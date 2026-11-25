@@ -1,0 +1,653 @@
+{
+  "id": "map_entrepot_vsp",
+  "name": "Entrepôt frigorifique n°3, VSP Holding (Harbor Island)",
+  "folder": "Acte 2",
+  "description": "**Entrepôt frigorifique n°3, VSP Holding (Harbor Island).** Un entrepôt biomédical certifié sur les quais : grues à conteneurs à l'arrêt, givre, brouillard de condensation. Un quai de chargement à trois portes sectionnelles, un hall de stockage à −5 °C (rayonnages de palettes sur quatre niveaux, allées de 3 m), trois chambres froides à −25 °C et une mezzanine de bureaux où Reinhardt Klee attend, attaché devant le terminal du contrat.\n\n**Utilisation** — Quête 2.4 *Inheritance*, **Phase 4 — L'entrepôt frigorifique** (après l'enlèvement de Klee).\n- Objectifs : libérer Klee vivant, empêcher la signature (Me Pryce attend devant le terminal), et le **duel Anthony / Morinaga** sur la mezzanine.\n- Gardes : 4 Crimson Crush dans le hall (2 au quai, 2 dans les allées), 2 Nettoyeurs AG Chemie sur la mezzanine, Morinaga en seiza dans le couloir, **Reyes** dans la cabine de contrôle avec un fusil si l'Horloge est à 6 ou plus.\n- Après *Inheritance*, si la holding est sauvée : **planque du groupe** (Lifestyle Low gratuit, froid, sûr, discret). Acte 3 : point de départ du cheval de Troie (approche E de *Severance*).\n\n**Comment Morinaga agit** : il ne se lève pas tant que personne ne monte sur la mezzanine et ne défend pas le Crush. Si Anthony monte : « Montre-moi. » Duel à la vraie lame — il frappe à plat ou pour désarmer, sauf si la jauge de la voie du sabre est à −2 ou moins. **Morinaga ne meurt pas ici** (Reyes fumigène et l'emmène). Klee sauvé sans massacre : jauge +1, il s'écarte.\n\n**Tests et conditions** : froid du hall — Constitution + Volonté seuil 2 par heure, sinon −1 aux tests physiques ; givre au sol — −1 Agilité pour courir ; brouillard — −1 visuel au-delà de 20 m. Chambre froide sans protection : 1 case d'Étourdissement toutes les 5 minutes.\n\n**Approches** : le portail à badge (codes de la holding), la camionnette réfrigérée elle-même, le quai par l'eau (grues, clôture à escalader), l'issue de secours sud, la porte du personnel. Le brouillard et les rayonnages permettent de traverser le hall sans être vu.",
+  "width": 68,
+  "height": 46,
+  "metersPerCell": 1,
+  "theme": "industrial",
+  "lighting": "dim",
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "tiles": [
+    "~~~~=,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+    "~~~~=,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+    "~~~~=,,,,,,,,===========================DDDD========================",
+    "~~~~,,,,,,,,,=,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,####,,,,,,,,,,,,,,,,,,=",
+    "~~~~=,,,,,,,,=,mmmmmm,,,vvv,,,,,,,,,,,,,,,,,,W..#,,,,,,,,mmmmmm,,,,=",
+    "~~~~=,o,,,,o,=,mmmmmm,,,vvv,,,,,,cc,,,,,,,,,,#D##,,,,,,,,mmmmmm,,,,=",
+    "~~~~=,,,,,,,,=,,,,,,,,,,vvv,,,,,,cc,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,=",
+    "~~~~=,,rrrr,,=,mmmm,,,,,vvv,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,=",
+    "~~~~=,,,,,,,,=,mmmm,,,,,vvv,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,=",
+    "~~~~=,,,,,,,,=,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,=",
+    "~~~~,,,,,,,,,=,###DDD###DDD###DDD##############D#################,,=",
+    "~~~~=,o,,,,o,=,#....................WTTT..#.........mm.#.......m#,,=",
+    "~~~~=,,,,,,,,=,#............cc......W.....#.TT.........#..cc...m#,,=",
+    "~~~~=,,,,,,,,=,#....................W.....#............D.......m#,,=",
+    "~~~~=,,,,,,,,=,#.cc..............cc.W.....#............#.......m#,,=",
+    "~~~~=,,,,,,,,=,#.cc..............cc.#WWDWW#............#..cc...m#,,=",
+    "~~~~=,mmmmmm,=,#.......................s...............#.......m#,,=",
+    "~~~~,,mmmmmm,=,#.......................s...............##########,,=",
+    "~~~~=,,,,,,,,=,#.......................................#.......m#,,=",
+    "~~~~=,mmmmmm,=,#..mmmmmmmm...mmmmmmmmmmm...mmmmmmmmmm..#..cc...m#,,=",
+    "~~~~=,mmmmmm,=,#..mmmmmmmm...mmmmmmmmmmm...mmmmmmmmmm..D.......m#,,=",
+    "~~~~=,,,,,,,,=,#.......................................#.......m#,,=",
+    "~~~~=,,,,,,,,=,#.............................v.........#..cc...m#,,=",
+    "~~~~=,,,ccc,,=,#.............................v.........#.......m#,,=",
+    "~~~~,,,,,,,,,=,#..mmmmmmmm...mmmmmmmmmmm...mmmmmmmmmm..##########,,=",
+    "~~~~=,,,,,,,,=,D..mmmmmmmm...mmmmmmmmmmm...mmmmmmmmmm..#.......m#,,=",
+    "~~~~=,,,,,,,,=,#.......................................#..cc...m#,,=",
+    "~~~~=,o,,,,o,=,#.................cc....................D.......m#,,=",
+    "~~~~=,,,,,,,,=,#.......................................#.......m#,,=",
+    "~~~~=,,rrrr,,=,#..mmmmmmmm...mmmmmmmmmmm...mmmmmmmmmm..#..cc...m#,,=",
+    "~~~~=,,,,,,,,=,#..mmmmmmmm...mmmmmmmmmmm...mmmmmmmmmm..#.......m#,,=",
+    "~~~~,,,,,,,,,=,#.......................................##########,,=",
+    "~~~~=,,,,,,,,=,#....cc.................................#........#,,=",
+    "~~~~=,o,,,,o,=,#..................................cc...#..mmmm..#,,=",
+    "~~~~=,,,,,,,,=,#..................................cc...#..mmmm..#,,=",
+    "~~~~=,,,,,,,,=,#..ss=================ss................#........#,,=",
+    "~~~~=,,,,,,,,=,#..ss.................ss................D........#,,=",
+    "~~~~=,,,,,,,,=,#..sWWWWDWWWW#WWWDWWWWWs................#..mmmm..#,,=",
+    "~~~~,,,,,,,,,=,#...#........#........#.................#..mmmm..#,,=",
+    "~~~~=,mmmmmm,=,#...#.TT.....#....TTT.#.................#........#,,=",
+    "~~~~=,mmmmmm,=,#...#....T...#........#.................#xx......#,,=",
+    "~~~~=,,,,,,,,=,#...#m.......#......m.#.................#........#,,=",
+    "~~~~=,,,,,,,,=,##############################D###################,,=",
+    "~~~~=,,,,,,,,=,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,=",
+    "~~~~=,,,,,,,,=,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,=",
+    "~~~~,,,,,,,,,======================================================="
+  ],
+  "doors": [
+    {
+      "id": "vsp_d01",
+      "x": 40,
+      "y": 2,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Portail à badge (codes de la holding)"
+    },
+    {
+      "id": "vsp_d02",
+      "x": 41,
+      "y": 2,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Portail à badge (codes de la holding)"
+    },
+    {
+      "id": "vsp_d03",
+      "x": 42,
+      "y": 2,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Portail à badge (codes de la holding)"
+    },
+    {
+      "id": "vsp_d04",
+      "x": 43,
+      "y": 2,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Portail à badge (codes de la holding)"
+    },
+    {
+      "id": "vsp_d05",
+      "x": 46,
+      "y": 5,
+      "state": "open",
+      "kind": "door",
+      "name": "Guérite (vide)"
+    },
+    {
+      "id": "vsp_d06",
+      "x": 18,
+      "y": 10,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Porte sectionnelle 1"
+    },
+    {
+      "id": "vsp_d07",
+      "x": 19,
+      "y": 10,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Porte sectionnelle 1"
+    },
+    {
+      "id": "vsp_d08",
+      "x": 20,
+      "y": 10,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Porte sectionnelle 1"
+    },
+    {
+      "id": "vsp_d09",
+      "x": 24,
+      "y": 10,
+      "state": "open",
+      "kind": "shutter",
+      "name": "Porte sectionnelle 2"
+    },
+    {
+      "id": "vsp_d10",
+      "x": 25,
+      "y": 10,
+      "state": "open",
+      "kind": "shutter",
+      "name": "Porte sectionnelle 2"
+    },
+    {
+      "id": "vsp_d11",
+      "x": 26,
+      "y": 10,
+      "state": "open",
+      "kind": "shutter",
+      "name": "Porte sectionnelle 2"
+    },
+    {
+      "id": "vsp_d12",
+      "x": 30,
+      "y": 10,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Porte sectionnelle 3"
+    },
+    {
+      "id": "vsp_d13",
+      "x": 31,
+      "y": 10,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Porte sectionnelle 3"
+    },
+    {
+      "id": "vsp_d14",
+      "x": 32,
+      "y": 10,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Porte sectionnelle 3"
+    },
+    {
+      "id": "vsp_d15",
+      "x": 47,
+      "y": 10,
+      "state": "closed",
+      "kind": "door",
+      "name": "Porte du personnel (badge)"
+    },
+    {
+      "id": "vsp_d16",
+      "x": 45,
+      "y": 42,
+      "state": "closed",
+      "kind": "door",
+      "name": "Issue de secours sud"
+    },
+    {
+      "id": "vsp_d17",
+      "x": 15,
+      "y": 25,
+      "state": "locked",
+      "kind": "door",
+      "name": "Porte côté quai"
+    },
+    {
+      "id": "vsp_d18",
+      "x": 39,
+      "y": 15,
+      "state": "closed",
+      "kind": "door",
+      "name": "Cabine de contrôle"
+    },
+    {
+      "id": "vsp_d19",
+      "x": 55,
+      "y": 13,
+      "state": "closed",
+      "kind": "door",
+      "name": "Chambre froide 1 (porte isotherme)"
+    },
+    {
+      "id": "vsp_d20",
+      "x": 55,
+      "y": 20,
+      "state": "closed",
+      "kind": "door",
+      "name": "Chambre froide 2 (porte isotherme)"
+    },
+    {
+      "id": "vsp_d21",
+      "x": 55,
+      "y": 27,
+      "state": "closed",
+      "kind": "door",
+      "name": "Chambre froide 3 (porte isotherme)"
+    },
+    {
+      "id": "vsp_d22",
+      "x": 55,
+      "y": 36,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salle des compresseurs"
+    },
+    {
+      "id": "vsp_d23",
+      "x": 23,
+      "y": 37,
+      "state": "closed",
+      "kind": "door",
+      "name": "Bureau 1"
+    },
+    {
+      "id": "vsp_d24",
+      "x": 32,
+      "y": 37,
+      "state": "closed",
+      "kind": "door",
+      "name": "Bureau 2"
+    }
+  ],
+  "lights": [
+    {
+      "id": "vsp_l01",
+      "x": 9,
+      "y": 9,
+      "radius": 8,
+      "color": "#ffa040",
+      "on": true,
+      "name": "Sodium — quai"
+    },
+    {
+      "id": "vsp_l02",
+      "x": 9,
+      "y": 36,
+      "radius": 8,
+      "color": "#ffa040",
+      "on": true,
+      "name": "Sodium — quai"
+    },
+    {
+      "id": "vsp_l03",
+      "x": 41,
+      "y": 4,
+      "radius": 7,
+      "color": "#ffa040",
+      "on": true,
+      "name": "Sodium — portail"
+    },
+    {
+      "id": "vsp_l04",
+      "x": 60,
+      "y": 7,
+      "radius": 6,
+      "color": "#ffa040",
+      "on": true,
+      "name": "Sodium — cour est"
+    },
+    {
+      "id": "vsp_l05",
+      "x": 8,
+      "y": 8,
+      "radius": 2,
+      "color": "#ff3344",
+      "on": true,
+      "name": "Balise de grue"
+    },
+    {
+      "id": "vsp_l06",
+      "x": 26,
+      "y": 13,
+      "radius": 6,
+      "color": "#cfe8ff",
+      "on": true,
+      "name": "Néons — quai de chargement"
+    },
+    {
+      "id": "vsp_l07",
+      "x": 39,
+      "y": 12,
+      "radius": 3,
+      "color": "#ffe0a0",
+      "on": true,
+      "name": "Cabine de contrôle"
+    },
+    {
+      "id": "vsp_l08",
+      "x": 22,
+      "y": 22,
+      "radius": 7,
+      "color": "#cfe8ff",
+      "on": true,
+      "name": "Rampe de néons froids"
+    },
+    {
+      "id": "vsp_l09",
+      "x": 41,
+      "y": 22,
+      "radius": 7,
+      "color": "#cfe8ff",
+      "on": true,
+      "name": "Rampe de néons froids"
+    },
+    {
+      "id": "vsp_l10",
+      "x": 30,
+      "y": 32,
+      "radius": 7,
+      "color": "#cfe8ff",
+      "on": true,
+      "name": "Rampe de néons froids"
+    },
+    {
+      "id": "vsp_l11",
+      "x": 48,
+      "y": 33,
+      "radius": 6,
+      "color": "#cfe8ff",
+      "on": true,
+      "name": "Rampe de néons froids"
+    },
+    {
+      "id": "vsp_l12",
+      "x": 59,
+      "y": 14,
+      "radius": 4,
+      "color": "#9fd8ff",
+      "on": true,
+      "name": "Chambre froide 1"
+    },
+    {
+      "id": "vsp_l13",
+      "x": 59,
+      "y": 21,
+      "radius": 4,
+      "color": "#9fd8ff",
+      "on": true,
+      "name": "Chambre froide 2"
+    },
+    {
+      "id": "vsp_l14",
+      "x": 59,
+      "y": 28,
+      "radius": 4,
+      "color": "#9fd8ff",
+      "on": true,
+      "name": "Chambre froide 3"
+    },
+    {
+      "id": "vsp_l15",
+      "x": 57,
+      "y": 39,
+      "radius": 2,
+      "color": "#ff3344",
+      "on": true,
+      "name": "Voyants des compresseurs"
+    },
+    {
+      "id": "vsp_l16",
+      "x": 24,
+      "y": 39,
+      "radius": 3,
+      "color": "#f0f6ff",
+      "on": true,
+      "name": "Bureau 1"
+    },
+    {
+      "id": "vsp_l17",
+      "x": 32,
+      "y": 39,
+      "radius": 3,
+      "color": "#f0f6ff",
+      "on": true,
+      "name": "Bureau 2"
+    },
+    {
+      "id": "vsp_l18",
+      "x": 28,
+      "y": 36,
+      "radius": 3,
+      "color": "#f0f6ff",
+      "on": true,
+      "name": "Couloir de la mezzanine"
+    }
+  ],
+  "regions": [
+    {
+      "id": "vsp_r01",
+      "name": "Bassin",
+      "x": 0,
+      "y": 0,
+      "w": 4,
+      "h": 46,
+      "color": "#1a3a5a",
+      "gmOnly": false
+    },
+    {
+      "id": "vsp_r02",
+      "name": "Quai de Harbor Island",
+      "x": 5,
+      "y": 2,
+      "w": 8,
+      "h": 44,
+      "color": "#3a4a5c",
+      "gmOnly": false
+    },
+    {
+      "id": "vsp_r03",
+      "name": "Cour",
+      "x": 14,
+      "y": 3,
+      "w": 53,
+      "h": 7,
+      "color": "#4a4a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "vsp_r04",
+      "name": "Quai de chargement",
+      "x": 16,
+      "y": 11,
+      "w": 20,
+      "h": 6,
+      "color": "#4a5a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "vsp_r05",
+      "name": "Cabine de contrôle (en hauteur)",
+      "x": 37,
+      "y": 11,
+      "w": 5,
+      "h": 4,
+      "color": "#6a5a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "vsp_r06",
+      "name": "Hall de stockage (−5 °C)",
+      "x": 16,
+      "y": 17,
+      "w": 39,
+      "h": 18,
+      "color": "#2a4a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "vsp_r07",
+      "name": "Chambre froide 1 (−25 °C)",
+      "x": 56,
+      "y": 11,
+      "w": 8,
+      "h": 6,
+      "color": "#1a5a7a",
+      "gmOnly": false
+    },
+    {
+      "id": "vsp_r08",
+      "name": "Chambre froide 2 (−25 °C)",
+      "x": 56,
+      "y": 18,
+      "w": 8,
+      "h": 6,
+      "color": "#1a5a7a",
+      "gmOnly": false
+    },
+    {
+      "id": "vsp_r09",
+      "name": "Chambre froide 3 (−25 °C)",
+      "x": 56,
+      "y": 25,
+      "w": 8,
+      "h": 6,
+      "color": "#1a5a7a",
+      "gmOnly": false
+    },
+    {
+      "id": "vsp_r10",
+      "name": "Salle des compresseurs",
+      "x": 56,
+      "y": 32,
+      "w": 8,
+      "h": 10,
+      "color": "#5a3a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "vsp_r11",
+      "name": "Mezzanine — couloir",
+      "x": 20,
+      "y": 36,
+      "w": 17,
+      "h": 1,
+      "color": "#6a5a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "vsp_r12",
+      "name": "Bureau 1 (Klee)",
+      "x": 20,
+      "y": 38,
+      "w": 8,
+      "h": 4,
+      "color": "#6a3a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "vsp_r13",
+      "name": "Bureau 2",
+      "x": 29,
+      "y": 38,
+      "w": 8,
+      "h": 4,
+      "color": "#5a4a3a",
+      "gmOnly": false
+    }
+  ],
+  "notes": [
+    {
+      "id": "vsp_n01",
+      "x": 41,
+      "y": 3,
+      "text": "Portail à badge : les codes de la holding (Klee, ou Anthony s'il les a). Guérite vide cette nuit. Clôture : Escalade seuil 1 (barbelés : seuil 2 sans gants).",
+      "gmOnly": true
+    },
+    {
+      "id": "vsp_n02",
+      "x": 25,
+      "y": 6,
+      "text": "Camionnette réfrigérée de VSP, utilisée pour l'enlèvement (balise du médaillon de Klee). Acte 3 : le cheval de Troie de Severance (approche E).",
+      "gmOnly": true
+    },
+    {
+      "id": "vsp_n03",
+      "x": 9,
+      "y": 12,
+      "text": "Grues à conteneurs à l'arrêt : Escalade seuil 2, vue plongeante sur la cour et le toit. Approche par l'eau possible (échelles du quai).",
+      "gmOnly": true
+    },
+    {
+      "id": "vsp_n04",
+      "x": 22,
+      "y": 13,
+      "text": "2 Crimson Crush près du quai, à côté de la porte ouverte. Ils fument, ils ont froid, ils s'ennuient.",
+      "gmOnly": true
+    },
+    {
+      "id": "vsp_n05",
+      "x": 39,
+      "y": 13,
+      "text": "Cabine de contrôle vitrée en hauteur : vue sur tout le hall. Si Horloge ≥ 6 : Reyes avec un fusil. Si Morinaga est en danger de mort, elle lance une grenade fumigène et l'emmène (ordres le concernant).",
+      "gmOnly": true
+    },
+    {
+      "id": "vsp_n06",
+      "x": 34,
+      "y": 21,
+      "text": "Rayonnages de palettes sur 4 niveaux : couverture lourde (Armor 8), bloquent la vue. Containers biomédicaux fragiles : chaque tir perdu détruit de la marchandise de VSP. Grimper par-dessus : Escalade seuil 2.",
+      "gmOnly": true
+    },
+    {
+      "id": "vsp_n07",
+      "x": 30,
+      "y": 27,
+      "text": "2 Crimson Crush patrouillent dans les allées. Givre au sol : −1 Agilité pour courir. Brouillard : −1 visuel au-delà de 20 m. Froid : Constitution + Volonté seuil 2 par heure sinon −1 aux tests physiques.",
+      "gmOnly": true
+    },
+    {
+      "id": "vsp_n08",
+      "x": 59,
+      "y": 12,
+      "text": "Chambres froides à −25 °C : portes isothermes coulissantes, ouverture intérieure de sécurité. Enfermé sans protection : 1 case d'Étourdissement toutes les 5 minutes. Idéal pour enfermer des gardes… ou se cacher.",
+      "gmOnly": true
+    },
+    {
+      "id": "vsp_n09",
+      "x": 59,
+      "y": 34,
+      "text": "Salle des compresseurs : conduites d'ammoniac. Un tir perdu ici = fuite (zone dangereuse, Constitution + Volonté seuil 3 ou 4E). Couper la réfrigération fait monter le brouillard dans tout le hall.",
+      "gmOnly": true
+    },
+    {
+      "id": "vsp_n10",
+      "x": 28,
+      "y": 36,
+      "text": "Couloir de la mezzanine : Morinaga assis en seiza, les yeux fermés. Il ne se lève pas tant que personne ne monte. Si Anthony monte : il se place entre lui et Klee — « Montre-moi. » Si Anthony achève un garde à terre devant lui : jauge −1, et seulement « Ah. »",
+      "gmOnly": true
+    },
+    {
+      "id": "vsp_n11",
+      "x": 23,
+      "y": 40,
+      "text": "Bureau 1 : Reinhardt Klee attaché sur une chaise devant le terminal du contrat (sceau familial + clé d'authentification de la banque). Me Desmond Pryce, avocat, non-combattant, terrifié : il parle à la moindre menace (ses honoraires sont payés par Stern Pacific Biosciences).",
+      "gmOnly": true
+    },
+    {
+      "id": "vsp_n12",
+      "x": 30,
+      "y": 36,
+      "text": "2 Nettoyeurs AG Chemie sur la mezzanine. Ordre : faire signer, puis « l'accident ». Ils protègent le terminal avant Klee.",
+      "gmOnly": true
+    },
+    {
+      "id": "vsp_n13",
+      "x": 18,
+      "y": 36,
+      "text": "Escaliers métalliques aux deux extrémités de la mezzanine : goulots, une personne de front. Le duel se joue sur la passerelle du couloir (garde-corps : une chute de 4 m sur le béton gelé, 4P).",
+      "gmOnly": true
+    },
+    {
+      "id": "vsp_n14",
+      "x": 46,
+      "y": 41,
+      "text": "Issue de secours sud (barre anti-panique, s'ouvre de l'intérieur ; de l'extérieur : Serrurerie seuil 2).",
+      "gmOnly": true
+    }
+  ],
+  "tokens": []
+}

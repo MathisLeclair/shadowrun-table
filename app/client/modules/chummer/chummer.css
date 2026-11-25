@@ -1,0 +1,35 @@
+/* Chummer5a interop (client/modules/chummer) — prefix chm- */
+.chm-logo { display: inline-grid; place-items: center; width: 22px; height: 18px; border-radius: 4px; font: 700 10px var(--mono); letter-spacing: .5px;
+  color: #0b0e12; background: linear-gradient(135deg, var(--amber), #c9761e); flex: none; vertical-align: middle; }
+.chm-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 6px 10px; border: 1px solid var(--line2); border-radius: 8px;
+  background: linear-gradient(90deg, #2a201030 0%, var(--panel) 60%); }
+.chm-status { flex: 1 1 220px; min-width: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.chm-status b { color: var(--amber); font-weight: 600; word-break: break-all; }
+.chm-actions .btn { white-space: nowrap; }
+
+.chm-panel .panel-head h3 { display: flex; align-items: center; gap: 8px; }
+.chm-reqs { display: flex; flex-direction: column; gap: 8px; }
+.chm-req { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 8px 10px;
+  border: 1px solid #6a4f1d; border-radius: 8px; background: #2a201030; }
+.chm-req-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.chm-req-name { background: none; border: 0; padding: 0; color: var(--cyan); font: 600 14px var(--sans); cursor: pointer; text-align: left; }
+.chm-req-name:hover { text-decoration: underline; }
+
+.chm-diff { display: flex; flex-direction: column; gap: 12px; }
+.chm-diff-h { margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--amber); }
+.chm-diff-table { width: 100%; }
+.chm-diff-table td { padding: 3px 8px; }
+.chm-diff-table td:first-child { color: var(--dim); }
+.chm-from { color: var(--faint); text-decoration: line-through; font-family: var(--mono); text-align: right; white-space: nowrap; }
+.chm-to { color: var(--text); font-family: var(--mono); font-weight: 600; }
+.chm-arrow { color: var(--faint); width: 1%; text-align: center; }
+.chm-diff-list { margin-bottom: 6px; }
+.chm-diff-listname { font-weight: 600; color: var(--text); font-size: 13px; }
+.chm-diff-list ul { margin: 2px 0 0; padding-left: 4px; list-style: none; }
+.chm-diff-list li { font-size: 13px; padding: 1px 0; }
+.chm-add { color: var(--green); }
+.chm-del { color: var(--red); }
+.chm-chg { color: var(--amber); }
+.chm-warn { border-left: 3px solid var(--amber); background: #2a201040; padding: 6px 10px; border-radius: 4px; font-size: 12.5px; }
+.chm-warn ul { margin: 4px 0 0; padding-left: 18px; }
+.chm-modal .modal-body { max-height: 78vh; }

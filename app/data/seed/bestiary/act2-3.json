@@ -1,0 +1,4058 @@
+[
+ {
+  "id": "tpl_rebecca_windows",
+  "name": "Rebecca « Windows » Wrought",
+  "folder": "Project Lazarus — Acte 2",
+  "metatype": "Humain",
+  "gender": "Femme",
+  "concept": "Ex-spider Knight Errant, ancienne partenaire de Bricks",
+  "color": "#4dd0e1",
+  "disposition": "neutral",
+  "attributes": {
+   "BOD": 3,
+   "AGI": 3,
+   "REA": 4,
+   "STR": 2,
+   "WIL": 5,
+   "LOG": 6,
+   "INT": 5,
+   "CHA": 3,
+   "EDG": 4,
+   "ESS": 5.4
+  },
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "computer",
+    "name": "Informatique",
+    "attr": "LOG",
+    "rating": 6,
+    "group": "electronics"
+   },
+   {
+    "id": "electronic_warfare",
+    "name": "Guerre électronique",
+    "attr": "LOG",
+    "rating": 6,
+    "spec": "Communications",
+    "group": "cracking"
+   },
+   {
+    "id": "hacking",
+    "name": "Hacking",
+    "attr": "LOG",
+    "rating": 5,
+    "group": "cracking"
+   },
+   {
+    "id": "cybercombat",
+    "name": "Cybercombat",
+    "attr": "LOG",
+    "rating": 5,
+    "group": "cracking"
+   },
+   {
+    "id": "software",
+    "name": "Software",
+    "attr": "LOG",
+    "rating": 5,
+    "group": "electronics"
+   },
+   {
+    "id": "hardware",
+    "name": "Hardware",
+    "attr": "LOG",
+    "rating": 4,
+    "group": "electronics"
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 4
+   },
+   {
+    "id": "sneaking",
+    "name": "Furtivité",
+    "attr": "AGI",
+    "rating": 4,
+    "group": "stealth"
+   },
+   {
+    "id": "forgery",
+    "name": "Contrefaçon",
+    "attr": "LOG",
+    "rating": 3
+   },
+   {
+    "id": "pistols",
+    "name": "Pistolets",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "firearms"
+   }
+  ],
+  "knowledge": [
+   {
+    "id": "k1",
+    "name": "Procédures Knight Errant",
+    "rating": 5,
+    "type": "professional"
+   },
+   {
+    "id": "k2",
+    "name": "Sécurité Matrice",
+    "rating": 5,
+    "type": "professional"
+   },
+   {
+    "id": "k3",
+    "name": "Finances de Harlan Kessler",
+    "rating": 4,
+    "type": "interest"
+   },
+   {
+    "id": "k4",
+    "name": "Puyallup (rue)",
+    "rating": 3,
+    "type": "street"
+   }
+  ],
+  "qualities": [
+   {
+    "id": "q5",
+    "name": "Paranoïa organisée",
+    "karma": 0,
+    "positive": true,
+    "notes": "Six ans de planque : drones, caméras, interrupteur d'homme mort."
+   }
+  ],
+  "weapons": [
+   {
+    "id": "w6",
+    "kind": "ranged",
+    "name": "Ares Light Fire 75 (silencieux, smartlink)",
+    "category": "Pistolet léger",
+    "skill": "pistols",
+    "accuracy": 8,
+    "damage": "6P",
+    "ap": 0,
+    "mode": "SA",
+    "rc": 0,
+    "ammo": "16(c)",
+    "reach": 0,
+    "notes": "Silencieux intégré."
+   },
+   {
+    "id": "w7",
+    "kind": "ranged",
+    "name": "Yamaha Pulsar II (taser)",
+    "category": "Taser",
+    "skill": "pistols",
+    "accuracy": 5,
+    "damage": "7S(e)",
+    "ap": -5,
+    "mode": "SA",
+    "rc": 0,
+    "ammo": "4(m)",
+    "reach": 0
+   },
+   {
+    "id": "w8",
+    "kind": "melee",
+    "name": "Mains nues",
+    "category": "Mains nues",
+    "skill": "unarmed_combat",
+    "accuracy": null,
+    "damage": "(STR)S",
+    "ap": 0,
+    "reach": 0,
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "notes": "Précision = limite physique"
+   }
+  ],
+  "armor": [
+   {
+    "id": "a9",
+    "name": "Manteau doublé",
+    "rating": 9,
+    "equipped": true
+   }
+  ],
+  "augmentations": [
+   {
+    "id": "x10",
+    "name": "Datajack",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 0.1
+   },
+   {
+    "id": "x11",
+    "name": "Cyberyeux 2 (vision nocturne, compensation antiflash, lien image, smartlink)",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 0.3,
+    "rating": 2
+   },
+   {
+    "id": "x12",
+    "name": "Booster cérébral 1",
+    "kind": "bioware",
+    "grade": "standard",
+    "essence": 0.2,
+    "rating": 1
+   }
+  ],
+  "gear": [
+   {
+    "id": "g13",
+    "name": "Serveur personnel + interrupteur d'homme mort (bracelet)",
+    "category": "Équipement",
+    "qty": 1,
+    "notes": "Si elle relâche la pression ou si la porte est forcée : effacement en 30 s et charge thermite (beaucoup de fumée)."
+   },
+   {
+    "id": "g14",
+    "name": "SIN « Rae Calder » (indice 4)",
+    "category": "SIN",
+    "qty": 1,
+    "rating": 4,
+    "notes": "Propriétaire de la laverie Suds'n'Duds."
+   },
+   {
+    "id": "g15",
+    "name": "Commlink (indice 4)",
+    "category": "Équipement",
+    "qty": 1,
+    "rating": 4
+   }
+  ],
+  "vehicles": [
+   {
+    "id": "v16",
+    "name": "GMC-Nissan Doberman (drone)",
+    "handling": "5",
+    "speed": 3,
+    "accel": 1,
+    "body": 4,
+    "armor": 4,
+    "pilot": 3,
+    "sensor": 3,
+    "notes": "Colt Cobra TZ-120 monté (7P, SA/TR/TA). Autosofts Ciblage 3, Clairvoyance 3, Évasion 3."
+   },
+   {
+    "id": "v17",
+    "name": "GMC-Nissan Doberman (drone)",
+    "handling": "5",
+    "speed": 3,
+    "accel": 1,
+    "body": 4,
+    "armor": 4,
+    "pilot": 3,
+    "sensor": 3,
+    "notes": "Colt Cobra TZ-120 monté (7P, SA/TR/TA). Autosofts Ciblage 3, Clairvoyance 3, Évasion 3."
+   },
+   {
+    "id": "v18",
+    "name": "MCT Fly-Spy (minidrone)",
+    "handling": "4",
+    "speed": 3,
+    "accel": 2,
+    "body": 1,
+    "armor": 0,
+    "pilot": 3,
+    "sensor": 3,
+    "notes": "Reconnaissance"
+   }
+  ],
+  "matrix": {
+   "device": "Sony CIY-720",
+   "rating": 4,
+   "attack": 5,
+   "sleaze": 7,
+   "dataProcessing": 6,
+   "firewall": 4,
+   "programs": [
+    "Armure",
+    "Filtre biofeedback",
+    "Décryptage",
+    "Chiffrement",
+    "Exploit",
+    "Fourche",
+    "Brouillage de signal",
+    "Furtivité",
+    "Boîte à outils",
+    "Enveloppe"
+   ]
+  },
+  "vision": {
+   "lowLight": true
+  },
+  "description": "Humaine, 35 ans. Ex-spider de la salle de contrôle de Knight Errant, elle a aidé Bricks à simuler sa mort en 2074 et vit depuis sous le nom de **Rae Calder**, au sous-sol de la laverie **Suds'n'Duds** (Puyallup), dans une cage de Faraday. Surveille les comptes de **Harlan Kessler** depuis six ans.\n\n- **Limites** : Physique 4 · Mentale 8 · Sociale 5.\n- **Initiative** : 9 + 1D6 (physique) · VR chaude 11 + 4D6. Moniteur Matrice 10.\n- **Défenses de la laverie** : 2 drones Doberman (arrière-boutique), 1 Fly-Spy (faux plafond), caméras dans 3 sèche-linge (Perception + INT seuil 4), porte du sous-sol en maglock 5 câblé (pas de sans-fil).\n\nParanoïaque, sèche, drôle quand elle oublie d'avoir peur. Elle en veut à Bricks d'être revenue. Ce qu'elle détient : fragments **BIO-73-1187**, manifeste **SP-NULL**, **dernier message de la Lt. Vosk**, comptes de Kessler, le nom « **Val** ». Alliée active en Acte 3 si elle survit à Windows Open (contact C4, L2 pour le groupe, L4 pour Bricks).",
+  "npc": {
+   "professionalRating": 4,
+   "grunt": false,
+   "kind": "metahuman",
+   "initMode": "hot",
+   "tactics": "- Ne combat jamais à découvert : pilote ses Doberman depuis le sous-sol et tient la caméra.\n- Garde toujours le bracelet de l'interrupteur d'homme mort : si on force l'entrée, tout fond (Loyauté 1, plus de fichiers).\n- Ouvre à Bricks si elle se présente devant une caméra et dit quelque chose que seule Windows comprendrait — pistolet braqué.\n- Pendant l'assaut : protège son serveur avant sa vie. Brise le Passeur à la Matrice (Mosaïque) plutôt qu'au pistolet.",
+   "loot": "Deck Sony CIY-720, serveur (données du dossier 0419 si intact), 2 Doberman, Fly-Spy."
+  },
+  "powers": [],
+  "spells": [],
+  "augmented": {},
+  "type": "npc",
+  "portrait": ""
+ },
+ {
+  "id": "tpl_silas_crowe_passeur",
+  "name": "Silas « le Passeur » Crowe",
+  "folder": "Équipe du Passeur",
+  "metatype": "Ork",
+  "gender": "Homme",
+  "concept": "Chef d'équipe, samouraï des rues ex-Desert Wars",
+  "color": "#ff8a3d",
+  "disposition": "hostile",
+  "attributes": {
+   "BOD": 7,
+   "AGI": 6,
+   "REA": 5,
+   "STR": 6,
+   "WIL": 4,
+   "LOG": 3,
+   "INT": 5,
+   "CHA": 4,
+   "EDG": 4,
+   "ESS": 1.6
+  },
+  "augmented": {
+   "REA": 2
+  },
+  "initiative": {
+   "dice": 3,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "automatics",
+    "name": "Armes automatiques",
+    "attr": "AGI",
+    "rating": 6,
+    "spec": "Fusils d’assaut",
+    "group": "firearms"
+   },
+   {
+    "id": "pistols",
+    "name": "Pistolets",
+    "attr": "AGI",
+    "rating": 5,
+    "group": "firearms"
+   },
+   {
+    "id": "leadership",
+    "name": "Leadership",
+    "attr": "CHA",
+    "rating": 5,
+    "group": "influence"
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 5
+   },
+   {
+    "id": "blades",
+    "name": "Armes tranchantes",
+    "attr": "AGI",
+    "rating": 4,
+    "group": "close_combat"
+   },
+   {
+    "id": "unarmed_combat",
+    "name": "Combat à mains nues",
+    "attr": "AGI",
+    "rating": 4,
+    "group": "close_combat"
+   },
+   {
+    "id": "negotiation",
+    "name": "Négociation",
+    "attr": "CHA",
+    "rating": 4,
+    "group": "influence"
+   },
+   {
+    "id": "sneaking",
+    "name": "Furtivité",
+    "attr": "AGI",
+    "rating": 4,
+    "group": "stealth"
+   },
+   {
+    "id": "etiquette",
+    "name": "Étiquette",
+    "attr": "CHA",
+    "rating": 3,
+    "spec": "Rue",
+    "group": "influence"
+   },
+   {
+    "id": "pilot_ground_craft",
+    "name": "Pilotage (véhicules terrestres)",
+    "attr": "REA",
+    "rating": 3
+   },
+   {
+    "id": "throwing_weapons",
+    "name": "Armes de jet",
+    "attr": "AGI",
+    "rating": 3
+   }
+  ],
+  "knowledge": [
+   {
+    "id": "k19",
+    "name": "Tactiques de petites unités",
+    "rating": 5,
+    "type": "professional"
+   },
+   {
+    "id": "k20",
+    "name": "Fixers de Tacoma",
+    "rating": 4,
+    "type": "street"
+   },
+   {
+    "id": "k21",
+    "name": "Desert Wars",
+    "rating": 3,
+    "type": "interest"
+   }
+  ],
+  "qualities": [
+   {
+    "id": "q22",
+    "name": "Code d'honneur",
+    "karma": 0,
+    "positive": false,
+    "notes": "Pas d'enfants, pas de civils, pas de livraisons « à l'abattoir »."
+   }
+  ],
+  "weapons": [
+   {
+    "id": "w23",
+    "kind": "ranged",
+    "name": "FN HAR (smartlink)",
+    "category": "Fusil d’assaut",
+    "skill": "automatics",
+    "accuracy": 7,
+    "damage": "10P",
+    "ap": -2,
+    "mode": "SA/TR/TA",
+    "rc": 2,
+    "ammo": "35(c)",
+    "reach": 0,
+    "notes": "RC 3 avec la crosse en appui."
+   },
+   {
+    "id": "w24",
+    "kind": "ranged",
+    "name": "Ares Predator V (smartlink)",
+    "category": "Pistolet lourd",
+    "skill": "pistols",
+    "accuracy": 7,
+    "damage": "8P",
+    "ap": -1,
+    "mode": "SA",
+    "rc": 0,
+    "ammo": "15(c)",
+    "reach": 0
+   },
+   {
+    "id": "w25",
+    "kind": "melee",
+    "name": "Couteau de combat",
+    "category": "Lame",
+    "skill": "blades",
+    "accuracy": 6,
+    "damage": "(STR+2)P",
+    "ap": -3,
+    "reach": 0,
+    "mode": "",
+    "rc": 0,
+    "ammo": ""
+   },
+   {
+    "id": "w26",
+    "kind": "ranged",
+    "name": "Grenade flash-bang",
+    "category": "Grenade",
+    "skill": "throwing_weapons",
+    "accuracy": null,
+    "damage": "10S",
+    "ap": -4,
+    "mode": "CC",
+    "rc": 0,
+    "ammo": "2",
+    "reach": 0,
+    "notes": "Rayon 10 m. Lancer : Armes de jet + AGI [Physique]."
+   },
+   {
+    "id": "w27",
+    "kind": "melee",
+    "name": "Mains nues",
+    "category": "Mains nues",
+    "skill": "unarmed_combat",
+    "accuracy": null,
+    "damage": "(STR)S",
+    "ap": 0,
+    "reach": 0,
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "notes": "Précision = limite physique"
+   }
+  ],
+  "armor": [
+   {
+    "id": "a28",
+    "name": "Veste pare-balles",
+    "rating": 12,
+    "equipped": true
+   },
+   {
+    "id": "a29",
+    "name": "Plaques dermiques 2",
+    "rating": 2,
+    "equipped": true,
+    "stack": true,
+    "notes": "Cyberware"
+   }
+  ],
+  "augmentations": [
+   {
+    "id": "x30",
+    "name": "Réflexes câblés 2",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 3,
+    "rating": 2,
+    "notes": "+2 RÉA, +2D6 initiative"
+   },
+   {
+    "id": "x31",
+    "name": "Plaques dermiques 2",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 1,
+    "rating": 2
+   },
+   {
+    "id": "x32",
+    "name": "Cyberyeux 2 (smartlink, vision nocturne, thermographique, antiflash)",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 0.4,
+    "rating": 2
+   }
+  ],
+  "gear": [
+   {
+    "id": "g33",
+    "name": "Grenade fumigène",
+    "category": "Grenade",
+    "qty": 1
+   },
+   {
+    "id": "g34",
+    "name": "Commlink (indice 4)",
+    "category": "Équipement",
+    "qty": 1,
+    "rating": 4
+   },
+   {
+    "id": "g35",
+    "name": "Contrat : « récupérer vivante une ex-flic » (40 000¥ via Dutch Haldane)",
+    "category": "Divers",
+    "qty": 1
+   }
+  ],
+  "vision": {
+   "lowLight": true,
+   "thermo": true
+  },
+  "description": "Ork, 38 ans. Ex-mercenaire des Desert Wars, shadowrunner depuis dix ans, réputation de pro « propre ». Engagé (via le fixer de Tacoma **Dutch Haldane**, payé en certifiés AG) pour ramasser **Rebecca Wrought vivante**. Il croit à une banale affaire d'espionnage industriel.\n\n- **Limites** : Physique 9 · Mentale 5 · Sociale 5. **Initiative** 12 + 3D6. Armure 14.\n- **Réserves** : FN HAR 14 (+2 spé), Predator 11, Négociation 8 dés, Con + INT 9 dés.\n- **Équipe** : Mosaïque (decker), Rempart (troll), « Cendre » (mage : utiliser *Mage mercenaire*). Camionnette GMC Bulldog grise, plaques de Tacoma.\n\nParle avant de tirer, tire mieux que ceux qui parlent. Rompt son contrat si on lui **prouve** pour qui il travaille (registre des honoraires ou liste 0419 : +2 dés) ; se laisse acheter pour **50 000¥**.",
+  "npc": {
+   "professionalRating": 5,
+   "grunt": false,
+   "kind": "metahuman",
+   "tactics": "- Ouvre toujours par la parole : mains visibles, propose un arrangement (Négociation vs 8 dés).\n- En combat : flash-bang, puis rafales contrôlées depuis la couverture ; Rempart fixe, Cendre neutralise, Mosaïque coupe les drones.\n- Objectif : repartir avec Windows **vivante**, pas tuer le groupe.\n- **Décroche dès qu'un membre de son équipe est gravement blessé.**\n- Contrat rompu à l'amiable : devient contact (C4, L1) qui doit un service.",
+   "loot": "FN HAR, Predator V, veste pare-balles, ~18 000¥ de revente pour toute l'équipe (Cabana prend sa part)."
+  },
+  "powers": [],
+  "spells": [],
+  "vehicles": [],
+  "type": "npc",
+  "portrait": ""
+ },
+ {
+  "id": "tpl_mosaique_decker",
+  "name": "« Mosaïque »",
+  "folder": "Équipe du Passeur",
+  "metatype": "Elfe",
+  "gender": "Femme",
+  "concept": "Decker de l'équipe du Passeur",
+  "color": "#b388ff",
+  "disposition": "hostile",
+  "attributes": {
+   "BOD": 3,
+   "AGI": 4,
+   "REA": 4,
+   "STR": 2,
+   "WIL": 4,
+   "LOG": 6,
+   "INT": 5,
+   "CHA": 4,
+   "EDG": 3,
+   "ESS": 5.7
+  },
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "hacking",
+    "name": "Hacking",
+    "attr": "LOG",
+    "rating": 6,
+    "group": "cracking"
+   },
+   {
+    "id": "cybercombat",
+    "name": "Cybercombat",
+    "attr": "LOG",
+    "rating": 6,
+    "group": "cracking"
+   },
+   {
+    "id": "computer",
+    "name": "Informatique",
+    "attr": "LOG",
+    "rating": 5,
+    "group": "electronics"
+   },
+   {
+    "id": "electronic_warfare",
+    "name": "Guerre électronique",
+    "attr": "LOG",
+    "rating": 5,
+    "group": "cracking"
+   },
+   {
+    "id": "software",
+    "name": "Software",
+    "attr": "LOG",
+    "rating": 4,
+    "group": "electronics"
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 4
+   },
+   {
+    "id": "pistols",
+    "name": "Pistolets",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "firearms"
+   },
+   {
+    "id": "sneaking",
+    "name": "Furtivité",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "stealth"
+   }
+  ],
+  "knowledge": [
+   {
+    "id": "k36",
+    "name": "Sécurité Matrice",
+    "rating": 5,
+    "type": "professional"
+   },
+   {
+    "id": "k37",
+    "name": "Scène decker de Seattle",
+    "rating": 4,
+    "type": "street"
+   }
+  ],
+  "weapons": [
+   {
+    "id": "w38",
+    "kind": "ranged",
+    "name": "Colt America L36",
+    "category": "Pistolet léger",
+    "skill": "pistols",
+    "accuracy": 7,
+    "damage": "7P",
+    "ap": 0,
+    "mode": "SA",
+    "rc": 0,
+    "ammo": "11(c)",
+    "reach": 0
+   },
+   {
+    "id": "w39",
+    "kind": "melee",
+    "name": "Mains nues",
+    "category": "Mains nues",
+    "skill": "unarmed_combat",
+    "accuracy": null,
+    "damage": "(STR)S",
+    "ap": 0,
+    "reach": 0,
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "notes": "Précision = limite physique"
+   }
+  ],
+  "armor": [
+   {
+    "id": "a40",
+    "name": "Vêtements pare-balles",
+    "rating": 6,
+    "equipped": true
+   }
+  ],
+  "augmentations": [
+   {
+    "id": "x41",
+    "name": "Datajack",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 0.1
+   },
+   {
+    "id": "x42",
+    "name": "Cyberyeux 1",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 0.2,
+    "rating": 1
+   }
+  ],
+  "gear": [
+   {
+    "id": "g43",
+    "name": "Photo de Bricks marquée « à confirmer » (dossier du client)",
+    "category": "Divers",
+    "qty": 1
+   }
+  ],
+  "matrix": {
+   "device": "Renraku Tsurugi",
+   "rating": 4,
+   "attack": 7,
+   "sleaze": 6,
+   "dataProcessing": 5,
+   "firewall": 4,
+   "programs": [
+    "Armure",
+    "Biofeedback",
+    "Exploit",
+    "Fourche",
+    "Marteau",
+    "Verrouillage",
+    "Furtivité",
+    "Boîte à outils"
+   ]
+  },
+  "vision": {
+   "lowLight": true
+  },
+  "description": "Elfe, 27 ans. Rapide, arrogante, curieuse. A vu dans le dossier du client une photo de Windows (2074)… et une de **Bricks**, marquée « à confirmer » : AG Chemie soupçonne fortement que Bricks est vivante. Elle veut savoir qui est cette « morte » qui hacke si bien.\n\n- **Limites** : Physique 4 · Mentale 7 · Sociale 6.\n- **Initiative** : 9 + 1D6 (physique) · VR chaude 10 + 4D6. Moniteur Matrice 10.\n- **Perception matricielle** : 11 dés (repère Bricks si elle utilise la Matrice pendant la course → position donnée au Passeur).\n- **Filature** : Guerre électronique + LOG [Capteurs] seuil 3 pour isoler sa signature, puis Pister.",
+  "npc": {
+   "professionalRating": 4,
+   "grunt": false,
+   "kind": "metahuman",
+   "initMode": "hot",
+   "tactics": "- Reste dans la camionnette en VR chaude ; coupe les drones de Windows (Doberman) et les caméras de la laverie.\n- Cible les decks adverses au Marteau / Verrouillage ; préfère humilier Bricks que la tuer.\n- Si on lui parle de Bricks : curiosité professionnelle, peut lâcher l'info de la photo.",
+   "loot": "Deck Renraku Tsurugi (bonne revente), Colt America L36."
+  },
+  "qualities": [],
+  "powers": [],
+  "spells": [],
+  "vehicles": [],
+  "augmented": {},
+  "type": "npc",
+  "portrait": ""
+ },
+ {
+  "id": "tpl_rempart_troll",
+  "name": "« Rempart »",
+  "folder": "Équipe du Passeur",
+  "metatype": "Troll",
+  "gender": "Homme",
+  "concept": "Armes lourdes et chauffeur de l'équipe du Passeur",
+  "color": "#8d6e63",
+  "disposition": "hostile",
+  "attributes": {
+   "BOD": 9,
+   "AGI": 4,
+   "REA": 4,
+   "STR": 9,
+   "WIL": 4,
+   "LOG": 2,
+   "INT": 3,
+   "CHA": 2,
+   "EDG": 2,
+   "ESS": 3.5
+  },
+  "augmented": {
+   "REA": 1
+  },
+  "initiative": {
+   "dice": 2,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "clubs",
+    "name": "Armes contondantes",
+    "attr": "AGI",
+    "rating": 5,
+    "group": "close_combat"
+   },
+   {
+    "id": "heavy_weapons",
+    "name": "Armes lourdes",
+    "attr": "AGI",
+    "rating": 5
+   },
+   {
+    "id": "unarmed_combat",
+    "name": "Combat à mains nues",
+    "attr": "AGI",
+    "rating": 5,
+    "group": "close_combat"
+   },
+   {
+    "id": "automatics",
+    "name": "Armes automatiques",
+    "attr": "AGI",
+    "rating": 4,
+    "group": "firearms"
+   },
+   {
+    "id": "intimidation",
+    "name": "Intimidation",
+    "attr": "CHA",
+    "rating": 4
+   },
+   {
+    "id": "pilot_ground_craft",
+    "name": "Pilotage (véhicules terrestres)",
+    "attr": "REA",
+    "rating": 4
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 3
+   },
+   {
+    "id": "running",
+    "name": "Course",
+    "attr": "STR",
+    "rating": 3,
+    "group": "athletics"
+   }
+  ],
+  "qualities": [
+   {
+    "id": "q44",
+    "name": "Loyal au Passeur",
+    "karma": 0,
+    "positive": true,
+    "notes": "Ne s'en prend pas aux civils sans ordre direct — et le dira avec une arme pointée."
+   }
+  ],
+  "weapons": [
+   {
+    "id": "w45",
+    "kind": "ranged",
+    "name": "Stoner-Ares M202 (smartlink)",
+    "category": "Mitrailleuse moyenne",
+    "skill": "heavy_weapons",
+    "accuracy": 5,
+    "damage": "10P",
+    "ap": -3,
+    "mode": "TA",
+    "rc": 0,
+    "ammo": "ceinture 100",
+    "reach": 0
+   },
+   {
+    "id": "w46",
+    "kind": "melee",
+    "name": "Bâton télescopique",
+    "category": "Contondante",
+    "skill": "clubs",
+    "accuracy": 4,
+    "damage": "(STR+2)P",
+    "ap": 0,
+    "reach": 2,
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "notes": "Fiche MJ : 10P."
+   },
+   {
+    "id": "w47",
+    "kind": "ranged",
+    "name": "Remington Roomsweeper (fléchettes)",
+    "category": "Pistolet lourd",
+    "skill": "pistols",
+    "accuracy": 4,
+    "damage": "9P(f)",
+    "ap": 5,
+    "mode": "SA",
+    "rc": 0,
+    "ammo": "8(m)",
+    "reach": 0,
+    "notes": "Munitions fléchettes."
+   },
+   {
+    "id": "w48",
+    "kind": "melee",
+    "name": "Mains nues",
+    "category": "Mains nues",
+    "skill": "unarmed_combat",
+    "accuracy": null,
+    "damage": "(STR)S",
+    "ap": 0,
+    "reach": 0,
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "notes": "Précision = limite physique"
+   }
+  ],
+  "armor": [
+   {
+    "id": "a49",
+    "name": "Armure intégrale + casque",
+    "rating": 18,
+    "equipped": true
+   },
+   {
+    "id": "a50",
+    "name": "Dépôts dermiques (troll)",
+    "rating": 1,
+    "equipped": true,
+    "stack": true,
+    "notes": "Trait métatype"
+   }
+  ],
+  "augmentations": [
+   {
+    "id": "x51",
+    "name": "Réflexes câblés 1",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 2,
+    "rating": 1,
+    "notes": "+1 RÉA, +1D6 initiative"
+   },
+   {
+    "id": "x52",
+    "name": "Smartlink",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 0.2
+   },
+   {
+    "id": "x53",
+    "name": "Cyberware divers (épaules renforcées)",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 0.3
+   }
+  ],
+  "vehicles": [
+   {
+    "id": "v54",
+    "name": "GMC Bulldog (fourgon gris, plaques de Tacoma)",
+    "handling": "3/3",
+    "speed": 3,
+    "accel": 1,
+    "body": 16,
+    "armor": 8,
+    "pilot": 1,
+    "sensor": 2,
+    "seats": 6,
+    "notes": "Camionnette de l'équipe."
+   }
+  ],
+  "vision": {
+   "thermo": true
+  },
+  "description": "Troll, 30 ans. Calme, lent à parler, très loyal envers le Passeur. Conduit la camionnette GMC Bulldog grise de l'équipe.\n\n- **Limites** : Physique 11 · Mentale 4 · Sociale 4. **Initiative** 8 + 2D6. **Armure 19**.\n- **Réserves** : M202 9 dés, masse 9 dés (Allonge 2), Intimidation 6.\n\nComplication possible : menace **Mama Tusker** à Fruitland — l'occasion pour Anthony de se montrer pire ou meilleur qu'il n'est.",
+  "npc": {
+   "professionalRating": 4,
+   "grunt": false,
+   "kind": "metahuman",
+   "tactics": "- Tient le goulot (porte, allée) et arrose en tir automatique pour fixer le groupe.\n- Au contact : masse télescopique (Allonge 2) pour repousser le samouraï.\n- Couvre la retraite du Passeur ; ne frappe pas les civils sans ordre.",
+   "loot": "Stoner-Ares M202, armure intégrale (bonne revente), Roomsweeper, la camionnette."
+  },
+  "knowledge": [],
+  "powers": [],
+  "spells": [],
+  "gear": [],
+  "type": "npc",
+  "portrait": ""
+ },
+ {
+  "id": "tpl_margaux_la_pie",
+  "name": "Margaux « La Pie » Hale",
+  "folder": "Project Lazarus — Acte 2",
+  "metatype": "Humain",
+  "gender": "Femme",
+  "concept": "Arnaqueuse devenue RP événementielle (Fondation Halcyon)",
+  "color": "#43a047",
+  "disposition": "neutral",
+  "attributes": {
+   "BOD": 2,
+   "AGI": 4,
+   "REA": 4,
+   "STR": 2,
+   "WIL": 5,
+   "LOG": 4,
+   "INT": 5,
+   "CHA": 6,
+   "EDG": 4,
+   "ESS": 5.6
+  },
+  "augmented": {
+   "CHA": 2
+  },
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "con",
+    "name": "Escroquerie",
+    "attr": "CHA",
+    "rating": 6,
+    "spec": "Baratin",
+    "group": "acting"
+   },
+   {
+    "id": "etiquette",
+    "name": "Étiquette",
+    "attr": "CHA",
+    "rating": 5,
+    "spec": "Corporatiste",
+    "group": "influence"
+   },
+   {
+    "id": "impersonation",
+    "name": "Imposture",
+    "attr": "CHA",
+    "rating": 5,
+    "group": "acting"
+   },
+   {
+    "id": "negotiation",
+    "name": "Négociation",
+    "attr": "CHA",
+    "rating": 5,
+    "group": "influence"
+   },
+   {
+    "id": "palming",
+    "name": "Escamotage",
+    "attr": "AGI",
+    "rating": 5,
+    "group": "stealth"
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 5
+   },
+   {
+    "id": "disguise",
+    "name": "Déguisement",
+    "attr": "INT",
+    "rating": 4,
+    "group": "stealth"
+   },
+   {
+    "id": "forgery",
+    "name": "Contrefaçon",
+    "attr": "LOG",
+    "rating": 4
+   },
+   {
+    "id": "performance",
+    "name": "Représentation",
+    "attr": "CHA",
+    "rating": 4,
+    "group": "acting"
+   },
+   {
+    "id": "pistols",
+    "name": "Pistolets",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "firearms"
+   },
+   {
+    "id": "sneaking",
+    "name": "Furtivité",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "stealth"
+   }
+  ],
+  "knowledge": [
+   {
+    "id": "k55",
+    "name": "Événementiel corporatiste",
+    "rating": 5,
+    "type": "professional"
+   },
+   {
+    "id": "k56",
+    "name": "Haute société de Seattle",
+    "rating": 5,
+    "type": "street"
+   },
+   {
+    "id": "k57",
+    "name": "Arnaques",
+    "rating": 6,
+    "type": "street"
+   }
+  ],
+  "qualities": [
+   {
+    "id": "q58",
+    "name": "Dette envers Dorian Ashe (80 000¥)",
+    "karma": 0,
+    "positive": false,
+    "notes": "Ashe l'a fait sortir de prison plus tôt et lui a donné ce travail."
+   },
+   {
+    "id": "q59",
+    "name": "Rancune (Jane)",
+    "karma": 0,
+    "positive": false,
+    "notes": "Vingt-deux mois de prison Lone Star après l'arnaque de Laurelhurst."
+   }
+  ],
+  "weapons": [
+   {
+    "id": "w60",
+    "kind": "ranged",
+    "name": "Streetline Special",
+    "category": "Pistolet de poche",
+    "skill": "pistols",
+    "accuracy": 4,
+    "damage": "6P",
+    "ap": 0,
+    "mode": "SA",
+    "rc": 0,
+    "ammo": "6(c)",
+    "reach": 0,
+    "notes": "Dans un porte-jarretelles."
+   },
+   {
+    "id": "w61",
+    "kind": "melee",
+    "name": "Mains nues",
+    "category": "Mains nues",
+    "skill": "unarmed_combat",
+    "accuracy": null,
+    "damage": "(STR)S",
+    "ap": 0,
+    "reach": 0,
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "notes": "Précision = limite physique"
+   }
+  ],
+  "armor": [
+   {
+    "id": "a62",
+    "name": "Robe de soirée blindée",
+    "rating": 6,
+    "equipped": true
+   }
+  ],
+  "augmentations": [
+   {
+    "id": "x63",
+    "name": "Phéromones sur mesure 2",
+    "kind": "bioware",
+    "grade": "standard",
+    "essence": 0.4,
+    "rating": 2,
+    "notes": "+2 CHA (tests sociaux)"
+   }
+  ],
+  "gear": [
+   {
+    "id": "g64",
+    "name": "Commlink Transys Avalon (indice 6)",
+    "category": "Équipement",
+    "qty": 1,
+    "rating": 6
+   },
+   {
+    "id": "g65",
+    "name": "Le « dossier Starling »",
+    "category": "Divers",
+    "qty": 1,
+    "notes": "Vrai nom de Jane, enregistrement audio, photo d'identité judiciaire. Interrupteur d'homme mort de 48 h vers Knight Errant et Ashe. Serveur dans son appartement de Capitol Hill (host personnel indice 3)."
+   },
+   {
+    "id": "g66",
+    "name": "Badge et codes du personnel du gala",
+    "category": "Divers",
+    "qty": 1
+   }
+  ],
+  "description": "Humaine, 31 ans. Ancienne complice de Jane (l'arnaque de **Laurelhurst** contre un cadre de Horizon, il y a six ans) ; elle a pris vingt-deux mois. Aujourd'hui chargée de relations publiques de la **Fondation Halcyon** : c'est elle qui organise le gala.\n\n- **Limites** : Physique 4 · Mentale 6 · **Sociale 9**. Initiative 9 + 1D6.\n- **Réserves** : Con 14 (+2 Baratin), Étiquette 13 (+2 Corporatiste), VOL + CHA pour résister : **11 dés** (avec phéromones).\n- **Exige** une copie de la **liste des clients VIP** de Halcyon. Sinon : « la dame en gris » (Reyes, si Horloge ≥ 4 ; sinon elle bluffe).\n\n**Qui a trahi qui ?** À trancher avec le joueur de Jane (version Margaux : Jane est partie avec l'argent ; version possible : Margaux l'avait déjà vendue à Lone Star). Élégante, drôle, blessée — une ennemie parfaite, une alliée possible, jamais une amie.",
+  "npc": {
+   "professionalRating": 2,
+   "grunt": false,
+   "kind": "metahuman",
+   "tactics": "- Ne se bat pas : elle frappe avec des mots et des fichiers. Choisit le pire moment (juste avant la suite, ou au milieu d'une conversation avec Kessler).\n- **Retournable** : Négociation vs 11 dés, +2 si Jane règle sa dette envers Ashe, +2 si Jane avoue sa version **en jeu**.\n- Doublée (fausse liste, Contrefaçon seuil 4) : s'en rend compte au bout d'une semaine.\n- Laissée en ennemie : vend l'adresse de Jane à Nachtigall pendant Burn Notice (+2 Initiative à Brandauer au premier tour).\n- Tuée au gala : Horloge +2, enquête KE, Notoriété +1 pour Jane ; le dossier Starling part 48 h après.",
+   "loot": "Commlink Transys Avalon (agenda du gala, codes du personnel), Streetline Special."
+  },
+  "powers": [],
+  "spells": [],
+  "vehicles": [],
+  "vision": {},
+  "type": "npc",
+  "portrait": ""
+ },
+ {
+  "id": "tpl_cornelius_wyatt_brandt",
+  "name": "Cornelius Wyatt-Brandt",
+  "folder": "Project Lazarus — Acte 2",
+  "metatype": "Humain",
+  "gender": "Homme",
+  "concept": "PDG de Stern Pacific Biosciences, hôte du gala Halcyon",
+  "color": "#cfd8dc",
+  "disposition": "neutral",
+  "attributes": {
+   "BOD": 3,
+   "AGI": 3,
+   "REA": 3,
+   "STR": 3,
+   "WIL": 5,
+   "LOG": 5,
+   "INT": 4,
+   "CHA": 6,
+   "EDG": 3,
+   "ESS": 5.8
+  },
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "etiquette",
+    "name": "Étiquette",
+    "attr": "CHA",
+    "rating": 6,
+    "spec": "Corporatiste",
+    "group": "influence"
+   },
+   {
+    "id": "negotiation",
+    "name": "Négociation",
+    "attr": "CHA",
+    "rating": 6,
+    "group": "influence"
+   },
+   {
+    "id": "leadership",
+    "name": "Leadership",
+    "attr": "CHA",
+    "rating": 5,
+    "group": "influence"
+   },
+   {
+    "id": "con",
+    "name": "Escroquerie",
+    "attr": "CHA",
+    "rating": 4,
+    "group": "acting"
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 3
+   },
+   {
+    "id": "pistols",
+    "name": "Pistolets",
+    "attr": "AGI",
+    "rating": 1,
+    "group": "firearms"
+   }
+  ],
+  "knowledge": [
+   {
+    "id": "k67",
+    "name": "Gestion d'entreprise",
+    "rating": 6,
+    "type": "professional"
+   },
+   {
+    "id": "k68",
+    "name": "Industrie biotech",
+    "rating": 5,
+    "type": "professional"
+   },
+   {
+    "id": "k69",
+    "name": "Haute société de Seattle",
+    "rating": 5,
+    "type": "street"
+   }
+  ],
+  "qualities": [
+   {
+    "id": "q70",
+    "name": "Client Halcyon (protocole partiel)",
+    "karma": 0,
+    "positive": false,
+    "notes": "63 ans, en paraît 45. Dépend d'injections régulières."
+   }
+  ],
+  "weapons": [],
+  "armor": [
+   {
+    "id": "a71",
+    "name": "Costume Mortimer of London « Berwick »",
+    "rating": 9,
+    "equipped": true
+   }
+  ],
+  "gear": [
+   {
+    "id": "g72",
+    "name": "Commlink haut de gamme (maître du PAN privé, indice 6)",
+    "category": "Équipement",
+    "qty": 1,
+    "rating": 6,
+    "notes": "PAN de la suite privée : Firewall 8, esclaves = coffre numérique + terminal du bureau. Accessible à 30 m."
+   },
+   {
+    "id": "g73",
+    "name": "SIN corporatiste (légitime)",
+    "category": "SIN",
+    "qty": 1
+   }
+  ],
+  "description": "Humain, 63 ans (en paraît 45 : client Halcyon, **protocole partiel**). PDG de **Stern Pacific Biosciences**, filiale seattloise d'AG Chemie. Hôte du Gala de printemps (discours à 21 h 30, monte dans la suite privée à 22 h 30 avec trois invités).\n\n- **Limites** : Physique 4 · Mentale 6 · Sociale 8. Initiative 7 + 1D6.\n- **Escorte** : 2 *Gardes du corps d'élite R5*.\n- **Conversation** : Étiquette seuil 3 ; à 3 succès, « nos partenaires de recherche qui préfèrent l'ombre — notre **Jardinier** ». Jane invitée dans la suite à 3 succès nets d'Étiquette cumulés sur la soirée.\n\nConnaît le nom du Dr. **Ansgar Wendt** sans l'avoir vu en public ; signe les budgets ; refuse de savoir d'où viennent les « matériaux biologiques ».",
+  "npc": {
+   "professionalRating": 1,
+   "grunt": false,
+   "kind": "metahuman",
+   "tactics": "- Ne se bat jamais : ses gardes du corps l'évacuent par l'ascenseur privé de la suite.\n- Lâche quand il a peur, utile quand il est acculé : signe n'importe quoi pour ne pas apparaître dans un exposé public.\n- Canal possible vers Francfort (fin « Silence doré »)."
+  },
+  "powers": [],
+  "spells": [],
+  "augmentations": [],
+  "vehicles": [],
+  "augmented": {},
+  "vision": {},
+  "type": "npc",
+  "portrait": ""
+ },
+ {
+  "id": "tpl_harlan_kessler",
+  "name": "Harlan Kessler",
+  "folder": "Project Lazarus — Acte 2",
+  "metatype": "Humain",
+  "gender": "Homme",
+  "concept": "Ex-capitaine des Affaires internes KE, consultant sécurité",
+  "color": "#90a4ae",
+  "disposition": "neutral",
+  "attributes": {
+   "BOD": 4,
+   "AGI": 3,
+   "REA": 3,
+   "STR": 3,
+   "WIL": 4,
+   "LOG": 4,
+   "INT": 4,
+   "CHA": 4,
+   "EDG": 2,
+   "ESS": 5.4
+  },
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "intimidation",
+    "name": "Intimidation",
+    "attr": "CHA",
+    "rating": 5
+   },
+   {
+    "id": "etiquette",
+    "name": "Étiquette",
+    "attr": "CHA",
+    "rating": 4,
+    "spec": "Forces de l’ordre",
+    "group": "influence"
+   },
+   {
+    "id": "leadership",
+    "name": "Leadership",
+    "attr": "CHA",
+    "rating": 4,
+    "group": "influence"
+   },
+   {
+    "id": "negotiation",
+    "name": "Négociation",
+    "attr": "CHA",
+    "rating": 4,
+    "group": "influence"
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 4
+   },
+   {
+    "id": "pistols",
+    "name": "Pistolets",
+    "attr": "AGI",
+    "rating": 4,
+    "group": "firearms"
+   },
+   {
+    "id": "computer",
+    "name": "Informatique",
+    "attr": "LOG",
+    "rating": 2,
+    "group": "electronics"
+   }
+  ],
+  "knowledge": [
+   {
+    "id": "k74",
+    "name": "Procédures Knight Errant (Affaires internes)",
+    "rating": 6,
+    "type": "professional"
+   },
+   {
+    "id": "k75",
+    "name": "Sécurité événementielle",
+    "rating": 4,
+    "type": "professional"
+   }
+  ],
+  "qualities": [
+   {
+    "id": "q76",
+    "name": "Lâche",
+    "karma": 0,
+    "positive": false,
+    "notes": "Craque sous la peur. Boit trop au gala."
+   }
+  ],
+  "weapons": [
+   {
+    "id": "w77",
+    "kind": "ranged",
+    "name": "Ares Predator V (smartlink)",
+    "category": "Pistolet lourd",
+    "skill": "pistols",
+    "accuracy": 7,
+    "damage": "8P",
+    "ap": -1,
+    "mode": "SA",
+    "rc": 0,
+    "ammo": "15(c)",
+    "reach": 0
+   },
+   {
+    "id": "w78",
+    "kind": "melee",
+    "name": "Mains nues",
+    "category": "Mains nues",
+    "skill": "unarmed_combat",
+    "accuracy": null,
+    "damage": "(STR)S",
+    "ap": 0,
+    "reach": 0,
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "notes": "Précision = limite physique"
+   }
+  ],
+  "armor": [
+   {
+    "id": "a79",
+    "name": "Vêtements Actioneer",
+    "rating": 8,
+    "equipped": true
+   }
+  ],
+  "augmentations": [
+   {
+    "id": "x80",
+    "name": "Cyberyeux 3",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 0.4,
+    "rating": 3
+   },
+   {
+    "id": "x81",
+    "name": "Genou cybernétique",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 0.2
+   }
+  ],
+  "gear": [
+   {
+    "id": "g82",
+    "name": "« Assurance-vie » : dossier 0419 non expurgé + enregistrement de l'appel",
+    "category": "Divers",
+    "qty": 1,
+    "notes": "Dans le coffre mural (indice 5, derrière un tableau de phare) de sa maison d'Alki Point."
+   },
+   {
+    "id": "g83",
+    "name": "Commlink (indice 4)",
+    "category": "Équipement",
+    "qty": 1,
+    "rating": 4
+   }
+  ],
+  "description": "Humain, 61 ans. Ex-capitaine des Affaires internes de Knight Errant : c'est lui qui a **ouvert puis classé le dossier KE-SEA/AI-2074-0419** contre 120 000¥ (puis 3 000¥/mois via Kessler Integrity Consulting). Consultant sécurité du gala Halcyon (6 *Sécurité corporatiste R4* en civil sous ses ordres).\n\n- **Limites** : Physique 4 · Mentale 5 · Sociale 5. Initiative 7 + 1D6.\n- **Escorte** : 1 *Garde du corps d'élite R5* (dort chez lui depuis le gala).\n- **Résiste** à l'Intimidation avec VOL + CHA = 8 dés.\n\n**Ce qu'il lâche** : « Demandez à Reyes. **Val Reyes**. Elle était dans l'équipe, en 74. » et l'existence de son **assurance** (map_maison_kessler). Témoin-clé pour l'Acte 3 s'il survit ; abattu par le tireur de Nachtigall s'il va chercher la protection de KE.",
+  "npc": {
+   "professionalRating": 2,
+   "grunt": false,
+   "kind": "metahuman",
+   "tactics": "- **La peur** : numéro 0419 glissé à l'oreille, Intimidation vs 8 dés → s'isole sur la terrasse ; 2e succès, il parle (Horloge +1 : il appelle quelqu'un en panique).\n- **Alcool et flatterie** : Con seuil 4 étendu (une tranche de 30 min par jet) → le Jardinier, l'assurance ; pas d'Horloge.\n- **Chantage écrit** : registre des honoraires envoyé pendant le discours → il vient chercher l'expéditeur dans un couloir de service.\n- En combat : se cache derrière son garde du corps et appelle Reyes.",
+   "loot": "Commlink (contacts Stern Pacific), Predator V, clés et code du portail d'Alki Point."
+  },
+  "powers": [],
+  "spells": [],
+  "vehicles": [],
+  "augmented": {},
+  "vision": {},
+  "type": "npc",
+  "portrait": ""
+ },
+ {
+  "id": "tpl_saori_tanabe",
+  "name": "Saori Tanabe",
+  "folder": "Project Lazarus — Acte 2",
+  "metatype": "Humain",
+  "gender": "Femme",
+  "concept": "Mme Johnson de Monobe International (Affaires spéciales)",
+  "color": "#ef5350",
+  "disposition": "neutral",
+  "attributes": {
+   "BOD": 3,
+   "AGI": 3,
+   "REA": 4,
+   "STR": 2,
+   "WIL": 6,
+   "LOG": 5,
+   "INT": 5,
+   "CHA": 5,
+   "EDG": 3,
+   "ESS": 5.1
+  },
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "etiquette",
+    "name": "Étiquette",
+    "attr": "CHA",
+    "rating": 6,
+    "spec": "Corporatiste",
+    "group": "influence"
+   },
+   {
+    "id": "negotiation",
+    "name": "Négociation",
+    "attr": "CHA",
+    "rating": 6,
+    "group": "influence"
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 5
+   },
+   {
+    "id": "con",
+    "name": "Escroquerie",
+    "attr": "CHA",
+    "rating": 4,
+    "group": "acting"
+   },
+   {
+    "id": "leadership",
+    "name": "Leadership",
+    "attr": "CHA",
+    "rating": 4,
+    "group": "influence"
+   },
+   {
+    "id": "intimidation",
+    "name": "Intimidation",
+    "attr": "CHA",
+    "rating": 3
+   },
+   {
+    "id": "pistols",
+    "name": "Pistolets",
+    "attr": "AGI",
+    "rating": 2,
+    "group": "firearms"
+   }
+  ],
+  "knowledge": [
+   {
+    "id": "k84",
+    "name": "Monobe International",
+    "rating": 6,
+    "type": "professional"
+   },
+   {
+    "id": "k85",
+    "name": "Politique corporatiste",
+    "rating": 5,
+    "type": "professional"
+   },
+   {
+    "id": "k86",
+    "name": "Ombres de Seattle",
+    "rating": 4,
+    "type": "street"
+   }
+  ],
+  "weapons": [],
+  "armor": [
+   {
+    "id": "a87",
+    "name": "Tailleur Mortimer of London",
+    "rating": 9,
+    "equipped": true
+   }
+  ],
+  "augmentations": [
+   {
+    "id": "x88",
+    "name": "Datajack",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 0.1
+   },
+   {
+    "id": "x89",
+    "name": "Cyberyeux 2 (avec options)",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 0.6,
+    "rating": 2
+   },
+   {
+    "id": "x90",
+    "name": "Booster cérébral 1",
+    "kind": "bioware",
+    "grade": "standard",
+    "essence": 0.2,
+    "rating": 1
+   }
+  ],
+  "gear": [
+   {
+    "id": "g91",
+    "name": "Commlink sécurisé Monobe (indice 6)",
+    "category": "Équipement",
+    "qty": 1,
+    "rating": 6
+   },
+   {
+    "id": "g92",
+    "name": "Invitations au gala Halcyon",
+    "category": "Divers",
+    "qty": 2
+   }
+  ],
+  "description": "Humaine, 44 ans. « Mme Johnson » de **Monobe International** à Seattle (Affaires spéciales). Monobe veut savoir exactement ce qu'AG Chemie faisait dans son hôpital (Grogg) — et récupérer le résultat.\n\n- **Limites** : Physique 4 · Mentale 6 · Sociale 7. Initiative 9 + 1D6.\n- **Escorte** : 2 *Gardes du corps d'élite R5*.\n- **Offres** : The Guest List 12 000¥/runner (+5 000¥ pour la liste VIP) ; Lazarus Cell 15 000¥/runner pour les données (+20 000¥ pour Dufresne) ; Burn Notice : planque à Bellevue contre une copie de tout ; Acte 3 : 120 000¥+ pour le programme.\n\nPolie, précise, jamais pressée. Elle paie bien, et elle n'oublie rien (si le groupe garde la liste VIP pour lui, elle le saura un jour). Contact possible : C5, L1.",
+  "npc": {
+   "professionalRating": 3,
+   "grunt": false,
+   "kind": "metahuman",
+   "tactics": "- Ne se montre jamais en combat ; ne reconnaît pas le groupe en public.\n- Négocie froidement (Négociation 11 dés, +2 Corporatiste en Étiquette) et ne paie qu'à la livraison.\n- Position finale selon la fin : satisfaite, méfiante, opportuniste, patronne ou ennemie froide."
+  },
+  "qualities": [],
+  "powers": [],
+  "spells": [],
+  "vehicles": [],
+  "augmented": {},
+  "vision": {},
+  "type": "npc",
+  "portrait": ""
+ },
+ {
+  "id": "tpl_edith_calloway",
+  "name": "Edith Calloway",
+  "folder": "Project Lazarus — Acte 2",
+  "metatype": "Humain",
+  "gender": "Femme",
+  "concept": "Conseillère municipale, cliente du protocole complet",
+  "color": "#f48fb1",
+  "disposition": "neutral",
+  "attributes": {
+   "BOD": 3,
+   "AGI": 3,
+   "REA": 3,
+   "STR": 2,
+   "WIL": 5,
+   "LOG": 4,
+   "INT": 4,
+   "CHA": 5,
+   "EDG": 2,
+   "ESS": 6
+  },
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "etiquette",
+    "name": "Étiquette",
+    "attr": "CHA",
+    "rating": 5,
+    "group": "influence"
+   },
+   {
+    "id": "negotiation",
+    "name": "Négociation",
+    "attr": "CHA",
+    "rating": 5,
+    "group": "influence"
+   },
+   {
+    "id": "leadership",
+    "name": "Leadership",
+    "attr": "CHA",
+    "rating": 4,
+    "group": "influence"
+   }
+  ],
+  "knowledge": [
+   {
+    "id": "k93",
+    "name": "Politique municipale de Seattle",
+    "rating": 6,
+    "type": "professional"
+   },
+   {
+    "id": "k94",
+    "name": "Haute société de Seattle",
+    "rating": 4,
+    "type": "street"
+   }
+  ],
+  "qualities": [
+   {
+    "id": "q95",
+    "name": "Cliente Halcyon (protocole complet)",
+    "karma": 0,
+    "positive": false,
+    "notes": "Injection mensuelle au niveau -1 de la clinique ; sans elle, « ça revient »."
+   }
+  ],
+  "weapons": [],
+  "armor": [],
+  "description": "Humaine, **88 ans** à l'état civil, en paraît 45 et danse toute la soirée. **Non-combattante.** Preuve vivante du « protocole complet ».\n\n- Parle volontiers de sa « renaissance » (Étiquette seuil 1). Avec Détecteur de mensonges, Jane sent sa peur.\n- **Ce qu'elle sait** : la clinique, l'injection mensuelle, une chambre blanche au premier sous-sol ; un jour, dans un couloir, « un jeune homme très grand, avec des yeux vides, qui portait un plateau » (Danny — ne le dites pas).\n- Témoin possible (fin « Lumière ») à condition de lui garantir ses injections. Sa recommandation peut ouvrir l'approche A de Severance.",
+  "npc": {
+   "professionalRating": 0,
+   "grunt": false,
+   "kind": "metahuman",
+   "tactics": "- Non-combattante : crie, se cache, appelle la sécurité.\n- Sa seule terreur : perdre ses injections."
+  },
+  "powers": [],
+  "spells": [],
+  "augmentations": [],
+  "gear": [],
+  "vehicles": [],
+  "augmented": {},
+  "vision": {},
+  "type": "npc",
+  "portrait": ""
+ },
+ {
+  "id": "tpl_scorch_delgado",
+  "name": "Tess « Scorch » Delgado",
+  "folder": "Project Lazarus — Acte 2",
+  "metatype": "Ork",
+  "gender": "Femme",
+  "concept": "Lieutenante de Crimson Crush",
+  "color": "#e53935",
+  "disposition": "neutral",
+  "attributes": {
+   "BOD": 6,
+   "AGI": 5,
+   "REA": 5,
+   "STR": 5,
+   "WIL": 4,
+   "LOG": 3,
+   "INT": 4,
+   "CHA": 4,
+   "EDG": 3,
+   "ESS": 4.8
+  },
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "pilot_ground_craft",
+    "name": "Pilotage (véhicules terrestres)",
+    "attr": "REA",
+    "rating": 5,
+    "spec": "Motos"
+   },
+   {
+    "id": "intimidation",
+    "name": "Intimidation",
+    "attr": "CHA",
+    "rating": 5
+   },
+   {
+    "id": "pistols",
+    "name": "Pistolets",
+    "attr": "AGI",
+    "rating": 5,
+    "group": "firearms"
+   },
+   {
+    "id": "automatics",
+    "name": "Armes automatiques",
+    "attr": "AGI",
+    "rating": 4,
+    "group": "firearms"
+   },
+   {
+    "id": "clubs",
+    "name": "Armes contondantes",
+    "attr": "AGI",
+    "rating": 4,
+    "group": "close_combat"
+   },
+   {
+    "id": "leadership",
+    "name": "Leadership",
+    "attr": "CHA",
+    "rating": 4,
+    "group": "influence"
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 4
+   },
+   {
+    "id": "unarmed_combat",
+    "name": "Combat à mains nues",
+    "attr": "AGI",
+    "rating": 4,
+    "group": "close_combat"
+   },
+   {
+    "id": "negotiation",
+    "name": "Négociation",
+    "attr": "CHA",
+    "rating": 3,
+    "group": "influence"
+   },
+   {
+    "id": "etiquette",
+    "name": "Étiquette",
+    "attr": "CHA",
+    "rating": 3,
+    "spec": "Gangs",
+    "group": "influence"
+   }
+  ],
+  "knowledge": [
+   {
+    "id": "k96",
+    "name": "Gangs des Redmond Barrens",
+    "rating": 5,
+    "type": "street"
+   },
+   {
+    "id": "k97",
+    "name": "Touristville",
+    "rating": 4,
+    "type": "street"
+   }
+  ],
+  "qualities": [
+   {
+    "id": "q98",
+    "name": "Frère disparu (Nico, donneur D-14)",
+    "karma": 0,
+    "positive": false,
+    "notes": "Le jour où elle le sait, Crimson Crush change de camp."
+   }
+  ],
+  "weapons": [
+   {
+    "id": "w99",
+    "kind": "ranged",
+    "name": "Ares Predator V (smartlink)",
+    "category": "Pistolet lourd",
+    "skill": "pistols",
+    "accuracy": 7,
+    "damage": "8P",
+    "ap": -1,
+    "mode": "SA",
+    "rc": 0,
+    "ammo": "15(c)",
+    "reach": 0
+   },
+   {
+    "id": "w100",
+    "kind": "ranged",
+    "name": "Uzi IV (visée laser)",
+    "category": "Mitraillette",
+    "skill": "automatics",
+    "accuracy": 5,
+    "damage": "7P",
+    "ap": 0,
+    "mode": "TR",
+    "rc": 0,
+    "ammo": "24(c)",
+    "reach": 0
+   },
+   {
+    "id": "w101",
+    "kind": "melee",
+    "name": "Chaîne de moto lestée",
+    "category": "Contondante",
+    "skill": "clubs",
+    "accuracy": 4,
+    "damage": "(STR+2)P",
+    "ap": 0,
+    "reach": 1,
+    "mode": "",
+    "rc": 0,
+    "ammo": ""
+   },
+   {
+    "id": "w102",
+    "kind": "melee",
+    "name": "Mains nues",
+    "category": "Mains nues",
+    "skill": "unarmed_combat",
+    "accuracy": null,
+    "damage": "(STR)S",
+    "ap": 0,
+    "reach": 0,
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "notes": "Précision = limite physique"
+   }
+  ],
+  "armor": [
+   {
+    "id": "a103",
+    "name": "Veste pare-balles aux couleurs du Crush",
+    "rating": 12,
+    "equipped": true
+   }
+  ],
+  "augmentations": [
+   {
+    "id": "x104",
+    "name": "Bras cybernétique gauche (apparent)",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 1
+   },
+   {
+    "id": "x105",
+    "name": "Smartlink",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 0.2
+   }
+  ],
+  "vehicles": [
+   {
+    "id": "v106",
+    "name": "Harley-Davidson Scorpion",
+    "handling": "4/3",
+    "speed": 4,
+    "accel": 2,
+    "body": 8,
+    "armor": 9,
+    "pilot": 1,
+    "sensor": 2
+   }
+  ],
+  "gear": [
+   {
+    "id": "g107",
+    "name": "Commlink (indice 3)",
+    "category": "Équipement",
+    "qty": 1,
+    "rating": 3
+   }
+  ],
+  "vision": {
+   "lowLight": true
+  },
+  "description": "Orque, 29 ans. Lieutenante de **Crimson Crush**, gère le contrat de gardiennage du **Site Glacier** ; ses hommes ont fourni la diversion du kidnapping de la femme secourue. QG : le **Rusty Piston** (Touristville).\n\n- **Limites** : Physique 7 · Mentale 5 · Sociale 6. Initiative 9 + 1D6.\n- **L'acheter** : 10 000¥, Négociation vs 7 dés → ses hommes regardent ailleurs **30 minutes**.\n- **Lui prouver que Nico est dans le lot D** (« D-14, Delgado N., 17 ans ») : elle ouvre la grille et lance une diversion ; Crush allié pour l'Acte 3.\n- **L'intimider** : vs 8 dés ; elle cède puis vend le groupe à Stadler (Horloge +1, sécurité en alerte).\n\nSait : les enlèvements de rue pour le lot D depuis deux ans (une trentaine), et le nom de celle qui paie : **Reyes**. Contact possible : C3, L2 si Nico est sauvé.",
+  "npc": {
+   "professionalRating": 3,
+   "grunt": false,
+   "kind": "metahuman",
+   "tactics": "- Commande depuis sa moto ; Uzi en rafale, chaîne au contact.\n- Ne meurt pas pour AG Chemie : décroche si le Crush perd la moitié de ses gars.\n- Alliée (Nico sauvé) : vingt motards en diversion sur l'entrée principale de Halcyon (Severance, approche D).",
+   "loot": "Predator V, Uzi IV, Harley-Davidson Scorpion."
+  },
+  "powers": [],
+  "spells": [],
+  "augmented": {},
+  "type": "npc",
+  "portrait": ""
+ },
+ {
+  "id": "tpl_dr_helene_dufresne",
+  "name": "Dr. Hélène Dufresne",
+  "folder": "Project Lazarus — Acte 2",
+  "metatype": "Humain",
+  "gender": "Femme",
+  "concept": "Directrice scientifique du Site Glacier, généticienne belge",
+  "color": "#80cbc4",
+  "disposition": "neutral",
+  "attributes": {
+   "BOD": 3,
+   "AGI": 3,
+   "REA": 3,
+   "STR": 2,
+   "WIL": 4,
+   "LOG": 7,
+   "INT": 5,
+   "CHA": 3,
+   "EDG": 2,
+   "ESS": 5.6
+  },
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "biotechnology",
+    "name": "Biotechnologie",
+    "attr": "LOG",
+    "rating": 6,
+    "spec": "Génie génétique",
+    "group": "biotech"
+   },
+   {
+    "id": "medicine",
+    "name": "Médecine",
+    "attr": "LOG",
+    "rating": 6,
+    "group": "biotech"
+   },
+   {
+    "id": "chemistry",
+    "name": "Chimie",
+    "attr": "LOG",
+    "rating": 5
+   },
+   {
+    "id": "computer",
+    "name": "Informatique",
+    "attr": "LOG",
+    "rating": 4,
+    "group": "electronics"
+   },
+   {
+    "id": "cybertechnology",
+    "name": "Cybertechnologie",
+    "attr": "LOG",
+    "rating": 4,
+    "group": "biotech"
+   },
+   {
+    "id": "etiquette",
+    "name": "Étiquette",
+    "attr": "CHA",
+    "rating": 3,
+    "group": "influence"
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 3
+   },
+   {
+    "id": "pistols",
+    "name": "Pistolets",
+    "attr": "AGI",
+    "rating": 1,
+    "group": "firearms"
+   }
+  ],
+  "knowledge": [
+   {
+    "id": "k108",
+    "name": "Génétique SURGE",
+    "rating": 7,
+    "type": "academic"
+   },
+   {
+    "id": "k109",
+    "name": "Protocole Lazarus",
+    "rating": 6,
+    "type": "professional"
+   },
+   {
+    "id": "k110",
+    "name": "Sous-sols de Halcyon (-1, -2)",
+    "rating": 3,
+    "type": "professional"
+   }
+  ],
+  "qualities": [
+   {
+    "id": "q111",
+    "name": "Culpabilité",
+    "karma": 0,
+    "positive": false,
+    "notes": "Elle a vu le lot D grandir. Une fille à Bruxelles."
+   }
+  ],
+  "weapons": [
+   {
+    "id": "w112",
+    "kind": "ranged",
+    "name": "Defiance Super Shock (taser)",
+    "category": "Taser",
+    "skill": "pistols",
+    "accuracy": 4,
+    "damage": "9S(e)",
+    "ap": -5,
+    "mode": "SA",
+    "rc": 0,
+    "ammo": "4(m)",
+    "reach": 0,
+    "notes": "Fiche MJ : 10S(e). Elle sait à peine s'en servir."
+   }
+  ],
+  "armor": [
+   {
+    "id": "a113",
+    "name": "Blouse de laboratoire (vêtements pare-balles)",
+    "rating": 6,
+    "equipped": true
+   }
+  ],
+  "augmentations": [
+   {
+    "id": "x114",
+    "name": "Datajack",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 0.1
+   },
+   {
+    "id": "x115",
+    "name": "Cyberyeux 1 (vision microscopique)",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 0.3,
+    "rating": 1
+   }
+  ],
+  "gear": [
+   {
+    "id": "g116",
+    "name": "Journal personnel chiffré (ho_journal_dufresne)",
+    "category": "Divers",
+    "qty": 1
+   },
+   {
+    "id": "g117",
+    "name": "Badge scientifique (accès jusqu'au -2 de Halcyon)",
+    "category": "Divers",
+    "qty": 1
+   }
+  ],
+  "description": "Humaine, 54 ans, Belge, généticienne. **Non-combattante.** Directrice scientifique du **Site Glacier** (Lazarus Cell) ; toujours là la nuit, dans le laboratoire en mezzanine.\n\n- **Limites** : Physique 3 · Mentale 8 · Sociale 5. Initiative 8 + 1D6.\n- **Retournable** : Négociation vs **7 dés**, **+3 dés** si le groupe lui garantit une sortie (Monobe ; Cabana pour 20 000¥).\n- **Ce qu'elle sait** : tout le protocole ; l'existence de **L-00** (elle soupçonne que c'est le Jardinier) ; le nom du Dr. **Ansgar Wendt** ; Halcyon (« Niveau -2, les sujets stabilisés. Niveau -3, je n'y suis jamais descendue ») ; **L-02** (« Wendt l'a gardé pour lui »). Connaît le code d'annulation du Protokoll Asche.\n\n« Dans dix ans, plus personne ne mourra de vieillesse. Le prix… le prix est obscène, je sais. » Témoin-clé de la fin « Lumière », défectrice possible, coupable quand même. Contact possible : C4, L1.",
+  "npc": {
+   "professionalRating": 1,
+   "grunt": false,
+   "kind": "metahuman",
+   "tactics": "- Ne se bat pas : protège ses données, plaide, négocie.\n- Sous la menace, tire au taser et rate.\n- Cible prioritaire de Reyes (preuve vivante).",
+   "loot": "Journal chiffré, badge scientifique, serveur local du laboratoire (à copier : 3 tours)."
+  },
+  "powers": [],
+  "spells": [],
+  "vehicles": [],
+  "augmented": {},
+  "vision": {},
+  "type": "npc",
+  "portrait": ""
+ },
+ {
+  "id": "tpl_jorg_stadler",
+  "name": "Hauptmann Jörg Stadler",
+  "folder": "Project Lazarus — Acte 2",
+  "metatype": "Humain",
+  "gender": "Homme",
+  "concept": "Chef de la sécurité AG Chemie du Site Glacier (ex-Werkschutz)",
+  "color": "#78909c",
+  "disposition": "hostile",
+  "attributes": {
+   "BOD": 6,
+   "AGI": 5,
+   "REA": 5,
+   "STR": 5,
+   "WIL": 5,
+   "LOG": 3,
+   "INT": 5,
+   "CHA": 3,
+   "EDG": 3,
+   "ESS": 3.1
+  },
+  "augmented": {
+   "REA": 1
+  },
+  "initiative": {
+   "dice": 2,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "automatics",
+    "name": "Armes automatiques",
+    "attr": "AGI",
+    "rating": 6,
+    "spec": "Mitraillettes",
+    "group": "firearms"
+   },
+   {
+    "id": "leadership",
+    "name": "Leadership",
+    "attr": "CHA",
+    "rating": 5,
+    "group": "influence"
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 5
+   },
+   {
+    "id": "pistols",
+    "name": "Pistolets",
+    "attr": "AGI",
+    "rating": 5,
+    "group": "firearms"
+   },
+   {
+    "id": "unarmed_combat",
+    "name": "Combat à mains nues",
+    "attr": "AGI",
+    "rating": 5,
+    "group": "close_combat"
+   },
+   {
+    "id": "intimidation",
+    "name": "Intimidation",
+    "attr": "CHA",
+    "rating": 4
+   },
+   {
+    "id": "throwing_weapons",
+    "name": "Armes de jet",
+    "attr": "AGI",
+    "rating": 4
+   },
+   {
+    "id": "first_aid",
+    "name": "Premiers soins",
+    "attr": "LOG",
+    "rating": 3,
+    "group": "biotech"
+   },
+   {
+    "id": "sneaking",
+    "name": "Furtivité",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "stealth"
+   }
+  ],
+  "knowledge": [
+   {
+    "id": "k118",
+    "name": "Protocoles de sécurité AG Chemie",
+    "rating": 6,
+    "type": "professional"
+   },
+   {
+    "id": "k119",
+    "name": "Sécurité de Halcyon",
+    "rating": 4,
+    "type": "professional"
+   }
+  ],
+  "weapons": [
+   {
+    "id": "w120",
+    "kind": "ranged",
+    "name": "HK-227 (silencieux, smartlink)",
+    "category": "Mitraillette",
+    "skill": "automatics",
+    "accuracy": 7,
+    "damage": "7P",
+    "ap": 0,
+    "mode": "SA/TR/TA",
+    "rc": 1,
+    "ammo": "28(c)",
+    "reach": 0,
+    "notes": "Silencieux intégré, crosse pliante (RC 1)."
+   },
+   {
+    "id": "w121",
+    "kind": "ranged",
+    "name": "Ares Predator V",
+    "category": "Pistolet lourd",
+    "skill": "pistols",
+    "accuracy": 5,
+    "damage": "8P",
+    "ap": -1,
+    "mode": "SA",
+    "rc": 0,
+    "ammo": "15(c)",
+    "reach": 0
+   },
+   {
+    "id": "w122",
+    "kind": "ranged",
+    "name": "Grenade flash-bang",
+    "category": "Grenade",
+    "skill": "throwing_weapons",
+    "accuracy": null,
+    "damage": "10S",
+    "ap": -4,
+    "mode": "CC",
+    "rc": 0,
+    "ammo": "2",
+    "reach": 0,
+    "notes": "Rayon 10 m. Lancer : Armes de jet + AGI [Physique]."
+   },
+   {
+    "id": "w123",
+    "kind": "ranged",
+    "name": "Grenade à fragmentation",
+    "category": "Grenade",
+    "skill": "throwing_weapons",
+    "accuracy": null,
+    "damage": "18P(f)",
+    "ap": 5,
+    "mode": "CC",
+    "rc": 0,
+    "ammo": "1",
+    "reach": 0,
+    "notes": "–1 VD par mètre."
+   },
+   {
+    "id": "w124",
+    "kind": "melee",
+    "name": "Mains nues",
+    "category": "Mains nues",
+    "skill": "unarmed_combat",
+    "accuracy": null,
+    "damage": "(STR)S",
+    "ap": 0,
+    "reach": 0,
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "notes": "Précision = limite physique"
+   }
+  ],
+  "armor": [
+   {
+    "id": "a125",
+    "name": "Veste pare-balles",
+    "rating": 12,
+    "equipped": true
+   },
+   {
+    "id": "a126",
+    "name": "Plaques dermiques 1",
+    "rating": 1,
+    "equipped": true,
+    "stack": true,
+    "notes": "Cyberware"
+   },
+   {
+    "id": "a127",
+    "name": "Casque (en alerte)",
+    "rating": 2,
+    "equipped": false,
+    "stack": true
+   }
+  ],
+  "augmentations": [
+   {
+    "id": "x128",
+    "name": "Réflexes câblés 1",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 2,
+    "rating": 1,
+    "notes": "+1 RÉA, +1D6 initiative"
+   },
+   {
+    "id": "x129",
+    "name": "Cyberyeux 3 (smartlink, thermographique, vision nocturne, antiflash)",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 0.4,
+    "rating": 3
+   },
+   {
+    "id": "x130",
+    "name": "Plaques dermiques 1",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 0.5,
+    "rating": 1
+   }
+  ],
+  "gear": [
+   {
+    "id": "g131",
+    "name": "Commlink tactique (indice 5)",
+    "category": "Équipement",
+    "qty": 1,
+    "rating": 5
+   },
+   {
+    "id": "g132",
+    "name": "Code de la valve de purge (salle des donneurs)",
+    "category": "Divers",
+    "qty": 1
+   }
+  ],
+  "vision": {
+   "lowLight": true,
+   "thermo": true
+  },
+  "description": "Humain, 47 ans. Ex-Werkschutz d'AG Chemie (unités d'intervention). Commande les **8 gardes AG Chemie** (*Sécurité corporatiste R4*) du Site Glacier.\n\n- **Limites** : Physique 8 · Mentale 6 · Sociale 5. **Initiative 11 + 2D6**. Armure 13 (15 casqué).\n- **Réserves** : HK-227 11 (+2 Mitraillettes), Leadership 8.\n- **À la première alerte** : 2 gardes à la salle des donneurs (purge : **6 tours** après l'ordre), 2 au Pavillon L (sédater et charger les sujets), 4 avec lui ; appelle **Reyes** (renforts en 20 min, Horloge +1).\n\nSoldat consciencieux, ni sadique ni scrupuleux : il exécutera la purge si on le lui ordonne. **Se rend** si la situation est clairement perdue et qu'on lui garantit la vie sauve — il connaît la sécurité de Halcyon (extraction vers l'Europe). Sa mort : Horloge +1 de plus.",
+  "npc": {
+   "professionalRating": 5,
+   "grunt": false,
+   "kind": "metahuman",
+   "tactics": "- Donne l'ordre de purge dès qu'il comprend que le site est perdu.\n- Flash-bang puis fragmentation dans les couloirs du Pavillon L ; tir en rafale depuis la passerelle.\n- Garde 4 hommes groupés pour la riposte ; ne poursuit pas hors du site.\n- Se rend contre la vie sauve ; parle sous contrainte ou contre une extraction.",
+   "loot": "HK-227, Predator V, grenades, commlink tactique (horaires des transferts)."
+  },
+  "qualities": [],
+  "powers": [],
+  "spells": [],
+  "vehicles": [],
+  "type": "npc",
+  "portrait": ""
+ },
+ {
+  "id": "tpl_sujet_l06_instable",
+  "name": "L-06 « le Résidu » (Ruth Abernathy)",
+  "folder": "Project Lazarus — Acte 2",
+  "metatype": "Humain",
+  "gender": "Femme",
+  "concept": "Sujet instable, échec du protocole Lazarus",
+  "color": "#c0ca33",
+  "disposition": "hostile",
+  "attributes": {
+   "BOD": 10,
+   "AGI": 4,
+   "REA": 5,
+   "STR": 9,
+   "WIL": 2,
+   "LOG": 1,
+   "INT": 3,
+   "CHA": 1,
+   "EDG": 1,
+   "ESS": 6
+  },
+  "initiative": {
+   "dice": 2,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "unarmed_combat",
+    "name": "Combat à mains nues",
+    "attr": "AGI",
+    "rating": 5,
+    "group": "close_combat"
+   },
+   {
+    "id": "running",
+    "name": "Course",
+    "attr": "STR",
+    "rating": 4,
+    "group": "athletics"
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 3
+   },
+   {
+    "id": "sneaking",
+    "name": "Furtivité",
+    "attr": "AGI",
+    "rating": 2,
+    "group": "stealth"
+   }
+  ],
+  "qualities": [
+   {
+    "id": "q133",
+    "name": "Régénération",
+    "karma": 0,
+    "positive": true,
+    "notes": "Récupère 1 case Physique au début de chaque tour de combat, sauf dégâts de feu ou d'acide."
+   },
+   {
+    "id": "q134",
+    "name": "Insensible à la douleur",
+    "karma": 0,
+    "positive": true,
+    "notes": "Ignore les modificateurs de blessure."
+   },
+   {
+    "id": "q135",
+    "name": "Photosensible",
+    "karma": 0,
+    "positive": false,
+    "notes": "–2 dés en lumière vive ; une flash-bang l'étourdit un tour complet sans test de résistance."
+   }
+  ],
+  "weapons": [
+   {
+    "id": "w136",
+    "kind": "melee",
+    "name": "Griffes et éperons osseux",
+    "category": "Arme naturelle",
+    "skill": "unarmed_combat",
+    "accuracy": 5,
+    "damage": "(STR+2)P",
+    "ap": -2,
+    "reach": 1,
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "notes": "Réserve 9 dés."
+   }
+  ],
+  "armor": [
+   {
+    "id": "a137",
+    "name": "Peau calcifiée",
+    "rating": 6,
+    "equipped": true
+   }
+  ],
+  "description": "Humaine altérée : **Ruth Abernathy**, 79 ans à l'état civil, ancienne institutrice de Tacoma. Échec du protocole Lazarus : régénération cellulaire incontrôlée, os saillants, peau calcifiée. Enfermée dans l'ancienne **citerne** du Site Glacier (porte d'acier en verrouillage électromagnétique **sans batterie de secours** : elle s'ouvre si la purge est déclenchée ou si le courant est coupé).\n\n- **Limites** : Physique 11 · Mentale 2 · Sociale 2. Initiative 8 + 2D6.\n- **Moniteurs** : Physique 13 / Étourdissant 9.\n- **L'appeler Ruth** doucement (le nom est dans son dossier) : elle s'arrête un tour (VOL + CHA seuil 2 pour celui qui parle).\n\nUne menace et une victime.",
+  "npc": {
+   "professionalRating": 2,
+   "grunt": false,
+   "kind": "metahuman",
+   "tactics": "- Fonce sur la source de bruit ou de lumière la plus proche ; frappe ce qui bouge.\n- Fuit la lumière vive ; se réfugie dans la salle d'embouteillage sombre.\n- Ne s'arrête que si on l'appelle par son nom, ou par le feu."
+  },
+  "knowledge": [],
+  "powers": [],
+  "spells": [],
+  "augmentations": [],
+  "gear": [],
+  "vehicles": [],
+  "augmented": {},
+  "vision": {},
+  "type": "npc",
+  "portrait": ""
+ },
+ {
+  "id": "tpl_sujet_lazarus",
+  "name": "Sujet Lazarus rajeuni (L-03, L-05, L-09, L-11)",
+  "folder": "Project Lazarus — Acte 2",
+  "metatype": "Humain",
+  "gender": "",
+  "concept": "Patient rajeuni dépendant, preuve vivante du programme",
+  "color": "#fff59d",
+  "disposition": "neutral",
+  "attributes": {
+   "BOD": 3,
+   "AGI": 3,
+   "REA": 3,
+   "STR": 2,
+   "WIL": 3,
+   "LOG": 3,
+   "INT": 3,
+   "CHA": 3,
+   "EDG": 1,
+   "ESS": 6
+  },
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [],
+  "qualities": [
+   {
+    "id": "q138",
+    "name": "Sous sédation légère",
+    "karma": 0,
+    "positive": false,
+    "notes": "–2 à tous les tests, mouvement réduit de moitié."
+   },
+   {
+    "id": "q139",
+    "name": "Dépendance Lazarus",
+    "karma": 0,
+    "positive": false,
+    "notes": "Sans injection depuis plus de 3 semaines : « régression » (vieillissement accéléré, douleurs, confusion). Sevrage possible en 6 mois avec Dufresne, les données et L-07."
+   }
+  ],
+  "weapons": [],
+  "armor": [],
+  "description": "Humains, **non-combattants**. Les quatre sujets du **Pavillon L** du Site Glacier (chambres vitrées 1 à 4, maglocks indice 4) :\n\n- **L-03 — Marguerite Dunleavy**, 74 ans (en paraît 40), ex-cadre de Horizon, cliente devenue sujet quand elle a voulu partir. A vu Danny : « Il s'appelle L-02, mais une fois, une infirmière l'a appelé Daniel, et il s'est retourné. »\n- **L-05 — Tomasz Wrona**, 81 ans (en paraît 35), ancien docker de Tacoma recruté dans un hospice.\n- **L-09 — Ada Fenwick**, 70 ans (en paraît 25).\n- **L-11 — Benedict Osei**, 77 ans (en paraît 50) : le protocole a « moins bien pris » ; refuse de partir, par peur de mourir sans injections.\n\nTous terrifiés. Des preuves vivantes, et des gens. Il faut un véhicule pour les évacuer (ambulance du parking, camionnette du Crush). Réutilisable pour les sujets stabilisés du -2 de Halcyon.",
+  "npc": {
+   "professionalRating": 0,
+   "grunt": true,
+   "kind": "metahuman",
+   "tactics": "- Ne se battent pas. Paniquent, se cachent, suivent qui leur parle calmement.\n- Cibles prioritaires de Reyes et de la purge."
+  },
+  "knowledge": [],
+  "powers": [],
+  "spells": [],
+  "augmentations": [],
+  "gear": [],
+  "vehicles": [],
+  "augmented": {},
+  "vision": {},
+  "type": "npc",
+  "portrait": ""
+ },
+ {
+  "id": "tpl_adachi_morinaga",
+  "name": "Adachi Morinaga",
+  "folder": "Project Lazarus — Acte 2",
+  "metatype": "Humain",
+  "gender": "Homme",
+  "concept": "Ancien maître de kenjutsu d'Anthony, adepte, liaison sécurité d'AG Chemie",
+  "color": "#ffd54f",
+  "disposition": "neutral",
+  "attributes": {
+   "BOD": 4,
+   "AGI": 7,
+   "REA": 6,
+   "STR": 4,
+   "WIL": 6,
+   "LOG": 4,
+   "INT": 6,
+   "CHA": 4,
+   "EDG": 4,
+   "MAG": 7,
+   "ESS": 6
+  },
+  "augmented": {
+   "REA": 2
+  },
+  "initiative": {
+   "dice": 3,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "blades",
+    "name": "Armes tranchantes",
+    "attr": "AGI",
+    "rating": 7,
+    "spec": "Katana",
+    "group": "close_combat",
+    "notes": "+2 Capacité améliorée : réserve 18 dés au katana."
+   },
+   {
+    "id": "gymnastics",
+    "name": "Gymnastique",
+    "attr": "AGI",
+    "rating": 6,
+    "group": "athletics"
+   },
+   {
+    "id": "instruction",
+    "name": "Enseignement",
+    "attr": "CHA",
+    "rating": 6
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 6
+   },
+   {
+    "id": "unarmed_combat",
+    "name": "Combat à mains nues",
+    "attr": "AGI",
+    "rating": 6,
+    "group": "close_combat"
+   },
+   {
+    "id": "sneaking",
+    "name": "Furtivité",
+    "attr": "AGI",
+    "rating": 5,
+    "group": "stealth"
+   },
+   {
+    "id": "assensing",
+    "name": "Observation astrale",
+    "attr": "INT",
+    "rating": 4
+   },
+   {
+    "id": "etiquette",
+    "name": "Étiquette",
+    "attr": "CHA",
+    "rating": 4,
+    "group": "influence"
+   },
+   {
+    "id": "intimidation",
+    "name": "Intimidation",
+    "attr": "CHA",
+    "rating": 4
+   },
+   {
+    "id": "arcana",
+    "name": "Arcanes",
+    "attr": "LOG",
+    "rating": 3
+   },
+   {
+    "id": "leadership",
+    "name": "Leadership",
+    "attr": "CHA",
+    "rating": 3,
+    "group": "influence"
+   },
+   {
+    "id": "throwing_weapons",
+    "name": "Armes de jet",
+    "attr": "AGI",
+    "rating": 3
+   }
+  ],
+  "knowledge": [
+   {
+    "id": "k140",
+    "name": "Kenjutsu (écoles et maîtres)",
+    "rating": 7,
+    "type": "academic"
+   },
+   {
+    "id": "k141",
+    "name": "Japonais",
+    "rating": 0,
+    "type": "language",
+    "native": true
+   },
+   {
+    "id": "k142",
+    "name": "Allemand",
+    "rating": 4,
+    "type": "language"
+   },
+   {
+    "id": "k143",
+    "name": "Sécurité d'AG Chemie à Seattle",
+    "rating": 4,
+    "type": "professional"
+   }
+  ],
+  "qualities": [
+   {
+    "id": "q144",
+    "name": "Adepte, initié de grade 2",
+    "karma": 0,
+    "positive": true,
+    "notes": "Métamagies : Centrage (une respiration de kata), Masque (cache dans son aura les traces du traitement Lazarus)."
+   },
+   {
+    "id": "q145",
+    "name": "Dégénérescence neuromotrice",
+    "karma": 0,
+    "positive": false,
+    "notes": "Sans injection Lazarus depuis > 10 jours : –3 dés à toutes ses réserves physiques et –1D6 d'Initiative (tremblements). > 20 jours : –5 dés."
+   }
+  ],
+  "powers": [
+   {
+    "id": "p146",
+    "name": "Réflexes améliorés",
+    "pp": 2.5,
+    "level": 2,
+    "notes": "+2 RÉA, +2D6 initiative"
+   },
+   {
+    "id": "p147",
+    "name": "Frappe critique (Armes tranchantes)",
+    "pp": 1,
+    "level": 2,
+    "notes": "+2 VD au sabre (inclus dans Shiranami)"
+   },
+   {
+    "id": "p148",
+    "name": "Capacité améliorée (Armes tranchantes)",
+    "pp": 1,
+    "level": 2,
+    "notes": "+2 à la compétence"
+   },
+   {
+    "id": "p149",
+    "name": "Armure mystique",
+    "pp": 1,
+    "level": 2,
+    "notes": "+2 armure"
+   },
+   {
+    "id": "p150",
+    "name": "Sens du combat",
+    "pp": 1,
+    "level": 2,
+    "notes": "+2 dés en défense"
+   },
+   {
+    "id": "p151",
+    "name": "Mains mortelles",
+    "pp": 0.5,
+    "notes": "Dégâts physiques à mains nues"
+   },
+   {
+    "id": "p152",
+    "name": "Centrage (métamagie)",
+    "pp": 0
+   },
+   {
+    "id": "p153",
+    "name": "Masque (métamagie)",
+    "pp": 0
+   }
+  ],
+  "weapons": [
+   {
+    "id": "w154",
+    "kind": "melee",
+    "name": "Katana « Shiranami »",
+    "category": "Lame",
+    "skill": "blades",
+    "accuracy": 7,
+    "damage": "(STR+5)P",
+    "ap": -3,
+    "reach": 1,
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "notes": "Frappe critique 2 incluse (= 9P). Réserve 18 dés. Parade possible au sabre."
+   },
+   {
+    "id": "w155",
+    "kind": "melee",
+    "name": "Mains mortelles",
+    "category": "Mains nues",
+    "skill": "unarmed_combat",
+    "accuracy": 6,
+    "damage": "(STR)P",
+    "ap": 0,
+    "reach": 0,
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "notes": "Réserve 13 dés."
+   },
+   {
+    "id": "w156",
+    "kind": "melee",
+    "name": "Bokken (entraînement)",
+    "category": "Contondante",
+    "skill": "clubs",
+    "accuracy": 5,
+    "damage": "(STR+2)S",
+    "ap": 0,
+    "reach": 1,
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "notes": "Épreuve au dojo : premier à trois touches, sans dégâts réels."
+   }
+  ],
+  "armor": [
+   {
+    "id": "a157",
+    "name": "Kimono et hakama (vêtements pare-balles)",
+    "rating": 6,
+    "equipped": true
+   },
+   {
+    "id": "a158",
+    "name": "Armure mystique 2",
+    "rating": 2,
+    "equipped": true,
+    "stack": true,
+    "notes": "Pouvoir d'adepte"
+   }
+  ],
+  "gear": [
+   {
+    "id": "g159",
+    "name": "Injecteur Lazarus (une dose tous les 10 jours)",
+    "category": "Divers",
+    "qty": 1,
+    "notes": "Il arrête les injections s'il apprend d'où elles viennent (jauge ≥ +2)."
+   },
+   {
+    "id": "g160",
+    "name": "Clé de l'ascenseur du -1 de Halcyon",
+    "category": "Divers",
+    "qty": 1
+   }
+  ],
+  "description": "Humain, 68 ans (en paraît 55). Adepte physique, **maître de kenjutsu**, initié de grade 2. A renvoyé Anthony parce qu'il « aimait la fin » ; venu à Seattle parce qu'AG Chemie lui a offert de faire cesser ses tremblements. Liaison sécurité d'AG Chemie, garde du Jardinier dans la galerie du gala. Vit au **dojo Kaze-no-Ki** (International District).\n\n- **Limites** : Physique 6 · Mentale 7 · Sociale 7. **Initiative 14 + 3D6**. Armure 8.\n- **Réserves** : Shiranami **18 dés** (9P, PA –3, Allonge 1) ; Mains mortelles 13 dés ; **défense 16 dés** (RÉA + INT + Sens du combat), parade au sabre.\n- **Santé** : sans injection > 10 jours : –3 dés physiques, –1D6 Init ; > 20 jours : –5 dés.\n\n**La voie du sabre** (jauge cachée –3/+3, départ 0) décide de son choix final à Severance : ≥ +2 « Le dernier élève » (tient le couloir seul, lègue Shiranami) ; 0/+1 « Le duel juste » ; ≤ –1 « La correction » (pleine puissance, combat à mort).",
+  "npc": {
+   "professionalRating": 6,
+   "grunt": false,
+   "kind": "metahuman",
+   "tactics": "- **Jamais de combat au gala ni à la réunion** : « Pas ici. » S'il est attaqué, désarme Anthony en un test (Armes tranchantes vs Armes tranchantes) et rend l'arme par la poignée.\n- **Entrepôt VSP** : reste en seiza tant que personne ne monte sur la mezzanine ; laisse le Crush et les Nettoyeurs se débrouiller. « Montre-moi. » Frappe à plat ou désarme (Called Shot), sauf jauge ≤ –2. Ne meurt pas ici (Reyes l'évacue sous fumigène).\n- Si Anthony achève un ennemi à terre devant lui : jauge –1, il dit seulement « Ah. »\n- **Severance** : selon la jauge (voir description). Vainqueur à la jauge ≤ –1, il laisse Anthony vivant : « Tu vivras avec ça. Moi aussi. »",
+   "loot": "Katana Shiranami (légué seulement s'il le choisit), clé de l'ascenseur du -1."
+  },
+  "spells": [],
+  "augmentations": [],
+  "vehicles": [],
+  "vision": {},
+  "type": "npc",
+  "portrait": ""
+ },
+ {
+  "id": "tpl_ansgar_wendt",
+  "name": "Dr. Ansgar Wendt « le Jardinier » (L-00)",
+  "folder": "Project Lazarus — Acte 3",
+  "metatype": "Humain",
+  "gender": "Homme",
+  "concept": "Responsable de Project Lazarus à Seattle, boss final",
+  "color": "#2e7d32",
+  "disposition": "hostile",
+  "attributes": {
+   "BOD": 5,
+   "AGI": 4,
+   "REA": 4,
+   "STR": 4,
+   "WIL": 7,
+   "LOG": 6,
+   "INT": 5,
+   "CHA": 5,
+   "EDG": 4,
+   "ESS": 6
+  },
+  "augmented": {
+   "LOG": 2
+  },
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "biotechnology",
+    "name": "Biotechnologie",
+    "attr": "LOG",
+    "rating": 8,
+    "spec": "Génétique SURGE",
+    "group": "biotech"
+   },
+   {
+    "id": "medicine",
+    "name": "Médecine",
+    "attr": "LOG",
+    "rating": 7,
+    "group": "biotech"
+   },
+   {
+    "id": "chemistry",
+    "name": "Chimie",
+    "attr": "LOG",
+    "rating": 6
+   },
+   {
+    "id": "negotiation",
+    "name": "Négociation",
+    "attr": "CHA",
+    "rating": 6,
+    "group": "influence"
+   },
+   {
+    "id": "etiquette",
+    "name": "Étiquette",
+    "attr": "CHA",
+    "rating": 5,
+    "spec": "Corporatiste",
+    "group": "influence"
+   },
+   {
+    "id": "intimidation",
+    "name": "Intimidation",
+    "attr": "CHA",
+    "rating": 5
+   },
+   {
+    "id": "leadership",
+    "name": "Leadership",
+    "attr": "CHA",
+    "rating": 5,
+    "group": "influence"
+   },
+   {
+    "id": "computer",
+    "name": "Informatique",
+    "attr": "LOG",
+    "rating": 4,
+    "group": "electronics"
+   },
+   {
+    "id": "con",
+    "name": "Escroquerie",
+    "attr": "CHA",
+    "rating": 4,
+    "group": "acting"
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 4
+   },
+   {
+    "id": "pistols",
+    "name": "Pistolets",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "firearms"
+   }
+  ],
+  "knowledge": [
+   {
+    "id": "k161",
+    "name": "Génétique SURGE",
+    "rating": 9,
+    "type": "academic"
+   },
+   {
+    "id": "k162",
+    "name": "Project Lazarus",
+    "rating": 8,
+    "type": "professional"
+   },
+   {
+    "id": "k163",
+    "name": "Orchidées",
+    "rating": 6,
+    "type": "interest"
+   },
+   {
+    "id": "k164",
+    "name": "Allemand",
+    "rating": 0,
+    "type": "language",
+    "native": true
+   }
+  ],
+  "qualities": [
+   {
+    "id": "q165",
+    "name": "Régénération lente (Lazarus)",
+    "karma": 0,
+    "positive": true,
+    "notes": "Récupère 1 case Physique tous les 2 tours de combat."
+   },
+   {
+    "id": "q166",
+    "name": "Dépendance Lazarus (Huntington)",
+    "karma": 0,
+    "positive": false,
+    "notes": "Sans injection depuis > 7 jours : –2 à toutes ses réserves, tremblements — et la peur."
+   }
+  ],
+  "weapons": [
+   {
+    "id": "w167",
+    "kind": "ranged",
+    "name": "Ares Light Fire 70",
+    "category": "Pistolet léger",
+    "skill": "pistols",
+    "accuracy": 7,
+    "damage": "6P",
+    "ap": 0,
+    "mode": "SA",
+    "rc": 0,
+    "ammo": "16(c)",
+    "reach": 0,
+    "notes": "Dans le tiroir de son bureau. Il tire mal (réserve 7 dés)."
+   },
+   {
+    "id": "w168",
+    "kind": "melee",
+    "name": "Mains nues (Phénix)",
+    "category": "Arme naturelle",
+    "skill": "unarmed_combat",
+    "accuracy": null,
+    "damage": "11P",
+    "ap": -2,
+    "reach": 1,
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "notes": "**Uniquement après la dose Phénix** : réserve 9 dés."
+   }
+  ],
+  "armor": [
+   {
+    "id": "a169",
+    "name": "Costume Mortimer of London « Berwick »",
+    "rating": 9,
+    "equipped": true
+   },
+   {
+    "id": "a170",
+    "name": "Derme Lazarus",
+    "rating": 2,
+    "equipped": true,
+    "stack": true,
+    "notes": "Trait Lazarus"
+   }
+  ],
+  "gear": [
+   {
+    "id": "g171",
+    "name": "Commlink sur circuit fermé de la Serre",
+    "category": "Équipement",
+    "qty": 1,
+    "rating": 6,
+    "notes": "Contrôle du Protokoll Asche et du tunnel d'évacuation."
+   },
+   {
+    "id": "g172",
+    "name": "Injecteur personnel",
+    "category": "Divers",
+    "qty": 1
+   },
+   {
+    "id": "g173",
+    "name": "Dose « Phénix »",
+    "category": "Divers",
+    "qty": 1,
+    "notes": "Dans un étui sur le bureau. Voir description."
+   }
+  ],
+  "description": "Humain, **83 ans** à l'état civil (né à Hambourg en 1997), en paraît 45. Biochimiste de Stern Pharma puis d'AG Chemie, atteint de la maladie de Huntington (comme son père) : il est **L-00**, premier sujet, **dépendant**. Responsable de Project Lazarus ; ordonnateur de l'effacement de l'Escouade 9 (2074). Vit dans **la Serre**, niveau -3 de la Clinique Halcyon.\n\n- **Limites** : Physique 6 · Mentale 10 · Sociale 8. Initiative 9 + 1D6. Armure 11.\n- **Moniteurs** : Physique 11 / Étourdissant 12.\n- **Option « Phénix »** (dose ultime) : CON 9, AGI 5, RÉA 6, FOR 9 ; Initiative 11 + 2D6 ; Physique 13 ; armure naturelle +6 (total 17) ; régénère 2 cases Physique par tour ; mains nues 9 dés, 11P, PA –2, Allonge 1 ; insensible à la douleur. **Au bout de 10 tours de combat, il meurt.**\n\nDoux, courtois, passionné ; arrose ses orchidées en parlant. Ses yeux sont ceux d'un vieillard. « Parce que mon père est mort en ne reconnaissant plus ses mains. Et que je ne le permettrai pas. »",
+  "npc": {
+   "professionalRating": 3,
+   "grunt": false,
+   "kind": "metahuman",
+   "tactics": "- **Négocie d'abord** : offre la jeunesse contre une injection par mois (début possible du « Silence doré »).\n- **Puis** dit « Daniel » : Danny s'interpose toujours entre lui et la menace.\n- **Fuit ensuite** par le tunnel d'évacuation (4 tours), ou déclenche le **Protokoll Asche** depuis son commlink.\n- **Se transforme en dernier** : dose Phénix (mise à jour des attributs à la main, 10 tours puis mort).\n- Sa voix ne monte jamais.",
+   "loot": "Commlink de la Serre (Protokoll Asche, tunnel), dose Phénix, injecteur, notes de recherche."
+  },
+  "powers": [],
+  "spells": [],
+  "augmentations": [],
+  "vehicles": [],
+  "vision": {},
+  "type": "npc",
+  "portrait": ""
+ },
+ {
+  "id": "tpl_danny_okafor_l02",
+  "name": "Daniel « Danny » Okafor — Sujet L-02",
+  "folder": "Project Lazarus — Acte 3",
+  "metatype": "Humain",
+  "gender": "Homme",
+  "concept": "Ex-sergent de l'Escouade 9, augmenté Lazarus-M, garde du corps du Jardinier",
+  "color": "#5c6bc0",
+  "disposition": "hostile",
+  "attributes": {
+   "BOD": 7,
+   "AGI": 6,
+   "REA": 5,
+   "STR": 6,
+   "WIL": 3,
+   "LOG": 3,
+   "INT": 5,
+   "CHA": 2,
+   "EDG": 3,
+   "ESS": 6
+  },
+  "augmented": {
+   "BOD": 2,
+   "AGI": 1,
+   "REA": 2,
+   "STR": 2
+  },
+  "initiative": {
+   "dice": 3,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "pistols",
+    "name": "Pistolets",
+    "attr": "AGI",
+    "rating": 6,
+    "spec": "Ares Predator",
+    "group": "firearms"
+   },
+   {
+    "id": "automatics",
+    "name": "Armes automatiques",
+    "attr": "AGI",
+    "rating": 6,
+    "group": "firearms"
+   },
+   {
+    "id": "unarmed_combat",
+    "name": "Combat à mains nues",
+    "attr": "AGI",
+    "rating": 6,
+    "group": "close_combat"
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 5
+   },
+   {
+    "id": "running",
+    "name": "Course",
+    "attr": "STR",
+    "rating": 5,
+    "group": "athletics"
+   },
+   {
+    "id": "clubs",
+    "name": "Armes contondantes",
+    "attr": "AGI",
+    "rating": 4,
+    "group": "close_combat"
+   },
+   {
+    "id": "first_aid",
+    "name": "Premiers soins",
+    "attr": "LOG",
+    "rating": 3,
+    "group": "biotech"
+   },
+   {
+    "id": "intimidation",
+    "name": "Intimidation",
+    "attr": "CHA",
+    "rating": 3
+   },
+   {
+    "id": "sneaking",
+    "name": "Furtivité",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "stealth"
+   }
+  ],
+  "knowledge": [
+   {
+    "id": "k174",
+    "name": "Procédures Knight Errant",
+    "rating": 5,
+    "type": "professional"
+   },
+   {
+    "id": "k175",
+    "name": "Escouade 9 (souvenirs inhibés)",
+    "rating": 4,
+    "type": "interest"
+   }
+  ],
+  "qualities": [
+   {
+    "id": "q176",
+    "name": "Régénération Lazarus",
+    "karma": 0,
+    "positive": true,
+    "notes": "Récupère 1 case Physique au début de chaque tour de combat tant qu'il n'est pas mort."
+   },
+   {
+    "id": "q177",
+    "name": "Endurance Lazarus",
+    "karma": 0,
+    "positive": true,
+    "notes": "Ignore les modificateurs de blessure jusqu'à la moitié de son moniteur Physique."
+   },
+   {
+    "id": "q178",
+    "name": "Conditionnement",
+    "karma": 0,
+    "positive": false,
+    "notes": "Ne répond qu'au prénom « Daniel ». Voir « Briser le conditionnement »."
+   },
+   {
+    "id": "q179",
+    "name": "Dépendance Lazarus",
+    "karma": 0,
+    "positive": false,
+    "notes": "Sans injection depuis > 7 jours : –2 à toutes ses réserves."
+   }
+  ],
+  "weapons": [
+   {
+    "id": "w180",
+    "kind": "ranged",
+    "name": "Ares Predator V (smartlink)",
+    "category": "Pistolet lourd",
+    "skill": "pistols",
+    "accuracy": 7,
+    "damage": "8P",
+    "ap": -1,
+    "mode": "SA",
+    "rc": 0,
+    "ammo": "15(c)",
+    "reach": 0,
+    "notes": "Réserve 15 dés (spé Ares Predator)."
+   },
+   {
+    "id": "w181",
+    "kind": "ranged",
+    "name": "Ingram Smartgun X (silencieux)",
+    "category": "Mitraillette",
+    "skill": "automatics",
+    "accuracy": 6,
+    "damage": "8P",
+    "ap": 0,
+    "mode": "TR/TA",
+    "rc": 0,
+    "ammo": "32(c)",
+    "reach": 0,
+    "notes": "Silencieux intégré. Réserve 13 dés."
+   },
+   {
+    "id": "w182",
+    "kind": "melee",
+    "name": "Poings Lazarus",
+    "category": "Mains nues",
+    "skill": "unarmed_combat",
+    "accuracy": null,
+    "damage": "(STR+1)P",
+    "ap": -1,
+    "reach": 0,
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "notes": "= 9P. Réserve 13 dés. Précision = limite physique."
+   }
+  ],
+  "armor": [
+   {
+    "id": "a183",
+    "name": "Costume blindé",
+    "rating": 9,
+    "equipped": true
+   },
+   {
+    "id": "a184",
+    "name": "Veste tactique (en alerte)",
+    "rating": 12,
+    "equipped": false
+   },
+   {
+    "id": "a185",
+    "name": "Peau renforcée Lazarus",
+    "rating": 3,
+    "equipped": true,
+    "stack": true,
+    "notes": "Trait Lazarus"
+   }
+  ],
+  "augmentations": [
+   {
+    "id": "x186",
+    "name": "Protocole Lazarus-M (niveau bioware, sans perte d'Essence)",
+    "kind": "bioware",
+    "grade": "standard",
+    "essence": 0,
+    "notes": "CON +2, AGI +1, RÉA +2, FOR +2, +2D6 initiative."
+   }
+  ],
+  "gear": [
+   {
+    "id": "g187",
+    "name": "Lunettes smartlink",
+    "category": "Équipement",
+    "qty": 1
+   },
+   {
+    "id": "g188",
+    "name": "Code d'annulation du Protokoll Asche (mémorisé)",
+    "category": "Divers",
+    "qty": 1
+   }
+  ],
+  "description": "Humain augmenté par le protocole **Lazarus-M**, 41 ans (en paraît 25). Ex-sergent de l'**Escouade 9** de Knight Errant (l'escouade de Bricks), enlevé en 2074 par les Moissonneurs de Reyes, **conditionné** (2077). Garde du corps du Jardinier au niveau -3 de Halcyon. Le meilleur agent que Knight Errant ait jamais eu, dans un corps qui ne lui appartient plus.\n\n- **Limites** : Physique 11 · Mentale 5 · Sociale 5. **Initiative 12 + 3D6**. Armure 12 (15 en alerte).\n- **Moniteurs** : Physique 13 / Étourdissant 10.\n\n**Briser le conditionnement** (Bricks seule ; Windows à –2 dés) : au lieu d'agir, Leadership ou Con + CHA [Sociale], **test étendu**. **+3 dés** « Neuf, on rentre à la maison » (ho_dernier_message_vosk), **+2** si elle lui fait écouter le message de Vosk, **+1 par souvenir** raconté à la table (max +3), **–2** si quelqu'un le blesse gravement pendant ce temps. **4** succès cumulés : il hésite (perd son action suivante). **8** : « …Bricks ? », il ne se bat plus. **12** : il se retourne contre Wendt. Connaît le code d'annulation du Protokoll Asche.\n\nS'il est tué, il meurt sans avoir su qui était en face. C'est possible. Ne l'empêchez pas si la table le choisit.",
+  "npc": {
+   "professionalRating": 6,
+   "grunt": false,
+   "kind": "metahuman",
+   "tactics": "- Se place toujours entre Wendt et la menace. Silencieux, précis, absent.\n- Ingram en rafale pour fixer, Predator pour achever, poings Lazarus au contact ; il se bat en régénérant.\n- Obéit au mot « Daniel ».\n- Ne parle pas — jusqu'à ce que Bricks lui donne une raison.",
+   "loot": "Predator V, Ingram Smartgun X, lunettes smartlink."
+  },
+  "powers": [],
+  "spells": [],
+  "vehicles": [],
+  "vision": {},
+  "type": "npc",
+  "portrait": ""
+ },
+ {
+  "id": "tpl_brandauer_nachtigall",
+  "name": "Major Tobias Brandauer « Nachtigall »",
+  "folder": "Nachtigall",
+  "metatype": "Humain",
+  "gender": "Homme",
+  "concept": "Chef de l'équipe d'élimination interne d'AG Chemie (Werkschutz)",
+  "color": "#37474f",
+  "disposition": "hostile",
+  "attributes": {
+   "BOD": 6,
+   "AGI": 6,
+   "REA": 5,
+   "STR": 5,
+   "WIL": 5,
+   "LOG": 4,
+   "INT": 6,
+   "CHA": 3,
+   "EDG": 4,
+   "ESS": 1.6
+  },
+  "augmented": {
+   "REA": 2
+  },
+  "initiative": {
+   "dice": 3,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "automatics",
+    "name": "Armes automatiques",
+    "attr": "AGI",
+    "rating": 7,
+    "spec": "Fusils d’assaut",
+    "group": "firearms"
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 6
+   },
+   {
+    "id": "pistols",
+    "name": "Pistolets",
+    "attr": "AGI",
+    "rating": 6,
+    "group": "firearms"
+   },
+   {
+    "id": "sneaking",
+    "name": "Furtivité",
+    "attr": "AGI",
+    "rating": 6,
+    "group": "stealth"
+   },
+   {
+    "id": "blades",
+    "name": "Armes tranchantes",
+    "attr": "AGI",
+    "rating": 5,
+    "group": "close_combat"
+   },
+   {
+    "id": "leadership",
+    "name": "Leadership",
+    "attr": "CHA",
+    "rating": 5,
+    "group": "influence"
+   },
+   {
+    "id": "unarmed_combat",
+    "name": "Combat à mains nues",
+    "attr": "AGI",
+    "rating": 5,
+    "group": "close_combat"
+   },
+   {
+    "id": "demolitions",
+    "name": "Démolition",
+    "attr": "LOG",
+    "rating": 4
+   },
+   {
+    "id": "intimidation",
+    "name": "Intimidation",
+    "attr": "CHA",
+    "rating": 4
+   },
+   {
+    "id": "running",
+    "name": "Course",
+    "attr": "STR",
+    "rating": 4,
+    "group": "athletics"
+   },
+   {
+    "id": "throwing_weapons",
+    "name": "Armes de jet",
+    "attr": "AGI",
+    "rating": 4
+   },
+   {
+    "id": "first_aid",
+    "name": "Premiers soins",
+    "attr": "LOG",
+    "rating": 3,
+    "group": "biotech"
+   },
+   {
+    "id": "pilot_ground_craft",
+    "name": "Pilotage (véhicules terrestres)",
+    "attr": "REA",
+    "rating": 3
+   }
+  ],
+  "knowledge": [
+   {
+    "id": "k189",
+    "name": "Doctrine Werkschutz",
+    "rating": 6,
+    "type": "professional"
+   },
+   {
+    "id": "k190",
+    "name": "Opérations clandestines",
+    "rating": 5,
+    "type": "professional"
+   },
+   {
+    "id": "k191",
+    "name": "Allemand",
+    "rating": 0,
+    "type": "language",
+    "native": true
+   }
+  ],
+  "qualities": [
+   {
+    "id": "q192",
+    "name": "Professionnel froid",
+    "karma": 0,
+    "positive": true,
+    "notes": "Ne charge jamais ; décroche dès que la moitié de sa cellule est hors de combat."
+   }
+  ],
+  "weapons": [
+   {
+    "id": "w193",
+    "kind": "ranged",
+    "name": "Ares Alpha (smartlink)",
+    "category": "Fusil d’assaut",
+    "skill": "automatics",
+    "accuracy": 7,
+    "damage": "11P",
+    "ap": -2,
+    "mode": "SA/TR/TA",
+    "rc": 2,
+    "ammo": "42(c)",
+    "reach": 0,
+    "notes": "RC 3 en appui. Réserve 15 dés."
+   },
+   {
+    "id": "w194",
+    "kind": "ranged",
+    "name": "Lance-grenades intégré (Ares Alpha)",
+    "category": "Lance-grenades",
+    "skill": "heavy_weapons",
+    "accuracy": 6,
+    "damage": "18P(f)",
+    "ap": 5,
+    "mode": "CC",
+    "rc": 0,
+    "ammo": "6(c)",
+    "reach": 0,
+    "notes": "Fragmentation 18P(f), PA +5, –1/m ; ou flash-bang 10S, PA –4, rayon 10 m."
+   },
+   {
+    "id": "w195",
+    "kind": "ranged",
+    "name": "Ares Predator V",
+    "category": "Pistolet lourd",
+    "skill": "pistols",
+    "accuracy": 5,
+    "damage": "8P",
+    "ap": -1,
+    "mode": "SA",
+    "rc": 0,
+    "ammo": "15(c)",
+    "reach": 0
+   },
+   {
+    "id": "w196",
+    "kind": "melee",
+    "name": "Couteau de combat",
+    "category": "Lame",
+    "skill": "blades",
+    "accuracy": 6,
+    "damage": "(STR+2)P",
+    "ap": -3,
+    "reach": 0,
+    "mode": "",
+    "rc": 0,
+    "ammo": ""
+   },
+   {
+    "id": "w197",
+    "kind": "melee",
+    "name": "Mains nues",
+    "category": "Mains nues",
+    "skill": "unarmed_combat",
+    "accuracy": null,
+    "damage": "(STR)S",
+    "ap": 0,
+    "reach": 0,
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "notes": "Précision = limite physique"
+   }
+  ],
+  "armor": [
+   {
+    "id": "a198",
+    "name": "Armure intégrale + casque (assaut)",
+    "rating": 18,
+    "equipped": true
+   },
+   {
+    "id": "a199",
+    "name": "Combinaison caméléon (infiltration)",
+    "rating": 9,
+    "equipped": false,
+    "notes": "+2 dés aux tests de Furtivité."
+   },
+   {
+    "id": "a200",
+    "name": "Plaques dermiques 2",
+    "rating": 2,
+    "equipped": true,
+    "stack": true,
+    "notes": "Cyberware"
+   }
+  ],
+  "augmentations": [
+   {
+    "id": "x201",
+    "name": "Réflexes câblés 2",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 3,
+    "rating": 2,
+    "notes": "+2 RÉA, +2D6 initiative"
+   },
+   {
+    "id": "x202",
+    "name": "Cyberyeux 3 (smartlink, vision nocturne, thermographique, antiflash, grossissement)",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 0.4,
+    "rating": 3
+   },
+   {
+    "id": "x203",
+    "name": "Plaques dermiques 2",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 1,
+    "rating": 2
+   }
+  ],
+  "gear": [
+   {
+    "id": "g204",
+    "name": "Commlink tactique chiffré (indice 6)",
+    "category": "Équipement",
+    "qty": 1,
+    "rating": 6,
+    "notes": "Contient l'ordre SEA-04 (ho_ordre_nachtigall), la fréquence tactique et le plan d'évacuation de Halcyon."
+   },
+   {
+    "id": "g205",
+    "name": "Grenade fumigène thermique",
+    "category": "Grenade",
+    "qty": 3
+   },
+   {
+    "id": "g206",
+    "name": "Charge de brèche",
+    "category": "Explosif",
+    "qty": 2
+   },
+   {
+    "id": "g207",
+    "name": "Médikit (indice 6)",
+    "category": "Équipement",
+    "qty": 1,
+    "rating": 6
+   }
+  ],
+  "vision": {
+   "lowLight": true,
+   "thermo": true
+  },
+  "description": "Humain, 44 ans. **AG Chemie Werkschutz, Abteilung Nachtigall** (Francfort), envoyé à Seattle par le directoire à la demande de Wendt. Commande 6 *Opérateurs Nachtigall*, 1 *Tireur d'élite corpo*, 1 *Rigger* (2 Doberman + 1 Fly-Spy) et 1 mage de combat (*Mage mercenaire* en uniforme Werkschutz).\n\n- **Limites** : Physique 8 · Mentale 7 · Sociale 5. **Initiative 13 + 3D6**.\n- **Armure** : 20 en assaut · 11 en infiltration (+2 dés Furtivité).\n- **Réserves** : Ares Alpha 15 dés (spé), Furtivité 12, Perception 12.\n- **Si La Pie a vendu l'adresse de Jane** : +2 dés d'Initiative au premier tour.\n\nUn professionnel froid, sans haine. Méprise Wendt (« un vieillard qui a peur du noir ») et lui obéit quand même. Sait : l'ordre, les cibles, le **Protokoll Ernte** (H+48), la sécurité de surface de Halcyon ; ignore le -3. Pendant Severance, stationné au -1 avec ce qu'il reste de Nachtigall.",
+  "npc": {
+   "professionalRating": 6,
+   "grunt": false,
+   "kind": "metahuman",
+   "tactics": "- **4 h du matin** : coupure de courant, la mage détecte puis Stunball par la fenêtre, entrée par la porte et l'escalier de secours sous flash-bang. **4 minutes** max sur objectif.\n- Fait travailler son tireur et ses drones ; ne charge jamais.\n- **Décroche après 6 tours** ou dès que la cellule perd la moitié de ses effectifs ; jamais d'engagement avec Knight Errant.\n- Ne se laisse pas capturer : fumigènes thermiques et repli.",
+   "loot": "Ares Alpha + lance-grenades, armure intégrale, commlink chiffré (indice 6, l'ordre SEA-04), médikit 6. Matériel militaire traçable."
+  },
+  "powers": [],
+  "spells": [],
+  "vehicles": [],
+  "type": "npc",
+  "portrait": ""
+ },
+ {
+  "id": "tpl_operateur_nachtigall",
+  "name": "Opérateur Nachtigall",
+  "folder": "Nachtigall",
+  "metatype": "Humain",
+  "gender": "Homme",
+  "concept": "Soldat d'élite du Werkschutz d'AG Chemie (PR 6)",
+  "color": "#546e7a",
+  "disposition": "hostile",
+  "attributes": {
+   "BOD": 5,
+   "AGI": 5,
+   "REA": 5,
+   "STR": 4,
+   "WIL": 4,
+   "LOG": 3,
+   "INT": 5,
+   "CHA": 2,
+   "EDG": 2,
+   "ESS": 3.2
+  },
+  "augmented": {
+   "REA": 1
+  },
+  "initiative": {
+   "dice": 2,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "automatics",
+    "name": "Armes automatiques",
+    "attr": "AGI",
+    "rating": 6,
+    "group": "firearms"
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 5
+   },
+   {
+    "id": "pistols",
+    "name": "Pistolets",
+    "attr": "AGI",
+    "rating": 5,
+    "group": "firearms"
+   },
+   {
+    "id": "sneaking",
+    "name": "Furtivité",
+    "attr": "AGI",
+    "rating": 5,
+    "group": "stealth"
+   },
+   {
+    "id": "unarmed_combat",
+    "name": "Combat à mains nues",
+    "attr": "AGI",
+    "rating": 4,
+    "group": "close_combat"
+   },
+   {
+    "id": "running",
+    "name": "Course",
+    "attr": "STR",
+    "rating": 3,
+    "group": "athletics"
+   },
+   {
+    "id": "throwing_weapons",
+    "name": "Armes de jet",
+    "attr": "AGI",
+    "rating": 3
+   },
+   {
+    "id": "first_aid",
+    "name": "Premiers soins",
+    "attr": "LOG",
+    "rating": 2,
+    "group": "biotech"
+   }
+  ],
+  "knowledge": [
+   {
+    "id": "k208",
+    "name": "Doctrine Werkschutz",
+    "rating": 4,
+    "type": "professional"
+   },
+   {
+    "id": "k209",
+    "name": "Allemand",
+    "rating": 0,
+    "type": "language",
+    "native": true
+   }
+  ],
+  "qualities": [
+   {
+    "id": "q210",
+    "name": "Formé à la résistance à l'interrogatoire",
+    "karma": 0,
+    "positive": true,
+    "notes": "+2 dés pour résister à l'Intimidation et au Con. Ne se rend que si on lui offre une sortie crédible."
+   }
+  ],
+  "weapons": [
+   {
+    "id": "w211",
+    "kind": "ranged",
+    "name": "HK-227 (silencieux, smartlink)",
+    "category": "Mitraillette",
+    "skill": "automatics",
+    "accuracy": 7,
+    "damage": "7P",
+    "ap": 0,
+    "mode": "SA/TR/TA",
+    "rc": 1,
+    "ammo": "28(c)",
+    "reach": 0,
+    "notes": "Silencieux, smartlink, crosse pliante (RC 1). Réserve 13 dés (smartlink sans fil)."
+   },
+   {
+    "id": "w212",
+    "kind": "ranged",
+    "name": "Ares Predator V",
+    "category": "Pistolet lourd",
+    "skill": "pistols",
+    "accuracy": 5,
+    "damage": "8P",
+    "ap": -1,
+    "mode": "SA",
+    "rc": 0,
+    "ammo": "15(c)",
+    "reach": 0
+   },
+   {
+    "id": "w213",
+    "kind": "ranged",
+    "name": "Grenade flash-bang",
+    "category": "Grenade",
+    "skill": "throwing_weapons",
+    "accuracy": null,
+    "damage": "10S",
+    "ap": -4,
+    "mode": "CC",
+    "rc": 0,
+    "ammo": "1",
+    "reach": 0,
+    "notes": "Rayon 10 m. Lancer : Armes de jet + AGI [Physique]."
+   },
+   {
+    "id": "w214",
+    "kind": "melee",
+    "name": "Mains nues",
+    "category": "Mains nues",
+    "skill": "unarmed_combat",
+    "accuracy": null,
+    "damage": "(STR)S",
+    "ap": 0,
+    "reach": 0,
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "notes": "Précision = limite physique"
+   }
+  ],
+  "armor": [
+   {
+    "id": "a215",
+    "name": "Veste pare-balles",
+    "rating": 12,
+    "equipped": true
+   },
+   {
+    "id": "a216",
+    "name": "Armure intégrale + casque (assaut)",
+    "rating": 18,
+    "equipped": false
+   },
+   {
+    "id": "a217",
+    "name": "Plaques dermiques 1",
+    "rating": 1,
+    "equipped": true,
+    "stack": true,
+    "notes": "Cyberware"
+   }
+  ],
+  "augmentations": [
+   {
+    "id": "x218",
+    "name": "Réflexes câblés 1",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 2,
+    "rating": 1,
+    "notes": "+1 RÉA, +1D6 initiative"
+   },
+   {
+    "id": "x219",
+    "name": "Cyberyeux 2 (smartlink, vision nocturne, thermographique)",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 0.3,
+    "rating": 2
+   },
+   {
+    "id": "x220",
+    "name": "Plaques dermiques 1",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 0.5,
+    "rating": 1
+   }
+  ],
+  "gear": [
+   {
+    "id": "g221",
+    "name": "Grenade fumigène thermique",
+    "category": "Grenade",
+    "qty": 1
+   },
+   {
+    "id": "g222",
+    "name": "Commlink tactique (indice 5)",
+    "category": "Équipement",
+    "qty": 1,
+    "rating": 5
+   }
+  ],
+  "vision": {
+   "lowLight": true,
+   "thermo": true
+  },
+  "description": "Humain. AG Chemie Werkschutz, Abteilung Nachtigall. Discipliné, silencieux, ne connaît pas Seattle et compense par le matériel.\n\n- **Limites** : Physique 7 · Mentale 5 · Sociale 4. **Initiative 11 + 2D6**.\n- **Armure** : 13 (veste) · 19 en assaut (équiper l'armure intégrale).\n- **Moniteurs** : Physique 11 / Étourdissant 10.\n\nCapturé, il parle si on lui offre une sortie crédible (ou sous Sonde mentale) : **Protokoll Ernte dans 48 heures** (convoi de nuit vers le port, ou vers l'entrepôt VSP), le Jardinier ne quitte jamais Halcyon, la sécurité de surface.",
+  "npc": {
+   "professionalRating": 6,
+   "grunt": true,
+   "kind": "metahuman",
+   "tactics": "- Binômes : un fixe en rafale, l'autre manœuvre ; flash-bang avant chaque entrée.\n- Ordre de **ne pas** être capturé ni de provoquer une intervention massive de Knight Errant.\n- La cellule décroche après **6 tours** ou à 50 % de pertes.",
+   "loot": "HK-227, Predator V, veste ou armure intégrale. ~30 000¥ de revente pour toute l'équipe (Cabana prend 40 %)."
+  },
+  "powers": [],
+  "spells": [],
+  "vehicles": [],
+  "type": "npc",
+  "portrait": ""
+ }
+]

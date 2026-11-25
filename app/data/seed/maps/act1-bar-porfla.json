@@ -1,0 +1,484 @@
+{
+  "id": "map_bar_porfla",
+  "name": "Bar de Porfla (Renton)",
+  "folder": "Acte 1",
+  "description": "**Le bar de Joseph Porfla — Renton.** Bistrot de quartier fatigué : comptoir zinc, box en skaï, billard, petite scène pour les soirs de concert, enseigne néon magenta sur la rue. Porfla vit pour ce bar ; son bureau et la cave sont à l'arrière.\n\n**Utilisation**\n- Quête 1.1 *Cleanup Crew*, Phase 2 (session 1) : trois Nettoyeurs d'AG Chemie emmènent Porfla, inconscient, par la porte de service vers leur van dans la ruelle. Combat immédiat ; poursuite possible dans la **Back Alley** (carte suivante).\n- Session 2, scènes 1-2 : stabiliser Porfla (Premiers soins/Médecine seuil 2), gérer la scène (cadavres, sang, police de Renton), interroger le Nettoyeur capturé dans la cave ou le bureau (Intimidation/Escroquerie contre VOL + CHA = 6 dés).\n\n**Tests utiles**\n- Perception seuil 3 : traces de lutte, seringue de sédatif sous un box.\n- Serrurerie seuil 4 : coffre du bureau.\n- Entrées : porte principale (rue), porte de service (ruelle), sortie de secours (passage latéral), fenêtre des toilettes femmes.",
+  "width": 48,
+  "height": 34,
+  "metersPerCell": 1,
+  "theme": "bar",
+  "lighting": "dim",
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "tiles": [
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+    ",,,,,,,,cccr,r,,,,,,,,,,,,,,,,,,,,,,vvvvv,,,,,,,",
+    ",,,,,,,,ccc,r,,,,,,,~~,,,,,,,,,,,,,,vvvvv,,,,,,,",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+    "  ##########################D########WWW######,,",
+    "  #m===xx====.#.mmmmmmm.#cc......#.......mmmm#,,",
+    "  #m..........#.........#........#...........#,,",
+    "  #...........#.....cc..#........D....TTTT...#,,",
+    "  #...TTTTT...#.cc..cc..#........#...........#,,",
+    "  #...TTTTT...D.cc......D......ss#..T........#c,",
+    "  #..........m#.........#......ss#...........#,c",
+    "  #c.........m#cccc...c.#......ss#.bbbb......#,,",
+    "  ######D###################D#################,,",
+    "  #..=....mmmmmmmmmmm...........mm..#.===.mmm#,,",
+    "  #..=..............................D.....mmm#,,",
+    "  #..=..............................#........#,,",
+    "  #..=================.............m#........#,,",
+    "  #.................................##########,,",
+    "  #bbb..............................#.===.mmm#,,",
+    "  #TTT....................TTTT......D.....mmmW,,",
+    "  #bbb....TT...TT.........TTTT......#........#c,",
+    "  #.................................##########,,",
+    "  #bbb..............TT.......................#,r",
+    "  #TTT...............................=m_____m#,,",
+    "  #bbb....TT...TT....................=_______D,,",
+    "  #..................................=_______#,,",
+    "  #..................................._______#,,",
+    "  ##WWWWWWW##WWWWWWW##DD##WWWWWWWW###WWWWWWW##,,",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+    ",,,,,,,,,,,,o,,,,,,,,,,,,,,,,,,,,,,,o,,,,,,,,,,,",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+    ",,,,,vvvv,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,vvvv,,,,",
+    ",,,,,vvvv,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,vvvv,,,,",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"
+  ],
+  "doors": [
+    {
+      "id": "bar_d01",
+      "x": 22,
+      "y": 27,
+      "state": "closed",
+      "kind": "door",
+      "name": "Entrée principale"
+    },
+    {
+      "id": "bar_d02",
+      "x": 23,
+      "y": 27,
+      "state": "closed",
+      "kind": "door",
+      "name": "Entrée principale"
+    },
+    {
+      "id": "bar_d03",
+      "x": 28,
+      "y": 4,
+      "state": "closed",
+      "kind": "door",
+      "name": "Porte de service (ruelle)"
+    },
+    {
+      "id": "bar_d04",
+      "x": 45,
+      "y": 24,
+      "state": "closed",
+      "kind": "door",
+      "name": "Sortie de secours (passage latéral)"
+    },
+    {
+      "id": "bar_d05",
+      "x": 8,
+      "y": 12,
+      "state": "open",
+      "kind": "door",
+      "name": "Porte battante (cuisine)"
+    },
+    {
+      "id": "bar_d06",
+      "x": 14,
+      "y": 9,
+      "state": "closed",
+      "kind": "door",
+      "name": "Porte — Réserve"
+    },
+    {
+      "id": "bar_d07",
+      "x": 24,
+      "y": 9,
+      "state": "locked",
+      "kind": "door",
+      "name": "Porte — Couloir de service"
+    },
+    {
+      "id": "bar_d08",
+      "x": 28,
+      "y": 12,
+      "state": "closed",
+      "kind": "door",
+      "name": "Porte « Privé »"
+    },
+    {
+      "id": "bar_d09",
+      "x": 33,
+      "y": 7,
+      "state": "locked",
+      "kind": "door",
+      "name": "Bureau de Porfla"
+    },
+    {
+      "id": "bar_d10",
+      "x": 36,
+      "y": 14,
+      "state": "closed",
+      "kind": "door",
+      "name": "Porte — Toilettes hommes"
+    },
+    {
+      "id": "bar_d11",
+      "x": 36,
+      "y": 19,
+      "state": "closed",
+      "kind": "door",
+      "name": "Porte — Toilettes femmes"
+    }
+  ],
+  "lights": [
+    {
+      "id": "bar_l01",
+      "x": 23,
+      "y": 28,
+      "radius": 5,
+      "color": "#ff3fd2",
+      "on": true,
+      "name": "Enseigne néon « Porfla's »"
+    },
+    {
+      "id": "bar_l02",
+      "x": 12,
+      "y": 30,
+      "radius": 7,
+      "color": "#ffb766",
+      "on": true,
+      "name": "Éclairage — Rue (Renton)"
+    },
+    {
+      "id": "bar_l03",
+      "x": 36,
+      "y": 30,
+      "radius": 7,
+      "color": "#ffb766",
+      "on": true,
+      "name": "Éclairage — Rue (Renton)"
+    },
+    {
+      "id": "bar_l04",
+      "x": 10,
+      "y": 15,
+      "radius": 4,
+      "color": "#ffb35c",
+      "on": true,
+      "name": "Éclairage — Comptoir"
+    },
+    {
+      "id": "bar_l05",
+      "x": 18,
+      "y": 15,
+      "radius": 4,
+      "color": "#ffb35c",
+      "on": true,
+      "name": "Éclairage — Comptoir"
+    },
+    {
+      "id": "bar_l06",
+      "x": 4,
+      "y": 21,
+      "radius": 3,
+      "color": "#ff9b4a",
+      "on": true,
+      "name": "Éclairage — Salle du bar"
+    },
+    {
+      "id": "bar_l07",
+      "x": 13,
+      "y": 22,
+      "radius": 4,
+      "color": "#ffc47a",
+      "on": true,
+      "name": "Éclairage — Salle du bar"
+    },
+    {
+      "id": "bar_l08",
+      "x": 27,
+      "y": 19,
+      "radius": 3,
+      "color": "#e8ffd0",
+      "on": true,
+      "name": "Lampe du billard"
+    },
+    {
+      "id": "bar_l09",
+      "x": 41,
+      "y": 25,
+      "radius": 4,
+      "color": "#36e6ff",
+      "on": true,
+      "name": "Projecteur de scène"
+    },
+    {
+      "id": "bar_l10",
+      "x": 34,
+      "y": 16,
+      "radius": 2,
+      "color": "#ff3fd2",
+      "on": true,
+      "name": "Juke-box"
+    },
+    {
+      "id": "bar_l11",
+      "x": 40,
+      "y": 15,
+      "radius": 2,
+      "color": "#d8f4ff",
+      "on": true,
+      "name": "Éclairage — Toilettes hommes"
+    },
+    {
+      "id": "bar_l12",
+      "x": 40,
+      "y": 20,
+      "radius": 2,
+      "color": "#d8f4ff",
+      "on": true,
+      "name": "Éclairage — Toilettes femmes"
+    },
+    {
+      "id": "bar_l13",
+      "x": 8,
+      "y": 7,
+      "radius": 4,
+      "color": "#fff1d0",
+      "on": true,
+      "name": "Éclairage — Cuisine"
+    },
+    {
+      "id": "bar_l14",
+      "x": 19,
+      "y": 9,
+      "radius": 3,
+      "color": "#c8b48a",
+      "on": true,
+      "name": "Éclairage — Réserve"
+    },
+    {
+      "id": "bar_l15",
+      "x": 28,
+      "y": 8,
+      "radius": 3,
+      "color": "#ff3344",
+      "on": true,
+      "name": "Panneau « Sortie »"
+    },
+    {
+      "id": "bar_l16",
+      "x": 39,
+      "y": 9,
+      "radius": 4,
+      "color": "#ffcf8a",
+      "on": true,
+      "name": "Éclairage — Bureau de Porfla"
+    },
+    {
+      "id": "bar_l17",
+      "x": 28,
+      "y": 2,
+      "radius": 4,
+      "color": "#ffb766",
+      "on": true,
+      "name": "Éclairage — Ruelle"
+    }
+  ],
+  "regions": [
+    {
+      "id": "bar_r01",
+      "name": "Ruelle",
+      "x": 0,
+      "y": 0,
+      "w": 48,
+      "h": 4,
+      "color": "#3a4a5c",
+      "gmOnly": false
+    },
+    {
+      "id": "bar_r02",
+      "name": "Rue (Renton)",
+      "x": 0,
+      "y": 28,
+      "w": 48,
+      "h": 6,
+      "color": "#3a4a5c",
+      "gmOnly": false
+    },
+    {
+      "id": "bar_r03",
+      "name": "Passage latéral",
+      "x": 46,
+      "y": 4,
+      "w": 2,
+      "h": 24,
+      "color": "#3a4a5c",
+      "gmOnly": false
+    },
+    {
+      "id": "bar_r04",
+      "name": "Salle du bar",
+      "x": 3,
+      "y": 13,
+      "w": 33,
+      "h": 14,
+      "color": "#8a4b1f",
+      "gmOnly": false
+    },
+    {
+      "id": "bar_r05",
+      "name": "Comptoir",
+      "x": 6,
+      "y": 13,
+      "w": 16,
+      "h": 3,
+      "color": "#b8752e",
+      "gmOnly": false
+    },
+    {
+      "id": "bar_r06",
+      "name": "Scène",
+      "x": 37,
+      "y": 22,
+      "w": 8,
+      "h": 5,
+      "color": "#a0287a",
+      "gmOnly": false
+    },
+    {
+      "id": "bar_r07",
+      "name": "Cuisine",
+      "x": 3,
+      "y": 5,
+      "w": 11,
+      "h": 7,
+      "color": "#6b6b4a",
+      "gmOnly": false
+    },
+    {
+      "id": "bar_r08",
+      "name": "Réserve",
+      "x": 15,
+      "y": 5,
+      "w": 9,
+      "h": 7,
+      "color": "#5b4a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "bar_r09",
+      "name": "Couloir de service",
+      "x": 25,
+      "y": 5,
+      "w": 8,
+      "h": 7,
+      "color": "#4a4a55",
+      "gmOnly": false
+    },
+    {
+      "id": "bar_r10",
+      "name": "Bureau de Porfla",
+      "x": 34,
+      "y": 5,
+      "w": 11,
+      "h": 7,
+      "color": "#7a3e2a",
+      "gmOnly": false
+    },
+    {
+      "id": "bar_r11",
+      "name": "Toilettes hommes",
+      "x": 37,
+      "y": 13,
+      "w": 8,
+      "h": 4,
+      "color": "#3e5a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "bar_r12",
+      "name": "Toilettes femmes",
+      "x": 37,
+      "y": 18,
+      "w": 8,
+      "h": 3,
+      "color": "#3e5a6a",
+      "gmOnly": false
+    }
+  ],
+  "notes": [
+    {
+      "id": "bar_n01",
+      "x": 28,
+      "y": 9,
+      "text": "Session 1 — deux Nettoyeurs AG Chemie traînent Porfla, inconscient (propofol + midazolam), vers la porte de service et le van.",
+      "gmOnly": true
+    },
+    {
+      "id": "bar_n02",
+      "x": 23,
+      "y": 25,
+      "text": "Session 1 — le 3e Nettoyeur couvre l'entrée (Fichetti Security 600 suppressé). Il fuit vers la ruelle dès que ça tourne mal.",
+      "gmOnly": true
+    },
+    {
+      "id": "bar_n03",
+      "x": 38,
+      "y": 3,
+      "text": "Van noir sans plaque des Nettoyeurs, moteur tournant, portes arrière ouvertes. Boîte à gants : kit d'effacement de preuves, entraves.",
+      "gmOnly": true
+    },
+    {
+      "id": "bar_n04",
+      "x": 13,
+      "y": 15,
+      "text": "Sous le comptoir : le fusil à pompe de Porfla (Perception seuil 2). Caisse : ~400¥.",
+      "gmOnly": true
+    },
+    {
+      "id": "bar_n05",
+      "x": 43,
+      "y": 6,
+      "text": "Coffre de Porfla (Serrurerie seuil 4, ou la combinaison s'il est réveillé) : 3 200¥ et ses notes sur le job Kidnapping.",
+      "gmOnly": true
+    },
+    {
+      "id": "bar_n06",
+      "x": 31,
+      "y": 10,
+      "text": "Cave : fûts, vieux groupe électrogène. Endroit discret pour interroger le Nettoyeur capturé (session 2).",
+      "gmOnly": true
+    },
+    {
+      "id": "bar_n07",
+      "x": 44,
+      "y": 25,
+      "text": "Sortie de secours → passage latéral : rejoint la ruelle ou la rue (départ de poursuite).",
+      "gmOnly": true
+    },
+    {
+      "id": "bar_n08",
+      "x": 10,
+      "y": 22,
+      "text": "Clients : 0 à 6 habitués selon l'heure, ivres et peu fiables comme témoins. La police de Renton arrive en 3D6 minutes si on l'appelle.",
+      "gmOnly": true
+    },
+    {
+      "id": "bar_n09",
+      "x": 4,
+      "y": 19,
+      "text": "Box : couvert léger (dossiers rembourrés). Le comptoir offre un bon couvert (béton + zinc).",
+      "gmOnly": true
+    }
+  ],
+  "tokens": [],
+  "explored": {}
+}

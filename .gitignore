@@ -1,0 +1,18 @@
+# Third-party tools (not ours to redistribute)
+Chummer5.226.0/
+Chummer5.226.0.zip
+*.chum5
+!app/tools/fixtures/*.chum5
+!app/server/lib/chummer/skeleton.chum5
+
+# App runtime data
+app/node_modules/
+app/data/state.json
+app/data/state.json.tmp
+app/data/backups/
+app/data/uploads/
+# Foundry music/images (~490 MB) are copied to the server separately
+app/data/assets/foundry/
+
+# Old standalone page / obsolete macro
+Shadowrun/create-act1-npcs-macro.js

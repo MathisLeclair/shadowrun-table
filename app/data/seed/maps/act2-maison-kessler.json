@@ -1,0 +1,558 @@
+{
+  "id": "map_maison_kessler",
+  "name": "Maison de Harlan Kessler (Alki Point, West Seattle)",
+  "folder": "Acte 2",
+  "description": "**Maison de Harlan Kessler (Alki Point, West Seattle).** Une maison de plain-pied au bord de l'eau, trop belle pour une retraite de flic : séjour vitré face à la mer, jardin clos de murs de 2 m, portail à code, ponton de 15 m. Kessler vit seul — sauf depuis le gala, où un garde du corps occupe la chambre d'amis. Dans le bureau, derrière un tableau de phare, un coffre mural : son **assurance-vie**.\n\n**Utilisation**\n- Quête 2.2 *The Guest List* (optionnel) : Kessler a parlé de son « assurance, chez moi » — le groupe peut venir la chercher ou le confronter.\n- Acte 3, *Burn Notice* : si Kessler panique et se fait tuer devant le commissariat, l'assurance reste dans le coffre… **course contre Reyes** pour la récupérer.\n\n**L'assurance** : une copie **non expurgée du dossier KE-SEA/AI-2074-0419** et l'enregistrement de l'appel qui lui demandait de le fermer. Preuve majeure pour la fin « Lumière », levier pour « Silence doré », et ce que Windows veut voir sortir.\n\n**Sécurité** : alarme domestique (host personnel rating 3, Firewall 4) — deux caméras extérieures, un drone de surveillance, l'éclairage à détecteur et le portail lui sont asservis. Coffre mural rating 5 (Serrurerie seuil 5, ou le code de Kessler). Un garde du corps d'élite (R5) dans la chambre d'amis.\n\n**Approches** : le portail (code), le portillon piéton, par-dessus le mur (Escalade seuil 1, mais les projecteurs à détecteur s'allument), par la mer (ponton, Discrétion la nuit), ou simplement en sonnant — Kessler ouvre à qui lui fait assez peur.",
+  "width": 46,
+  "height": 46,
+  "metersPerCell": 1,
+  "theme": "residential",
+  "lighting": "dark",
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "tiles": [
+    ",,,,,o,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,o,,,,,,,",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,vvvvv,,,,,,,,,,,",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,vvvvv,,,,,,,,,,,",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+    "tt####DDDD###########D######################tt",
+    "tt#tg,,,,,,gggggggggg,gggggggggggggggtttttt#tt",
+    "tt#tg,,,,,,ggtttttggg,gggggttttggggggtttttt#tt",
+    "tt#tg,,,,,,ggtttttggg,gggggttttggggggtttttt#tt",
+    "tt#tg,,,,,,gggggggggg,ggggggggggggggggggggg#tt",
+    "tt#tg,,,,,,gggggggggg,ggggggggggggggggggggg#tt",
+    "tt#tg,,,,,,gggggggggg,gggggggggggoggggggggg#tt",
+    "tt####DDDD####W######D#####WW###ggggggggggg#tt",
+    "tt##........#bb...#m...#=======#ggggttggggg#tt",
+    "tt##vv..vvv.#bb...D....#.......Wggggttggggg#tt",
+    "tt##vv..vvv.D.....#....D..TTT..Wggggttggggg#tt",
+    "tt##vv..vvv.#....T#....#.......Wggggggggggg#tt",
+    "tt##vv..vvv.#########D#####D####ggggggggggg#tt",
+    "tt##vv..vvv.#m....#............#ggggggggggg#tt",
+    "tt##....vvv.#.TT..D.........TT.Wggggggggttt#tt",
+    "tt##mmm.....#....m#.bbb........Wggggggggttt#tt",
+    "tt#################.b..TT......Wgg~~~~ggttt#tt",
+    "tt#ggggggggg#....m#.b..........Wgg~~~~ggggg#tt",
+    "tt#ggggggggg#.bb..D...........mWgg~~~~ggggg#tt",
+    "tt#ggggggggg#.bb..#............#ggggggggggg#tt",
+    "tt#tttgggggg###W###WWWWWDDWWWWW#ggggggggggg#tt",
+    "tt#tttggggggggggggg,,,,,,,,,,,,gggggggggggg#tt",
+    "tt#tttggggggggggggg,,,TT,,,T,,,gggggttttggg#tt",
+    "tt#gggggggggtttgggg,,,,,,,,,,,,gggggttttggg#tt",
+    "tt#gggggggggtttgggggggggggggggggggggggggggg#tt",
+    "tt#gggggggggggggggggggggggggggggggggggggggg#tt",
+    "tt######################D###################tt",
+    "rrr~~~~rrrrrrrrrrrrrrrr__rrrrrrrrrrrrrrrrrrrrr",
+    "rrrrrrrrrrrrrrrrrrrrrrr__rrrrrrrrrrrr~~~~~rrrr",
+    "~~~~~~~~~~~~~~~~~~~~~~~__~~~~~~~~~~~~~~~~~~~~~",
+    "~~~~~~~~~~~~~~~~~~~~~~~__~~~~~~~~~~~~~~~~~~~~~",
+    "~~~~~~~~~~~~~~~~~~~~~~~__~~~~~~~~~~~~~~~~~~~~~",
+    "~~~~~~~~~~~~~~~~~~~~~~~__~~~~~~~~~~~~~~~~~~~~~",
+    "~~~~~~~~~~~~~~~~~~~~~~o__o~~~~~~~~~~~~~~~~~~~~",
+    "~~~~~~~~~~~~~~~~~~~~~~~__~~~~~~~~~~~~~~~~~~~~~",
+    "~~~~~~~~~~~~~~~~~~~~~~~__~~~~~~~~~~~~~~~~~~~~~",
+    "~~~~~~~~~~~~~~~~~~~~~~~__~~~~~~~~~~~~~~~~~~~~~",
+    "~~~~~~~~~~~~~~~~~~~~~~~__~~~~~~~~~~~~~~~~~~~~~",
+    "~~~~~~~~~~~~~~~~~~~~~~o__o~~~~~~~~~~~~~~~~~~~~",
+    "~~~~~~~~~~~~~~~~~~~~~~~__~~~~~~~~~~~~~~~~~~~~~",
+    "~~~~~~~~~~~~~~~~~~~~~~~__~~~~~~~~~~~~~~~~~~~~~",
+    "~~~~~~~~~~~~~~~~~~~~~~~__~~~~~~~~~~~~~~~~~~~~~"
+  ],
+  "doors": [
+    {
+      "id": "voss_d01",
+      "x": 6,
+      "y": 4,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Portail à code"
+    },
+    {
+      "id": "voss_d02",
+      "x": 7,
+      "y": 4,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Portail à code"
+    },
+    {
+      "id": "voss_d03",
+      "x": 8,
+      "y": 4,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Portail à code"
+    },
+    {
+      "id": "voss_d04",
+      "x": 9,
+      "y": 4,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Portail à code"
+    },
+    {
+      "id": "voss_d05",
+      "x": 21,
+      "y": 4,
+      "state": "locked",
+      "kind": "door",
+      "name": "Portillon (code)"
+    },
+    {
+      "id": "voss_d06",
+      "x": 24,
+      "y": 30,
+      "state": "locked",
+      "kind": "door",
+      "name": "Portillon côté mer"
+    },
+    {
+      "id": "voss_d07",
+      "x": 21,
+      "y": 11,
+      "state": "locked",
+      "kind": "door",
+      "name": "Porte d'entrée"
+    },
+    {
+      "id": "voss_d08",
+      "x": 24,
+      "y": 24,
+      "state": "closed",
+      "kind": "door",
+      "name": "Baie coulissante (verre ordinaire)"
+    },
+    {
+      "id": "voss_d09",
+      "x": 25,
+      "y": 24,
+      "state": "closed",
+      "kind": "door",
+      "name": "Baie coulissante (verre ordinaire)"
+    },
+    {
+      "id": "voss_d10",
+      "x": 18,
+      "y": 13,
+      "state": "closed",
+      "kind": "door",
+      "name": "Chambre d'amis"
+    },
+    {
+      "id": "voss_d11",
+      "x": 23,
+      "y": 14,
+      "state": "open",
+      "kind": "door",
+      "name": "Cuisine"
+    },
+    {
+      "id": "voss_d12",
+      "x": 21,
+      "y": 16,
+      "state": "open",
+      "kind": "door",
+      "name": "Entrée → séjour"
+    },
+    {
+      "id": "voss_d13",
+      "x": 27,
+      "y": 16,
+      "state": "open",
+      "kind": "door",
+      "name": "Cuisine → séjour"
+    },
+    {
+      "id": "voss_d14",
+      "x": 18,
+      "y": 18,
+      "state": "closed",
+      "kind": "door",
+      "name": "Bureau"
+    },
+    {
+      "id": "voss_d15",
+      "x": 18,
+      "y": 22,
+      "state": "closed",
+      "kind": "door",
+      "name": "Chambre de Kessler"
+    },
+    {
+      "id": "voss_d16",
+      "x": 6,
+      "y": 11,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Porte de garage"
+    },
+    {
+      "id": "voss_d17",
+      "x": 7,
+      "y": 11,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Porte de garage"
+    },
+    {
+      "id": "voss_d18",
+      "x": 8,
+      "y": 11,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Porte de garage"
+    },
+    {
+      "id": "voss_d19",
+      "x": 9,
+      "y": 11,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Porte de garage"
+    },
+    {
+      "id": "voss_d20",
+      "x": 12,
+      "y": 14,
+      "state": "closed",
+      "kind": "door",
+      "name": "Garage → maison"
+    }
+  ],
+  "lights": [
+    {
+      "id": "voss_l01",
+      "x": 5,
+      "y": 1,
+      "radius": 6,
+      "color": "#ffb766",
+      "on": true,
+      "name": "Éclairage — rue"
+    },
+    {
+      "id": "voss_l02",
+      "x": 38,
+      "y": 1,
+      "radius": 6,
+      "color": "#ffb766",
+      "on": true,
+      "name": "Éclairage — rue"
+    },
+    {
+      "id": "voss_l03",
+      "x": 24,
+      "y": 20,
+      "radius": 5,
+      "color": "#ffe0b0",
+      "on": true,
+      "name": "Séjour (Kessler boit face à la mer)"
+    },
+    {
+      "id": "voss_l04",
+      "x": 15,
+      "y": 13,
+      "radius": 2,
+      "color": "#7fb8ff",
+      "on": true,
+      "name": "Écran — chambre d'amis"
+    },
+    {
+      "id": "voss_l05",
+      "x": 21,
+      "y": 13,
+      "radius": 2,
+      "color": "#fff1d0",
+      "on": false,
+      "name": "Entrée"
+    },
+    {
+      "id": "voss_l06",
+      "x": 27,
+      "y": 13,
+      "radius": 3,
+      "color": "#f6f8ff",
+      "on": false,
+      "name": "Cuisine"
+    },
+    {
+      "id": "voss_l07",
+      "x": 15,
+      "y": 18,
+      "radius": 2,
+      "color": "#ffd9a0",
+      "on": false,
+      "name": "Lampe du bureau"
+    },
+    {
+      "id": "voss_l08",
+      "x": 9,
+      "y": 7,
+      "radius": 6,
+      "color": "#f4f8ff",
+      "on": false,
+      "name": "Projecteur à détecteur — allée"
+    },
+    {
+      "id": "voss_l09",
+      "x": 35,
+      "y": 8,
+      "radius": 6,
+      "color": "#f4f8ff",
+      "on": false,
+      "name": "Projecteur à détecteur — jardin est"
+    },
+    {
+      "id": "voss_l10",
+      "x": 10,
+      "y": 26,
+      "radius": 6,
+      "color": "#f4f8ff",
+      "on": false,
+      "name": "Projecteur à détecteur — jardin ouest"
+    },
+    {
+      "id": "voss_l11",
+      "x": 33,
+      "y": 27,
+      "radius": 6,
+      "color": "#f4f8ff",
+      "on": false,
+      "name": "Projecteur à détecteur — patio"
+    },
+    {
+      "id": "voss_l12",
+      "x": 24,
+      "y": 44,
+      "radius": 3,
+      "color": "#e8f0ff",
+      "on": true,
+      "name": "Lanterne du ponton"
+    },
+    {
+      "id": "voss_l13",
+      "x": 36,
+      "y": 21,
+      "radius": 2,
+      "color": "#5ad8c8",
+      "on": true,
+      "name": "Bassin éclairé"
+    }
+  ],
+  "regions": [
+    {
+      "id": "voss_r01",
+      "name": "Rue (Alki Avenue)",
+      "x": 0,
+      "y": 0,
+      "w": 46,
+      "h": 4,
+      "color": "#3a4a5c",
+      "gmOnly": false
+    },
+    {
+      "id": "voss_r02",
+      "name": "Jardin clos",
+      "x": 3,
+      "y": 5,
+      "w": 40,
+      "h": 25,
+      "color": "#2a4a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "voss_r03",
+      "name": "Allée",
+      "x": 5,
+      "y": 5,
+      "w": 6,
+      "h": 6,
+      "color": "#4a4a40",
+      "gmOnly": false
+    },
+    {
+      "id": "voss_r04",
+      "name": "Garage",
+      "x": 4,
+      "y": 12,
+      "w": 8,
+      "h": 8,
+      "color": "#4a4a55",
+      "gmOnly": false
+    },
+    {
+      "id": "voss_r05",
+      "name": "Chambre d'amis (garde du corps)",
+      "x": 13,
+      "y": 12,
+      "w": 5,
+      "h": 4,
+      "color": "#5a3a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "voss_r06",
+      "name": "Entrée",
+      "x": 19,
+      "y": 12,
+      "w": 4,
+      "h": 4,
+      "color": "#4a4a40",
+      "gmOnly": false
+    },
+    {
+      "id": "voss_r07",
+      "name": "Cuisine",
+      "x": 24,
+      "y": 12,
+      "w": 7,
+      "h": 4,
+      "color": "#4a4a40",
+      "gmOnly": false
+    },
+    {
+      "id": "voss_r08",
+      "name": "Bureau (coffre mural)",
+      "x": 13,
+      "y": 17,
+      "w": 5,
+      "h": 3,
+      "color": "#6a5a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "voss_r09",
+      "name": "Chambre de Kessler",
+      "x": 13,
+      "y": 21,
+      "w": 5,
+      "h": 3,
+      "color": "#4a3a5a",
+      "gmOnly": false
+    },
+    {
+      "id": "voss_r10",
+      "name": "Séjour vitré",
+      "x": 19,
+      "y": 17,
+      "w": 12,
+      "h": 7,
+      "color": "#2a4a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "voss_r11",
+      "name": "Patio",
+      "x": 19,
+      "y": 25,
+      "w": 12,
+      "h": 3,
+      "color": "#5a4a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "voss_r12",
+      "name": "Rochers",
+      "x": 0,
+      "y": 31,
+      "w": 46,
+      "h": 2,
+      "color": "#4a3a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "voss_r13",
+      "name": "Ponton (15 m)",
+      "x": 23,
+      "y": 31,
+      "w": 2,
+      "h": 15,
+      "color": "#6a5a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "voss_r14",
+      "name": "Puget Sound",
+      "x": 0,
+      "y": 33,
+      "w": 46,
+      "h": 13,
+      "color": "#1a3a5a",
+      "gmOnly": false
+    }
+  ],
+  "notes": [
+    {
+      "id": "voss_n01",
+      "x": 8,
+      "y": 5,
+      "text": "Portail à code et portillon : clavier asservi au host personnel (rating 3, Firewall 4). Bricks l'ouvre en une action. Escalader le mur de 2 m : Escalade seuil 1 — mais les projecteurs à détecteur s'allument.",
+      "gmOnly": true
+    },
+    {
+      "id": "voss_n02",
+      "x": 20,
+      "y": 10,
+      "text": "Caméra extérieure n°1 (porte d'entrée et allée). Caméra n°2 sur le patio, braquée sur le ponton. Toutes deux esclaves du host de la maison : boucle vidéo facile.",
+      "gmOnly": true
+    },
+    {
+      "id": "voss_n03",
+      "x": 39,
+      "y": 14,
+      "text": "Drone de surveillance domestique : une ronde du jardin toutes les 30 minutes, se pose sur le toit du garage. Il allume les projecteurs et prévient le commlink de Kessler.",
+      "gmOnly": true
+    },
+    {
+      "id": "voss_n04",
+      "x": 15,
+      "y": 14,
+      "text": "Chambre d'amis : un garde du corps d'élite (R5) installé depuis le gala. Il dort peu et mal. Il protège Kessler, pas les papiers de Kessler.",
+      "gmOnly": true
+    },
+    {
+      "id": "voss_n05",
+      "x": 15,
+      "y": 19,
+      "text": "Bureau : derrière le tableau de phare, COFFRE MURAL rating 5 (Serrurerie seuil 5, ou le code de Kessler). L'assurance-vie : copie non expurgée du dossier KE-SEA/AI-2074-0419 + enregistrement de l'appel lui demandant de le fermer.",
+      "gmOnly": true
+    },
+    {
+      "id": "voss_n06",
+      "x": 23,
+      "y": 21,
+      "text": "Kessler, 61 ans, vit seul. Le soir, il boit face à la mer. Il a fermé le 0419, il sait que Reyes était dans l'équipe, il sait que le Jardinier existe. Il ne sait pas ce que « transféré » veut dire — et ne veut pas le savoir.",
+      "gmOnly": true
+    },
+    {
+      "id": "voss_n07",
+      "x": 24,
+      "y": 25,
+      "text": "Baie coulissante en verre ordinaire : on la traverse d'un coup d'épaule (ou d'une balle).",
+      "gmOnly": true
+    },
+    {
+      "id": "voss_n08",
+      "x": 8,
+      "y": 16,
+      "text": "Garage : la berline de Kessler et un bateau à moteur sur sa remorque (inutilisable sans le mettre à l'eau : 10 minutes et du bruit).",
+      "gmOnly": true
+    },
+    {
+      "id": "voss_n09",
+      "x": 24,
+      "y": 38,
+      "text": "Ponton de 15 m : accès par l'eau possible, la nuit, sans passer par le portail. La lanterne du bout reste allumée.",
+      "gmOnly": true
+    },
+    {
+      "id": "voss_n10",
+      "x": 30,
+      "y": 6,
+      "text": "Acte 3 (Burn Notice) : si Kessler a été abattu devant le commissariat, Reyes vient vider le coffre. Arriver avant elle — ou pendant.",
+      "gmOnly": true
+    }
+  ],
+  "tokens": []
+}

@@ -1,0 +1,153 @@
+{
+  "specials": [
+    {
+      "id": "cabana-veste-occasion",
+      "name": "Veste pare-balles d'occasion",
+      "category": "Armures",
+      "file": "armor",
+      "catalogRef": "36a4cd30-c32c-44d0-847a-0c15fb51072a",
+      "cost": 600,
+      "originalCost": 1000,
+      "avail": "2",
+      "stock": 3,
+      "notes": "Récupérées après le grand ménage chez Porfla. Deux impacts recousus au kevlar, odeur de bière garantie — mais toujours 12 points d'armure."
+    },
+    {
+      "id": "cabana-faux-sin-4",
+      "name": "Faux SIN indice 4 — « Paul Mercier »",
+      "category": "Identité et créditubes",
+      "file": "gear",
+      "catalogRef": "0c800bca-e6ff-475b-a014-c2069f5e364c",
+      "rating": 4,
+      "cost": 9000,
+      "originalCost": 10000,
+      "avail": "12F",
+      "stock": 2,
+      "notes": "Identité québécoise propre, historique de crédit crédible, aucun lien avec Seattle. Cabana garantit qu'il passe un contrôle Knight Errant de routine.",
+      "gmNotes": "Si un runner l'utilise près d'un site AG Chemie, Hollow Pine peut le signaler : jet 4 dés contre l'indice."
+    },
+    {
+      "id": "cabana-stim-patchs",
+      "name": "Lot de 5 stim patchs (indice 3)",
+      "category": "Biotech",
+      "file": "gear",
+      "catalogRef": "320bd9e3-e261-4a45-aa03-c740b6855e73",
+      "rating": 3,
+      "stats": { "costFor": 5 },
+      "cost": 300,
+      "originalCost": 375,
+      "avail": "6",
+      "stock": 4,
+      "notes": "De quoi tenir une nuit blanche de plus. Effet secondaire : la descente fait mal (dommages étourdissants à la fin de l'effet)."
+    },
+    {
+      "id": "cabana-medkit-6",
+      "name": "Médikit indice 6 « tombé du camion »",
+      "category": "Biotech",
+      "file": "gear",
+      "catalogRef": "ae9c37df-6d82-44c1-aa21-6c87e45e2dc1",
+      "rating": 6,
+      "cost": 1200,
+      "originalCost": 1500,
+      "avail": "6",
+      "stock": 2,
+      "notes": "Kit DocWagon complet, numéro de série limé. Le logo clignote encore en RA si on l'allume trop près d'une ambulance."
+    },
+    {
+      "id": "cabana-trauma-patch",
+      "name": "Trauma patch",
+      "category": "Biotech",
+      "file": "gear",
+      "catalogRef": "5de1956f-0ec3-4fad-9e9a-d8b90ac1e3f4",
+      "cost": 450,
+      "originalCost": 500,
+      "avail": "6",
+      "stock": 4,
+      "notes": "Stabilise un runner mourant. Cabana conseille d'en avoir un par tête avant d'aller fouiner chez Hollow Pine."
+    },
+    {
+      "id": "cabana-silencieux-sniper",
+      "name": "Silencieux usiné pour fusil de précision",
+      "category": "Accessoires d'armes",
+      "file": "weapons",
+      "catalogRef": "0da6149e-982f-4051-825b-52c1b79c7e52",
+      "cost": 450,
+      "originalCost": 500,
+      "avail": "9F",
+      "stock": 1,
+      "notes": "Pour Jane : un armurier de Puyallup l'a usiné sur mesure pour un canon long. Se visse sans outil, pas de perte de précision."
+    },
+    {
+      "id": "cabana-katana-mono",
+      "name": "Katana à tranchant monofilament",
+      "category": "Armes tranchantes",
+      "file": "weapons",
+      "stats": { "type": "melee", "skill": "blades", "accuracy": 7, "reach": 1, "damage": "(STR+3)P", "ap": -5, "rc": 0 },
+      "cost": 6500,
+      "avail": "14F",
+      "stock": 1,
+      "notes": "Pour Anthony : lame forgée à Kyoto, fil monofilament serti dans le tranchant (PA −5 au lieu de −3). Cabana jure qu'elle a appartenu à un oyabun du Shotozumi-gumi.",
+      "gmNotes": "Arme maison : si un yakuza la reconnaît, conséquences sociales (Notoriété ou dette)."
+    },
+    {
+      "id": "cabana-fairlight-caliban",
+      "name": "Fairlight Caliban reconditionné",
+      "category": "Commlinks",
+      "file": "gear",
+      "catalogRef": "1522dd91-99d9-42f9-ab19-b43e8e3c7322",
+      "cost": 6000,
+      "originalCost": 8000,
+      "avail": "14",
+      "stock": 1,
+      "notes": "Pour Bricks : récupéré sur un cadre de Mitsuhama tombé en disgrâce, firmware réinstallé à blanc. Indice 7, la Rolls des commlinks — à prix d'ami."
+    },
+    {
+      "id": "cabana-uniforme-ke",
+      "name": "Uniforme Knight Errant (patrouille)",
+      "category": "Déguisements",
+      "file": "gear",
+      "catalogRef": "1ecebb15-6ced-464e-9e36-2cd217e4bc63",
+      "cost": 3500,
+      "avail": "16F",
+      "stock": 2,
+      "notes": "Uniforme complet, insignes et badge RFID cloné (valable 48 h). Bricks reconnaîtra la coupe : c'est le modèle de son ancienne brigade."
+    },
+    {
+      "id": "cabana-apds",
+      "name": "Munitions APDS (boîte de 10)",
+      "category": "Munitions",
+      "file": "gear",
+      "catalogRef": "ef9c8aae-26df-4fe6-88b3-79fbb5eb77c5",
+      "stats": { "costFor": 10 },
+      "cost": 110,
+      "originalCost": 120,
+      "avail": "12F",
+      "stock": 5,
+      "notes": "Perce-blindage militaire, stock détourné d'un convoi Lone Star. Idéal contre les gardes en armure lourde."
+    },
+    {
+      "id": "cabana-flashbang",
+      "name": "Grenade flashbang",
+      "category": "Munitions",
+      "file": "gear",
+      "catalogRef": "f4b92e14-fe1f-4be4-ad73-aed10e1f73b4",
+      "cost": 90,
+      "originalCost": 100,
+      "avail": "6R",
+      "stock": 6,
+      "notes": "Pour entrer quelque part sans tuer tout le monde. Ou pour en sortir."
+    },
+    {
+      "id": "cabana-badge-hollow-pine",
+      "name": "Badge d'accès Hollow Pine Holdings (cloné)",
+      "category": "Matériel d'intrusion",
+      "file": "gear",
+      "cost": 4000,
+      "avail": "10F",
+      "stock": 1,
+      "hidden": true,
+      "notes": "Badge RFID niveau 2 cloné sur un employé de Hollow Pine. Ouvre les portes de service, pas les labos.",
+      "gmNotes": "Brouillon : à révéler quand les runners remontent la piste Dorian Ashe / Hollow Pine (acte 2). Le badge est surveillé : chaque usage laisse une trace dans les logs de sécurité."
+    }
+  ]
+}

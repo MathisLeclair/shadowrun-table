@@ -1,0 +1,704 @@
+{
+  "id": "map_funerarium_hargrove",
+  "name": "Funérarium Hargrove & Fils (Renton)",
+  "folder": "Acte 3",
+  "description": "**Funérarium Hargrove & Fils (Renton) — la planque de secours de Perrine Cabana.** Un salon funéraire de briques fermé depuis 2076, racheté par Cabana via un prête-nom : vitraux, cercueils, une chapelle aux bancs de chêne, deux corbillards dans le garage. Entre les salons de présentation, Cabana a monté un hôpital de fortune. À l'est, le cimetière municipal ; au sud, l'allée arrière et la cour d'un immeuble voisin où débouche un ancien tunnel à charbon. **L'étage et le sous-sol sont dessinés à part, à droite du plan.**\n\n**Utilisation**\n- Acte 2, *Lazarus Cell* Phase 5 : Cabana en fait un hôpital de fortune pour les sujets et les donneurs évacués du Site Glacier (5 000¥).\n- Acte 3, *Burn Notice* Phase 3 : refuge du groupe après la nuit des rossignols. Discret, glacial, plein de cercueils. **Nachtigall peut le retrouver au bout de 48 heures** si quelqu'un a été suivi, ou si un sujet appelle sa famille.\n\n**Défendre la place** : porte en chêne (serrure mécanique rating 4 + barre intérieure), deux capteurs de mouvement bon marché dans la cour, l'étage comme poste de guet sur la rue et le cimetière. L'armoire à armes de Cabana dans le bureau (2 fusils à pompe, 1 HK-227, munitions). Pas de host, pas de caméra : Cabana n'aime pas les enregistrements — et Bricks n'a rien à défendre dans la Matrice ici.\n\n**Fuir** : les deux corbillards Mercedes (personne n'arrête un corbillard), ou le tunnel à charbon depuis le crématorium (30 m, débouche dans la cour voisine). Cachette d'urgence : les tiroirs réfrigérés de la salle de thanatopraxie (une personne, 10 minutes).\n\n**Attention** : le cimetière voisin offre énormément de couverture aux assaillants.\n\n**Lumière** : réglée sur *obscurité* (nuit) : tout est sombre sauf les salons des malades. De jour, allumez les vitraux (lumières colorées éteintes par défaut) ou passez en pénombre.",
+  "width": 70,
+  "height": 50,
+  "metersPerCell": 1,
+  "theme": "residential",
+  "lighting": "dark",
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "tiles": [
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,                        ",
+    ",,,,,,,,,,,,,,,,,,,,vvvvv,,,,,,,,,,,,,,,,,,,,, #####WW####WW###WW#### ",
+    ",,,,,,,,,,,,,,,,,,,,vvvvv,,,,,,,,,,,,,,,,,,,,, #ss#=====.#..........# ",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, #ssD......#..........W ",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, #..#......#..bbb.....W ",
+    ",,,,,,,,o,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,o,,,,, #..#..TT..D..........# ",
+    " ##########WWD#WW##########=========D========= #..#......#......TT..# ",
+    " #......m#T.......#.......#=gggggggg,gggggggg= #..#......#..........# ",
+    " #.TTT...#......b.#ss..ss.#=gggggggg,gttggggg= #..#......#..........# ",
+    " #.......#......b.#ss..ss.#=gcgggcgg,gttgcggg= ##D########D####D##### ",
+    " #.......D........D.......#=gggggggg,gggggggg= #.....m.#....#.......# ",
+    " #m......#........#.......#=gggggggg,gggggggg= #.......#....#.......W ",
+    " #m......#........#......m#=gcgcgcgg,ggcgcgcg= #.......#....#.......W ",
+    " ###########DD###D#########=g#####gg,gggggggg= #.bb....#....#....bb.W ",
+    " #..............#..#.bb.b.#=g#...#gg,gggggggg= #.bb....#~~.m#....bb.# ",
+    " W.=====..=====.#..#....b.W=g#...#gg,ggcgggcg= #.......#....#.......# ",
+    " W..............#..D.bb.b.W=g##D##gg,gggggggg= ###################### ",
+    " W.=====..=====.#..#......#=gggggggg,gggggggg=                        ",
+    " W..............#..########=gcgcgcgg,ggcgcttg=                        ",
+    " W.=====..=====.#..#.bb...#=gggggggg,gggggttg=                        ",
+    " W..............#..#....b.W=ttgggggg,gggggggg= ###################### ",
+    " Wm...TTTT......#..D.bb.b.W=ttgggcgg,ggggcggg= #ss................ee# ",
+    " #m.............#..#....b.#=gggggggg,gggggggg= #ss................ee# ",
+    " #########D######D#########=gggggggg,gggggggg= #....................# ",
+    " #.........ee#,,,,,,,,,,,,#=,,,,,,,,o,,,,,,,,= #####D#########D###### ",
+    " #.vv..vv..ee#,,,,,,,,,cc,#=gggggggg,gggggggg= #m________#..........# ",
+    " #.vv..vv....#,,,,,,,,,,,,#=gggggggg,gggggggg= #m________#...mmmm.o.# ",
+    " #.vv..vv....D,,,,,,,,,,,,#=gggcgggg,ggcgggcg= #m__T__T__#...mmmm...# ",
+    " #.vv..vv....#,,,,,,,,,,,,#=gggggtgg,gggggggg= #m__T__T__#...mmmm...# ",
+    " #.vv..vv....#,,,,,,,,,,,t#=gggggtgg,gggggggg= #m________#..........# ",
+    " #m..........#,c,,,,,,,,,,#=gcgcgcgg,ggcgcgcg= #m________#..........# ",
+    " ###DDDDD###########D######=gggggggg,gggggggg= #.________#..........# ",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,=gggggggg,gggggggg= #.__====__#..........# ",
+    ",,,,,,,,,,,,,,,,,,,,,,,,cc,=gcgggcgg,gg##D##g= #.________#..........# ",
+    ",,c,,,,,,,,,,,,,,,,,,,,,,,,=gggggggg,gg#...#g= #.________#.cc.......# ",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,=gggggggg,gg#...#g= #.________#.cc.......# ",
+    "#############D#############=gcgcgcgg,gg#####g= #.________#..........# ",
+    "#    ########D########    #=gggggggg,gggggggg= ################D##### ",
+    "#    #,,,,,,,,,,,,,,,#    #=gggggggg,gggggggg=                #r#     ",
+    "#    #,ccc,,,,,,,,,t,#    #=gggcgggg,ggcgggcg=                #r#     ",
+    "#    #,,,,,,,,,,,,,,,#    #=ggttgggg,gggggggg=                #r#     ",
+    "#    #,,,,,,,,,,,,,,,#    #=ggttgggg,gggggggg=                #r#     ",
+    "#    #,,,,,,,,,,,,,,,#    #=gcgcgcgg,ggcgcgcg=                #r#     ",
+    "#    #,,,,,,s,,,,,,,,#    #=gggggggg,gggggggg=                #r#     ",
+    "#    #,,,,,,,,,,,,,,,#    #=gggggggg,gggggttg=                #r#     ",
+    "#    #,,,,,,,,,,,,cc,#    #=gcgggcgg,ggggcttg=                #r#     ",
+    "#    #,,,,,,,,,,,,cc,#    #=gggggggg,gggggggg=                #r#     ",
+    "#    #,,,,,,,,,,,,,,,#    #=gggggggg,gggggggg=                #r#     ",
+    "#    #################    #=gggggggg,gggggggg=                #s#     ",
+    "###########################=gggggggg,gggggggg=                        "
+  ],
+  "doors": [
+    {
+      "id": "fun_d01",
+      "x": 36,
+      "y": 6,
+      "state": "closed",
+      "kind": "gate",
+      "name": "Grille du cimetière"
+    },
+    {
+      "id": "fun_d02",
+      "x": 31,
+      "y": 16,
+      "state": "locked",
+      "kind": "door",
+      "name": "Mausolée Hargrove"
+    },
+    {
+      "id": "fun_d03",
+      "x": 41,
+      "y": 33,
+      "state": "locked",
+      "kind": "door",
+      "name": "Mausolée"
+    },
+    {
+      "id": "fun_d04",
+      "x": 9,
+      "y": 10,
+      "state": "closed",
+      "kind": "door",
+      "name": "Bureau du directeur"
+    },
+    {
+      "id": "fun_d05",
+      "x": 13,
+      "y": 6,
+      "state": "locked",
+      "kind": "door",
+      "name": "Porte en chêne (serrure 4 + barre)"
+    },
+    {
+      "id": "fun_d06",
+      "x": 18,
+      "y": 10,
+      "state": "closed",
+      "kind": "door",
+      "name": "Cage d'escalier"
+    },
+    {
+      "id": "fun_d07",
+      "x": 12,
+      "y": 13,
+      "state": "open",
+      "kind": "door",
+      "name": "Chapelle"
+    },
+    {
+      "id": "fun_d08",
+      "x": 13,
+      "y": 13,
+      "state": "open",
+      "kind": "door",
+      "name": "Chapelle"
+    },
+    {
+      "id": "fun_d09",
+      "x": 10,
+      "y": 23,
+      "state": "closed",
+      "kind": "door",
+      "name": "Chapelle → garage (cercueils)"
+    },
+    {
+      "id": "fun_d10",
+      "x": 17,
+      "y": 13,
+      "state": "closed",
+      "kind": "door",
+      "name": "Couloir des salons"
+    },
+    {
+      "id": "fun_d11",
+      "x": 19,
+      "y": 16,
+      "state": "open",
+      "kind": "door",
+      "name": "Salon de présentation A"
+    },
+    {
+      "id": "fun_d12",
+      "x": 19,
+      "y": 21,
+      "state": "open",
+      "kind": "door",
+      "name": "Salon de présentation B"
+    },
+    {
+      "id": "fun_d13",
+      "x": 17,
+      "y": 23,
+      "state": "closed",
+      "kind": "door",
+      "name": "Porte de service (cour)"
+    },
+    {
+      "id": "fun_d14",
+      "x": 4,
+      "y": 31,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Porte basculante du garage"
+    },
+    {
+      "id": "fun_d15",
+      "x": 5,
+      "y": 31,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Porte basculante du garage"
+    },
+    {
+      "id": "fun_d16",
+      "x": 6,
+      "y": 31,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Porte basculante du garage"
+    },
+    {
+      "id": "fun_d17",
+      "x": 7,
+      "y": 31,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Porte basculante du garage"
+    },
+    {
+      "id": "fun_d18",
+      "x": 8,
+      "y": 31,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Porte basculante du garage"
+    },
+    {
+      "id": "fun_d19",
+      "x": 13,
+      "y": 27,
+      "state": "closed",
+      "kind": "door",
+      "name": "Garage → cour"
+    },
+    {
+      "id": "fun_d20",
+      "x": 20,
+      "y": 31,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Portail de la cour"
+    },
+    {
+      "id": "fun_d21",
+      "x": 13,
+      "y": 36,
+      "state": "closed",
+      "kind": "gate",
+      "name": "Porche (cour voisine)"
+    },
+    {
+      "id": "fun_d22",
+      "x": 13,
+      "y": 37,
+      "state": "open",
+      "kind": "door",
+      "name": "Porche (cour voisine)"
+    },
+    {
+      "id": "fun_d23",
+      "x": 50,
+      "y": 3,
+      "state": "open",
+      "kind": "door",
+      "name": "Palier → cuisine"
+    },
+    {
+      "id": "fun_d24",
+      "x": 57,
+      "y": 5,
+      "state": "open",
+      "kind": "door",
+      "name": "Salon"
+    },
+    {
+      "id": "fun_d25",
+      "x": 49,
+      "y": 9,
+      "state": "closed",
+      "kind": "door",
+      "name": "Chambre 1"
+    },
+    {
+      "id": "fun_d26",
+      "x": 58,
+      "y": 9,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salle de bain"
+    },
+    {
+      "id": "fun_d27",
+      "x": 63,
+      "y": 9,
+      "state": "closed",
+      "kind": "door",
+      "name": "Chambre 2"
+    },
+    {
+      "id": "fun_d28",
+      "x": 52,
+      "y": 24,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salle de thanatopraxie"
+    },
+    {
+      "id": "fun_d29",
+      "x": 62,
+      "y": 24,
+      "state": "closed",
+      "kind": "door",
+      "name": "Crématorium"
+    },
+    {
+      "id": "fun_d30",
+      "x": 63,
+      "y": 37,
+      "state": "closed",
+      "kind": "door",
+      "name": "Trappe du tunnel à charbon"
+    }
+  ],
+  "lights": [
+    {
+      "id": "fun_l01",
+      "x": 8,
+      "y": 2,
+      "radius": 6,
+      "color": "#ffb766",
+      "on": true,
+      "name": "Éclairage — rue"
+    },
+    {
+      "id": "fun_l02",
+      "x": 40,
+      "y": 2,
+      "radius": 6,
+      "color": "#ffb766",
+      "on": true,
+      "name": "Éclairage — rue"
+    },
+    {
+      "id": "fun_l03",
+      "x": 22,
+      "y": 16,
+      "radius": 3,
+      "color": "#ffd9a0",
+      "on": true,
+      "name": "Salon A — veilleuse des malades"
+    },
+    {
+      "id": "fun_l04",
+      "x": 22,
+      "y": 20,
+      "radius": 3,
+      "color": "#ffd9a0",
+      "on": true,
+      "name": "Salon B — veilleuse des malades"
+    },
+    {
+      "id": "fun_l05",
+      "x": 4,
+      "y": 9,
+      "radius": 2,
+      "color": "#ff9a5a",
+      "on": true,
+      "name": "Radio et lampe du bureau"
+    },
+    {
+      "id": "fun_l06",
+      "x": 3,
+      "y": 16,
+      "radius": 4,
+      "color": "#ff3fd2",
+      "on": false,
+      "name": "Vitrail (jour)"
+    },
+    {
+      "id": "fun_l07",
+      "x": 3,
+      "y": 20,
+      "radius": 4,
+      "color": "#36e6ff",
+      "on": false,
+      "name": "Vitrail (jour)"
+    },
+    {
+      "id": "fun_l08",
+      "x": 13,
+      "y": 8,
+      "radius": 4,
+      "color": "#ffb766",
+      "on": false,
+      "name": "Vitraux du hall (jour)"
+    },
+    {
+      "id": "fun_l09",
+      "x": 8,
+      "y": 21,
+      "radius": 2,
+      "color": "#ffcf7a",
+      "on": false,
+      "name": "Cierges de l'autel"
+    },
+    {
+      "id": "fun_l10",
+      "x": 20,
+      "y": 27,
+      "radius": 4,
+      "color": "#f4f8ff",
+      "on": false,
+      "name": "Applique de la cour"
+    },
+    {
+      "id": "fun_l11",
+      "x": 34,
+      "y": 21,
+      "radius": 2,
+      "color": "#ff6a3a",
+      "on": true,
+      "name": "Lanterne de tombe"
+    },
+    {
+      "id": "fun_l12",
+      "x": 13,
+      "y": 41,
+      "radius": 3,
+      "color": "#ffb766",
+      "on": true,
+      "name": "Cour voisine — ampoule"
+    },
+    {
+      "id": "fun_l13",
+      "x": 62,
+      "y": 5,
+      "radius": 3,
+      "color": "#ffd9a0",
+      "on": false,
+      "name": "Étage — salon"
+    },
+    {
+      "id": "fun_l14",
+      "x": 52,
+      "y": 29,
+      "radius": 4,
+      "color": "#e8f4ff",
+      "on": false,
+      "name": "Néon de la salle de thanatopraxie"
+    },
+    {
+      "id": "fun_l15",
+      "x": 63,
+      "y": 31,
+      "radius": 3,
+      "color": "#ff8a3a",
+      "on": false,
+      "name": "Braises du four"
+    }
+  ],
+  "regions": [
+    {
+      "id": "fun_r01",
+      "name": "Rue (Renton)",
+      "x": 0,
+      "y": 0,
+      "w": 46,
+      "h": 6,
+      "color": "#3a4a5c",
+      "gmOnly": false
+    },
+    {
+      "id": "fun_r02",
+      "name": "Cimetière municipal",
+      "x": 28,
+      "y": 7,
+      "w": 17,
+      "h": 43,
+      "color": "#2a4a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "fun_r03",
+      "name": "Bureau du directeur",
+      "x": 2,
+      "y": 7,
+      "w": 7,
+      "h": 6,
+      "color": "#5a4a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "fun_r04",
+      "name": "Hall d'accueil",
+      "x": 10,
+      "y": 7,
+      "w": 8,
+      "h": 6,
+      "color": "#5a3a5a",
+      "gmOnly": false
+    },
+    {
+      "id": "fun_r05",
+      "name": "Cage d'escalier",
+      "x": 19,
+      "y": 7,
+      "w": 7,
+      "h": 6,
+      "color": "#4a4a4a",
+      "gmOnly": false
+    },
+    {
+      "id": "fun_r06",
+      "name": "Chapelle",
+      "x": 2,
+      "y": 14,
+      "w": 14,
+      "h": 9,
+      "color": "#4a2a5a",
+      "gmOnly": false
+    },
+    {
+      "id": "fun_r07",
+      "name": "Salon A (malades)",
+      "x": 20,
+      "y": 14,
+      "w": 6,
+      "h": 4,
+      "color": "#6a3a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "fun_r08",
+      "name": "Salon B (malades)",
+      "x": 20,
+      "y": 19,
+      "w": 6,
+      "h": 4,
+      "color": "#6a3a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "fun_r09",
+      "name": "Garage (corbillards)",
+      "x": 2,
+      "y": 24,
+      "w": 11,
+      "h": 7,
+      "color": "#3a3a4a",
+      "gmOnly": false
+    },
+    {
+      "id": "fun_r10",
+      "name": "Cour (capteurs de mouvement)",
+      "x": 14,
+      "y": 24,
+      "w": 12,
+      "h": 7,
+      "color": "#4a4a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "fun_r11",
+      "name": "Allée arrière",
+      "x": 0,
+      "y": 32,
+      "w": 27,
+      "h": 4,
+      "color": "#3a3a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "fun_r12",
+      "name": "Cour de l'immeuble voisin",
+      "x": 6,
+      "y": 38,
+      "w": 15,
+      "h": 10,
+      "color": "#3a4a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "fun_r13",
+      "name": "Étage — appartement (plan séparé)",
+      "x": 48,
+      "y": 2,
+      "w": 20,
+      "h": 14,
+      "color": "#3a3a5a",
+      "gmOnly": false
+    },
+    {
+      "id": "fun_r14",
+      "name": "Sous-sol (plan séparé)",
+      "x": 48,
+      "y": 21,
+      "w": 20,
+      "h": 16,
+      "color": "#3a4a4a",
+      "gmOnly": false
+    },
+    {
+      "id": "fun_r15",
+      "name": "Salle de thanatopraxie",
+      "x": 48,
+      "y": 25,
+      "w": 9,
+      "h": 12,
+      "color": "#5a6a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "fun_r16",
+      "name": "Crématorium",
+      "x": 58,
+      "y": 25,
+      "w": 10,
+      "h": 12,
+      "color": "#5a3a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "fun_r17",
+      "name": "Tunnel à charbon (30 m)",
+      "x": 62,
+      "y": 37,
+      "w": 3,
+      "h": 12,
+      "color": "#4a3a2a",
+      "gmOnly": true
+    }
+  ],
+  "notes": [
+    {
+      "id": "fun_n01",
+      "x": 13,
+      "y": 7,
+      "text": "Porte en chêne : serrure mécanique rating 4 + barre de sécurité intérieure (une fois barrée : Force seuil 4 ou explosifs). Vitraux de part et d'autre.",
+      "gmOnly": true
+    },
+    {
+      "id": "fun_n02",
+      "x": 3,
+      "y": 11,
+      "text": "Armoire à armes de Cabana : 2 fusils à pompe, 1 HK-227, munitions. Radio sur le bureau (fréquence de Cabana).",
+      "gmOnly": true
+    },
+    {
+      "id": "fun_n03",
+      "x": 8,
+      "y": 18,
+      "text": "Chapelle : rangées de bancs = couverture partielle. Autel, orgue électrique, vitraux. Le cœur de la défense si l'ennemi entre par l'avant.",
+      "gmOnly": true
+    },
+    {
+      "id": "fun_n04",
+      "x": 23,
+      "y": 15,
+      "text": "Salons de présentation transformés en chambres de malades (lits de camp, perfusions) : sujets et donneurs sauvés du Site Glacier. Sans injection, les sujets rajeunis « régressent » en quelques semaines — une raison d'aller à Halcyon.",
+      "gmOnly": true
+    },
+    {
+      "id": "fun_n05",
+      "x": 5,
+      "y": 27,
+      "text": "Deux corbillards Mercedes en état de marche : véhicules de fuite (personne n'arrête un corbillard). Monte-charge vers le sous-sol (cercueils).",
+      "gmOnly": true
+    },
+    {
+      "id": "fun_n06",
+      "x": 20,
+      "y": 26,
+      "text": "Deux capteurs de mouvement bon marché dans la cour (Perception seuil 2 pour les repérer, Discrétion seuil 2 pour passer). Ils sonnent sur la radio du bureau.",
+      "gmOnly": true
+    },
+    {
+      "id": "fun_n07",
+      "x": 34,
+      "y": 26,
+      "text": "Le cimetière offre beaucoup de couverture aux assaillants : tombes (couverture partielle), mausolées et arbres (couverture lourde). Nachtigall s'approcherait par ici et par l'allée, en même temps.",
+      "gmOnly": true
+    },
+    {
+      "id": "fun_n08",
+      "x": 62,
+      "y": 3,
+      "text": "Étage : fenêtres sur la rue et sur le cimetière — poste de guet idéal (et de tir pour Jane).",
+      "gmOnly": true
+    },
+    {
+      "id": "fun_n09",
+      "x": 49,
+      "y": 27,
+      "text": "Six tiroirs réfrigérés à cadavres : cachette parfaite pour une personne pendant 10 minutes (ensuite, Constitution + Volonté seuil 2 par minute).",
+      "gmOnly": true
+    },
+    {
+      "id": "fun_n10",
+      "x": 63,
+      "y": 33,
+      "text": "Crématorium : four éteint, cheminée. Trappe de service vers l'ancien tunnel de livraison de charbon : 30 m, débouche dans la cour de l'immeuble voisin (12,43 sur le plan principal).",
+      "gmOnly": true
+    },
+    {
+      "id": "fun_n11",
+      "x": 12,
+      "y": 43,
+      "text": "Trappe du tunnel à charbon (sortie). Cour d'un immeuble d'habitation : on en sort par le porche sur l'allée.",
+      "gmOnly": true
+    },
+    {
+      "id": "fun_n12",
+      "x": 14,
+      "y": 34,
+      "text": "Burn Notice : Nachtigall retrouve le funérarium au bout de 48 h si quelqu'un a été suivi ou si un sujet appelle sa famille. Cabana ne viendra pas en personne ; elle envoie de la soupe et des munitions.",
+      "gmOnly": true
+    }
+  ],
+  "tokens": []
+}

@@ -1,0 +1,626 @@
+{
+  "acts": [
+    {
+      "id": "act_1",
+      "title": "Acte 1 — Affaires en suspens",
+      "summary": "Retombées immédiates du job « Kidnapping ». Discret, réactif, plante tous les fils à venir. AG Chemie colmate la fuite (**Cleanup Crew**), le groupe remonte l'argent et la piste jusqu'à **Hollow Pine Holdings** (**Open Book**) et, en option, la famille d'Anthony se révèle pressée par la même société-écran (**Family Business**).\n\nÀ la fin de l'acte, sans que personne ne l'ait dit à voix haute, le groupe doit avoir **un nom** (Hollow Pine), **un visage** (Dorian Ashe) et **une raison personnelle** de s'y intéresser — chacun à sa manière. Seuls Cleanup Crew et Open Book sont indispensables."
+    },
+    {
+      "id": "act_2",
+      "title": "Acte 2 — Creuser plus profond",
+      "summary": "Les enjeux montent : AG Chemie remarque que le groupe continue de creuser et des antagonistes de rang intermédiaire apparaissent. Course pour retrouver **Rebecca « Windows » Wrought** et le reste du dossier de l'escouade de Bricks, infiltration mondaine de Jane (**The Guest List**) avec sa complication « visage du passé », raid sur un site de recherche noir plus important que celui de Grogg (**Lazarus Cell**), et confrontation ambivalente d'Anthony avec **Adachi Morinaga** (**Inheritance**)."
+    },
+    {
+      "id": "act_3",
+      "title": "Acte 3 — Confrontation",
+      "summary": "AG Chemie sait que le groupe détient de vraies preuves et le marque pour élimination (**Burn Notice**). Les runners choisissent comment utiliser ce qu'ils ont : Monobe, corpo rivale, presse ou chantage. Finale (**Severance**) : assaut sur le centre névralgique seattlois de Project Lazarus. L'issue doit répondre à **qui a effacé l'escouade de Bricks et pourquoi**, et clore (ou compliquer durablement) le lien d'Anthony avec sa famille et Morinaga — sans jamais quitter Seattle."
+    }
+  ],
+  "quests": [
+    {
+      "id": "q_cleanup_crew",
+      "actId": "act_1",
+      "title": "Cleanup Crew",
+      "status": "done",
+      "doc": "act1-loose-ends.md#Quête 1.1",
+      "summary": "AG Chemie envoie une équipe déniable effacer les preuves et les témoins gênants du job « Kidnapping » : Joseph Porfla et la femme secourue (ex-employée d'Ares rajeunie, en convalescence sous faux nom). Le groupe doit protéger des gens qu'il vient d'aider — première preuve directe que l'affaire dépasse largement un simple médecin.\n\n**Bilan à la table :** Porfla et la femme secourue sont saufs, mais aucune capture ni aveu exploitable. Reyes n'a jamais été croisée.",
+      "phases": [
+        {
+          "id": "p1",
+          "title": "Le tuyau — le Kidnappeur « suicidé »",
+          "done": true,
+          "text": "Cabana appelle : le Kidnappeur est retrouvé mort dans sa cellule, suicide maquillé (Perception ou Forensics, seuil 3, pour le repérer). Deux témoins restent exposés : Porfla et la femme secourue.\n\n*Non jouée à la table — considérée comme acquise en coulisses.*"
+        },
+        {
+          "id": "p2",
+          "title": "Le bar de Porfla",
+          "done": true,
+          "text": "**Séance 1.** Le groupe arrive pendant l'enlèvement : **3 Nettoyeurs** emmènent Porfla, inconscient (propofol + midazolam, même mode opératoire que le job Kidnapping). Combat immédiat, fuite ratée : **2 morts, 1 capturé inconscient**. Porfla stabilisé en séance 2."
+        },
+        {
+          "id": "p3",
+          "title": "La planque — mettre la femme secourue à l'abri",
+          "done": true,
+          "text": "**Séance 2.** Extraction de la femme secourue depuis l'hôpital (Trauma Ward) **sans jamais croiser l'équipe de Reyes** — sortie propre. Elle est mise à l'abri chez Jane et interrogée (captivité, prises de sang, autres patients, « visiteuse tirée à quatre épingles »)."
+        },
+        {
+          "id": "p4",
+          "title": "Point culminant — capturer un Nettoyeur",
+          "done": true,
+          "text": "Prévu : un Nettoyeur capturé lâche « Hollow Pine » sous pression (WIL 3 + CHA 3 = 6 dés en opposition).\n\n**Réel :** le Nettoyeur capturé en séance 1 est perdu sans avoir rien lâché. Piste remplacée par le signal de l'implant oculaire (voir Open Book)."
+        }
+      ],
+      "npcs": [
+        "tpl_agc_cleaner",
+        "tpl_agc_reyes",
+        "tpl_joseph_porfla",
+        "tpl_subject_l07"
+      ],
+      "maps": [
+        "map_bar_porfla",
+        "map_fvtt_bar",
+        "map_back_alley",
+        "map_fvtt_back-alley",
+        "map_trauma_ward",
+        "map_fvtt_trauma-ward",
+        "map_jane_apartment",
+        "map_fvtt_apartement"
+      ],
+      "rewards": "- **2 000¥ / runner** de la part de Perrine Cabana\n- **2 Karma** / runner\n- Butin des Nettoyeurs (pistolets suppressés, faux SIN, commlink rating 4 avec agent d'effacement) — **déjà revendu en séance 2**",
+      "gmNotes": "- **À vérifier :** les 2 000¥ et 2 Karma de Cabana ont-ils été distribués ? (le plan de la séance 3 prévoyait de le faire si ce n'était pas fait)\n- Le Nettoyeur capturé : sort exact non tranché (mort, relâché, livré ?). Si AG Chemie l'apprend, sa réaction en Acte 2 s'accélère légèrement — ne pas l'annoncer.\n- **Reyes reste intacte et non identifiée** : menace en réserve, réutilisable n'importe quand sans explication."
+    },
+    {
+      "id": "q_open_book",
+      "actId": "act_1",
+      "title": "Open Book",
+      "status": "active",
+      "doc": "act1-loose-ends.md#Quête 1.2",
+      "summary": "L'enquête de Bricks. À l'origine : un grand livre chiffré dans les commlinks Renraku Sensei. **Ce matériel a été revendu (séance 2)** : la porte d'entrée est désormais le **signal de traçage caché dans l'implant oculaire** de la femme secourue, qui remonte jusqu'à un relais de **Hollow Pine Holdings**. La quête culmine sur la révélation du vieux numéro de dossier Knight Errant — celui de l'escouade de Bricks.",
+      "phases": [
+        {
+          "id": "p1",
+          "title": "Accroche — hacker l'implant et tracer le signal",
+          "done": true,
+          "text": "*Remplace « Le grand livre » (obsolète, commlinks revendus).* **Séance 3.**\n1. Stade 1 (seuil 3, Cybertechnologie/Médecine) — implant Ares standard.\n2. Stade 2 (seuil 6, Cybertechnologie) — module de biomonitoring greffé après coup.\n3. Stade 3 (seuil 9, Guerre électronique/Hacking) — salves intermittentes : il « appelle chez lui ». **Urgence** : l'appartement de Jane est peut-être localisé.\n4. Traçage (seuil 8) — relais Matrice au nom de **Hollow Pine Holdings**.\n5. Bonus : décrypter la salve (seuil 8) — « Subject L-07 — Rejuvenation Index 0.83 ».\n\nDécision : désactiver (Électronique 4), extraire (Médecine 5, risque Étourdissant) ou garder comme appât.\n\n*Résultat exact de la séance 3 non documenté — à confirmer.*"
+        },
+        {
+          "id": "p2",
+          "title": "Creuser du côté de Hollow Pine — registres publics",
+          "done": true,
+          "text": "**Séance 3 (fin).** Registres publics (Informatique, seuil 4) : coquille immobilière/« conseil », dirigeant unique **Dorian Ashe**, bureau à Seattle (Corp Lobby), host associé.\n- Optionnel : creuser sur Ashe (Étiquette/Négociation/contact, seuil 4) — visage public, galas, aucun antécédent → rapprochement avec la « visiteuse tirée à quatre épingles ».\n- Repérage du bureau (Perception/Perception matricielle, seuil 5) : horaires, agents Human Corpo Security R3, IC de patrouille.\n\nLe groupe devait finir la séance en choisissant son approche : **host à distance** ou **intrusion physique**.\n\n*À confirmer : approche choisie par la table.*"
+        },
+        {
+          "id": "p3",
+          "title": "Le host de Hollow Pine (ou le Corp Lobby)",
+          "done": false,
+          "text": "**Host Rating 5** — Attaque 6 / Corruption 8 / Traitement 5 / Firewall 7. IC de patrouille + **Junior Security Spider**, qui monte en **Standard Security Spider** si alerte. Gagnable pour une seule decker : Hollow Pine n'est qu'un relais, pas une forteresse.\n\nAlternative physique : bureau au Corp Lobby (Jane/Anthony), sécurité Human Corpo Security R3, Server Room.\n\nBonus : Bricks peut ponctionner quelques milliers de ¥ sur un compte discrétionnaire (attention attirée au jugé du MJ)."
+        },
+        {
+          "id": "p4",
+          "title": "La révélation — le dossier Knight Errant",
+          "done": false,
+          "text": "Enfoui dans le host (ou dans les dossiers papier) : un vieux numéro de dossier renvoyant à une enquête interne Knight Errant classée sans suite — **le dossier de l'escouade de Bricks**. Coup de poing émotionnel : le fil qu'elle tire depuis des années et la corpo que le groupe expose ne font qu'un. Ouvre **Windows Open** (Acte 2)."
+        }
+      ],
+      "npcs": [
+        "tpl_dorian_ashe",
+        "tpl_subject_l07",
+        "tpl_host_hollow_pine",
+        "tpl_ic_patrol",
+        "tpl_spider_junior",
+        "tpl_spider_standard",
+        "tpl_corpsec_human_r3",
+        "tpl_agc_reyes"
+      ],
+      "maps": [
+        "map_jane_apartment",
+        "map_fvtt_apartement",
+        "map_hacker_lair",
+        "map_fvtt_hacker-s-lair",
+        "map_corp_lobby",
+        "map_fvtt_corp-lobby",
+        "map_server_room",
+        "map_fvtt_server-room"
+      ],
+      "rewards": "- **2 Karma** / runner (travail de terrain) — pas de paiement, ce n'est pas un contrat\n- Ponction discrète sur un compte de Hollow Pine (quelques milliers de ¥, au jugé)\n- La piste qui ouvre **Windows Open**",
+      "gmNotes": "- Si la piste de l'implant a été perdue (jets ratés, puce coupée trop tôt) : faire resurgir Hollow Pine via **Reyes** (filée ou capturée) ou via **Dorian Ashe** dans Family Business.\n- Le fragment **L-07** et les autres patients sont deux graines pour **Lazarus Cell** : ne pas les exploiter tout de suite.\n- Séance 4 : jouer la Phase 3 puis la Phase 4 selon l'approche choisie."
+    },
+    {
+      "id": "q_family_business",
+      "actId": "act_1",
+      "title": "Family Business",
+      "status": "upcoming",
+      "doc": "act1-loose-ends.md#Quête 1.3",
+      "summary": "*Optionnel — coup de projecteur sur Anthony.* Un message codé de **Reinhardt Klee**, représentant du domaine Von Schloss à Seattle : un acheteur agressif fait pression sur la holding locale de la famille pour peser sur un différend resté à Francfort. L'acheteur est, encore, **Hollow Pine Holdings** — représentée par Dorian Ashe. Doit sonner comme un « attends, encore ce nom-là ? ».",
+      "phases": [
+        {
+          "id": "p1",
+          "title": "La réunion avec Klee",
+          "done": false,
+          "text": "Anthony retrouve Klee à la holding familiale (Penthouse Office). Menaces juridiques, offre de rachat au rabais, hommes qui débarquent sans prévenir. Klee a peur et veut que ça se règle **discrètement**, sans que ça remonte à la famille."
+        },
+        {
+          "id": "p2",
+          "title": "Qui est derrière tout ça",
+          "done": false,
+          "text": "Étiquette, Négociation ou piste papier de Bricks : l'acheteur est **Hollow Pine Holdings**, représentée par **Dorian Ashe**. Si le groupe l'a déjà croisée, c'est une reconnaissance, pas une présentation."
+        },
+        {
+          "id": "p3",
+          "title": "La pression monte",
+          "done": false,
+          "text": "Gros bras locaux pour « convaincre » Klee de signer : Human Corpo Security R3 / Troll Corpo Security R3 rhabillés en hommes de main. Confrontation possible au chantier près de la holding (Construction Site)."
+        },
+        {
+          "id": "p4",
+          "title": "Un avertissement, pas un combat",
+          "done": false,
+          "text": "**Ne pas régler Morinaga ici** (réservé à Inheritance). Le planter : il observe la scène à distance, ou un homme de main lâche un nom qu'Anthony reconnaît du monastère. Le but : le malaise."
+        }
+      ],
+      "npcs": [
+        "tpl_reinhardt_klee",
+        "tpl_dorian_ashe",
+        "tpl_corpsec_human_r3",
+        "tpl_corpsec_troll_r3"
+      ],
+      "maps": [
+        "map_penthouse_office",
+        "map_fvtt_penthouse-office",
+        "map_construction_site",
+        "map_fvtt_construction-site",
+        "map_corp_lobby",
+        "map_fvtt_corp-lobby"
+      ],
+      "rewards": "- **1 500¥** (la famille n'a pas de liquidités à revendre)\n- **Reinhardt Klee** comme contact (Connexion 2, Loyauté 3)\n- **2 Karma** / runner\n- Confirmation narrative : Hollow Pine est la façade seattloise d'AG Chemie",
+      "gmNotes": "- À déclencher quand Anthony a besoin de lumière — idéalement juste après la Phase 2 d'Open Book (Ashe déjà identifiée).\n- Document prêt : « Message codé de Reinhardt Klee » (onglet Dossiers joueurs) — à révéler à Anthony seul."
+    },
+    {
+      "id": "q_windows_open",
+      "actId": "act_2",
+      "title": "Windows Open",
+      "status": "upcoming",
+      "doc": "campaign-outline.md#Acte 2",
+      "summary": "Retrouver **Rebecca « Windows » Wrought**, l'ex-partenaire de Bricks qui l'a aidée à simuler sa mort, désormais encore plus enfoncée dans la clandestinité. Elle détient le reste du dossier de l'escouade — mais quelqu'un d'autre la cherche aussi : c'est une course. Établit qu'AG Chemie traque activement tous ceux liés à l'ancienne enquête.",
+      "phases": [
+        {
+          "id": "p1",
+          "title": "Remonter la piste de Windows",
+          "done": false,
+          "text": "Contacts de Bricks (Ben Teller, Cabana), vieilles planques, protocoles de contact Knight Errant que seules Bricks et Windows connaissent."
+        },
+        {
+          "id": "p2",
+          "title": "Quelqu'un d'autre la cherche",
+          "done": false,
+          "text": "Signes d'une autre équipe sur la même piste : Reyes et ses Nettoyeurs sont les candidats naturels. Faire sentir l'horloge."
+        },
+        {
+          "id": "p3",
+          "title": "La course",
+          "done": false,
+          "text": "Arriver avant l'équipe d'AG Chemie — poursuite, embuscade ou défense de la planque de Windows. Crimson Crush possible en muscle de rue."
+        },
+        {
+          "id": "p4",
+          "title": "Le reste du dossier",
+          "done": false,
+          "text": "Windows livre ses fragments du dossier original de l'escouade. Elle devient un personnage actif — et potentiellement une cible à protéger."
+        }
+      ],
+      "npcs": [
+        "tpl_agc_reyes",
+        "tpl_agc_cleaner",
+        "tpl_crimson_ganger"
+      ],
+      "maps": [
+        "map_hacker_lair",
+        "map_fvtt_hacker-s-lair",
+        "map_back_alley",
+        "map_fvtt_back-alley"
+      ],
+      "rewards": "- Fragments du dossier de l'escouade de Bricks\n- Windows Wrought comme alliée active\n- Karma à fixer (2-4)",
+      "gmNotes": "Bon moment pour faire réapparaître **Reyes** — le groupe ne sait toujours pas qu'il l'a évitée en séance 2."
+    },
+    {
+      "id": "q_guest_list",
+      "actId": "act_2",
+      "title": "The Guest List",
+      "status": "upcoming",
+      "doc": "campaign-outline.md#Acte 2",
+      "summary": "Un gala ou une collecte de fonds de la filiale seattloise d'AG Chemie. **Jane** s'y infiltre socialement pour poser un mouchard ou approcher un responsable du programme. C'est ici que tombe **sa complication** : un visage de son passé la reconnaît en pleine mission et menace de l'exposer si elle ne coopère pas.",
+      "phases": [
+        {
+          "id": "p1",
+          "title": "L'invitation",
+          "done": false,
+          "text": "Obtenir une invitation ou une couverture (faux SIN, faussaire, contact mondain de Jane). Dorian Ashe figure sur la liste des invités."
+        },
+        {
+          "id": "p2",
+          "title": "Le gala",
+          "done": false,
+          "text": "Infiltration sociale : Étiquette, Escroquerie, Imposture, Représentation. Objectif : poser le mouchard ou approcher un responsable du programme. Anthony/Bricks en soutien (garde du corps, Matrice)."
+        },
+        {
+          "id": "p3",
+          "title": "Un visage du passé",
+          "done": false,
+          "text": "Quelqu'un reconnaît Jane (fixeuse rivale, cible brûlée, victime d'une ancienne arnaque) et exige sa coopération. À trancher avec le passé de Jane."
+        },
+        {
+          "id": "p4",
+          "title": "Sortir proprement",
+          "done": false,
+          "text": "Exfiltration sous le regard de la sécurité corpo. Le chantage peut donner naissance à un job de suite."
+        }
+      ],
+      "npcs": [
+        "tpl_dorian_ashe",
+        "tpl_corpsec_human_r3"
+      ],
+      "maps": [
+        "map_penthouse_office",
+        "map_fvtt_penthouse-office",
+        "map_corp_lobby",
+        "map_fvtt_corp-lobby"
+      ],
+      "rewards": "- Informations sur la chaîne de commandement de Project Lazarus\n- Karma à fixer (2-4)",
+      "gmNotes": "Street Cred 8 / Notoriété 2 de Jane : la réputation joue dans les deux sens. Préparer le personnage « visage du passé » avant la séance."
+    },
+    {
+      "id": "q_lazarus_cell",
+      "actId": "act_2",
+      "title": "Lazarus Cell",
+      "status": "upcoming",
+      "doc": "campaign-outline.md#Acte 2",
+      "summary": "Frapper un site de recherche noir plus important que celui de Grogg : preuve de l'ampleur du programme, **d'autres sujets « rajeunis »** à secourir ou recruter, et Crimson Crush réutilisé comme muscle défendant le site. Paie les graines plantées par la femme secourue (autres patients) et le fragment « Subject L-07 ».",
+      "phases": [
+        {
+          "id": "p1",
+          "title": "Localiser le site",
+          "done": false,
+          "text": "Croiser le dossier de l'escouade, les données de Hollow Pine et le relais du signal L-07."
+        },
+        {
+          "id": "p2",
+          "title": "Repérage",
+          "done": false,
+          "text": "Crimson Crush en périmètre, sécurité corpo à l'intérieur, host du site."
+        },
+        {
+          "id": "p3",
+          "title": "L'assaut",
+          "done": false,
+          "text": "Infiltration ou assaut. Sécurité corpo (humains, trolls), spider standard, Crimson Crush en renfort."
+        },
+        {
+          "id": "p4",
+          "title": "Les autres sujets",
+          "done": false,
+          "text": "Que faire des patients rajeunis ? Les secourir, les recruter, les abandonner — chaque choix a un poids pour l'Acte 3."
+        }
+      ],
+      "npcs": [
+        "tpl_crimson_ganger",
+        "tpl_crimson_sarge",
+        "tpl_corpsec_human_r3",
+        "tpl_corpsec_troll_r3",
+        "tpl_spider_standard",
+        "tpl_subject_l07"
+      ],
+      "maps": [
+        "map_server_room",
+        "map_fvtt_server-room",
+        "map_trauma_ward",
+        "map_fvtt_trauma-ward"
+      ],
+      "rewards": "- Preuves de l'ampleur de Project Lazarus\n- Karma à fixer (3-5)",
+      "gmNotes": "Le combat le plus « dungeon » de l'acte. Les patients secourus sont des leviers (et des bouches à nourrir) pour Burn Notice."
+    },
+    {
+      "id": "q_inheritance",
+      "actId": "act_2",
+      "title": "Inheritance",
+      "status": "upcoming",
+      "doc": "campaign-outline.md#Acte 2",
+      "summary": "*Fait écho à Family Business.* La pression sur la holding Von Schloss arrive à son paroxysme — rachat forcé, cambriolage ou enlèvement de Reinhardt Klee. Anthony retrouve **Adachi Morinaga**, son ancien mentor, employé de la branche répressive locale d'AG Chemie : une confrontation personnelle et ambivalente, et l'occasion d'apprendre la structure de commandement de Project Lazarus de quelqu'un qui regrette à moitié son rôle.",
+      "phases": [
+        {
+          "id": "p1",
+          "title": "L'escalade",
+          "done": false,
+          "text": "Réunion de rachat forcé, cambriolage de la holding ou enlèvement de Klee — au choix selon le rythme."
+        },
+        {
+          "id": "p2",
+          "title": "Le bureau d'AG Chemie",
+          "done": false,
+          "text": "Remonter jusqu'au bureau seattlois qui gère l'affaire."
+        },
+        {
+          "id": "p3",
+          "title": "Morinaga",
+          "done": false,
+          "text": "Confrontation avec le moine qui a renvoyé Anthony pour son goût de la violence. Pas un simple combat : dialogue, regrets, honneur."
+        },
+        {
+          "id": "p4",
+          "title": "La chaîne de commandement",
+          "done": false,
+          "text": "Morinaga, à moitié repentant, livre des éléments sur le responsable de Project Lazarus à Seattle."
+        }
+      ],
+      "npcs": [
+        "tpl_reinhardt_klee",
+        "tpl_dorian_ashe",
+        "tpl_corpsec_troll_r3",
+        "tpl_corpsec_human_r3"
+      ],
+      "maps": [
+        "map_penthouse_office",
+        "map_fvtt_penthouse-office",
+        "map_corp_lobby",
+        "map_fvtt_corp-lobby",
+        "map_construction_site",
+        "map_fvtt_construction-site"
+      ],
+      "rewards": "- Sort de la holding Von Schloss\n- Informations sur le responsable de Project Lazarus\n- Karma à fixer (2-4)",
+      "gmNotes": "Pas de fiche bestiaire pour **Adachi Morinaga** pour l'instant — à créer (adepte/maître d'armes, ambigu). Ne pas le tuer trop vite : il est plus utile vivant."
+    },
+    {
+      "id": "q_burn_notice",
+      "actId": "act_3",
+      "title": "Burn Notice",
+      "status": "upcoming",
+      "doc": "campaign-outline.md#Acte 3",
+      "summary": "AG Chemie sait que le groupe détient de vraies preuves et le marque pour élimination : une équipe dédiée d'extraction/assassinat s'en prend directement aux runners. Survivre marque le tournant : le groupe choisit comment utiliser ce qu'il a — faire pression sur **Monobe**, refiler l'info à une corpo rivale, aller voir la presse, ou garder ça pour du chantage.",
+      "phases": [
+        {
+          "id": "p1",
+          "title": "Les premiers signes",
+          "done": false,
+          "text": "Contacts qui se taisent, planques compromises, comptes surveillés."
+        },
+        {
+          "id": "p2",
+          "title": "L'attaque",
+          "done": false,
+          "text": "L'équipe dédiée frappe chez un runner (appartement de Jane ?) ou dans la rue. Reyes à la tête si elle est toujours libre."
+        },
+        {
+          "id": "p3",
+          "title": "Survivre et contre-attaquer",
+          "done": false,
+          "text": "Fuite, planque, retournement de situation."
+        },
+        {
+          "id": "p4",
+          "title": "Le choix",
+          "done": false,
+          "text": "Monobe, corpo rivale, presse ou chantage : la décision du groupe façonne Severance."
+        }
+      ],
+      "npcs": [
+        "tpl_agc_reyes",
+        "tpl_agc_cleaner",
+        "tpl_crimson_sarge",
+        "tpl_crimson_ganger"
+      ],
+      "maps": [
+        "map_jane_apartment",
+        "map_fvtt_apartement",
+        "map_back_alley",
+        "map_fvtt_back-alley"
+      ],
+      "rewards": "- Karma à fixer (3-5)\n- Alliés/leviers selon le choix final",
+      "gmNotes": "Trancher **Monobe** (allié ou menace) avant cette quête au plus tard."
+    },
+    {
+      "id": "q_severance",
+      "actId": "act_3",
+      "title": "Severance",
+      "status": "upcoming",
+      "doc": "campaign-outline.md#Acte 3",
+      "summary": "*Finale.* Assaut direct sur le centre névralgique seattlois de Project Lazarus, où le programme est géré au quotidien. Fins possibles : exposer le programme, extorquer un silence permanent et un paiement, ou régler ça personnellement pour l'escouade de Bricks. L'issue doit répondre à **qui a effacé l'équipe de Bricks et pourquoi**, et clore le fil Von Schloss / Morinaga.",
+      "phases": [
+        {
+          "id": "p1",
+          "title": "Préparer l'assaut",
+          "done": false,
+          "text": "Plans, contacts, matériel (Cabana), alliés gagnés en route."
+        },
+        {
+          "id": "p2",
+          "title": "Infiltration",
+          "done": false,
+          "text": "Sécurité AAA locale, host renforcé, spiders."
+        },
+        {
+          "id": "p3",
+          "title": "Le responsable de Project Lazarus",
+          "done": false,
+          "text": "Première rencontre en personne avec le cadre qui dirige le volet seattlois du programme."
+        },
+        {
+          "id": "p4",
+          "title": "Le dénouement",
+          "done": false,
+          "text": "Exposer, extorquer ou se venger — et répondre enfin à la question de Bricks."
+        }
+      ],
+      "npcs": [
+        "tpl_corpsec_troll_r3",
+        "tpl_corpsec_human_r3",
+        "tpl_spider_standard",
+        "tpl_dorian_ashe"
+      ],
+      "maps": [
+        "map_corp_lobby",
+        "map_fvtt_corp-lobby",
+        "map_server_room",
+        "map_fvtt_server-room",
+        "map_penthouse_office",
+        "map_fvtt_penthouse-office"
+      ],
+      "rewards": "- À fixer selon la fin choisie",
+      "gmNotes": "Le responsable de Project Lazarus reste sans visage jusqu'ici (ordres, nettoyeurs, paperasse) : ne pas le montrer avant."
+    }
+  ],
+  "sessions": [
+    {
+      "id": "s1",
+      "number": 1,
+      "title": "Séance 1 — Le bar de Porfla",
+      "played": true,
+      "doc": "act1-loose-ends.md#Quête 1.1",
+      "plan": "Ouverture de la trame **Project Lazarus** : Cleanup Crew, Phase 2. Une équipe de Nettoyeurs d'AG Chemie surveille le bar de Joseph Porfla à Renton. Laisser au groupe la chance d'arriver le premier et de tendre l'embuscade.\n\nVoir *act1-loose-ends.md*, Quête 1.1.",
+      "recap": "Le groupe arrive au bar de Porfla **pendant** l'enlèvement : **3 Nettoyeurs** d'AG Chemie (et non 2) emmènent Porfla, inconscient. Combat immédiat. Les Nettoyeurs tentent de fuir sans succès : **2 morts, 1 capturé inconscient**. Porfla est en cours de stabilisation.\n\nÉcarts vs. le plan : 3 Nettoyeurs au lieu de 2 ; Porfla déjà en train d'être enlevé plutôt que simplement surveillé ; Phase 1 (le Kidnappeur « suicidé ») non jouée."
+    },
+    {
+      "id": "s2",
+      "number": 2,
+      "title": "Séance 2 — Interrogatoire et extraction",
+      "played": true,
+      "doc": "session-2-plan.md",
+      "plan": "Suite de Cleanup Crew → ouverture d'Open Book : stabiliser Porfla, interroger le Nettoyeur capturé (« Hollow Pine » à moitié retenu), analyser l'œil, décider du sort de la femme secourue (la planque), puis amorcer le décryptage du grand livre.\n\nDéroulé complet : *session-2-plan.md*.",
+      "recap": "- Extraction de la femme secourue de l'hôpital (Trauma Ward) **sans jamais croiser l'équipe de Nettoyeurs** : Reyes reste une menace intacte et non identifiée.\n- Elle est mise à l'abri **chez Jane** et interrogée : détention dans une aile privée liée à l'hôpital de Grogg, sédation, prises de sang et scans, jargon (« indice de rajeunissement », « marqueurs d'expression »), **d'autres patients** dans les chambres voisines, une **visiteuse tirée à quatre épingles** qui parlait conformité et affaires (= Dorian Ashe, non nommée).\n- **Le pont vers Open Book est rompu** : le Nettoyeur capturé est perdu sans avoir lâché « Hollow Pine », et le groupe a revendu **tous** les commlinks (rating 4 des Nettoyeurs + les 5 Renraku Sensei du grand livre).\n- La suite : hacker l'implant oculaire en séance 3 — seule route restante vers Hollow Pine."
+    },
+    {
+      "id": "s3",
+      "number": 3,
+      "title": "Séance 3 — Hacker l'œil, trouver Hollow Pine",
+      "played": true,
+      "doc": "session-3-plan.md",
+      "plan": "1. Chez Jane : ambiance, la femme secourue sur les nerfs.\n2. Le hack de l'implant (stades 1 à 3, traçage vers **Hollow Pine**, bonus « Subject L-07 — Rejuvenation Index 0.83 »).\n3. Décision : désactiver, extraire ou garder comme appât.\n4. Registres publics sur Hollow Pine : **Dorian Ashe**, bureau au Corp Lobby, host associé.\n5. Fin : choisir l'approche pour la séance 4 (host à distance ou intrusion physique).\n\nDéroulé complet : *session-3-plan.md*.",
+      "recap": "**À compléter** — le déroulé réel de la séance 3 n'a pas encore été noté.\n\n*Hypothèse retenue par session-4-plan.md :* signal tracé jusqu'à Hollow Pine, fragment L-07 décrypté, Dorian Ashe identifiée via les registres publics, bureau repéré (tour Meridian, Downtown), approche choisie. À confirmer ou corriger.\n\nPoints à renseigner :\n- Le hack de l'implant a-t-il réussi ? Jusqu'à quel stade ?\n- Hollow Pine tracé ? Fragment L-07 décrypté ?\n- Sort de l'implant : désactivé, extrait, ou laissé actif comme appât ?\n- Registres publics : Dorian Ashe identifiée ? Rapprochement avec la « visiteuse » fait à voix haute ?\n- Approche choisie pour la séance 4 : host ou Corp Lobby ?\n- Récompenses de Cleanup Crew distribuées ?"
+    },
+    {
+      "id": "s4",
+      "number": 4,
+      "title": "Séance 4 — Le host de Hollow Pine",
+      "played": false,
+      "doc": "session-4-plan.md",
+      "plan": "Open Book, **Phase 3** puis **Phase 4**, selon l'approche choisie en fin de séance 3 :\n- **Host à distance** (Bricks) : Rating 5 — Attaque 6 / Corruption 8 / Traitement 5 / Firewall 7, IC de patrouille, Junior Security Spider → Standard si alerte.\n- **Intrusion physique** (Jane/Anthony) : bureau au Corp Lobby, Human Corpo Security R3, Server Room.\n\nPuis la révélation : le vieux numéro de dossier Knight Errant — celui de l'escouade de Bricks. Préparer la transition vers **Windows Open**.\n\nGarder sous le coude : Reyes (menace en réserve), Family Business si Anthony a besoin de lumière.",
+      "recap": ""
+    }
+  ],
+  "threads": [
+    {
+      "id": "th_reyes",
+      "label": "Reyes toujours en liberté",
+      "state": "open",
+      "notes": "Cheffe des Nettoyeurs. Jamais affrontée ni identifiée par le groupe (évitée en séance 2 sans qu'il le sache). Réutilisable n'importe quand : Windows Open, Burn Notice, ou si la piste Hollow Pine est perdue."
+    },
+    {
+      "id": "th_hollow_pine",
+      "label": "Hollow Pine Holdings",
+      "state": "open",
+      "notes": "Société-écran seattloise d'AG Chemie. Relie les trois jobs de l'Acte 1 (Nettoyeurs, financement, pression sur la holding Von Schloss). Host Rating 5, bureau au Corp Lobby."
+    },
+    {
+      "id": "th_l07",
+      "label": "Subject L-07 / signal de l'implant",
+      "state": "open",
+      "notes": "Module de biomonitoring greffé dans l'implant Ares de la femme secourue, émet des salves vers un relais Hollow Pine. Fragment : « Subject L-07 — Rejuvenation Index 0.83 ». Sort de la puce à confirmer (séance 3)."
+    },
+    {
+      "id": "th_other_patients",
+      "label": "Autres patients rajeunis",
+      "state": "dormant",
+      "notes": "La femme secourue a entendu/entrevu d'autres patients dans des chambres voisines. Graine pour **Lazarus Cell**."
+    },
+    {
+      "id": "th_ashe",
+      "label": "Dorian Ashe — « visiteuse tirée à quatre épingles »",
+      "state": "open",
+      "notes": "Compliance Officer de Hollow Pine, visage public et légal. Correspond à la visiteuse décrite par la femme secourue. Se déplace avec de la sécurité corpo. Meilleure cible pour Jane que pour un combat."
+    },
+    {
+      "id": "th_ke_file",
+      "label": "Dossier Knight Errant de l'escouade de Bricks",
+      "state": "open",
+      "notes": "Le vieux numéro de dossier enfoui chez Hollow Pine (Phase 4 d'Open Book). L'escouade a disparu un par un ; Bricks a simulé sa mort. Question finale de la campagne : qui l'a effacée et pourquoi."
+    },
+    {
+      "id": "th_windows",
+      "label": "Rebecca « Windows » Wrought",
+      "state": "dormant",
+      "notes": "Ex-partenaire de Bricks chez Knight Errant, l'a aidée à simuler sa mort. Détient des fragments du dossier. Deviendra une cible quand AG Chemie remarquera que Bricks fouille (Windows Open)."
+    },
+    {
+      "id": "th_morinaga",
+      "label": "Adachi Morinaga",
+      "state": "dormant",
+      "notes": "Ancien mentor d'Anthony (moine, l'a renvoyé pour son goût de la violence). Agent de liaison pour la répression locale d'AG Chemie. À planter dans Family Business, confrontation dans Inheritance."
+    },
+    {
+      "id": "th_von_schloss",
+      "label": "Famille Von Schloss / Reinhardt Klee",
+      "state": "dormant",
+      "notes": "Hollow Pine fait pression sur la holding seattloise de la famille. Message codé de Klee prêt (Dossiers joueurs). La famille qui a exilé Anthony a besoin de lui."
+    },
+    {
+      "id": "th_monobe",
+      "label": "Monobe International — allié ou menace (à trancher)",
+      "state": "open",
+      "notes": "A payé 5 000¥/runner pour étouffer l'affaire de l'hôpital. Allié discret (veut exposer l'ingérence d'AG Chemie) ou partie qui veut que les runners se taisent ? **À trancher tôt.**"
+    },
+    {
+      "id": "th_crimson",
+      "label": "Crimson Crush",
+      "state": "dormant",
+      "notes": "Gang de motards aperçu pendant le kidnapping. Muscle local engagé par AG Chemie/ses nettoyeurs : menace de rue récurrente (Lazarus Cell, Burn Notice)."
+    },
+    {
+      "id": "th_jane_past",
+      "label": "Le passé de Jane",
+      "state": "dormant",
+      "notes": "Un visage de son passé (fixeuse rivale, cible brûlée, victime d'une arnaque) la reconnaît en pleine infiltration — prévu pour The Guest List. Street Cred 8, Notoriété 2."
+    },
+    {
+      "id": "th_sold_commlinks",
+      "label": "Commlinks revendus (pistes perdues)",
+      "state": "dead",
+      "notes": "Commlink rating 4 des Nettoyeurs (agent d'effacement) et 5 Renraku Sensei (grand livre chiffré) revendus en séance 2. Ne pas les faire réapparaître par contrivance — remplacé par le signal de l'implant."
+    },
+    {
+      "id": "th_captured_cleaner",
+      "label": "Le Nettoyeur capturé (séance 1)",
+      "state": "dead",
+      "notes": "Perdu sans avoir lâché « Hollow Pine ». Sort exact non tranché. Si AG Chemie l'apprend, sa réaction en Acte 2 s'accélère."
+    }
+  ],
+  "handouts": [
+    {
+      "id": "h_hollow_pine_registry",
+      "title": "Extrait du registre public — Hollow Pine Holdings",
+      "revealedTo": [],
+      "gmNotes": "À révéler après le test de registres publics (Open Book, Phase 2 — Informatique, seuil 4).",
+      "body": "**REGISTRE DU COMMERCE — ÉTAT DE WASHINGTON (UCAS)**\n*Extrait public — consultation Matrice libre d'accès*\n\n| Champ | Valeur |\n|---|---|\n| Raison sociale | **Hollow Pine Holdings, LLC** |\n| Activité déclarée | Gestion de patrimoine immobilier ; conseil aux entreprises |\n| Immatriculation | 14/03/2076 |\n| Siège social | Suite 1408, Meridian Tower — 4th Avenue, Downtown Seattle |\n| Dirigeant enregistré | **Dorian Ashe** — Compliance Officer |\n| Effectif déclaré | 4 |\n| Capital social | Non communiqué |\n| Host Matrice associé | hollowpine.sea — accès restreint |\n\n> Aucune procédure collective en cours. Aucun litige enregistré. Aucune filiale déclarée.\n\n*Bénéficiaires effectifs : information non publique (régime de confidentialité, art. 7-C).*"
+    },
+    {
+      "id": "h_l07_fragment",
+      "title": "Fragment de transmission : Subject L-07 — Rejuvenation Index 0.83",
+      "revealedTo": [],
+      "gmNotes": "Bonus du hack de l'implant (décrypter la salve, seuil 8). À révéler à Bricks d'abord, puis à tous si elle partage.",
+      "body": "**SALVE INTERCEPTÉE — implant oculaire, module non-Ares**\n*Durée 0,4 s · émission intermittente · chiffrement propriétaire (partiellement cassé)*\n\n```\n>> HDR   SUBJ L-07 / BIO-MON v2.3\n>> STAT  AMBULATOIRE — HORS SITE\n>> RJV.IDX     0.83   (+0.02)\n>> EXPR.MRK    SRG-4 / SRG-7 STABLES\n>> TEL.DELTA   +11.6 %\n>> ESS.RES     NOMINAL\n>> SYNC  ##/##/80  ##:##  — RELAIS H?-SEA-02\n>> ░░░░░░░░ [données illisibles] ░░░░░░░░\n```\n\n*Le reste de la salve n'a pas pu être décodé. « L-07 » ressemble à un numéro de sujet. Elle n'était pas la seule.*"
+    },
+    {
+      "id": "h_klee_message",
+      "title": "Message codé de Reinhardt Klee",
+      "revealedTo": [],
+      "gmNotes": "Accroche de Family Business — à révéler à Anthony seul (révéler à un joueur précis).",
+      "body": "*Message reçu sur ton commlink, chiffré avec l'ancien code familial — celui que tu as appris enfant et que tu croyais avoir oublié.*\n\n---\n\nHerr Anthony,\n\nPardonnez-moi de vous écrire par ce canal, et de vous écrire tout court, après tant d'années. Je sais ce que la famille vous a fait. Je ne vous demanderais rien si j'avais quelqu'un d'autre vers qui me tourner.\n\nDepuis trois semaines, un acheteur cherche à reprendre la holding de la famille à Seattle. Une offre ridicule d'abord, puis des avocats, puis des courriers que je ne peux pas montrer à Francfort. Avant-hier, deux hommes m'attendaient devant le bureau. Ils n'ont rien dit. Ils n'avaient pas besoin.\n\nJe ne sais pas qui est derrière tout cela. Je sais seulement que ce n'est pas une affaire d'argent : on se sert de nous pour peser sur la famille, là-bas.\n\nLa famille ne doit rien savoir. Si vous acceptez de m'entendre, je serai au bureau tous les soirs après vingt heures. Venez seul, ou avec des gens de confiance.\n\nAvec mon respect, et mes regrets,\n\n**R. K.**"
+    },
+    {
+      "id": "h_perrine_cabana",
+      "title": "Fiche de Perrine Cabana",
+      "revealedTo": [],
+      "gmNotes": "Fiche de contact partagée — peut être révélée à tous à tout moment.",
+      "body": "**CONTACT — PERRINE CABANA**\n*Fixeuse · Seattle*\n\n| | |\n|---|---|\n| Connexion | **3** |\n| Loyauté | **4** |\n| Rôle | Fixeuse principale du groupe |\n| Rencontrée | Récompense du job « Kidnapping » |\n\n**Ce qu'elle fait pour vous**\n- Trouve des jobs et négocie les paiements\n- Matériel, faux SIN, médecins discrets, équipes de nettoyage\n- Infos de la rue : qui cherche qui, qui paie qui\n\n**Ce qu'on sait d'elle**\n- Pragmatique, ponctuelle, n'aime pas les surprises.\n- Protège ses gens : elle a payé de sa poche pour vous garder en vie après l'affaire de l'hôpital.\n- Ne pose pas de questions dont elle ne veut pas la réponse.\n\n> « Je ne vous demande pas d'être propres. Je vous demande d'être joignables. »"
+    }
+  ],
+  "playerRecap": "# L'histoire jusqu'ici\n\n*Seattle, 2080. Ce que vous savez — et rien de plus.*\n\n## Le groupe\n\n**Anthony Von Schloss** — samouraï des rues, formé au katana par un moine au Japon avant de dériver dans la pègre de Seattle. Rapide, mortel, pas du genre à faire des prisonniers.\n\n**Jane** — adepte, la bouche du groupe. Convaincre, se déguiser, mentir, disparaître… et un fusil de sniper quand les mots ne suffisent plus. Sa réputation dans le milieu commence à devenir sérieuse.\n\n**Bricks** — decker, ancienne « spider » de Knight Errant. Officiellement morte : quand son escouade a commencé à disparaître une par une, elle a préféré simuler sa mort plutôt que d'être la suivante. Elle cherche toujours qui en voulait à son équipe.\n\n*Ank' Lay a quitté le groupe après l'affaire de l'hôpital.*\n\n## Le job « Kidnapping »\n\nSophie Winters, une contact de Jane, vous met sur l'affaire : la « fille » d'un proche de **Joseph Porfla**, patron de bar à Renton, a été enlevée. Vidéos trafiquées, un hacker de cybercafé cuisiné, des motards du **Crimson Crush** aperçus dans le coin, une seringue de sédatifs dans un parking… La piste mène au kidnappeur, qui finit par lâcher un nom : le **Dr. Sebastian Grogg**, médecin dans un hôpital appartenant à **Monobe International**.\n\nAu dernier étage de l'hôpital, après avoir traversé des gardes qui ne lâchaient rien : un assistant mort, Grogg en train de se vider de son sang, et la victime déjà libérée grâce à un laser caché dans son implant oculaire. Avant de mourir, Grogg a lâché un dernier nom : **AG Chemie Europa**, qui l'avait engagé pour mener des expériences illégales sur elle.\n\n**Après coup :** Monobe a payé pour que l'affaire ne sorte pas (5 000¥ chacun), Porfla vous a remerciés (1 000¥ chacun), et vous avez gagné une nouvelle contact : la fixeuse **Perrine Cabana**.\n\n## Séance 1 — Le bar de Porfla\n\nQuelques jours plus tard, la rue murmure qu'on fait le ménage parmi les témoins. Vous arrivez au bar de Porfla juste à temps : trois professionnels sont en train de l'emmener, inconscient. Le combat est bref et brutal. Deux d'entre eux meurent en tentant de fuir, le troisième tombe inconscient. Porfla est vivant.\n\n## Séance 2 — Mettre la rescapée à l'abri\n\nVous comprenez que la femme que vous avez sauvée reste une cible. Vous la sortez de l'hôpital sans encombre et l'installez **chez Jane**. Elle vous raconte sa captivité : une aile privée, des sédatifs, des prises de sang et des scans à répétition, des mots comme « indice de rajeunissement » ou « marqueurs d'expression »… Elle n'était **pas la seule** : il y avait d'autres patients dans les chambres voisines. Et une visiteuse revenait régulièrement — **tirée à quatre épingles**, qui parlait affaires et conformité plutôt que médecine.\n\nLe prisonnier, lui, n'a rien donné d'exploitable. Et tout le matériel récupéré (commlinks compris) a été revendu.\n\n## Séance 3 — L'œil\n\nIl reste une piste : l'implant oculaire de la rescapée. Ce soir-là, Bricks s'est penchée dessus…\n\n*La suite de la séance 3 sera ajoutée par le MJ.*\n\n## Questions en suspens\n\n- Qui a envoyé les « nettoyeurs » — et qui leur donne les ordres ?\n- Qu'est-ce qu'AG Chemie cherchait à faire de la rescapée ? Qui sont les autres patients ?\n- Qui est la visiteuse tirée à quatre épingles ?\n- Monobe a payé pour qu'on se taise… mais de quel côté est-elle vraiment ?",
+  "notes": "# Prochaines étapes\n\n## Avant la séance 4\n- **Compléter le récap de la séance 3** (onglet Séances) et mettre à jour le récap joueurs.\n- Cocher/décocher les phases d'Open Book selon ce qui s'est vraiment joué.\n- Vérifier que les récompenses de Cleanup Crew (2 000¥ + 2 Karma) ont été distribuées.\n- Préparer les deux approches de la Phase 3 : host Hollow Pine (Rating 5) **et** Corp Lobby.\n- Préparer la révélation du dossier Knight Errant (Phase 4) — moment fort pour Bricks.\n- Révéler les documents au bon moment : registre Hollow Pine, fragment L-07.\n\n## Décisions à prendre\n- **Monobe** : allié discret ou menace ? À trancher avant l'Acte 2.\n- **Family Business** : quand l'ouvrir pour Anthony ? (idéalement juste après l'identification d'Ashe)\n- **Le passé de Jane** : qui la reconnaîtra au gala ?\n- **Morinaga** : créer sa fiche.\n\n## En réserve\n- Reyes — menace intacte, non identifiée. À sortir si la tension retombe.\n- Crimson Crush — muscle de rue pour l'Acte 2."
+}

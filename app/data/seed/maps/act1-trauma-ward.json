@@ -1,0 +1,559 @@
+{
+  "id": "map_trauma_ward",
+  "name": "Trauma Ward (hôpital Monobe)",
+  "folder": "Acte 1",
+  "description": "**Aile de traumatologie — hôpital Monobe International.** Un étage propre et blanc : hall des ascenseurs, accueil des urgences, quatre chambres, poste infirmier, pharmacie, réserve, bloc opératoire avec salle de réveil, poste de sécurité et cage d'escalier.\n\n**Utilisation**\n- Quête 1.1 *Cleanup Crew*, Phase 3 (« la planque ») : la femme secourue y convalescait (Chambre 23). Session 2 : le groupe l'a extraite sans croiser Reyes et son équipe.\n- Session 3 / réutilisation : le bloc permet l'analyse de l'implant oculaire (Stades 1-2) et son extraction chirurgicale.\n- Réutilisable pour tout hôpital corpo (changer les noms de chambres).\n\n**Tests utiles**\n- Perception seuil 4 : repérer la surveillance des Nettoyeurs (un « visiteur » qui attend trop longtemps dans le hall).\n- Étiquette/Escroquerie seuil 3 : se faire passer pour de la famille ou un médecin.\n- Serrurerie seuil 4 : pharmacie, réserve. Sortie de secours sous alarme.\n- Sécurité légère : 1 garde (2 la nuit), caméras reliées au host Monobe (Attack 8 / Sleaze 9 / DP 7 / Firewall 10).",
+  "width": 56,
+  "height": 36,
+  "metersPerCell": 1,
+  "theme": "lab",
+  "lighting": "bright",
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "tiles": [
+    "###############WWWWW####WW###WW#WW###WW#WW###WW#WW###WW#",
+    "#eee#eee#ee#.mmmmmmmmmm#bm...mb#bm...mb#bm...mb#bm...mb#",
+    "#eee#eee#ee#...........#b.....b#b.....b#b.....b#b.....bW",
+    "#eee#eee#ee#...........#.......#.......#.......#.......W",
+    "##D###D##DD#...TT..TT..#.......#.......#.......#.......W",
+    "#..........#...........#.......#.......#.......#.......W",
+    "Wg........g#.=.........#...T...#...T...#...T...#...T...W",
+    "Wb.........#.=.........#.......#.......#.......#.......W",
+    "Wb.........#.=.........#.......#.......#.......#.......W",
+    "Wb.TT......#.========..#......m#......m#......m#......mW",
+    "Wb.TT......#...........#.......#.......#.......#.......W",
+    "Wb.........#...........#D##....#D##....#D##....#D##....W",
+    "W..........#..bbbb.bbb.#..#....#..#....#..#....#..#....W",
+    "#g.........#...........#..#....#..#....#..#....#..#....W",
+    "#..........#...........#.T#....#.T#....#.T#....#.T#....#",
+    "#..........#...........#####D#######D#######D#######D###",
+    "#......................................................#",
+    "#......................................................D",
+    "#......................................................D",
+    "#......................................................#",
+    "######D#######WW#D#W####........#####D######D###########",
+    "#..........#..........#..........#.......#.....#.......#",
+    "#.ss...ss..#m.........#..======..#m.....m#.....#......m#",
+    "#.ss.#.ss..#m.TTT.....#..=....=..#m.....m#=....#......m#",
+    "#.ss.#.ss..#m.TTT.....#..=.TT.=..#m.ccc.m#=....D.......#",
+    "#.ss.#.ss..#m.........#..=.......#m.ccc.m#=....#.......#",
+    "#.ss.#.ss..#m........m#..........#m.....m#.....#.m..m..#",
+    "#.ss.#.ss..#.........m#...mmm....#m.....m###D###..TT...#",
+    "####D############D###########D####m.....m#.....#..TT...#",
+    "#..........#mmm.......#.........m#m.ccc.m#bm.mb#T...m..#",
+    "#m.......mm#.........=#.mmmmm....#m.ccc.m#b...b#T......#",
+    "#m.........#.....TT..=#..........#m.....m#.....D.......#",
+    "#m.........#.....TT..=#.mmmmm....#m.....m#b....#.....b.#",
+    "#m........x#.........=#..........#m.....m#b....#.....b.#",
+    "#..........#bbbb......#.mmmmm....#.......#.....#.......#",
+    "########################################################"
+  ],
+  "doors": [
+    {
+      "id": "ward_d01",
+      "x": 2,
+      "y": 4,
+      "state": "closed",
+      "kind": "door",
+      "name": "Ascenseur 1"
+    },
+    {
+      "id": "ward_d02",
+      "x": 6,
+      "y": 4,
+      "state": "closed",
+      "kind": "door",
+      "name": "Ascenseur 2"
+    },
+    {
+      "id": "ward_d03",
+      "x": 9,
+      "y": 4,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Monte-charge"
+    },
+    {
+      "id": "ward_d04",
+      "x": 10,
+      "y": 4,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Monte-charge"
+    },
+    {
+      "id": "ward_d05",
+      "x": 28,
+      "y": 15,
+      "state": "closed",
+      "kind": "door",
+      "name": "Chambre 21"
+    },
+    {
+      "id": "ward_d06",
+      "x": 24,
+      "y": 11,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salle d'eau (ch. 21)"
+    },
+    {
+      "id": "ward_d07",
+      "x": 36,
+      "y": 15,
+      "state": "closed",
+      "kind": "door",
+      "name": "Chambre 22"
+    },
+    {
+      "id": "ward_d08",
+      "x": 32,
+      "y": 11,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salle d'eau (ch. 22)"
+    },
+    {
+      "id": "ward_d09",
+      "x": 44,
+      "y": 15,
+      "state": "closed",
+      "kind": "door",
+      "name": "Chambre 23"
+    },
+    {
+      "id": "ward_d10",
+      "x": 40,
+      "y": 11,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salle d'eau (ch. 23)"
+    },
+    {
+      "id": "ward_d11",
+      "x": 52,
+      "y": 15,
+      "state": "closed",
+      "kind": "door",
+      "name": "Chambre 24"
+    },
+    {
+      "id": "ward_d12",
+      "x": 48,
+      "y": 11,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salle d'eau (ch. 24)"
+    },
+    {
+      "id": "ward_d13",
+      "x": 55,
+      "y": 17,
+      "state": "locked",
+      "kind": "door",
+      "name": "Sortie de secours (alarme)"
+    },
+    {
+      "id": "ward_d14",
+      "x": 55,
+      "y": 18,
+      "state": "locked",
+      "kind": "door",
+      "name": "Sortie de secours (alarme)"
+    },
+    {
+      "id": "ward_d15",
+      "x": 6,
+      "y": 20,
+      "state": "closed",
+      "kind": "door",
+      "name": "Cage d'escalier"
+    },
+    {
+      "id": "ward_d16",
+      "x": 4,
+      "y": 28,
+      "state": "locked",
+      "kind": "door",
+      "name": "Local technique"
+    },
+    {
+      "id": "ward_d17",
+      "x": 17,
+      "y": 20,
+      "state": "closed",
+      "kind": "door",
+      "name": "Poste de sécurité"
+    },
+    {
+      "id": "ward_d18",
+      "x": 17,
+      "y": 28,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salle de repos"
+    },
+    {
+      "id": "ward_d19",
+      "x": 29,
+      "y": 28,
+      "state": "locked",
+      "kind": "door",
+      "name": "Pharmacie"
+    },
+    {
+      "id": "ward_d20",
+      "x": 37,
+      "y": 20,
+      "state": "locked",
+      "kind": "door",
+      "name": "Réserve de matériel"
+    },
+    {
+      "id": "ward_d21",
+      "x": 44,
+      "y": 20,
+      "state": "closed",
+      "kind": "door",
+      "name": "Sas de lavage"
+    },
+    {
+      "id": "ward_d22",
+      "x": 47,
+      "y": 24,
+      "state": "closed",
+      "kind": "door",
+      "name": "Bloc opératoire"
+    },
+    {
+      "id": "ward_d23",
+      "x": 44,
+      "y": 27,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salle de réveil"
+    },
+    {
+      "id": "ward_d24",
+      "x": 47,
+      "y": 31,
+      "state": "closed",
+      "kind": "door",
+      "name": "Bloc → salle de réveil"
+    }
+  ],
+  "lights": [
+    {
+      "id": "ward_l01",
+      "x": 8,
+      "y": 17,
+      "radius": 6,
+      "color": "#e9f6ff",
+      "on": true,
+      "name": "Éclairage — Couloir principal"
+    },
+    {
+      "id": "ward_l02",
+      "x": 28,
+      "y": 17,
+      "radius": 6,
+      "color": "#e9f6ff",
+      "on": true,
+      "name": "Éclairage — Couloir principal"
+    },
+    {
+      "id": "ward_l03",
+      "x": 48,
+      "y": 17,
+      "radius": 6,
+      "color": "#e9f6ff",
+      "on": true,
+      "name": "Éclairage — Couloir principal"
+    },
+    {
+      "id": "ward_l04",
+      "x": 54,
+      "y": 17,
+      "radius": 3,
+      "color": "#ff3344",
+      "on": true,
+      "name": "Éclairage — Couloir principal"
+    },
+    {
+      "id": "ward_l05",
+      "x": 50,
+      "y": 26,
+      "radius": 5,
+      "color": "#f2fbff",
+      "on": true,
+      "name": "Scialytique du bloc"
+    },
+    {
+      "id": "ward_l06",
+      "x": 13,
+      "y": 24,
+      "radius": 2,
+      "color": "#36e6ff",
+      "on": true,
+      "name": "Écrans de surveillance"
+    },
+    {
+      "id": "ward_l07",
+      "x": 31,
+      "y": 30,
+      "radius": 2,
+      "color": "#5dff9b",
+      "on": true,
+      "name": "Éclairage — Pharmacie"
+    },
+    {
+      "id": "ward_l08",
+      "x": 40,
+      "y": 6,
+      "radius": 3,
+      "color": "#9fe8ff",
+      "on": true,
+      "name": "Éclairage — Chambre 23"
+    }
+  ],
+  "regions": [
+    {
+      "id": "ward_r01",
+      "name": "Hall des ascenseurs",
+      "x": 1,
+      "y": 5,
+      "w": 10,
+      "h": 10,
+      "color": "#3f6a7a",
+      "gmOnly": false
+    },
+    {
+      "id": "ward_r02",
+      "name": "Accueil des urgences",
+      "x": 12,
+      "y": 1,
+      "w": 11,
+      "h": 14,
+      "color": "#3f6a7a",
+      "gmOnly": false
+    },
+    {
+      "id": "ward_r03",
+      "name": "Chambre 21",
+      "x": 24,
+      "y": 1,
+      "w": 7,
+      "h": 14,
+      "color": "#4f7f8f",
+      "gmOnly": false
+    },
+    {
+      "id": "ward_r04",
+      "name": "Chambre 22",
+      "x": 32,
+      "y": 1,
+      "w": 7,
+      "h": 14,
+      "color": "#4f7f8f",
+      "gmOnly": false
+    },
+    {
+      "id": "ward_r05",
+      "name": "Chambre 23",
+      "x": 40,
+      "y": 1,
+      "w": 7,
+      "h": 14,
+      "color": "#4f7f8f",
+      "gmOnly": false
+    },
+    {
+      "id": "ward_r06",
+      "name": "Chambre 24",
+      "x": 48,
+      "y": 1,
+      "w": 7,
+      "h": 14,
+      "color": "#4f7f8f",
+      "gmOnly": false
+    },
+    {
+      "id": "ward_r07",
+      "name": "Couloir principal",
+      "x": 1,
+      "y": 16,
+      "w": 54,
+      "h": 4,
+      "color": "#2f4f5f",
+      "gmOnly": false
+    },
+    {
+      "id": "ward_r08",
+      "name": "Cage d'escalier",
+      "x": 1,
+      "y": 21,
+      "w": 10,
+      "h": 7,
+      "color": "#4a4a55",
+      "gmOnly": false
+    },
+    {
+      "id": "ward_r09",
+      "name": "Local technique",
+      "x": 1,
+      "y": 29,
+      "w": 10,
+      "h": 6,
+      "color": "#5a5a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "ward_r10",
+      "name": "Poste de sécurité",
+      "x": 12,
+      "y": 21,
+      "w": 10,
+      "h": 7,
+      "color": "#7a3a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "ward_r11",
+      "name": "Salle de repos",
+      "x": 12,
+      "y": 29,
+      "w": 10,
+      "h": 6,
+      "color": "#4a5a4a",
+      "gmOnly": false
+    },
+    {
+      "id": "ward_r12",
+      "name": "Poste infirmier",
+      "x": 23,
+      "y": 21,
+      "w": 10,
+      "h": 7,
+      "color": "#3f7a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "ward_r13",
+      "name": "Pharmacie",
+      "x": 23,
+      "y": 29,
+      "w": 10,
+      "h": 6,
+      "color": "#3f7a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "ward_r14",
+      "name": "Réserve de matériel",
+      "x": 34,
+      "y": 21,
+      "w": 7,
+      "h": 14,
+      "color": "#5a5a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "ward_r15",
+      "name": "Sas de lavage",
+      "x": 42,
+      "y": 21,
+      "w": 5,
+      "h": 6,
+      "color": "#3f6a7a",
+      "gmOnly": false
+    },
+    {
+      "id": "ward_r16",
+      "name": "Salle de réveil",
+      "x": 42,
+      "y": 28,
+      "w": 5,
+      "h": 7,
+      "color": "#3f6a7a",
+      "gmOnly": false
+    },
+    {
+      "id": "ward_r17",
+      "name": "Bloc opératoire",
+      "x": 48,
+      "y": 21,
+      "w": 7,
+      "h": 14,
+      "color": "#2f7f9f",
+      "gmOnly": false
+    }
+  ],
+  "notes": [
+    {
+      "id": "ward_n01",
+      "x": 43,
+      "y": 6,
+      "text": "Chambre 23 : la femme secourue y convalescait sous un faux nom (session 2). Dossier patient falsifié dans le terminal de l'accueil.",
+      "gmOnly": true
+    },
+    {
+      "id": "ward_n02",
+      "x": 16,
+      "y": 24,
+      "text": "Poste de sécurité : 1 Human Corpo Security R3 (2 la nuit). Flux des caméras : hall des ascenseurs, accueil, couloir (2 caméras, extrémités), poste infirmier, sas du bloc. Couper les flux : Hacking sur le host Monobe (Firewall 10) ou débrancher ici.",
+      "gmOnly": true
+    },
+    {
+      "id": "ward_n03",
+      "x": 27,
+      "y": 23,
+      "text": "Poste infirmier : 2 infirmières, 1 interne. Étiquette/Escroquerie seuil 3 pour passer pour de la famille ou un médecin.",
+      "gmOnly": true
+    },
+    {
+      "id": "ward_n04",
+      "x": 29,
+      "y": 31,
+      "text": "Pharmacie : sédatifs (propofol, midazolam — même cocktail que les Nettoyeurs), medkits rating 3-6. Serrurerie seuil 4 ; vol remarqué en 1D6 h.",
+      "gmOnly": true
+    },
+    {
+      "id": "ward_n05",
+      "x": 51,
+      "y": 25,
+      "text": "Bloc : kit de diagnostic complet. Permet les Stades 1-2 de l'analyse de l'implant oculaire (seuils 3/6) et l'extraction du module (Médecine seuil 5).",
+      "gmOnly": true
+    },
+    {
+      "id": "ward_n06",
+      "x": 3,
+      "y": 12,
+      "text": "Hall des ascenseurs : caméra au plafond. Session 2 — l'équipe de Reyes montait par l'ascenseur pendant que le groupe repartait par l'escalier (jamais croisée).",
+      "gmOnly": true
+    },
+    {
+      "id": "ward_n07",
+      "x": 54,
+      "y": 18,
+      "text": "Sortie de secours : ouvrir déclenche l'alarme de l'étage (sauf Électronique seuil 3 pour shunter le contact).",
+      "gmOnly": true
+    },
+    {
+      "id": "ward_n08",
+      "x": 9,
+      "y": 31,
+      "text": "Local technique : tableau électrique de l'aile. Couper le courant = obscurité 10 s avant les éclairages de secours (rouges, ambiance « dim »).",
+      "gmOnly": true
+    },
+    {
+      "id": "ward_n09",
+      "x": 38,
+      "y": 27,
+      "text": "Réserve : fauteuils roulants, brancards, blouses — de quoi déguiser une extraction (Déguisement +2).",
+      "gmOnly": true
+    }
+  ],
+  "tokens": [],
+  "explored": {}
+}

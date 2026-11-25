@@ -1,0 +1,915 @@
+[
+ {
+  "id": "tpl_fvtt_perrine_cabana",
+  "type": "npc",
+  "name": "Perrine Cabana",
+  "folder": "Contacts & PNJ",
+  "metatype": "Humain",
+  "concept": "",
+  "gender": "",
+  "portrait": "",
+  "color": "#8a9bb0",
+  "disposition": "neutral",
+  "attributes": {
+   "BOD": 3,
+   "AGI": 3,
+   "REA": 4,
+   "STR": 2,
+   "WIL": 4,
+   "LOG": 5,
+   "INT": 5,
+   "CHA": 6,
+   "EDG": 4,
+   "ESS": 6
+  },
+  "augmented": {},
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "etiquette",
+    "name": "Étiquette",
+    "attr": "CHA",
+    "rating": 6,
+    "group": "influence"
+   },
+   {
+    "id": "negotiation",
+    "name": "Négociation",
+    "attr": "CHA",
+    "rating": 6,
+    "group": "influence"
+   },
+   {
+    "id": "con",
+    "name": "Escroquerie",
+    "attr": "CHA",
+    "rating": 5,
+    "group": "acting"
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 4
+   }
+  ],
+  "knowledge": [],
+  "qualities": [],
+  "powers": [],
+  "spells": [],
+  "weapons": [
+   {
+    "id": "fvtt_QboioTQaXWacHfI4",
+    "name": "Mains nues",
+    "category": "Corps à corps",
+    "kind": "melee",
+    "skill": "unarmed_combat",
+    "accuracy": 5,
+    "damage": "(STR)S",
+    "ap": 0,
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "reach": 0,
+    "notes": "Unarmed Attack (SR5 132)"
+   }
+  ],
+  "armor": [],
+  "augmentations": [],
+  "gear": [],
+  "vehicles": [],
+  "vision": {},
+  "description": "Fixeuse professionnelle, contact partagé par les quatre PJ. Sert d'intermédiaire discret entre corpos et runners, tient parole, protège ses gens -- ce qui la rend fiable mais aussi exigeante. Devient la fixeuse principale du groupe pour la suite de la campagne (voir campaign-outline.md).",
+  "npc": {
+   "professionalRating": 0,
+   "grunt": true,
+   "kind": "metahuman",
+   "tactics": "",
+   "loot": ""
+  },
+  "foundryId": "0VtybZM3jWdPl9G9",
+  "foundryWorld": "test-world",
+  "foundryImportedAt": 1795629244307,
+  "foundryHash": "8724024606ae"
+ },
+ {
+  "id": "tpl_fvtt_grunt",
+  "type": "npc",
+  "name": "Grunt",
+  "folder": "Gangs",
+  "metatype": "Humain",
+  "concept": "",
+  "gender": "",
+  "portrait": "",
+  "color": "#c94a4a",
+  "disposition": "hostile",
+  "attributes": {
+   "BOD": 3,
+   "AGI": 3,
+   "REA": 4,
+   "STR": 4,
+   "WIL": 3,
+   "LOG": 3,
+   "INT": 4,
+   "CHA": 2,
+   "EDG": 0,
+   "ESS": 6
+  },
+  "augmented": {},
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "unarmed_combat",
+    "name": "Combat à mains nues",
+    "attr": "AGI",
+    "rating": 4,
+    "group": "close_combat"
+   },
+   {
+    "id": "automatics",
+    "name": "Armes automatiques",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "firearms"
+   }
+  ],
+  "knowledge": [],
+  "qualities": [],
+  "powers": [],
+  "spells": [],
+  "weapons": [
+   {
+    "id": "fvtt_FXGxBe64ekPGlQQ9",
+    "name": "Couteau",
+    "category": "Armes tranchantes",
+    "kind": "melee",
+    "skill": "blades",
+    "accuracy": 5,
+    "damage": "(STR+1)P",
+    "ap": 0,
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "reach": 0,
+    "catalogId": "eb16de72-e646-4880-aa5b-21a5a0a2b342",
+    "notes": "Knife (SR5 422)"
+   },
+   {
+    "id": "fvtt_kCinELbm1fQHB5z9",
+    "name": "HK MP75",
+    "category": "Mitraillettes",
+    "kind": "ranged",
+    "skill": "automatics",
+    "accuracy": 6,
+    "damage": "9P",
+    "ap": -1,
+    "mode": "SA/TR/TA",
+    "rc": 2,
+    "ammo": "30",
+    "reach": 0,
+    "catalogId": "5c04009f-7858-4c9a-bc9e-d21880e420cf",
+    "notes": "HK MP75 (SHB2 0)"
+   }
+  ],
+  "armor": [],
+  "augmentations": [],
+  "gear": [],
+  "vehicles": [],
+  "matrix": {
+   "device": "Meta Link (commlink)",
+   "rating": 1,
+   "attack": 0,
+   "sleaze": 0,
+   "dataProcessing": 1,
+   "firewall": 1,
+   "programs": []
+  },
+  "vision": {},
+  "description": "",
+  "npc": {
+   "professionalRating": 0,
+   "grunt": true,
+   "kind": "metahuman",
+   "tactics": "",
+   "loot": ""
+  },
+  "foundryId": "298MjgDP47IKqqQ0",
+  "foundryWorld": "test-world",
+  "foundryImportedAt": 1795629244307,
+  "foundryHash": "57ba0855bec3"
+ },
+ {
+  "id": "tpl_fvtt_dr_sebastian_grogg",
+  "type": "npc",
+  "name": "Dr. Sebastian Grogg",
+  "folder": "PNJ (Foundry)",
+  "metatype": "Humain",
+  "concept": "",
+  "gender": "",
+  "portrait": "/assets/foundry/img/Sebastian_grogg.jpg",
+  "color": "#c94a4a",
+  "disposition": "hostile",
+  "attributes": {
+   "BOD": 3,
+   "AGI": 3,
+   "REA": 3,
+   "STR": 3,
+   "WIL": 3,
+   "LOG": 3,
+   "INT": 3,
+   "CHA": 3,
+   "EDG": 1,
+   "ESS": 6
+  },
+  "augmented": {},
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [],
+  "knowledge": [],
+  "qualities": [],
+  "powers": [],
+  "spells": [],
+  "weapons": [],
+  "armor": [],
+  "augmentations": [],
+  "gear": [],
+  "vehicles": [],
+  "vision": {},
+  "description": "*Fiche vide dans Foundry : statistiques par défaut (attributs 3).*",
+  "npc": {
+   "professionalRating": 0,
+   "grunt": false,
+   "kind": "metahuman",
+   "tactics": "",
+   "loot": ""
+  },
+  "foundryId": "31kgdLtS4u4OX2RA",
+  "foundryWorld": "test-world",
+  "foundryImportedAt": 1795629244307,
+  "foundryHash": "268e536c7587"
+ },
+ {
+  "id": "tpl_fvtt_human_man_3",
+  "type": "npc",
+  "name": "Human Man 3",
+  "folder": "Figurants",
+  "metatype": "Humain",
+  "concept": "",
+  "gender": "",
+  "portrait": "/assets/foundry/img/male_human_3.jpg",
+  "color": "#8a9bb0",
+  "disposition": "neutral",
+  "attributes": {
+   "BOD": 3,
+   "AGI": 3,
+   "REA": 3,
+   "STR": 3,
+   "WIL": 3,
+   "LOG": 3,
+   "INT": 3,
+   "CHA": 3,
+   "EDG": 1,
+   "ESS": 6
+  },
+  "augmented": {},
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [],
+  "knowledge": [],
+  "qualities": [],
+  "powers": [],
+  "spells": [],
+  "weapons": [],
+  "armor": [],
+  "augmentations": [],
+  "gear": [],
+  "vehicles": [],
+  "vision": {},
+  "description": "*Fiche vide dans Foundry : statistiques par défaut (attributs 3).*",
+  "npc": {
+   "professionalRating": 0,
+   "grunt": false,
+   "kind": "metahuman",
+   "tactics": "",
+   "loot": ""
+  },
+  "foundryId": "7cziND3mvjHNwGum",
+  "foundryWorld": "test-world",
+  "foundryImportedAt": 1795629244307,
+  "foundryHash": "b6ed4fe92e70"
+ },
+ {
+  "id": "tpl_fvtt_thug",
+  "type": "npc",
+  "name": "Thug",
+  "folder": "Gangs",
+  "metatype": "Ork",
+  "concept": "",
+  "gender": "",
+  "portrait": "",
+  "color": "#c94a4a",
+  "disposition": "hostile",
+  "attributes": {
+   "BOD": 6,
+   "AGI": 3,
+   "REA": 4,
+   "STR": 6,
+   "WIL": 3,
+   "LOG": 2,
+   "INT": 4,
+   "CHA": 1,
+   "EDG": 0,
+   "ESS": 6
+  },
+  "augmented": {},
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "clubs",
+    "name": "Armes contondantes",
+    "attr": "AGI",
+    "rating": 4,
+    "group": "close_combat"
+   },
+   {
+    "id": "blades",
+    "name": "Armes tranchantes",
+    "attr": "AGI",
+    "rating": 4,
+    "group": "close_combat"
+   },
+   {
+    "id": "unarmed_combat",
+    "name": "Combat à mains nues",
+    "attr": "AGI",
+    "rating": 4,
+    "group": "close_combat"
+   },
+   {
+    "id": "intimidation",
+    "name": "Intimidation",
+    "attr": "CHA",
+    "rating": 4
+   },
+   {
+    "id": "pistols",
+    "name": "Pistolets",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "firearms"
+   }
+  ],
+  "knowledge": [],
+  "qualities": [],
+  "powers": [],
+  "spells": [],
+  "weapons": [
+   {
+    "id": "fvtt_7UCvDgJ8hLbfGQsl",
+    "name": "Massue",
+    "category": "Armes contondantes",
+    "kind": "melee",
+    "skill": "clubs",
+    "accuracy": 4,
+    "damage": "(STR+3)P",
+    "ap": 0,
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "reach": 1,
+    "catalogId": "5af85697-7d67-4bf7-b539-dbd4e63a34d1",
+    "notes": "Club (SR5 422)"
+   },
+   {
+    "id": "fvtt_qsd8KgC4XxkvowSO",
+    "name": "Couteau",
+    "category": "Armes tranchantes",
+    "kind": "melee",
+    "skill": "blades",
+    "accuracy": 5,
+    "damage": "(STR+1)P",
+    "ap": 0,
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "reach": 0,
+    "catalogId": "eb16de72-e646-4880-aa5b-21a5a0a2b342",
+    "notes": "Knife (SR5 422)"
+   },
+   {
+    "id": "fvtt_3hLeIai6j0lRttLM",
+    "name": "Colt America L36",
+    "category": "Pistolets légers",
+    "kind": "ranged",
+    "skill": "pistols",
+    "accuracy": 7,
+    "damage": "7P",
+    "ap": 0,
+    "mode": "SA",
+    "rc": 0,
+    "ammo": "11",
+    "reach": 0,
+    "catalogId": "676660a2-3320-4b4a-acaf-f645f2ba6cd7",
+    "notes": "Colt America L36 (SR5 425)"
+   }
+  ],
+  "armor": [
+   {
+    "id": "fvtt_SyfvSMrGG0J4Idvp",
+    "name": "Gilet pare-balles",
+    "rating": 9,
+    "equipped": true,
+    "stack": false,
+    "notes": "Armor Vest",
+    "catalogId": "4ad1eeab-daf3-4495-a73d-fbb0ce89be5b"
+   }
+  ],
+  "augmentations": [],
+  "gear": [],
+  "vehicles": [],
+  "matrix": {
+   "device": "Meta Link (commlink)",
+   "rating": 1,
+   "attack": 0,
+   "sleaze": 0,
+   "dataProcessing": 1,
+   "firewall": 1,
+   "programs": []
+  },
+  "vision": {
+   "lowLight": true
+  },
+  "description": "",
+  "npc": {
+   "professionalRating": 0,
+   "grunt": true,
+   "kind": "metahuman",
+   "tactics": "",
+   "loot": ""
+  },
+  "foundryId": "Dam0tbi0pHRxZ9Gd",
+  "foundryWorld": "test-world",
+  "foundryImportedAt": 1795629244307,
+  "foundryHash": "7659770b1e68"
+ },
+ {
+  "id": "tpl_fvtt_male_elf_2",
+  "type": "npc",
+  "name": "Male elf 2",
+  "folder": "Figurants",
+  "metatype": "Humain",
+  "concept": "",
+  "gender": "",
+  "portrait": "/assets/foundry/img/male_elf_2.jpg",
+  "color": "#8a9bb0",
+  "disposition": "neutral",
+  "attributes": {
+   "BOD": 3,
+   "AGI": 3,
+   "REA": 3,
+   "STR": 3,
+   "WIL": 3,
+   "LOG": 3,
+   "INT": 3,
+   "CHA": 3,
+   "EDG": 1,
+   "ESS": 6
+  },
+  "augmented": {},
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [],
+  "knowledge": [],
+  "qualities": [],
+  "powers": [],
+  "spells": [],
+  "weapons": [],
+  "armor": [],
+  "augmentations": [],
+  "gear": [],
+  "vehicles": [],
+  "vision": {},
+  "description": "*Fiche vide dans Foundry : statistiques par défaut (attributs 3).*",
+  "npc": {
+   "professionalRating": 0,
+   "grunt": false,
+   "kind": "metahuman",
+   "tactics": "",
+   "loot": ""
+  },
+  "foundryId": "OaRi8LhjUDm2L5od",
+  "foundryWorld": "test-world",
+  "foundryImportedAt": 1795629244307,
+  "foundryHash": "a3c63039d49c"
+ },
+ {
+  "id": "tpl_fvtt_sophie_winters",
+  "type": "npc",
+  "name": "Sophie Winters",
+  "folder": "Contacts & PNJ",
+  "metatype": "Humain",
+  "concept": "",
+  "gender": "",
+  "portrait": "",
+  "color": "#8a9bb0",
+  "disposition": "neutral",
+  "attributes": {
+   "BOD": 2,
+   "AGI": 3,
+   "REA": 3,
+   "STR": 2,
+   "WIL": 3,
+   "LOG": 3,
+   "INT": 4,
+   "CHA": 5,
+   "EDG": 3,
+   "ESS": 6
+  },
+  "augmented": {},
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "etiquette",
+    "name": "Étiquette",
+    "attr": "CHA",
+    "rating": 5,
+    "group": "influence"
+   },
+   {
+    "id": "negotiation",
+    "name": "Négociation",
+    "attr": "CHA",
+    "rating": 4,
+    "group": "influence"
+   },
+   {
+    "id": "con",
+    "name": "Escroquerie",
+    "attr": "CHA",
+    "rating": 3,
+    "group": "acting"
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 3
+   }
+  ],
+  "knowledge": [],
+  "qualities": [],
+  "powers": [],
+  "spells": [],
+  "weapons": [
+   {
+    "id": "fvtt_kHxmJntU8xhY6AJE",
+    "name": "Mains nues",
+    "category": "Corps à corps",
+    "kind": "melee",
+    "skill": "unarmed_combat",
+    "accuracy": 5,
+    "damage": "(STR)S",
+    "ap": 0,
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "reach": 0,
+    "notes": "Unarmed Attack (SR5 132)"
+   }
+  ],
+  "armor": [],
+  "augmentations": [],
+  "gear": [],
+  "vehicles": [],
+  "vision": {},
+  "description": "Contact de Jane. C'est son appel qui a lancé le job Kidnapping -- une amie proche de Joseph Porfla, bien introduite socialement à Seattle. Peut resservir comme point d'entrée social pour de futures accroches.",
+  "npc": {
+   "professionalRating": 0,
+   "grunt": true,
+   "kind": "metahuman",
+   "tactics": "",
+   "loot": ""
+  },
+  "foundryId": "TiLbrEgpzvdvcwAb",
+  "foundryWorld": "test-world",
+  "foundryImportedAt": 1795629244307,
+  "foundryHash": "8e9b6fd3cd86"
+ },
+ {
+  "id": "tpl_fvtt_male_elf",
+  "type": "npc",
+  "name": "Male Elf",
+  "folder": "Figurants",
+  "metatype": "Humain",
+  "concept": "",
+  "gender": "",
+  "portrait": "/assets/foundry/img/male_elf.jpg",
+  "color": "#8a9bb0",
+  "disposition": "neutral",
+  "attributes": {
+   "BOD": 3,
+   "AGI": 3,
+   "REA": 3,
+   "STR": 3,
+   "WIL": 3,
+   "LOG": 3,
+   "INT": 3,
+   "CHA": 3,
+   "EDG": 1,
+   "ESS": 6
+  },
+  "augmented": {},
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [],
+  "knowledge": [],
+  "qualities": [],
+  "powers": [],
+  "spells": [],
+  "weapons": [],
+  "armor": [],
+  "augmentations": [],
+  "gear": [],
+  "vehicles": [],
+  "vision": {},
+  "description": "*Fiche vide dans Foundry : statistiques par défaut (attributs 3).*",
+  "npc": {
+   "professionalRating": 0,
+   "grunt": false,
+   "kind": "metahuman",
+   "tactics": "",
+   "loot": ""
+  },
+  "foundryId": "Z1oMj6JVGZn3DbMC",
+  "foundryWorld": "test-world",
+  "foundryImportedAt": 1795629244307,
+  "foundryHash": "08b20374f5e1"
+ },
+ {
+  "id": "tpl_fvtt_kidnapper",
+  "type": "npc",
+  "name": "Kidnapper",
+  "folder": "PNJ (Foundry)",
+  "metatype": "Humain",
+  "concept": "",
+  "gender": "",
+  "portrait": "/assets/foundry/img/kidnapper.jpg",
+  "color": "#c94a4a",
+  "disposition": "hostile",
+  "attributes": {
+   "BOD": 3,
+   "AGI": 2,
+   "REA": 4,
+   "STR": 4,
+   "WIL": 1,
+   "LOG": 2,
+   "INT": 2,
+   "CHA": 1,
+   "EDG": 0,
+   "ESS": 6
+  },
+  "augmented": {},
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "pistols",
+    "name": "Pistolets",
+    "attr": "AGI",
+    "rating": 4,
+    "group": "firearms"
+   },
+   {
+    "id": "unarmed_combat",
+    "name": "Combat à mains nues",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "close_combat"
+   }
+  ],
+  "knowledge": [],
+  "qualities": [],
+  "powers": [],
+  "spells": [],
+  "weapons": [
+   {
+    "id": "fvtt_SuZrCtuutDJwZTgq",
+    "name": "Ares Light Fire 70",
+    "category": "Pistolets légers",
+    "kind": "ranged",
+    "skill": "pistols",
+    "accuracy": 7,
+    "damage": "6P",
+    "ap": 0,
+    "mode": "SA",
+    "rc": 0,
+    "ammo": "16",
+    "reach": 0,
+    "equipped": true,
+    "catalogId": "67474de7-d29b-4b31-a6ae-1e2e981fa5d2",
+    "notes": "Ares Light Fire 70 (SR5 425)"
+   }
+  ],
+  "armor": [],
+  "augmentations": [],
+  "gear": [
+   {
+    "id": "fvtt_KSI3FQe0Hot3f6Za",
+    "name": "Gants pas cher",
+    "category": "Vêtements",
+    "qty": 1,
+    "catalogId": "d8016291-050d-413d-8896-0ee1bc1063a6",
+    "notes": "Cheap Gloves"
+   },
+   {
+    "id": "fvtt_HhOplKRvol8qsOcV",
+    "name": "Chemise pas cher",
+    "category": "Vêtements",
+    "qty": 1,
+    "catalogId": "fe363b10-a801-4049-9d5b-1908c6a6b9fc",
+    "notes": "Cheap Shirt"
+   },
+   {
+    "id": "fvtt_mKOkcO7Qqi2fabjM",
+    "name": "Chaussures pas cher",
+    "category": "Vêtements",
+    "qty": 1,
+    "catalogId": "dc78601d-7171-470e-8d7d-2e772cbcbfb2",
+    "notes": "Cheap Shoes"
+   },
+   {
+    "id": "fvtt_wNXUpbQOLRD5ZTqw",
+    "name": "Pantalon pas cher",
+    "category": "Vêtements",
+    "qty": 1,
+    "catalogId": "024cca53-0d3a-4c89-bb73-a885b7d6111e",
+    "notes": "Cheap Pants"
+   },
+   {
+    "id": "fvtt_ykqRlzjum53en2LR",
+    "name": "Sous-vêtements pas cher",
+    "category": "Vêtements",
+    "qty": 1,
+    "catalogId": "7e13ee6d-5698-4b1e-bf93-7735bec4c0bc",
+    "notes": "Cheap Undergarments"
+   },
+   {
+    "id": "fvtt_l42ABiG8niqlxeSJ",
+    "name": "Montre pas cher",
+    "category": "Vêtements",
+    "qty": 1,
+    "catalogId": "f93ceb9d-1736-4e51-b550-0275822c4d3e",
+    "notes": "Cheap Watch"
+   }
+  ],
+  "vehicles": [],
+  "matrix": {
+   "device": "Common Denominator Element (commlink)",
+   "rating": 2,
+   "attack": 0,
+   "sleaze": 0,
+   "dataProcessing": 2,
+   "firewall": 2,
+   "programs": []
+  },
+  "vision": {},
+  "description": "",
+  "npc": {
+   "professionalRating": 0,
+   "grunt": false,
+   "kind": "metahuman",
+   "tactics": "",
+   "loot": ""
+  },
+  "foundryId": "cXludj1e47RQReKA",
+  "foundryWorld": "test-world",
+  "foundryImportedAt": 1795629244307,
+  "foundryHash": "2c6c96bfe998"
+ },
+ {
+  "id": "tpl_fvtt_human_man",
+  "type": "npc",
+  "name": "Human Man",
+  "folder": "Figurants",
+  "metatype": "Humain",
+  "concept": "",
+  "gender": "",
+  "portrait": "/assets/foundry/img/basic_human.jpg",
+  "color": "#8a9bb0",
+  "disposition": "neutral",
+  "attributes": {
+   "BOD": 3,
+   "AGI": 3,
+   "REA": 3,
+   "STR": 3,
+   "WIL": 3,
+   "LOG": 3,
+   "INT": 3,
+   "CHA": 3,
+   "EDG": 1,
+   "ESS": 6
+  },
+  "augmented": {},
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [],
+  "knowledge": [],
+  "qualities": [],
+  "powers": [],
+  "spells": [],
+  "weapons": [],
+  "armor": [],
+  "augmentations": [],
+  "gear": [],
+  "vehicles": [],
+  "vision": {},
+  "description": "*Fiche vide dans Foundry : statistiques par défaut (attributs 3).*",
+  "npc": {
+   "professionalRating": 0,
+   "grunt": false,
+   "kind": "metahuman",
+   "tactics": "",
+   "loot": ""
+  },
+  "foundryId": "j6Vv7tfFw0UXmGO9",
+  "foundryWorld": "test-world",
+  "foundryImportedAt": 1795629244307,
+  "foundryHash": "b0c7bd5a95f6"
+ },
+ {
+  "id": "tpl_fvtt_human_man_2",
+  "type": "npc",
+  "name": "Human man 2",
+  "folder": "Figurants",
+  "metatype": "Humain",
+  "concept": "",
+  "gender": "",
+  "portrait": "/assets/foundry/img/male_human_2.jpg",
+  "color": "#8a9bb0",
+  "disposition": "neutral",
+  "attributes": {
+   "BOD": 3,
+   "AGI": 3,
+   "REA": 3,
+   "STR": 3,
+   "WIL": 3,
+   "LOG": 3,
+   "INT": 3,
+   "CHA": 3,
+   "EDG": 1,
+   "ESS": 6
+  },
+  "augmented": {},
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [],
+  "knowledge": [],
+  "qualities": [],
+  "powers": [],
+  "spells": [],
+  "weapons": [],
+  "armor": [],
+  "augmentations": [],
+  "gear": [],
+  "vehicles": [],
+  "vision": {},
+  "description": "*Fiche vide dans Foundry : statistiques par défaut (attributs 3).*",
+  "npc": {
+   "professionalRating": 0,
+   "grunt": false,
+   "kind": "metahuman",
+   "tactics": "",
+   "loot": ""
+  },
+  "foundryId": "yVXYQod3dr5ZxNBR",
+  "foundryWorld": "test-world",
+  "foundryImportedAt": 1795629244307,
+  "foundryHash": "b9b7d0c0e4a5"
+ }
+]

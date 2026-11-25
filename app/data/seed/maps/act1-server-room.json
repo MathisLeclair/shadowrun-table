@@ -1,0 +1,365 @@
+{
+  "id": "map_server_room",
+  "name": "Hollow Pine — salle des serveurs",
+  "folder": "Acte 1",
+  "description": "**Étage technique de Hollow Pine Holdings.** Couloir de service desservi par l'escalier et un monte-charge ; salle des serveurs à faux plancher (allées de racks, console d'administration, local onduleurs) derrière une porte maglock ; poste du spider de sécurité ; bureau arrière avec les archives papier. Une gaine technique court sous le plancher, accessible par deux trappes secrètes.\n\n**Utilisation**\n- Quête 1.2 *Open Book*, Phase 3-4, version effraction physique : brancher Bricks directement sur le host depuis la console, ou fouiller les archives pour le dossier Knight Errant.\n- Peut servir de « local serveur » détaillé pour la carte Corp Lobby (12e étage).\n\n**Sécurité** : Junior Security Spider en RV (Standard si alerte), maglocks rating 5, caméras, extinction au gaz inerte.\n\n**Tests utiles** : Serrurerie/Hardware seuil 5 (maglock), Perception seuil 4 (trappes), Hacking sur le host (Firewall 7), Informatique seuil 3 (archives).",
+  "width": 46,
+  "height": 34,
+  "metersPerCell": 1,
+  "theme": "matrix",
+  "lighting": "dim",
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "tiles": [
+    "                                              ",
+    " ############################################ ",
+    " #ss....................cc....mm.........#ee# ",
+    " #ss.....................................Dee# ",
+    " #ss.....c...............................#ee# ",
+    " ##############DD####################D####### ",
+    " #_____________________________#............# ",
+    " #_____________________________#..TTTT.....m# ",
+    " #m__mm___mm________mm___mm___m#.......bb..m# ",
+    " #m__mm___mm________mm___mm___m#.......bb..m# ",
+    " #m__mm___mm________mm___mm____#...........m# ",
+    " #___mm___mm__TTTT__mm___mm____D............# ",
+    " #___mm___mm________mm___mm____#...T........# ",
+    " #___mm___mm________mm___mm____#............# ",
+    " #___mm___mm________mm___mm____#..........cc# ",
+    " #_____________________________######D####### ",
+    " #_____________________________#............# ",
+    " #___mm___mm________mm___mm____#...........m# ",
+    " #m__mm___mm________mm___mm____#.mmmmmm....m# ",
+    " #m__mm___mm________mm___mm____#...........m# ",
+    " #m__mm___mm_c____c_mm___mm____#...........m# ",
+    " #___mm___mm________mm___mm____#.mmmmmm.....# ",
+    " #___mm___mm________mm___mm____#............# ",
+    " #___mm___mm________mm___mm____#........TT..# ",
+    " #_____________________________#.mmmmmm.....# ",
+    " #####D####....................#............# ",
+    " #........#....................#............# ",
+    " #.xx...o.#..............ccc...D........TTT.# ",
+    " #......o.#.ccccc........c.....#............# ",
+    " #........#....................#.c..........# ",
+    " #mmmmmmmm#..................m.#............# ",
+    "###################D###################D######",
+    "..............................................",
+    "##############################################"
+  ],
+  "doors": [
+    {
+      "id": "srv_d01",
+      "x": 15,
+      "y": 5,
+      "state": "locked",
+      "kind": "door",
+      "name": "Porte maglock (salle des serveurs)"
+    },
+    {
+      "id": "srv_d02",
+      "x": 16,
+      "y": 5,
+      "state": "locked",
+      "kind": "door",
+      "name": "Porte maglock (salle des serveurs)"
+    },
+    {
+      "id": "srv_d03",
+      "x": 41,
+      "y": 3,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Monte-charge"
+    },
+    {
+      "id": "srv_d04",
+      "x": 37,
+      "y": 5,
+      "state": "locked",
+      "kind": "door",
+      "name": "Poste du spider (maglock)"
+    },
+    {
+      "id": "srv_d05",
+      "x": 31,
+      "y": 11,
+      "state": "closed",
+      "kind": "door",
+      "name": "Poste du spider"
+    },
+    {
+      "id": "srv_d06",
+      "x": 37,
+      "y": 15,
+      "state": "closed",
+      "kind": "door",
+      "name": "Bureau arrière"
+    },
+    {
+      "id": "srv_d07",
+      "x": 31,
+      "y": 27,
+      "state": "closed",
+      "kind": "door",
+      "name": "Bureau arrière"
+    },
+    {
+      "id": "srv_d08",
+      "x": 6,
+      "y": 25,
+      "state": "locked",
+      "kind": "door",
+      "name": "Local onduleurs"
+    },
+    {
+      "id": "srv_d09",
+      "x": 19,
+      "y": 31,
+      "state": "closed",
+      "kind": "secret",
+      "name": "Trappe de la gaine technique"
+    },
+    {
+      "id": "srv_d10",
+      "x": 39,
+      "y": 31,
+      "state": "closed",
+      "kind": "secret",
+      "name": "Trappe de la gaine technique"
+    }
+  ],
+  "lights": [
+    {
+      "id": "srv_l01",
+      "x": 10,
+      "y": 3,
+      "radius": 4,
+      "color": "#cfe0ff",
+      "on": true,
+      "name": "Éclairage — Couloir de service"
+    },
+    {
+      "id": "srv_l02",
+      "x": 33,
+      "y": 3,
+      "radius": 4,
+      "color": "#cfe0ff",
+      "on": true,
+      "name": "Éclairage — Couloir de service"
+    },
+    {
+      "id": "srv_l03",
+      "x": 8,
+      "y": 11,
+      "radius": 3,
+      "color": "#36e6ff",
+      "on": true,
+      "name": "Éclairage — Salle des serveurs"
+    },
+    {
+      "id": "srv_l04",
+      "x": 23,
+      "y": 11,
+      "radius": 3,
+      "color": "#36e6ff",
+      "on": true,
+      "name": "Éclairage — Salle des serveurs"
+    },
+    {
+      "id": "srv_l05",
+      "x": 8,
+      "y": 20,
+      "radius": 3,
+      "color": "#5dff9b",
+      "on": true,
+      "name": "Éclairage — Salle des serveurs"
+    },
+    {
+      "id": "srv_l06",
+      "x": 23,
+      "y": 20,
+      "radius": 3,
+      "color": "#5dff9b",
+      "on": true,
+      "name": "Éclairage — Salle des serveurs"
+    },
+    {
+      "id": "srv_l07",
+      "x": 15,
+      "y": 12,
+      "radius": 2,
+      "color": "#36e6ff",
+      "on": true,
+      "name": "Éclairage — Salle des serveurs"
+    },
+    {
+      "id": "srv_l08",
+      "x": 38,
+      "y": 10,
+      "radius": 3,
+      "color": "#ff3fd2",
+      "on": true,
+      "name": "Éclairage — Poste du spider"
+    },
+    {
+      "id": "srv_l09",
+      "x": 41,
+      "y": 25,
+      "radius": 3,
+      "color": "#ffd9a0",
+      "on": true,
+      "name": "Éclairage — Bureau arrière & archives"
+    },
+    {
+      "id": "srv_l10",
+      "x": 6,
+      "y": 28,
+      "radius": 2,
+      "color": "#ff3344",
+      "on": true,
+      "name": "Éclairage — Local onduleurs"
+    },
+    {
+      "id": "srv_l11",
+      "x": 16,
+      "y": 6,
+      "radius": 2,
+      "color": "#ff3344",
+      "on": true,
+      "name": "Éclairage — Salle des serveurs"
+    }
+  ],
+  "regions": [
+    {
+      "id": "srv_r01",
+      "name": "Couloir de service",
+      "x": 2,
+      "y": 2,
+      "w": 39,
+      "h": 3,
+      "color": "#4a4a55",
+      "gmOnly": false
+    },
+    {
+      "id": "srv_r02",
+      "name": "Monte-charge",
+      "x": 42,
+      "y": 2,
+      "w": 2,
+      "h": 3,
+      "color": "#4a4a55",
+      "gmOnly": false
+    },
+    {
+      "id": "srv_r03",
+      "name": "Salle des serveurs",
+      "x": 2,
+      "y": 6,
+      "w": 29,
+      "h": 25,
+      "color": "#1f5a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "srv_r04",
+      "name": "Local onduleurs",
+      "x": 2,
+      "y": 26,
+      "w": 8,
+      "h": 4,
+      "color": "#6a5a1f",
+      "gmOnly": false
+    },
+    {
+      "id": "srv_r05",
+      "name": "Poste du spider",
+      "x": 32,
+      "y": 6,
+      "w": 12,
+      "h": 9,
+      "color": "#5f2f6f",
+      "gmOnly": false
+    },
+    {
+      "id": "srv_r06",
+      "name": "Bureau arrière & archives",
+      "x": 32,
+      "y": 16,
+      "w": 12,
+      "h": 15,
+      "color": "#4a4a5a",
+      "gmOnly": false
+    },
+    {
+      "id": "srv_r07",
+      "name": "Gaine technique",
+      "x": 0,
+      "y": 32,
+      "w": 46,
+      "h": 1,
+      "color": "#3a3a3a",
+      "gmOnly": true
+    }
+  ],
+  "notes": [
+    {
+      "id": "srv_n01",
+      "x": 15,
+      "y": 6,
+      "text": "Porte maglock rating 5 : Serrurerie/Hardware seuil 5 ou badge cloné. L'ouvrir sans badge envoie une alerte silencieuse au poste du spider (sauf si Bricks a mis le capteur en boucle).",
+      "gmOnly": true
+    },
+    {
+      "id": "srv_n02",
+      "x": 38,
+      "y": 11,
+      "text": "Junior Security Spider (acteur existant) en RV : son corps est vulnérable ici. Passe Standard Security Spider en cas d'alerte.",
+      "gmOnly": true
+    },
+    {
+      "id": "srv_n03",
+      "x": 36,
+      "y": 19,
+      "text": "Archives papier : le dossier physique portant le vieux numéro Knight Errant (Phase 4 d'Open Book). Informatique/Recherche seuil 3, 10 minutes de fouille.",
+      "gmOnly": true
+    },
+    {
+      "id": "srv_n04",
+      "x": 19,
+      "y": 32,
+      "text": "Gaine technique : on y rampe (déplacement /2). Relie salle des serveurs, bureau arrière et les immeubles voisins. Perception seuil 4 pour trouver les trappes depuis l'intérieur.",
+      "gmOnly": true
+    },
+    {
+      "id": "srv_n05",
+      "x": 16,
+      "y": 12,
+      "text": "Console d'administration : accès direct au host Hollow Pine (Rating 5 — Att 6/Sle 8/DP 5/FW 7) sans passer par la Matrice publique : pas de bruit, IC de patrouille seulement.",
+      "gmOnly": true
+    },
+    {
+      "id": "srv_n06",
+      "x": 5,
+      "y": 28,
+      "text": "Local onduleurs : couper l'alimentation éteint caméras et maglocks de l'étage pendant 3 tours, le temps que le groupe électrogène démarre.",
+      "gmOnly": true
+    },
+    {
+      "id": "srv_n07",
+      "x": 13,
+      "y": 17,
+      "text": "Extinction au gaz inerte : si l'alarme incendie se déclenche, la salle est saturée en 3 tours (sortir ou subir la suffocation).",
+      "gmOnly": true
+    },
+    {
+      "id": "srv_n08",
+      "x": 42,
+      "y": 3,
+      "text": "Monte-charge : arrive du quai de livraison. Bonne entrée déguisée en livreurs (Déguisement + faux bon de livraison).",
+      "gmOnly": true
+    }
+  ],
+  "tokens": [],
+  "explored": {}
+}

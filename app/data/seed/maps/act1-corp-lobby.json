@@ -1,0 +1,655 @@
+{
+  "id": "map_corp_lobby",
+  "name": "Hollow Pine Holdings — hall & 12e étage",
+  "folder": "Acte 1",
+  "description": "**Immeuble de bureaux de Hollow Pine Holdings — Seattle.** Deux niveaux sur la même carte : en haut le **rez-de-chaussée** (parvis, façade vitrée, porte tambour, accueil, tourniquets, ascenseurs, poste de sécurité, escalier de service), en bas le **12e étage** loué par Hollow Pine (accueil, salle de conférence, open space, local serveur, bureau de Dorian Ashe). Les cabines d'ascenseur font le lien.\n\n**Utilisation**\n- Quête 1.2 *Open Book*, Phase 2-4 : repérage (fin de session 3) puis infiltration physique (session 4) si le groupe ne pirate pas le host à distance.\n- Quête 1.3 *Family Business* : rencontre possible avec Dorian Ashe.\n\n**Sécurité**\n- Jour : 2 agents (Human Corpo Security R3) au contrôle + 1 au poste ; nuit : 1 + 1. Junior Security Spider au poste (Standard en cas d'alerte).\n- Host Hollow Pine : Rating 5 (Attack 6 / Sleaze 8 / DP 5 / Firewall 7), IC de patrouille.\n- Maglocks : local serveur, portes vitrées du 12e, bureau de Ashe (rating 4-5).\n\n**Tests utiles** : Étiquette seuil 3 (badge visiteur), Déguisement (tenue d'entretien), Hardware seuil 3 (tourniquet), Serrurerie seuil 5 (coffre de Ashe).",
+  "width": 60,
+  "height": 44,
+  "metersPerCell": 1,
+  "theme": "corp",
+  "lighting": "bright",
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "tiles": [
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+    ",,,,,,vvvvv,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,cc,,,,,,",
+    ",,,,,,vvvvv,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+    ",,,,,,,,,,,,,,o,,,o,,,tt,,,,,,,,,,,,tt,,o,,,o,,,,,,,,,,,,,,,",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+    " #WWWWWWWWWWWWWWWWWWWWWWWWWW=DD=WWWWWWWWW#WWWWWWWWWWWWWWWW# ",
+    " #t.........t............................#.mmmmmmmm...bb..# ",
+    " #....................=...T...T...=......W............bb..# ",
+    " W.b..................=...........=......#..TTTTT.........# ",
+    " W.b.TT...............=============......D...............m# ",
+    " W.b.TT..................................#...............m# ",
+    " #.b............................===......#...............m# ",
+    " #t..bbbb................................################## ",
+    " #===============D=D=D=D============D====#.......#........# ",
+    " #t...........t.......................t..#..ssss.#......mm# ",
+    " #.......................................#..ssss.#.cc.....# ",
+    " #.......................................D..ssss.#.cc.....# ",
+    " #####D######D###D###D###D####D#####D#####..ssss.D........# ",
+    " D.mm......#eee#eee#eee#eee#.....#.......#..ssss.#........D ",
+    " #.mm......#eee#eee#eee#eee#.....#.......#..ssss.#........# ",
+    " #.mm..ccc.#eee#eee#eee#eee#TT...#.....TT#.......#........# ",
+    " ########################################################## ",
+    "                                                            ",
+    " ###########################WWWWWWWWWWW######WWWWWWWWWWWWW# ",
+    " #.....#mmm#eee#eee#eee#eee#...mmmmm...#....#.mmmmm......mW ",
+    " #.sss.#.mm#eee#eee#eee#eee#...........#....#........o....W ",
+    " #.sss.#...#eee#eee#eee#eee#...........#....#.............W ",
+    " #.sss.#...##D###D###D###D##..TTTTTTT..#....#.............W ",
+    " #.sss.#...#t..............#..TTTTTTT..D....#....TTTT.....W ",
+    " #.sss.#...#b............=.#...........#....#.............W ",
+    " #.....#...#b.........====.#...........#....D...........b.W ",
+    " #.....#...#..............t#...........#....#.........T.b.W ",
+    " ###D####D##WWWWWWDDWWWWWWW#WWWWWDWWWWW#....#...........b.W ",
+    " #t...................................t.....#...........b.W ",
+    " #..TT=TT..TT=TT..TT=TT..TT=TT..TT=TT.......#.t...........W ",
+    " W..=====..=====..=====..=====..=====.......############### ",
+    " W=.TT=TT..TT=TT..TT=TT..TT=TT..TT=TT.......#.............W ",
+    " #=.........................................#...........m.W ",
+    " W=.........................................#...TTTT....m.W ",
+    " W=.TT=TT..TT=TT..TT=TT..TT=TT..TT=TT.......D...........m.W ",
+    " #=.=====..=====..=====..=====..=====.......#.............W ",
+    " W=.TT=TT..TT=TT..TT=TT..TT=TT..TT=TT.......#.............W ",
+    " #........................................mm#t............W ",
+    " ##WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW################ "
+  ],
+  "doors": [
+    {
+      "id": "lobby_d01",
+      "x": 29,
+      "y": 5,
+      "state": "open",
+      "kind": "door",
+      "name": "Porte tambour"
+    },
+    {
+      "id": "lobby_d02",
+      "x": 30,
+      "y": 5,
+      "state": "open",
+      "kind": "door",
+      "name": "Porte tambour"
+    },
+    {
+      "id": "lobby_d03",
+      "x": 1,
+      "y": 18,
+      "state": "locked",
+      "kind": "door",
+      "name": "Accès livraisons"
+    },
+    {
+      "id": "lobby_d04",
+      "x": 17,
+      "y": 13,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Tourniquet (badge)"
+    },
+    {
+      "id": "lobby_d05",
+      "x": 19,
+      "y": 13,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Tourniquet (badge)"
+    },
+    {
+      "id": "lobby_d06",
+      "x": 21,
+      "y": 13,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Tourniquet (badge)"
+    },
+    {
+      "id": "lobby_d07",
+      "x": 23,
+      "y": 13,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Tourniquet (badge)"
+    },
+    {
+      "id": "lobby_d08",
+      "x": 36,
+      "y": 13,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Portillon (agent de sécurité)"
+    },
+    {
+      "id": "lobby_d09",
+      "x": 13,
+      "y": 17,
+      "state": "closed",
+      "kind": "door",
+      "name": "Ascenseur 1"
+    },
+    {
+      "id": "lobby_d10",
+      "x": 17,
+      "y": 17,
+      "state": "closed",
+      "kind": "door",
+      "name": "Ascenseur 2"
+    },
+    {
+      "id": "lobby_d11",
+      "x": 21,
+      "y": 17,
+      "state": "closed",
+      "kind": "door",
+      "name": "Ascenseur 3"
+    },
+    {
+      "id": "lobby_d12",
+      "x": 25,
+      "y": 17,
+      "state": "closed",
+      "kind": "door",
+      "name": "Ascenseur 4"
+    },
+    {
+      "id": "lobby_d13",
+      "x": 6,
+      "y": 17,
+      "state": "closed",
+      "kind": "door",
+      "name": "Porte — Local courrier"
+    },
+    {
+      "id": "lobby_d14",
+      "x": 30,
+      "y": 17,
+      "state": "closed",
+      "kind": "door",
+      "name": "Toilettes"
+    },
+    {
+      "id": "lobby_d15",
+      "x": 36,
+      "y": 17,
+      "state": "closed",
+      "kind": "door",
+      "name": "Toilettes"
+    },
+    {
+      "id": "lobby_d16",
+      "x": 41,
+      "y": 9,
+      "state": "locked",
+      "kind": "door",
+      "name": "Sécurité — accès restreint"
+    },
+    {
+      "id": "lobby_d17",
+      "x": 41,
+      "y": 16,
+      "state": "closed",
+      "kind": "door",
+      "name": "Escalier de service"
+    },
+    {
+      "id": "lobby_d18",
+      "x": 49,
+      "y": 17,
+      "state": "locked",
+      "kind": "door",
+      "name": "Local de maintenance"
+    },
+    {
+      "id": "lobby_d19",
+      "x": 58,
+      "y": 18,
+      "state": "closed",
+      "kind": "door",
+      "name": "Sortie de secours"
+    },
+    {
+      "id": "lobby_d20",
+      "x": 13,
+      "y": 27,
+      "state": "closed",
+      "kind": "door",
+      "name": "Ascenseur 1 (12e)"
+    },
+    {
+      "id": "lobby_d21",
+      "x": 17,
+      "y": 27,
+      "state": "closed",
+      "kind": "door",
+      "name": "Ascenseur 2 (12e)"
+    },
+    {
+      "id": "lobby_d22",
+      "x": 21,
+      "y": 27,
+      "state": "closed",
+      "kind": "door",
+      "name": "Ascenseur 3 (12e)"
+    },
+    {
+      "id": "lobby_d23",
+      "x": 25,
+      "y": 27,
+      "state": "closed",
+      "kind": "door",
+      "name": "Ascenseur 4 (12e)"
+    },
+    {
+      "id": "lobby_d24",
+      "x": 4,
+      "y": 32,
+      "state": "closed",
+      "kind": "door",
+      "name": "Escalier (12e)"
+    },
+    {
+      "id": "lobby_d25",
+      "x": 9,
+      "y": 32,
+      "state": "locked",
+      "kind": "door",
+      "name": "Local serveur (maglock)"
+    },
+    {
+      "id": "lobby_d26",
+      "x": 18,
+      "y": 32,
+      "state": "locked",
+      "kind": "door",
+      "name": "Portes vitrées (maglock)"
+    },
+    {
+      "id": "lobby_d27",
+      "x": 19,
+      "y": 32,
+      "state": "locked",
+      "kind": "door",
+      "name": "Portes vitrées (maglock)"
+    },
+    {
+      "id": "lobby_d28",
+      "x": 33,
+      "y": 32,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salle de conférence"
+    },
+    {
+      "id": "lobby_d29",
+      "x": 39,
+      "y": 28,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salle de conférence"
+    },
+    {
+      "id": "lobby_d30",
+      "x": 44,
+      "y": 30,
+      "state": "locked",
+      "kind": "door",
+      "name": "Bureau de D. Ashe (maglock)"
+    },
+    {
+      "id": "lobby_d31",
+      "x": 44,
+      "y": 39,
+      "state": "closed",
+      "kind": "door",
+      "name": "Bureau de l'assistante"
+    }
+  ],
+  "lights": [
+    {
+      "id": "lobby_l01",
+      "x": 30,
+      "y": 3,
+      "radius": 4,
+      "color": "#36e6ff",
+      "on": true,
+      "name": "Enseigne « Hollow Pine »"
+    },
+    {
+      "id": "lobby_l02",
+      "x": 20,
+      "y": 10,
+      "radius": 8,
+      "color": "#e8f4ff",
+      "on": true,
+      "name": "Éclairage — Hall d'accueil (RDC)"
+    },
+    {
+      "id": "lobby_l03",
+      "x": 52,
+      "y": 7,
+      "radius": 3,
+      "color": "#36e6ff",
+      "on": true,
+      "name": "Éclairage — Poste de sécurité"
+    },
+    {
+      "id": "lobby_l04",
+      "x": 26,
+      "y": 15,
+      "radius": 6,
+      "color": "#e8f4ff",
+      "on": true,
+      "name": "Éclairage — Hall des ascenseurs (RDC)"
+    },
+    {
+      "id": "lobby_l05",
+      "x": 45,
+      "y": 17,
+      "radius": 2,
+      "color": "#ff3344",
+      "on": true,
+      "name": "Éclairage — Escalier de service"
+    },
+    {
+      "id": "lobby_l06",
+      "x": 19,
+      "y": 29,
+      "radius": 3,
+      "color": "#5dff9b",
+      "on": true,
+      "name": "Logo lumineux (12e)"
+    },
+    {
+      "id": "lobby_l07",
+      "x": 33,
+      "y": 25,
+      "radius": 3,
+      "color": "#36e6ff",
+      "on": true,
+      "name": "Éclairage — 12e — Salle de conférence"
+    },
+    {
+      "id": "lobby_l08",
+      "x": 50,
+      "y": 29,
+      "radius": 3,
+      "color": "#ffd9a0",
+      "on": true,
+      "name": "Éclairage — 12e — Bureau de Dorian Ashe"
+    },
+    {
+      "id": "lobby_l09",
+      "x": 9,
+      "y": 27,
+      "radius": 2,
+      "color": "#5dff9b",
+      "on": true,
+      "name": "Éclairage — 12e — Local serveur"
+    },
+    {
+      "id": "lobby_l10",
+      "x": 22,
+      "y": 37,
+      "radius": 7,
+      "color": "#e8f4ff",
+      "on": true,
+      "name": "Éclairage — 12e — Open space"
+    }
+  ],
+  "regions": [
+    {
+      "id": "lobby_r01",
+      "name": "Parvis",
+      "x": 0,
+      "y": 0,
+      "w": 60,
+      "h": 5,
+      "color": "#3a4a5c",
+      "gmOnly": false
+    },
+    {
+      "id": "lobby_r02",
+      "name": "Hall d'accueil (RDC)",
+      "x": 2,
+      "y": 6,
+      "w": 39,
+      "h": 7,
+      "color": "#2f5f7f",
+      "gmOnly": false
+    },
+    {
+      "id": "lobby_r03",
+      "name": "Salon d'attente",
+      "x": 3,
+      "y": 7,
+      "w": 10,
+      "h": 6,
+      "color": "#3f6f8f",
+      "gmOnly": false
+    },
+    {
+      "id": "lobby_r04",
+      "name": "Hall des ascenseurs (RDC)",
+      "x": 2,
+      "y": 14,
+      "w": 39,
+      "h": 3,
+      "color": "#2f5f7f",
+      "gmOnly": false
+    },
+    {
+      "id": "lobby_r05",
+      "name": "Local courrier",
+      "x": 2,
+      "y": 18,
+      "w": 9,
+      "h": 3,
+      "color": "#4a4a55",
+      "gmOnly": false
+    },
+    {
+      "id": "lobby_r06",
+      "name": "Toilettes",
+      "x": 28,
+      "y": 18,
+      "w": 13,
+      "h": 3,
+      "color": "#3e5a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "lobby_r07",
+      "name": "Poste de sécurité",
+      "x": 42,
+      "y": 6,
+      "w": 16,
+      "h": 6,
+      "color": "#7a3a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "lobby_r08",
+      "name": "Escalier de service",
+      "x": 42,
+      "y": 13,
+      "w": 7,
+      "h": 8,
+      "color": "#4a4a55",
+      "gmOnly": false
+    },
+    {
+      "id": "lobby_r09",
+      "name": "Local de maintenance",
+      "x": 50,
+      "y": 13,
+      "w": 8,
+      "h": 8,
+      "color": "#4a4a55",
+      "gmOnly": false
+    },
+    {
+      "id": "lobby_r10",
+      "name": "12e — Escalier",
+      "x": 2,
+      "y": 24,
+      "w": 5,
+      "h": 8,
+      "color": "#4a4a55",
+      "gmOnly": false
+    },
+    {
+      "id": "lobby_r11",
+      "name": "12e — Local serveur",
+      "x": 8,
+      "y": 24,
+      "w": 3,
+      "h": 8,
+      "color": "#1f5a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "lobby_r12",
+      "name": "12e — Accueil Hollow Pine",
+      "x": 12,
+      "y": 28,
+      "w": 15,
+      "h": 4,
+      "color": "#2f6f4f",
+      "gmOnly": false
+    },
+    {
+      "id": "lobby_r13",
+      "name": "12e — Salle de conférence",
+      "x": 28,
+      "y": 24,
+      "w": 11,
+      "h": 8,
+      "color": "#2f5f7f",
+      "gmOnly": false
+    },
+    {
+      "id": "lobby_r14",
+      "name": "12e — Couloir de direction",
+      "x": 40,
+      "y": 24,
+      "w": 4,
+      "h": 9,
+      "color": "#2f5f7f",
+      "gmOnly": false
+    },
+    {
+      "id": "lobby_r15",
+      "name": "12e — Bureau de Dorian Ashe",
+      "x": 45,
+      "y": 24,
+      "w": 13,
+      "h": 11,
+      "color": "#5f3f7f",
+      "gmOnly": false
+    },
+    {
+      "id": "lobby_r16",
+      "name": "12e — Bureau de l'assistante",
+      "x": 45,
+      "y": 36,
+      "w": 13,
+      "h": 7,
+      "color": "#3f4f7f",
+      "gmOnly": false
+    },
+    {
+      "id": "lobby_r17",
+      "name": "12e — Open space",
+      "x": 2,
+      "y": 33,
+      "w": 42,
+      "h": 10,
+      "color": "#2f4f5f",
+      "gmOnly": false
+    }
+  ],
+  "notes": [
+    {
+      "id": "lobby_n01",
+      "x": 28,
+      "y": 8,
+      "text": "Accueil : 1 réceptionniste (non-combattante). Badge visiteur : Étiquette seuil 3 + faux SIN contrôlé (rating 4).",
+      "gmOnly": true
+    },
+    {
+      "id": "lobby_n02",
+      "x": 33,
+      "y": 12,
+      "text": "Contrôle : 2 Human Corpo Security R3 de 7h à 20h, 1 seul la nuit (repérage session 3, Perception seuil 5).",
+      "gmOnly": true
+    },
+    {
+      "id": "lobby_n03",
+      "x": 20,
+      "y": 14,
+      "text": "Tourniquets : badge requis — Hardware seuil 3, badge cloné, ou ouverture depuis le host. Le portillon s'ouvre depuis le poste de sécurité.",
+      "gmOnly": true
+    },
+    {
+      "id": "lobby_n04",
+      "x": 47,
+      "y": 9,
+      "text": "Poste de sécurité : 1 garde + la Junior Security Spider (passe Standard si alerte). Flux de toutes les caméras. Couper les flux = Hacking sur le host Hollow Pine (Rating 5, Firewall 7).",
+      "gmOnly": true
+    },
+    {
+      "id": "lobby_n05",
+      "x": 3,
+      "y": 15,
+      "text": "Caméras : hall (coins NO et NE), tourniquets, cabines d'ascenseur, accueil du 12e, couloir de direction, porte de Ashe.",
+      "gmOnly": true
+    },
+    {
+      "id": "lobby_n06",
+      "x": 21,
+      "y": 21,
+      "text": "Ascenseurs : les cabines du RDC (y 18-20) et du 12e (y 24-26) sont les mêmes — déplacez les jetons d'une cabine à l'autre. Badge requis pour le 12e.",
+      "gmOnly": true
+    },
+    {
+      "id": "lobby_n07",
+      "x": 9,
+      "y": 28,
+      "text": "Local serveur : nœud physique du host Hollow Pine. Accès direct = pas de bruit. Pour une effraction détaillée, utilisez la carte Server Room.",
+      "gmOnly": true
+    },
+    {
+      "id": "lobby_n08",
+      "x": 51,
+      "y": 27,
+      "text": "Bureau de Ashe : terminal (numéro de dossier Knight Errant — Phase 4 d'Open Book), coffre (Serrurerie seuil 5) : offre de rachat de la holding Von Schloss (lien Family Business).",
+      "gmOnly": true
+    },
+    {
+      "id": "lobby_n09",
+      "x": 33,
+      "y": 29,
+      "text": "Conférence : si Ashe est présent, il reçoit ici, escorté de 2 agents. Jane peut le manipuler (Étiquette 6 / Négociation 5 / Escroquerie 5 en face).",
+      "gmOnly": true
+    },
+    {
+      "id": "lobby_n10",
+      "x": 50,
+      "y": 17,
+      "text": "Local de maintenance : tenues d'agent d'entretien + chariot — déguisement idéal pour monter au 12e par l'escalier.",
+      "gmOnly": true
+    },
+    {
+      "id": "lobby_n11",
+      "x": 58,
+      "y": 19,
+      "text": "Sortie de secours : alarme incendie si ouverte de l'intérieur hors horaires.",
+      "gmOnly": true
+    }
+  ],
+  "tokens": [],
+  "explored": {}
+}

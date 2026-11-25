@@ -1,0 +1,361 @@
+{
+  "id": "map_penthouse_office",
+  "name": "Holding Von Schloss — penthouse",
+  "folder": "Acte 1",
+  "description": "**Le penthouse de la holding familiale Von Schloss — Seattle.** Bureaux feutrés, boiseries et verre : palier d'ascenseurs, accueil avec le blason familial, salle des marchés, bureau de Reinhardt Klee (avec la lame d'apparat de la famille), archives verrouillées, salon, et une grande terrasse avec bassin et jardin suspendu derrière une façade vitrée.\n\n**Utilisation**\n- Quête 1.3 *Family Business* : Phase 1 (rencontre avec Klee), Phase 2 (preuves dans les archives : l'acheteur est Hollow Pine Holdings / Dorian Ashe), Phase 3 (les gros bras débarquent), Phase 4 (Adachi Morinaga observe de loin — un avertissement, pas un combat).\n\n**Tests utiles**\n- Étiquette/Négociation pour rassurer Klee ; Recherche seuil 3 dans les archives ; Serrurerie seuil 5 (coffre).\n- Intimidation contre les gros bras (Human/Troll Corpo Security R3) pour désamorcer sans combat.\n- Perception seuil 4 depuis la terrasse : la silhouette sur le toit d'en face.",
+  "width": 50,
+  "height": 38,
+  "metersPerCell": 1,
+  "theme": "corp",
+  "lighting": "bright",
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "tiles": [
+    "                                                  ",
+    " ###############WWWWWWWWWWWWW####WWWWWWWWWWWWWW## ",
+    " #eeeee#eeeee#t.....mmmmm.....t#t.......m.......# ",
+    " #eeeee#eeeee#.................#...............m# ",
+    " ###D#####D###....=...T...=...b#...............m# ",
+    " #t.........tW....=.......=...b#...............m# ",
+    " #...........W....=========....#...............m# ",
+    " #...........D.................D......TTTT.....m# ",
+    " #...........W.................#...............m# ",
+    " #...........W.................#...............m# ",
+    " #g.........g#.bbb.............#...T...........m# ",
+    " ###D#####D###########D#########...............m# ",
+    " #.....#.....#.................#..bbb..........m# ",
+    " #.sss.#....=#.................#...............m# ",
+    " #.sss.#....=#..TTTT...TTTT....#.m............t.# ",
+    " #.sss.#....=#..TTTT...TTTT....########D######### ",
+    " #.sss.#.....#.................#T..............m# ",
+    " #.....#.....#.................#................# ",
+    " #############..............o..#..mmmmmmmmmmmm..# ",
+    " #t............................#................# ",
+    " W.........=....TTTT...TTTT....D................# ",
+    " W..TTT....=....TTTT...TTTT....#..mmmmmmmmmmmm..# ",
+    " W..TTT....=.o.................#................# ",
+    " W.........=...................#................# ",
+    " W.bbbbb.......................#..mmmmmmmmmmmm..# ",
+    " #............................t#................# ",
+    "=#WWWWDWWWWWWWWDDWWWWWWWWWWWWWW##################=",
+    "=,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,=",
+    "=,tt,,,,,,,,,,,,,,,,,,,,,,,,,,,,,c,,,,ggggggggtg,=",
+    "=,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,ggtggggggg,=",
+    "=,,,,,,,,,,,,,,,,,b,~~~~~~~~,b,,,,,,,,ggggggtggg,=",
+    "=,,,,,,,TTT,,,,,,,,,~~~~~~~~,,,,,,,,,,gtgggggggg,=",
+    "=,,,,,,,TTT,,,,,,,b,~~~~~~~~,b,,,,,,,,,,,,,,,,,,,=",
+    "=,,,,,,,,,,,,,,,,,,,~~~~~~~~,,,,,,,,,,,,,,,,,,,,,=",
+    "=,,,,,,,,,,,,cc,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,=",
+    "=,t,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,t,,,,,,,,,,,,t,=",
+    "==================================================",
+    "                                                  "
+  ],
+  "doors": [
+    {
+      "id": "pent_d01",
+      "x": 4,
+      "y": 4,
+      "state": "closed",
+      "kind": "door",
+      "name": "Ascenseur privé"
+    },
+    {
+      "id": "pent_d02",
+      "x": 10,
+      "y": 4,
+      "state": "closed",
+      "kind": "door",
+      "name": "Ascenseur de service"
+    },
+    {
+      "id": "pent_d03",
+      "x": 13,
+      "y": 7,
+      "state": "closed",
+      "kind": "door",
+      "name": "Portes vitrées (accueil)"
+    },
+    {
+      "id": "pent_d04",
+      "x": 4,
+      "y": 11,
+      "state": "closed",
+      "kind": "door",
+      "name": "Escalier de service"
+    },
+    {
+      "id": "pent_d05",
+      "x": 10,
+      "y": 11,
+      "state": "closed",
+      "kind": "door",
+      "name": "Toilettes"
+    },
+    {
+      "id": "pent_d06",
+      "x": 31,
+      "y": 7,
+      "state": "closed",
+      "kind": "door",
+      "name": "Bureau de R. Klee"
+    },
+    {
+      "id": "pent_d07",
+      "x": 39,
+      "y": 15,
+      "state": "locked",
+      "kind": "door",
+      "name": "Archives"
+    },
+    {
+      "id": "pent_d08",
+      "x": 31,
+      "y": 20,
+      "state": "locked",
+      "kind": "door",
+      "name": "Archives (accès salle des marchés)"
+    },
+    {
+      "id": "pent_d09",
+      "x": 15,
+      "y": 26,
+      "state": "closed",
+      "kind": "door",
+      "name": "Baie coulissante"
+    },
+    {
+      "id": "pent_d10",
+      "x": 16,
+      "y": 26,
+      "state": "closed",
+      "kind": "door",
+      "name": "Baie coulissante"
+    },
+    {
+      "id": "pent_d11",
+      "x": 6,
+      "y": 26,
+      "state": "closed",
+      "kind": "door",
+      "name": "Baie du salon"
+    }
+  ],
+  "lights": [
+    {
+      "id": "pent_l01",
+      "x": 39,
+      "y": 8,
+      "radius": 3,
+      "color": "#ffd9a0",
+      "on": true,
+      "name": "Éclairage — Bureau de Reinhardt Klee"
+    },
+    {
+      "id": "pent_l02",
+      "x": 22,
+      "y": 5,
+      "radius": 3,
+      "color": "#ffcf8a",
+      "on": true,
+      "name": "Éclairage — Accueil"
+    },
+    {
+      "id": "pent_l03",
+      "x": 5,
+      "y": 33,
+      "radius": 4,
+      "color": "#ffb766",
+      "on": true,
+      "name": "Éclairage — Terrasse"
+    },
+    {
+      "id": "pent_l04",
+      "x": 33,
+      "y": 33,
+      "radius": 4,
+      "color": "#ffb766",
+      "on": true,
+      "name": "Éclairage — Terrasse"
+    },
+    {
+      "id": "pent_l05",
+      "x": 23,
+      "y": 29,
+      "radius": 3,
+      "color": "#36e6ff",
+      "on": true,
+      "name": "Éclairage du bassin"
+    },
+    {
+      "id": "pent_l06",
+      "x": 44,
+      "y": 33,
+      "radius": 3,
+      "color": "#5dff9b",
+      "on": true,
+      "name": "Éclairage — Terrasse"
+    },
+    {
+      "id": "pent_l07",
+      "x": 9,
+      "y": 7,
+      "radius": 3,
+      "color": "#e8f4ff",
+      "on": true,
+      "name": "Éclairage — Palier des ascenseurs"
+    }
+  ],
+  "regions": [
+    {
+      "id": "pent_r01",
+      "name": "Palier des ascenseurs",
+      "x": 2,
+      "y": 5,
+      "w": 11,
+      "h": 6,
+      "color": "#3f5f7f",
+      "gmOnly": false
+    },
+    {
+      "id": "pent_r02",
+      "name": "Escalier de service",
+      "x": 2,
+      "y": 12,
+      "w": 5,
+      "h": 6,
+      "color": "#4a4a55",
+      "gmOnly": false
+    },
+    {
+      "id": "pent_r03",
+      "name": "Toilettes",
+      "x": 8,
+      "y": 12,
+      "w": 5,
+      "h": 6,
+      "color": "#3e5a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "pent_r04",
+      "name": "Accueil",
+      "x": 14,
+      "y": 2,
+      "w": 17,
+      "h": 9,
+      "color": "#5f4f2f",
+      "gmOnly": false
+    },
+    {
+      "id": "pent_r05",
+      "name": "Bureau de Reinhardt Klee",
+      "x": 32,
+      "y": 2,
+      "w": 16,
+      "h": 13,
+      "color": "#6f3f2f",
+      "gmOnly": false
+    },
+    {
+      "id": "pent_r06",
+      "name": "Archives",
+      "x": 32,
+      "y": 16,
+      "w": 16,
+      "h": 10,
+      "color": "#4f4a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "pent_r07",
+      "name": "Salle des marchés",
+      "x": 14,
+      "y": 12,
+      "w": 17,
+      "h": 14,
+      "color": "#3f5f6f",
+      "gmOnly": false
+    },
+    {
+      "id": "pent_r08",
+      "name": "Salon",
+      "x": 2,
+      "y": 19,
+      "w": 11,
+      "h": 7,
+      "color": "#5f4f3f",
+      "gmOnly": false
+    },
+    {
+      "id": "pent_r09",
+      "name": "Terrasse",
+      "x": 1,
+      "y": 27,
+      "w": 48,
+      "h": 9,
+      "color": "#2f5f4f",
+      "gmOnly": false
+    }
+  ],
+  "notes": [
+    {
+      "id": "pent_n01",
+      "x": 39,
+      "y": 9,
+      "text": "Phase 1 de Family Business : Klee reçoit Anthony ici. Menaces juridiques, offre de rachat au rabais, hommes qui débarquent sans prévenir. Il veut que ça se règle discrètement.",
+      "gmOnly": true
+    },
+    {
+      "id": "pent_n02",
+      "x": 40,
+      "y": 19,
+      "text": "Archives : correspondance de Hollow Pine Holdings signée Dorian Ashe (Phase 2). Recherche seuil 3, ou Klee la montre de lui-même s'il fait confiance.",
+      "gmOnly": true
+    },
+    {
+      "id": "pent_n03",
+      "x": 6,
+      "y": 7,
+      "text": "Phase 3 : 2 Human Corpo Security R3 + 1 Troll Corpo Security R3 arrivent par l'ascenseur pour « convaincre » Klee de signer. Intimidation, pas carnage.",
+      "gmOnly": true
+    },
+    {
+      "id": "pent_n04",
+      "x": 42,
+      "y": 34,
+      "text": "Terrasse : vue sur le chantier voisin (carte Construction Site). Phase 4 : Adachi Morinaga observe depuis un toit d'en face — Perception seuil 4 pour remarquer la silhouette. Ne pas résoudre ici.",
+      "gmOnly": true
+    },
+    {
+      "id": "pent_n05",
+      "x": 40,
+      "y": 3,
+      "text": "Panoplie : la lame d'apparat des Von Schloss. Klee la montre à Anthony — bonne accroche émotionnelle.",
+      "gmOnly": true
+    },
+    {
+      "id": "pent_n06",
+      "x": 22,
+      "y": 7,
+      "text": "Réceptionniste (Frau Lenz) : prévient Klee par commlink dès qu'un inconnu sort de l'ascenseur.",
+      "gmOnly": true
+    },
+    {
+      "id": "pent_n07",
+      "x": 47,
+      "y": 17,
+      "text": "Coffre familial (Serrurerie seuil 5) : titres de propriété de la holding — ce que Hollow Pine veut vraiment.",
+      "gmOnly": true
+    },
+    {
+      "id": "pent_n08",
+      "x": 24,
+      "y": 35,
+      "text": "Rambarde : chute de 40 étages. Projeter quelqu'un par-dessus = test de mêlée + 2 succès nets.",
+      "gmOnly": true
+    }
+  ],
+  "tokens": [],
+  "explored": {}
+}

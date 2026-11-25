@@ -1,0 +1,6 @@
+* text=auto eol=lf
+*.chum5 binary
+*.bat text eol=crlf
+*.png binary
+*.jpg binary
+*.webp binary

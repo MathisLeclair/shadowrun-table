@@ -1,0 +1,646 @@
+{
+  "id": "map_parc_mobilhomes_fruitland",
+  "name": "Parc de mobil-homes de Fruitland (Puyallup)",
+  "folder": "Acte 2",
+  "description": "**Parc de mobil-homes de Fruitland (Puyallup).** Un terrain de gravier et de boue d'environ 60 × 40 m, grillagé sur trois côtés, seize mobil-homes fatigués en deux rangées de part et d'autre d'une allée centrale, deux carcasses de voitures, un barbecue collectif en béton et l'enclos à poulets mutants de Mama Odile Tusker. Quartier ork : on ne parle pas aux flics, et on n'aime pas les fusillades.\n\n**Utilisation**\n- Quête 2.1 *Windows Open*, Phase 1 — **Porte A** : le mobil-home 14 de Mama Tusker, dernière adresse connue de Windows (liste de surveillance de Hollow Pine).\n- Phase 2 — **le face-à-face de Fruitland** (garanti) : la camionnette grise du Passeur se gare devant le bâtiment commun pendant que le groupe parle à Mama Tusker. Le Passeur descend seul, mains visibles.\n- Si le Passeur gagne la course : Mama Tusker garde la **clé USB** de Windows (message de Vosk + manifeste SP-NULL).\n\n**Tests utiles**\n- Mama Tusker : Etiquette (Rue) + Charisme seuil 2, ou 50¥ et un peu de patience → l'adresse de réexpédition des colis de graines (boîte postale d'une épicerie de Puyallup centre) : **+2 Piste**.\n- Le Passeur : Négociation/Escroquerie contre Négociation + Charisme (8 dés) ; bluff de Jane : Escroquerie + Charisme contre Escroquerie + Intuition (9 dés), réussite = le Passeur perd 2 Piste ; acheter la rupture : 50 000¥.\n- Entrer discrètement de nuit : Discrétion contre Perception des habitants (+2 dés s'ils sont alertés par les poules).\n\n**Approches** : l'entrée carrossable au sud (barrière cassée), le trou du grillage au nord-est, ou par-dessus le grillage (Escalade seuil 1, 2 m). Pas de caméras, pas de host : ici, ce sont les voisins qui font la sécurité.\n\n**Lumière** : réglée sur *pénombre* (soir). De jour, passez la carte en plein jour ; la nuit, trois lampadaires dont un clignote (−1 visuel sans vision nocturne).",
+  "width": 64,
+  "height": 46,
+  "metersPerCell": 1,
+  "theme": "residential",
+  "lighting": "dim",
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "tiles": [
+    "gggtttggggggttggggggttttgggggggggttggggggtttgggggttggggggggtttgg",
+    "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+    "g========================================================,=====g",
+    "g=gggggg,,,,,,ggggg,,,,,,,,,,,,,,,,,,,,,,,gggg,,,,,,,,,rr,rr,,=g",
+    "g=gggggg,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,gggg,,,,,,,,,rrrrr,,=g",
+    "g=,,#WW#,#WW#,#WW#,#WW#,#WW#,#WW#,,,,,,,,,,,#WW#,,#WW#,,,,,,,,=g",
+    "t=,,#bb#,#bb#,#bb#,#bb#,#bb#,#b.#,========,,#bb#,,#bb#,,,,,,c,=g",
+    "t=,,#..W,#..W,#..W,#..W,#..W,#..W,=ggggcc=,,#..W,,#..W,,,,,,,,=g",
+    "g=,,#..#,#..#,#..#,#..#,#..#,#.T#,=gggggg=,,#..#,,#..#,,,,,,,,=g",
+    "g=c,W..#,W..#,W..#,W..#,W..#,W..#,=gggggg=,,W..#,,W..#,,vvv,,,=g",
+    "g=c,#T.#,#T.#,#T.#,#T.#,#T.#,#T.#,=gggggg=,,#T.#,,#T.#,,vvv,,,=t",
+    "g=c,#T.W,#T.W,#T.W,#T.W,#T.W,#..W,===D====,,#T.W,,#T.W,,,,,,,,=t",
+    "g=,,#..#g#..#,#..#,#..#,#..#,#.=#,,,,,,,,,,,#..#,,#..#gg,,,,,,=g",
+    "g=,,#=.#g#=.#,#=.#,#=.#,#=.#,#..#,,,,,,,,,,,#=.#,,#=.#gg,,,,,,=g",
+    "g=,,#=.W,#=.W,#=.W,#=.W,#=.W,#m.W,,,,,,,,,,,#=.W,,#=.Wgg,,cc,,=g",
+    "t=,,#..#,#..#,#..#,#..#,#..#,#..#,,,,,,,,,,,#..#,,#..#,,,,cc,,=g",
+    "g=,,#D##,#D##,#D##,#D##,#D##,#D##,,,,,,,,,,,#D##,,#D##,,,,,,,,=g",
+    "g=,,,,,,,,,,,,,,,,,,,,,,,,,,,c,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,=g",
+    "g=,,,,rro,,,,,,,,,,,,,,,,,,,,,,,,,,,,,r,,,,,,,,,,,,,,,,o,,,,,,=g",
+    "g=,,,,,,,,vvvv,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,=g",
+    "g=,,,,,,,,vvvv,,,,,,,,,,TT,,ccc,,,,,,,,,,,,,,,,,,,,,,,,,,,r,,,=g",
+    "g=,,,,,,,,,,,,,,,,,,,,,,,,,,ccc,,TT,,,,,,,,,,,vvvv,,,,,,,,,,,,=g",
+    "g=,r,,,,,,,,,,,,,,,,,,,,,T,,,,,,,,,,,,,,,,,,,,vvvv,,,,,,,,,,,,=t",
+    "g=,,,,,,,,,,,,,,,rr,,,,,,,,,,,,o,,,,,,,,,,,,,,,,,,,,rr,,,cc,,,=g",
+    "g=,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,r,,,,,,,,,,,,,,,,,,,,=g",
+    "g=,,#D##,#D##,#D##,#D##,,,,,,,,,,,,#D##,#D##,#D##,#D##,,,,,,,,=g",
+    "g=,,#..#,#..#,#..#,#..#,,,,,,,,,,,,#..#,#..#,#..#,#..#,,ggggg,=g",
+    "t=,,#=.W,#=.W,#=.W,#=.W,,,,,,,,,,,,#=.W,#=.W,#=.W,#=.W,,ggggg,=g",
+    "t=,,#=.#,#=.#,#=.#,#=.#,,,,,,,,,,,,#=.#,#=.#,#=.#,#=.#,,ggggg,=g",
+    "g=,,#..#,#..#,#..#,#..#,,,,,,,,,,,,#..#,#..#,#..#,#..#,,,,,,,,=g",
+    "g=c,#T.W,#T.W,#T.W,#T.W,,,,,,,,,,,,#T.W,#T.W,#T.W,#T.W,######,=g",
+    "g=c,#T.#,#T.#,#T.#g#T.#,,,,,,,,,,,,#T.#,#T.#,#T.#,#T.#,#mm.m#,=g",
+    "g=,,W..#,W..#,W..#gW..#,,,,,,,,,,,,W..#,W..#,W..#,W..#,W...m#,=g",
+    "g=,,#..#,#..#,#..#g#..#,,,,,,,,,,,,#..#,#..#,#..#,#..#,#...m#,=t",
+    "g=,,#..W,#..W,#..W,#..W,,,,,,,,,,,,#..W,#..W,#..W,#..W,##D###,=t",
+    "g=,,#bb#,#bb#,#bb#,#bb#,,,,,,,,,,,,#bb#,#bb#,#bb#,#bb#,,,,,,,,=g",
+    "t=,,#WW#,#WW#,#WW#,#WW#,,,,,,,,,,,,#WW#,#WW#,#WW#,#WW#,,,,,,,,=g",
+    "g=,,,,,,,,,,,,,,,,,,,,,,ggg,,,,,,,,,,,,,,,,,,,,,,,vvvvv,,,,,,,=g",
+    "g=gggggg,,cc,,,,,,,,,,,,ggg,,,,,,,,,gggg,,,,,,,,,,vvvvv,,,,,,,=g",
+    "g=gggggg,,,,,,,,,,,,,,,,,,,,,,,,,,,,gggg,rrr,,,,,,,,,,,,,,ggg,=g",
+    "g=gggggg,,,,,,,,,,,,,,,,,,,,,,,,,,,,gggg,,,,,,,,,,,,,,,,,,ggg,=g",
+    "g=,,,,,,,,,,,,,,,,,,,,,,,,rr,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,=g",
+    "g========================o,,,,,,,,o============================g",
+    ",,,,,,,,,,o,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,o,,,,,,,,,,,,,,,,,,,",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"
+  ],
+  "doors": [
+    {
+      "id": "fruit_d01",
+      "x": 5,
+      "y": 16,
+      "state": "closed",
+      "kind": "door",
+      "name": "Mobil-home 9"
+    },
+    {
+      "id": "fruit_d02",
+      "x": 10,
+      "y": 16,
+      "state": "closed",
+      "kind": "door",
+      "name": "Mobil-home 10"
+    },
+    {
+      "id": "fruit_d03",
+      "x": 15,
+      "y": 16,
+      "state": "closed",
+      "kind": "door",
+      "name": "Mobil-home 11"
+    },
+    {
+      "id": "fruit_d04",
+      "x": 20,
+      "y": 16,
+      "state": "closed",
+      "kind": "door",
+      "name": "Mobil-home 12"
+    },
+    {
+      "id": "fruit_d05",
+      "x": 25,
+      "y": 16,
+      "state": "closed",
+      "kind": "door",
+      "name": "Mobil-home 13"
+    },
+    {
+      "id": "fruit_d06",
+      "x": 30,
+      "y": 16,
+      "state": "closed",
+      "kind": "door",
+      "name": "Mobil-home 14"
+    },
+    {
+      "id": "fruit_d07",
+      "x": 45,
+      "y": 16,
+      "state": "closed",
+      "kind": "door",
+      "name": "Mobil-home 15"
+    },
+    {
+      "id": "fruit_d08",
+      "x": 51,
+      "y": 16,
+      "state": "closed",
+      "kind": "door",
+      "name": "Mobil-home 16"
+    },
+    {
+      "id": "fruit_d09",
+      "x": 5,
+      "y": 25,
+      "state": "closed",
+      "kind": "door",
+      "name": "Mobil-home 1"
+    },
+    {
+      "id": "fruit_d10",
+      "x": 10,
+      "y": 25,
+      "state": "closed",
+      "kind": "door",
+      "name": "Mobil-home 2"
+    },
+    {
+      "id": "fruit_d11",
+      "x": 15,
+      "y": 25,
+      "state": "closed",
+      "kind": "door",
+      "name": "Mobil-home 3"
+    },
+    {
+      "id": "fruit_d12",
+      "x": 20,
+      "y": 25,
+      "state": "closed",
+      "kind": "door",
+      "name": "Mobil-home 4"
+    },
+    {
+      "id": "fruit_d13",
+      "x": 36,
+      "y": 25,
+      "state": "closed",
+      "kind": "door",
+      "name": "Mobil-home 5"
+    },
+    {
+      "id": "fruit_d14",
+      "x": 41,
+      "y": 25,
+      "state": "closed",
+      "kind": "door",
+      "name": "Mobil-home 6"
+    },
+    {
+      "id": "fruit_d15",
+      "x": 46,
+      "y": 25,
+      "state": "closed",
+      "kind": "door",
+      "name": "Mobil-home 7"
+    },
+    {
+      "id": "fruit_d16",
+      "x": 51,
+      "y": 25,
+      "state": "closed",
+      "kind": "door",
+      "name": "Mobil-home 8"
+    },
+    {
+      "id": "fruit_d17",
+      "x": 37,
+      "y": 11,
+      "state": "closed",
+      "kind": "gate",
+      "name": "Portillon de l'enclos"
+    },
+    {
+      "id": "fruit_d18",
+      "x": 57,
+      "y": 34,
+      "state": "closed",
+      "kind": "door",
+      "name": "Bâtiment commun"
+    }
+  ],
+  "lights": [
+    {
+      "id": "fruit_l01",
+      "x": 8,
+      "y": 19,
+      "radius": 7,
+      "color": "#ffb766",
+      "on": true,
+      "name": "Lampadaire ouest"
+    },
+    {
+      "id": "fruit_l02",
+      "x": 31,
+      "y": 22,
+      "radius": 7,
+      "color": "#ffb766",
+      "on": true,
+      "name": "Lampadaire central"
+    },
+    {
+      "id": "fruit_l03",
+      "x": 55,
+      "y": 19,
+      "radius": 7,
+      "color": "#ffb766",
+      "on": true,
+      "name": "Lampadaire est (clignote)"
+    },
+    {
+      "id": "fruit_l04",
+      "x": 31,
+      "y": 10,
+      "radius": 3,
+      "color": "#ffd9a0",
+      "on": true,
+      "name": "Mobil-home 14 — lampe"
+    },
+    {
+      "id": "fruit_l05",
+      "x": 37,
+      "y": 8,
+      "radius": 2,
+      "color": "#ff6a3a",
+      "on": true,
+      "name": "Lampe chauffante de l'enclos"
+    },
+    {
+      "id": "fruit_l06",
+      "x": 16,
+      "y": 10,
+      "radius": 2,
+      "color": "#7fb8ff",
+      "on": true,
+      "name": "Écran de trid (n°11)"
+    },
+    {
+      "id": "fruit_l07",
+      "x": 6,
+      "y": 30,
+      "radius": 2,
+      "color": "#ffd9a0",
+      "on": true,
+      "name": "Fenêtre éclairée (n°1)"
+    },
+    {
+      "id": "fruit_l08",
+      "x": 42,
+      "y": 31,
+      "radius": 2,
+      "color": "#ffd9a0",
+      "on": true,
+      "name": "Fenêtre éclairée (n°6)"
+    },
+    {
+      "id": "fruit_l09",
+      "x": 57,
+      "y": 32,
+      "radius": 3,
+      "color": "#d8f4ff",
+      "on": false,
+      "name": "Néon de la laverie (hors service)"
+    },
+    {
+      "id": "fruit_l10",
+      "x": 29,
+      "y": 40,
+      "radius": 4,
+      "color": "#ff8a3a",
+      "on": false,
+      "name": "Feu de bidon (entrée)"
+    },
+    {
+      "id": "fruit_l11",
+      "x": 10,
+      "y": 44,
+      "radius": 6,
+      "color": "#ffb766",
+      "on": true,
+      "name": "Éclairage — rue"
+    },
+    {
+      "id": "fruit_l12",
+      "x": 44,
+      "y": 44,
+      "radius": 6,
+      "color": "#ffb766",
+      "on": true,
+      "name": "Éclairage — rue"
+    },
+    {
+      "id": "fruit_l13",
+      "x": 52,
+      "y": 39,
+      "radius": 5,
+      "color": "#f4f0d8",
+      "on": false,
+      "name": "Phares de la camionnette"
+    }
+  ],
+  "regions": [
+    {
+      "id": "fruit_r01",
+      "name": "n°9",
+      "x": 4,
+      "y": 5,
+      "w": 4,
+      "h": 12,
+      "color": "#4a4a40",
+      "gmOnly": false
+    },
+    {
+      "id": "fruit_r02",
+      "name": "n°10",
+      "x": 9,
+      "y": 5,
+      "w": 4,
+      "h": 12,
+      "color": "#4a4a40",
+      "gmOnly": false
+    },
+    {
+      "id": "fruit_r03",
+      "name": "n°11",
+      "x": 14,
+      "y": 5,
+      "w": 4,
+      "h": 12,
+      "color": "#4a4a40",
+      "gmOnly": false
+    },
+    {
+      "id": "fruit_r04",
+      "name": "n°12",
+      "x": 19,
+      "y": 5,
+      "w": 4,
+      "h": 12,
+      "color": "#4a4a40",
+      "gmOnly": false
+    },
+    {
+      "id": "fruit_r05",
+      "name": "n°13",
+      "x": 24,
+      "y": 5,
+      "w": 4,
+      "h": 12,
+      "color": "#4a4a40",
+      "gmOnly": false
+    },
+    {
+      "id": "fruit_r06",
+      "name": "n°14",
+      "x": 29,
+      "y": 5,
+      "w": 4,
+      "h": 12,
+      "color": "#c86a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "fruit_r07",
+      "name": "n°15",
+      "x": 44,
+      "y": 5,
+      "w": 4,
+      "h": 12,
+      "color": "#4a4a40",
+      "gmOnly": false
+    },
+    {
+      "id": "fruit_r08",
+      "name": "n°16",
+      "x": 50,
+      "y": 5,
+      "w": 4,
+      "h": 12,
+      "color": "#4a4a40",
+      "gmOnly": false
+    },
+    {
+      "id": "fruit_r09",
+      "name": "n°1",
+      "x": 4,
+      "y": 25,
+      "w": 4,
+      "h": 12,
+      "color": "#4a4a40",
+      "gmOnly": false
+    },
+    {
+      "id": "fruit_r10",
+      "name": "n°2",
+      "x": 9,
+      "y": 25,
+      "w": 4,
+      "h": 12,
+      "color": "#4a4a40",
+      "gmOnly": false
+    },
+    {
+      "id": "fruit_r11",
+      "name": "n°3",
+      "x": 14,
+      "y": 25,
+      "w": 4,
+      "h": 12,
+      "color": "#4a4a40",
+      "gmOnly": false
+    },
+    {
+      "id": "fruit_r12",
+      "name": "n°4",
+      "x": 19,
+      "y": 25,
+      "w": 4,
+      "h": 12,
+      "color": "#4a4a40",
+      "gmOnly": false
+    },
+    {
+      "id": "fruit_r13",
+      "name": "n°5",
+      "x": 35,
+      "y": 25,
+      "w": 4,
+      "h": 12,
+      "color": "#4a4a40",
+      "gmOnly": false
+    },
+    {
+      "id": "fruit_r14",
+      "name": "n°6",
+      "x": 40,
+      "y": 25,
+      "w": 4,
+      "h": 12,
+      "color": "#4a4a40",
+      "gmOnly": false
+    },
+    {
+      "id": "fruit_r15",
+      "name": "n°7",
+      "x": 45,
+      "y": 25,
+      "w": 4,
+      "h": 12,
+      "color": "#4a4a40",
+      "gmOnly": false
+    },
+    {
+      "id": "fruit_r16",
+      "name": "n°8",
+      "x": 50,
+      "y": 25,
+      "w": 4,
+      "h": 12,
+      "color": "#4a4a40",
+      "gmOnly": false
+    },
+    {
+      "id": "fruit_r17",
+      "name": "Allée centrale",
+      "x": 2,
+      "y": 17,
+      "w": 60,
+      "h": 8,
+      "color": "#5a4a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "fruit_r18",
+      "name": "Enclos à poulets",
+      "x": 34,
+      "y": 6,
+      "w": 8,
+      "h": 6,
+      "color": "#6a7a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "fruit_r19",
+      "name": "Bâtiment commun (laverie, boîtes aux lettres)",
+      "x": 55,
+      "y": 30,
+      "w": 6,
+      "h": 5,
+      "color": "#4a4a55",
+      "gmOnly": false
+    },
+    {
+      "id": "fruit_r20",
+      "name": "Entrée (barrière cassée)",
+      "x": 24,
+      "y": 39,
+      "w": 12,
+      "h": 4,
+      "color": "#7a5a1a",
+      "gmOnly": false
+    },
+    {
+      "id": "fruit_r21",
+      "name": "Rue",
+      "x": 0,
+      "y": 43,
+      "w": 64,
+      "h": 3,
+      "color": "#3a4a5c",
+      "gmOnly": false
+    },
+    {
+      "id": "fruit_r22",
+      "name": "Friche (hors du parc)",
+      "x": 0,
+      "y": 0,
+      "w": 64,
+      "h": 2,
+      "color": "#2a4a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "fruit_r23",
+      "name": "Trou dans le grillage",
+      "x": 55,
+      "y": 2,
+      "w": 5,
+      "h": 3,
+      "color": "#7a2a1a",
+      "gmOnly": true
+    }
+  ],
+  "notes": [
+    {
+      "id": "fruit_n01",
+      "x": 31,
+      "y": 12,
+      "text": "Mama Odile Tusker, vieille orque, mobil-home 14 depuis 2078. Elle a connu « la fille aux lunettes » : Windows est partie en 2078 sans adresse, mais lui envoie chaque mois un colis de graines « pour les poules ». Etiquette (Rue) + Charisme seuil 2, ou 50¥ et de la patience → adresse de réexpédition : boîte postale d'une épicerie de Puyallup centre (+2 Piste).",
+      "gmOnly": true
+    },
+    {
+      "id": "fruit_n02",
+      "x": 30,
+      "y": 14,
+      "text": "SECRET — dans une boîte de graines sous l'évier : la clé USB que Windows lui a confiée « au cas où » (message de Vosk + manifeste SP-NULL). Elle ne la donne qu'à quelqu'un qui vient de la part de Windows, ou si Windows a été enlevée (fail-forward).",
+      "gmOnly": true
+    },
+    {
+      "id": "fruit_n03",
+      "x": 37,
+      "y": 9,
+      "text": "Poules mutantes : toute intrusion dans l'enclos ou à moins de 3 m de nuit les fait caqueter. Les habitants gagnent +2 dés en Perception. Bonne diversion, aussi.",
+      "gmOnly": true
+    },
+    {
+      "id": "fruit_n04",
+      "x": 52,
+      "y": 36,
+      "text": "Phase 2 — le face-à-face : la camionnette GMC Bulldog grise (plaques de Tacoma) se gare ici. Le Passeur descend seul, mains visibles. Mosaïque (decker) reste dans la camionnette, Rempart (troll, arme lourde) adossé au capot, Cendre (mage) côté passager. Parler : Négociation contre 8 dés (3 succès nets = il rompt le contrat). Acheter : 50 000¥. Bluff de Jane : 9 dés, réussite = Passeur −2 Piste.",
+      "gmOnly": true
+    },
+    {
+      "id": "fruit_n05",
+      "x": 58,
+      "y": 32,
+      "text": "Laverie commune hors service et boîtes aux lettres. L'ancienne boîte de Windows est vide (Perception seuil 2 : son étiquette a été grattée, il reste « R. W »).",
+      "gmOnly": true
+    },
+    {
+      "id": "fruit_n06",
+      "x": 12,
+      "y": 21,
+      "text": "Carcasses de voitures et barbecue en béton : couverture lourde (Armor 8). Les seules vraies protections de l'allée.",
+      "gmOnly": true
+    },
+    {
+      "id": "fruit_n07",
+      "x": 6,
+      "y": 11,
+      "text": "Parois des mobil-homes : Armor 4 / Structure 6. Les balles traversent : dissimulation seulement, pas de vraie couverture. Les portes ferment avec de simples verrous (Serrurerie seuil 1).",
+      "gmOnly": true
+    },
+    {
+      "id": "fruit_n08",
+      "x": 20,
+      "y": 22,
+      "text": "Une dizaine d'habitants orks témoins (des gamins, des retraités, un ou deux costauds). Hostiles aux flics comme aux fusillades. En cas de combat : Horloge +1, et le Passeur décroche à la première blessure grave d'un de ses membres.",
+      "gmOnly": true
+    },
+    {
+      "id": "fruit_n09",
+      "x": 57,
+      "y": 4,
+      "text": "Trou dans le grillage (Perception seuil 2 de l'extérieur) : accès discret par la friche, utilisé par les gamins du parc.",
+      "gmOnly": true
+    },
+    {
+      "id": "fruit_n10",
+      "x": 29,
+      "y": 41,
+      "text": "Barrière levante cassée : seule entrée carrossable. La nuit, un bidon peut brûler ici (lumière éteinte par défaut).",
+      "gmOnly": true
+    },
+    {
+      "id": "fruit_n11",
+      "x": 55,
+      "y": 20,
+      "text": "Lampadaire qui clignote : la nuit, pénombre (−1 visuel sans vision nocturne) dans tout l'est de l'allée.",
+      "gmOnly": true
+    },
+    {
+      "id": "fruit_n12",
+      "x": 33,
+      "y": 18,
+      "text": "Complication possible : Rempart menace Mama Tusker pour obtenir l'adresse. Un PNJ innocent sur le chemin : le moment où Anthony se montre pire ou meilleur qu'il n'est (jauge de la voie du sabre si Morinaga peut l'apprendre).",
+      "gmOnly": true
+    }
+  ],
+  "tokens": []
+}

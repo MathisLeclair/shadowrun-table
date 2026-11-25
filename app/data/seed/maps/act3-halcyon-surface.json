@@ -1,0 +1,855 @@
+{
+  "id": "map_halcyon_surface",
+  "name": "Clinique Halcyon — surface (Bellevue)",
+  "folder": "Acte 3",
+  "description": "**Clinique Halcyon — surface (Bellevue, au bord du lac Sammamish).** Une clinique de longévité de luxe, verre et cèdre, au milieu de jardins japonais : pins taillés, bassins à carpes, ponts de bois, lanternes de pierre. En surface, tout est légal et magnifique. Sous terre, trois niveaux qui n'apparaissent sur aucun plan déposé (voir **map_halcyon_sous_sols**).\n\n*Plan compressé* : le terrain réel fait environ 200 × 150 m et le bâtiment 80 × 30 m ; jardins et ailes sont raccourcis, les pièces gardent leur échelle. Le **parking souterrain** (≈ 60 × 40 m) est dessiné dans la bande de droite : on y descend par la rampe à l'est de l'allée circulaire. Les étages 1-2 (40 chambres de clients) et le toit ne sont pas dessinés.\n\n**Utilisation** — Quête 3.2 *Severance* (finale), dans les 48 h avant le Protokoll Ernte.\n- **A. La patiente** (Jane, cliente VIP) : grille → hall → ascenseur de service jusqu'au -1. Usurpation + Charisme [Physique] contre 6 dés à l'accueil, puis Escroquerie + Charisme contre l'infirmier-chef (7 dés) pour refuser l'examen sanguin.\n- **C. Le host** : couper l'éclairage des jardins, boucler les caméras, ouvrir les maglocks.\n- **D. L'assaut** : par la rampe et le quai de chargement (le côté le moins protégé), idéalement avec Scorch et une vingtaine de motards du Crush en diversion sur la grille principale.\n- **E. Le cheval de Troie** : le camion frigorifique que la sécurité attend au quai — les gardes ouvrent eux-mêmes.\n- Autres entrées : le lac (ponton), le toit (héliport, escalier de service maglock 5).\n\n**Sécurité** : 1 garde à la grille ; 2 gardes de nuit à l'accueil (Sécurité corpo humaine R3) ; 4 gardes Werkschutz (Sécurité corpo R4) en binômes, une ronde toutes les 20 minutes ; 2 au quai pendant le Protokoll Ernte ; 2 Fly-Spy sur les jardins ; un esprit de l'air (Force 4) en patrouille astrale. Host rating 7 (A9/S7/DP8/F10) : 2 spiders, Patrol IC puis Probe, Killer, Track, Black IC, Blaster. Knight Errant (zone AAA) : 4 + 1D6 minutes — mais Halcyon **ne l'appelle pas** si les sous-sols sont compromis.\n\n**Sortir** : par le quai (si le groupe tient le parking), par le lac (hors-bord du ponton), par l'héliport (Hughes WK-2 Stallion certains soirs), ou noyé parmi les clients évacués quand Knight Errant arrive.",
+  "width": 70,
+  "height": 50,
+  "metersPerCell": 1,
+  "theme": "corp",
+  "lighting": "dark",
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "tiles": [
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+    "#######################DDDD#########################                  ",
+    "#ggggggggggggggggggggg,,,,,,####ggggggggggggggggggg#                  ",
+    "#ggggggggggggggggggggg,,,,,,W..#ggggggtttgggggggttg#                  ",
+    "#gttttggggggcg,,,,,,,,,,,,,,#D##,,,,ggtttgcgggggttg###################",
+    "#gttttgggggggg,,,,,,,,,,,,,,,,,,,,,,ggggggggggggggg#######...........#",
+    "#gggg~~_~~~ggg,,,,gttggggggggttg,,,,,,,,,,,,,,,ssssssssssD...........#",
+    "#gggg~~_~~~ggg,,,,gttg~~~~~ggttg,,,,,,,,,,,,,,,ssssssssssD...........#",
+    "#gggggggtttggg,,,,gggggggggggggg,,,,ggggggggggggggg#######......vvvvv#",
+    "#gggcgggtttgcg,,,,,,,,,,,,,,,,,,,,,,gcggttggttttggg##...........vvvvv#",
+    "#ggttggggggggg,,,,,,,,,,,,,,,,,,,,,,ggggggggggggggg##.....o....o.....#",
+    "#g################WWWWWWDDDWWWWWWW###############gg##vvvvv...........#",
+    "#g#b...#b...#b..#~............#.ss.#............#gg##vvvvv...........#",
+    "#gW....#....#...#~.o..........#.ss.#.b.........b#gg##...........vvvvv#",
+    "#gW..T.#..T.#.T.#~............#....#..~~~~~~~~.bWgg##...........vvvvv#",
+    "#g#....#....#...#~....=.....=.##D###..~~~~~~~~..Wgg##................#",
+    "#g###D###D####D##.....=======......#..~~~~~~~~..#gg##vvvvvo....o.....#",
+    "#g#.............D..............tt..D..~~~~~~~~..#gg##vvvvv...........#",
+    "#gD.............D..................D..~~~~~~~~..Wgg##................#",
+    "#g###D###D####D##...bb...........o.#..~~~~~~~~..Wgg##...........vvvvv#",
+    "#g#....#....#...#~.......bb........#............Dgg##vvvvv......vvvvv#",
+    "#gW..T.#..T.#.T.#~.................#............#gg##vvvvv...........#",
+    "#gW....#....#...#~...........##########D###D##D##gg##.....o....o.....#",
+    "#g#b...#b...#b..#~.o.........#.....##....#..#...#gg##...........vvvvv#",
+    "#g###############............D.....##....#..#...#gg##vvvvv......vvvvv#",
+    "#g#......#.....m#..ee.ee.....#..ee.##....#b.#.b.Wgg##vvvvv...........#",
+    "#gW.TT...D.TTT..D..ee.ee.....#..ee.##....#b.#.b.#gg##................#",
+    "#g#......#......#............#m....#######..#...#gg##...........vvvvv#",
+    "#g###############WWWWWWWWDDWWWWWWWW##############gg##.....o....ovvvvv#",
+    "#gggggggggggggggggggggg,,,,,ggggggggggggggggggggggg##vvvvv...........#",
+    "#ggtttggggggggggtggttgg,,,,,gggtttgggggggggggtttggg##vvvvv...........#",
+    "#ggtttgcgggggggggggttgg,,,,,gggtttgggggggggggtttggg##................#",
+    "#ggggggg~~~~_~~~~~ggggggg,ggggggggggggggggggctttggg##...........vvvvv#",
+    "#ggggggg~~~~_~~~~~ggggggg,ggggggg~~~~~_~~~~~~gggggg##...........vvvvv#",
+    "#ggggggg~~~~_~~~~~gcggggg,ggggcgg~~~~~_~~~~~~gggggg##vvvvvo....o.....#",
+    "#ggggggggggggg,,,,,,,,,,,,,,,,,,,,,,,,_~~~~~~gggggg##vvvvv...........#",
+    "#gggtttgggggggggggggggggg,ggggggggggggggggggggggggg##................#",
+    "#gggtttgggcgggggggggttggg,gggtttggggggggcgggggtttgg##................#",
+    "#gggggggggggggggggggggggg,ggggggggggggggggggggtttgg##................#",
+    "#rrrrrrrrrrrrrrrrrrrrrrr__rrrrrrrrrrrrrrrrrrrrrrrrr##................#",
+    "#rrrrrrrrrrrrrrrrrrrrrrr__rrrrrrrrrrrrrrrrrrrrrrrrr####DDD###DDD######",
+    "~~~~~~~~~~~~~~~~~~~~~~~~__~~~~~~~~~~~~~~~~~~~~~~~~~~#...........WTTT##",
+    "~~~~~~~~~~~~~~~~~~~~~~~~__~~~~~~~~~~~~~~~~~~~~~~~~~~#......ccc..W...##",
+    "~~~~~~~~~~~~~~~~~~~~~~~~__vv~~~~~~~~~~~~~~~~~~~~~~~~#...........W...##",
+    "~~~~~~~~~~~~~~~~~~~~~~~~__vv~~~~~~~~~~~~~~~~~~~~~~~~###D##......WWDWW#",
+    "~~~~~~~~~~~~~~~~~~~~~~~~__vv~~~~~~~~~~~~~~~~~~~~~~~~#.eee#...........#",
+    "~~~~~~~~~~~~~~~~~~~~~~~o__~~~~~~~~~~~~~~~~~~~~~~~~~~#.eee#..cc.......#",
+    "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#....#...........#",
+    "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~##################"
+  ],
+  "doors": [
+    {
+      "id": "hsurf_d01",
+      "x": 23,
+      "y": 2,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Grille principale (lecteur de plaque)"
+    },
+    {
+      "id": "hsurf_d02",
+      "x": 24,
+      "y": 2,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Grille principale (lecteur de plaque)"
+    },
+    {
+      "id": "hsurf_d03",
+      "x": 25,
+      "y": 2,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Grille principale (lecteur de plaque)"
+    },
+    {
+      "id": "hsurf_d04",
+      "x": 26,
+      "y": 2,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Grille principale (lecteur de plaque)"
+    },
+    {
+      "id": "hsurf_d05",
+      "x": 29,
+      "y": 5,
+      "state": "closed",
+      "kind": "door",
+      "name": "Guérite"
+    },
+    {
+      "id": "hsurf_d06",
+      "x": 24,
+      "y": 12,
+      "state": "closed",
+      "kind": "door",
+      "name": "Portes vitrées du hall"
+    },
+    {
+      "id": "hsurf_d07",
+      "x": 25,
+      "y": 12,
+      "state": "closed",
+      "kind": "door",
+      "name": "Portes vitrées du hall"
+    },
+    {
+      "id": "hsurf_d08",
+      "x": 26,
+      "y": 12,
+      "state": "closed",
+      "kind": "door",
+      "name": "Portes vitrées du hall"
+    },
+    {
+      "id": "hsurf_d09",
+      "x": 29,
+      "y": 25,
+      "state": "locked",
+      "kind": "door",
+      "name": "Porte « Personnel » (badge + code)"
+    },
+    {
+      "id": "hsurf_d10",
+      "x": 32,
+      "y": 16,
+      "state": "locked",
+      "kind": "door",
+      "name": "Escalier de service — toit (maglock 5)"
+    },
+    {
+      "id": "hsurf_d11",
+      "x": 25,
+      "y": 29,
+      "state": "closed",
+      "kind": "door",
+      "name": "Baie vers les jardins"
+    },
+    {
+      "id": "hsurf_d12",
+      "x": 26,
+      "y": 29,
+      "state": "closed",
+      "kind": "door",
+      "name": "Baie vers les jardins"
+    },
+    {
+      "id": "hsurf_d13",
+      "x": 5,
+      "y": 17,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salon de consultation 1"
+    },
+    {
+      "id": "hsurf_d14",
+      "x": 9,
+      "y": 17,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salon de consultation 2"
+    },
+    {
+      "id": "hsurf_d15",
+      "x": 14,
+      "y": 17,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salon de consultation 3"
+    },
+    {
+      "id": "hsurf_d16",
+      "x": 5,
+      "y": 20,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salon de consultation 4"
+    },
+    {
+      "id": "hsurf_d17",
+      "x": 9,
+      "y": 20,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salon de consultation 5"
+    },
+    {
+      "id": "hsurf_d18",
+      "x": 14,
+      "y": 20,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salon de consultation 6"
+    },
+    {
+      "id": "hsurf_d19",
+      "x": 9,
+      "y": 27,
+      "state": "closed",
+      "kind": "door",
+      "name": "Bureau de la directrice médicale"
+    },
+    {
+      "id": "hsurf_d20",
+      "x": 16,
+      "y": 27,
+      "state": "closed",
+      "kind": "door",
+      "name": "Bureaux administratifs"
+    },
+    {
+      "id": "hsurf_d21",
+      "x": 16,
+      "y": 18,
+      "state": "open",
+      "kind": "door",
+      "name": "Aile ouest"
+    },
+    {
+      "id": "hsurf_d22",
+      "x": 16,
+      "y": 19,
+      "state": "open",
+      "kind": "door",
+      "name": "Aile ouest"
+    },
+    {
+      "id": "hsurf_d23",
+      "x": 35,
+      "y": 18,
+      "state": "open",
+      "kind": "door",
+      "name": "Spa"
+    },
+    {
+      "id": "hsurf_d24",
+      "x": 35,
+      "y": 19,
+      "state": "open",
+      "kind": "door",
+      "name": "Spa"
+    },
+    {
+      "id": "hsurf_d25",
+      "x": 39,
+      "y": 23,
+      "state": "closed",
+      "kind": "door",
+      "name": "Hammam"
+    },
+    {
+      "id": "hsurf_d26",
+      "x": 43,
+      "y": 23,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salle de soin 1"
+    },
+    {
+      "id": "hsurf_d27",
+      "x": 46,
+      "y": 23,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salle de soin 2"
+    },
+    {
+      "id": "hsurf_d28",
+      "x": 48,
+      "y": 21,
+      "state": "closed",
+      "kind": "door",
+      "name": "Issue de secours est"
+    },
+    {
+      "id": "hsurf_d29",
+      "x": 2,
+      "y": 19,
+      "state": "closed",
+      "kind": "door",
+      "name": "Issue de secours ouest"
+    },
+    {
+      "id": "hsurf_d30",
+      "x": 57,
+      "y": 7,
+      "state": "closed",
+      "kind": "gate",
+      "name": "Barrière du parking (badge)"
+    },
+    {
+      "id": "hsurf_d31",
+      "x": 57,
+      "y": 8,
+      "state": "closed",
+      "kind": "gate",
+      "name": "Barrière du parking (badge)"
+    },
+    {
+      "id": "hsurf_d32",
+      "x": 55,
+      "y": 41,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Porte sectionnelle 1 (quai)"
+    },
+    {
+      "id": "hsurf_d33",
+      "x": 56,
+      "y": 41,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Porte sectionnelle 1 (quai)"
+    },
+    {
+      "id": "hsurf_d34",
+      "x": 57,
+      "y": 41,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Porte sectionnelle 1 (quai)"
+    },
+    {
+      "id": "hsurf_d35",
+      "x": 61,
+      "y": 41,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Porte sectionnelle 2 (quai)"
+    },
+    {
+      "id": "hsurf_d36",
+      "x": 62,
+      "y": 41,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Porte sectionnelle 2 (quai)"
+    },
+    {
+      "id": "hsurf_d37",
+      "x": 63,
+      "y": 41,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Porte sectionnelle 2 (quai)"
+    },
+    {
+      "id": "hsurf_d38",
+      "x": 66,
+      "y": 45,
+      "state": "closed",
+      "kind": "door",
+      "name": "Cabine de contrôle"
+    },
+    {
+      "id": "hsurf_d39",
+      "x": 55,
+      "y": 45,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Monte-charge (-1, -2)"
+    }
+  ],
+  "lights": [
+    {
+      "id": "hsurf_l01",
+      "x": 25,
+      "y": 4,
+      "radius": 6,
+      "color": "#f4f8ff",
+      "on": true,
+      "name": "Grille principale"
+    },
+    {
+      "id": "hsurf_l02",
+      "x": 30,
+      "y": 4,
+      "radius": 2,
+      "color": "#ffe0a0",
+      "on": true,
+      "name": "Guérite"
+    },
+    {
+      "id": "hsurf_l03",
+      "x": 12,
+      "y": 6,
+      "radius": 3,
+      "color": "#ffcf8a",
+      "on": true,
+      "name": "Lanterne de jardin (éclairage bas)"
+    },
+    {
+      "id": "hsurf_l04",
+      "x": 38,
+      "y": 6,
+      "radius": 3,
+      "color": "#ffcf8a",
+      "on": true,
+      "name": "Lanterne de jardin (éclairage bas)"
+    },
+    {
+      "id": "hsurf_l05",
+      "x": 25,
+      "y": 9,
+      "radius": 3,
+      "color": "#ffcf8a",
+      "on": true,
+      "name": "Lanterne de jardin (éclairage bas)"
+    },
+    {
+      "id": "hsurf_l06",
+      "x": 8,
+      "y": 34,
+      "radius": 3,
+      "color": "#ffcf8a",
+      "on": true,
+      "name": "Lanterne de jardin (éclairage bas)"
+    },
+    {
+      "id": "hsurf_l07",
+      "x": 20,
+      "y": 36,
+      "radius": 3,
+      "color": "#ffcf8a",
+      "on": true,
+      "name": "Lanterne de jardin (éclairage bas)"
+    },
+    {
+      "id": "hsurf_l08",
+      "x": 34,
+      "y": 33,
+      "radius": 3,
+      "color": "#ffcf8a",
+      "on": true,
+      "name": "Lanterne de jardin (éclairage bas)"
+    },
+    {
+      "id": "hsurf_l09",
+      "x": 44,
+      "y": 37,
+      "radius": 3,
+      "color": "#ffcf8a",
+      "on": true,
+      "name": "Lanterne de jardin (éclairage bas)"
+    },
+    {
+      "id": "hsurf_l10",
+      "x": 4,
+      "y": 9,
+      "radius": 3,
+      "color": "#ffcf8a",
+      "on": true,
+      "name": "Lanterne de jardin (éclairage bas)"
+    },
+    {
+      "id": "hsurf_l11",
+      "x": 25,
+      "y": 20,
+      "radius": 10,
+      "color": "#f6f2e8",
+      "on": true,
+      "name": "Hall — éclairé toute la nuit"
+    },
+    {
+      "id": "hsurf_l12",
+      "x": 25,
+      "y": 14,
+      "radius": 5,
+      "color": "#fff1d0",
+      "on": true,
+      "name": "Hall — lustre"
+    },
+    {
+      "id": "hsurf_l13",
+      "x": 9,
+      "y": 18,
+      "radius": 4,
+      "color": "#f0f6ff",
+      "on": true,
+      "name": "Couloir de l'aile ouest"
+    },
+    {
+      "id": "hsurf_l14",
+      "x": 42,
+      "y": 18,
+      "radius": 6,
+      "color": "#36e6ff",
+      "on": true,
+      "name": "Piscine thermale"
+    },
+    {
+      "id": "hsurf_l15",
+      "x": 32,
+      "y": 26,
+      "radius": 2,
+      "color": "#f0f6ff",
+      "on": true,
+      "name": "Local de l'ascenseur de service"
+    },
+    {
+      "id": "hsurf_l16",
+      "x": 49,
+      "y": 8,
+      "radius": 3,
+      "color": "#eef4ff",
+      "on": true,
+      "name": "Rampe du parking"
+    },
+    {
+      "id": "hsurf_l17",
+      "x": 60,
+      "y": 10,
+      "radius": 8,
+      "color": "#eef4ff",
+      "on": true,
+      "name": "Parking — lumière blanche"
+    },
+    {
+      "id": "hsurf_l18",
+      "x": 60,
+      "y": 20,
+      "radius": 8,
+      "color": "#eef4ff",
+      "on": true,
+      "name": "Parking — lumière blanche"
+    },
+    {
+      "id": "hsurf_l19",
+      "x": 60,
+      "y": 30,
+      "radius": 8,
+      "color": "#eef4ff",
+      "on": true,
+      "name": "Parking — lumière blanche"
+    },
+    {
+      "id": "hsurf_l20",
+      "x": 60,
+      "y": 39,
+      "radius": 8,
+      "color": "#eef4ff",
+      "on": true,
+      "name": "Parking — lumière blanche"
+    },
+    {
+      "id": "hsurf_l21",
+      "x": 60,
+      "y": 45,
+      "radius": 6,
+      "color": "#eef4ff",
+      "on": true,
+      "name": "Quai de chargement"
+    },
+    {
+      "id": "hsurf_l22",
+      "x": 66,
+      "y": 43,
+      "radius": 2,
+      "color": "#ffe0a0",
+      "on": true,
+      "name": "Cabine de contrôle"
+    },
+    {
+      "id": "hsurf_l23",
+      "x": 25,
+      "y": 47,
+      "radius": 3,
+      "color": "#e8f0ff",
+      "on": true,
+      "name": "Lanterne du ponton"
+    }
+  ],
+  "regions": [
+    {
+      "id": "hsurf_r01",
+      "name": "Avenue",
+      "x": 0,
+      "y": 0,
+      "w": 70,
+      "h": 2,
+      "color": "#3a4a5c",
+      "gmOnly": false
+    },
+    {
+      "id": "hsurf_r02",
+      "name": "Grille principale",
+      "x": 22,
+      "y": 2,
+      "w": 10,
+      "h": 4,
+      "color": "#5a5a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsurf_r03",
+      "name": "Allée circulaire",
+      "x": 14,
+      "y": 5,
+      "w": 22,
+      "h": 7,
+      "color": "#4a4a4a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsurf_r04",
+      "name": "Jardins japonais (nord)",
+      "x": 1,
+      "y": 3,
+      "w": 50,
+      "h": 9,
+      "color": "#2a4a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsurf_r05",
+      "name": "Hall d'accueil (double hauteur)",
+      "x": 17,
+      "y": 13,
+      "w": 18,
+      "h": 16,
+      "color": "#5a5a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsurf_r06",
+      "name": "Aile ouest — salons de consultation",
+      "x": 3,
+      "y": 13,
+      "w": 13,
+      "h": 12,
+      "color": "#3a4a5a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsurf_r07",
+      "name": "Administration",
+      "x": 3,
+      "y": 26,
+      "w": 13,
+      "h": 3,
+      "color": "#3a3a4a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsurf_r08",
+      "name": "Aile est — piscine thermale (verrière)",
+      "x": 36,
+      "y": 13,
+      "w": 12,
+      "h": 10,
+      "color": "#2a5a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsurf_r09",
+      "name": "Hammam et salles de soin",
+      "x": 36,
+      "y": 23,
+      "w": 12,
+      "h": 6,
+      "color": "#4a3a4a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsurf_r10",
+      "name": "Ascenseur de service (-1, -2)",
+      "x": 30,
+      "y": 24,
+      "w": 5,
+      "h": 5,
+      "color": "#7a2a2a",
+      "gmOnly": true
+    },
+    {
+      "id": "hsurf_r11",
+      "name": "Jardins japonais (sud)",
+      "x": 1,
+      "y": 30,
+      "w": 50,
+      "h": 10,
+      "color": "#2a4a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsurf_r12",
+      "name": "Rive",
+      "x": 1,
+      "y": 40,
+      "w": 50,
+      "h": 2,
+      "color": "#4a4a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsurf_r13",
+      "name": "Ponton privé",
+      "x": 24,
+      "y": 40,
+      "w": 4,
+      "h": 8,
+      "color": "#6a5a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsurf_r14",
+      "name": "Lac Sammamish",
+      "x": 0,
+      "y": 42,
+      "w": 52,
+      "h": 8,
+      "color": "#1a3a5a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsurf_r15",
+      "name": "Rampe du parking",
+      "x": 47,
+      "y": 6,
+      "w": 10,
+      "h": 4,
+      "color": "#5a5a5a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsurf_r16",
+      "name": "Parking souterrain",
+      "x": 53,
+      "y": 6,
+      "w": 16,
+      "h": 35,
+      "color": "#3a4a5c",
+      "gmOnly": false
+    },
+    {
+      "id": "hsurf_r17",
+      "name": "Quai de chargement",
+      "x": 53,
+      "y": 42,
+      "w": 16,
+      "h": 7,
+      "color": "#5a4a2a",
+      "gmOnly": false
+    }
+  ],
+  "notes": [
+    {
+      "id": "hsurf_n01",
+      "x": 30,
+      "y": 4,
+      "text": "Guérite : 1 garde, lecteur de plaque. Approche A : la « cliente VIP » arrive en voiture, attendue (liste du gala, Margaux ou Calloway). Approche D : diversion du Crimson Crush ici pendant que le groupe passe par le quai.",
+      "gmOnly": true
+    },
+    {
+      "id": "hsurf_n02",
+      "x": 40,
+      "y": 9,
+      "text": "2 drones MCT Fly-Spy survolent les jardins (esclaves du host). Un esprit de l'air (Force 4), lié par le mage de sécurité, patrouille l'astral au-dessus des jardins.",
+      "gmOnly": true
+    },
+    {
+      "id": "hsurf_n03",
+      "x": 10,
+      "y": 30,
+      "text": "Rondes : 4 gardes Werkschutz (Sécurité corpo R4) en binômes, passage toutes les 20 minutes. Jardins sombres : éclairage bas, −1 visuel. Beaucoup de couverture légère (pins, lanternes, ponts).",
+      "gmOnly": true
+    },
+    {
+      "id": "hsurf_n04",
+      "x": 25,
+      "y": 16,
+      "text": "Accueil : 2 gardes de nuit (Sécurité corpo humaine R3). Mur d'eau, orchidées, œuvres d'art. Hall éclairé toute la nuit. Ascenseurs publics : étages de chambres seulement (40 clients = 40 témoins puissants).",
+      "gmOnly": true
+    },
+    {
+      "id": "hsurf_n05",
+      "x": 32,
+      "y": 27,
+      "text": "Ascenseur de service derrière la porte « Personnel » (badge + code) : descend au -1 et au -2. Le -3 n'est accessible que par l'ascenseur privé du -2.",
+      "gmOnly": true
+    },
+    {
+      "id": "hsurf_n06",
+      "x": 33,
+      "y": 13,
+      "text": "Escalier de service vers le toit (maglock rating 5) : héliport (un Hughes WK-2 Stallion certains soirs — sortie si quelqu'un sait piloter), locaux techniques.",
+      "gmOnly": true
+    },
+    {
+      "id": "hsurf_n07",
+      "x": 6,
+      "y": 26,
+      "text": "Bureau de la directrice médicale : une figurante sans lien avec Lazarus. Les salons de consultation servent aux clients de surface.",
+      "gmOnly": true
+    },
+    {
+      "id": "hsurf_n08",
+      "x": 42,
+      "y": 21,
+      "text": "Piscine thermale intérieure sous verrière, hammam, salles de soin. La nuit : vide, embué, une bonne cachette (et un bon endroit pour noyer un problème).",
+      "gmOnly": true
+    },
+    {
+      "id": "hsurf_n09",
+      "x": 25,
+      "y": 24,
+      "text": "Host de Halcyon rating 7 (A9/S7/DP8/F10), sculpture « jardin d'hiver infini » : caméras, maglocks, ascenseurs (sauf celui du -3), éclairage, ventilation, drones, valve de la Pépinière. Pas le coffre de données ni le -3. Knight Errant : 4 + 1D6 min, mais Halcyon ne l'appelle pas si les sous-sols sont compromis.",
+      "gmOnly": true
+    },
+    {
+      "id": "hsurf_n10",
+      "x": 27,
+      "y": 44,
+      "text": "Ponton privé et hors-bord : sortie possible par le lac (ou entrée discrète, Discrétion contre les drones).",
+      "gmOnly": true
+    },
+    {
+      "id": "hsurf_n11",
+      "x": 58,
+      "y": 8,
+      "text": "Barrière à badge. Caméras tous les 15 m dans tout le parking (esclaves du host).",
+      "gmOnly": true
+    },
+    {
+      "id": "hsurf_n12",
+      "x": 60,
+      "y": 44,
+      "text": "Quai de chargement : arrivée des convois et du lot D (Reyes y amenait les donneurs). 2 gardes Werkschutz pendant le Protokoll Ernte. Approche E : le camion frigorifique attendu — les gardes ouvrent eux-mêmes. Monte-charge vers le -1 et le -2.",
+      "gmOnly": true
+    },
+    {
+      "id": "hsurf_n13",
+      "x": 66,
+      "y": 42,
+      "text": "Cabine de contrôle vitrée : console des portes sectionnelles et du monte-charge, interphone avec le poste central du -1.",
+      "gmOnly": true
+    }
+  ],
+  "tokens": []
+}

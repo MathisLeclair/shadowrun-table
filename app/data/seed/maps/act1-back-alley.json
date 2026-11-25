@@ -1,0 +1,327 @@
+{
+  "id": "map_back_alley",
+  "name": "Ruelle derrière le bar",
+  "folder": "Acte 1",
+  "description": "**La ruelle derrière le bar de Porfla — Renton.** Une ruelle étroite et humide qui part de la rue (ouest) et finit en cul-de-sac derrière un grillage cadenassé (est). Poubelles, épave de voiture, échelles d'incendie, porte de cuisine d'un boui-boui à nouilles et rideau de garage.\n\n**Utilisation**\n- Quête 1.1 *Cleanup Crew*, Phase 2 : si les runners traînent, Porfla est emmené et la scène devient un sauvetage + **poursuite** ici. Phase 4 : le cul-de-sac est l'endroit rêvé pour capturer un Nettoyeur vivant.\n- Réutilisable pour n'importe quelle embuscade de rue à Renton.\n\n**Tests utiles**\n- Escalade seuil 2 : échelles d'incendie / grillage.\n- Perception seuil 3 dans le noir : repérer quelqu'un tapi derrière les bennes (−6 sans vision nocturne hors des halos de lumière).\n- Lumière : seuls les lampadaires de la rue, l'applique de la porte du bar et le néon du Wok Hei éclairent ; l'ampoule du garage est grillée (à rallumer depuis l'onglet carte).",
+  "width": 50,
+  "height": 30,
+  "metersPerCell": 1,
+  "theme": "street",
+  "lighting": "dark",
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "tiles": [
+    ",,,,,,,,#                                         ",
+    ",,,,,,,,#                                         ",
+    ",,,,,,,,#                                         ",
+    ",vv,,,,c#                         #########       ",
+    ",vv,,,,c#                         #.ss...m#       ",
+    ",vv,,,,,#     ############        #.ss....#       ",
+    ",vv,,,,,#     #cc.....ccc#        #.ss....#       ",
+    ",,,,,,,,#     #c.........#        #.ss....#       ",
+    ",,,,,,o,#     #..........#        #.......#       ",
+    ",,,,,,,,###WW#######D##########W######D######WW###",
+    ",,,,,,,,,,cc,,,,,,,,,,,,,,=ss=,,,,,,,,,cc,,,=,,,,#",
+    ",,,,,,,,,,cc,r,,,,,,,r,,,,,,,,,,,,,,,,,,,r,,=,cc,#",
+    ",,,,,,,,,,,,r,,,,,,,,,,,,,,,,,,,,,,,,,,,,,r,=r,,b#",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,~~,,,,,,,=,r,,#",
+    ",,~~,,,,,,,,,,,,,vvvv,,,,,,,,,,,,,,,,,,,,,,,D,,r,#",
+    ",,,,,,,,,,,,,,,,,vvvv,,,,,,,,~~,,,,,,x,,,,,,D,,,,#",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,~,,r,,,,,,,,,,=,,r,#",
+    ",,,,,,,,,,,,,,,,,,,,,,,,r,,,,,,,,,,,,,,,,,c,=,r,,#",
+    ",,,,,,,,,,,,,,,,,,,,,,,ccc,,,,,,,cc,,,,,,,c,=r,,c#",
+    ",,,,,,,,,,,,,,,,,,,,,,,cccr,,,,,,,,,,=ss=,,,=,,,,#",
+    ",,,,,,,,#####DDD####WW#########D##########WW######",
+    ",,,,,,o,#.......cc#       #........m#             ",
+    ",vv,,,,,#........c#       #........m#             ",
+    ",vv,,,,,#...v.....#       #.....TTT.#             ",
+    ",vv,,,,,#...v.....#       #.........#             ",
+    ",vv,,,,,#TTTT.....#       #==xx=====#             ",
+    ",,,,,,,,###########       ###########             ",
+    ",,,,,,,,#                                         ",
+    ",,,,,,,,#                                         ",
+    ",,,,,,,,#                                         "
+  ],
+  "doors": [
+    {
+      "id": "alley_d01",
+      "x": 20,
+      "y": 9,
+      "state": "closed",
+      "kind": "door",
+      "name": "Porte de service du bar de Porfla"
+    },
+    {
+      "id": "alley_d02",
+      "x": 38,
+      "y": 9,
+      "state": "closed",
+      "kind": "door",
+      "name": "Porte de la cage d'escalier"
+    },
+    {
+      "id": "alley_d03",
+      "x": 13,
+      "y": 20,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Rideau du garage"
+    },
+    {
+      "id": "alley_d04",
+      "x": 14,
+      "y": 20,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Rideau du garage"
+    },
+    {
+      "id": "alley_d05",
+      "x": 15,
+      "y": 20,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Rideau du garage"
+    },
+    {
+      "id": "alley_d06",
+      "x": 31,
+      "y": 20,
+      "state": "locked",
+      "kind": "door",
+      "name": "Porte de cuisine du Wok Hei"
+    },
+    {
+      "id": "alley_d07",
+      "x": 44,
+      "y": 14,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Grillage (cadenas)"
+    },
+    {
+      "id": "alley_d08",
+      "x": 44,
+      "y": 15,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Grillage (cadenas)"
+    }
+  ],
+  "lights": [
+    {
+      "id": "alley_l01",
+      "x": 5,
+      "y": 8,
+      "radius": 6,
+      "color": "#ffb766",
+      "on": true,
+      "name": "Éclairage — Rue (Renton)"
+    },
+    {
+      "id": "alley_l02",
+      "x": 5,
+      "y": 21,
+      "radius": 6,
+      "color": "#ffb766",
+      "on": true,
+      "name": "Éclairage — Rue (Renton)"
+    },
+    {
+      "id": "alley_l03",
+      "x": 20,
+      "y": 10,
+      "radius": 4,
+      "color": "#ffcf8a",
+      "on": true,
+      "name": "Éclairage — Ruelle"
+    },
+    {
+      "id": "alley_l04",
+      "x": 38,
+      "y": 10,
+      "radius": 3,
+      "color": "#ff3344",
+      "on": true,
+      "name": "Éclairage — Ruelle"
+    },
+    {
+      "id": "alley_l05",
+      "x": 31,
+      "y": 19,
+      "radius": 4,
+      "color": "#36e6ff",
+      "on": true,
+      "name": "Néon du Wok Hei"
+    },
+    {
+      "id": "alley_l06",
+      "x": 14,
+      "y": 19,
+      "radius": 4,
+      "color": "#ffb766",
+      "on": false,
+      "name": "Ampoule du garage (grillée)"
+    },
+    {
+      "id": "alley_l07",
+      "x": 37,
+      "y": 6,
+      "radius": 3,
+      "color": "#e9f0ff",
+      "on": true,
+      "name": "Éclairage — Cage d'escalier (immeuble)"
+    },
+    {
+      "id": "alley_l08",
+      "x": 31,
+      "y": 23,
+      "radius": 3,
+      "color": "#fff1d0",
+      "on": true,
+      "name": "Éclairage — Cuisine du Wok Hei"
+    },
+    {
+      "id": "alley_l09",
+      "x": 20,
+      "y": 7,
+      "radius": 3,
+      "color": "#ffb35c",
+      "on": true,
+      "name": "Éclairage — Arrière du bar de Porfla"
+    }
+  ],
+  "regions": [
+    {
+      "id": "alley_r01",
+      "name": "Rue (Renton)",
+      "x": 0,
+      "y": 0,
+      "w": 8,
+      "h": 30,
+      "color": "#3a4a5c",
+      "gmOnly": false
+    },
+    {
+      "id": "alley_r02",
+      "name": "Ruelle",
+      "x": 8,
+      "y": 10,
+      "w": 36,
+      "h": 10,
+      "color": "#4a3f55",
+      "gmOnly": false
+    },
+    {
+      "id": "alley_r03",
+      "name": "Cul-de-sac",
+      "x": 45,
+      "y": 10,
+      "w": 4,
+      "h": 10,
+      "color": "#5a2a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "alley_r04",
+      "name": "Arrière du bar de Porfla",
+      "x": 15,
+      "y": 6,
+      "w": 10,
+      "h": 3,
+      "color": "#8a4b1f",
+      "gmOnly": false
+    },
+    {
+      "id": "alley_r05",
+      "name": "Cage d'escalier (immeuble)",
+      "x": 35,
+      "y": 4,
+      "w": 7,
+      "h": 5,
+      "color": "#4a4a55",
+      "gmOnly": false
+    },
+    {
+      "id": "alley_r06",
+      "name": "Garage",
+      "x": 9,
+      "y": 21,
+      "w": 9,
+      "h": 5,
+      "color": "#4a4a55",
+      "gmOnly": false
+    },
+    {
+      "id": "alley_r07",
+      "name": "Cuisine du Wok Hei",
+      "x": 27,
+      "y": 21,
+      "w": 9,
+      "h": 5,
+      "color": "#6b6b4a",
+      "gmOnly": false
+    }
+  ],
+  "notes": [
+    {
+      "id": "alley_n01",
+      "x": 46,
+      "y": 15,
+      "text": "Cul-de-sac derrière le grillage : idéal pour coincer un fuyard et capturer un Nettoyeur vivant (Phase 4 de Cleanup Crew). Escalader le grillage : Athlétisme seuil 2.",
+      "gmOnly": true
+    },
+    {
+      "id": "alley_n02",
+      "x": 27,
+      "y": 11,
+      "text": "Échelle d'incendie : monte aux toits (Escalade seuil 2). Vue plongeante sur la ruelle : +2 dés de Perception, couvert partiel.",
+      "gmOnly": true
+    },
+    {
+      "id": "alley_n03",
+      "x": 18,
+      "y": 13,
+      "text": "Épave de Ford Americar : bon couvert. Coffre vide, pneus crevés.",
+      "gmOnly": true
+    },
+    {
+      "id": "alley_n04",
+      "x": 21,
+      "y": 12,
+      "text": "Session 1 — le van des Nettoyeurs attendait devant la porte de service (voir carte du bar). Déplacez-le si la poursuite part en voiture.",
+      "gmOnly": true
+    },
+    {
+      "id": "alley_n05",
+      "x": 37,
+      "y": 16,
+      "text": "Bouche de vapeur : brouille la vision thermographique sur 2 m (−2 dés).",
+      "gmOnly": true
+    },
+    {
+      "id": "alley_n06",
+      "x": 31,
+      "y": 22,
+      "text": "Cuisine du Wok Hei : le cuisinier, M. Tran, déteste la police. 50¥ = un témoin muet ou une cachette.",
+      "gmOnly": true
+    },
+    {
+      "id": "alley_n07",
+      "x": 4,
+      "y": 15,
+      "text": "Rue : passage régulier. Un coup de feu non suppressé attire une patrouille de Renton en 2D6 minutes.",
+      "gmOnly": true
+    },
+    {
+      "id": "alley_n08",
+      "x": 14,
+      "y": 22,
+      "text": "Garage : moto Harley sans clé, outils. Le rideau se lève en 1 action complexe (bruyant).",
+      "gmOnly": true
+    }
+  ],
+  "tokens": [],
+  "explored": {}
+}

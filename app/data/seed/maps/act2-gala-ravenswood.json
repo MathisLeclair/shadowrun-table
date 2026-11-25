@@ -1,0 +1,704 @@
+{
+  "id": "map_gala_ravenswood",
+  "name": "Hôtel Ravenswood, 31e étage — Gala de la Fondation Halcyon",
+  "folder": "Acte 2",
+  "description": "**Hôtel Ravenswood, 31e étage — Gala de printemps de la Fondation Halcyon.** Noir et argent, « l'éternel printemps » : lustres de verre, jardin suspendu, quatuor à cordes. 220 invités, 40 extras du traiteur, une sécurité à trois têtes (hôtel, Stern Pacific en civil sous Harlan Kessler, gardes du corps privés). Au nord, la suite privée de Cornelius Wyatt-Brandt et sa galerie vitrée qui surplombe la salle de bal — le Jardinier y reste toute la soirée, à contre-jour.\n\n**Utilisation** — Quête 2.2 *The Guest List*\n- Phase 1 *Entrer* : foyer et vestiaire (invitée), office et cuisines (extra du traiteur Maison Duval), zone des gardes du corps (Anthony), ou de l'extérieur (Bricks, chambre du 29e/30e).\n- Phase 2 *La salle* : scène sociale en **8 tranches de 30 minutes** (20 h → minuit). 21 h 30 : discours de Wyatt-Brandt sur l'estrade. 22 h 30 : il monte à la suite avec trois invités. 23 h 15 : le Jardinier et Morinaga partent par l'ascenseur privé.\n- Phase 3 *La Pie* (3e ou 4e tranche, au pire moment). Phase 4 *la suite et le mouchard*. Phase 5 *Sortir* (terrasse, ascenseurs de service bouclés, vestiaire piégé).\n\n**Tests utiles**\n- Invitation : Contrefaçon + Logique [Mental] seuil 4 (+ la liste de l'hôtel piratée). Contrôle : Étiquette + Charisme [Social] seuil 2. Extra : Déguisement + Intuition seuil 2 + faux SIN R3.\n- Host de l'hôtel : rating 5 (A6/S5/DP7/F8), Patrol IC puis Probe, Killer, Black IC ; Spider standard en poste. Ajouter un nom à la liste : Edit File, Computer + Logique [DP] contre 13 dés.\n- PAN de la suite : rating 6 / Firewall 8, portée **30 m** ; Hack on the Fly contre 14 dés, Crack File (chiffrement 5), copie contre 14 dés. Mouchard physique : Escamotage + Agilité seuil 3 (+1 sous le regard des gardes).\n- Sortie par la terrasse : grappin, 6 m jusqu'à la terrasse du 29e, Athlétisme + Force seuil 2.\n\n**Approches** : ascenseurs publics (foyer), ascenseur et escalier de service (badge), monte-charge du traiteur, terrasse (grappin depuis le 29e), Matrice. Aucune caméra dans la suite ; caméras partout ailleurs.",
+  "width": 56,
+  "height": 46,
+  "metersPerCell": 1,
+  "theme": "club",
+  "lighting": "dim",
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "tiles": [
+    "          ####W################WW#######################",
+    "          #........===.#.m..........m#..#.............m#",
+    "          W.bbbb.....=.#............m#..#.............m#",
+    "          W............#....TTTT.....#..#.............m#",
+    "          W....TT......D.............D..#.............m#",
+    "          W.b..........#.............#..#...TTTT......m#",
+    "          W.b..........#.........bb..#..#...TTTT......m#",
+    "          #m...........#.............#..#..............#",
+    "          #######D############D#######..D..............#",
+    "==========#..............#.ss.....ee.#..#..............#",
+    "=,,,,,,,==#.T............D.ss.....ee.#..#..............#",
+    "=gg,,,,,==#..............#.ss........#..#..............#",
+    "=ggo,,o,###WWWWWWWWWWWWWW##ss#########..#.........bbb..#",
+    "=gg,,,,,W......_____T______...=====..#..#..............#",
+    "=,,,,,,,W......____________..........#..#..............#",
+    "=,,,,tt,W......____________..........#..################",
+    "=,,,,tt,W............................#..#..........===m#",
+    "=,,,,,,,D.TT..o..............o.TT....#..#.............m#",
+    "=,,,,,,,W............................#..#.............m#",
+    "=,,o,,o,W....TT.____________.........D..#...TTTTTT....m#",
+    "=gg,,,,,W.......____________.........#..D...TTTTTT....m#",
+    "=gg,,,,,W.......____________.........#..#.............m#",
+    "=gg,TT,,W.TT....____________...TT....#..#.............m#",
+    "=gg,,,,,W.......____________.........#..#.............m#",
+    "=,,,,,,,D.......____________.........#..#.............m#",
+    "=,,,,,,,W....TT.____________.........#..#...TTTTTT....m#",
+    "=t,,,,,,W............................#..#...TTTTTT....m#",
+    "=t,,,,,,W.TT..o..............o.......#..D.............m#",
+    "=,,,,tt,W............................D..#.............m#",
+    "=,,,,tt,W.........TT...TT...TT.......#..#.............m#",
+    "=,,,,,,,W.........................=..#..#======.......m#",
+    "=,,,,,,,D....TT................====..#..#######D########",
+    "=,,,,,,,W............................#..#..........#...#",
+    "=gg,TT,,W............................#..#....ccc...#eee#",
+    "=gg,,,,,#############DD###############..#....ccc...Deee#",
+    "=gg,,,,,#...........#mm=.............#..#..........#eee#",
+    "=gg,,,,,#.TT..TT....#mm=.............#..#..........#####",
+    "=ggo,,o,#...........#mm=......TT.....#..#..............#",
+    "=,,,,,,,#.........T.#................#..D..........#####",
+    "=,,,,,,,#.TT..TT..T.#====o__o===.====#..#..........#eee#",
+    "=,,,,,,,#...........D................#..#..........Deee#",
+    "========#...........#.............bb.D..##D##......#eee#",
+    "        #.TT..TT....#................#..#sss#......#####",
+    "        #...........#....ee...ee.....#..#sss#..........#",
+    "        #############....ee...ee.....#..#sss#..........#",
+    "                    ####################################"
+  ],
+  "doors": [
+    {
+      "id": "gala_d01",
+      "x": 23,
+      "y": 4,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salon → bureau"
+    },
+    {
+      "id": "gala_d02",
+      "x": 17,
+      "y": 8,
+      "state": "open",
+      "kind": "door",
+      "name": "Salon → galerie"
+    },
+    {
+      "id": "gala_d03",
+      "x": 30,
+      "y": 8,
+      "state": "closed",
+      "kind": "door",
+      "name": "Bureau → vestibule"
+    },
+    {
+      "id": "gala_d04",
+      "x": 25,
+      "y": 10,
+      "state": "closed",
+      "kind": "door",
+      "name": "Galerie → vestibule"
+    },
+    {
+      "id": "gala_d05",
+      "x": 37,
+      "y": 4,
+      "state": "locked",
+      "kind": "door",
+      "name": "Porte de service de la suite (maglock 4)"
+    },
+    {
+      "id": "gala_d06",
+      "x": 8,
+      "y": 17,
+      "state": "open",
+      "kind": "door",
+      "name": "Baie vitrée coulissante"
+    },
+    {
+      "id": "gala_d07",
+      "x": 8,
+      "y": 24,
+      "state": "open",
+      "kind": "door",
+      "name": "Baie vitrée coulissante"
+    },
+    {
+      "id": "gala_d08",
+      "x": 8,
+      "y": 31,
+      "state": "closed",
+      "kind": "door",
+      "name": "Baie vitrée coulissante"
+    },
+    {
+      "id": "gala_d09",
+      "x": 21,
+      "y": 34,
+      "state": "open",
+      "kind": "door",
+      "name": "Grandes portes de la salle de bal"
+    },
+    {
+      "id": "gala_d10",
+      "x": 22,
+      "y": 34,
+      "state": "open",
+      "kind": "door",
+      "name": "Grandes portes de la salle de bal"
+    },
+    {
+      "id": "gala_d11",
+      "x": 37,
+      "y": 19,
+      "state": "closed",
+      "kind": "door",
+      "name": "Porte de service (salle de bal)"
+    },
+    {
+      "id": "gala_d12",
+      "x": 37,
+      "y": 28,
+      "state": "closed",
+      "kind": "door",
+      "name": "Porte de service (salle de bal)"
+    },
+    {
+      "id": "gala_d13",
+      "x": 40,
+      "y": 8,
+      "state": "closed",
+      "kind": "door",
+      "name": "Vestiaire du personnel"
+    },
+    {
+      "id": "gala_d14",
+      "x": 40,
+      "y": 20,
+      "state": "open",
+      "kind": "door",
+      "name": "Porte battante (cuisines)"
+    },
+    {
+      "id": "gala_d15",
+      "x": 40,
+      "y": 27,
+      "state": "open",
+      "kind": "door",
+      "name": "Porte battante (cuisines)"
+    },
+    {
+      "id": "gala_d16",
+      "x": 47,
+      "y": 31,
+      "state": "open",
+      "kind": "door",
+      "name": "Cuisines → zone de service"
+    },
+    {
+      "id": "gala_d17",
+      "x": 40,
+      "y": 38,
+      "state": "closed",
+      "kind": "door",
+      "name": "Couloir → zone de service"
+    },
+    {
+      "id": "gala_d18",
+      "x": 51,
+      "y": 34,
+      "state": "open",
+      "kind": "shutter",
+      "name": "Monte-charge du traiteur"
+    },
+    {
+      "id": "gala_d19",
+      "x": 51,
+      "y": 40,
+      "state": "locked",
+      "kind": "door",
+      "name": "Ascenseur de service (badge)"
+    },
+    {
+      "id": "gala_d20",
+      "x": 42,
+      "y": 41,
+      "state": "closed",
+      "kind": "door",
+      "name": "Escalier de service"
+    },
+    {
+      "id": "gala_d21",
+      "x": 20,
+      "y": 40,
+      "state": "open",
+      "kind": "door",
+      "name": "Salon des enchères"
+    },
+    {
+      "id": "gala_d22",
+      "x": 37,
+      "y": 41,
+      "state": "closed",
+      "kind": "door",
+      "name": "Porte de service (foyer)"
+    }
+  ],
+  "lights": [
+    {
+      "id": "gala_l01",
+      "x": 16,
+      "y": 21,
+      "radius": 8,
+      "color": "#ffd98a",
+      "on": true,
+      "name": "Lustre de verre (or)"
+    },
+    {
+      "id": "gala_l02",
+      "x": 28,
+      "y": 21,
+      "radius": 8,
+      "color": "#ffd98a",
+      "on": true,
+      "name": "Lustre de verre (or)"
+    },
+    {
+      "id": "gala_l03",
+      "x": 22,
+      "y": 29,
+      "radius": 7,
+      "color": "#e8e4ff",
+      "on": true,
+      "name": "Lustre de verre (argent)"
+    },
+    {
+      "id": "gala_l04",
+      "x": 20,
+      "y": 14,
+      "radius": 4,
+      "color": "#fff1d0",
+      "on": true,
+      "name": "Poursuite de l'estrade"
+    },
+    {
+      "id": "gala_l05",
+      "x": 33,
+      "y": 31,
+      "radius": 3,
+      "color": "#ffcf8a",
+      "on": true,
+      "name": "Bar"
+    },
+    {
+      "id": "gala_l06",
+      "x": 18,
+      "y": 10,
+      "radius": 3,
+      "color": "#fff1d0",
+      "on": true,
+      "name": "Contre-jour de la galerie"
+    },
+    {
+      "id": "gala_l07",
+      "x": 16,
+      "y": 4,
+      "radius": 5,
+      "color": "#ffcf8a",
+      "on": true,
+      "name": "Suite — salon"
+    },
+    {
+      "id": "gala_l08",
+      "x": 30,
+      "y": 4,
+      "radius": 4,
+      "color": "#f6f2e8",
+      "on": true,
+      "name": "Suite — bureau"
+    },
+    {
+      "id": "gala_l09",
+      "x": 31,
+      "y": 10,
+      "radius": 2,
+      "color": "#ffcf8a",
+      "on": true,
+      "name": "Suite — vestibule"
+    },
+    {
+      "id": "gala_l10",
+      "x": 4,
+      "y": 14,
+      "radius": 3,
+      "color": "#9fe8c0",
+      "on": true,
+      "name": "Terrasse — éclairage bas"
+    },
+    {
+      "id": "gala_l11",
+      "x": 4,
+      "y": 25,
+      "radius": 3,
+      "color": "#9fe8c0",
+      "on": true,
+      "name": "Terrasse — éclairage bas"
+    },
+    {
+      "id": "gala_l12",
+      "x": 4,
+      "y": 35,
+      "radius": 3,
+      "color": "#9fe8c0",
+      "on": true,
+      "name": "Terrasse — éclairage bas"
+    },
+    {
+      "id": "gala_l13",
+      "x": 38,
+      "y": 10,
+      "radius": 4,
+      "color": "#f0f6ff",
+      "on": true,
+      "name": "Couloir de service"
+    },
+    {
+      "id": "gala_l14",
+      "x": 38,
+      "y": 33,
+      "radius": 4,
+      "color": "#f0f6ff",
+      "on": true,
+      "name": "Couloir de service"
+    },
+    {
+      "id": "gala_l15",
+      "x": 47,
+      "y": 23,
+      "radius": 6,
+      "color": "#f6f8ff",
+      "on": true,
+      "name": "Cuisines"
+    },
+    {
+      "id": "gala_l16",
+      "x": 47,
+      "y": 8,
+      "radius": 4,
+      "color": "#f0f6ff",
+      "on": true,
+      "name": "Vestiaire du personnel"
+    },
+    {
+      "id": "gala_l17",
+      "x": 47,
+      "y": 38,
+      "radius": 4,
+      "color": "#f0f6ff",
+      "on": true,
+      "name": "Zone de service"
+    },
+    {
+      "id": "gala_l18",
+      "x": 28,
+      "y": 41,
+      "radius": 6,
+      "color": "#ffe8c0",
+      "on": true,
+      "name": "Foyer"
+    },
+    {
+      "id": "gala_l19",
+      "x": 14,
+      "y": 39,
+      "radius": 4,
+      "color": "#ffd98a",
+      "on": true,
+      "name": "Vitrines des enchères"
+    }
+  ],
+  "regions": [
+    {
+      "id": "gala_r01",
+      "name": "Suite privée — salon",
+      "x": 11,
+      "y": 1,
+      "w": 12,
+      "h": 7,
+      "color": "#5a3a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "gala_r02",
+      "name": "Suite privée — bureau",
+      "x": 24,
+      "y": 1,
+      "w": 13,
+      "h": 7,
+      "color": "#5a3a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "gala_r03",
+      "name": "Galerie vitrée",
+      "x": 11,
+      "y": 9,
+      "w": 14,
+      "h": 3,
+      "color": "#6a5a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "gala_r04",
+      "name": "Vestibule (escalier et ascenseur privés)",
+      "x": 26,
+      "y": 9,
+      "w": 11,
+      "h": 3,
+      "color": "#5a3a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "gala_r05",
+      "name": "Salle de bal Aurore",
+      "x": 9,
+      "y": 13,
+      "w": 28,
+      "h": 21,
+      "color": "#2a2a4a",
+      "gmOnly": false
+    },
+    {
+      "id": "gala_r06",
+      "name": "Estrade",
+      "x": 15,
+      "y": 13,
+      "w": 12,
+      "h": 3,
+      "color": "#6a5a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "gala_r07",
+      "name": "Piste de danse",
+      "x": 16,
+      "y": 19,
+      "w": 12,
+      "h": 7,
+      "color": "#4a2a5a",
+      "gmOnly": false
+    },
+    {
+      "id": "gala_r08",
+      "name": "Zone des gardes du corps",
+      "x": 33,
+      "y": 14,
+      "w": 4,
+      "h": 16,
+      "color": "#5a2a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "gala_r09",
+      "name": "Terrasse — jardin suspendu",
+      "x": 1,
+      "y": 10,
+      "w": 7,
+      "h": 31,
+      "color": "#2a5a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "gala_r10",
+      "name": "Salon des enchères",
+      "x": 9,
+      "y": 35,
+      "w": 11,
+      "h": 9,
+      "color": "#6a5a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "gala_r11",
+      "name": "Foyer et vestiaire",
+      "x": 21,
+      "y": 35,
+      "w": 16,
+      "h": 10,
+      "color": "#3a3a5a",
+      "gmOnly": false
+    },
+    {
+      "id": "gala_r12",
+      "name": "Couloir de service",
+      "x": 38,
+      "y": 1,
+      "w": 2,
+      "h": 44,
+      "color": "#4a4a4a",
+      "gmOnly": false
+    },
+    {
+      "id": "gala_r13",
+      "name": "Office et cuisines (Maison Duval)",
+      "x": 41,
+      "y": 16,
+      "w": 14,
+      "h": 15,
+      "color": "#4a4a40",
+      "gmOnly": false
+    },
+    {
+      "id": "gala_r14",
+      "name": "Vestiaire du personnel",
+      "x": 41,
+      "y": 1,
+      "w": 14,
+      "h": 14,
+      "color": "#4a4a40",
+      "gmOnly": false
+    },
+    {
+      "id": "gala_r15",
+      "name": "Ascenseurs et escalier de service",
+      "x": 41,
+      "y": 32,
+      "w": 14,
+      "h": 13,
+      "color": "#4a4a4a",
+      "gmOnly": false
+    },
+    {
+      "id": "gala_r16",
+      "name": "Portée du PAN de la suite (30 m)",
+      "x": 10,
+      "y": 0,
+      "w": 30,
+      "h": 30,
+      "color": "#7a1a5a",
+      "gmOnly": true
+    }
+  ],
+  "notes": [
+    {
+      "id": "gala_n01",
+      "x": 30,
+      "y": 38,
+      "text": "Contrôle des invitations : 2 agents de l'hôtel (Sécurité corpo humaine R3), lecteur RFID. Invitation Halcyon signée : Contrefaçon + Logique [Mental] seuil 4 ET la liste de l'hôtel piratée. Étiquette + Charisme [Social] seuil 2 (Jane l'a sans y penser).",
+      "gmOnly": true
+    },
+    {
+      "id": "gala_n02",
+      "x": 26,
+      "y": 40,
+      "text": "Portique de détection d'armes. Les gardes du corps déclarés passent à côté (couloir en 32,39) : pistolet déclaré autorisé, lame interdite. Le nodachi d'Anthony reste à la voiture.",
+      "gmOnly": true
+    },
+    {
+      "id": "gala_n03",
+      "x": 22,
+      "y": 36,
+      "text": "Vestiaire. Complication « Margaux joue sa carte » : 6 agents Stern Pacific (Sécurité corpo R4) attendent Jane ici à la sortie.",
+      "gmOnly": true
+    },
+    {
+      "id": "gala_n04",
+      "x": 21,
+      "y": 15,
+      "text": "21 h 30 : discours de Wyatt-Brandt (« Vieillir n'est plus une fatalité, c'est un choix »). Quatuor à cordes. Pendant le discours, tous les regards sont sur l'estrade : bon moment pour un chantage écrit sur le commlink de Kessler.",
+      "gmOnly": true
+    },
+    {
+      "id": "gala_n05",
+      "x": 35,
+      "y": 22,
+      "text": "Zone réservée aux gardes du corps (une douzaine, Garde du corps d'élite R5). Ils n'en sortent que si leur « principal » se déplace. Anthony y est cantonné s'il vient comme garde du corps de Jane.",
+      "gmOnly": true
+    },
+    {
+      "id": "gala_n06",
+      "x": 18,
+      "y": 11,
+      "text": "Galerie : le Jardinier, immobile à contre-jour, un verre d'eau à la main ; Morinaga à ses côtés, mains croisées dans le dos. Le Jardinier ne descend jamais. Anthony sent un regard au moins une fois (aucun test). Face-à-face silencieux possible : « Tu tiens ton verre comme tu tenais ton sabre. Trop serré. »",
+      "gmOnly": true
+    },
+    {
+      "id": "gala_n07",
+      "x": 29,
+      "y": 3,
+      "text": "Bureau : terminal + coffre numérique (liste VIP : 43 noms, « protocole partiel/complet », date de la prochaine injection). Esclaves du PAN privé de Wyatt-Brandt (rating 6, Firewall 8, portée 30 m). Aucune caméra dans la suite. 22 h 30 : Wyatt-Brandt monte avec 3 invités et 2 gardes du corps ; Jane est invitée si elle a cumulé 3 succès nets d'Étiquette avec lui.",
+      "gmOnly": true
+    },
+    {
+      "id": "gala_n08",
+      "x": 35,
+      "y": 10,
+      "text": "Ascenseur privé vers le parking. 23 h 15 : le Jardinier et Morinaga partent par ici. Complication : Morinaga revient seul et attend Anthony près des ascenseurs avec l'adresse du dojo (accroche d'Inheritance).",
+      "gmOnly": true
+    },
+    {
+      "id": "gala_n09",
+      "x": 28,
+      "y": 12,
+      "text": "Escalier privé salle de bal → suite : deux gardes du corps de Wyatt-Brandt au pied des marches toute la soirée.",
+      "gmOnly": true
+    },
+    {
+      "id": "gala_n10",
+      "x": 37,
+      "y": 5,
+      "text": "Porte de service de la suite : maglock rating 4 (esclave du host de l'hôtel, pas du PAN). Un extra avec un plateau y est presque invisible (Déguisement + Intuition seuil 3).",
+      "gmOnly": true
+    },
+    {
+      "id": "gala_n11",
+      "x": 4,
+      "y": 18,
+      "text": "Terrasse : Kessler vient y « prendre l'air » après la peur (Intimidation contre 8 dés). Deuxième succès : il donne le nom de Val Reyes et parle de son « assurance, chez moi » (map_maison_kessler). Garde-corps en verre.",
+      "gmOnly": true
+    },
+    {
+      "id": "gala_n12",
+      "x": 1,
+      "y": 30,
+      "text": "6 m plus bas : la terrasse du 29e (restaurant fermé). Sortie au grappin : Athlétisme + Force seuil 2. Un garde-corps de verre brisé déclenche l'alarme (caméra).",
+      "gmOnly": true
+    },
+    {
+      "id": "gala_n13",
+      "x": 18,
+      "y": 37,
+      "text": "Lot n°12 : « séjour de régénération de quatorze jours à la Clinique Halcyon — protocole Aurore », mise à 250 000¥. La brochure (ho_brochure_halcyon) : adresse à Bellevue, jardins, aucune photo des sous-sols.",
+      "gmOnly": true
+    },
+    {
+      "id": "gala_n14",
+      "x": 47,
+      "y": 21,
+      "text": "Traiteur Maison Duval : 40 extras. Déguisement + Intuition seuil 2 + faux SIN R3. Accès : cuisines, office, couloirs de service, galerie (pour servir). Bricks est à moins de 30 m du bureau de la suite depuis le couloir nord.",
+      "gmOnly": true
+    },
+    {
+      "id": "gala_n15",
+      "x": 53,
+      "y": 40,
+      "text": "Ascenseur de service à badge, monte-charge, escalier de service. Si Kessler panique et appelle Reyes : la sécurité discrète ferme les ascenseurs de service et vérifie les SIN du personnel (test d'Escroquerie en groupe).",
+      "gmOnly": true
+    },
+    {
+      "id": "gala_n16",
+      "x": 23,
+      "y": 27,
+      "text": "Host de l'hôtel rating 5 (A6/S5/DP7/F8) : caméras de tous les espaces publics, ascenseurs, liste des invités, éclairage de la salle. Patrol IC, puis Probe, Killer et Black IC en alerte sérieuse. Spider standard en poste toute la soirée.",
+      "gmOnly": true
+    },
+    {
+      "id": "gala_n17",
+      "x": 19,
+      "y": 24,
+      "text": "Qui est là : Wyatt-Brandt (hôte, 2 gardes du corps), Dorian Ashe (organise, nerveuse), Harlan Kessler (smoking trop serré, boit trop ; 6 agents Stern Pacific en civil sous ses ordres), Saori Tanabe (si employeuse), la conseillère Edith Calloway (88 ans, en paraît 45, danse toute la soirée), Margaux « La Pie » Hale (robe vert bouteille). Reyes dans l'équipe discrète si Horloge ≥ 4.",
+      "gmOnly": true
+    },
+    {
+      "id": "gala_n18",
+      "x": 32,
+      "y": 26,
+      "text": "La Pie (3e ou 4e tranche) : main gantée sur le bras de Jane. « Tu as changé de coiffure… » Elle veut la liste VIP. La « dame en gris » qu'elle menace d'alerter = Reyes (si Horloge ≥ 4), sinon elle bluffe.",
+      "gmOnly": true
+    }
+  ],
+  "tokens": []
+}

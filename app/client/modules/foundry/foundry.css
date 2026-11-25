@@ -1,0 +1,38 @@
+/* Foundry VTT import panel (Réglages). */
+.foundry-panel { margin-top: 14px; }
+.foundry-intro { margin: 0; max-width: 980px; }
+.foundry-intro strong { color: var(--amber); font-weight: 600; }
+.foundry-check { width: 16px; height: 16px; accent-color: var(--cyan); cursor: pointer; flex: none; }
+.foundry-section { border-top: 1px solid var(--line); padding-top: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.foundry-section p { margin: 0; }
+.foundry-section-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.foundry-section-head h4 { color: var(--cyan); font-size: 14px; display: flex; align-items: baseline; gap: 8px; }
+.foundry-modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 8px; }
+.foundry-modes label { display: flex; gap: 8px; align-items: flex-start; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel2); cursor: pointer; font-size: 12.5px; color: var(--dim); }
+.foundry-modes label.on { border-color: var(--cyan-d); color: var(--text); }
+.foundry-modes input { accent-color: var(--cyan); margin-top: 2px; }
+.foundry-pcs { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 8px; }
+.foundry-pc.selected, .foundry-scene.selected { border-color: var(--cyan-d); }
+.foundry-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid var(--line2); flex: none; background: var(--panel3); }
+.foundry-avatar.empty-avatar { display: flex; align-items: center; justify-content: center; color: var(--dim); font-weight: 700; }
+.foundry-diff { margin: 8px 0 0 24px; padding: 0 0 0 14px; font-size: 12px; color: var(--dim); }
+.foundry-diff li { margin: 1px 0; }
+.foundry-table-wrap { max-height: 340px; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius); }
+.foundry-table { width: 100%; }
+.foundry-table tr.selected td { background: #0f262633; }
+.foundry-table td { vertical-align: top; }
+.foundry-scenes { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+.foundry-scene { display: flex; flex-direction: column; gap: 4px; padding: 8px; cursor: pointer; min-width: 0; }
+.foundry-thumb { height: 104px; border-radius: 6px; overflow: hidden; background: var(--bg2); display: flex; align-items: center; justify-content: center; border: 1px solid var(--line); }
+.foundry-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.foundry-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.foundry-list { list-style: none; margin: 0; padding: 0; max-height: 260px; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius); }
+.foundry-list li { display: flex; align-items: center; gap: 8px; padding: 5px 10px; border-bottom: 1px solid var(--line); font-size: 12.5px; min-width: 0; }
+.foundry-list li:last-child { border-bottom: none; }
+.foundry-actions { border-top: 1px solid var(--line); padding-top: 10px; }
+.foundry-audio { display: flex; align-items: center; gap: 10px; }
+.foundry-progress { flex: 1; max-width: 320px; height: 6px; background: var(--panel3); border-radius: 3px; overflow: hidden; }
+.foundry-progress div { height: 100%; background: var(--cyan); transition: width .3s; }
+.foundry-result h4 { color: var(--green); }
+.foundry-result ul { margin: 6px 0 0; padding-left: 18px; }
+.foundry-ok { color: var(--green); }

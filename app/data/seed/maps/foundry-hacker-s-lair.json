@@ -1,0 +1,467 @@
+{
+  "id": "map_fvtt_hacker-s-lair",
+  "name": "Hacker's Lair",
+  "folder": "Foundry / Indoor",
+  "description": "Importée de **Foundry VTT** (monde `test-world`, scène « Hacker's Lair », dossier Indoor).\n\nImage 1200×900 px, grille 100 px = 2 m.\n\nMurs : 27 (dont 1 porte). Lumières : 18.",
+  "width": 12,
+  "height": 9,
+  "metersPerCell": 2,
+  "tiles": [
+    "............",
+    "............",
+    "............",
+    "............",
+    "............",
+    "............",
+    "............",
+    "............",
+    "............"
+  ],
+  "walls": [
+    {
+      "id": "w1",
+      "x1": 11.5,
+      "y1": 7.87,
+      "x2": 11.5,
+      "y2": 3.87,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w2",
+      "x1": 11.5,
+      "y1": 1,
+      "x2": 8.62,
+      "y2": 1,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w3",
+      "x1": 0.5,
+      "y1": 6,
+      "x2": 0.5,
+      "y2": 4.5,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w4",
+      "x1": 0.5,
+      "y1": 2.12,
+      "x2": 4.62,
+      "y2": 2.12,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w5",
+      "x1": 8.62,
+      "y1": 2.12,
+      "x2": 8.62,
+      "y2": 1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w6",
+      "x1": 0.5,
+      "y1": 6,
+      "x2": 0.5,
+      "y2": 7.87,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w7",
+      "x1": 0.5,
+      "y1": 6,
+      "x2": 5,
+      "y2": 6,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w8",
+      "x1": 6.25,
+      "y1": 7.87,
+      "x2": 0.5,
+      "y2": 7.87,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w9",
+      "x1": 6.25,
+      "y1": 7.87,
+      "x2": 6.25,
+      "y2": 6,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w10",
+      "x1": 8.62,
+      "y1": 2.12,
+      "x2": 8.62,
+      "y2": 3.87,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w11",
+      "x1": 10,
+      "y1": 3.87,
+      "x2": 11.5,
+      "y2": 3.87,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w12",
+      "x1": 11.5,
+      "y1": 3.87,
+      "x2": 11.5,
+      "y2": 1,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w13",
+      "x1": 8.62,
+      "y1": 3.87,
+      "x2": 9,
+      "y2": 3.87,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w14",
+      "x1": 9,
+      "y1": 3.87,
+      "x2": 10,
+      "y2": 3.87,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "locked",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w15",
+      "x1": 5.5,
+      "y1": 2.12,
+      "x2": 5.5,
+      "y2": 4,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w16",
+      "x1": 5.5,
+      "y1": 2.12,
+      "x2": 8.62,
+      "y2": 2.12,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w17",
+      "x1": 4.62,
+      "y1": 2.12,
+      "x2": 5.5,
+      "y2": 2.12,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w18",
+      "x1": 4.62,
+      "y1": 2.12,
+      "x2": 4.62,
+      "y2": 3.75,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w19",
+      "x1": 4.62,
+      "y1": 3.75,
+      "x2": 2.37,
+      "y2": 3.75,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w20",
+      "x1": 2.37,
+      "y1": 3.75,
+      "x2": 2.37,
+      "y2": 4.5,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w21",
+      "x1": 2.37,
+      "y1": 4.5,
+      "x2": 0.5,
+      "y2": 4.5,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w22",
+      "x1": 0.5,
+      "y1": 4.5,
+      "x2": 0.5,
+      "y2": 2.12,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w23",
+      "x1": 8.12,
+      "y1": 7.87,
+      "x2": 11.5,
+      "y2": 7.87,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w24",
+      "x1": 6.25,
+      "y1": 7.87,
+      "x2": 7.5,
+      "y2": 7.87,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w25",
+      "x1": 7.5,
+      "y1": 7.87,
+      "x2": 7.5,
+      "y2": 6.12,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w26",
+      "x1": 7.5,
+      "y1": 6.12,
+      "x2": 8.12,
+      "y2": 6.12,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w27",
+      "x1": 8.12,
+      "y1": 6.12,
+      "x2": 8.12,
+      "y2": 7.87,
+      "move": true,
+      "sight": true,
+      "door": null
+    }
+  ],
+  "doors": [],
+  "lights": [
+    {
+      "id": "l1",
+      "x": 2,
+      "y": 3,
+      "radius": 0.5,
+      "color": "#87c5a3",
+      "on": true
+    },
+    {
+      "id": "l2",
+      "x": 2,
+      "y": 3,
+      "radius": 0.5,
+      "color": "#87c5a3",
+      "on": true
+    },
+    {
+      "id": "l3",
+      "x": 4,
+      "y": 3,
+      "radius": 0.5,
+      "color": "#87c5a3",
+      "on": true
+    },
+    {
+      "id": "l4",
+      "x": 7,
+      "y": 7,
+      "radius": 0.5,
+      "color": "#87c5a3",
+      "on": true
+    },
+    {
+      "id": "l5",
+      "x": 6,
+      "y": 7,
+      "radius": 0.5,
+      "color": "#3d4a55",
+      "on": true
+    },
+    {
+      "id": "l6",
+      "x": 3,
+      "y": 3,
+      "radius": 0.5,
+      "color": "#87c5a3",
+      "on": true
+    },
+    {
+      "id": "l7",
+      "x": 9,
+      "y": 1,
+      "radius": 2,
+      "color": "#83363c",
+      "on": true
+    },
+    {
+      "id": "l8",
+      "x": 2,
+      "y": 6,
+      "radius": 0.5,
+      "color": "#2b7581",
+      "on": true
+    },
+    {
+      "id": "l9",
+      "x": 10,
+      "y": 5,
+      "radius": 2.4,
+      "color": "#afbabf",
+      "on": true
+    },
+    {
+      "id": "l10",
+      "x": 10,
+      "y": 5,
+      "radius": 1.6,
+      "color": "#afb8be",
+      "on": true
+    },
+    {
+      "id": "l11",
+      "x": 10,
+      "y": 5,
+      "radius": 0.8,
+      "color": "#afb8be",
+      "on": true
+    },
+    {
+      "id": "l12",
+      "x": 2,
+      "y": 6,
+      "radius": 0.5,
+      "color": "#2b7581",
+      "on": true
+    },
+    {
+      "id": "l13",
+      "x": 3,
+      "y": 6,
+      "radius": 0.5,
+      "color": "#2b7581",
+      "on": true
+    },
+    {
+      "id": "l14",
+      "x": 4,
+      "y": 6,
+      "radius": 0.5,
+      "color": "#2b7581",
+      "on": true
+    },
+    {
+      "id": "l15",
+      "x": 3,
+      "y": 6,
+      "radius": 0.5,
+      "color": "#2b7581",
+      "on": true
+    },
+    {
+      "id": "l16",
+      "x": 5,
+      "y": 5,
+      "radius": 0.5,
+      "color": "#2b7581",
+      "on": true
+    },
+    {
+      "id": "l17",
+      "x": 5,
+      "y": 5,
+      "radius": 0.5,
+      "color": "#2b7581",
+      "on": true
+    },
+    {
+      "id": "l18",
+      "x": 1,
+      "y": 7,
+      "radius": 0.5,
+      "color": "#2b7581",
+      "on": true
+    }
+  ],
+  "lighting": "bright",
+  "regions": [],
+  "notes": [],
+  "tokens": [],
+  "explored": {},
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "background": {
+    "url": "/assets/foundry/scenes/hackers-lair-day.jpg",
+    "opacity": 1,
+    "mode": "image",
+    "x": 0,
+    "y": 0,
+    "w": 12,
+    "h": 9
+  },
+  "theme": "matrix",
+  "thumb": "/assets/foundry/thumbs/NSgrMr0v8PbrKfqo.png",
+  "foundry": {
+    "id": "NSgrMr0v8PbrKfqo",
+    "world": "test-world",
+    "importedAt": 1795629244307,
+    "hash": "ad114d93828c"
+  }
+}

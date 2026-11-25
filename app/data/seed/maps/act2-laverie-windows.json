@@ -1,0 +1,453 @@
+{
+  "id": "map_laverie_windows",
+  "name": "Laverie Suds'n'Duds et planque de Windows (Puyallup)",
+  "folder": "Acte 2",
+  "description": "**Laverie Suds'n'Duds (Puyallup) — la planque de Windows.** Une laverie automatique ouverte 24 h/24 au rez-de-chaussée d'un petit immeuble d'angle : quatorze machines (six marchent), des sèche-linge empilés, un comptoir de monnaie. Derrière, l'arrière-boutique et ses deux drones en veille ; dessous, la planque de Rebecca « Windows » Wrought, une cage de Faraday couverte de photos et de fils rouges. Le sous-sol est dessiné à part, à droite du plan.\n\n**Utilisation**\n- Quête 2.1 *Windows Open*, **Phase 3** (trouver Windows et la convaincre) et **Phase 4** (l'assaut : l'équipe du Passeur, ou Reyes + 4 Nettoyeurs + 2 guetteurs du Crimson Crush à moto au coin de la rue).\n- La scène des retrouvailles se joue au sous-sol, ou à travers la porte blindée.\n\n**Tests utiles**\n- Repérer les caméras des sèche-linge : Perception + Intuition seuil 4. Bruit des machines : −2 en Perception auditive dans la salle.\n- Porte « Privé » : serrure mécanique rating 2. Porte blindée du sous-sol : Structure 12 / Armor 12, **maglock rating 5 câblé sans sans-fil** (séquenceur ou accès physique uniquement).\n- Convaincre Windows à travers la porte : Négociation + Charisme seuil 3 (Jane). Bricks qui frappe à la porte et dit ce que seule Windows comprendrait : **aucun test**, laissez parler la joueuse.\n\n**Approches** : la vitrine et la porte automatique (rue), la porte de service (allée), le parking au nord par l'allée, l'escalier de secours de l'immeuble. Sortie de Windows : l'ancien **conduit à charbon** (0,8 m) qui remonte dans l'allée par une trappe en fonte.\n\n**Assaut** : le Fly-Spy de Windows repère les assaillants à deux rues — 3 tours de combat pour se préparer. Les assaillants veulent repartir avec Windows vivante ; Windows veut protéger son serveur. Entrer en force = drones, interrupteur d'homme mort, serveur fondu, Windows à Loyauté 1.",
+  "width": 54,
+  "height": 40,
+  "metersPerCell": 1,
+  "theme": "street",
+  "lighting": "dark",
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "tiles": [
+    ",,,,,,                                                ",
+    ",,,,,,###########################                     ",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#                     ",
+    ",,,,,,,,vv,,,,vv,,,,,,,,,,vv,,,,#                     ",
+    ",,,,,,,,vv,,,,vv,,,,,,,,,,vv,,,,#                     ",
+    ",,,,,,,,vv,,,,vv,,,,,,,,,,vv,,,,#                     ",
+    ",,,,,,,,vv,,,,vv,,,,,,,,,,vv,,,,#                     ",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#                     ",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#                     ",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,c#                     ",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,c#                     ",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#                     ",
+    ",,,,,o,,,,,,,,,,,,,,,,,,,,,,,,,,#                     ",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#                     ",
+    ",,,,,,##############,,,#########       ###            ",
+    ",,,,,,#m.ss.####s###r,,#       #       #s#     #s#    ",
+    ",,,,,,#m.ss.####s###,,,#       #       #s#     #r#    ",
+    ",,,,,,#..ss.####s###,s,#       #       #s#     #r#    ",
+    ",,,,,,#.....####s###,,,#       #       #s#     #r#    ",
+    ",,,,,,#.....####D###,,,#       #       #s#     #r#    ",
+    ",,,,,,D.....##m....#,,,#       #      ##.#######r#    ",
+    ",,,,,,#.....##m....D,,,#       #      #...TTT.m#r#    ",
+    ",,,,,,#.....##m...m#s,,#       #      #.......m#r#    ",
+    ",,,,,,#.....##....m#,,,#       #      #T.......#r#    ",
+    ",,,,,,###D######D###,,,D       #      #........Dr#    ",
+    ",,,,,,#m.TT.=.....m#,,,#       #      #........###    ",
+    ",,,,,,W.....====..m#,,,#       #      #bb....==#      ",
+    ",,,,,,Wc..........m#,cc#       #      ##########      ",
+    ",,,,,,Wc..ccccc...m#,cc#       #                      ",
+    ",,,,,,Wc..ccccc...m#,,,#       #                      ",
+    ",v,,,,Wc..........m#,,,#       #                      ",
+    ",v,,,,W............#,,r#       #                      ",
+    ",,,,,,#.TT......TT.#,,,#       #                      ",
+    ",,,,,,#WWWWWDDWWWWW#,,,#########                      ",
+    ",,,,,,,,,,,,,,,,,,,,,,,,o,,,,,,,,,,,,,,,,,,,o,,,,,,,,,",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+    ",,,vv,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+    ",,,,,,,,vvvv,,,,,,,,,,,,,,,,,,,,,,,,,,,,vvvvv,,,,,,,,,",
+    ",,,,,,,,vvvv,,,,,,,,,,,,,,,,,,,,,,,,,,,,vvvvv,,,,,,,,,",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"
+  ],
+  "doors": [
+    {
+      "id": "lav_d01",
+      "x": 6,
+      "y": 20,
+      "state": "closed",
+      "kind": "door",
+      "name": "Entrée de l'immeuble"
+    },
+    {
+      "id": "lav_d02",
+      "x": 9,
+      "y": 24,
+      "state": "locked",
+      "kind": "door",
+      "name": "Porte du hall → laverie (condamnée)"
+    },
+    {
+      "id": "lav_d03",
+      "x": 16,
+      "y": 19,
+      "state": "locked",
+      "kind": "door",
+      "name": "Porte blindée (maglock 5 câblé)"
+    },
+    {
+      "id": "lav_d04",
+      "x": 19,
+      "y": 21,
+      "state": "closed",
+      "kind": "door",
+      "name": "Porte de service (allée)"
+    },
+    {
+      "id": "lav_d05",
+      "x": 16,
+      "y": 24,
+      "state": "closed",
+      "kind": "door",
+      "name": "Porte « Privé » (serrure rating 2)"
+    },
+    {
+      "id": "lav_d06",
+      "x": 12,
+      "y": 33,
+      "state": "closed",
+      "kind": "door",
+      "name": "Porte vitrée automatique"
+    },
+    {
+      "id": "lav_d07",
+      "x": 13,
+      "y": 33,
+      "state": "closed",
+      "kind": "door",
+      "name": "Porte vitrée automatique"
+    },
+    {
+      "id": "lav_d08",
+      "x": 23,
+      "y": 24,
+      "state": "locked",
+      "kind": "door",
+      "name": "Porte arrière (boutique voisine)"
+    },
+    {
+      "id": "lav_d09",
+      "x": 47,
+      "y": 24,
+      "state": "closed",
+      "kind": "secret",
+      "name": "Conduit à charbon (derrière une étagère)"
+    }
+  ],
+  "lights": [
+    {
+      "id": "lav_l01",
+      "x": 10,
+      "y": 27,
+      "radius": 6,
+      "color": "#e8f4ff",
+      "on": true,
+      "name": "Néons — salle des machines"
+    },
+    {
+      "id": "lav_l02",
+      "x": 15,
+      "y": 30,
+      "radius": 6,
+      "color": "#e8f4ff",
+      "on": true,
+      "name": "Néons — salle des machines"
+    },
+    {
+      "id": "lav_l03",
+      "x": 14,
+      "y": 25,
+      "radius": 2,
+      "color": "#ffe8b0",
+      "on": true,
+      "name": "Lampe du comptoir"
+    },
+    {
+      "id": "lav_l04",
+      "x": 16,
+      "y": 22,
+      "radius": 2,
+      "color": "#c8a86a",
+      "on": true,
+      "name": "Ampoule — arrière-boutique"
+    },
+    {
+      "id": "lav_l05",
+      "x": 20,
+      "y": 20,
+      "radius": 3,
+      "color": "#ffb766",
+      "on": true,
+      "name": "Applique — porte de service"
+    },
+    {
+      "id": "lav_l06",
+      "x": 9,
+      "y": 20,
+      "radius": 3,
+      "color": "#fff1d0",
+      "on": true,
+      "name": "Hall de l'immeuble (minuterie)"
+    },
+    {
+      "id": "lav_l07",
+      "x": 18,
+      "y": 8,
+      "radius": 7,
+      "color": "#ffa040",
+      "on": true,
+      "name": "Lampadaire au sodium — parking"
+    },
+    {
+      "id": "lav_l08",
+      "x": 3,
+      "y": 24,
+      "radius": 6,
+      "color": "#ffb766",
+      "on": true,
+      "name": "Éclairage — rue"
+    },
+    {
+      "id": "lav_l09",
+      "x": 24,
+      "y": 36,
+      "radius": 6,
+      "color": "#ffb766",
+      "on": true,
+      "name": "Éclairage — rue"
+    },
+    {
+      "id": "lav_l10",
+      "x": 13,
+      "y": 35,
+      "radius": 3,
+      "color": "#ff3fd2",
+      "on": true,
+      "name": "Enseigne néon « Suds'n'Duds »"
+    },
+    {
+      "id": "lav_l11",
+      "x": 42,
+      "y": 24,
+      "radius": 5,
+      "color": "#d8f0ff",
+      "on": true,
+      "name": "Planque — éclairage permanent"
+    },
+    {
+      "id": "lav_l12",
+      "x": 43,
+      "y": 22,
+      "radius": 2,
+      "color": "#36e6ff",
+      "on": true,
+      "name": "Les trois écrans"
+    }
+  ],
+  "regions": [
+    {
+      "id": "lav_r01",
+      "name": "Salle des machines",
+      "x": 7,
+      "y": 25,
+      "w": 12,
+      "h": 8,
+      "color": "#3a5a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "lav_r02",
+      "name": "Arrière-boutique",
+      "x": 14,
+      "y": 20,
+      "w": 5,
+      "h": 4,
+      "color": "#5a4a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "lav_r03",
+      "name": "Escalier du sous-sol",
+      "x": 16,
+      "y": 15,
+      "w": 1,
+      "h": 4,
+      "color": "#7a2a1a",
+      "gmOnly": false
+    },
+    {
+      "id": "lav_r04",
+      "name": "Hall de l'immeuble",
+      "x": 7,
+      "y": 15,
+      "w": 5,
+      "h": 9,
+      "color": "#4a4a55",
+      "gmOnly": false
+    },
+    {
+      "id": "lav_r05",
+      "name": "Allée de service",
+      "x": 20,
+      "y": 14,
+      "w": 3,
+      "h": 20,
+      "color": "#3a3a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "lav_r06",
+      "name": "Parking (6 places)",
+      "x": 6,
+      "y": 2,
+      "w": 26,
+      "h": 12,
+      "color": "#3a4a5c",
+      "gmOnly": false
+    },
+    {
+      "id": "lav_r07",
+      "name": "Rue",
+      "x": 0,
+      "y": 34,
+      "w": 54,
+      "h": 6,
+      "color": "#3a4a5c",
+      "gmOnly": false
+    },
+    {
+      "id": "lav_r08",
+      "name": "Rue (angle)",
+      "x": 0,
+      "y": 0,
+      "w": 6,
+      "h": 34,
+      "color": "#3a4a5c",
+      "gmOnly": false
+    },
+    {
+      "id": "lav_r09",
+      "name": "Sous-sol — la planque (plan séparé)",
+      "x": 38,
+      "y": 14,
+      "w": 13,
+      "h": 14,
+      "color": "#6a2a5a",
+      "gmOnly": false
+    },
+    {
+      "id": "lav_r10",
+      "name": "Conduit à charbon",
+      "x": 47,
+      "y": 15,
+      "w": 3,
+      "h": 11,
+      "color": "#7a2a1a",
+      "gmOnly": true
+    },
+    {
+      "id": "lav_r11",
+      "name": "Guetteurs du Crush",
+      "x": 0,
+      "y": 29,
+      "w": 6,
+      "h": 9,
+      "color": "#7a1a1a",
+      "gmOnly": true
+    }
+  ],
+  "notes": [
+    {
+      "id": "lav_n01",
+      "x": 12,
+      "y": 32,
+      "text": "Vitrine et porte vitrée automatique : verre ordinaire. Ouvert 24 h/24 ; à 3 h du matin, un ou deux clients de passage (témoins).",
+      "gmOnly": true
+    },
+    {
+      "id": "lav_n02",
+      "x": 17,
+      "y": 27,
+      "text": "Six sèche-linge empilés : trois cachent des caméras (Perception + Intuition seuil 4). Câblées vers le sous-sol — pas de sans-fil, rien à pirater depuis la Matrice.",
+      "gmOnly": true
+    },
+    {
+      "id": "lav_n03",
+      "x": 11,
+      "y": 26,
+      "text": "Fly-Spy de Windows dans une dalle du faux plafond. Il voit toute la salle et repère les assaillants à deux rues (3 tours d'avance).",
+      "gmOnly": true
+    },
+    {
+      "id": "lav_n04",
+      "x": 12,
+      "y": 29,
+      "text": "Machines : couverture partielle (Armor 6, Structure 8). Les sèche-linge en marche couvrent les pas : −2 aux tests de Perception auditive.",
+      "gmOnly": true
+    },
+    {
+      "id": "lav_n05",
+      "x": 15,
+      "y": 21,
+      "text": "Deux drones GMC-Nissan Doberman en veille (Body 4, Armor 4, Pilot 3, Sensor 3, Colt Cobra TZ-120 monté, autosofts Targeting 3 / Clearsight 3 / Evasion 3). Étagères de lessive, chaudière. Complication Old Lin : Windows les a déplacés dans la salle des machines.",
+      "gmOnly": true
+    },
+    {
+      "id": "lav_n06",
+      "x": 16,
+      "y": 18,
+      "text": "Porte blindée Structure 12 / Armor 12, maglock rating 5 câblé (séquenceur ou accès physique). Escalier étroit : une seule personne à la fois — le goulot de l'assaut. Porte forcée = interrupteur d'homme mort.",
+      "gmOnly": true
+    },
+    {
+      "id": "lav_n07",
+      "x": 44,
+      "y": 23,
+      "text": "Cage de Faraday : aucune connexion sans fil n'entre ni ne sort (Bricks est coupée de la Matrice ici). Lit de camp, kitchenette, trois écrans. Windows (pistolet braqué) ouvre si Bricks se présente devant une caméra.",
+      "gmOnly": true
+    },
+    {
+      "id": "lav_n08",
+      "x": 46,
+      "y": 22,
+      "text": "Serveur dans une armoire métallique, charge thermite reliée à l'interrupteur d'homme mort (bracelet de Windows). Pression relâchée ou porte forcée → effacement en 30 s, mémoire grillée, beaucoup de fumée. Contenu (Phase 5) : fragments du dossier de l'Escouade 9 (BIO-73-1187, les Moissonneurs, Mission St. Brendan, manifeste SP-NULL), dernier message de Vosk, six ans de comptes de Kessler.",
+      "gmOnly": true
+    },
+    {
+      "id": "lav_n09",
+      "x": 42,
+      "y": 20,
+      "text": "Mur nord couvert de photos et de fils rouges : six ans d'enquête sur Harlan Kessler. Au centre, une photo de l'Escouade 9 — Bricks y est.",
+      "gmOnly": true
+    },
+    {
+      "id": "lav_n10",
+      "x": 48,
+      "y": 20,
+      "text": "Conduit à charbon (0,8 m) caché derrière une étagère (Perception seuil 4). On y rampe une personne à la fois (déplacement /2). Remonte dans l'allée par la trappe en fonte : l'issue de secours de Windows.",
+      "gmOnly": true
+    },
+    {
+      "id": "lav_n11",
+      "x": 21,
+      "y": 17,
+      "text": "Trappe en fonte de l'ancien conduit à charbon (Perception seuil 3 : elle a été dégrippée récemment).",
+      "gmOnly": true
+    },
+    {
+      "id": "lav_n12",
+      "x": 21,
+      "y": 26,
+      "text": "Benne : couverture lourde. Escalier de secours de l'immeuble (pied en 20,22) : accès aux toits et aux fenêtres de l'étage.",
+      "gmOnly": true
+    },
+    {
+      "id": "lav_n13",
+      "x": 2,
+      "y": 32,
+      "text": "Si Reyes vient : 2 Crimson Crush à moto en guetteurs au coin de la rue. Reyes + 4 Nettoyeurs entrent par la vitrine ET par l'allée. Au 2e tour, Reyes s'arrête une demi-action : « Toi, t'es censée être morte. »",
+      "gmOnly": true
+    },
+    {
+      "id": "lav_n14",
+      "x": 26,
+      "y": 10,
+      "text": "Phase 4 — l'équipe du Passeur : Mosaïque reste dans la camionnette au parking, Rempart enfonce la porte de service, le Passeur et Cendre entrent par la vitrine. Ils veulent Windows vivante et décrochent à la première blessure grave.",
+      "gmOnly": true
+    }
+  ],
+  "tokens": []
+}

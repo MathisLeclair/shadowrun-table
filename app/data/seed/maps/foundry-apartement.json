@@ -1,0 +1,708 @@
+{
+  "id": "map_fvtt_apartement",
+  "name": "Apartement",
+  "folder": "Foundry / Indoor",
+  "description": "Importée de **Foundry VTT** (monde `test-world`, scène « Apartement », dossier Indoor).\n\nImage 3360×2520 px, grille 100 px = 1 m.\n\nMurs : 46 (dont 7 portes). Lumières : 20.\n\nJetons dans Foundry : 3× Grunt (`tpl_fvtt_grunt`).",
+  "width": 34,
+  "height": 26,
+  "metersPerCell": 1,
+  "tiles": [
+    "..................................",
+    "..................................",
+    "..................................",
+    "..................................",
+    "..................................",
+    "..................................",
+    "..................................",
+    "..................................",
+    "..................................",
+    "..................................",
+    "..................................",
+    "..................................",
+    "..................................",
+    "..................................",
+    "..................................",
+    "..................................",
+    "..................................",
+    "..................................",
+    "..................................",
+    "..................................",
+    "..................................",
+    "..................................",
+    "..................................",
+    "..................................",
+    "..................................",
+    ".................................."
+  ],
+  "walls": [
+    {
+      "id": "w1",
+      "x1": 16,
+      "y1": 20,
+      "x2": 7,
+      "y2": 20,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w2",
+      "x1": 7,
+      "y1": 2,
+      "x2": 17.87,
+      "y2": 2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w3",
+      "x1": 17.87,
+      "y1": 2,
+      "x2": 17.87,
+      "y2": 20,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w4",
+      "x1": 17.87,
+      "y1": 20,
+      "x2": 17.12,
+      "y2": 20,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w5",
+      "x1": 23.12,
+      "y1": 20,
+      "x2": 17.87,
+      "y2": 20,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w6",
+      "x1": 24.25,
+      "y1": 20,
+      "x2": 33.37,
+      "y2": 20,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w7",
+      "x1": 33.5,
+      "y1": 22.5,
+      "x2": 7,
+      "y2": 22.62,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w8",
+      "x1": 7,
+      "y1": 20.12,
+      "x2": 7,
+      "y2": 22.62,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w9",
+      "x1": 25.25,
+      "y1": 20,
+      "x2": 25.25,
+      "y2": 18,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w10",
+      "x1": 25.25,
+      "y1": 16.87,
+      "x2": 25.25,
+      "y2": 14.62,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w11",
+      "x1": 17.87,
+      "y1": 10.37,
+      "x2": 19.37,
+      "y2": 10.37,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w12",
+      "x1": 21.5,
+      "y1": 10.37,
+      "x2": 27.5,
+      "y2": 10.37,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w13",
+      "x1": 25.25,
+      "y1": 10.37,
+      "x2": 25.25,
+      "y2": 13.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w14",
+      "x1": 29.62,
+      "y1": 10.37,
+      "x2": 33.5,
+      "y2": 10.37,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w15",
+      "x1": 31.87,
+      "y1": 10.37,
+      "x2": 31.87,
+      "y2": 19.87,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w16",
+      "x1": 31.87,
+      "y1": 15.12,
+      "x2": 25.25,
+      "y2": 15.12,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w17",
+      "x1": 7,
+      "y1": 19.87,
+      "x2": 7,
+      "y2": 18.37,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w18",
+      "x1": 7,
+      "y1": 16.25,
+      "x2": 7,
+      "y2": 11.62,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w19",
+      "x1": 7,
+      "y1": 4.37,
+      "x2": 7,
+      "y2": 2.12,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w20",
+      "x1": 7,
+      "y1": 9.62,
+      "x2": 7,
+      "y2": 6.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w21",
+      "x1": 7,
+      "y1": 9,
+      "x2": 10.62,
+      "y2": 9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w22",
+      "x1": 11.62,
+      "y1": 9,
+      "x2": 14.12,
+      "y2": 9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w23",
+      "x1": 15.25,
+      "y1": 9,
+      "x2": 17.87,
+      "y2": 9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w24",
+      "x1": 12.25,
+      "y1": 9,
+      "x2": 12.25,
+      "y2": 2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w25",
+      "x1": 10.62,
+      "y1": 9,
+      "x2": 11.62,
+      "y2": 9,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "open",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w26",
+      "x1": 14.12,
+      "y1": 9,
+      "x2": 15.25,
+      "y2": 9,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "open",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w27",
+      "x1": 16,
+      "y1": 20,
+      "x2": 17.12,
+      "y2": 20,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "open",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w28",
+      "x1": 23.12,
+      "y1": 20,
+      "x2": 24.25,
+      "y2": 20,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "open",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w29",
+      "x1": 25.25,
+      "y1": 16.87,
+      "x2": 25.25,
+      "y2": 18,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "open",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w30",
+      "x1": 25.25,
+      "y1": 13.5,
+      "x2": 25.25,
+      "y2": 14.62,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "open",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w31",
+      "x1": 7,
+      "y1": 9.62,
+      "x2": 7,
+      "y2": 11.62,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w32",
+      "x1": 5.25,
+      "y1": 13.87,
+      "x2": 5.25,
+      "y2": 18.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w33",
+      "x1": 5.87,
+      "y1": 6,
+      "x2": 5.87,
+      "y2": 7.87,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w34",
+      "x1": 5.12,
+      "y1": 1.37,
+      "x2": 5.12,
+      "y2": 4.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w35",
+      "x1": 6.5,
+      "y1": 21,
+      "x2": 6.5,
+      "y2": 25.62,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w36",
+      "x1": 17.25,
+      "y1": 2.62,
+      "x2": 17.25,
+      "y2": 3.62,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w37",
+      "x1": 26.25,
+      "y1": 16.12,
+      "x2": 26.87,
+      "y2": 15.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w38",
+      "x1": 27,
+      "y1": 15.5,
+      "x2": 28.12,
+      "y2": 15.37,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w39",
+      "x1": 12.62,
+      "y1": 20,
+      "x2": 12.62,
+      "y2": 15.62,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w40",
+      "x1": 12.62,
+      "y1": 15.62,
+      "x2": 15.12,
+      "y2": 15.62,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w41",
+      "x1": 15.12,
+      "y1": 15.62,
+      "x2": 15.12,
+      "y2": 17.37,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w42",
+      "x1": 15.12,
+      "y1": 18.37,
+      "x2": 15.12,
+      "y2": 20,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w43",
+      "x1": 17.87,
+      "y1": 17.37,
+      "x2": 22.12,
+      "y2": 17.37,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w44",
+      "x1": 22.12,
+      "y1": 17.37,
+      "x2": 22.12,
+      "y2": 18.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w45",
+      "x1": 7,
+      "y1": 18.37,
+      "x2": 7,
+      "y2": 16.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w46",
+      "x1": 15.12,
+      "y1": 17.37,
+      "x2": 15.12,
+      "y2": 18.37,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "open",
+        "kind": "door"
+      }
+    }
+  ],
+  "doors": [],
+  "lights": [
+    {
+      "id": "l1",
+      "x": 8,
+      "y": 9,
+      "radius": 1.6,
+      "color": "#83bef1",
+      "on": true
+    },
+    {
+      "id": "l2",
+      "x": 17,
+      "y": 13,
+      "radius": 2.6,
+      "color": "#ff8080",
+      "on": true
+    },
+    {
+      "id": "l3",
+      "x": 18,
+      "y": 12,
+      "radius": 1.6,
+      "color": "#83bef1",
+      "on": true
+    },
+    {
+      "id": "l4",
+      "x": 10,
+      "y": 19,
+      "radius": 2.6,
+      "color": "#ff8080",
+      "on": true
+    },
+    {
+      "id": "l5",
+      "x": 5,
+      "y": 16,
+      "radius": 3.4,
+      "color": "#66d1ff",
+      "on": true
+    },
+    {
+      "id": "l6",
+      "x": 5,
+      "y": 3,
+      "radius": 3.4,
+      "color": "#ff2e2e",
+      "on": true
+    },
+    {
+      "id": "l7",
+      "x": 5,
+      "y": 7,
+      "radius": 2,
+      "color": "#66d1ff",
+      "on": true
+    },
+    {
+      "id": "l8",
+      "x": 6,
+      "y": 23,
+      "radius": 4.5,
+      "color": "#ff2e2e",
+      "on": true
+    },
+    {
+      "id": "l9",
+      "x": 17,
+      "y": 3,
+      "radius": 0.9,
+      "color": "#ffcc88",
+      "on": true
+    },
+    {
+      "id": "l10",
+      "x": 26,
+      "y": 16,
+      "radius": 0.9,
+      "color": "#ffcc88",
+      "on": true
+    },
+    {
+      "id": "l11",
+      "x": 27,
+      "y": 15,
+      "radius": 0.9,
+      "color": "#ffcc88",
+      "on": true
+    },
+    {
+      "id": "l12",
+      "x": 12,
+      "y": 14,
+      "radius": 7.6,
+      "color": "#ffcc88",
+      "on": true
+    },
+    {
+      "id": "l13",
+      "x": 22,
+      "y": 15,
+      "radius": 6.8,
+      "color": "#ffcc88",
+      "on": false
+    },
+    {
+      "id": "l14",
+      "x": 29,
+      "y": 13,
+      "radius": 4.9,
+      "color": "#ffcc88",
+      "on": false
+    },
+    {
+      "id": "l15",
+      "x": 28,
+      "y": 17,
+      "radius": 2.8,
+      "color": "#ffcc88",
+      "on": false
+    },
+    {
+      "id": "l16",
+      "x": 10,
+      "y": 6,
+      "radius": 4.3,
+      "color": "#ffcc88",
+      "on": false
+    },
+    {
+      "id": "l17",
+      "x": 15,
+      "y": 6,
+      "radius": 4.6,
+      "color": "#ffcc88",
+      "on": false
+    },
+    {
+      "id": "l18",
+      "x": 14,
+      "y": 21,
+      "radius": 5.2,
+      "color": "#ffcc88",
+      "on": true
+    },
+    {
+      "id": "l19",
+      "x": 21,
+      "y": 21,
+      "radius": 5.5,
+      "color": "#ffcc88",
+      "on": true
+    },
+    {
+      "id": "l20",
+      "x": 27,
+      "y": 21,
+      "radius": 5.4,
+      "color": "#ffcc88",
+      "on": true
+    }
+  ],
+  "lighting": "dark",
+  "regions": [],
+  "notes": [],
+  "tokens": [],
+  "explored": {},
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "background": {
+    "url": "/assets/foundry/scenes/appartement_1.jpg",
+    "opacity": 1,
+    "mode": "image",
+    "x": -0.13,
+    "y": 0.46,
+    "w": 33.6,
+    "h": 25.2
+  },
+  "theme": "street",
+  "thumb": "/assets/foundry/thumbs/gNlcfaNOEyOZeCsv.png",
+  "foundry": {
+    "id": "gNlcfaNOEyOZeCsv",
+    "world": "test-world",
+    "importedAt": 1795629244307,
+    "hash": "5f3bd9d1f11a"
+  }
+}

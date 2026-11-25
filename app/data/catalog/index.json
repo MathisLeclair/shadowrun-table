@@ -1,0 +1,890 @@
+{
+ "generated": "2026-11-25T16:21:58.603Z",
+ "source": "Chummer5.226.0",
+ "files": [
+  {
+   "name": "weapons",
+   "count": 500,
+   "bytes": 169050,
+   "categories": [
+    {
+     "name": "Assault Cannons",
+     "nameFr": "Canons d'assaut",
+     "count": 9
+    },
+    {
+     "name": "Assault Rifles",
+     "nameFr": "Fusils d'assaut",
+     "count": 21
+    },
+    {
+     "name": "Blades",
+     "nameFr": "Armes tranchantes",
+     "count": 40
+    },
+    {
+     "name": "Bows",
+     "nameFr": "Arcs",
+     "count": 18
+    },
+    {
+     "name": "Carbines",
+     "nameFr": "Carabines",
+     "count": 5
+    },
+    {
+     "name": "Clubs",
+     "nameFr": "Armes contondantes",
+     "count": 17
+    },
+    {
+     "name": "Crossbows",
+     "nameFr": "Arbalètes",
+     "count": 8
+    },
+    {
+     "name": "Exotic Melee Weapons",
+     "nameFr": "Armes de mêlée exotiques",
+     "count": 23
+    },
+    {
+     "name": "Exotic Ranged Weapons",
+     "nameFr": "Armes à distance exotiques",
+     "count": 23
+    },
+    {
+     "name": "Flamethrowers",
+     "nameFr": "Lance-flammes",
+     "count": 3
+    },
+    {
+     "name": "Grenade Launchers",
+     "nameFr": "Lance-grenades",
+     "count": 6
+    },
+    {
+     "name": "Heavy Machine Guns",
+     "nameFr": "Mitrailleuses lourdes",
+     "count": 6
+    },
+    {
+     "name": "Heavy Pistols",
+     "nameFr": "Pistolets lourds",
+     "count": 37
+    },
+    {
+     "name": "Holdouts",
+     "nameFr": "Pistolets de poche",
+     "count": 12
+    },
+    {
+     "name": "Improvised Weapons",
+     "nameFr": "Armes improvisées",
+     "count": 11
+    },
+    {
+     "name": "Laser Weapons",
+     "nameFr": "Armes laser",
+     "count": 5
+    },
+    {
+     "name": "Light Machine Guns",
+     "nameFr": "Mitrailleuses légères",
+     "count": 9
+    },
+    {
+     "name": "Light Pistols",
+     "nameFr": "Pistolets légers",
+     "count": 18
+    },
+    {
+     "name": "Machine Pistols",
+     "nameFr": "Pistolets-mitrailleurs",
+     "count": 13
+    },
+    {
+     "name": "Medium Machine Guns",
+     "nameFr": "Mitrailleuses moyennes",
+     "count": 3
+    },
+    {
+     "name": "Missile Launchers",
+     "nameFr": "Lance-missiles",
+     "count": 8
+    },
+    {
+     "name": "Shotguns",
+     "nameFr": "Fusils à pompe",
+     "count": 24
+    },
+    {
+     "name": "Sniper Rifles",
+     "nameFr": "Fusils de précision",
+     "count": 15
+    },
+    {
+     "name": "Sporting Rifles",
+     "nameFr": "Fusils de chasse",
+     "count": 13
+    },
+    {
+     "name": "Submachine Guns",
+     "nameFr": "Mitraillettes",
+     "count": 22
+    },
+    {
+     "name": "Tasers",
+     "nameFr": "Pistolets à impulsion électrique",
+     "count": 6
+    },
+    {
+     "name": "Unarmed",
+     "nameFr": "Combat à mains nues",
+     "count": 5
+    },
+    {
+     "name": "Underbarrel Weapons",
+     "nameFr": "Armes montées",
+     "count": 7
+    },
+    {
+     "name": "Weapon Accessories",
+     "nameFr": "Accessoires d’armes",
+     "count": 113
+    }
+   ]
+  },
+  {
+   "name": "armor",
+   "count": 243,
+   "bytes": 71045,
+   "categories": [
+    {
+     "name": "Armor",
+     "nameFr": "Armures",
+     "count": 20
+    },
+    {
+     "name": "Armor Modifications",
+     "nameFr": "Modifications d’armure",
+     "count": 57
+    },
+    {
+     "name": "Cloaks",
+     "nameFr": "Manteaux",
+     "count": 3
+    },
+    {
+     "name": "Clothing",
+     "nameFr": "Vêtements renforcés",
+     "count": 51
+    },
+    {
+     "name": "High-Fashion Armor Clothing",
+     "nameFr": "Vêtements Haute-Couture renforcés",
+     "count": 49
+    },
+    {
+     "name": "Specialty Armor",
+     "nameFr": "Armures Spécialisées",
+     "count": 63
+    }
+   ]
+  },
+  {
+   "name": "gear",
+   "count": 1264,
+   "bytes": 332005,
+   "categories": [
+    {
+     "name": "Alchemical Preperations",
+     "count": 15
+    },
+    {
+     "name": "Alchemical Tools",
+     "nameFr": "Matériel d'Alchimie",
+     "count": 5
+    },
+    {
+     "name": "Ammunition",
+     "nameFr": "Munitions",
+     "count": 157
+    },
+    {
+     "name": "Animals",
+     "count": 6
+    },
+    {
+     "name": "Appearance Modification",
+     "nameFr": "Modificateurs d'apparence",
+     "count": 1
+    },
+    {
+     "name": "Armor Enhancements",
+     "nameFr": "Améliorations d'armure",
+     "count": 6
+    },
+    {
+     "name": "Audio Devices",
+     "nameFr": "Appareils audio",
+     "count": 7
+    },
+    {
+     "name": "Autosofts",
+     "nameFr": "Autopilotes",
+     "count": 1
+    },
+    {
+     "name": "Biotech",
+     "count": 19
+    },
+    {
+     "name": "Booster Chips",
+     "nameFr": "Puces de boost",
+     "count": 8
+    },
+    {
+     "name": "Breaking and Entering Gear",
+     "nameFr": "Matériel d'intrusion",
+     "count": 11
+    },
+    {
+     "name": "BTLs",
+     "count": 12
+    },
+    {
+     "name": "Chemicals",
+     "nameFr": "Produits chimiques",
+     "count": 5
+    },
+    {
+     "name": "Commlink Accessories",
+     "nameFr": "Accessoires pour commlinks",
+     "count": 8
+    },
+    {
+     "name": "Commlink/Cyberdeck Form Factors",
+     "nameFr": "Modification de Forme pour Commlink/Cyberdeck",
+     "count": 1
+    },
+    {
+     "name": "Commlinks",
+     "count": 34
+    },
+    {
+     "name": "Communications and Countermeasures",
+     "nameFr": "Communications et Brouilleurs",
+     "count": 9
+    },
+    {
+     "name": "Contracts/Upkeep",
+     "nameFr": "Contrats/Entretien",
+     "count": 26
+    },
+    {
+     "name": "Critter Gear",
+     "nameFr": "Équipement pour animaux",
+     "count": 3
+    },
+    {
+     "name": "Cyberdeck Modules",
+     "nameFr": "Modules pour Cyberdeck",
+     "count": 9
+    },
+    {
+     "name": "Cyberdecks",
+     "count": 47
+    },
+    {
+     "name": "Cyberterminals",
+     "nameFr": "Cyberterminaux",
+     "count": 6
+    },
+    {
+     "name": "Disguises",
+     "nameFr": "Déguisements",
+     "count": 6
+    },
+    {
+     "name": "Drugs",
+     "nameFr": "Drogues",
+     "count": 73
+    },
+    {
+     "name": "Electronic Modification",
+     "nameFr": "Modifications électroniques",
+     "count": 30
+    },
+    {
+     "name": "Electronic Parts",
+     "nameFr": "Pièces électroniques",
+     "count": 2
+    },
+    {
+     "name": "Electronics Accessories",
+     "nameFr": "Accessoires électroniques",
+     "count": 20
+    },
+    {
+     "name": "Entertainment",
+     "nameFr": "Loisirs",
+     "count": 31
+    },
+    {
+     "name": "Explosives",
+     "nameFr": "Explosifs",
+     "count": 28
+    },
+    {
+     "name": "Extraction Devices",
+     "nameFr": "Matériel d'Extraction",
+     "count": 7
+    },
+    {
+     "name": "Foci",
+     "nameFr": "Focus",
+     "count": 96
+    },
+    {
+     "name": "Food",
+     "nameFr": "Nourriture",
+     "count": 42
+    },
+    {
+     "name": "Formulae",
+     "nameFr": "Formules",
+     "count": 37
+    },
+    {
+     "name": "Grapple Gun",
+     "nameFr": "Lance-Grappin",
+     "count": 14
+    },
+    {
+     "name": "Hacking Programs",
+     "nameFr": "Programmes de piratage",
+     "count": 1
+    },
+    {
+     "name": "Housewares",
+     "nameFr": "Mobilier et équipement",
+     "count": 17
+    },
+    {
+     "name": "ID/Credsticks",
+     "nameFr": "Identité et créditubes",
+     "count": 7
+    },
+    {
+     "name": "Magical Compounds",
+     "nameFr": "Composés magiques",
+     "count": 21
+    },
+    {
+     "name": "Magical Plants",
+     "count": 35
+    },
+    {
+     "name": "Magical Supplies",
+     "nameFr": "Fournitures magiques",
+     "count": 67
+    },
+    {
+     "name": "Matrix Accessories",
+     "nameFr": "Accessoires matriciels",
+     "count": 15
+    },
+    {
+     "name": "Metatype-Specific",
+     "nameFr": "Spécifique au métatype",
+     "count": 4
+    },
+    {
+     "name": "Miscellany",
+     "nameFr": "Divers",
+     "count": 52
+    },
+    {
+     "name": "Musical Instruments",
+     "count": 7
+    },
+    {
+     "name": "Nanogear",
+     "count": 19
+    },
+    {
+     "name": "PI-Tac",
+     "count": 5
+    },
+    {
+     "name": "PI-Tac Programs",
+     "count": 7
+    },
+    {
+     "name": "Printing",
+     "nameFr": "Imprimerie",
+     "count": 6
+    },
+    {
+     "name": "Reporter Gear",
+     "nameFr": "Équipement de journaliste",
+     "count": 2
+    },
+    {
+     "name": "RFID Tags",
+     "nameFr": "Tags RFID",
+     "count": 5
+    },
+    {
+     "name": "Rigger Command Consoles",
+     "nameFr": "Console de commandes Rigger",
+     "count": 13
+    },
+    {
+     "name": "Security Devices",
+     "nameFr": "Matériel de sécurité",
+     "count": 9
+    },
+    {
+     "name": "Sensor Functions",
+     "nameFr": "Fonctions de capteurs",
+     "count": 13
+    },
+    {
+     "name": "Sensor Housings",
+     "nameFr": "Logements pour senseurs",
+     "count": 2
+    },
+    {
+     "name": "Sensors",
+     "nameFr": "Senseurs",
+     "count": 2
+    },
+    {
+     "name": "Services",
+     "count": 11
+    },
+    {
+     "name": "Skillsofts",
+     "nameFr": "Logiciels de compétence",
+     "count": 3
+    },
+    {
+     "name": "Software",
+     "nameFr": "Logiciels",
+     "count": 5
+    },
+    {
+     "name": "Software Tweaks",
+     "nameFr": "Ajustements logiciels",
+     "count": 2
+    },
+    {
+     "name": "Survival Gear",
+     "nameFr": "Matériel de Survie",
+     "count": 24
+    },
+    {
+     "name": "Tailored Perfume/Cologne",
+     "nameFr": "Parfums",
+     "count": 6
+    },
+    {
+     "name": "Tir Tairngire Beverages",
+     "count": 13
+    },
+    {
+     "name": "Tools",
+     "nameFr": "Outils",
+     "count": 48
+    },
+    {
+     "name": "Tools of the Trade",
+     "nameFr": "Bricolages approuvés",
+     "count": 16
+    },
+    {
+     "name": "Toxins",
+     "nameFr": "Toxines",
+     "count": 33
+    },
+    {
+     "name": "Vision Devices",
+     "nameFr": "Appareils optiques et d'imagerie",
+     "count": 12
+    }
+   ]
+  },
+  {
+   "name": "cyberware",
+   "count": 283,
+   "bytes": 92714,
+   "categories": [
+    {
+     "name": "Bodyware",
+     "nameFr": "Somatoware",
+     "count": 41
+    },
+    {
+     "name": "Cosmetic Enhancement",
+     "nameFr": "Améliorations esthétiques",
+     "count": 13
+    },
+    {
+     "name": "Cyber Implant Weapon",
+     "nameFr": "Armes cyber-implantées",
+     "count": 18
+    },
+    {
+     "name": "Cyber Implant Weapon Accessory",
+     "nameFr": "Cyberware pour armes",
+     "count": 6
+    },
+    {
+     "name": "Cyberlimb",
+     "nameFr": "Membres cybernétiques",
+     "count": 50
+    },
+    {
+     "name": "Cyberlimb Accessory",
+     "nameFr": "Accessoires pour membres cybernétiques",
+     "count": 4
+    },
+    {
+     "name": "Cyberlimb Enhancement",
+     "nameFr": "Améliorations pour membres cybernétiques",
+     "count": 26
+    },
+    {
+     "name": "Cybersuite",
+     "nameFr": "Cyberarmures",
+     "count": 31
+    },
+    {
+     "name": "Earware",
+     "nameFr": "Auriculoware",
+     "count": 13
+    },
+    {
+     "name": "Eyeware",
+     "nameFr": "Implants oculaires",
+     "count": 17
+    },
+    {
+     "name": "Hard Nanoware",
+     "nameFr": "Nanoware implanté",
+     "count": 7
+    },
+    {
+     "name": "Headware",
+     "nameFr": "Céphaloware",
+     "count": 32
+    },
+    {
+     "name": "Nanocybernetics",
+     "nameFr": "Nano-cybernétique",
+     "count": 7
+    },
+    {
+     "name": "Soft Nanoware",
+     "nameFr": "Nanoware injecté",
+     "count": 11
+    },
+    {
+     "name": "Special Biodrone Cyberware",
+     "nameFr": "Cyberware pour biodrones",
+     "count": 7
+    }
+   ]
+  },
+  {
+   "name": "bioware",
+   "count": 183,
+   "bytes": 55582,
+   "categories": [
+    {
+     "name": "Basic",
+     "nameFr": "Standard",
+     "count": 40
+    },
+    {
+     "name": "Bio-Weapons",
+     "nameFr": "Armement biologique",
+     "count": 23
+    },
+    {
+     "name": "Biosculpting",
+     "nameFr": "Biosculpture",
+     "count": 7
+    },
+    {
+     "name": "Complimentary Genetics",
+     "count": 6
+    },
+    {
+     "name": "Cosmetic Bioware",
+     "nameFr": "Bioware cosmétique",
+     "count": 13
+    },
+    {
+     "name": "Cultured",
+     "nameFr": "De culture",
+     "count": 21
+    },
+    {
+     "name": "Environmental Microadaptation",
+     "count": 8
+    },
+    {
+     "name": "Exotic Metagenetics",
+     "count": 8
+    },
+    {
+     "name": "Genetic Restoration",
+     "nameFr": "Restauration génétique",
+     "count": 7
+    },
+    {
+     "name": "Immunization",
+     "count": 1
+    },
+    {
+     "name": "Orthoskin Upgrades",
+     "nameFr": "Augmentations orthodermiques",
+     "count": 7
+    },
+    {
+     "name": "Phenotype Adjustment",
+     "count": 15
+    },
+    {
+     "name": "Symbionts",
+     "nameFr": "Symbiontes",
+     "count": 11
+    },
+    {
+     "name": "Transgenic Alteration",
+     "count": 1
+    },
+    {
+     "name": "Transgenics",
+     "count": 15
+    }
+   ]
+  },
+  {
+   "name": "vehicles",
+   "count": 346,
+   "bytes": 109719,
+   "categories": [
+    {
+     "name": "Bikes",
+     "nameFr": "Motos",
+     "count": 21
+    },
+    {
+     "name": "Boats",
+     "nameFr": "Bateaux",
+     "count": 32
+    },
+    {
+     "name": "Cars",
+     "nameFr": "Voitures",
+     "count": 64
+    },
+    {
+     "name": "Corpsec/Police/Military",
+     "nameFr": "Corpsec/Police/Armée",
+     "count": 26
+    },
+    {
+     "name": "Drones: Anthro",
+     "nameFr": "Drones: Humanoïde",
+     "count": 17
+    },
+    {
+     "name": "Drones: Huge",
+     "nameFr": "Drones: Géant",
+     "count": 5
+    },
+    {
+     "name": "Drones: Large",
+     "nameFr": "Drones: Grand",
+     "count": 18
+    },
+    {
+     "name": "Drones: Medium",
+     "nameFr": "Drones: Moyen",
+     "count": 19
+    },
+    {
+     "name": "Drones: Micro",
+     "count": 5
+    },
+    {
+     "name": "Drones: Mini",
+     "count": 18
+    },
+    {
+     "name": "Drones: Missile",
+     "count": 1
+    },
+    {
+     "name": "Drones: Small",
+     "nameFr": "Drones: Petit",
+     "count": 38
+    },
+    {
+     "name": "Fixed-Wing Aircraft",
+     "nameFr": "Voilure fixe",
+     "count": 4
+    },
+    {
+     "name": "Hovercraft",
+     "count": 1
+    },
+    {
+     "name": "LTAV",
+     "nameFr": "PLA",
+     "count": 3
+    },
+    {
+     "name": "Municipal/Construction",
+     "count": 13
+    },
+    {
+     "name": "Rotorcraft",
+     "nameFr": "Hélicoptères",
+     "count": 19
+    },
+    {
+     "name": "Submarines",
+     "nameFr": "Sous-marins",
+     "count": 3
+    },
+    {
+     "name": "Trucks",
+     "nameFr": "Fourgons et camions",
+     "count": 34
+    },
+    {
+     "name": "VTOL/VSTOL",
+     "nameFr": "Poussée vectorielle",
+     "count": 5
+    }
+   ]
+  },
+  {
+   "name": "qualities",
+   "count": 795,
+   "bytes": 174932,
+   "categories": [
+    {
+     "name": "Negative",
+     "nameFr": "Négatifs",
+     "count": 271
+    },
+    {
+     "name": "Positive",
+     "nameFr": "Positifs",
+     "count": 524
+    }
+   ]
+  },
+  {
+   "name": "spells",
+   "count": 358,
+   "bytes": 88330,
+   "categories": [
+    {
+     "name": "Combat",
+     "count": 61
+    },
+    {
+     "name": "Detection",
+     "nameFr": "Détection",
+     "count": 47
+    },
+    {
+     "name": "Enchantments",
+     "nameFr": "Enchantements",
+     "count": 10
+    },
+    {
+     "name": "Health",
+     "nameFr": "Santé",
+     "count": 39
+    },
+    {
+     "name": "Illusion",
+     "count": 41
+    },
+    {
+     "name": "Manipulation",
+     "count": 99
+    },
+    {
+     "name": "Rituals",
+     "nameFr": "Rituels",
+     "count": 61
+    }
+   ]
+  },
+  {
+   "name": "powers",
+   "count": 103,
+   "bytes": 22767,
+   "categories": [
+    {
+     "name": "Adept Powers",
+     "nameFr": "Pouvoirs d’adepte",
+     "count": 103
+    }
+   ]
+  },
+  {
+   "name": "programs",
+   "count": 71,
+   "bytes": 18762,
+   "categories": [
+    {
+     "name": "Advanced Programs",
+     "nameFr": "Programmes avancés",
+     "count": 16
+    },
+    {
+     "name": "Autosofts",
+     "nameFr": "Autopilotes",
+     "count": 11
+    },
+    {
+     "name": "Common Programs",
+     "nameFr": "Programmes classiques",
+     "count": 10
+    },
+    {
+     "name": "Hacking Programs",
+     "nameFr": "Programmes de piratage",
+     "count": 32
+    },
+    {
+     "name": "Software",
+     "nameFr": "Softwares",
+     "count": 2
+    }
+   ]
+  },
+  {
+   "name": "lifestyles",
+   "count": 11,
+   "bytes": 2974,
+   "categories": [
+    {
+     "name": "Lifestyles",
+     "nameFr": "Train de vie",
+     "count": 11
+    }
+   ]
+  }
+ ]
+}

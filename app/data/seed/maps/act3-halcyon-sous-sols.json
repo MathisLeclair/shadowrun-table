@@ -1,0 +1,1141 @@
+{
+  "id": "map_halcyon_sous_sols",
+  "name": "Clinique Halcyon — niveaux -1, -2 et -3",
+  "folder": "Acte 3",
+  "description": "**Clinique Halcyon — les trois sous-sols.** Ce qui n'apparaît sur aucun plan déposé. Le **niveau -1** (en haut) : couloir blanc, musique douce, suites de traitement VIP, pharmacie sécurisée, poste de sécurité central. Le **niveau -2** (en bas à gauche) : le cœur — sujets stabilisés, la Pépinière (le lot D de Halcyon), le laboratoire, le coffre de données. Le **niveau -3** (en bas à droite) : la Serre, le jardin souterrain du Dr. Ansgar Wendt.\n\n*Les trois niveaux sont dessinés côte à côte* (plan compressé). Ascenseurs et escaliers de même nom se correspondent : déplacez les pions d'un niveau à l'autre. Le -3 n'est desservi que par l'ascenseur privé (circuit fermé) et un escalier de service (maglock 6) depuis le -2.\n\n**Utilisation** — Quête 3.2 *Severance*. Scènes : le poste central (-1), la pharmacie (-1), la Pépinière (-2), le coffre de données (-2), la Serre et la confrontation avec le Jardinier (-3), Danny, Morinaga (selon la jauge), Reyes (au -1 avec Brandauer).\n\n**PROTOKOLL ASCHE** — alerte rouge du host (2e palier) ou ordre de Wendt : en **10 tours de combat**, les charges thermiques incinèrent le coffre de données et la Pépinière est scellée et noyée de sédatif létal. Le couper : au poste central (Computer + Logique seuil 4 avec accès admin — codes d'Ashe ou de Reyes) ; via le host (Hacking + Logique [Sleaze] contre 17 dés, 3 marques) ; physiquement (valves de la Pépinière, et Démolition + Logique seuil 3 par charge, 4 charges au coffre) ; ou par Danny / Dufresne. **Les données ou les donneurs** : une vraie décision.\n\n**Sécurité** : -1 : 2 spiders standard et 2 gardes (Sécurité corpo R4) au poste central ; Nachtigall (Brandauer et survivants) et parfois Reyes dans leurs quartiers pendant le Protokoll Ernte. -2 : 4 gardes R4 en patrouille et 1 mage de sécurité. -3 : Danny Okafor (L-02), 2 gardes du corps d'élite (R5), le Jardinier — et Morinaga à l'antichambre selon la jauge. Le -1 et le -2 sont éclairés en permanence (aucune ombre utile) ; la Serre baigne dans une lumière horticole violette (−1 visuel pour les couleurs seulement).",
+  "width": 70,
+  "height": 50,
+  "metersPerCell": 1,
+  "theme": "lab",
+  "lighting": "bright",
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "tiles": [
+    "######################################################################",
+    "#.ee..T#b...m#b...m#b...m#mmmmmmm#.bbb....bbb.#b.......b#.....m#.eee.#",
+    "#.ee...#.....#.....#.....#.......#............#b..TTT..b#.....m#.eee.#",
+    "#......#.....#.....#.....#m.....m#.....TT.....#b..TTT..b#.....m#.eee.#",
+    "#......#....m#....m#....m#m.....m#...........~#b.......b#.....m#.....#",
+    "#......#.....#.....#.....#m.....m#...........~#.........#.....m#.....#",
+    "#......###D#####D#####D######D########DD###########D########D#####D###",
+    "#....................................................................#",
+    "#....................................................................#",
+    "#....................................................................#",
+    "###D####D#####D#####D########D##########D###########D#################",
+    "#....#.....#.....#.....#.........m#...........#......................#",
+    "#....#....m#....m#....m#..........#....TTT....#..mmmm..mmmm..mmmm....#",
+    "#.ss.#.....#.....#.....#..TTTTTT..#...........#..mmmm..mmmm..mmmm....#",
+    "#.ss.#.....#.....#.....#..........#...........#..mmmm..mmmm..mmmm....#",
+    "#.ss.#b...m#b...m#b...m#.mmmmmmmm.#.=========.#......................#",
+    "######################################################################",
+    "                                                                      ",
+    "############################################ #########################",
+    "#.ee..eee..#ss...#.............mm###m.mm.m## #cc.....#..ee..#.....ss.#",
+    "#.ee..eee..#ss...#.cc..cc..cc..mm###m....m## #.......#..ee..#.....ss.#",
+    "#.....eee..#D##..#.............mm###m....m## #.....cc#......#........#",
+    "#................#...............###......## #.......#......#........#",
+    "#................D...............#####D##### #####D#####DD#######D####",
+    "#................#.cc..cc...mmmm.###....ee## #gggggggggg,,ggggggggggg#",
+    "#....TTTT........#...............###....ee## #gcccggcccg,,ggcccggcccg#",
+    "#................#...............###......## #gcccggcccg,,ggcccggcccg#",
+    "#................########D###########D###### #gggggggggg,,ggggggggggg#",
+    "#..........................................# #ggttgggggg,,gggggtttggg#",
+    "#..........................................# #gggggogggg,,ggggogggggg#",
+    "######DDD###############D###########D####D## #,,,,,,,,,,,,,,,,,,,,,,,#",
+    "#b...#...#...b##.................##b...#sss# #ggggggggggTTggggggggggg#",
+    "#....D...D....##.................##b...#sss# #gggggogtgg,,g~~~ogggggg#",
+    "#....#...#....##.bb.bb.bb.bb.bb..##b...#...# #gcccgggggg,,g~~~gggcccg#",
+    "######...#######.................##..TT##### #gcccggcccg,,ggcccggcccg#",
+    "#b...#...#...b##.................##....##### #ggggggcccg,,ggcccgggggg#",
+    "#....D...D....##.bb.bb.bb.bb.bb..##....##### #gggttggggg,,ggggggggttg#",
+    "#....#...#....##.................###D####### #gggggggggg,,ggggggggggg#",
+    "######...#######.................##........# #WWWWDWW#####D#######D###",
+    "#b...#...#...b##.bb.bb.bb.bb.bb..##..m..m..# #.......#.........#.....#",
+    "#....D...D....##.................##..m..m..# #.......#.m.....m.#.....#",
+    "#....#...#....##.................D#..m..m..# #..bb...#.m.....m.#.....#",
+    "######...#######.bb.bb.bb.bb.bb..##..m..m..# #.......#.m.....m.###.###",
+    "#b...#...#...b##.................##..m..m..# #mm.....#.m.mmm.m.###.###",
+    "#....D...D....##.................##..m..m..# #.......#.........###.###",
+    "#....#...#....#####################..m..m..# #####################.###",
+    "######...##########################..m..m..#                     #.#  ",
+    "#mmmm.....mmmm##mmmmmmmmmmmmmmmmm##........#                     #.#  ",
+    "#mmmm.....mmmm##mmmmmmmmmmmmmmmmm##........#                     #s#  ",
+    "############################################                     ###  "
+  ],
+  "doors": [
+    {
+      "id": "hsub_d01",
+      "x": 10,
+      "y": 6,
+      "state": "closed",
+      "kind": "door",
+      "name": "Suite de traitement 1"
+    },
+    {
+      "id": "hsub_d02",
+      "x": 16,
+      "y": 6,
+      "state": "closed",
+      "kind": "door",
+      "name": "Suite de traitement 2"
+    },
+    {
+      "id": "hsub_d03",
+      "x": 22,
+      "y": 6,
+      "state": "closed",
+      "kind": "door",
+      "name": "Suite de traitement 3"
+    },
+    {
+      "id": "hsub_d04",
+      "x": 29,
+      "y": 6,
+      "state": "locked",
+      "kind": "door",
+      "name": "Pharmacie (maglock 6 + biométrie)"
+    },
+    {
+      "id": "hsub_d05",
+      "x": 51,
+      "y": 6,
+      "state": "closed",
+      "kind": "door",
+      "name": "Quartiers de Nachtigall"
+    },
+    {
+      "id": "hsub_d06",
+      "x": 60,
+      "y": 6,
+      "state": "closed",
+      "kind": "door",
+      "name": "Vestiaire du personnel"
+    },
+    {
+      "id": "hsub_d07",
+      "x": 66,
+      "y": 6,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Monte-charge du quai"
+    },
+    {
+      "id": "hsub_d08",
+      "x": 3,
+      "y": 10,
+      "state": "locked",
+      "kind": "door",
+      "name": "Escalier de secours → -2 (maglock 5)"
+    },
+    {
+      "id": "hsub_d09",
+      "x": 8,
+      "y": 10,
+      "state": "closed",
+      "kind": "door",
+      "name": "Suite de traitement 4"
+    },
+    {
+      "id": "hsub_d10",
+      "x": 14,
+      "y": 10,
+      "state": "closed",
+      "kind": "door",
+      "name": "Suite de traitement 5"
+    },
+    {
+      "id": "hsub_d11",
+      "x": 20,
+      "y": 10,
+      "state": "closed",
+      "kind": "door",
+      "name": "Suite de traitement 6"
+    },
+    {
+      "id": "hsub_d12",
+      "x": 29,
+      "y": 10,
+      "state": "locked",
+      "kind": "door",
+      "name": "Poste de sécurité central"
+    },
+    {
+      "id": "hsub_d13",
+      "x": 40,
+      "y": 10,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salle de préparation"
+    },
+    {
+      "id": "hsub_d14",
+      "x": 52,
+      "y": 10,
+      "state": "closed",
+      "kind": "door",
+      "name": "Local technique (ventilation)"
+    },
+    {
+      "id": "hsub_d15",
+      "x": 12,
+      "y": 21,
+      "state": "locked",
+      "kind": "door",
+      "name": "Escalier de secours ← -1 (maglock 5)"
+    },
+    {
+      "id": "hsub_d16",
+      "x": 17,
+      "y": 23,
+      "state": "closed",
+      "kind": "door",
+      "name": "Laboratoire principal"
+    },
+    {
+      "id": "hsub_d17",
+      "x": 25,
+      "y": 27,
+      "state": "closed",
+      "kind": "door",
+      "name": "Laboratoire principal"
+    },
+    {
+      "id": "hsub_d18",
+      "x": 38,
+      "y": 23,
+      "state": "locked",
+      "kind": "door",
+      "name": "Coffre de données (blindé, maglock 6)"
+    },
+    {
+      "id": "hsub_d19",
+      "x": 37,
+      "y": 27,
+      "state": "locked",
+      "kind": "door",
+      "name": "Sas de l'ascenseur privé (biométrie)"
+    },
+    {
+      "id": "hsub_d20",
+      "x": 5,
+      "y": 32,
+      "state": "locked",
+      "kind": "door",
+      "name": "Chambre 1 (porte vitrée, maglock 5)"
+    },
+    {
+      "id": "hsub_d21",
+      "x": 9,
+      "y": 32,
+      "state": "locked",
+      "kind": "door",
+      "name": "Chambre 2 (porte vitrée, maglock 5)"
+    },
+    {
+      "id": "hsub_d22",
+      "x": 5,
+      "y": 36,
+      "state": "locked",
+      "kind": "door",
+      "name": "Chambre 3 (porte vitrée, maglock 5)"
+    },
+    {
+      "id": "hsub_d23",
+      "x": 9,
+      "y": 36,
+      "state": "locked",
+      "kind": "door",
+      "name": "Chambre 4 (porte vitrée, maglock 5)"
+    },
+    {
+      "id": "hsub_d24",
+      "x": 5,
+      "y": 40,
+      "state": "locked",
+      "kind": "door",
+      "name": "Chambre 5 (porte vitrée, maglock 5)"
+    },
+    {
+      "id": "hsub_d25",
+      "x": 9,
+      "y": 40,
+      "state": "locked",
+      "kind": "door",
+      "name": "Chambre 6 (porte vitrée, maglock 5)"
+    },
+    {
+      "id": "hsub_d26",
+      "x": 5,
+      "y": 44,
+      "state": "locked",
+      "kind": "door",
+      "name": "Chambre 7 (porte vitrée, maglock 5)"
+    },
+    {
+      "id": "hsub_d27",
+      "x": 9,
+      "y": 44,
+      "state": "locked",
+      "kind": "door",
+      "name": "Chambre 8 (porte vitrée, maglock 5)"
+    },
+    {
+      "id": "hsub_d28",
+      "x": 24,
+      "y": 30,
+      "state": "closed",
+      "kind": "door",
+      "name": "Sas de la Pépinière"
+    },
+    {
+      "id": "hsub_d29",
+      "x": 36,
+      "y": 30,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salle de garde"
+    },
+    {
+      "id": "hsub_d30",
+      "x": 41,
+      "y": 30,
+      "state": "locked",
+      "kind": "door",
+      "name": "Escalier de service → -3 (maglock 6)"
+    },
+    {
+      "id": "hsub_d31",
+      "x": 33,
+      "y": 41,
+      "state": "closed",
+      "kind": "door",
+      "name": "Pépinière → réserve médicale"
+    },
+    {
+      "id": "hsub_d32",
+      "x": 36,
+      "y": 37,
+      "state": "closed",
+      "kind": "door",
+      "name": "Réserve médicale"
+    },
+    {
+      "id": "hsub_d33",
+      "x": 56,
+      "y": 23,
+      "state": "closed",
+      "kind": "door",
+      "name": "Porte de verre dépoli"
+    },
+    {
+      "id": "hsub_d34",
+      "x": 57,
+      "y": 23,
+      "state": "closed",
+      "kind": "door",
+      "name": "Porte de verre dépoli"
+    },
+    {
+      "id": "hsub_d35",
+      "x": 65,
+      "y": 23,
+      "state": "locked",
+      "kind": "door",
+      "name": "Escalier de service ← -2 (maglock 6)"
+    },
+    {
+      "id": "hsub_d36",
+      "x": 50,
+      "y": 23,
+      "state": "closed",
+      "kind": "door",
+      "name": "Remise horticole"
+    },
+    {
+      "id": "hsub_d37",
+      "x": 50,
+      "y": 38,
+      "state": "closed",
+      "kind": "door",
+      "name": "Chambre de traitement de L-00"
+    },
+    {
+      "id": "hsub_d38",
+      "x": 58,
+      "y": 38,
+      "state": "closed",
+      "kind": "door",
+      "name": "Porte grise — archive des spécimens"
+    },
+    {
+      "id": "hsub_d39",
+      "x": 66,
+      "y": 38,
+      "state": "closed",
+      "kind": "secret",
+      "name": "Treillage de lierre (porte blindée)"
+    }
+  ],
+  "lights": [
+    {
+      "id": "hsub_l01",
+      "x": 10,
+      "y": 8,
+      "radius": 8,
+      "color": "#f4f8ff",
+      "on": true,
+      "name": "-1 — couloir blanc"
+    },
+    {
+      "id": "hsub_l02",
+      "x": 30,
+      "y": 8,
+      "radius": 8,
+      "color": "#f4f8ff",
+      "on": true,
+      "name": "-1 — couloir blanc"
+    },
+    {
+      "id": "hsub_l03",
+      "x": 50,
+      "y": 8,
+      "radius": 8,
+      "color": "#f4f8ff",
+      "on": true,
+      "name": "-1 — couloir blanc"
+    },
+    {
+      "id": "hsub_l04",
+      "x": 64,
+      "y": 8,
+      "radius": 8,
+      "color": "#f4f8ff",
+      "on": true,
+      "name": "-1 — couloir blanc"
+    },
+    {
+      "id": "hsub_l05",
+      "x": 10,
+      "y": 3,
+      "radius": 3,
+      "color": "#ffe8c8",
+      "on": true,
+      "name": "Suite de traitement"
+    },
+    {
+      "id": "hsub_l06",
+      "x": 16,
+      "y": 3,
+      "radius": 3,
+      "color": "#ffe8c8",
+      "on": true,
+      "name": "Suite de traitement"
+    },
+    {
+      "id": "hsub_l07",
+      "x": 22,
+      "y": 3,
+      "radius": 3,
+      "color": "#ffe8c8",
+      "on": true,
+      "name": "Suite de traitement"
+    },
+    {
+      "id": "hsub_l08",
+      "x": 8,
+      "y": 13,
+      "radius": 3,
+      "color": "#ffe8c8",
+      "on": true,
+      "name": "Suite de traitement"
+    },
+    {
+      "id": "hsub_l09",
+      "x": 14,
+      "y": 13,
+      "radius": 3,
+      "color": "#ffe8c8",
+      "on": true,
+      "name": "Suite de traitement"
+    },
+    {
+      "id": "hsub_l10",
+      "x": 20,
+      "y": 13,
+      "radius": 3,
+      "color": "#ffe8c8",
+      "on": true,
+      "name": "Suite de traitement"
+    },
+    {
+      "id": "hsub_l11",
+      "x": 29,
+      "y": 3,
+      "radius": 3,
+      "color": "#c8f0ff",
+      "on": true,
+      "name": "Pharmacie — chambre froide"
+    },
+    {
+      "id": "hsub_l12",
+      "x": 29,
+      "y": 13,
+      "radius": 4,
+      "color": "#36e6ff",
+      "on": true,
+      "name": "Mur d'écrans"
+    },
+    {
+      "id": "hsub_l13",
+      "x": 51,
+      "y": 3,
+      "radius": 3,
+      "color": "#ffd0a0",
+      "on": true,
+      "name": "Quartiers de Nachtigall"
+    },
+    {
+      "id": "hsub_l14",
+      "x": 40,
+      "y": 3,
+      "radius": 4,
+      "color": "#ffe8c8",
+      "on": true,
+      "name": "Salon d'attente"
+    },
+    {
+      "id": "hsub_l15",
+      "x": 7,
+      "y": 24,
+      "radius": 6,
+      "color": "#f4f8ff",
+      "on": true,
+      "name": "-2 — palier"
+    },
+    {
+      "id": "hsub_l16",
+      "x": 25,
+      "y": 22,
+      "radius": 7,
+      "color": "#e8f8ff",
+      "on": true,
+      "name": "Laboratoire"
+    },
+    {
+      "id": "hsub_l17",
+      "x": 38,
+      "y": 20,
+      "radius": 2,
+      "color": "#36e6ff",
+      "on": true,
+      "name": "Voyants des serveurs"
+    },
+    {
+      "id": "hsub_l18",
+      "x": 7,
+      "y": 38,
+      "radius": 6,
+      "color": "#f4f8ff",
+      "on": true,
+      "name": "Pavillon des sujets"
+    },
+    {
+      "id": "hsub_l19",
+      "x": 24,
+      "y": 37,
+      "radius": 9,
+      "color": "#f4f8ff",
+      "on": true,
+      "name": "Pépinière — lumière crue"
+    },
+    {
+      "id": "hsub_l20",
+      "x": 20,
+      "y": 29,
+      "radius": 6,
+      "color": "#f4f8ff",
+      "on": true,
+      "name": "-2 — couloir"
+    },
+    {
+      "id": "hsub_l21",
+      "x": 36,
+      "y": 33,
+      "radius": 3,
+      "color": "#ffe0b0",
+      "on": true,
+      "name": "Salle de garde"
+    },
+    {
+      "id": "hsub_l22",
+      "x": 57,
+      "y": 21,
+      "radius": 3,
+      "color": "#f0f0ff",
+      "on": true,
+      "name": "Antichambre"
+    },
+    {
+      "id": "hsub_l23",
+      "x": 51,
+      "y": 27,
+      "radius": 6,
+      "color": "#c86aff",
+      "on": true,
+      "name": "Lampes horticoles (violet)"
+    },
+    {
+      "id": "hsub_l24",
+      "x": 63,
+      "y": 27,
+      "radius": 6,
+      "color": "#c86aff",
+      "on": true,
+      "name": "Lampes horticoles (violet)"
+    },
+    {
+      "id": "hsub_l25",
+      "x": 51,
+      "y": 35,
+      "radius": 6,
+      "color": "#ff8ad8",
+      "on": true,
+      "name": "Lampes horticoles (chaudes)"
+    },
+    {
+      "id": "hsub_l26",
+      "x": 63,
+      "y": 35,
+      "radius": 6,
+      "color": "#ff8ad8",
+      "on": true,
+      "name": "Lampes horticoles (chaudes)"
+    },
+    {
+      "id": "hsub_l27",
+      "x": 57,
+      "y": 32,
+      "radius": 2,
+      "color": "#ffd9a0",
+      "on": true,
+      "name": "Lampe du bureau de Wendt"
+    },
+    {
+      "id": "hsub_l28",
+      "x": 49,
+      "y": 41,
+      "radius": 3,
+      "color": "#e8f8ff",
+      "on": true,
+      "name": "Chambre de L-00"
+    },
+    {
+      "id": "hsub_l29",
+      "x": 58,
+      "y": 41,
+      "radius": 3,
+      "color": "#7fffd0",
+      "on": true,
+      "name": "Archive — cuves de formol"
+    },
+    {
+      "id": "hsub_l30",
+      "x": 66,
+      "y": 45,
+      "radius": 3,
+      "color": "#f4f8ff",
+      "on": true,
+      "name": "Tunnel éclairé"
+    }
+  ],
+  "regions": [
+    {
+      "id": "hsub_r01",
+      "name": "NIVEAU -1 — traitement et sécurité",
+      "x": 1,
+      "y": 7,
+      "w": 68,
+      "h": 3,
+      "color": "#3a4a5a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r02",
+      "name": "Palier des ascenseurs (-1)",
+      "x": 1,
+      "y": 1,
+      "w": 6,
+      "h": 5,
+      "color": "#4a4a4a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r03",
+      "name": "Suite 1",
+      "x": 8,
+      "y": 1,
+      "w": 5,
+      "h": 5,
+      "color": "#5a5a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r04",
+      "name": "Suite 2",
+      "x": 14,
+      "y": 1,
+      "w": 5,
+      "h": 5,
+      "color": "#5a5a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r05",
+      "name": "Suite 3",
+      "x": 20,
+      "y": 1,
+      "w": 5,
+      "h": 5,
+      "color": "#5a5a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r06",
+      "name": "Pharmacie sécurisée",
+      "x": 26,
+      "y": 1,
+      "w": 7,
+      "h": 5,
+      "color": "#2a5a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r07",
+      "name": "Salon d'attente",
+      "x": 34,
+      "y": 1,
+      "w": 12,
+      "h": 5,
+      "color": "#4a4a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r08",
+      "name": "Quartiers de Nachtigall",
+      "x": 47,
+      "y": 1,
+      "w": 9,
+      "h": 5,
+      "color": "#6a2a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r09",
+      "name": "Vestiaire",
+      "x": 57,
+      "y": 1,
+      "w": 6,
+      "h": 5,
+      "color": "#4a4a4a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r10",
+      "name": "Monte-charge (quai)",
+      "x": 64,
+      "y": 1,
+      "w": 5,
+      "h": 5,
+      "color": "#4a4a4a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r11",
+      "name": "Escalier de secours",
+      "x": 1,
+      "y": 11,
+      "w": 4,
+      "h": 5,
+      "color": "#4a4a4a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r12",
+      "name": "Suite 4",
+      "x": 6,
+      "y": 11,
+      "w": 5,
+      "h": 5,
+      "color": "#5a5a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r13",
+      "name": "Suite 5",
+      "x": 12,
+      "y": 11,
+      "w": 5,
+      "h": 5,
+      "color": "#5a5a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r14",
+      "name": "Suite 6",
+      "x": 18,
+      "y": 11,
+      "w": 5,
+      "h": 5,
+      "color": "#5a5a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r15",
+      "name": "Poste de sécurité central",
+      "x": 24,
+      "y": 11,
+      "w": 10,
+      "h": 5,
+      "color": "#2a3a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r16",
+      "name": "Salle de préparation",
+      "x": 35,
+      "y": 11,
+      "w": 11,
+      "h": 5,
+      "color": "#3a4a4a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r17",
+      "name": "Local technique",
+      "x": 47,
+      "y": 11,
+      "w": 22,
+      "h": 5,
+      "color": "#3a3a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r18",
+      "name": "NIVEAU -2 — le cœur",
+      "x": 1,
+      "y": 28,
+      "w": 42,
+      "h": 2,
+      "color": "#3a4a5a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r19",
+      "name": "Palier (-2)",
+      "x": 1,
+      "y": 19,
+      "w": 15,
+      "h": 9,
+      "color": "#4a4a4a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r20",
+      "name": "Laboratoire principal",
+      "x": 18,
+      "y": 19,
+      "w": 15,
+      "h": 8,
+      "color": "#2a5a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r21",
+      "name": "Coffre de données",
+      "x": 36,
+      "y": 19,
+      "w": 6,
+      "h": 4,
+      "color": "#6a2a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r22",
+      "name": "Sas de l'ascenseur privé",
+      "x": 36,
+      "y": 24,
+      "w": 6,
+      "h": 3,
+      "color": "#6a5a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r23",
+      "name": "Pavillon des sujets stabilisés",
+      "x": 1,
+      "y": 31,
+      "w": 13,
+      "h": 15,
+      "color": "#5a5a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r24",
+      "name": "La Pépinière (12 °C)",
+      "x": 16,
+      "y": 31,
+      "w": 17,
+      "h": 14,
+      "color": "#7a2a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r25",
+      "name": "Salle de garde",
+      "x": 35,
+      "y": 31,
+      "w": 4,
+      "h": 6,
+      "color": "#5a4a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r26",
+      "name": "Réserve médicale",
+      "x": 35,
+      "y": 38,
+      "w": 8,
+      "h": 11,
+      "color": "#3a4a4a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r27",
+      "name": "NIVEAU -3 — la Serre",
+      "x": 46,
+      "y": 24,
+      "w": 23,
+      "h": 14,
+      "color": "#4a2a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r28",
+      "name": "Escalier de service (-3)",
+      "x": 61,
+      "y": 19,
+      "w": 8,
+      "h": 4,
+      "color": "#4a4a4a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r29",
+      "name": "Antichambre",
+      "x": 54,
+      "y": 19,
+      "w": 6,
+      "h": 4,
+      "color": "#5a5a5a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r30",
+      "name": "Remise horticole",
+      "x": 46,
+      "y": 19,
+      "w": 7,
+      "h": 4,
+      "color": "#3a4a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r31",
+      "name": "Chambre de traitement de L-00",
+      "x": 46,
+      "y": 39,
+      "w": 7,
+      "h": 5,
+      "color": "#6a6a7a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r32",
+      "name": "Archive des spécimens",
+      "x": 54,
+      "y": 39,
+      "w": 9,
+      "h": 5,
+      "color": "#2a5a4a",
+      "gmOnly": false
+    },
+    {
+      "id": "hsub_r33",
+      "name": "Tunnel d'évacuation (120 m)",
+      "x": 64,
+      "y": 39,
+      "w": 5,
+      "h": 11,
+      "color": "#5a3a2a",
+      "gmOnly": true
+    }
+  ],
+  "notes": [
+    {
+      "id": "hsub_n01",
+      "x": 4,
+      "y": 3,
+      "text": "Ascenseur de service (depuis le hall, badge + code). Approche A : Jane arrive ici légalement, conduite à une suite. Elle peut ouvrir le quai de l'intérieur, poser un relais pour Bricks (connexion directe : +2 dés, pas de bruit) ou subtiliser un badge.",
+      "gmOnly": true
+    },
+    {
+      "id": "hsub_n02",
+      "x": 11,
+      "y": 2,
+      "text": "Suites de traitement VIP : fauteuil médical, écran-paysage, minibar. C'est ici que les clients reçoivent leurs injections.",
+      "gmOnly": true
+    },
+    {
+      "id": "hsub_n03",
+      "x": 29,
+      "y": 2,
+      "text": "Pharmacie : porte blindée, maglock 6 + biométrie. Des centaines de doses étiquetées au nom des clients VIP. Preuve (Lumière), monnaie (Silence doré), trésor (Au plus offrant), et sursis pour les sujets sauvés (une dose par sujet et par mois).",
+      "gmOnly": true
+    },
+    {
+      "id": "hsub_n04",
+      "x": 29,
+      "y": 12,
+      "text": "POSTE CENTRAL : mur d'écrans, 2 spiders standard, 2 gardes R4, console des ascenseurs, râtelier, contrôle du Protokoll Asche (annulation : Computer + Logique seuil 4 avec accès admin — codes d'Ashe ou de Reyes). Le prendre physiquement règle la moitié des problèmes de Bricks.",
+      "gmOnly": true
+    },
+    {
+      "id": "hsub_n05",
+      "x": 51,
+      "y": 2,
+      "text": "Pendant le Protokoll Ernte : le Major Brandauer et ce qu'il reste de Nachtigall, parfois Reyes. Acculée, Reyes négocie sa puce contre sa vie. « Parce qu'on m'a payée. C'est toujours pour ça. »",
+      "gmOnly": true
+    },
+    {
+      "id": "hsub_n06",
+      "x": 66,
+      "y": 4,
+      "text": "Monte-charge depuis le quai de chargement (surface). Arrivée des approches D et E.",
+      "gmOnly": true
+    },
+    {
+      "id": "hsub_n07",
+      "x": 3,
+      "y": 12,
+      "text": "Escalier de secours vers le -2 (maglock rating 5, esclave du host).",
+      "gmOnly": true
+    },
+    {
+      "id": "hsub_n08",
+      "x": 7,
+      "y": 23,
+      "text": "Palier du -2. Patrouille : 4 gardes R4 + 1 mage de sécurité (son esprit de l'air patrouille la surface). Morinaga « dernier élève » (jauge ≥ +2) tient ce couloir seul contre les renforts : « Va. Je tiens le couloir. »",
+      "gmOnly": true
+    },
+    {
+      "id": "hsub_n09",
+      "x": 7,
+      "y": 35,
+      "text": "Pavillon des sujets stabilisés : 8 chambres, portes vitrées maglock 5. Les sujets, tout allié enlevé pendant Burn Notice, et L-07 si elle a été reprise (une chambre dorée et une perfusion).",
+      "gmOnly": true
+    },
+    {
+      "id": "hsub_n10",
+      "x": 24,
+      "y": 37,
+      "text": "La Pépinière : ancienne salle blanche, 12 °C, 20 lits. Des enfants des rues, des changelings, des adolescents — et tout enlevé de Burn Notice qui n'est pas un « actif » (Porfla ?), en attente d'« évaluation ».",
+      "gmOnly": true
+    },
+    {
+      "id": "hsub_n11",
+      "x": 24,
+      "y": 31,
+      "text": "VALVE DU PROTOKOLL ASCHE (au plafond) : Pépinière scellée et noyée de sédatif létal 10 tours après le déclenchement. Coupure physique valve par valve.",
+      "gmOnly": true
+    },
+    {
+      "id": "hsub_n12",
+      "x": 26,
+      "y": 22,
+      "text": "Laboratoire principal : cuves de culture, séquenceurs, centrifugeuses. Paillasses = couverture partielle.",
+      "gmOnly": true
+    },
+    {
+      "id": "hsub_n13",
+      "x": 38,
+      "y": 20,
+      "text": "COFFRE DE DONNÉES : porte blindée Structure 16 / Armor 16, maglock 6, serveurs isolés sans sans-fil (connexion physique). Copie : Computer + Logique [DP] étendu, 1 tour par jet — seuil 12 (tout, dont le financement de Francfort), 6 (le protocole), 4 (Escouade 9 + ordres de Wendt). 4 charges thermiques (Démolition + Logique seuil 3 chacune).",
+      "gmOnly": true
+    },
+    {
+      "id": "hsub_n14",
+      "x": 38,
+      "y": 25,
+      "text": "Ascenseur privé vers le -3 : circuit fermé, hors du host. Biométrie de Wendt ou de Danny, ou les codes de Morinaga.",
+      "gmOnly": true
+    },
+    {
+      "id": "hsub_n15",
+      "x": 41,
+      "y": 31,
+      "text": "Escalier de service vers le -3 (maglock rating 6).",
+      "gmOnly": true
+    },
+    {
+      "id": "hsub_n16",
+      "x": 57,
+      "y": 22,
+      "text": "Antichambre : Morinaga attend ici, selon la jauge. ≥ +2 : il ouvre (« Va. »). 0/+1 : duel juste, seul à seul, gardes à l'écart. ≤ −1 : « Je dois corriger mon erreur » — le combat le plus dangereux de la campagne pour Anthony.",
+      "gmOnly": true
+    },
+    {
+      "id": "hsub_n17",
+      "x": 54,
+      "y": 27,
+      "text": "La Serre : vraie terre, orchidées sous lampes horticoles, petit bassin, allées de gravier. Bacs de plantation : couverture partielle (Armor 4) ; piliers : couverture lourde ; massifs d'orchidées : bloquent la vue.",
+      "gmOnly": true
+    },
+    {
+      "id": "hsub_n18",
+      "x": 57,
+      "y": 31,
+      "text": "Bureau de Wendt (bois clair) : terminal sur circuit fermé — Protokoll Asche, tunnel, dossiers personnels. Wendt arrose ses orchidées et attend : il veut comprendre, et croit encore pouvoir négocier (« Combien ? Pour vous trois. »).",
+      "gmOnly": true
+    },
+    {
+      "id": "hsub_n19",
+      "x": 60,
+      "y": 30,
+      "text": "Gardes du -3 : Danny Okafor (L-02), 2 gardes du corps d'élite (R5), le Jardinier. Wendt dit « Daniel » et Danny s'avance. Briser le conditionnement (Bricks) : Leadership ou Escroquerie + Charisme, étendu, seuil 8 ; +3 « Neuf, on rentre à la maison. », +2 message de Vosk, +1 par souvenir raconté (max +3), −2 s'il est gravement blessé. 4 : il hésite. 8 : « …Bricks ? » 12 : il se retourne vers Wendt.",
+      "gmOnly": true
+    },
+    {
+      "id": "hsub_n20",
+      "x": 49,
+      "y": 40,
+      "text": "Chambre de traitement de L-00 (derrière la baie vitrée) : fauteuil médical, pompes, perfusion prête. L-00, « le premier patient », c'est Wendt. Dernier recours : la dose Phénix (10 tours de régénération terrible, puis l'effondrement).",
+      "gmOnly": true
+    },
+    {
+      "id": "hsub_n21",
+      "x": 58,
+      "y": 41,
+      "text": "Archive des spécimens : cuves de formol. L-01. L-04 — un homme coréen d'une trentaine d'années, les yeux fermés : Kim Jae-won. L-06-A… Si Bricks entre, ne demandez rien. Laissez-la regarder.",
+      "gmOnly": true
+    },
+    {
+      "id": "hsub_n22",
+      "x": 66,
+      "y": 40,
+      "text": "Tunnel d'évacuation : porte blindée cachée derrière un treillage de lierre (Perception seuil 4), biométrie de Wendt. 120 m de tunnel éclairé jusqu'au -2 du parking de l'immeuble voisin : berline blindée et chauffeur. Wendt met 4 tours à l'atteindre.",
+      "gmOnly": true
+    }
+  ],
+  "tokens": []
+}

@@ -1,0 +1,757 @@
+{
+  "id": "map_fvtt_cyberpunk-mansion",
+  "name": "Cyberpunk Mansion",
+  "folder": "Foundry / Downtown/indoor",
+  "description": "Importée de **Foundry VTT** (monde `test-world`, scène « Cyberpunk Mansion », dossier Downtown/indoor).\n\nImage 1200×2400 px, grille 120 px = 2 m.\n\nMurs : 40. Lumières : 37.",
+  "width": 10,
+  "height": 20,
+  "metersPerCell": 2,
+  "tiles": [
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    ".........."
+  ],
+  "walls": [
+    {
+      "id": "w1",
+      "x1": 1.375,
+      "y1": 9.625,
+      "x2": 1.375,
+      "y2": 3.375,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w2",
+      "x1": 1.375,
+      "y1": 9.625,
+      "x2": 0,
+      "y2": 9.625,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w3",
+      "x1": 0,
+      "y1": 11,
+      "x2": 1.375,
+      "y2": 11,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w4",
+      "x1": 1.375,
+      "y1": 11,
+      "x2": 1.375,
+      "y2": 13.125,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w5",
+      "x1": 1.375,
+      "y1": 13.125,
+      "x2": 2.25,
+      "y2": 13.125,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w6",
+      "x1": 2.75,
+      "y1": 16,
+      "x2": 2.75,
+      "y2": 15.625,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w7",
+      "x1": 2.25,
+      "y1": 13.125,
+      "x2": 1,
+      "y2": 14.625,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w8",
+      "x1": 1,
+      "y1": 14.625,
+      "x2": 1,
+      "y2": 15.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w9",
+      "x1": 1,
+      "y1": 15.25,
+      "x2": 2.25,
+      "y2": 15.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w10",
+      "x1": 2.75,
+      "y1": 15.625,
+      "x2": 2.25,
+      "y2": 15.625,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w11",
+      "x1": 2.25,
+      "y1": 15.625,
+      "x2": 2.25,
+      "y2": 15.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w12",
+      "x1": 2.75,
+      "y1": 16,
+      "x2": 7.125,
+      "y2": 16,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w13",
+      "x1": 7.125,
+      "y1": 16,
+      "x2": 7.125,
+      "y2": 15.625,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w14",
+      "x1": 7.125,
+      "y1": 15.625,
+      "x2": 7.625,
+      "y2": 15.625,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w15",
+      "x1": 7.625,
+      "y1": 15.625,
+      "x2": 7.625,
+      "y2": 15.125,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w16",
+      "x1": 7.625,
+      "y1": 15.125,
+      "x2": 9,
+      "y2": 15.125,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w17",
+      "x1": 9,
+      "y1": 15.125,
+      "x2": 9,
+      "y2": 14,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w18",
+      "x1": 9,
+      "y1": 14,
+      "x2": 7.875,
+      "y2": 13.125,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w19",
+      "x1": 7.875,
+      "y1": 13.125,
+      "x2": 8.75,
+      "y2": 13.125,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w20",
+      "x1": 8.75,
+      "y1": 13.125,
+      "x2": 8.875,
+      "y2": 5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w21",
+      "x1": 8.875,
+      "y1": 5,
+      "x2": 9.25,
+      "y2": 4.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w22",
+      "x1": 9.25,
+      "y1": 4.5,
+      "x2": 9.125,
+      "y2": 2.125,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w23",
+      "x1": 9.125,
+      "y1": 2.125,
+      "x2": 8.5,
+      "y2": 3.25,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w24",
+      "x1": 8.5,
+      "y1": 3.25,
+      "x2": 8,
+      "y2": 3.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w25",
+      "x1": 8,
+      "y1": 3.25,
+      "x2": 8,
+      "y2": 2.875,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w26",
+      "x1": 1.375,
+      "y1": 3.375,
+      "x2": 2,
+      "y2": 3.375,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w27",
+      "x1": 2,
+      "y1": 3.375,
+      "x2": 2,
+      "y2": 2.875,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w28",
+      "x1": 2,
+      "y1": 2.875,
+      "x2": 8,
+      "y2": 2.875,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w29",
+      "x1": 2.25,
+      "y1": 13.125,
+      "x2": 2.875,
+      "y2": 13.125,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w30",
+      "x1": 7.875,
+      "y1": 13.125,
+      "x2": 7.125,
+      "y2": 13.125,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w31",
+      "x1": 5.5,
+      "y1": 7.5,
+      "x2": 4.875,
+      "y2": 7,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w32",
+      "x1": 5.5,
+      "y1": 7.5,
+      "x2": 5.25,
+      "y2": 7.875,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w33",
+      "x1": 5.25,
+      "y1": 7.875,
+      "x2": 4.625,
+      "y2": 8,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w34",
+      "x1": 4.625,
+      "y1": 8,
+      "x2": 4.375,
+      "y2": 7.75,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w35",
+      "x1": 4.375,
+      "y1": 7.75,
+      "x2": 4.875,
+      "y2": 7,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w36",
+      "x1": 4.25,
+      "y1": 5.125,
+      "x2": 5.75,
+      "y2": 5.125,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w37",
+      "x1": 2.75,
+      "y1": 11.125,
+      "x2": 2.75,
+      "y2": 4,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w38",
+      "x1": 7.25,
+      "y1": 4,
+      "x2": 7.25,
+      "y2": 11.125,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w39",
+      "x1": 2.75,
+      "y1": 4,
+      "x2": 3.625,
+      "y2": 4,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w40",
+      "x1": 7.25,
+      "y1": 4,
+      "x2": 6.375,
+      "y2": 4,
+      "move": true,
+      "sight": false,
+      "door": null
+    }
+  ],
+  "doors": [],
+  "lights": [
+    {
+      "id": "l1",
+      "x": 4,
+      "y": 2,
+      "radius": 2.7,
+      "color": "#d4d3ce",
+      "on": true
+    },
+    {
+      "id": "l2",
+      "x": 5,
+      "y": 18,
+      "radius": 1,
+      "color": "#bdb785",
+      "on": true
+    },
+    {
+      "id": "l3",
+      "x": 5,
+      "y": 16,
+      "radius": 0.5,
+      "color": "#ff0000",
+      "on": true
+    },
+    {
+      "id": "l4",
+      "x": 5,
+      "y": 11,
+      "radius": 0.8,
+      "color": "#87eeed",
+      "on": true
+    },
+    {
+      "id": "l5",
+      "x": 5,
+      "y": 12,
+      "radius": 0.8,
+      "color": "#87eeed",
+      "on": true
+    },
+    {
+      "id": "l6",
+      "x": 6,
+      "y": 12,
+      "radius": 0.5,
+      "color": "#87eeed",
+      "on": true
+    },
+    {
+      "id": "l7",
+      "x": 6,
+      "y": 12,
+      "radius": 0.5,
+      "color": "#87eeed",
+      "on": true
+    },
+    {
+      "id": "l8",
+      "x": 7,
+      "y": 10,
+      "radius": 0.5,
+      "color": "#87eeed",
+      "on": true
+    },
+    {
+      "id": "l9",
+      "x": 7,
+      "y": 8,
+      "radius": 0.5,
+      "color": "#87eeed",
+      "on": true
+    },
+    {
+      "id": "l10",
+      "x": 7,
+      "y": 6,
+      "radius": 0.5,
+      "color": "#87eeed",
+      "on": true
+    },
+    {
+      "id": "l11",
+      "x": 7,
+      "y": 5,
+      "radius": 0.5,
+      "color": "#87eeed",
+      "on": true
+    },
+    {
+      "id": "l12",
+      "x": 2,
+      "y": 5,
+      "radius": 0.5,
+      "color": "#87eeed",
+      "on": true
+    },
+    {
+      "id": "l13",
+      "x": 2,
+      "y": 6,
+      "radius": 0.5,
+      "color": "#87eeed",
+      "on": true
+    },
+    {
+      "id": "l14",
+      "x": 2,
+      "y": 8,
+      "radius": 0.5,
+      "color": "#87eeed",
+      "on": true
+    },
+    {
+      "id": "l15",
+      "x": 2,
+      "y": 10,
+      "radius": 0.5,
+      "color": "#87eeed",
+      "on": true
+    },
+    {
+      "id": "l16",
+      "x": 3,
+      "y": 12,
+      "radius": 0.5,
+      "color": "#87eeed",
+      "on": true
+    },
+    {
+      "id": "l17",
+      "x": 3,
+      "y": 12,
+      "radius": 0.5,
+      "color": "#87eeed",
+      "on": true
+    },
+    {
+      "id": "l18",
+      "x": 1,
+      "y": 12,
+      "radius": 0.9,
+      "color": "#2efffc",
+      "on": true
+    },
+    {
+      "id": "l19",
+      "x": 1,
+      "y": 7,
+      "radius": 0.6,
+      "color": "#2efffc",
+      "on": true
+    },
+    {
+      "id": "l20",
+      "x": 1,
+      "y": 4,
+      "radius": 0.6,
+      "color": "#2efffc",
+      "on": true
+    },
+    {
+      "id": "l21",
+      "x": 1,
+      "y": 3,
+      "radius": 0.5,
+      "color": "#2efffc",
+      "on": true
+    },
+    {
+      "id": "l22",
+      "x": 8,
+      "y": 3,
+      "radius": 0.6,
+      "color": "#2efffc",
+      "on": true
+    },
+    {
+      "id": "l23",
+      "x": 8,
+      "y": 4,
+      "radius": 0.6,
+      "color": "#2efffc",
+      "on": true
+    },
+    {
+      "id": "l24",
+      "x": 8,
+      "y": 10,
+      "radius": 1.4,
+      "color": "#2efffc",
+      "on": true
+    },
+    {
+      "id": "l25",
+      "x": 8,
+      "y": 12,
+      "radius": 0.5,
+      "color": "#2efffc",
+      "on": true
+    },
+    {
+      "id": "l26",
+      "x": 1,
+      "y": 10,
+      "radius": 0.6,
+      "color": "#2efffc",
+      "on": true
+    },
+    {
+      "id": "l27",
+      "x": 1,
+      "y": 9,
+      "radius": 0.6,
+      "color": "#2efffc",
+      "on": true
+    },
+    {
+      "id": "l28",
+      "x": 1,
+      "y": 9,
+      "radius": 0.5,
+      "color": "#2efffc",
+      "on": true
+    },
+    {
+      "id": "l29",
+      "x": 2,
+      "y": 17,
+      "radius": 0.5,
+      "color": "#bdb785",
+      "on": true
+    },
+    {
+      "id": "l30",
+      "x": 7,
+      "y": 17,
+      "radius": 0.5,
+      "color": "#bdb785",
+      "on": true
+    },
+    {
+      "id": "l31",
+      "x": 9,
+      "y": 10,
+      "radius": 0.5,
+      "color": "#bdb785",
+      "on": true
+    },
+    {
+      "id": "l32",
+      "x": 8,
+      "y": 6,
+      "radius": 0.5,
+      "color": "#bdb785",
+      "on": true
+    },
+    {
+      "id": "l33",
+      "x": 8,
+      "y": 2,
+      "radius": 0.5,
+      "color": "#bdb785",
+      "on": true
+    },
+    {
+      "id": "l34",
+      "x": 1,
+      "y": 2,
+      "radius": 0.5,
+      "color": "#bdb785",
+      "on": true
+    },
+    {
+      "id": "l35",
+      "x": 0,
+      "y": 6,
+      "radius": 0.5,
+      "color": "#bdb785",
+      "on": true
+    },
+    {
+      "id": "l36",
+      "x": 0,
+      "y": 12,
+      "radius": 0.5,
+      "color": "#bdb785",
+      "on": true
+    },
+    {
+      "id": "l37",
+      "x": 8,
+      "y": 14,
+      "radius": 0.5,
+      "color": "#2efffc",
+      "on": true
+    }
+  ],
+  "lighting": "bright",
+  "regions": [],
+  "notes": [],
+  "tokens": [],
+  "explored": {},
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "background": {
+    "url": "/assets/foundry/scenes/cyber-mansion.jpg",
+    "opacity": 1,
+    "mode": "image",
+    "x": 0,
+    "y": 0,
+    "w": 10,
+    "h": 20
+  },
+  "theme": "residential",
+  "thumb": "/assets/foundry/thumbs/KrY25Y7cJ2bi1rBq.png",
+  "foundry": {
+    "id": "KrY25Y7cJ2bi1rBq",
+    "world": "test-world",
+    "importedAt": 1795629244307,
+    "hash": "d9ca060634f2"
+  }
+}

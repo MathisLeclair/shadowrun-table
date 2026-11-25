@@ -1,0 +1,790 @@
+{
+  "id": "map_site_glacier",
+  "name": "Site Glacier — ancienne usine Glacier Springs Bottling",
+  "folder": "Acte 2",
+  "description": "**Site Glacier — l'ancienne usine Glacier Springs Bottling (Redmond Barrens).** De loin, une ruine industrielle parmi d'autres : un hangar d'embouteillage sous une verrière à moitié brisée, un château d'eau à la montagne bleue délavée, un parking de camions. De près : un grillage neuf à barbelés, des caméras neuves, les motos du Crimson Crush — et, derrière des bâches plastiques, un hôpital clandestin propre comme un bloc opératoire.\n\n*Plan compressé* : le périmètre réel fait environ 120 × 80 m, la cour est raccourcie ici. Le hangar (≈ 60 × 30 m) est à l'échelle. La station de pompage (sous-sol, sous l'angle sud-ouest) et le canal de drainage (200 m dans l'eau froide) sont dessinés au sud du hangar.\n\n**Utilisation** — Quête 2.3 *Lazarus Cell*\n- Phase 1 *Repérage* (Perception seuil 3 à distance, drone, Matrice, astral). Phase 3 *Entrer* : grille (avec Scorch ou en force), canal, toit (verrière + passerelle), Matrice. Phase 4 *Les quartiers*. Phase 5 *Sortir, et avec qui* — sujets, donneurs, données, Dufresne, ou tout brûler.\n\n**Sécurité** : dehors 6 à 8 Crimson Crush (+ un sergent) en deux équipes ; dedans 8 gardes AG Chemie (Sécurité corpo R4) — 2 en ronde, 2 en salle de sécurité, 4 au repos — sous le Hauptmann Jörg Stadler ; 1 mage de sécurité (ronde astrale toutes les heures). Host du site rating 4 (A5/S4/DP6/F7, Patrol IC puis Acid, Binder, Killer) ; Junior Spider en salle de sécurité. À la première alerte, Stadler appelle Reyes : **renforts en 20 minutes** (Reyes + 4 Nettoyeurs), Horloge +1.\n\n**Le protocole de purge** : alerte rouge du host ou ordre de Stadler → la valve de la salle des donneurs injecte un sédatif létal **6 tours** plus tard. La couper : Hardware + Logique seuil 3 sur la valve, Guerre électronique + Logique [Sleaze] contre 11 dés via le host, ou arracher les perfusions une par une (9 actions).\n\n**Le Résidu (L-06)** : enfermé dans la citerne. Coupure de courant ou purge → la porte électromagnétique s'ouvre (pas de batterie de secours).\n\n**Tests utiles** : grille du canal Force + Constitution seuil 3 (ou outils) ; eau froide Constitution + Volonté seuil 2 (sinon −1 aux tests physiques pendant 1 h) ; Escalade du château d'eau seuil 2 ; obscurité de la salle d'embouteillage −2 visuel sans vision nocturne ; Dufresne retournée : Négociation + Charisme contre 7 dés (+3 si sortie garantie).",
+  "width": 70,
+  "height": 50,
+  "metersPerCell": 1,
+  "theme": "industrial",
+  "lighting": "dark",
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "tiles": [
+    ",,,,,,r,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,r,,,,,,,,,,,,,,,,,,,,,",
+    "==============================DDDD====================================",
+    "=,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,####,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,=",
+    "=,,,o,,,,,o,,,,,,,,,,,,,,,,,x,,,,,W..#,,,,,,,,,,,,,,vv,,vv,,vv,,v,v,,=",
+    "=,,,,,,,,,,,,,cc,,,,,,,,,,,,,,,,,,#D##,,,,,,,,,,,,,,vv,,vv,,vv,,v,v,,=",
+    "=,,,,,,,,,,,,,cc,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,vv,,vv,,vv,,,,,,,=",
+    "=,,,,,,s,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,vv,,vv,,vv,,,,,,,=",
+    "=,,,,,,,,,,,,,,,,,,,rrrr,,,,,,,,,,,,,,,,,,,,,,,,,,,,vv,,,,,,,,,,v,v,,=",
+    "=,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,v,v,,=",
+    "=,,,o,,,,,o,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,rrr,,,,,,,,,,,,,,,,,,,,,=",
+    "=,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,=",
+    "=,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,=",
+    "=,,###########DDD####################D#######################,,,,,,,,=",
+    "=,,#...............#mmm....mmm##...........#b......b#..mmmm.#,,,cc,,,=",
+    "=,,#.cc..rrr.......#..........##.cc........#b......bW.......#,,,cc,,,=",
+    "=,,#.cc............#.........m##.cc....cc..#b.TTT..b#...T...#,,,cc,,,=",
+    "=,,W............sssD....TTT...#D...........#..TTT...#m......#,,,,,,,,=",
+    "=,,#...............#..........##...........#........####D####,,,,,,,,=",
+    "=,,#...............#m.........##...........#........#.......#,,,,,,,,=",
+    "=,,#s..............##WWWWWWWW###...........####D#####......s#,,,,,,,,=",
+    "=,,#...........................D............................#,,,,,,,,=",
+    "=,,#.ccccccccccc...............D............................#,,,,,,,,=",
+    "=,,#.................mm..mm....#.WWWWWWWWWWWWW...........mm.#,,,,,,,,=",
+    "=,,D........v........mm..mm....#.Wb..Wb..Wb..W..====........#,,,,,,,,=",
+    "=,,#........v..................#.W...W...W...W........T.....D,,,,,,,,=",
+    "=,,#...........................#.W...W...W...W..............#,,,,,,,,=",
+    "=,,#.ccccccccccc.....mm..mm....#.WWDWWWDWWWDWW..............#,,mmm,,,=",
+    "=,,#.................mm..mm....#............................#,,mmm,,,=",
+    "=,,#...........................#............................#,,mmm,,,=",
+    "=,,#.cc............r........r..#.WWDWWWDWWWDWW.######D#######,,,,,,,,=",
+    "=,,W...........................#.W...W...W...W.#...........m#,,,,,,,,=",
+    "=,,#....ccccccccccccccccccc....#.W...W...W...W.#.bb..bb..bb.#,,,,,,,,=",
+    "=,,#...###.....................#.Wb..Wb..W...W.#............#,,,,,,,,=",
+    "=,,#..#...#....cc..............#.WWWWWWWWWWWWW.#............#,,,,,,,,=",
+    "=,,#.#.....#r..cc..............#...............#.bb..bb..bb.#,,,,,,,,=",
+    "=,,W.#.....D...................#.xxx....xx.....#............#,,rrr,,,=",
+    "=,,#.#.....#......ccccccccccc..D.xxx....xx.....#............#,,rrr,,,=",
+    "=,,#..#...#..r.................#........xx.ccc.#.bb..bb..bb.#,,,,,,,,=",
+    "=,,#...###..............ccc....#.xxxxx.....ccc.#............#,,,,,,,,=",
+    "=,,#...........................#...............#....mmm.....#,,,,,,,,=",
+    "=,,####W######D##########W###################W###############,,,,,,,,=",
+    "=,,,,,,,,#####s####,,,,,,,,,,,,,,,,,,,,,,,,,,,,,ccc,,,,,,,,,,,,,,,,,,=",
+    "=,,,,,,,,#....s.mm#,,,,,,,,,,,rrrr,,,,,,,,,,,,,,ccc,,,,,,,,,,,,,,,,,,=",
+    "=,,,,,,,,#mm......#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,=",
+    "=========#mm......#===================================================",
+    "rrrrrrrrr#####D####rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+    "rrrrrrrrrrrrr#r#rrrr~~rrrrrrrrrrrrrrrrrr~rrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+    "~~~~~~~~~~~~~#r#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+    "~~~~~~~~~~~~~#r#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+  ],
+  "doors": [
+    {
+      "id": "glac_d01",
+      "x": 30,
+      "y": 2,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Portail roulant motorisé"
+    },
+    {
+      "id": "glac_d02",
+      "x": 31,
+      "y": 2,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Portail roulant motorisé"
+    },
+    {
+      "id": "glac_d03",
+      "x": 32,
+      "y": 2,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Portail roulant motorisé"
+    },
+    {
+      "id": "glac_d04",
+      "x": 33,
+      "y": 2,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Portail roulant motorisé"
+    },
+    {
+      "id": "glac_d05",
+      "x": 35,
+      "y": 5,
+      "state": "closed",
+      "kind": "door",
+      "name": "Guérite"
+    },
+    {
+      "id": "glac_d06",
+      "x": 14,
+      "y": 13,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Porte de chargement (rideau métallique)"
+    },
+    {
+      "id": "glac_d07",
+      "x": 15,
+      "y": 13,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Porte de chargement (rideau métallique)"
+    },
+    {
+      "id": "glac_d08",
+      "x": 16,
+      "y": 13,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Porte de chargement (rideau métallique)"
+    },
+    {
+      "id": "glac_d09",
+      "x": 37,
+      "y": 13,
+      "state": "closed",
+      "kind": "door",
+      "name": "Porte du personnel"
+    },
+    {
+      "id": "glac_d10",
+      "x": 60,
+      "y": 25,
+      "state": "locked",
+      "kind": "door",
+      "name": "Porte latérale est"
+    },
+    {
+      "id": "glac_d11",
+      "x": 3,
+      "y": 24,
+      "state": "locked",
+      "kind": "door",
+      "name": "Issue de secours ouest (chaînée)"
+    },
+    {
+      "id": "glac_d12",
+      "x": 19,
+      "y": 17,
+      "state": "closed",
+      "kind": "door",
+      "name": "Escalier métallique — labo"
+    },
+    {
+      "id": "glac_d13",
+      "x": 31,
+      "y": 17,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Rideau de bâches"
+    },
+    {
+      "id": "glac_d14",
+      "x": 31,
+      "y": 21,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Rideau de bâches"
+    },
+    {
+      "id": "glac_d15",
+      "x": 31,
+      "y": 22,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Rideau de bâches"
+    },
+    {
+      "id": "glac_d16",
+      "x": 31,
+      "y": 37,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Rideau de bâches"
+    },
+    {
+      "id": "glac_d17",
+      "x": 47,
+      "y": 20,
+      "state": "closed",
+      "kind": "door",
+      "name": "Quartiers des gardes"
+    },
+    {
+      "id": "glac_d18",
+      "x": 56,
+      "y": 18,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salle de sécurité"
+    },
+    {
+      "id": "glac_d19",
+      "x": 35,
+      "y": 27,
+      "state": "locked",
+      "kind": "door",
+      "name": "Chambre 1 — L-03 (maglock 4)"
+    },
+    {
+      "id": "glac_d20",
+      "x": 39,
+      "y": 27,
+      "state": "locked",
+      "kind": "door",
+      "name": "Chambre 2 — L-05 (maglock 4)"
+    },
+    {
+      "id": "glac_d21",
+      "x": 43,
+      "y": 27,
+      "state": "locked",
+      "kind": "door",
+      "name": "Chambre 3 — L-09 (maglock 4)"
+    },
+    {
+      "id": "glac_d22",
+      "x": 35,
+      "y": 30,
+      "state": "locked",
+      "kind": "door",
+      "name": "Chambre 4 — L-11 (maglock 4)"
+    },
+    {
+      "id": "glac_d23",
+      "x": 39,
+      "y": 30,
+      "state": "locked",
+      "kind": "door",
+      "name": "Chambre 5 — vide (maglock 4)"
+    },
+    {
+      "id": "glac_d24",
+      "x": 43,
+      "y": 30,
+      "state": "locked",
+      "kind": "door",
+      "name": "Chambre 6 — porte renforcée"
+    },
+    {
+      "id": "glac_d25",
+      "x": 53,
+      "y": 30,
+      "state": "locked",
+      "kind": "door",
+      "name": "Porte isotherme (maglock 4)"
+    },
+    {
+      "id": "glac_d26",
+      "x": 11,
+      "y": 36,
+      "state": "locked",
+      "kind": "door",
+      "name": "Citerne — porte d'acier électromagnétique"
+    },
+    {
+      "id": "glac_d27",
+      "x": 14,
+      "y": 41,
+      "state": "closed",
+      "kind": "door",
+      "name": "Trappe — escalier de la station de pompage"
+    },
+    {
+      "id": "glac_d28",
+      "x": 14,
+      "y": 46,
+      "state": "locked",
+      "kind": "gate",
+      "name": "Grille rouillée du canal"
+    }
+  ],
+  "lights": [
+    {
+      "id": "glac_l01",
+      "x": 31,
+      "y": 5,
+      "radius": 10,
+      "color": "#f4f8ff",
+      "on": true,
+      "name": "Projecteur de la grille"
+    },
+    {
+      "id": "glac_l02",
+      "x": 58,
+      "y": 10,
+      "radius": 10,
+      "color": "#f4f8ff",
+      "on": true,
+      "name": "Projecteur du parking"
+    },
+    {
+      "id": "glac_l03",
+      "x": 28,
+      "y": 5,
+      "radius": 3,
+      "color": "#ff8a3a",
+      "on": true,
+      "name": "Feu de camp (baril)"
+    },
+    {
+      "id": "glac_l04",
+      "x": 35,
+      "y": 4,
+      "radius": 2,
+      "color": "#ffe0a0",
+      "on": true,
+      "name": "Guérite"
+    },
+    {
+      "id": "glac_l05",
+      "x": 39,
+      "y": 28,
+      "radius": 7,
+      "color": "#eef6ff",
+      "on": true,
+      "name": "Néons crus — Pavillon L"
+    },
+    {
+      "id": "glac_l06",
+      "x": 53,
+      "y": 25,
+      "radius": 4,
+      "color": "#eef6ff",
+      "on": true,
+      "name": "Néons — poste infirmier"
+    },
+    {
+      "id": "glac_l07",
+      "x": 53,
+      "y": 35,
+      "radius": 7,
+      "color": "#eef6ff",
+      "on": true,
+      "name": "Néons crus — salle des donneurs"
+    },
+    {
+      "id": "glac_l08",
+      "x": 24,
+      "y": 16,
+      "radius": 5,
+      "color": "#c8f0ff",
+      "on": true,
+      "name": "Labo de Dufresne"
+    },
+    {
+      "id": "glac_l09",
+      "x": 57,
+      "y": 16,
+      "radius": 3,
+      "color": "#36e6ff",
+      "on": true,
+      "name": "Moniteurs — salle de sécurité"
+    },
+    {
+      "id": "glac_l10",
+      "x": 48,
+      "y": 18,
+      "radius": 3,
+      "color": "#ffe0b0",
+      "on": true,
+      "name": "Quartiers des gardes"
+    },
+    {
+      "id": "glac_l11",
+      "x": 16,
+      "y": 30,
+      "radius": 2,
+      "color": "#ff3344",
+      "on": true,
+      "name": "Veilleuse de secours"
+    },
+    {
+      "id": "glac_l12",
+      "x": 12,
+      "y": 25,
+      "radius": 6,
+      "color": "#8fa8d8",
+      "on": false,
+      "name": "Lune par la verrière brisée"
+    },
+    {
+      "id": "glac_l13",
+      "x": 37,
+      "y": 18,
+      "radius": 3,
+      "color": "#f0f0e0",
+      "on": true,
+      "name": "Baladeuse — réception"
+    }
+  ],
+  "regions": [
+    {
+      "id": "glac_r01",
+      "name": "Route d'accès",
+      "x": 0,
+      "y": 0,
+      "w": 70,
+      "h": 2,
+      "color": "#3a4a5c",
+      "gmOnly": false
+    },
+    {
+      "id": "glac_r02",
+      "name": "Cour",
+      "x": 1,
+      "y": 3,
+      "w": 68,
+      "h": 10,
+      "color": "#4a4a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "glac_r03",
+      "name": "Château d'eau (25 m)",
+      "x": 4,
+      "y": 4,
+      "w": 7,
+      "h": 7,
+      "color": "#2a4a7a",
+      "gmOnly": false
+    },
+    {
+      "id": "glac_r04",
+      "name": "Parking de camions",
+      "x": 50,
+      "y": 3,
+      "w": 18,
+      "h": 9,
+      "color": "#3a4a5c",
+      "gmOnly": false
+    },
+    {
+      "id": "glac_r05",
+      "name": "Salle d'embouteillage",
+      "x": 4,
+      "y": 21,
+      "w": 27,
+      "h": 20,
+      "color": "#3a3a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "glac_r06",
+      "name": "Passerelle d'entretien (9 m, sous la verrière)",
+      "x": 4,
+      "y": 20,
+      "w": 56,
+      "h": 1,
+      "color": "#6a5a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "glac_r07",
+      "name": "Labo et bureau de Dufresne (mezzanine)",
+      "x": 20,
+      "y": 14,
+      "w": 10,
+      "h": 6,
+      "color": "#2a5a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "glac_r08",
+      "name": "Zone de réception",
+      "x": 32,
+      "y": 14,
+      "w": 11,
+      "h": 7,
+      "color": "#4a4a40",
+      "gmOnly": false
+    },
+    {
+      "id": "glac_r09",
+      "name": "Quartiers des gardes",
+      "x": 44,
+      "y": 14,
+      "w": 8,
+      "h": 6,
+      "color": "#5a4a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "glac_r10",
+      "name": "Salle de sécurité",
+      "x": 53,
+      "y": 14,
+      "w": 7,
+      "h": 4,
+      "color": "#2a3a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "glac_r11",
+      "name": "Pavillon L",
+      "x": 32,
+      "y": 21,
+      "w": 28,
+      "h": 9,
+      "color": "#6a6a7a",
+      "gmOnly": false
+    },
+    {
+      "id": "glac_r12",
+      "name": "Ch. 1 — L-03",
+      "x": 34,
+      "y": 24,
+      "w": 3,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "glac_r13",
+      "name": "Ch. 2 — L-05",
+      "x": 38,
+      "y": 24,
+      "w": 3,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "glac_r14",
+      "name": "Ch. 3 — L-09",
+      "x": 42,
+      "y": 24,
+      "w": 3,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "glac_r15",
+      "name": "Ch. 4 — L-11",
+      "x": 34,
+      "y": 31,
+      "w": 3,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "glac_r16",
+      "name": "Ch. 5",
+      "x": 38,
+      "y": 31,
+      "w": 3,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "glac_r17",
+      "name": "Ch. 6",
+      "x": 42,
+      "y": 31,
+      "w": 3,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "glac_r18",
+      "name": "Salle des donneurs — Lot D",
+      "x": 48,
+      "y": 31,
+      "w": 12,
+      "h": 10,
+      "color": "#7a2a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "glac_r19",
+      "name": "Stock de solvants",
+      "x": 32,
+      "y": 35,
+      "w": 15,
+      "h": 6,
+      "color": "#7a2a1a",
+      "gmOnly": false
+    },
+    {
+      "id": "glac_r20",
+      "name": "Citerne de stockage (L-06)",
+      "x": 5,
+      "y": 33,
+      "w": 7,
+      "h": 7,
+      "color": "#5a1a1a",
+      "gmOnly": true
+    },
+    {
+      "id": "glac_r21",
+      "name": "Station de pompage (sous-sol)",
+      "x": 10,
+      "y": 43,
+      "w": 8,
+      "h": 3,
+      "color": "#2a4a5a",
+      "gmOnly": false
+    },
+    {
+      "id": "glac_r22",
+      "name": "Canal de drainage (200 m)",
+      "x": 13,
+      "y": 46,
+      "w": 3,
+      "h": 4,
+      "color": "#2a4a5a",
+      "gmOnly": false
+    },
+    {
+      "id": "glac_r23",
+      "name": "Berge boueuse",
+      "x": 0,
+      "y": 46,
+      "w": 70,
+      "h": 2,
+      "color": "#4a3a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "glac_r24",
+      "name": "Transformateur",
+      "x": 63,
+      "y": 27,
+      "w": 3,
+      "h": 3,
+      "color": "#7a6a1a",
+      "gmOnly": true
+    }
+  ],
+  "notes": [
+    {
+      "id": "glac_n01",
+      "x": 36,
+      "y": 4,
+      "text": "Guérite : 2 Crimson Crush + 1 garde AG Chemie. Feu de camp dans un baril. Si Scorch est alliée (Nico prouvé dans le lot D), elle ouvre la grille et ses motards font une diversion bruyante au moment voulu. Achetée (10 000¥) : 30 minutes, pas plus.",
+      "gmOnly": true
+    },
+    {
+      "id": "glac_n02",
+      "x": 44,
+      "y": 7,
+      "text": "Dehors : 6 à 8 Crimson Crush (+ un sergent) en deux équipes. Rondes lâches, beaucoup d'alcool après minuit. Intimidée, Scorch vend le groupe à Stadler (Horloge +1, alerte à l'arrivée).",
+      "gmOnly": true
+    },
+    {
+      "id": "glac_n03",
+      "x": 1,
+      "y": 3,
+      "text": "Caméras neuves sur poteaux aux quatre coins du grillage (host du site rating 4 : A5/S4/DP6/F7 ; Patrol IC, puis Acid, Binder, Killer). Bouclables par Bricks.",
+      "gmOnly": true
+    },
+    {
+      "id": "glac_n04",
+      "x": 7,
+      "y": 6,
+      "text": "Château d'eau, 25 m, échelle extérieure (Escalade seuil 2). Poste de sniper idéal : vue sur la cour, le parking et la verrière. Jane y est chez elle.",
+      "gmOnly": true
+    },
+    {
+      "id": "glac_n05",
+      "x": 54,
+      "y": 5,
+      "text": "Ambulance privée : arrive tous les deux jours à 4 h. Véhicule pour évacuer les sujets. Complication « transfert avancé » : elle arrive pendant le raid avec 2 gardes de plus, portière ouverte.",
+      "gmOnly": true
+    },
+    {
+      "id": "glac_n06",
+      "x": 30,
+      "y": 20,
+      "text": "Verrière à moitié brisée, 12 m. La passerelle d'entretien court d'un bout à l'autre à 9 m (échelles en 4,20 et 59,20). Grappin d'Anthony : rappel dans la salle d'embouteillage ou passerelle jusqu'au labo.",
+      "gmOnly": true
+    },
+    {
+      "id": "glac_n07",
+      "x": 10,
+      "y": 29,
+      "text": "Salle d'embouteillage sombre (−2 visuel sans vision nocturne). Tapis roulants immobiles : couverture partielle (Armor 6). Cuves inox : couverture lourde, bloquent la vue.",
+      "gmOnly": true
+    },
+    {
+      "id": "glac_n08",
+      "x": 25,
+      "y": 16,
+      "text": "Dr. Hélène Dufresne (toujours là la nuit). Elle ne se bat pas, elle protège ses données. Serveur local (Bricks : 3 tours de copie), journal (ho_journal_dufresne), classeur des dossiers papier dont ho_dossier_l02. Retournement : Négociation + Charisme contre 7 dés, +3 si sortie garantie (Monobe, ou Cabana pour 20 000¥).",
+      "gmOnly": true
+    },
+    {
+      "id": "glac_n09",
+      "x": 57,
+      "y": 17,
+      "text": "Salle de sécurité : moniteurs, Junior Spider, 2 gardes, râtelier, terminal du host (accès direct : +2 dés et pas de bruit pour Bricks). Fausse alarme incendie possible : les gardes évacuent vers le parking… et les sujets aussi.",
+      "gmOnly": true
+    },
+    {
+      "id": "glac_n10",
+      "x": 47,
+      "y": 15,
+      "text": "Quartiers : 4 gardes au repos + le Hauptmann Jörg Stadler. À la première alerte : 2 gardes → salle des donneurs (purge), 2 → Pavillon L (sédater et charger les sujets), 4 avec lui pour la riposte. Il appelle Reyes (20 min).",
+      "gmOnly": true
+    },
+    {
+      "id": "glac_n11",
+      "x": 39,
+      "y": 25,
+      "text": "Pavillon L : chambres vitrées (verre renforcé Armor 6 / Structure 6, maglocks rating 4 esclaves du host). 1 L-03 Marguerite Dunleavy (74 ans, en paraît 40), 2 L-05 Tomasz Wrona, 3 L-09 Ada Fenwick, 4 L-11 Benedict Osei. Sédation légère, terrifiés. Dunleavy a vu Danny (« Daniel »).",
+      "gmOnly": true
+    },
+    {
+      "id": "glac_n12",
+      "x": 43,
+      "y": 32,
+      "text": "Chambre 6 : vide, porte renforcée, griffures à l'intérieur. C'était celle de L-06, le Résidu (maintenant dans la citerne).",
+      "gmOnly": true
+    },
+    {
+      "id": "glac_n13",
+      "x": 53,
+      "y": 33,
+      "text": "Lot D : ancienne chambre froide, 12 °C. Neuf donneurs SURGE de 15 à 30 ans attachés et perfusés. D-14 : Nico Delgado, 17 ans, maigre, conscient (le frère de Scorch). Impossible à évacuer sans véhicule.",
+      "gmOnly": true
+    },
+    {
+      "id": "glac_n14",
+      "x": 53,
+      "y": 39,
+      "text": "VALVE DU PROTOCOLE DE PURGE (mur du fond). 6 tours après l'ordre ou l'alerte rouge. Hardware + Logique seuil 3 ; ou via le host (Guerre électronique + Logique [Sleaze] contre 11 dés) ; ou arracher les 9 perfusions (1 action chacune).",
+      "gmOnly": true
+    },
+    {
+      "id": "glac_n15",
+      "x": 8,
+      "y": 36,
+      "text": "Citerne (cylindre de 6 m) : L-06, le Résidu — 79 ans, des cellules qui n'ont jamais cessé de se régénérer. Porte électromagnétique SANS batterie de secours : coupure de courant ou purge = elle s'ouvre. Une menace de combat, et une victime.",
+      "gmOnly": true
+    },
+    {
+      "id": "glac_n16",
+      "x": 64,
+      "y": 28,
+      "text": "Transformateur du site. Couper le courant : noir total dans le hangar, caméras et maglocks HS… et la citerne du Résidu s'ouvre.",
+      "gmOnly": true
+    },
+    {
+      "id": "glac_n17",
+      "x": 14,
+      "y": 44,
+      "text": "Station de pompage (sous-sol) : débouché du canal. Grille rouillée : Force + Constitution seuil 3 ou outils. 200 m (15 min) dans l'eau froide : Constitution + Volonté seuil 2, sinon −1 aux tests physiques la première heure. Personne ne surveille — sauf le mage, en astral.",
+      "gmOnly": true
+    },
+    {
+      "id": "glac_n18",
+      "x": 24,
+      "y": 34,
+      "text": "Mage de sécurité : ronde astrale toutes les heures. En astral, le hangar baigne dans une aura de douleur ancienne et de vie là où il ne devrait pas y en avoir : « comme une serre ».",
+      "gmOnly": true
+    },
+    {
+      "id": "glac_n19",
+      "x": 39,
+      "y": 38,
+      "text": "Stocks de solvants : de quoi tout brûler (Anthony). Le feu efface aussi une partie des preuves.",
+      "gmOnly": true
+    },
+    {
+      "id": "glac_n20",
+      "x": 66,
+      "y": 6,
+      "text": "Renforts : Reyes + 4 Nettoyeurs, 20 min après l'alerte (deux berlines + un van), phares éteints à 200 m, entrée par le parking. Consigne : nettoyer. Elle cible en priorité les preuves vivantes (sujets, Dufresne).",
+      "gmOnly": true
+    }
+  ],
+  "tokens": []
+}

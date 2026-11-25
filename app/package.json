@@ -1,0 +1,27 @@
+{
+  "name": "shadowrun-table",
+  "version": "1.0.0",
+  "description": "Table de jeu Shadowrun 5E — Project Lazarus (MJ + joueurs en temps réel)",
+  "type": "module",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "build:catalog": "node tools/build-catalog.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "adm-zip": "^0.6.1",
+    "classic-level": "^3.0.0",
+    "express": "^4.22.3",
+    "fast-xml-parser": "^5.12.1",
+    "htm": "^3.1.1",
+    "preact": "^10.29.8",
+    "socket.io": "^4.8.4"
+  },
+  "devDependencies": {
+    "socket.io-client": "^4.8.4"
+  }
+}

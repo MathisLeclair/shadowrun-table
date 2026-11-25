@@ -1,0 +1,341 @@
+{
+  "id": "map_dojo_morinaga",
+  "name": "Dojo Kaze-no-Ki (International District)",
+  "folder": "Acte 2",
+  "description": "**Dojo Kaze-no-Ki (International District).** Le premier étage d'un vieil immeuble de briques, au-dessus d'une épicerie fermée. Parquet clair, murs blancs, papier de riz, lanternes. Adachi Morinaga y enseigne gratuitement le kenjutsu à six gamins du quartier trois soirs par semaine ; le reste du temps, il y vit seul. On y monte par un escalier extérieur en fer forgé, côté ruelle. Le toit est dessiné à part, sous le plan.\n\n**Utilisation**\n- Quête 2.4 *Inheritance*, **Phase 2 — Le dojo** : la conversation Anthony / Morinaga (roleplay pur, ne la coupez pas avec des jets), puis **l'épreuve au bokken**.\n- Phase 3 : le message de Morinaga peut être laissé ici (« Harbor Island, entrepôt 3… »).\n- Acte 3, *Burn Notice* Phase 3 : **refuge** si la jauge de la voie du sabre est à **+2 ou plus**. Morinaga ouvre sans un mot et monte la garde toute la nuit, assis dans la salle d'entraînement, le sabre sur les genoux. Personne ne vient.\n\n**L'épreuve** : premier à trois touches, aucun dégât réel (chaque test opposé gagné = une touche). Morinaga : 18 dés au sabre. Ce qui compte, c'est *comment* Anthony perd — ou gagne par une ruse honnête, l'Edge, l'environnement (Morinaga rit pour la première fois depuis des années). Frapper après la troisième touche ou pour faire mal : il pose son bokken et met fin à la soirée (jauge −1).\n\n**Sécurité** : aucune. Une porte coulissante en bois à simple verrou, pas de caméra, pas de host, et Morinaga n'allume pas de commlink chez lui. La salle n'offre **aucune couverture** : l'espace est pensé pour le combat.\n\n**Lumière** : réglée sur *pénombre* (le soir, lanternes en papier). De jour, lumière diffuse des fenêtres à papier de riz : passez en plein jour.",
+  "width": 46,
+  "height": 38,
+  "metersPerCell": 1,
+  "theme": "residential",
+  "lighting": "dim",
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "tiles": [
+    "ggg,,,,,,,,,,,ggg,,,,,,,,,,###################",
+    "ggg,,,,,,,,,,,,,,,,,,,,,,,,#                 #",
+    "  ####################,,,cc#                 #",
+    "  #__========__#m..bb#,,,cc#                 #",
+    "  #____________#.....#,,,,,#                 #",
+    "  W____________#.T...#,,r,,#                 #",
+    "  W____________#....T#,,,,,D                 #",
+    "  WT___________##D####,,,,,#                 #",
+    "  WT___________#..Dm.#,,,,,#                 #",
+    "  W____________#..#.s#,,,,c#                 #",
+    "  W____________#..####s=,,,#                 #",
+    "  #____________D.....Ds.,,,#                 #",
+    "  #____________#m....#s=,,,#                 #",
+    "  ##WWWWWWWWWW########s=,,,###################",
+    ",,,,,,,,,,,,,,,,,,,,,,s,,,,,,,,,,,,,,,,,,,,,,,",
+    ",,o,,,,,,,,,,,,,,,,o,,s,,,,,,,,,,,,,,,o,,,,,,,",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+    ",,,,,vvvv,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+    ",,,,,vvvv,,,,,,,,,,,,,,,,,,,,,vvvvv,,,,,,,,,,,",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,vvvvv,,,,,,,,,,,",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+    "############WW###################WW###########",
+    "                                              ",
+    "  ====================                        ",
+    "  =,,,,,,,,,,,,,,,,,,=                        ",
+    "  =,,,,,,,,,,,oo,,,,,=                        ",
+    "  =,,mmm,,,,,,oo,,,,,=                        ",
+    "  =,,mmm,,,,,,,,,,,,,=                        ",
+    "  =,,,,,,,,,,,,,,,,,,=                        ",
+    "  =,,,,,,,,cc,,,,,,,,=                        ",
+    "  =,,,,,,,,,,,,,,,,,s=                        ",
+    "  =,,,,,,,,,,,,,,,,,,=                        ",
+    "  =gg,,,,o,,,,,,,,,,,=                        ",
+    "  =g,,,,,,,,,,,,,,,,,=                        ",
+    "  ====================                        ",
+    "                                              ",
+    "                                              "
+  ],
+  "doors": [
+    {
+      "id": "dojo_d01",
+      "x": 27,
+      "y": 6,
+      "state": "locked",
+      "kind": "door",
+      "name": "Porte arrière (entrepôt voisin)"
+    },
+    {
+      "id": "dojo_d02",
+      "x": 15,
+      "y": 11,
+      "state": "closed",
+      "kind": "door",
+      "name": "Shoji — salle d'entraînement"
+    },
+    {
+      "id": "dojo_d03",
+      "x": 17,
+      "y": 7,
+      "state": "closed",
+      "kind": "door",
+      "name": "Shoji — pièce de vie"
+    },
+    {
+      "id": "dojo_d04",
+      "x": 18,
+      "y": 8,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salle d'eau"
+    },
+    {
+      "id": "dojo_d05",
+      "x": 21,
+      "y": 11,
+      "state": "closed",
+      "kind": "door",
+      "name": "Porte coulissante en bois (simple verrou)"
+    }
+  ],
+  "lights": [
+    {
+      "id": "dojo_l01",
+      "x": 6,
+      "y": 6,
+      "radius": 4,
+      "color": "#ffc070",
+      "on": true,
+      "name": "Lanterne en papier"
+    },
+    {
+      "id": "dojo_l02",
+      "x": 11,
+      "y": 9,
+      "radius": 4,
+      "color": "#ffc070",
+      "on": true,
+      "name": "Lanterne en papier"
+    },
+    {
+      "id": "dojo_l03",
+      "x": 18,
+      "y": 5,
+      "radius": 3,
+      "color": "#ffb060",
+      "on": true,
+      "name": "Lampe de chevet"
+    },
+    {
+      "id": "dojo_l04",
+      "x": 17,
+      "y": 11,
+      "radius": 2,
+      "color": "#ffd9a0",
+      "on": true,
+      "name": "Lanterne de l'entrée"
+    },
+    {
+      "id": "dojo_l05",
+      "x": 8,
+      "y": 15,
+      "radius": 6,
+      "color": "#ffb766",
+      "on": true,
+      "name": "Éclairage — rue"
+    },
+    {
+      "id": "dojo_l06",
+      "x": 36,
+      "y": 16,
+      "radius": 6,
+      "color": "#ffb766",
+      "on": true,
+      "name": "Éclairage — rue"
+    },
+    {
+      "id": "dojo_l07",
+      "x": 24,
+      "y": 7,
+      "radius": 3,
+      "color": "#ff9a5a",
+      "on": true,
+      "name": "Ampoule nue — ruelle"
+    },
+    {
+      "id": "dojo_l08",
+      "x": 30,
+      "y": 15,
+      "radius": 4,
+      "color": "#ff3fd2",
+      "on": true,
+      "name": "Enseigne néon (karaoké)"
+    },
+    {
+      "id": "dojo_l09",
+      "x": 41,
+      "y": 20,
+      "radius": 3,
+      "color": "#36e6ff",
+      "on": true,
+      "name": "Enseigne néon (noodle bar)"
+    }
+  ],
+  "regions": [
+    {
+      "id": "dojo_r01",
+      "name": "Salle d'entraînement",
+      "x": 3,
+      "y": 3,
+      "w": 12,
+      "h": 10,
+      "color": "#6a5a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "dojo_r02",
+      "name": "Pièce de vie",
+      "x": 16,
+      "y": 3,
+      "w": 5,
+      "h": 4,
+      "color": "#5a3a2a",
+      "gmOnly": false
+    },
+    {
+      "id": "dojo_r03",
+      "name": "Salle d'eau",
+      "x": 19,
+      "y": 8,
+      "w": 2,
+      "h": 2,
+      "color": "#3a4a5a",
+      "gmOnly": false
+    },
+    {
+      "id": "dojo_r04",
+      "name": "Entrée",
+      "x": 16,
+      "y": 8,
+      "w": 2,
+      "h": 5,
+      "color": "#4a4a40",
+      "gmOnly": false
+    },
+    {
+      "id": "dojo_r05",
+      "name": "Escalier en fer forgé",
+      "x": 22,
+      "y": 10,
+      "w": 2,
+      "h": 6,
+      "color": "#5a5a5a",
+      "gmOnly": false
+    },
+    {
+      "id": "dojo_r06",
+      "name": "Ruelle",
+      "x": 22,
+      "y": 0,
+      "w": 5,
+      "h": 14,
+      "color": "#3a3a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "dojo_r07",
+      "name": "Rue (devant l'épicerie)",
+      "x": 0,
+      "y": 14,
+      "w": 46,
+      "h": 8,
+      "color": "#3a4a5c",
+      "gmOnly": false
+    },
+    {
+      "id": "dojo_r08",
+      "name": "Toit (plan séparé) — vue sur la ruelle et la rue",
+      "x": 2,
+      "y": 24,
+      "w": 20,
+      "h": 12,
+      "color": "#3a3a4a",
+      "gmOnly": false
+    }
+  ],
+  "notes": [
+    {
+      "id": "dojo_n01",
+      "x": 8,
+      "y": 8,
+      "text": "Épreuve au bokken : premier à trois touches, chaque test opposé gagné = une touche, aucun dégât. Morinaga (18 dés) ne cherche pas à humilier : il cherche à voir. Ruse honnête qui marche → il rit (jauge +1). Perdre avec grâce → jauge +1. Frapper après la 3e touche → il pose son bokken (jauge −1).",
+      "gmOnly": true
+    },
+    {
+      "id": "dojo_n02",
+      "x": 3,
+      "y": 8,
+      "text": "Kamidana (autel). Six gamins du quartier y saluent trois soirs par semaine — témoins, otages potentiels, et la raison pour laquelle Morinaga ne se battra jamais ici pour de vrai.",
+      "gmOnly": true
+    },
+    {
+      "id": "dojo_n03",
+      "x": 6,
+      "y": 4,
+      "text": "Râtelier de bokken et de shinai. Aucune vraie lame dans la salle.",
+      "gmOnly": true
+    },
+    {
+      "id": "dojo_n04",
+      "x": 18,
+      "y": 4,
+      "text": "Futon, théière, petite bibliothèque. Le katana Shiranami sur son support. Une photo encadrée retournée face au mur : Morinaga et ses élèves à Kyoto — Anthony à seize ans.",
+      "gmOnly": true
+    },
+    {
+      "id": "dojo_n05",
+      "x": 10,
+      "y": 11,
+      "text": "La conversation (adaptez) : « Je t'ai renvoyé parce que tu aimais la fin. » « Mes mains tremblent. Un homme de Francfort m'a proposé de les faire cesser de trembler. » « Le jour où tu sauras ce que tu veux en faire, je te dirai ce que je sais. »",
+      "gmOnly": true
+    },
+    {
+      "id": "dojo_n06",
+      "x": 13,
+      "y": 5,
+      "text": "Jauge de la voie du sabre (−3 à +3, cachée). −1 : achever un ennemi à terre (si Morinaga peut l'apprendre), frapper après l'épreuve. +1 : épargner sciemment un ennemi, gagner par une ruse honnête ou perdre avec grâce, sauver Klee sans massacre, dire avec ses mots ce qu'il a compris.",
+      "gmOnly": true
+    },
+    {
+      "id": "dojo_n07",
+      "x": 21,
+      "y": 12,
+      "text": "Porte coulissante en bois, simple verrou (Serrurerie seuil 1, ou un coup d'épaule). Pas de caméra, pas de host, pas de commlink allumé : Bricks ne voit rien d'ici.",
+      "gmOnly": true
+    },
+    {
+      "id": "dojo_n08",
+      "x": 22,
+      "y": 13,
+      "text": "Escalier extérieur en fer forgé, côté ruelle : il grince (Discrétion −2 pour monter sans bruit). Une seule personne de front.",
+      "gmOnly": true
+    },
+    {
+      "id": "dojo_n09",
+      "x": 10,
+      "y": 15,
+      "text": "Au rez-de-chaussée : l'épicerie fermée, rideau de fer baissé. Du toit, on voit son entrée et toute la ruelle.",
+      "gmOnly": true
+    },
+    {
+      "id": "dojo_n10",
+      "x": 20,
+      "y": 32,
+      "text": "Trappe du toit (échelle depuis la salle d'eau). Le toit : poste de guet sur la ruelle et la rue, parapet bas (couverture partielle). Burn Notice, refuge : Morinaga garde la salle, quelqu'un du groupe peut guetter ici.",
+      "gmOnly": true
+    },
+    {
+      "id": "dojo_n11",
+      "x": 17,
+      "y": 9,
+      "text": "Phase 3 (enlèvement de Klee) : message de Morinaga glissé sous la porte ou posé sur le shoji : « Harbor Island, entrepôt 3. Viens seul si tu veux qu'il vive. Viens avec tes amis si tu veux qu'il vive vraiment. »",
+      "gmOnly": true
+    }
+  ],
+  "tokens": []
+}

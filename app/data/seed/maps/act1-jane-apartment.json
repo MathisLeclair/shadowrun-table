@@ -1,0 +1,485 @@
+{
+  "id": "map_jane_apartment",
+  "name": "Appartement de Jane",
+  "folder": "Acte 1",
+  "description": "**L'appartement de Jane — 3e étage d'un vieil immeuble de Renton.** Couloir mal éclairé, ascenseur en panne, voisins pittoresques. L'appartement de Jane occupe tout le côté sud : entrée, cuisine américaine, salon, chambre (avec une planque derrière la penderie), salle de bain et un atelier de déguisement/diagnostic. Les fenêtres du salon et de l'atelier donnent sur l'escalier de secours au-dessus de la rue.\n\n**Utilisation**\n- Fin de session 2 / session 3 : la femme secourue est mise à l'abri ici (scène 1 : ambiance), puis analyse et hack de son implant oculaire (scènes 2-3).\n- Si le signal de l'implant a été capté : assaut de l'équipe de Reyes par la cage d'escalier **et** l'escalier de secours (option « appât » de la scène 3).\n\n**Tests utiles**\n- Perception seuil 4 : repérer la surveillance (guetteur dans le 3C, voiture en bas).\n- Stades de l'implant : 3 (Cybertechnologie/Médecine), 6 (Cybertechnologie), 9 (Guerre électronique/Hacking), traçage +8, décryptage +8.\n- Désactiver la puce : Électronique seuil 4. Extraire le module : Médecine seuil 5.",
+  "width": 52,
+  "height": 34,
+  "metersPerCell": 1,
+  "theme": "residential",
+  "lighting": "dim",
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "tiles": [
+    "                                                    ",
+    " ###############WWW###WWWW#####WWWWW#######WWWWW### ",
+    " #.ss#ss.#####.bb.m#...====#.......cc..#.bbb..====# ",
+    " W.ss#ss.#####.bb..#.......#.bb..r...c.#.bbb......# ",
+    " W.ss#ss.#####.bb..........#.bb........#..........# ",
+    " W.ss#ss.#####.....#.TT....#...r.......#..........# ",
+    " W.ss#ss.#####m....#.TT....#...........#.....TT...# ",
+    " #.ss#ss.#####m............#........r..#.....TT...# ",
+    " #.ss.ss.#eee#m............#....c......#..........# ",
+    " #.......#eee#............g#.r....r..r.#.........m# ",
+    " #.......#eee#g.......bbbb.#...........#bbbb......# ",
+    " ####D#####D########D############D##########D###### ",
+    " #................................................# ",
+    " W................................................W ",
+    " #................................................# ",
+    " ######D###########D############################### ",
+    " #.......====#m.......#=========m#mbbT..#.c#T..~~~# ",
+    " #...........#m.......#..........#.bb...#.c#...~~~# ",
+    " #m..........#........D...TTT....#.bb...#D##......# ",
+    " #m..........#........#...TTT....#.........D......# ",
+    " #m..........#........#..........#.........#......# ",
+    " #.....TT....#####D####=========.#.........#......# ",
+    " #.....TT....#.....mmm...........D....TT...#==....# ",
+    " #...........#m.._______.......g.################## ",
+    " #...........#m..__TTT__b........#.TTTTTT...TTT..m# ",
+    " #...........#m.._______...TTT...#...............m# ",
+    " #.bbb.......#m.._bbbbb_...TTT...D...............m# ",
+    " #.bbb.......#...................#...o..o..o.....m# ",
+    " #...........#.g.................#................# ",
+    " ###WWWWWWW#####WWWWW###WWWWWWDW###WWWDWW#####WW### ",
+    "                             =,,,,,,,,,,,,,,,=      ",
+    "                             =s,,,,,,,,,,,,,s=      ",
+    "                             =================      ",
+    "                                                    "
+  ],
+  "doors": [
+    {
+      "id": "jane_d01",
+      "x": 5,
+      "y": 11,
+      "state": "closed",
+      "kind": "door",
+      "name": "Cage d'escalier"
+    },
+    {
+      "id": "jane_d02",
+      "x": 11,
+      "y": 11,
+      "state": "locked",
+      "kind": "door",
+      "name": "Ascenseur (en panne)"
+    },
+    {
+      "id": "jane_d03",
+      "x": 20,
+      "y": 11,
+      "state": "closed",
+      "kind": "door",
+      "name": "Apt 3B"
+    },
+    {
+      "id": "jane_d04",
+      "x": 33,
+      "y": 11,
+      "state": "locked",
+      "kind": "door",
+      "name": "Apt 3C (scellé)"
+    },
+    {
+      "id": "jane_d05",
+      "x": 44,
+      "y": 11,
+      "state": "closed",
+      "kind": "door",
+      "name": "Apt 3D"
+    },
+    {
+      "id": "jane_d06",
+      "x": 7,
+      "y": 15,
+      "state": "closed",
+      "kind": "door",
+      "name": "Apt 3A"
+    },
+    {
+      "id": "jane_d07",
+      "x": 19,
+      "y": 15,
+      "state": "locked",
+      "kind": "door",
+      "name": "Porte blindée de Jane (maglock)"
+    },
+    {
+      "id": "jane_d08",
+      "x": 33,
+      "y": 22,
+      "state": "closed",
+      "kind": "door",
+      "name": "Chambre"
+    },
+    {
+      "id": "jane_d09",
+      "x": 43,
+      "y": 19,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salle de bain"
+    },
+    {
+      "id": "jane_d10",
+      "x": 41,
+      "y": 18,
+      "state": "closed",
+      "kind": "secret",
+      "name": "Penderie à double fond"
+    },
+    {
+      "id": "jane_d11",
+      "x": 33,
+      "y": 26,
+      "state": "closed",
+      "kind": "door",
+      "name": "Atelier"
+    },
+    {
+      "id": "jane_d12",
+      "x": 30,
+      "y": 29,
+      "state": "closed",
+      "kind": "door",
+      "name": "Fenêtre du salon (escalier de secours)"
+    },
+    {
+      "id": "jane_d13",
+      "x": 38,
+      "y": 29,
+      "state": "closed",
+      "kind": "door",
+      "name": "Fenêtre de l'atelier (escalier de secours)"
+    }
+  ],
+  "lights": [
+    {
+      "id": "jane_l01",
+      "x": 8,
+      "y": 13,
+      "radius": 4,
+      "color": "#ffd9a0",
+      "on": true,
+      "name": "Éclairage — Couloir du 3e étage"
+    },
+    {
+      "id": "jane_l02",
+      "x": 30,
+      "y": 13,
+      "radius": 4,
+      "color": "#ffd9a0",
+      "on": true,
+      "name": "Éclairage — Couloir du 3e étage"
+    },
+    {
+      "id": "jane_l03",
+      "x": 45,
+      "y": 13,
+      "radius": 4,
+      "color": "#ffd9a0",
+      "on": false,
+      "name": "Plafonnier du couloir (en panne)"
+    },
+    {
+      "id": "jane_l04",
+      "x": 6,
+      "y": 10,
+      "radius": 2,
+      "color": "#ff3344",
+      "on": true,
+      "name": "Éclairage — Cage d'escalier"
+    },
+    {
+      "id": "jane_l05",
+      "x": 20,
+      "y": 25,
+      "radius": 4,
+      "color": "#ffb35c",
+      "on": true,
+      "name": "Éclairage — Salon"
+    },
+    {
+      "id": "jane_l06",
+      "x": 27,
+      "y": 17,
+      "radius": 3,
+      "color": "#fff1d0",
+      "on": true,
+      "name": "Éclairage — Cuisine"
+    },
+    {
+      "id": "jane_l07",
+      "x": 38,
+      "y": 19,
+      "radius": 3,
+      "color": "#ff9bd0",
+      "on": true,
+      "name": "Éclairage — Chambre"
+    },
+    {
+      "id": "jane_l08",
+      "x": 45,
+      "y": 25,
+      "radius": 3,
+      "color": "#fff6e0",
+      "on": true,
+      "name": "Éclairage — Atelier de déguisement"
+    },
+    {
+      "id": "jane_l09",
+      "x": 38,
+      "y": 25,
+      "radius": 2,
+      "color": "#36e6ff",
+      "on": true,
+      "name": "Éclairage — Atelier de déguisement"
+    },
+    {
+      "id": "jane_l10",
+      "x": 46,
+      "y": 19,
+      "radius": 2,
+      "color": "#d8f4ff",
+      "on": true,
+      "name": "Éclairage — Salle de bain"
+    },
+    {
+      "id": "jane_l11",
+      "x": 45,
+      "y": 5,
+      "radius": 3,
+      "color": "#7aa8ff",
+      "on": true,
+      "name": "Trideo du 3D"
+    },
+    {
+      "id": "jane_l12",
+      "x": 37,
+      "y": 31,
+      "radius": 4,
+      "color": "#ffb766",
+      "on": true,
+      "name": "Lampadaire de la rue (en contrebas)"
+    }
+  ],
+  "regions": [
+    {
+      "id": "jane_r01",
+      "name": "Cage d'escalier",
+      "x": 2,
+      "y": 2,
+      "w": 7,
+      "h": 9,
+      "color": "#4a4a55",
+      "gmOnly": false
+    },
+    {
+      "id": "jane_r02",
+      "name": "Ascenseur (en panne)",
+      "x": 10,
+      "y": 8,
+      "w": 3,
+      "h": 3,
+      "color": "#4a4a55",
+      "gmOnly": false
+    },
+    {
+      "id": "jane_r03",
+      "name": "Couloir du 3e étage",
+      "x": 2,
+      "y": 12,
+      "w": 48,
+      "h": 3,
+      "color": "#3a3a48",
+      "gmOnly": false
+    },
+    {
+      "id": "jane_r04",
+      "name": "Apt 3B (Mme Okafor)",
+      "x": 14,
+      "y": 2,
+      "w": 13,
+      "h": 9,
+      "color": "#5a4a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "jane_r05",
+      "name": "Apt 3C (vide)",
+      "x": 28,
+      "y": 2,
+      "w": 11,
+      "h": 9,
+      "color": "#4a4040",
+      "gmOnly": false
+    },
+    {
+      "id": "jane_r06",
+      "name": "Apt 3D",
+      "x": 40,
+      "y": 2,
+      "w": 10,
+      "h": 9,
+      "color": "#5a4a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "jane_r07",
+      "name": "Apt 3A",
+      "x": 2,
+      "y": 16,
+      "w": 11,
+      "h": 13,
+      "color": "#5a4a3a",
+      "gmOnly": false
+    },
+    {
+      "id": "jane_r08",
+      "name": "Entrée",
+      "x": 14,
+      "y": 16,
+      "w": 8,
+      "h": 5,
+      "color": "#7a4a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "jane_r09",
+      "name": "Cuisine",
+      "x": 23,
+      "y": 16,
+      "w": 10,
+      "h": 5,
+      "color": "#7a4a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "jane_r10",
+      "name": "Salon",
+      "x": 14,
+      "y": 22,
+      "w": 19,
+      "h": 7,
+      "color": "#8a4a7a",
+      "gmOnly": false
+    },
+    {
+      "id": "jane_r11",
+      "name": "Chambre",
+      "x": 34,
+      "y": 16,
+      "w": 9,
+      "h": 7,
+      "color": "#7a4a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "jane_r12",
+      "name": "Salle de bain",
+      "x": 44,
+      "y": 16,
+      "w": 6,
+      "h": 7,
+      "color": "#4a6a7a",
+      "gmOnly": false
+    },
+    {
+      "id": "jane_r13",
+      "name": "Atelier de déguisement",
+      "x": 34,
+      "y": 24,
+      "w": 16,
+      "h": 5,
+      "color": "#6a3a8a",
+      "gmOnly": false
+    },
+    {
+      "id": "jane_r14",
+      "name": "Planque d'armes",
+      "x": 41,
+      "y": 16,
+      "w": 2,
+      "h": 2,
+      "color": "#8a2a2a",
+      "gmOnly": true
+    },
+    {
+      "id": "jane_r15",
+      "name": "Escalier de secours",
+      "x": 30,
+      "y": 30,
+      "w": 15,
+      "h": 2,
+      "color": "#3a4a5c",
+      "gmOnly": false
+    }
+  ],
+  "notes": [
+    {
+      "id": "jane_n01",
+      "x": 41,
+      "y": 16,
+      "text": "Planque derrière la penderie (passage secret) : munitions, kit de déguisement de secours, créditubes. Contenu exact à valider avec le joueur de Jane.",
+      "gmOnly": true
+    },
+    {
+      "id": "jane_n02",
+      "x": 36,
+      "y": 25,
+      "text": "Établi : kit de diagnostic électronique — Stades 1-2 de l'analyse de l'implant (seuils 3/6). Bricks peut y brancher son deck pour le Stade 3 (seuil 9).",
+      "gmOnly": true
+    },
+    {
+      "id": "jane_n03",
+      "x": 20,
+      "y": 27,
+      "text": "Session 3 — la femme secourue sur le canapé, enroulée dans une couverture, sursaute au moindre bruit de couloir.",
+      "gmOnly": true
+    },
+    {
+      "id": "jane_n04",
+      "x": 33,
+      "y": 6,
+      "text": "Apt 3C vide : si le signal de l'implant a été capté, un guetteur de Reyes s'y est installé (porte forcée : Perception seuil 4).",
+      "gmOnly": true
+    },
+    {
+      "id": "jane_n05",
+      "x": 21,
+      "y": 8,
+      "text": "Mme Okafor (3B) : voit tout par son judas. Témoin gênant… ou alliée : elle a remarqué une voiture qui tourne dans la rue depuis deux jours.",
+      "gmOnly": true
+    },
+    {
+      "id": "jane_n06",
+      "x": 37,
+      "y": 30,
+      "text": "Escalier de secours : seconde voie d'assaut (prise en tenaille avec la cage d'escalier). D'ici, on voit la voiture qui stationne trop longtemps en bas (session 3, scène 2).",
+      "gmOnly": true
+    },
+    {
+      "id": "jane_n07",
+      "x": 11,
+      "y": 9,
+      "text": "Ascenseur en panne depuis des mois : seule voie rapide = l'escalier. Bon goulet d'étranglement pour tenir le couloir.",
+      "gmOnly": true
+    },
+    {
+      "id": "jane_n08",
+      "x": 19,
+      "y": 16,
+      "text": "Porte blindée (Structure 8) + maglock rating 4. Caméra-judas reliée au commlink de Jane.",
+      "gmOnly": true
+    },
+    {
+      "id": "jane_n09",
+      "x": 46,
+      "y": 9,
+      "text": "Apt 3D : couple d'orks bruyant, trideo à fond. Les coups de feu suppressés passent inaperçus ; les autres, non.",
+      "gmOnly": true
+    }
+  ],
+  "tokens": [],
+  "explored": {}
+}

@@ -1,0 +1,4862 @@
+[
+  {
+    "id": "pc_anthony",
+    "type": "pc",
+    "name": "Anthony Von Schloss",
+    "player": "Tonikou",
+    "metatype": "Humain",
+    "age": 22,
+    "gender": "Homme",
+    "concept": "Samouraï des rues — maître du kenjutsu",
+    "color": "#dc143c",
+    "portrait": "/assets/foundry/img/anthony.png",
+    "bio": "Héritier d’une famille noble de guerriers allemande, Anthony a été envoyé au Japon pour être formé au **kenjutsu** par un moine. Il a ensuite dérivé vers la pègre de Seattle (mafia, yakuza) avant de devenir shadowrunner.\n\nCombattant au corps-à-corps redoutable, il manie le **nodachi** avec une précision chirurgicale… et un penchant sadique : il prend plaisir à achever les ennemis blessés (*Accompli dans le meurtre*).\n\n### Historique (Foundry)\n\nAnthony von schloss was born in Germany in Berlin. His family is a family of noble warriors possessing acastle. One day, when his family expelled him from the castle (they were fed up with him doing nothing with his days), he decided to go to Japan.\nThere, he met a monk (Adachi Morinaga), who accommodated him in his temple and mainly taught him how to manage himself. Anthony also learned the art of katana there and some basic knowledge about Kenjutsu. He was fired when the monks realized that Anthony's ideologies were very different from theirs. Indeed, although Anthony had a great ethics and that he used his katana and Kenjutsu to protect the population and the innocent people in general, he took great pleasure in killing his enemies and more particularly in finishing them off in a violent manner when they were wounded and when they implored to spare them. Anthony then went to the nearest airport and requested a ticket completely randomly. He then took the plane and landed in Seattle in the United States.\nHe spent a few months in the streets hanging out with bad influences like the mafia, the yakuza and other gangsters. Thanks to his skills in combat, he managed to quickly make a reputation and consequently money. Today, after preparing himself physically and in equipment, Anthony made the decision to hire his services and become a shadowrunner. He is just getting ready to begin his first mission.",
+    "notes": "Fiche synchronisée depuis Foundry VTT (monde « Shadowrun »). Les changements faits dans Foundry arrivent ici quand le MJ relance l'import.",
+    "gmNotes": "Volonté 1 et Logique 1 : très influençable, résiste mal à l’intimidation et à la manipulation, mémoire défaillante — à exploiter avec doigté.",
+    "attributes": {
+      "BOD": 5,
+      "AGI": 5,
+      "REA": 5,
+      "STR": 6,
+      "WIL": 1,
+      "LOG": 1,
+      "INT": 5,
+      "CHA": 4,
+      "EDG": 5,
+      "ESS": 6
+    },
+    "augmented": {},
+    "initiative": {
+      "dice": 1,
+      "bonus": 0
+    },
+    "condition": {
+      "physical": 0,
+      "stun": 0,
+      "overflow": 0
+    },
+    "edge": {
+      "current": 5
+    },
+    "skills": [
+      {
+        "id": "clubs",
+        "name": "Armes contondantes",
+        "attr": "AGI",
+        "rating": 6,
+        "group": "close_combat"
+      },
+      {
+        "id": "blades",
+        "name": "Armes tranchantes",
+        "attr": "AGI",
+        "rating": 6,
+        "spec": "Swords",
+        "group": "close_combat"
+      },
+      {
+        "id": "unarmed_combat",
+        "name": "Combat à mains nues",
+        "attr": "AGI",
+        "rating": 6,
+        "group": "close_combat"
+      },
+      {
+        "id": "automatics",
+        "name": "Armes automatiques",
+        "attr": "AGI",
+        "rating": 5,
+        "group": "firearms"
+      },
+      {
+        "id": "longarms",
+        "name": "Armes d’épaule",
+        "attr": "AGI",
+        "rating": 5,
+        "group": "firearms"
+      },
+      {
+        "id": "running",
+        "name": "Course",
+        "attr": "STR",
+        "rating": 5,
+        "group": "athletics"
+      },
+      {
+        "id": "pistols",
+        "name": "Pistolets",
+        "attr": "AGI",
+        "rating": 5,
+        "group": "firearms"
+      },
+      {
+        "id": "gymnastics",
+        "name": "Gymnastique",
+        "attr": "AGI",
+        "rating": 3,
+        "group": "athletics"
+      },
+      {
+        "id": "etiquette",
+        "name": "Étiquette",
+        "attr": "CHA",
+        "rating": 2,
+        "group": "influence"
+      },
+      {
+        "id": "leadership",
+        "name": "Leadership",
+        "attr": "CHA",
+        "rating": 2,
+        "group": "influence"
+      },
+      {
+        "id": "negotiation",
+        "name": "Négociation",
+        "attr": "CHA",
+        "rating": 2,
+        "group": "influence"
+      },
+      {
+        "id": "disguise",
+        "name": "Déguisement",
+        "attr": "INT",
+        "rating": 1,
+        "group": "stealth"
+      },
+      {
+        "id": "palming",
+        "name": "Escamotage",
+        "attr": "AGI",
+        "rating": 1,
+        "group": "stealth"
+      },
+      {
+        "id": "sneaking",
+        "name": "Furtivité",
+        "attr": "AGI",
+        "rating": 1,
+        "group": "stealth"
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "fvtt_PwzQ7XcF5dLsoUqt",
+        "name": "English",
+        "rating": 0,
+        "type": "language",
+        "native": true
+      },
+      {
+        "id": "fvtt_8OXT9eTp85j3DT76",
+        "name": "German",
+        "rating": 0,
+        "type": "language",
+        "native": true
+      },
+      {
+        "id": "fvtt_OyL6xZ7NCKbrsxmg",
+        "name": "Bars and Clubs",
+        "rating": 1,
+        "type": "street"
+      },
+      {
+        "id": "fvtt_LeYSW6BtqhodDQGB",
+        "name": "Corporation: DocWagon",
+        "rating": 1,
+        "type": "street"
+      },
+      {
+        "id": "fvtt_MG33zDxEC0kskxgx",
+        "name": "Fight Clubs",
+        "rating": 1,
+        "type": "street"
+      },
+      {
+        "id": "fvtt_7NDoM5fjuU3iC9V3",
+        "name": "Mafia",
+        "rating": 2,
+        "type": "street"
+      },
+      {
+        "id": "fvtt_wd0ogSFH8rykf2Go",
+        "name": "Street Gangs: Seattle",
+        "rating": 1,
+        "type": "street",
+        "spec": "405 Hellhounds"
+      },
+      {
+        "id": "fvtt_z5VgPpd3ksmaVjKo",
+        "name": "Triads",
+        "rating": 1,
+        "type": "street"
+      },
+      {
+        "id": "fvtt_KPcY4BldJEYOXAc9",
+        "name": "Yakuza",
+        "rating": 1,
+        "type": "street"
+      },
+      {
+        "id": "fvtt_kxEqmYxvsShr9Ej5",
+        "name": "Alcohol",
+        "rating": 1,
+        "type": "interest"
+      },
+      {
+        "id": "fvtt_Ewrwu0J4ZACYTols",
+        "name": "Blade Design",
+        "rating": 1,
+        "type": "interest",
+        "spec": "Swords"
+      }
+    ],
+    "qualities": [
+      {
+        "id": "fvtt_lwkFz6pxq2MiFsRJ",
+        "name": "Défenseur agile",
+        "karma": 3,
+        "positive": true,
+        "notes": "Agile Defender · RG 127",
+        "catalogId": "1d0c4278-501d-456f-ab63-69afee6fbf95"
+      },
+      {
+        "id": "fvtt_xs1kGkhBD80X4Kpt",
+        "name": "Accompli dans le meurtre",
+        "karma": 8,
+        "positive": true,
+        "notes": "Revels in Murder · CF 56",
+        "catalogId": "999fd139-d2c7-42ba-8ff8-cd9cbe65711c"
+      },
+      {
+        "id": "fvtt_Eh6yKKf7bPrUmE7G",
+        "name": "Bilingue",
+        "karma": 5,
+        "positive": true,
+        "notes": "Bilingual · SR5 72",
+        "catalogId": "c734e46a-d391-45a6-b022-6f18db5019f1"
+      },
+      {
+        "id": "fvtt_rgJ2rY0vDTJ1MXIU",
+        "name": "Finishing Move",
+        "karma": 0,
+        "positive": true,
+        "notes": "Finishing Move · RG 124"
+      }
+    ],
+    "powers": [],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "fvtt_Dtk9ui4OSmwXXnJw",
+        "name": "Mains nues",
+        "category": "Corps à corps",
+        "kind": "melee",
+        "skill": "unarmed_combat",
+        "accuracy": 8,
+        "damage": "(STR)S",
+        "ap": 0,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "equipped": true,
+        "notes": "Unarmed Attack (SR5 132)"
+      },
+      {
+        "id": "fvtt_2cQIIYkKrRxiNUeR",
+        "name": "Nodachi",
+        "category": "Armes tranchantes",
+        "kind": "melee",
+        "skill": "blades",
+        "accuracy": 5,
+        "damage": "11P",
+        "ap": -5,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 2,
+        "equipped": true,
+        "catalogId": "56639654-5143-4bba-9354-9ae19ed7d658",
+        "notes": "Nodachi (SL 21)"
+      },
+      {
+        "id": "fvtt_SjM0aaww96kxVueJ",
+        "name": "Colt Government 2066",
+        "category": "Pistolets lourds",
+        "kind": "ranged",
+        "skill": "pistols",
+        "accuracy": 6,
+        "damage": "7P",
+        "ap": -5,
+        "mode": "SA",
+        "rc": 3,
+        "ammo": "14",
+        "reach": 0,
+        "equipped": true,
+        "catalogId": "6366691e-c1e0-4d5e-b7a6-1c0371708714",
+        "notes": "Colt Government 2066 (SR5 426)"
+      },
+      {
+        "id": "fvtt_ktWotmSZbqkcu695",
+        "name": "Grapple Gun",
+        "category": "Arme à distance",
+        "kind": "ranged",
+        "skill": "exotic_weapon",
+        "accuracy": 3,
+        "damage": "7S",
+        "ap": -2,
+        "mode": "CC",
+        "rc": 3,
+        "ammo": "",
+        "reach": 0,
+        "equipped": true,
+        "notes": "Grapple Gun (SR5 449)"
+      },
+      {
+        "id": "fvtt_9Wew96JuhjjGHUUB",
+        "name": "Électro-gants (Paire)",
+        "category": "Combat à mains nues",
+        "kind": "melee",
+        "skill": "unarmed_combat",
+        "accuracy": 8,
+        "damage": "8S",
+        "ap": -5,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "equipped": true,
+        "catalogId": "e789ce47-f1bf-4c08-88b8-3295dddd03b1",
+        "notes": "Shock Gloves (SR5 423)"
+      },
+      {
+        "id": "fvtt_W8dcgjfyDmy7ivNi",
+        "name": "Grenade: Flash-Bang",
+        "category": "Arme de jet",
+        "kind": "ranged",
+        "skill": "throwing_weapons",
+        "accuracy": 8,
+        "damage": "10S",
+        "ap": -4,
+        "mode": "",
+        "rc": 3,
+        "ammo": "",
+        "reach": 0,
+        "equipped": true,
+        "notes": "Grenade: Flash-Bang (SR5 435)"
+      },
+      {
+        "id": "fvtt_ejEwGCVoJcX2A23P",
+        "name": "Grenade: Fragmentation",
+        "category": "Arme de jet",
+        "kind": "ranged",
+        "skill": "throwing_weapons",
+        "accuracy": 8,
+        "damage": "18P",
+        "ap": 5,
+        "mode": "",
+        "rc": 3,
+        "ammo": "",
+        "reach": 0,
+        "equipped": true,
+        "notes": "Grenade: Fragmentation (SR5 435)"
+      },
+      {
+        "id": "fvtt_JUafFzFQr2BsVJnG",
+        "name": "Ares Alpha",
+        "category": "Fusils d'assaut",
+        "kind": "ranged",
+        "skill": "automatics",
+        "accuracy": 5,
+        "damage": "11P",
+        "ap": -6,
+        "mode": "SA/TR/TA",
+        "rc": 5,
+        "ammo": "42(c)",
+        "reach": 0,
+        "equipped": true,
+        "catalogId": "3a7a90ce-fbb5-4599-a857-b9849eb9769c",
+        "notes": "Ares Alpha (SR5 428)"
+      },
+      {
+        "id": "fvtt_Mu38LLsOGepD6TTx",
+        "name": "Micro Flare Launcher",
+        "category": "Arme à distance",
+        "kind": "ranged",
+        "skill": "exotic_weapon",
+        "accuracy": 3,
+        "damage": "5P",
+        "ap": -5,
+        "mode": "CC",
+        "rc": 3,
+        "ammo": "",
+        "reach": 0,
+        "equipped": true,
+        "notes": "Micro Flare Launcher (SR5 449)"
+      },
+      {
+        "id": "fvtt_TiTAtU2FqV5PWlVk",
+        "name": "Ares Alpha Grenade Launcher",
+        "category": "underbarrel weapons",
+        "kind": "ranged",
+        "skill": "heavy_weapons",
+        "accuracy": 6,
+        "damage": "Spécial",
+        "ap": 0,
+        "mode": "CC",
+        "rc": 0,
+        "ammo": "6",
+        "reach": 0,
+        "equipped": true,
+        "notes": "Ares Alpha Grenade Launcher (SR5 428)"
+      }
+    ],
+    "armor": [
+      {
+        "id": "fvtt_BvFtNTWWs5UfNkl5",
+        "name": "Vashon Island : Sleeping Tiger",
+        "rating": 15,
+        "equipped": true,
+        "stack": false,
+        "notes": "Vashon Island: Sleeping Tiger",
+        "catalogId": "fc8fd2e8-4856-4830-b241-a5128a08f902"
+      },
+      {
+        "id": "fvtt_C21GQUVNImGCREU6",
+        "name": "Casque SWAT",
+        "rating": 3,
+        "equipped": true,
+        "stack": true,
+        "notes": "SWAT Helmet",
+        "catalogId": "8408b3e7-87ff-4b6e-bfdc-19433ba356da"
+      }
+    ],
+    "augmentations": [],
+    "gear": [
+      {
+        "id": "fvtt_5N2KugWoU3mbEPVX",
+        "name": "Mun. : Balles ADPS",
+        "category": "Munitions",
+        "qty": 33,
+        "catalogId": "ef9c8aae-26df-4fe6-88b3-79fbb5eb77c5",
+        "notes": "Ammo: APDS (Heavy Pistols)"
+      },
+      {
+        "id": "fvtt_412fi7IPqwVVj2hv",
+        "name": "Chargeur supplémentaire",
+        "category": "Munitions",
+        "qty": 3,
+        "catalogId": "75ccb148-e774-429c-b854-a27816439626",
+        "notes": "Spare Clip (Colt Government 2066)"
+      },
+      {
+        "id": "fvtt_lxmtL8j5D4QKj96B",
+        "name": "Lunettes",
+        "category": "Appareils optiques et d'imagerie",
+        "rating": 4,
+        "qty": 1,
+        "catalogId": "b218dbd1-5706-4d9e-a6a7-ab9b658c3acd",
+        "notes": "Glasses"
+      },
+      {
+        "id": "fvtt_sHtFbj8TLztcfckJ",
+        "name": "Lance-grappin",
+        "category": "Lance-Grappin",
+        "qty": 1,
+        "catalogId": "59561c08-3269-470d-9d8b-3cde8a8ccbf8",
+        "notes": "Grapple Gun"
+      },
+      {
+        "id": "fvtt_XTfz6JYm1LVbP7nS",
+        "name": "Créditube certifié (Platine)",
+        "category": "Identité et créditubes",
+        "qty": 1,
+        "catalogId": "a19055f0-02ab-4bc2-ab43-0ef82e1b9100",
+        "notes": "Certified Credstick, Platinum"
+      },
+      {
+        "id": "fvtt_ksMvTsgHtCPQl8wT",
+        "name": "TNT",
+        "category": "Explosifs",
+        "rating": 5,
+        "qty": 3,
+        "catalogId": "733504c5-f2bb-4114-9132-e92979dc2010"
+      },
+      {
+        "id": "fvtt_5HaiARDaqfqtfESJ",
+        "name": "Atomiseur",
+        "category": "Matériel d'Alchimie",
+        "rating": 6,
+        "qty": 1,
+        "catalogId": "377c7545-50e3-4547-a47b-1a0cd9ee567f",
+        "notes": "Atomizer"
+      },
+      {
+        "id": "fvtt_lTw2yds3pRAzI9rn",
+        "name": "Dynamite",
+        "category": "Explosifs",
+        "rating": 3,
+        "qty": 1,
+        "catalogId": "df3efeef-661f-41fd-9007-01ba7db42dee"
+      },
+      {
+        "id": "fvtt_GOpJAMvsEgcZRHJu",
+        "name": "Prostitué·e (Luxe)",
+        "category": "Équipement",
+        "qty": 1,
+        "catalogId": "e89c0769-97e7-43c4-911a-c3fca2b09440",
+        "notes": "Prostitute (Good)"
+      },
+      {
+        "id": "fvtt_7101zcZRsz4wm0dE",
+        "name": "Black Panther",
+        "category": "Parfums",
+        "qty": 1,
+        "catalogId": "6393ca16-41d0-4714-b7a0-1be18a62815c"
+      },
+      {
+        "id": "fvtt_lz1bR05LG6SmbaLB",
+        "name": "Sac à dos (Bonne qualité)",
+        "category": "Outils",
+        "qty": 1,
+        "catalogId": "d7c98f39-279e-4169-8818-0c3cad08205b",
+        "notes": "Backpack (Good)"
+      },
+      {
+        "id": "fvtt_5opVmgb2hS9dDkSs",
+        "name": "Briquet rechargeable",
+        "category": "Outils",
+        "qty": 1,
+        "catalogId": "17ff01a6-e143-4d07-979d-d524671e1d34",
+        "notes": "Lighter (Good)"
+      },
+      {
+        "id": "fvtt_v0Ew86YXjkYDcKC4",
+        "name": "Médikit à nanites",
+        "category": "Équipement",
+        "qty": 1,
+        "catalogId": "4752d8ab-4393-4fd6-a3c6-c85f65d01281",
+        "notes": "Savior Medkit"
+      },
+      {
+        "id": "fvtt_gFqab65jzsQvzWZf",
+        "name": "Recharge pour médikit à nanites",
+        "category": "Équipement",
+        "qty": 4,
+        "catalogId": "4f4f8801-dfe6-4847-add3-4afa66ec547f",
+        "notes": "Savior Medkit Supplies"
+      },
+      {
+        "id": "fvtt_ilKUUngqudWG5mzp",
+        "name": "Paquet de chips (Gros)",
+        "category": "Nourriture",
+        "qty": 2,
+        "catalogId": "989796e7-445e-4fa7-87b5-3152612fa6ee",
+        "notes": "Bag of Chips (Large)"
+      },
+      {
+        "id": "fvtt_GDSIN6VhsE7Ddhih",
+        "name": "Corde standard (100m)",
+        "category": "Lance-Grappin",
+        "qty": 2,
+        "catalogId": "8adaecd5-0c24-4982-8803-e4459e16589f",
+        "notes": "Standard Rope (100m)"
+      },
+      {
+        "id": "fvtt_ZeUedzu7pou1nzdy",
+        "name": "Chargeur supplémentaire",
+        "category": "Munitions",
+        "qty": 3,
+        "catalogId": "75ccb148-e774-429c-b854-a27816439626",
+        "notes": "Spare Clip (Ares Alpha)"
+      },
+      {
+        "id": "fvtt_Mf3obHEfVY8DVDcB",
+        "name": "Mun. : Balles ADPS",
+        "category": "Munitions",
+        "qty": 48,
+        "catalogId": "ef9c8aae-26df-4fe6-88b3-79fbb5eb77c5",
+        "notes": "Ammo: APDS (Assault Rifles)"
+      },
+      {
+        "id": "fvtt_rnx3SGK1v6IWNrHC",
+        "name": "Lance micro-fusées de détresse",
+        "category": "Améliorations d'armure",
+        "qty": 1,
+        "catalogId": "f77fc093-d5cf-4be6-bfeb-311653ecd64e",
+        "notes": "Micro Flare Launcher"
+      },
+      {
+        "id": "fvtt_G7r1MDlrPeg9myKb",
+        "name": "Matériel d'escalade",
+        "category": "Matériel de Survie",
+        "qty": 1,
+        "catalogId": "a17cae86-4d6f-4e00-acb6-03f0ccfb2807",
+        "notes": "Climbing Gear"
+      },
+      {
+        "id": "fvtt_pP9vQeYwSCmrZdXA",
+        "name": "Bouteille d'eau (1 litre)",
+        "category": "Nourriture",
+        "qty": 1,
+        "catalogId": "af06a5f9-a010-4e29-95b0-cd3e280d1de3",
+        "notes": "Liter Bottle of Water"
+      }
+    ],
+    "vehicles": [
+      {
+        "id": "fvtt_GJEaGFAI8hw84rgX",
+        "name": "Harley-Davidson Nightmare",
+        "handling": "4",
+        "speed": "5",
+        "accel": "3",
+        "body": 8,
+        "armor": 8,
+        "pilot": 2,
+        "sensor": 3,
+        "notes": "Type : ground",
+        "catalogId": "f0b4963e-d709-47a2-a290-5528c79d2cd8",
+        "img": "/assets/foundry/img/harley-nightmare.jpg"
+      }
+    ],
+    "contacts": [
+      {
+        "id": "fvtt_IMPDwbhYzZQFOD28",
+        "name": "James M. Carter",
+        "connection": 2,
+        "loyalty": 3,
+        "notes": "Police Chief"
+      },
+      {
+        "id": "fvtt_lBLQ8SyaE25PaEDL",
+        "name": "Vitto Scaletta",
+        "connection": 4,
+        "loyalty": 3,
+        "notes": "Mafia Godfather"
+      },
+      {
+        "id": "fvtt_9MqjigHrH70yhDRQ",
+        "name": "Perrine Cabana",
+        "connection": 2,
+        "loyalty": 4,
+        "notes": "Armorer"
+      },
+      {
+        "id": "fvtt_7es2OCw4BnuDDB6t",
+        "name": "Joseph Mayers",
+        "connection": 1,
+        "loyalty": 4,
+        "notes": "Street doc"
+      }
+    ],
+    "sins": [
+      {
+        "id": "fvtt_DihqrCp1INQxdULM",
+        "name": "Faux SIN — Anthony Johnson",
+        "rating": 4,
+        "licenses": [
+          "Driver's License (4)",
+          "Explosives License (4)",
+          "Large Blades License (4)",
+          "Restricted Armor License (4)",
+          "Weapon License (4)"
+        ]
+      },
+      {
+        "id": "fvtt_r0xKpzKHfItfN1Pd",
+        "name": "Faux SIN — Geroge Clam",
+        "rating": 4,
+        "licenses": [
+          "Driver's License (4)",
+          "Weapon License (4)",
+          "Explosives License (4)",
+          "Large Blades License (4)",
+          "Restricted Armor License (4)"
+        ]
+      }
+    ],
+    "lifestyle": {
+      "name": "Anthony's lifestyle (Moyen)",
+      "monthlyCost": 7083,
+      "monthsPaid": 1
+    },
+    "karma": 27,
+    "karmaTotal": 27,
+    "nuyen": 31847,
+    "streetCred": 2,
+    "notoriety": 1,
+    "publicAwareness": 1,
+    "vision": {},
+    "history": [
+      {
+        "ts": 1795197600000,
+        "text": "Valeurs de départ (récap de campagne, fin du job « Kidnapping ») : 25 karma, 26 649¥, Street Cred 2.",
+        "karma": 25,
+        "nuyen": 26649
+      },
+      {
+        "ts": 1795628564735,
+        "text": "Synchronisation Foundry (test-world) : 27 karma, 31 847¥",
+        "karma": 2,
+        "nuyen": 5198
+      }
+    ],
+    "matrix": {
+      "device": "Pulse Wave (commlink)",
+      "rating": 6,
+      "attack": 0,
+      "sleaze": 0,
+      "dataProcessing": 6,
+      "firewall": 6,
+      "programs": []
+    },
+    "foundry": {
+      "id": "8RLyHqM47QR56DTo",
+      "world": "test-world",
+      "importedAt": 1795629244307,
+      "hash": "345aeb1f5c86",
+      "snapshot": {
+        "s": {
+          "karma": 27,
+          "karmaTotal": 27,
+          "nuyen": 31847,
+          "streetCred": 2,
+          "notoriety": 1,
+          "publicAwareness": 1,
+          "metatype": "Humain"
+        },
+        "a": {
+          "BOD": 5,
+          "AGI": 5,
+          "REA": 5,
+          "STR": 6,
+          "WIL": 1,
+          "LOG": 1,
+          "INT": 5,
+          "CHA": 4,
+          "EDG": 5,
+          "ESS": 6
+        },
+        "aug": {},
+        "init": {
+          "dice": 1,
+          "bonus": 0
+        },
+        "c": {
+          "physical": 0,
+          "stun": 0,
+          "overflow": 0
+        },
+        "e": 5,
+        "sk": {
+          "clubs": "ffa193c2d167",
+          "blades": "d24d13eb2442",
+          "unarmed_combat": "f0b57aee3f8a",
+          "automatics": "269f528082d6",
+          "longarms": "125c2654f9a7",
+          "running": "936e2d82a205",
+          "pistols": "9912ef1f8bf2",
+          "gymnastics": "46afaf3c71e7",
+          "etiquette": "57d116c08b09",
+          "leadership": "45dac1d0b63e",
+          "negotiation": "52bc83ee0900",
+          "disguise": "ddc43d4f0dca",
+          "palming": "99ced90f5ac5",
+          "sneaking": "26485071d71f"
+        },
+        "items": {
+          "weapons": {
+            "fvtt_Dtk9ui4OSmwXXnJw": "53c1f7a80ed7",
+            "fvtt_2cQIIYkKrRxiNUeR": "99442aa0110f",
+            "fvtt_SjM0aaww96kxVueJ": "c726ab0d8ebf",
+            "fvtt_ktWotmSZbqkcu695": "b567e1bf3dbe",
+            "fvtt_9Wew96JuhjjGHUUB": "e0e7496e4da0",
+            "fvtt_W8dcgjfyDmy7ivNi": "375da282369b",
+            "fvtt_ejEwGCVoJcX2A23P": "ca8c037ef944",
+            "fvtt_JUafFzFQr2BsVJnG": "28e2162c7f30",
+            "fvtt_Mu38LLsOGepD6TTx": "fe22949cf959",
+            "fvtt_TiTAtU2FqV5PWlVk": "59c1a2ccbc28"
+          },
+          "armor": {
+            "fvtt_BvFtNTWWs5UfNkl5": "3c24b0ea948f",
+            "fvtt_C21GQUVNImGCREU6": "cea737a56c91"
+          },
+          "augmentations": {},
+          "gear": {
+            "fvtt_5N2KugWoU3mbEPVX": "adf24e7f51f8",
+            "fvtt_412fi7IPqwVVj2hv": "a6d0f00b28bd",
+            "fvtt_lxmtL8j5D4QKj96B": "0c37964897bd",
+            "fvtt_sHtFbj8TLztcfckJ": "5caf502d83a5",
+            "fvtt_XTfz6JYm1LVbP7nS": "ed7807b35912",
+            "fvtt_ksMvTsgHtCPQl8wT": "1c3cadf040a8",
+            "fvtt_5HaiARDaqfqtfESJ": "708d398796ac",
+            "fvtt_lTw2yds3pRAzI9rn": "1f5bdda76bc1",
+            "fvtt_GOpJAMvsEgcZRHJu": "62841b7046a3",
+            "fvtt_7101zcZRsz4wm0dE": "53c503309069",
+            "fvtt_lz1bR05LG6SmbaLB": "7462e4a5bf00",
+            "fvtt_5opVmgb2hS9dDkSs": "419c62944207",
+            "fvtt_v0Ew86YXjkYDcKC4": "1d9bb3961fe3",
+            "fvtt_gFqab65jzsQvzWZf": "035207fef424",
+            "fvtt_ilKUUngqudWG5mzp": "b72156ea1c40",
+            "fvtt_GDSIN6VhsE7Ddhih": "a21dd45e0ae1",
+            "fvtt_ZeUedzu7pou1nzdy": "0553aabd6a0a",
+            "fvtt_Mf3obHEfVY8DVDcB": "342924121392",
+            "fvtt_rnx3SGK1v6IWNrHC": "edf7ef986db9",
+            "fvtt_G7r1MDlrPeg9myKb": "9ec863212146",
+            "fvtt_pP9vQeYwSCmrZdXA": "f59e64b3c0ed"
+          },
+          "vehicles": {
+            "fvtt_GJEaGFAI8hw84rgX": "a1508c38f157"
+          },
+          "contacts": {
+            "fvtt_IMPDwbhYzZQFOD28": "2e9dbd7f324e",
+            "fvtt_lBLQ8SyaE25PaEDL": "987be92ef0d7",
+            "fvtt_9MqjigHrH70yhDRQ": "a72dd84848b3",
+            "fvtt_7es2OCw4BnuDDB6t": "29f4b85e9f8b"
+          },
+          "sins": {
+            "fvtt_DihqrCp1INQxdULM": "4a6a4681729e",
+            "fvtt_r0xKpzKHfItfN1Pd": "8ceec9dfa897"
+          },
+          "qualities": {
+            "fvtt_lwkFz6pxq2MiFsRJ": "49035b537ec1",
+            "fvtt_xs1kGkhBD80X4Kpt": "290a6ef0eccd",
+            "fvtt_Eh6yKKf7bPrUmE7G": "b512c115789b",
+            "fvtt_rgJ2rY0vDTJ1MXIU": "070552aee6a7"
+          },
+          "powers": {},
+          "spells": {},
+          "knowledge": {
+            "fvtt_PwzQ7XcF5dLsoUqt": "f6547faaa47b",
+            "fvtt_8OXT9eTp85j3DT76": "b24fad1853fa",
+            "fvtt_OyL6xZ7NCKbrsxmg": "d035d34f0309",
+            "fvtt_LeYSW6BtqhodDQGB": "56ff5b191f51",
+            "fvtt_MG33zDxEC0kskxgx": "303a7eb46b64",
+            "fvtt_7NDoM5fjuU3iC9V3": "f2780c83db33",
+            "fvtt_wd0ogSFH8rykf2Go": "ca33fcf4e8e5",
+            "fvtt_z5VgPpd3ksmaVjKo": "9dc09931d20d",
+            "fvtt_KPcY4BldJEYOXAc9": "5d176f1967b9",
+            "fvtt_kxEqmYxvsShr9Ej5": "750cf876d3f7",
+            "fvtt_Ewrwu0J4ZACYTols": "73e40051d5b9"
+          }
+        },
+        "matrix": "c8b737d581e8",
+        "lifestyle": "21b59363288a",
+        "vision": "bf21a9e8fbc5"
+      },
+      "user": "Tonikou"
+    }
+  },
+  {
+    "id": "pc_jane",
+    "type": "pc",
+    "name": "Jane",
+    "player": "Baptou",
+    "metatype": "Humain",
+    "age": 25,
+    "gender": "Femme",
+    "concept": "Face — adepte sociale, infiltratrice et tireuse d’élite",
+    "color": "#e0468f",
+    "portrait": "/assets/foundry/img/jane_pic.png",
+    "bio": "Face du groupe et **adepte sociale** : Jane lit les gens comme des livres ouverts, ment sans ciller et se glisse dans n’importe quel rôle. Spécialiste de l’infiltration, elle a aussi reçu une formation de **tireuse d’élite**.\n\nC’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters, et c’est chez elle que la femme secourue a été mise à l’abri. Street Cred la plus haute du groupe.",
+    "notes": "Fiche synchronisée depuis Foundry VTT (monde « Shadowrun »). Les changements faits dans Foundry arrivent ici quand le MJ relance l'import.",
+    "gmNotes": "Charisme 8 dépasse le maximum humain (6, 7 avec Attribut exceptionnel) — valeur reprise telle quelle de la fiche Foundry, à vérifier.\n\nRéaction Foundry 7 = 5 naturelle + 2 (augmentation).",
+    "attributes": {
+      "BOD": 2,
+      "AGI": 6,
+      "REA": 5,
+      "STR": 2,
+      "WIL": 3,
+      "LOG": 4,
+      "INT": 5,
+      "CHA": 8,
+      "EDG": 3,
+      "MAG": 5,
+      "ESS": 6
+    },
+    "augmented": {
+      "REA": 2
+    },
+    "initiative": {
+      "dice": 3,
+      "bonus": 0
+    },
+    "condition": {
+      "physical": 0,
+      "stun": 0,
+      "overflow": 0
+    },
+    "edge": {
+      "current": 3
+    },
+    "skills": [
+      {
+        "id": "longarms",
+        "name": "Armes d’épaule",
+        "attr": "AGI",
+        "rating": 6,
+        "spec": "Sniper Rifles",
+        "group": "firearms"
+      },
+      {
+        "id": "forgery",
+        "name": "Contrefaçon",
+        "attr": "LOG",
+        "rating": 6,
+        "spec": "Counterfeiting"
+      },
+      {
+        "id": "con",
+        "name": "Escroquerie",
+        "attr": "CHA",
+        "rating": 6,
+        "spec": "Seduction",
+        "group": "acting"
+      },
+      {
+        "id": "etiquette",
+        "name": "Étiquette",
+        "attr": "CHA",
+        "rating": 6,
+        "spec": "High Society",
+        "group": "influence"
+      },
+      {
+        "id": "impersonation",
+        "name": "Imposture",
+        "attr": "CHA",
+        "rating": 6,
+        "group": "acting"
+      },
+      {
+        "id": "leadership",
+        "name": "Leadership",
+        "attr": "CHA",
+        "rating": 6,
+        "spec": "Command",
+        "group": "influence"
+      },
+      {
+        "id": "perception",
+        "name": "Perception",
+        "attr": "INT",
+        "rating": 6,
+        "spec": "Hearing"
+      },
+      {
+        "id": "performance",
+        "name": "Représentation",
+        "attr": "CHA",
+        "rating": 6,
+        "group": "acting"
+      },
+      {
+        "id": "disguise",
+        "name": "Déguisement",
+        "attr": "INT",
+        "rating": 4,
+        "group": "stealth"
+      },
+      {
+        "id": "palming",
+        "name": "Escamotage",
+        "attr": "AGI",
+        "rating": 4,
+        "group": "stealth"
+      },
+      {
+        "id": "sneaking",
+        "name": "Furtivité",
+        "attr": "AGI",
+        "rating": 4,
+        "group": "stealth"
+      },
+      {
+        "id": "locksmith",
+        "name": "Serrurerie",
+        "attr": "AGI",
+        "rating": 2
+      },
+      {
+        "id": "artisan",
+        "name": "Artisanat",
+        "attr": "INT",
+        "rating": 1,
+        "spec": "Drawing"
+      },
+      {
+        "id": "gymnastics",
+        "name": "Gymnastique",
+        "attr": "AGI",
+        "rating": 1,
+        "spec": "Climbing",
+        "group": "athletics"
+      },
+      {
+        "id": "intimidation",
+        "name": "Intimidation",
+        "attr": "CHA",
+        "rating": 1,
+        "spec": "Mental"
+      },
+      {
+        "id": "negotiation",
+        "name": "Négociation",
+        "attr": "CHA",
+        "rating": 1,
+        "spec": "Diplomacy",
+        "group": "influence"
+      },
+      {
+        "id": "pistols",
+        "name": "Pistolets",
+        "attr": "AGI",
+        "rating": 1,
+        "spec": "Tasers",
+        "group": "firearms"
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "fvtt_hukqVWVuQYFSmH5y",
+        "name": "Arabic",
+        "rating": 1,
+        "type": "language",
+        "spec": "Speak"
+      },
+      {
+        "id": "fvtt_X4TbMlyguq13bPpI",
+        "name": "German",
+        "rating": 1,
+        "type": "language"
+      },
+      {
+        "id": "fvtt_Ci66JLOv3r903GPB",
+        "name": "Italian",
+        "rating": 1,
+        "type": "language",
+        "spec": "Speak"
+      },
+      {
+        "id": "fvtt_uwCd6Ve7JOrlQTV1",
+        "name": "Japanese",
+        "rating": 1,
+        "type": "language"
+      },
+      {
+        "id": "fvtt_lCDzIMaYZvOTP5Re",
+        "name": "Korean",
+        "rating": 1,
+        "type": "language"
+      },
+      {
+        "id": "fvtt_4WYp32GO9ltllBPL",
+        "name": "Mandarin",
+        "rating": 1,
+        "type": "language",
+        "spec": "Speak"
+      },
+      {
+        "id": "fvtt_pyyYwjdzLpngvXvY",
+        "name": "English",
+        "rating": 0,
+        "type": "language",
+        "native": true
+      },
+      {
+        "id": "fvtt_HlF9HQ6Jk23dYIaT",
+        "name": "Art",
+        "rating": 3,
+        "type": "academic"
+      },
+      {
+        "id": "fvtt_TaaIKvTpI5RtE4BD",
+        "name": "Economics",
+        "rating": 1,
+        "type": "academic"
+      },
+      {
+        "id": "fvtt_YzDmLslKD5ROJX5t",
+        "name": "Literature",
+        "rating": 3,
+        "type": "academic"
+      },
+      {
+        "id": "fvtt_hEeojLHAWUlmwqZA",
+        "name": "Business",
+        "rating": 2,
+        "type": "professional"
+      },
+      {
+        "id": "fvtt_dC9WdzhqXcTSUMJZ",
+        "name": "Law",
+        "rating": 1,
+        "type": "professional"
+      },
+      {
+        "id": "fvtt_WZgisUm92WJ0cBN2",
+        "name": "Classical Music",
+        "rating": 1,
+        "type": "interest"
+      },
+      {
+        "id": "fvtt_Fjionj4Hpci99sod",
+        "name": "Fashion",
+        "rating": 1,
+        "type": "interest"
+      },
+      {
+        "id": "fvtt_KLT5s190qDP9E6ef",
+        "name": "French",
+        "rating": 1,
+        "type": "language"
+      }
+    ],
+    "qualities": [
+      {
+        "id": "fvtt_TeMLhpmn8eDDt6oN",
+        "name": "Low-Light Vision",
+        "karma": 0,
+        "positive": true,
+        "notes": "Low-Light Vision · SR5 66"
+      },
+      {
+        "id": "fvtt_HpxSqH2lxbOHx75C",
+        "name": "Adepte",
+        "karma": 20,
+        "positive": true,
+        "notes": "Adept · SR5 69",
+        "catalogId": "55247bdc-c313-4614-ae15-5012308096ff"
+      },
+      {
+        "id": "fvtt_CvDvgEJ6C8zVf0Ax",
+        "name": "Époustouflant",
+        "karma": 3,
+        "positive": true,
+        "notes": "Too Pretty To Hit · RG 127",
+        "catalogId": "0c23861e-36d1-4454-b327-0d8118d02d60"
+      },
+      {
+        "id": "fvtt_B7sAN7m6W9H6BDwt",
+        "name": "Aimant à accidents",
+        "karma": -4,
+        "positive": false,
+        "notes": "Accident Prone · R5 33",
+        "catalogId": "ba27345f-0e68-4660-9b76-2b999c3a4161"
+      },
+      {
+        "id": "fvtt_nVVW1qXSm56dZadT",
+        "name": "Tu me prends pour un con ?",
+        "karma": -3,
+        "positive": false,
+        "notes": "Did You Just Call Me Dumb? · RF 154",
+        "catalogId": "8bca877e-42e5-4ff7-92ec-4c83f4cadb86"
+      },
+      {
+        "id": "fvtt_D41vBPOa0PQ7X6SQ",
+        "name": "Poids plume",
+        "karma": -6,
+        "positive": false,
+        "notes": "Lightweight · CF 58",
+        "catalogId": "8e176d15-e646-4aed-824c-171c6bd9e4bc"
+      }
+    ],
+    "powers": [
+      {
+        "id": "fvtt_A3rg282jy3mgwplV",
+        "name": "Ton autoritaire",
+        "level": 1,
+        "pp": 0.5,
+        "notes": "Authoritative Tone · SG 170",
+        "catalogId": "5f1ebcd8-9571-4716-b7fd-ec674306b833"
+      },
+      {
+        "id": "fvtt_FuoHtDdgUoyW3yOk",
+        "name": "Mémoire eidétique",
+        "pp": 0.5,
+        "notes": "Eidetic Sense Memory · SSP 23",
+        "catalogId": "57e7de72-6155-486b-9269-caebedfb34fe"
+      },
+      {
+        "id": "fvtt_ffRVAQh3Z4UFj3Dr",
+        "name": "Réflexes améliorés",
+        "level": 2,
+        "pp": 2.5,
+        "notes": "Improved Reflexes · SR5 310",
+        "catalogId": "fea9e769-5f2c-4bae-9610-56c0825e145a"
+      },
+      {
+        "id": "fvtt_JMUStU55vzQCLEa6",
+        "name": "Contrôle corporel",
+        "level": 2,
+        "pp": 0.5,
+        "notes": "Kinesics · SR5 310",
+        "catalogId": "f1e8a618-ba12-4972-91f0-974500387893"
+      },
+      {
+        "id": "fvtt_6J6OjL6PJ4d1L55w",
+        "name": "Détecteur de mensonges",
+        "level": 3,
+        "pp": 0.75,
+        "notes": "Lie Detector · CA 153",
+        "catalogId": "7a5084df-b4d2-4f2a-84aa-43627f43c240"
+      },
+      {
+        "id": "fvtt_YKh0LwshiAohceUz",
+        "name": "Linguistique",
+        "pp": 0.25,
+        "notes": "Linguistics · SG 172",
+        "catalogId": "44f0bbba-184a-4e76-93de-19862ac6607b"
+      }
+    ],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "fvtt_hz8IOOlysqrmYie1",
+        "name": "Mains nues",
+        "category": "Corps à corps",
+        "kind": "melee",
+        "skill": "unarmed_combat",
+        "accuracy": 5,
+        "damage": "(STR)S",
+        "ap": 0,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "notes": "Unarmed Attack (SR5 132)"
+      },
+      {
+        "id": "fvtt_9EzHwCdrydKGarJL",
+        "name": "Defiance EX Shocker",
+        "category": "Pistolets à impulsion électrique",
+        "kind": "ranged",
+        "skill": "pistols",
+        "accuracy": 4,
+        "damage": "9S",
+        "ap": -5,
+        "mode": "CC",
+        "rc": 2,
+        "ammo": "4",
+        "reach": 0,
+        "catalogId": "7d5bcc0b-9ec2-4c87-aaa7-a4d531d7974e",
+        "notes": "Defiance EX Shocker (SR5 424)"
+      },
+      {
+        "id": "fvtt_rkS7Y5o6dM6CchmE",
+        "name": "Enfield AS-7",
+        "category": "Fusils à pompe",
+        "kind": "ranged",
+        "skill": "longarms",
+        "accuracy": 4,
+        "damage": "11S",
+        "ap": -5,
+        "mode": "SA/TR",
+        "rc": 2,
+        "ammo": "10(c)",
+        "reach": 0,
+        "equipped": true,
+        "catalogId": "622bd915-0e0c-431b-9da5-e0c0c31e2122",
+        "notes": "Enfield AS-7 (SR5 429)"
+      },
+      {
+        "id": "fvtt_Yj5oyh0NuDUyh0DR",
+        "name": "Grenade: Gas",
+        "category": "Arme de jet",
+        "kind": "ranged",
+        "skill": "throwing_weapons",
+        "accuracy": 5,
+        "damage": "10S",
+        "ap": 0,
+        "mode": "",
+        "rc": 2,
+        "ammo": "",
+        "reach": 0,
+        "equipped": true,
+        "notes": "Grenade: Gas (SR5 435)"
+      },
+      {
+        "id": "fvtt_fhk18LQKhMYn534G",
+        "name": "Grenade: Thermal Smoke",
+        "category": "Arme de jet",
+        "kind": "ranged",
+        "skill": "throwing_weapons",
+        "accuracy": 5,
+        "damage": "10S",
+        "ap": 0,
+        "mode": "",
+        "rc": 2,
+        "ammo": "",
+        "reach": 0,
+        "notes": "Grenade: Thermal Smoke (SR5 435)"
+      },
+      {
+        "id": "fvtt_Ds5A6qreqCpL8Dzq",
+        "name": "Grenade: Flash-Bang",
+        "category": "Arme de jet",
+        "kind": "ranged",
+        "skill": "throwing_weapons",
+        "accuracy": 5,
+        "damage": "10S",
+        "ap": -4,
+        "mode": "",
+        "rc": 2,
+        "ammo": "",
+        "reach": 0,
+        "notes": "Grenade: Flash-Bang (SR5 435)"
+      },
+      {
+        "id": "fvtt_EbIJJ9Zt15iJHi6r",
+        "name": "Grenade: Gas, Aerodynamic",
+        "category": "Arme de jet",
+        "kind": "ranged",
+        "skill": "throwing_weapons",
+        "accuracy": 5,
+        "damage": "10S",
+        "ap": 0,
+        "mode": "",
+        "rc": 2,
+        "ammo": "",
+        "reach": 0,
+        "notes": "Grenade: Gas, Aerodynamic (SR5 435)"
+      },
+      {
+        "id": "fvtt_1v3pqCP5LUjSgGiV",
+        "name": "Grenade: Fragmentation",
+        "category": "Arme de jet",
+        "kind": "ranged",
+        "skill": "throwing_weapons",
+        "accuracy": 5,
+        "damage": "18P",
+        "ap": 5,
+        "mode": "",
+        "rc": 2,
+        "ammo": "",
+        "reach": 0,
+        "notes": "Grenade: Fragmentation (SR5 435)"
+      },
+      {
+        "id": "fvtt_JwWl6ngUOvfn3MTK",
+        "name": "Grenade: Flash-Pak",
+        "category": "Arme de jet",
+        "kind": "ranged",
+        "skill": "throwing_weapons",
+        "accuracy": 5,
+        "damage": "Spécial",
+        "ap": 0,
+        "mode": "",
+        "rc": 2,
+        "ammo": "",
+        "reach": 0,
+        "notes": "Grenade: Flash-Pak (SR5 435)"
+      },
+      {
+        "id": "fvtt_z0d0D3M9DQ8s5Mjc",
+        "name": "Ares Desert Strike",
+        "category": "Fusils de précision",
+        "kind": "ranged",
+        "skill": "longarms",
+        "accuracy": 7,
+        "damage": "13P",
+        "ap": -4,
+        "mode": "SA",
+        "rc": 0,
+        "ammo": "14",
+        "reach": 0,
+        "catalogId": "50cec60d-a421-4edd-9baa-d10bfbc08e70",
+        "notes": "Ares Desert Strike (SR5 428)"
+      }
+    ],
+    "armor": [
+      {
+        "id": "fvtt_PFVhZGlgrRGkKkNS",
+        "name": "Costume « Actioneer »",
+        "rating": 10,
+        "equipped": false,
+        "stack": false,
+        "notes": "Actioneer Business Clothes",
+        "catalogId": "5a650844-8f24-48e7-829f-0443d9ff5cf7"
+      },
+      {
+        "id": "fvtt_6f2aB4NDqctyJ37g",
+        "name": "Zoé : Heritage 12",
+        "rating": 14,
+        "equipped": true,
+        "stack": false,
+        "notes": "Zoé: Heritage 12",
+        "catalogId": "d4804f1b-4443-4e97-a7d2-9c1659732c6b"
+      },
+      {
+        "id": "fvtt_bYX4zpTKLE5gYSDm",
+        "name": "Zoé : Second Skin",
+        "rating": 2,
+        "equipped": true,
+        "stack": true,
+        "notes": "Zoé: Second Skin",
+        "catalogId": "739b029d-b2a0-48cb-ac2e-51636fc495c2"
+      }
+    ],
+    "augmentations": [],
+    "gear": [
+      {
+        "id": "fvtt_LNc3CxmZSxKYYFyY",
+        "name": "Chaussures haut de gamme",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "b7d83159-2840-4a10-985f-4ef346715c80",
+        "notes": "Nice Shoes"
+      },
+      {
+        "id": "fvtt_ZnC0iMCdAX6Ojdoq",
+        "name": "Sous-vêtements haut de gamme",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "675b4735-227e-4395-8f62-bd9a62670474",
+        "notes": "Nice Undergarments"
+      },
+      {
+        "id": "fvtt_41T9uxquHGwuPASB",
+        "name": "Chaussettes haut de gamme",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "5293b8a8-32fd-4df4-ae86-6b909b952432",
+        "notes": "Nice Socks"
+      },
+      {
+        "id": "fvtt_pL6YvL4e2CFVjJvf",
+        "name": "Bijou haut de gamme",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "9fc5642a-1670-4907-82cb-179a441d11f0",
+        "notes": "Nice Jewelry"
+      },
+      {
+        "id": "fvtt_1oxHAXrWtT5Kz1Jt",
+        "name": "Gants haut de gamme",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "e98c2113-306a-4596-abcb-46607c432cfb",
+        "notes": "Nice Gloves"
+      },
+      {
+        "id": "fvtt_zh9bu6rF4BFGPiZF",
+        "name": "Chapeau",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "2b09566c-ece5-497d-bafd-600f9cec9763",
+        "notes": "Hat"
+      },
+      {
+        "id": "fvtt_Eo2S7TE2kGy6fm1J",
+        "name": "Bague en diamant de taille normale",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "f3cc02db-5049-462c-957b-75859e852408",
+        "notes": "Decent Diamond Ring"
+      },
+      {
+        "id": "fvtt_BxJ6rLQlW9Y4ohkB",
+        "name": "Custom Commlink (Fashion Link)",
+        "category": "Commlink",
+        "qty": 1
+      },
+      {
+        "id": "fvtt_pNJOhjdBJIkkNgFO",
+        "name": "Créditube certifié (Platine)",
+        "category": "Identité et créditubes",
+        "qty": 1,
+        "catalogId": "a19055f0-02ab-4bc2-ab43-0ef82e1b9100",
+        "notes": "Certified Credstick, Platinum"
+      },
+      {
+        "id": "fvtt_eNAbRvaKZQPH7VAm",
+        "name": "Kit de serrurerie",
+        "category": "Matériel d'intrusion",
+        "qty": 1,
+        "catalogId": "0fdeb240-743c-4a9d-9cf1-fef0990575bb",
+        "notes": "Lockpick Set"
+      },
+      {
+        "id": "fvtt_QDFjvKAwOzXAfHgY",
+        "name": "Sac à dos (Luxe)",
+        "category": "Outils",
+        "qty": 1,
+        "catalogId": "8459fade-af0f-48a6-b283-b4969d1fe6b7",
+        "notes": "Backpack (Nice)"
+      },
+      {
+        "id": "fvtt_0JNa5eeBqrwZd1AD",
+        "name": "Caméra (Micro)",
+        "category": "Appareils optiques et d'imagerie",
+        "qty": 2,
+        "catalogId": "fa6fa434-107b-4f36-a138-f98b044dae76",
+        "notes": "Camera, Micro"
+      },
+      {
+        "id": "fvtt_k2Tyy0pahq0SRMHL",
+        "name": "Écouteurs",
+        "category": "Appareils audio",
+        "rating": 3,
+        "qty": 1,
+        "catalogId": "5d69d002-c33d-4d0f-9c4d-d78db4d78e5d",
+        "notes": "Earbuds"
+      },
+      {
+        "id": "fvtt_3HxU2GMzjUCqwGHQ",
+        "name": "Système de surveillance dissimulé",
+        "category": "Accessoires électroniques",
+        "rating": 2,
+        "qty": 1,
+        "catalogId": "c03e4428-f3fe-434c-881a-68d638408715",
+        "notes": "Concealable Surveillance Gear"
+      },
+      {
+        "id": "fvtt_mX6dRmKMGEfroR73",
+        "name": "Corde dégradable (100m)",
+        "category": "Lance-Grappin",
+        "qty": 1,
+        "catalogId": "76890101-9f90-41db-a6f0-6f5fd4802896",
+        "notes": "Stealth Rope (100m)"
+      },
+      {
+        "id": "fvtt_dEIbFrtDSCcGxykM",
+        "name": "Mun. : Traceurs RFID furtifs",
+        "category": "Munitions",
+        "qty": 10,
+        "catalogId": "4b844ac3-20e8-4982-8711-20579b5295a8",
+        "notes": "Ammo: Tracker Rounds, Stealth Tag (Sniper Rifles)"
+      },
+      {
+        "id": "fvtt_XdOCanGnze5ZbIQY",
+        "name": "Mun. : Balles ADPS",
+        "category": "Munitions",
+        "qty": 23,
+        "catalogId": "ef9c8aae-26df-4fe6-88b3-79fbb5eb77c5",
+        "notes": "Ammo: APDS (Sniper Rifles)"
+      },
+      {
+        "id": "fvtt_V2X8ti8hu4pYdvPZ",
+        "name": "Mun. : Dards taser",
+        "category": "Munitions",
+        "qty": 68,
+        "catalogId": "8afe5065-5815-4a98-b047-2a7fed85db55",
+        "notes": "Ammo: Taser Dart (Tasers)"
+      },
+      {
+        "id": "fvtt_CYfZBRDzGFeCrJAh",
+        "name": "Chargeur supplémentaire",
+        "category": "Munitions",
+        "qty": 1,
+        "catalogId": "75ccb148-e774-429c-b854-a27816439626",
+        "notes": "Spare Clip (Ares Desert Strike)"
+      },
+      {
+        "id": "fvtt_nio8Uj9gzrFcicd7",
+        "name": "Rapelling Gloves",
+        "category": "Équipement",
+        "qty": 1
+      },
+      {
+        "id": "fvtt_QJKHOCSVI3P7abIB",
+        "name": "Kit d'outillage",
+        "category": "Outils",
+        "qty": 1,
+        "catalogId": "64fa5212-1d58-4e94-9cc1-9e3eb10773ed",
+        "notes": "Tool Kit (Disguise)"
+      },
+      {
+        "id": "fvtt_lk8StnnthkP3Uimp",
+        "name": "Respirateur chic",
+        "category": "Matériel de Survie",
+        "rating": 6,
+        "qty": 1,
+        "catalogId": "314566c7-4ea1-4f8d-94cd-f213af1e0535",
+        "notes": "Fashion Respirator"
+      },
+      {
+        "id": "fvtt_nV5FoVzewu22dX1q",
+        "name": "Sac de sport (Luxe)",
+        "category": "Outils",
+        "qty": 1,
+        "catalogId": "c22784cf-6ff2-4f65-9120-0be4d8eec1e3",
+        "notes": "Duffel Bag (Nice)"
+      },
+      {
+        "id": "fvtt_6M7K13pzPdo2bsJl",
+        "name": "Micro-transmetteur",
+        "category": "Communications et Brouilleurs",
+        "qty": 2,
+        "catalogId": "d1fca845-ae01-4b39-a176-1506da699e0e",
+        "notes": "Micro-Transceiver"
+      },
+      {
+        "id": "fvtt_EoJZ6zr0q8gCSGqT",
+        "name": "Bâtonnet catalyseur",
+        "category": "Lance-Grappin",
+        "qty": 1,
+        "catalogId": "dff54f55-846d-4017-84e2-dd1f1c29861f",
+        "notes": "Catalyst Stick"
+      },
+      {
+        "id": "fvtt_0pYbzmxEBUmimw7X",
+        "name": "Matériel d'escalade",
+        "category": "Matériel de Survie",
+        "qty": 1,
+        "catalogId": "a17cae86-4d6f-4e00-acb6-03f0ccfb2807",
+        "notes": "Climbing Gear"
+      },
+      {
+        "id": "fvtt_SgNGftu3CR59ugDf",
+        "name": "Lampe-torche (Ultraviolet)",
+        "category": "Matériel de Survie",
+        "qty": 1,
+        "catalogId": "44acc4c0-5795-47a4-84fb-bd2374276360",
+        "notes": "Flashlight, Low-light"
+      },
+      {
+        "id": "fvtt_Kk0GTvvnoyd6caVC",
+        "name": "Mun. : Balles Stick-n-Shock",
+        "category": "Munitions",
+        "qty": 34,
+        "catalogId": "d9f69780-93eb-41ff-9a9c-893f8c52794e",
+        "notes": "Ammo: Stick-n-Shock (Shotguns)"
+      },
+      {
+        "id": "fvtt_XGazTbKTuSdVDCwM",
+        "name": "Microphone laser",
+        "category": "Appareils audio",
+        "rating": 6,
+        "qty": 1,
+        "catalogId": "026f00c9-376e-4b4a-b615-9242db87afb3",
+        "notes": "Microphone, Laser"
+      },
+      {
+        "id": "fvtt_9IN4WLUW1VPwdoSG",
+        "name": "Système de surveillance dissimulé",
+        "category": "Accessoires électroniques",
+        "rating": 2,
+        "qty": 1,
+        "catalogId": "c03e4428-f3fe-434c-881a-68d638408715",
+        "notes": "Concealable Surveillance Gear"
+      },
+      {
+        "id": "fvtt_GedSiu0xwYbnVoDJ",
+        "name": "Brouilleur (Zone)",
+        "category": "Communications et Brouilleurs",
+        "rating": 6,
+        "qty": 1,
+        "catalogId": "6576cfa9-f2f5-4624-bbde-60a8f3f13785",
+        "notes": "Jammer, Area"
+      },
+      {
+        "id": "fvtt_amCHTxXdhxQqR0uh",
+        "name": "Lunettes",
+        "category": "Appareils optiques et d'imagerie",
+        "rating": 4,
+        "qty": 1,
+        "catalogId": "b218dbd1-5706-4d9e-a6a7-ab9b658c3acd",
+        "notes": "Glasses"
+      },
+      {
+        "id": "fvtt_c9sPih1bh41jjbDp",
+        "name": "Mun. : Balles Stick-n-Shock",
+        "category": "Munitions",
+        "rating": 2,
+        "qty": 1,
+        "catalogId": "d9f69780-93eb-41ff-9a9c-893f8c52794e",
+        "notes": "Ammo: Stick-n-Shock"
+      }
+    ],
+    "vehicles": [
+      {
+        "id": "fvtt_cVjUM9QVZlpwObsc",
+        "name": "SAAB Dynamit",
+        "handling": "5",
+        "speed": "9",
+        "accel": "3",
+        "body": 10,
+        "armor": 3,
+        "pilot": 2,
+        "sensor": 3,
+        "notes": "Type : ground",
+        "catalogId": "04b31d4c-55f1-43c8-a2ea-ce3002c6f577",
+        "img": "/assets/foundry/img/SAAB_dynamit.jpg"
+      },
+      {
+        "id": "fvtt_nJsg9n3ylvHVv75H",
+        "name": "Artemis Inustries Nightwing",
+        "handling": "6",
+        "speed": "3",
+        "accel": "1",
+        "body": 4,
+        "armor": 0,
+        "pilot": 1,
+        "sensor": 1,
+        "notes": "Type : air",
+        "img": "/assets/foundry/img/nightwing.jpg"
+      }
+    ],
+    "matrix": {
+      "device": "Hermes Ikon (commlink)",
+      "rating": 5,
+      "attack": 0,
+      "sleaze": 0,
+      "dataProcessing": 5,
+      "firewall": 5,
+      "programs": []
+    },
+    "contacts": [
+      {
+        "id": "fvtt_H6Fwi5uILDNwltP7",
+        "name": "Uncle Jhonathan",
+        "connection": 5,
+        "loyalty": 2,
+        "notes": "Infobroker"
+      },
+      {
+        "id": "fvtt_9q20SXYiOnr1RJbz",
+        "name": "Joseph Myers",
+        "connection": 1,
+        "loyalty": 6,
+        "notes": "Street Doc"
+      },
+      {
+        "id": "fvtt_6of1L9UlFlhGkRYp",
+        "name": "Sarah Bones",
+        "connection": 1,
+        "loyalty": 1,
+        "notes": "Fence"
+      },
+      {
+        "id": "fvtt_DJY9kvb9vjgH2Bbd",
+        "name": "Sophie Winters",
+        "connection": 3,
+        "loyalty": 4,
+        "notes": "Bartender"
+      },
+      {
+        "id": "fvtt_E1qCXcBupsJdqFuM",
+        "name": "My Little Devil",
+        "connection": 1,
+        "loyalty": 1,
+        "notes": "Devil Rats"
+      },
+      {
+        "id": "fvtt_c2XM1fWGEZeSySj3",
+        "name": "Perrine Cabana",
+        "connection": 2,
+        "loyalty": 4,
+        "notes": "Armorer"
+      }
+    ],
+    "sins": [
+      {
+        "id": "fvtt_wOPcfi4umMJXlPRt",
+        "name": "Faux SIN — Jeanne Martin",
+        "rating": 1,
+        "licenses": [
+          "Driver's License (1)"
+        ]
+      },
+      {
+        "id": "fvtt_ToimQYaOrn7TvL0I",
+        "name": "Faux SIN — Gianna Bianchi",
+        "rating": 3,
+        "licenses": [
+          "Driver's License (3)",
+          "Concealed Carry Permit (3)",
+          "Hunting License (3)",
+          "Bounty Hunter's License (3)",
+          "Military Ammunition License (3)"
+        ]
+      },
+      {
+        "id": "fvtt_pXtzGEtfDKefIgsr",
+        "name": "Faux SIN — Jane Beauty",
+        "rating": 6,
+        "licenses": [
+          "Concealed Carry Permit (6)",
+          "Driver's License (6)",
+          "Pet License (6)",
+          "Firearms License (6)"
+        ]
+      }
+    ],
+    "lifestyle": {
+      "name": "Best Home (Moyen)",
+      "monthlyCost": 5000,
+      "monthsPaid": 1
+    },
+    "karma": 22,
+    "karmaTotal": 83,
+    "nuyen": 98188,
+    "streetCred": 8,
+    "notoriety": 2,
+    "publicAwareness": 1,
+    "vision": {
+      "lowLight": true
+    },
+    "history": [
+      {
+        "ts": 1795197600000,
+        "text": "Valeurs de départ (récap de campagne, fin du job « Kidnapping ») : 20 karma, 97 135¥, Street Cred 8, Notoriété 2.",
+        "karma": 20,
+        "nuyen": 97135
+      },
+      {
+        "ts": 1795628564735,
+        "text": "Synchronisation Foundry (test-world) : 22 karma, 98 188¥",
+        "karma": 2,
+        "nuyen": 1053
+      }
+    ],
+    "foundry": {
+      "id": "M47wzFIaLKTq9Nnb",
+      "world": "test-world",
+      "importedAt": 1795629244307,
+      "hash": "29c3b89f2aea",
+      "snapshot": {
+        "s": {
+          "karma": 22,
+          "karmaTotal": 83,
+          "nuyen": 98188,
+          "streetCred": 8,
+          "notoriety": 2,
+          "publicAwareness": 1,
+          "metatype": "Humain"
+        },
+        "a": {
+          "BOD": 2,
+          "AGI": 6,
+          "REA": 5,
+          "STR": 2,
+          "WIL": 3,
+          "LOG": 4,
+          "INT": 5,
+          "CHA": 8,
+          "EDG": 3,
+          "MAG": 5,
+          "ESS": 6
+        },
+        "aug": {
+          "REA": 2
+        },
+        "init": {
+          "dice": 3,
+          "bonus": 0
+        },
+        "c": {
+          "physical": 0,
+          "stun": 0,
+          "overflow": 0
+        },
+        "e": 3,
+        "sk": {
+          "longarms": "7f3cae074791",
+          "forgery": "4dc0df5b61df",
+          "con": "01d0603baf3a",
+          "etiquette": "fff024eb2716",
+          "impersonation": "73960b9fa61a",
+          "leadership": "eafe6f9cf9f7",
+          "perception": "c320c82f0e4f",
+          "performance": "fd2b9b4f5147",
+          "disguise": "16236043daf9",
+          "palming": "75f915a1265c",
+          "sneaking": "f04c83ffed2f",
+          "locksmith": "581c2f8d2950",
+          "artisan": "7fbca0cd360f",
+          "gymnastics": "93d1853c4497",
+          "intimidation": "a8ded503896b",
+          "negotiation": "9059de1160d8",
+          "pistols": "88b1bc1f8b9c"
+        },
+        "items": {
+          "weapons": {
+            "fvtt_hz8IOOlysqrmYie1": "1fe959290554",
+            "fvtt_9EzHwCdrydKGarJL": "55dfc6d2589d",
+            "fvtt_rkS7Y5o6dM6CchmE": "a3154a72b886",
+            "fvtt_Yj5oyh0NuDUyh0DR": "07eba6bddf75",
+            "fvtt_fhk18LQKhMYn534G": "18e67c56bbcd",
+            "fvtt_Ds5A6qreqCpL8Dzq": "e32ee501557f",
+            "fvtt_EbIJJ9Zt15iJHi6r": "73b2d796bd27",
+            "fvtt_1v3pqCP5LUjSgGiV": "4815e6a8a12a",
+            "fvtt_JwWl6ngUOvfn3MTK": "57309dd2c110",
+            "fvtt_z0d0D3M9DQ8s5Mjc": "c8cd79209e99"
+          },
+          "armor": {
+            "fvtt_PFVhZGlgrRGkKkNS": "482d2c47d68e",
+            "fvtt_6f2aB4NDqctyJ37g": "169a385ff146",
+            "fvtt_bYX4zpTKLE5gYSDm": "edc514cf02e4"
+          },
+          "augmentations": {},
+          "gear": {
+            "fvtt_LNc3CxmZSxKYYFyY": "686f93ca9aa4",
+            "fvtt_ZnC0iMCdAX6Ojdoq": "443f67029a18",
+            "fvtt_41T9uxquHGwuPASB": "2317ec555727",
+            "fvtt_pL6YvL4e2CFVjJvf": "1469983e1a42",
+            "fvtt_1oxHAXrWtT5Kz1Jt": "a37b39014d31",
+            "fvtt_zh9bu6rF4BFGPiZF": "17e297626782",
+            "fvtt_Eo2S7TE2kGy6fm1J": "67876aaf662c",
+            "fvtt_BxJ6rLQlW9Y4ohkB": "99ea6d012dfb",
+            "fvtt_pNJOhjdBJIkkNgFO": "2ef1fccef0c1",
+            "fvtt_eNAbRvaKZQPH7VAm": "4c3d3fd4d2ed",
+            "fvtt_QDFjvKAwOzXAfHgY": "720aae661892",
+            "fvtt_0JNa5eeBqrwZd1AD": "e2a329a4c023",
+            "fvtt_k2Tyy0pahq0SRMHL": "e2d17213b993",
+            "fvtt_3HxU2GMzjUCqwGHQ": "4a68ae9ce219",
+            "fvtt_mX6dRmKMGEfroR73": "deadd2fd9d49",
+            "fvtt_dEIbFrtDSCcGxykM": "81ec425f73a0",
+            "fvtt_XdOCanGnze5ZbIQY": "9d2b7d21bd5c",
+            "fvtt_V2X8ti8hu4pYdvPZ": "8261d1c07f10",
+            "fvtt_CYfZBRDzGFeCrJAh": "c826de564d0e",
+            "fvtt_nio8Uj9gzrFcicd7": "e5b3323ed063",
+            "fvtt_QJKHOCSVI3P7abIB": "0552ad5e499f",
+            "fvtt_lk8StnnthkP3Uimp": "b1350478b68b",
+            "fvtt_nV5FoVzewu22dX1q": "1711fade4431",
+            "fvtt_6M7K13pzPdo2bsJl": "b9fd1600954f",
+            "fvtt_EoJZ6zr0q8gCSGqT": "17d275297008",
+            "fvtt_0pYbzmxEBUmimw7X": "2ab571269030",
+            "fvtt_SgNGftu3CR59ugDf": "bf36fab535e1",
+            "fvtt_Kk0GTvvnoyd6caVC": "4c3f253148fb",
+            "fvtt_XGazTbKTuSdVDCwM": "b9a619ef1139",
+            "fvtt_9IN4WLUW1VPwdoSG": "303c389f7d34",
+            "fvtt_GedSiu0xwYbnVoDJ": "6e894e4e3a3f",
+            "fvtt_amCHTxXdhxQqR0uh": "590ce98a2086",
+            "fvtt_c9sPih1bh41jjbDp": "3965527087cb"
+          },
+          "vehicles": {
+            "fvtt_cVjUM9QVZlpwObsc": "9cd3d6ff3eae",
+            "fvtt_nJsg9n3ylvHVv75H": "3511cd8e4e86"
+          },
+          "contacts": {
+            "fvtt_H6Fwi5uILDNwltP7": "9da180457bd4",
+            "fvtt_9q20SXYiOnr1RJbz": "6b3f52300f80",
+            "fvtt_6of1L9UlFlhGkRYp": "d552489879a2",
+            "fvtt_DJY9kvb9vjgH2Bbd": "82c7679fd095",
+            "fvtt_E1qCXcBupsJdqFuM": "943d6bed955f",
+            "fvtt_c2XM1fWGEZeSySj3": "5aecc150f3ad"
+          },
+          "sins": {
+            "fvtt_wOPcfi4umMJXlPRt": "246c276a99a8",
+            "fvtt_ToimQYaOrn7TvL0I": "5cf608fedb80",
+            "fvtt_pXtzGEtfDKefIgsr": "ac4acddf11d0"
+          },
+          "qualities": {
+            "fvtt_TeMLhpmn8eDDt6oN": "1121afa4c9df",
+            "fvtt_HpxSqH2lxbOHx75C": "5975b0720132",
+            "fvtt_CvDvgEJ6C8zVf0Ax": "e88a1a94a884",
+            "fvtt_B7sAN7m6W9H6BDwt": "ebc8abeca303",
+            "fvtt_nVVW1qXSm56dZadT": "a161f086940e",
+            "fvtt_D41vBPOa0PQ7X6SQ": "2bb518104ad3"
+          },
+          "powers": {
+            "fvtt_A3rg282jy3mgwplV": "77597470be0d",
+            "fvtt_FuoHtDdgUoyW3yOk": "c82ed3a56549",
+            "fvtt_ffRVAQh3Z4UFj3Dr": "736b0a43a92e",
+            "fvtt_JMUStU55vzQCLEa6": "cd1e4e0a88fe",
+            "fvtt_6J6OjL6PJ4d1L55w": "e2dd6043e4a1",
+            "fvtt_YKh0LwshiAohceUz": "285645fcaace"
+          },
+          "spells": {},
+          "knowledge": {
+            "fvtt_hukqVWVuQYFSmH5y": "0f5b2d8211ef",
+            "fvtt_X4TbMlyguq13bPpI": "c274264718f6",
+            "fvtt_Ci66JLOv3r903GPB": "91e89793f4c2",
+            "fvtt_uwCd6Ve7JOrlQTV1": "21c479b2b70b",
+            "fvtt_lCDzIMaYZvOTP5Re": "e617855e89da",
+            "fvtt_4WYp32GO9ltllBPL": "bf95a2827f25",
+            "fvtt_pyyYwjdzLpngvXvY": "3ea13e565565",
+            "fvtt_HlF9HQ6Jk23dYIaT": "2fb8246b69be",
+            "fvtt_TaaIKvTpI5RtE4BD": "d9907a18fa45",
+            "fvtt_YzDmLslKD5ROJX5t": "c00342565c77",
+            "fvtt_hEeojLHAWUlmwqZA": "e7654dd1f13d",
+            "fvtt_dC9WdzhqXcTSUMJZ": "b88c1a0d9208",
+            "fvtt_WZgisUm92WJ0cBN2": "834aeb4a1968",
+            "fvtt_Fjionj4Hpci99sod": "8a2ca767b109",
+            "fvtt_KLT5s190qDP9E6ef": "102e2fd02f34"
+          }
+        },
+        "matrix": "8934c83eb83c",
+        "lifestyle": "1be95ec8a094",
+        "vision": "f3d1cf29241f"
+      },
+      "user": "Baptou"
+    }
+  },
+  {
+    "id": "pc_bricks",
+    "type": "pc",
+    "name": "Bricks",
+    "player": "Tangouche",
+    "metatype": "Humain",
+    "age": 32,
+    "gender": "Femme",
+    "concept": "Decker — ex-spider de Knight Errant",
+    "color": "#3fd6d0",
+    "portrait": "/assets/foundry/img/bricks_pic.png",
+    "bio": "Ancienne **spider de Knight Errant** (sécurité Matrice), Bricks a vu son escouade disparaître membre après membre alors qu’elle traquait des shadowrunners. Elle a **simulé sa propre mort** avec l’aide de son ex-partenaire Rebecca « Windows » Wrought.\n\nElle fait désormais des runs elle-même pour financer sa recherche : découvrir qui en veut à son ancienne équipe. Officiellement morte, elle vit sous le faux SIN d’**Alexia Harbinger**.\n\n### Historique (Foundry)\n\nPreviously a spider for the Kinght Errant.  \nTeam pursued and captured shadowrunners that had stolen company data.  \nMembers of the squad started disappearing mysteriously.  \nBricks decided to fake her own death with the help of her best friend Windows.  \nHer plan is to complete runs in order to gain the money and networking she needs to find out who is after her and her team.",
+    "notes": "Fiche synchronisée depuis Foundry VTT (monde « Shadowrun »). Les changements faits dans Foundry arrivent ici quand le MJ relance l'import.",
+    "gmNotes": "Piste perso : qui fait disparaître l’ancienne escouade KE de Bricks ? À relier à AG Chemie / Hollow Pine si besoin.",
+    "attributes": {
+      "BOD": 4,
+      "AGI": 5,
+      "REA": 5,
+      "STR": 2,
+      "WIL": 4,
+      "LOG": 6,
+      "INT": 4,
+      "CHA": 3,
+      "EDG": 5,
+      "ESS": 5.35
+    },
+    "augmented": {},
+    "initiative": {
+      "dice": 1,
+      "bonus": 0
+    },
+    "condition": {
+      "physical": 0,
+      "stun": 0,
+      "overflow": 0
+    },
+    "edge": {
+      "current": 5
+    },
+    "skills": [
+      {
+        "id": "cybercombat",
+        "name": "Cybercombat",
+        "attr": "LOG",
+        "rating": 6,
+        "group": "cracking"
+      },
+      {
+        "id": "electronic_warfare",
+        "name": "Guerre électronique",
+        "attr": "LOG",
+        "rating": 6,
+        "group": "cracking"
+      },
+      {
+        "id": "hacking",
+        "name": "Hacking",
+        "attr": "LOG",
+        "rating": 6,
+        "spec": "Devices",
+        "group": "cracking"
+      },
+      {
+        "id": "computer",
+        "name": "Informatique",
+        "attr": "LOG",
+        "rating": 6,
+        "group": "electronics"
+      },
+      {
+        "id": "longarms",
+        "name": "Armes d’épaule",
+        "attr": "AGI",
+        "rating": 1,
+        "spec": "Shotguns",
+        "group": "firearms"
+      },
+      {
+        "id": "disguise",
+        "name": "Déguisement",
+        "attr": "INT",
+        "rating": 1,
+        "group": "stealth"
+      },
+      {
+        "id": "palming",
+        "name": "Escamotage",
+        "attr": "AGI",
+        "rating": 1,
+        "group": "stealth"
+      },
+      {
+        "id": "sneaking",
+        "name": "Furtivité",
+        "attr": "AGI",
+        "rating": 1,
+        "group": "stealth"
+      },
+      {
+        "id": "hardware",
+        "name": "Hardware",
+        "attr": "LOG",
+        "rating": 1,
+        "group": "electronics"
+      },
+      {
+        "id": "aeronautics_mechanic",
+        "name": "Mécanique aéronautique",
+        "attr": "LOG",
+        "rating": 1,
+        "group": "engineering"
+      },
+      {
+        "id": "automotive_mechanic",
+        "name": "Mécanique automobile",
+        "attr": "LOG",
+        "rating": 1,
+        "group": "engineering"
+      },
+      {
+        "id": "industrial_mechanic",
+        "name": "Mécanique industrielle",
+        "attr": "LOG",
+        "rating": 1,
+        "group": "engineering"
+      },
+      {
+        "id": "nautical_mechanic",
+        "name": "Mécanique nautique",
+        "attr": "LOG",
+        "rating": 1,
+        "group": "engineering"
+      },
+      {
+        "id": "perception",
+        "name": "Perception",
+        "attr": "INT",
+        "rating": 1
+      },
+      {
+        "id": "locksmith",
+        "name": "Serrurerie",
+        "attr": "AGI",
+        "rating": 1
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "fvtt_FwGtUY6HefXNgjjC",
+        "name": "Area Knowledge: Seattle",
+        "rating": 4,
+        "type": "street",
+        "spec": "Matrix Hot Spots"
+      },
+      {
+        "id": "fvtt_BLivSmtGUSxcrfb3",
+        "name": "Politics",
+        "rating": 4,
+        "type": "street"
+      },
+      {
+        "id": "fvtt_qqEUz2rqfo5CPpID",
+        "name": "Corporation: Knight Errant",
+        "rating": 4,
+        "type": "professional",
+        "spec": "Corporate Security"
+      },
+      {
+        "id": "fvtt_o1qkSDMniKGCsAiz",
+        "name": "Matrix",
+        "rating": 2,
+        "type": "professional"
+      },
+      {
+        "id": "fvtt_VrsQEqO0uFL6gYwy",
+        "name": "Police Procedures (Professional)",
+        "rating": 4,
+        "type": "professional"
+      }
+    ],
+    "qualities": [
+      {
+        "id": "fvtt_F7epwscPy6ImAMKc",
+        "name": "Disparition Ninja",
+        "karma": 5,
+        "positive": true,
+        "notes": "Ninja Vanish · DT 44",
+        "catalogId": "ffa26ef9-e2d3-47c2-8fb7-43ad27e85b62"
+      },
+      {
+        "id": "fvtt_OADmfVJL8NFMvrmq",
+        "name": "Comme un bourrin",
+        "karma": 6,
+        "positive": true,
+        "notes": "Go Big or Go Home · DT 44",
+        "catalogId": "64876d0b-bfa6-45df-b8c8-caf6385306c6"
+      },
+      {
+        "id": "fvtt_csIfsL8RsGK5md2s",
+        "name": "SIN de défunt",
+        "karma": -20,
+        "positive": false,
+        "notes": "Dead SIN · BTB 162",
+        "catalogId": "c0d411e6-ca88-4011-b56c-9f594882beb4"
+      },
+      {
+        "id": "fvtt_nsQ8dIXJMloNm8xL",
+        "name": "Bon codeur",
+        "karma": 10,
+        "positive": true,
+        "notes": "Codeslinger · SR5 72",
+        "catalogId": "41cc3e26-ae55-4e28-bd6a-b08866c21424"
+      }
+    ],
+    "powers": [],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "fvtt_k8eZzULlmMG92x1E",
+        "name": "Mains nues",
+        "category": "Corps à corps",
+        "kind": "melee",
+        "skill": "unarmed_combat",
+        "accuracy": 5,
+        "damage": "(STR)S",
+        "ap": 0,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "equipped": true,
+        "notes": "Unarmed Attack (SR5 132)"
+      },
+      {
+        "id": "fvtt_T3sUXHGLeVWMZpHB",
+        "name": "Beretta Northstar",
+        "category": "Fusils à pompe",
+        "kind": "ranged",
+        "skill": "longarms",
+        "accuracy": 4,
+        "damage": "11P",
+        "ap": -1,
+        "mode": "CC",
+        "rc": 2,
+        "ammo": "12(m)",
+        "reach": 0,
+        "catalogId": "f5ae45ef-f4f6-4d9a-873f-81e4ee973dc1",
+        "notes": "Beretta Northstar (SL 39)"
+      },
+      {
+        "id": "fvtt_wGGgCkZyiirl5Hkc",
+        "name": "Grenade: Douser",
+        "category": "Arme de jet",
+        "kind": "ranged",
+        "skill": "throwing_weapons",
+        "accuracy": 5,
+        "damage": "Spécial",
+        "ap": 0,
+        "mode": "",
+        "rc": 2,
+        "ammo": "",
+        "reach": 0,
+        "equipped": true,
+        "notes": "Grenade: Douser (KC 53)"
+      },
+      {
+        "id": "fvtt_wvH7DD2JTNo9DmYn",
+        "name": "Grenade: COS",
+        "category": "Arme de jet",
+        "kind": "ranged",
+        "skill": "throwing_weapons",
+        "accuracy": 5,
+        "damage": "Spécial",
+        "ap": 0,
+        "mode": "",
+        "rc": 2,
+        "ammo": "",
+        "reach": 0,
+        "equipped": true,
+        "notes": "Grenade: COS (KC 54)"
+      },
+      {
+        "id": "fvtt_yN3thI6ZLjmTocEL",
+        "name": "Fichetti Security 600",
+        "category": "Pistolets légers",
+        "kind": "ranged",
+        "skill": "pistols",
+        "accuracy": 6,
+        "damage": "7P",
+        "ap": 0,
+        "mode": "CC",
+        "rc": 2,
+        "ammo": "30(c)",
+        "reach": 0,
+        "catalogId": "7dff8ab0-c659-4901-ac3b-cb8b4f3839bf",
+        "notes": "Fichetti Security 600 (SR5 426)"
+      },
+      {
+        "id": "fvtt_vnw2PtRHqgt6sau2",
+        "name": "Colt Cobra TZ-120",
+        "category": "Mitraillettes",
+        "kind": "ranged",
+        "skill": "automatics",
+        "accuracy": 4,
+        "damage": "7P",
+        "ap": 0,
+        "mode": "SA/TR/TA",
+        "rc": 4,
+        "ammo": "32(c)",
+        "reach": 0,
+        "catalogId": "b2eefb04-0e33-4faa-8e92-5c4bcbfc3f16",
+        "notes": "Colt Cobra TZ-120 (SR5 427)"
+      }
+    ],
+    "armor": [
+      {
+        "id": "fvtt_wQ48BeLNpRQEo4Qi",
+        "name": "Veste pare-balles",
+        "rating": 12,
+        "equipped": true,
+        "stack": false,
+        "notes": "Armor Jacket",
+        "catalogId": "36a4cd30-c32c-44d0-847a-0c15fb51072a"
+      }
+    ],
+    "augmentations": [
+      {
+        "id": "fvtt_GY8q5cng2PzdpxhB",
+        "name": "Yeux cybernétiques, système de base",
+        "kind": "cyberware",
+        "grade": "standard",
+        "rating": 4,
+        "essence": 0.5,
+        "notes": "Cybereyes Basic System",
+        "catalogId": "8e414ade-2764-4dc7-bdc4-83bb4a086034"
+      },
+      {
+        "id": "fvtt_iQVBqIdp2DspTSPr",
+        "name": "Datajack Plus",
+        "kind": "cyberware",
+        "grade": "standard",
+        "rating": 3,
+        "essence": 0.15,
+        "catalogId": "8496afd6-ad34-4e73-b3f4-191ef11e121c"
+      }
+    ],
+    "gear": [
+      {
+        "id": "fvtt_Dhe0lxrUe14rcxfe",
+        "name": "Mun. : Balles normales",
+        "category": "Munitions",
+        "qty": 54,
+        "catalogId": "b2a0b340-c793-4322-8422-8b03d18a6fae",
+        "notes": "Ammo: Regular Ammo (Shotguns)"
+      },
+      {
+        "id": "fvtt_kgvyeLpY84s5LlBT",
+        "name": "Mun. : Balles ADPS",
+        "category": "Munitions",
+        "qty": 6,
+        "catalogId": "ef9c8aae-26df-4fe6-88b3-79fbb5eb77c5",
+        "notes": "Ammo: APDS (Shotguns)"
+      },
+      {
+        "id": "fvtt_NMoC2auPOu8DGwWb",
+        "name": "Nuage boosteur (Hacker à la volée)",
+        "category": "Accessoires matriciels",
+        "qty": 2,
+        "catalogId": "9bd48bd3-ad36-4f34-96bc-37afd97dc520",
+        "notes": "Booster Cloud [Hack on the Fly]"
+      },
+      {
+        "id": "fvtt_DAbsZUwPMLa9NHM9",
+        "name": "Nuage boosteur (Perception matricielle)",
+        "category": "Accessoires matriciels",
+        "qty": 2,
+        "catalogId": "bfcfe6d3-b341-427c-be65-1fa21e043b0a",
+        "notes": "Booster Cloud [Matrix Perception]"
+      },
+      {
+        "id": "fvtt_inHY8QTz0cSoIEf5",
+        "name": "Créditube certifié (Standard)",
+        "category": "Identité et créditubes",
+        "qty": 1,
+        "catalogId": "c56554d1-4102-446f-8d3e-acd0c7404c3a",
+        "notes": "Certified Credstick, Standard"
+      },
+      {
+        "id": "fvtt_BdinhW8U8S004vdt",
+        "name": "Chargeur supplémentaire",
+        "category": "Munitions",
+        "qty": 2,
+        "catalogId": "75ccb148-e774-429c-b854-a27816439626",
+        "notes": "Spare Clip (Beretta Northstar)"
+      },
+      {
+        "id": "fvtt_6bE2z9NsmPpHcr02",
+        "name": "Agent",
+        "category": "Équipement",
+        "rating": 6,
+        "qty": 1
+      },
+      {
+        "id": "fvtt_7WlAPfm2rrQa8cSF",
+        "name": "Holster rapide dissimulé",
+        "category": "Améliorations d'armure",
+        "qty": 1,
+        "catalogId": "82334694-a630-42c4-95d6-eb1345e4ed82",
+        "notes": "Concealed Quick-Draw Holster"
+      }
+    ],
+    "vehicles": [],
+    "matrix": {
+      "device": "Aztechnology Shadow Warrior",
+      "rating": 3,
+      "attack": 6,
+      "sleaze": 5,
+      "dataProcessing": 3,
+      "firewall": 4,
+      "programs": [
+        "Stealth",
+        "Browse",
+        "Agent (5)",
+        "Edit",
+        "Armor",
+        "Encryption",
+        "Signal Scrub",
+        "Toolbox",
+        "Biofeedback",
+        "Biofeedback Filter",
+        "Fork",
+        "Hammer",
+        "Mugger",
+        "Guard",
+        "Bootstrap",
+        "Shredder",
+        "Crash (Program)",
+        "Evaluate",
+        "Paintjob",
+        "Tarball"
+      ]
+    },
+    "contacts": [
+      {
+        "id": "fvtt_koXVImZgV5dzaHpQ",
+        "name": "Ben Teller",
+        "connection": 2,
+        "loyalty": 1,
+        "notes": "Street Doc"
+      },
+      {
+        "id": "fvtt_bwnwzbNyh0LPmndy",
+        "name": "Rebecca \"Windows\" Wrought",
+        "connection": 2,
+        "loyalty": 4,
+        "notes": "Spider"
+      },
+      {
+        "id": "fvtt_FP4J27yJseetCTZ7",
+        "name": "Perrine Cabana",
+        "connection": 2,
+        "loyalty": 4,
+        "notes": "Armorer"
+      },
+      {
+        "id": "fvtt_erGBtXjQSRXvtPcl",
+        "name": "Joseph Mayers",
+        "connection": 1,
+        "loyalty": 4
+      },
+      {
+        "id": "fvtt_Hk6BjjVQMa6GcuD1",
+        "name": "Jane",
+        "connection": 4,
+        "loyalty": 4,
+        "notes": "Face"
+      }
+    ],
+    "sins": [
+      {
+        "id": "fvtt_rS8Y4Ql8eWJRbSqc",
+        "name": "Faux SIN — Alexia Harbinger",
+        "rating": 4,
+        "licenses": [
+          "Shotgun License (3)",
+          "Cyberdeck License (3)",
+          "Concealed Carry Permit (3)"
+        ]
+      }
+    ],
+    "lifestyle": {
+      "name": "Seattle Downtown Outskirts (Moyen)",
+      "monthlyCost": 5000,
+      "monthsPaid": 1
+    },
+    "karma": 20,
+    "karmaTotal": 20,
+    "nuyen": 16494,
+    "streetCred": 1,
+    "notoriety": 1,
+    "publicAwareness": 1,
+    "vision": {
+      "lowLight": true,
+      "thermo": true
+    },
+    "history": [
+      {
+        "ts": 1795197600000,
+        "text": "Valeurs de départ (récap de campagne, fin du job « Kidnapping ») : 18 karma, 14 402¥, Street Cred 1.",
+        "karma": 18,
+        "nuyen": 14402
+      },
+      {
+        "ts": 1795628564735,
+        "text": "Synchronisation Foundry (test-world) : 20 karma, 16 494¥",
+        "karma": 2,
+        "nuyen": 2092
+      }
+    ],
+    "foundry": {
+      "id": "VnN4tesgg1VVUtrC",
+      "world": "test-world",
+      "importedAt": 1795629244307,
+      "hash": "b8f1356c35f1",
+      "snapshot": {
+        "s": {
+          "karma": 20,
+          "karmaTotal": 20,
+          "nuyen": 16494,
+          "streetCred": 1,
+          "notoriety": 1,
+          "publicAwareness": 1,
+          "metatype": "Humain"
+        },
+        "a": {
+          "BOD": 4,
+          "AGI": 5,
+          "REA": 5,
+          "STR": 2,
+          "WIL": 4,
+          "LOG": 6,
+          "INT": 4,
+          "CHA": 3,
+          "EDG": 5,
+          "ESS": 5.35
+        },
+        "aug": {},
+        "init": {
+          "dice": 1,
+          "bonus": 0
+        },
+        "c": {
+          "physical": 0,
+          "stun": 0,
+          "overflow": 0
+        },
+        "e": 5,
+        "sk": {
+          "cybercombat": "48973574ce99",
+          "electronic_warfare": "176c505aa91e",
+          "hacking": "17574b5e2589",
+          "computer": "d1d63f4488a4",
+          "longarms": "4c3f26bde0dc",
+          "disguise": "ddc43d4f0dca",
+          "palming": "99ced90f5ac5",
+          "sneaking": "26485071d71f",
+          "hardware": "7d671312d1e1",
+          "aeronautics_mechanic": "9addf574dd7d",
+          "automotive_mechanic": "106e301c8b39",
+          "industrial_mechanic": "35f1eac10950",
+          "nautical_mechanic": "c7f61e055b82",
+          "perception": "f2536ffeafee",
+          "locksmith": "de22dbead26e"
+        },
+        "items": {
+          "weapons": {
+            "fvtt_k8eZzULlmMG92x1E": "f409619e2fef",
+            "fvtt_T3sUXHGLeVWMZpHB": "d0c3c16fcdb1",
+            "fvtt_wGGgCkZyiirl5Hkc": "6c350573a70c",
+            "fvtt_wvH7DD2JTNo9DmYn": "0308c6ac9fe3",
+            "fvtt_yN3thI6ZLjmTocEL": "21e628587eab",
+            "fvtt_vnw2PtRHqgt6sau2": "f12642984c85"
+          },
+          "armor": {
+            "fvtt_wQ48BeLNpRQEo4Qi": "d1bb36240599"
+          },
+          "augmentations": {
+            "fvtt_GY8q5cng2PzdpxhB": "914b2ff3c362",
+            "fvtt_iQVBqIdp2DspTSPr": "4f54f666e7b0"
+          },
+          "gear": {
+            "fvtt_Dhe0lxrUe14rcxfe": "064932acdbc9",
+            "fvtt_kgvyeLpY84s5LlBT": "04db68811c6e",
+            "fvtt_NMoC2auPOu8DGwWb": "a7d5571945a3",
+            "fvtt_DAbsZUwPMLa9NHM9": "49a84adb8d39",
+            "fvtt_inHY8QTz0cSoIEf5": "8cf5ff38ddb2",
+            "fvtt_BdinhW8U8S004vdt": "4ee7e2c01a3d",
+            "fvtt_6bE2z9NsmPpHcr02": "bdc49a636aa2",
+            "fvtt_7WlAPfm2rrQa8cSF": "116b00974723"
+          },
+          "vehicles": {},
+          "contacts": {
+            "fvtt_koXVImZgV5dzaHpQ": "0b6833186ba7",
+            "fvtt_bwnwzbNyh0LPmndy": "a052d437f9fa",
+            "fvtt_FP4J27yJseetCTZ7": "86dc31c18454",
+            "fvtt_erGBtXjQSRXvtPcl": "6ebac75b834c",
+            "fvtt_Hk6BjjVQMa6GcuD1": "a71cc7e8c41f"
+          },
+          "sins": {
+            "fvtt_rS8Y4Ql8eWJRbSqc": "f0062f9b8145"
+          },
+          "qualities": {
+            "fvtt_F7epwscPy6ImAMKc": "13a0d3ae3d73",
+            "fvtt_OADmfVJL8NFMvrmq": "82773b930607",
+            "fvtt_csIfsL8RsGK5md2s": "7d43ef616b6d",
+            "fvtt_nsQ8dIXJMloNm8xL": "b13ee0a19a26"
+          },
+          "powers": {},
+          "spells": {},
+          "knowledge": {
+            "fvtt_FwGtUY6HefXNgjjC": "357c8d38a5cf",
+            "fvtt_BLivSmtGUSxcrfb3": "0d07a72d087d",
+            "fvtt_qqEUz2rqfo5CPpID": "939f1d9dd7cc",
+            "fvtt_o1qkSDMniKGCsAiz": "54b77c25f06a",
+            "fvtt_VrsQEqO0uFL6gYwy": "709f3e26d0cb"
+          }
+        },
+        "matrix": "2bcc1f89f11e",
+        "lifestyle": "5256ca14d7c6",
+        "vision": "1c31d95620ad"
+      },
+      "user": "Tangouche"
+    }
+  },
+  {
+    "id": "pc_anklay",
+    "type": "pc",
+    "name": "Ank’ Lay",
+    "player": "Jean Michou",
+    "metatype": "Ork",
+    "age": 17,
+    "gender": "Homme",
+    "retired": true,
+    "concept": "Brute de combat — dernier guerrier de son clan",
+    "color": "#e0a63f",
+    "portrait": "/assets/foundry/img/ank.png",
+    "bio": "Meilleur guerrier de son clan dès l’âge de 11 ans, élevé dans la violence. Son clan a été **anéanti pendant son absence** : il a tout perdu et s’est retrouvé à la rue, sans le sou et sans contact.\n\n*Ne fait plus partie de la table depuis la fin du job « Kidnapping » (son joueur est parti).*\n\n### Historique (Foundry)\n\nS'énerve (trop) facilement si son nom est prononcé un peu vite.  \nA tendance à tout régler par la violence.  \nTroubles de l'attention (5mn ou plus test étendu test 3 composure).  \nEn tant qu'oni, et à cause de son nom, a eu une enfance difficile. Au vu de ses qualités et de son milieu, il a rapidement appris que la violence était toujours la meilleure solution. Ce qui en a fait à 11 ans le meilleur guerrier de son clan, capable de réussir les missions les plus dangereuses.  \nSon clan s'est fait éliminer il y a peu, pendant qu'il était en vacances. Il n'a pas pu récupérer ses possessions et se retrouve donc à la rue, sans contact, et sans le sou.",
+    "notes": "Fiche synchronisée depuis Foundry VTT (monde « Shadowrun »). Les changements faits dans Foundry arrivent ici quand le MJ relance l'import.",
+    "gmNotes": "PJ retraité — peut revenir comme PNJ (allié ou ennemi).",
+    "attributes": {
+      "BOD": 7,
+      "AGI": 6,
+      "REA": 6,
+      "STR": 6,
+      "WIL": 4,
+      "LOG": 2,
+      "INT": 5,
+      "CHA": 2,
+      "EDG": 2,
+      "ESS": 1
+    },
+    "augmented": {
+      "AGI": 4,
+      "REA": 2,
+      "STR": 4
+    },
+    "initiative": {
+      "dice": 3,
+      "bonus": 0
+    },
+    "condition": {
+      "physical": 0,
+      "stun": 4,
+      "overflow": 0
+    },
+    "edge": {
+      "current": 2
+    },
+    "skills": [
+      {
+        "id": "clubs",
+        "name": "Armes contondantes",
+        "attr": "AGI",
+        "rating": 6,
+        "group": "close_combat"
+      },
+      {
+        "id": "blades",
+        "name": "Armes tranchantes",
+        "attr": "AGI",
+        "rating": 6,
+        "group": "close_combat"
+      },
+      {
+        "id": "unarmed_combat",
+        "name": "Combat à mains nues",
+        "attr": "AGI",
+        "rating": 6,
+        "group": "close_combat"
+      },
+      {
+        "id": "automatics",
+        "name": "Armes automatiques",
+        "attr": "AGI",
+        "rating": 1,
+        "group": "firearms"
+      },
+      {
+        "id": "longarms",
+        "name": "Armes d’épaule",
+        "attr": "AGI",
+        "rating": 1,
+        "group": "firearms"
+      },
+      {
+        "id": "throwing_weapons",
+        "name": "Armes de jet",
+        "attr": "AGI",
+        "rating": 1
+      },
+      {
+        "id": "heavy_weapons",
+        "name": "Armes lourdes",
+        "attr": "AGI",
+        "rating": 1
+      },
+      {
+        "id": "gunnery",
+        "name": "Artillerie",
+        "attr": "AGI",
+        "rating": 1
+      },
+      {
+        "id": "running",
+        "name": "Course",
+        "attr": "STR",
+        "rating": 1,
+        "group": "athletics"
+      },
+      {
+        "id": "palming",
+        "name": "Escamotage",
+        "attr": "AGI",
+        "rating": 1,
+        "group": "stealth"
+      },
+      {
+        "id": "sneaking",
+        "name": "Furtivité",
+        "attr": "AGI",
+        "rating": 1,
+        "group": "stealth"
+      },
+      {
+        "id": "gymnastics",
+        "name": "Gymnastique",
+        "attr": "AGI",
+        "rating": 1,
+        "group": "athletics"
+      },
+      {
+        "id": "swimming",
+        "name": "Natation",
+        "attr": "STR",
+        "rating": 1,
+        "group": "athletics"
+      },
+      {
+        "id": "perception",
+        "name": "Perception",
+        "attr": "INT",
+        "rating": 1
+      },
+      {
+        "id": "pistols",
+        "name": "Pistolets",
+        "attr": "AGI",
+        "rating": 1,
+        "group": "firearms"
+      },
+      {
+        "id": "locksmith",
+        "name": "Serrurerie",
+        "attr": "AGI",
+        "rating": 1
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "fvtt_qTB6gN3ksicTP0K4",
+        "name": "Japanese",
+        "rating": 5,
+        "type": "language"
+      },
+      {
+        "id": "fvtt_vqoU7lsk7I89hx2a",
+        "name": "Bars and Clubs",
+        "rating": 1,
+        "type": "street"
+      },
+      {
+        "id": "fvtt_QaivvVJ98QX3NHuD",
+        "name": "Radical Groups",
+        "rating": 3,
+        "type": "street"
+      },
+      {
+        "id": "fvtt_0jmHznMEFeTbKtIv",
+        "name": "Syndicates",
+        "rating": 1,
+        "type": "street"
+      },
+      {
+        "id": "fvtt_vwfnNTEeN28wajXL",
+        "name": "Yakuza",
+        "rating": 3,
+        "type": "street"
+      },
+      {
+        "id": "fvtt_xHffrb93L9wQHkf0",
+        "name": "Alcohol",
+        "rating": 1,
+        "type": "interest"
+      }
+    ],
+    "qualities": [
+      {
+        "id": "fvtt_m5ytR6ul4sMYIovM",
+        "name": "Low-Light Vision",
+        "karma": 0,
+        "positive": true,
+        "notes": "Low-Light Vision · SR5 66"
+      },
+      {
+        "id": "fvtt_zMuG4lEs6koWxw1G",
+        "name": "Couleur de peau frappante",
+        "karma": -4,
+        "positive": false,
+        "notes": "Striking Skin Pigmentation · RF 122",
+        "catalogId": "c57c9407-7ac6-4061-abab-7735c8bd69b4"
+      },
+      {
+        "id": "fvtt_F7j7RM2OFsxadvHv",
+        "name": "Accroc au combat",
+        "karma": -7,
+        "positive": false,
+        "notes": "Combat Junkie · RG 127",
+        "catalogId": "8d2b32ec-2ddf-40dd-a29b-bf2e85a3d8ca"
+      },
+      {
+        "id": "fvtt_MhWKS1HRXClVoF1R",
+        "name": "Défenseur agile",
+        "karma": 3,
+        "positive": true,
+        "notes": "Agile Defender · RG 127",
+        "catalogId": "1d0c4278-501d-456f-ab63-69afee6fbf95"
+      },
+      {
+        "id": "fvtt_dsbcGUDj0H5pthGc",
+        "name": "Matos rare",
+        "karma": 10,
+        "positive": true,
+        "notes": "Restricted Gear · RF 149",
+        "catalogId": "ce939b04-5fc6-49e9-a747-9c9d1254449e"
+      },
+      {
+        "id": "fvtt_iGEmwE6n69VZFwPV",
+        "name": "Traumatisme",
+        "karma": -8,
+        "positive": false,
+        "notes": "Social Stress · SR5 85",
+        "catalogId": "8ba2830a-3f10-4877-9752-93be051b205b"
+      },
+      {
+        "id": "fvtt_Zp7obqBRpvdbDlAZ",
+        "name": "TDAH",
+        "karma": -6,
+        "positive": false,
+        "notes": "Lack of Focus · CF 58",
+        "catalogId": "06078d89-0f12-4f57-99d0-e088847dec7e"
+      },
+      {
+        "id": "fvtt_eufk6lajI8I4PH1W",
+        "name": "Obsessionnel",
+        "karma": -2,
+        "positive": false,
+        "notes": "Driven · RF 154",
+        "catalogId": "4d435a24-f8f9-456d-83c1-6fecb217cf67"
+      }
+    ],
+    "powers": [],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "fvtt_mlgk78MZOO3JJir7",
+        "name": "Mains nues",
+        "category": "Corps à corps",
+        "kind": "melee",
+        "skill": "unarmed_combat",
+        "accuracy": 12,
+        "damage": "(STR)S",
+        "ap": 0,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "notes": "Unarmed Attack (SR5 132)"
+      },
+      {
+        "id": "fvtt_xjdqEmwEh5mr1wPf",
+        "name": "Crosse de fusil",
+        "category": "Armes improvisées",
+        "kind": "melee",
+        "skill": "clubs",
+        "accuracy": 3,
+        "damage": "13S",
+        "ap": 0,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "catalogId": "9dfa8458-d544-4b31-924e-9439478d9d27",
+        "notes": "Rifle Butt (RG 22)"
+      },
+      {
+        "id": "fvtt_rQmTulbiFrMktuRG",
+        "name": "Bouteille entière",
+        "category": "Armes improvisées",
+        "kind": "melee",
+        "skill": "clubs",
+        "accuracy": 3,
+        "damage": "11S",
+        "ap": 0,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "catalogId": "4c1d521e-bc16-4b6f-9f54-f92e8f957ef4",
+        "notes": "Bottle (unbroken) (RG 22)"
+      },
+      {
+        "id": "fvtt_5tExIwt01gcEgVEa",
+        "name": "Couteau de survie",
+        "category": "Armes tranchantes",
+        "kind": "melee",
+        "skill": "blades",
+        "accuracy": 5,
+        "damage": "12P",
+        "ap": -1,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "catalogId": "e5e5e025-8622-406c-a2bb-030ad5392d79",
+        "notes": "Survival Knife (SR5 422)"
+      },
+      {
+        "id": "fvtt_ac1Pji1IOwBNYGkN",
+        "name": "Bouteille brisée",
+        "category": "Armes improvisées",
+        "kind": "melee",
+        "skill": "clubs",
+        "accuracy": 3,
+        "damage": "10P",
+        "ap": 0,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "catalogId": "07ce89c6-7c69-45a4-91a9-3375847c878a",
+        "notes": "Bottle (broken, after first hit) (RG 22)"
+      },
+      {
+        "id": "fvtt_DH603oDdUWfjx87m",
+        "name": "Pistolet",
+        "category": "Armes improvisées",
+        "kind": "melee",
+        "skill": "clubs",
+        "accuracy": 4,
+        "damage": "11P",
+        "ap": 0,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "catalogId": "639651f0-a8bf-4884-ab73-0d78affa1a22",
+        "notes": "Pistol (RG 22)"
+      },
+      {
+        "id": "fvtt_fWKmr5875gjqGzwx",
+        "name": "Chaise",
+        "category": "Armes improvisées",
+        "kind": "melee",
+        "skill": "clubs",
+        "accuracy": 3,
+        "damage": "12S",
+        "ap": 0,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 1,
+        "catalogId": "fe954a0e-2d54-4bd4-9ea2-f1fc2c5bac58",
+        "notes": "Chair (RG 22)"
+      },
+      {
+        "id": "fvtt_vcAkWmQ6uwVcmo2S",
+        "name": "Throwing Knife",
+        "category": "Arme de jet",
+        "kind": "ranged",
+        "skill": "throwing_weapons",
+        "accuracy": 12,
+        "damage": "11P",
+        "ap": -1,
+        "mode": "",
+        "rc": 5,
+        "ammo": "",
+        "reach": 0,
+        "notes": "Throwing Knife (SR5 424)"
+      },
+      {
+        "id": "fvtt_BcIyvACDhN7kDlFX",
+        "name": "Couteau",
+        "category": "Armes tranchantes",
+        "kind": "melee",
+        "skill": "blades",
+        "accuracy": 5,
+        "damage": "11P",
+        "ap": -1,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "catalogId": "eb16de72-e646-4880-aa5b-21a5a0a2b342",
+        "notes": "Knife (Survival Kit) (SR5 422)"
+      },
+      {
+        "id": "fvtt_lqjuh4fwMNoLfnDH",
+        "name": "Boomerang",
+        "category": "Arme de jet",
+        "kind": "ranged",
+        "skill": "throwing_weapons",
+        "accuracy": 11,
+        "damage": "12P",
+        "ap": 0,
+        "mode": "",
+        "rc": 5,
+        "ammo": "",
+        "reach": 0,
+        "notes": "Boomerang (RG 24)"
+      },
+      {
+        "id": "fvtt_txh9pRKMFKxW2eBB",
+        "name": "Grenade: Flash-Pak",
+        "category": "Arme de jet",
+        "kind": "ranged",
+        "skill": "throwing_weapons",
+        "accuracy": 12,
+        "damage": "Spécial",
+        "ap": 0,
+        "mode": "",
+        "rc": 5,
+        "ammo": "",
+        "reach": 0,
+        "notes": "Grenade: Flash-Pak (SR5 435)"
+      },
+      {
+        "id": "fvtt_JtK2nwpUoaoFykMa",
+        "name": "Arc (Indice 10)",
+        "category": "Arcs",
+        "kind": "ranged",
+        "skill": "archery",
+        "accuracy": 6,
+        "damage": "12P",
+        "ap": -3,
+        "mode": "CC",
+        "rc": 5,
+        "ammo": "1",
+        "reach": 0,
+        "catalogId": "01c3880f-d0a7-4cd5-8460-ba69fc36ae63",
+        "notes": "Bow (Rating 10) (SR5 423)"
+      },
+      {
+        "id": "fvtt_u7PxWqcBH1moeS6M",
+        "name": "Colt Cobra TZ-120",
+        "category": "Mitraillettes",
+        "kind": "ranged",
+        "skill": "automatics",
+        "accuracy": 4,
+        "damage": "7P",
+        "ap": 0,
+        "mode": "SA/TR/TA",
+        "rc": 0,
+        "ammo": "32",
+        "reach": 0,
+        "catalogId": "b2eefb04-0e33-4faa-8e92-5c4bcbfc3f16",
+        "notes": "Colt Cobra TZ-120 (SR5 427)"
+      }
+    ],
+    "armor": [
+      {
+        "id": "fvtt_2gPkkO4IEJ6V1d6D",
+        "name": "Veste pare-balles",
+        "rating": 12,
+        "equipped": false,
+        "stack": false,
+        "notes": "Armor Jacket",
+        "catalogId": "36a4cd30-c32c-44d0-847a-0c15fb51072a"
+      },
+      {
+        "id": "fvtt_25XxJ7NoYYuz6Ja5",
+        "name": "Zoé : Executive Suite",
+        "rating": 12,
+        "equipped": true,
+        "stack": false,
+        "notes": "Zoé: Executive Suite",
+        "catalogId": "5341cfd0-5cd7-49d5-8a95-0266355f391a"
+      },
+      {
+        "id": "fvtt_DofI1yvxHFkAQXw1",
+        "name": "Mortimer of London : Manteau Argentum",
+        "rating": 14,
+        "equipped": true,
+        "stack": true,
+        "notes": "Mortimer of London: Argentum Coat",
+        "catalogId": "dceda713-a138-4161-8bd2-b909ffed7f85"
+      },
+      {
+        "id": "fvtt_FAUVrjq31mqnLPiH",
+        "name": "Zoé : Second Skin",
+        "rating": 6,
+        "equipped": true,
+        "stack": true,
+        "notes": "Zoé: Second Skin",
+        "catalogId": "739b029d-b2a0-48cb-ac2e-51636fc495c2"
+      }
+    ],
+    "augmentations": [
+      {
+        "id": "fvtt_9sMsUK5CAUYaqmsp",
+        "name": "Substituts musculaires",
+        "kind": "cyberware",
+        "grade": "standard",
+        "rating": 4,
+        "essence": 4,
+        "notes": "Muscle Replacement",
+        "catalogId": "46f80a44-80ae-41d7-a7c8-a119c4cff70f"
+      },
+      {
+        "id": "fvtt_xNGk1vsh0YWa5Act",
+        "name": "Amplificateur synaptique",
+        "kind": "cyberware",
+        "grade": "standard",
+        "rating": 2,
+        "essence": 1,
+        "notes": "Synaptic Booster",
+        "catalogId": "4a4e1079-5872-4f3f-a450-48c30a5504f3"
+      }
+    ],
+    "gear": [
+      {
+        "id": "fvtt_Gwd9siFQTAY12vUZ",
+        "name": "Gants pas cher",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "d8016291-050d-413d-8896-0ee1bc1063a6",
+        "notes": "Cheap Gloves"
+      },
+      {
+        "id": "fvtt_do1h73L7wdCSi9tP",
+        "name": "Chaussures pas cher",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "dc78601d-7171-470e-8d7d-2e772cbcbfb2",
+        "notes": "Cheap Shoes"
+      },
+      {
+        "id": "fvtt_AB773SV6OXgR1KCp",
+        "name": "Chaussures de bonne qualité",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "99912fac-51df-4afb-88d1-1ff1a2c6fd2a",
+        "notes": "Good Shoes"
+      },
+      {
+        "id": "fvtt_Pe6eEffrL9fg0ty3",
+        "name": "Sous-vêtements haut de gamme",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "675b4735-227e-4395-8f62-bd9a62670474",
+        "notes": "Nice Undergarments"
+      },
+      {
+        "id": "fvtt_Iyq7hz2BWDQtCqPx",
+        "name": "Chaussettes haut de gamme",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "5293b8a8-32fd-4df4-ae86-6b909b952432",
+        "notes": "Nice Socks"
+      },
+      {
+        "id": "fvtt_EWO0SMglFL4YJbhU",
+        "name": "Chaussures haut de gamme",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "b7d83159-2840-4a10-985f-4ef346715c80",
+        "notes": "Nice Shoes"
+      },
+      {
+        "id": "fvtt_fu0nZSwZqzeo7OlL",
+        "name": "Montre haut de gamme",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "7e081824-e64e-4d7a-8621-eba30197362a",
+        "notes": "Nice Watch"
+      },
+      {
+        "id": "fvtt_aw3NES25pPMrZpzj",
+        "name": "Pantalon pas cher",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "024cca53-0d3a-4c89-bb73-a885b7d6111e",
+        "notes": "Cheap Pants"
+      },
+      {
+        "id": "fvtt_3A4g8QsEFkfArqzQ",
+        "name": "Chemise pas cher",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "fe363b10-a801-4049-9d5b-1908c6a6b9fc",
+        "notes": "Cheap Shirt"
+      },
+      {
+        "id": "fvtt_rs7MF2OeMzyQQHbv",
+        "name": "Costume pas cher",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "a2deaf94-855d-4d90-a711-07d590e22618",
+        "notes": "Cheap Suit"
+      },
+      {
+        "id": "fvtt_KdHpTvOImO1Fsa2E",
+        "name": "Chaussettes pas cher",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "1e440489-b800-4e5f-904b-98ef1591402b",
+        "notes": "Cheap Socks"
+      },
+      {
+        "id": "fvtt_5SuE1atbRBJeCR1N",
+        "name": "Sous-vêtements pas cher",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "7e13ee6d-5698-4b1e-bf93-7735bec4c0bc",
+        "notes": "Cheap Undergarments"
+      },
+      {
+        "id": "fvtt_MG4HVP9BggDHmf5d",
+        "name": "Sous-vêtements de bonne qualité",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "68eabf76-7e06-41a7-8717-2fdce3be8082",
+        "notes": "Good Undergarments"
+      },
+      {
+        "id": "fvtt_O3uh8IWs8NHNfXzk",
+        "name": "Montre pas cher",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "f93ceb9d-1736-4e51-b550-0275822c4d3e",
+        "notes": "Cheap Watch"
+      },
+      {
+        "id": "fvtt_e5yfsJ81LW0rBYvP",
+        "name": "Gants haut de gamme",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "e98c2113-306a-4596-abcb-46607c432cfb",
+        "notes": "Nice Gloves"
+      },
+      {
+        "id": "fvtt_d352t3e0NogWYXmL",
+        "name": "Prepaid Commlink (Cheap)",
+        "category": "Commlink",
+        "rating": 1,
+        "qty": 2
+      },
+      {
+        "id": "fvtt_KU2t1dNGcwOiIa3S",
+        "name": "Meta Link",
+        "category": "Commlink",
+        "rating": 1,
+        "qty": 1
+      },
+      {
+        "id": "fvtt_bDSkT3Dvv0FpPU73",
+        "name": "Lunettes",
+        "category": "Appareils optiques et d'imagerie",
+        "rating": 2,
+        "qty": 1,
+        "catalogId": "b218dbd1-5706-4d9e-a6a7-ab9b658c3acd",
+        "notes": "Glasses"
+      },
+      {
+        "id": "fvtt_CRZKHaQKBae58hwh",
+        "name": "Fancy Whiskey",
+        "category": "Équipement",
+        "qty": 1
+      },
+      {
+        "id": "fvtt_z4uoKxmykVVr6Gcx",
+        "name": "Couteau de lancer",
+        "category": "Munitions",
+        "qty": 10,
+        "catalogId": "d9bf2003-1911-4e65-b6a1-8babb761dd85",
+        "notes": "Throwing Knife"
+      },
+      {
+        "id": "fvtt_j5p49zt3WScDEO1W",
+        "name": "Mun. : Flèches standard",
+        "category": "Munitions",
+        "rating": 10,
+        "qty": 100,
+        "catalogId": "9e7a685f-e612-4b6b-955c-a7bc42b23682",
+        "notes": "Arrow: Standard (Bows)"
+      },
+      {
+        "id": "fvtt_XfpaUr40ArytLdil",
+        "name": "Respirateur chic",
+        "category": "Matériel de Survie",
+        "rating": 6,
+        "qty": 1,
+        "catalogId": "314566c7-4ea1-4f8d-94cd-f213af1e0535",
+        "notes": "Fashion Respirator"
+      },
+      {
+        "id": "fvtt_VricSY93bbL9th2u",
+        "name": "Mun. : Flèches à pointe hurlante",
+        "category": "Munitions",
+        "rating": 10,
+        "qty": 2,
+        "catalogId": "1cdea5f7-df85-4ebe-bc32-f8dbfa27dad3",
+        "notes": "Arrow: Screamer Head (Bows)"
+      },
+      {
+        "id": "fvtt_SJMfKvsItEhJu2Z5",
+        "name": "Mun. : Flèches à pointe contondante",
+        "category": "Munitions",
+        "rating": 10,
+        "qty": 10,
+        "catalogId": "8fb09c1d-f890-444b-bb2b-cf1a5e6825b8",
+        "notes": "Arrow: Hammerhead (Bows)"
+      },
+      {
+        "id": "fvtt_2npASC5wjLWxFp2c",
+        "name": "Sac à dos (Bonne qualité)",
+        "category": "Outils",
+        "qty": 1,
+        "catalogId": "d7c98f39-279e-4169-8818-0c3cad08205b",
+        "notes": "Backpack (Good)"
+      },
+      {
+        "id": "fvtt_6xXcWBrHpWaiGbQ9",
+        "name": "Coeur d'hiver",
+        "category": "Drogues",
+        "qty": 1,
+        "catalogId": "62d633d1-0e3a-4ea6-a4ba-f88ccdf72cf9",
+        "notes": "Slab"
+      },
+      {
+        "id": "fvtt_JyCmstkCy3Y6I0Lb",
+        "name": "Kamikaze",
+        "category": "Drogues",
+        "qty": 1,
+        "catalogId": "098bf489-bea9-4f17-b3d9-aead979fdc32"
+      },
+      {
+        "id": "fvtt_R4f23NpgSqD5lWgZ",
+        "name": "Hurlg",
+        "category": "Drogues",
+        "qty": 5,
+        "catalogId": "a713f573-128b-4143-adc0-32f52e698587"
+      },
+      {
+        "id": "fvtt_ufOprlKqkhsr9Kvb",
+        "name": "Garde de nuit",
+        "category": "Drogues",
+        "qty": 2,
+        "catalogId": "a2b0310b-5a8f-4b01-b478-967d345ce22c",
+        "notes": "Nightwatch"
+      },
+      {
+        "id": "fvtt_yHyWDA2mMKbQm28o",
+        "name": "Anesthépeinture (Pot)",
+        "category": "Drogues",
+        "qty": 5,
+        "catalogId": "6e219091-8e3c-4a65-bb1d-78a351d8bf54",
+        "notes": "NoPaint"
+      },
+      {
+        "id": "fvtt_CN48rSwPzj1eAKmC",
+        "name": "Cram",
+        "category": "Drogues",
+        "qty": 5,
+        "catalogId": "8dc829b9-8b94-4510-ab1a-2305cbad69c9"
+      },
+      {
+        "id": "fvtt_ojZOhmihS5u29aZ0",
+        "name": "Bétameth",
+        "category": "Drogues",
+        "qty": 1,
+        "catalogId": "f4eb63ce-c182-406c-b625-5699047e33a9",
+        "notes": "Betameth"
+      },
+      {
+        "id": "fvtt_FeTvknoB6ebW32cz",
+        "name": "Lentilles de contact",
+        "category": "Appareils optiques et d'imagerie",
+        "rating": 3,
+        "qty": 1,
+        "catalogId": "1a3a9204-959b-4db5-83de-094f921c5e7f",
+        "notes": "Contacts"
+      },
+      {
+        "id": "fvtt_zlLz25y0k6okJef6",
+        "name": "Écouteurs",
+        "category": "Appareils audio",
+        "rating": 3,
+        "qty": 1,
+        "catalogId": "5d69d002-c33d-4d0f-9c4d-d78db4d78e5d",
+        "notes": "Earbuds"
+      },
+      {
+        "id": "fvtt_r2iTO6cLbf8BMFWQ",
+        "name": "Micro-transmetteur",
+        "category": "Communications et Brouilleurs",
+        "qty": 2,
+        "catalogId": "d1fca845-ae01-4b39-a176-1506da699e0e",
+        "notes": "Micro-Transceiver"
+      },
+      {
+        "id": "fvtt_bQZJjiRGCJFh03w3",
+        "name": "Kit de survie",
+        "category": "Matériel de Survie",
+        "qty": 1,
+        "catalogId": "27f9775d-cd14-4900-827f-ba00d26e0c67",
+        "notes": "Survival Kit"
+      },
+      {
+        "id": "fvtt_iYkx8AZXHkzWti8y",
+        "name": "Corde standard (100m)",
+        "category": "Lance-Grappin",
+        "qty": 1,
+        "catalogId": "8adaecd5-0c24-4982-8803-e4459e16589f",
+        "notes": "Standard Rope (100m)"
+      },
+      {
+        "id": "fvtt_Pg98Y4lCen39gh15",
+        "name": "Matériel d'escalade",
+        "category": "Matériel de Survie",
+        "qty": 1,
+        "catalogId": "a17cae86-4d6f-4e00-acb6-03f0ccfb2807",
+        "notes": "Climbing Gear"
+      },
+      {
+        "id": "fvtt_ydvKWgBsek701ZYj",
+        "name": "Créditube certifié (Or)",
+        "category": "Identité et créditubes",
+        "qty": 1,
+        "catalogId": "697ef5f4-8cde-434d-aca6-1bddd4d526d3",
+        "notes": "Certified Credstick, Gold"
+      },
+      {
+        "id": "fvtt_kQ0WxCoDxCNL95Yp",
+        "name": "Médikit à nanites",
+        "category": "Équipement",
+        "qty": 1,
+        "catalogId": "4752d8ab-4393-4fd6-a3c6-c85f65d01281",
+        "notes": "Savior Medkit"
+      },
+      {
+        "id": "fvtt_37C9Pzp706md3Ixm",
+        "name": "Caméra",
+        "category": "Appareils optiques et d'imagerie",
+        "rating": 3,
+        "qty": 1,
+        "catalogId": "07805498-75ea-441f-bd27-6536d4131b51",
+        "notes": "Camera"
+      },
+      {
+        "id": "fvtt_VQygx59mtekv6BDR",
+        "name": "Lampe-torche (Ultraviolet)",
+        "category": "Matériel de Survie",
+        "qty": 1,
+        "catalogId": "44acc4c0-5795-47a4-84fb-bd2374276360",
+        "notes": "Flashlight, Low-light"
+      },
+      {
+        "id": "fvtt_IehJ4yIRdYDmALNF",
+        "name": "Menottes (Jetables en plastique, par 10)",
+        "category": "Matériel de sécurité",
+        "qty": 10,
+        "catalogId": "53c0b4cc-b209-4db4-bb0d-6710b3f4349a",
+        "notes": "Restraint, Plastic"
+      },
+      {
+        "id": "fvtt_IZTR2X0tTr3Aq59o",
+        "name": "Menottes (Métal)",
+        "category": "Matériel de sécurité",
+        "qty": 2,
+        "catalogId": "b9812675-b4c3-43ce-b564-c47a5f66b0fc",
+        "notes": "Restraint, Metal"
+      },
+      {
+        "id": "fvtt_PP8Vd7q28rZP25KE",
+        "name": "Boomerangs",
+        "category": "Munitions",
+        "qty": 5,
+        "catalogId": "c1df71d5-845b-46c9-ab8d-9166c5cbac70",
+        "notes": "Boomerang"
+      },
+      {
+        "id": "fvtt_4xpxTGL3aMlYO8US",
+        "name": "Pistolet à peinture",
+        "category": "Outils",
+        "qty": 1,
+        "catalogId": "ae3cdf0d-da25-4171-b2b4-4d9fa92374e2",
+        "notes": "Paint Gun"
+      },
+      {
+        "id": "fvtt_O4ZUOb7L5wyksZGl",
+        "name": "Kit de serrurerie",
+        "category": "Matériel d'intrusion",
+        "qty": 1,
+        "catalogId": "0fdeb240-743c-4a9d-9cf1-fef0990575bb",
+        "notes": "Lockpick Set"
+      },
+      {
+        "id": "fvtt_UayJ5RcTmyLzY9Md",
+        "name": "Jumelles (Électroniques)",
+        "category": "Appareils optiques et d'imagerie",
+        "rating": 3,
+        "qty": 1,
+        "catalogId": "1c6db3ed-a360-40b4-8118-9aca9d96001c",
+        "notes": "Binoculars"
+      }
+    ],
+    "vehicles": [],
+    "contacts": [
+      {
+        "id": "fvtt_DEHB6t6dmcdhIpdg",
+        "name": "Crazy Clochard",
+        "connection": 2,
+        "loyalty": 4
+      },
+      {
+        "id": "fvtt_6DNc7BVpmnOqpg2r",
+        "name": "(Imaginary) Annie Goldsmith",
+        "connection": 4,
+        "loyalty": 1
+      },
+      {
+        "id": "fvtt_LJwRESZZwMQvSEqc",
+        "name": "Yu Hikimi",
+        "connection": 6,
+        "loyalty": 3,
+        "notes": "Shategashira-hosa"
+      },
+      {
+        "id": "fvtt_xoCfJJeoV6fvMYa7",
+        "name": "Perrine Cabana",
+        "connection": 2,
+        "loyalty": 4,
+        "notes": "Armorer"
+      }
+    ],
+    "sins": [
+      {
+        "id": "fvtt_IKopWBCb8LKXp3Yl",
+        "name": "Faux SIN — Garrosh Hurlenfer",
+        "rating": 1,
+        "licenses": []
+      },
+      {
+        "id": "fvtt_ztgancJ7EhD7YnrX",
+        "name": "Faux SIN — Terada Sin'ichi",
+        "rating": 4,
+        "licenses": []
+      }
+    ],
+    "karma": 16,
+    "karmaTotal": 26,
+    "nuyen": 46079,
+    "streetCred": 3,
+    "notoriety": 0,
+    "publicAwareness": 0,
+    "vision": {
+      "lowLight": true
+    },
+    "history": [
+      {
+        "ts": 1795197600000,
+        "text": "Valeurs de départ (récap de campagne, fin du job « Kidnapping ») : 16 karma, 46 079¥, Street Cred 3. Personnage retiré.",
+        "karma": 16,
+        "nuyen": 46079
+      }
+    ],
+    "matrix": {
+      "device": "Fuchi Cyber-X7 (commlink)",
+      "rating": 7,
+      "attack": 0,
+      "sleaze": 0,
+      "dataProcessing": 7,
+      "firewall": 7,
+      "programs": []
+    },
+    "lifestyle": {
+      "name": "Home (Bas)",
+      "monthlyCost": 2000,
+      "monthsPaid": 1
+    },
+    "foundry": {
+      "id": "gRpohjIKhNi6WmlF",
+      "world": "test-world",
+      "importedAt": 1795629244307,
+      "hash": "4cf540d8a3b1",
+      "snapshot": {
+        "s": {
+          "karma": 16,
+          "karmaTotal": 26,
+          "nuyen": 46079,
+          "streetCred": 3,
+          "notoriety": 0,
+          "publicAwareness": 0,
+          "metatype": "Ork"
+        },
+        "a": {
+          "BOD": 7,
+          "AGI": 6,
+          "REA": 6,
+          "STR": 6,
+          "WIL": 4,
+          "LOG": 2,
+          "INT": 5,
+          "CHA": 2,
+          "EDG": 2,
+          "ESS": 1
+        },
+        "aug": {
+          "AGI": 4,
+          "REA": 2,
+          "STR": 4
+        },
+        "init": {
+          "dice": 3,
+          "bonus": 0
+        },
+        "c": {
+          "physical": 0,
+          "stun": 4,
+          "overflow": 0
+        },
+        "e": 2,
+        "sk": {
+          "clubs": "ffa193c2d167",
+          "blades": "cd1d7ec1ce8a",
+          "unarmed_combat": "f0b57aee3f8a",
+          "automatics": "4fcc36ffcce4",
+          "longarms": "e84d71c4edba",
+          "throwing_weapons": "52ce6b2190be",
+          "heavy_weapons": "17ff399da265",
+          "gunnery": "60298f0279cd",
+          "running": "ca0cb09fb705",
+          "palming": "99ced90f5ac5",
+          "sneaking": "26485071d71f",
+          "gymnastics": "3433bc3ab9a6",
+          "swimming": "8ec5ea23b740",
+          "perception": "f2536ffeafee",
+          "pistols": "8d14830147fe",
+          "locksmith": "de22dbead26e"
+        },
+        "items": {
+          "weapons": {
+            "fvtt_mlgk78MZOO3JJir7": "718d683bc5ef",
+            "fvtt_xjdqEmwEh5mr1wPf": "211c94947018",
+            "fvtt_rQmTulbiFrMktuRG": "4a498a065e30",
+            "fvtt_5tExIwt01gcEgVEa": "8fc155bb69b8",
+            "fvtt_ac1Pji1IOwBNYGkN": "7bd11066f3ee",
+            "fvtt_DH603oDdUWfjx87m": "0e9d96827304",
+            "fvtt_fWKmr5875gjqGzwx": "2949b85c885d",
+            "fvtt_vcAkWmQ6uwVcmo2S": "eeda6d990d6a",
+            "fvtt_BcIyvACDhN7kDlFX": "2228138acb1b",
+            "fvtt_lqjuh4fwMNoLfnDH": "aedcba4a8092",
+            "fvtt_txh9pRKMFKxW2eBB": "9c50c844d737",
+            "fvtt_JtK2nwpUoaoFykMa": "58c28bb7ce22",
+            "fvtt_u7PxWqcBH1moeS6M": "949bf798dc9b"
+          },
+          "armor": {
+            "fvtt_2gPkkO4IEJ6V1d6D": "acda229c5980",
+            "fvtt_25XxJ7NoYYuz6Ja5": "6405d879e39a",
+            "fvtt_DofI1yvxHFkAQXw1": "8bc19e4ecd8e",
+            "fvtt_FAUVrjq31mqnLPiH": "8f5bac2acccd"
+          },
+          "augmentations": {
+            "fvtt_9sMsUK5CAUYaqmsp": "77fe76f8f542",
+            "fvtt_xNGk1vsh0YWa5Act": "95944b0a2f88"
+          },
+          "gear": {
+            "fvtt_Gwd9siFQTAY12vUZ": "ea938639f884",
+            "fvtt_do1h73L7wdCSi9tP": "6079cbd5691c",
+            "fvtt_AB773SV6OXgR1KCp": "9c9916258de4",
+            "fvtt_Pe6eEffrL9fg0ty3": "c0873a31fad6",
+            "fvtt_Iyq7hz2BWDQtCqPx": "421c0b576d57",
+            "fvtt_EWO0SMglFL4YJbhU": "1e6f6ff4ab86",
+            "fvtt_fu0nZSwZqzeo7OlL": "b3154eeb553e",
+            "fvtt_aw3NES25pPMrZpzj": "d049a439eb53",
+            "fvtt_3A4g8QsEFkfArqzQ": "408892824e40",
+            "fvtt_rs7MF2OeMzyQQHbv": "3da2e5c7eee4",
+            "fvtt_KdHpTvOImO1Fsa2E": "f4e57666a52c",
+            "fvtt_5SuE1atbRBJeCR1N": "e82f6c884c9a",
+            "fvtt_MG4HVP9BggDHmf5d": "3949ead00faf",
+            "fvtt_O3uh8IWs8NHNfXzk": "9ed676278f00",
+            "fvtt_e5yfsJ81LW0rBYvP": "a9839bae4b16",
+            "fvtt_d352t3e0NogWYXmL": "4e6348ba26f6",
+            "fvtt_KU2t1dNGcwOiIa3S": "79b021cbfb83",
+            "fvtt_bDSkT3Dvv0FpPU73": "8e927cfed8b1",
+            "fvtt_CRZKHaQKBae58hwh": "0be788611d27",
+            "fvtt_z4uoKxmykVVr6Gcx": "05e8a5b34c70",
+            "fvtt_j5p49zt3WScDEO1W": "9db33c219a1a",
+            "fvtt_XfpaUr40ArytLdil": "6f6aed529acc",
+            "fvtt_VricSY93bbL9th2u": "6078727a3cc5",
+            "fvtt_SJMfKvsItEhJu2Z5": "57e2d573686e",
+            "fvtt_2npASC5wjLWxFp2c": "9663890c2ced",
+            "fvtt_6xXcWBrHpWaiGbQ9": "b878570537aa",
+            "fvtt_JyCmstkCy3Y6I0Lb": "abb9842fa7cc",
+            "fvtt_R4f23NpgSqD5lWgZ": "198b7d5b5272",
+            "fvtt_ufOprlKqkhsr9Kvb": "2da6cf5ba139",
+            "fvtt_yHyWDA2mMKbQm28o": "8318cfa5c14b",
+            "fvtt_CN48rSwPzj1eAKmC": "6b0a0df1f5e6",
+            "fvtt_ojZOhmihS5u29aZ0": "8074d84d9b81",
+            "fvtt_FeTvknoB6ebW32cz": "d7dbb185e018",
+            "fvtt_zlLz25y0k6okJef6": "5b881f24974c",
+            "fvtt_r2iTO6cLbf8BMFWQ": "108b1400edb2",
+            "fvtt_bQZJjiRGCJFh03w3": "53e0f2f15f7d",
+            "fvtt_iYkx8AZXHkzWti8y": "a9d85fedec47",
+            "fvtt_Pg98Y4lCen39gh15": "f7c5df94abf8",
+            "fvtt_ydvKWgBsek701ZYj": "b27365ac5183",
+            "fvtt_kQ0WxCoDxCNL95Yp": "069729ab7da9",
+            "fvtt_37C9Pzp706md3Ixm": "77d588f337bc",
+            "fvtt_VQygx59mtekv6BDR": "610bfd6dfdca",
+            "fvtt_IehJ4yIRdYDmALNF": "465b1ba71c80",
+            "fvtt_IZTR2X0tTr3Aq59o": "ab25ca272898",
+            "fvtt_PP8Vd7q28rZP25KE": "dcba82460fcd",
+            "fvtt_4xpxTGL3aMlYO8US": "34d08aefc33e",
+            "fvtt_O4ZUOb7L5wyksZGl": "b37b19ceed30",
+            "fvtt_UayJ5RcTmyLzY9Md": "e9e8f225cbef"
+          },
+          "vehicles": {},
+          "contacts": {
+            "fvtt_DEHB6t6dmcdhIpdg": "3c7e7b93f211",
+            "fvtt_6DNc7BVpmnOqpg2r": "dc680dbda804",
+            "fvtt_LJwRESZZwMQvSEqc": "c9a61893fb9a",
+            "fvtt_xoCfJJeoV6fvMYa7": "d5048b2cf3b4"
+          },
+          "sins": {
+            "fvtt_IKopWBCb8LKXp3Yl": "791040aa8aa4",
+            "fvtt_ztgancJ7EhD7YnrX": "934c2662ad9b"
+          },
+          "qualities": {
+            "fvtt_m5ytR6ul4sMYIovM": "3625e269ea2b",
+            "fvtt_zMuG4lEs6koWxw1G": "54786f208fb9",
+            "fvtt_F7j7RM2OFsxadvHv": "7012c4124ed5",
+            "fvtt_MhWKS1HRXClVoF1R": "ed190c77994c",
+            "fvtt_dsbcGUDj0H5pthGc": "81c5edb808cc",
+            "fvtt_iGEmwE6n69VZFwPV": "9a8abbe64b71",
+            "fvtt_Zp7obqBRpvdbDlAZ": "0f972ebc6d90",
+            "fvtt_eufk6lajI8I4PH1W": "687d4c4e5d71"
+          },
+          "powers": {},
+          "spells": {},
+          "knowledge": {
+            "fvtt_qTB6gN3ksicTP0K4": "7c28fdf6d7f7",
+            "fvtt_vqoU7lsk7I89hx2a": "393b300a59f6",
+            "fvtt_QaivvVJ98QX3NHuD": "49d850ac4e19",
+            "fvtt_0jmHznMEFeTbKtIv": "0398c94fd5f1",
+            "fvtt_vwfnNTEeN28wajXL": "09b0778139d9",
+            "fvtt_xHffrb93L9wQHkf0": "0b272d5cb978"
+          }
+        },
+        "matrix": "6f027afed084",
+        "lifestyle": "654faaa2e712",
+        "vision": "f3d1cf29241f"
+      },
+      "user": "Jean Michou"
+    }
+  },
+  {
+    "id": "pc_christopher",
+    "type": "pc",
+    "name": "Christopher Armingstar",
+    "player": "",
+    "concept": "PJ importé de Foundry",
+    "color": "#3fa7d6",
+    "bio": "Tall and of a pretty average build man, some grey hair can be seen and a 3 days beard can be seen on the face.  \nHe as a pretty face but if you are near him you can't shook the feeling of uneasyness like he's not the man he seems to be.  \nAddicted to alcohol and to smoking, he spend most of his free time in some bar trying to con some \"innocent\" bystander.  \nAs far as his memory goes he always lived with his father, who was working in some shaddy business; Due to his work his dad, and defacto Chris, had to move arround a lot, which led him to had to addapt quickly to new environement, faces, schools. This constant moving arround is what forge his character to be what he's know: quick to adapt, and please the person in front of him. his father being rarely there for him, he hung arround with some shaddy people when he was a teenager leading him rapidly to become quite fond of alchool and smoking, which took him away from the loneliness of comming back to a empty home. After a few years of sweet talking his way arround he quickly understood that having social skills can give you a lot of advantages in life; so much so that you can pretty much live off other people's cluelessness.\n\n### Historique (Foundry)\n\nTall and of a pretty average build man, some grey hair can be seen and a 3 days beard can be seen on the face.  \nHe as a pretty face but if you are near him you can't shook the feeling of uneasyness like he's not the man he seems to be.  \nAddicted to alcohol and to smoking, he spend most of his free time in some bar trying to con some \"innocent\" bystander.  \nAs far as his memory goes he always lived with his father, who was working in some shaddy business; Due to his work his dad, and defacto Chris, had to move arround a lot, which led him to had to addapt quickly to new environement, faces, schools. This constant moving arround is what forge his character to be what he's know: quick to adapt, and please the person in front of him. his father being rarely there for him, he hung arround with some shaddy people when he was a teenager leading him rapidly to become quite fond of alchool and smoking, which took him away from the loneliness of comming back to a empty home. After a few years of sweet talking his way arround he quickly understood that having social skills can give you a lot of advantages in life; so much so that you can pretty much live off other people's cluelessness.",
+    "notes": "Fiche synchronisée depuis Foundry VTT (monde « Shadowrun »). Les changements faits dans Foundry arrivent ici quand le MJ relance l'import.",
+    "gmNotes": "Aucun joueur propriétaire dans Foundry : importé comme PJ retraité.",
+    "metatype": "Humain",
+    "attributes": {
+      "BOD": 2,
+      "AGI": 5,
+      "REA": 5,
+      "STR": 3,
+      "WIL": 3,
+      "LOG": 2,
+      "INT": 4,
+      "CHA": 6,
+      "EDG": 5,
+      "ESS": 5.65
+    },
+    "augmented": {},
+    "initiative": {
+      "dice": 1,
+      "bonus": 0
+    },
+    "condition": {
+      "physical": 0,
+      "stun": 0,
+      "overflow": 0
+    },
+    "edge": {
+      "current": 5
+    },
+    "skills": [
+      {
+        "id": "disguise",
+        "name": "Déguisement",
+        "attr": "INT",
+        "rating": 6,
+        "group": "stealth"
+      },
+      {
+        "id": "con",
+        "name": "Escroquerie",
+        "attr": "CHA",
+        "rating": 6,
+        "spec": "Fast Talk",
+        "group": "acting"
+      },
+      {
+        "id": "etiquette",
+        "name": "Étiquette",
+        "attr": "CHA",
+        "rating": 6,
+        "group": "influence"
+      },
+      {
+        "id": "impersonation",
+        "name": "Imposture",
+        "attr": "CHA",
+        "rating": 6,
+        "group": "acting"
+      },
+      {
+        "id": "leadership",
+        "name": "Leadership",
+        "attr": "CHA",
+        "rating": 6,
+        "spec": "Rally",
+        "group": "influence"
+      },
+      {
+        "id": "negotiation",
+        "name": "Négociation",
+        "attr": "CHA",
+        "rating": 6,
+        "group": "influence"
+      },
+      {
+        "id": "pistols",
+        "name": "Pistolets",
+        "attr": "AGI",
+        "rating": 6,
+        "group": "firearms"
+      },
+      {
+        "id": "first_aid",
+        "name": "Premiers soins",
+        "attr": "LOG",
+        "rating": 6,
+        "group": "biotech"
+      },
+      {
+        "id": "clubs",
+        "name": "Armes contondantes",
+        "attr": "AGI",
+        "rating": 4,
+        "group": "close_combat"
+      },
+      {
+        "id": "blades",
+        "name": "Armes tranchantes",
+        "attr": "AGI",
+        "rating": 4,
+        "group": "close_combat"
+      },
+      {
+        "id": "unarmed_combat",
+        "name": "Combat à mains nues",
+        "attr": "AGI",
+        "rating": 4,
+        "group": "close_combat"
+      },
+      {
+        "id": "palming",
+        "name": "Escamotage",
+        "attr": "AGI",
+        "rating": 4,
+        "spec": "Pickpocket",
+        "group": "stealth"
+      },
+      {
+        "id": "perception",
+        "name": "Perception",
+        "attr": "INT",
+        "rating": 4,
+        "spec": "Visual"
+      },
+      {
+        "id": "locksmith",
+        "name": "Serrurerie",
+        "attr": "AGI",
+        "rating": 4
+      },
+      {
+        "id": "pilot_ground_craft",
+        "name": "Pilotage (véhicules terrestres)",
+        "attr": "REA",
+        "rating": 3
+      },
+      {
+        "id": "automatics",
+        "name": "Armes automatiques",
+        "attr": "AGI",
+        "rating": 1,
+        "group": "firearms"
+      },
+      {
+        "id": "heavy_weapons",
+        "name": "Armes lourdes",
+        "attr": "AGI",
+        "rating": 1
+      },
+      {
+        "id": "gunnery",
+        "name": "Artillerie",
+        "attr": "AGI",
+        "rating": 1
+      },
+      {
+        "id": "sneaking",
+        "name": "Furtivité",
+        "attr": "AGI",
+        "rating": 1,
+        "group": "stealth"
+      },
+      {
+        "id": "intimidation",
+        "name": "Intimidation",
+        "attr": "CHA",
+        "rating": 1
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "fvtt_y0jIcXZJVIkH01cG",
+        "name": "Area Knowledge: Neo-Tokyo",
+        "rating": 1,
+        "type": "street"
+      },
+      {
+        "id": "fvtt_WIjk3RpeFm5rbBx3",
+        "name": "Area Knowledge: Seattle",
+        "rating": 1,
+        "type": "street"
+      },
+      {
+        "id": "fvtt_xCrXS9j0FQWKKaAf",
+        "name": "Bars and Clubs",
+        "rating": 1,
+        "type": "street"
+      },
+      {
+        "id": "fvtt_CyZShvjmTEkzVlSL",
+        "name": "Gangs",
+        "rating": 1,
+        "type": "street"
+      },
+      {
+        "id": "fvtt_Si16B9XKHcz8irQl",
+        "name": "Yakuza",
+        "rating": 2,
+        "type": "street",
+        "spec": "Organizations"
+      },
+      {
+        "id": "fvtt_7lAvOjfy9Olvsznr",
+        "name": "Politics",
+        "rating": 1,
+        "type": "academic"
+      },
+      {
+        "id": "fvtt_M0GnGCdFfZm2Ddn5",
+        "name": "Business",
+        "rating": 1,
+        "type": "professional"
+      },
+      {
+        "id": "fvtt_7sK4CEpu5bOy7zcq",
+        "name": "Alcohol",
+        "rating": 2,
+        "type": "interest"
+      },
+      {
+        "id": "fvtt_rkVaxRaqoD6wdMyx",
+        "name": "Fashion",
+        "rating": 1,
+        "type": "interest"
+      }
+    ],
+    "qualities": [
+      {
+        "id": "fvtt_pEYqHXEQjnZzYBlX",
+        "name": "Addiction (modérée)",
+        "karma": -9,
+        "positive": false,
+        "notes": "Addiction (Moderate) · SR5 78",
+        "catalogId": "9a52a300-4d90-4b1f-a113-d0e40a410063"
+      },
+      {
+        "id": "fvtt_66jvy8rTAOy880mO",
+        "name": "Addiction (légère)",
+        "karma": -4,
+        "positive": false,
+        "notes": "Addiction (Mild) · SR5 77",
+        "catalogId": "ea7cced4-a201-44a2-9a1b-e10180b1df81"
+      },
+      {
+        "id": "fvtt_fKhY2XnJSeT98PTQ",
+        "name": "Bilingue",
+        "karma": 5,
+        "positive": true,
+        "notes": "Bilingual · SR5 72",
+        "catalogId": "c734e46a-d391-45a6-b022-6f18db5019f1"
+      },
+      {
+        "id": "fvtt_8Eae2RNLv69sfvaP",
+        "name": "Mémoire photographique",
+        "karma": 6,
+        "positive": true,
+        "notes": "Photographic Memory · SR5 76",
+        "catalogId": "9d3be1d9-1309-45e7-8bd9-1f5a3ede3522"
+      }
+    ],
+    "powers": [],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "fvtt_sksbnqSorW3mLnMn",
+        "name": "Mains nues",
+        "category": "Corps à corps",
+        "kind": "melee",
+        "skill": "unarmed_combat",
+        "accuracy": 5,
+        "damage": "(STR)S",
+        "ap": 0,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "notes": "Unarmed Attack (SR5 132)"
+      },
+      {
+        "id": "fvtt_fXWysWvXpgiZzFlH",
+        "name": "Colt Government 2066",
+        "category": "Pistolets lourds",
+        "kind": "ranged",
+        "skill": "pistols",
+        "accuracy": 6,
+        "damage": "7P",
+        "ap": -5,
+        "mode": "SA",
+        "rc": 2,
+        "ammo": "14(c)",
+        "reach": 0,
+        "catalogId": "6366691e-c1e0-4d5e-b7a6-1c0371708714",
+        "notes": "Colt Government 2066 (SR5 426)"
+      },
+      {
+        "id": "fvtt_gVDyjqVk7I3OrwoU",
+        "name": "Ares Light Fire 75",
+        "category": "Pistolets légers",
+        "kind": "ranged",
+        "skill": "pistols",
+        "accuracy": 6,
+        "damage": "6P",
+        "ap": 0,
+        "mode": "SA",
+        "rc": 2,
+        "ammo": "16(c)",
+        "reach": 0,
+        "catalogId": "93722378-dcb6-4988-ba4e-54ce545644fe",
+        "notes": "Ares Light Fire 75 (SR5 425)"
+      },
+      {
+        "id": "fvtt_qbPkuKQQucnBfYe2",
+        "name": "Couteau de combat",
+        "category": "Armes tranchantes",
+        "kind": "melee",
+        "skill": "blades",
+        "accuracy": 6,
+        "damage": "5P",
+        "ap": -3,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "catalogId": "656906d8-b6a4-47a2-9554-de365097eba0",
+        "notes": "Combat Knife (SR5 422)"
+      },
+      {
+        "id": "fvtt_oKJpENfQmDzziduU",
+        "name": "ArmTech MGL-12",
+        "category": "Lance-grenades",
+        "kind": "ranged",
+        "skill": "heavy_weapons",
+        "accuracy": 4,
+        "damage": "Grenade",
+        "ap": 0,
+        "mode": "SA",
+        "rc": 2,
+        "ammo": "12(c)",
+        "reach": 0,
+        "catalogId": "5b98b55d-c87c-453a-ad87-9b34c8cbf04b",
+        "notes": "ArmTech MGL-12 (SR5 431)"
+      },
+      {
+        "id": "fvtt_BoL7YRWIJHvboXi7",
+        "name": "Minigrenade: High Explosive",
+        "category": "Arme à distance",
+        "kind": "ranged",
+        "skill": "heavy_weapons",
+        "accuracy": "",
+        "damage": "16P",
+        "ap": -2,
+        "mode": "",
+        "rc": 2,
+        "ammo": "",
+        "reach": 0,
+        "notes": "Minigrenade: High Explosive (SR5 435)"
+      },
+      {
+        "id": "fvtt_OLGm04DlyQsTgLpR",
+        "name": "Minigrenade: Gas",
+        "category": "Arme à distance",
+        "kind": "ranged",
+        "skill": "heavy_weapons",
+        "accuracy": "",
+        "damage": "10S",
+        "ap": 0,
+        "mode": "",
+        "rc": 2,
+        "ammo": "",
+        "reach": 0,
+        "notes": "Minigrenade: Gas (SR5 435)"
+      },
+      {
+        "id": "fvtt_cvRDBKaMGhz0cWmv",
+        "name": "Couteau",
+        "category": "Armes tranchantes",
+        "kind": "melee",
+        "skill": "blades",
+        "accuracy": 5,
+        "damage": "4P",
+        "ap": -1,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "catalogId": "eb16de72-e646-4880-aa5b-21a5a0a2b342",
+        "notes": "Knife (Survival Kit) (SR5 422)"
+      },
+      {
+        "id": "fvtt_jD1JUdqbHfQ78DMB",
+        "name": "Tronçonneuse monofilament",
+        "category": "Armes de mêlée exotiques",
+        "kind": "melee",
+        "skill": "exotic_weapon",
+        "accuracy": 3,
+        "damage": "8P",
+        "ap": -6,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 1,
+        "catalogId": "fb814f8e-7284-4ae8-b362-63958d6a1921",
+        "notes": "Monofilament Chainsaw (SR5 448)"
+      },
+      {
+        "id": "fvtt_6ahUiYvHws35fzq0",
+        "name": "Ares Briefcase Shield",
+        "category": "Corps à corps",
+        "kind": "melee",
+        "skill": "exotic_weapon",
+        "accuracy": 3,
+        "damage": "5P",
+        "ap": 0,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "notes": "Ares Briefcase Shield (CA 137)"
+      }
+    ],
+    "armor": [
+      {
+        "id": "fvtt_g6WYjOvCudou2uXO",
+        "name": "Costume « Actioneer »",
+        "rating": 8,
+        "equipped": false,
+        "stack": false,
+        "notes": "Actioneer Business Clothes",
+        "catalogId": "5a650844-8f24-48e7-829f-0443d9ff5cf7"
+      },
+      {
+        "id": "fvtt_K2m8o9QSd2Vw67bE",
+        "name": "Zoé : Heritage 12",
+        "rating": 12,
+        "equipped": true,
+        "stack": false,
+        "notes": "Zoé: Heritage 12",
+        "catalogId": "d4804f1b-4443-4e97-a7d2-9c1659732c6b"
+      },
+      {
+        "id": "fvtt_bgzKpPH9YxbTde8D",
+        "name": "Mortimer of London : Manteau Greatcoat",
+        "rating": 10,
+        "equipped": true,
+        "stack": true,
+        "notes": "Mortimer of London: Greatcoat Coat",
+        "catalogId": "446ec9ad-9a52-46fe-8f27-873a51ef6291"
+      },
+      {
+        "id": "fvtt_zzSimmXN96t0XE8R",
+        "name": "Bouclier attaché-case Ares",
+        "rating": 4,
+        "equipped": false,
+        "stack": true,
+        "notes": "Ares Briefcase Shield",
+        "catalogId": "b9554fe8-fc04-4746-8f5f-32d5ee9053be"
+      }
+    ],
+    "augmentations": [
+      {
+        "id": "fvtt_xBDMOEOgiUJsTMnB",
+        "name": "Yeux cybernétiques, système de base",
+        "kind": "cyberware",
+        "grade": "standard",
+        "rating": 2,
+        "essence": 0.15,
+        "notes": "Cybereyes Basic System",
+        "catalogId": "8e414ade-2764-4dc7-bdc4-83bb4a086034"
+      },
+      {
+        "id": "fvtt_rkHb0jc95kc5RvLm",
+        "name": "Producteurs de plaquettes",
+        "kind": "cyberware",
+        "grade": "standard",
+        "essence": 0.2,
+        "notes": "Platelet Factories",
+        "catalogId": "8c75648c-19d2-4734-b107-c04bb0e1904a"
+      }
+    ],
+    "gear": [
+      {
+        "id": "fvtt_bEL0eLzLyFjXaDnM",
+        "name": "Sous-vêtements haut de gamme",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "675b4735-227e-4395-8f62-bd9a62670474",
+        "notes": "Nice Undergarments"
+      },
+      {
+        "id": "fvtt_PYtXJmoOOTpanQ9d",
+        "name": "Chaussettes haut de gamme",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "5293b8a8-32fd-4df4-ae86-6b909b952432",
+        "notes": "Nice Socks"
+      },
+      {
+        "id": "fvtt_p8Eii4QwTGtgLmFT",
+        "name": "Bijou haut de gamme",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "9fc5642a-1670-4907-82cb-179a441d11f0",
+        "notes": "Nice Jewelry"
+      },
+      {
+        "id": "fvtt_2cB7LMiABdl5R5ha",
+        "name": "Gants haut de gamme",
+        "category": "Vêtements",
+        "qty": 1,
+        "catalogId": "e98c2113-306a-4596-abcb-46607c432cfb",
+        "notes": "Nice Gloves"
+      },
+      {
+        "id": "fvtt_9XbXvL2FtlKbmQ9i",
+        "name": "Mun. : Balles à pointe creuse",
+        "category": "Munitions",
+        "qty": 74,
+        "catalogId": "f486f414-ee2c-46db-92ea-c682861d8fe0",
+        "notes": "Ammo: Hollow Points"
+      },
+      {
+        "id": "fvtt_Pqs5IxKjKdJWKqfD",
+        "name": "Mun. : Balles normales",
+        "category": "Munitions",
+        "qty": 82,
+        "catalogId": "b2a0b340-c793-4322-8422-8b03d18a6fae",
+        "notes": "Ammo: Regular Ammo"
+      },
+      {
+        "id": "fvtt_Se492hu0CFrTLTjW",
+        "name": "Mun. : Balles normales",
+        "category": "Munitions",
+        "qty": 32,
+        "catalogId": "b2a0b340-c793-4322-8422-8b03d18a6fae",
+        "notes": "Ammo: Regular Ammo (Holdouts)"
+      },
+      {
+        "id": "fvtt_rvx6JVOS2vaSl374",
+        "name": "Créditube certifié (Or)",
+        "category": "Identité et créditubes",
+        "qty": 1,
+        "catalogId": "697ef5f4-8cde-434d-aca6-1bddd4d526d3",
+        "notes": "Certified Credstick, Gold"
+      },
+      {
+        "id": "fvtt_Y8liJpKoeFjsLFTF",
+        "name": "Chargeur supplémentaire",
+        "category": "Munitions",
+        "qty": 3,
+        "catalogId": "75ccb148-e774-429c-b854-a27816439626",
+        "notes": "Spare Clip (Colt Government 2066)"
+      },
+      {
+        "id": "fvtt_MBTJmrCsfJPgngpj",
+        "name": "Kit de serrurerie",
+        "category": "Matériel d'intrusion",
+        "qty": 1,
+        "catalogId": "0fdeb240-743c-4a9d-9cf1-fef0990575bb",
+        "notes": "Lockpick Set"
+      },
+      {
+        "id": "fvtt_sNitXG1fqpkwkncj",
+        "name": "Chargeur supplémentaire",
+        "category": "Munitions",
+        "qty": 2,
+        "catalogId": "75ccb148-e774-429c-b854-a27816439626",
+        "notes": "Spare Clip (Ares Light Fire 75)"
+      },
+      {
+        "id": "fvtt_2Y4PlmZ9dzHusUhr",
+        "name": "Mun. : Balles normales",
+        "category": "Munitions",
+        "qty": 64,
+        "catalogId": "b2a0b340-c793-4322-8422-8b03d18a6fae",
+        "notes": "Ammo: Regular Ammo"
+      },
+      {
+        "id": "fvtt_5BjRZXOmuJXxuymH",
+        "name": "Patch antidote",
+        "category": "Équipement",
+        "rating": 6,
+        "qty": 1,
+        "catalogId": "47e12d78-cb99-4e20-aff5-11cbed1e715e",
+        "notes": "Slap Patch, Antidote Patch"
+      },
+      {
+        "id": "fvtt_mu4fpMEKLTZzj1bC",
+        "name": "Mun. : Balles ADPS",
+        "category": "Munitions",
+        "qty": 65,
+        "catalogId": "ef9c8aae-26df-4fe6-88b3-79fbb5eb77c5",
+        "notes": "Ammo: APDS"
+      },
+      {
+        "id": "fvtt_7JC7WhoLQR7DNbvq",
+        "name": "Lunettes",
+        "category": "Appareils optiques et d'imagerie",
+        "rating": 3,
+        "qty": 1,
+        "catalogId": "b218dbd1-5706-4d9e-a6a7-ab9b658c3acd",
+        "notes": "Glasses"
+      },
+      {
+        "id": "fvtt_fXtpSoscE7aSbnS8",
+        "name": "Médikit",
+        "category": "Équipement",
+        "rating": 6,
+        "qty": 1,
+        "catalogId": "ae9c37df-6d82-44c1-aa21-6c87e45e2dc1",
+        "notes": "Medkit"
+      },
+      {
+        "id": "fvtt_6XyxPYCMeouy0oV0",
+        "name": "Recharge de médikit",
+        "category": "Équipement",
+        "qty": 8,
+        "catalogId": "76aca45d-0d4f-45a3-a532-c47ac0b26b89",
+        "notes": "Medkit Supplies"
+      },
+      {
+        "id": "fvtt_7YgX02iP91R1DJu2",
+        "name": "Masque à gaz",
+        "category": "Matériel de Survie",
+        "qty": 1,
+        "catalogId": "2633cf38-90a6-4843-b475-e3ee1132fb5f",
+        "notes": "Gas Mask"
+      },
+      {
+        "id": "fvtt_vObbqPdAqPUGuStH",
+        "name": "Matériel de plongée",
+        "category": "Matériel de Survie",
+        "qty": 1,
+        "catalogId": "927c8a62-2c67-4121-abeb-235ebde7b90a",
+        "notes": "Diving Gear"
+      },
+      {
+        "id": "fvtt_JOp8bntUoGpu9WJF",
+        "name": "Kit de survie",
+        "category": "Matériel de Survie",
+        "qty": 1,
+        "catalogId": "27f9775d-cd14-4900-827f-ba00d26e0c67",
+        "notes": "Survival Kit"
+      },
+      {
+        "id": "fvtt_fTVaOtxwacF0nN5P",
+        "name": "Jumelles (Électroniques)",
+        "category": "Appareils optiques et d'imagerie",
+        "rating": 3,
+        "qty": 1,
+        "catalogId": "1c6db3ed-a360-40b4-8118-9aca9d96001c",
+        "notes": "Binoculars"
+      },
+      {
+        "id": "fvtt_GEtU7SwYETOnYhCt",
+        "name": "Paquet de cigarettes (35)",
+        "category": "Divers",
+        "qty": 2,
+        "catalogId": "09425101-0700-49fb-a7e7-94a2b8c8f79a",
+        "notes": "Pack of Cigarettes"
+      },
+      {
+        "id": "fvtt_gD3vcRasfMiMYIQW",
+        "name": "Briquet rechargeable",
+        "category": "Outils",
+        "qty": 1,
+        "catalogId": "17ff01a6-e143-4d07-979d-d524671e1d34",
+        "notes": "Lighter (Good)"
+      },
+      {
+        "id": "fvtt_BFN6QvG0W74eHz88",
+        "name": "Allumettes (Boîte de 100)",
+        "category": "Outils",
+        "qty": 10,
+        "catalogId": "a0110448-c617-4cef-930d-2e673425bb80",
+        "notes": "Matches"
+      },
+      {
+        "id": "fvtt_bA7aClZ18EoKqMHt",
+        "name": "Autocrocheteur",
+        "category": "Matériel d'intrusion",
+        "rating": 6,
+        "qty": 1,
+        "catalogId": "af829cba-8d5e-40fd-b37b-e5266c29c55a",
+        "notes": "Autopicker"
+      },
+      {
+        "id": "fvtt_eiVHPQqUshXjPdUI",
+        "name": "Copieur de cartes",
+        "category": "Matériel d'intrusion",
+        "rating": 6,
+        "qty": 1,
+        "catalogId": "dcab11fa-b31a-49bd-ba43-3a9009072e4e",
+        "notes": "Keycard Copier"
+      },
+      {
+        "id": "fvtt_3RLAlulDLFWOjvNO",
+        "name": "Kit de serrurerie",
+        "category": "Matériel d'intrusion",
+        "qty": 1,
+        "catalogId": "0fdeb240-743c-4a9d-9cf1-fef0990575bb",
+        "notes": "Lockpick Set"
+      },
+      {
+        "id": "fvtt_vE8FrYsjiqSx8W7s",
+        "name": "Mini-poste à soudure",
+        "category": "Matériel d'intrusion",
+        "qty": 1,
+        "catalogId": "a210be88-be16-4d66-afcb-7d58b8e1397f",
+        "notes": "Miniwelder"
+      },
+      {
+        "id": "fvtt_8NepLHN2L9Xq4R6j",
+        "name": "Tronçonneuse monofilament",
+        "category": "Matériel d'intrusion",
+        "qty": 1,
+        "catalogId": "17a4ed15-a9d3-40a6-b5d4-4a69f6c8b9d3",
+        "notes": "Monofilament Chainsaw"
+      },
+      {
+        "id": "fvtt_NufI1Loi6yzNlcc0",
+        "name": "Black Panther",
+        "category": "Parfums",
+        "qty": 8,
+        "catalogId": "6393ca16-41d0-4714-b7a0-1be18a62815c"
+      },
+      {
+        "id": "fvtt_nobgXN1hbloOCsFh",
+        "name": "Respirateur chic",
+        "category": "Matériel de Survie",
+        "rating": 6,
+        "qty": 1,
+        "catalogId": "314566c7-4ea1-4f8d-94cd-f213af1e0535",
+        "notes": "Fashion Respirator"
+      },
+      {
+        "id": "fvtt_2aWkvfla2umyM7Ta",
+        "name": "Mun. : Balles normales",
+        "category": "Munitions",
+        "qty": 90,
+        "catalogId": "b2a0b340-c793-4322-8422-8b03d18a6fae",
+        "notes": "Ammo: Regular Ammo"
+      },
+      {
+        "id": "fvtt_OrDoCJImXsA0zNah",
+        "name": "Combinaison NBC",
+        "category": "Matériel de Survie",
+        "qty": 4,
+        "catalogId": "a39501ca-0df5-4fb7-8992-97b765383d17",
+        "notes": "Hazmat Suit"
+      },
+      {
+        "id": "fvtt_MPjMwxL20rpOHRYE",
+        "name": "Bâtonnet luminescent",
+        "category": "Matériel de Survie",
+        "qty": 10,
+        "catalogId": "c658ec7e-48c1-4ead-8083-f3ee0eab92e4",
+        "notes": "Light Stick"
+      },
+      {
+        "id": "fvtt_0yQfbrzvfPwkmYwq",
+        "name": "Corde standard (100m)",
+        "category": "Lance-Grappin",
+        "qty": 1,
+        "catalogId": "8adaecd5-0c24-4982-8803-e4459e16589f",
+        "notes": "Standard Rope (100m)"
+      },
+      {
+        "id": "fvtt_i4H34BJCpTJ3ilZk",
+        "name": "Menottes (Métal)",
+        "category": "Matériel de sécurité",
+        "qty": 2,
+        "catalogId": "b9812675-b4c3-43ce-b564-c47a5f66b0fc",
+        "notes": "Restraint, Metal"
+      },
+      {
+        "id": "fvtt_7WO9snWmOuyf7DRy",
+        "name": "Écouteurs",
+        "category": "Appareils audio",
+        "rating": 3,
+        "qty": 1,
+        "catalogId": "5d69d002-c33d-4d0f-9c4d-d78db4d78e5d",
+        "notes": "Earbuds"
+      },
+      {
+        "id": "fvtt_fLfpDgVc8gPjuolV",
+        "name": "Créditube certifié (Ébène)",
+        "category": "Identité et créditubes",
+        "qty": 1,
+        "catalogId": "fd2c8afe-7c0f-4b98-ae93-a6108531b236",
+        "notes": "Certified Credstick, Ebony"
+      }
+    ],
+    "vehicles": [],
+    "matrix": {
+      "device": "Fairlight Caliban (commlink)",
+      "rating": 7,
+      "attack": 0,
+      "sleaze": 0,
+      "dataProcessing": 7,
+      "firewall": 7,
+      "programs": []
+    },
+    "contacts": [
+      {
+        "id": "fvtt_RdTQGK1ty0IeOWe7",
+        "name": "Dan",
+        "connection": 4,
+        "loyalty": 4,
+        "notes": "Police Chief"
+      },
+      {
+        "id": "fvtt_Qg56ein6pctT5HNa",
+        "name": "Kazuyoshi Kudo",
+        "connection": 4,
+        "loyalty": 3,
+        "notes": "Yakuza"
+      },
+      {
+        "id": "fvtt_argN3hxMc1avXt5o",
+        "name": "Arianne Mortia",
+        "connection": 3,
+        "loyalty": 5,
+        "notes": "Armorer"
+      },
+      {
+        "id": "fvtt_lePUBxmGRYprM52g",
+        "name": "Jean-Pierre",
+        "connection": 1,
+        "loyalty": 1
+      },
+      {
+        "id": "fvtt_N1w9dIFz6gBdaA8N",
+        "name": "Karen King",
+        "connection": 11,
+        "loyalty": 2,
+        "notes": "Corporate Manager"
+      },
+      {
+        "id": "fvtt_CLUH7addEgh6Hdz7",
+        "name": "Hiroshi Yamamoto",
+        "connection": 4,
+        "loyalty": 2,
+        "notes": "Yakuza"
+      },
+      {
+        "id": "fvtt_zIpDO6bWOeMdJNE0",
+        "name": "Kerry Taylor",
+        "connection": 5,
+        "loyalty": 1,
+        "notes": "Infobroker"
+      },
+      {
+        "id": "fvtt_LS6BVN1EVMd9xSSK",
+        "name": "Vi Moneau",
+        "connection": 3,
+        "loyalty": 5,
+        "notes": "Decker"
+      },
+      {
+        "id": "fvtt_x0SmcGSPmuvYHHMr",
+        "name": "Erik\"The Brick\" Walker",
+        "connection": 4,
+        "loyalty": 1,
+        "notes": "Corporate Manager"
+      },
+      {
+        "id": "fvtt_Qf7NhUt7NBcyDJJr",
+        "name": "Charles Juno",
+        "connection": 1,
+        "loyalty": 1,
+        "notes": "Corp (Jupiter Systems)"
+      }
+    ],
+    "sins": [
+      {
+        "id": "fvtt_BNPICoNuMN09VIrp",
+        "name": "Faux SIN — Johnathan Doe",
+        "rating": 6,
+        "licenses": [
+          "Weapon License (4)",
+          "Driver's License (4)",
+          "Concealed Carry Permit (4)",
+          "Medical License (6)"
+        ]
+      }
+    ],
+    "lifestyle": {
+      "name": "The Lounge (Haut)",
+      "monthlyCost": 10000,
+      "monthsPaid": 1
+    },
+    "karma": 5,
+    "karmaTotal": 69,
+    "nuyen": 207159,
+    "streetCred": 2,
+    "notoriety": 0,
+    "publicAwareness": 0,
+    "vision": {},
+    "history": [
+      {
+        "ts": 1795628564735,
+        "text": "Valeurs importées de Foundry (test-world) : 5 karma, 207 159¥",
+        "karma": 5,
+        "nuyen": 207159
+      }
+    ],
+    "retired": true,
+    "portrait": "",
+    "foundry": {
+      "id": "vlPeWy4Ke53a5jT7",
+      "world": "test-world",
+      "importedAt": 1795629244307,
+      "hash": "3df5de4a310f",
+      "snapshot": {
+        "s": {
+          "karma": 5,
+          "karmaTotal": 69,
+          "nuyen": 207159,
+          "streetCred": 2,
+          "notoriety": 0,
+          "publicAwareness": 0,
+          "metatype": "Humain"
+        },
+        "a": {
+          "BOD": 2,
+          "AGI": 5,
+          "REA": 5,
+          "STR": 3,
+          "WIL": 3,
+          "LOG": 2,
+          "INT": 4,
+          "CHA": 6,
+          "EDG": 5,
+          "ESS": 5.65
+        },
+        "aug": {},
+        "init": {
+          "dice": 1,
+          "bonus": 0
+        },
+        "c": {
+          "physical": 0,
+          "stun": 0,
+          "overflow": 0
+        },
+        "e": 5,
+        "sk": {
+          "disguise": "d1a2533fc5f6",
+          "con": "9e5bfe9d27f5",
+          "etiquette": "2ade6d65b95b",
+          "impersonation": "73960b9fa61a",
+          "leadership": "eae73fb87333",
+          "negotiation": "68d65163a2ad",
+          "pistols": "71ad1a316623",
+          "first_aid": "cedadee4bb4e",
+          "clubs": "d0f535d96527",
+          "blades": "66a5581db73c",
+          "unarmed_combat": "c5f9638eab7f",
+          "palming": "6cf792c83e77",
+          "perception": "8608521e6078",
+          "locksmith": "5b37bcf337c3",
+          "pilot_ground_craft": "9955cc6181d1",
+          "automatics": "4fcc36ffcce4",
+          "heavy_weapons": "17ff399da265",
+          "gunnery": "60298f0279cd",
+          "sneaking": "26485071d71f",
+          "intimidation": "5b9a8093b111"
+        },
+        "items": {
+          "weapons": {
+            "fvtt_sksbnqSorW3mLnMn": "f22e95682196",
+            "fvtt_fXWysWvXpgiZzFlH": "b5fe64635ac7",
+            "fvtt_gVDyjqVk7I3OrwoU": "604fac9aafdf",
+            "fvtt_qbPkuKQQucnBfYe2": "a916b1ae7856",
+            "fvtt_oKJpENfQmDzziduU": "bba92713268c",
+            "fvtt_BoL7YRWIJHvboXi7": "b2880f0aa469",
+            "fvtt_OLGm04DlyQsTgLpR": "351378979235",
+            "fvtt_cvRDBKaMGhz0cWmv": "79aed9aea084",
+            "fvtt_jD1JUdqbHfQ78DMB": "0d5091cd50c7",
+            "fvtt_6ahUiYvHws35fzq0": "5b16288b52a3"
+          },
+          "armor": {
+            "fvtt_g6WYjOvCudou2uXO": "b81a95b44f32",
+            "fvtt_K2m8o9QSd2Vw67bE": "10c7d6e94700",
+            "fvtt_bgzKpPH9YxbTde8D": "3548bf232ed0",
+            "fvtt_zzSimmXN96t0XE8R": "54ba050a234f"
+          },
+          "augmentations": {
+            "fvtt_xBDMOEOgiUJsTMnB": "dd7f51bfd573",
+            "fvtt_rkHb0jc95kc5RvLm": "5d46a3ce389e"
+          },
+          "gear": {
+            "fvtt_bEL0eLzLyFjXaDnM": "e805158ea102",
+            "fvtt_PYtXJmoOOTpanQ9d": "c51c76b3fc86",
+            "fvtt_p8Eii4QwTGtgLmFT": "c6642f5737db",
+            "fvtt_2cB7LMiABdl5R5ha": "df643007dc6f",
+            "fvtt_9XbXvL2FtlKbmQ9i": "d0aef5c554cf",
+            "fvtt_Pqs5IxKjKdJWKqfD": "8f303d315f27",
+            "fvtt_Se492hu0CFrTLTjW": "8d6732588394",
+            "fvtt_rvx6JVOS2vaSl374": "8693163ad764",
+            "fvtt_Y8liJpKoeFjsLFTF": "631fe797cd46",
+            "fvtt_MBTJmrCsfJPgngpj": "5f1df3fa6746",
+            "fvtt_sNitXG1fqpkwkncj": "8edce654ed80",
+            "fvtt_2Y4PlmZ9dzHusUhr": "a2f139d02f03",
+            "fvtt_5BjRZXOmuJXxuymH": "300e70da5017",
+            "fvtt_mu4fpMEKLTZzj1bC": "e2e48463b282",
+            "fvtt_7JC7WhoLQR7DNbvq": "f0e61faa28c8",
+            "fvtt_fXtpSoscE7aSbnS8": "9ffaa155cb9e",
+            "fvtt_6XyxPYCMeouy0oV0": "444a294df14b",
+            "fvtt_7YgX02iP91R1DJu2": "3a853c25cab2",
+            "fvtt_vObbqPdAqPUGuStH": "52d1e9fd0849",
+            "fvtt_JOp8bntUoGpu9WJF": "a8b9aac20078",
+            "fvtt_fTVaOtxwacF0nN5P": "2dc81507c214",
+            "fvtt_GEtU7SwYETOnYhCt": "7d0aa9508e92",
+            "fvtt_gD3vcRasfMiMYIQW": "1e5d49f3e4fd",
+            "fvtt_BFN6QvG0W74eHz88": "360234b46f84",
+            "fvtt_bA7aClZ18EoKqMHt": "b6bc5b7adf8e",
+            "fvtt_eiVHPQqUshXjPdUI": "3f7dfd7f9713",
+            "fvtt_3RLAlulDLFWOjvNO": "1cb37c26a4f3",
+            "fvtt_vE8FrYsjiqSx8W7s": "61dd3c2a546b",
+            "fvtt_8NepLHN2L9Xq4R6j": "f5598209ae59",
+            "fvtt_NufI1Loi6yzNlcc0": "b26cfd6239d5",
+            "fvtt_nobgXN1hbloOCsFh": "2598a9dd67ba",
+            "fvtt_2aWkvfla2umyM7Ta": "a1c138f6c304",
+            "fvtt_OrDoCJImXsA0zNah": "5efd1d2eb1bc",
+            "fvtt_MPjMwxL20rpOHRYE": "72d59fdc334e",
+            "fvtt_0yQfbrzvfPwkmYwq": "7b666e9408e6",
+            "fvtt_i4H34BJCpTJ3ilZk": "fe79f934d1e1",
+            "fvtt_7WO9snWmOuyf7DRy": "0acb761fdfdf",
+            "fvtt_fLfpDgVc8gPjuolV": "5535b0929974"
+          },
+          "vehicles": {},
+          "contacts": {
+            "fvtt_RdTQGK1ty0IeOWe7": "3c41431a636f",
+            "fvtt_Qg56ein6pctT5HNa": "97d7ae57fb41",
+            "fvtt_argN3hxMc1avXt5o": "1065f8ed49b4",
+            "fvtt_lePUBxmGRYprM52g": "1c4193384a42",
+            "fvtt_N1w9dIFz6gBdaA8N": "79b3038147e5",
+            "fvtt_CLUH7addEgh6Hdz7": "e5fdad33cf75",
+            "fvtt_zIpDO6bWOeMdJNE0": "50d0522c9a16",
+            "fvtt_LS6BVN1EVMd9xSSK": "f7a3781aba1d",
+            "fvtt_x0SmcGSPmuvYHHMr": "7058c0c0bd6c",
+            "fvtt_Qf7NhUt7NBcyDJJr": "224ecc50cc8e"
+          },
+          "sins": {
+            "fvtt_BNPICoNuMN09VIrp": "9e7e6304d8f0"
+          },
+          "qualities": {
+            "fvtt_pEYqHXEQjnZzYBlX": "fb05a7717ea4",
+            "fvtt_66jvy8rTAOy880mO": "693b640a5e33",
+            "fvtt_fKhY2XnJSeT98PTQ": "389c9d8108ab",
+            "fvtt_8Eae2RNLv69sfvaP": "b0fde43f6520"
+          },
+          "powers": {},
+          "spells": {},
+          "knowledge": {
+            "fvtt_y0jIcXZJVIkH01cG": "a2b5b796a3fd",
+            "fvtt_WIjk3RpeFm5rbBx3": "f603ff61fadc",
+            "fvtt_xCrXS9j0FQWKKaAf": "de311517af90",
+            "fvtt_CyZShvjmTEkzVlSL": "5395d3bdfd78",
+            "fvtt_Si16B9XKHcz8irQl": "4650e48fc272",
+            "fvtt_7lAvOjfy9Olvsznr": "a7d5a89c90f6",
+            "fvtt_M0GnGCdFfZm2Ddn5": "880c1cbc5e20",
+            "fvtt_7sK4CEpu5bOy7zcq": "9cdb453f95eb",
+            "fvtt_rkVaxRaqoD6wdMyx": "ad8ed472b44d"
+          }
+        },
+        "matrix": "a7057b31d572",
+        "lifestyle": "add22bfb3763",
+        "vision": "bf21a9e8fbc5"
+      }
+    }
+  }
+]

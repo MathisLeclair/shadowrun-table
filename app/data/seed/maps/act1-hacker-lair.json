@@ -1,0 +1,329 @@
+{
+  "id": "map_hacker_lair",
+  "name": "Repaire de Bricks (Hacker's Lair)",
+  "folder": "Acte 1",
+  "description": "**Le repaire de Bricks.** Un garage reconverti au fond d'une ruelle : rideau métallique et porte blindée côté rue, quartiers de vie spartiates, et quelques marches plus bas « l'antre » — racks de serveurs, faux plancher, poste de decking en fer à cheval sous un mur d'écrans. Une trappe secrète mène à un tunnel de maintenance.\n\n**Utilisation**\n- Quête 1.2 *Open Book* : base d'opérations de Bricks (décryptage, traçage du signal de l'implant, recherches sur Hollow Pine et Dorian Ashe).\n- Session 3, scène 4 (recherches publiques, repérage du host) ; préparation de la session 4.\n- En cas de riposte d'AG Chemie : forteresse défendable avec sortie de secours.\n\n**Tests utiles**\n- Stade 3 de l'implant (Guerre électronique/Hacking seuil 9), traçage (seuil 8), décryptage (seuil 8).\n- Registres publics : Informatique seuil 4. Repérage du host : Perception matricielle seuil 5.\n- Intrus : porte blindée (Structure 12), maglock rating 4 ; trappe secrète Perception seuil 5.",
+  "width": 44,
+  "height": 32,
+  "metersPerCell": 1,
+  "theme": "matrix",
+  "lighting": "dim",
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "tiles": [
+    "               #############################",
+    "               #......r......r........~.....",
+    "  ################################D#########",
+    "  #======m......bbb.c....#.............mm#  ",
+    "  #.............bbb......#._____________.#  ",
+    "  #......................#.__m__m__m__m_.#  ",
+    "  #..TT..................#.__m__m__m__m_.#  ",
+    "  #..TT..............#####.__m__m__m__m_.#  ",
+    "  #..................#.~~#.__m__m__m__m_.#  ",
+    "  #........T.........D.~~#.__m__m__m__m_.#  ",
+    "  #..................#...#.__m__m__m__m_.#  ",
+    "  #c......bbbb.......#..T#.__m__m__m__m_.#  ",
+    "  ############D###########._____________.#  ",
+    "  #.............mmmmm....#..............m#  ",
+    "  #......................#..............m#  ",
+    "  #T.....................#...mmm.........#  ",
+    "  #T...........cc........#.TTTTTTT.......#  ",
+    "  #T....vvvv...cc........#.T.....T.......#  ",
+    "  #T....vvvv...........ss#.T.....T.......#  ",
+    "  #T....vvvv...........ssD...............#  ",
+    "  #T....vvvv...........ss#.............b.#  ",
+    "  #T....vvvv.............#.........TTT.b.#  ",
+    "  #......................#.............b.#  ",
+    "  #..........x.......ccc.#........bbbbbb.#  ",
+    "  #.cc...............ccc.#.cc............#  ",
+    "  #.c....................#.c............m#  ",
+    "  ##WWW##DDDD#######D#####################  ",
+    ",,,,,,,,,,,,,,,,o,,,,,,,,,,,,,,,,,,,o,,,,,,,",
+    ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,ccc,,,,,,,,,,,",
+    ",,vvvvv,,,,,,,,,,,,,,,,,,,,,,,ccc,,,,,,,,,,,",
+    ",,vvvvv,,,,,,,,,,,,,,,,,rr,,,,,,,,,,,,,,,,,,",
+    ",,,,,,,,,,,,r,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"
+  ],
+  "doors": [
+    {
+      "id": "lair_d01",
+      "x": 9,
+      "y": 26,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Rideau du garage"
+    },
+    {
+      "id": "lair_d02",
+      "x": 10,
+      "y": 26,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Rideau du garage"
+    },
+    {
+      "id": "lair_d03",
+      "x": 11,
+      "y": 26,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Rideau du garage"
+    },
+    {
+      "id": "lair_d04",
+      "x": 12,
+      "y": 26,
+      "state": "closed",
+      "kind": "shutter",
+      "name": "Rideau du garage"
+    },
+    {
+      "id": "lair_d05",
+      "x": 20,
+      "y": 26,
+      "state": "locked",
+      "kind": "door",
+      "name": "Porte blindée (maglock)"
+    },
+    {
+      "id": "lair_d06",
+      "x": 14,
+      "y": 12,
+      "state": "closed",
+      "kind": "door",
+      "name": "Quartiers"
+    },
+    {
+      "id": "lair_d07",
+      "x": 21,
+      "y": 9,
+      "state": "closed",
+      "kind": "door",
+      "name": "Salle d'eau"
+    },
+    {
+      "id": "lair_d08",
+      "x": 25,
+      "y": 19,
+      "state": "locked",
+      "kind": "door",
+      "name": "Porte de sécurité de l'antre"
+    },
+    {
+      "id": "lair_d09",
+      "x": 34,
+      "y": 2,
+      "state": "closed",
+      "kind": "secret",
+      "name": "Trappe vers le tunnel"
+    }
+  ],
+  "lights": [
+    {
+      "id": "lair_l01",
+      "x": 16,
+      "y": 28,
+      "radius": 5,
+      "color": "#ffb766",
+      "on": true,
+      "name": "Éclairage — Ruelle"
+    },
+    {
+      "id": "lair_l02",
+      "x": 20,
+      "y": 27,
+      "radius": 2,
+      "color": "#ff3344",
+      "on": true,
+      "name": "Éclairage — Ruelle"
+    },
+    {
+      "id": "lair_l03",
+      "x": 12,
+      "y": 15,
+      "radius": 4,
+      "color": "#ffc47a",
+      "on": true,
+      "name": "Éclairage — Garage"
+    },
+    {
+      "id": "lair_l04",
+      "x": 9,
+      "y": 6,
+      "radius": 3,
+      "color": "#ffd9a0",
+      "on": true,
+      "name": "Éclairage — Quartiers de Bricks"
+    },
+    {
+      "id": "lair_l05",
+      "x": 30,
+      "y": 8,
+      "radius": 3,
+      "color": "#36e6ff",
+      "on": true,
+      "name": "Éclairage — L'antre"
+    },
+    {
+      "id": "lair_l06",
+      "x": 36,
+      "y": 8,
+      "radius": 3,
+      "color": "#36e6ff",
+      "on": true,
+      "name": "Éclairage — L'antre"
+    },
+    {
+      "id": "lair_l07",
+      "x": 33,
+      "y": 4,
+      "radius": 2,
+      "color": "#5dff9b",
+      "on": true,
+      "name": "Éclairage — L'antre"
+    },
+    {
+      "id": "lair_l08",
+      "x": 30,
+      "y": 17,
+      "radius": 3,
+      "color": "#ff3fd2",
+      "on": true,
+      "name": "Éclairage — L'antre"
+    },
+    {
+      "id": "lair_l09",
+      "x": 37,
+      "y": 22,
+      "radius": 2,
+      "color": "#ffb35c",
+      "on": true,
+      "name": "Éclairage — L'antre"
+    },
+    {
+      "id": "lair_l10",
+      "x": 24,
+      "y": 19,
+      "radius": 2,
+      "color": "#ff3344",
+      "on": true,
+      "name": "Éclairage — Garage"
+    }
+  ],
+  "regions": [
+    {
+      "id": "lair_r01",
+      "name": "Ruelle",
+      "x": 0,
+      "y": 27,
+      "w": 44,
+      "h": 5,
+      "color": "#3a4a5c",
+      "gmOnly": false
+    },
+    {
+      "id": "lair_r02",
+      "name": "Garage",
+      "x": 3,
+      "y": 13,
+      "w": 22,
+      "h": 13,
+      "color": "#4a4a55",
+      "gmOnly": false
+    },
+    {
+      "id": "lair_r03",
+      "name": "Quartiers de Bricks",
+      "x": 3,
+      "y": 3,
+      "w": 22,
+      "h": 9,
+      "color": "#4a3a5a",
+      "gmOnly": false
+    },
+    {
+      "id": "lair_r04",
+      "name": "Salle d'eau",
+      "x": 22,
+      "y": 8,
+      "w": 3,
+      "h": 4,
+      "color": "#3a5a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "lair_r05",
+      "name": "L'antre",
+      "x": 26,
+      "y": 3,
+      "w": 15,
+      "h": 23,
+      "color": "#1f5a6a",
+      "gmOnly": false
+    },
+    {
+      "id": "lair_r06",
+      "name": "Tunnel de maintenance",
+      "x": 16,
+      "y": 1,
+      "w": 28,
+      "h": 1,
+      "color": "#3a3a3a",
+      "gmOnly": true
+    }
+  ],
+  "notes": [
+    {
+      "id": "lair_n01",
+      "x": 30,
+      "y": 18,
+      "text": "Poste de Bricks : deck Aztechnology Shadow Warrior. Ici se jouent le Stade 3 de l'implant (seuil 9), le traçage vers Hollow Pine (seuil 8) et le décryptage « Subject L-07 » (seuil 8).",
+      "gmOnly": true
+    },
+    {
+      "id": "lair_n02",
+      "x": 34,
+      "y": 3,
+      "text": "Trappe secrète → tunnel de maintenance → égouts (sortie à 200 m). Bricks la connaît ; un intrus la trouve sur Perception seuil 5.",
+      "gmOnly": true
+    },
+    {
+      "id": "lair_n03",
+      "x": 20,
+      "y": 25,
+      "text": "Porte blindée (Structure 12, Armure 12), maglock rating 4. Seule entrée « officielle » à part le rideau.",
+      "gmOnly": true
+    },
+    {
+      "id": "lair_n04",
+      "x": 33,
+      "y": 13,
+      "text": "L'antre est une cage de Faraday : aucun signal sans fil n'en sort. Amener la femme secourue ici coupe la balise de l'implant tant qu'elle reste dedans.",
+      "gmOnly": true
+    },
+    {
+      "id": "lair_n05",
+      "x": 10,
+      "y": 28,
+      "text": "Caméras discrètes sur la ruelle (flux sur le deck de Bricks) : personne n'approche sans être vu si quelqu'un surveille.",
+      "gmOnly": true
+    },
+    {
+      "id": "lair_n06",
+      "x": 9,
+      "y": 19,
+      "text": "Van de Bricks : faux plaques, kit de surveillance. Les clés sont sur le contact.",
+      "gmOnly": true
+    },
+    {
+      "id": "lair_n07",
+      "x": 28,
+      "y": 22,
+      "text": "Session 3, scène 4 : recherches publiques sur Hollow Pine (Informatique seuil 4), repérage Matrice du host à distance (seuil 5).",
+      "gmOnly": true
+    }
+  ],
+  "tokens": [],
+  "explored": {}
+}
