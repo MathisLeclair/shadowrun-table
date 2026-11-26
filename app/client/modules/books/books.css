@@ -6,10 +6,10 @@
 .bookref-icon { font-size: 11px; }
 
 /* ----- drawer ----- */
-.books-drawer { position: fixed; top: var(--topbar-h); right: 0; bottom: 0; z-index: 150; display: flex; flex-direction: column;
+.books-drawer { position: fixed; top: var(--topbar-h); right: 0; bottom: 0; z-index: 170; display: flex; flex-direction: column;
   background: var(--panel); border-left: 1px solid var(--line2); box-shadow: -8px 0 24px #0008; max-width: 100vw; }
 .books-drawer.dragging { user-select: none; }
-/* A modal opened after the drawer (.modal-backdrop is z-index 100) goes in front of it (BookViewer). */
+/* Above sheet dialogs (.sh-overlay 160) opened before it; a modal opened after the drawer goes in front of it (BookViewer). */
 .books-drawer.behind { z-index: 90; }
 .books-resize { position: absolute; left: -4px; top: 0; bottom: 0; width: 8px; cursor: ew-resize; z-index: 2; }
 .books-resize:hover, .books-drawer.dragging .books-resize { background: linear-gradient(90deg, transparent 3px, var(--cyan) 3px, var(--cyan) 5px, transparent 5px); }
