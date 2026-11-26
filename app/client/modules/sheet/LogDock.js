@@ -37,7 +37,8 @@ const PAIRS = [
 ];
 
 /** Author shown on an entry: the GM's stored 'MJ' is translated, names stay as they are. */
-const authorText = (e) => (e.author === 'MJ' ? t('MJ') : e.author || (KIND_LABEL[e.kind] ? t(KIND_LABEL[e.kind]) : ''));
+const authorText = (e) =>
+  e.authorI18n?.key ? t(e.authorI18n.key, e.authorI18n.params) : e.author === 'MJ' ? t('MJ') : e.author || (KIND_LABEL[e.kind] ? t(KIND_LABEL[e.kind]) : '');
 
 function authorColor(game, e) {
   if (e.roll?.actorId && game.actors?.[e.roll.actorId]?.color) return game.actors[e.roll.actorId].color;

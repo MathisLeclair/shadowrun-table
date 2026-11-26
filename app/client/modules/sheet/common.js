@@ -114,6 +114,7 @@ function rollTermText(part) {
 
 /** Roll label (stored French text, or typed by a user) in the UI language. Accepts a roll or a label. */
 export function rollLabel(rollOrLabel) {
+  if (rollOrLabel && typeof rollOrLabel === 'object' && rollOrLabel.labelI18n?.key) return t(rollOrLabel.labelI18n.key, rollOrLabel.labelI18n.params);
   const label = typeof rollOrLabel === 'string' ? rollOrLabel : rollOrLabel?.label || '';
   if (!label) return '';
   if (label === 'Jet de dés') return t('Jet de dés');
