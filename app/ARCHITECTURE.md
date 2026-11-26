@@ -116,6 +116,7 @@ Registry (fixed — implement these default exports):
 | campaign/DossiersPage.js | `({game})` player handouts + recap | main tab `dossiers` |
 | matrix/MatrixPage.js | `({game})` decker cockpit (players) / Matrix overview, hosts & IC (GM) | main tab `matrix` |
 | chargen/ChargenPage.js | `({game})` priority character creator (players) / approval queue (GM) | main tab `chargen` |
+| notes/NotesPage.js | `({game})` private notes + collaborative party notes (see « Notes ») | main tab `notes` |
 | core/SettingsPage.js | `({game})` GM settings (table language, players, backups, Foundry…) | main tab `settings` |
 
 The enemy generator (`chargen/EnemyGenerator.js`) is opened from the Bestiaire page. The server admin page (`/admin`) is `client/modules/admin/AdminPage.js`, mounted by app.js outside the table UI.
@@ -373,7 +374,7 @@ The app runs in French or English, **per user**. French stays the source text in
 1. Wrap **every** user-facing French literal: text nodes, `title=`, `placeholder=`, `label=`, `hint=`, `aria-label=`, toasts, `confirmAction()`/`promptText()` messages, option labels, empty states, document titles: `html\`<${Button} title=${t('Supprimer')}>${t('Supprimer')}</${Button}>\``.
 2. **Never concatenate translated fragments** and never put a variable in a key: `t('Rendre {n} point(s) d’Essence à {name} ?', { n, name })`, not `'Rendre ' + n + …` nor ``t(`Rendre ${n}…`)``. Whole sentences only (word order differs in English). Prefer `tn()` over « point(s) ».
 3. **Never call `t()` at module top level** (dictionaries are not loaded yet and the language changes at runtime): translate at render time; constant tables use `tk()` + `t(value)`.
-4. Add the English to **your area file only**: `client/i18n/en/<area>.json` (areas: `map`, `sheet`, `combat`, `shop`, `training`, `audio`, `campaign`, `foundry`, `chummer`, `matrix`, `chargen`; `core`/`admin`/`glossary` belong to the core). Keep the placeholders identical (`{name}` stays `{name}`). Use the SR5 English terms of `glossary.json` (Edge, Body, Condition Monitor, Push the Limit, Overwatch Score, DV, AP…), and check the glossary before adding a term.
+4. Add the English to **your area file only**: `client/i18n/en/<area>.json` (areas: `map`, `sheet`, `combat`, `shop`, `training`, `audio`, `campaign`, `foundry`, `chummer`, `matrix`, `chargen`, `notes`; `core`/`admin`/`glossary` belong to the core). Keep the placeholders identical (`{name}` stays `{name}`). Use the SR5 English terms of `glossary.json` (Edge, Body, Condition Monitor, Push the Limit, Overwatch Score, DV, AP…), and check the glossary before adding a term.
 5. Ambiguous short words: a key may carry a context before `::` — `t('sort::Puissance')` shows « Puissance » in French and looks up `"sort::Puissance"` in the dictionary. Use it only when the same French word needs two English translations (the checker reports such conflicts).
 6. Do **not** translate data: campaign story, quests, handouts, NPC descriptions, seeds, map/actor/item names typed by the GM, chat. Catalog items: `itemName(item)`. Skill/attribute labels: the helpers above. Stored French values (metatype 'Humain', status 'à terre'…): keep storing French, display with `t()`/`tIfKnown()`/`metatypeLabel()`.
 7. Endonyms in a language picker (« Français », « English ») are never translated (add `// i18n-ignore` on the line if the checker flags them).
@@ -484,3 +485,30 @@ chargen: { settings: { method: 'priority', allowPlayers: true, startingKarmaBonu
 ### Integration checks
 - `tools/i18n-check.js` must report 0 missing; every `tools/test-*.js` and `tools/smoke.js` pass. `tools/test-integration.js` (port 3971) runs the cross-module flow (two tables at once, EN + FR: admin creates a vierge/en table, player creator → GM approval, enemy generator + spawn + combat, Bricks + agent in the Matrix on Lazarus, no cross-table leak, keyed errors translated).
 - Admin HTTP errors use `errorBody()` too (`fail(res, status, key, extra, params)` in `server/lib/admin.js`), so `/admin` shows them in English.
+
+## Notes (owner: `75-notes.js`, UI `client/modules/notes/`, English `client/i18n/en/notes.json`)
+Main tab `notes` (GM + players): each user has a **private** note space, the party has a **collaborative** one the GM reads too.
+```js
+notes: {
+  pages: { [id]: { id, scope: 'private'|'party', ownerId (userId, private only), title (≤120), body (markdown, ≤100 000 chars), shareWithGM (private only),
+    folder (≤60, '' = none), pinned, createdBy, updatedBy, createdAt, updatedAt, version (counts BODY changes),
+    lock?: { userId, name, until } (party only, 60 s), deleted?: { at, by } (trash, purged after 7 days) } },
+  comments: { [pageId]: [{ id, userId, author, text (≤2000), ts }] },
+  settings: { gmCanEditParty: false },
+}
+// view only: notes.now = server time (clients estimate the clock skew for lock expiry)
+```
+- **Visibility** (`filter` AND `gmFilter`, the GM view is filtered too): a private page goes to its owner only, and to the GM while `shareWithGM` (read-only, the GM may comment). Party pages go to every user of the table. Comments follow their page. Any action on a page the user cannot read answers « Note introuvable » (existence never revealed). Private actions never log nor emit to anyone else. Limits: 300 private pages per user, 500 party pages, 12 M characters of bodies per table.
+- **Write rights**: private → owner only (the GM may keep private GM notes the same way). Party → any player; the GM only with `settings.gmCanEditParty` (`notes/settings`, GM). Delete = soft (trash, restorable 7 days): private → owner; party → any player or the GM. Purge (only from the trash): private → owner; party → creator or GM.
+- **Actions** (all `role: 'any'` except settings): `notes/create { scope, title, folder?, body? } → { id }` (party: logs `kind:'system'` « Nouvelle note de groupe : {title} »), `notes/save { id, body?, title?, baseVersion } → { version, updatedAt } | { conflict: true, server: { title, body, version, updatedBy, updatedAt } }` (conflict only when the body changes from a stale `baseVersion`; titles/folders/pins are last-write-wins), `notes/rename { id, title?, folder?, pinned? }`, `notes/delete`, `notes/restore`, `notes/purge { id }`, `notes/setShare { id, shareWithGM }` (owner), `notes/lock { id, force? } → { locked: false, until } | { locked: true, lock }` (party pages; private → `{ locked: false, until: null }`), `notes/unlock { id }`, `notes/comment { id, text }` (party pages, or private pages shared with the GM: owner + GM), `notes/deleteComment { id, commentId }` (author, GM, or the private page's owner), `notes/settings { gmCanEditParty }` (GM).
+- Transient event `notes:comment { pageId, title, author }` → the page's other readers only.
+- **Client**: two panes (« Mes notes », « Notes du groupe », GM: « Notes partagées par les joueurs » grouped by player; search in titles/bodies/folders; folders; pinned first; « Corbeille ») | editor (title, folder, pin, share toggle, Écrire / Côte à côte / Aperçu, toolbar bold/italic/heading/list/checkbox/quote/[[link]], Ctrl+B/I/S, comments). Single pane with a back button under 800 px. Autosave 1.5 s after typing stops, on blur, on leave/hidden tab; status Enregistré / Modifié… / Enregistrement… / Conflit; conflict dialog: keep mine (re-save on the server version) / take theirs / copy mine. Soft lock: taken on focus/typing of a party page, renewed every 20 s while typing (released after 45 s idle or on leave); others see « X est en train d’écrire… » and may « Modifier quand même » after a confirm (`force`).
+- Markdown (`client/modules/notes/notes-md.js`, pure, tested in Node): the shared `renderMarkdown()` + `[[Titre]]` links (`#note:<id>`, or `#new:<title>` to create the missing page), `@Nom` mention badges (PC names, first names, player names), clickable `- [ ]` task checkboxes (toggling edits the source line).
+- Tests: `node tools/test-notes.js` (ports 3150-3199): pure helpers, private isolation (other player, GM before/after share, other table), party visibility across one table only (second table created through the admin API), permissions, version conflict, lock lifecycle, trash/restore/purge, comments + events, payload validation. i18n: `node tools/i18n-check.js --area notes --strict` (client) and `node tools/i18n-check.js server/modules/75-notes.js --strict` (server keys; the checker's `--area` table has no `notes` entry for the server file).
+
+### Notes — limits & privacy (after review)
+- Limits: 100 000 chars per note, 1 M private chars per owner (trash included), 5 M per table (comments included), 1000 comments per author. Private pages of removed users are dropped.
+- `notes/delete {id, force?}` is refused while another user holds a live lock on the party page, unless `force`.
+- `state.notes` is excluded from the core's deep clone in `buildView`; the module builds `view.notes` per user (filter/gmFilter).
+- The GM's « Télécharger la partie » (`/api/admin/export`) leaves out unshared private notes; server backups (host/admin) keep everything. `users/resetPin` logs a notice to the player.
+- Checkboxes carry `data-line`; `toggleCheckboxAt(body, line)` toggles them outside code blocks.

@@ -144,5 +144,6 @@
   "Le nom de la campagne ne peut pas être vide": "The campaign name cannot be empty",
   "Mot de passe MJ trop court (4 caractères minimum)": "GM password too short (4 characters minimum)",
   "Langue inconnue": "Unknown language",
-  "Joueur introuvable": "Player not found"
+  "Joueur introuvable": "Player not found",
+  "Le MJ a effacé le code PIN de {name}.": "The GM cleared {name}’s PIN."
 }

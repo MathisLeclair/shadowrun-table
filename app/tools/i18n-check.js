@@ -33,6 +33,7 @@ const AREA_EXTRA = {
   combat: ['server/modules/30-combat.js'],
   shop: ['server/modules/40-shop.js'],
   matrix: ['server/modules/45-matrix.js', 'shared/matrix.js'],
+  notes: ['server/modules/75-notes.js'],
   chargen: ['server/modules/15-chargen.js', 'shared/chargen.js', 'shared/npcgen.js'],
   training: ['server/modules/50-training.js', 'shared/advancement.js'],
   audio: ['server/modules/60-audio.js'],

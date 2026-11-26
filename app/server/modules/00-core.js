@@ -98,7 +98,11 @@ export default {
     'users/resetPin': {
       role: 'gm',
       handler(ctx, { userId }) {
-        if (ctx.state.users[userId]) ctx.state.users[userId].pin = null;
+        const u = ctx.state.users[userId];
+        if (!u) return;
+        u.pin = null;
+        // The player is told: without a PIN anyone could log in under their name (and read their private notes).
+        ctx.log({ kind: 'system', author: 'MJ', text: `Le MJ a effacé le code PIN de ${u.name}.`, i18n: { key: 'Le MJ a effacé le code PIN de {name}.', params: { name: u.name } }, to: [u.id, 'gm'] });
       },
     },
     // Banner text shown on every screen (null to clear).

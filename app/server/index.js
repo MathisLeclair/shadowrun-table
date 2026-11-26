@@ -189,7 +189,8 @@ function onlineUsers(table) {
 
 function buildView(table, user) {
   const state = table.state;
-  const { sessions, config, ...rest } = state;
+  // notes: built per user by the notes module (filter/gmFilter) from the live state, never deep-cloned whole.
+  const { sessions, config, notes, ...rest } = state;
   const view = deepClone(rest);
   view.config = { campaignName: config?.campaignName || 'Shadowrun', lang: config?.lang || 'fr', table: table.info() };
   view.me = { id: user.id, role: user.role, name: user.name, characterIds: user.characterIds, lang: userLang(state, user.id) };
@@ -571,7 +572,14 @@ app.post('/api/admin/backup', requireGM, (req, res) => {
 });
 app.get('/api/admin/export', requireGM, (req, res) => {
   res.setHeader('Content-Disposition', `attachment; filename="shadowrun-${req.srTable.slug}.json"`);
-  res.json(req.srTable.state);
+  // Players' private notes stay private: unshared ones are left out of the GM's download (server backups keep them).
+  const st = req.srTable.state;
+  const pages = st.notes?.pages || {};
+  const hidden = new Set(Object.values(pages).filter((p) => p && p.scope === 'private' && p.ownerId !== 'gm' && !p.shareWithGM).map((p) => p.id));
+  if (!hidden.size) return res.json(st);
+  const notes = { ...st.notes, pages: Object.fromEntries(Object.entries(pages).filter(([id]) => !hidden.has(id))) };
+  if (st.notes.comments) notes.comments = Object.fromEntries(Object.entries(st.notes.comments).filter(([id]) => !hidden.has(id)));
+  res.json({ ...st, notes });
 });
 const isObj = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
 /** Replace a table's whole state (import, restore): keeps the live GM password/settings when missing and everyone logged in. */

@@ -18,6 +18,7 @@ import DossiersPage from './campaign/DossiersPage.js';
 import SettingsPage from './core/SettingsPage.js';
 import MatrixPage from './matrix/MatrixPage.js';
 import ChargenPage from './chargen/ChargenPage.js';
+import NotesPage from './notes/NotesPage.js';
 import { unreadHandouts } from './campaign/common.js';
 import { tk } from '../lib/i18n.js';
 
@@ -34,6 +35,7 @@ export const mainTabs = [
   { id: 'chargen', label: tk('Création'), icon: '✚', roles: ['gm', 'player'], component: ChargenPage, badge: (g) => (g.me.role === 'gm' ? pending(g.chargen?.drafts) : null) },
   { id: 'shop', label: tk('Boutique'), icon: '¥', roles: ['gm', 'player'], component: ShopPage, badge: (g) => (g.me.role === 'gm' ? pending(g.shop?.orders) : null) },
   { id: 'training', label: tk('Progression'), icon: '▲', roles: ['gm', 'player'], component: TrainingPage, badge: (g) => (g.me.role === 'gm' ? pending(g.training?.requests) : null) },
+  { id: 'notes', label: tk('Notes'), icon: '✎', roles: ['gm', 'player'], component: NotesPage },
   { id: 'audio', label: tk('Ambiance'), icon: '♫', roles: ['gm'], component: AudioPage },
   { id: 'campaign', label: tk('Campagne'), icon: '✦', roles: ['gm'], component: CampaignPage },
   { id: 'dossiers', label: tk('Dossiers'), icon: '✉', roles: ['player'], component: DossiersPage, badge: (g) => unreadHandouts(g) || null },
