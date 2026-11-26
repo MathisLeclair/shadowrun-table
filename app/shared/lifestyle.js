@@ -1,7 +1,8 @@
 // Lifestyle rules (SR5 p.369-373, Run Faster p.216-230). Pure module shared by the server and the browser.
 //
-// actor.lifestyles = [{ id, name, base, catalogId?, baseCost, monthsPaid, primary, points?, pointCost?, qualities: [Quality],
-//                       monthlyCost (derived, stored for display), notes, chummerGuid? }]
+// actor.lifestyles = [{ id, name, base, catalogId?, baseCost (derived from `base`, see levelCost), metatypePct? (dwarf +20 / troll +100,
+//                       % of the base only), extraCost? (RF points bought above the base, flat ¥ — Chummer Advanced lifestyles),
+//                       monthsPaid, primary, points?, pointCost?, qualities: [Quality], monthlyCost (derived, stored for display), notes, chummerGuid? }]
 // Quality = { id, catalogId?, name, nameFr?, category, cost (flat ¥/month, may be < 0), multiplier (%), baseOnly? (the % applies to the
 //             base cost only: Chummer <multiplierbaseonly>, Extra Secure), lp?, notes? }
 //
@@ -19,10 +20,26 @@ export const POINT_KEYS = ['comforts', 'security', 'neighborhood', 'entertainmen
 /** Contract options (DocWagon, Pheromone Detection…) are added after the percentages (Chummer: never multiplied). */
 export const isContract = (q) => String(q?.category || '') === 'Contracts';
 
+/** Fixed monthly base cost per lifestyle level (SR5 p.369, RF p.216-218) — the catalog's cost of each base lifestyle. */
+export const LEVEL_COST = { Street: 0, Squatter: 500, Low: 2000, Medium: 5000, High: 10000, Luxury: 100000, 'Bolt Hole': 1000, Traveler: 3000, Commercial: 8000, Hospitalized: 500 };
+const HOSPITALIZED_INTENSIVE = '2be1a0f7-6133-4966-be57-720ed9b927a9';
+
+/**
+ * Base cost of a lifestyle from its level (never from what is stored: options are added on top, see monthlyCost).
+ * Hospitalized: 1 000 ¥ for the intensive care entry. Unknown / custom level → the stored baseCost (null if none known).
+ */
+export function levelCost(l) {
+  const base = String(l?.base || '');
+  if (base === 'Hospitalized' && (l?.catalogId === HOSPITALIZED_INTENSIVE || /intensi/i.test(String(l?.name || '')))) return 1000;
+  if (Object.prototype.hasOwnProperty.call(LEVEL_COST, base)) return LEVEL_COST[base];
+  return null;
+}
+
 /** Sums of a lifestyle's parts: { base, baseOnlyPct, pct, flat (non-contract options), contracts, points }. */
 function parts(l) {
-  const base = Math.max(0, num(l?.baseCost));
-  let baseOnlyPct = 0;
+  const fixed = levelCost(l);
+  const base = fixed ?? Math.max(0, num(l?.baseCost));
+  let baseOnlyPct = Math.max(0, num(l?.metatypePct));
   let pct = 0;
   let flat = 0;
   let contracts = 0;
@@ -33,14 +50,14 @@ function parts(l) {
     if (isContract(q)) contracts += num(q.cost);
     else flat += num(q.cost);
   }
-  let points = 0;
+  let points = Math.max(0, num(l?.extraCost));
   if (l?.points && l?.pointCost) for (const k of POINT_KEYS) points += Math.max(0, num(l.points[k])) * Math.max(0, num(l.pointCost[k]));
   return { base, baseOnlyPct, pct, flat, contracts, points };
 }
 
 /**
  * Monthly cost of one lifestyle (Chummer's order):
- *   (baseCost × (1 + Σ base-only % / 100) + Σ option costs (non-contract) + Σ points[k] × pointCost[k] (RF, optional))
+ *   (level cost × (1 + (metatype % + Σ base-only %) / 100) + Σ option costs (non-contract) + Σ points[k] × pointCost[k] (RF, optional))
  *     × (1 + Σ other % / 100) + Σ contract costs
  * e.g. Medium 5 000 + Garage 100 + Dangerous Area −20 % = 4 080. Never negative; rounded to the nuyen.
  */
@@ -59,13 +76,33 @@ export function costBreakdown(l) {
   return { base: p.base, multiplier, fromMultiplier: total - p.base - flat - p.points, flat, contracts: Math.round(p.contracts), points: p.points, total };
 }
 
+const METATYPE_PCT = [[/^(nain|dwarf)/i, 20], [/^troll/i, 100]];
+
+/**
+ * Pin a lifestyle's stored baseCost to its level's fixed cost and recompute monthlyCost. Older data stored the whole rent
+ * in baseCost (legacy/Foundry imports, chargen's dwarf/troll surcharge): a surcharge that matches the actor's metatype
+ * becomes metatypePct, anything else is dropped (the options carry the extras). Returns the lifestyle.
+ */
+export function normalizeLifestyle(l, actor) {
+  if (!l || typeof l !== 'object') return l;
+  if (!Array.isArray(l.qualities)) l.qualities = [];
+  const fixed = levelCost(l);
+  if (fixed !== null) {
+    const stored = Math.round(num(l.baseCost, fixed));
+    const pct = (METATYPE_PCT.find(([re]) => re.test(String(actor?.metatype || ''))) || [])[1];
+    if (pct && l.metatypePct === undefined && fixed && stored === Math.round(fixed * (1 + pct / 100))) l.metatypePct = pct;
+    l.baseCost = fixed;
+  }
+  l.monthlyCost = monthlyCost(l);
+  return l;
+}
+
 /** Recompute and store `monthlyCost` on every lifestyle of an actor; keeps exactly one primary. Returns the actor. */
 export function settleLifestyles(actor) {
   if (!actor || !Array.isArray(actor.lifestyles)) return actor;
   let primarySeen = false;
   for (const l of actor.lifestyles) {
-    if (!Array.isArray(l.qualities)) l.qualities = [];
-    l.monthlyCost = monthlyCost(l);
+    normalizeLifestyle(l, actor);
     if (l.primary && !primarySeen) primarySeen = true;
     else l.primary = false;
   }

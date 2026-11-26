@@ -62,7 +62,7 @@ export const LIST_FIELDS = {
     { k: 'rating', label: tk('Indice'), type: 'num' }, { k: 'native', label: tk('Langue maternelle'), type: 'bool' },
   ],
   lifestyles: [
-    { k: 'name', label: tk('Nom'), w: 170 }, { k: 'base', label: tk('Niveau'), type: 'select', options: lifestyleBaseOptions }, { k: 'baseCost', label: tk('Coût de base (¥)'), type: 'num', step: 100 },
+    { k: 'name', label: tk('Nom'), w: 170 }, { k: 'base', label: tk('Niveau'), type: 'select', options: lifestyleBaseOptions }, { k: 'baseCost', label: tk('Coût de base (¥)'), type: 'ro' },
     { k: 'monthsPaid', label: tk('Mois payés'), type: 'num' }, { k: 'primary', label: tk('Principal'), type: 'bool' }, { k: 'monthlyCost', label: tk('Total / mois'), type: 'ro' }, { k: 'notes', label: tk('Notes'), w: 160 },
   ],
   martialArts: [{ k: 'name', label: tk('Art martial'), w: 200 }, { k: 'rating', label: tk('Indice'), type: 'num' }, { k: 'notes', label: tk('Notes'), w: 260 }],

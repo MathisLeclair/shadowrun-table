@@ -66,7 +66,7 @@ console.log('lifestyle / armor-mod conversion, merge re-import of upgrades');
   const planque = sheet.lifestyles.find((l) => l.name === 'Planque');
   ok(planque.baseCost === 5000 && planque.qualities.length === 1 && planque.monthlyCost === 7083, `Foundry total cost with options: catalog base + options, no double count (${JSON.stringify(planque)})`);
   const trou = sheet.lifestyles.find((l) => l.name === 'Trou');
-  ok(trou.baseCost === 2500 && trou.monthlyCost === 2500, 'Foundry total cost without options = base cost');
+  ok(trou.baseCost === 2000 && trou.monthlyCost === 2000 && /2500/.test(trou.notes), 'Foundry total without options: base fixed by the level, Foundry total in the notes');
   const jacket = sheet.armor.find((a) => a._en === 'Armor Jacket');
   const vest = sheet.armor.find((a) => a !== jacket);
   ok(jacket.rating === 12 && jacket.mods[0].effects?.armor === 2, 'Foundry base rating: mod armor bonus kept (added by armorTotal)');
@@ -145,7 +145,7 @@ const bundle = buildBundle(world, {});
   const anthony = bundle.pcs.find((p) => p.appId === 'pc_anthony');
   if (anthony) {
     const al = anthony.sheet.lifestyles[0];
-    ok(al && al.base === 'Medium' && al.baseCost === 7083 && al.points?.neighborhood === 3, `Anthony lifestyle cost/points from Foundry (${JSON.stringify(al)})`);
+    ok(al && al.base === 'Medium' && al.baseCost === 5000 && al.points?.neighborhood === 3, `Anthony lifestyle cost/points from Foundry (${JSON.stringify(al)})`);
     const colt = anthony.sheet.weapons.find((w) => /Colt Government/.test(w._en || w.name));
     ok(colt?.accessories?.some((x) => /Smartgun/.test(x.name) && x.effects.smartgun) && colt.accessories.some((x) => x.name === 'Silencer/Suppressor'), 'Colt accessories (smartgun, silencer)');
     const tiger = anthony.sheet.armor.find((a) => (a.mods || []).length);

@@ -303,7 +303,7 @@ try {
     const a = normalizeActor({ name: 'Old', lifestyle: { name: 'Planque (Moyen)', monthlyCost: 5500, monthsPaid: 2, chummerGuid: 'g1' } }, (p) => `${p}_x`);
     assert.equal(a.lifestyle, undefined);
     assert.equal(a.lifestyles.length, 1);
-    assert.deepEqual({ ...a.lifestyles[0], id: undefined }, { id: undefined, name: 'Planque (Moyen)', base: 'Medium', baseCost: 5500, monthsPaid: 2, primary: true, qualities: [], monthlyCost: 5500, notes: '', chummerGuid: 'g1' });
+    assert.deepEqual({ ...a.lifestyles[0], id: undefined }, { id: undefined, name: 'Planque (Moyen)', base: 'Medium', baseCost: 5000, monthsPaid: 2, primary: true, qualities: [], monthlyCost: 5000, notes: 'Ancien loyer : 5500 ¥', chummerGuid: 'g1' });
     for (const pc of Object.values(gm.state.actors).filter((x) => x.type === 'pc')) assert.ok(Array.isArray(pc.lifestyles) && pc.lifestyle === undefined, pc.name);
   });
   let lsId;
@@ -326,11 +326,13 @@ try {
     await gm.send('actor/updateSubItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: lsId, sub: 'qualities', subId: q1, patch: { baseOnly: false } });
     await settle();
     assert.equal(gm.state.actors.pc_bricks.lifestyles.find((l) => l.id === lsId).monthlyCost, (2000 + 100) * 1.1, 'plain % applies to base + options');
-    await gm.send('actor/updateItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: lsId, patch: { baseCost: 3000 } });
+    await gm.send('actor/updateItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: lsId, patch: { baseCost: 3000 } }); // ignored: the base cost is fixed by the level
+    await gm.send('actor/updateItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: lsId, patch: { base: 'Medium' } });
     await gm.send('actor/removeSubItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: lsId, sub: 'qualities', subId: q1 });
     await settle();
     ls = gm.state.actors.pc_bricks.lifestyles;
-    assert.equal(ls.find((l) => l.id === lsId).monthlyCost, 3100);
+    assert.equal(ls.find((l) => l.id === lsId).monthlyCost, 5100, 'Medium 5000 (fixed) + Garage 100');
+    assert.equal(ls.find((l) => l.id === lsId).baseCost, 5000);
     if (ls.length > 1) {
       const other = ls.find((l) => l.id !== lsId);
       await gm.send('actor/updateItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: other.id, patch: { primary: true } });

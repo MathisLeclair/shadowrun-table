@@ -100,7 +100,7 @@ try {
   const c = prim(gm, 'pc_christopher');
   ok(c.name === 'The Lounge (Haut)' && c.monthlyCost === 10000 && !c.qualities.length && /The Hut/.test(c.notes) && /Garage/.test(c.notes), 'Christopher: current lifestyle kept, historic one in the notes');
   const an = prim(gm, 'pc_anthony');
-  ok(!an.qualities.length && an.monthlyCost === 7083, 'Anthony untouched (7083 ¥/month)');
+  ok(!an.qualities.length && an.baseCost === 5000 && an.monthlyCost === 5000, 'Anthony untouched: no option, Medium fixed base 5000 ¥/month');
   ok(ids.every((id) => JSON.stringify([gm.state.actors[id].karma, gm.state.actors[id].nuyen]) === JSON.stringify(money0[id])), 'karma and nuyen unchanged');
   ok(/after  \* Best Home \(Moyen\) \[Medium\] 8 583 ¥\/month/.test(r.out), 'prints the result per lifestyle');
 
@@ -138,7 +138,7 @@ try {
   const j = prim(gm, 'pc_jane');
   ok(j.qualities.length === 4 && j.monthlyCost === 8583 && j.qualities.every((q) => q.notes === spec.actors.pc_jane.note), 'boot restore: Jane 8583 ¥, notes « Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier »');
   ok(/The Hut/.test(prim(gm, 'pc_christopher').notes || ''), 'boot restore: Christopher historic note');
-  ok(!prim(gm, 'pc_anthony').qualities.length && prim(gm, 'pc_anthony').monthlyCost === 7083, 'boot restore: Anthony (inferred, no Chummer file) left alone — only --include-inferred applies it');
+  ok(!prim(gm, 'pc_anthony').qualities.length && prim(gm, 'pc_anthony').monthlyCost === 5000, 'boot restore: Anthony (inferred, no Chummer file) left alone — only --include-inferred applies it');
   const r = await run(['--url', srv.url, '--table', 'lazarus', '--password', 'pw-restore', '--dry-run']);
   ok(r.code === 0 && /Nothing to do/.test(r.out), 'script after the boot restore: nothing to do');
   gm.close();

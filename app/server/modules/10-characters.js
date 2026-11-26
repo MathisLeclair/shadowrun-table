@@ -9,7 +9,7 @@ import {
   ITEM_LISTS, PLAYER_ITEM_FIELDS, PLAYER_ACTOR_KEYS, MERGE_KEYS, normalizeActor, blankActor, healthStatus, categoryToSkill,
   evalFormula, slugify, METATYPE_FR, MELEE_SKILLS, SUB_LISTS,
 } from '../../client/modules/sheet/sheet-data.js';
-import { monthlyCost as lifestyleMonthlyCost } from '../../shared/lifestyle.js';
+import { normalizeLifestyle } from '../../shared/lifestyle.js';
 import { removeBonus, weaponFromStats, wareCatalogItem, detachAugmentation, bakeItemBonus, itemBonusSpec } from '../lib/augment.js';
 import { errorBody } from '../lib/i18n.js';
 import { actorModifiers, deriveFull } from '../lib/modifiers.js';
@@ -270,10 +270,7 @@ const subList = (ctx, list, items, sub) => (Array.isArray(items) ? items.slice(0
 function settleLifestyles(a, primaryId) {
   if (!Array.isArray(a.lifestyles)) return;
   if (primaryId && a.lifestyles.some((l) => l.id === primaryId)) for (const l of a.lifestyles) l.primary = l.id === primaryId;
-  for (const l of a.lifestyles) {
-    l.qualities = Array.isArray(l.qualities) ? l.qualities : [];
-    l.monthlyCost = Math.round(Number(lifestyleMonthlyCost(l)) || 0);
-  }
+  for (const l of a.lifestyles) normalizeLifestyle(l, a); // baseCost pinned to the level's fixed cost
   if (a.lifestyles.length && !a.lifestyles.some((l) => l.primary)) a.lifestyles[0].primary = true;
 }
 
@@ -287,7 +284,9 @@ function sanitizeItem(list, item, ctx) {
     if (list === 'armor' && out.capacity !== undefined) out.capacity = realNum(out.capacity, 0, 99);
     if (list === 'lifestyles') {
       for (const k of ['base', 'catalogId']) if (out[k] !== undefined) out[k] = str(out[k], k === 'base' ? 40 : 80);
-      if (out.baseCost !== undefined) out.baseCost = clampInt(out.baseCost, 0, 1e8);
+      if (out.baseCost !== undefined) out.baseCost = clampInt(out.baseCost, 0, 1e8); // only kept for a custom level (normalizeLifestyle)
+      if (out.metatypePct !== undefined) out.metatypePct = clampInt(out.metatypePct, 0, 500);
+      if (out.extraCost !== undefined) out.extraCost = clampInt(out.extraCost, 0, 1e8);
       if (out.monthsPaid !== undefined) out.monthsPaid = clampInt(out.monthsPaid, 0, 999);
       if (out.primary !== undefined) out.primary = !!out.primary;
       if (out.points !== undefined) {

@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { startServer, login, client, settle } from './test-client.js';
-import { monthlyCost, costBreakdown, settleLifestyles, primaryLifestyle, qualityProblem, lifestyleFromCatalog, qualityFromCatalog } from '../shared/lifestyle.js';
+import { monthlyCost, costBreakdown, settleLifestyles, normalizeLifestyle, levelCost, primaryLifestyle, qualityProblem, lifestyleFromCatalog, qualityFromCatalog } from '../shared/lifestyle.js';
 import { normalizeActor } from '../client/modules/sheet/sheet-data.js';
 import { uid } from '../shared/util.js';
 
@@ -60,6 +60,15 @@ const squat = lifestyleFromCatalog(squatter, { id: 'l2' });
 squat.qualities.push(qualityFromCatalog(dangerous, { id: 'q2' }));
 ok(monthlyCost(squat) === 400, 'Squatter 500 − 20 % = 400');
 ok(monthlyCost({ baseCost: 100, qualities: [{ cost: -1000 }] }) === 0, 'never negative');
+ok(monthlyCost({ base: 'Medium', baseCost: 7083, qualities: [{ cost: 100 }] }) === 5100, 'stored baseCost ignored: Medium is always 5000 (+ Garage 100)');
+ok(monthlyCost({ base: 'Custom', baseCost: 1234, qualities: [] }) === 1234, 'custom level keeps its stored base cost');
+ok(levelCost({ base: 'Hospitalized', catalogId: '2be1a0f7-6133-4966-be57-720ed9b927a9' }) === 1000 && levelCost({ base: 'Hospitalized' }) === 500, 'Hospitalized basic / intensive');
+ok(monthlyCost({ base: 'Medium', metatypePct: 20, qualities: [{ cost: 100 }] }) === 6100, 'dwarf +20 % of the base only');
+ok(monthlyCost({ base: 'Low', extraCost: 300, qualities: [] }) === 2300, 'RF points bought (extraCost) added to the base');
+const baked = normalizeLifestyle({ base: 'Medium', baseCost: 7083, qualities: [{ cost: 2083, category: 'Contracts' }] }, { metatype: 'Humain' });
+ok(baked.baseCost === 5000 && baked.monthlyCost === 7083 && baked.metatypePct === undefined, 'baked total (Anthony) pinned back to 5000, options added once');
+const dwarf = normalizeLifestyle({ base: 'Medium', baseCost: 6000, qualities: [] }, { metatype: 'Nain' });
+ok(dwarf.baseCost === 5000 && dwarf.metatypePct === 20 && dwarf.monthlyCost === 6000, 'chargen dwarf surcharge migrated to metatypePct');
 ok(monthlyCost({ baseCost: 0, points: { comforts: 2, security: 1 }, pointCost: { comforts: 50, security: 50 }, qualities: [] }) === 150, 'RF points × cost per point');
 ok(monthlyCost(null) === 0 && monthlyCost({}) === 0, 'robust to bad input');
 // Chummer order: plain percentages multiply base + non-contract options (+ RF points); base-only % the base; contracts after.
@@ -106,7 +115,7 @@ const legacy = { id: 'x', type: 'pc', name: 'Legacy', lifestyle: { name: 'Planqu
 normalizeActor(legacy, uid);
 ok(Array.isArray(legacy.lifestyles) && legacy.lifestyles.length === 1 && !('lifestyle' in legacy), 'legacy lifestyle migrated');
 const m0 = legacy.lifestyles[0];
-ok(m0.name === 'Planque (Moyen)' && m0.baseCost === 7083 && m0.monthsPaid === 2 && m0.primary && m0.chummerGuid === 'g-1', 'name / cost / months / guid kept');
+ok(m0.name === 'Planque (Moyen)' && m0.base === 'Medium' && m0.baseCost === 5000 && /7083/.test(m0.notes) && m0.monthsPaid === 2 && m0.primary && m0.chummerGuid === 'g-1', 'name / months / guid kept, base cost fixed by the level (old rent in the notes)');
 normalizeActor(legacy, uid);
 ok(legacy.lifestyles.length === 1 && legacy.lifestyles[0].id === m0.id, 'second normalization does nothing');
 
@@ -161,7 +170,7 @@ try {
   ok(A(gm, 'pc_low').lifestyles[0].baseCost === 2000 && !A(gm, 'pc_low').lifestyles[0].qualities.length, 'other actors migrated without upgrades');
   ok(!('restored' in pj.state.shop), 'restore bookkeeping hidden from players');
   const an = A(gm, 'pc_anthony');
-  ok(!an.lifestyles[0].qualities.length && an.lifestyles[0].monthlyCost === 7083 && !an.history.some((h) => /restaurées/.test(h.text || '')) && !gm.state.shop.restored.includes('pc_anthony'), 'inferred restore spec (Anthony) not applied at boot');
+  ok(!an.lifestyles[0].qualities.length && an.lifestyles[0].monthlyCost === 5000 && !an.history.some((h) => /restaurées/.test(h.text || '')) && !gm.state.shop.restored.includes('pc_anthony'), 'inferred restore spec (Anthony) not applied at boot');
 
   console.log('• buy a new lifestyle');
   let r = await pl.send('shop/buy', { actorId: 'pc_low', items: [{ ref: medium.id, qty: 2, lifestyleName: 'Appart du centre' }] });

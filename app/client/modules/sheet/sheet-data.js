@@ -95,10 +95,11 @@ export function vehicleSlotsByCategory(v) {
 /** Legacy single `actor.lifestyle` ({ name, monthlyCost, monthsPaid }) → one lifestyles[] entry. */
 export function legacyLifestyle(ls, makeId) {
   const base = guessLifestyleBase(ls.name) || 'Medium';
-  const cost = Math.max(0, num(ls.monthlyCost, LIFESTYLE_BASES[base]?.cost || 0));
+  const cost = LIFESTYLE_BASES[base]?.cost || 0; // fixed per level; the old total rent is kept in the notes
+  const old = Math.max(0, Math.round(num(ls.monthlyCost, cost)));
   return {
     id: makeId('ls'), name: String(ls.name || base).slice(0, 120), base, baseCost: cost, monthsPaid: Math.max(0, Math.round(num(ls.monthsPaid))), primary: true,
-    qualities: [], monthlyCost: cost, notes: '', ...(ls.chummerGuid ? { chummerGuid: ls.chummerGuid } : {}),
+    qualities: [], monthlyCost: cost, notes: old !== cost ? `Ancien loyer : ${old} ¥` : '', ...(ls.chummerGuid ? { chummerGuid: ls.chummerGuid } : {}),
   };
 }
 

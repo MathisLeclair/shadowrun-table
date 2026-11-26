@@ -474,7 +474,7 @@ export function parseChum5(xml, { fileName = '', now = Date.now(), makeId = uid,
     const pct = num(ls.val('percentage'), 100);
     const notes = [longText(ls.val('notes')), roommates ? `${roommates} colocataire(s)` : '', pct !== 100 ? `part payée : ${pct} %` : ''].filter(Boolean).join(' — ');
     const item = {
-      id: makeId('ls'), name: ls.val('name') || base, base, baseCost: Math.round(num(ls.val('cost'), LIFESTYLE_BASES[base]?.cost || 0) + extra), monthsPaid: num(ls.val('months')),
+      id: makeId('ls'), name: ls.val('name') || base, base, baseCost: Math.round(num(ls.val('cost'), LIFESTYLE_BASES[base]?.cost || 0)), ...(extra > 0 ? { extraCost: Math.round(extra) } : {}), monthsPaid: num(ls.val('months')),
       primary: false, ...(points ? { points } : {}),
       qualities: (ls.get('lifestylequalities')?.all('lifestylequality') || []).filter((q) => q.val('name')).map((q) => lifestyleQualityFromNode(q, makeId)),
       notes, _tenant: bool(ls.val('primarytenant')),

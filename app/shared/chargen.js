@@ -1288,11 +1288,12 @@ export function buildActor(rawData, ctx = {}, opts = {}) {
   for (const a of actor.armor) if (a.stack || a === best) a.equipped = true;
 
   if (result.lifestyle) {
-    // Starting lifestyle → lifestyles[0] (see shared/lifestyle.js); the dwarf/troll surcharge is part of the base cost.
+    // Starting lifestyle → lifestyles[0] (see shared/lifestyle.js); the dwarf/troll surcharge is metatypePct (% of the base).
     const it = result.lifestyle.item || {};
     const base = /^Hospitalized/i.test(it.name || '') ? 'Hospitalized' : it.name || 'Medium';
     actor.lifestyles = [{
-      id: makeId('ls'), name: result.lifestyle.name, base, ...(it.id ? { catalogId: it.id } : {}), baseCost: result.lifestyle.monthly, monthsPaid: result.lifestyle.months,
+      id: makeId('ls'), name: result.lifestyle.name, base, ...(it.id ? { catalogId: it.id } : {}), baseCost: Math.round(Number(it.cost) || 0),
+      ...(LIFESTYLE_MULT[data.metatype] ? { metatypePct: Math.round((LIFESTYLE_MULT[data.metatype] - 1) * 100) } : {}), monthsPaid: result.lifestyle.months,
       primary: true, qualities: [], monthlyCost: result.lifestyle.monthly, notes: '',
     }];
   }

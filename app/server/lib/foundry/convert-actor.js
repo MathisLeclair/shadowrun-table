@@ -475,16 +475,16 @@ export function convertSheet(fa, ctx = {}) {
         ...(st.baseOnly ? { baseOnly: true } : {}), ...(st.lp !== undefined ? { lp: num(st.lp, 0) } : {}),
       };
     }).filter(Boolean);
-    // Foundry `cost` is the TOTAL per month (options included): with options, the base is the catalog's and the
-    // options are added back by monthlyCost(); without options, that total becomes the base cost.
+    // Foundry `cost` is the TOTAL per month (options included): the base is the level's fixed cost (shared/lifestyle.js)
+    // and the options are added back by monthlyCost(); the Foundry total is kept in the notes.
     const total = num(sy.cost, 0);
     const catalogBase = num(hit?.entry?.cost, LIFESTYLE_COST[t] || 0);
     const l = {
-      id: fid(ls), name: ls.name, base, ...(hit ? { catalogId: hit.entry.id } : {}), baseCost: total && !qualities.length ? total : catalogBase || total,
+      id: fid(ls), name: ls.name, base, ...(hit ? { catalogId: hit.entry.id } : {}), baseCost: catalogBase || total,
       monthsPaid: Math.max(0, Math.round(num(sy.paid, 1))), primary: i === 0, ...(Object.keys(points).length ? { points } : {}), qualities,
       notes: [
         sy.permanent ? 'Permanent' : '', num(sy.guests, 0) ? `Invités : ${sy.guests}` : '',
-        total ? (qualities.length ? `Coût mensuel Foundry : ${total} ¥ (options recalculées)` : 'Coût mensuel total repris de Foundry') : '',
+        total && total !== catalogBase ? `Coût mensuel Foundry : ${total} ¥ (options recalculées)` : '',
       ].filter(Boolean).join(' · '),
     };
     l.monthlyCost = Math.round(Number(monthlyCost(l)) || 0);
