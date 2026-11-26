@@ -14,7 +14,8 @@ import { ItemRef, SkillRef, RuleRef, BookRef } from '../books/BookRef.js';
 import { ruleRef } from '/shared/bookrefs.js';
 import { AmmoCell, ReadyToggle } from './weapon-ui.js';
 import { readyCount, isUnarmed, isGrenade, usesAmmo, fireOptions } from './inventory.js';
-import { COMBAT_ACTIONS, unlockedActions, isUnlocked } from '/shared/combat.js';
+import { COMBAT_ACTIONS, unlockedActions, isUnlocked, AFFLICTIONS, stillActive } from '/shared/combat.js';
+import { send } from '../../lib/net.js';
 
 /** "(STR+5)P" → "11P" for this actor; other damage codes unchanged. */
 export function damageText(actor, dmg) {
@@ -23,6 +24,22 @@ export function damageText(actor, dmg) {
   const p = parseDamage(raw, actor);
   const rest = raw.replace(/\(?\s*STR\s*([+-]\s*\d+)?\s*\)?\s*[PS]?/i, '');
   return `${p.value}${p.type}${rest}`;
+}
+
+/** Toxin effects in progress (actor.afflictions, shared/combat.js AFFLICTIONS) — the GM can end one early. */
+function Afflictions({ s }) {
+  const now = Date.now();
+  const list = (s.actor.afflictions || []).filter((a) => a && AFFLICTIONS[a.kind] && stillActive(a.until, s.game.combat, now));
+  if (!list.length) return null;
+  const effect = (def) => (def.dice ? t('{n} dés à tous les tests', { n: def.dice }) : def.woundFactor ? t('malus de blessures ×{n}', { n: def.woundFactor }) : t('aucune action'));
+  return html`<div class="row wrap gap-s">
+    <span class="field-label">${t('Effets en cours')}</span>
+    ${list.map((a) => {
+      const def = AFFLICTIONS[a.kind];
+      return html`<span class="badge badge-magenta" key=${a.id} title=${`${a.source ? t(a.source) + ' — ' : ''}${effect(def)}`}>${t(def.name)} · ${effect(def)}
+        ${s.gm && html` <button class="link" onClick=${() => send('attack/removeAffliction', { actorId: s.actor.id, afflictionId: a.id }).catch(() => {})} title=${t('Mettre fin à cet effet')}>✕</button>`}</span>`;
+    })}
+  </div>`;
 }
 
 /** Weapons shown by default: the ready ones (« Mains nues » always). */
@@ -50,6 +67,7 @@ export function CombatTab({ s }) {
       <${RollStat} label=${t('Blessures')} value=${dm.woundModifier || 0} accent=${dm.woundModifier ? 'magenta' : null} book=${ruleRef('woundModifiers')} />
     </div>
     <div class="muted small">${t('Encaissement : la PA de l’arme modifie l’armure (ajoute-la en modificateur). Tous les jets d’attaque utilisent la Précision de l’arme comme limite.')}</div>
+    <${Afflictions} s=${s} />
 
     <div class="sh-sec-head"><h4 class="section-title">${t('Armes')}</h4>
       ${!edit && stowed > 0 && html`<${Button} small variant="ghost" onClick=${() => setShowAll(!showAll)}>${showAll ? t('Armes prêtes seulement') : tn(stowed, 'Afficher tout ({n} rangée)', 'Afficher tout ({n} rangées)')}</${Button}>`}</div>

@@ -3,6 +3,8 @@
 import assert from 'node:assert/strict';
 import { startServer, login, client, settle } from './test-client.js';
 import { launcherRounds } from '../client/modules/sheet/inventory.js';
+import { combineEnv, environmentFor, toxinOutcome, TOXIN_BY_ID, stillActive, untilFor, areaEffectOf, pruneExpired } from '../shared/combat.js';
+import { collectModifiers, poolModifiers, rollContext, derivedWithModifiers } from '../shared/modifiers.js';
 import { rollScatter, blastOf, blastDvAt, blastReach, rangeFor, defenseLines, actionsForWeapon, unlockedActions, finalDamageType } from '../shared/combat.js';
 
 const srv = await startServer({ port: Number(process.env.SR_TEST_PORT) || 3291 });
@@ -77,11 +79,57 @@ try {
     assert.equal(finalDamageType('P', 10, 9), 'P');
   });
 
+  await test('environment: worst column, two at the worst level = one worse, two Heavy = −10', () => {
+    assert.equal(combineEnv({ range: 1 }), -1);
+    assert.equal(combineEnv({ light: 3 }), -6);
+    assert.equal(combineEnv({ light: 2, range: 1 }), -3);
+    assert.equal(combineEnv({ light: 2, wind: 2 }), -6);
+    assert.equal(combineEnv({ light: 3, visibility: 3 }), -10);
+  });
+  await test('environment: dark map, low-light / thermographic vision, smoke on the line of fire', () => {
+    const map = { width: 20, height: 10, lighting: 'dark', metersPerCell: 1 };
+    const base = { map, from: { x: 1, y: 5 }, to: { x: 10, y: 5 }, meters: 9, rangeIndex: 0, litRatio: null };
+    assert.equal(environmentFor(base).value, -6, 'total darkness');
+    assert.equal(environmentFor({ ...map && base, map: { ...map, lighting: 'dim' }, senses: { lowLight: true } }).value, 0, 'low-light: dim → full');
+    assert.equal(environmentFor({ ...base, senses: { thermo: true } }).value, -3, 'thermo: one row up');
+    const smoke = [{ effect: 'smoke', x: 5, y: 5, radius: 3 }];
+    assert.equal(environmentFor({ ...base, map: { ...map, lighting: 'bright' }, blasts: smoke }).value, -6, 'heavy smoke on the line');
+    assert.equal(environmentFor({ ...base, map: { ...map, lighting: 'bright' }, blasts: smoke, senses: { thermo: true } }).value, -3);
+    assert.equal(environmentFor({ ...base, map: { ...map, lighting: 'bright' }, blasts: [{ ...smoke[0], effect: 'thermalSmoke' }], senses: { thermo: true } }).value, -6, 'thermal smoke blocks thermo');
+    assert.equal(environmentFor({ ...base, blasts: smoke }).value, -10, 'darkness + smoke');
+    assert.equal(environmentFor({ ...base, map: { ...map, lighting: 'bright', weather: { wind: 2 } }, senses: { smartlink: true } }).value, -1, 'smartlink: wind one row up');
+  });
+  await test('toxins: outcome, afflictions on the sheet (−2 dice, wounds ×2), expiry', () => {
+    const cs = TOXIN_BY_ID.cs;
+    assert.deepEqual(toxinOutcome(cs, 0, 3).afflictions, []);
+    const o = toxinOutcome(cs, 5, 3);
+    assert.equal(o.damage, 5);
+    assert.equal(o.damageType, 'S');
+    assert.deepEqual(o.afflictions, ['disoriented', 'nauseous', 'incapacitated']);
+    assert.deepEqual(toxinOutcome(cs, 2, 3).afflictions, ['disoriented', 'nauseous']);
+    assert.equal(areaEffectOf({ name: 'Grenade: Gas' }), 'gas');
+    assert.equal(areaEffectOf({ name: 'Minigrenade: Thermal Smoke' }), 'thermalSmoke');
+    assert.equal(areaEffectOf({ name: 'Grenade: Fragmentation' }), 'explosion');
+    const a = { attributes: { BOD: 3, AGI: 3, REA: 3, STR: 3, WIL: 3, LOG: 3, INT: 3, CHA: 3, EDG: 2, ESS: 6 }, skills: [{ id: 'pistols', rating: 3 }], condition: { physical: 3, stun: 0 },
+      afflictions: [{ id: 'a1', kind: 'disoriented' }, { id: 'a2', kind: 'nauseous' }] };
+    const mods = collectModifiers(a, () => null);
+    assert.equal(poolModifiers(mods, rollContext(a, { skillId: 'pistols' })).total, -2);
+    assert.equal(poolModifiers(mods, rollContext(a, { attr: 'BOD', attr2: 'WIL', test: 'toxinResist' })).total, 0, 'not on resistance tests');
+    assert.equal(derivedWithModifiers(a, mods).woundModifier, -2);
+    const combat = { active: true, startedAt: 5, round: 2 };
+    const u = untilFor(combat, 0, { turns: 3 });
+    assert.ok(stillActive(u, { ...combat, round: 4 }, 0) && !stillActive(u, { ...combat, round: 5 }, 0));
+    const state = { combat: { ...combat, round: 3 }, attacks: { blasts: [{ id: 'b', until: untilFor(combat, 0, { turns: 1 }) }, { id: 'c', until: untilFor(combat, 0, { long: true }) }] }, actors: {} };
+    pruneExpired(state, 0);
+    assert.deepEqual(state.attacks.blasts.map((b) => b.id), ['c'], 'explosion gone at the next Combat Turn, cloud stays');
+  });
+
   const gm = await client(srv.url, await login(srv.url, { role: 'gm', password: 'lazarus' }));
   const p1 = await client(srv.url, await login(srv.url, { role: 'player', name: 'Mat', characterId: 'pc_anthony' }));
   await settle();
   const mapId = await gm.send('maps/create', { name: 'Test attaques', width: 40, height: 20 });
   await gm.send('maps/setActive', { mapId });
+  await gm.send('maps/update', { mapId, patch: { lighting: 'bright' } }); // daylight: no environmental modifier but the range
   await gm.send('maps/addToken', { mapId, token: { actorId: 'pc_anthony', x: 5, y: 5 } });
   const spawned = await gm.send('bestiary/spawn', { templateId: 'tpl_agc_cleaner', mapId, x: 15, y: 5 });
   const npcId = Array.isArray(spawned) ? spawned[0] : spawned.actorIds?.[0];
@@ -171,6 +219,51 @@ try {
     await gm.send('attack/clear', { all: true });
     await settle();
     assert.equal(gm.state.attacks.blasts.length, 0);
+  });
+  await test('gas grenade: a toxin resistance for each token caught, effects on the sheet, the cloud stays', async () => {
+    const jane = gm.state.actors.pc_jane;
+    const gas = jane.weapons.find((w) => w.name === 'Grenade: Gas');
+    await gm.send('maps/addToken', { mapId, token: { actorId: 'pc_jane', x: npcToken.x - 2, y: npcToken.y + 2 } });
+    const r = await gm.send('attack/roll', { actorId: 'pc_jane', weaponId: gas.id, skillId: gas.skill, toxinId: 'neurostun8', point: { x: npcToken.x, y: npcToken.y } });
+    await settle();
+    const b = gm.state.attacks.blasts.find((x) => x.id === r.blastId);
+    assert.equal(b.effect, 'gas');
+    assert.equal(b.toxinId, 'neurostun8');
+    assert.equal(b.dv, null, 'no blast damage: the toxin replaces it');
+    assert.ok(b.until, 'expiry set');
+    assert.ok(b.hits.length > 0, 'Jane, 3 m away, is in the 10 m cloud');
+    for (const h of b.hits) {
+      const a = gm.state.attacks.list.find((x) => x.id === h.attackId);
+      assert.equal(a.kind, 'toxin');
+      assert.equal(a.dv, 15);
+      const res = await gm.send('attack/soak', { attackId: a.id });
+      assert.equal(res.attack.status, 'done');
+      assert.match(res.roll.breakdown, /CON|BOD/);
+      await settle();
+      const victim = gm.state.actors[a.targetId];
+      if (res.attack.left > 0) assert.ok((victim.afflictions || []).some((x) => x.kind === 'disoriented'), 'disoriented');
+    }
+    // Clean up for the next tests: effects ended, stun healed, cloud gone.
+    for (const h of b.hits) {
+      for (const x of gm.state.actors[h.actorId].afflictions || []) await gm.send('attack/removeAffliction', { actorId: h.actorId, afflictionId: x.id });
+      await gm.send('actor/update', { actorId: h.actorId, patch: { condition: { ...gm.state.actors[h.actorId].condition, stun: 0 } } }).catch(() => {});
+    }
+    await gm.send('attack/clear', { all: true });
+    await settle();
+  });
+  await test('weather: the environment line replaces the range line in the attack pool', async () => {
+    await gm.send('maps/update', { mapId, patch: { weather: { visibility: 3 } } });
+    const colt = gm.state.actors.pc_anthony.weapons.find((w) => w.id === COLT);
+    await gm.send('weapon/reload', { actorId: 'pc_anthony', weaponId: COLT, free: true }).catch(() => {});
+    try {
+      const r = await gm.send('attack/roll', { actorId: 'pc_anthony', weaponId: colt.id, skillId: 'pistols', targetTokenId: npcToken.id });
+      assert.match(r.breakdown, /env\. \(portée, visibilité\) −6/);
+    } finally {
+      await gm.send('maps/update', { mapId, patch: { weather: { visibility: 0 } } });
+    }
+    await settle();
+    assert.equal(gm.state.maps[mapId].weather, undefined);
+    await gm.send('attack/clear', { all: true });
   });
   await test('grenade launcher without a minigrenade profile: the catalog round chosen gives the blast, a round is used', async () => {
     const alpha = gm.state.actors.pc_anthony.weapons.find((w) => /Alpha Grenade Launcher/.test(w.name));

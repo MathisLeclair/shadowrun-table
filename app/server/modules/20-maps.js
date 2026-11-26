@@ -210,6 +210,7 @@ export function normalizeMap(m) {
   m.tiles = Array.from({ length: m.height }, (_, y) => cleanRow(rows[y], m.width));
   m.metersPerCell = num(m.metersPerCell, 0.25, 50, 1);
   m.lighting = oneOf(m.lighting, LIGHTINGS, 'bright');
+  setWeather(m, m.weather);
   m.theme = oneOf(m.theme, THEMES, 'street');
   m.fog = m.fog !== false;
   m.sharedVision = m.sharedVision !== false;
@@ -467,12 +468,21 @@ function sfx(ctx, id) {
   ctx.emitTo('all', 'sfx', { id });
 }
 
+/** Weather of a map for the environmental modifiers (SR5 p. 175): visibility (rain / fog / smoke) and wind, 0 none … 3 heavy. */
+function setWeather(map, w) {
+  const lvl = (v) => Math.max(0, Math.min(3, Math.round(Number(v) || 0)));
+  const next = { visibility: lvl(w?.visibility), wind: lvl(w?.wind) };
+  if (next.visibility || next.wind) map.weather = next;
+  else delete map.weather;
+}
+
 function patchMapFields(ctx, map, patch) {
   if (!patch || typeof patch !== 'object') ctx.fail('Modification invalide');
   if ('name' in patch) map.name = str(patch.name || 'Carte sans nom', 80);
   if ('folder' in patch) map.folder = str(patch.folder, 60);
   if ('description' in patch) map.description = str(patch.description, 20000);
   if ('lighting' in patch) map.lighting = oneOf(patch.lighting, LIGHTINGS, map.lighting);
+  if ('weather' in patch) setWeather(map, { ...(map.weather || {}), ...(patch.weather && typeof patch.weather === 'object' ? patch.weather : {}) });
   if ('theme' in patch) map.theme = oneOf(patch.theme, THEMES, map.theme);
   if ('fog' in patch) map.fog = !!patch.fog;
   if ('sharedVision' in patch) map.sharedVision = !!patch.sharedVision;

@@ -208,6 +208,253 @@ export function blastReach(blast) {
 }
 
 // ---------------------------------------------------------------------------
+// Area effects of grenades: what the blast leaves on the map (SR5 p. 435) and the toxins of gas grenades (p. 409-410)
+// ---------------------------------------------------------------------------
+/**
+ * Kind of area effect of a grenade / launcher round: 'explosion' (frag, HE, flash-bang: damage once), 'smoke' / 'thermalSmoke'
+ * (a cloud: heavy visibility modifier through it; thermographic vision sees through plain smoke only), 'gas' (a cloud: the
+ * toxin chosen at the throw, a resistance test for each token caught), 'flashpak' (blinding glare in its radius).
+ */
+export function areaEffectOf(w) {
+  const s = textOf(w);
+  if (/flash ?pak/.test(s)) return 'flashpak';
+  if (/thermal smoke|fumigene infrarouge|fumee thermique|thermal/.test(s)) return 'thermalSmoke';
+  if (/smoke|fumigene|fumee/.test(s)) return 'smoke';
+  if (/\bgas\b|\bgaz\b|chemical|chimique|lacrymo|neuro ?stun|pepper punch|nausea|seven ?7|\bcs\b/.test(s)) return 'gas';
+  return 'explosion';
+}
+/** Cloud-like effects stay on the map until the end of the fight (explosions: until the end of the Combat Turn). */
+export const LASTING_EFFECTS = ['smoke', 'thermalSmoke', 'gas', 'flashpak'];
+
+/**
+ * Toxins a gas grenade can hold (SR5 p. 409-410): vector, speed, penetration, power, effects
+ * ('disorientation' | 'nausea' | 'stun' | 'physical'). Speed is not delayed here: the resistance test is rolled at once.
+ */
+export const TOXINS = [
+  { id: 'cs', name: tk('Gaz lacrymogène (CS)'), en: 'CS/Tear Gas', vector: ['contact', 'inhalation'], speed: 1, penetration: 0, power: 8, effects: ['disorientation', 'nausea', 'stun'], page: 409 },
+  { id: 'pepper', name: tk('Gaz poivre (Pepper Punch)'), en: 'Pepper Punch', vector: ['contact', 'inhalation'], speed: 1, penetration: 0, power: 11, effects: ['nausea', 'stun'], page: 410 },
+  { id: 'nausea', name: tk('Gaz vomitif'), en: 'Nausea Gas', vector: ['inhalation'], speed: 3, penetration: 0, power: 9, effects: ['disorientation', 'nausea'], page: 410 },
+  { id: 'neurostun8', name: tk('Neuro-Stun VIII'), en: 'Neuro-Stun VIII', vector: ['contact', 'inhalation'], speed: 1, penetration: 0, power: 15, effects: ['disorientation', 'stun'], page: 410 },
+  { id: 'neurostun9', name: tk('Neuro-Stun IX'), en: 'Neuro-Stun IX', vector: ['contact', 'inhalation'], speed: 1, penetration: 0, power: 15, effects: ['disorientation', 'stun'], page: 410 },
+  { id: 'neurostun10', name: tk('Neuro-Stun X'), en: 'Neuro-Stun X', vector: ['contact', 'inhalation'], speed: 1, penetration: -2, power: 15, effects: ['disorientation', 'stun'], page: 410 },
+  { id: 'seven7', name: tk('Seven-7'), en: 'Seven-7', vector: ['contact', 'inhalation'], speed: 1, penetration: -2, power: 12, effects: ['disorientation', 'nausea', 'physical'], page: 410 },
+];
+export const TOXIN_BY_ID = Object.fromEntries(TOXINS.map((x) => [x.id, x]));
+
+/** Toxin named by a gas grenade (« Grenade: Gas (Neuro-Stun VIII) »), else null (the thrower picks; CS by default). */
+export function toxinFromText(w) {
+  const s = textOf(w) + ' ' + norm(w?.notes || '') + ' ' + norm(w?.choice || '');
+  if (/neuro ?stun (x|10)\b/.test(s)) return 'neurostun10';
+  if (/neuro ?stun (ix|9)\b/.test(s)) return 'neurostun9';
+  if (/neuro ?stun/.test(s)) return 'neurostun8';
+  if (/seven ?7/.test(s)) return 'seven7';
+  if (/pepper|poivre/.test(s)) return 'pepper';
+  if (/nausea|vomitif/.test(s)) return 'nausea';
+  if (/\bcs\b|tear|lacrymo/.test(s)) return 'cs';
+  return null;
+}
+
+/**
+ * Toxin effects once resisted (SR5 p. 408-409). left = Power − resistance hits (nothing when ≤ 0).
+ * disorientation: −2 dice for 10 minutes; nausea: wound modifiers doubled for 10 minutes, and incapacitated for 3 Combat Turns
+ * when left > Willpower; stun / physical: left boxes of that damage (no armor).
+ */
+export function toxinOutcome(toxin, left, wil) {
+  const out = { damage: 0, damageType: null, afflictions: [] };
+  if (!toxin || left <= 0) return out;
+  if (toxin.effects.includes('stun')) { out.damage = left; out.damageType = 'S'; }
+  if (toxin.effects.includes('physical')) { out.damage = left; out.damageType = 'P'; }
+  if (toxin.effects.includes('disorientation')) out.afflictions.push('disoriented');
+  if (toxin.effects.includes('nausea')) {
+    out.afflictions.push('nauseous');
+    if (left > (Number(wil) || 0)) out.afflictions.push('incapacitated');
+  }
+  return out;
+}
+
+/**
+ * Afflictions a character can carry (actor.afflictions: [{ id, kind, source, ts, until }]), with their modifiers:
+ * dice = on every skill / attribute test but resistance tests, woundFactor = wound modifier multiplier.
+ * until: { round: 'startedAt:round' } (Combat Turns) | { combat: startedAt } (rest of the fight) | { ts } (out of combat).
+ */
+export const AFFLICTIONS = {
+  disoriented: { name: tk('Désorienté'), en: 'Disoriented', dice: -2 },
+  nauseous: { name: tk('Nauséeux'), en: 'Nauseous', woundFactor: 2 },
+  incapacitated: { name: tk('Incapable d’agir (nausée)'), en: 'Incapacitated (nausea)', turns: 3 },
+};
+const LONG_MS = 10 * 60 * 1000; // 10 minutes (outside combat)
+const TURN_MS = 60 * 1000; // a few Combat Turns outside combat
+
+/** Expiry of an affliction / area effect created now: { round } | { combat } | { ts }. */
+export function untilFor(combat, now, { turns = 0, long = false } = {}) {
+  if (combat?.active) {
+    if (turns) return { round: `${combat.startedAt || 0}:${(combat.round || 1) + turns - 1}` };
+    return { combat: combat.startedAt || 0 };
+  }
+  return { ts: now + (turns ? TURN_MS : long ? LONG_MS : TURN_MS) };
+}
+/** Is something with this `until` still running? */
+export function stillActive(until, combat, now) {
+  if (!until) return true;
+  if (until.ts !== undefined) return now <= until.ts;
+  if (!combat?.active) return false;
+  const started = combat.startedAt || 0;
+  if (until.combat !== undefined) return until.combat === started;
+  const [s, r] = String(until.round || '').split(':').map(Number);
+  return s === started && (combat.round || 1) <= r;
+}
+
+/** Blast markers still shown: explosions until the end of their Combat Turn (1 min outside combat), clouds until the end of the fight. */
+export function activeBlasts(blasts, combat, now) {
+  return (blasts || []).filter((b) => (b.until ? stillActive(b.until, combat, now) : true));
+}
+
+/** Drop the blast markers and afflictions that ran out (state.attacks.blasts, actor.afflictions). Returns true when something changed. */
+export function pruneExpired(state, now) {
+  let changed = false;
+  const s = state?.attacks;
+  if (s && Array.isArray(s.blasts)) {
+    const kept = activeBlasts(s.blasts, state.combat, now);
+    if (kept.length !== s.blasts.length) {
+      s.blasts = kept;
+      changed = true;
+    }
+  }
+  for (const a of Object.values(state?.actors || {})) {
+    if (!Array.isArray(a?.afflictions) || !a.afflictions.length) continue;
+    const kept = a.afflictions.filter((x) => x && stillActive(x.until, state.combat, now));
+    if (kept.length !== a.afflictions.length) {
+      a.afflictions = kept;
+      changed = true;
+    }
+  }
+  return changed;
+}
+
+/** Protection of an actor against a toxin: 'immune' (chemical seal, or a gas mask against an inhalation-only toxin) or null. */
+export function toxinProtection(actor, toxin) {
+  const names = [...(actor?.gear || []), ...(actor?.armor || []).filter((a) => a?.equipped).flatMap((a) => [a, ...(a.mods || [])]), ...(actor?.augmentations || [])]
+    .filter(Boolean).flatMap((x) => [x.name, x.nameEn, x.nameFr, x.notes]).filter(Boolean).map(norm).join(' | ');
+  if (/chemical seal|joint chimique|etancheite chimique|scelle chimique/.test(names)) return 'immune';
+  const inhalationOnly = toxin && toxin.vector.length === 1 && toxin.vector[0] === 'inhalation';
+  if (inhalationOnly && /gas mask|masque a gaz|internal air tank|reservoir d'air|reserve d'air/.test(names)) return 'immune';
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// Environmental modifiers of ranged attacks (SR5 p. 175): visibility, light / glare, wind, range — vision compensation
+// ---------------------------------------------------------------------------
+export const ENV_LEVEL_MODS = [0, -1, -3, -6];
+export const ENV_COLUMNS = ['visibility', 'light', 'wind', 'range'];
+export const ENV_LEVEL_LABELS = {
+  visibility: [tk('dégagé'), tk('pluie / brouillard / fumée légers'), tk('pluie / brouillard / fumée modérés'), tk('pluie / brouillard / fumée denses')],
+  light: [tk('pleine lumière'), tk('lumière partielle'), tk('faible lumière'), tk('obscurité totale')],
+  glare: [tk('sans éblouissement'), tk('léger éblouissement'), tk('éblouissement modéré'), tk('éblouissement aveuglant')],
+  wind: [tk('pas de vent'), tk('vent léger'), tk('vent modéré'), tk('vent fort')],
+};
+
+/** SR5: the worst column gives the modifier; two columns at that worst level → one level worse (two Heavy → −10). */
+export function combineEnv(levels) {
+  const vals = ENV_COLUMNS.map((k) => Math.max(0, Math.min(3, Math.round(Number(levels?.[k]) || 0)))).filter((v) => v > 0);
+  if (!vals.length) return 0;
+  const top = Math.max(...vals);
+  const ties = vals.filter((v) => v === top).length;
+  if (ties < 2) return ENV_LEVEL_MODS[top];
+  return top >= 3 ? -10 : ENV_LEVEL_MODS[top + 1];
+}
+
+const ULTRASOUND_RE = /ultrasound|ultrason/;
+const SMARTLINK_RE = /smart ?link|smartgun|smart ?gun/;
+const FLARE_RE = /flare comp|compensation (anti ?)?flash|anti ?eblouissement|compensation d'eblouissement/;
+/** Senses of an attacker for the compensation rules: low-light / thermographic (token vision rules), ultrasound, flare compensation, smartlink. */
+export function attackSenses(actor, tokenVisionInfo = {}, weapon = null) {
+  const items = [
+    ...(actor?.augmentations || []), ...(actor?.gear || []), ...(actor?.qualities || []), ...(actor?.powers || []),
+    ...(actor?.armor || []).flatMap((a) => [a, ...(a?.mods || [])]),
+  ].filter(Boolean);
+  const names = items.flatMap((x) => [x.name, x.nameEn, x.nameFr, x.notes, ...(x.mods || []).map((m) => m?.name)]).filter(Boolean).map(norm).join(' | ');
+  const wNames = weapon ? [weapon.name, ...(weapon.accessories || []).flatMap((a) => [a?.name, a?.nameFr])].filter(Boolean).map(norm).join(' | ') : '';
+  return {
+    lowLight: !!tokenVisionInfo.lowLight,
+    thermo: !!tokenVisionInfo.thermo,
+    ultrasound: ULTRASOUND_RE.test(names),
+    flare: FLARE_RE.test(names),
+    smartlink: SMARTLINK_RE.test(names) && SMARTLINK_RE.test(wNames),
+  };
+}
+
+/** Light level of a cell from the map lighting (createVisionContext litRatio): lit 0, edge of a light 1, dim 2, dark 3. */
+export function lightLevelAt(map, litRatio, x, y) {
+  const lighting = map?.lighting || 'bright';
+  if (lighting === 'bright') return 0;
+  const i = (y | 0) * (map.width | 0) + (x | 0);
+  const r = litRatio ? litRatio[i] : Infinity;
+  if (r <= 1) return 0;
+  if (r <= 2) return 1;
+  return lighting === 'dim' ? 2 : 3;
+}
+
+/** Shortest distance (cells) from point p to segment a–b. */
+function segDist(p, a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const L = dx * dx + dy * dy;
+  const t = L ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / L)) : 0;
+  return Math.hypot(a.x + t * dx - p.x, a.y + t * dy - p.y);
+}
+
+/**
+ * Environmental modifier of a ranged attack. from / to = cells, meters = distance, rangeIndex = 0..3 (short … extreme, null = none),
+ * litRatio from createVisionContext (null = bright map), blasts = active blast markers of the map, senses = attackSenses().
+ * Returns { value, levels (after compensation), raw (before), notes: [French labels of what lowered a column], parts: [labels] }.
+ */
+export function environmentFor({ map, from, to, meters = 0, rangeIndex = null, litRatio = null, blasts = [], senses = {} }) {
+  const weather = map?.weather || {};
+  const mpc = Number(map?.metersPerCell) || 1;
+  const raw = { visibility: Math.max(0, Math.min(3, Number(weather.visibility) || 0)), light: 0, glare: 0, wind: Math.max(0, Math.min(3, Number(weather.wind) || 0)), range: rangeIndex ?? 0 };
+  let thermalSmoke = false;
+  if (to) raw.light = lightLevelAt(map, litRatio, to.x, to.y);
+  for (const b of blasts || []) {
+    const r = (Number(b.radius ?? b.reach) || 10) / mpc;
+    const c = { x: b.x, y: b.y };
+    if (b.effect === 'smoke' || b.effect === 'thermalSmoke') {
+      const through = from && to ? segDist(c, from, to) <= r : to ? Math.hypot(to.x - c.x, to.y - c.y) <= r : false;
+      if (through) {
+        raw.visibility = 3;
+        if (b.effect === 'thermalSmoke') thermalSmoke = true;
+      }
+    } else if (b.effect === 'flashpak') {
+      const near = (p) => p && Math.hypot(p.x - c.x, p.y - c.y) <= r;
+      if (near(from) || near(to)) raw.glare = 3;
+    }
+  }
+  const lv = { ...raw };
+  const notes = [];
+  const lower = (k, n, why) => {
+    const before = lv[k];
+    lv[k] = Math.max(0, lv[k] - n);
+    if (lv[k] < before && !notes.includes(why)) notes.push(why);
+  };
+  if (senses.lowLight && (lv.light === 1 || lv.light === 2)) lower('light', lv.light, tk('vision nocturne'));
+  if (senses.thermo) {
+    lower('light', 1, tk('vision thermographique'));
+    if (!thermalSmoke) lower('visibility', 1, tk('vision thermographique'));
+  }
+  if (senses.ultrasound) {
+    lower('visibility', 1, tk('ultrasons'));
+    if (meters <= 50) lower('light', 3, tk('ultrasons'));
+  }
+  if (senses.flare) lower('glare', 3, tk('compensation anti-flash'));
+  if (senses.smartlink) lower('wind', 1, tk('smartlink'));
+  const levels = { visibility: lv.visibility, light: Math.max(lv.light, lv.glare), wind: lv.wind, range: lv.range };
+  const parts = [];
+  if (lv.visibility) parts.push(ENV_LEVEL_LABELS.visibility[lv.visibility]);
+  if (lv.light) parts.push(ENV_LEVEL_LABELS.light[lv.light]);
+  if (lv.glare) parts.push(ENV_LEVEL_LABELS.glare[lv.glare]);
+  if (lv.wind) parts.push(ENV_LEVEL_LABELS.wind[lv.wind]);
+  return { value: combineEnv(levels), levels, raw, notes, parts, rangeOnly: !lv.visibility && !lv.light && !lv.glare && !lv.wind };
+}
+
+// ---------------------------------------------------------------------------
 // Special combat actions (SR5 core + Run & Gun — Chummer data/actions.xml)
 // ---------------------------------------------------------------------------
 /**

@@ -341,13 +341,29 @@ Attack = { id, ts, mapId, kind: 'ranged'|'melee'|'blast', attackerId, attackerNa
   grenade, 2 aerodynamic, 3 launcher, 4 missile, 5 rocket), glitch ×2, critical glitch = at the thrower's feet; blast (`blastOf`: « −N/m » / « N m
   Radius » in the damage, else the SR5 p. 435 table by name) → a `soak` attack for each token with a sheet in reach. Otherwise: a `defense` attack
   (0 hits = `missed`). Returns the roll + `attackId` / `blast`.
+  Area effect (`areaEffectOf`): 'explosion' (blast marker until the end of its Combat Turn, 1 min outside combat), 'smoke' / 'thermalSmoke' /
+  'gas' / 'flashpak' (`LASTING_EFFECTS`: a cloud until the end of the fight, 10 min outside; radius 10 m when the round gives none). Blast
+  record: `effect`, `until` ({ round: 'startedAt:round' } | { combat: startedAt } | { ts }), `toxinId`. Gas: `toxinId` (payload, else named in the
+  grenade — `toxinFromText`, else CS) from `TOXINS` (SR5 p. 409-410), no blast damage; a `toxin` attack (status `soak`, dv = Power, ap =
+  Penetration) for each token in the cloud, unless `toxinProtection` = immune (chemical seal; gas mask vs an inhalation-only toxin).
+  Environmental modifier (SR5 p. 175, `environmentFor`): columns visibility (map `weather.visibility`, heavy through a smoke cloud on the line
+  of fire), light (target cell: `lightLevelAt` from `createVisionContext` litRatio — lit 0, light edge 1, dim map 2, dark 3; flash-pak glare
+  3 when the attacker or target is in it), wind (`weather.wind`), range (the band); the worst column, two at that level = one worse, two
+  Heavy = −10 (`combineEnv`). Compensation (`attackSenses`): low-light (partial / dim light → 0), thermographic (visibility — not thermal
+  smoke — and light one row up), ultrasound (visibility one row up, light ignored ≤ 50 m), flare compensation (glare), smartlink + smartgun
+  (wind one row up). Range only → the range line as before; else one line « env. (portée, lumière) −N » (ranged weapons only, not melee).
 - `attack/defend` (owner of the target, GM for NPCs) `{ attackId, options: ['dodge'|'parry'|'block'|'full'|'agile'|'acrobatic'|'perceptive'|'pretty'],
   situations: ['cover-partial'|'cover-good'|'running'|'prone'|'in-melee'|'vehicle'], modifier, explode }`: REA + INT + `defenseLines()` (one active
   defense, turn-long ones paid once, fire mode, action, area −2, reach difference, −1 per defense already made this Combat Turn). net ≤ 0 →
   `missed`; no damage code → `done`; else `soak` with DV + net hits. Dodge also works against ranged attacks (SR5 p. 191; Chummer's data lists it for melee only).
 - `attack/soak` `{ attackId, modifier, explode }`: BOD + max(0, armor + AP); damage = DV − hits, Stun when the DV is below the modified armor
   (`finalDamageType`). GM: `attack/auto` (defense then soak without options), `attack/resolve { outcome: 'missed'|'damage', amount, type }`,
-  `attack/clear { all?, blasts? }`, `attack/removeBlast`; attacker or GM: `attack/cancel`.
+  `attack/clear { all?, blasts? }`, `attack/removeBlast` (also in the GM's cell menu), `attack/removeAffliction { actorId, afflictionId }`;
+  attacker or GM: `attack/cancel`. A `toxin` attack's soak is the Toxin Resistance Test (BOD + WIL, no wound modifier): left = Power − hits →
+  `toxinOutcome`: Stun / Physical damage (no armor) and `actor.afflictions` [{ id, kind, source, sourceEn, ts, until }] — 'disoriented'
+  (−2 dice on every test but resistance tests: modifier type `allTests`), 'nauseous' (wound modifier ×2: `woundFactor`), 'incapacitated'
+  (left > WIL, 3 Combat Turns; shown only). `pruneExpired` (shared/combat.js) drops ran-out blasts and afflictions at each attack, new Combat
+  Turn and combat end; the sheet's Combat tab lists the afflictions (GM ✕). Speed is not delayed and Penetration does not lower protection.
 - Player view: no attack on a hidden NPC, a hidden attacker's name is `?`, blasts of the shown map only, `myTurn` = their characters' turn record.
 - Client: `ui.targetTokenId` (players: click another token; everyone: token menu « Cibler »), `ui.aimPoint` (cell menu « Viser ce point »); the map draws
   `scene.combatMarks` (reticle, aimed point + blast preview ring, attack arrows, blasts with DV rings — `renderer.drawCombatMarks`) and a target
@@ -366,6 +382,7 @@ Map = {
   doors: [{ id, x, y, state: 'open'|'closed'|'locked', kind: 'door'|'gate'|'shutter'|'secret', name? }],
   lights: [{ id, x, y, radius, color: '#ffcc88', on: true }],
   lighting: 'bright'|'dim'|'dark',  // ambient light
+  weather?: { visibility: 0..3, wind: 0..3 },  // rain / fog and wind levels of the environmental modifier (absent = clear, no wind)
   regions: [{ id, name, x, y, w, h, color?, gmOnly?: bool }],   // labelled rooms/zones
   notes: [{ id, x, y, text, gmOnly: true }],                    // GM pins
   tokens: [Token],

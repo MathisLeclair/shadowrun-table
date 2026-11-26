@@ -15,6 +15,7 @@
 // Everything else (limits, skill / category / group / linked-attribute dice, condition monitor boxes, armor of implants and
 // qualities, soak, composure, memory…) is not stored anywhere and is applied here.
 import { derive, attr, armorTotal, armorValue, SKILL_BY_ID, SKILLS } from './sr5.js';
+import { AFFLICTIONS } from './combat.js';
 
 /** Marker for the i18n checker: French labels, rendered by the client with t(label). */
 const tk = (s) => s;
@@ -375,6 +376,16 @@ export function collectModifiers(actor, lookup, opts = {}) {
       if (Number(e.dicePool)) out.push({ ...base, id: `weapons:${w.id}:${acc.id}:pool`, type: 'weaponPool', target: w.id, value: Number(e.dicePool) });
     }
   }
+  // Afflictions (toxins of gas grenades…, shared/combat.js AFFLICTIONS): −2 dice on every test, wound modifiers doubled. Those of
+  // a fight are removed by the combat module; the out-of-combat ones (until.ts) end with their time.
+  const now = Date.now();
+  for (const a of actor.afflictions || []) {
+    const def = a && AFFLICTIONS[a.kind];
+    if (!def || (a.until?.ts !== undefined && now > a.until.ts)) continue;
+    const source = { list: 'afflictions', itemId: a.id, name: a.sourceEn ? `${def.en} (${a.sourceEn})` : def.en, nameFr: a.source ? `${def.name} (${a.source})` : def.name };
+    if (def.dice) out.push({ id: `afflictions:${a.id}:dice`, source, type: 'allTests', target: null, value: def.dice, condition: null });
+    if (def.woundFactor) out.push({ id: `afflictions:${a.id}:wounds`, source, type: 'woundFactor', target: null, value: def.woundFactor, condition: null });
+  }
   settleBaked(actor, stored);
   return out;
 }
@@ -565,6 +576,8 @@ export function concernsPool(m, ctx) {
       return !!ctx.test && m.target === ctx.test;
     case 'weaponPool':
       return !!ctx.weaponId && m.target === ctx.weaponId;
+    case 'allTests': // every skill / attribute test but resistance tests (afflictions)
+      return !!(ctx.skillId || ctx.knowledgeType || ctx.attrs?.length || ctx.test) && !RESIST_TESTS.includes(ctx.test);
     case 'matrixAction': {
       if (!ctx.actionId || !m.target) return false;
       const t = norm(m.target).replace(/[^a-z0-9]/g, '');
@@ -754,6 +767,12 @@ export function derivedWithModifiers(actor, mods = []) {
     const fromS = Math.min(shared - fromP, s);
     out.woundModifier = -(Math.floor((p - fromP) / per) + Math.floor((s - fromS) / per)) || 0;
     out.sources.woundModifier = [...thr, ...off, ...shr];
+  }
+  // Nausea (toxins): wound modifiers doubled.
+  const wf = byType('woundFactor');
+  if (wf.length) {
+    if (out.woundModifier) out.woundModifier *= Math.max(...wf.map((m) => Number(m.value) || 1));
+    out.sources.woundModifier = [...(out.sources.woundModifier || []), ...wf.map((m) => ({ mod: m, value: m.value, applied: true }))];
   }
 
   // Armor (implants, qualities, powers: <armor>) and the values that depend on it

@@ -1698,7 +1698,9 @@ export class MapRenderer {
     for (const b of cm.blasts || []) {
       const c = C(b.x, b.y);
       const reach = (Number(b.reach) || 0) / mpc;
-      const col = b.dv ? (b.type === 'S' ? '#3fa9e0' : '#e0663f') : '#b8c2cc';
+      // Colour: explosion (orange, stun blue), smoke grey, thermal smoke purple-grey, gas green, flash-pak white.
+      const col = b.effect === 'gas' ? '#7fd36b' : b.effect === 'flashpak' ? '#fff3b0' : b.effect === 'thermalSmoke' ? '#a59bb8'
+        : b.effect === 'smoke' ? '#b8c2cc' : b.dv ? (b.type === 'S' ? '#3fa9e0' : '#e0663f') : '#b8c2cc';
       if (reach > 0) {
         const g = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, (reach + 0.5) * scale);
         g.addColorStop(0, rgba(col, b.radius ? 0.28 : 0.42));

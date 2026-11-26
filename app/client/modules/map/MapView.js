@@ -13,7 +13,7 @@ import { t, tk, compare } from '../../lib/i18n.js';
 import { tRich } from '../sheet/common.js';
 import { RollDialog } from '../sheet/RollDialog.js';
 import { setTarget, setAimPoint, PENDING } from '../combat/attack-common.js';
-import { cellDistance, rangeFor, rangeClass, isAreaWeapon, blastOf, blastReach } from '/shared/combat.js';
+import { cellDistance, rangeFor, rangeClass, isAreaWeapon, blastOf, blastReach, activeBlasts, TOXIN_BY_ID } from '/shared/combat.js';
 import { isUnarmed, isLauncherProfile, launcherRounds } from '../sheet/inventory.js';
 
 loadCss('/modules/map/map.css');
@@ -82,6 +82,14 @@ function defaultWeapon(actor, meters, grenade) {
   const ranged = ready.filter((w) => w.kind !== 'melee' && !isAreaWeapon(w));
   if (meters !== null && meters <= 2 && melee.length) return melee.find((w) => !isUnarmed(w)) || melee[0];
   return ranged[0] || melee[0] || null;
+}
+
+/** Label under a blast marker: the cloud kind (smoke, gas + toxin, flash-pak) and the scatter. */
+function blastLabel(b) {
+  const kind = b.effect === 'smoke' ? t('fumée') : b.effect === 'thermalSmoke' ? t('fumée thermique') : b.effect === 'flashpak' ? t('flash-pak')
+    : b.effect === 'gas' ? t('gaz : {toxin}', { toxin: t(TOXIN_BY_ID[b.toxinId]?.name || 'Gaz lacrymogène (CS)') }) : null;
+  const drift = b.scattered ? t('dévie de {m} m', { m: b.meters }) : null;
+  return [kind, drift].filter(Boolean).join(' · ') || null;
 }
 
 /** Blast reach (meters) of the grenade the banner would throw — preview ring around the aimed point. */
@@ -203,11 +211,18 @@ function LiveMap({ game, map, ui, isGM }) {
   const targetMeters = targetTok && attackerTok ? cellDistance(attackerTok, targetTok, mpc) : null;
   const aimHere = ui.aimPoint && ui.aimPoint.mapId === map.id ? ui.aimPoint : null;
   const attacksSlice = game.attacks;
+  // Explosion markers fade at the end of their Combat Turn (1 min outside combat); clouds stay until the end of the fight.
+  const [clock, setClock] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setClock(Date.now()), 10000);
+    return () => clearInterval(id);
+  }, []);
+  const mapBlasts = useMemo(() => activeBlasts((attacksSlice?.blasts || []).filter((b) => b.mapId === map.id), combat, clock), [attacksSlice, map.id, combat, clock]);
   const combatMarks = useMemo(() => {
-    const blasts = (attacksSlice?.blasts || []).filter((b) => b.mapId === map.id).slice(0, 4);
+    const blasts = mapBlasts.slice(0, 8);
     const lines = [];
     for (const a of attacksSlice?.list || []) {
-      if (a.mapId !== map.id || !PENDING.has(a.status) || a.kind === 'blast') continue;
+      if (a.mapId !== map.id || !PENDING.has(a.status) || a.kind === 'blast' || a.kind === 'toxin') continue;
       const from = (map.tokens || []).find((tt) => tt.actorId && tt.actorId === a.attackerId);
       if (!from || !a.targetTokenId) continue;
       lines.push({ from: from.id, to: a.targetTokenId, color: a.status === 'soak' ? '#e0663f' : '#e05c5c', dashed: a.status === 'defense', label: a.status === 'soak' ? `${a.modifiedDv}${a.type}` : null });
@@ -219,10 +234,10 @@ function LiveMap({ game, map, ui, isGM }) {
       aim: aimHere ? { x: aimHere.x, y: aimHere.y } : null,
       aimLabel: aimHere && attackerTok ? `${cellDistance(attackerTok, aimHere, mpc)} m` : null,
       aimReach: aimHere && attackerTok ? grenadeReach(actors[attackerTok.actorId]) : 0,
-      blasts: blasts.map((b) => ({ ...b, label: b.scattered ? t('dévie de {m} m', { m: b.meters }) : null })),
+      blasts: blasts.map((b) => ({ ...b, label: blastLabel(b) })),
       lines,
     };
-  }, [attacksSlice, map.id, map.tokens, targetTok, aimHere, attackerTok, targetMeters, actors]);
+  }, [attacksSlice, mapBlasts, map.id, map.tokens, targetTok, aimHere, attackerTok, targetMeters, actors]);
 
   const scene = useMemo(
     () => ({
@@ -579,6 +594,8 @@ function LiveMap({ game, map, ui, isGM }) {
       <${Toggle} label=${t('Verrou')} title=${t('Bloquer les déplacements des joueurs')} value=${map.movementLocked} onChange=${(v) => send('maps/update', { mapId, patch: { movementLocked: v } }).catch(quiet)} />
       <${Toggle} label=${t('Brouillard')} title=${t('Brouillard de guerre pour les joueurs')} value=${map.fog !== false} onChange=${(v) => send('maps/update', { mapId, patch: { fog: v } }).catch(quiet)} />
       <${Select} class="map-tb-select small" value=${map.lighting || 'bright'} options=${lightingOptions()} onChange=${(v) => send('maps/update', { mapId, patch: { lighting: v } }).catch(quiet)} title=${t('Éclairage ambiant')} />
+      <${Select} class="map-tb-select small" value=${String(map.weather?.visibility || 0)} options=${[t('Temps clair'), t('Pluie / brouillard légers'), t('Pluie / brouillard modérés'), t('Pluie / brouillard denses')].map((label, i) => ({ value: String(i), label }))} onChange=${(v) => send('maps/update', { mapId, patch: { weather: { visibility: Number(v) } } }).catch(quiet)} title=${t('Visibilité (modificateur d’environnement des attaques à distance)')} />
+      <${Select} class="map-tb-select small" value=${String(map.weather?.wind || 0)} options=${[t('Pas de vent'), t('Vent léger'), t('Vent modéré'), t('Vent fort')].map((label, i) => ({ value: String(i), label }))} onChange=${(v) => send('maps/update', { mapId, patch: { weather: { wind: Number(v) } } }).catch(quiet)} title=${t('Vent (modificateur d’environnement des attaques à distance)')} />
       ${(map.walls || []).length > 0 && html`<${Toggle} label=${t('Afficher les murs')} title=${t('Tracer les murs (segments) par-dessus la carte — visible par toi seul')} value=${showWalls} onChange=${setShowWalls} />`}
       ${isImageMap(map) && html`<${Toggle} label=${t('Grille')} title=${t("Quadrillage discret par-dessus l'image")} value=${showGrid} onChange=${setShowGrid} />`}
       <span class="map-tb-sep"></span>
@@ -681,8 +698,11 @@ function LiveMap({ game, map, ui, isGM }) {
     }
     // empty cell
     const inside = x >= 0 && y >= 0 && x < map.width && y < map.height;
+    // Blast markers covering this cell (GM: remove one — a cloud blown away, a marker no longer needed).
+    const blastsHere = isGM ? mapBlasts.filter((b) => Math.hypot(b.x - x, b.y - y) <= Math.max(1, (Number(b.radius ?? b.reach) || 0) / (Number(map.metersPerCell) || 1) + 0.5)) : [];
     const aimItems = inside && html`<button class="map-menu-item" onClick=${act(() => setAimPoint(mapId, x, y))}>💣 ${t('Viser ce point (grenade)')}</button>
-      ${aimHere && html`<button class="map-menu-item" onClick=${act(() => setAimPoint(null))}>${t('Effacer le point visé')}</button>`}`;
+      ${aimHere && html`<button class="map-menu-item" onClick=${act(() => setAimPoint(null))}>${t('Effacer le point visé')}</button>`}
+      ${blastsHere.map((b) => html`<button class="map-menu-item" key=${b.id} onClick=${act(() => send('attack/removeBlast', { blastId: b.id }).catch(quiet))}>✕ ${t('Retirer : {what}', { what: blastLabel({ ...b, scattered: false }) || (typeof b.weaponName === 'string' ? b.weaponName : b.weaponName?.fr) || t('souffle') })}</button>`)}`;
     if (!isGM || view.preview) {
       return html`<button class="map-menu-item" onClick=${act(() => ping({ fx: menu.fx, fy: menu.fy }))}>${t('Pinger ici')}</button>${aimItems}`;
     }

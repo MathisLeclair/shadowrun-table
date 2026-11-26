@@ -22,7 +22,8 @@ import { itemLabel } from './common.js';
 import { usesAmmo, isGrenade, fireOptions, isUnarmed } from './inventory.js';
 import { ReloadDialog, fireSelectOptions, ammoKindLabel, actionLabel } from './weapon-ui.js';
 import { useUI, setUI } from '../../lib/ui-store.js';
-import { actionsForWeapon, ACTION_BY_ID, isAreaWeapon, rangeFor, rangeClass, blastOf, blastReach, cellDistance, isUnlocked } from '/shared/combat.js';
+import { actionsForWeapon, ACTION_BY_ID, isAreaWeapon, rangeFor, rangeClass, blastOf, blastReach, cellDistance, isUnlocked, RANGE_BANDS, environmentFor, attackSenses, activeBlasts, areaEffectOf, TOXINS, toxinFromText } from '/shared/combat.js';
+import { createVisionContext, tokenVision } from '/shared/vision.js';
 import { targetCandidates, attackMap, tokenOfActor, turnInfo } from '../combat/attack-common.js';
 import { isLauncherProfile, launcherRounds } from './inventory.js';
 
@@ -166,6 +167,19 @@ export function RollDialog({ game, actor, preset: initialPreset = {}, onClose })
   const blast = area ? blastOf(profile || weapon, sheet) : null;
   const aimAt = point || (target ? { x: target.token.x, y: target.token.y } : null);
   const range = weapon && weapon.kind !== 'melee' && myToken && aimAt ? rangeFor(weapon, sheet, cellDistance(myToken, aimAt, Number(amap.metersPerCell) || 1)) : null;
+  // Environmental modifier (SR5 p. 175, same computation as the server): range + light at the target + weather + smoke / flash-pak.
+  const litRatio = useMemo(() => (amap && (amap.lighting || 'bright') !== 'bright' ? createVisionContext(amap).litRatio : null), [amap]);
+  const env = weapon && weapon.kind !== 'melee' && myToken && aimAt
+    ? environmentFor({
+      map: amap, from: myToken, to: aimAt, meters: range?.meters ?? cellDistance(myToken, aimAt, Number(amap.metersPerCell) || 1),
+      rangeIndex: range ? RANGE_BANDS.findIndex((b) => b.id === range.id) : null, litRatio,
+      blasts: activeBlasts((game.attacks?.blasts || []).filter((b) => b.mapId === amap.id), game.combat, Date.now()),
+      senses: attackSenses(sheet, tokenVision(myToken, sheet), weapon),
+    })
+    : null;
+  // Gas grenade: the toxin it holds (named in the grenade, else chosen here; CS by default).
+  const gas = area && areaEffectOf(profile || weapon) === 'gas';
+  const [toxinId, setToxinId] = useState(() => toxinFromText(profile || weapon) || 'cs');
   const weaponActions = sheet && weapon ? actionsForWeapon(sheet, weapon, { allowLocked: gm, fireIds: usesAmmo(weapon) ? fireOptions(weapon).map((o) => o.id) : [] }) : [];
   const turn = sheet ? turnInfo(game, sheet.id) : null;
   const usedOnce = !!(action?.once && turn?.once?.includes(action.id));
@@ -230,7 +244,9 @@ export function RollDialog({ game, actor, preset: initialPreset = {}, onClose })
   const woundMod = wounds && dm ? dm.woundModifier : 0;
   const soakArmor = test === 'soak' && dm ? dm.armor : 0;
   const extraParts = [];
-  if (range?.mod) extraParts.push([`${t(range.label)} (${range.meters} m)`, range.mod]);
+  if (env && !env.rangeOnly) {
+    if (env.value) extraParts.push([t('environnement'), env.value]);
+  } else if (range?.mod) extraParts.push([`${t(range.label)} (${range.meters} m)`, range.mod]);
   if (action?.dice) extraParts.push([t(action.name), action.dice]);
   const extra = extraParts.reduce((n, [, v]) => n + v, 0);
   const total = Math.max(0, prev.pool + pm.total + soakArmor + modifier + woundMod + extra + (explode ? edgeMax : 0));
@@ -280,6 +296,7 @@ export function RollDialog({ game, actor, preset: initialPreset = {}, onClose })
         else if (targetId) payload.targetTokenId = targetId;
         if (actionId) payload.actionId = actionId;
         if (round) payload.profileId = round.id;
+        if (gas) payload.toxinId = toxinId;
         if (gm && amap) payload.mapId = amap.id;
       }
       const r = await send(attackRoll ? 'attack/roll' : 'dice/roll', payload);
@@ -354,10 +371,15 @@ export function RollDialog({ game, actor, preset: initialPreset = {}, onClose })
         </div>
         ${area && aim && html`<${Toggle} value=${useAim} onChange=${setUseAim} label=${t('Viser le point marqué sur la carte ({x}, {y})', { x: aim.x, y: aim.y })} />`}
         ${area && !aim && html`<div class="faint small">${t('Astuce : clic droit sur la carte → « Viser ce point » pour lancer sur une case.')}</div>`}
-        ${area && blast && html`<div class="faint small">${blast.damaging
+        ${area && blast && html`<div class="faint small">${gas
+          ? t('Nuage de gaz de {r} m : un test de Résistance aux toxines (CON + VOL) pour chaque pion dedans.', { r: blast.radius || 10 })
+          : blast.damaging
           ? (blast.radius ? t('Souffle : {dv}{type} dans un rayon de {r} m.', { dv: blast.dv, type: blast.type, r: blast.radius }) : t('Souffle : {dv}{type}, −{f} par mètre (jusqu’à {r} m).', { dv: blast.dv, type: blast.type, f: blast.falloff, r: blastReach(blast) }))
           : t('Pas de dommages de souffle (fumée, gaz…).')} ${t('3 succès : pas de dispersion.')}</div>`}
         ${range && html`<div class=${'small ' + (range.beyond || range.tooClose ? 'error' : 'muted')}>${range.beyond ? t('Hors de portée ({m} m, max {max} m)', { m: range.meters, max: range.max }) : range.tooClose ? t('Trop près : portée minimale {min} m', { min: range.min }) : t('{band} ({m} m) : {mod} dés', { band: t(range.label), m: range.meters, mod: range.mod })}</div>`}
+        ${env && !env.rangeOnly && html`<div class=${'small ' + (env.value ? 'amber' : 'muted')}>${t('Environnement : {parts} → {mod} dés', { parts: [...(range?.mod ? [t(range.label)] : []), ...env.parts.map((p) => t(p))].join(', '), mod: env.value })}${env.notes.length ? ` (${t('compensé : {what}', { what: env.notes.map((n) => t(n)).join(', ') })})` : ''} <${BookRef} source="SR5" page=${175} /></div>`}
+        ${gas && html`<div class="row wrap gap-s"><span class="field-label">${t('Gaz')}</span>
+          <${Select} value=${toxinId} onChange=${setToxinId} options=${TOXINS.map((x) => ({ value: x.id, label: `${t(x.name)} · ${t('puissance {n}', { n: x.power })}` }))} /></div>`}
         ${!myToken && (targetId || point) && weapon?.kind !== 'melee' && html`<div class="faint small">${t('Pas de pion de ce personnage sur la carte : portée non calculée.')}</div>`}
       </div>`}
       ${lines.length > 0 && html`<div class="sh-rd-mods">

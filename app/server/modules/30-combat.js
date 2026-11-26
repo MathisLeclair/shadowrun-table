@@ -7,6 +7,7 @@ import { rollInitiative, attr, ATTRS } from '../../shared/sr5.js';
 import { deriveFull as derive } from '../lib/modifiers.js';
 import { fillActorRefs } from '../lib/bookrefs.js';
 import { uid, clamp, deepClone } from '../../shared/util.js';
+import { pruneExpired } from '../../shared/combat.js';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -548,6 +549,7 @@ function newCombatTurn(ctx, c) {
     }
   }
   logCombat(ctx, tk('— Tour de combat {round} — lancez l’initiative !'), { round: c.round });
+  pruneExpired(ctx.state, ctx.now); // explosion markers of the last turn, afflictions that ran out (shared/combat.js)
   if (npcRolls.length) logCombat(ctx, tk('Initiative PNJ : {list}'), { list: scoreList(npcRolls) }, { gmOnly: true });
   sortEntries(ctx.state, c);
   const waiting = c.entries.filter((e) => e.toRoll && !e.out && !e.down);
@@ -1083,6 +1085,7 @@ export default {
         const rounds = c?.round || 1;
         ctx.state.combat = emptyCombat();
         undoStacks.delete(ctx.state);
+        pruneExpired(ctx.state, ctx.now); // the fight's clouds and afflictions end with it
         if (c?.active) {
           if (rounds > 1) logCombat(ctx, tk('Fin du combat ({n} tours).'), { n: rounds });
           else logCombat(ctx, tk('Fin du combat ({n} tour).'), { n: rounds });

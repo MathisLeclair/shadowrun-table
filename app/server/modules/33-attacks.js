@@ -4,10 +4,12 @@
 // State: attacks: { list: [Attack] (newest first, max 60), blasts: [Blast] (max 12), turn: { [actorId]: { key, defended, boosts, once } } }.
 import { parseDamage } from '../../shared/sr5.js';
 import {
-  ACTION_BY_ID, isUnlocked, rangeFor, rangeClass, cellDistance, isAreaWeapon, scatterDice, rollScatter, blastOf, blastDvAt, blastReach, defenseLines, finalDamageType,
+  ACTION_BY_ID, isUnlocked, rangeFor, rangeClass, RANGE_BANDS, environmentFor, attackSenses, activeBlasts, pruneExpired, areaEffectOf,
+  LASTING_EFFECTS, TOXIN_BY_ID, toxinFromText, toxinOutcome, toxinProtection, untilFor, AFFLICTIONS, cellDistance, isAreaWeapon, scatterDice, rollScatter, blastOf, blastDvAt, blastReach, defenseLines, finalDamageType,
   DEFENSE_BY_ID, SITUATION_BY_ID,
 } from '../../shared/combat.js';
 import { FIRE_BY_ID, isLauncherProfile, launcherRounds, fireOptions, usesAmmo } from '../../client/modules/sheet/inventory.js';
+import { createVisionContext, tokenVision } from '../../shared/vision.js';
 import { performRoll, applyDamage } from './10-characters.js';
 import { spendInitiative, combatTurnKey } from './30-combat.js';
 
@@ -121,11 +123,50 @@ function doDefend(ctx, atk, { options = [], situations = [], modifier = 0, explo
   return roll;
 }
 
+/**
+ * Toxin Resistance Test (BOD + WIL, SR5 p. 408): Power − hits = what is left; damage (no armor) and the toxin's effects
+ * (afflictions: Disoriented / Nauseous for the rest of the fight, 10 min outside; Incapacitated 3 Combat Turns if left > WIL).
+ */
+function doToxin(ctx, atk, target, { modifier = 0, explode = false } = {}) {
+  const toxin = TOXIN_BY_ID[atk.toxinId];
+  if (!toxin) ctx.fail('Toxine inconnue');
+  const roll = performRoll(ctx, {
+    actorId: target.id, attr: 'BOD', attr2: 'WIL', test: 'toxinResist', label: tk('Résister aux toxines'), applyWounds: false, limit: null,
+    modifier: int(modifier, -30, 30), explode: !!explode,
+  }, { logExtra: { attackId: atk.id, soak: true } });
+  const left = Math.max(0, toxin.power - roll.hits);
+  const out = toxinOutcome(toxin, left, target.attributes?.WIL);
+  atk.soakHits = roll.hits;
+  atk.soakLogId = roll.logId;
+  atk.damage = out.damage;
+  atk.damageType = out.damageType;
+  atk.left = left;
+  atk.effects = out.afflictions;
+  atk.status = 'done';
+  atk.resolvedTs = ctx.now;
+  if (out.afflictions.length) {
+    const list = (target.afflictions = (Array.isArray(target.afflictions) ? target.afflictions : []).filter((a) => !out.afflictions.includes(a.kind)));
+    for (const kind of out.afflictions) {
+      const def = AFFLICTIONS[kind];
+      list.push({ id: ctx.uid('aff'), kind, source: toxin.name, sourceEn: toxin.en, ts: ctx.now, until: untilFor(ctx.state.combat, ctx.now, def.turns ? { turns: def.turns } : { long: true }) });
+    }
+  }
+  if (out.damage > 0) applyDamage(ctx, target, out.damage, out.damageType);
+  if (!left) logAttack(ctx, tk('{target} résiste au gaz ({toxin}).'), { target: atk.targetName, toxin: { t: toxin.name } }, atk.gmOnly);
+  else if (out.afflictions.length) {
+    logAttack(ctx, tk('{target} subit le gaz ({toxin}) : {effects}.'), {
+      target: atk.targetName, toxin: { t: toxin.name }, effects: { fr: out.afflictions.map((k) => AFFLICTIONS[k].name).join(', '), en: out.afflictions.map((k) => AFFLICTIONS[k].en).join(', ') },
+    }, atk.gmOnly);
+  }
+  return roll;
+}
+
 /** Damage resistance (BOD + armor modified by AP), damage applied. Returns the roll. */
 function doSoak(ctx, atk, { modifier = 0, explode = false } = {}) {
   if (atk.status !== 'soak') ctx.fail('Cette attaque n’attend pas d’encaissement');
   const target = actorOf(ctx, atk.targetId);
   if (!ctx.owns(target.id)) ctx.fail('Seul le joueur de la cible (ou le MJ) peut encaisser');
+  if (atk.kind === 'toxin') return doToxin(ctx, atk, target, { modifier, explode });
   const internal = { ap: atk.ap, logExtra: { attackId: atk.id, soak: true } };
   const roll = performRoll(ctx, {
     actorId: target.id, attr: 'BOD', test: 'soak', label: tk('Encaissement'), applyWounds: false, limit: null, modifier: int(modifier, -30, 30), explode: !!explode,
@@ -152,7 +193,7 @@ function filterView(view, user, state) {
   const visible = (id) => !!view.actors?.[id];
   s.list = (s.list || []).filter((a) => !a.gmOnly && visible(a.targetId)).map((a) => (visible(a.attackerId) ? a : { ...a, attackerName: '?', attackerId: null }));
   const amid = state?.scene?.activeMapId;
-  s.blasts = (s.blasts || []).filter((b) => b.mapId === amid && !b.gmOnly).map((b) => ({ ...b, hits: (b.hits || []).filter((h) => visible(h.actorId)) }));
+  s.blasts = activeBlasts(s.blasts, state?.combat, Date.now()).filter((b) => b.mapId === amid && !b.gmOnly).map((b) => ({ ...b, hits: (b.hits || []).filter((h) => visible(h.actorId)) }));
   // Turn info of the player's own characters (defenses already made, boosts paid) for the defense dialog preview.
   const own = new Set(user.characterIds || []);
   s.myTurn = {};
@@ -185,6 +226,8 @@ export default {
         delete payload.point;
         delete payload.actionId;
         delete payload.profileId;
+        delete payload.toxinId;
+        pruneExpired(ctx.state, ctx.now);
         delete payload.mapId;
         // Special action: unlocked (technique / quality), fits the weapon, once per turn, Edge.
         if (action) {
@@ -227,13 +270,29 @@ export default {
           if (isObj(p.point) && map) point = { x: int(p.point.x, 0, map.width - 1), y: int(p.point.y, 0, map.height - 1) };
           else if (targetToken) point = { x: targetToken.x, y: targetToken.y };
         }
-        // Range modifier from the token distance (ranged weapons): « portée longue (34 m) −3 ».
+        // Environmental modifier (SR5 p. 175) from the token distance (range column), the target cell's light, the map weather,
+        // smoke clouds on the line of fire and flash-paks, after the attacker's vision: « portée longue (34 m) −3 » when the range
+        // is the only condition, else « environnement (portée longue 34 m, obscurité totale) −10 ».
         const bonus = [];
         let range = null;
+        let env = null;
         const aimAt = point || (targetToken ? { x: targetToken.x, y: targetToken.y } : null);
         if (weapon && weapon.kind !== 'melee' && attackerToken && aimAt) {
           range = rangeFor(weapon, actor, cellDistance(attackerToken, aimAt, mpc));
-          if (range?.mod) bonus.push({ label: `${range.label} (${range.meters} m)`, value: range.mod });
+          env = environmentFor({
+            map, from: attackerToken, to: aimAt, meters: range?.meters ?? cellDistance(attackerToken, aimAt, mpc),
+            rangeIndex: range ? RANGE_BANDS.findIndex((b) => b.id === range.id) : null,
+            litRatio: (map.lighting || 'bright') !== 'bright' ? createVisionContext(map).litRatio : null,
+            blasts: activeBlasts(slice(ctx.state).blasts.filter((b) => b.mapId === map.id), ctx.state.combat, ctx.now),
+            senses: attackSenses(actor, tokenVision(attackerToken, actor), weapon),
+          });
+          if (env.rangeOnly) {
+            if (range?.mod) bonus.push({ label: `${range.label} (${range.meters} m)`, value: range.mod });
+          } else if (env.value) {
+            // Short label (roll lines are cut at 40 characters): the columns that count, « env. (portée, lumière) −6 ».
+            const cols = [['range', 'portée'], ['visibility', 'visibilité'], ['light', 'lumière'], ['wind', 'vent']].filter(([k]) => env.levels[k] > 0).map(([, l]) => l);
+            bonus.push({ label: `env. (${cols.join(', ')})`, value: env.value });
+          }
         }
         if (action?.dice) bonus.push({ label: action.name, value: action.dice });
         // Launcher ammunition: the minigrenade profile listed on the sheet gives DV / AP / blast.
@@ -289,9 +348,35 @@ export default {
             }
           }
           const blast = blastOf(source, actor) || { dv: null, type: 'P', ap: 0, falloff: null, radius: null, damaging: false };
+          // What the blast leaves: an explosion (until the end of the Combat Turn) or a cloud / flash-pak (until the end of the fight).
+          const effect = areaEffectOf(source);
+          const lasting = LASTING_EFFECTS.includes(effect);
+          if (lasting && !blast.radius && !blastReach(blast)) blast.radius = 10;
+          const toxin = effect === 'gas' ? TOXIN_BY_ID[str(p.toxinId, 20)] || TOXIN_BY_ID[toxinFromText(source)] || TOXIN_BY_ID.cs : null;
+          if (toxin) blast.damaging = false; // the toxin replaces the grenade's damage
           if (action?.dv && blast.damaging) blast.dv += action.dv;
           const hits = [];
-          if (blast.damaging) {
+          if (toxin) {
+            // Gas: a Toxin Resistance Test (BOD + WIL) for every token caught (a chemical seal, or a gas mask against an
+            // inhalation-only toxin, protects).
+            for (const tok of map.tokens || []) {
+              if (!tok.actorId || !ctx.state.actors[tok.actorId]) continue;
+              const m = cellDistance(tok, land, mpc);
+              if (m > blast.radius) continue;
+              const victim = ctx.state.actors[tok.actorId];
+              const hidden = gmOnly || (victim.type === 'npc' && victim.hidden);
+              if (toxinProtection(victim, toxin) === 'immune') {
+                logAttack(ctx, tk('{target} est protégé du gaz ({toxin}).'), { target: victim.name, toxin: { t: toxin.name } }, hidden);
+                continue;
+              }
+              const atk = push(ctx.state, s.list, {
+                ...base, id: ctx.uid('atk'), kind: 'toxin', targetId: victim.id, targetTokenId: tok.id, targetName: victim.name,
+                toxinId: toxin.id, toxinName: { fr: toxin.name, en: toxin.en }, dv: toxin.power, modifiedDv: toxin.power, type: toxin.effects.includes('physical') ? 'P' : 'S',
+                ap: toxin.penetration, meters: m, status: 'soak', ...(hidden ? { gmOnly: true } : {}),
+              }, MAX_ATTACKS);
+              hits.push({ actorId: victim.id, tokenId: tok.id, name: victim.name, dv: toxin.power, meters: m, attackId: atk.id });
+            }
+          } else if (blast.damaging) {
             for (const tok of map.tokens || []) {
               if (!tok.actorId || !ctx.state.actors[tok.actorId]) continue;
               const m = cellDistance(tok, land, mpc);
@@ -310,7 +395,8 @@ export default {
             id: atkId, ts: ctx.now, mapId: map.id, attackerId: actor.id, attackerName: actor.name, weaponName: biName(source), from, aim: point,
             x: land.x, y: land.y, meters: land.meters, scattered: !!land.scattered, dir: land.dir || null, dist: land.dist || null,
             ...(land.fumble ? { fumble: true } : {}), ...(land.glitch ? { glitch: true } : {}), hitsRolled: roll.hits,
-            dv: blast.dv, type: blast.type, ap: blast.ap, falloff: blast.falloff, radius: blast.radius, reach: blastReach(blast), hits, ...(gmOnly ? { gmOnly: true } : {}),
+            dv: blast.damaging ? blast.dv : null, type: blast.type, ap: blast.ap, falloff: blast.falloff, radius: blast.radius, reach: blastReach(blast), hits, ...(gmOnly ? { gmOnly: true } : {}),
+            effect, until: untilFor(ctx.state.combat, ctx.now, lasting ? { long: true } : { turns: 1 }), ...(toxin ? { toxinId: toxin.id, toxinName: { fr: toxin.name, en: toxin.en } } : {}),
           }, MAX_BLASTS);
           if (land.scattered) logAttack(ctx, tk('{weapon} dévie de {m} m ({dir} au diagramme).'), { weapon: biName(source), m: land.meters, dir: land.dir ? land.dir[0] + land.dir[1] : '—' }, gmOnly);
           else logAttack(ctx, tk('{weapon} tombe exactement au point visé.'), { weapon: biName(source) }, gmOnly);
@@ -409,6 +495,17 @@ export default {
         s.list = p.all ? [] : s.list.filter((a) => a.status === 'defense' || a.status === 'soak');
         if (p.blasts !== false) s.blasts = [];
         return { left: s.list.length };
+      },
+    },
+
+    // GM (or the character's player): end an affliction (toxin effect) early. { actorId, afflictionId }
+    'attack/removeAffliction': {
+      role: 'any',
+      handler(ctx, p = {}) {
+        const actor = actorOf(ctx, str(p.actorId, 60));
+        if (!ctx.isGM) ctx.fail('Réservé au MJ');
+        actor.afflictions = (actor.afflictions || []).filter((a) => a.id !== str(p.afflictionId, 60));
+        return {};
       },
     },
 
