@@ -55,6 +55,11 @@ export const SCENE_TO_APP_MAP = {
   'construction site': 'map_construction_site',
 };
 
+// Foundry scenes that ARE a campaign location: app name + a GM line put before the import description.
+export const SCENE_LABEL = {
+  bar: { name: 'Bar de Porfla (Renton)', intro: '**Le bar de Joseph Porfla, à Renton** : la carte jouée en séance 1 (*Cleanup Crew*), puis cible de Reyes dans *Burn Notice*. Plan maison du même lieu : « Bar de Porfla (plan maison) » (`map_bar_porfla`).' },
+};
+
 const PC_COLORS = ['#7a8cff', '#4fc38a', '#d9a441', '#b469d6', '#3fa7d6'];
 const SHEET_FIELDS = ['metatype', 'attributes', 'augmented', 'initiative', 'condition', 'edge', 'skills', 'knowledge', 'qualities', 'powers', 'spells', 'weapons', 'armor', 'augmentations', 'gear', 'vehicles', 'matrix', 'contacts', 'sins', 'lifestyles', 'karma', 'karmaTotal', 'nuyen', 'streetCred', 'notoriety', 'publicAwareness', 'vision', 'containers'];
 const ITEM_LISTS = ['weapons', 'armor', 'augmentations', 'gear', 'vehicles', 'contacts', 'sins', 'qualities', 'powers', 'spells', 'knowledge', 'lifestyles'];
@@ -158,6 +163,10 @@ export function buildBundle(world, { now = Date.now(), assets } = {}) {
       skippedScenes.push({ fid: s._id, name: s.name, reason: tk('pas d’image de fond') }); // shown translated by the panel
       continue;
     }
+    const label = SCENE_LABEL[norm(s.name)];
+    if (label) Object.assign(map, { name: label.name, description: `${label.intro}
+
+${map.description}` });
     scenes.push({ fid: s._id, name: s.name, folder: folderPath(s.folder), map, hash: stableHash({ ...map, foundry: undefined, explored: undefined }), appMapId: SCENE_TO_APP_MAP[norm(s.name)] || null });
   }
   const journals = convertJournals(world.journal || [], { folderPath, asset: A.asset, links, worldTitle: world.meta?.title });

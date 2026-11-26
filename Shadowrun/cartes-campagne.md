@@ -10,7 +10,7 @@ Les cartes Foundry déjà vues par les joueurs (Bar, Back Alley, Trauma Ward, Ap
 
 | Lieu | Carte | Pourquoi | À adapter |
 |---|---|---|---|
-| Bar de Porfla (Renton) — Cleanup Crew, puis cible de Reyes dans Burn Notice | **Bar** (Foundry, `map_fvtt_bar`) + plan maison `map_bar_porfla` | Déjà joué en séance 1 sur la carte Foundry ; pas une carte Fragmaps de la bibliothèque. | Rien. |
+| Bar de Porfla (Renton) — Cleanup Crew, puis cible de Reyes dans Burn Notice | **Bar de Porfla (Renton)** (scène Foundry « Bar », `map_fvtt_bar`) + « Bar de Porfla (plan maison) » `map_bar_porfla` | Déjà joué en séance 1 sur la carte Foundry, qui est le bar de Porfla ; pas une carte Fragmaps de la bibliothèque. | Rien. |
 | Ruelle derrière le bar | **Ruelle** (Fragmaps free, `map_fvtt_back-alley`) | Déjà jouée. | Rien. |
 | Trauma Ward (hôpital Monobe) | **Service des urgences** (Fragmaps free, `map_fvtt_trauma-ward`) | Déjà jouée, c'est le lieu exact. | Rien. |
 | Appartement de Jane | **Apartement** (Foundry, `map_fvtt_apartement`) + plan maison `map_jane_apartment` | Jouée en séance 3. Le plan maison garde l'étage (voisins, escalier de secours) utile pour l'attaque de Burn Notice. | Rien. (Option non retenue : « Studio » Fragmaps, trop petit pour l'assaut.) |

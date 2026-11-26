@@ -1,6 +1,6 @@
 {
   "id": "map_bar_porfla",
-  "name": "Bar de Porfla (Renton)",
+  "name": "Bar de Porfla (plan maison)",
   "folder": "Acte 1",
   "description": "**Le bar de Joseph Porfla — Renton.** Bistrot de quartier fatigué : comptoir zinc, box en skaï, billard, petite scène pour les soirs de concert, enseigne néon magenta sur la rue. Porfla vit pour ce bar ; son bureau et la cave sont à l'arrière.\n\n**Utilisation**\n- Quête 1.1 *Cleanup Crew*, Phase 2 (session 1) : trois Nettoyeurs d'AG Chemie emmènent Porfla, inconscient, par la porte de service vers leur van dans la ruelle. Combat immédiat ; poursuite possible dans la **Back Alley** (carte suivante).\n- Session 2, scènes 1-2 : stabiliser Porfla (Premiers soins/Médecine seuil 2), gérer la scène (cadavres, sang, police de Renton), interroger le Nettoyeur capturé dans la cave ou le bureau (Intimidation/Escroquerie contre VOL + CHA = 6 dés).\n\n**Tests utiles**\n- Perception seuil 3 : traces de lutte, seringue de sédatif sous un box.\n- Serrurerie seuil 4 : coffre du bureau.\n- Entrées : porte principale (rue), porte de service (ruelle), sortie de secours (passage latéral), fenêtre des toilettes femmes.",
   "width": 48,

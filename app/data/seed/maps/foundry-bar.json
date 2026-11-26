@@ -1,8 +1,8 @@
 {
   "id": "map_fvtt_bar",
-  "name": "Bar",
+  "name": "Bar de Porfla (Renton)",
   "folder": "Foundry",
-  "description": "Importée de **Foundry VTT** (monde `test-world`, scène « Bar »).\n\nImage 3000×1875 px, grille 50 px = 1 m.\n\nMurs : 49 (dont 11 portes). Lumières : 17.\n\nJetons dans Foundry : 1× Joseph Porfla (`tpl_joseph_porfla`), 3× thug (`tpl_agc_cleaner`), 3× Human Man (`tpl_fvtt_human_man`), 1× Bricks, 1× Jane, 1× Anthony, 1× SAAB Dynamit.",
+  "description": "**Le bar de Joseph Porfla, à Renton** : la carte jouée en séance 1 (*Cleanup Crew*), puis cible de Reyes dans *Burn Notice*. Plan maison du même lieu : « Bar de Porfla (plan maison) » (`map_bar_porfla`).\n\nImportée de **Foundry VTT** (monde `test-world`, scène « Bar »).\n\nImage 3000×1875 px, grille 50 px = 1 m.\n\nMurs : 49 (dont 11 portes). Lumières : 17.\n\nJetons dans Foundry : 1× Joseph Porfla (`tpl_joseph_porfla`), 3× thug (`tpl_agc_cleaner`), 3× Human Man (`tpl_fvtt_human_man`), 1× Bricks, 1× Jane, 1× Anthony, 1× SAAB Dynamit.",
   "width": 60,
   "height": 38,
   "metersPerCell": 1,
@@ -733,6 +733,6 @@
     "id": "VcgFDtF67sLvXc6o",
     "world": "test-world",
     "importedAt": 1795629244307,
-    "hash": "9d6938ba40c7"
+    "hash": "774784db077b"
   }
 }

@@ -91,7 +91,7 @@
     {"id":"trk_lib_were_not_done_here_yet","name":"We're Not Done Here Yet","kind":"music","source":"url","url":"/assets/music/dancramp-void/were-not-done-here-yet.mp3","tags":["victoire","Dan Cramp"],"volume":0.58,"loop":true,"credit":"Dan Cramp — Void (CC BY 4.0)"}
   ],
   "scenes": [
-    {"id":"scn-bar-porfla","name":"Bar de Porfla","ambient":"amb-bar","music":null,"mapId":"map_bar_porfla"},
+    {"id":"scn-bar-porfla","name":"Bar de Porfla","ambient":"amb-bar","music":null,"mapId":"map_fvtt_bar"},
     {"id":"scn-ruelle","name":"Ruelle","ambient":"amb-alley","music":null,"mapId":"map_back_alley"},
     {"id":"scn-trauma-ward","name":"Hôpital / Trauma Ward","ambient":"amb-hospital","music":"trk_lib_the_evil_has_returned","mapId":"map_trauma_ward","replaces":{"music":"mus-tension"}},
     {"id":"scn-planque-jane","name":"Planque de Jane","ambient":"amb-rain","music":null,"mapId":"map_jane_apartment"},

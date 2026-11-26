@@ -761,7 +761,7 @@ try {
     assert.ok(a.tracks.some((t) => t.id === 'amb-rain') && a.tracks.some((t) => t.id === 'mus-combat') && a.tracks.some((t) => t.id === 'dice'));
     const porfla = a.scenes.find((s) => s.id === 'scn-bar-porfla');
     assert.equal(porfla.ambient, 'amb-bar');
-    assert.equal(porfla.mapId, 'map_bar_porfla');
+    assert.equal(porfla.mapId, 'map_fvtt_bar');
     const pa = p1.state.audio;
     assert.equal(pa.scenes, undefined);
     assert.equal(pa.autoScenes, undefined);
