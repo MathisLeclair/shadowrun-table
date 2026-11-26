@@ -76,7 +76,7 @@
 .books-snippet mark { background: color-mix(in srgb, var(--amber) 35%, transparent); color: var(--text); border-radius: 2px; padding: 0 1px; }
 
 /* ----- Règles tab ----- */
-.books-page .panel + .panel, .books-page .books-grid { margin-top: 14px; }
+.books-tab .panel + .panel, .books-tab .books-grid { margin-top: 14px; }
 .books-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: start; }
 .books-quick { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px 16px; }
 .books-quick-group { display: flex; flex-direction: column; gap: 4px; }

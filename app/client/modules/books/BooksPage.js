@@ -89,7 +89,7 @@ export default function BooksPage({ game }) {
   const cached = cachedByCode(cache.entries, books || []);
   const isGM = game?.me?.role === 'gm';
   const err = booksError();
-  return html`<div class="page books-page">
+  return html`<div class="page books-tab">
     <div class="page-title"><h2>${t('Règles')}</h2></div>
     ${books === null
       ? html`<${Empty}>${t('Chargement…')}</${Empty}>`
