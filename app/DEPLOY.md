@@ -219,3 +219,30 @@ GM password of a table forgotten: `/admin` → *Mot de passe MJ*.
 `data/tables/lazarus/backups/legacy-state-<date>.json`); `http://localhost:3000/` redirects to `/t/lazarus/`, old
 sessions stay valid. To undo: stop the server, copy `data/tables/lazarus/state.json` back to `data/state.json`, move
 `uploads/` and `backups/` back to `data/`, delete `data/server.json` and `data/tables/`, and start the previous version.
+
+## Auto-deploy on push to `main`
+
+A systemd timer on the VPS (`shadowrun-autodeploy.timer`) runs `app/deploy/autodeploy.sh` every minute. When
+`origin/main` has a new commit it:
+
+1. snapshots `app/runtime/` (all tables) into `~/shadowrun-backups/runtime-<date>-<oldcommit>.tgz` (10 newest kept);
+2. tags the running image `shadowrun-app:previous`, `git reset --hard` to the new commit, `docker compose up -d --build`;
+3. waits up to 3 minutes for `/api/health`;
+4. on failure: goes back to the previous commit and image, and remembers the failed commit so it is not retried
+   until a newer commit is pushed. Game data is never rolled back automatically (restore a snapshot by hand if needed).
+
+So: **push to `main` → live about 1–3 minutes later.** No secret is stored on GitHub; the VPS pulls with its read-only
+deploy key (`~/.ssh/shadowrun_deploy`, ssh alias `github-shadowrun`).
+
+```bash
+journalctl -u shadowrun-autodeploy -n 50 --no-pager     # what the last deploys did
+systemctl list-timers shadowrun-autodeploy.timer         # next check
+sudo systemctl stop shadowrun-autodeploy.timer           # pause auto-deploy (start to resume)
+```
+
+Install (once, on the VPS, after the clone):
+
+```bash
+sudo cp ~/shadowrun/app/deploy/systemd/shadowrun-autodeploy.* /etc/systemd/system/
+sudo systemctl daemon-reload && sudo systemctl enable --now shadowrun-autodeploy.timer
+```

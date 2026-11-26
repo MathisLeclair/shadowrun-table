@@ -1,0 +1,11 @@
+[Unit]
+Description=Shadowrun table: deploy new commits from GitHub main
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+Environment=HOME=/home/ubuntu
+ExecStart=/bin/bash /home/ubuntu/shadowrun/app/deploy/autodeploy.sh
+TimeoutStartSec=900
