@@ -1,0 +1,434 @@
+{
+  "id": "lib_electronics-repair-shop",
+  "slug": "electronics-repair-shop",
+  "name": "Electronics Repair Shop",
+  "nameFr": "Atelier de réparation électronique",
+  "source": "fragmap",
+  "image": "electronics repair shop.jpg",
+  "imageW": 2000,
+  "imageH": 1600,
+  "gridPx": 200,
+  "offsetX": 0,
+  "offsetY": 0,
+  "width": 10,
+  "height": 8,
+  "metersPerCell": 1.5,
+  "theme": "street",
+  "lighting": "dim",
+  "tags": [
+    "atelier",
+    "workshop",
+    "réparation",
+    "repair",
+    "électronique",
+    "electronics",
+    "boutique",
+    "shop",
+    "receleur",
+    "fence",
+    "technomancien",
+    "rigger",
+    "decker",
+    "trappe",
+    "hatch",
+    "réserve",
+    "storeroom",
+    "intérieur",
+    "indoor",
+    "petit",
+    "small"
+  ],
+  "description": "Petit atelier de réparation électronique encombré d'établis, de pièces détachées et de vieux terminaux, avec une réserve attenante ouverte sur la rue par un rideau métallique et une trappe au sol. Parfait comme repaire d'un contact technicien, d'un receleur de matos ou d'un decker qui bricole des deck volés.",
+  "entry": {
+    "x": 7.4,
+    "y": 1.6
+  },
+  "walls": [
+    {
+      "id": "w1",
+      "x1": 2.55,
+      "y1": 1,
+      "x2": 5.32,
+      "y2": 1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w2",
+      "x1": 5.32,
+      "y1": 1,
+      "x2": 5.32,
+      "y2": 2.58,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w3",
+      "x1": 5.32,
+      "y1": 2.58,
+      "x2": 6.39,
+      "y2": 2.58,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w4",
+      "x1": 6.39,
+      "y1": 2.58,
+      "x2": 6.39,
+      "y2": 3.6,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w5",
+      "x1": 6.39,
+      "y1": 3.6,
+      "x2": 6.39,
+      "y2": 4.63,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w6",
+      "x1": 6.39,
+      "y1": 4.63,
+      "x2": 5.88,
+      "y2": 4.63,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w7",
+      "x1": 5.88,
+      "y1": 4.63,
+      "x2": 5.88,
+      "y2": 4.93,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w8",
+      "x1": 5.88,
+      "y1": 4.93,
+      "x2": 5.28,
+      "y2": 4.93,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w9",
+      "x1": 5.28,
+      "y1": 4.93,
+      "x2": 5.28,
+      "y2": 5.4,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w10",
+      "x1": 5.28,
+      "y1": 5.4,
+      "x2": 6,
+      "y2": 5.4,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w11",
+      "x1": 6,
+      "y1": 5.4,
+      "x2": 6,
+      "y2": 7.86,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w12",
+      "x1": 6,
+      "y1": 7.86,
+      "x2": 3.96,
+      "y2": 7.86,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w13",
+      "x1": 3.96,
+      "y1": 7.86,
+      "x2": 3.96,
+      "y2": 6.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w14",
+      "x1": 3.96,
+      "y1": 6.5,
+      "x2": 1.2,
+      "y2": 6.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w15",
+      "x1": 1.2,
+      "y1": 6.5,
+      "x2": 1.2,
+      "y2": 2.39,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w16",
+      "x1": 1.2,
+      "y1": 2.39,
+      "x2": 2.55,
+      "y2": 2.39,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w17",
+      "x1": 2.55,
+      "y1": 2.39,
+      "x2": 2.55,
+      "y2": 1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w18",
+      "x1": 6.39,
+      "y1": 2.58,
+      "x2": 6.75,
+      "y2": 2.58,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w19",
+      "x1": 6.39,
+      "y1": 3.6,
+      "x2": 6.75,
+      "y2": 3.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w20",
+      "x1": 6.75,
+      "y1": 2.58,
+      "x2": 6.75,
+      "y2": 1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w21",
+      "x1": 6.75,
+      "y1": 1,
+      "x2": 8.45,
+      "y2": 1,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w22",
+      "x1": 8.45,
+      "y1": 1,
+      "x2": 9.45,
+      "y2": 1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w23",
+      "x1": 9.45,
+      "y1": 1,
+      "x2": 9.45,
+      "y2": 5.13,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w24",
+      "x1": 9.45,
+      "y1": 5.13,
+      "x2": 6.75,
+      "y2": 5.13,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w25",
+      "x1": 6.75,
+      "y1": 5.13,
+      "x2": 6.75,
+      "y2": 3.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "l1",
+      "x": 3.6,
+      "y": 4.3,
+      "radius": 3.5,
+      "color": "#ffe6b0",
+      "on": true
+    },
+    {
+      "id": "l2",
+      "x": 2,
+      "y": 3.6,
+      "radius": 2,
+      "color": "#ffd860",
+      "on": true
+    },
+    {
+      "id": "l3",
+      "x": 5,
+      "y": 6.9,
+      "radius": 2.5,
+      "color": "#fff0c8",
+      "on": true
+    },
+    {
+      "id": "l4",
+      "x": 4.6,
+      "y": 7.65,
+      "radius": 1,
+      "color": "#60ff80",
+      "on": true
+    },
+    {
+      "id": "l5",
+      "x": 5.7,
+      "y": 3.6,
+      "radius": 1.5,
+      "color": "#e8f0ff",
+      "on": true
+    },
+    {
+      "id": "l6",
+      "x": 7.4,
+      "y": 1.6,
+      "radius": 3.5,
+      "color": "#fff6e6",
+      "on": true
+    },
+    {
+      "id": "l7",
+      "x": 8.3,
+      "y": 3.9,
+      "radius": 2,
+      "color": "#f0e8d8",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "r1",
+      "name": "Atelier",
+      "x": 2,
+      "y": 3,
+      "w": 3,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "r2",
+      "name": "Établi",
+      "x": 1,
+      "y": 3,
+      "w": 1,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "r3",
+      "name": "Rayonnages",
+      "x": 3,
+      "y": 1,
+      "w": 2,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "r4",
+      "name": "Poste de diagnostic",
+      "x": 5,
+      "y": 3,
+      "w": 1,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "r5",
+      "name": "Trappe",
+      "x": 4,
+      "y": 6,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "r6",
+      "name": "Réserve",
+      "x": 7,
+      "y": 2,
+      "w": 2,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "r7",
+      "name": "Rideau métallique",
+      "x": 7,
+      "y": 1,
+      "w": 1,
+      "h": 1,
+      "gmOnly": false
+    }
+  ],
+  "traced": {
+    "by": "agent",
+    "at": "2026-11-26T16:33:05.537Z",
+    "quality": "good",
+    "notes": "Pas de bande de mur : murs sur le bord du sol. Aucune porte dessinée vers l'extérieur : rideau métallique supposé au nord de la réserve (zone éclairée par le jour), porte supposée entre l'atelier et la réserve à travers l'interstice noir (x≈6.4–6.75). La trappe verte au sol (sud) est un accès vers le sous-sol/les égouts, non tracée (à gérer par le MJ). Établis et étagères non tracés."
+  },
+  "version": 1
+}

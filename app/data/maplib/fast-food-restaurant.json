@@ -1,0 +1,617 @@
+{
+  "id": "lib_fast-food-restaurant",
+  "slug": "fast-food-restaurant",
+  "name": "Fast Food Restaurant",
+  "nameFr": "Fast-food",
+  "source": "fragmap",
+  "image": "fast food restaurant.jpg",
+  "imageW": 2400,
+  "imageH": 2800,
+  "gridPx": 200,
+  "offsetX": 0,
+  "offsetY": 0,
+  "width": 12,
+  "height": 14,
+  "metersPerCell": 1.5,
+  "theme": "street",
+  "lighting": "bright",
+  "tags": [
+    "fast-food",
+    "fast food",
+    "restaurant",
+    "burger",
+    "diner",
+    "Stuffer Shack",
+    "soykaf",
+    "cuisine",
+    "kitchen",
+    "comptoir",
+    "counter",
+    "rendez-vous",
+    "meet",
+    "braquage",
+    "robbery",
+    "fusillade",
+    "shootout",
+    "public",
+    "intérieur",
+    "indoor"
+  ],
+  "description": "Fast-food de quartier : grande salle aux tables rouges et vitrine sur la rue, comptoir de commande, cuisine, bureau du gérant et couloir des toilettes. Lieu public idéal pour un rendez-vous discret avec un contact, une filature qui dégénère ou un braquage de caisse par des gangers affamés.",
+  "entry": {
+    "x": 4.3,
+    "y": 12.1
+  },
+  "walls": [
+    {
+      "id": "w1",
+      "x1": 3.8,
+      "y1": 2.95,
+      "x2": 3.72,
+      "y2": 2.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w2",
+      "x1": 3.72,
+      "y1": 2.95,
+      "x2": 3.05,
+      "y2": 2.95,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w3",
+      "x1": 3.05,
+      "y1": 2.95,
+      "x2": 2.15,
+      "y2": 2.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w4",
+      "x1": 2.15,
+      "y1": 2.95,
+      "x2": 2.15,
+      "y2": 3.65,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w5",
+      "x1": 2.15,
+      "y1": 3.65,
+      "x2": 2.15,
+      "y2": 9.35,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w6",
+      "x1": 2.15,
+      "y1": 9.35,
+      "x2": 2.15,
+      "y2": 12.43,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w7",
+      "x1": 2.15,
+      "y1": 12.43,
+      "x2": 4,
+      "y2": 12.43,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w8",
+      "x1": 4,
+      "y1": 12.43,
+      "x2": 4,
+      "y2": 12.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w9",
+      "x1": 4,
+      "y1": 12.6,
+      "x2": 4.65,
+      "y2": 12.6,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w10",
+      "x1": 4.65,
+      "y1": 12.6,
+      "x2": 6.7,
+      "y2": 12.6,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w11",
+      "x1": 6.7,
+      "y1": 12.6,
+      "x2": 8.5,
+      "y2": 12.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w12",
+      "x1": 8.5,
+      "y1": 12.6,
+      "x2": 8.5,
+      "y2": 10.79,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w13",
+      "x1": 8.5,
+      "y1": 10.79,
+      "x2": 10.68,
+      "y2": 10.79,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w14",
+      "x1": 10.68,
+      "y1": 10.79,
+      "x2": 10.68,
+      "y2": 4.14,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w15",
+      "x1": 10.68,
+      "y1": 4.14,
+      "x2": 8.2,
+      "y2": 4.14,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w16",
+      "x1": 3.8,
+      "y1": 6.3,
+      "x2": 3.8,
+      "y2": 2.26,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w17",
+      "x1": 3.8,
+      "y1": 2.26,
+      "x2": 4.1,
+      "y2": 2.26,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w18",
+      "x1": 4.1,
+      "y1": 2.26,
+      "x2": 4.1,
+      "y2": 1.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w19",
+      "x1": 4.1,
+      "y1": 1.25,
+      "x2": 6,
+      "y2": 1.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w20",
+      "x1": 6,
+      "y1": 1.25,
+      "x2": 6,
+      "y2": 2.26,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w21",
+      "x1": 6,
+      "y1": 2.26,
+      "x2": 7.89,
+      "y2": 2.26,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w22",
+      "x1": 7.89,
+      "y1": 2.26,
+      "x2": 7.89,
+      "y2": 2.61,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w23",
+      "x1": 7.89,
+      "y1": 2.61,
+      "x2": 8.2,
+      "y2": 2.61,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w24",
+      "x1": 8.2,
+      "y1": 2.61,
+      "x2": 8.2,
+      "y2": 4.14,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w25",
+      "x1": 8.2,
+      "y1": 4.14,
+      "x2": 8.2,
+      "y2": 4.35,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w26",
+      "x1": 8.2,
+      "y1": 4.35,
+      "x2": 8.2,
+      "y2": 5.05,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w27",
+      "x1": 8.2,
+      "y1": 5.05,
+      "x2": 8.2,
+      "y2": 6.42,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w28",
+      "x1": 3.8,
+      "y1": 6.3,
+      "x2": 6.45,
+      "y2": 6.3,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w29",
+      "x1": 6.45,
+      "y1": 6.3,
+      "x2": 7.38,
+      "y2": 6.3,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w30",
+      "x1": 7.38,
+      "y1": 6.3,
+      "x2": 8.2,
+      "y2": 6.3,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w31",
+      "x1": 7.38,
+      "y1": 6.3,
+      "x2": 7.38,
+      "y2": 7.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w32",
+      "x1": 7.38,
+      "y1": 7.95,
+      "x2": 7.75,
+      "y2": 8.22,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w33",
+      "x1": 7.75,
+      "y1": 8.22,
+      "x2": 8.49,
+      "y2": 8.22,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w34",
+      "x1": 8.49,
+      "y1": 8.22,
+      "x2": 8.49,
+      "y2": 6.42,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w35",
+      "x1": 8.2,
+      "y1": 6.42,
+      "x2": 8.49,
+      "y2": 6.42,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w36",
+      "x1": 8.49,
+      "y1": 6.42,
+      "x2": 10.68,
+      "y2": 6.42,
+      "move": true,
+      "sight": true,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "l1",
+      "x": 5.4,
+      "y": 3.3,
+      "radius": 4,
+      "color": "#f4f4ff",
+      "on": true
+    },
+    {
+      "id": "l2",
+      "x": 6.8,
+      "y": 4.8,
+      "radius": 4,
+      "color": "#f4f4ff",
+      "on": true
+    },
+    {
+      "id": "l3",
+      "x": 5,
+      "y": 1.8,
+      "radius": 2,
+      "color": "#ffe0b0",
+      "on": true
+    },
+    {
+      "id": "l4",
+      "x": 9.3,
+      "y": 5,
+      "radius": 3,
+      "color": "#fff0d0",
+      "on": true
+    },
+    {
+      "id": "l5",
+      "x": 10.1,
+      "y": 5.3,
+      "radius": 1.5,
+      "color": "#60c0ff",
+      "on": true
+    },
+    {
+      "id": "l6",
+      "x": 2.9,
+      "y": 4,
+      "radius": 3,
+      "color": "#ffe0c0",
+      "on": true
+    },
+    {
+      "id": "l7",
+      "x": 2.45,
+      "y": 7.9,
+      "radius": 2.5,
+      "color": "#ff5030",
+      "on": true
+    },
+    {
+      "id": "l8",
+      "x": 5.6,
+      "y": 6.6,
+      "radius": 2.5,
+      "color": "#ffffff",
+      "on": true
+    },
+    {
+      "id": "l9",
+      "x": 5.5,
+      "y": 8.4,
+      "radius": 2,
+      "color": "#ffd080",
+      "on": true
+    },
+    {
+      "id": "l10",
+      "x": 5.5,
+      "y": 9.6,
+      "radius": 4,
+      "color": "#ffe0c0",
+      "on": true
+    },
+    {
+      "id": "l11",
+      "x": 6,
+      "y": 11.4,
+      "radius": 4,
+      "color": "#ffd8b0",
+      "on": true
+    },
+    {
+      "id": "l12",
+      "x": 9.6,
+      "y": 8.6,
+      "radius": 3.5,
+      "color": "#ffd8b0",
+      "on": true
+    },
+    {
+      "id": "l13",
+      "x": 3,
+      "y": 12,
+      "radius": 2,
+      "color": "#8090ff",
+      "on": true
+    },
+    {
+      "id": "l14",
+      "x": 8.2,
+      "y": 12,
+      "radius": 1.5,
+      "color": "#ffd040",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "r1",
+      "name": "Couloir des toilettes",
+      "x": 2,
+      "y": 3,
+      "w": 1,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "r2",
+      "name": "Cuisine",
+      "x": 4,
+      "y": 3,
+      "w": 4,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "r3",
+      "name": "Plonge",
+      "x": 4,
+      "y": 1,
+      "w": 2,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "r4",
+      "name": "Bureau du gérant",
+      "x": 8,
+      "y": 4,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "r5",
+      "name": "Derrière le comptoir",
+      "x": 4,
+      "y": 6,
+      "w": 3,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "r6",
+      "name": "Comptoir",
+      "x": 4,
+      "y": 8,
+      "w": 3,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "r7",
+      "name": "Salle",
+      "x": 3,
+      "y": 9,
+      "w": 5,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "r8",
+      "name": "Coin tables",
+      "x": 8,
+      "y": 7,
+      "w": 2,
+      "h": 3,
+      "gmOnly": false
+    }
+  ],
+  "traced": {
+    "by": "agent",
+    "at": "2026-11-26T16:37:43.535Z",
+    "quality": "good",
+    "notes": "Murs en perspective : tracés au pied du mur (bord du sol), bandes noires entre pièces : au centre. Entrée vitrée supposée au sud-ouest (battant ouvert x≈4.0–4.65), vitrines = fenêtres à l'ouest et au sud. Portes rouges du couloir (toilettes, hors carte) tracées fermées. Porte cuisine ↔ arrière du comptoir à l'ouverture sombre (x≈6.45–7.38), porte bureau ↔ cuisine supposée. Comptoir de commande et comptoir-bar le long de la vitrine non tracés."
+  },
+  "version": 1
+}

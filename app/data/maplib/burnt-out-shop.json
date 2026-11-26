@@ -1,0 +1,429 @@
+{
+  "id": "lib_burnt-out-shop",
+  "slug": "burnt-out-shop",
+  "name": "Burnt Out Shop",
+  "nameFr": "Boutique incendiée",
+  "source": "fragmap",
+  "image": "burnt out shop.jpg",
+  "imageW": 3400,
+  "imageH": 4600,
+  "gridPx": 200,
+  "offsetX": 0,
+  "offsetY": 0,
+  "width": 17,
+  "height": 23,
+  "metersPerCell": 1.5,
+  "theme": "street",
+  "lighting": "dim",
+  "tags": [
+    "ruine",
+    "ruins",
+    "incendie",
+    "burnt",
+    "boutique",
+    "shop",
+    "abandonné",
+    "abandoned",
+    "squat",
+    "barrens",
+    "Redmond",
+    "planque",
+    "hideout",
+    "cadavre",
+    "corpse",
+    "enquête",
+    "investigation",
+    "embuscade",
+    "ambush",
+    "intérieur",
+    "indoor"
+  ],
+  "description": "Supérette ravagée par un incendie : rayonnages renversés, comptoir calciné, cuisine éventrée, arrière-boutique effondrée et un mur porteur écroulé. Un cadavre gît encore près des casiers. Parfait pour une enquête sur un incendie criminel, un rendez-vous discret dans les Barrens ou une embuscade de goules.",
+  "entry": {
+    "x": 10,
+    "y": 21.2
+  },
+  "walls": [
+    {
+      "id": "w1",
+      "x1": 0.71,
+      "y1": 1.38,
+      "x2": 1.45,
+      "y2": 1.38,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w2",
+      "x1": 1.45,
+      "y1": 1.38,
+      "x2": 5.5,
+      "y2": 1.38,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w3",
+      "x1": 5.5,
+      "y1": 1.38,
+      "x2": 6.2,
+      "y2": 1.38,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w4",
+      "x1": 6.2,
+      "y1": 1.38,
+      "x2": 11.15,
+      "y2": 1.38,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w5",
+      "x1": 11.15,
+      "y1": 1.38,
+      "x2": 16.15,
+      "y2": 1.38,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w6",
+      "x1": 16.15,
+      "y1": 1.38,
+      "x2": 16.15,
+      "y2": 6.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w7",
+      "x1": 16.15,
+      "y1": 6.25,
+      "x2": 16.15,
+      "y2": 19.38,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w8",
+      "x1": 16.15,
+      "y1": 19.38,
+      "x2": 13.4,
+      "y2": 19.38,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w9",
+      "x1": 13.4,
+      "y1": 19.38,
+      "x2": 12.85,
+      "y2": 19.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w10",
+      "x1": 12.85,
+      "y1": 19.6,
+      "x2": 12.45,
+      "y2": 20.1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w11",
+      "x1": 12.45,
+      "y1": 20.1,
+      "x2": 12.3,
+      "y2": 20.7,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w12",
+      "x1": 12.3,
+      "y1": 20.7,
+      "x2": 12.3,
+      "y2": 21.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w13",
+      "x1": 12.3,
+      "y1": 21.95,
+      "x2": 10.8,
+      "y2": 21.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w14",
+      "x1": 10.8,
+      "y1": 21.95,
+      "x2": 9.2,
+      "y2": 21.95,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w15",
+      "x1": 9.2,
+      "y1": 21.95,
+      "x2": 1.6,
+      "y2": 21.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w16",
+      "x1": 1.6,
+      "y1": 21.95,
+      "x2": 1.6,
+      "y2": 20.65,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w17",
+      "x1": 1.6,
+      "y1": 20.65,
+      "x2": 0.71,
+      "y2": 20.65,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w18",
+      "x1": 0.71,
+      "y1": 20.65,
+      "x2": 0.71,
+      "y2": 18.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w19",
+      "x1": 0.71,
+      "y1": 18.6,
+      "x2": 0.71,
+      "y2": 12.1,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w20",
+      "x1": 0.71,
+      "y1": 12.1,
+      "x2": 0.71,
+      "y2": 1.38,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w21",
+      "x1": 6.2,
+      "y1": 1.38,
+      "x2": 6.2,
+      "y2": 6.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w22",
+      "x1": 11.15,
+      "y1": 1.38,
+      "x2": 11.15,
+      "y2": 6.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w23",
+      "x1": 11.15,
+      "y1": 6.25,
+      "x2": 11.15,
+      "y2": 13.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w24",
+      "x1": 11.15,
+      "y1": 6.25,
+      "x2": 11.5,
+      "y2": 6.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w25",
+      "x1": 11.5,
+      "y1": 6.25,
+      "x2": 12.6,
+      "y2": 6.25,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w26",
+      "x1": 12.6,
+      "y1": 6.25,
+      "x2": 16.15,
+      "y2": 6.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "l1",
+      "x": 3.5,
+      "y": 4.2,
+      "radius": 4,
+      "color": "#f0f4ff",
+      "on": true
+    },
+    {
+      "id": "l2",
+      "x": 3,
+      "y": 15.5,
+      "radius": 5,
+      "color": "#fff0d0",
+      "on": true
+    },
+    {
+      "id": "l3",
+      "x": 13.5,
+      "y": 3.5,
+      "radius": 4,
+      "color": "#fffaf0",
+      "on": true
+    },
+    {
+      "id": "l4",
+      "x": 12.5,
+      "y": 7.8,
+      "radius": 3,
+      "color": "#fff8e8",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "r1",
+      "name": "Cuisine",
+      "x": 1,
+      "y": 2,
+      "w": 5,
+      "h": 4,
+      "gmOnly": false
+    },
+    {
+      "id": "r2",
+      "name": "Arrière-boutique",
+      "x": 7,
+      "y": 2,
+      "w": 3,
+      "h": 4,
+      "gmOnly": false
+    },
+    {
+      "id": "r3",
+      "name": "Réserve",
+      "x": 12,
+      "y": 2,
+      "w": 4,
+      "h": 4,
+      "gmOnly": false
+    },
+    {
+      "id": "r4",
+      "name": "Boutique",
+      "x": 2,
+      "y": 7,
+      "w": 8,
+      "h": 12,
+      "gmOnly": false
+    },
+    {
+      "id": "r5",
+      "name": "Comptoir",
+      "x": 12,
+      "y": 7,
+      "w": 3,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "r6",
+      "name": "Rayonnages",
+      "x": 14,
+      "y": 10,
+      "w": 2,
+      "h": 8,
+      "gmOnly": false
+    },
+    {
+      "id": "r7",
+      "name": "Mur effondré",
+      "x": 10,
+      "y": 14,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "r8",
+      "name": "Entrée",
+      "x": 9,
+      "y": 20,
+      "w": 2,
+      "h": 1,
+      "gmOnly": false
+    }
+  ],
+  "traced": {
+    "by": "agent",
+    "at": "2026-11-26T16:40:34.163Z",
+    "quality": "rough",
+    "notes": "Ruine sombre et chargée : murs au bord du sol. Le mur porteur central (x 11.15) s'est effondré au sud de y 13.6 : passage libre entre les deux moitiés. Grandes fenêtres à l'ouest (y 12–18.6) et au nord de la cuisine = fenêtres. Aucune porte d'entrée lisible : porte supposée au sud (zone bleue au tag, fermée par défaut) et porte supposée de la réserve nord-est. Rayonnages, comptoir, frigos renversés et gravats non tracés (couvert à gérer par le MJ)."
+  },
+  "version": 1
+}

@@ -1,0 +1,647 @@
+{
+  "id": "lib_industrial-kitchen",
+  "slug": "industrial-kitchen",
+  "name": "Industrial Kitchen",
+  "nameFr": "Cuisine industrielle",
+  "source": "fragmap",
+  "image": "industrial kitchen.jpg",
+  "imageW": 2800,
+  "imageH": 3200,
+  "gridPx": 200,
+  "offsetX": 0,
+  "offsetY": 0,
+  "width": 14,
+  "height": 16,
+  "metersPerCell": 1.5,
+  "theme": "industrial",
+  "lighting": "bright",
+  "tags": [
+    "cuisine",
+    "kitchen",
+    "restaurant",
+    "cuisine industrielle",
+    "commercial kitchen",
+    "chambre froide",
+    "walk-in freezer",
+    "bureau",
+    "office",
+    "livraisons",
+    "deliveries",
+    "infiltration",
+    "fusillade",
+    "firefight",
+    "mafia",
+    "intérieur",
+    "indoor"
+  ],
+  "description": "Grande cuisine de restaurant en inox : pianos, postes de dressage, plonge, une réserve, le bureau du chef et une chambre froide. Idéale pour s'infiltrer par l'entrée des livraisons, rencontrer un parrain de la Mafia ou des Triades dans l'arrière-cuisine, ou une fusillade entre les fourneaux.",
+  "entry": {
+    "x": 6.4,
+    "y": 14.4
+  },
+  "walls": [
+    {
+      "id": "w1",
+      "x1": 1.3,
+      "y1": 1.14,
+      "x2": 1.8,
+      "y2": 1.14,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w2",
+      "x1": 1.8,
+      "y1": 1.14,
+      "x2": 1.8,
+      "y2": 0.7,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w3",
+      "x1": 1.8,
+      "y1": 0.7,
+      "x2": 4.55,
+      "y2": 0.7,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w4",
+      "x1": 4.55,
+      "y1": 0.7,
+      "x2": 4.55,
+      "y2": 1.08,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w5",
+      "x1": 4.55,
+      "y1": 1.08,
+      "x2": 5,
+      "y2": 1.08,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w6",
+      "x1": 5,
+      "y1": 1.08,
+      "x2": 5,
+      "y2": 0.7,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w7",
+      "x1": 5,
+      "y1": 0.7,
+      "x2": 8.48,
+      "y2": 0.7,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w8",
+      "x1": 8.48,
+      "y1": 0.7,
+      "x2": 8.48,
+      "y2": 1.1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w9",
+      "x1": 8.48,
+      "y1": 1.1,
+      "x2": 8.48,
+      "y2": 2.3,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w10",
+      "x1": 8.48,
+      "y1": 2.3,
+      "x2": 8.48,
+      "y2": 2.45,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w11",
+      "x1": 8.48,
+      "y1": 2.45,
+      "x2": 7.09,
+      "y2": 2.45,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w12",
+      "x1": 7.09,
+      "y1": 2.45,
+      "x2": 7.09,
+      "y2": 3,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w13",
+      "x1": 7.09,
+      "y1": 3,
+      "x2": 7.35,
+      "y2": 3,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w14",
+      "x1": 7.35,
+      "y1": 3,
+      "x2": 7.35,
+      "y2": 6.45,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w15",
+      "x1": 7.35,
+      "y1": 6.45,
+      "x2": 7.35,
+      "y2": 7.6,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w16",
+      "x1": 7.35,
+      "y1": 7.6,
+      "x2": 7.35,
+      "y2": 8.1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w17",
+      "x1": 7.35,
+      "y1": 8.1,
+      "x2": 7.35,
+      "y2": 9.9,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w18",
+      "x1": 7.35,
+      "y1": 9.9,
+      "x2": 7.35,
+      "y2": 12.4,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w19",
+      "x1": 7.35,
+      "y1": 12.4,
+      "x2": 7.35,
+      "y2": 13.55,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w20",
+      "x1": 7.35,
+      "y1": 13.55,
+      "x2": 7.35,
+      "y2": 14.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w21",
+      "x1": 7.35,
+      "y1": 14.95,
+      "x2": 6.9,
+      "y2": 14.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w22",
+      "x1": 6.9,
+      "y1": 14.95,
+      "x2": 5.8,
+      "y2": 14.95,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w23",
+      "x1": 5.8,
+      "y1": 14.95,
+      "x2": 1.8,
+      "y2": 14.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w24",
+      "x1": 1.8,
+      "y1": 14.95,
+      "x2": 1.8,
+      "y2": 14.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w25",
+      "x1": 1.8,
+      "y1": 14.5,
+      "x2": 1.3,
+      "y2": 14.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w26",
+      "x1": 1.3,
+      "y1": 14.5,
+      "x2": 1.3,
+      "y2": 8.8,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w27",
+      "x1": 1.3,
+      "y1": 8.8,
+      "x2": 1.82,
+      "y2": 8.8,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w28",
+      "x1": 1.82,
+      "y1": 8.8,
+      "x2": 1.82,
+      "y2": 7.95,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w29",
+      "x1": 1.82,
+      "y1": 7.95,
+      "x2": 1.3,
+      "y2": 7.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w30",
+      "x1": 1.3,
+      "y1": 7.95,
+      "x2": 1.3,
+      "y2": 1.14,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w31",
+      "x1": 7.35,
+      "y1": 5.45,
+      "x2": 9.65,
+      "y2": 5.45,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w32",
+      "x1": 9.65,
+      "y1": 5.45,
+      "x2": 9.65,
+      "y2": 7.96,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w33",
+      "x1": 9.65,
+      "y1": 7.96,
+      "x2": 7.35,
+      "y2": 7.96,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w34",
+      "x1": 9.65,
+      "y1": 7.96,
+      "x2": 9.65,
+      "y2": 11.33,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w35",
+      "x1": 7.35,
+      "y1": 11.33,
+      "x2": 13.18,
+      "y2": 11.33,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w36",
+      "x1": 13.18,
+      "y1": 11.33,
+      "x2": 13.18,
+      "y2": 14.94,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w37",
+      "x1": 13.18,
+      "y1": 14.94,
+      "x2": 7.75,
+      "y2": 14.94,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w38",
+      "x1": 7.75,
+      "y1": 14.94,
+      "x2": 7.75,
+      "y2": 14.42,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w39",
+      "x1": 7.75,
+      "y1": 14.42,
+      "x2": 7.35,
+      "y2": 14.42,
+      "move": true,
+      "sight": true,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "l1",
+      "x": 3,
+      "y": 2.8,
+      "radius": 4,
+      "color": "#f4f8ff",
+      "on": true
+    },
+    {
+      "id": "l2",
+      "x": 5.6,
+      "y": 2.8,
+      "radius": 4,
+      "color": "#f4f8ff",
+      "on": true
+    },
+    {
+      "id": "l3",
+      "x": 3.9,
+      "y": 6.8,
+      "radius": 4,
+      "color": "#f4f8ff",
+      "on": true
+    },
+    {
+      "id": "l4",
+      "x": 6.1,
+      "y": 6.8,
+      "radius": 4,
+      "color": "#f4f8ff",
+      "on": true
+    },
+    {
+      "id": "l5",
+      "x": 3.9,
+      "y": 10.8,
+      "radius": 4,
+      "color": "#f4f8ff",
+      "on": true
+    },
+    {
+      "id": "l6",
+      "x": 6.1,
+      "y": 10.8,
+      "radius": 4,
+      "color": "#f4f8ff",
+      "on": true
+    },
+    {
+      "id": "l7",
+      "x": 4.2,
+      "y": 13.8,
+      "radius": 3.5,
+      "color": "#f4f8ff",
+      "on": true
+    },
+    {
+      "id": "l8",
+      "x": 2.15,
+      "y": 5,
+      "radius": 1.5,
+      "color": "#ff9030",
+      "on": true
+    },
+    {
+      "id": "l9",
+      "x": 3.1,
+      "y": 14.1,
+      "radius": 1.5,
+      "color": "#60ffd0",
+      "on": true
+    },
+    {
+      "id": "l10",
+      "x": 7.8,
+      "y": 1.8,
+      "radius": 2,
+      "color": "#e0f0ff",
+      "on": true
+    },
+    {
+      "id": "l11",
+      "x": 8.5,
+      "y": 6.7,
+      "radius": 3,
+      "color": "#f0f0e8",
+      "on": true
+    },
+    {
+      "id": "l12",
+      "x": 8.5,
+      "y": 9.6,
+      "radius": 3,
+      "color": "#f0f0e8",
+      "on": true
+    },
+    {
+      "id": "l13",
+      "x": 9.4,
+      "y": 9.1,
+      "radius": 1.2,
+      "color": "#60d0ff",
+      "on": true
+    },
+    {
+      "id": "l14",
+      "x": 10.2,
+      "y": 12.9,
+      "radius": 3.5,
+      "color": "#a8c8ff",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "r1",
+      "name": "Plonge",
+      "x": 2,
+      "y": 1,
+      "w": 5,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "r2",
+      "name": "Sas",
+      "x": 7,
+      "y": 1,
+      "w": 1,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "r3",
+      "name": "Pianos",
+      "x": 1,
+      "y": 4,
+      "w": 2,
+      "h": 9,
+      "gmOnly": false
+    },
+    {
+      "id": "r4",
+      "name": "Postes de dressage",
+      "x": 3,
+      "y": 4,
+      "w": 4,
+      "h": 9,
+      "gmOnly": false
+    },
+    {
+      "id": "r5",
+      "name": "Livraisons",
+      "x": 5,
+      "y": 13,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "r6",
+      "name": "Réserve",
+      "x": 8,
+      "y": 6,
+      "w": 1,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "r7",
+      "name": "Bureau du chef",
+      "x": 8,
+      "y": 8,
+      "w": 1,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "r8",
+      "name": "Chambre froide",
+      "x": 8,
+      "y": 12,
+      "w": 5,
+      "h": 2,
+      "gmOnly": false
+    }
+  ],
+  "traced": {
+    "by": "agent",
+    "at": "2026-11-26T16:37:06.384Z",
+    "quality": "good",
+    "notes": "Plan en vue de coupe (murs vus en perspective, pas de bande sombre) : murs au bord extérieur du dessin ; un seul mur au milieu des vides noirs entre la cuisine et les pièces de droite. Portes déduites des panneaux encadrés de rouge sur le mur droit : bureau (y 8.1–9.9) et chambre froide (y 12.4–13.55) ; porte de la réserve supposée (y 6.45–7.6). Porte de livraison en bas à droite (battant ouvert dessiné), porte de service dans le renfoncement gauche (y 8–8.8), porte du sas en haut à droite vers la salle du restaurant (non représentée). Hottes noires, plans de travail et étagères non tracés."
+  },
+  "version": 1
+}

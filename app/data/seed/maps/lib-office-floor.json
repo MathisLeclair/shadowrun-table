@@ -1,0 +1,872 @@
+{
+  "id": "map_lib_office-floor",
+  "name": "Hollow Pine — suite 1408 (tour Meridian, 14e)",
+  "folder": "Acte 1",
+  "description": "**Lieu de campagne :** Les bureaux de Hollow Pine Holdings au 14e étage de la tour Meridian (5th Avenue, Downtown). Le hall du rez-de-chaussée se joue sur « Corp Lobby » (Foundry) ou en narration.\n\n**Quête :** Open Book (séance 4, approche B).\n\n**À adapter :** Le « Bureau de direction » est celui de Dorian Ashe, le « Local serveur » est la salle serveur de la suite (plus besoin d’une carte séparée). Le second bureau vitré et la salle de pause sont vides : c’est une coquille.\n\n**La carte (bibliothèque Fragmaps, « Plateau de bureaux ») :** Étage de bureaux d'une petite corpo : open-space de box, salle de réunion, deux bureaux de cadres vitrés, salle de pause, cage d'escalier et local serveur. Idéal pour un vol de données nocturne, une extraction de cadre ou une réunion avec un Johnson corporatiste.\n\nVoir Shadowrun/cartes-campagne.md.",
+  "width": 21,
+  "height": 15,
+  "metersPerCell": 1.5,
+  "theme": "corp",
+  "lighting": "dim",
+  "tiles": [
+    ".....................",
+    ".....................",
+    ".....................",
+    ".....................",
+    ".....................",
+    ".....................",
+    ".....................",
+    ".....................",
+    ".....................",
+    ".....................",
+    ".....................",
+    ".....................",
+    ".....................",
+    ".....................",
+    "....................."
+  ],
+  "background": {
+    "url": "/api/maplib/image/office-floor",
+    "opacity": 1,
+    "mode": "image",
+    "x": 0,
+    "y": 0,
+    "w": 21,
+    "h": 15
+  },
+  "walls": [
+    {
+      "id": "wall_office-floor_1",
+      "x1": 0.86,
+      "y1": 1.85,
+      "x2": 1.15,
+      "y2": 1.85,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_2",
+      "x1": 1.15,
+      "y1": 1.85,
+      "x2": 1.15,
+      "y2": 1.2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_3",
+      "x1": 1.15,
+      "y1": 1.2,
+      "x2": 1.75,
+      "y2": 1.2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_4",
+      "x1": 1.75,
+      "y1": 1.2,
+      "x2": 5.15,
+      "y2": 1.2,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_5",
+      "x1": 5.15,
+      "y1": 1.2,
+      "x2": 5.4,
+      "y2": 1.2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_6",
+      "x1": 5.4,
+      "y1": 1.2,
+      "x2": 6.3,
+      "y2": 1.2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_7",
+      "x1": 6.3,
+      "y1": 1.2,
+      "x2": 9.4,
+      "y2": 1.2,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_8",
+      "x1": 9.4,
+      "y1": 1.2,
+      "x2": 9.97,
+      "y2": 1.2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_9",
+      "x1": 9.97,
+      "y1": 1.2,
+      "x2": 10.2,
+      "y2": 1.2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_10",
+      "x1": 10.2,
+      "y1": 1.2,
+      "x2": 12.9,
+      "y2": 1.2,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_11",
+      "x1": 12.9,
+      "y1": 1.2,
+      "x2": 13.43,
+      "y2": 1.2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_12",
+      "x1": 13.43,
+      "y1": 1.2,
+      "x2": 14,
+      "y2": 1.2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_13",
+      "x1": 14,
+      "y1": 1.2,
+      "x2": 18.5,
+      "y2": 1.2,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_14",
+      "x1": 18.5,
+      "y1": 1.2,
+      "x2": 19.65,
+      "y2": 1.2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_15",
+      "x1": 19.65,
+      "y1": 1.2,
+      "x2": 19.65,
+      "y2": 4.65,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_16",
+      "x1": 0.86,
+      "y1": 1.85,
+      "x2": 0.86,
+      "y2": 8,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_17",
+      "x1": 0.86,
+      "y1": 8,
+      "x2": 1.98,
+      "y2": 8,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_18",
+      "x1": 1.98,
+      "y1": 8,
+      "x2": 5.4,
+      "y2": 8,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_19",
+      "x1": 5.4,
+      "y1": 1.2,
+      "x2": 5.4,
+      "y2": 4.65,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_20",
+      "x1": 5.4,
+      "y1": 4.65,
+      "x2": 5.4,
+      "y2": 5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_21",
+      "x1": 5.4,
+      "y1": 5,
+      "x2": 5.4,
+      "y2": 5.95,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_office-floor_22",
+      "x1": 5.4,
+      "y1": 5.95,
+      "x2": 5.4,
+      "y2": 8,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_23",
+      "x1": 5.4,
+      "y1": 8,
+      "x2": 5.4,
+      "y2": 10.15,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_24",
+      "x1": 5.4,
+      "y1": 10.15,
+      "x2": 5.4,
+      "y2": 11.05,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_office-floor_25",
+      "x1": 5.4,
+      "y1": 11.05,
+      "x2": 5.4,
+      "y2": 11.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_26",
+      "x1": 5.4,
+      "y1": 11.6,
+      "x2": 5.4,
+      "y2": 11.65,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_27",
+      "x1": 5.4,
+      "y1": 11.65,
+      "x2": 5.4,
+      "y2": 12.6,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_office-floor_28",
+      "x1": 5.4,
+      "y1": 12.6,
+      "x2": 5.4,
+      "y2": 13.82,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_29",
+      "x1": 9.97,
+      "y1": 1.2,
+      "x2": 9.97,
+      "y2": 4.65,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_30",
+      "x1": 13.43,
+      "y1": 1.2,
+      "x2": 13.43,
+      "y2": 4.65,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_31",
+      "x1": 5.4,
+      "y1": 4.65,
+      "x2": 6.95,
+      "y2": 4.65,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_32",
+      "x1": 6.95,
+      "y1": 4.65,
+      "x2": 7.9,
+      "y2": 4.65,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_office-floor_33",
+      "x1": 7.9,
+      "y1": 4.65,
+      "x2": 9.97,
+      "y2": 4.65,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_34",
+      "x1": 9.97,
+      "y1": 4.65,
+      "x2": 11.15,
+      "y2": 4.65,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_35",
+      "x1": 11.15,
+      "y1": 4.65,
+      "x2": 12.05,
+      "y2": 4.65,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_office-floor_36",
+      "x1": 12.05,
+      "y1": 4.65,
+      "x2": 13.43,
+      "y2": 4.65,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_37",
+      "x1": 13.43,
+      "y1": 4.65,
+      "x2": 14.2,
+      "y2": 4.65,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_38",
+      "x1": 14.2,
+      "y1": 4.65,
+      "x2": 15.1,
+      "y2": 4.65,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_office-floor_39",
+      "x1": 15.1,
+      "y1": 4.65,
+      "x2": 18.85,
+      "y2": 4.65,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_40",
+      "x1": 18.85,
+      "y1": 4.65,
+      "x2": 19.65,
+      "y2": 4.65,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_41",
+      "x1": 1.98,
+      "y1": 8,
+      "x2": 1.98,
+      "y2": 13.82,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_42",
+      "x1": 1.98,
+      "y1": 13.82,
+      "x2": 5.4,
+      "y2": 13.82,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_43",
+      "x1": 1.98,
+      "y1": 11.6,
+      "x2": 5.4,
+      "y2": 11.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_44",
+      "x1": 18.85,
+      "y1": 4.65,
+      "x2": 18.85,
+      "y2": 10.3,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_45",
+      "x1": 18.85,
+      "y1": 10.3,
+      "x2": 20.25,
+      "y2": 10.3,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_46",
+      "x1": 20.25,
+      "y1": 10.3,
+      "x2": 20.25,
+      "y2": 11.4,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_47",
+      "x1": 20.25,
+      "y1": 11.4,
+      "x2": 20.25,
+      "y2": 13,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_office-floor_48",
+      "x1": 20.25,
+      "y1": 13,
+      "x2": 20.25,
+      "y2": 13.82,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_49",
+      "x1": 20.25,
+      "y1": 13.82,
+      "x2": 7,
+      "y2": 13.82,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_office-floor_50",
+      "x1": 7,
+      "y1": 13.82,
+      "x2": 6.1,
+      "y2": 13.82,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_office-floor_51",
+      "x1": 6.1,
+      "y1": 13.82,
+      "x2": 5.4,
+      "y2": 13.82,
+      "move": true,
+      "sight": true,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "light_office-floor_52",
+      "x": 3,
+      "y": 2,
+      "radius": 3,
+      "color": "#e8f0ff",
+      "on": true
+    },
+    {
+      "id": "light_office-floor_53",
+      "x": 3,
+      "y": 6,
+      "radius": 3,
+      "color": "#fff0d8",
+      "on": true
+    },
+    {
+      "id": "light_office-floor_54",
+      "x": 2,
+      "y": 5,
+      "radius": 2,
+      "color": "#40c8ff",
+      "on": true
+    },
+    {
+      "id": "light_office-floor_55",
+      "x": 8,
+      "y": 2,
+      "radius": 3,
+      "color": "#e8f0ff",
+      "on": true
+    },
+    {
+      "id": "light_office-floor_56",
+      "x": 12,
+      "y": 2,
+      "radius": 3,
+      "color": "#e8f0ff",
+      "on": true
+    },
+    {
+      "id": "light_office-floor_57",
+      "x": 16,
+      "y": 2,
+      "radius": 3,
+      "color": "#e8f0ff",
+      "on": true
+    },
+    {
+      "id": "light_office-floor_58",
+      "x": 19,
+      "y": 3,
+      "radius": 2,
+      "color": "#ffa040",
+      "on": true
+    },
+    {
+      "id": "light_office-floor_59",
+      "x": 19,
+      "y": 2,
+      "radius": 1.5,
+      "color": "#40c8ff",
+      "on": true
+    },
+    {
+      "id": "light_office-floor_60",
+      "x": 4,
+      "y": 10,
+      "radius": 2,
+      "color": "#30b0ff",
+      "on": true
+    },
+    {
+      "id": "light_office-floor_61",
+      "x": 3,
+      "y": 12,
+      "radius": 2,
+      "color": "#60d0ff",
+      "on": true
+    },
+    {
+      "id": "light_office-floor_62",
+      "x": 7,
+      "y": 13,
+      "radius": 1.5,
+      "color": "#60e8ff",
+      "on": true
+    },
+    {
+      "id": "light_office-floor_63",
+      "x": 19,
+      "y": 12,
+      "radius": 2.5,
+      "color": "#60e0ff",
+      "on": true
+    },
+    {
+      "id": "light_office-floor_64",
+      "x": 10,
+      "y": 8,
+      "radius": 3,
+      "color": "#80e8ff",
+      "on": true
+    },
+    {
+      "id": "light_office-floor_65",
+      "x": 13,
+      "y": 8,
+      "radius": 3,
+      "color": "#80e8ff",
+      "on": true
+    },
+    {
+      "id": "light_office-floor_66",
+      "x": 16,
+      "y": 8,
+      "radius": 3,
+      "color": "#80e8ff",
+      "on": true
+    },
+    {
+      "id": "light_office-floor_67",
+      "x": 10,
+      "y": 11,
+      "radius": 3,
+      "color": "#80e8ff",
+      "on": true
+    },
+    {
+      "id": "light_office-floor_68",
+      "x": 14,
+      "y": 11,
+      "radius": 3,
+      "color": "#80e8ff",
+      "on": true
+    },
+    {
+      "id": "light_office-floor_69",
+      "x": 19,
+      "y": 8,
+      "radius": 2.5,
+      "color": "#fff0d8",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "reg_office-floor_70",
+      "name": "Salle de réunion",
+      "x": 1,
+      "y": 2,
+      "w": 4,
+      "h": 6,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_office-floor_71",
+      "name": "Bureau de direction",
+      "x": 6,
+      "y": 2,
+      "w": 3,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_office-floor_72",
+      "name": "Bureau",
+      "x": 10,
+      "y": 2,
+      "w": 3,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_office-floor_73",
+      "name": "Salle de pause",
+      "x": 14,
+      "y": 2,
+      "w": 5,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_office-floor_74",
+      "name": "Cage d'escalier",
+      "x": 2,
+      "y": 9,
+      "w": 3,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_office-floor_75",
+      "name": "Local serveur",
+      "x": 2,
+      "y": 12,
+      "w": 3,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_office-floor_76",
+      "name": "Open-space",
+      "x": 8,
+      "y": 7,
+      "w": 10,
+      "h": 5,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_office-floor_77",
+      "name": "Couloir",
+      "x": 6,
+      "y": 5,
+      "w": 12,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_office-floor_78",
+      "name": "Accueil",
+      "x": 18,
+      "y": 11,
+      "w": 1,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "libentry_office-floor_79",
+      "name": "Entrée",
+      "x": 6,
+      "y": 12,
+      "w": 1,
+      "h": 1,
+      "gmOnly": true
+    }
+  ],
+  "doors": [],
+  "notes": [
+    {
+      "id": "note_office-floor_1",
+      "x": 18,
+      "y": 12,
+      "text": "Porte de la suite : verre dépoli, cadre acier, logo au pin creux. Maglock rating 4 (badge + code à 4 chiffres). Caméra n°1 au-dessus, côté intérieur. Accueil : comptoir laqué blanc, mur végétal, caméra n°2. Le terminal de l’accueil est esclave du host (connexion directe = +2 dés pour Bricks).",
+      "gmOnly": true
+    },
+    {
+      "id": "note_office-floor_2",
+      "x": 13,
+      "y": 9,
+      "text": "Plateau ouvert : quatre postes vides, très peu personnalisés — personne ne travaille vraiment ici. Tiroirs : fournitures neuves, baux commerciaux sans intérêt. Bureaux = couverture partielle ; cloisons vitrées = aucune.",
+      "gmOnly": true
+    },
+    {
+      "id": "note_office-floor_3",
+      "x": 3,
+      "y": 5,
+      "text": "Table en verre, baie vitrée sur la ville : la fenêtre que la nacelle du laveur de vitres (toit, accès par la cage du 22e, maglock 3) permet d’atteindre. Verre renforcé non ouvrant (Structure 6, Armor 6) : 10 min de découpe, ou Athletics/Gymnastics pour tenir en place pendant qu’un autre découpe.",
+      "gmOnly": true
+    },
+    {
+      "id": "note_office-floor_4",
+      "x": 7,
+      "y": 3,
+      "text": "Bureau de Dorian Ashe, le seul endroit vivant : orchidées, photo d’Ashe avec Cornelius Wyatt-Brandt au gala Halcyon, bibliothèque de droit des sociétés. Derrière un panneau : le coffre (mécanique + pavé, rating 4 ; Locksmith + Agility seuil 4 ou autopicker). Contenu : voir Phase 4 (dossier 0419).",
+      "gmOnly": true
+    },
+    {
+      "id": "note_office-floor_5",
+      "x": 3,
+      "y": 12,
+      "text": "Salle serveur : porte blindée, maglock biométrique rating 5 (paume d’Ashe ou de l’admin du prestataire). Deux baies, console de maintenance (accès direct au host, sans bruit), clim bruyante (–2 Perception auditive). Caméra n°3. Enfoncer la porte (Structure 12, Armor 12) déclenche l’alarme.",
+      "gmOnly": true
+    },
+    {
+      "id": "note_office-floor_6",
+      "x": 3,
+      "y": 10,
+      "text": "Escalier de secours verrouillé côté cage (maglock rating 3, alarme à l’ouverture après 22 h). Ronde du garde de la tour toutes les 40 min (14e : 22 h 20, 23 h 00, 23 h 40). À 23 h 40, Reyes + 2 Nettoyeurs montent avec un badge valide : 12 minutes sur place (coffre, classeur, agent d’effacement).",
+      "gmOnly": true
+    },
+    {
+      "id": "note_office-floor_7",
+      "x": 12,
+      "y": 5,
+      "text": "De nuit : veilleuses au sol seulement (pénombre, –1 visuel sans Low-Light). Si le host est en alerte, les détecteurs de mouvement allument les plafonniers de l’accueil et du plateau.",
+      "gmOnly": true
+    }
+  ],
+  "tokens": [],
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "library": {
+    "slug": "office-floor",
+    "version": 1,
+    "linkedAt": 1795651200000
+  }
+}

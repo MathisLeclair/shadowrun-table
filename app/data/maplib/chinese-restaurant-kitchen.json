@@ -1,0 +1,339 @@
+{
+  "id": "lib_chinese-restaurant-kitchen",
+  "slug": "chinese-restaurant-kitchen",
+  "name": "Chinese Restaurant Kitchen",
+  "nameFr": "Cuisine de restaurant chinois",
+  "source": "fragmap",
+  "image": "chinese restaurant kitchen.jpg",
+  "imageW": 1820,
+  "imageH": 1540,
+  "gridPx": 140,
+  "offsetX": 0,
+  "offsetY": 0,
+  "width": 13,
+  "height": 11,
+  "metersPerCell": 1.5,
+  "theme": "bar",
+  "lighting": "dim",
+  "tags": [
+    "cuisine",
+    "kitchen",
+    "restaurant",
+    "chinois",
+    "chinese",
+    "Triade",
+    "triad",
+    "chambre froide",
+    "walk-in freezer",
+    "Chinatown",
+    "arrière-cuisine",
+    "back kitchen",
+    "fusillade",
+    "shootout",
+    "planque",
+    "intérieur",
+    "indoor"
+  ],
+  "description": "Cuisine d'un restaurant chinois : rangée de woks et fourneaux, îlot de dressage, plonge, et une chambre froide où pendent des carcasses. Une porte grillagée donne sur la ruelle, des portes battantes sur la salle. Parfaite pour une rencontre avec la Triade, une fusillade entre les fourneaux ou un corps à faire disparaître dans la chambre froide.",
+  "entry": {
+    "x": 7.2,
+    "y": 9.3
+  },
+  "walls": [
+    {
+      "id": "w1",
+      "x1": 0.86,
+      "y1": 0.9,
+      "x2": 6.15,
+      "y2": 0.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w2",
+      "x1": 6.15,
+      "y1": 0.9,
+      "x2": 7.05,
+      "y2": 0.9,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w3",
+      "x1": 7.05,
+      "y1": 0.9,
+      "x2": 7.33,
+      "y2": 0.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w4",
+      "x1": 7.33,
+      "y1": 0.9,
+      "x2": 12.44,
+      "y2": 0.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w5",
+      "x1": 12.44,
+      "y1": 0.9,
+      "x2": 12.44,
+      "y2": 4.62,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w6",
+      "x1": 12.44,
+      "y1": 4.62,
+      "x2": 12.44,
+      "y2": 9.88,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w7",
+      "x1": 12.44,
+      "y1": 9.88,
+      "x2": 8,
+      "y2": 9.88,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w8",
+      "x1": 8,
+      "y1": 9.88,
+      "x2": 6.3,
+      "y2": 9.88,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w9",
+      "x1": 6.3,
+      "y1": 9.88,
+      "x2": 0.86,
+      "y2": 9.88,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w10",
+      "x1": 0.86,
+      "y1": 9.88,
+      "x2": 0.86,
+      "y2": 0.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w11",
+      "x1": 7.33,
+      "y1": 0.9,
+      "x2": 7.33,
+      "y2": 3.4,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w12",
+      "x1": 7.33,
+      "y1": 3.4,
+      "x2": 7.33,
+      "y2": 4.5,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w13",
+      "x1": 7.33,
+      "y1": 4.5,
+      "x2": 7.33,
+      "y2": 4.62,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w14",
+      "x1": 7.33,
+      "y1": 4.62,
+      "x2": 12.44,
+      "y2": 4.62,
+      "move": true,
+      "sight": true,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "l1",
+      "x": 8.5,
+      "y": 1.25,
+      "radius": 4,
+      "color": "#c8ffc0",
+      "on": true
+    },
+    {
+      "id": "l2",
+      "x": 10.5,
+      "y": 3,
+      "radius": 3,
+      "color": "#d8ffd0",
+      "on": true
+    },
+    {
+      "id": "l3",
+      "x": 12.15,
+      "y": 7.2,
+      "radius": 4,
+      "color": "#d0ffe0",
+      "on": true
+    },
+    {
+      "id": "l4",
+      "x": 2.1,
+      "y": 3.1,
+      "radius": 2,
+      "color": "#ff8040",
+      "on": true
+    },
+    {
+      "id": "l5",
+      "x": 2.1,
+      "y": 5.8,
+      "radius": 2,
+      "color": "#ff8040",
+      "on": true
+    },
+    {
+      "id": "l6",
+      "x": 4.2,
+      "y": 5.5,
+      "radius": 4,
+      "color": "#fff0d0",
+      "on": true
+    },
+    {
+      "id": "l7",
+      "x": 6,
+      "y": 8.95,
+      "radius": 2,
+      "color": "#ffa050",
+      "on": true
+    },
+    {
+      "id": "l8",
+      "x": 4.4,
+      "y": 8.9,
+      "radius": 2,
+      "color": "#ffa050",
+      "on": true
+    },
+    {
+      "id": "l9",
+      "x": 8.8,
+      "y": 6.6,
+      "radius": 3.5,
+      "color": "#ffe8d0",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "r1",
+      "name": "Fourneaux",
+      "x": 1,
+      "y": 2,
+      "w": 2,
+      "h": 6,
+      "gmOnly": false
+    },
+    {
+      "id": "r2",
+      "name": "Passe",
+      "x": 3,
+      "y": 3,
+      "w": 3,
+      "h": 5,
+      "gmOnly": false
+    },
+    {
+      "id": "r3",
+      "name": "Préparation",
+      "x": 7,
+      "y": 5,
+      "w": 3,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "r4",
+      "name": "Plonge",
+      "x": 10,
+      "y": 5,
+      "w": 2,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "r5",
+      "name": "Chambre froide",
+      "x": 8,
+      "y": 1,
+      "w": 4,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "r6",
+      "name": "Sortie de service",
+      "x": 6,
+      "y": 1,
+      "w": 1,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "r7",
+      "name": "Portes de la salle",
+      "x": 6,
+      "y": 8,
+      "w": 2,
+      "h": 1,
+      "gmOnly": false
+    }
+  ],
+  "traced": {
+    "by": "agent",
+    "at": "2026-11-26T16:34:07.137Z",
+    "quality": "good",
+    "notes": "Portes battantes vers la salle (bas, x 6.3–8) et porte grillagée de service vers la ruelle (haut, x 6.15–7.05) déduites du dessin. La porte de la chambre froide n'est pas visible : supposée sur son mur ouest, derrière le comptoir (y 3.4–4.5). Fourneaux, îlot, plonge et congélateurs non tracés."
+  },
+  "version": 1
+}

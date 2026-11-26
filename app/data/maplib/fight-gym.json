@@ -1,0 +1,404 @@
+{
+  "id": "lib_fight-gym",
+  "slug": "fight-gym",
+  "name": "Fight Gym",
+  "nameFr": "Salle de combat",
+  "source": "fragmap",
+  "image": "fight gym.jpg",
+  "imageW": 2401,
+  "imageH": 2999,
+  "gridPx": 200,
+  "offsetX": 0,
+  "offsetY": 0,
+  "width": 13,
+  "height": 15,
+  "metersPerCell": 1.5,
+  "theme": "club",
+  "lighting": "dim",
+  "tags": [
+    "salle de sport",
+    "gym",
+    "combat",
+    "fight",
+    "ring",
+    "MMA",
+    "boxe",
+    "boxing",
+    "combat clandestin",
+    "underground fight",
+    "paris",
+    "betting",
+    "gang",
+    "entraînement",
+    "training",
+    "bureau",
+    "office",
+    "intérieur",
+    "indoor"
+  ],
+  "description": "Salle d'arts martiaux mixtes de quartier : ring central éclairé, tapis, zone de musculation, tapis de course face aux écrans et un bureau en mezzanine accessible par un escalier. Parfait pour un combat clandestin avec paris, une rencontre avec un fixer gérant de club ou une descente de gang en plein entraînement.",
+  "entry": {
+    "x": 6,
+    "y": 14.5
+  },
+  "walls": [
+    {
+      "id": "w1",
+      "x1": 0.55,
+      "y1": 0.95,
+      "x2": 4.85,
+      "y2": 0.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w2",
+      "x1": 4.85,
+      "y1": 0.95,
+      "x2": 4.85,
+      "y2": 1.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w3",
+      "x1": 4.85,
+      "y1": 1.6,
+      "x2": 4.85,
+      "y2": 2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w4",
+      "x1": 4.85,
+      "y1": 2,
+      "x2": 4.85,
+      "y2": 2.9,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w5",
+      "x1": 4.85,
+      "y1": 2.9,
+      "x2": 4.85,
+      "y2": 3.05,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w6",
+      "x1": 4.85,
+      "y1": 3.05,
+      "x2": 4.85,
+      "y2": 4.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w7",
+      "x1": 0.55,
+      "y1": 3.4,
+      "x2": 4.85,
+      "y2": 3.4,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w8",
+      "x1": 0.55,
+      "y1": 4.6,
+      "x2": 4.85,
+      "y2": 4.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w9",
+      "x1": 0.55,
+      "y1": 0.95,
+      "x2": 0.55,
+      "y2": 15,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w10",
+      "x1": 4.85,
+      "y1": 1.6,
+      "x2": 11.1,
+      "y2": 1.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w11",
+      "x1": 11.1,
+      "y1": 1.6,
+      "x2": 11.1,
+      "y2": 4.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w12",
+      "x1": 11.1,
+      "y1": 4.6,
+      "x2": 10.75,
+      "y2": 4.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w13",
+      "x1": 10.75,
+      "y1": 4.6,
+      "x2": 10.75,
+      "y2": 15,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w14",
+      "x1": 4.85,
+      "y1": 3.05,
+      "x2": 5.9,
+      "y2": 3.05,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w15",
+      "x1": 5.9,
+      "y1": 3.05,
+      "x2": 5.9,
+      "y2": 4,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w16",
+      "x1": 6.6,
+      "y1": 1.6,
+      "x2": 6.6,
+      "y2": 4,
+      "move": true,
+      "sight": false,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "l1",
+      "x": 6.7,
+      "y": 1.85,
+      "radius": 3,
+      "color": "#fff4e0",
+      "on": true
+    },
+    {
+      "id": "l2",
+      "x": 7.85,
+      "y": 1.85,
+      "radius": 3,
+      "color": "#fff4e0",
+      "on": true
+    },
+    {
+      "id": "l3",
+      "x": 8.85,
+      "y": 1.95,
+      "radius": 3,
+      "color": "#fff4e0",
+      "on": true
+    },
+    {
+      "id": "l4",
+      "x": 5.4,
+      "y": 8.5,
+      "radius": 5,
+      "color": "#ffffff",
+      "on": true
+    },
+    {
+      "id": "l5",
+      "x": 2.6,
+      "y": 2.4,
+      "radius": 3,
+      "color": "#c0fff0",
+      "on": true
+    },
+    {
+      "id": "l6",
+      "x": 10.2,
+      "y": 6.3,
+      "radius": 1.5,
+      "color": "#60ffe0",
+      "on": true
+    },
+    {
+      "id": "l7",
+      "x": 10.2,
+      "y": 7.5,
+      "radius": 1.5,
+      "color": "#60ffe0",
+      "on": true
+    },
+    {
+      "id": "l8",
+      "x": 10.2,
+      "y": 8.7,
+      "radius": 1.5,
+      "color": "#60ffe0",
+      "on": true
+    },
+    {
+      "id": "l9",
+      "x": 10.3,
+      "y": 10.3,
+      "radius": 2,
+      "color": "#ff3030",
+      "on": true
+    },
+    {
+      "id": "l10",
+      "x": 10.7,
+      "y": 3.5,
+      "radius": 1.5,
+      "color": "#ffffff",
+      "on": true
+    },
+    {
+      "id": "l11",
+      "x": 1,
+      "y": 12.6,
+      "radius": 2.5,
+      "color": "#a0e8ff",
+      "on": true
+    },
+    {
+      "id": "l12",
+      "x": 1,
+      "y": 7.1,
+      "radius": 2,
+      "color": "#a0f0ff",
+      "on": true
+    },
+    {
+      "id": "l13",
+      "x": 9.6,
+      "y": 12.3,
+      "radius": 1.5,
+      "color": "#e0e8ff",
+      "on": true
+    },
+    {
+      "id": "l14",
+      "x": 9.6,
+      "y": 13.5,
+      "radius": 1.5,
+      "color": "#e0e8ff",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "r1",
+      "name": "Bureau (mezzanine)",
+      "x": 1,
+      "y": 1,
+      "w": 3,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "r2",
+      "name": "Escalier",
+      "x": 5,
+      "y": 2,
+      "w": 1,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "r3",
+      "name": "Accueil",
+      "x": 7,
+      "y": 2,
+      "w": 3,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "r4",
+      "name": "Casiers",
+      "x": 1,
+      "y": 5,
+      "w": 2,
+      "h": 5,
+      "gmOnly": false
+    },
+    {
+      "id": "r5",
+      "name": "Ring",
+      "x": 4,
+      "y": 7,
+      "w": 3,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "r6",
+      "name": "Cardio",
+      "x": 8,
+      "y": 5,
+      "w": 2,
+      "h": 5,
+      "gmOnly": false
+    },
+    {
+      "id": "r7",
+      "name": "Musculation",
+      "x": 3,
+      "y": 11,
+      "w": 6,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "r8",
+      "name": "Entrée",
+      "x": 5,
+      "y": 14,
+      "w": 4,
+      "h": 1,
+      "gmOnly": false
+    }
+  ],
+  "traced": {
+    "by": "agent",
+    "at": "2026-11-26T16:36:06.370Z",
+    "quality": "rough",
+    "notes": "Carte sombre en perspective. Le bureau est en mezzanine : on y monte par l'escalier (palier x 5–6.5) et une porte est supposée sur son mur est ; la façade vitrée sous le bureau (y 3.4–4.6) est traitée comme un bloc plein. Rambardes de l'escalier = fenêtres. Le bas de la carte (y 14–15) est laissé ouvert : la salle continue hors champ, c'est l'entrée supposée. Cordes du ring, bancs, tapis de course et casiers non tracés."
+  },
+  "version": 1
+}

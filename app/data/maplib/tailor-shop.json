@@ -1,0 +1,344 @@
+{
+  "id": "lib_tailor-shop",
+  "slug": "tailor-shop",
+  "name": "Tailor Shop",
+  "nameFr": "Atelier de tailleur",
+  "source": "fragmap",
+  "image": "tailor shop.jpg",
+  "imageW": 2400,
+  "imageH": 1800,
+  "gridPx": 200,
+  "offsetX": 0,
+  "offsetY": 0,
+  "width": 12,
+  "height": 9,
+  "metersPerCell": 1.5,
+  "theme": "street",
+  "lighting": "dim",
+  "tags": [
+    "tailleur",
+    "tailor",
+    "boutique",
+    "shop",
+    "magasin",
+    "store",
+    "atelier",
+    "workshop",
+    "couture",
+    "costume",
+    "suit",
+    "façade",
+    "front",
+    "contact",
+    "fixer",
+    "mafia",
+    "intérieur",
+    "indoor",
+    "petit",
+    "small"
+  ],
+  "description": "Boutique de tailleur à l'ancienne : salle d'exposition avec vitrines de chemises et de cravates, tapis persans, et un atelier de coupe à l'arrière avec une porte de service. Parfaite comme façade d'un fixer ou de la Mafia, rendez-vous discret avec un Johnson en costume, ou lieu où se faire faire une veste blindée sur mesure.",
+  "entry": {
+    "x": 1.5,
+    "y": 6.6
+  },
+  "walls": [
+    {
+      "id": "w1",
+      "x1": 0.96,
+      "y1": 4.85,
+      "x2": 6.88,
+      "y2": 4.85,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w2",
+      "x1": 6.88,
+      "y1": 4.85,
+      "x2": 6.88,
+      "y2": 5.05,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w3",
+      "x1": 6.88,
+      "y1": 5.05,
+      "x2": 7.46,
+      "y2": 5.05,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w4",
+      "x1": 7.46,
+      "y1": 5.05,
+      "x2": 7.46,
+      "y2": 4.52,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w5",
+      "x1": 7.46,
+      "y1": 4.52,
+      "x2": 7.15,
+      "y2": 4.52,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w6",
+      "x1": 7.15,
+      "y1": 4.52,
+      "x2": 7.15,
+      "y2": 1.14,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w7",
+      "x1": 7.15,
+      "y1": 1.14,
+      "x2": 9.3,
+      "y2": 1.14,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w8",
+      "x1": 9.3,
+      "y1": 1.14,
+      "x2": 10.4,
+      "y2": 1.14,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w9",
+      "x1": 10.4,
+      "y1": 1.14,
+      "x2": 10.65,
+      "y2": 1.14,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w10",
+      "x1": 10.65,
+      "y1": 1.14,
+      "x2": 10.65,
+      "y2": 4.8,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w11",
+      "x1": 10.65,
+      "y1": 4.8,
+      "x2": 9.25,
+      "y2": 4.8,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w12",
+      "x1": 9.25,
+      "y1": 4.8,
+      "x2": 9.25,
+      "y2": 5.8,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w13",
+      "x1": 9.25,
+      "y1": 5.8,
+      "x2": 9.45,
+      "y2": 5.8,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w14",
+      "x1": 9.45,
+      "y1": 5.8,
+      "x2": 9.45,
+      "y2": 8.47,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w15",
+      "x1": 9.45,
+      "y1": 8.47,
+      "x2": 0.96,
+      "y2": 8.47,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w16",
+      "x1": 0.96,
+      "y1": 8.47,
+      "x2": 0.96,
+      "y2": 7.1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w17",
+      "x1": 0.96,
+      "y1": 7.1,
+      "x2": 0.96,
+      "y2": 6.05,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w18",
+      "x1": 0.96,
+      "y1": 6.05,
+      "x2": 0.96,
+      "y2": 4.85,
+      "move": true,
+      "sight": true,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "l1",
+      "x": 8.8,
+      "y": 2.7,
+      "radius": 3,
+      "color": "#ffd8a0",
+      "on": true
+    },
+    {
+      "id": "l2",
+      "x": 10.1,
+      "y": 3.7,
+      "radius": 2,
+      "color": "#fff0d0",
+      "on": true
+    },
+    {
+      "id": "l3",
+      "x": 3.6,
+      "y": 6.9,
+      "radius": 3,
+      "color": "#ffe8c0",
+      "on": true
+    },
+    {
+      "id": "l4",
+      "x": 2.1,
+      "y": 5.4,
+      "radius": 2.5,
+      "color": "#ffd8a0",
+      "on": true
+    },
+    {
+      "id": "l5",
+      "x": 4.3,
+      "y": 5.4,
+      "radius": 2.5,
+      "color": "#ffd8a0",
+      "on": true
+    },
+    {
+      "id": "l6",
+      "x": 6.2,
+      "y": 7.9,
+      "radius": 2,
+      "color": "#ffe0b0",
+      "on": true
+    },
+    {
+      "id": "l7",
+      "x": 9.1,
+      "y": 7.7,
+      "radius": 2,
+      "color": "#ffd8a0",
+      "on": true
+    },
+    {
+      "id": "l8",
+      "x": 9.15,
+      "y": 6.05,
+      "radius": 1.5,
+      "color": "#fff0d0",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "r1",
+      "name": "Entrée",
+      "x": 1,
+      "y": 6,
+      "w": 1,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "r2",
+      "name": "Boutique",
+      "x": 2,
+      "y": 5,
+      "w": 4,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "r3",
+      "name": "Rayon chemises",
+      "x": 6,
+      "y": 5,
+      "w": 3,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "r4",
+      "name": "Atelier de coupe",
+      "x": 7,
+      "y": 1,
+      "w": 4,
+      "h": 4,
+      "gmOnly": false
+    }
+  ],
+  "traced": {
+    "by": "agent",
+    "at": "2026-11-26T16:32:45.270Z",
+    "quality": "good",
+    "notes": "Plan ouvert en L : la boutique et l'atelier communiquent sans porte. Porte d'entrée sur le mur ouest (vitrée, digicode vert), porte de service au nord de l'atelier (digicode rouge). Vitrines, comptoirs et étagères non tracés."
+  },
+  "version": 1
+}

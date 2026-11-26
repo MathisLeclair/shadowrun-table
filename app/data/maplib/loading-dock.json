@@ -1,0 +1,644 @@
+{
+  "id": "lib_loading-dock",
+  "slug": "loading-dock",
+  "name": "Loading Dock",
+  "nameFr": "Quai de chargement",
+  "source": "fragmap",
+  "image": "loading dock.jpg",
+  "imageW": 3640,
+  "imageH": 4900,
+  "gridPx": 140,
+  "offsetX": 0,
+  "offsetY": 0,
+  "width": 26,
+  "height": 35,
+  "metersPerCell": 1.5,
+  "theme": "industrial",
+  "lighting": "dark",
+  "tags": [
+    "quai de chargement",
+    "loading dock",
+    "entrepôt",
+    "warehouse",
+    "camion",
+    "truck",
+    "livraison",
+    "delivery",
+    "ruelle",
+    "alley",
+    "rue",
+    "street",
+    "contrebande",
+    "smuggling",
+    "braquage",
+    "hijack",
+    "embuscade",
+    "ambush",
+    "nuit",
+    "night",
+    "extérieur",
+    "outdoor"
+  ],
+  "description": "Arrière d'un entrepôt la nuit : quai de chargement éclairé où un semi-remorque est à quai, ruelle étroite bordée de boutiques à néons, rue et trottoir face à des toits industriels, cour grillagée. Parfait pour détourner une livraison, intercepter une cargaison de contrebande ou tendre une embuscade.",
+  "entry": {
+    "x": 6.5,
+    "y": 21.5
+  },
+  "walls": [
+    {
+      "id": "w1",
+      "x1": 4.4,
+      "y1": 0,
+      "x2": 4.4,
+      "y2": 12.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w2",
+      "x1": 4.4,
+      "y1": 12.6,
+      "x2": 4.4,
+      "y2": 14.4,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w3",
+      "x1": 4.4,
+      "y1": 14.4,
+      "x2": 4.4,
+      "y2": 16.2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w4",
+      "x1": 4.4,
+      "y1": 16.2,
+      "x2": 0,
+      "y2": 16.2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w5",
+      "x1": 7.95,
+      "y1": 0,
+      "x2": 7.95,
+      "y2": 7.2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w6",
+      "x1": 7.95,
+      "y1": 7.2,
+      "x2": 9.2,
+      "y2": 9.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w7",
+      "x1": 9.2,
+      "y1": 9.6,
+      "x2": 9.4,
+      "y2": 9.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w8",
+      "x1": 9.4,
+      "y1": 9.6,
+      "x2": 10.6,
+      "y2": 9.6,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w9",
+      "x1": 10.6,
+      "y1": 9.6,
+      "x2": 12,
+      "y2": 9.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w10",
+      "x1": 12,
+      "y1": 9.6,
+      "x2": 13.8,
+      "y2": 9.6,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "open",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w11",
+      "x1": 13.8,
+      "y1": 9.6,
+      "x2": 15.6,
+      "y2": 9.6,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "open",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w12",
+      "x1": 15.6,
+      "y1": 9.6,
+      "x2": 16.9,
+      "y2": 9.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w13",
+      "x1": 16.9,
+      "y1": 9.6,
+      "x2": 18,
+      "y2": 9.6,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w14",
+      "x1": 18,
+      "y1": 9.6,
+      "x2": 18.1,
+      "y2": 9.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w15",
+      "x1": 18.1,
+      "y1": 9.6,
+      "x2": 18.1,
+      "y2": 19,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w16",
+      "x1": 18.1,
+      "y1": 19,
+      "x2": 26,
+      "y2": 19,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w17",
+      "x1": 13.1,
+      "y1": 9.8,
+      "x2": 15,
+      "y2": 9.8,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w18",
+      "x1": 15,
+      "y1": 9.8,
+      "x2": 15,
+      "y2": 17.8,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w19",
+      "x1": 15,
+      "y1": 17.8,
+      "x2": 13.1,
+      "y2": 17.8,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w20",
+      "x1": 13.1,
+      "y1": 17.8,
+      "x2": 13.1,
+      "y2": 9.8,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w21",
+      "x1": 16.1,
+      "y1": 9.85,
+      "x2": 18,
+      "y2": 9.85,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w22",
+      "x1": 18,
+      "y1": 9.85,
+      "x2": 18,
+      "y2": 14.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w23",
+      "x1": 18,
+      "y1": 14.5,
+      "x2": 16.1,
+      "y2": 14.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w24",
+      "x1": 16.1,
+      "y1": 14.5,
+      "x2": 16.1,
+      "y2": 9.85,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w25",
+      "x1": 12.1,
+      "y1": 27.2,
+      "x2": 17.4,
+      "y2": 27.2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w26",
+      "x1": 17.4,
+      "y1": 27.2,
+      "x2": 17.4,
+      "y2": 29.4,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w27",
+      "x1": 17.4,
+      "y1": 29.4,
+      "x2": 12.1,
+      "y2": 29.4,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w28",
+      "x1": 12.1,
+      "y1": 29.4,
+      "x2": 12.1,
+      "y2": 27.2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w29",
+      "x1": 4.85,
+      "y1": 1.3,
+      "x2": 5.9,
+      "y2": 1.3,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w30",
+      "x1": 5.9,
+      "y1": 1.3,
+      "x2": 5.9,
+      "y2": 3.3,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w31",
+      "x1": 5.9,
+      "y1": 3.3,
+      "x2": 4.85,
+      "y2": 3.3,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w32",
+      "x1": 4.85,
+      "y1": 3.3,
+      "x2": 4.85,
+      "y2": 1.3,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w33",
+      "x1": 8.2,
+      "y1": 32.3,
+      "x2": 10.1,
+      "y2": 32.3,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w34",
+      "x1": 10.1,
+      "y1": 32.3,
+      "x2": 10.1,
+      "y2": 33.8,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w35",
+      "x1": 10.1,
+      "y1": 33.8,
+      "x2": 8.2,
+      "y2": 33.8,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w36",
+      "x1": 8.2,
+      "y1": 33.8,
+      "x2": 8.2,
+      "y2": 32.3,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w37",
+      "x1": 0,
+      "y1": 31.5,
+      "x2": 5.2,
+      "y2": 31.5,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w38",
+      "x1": 7.6,
+      "y1": 31.5,
+      "x2": 11.2,
+      "y2": 31.5,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w39",
+      "x1": 11.2,
+      "y1": 35,
+      "x2": 11.2,
+      "y2": 31.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w40",
+      "x1": 11.2,
+      "y1": 31.5,
+      "x2": 11.9,
+      "y2": 31.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w41",
+      "x1": 11.9,
+      "y1": 31.5,
+      "x2": 11.9,
+      "y2": 30.2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w42",
+      "x1": 11.9,
+      "y1": 30.2,
+      "x2": 26,
+      "y2": 30.2,
+      "move": true,
+      "sight": true,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "l1",
+      "x": 1.7,
+      "y": 25.6,
+      "radius": 6,
+      "color": "#ffd8a0",
+      "on": true
+    },
+    {
+      "id": "l2",
+      "x": 4.65,
+      "y": 11.8,
+      "radius": 3,
+      "color": "#ffd080",
+      "on": true
+    },
+    {
+      "id": "l3",
+      "x": 3,
+      "y": 16.6,
+      "radius": 2,
+      "color": "#60ffb0",
+      "on": true
+    },
+    {
+      "id": "l4",
+      "x": 4.65,
+      "y": 5.8,
+      "radius": 2.5,
+      "color": "#ffa040",
+      "on": true
+    },
+    {
+      "id": "l5",
+      "x": 4.65,
+      "y": 1.5,
+      "radius": 2,
+      "color": "#e0f0ff",
+      "on": true
+    },
+    {
+      "id": "l6",
+      "x": 11.5,
+      "y": 10.1,
+      "radius": 3,
+      "color": "#ffd080",
+      "on": true
+    },
+    {
+      "id": "l7",
+      "x": 9.9,
+      "y": 9.9,
+      "radius": 2,
+      "color": "#fff0d0",
+      "on": true
+    },
+    {
+      "id": "l8",
+      "x": 14,
+      "y": 18.3,
+      "radius": 3,
+      "color": "#fff0d0",
+      "on": true
+    },
+    {
+      "id": "l9",
+      "x": 23,
+      "y": 19.8,
+      "radius": 4,
+      "color": "#a060ff",
+      "on": true
+    },
+    {
+      "id": "l10",
+      "x": 16.7,
+      "y": 29.9,
+      "radius": 2.5,
+      "color": "#ffc060",
+      "on": true
+    },
+    {
+      "id": "l11",
+      "x": 20.1,
+      "y": 29.9,
+      "radius": 2.5,
+      "color": "#ffc060",
+      "on": true
+    },
+    {
+      "id": "l12",
+      "x": 24.7,
+      "y": 29.9,
+      "radius": 2.5,
+      "color": "#ffc060",
+      "on": true
+    },
+    {
+      "id": "l13",
+      "x": 25.6,
+      "y": 28.4,
+      "radius": 3,
+      "color": "#ff3060",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "r1",
+      "name": "Ruelle",
+      "x": 5,
+      "y": 0,
+      "w": 3,
+      "h": 16,
+      "gmOnly": false
+    },
+    {
+      "id": "r2",
+      "name": "Quai de chargement",
+      "x": 9,
+      "y": 10,
+      "w": 4,
+      "h": 6,
+      "gmOnly": false
+    },
+    {
+      "id": "r3",
+      "name": "Rue",
+      "x": 0,
+      "y": 19,
+      "w": 26,
+      "h": 9,
+      "gmOnly": false
+    },
+    {
+      "id": "r4",
+      "name": "Trottoir",
+      "x": 0,
+      "y": 29,
+      "w": 12,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "r5",
+      "name": "Cour grillagée",
+      "x": 0,
+      "y": 32,
+      "w": 11,
+      "h": 3,
+      "gmOnly": false
+    }
+  ],
+  "traced": {
+    "by": "agent",
+    "at": "2026-11-26T16:42:37.362Z",
+    "quality": "good",
+    "notes": "Carte extérieure : seuls les façades des bâtiments (murs à la base des façades en perspective), les grillages (bloquent le passage, pas la vue), les véhicules hauts (semi-remorque, camion-caisse, fourgon : murs pleins) et les véhicules bas (moto, voiture : passage bloqué seulement) sont tracés. Portes : boutique de la ruelle, porte de service, grand quai ouvert (2 battants) et porte latérale de l'entrepôt. La rue reste ouverte ; le bord du quai (bande jaune) n'est pas un mur."
+  },
+  "version": 1
+}

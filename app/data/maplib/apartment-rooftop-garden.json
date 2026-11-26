@@ -1,0 +1,367 @@
+{
+  "id": "lib_apartment-rooftop-garden",
+  "slug": "apartment-rooftop-garden",
+  "name": "Apartment Rooftop Garden",
+  "nameFr": "Jardin sur le toit",
+  "source": "fragmap",
+  "image": "apartment rooftop garden.jpg",
+  "imageW": 5180,
+  "imageH": 3360,
+  "gridPx": 140,
+  "offsetX": 0,
+  "offsetY": 0,
+  "width": 37,
+  "height": 24,
+  "metersPerCell": 1.5,
+  "theme": "residential",
+  "lighting": "bright",
+  "tags": [
+    "toit",
+    "rooftop",
+    "toit-terrasse",
+    "roof garden",
+    "jardin",
+    "garden",
+    "potager",
+    "immeuble",
+    "apartment",
+    "résidentiel",
+    "residential",
+    "linge",
+    "laundry",
+    "sniper",
+    "filature",
+    "poursuite",
+    "chase",
+    "extérieur",
+    "outdoor",
+    "jour",
+    "daylight"
+  ],
+  "description": "Toit-terrasse d'un immeuble d'habitation transformé en potager communautaire : bacs de légumes, pergola, linge qui sèche, cerné par des tours plus hautes et un vide sur la rue. Parfait pour une poursuite sur les toits, un poste de tir embusqué, une rencontre discrète entre voisins ou un contact qui cultive bien plus que des tomates.",
+  "entry": {
+    "x": 27.3,
+    "y": 7.1
+  },
+  "walls": [
+    {
+      "id": "w1",
+      "x1": 10,
+      "y1": 14.6,
+      "x2": 10,
+      "y2": 8.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w2",
+      "x1": 10,
+      "y1": 8.5,
+      "x2": 10,
+      "y2": 7.45,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w3",
+      "x1": 10,
+      "y1": 7.45,
+      "x2": 10,
+      "y2": 5.45,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w4",
+      "x1": 10,
+      "y1": 5.45,
+      "x2": 12.95,
+      "y2": 5.45,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w5",
+      "x1": 12.95,
+      "y1": 5.45,
+      "x2": 12.95,
+      "y2": 6.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w6",
+      "x1": 12.95,
+      "y1": 6.75,
+      "x2": 21.05,
+      "y2": 6.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w7",
+      "x1": 21.05,
+      "y1": 6.75,
+      "x2": 21.05,
+      "y2": 5.45,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w8",
+      "x1": 21.05,
+      "y1": 5.45,
+      "x2": 28,
+      "y2": 5.45,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w9",
+      "x1": 28,
+      "y1": 5.45,
+      "x2": 28,
+      "y2": 6.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w10",
+      "x1": 28,
+      "y1": 6.5,
+      "x2": 28,
+      "y2": 7.8,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w11",
+      "x1": 28,
+      "y1": 7.8,
+      "x2": 28,
+      "y2": 10.1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w12",
+      "x1": 28,
+      "y1": 10.1,
+      "x2": 31.7,
+      "y2": 10.1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w13",
+      "x1": 31.7,
+      "y1": 10.1,
+      "x2": 31.7,
+      "y2": 17.9,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w14",
+      "x1": 31.7,
+      "y1": 17.9,
+      "x2": 24.55,
+      "y2": 17.9,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w15",
+      "x1": 24.55,
+      "y1": 17.9,
+      "x2": 24.55,
+      "y2": 15,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w16",
+      "x1": 24.55,
+      "y1": 15,
+      "x2": 21.15,
+      "y2": 15,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w17",
+      "x1": 21.15,
+      "y1": 15,
+      "x2": 21.15,
+      "y2": 10.9,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w18",
+      "x1": 21.15,
+      "y1": 10.9,
+      "x2": 14.85,
+      "y2": 10.9,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w19",
+      "x1": 14.85,
+      "y1": 10.9,
+      "x2": 14.85,
+      "y2": 10.05,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w20",
+      "x1": 14.85,
+      "y1": 10.05,
+      "x2": 12.2,
+      "y2": 10.05,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w21",
+      "x1": 12.2,
+      "y1": 10.05,
+      "x2": 12.2,
+      "y2": 13.43,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w22",
+      "x1": 12.2,
+      "y1": 13.43,
+      "x2": 13.3,
+      "y2": 13.43,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w23",
+      "x1": 13.3,
+      "y1": 13.43,
+      "x2": 13.3,
+      "y2": 14.6,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w24",
+      "x1": 13.3,
+      "y1": 14.6,
+      "x2": 10,
+      "y2": 14.6,
+      "move": true,
+      "sight": false,
+      "door": null
+    }
+  ],
+  "lights": [],
+  "regions": [
+    {
+      "id": "r1",
+      "name": "Passerelle ouest",
+      "x": 10,
+      "y": 8,
+      "w": 2,
+      "h": 6,
+      "gmOnly": false
+    },
+    {
+      "id": "r2",
+      "name": "Terrasse nord",
+      "x": 13,
+      "y": 7,
+      "w": 8,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "r3",
+      "name": "Potager",
+      "x": 21,
+      "y": 6,
+      "w": 6,
+      "h": 4,
+      "gmOnly": false
+    },
+    {
+      "id": "r4",
+      "name": "Sortie d'escalier",
+      "x": 26,
+      "y": 6,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "r5",
+      "name": "Pergola",
+      "x": 22,
+      "y": 12,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "r6",
+      "name": "Jardin est",
+      "x": 25,
+      "y": 10,
+      "w": 5,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "r7",
+      "name": "Étendoir",
+      "x": 25,
+      "y": 13,
+      "w": 6,
+      "h": 4,
+      "gmOnly": false
+    }
+  ],
+  "traced": {
+    "by": "agent",
+    "at": "2026-11-26T16:40:54.265Z",
+    "quality": "good",
+    "notes": "Vue aérienne en perspective : murs posés au pied des façades. Les façades des tours voisines, le bloc d'escalier à l'est et la tourelle centrale bloquent la vue ; les parapets au-dessus du vide (cour et rue) sont des fenêtres (bloquent le passage, pas la vue). Porte d'accès au toit supposée sur le panneau vert-bleu du bloc d'escalier, porte verte de l'immeuble ouest. Toits voisins hors d'atteinte, non tracés. Bacs, pergola et étendoirs non tracés."
+  },
+  "version": 1
+}

@@ -1,7 +1,7 @@
 {
   "id": "map_back_alley",
   "name": "Ruelle derrière le bar",
-  "folder": "Acte 1",
+  "folder": "Cartes maison (anciennes)",
   "description": "**La ruelle derrière le bar de Porfla — Renton.** Une ruelle étroite et humide qui part de la rue (ouest) et finit en cul-de-sac derrière un grillage cadenassé (est). Poubelles, épave de voiture, échelles d'incendie, porte de cuisine d'un boui-boui à nouilles et rideau de garage.\n\n**Utilisation**\n- Quête 1.1 *Cleanup Crew*, Phase 2 : si les runners traînent, Porfla est emmené et la scène devient un sauvetage + **poursuite** ici. Phase 4 : le cul-de-sac est l'endroit rêvé pour capturer un Nettoyeur vivant.\n- Réutilisable pour n'importe quelle embuscade de rue à Renton.\n\n**Tests utiles**\n- Escalade seuil 2 : échelles d'incendie / grillage.\n- Perception seuil 3 dans le noir : repérer quelqu'un tapi derrière les bennes (−6 sans vision nocturne hors des halos de lumière).\n- Lumière : seuls les lampadaires de la rue, l'applique de la porte du bar et le néon du Wok Hei éclairent ; l'ampoule du garage est grillée (à rallumer depuis l'onglet carte).",
   "width": 50,
   "height": 30,

@@ -1,0 +1,446 @@
+{
+  "id": "map_lib_electronics-repair-shop",
+  "name": "Boutique d’Old Lin (Chinatown)",
+  "folder": "Acte 2",
+  "description": "**Lieu de campagne :** La boutique de réparation de commlinks d’Old Lin, faussaire de SIN rating 4 : elle a vendu son identité « Rae Calder » à Windows.\n\n**Quête :** Windows Open (Porte C).\n\n**À adapter :** Rien à changer : l’atelier est la boutique, la réserve et la trappe servent pour le matériel de faussaire.\n\n**La carte (bibliothèque Fragmaps, « Atelier de réparation électronique ») :** Petit atelier de réparation électronique encombré d'établis, de pièces détachées et de vieux terminaux, avec une réserve attenante ouverte sur la rue par un rideau métallique et une trappe au sol. Parfait comme repaire d'un contact technicien, d'un receleur de matos ou d'un decker qui bricole des deck volés.\n\nVoir Shadowrun/cartes-campagne.md.",
+  "width": 10,
+  "height": 8,
+  "metersPerCell": 1.5,
+  "theme": "street",
+  "lighting": "dim",
+  "tiles": [
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+    ".........."
+  ],
+  "background": {
+    "url": "/api/maplib/image/electronics-repair-shop",
+    "opacity": 1,
+    "mode": "image",
+    "x": 0,
+    "y": 0,
+    "w": 10,
+    "h": 8
+  },
+  "walls": [
+    {
+      "id": "wall_electronics-repair-shop_1",
+      "x1": 2.55,
+      "y1": 1,
+      "x2": 5.32,
+      "y2": 1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_electronics-repair-shop_2",
+      "x1": 5.32,
+      "y1": 1,
+      "x2": 5.32,
+      "y2": 2.58,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_electronics-repair-shop_3",
+      "x1": 5.32,
+      "y1": 2.58,
+      "x2": 6.39,
+      "y2": 2.58,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_electronics-repair-shop_4",
+      "x1": 6.39,
+      "y1": 2.58,
+      "x2": 6.39,
+      "y2": 3.6,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_electronics-repair-shop_5",
+      "x1": 6.39,
+      "y1": 3.6,
+      "x2": 6.39,
+      "y2": 4.63,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_electronics-repair-shop_6",
+      "x1": 6.39,
+      "y1": 4.63,
+      "x2": 5.88,
+      "y2": 4.63,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_electronics-repair-shop_7",
+      "x1": 5.88,
+      "y1": 4.63,
+      "x2": 5.88,
+      "y2": 4.93,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_electronics-repair-shop_8",
+      "x1": 5.88,
+      "y1": 4.93,
+      "x2": 5.28,
+      "y2": 4.93,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_electronics-repair-shop_9",
+      "x1": 5.28,
+      "y1": 4.93,
+      "x2": 5.28,
+      "y2": 5.4,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_electronics-repair-shop_10",
+      "x1": 5.28,
+      "y1": 5.4,
+      "x2": 6,
+      "y2": 5.4,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_electronics-repair-shop_11",
+      "x1": 6,
+      "y1": 5.4,
+      "x2": 6,
+      "y2": 7.86,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_electronics-repair-shop_12",
+      "x1": 6,
+      "y1": 7.86,
+      "x2": 3.96,
+      "y2": 7.86,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_electronics-repair-shop_13",
+      "x1": 3.96,
+      "y1": 7.86,
+      "x2": 3.96,
+      "y2": 6.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_electronics-repair-shop_14",
+      "x1": 3.96,
+      "y1": 6.5,
+      "x2": 1.2,
+      "y2": 6.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_electronics-repair-shop_15",
+      "x1": 1.2,
+      "y1": 6.5,
+      "x2": 1.2,
+      "y2": 2.39,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_electronics-repair-shop_16",
+      "x1": 1.2,
+      "y1": 2.39,
+      "x2": 2.55,
+      "y2": 2.39,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_electronics-repair-shop_17",
+      "x1": 2.55,
+      "y1": 2.39,
+      "x2": 2.55,
+      "y2": 1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_electronics-repair-shop_18",
+      "x1": 6.39,
+      "y1": 2.58,
+      "x2": 6.75,
+      "y2": 2.58,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_electronics-repair-shop_19",
+      "x1": 6.39,
+      "y1": 3.6,
+      "x2": 6.75,
+      "y2": 3.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_electronics-repair-shop_20",
+      "x1": 6.75,
+      "y1": 2.58,
+      "x2": 6.75,
+      "y2": 1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_electronics-repair-shop_21",
+      "x1": 6.75,
+      "y1": 1,
+      "x2": 8.45,
+      "y2": 1,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_electronics-repair-shop_22",
+      "x1": 8.45,
+      "y1": 1,
+      "x2": 9.45,
+      "y2": 1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_electronics-repair-shop_23",
+      "x1": 9.45,
+      "y1": 1,
+      "x2": 9.45,
+      "y2": 5.13,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_electronics-repair-shop_24",
+      "x1": 9.45,
+      "y1": 5.13,
+      "x2": 6.75,
+      "y2": 5.13,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_electronics-repair-shop_25",
+      "x1": 6.75,
+      "y1": 5.13,
+      "x2": 6.75,
+      "y2": 3.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "light_electronics-repair-shop_26",
+      "x": 4,
+      "y": 4,
+      "radius": 3.5,
+      "color": "#ffe6b0",
+      "on": true
+    },
+    {
+      "id": "light_electronics-repair-shop_27",
+      "x": 2,
+      "y": 4,
+      "radius": 2,
+      "color": "#ffd860",
+      "on": true
+    },
+    {
+      "id": "light_electronics-repair-shop_28",
+      "x": 5,
+      "y": 7,
+      "radius": 2.5,
+      "color": "#fff0c8",
+      "on": true
+    },
+    {
+      "id": "light_electronics-repair-shop_29",
+      "x": 5,
+      "y": 7,
+      "radius": 1,
+      "color": "#60ff80",
+      "on": true
+    },
+    {
+      "id": "light_electronics-repair-shop_30",
+      "x": 6,
+      "y": 4,
+      "radius": 1.5,
+      "color": "#e8f0ff",
+      "on": true
+    },
+    {
+      "id": "light_electronics-repair-shop_31",
+      "x": 7,
+      "y": 2,
+      "radius": 3.5,
+      "color": "#fff6e6",
+      "on": true
+    },
+    {
+      "id": "light_electronics-repair-shop_32",
+      "x": 8,
+      "y": 4,
+      "radius": 2,
+      "color": "#f0e8d8",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "reg_electronics-repair-shop_33",
+      "name": "Atelier",
+      "x": 2,
+      "y": 3,
+      "w": 3,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_electronics-repair-shop_34",
+      "name": "Établi",
+      "x": 1,
+      "y": 3,
+      "w": 1,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_electronics-repair-shop_35",
+      "name": "Rayonnages",
+      "x": 3,
+      "y": 1,
+      "w": 2,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_electronics-repair-shop_36",
+      "name": "Poste de diagnostic",
+      "x": 5,
+      "y": 3,
+      "w": 1,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_electronics-repair-shop_37",
+      "name": "Trappe",
+      "x": 4,
+      "y": 6,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_electronics-repair-shop_38",
+      "name": "Réserve",
+      "x": 7,
+      "y": 2,
+      "w": 2,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_electronics-repair-shop_39",
+      "name": "Rideau métallique",
+      "x": 7,
+      "y": 1,
+      "w": 1,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "libentry_electronics-repair-shop_40",
+      "name": "Entrée",
+      "x": 7,
+      "y": 1,
+      "w": 1,
+      "h": 1,
+      "gmOnly": true
+    }
+  ],
+  "doors": [],
+  "notes": [
+    {
+      "id": "note_electronics-repair-shop_1",
+      "x": 3,
+      "y": 4,
+      "text": "Old Lin ne vend pas ses clients, elle vend des services. Negotiation + Charisme contre 8 dés (Street Cred de Jane : +2 dés) ; 1 000¥ de « frais » ou un service (lui rapporter un commlink volé chez un concurrent) → l’identité : Rae Calder, propriétaire d’une laverie (+2 Piste). Menacée, elle donne le nom… et appelle Windows juste après.",
+      "gmOnly": true
+    },
+    {
+      "id": "note_electronics-repair-shop_2",
+      "x": 5,
+      "y": 7,
+      "text": "Suggestion : sous la trappe, le vrai atelier de faussaire (imprimantes de SIN, lecteurs biométriques). Old Lin n’y emmène personne.",
+      "gmOnly": true
+    }
+  ],
+  "tokens": [],
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "library": {
+    "slug": "electronics-repair-shop",
+    "version": 1,
+    "linkedAt": 1795651200000
+  }
+}

@@ -57,14 +57,12 @@
         "tpl_subject_l07"
       ],
       "maps": [
-        "map_bar_porfla",
         "map_fvtt_bar",
-        "map_back_alley",
+        "map_bar_porfla",
         "map_fvtt_back-alley",
-        "map_trauma_ward",
         "map_fvtt_trauma-ward",
-        "map_jane_apartment",
-        "map_fvtt_apartement"
+        "map_fvtt_apartement",
+        "map_jane_apartment"
       ],
       "rewards": "- **2 000¥ / runner** de la part de Perrine Cabana\n- **2 Karma** / runner\n- Butin des Nettoyeurs (pistolets suppressés, faux SIN, commlink rating 4 avec agent d'effacement) — **déjà revendu en séance 2**",
       "gmNotes": "- **À vérifier :** les 2 000¥ et 2 Karma de Cabana ont-ils été distribués ? (le plan de la séance 3 prévoyait de le faire si ce n'était pas fait)\n- Le Nettoyeur capturé : sort exact non tranché (mort, relâché, livré ?). Si AG Chemie l'apprend, sa réaction en Acte 2 s'accélère légèrement — ne pas l'annoncer.\n- **Reyes reste intacte et non identifiée** : menace en réserve, réutilisable n'importe quand sans explication."
@@ -113,14 +111,11 @@
         "tpl_agc_reyes"
       ],
       "maps": [
-        "map_jane_apartment",
-        "map_fvtt_apartement",
-        "map_hacker_lair",
         "map_fvtt_hacker-s-lair",
-        "map_corp_lobby",
         "map_fvtt_corp-lobby",
-        "map_server_room",
-        "map_fvtt_server-room"
+        "map_lib_office-floor",
+        "map_fvtt_apartement",
+        "map_jane_apartment"
       ],
       "rewards": "- **2 Karma** / runner (travail de terrain) — pas de paiement, ce n'est pas un contrat\n- Ponction discrète sur un compte de Hollow Pine (quelques milliers de ¥, au jugé)\n- La piste qui ouvre **Windows Open**",
       "gmNotes": "- Si la piste de l'implant a été perdue (jets ratés, puce coupée trop tôt) : faire resurgir Hollow Pine via **Reyes** (filée ou capturée) ou via **Dorian Ashe** dans Family Business.\n- Le fragment **L-07** et les autres patients sont deux graines pour **Lazarus Cell** : ne pas les exploiter tout de suite.\n- Séance 4 : jouer la Phase 3 puis la Phase 4 selon l'approche choisie."
@@ -165,11 +160,8 @@
         "tpl_corpsec_troll_r3"
       ],
       "maps": [
-        "map_penthouse_office",
         "map_fvtt_penthouse-office",
-        "map_construction_site",
         "map_fvtt_construction-site",
-        "map_corp_lobby",
         "map_fvtt_corp-lobby"
       ],
       "rewards": "- **1 500¥** (la famille n'a pas de liquidités à revendre)\n- **Reinhardt Klee** comme contact (Connexion 2, Loyauté 3)\n- **2 Karma** / runner\n- Confirmation narrative : Hollow Pine est la façade seattloise d'AG Chemie",
@@ -214,10 +206,12 @@
         "tpl_crimson_ganger"
       ],
       "maps": [
-        "map_hacker_lair",
-        "map_fvtt_hacker-s-lair",
-        "map_back_alley",
-        "map_fvtt_back-alley"
+        "map_lib_nomad-camp",
+        "map_lib_electronics-repair-shop",
+        "map_lib_tailor-shop",
+        "map_lib_basement-utility-room",
+        "map_laverie_windows",
+        "map_fvtt_hacker-s-lair"
       ],
       "rewards": "- Fragments du dossier de l'escouade de Bricks\n- Windows Wrought comme alliée active\n- Karma à fixer (2-4)",
       "gmNotes": "Bon moment pour faire réapparaître **Reyes** — le groupe ne sait toujours pas qu'il l'a évitée en séance 2."
@@ -260,10 +254,12 @@
         "tpl_corpsec_human_r3"
       ],
       "maps": [
-        "map_penthouse_office",
-        "map_fvtt_penthouse-office",
-        "map_corp_lobby",
-        "map_fvtt_corp-lobby"
+        "map_lib_high-class-restaurant",
+        "map_lib_executive-suite",
+        "map_lib_industrial-kitchen",
+        "map_gala_ravenswood",
+        "map_lib_1-bdrm",
+        "map_maison_kessler"
       ],
       "rewards": "- Informations sur la chaîne de commandement de Project Lazarus\n- Karma à fixer (2-4)",
       "gmNotes": "Street Cred 8 / Notoriété 2 de Jane : la réputation joue dans les deux sens. Préparer le personnage « visage du passé » avant la séance."
@@ -310,10 +306,11 @@
         "tpl_subject_l07"
       ],
       "maps": [
-        "map_server_room",
-        "map_fvtt_server-room",
-        "map_trauma_ward",
-        "map_fvtt_trauma-ward"
+        "map_site_glacier",
+        "map_lib_xenoform-research-lab",
+        "map_lib_dive-bar",
+        "map_lib_minute-clinic",
+        "map_funerarium_hargrove"
       ],
       "rewards": "- Preuves de l'ampleur de Project Lazarus\n- Karma à fixer (3-5)",
       "gmNotes": "Le combat le plus « dungeon » de l'acte. Les patients secourus sont des leviers (et des bouches à nourrir) pour Burn Notice."
@@ -358,11 +355,9 @@
         "tpl_corpsec_human_r3"
       ],
       "maps": [
-        "map_penthouse_office",
         "map_fvtt_penthouse-office",
-        "map_corp_lobby",
-        "map_fvtt_corp-lobby",
-        "map_construction_site",
+        "map_dojo_morinaga",
+        "map_lib_seafood-packing-facility",
         "map_fvtt_construction-site"
       ],
       "rewards": "- Sort de la holding Von Schloss\n- Informations sur le responsable de Project Lazarus\n- Karma à fixer (2-4)",
@@ -408,10 +403,15 @@
         "tpl_crimson_ganger"
       ],
       "maps": [
-        "map_jane_apartment",
         "map_fvtt_apartement",
-        "map_back_alley",
-        "map_fvtt_back-alley"
+        "map_jane_apartment",
+        "map_fvtt_hacker-s-lair",
+        "map_fvtt_bar",
+        "map_fvtt_back-alley",
+        "map_funerarium_hargrove",
+        "map_lib_kingpins-meeting-room",
+        "map_dojo_morinaga",
+        "map_maison_kessler"
       ],
       "rewards": "- Karma à fixer (3-5)\n- Alliés/leviers selon le choix final",
       "gmNotes": "Trancher **Monobe** (allié ou menace) avant cette quête au plus tard."
@@ -456,12 +456,13 @@
         "tpl_dorian_ashe"
       ],
       "maps": [
-        "map_corp_lobby",
-        "map_fvtt_corp-lobby",
-        "map_server_room",
-        "map_fvtt_server-room",
-        "map_penthouse_office",
-        "map_fvtt_penthouse-office"
+        "map_halcyon_surface",
+        "map_lib_boutique-clinic",
+        "map_halcyon_sous_sols",
+        "map_lib_predator-lab",
+        "map_lib_server-room",
+        "map_lib_greenhouse-rnd-lab",
+        "map_lib_seafood-packing-facility"
       ],
       "rewards": "- À fixer selon la fin choisie",
       "gmNotes": "Le responsable de Project Lazarus reste sans visage jusqu'ici (ordres, nettoyeurs, paperasse) : ne pas le montrer avant."

@@ -1,0 +1,501 @@
+{
+  "id": "map_lib_kingpins-meeting-room",
+  "name": "Planque Monobe (Bellevue)",
+  "folder": "Acte 3",
+  "description": "**Lieu de campagne :** La planque offerte par Saori Tanabe dans un immeuble résidentiel corporatiste de Monobe, à cinq rues de Halcyon. Prix : une copie de tout ce que le groupe possède.\n\n**Quête :** Burn Notice (Phase 3).\n\n**À adapter :** Rien à changer : c’est confortable, et c’est une cage (l’ascenseur vitré est contrôlé par Monobe).\n\n**La carte (bibliothèque Fragmaps, « Salon du caïd ») :** Penthouse épuré d'un caïd du crime : grand salon blanc avec canapé et écran, table de poker, cuisine ouverte avec bar, coin bibliothèque, et ascenseur vitré privé donnant sur la ville. Parfait pour une négociation tendue avec un parrain, un Johnson de la Mafia ou des Yakuzas, ou une extraction à haute altitude.\n\nVoir Shadowrun/cartes-campagne.md.",
+  "width": 15,
+  "height": 9,
+  "metersPerCell": 1.5,
+  "theme": "residential",
+  "lighting": "bright",
+  "tiles": [
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "..............."
+  ],
+  "background": {
+    "url": "/api/maplib/image/kingpins-meeting-room",
+    "opacity": 1,
+    "mode": "image",
+    "x": 0,
+    "y": 0,
+    "w": 15,
+    "h": 9
+  },
+  "walls": [
+    {
+      "id": "wall_kingpins-meeting-room_1",
+      "x1": 2.3,
+      "y1": 3.45,
+      "x2": 2.3,
+      "y2": 2.52,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_2",
+      "x1": 2.3,
+      "y1": 2.52,
+      "x2": 9.3,
+      "y2": 2.52,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_3",
+      "x1": 9.3,
+      "y1": 2.52,
+      "x2": 9.3,
+      "y2": 1.36,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_4",
+      "x1": 9.3,
+      "y1": 1.36,
+      "x2": 9.54,
+      "y2": 1.36,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_5",
+      "x1": 9.54,
+      "y1": 1.36,
+      "x2": 9.54,
+      "y2": 0.16,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_6",
+      "x1": 9.54,
+      "y1": 0.16,
+      "x2": 11.62,
+      "y2": 0.16,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_7",
+      "x1": 11.62,
+      "y1": 0.16,
+      "x2": 11.62,
+      "y2": 0.37,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_8",
+      "x1": 11.62,
+      "y1": 0.37,
+      "x2": 13.75,
+      "y2": 0.37,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_9",
+      "x1": 13.75,
+      "y1": 0.37,
+      "x2": 13.75,
+      "y2": 1.36,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_10",
+      "x1": 13.75,
+      "y1": 1.36,
+      "x2": 14,
+      "y2": 1.36,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_11",
+      "x1": 14,
+      "y1": 1.36,
+      "x2": 14,
+      "y2": 6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_12",
+      "x1": 14,
+      "y1": 6,
+      "x2": 12.66,
+      "y2": 6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_13",
+      "x1": 12.66,
+      "y1": 6,
+      "x2": 12.66,
+      "y2": 5.88,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_14",
+      "x1": 12.66,
+      "y1": 5.88,
+      "x2": 11.46,
+      "y2": 5.88,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_15",
+      "x1": 11.46,
+      "y1": 5.88,
+      "x2": 11.46,
+      "y2": 7.29,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_16",
+      "x1": 11.46,
+      "y1": 7.29,
+      "x2": 11.62,
+      "y2": 7.29,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_17",
+      "x1": 11.62,
+      "y1": 7.29,
+      "x2": 11.62,
+      "y2": 8.3,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_18",
+      "x1": 11.62,
+      "y1": 8.3,
+      "x2": 6.97,
+      "y2": 8.3,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_19",
+      "x1": 6.97,
+      "y1": 8.3,
+      "x2": 6.97,
+      "y2": 7.05,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_20",
+      "x1": 6.97,
+      "y1": 7.05,
+      "x2": 4.6,
+      "y2": 7.05,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_21",
+      "x1": 4.6,
+      "y1": 7.05,
+      "x2": 4.6,
+      "y2": 7.18,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_22",
+      "x1": 4.6,
+      "y1": 7.18,
+      "x2": 2.3,
+      "y2": 7.18,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_23",
+      "x1": 2.3,
+      "y1": 7.18,
+      "x2": 2.3,
+      "y2": 7,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_24",
+      "x1": 2.3,
+      "y1": 7,
+      "x2": 2.3,
+      "y2": 6.35,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_25",
+      "x1": 2.3,
+      "y1": 6.35,
+      "x2": 2.3,
+      "y2": 3.45,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_kingpins-meeting-room_26",
+      "x1": 8.88,
+      "y1": 3.44,
+      "x2": 8.88,
+      "y2": 5.82,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_27",
+      "x1": 2.3,
+      "y1": 2.85,
+      "x2": 0.7,
+      "y2": 2.85,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_28",
+      "x1": 0.7,
+      "y1": 2.85,
+      "x2": 0.7,
+      "y2": 7,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_kingpins-meeting-room_29",
+      "x1": 0.7,
+      "y1": 7,
+      "x2": 2.3,
+      "y2": 7,
+      "move": true,
+      "sight": false,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "light_kingpins-meeting-room_30",
+      "x": 6,
+      "y": 5,
+      "radius": 4,
+      "color": "#fff4e8",
+      "on": true
+    },
+    {
+      "id": "light_kingpins-meeting-room_31",
+      "x": 5,
+      "y": 4,
+      "radius": 2,
+      "color": "#ffb060",
+      "on": true
+    },
+    {
+      "id": "light_kingpins-meeting-room_32",
+      "x": 8,
+      "y": 4,
+      "radius": 2,
+      "color": "#ffb060",
+      "on": true
+    },
+    {
+      "id": "light_kingpins-meeting-room_33",
+      "x": 12,
+      "y": 4,
+      "radius": 4,
+      "color": "#fff4e8",
+      "on": true
+    },
+    {
+      "id": "light_kingpins-meeting-room_34",
+      "x": 12,
+      "y": 1,
+      "radius": 3,
+      "color": "#ffd8a0",
+      "on": true
+    },
+    {
+      "id": "light_kingpins-meeting-room_35",
+      "x": 11,
+      "y": 5,
+      "radius": 2,
+      "color": "#fff0c0",
+      "on": true
+    },
+    {
+      "id": "light_kingpins-meeting-room_36",
+      "x": 13,
+      "y": 5,
+      "radius": 2,
+      "color": "#ffb060",
+      "on": true
+    },
+    {
+      "id": "light_kingpins-meeting-room_37",
+      "x": 11,
+      "y": 7,
+      "radius": 2,
+      "color": "#ffb060",
+      "on": true
+    },
+    {
+      "id": "light_kingpins-meeting-room_38",
+      "x": 9,
+      "y": 7,
+      "radius": 3,
+      "color": "#fff4e8",
+      "on": true
+    },
+    {
+      "id": "light_kingpins-meeting-room_39",
+      "x": 1,
+      "y": 5,
+      "radius": 2.5,
+      "color": "#60f0c0",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "reg_kingpins-meeting-room_40",
+      "name": "Salon",
+      "x": 3,
+      "y": 3,
+      "w": 5,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_kingpins-meeting-room_41",
+      "name": "Entrée",
+      "x": 2,
+      "y": 3,
+      "w": 1,
+      "h": 4,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_kingpins-meeting-room_42",
+      "name": "Table de poker",
+      "x": 9,
+      "y": 3,
+      "w": 3,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_kingpins-meeting-room_43",
+      "name": "Cuisine",
+      "x": 10,
+      "y": 1,
+      "w": 4,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_kingpins-meeting-room_44",
+      "name": "Galerie",
+      "x": 12,
+      "y": 3,
+      "w": 2,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_kingpins-meeting-room_45",
+      "name": "Coin lecture",
+      "x": 7,
+      "y": 6,
+      "w": 4,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_kingpins-meeting-room_46",
+      "name": "Ascenseur vitré",
+      "x": 1,
+      "y": 3,
+      "w": 1,
+      "h": 4,
+      "gmOnly": false
+    },
+    {
+      "id": "libentry_kingpins-meeting-room_47",
+      "name": "Entrée",
+      "x": 2,
+      "y": 5,
+      "w": 1,
+      "h": 1,
+      "gmOnly": true
+    }
+  ],
+  "doors": [],
+  "notes": [
+    {
+      "id": "note_kingpins-meeting-room_1",
+      "x": 1,
+      "y": 5,
+      "text": "Suggestion : ascenseur privé contrôlé par la sécurité de Monobe : on entre et on sort quand Monobe le veut. Caméras de l’immeuble esclaves du host de Monobe.",
+      "gmOnly": true
+    }
+  ],
+  "tokens": [],
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "library": {
+    "slug": "kingpins-meeting-room",
+    "version": 1,
+    "linkedAt": 1795651200000
+  }
+}

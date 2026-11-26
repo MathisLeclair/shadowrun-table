@@ -1,0 +1,547 @@
+{
+  "id": "lib_vip-lounge",
+  "slug": "vip-lounge",
+  "name": "Vip Lounge",
+  "nameFr": "Salon VIP",
+  "source": "fragmap",
+  "image": "vip lounge.jpg",
+  "imageW": 3200,
+  "imageH": 2000,
+  "gridPx": 200,
+  "offsetX": 0,
+  "offsetY": 0,
+  "width": 16,
+  "height": 10,
+  "metersPerCell": 1.5,
+  "theme": "club",
+  "lighting": "dim",
+  "tags": [
+    "salon VIP",
+    "VIP lounge",
+    "boîte de nuit",
+    "nightclub",
+    "club",
+    "néon",
+    "neon",
+    "bar",
+    "luxe",
+    "luxury",
+    "Johnson",
+    "rencontre",
+    "meet",
+    "négociation",
+    "corpo",
+    "yakuza",
+    "intérieur",
+    "indoor"
+  ],
+  "description": "Salon VIP d'une boîte huppée, baigné de néons violets : bar rétroéclairé, canapés en cuir, tables basses et une grande baie vitrée sur la ville. On y accède par un hall d'ascenseur. Idéal pour rencontrer un Johnson corpo, négocier avec un lieutenant yakuza ou surveiller une cible qui fait la fête.",
+  "entry": {
+    "x": 3.1,
+    "y": 2.5
+  },
+  "walls": [
+    {
+      "id": "w1",
+      "x1": 1.62,
+      "y1": 1.9,
+      "x2": 1.62,
+      "y2": 1.55,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w2",
+      "x1": 1.62,
+      "y1": 1.55,
+      "x2": 1.62,
+      "y2": 0.8,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w3",
+      "x1": 1.62,
+      "y1": 0.8,
+      "x2": 1.62,
+      "y2": 0.56,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w4",
+      "x1": 1.62,
+      "y1": 0.56,
+      "x2": 4.22,
+      "y2": 0.56,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w5",
+      "x1": 4.22,
+      "y1": 0.56,
+      "x2": 4.22,
+      "y2": 1.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w6",
+      "x1": 1.3,
+      "y1": 2.21,
+      "x2": 1.62,
+      "y2": 2.21,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w7",
+      "x1": 1.62,
+      "y1": 2.21,
+      "x2": 1.62,
+      "y2": 1.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w8",
+      "x1": 1.62,
+      "y1": 1.9,
+      "x2": 2.5,
+      "y2": 1.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w9",
+      "x1": 2.5,
+      "y1": 1.9,
+      "x2": 3.75,
+      "y2": 1.9,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w10",
+      "x1": 3.75,
+      "y1": 1.9,
+      "x2": 4.22,
+      "y2": 1.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w11",
+      "x1": 4.22,
+      "y1": 1.9,
+      "x2": 4.73,
+      "y2": 1.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w12",
+      "x1": 4.73,
+      "y1": 1.9,
+      "x2": 4.73,
+      "y2": 1.61,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w13",
+      "x1": 4.73,
+      "y1": 1.61,
+      "x2": 8.13,
+      "y2": 1.61,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w14",
+      "x1": 8.13,
+      "y1": 1.61,
+      "x2": 8.13,
+      "y2": 2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w15",
+      "x1": 8.13,
+      "y1": 2,
+      "x2": 8.55,
+      "y2": 2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w16",
+      "x1": 8.55,
+      "y1": 2,
+      "x2": 8.55,
+      "y2": 1.64,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w17",
+      "x1": 8.55,
+      "y1": 1.64,
+      "x2": 11.57,
+      "y2": 1.64,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w18",
+      "x1": 11.57,
+      "y1": 1.64,
+      "x2": 11.57,
+      "y2": 2.45,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w19",
+      "x1": 11.57,
+      "y1": 2.45,
+      "x2": 14.3,
+      "y2": 2.45,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w20",
+      "x1": 14.3,
+      "y1": 2.45,
+      "x2": 14.87,
+      "y2": 2.85,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w21",
+      "x1": 14.87,
+      "y1": 2.85,
+      "x2": 14.87,
+      "y2": 3,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w22",
+      "x1": 14.87,
+      "y1": 3,
+      "x2": 14.87,
+      "y2": 6.5,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w23",
+      "x1": 14.87,
+      "y1": 6.5,
+      "x2": 14.87,
+      "y2": 9.09,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w24",
+      "x1": 14.87,
+      "y1": 9.09,
+      "x2": 12.87,
+      "y2": 9.09,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w25",
+      "x1": 12.87,
+      "y1": 9.09,
+      "x2": 12.1,
+      "y2": 8.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w26",
+      "x1": 12.1,
+      "y1": 8.5,
+      "x2": 8.11,
+      "y2": 8.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w27",
+      "x1": 8.11,
+      "y1": 8.5,
+      "x2": 8.11,
+      "y2": 9.69,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w28",
+      "x1": 8.11,
+      "y1": 9.69,
+      "x2": 3.81,
+      "y2": 9.69,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w29",
+      "x1": 3.81,
+      "y1": 9.69,
+      "x2": 3.81,
+      "y2": 8.51,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w30",
+      "x1": 3.81,
+      "y1": 8.51,
+      "x2": 1.3,
+      "y2": 8.51,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w31",
+      "x1": 1.3,
+      "y1": 8.51,
+      "x2": 1.3,
+      "y2": 2.21,
+      "move": true,
+      "sight": true,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "l1",
+      "x": 6.5,
+      "y": 1.95,
+      "radius": 3,
+      "color": "#60c0ff",
+      "on": true
+    },
+    {
+      "id": "l2",
+      "x": 5.6,
+      "y": 4.7,
+      "radius": 3,
+      "color": "#80f0ff",
+      "on": true
+    },
+    {
+      "id": "l3",
+      "x": 14.4,
+      "y": 4.6,
+      "radius": 4,
+      "color": "#a0e0ff",
+      "on": true
+    },
+    {
+      "id": "l4",
+      "x": 13.9,
+      "y": 2.95,
+      "radius": 3,
+      "color": "#fff0e0",
+      "on": true
+    },
+    {
+      "id": "l5",
+      "x": 13.7,
+      "y": 8.05,
+      "radius": 3,
+      "color": "#ffd0e0",
+      "on": true
+    },
+    {
+      "id": "l6",
+      "x": 8.9,
+      "y": 1.9,
+      "radius": 2,
+      "color": "#fff0e0",
+      "on": true
+    },
+    {
+      "id": "l7",
+      "x": 1.75,
+      "y": 2.9,
+      "radius": 2,
+      "color": "#80e0ff",
+      "on": true
+    },
+    {
+      "id": "l8",
+      "x": 1.9,
+      "y": 1.15,
+      "radius": 2,
+      "color": "#ff80ff",
+      "on": true
+    },
+    {
+      "id": "l9",
+      "x": 12.9,
+      "y": 2.75,
+      "radius": 2,
+      "color": "#ff3040",
+      "on": true
+    },
+    {
+      "id": "l10",
+      "x": 10.9,
+      "y": 5.9,
+      "radius": 2,
+      "color": "#e0a0ff",
+      "on": true
+    },
+    {
+      "id": "l11",
+      "x": 7.4,
+      "y": 7.1,
+      "radius": 2,
+      "color": "#e0a0ff",
+      "on": true
+    },
+    {
+      "id": "l12",
+      "x": 2.4,
+      "y": 4.1,
+      "radius": 2,
+      "color": "#e0a0ff",
+      "on": true
+    },
+    {
+      "id": "l13",
+      "x": 4.6,
+      "y": 6.4,
+      "radius": 3,
+      "color": "#ffd0ff",
+      "on": true
+    },
+    {
+      "id": "l14",
+      "x": 5.5,
+      "y": 9.3,
+      "radius": 2,
+      "color": "#b0a0ff",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "r1",
+      "name": "Hall d'ascenseur",
+      "x": 2,
+      "y": 1,
+      "w": 2,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "r2",
+      "name": "Bar",
+      "x": 5,
+      "y": 2,
+      "w": 3,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "r3",
+      "name": "Salon ouest",
+      "x": 2,
+      "y": 3,
+      "w": 2,
+      "h": 5,
+      "gmOnly": false
+    },
+    {
+      "id": "r4",
+      "name": "Salon central",
+      "x": 5,
+      "y": 5,
+      "w": 4,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "r5",
+      "name": "Salon est",
+      "x": 9,
+      "y": 3,
+      "w": 3,
+      "h": 4,
+      "gmOnly": false
+    },
+    {
+      "id": "r6",
+      "name": "Baie vitrée",
+      "x": 12,
+      "y": 3,
+      "w": 2,
+      "h": 4,
+      "gmOnly": false
+    },
+    {
+      "id": "r7",
+      "name": "Alcôve sud",
+      "x": 4,
+      "y": 9,
+      "w": 4,
+      "h": 1,
+      "gmOnly": false
+    }
+  ],
+  "traced": {
+    "by": "agent",
+    "at": "2026-11-26T16:36:21.584Z",
+    "quality": "good",
+    "notes": "Murs sur le bord du sol (pas de bande sombre). Le hall d'ascenseur au nord-ouest est séparé du salon par une bande noire : porte double supposée (x 2.5–3.75), porte d'ascenseur supposée derrière l'écran rose. Baie vitrée à l'est = fenêtre. Bords d'estrade, rampes néon et cloison basse du salon ouest non tracés."
+  },
+  "version": 1
+}

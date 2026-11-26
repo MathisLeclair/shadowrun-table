@@ -1,7 +1,7 @@
 {
   "id": "map_corp_lobby",
   "name": "Hollow Pine Holdings — hall & 12e étage",
-  "folder": "Acte 1",
+  "folder": "Cartes maison (anciennes)",
   "description": "**Immeuble de bureaux de Hollow Pine Holdings — Seattle.** Deux niveaux sur la même carte : en haut le **rez-de-chaussée** (parvis, façade vitrée, porte tambour, accueil, tourniquets, ascenseurs, poste de sécurité, escalier de service), en bas le **12e étage** loué par Hollow Pine (accueil, salle de conférence, open space, local serveur, bureau de Dorian Ashe). Les cabines d'ascenseur font le lien.\n\n**Utilisation**\n- Quête 1.2 *Open Book*, Phase 2-4 : repérage (fin de session 3) puis infiltration physique (session 4) si le groupe ne pirate pas le host à distance.\n- Quête 1.3 *Family Business* : rencontre possible avec Dorian Ashe.\n\n**Sécurité**\n- Jour : 2 agents (Human Corpo Security R3) au contrôle + 1 au poste ; nuit : 1 + 1. Junior Security Spider au poste (Standard en cas d'alerte).\n- Host Hollow Pine : Rating 5 (Attack 6 / Sleaze 8 / DP 5 / Firewall 7), IC de patrouille.\n- Maglocks : local serveur, portes vitrées du 12e, bureau de Ashe (rating 4-5).\n\n**Tests utiles** : Étiquette seuil 3 (badge visiteur), Déguisement (tenue d'entretien), Hardware seuil 3 (tourniquet), Serrurerie seuil 5 (coffre de Ashe).",
   "width": 60,
   "height": 44,

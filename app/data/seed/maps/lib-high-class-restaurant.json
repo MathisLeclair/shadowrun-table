@@ -1,0 +1,624 @@
+{
+  "id": "map_lib_high-class-restaurant",
+  "name": "Hôtel Ravenswood — salle Aurore (gala Halcyon)",
+  "folder": "Acte 2",
+  "description": "**Lieu de campagne :** Le gala de la Fondation Halcyon, 31e étage de l’hôtel Ravenswood (Downtown) : la salle de bal. La suite privée et les cuisines sont des cartes à part ; l’ancien plan « Hôtel Ravenswood, 31e étage » reste le plan d’ensemble (terrasse, couloir de service, foyer).\n\n**Quête :** The Guest List.\n\n**À adapter :** Retirez les tables du milieu pour la piste de danse ; l’estrade accueille les discours et le quatuor à cordes (le piano reste). Les « Vitrines à desserts » deviennent les lots de la vente aux enchères (lot n°12 : la brochure Halcyon). Les banquettes est = la zone des gardes du corps ; le passe-plats mène à l’office.\n\n**La carte (bibliothèque Fragmaps, « Restaurant gastronomique ») :** Restaurant chic au carrelage de marbre rouge et blanc : bar en L, piano à queue, grande jardinière centrale, estrade à balustrade et banquettes le long des murs, avec passe-plats vers les cuisines. Le cadre parfait pour une rencontre avec un Johnson corpo, une négociation avec un parrain de la Mafia ou une extraction en plein service.\n\nVoir Shadowrun/cartes-campagne.md.",
+  "width": 15,
+  "height": 18,
+  "metersPerCell": 1.5,
+  "theme": "bar",
+  "lighting": "dim",
+  "tiles": [
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "..............."
+  ],
+  "background": {
+    "url": "/api/maplib/image/high-class-restaurant",
+    "opacity": 1,
+    "mode": "image",
+    "x": 0,
+    "y": 0,
+    "w": 15,
+    "h": 18
+  },
+  "walls": [
+    {
+      "id": "wall_high-class-restaurant_1",
+      "x1": 1.95,
+      "y1": 1.95,
+      "x2": 2.1,
+      "y2": 1.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_high-class-restaurant_2",
+      "x1": 2.1,
+      "y1": 1.95,
+      "x2": 6,
+      "y2": 1.95,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_high-class-restaurant_3",
+      "x1": 6,
+      "y1": 1.95,
+      "x2": 10,
+      "y2": 1.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_high-class-restaurant_4",
+      "x1": 10,
+      "y1": 1.95,
+      "x2": 10,
+      "y2": 4.38,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_high-class-restaurant_5",
+      "x1": 10,
+      "y1": 4.38,
+      "x2": 12.75,
+      "y2": 4.38,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_high-class-restaurant_6",
+      "x1": 12.75,
+      "y1": 4.38,
+      "x2": 13.15,
+      "y2": 4.85,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_high-class-restaurant_7",
+      "x1": 13.15,
+      "y1": 4.85,
+      "x2": 13.15,
+      "y2": 11.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_high-class-restaurant_8",
+      "x1": 13.15,
+      "y1": 11.9,
+      "x2": 13.15,
+      "y2": 13.7,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_high-class-restaurant_9",
+      "x1": 13.15,
+      "y1": 13.7,
+      "x2": 13.15,
+      "y2": 15.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_high-class-restaurant_10",
+      "x1": 13.15,
+      "y1": 15.75,
+      "x2": 10.75,
+      "y2": 15.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_high-class-restaurant_11",
+      "x1": 10.75,
+      "y1": 15.75,
+      "x2": 10,
+      "y2": 15.05,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_high-class-restaurant_12",
+      "x1": 10,
+      "y1": 15.05,
+      "x2": 7.2,
+      "y2": 15.05,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_high-class-restaurant_13",
+      "x1": 7.2,
+      "y1": 15.05,
+      "x2": 7.2,
+      "y2": 15.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_high-class-restaurant_14",
+      "x1": 7.2,
+      "y1": 15.9,
+      "x2": 7.2,
+      "y2": 16.95,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_high-class-restaurant_15",
+      "x1": 7.2,
+      "y1": 16.95,
+      "x2": 6.55,
+      "y2": 16.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_high-class-restaurant_16",
+      "x1": 6.55,
+      "y1": 16.95,
+      "x2": 4.95,
+      "y2": 16.95,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_high-class-restaurant_17",
+      "x1": 4.95,
+      "y1": 16.95,
+      "x2": 1.95,
+      "y2": 16.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_high-class-restaurant_18",
+      "x1": 1.95,
+      "y1": 16.95,
+      "x2": 1.95,
+      "y2": 16.1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_high-class-restaurant_19",
+      "x1": 1.95,
+      "y1": 16.1,
+      "x2": 1.95,
+      "y2": 14.9,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_high-class-restaurant_20",
+      "x1": 1.95,
+      "y1": 14.9,
+      "x2": 1.95,
+      "y2": 14.1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_high-class-restaurant_21",
+      "x1": 1.95,
+      "y1": 14.1,
+      "x2": 1.95,
+      "y2": 12.9,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_high-class-restaurant_22",
+      "x1": 1.95,
+      "y1": 12.9,
+      "x2": 1.95,
+      "y2": 5.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_high-class-restaurant_23",
+      "x1": 1.95,
+      "y1": 5.6,
+      "x2": 1.95,
+      "y2": 2,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_high-class-restaurant_24",
+      "x1": 1.95,
+      "y1": 2,
+      "x2": 1.95,
+      "y2": 1.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_high-class-restaurant_25",
+      "x1": 11.35,
+      "y1": 8.72,
+      "x2": 13.15,
+      "y2": 8.72,
+      "move": true,
+      "sight": false,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "light_high-class-restaurant_26",
+      "x": 8,
+      "y": 2,
+      "radius": 3,
+      "color": "#ffb060",
+      "on": true
+    },
+    {
+      "id": "light_high-class-restaurant_27",
+      "x": 3,
+      "y": 3,
+      "radius": 1.5,
+      "color": "#ffe0b0",
+      "on": true
+    },
+    {
+      "id": "light_high-class-restaurant_28",
+      "x": 3,
+      "y": 4,
+      "radius": 1.5,
+      "color": "#ffe0b0",
+      "on": true
+    },
+    {
+      "id": "light_high-class-restaurant_29",
+      "x": 6,
+      "y": 5,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "light_high-class-restaurant_30",
+      "x": 6,
+      "y": 7,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "light_high-class-restaurant_31",
+      "x": 5,
+      "y": 6,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "light_high-class-restaurant_32",
+      "x": 11,
+      "y": 5,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "light_high-class-restaurant_33",
+      "x": 13,
+      "y": 5,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "light_high-class-restaurant_34",
+      "x": 13,
+      "y": 7,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "light_high-class-restaurant_35",
+      "x": 2,
+      "y": 10,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "light_high-class-restaurant_36",
+      "x": 2,
+      "y": 12,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "light_high-class-restaurant_37",
+      "x": 2,
+      "y": 14,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "light_high-class-restaurant_38",
+      "x": 2,
+      "y": 16,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "light_high-class-restaurant_39",
+      "x": 5,
+      "y": 10,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "light_high-class-restaurant_40",
+      "x": 5,
+      "y": 13,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "light_high-class-restaurant_41",
+      "x": 4,
+      "y": 15,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "light_high-class-restaurant_42",
+      "x": 13,
+      "y": 11,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "light_high-class-restaurant_43",
+      "x": 13,
+      "y": 13,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "light_high-class-restaurant_44",
+      "x": 13,
+      "y": 15,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "light_high-class-restaurant_45",
+      "x": 10,
+      "y": 13,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "light_high-class-restaurant_46",
+      "x": 10,
+      "y": 13,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "light_high-class-restaurant_47",
+      "x": 9,
+      "y": 15,
+      "radius": 2.5,
+      "color": "#ffc070",
+      "on": true
+    },
+    {
+      "id": "light_high-class-restaurant_48",
+      "x": 6,
+      "y": 17,
+      "radius": 3,
+      "color": "#ffd080",
+      "on": true
+    },
+    {
+      "id": "light_high-class-restaurant_49",
+      "x": 12,
+      "y": 15,
+      "radius": 2,
+      "color": "#ff6040",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "reg_high-class-restaurant_50",
+      "name": "Bar",
+      "x": 6,
+      "y": 2,
+      "w": 4,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_high-class-restaurant_51",
+      "name": "Vitrines à desserts",
+      "x": 2,
+      "y": 2,
+      "w": 2,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_high-class-restaurant_52",
+      "name": "Salle principale",
+      "x": 5,
+      "y": 9,
+      "w": 5,
+      "h": 5,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_high-class-restaurant_53",
+      "name": "Estrade",
+      "x": 10,
+      "y": 5,
+      "w": 3,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_high-class-restaurant_54",
+      "name": "Banquettes ouest",
+      "x": 2,
+      "y": 9,
+      "w": 2,
+      "h": 7,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_high-class-restaurant_55",
+      "name": "Banquettes est",
+      "x": 11,
+      "y": 10,
+      "w": 2,
+      "h": 5,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_high-class-restaurant_56",
+      "name": "Accueil",
+      "x": 4,
+      "y": 15,
+      "w": 3,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_high-class-restaurant_57",
+      "name": "Passe-plats",
+      "x": 7,
+      "y": 14,
+      "w": 3,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_high-class-restaurant_58",
+      "name": "Petite scène",
+      "x": 11,
+      "y": 15,
+      "w": 2,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "libentry_high-class-restaurant_59",
+      "name": "Entrée",
+      "x": 5,
+      "y": 16,
+      "w": 1,
+      "h": 1,
+      "gmOnly": true
+    }
+  ],
+  "doors": [],
+  "notes": [
+    {
+      "id": "note_high-class-restaurant_1",
+      "x": 5,
+      "y": 16,
+      "text": "Foyer : contrôle des invitations (2 agents de l’hôtel, lecteur RFID), vestiaire, portique de détection d’armes (les gardes du corps déclarés passent à côté). Si Margaux joue sa carte : six gardes Stern Pacific attendent Jane au vestiaire.",
+      "gmOnly": true
+    },
+    {
+      "id": "note_high-class-restaurant_2",
+      "x": 11,
+      "y": 6,
+      "text": "Discours et quatuor à cordes. 6 agents Stern Pacific en civil sous les ordres de Kessler ; Reyes dans l’équipe discrète si l’Horloge est à 4 ou plus. Caméras partout (esclaves du host de l’hôtel), aucune dans la suite privée.",
+      "gmOnly": true
+    },
+    {
+      "id": "note_high-class-restaurant_3",
+      "x": 12,
+      "y": 12,
+      "text": "Zone des gardes du corps privés des invités (une douzaine de tpl_bodyguard_r5).",
+      "gmOnly": true
+    },
+    {
+      "id": "note_high-class-restaurant_4",
+      "x": 3,
+      "y": 3,
+      "text": "Salon des enchères : les lots sous vitrine, dont le lot n°12 (brochure de la Clinique Halcyon).",
+      "gmOnly": true
+    }
+  ],
+  "tokens": [],
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "library": {
+    "slug": "high-class-restaurant",
+    "version": 1,
+    "linkedAt": 1795651200000
+  }
+}

@@ -1,0 +1,587 @@
+{
+  "id": "map_lib_dive-bar",
+  "name": "Rusty Piston (bar du Crush, Touristville)",
+  "folder": "Acte 2",
+  "description": "**Lieu de campagne :** Le bar des motards de Crimson Crush à Touristville, où l’on traite avec Scorch (remplace « le bar de Porfla rhabillé »).\n\n**Quête :** Lazarus Cell (Phase 2).\n\n**À adapter :** Ajoutez des motos garées en haut de l’escalier côté rue et des couleurs du Crush aux murs. L’arrière-salle est le coin de Scorch.\n\n**La carte (bibliothèque Fragmaps, « Bar miteux ») :** Bar de quartier baigné de néons : long comptoir en biais, deux billards, banquettes, petite scène et une arrière-salle avec table de jeu. On y descend depuis la rue par un escalier. Idéal pour rencontrer un Johnson, une partie de cartes qui tourne mal ou une bagarre de gangers.\n\nVoir Shadowrun/cartes-campagne.md.",
+  "width": 11,
+  "height": 18,
+  "metersPerCell": 1.5,
+  "theme": "bar",
+  "lighting": "dim",
+  "tiles": [
+    "...........",
+    "...........",
+    "...........",
+    "...........",
+    "...........",
+    "...........",
+    "...........",
+    "...........",
+    "...........",
+    "...........",
+    "...........",
+    "...........",
+    "...........",
+    "...........",
+    "...........",
+    "...........",
+    "...........",
+    "..........."
+  ],
+  "background": {
+    "url": "/api/maplib/image/dive-bar",
+    "opacity": 1,
+    "mode": "image",
+    "x": 0,
+    "y": 0,
+    "w": 11,
+    "h": 18
+  },
+  "walls": [
+    {
+      "id": "wall_dive-bar_1",
+      "x1": 4.95,
+      "y1": 1.15,
+      "x2": 8.2,
+      "y2": 1.15,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_dive-bar_2",
+      "x1": 8.2,
+      "y1": 1.15,
+      "x2": 9.45,
+      "y2": 2.45,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_dive-bar_3",
+      "x1": 9.45,
+      "y1": 2.45,
+      "x2": 9.45,
+      "y2": 4.29,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_dive-bar_4",
+      "x1": 4.95,
+      "y1": 4.29,
+      "x2": 4.95,
+      "y2": 1.15,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_dive-bar_5",
+      "x1": 4.15,
+      "y1": 4.29,
+      "x2": 5.22,
+      "y2": 4.29,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_dive-bar_6",
+      "x1": 5.22,
+      "y1": 4.29,
+      "x2": 5.82,
+      "y2": 4.29,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_dive-bar_7",
+      "x1": 5.82,
+      "y1": 4.29,
+      "x2": 9.5,
+      "y2": 4.29,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_dive-bar_8",
+      "x1": 4.15,
+      "y1": 4.29,
+      "x2": 1.6,
+      "y2": 6.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_dive-bar_9",
+      "x1": 1.6,
+      "y1": 6.9,
+      "x2": 1.6,
+      "y2": 8.85,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_dive-bar_10",
+      "x1": 1.6,
+      "y1": 8.85,
+      "x2": 2.58,
+      "y2": 8.85,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_dive-bar_11",
+      "x1": 2.58,
+      "y1": 8.85,
+      "x2": 2.58,
+      "y2": 11.17,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_dive-bar_12",
+      "x1": 2.58,
+      "y1": 11.17,
+      "x2": 3.1,
+      "y2": 11.17,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_dive-bar_13",
+      "x1": 3.1,
+      "y1": 11.17,
+      "x2": 3.1,
+      "y2": 12.32,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_dive-bar_14",
+      "x1": 3.1,
+      "y1": 12.32,
+      "x2": 1.43,
+      "y2": 12.32,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_dive-bar_15",
+      "x1": 1.43,
+      "y1": 12.32,
+      "x2": 1.43,
+      "y2": 14.65,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_dive-bar_16",
+      "x1": 1.43,
+      "y1": 14.65,
+      "x2": 2.6,
+      "y2": 14.65,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_dive-bar_17",
+      "x1": 2.6,
+      "y1": 14.65,
+      "x2": 2.6,
+      "y2": 15.98,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_dive-bar_18",
+      "x1": 2.6,
+      "y1": 15.98,
+      "x2": 4.42,
+      "y2": 15.98,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_dive-bar_19",
+      "x1": 4.42,
+      "y1": 15.98,
+      "x2": 5.25,
+      "y2": 16.45,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_dive-bar_20",
+      "x1": 5.25,
+      "y1": 16.45,
+      "x2": 8.4,
+      "y2": 16.45,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_dive-bar_21",
+      "x1": 8.13,
+      "y1": 15.05,
+      "x2": 8.4,
+      "y2": 16.45,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_dive-bar_22",
+      "x1": 8.4,
+      "y1": 16.45,
+      "x2": 8.63,
+      "y2": 17.65,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_dive-bar_23",
+      "x1": 8.63,
+      "y1": 17.65,
+      "x2": 9.72,
+      "y2": 17.65,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_dive-bar_24",
+      "x1": 9.5,
+      "y1": 4.29,
+      "x2": 9.5,
+      "y2": 14.3,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_dive-bar_25",
+      "x1": 9.5,
+      "y1": 14.3,
+      "x2": 9.72,
+      "y2": 15.3,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_dive-bar_26",
+      "x1": 9.72,
+      "y1": 15.3,
+      "x2": 9.72,
+      "y2": 17.65,
+      "move": true,
+      "sight": true,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "light_dive-bar_27",
+      "x": 7,
+      "y": 3,
+      "radius": 3,
+      "color": "#fff0d0",
+      "on": true
+    },
+    {
+      "id": "light_dive-bar_28",
+      "x": 5,
+      "y": 3,
+      "radius": 1.5,
+      "color": "#40f0ff",
+      "on": true
+    },
+    {
+      "id": "light_dive-bar_29",
+      "x": 9,
+      "y": 3,
+      "radius": 1.5,
+      "color": "#40ffd0",
+      "on": true
+    },
+    {
+      "id": "light_dive-bar_30",
+      "x": 3,
+      "y": 6,
+      "radius": 3,
+      "color": "#ff40ff",
+      "on": true
+    },
+    {
+      "id": "light_dive-bar_31",
+      "x": 2,
+      "y": 8,
+      "radius": 2,
+      "color": "#ffd040",
+      "on": true
+    },
+    {
+      "id": "light_dive-bar_32",
+      "x": 4,
+      "y": 8,
+      "radius": 3,
+      "color": "#40f0ff",
+      "on": true
+    },
+    {
+      "id": "light_dive-bar_33",
+      "x": 7,
+      "y": 5,
+      "radius": 3,
+      "color": "#ff50e0",
+      "on": true
+    },
+    {
+      "id": "light_dive-bar_34",
+      "x": 9,
+      "y": 7,
+      "radius": 2,
+      "color": "#ffd8b0",
+      "on": true
+    },
+    {
+      "id": "light_dive-bar_35",
+      "x": 9,
+      "y": 8,
+      "radius": 2,
+      "color": "#ffd8b0",
+      "on": true
+    },
+    {
+      "id": "light_dive-bar_36",
+      "x": 9,
+      "y": 10,
+      "radius": 1.5,
+      "color": "#ff3040",
+      "on": true
+    },
+    {
+      "id": "light_dive-bar_37",
+      "x": 9,
+      "y": 11,
+      "radius": 2,
+      "color": "#ffd8b0",
+      "on": true
+    },
+    {
+      "id": "light_dive-bar_38",
+      "x": 9,
+      "y": 13,
+      "radius": 2,
+      "color": "#ffd8b0",
+      "on": true
+    },
+    {
+      "id": "light_dive-bar_39",
+      "x": 4,
+      "y": 10,
+      "radius": 2.5,
+      "color": "#b090ff",
+      "on": true
+    },
+    {
+      "id": "light_dive-bar_40",
+      "x": 4,
+      "y": 13,
+      "radius": 2.5,
+      "color": "#b090ff",
+      "on": true
+    },
+    {
+      "id": "light_dive-bar_41",
+      "x": 2,
+      "y": 13,
+      "radius": 2.5,
+      "color": "#ff40e0",
+      "on": true
+    },
+    {
+      "id": "light_dive-bar_42",
+      "x": 2,
+      "y": 14,
+      "radius": 1.5,
+      "color": "#ff3030",
+      "on": true
+    },
+    {
+      "id": "light_dive-bar_43",
+      "x": 4,
+      "y": 16,
+      "radius": 2.5,
+      "color": "#ffe0ff",
+      "on": true
+    },
+    {
+      "id": "light_dive-bar_44",
+      "x": 7,
+      "y": 16,
+      "radius": 2.5,
+      "color": "#f0d0ff",
+      "on": true
+    },
+    {
+      "id": "light_dive-bar_45",
+      "x": 9,
+      "y": 14,
+      "radius": 1.5,
+      "color": "#ff3030",
+      "on": true
+    },
+    {
+      "id": "light_dive-bar_46",
+      "x": 9,
+      "y": 15,
+      "radius": 2,
+      "color": "#ff40c0",
+      "on": true
+    },
+    {
+      "id": "light_dive-bar_47",
+      "x": 9,
+      "y": 17,
+      "radius": 2,
+      "color": "#ff9070",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "reg_dive-bar_48",
+      "name": "Arrière-salle",
+      "x": 5,
+      "y": 1,
+      "w": 4,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_dive-bar_49",
+      "name": "Bar",
+      "x": 2,
+      "y": 5,
+      "w": 2,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_dive-bar_50",
+      "name": "Scène",
+      "x": 6,
+      "y": 4,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_dive-bar_51",
+      "name": "Salle",
+      "x": 5,
+      "y": 7,
+      "w": 4,
+      "h": 6,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_dive-bar_52",
+      "name": "Billards",
+      "x": 3,
+      "y": 9,
+      "w": 2,
+      "h": 5,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_dive-bar_53",
+      "name": "Coin jeux",
+      "x": 1,
+      "y": 12,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_dive-bar_54",
+      "name": "Banquettes",
+      "x": 3,
+      "y": 15,
+      "w": 5,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_dive-bar_55",
+      "name": "Escalier (rue)",
+      "x": 8,
+      "y": 15,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "libentry_dive-bar_56",
+      "name": "Entrée",
+      "x": 9,
+      "y": 17,
+      "w": 1,
+      "h": 1,
+      "gmOnly": true
+    }
+  ],
+  "doors": [],
+  "notes": [
+    {
+      "id": "note_dive-bar_1",
+      "x": 7,
+      "y": 2,
+      "text": "Scorch, lieutenante de Crimson Crush. Elle refuse de parler du « contrat de gardiennage chez les blouses blanches » (le Site Glacier) — ce qui en dit long. Voir act2, Lazarus Cell, Phase 2, pour les façons de traiter avec elle.",
+      "gmOnly": true
+    },
+    {
+      "id": "note_dive-bar_2",
+      "x": 9,
+      "y": 16,
+      "text": "Les motos du Crush sont garées en haut de l’escalier : personne n’entre ni ne sort sans être vu.",
+      "gmOnly": true
+    }
+  ],
+  "tokens": [],
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "library": {
+    "slug": "dive-bar",
+    "version": 1,
+    "linkedAt": 1795651200000
+  }
+}

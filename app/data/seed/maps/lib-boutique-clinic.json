@@ -1,0 +1,900 @@
+{
+  "id": "map_lib_boutique-clinic",
+  "name": "Clinique Halcyon — hall et salons de consultation",
+  "folder": "Acte 3",
+  "description": "**Lieu de campagne :** Le rez-de-chaussée de la Clinique Halcyon (Bellevue) pour les scènes rapprochées : accueil, salons de consultation, accès à l’ascenseur de service. Le domaine (jardins, rive, parking, quai) reste sur l’ancien plan « Clinique Halcyon — surface ».\n\n**Quête :** Severance (approche A, surface).\n\n**À adapter :** Le « Salon d’attente (koïs) » est le hall à mur d’eau et orchidées ; les salles d’examen sont deux des six salons de consultation de l’aile ouest ; l’« Escalier » est la porte « Personnel » de l’ascenseur de service (badge + code, vers le -1 et le -2). Le bloc opératoire est fermé la nuit.\n\n**La carte (bibliothèque Fragmaps, « Clinique privée de luxe ») :** Clinique esthétique haut de gamme : accueil design, salon d'attente avec bassin à koïs, deux salles d'examen, un bloc opératoire et un jardin zen intérieur. Parfait pour une pose de cyberware discrète chez un doc « respectable », l'extraction d'un patient VIP ou un vol de données médicales à Bellevue.\n\nVoir Shadowrun/cartes-campagne.md.",
+  "width": 17,
+  "height": 21,
+  "metersPerCell": 1.5,
+  "theme": "lab",
+  "lighting": "bright",
+  "tiles": [
+    ".................",
+    ".................",
+    ".................",
+    ".................",
+    ".................",
+    ".................",
+    ".................",
+    ".................",
+    ".................",
+    ".................",
+    ".................",
+    ".................",
+    ".................",
+    ".................",
+    ".................",
+    ".................",
+    ".................",
+    ".................",
+    ".................",
+    ".................",
+    "................."
+  ],
+  "background": {
+    "url": "/api/maplib/image/boutique-clinic",
+    "opacity": 1,
+    "mode": "image",
+    "x": 0,
+    "y": 0,
+    "w": 16.01,
+    "h": 21
+  },
+  "walls": [
+    {
+      "id": "wall_boutique-clinic_1",
+      "x1": 2.35,
+      "y1": 9.47,
+      "x2": 1.08,
+      "y2": 9.47,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_2",
+      "x1": 1.08,
+      "y1": 9.47,
+      "x2": 1.08,
+      "y2": 1.42,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_3",
+      "x1": 1.08,
+      "y1": 1.42,
+      "x2": 6.35,
+      "y2": 1.42,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_4",
+      "x1": 6.35,
+      "y1": 1.42,
+      "x2": 8.13,
+      "y2": 3.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_5",
+      "x1": 8.13,
+      "y1": 3.25,
+      "x2": 9.19,
+      "y2": 2.45,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_6",
+      "x1": 9.19,
+      "y1": 2.45,
+      "x2": 9.19,
+      "y2": 1.47,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_7",
+      "x1": 9.19,
+      "y1": 1.47,
+      "x2": 14.3,
+      "y2": 1.47,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_8",
+      "x1": 14.3,
+      "y1": 1.47,
+      "x2": 14.75,
+      "y2": 1.62,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_9",
+      "x1": 14.75,
+      "y1": 1.62,
+      "x2": 14.98,
+      "y2": 2.2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_10",
+      "x1": 14.98,
+      "y1": 2.2,
+      "x2": 14.98,
+      "y2": 11.33,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_11",
+      "x1": 8.13,
+      "y1": 3.25,
+      "x2": 7.3,
+      "y2": 3.934,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_12",
+      "x1": 7.3,
+      "y1": 3.934,
+      "x2": 6,
+      "y2": 5.004,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_boutique-clinic_13",
+      "x1": 6,
+      "y1": 5.004,
+      "x2": 3.37,
+      "y2": 7.17,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_14",
+      "x1": 3.37,
+      "y1": 7.17,
+      "x2": 1.08,
+      "y2": 7.17,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_15",
+      "x1": 8.13,
+      "y1": 3.25,
+      "x2": 9.26,
+      "y2": 4.55,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_16",
+      "x1": 9.26,
+      "y1": 4.55,
+      "x2": 10.043,
+      "y2": 5.45,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_boutique-clinic_17",
+      "x1": 10.043,
+      "y1": 5.45,
+      "x2": 10.14,
+      "y2": 5.56,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_18",
+      "x1": 10.14,
+      "y1": 5.56,
+      "x2": 14.55,
+      "y2": 10.85,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_19",
+      "x1": 14.55,
+      "y1": 10.85,
+      "x2": 14.98,
+      "y2": 11.33,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_20",
+      "x1": 14.98,
+      "y1": 11.33,
+      "x2": 13.47,
+      "y2": 12.591,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_21",
+      "x1": 13.47,
+      "y1": 12.591,
+      "x2": 12.45,
+      "y2": 13.43,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_22",
+      "x1": 12.45,
+      "y1": 13.43,
+      "x2": 11.447,
+      "y2": 13.42,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_23",
+      "x1": 11.447,
+      "y1": 13.42,
+      "x2": 10.835,
+      "y2": 12.7,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_24",
+      "x1": 10.835,
+      "y1": 12.7,
+      "x2": 10.155,
+      "y2": 11.9,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_boutique-clinic_25",
+      "x1": 10.155,
+      "y1": 11.9,
+      "x2": 9.586,
+      "y2": 11.23,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_26",
+      "x1": 9.586,
+      "y1": 11.23,
+      "x2": 8.455,
+      "y2": 9.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_27",
+      "x1": 8.455,
+      "y1": 9.9,
+      "x2": 7.775,
+      "y2": 9.1,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_boutique-clinic_28",
+      "x1": 7.775,
+      "y1": 9.1,
+      "x2": 7.308,
+      "y2": 8.55,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_29",
+      "x1": 7.308,
+      "y1": 8.55,
+      "x2": 7.4,
+      "y2": 7.804,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_30",
+      "x1": 7.4,
+      "y1": 7.804,
+      "x2": 10.14,
+      "y2": 5.56,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_31",
+      "x1": 9.586,
+      "y1": 11.23,
+      "x2": 12.723,
+      "y2": 8.659,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_32",
+      "x1": 13.47,
+      "y1": 12.591,
+      "x2": 14.3,
+      "y2": 12.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_33",
+      "x1": 14.3,
+      "y1": 12.75,
+      "x2": 14.75,
+      "y2": 13.05,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_34",
+      "x1": 14.75,
+      "y1": 13.05,
+      "x2": 14.98,
+      "y2": 13.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_35",
+      "x1": 14.98,
+      "y1": 13.6,
+      "x2": 14.98,
+      "y2": 18.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_36",
+      "x1": 14.98,
+      "y1": 18.6,
+      "x2": 14.7,
+      "y2": 18.98,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_37",
+      "x1": 14.7,
+      "y1": 18.98,
+      "x2": 13.1,
+      "y2": 18.98,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_38",
+      "x1": 13.1,
+      "y1": 18.98,
+      "x2": 12,
+      "y2": 18.98,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_boutique-clinic_39",
+      "x1": 12,
+      "y1": 18.98,
+      "x2": 11.9,
+      "y2": 18.98,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_40",
+      "x1": 5.7,
+      "y1": 15.6,
+      "x2": 10,
+      "y2": 15.7,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_41",
+      "x1": 10,
+      "y1": 15.7,
+      "x2": 11.9,
+      "y2": 17.62,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_42",
+      "x1": 11.9,
+      "y1": 17.62,
+      "x2": 11.9,
+      "y2": 18.1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_43",
+      "x1": 11.9,
+      "y1": 18.1,
+      "x2": 11.9,
+      "y2": 18.98,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_boutique-clinic_44",
+      "x1": 11.9,
+      "y1": 18.98,
+      "x2": 10.42,
+      "y2": 18.98,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_45",
+      "x1": 10.42,
+      "y1": 18.98,
+      "x2": 10.42,
+      "y2": 19.92,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_46",
+      "x1": 10.42,
+      "y1": 19.92,
+      "x2": 4.6,
+      "y2": 19.92,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_47",
+      "x1": 4.6,
+      "y1": 19.92,
+      "x2": 4.6,
+      "y2": 15.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_48",
+      "x1": 1.08,
+      "y1": 13.25,
+      "x2": 4.85,
+      "y2": 13.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_49",
+      "x1": 4.85,
+      "y1": 13.25,
+      "x2": 5.7,
+      "y2": 13.25,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_boutique-clinic_50",
+      "x1": 5.7,
+      "y1": 13.25,
+      "x2": 5.7,
+      "y2": 15.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_51",
+      "x1": 5.7,
+      "y1": 15.6,
+      "x2": 1.08,
+      "y2": 15.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_52",
+      "x1": 1.08,
+      "y1": 15.6,
+      "x2": 1.08,
+      "y2": 13.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_53",
+      "x1": 2.43,
+      "y1": 13.25,
+      "x2": 2.43,
+      "y2": 11.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_54",
+      "x1": 2.43,
+      "y1": 11.95,
+      "x2": 4.95,
+      "y2": 11.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_55",
+      "x1": 4.95,
+      "y1": 11.95,
+      "x2": 4.95,
+      "y2": 11.67,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_boutique-clinic_56",
+      "x1": 4.95,
+      "y1": 11.67,
+      "x2": 2.35,
+      "y2": 9.47,
+      "move": true,
+      "sight": true,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "light_boutique-clinic_57",
+      "x": 5,
+      "y": 4,
+      "radius": 4,
+      "color": "#e8fbff",
+      "on": true
+    },
+    {
+      "id": "light_boutique-clinic_58",
+      "x": 2,
+      "y": 3,
+      "radius": 2,
+      "color": "#c8f4ff",
+      "on": true
+    },
+    {
+      "id": "light_boutique-clinic_59",
+      "x": 2,
+      "y": 8,
+      "radius": 2,
+      "color": "#ffd0b0",
+      "on": true
+    },
+    {
+      "id": "light_boutique-clinic_60",
+      "x": 8,
+      "y": 4,
+      "radius": 2,
+      "color": "#ffc8a0",
+      "on": true
+    },
+    {
+      "id": "light_boutique-clinic_61",
+      "x": 12,
+      "y": 4,
+      "radius": 4,
+      "color": "#40d0c8",
+      "on": true
+    },
+    {
+      "id": "light_boutique-clinic_62",
+      "x": 15,
+      "y": 9,
+      "radius": 1.5,
+      "color": "#ffb060",
+      "on": true
+    },
+    {
+      "id": "light_boutique-clinic_63",
+      "x": 15,
+      "y": 10,
+      "radius": 1.5,
+      "color": "#ffb060",
+      "on": true
+    },
+    {
+      "id": "light_boutique-clinic_64",
+      "x": 10,
+      "y": 9,
+      "radius": 3,
+      "color": "#f0f8ff",
+      "on": true
+    },
+    {
+      "id": "light_boutique-clinic_65",
+      "x": 12,
+      "y": 11,
+      "radius": 3,
+      "color": "#f0f8ff",
+      "on": true
+    },
+    {
+      "id": "light_boutique-clinic_66",
+      "x": 4,
+      "y": 10,
+      "radius": 2,
+      "color": "#60e0ff",
+      "on": true
+    },
+    {
+      "id": "light_boutique-clinic_67",
+      "x": 8,
+      "y": 13,
+      "radius": 4,
+      "color": "#dceeff",
+      "on": true
+    },
+    {
+      "id": "light_boutique-clinic_68",
+      "x": 11,
+      "y": 15,
+      "radius": 4,
+      "color": "#dceeff",
+      "on": true
+    },
+    {
+      "id": "light_boutique-clinic_69",
+      "x": 14,
+      "y": 16,
+      "radius": 2.5,
+      "color": "#a0d8ff",
+      "on": true
+    },
+    {
+      "id": "light_boutique-clinic_70",
+      "x": 14,
+      "y": 19,
+      "radius": 1.5,
+      "color": "#ffe0c0",
+      "on": true
+    },
+    {
+      "id": "light_boutique-clinic_71",
+      "x": 3,
+      "y": 14,
+      "radius": 3,
+      "color": "#f4f8ff",
+      "on": true
+    },
+    {
+      "id": "light_boutique-clinic_72",
+      "x": 8,
+      "y": 17,
+      "radius": 4,
+      "color": "#f0fff4",
+      "on": true
+    },
+    {
+      "id": "light_boutique-clinic_73",
+      "x": 11,
+      "y": 19,
+      "radius": 1.5,
+      "color": "#ffd8a0",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "reg_boutique-clinic_74",
+      "name": "Bloc opératoire",
+      "x": 1,
+      "y": 2,
+      "w": 4,
+      "h": 4,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_boutique-clinic_75",
+      "name": "Alcôve",
+      "x": 1,
+      "y": 7,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_boutique-clinic_76",
+      "name": "Couloir",
+      "x": 5,
+      "y": 6,
+      "w": 3,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_boutique-clinic_77",
+      "name": "Salon d'attente (koïs)",
+      "x": 10,
+      "y": 2,
+      "w": 4,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_boutique-clinic_78",
+      "name": "Salle d'examen 1",
+      "x": 8,
+      "y": 8,
+      "w": 3,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_boutique-clinic_79",
+      "name": "Salle d'examen 2",
+      "x": 11,
+      "y": 11,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_boutique-clinic_80",
+      "name": "Hall",
+      "x": 6,
+      "y": 10,
+      "w": 2,
+      "h": 4,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_boutique-clinic_81",
+      "name": "Accueil",
+      "x": 12,
+      "y": 14,
+      "w": 2,
+      "h": 4,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_boutique-clinic_82",
+      "name": "Toilettes",
+      "x": 2,
+      "y": 14,
+      "w": 3,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_boutique-clinic_83",
+      "name": "Escalier",
+      "x": 3,
+      "y": 12,
+      "w": 1,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_boutique-clinic_84",
+      "name": "Jardin zen",
+      "x": 5,
+      "y": 16,
+      "w": 5,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "libentry_boutique-clinic_85",
+      "name": "Entrée",
+      "x": 12,
+      "y": 18,
+      "w": 1,
+      "h": 1,
+      "gmOnly": true
+    }
+  ],
+  "doors": [],
+  "notes": [
+    {
+      "id": "note_boutique-clinic_1",
+      "x": 13,
+      "y": 16,
+      "text": "Comptoir d’accueil : 2 gardes de nuit (tpl_corpsec_human_r3). Approche A : Impersonation + Charisme contre 6 dés pour entrer comme cliente VIP, puis Con + Charisme contre l’infirmier-chef (7 dés) pour refuser l’examen sanguin.",
+      "gmOnly": true
+    },
+    {
+      "id": "note_boutique-clinic_2",
+      "x": 3,
+      "y": 12,
+      "text": "Porte « Personnel » : ascenseur de service (badge + code) vers le -1 et le -2. Rondes : 4 gardes Werkschutz en binômes, passage toutes les 20 minutes.",
+      "gmOnly": true
+    }
+  ],
+  "tokens": [],
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "library": {
+    "slug": "boutique-clinic",
+    "version": 1,
+    "linkedAt": 1795651200000
+  }
+}

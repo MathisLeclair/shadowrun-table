@@ -1,7 +1,7 @@
 {
   "id": "map_trauma_ward",
   "name": "Trauma Ward (hôpital Monobe)",
-  "folder": "Acte 1",
+  "folder": "Cartes maison (anciennes)",
   "description": "**Aile de traumatologie — hôpital Monobe International.** Un étage propre et blanc : hall des ascenseurs, accueil des urgences, quatre chambres, poste infirmier, pharmacie, réserve, bloc opératoire avec salle de réveil, poste de sécurité et cage d'escalier.\n\n**Utilisation**\n- Quête 1.1 *Cleanup Crew*, Phase 3 (« la planque ») : la femme secourue y convalescait (Chambre 23). Session 2 : le groupe l'a extraite sans croiser Reyes et son équipe.\n- Session 3 / réutilisation : le bloc permet l'analyse de l'implant oculaire (Stades 1-2) et son extraction chirurgicale.\n- Réutilisable pour tout hôpital corpo (changer les noms de chambres).\n\n**Tests utiles**\n- Perception seuil 4 : repérer la surveillance des Nettoyeurs (un « visiteur » qui attend trop longtemps dans le hall).\n- Étiquette/Escroquerie seuil 3 : se faire passer pour de la famille ou un médecin.\n- Serrurerie seuil 4 : pharmacie, réserve. Sortie de secours sous alarme.\n- Sécurité légère : 1 garde (2 la nuit), caméras reliées au host Monobe (Attack 8 / Sleaze 9 / DP 7 / Firewall 10).",
   "width": 56,
   "height": 36,

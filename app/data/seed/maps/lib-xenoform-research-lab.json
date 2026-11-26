@@ -1,0 +1,369 @@
+{
+  "id": "map_lib_xenoform-research-lab",
+  "name": "Site Glacier — Pavillon L et labo de Dufresne",
+  "folder": "Acte 2",
+  "description": "**Lieu de campagne :** L’intérieur du Site Glacier pour les scènes rapprochées : le laboratoire de la Dr. Dufresne et le Pavillon L. Le reste du site (périmètre, château d’eau, salle d’embouteillage, salle des donneurs) reste sur l’ancien plan « Site Glacier ».\n\n**Quête :** Lazarus Cell (Phases 3-5).\n\n**À adapter :** La « Salle de confinement » grillagée est le Pavillon L : six chambres vitrées (L-03, L-05, L-09, L-11, une vide, une à la porte renforcée et griffée). Le « Laboratoire » est celui de Dufresne (centrifugeuses, cuves, serveur local, classeurs) ; remplacez les aquariums par des cuves de culture.\n\n**La carte (bibliothèque Fragmaps, « Laboratoire de recherche xénoforme ») :** Laboratoire biotech clandestin où l'on étudie des créatures éveillées : paillasses, aquariums, table de dissection et postes de contrôle, et une salle de confinement grillagée remplie de cages. Idéal pour une extraction de chercheur, un vol d'échantillons ou une run qui tourne mal quand les cages s'ouvrent.\n\nVoir Shadowrun/cartes-campagne.md.",
+  "width": 15,
+  "height": 11,
+  "metersPerCell": 1.5,
+  "theme": "lab",
+  "lighting": "dim",
+  "tiles": [
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "...............",
+    "..............."
+  ],
+  "background": {
+    "url": "/api/maplib/image/xenoform-research-lab",
+    "opacity": 1,
+    "mode": "image",
+    "x": 0,
+    "y": 0,
+    "w": 15,
+    "h": 11
+  },
+  "walls": [
+    {
+      "id": "wall_xenoform-research-lab_1",
+      "x1": 1.9,
+      "y1": 10.55,
+      "x2": 0.8,
+      "y2": 10.55,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_xenoform-research-lab_2",
+      "x1": 0.8,
+      "y1": 10.55,
+      "x2": 0.8,
+      "y2": 0.88,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_xenoform-research-lab_3",
+      "x1": 0.8,
+      "y1": 0.88,
+      "x2": 8.1,
+      "y2": 0.88,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_xenoform-research-lab_4",
+      "x1": 8.1,
+      "y1": 0.88,
+      "x2": 13.3,
+      "y2": 0.88,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_xenoform-research-lab_5",
+      "x1": 13.3,
+      "y1": 0.88,
+      "x2": 13.3,
+      "y2": 8.55,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_xenoform-research-lab_6",
+      "x1": 13.3,
+      "y1": 8.55,
+      "x2": 8.1,
+      "y2": 8.55,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_xenoform-research-lab_7",
+      "x1": 8.1,
+      "y1": 8.55,
+      "x2": 7.9,
+      "y2": 8.4,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_xenoform-research-lab_8",
+      "x1": 7.9,
+      "y1": 8.4,
+      "x2": 4.6,
+      "y2": 10.2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_xenoform-research-lab_9",
+      "x1": 4.6,
+      "y1": 10.2,
+      "x2": 3.9,
+      "y2": 10.2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_xenoform-research-lab_10",
+      "x1": 3.9,
+      "y1": 10.2,
+      "x2": 3.9,
+      "y2": 10.55,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_xenoform-research-lab_11",
+      "x1": 3.9,
+      "y1": 10.55,
+      "x2": 3.6,
+      "y2": 10.55,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_xenoform-research-lab_12",
+      "x1": 3.6,
+      "y1": 10.55,
+      "x2": 1.9,
+      "y2": 10.55,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_xenoform-research-lab_13",
+      "x1": 8.1,
+      "y1": 0.88,
+      "x2": 8.1,
+      "y2": 3.2,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_xenoform-research-lab_14",
+      "x1": 8.1,
+      "y1": 3.2,
+      "x2": 8.1,
+      "y2": 4.4,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "locked",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_xenoform-research-lab_15",
+      "x1": 8.1,
+      "y1": 4.4,
+      "x2": 8.1,
+      "y2": 8.55,
+      "move": true,
+      "sight": false,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "light_xenoform-research-lab_16",
+      "x": 3,
+      "y": 1,
+      "radius": 2.5,
+      "color": "#a0f0ff",
+      "on": true
+    },
+    {
+      "id": "light_xenoform-research-lab_17",
+      "x": 4,
+      "y": 3,
+      "radius": 3.5,
+      "color": "#d0ffc0",
+      "on": true
+    },
+    {
+      "id": "light_xenoform-research-lab_18",
+      "x": 6,
+      "y": 3,
+      "radius": 3,
+      "color": "#e0ffe0",
+      "on": true
+    },
+    {
+      "id": "light_xenoform-research-lab_19",
+      "x": 6,
+      "y": 5,
+      "radius": 2,
+      "color": "#ffffff",
+      "on": true
+    },
+    {
+      "id": "light_xenoform-research-lab_20",
+      "x": 4,
+      "y": 5,
+      "radius": 2.5,
+      "color": "#80ff80",
+      "on": true
+    },
+    {
+      "id": "light_xenoform-research-lab_21",
+      "x": 5,
+      "y": 7,
+      "radius": 3,
+      "color": "#b0ffb0",
+      "on": true
+    },
+    {
+      "id": "light_xenoform-research-lab_22",
+      "x": 6,
+      "y": 8,
+      "radius": 2.5,
+      "color": "#60ffe0",
+      "on": true
+    },
+    {
+      "id": "light_xenoform-research-lab_23",
+      "x": 3,
+      "y": 10,
+      "radius": 2.5,
+      "color": "#f0f4ff",
+      "on": true
+    },
+    {
+      "id": "light_xenoform-research-lab_24",
+      "x": 8,
+      "y": 3,
+      "radius": 1,
+      "color": "#ff3030",
+      "on": true
+    },
+    {
+      "id": "light_xenoform-research-lab_25",
+      "x": 11,
+      "y": 3,
+      "radius": 3.5,
+      "color": "#c0ffc0",
+      "on": true
+    },
+    {
+      "id": "light_xenoform-research-lab_26",
+      "x": 11,
+      "y": 6,
+      "radius": 2.5,
+      "color": "#c0ff90",
+      "on": true
+    },
+    {
+      "id": "light_xenoform-research-lab_27",
+      "x": 12,
+      "y": 7,
+      "radius": 2.5,
+      "color": "#80b0ff",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "reg_xenoform-research-lab_28",
+      "name": "Laboratoire",
+      "x": 1,
+      "y": 1,
+      "w": 7,
+      "h": 5,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_xenoform-research-lab_29",
+      "name": "Postes de contrôle",
+      "x": 2,
+      "y": 7,
+      "w": 5,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_xenoform-research-lab_30",
+      "name": "Sas d'entrée",
+      "x": 2,
+      "y": 9,
+      "w": 2,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_xenoform-research-lab_31",
+      "name": "Salle de confinement",
+      "x": 9,
+      "y": 1,
+      "w": 4,
+      "h": 7,
+      "gmOnly": false
+    },
+    {
+      "id": "libentry_xenoform-research-lab_32",
+      "name": "Entrée",
+      "x": 2,
+      "y": 9,
+      "w": 1,
+      "h": 1,
+      "gmOnly": true
+    }
+  ],
+  "doors": [],
+  "notes": [
+    {
+      "id": "note_xenoform-research-lab_1",
+      "x": 4,
+      "y": 3,
+      "text": "Dr. Hélène Dufresne, là la nuit. Elle ne se bat pas, elle protège ses données. Retournable : Negotiation + Charisme contre 7 dés, +3 si le groupe lui garantit une sortie (fille à Bruxelles). Serveur local + classeurs métalliques : dossiers papier des sujets, dont celui de L-02.",
+      "gmOnly": true
+    },
+    {
+      "id": "note_xenoform-research-lab_2",
+      "x": 11,
+      "y": 4,
+      "text": "Pavillon L : chambres vitrées (verre renforcé Armor 6, Structure 6 ; maglocks rating 4). Ch. 1-4 : L-03, L-05, L-09, L-11. Ch. 5 vide, prête pour un transfert. Ch. 6 vide, porte renforcée, griffures. Néons allumés en permanence.",
+      "gmOnly": true
+    },
+    {
+      "id": "note_xenoform-research-lab_3",
+      "x": 4,
+      "y": 8,
+      "text": "Gardes AG Chemie (tpl_corpsec_r4) : 2 en ronde, 2 en salle de sécurité, 4 au repos ; Stadler ; une mage de sécurité en ronde astrale toutes les heures ; Junior Spider.",
+      "gmOnly": true
+    }
+  ],
+  "tokens": [],
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "library": {
+    "slug": "xenoform-research-lab",
+    "version": 1,
+    "linkedAt": 1795651200000
+  }
+}

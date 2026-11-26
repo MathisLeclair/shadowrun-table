@@ -1,0 +1,313 @@
+{
+  "id": "map_lib_1-bdrm",
+  "name": "Appartement de Margaux (Capitol Hill)",
+  "folder": "Acte 2",
+  "description": "**Lieu de campagne :** L’appartement de Capitol Hill où tourne le serveur du « dossier Starling » de Margaux « La Pie » Hale (interrupteur d’homme mort de 48 h).\n\n**Quête :** The Guest List (Margaux, optionnel).\n\n**À adapter :** Rien à changer : le serveur est sur le poste de travail du séjour.\n\n**La carte (bibliothèque Fragmaps, « Appartement une chambre ») :** Petit appartement une chambre d'un immeuble de Seattle : cuisine ouverte, séjour avec canapé et poste de travail, salle de bain et chambre au néon. Parfait comme planque d'un runner, domicile d'un contact ou d'une cible à cueillir au réveil.\n\nVoir Shadowrun/cartes-campagne.md.",
+  "width": 6,
+  "height": 6,
+  "metersPerCell": 1.5,
+  "theme": "residential",
+  "lighting": "dim",
+  "tiles": [
+    "......",
+    "......",
+    "......",
+    "......",
+    "......",
+    "......"
+  ],
+  "background": {
+    "url": "/api/maplib/image/1-bdrm",
+    "opacity": 1,
+    "mode": "image",
+    "x": 0,
+    "y": 0,
+    "w": 6,
+    "h": 6
+  },
+  "walls": [
+    {
+      "id": "wall_1-bdrm_1",
+      "x1": 1.3,
+      "y1": 0.39,
+      "x2": 5.39,
+      "y2": 0.39,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_1-bdrm_2",
+      "x1": 5.39,
+      "y1": 0.39,
+      "x2": 5.39,
+      "y2": 5.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_1-bdrm_3",
+      "x1": 5.39,
+      "y1": 5.5,
+      "x2": 0.33,
+      "y2": 5.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_1-bdrm_4",
+      "x1": 0.33,
+      "y1": 5.5,
+      "x2": 0.33,
+      "y2": 2.45,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_1-bdrm_5",
+      "x1": 0.33,
+      "y1": 2.45,
+      "x2": 1.3,
+      "y2": 2.45,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_1-bdrm_6",
+      "x1": 1.3,
+      "y1": 2.45,
+      "x2": 1.3,
+      "y2": 1.85,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_1-bdrm_7",
+      "x1": 1.3,
+      "y1": 1.85,
+      "x2": 1.3,
+      "y2": 1.1,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_1-bdrm_8",
+      "x1": 1.3,
+      "y1": 1.1,
+      "x2": 1.3,
+      "y2": 0.39,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_1-bdrm_9",
+      "x1": 2.51,
+      "y1": 0.39,
+      "x2": 2.51,
+      "y2": 2.44,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_1-bdrm_10",
+      "x1": 2.51,
+      "y1": 2.44,
+      "x2": 3.85,
+      "y2": 2.44,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_1-bdrm_11",
+      "x1": 3.85,
+      "y1": 2.44,
+      "x2": 4.55,
+      "y2": 2.44,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_1-bdrm_12",
+      "x1": 4.55,
+      "y1": 2.44,
+      "x2": 5.39,
+      "y2": 2.44,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_1-bdrm_13",
+      "x1": 3.88,
+      "y1": 2.44,
+      "x2": 3.88,
+      "y2": 3.08,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_1-bdrm_14",
+      "x1": 3.88,
+      "y1": 3.08,
+      "x2": 3.88,
+      "y2": 3.43,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_1-bdrm_15",
+      "x1": 3.88,
+      "y1": 3.43,
+      "x2": 5.39,
+      "y2": 3.43,
+      "move": true,
+      "sight": true,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "light_1-bdrm_16",
+      "x": 2,
+      "y": 4,
+      "radius": 4,
+      "color": "#ffe6c0",
+      "on": true
+    },
+    {
+      "id": "light_1-bdrm_17",
+      "x": 4,
+      "y": 1,
+      "radius": 3,
+      "color": "#c8f0ff",
+      "on": true
+    },
+    {
+      "id": "light_1-bdrm_18",
+      "x": 3,
+      "y": 1,
+      "radius": 2,
+      "color": "#ff4fd8",
+      "on": true
+    },
+    {
+      "id": "light_1-bdrm_19",
+      "x": 5,
+      "y": 3,
+      "radius": 2,
+      "color": "#a8ecff",
+      "on": true
+    },
+    {
+      "id": "light_1-bdrm_20",
+      "x": 2,
+      "y": 5,
+      "radius": 1.5,
+      "color": "#7fe8ff",
+      "on": true
+    },
+    {
+      "id": "light_1-bdrm_21",
+      "x": 4,
+      "y": 5,
+      "radius": 2,
+      "color": "#7fc8ff",
+      "on": true
+    },
+    {
+      "id": "light_1-bdrm_22",
+      "x": 2,
+      "y": 1,
+      "radius": 1,
+      "color": "#ff4040",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "reg_1-bdrm_23",
+      "name": "Cuisine",
+      "x": 1,
+      "y": 0,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_1-bdrm_24",
+      "name": "Chambre",
+      "x": 3,
+      "y": 0,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_1-bdrm_25",
+      "name": "Salle de bain",
+      "x": 4,
+      "y": 2,
+      "w": 1,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_1-bdrm_26",
+      "name": "Séjour",
+      "x": 1,
+      "y": 3,
+      "w": 3,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "libentry_1-bdrm_27",
+      "name": "Entrée",
+      "x": 1,
+      "y": 1,
+      "w": 1,
+      "h": 1,
+      "gmOnly": true
+    }
+  ],
+  "doors": [],
+  "notes": [
+    {
+      "id": "note_1-bdrm_1",
+      "x": 2,
+      "y": 4,
+      "text": "Serveur du dossier Starling : host personnel rating 3, facile — si on y pense. Si Margaux disparaît ou ne se connecte pas pendant 48 h, le fichier part à Knight Errant et à Dorian Ashe.",
+      "gmOnly": true
+    }
+  ],
+  "tokens": [],
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "library": {
+    "slug": "1-bdrm",
+    "version": 1,
+    "linkedAt": 1795651200000
+  }
+}

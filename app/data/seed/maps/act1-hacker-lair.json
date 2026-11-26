@@ -1,7 +1,7 @@
 {
   "id": "map_hacker_lair",
   "name": "Repaire de Bricks (Hacker's Lair)",
-  "folder": "Acte 1",
+  "folder": "Cartes maison (anciennes)",
   "description": "**Le repaire de Bricks.** Un garage reconverti au fond d'une ruelle : rideau métallique et porte blindée côté rue, quartiers de vie spartiates, et quelques marches plus bas « l'antre » — racks de serveurs, faux plancher, poste de decking en fer à cheval sous un mur d'écrans. Une trappe secrète mène à un tunnel de maintenance.\n\n**Utilisation**\n- Quête 1.2 *Open Book* : base d'opérations de Bricks (décryptage, traçage du signal de l'implant, recherches sur Hollow Pine et Dorian Ashe).\n- Session 3, scène 4 (recherches publiques, repérage du host) ; préparation de la session 4.\n- En cas de riposte d'AG Chemie : forteresse défendable avec sortie de secours.\n\n**Tests utiles**\n- Stade 3 de l'implant (Guerre électronique/Hacking seuil 9), traçage (seuil 8), décryptage (seuil 8).\n- Registres publics : Informatique seuil 4. Repérage du host : Perception matricielle seuil 5.\n- Intrus : porte blindée (Structure 12), maglock rating 4 ; trappe secrète Perception seuil 5.",
   "width": 44,
   "height": 32,

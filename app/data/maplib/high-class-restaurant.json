@@ -1,0 +1,586 @@
+{
+  "id": "lib_high-class-restaurant",
+  "slug": "high-class-restaurant",
+  "name": "High Class Restaurant",
+  "nameFr": "Restaurant gastronomique",
+  "source": "fragmap",
+  "image": "high class restaurant.jpg",
+  "imageW": 3000,
+  "imageH": 3600,
+  "gridPx": 200,
+  "offsetX": 0,
+  "offsetY": 0,
+  "width": 15,
+  "height": 18,
+  "metersPerCell": 1.5,
+  "theme": "bar",
+  "lighting": "dim",
+  "tags": [
+    "restaurant",
+    "gastronomique",
+    "fine dining",
+    "luxe",
+    "luxury",
+    "haut de gamme",
+    "upscale",
+    "bar",
+    "piano",
+    "Johnson",
+    "rendez-vous",
+    "meet",
+    "négociation",
+    "negotiation",
+    "corpo",
+    "corporate",
+    "mafia",
+    "intérieur",
+    "indoor"
+  ],
+  "description": "Restaurant chic au carrelage de marbre rouge et blanc : bar en L, piano à queue, grande jardinière centrale, estrade à balustrade et banquettes le long des murs, avec passe-plats vers les cuisines. Le cadre parfait pour une rencontre avec un Johnson corpo, une négociation avec un parrain de la Mafia ou une extraction en plein service.",
+  "entry": {
+    "x": 5.7,
+    "y": 16.4
+  },
+  "walls": [
+    {
+      "id": "w1",
+      "x1": 1.95,
+      "y1": 1.95,
+      "x2": 2.1,
+      "y2": 1.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w2",
+      "x1": 2.1,
+      "y1": 1.95,
+      "x2": 6,
+      "y2": 1.95,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w3",
+      "x1": 6,
+      "y1": 1.95,
+      "x2": 10,
+      "y2": 1.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w4",
+      "x1": 10,
+      "y1": 1.95,
+      "x2": 10,
+      "y2": 4.38,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w5",
+      "x1": 10,
+      "y1": 4.38,
+      "x2": 12.75,
+      "y2": 4.38,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w6",
+      "x1": 12.75,
+      "y1": 4.38,
+      "x2": 13.15,
+      "y2": 4.85,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w7",
+      "x1": 13.15,
+      "y1": 4.85,
+      "x2": 13.15,
+      "y2": 11.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w8",
+      "x1": 13.15,
+      "y1": 11.9,
+      "x2": 13.15,
+      "y2": 13.7,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w9",
+      "x1": 13.15,
+      "y1": 13.7,
+      "x2": 13.15,
+      "y2": 15.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w10",
+      "x1": 13.15,
+      "y1": 15.75,
+      "x2": 10.75,
+      "y2": 15.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w11",
+      "x1": 10.75,
+      "y1": 15.75,
+      "x2": 10,
+      "y2": 15.05,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w12",
+      "x1": 10,
+      "y1": 15.05,
+      "x2": 7.2,
+      "y2": 15.05,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w13",
+      "x1": 7.2,
+      "y1": 15.05,
+      "x2": 7.2,
+      "y2": 15.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w14",
+      "x1": 7.2,
+      "y1": 15.9,
+      "x2": 7.2,
+      "y2": 16.95,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w15",
+      "x1": 7.2,
+      "y1": 16.95,
+      "x2": 6.55,
+      "y2": 16.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w16",
+      "x1": 6.55,
+      "y1": 16.95,
+      "x2": 4.95,
+      "y2": 16.95,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w17",
+      "x1": 4.95,
+      "y1": 16.95,
+      "x2": 1.95,
+      "y2": 16.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w18",
+      "x1": 1.95,
+      "y1": 16.95,
+      "x2": 1.95,
+      "y2": 16.1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w19",
+      "x1": 1.95,
+      "y1": 16.1,
+      "x2": 1.95,
+      "y2": 14.9,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w20",
+      "x1": 1.95,
+      "y1": 14.9,
+      "x2": 1.95,
+      "y2": 14.1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w21",
+      "x1": 1.95,
+      "y1": 14.1,
+      "x2": 1.95,
+      "y2": 12.9,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w22",
+      "x1": 1.95,
+      "y1": 12.9,
+      "x2": 1.95,
+      "y2": 5.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w23",
+      "x1": 1.95,
+      "y1": 5.6,
+      "x2": 1.95,
+      "y2": 2,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w24",
+      "x1": 1.95,
+      "y1": 2,
+      "x2": 1.95,
+      "y2": 1.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w25",
+      "x1": 11.35,
+      "y1": 8.72,
+      "x2": 13.15,
+      "y2": 8.72,
+      "move": true,
+      "sight": false,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "l1",
+      "x": 8.3,
+      "y": 2.4,
+      "radius": 3,
+      "color": "#ffb060",
+      "on": true
+    },
+    {
+      "id": "l2",
+      "x": 3.2,
+      "y": 2.9,
+      "radius": 1.5,
+      "color": "#ffe0b0",
+      "on": true
+    },
+    {
+      "id": "l3",
+      "x": 3.2,
+      "y": 4.2,
+      "radius": 1.5,
+      "color": "#ffe0b0",
+      "on": true
+    },
+    {
+      "id": "l4",
+      "x": 6.4,
+      "y": 5,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "l5",
+      "x": 6.4,
+      "y": 7.2,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "l6",
+      "x": 4.5,
+      "y": 6.4,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "l7",
+      "x": 10.7,
+      "y": 5,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "l8",
+      "x": 12.8,
+      "y": 5.2,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "l9",
+      "x": 12.8,
+      "y": 7.2,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "l10",
+      "x": 2.2,
+      "y": 9.5,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "l11",
+      "x": 2.2,
+      "y": 11.6,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "l12",
+      "x": 2.2,
+      "y": 13.6,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "l13",
+      "x": 2.2,
+      "y": 15.7,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "l14",
+      "x": 4.5,
+      "y": 9.5,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "l15",
+      "x": 4.5,
+      "y": 12.8,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "l16",
+      "x": 4.2,
+      "y": 15,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "l17",
+      "x": 12.9,
+      "y": 10.6,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "l18",
+      "x": 12.9,
+      "y": 12.8,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "l19",
+      "x": 12.9,
+      "y": 14.9,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "l20",
+      "x": 10.3,
+      "y": 13,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "l21",
+      "x": 9.7,
+      "y": 12.9,
+      "radius": 2,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "l22",
+      "x": 8.5,
+      "y": 14.5,
+      "radius": 2.5,
+      "color": "#ffc070",
+      "on": true
+    },
+    {
+      "id": "l23",
+      "x": 5.8,
+      "y": 16.5,
+      "radius": 3,
+      "color": "#ffd080",
+      "on": true
+    },
+    {
+      "id": "l24",
+      "x": 12,
+      "y": 15.35,
+      "radius": 2,
+      "color": "#ff6040",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "r1",
+      "name": "Bar",
+      "x": 6,
+      "y": 2,
+      "w": 4,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "r2",
+      "name": "Vitrines à desserts",
+      "x": 2,
+      "y": 2,
+      "w": 2,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "r3",
+      "name": "Salle principale",
+      "x": 5,
+      "y": 9,
+      "w": 5,
+      "h": 5,
+      "gmOnly": false
+    },
+    {
+      "id": "r4",
+      "name": "Estrade",
+      "x": 10,
+      "y": 5,
+      "w": 3,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "r5",
+      "name": "Banquettes ouest",
+      "x": 2,
+      "y": 9,
+      "w": 2,
+      "h": 7,
+      "gmOnly": false
+    },
+    {
+      "id": "r6",
+      "name": "Banquettes est",
+      "x": 11,
+      "y": 10,
+      "w": 2,
+      "h": 5,
+      "gmOnly": false
+    },
+    {
+      "id": "r7",
+      "name": "Accueil",
+      "x": 4,
+      "y": 15,
+      "w": 3,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "r8",
+      "name": "Passe-plats",
+      "x": 7,
+      "y": 14,
+      "w": 3,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "r9",
+      "name": "Petite scène",
+      "x": 11,
+      "y": 15,
+      "w": 2,
+      "h": 1,
+      "gmOnly": false
+    }
+  ],
+  "traced": {
+    "by": "agent",
+    "at": "2026-11-26T16:39:28.598Z",
+    "quality": "good",
+    "notes": "Murs en perspective très épais : tracés près du pied du mur (bord du sol). Vitrages verts (nord, ouest) et fenêtres orangées tracés en fenêtres. Entrée principale supposée au sud (zone éclairée près du pupitre d'accueil), porte de service vers les cuisines (hors carte) au rideau rouge à x=7.2. Balustrade de l'estrade = fenêtre (bloque le passage, pas la vue), escalier laissé ouvert. Bar, jardinière, piano et banquettes non tracés."
+  },
+  "version": 1
+}

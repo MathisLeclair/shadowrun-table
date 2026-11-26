@@ -1,0 +1,1044 @@
+{
+  "id": "map_lib_server-room",
+  "name": "Clinique Halcyon — coffre de données (-2)",
+  "folder": "Acte 3",
+  "description": "**Lieu de campagne :** Le coffre de données du niveau -2 : baie de serveurs isolés, accès physique uniquement.\n\n**Quête :** Severance (niveau -2).\n\n**À adapter :** La salle est plus grande que les 5 × 4 m du texte : ne gardez qu’une allée de baies, le reste est la salle froide. Une seule porte blindée.\n\n**La carte (bibliothèque Fragmaps, « Salle des serveurs ») :** Salle de serveurs climatisée : accès physique à un nœud, vol de données ou sabotage.\n\nVoir Shadowrun/cartes-campagne.md.",
+  "width": 19,
+  "height": 13,
+  "metersPerCell": 2,
+  "theme": "matrix",
+  "lighting": "bright",
+  "tiles": [
+    "...................",
+    "...................",
+    "...................",
+    "...................",
+    "...................",
+    "...................",
+    "...................",
+    "...................",
+    "...................",
+    "...................",
+    "...................",
+    "...................",
+    "..................."
+  ],
+  "background": {
+    "url": "/api/maplib/image/server-room",
+    "opacity": 1,
+    "mode": "image",
+    "x": 0,
+    "y": 0,
+    "w": 19,
+    "h": 12.9
+  },
+  "walls": [
+    {
+      "id": "wall_server-room_1",
+      "x1": 5.75,
+      "y1": 10.5,
+      "x2": 16.12,
+      "y2": 10.5,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_2",
+      "x1": 5.75,
+      "y1": 9.62,
+      "x2": 5.75,
+      "y2": 7.12,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_3",
+      "x1": 5.75,
+      "y1": 7.12,
+      "x2": 5.75,
+      "y2": 6,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_server-room_4",
+      "x1": 5.75,
+      "y1": 6,
+      "x2": 5.75,
+      "y2": 4.87,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_server-room_5",
+      "x1": 5.75,
+      "y1": 4.87,
+      "x2": 5.75,
+      "y2": 2.37,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_6",
+      "x1": 5.75,
+      "y1": 2,
+      "x2": 5.75,
+      "y2": 1.37,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_7",
+      "x1": 5.75,
+      "y1": 9.62,
+      "x2": 5.75,
+      "y2": 10.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_8",
+      "x1": 5.75,
+      "y1": 10.5,
+      "x2": 4,
+      "y2": 10.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_9",
+      "x1": 2,
+      "y1": 10.5,
+      "x2": 1,
+      "y2": 10.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_10",
+      "x1": 2,
+      "y1": 10.5,
+      "x2": 4,
+      "y2": 10.5,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_server-room_11",
+      "x1": 1,
+      "y1": 10.5,
+      "x2": 1,
+      "y2": 12.12,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_12",
+      "x1": 1,
+      "y1": 12.12,
+      "x2": 18,
+      "y2": 12.12,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_13",
+      "x1": 18,
+      "y1": 12.12,
+      "x2": 18,
+      "y2": 11.12,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_14",
+      "x1": 18,
+      "y1": 11.12,
+      "x2": 16.12,
+      "y2": 10.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_15",
+      "x1": 5.75,
+      "y1": 2,
+      "x2": 2,
+      "y2": 2,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_16",
+      "x1": 2,
+      "y1": 2,
+      "x2": 2,
+      "y2": 3.12,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_17",
+      "x1": 5.75,
+      "y1": 2,
+      "x2": 5.75,
+      "y2": 2.37,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_18",
+      "x1": 2,
+      "y1": 3.12,
+      "x2": 2.87,
+      "y2": 3.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_19",
+      "x1": 2.87,
+      "y1": 3.5,
+      "x2": 2.87,
+      "y2": 4.12,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_20",
+      "x1": 2.87,
+      "y1": 4.12,
+      "x2": 2.12,
+      "y2": 4.12,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_21",
+      "x1": 2.12,
+      "y1": 4.12,
+      "x2": 0,
+      "y2": 3.12,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_22",
+      "x1": 0,
+      "y1": 3.12,
+      "x2": 0,
+      "y2": 1.87,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_23",
+      "x1": 0,
+      "y1": 1.87,
+      "x2": 2,
+      "y2": 3.12,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_24",
+      "x1": 2.87,
+      "y1": 8.62,
+      "x2": 2.87,
+      "y2": 8.12,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_25",
+      "x1": 2.87,
+      "y1": 8.12,
+      "x2": 2,
+      "y2": 8.12,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_26",
+      "x1": 2,
+      "y1": 8.12,
+      "x2": 0,
+      "y2": 8.242,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_27",
+      "x1": 2,
+      "y1": 8.75,
+      "x2": 2.87,
+      "y2": 8.62,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_28",
+      "x1": 2.87,
+      "y1": 8.12,
+      "x2": 3,
+      "y2": 7.25,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_29",
+      "x1": 3,
+      "y1": 7.25,
+      "x2": 2.75,
+      "y2": 7,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_30",
+      "x1": 2.75,
+      "y1": 7,
+      "x2": 2.5,
+      "y2": 6,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_31",
+      "x1": 2.5,
+      "y1": 6,
+      "x2": 3,
+      "y2": 5,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_32",
+      "x1": 3,
+      "y1": 5,
+      "x2": 2.87,
+      "y2": 4.12,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_33",
+      "x1": 5.75,
+      "y1": 1.37,
+      "x2": 18,
+      "y2": 1.5,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_34",
+      "x1": 18,
+      "y1": 4.75,
+      "x2": 15.62,
+      "y2": 5.37,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_35",
+      "x1": 15.62,
+      "y1": 5.37,
+      "x2": 15.62,
+      "y2": 6.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_36",
+      "x1": 15.62,
+      "y1": 6.5,
+      "x2": 18,
+      "y2": 6.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_37",
+      "x1": 18,
+      "y1": 6.25,
+      "x2": 18,
+      "y2": 4.75,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_38",
+      "x1": 16.12,
+      "y1": 10.5,
+      "x2": 15.25,
+      "y2": 10,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_39",
+      "x1": 15.25,
+      "y1": 10,
+      "x2": 15.25,
+      "y2": 9.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_40",
+      "x1": 15.25,
+      "y1": 9.25,
+      "x2": 16.12,
+      "y2": 9.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_41",
+      "x1": 16.12,
+      "y1": 9.25,
+      "x2": 18,
+      "y2": 10,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_42",
+      "x1": 18,
+      "y1": 10,
+      "x2": 18,
+      "y2": 11.12,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_43",
+      "x1": 18,
+      "y1": 6.25,
+      "x2": 18,
+      "y2": 10,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_44",
+      "x1": 18,
+      "y1": 4.75,
+      "x2": 18,
+      "y2": 1.5,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_45",
+      "x1": 2,
+      "y1": 10.5,
+      "x2": 2,
+      "y2": 8.75,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_46",
+      "x1": 2,
+      "y1": 8.75,
+      "x2": 0,
+      "y2": 9.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_47",
+      "x1": 6.87,
+      "y1": 2.75,
+      "x2": 8,
+      "y2": 2.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_48",
+      "x1": 8,
+      "y1": 2.75,
+      "x2": 8,
+      "y2": 5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_49",
+      "x1": 8,
+      "y1": 5,
+      "x2": 6.87,
+      "y2": 5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_50",
+      "x1": 6.87,
+      "y1": 5,
+      "x2": 6.87,
+      "y2": 2.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_51",
+      "x1": 9,
+      "y1": 2.75,
+      "x2": 10.12,
+      "y2": 2.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_52",
+      "x1": 10.12,
+      "y1": 2.75,
+      "x2": 10.12,
+      "y2": 5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_53",
+      "x1": 10.12,
+      "y1": 5,
+      "x2": 9,
+      "y2": 5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_54",
+      "x1": 9,
+      "y1": 5,
+      "x2": 9,
+      "y2": 2.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_55",
+      "x1": 11.12,
+      "y1": 2.75,
+      "x2": 12.25,
+      "y2": 2.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_56",
+      "x1": 12.25,
+      "y1": 2.75,
+      "x2": 12.25,
+      "y2": 5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_57",
+      "x1": 12.25,
+      "y1": 5,
+      "x2": 11.12,
+      "y2": 5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_58",
+      "x1": 11.12,
+      "y1": 5,
+      "x2": 11.12,
+      "y2": 2.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_59",
+      "x1": 13.37,
+      "y1": 2.75,
+      "x2": 14.37,
+      "y2": 2.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_60",
+      "x1": 14.37,
+      "y1": 2.75,
+      "x2": 14.37,
+      "y2": 5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_61",
+      "x1": 14.37,
+      "y1": 5,
+      "x2": 13.37,
+      "y2": 5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_62",
+      "x1": 13.37,
+      "y1": 5,
+      "x2": 13.37,
+      "y2": 2.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_63",
+      "x1": 6.87,
+      "y1": 7,
+      "x2": 8,
+      "y2": 7,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_64",
+      "x1": 8,
+      "y1": 7,
+      "x2": 8,
+      "y2": 9.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_65",
+      "x1": 8,
+      "y1": 9.25,
+      "x2": 6.87,
+      "y2": 9.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_66",
+      "x1": 6.87,
+      "y1": 9.25,
+      "x2": 6.87,
+      "y2": 7,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_67",
+      "x1": 9,
+      "y1": 7,
+      "x2": 10.12,
+      "y2": 7,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_68",
+      "x1": 10.12,
+      "y1": 7,
+      "x2": 10.12,
+      "y2": 9.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_69",
+      "x1": 10.12,
+      "y1": 9.25,
+      "x2": 9,
+      "y2": 9.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_70",
+      "x1": 9,
+      "y1": 9.25,
+      "x2": 9,
+      "y2": 7,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_71",
+      "x1": 11.12,
+      "y1": 7,
+      "x2": 12.25,
+      "y2": 7,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_72",
+      "x1": 12.25,
+      "y1": 7,
+      "x2": 12.25,
+      "y2": 9.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_73",
+      "x1": 12.25,
+      "y1": 9.25,
+      "x2": 11.12,
+      "y2": 9.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_74",
+      "x1": 11.12,
+      "y1": 9.25,
+      "x2": 11.12,
+      "y2": 7,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_75",
+      "x1": 13.5,
+      "y1": 7,
+      "x2": 14.37,
+      "y2": 7,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_76",
+      "x1": 14.37,
+      "y1": 7,
+      "x2": 14.37,
+      "y2": 9.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_77",
+      "x1": 14.37,
+      "y1": 9.25,
+      "x2": 13.5,
+      "y2": 9.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_78",
+      "x1": 13.5,
+      "y1": 9.25,
+      "x2": 13.5,
+      "y2": 7,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_79",
+      "x1": 8,
+      "y1": 2.75,
+      "x2": 9,
+      "y2": 2.75,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_80",
+      "x1": 12.25,
+      "y1": 2.75,
+      "x2": 13.37,
+      "y2": 2.75,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_81",
+      "x1": 12.25,
+      "y1": 9.25,
+      "x2": 13.5,
+      "y2": 9.25,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_82",
+      "x1": 9,
+      "y1": 9.25,
+      "x2": 8,
+      "y2": 9.25,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_server-room_83",
+      "x1": 9,
+      "y1": 7,
+      "x2": 8,
+      "y2": 7,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_server-room_84",
+      "x1": 12.25,
+      "y1": 7,
+      "x2": 13.5,
+      "y2": 7,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_server-room_85",
+      "x1": 13.37,
+      "y1": 5,
+      "x2": 12.25,
+      "y2": 5,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_server-room_86",
+      "x1": 9,
+      "y1": 5,
+      "x2": 8,
+      "y2": 5,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    }
+  ],
+  "lights": [
+    {
+      "id": "light_server-room_87",
+      "x": 2,
+      "y": 5,
+      "radius": 1.2,
+      "color": "#4493a7",
+      "on": true
+    },
+    {
+      "id": "light_server-room_88",
+      "x": 2,
+      "y": 6,
+      "radius": 1.2,
+      "color": "#4493a7",
+      "on": true
+    },
+    {
+      "id": "light_server-room_89",
+      "x": 2,
+      "y": 7,
+      "radius": 0.6,
+      "color": "#4493a7",
+      "on": true
+    },
+    {
+      "id": "light_server-room_90",
+      "x": 1,
+      "y": 6,
+      "radius": 0.6,
+      "color": "#4493a7",
+      "on": true
+    },
+    {
+      "id": "light_server-room_91",
+      "x": 1,
+      "y": 9,
+      "radius": 0.6,
+      "color": "#4493a7",
+      "on": true
+    },
+    {
+      "id": "light_server-room_92",
+      "x": 11,
+      "y": 7,
+      "radius": 0.6,
+      "color": "#446aa7",
+      "on": true
+    },
+    {
+      "id": "light_server-room_93",
+      "x": 11,
+      "y": 8,
+      "radius": 0.6,
+      "color": "#446aa7",
+      "on": true
+    },
+    {
+      "id": "light_server-room_94",
+      "x": 11,
+      "y": 3,
+      "radius": 0.6,
+      "color": "#446aa7",
+      "on": true
+    },
+    {
+      "id": "light_server-room_95",
+      "x": 11,
+      "y": 4,
+      "radius": 0.6,
+      "color": "#446aa7",
+      "on": true
+    },
+    {
+      "id": "light_server-room_96",
+      "x": 13,
+      "y": 8,
+      "radius": 0.8,
+      "color": "#6b0000",
+      "on": true
+    },
+    {
+      "id": "light_server-room_97",
+      "x": 8,
+      "y": 8,
+      "radius": 0.8,
+      "color": "#6b0000",
+      "on": true
+    },
+    {
+      "id": "light_server-room_98",
+      "x": 13,
+      "y": 3,
+      "radius": 0.8,
+      "color": "#6b0000",
+      "on": true
+    },
+    {
+      "id": "light_server-room_99",
+      "x": 8,
+      "y": 3,
+      "radius": 0.8,
+      "color": "#6b0000",
+      "on": true
+    }
+  ],
+  "regions": [],
+  "doors": [],
+  "notes": [
+    {
+      "id": "note_server-room_1",
+      "x": 9,
+      "y": 6,
+      "text": "Porte blindée Structure 16 / Armor 16, maglock rating 6. Salle froide, aucune connexion sans fil : Bricks doit se brancher (Computer + Logic [Data Processing], test étendu, seuil 12, intervalle 1 tour pour tout copier ; protocole seul : 6 ; Escouade 9 + ordres de Wendt : 4). 4 charges thermiques du Protokoll Asche.",
+      "gmOnly": true
+    }
+  ],
+  "tokens": [],
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "library": {
+    "slug": "server-room",
+    "version": 1,
+    "linkedAt": 1795651200000
+  }
+}

@@ -1,7 +1,7 @@
 {
   "id": "map_server_room",
   "name": "Hollow Pine — salle des serveurs",
-  "folder": "Acte 1",
+  "folder": "Cartes maison (anciennes)",
   "description": "**Étage technique de Hollow Pine Holdings.** Couloir de service desservi par l'escalier et un monte-charge ; salle des serveurs à faux plancher (allées de racks, console d'administration, local onduleurs) derrière une porte maglock ; poste du spider de sécurité ; bureau arrière avec les archives papier. Une gaine technique court sous le plancher, accessible par deux trappes secrètes.\n\n**Utilisation**\n- Quête 1.2 *Open Book*, Phase 3-4, version effraction physique : brancher Bricks directement sur le host depuis la console, ou fouiller les archives pour le dossier Knight Errant.\n- Peut servir de « local serveur » détaillé pour la carte Corp Lobby (12e étage).\n\n**Sécurité** : Junior Security Spider en RV (Standard si alerte), maglocks rating 5, caméras, extinction au gaz inerte.\n\n**Tests utiles** : Serrurerie/Hardware seuil 5 (maglock), Perception seuil 4 (trappes), Hacking sur le host (Firewall 7), Informatique seuil 3 (archives).",
   "width": 46,
   "height": 34,

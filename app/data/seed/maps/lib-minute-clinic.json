@@ -1,0 +1,396 @@
+{
+  "id": "map_lib_minute-clinic",
+  "name": "Clinique de rue (Docteur Silvertongue)",
+  "folder": "Acte 2",
+  "description": "**Lieu de campagne :** La clinique de rue où le groupe peut soigner les sujets libérés du Site Glacier (ou un runner blessé) — option « Ork Underground, Docteur Silvertongue ou équivalent ».\n\n**Quête :** Lazarus Cell (option « Où les emmener ? »).\n\n**À adapter :** Rien à changer. Chaque refuge a ses conséquences en Acte 3 : une clinique de rue parle si on la paie.\n\n**La carte (bibliothèque Fragmaps, « Clinique de quartier ») :** Petite clinique sans rendez-vous : accueil et salle d'attente, salle de soins avec lits et brancard, bloc opératoire derrière des rideaux. Pour soigner un runner blessé, voler des fournitures, extraire un patient ou rencontrer un doc des rues qui pose des implants hors registre.\n\nVoir Shadowrun/cartes-campagne.md.",
+  "width": 9,
+  "height": 12,
+  "metersPerCell": 1.5,
+  "theme": "lab",
+  "lighting": "bright",
+  "tiles": [
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    "........."
+  ],
+  "background": {
+    "url": "/api/maplib/image/minute-clinic",
+    "opacity": 1,
+    "mode": "image",
+    "x": 0,
+    "y": 0,
+    "w": 9,
+    "h": 12
+  },
+  "walls": [
+    {
+      "id": "wall_minute-clinic_1",
+      "x1": 1.4,
+      "y1": 1.95,
+      "x2": 4.3,
+      "y2": 1.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_minute-clinic_2",
+      "x1": 4.3,
+      "y1": 1.95,
+      "x2": 4.3,
+      "y2": 1.55,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_minute-clinic_3",
+      "x1": 4.3,
+      "y1": 1.55,
+      "x2": 7.15,
+      "y2": 1.55,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_minute-clinic_4",
+      "x1": 7.15,
+      "y1": 1.55,
+      "x2": 7.15,
+      "y2": 7.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_minute-clinic_5",
+      "x1": 7.15,
+      "y1": 7.9,
+      "x2": 7.85,
+      "y2": 7.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_minute-clinic_6",
+      "x1": 7.85,
+      "y1": 7.9,
+      "x2": 7.85,
+      "y2": 8.85,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_minute-clinic_7",
+      "x1": 7.85,
+      "y1": 8.85,
+      "x2": 7.85,
+      "y2": 10.45,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_minute-clinic_8",
+      "x1": 7.85,
+      "y1": 10.45,
+      "x2": 7.85,
+      "y2": 11.1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_minute-clinic_9",
+      "x1": 7.85,
+      "y1": 11.1,
+      "x2": 4.85,
+      "y2": 11.1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_minute-clinic_10",
+      "x1": 4.85,
+      "y1": 11.1,
+      "x2": 4.85,
+      "y2": 10.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_minute-clinic_11",
+      "x1": 4.85,
+      "y1": 10.25,
+      "x2": 3.95,
+      "y2": 10.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_minute-clinic_12",
+      "x1": 3.95,
+      "y1": 10.25,
+      "x2": 3.95,
+      "y2": 10,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_minute-clinic_13",
+      "x1": 3.95,
+      "y1": 10,
+      "x2": 3.95,
+      "y2": 9.3,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_minute-clinic_14",
+      "x1": 3.95,
+      "y1": 9.3,
+      "x2": 3.95,
+      "y2": 7.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_minute-clinic_15",
+      "x1": 3.95,
+      "y1": 7.5,
+      "x2": 1.4,
+      "y2": 7.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_minute-clinic_16",
+      "x1": 1.4,
+      "y1": 7.5,
+      "x2": 1.4,
+      "y2": 1.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_minute-clinic_17",
+      "x1": 4.3,
+      "y1": 1.95,
+      "x2": 4.3,
+      "y2": 3.55,
+      "move": false,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_minute-clinic_18",
+      "x1": 5.75,
+      "y1": 3.55,
+      "x2": 7.15,
+      "y2": 3.55,
+      "move": false,
+      "sight": true,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "light_minute-clinic_19",
+      "x": 3,
+      "y": 2,
+      "radius": 3,
+      "color": "#f4fff0",
+      "on": true
+    },
+    {
+      "id": "light_minute-clinic_20",
+      "x": 5,
+      "y": 2,
+      "radius": 3.5,
+      "color": "#f4fff8",
+      "on": true
+    },
+    {
+      "id": "light_minute-clinic_21",
+      "x": 7,
+      "y": 2,
+      "radius": 2,
+      "color": "#e8f8ff",
+      "on": true
+    },
+    {
+      "id": "light_minute-clinic_22",
+      "x": 2,
+      "y": 2,
+      "radius": 1.5,
+      "color": "#40ffa0",
+      "on": true
+    },
+    {
+      "id": "light_minute-clinic_23",
+      "x": 2,
+      "y": 2,
+      "radius": 2,
+      "color": "#e8f8ff",
+      "on": true
+    },
+    {
+      "id": "light_minute-clinic_24",
+      "x": 2,
+      "y": 5,
+      "radius": 1.5,
+      "color": "#80e0ff",
+      "on": true
+    },
+    {
+      "id": "light_minute-clinic_25",
+      "x": 4,
+      "y": 5,
+      "radius": 1.5,
+      "color": "#40c0ff",
+      "on": true
+    },
+    {
+      "id": "light_minute-clinic_26",
+      "x": 4,
+      "y": 6,
+      "radius": 4,
+      "color": "#f0fff0",
+      "on": true
+    },
+    {
+      "id": "light_minute-clinic_27",
+      "x": 6,
+      "y": 7,
+      "radius": 4,
+      "color": "#e8fff8",
+      "on": true
+    },
+    {
+      "id": "light_minute-clinic_28",
+      "x": 5,
+      "y": 8,
+      "radius": 1.5,
+      "color": "#60d0ff",
+      "on": true
+    },
+    {
+      "id": "light_minute-clinic_29",
+      "x": 5,
+      "y": 11,
+      "radius": 1.5,
+      "color": "#ff3030",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "reg_minute-clinic_30",
+      "name": "Salle de soins",
+      "x": 2,
+      "y": 2,
+      "w": 2,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_minute-clinic_31",
+      "name": "Bloc opératoire",
+      "x": 5,
+      "y": 2,
+      "w": 2,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_minute-clinic_32",
+      "name": "Lits",
+      "x": 1,
+      "y": 5,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_minute-clinic_33",
+      "name": "Salle principale",
+      "x": 3,
+      "y": 5,
+      "w": 4,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_minute-clinic_34",
+      "name": "Accueil",
+      "x": 5,
+      "y": 7,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_minute-clinic_35",
+      "name": "Salle d'attente",
+      "x": 5,
+      "y": 9,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "libentry_minute-clinic_36",
+      "name": "Entrée",
+      "x": 7,
+      "y": 9,
+      "w": 1,
+      "h": 1,
+      "gmOnly": true
+    }
+  ],
+  "doors": [],
+  "notes": [
+    {
+      "id": "note_minute-clinic_1",
+      "x": 2,
+      "y": 6,
+      "text": "Quatre sujets sous sédation qui marchent mal : il faut des lits, des perfusions, et quelqu’un pour se taire. Le doc veut être payé — et AG Chemie paie mieux que le groupe si l’Horloge monte.",
+      "gmOnly": true
+    }
+  ],
+  "tokens": [],
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "library": {
+    "slug": "minute-clinic",
+    "version": 1,
+    "linkedAt": 1795651200000
+  }
+}

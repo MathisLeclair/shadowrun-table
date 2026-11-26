@@ -41,7 +41,7 @@
         {
           "id": "p3b",
           "title": "Phase 3B — L'infiltration physique (tour Meridian, suite 1408)",
-          "text": "**Rez-de-chaussée** : garde du hall + ronde toutes les **40 min** (*Sécurité corpo humaine R3*), ascenseurs à badge après 20 h, escalier de secours en maglock 3, nacelle de laveur de vitres sur le toit (grappin d'Anthony vers la salle de réunion, verre Structure 6 / Armure 6).\n\n**Suite 1408** (map_corp_lobby) : maglock 4 (badge + code), 3 caméras esclaves du host, plateau ouvert, bureau d'Ashe avec **coffre indice 4** derrière la bibliothèque. **Salle serveur** (map_server_room) : maglock biométrique 5 (paume d'Ashe), porte Structure 12 / Armure 12 ; connexion directe = **+2 dés** pour Bricks, **–2 dés** à la Patrol IC.\n\n- **Jour, Jane en première ligne** : auditrice de Francfort (Imposture vs Priya 6 dés, puis Con vs Ashe 9 dés ; **2 succès nets** = seule avec les registres, **4** = code de la salle serveur), cliente (pose un relais sans fil), ou prestataire de nettoyage. Voler l'empreinte de paume d'Ashe : Escamotage seuil 2, puis Contrefaçon + LOG seuil 4.\n- **Nuit, furtif** : badge cloné, escalier ou toit, séquenceur, boucle des caméras.\n- **Bruyant (Anthony)** : Knight Errant en **6 + 1D6 min**, Horloge +1. **Noter si Anthony achève un garde à terre** (jauge de la voie du sabre de Morinaga).",
+          "text": "**Rez-de-chaussée** : garde du hall + ronde toutes les **40 min** (*Sécurité corpo humaine R3*), ascenseurs à badge après 20 h, escalier de secours en maglock 3, nacelle de laveur de vitres sur le toit (grappin d'Anthony vers la salle de réunion, verre Structure 6 / Armure 6).\n\n**Suite 1408** (map_lib_office-floor) : maglock 4 (badge + code), 3 caméras esclaves du host, plateau ouvert, bureau d'Ashe avec **coffre indice 4** derrière la bibliothèque. **Salle serveur** (le local serveur de map_lib_office-floor) : maglock biométrique 5 (paume d'Ashe), porte Structure 12 / Armure 12 ; connexion directe = **+2 dés** pour Bricks, **–2 dés** à la Patrol IC.\n\n- **Jour, Jane en première ligne** : auditrice de Francfort (Imposture vs Priya 6 dés, puis Con vs Ashe 9 dés ; **2 succès nets** = seule avec les registres, **4** = code de la salle serveur), cliente (pose un relais sans fil), ou prestataire de nettoyage. Voler l'empreinte de paume d'Ashe : Escamotage seuil 2, puis Contrefaçon + LOG seuil 4.\n- **Nuit, furtif** : badge cloné, escalier ou toit, séquenceur, boucle des caméras.\n- **Bruyant (Anthony)** : Knight Errant en **6 + 1D6 min**, Horloge +1. **Noter si Anthony achève un garde à terre** (jauge de la voie du sabre de Morinaga).",
           "done": false
         },
         {
@@ -80,7 +80,7 @@
         },
         {
           "id": "p2",
-          "title": "La réunion avec Klee (map_penthouse_office)",
+          "title": "La réunion avec Klee (map_fvtt_penthouse-office)",
           "text": "Menaces juridiques, offre de rachat à **30 %**, des hommes qui attendent devant l'immeuble le soir. Klee a honte d'appeler « l'enfant qu'on a chassé » et veut que **Francfort n'en sache rien**.\n\nJoué après la session 4 : Klee connaît déjà le nom de Hollow Pine et d'Ashe ; l'offre finale expire dans **6 jours**.",
           "done": false
         },
@@ -93,7 +93,7 @@
         {
           "id": "p4",
           "title": "La pression de la rue",
-          "text": "Deux gros bras en civil (*Sécurité corpo humaine R3* ou *troll R3*) attendent Klee devant la holding le soir même, ou sur le chantier voisin (map_construction_site). Combat court ou intimidation.",
+          "text": "Deux gros bras en civil (*Sécurité corpo humaine R3* ou *troll R3*) attendent Klee devant la holding le soir même, ou sur le chantier voisin (map_fvtt_construction-site). Combat court ou intimidation.",
           "done": false
         },
         {
@@ -111,9 +111,6 @@
         "tpl_adachi_morinaga"
       ],
       "maps": [
-        "map_penthouse_office",
-        "map_construction_site",
-        "map_corp_lobby",
         "map_fvtt_penthouse-office",
         "map_fvtt_construction-site",
         "map_fvtt_corp-lobby"
@@ -138,7 +135,7 @@
         {
           "id": "p2",
           "title": "Phase 1 — Trois portes (au moins), une seule cible",
-          "text": "- **A. Fruitland** (map_parc_mobilhomes_fruitland) : **Mama Odile Tusker** (vieille orque, poulets mutants, mobil-home 14). Étiquette (Rue) + CHA seuil 2 ou 50¥ → boîte postale de réexpédition des colis de graines (**+2 Piste**). **Le Passeur arrive dans l'heure.**\n- **B. Les « fenêtres » RA de Windows** (Bricks, map_hacker_lair) : recherche matricielle étendue Informatique + INT [DP] **seuil 10, intervalle 1 h** → +1 Piste par palier de 5 succès ; dernière fenêtre : « *Le linge propre ne ment pas.* » Ou remonter son mouchard sur les comptes de Kessler (Hacking + LOG [Corruption] vs **13 dés**, **+2 Piste** ; échec : Windows sait qu'on la traque, Phase 3 plus dure).\n- **C. Old Lin**, faussaire de Chinatown : Négociation vs **8 dés** (+2 dés Street Cred de Jane), 1 000¥ ou un service → identité « **Rae Calder** », propriétaire d'une laverie (**+2 Piste**). Menacée : elle donne le nom puis appelle Windows.\n- **D. (secours) Filer le Passeur** : camionnette GMC Bulldog grise (plaques de Tacoma) ou signature de Mosaïque (Guerre électronique + LOG [Capteurs] seuil 3, puis Pister) → **+1 Piste par demi-journée**.\n\n**Fail-forward à 4 Piste** : Windows envoie elle-même un Fly-Spy avec une adresse et une heure.",
+          "text": "- **A. Fruitland** (map_lib_nomad-camp) : **Mama Odile Tusker** (vieille orque, poulets mutants, mobil-home 14). Étiquette (Rue) + CHA seuil 2 ou 50¥ → boîte postale de réexpédition des colis de graines (**+2 Piste**). **Le Passeur arrive dans l'heure.**\n- **B. Les « fenêtres » RA de Windows** (Bricks, map_hacker_lair) : recherche matricielle étendue Informatique + INT [DP] **seuil 10, intervalle 1 h** → +1 Piste par palier de 5 succès ; dernière fenêtre : « *Le linge propre ne ment pas.* » Ou remonter son mouchard sur les comptes de Kessler (Hacking + LOG [Corruption] vs **13 dés**, **+2 Piste** ; échec : Windows sait qu'on la traque, Phase 3 plus dure).\n- **C. Old Lin**, faussaire de Chinatown : Négociation vs **8 dés** (+2 dés Street Cred de Jane), 1 000¥ ou un service → identité « **Rae Calder** », propriétaire d'une laverie (**+2 Piste**). Menacée : elle donne le nom puis appelle Windows.\n- **D. (secours) Filer le Passeur** : camionnette GMC Bulldog grise (plaques de Tacoma) ou signature de Mosaïque (Guerre électronique + LOG [Capteurs] seuil 3, puis Pister) → **+1 Piste par demi-journée**.\n\n**Fail-forward à 4 Piste** : Windows envoie elle-même un Fly-Spy avec une adresse et une heure.",
           "done": false
         },
         {
@@ -149,7 +146,7 @@
         },
         {
           "id": "p4",
-          "title": "Phase 3 — La laverie Suds'n'Duds (map_laverie_windows)",
+          "title": "Phase 3 — La laverie Suds'n'Duds (map_lib_tailor-shop, sous-sol map_lib_basement-utility-room)",
           "text": "Ouverte 24 h/24, quatorze machines dont six marchent. Windows vit au sous-sol, en **cage de Faraday**.\n- **Défenses** : 2 drones **Doberman** (arrière-boutique), 1 **Fly-Spy** (faux plafond), caméras dans 3 sèche-linge (Perception + INT seuil 4), porte blindée en **maglock 5 câblé** (pas de sans-fil), **interrupteur d'homme mort** (effacement en 30 s + thermite).\n- **Bricks se présente devant une caméra** : moment de roleplay, **pas de test**. Windows ouvre, pistolet braqué.\n- **Entrée en force** : drones, serveur fondu, Windows blessée et **Loyauté 1** (plus de fichiers).\n- **Jane parle à travers la porte** : Négociation seuil 3.\n\n**Les retrouvailles** : la colère (« J'ai dû pleurer à ton enterrement. Devant Kessler. »), les comptes de Kessler, et « Danny. Ni Jae-won. **Transféré où, Bricks ?** »",
           "done": false
         },
@@ -177,11 +174,12 @@
         "tpl_crimson_ganger"
       ],
       "maps": [
-        "map_parc_mobilhomes_fruitland",
+        "map_lib_nomad-camp",
+        "map_lib_electronics-repair-shop",
+        "map_lib_tailor-shop",
+        "map_lib_basement-utility-room",
         "map_laverie_windows",
-        "map_hacker_lair",
-        "map_fvtt_hacker-s-lair",
-        "map_fvtt_back-alley"
+        "map_fvtt_hacker-s-lair"
       ],
       "rewards": "- **4 Karma** (5 si Windows est sauvée avec ses fichiers sans que le groupe tire le premier)\n- Pas de Johnson. Butin de l'équipe du Passeur : ~18 000¥ de revente, **~5 000¥/runner** après la part de Cabana\n- **Windows** contact (Connexion 4, Loyauté 2 pour le groupe, 4 pour Bricks)\n- **Le Passeur** contact (Connexion 4, Loyauté 1) si contrat rompu à l'amiable — il doit un service\n- **Street Cred +1** pour Bricks",
       "gmNotes": "**Ce que savent les PNJ**\n- **Windows** : voir Phase 5. Rien sur Lazarus ni Halcyon.\n- **Le Passeur** : contrat via le fixer de Tacoma **Dutch Haldane**, d'« une femme qui paie en certifiés AG » (40 000¥). Retourné, il donne le point de livraison (parking de Bellevue).\n- **Mosaïque** : le dossier du client contenait une photo de Windows (2074)… et une de **Bricks**, « à confirmer ».\n- **Mama Tusker** : la clé USB et l'affection.\n\n**Complications**\n- Old Lin a appelé Windows : drones déplacés dans la salle des machines, Windows attend avec un fusil.\n- Mosaïque piège la grille : si Bricks utilise la Matrice pendant la course, Perception matricielle 11 dés → position donnée au Passeur.\n- Rempart menace Mama Tusker.\n\n**Reyes (version Acte 2)** : HK-227 smartlink (7P, SA/TR/TA) en arme principale, 2 flash-bang + 1 fumigène thermique, Armure 14 (veste + casque). Elle connaît Bricks. Au-dessus d'Horloge 6 : plus de consigne de ramener des témoins vivants."
@@ -246,10 +244,12 @@
         "tpl_agc_reyes"
       ],
       "maps": [
+        "map_lib_high-class-restaurant",
+        "map_lib_executive-suite",
+        "map_lib_industrial-kitchen",
         "map_gala_ravenswood",
-        "map_maison_kessler",
-        "map_fvtt_penthouse-office",
-        "map_fvtt_corp-lobby"
+        "map_lib_1-bdrm",
+        "map_maison_kessler"
       ],
       "rewards": "- **5 Karma** (+1 si La Pie a été gérée sans violence)\n- **Monobe** : 12 000¥/runner pour le mouchard, +5 000¥/runner pour la liste VIP (si le groupe la garde, Tanabe le saura un jour)\n- Contacts possibles : **Margaux Hale** (C3, L1 — retournée), **Dorian Ashe** (C3, L1 — retournée), **Saori Tanabe** (C5, L1 — mission réussie)\n- **Street Cred +1** pour Jane · **Notoriété +1** si Jane démasquée publiquement ou Margaux tuée",
       "gmNotes": "**Ce que savent les PNJ**\n- **Wyatt-Brandt** : la longévité de luxe ; la « recherche profonde » est confiée au Dr. **Ansgar Wendt**, jamais vu en public. Signe les budgets, refuse de savoir le reste.\n- **Kessler** : a fermé le 0419, sait que Reyes était dans l'équipe, sait que le Jardinier existe. **Copie non expurgée du dossier 0419** chez lui, à Alki Point (map_maison_kessler : coffre mural indice 5, host domestique 3, un garde du corps).\n- **Ashe** : la structure financière, Glacier, Halcyon, le surnom du Jardinier. Elle a peur de Reyes.\n- **Margaux** : le plan du gala, le planning de la Fondation ; « Les injections viennent toutes d'un sous-sol de la clinique. »\n- **Calloway** : la clinique, l'injection mensuelle, la chambre blanche au -1, Danny entrevu.\n\n**Reyes** peut être dans l'équipe discrète de Kessler si l'Horloge est à 4 ou plus (« la dame en gris »). Jane démasquée : Horloge +2 ; mouchard découvert : +1."
@@ -277,7 +277,7 @@
         {
           "id": "p3",
           "title": "Phase 2 — Scorch et le Crush (Rusty Piston, Touristville)",
-          "text": "*(map_bar_porfla rhabillée si besoin)*\n- **L'acheter** : **10 000¥**, Négociation vs **7 dés** → 30 minutes, pas plus.\n- **Lui dire pour Nico** (preuve : « D-14, Delgado N., 17 ans » dans le host du site) : elle ouvre la grille et lance une **diversion** ; Crush allié pour l'Acte 3.\n- **L'intimider** : vs **8 dés** ; elle cède puis trahit (Horloge +1, sécurité en alerte).\n- **La contourner** : canal ou toit, les motards ne voient rien.",
+          "text": "*(le Rusty Piston : map_lib_dive-bar)*\n- **L'acheter** : **10 000¥**, Négociation vs **7 dés** → 30 minutes, pas plus.\n- **Lui dire pour Nico** (preuve : « D-14, Delgado N., 17 ans » dans le host du site) : elle ouvre la grille et lance une **diversion** ; Crush allié pour l'Acte 3.\n- **L'intimider** : vs **8 dés** ; elle cède puis trahit (Horloge +1, sécurité en alerte).\n- **La contourner** : canal ou toit, les motards ne voient rien.",
           "done": false
         },
         {
@@ -315,10 +315,10 @@
       ],
       "maps": [
         "map_site_glacier",
-        "map_bar_porfla",
-        "map_funerarium_hargrove",
-        "map_fvtt_server-room",
-        "map_fvtt_trauma-ward"
+        "map_lib_xenoform-research-lab",
+        "map_lib_dive-bar",
+        "map_lib_minute-clinic",
+        "map_funerarium_hargrove"
       ],
       "rewards": "- **6 Karma** (+1 si les donneurs sont sauvés, +1 si personne n'a été achevé à terre)\n- Pas de Johnson par défaut. **Monobe** : 15 000¥/runner pour les données (+20 000¥ pour Dufresne). Matériel AG Chemie : ~2 000¥ par garde\n- Contacts : **Scorch** (C3, L2 si Nico est sauvé, sinon 0), **Dr. Dufresne** (C4, L1 si retournée) ; les sujets : une dette, pas un contact\n- **Horloge +2** dans tous les cas (+1 si Stadler meurt)",
       "gmNotes": "**Ce que savent les PNJ**\n- **Dufresne** : tout le protocole ; **L-00** (« le premier patient ») qu'elle soupçonne être Wendt ; le nom **Ansgar Wendt** ; Halcyon (-2 sujets stabilisés, -3 jamais) ; **L-02** (« Wendt l'a gardé pour lui »).\n- **Stadler** : la sécurité de Halcyon (mêmes protocoles), le nom de Reyes, les horaires de transfert. Parle sous contrainte ou contre une extraction vers l'Europe. Se rend contre la vie sauve.\n- **Scorch** : le kidnapping de la femme secourue (ses hommes), une trentaine d'enlèvements pour le lot D depuis deux ans, le nom « Reyes ».\n- **Dunleavy (L-03)** : « Le grand garçon… une infirmière l'a appelé Daniel, et il s'est retourné. »\n\n**Complications**\n- Le transfert est avancé : l'ambulance arrive pendant le raid (2 gardes de plus, un véhicule pour fuir).\n- Le Résidu est libéré (purge, coupure, mauvaise porte).\n- L-11 refuse de partir : il a peur de mourir sans ses injections. Les sauver, c'est s'engager à leur trouver un traitement."
@@ -339,7 +339,7 @@
         },
         {
           "id": "p2",
-          "title": "Phase 1 — La réunion de rachat (map_penthouse_office)",
+          "title": "Phase 1 — La réunion de rachat (map_fvtt_penthouse-office)",
           "text": "Klee, son avocate **Me Brigitte Ortner** ; en face **Ashe**, **Me Desmond Pryce** (Négociation 5, Étiquette 4), **Morinaga** debout près de la baie. Offre à **30 %** + chantage (preuves fabriquées de détournement par Klee : sinon, Francfort et le parquet).\n- **Démonter le faux** : Contrefaçon + LOG seuil 4 (Jane), ou Bricks remonte la source (Informatique + INT seuil 3) → un terminal de Hollow Pine. La réunion est suspendue.\n- **Retourner la table** avec le registre des honoraires ou le lien avec L-07 : Ashe pâlit, Morinaga tourne la tête.\n- **Morinaga** : « Ton grand-père se serait tu. » Ne laisse personne toucher Ashe (« **Pas ici.** »). Attaqué : désarme Anthony en un test (Armes tranchantes opposé) et rend l'arme par la poignée.\n\nEn sortant : « Le dojo **Kaze-no-Ki**. International District. Le soir, après neuf heures. »",
           "done": false
         },
@@ -363,7 +363,7 @@
         },
         {
           "id": "p6",
-          "title": "Phase 4 — L'entrepôt frigorifique n°3 (map_entrepot_vsp)",
+          "title": "Phase 4 — L'entrepôt frigorifique n°3 (map_lib_seafood-packing-facility)",
           "text": "Klee attaché sur la mezzanine devant le terminal du contrat, **Pryce**, **2 Nettoyeurs**, **Morinaga en seiza** ; **4 Crush** dans le hall à **–5 °C** (chaque heure sans tenue : –1 physique, CON + VOL seuil 2) ; chambres froides à –25 °C. **Reyes** dans la cabine du quai si Horloge ≥ 6.\n\nMorinaga ne se lève que si Anthony monte sur la mezzanine : « **Montre-moi.** » Duel à la vraie lame : il frappe à plat ou désarme, **sauf jauge ≤ –2**. Anthony achève un garde devant lui : jauge –1 (« Ah. »). **Il ne meurt pas ici** : Reyes l'évacue sous fumigène.",
           "done": false
         },
@@ -385,12 +385,9 @@
         "tpl_corpsec_troll_r3"
       ],
       "maps": [
-        "map_penthouse_office",
-        "map_dojo_morinaga",
-        "map_entrepot_vsp",
-        "map_construction_site",
         "map_fvtt_penthouse-office",
-        "map_fvtt_corp-lobby",
+        "map_dojo_morinaga",
+        "map_lib_seafood-packing-facility",
         "map_fvtt_construction-site"
       ],
       "rewards": "- **5 Karma** (+1 si la jauge de la voie du sabre est positive à la fin)\n- **5 000¥/runner** de prime de sécurité (+1 500¥ symboliques si Family Business n'a pas été payé)\n- L'**entrepôt n°3** comme planque (Lifestyle Bas gratuit, froid, sûr) si la holding est sauvée\n- **Klee** : Loyauté 4 si Anthony l'a sauvé lui-même\n- **Morinaga** : pas un contact, une relation",
@@ -419,13 +416,13 @@
         {
           "id": "p3",
           "title": "Phase 2 — La nuit des rossignols (4 h)",
-          "text": "- **Cellule A** (Brandauer + 3 opérateurs + la mage) sur le lieu principal (par défaut l'appartement de Jane) : coupure de courant, détection puis **Stunball** par la fenêtre, entrée par la porte et l'escalier de secours sous flash-bang. **4 minutes** sur objectif ; récupérer L-07 si elle est là.\n- **Cellule B** (3 opérateurs + *Tireur d'élite corpo* + *Rigger* avec 2 Doberman et 1 Fly-Spy) sur le second lieu (Hacker's Lair de Bricks).\n- **Reyes + 4 Nettoyeurs** : Porfla (map_bar_porfla), Windows (une planque Cabana à 3 000¥ résiste, un motel non), L-07.\n\n**Le groupe ne peut pas être partout.** Les cellules décrochent après **6 tours** ou **50 % de pertes**, sans jamais engager Knight Errant. **La Pie laissée en ennemie** : elle a vendu l'adresse de Jane → **+2 Initiative** pour Brandauer au premier tour.",
+          "text": "- **Cellule A** (Brandauer + 3 opérateurs + la mage) sur le lieu principal (par défaut l'appartement de Jane) : coupure de courant, détection puis **Stunball** par la fenêtre, entrée par la porte et l'escalier de secours sous flash-bang. **4 minutes** sur objectif ; récupérer L-07 si elle est là.\n- **Cellule B** (3 opérateurs + *Tireur d'élite corpo* + *Rigger* avec 2 Doberman et 1 Fly-Spy) sur le second lieu (Hacker's Lair de Bricks).\n- **Reyes + 4 Nettoyeurs** : Porfla (map_fvtt_bar), Windows (une planque Cabana à 3 000¥ résiste, un motel non), L-07.\n\n**Le groupe ne peut pas être partout.** Les cellules décrochent après **6 tours** ou **50 % de pertes**, sans jamais engager Knight Errant. **La Pie laissée en ennemie** : elle a vendu l'adresse de Jane → **+2 Initiative** pour Brandauer au premier tour.",
           "done": false
         },
         {
           "id": "p4",
           "title": "Phase 3 — Fuir, se cacher, compter les morts",
-          "text": "- **Funérarium Hargrove** (map_funerarium_hargrove) : discret, glacial ; retrouvable par Nachtigall en **48 h**.\n- **Planque Monobe** à Bellevue, à cinq rues de Halcyon : prix = **une copie de tout**. Confortable, et une cage.\n- **Dojo de Morinaga** (jauge ≥ +2) : il monte la garde toute la nuit, sabre sur les genoux. Personne ne vient.\n\nCompter les pertes (Porfla, Windows, Klee, L-07) : un allié **enlevé** est emmené au **-2 de Halcyon** (objectif de sauvetage pour Severance). **Ne pas tuer plus d'un PNJ allié.**",
+          "text": "- **Funérarium Hargrove** (map_funerarium_hargrove) : discret, glacial ; retrouvable par Nachtigall en **48 h**.\n- **Planque Monobe** (map_lib_kingpins-meeting-room) à Bellevue, à cinq rues de Halcyon : prix = **une copie de tout**. Confortable, et une cage.\n- **Dojo de Morinaga** (jauge ≥ +2) : il monte la garde toute la nuit, sabre sur les genoux. Personne ne vient.\n\nCompter les pertes (Porfla, Windows, Klee, L-07) : un allié **enlevé** est emmené au **-2 de Halcyon** (objectif de sauvetage pour Severance). **Ne pas tuer plus d'un PNJ allié.**",
           "done": false
         },
         {
@@ -456,14 +453,15 @@
         "tpl_joseph_porfla"
       ],
       "maps": [
-        "map_jane_apartment",
-        "map_hacker_lair",
-        "map_bar_porfla",
-        "map_funerarium_hargrove",
-        "map_dojo_morinaga",
-        "map_maison_kessler",
         "map_fvtt_apartement",
-        "map_fvtt_back-alley"
+        "map_jane_apartment",
+        "map_fvtt_hacker-s-lair",
+        "map_fvtt_bar",
+        "map_fvtt_back-alley",
+        "map_funerarium_hargrove",
+        "map_lib_kingpins-meeting-room",
+        "map_dojo_morinaga",
+        "map_maison_kessler"
       ],
       "rewards": "- **6 Karma** (+1 si aucun allié n'est mort, +1 si un membre de Nachtigall est capturé vivant)\n- Butin militaire : ~30 000¥ de revente, **~6 000¥/runner** après les 40 % de Cabana (garder une Ares Alpha laisse une signature)\n- **Street Cred +1** pour chaque PJ",
       "gmNotes": "**Ce que savent les PNJ**\n- **Brandauer** : l'ordre, les cibles, le Protokoll Ernte, la sécurité de surface. Pas le -3. Méprise Wendt (« un vieillard qui a peur du noir »).\n- **Les opérateurs** : l'heure du convoi.\n- **Reyes** : l'Escouade 9, les Moissonneurs, la logistique de Halcyon (quai, convois, codes). Jamais descendue au -3.\n\n**Complications**\n- **Knight Errant arrive** pendant la frappe chez Jane : deux patrouilleurs que Nachtigall tuerait sans hésiter.\n- **Un sujet régresse** faute d'injection : les seules doses sont à Halcyon.\n- **Kessler panique** et va se mettre sous protection de KE : abattu sur le parking par le tireur. Son assurance reste à Alki Point — à condition d'y aller avant Reyes.\n\n**Reyes (version Acte 3)** : Réflexes câblés 2 (RÉA 7, Initiative 12 + 3D6, Essence 3,5), Armure 16, **la puce** cousue dans la doublure de sa veste."
@@ -546,11 +544,12 @@
       ],
       "maps": [
         "map_halcyon_surface",
+        "map_lib_boutique-clinic",
         "map_halcyon_sous_sols",
-        "map_entrepot_vsp",
-        "map_fvtt_corp-lobby",
-        "map_fvtt_server-room",
-        "map_fvtt_penthouse-office"
+        "map_lib_predator-lab",
+        "map_lib_server-room",
+        "map_lib_greenhouse-rnd-lab",
+        "map_lib_seafood-packing-facility"
       ],
       "rewards": "- **8 Karma** (+2 si la fin choisie est menée à bout, +1 par arc personnel résolu en jeu)\n- **Street Cred +2** chacun\n- Argent selon la fin : Lumière 5 000-15 000¥ · Silence doré 100 000-150 000¥ · Vengeance ~15 000¥ de butin · Vente 100 000-170 000¥\n- **Shiranami** pour Anthony si Morinaga le lègue",
       "gmNotes": "- **Les données ou les donneurs** : si le groupe ne peut pas tout sauver face au Protokoll Asche, c'est une vraie décision, et la fin en dépend.\n- Personne ne doit avoir vu le visage du Jardinier avant la Serre.\n- Halcyon n'appellera pas Knight Errant tant que les sous-sols sont compromis ; KE ne vient que si quelqu'un d'autre l'appelle (ce qui peut faire partie de la fin « Lumière »).\n- **Wendt « Phénix »** : modifier la fiche à la main (CON 9, AGI 5, RÉA 6, FOR 9, Init 11 + 2D6, Physique 13, armure 17, régénération 2/tour, mort au 10e tour)."

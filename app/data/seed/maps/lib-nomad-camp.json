@@ -1,0 +1,1273 @@
+{
+  "id": "map_lib_nomad-camp",
+  "name": "Parc de mobil-homes de Fruitland (Puyallup)",
+  "folder": "Acte 2",
+  "description": "**Lieu de campagne :** Le parc de mobil-homes où vit Mama Odile Tusker (mobil-home 14) ; le face-à-face avec le Passeur.\n\n**Quête :** Windows Open (Porte A, Phase 2).\n\n**À adapter :** Moins de mobil-homes que dans le texte : numérotez ceux de la carte, la caravane du centre est le n°14. Les conteneurs et cuves de l’ouest sont la friche industrielle voisine ; le grand bâtiment du nord sert de bâtiment commun (laverie hors service, boîtes aux lettres).\n\n**La carte (bibliothèque Fragmaps, « Camp de nomades ») :** Campement de nomades et de caravanes en périphérie : contrebandiers, passeurs ou refuge temporaire.\n\nVoir Shadowrun/cartes-campagne.md.",
+  "width": 26,
+  "height": 47,
+  "metersPerCell": 2,
+  "theme": "street",
+  "lighting": "bright",
+  "tiles": [
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    "..........................",
+    ".........................."
+  ],
+  "background": {
+    "url": "/api/maplib/image/nomad-camp",
+    "opacity": 1,
+    "mode": "image",
+    "x": 0,
+    "y": 0,
+    "w": 26,
+    "h": 46.142
+  },
+  "walls": [
+    {
+      "id": "wall_nomad-camp_1",
+      "x1": 11.5,
+      "y1": 44.875,
+      "x2": 15.125,
+      "y2": 43.875,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_2",
+      "x1": 15.125,
+      "y1": 43.875,
+      "x2": 18.125,
+      "y2": 43.125,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_nomad-camp_3",
+      "x1": 18.125,
+      "y1": 43.125,
+      "x2": 21.5,
+      "y2": 42.25,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_4",
+      "x1": 11.5,
+      "y1": 44.875,
+      "x2": 11.5,
+      "y2": 36.125,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_5",
+      "x1": 11.5,
+      "y1": 36.125,
+      "x2": 8.875,
+      "y2": 36.125,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_6",
+      "x1": 11.5,
+      "y1": 44.875,
+      "x2": 11.5,
+      "y2": 46.25,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_7",
+      "x1": 21.5,
+      "y1": 42.25,
+      "x2": 20.625,
+      "y2": 38.5,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_8",
+      "x1": 20.625,
+      "y1": 38.5,
+      "x2": 22.125,
+      "y2": 36.875,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_9",
+      "x1": 21.5,
+      "y1": 33.75,
+      "x2": 21.5,
+      "y2": 31,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_10",
+      "x1": 8.875,
+      "y1": 36.125,
+      "x2": 7.125,
+      "y2": 34.875,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_11",
+      "x1": 7.125,
+      "y1": 34.875,
+      "x2": 7.125,
+      "y2": 25.375,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_12",
+      "x1": 7.125,
+      "y1": 25.375,
+      "x2": 2.25,
+      "y2": 25.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_13",
+      "x1": 2.25,
+      "y1": 25.25,
+      "x2": 2.25,
+      "y2": 26.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_14",
+      "x1": 2.25,
+      "y1": 26.5,
+      "x2": 0,
+      "y2": 26.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_15",
+      "x1": 0,
+      "y1": 26.5,
+      "x2": 0,
+      "y2": 24.375,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_16",
+      "x1": 0,
+      "y1": 23.5,
+      "x2": 3,
+      "y2": 23.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_17",
+      "x1": 0,
+      "y1": 23.5,
+      "x2": 0,
+      "y2": 20,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_18",
+      "x1": 0,
+      "y1": 24.375,
+      "x2": 3,
+      "y2": 24,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_19",
+      "x1": 3,
+      "y1": 24,
+      "x2": 3,
+      "y2": 23.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_20",
+      "x1": 0,
+      "y1": 20,
+      "x2": 4.625,
+      "y2": 20.125,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_21",
+      "x1": 4.625,
+      "y1": 20.125,
+      "x2": 4.5,
+      "y2": 17.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_22",
+      "x1": 4.5,
+      "y1": 17.75,
+      "x2": 2.625,
+      "y2": 17.125,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_23",
+      "x1": 2.625,
+      "y1": 17.125,
+      "x2": 1.5,
+      "y2": 17.375,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_24",
+      "x1": 1.5,
+      "y1": 17.375,
+      "x2": 1.25,
+      "y2": 17.375,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_25",
+      "x1": 1.25,
+      "y1": 17.375,
+      "x2": 1.25,
+      "y2": 16.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_26",
+      "x1": 1.25,
+      "y1": 16.75,
+      "x2": 0,
+      "y2": 16.125,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_27",
+      "x1": 4.75,
+      "y1": 16.125,
+      "x2": 0.375,
+      "y2": 12.25,
+      "move": false,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_28",
+      "x1": 0.375,
+      "y1": 12.25,
+      "x2": 3.625,
+      "y2": 8.5,
+      "move": false,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_29",
+      "x1": 3.625,
+      "y1": 8.5,
+      "x2": 7.625,
+      "y2": 12.75,
+      "move": false,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_30",
+      "x1": 7.625,
+      "y1": 12.75,
+      "x2": 4.75,
+      "y2": 16.125,
+      "move": false,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_31",
+      "x1": 7.5,
+      "y1": 5.5,
+      "x2": 9.875,
+      "y2": 8.375,
+      "move": false,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_32",
+      "x1": 9.875,
+      "y1": 8.375,
+      "x2": 15,
+      "y2": 4.625,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_33",
+      "x1": 15,
+      "y1": 4.625,
+      "x2": 13.875,
+      "y2": 3.375,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_34",
+      "x1": 13.875,
+      "y1": 3.375,
+      "x2": 14.875,
+      "y2": 2.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_35",
+      "x1": 14.875,
+      "y1": 2.75,
+      "x2": 12.603,
+      "y2": 0,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_36",
+      "x1": 12.311,
+      "y1": 0,
+      "x2": 6.25,
+      "y2": 4,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_37",
+      "x1": 7.5,
+      "y1": 5.5,
+      "x2": 6.25,
+      "y2": 4,
+      "move": false,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_38",
+      "x1": 9.875,
+      "y1": 8.375,
+      "x2": 7.75,
+      "y2": 10.125,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_39",
+      "x1": 5,
+      "y1": 6.875,
+      "x2": 6.125,
+      "y2": 5.875,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_40",
+      "x1": 6.125,
+      "y1": 5.875,
+      "x2": 6.25,
+      "y2": 4,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_41",
+      "x1": 0.375,
+      "y1": 2.875,
+      "x2": 3.75,
+      "y2": 2.875,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_42",
+      "x1": 3.75,
+      "y1": 2.875,
+      "x2": 3.75,
+      "y2": 5.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_43",
+      "x1": 3.75,
+      "y1": 5.25,
+      "x2": 0.375,
+      "y2": 5.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_44",
+      "x1": 0.375,
+      "y1": 5.25,
+      "x2": 0.375,
+      "y2": 2.875,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_45",
+      "x1": 0,
+      "y1": 0,
+      "x2": 4.125,
+      "y2": 0,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_46",
+      "x1": 4.125,
+      "y1": 0,
+      "x2": 4.125,
+      "y2": 2.375,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_47",
+      "x1": 4.125,
+      "y1": 2.375,
+      "x2": 0,
+      "y2": 2.375,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_48",
+      "x1": 0,
+      "y1": 2.375,
+      "x2": 0,
+      "y2": 0,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_49",
+      "x1": 0,
+      "y1": 2.375,
+      "x2": 0.375,
+      "y2": 2.875,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_50",
+      "x1": 4.125,
+      "y1": 2.375,
+      "x2": 3.75,
+      "y2": 2.875,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_51",
+      "x1": 8.875,
+      "y1": 17.5,
+      "x2": 9.25,
+      "y2": 19,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_52",
+      "x1": 9.25,
+      "y1": 19,
+      "x2": 13.5,
+      "y2": 18,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_53",
+      "x1": 13.5,
+      "y1": 18,
+      "x2": 13,
+      "y2": 16.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_54",
+      "x1": 12.25,
+      "y1": 16.625,
+      "x2": 8.875,
+      "y2": 17.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_55",
+      "x1": 13,
+      "y1": 16.5,
+      "x2": 13.5,
+      "y2": 16.625,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_56",
+      "x1": 13.5,
+      "y1": 16.625,
+      "x2": 14.375,
+      "y2": 15,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_57",
+      "x1": 14.375,
+      "y1": 15,
+      "x2": 10.625,
+      "y2": 12.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_58",
+      "x1": 10.625,
+      "y1": 12.75,
+      "x2": 9.5,
+      "y2": 14.625,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_59",
+      "x1": 9.5,
+      "y1": 14.625,
+      "x2": 10.375,
+      "y2": 15.625,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_60",
+      "x1": 10.375,
+      "y1": 15.625,
+      "x2": 12.25,
+      "y2": 16.625,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_61",
+      "x1": 15.625,
+      "y1": 20.125,
+      "x2": 19.625,
+      "y2": 21.625,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_62",
+      "x1": 19.625,
+      "y1": 21.625,
+      "x2": 17.625,
+      "y2": 26.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_63",
+      "x1": 17.625,
+      "y1": 26.5,
+      "x2": 16,
+      "y2": 25.875,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_64",
+      "x1": 16,
+      "y1": 25.875,
+      "x2": 16.25,
+      "y2": 25.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_65",
+      "x1": 16.25,
+      "y1": 25.25,
+      "x2": 15,
+      "y2": 24.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_66",
+      "x1": 15,
+      "y1": 24.75,
+      "x2": 15.625,
+      "y2": 23.125,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_67",
+      "x1": 15.625,
+      "y1": 23.125,
+      "x2": 16.875,
+      "y2": 23.625,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_68",
+      "x1": 16.875,
+      "y1": 23.625,
+      "x2": 17.125,
+      "y2": 22.875,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_69",
+      "x1": 17.125,
+      "y1": 22.875,
+      "x2": 14.875,
+      "y2": 21.875,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_70",
+      "x1": 14.875,
+      "y1": 21.875,
+      "x2": 15.625,
+      "y2": 20.125,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_71",
+      "x1": 11,
+      "y1": 24.125,
+      "x2": 9.625,
+      "y2": 26.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_72",
+      "x1": 9.625,
+      "y1": 26.25,
+      "x2": 10.5,
+      "y2": 26.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_73",
+      "x1": 10.5,
+      "y1": 26.75,
+      "x2": 11.75,
+      "y2": 24.625,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_74",
+      "x1": 11.75,
+      "y1": 24.625,
+      "x2": 11,
+      "y2": 24.125,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_75",
+      "x1": 21.5,
+      "y1": 33.75,
+      "x2": 25,
+      "y2": 35,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_76",
+      "x1": 25,
+      "y1": 35,
+      "x2": 25,
+      "y2": 39.625,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_77",
+      "x1": 25,
+      "y1": 39.625,
+      "x2": 22.125,
+      "y2": 36.875,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_78",
+      "x1": 21.5,
+      "y1": 31,
+      "x2": 26,
+      "y2": 32,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_79",
+      "x1": 21.5,
+      "y1": 31,
+      "x2": 20.25,
+      "y2": 30.625,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_80",
+      "x1": 20.25,
+      "y1": 30.625,
+      "x2": 20.25,
+      "y2": 26.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_81",
+      "x1": 20.25,
+      "y1": 26.75,
+      "x2": 23.375,
+      "y2": 26.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_82",
+      "x1": 23.375,
+      "y1": 26.75,
+      "x2": 23.375,
+      "y2": 22.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_83",
+      "x1": 23.375,
+      "y1": 22.75,
+      "x2": 24.375,
+      "y2": 22.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_84",
+      "x1": 24.375,
+      "y1": 22.75,
+      "x2": 26,
+      "y2": 22.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_85",
+      "x1": 24.375,
+      "y1": 22.75,
+      "x2": 24.375,
+      "y2": 18.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_86",
+      "x1": 24.375,
+      "y1": 18.5,
+      "x2": 21.125,
+      "y2": 18.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_87",
+      "x1": 21.125,
+      "y1": 18.5,
+      "x2": 21.25,
+      "y2": 16.625,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_88",
+      "x1": 21.25,
+      "y1": 16.625,
+      "x2": 22.375,
+      "y2": 16.125,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_89",
+      "x1": 22.375,
+      "y1": 16.125,
+      "x2": 26,
+      "y2": 16.125,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_90",
+      "x1": 24.625,
+      "y1": 2,
+      "x2": 25.5,
+      "y2": 3.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_91",
+      "x1": 25.5,
+      "y1": 3.5,
+      "x2": 26,
+      "y2": 3.167,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_92",
+      "x1": 24.625,
+      "y1": 2,
+      "x2": 21,
+      "y2": 4,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_93",
+      "x1": 21,
+      "y1": 4,
+      "x2": 19.875,
+      "y2": 6.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_94",
+      "x1": 19.875,
+      "y1": 6.25,
+      "x2": 19.375,
+      "y2": 6.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_95",
+      "x1": 19.375,
+      "y1": 6.25,
+      "x2": 18.75,
+      "y2": 8,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_96",
+      "x1": 18.75,
+      "y1": 8,
+      "x2": 17.25,
+      "y2": 8.125,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_97",
+      "x1": 17.25,
+      "y1": 8.125,
+      "x2": 17,
+      "y2": 10.375,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_98",
+      "x1": 17,
+      "y1": 10.375,
+      "x2": 18.875,
+      "y2": 10.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_99",
+      "x1": 18.875,
+      "y1": 10.5,
+      "x2": 18.875,
+      "y2": 14.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_100",
+      "x1": 18.875,
+      "y1": 14.25,
+      "x2": 26,
+      "y2": 14.125,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_101",
+      "x1": 12.375,
+      "y1": 29.125,
+      "x2": 15.375,
+      "y2": 30.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_102",
+      "x1": 15.375,
+      "y1": 30.5,
+      "x2": 14.5,
+      "y2": 32.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_103",
+      "x1": 14.5,
+      "y1": 32.5,
+      "x2": 11.5,
+      "y2": 31.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_104",
+      "x1": 11.5,
+      "y1": 31.25,
+      "x2": 12.375,
+      "y2": 29.125,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_105",
+      "x1": 12.375,
+      "y1": 34.75,
+      "x2": 15,
+      "y2": 33.375,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_106",
+      "x1": 15,
+      "y1": 33.375,
+      "x2": 16.375,
+      "y2": 35.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_107",
+      "x1": 16.375,
+      "y1": 35.75,
+      "x2": 13.75,
+      "y2": 37.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_108",
+      "x1": 13.75,
+      "y1": 37.25,
+      "x2": 12.375,
+      "y2": 34.75,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_109",
+      "x1": 13.125,
+      "y1": 37.5,
+      "x2": 15.75,
+      "y2": 37.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_110",
+      "x1": 15.75,
+      "y1": 37.5,
+      "x2": 15.625,
+      "y2": 40.125,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_111",
+      "x1": 15.625,
+      "y1": 40.125,
+      "x2": 13,
+      "y2": 40.125,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_112",
+      "x1": 13,
+      "y1": 40.125,
+      "x2": 13.125,
+      "y2": 37.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_113",
+      "x1": 13.75,
+      "y1": 37.25,
+      "x2": 15.75,
+      "y2": 37.5,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_114",
+      "x1": 13.75,
+      "y1": 37.25,
+      "x2": 13.125,
+      "y2": 37.5,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "wall_nomad-camp_115",
+      "x1": 8.875,
+      "y1": 36.125,
+      "x2": 8.625,
+      "y2": 46.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    }
+  ],
+  "lights": [],
+  "regions": [],
+  "doors": [],
+  "notes": [
+    {
+      "id": "note_nomad-camp_1",
+      "x": 16,
+      "y": 22,
+      "text": "Mobil-home 14 — Mama Odile Tusker, vieille orque. Elle a connu « la fille aux lunettes » : Windows lui envoie chaque mois un colis de graines « pour les poules ». Etiquette (Street) + Charisme seuil 2, ou 50¥ et de la patience → boîte postale d’une épicerie de Puyallup centre (+2 Piste). SECRET : sous l’évier, la clé USB de Windows (message de Vosk + manifeste SP-NULL), donnée seulement de la part de Windows ou si elle a été enlevée.",
+      "gmOnly": true
+    },
+    {
+      "id": "note_nomad-camp_2",
+      "x": 8,
+      "y": 23,
+      "text": "Enclos à poulets mutants (8 × 6 m, grillagé) : toute intrusion à moins de 3 m la nuit les fait caqueter — +2 dés en Perception pour les habitants. Bonne diversion aussi.",
+      "gmOnly": true
+    },
+    {
+      "id": "note_nomad-camp_3",
+      "x": 13,
+      "y": 44,
+      "text": "Entrée sud (barrière levante cassée) : seule entrée carrossable. Phase 2 : la camionnette GMC Bulldog grise du Passeur se gare ici. Le Passeur descend seul, mains visibles ; Mosaïque reste dans la camionnette, Rempart adossé au capot, Cendre côté passager. Négociation contre 8 dés (3 succès nets = il rompt le contrat) ; acheter : 50 000¥.",
+      "gmOnly": true
+    },
+    {
+      "id": "note_nomad-camp_4",
+      "x": 10,
+      "y": 5,
+      "text": "Bâtiment commun : laverie hors service et boîtes aux lettres. L’ancienne boîte de Windows est vide (Perception seuil 2 : étiquette grattée, il reste « R. W »).",
+      "gmOnly": true
+    },
+    {
+      "id": "note_nomad-camp_5",
+      "x": 10,
+      "y": 26,
+      "text": "Carcasses de voitures / barbecue en béton : couverture lourde (Armor 8). Parois des mobil-homes : Armor 4 / Structure 6, les balles traversent. Une dizaine d’habitants orks témoins, hostiles aux flics comme aux fusillades : un combat ici = Horloge +1.",
+      "gmOnly": true
+    }
+  ],
+  "tokens": [],
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "library": {
+    "slug": "nomad-camp",
+    "version": 1,
+    "linkedAt": 1795651200000
+  }
+}

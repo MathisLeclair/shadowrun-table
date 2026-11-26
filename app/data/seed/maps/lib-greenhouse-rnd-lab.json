@@ -1,0 +1,396 @@
+{
+  "id": "map_lib_greenhouse-rnd-lab",
+  "name": "Clinique Halcyon — la Serre (-3)",
+  "folder": "Acte 3",
+  "description": "**Lieu de campagne :** La Serre du niveau -3 : le bureau-jardin du Jardinier (Dr. Ansgar Wendt), la chambre de traitement de L-00, l’archive des spécimens.\n\n**Quête :** Severance (niveau -3).\n\n**À adapter :** Ajoutez de la terre, des orchidées sous lampes horticoles (lumière violette et chaude), un petit bassin et le bureau en bois clair de Wendt sur la « Paillasse centrale ». Le « Sas vitré » est l’antichambre de l’ascenseur privé (Morinaga y attend, selon la jauge) ; la « Salle des analyseurs » est la chambre de traitement de L-00, la « Cellule cryogénique » l’archive des spécimens.\n\n**La carte (bibliothèque Fragmaps, « Laboratoire de recherche botanique ») :** Laboratoire corporatiste de recherche botanique : paillasse centrale, armoires de culture éclairées, postes de travail, salle d'analyseurs et une cellule cryogénique attenante. Cible idéale pour un vol d'échantillons ou de données, l'extraction d'un chercheur ou un sabotage commandité par une corpo rivale.\n\nVoir Shadowrun/cartes-campagne.md.",
+  "width": 9,
+  "height": 11,
+  "metersPerCell": 1.5,
+  "theme": "lab",
+  "lighting": "bright",
+  "tiles": [
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    ".........",
+    "........."
+  ],
+  "background": {
+    "url": "/api/maplib/image/greenhouse-rnd-lab",
+    "opacity": 1,
+    "mode": "image",
+    "x": 0,
+    "y": 0,
+    "w": 9,
+    "h": 11
+  },
+  "walls": [
+    {
+      "id": "wall_greenhouse-rnd-lab_1",
+      "x1": 0.46,
+      "y1": 1.35,
+      "x2": 1.2,
+      "y2": 1.35,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_greenhouse-rnd-lab_2",
+      "x1": 1.2,
+      "y1": 1.35,
+      "x2": 1.2,
+      "y2": 1.12,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_greenhouse-rnd-lab_3",
+      "x1": 1.2,
+      "y1": 1.12,
+      "x2": 3.1,
+      "y2": 1.12,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_greenhouse-rnd-lab_4",
+      "x1": 3.1,
+      "y1": 1.12,
+      "x2": 5,
+      "y2": 1.12,
+      "move": true,
+      "sight": false,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_greenhouse-rnd-lab_5",
+      "x1": 5,
+      "y1": 1.12,
+      "x2": 5.75,
+      "y2": 1.12,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_greenhouse-rnd-lab_6",
+      "x1": 5.75,
+      "y1": 1.12,
+      "x2": 6.05,
+      "y2": 1.36,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_greenhouse-rnd-lab_7",
+      "x1": 6.05,
+      "y1": 1.36,
+      "x2": 7.8,
+      "y2": 1.36,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_greenhouse-rnd-lab_8",
+      "x1": 7.8,
+      "y1": 1.36,
+      "x2": 7.8,
+      "y2": 1.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_greenhouse-rnd-lab_9",
+      "x1": 7.8,
+      "y1": 1.95,
+      "x2": 7.8,
+      "y2": 2.95,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_greenhouse-rnd-lab_10",
+      "x1": 7.8,
+      "y1": 2.95,
+      "x2": 7.8,
+      "y2": 3.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_greenhouse-rnd-lab_11",
+      "x1": 5.4,
+      "y1": 3.6,
+      "x2": 8.42,
+      "y2": 3.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_greenhouse-rnd-lab_12",
+      "x1": 8.42,
+      "y1": 3.6,
+      "x2": 8.42,
+      "y2": 7.22,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_greenhouse-rnd-lab_13",
+      "x1": 8.42,
+      "y1": 7.22,
+      "x2": 5.4,
+      "y2": 7.22,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_greenhouse-rnd-lab_14",
+      "x1": 5.4,
+      "y1": 3.6,
+      "x2": 5.4,
+      "y2": 3.85,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_greenhouse-rnd-lab_15",
+      "x1": 5.4,
+      "y1": 3.85,
+      "x2": 5.4,
+      "y2": 4.75,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_greenhouse-rnd-lab_16",
+      "x1": 5.4,
+      "y1": 4.75,
+      "x2": 5.4,
+      "y2": 9.68,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_greenhouse-rnd-lab_17",
+      "x1": 5.4,
+      "y1": 9.68,
+      "x2": 0.46,
+      "y2": 9.68,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_greenhouse-rnd-lab_18",
+      "x1": 0.46,
+      "y1": 9.68,
+      "x2": 0.46,
+      "y2": 1.35,
+      "move": true,
+      "sight": true,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "light_greenhouse-rnd-lab_19",
+      "x": 4,
+      "y": 4,
+      "radius": 4,
+      "color": "#fff8e8",
+      "on": true
+    },
+    {
+      "id": "light_greenhouse-rnd-lab_20",
+      "x": 3,
+      "y": 8,
+      "radius": 4,
+      "color": "#fff8e8",
+      "on": true
+    },
+    {
+      "id": "light_greenhouse-rnd-lab_21",
+      "x": 7,
+      "y": 3,
+      "radius": 3,
+      "color": "#fff8e8",
+      "on": true
+    },
+    {
+      "id": "light_greenhouse-rnd-lab_22",
+      "x": 7,
+      "y": 4,
+      "radius": 3,
+      "color": "#d8fff8",
+      "on": true
+    },
+    {
+      "id": "light_greenhouse-rnd-lab_23",
+      "x": 8,
+      "y": 6,
+      "radius": 1.5,
+      "color": "#c0fff0",
+      "on": true
+    },
+    {
+      "id": "light_greenhouse-rnd-lab_24",
+      "x": 2,
+      "y": 2,
+      "radius": 2,
+      "color": "#d8ffb0",
+      "on": true
+    },
+    {
+      "id": "light_greenhouse-rnd-lab_25",
+      "x": 1,
+      "y": 6,
+      "radius": 1.5,
+      "color": "#c8ff90",
+      "on": true
+    },
+    {
+      "id": "light_greenhouse-rnd-lab_26",
+      "x": 1,
+      "y": 7,
+      "radius": 1.5,
+      "color": "#c8ff90",
+      "on": true
+    },
+    {
+      "id": "light_greenhouse-rnd-lab_27",
+      "x": 5,
+      "y": 6,
+      "radius": 1.5,
+      "color": "#c0e8ff",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "reg_greenhouse-rnd-lab_28",
+      "name": "Sas vitré",
+      "x": 3,
+      "y": 1,
+      "w": 2,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_greenhouse-rnd-lab_29",
+      "name": "Postes de travail",
+      "x": 1,
+      "y": 2,
+      "w": 1,
+      "h": 6,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_greenhouse-rnd-lab_30",
+      "name": "Paillasse centrale",
+      "x": 2,
+      "y": 3,
+      "w": 3,
+      "h": 4,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_greenhouse-rnd-lab_31",
+      "name": "Salle des analyseurs",
+      "x": 6,
+      "y": 2,
+      "w": 2,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_greenhouse-rnd-lab_32",
+      "name": "Cellule cryogénique",
+      "x": 6,
+      "y": 4,
+      "w": 2,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_greenhouse-rnd-lab_33",
+      "name": "Plan de travail",
+      "x": 1,
+      "y": 8,
+      "w": 4,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "libentry_greenhouse-rnd-lab_34",
+      "name": "Entrée",
+      "x": 4,
+      "y": 1,
+      "w": 1,
+      "h": 1,
+      "gmOnly": true
+    }
+  ],
+  "doors": [],
+  "notes": [
+    {
+      "id": "note_greenhouse-rnd-lab_1",
+      "x": 3,
+      "y": 5,
+      "text": "Bureau de Wendt : terminal sur circuit fermé (Protokoll Asche, tunnel, dossiers personnels). Bacs de plantation = couverture partielle (Armor 4), piliers = couverture lourde. Danny (L-02) et 2 gardes du corps tpl_bodyguard_r5.",
+      "gmOnly": true
+    },
+    {
+      "id": "note_greenhouse-rnd-lab_2",
+      "x": 7,
+      "y": 5,
+      "text": "Archive des spécimens, porte grise : cuves de formol étiquetées L-01, L-04, L-06-A… Dans la cuve L-04, Kim Jae-won. Si Bricks entre, ne demandez rien. Laissez-la regarder.",
+      "gmOnly": true
+    },
+    {
+      "id": "note_greenhouse-rnd-lab_3",
+      "x": 3,
+      "y": 8,
+      "text": "Tunnel d’évacuation : porte blindée derrière un treillage de lierre (biométrie de Wendt), 120 m, débouche au -2 du parking de l’immeuble voisin (berline blindée). Wendt l’atteint en 4 tours.",
+      "gmOnly": true
+    }
+  ],
+  "tokens": [],
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "library": {
+    "slug": "greenhouse-rnd-lab",
+    "version": 1,
+    "linkedAt": 1795651200000
+  }
+}

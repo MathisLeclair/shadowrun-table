@@ -1,0 +1,382 @@
+{
+  "id": "lib_minute-clinic",
+  "slug": "minute-clinic",
+  "name": "Minute Clinic",
+  "nameFr": "Clinique de quartier",
+  "source": "fragmap",
+  "image": "minute clinic.jpg",
+  "imageW": 1800,
+  "imageH": 2400,
+  "gridPx": 200,
+  "offsetX": 0,
+  "offsetY": 0,
+  "width": 9,
+  "height": 12,
+  "metersPerCell": 1.5,
+  "theme": "lab",
+  "lighting": "bright",
+  "tags": [
+    "clinique",
+    "clinic",
+    "médecin",
+    "doc",
+    "street doc",
+    "hôpital",
+    "hospital",
+    "soins",
+    "medical",
+    "bloc opératoire",
+    "surgery",
+    "cyberchirurgie",
+    "accueil",
+    "intérieur",
+    "indoor",
+    "DocWagon"
+  ],
+  "description": "Petite clinique sans rendez-vous : accueil et salle d'attente, salle de soins avec lits et brancard, bloc opératoire derrière des rideaux. Pour soigner un runner blessé, voler des fournitures, extraire un patient ou rencontrer un doc des rues qui pose des implants hors registre.",
+  "entry": {
+    "x": 7.4,
+    "y": 9.6
+  },
+  "walls": [
+    {
+      "id": "w1",
+      "x1": 1.4,
+      "y1": 1.95,
+      "x2": 4.3,
+      "y2": 1.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w2",
+      "x1": 4.3,
+      "y1": 1.95,
+      "x2": 4.3,
+      "y2": 1.55,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w3",
+      "x1": 4.3,
+      "y1": 1.55,
+      "x2": 7.15,
+      "y2": 1.55,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w4",
+      "x1": 7.15,
+      "y1": 1.55,
+      "x2": 7.15,
+      "y2": 7.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w5",
+      "x1": 7.15,
+      "y1": 7.9,
+      "x2": 7.85,
+      "y2": 7.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w6",
+      "x1": 7.85,
+      "y1": 7.9,
+      "x2": 7.85,
+      "y2": 8.85,
+      "move": true,
+      "sight": false,
+      "door": null
+    },
+    {
+      "id": "w7",
+      "x1": 7.85,
+      "y1": 8.85,
+      "x2": 7.85,
+      "y2": 10.45,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w8",
+      "x1": 7.85,
+      "y1": 10.45,
+      "x2": 7.85,
+      "y2": 11.1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w9",
+      "x1": 7.85,
+      "y1": 11.1,
+      "x2": 4.85,
+      "y2": 11.1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w10",
+      "x1": 4.85,
+      "y1": 11.1,
+      "x2": 4.85,
+      "y2": 10.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w11",
+      "x1": 4.85,
+      "y1": 10.25,
+      "x2": 3.95,
+      "y2": 10.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w12",
+      "x1": 3.95,
+      "y1": 10.25,
+      "x2": 3.95,
+      "y2": 10,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w13",
+      "x1": 3.95,
+      "y1": 10,
+      "x2": 3.95,
+      "y2": 9.3,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w14",
+      "x1": 3.95,
+      "y1": 9.3,
+      "x2": 3.95,
+      "y2": 7.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w15",
+      "x1": 3.95,
+      "y1": 7.5,
+      "x2": 1.4,
+      "y2": 7.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w16",
+      "x1": 1.4,
+      "y1": 7.5,
+      "x2": 1.4,
+      "y2": 1.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w17",
+      "x1": 4.3,
+      "y1": 1.95,
+      "x2": 4.3,
+      "y2": 3.55,
+      "move": false,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w18",
+      "x1": 5.75,
+      "y1": 3.55,
+      "x2": 7.15,
+      "y2": 3.55,
+      "move": false,
+      "sight": true,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "l1",
+      "x": 2.6,
+      "y": 2.2,
+      "radius": 3,
+      "color": "#f4fff0",
+      "on": true
+    },
+    {
+      "id": "l2",
+      "x": 5.3,
+      "y": 1.85,
+      "radius": 3.5,
+      "color": "#f4fff8",
+      "on": true
+    },
+    {
+      "id": "l3",
+      "x": 6.5,
+      "y": 1.9,
+      "radius": 2,
+      "color": "#e8f8ff",
+      "on": true
+    },
+    {
+      "id": "l4",
+      "x": 2.2,
+      "y": 2.3,
+      "radius": 1.5,
+      "color": "#40ffa0",
+      "on": true
+    },
+    {
+      "id": "l5",
+      "x": 1.7,
+      "y": 2.1,
+      "radius": 2,
+      "color": "#e8f8ff",
+      "on": true
+    },
+    {
+      "id": "l6",
+      "x": 2.1,
+      "y": 4.7,
+      "radius": 1.5,
+      "color": "#80e0ff",
+      "on": true
+    },
+    {
+      "id": "l7",
+      "x": 3.9,
+      "y": 4.7,
+      "radius": 1.5,
+      "color": "#40c0ff",
+      "on": true
+    },
+    {
+      "id": "l8",
+      "x": 3.5,
+      "y": 5.6,
+      "radius": 4,
+      "color": "#f0fff0",
+      "on": true
+    },
+    {
+      "id": "l9",
+      "x": 6,
+      "y": 7.3,
+      "radius": 4,
+      "color": "#e8fff8",
+      "on": true
+    },
+    {
+      "id": "l10",
+      "x": 4.5,
+      "y": 8.3,
+      "radius": 1.5,
+      "color": "#60d0ff",
+      "on": true
+    },
+    {
+      "id": "l11",
+      "x": 5.05,
+      "y": 10.7,
+      "radius": 1.5,
+      "color": "#ff3030",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "r1",
+      "name": "Salle de soins",
+      "x": 2,
+      "y": 2,
+      "w": 2,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "r2",
+      "name": "Bloc opératoire",
+      "x": 5,
+      "y": 2,
+      "w": 2,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "r3",
+      "name": "Lits",
+      "x": 1,
+      "y": 5,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "r4",
+      "name": "Salle principale",
+      "x": 3,
+      "y": 5,
+      "w": 4,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "r5",
+      "name": "Accueil",
+      "x": 5,
+      "y": 7,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "r6",
+      "name": "Salle d'attente",
+      "x": 5,
+      "y": 9,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    }
+  ],
+  "traced": {
+    "by": "agent",
+    "at": "2026-11-26T16:34:10.243Z",
+    "quality": "good",
+    "notes": "Murs en perspective : segments à la base des murs. Rideaux du bloc opératoire tracés en murs « vue seule » (bloquent la vue, pas le passage). Entrée vitrée à l'est (porte coulissante supposée au droit du tapis, vitrine au-dessus) ; porte de service à l'ouest du hall (près du digicode). Comptoir d'accueil, lits et appareils non tracés."
+  },
+  "version": 1
+}

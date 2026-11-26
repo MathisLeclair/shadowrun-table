@@ -1,0 +1,600 @@
+{
+  "id": "lib_hookah-lounge",
+  "slug": "hookah-lounge",
+  "name": "Hookah Lounge",
+  "nameFr": "Bar à chicha",
+  "source": "fragmap",
+  "image": "hookah lounge.jpg",
+  "imageW": 2400,
+  "imageH": 2400,
+  "gridPx": 200,
+  "offsetX": 0,
+  "offsetY": 0,
+  "width": 12,
+  "height": 12,
+  "metersPerCell": 1.5,
+  "theme": "club",
+  "lighting": "dark",
+  "tags": [
+    "bar à chicha",
+    "hookah lounge",
+    "chicha",
+    "narguilé",
+    "lounge",
+    "salon",
+    "tapis",
+    "ambiance tamisée",
+    "dim",
+    "rencontre",
+    "meet",
+    "Johnson",
+    "négociation",
+    "deal",
+    "nightlife",
+    "intérieur",
+    "indoor"
+  ],
+  "description": "Bar à chicha feutré aux murs pourpres : long couloir d'entrée tapissé, grand salon de tapis et de poufs, alcôve à arcade, comptoir à chicha argenté et petite arrière-salle éclairée. Idéal pour une négociation discrète avec un Johnson, un rendez-vous avec un fixer ou une planque de contrebandiers derrière la fumée.",
+  "walls": [
+    {
+      "id": "w1",
+      "x1": 8.45,
+      "y1": 1,
+      "x2": 9.42,
+      "y2": 1,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w2",
+      "x1": 9.42,
+      "y1": 1,
+      "x2": 9.42,
+      "y2": 5.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w3",
+      "x1": 9.42,
+      "y1": 5.9,
+      "x2": 10.5,
+      "y2": 5.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w4",
+      "x1": 10.5,
+      "y1": 5.9,
+      "x2": 10.5,
+      "y2": 6.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w5",
+      "x1": 10.5,
+      "y1": 6.6,
+      "x2": 11.05,
+      "y2": 7.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w6",
+      "x1": 11.05,
+      "y1": 7.25,
+      "x2": 11.05,
+      "y2": 10.82,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w7",
+      "x1": 11.05,
+      "y1": 10.82,
+      "x2": 3.55,
+      "y2": 10.82,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w8",
+      "x1": 3.55,
+      "y1": 10.82,
+      "x2": 2.75,
+      "y2": 10.82,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w9",
+      "x1": 2.75,
+      "y1": 10.82,
+      "x2": 2.42,
+      "y2": 10.82,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w10",
+      "x1": 2.42,
+      "y1": 10.82,
+      "x2": 2.35,
+      "y2": 10.3,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w11",
+      "x1": 2.35,
+      "y1": 10.3,
+      "x2": 2.15,
+      "y2": 9.8,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w12",
+      "x1": 2.15,
+      "y1": 9.8,
+      "x2": 1.75,
+      "y2": 9.35,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w13",
+      "x1": 1.75,
+      "y1": 9.35,
+      "x2": 1,
+      "y2": 9.05,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w14",
+      "x1": 1,
+      "y1": 9.05,
+      "x2": 1.52,
+      "y2": 8.7,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w15",
+      "x1": 1.52,
+      "y1": 8.7,
+      "x2": 1.52,
+      "y2": 4.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w16",
+      "x1": 1.52,
+      "y1": 4.9,
+      "x2": 2.35,
+      "y2": 4.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w17",
+      "x1": 2.35,
+      "y1": 4.9,
+      "x2": 2.35,
+      "y2": 4.35,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w18",
+      "x1": 2.35,
+      "y1": 4.35,
+      "x2": 4.9,
+      "y2": 2.25,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w19",
+      "x1": 4.9,
+      "y1": 2.25,
+      "x2": 5.5,
+      "y2": 2.85,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w20",
+      "x1": 5.5,
+      "y1": 2.85,
+      "x2": 5.82,
+      "y2": 2.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w21",
+      "x1": 5.82,
+      "y1": 2.6,
+      "x2": 6.66,
+      "y2": 1.95,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w22",
+      "x1": 6.66,
+      "y1": 1.95,
+      "x2": 7.25,
+      "y2": 1.45,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w23",
+      "x1": 7.25,
+      "y1": 1.45,
+      "x2": 8.45,
+      "y2": 1.45,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w24",
+      "x1": 8.45,
+      "y1": 1,
+      "x2": 8.45,
+      "y2": 1.45,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w25",
+      "x1": 8.45,
+      "y1": 1.45,
+      "x2": 8.45,
+      "y2": 4.58,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w26",
+      "x1": 8.45,
+      "y1": 4.58,
+      "x2": 7.1,
+      "y2": 4.58,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w27",
+      "x1": 8.65,
+      "y1": 5.9,
+      "x2": 8.65,
+      "y2": 9.65,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w28",
+      "x1": 8.65,
+      "y1": 5.9,
+      "x2": 9.42,
+      "y2": 5.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "l1",
+      "x": 4.85,
+      "y": 4,
+      "radius": 2,
+      "color": "#ff6050",
+      "on": true
+    },
+    {
+      "id": "l2",
+      "x": 6.45,
+      "y": 6.5,
+      "radius": 2,
+      "color": "#ffb090",
+      "on": true
+    },
+    {
+      "id": "l3",
+      "x": 5.95,
+      "y": 8.85,
+      "radius": 2,
+      "color": "#ffa070",
+      "on": true
+    },
+    {
+      "id": "l4",
+      "x": 7.55,
+      "y": 8.7,
+      "radius": 2,
+      "color": "#ffa070",
+      "on": true
+    },
+    {
+      "id": "l5",
+      "x": 8.4,
+      "y": 8.15,
+      "radius": 1.5,
+      "color": "#ffa060",
+      "on": true
+    },
+    {
+      "id": "l6",
+      "x": 10.15,
+      "y": 6.35,
+      "radius": 2,
+      "color": "#ff7050",
+      "on": true
+    },
+    {
+      "id": "l7",
+      "x": 10.75,
+      "y": 7.9,
+      "radius": 2,
+      "color": "#ff7050",
+      "on": true
+    },
+    {
+      "id": "l8",
+      "x": 10.7,
+      "y": 9.3,
+      "radius": 2,
+      "color": "#ff7050",
+      "on": true
+    },
+    {
+      "id": "l9",
+      "x": 10,
+      "y": 9,
+      "radius": 1.5,
+      "color": "#ffa060",
+      "on": true
+    },
+    {
+      "id": "l10",
+      "x": 3,
+      "y": 4.5,
+      "radius": 1.5,
+      "color": "#ffb070",
+      "on": true
+    },
+    {
+      "id": "l11",
+      "x": 3.45,
+      "y": 3.85,
+      "radius": 1.5,
+      "color": "#ffb070",
+      "on": true
+    },
+    {
+      "id": "l12",
+      "x": 4.35,
+      "y": 3.35,
+      "radius": 1.5,
+      "color": "#ffb070",
+      "on": true
+    },
+    {
+      "id": "l13",
+      "x": 4.9,
+      "y": 2.85,
+      "radius": 1.5,
+      "color": "#ffb070",
+      "on": true
+    },
+    {
+      "id": "l14",
+      "x": 2.6,
+      "y": 5.4,
+      "radius": 1.5,
+      "color": "#60e0ff",
+      "on": true
+    },
+    {
+      "id": "l15",
+      "x": 8.85,
+      "y": 1.85,
+      "radius": 1.5,
+      "color": "#ff70ff",
+      "on": true
+    },
+    {
+      "id": "l16",
+      "x": 8.85,
+      "y": 4.95,
+      "radius": 1.5,
+      "color": "#ff70ff",
+      "on": true
+    },
+    {
+      "id": "l17",
+      "x": 8.25,
+      "y": 5.85,
+      "radius": 1.5,
+      "color": "#ff3030",
+      "on": true
+    },
+    {
+      "id": "l18",
+      "x": 7,
+      "y": 2.9,
+      "radius": 3,
+      "color": "#e0f0ff",
+      "on": true
+    },
+    {
+      "id": "l19",
+      "x": 3.5,
+      "y": 8.3,
+      "radius": 2.5,
+      "color": "#c080ff",
+      "on": true
+    },
+    {
+      "id": "l20",
+      "x": 6,
+      "y": 10.5,
+      "radius": 2,
+      "color": "#ff60e0",
+      "on": true
+    },
+    {
+      "id": "l21",
+      "x": 9,
+      "y": 10.5,
+      "radius": 2,
+      "color": "#ff60e0",
+      "on": true
+    },
+    {
+      "id": "l22",
+      "x": 2,
+      "y": 7,
+      "radius": 1.5,
+      "color": "#ff60e0",
+      "on": true
+    },
+    {
+      "id": "l23",
+      "x": 4.6,
+      "y": 9.2,
+      "radius": 1.5,
+      "color": "#ff4050",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "r1",
+      "name": "Couloir d'entrée",
+      "x": 8,
+      "y": 1,
+      "w": 1,
+      "h": 4,
+      "gmOnly": false
+    },
+    {
+      "id": "r2",
+      "name": "Arrière-salle",
+      "x": 6,
+      "y": 2,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "r3",
+      "name": "Salon principal",
+      "x": 4,
+      "y": 5,
+      "w": 4,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "r4",
+      "name": "Salon nord",
+      "x": 3,
+      "y": 3,
+      "w": 3,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "r5",
+      "name": "Coin canapés",
+      "x": 2,
+      "y": 5,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "r6",
+      "name": "Comptoir à chicha",
+      "x": 2,
+      "y": 7,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "r7",
+      "name": "Banquettes",
+      "x": 5,
+      "y": 9,
+      "w": 5,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "r8",
+      "name": "Alcôve",
+      "x": 9,
+      "y": 6,
+      "w": 1,
+      "h": 3,
+      "gmOnly": false
+    }
+  ],
+  "traced": {
+    "by": "agent",
+    "at": "2026-11-26T16:36:01.389Z",
+    "quality": "rough",
+    "notes": "Plan très sombre, en fausse perspective, sans porte dessinée. Portes supposées : entrée au bout nord du couloir tapissé, porte de service derrière le comptoir (sud-ouest), porte vitrée de l'arrière-salle (mur nord-ouest). Paravents en treillis, arcade décorative de l'alcôve, comptoir et banquettes non tracés (ils ne bloquent pas la vue). Façade sud-ouest courbe approximée par segments."
+  },
+  "version": 1,
+  "entry": {
+    "x": 8.95,
+    "y": 1.6
+  }
+}

@@ -1,0 +1,671 @@
+{
+  "id": "map_lib_industrial-kitchen",
+  "name": "Hôtel Ravenswood — office et cuisines (Maison Duval)",
+  "folder": "Acte 2",
+  "description": "**Lieu de campagne :** L’office du traiteur Maison Duval au 31e : l’entrée discrète du gala (Jane ou un runner en extra du personnel).\n\n**Quête :** The Guest List.\n\n**À adapter :** Les « Livraisons » sont le monte-charge et l’ascenseur de service (badge du personnel) ; le bureau du chef sert de vestiaire du personnel.\n\n**La carte (bibliothèque Fragmaps, « Cuisine industrielle ») :** Grande cuisine de restaurant en inox : pianos, postes de dressage, plonge, une réserve, le bureau du chef et une chambre froide. Idéale pour s'infiltrer par l'entrée des livraisons, rencontrer un parrain de la Mafia ou des Triades dans l'arrière-cuisine, ou une fusillade entre les fourneaux.\n\nVoir Shadowrun/cartes-campagne.md.",
+  "width": 14,
+  "height": 16,
+  "metersPerCell": 1.5,
+  "theme": "industrial",
+  "lighting": "bright",
+  "tiles": [
+    "..............",
+    "..............",
+    "..............",
+    "..............",
+    "..............",
+    "..............",
+    "..............",
+    "..............",
+    "..............",
+    "..............",
+    "..............",
+    "..............",
+    "..............",
+    "..............",
+    "..............",
+    ".............."
+  ],
+  "background": {
+    "url": "/api/maplib/image/industrial-kitchen",
+    "opacity": 1,
+    "mode": "image",
+    "x": 0,
+    "y": 0,
+    "w": 14,
+    "h": 16
+  },
+  "walls": [
+    {
+      "id": "wall_industrial-kitchen_1",
+      "x1": 1.3,
+      "y1": 1.14,
+      "x2": 1.8,
+      "y2": 1.14,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_2",
+      "x1": 1.8,
+      "y1": 1.14,
+      "x2": 1.8,
+      "y2": 0.7,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_3",
+      "x1": 1.8,
+      "y1": 0.7,
+      "x2": 4.55,
+      "y2": 0.7,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_4",
+      "x1": 4.55,
+      "y1": 0.7,
+      "x2": 4.55,
+      "y2": 1.08,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_5",
+      "x1": 4.55,
+      "y1": 1.08,
+      "x2": 5,
+      "y2": 1.08,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_6",
+      "x1": 5,
+      "y1": 1.08,
+      "x2": 5,
+      "y2": 0.7,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_7",
+      "x1": 5,
+      "y1": 0.7,
+      "x2": 8.48,
+      "y2": 0.7,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_8",
+      "x1": 8.48,
+      "y1": 0.7,
+      "x2": 8.48,
+      "y2": 1.1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_9",
+      "x1": 8.48,
+      "y1": 1.1,
+      "x2": 8.48,
+      "y2": 2.3,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_industrial-kitchen_10",
+      "x1": 8.48,
+      "y1": 2.3,
+      "x2": 8.48,
+      "y2": 2.45,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_11",
+      "x1": 8.48,
+      "y1": 2.45,
+      "x2": 7.09,
+      "y2": 2.45,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_12",
+      "x1": 7.09,
+      "y1": 2.45,
+      "x2": 7.09,
+      "y2": 3,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_13",
+      "x1": 7.09,
+      "y1": 3,
+      "x2": 7.35,
+      "y2": 3,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_14",
+      "x1": 7.35,
+      "y1": 3,
+      "x2": 7.35,
+      "y2": 6.45,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_15",
+      "x1": 7.35,
+      "y1": 6.45,
+      "x2": 7.35,
+      "y2": 7.6,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_industrial-kitchen_16",
+      "x1": 7.35,
+      "y1": 7.6,
+      "x2": 7.35,
+      "y2": 8.1,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_17",
+      "x1": 7.35,
+      "y1": 8.1,
+      "x2": 7.35,
+      "y2": 9.9,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_industrial-kitchen_18",
+      "x1": 7.35,
+      "y1": 9.9,
+      "x2": 7.35,
+      "y2": 12.4,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_19",
+      "x1": 7.35,
+      "y1": 12.4,
+      "x2": 7.35,
+      "y2": 13.55,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_industrial-kitchen_20",
+      "x1": 7.35,
+      "y1": 13.55,
+      "x2": 7.35,
+      "y2": 14.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_21",
+      "x1": 7.35,
+      "y1": 14.95,
+      "x2": 6.9,
+      "y2": 14.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_22",
+      "x1": 6.9,
+      "y1": 14.95,
+      "x2": 5.8,
+      "y2": 14.95,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_industrial-kitchen_23",
+      "x1": 5.8,
+      "y1": 14.95,
+      "x2": 1.8,
+      "y2": 14.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_24",
+      "x1": 1.8,
+      "y1": 14.95,
+      "x2": 1.8,
+      "y2": 14.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_25",
+      "x1": 1.8,
+      "y1": 14.5,
+      "x2": 1.3,
+      "y2": 14.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_26",
+      "x1": 1.3,
+      "y1": 14.5,
+      "x2": 1.3,
+      "y2": 8.8,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_27",
+      "x1": 1.3,
+      "y1": 8.8,
+      "x2": 1.82,
+      "y2": 8.8,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_28",
+      "x1": 1.82,
+      "y1": 8.8,
+      "x2": 1.82,
+      "y2": 7.95,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "wall_industrial-kitchen_29",
+      "x1": 1.82,
+      "y1": 7.95,
+      "x2": 1.3,
+      "y2": 7.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_30",
+      "x1": 1.3,
+      "y1": 7.95,
+      "x2": 1.3,
+      "y2": 1.14,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_31",
+      "x1": 7.35,
+      "y1": 5.45,
+      "x2": 9.65,
+      "y2": 5.45,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_32",
+      "x1": 9.65,
+      "y1": 5.45,
+      "x2": 9.65,
+      "y2": 7.96,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_33",
+      "x1": 9.65,
+      "y1": 7.96,
+      "x2": 7.35,
+      "y2": 7.96,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_34",
+      "x1": 9.65,
+      "y1": 7.96,
+      "x2": 9.65,
+      "y2": 11.33,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_35",
+      "x1": 7.35,
+      "y1": 11.33,
+      "x2": 13.18,
+      "y2": 11.33,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_36",
+      "x1": 13.18,
+      "y1": 11.33,
+      "x2": 13.18,
+      "y2": 14.94,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_37",
+      "x1": 13.18,
+      "y1": 14.94,
+      "x2": 7.75,
+      "y2": 14.94,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_38",
+      "x1": 7.75,
+      "y1": 14.94,
+      "x2": 7.75,
+      "y2": 14.42,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "wall_industrial-kitchen_39",
+      "x1": 7.75,
+      "y1": 14.42,
+      "x2": 7.35,
+      "y2": 14.42,
+      "move": true,
+      "sight": true,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "light_industrial-kitchen_40",
+      "x": 3,
+      "y": 3,
+      "radius": 4,
+      "color": "#f4f8ff",
+      "on": true
+    },
+    {
+      "id": "light_industrial-kitchen_41",
+      "x": 6,
+      "y": 3,
+      "radius": 4,
+      "color": "#f4f8ff",
+      "on": true
+    },
+    {
+      "id": "light_industrial-kitchen_42",
+      "x": 4,
+      "y": 7,
+      "radius": 4,
+      "color": "#f4f8ff",
+      "on": true
+    },
+    {
+      "id": "light_industrial-kitchen_43",
+      "x": 6,
+      "y": 7,
+      "radius": 4,
+      "color": "#f4f8ff",
+      "on": true
+    },
+    {
+      "id": "light_industrial-kitchen_44",
+      "x": 4,
+      "y": 11,
+      "radius": 4,
+      "color": "#f4f8ff",
+      "on": true
+    },
+    {
+      "id": "light_industrial-kitchen_45",
+      "x": 6,
+      "y": 11,
+      "radius": 4,
+      "color": "#f4f8ff",
+      "on": true
+    },
+    {
+      "id": "light_industrial-kitchen_46",
+      "x": 4,
+      "y": 14,
+      "radius": 3.5,
+      "color": "#f4f8ff",
+      "on": true
+    },
+    {
+      "id": "light_industrial-kitchen_47",
+      "x": 2,
+      "y": 5,
+      "radius": 1.5,
+      "color": "#ff9030",
+      "on": true
+    },
+    {
+      "id": "light_industrial-kitchen_48",
+      "x": 3,
+      "y": 14,
+      "radius": 1.5,
+      "color": "#60ffd0",
+      "on": true
+    },
+    {
+      "id": "light_industrial-kitchen_49",
+      "x": 8,
+      "y": 2,
+      "radius": 2,
+      "color": "#e0f0ff",
+      "on": true
+    },
+    {
+      "id": "light_industrial-kitchen_50",
+      "x": 9,
+      "y": 7,
+      "radius": 3,
+      "color": "#f0f0e8",
+      "on": true
+    },
+    {
+      "id": "light_industrial-kitchen_51",
+      "x": 9,
+      "y": 10,
+      "radius": 3,
+      "color": "#f0f0e8",
+      "on": true
+    },
+    {
+      "id": "light_industrial-kitchen_52",
+      "x": 9,
+      "y": 9,
+      "radius": 1.2,
+      "color": "#60d0ff",
+      "on": true
+    },
+    {
+      "id": "light_industrial-kitchen_53",
+      "x": 10,
+      "y": 13,
+      "radius": 3.5,
+      "color": "#a8c8ff",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "reg_industrial-kitchen_54",
+      "name": "Plonge",
+      "x": 2,
+      "y": 1,
+      "w": 5,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_industrial-kitchen_55",
+      "name": "Sas",
+      "x": 7,
+      "y": 1,
+      "w": 1,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_industrial-kitchen_56",
+      "name": "Pianos",
+      "x": 1,
+      "y": 4,
+      "w": 2,
+      "h": 9,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_industrial-kitchen_57",
+      "name": "Postes de dressage",
+      "x": 3,
+      "y": 4,
+      "w": 4,
+      "h": 9,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_industrial-kitchen_58",
+      "name": "Livraisons",
+      "x": 5,
+      "y": 13,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_industrial-kitchen_59",
+      "name": "Réserve",
+      "x": 8,
+      "y": 6,
+      "w": 1,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_industrial-kitchen_60",
+      "name": "Bureau du chef",
+      "x": 8,
+      "y": 8,
+      "w": 1,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "reg_industrial-kitchen_61",
+      "name": "Chambre froide",
+      "x": 8,
+      "y": 12,
+      "w": 5,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "libentry_industrial-kitchen_62",
+      "name": "Entrée",
+      "x": 6,
+      "y": 14,
+      "w": 1,
+      "h": 1,
+      "gmOnly": true
+    }
+  ],
+  "doors": [],
+  "notes": [
+    {
+      "id": "note_industrial-kitchen_1",
+      "x": 6,
+      "y": 14,
+      "text": "Monte-charge, ascenseur de service (badge personnel) et escalier de service. Le couloir de service (2 m) part d’ici, fait le tour de l’étage et mène à la porte de service de la suite privée.",
+      "gmOnly": true
+    },
+    {
+      "id": "note_industrial-kitchen_2",
+      "x": 8,
+      "y": 9,
+      "text": "Vestiaire du personnel : tenues de serveur Maison Duval, plannings — Margaux (retournée) connaît les codes du personnel.",
+      "gmOnly": true
+    }
+  ],
+  "tokens": [],
+  "fog": true,
+  "sharedVision": true,
+  "movementLocked": false,
+  "library": {
+    "slug": "industrial-kitchen",
+    "version": 1,
+    "linkedAt": 1795651200000
+  }
+}

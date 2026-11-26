@@ -1,7 +1,7 @@
 {
   "id": "map_construction_site",
   "name": "Chantier près de la holding",
-  "folder": "Acte 1",
+  "folder": "Cartes maison (anciennes)",
   "description": "**Chantier de construction voisin de la holding Von Schloss.** Un terrain clôturé de grillage : portail cadenassé sur la rue, trou discret côté ouest, dalle de béton d'un immeuble en construction (piliers, cage d'ascenseur ouverte, escalier vers l'étage), échafaudage, base de grue, piles de matériaux, fosse de fondation, engins et conteneur de chantier. La nuit, seuls quelques projecteurs éclairent — l'un d'eux est en panne.\n\n**Utilisation**\n- Quête 1.3 *Family Business*, Phase 3 : lieu de confrontation extérieur avec les gros bras d'AG Chemie (Human/Troll Corpo Security R3) venus faire signer Klee. Phase 4 : Adachi Morinaga peut observer depuis la grue ou un toit voisin — un avertissement, pas un combat.\n\n**Tests utiles**\n- Perception seuil 2 (trou du grillage), Escalade seuil 3 (grue), Agilité + Réaction seuil 2 (se rattraper au bord de la cage d'ascenseur).\n- Intimidation pour désamorcer ; les gros bras veulent faire peur, pas tuer.\n- Visibilité : obscurité partielle (−2) hors des halos, totale (−6) dans les zones d'ombre.",
   "width": 60,
   "height": 44,

@@ -1,0 +1,524 @@
+{
+  "id": "lib_street-race",
+  "slug": "street-race",
+  "name": "Street Race",
+  "nameFr": "Course de rue",
+  "source": "fragmap",
+  "image": "street race.jpg",
+  "imageW": 3780,
+  "imageH": 5180,
+  "gridPx": 140,
+  "offsetX": 0,
+  "offsetY": 0,
+  "width": 27,
+  "height": 37,
+  "metersPerCell": 1.5,
+  "theme": "street",
+  "lighting": "dark",
+  "tags": [
+    "rue",
+    "street",
+    "course",
+    "race",
+    "voitures",
+    "cars",
+    "rigger",
+    "pont",
+    "overpass",
+    "néons",
+    "neon",
+    "gang",
+    "poursuite",
+    "chase",
+    "nuit",
+    "night",
+    "extérieur",
+    "outdoor"
+  ],
+  "description": "Grande avenue de nuit sous un pont routier : trois bolides sur la ligne de départ, une foule de spectateurs, des vitrines au néon et des trottoirs de part et d'autre. Parfait pour une course illégale organisée par un gang de riggers, une transaction au milieu de la foule ou une poursuite qui démarre en trombe.",
+  "entry": {
+    "x": 13.5,
+    "y": 34.5
+  },
+  "walls": [
+    {
+      "id": "w1",
+      "x1": 2.6,
+      "y1": 2.2,
+      "x2": 3.3,
+      "y2": 6.9,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w2",
+      "x1": 3.3,
+      "y1": 6.9,
+      "x2": 6.9,
+      "y2": 7.65,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w3",
+      "x1": 6.9,
+      "y1": 7.65,
+      "x2": 8.3,
+      "y2": 7.3,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w4",
+      "x1": 8.3,
+      "y1": 7.3,
+      "x2": 8.95,
+      "y2": 6.3,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w5",
+      "x1": 8.95,
+      "y1": 6.3,
+      "x2": 8.95,
+      "y2": 3.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w6",
+      "x1": 20.4,
+      "y1": 4.6,
+      "x2": 20.4,
+      "y2": 6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w7",
+      "x1": 20.4,
+      "y1": 6,
+      "x2": 19.6,
+      "y2": 8.2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w8",
+      "x1": 19.6,
+      "y1": 8.2,
+      "x2": 23,
+      "y2": 8.2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w9",
+      "x1": 23,
+      "y1": 8.2,
+      "x2": 23,
+      "y2": 7.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w10",
+      "x1": 23,
+      "y1": 7.6,
+      "x2": 27,
+      "y2": 7.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w11",
+      "x1": 23,
+      "y1": 10,
+      "x2": 27,
+      "y2": 10,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w12",
+      "x1": 0,
+      "y1": 18.2,
+      "x2": 1.8,
+      "y2": 19,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w13",
+      "x1": 1.8,
+      "y1": 19,
+      "x2": 3.7,
+      "y2": 20.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w14",
+      "x1": 3.7,
+      "y1": 20.6,
+      "x2": 3.7,
+      "y2": 30.3,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w15",
+      "x1": 3.7,
+      "y1": 30.3,
+      "x2": 1,
+      "y2": 30.3,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w16",
+      "x1": 1,
+      "y1": 30.3,
+      "x2": 1,
+      "y2": 32.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w17",
+      "x1": 1,
+      "y1": 32.6,
+      "x2": 0,
+      "y2": 32.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w18",
+      "x1": 0,
+      "y1": 33.6,
+      "x2": 4.5,
+      "y2": 33.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w19",
+      "x1": 4.5,
+      "y1": 33.6,
+      "x2": 4.9,
+      "y2": 37,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w20",
+      "x1": 27,
+      "y1": 12,
+      "x2": 23.4,
+      "y2": 15.2,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w21",
+      "x1": 23.4,
+      "y1": 15.2,
+      "x2": 23.4,
+      "y2": 26.3,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w22",
+      "x1": 23.4,
+      "y1": 26.3,
+      "x2": 27,
+      "y2": 26.3,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w23",
+      "x1": 27,
+      "y1": 29.8,
+      "x2": 24.6,
+      "y2": 29.8,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w24",
+      "x1": 24.6,
+      "y1": 29.8,
+      "x2": 22,
+      "y2": 32.5,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w25",
+      "x1": 22,
+      "y1": 32.5,
+      "x2": 22,
+      "y2": 37,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w26",
+      "x1": 20.6,
+      "y1": 32.2,
+      "x2": 22,
+      "y2": 35.2,
+      "move": true,
+      "sight": false,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "l1",
+      "x": 14,
+      "y": 5.8,
+      "radius": 6,
+      "color": "#fff0d0",
+      "on": true
+    },
+    {
+      "id": "l2",
+      "x": 10.5,
+      "y": 5,
+      "radius": 2,
+      "color": "#40ff80",
+      "on": true
+    },
+    {
+      "id": "l3",
+      "x": 18.3,
+      "y": 5.6,
+      "radius": 2,
+      "color": "#40ff80",
+      "on": true
+    },
+    {
+      "id": "l4",
+      "x": 22.3,
+      "y": 2.6,
+      "radius": 5,
+      "color": "#ffb060",
+      "on": true
+    },
+    {
+      "id": "l5",
+      "x": 23.3,
+      "y": 6.9,
+      "radius": 1.5,
+      "color": "#e0f0ff",
+      "on": true
+    },
+    {
+      "id": "l6",
+      "x": 4.6,
+      "y": 23,
+      "radius": 5,
+      "color": "#ff9060",
+      "on": true
+    },
+    {
+      "id": "l7",
+      "x": 4,
+      "y": 28.5,
+      "radius": 4,
+      "color": "#ffd890",
+      "on": true
+    },
+    {
+      "id": "l8",
+      "x": 2.3,
+      "y": 31.9,
+      "radius": 5,
+      "color": "#ffe0b0",
+      "on": true
+    },
+    {
+      "id": "l9",
+      "x": 22.8,
+      "y": 17,
+      "radius": 4,
+      "color": "#ff9050",
+      "on": true
+    },
+    {
+      "id": "l10",
+      "x": 22.8,
+      "y": 22.5,
+      "radius": 4,
+      "color": "#ff7050",
+      "on": true
+    },
+    {
+      "id": "l11",
+      "x": 23.6,
+      "y": 13.4,
+      "radius": 3,
+      "color": "#ff6040",
+      "on": true
+    },
+    {
+      "id": "l12",
+      "x": 24.3,
+      "y": 28.2,
+      "radius": 3,
+      "color": "#ff80ff",
+      "on": true
+    },
+    {
+      "id": "l13",
+      "x": 24.3,
+      "y": 31,
+      "radius": 3,
+      "color": "#60ff60",
+      "on": true
+    },
+    {
+      "id": "l14",
+      "x": 20.5,
+      "y": 35.6,
+      "radius": 5,
+      "color": "#e0f0ff",
+      "on": true
+    },
+    {
+      "id": "l15",
+      "x": 11.3,
+      "y": 27.8,
+      "radius": 4,
+      "color": "#e0f0ff",
+      "on": true
+    },
+    {
+      "id": "l16",
+      "x": 14,
+      "y": 27.8,
+      "radius": 4,
+      "color": "#e0f0ff",
+      "on": true
+    },
+    {
+      "id": "l17",
+      "x": 16.6,
+      "y": 28.2,
+      "radius": 4,
+      "color": "#ffe0e0",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "r1",
+      "name": "Passage sous le pont",
+      "x": 9,
+      "y": 4,
+      "w": 11,
+      "h": 5,
+      "gmOnly": false
+    },
+    {
+      "id": "r2",
+      "name": "Place arborée",
+      "x": 0,
+      "y": 10,
+      "w": 6,
+      "h": 8,
+      "gmOnly": false
+    },
+    {
+      "id": "r3",
+      "name": "Trottoir ouest",
+      "x": 4,
+      "y": 19,
+      "w": 4,
+      "h": 11,
+      "gmOnly": false
+    },
+    {
+      "id": "r4",
+      "name": "Trottoir est",
+      "x": 20,
+      "y": 12,
+      "w": 3,
+      "h": 14,
+      "gmOnly": false
+    },
+    {
+      "id": "r5",
+      "name": "Escalier vers le pont",
+      "x": 23,
+      "y": 8,
+      "w": 3,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "r6",
+      "name": "Ligne de départ",
+      "x": 10,
+      "y": 27,
+      "w": 8,
+      "h": 5,
+      "gmOnly": false
+    },
+    {
+      "id": "r7",
+      "name": "Rue transversale est",
+      "x": 23,
+      "y": 27,
+      "w": 4,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "r8",
+      "name": "Coin du lampadaire",
+      "x": 1,
+      "y": 30,
+      "w": 3,
+      "h": 2,
+      "gmOnly": false
+    }
+  ],
+  "traced": {
+    "by": "agent",
+    "at": "2026-11-26T16:42:00.495Z",
+    "quality": "rough",
+    "notes": "Rue extérieure dessinée en perspective : murs au pied des façades, approximatifs (±0.4 case). Le tablier du pont (en haut) est au-dessus de la chaussée : non tracé, seules ses deux culées le sont. L'escalier vers le pont (est) est accessible par son côté ouest. Arbres, kiosque lumineux, bancs, voitures et foule non tracés. Rue transversale ouverte à l'est (y≈27–29). Échelle vérifiée sur les voitures (≈1.3×3 cases à 140 px)."
+  },
+  "version": 1
+}

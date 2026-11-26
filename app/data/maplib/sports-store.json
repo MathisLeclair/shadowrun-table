@@ -1,0 +1,400 @@
+{
+  "id": "lib_sports-store",
+  "slug": "sports-store",
+  "name": "Sports Store",
+  "nameFr": "Magasin de sport",
+  "source": "fragmap",
+  "image": "sports store.jpg",
+  "imageW": 2200,
+  "imageH": 2400,
+  "gridPx": 200,
+  "offsetX": 0,
+  "offsetY": 0,
+  "width": 11,
+  "height": 12,
+  "metersPerCell": 1.5,
+  "theme": "street",
+  "lighting": "bright",
+  "tags": [
+    "magasin",
+    "store",
+    "sport",
+    "sports",
+    "boutique",
+    "shop",
+    "commerce",
+    "retail",
+    "cabines",
+    "fitting rooms",
+    "braquage",
+    "robbery",
+    "centre commercial",
+    "mall",
+    "intérieur",
+    "indoor"
+  ],
+  "description": "Magasin d'articles de sport lumineux : murs de baskets, îlots de vêtements, ballons, caisse près des portes vitrées et une rangée de cabines d'essayage. Bon décor pour une filature dans un centre commercial de Bellevue, une remise discrète entre deux cabines ou un braquage qui dégénère.",
+  "entry": {
+    "x": 8.9,
+    "y": 8.8
+  },
+  "walls": [
+    {
+      "id": "w1",
+      "x1": 3.45,
+      "y1": 5.82,
+      "x2": 2.38,
+      "y2": 4.62,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w2",
+      "x1": 2.38,
+      "y1": 4.62,
+      "x2": 2.38,
+      "y2": 0.92,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w3",
+      "x1": 2.38,
+      "y1": 0.92,
+      "x2": 9.62,
+      "y2": 0.92,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w4",
+      "x1": 9.62,
+      "y1": 0.92,
+      "x2": 9.62,
+      "y2": 7.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w5",
+      "x1": 9.62,
+      "y1": 7.95,
+      "x2": 9.62,
+      "y2": 9.65,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w6",
+      "x1": 9.62,
+      "y1": 9.65,
+      "x2": 9.62,
+      "y2": 10.72,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w7",
+      "x1": 9.62,
+      "y1": 10.72,
+      "x2": 3.45,
+      "y2": 10.72,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w8",
+      "x1": 3.45,
+      "y1": 10.72,
+      "x2": 3.45,
+      "y2": 9.95,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w9",
+      "x1": 3.45,
+      "y1": 9.95,
+      "x2": 3.45,
+      "y2": 5.82,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w10",
+      "x1": 3.45,
+      "y1": 5.82,
+      "x2": 1.06,
+      "y2": 5.82,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w11",
+      "x1": 1.06,
+      "y1": 5.82,
+      "x2": 1.06,
+      "y2": 10.72,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w12",
+      "x1": 1.06,
+      "y1": 10.72,
+      "x2": 3.45,
+      "y2": 10.72,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w13",
+      "x1": 1.06,
+      "y1": 7.02,
+      "x2": 2.3,
+      "y2": 7.02,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w14",
+      "x1": 1.06,
+      "y1": 8.22,
+      "x2": 2.3,
+      "y2": 8.22,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w15",
+      "x1": 1.06,
+      "y1": 9.38,
+      "x2": 2.3,
+      "y2": 9.38,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w16",
+      "x1": 2.3,
+      "y1": 5.82,
+      "x2": 2.3,
+      "y2": 7.02,
+      "move": false,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w17",
+      "x1": 2.3,
+      "y1": 7.02,
+      "x2": 2.3,
+      "y2": 8.22,
+      "move": false,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w18",
+      "x1": 2.3,
+      "y1": 8.22,
+      "x2": 2.3,
+      "y2": 9.38,
+      "move": false,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w19",
+      "x1": 2.3,
+      "y1": 9.38,
+      "x2": 2.3,
+      "y2": 10.72,
+      "move": false,
+      "sight": true,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "l1",
+      "x": 3.6,
+      "y": 1.5,
+      "radius": 2,
+      "color": "#d0f0ff",
+      "on": true
+    },
+    {
+      "id": "l2",
+      "x": 6.3,
+      "y": 1.5,
+      "radius": 2.5,
+      "color": "#fff0d8",
+      "on": true
+    },
+    {
+      "id": "l3",
+      "x": 8.2,
+      "y": 1.5,
+      "radius": 2.5,
+      "color": "#fff0d8",
+      "on": true
+    },
+    {
+      "id": "l4",
+      "x": 9.25,
+      "y": 3.4,
+      "radius": 2,
+      "color": "#60e0ff",
+      "on": true
+    },
+    {
+      "id": "l5",
+      "x": 9.25,
+      "y": 4.9,
+      "radius": 2,
+      "color": "#60e0ff",
+      "on": true
+    },
+    {
+      "id": "l6",
+      "x": 5.5,
+      "y": 3.2,
+      "radius": 4,
+      "color": "#e8f4ff",
+      "on": true
+    },
+    {
+      "id": "l7",
+      "x": 7.5,
+      "y": 6.3,
+      "radius": 4,
+      "color": "#e8f4ff",
+      "on": true
+    },
+    {
+      "id": "l8",
+      "x": 5.5,
+      "y": 8.2,
+      "radius": 4,
+      "color": "#e8f4ff",
+      "on": true
+    },
+    {
+      "id": "l9",
+      "x": 9,
+      "y": 8.8,
+      "radius": 4,
+      "color": "#c8ecff",
+      "on": true
+    },
+    {
+      "id": "l10",
+      "x": 7.7,
+      "y": 10.35,
+      "radius": 2,
+      "color": "#ffd8a0",
+      "on": true
+    },
+    {
+      "id": "l11",
+      "x": 8.9,
+      "y": 10.35,
+      "radius": 2,
+      "color": "#ffd8a0",
+      "on": true
+    },
+    {
+      "id": "l12",
+      "x": 2.9,
+      "y": 6,
+      "radius": 2,
+      "color": "#d0f0ff",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "r1",
+      "name": "Mur des baskets",
+      "x": 3,
+      "y": 1,
+      "w": 6,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "r2",
+      "name": "Rayons",
+      "x": 4,
+      "y": 2,
+      "w": 5,
+      "h": 6,
+      "gmOnly": false
+    },
+    {
+      "id": "r3",
+      "name": "Caisse",
+      "x": 6,
+      "y": 8,
+      "w": 2,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "r4",
+      "name": "Entrée",
+      "x": 8,
+      "y": 8,
+      "w": 1,
+      "h": 2,
+      "gmOnly": false
+    },
+    {
+      "id": "r5",
+      "name": "Cabines d'essayage",
+      "x": 1,
+      "y": 6,
+      "w": 1,
+      "h": 4,
+      "gmOnly": false
+    },
+    {
+      "id": "r6",
+      "name": "Couloir des cabines",
+      "x": 2,
+      "y": 6,
+      "w": 1,
+      "h": 4,
+      "gmOnly": false
+    }
+  ],
+  "traced": {
+    "by": "agent",
+    "at": "2026-11-26T16:34:33.393Z",
+    "quality": "good",
+    "notes": "Plan en vue de coupe sans bandes de murs : murs posés au bord du sol. Entrée = portes vitrées à droite (y 8–9.6). Le bloc des cabines est séparé du magasin par un vide noir : porte supposée en bas de la cloison (x 3.45, y 10–10.7), près du paillasson. Rideaux des cabines = cloisons bloquant la vue mais pas le passage. Îlots, présentoirs et comptoir de caisse non tracés."
+  },
+  "version": 1
+}

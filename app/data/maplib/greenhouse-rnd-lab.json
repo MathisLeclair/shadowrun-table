@@ -1,0 +1,372 @@
+{
+  "id": "lib_greenhouse-rnd-lab",
+  "slug": "greenhouse-rnd-lab",
+  "name": "Greenhouse R&D Lab",
+  "nameFr": "Laboratoire de recherche botanique",
+  "source": "fragmap",
+  "image": "greenhouse rnd lab.jpg",
+  "imageW": 1800,
+  "imageH": 2200,
+  "gridPx": 200,
+  "offsetX": 0,
+  "offsetY": 0,
+  "width": 9,
+  "height": 11,
+  "metersPerCell": 1.5,
+  "theme": "lab",
+  "lighting": "bright",
+  "tags": [
+    "laboratoire",
+    "lab",
+    "serre",
+    "greenhouse",
+    "botanique",
+    "botany",
+    "recherche",
+    "research",
+    "R&D",
+    "corpo",
+    "corporate",
+    "cryogénie",
+    "cryo",
+    "extraction",
+    "vol de données",
+    "datasteal",
+    "infiltration",
+    "intérieur",
+    "indoor"
+  ],
+  "description": "Laboratoire corporatiste de recherche botanique : paillasse centrale, armoires de culture éclairées, postes de travail, salle d'analyseurs et une cellule cryogénique attenante. Cible idéale pour un vol d'échantillons ou de données, l'extraction d'un chercheur ou un sabotage commandité par une corpo rivale.",
+  "entry": {
+    "x": 4,
+    "y": 1.6
+  },
+  "walls": [
+    {
+      "id": "w1",
+      "x1": 0.46,
+      "y1": 1.35,
+      "x2": 1.2,
+      "y2": 1.35,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w2",
+      "x1": 1.2,
+      "y1": 1.35,
+      "x2": 1.2,
+      "y2": 1.12,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w3",
+      "x1": 1.2,
+      "y1": 1.12,
+      "x2": 3.1,
+      "y2": 1.12,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w4",
+      "x1": 3.1,
+      "y1": 1.12,
+      "x2": 5,
+      "y2": 1.12,
+      "move": true,
+      "sight": false,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w5",
+      "x1": 5,
+      "y1": 1.12,
+      "x2": 5.75,
+      "y2": 1.12,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w6",
+      "x1": 5.75,
+      "y1": 1.12,
+      "x2": 6.05,
+      "y2": 1.36,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w7",
+      "x1": 6.05,
+      "y1": 1.36,
+      "x2": 7.8,
+      "y2": 1.36,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w8",
+      "x1": 7.8,
+      "y1": 1.36,
+      "x2": 7.8,
+      "y2": 1.95,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w9",
+      "x1": 7.8,
+      "y1": 1.95,
+      "x2": 7.8,
+      "y2": 2.95,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w10",
+      "x1": 7.8,
+      "y1": 2.95,
+      "x2": 7.8,
+      "y2": 3.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w11",
+      "x1": 5.4,
+      "y1": 3.6,
+      "x2": 8.42,
+      "y2": 3.6,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w12",
+      "x1": 8.42,
+      "y1": 3.6,
+      "x2": 8.42,
+      "y2": 7.22,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w13",
+      "x1": 8.42,
+      "y1": 7.22,
+      "x2": 5.4,
+      "y2": 7.22,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w14",
+      "x1": 5.4,
+      "y1": 3.6,
+      "x2": 5.4,
+      "y2": 3.85,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w15",
+      "x1": 5.4,
+      "y1": 3.85,
+      "x2": 5.4,
+      "y2": 4.75,
+      "move": true,
+      "sight": true,
+      "door": {
+        "state": "closed",
+        "kind": "door"
+      }
+    },
+    {
+      "id": "w16",
+      "x1": 5.4,
+      "y1": 4.75,
+      "x2": 5.4,
+      "y2": 9.68,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w17",
+      "x1": 5.4,
+      "y1": 9.68,
+      "x2": 0.46,
+      "y2": 9.68,
+      "move": true,
+      "sight": true,
+      "door": null
+    },
+    {
+      "id": "w18",
+      "x1": 0.46,
+      "y1": 9.68,
+      "x2": 0.46,
+      "y2": 1.35,
+      "move": true,
+      "sight": true,
+      "door": null
+    }
+  ],
+  "lights": [
+    {
+      "id": "l1",
+      "x": 3.9,
+      "y": 3.5,
+      "radius": 4,
+      "color": "#fff8e8",
+      "on": true
+    },
+    {
+      "id": "l2",
+      "x": 3.4,
+      "y": 7.6,
+      "radius": 4,
+      "color": "#fff8e8",
+      "on": true
+    },
+    {
+      "id": "l3",
+      "x": 6.6,
+      "y": 2.7,
+      "radius": 3,
+      "color": "#fff8e8",
+      "on": true
+    },
+    {
+      "id": "l4",
+      "x": 6.95,
+      "y": 4.1,
+      "radius": 3,
+      "color": "#d8fff8",
+      "on": true
+    },
+    {
+      "id": "l5",
+      "x": 7.9,
+      "y": 6,
+      "radius": 1.5,
+      "color": "#c0fff0",
+      "on": true
+    },
+    {
+      "id": "l6",
+      "x": 2,
+      "y": 1.6,
+      "radius": 2,
+      "color": "#d8ffb0",
+      "on": true
+    },
+    {
+      "id": "l7",
+      "x": 1.2,
+      "y": 5.9,
+      "radius": 1.5,
+      "color": "#c8ff90",
+      "on": true
+    },
+    {
+      "id": "l8",
+      "x": 1.25,
+      "y": 7.1,
+      "radius": 1.5,
+      "color": "#c8ff90",
+      "on": true
+    },
+    {
+      "id": "l9",
+      "x": 4.7,
+      "y": 5.9,
+      "radius": 1.5,
+      "color": "#c0e8ff",
+      "on": true
+    }
+  ],
+  "regions": [
+    {
+      "id": "r1",
+      "name": "Sas vitré",
+      "x": 3,
+      "y": 1,
+      "w": 2,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "r2",
+      "name": "Postes de travail",
+      "x": 1,
+      "y": 2,
+      "w": 1,
+      "h": 6,
+      "gmOnly": false
+    },
+    {
+      "id": "r3",
+      "name": "Paillasse centrale",
+      "x": 2,
+      "y": 3,
+      "w": 3,
+      "h": 4,
+      "gmOnly": false
+    },
+    {
+      "id": "r4",
+      "name": "Salle des analyseurs",
+      "x": 6,
+      "y": 2,
+      "w": 2,
+      "h": 1,
+      "gmOnly": false
+    },
+    {
+      "id": "r5",
+      "name": "Cellule cryogénique",
+      "x": 6,
+      "y": 4,
+      "w": 2,
+      "h": 3,
+      "gmOnly": false
+    },
+    {
+      "id": "r6",
+      "name": "Plan de travail",
+      "x": 1,
+      "y": 8,
+      "w": 4,
+      "h": 1,
+      "gmOnly": false
+    }
+  ],
+  "traced": {
+    "by": "agent",
+    "at": "2026-11-26T16:34:25.445Z",
+    "quality": "good",
+    "notes": "Murs au bord du sol (pas de bande sombre). Porte vitrée coulissante au nord (bloque le passage, pas la vue). Porte à rayures jaunes du mur est = porte fermée (sortie/chambre froide). La cellule cryogénique est un encart sans porte dessinée : porte supposée dans le mur ouest de la cellule, côté labo. Paillasses et armoires non tracées."
+  },
+  "version": 1
+}
