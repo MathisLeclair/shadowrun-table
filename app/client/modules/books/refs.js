@@ -1,0 +1,43 @@
+// Pure rulebook reference helpers (no imports: also unit-tested in Node by tools/test-books.js).
+// Page mapping follows the same rules as server/lib/books/offsets.js.
+export function offsetFor(book, printed) {
+  let off = Number(book?.offset) || 0;
+  for (const r of book?.offsets || []) if (Number(printed) >= r.fromPrinted) off = Number(r.offset) || 0;
+  return off;
+}
+export function printedToPdf(book, printed) {
+  const n = Number(printed);
+  if (!Number.isFinite(n) || n < 1) return null;
+  const p = Math.round(n + offsetFor(book, n));
+  return p >= 1 && p <= (Number(book?.pages) || Infinity) ? p : null; // outside the book → null (« page introuvable »)
+}
+export function pdfToPrinted(book, pdfPage) {
+  const p = Number(pdfPage);
+  const ranges = [{ fromPrinted: -Infinity, offset: Number(book?.offset) || 0 }, ...(book?.offsets || [])];
+  for (let i = ranges.length - 1; i >= 0; i--) {
+    const n = p - (Number(ranges[i].offset) || 0);
+    if (n >= ranges[i].fromPrinted || i === 0) return n >= 1 ? n : null;
+  }
+  return null;
+}
+
+/**
+ * Parse a book reference: 'RG 62', 'SR5 p. 240', 'SR5 p.240', 'SR5:240', 'RF 221, SR5 12' (first one),
+ * { source: 'RG', page: '62' } or { code, page }. Returns { code, page } (page = printed page number) or null.
+ */
+export function parseSourceRef(ref, page) {
+  if (ref && typeof ref === 'object') return parseSourceRef(ref.source ?? ref.code, ref.page ?? page);
+  const s = String(ref ?? '').trim();
+  if (!s) return null;
+  if (page !== undefined && page !== null && page !== '') {
+    const code = s.toUpperCase().match(/^[A-Z0-9][A-Z0-9-]{0,11}$/)?.[0];
+    const n = parseInt(String(page).replace(/^p\.?\s*/i, ''), 10);
+    return code && n > 0 ? { code, page: n } : code ? { code, page: null } : null;
+  }
+  // A separator is required between the code and the page: « GH3 » is a code, « GH 3 » / « GH3 p.3 » are references.
+  const m = s.match(/^([A-Za-z0-9][A-Za-z0-9-]{0,11})(?:\s+|\s*[:,]\s*|\s*(?=p))(?:p(?:age|g)?\.?\s*)?(\d{1,4})\b/i);
+  if (m) return { code: m[1].toUpperCase(), page: parseInt(m[2], 10) };
+  const only = s.match(/^([A-Za-z0-9][A-Za-z0-9-]{0,11})$/);
+  return only ? { code: only[1].toUpperCase(), page: null } : null;
+}
+

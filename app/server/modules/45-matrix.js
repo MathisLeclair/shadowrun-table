@@ -12,6 +12,8 @@ import {
   matrixInitiative, dumpshock, hostAttributes, defaultIcFor, icAttackPool, skillRating, loadedProgramIds,
 } from '../../shared/matrix.js';
 import { uid, deepClone, slug } from '../../shared/util.js';
+import { cleanConditions } from '../../shared/modifiers.js';
+import { actorModifiers, deriveFull } from '../lib/modifiers.js';
 import { formatFr } from '../lib/i18n.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -244,7 +246,7 @@ function addMarkOnMe(persona, sourceId, name, n = 1, msg) {
 function applyActorDamage(actor, n, type) {
   if (!n) return;
   actor.condition ||= { physical: 0, stun: 0, overflow: 0 };
-  const d = derive(actor);
+  const d = deriveFull(actor); // monitors with the modifiers of gear / qualities / implants
   const c = actor.condition;
   let toPhysical = 0;
   if (type === 'S') {
@@ -655,7 +657,11 @@ function performAction(ctx, actor, persona, action, p, { agent = false } = {}) {
   if (edge && (actor.edge?.current || 0) <= 0) ctx.fail('{name} n’a plus de point de Chance', { name: actor.name });
 
   const marksWanted = action.placesMarks ? clampInt(p.marks, 1, 3, 1) : 0;
-  const pc = actionPool(actor, persona, action, { useSpec: !!p.useSpec && !agent, marks: marksWanted, modifier: clampInt(p.modifier, -30, 30, 0), assist, edge, agent });
+  // Decker's modifiers (skill / linked attribute / Codeslinger dice: shared/modifiers.js), computed here; the client only says which
+  // situational switches are on (checked against the actor's own modifiers). The agent rolls its Rating: no modifier.
+  const mods = agent ? null : actorModifiers(actor);
+  const conditions = mods ? cleanConditions(mods, p.conditions) : [];
+  const pc = actionPool(actor, persona, action, { useSpec: !!p.useSpec && !agent, marks: marksWanted, modifier: clampInt(p.modifier, -30, 30, 0), assist, edge, agent, ...(mods ? { mods, conditions } : {}) });
   if (pc.impossible) ctx.fail(pc.reasonKey || pc.reason, pc.reasonParams);
   if (pc.pool <= 0) ctx.fail('Réserve de dés nulle : l’action échoue automatiquement');
   if (edge) actor.edge.current -= 1;
@@ -1061,7 +1067,7 @@ const actions = {
     const was = persona.online ? persona.mode : null;
     persona.mode = mode;
     persona.online = true;
-    const ini = matrixInitiative(actor, persona, mode);
+    const ini = matrixInitiative(actor, persona, mode, actorModifiers(actor));
     if (was !== mode) {
       const params = { name: actor.name, mode: { t: MODE_LABELS[mode] }, ini: ini.text };
       mlog(ctx, { author: actor.name, msgs: [was ? { t: '{name} passe en {mode} (initiative {ini}).', params } : { t: '{name} se connecte à la Matrice en {mode} (initiative {ini}).', params }], matrix: { event: 'connect', actorId, mode } });

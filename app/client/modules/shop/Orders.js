@@ -6,7 +6,7 @@ import { toast, openSheet } from '../../lib/ui-store.js';
 import { t, tk } from '../../lib/i18n.js';
 import { nuyen, gradeLabel, timeAgo, STATUS_LABEL, STATUS_COLOR, FLAG_LABEL, FLAG_COLOR } from './common.js';
 
-const KIND_LABEL = { buy: tk('Achat'), sell: tk('Revente'), give: tk('Don du MJ') };
+const KIND_LABEL = { buy: tk('Achat'), sell: tk('Revente'), give: tk('Don du MJ'), karma: tk('Art martial (karma)') };
 const kindLabel = (k) => (KIND_LABEL[k] ? t(KIND_LABEL[k]) : k);
 /** Who placed the order: the server stores 'MJ' for the GM, else the player's name. */
 const byLabel = (by) => (by === 'MJ' ? t('MJ') : by || '?');
@@ -15,11 +15,11 @@ function Lines({ order }) {
   return html`<ul class="shop-order-lines">
     ${order.items.map(
       (l) => html`<li>
-        <span class="grow">${l.name}${l.rating ? html` <span class="muted">${t('ind. {n}', { n: l.rating })}</span>` : null}${l.grade && l.grade !== 'standard' ? html` <span class="muted">${gradeLabel(l.grade)}</span>` : null}${l.qty > 1 ? html` <span class="muted">×${l.qty}</span>` : null}</span>
+        <span class="grow">${l.name}${l.target?.name ? html` <span class="cyan">→ ${l.target.name}</span>` : null}${l.techniques?.length ? html` <span class="muted">(${l.techniques.join(', ')})</span>` : null}${l.rating ? html` <span class="muted">${t('ind. {n}', { n: l.rating })}</span>` : null}${l.grade && l.grade !== 'standard' ? html` <span class="muted">${gradeLabel(l.grade)}</span>` : null}${l.qty > 1 ? html` <span class="muted">×${l.qty}</span>` : null}</span>
         ${l.legality === 'F' ? html`<${Badge} color="red">F</${Badge}>` : l.legality === 'R' ? html`<${Badge} color="amber">R</${Badge}>` : null}
         ${l.availValue !== undefined && order.kind !== 'sell' ? html`<span class="faint small mono" title=${t('Disponibilité')}>${t('D{n}', { n: l.availValue })}</span>` : null}
         ${l.essence ? html`<span class="faint small mono">${t('Ess {n}', { n: Math.round(l.essence * l.qty * 1000) / 1000 })}</span>` : null}
-        <span class="mono small">${l.unitCost === null || l.unitCost === undefined ? '?' : nuyen(l.unitCost * l.qty)}</span>
+        <span class="mono small">${l.karma ? t('{n} karma', { n: l.karma }) : l.unitCost === null || l.unitCost === undefined ? '?' : nuyen(l.unitCost * l.qty)}</span>
       </li>`
     )}
   </ul>`;
@@ -33,6 +33,9 @@ function PendingCard({ order, game }) {
   const have = Number(actor?.nuyen) || 0;
   const amount = total === '' ? null : Number(total);
   const after = order.kind === 'sell' ? have + (amount || 0) : have - (amount || 0);
+  const karma = order.kind === 'karma';
+  const karmaHave = Number(actor?.karma) || 0;
+  const karmaAfter = karmaHave - (Number(order.karma) || 0);
   const resolve = async (approve) => {
     if (!approve && !(await confirmAction(t('Refuser cette commande ?')))) return;
     setBusy(true);
@@ -55,12 +58,14 @@ function PendingCard({ order, game }) {
     </div>
     <${Lines} order=${order} />
     <div class="row wrap shop-order-foot">
-      <label class="row gap-s small">${order.kind === 'sell' ? t('Paiement') : t('Total')}
-        <input class="input shop-price-input" type="number" min="0" value=${total} placeholder="¥" onInput=${(e) => setTotal(e.target.value)} />
-      </label>
-      ${actor && html`<span class="small mono">${nuyen(have)} → <span class=${after < 0 ? 'red' : 'green'}>${nuyen(after)}</span></span>`}
+      ${karma
+        ? actor && html`<span class="small mono">${t('Karma')} ${karmaHave} → <span class=${karmaAfter < 0 ? 'red' : 'green'}>${karmaAfter}</span></span>`
+        : html`<label class="row gap-s small">${order.kind === 'sell' ? t('Paiement') : t('Total')}
+            <input class="input shop-price-input" type="number" min="0" value=${total} placeholder="¥" onInput=${(e) => setTotal(e.target.value)} />
+          </label>
+          ${actor && html`<span class="small mono">${nuyen(have)} → <span class=${after < 0 ? 'red' : 'green'}>${nuyen(after)}</span></span>`}`}
       <${TextInput} class="grow shop-note" live value=${note} onChange=${setNote} placeholder=${t('Note pour le joueur (optionnel)')} />
-      <${Button} small variant="primary" disabled=${busy || (order.kind === 'sell' && amount === null) || (order.kind !== 'sell' && after < 0)} onClick=${() => resolve(true)}>${t('Valider')}</${Button}>
+      <${Button} small variant="primary" disabled=${busy || (karma ? karmaAfter < 0 : (order.kind === 'sell' && amount === null) || (order.kind !== 'sell' && after < 0))} onClick=${() => resolve(true)}>${t('Valider')}</${Button}>
       <${Button} small variant="danger" disabled=${busy} onClick=${() => resolve(false)}>${t('Refuser')}</${Button}>
     </div>
   </div>`;
@@ -99,7 +104,7 @@ export default function Orders({ game, actor }) {
               <${Button} small variant="ghost" onClick=${() => cancel(o)}>${t('Annuler')}</${Button}>
             </div>
             <${Lines} order=${o} />
-            <div class="right"><span class="muted small">${o.kind === 'sell' ? t('Proposé :') : t('Total :')} </span><strong class="mono">${o.total === null || o.total === undefined ? t('à fixer') : nuyen(o.total)}</strong></div>
+            <div class="right"><span class="muted small">${o.kind === 'sell' ? t('Proposé :') : t('Total :')} </span><strong class="mono">${o.kind === 'karma' ? t('{n} karma', { n: o.karma }) : o.total === null || o.total === undefined ? t('à fixer') : nuyen(o.total)}</strong></div>
           </div>`
     )}
 
@@ -122,7 +127,7 @@ export default function Orders({ game, actor }) {
               <td class="small">${kindLabel(o.kind)}</td>
               <td class="small">${game.actors?.[o.actorId]?.name || '—'}</td>
               <td class="small">${o.items.map((l) => `${l.name}${l.qty > 1 ? ` ×${l.qty}` : ''}`).join(', ')}${o.gmNote ? html`<div class="faint">« ${o.gmNote} »</div>` : null}</td>
-              <td class=${'num-cell small' + (o.kind === 'sell' ? ' green' : '')}>${o.kind === 'give' ? t('offert') : o.total === null || o.total === undefined ? '—' : `${o.kind === 'sell' ? '+' : '−'}${nuyen(o.total)}`}</td>
+              <td class=${'num-cell small' + (o.kind === 'sell' ? ' green' : '')}>${o.kind === 'karma' ? t('{n} karma', { n: `−${o.karma}` }) : o.kind === 'give' ? t('offert') : o.total === null || o.total === undefined ? '—' : `${o.kind === 'sell' ? '+' : '−'}${nuyen(o.total)}`}</td>
               <td><${Badge} color=${STATUS_COLOR[o.status] || 'dim'}>${STATUS_LABEL[o.status] ? t(STATUS_LABEL[o.status]) : o.status}</${Badge}></td>
             </tr>`
           )}

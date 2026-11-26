@@ -6,6 +6,7 @@
 // accepted as-is by sanitizeTemplate() in server/modules/30-combat.js.
 import { METATYPES, SKILL_BY_ID, attr } from './sr5.js';
 import { METATYPE_MIN } from './chargen.js';
+import { bonusFromEffects } from './modifiers.js';
 
 // i18n: tier/archetype labels and texts are French dictionary keys (client/i18n/en/chargen.json), shown with t().
 // Generated templates (names, descriptions, tactics, gear) are stored data and stay in French.
@@ -545,7 +546,9 @@ function buildMetahuman(tpl, a, t, metatype, id, pick, r, find, rules, lieutenan
     const aug = { id: id('x'), name: item.nameFr || item.name, kind: st.kind || (file === 'bioware' ? 'bioware' : 'cyberware'), grade: q.grade || g, essence: q.essence || 0, catalogId: item.id };
     if (q.rating) aug.rating = q.rating;
     ess.total += aug.essence;
-    const bonus = st.bonus;
+    // Catalog effects (initiative score of Move-by-Wire…) else stats.bonus; recorded on aug.bonus (shared/modifiers.js « baked »).
+    const eff = Array.isArray(item.effects) ? bonusFromEffects(item.effects, aug) : null;
+    const bonus = eff ? { ...eff, ...(st.bonus?.armor ? { armor: st.bonus.armor } : {}) } : st.bonus;
     if (bonus) {
       const applied = {};
       for (const [k, f] of Object.entries(bonus.attributes || {})) {
@@ -559,6 +562,13 @@ function buildMetahuman(tpl, a, t, metatype, id, pick, r, find, rules, lieutenan
         if (v) {
           tpl.initiative.dice = clampN(tpl.initiative.dice + v, 1, 5);
           applied.initiativeDice = v;
+        }
+      }
+      if (bonus.initiative) {
+        const v = evalAt(rules, bonus.initiative, q.rating);
+        if (v) {
+          tpl.initiative.bonus = (Number(tpl.initiative.bonus) || 0) + v;
+          applied.initiative = v;
         }
       }
       if (Object.keys(applied).length) aug.bonus = applied;

@@ -5,7 +5,7 @@ import { readFileSync as readSeedFile } from 'node:fs';
 // Expected values come from the seed (regenerated from Foundry), not hard-coded numbers.
 const SEED_JANE = JSON.parse(readSeedFile(new URL('../data/seed/actors/pcs.json', import.meta.url), 'utf8')).find((a) => a.id === 'pc_jane');
 
-const srv = await startServer({ port: 3102 });
+const srv = await startServer({ port: Number(process.env.SR_TEST_PORT) || 3270 });
 let failures = 0;
 async function test(name, fn) {
   try {
@@ -239,7 +239,7 @@ try {
     await gm.send('actor/damage', { actorId: 'pc_bricks', amount: 6, type: 'S' });
     const r = await p2.send('dice/roll', { actorId: 'pc_bricks', skillId: 'hacking', applyWounds: true, limit: null });
     assert.equal(r.pool, 6 + 6 - 2);
-    assert.equal(r.limit, null);
+    assert.ok(r.limit > 0, 'a player cannot remove the computed limit (limit: null)');
     await gm.send('actor/heal', { actorId: 'pc_bricks', type: 'all' });
   });
   await test('Push the Limit: adds Edge, explodes, no limit, spends Edge', async () => {
@@ -273,6 +273,96 @@ try {
     await rejects(p1.send('dice/secondChance', { logId: r.logId }), /appartient/);
     await settle();
     assert.equal(gm.state.actors.pc_bricks.edge.current, 4);
+  });
+
+  console.log('Lifestyles, nested items (accessories, mods, options, techniques), martial arts');
+  await test('legacy single lifestyle is migrated to lifestyles[] (seed / old state)', async () => {
+    const { normalizeActor } = await import('../client/modules/sheet/sheet-data.js');
+    const a = normalizeActor({ name: 'Old', lifestyle: { name: 'Planque (Moyen)', monthlyCost: 5500, monthsPaid: 2, chummerGuid: 'g1' } }, (p) => `${p}_x`);
+    assert.equal(a.lifestyle, undefined);
+    assert.equal(a.lifestyles.length, 1);
+    assert.deepEqual({ ...a.lifestyles[0], id: undefined }, { id: undefined, name: 'Planque (Moyen)', base: 'Medium', baseCost: 5500, monthsPaid: 2, primary: true, qualities: [], monthlyCost: 5500, notes: '', chummerGuid: 'g1' });
+    for (const pc of Object.values(gm.state.actors).filter((x) => x.type === 'pc')) assert.ok(Array.isArray(pc.lifestyles) && pc.lifestyle === undefined, pc.name);
+  });
+  let lsId;
+  await test('GM adds a lifestyle and options: monthly cost derived, single primary', async () => {
+    const before = (gm.state.actors.pc_bricks.lifestyles || []).length;
+    lsId = await gm.send('actor/addItem', { actorId: 'pc_bricks', list: 'lifestyles', item: { name: 'Planque de Tacoma', base: 'Low', baseCost: 2000, monthsPaid: 1, primary: true, monthlyCost: 999999 } });
+    const q1 = await gm.send('actor/addSubItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: lsId, sub: 'qualities', item: { name: 'Extra Secure', category: 'Positive', multiplier: 20, baseOnly: true, cost: 0, lp: 1 } });
+    await gm.send('actor/addSubItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: lsId, sub: 'qualities', item: { name: 'Garage (Car (Body 5 or More))', category: 'Entertainment - Asset', cost: 100, lp: 2 } });
+    await settle();
+    let ls = gm.state.actors.pc_bricks.lifestyles;
+    assert.equal(ls.length, before + 1);
+    const mine = ls.find((l) => l.id === lsId);
+    assert.equal(mine.monthlyCost, 2000 * 1.2 + 100, 'client monthlyCost ignored, derived instead (Extra Secure: % of the base only)');
+    assert.equal(mine.qualities.find((q) => q.id === q1).baseOnly, true, 'baseOnly kept by the GM editor');
+    assert.equal(ls.filter((l) => l.primary).length, 1);
+    assert.ok(mine.primary);
+    await gm.send('actor/updateSubItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: lsId, sub: 'qualities', subId: q1, patch: { multiplier: 10, notes: 'négocié' } });
+    await settle();
+    assert.equal(gm.state.actors.pc_bricks.lifestyles.find((l) => l.id === lsId).monthlyCost, 2000 * 1.1 + 100);
+    await gm.send('actor/updateSubItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: lsId, sub: 'qualities', subId: q1, patch: { baseOnly: false } });
+    await settle();
+    assert.equal(gm.state.actors.pc_bricks.lifestyles.find((l) => l.id === lsId).monthlyCost, (2000 + 100) * 1.1, 'plain % applies to base + options');
+    await gm.send('actor/updateItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: lsId, patch: { baseCost: 3000 } });
+    await gm.send('actor/removeSubItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: lsId, sub: 'qualities', subId: q1 });
+    await settle();
+    ls = gm.state.actors.pc_bricks.lifestyles;
+    assert.equal(ls.find((l) => l.id === lsId).monthlyCost, 3100);
+    if (ls.length > 1) {
+      const other = ls.find((l) => l.id !== lsId);
+      await gm.send('actor/updateItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: other.id, patch: { primary: true } });
+      await settle();
+      assert.deepEqual(gm.state.actors.pc_bricks.lifestyles.filter((l) => l.primary).map((l) => l.id), [other.id], 'primary moved');
+    }
+    // Players see their lifestyles but cannot touch them.
+    assert.ok(p2.state.actors.pc_bricks.lifestyles.some((l) => l.id === lsId));
+    await rejects(p2.send('actor/addSubItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: lsId, sub: 'qualities', item: { name: 'X' } }));
+    await rejects(p2.send('actor/updateItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: lsId, patch: { monthsPaid: 12 } }), /MJ|modifier/);
+    await gm.send('actor/removeItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: lsId });
+    await settle();
+    assert.equal(gm.state.actors.pc_bricks.lifestyles.length, before);
+    if (before) assert.equal(gm.state.actors.pc_bricks.lifestyles.filter((l) => l.primary).length, 1);
+  });
+  await test('weapon accessories, armor mods, vehicle mods: nested CRUD (GM only) with validation', async () => {
+    const w = gm.state.actors.pc_jane.weapons.find((x) => x.kind === 'ranged');
+    const accId = await gm.send('actor/addSubItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, sub: 'accessories', item: { name: 'Laser Sight', mount: 'Top', cost: '125', avail: '2', effects: { accuracy: 1, junk: 'x' } } });
+    await settle();
+    let acc = gm.state.actors.pc_jane.weapons.find((x) => x.id === w.id).accessories.find((x) => x.id === accId);
+    assert.deepEqual({ name: acc.name, mount: acc.mount, cost: acc.cost, effects: acc.effects }, { name: 'Laser Sight', mount: 'Top', cost: 125, effects: { accuracy: 1 } });
+    await gm.send('actor/updateSubItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, sub: 'accessories', subId: accId, patch: { mount: 'Nowhere', effects: { rc: 2 } } });
+    await settle();
+    acc = gm.state.actors.pc_jane.weapons.find((x) => x.id === w.id).accessories.find((x) => x.id === accId);
+    assert.equal(acc.mount, '');
+    assert.deepEqual(acc.effects, { rc: 2 });
+    assert.ok(p1.state.actors.pc_jane.weapons.find((x) => x.id === w.id).accessories.some((x) => x.id === accId), 'owner sees it');
+    await rejects(p1.send('actor/removeSubItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, sub: 'accessories', subId: accId }));
+    await rejects(p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, patch: { accessories: [] } }), /modifier/);
+    await rejects(gm.send('actor/addSubItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, sub: 'qualities', item: { name: 'x' } }), /Sous-liste inconnue/);
+    await rejects(gm.send('actor/addSubItem', { actorId: 'pc_jane', list: 'gear', itemId: w.id, sub: 'mods', item: { name: 'x' } }), /Sous-liste inconnue/);
+    await rejects(gm.send('actor/updateSubItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, sub: 'accessories', subId: 'nope', patch: {} }), /introuvable/);
+    await gm.send('actor/removeSubItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, sub: 'accessories', subId: accId });
+    await settle();
+    assert.ok(!gm.state.actors.pc_jane.weapons.find((x) => x.id === w.id).accessories.some((x) => x.id === accId));
+    const ar = gm.state.actors.pc_jane.armor[0];
+    const modId = await gm.send('actor/addSubItem', { actorId: 'pc_jane', list: 'armor', itemId: ar.id, sub: 'mods', item: { name: 'Gel Packs', capacity: 0, cost: 1500, effects: { armor: 2 } } });
+    await settle();
+    assert.deepEqual(gm.state.actors.pc_jane.armor[0].mods.find((m) => m.id === modId).effects, { armor: 2 });
+    await gm.send('actor/removeSubItem', { actorId: 'pc_jane', list: 'armor', itemId: ar.id, sub: 'mods', subId: modId });
+    const vid = await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'vehicles', item: { name: 'Moto', mods: [{ name: 'Run-Flat Tires', slots: 0, rating: 1, category: 'All', cost: 250 }] } });
+    await settle();
+    const v = gm.state.actors.pc_jane.vehicles.find((x) => x.id === vid);
+    assert.ok(v.mods[0].id && v.mods[0].name === 'Run-Flat Tires' && v.mods[0].rating === 1, 'mods sanitized and given ids by addItem');
+    await gm.send('actor/removeItem', { actorId: 'pc_jane', list: 'vehicles', itemId: vid });
+  });
+  await test('martial arts and techniques', async () => {
+    const id = await gm.send('actor/addItem', { actorId: 'pc_anthony', list: 'martialArts', item: { name: 'Kenjutsu', catalogId: 'abc', rating: 0 } });
+    const tq = await gm.send('actor/addSubItem', { actorId: 'pc_anthony', list: 'martialArts', itemId: id, sub: 'techniques', item: { name: 'Riposte', nameFr: 'Riposte' } });
+    await settle();
+    const ma = gm.state.actors.pc_anthony.martialArts.find((m) => m.id === id);
+    assert.equal(ma.rating, 1);
+    assert.deepEqual(ma.techniques.map((x) => [x.id, x.name]), [[tq, 'Riposte']]);
+    await gm.send('actor/removeItem', { actorId: 'pc_anthony', list: 'martialArts', itemId: id });
   });
 
   console.log('Duplicate / delete / import');

@@ -1,0 +1,341 @@
+{
+ "_comment": "Upgrades the characters had in Chummer (Shadowrun_chum5_files, historic) and lost on the way Chummer → Foundry → app. Applied once per actor by the shop module (server/modules/40-shop.js restoreUpgrades) and, on a running table, by tools/restore-lifestyles.js (lifestyles only). note = notes of the restored sub-items; lifestyleNote = appended to the primary lifestyle notes; inferred = not from a Chummer file. Generated, then reviewed by hand (see ../Shadowrun/historique-chummer.md).",
+ "actors": {
+  "pc_jane": {
+   "actorName": "Jane",
+   "chummerFile": "Jane_Active.chum5",
+   "chummerDate": "01/08/2020",
+   "note": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier",
+   "lifestyle": {
+    "match": "Best Home",
+    "base": "Medium",
+    "qualities": [
+     "4f2d39cd-fbc7-4d02-a3eb-f8decdb9a415",
+     "4fb84713-6171-409d-ad7c-ccbc44b891ad",
+     "eeb6f3b7-70b3-478b-88c6-af47bb233b44",
+     "c5eef5c6-288a-47c0-8d2a-42353a896077"
+    ]
+   },
+   "weapons": [
+    {
+     "catalogId": "7d5bcc0b-9ec2-4c87-aaa7-a4d531d7974e",
+     "match": "Defiance EX Shocker",
+     "accessories": [
+      {
+       "id": "ea64527d-0e1e-4248-957b-7c02d79dad30",
+       "name": "Concealed Quick-Draw Holster",
+       "mount": ""
+      }
+     ]
+    },
+    {
+     "catalogId": "50cec60d-a421-4edd-9baa-d10bfbc08e70",
+     "match": "Ares Desert Strike",
+     "accessories": [
+      {
+       "id": "46596db4-6f25-4990-80cc-c4102eaf80f7",
+       "name": "Shock Pad",
+       "mount": "Internal",
+       "included": true
+      },
+      {
+       "id": "2905095e-937e-4dbc-aa56-3b66676e1559",
+       "name": "Imaging Scope",
+       "mount": "Internal",
+       "included": true
+      }
+     ]
+    },
+    {
+     "catalogId": "622bd915-0e0c-431b-9da5-e0c0c31e2122",
+     "match": "Enfield AS-7",
+     "accessories": [
+      {
+       "id": "521f9c2e-dfb2-42a6-b707-9808ae4885de",
+       "name": "Laser Sight",
+       "mount": "Internal",
+       "included": true
+      }
+     ]
+    }
+   ],
+   "armor": [
+    {
+     "match": "Actioneer",
+     "ratingIncludesMods": true,
+     "mods": [
+      {
+       "id": "9ee8e6ad-2472-485d-ae42-d1978749b456",
+       "name": "Electrochromic Clothing"
+      },
+      {
+       "id": "ed43ded4-1b2f-410a-9322-166c39306d03",
+       "name": "Gel Packs"
+      }
+     ]
+    },
+    {
+     "match": "Heritage 12",
+     "ratingIncludesMods": true,
+     "mods": [
+      {
+       "id": "480b7c5d-758b-4833-8bfd-9487e2455f7d",
+       "name": "Chemical Protection",
+       "rating": 6
+      },
+      {
+       "id": "cf8accf5-4117-4419-ab73-957489038ab9",
+       "name": "YNT Softweave Armor"
+      },
+      {
+       "id": "851f226f-2116-4001-8937-408d4570396e",
+       "name": "AR Fashion"
+      },
+      {
+       "id": "ed43ded4-1b2f-410a-9322-166c39306d03",
+       "name": "Gel Packs"
+      },
+      {
+       "id": "0cfb049a-a1bd-4daa-96be-9468c37d9c3c",
+       "name": "Nonconductivity",
+       "rating": 3
+      },
+      {
+       "id": "9ee8e6ad-2472-485d-ae42-d1978749b456",
+       "name": "Electrochromic Clothing"
+      }
+     ]
+    },
+    {
+     "match": "Second Skin",
+     "ratingIncludesMods": true,
+     "mods": [
+      {
+       "id": "b5283cb0-3676-44d3-a7e9-dee099416295",
+       "name": "Radiation Shielding",
+       "rating": 2
+      }
+     ]
+    }
+   ]
+  },
+  "pc_bricks": {
+   "actorName": "Bricks",
+   "chummerFile": "Bricks_active.chum5",
+   "chummerDate": "07/07/2026",
+   "note": "Restauré depuis Chummer (fichier du 07/07/2026) — à vérifier",
+   "lifestyle": {
+    "match": "Seattle Downtown Outskirts",
+    "base": "Medium",
+    "qualities": [
+     "4f2d39cd-fbc7-4d02-a3eb-f8decdb9a415"
+    ]
+   },
+   "weapons": [
+    {
+     "catalogId": "f5ae45ef-f4f6-4d9a-873f-81e4ee973dc1",
+     "match": "Beretta Northstar",
+     "accessories": [
+      {
+       "id": "d2a1cc9b-72e3-49df-957c-8ed6fb47a813",
+       "name": "Additional Clip/Magazine",
+       "mount": "Internal",
+       "included": true
+      },
+      {
+       "id": "d57d2c64-1f61-4f5f-a465-8ce0dfacec6a",
+       "name": "Smartgun System, Internal",
+       "mount": "Internal",
+       "included": true
+      }
+     ]
+    }
+   ]
+  },
+  "pc_anklay": {
+   "actorName": "Ank’ Lay",
+   "chummerFile": "Ank_Lay_Active.chum5",
+   "chummerDate": "09/05/2020",
+   "note": "Restauré depuis Chummer (fichier du 09/05/2020) — à vérifier",
+   "lifestyle": {
+    "match": "Home",
+    "base": "Low",
+    "qualities": []
+   },
+   "armor": [
+    {
+     "match": "Executive Suite",
+     "ratingIncludesMods": true,
+     "mods": [
+      {
+       "id": "9ee8e6ad-2472-485d-ae42-d1978749b456",
+       "name": "Electrochromic Clothing"
+      },
+      {
+       "id": "cf8accf5-4117-4419-ab73-957489038ab9",
+       "name": "YNT Softweave Armor"
+      },
+      {
+       "id": "0cfb049a-a1bd-4daa-96be-9468c37d9c3c",
+       "name": "Nonconductivity",
+       "rating": 3
+      },
+      {
+       "id": "80effbdd-047d-4b1f-8159-f13f86bba4e6",
+       "name": "Grey Mana Integration",
+       "rating": 3
+      }
+     ]
+    },
+    {
+     "match": "Argentum",
+     "ratingIncludesMods": true,
+     "mods": [
+      {
+       "id": "9ee8e6ad-2472-485d-ae42-d1978749b456",
+       "name": "Electrochromic Clothing"
+      },
+      {
+       "id": "cf8accf5-4117-4419-ab73-957489038ab9",
+       "name": "YNT Softweave Armor"
+      },
+      {
+       "id": "dbdaf817-9bfa-4938-a195-b53c63b53e7c",
+       "name": "Shock Frills"
+      },
+      {
+       "id": "ed43ded4-1b2f-410a-9322-166c39306d03",
+       "name": "Gel Packs"
+      },
+      {
+       "id": "497b5d6b-df0c-401d-91de-42a224b1fa87",
+       "name": "Insulation",
+       "rating": 6
+      },
+      {
+       "id": "dd246520-7306-40fb-88b4-c9cb031208fc",
+       "name": "Fire Resistance",
+       "rating": 6
+      },
+      {
+       "id": "5a0965bd-759c-4e41-8c47-2b87c9de06d6",
+       "name": "Auto-Injector"
+      },
+      {
+       "id": "480b7c5d-758b-4833-8bfd-9487e2455f7d",
+       "name": "Chemical Protection",
+       "rating": 5
+      }
+     ]
+    },
+    {
+     "match": "Second Skin",
+     "ratingIncludesMods": true,
+     "mods": [
+      {
+       "id": "b5283cb0-3676-44d3-a7e9-dee099416295",
+       "name": "Radiation Shielding",
+       "rating": 2
+      }
+     ]
+    }
+   ]
+  },
+  "pc_christopher": {
+   "actorName": "Christopher Armingstar",
+   "chummerFile": "Christopher_Armingstar_Active.chum5",
+   "chummerDate": "01/08/2020",
+   "note": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier",
+   "weapons": [
+    {
+     "catalogId": "6366691e-c1e0-4d5e-b7a6-1c0371708714",
+     "match": "Colt Government 2066",
+     "accessories": [
+      {
+       "id": "521f9c2e-dfb2-42a6-b707-9808ae4885de",
+       "name": "Laser Sight",
+       "mount": "Top"
+      },
+      {
+       "id": "0da6149e-982f-4051-825b-52c1b79c7e52",
+       "name": "Silencer/Suppressor",
+       "mount": "Barrel"
+      }
+     ]
+    },
+    {
+     "catalogId": "93722378-dcb6-4988-ba4e-54ce545644fe",
+     "match": "Ares Light Fire 75",
+     "accessories": [
+      {
+       "id": "d57d2c64-1f61-4f5f-a465-8ce0dfacec6a",
+       "name": "Smartgun System, Internal",
+       "mount": "Internal",
+       "included": true
+      },
+      {
+       "id": "7f66a669-917a-4423-bd83-cf0e0a1fb2a8",
+       "name": "Concealable Holster",
+       "mount": ""
+      }
+     ]
+    },
+    {
+     "catalogId": "656906d8-b6a4-47a2-9554-de365097eba0",
+     "match": "Combat Knife",
+     "accessories": [
+      {
+       "id": "7f66a669-917a-4423-bd83-cf0e0a1fb2a8",
+       "name": "Concealable Holster",
+       "mount": ""
+      }
+     ]
+    }
+   ],
+   "armor": [
+    {
+     "match": "Heritage 12",
+     "ratingIncludesMods": true,
+     "mods": [
+      {
+       "id": "9ee8e6ad-2472-485d-ae42-d1978749b456",
+       "name": "Electrochromic Clothing"
+      },
+      {
+       "id": "dd246520-7306-40fb-88b4-c9cb031208fc",
+       "name": "Fire Resistance",
+       "rating": 2
+      }
+     ]
+    },
+    {
+     "match": "Greatcoat",
+     "ratingIncludesMods": true,
+     "mods": [
+      {
+       "id": "9ee8e6ad-2472-485d-ae42-d1978749b456",
+       "name": "Electrochromic Clothing"
+      },
+      {
+       "id": "dbdaf817-9bfa-4938-a195-b53c63b53e7c",
+       "name": "Shock Frills"
+      }
+     ]
+    }
+   ],
+   "lifestyleNote": "Historique Chummer (fichier du 01/08/2020) : « The Hut », Moyen (points RF Confort 3 / Sécurité 4 / Voisinage 5) avec Endroit dangereux (−20 %), Contrat DocWagon (Or) 2 083 ¥, Garage (gros véhicule, Body 5+) 100 ¥ (pour l’Ares Roadmaster), Pilier de bar (The Jeffrey’s) 25 ¥ — 6 248 ¥/mois. Non restauré : la fiche actuelle (Foundry) a « The Lounge » (Haut), conservé."
+  },
+  "pc_anthony": {
+   "actorName": "Anthony Von Schloss",
+   "inferred": true,
+   "note": "Déduit du loyer Foundry (7 083 ¥ = Moyen 5 000 ¥ + DocWagon Or 2 083 ¥), aucun fichier Chummer — à vérifier",
+   "lifestyle": {
+    "match": "Anthony's lifestyle",
+    "base": "Medium",
+    "qualities": [
+     "4f2d39cd-fbc7-4d02-a3eb-f8decdb9a415"
+    ]
+   }
+  }
+ }
+}

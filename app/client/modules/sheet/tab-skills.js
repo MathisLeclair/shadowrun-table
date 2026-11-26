@@ -7,6 +7,7 @@ import { t, attrShort, skillLabel, skillGroupLabel, skillCategoryLabel, getLang,
 import { ListEditor } from './editors.js';
 import { KNOWLEDGE_TYPES, knowledgeAttr } from './sheet-data.js';
 import { skillName } from './common.js';
+import { SkillRef, RuleRef } from '../books/BookRef.js';
 
 const attrOptions = () => ['AGI', 'BOD', 'REA', 'STR', 'CHA', 'INT', 'LOG', 'WIL', 'MAG', 'RES'].map((k) => ({ value: k, label: attrShort(k) }));
 
@@ -32,7 +33,7 @@ function SkillRow({ s, sk, def, ghost }) {
   const disabled = res.impossible;
   return html`<tr class=${'sh-skill' + (ghost ? ' ghost' : '') + (disabled ? ' disabled' : '')} onClick=${disabled ? null : () => s.roll({ skillId: sk?.id || def.id })}
     title=${disabled ? t('Ne peut pas être utilisée sans formation') : t('Lancer {name}', { name })}>
-    <td><span class="sh-skill-name">${name}</span>${def?.group ? html` <span class="faint small">${skillGroupLabel(def.group)}</span>` : null}
+    <td><span class="sh-skill-name">${name}</span> <${SkillRef} id=${sk?.id || def?.id} />${def?.group ? html` <span class="faint small">${skillGroupLabel(def.group)}</span>` : null}
       ${sk?.notes ? html` <span class="badge badge-amber" title=${sk.notes}>${sk.notes}</span>` : null}</td>
     <td class="muted small">${attrShort(at)} ${attr(actor, at)}</td>
     <td class="num-cell">${ghost ? '—' : sk.rating}</td>
@@ -99,7 +100,7 @@ export function SkillsTab({ s }) {
       )}
     </div>
 
-    <h4 class="section-title">${t('Connaissances & langues')}</h4>
+    <h4 class="section-title">${t('Connaissances & langues')} <${RuleRef} rule="knowledgeSkills" /></h4>
     ${edit
       ? html`<${ListEditor} actor=${actor} list="knowledge" />`
       : knowledge.length

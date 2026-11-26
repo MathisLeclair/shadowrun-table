@@ -3,13 +3,16 @@
 import { SKILL_BY_ID, METATYPES } from '../../../shared/sr5.js';
 import { findCatalog, norm } from './catalog.js';
 import { htmlToMarkdown } from './html2md.js';
+import { monthlyCost } from '../../../shared/lifestyle.js';
+import { chummerEval } from '../chummer/parse.js';
 
 export const ATTR_KEYS = { body: 'BOD', agility: 'AGI', reaction: 'REA', strength: 'STR', willpower: 'WIL', logic: 'LOG', intuition: 'INT', charisma: 'CHA', edge: 'EDG', magic: 'MAG', resonance: 'RES', essence: 'ESS' };
 const CORE = ['BOD', 'AGI', 'REA', 'STR', 'WIL', 'LOG', 'INT', 'CHA'];
 export const METATYPE_FR = { human: 'Humain', elf: 'Elfe', dwarf: 'Nain', ork: 'Ork', orc: 'Ork', troll: 'Troll' };
 const KNOW_TYPES = { street: 'street', academic: 'academic', professional: 'professional', interests: 'interest', interest: 'interest' };
-const LIFESTYLE_FR = { street: 'Rue', squatter: 'Squatteur', low: 'Bas', medium: 'Moyen', middle: 'Moyen', high: 'Haut', luxury: 'Luxe', other: 'Autre' };
-const LIFESTYLE_COST = { street: 0, squatter: 500, low: 2000, medium: 5000, middle: 5000, high: 10000, luxury: 100000 };
+const LIFESTYLE_BASE = { street: 'Street', squatter: 'Squatter', low: 'Low', medium: 'Medium', middle: 'Medium', high: 'High', luxury: 'Luxury', commercial: 'Commercial', traveler: 'Traveler', bolt_hole: 'Bolt Hole', hospitalized: 'Hospitalized' };
+const LIFESTYLE_COST = { street: 0, squatter: 500, low: 2000, medium: 5000, middle: 5000, high: 10000, luxury: 100000, commercial: 8000, traveler: 3000, bolt_hole: 1000, hospitalized: 500 };
+const MOUNTS = { top: 'Top', under: 'Under', barrel: 'Barrel', stock: 'Stock', side: 'Side', internal: 'Internal' };
 const SPELL_CAT = { combat: 'Combat', detection: 'Détection', health: 'Santé', illusion: 'Illusion', manipulation: 'Manipulation', enchantment: 'Enchantement', ritual: 'Rituel' };
 const SPELL_RANGE = { los: 'LDV', los_a: 'LDV (Z)', touch: 'Contact', self: 'Personnel', self_a: 'Personnel (Z)', special: 'Spécial' };
 const SPELL_DUR = { instant: 'I', sustained: 'M', permanent: 'P', always: 'Toujours', special: 'Spécial' };
@@ -96,7 +99,7 @@ function knownBoosts(items) {
   return { rea, dice };
 }
 
-function weaponOf(it) {
+function weaponOf(it, physical = null) {
   const s = it.system || {};
   const a = s.action || {};
   const cat = String(s.category || '');
@@ -133,7 +136,7 @@ function weaponOf(it) {
     category: s.subcategory ? hit?.entry?.categoryFr || s.subcategory : hit?.entry?.categoryFr || (melee ? 'Corps à corps' : cat === 'thrown' ? 'Arme de jet' : 'Arme à distance'),
     kind: melee ? 'melee' : 'ranged',
     skill: isUnarmed ? 'unarmed_combat' : skill,
-    accuracy: num(a.limit?.base, 0) || num(a.limit?.value, 0) || (cs.accuracy ?? ''),
+    accuracy: '', // below
     damage,
     ap: num(dmg.ap?.base, 0),
     mode: melee ? '' : mode || cs.mode || '',
@@ -143,8 +146,68 @@ function weaponOf(it) {
   };
   if (tech(it).equipped) out.equipped = true;
   if (hit) out.catalogId = hit.entry.id;
+  const accessories = embedded(it, 'weapon').map(accessoryOf);
+  if (accessories.length) out.accessories = accessories;
+  // Accuracy = the BASE value (accessories add theirs: shared/modifiers.js weaponAccuracy). Unarmed / thrown weapons and grenades use
+  // the physical limit, which Foundry stores as a number: kept as « Physical » (± the difference) so it follows STR / BOD / REA and
+  // the physical-limit modifiers. limit.value (accessories included) only when no accessory carries an Accuracy bonus.
+  const limBase = num(a.limit?.base, 0);
+  if (isUnarmed || cat === 'thrown' || /phys/i.test(String(cs.accuracy ?? ''))) {
+    // Unarmed: Foundry keeps a placeholder (5 on most NPCs) → plain « Physical »; thrown weapons keep a small difference (Boomerang −1).
+    const diff = physical && limBase && !isUnarmed ? limBase - physical : 0;
+    out.accuracy = /phys/i.test(String(cs.accuracy ?? '')) ? String(cs.accuracy) : diff && Math.abs(diff) <= 2 ? `Physical${diff > 0 ? '+' : ''}${diff}` : 'Physical';
+  } else {
+    const accBonus = accessories.some((x) => Number(x.effects?.accuracy));
+    out.accuracy = limBase || (accBonus ? 0 : num(a.limit?.value, 0)) || (cs.accuracy ?? '');
+  }
+  const mounts = hit?.entry?.stats?.mounts || hit?.entry?.mounts;
+  if (Array.isArray(mounts) && mounts.length) out.mounts = mounts.filter((m) => Object.values(MOUNTS).includes(m));
   if (notes.length) out.notes = notes.join(' · ');
   return out;
+}
+
+/** Modifications embedded in a Foundry item (flags.shadowrun5e.embeddedItems, type 'modification'). */
+function embedded(it, kind) {
+  const list = it.flags?.shadowrun5e?.embeddedItems;
+  return (Array.isArray(list) ? list : []).filter((e) => e && typeof e === 'object' && e.type === 'modification' && (!kind || !e.system?.type || e.system.type === kind));
+}
+
+/** Common fields of an embedded modification: { id, name, nameFr?, catalogId?, rating?, cost, avail, notes? }. */
+function modHead(e, file, i) {
+  const hit = findCatalog(e.name, file);
+  const t = e.system?.technology || {};
+  const rating = Math.round(num(t.rating, 0));
+  const out = { id: `fvtt_${e._id || `m${i}`}`, name: e.name };
+  if (hit?.entry?.nameFr) out.nameFr = hit.entry.nameFr;
+  if (hit) out.catalogId = hit.entry.id;
+  if (rating > 0) out.rating = rating;
+  out.cost = num(t.cost, 0) || num(hit?.entry?.cost, 0);
+  out.avail = String(t.availability ?? hit?.entry?.avail ?? '');
+  if (src(e)) out.notes = src(e);
+  return { out, hit };
+}
+
+/** Foundry weapon modification → weapon.accessories[] item. */
+function accessoryOf(e, i) {
+  const { out, hit } = modHead(e, 'accessories', i);
+  const m = e.system?.mod_weapon || {};
+  const cs = hit?.entry?.stats || {};
+  const effects = {};
+  if (/smartgun/i.test(e.name)) effects.smartgun = true;
+  else if (num(m.accuracy, 0) || num(cs.accuracy, 0)) effects.accuracy = num(m.accuracy, 0) || num(cs.accuracy, 0);
+  if (num(m.rc, 0) || num(cs.rc, 0)) effects.rc = num(m.rc, 0) || num(cs.rc, 0);
+  if (num(m.dice_pool, 0)) effects.dicePool = num(m.dice_pool, 0);
+  const mount = MOUNTS[String(m.mount_point || '').toLowerCase()] || String(cs.mount || '').split('/')[0] || '';
+  return { ...out, mount: Object.values(MOUNTS).includes(mount) ? mount : '', effects };
+}
+
+/** Foundry armor modification → armor.mods[] item. */
+function armorModOf(e, i, armorCapacity = 0) {
+  const { out, hit } = modHead(e, 'armormods', i);
+  const armor = num(e.system?.mod_armor?.value, 0);
+  const capRaw = hit?.entry?.stats?.capacity ?? hit?.entry?.capacity;
+  const cap = typeof capRaw === 'number' ? capRaw : chummerEval(capRaw, { Rating: out.rating || 1, Capacity: armorCapacity }) ?? 0;
+  return { ...out, capacity: cap, ...(armor ? { effects: { armor } } : {}) };
 }
 
 function deviceAtts(it) {
@@ -274,7 +337,10 @@ export function convertSheet(fa, ctx = {}) {
     });
 
   // --- Weapons, armor, augmentations
-  const weapons = items.filter((x) => x.type === 'weapon').map(weaponOf);
+  // Physical limit (SR5 p. 46) with the augmented attributes (+4 max), for the thrown weapons' « Physical » accuracy.
+  const effAttr = (k) => (attributes[k] || 1) + Math.min(4, augmented[k] || 0);
+  const physicalLimit = Math.ceil((effAttr('STR') * 2 + effAttr('BOD') + effAttr('REA')) / 3);
+  const weapons = items.filter((x) => x.type === 'weapon').map((x) => weaponOf(x, physicalLimit));
   const armor = [];
   const gear = [];
   for (const it of items.filter((x) => x.type === 'armor')) {
@@ -286,7 +352,21 @@ export function convertSheet(fa, ctx = {}) {
       gear.push({ id: fid(it), name, category: 'Vêtements', qty: Math.max(1, num(tech(it).quantity, 1)), ...(hit ? { catalogId: hit.entry.id } : {}), notes: it.name !== name ? it.name : undefined });
       continue;
     }
-    armor.push({ id: fid(it), _en: it.name, name, rating, equipped: !!tech(it).equipped, stack: !!a.accessory, ...(it.name !== name ? { notes: it.name } : {}), ...(hit ? { catalogId: hit.entry.id } : {}) });
+    const capacity = num(hit?.entry?.stats?.capacity, 0);
+    const mods = embedded(it, 'armor').map((e, i) => armorModOf(e, i, capacity));
+    // shared/sr5.js armorTotal adds mods[].effects.armor to the rating: only when the rating is Foundry's base value
+    // (armor.value is the total, mods included — no second count).
+    if (!num(a.base, 0)) {
+      for (const m of mods) {
+        if (!m.effects) continue;
+        delete m.effects.armor;
+        if (!Object.keys(m.effects).length) delete m.effects;
+      }
+    }
+    armor.push({
+      id: fid(it), _en: it.name, name, rating, equipped: !!tech(it).equipped, stack: !!a.accessory, ...(capacity ? { capacity } : {}), ...(mods.length ? { mods } : {}),
+      ...(it.name !== name ? { notes: it.name } : {}), ...(hit ? { catalogId: hit.entry.id } : {}),
+    });
   }
   const augmentations = ware.concat(items.filter((it) => (it.type === 'cyberware' || it.type === 'bioware') && tech(it).equipped === false)).map((it) => {
     const hit = findCatalog(it.name, ['cyberware', 'bioware']);
@@ -363,13 +443,39 @@ export function convertSheet(fa, ctx = {}) {
         licenses: (it.system?.licenses || []).filter((l) => l && String(l.name || '').trim()).map((l) => `${String(l.name).trim()}${num(l.rtg) ? ` (${l.rtg})` : ''}`),
       };
     });
-  const ls = items.find((x) => x.type === 'lifestyle');
-  let lifestyle;
-  if (ls) {
-    const t = String(ls.system?.type || '').toLowerCase();
-    const cost = num(ls.system?.cost, 0) || LIFESTYLE_COST[t] || 0;
-    lifestyle = { name: `${ls.name}${LIFESTYLE_FR[t] ? ` (${LIFESTYLE_FR[t]})` : ''}`, monthlyCost: cost, monthsPaid: Math.max(0, Math.round(num(ls.system?.paid, 1))) };
-  }
+  // Lifestyles (Foundry: type, cost = total per month when set, comforts/security/neighborhood points, mods = upgrades)
+  const lifestyles = items.filter((x) => x.type === 'lifestyle').map((ls, i) => {
+    const sy = ls.system || {};
+    const t = String(sy.type || '').toLowerCase().replace(/\s+/g, '_');
+    const base = LIFESTYLE_BASE[t] || 'Medium';
+    const hit = findCatalog(base, 'lifestyles');
+    const points = Object.fromEntries(['comforts', 'security', 'neighborhood'].filter((k) => num(sy[k], 0) > 0).map((k) => [k, Math.round(num(sy[k], 0))]));
+    const qualities = (Array.isArray(sy.mods) ? sy.mods : []).map((m, j) => {
+      const nm = typeof m === 'string' ? m : String(m?.name || '');
+      if (!nm.trim()) return null;
+      const q = findCatalog(nm, 'lifestylequalities');
+      const st = q?.entry?.stats || {};
+      return {
+        id: `fvtt_${ls._id}_q${j}`, name: q?.entry?.name || nm.trim(), ...(q?.entry?.nameFr ? { nameFr: q.entry.nameFr } : {}), ...(q ? { catalogId: q.entry.id } : {}),
+        category: q?.entry?.category || '', cost: num(typeof m === 'object' ? m.cost : undefined, num(q?.entry?.cost, 0)), multiplier: num(st.multiplier, 0),
+        ...(st.baseOnly ? { baseOnly: true } : {}), ...(st.lp !== undefined ? { lp: num(st.lp, 0) } : {}),
+      };
+    }).filter(Boolean);
+    // Foundry `cost` is the TOTAL per month (options included): with options, the base is the catalog's and the
+    // options are added back by monthlyCost(); without options, that total becomes the base cost.
+    const total = num(sy.cost, 0);
+    const catalogBase = num(hit?.entry?.cost, LIFESTYLE_COST[t] || 0);
+    const l = {
+      id: fid(ls), name: ls.name, base, ...(hit ? { catalogId: hit.entry.id } : {}), baseCost: total && !qualities.length ? total : catalogBase || total,
+      monthsPaid: Math.max(0, Math.round(num(sy.paid, 1))), primary: i === 0, ...(Object.keys(points).length ? { points } : {}), qualities,
+      notes: [
+        sy.permanent ? 'Permanent' : '', num(sy.guests, 0) ? `Invités : ${sy.guests}` : '',
+        total ? (qualities.length ? `Coût mensuel Foundry : ${total} ¥ (options recalculées)` : 'Coût mensuel total repris de Foundry') : '',
+      ].filter(Boolean).join(' · '),
+    };
+    l.monthlyCost = Math.round(Number(monthlyCost(l)) || 0);
+    return l;
+  });
 
   // --- Vision
   const vision = {};
@@ -392,6 +498,14 @@ export function convertSheet(fa, ctx = {}) {
   const edge = { current: Math.max(0, num(attributes.EDG, 0) - Math.max(0, Math.round(num(at.edge?.uses, 0)))) };
   const karma = Math.round(num(s.karma?.value, 0));
   const karmaTotal = Math.max(karma, Math.round(num(s.karma?.max, 0)));
+
+  // Rulebook references (system.description.source « SR5 435 ») by app item id: applied by importer.js AFTER the merge
+  // snapshot (server/lib/bookrefs.js fillActorRefs), so they never make an unchanged Foundry item look changed.
+  const itemSources = {};
+  for (const it of items) {
+    if (src(it)) itemSources[fid(it)] = src(it);
+    for (const e of embedded(it)) if (e._id && src(e)) itemSources[`fvtt_${e._id}`] = src(e);
+  }
 
   const portraitSrc = String(fa.img || '');
   const portrait = portraitSrc && !/^icons\//.test(portraitSrc) && !/mystery-man/.test(portraitSrc) && ctx.asset ? ctx.asset(portraitSrc, 'img') : '';
@@ -417,7 +531,7 @@ export function convertSheet(fa, ctx = {}) {
     ...(matrix ? { matrix } : {}),
     contacts,
     sins,
-    ...(lifestyle ? { lifestyle } : {}),
+    lifestyles,
     karma,
     karmaTotal,
     nuyen: Math.round(num(s.nuyen, 0)),
@@ -428,6 +542,7 @@ export function convertSheet(fa, ctx = {}) {
     portrait,
     description: md(s.description?.value, ctx),
     gmNotesExtra: notesGm.join('\n'),
+    itemSources,
   };
 }
 

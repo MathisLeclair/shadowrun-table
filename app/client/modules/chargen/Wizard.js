@@ -4,6 +4,8 @@ import { html, Button, Select, Field, Panel, confirmAction } from '../../lib/ui.
 import { send } from '../../lib/net.js';
 import { toast, openSheet } from '../../lib/ui-store.js';
 import { STEPS, normalizeDraft, emptyDraft } from '/shared/chargen.js';
+import { CHARGEN_STEP_REFS } from '/shared/bookrefs.js';
+import { BookRef } from '../books/BookRef.js';
 import { t, tn, fmtNumber, compare, metatypeLabel } from '../../lib/i18n.js';
 import { useRulesCtx, useComputed, produce, StatusBadge, timeAgo, nuyen } from './common.js';
 import { StepConcept, StepPriorities, StepMetatype, StepAttributes } from './steps-basics.js';
@@ -152,7 +154,7 @@ export default function Wizard({ game, draft, onExit }) {
     <main class="cg-main">
       <header class="cg-head">
         <div class="row wrap spread">
-          <h2>${stepIdx + 1}. ${t(step.label)}</h2>
+          <h2>${stepIdx + 1}. ${t(step.label)} ${CHARGEN_STEP_REFS[step.id] ? html`<${BookRef} source=${CHARGEN_STEP_REFS[step.id].source} page=${CHARGEN_STEP_REFS[step.id].page} />` : null}</h2>
           <div class="cg-head-pills">
             <span class=${'cg-pill ' + pillState(r.spent.attrPoints, r.budgets.attrPoints)} title=${t('Points d’attributs')}>${t('Attr {used}/{total}', { used: r.spent.attrPoints, total: r.budgets.attrPoints })}</span>
             <span class=${'cg-pill ' + pillState(r.spent.specialPoints, r.budgets.specialPoints)} title=${t('Points d’attributs spéciaux')}>${t('Spé {used}/{total}', { used: r.spent.specialPoints, total: r.budgets.specialPoints })}</span>

@@ -10,16 +10,17 @@ import { fileURLToPath } from 'node:url';
 import { uid, deepClone } from '../../shared/util.js';
 import { normalizeDraft, compute, buildActor, draftHeadline, NUYEN_PARAMS } from '../../shared/chargen.js';
 import { generateEncounter, ARCHETYPE_BY_ID, METATYPE_CHOICES, GENERATED_FOLDER } from '../../shared/npcgen.js';
-import { quote, evalFormula, targetList, DEVICE_GEAR } from '../../client/modules/shop/rules.js';
+import { quote, evalFormula, targetList, DEVICE_GEAR, accessoryFit, armorModFit, armorCapacity, upgradeAvail, accessoryEffects } from '../../client/modules/shop/rules.js';
 import { normalizeActor } from '../../client/modules/sheet/sheet-data.js';
 import combat, { sanitizeTemplate } from './30-combat.js';
 import { formatFr } from '../lib/i18n.js';
+import { fillActorRefs } from '../lib/bookrefs.js';
 
 /** Marks a translatable key for tools/i18n-check.js (English in client/i18n/en/chargen.json). */
 const tk = (s) => s;
 
 const CATALOG_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'data', 'catalog');
-const FILES = ['weapons', 'armor', 'gear', 'cyberware', 'bioware', 'vehicles', 'programs', 'lifestyles', 'qualities', 'spells', 'powers'];
+const FILES = ['weapons', 'armor', 'gear', 'cyberware', 'bioware', 'vehicles', 'programs', 'lifestyles', 'qualities', 'spells', 'powers', 'accessories', 'armormods'];
 const STATUSES = ['draft', 'pending', 'approved', 'rejected'];
 const MAX_DRAFTS_PER_PLAYER = 8;
 const MAX_DRAFTS = 150;
@@ -51,7 +52,7 @@ function loadCatalogs() {
 }
 loadCatalogs();
 
-const RULES = { quote, evalFormula, targetList, DEVICE_GEAR };
+const RULES = { quote, evalFormula, targetList, DEVICE_GEAR, accessoryFit, armorModFit, armorCapacity, upgradeAvail, accessoryEffects };
 function rulesCtx(state) {
   return { lookup: (id) => BY_ID.get(id) || null, rules: RULES, settings: state.chargen?.settings || {} };
 }
@@ -152,6 +153,7 @@ function createActor(ctx, data, { type = 'pc', assignTo = null, source = '' } = 
     }
   }
   normalizeActor(actor, (prefix) => ctx.uid(prefix));
+  fillActorRefs(actor); // 📖 source / page of the bought gear, qualities, spells, powers, complex forms
   actor.edge.current = actor.attributes.EDG;
   state.actors[id] = actor;
   if (owner) {

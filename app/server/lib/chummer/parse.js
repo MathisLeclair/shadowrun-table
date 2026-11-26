@@ -4,9 +4,10 @@
 import crypto from 'node:crypto';
 import { parseXml, XmlError } from './xml.js';
 import { i18nError, errorParam, warningList } from './messages.js';
-import { skillsData, appSkillId, metatypeData, METATYPE_FROM_EN, frenchName, frenchCategory, gradeTable, norm } from './data.js';
+import { skillsData, appSkillId, metatypeData, METATYPE_FROM_EN, frenchName, frenchCategory, gradeTable, norm, appCatalog, findDataItem } from './data.js';
 import { SKILL_BY_ID } from '../../../shared/sr5.js';
-import { blankActor, categoryToSkill, evalFormula, MELEE_SKILLS } from '../../../client/modules/sheet/sheet-data.js';
+import { blankActor, categoryToSkill, evalFormula, MELEE_SKILLS, LIFESTYLE_BASES } from '../../../client/modules/sheet/sheet-data.js';
+import { monthlyCost } from '../../../shared/lifestyle.js';
 import { uid } from '../../../shared/util.js';
 
 /** User-facing import error (French message, no stack needed). */
@@ -23,6 +24,37 @@ const num = (s, d = 0) => {
 };
 const bool = (s) => /^(true|1)$/i.test(String(s ?? '').trim());
 const round2 = (n) => Math.round(n * 100) / 100;
+
+/**
+ * Evaluate a Chummer cost/capacity/slots formula: "Rating * 250", "25000 div 12", "[Rating]", "FixedValues(…)",
+ * "[-(Capacity * 0.5 + 0.5*number((Capacity mod 2) = 1))]", "Body * 1000". Unknown names → null. Returns a number or null.
+ */
+export function chummerEval(expr, vars = {}) {
+  if (typeof expr === 'number') return expr;
+  let s = String(expr ?? '').trim();
+  if (!s) return null;
+  if (/^[+-]?\d+(\.\d+)?$/.test(s.replace(',', '.'))) return Number(s.replace(',', '.'));
+  const rating = Number(vars.Rating ?? vars.rating ?? 1) || 0;
+  s = s.replace(/FixedValues\(([^)]*(?:\([^)]*\)[^)]*)*)\)/gi, (m, list) => {
+    const vals = list.split(',').map((x) => x.trim());
+    return `(${vals[Math.max(0, Math.min(vals.length - 1, (rating || 1) - 1))] || '0'})`;
+  });
+  s = s.replace(/[[\]{}]/g, '').replace(/\bdiv\b/gi, '/').replace(/\bmod\b/gi, '%').replace(/\bnumber\(/gi, '(').replace(/([^<>=!])=(?!=)/g, '$1===');
+  s = s.replace(/[A-Za-z][A-Za-z ]*[A-Za-z]|[A-Za-z]/g, (name) => {
+    const k = name.trim();
+    const v = vars[k] ?? vars[k.charAt(0).toUpperCase() + k.slice(1)];
+    return v === undefined || v === null || !Number.isFinite(Number(v)) ? 'NaN' : `(${Number(v)})`;
+  });
+  if (!/^[\d.+\-*/%()\s<>=!?:NaN]+$/.test(s)) return null;
+  try {
+    // eslint-disable-next-line no-new-func
+    const v = Function(`"use strict"; return (${s});`)();
+    const n = typeof v === 'boolean' ? Number(v) : v;
+    return typeof n === 'number' && Number.isFinite(n) ? Math.round(n * 10000) / 10000 : null;
+  } catch {
+    return null;
+  }
+}
 
 export function sha1(s) {
   return crypto.createHash('sha1').update(String(s)).digest('hex');
@@ -65,6 +97,13 @@ function displayName(kind, node) {
   const base = fr || node.val('name');
   const extra = node.val('extra');
   return extra ? `${base} (${extra})` : base;
+}
+/** Rulebook reference of a node (<source>SR5</source><page>435</page>) → { source, page? } fields, or {}. */
+function bookRef(node) {
+  const src = String(node.val('source') || '').trim();
+  if (!/^[A-Za-z0-9][A-Za-z0-9-]{0,11}$/.test(src)) return {};
+  const page = parseInt(node.val('page'), 10);
+  return page > 0 ? { source: src.toUpperCase(), page } : { source: src.toUpperCase() };
 }
 function srcNote(node) {
   const src = node.val('source');
@@ -237,7 +276,8 @@ export function parseChum5(xml, { fileName = '', now = Date.now(), makeId = uid,
     a.qualities.push(withRef({ id: makeId('itm'), name: displayName('qualities', q), karma, positive, ...(note ? { notes: note } : {}) }, q));
   }
 
-  // Weapons. Chummer's built-in Unarmed Attack becomes the app's « Mains nues » (accuracy = physical limit).
+  // Weapons. Chummer's built-in Unarmed Attack becomes the app's « Mains nues » (accuracy « Physical »: the physical limit with its
+  // modifiers, recomputed when STR / BOD / REA change — shared/modifiers.js weaponAccuracy).
   let unarmedDone = false;
   for (const w of c.get('weapons')?.all('weapon') || []) {
     const name = w.val('name');
@@ -245,10 +285,8 @@ export function parseChum5(xml, { fileName = '', now = Date.now(), makeId = uid,
     if (name === 'Unarmed Attack') {
       if (unarmedDone) continue;
       unarmedDone = true;
-      const A = (k) => (a.attributes[k] || 1) + (a.augmented?.[k] || 0);
-      const physical = Math.ceil((A('STR') * 2 + A('BOD') + A('REA')) / 3);
       a.weapons.push(withRef({
-        id: makeId('itm'), name: 'Mains nues', category: 'Corps à corps', kind: 'melee', skill: 'unarmed_combat', accuracy: physical,
+        id: makeId('itm'), name: 'Mains nues', category: 'Corps à corps', kind: 'melee', skill: 'unarmed_combat', accuracy: 'Physical',
         damage: w.val('damage').replace(/\{STR\}/g, 'STR') || '(STR)S', ap: 0, mode: '', rc: 0, ammo: '', reach: num(w.val('reach')), notes: 'Unarmed Attack (SR5 132)',
       }, w));
       continue;
@@ -261,9 +299,13 @@ export function parseChum5(xml, { fileName = '', now = Date.now(), makeId = uid,
     if (!ar.val('name')) continue;
     const raw = ar.val('armoroverride') || ar.val('armor');
     const rating = /^[+-]?\d+$/.test(raw.trim()) ? Math.abs(num(raw.replace('+', ''))) : Math.max(0, num(evalFormula(raw.replace(/^\+/, ''), num(ar.val('rating'), 1)), 0));
-    const mods = (ar.get('armormods')?.all('armormod') || []).map((m) => m.val('name') + (num(m.val('rating')) ? ` ${m.val('rating')}` : '')).filter(Boolean);
-    const note = [srcNote(ar), mods.length ? `Modifications : ${mods.join(', ')}` : '', longText(ar.val('notes'))].filter(Boolean).join(' — ');
-    a.armor.push(withRef({ id: makeId('itm'), name: displayName('armor', ar), rating, equipped: bool(ar.val('equipped')), ...(raw.trim().startsWith('+') ? { stack: true } : {}), ...(note ? { notes: note } : {}) }, ar));
+    const capacity = Math.max(0, chummerEval(ar.val('armorcapacity'), { Rating: num(ar.val('rating'), 1) }) ?? 0);
+    const mods = (ar.get('armormods')?.all('armormod') || []).filter((m) => m.val('name')).map((m) => armorModFromNode(m, capacity, makeId));
+    const note = [srcNote(ar), longText(ar.val('notes'))].filter(Boolean).join(' — ');
+    a.armor.push(withRef({
+      id: makeId('itm'), name: displayName('armor', ar), rating, equipped: bool(ar.val('equipped')), ...(raw.trim().startsWith('+') ? { stack: true } : {}),
+      ...(capacity ? { capacity } : {}), ...(mods.length ? { mods } : {}), ...(note ? { notes: note } : {}),
+    }, ar));
     for (const g of ar.get('gears')?.all('gear') || []) pushGear(g, `dans ${ar.val('name')}`);
   }
 
@@ -334,16 +376,16 @@ export function parseChum5(xml, { fileName = '', now = Date.now(), makeId = uid,
   // Vehicles & drones
   for (const vh of c.get('vehicles')?.all('vehicle') || []) {
     if (!vh.val('name')) continue;
-    const mods = (vh.get('mods')?.all('mod') || []).map((m) => m.val('name')).filter(Boolean);
+    const mods = (vh.get('mods')?.all('mod') || []).filter((m) => m.val('name')).map((m) => vehicleModFromNode(m, vh, makeId));
     const weapons = [];
     vh.walk((n) => {
       if (n.name === 'weapon' && n.val('name')) weapons.push(n.val('name'));
     });
-    const note = [srcNote(vh), mods.length ? `Modifications : ${mods.join(', ')}` : '', weapons.length ? `Armes : ${weapons.join(', ')}` : '', longText(vh.val('notes'))].filter(Boolean).join(' — ');
+    const note = [srcNote(vh), weapons.length ? `Armes : ${weapons.join(', ')}` : '', longText(vh.val('notes'))].filter(Boolean).join(' — ');
     a.vehicles.push(withRef({
       id: makeId('itm'), name: vh.val('vehiclename') || displayName('vehicles', vh), handling: vh.val('handling'), speed: vh.val('speed'), accel: vh.val('accel'),
       body: num(vh.val('body')), armor: num(vh.val('armor')), pilot: num(vh.val('pilot')), sensor: num(vh.val('sensor')), seats: num(vh.val('seats')),
-      ...(note ? { notes: note } : {}),
+      ...(mods.length ? { mods } : {}), ...(note ? { notes: note } : {}),
     }, vh));
   }
 
@@ -376,13 +418,45 @@ export function parseChum5(xml, { fileName = '', now = Date.now(), makeId = uid,
   const forms = (c.get('complexforms')?.all('complexform') || []).filter((f) => f.val('name'));
   if (forms.length) a.complexForms = forms.map((f) => withRef({ id: makeId('itm'), name: f.val('name') + (f.val('extra') ? ` (${f.val('extra')})` : ''), target: f.val('target'), duration: f.val('duration'), fading: f.val('fv') }, f));
 
-  // Lifestyle: the most expensive one
-  const lifestyles = (c.get('lifestyles')?.all('lifestyle') || []).filter((l) => l.val('name') || l.val('baselifestyle'));
-  if (lifestyles.length) {
-    const ls = lifestyles.sort((x, y) => num(y.val('totalmonthlycost') || y.val('cost')) - num(x.val('totalmonthlycost') || x.val('cost')))[0];
-    const base = ls.val('baselifestyle');
-    const nm = ls.val('name') || base;
-    a.lifestyle = { name: nm, monthlyCost: num(ls.val('totalmonthlycost') || ls.val('cost')), monthsPaid: num(ls.val('months')), chummerGuid: guidOf(ls) };
+  // Lifestyles with their qualities (Garage, DocWagon contract, Extra Secure…). Primary: the primary tenant's, else the most expensive.
+  for (const ls of (c.get('lifestyles')?.all('lifestyle') || []).filter((l) => l.val('name') || l.val('baselifestyle'))) {
+    const base = ls.val('baselifestyle') || 'Medium';
+    const costFor = (k) => num(ls.val(`costfor${k}`) || (k === 'area' ? ls.val('costforearea') : ''));
+    const extra = ['area', 'comforts', 'security'].reduce((sum, k) => sum + num(ls.val(k)) * costFor(k), 0);
+    const advanced = ls.val('type') === 'Advanced';
+    const points = advanced ? { comforts: num(ls.val('basecomforts')) + num(ls.val('comforts')), security: num(ls.val('basesecurity')) + num(ls.val('security')), neighborhood: num(ls.val('basearea')) + num(ls.val('area')) } : null;
+    const roommates = num(ls.val('roommates'));
+    const pct = num(ls.val('percentage'), 100);
+    const notes = [longText(ls.val('notes')), roommates ? `${roommates} colocataire(s)` : '', pct !== 100 ? `part payée : ${pct} %` : ''].filter(Boolean).join(' — ');
+    const item = {
+      id: makeId('ls'), name: ls.val('name') || base, base, baseCost: Math.round(num(ls.val('cost'), LIFESTYLE_BASES[base]?.cost || 0) + extra), monthsPaid: num(ls.val('months')),
+      primary: false, ...(points ? { points } : {}),
+      qualities: (ls.get('lifestylequalities')?.all('lifestylequality') || []).filter((q) => q.val('name')).map((q) => lifestyleQualityFromNode(q, makeId)),
+      notes, _tenant: bool(ls.val('primarytenant')),
+    };
+    if (sourceOf(ls)) item.catalogId = sourceOf(ls);
+    if (guidOf(ls)) item.chummerGuid = guidOf(ls);
+    Object.assign(item, bookRef(ls));
+    item.monthlyCost = Math.round(Number(monthlyCost(item)) || 0);
+    a.lifestyles.push(item);
+  }
+  if (a.lifestyles.length) {
+    const main = a.lifestyles.find((l) => l._tenant) || [...a.lifestyles].sort((x, y) => y.monthlyCost - x.monthlyCost)[0];
+    main.primary = true;
+  }
+  for (const l of a.lifestyles) delete l._tenant;
+
+  // Martial arts (Run & Gun) and their techniques
+  for (const m of (c.get('martialarts')?.all('martialart') || []).filter((x) => x.val('name'))) {
+    const techniques = (m.get('martialarttechniques')?.all('martialarttechnique') || m.get('techniques')?.all('technique') || []).filter((t) => t.val('name'))
+      .map((t) => ({ ...subHead('techniques', t, makeId), ...(longText(t.val('notes')) ? { notes: longText(t.val('notes')) } : {}) }));
+    const head = subHead('martialarts', m, makeId);
+    const notes = longText(m.val('notes'));
+    a.martialArts.push({
+      id: makeId('itm'), name: head.nameFr || head.name, rating: Math.max(1, num(m.val('rating'), 1)), techniques, ...(notes ? { notes } : {}),
+      ...(head.catalogId ? { catalogId: head.catalogId } : {}), ...(head.chummerGuid ? { chummerGuid: head.chummerGuid } : {}),
+      ...(head.source ? { source: head.source, ...(head.page ? { page: head.page } : {}) } : {}),
+    });
   }
 
   // Extras that the app has no dedicated place for: summarized in the notes.
@@ -392,11 +466,6 @@ export function parseChum5(xml, { fileName = '', now = Date.now(), makeId = uid,
   if (grade) extras.push(`Initié de grade ${grade}${metamagics.length ? ` — métamagies : ${metamagics.join(', ')}` : ''}`);
   const sub = num(v('submersiongrade'));
   if (sub) extras.push(`Submergé de grade ${sub}${metamagics.length ? ` — échos : ${metamagics.join(', ')}` : ''}`);
-  const arts = (c.get('martialarts')?.all('martialart') || []).map((m) => {
-    const tech = (m.get('martialarttechniques')?.all('martialarttechnique') || m.get('techniques')?.all('technique') || []).map((t) => t.val('name')).filter(Boolean);
-    return m.val('name') + (tech.length ? ` (${tech.join(', ')})` : '');
-  });
-  if (arts.length) extras.push(`Arts martiaux : ${arts.join(' ; ')}`);
   const foci = (c.get('foci')?.all('focus') || []).map((f) => f.val('name')).filter(Boolean);
   if (foci.length) extras.push(`Focus liés : ${foci.join(', ')}`);
   const spirits = (c.get('spirits')?.all('spirit') || []).map((s) => `${s.val('name')}${s.val('force') ? ` (Puissance ${s.val('force')})` : ''}${s.val('services') ? `, ${s.val('services')} service(s)` : ''}`).filter((x) => x.trim());
@@ -436,11 +505,101 @@ export function parseChum5(xml, { fileName = '', now = Date.now(), makeId = uid,
   return { actor: a, warnings, warningsI18n: warn.i18n, info: { created, appVersion: v('appversion'), buildMethod: v('buildmethod'), mugshot } };
 }
 
+/** Nested item head: English name (+ extra), French name from the app catalog, catalog id, guid. */
+function subHead(kind, node, makeId) {
+  const sid = sourceOf(node);
+  const extra = node.val('extra');
+  let fr = sid ? frenchName(kind, sid) : null;
+  if (!fr && kind === 'techniques' && sid) fr = techniqueFr(sid);
+  const out = { id: makeId('sub'), name: node.val('name') + (extra ? ` (${extra})` : '') };
+  if (fr) out.nameFr = fr + (extra ? ` (${extra})` : '');
+  if (sid) out.catalogId = sid;
+  const g = guidOf(node);
+  if (g) out.chummerGuid = g;
+  Object.assign(out, bookRef(node));
+  return out;
+}
+
+/** French name of a martial art technique (techniques live inside the martialarts catalog entries). */
+function techniqueFr(id) {
+  for (const e of appCatalog('martialarts').list) {
+    for (const t of [...(Array.isArray(e.techniques) ? e.techniques : []), ...(Array.isArray(e.stats?.techniques) ? e.stats.techniques : [])]) {
+      if (t && String(t.id || '').toLowerCase() === id && t.nameFr) return t.nameFr;
+    }
+  }
+  return null;
+}
+
+const costOf = (node, vars) => {
+  const raw = node.val('cost');
+  const n = chummerEval(raw, vars);
+  return n === null ? 0 : Math.round(n * 100) / 100;
+};
+const optNotes = (node) => longText(node.val('notes'));
+
+/** <accessory> of a weapon → weapon.accessories[] item. */
+function accessoryFromNode(x, makeId) {
+  const rating = num(x.val('rating'));
+  const mount = x.val('mount');
+  const effects = {};
+  const name = x.val('name');
+  if (/smartgun/i.test(name)) effects.smartgun = true;
+  else if (num(x.val('accuracy'))) effects.accuracy = num(x.val('accuracy'));
+  if (num(x.val('rc'))) effects.rc = num(x.val('rc'));
+  if (num(x.val('rcgroup'))) effects.rcGroup = num(x.val('rcgroup'));
+  const notes = optNotes(x);
+  return {
+    ...subHead('accessories', x, makeId), mount: ['Top', 'Under', 'Barrel', 'Stock', 'Side', 'Internal'].includes(mount) ? mount : '', ...(rating ? { rating } : {}),
+    cost: costOf(x, { Rating: rating }), avail: x.val('avail'), effects, ...(bool(x.val('included')) ? { included: true } : {}), ...(x.has('equipped') && !bool(x.val('equipped')) ? { equipped: false } : {}),
+    ...(notes ? { notes } : {}),
+  };
+}
+
+/** <armormod> → armor.mods[] item (capacity evaluated with the armor's own capacity). */
+function armorModFromNode(m, armorCapacity, makeId) {
+  const rating = num(m.val('rating'));
+  const cap = chummerEval(m.val('armorcapacity'), { Rating: rating, Capacity: armorCapacity });
+  const armor = num(String(m.val('armor')).replace('+', ''));
+  const notes = optNotes(m);
+  return {
+    ...subHead('armormods', m, makeId), ...(rating ? { rating } : {}), capacity: cap ?? 0, cost: costOf(m, { Rating: rating }), avail: m.val('avail'),
+    ...(armor ? { effects: { armor } } : {}), ...(bool(m.val('included')) ? { included: true } : {}), ...(m.has('equipped') && !bool(m.val('equipped')) ? { equipped: false } : {}),
+    ...(notes ? { notes } : {}),
+  };
+}
+
+/** <mod> of a vehicle → vehicle.mods[] item. */
+function vehicleModFromNode(m, vh, makeId) {
+  const rating = num(m.val('rating'));
+  const vars = { Rating: rating, Body: num(vh.val('body')), Acceleration: num(String(vh.val('accel')).split('/')[0]), Handling: num(String(vh.val('handling')).split('/')[0]), Speed: num(String(vh.val('speed')).split('/')[0]), Pilot: num(vh.val('pilot')), Sensor: num(vh.val('sensor')), Armor: num(vh.val('armor')) };
+  const notes = optNotes(m);
+  return {
+    ...subHead('vehiclemods', m, makeId), ...(rating ? { rating } : {}), slots: chummerEval(m.val('slots'), vars) ?? 0, category: m.val('category'), cost: costOf(m, vars), avail: m.val('avail'),
+    ...(bool(m.val('included')) ? { included: true } : {}), ...(notes ? { notes } : {}),
+  };
+}
+
+/** <lifestylequality> → lifestyle.qualities[] item. Standard lifestyles use <basemultiplier>, advanced (RF) ones <multiplier>. */
+function lifestyleQualityFromNode(q, makeId) {
+  const notes = optNotes(q);
+  // <basemultiplier> (Extra Secure): % of the base cost only (shared/lifestyle.js baseOnly); <multiplier>: % of the whole.
+  const mult = num(q.val('multiplier'));
+  const baseMult = num(q.val('basemultiplier'));
+  return {
+    ...subHead('lifestylequalities', q, makeId), category: q.val('category'), cost: costOf(q, {}), multiplier: mult || baseMult, ...(!mult && baseMult ? { baseOnly: true } : {}),
+    lp: num(q.val('lp')), ...(notes ? { notes } : {}),
+  };
+}
+
 function withRef(item, node) {
   const g = guidOf(node);
   const s = sourceOf(node);
   if (s) item.catalogId = s;
   if (g) item.chummerGuid = g;
+  if (!item.source) Object.assign(item, bookRef(node)); // 📖 chip (ARCHITECTURE.md « Rulebooks »)
+  // Chummer <extra> = the choice of a « select… » bonus (Codeslinger's Matrix action, Aptitude's skill…): shared/modifiers.js item.choice.
+  const extra = node.val('extra');
+  if (extra && !item.choice) item.choice = String(extra).slice(0, 120);
   return item;
 }
 
@@ -448,15 +607,17 @@ function weaponFromNode(w, makeId, where) {
   const category = w.val('category');
   const skill = categoryToSkill(category, w.val('useskill'));
   const melee = w.val('type') === 'Melee' || MELEE_SKILLS.includes(skill);
-  const accessories = (w.get('accessories')?.all('accessory') || []).map((x) => x.val('name')).filter(Boolean);
+  const accessories = (w.get('accessories')?.all('accessory') || []).filter((x) => x.val('name')).map((x) => accessoryFromNode(x, makeId));
   const mode = w.val('mode');
   const ammo = w.val('ammo');
-  const note = [where || '', srcNote(w), accessories.length ? `Accessoires : ${accessories.join(', ')}` : '', longText(w.val('notes'))].filter(Boolean).join(' — ');
+  const note = [where || '', srcNote(w), longText(w.val('notes'))].filter(Boolean).join(' — ');
   const apRaw = w.val('ap');
+  const data = sourceOf(w) ? findDataItem('weapons', { id: sourceOf(w) }) : null;
+  const mounts = (data?.get('accessorymounts')?.all('mount') || []).map((m) => m.text.trim()).filter(Boolean);
   return withRef({
     id: makeId('itm'), name: w.val('weaponname') || displayName('weapons', w), category: frenchCategory('weapons', sourceOf(w)) || category, kind: melee ? 'melee' : 'ranged', skill,
     accuracy: w.val('accuracy'), damage: w.val('damage').replace(/\{STR\}/g, 'STR'),
     ap: /^[+-]?\d+$/.test(apRaw) ? Number(apRaw) : apRaw === '-' ? 0 : apRaw, mode: mode === '0' ? '' : mode, rc: num(w.val('rc')), ammo: ammo === '0' ? '' : ammo, reach: num(w.val('reach')),
-    ...(note ? { notes: note } : {}),
+    ...(accessories.length ? { accessories } : {}), ...(mounts.length ? { mounts } : {}), ...(note ? { notes: note } : {}),
   }, w);
 }

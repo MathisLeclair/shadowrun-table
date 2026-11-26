@@ -127,6 +127,15 @@ button.sh-stat { cursor: pointer; transition: border-color .12s, background .12s
 button.sh-stat:hover { border-color: var(--pc); background: var(--panel3); }
 button.sh-stat .stat-label::after { content: ' ⚄'; color: var(--faint); }
 .sh-stat-sub { font: 9.5px var(--mono); color: var(--faint); letter-spacing: .5px; }
+/* Stat box with its rulebook chip (📖 SR5 46) in the top-right corner, outside the roll button. */
+.sh-stat-wrap { position: relative; display: flex; min-width: 0; }
+.sh-stat-wrap > .sh-stat { flex: 1; min-width: 0; }
+.sh-stat.sh-has-book { padding-top: 16px; }
+.bookref.sh-stat-book { position: absolute; top: 2px; right: 2px; padding: 0 5px; gap: 2px; font-size: 9.5px; line-height: 14px; opacity: .75; }
+.bookref.sh-stat-book:hover, .bookref.sh-stat-book:focus-visible { opacity: 1; }
+.sh-stat-book .bookref-icon { font-size: 9px; }
+.sh-subchip .bookref { padding: 0 5px; font-size: 10px; line-height: 14px; }
+.section-title .bookref { margin-left: 6px; text-transform: none; letter-spacing: 0; font-weight: 400; }
 .sh-vision { margin-top: 6px; }
 
 /* skills */
@@ -320,3 +329,33 @@ tr.sh-skill:hover .sh-die-btn { color: var(--pc); }
 .ld-input { gap: 6px; }
 .ld-input .input { flex: 1; }
 .ld-input .input.whisper { border-color: var(--violet); background: #1e1830; }
+
+/* Nested lists: weapon accessories, armor / vehicle mods, lifestyle options, martial art techniques */
+.sh-subchips { display: inline-flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+.sh-subchip { display: inline-flex; align-items: center; gap: 3px; font-size: 11.5px; padding: 1px 7px; border-radius: 10px; background: var(--panel3); border: 1px solid var(--line2); color: var(--text); white-space: nowrap; }
+.sh-subchip i { font-style: normal; color: var(--cyan); font-family: var(--mono); font-size: 11px; }
+.sh-subchip.incl { border-style: dashed; color: var(--dim); }
+.sh-subchip.off { opacity: .5; text-decoration: line-through; }
+.sh-sub-row > td { background: var(--panel); padding: 6px 8px 10px 22px !important; }
+.sh-subeditor { display: flex; flex-direction: column; gap: 6px; border-left: 2px solid var(--pc); padding-left: 10px; }
+.sh-sub-title { font: 600 12px var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: .04em; }
+.sh-edit-table td.nowrap { white-space: nowrap; }
+.sh-lifestyle.primary { border-left-color: var(--amber); }
+
+/* Modifiers (shared/modifiers.js): effect chips on items, roll dialog lines and switches */
+.sh-mods { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+.sh-mod { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: 11.5px; padding: 2px 8px; border-radius: 10px; background: #102020; border: 1px solid var(--line2); color: var(--text); }
+.sh-mod b { color: var(--cyan); font-weight: 600; }
+.sh-mod.bad { border-color: #5a2a2a; }
+.sh-mod.info { opacity: .75; border-style: dashed; }
+.sh-mod.unbaked { opacity: 1; border-color: var(--amber); }
+.sh-mod.off, .sh-mod.ignored { opacity: .55; }
+.sh-mod.ignored span { text-decoration: line-through; }
+.sh-mod .bookref { font-size: 10.5px; }
+.sh-rd-part.mod { border-color: var(--cyan-d); }
+.sh-rd-mods { display: flex; flex-direction: column; gap: 4px; }
+.sh-rd-mod { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.sh-rd-mod-dot { width: 13px; text-align: center; color: var(--dim); font-size: 11px; }
+.sh-rd-switches { padding: 8px 10px; border-radius: 8px; border: 1px dashed var(--line2); }
+.sh-alt { color: var(--amber); font-size: .8em; }
+.ld-roll-mods { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 3px; }

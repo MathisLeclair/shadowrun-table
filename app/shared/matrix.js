@@ -10,6 +10,7 @@
 // - The decker's agent shares the deck: same ASDF, same loaded programs, same marks and the same Overwatch Score.
 //   It uses its Rating for every skill and attribute (pool = 2 × Rating) and the deck's attributes as limits.
 import { attr, derive, SKILL_BY_ID } from './sr5.js';
+import { poolModifiers, rollContext, derivedWithModifiers } from './modifiers.js';
 
 // i18n: French labels are dictionary keys (client/i18n/en/matrix.json). tk() marks them for tools/i18n-check.js;
 // the UI renders t(label). Dynamic texts (pool parts, reasons) carry { key, params } next to their French `label`.
@@ -284,13 +285,17 @@ export function programSum(persona, prop) {
   return n;
 }
 
-/** Matrix initiative for a mode: AR = physical initiative; VR = Data Processing + INT + 3D6 (cold) / 4D6 (hot). */
-export function matrixInitiative(actor, persona, mode = persona?.mode) {
+/**
+ * Matrix initiative for a mode: AR = physical initiative; VR = Data Processing + INT + 3D6 (cold) / 4D6 (hot).
+ * mods (shared/modifiers.js collectModifiers) add their matrix initiative dice in VR (max 5D6).
+ */
+export function matrixInitiative(actor, persona, mode = persona?.mode, mods = null) {
   const d = derive(actor);
   if (mode === 'cold' || mode === 'hot') {
     const dp = deckStats(actor, persona).eff.dataProcessing;
     const base = dp + attr(actor, 'INT');
-    const dice = mode === 'hot' ? 4 : 3;
+    const extra = (mods || []).filter((m) => m.type === 'matrixInitiativeDice' && !m.condition && !m.info && m.value).reduce((n, m) => n + m.value, 0);
+    const dice = Math.min(5, (mode === 'hot' ? 4 : 3) + extra);
     return { base, dice, text: `${base} + ${dice}D6` };
   }
   return { base: d.initiative.base, dice: d.initiative.dice, text: d.initiative.text };
@@ -314,11 +319,13 @@ export function skillRating(actor, skillId) {
 
 /**
  * Dice pool + limit of a Matrix action for the decker (or her agent with opts.agent = true).
- * opts: { useSpec, marks (1-3, extra marks penalty), modifier, assist: { dice, limitBonus }, edge (Push the Limit) }
- * Returns { pool, parts: [{ label, value }], limit, limitParts, impossible, reason }.
+ * opts: { useSpec, marks (1-3, extra marks penalty), modifier, assist: { dice, limitBonus }, edge (Push the Limit),
+ *         mods (shared/modifiers.js collectModifiers: skill / linked attribute / Codeslinger dice of the decker), conditions (switches on) }
+ * Returns { pool, parts: [{ label, value, mod? }], limit, limitParts, impossible, reason, modLines (modifier lines, toggles included) }.
  */
 export function actionPool(actor, persona, action, opts = {}) {
   const parts = [];
+  let modLines = [];
   const limitParts = [];
   if (!action || action.noTest) return { pool: 0, parts, limit: null, limitParts, impossible: false, noTest: true };
   const deck = deckStats(actor, persona);
@@ -341,8 +348,14 @@ export function actionPool(actor, persona, action, opts = {}) {
       parts.push({ label: sk.name || def?.fr || action.skill, skillId: action.skill, value: Number(sk.rating) }, { label: action.attr, attr: action.attr, value: a });
       if (opts.useSpec && sk.spec) parts.push(part(tk('Spé. {spec}'), 2, { spec: sk.spec }));
     }
+    if (opts.mods) {
+      const ctx = { ...rollContext(actor, { skillId: action.skill, attr: action.attr }), actionId: action.id, actionNames: [action.en, action.fr], mode: persona?.mode || null };
+      const pm = poolModifiers(opts.mods, ctx, { conditions: opts.conditions || [] });
+      modLines = pm.lines;
+      for (const l of pm.lines) if (l.state === 'applied') parts.push({ label: l.mod.source.name, value: l.value, mod: { id: l.mod.id, book: l.mod.source.book, page: l.mod.source.page } });
+    }
     if (persona?.mode === 'hot') parts.push(part(tk('RV chaude'), HOT_SIM_BONUS));
-    const w = derive(actor).woundModifier;
+    const w = (opts.mods ? derivedWithModifiers(actor, opts.mods) : derive(actor)).woundModifier;
     if (w) parts.push(part(tk('Blessures'), w));
   }
   if (deck.noise) parts.push(part(tk('Bruit'), -deck.noise));
@@ -371,7 +384,7 @@ export function actionPool(actor, persona, action, opts = {}) {
     }
     if (opts.edge && !opts.agent) limit = null;
   }
-  return { pool, parts, limit, limitParts, impossible: false };
+  return { pool, parts, limit, limitParts, impossible: false, modLines };
 }
 
 /** Defense pool of a host (or its IC, devices and files): host rating (as mental attribute) + host attribute. */

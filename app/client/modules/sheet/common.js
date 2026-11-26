@@ -101,7 +101,9 @@ export function Overlay({ title, onClose, width = 560, children, actions, class:
 // Roll labels and breakdowns are stored in French by the server ('Défense', 'Agilité + Logique', '6 dés',
 // 'Pistolets 4 + AGI 5 + spé. +2'): every viewer sees them in their own language through these helpers.
 // Terms the server/dialogs put in breakdowns (French keys, translated when shown).
-export const ROLL_TERMS = [tk('spé.'), tk('mod.'), tk('blessures'), tk('par défaut'), tk('bonus'), tk('recul'), tk('armure')];
+export const ROLL_TERMS = [tk('spé.'), tk('mod.'), tk('blessures'), tk('par défaut'), tk('bonus'), tk('recul'), tk('armure'), tk('accessoires'),
+  // first term of roll.limitBreakdown (« sociale 9 + Zoé : Heritage 12 +2 »): the server's French limit adjectives
+  tk('physique'), tk('mentale'), tk('sociale'), tk('astrale')];
 
 function rollTermText(part) {
   const p = String(part).trim();
@@ -153,7 +155,10 @@ export function DiceFaces({ roll, small }) {
 }
 
 // roll.limitLabel is stored by the server as a French adjective ('physique'…) — older entries may hold any text.
-const LIMIT_TITLES = { physique: tk('Limite physique'), mentale: tk('Limite mentale'), sociale: tk('Limite sociale'), astrale: tk('Limite astrale') };
+const LIMIT_TITLES = {
+  physique: tk('Limite physique'), mentale: tk('Limite mentale'), sociale: tk('Limite sociale'), astrale: tk('Limite astrale'), précision: tk('Précision'),
+  Attaque: tk('Attaque'), Corruption: tk('Corruption'), Traitement: tk('Traitement'), Firewall: tk('Firewall'),
+};
 const limitTitle = (l) => (LIMIT_TITLES[l] ? t(LIMIT_TITLES[l]) : t('Limite {kind}', { kind: l }));
 
 /** Badges summarizing a roll (glitch, limit, Edge…). */
@@ -161,7 +166,8 @@ export function RollBadges({ roll }) {
   if (!roll) return null;
   return html`<span class="sh-roll-badges">
     ${roll.critGlitch ? html`<span class="badge badge-red sh-glitch">${t('Échec critique !')}</span>` : roll.glitch ? html`<span class="badge badge-amber">${t('Complication')}</span>` : null}
-    ${roll.limit ? html`<span class=${'badge ' + (roll.limited ? 'badge-amber' : '')} title=${roll.limitLabel ? limitTitle(roll.limitLabel) : t('Limite')}>${t('lim. {n}', { n: roll.limit })}${roll.limited ? ` (${roll.rawHits} → ${roll.limit})` : ''}</span>` : null}
+    ${roll.limit ? html`<span class=${'badge ' + (roll.limited ? 'badge-amber' : '')} title=${(roll.limitLabel ? limitTitle(roll.limitLabel) : t('Limite')) + (roll.limitBreakdown ? `
+${rollBreakdown(roll.limitBreakdown)}` : '')}>${t('lim. {n}', { n: roll.limit })}${roll.limited ? ` (${roll.rawHits} → ${roll.limit})` : ''}</span>` : null}
     ${roll.explode ? html`<span class="badge badge-magenta" title=${t('Repousser les limites : +Chance, règle des 6, sans limite')}>${t('Chance')}</span>` : null}
     ${roll.secondChance ? html`<span class="badge badge-magenta" title=${t('Seconde chance : échecs relancés')}>${t('2ᵉ chance')}</span>` : null}
     ${roll.secret ? html`<span class="badge badge-dim">${t('secret')}</span>` : null}

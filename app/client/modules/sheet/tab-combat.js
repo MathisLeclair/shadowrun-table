@@ -3,9 +3,15 @@ import { html, Button, IconButton } from '../../lib/ui.js';
 import { send } from '../../lib/net.js';
 import { SKILL_BY_ID, attr, skillPool, parseDamage } from '/shared/sr5.js';
 import { t, tk, attrShort, skillLabel } from '../../lib/i18n.js';
-import { accuracyLimit } from './common.js';
+import { accuracyLimit, signed } from './common.js';
 import { RollStat } from './tab-summary.js';
 import { ListEditor } from './editors.js';
+import { SubChips, weaponWithMods } from './sublists.js';
+import { poolModifiers, rollContext, weaponAccuracy } from '/shared/modifiers.js';
+import { LimitStat } from './tab-summary.js';
+import { sourcesTitle, sourceName, effectText } from './modifiers-ui.js';
+import { ItemRef, SkillRef, RuleRef } from '../books/BookRef.js';
+import { ruleRef } from '/shared/bookrefs.js';
 
 /** "(STR+5)P" → "11P" for this actor; other damage codes unchanged. */
 export function damageText(actor, dmg) {
@@ -34,21 +40,20 @@ function AmmoCell({ s, w }) {
 }
 
 export function CombatTab({ s }) {
-  const { actor, d, edit } = s;
+  const { actor, d, dm, edit } = s;
   const weapons = actor.weapons || [];
-  const attack = (w) => {
-    const lim = accuracyLimit(actor, w.accuracy);
-    s.roll({ skillId: w.skill || 'exotic_weapon', label: `Attaque — ${w.name}`, limit: lim ?? undefined }); // i18n-ignore: stored French label, shown with rollLabel()
-  };
+  // Attack: the server computes the limit (Accuracy + accessories + Accuracy modifiers) and adds the accessories' dice (weaponId).
+  const attack = (w) => s.roll({ skillId: w.skill || 'exotic_weapon', weaponId: w.id, label: `Attaque — ${w.name}` }); // i18n-ignore: stored French label, shown with rollLabel()
+  const arts = actor.martialArts || [];
   return html`<div class="sh-combat">
     <div class="sh-derived">
-      <${RollStat} label=${t('Initiative')} value=${d.initiative.text} accent="cyan" />
-      <${RollStat} label=${t('Défense')} value=${d.defense} sub=${`${attrShort('REA')} + ${attrShort('INT')}`} accent="amber" onClick=${() => s.roll({ attr: 'REA', attr2: 'INT', label: tk('Défense') })} />
-      <${RollStat} label=${t('Défense totale')} value=${d.defense + attr(actor, 'WIL')} sub=${`+ ${attrShort('WIL')}`} onClick=${() => s.roll({ attr: 'REA', attr2: 'INT', label: tk('Défense totale'), bonus: [{ label: 'VOL', value: attr(actor, 'WIL') }] })} />
-      <${RollStat} label=${t('Encaissement')} value=${d.soak} sub=${t('{attr} + armure', { attr: attrShort('BOD') })} accent="amber" onClick=${() => s.roll({ attr: 'BOD', label: tk('Encaissement'), applyWounds: false, limit: null, bonus: [{ label: tk('armure'), value: d.armor }] })} />
-      <${RollStat} label=${t('Armure')} value=${d.armor} />
-      <${RollStat} label=${t('Limite physique')} value=${d.limits.physical} />
-      <${RollStat} label=${t('Blessures')} value=${d.woundModifier || 0} accent=${d.woundModifier ? 'magenta' : null} />
+      <${RollStat} label=${t('Initiative')} value=${d.initiative.text} accent="cyan" book=${ruleRef('initiative')} title=${sourcesTitle(dm.sources.initiative)} />
+      <${RollStat} label=${t('Défense')} value=${dm.defense} sub=${`${attrShort('REA')} + ${attrShort('INT')}`} accent="amber" book=${ruleRef('defense')} title=${sourcesTitle(dm.sources.defense)} onClick=${() => s.roll({ attr: 'REA', attr2: 'INT', label: tk('Défense'), test: 'defense' })} />
+      <${RollStat} label=${t('Défense totale')} value=${dm.defense + attr(actor, 'WIL')} book=${ruleRef('defense')} sub=${`+ ${attrShort('WIL')}`} onClick=${() => s.roll({ attr: 'REA', attr2: 'INT', label: tk('Défense totale'), test: 'defense', bonus: [{ label: 'VOL', value: attr(actor, 'WIL') }] })} />
+      <${RollStat} label=${t('Encaissement')} value=${dm.soak} sub=${t('{attr} + armure', { attr: attrShort('BOD') })} accent="amber" book=${ruleRef('soak')} title=${sourcesTitle([...(dm.sources.armor || []), ...(dm.sources.soak || [])])} onClick=${() => s.roll({ attr: 'BOD', label: tk('Encaissement'), applyWounds: false, limit: null, test: 'soak' })} />
+      <${RollStat} label=${t('Armure')} value=${dm.armor} book=${ruleRef('armor')} title=${sourcesTitle(dm.sources.armor)} />
+      <${LimitStat} s=${s} name="physical" label=${t('Limite physique')} />
+      <${RollStat} label=${t('Blessures')} value=${dm.woundModifier || 0} accent=${dm.woundModifier ? 'magenta' : null} book=${ruleRef('woundModifiers')} />
     </div>
     <div class="muted small">${t('Encaissement : la PA de l’arme modifie l’armure (ajoute-la en modificateur). Tous les jets d’attaque utilisent la Précision de l’arme comme limite.')}</div>
 
@@ -63,17 +68,29 @@ export function CombatTab({ s }) {
                 const def = SKILL_BY_ID[w.skill];
                 const sk = (actor.skills || []).find((x) => x.id === w.skill);
                 const pool = skillPool(actor, w.skill || 'exotic_weapon');
+                const wm = weaponWithMods(actor, w, accuracyLimit);
+                // Unconditional modifiers of the actor (skill / group / category dice, Accuracy qualities) — situational ones in the roll dialog.
+                const rctx = rollContext(actor, { skillId: w.skill || 'exotic_weapon', weaponId: w.id });
+                const pm = poolModifiers(s.mods, rctx, {});
+                const acc = weaponAccuracy(actor, w, s.mods, rctx, {});
+                const accMods = acc.lines.filter((l) => l.state === 'applied');
+                const accTitle = [wm.mods.accuracy ? t('Précision {base} {mod} (accessoires)', { base: wm.baseAccuracy ?? w.accuracy, mod: signed(wm.mods.accuracy) }) : '',
+                  ...accMods.map((l) => `${sourceName(l.mod.source)} : ${effectText(l.mod)}`)].filter(Boolean).join('\n');
+                const poolTitle = [`${def ? skillLabel(def.id) : w.skill} + ${attrShort(sk?.attr || def?.attr || 'AGI')}`, ...pm.lines.filter((l) => l.state === 'applied').map((l) => `${sourceName(l.mod.source)} : ${effectText(l.mod)}`)].join('\n');
+                const rcTitle = wm.mods.rc ? t('RC {base} {mod} (accessoires)', { base: Number(w.rc) || 0, mod: signed(wm.mods.rc) }) : '';
                 return html`<tr key=${w.id}>
                   <td>
-                    <div class="sh-weapon-name">${w.name}${w.kind === 'melee' && w.reach ? html` <span class="badge" title=${t('Allonge')}>${t('allonge {n}', { n: w.reach })}</span>` : null}</div>
-                    <div class="faint small">${def ? skillLabel(def.id) : w.skill || '—'}${sk ? '' : ` ${t('(non maîtrisée)')}`}${w.notes ? html` · <span title=${w.notes}>${w.notes.length > 60 ? w.notes.slice(0, 60) + '…' : w.notes}</span>` : null}</div>
+                    <div class="sh-weapon-name">${w.name} <${ItemRef} item=${w} />${w.kind === 'melee' && w.reach ? html` <span class="badge" title=${t('Allonge')}>${t('allonge {n}', { n: w.reach })}</span>` : null}
+                      ${wm.mods.smartgun ? html` <span class="badge badge-cyan" title=${t('Smartgun : +2 dés avec un smartlink sans fil (à ajouter au jet).')}>${t('smartgun')}</span>` : null}</div>
+                    <div class="faint small">${def ? skillLabel(def.id) : w.skill || '—'}${def ? html` <${SkillRef} id=${def.id} />` : null}${sk ? '' : ` ${t('(non maîtrisée)')}`}${w.notes ? html` · <span title=${w.notes}>${w.notes.length > 60 ? w.notes.slice(0, 60) + '…' : w.notes}</span>` : null}</div>
+                    ${(w.accessories || []).length > 0 && html`<div><${SubChips} sub="accessories" items=${w.accessories} /></div>`}
                   </td>
-                  <td class="num-cell sh-pool" title=${`${def ? skillLabel(def.id) : w.skill} + ${attrShort(sk?.attr || def?.attr || 'AGI')}`}>${pool.impossible ? '—' : pool.pool}</td>
-                  <td class="num-cell">${accuracyLimit(actor, w.accuracy) ?? w.accuracy ?? '—'}</td>
+                  <td class=${'num-cell sh-pool' + (pm.total ? ' cyan' : '')} title=${poolTitle}>${pool.impossible ? '—' : pool.pool + wm.mods.dicePool + pm.total}</td>
+                  <td class=${'num-cell' + (wm.mods.accuracy || accMods.length ? ' cyan' : '')} title=${accTitle}>${acc.total ?? wm.accuracy ?? w.accuracy ?? '—'}</td>
                   <td class="mono" title=${w.damage}>${damageText(actor, w.damage)}</td>
                   <td class="num-cell">${w.ap ?? 0}</td>
                   <td class="small">${w.mode || '—'}</td>
-                  <td class="num-cell">${w.rc || 0}</td>
+                  <td class=${'num-cell' + (wm.mods.rc ? ' cyan' : '')} title=${rcTitle}>${wm.rc}</td>
                   <td><${AmmoCell} s=${s} w=${w} /></td>
                   <td><${Button} small variant="primary" disabled=${pool.impossible} onClick=${() => attack(w)} title=${pool.impossible ? t('Compétence non maîtrisée') : t('Jet d’attaque')}>${t('Attaque')}</${Button}></td>
                 </tr>`;
@@ -82,9 +99,18 @@ export function CombatTab({ s }) {
           </table></div>`
         : html`<div class="muted small">${t('Aucune arme.')}</div>`}
 
+    ${(edit || arts.length > 0) && html`<h4 class="section-title">${t('Arts martiaux')} <${RuleRef} rule="martialArts" /></h4>`}
+    ${edit
+      ? html`<${ListEditor} actor=${actor} list="martialArts" />`
+      : arts.length > 0 && html`<div class="sh-cards">${arts.map((m) => html`<div class="sh-card" key=${m.id}>
+          <div class="row spread"><span><b>${m.name}</b> <${ItemRef} item=${m} /></span>${m.rating > 1 ? html`<span class="badge badge-magenta">${t('Indice {n}', { n: m.rating })}</span>` : null}</div>
+          <${SubChips} sub="techniques" items=${m.techniques} empty=${t('Aucune technique.')} />
+          ${m.notes && html`<div class="faint small">${m.notes}</div>`}
+        </div>`)}</div>`}
+
     ${!edit && (actor.armor || []).length > 0 && html`
       <h4 class="section-title">${t('Armure portée')}</h4>
-      <div class="row wrap">${(actor.armor || []).filter((a) => a.equipped).map((a) => html`<span class="badge badge-cyan" key=${a.id}>${a.name} ${a.stack ? '+' : ''}${a.rating}</span>`)}
+      <div class="row wrap">${(actor.armor || []).filter((a) => a.equipped).map((a) => html`<span class="row gap-s" key=${a.id}><span class="badge badge-cyan">${a.name} ${a.stack ? '+' : ''}${a.rating}</span><${ItemRef} item=${a} /></span>`)}
         ${!(actor.armor || []).some((a) => a.equipped) && html`<span class="muted small">${t('Aucune armure équipée (onglet Équipement).')}</span>`}</div>`}
   </div>`;
 }

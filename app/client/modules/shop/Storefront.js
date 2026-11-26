@@ -3,9 +3,11 @@ import { useEffect, useMemo, useState } from 'preact/hooks';
 import { html, Button, IconButton, Badge, Empty, SearchBox, Select, Toggle, Modal } from '../../lib/ui.js';
 import { toast } from '../../lib/ui-store.js';
 import { t, tn, tk, compare } from '../../lib/i18n.js';
-import { SECTIONS, fold } from './rules.js';
-import { specialEntry, priceEntry, buyStatus, addToCart, nuyen, AvailBadge, useMedia } from './common.js';
+import { STORE_SECTIONS, UPGRADE_FILES, fold } from './rules.js';
+import { specialEntry, priceEntry, buyStatus, addToCart, nuyen, AvailBadge, useMedia, useMartialCatalog } from './common.js';
 import ItemDetail from './ItemDetail.js';
+import MartialArts from './MartialArts.js';
+import { ItemRef } from '../books/BookRef.js';
 
 const PAGE = 40;
 // Remember the view between tab switches (module-level, per browser tab).
@@ -24,12 +26,13 @@ export default function Storefront({ game, actor, catalog }) {
   const narrow = useMedia('(max-width: 760px)');
   const wide = useMedia('(min-width: 1180px)');
   const specials = shop.specials || [];
+  const martial = useMartialCatalog();
 
   const sections = useMemo(() => {
     const list = [];
     if (specials.length || isGM) list.push({ id: 'specials', label: tk('Offres de Cabana'), icon: '★', files: [] });
-    for (const s of SECTIONS) {
-      if (!isGM && s.files.every((f) => shop.categories?.[f] === false)) continue;
+    for (const s of STORE_SECTIONS) {
+      if (!isGM && s.files.length && s.files.every((f) => shop.categories?.[f] === false)) continue;
       list.push(s);
     }
     list.push({ id: 'all', label: tk('Tout le catalogue'), icon: '⌕', files: [] });
@@ -137,6 +140,8 @@ export default function Storefront({ game, actor, catalog }) {
   const quickAdd = (ev, r) => {
     ev.stopPropagation();
     if (!actor) return toast(t('Choisis d’abord un personnage'), 'warn');
+    // Upgrades need a target (weapon, armor, vehicle, lifestyle): open the detail panel instead.
+    if (!r.e.special && UPGRADE_FILES[r.e.file]) return setSelected(r.e.ref);
     const l = { ref: r.e.ref, qty: 1, name: r.e.name };
     if (!r.e.special && r.e.item?.rating) l.rating = r.e.item.rating.min;
     if (!r.e.special && r.q.grade) l.grade = r.q.grade;
@@ -150,7 +155,7 @@ export default function Storefront({ game, actor, catalog }) {
     for (const e of catalog?.entries || []) if (isGM || shop.categories?.[e.file] !== false) c[e.section] = (c[e.section] || 0) + 1;
     return c;
   }, [catalog, isGM, shop.categories]);
-  const sectionCount = (s) => (s.id === 'specials' ? specials.length : s.id === 'all' ? null : counts[s.id] || 0);
+  const sectionCount = (s) => (s.id === 'specials' ? specials.length : s.id === 'martialarts' ? (martial ? martial.length : null) : s.id === 'all' ? null : counts[s.id] || 0);
 
   if (!catalog) return html`<div class="shop-loading">${t('Connexion au catalogue de Cabana…')}</div>`;
 
@@ -222,7 +227,7 @@ export default function Storefront({ game, actor, catalog }) {
                   ${shown.map(
                     (r) => html`<tr class=${'shop-row' + (selected === r.e.ref ? ' selected' : '') + (!r.st.ok ? ' blocked' : '')} onClick=${() => setSelected(r.e.ref)}>
                       <td>
-                        <div class="shop-row-name">${r.e.name}</div>
+                        <div class="shop-row-name">${r.e.name} <${ItemRef} item=${r.e.item} /></div>
                         ${r.e.item?.nameFr && r.e.item.name !== r.e.item.nameFr ? html`<div class="faint small">${r.e.name === r.e.item.name ? r.e.item.nameFr : r.e.item.name}</div>` : null}
                         ${narrow && html`<div class="faint small">${r.e.category}</div>`}
                       </td>
@@ -244,6 +249,13 @@ export default function Storefront({ game, actor, catalog }) {
       <${Button} small variant="ghost" disabled=${curPage >= pages - 1} onClick=${() => setPage(curPage + 1)}>${t('Suivant')} ›</${Button}>
     </div>`;
 
+  if (section === 'martialarts') {
+    return html`<div class=${'shop-store' + (narrow ? ' narrow' : '')}>
+      ${sidebar}
+      <div class="shop-main"><${MartialArts} game=${game} actor=${actor} styles=${martial} wide=${wide} /></div>
+    </div>`;
+  }
+
   return html`<div class=${'shop-store' + (wide ? ' wide' : '') + (narrow ? ' narrow' : '')}>
     ${sidebar}
     <div class="shop-main">
@@ -254,10 +266,10 @@ export default function Storefront({ game, actor, catalog }) {
     </div>
     ${wide &&
     html`<aside class="shop-side">
-      ${selEntry ? html`<${ItemDetail} key=${selEntry.ref} entry=${selEntry} game=${game} actor=${actor} />` : html`<${Empty}>${t('Sélectionne un article pour voir ses caractéristiques.')}</${Empty}>`}
+      ${selEntry ? html`<${ItemDetail} key=${selEntry.ref} entry=${selEntry} game=${game} actor=${actor} catalog=${catalog} />` : html`<${Empty}>${t('Sélectionne un article pour voir ses caractéristiques.')}</${Empty}>`}
     </aside>`}
     ${!wide && selEntry && html`<${Modal} title=${selEntry.name} width=${560} onClose=${() => setSelected(null)}>
-      <${ItemDetail} key=${selEntry.ref} entry=${selEntry} game=${game} actor=${actor} compact />
+      <${ItemDetail} key=${selEntry.ref} entry=${selEntry} game=${game} actor=${actor} catalog=${catalog} compact />
     </${Modal}>`}
   </div>`;
 }

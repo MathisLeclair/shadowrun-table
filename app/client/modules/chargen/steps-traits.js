@@ -6,6 +6,7 @@ import { t, getLang, attrLabel, skillLabel, itemName } from '../../lib/i18n.js';
 import { MAGIC_QUALITY_NAMES, LIMITS, rowId } from '/shared/chargen.js';
 import { Budget, StepIssues } from './common.js';
 import Picker from './Picker.js';
+import { ItemRef } from '../books/BookRef.js';
 
 const CHOICE_ATTRS = ['BOD', 'AGI', 'REA', 'STR', 'WIL', 'LOG', 'INT', 'CHA', 'MAG', 'RES'];
 const NEEDS_CHOICE = {
@@ -42,7 +43,7 @@ export function StepQualities({ data, update, result, issues, rc }) {
             if (!row) return null;
             const kind = NEEDS_CHOICE[q.en];
             return html`<tr key=${row.id}>
-              <td><strong class=${q.positive ? 'green' : 'red'}>${q.item ? itemName(q.item) : q.name}</strong>${getLang() === 'fr' && q.en !== q.name ? html` <span class="faint small">${q.en}</span>` : ''}</td>
+              <td><strong class=${q.positive ? 'green' : 'red'}>${q.item ? itemName(q.item) : q.name}</strong> <${ItemRef} item=${q.item} />${getLang() === 'fr' && q.en !== q.name ? html` <span class="faint small">${q.en}</span>` : ''}</td>
               <td>${q.maxLevels > 1 ? html`<span class="row gap-s"><span class="small muted">${t('Niveau')}</span><${NumberInput} small value=${row.level} min=${1} max=${q.maxLevels} onChange=${(v) => setQ(row.id, 'level', v)} /></span>` : ''}</td>
               <td>${kind === 'attr'
                 ? html`<${Select} value=${row.choice} onChange=${(v) => setQ(row.id, 'choice', v)} options=${[{ value: '', label: t('— Attribut —') }, ...CHOICE_ATTRS.map((k) => ({ value: k, label: attrLabel(k) }))]} />`

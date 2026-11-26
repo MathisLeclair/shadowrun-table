@@ -5,7 +5,7 @@
 // nuyens merge as deltas (ours + theirs − base) so rewards given in the app while the player edited the
 // file in Chummer are not lost. Items are matched by `chummerGuid`; items added in the app since the last
 // sync (no guid yet) are kept. Without a base (first import into an app-made actor) the file wins.
-import { ITEM_LISTS } from '../../../client/modules/sheet/sheet-data.js';
+import { ITEM_LISTS, SUB_LISTS } from '../../../client/modules/sheet/sheet-data.js';
 import { ATTR_LABELS } from '../../../shared/sr5.js';
 import { formatFr } from '../../../client/i18n/format.js';
 import { nuyen as fmtNuyen } from '../../../shared/util.js';
@@ -19,23 +19,34 @@ const isEmpty = (v) => v === undefined || v === null || v === '';
 const TEXT_FIELDS = ['name', 'realName', 'metatype', 'metavariant', 'gender', 'age', 'player', 'concept', 'bio', 'notes'];
 const NUM_FIELDS = ['streetCred', 'notoriety', 'publicAwareness'];
 const DELTA_FIELDS = ['karma', 'karmaTotal', 'nuyen'];
-const OBJ_FIELDS = ['initiative', 'matrix', 'lifestyle', 'vision'];
+const OBJ_FIELDS = ['initiative', 'matrix', 'vision'];
 const LISTS = ITEM_LISTS.filter((l) => !['skills', 'skillGroups'].includes(l));
 
 const pick3 = (ours, theirs, base, hasBase) => (hasBase ? (!eq(theirs, base) ? theirs : ours) : theirs);
 
+/** Nested lists of list items (accessories, mods, lifestyle options, techniques): merged entry by entry, by chummerGuid. */
+const SUB_KEYS = new Set(Object.values(SUB_LISTS));
+
 function mergeItem(o, t, b) {
   const out = { ...o, ...t, id: o.id };
-  if (b) for (const k of new Set([...Object.keys(o), ...Object.keys(t)])) if (k !== 'id') out[k] = !eq(t[k], b[k]) ? t[k] : o[k];
+  if (b) for (const k of new Set([...Object.keys(o), ...Object.keys(t)])) if (k !== 'id' && !SUB_KEYS.has(k)) out[k] = !eq(t[k], b[k]) ? t[k] : o[k];
+  // Nested lists: a whole-array comparison would always see a change (the parses give sub-items fresh ids) and wipe
+  // the entries added in the app (shop scope, Garage…). Merge them like the parent lists: by guid, app ids kept.
+  for (const k of SUB_KEYS) {
+    if (!Array.isArray(o[k]) && !Array.isArray(t[k])) continue;
+    out[k] = mergeList(Array.isArray(o[k]) ? o[k] : [], Array.isArray(t[k]) ? t[k] : [], b ? (Array.isArray(b[k]) ? b[k] : []) : null);
+  }
   for (const k of Object.keys(out)) if (out[k] === undefined) delete out[k];
   return out;
 }
 
-const sameItem = (a, b) => {
-  const { id: _a, ...x } = a || {};
-  const { id: _b, ...y } = b || {};
-  return eq(x, y);
+/** Item without its app ids (its own and its nested entries': each parse gives fresh ids). */
+const withoutIds = (it) => {
+  const { id: _id, ...x } = it || {};
+  for (const k of SUB_KEYS) if (Array.isArray(x[k])) x[k] = x[k].map((s) => (s && typeof s === 'object' ? withoutIds(s) : s));
+  return x;
 };
+const sameItem = (a, b) => eq(withoutIds(a), withoutIds(b));
 
 /**
  * oursGuids = chummerGuids present anywhere on the app actor (all lists): an item the app keeps in another list
@@ -156,8 +167,15 @@ export function mergeActor(current, theirs, base, { now = Date.now(), fileName =
 const LIST_LABELS = {
   weapons: tk('Armes'), armor: tk('Armures'), augmentations: tk('Augmentations'), gear: tk('Équipement'), vehicles: tk('Véhicules'), contacts: tk('Contacts'), sins: tk('SIN'),
   qualities: tk('Qualités'), powers: tk('Pouvoirs'), spells: tk('Sorts'), knowledge: tk('Connaissances'), complexForms: tk('Formes complexes'),
+  lifestyles: tk('Modes de vie'), martialArts: tk('Arts martiaux'),
 };
-const ITEM_FIELDS = { gear: ['qty', 'rating'], armor: ['rating', 'equipped'], augmentations: ['rating', 'grade', 'essence'], contacts: ['connection', 'loyalty'], powers: ['level'], knowledge: ['rating'], sins: ['rating'] };
+const ITEM_FIELDS = {
+  gear: ['qty', 'rating'], armor: ['rating', 'equipped'], augmentations: ['rating', 'grade', 'essence'], contacts: ['connection', 'loyalty'], powers: ['level'], knowledge: ['rating'], sins: ['rating'],
+  lifestyles: ['monthsPaid', 'monthlyCost'], martialArts: ['rating'],
+};
+/** Nested lists compared by name in the diff (accessories, mods, lifestyle qualities, techniques). */
+const SUB_DIFF = { weapons: 'accessories', armor: 'mods', vehicles: 'mods', lifestyles: 'qualities', martialArts: 'techniques' };
+const subNames = (it, sub) => (Array.isArray(it?.[sub]) ? it[sub] : []).map((x) => x.name).sort();
 const label = (it) => (it.rating && !['contacts'].includes(it.kind) ? `${it.name}` : it.name);
 
 /** { scalars: [{ label, from, to }], attributes: [...], skills: [...], lists: [{ list, label, added, removed, changed }], empty } */
@@ -177,7 +195,6 @@ export function diffActors(before, after) {
   push(tk('Dés d’initiative'), before.initiative?.dice || 1, after.initiative?.dice || 1);
   push(tk('Dommages physiques'), before.condition?.physical || 0, after.condition?.physical || 0);
   push(tk('Dommages étourdissants'), before.condition?.stun || 0, after.condition?.stun || 0);
-  push(tk('Mode de vie'), before.lifestyle?.name, after.lifestyle?.name);
   push(tk('Concept'), before.concept, after.concept);
   if (!eq(before.bio || '', after.bio || '')) scalars.push({ label: tk('Description'), from: '…', to: tk('modifiée') });
   if (!eq(before.notes || '', after.notes || '')) scalars.push({ label: tk('Notes'), from: '…', to: tk('modifiées') });
@@ -213,7 +230,12 @@ export function diffActors(before, after) {
       const o = idsA.get(i.id);
       if (!o) continue;
       const fields = (ITEM_FIELDS[l] || []).filter((f) => !eq(o[f], i[f]));
-      if (fields.length) changed.push(`${i.name} (${fields.map((f) => `${f} ${o[f] ?? '—'} → ${i[f] ?? '—'}`).join(', ')})`);
+      const sub = SUB_DIFF[l];
+      const subA = sub ? subNames(o, sub) : [];
+      const subB = sub ? subNames(i, sub) : [];
+      const subChange = sub && !eq(subA, subB) ? [...subB.filter((n) => !subA.includes(n)).map((n) => `+${n}`), ...subA.filter((n) => !subB.includes(n)).map((n) => `−${n}`)].join(', ') : '';
+      if (fields.length) changed.push(`${i.name} (${fields.map((f) => `${f} ${o[f] ?? '—'} → ${i[f] ?? '—'}`).join(', ')}${subChange ? `, ${subChange}` : ''})`);
+      else if (subChange) changed.push(`${i.name} (${subChange})`);
       else if (o.name !== i.name) changed.push(`${o.name} → ${i.name}`);
     }
     if (added.length || removed.length || changed.length) lists.push({ list: l, label: LIST_LABELS[l], added, removed, changed });

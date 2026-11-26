@@ -63,7 +63,7 @@
     "category": "Mains nues",
     "kind": "melee",
     "skill": "unarmed_combat",
-    "accuracy": 5,
+    "accuracy": "Physical",
     "damage": "(STR)S",
     "ap": 0,
     "mode": "",
@@ -87,6 +87,10 @@
     "reach": 0,
     "equipped": true,
     "catalogId": "7dff8ab0-c659-4901-ac3b-cb8b4f3839bf",
+    "mounts": [
+     "Barrel",
+     "Top"
+    ],
     "notes": "Fichetti Security 600 (SR5 426)"
    }
   ],
@@ -97,6 +101,7 @@
     "rating": 9,
     "equipped": true,
     "stack": false,
+    "capacity": 9,
     "notes": "Armor Vest",
     "catalogId": "4ad1eeab-daf3-4495-a73d-fbb0ce89be5b"
    }
@@ -169,7 +174,7 @@
   "foundryId": "X1ZI4F8Gsqsigwnf",
   "foundryWorld": "test-world",
   "foundryImportedAt": 1795629244307,
-  "foundryHash": "34f62b728c1b"
+  "foundryHash": "fd8ba6884cd0"
  },
  {
   "type": "npc",
@@ -250,7 +255,7 @@
     "category": "Mains nues",
     "kind": "melee",
     "skill": "unarmed_combat",
-    "accuracy": 5,
+    "accuracy": "Physical",
     "damage": "(STR)S",
     "ap": 0,
     "mode": "",
@@ -274,6 +279,12 @@
     "reach": 0,
     "equipped": true,
     "catalogId": "b2eefb04-0e33-4faa-8e92-5c4bcbfc3f16",
+    "mounts": [
+     "Barrel",
+     "Top",
+     "Stock",
+     "Side"
+    ],
     "notes": "Colt Cobra TZ-120 (SR5 427)"
    },
    {
@@ -290,6 +301,13 @@
     "ammo": "5",
     "reach": 0,
     "catalogId": "c2c0e756-a099-4f9d-b6bb-18f412d670a3",
+    "mounts": [
+     "Stock",
+     "Side",
+     "Barrel",
+     "Top",
+     "Under"
+    ],
     "notes": "Defiance T-250 (SR5 429)"
    }
   ],
@@ -300,6 +318,7 @@
     "rating": 12,
     "equipped": true,
     "stack": false,
+    "capacity": 12,
     "notes": "Armor Jacket",
     "catalogId": "36a4cd30-c32c-44d0-847a-0c15fb51072a"
    }
@@ -386,7 +405,7 @@
   "foundryId": "q7x3a39u0xiBxWCD",
   "foundryWorld": "test-world",
   "foundryImportedAt": 1795629244307,
-  "foundryHash": "ee7fd05eeba6"
+  "foundryHash": "f32fdeb3ac13"
  },
  {
   "type": "npc",
@@ -457,7 +476,7 @@
     "category": "Corps à corps",
     "kind": "melee",
     "skill": "unarmed_combat",
-    "accuracy": 5,
+    "accuracy": "Physical",
     "damage": "(STR)S",
     "ap": 0,
     "mode": "",
@@ -529,7 +548,7 @@
   "foundryId": "r06d17lo9HANpr0n",
   "foundryWorld": "test-world",
   "foundryImportedAt": 1795629244307,
-  "foundryHash": "d0394c7b6a3c"
+  "foundryHash": "cdd56b9148e3"
  },
  {
   "type": "npc",
@@ -594,7 +613,7 @@
     "category": "Corps à corps",
     "kind": "melee",
     "skill": "unarmed_combat",
-    "accuracy": 5,
+    "accuracy": "Physical",
     "damage": "(STR)S",
     "ap": 0,
     "mode": "",
@@ -653,7 +672,7 @@
   "foundryId": "mx0PqaCBR0cUcrYv",
   "foundryWorld": "test-world",
   "foundryImportedAt": 1795629244307,
-  "foundryHash": "973958ec959e"
+  "foundryHash": "5c9aeeb8c4eb"
  },
  {
   "type": "npc",
@@ -857,7 +876,7 @@
     "category": "Corps à corps",
     "kind": "melee",
     "skill": "unarmed_combat",
-    "accuracy": 5,
+    "accuracy": "Physical",
     "damage": "(STR)S",
     "ap": 0,
     "mode": "",
@@ -909,7 +928,7 @@
   "foundryId": "MB7GxZKCWf2gE6lw",
   "foundryWorld": "test-world",
   "foundryImportedAt": 1795629244307,
-  "foundryHash": "f4862f303773"
+  "foundryHash": "42ea1f823d5a"
  },
  {
   "type": "npc",
@@ -976,6 +995,10 @@
     "ammo": "11",
     "reach": 0,
     "catalogId": "676660a2-3320-4b4a-acaf-f645f2ba6cd7",
+    "mounts": [
+     "Barrel",
+     "Top"
+    ],
     "notes": "Colt America L36 (SR5 425)"
    },
    {
@@ -1016,7 +1039,7 @@
     "category": "Mains nues",
     "kind": "melee",
     "skill": "unarmed_combat",
-    "accuracy": 5,
+    "accuracy": "Physical",
     "damage": "(STR)S",
     "ap": 0,
     "mode": "",
@@ -1033,6 +1056,7 @@
     "rating": 9,
     "equipped": true,
     "stack": false,
+    "capacity": 9,
     "notes": "Armor Vest",
     "catalogId": "4ad1eeab-daf3-4495-a73d-fbb0ce89be5b"
    }
@@ -1106,7 +1130,7 @@
   "foundryId": "vTKV4NKE5RrS2BF7",
   "foundryWorld": "test-world",
   "foundryImportedAt": 1795629244307,
-  "foundryHash": "2d7c46338c40"
+  "foundryHash": "280323de4e7b"
  },
  {
   "type": "npc",
@@ -1219,6 +1243,10 @@
     "ammo": "11",
     "reach": 0,
     "catalogId": "676660a2-3320-4b4a-acaf-f645f2ba6cd7",
+    "mounts": [
+     "Barrel",
+     "Top"
+    ],
     "notes": "Colt America L36 (SR5 425)"
    },
    {
@@ -1235,6 +1263,13 @@
     "ammo": "5",
     "reach": 0,
     "catalogId": "c2c0e756-a099-4f9d-b6bb-18f412d670a3",
+    "mounts": [
+     "Stock",
+     "Side",
+     "Barrel",
+     "Top",
+     "Under"
+    ],
     "notes": "Portée de pistolet lourd"
    }
   ],
@@ -1245,6 +1280,7 @@
     "rating": 12,
     "equipped": true,
     "stack": false,
+    "capacity": 12,
     "notes": "Armor Jacket",
     "catalogId": "36a4cd30-c32c-44d0-847a-0c15fb51072a"
    }
@@ -1323,7 +1359,7 @@
   "foundryId": "mf252aoJHlOB2fpL",
   "foundryWorld": "test-world",
   "foundryImportedAt": 1795629244307,
-  "foundryHash": "33341446a521"
+  "foundryHash": "1ec06e16dc09"
  },
  {
   "type": "npc",
@@ -1838,6 +1874,12 @@
     "reach": 0,
     "equipped": true,
     "catalogId": "b2eefb04-0e33-4faa-8e92-5c4bcbfc3f16",
+    "mounts": [
+     "Barrel",
+     "Top",
+     "Stock",
+     "Side"
+    ],
     "notes": "Colt Cobra TZ-120 (SR5 427)"
    },
    {
@@ -1854,6 +1896,10 @@
     "ammo": "30",
     "reach": 0,
     "catalogId": "7dff8ab0-c659-4901-ac3b-cb8b4f3839bf",
+    "mounts": [
+     "Barrel",
+     "Top"
+    ],
     "notes": "Fichetti Security 600 (SR5 426)"
    }
   ],
@@ -1864,6 +1910,7 @@
     "rating": 12,
     "equipped": true,
     "stack": false,
+    "capacity": 12,
     "notes": "Armor Jacket",
     "catalogId": "36a4cd30-c32c-44d0-847a-0c15fb51072a"
    },
@@ -1873,6 +1920,7 @@
     "rating": 9,
     "equipped": true,
     "stack": false,
+    "capacity": 9,
     "notes": "Armor Vest",
     "catalogId": "4ad1eeab-daf3-4495-a73d-fbb0ce89be5b"
    }
@@ -1937,7 +1985,7 @@
   "foundryId": "SIXeHwOC28tuFZOc",
   "foundryWorld": "test-world",
   "foundryImportedAt": 1795629244307,
-  "foundryHash": "523db6d0c587"
+  "foundryHash": "e4af9d0ac02e"
  },
  {
   "type": "npc",
@@ -2005,6 +2053,12 @@
     "reach": 0,
     "equipped": true,
     "catalogId": "b2eefb04-0e33-4faa-8e92-5c4bcbfc3f16",
+    "mounts": [
+     "Barrel",
+     "Top",
+     "Stock",
+     "Side"
+    ],
     "notes": "Colt Cobra TZ-120 (SR5 427)"
    },
    {
@@ -2021,6 +2075,10 @@
     "ammo": "30",
     "reach": 0,
     "catalogId": "7dff8ab0-c659-4901-ac3b-cb8b4f3839bf",
+    "mounts": [
+     "Barrel",
+     "Top"
+    ],
     "notes": "Fichetti Security 600 (SR5 426)"
    }
   ],
@@ -2031,6 +2089,7 @@
     "rating": 15,
     "equipped": true,
     "stack": false,
+    "capacity": 15,
     "notes": "Full Body Armor",
     "catalogId": "9ee80c97-9197-4dd5-baed-f77cfd2cee17"
    }
@@ -2085,7 +2144,7 @@
   "foundryId": "yd8yc6L9gG6VVMHM",
   "foundryWorld": "test-world",
   "foundryImportedAt": 1795629244307,
-  "foundryHash": "ef0a96ec3441"
+  "foundryHash": "aaf1dcaef4a9"
  },
  {
   "type": "npc",
@@ -2153,6 +2212,12 @@
     "reach": 0,
     "equipped": true,
     "catalogId": "b2eefb04-0e33-4faa-8e92-5c4bcbfc3f16",
+    "mounts": [
+     "Barrel",
+     "Top",
+     "Stock",
+     "Side"
+    ],
     "notes": "Colt Cobra TZ-120 (SR5 427)"
    },
    {
@@ -2169,6 +2234,10 @@
     "ammo": "30",
     "reach": 0,
     "catalogId": "7dff8ab0-c659-4901-ac3b-cb8b4f3839bf",
+    "mounts": [
+     "Barrel",
+     "Top"
+    ],
     "notes": "Fichetti Security 600 (SR5 426)"
    }
   ],
@@ -2179,6 +2248,7 @@
     "rating": 12,
     "equipped": true,
     "stack": false,
+    "capacity": 12,
     "notes": "Armor Jacket",
     "catalogId": "36a4cd30-c32c-44d0-847a-0c15fb51072a"
    }
@@ -2255,7 +2325,7 @@
   "foundryId": "Ddm6IDOJvaVyWBSJ",
   "foundryWorld": "test-world",
   "foundryImportedAt": 1795629244307,
-  "foundryHash": "91f2d7762306"
+  "foundryHash": "4bf2f81b5115"
  },
  {
   "type": "npc",
@@ -2314,7 +2384,7 @@
     "category": "Corps à corps",
     "kind": "melee",
     "skill": "unarmed_combat",
-    "accuracy": 5,
+    "accuracy": "Physical",
     "damage": "(STR)S",
     "ap": 0,
     "mode": "",
@@ -2337,6 +2407,13 @@
     "ammo": "42",
     "reach": 0,
     "catalogId": "3a7a90ce-fbb5-4599-a857-b9849eb9769c",
+    "mounts": [
+     "Stock",
+     "Side",
+     "Barrel",
+     "Top",
+     "Under"
+    ],
     "notes": "Ares Alpha (SR5 428)"
    }
   ],
@@ -2347,6 +2424,7 @@
     "rating": 12,
     "equipped": true,
     "stack": false,
+    "capacity": 12,
     "notes": "Armor Jacket",
     "catalogId": "36a4cd30-c32c-44d0-847a-0c15fb51072a"
    }
@@ -2427,7 +2505,7 @@
   "foundryId": "EMxuy9Rg4BiauIVv",
   "foundryWorld": "test-world",
   "foundryImportedAt": 1795629244307,
-  "foundryHash": "b4d4a23a00e9"
+  "foundryHash": "55a5f7c2013e"
  },
  {
   "type": "npc",
@@ -2916,7 +2994,7 @@
     "category": "Corps à corps",
     "kind": "melee",
     "skill": "unarmed_combat",
-    "accuracy": 5,
+    "accuracy": "Physical",
     "damage": "(STR)S",
     "ap": 0,
     "mode": "",
@@ -2939,6 +3017,13 @@
     "ammo": "10(c)",
     "reach": 0,
     "catalogId": "622bd915-0e0c-431b-9da5-e0c0c31e2122",
+    "mounts": [
+     "Stock",
+     "Side",
+     "Barrel",
+     "Top",
+     "Under"
+    ],
     "notes": "Enfield AS-7 (SR5 429)"
    }
   ],
@@ -2949,6 +3034,7 @@
     "rating": 9,
     "equipped": true,
     "stack": false,
+    "capacity": 9,
     "notes": "Armor Vest",
     "catalogId": "4ad1eeab-daf3-4495-a73d-fbb0ce89be5b"
    }
@@ -3032,7 +3118,7 @@
   "foundryId": "6UWVikNA7z277HKr",
   "foundryWorld": "test-world",
   "foundryImportedAt": 1795629244307,
-  "foundryHash": "f2c416a99c55"
+  "foundryHash": "b85c7ea706f1"
  },
  {
   "type": "npc",
@@ -3083,7 +3169,7 @@
     "category": "Corps à corps",
     "kind": "melee",
     "skill": "unarmed_combat",
-    "accuracy": 5,
+    "accuracy": "Physical",
     "damage": "(STR)S",
     "ap": 0,
     "mode": "",
@@ -3107,6 +3193,12 @@
     "reach": 0,
     "equipped": true,
     "catalogId": "b2eefb04-0e33-4faa-8e92-5c4bcbfc3f16",
+    "mounts": [
+     "Barrel",
+     "Top",
+     "Stock",
+     "Side"
+    ],
     "notes": "Colt Cobra TZ-120 (SR5 427)"
    }
   ],
@@ -3246,7 +3338,7 @@
   "foundryId": "fDRJPXj9pJ4jj91T",
   "foundryWorld": "test-world",
   "foundryImportedAt": 1795629244307,
-  "foundryHash": "fd93256fa160"
+  "foundryHash": "5eb3d7f4b3cb"
  },
  {
   "type": "npc",
@@ -3445,7 +3537,7 @@
     "category": "Corps à corps",
     "kind": "melee",
     "skill": "unarmed_combat",
-    "accuracy": 5,
+    "accuracy": "Physical",
     "damage": "(STR)S",
     "ap": 0,
     "mode": "",
@@ -3526,7 +3618,7 @@
   "foundryId": "xQYWHk8XE8AVaOX2",
   "foundryWorld": "test-world",
   "foundryImportedAt": 1795629244307,
-  "foundryHash": "21f642e60cc0"
+  "foundryHash": "0b91afbe37d7"
  },
  {
   "type": "npc",

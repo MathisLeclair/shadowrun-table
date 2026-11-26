@@ -8,6 +8,8 @@ import {
 } from '/shared/chargen.js';
 import { Budget, StepIssues, i18n } from './common.js';
 import Picker from './Picker.js';
+import { ItemRef, BookRef } from '../books/BookRef.js';
+import { complexFormRef } from '/shared/bookrefs.js';
 
 /** Spell categories: French label from the catalog table, official English category (the key) in English. */
 const spellCats = () => Object.entries(SPELL_CATEGORIES).map(([value, label]) => ({ value, label: getLang() === 'fr' ? label : value }));
@@ -101,7 +103,7 @@ function Spells({ data, update, result, rc }) {
   return html`<${Panel} title=${t('Sorts')} class="cg-mt" actions=${html`<${Badge} color=${r.spent.spells > max ? 'red' : 'cyan'}>${t('{n} / {free} gratuits', { n: r.spent.spells, free })}${r.spent.spells > free ? ` · +${(r.spent.spells - free) * 5} K` : ''}</${Badge}>`}>
     <div class="small muted">${free ? t('{n} sorts gratuits, puis 5 karma par sort.', { n: free }) : t('5 karma par sort.')} ${t('Maximum Magie × 2 = {max}.', { max })}</div>
     ${data.spells.length > 0 && html`<div class="cg-chips">
-      ${r.spells.map((s) => html`<span class="cg-chip">${s.item ? itemName(s.item) : s.name} <i>${spellCat(s.item, s.category)} · ${s.type} · ${s.range} · ${s.duration} · ${t('Drain {dv}', { dv: s.drain })}</i>
+      ${r.spells.map((s) => html`<span class="cg-chip">${s.item ? itemName(s.item) : s.name} <${ItemRef} item=${s.item} /> <i>${spellCat(s.item, s.category)} · ${s.type} · ${s.range} · ${s.duration} · ${t('Drain {dv}', { dv: s.drain })}</i>
         <${IconButton} icon="✕" title=${t('Retirer')} onClick=${() => update((d) => (d.spells = d.spells.filter((x) => x.catalogId !== s.catalogId)))} /></span>`)}
     </div>`}
     <${Picker} items=${rc.spells} name=${itemName} placeholder=${t('Chercher un sort…')}
@@ -121,7 +123,7 @@ function Powers({ data, update, result, rc }) {
         const info = powerInfo(p.item);
         const row = data.powers.find((x) => x.catalogId === p.catalogId);
         return html`<tr>
-          <td><strong>${p.item ? itemName(p.item) : p.name}</strong>${info.extraPP ? html` <span class="faint small">${t('(+{pp} PP au 1er niveau)', { pp: info.extraPP })}</span>` : ''}</td>
+          <td><strong>${p.item ? itemName(p.item) : p.name}</strong> <${ItemRef} item=${p.item} />${info.extraPP ? html` <span class="faint small">${t('(+{pp} PP au 1er niveau)', { pp: info.extraPP })}</span>` : ''}</td>
           <td>${info.levels ? html`<span class="row gap-s"><span class="small muted">${t('Niveau')}</span><${NumberInput} small value=${row?.level || 1} min=${1} max=${Math.min(info.maxLevel || 12, Math.max(1, r.magic.effMAG))} onChange=${(v) => update((d) => { const x = d.powers.find((y) => y.catalogId === p.catalogId); if (x) x.level = v; })} /></span>` : ''}</td>
           <td><${TextInput} live value=${row?.choice || ''} placeholder=${t('Précision (compétence, attribut…)')} onChange=${(v) => update((d) => { const x = d.powers.find((y) => y.catalogId === p.catalogId); if (x) x.choice = v; })} /></td>
           <td class="num-cell">${p.pp} PP</td>
@@ -149,9 +151,14 @@ function Forms({ data, update, result }) {
     <div class="cg-forms">
       ${COMPLEX_FORMS.map((f) => html`<label class=${'cg-form' + (chosen.has(f.id) ? ' on' : '')}>
         <input type="checkbox" checked=${chosen.has(f.id)} onChange=${() => toggle(f.id)} />
-        <span class="grow"><strong>${getLang() === 'fr' ? f.name : f.en}</strong><span class="small muted"> · ${t(f.target)} · ${t('durée {d}', { d: f.duration })} · ${t('estompage {f}', { f: f.fading })}</span></span>
+        <span class="grow"><strong>${getLang() === 'fr' ? f.name : f.en}</strong> <${FormRef} f=${f} /><span class="small muted"> · ${t(f.target)} · ${t('durée {d}', { d: f.duration })} · ${t('estompage {f}', { f: f.fading })}</span></span>
       </label>`)}
     </div>
   </${Panel}>`;
 }
 
+/** 📖 SR5 page of a core complex form (shared/bookrefs.js COMPLEX_FORM_PAGES). */
+function FormRef({ f }) {
+  const r = complexFormRef(f);
+  return r ? html`<${BookRef} source=${r.source} page=${r.page} />` : null;
+}

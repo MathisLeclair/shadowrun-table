@@ -67,7 +67,7 @@
     "category": "Corps à corps",
     "kind": "melee",
     "skill": "unarmed_combat",
-    "accuracy": 5,
+    "accuracy": "Physical",
     "damage": "(STR)S",
     "ap": 0,
     "mode": "",
@@ -93,7 +93,7 @@
   "foundryId": "0VtybZM3jWdPl9G9",
   "foundryWorld": "test-world",
   "foundryImportedAt": 1795629244307,
-  "foundryHash": "8724024606ae"
+  "foundryHash": "783f9dd2c1e3"
  },
  {
   "id": "tpl_fvtt_grunt",
@@ -174,6 +174,13 @@
     "ammo": "30",
     "reach": 0,
     "catalogId": "5c04009f-7858-4c9a-bc9e-d21880e420cf",
+    "mounts": [
+     "Stock",
+     "Side",
+     "Barrel",
+     "Top",
+     "Under"
+    ],
     "notes": "HK MP75 (SHB2 0)"
    }
   ],
@@ -202,7 +209,7 @@
   "foundryId": "298MjgDP47IKqqQ0",
   "foundryWorld": "test-world",
   "foundryImportedAt": 1795629244307,
-  "foundryHash": "57ba0855bec3"
+  "foundryHash": "11266136aa9d"
  },
  {
   "id": "tpl_fvtt_dr_sebastian_grogg",
@@ -423,6 +430,10 @@
     "ammo": "11",
     "reach": 0,
     "catalogId": "676660a2-3320-4b4a-acaf-f645f2ba6cd7",
+    "mounts": [
+     "Barrel",
+     "Top"
+    ],
     "notes": "Colt America L36 (SR5 425)"
    }
   ],
@@ -433,6 +444,7 @@
     "rating": 9,
     "equipped": true,
     "stack": false,
+    "capacity": 9,
     "notes": "Armor Vest",
     "catalogId": "4ad1eeab-daf3-4495-a73d-fbb0ce89be5b"
    }
@@ -463,7 +475,7 @@
   "foundryId": "Dam0tbi0pHRxZ9Gd",
   "foundryWorld": "test-world",
   "foundryImportedAt": 1795629244307,
-  "foundryHash": "7659770b1e68"
+  "foundryHash": "93979d837e07"
  },
  {
   "id": "tpl_fvtt_male_elf_2",
@@ -585,7 +597,7 @@
     "category": "Corps à corps",
     "kind": "melee",
     "skill": "unarmed_combat",
-    "accuracy": 5,
+    "accuracy": "Physical",
     "damage": "(STR)S",
     "ap": 0,
     "mode": "",
@@ -611,7 +623,7 @@
   "foundryId": "TiLbrEgpzvdvcwAb",
   "foundryWorld": "test-world",
   "foundryImportedAt": 1795629244307,
-  "foundryHash": "8e9b6fd3cd86"
+  "foundryHash": "f19297604224"
  },
  {
   "id": "tpl_fvtt_male_elf",
@@ -729,6 +741,10 @@
     "reach": 0,
     "equipped": true,
     "catalogId": "67474de7-d29b-4b31-a6ae-1e2e981fa5d2",
+    "mounts": [
+     "Barrel",
+     "Top"
+    ],
     "notes": "Ares Light Fire 70 (SR5 425)"
    }
   ],
@@ -806,7 +822,7 @@
   "foundryId": "cXludj1e47RQReKA",
   "foundryWorld": "test-world",
   "foundryImportedAt": 1795629244307,
-  "foundryHash": "2c6c96bfe998"
+  "foundryHash": "4afc1773983a"
  },
  {
   "id": "tpl_fvtt_human_man",

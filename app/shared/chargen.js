@@ -23,6 +23,7 @@
 //     contacts: [{ id, name, connection, loyalty, notes }], notes }
 import { METATYPES, SKILLS, SKILL_BY_ID, SKILL_GROUPS, ATTR_LABELS } from './sr5.js';
 import { spellInfo, powerInfo } from './advancement.js';
+import { bonusFromEffects } from './modifiers.js';
 
 // ---------------------------------------------------------------------------
 // i18n (see ARCHITECTURE.md « i18n »). French labels are dictionary keys (client/i18n/en/chargen.json): tk() marks
@@ -165,7 +166,9 @@ export const KNOWLEDGE_TYPES = { street: tk('Rue'), academic: tk('Académique'),
 /** Qualities that come from the Magic priority (never bought separately at creation). */
 export const MAGIC_QUALITY_NAMES = new Set(['Magician', 'Adept', 'Mystic Adept', 'Aspected Magician', 'Technomancer']);
 export const CREATION_GRADES = ['standard', 'alpha', 'used'];
-export const GEAR_FILES = ['weapons', 'armor', 'gear', 'cyberware', 'bioware', 'vehicles', 'programs'];
+export const GEAR_FILES = ['weapons', 'armor', 'gear', 'cyberware', 'bioware', 'vehicles', 'programs', 'accessories', 'armormods'];
+/** Upgrade catalogs offered at creation: installed on a weapon / armor row of the same draft (gear row `target` = that row's id). */
+export const CREATION_UPGRADES = { accessories: { file: 'weapons', list: 'weapons', sub: 'accessories' }, armormods: { file: 'armor', list: 'armor', sub: 'mods' } };
 
 export const LIMITS = {
   karma: 25, // starting karma
@@ -316,6 +319,9 @@ export function normalizeDraft(raw) {
         qty: int(g.qty, 1, 1, 999),
         rating: g.rating === null || g.rating === undefined || g.rating === '' ? null : int(g.rating, 1, 0, 100),
         grade: CREATION_GRADES.includes(g.grade) || ['beta', 'delta'].includes(g.grade) ? g.grade : null,
+        // Weapon accessory / armor mod: draft row it is installed on (+ accessory mount point).
+        ...(str(g.target, 40) ? { target: str(g.target, 40) } : {}),
+        ...(str(g.mount, 20) ? { mount: str(g.mount, 20) } : {}),
       };
     }),
     lifestyle: isObj(d.lifestyle) && str(d.lifestyle.catalogId, 80) ? { catalogId: str(d.lifestyle.catalogId, 80), months: int(d.lifestyle.months, 1, 1, 12) } : null,
@@ -561,9 +567,66 @@ export function compute(rawData, ctx = {}) {
 
   // ---- Gear (needed early: essence affects Magic)
   const gearLines = [];
+  /**
+   * Weapon accessory / armor mod row: target = a weapon / armor row of the draft; price with the target's value (WeaponCost,
+   * ArmorCost, Capacity), availability relative to the target (« +2R »), fit checked with the shop rules (mount points, capacity).
+   */
+  const upgradeLine = (g, e) => {
+    const u = CREATION_UPGRADES[e.file];
+    const [nfr, nen] = itemNames(e.item);
+    const base = { row: g, item: e.item, file: e.file, name: nfr, upgrade: true };
+    const tl = gearLines.find((l) => l.row.id === g.target && l.file === u.file && l.item && l.quote && (!rules.targetList || rules.targetList(l.file, l.item) === u.list));
+    if (!tl) {
+      err('gear', u.file === 'weapons' ? tk('{name} : choisis l’arme sur laquelle l’installer.') : tk('{name} : choisis l’armure sur laquelle l’installer.'), { name: nfr }, { name: nen });
+      return base;
+    }
+    const tst = tl.item.stats || {};
+    if (!tl.sim) {
+      tl.sim = u.file === 'weapons'
+        ? { name: tl.name, category: tl.item.category, ...(Array.isArray(tst.mounts) ? { mounts: [...tst.mounts] } : {}),
+          accessories: (tst.included || []).map((inc) => ({ catalogId: inc.id, name: inc.name, mount: 'Internal', included: true })) }
+        : { name: tl.name, rating: evalAt(rules, tst.armor ?? 0, tl.quote.rating), ...(tst.capacity !== undefined ? { capacity: tst.capacity } : {}), mods: [] };
+    }
+    const cap = u.file === 'armor' && rules.armorCapacity ? rules.armorCapacity(tl.sim, tl.item) : 0;
+    const vars = u.file === 'weapons' ? { WeaponCost: tl.quote.unitCost || 0 } : { ArmorCost: tl.quote.unitCost || 0, Capacity: cap };
+    let q = null;
+    try {
+      q = rules.quote ? rules.quote(e.item, { rating: g.rating, vars }) : null;
+      if (q && rules.upgradeAvail) q = rules.upgradeAvail(q, e.item, tl.quote);
+    } catch {
+      q = null;
+    }
+    if (!q) return { ...base, missing: !rules.quote };
+    const line = { ...base, quote: q, qty: 1, total: q.unitCost, essence: 0, target: { rowId: tl.row.id, name: tl.name } };
+    const en = (params) => Object.fromEntries(Object.entries(params || {}).map(([k, v]) => [k, k === 'item' ? nen : k === 'weapon' || k === 'armor' ? tl.item.name : v]));
+    if (u.file === 'weapons' && rules.accessoryFit) {
+      const fit = rules.accessoryFit(tl.sim, tl.item, e.item, { mount: g.mount });
+      if (fit.problem) {
+        err('gear', fit.problem.key, fit.problem.params, en(fit.problem.params));
+        line.misfit = true;
+      }
+      else {
+        tl.sim.accessories.push({ catalogId: e.item.id, mount: fit.mount });
+        line.mount = fit.mount;
+      }
+    } else if (u.file === 'armor' && rules.armorModFit) {
+      const fit = rules.armorModFit(tl.sim, tl.item, e.item, q.rating);
+      if (fit.problem) {
+        err('gear', fit.problem.key, fit.problem.params, en(fit.problem.params));
+        line.misfit = true;
+      }
+      else {
+        tl.sim.mods.push({ catalogId: e.item.id, capacity: fit.need });
+        line.capacity = fit.need;
+      }
+    }
+    return line;
+  };
   let gearCost = 0;
   let essenceCost = 0;
-  for (const g of data.gear) {
+  // Upgrade rows (accessories, armor mods) are priced and fitted after the weapons / armors they are installed on.
+  const isUpgradeRow = (g) => !!CREATION_UPGRADES[lookup(g.ref)?.file];
+  for (const g of [...data.gear.filter((x) => !isUpgradeRow(x)), ...data.gear.filter(isUpgradeRow)]) {
     const e = lookup(g.ref);
     if (!e) {
       gearLines.push({ row: g, missing: true, name: g.name || g.ref });
@@ -573,6 +636,15 @@ export function compute(rawData, ctx = {}) {
     if (!GEAR_FILES.includes(e.file)) {
       const [nfr, nen] = itemNames(e.item);
       err('gear', tk('{name} : ne s’achète pas ici.'), { name: nfr }, { name: nen });
+      continue;
+    }
+    if (CREATION_UPGRADES[e.file]) {
+      const line = upgradeLine(g, e);
+      gearLines.push(line);
+      if (line.quote) {
+        gearCost += line.total;
+        if (line.quote.availValue > LIMITS.maxAvail) err('gear', tk('{name} : disponibilité {avail} au-dessus de {max} (création).'), { name: line.name, avail: line.quote.avail, max: LIMITS.maxAvail }, { name: e.item.name });
+      }
       continue;
     }
     const ware = e.file === 'cyberware' || e.file === 'bioware';
@@ -913,7 +985,7 @@ function evalAt(rules, f, rating) {
   }
 }
 
-/** Same recording format as server/lib/augment.js applyBonus: returns what was applied ({ attributes, initiativeDice }). */
+/** Same recording format as server/lib/augment.js applyBonus: returns what was applied ({ attributes, initiativeDice, initiative }). */
 function applyBonusPure(actor, bonus, rating, rules) {
   if (!bonus || !rules.evalFormula) return undefined;
   const applied = {};
@@ -933,7 +1005,26 @@ function applyBonusPure(actor, bonus, rating, rules) {
       applied.initiativeDice = v;
     }
   }
+  if (bonus.initiative) {
+    const v = evalAt(rules, bonus.initiative, rating);
+    if (v) {
+      actor.initiative = actor.initiative || { dice: 1, bonus: 0 };
+      actor.initiative.bonus = (Number(actor.initiative.bonus) || 0) + v;
+      applied.initiative = v;
+    }
+  }
   return Object.keys(applied).length ? applied : undefined;
+}
+
+/** Weapon accessory sub-item (same shape as the shop's): catalog entry from ctx.lookup(inc.id) when known. */
+function accessoryFrom(makeId, ctx, inc, extra = {}, known = null) {
+  const accItem = known || (inc.id && ctx.lookup ? ctx.lookup(inc.id)?.item : null);
+  const a = { id: makeId('acc'), ...(accItem || inc.id ? { catalogId: accItem?.id || inc.id } : {}), name: accItem?.name || inc.name, mount: '', cost: 0, avail: accItem?.avail || '' };
+  if (accItem?.nameFr) a.nameFr = accItem.nameFr;
+  const effects = accItem && ctx.rules?.accessoryEffects ? ctx.rules.accessoryEffects(accItem) : {};
+  if (Object.keys(effects).length) a.effects = effects;
+  if (Array.isArray(accItem?.stats?.extraMount) && accItem.stats.extraMount.length) a.extraMount = [...accItem.stats.extraMount];
+  return Object.assign(a, extra);
 }
 
 function weaponFrom(makeId, name, category, st, extra = {}) {
@@ -1059,6 +1150,9 @@ export function buildActor(rawData, ctx = {}, opts = {}) {
     if (q.notes) notes.push(q.notes);
     const row = { id: makeId('q'), name: q.name + (q.maxLevels > 1 && q.level > 1 ? ` (${q.level})` : ''), karma: q.positive ? q.cost : -q.cost, positive: q.positive, catalogId: q.catalogId };
     if (notes.length) row.notes = notes.join(' — ');
+    // Attribute / initiative bonus of the quality's catalog effects (Lightning Reflexes…), stored like server/lib/augment.js does.
+    const qb = applyBonusPure(actor, bonusFromEffects(q.item?.effects, row), 1, rules);
+    if (qb) row.bonus = qb;
     actor.qualities.push(row);
   }
   if (data.metatype === 'Troll') actor.armor.push({ id: makeId('arm'), name: tk('Armure dermique (troll)'), rating: 1, equipped: true, stack: true, notes: tk('Trait racial') });
@@ -1070,8 +1164,11 @@ export function buildActor(rawData, ctx = {}, opts = {}) {
   for (const p of result.powers) {
     const pw = { id: makeId('pw'), name: p.name, pp: p.pp, catalogId: p.catalogId };
     if (p.level) pw.level = p.level;
-    if (p.choice) pw.notes = p.choice;
-    const bonus = p.item?.stats?.bonus;
+    if (p.choice) {
+      pw.notes = p.choice;
+      pw.choice = p.choice; // « select… » effects (Improved Physical Attribute, Improved Ability) — shared/modifiers.js
+    }
+    const bonus = (Array.isArray(p.item?.effects) ? bonusFromEffects(p.item.effects, pw) : null) || p.item?.stats?.bonus;
     if (bonus) {
       const applied = applyBonusPure(actor, bonus, p.level || 1, rules);
       if (applied) pw.bonus = applied;
@@ -1085,6 +1182,7 @@ export function buildActor(rawData, ctx = {}, opts = {}) {
 
   // Gear (same item → actor mapping as the shop, server/modules/40-shop.js addLine)
   let device = null;
+  const built = new Map(); // draft row id → first weapon / armor built from it (upgrade target)
   const DEVICE = rules.DEVICE_GEAR || new Set(['Commlinks', 'Cyberdecks', 'Rigger Command Consoles', 'Cyberterminals']);
   for (const line of result.gearLines) {
     if (!line.quote) continue;
@@ -1094,16 +1192,29 @@ export function buildActor(rawData, ctx = {}, opts = {}) {
     const category = item.categoryFr || item.category || '';
     const listName = rules.targetList ? rules.targetList(file, item) : file === 'weapons' ? 'weapons' : 'gear';
     const base = { catalogId: item.id, paid: q.unitCost };
+    if (listName === 'upgrade') continue; // installed below, once every weapon / armor exists
     if (listName === 'weapons') {
-      for (let i = 0; i < qty; i++) actor.weapons.push(weaponFrom(makeId, lname, category, st, base));
+      for (let i = 0; i < qty; i++) {
+        // Same as a shop purchase: mount points and the accessories delivered with the weapon.
+        const w = weaponFrom(makeId, lname, category, st, base);
+        if (Array.isArray(st.mounts)) w.mounts = [...st.mounts];
+        const included = (st.included || []).map((inc) => accessoryFrom(makeId, ctx, inc, { mount: 'Internal', included: true, cost: 0 }));
+        if (included.length) w.accessories = included;
+        actor.weapons.push(w);
+        if (!built.has(line.row.id)) built.set(line.row.id, w);
+      }
     } else if (listName === 'armor') {
-      for (let i = 0; i < qty; i++) actor.armor.push({ id: makeId('arm'), name: lname, rating: evalAt(rules, st.armor ?? 0, q.rating), equipped: false, ...(st.stack ? { stack: true } : {}), ...base });
+      for (let i = 0; i < qty; i++) {
+        const ar = { id: makeId('arm'), name: lname, rating: evalAt(rules, st.armor ?? 0, q.rating), equipped: false, ...(st.stack ? { stack: true } : {}), ...(st.capacity !== undefined ? { capacity: evalAt(rules, st.capacity, q.rating) } : {}), ...base };
+        actor.armor.push(ar);
+        if (!built.has(line.row.id)) built.set(line.row.id, ar);
+      }
     } else if (listName === 'augmentations') {
       for (let i = 0; i < qty; i++) {
         const aug = { id: makeId('aug'), name: lname, kind: st.kind || (file === 'bioware' ? 'bioware' : 'cyberware'), grade: q.grade || 'standard', essence: q.essence || 0, ...base };
         if (q.rating) aug.rating = q.rating;
         actor.attributes.ESS = round3(actor.attributes.ESS - aug.essence);
-        const applied = applyBonusPure(actor, st.bonus, q.rating, rules);
+        const applied = applyBonusPure(actor, (Array.isArray(item.effects) ? bonusFromEffects(item.effects, aug) : null) || st.bonus, q.rating, rules);
         if (applied) aug.bonus = applied;
         if (st.weapon) actor.weapons.push(weaponFrom(makeId, lname, category, st.weapon, { augId: aug.id, catalogId: item.id }));
         actor.augmentations.push(aug);
@@ -1130,6 +1241,28 @@ export function buildActor(rawData, ctx = {}, opts = {}) {
       if (file === 'programs') (actor._programs = actor._programs || []).push(lname);
     }
   }
+  // Weapon accessories / armor mods on their weapon / armor (fit already checked by compute())
+  for (const line of result.gearLines) {
+    if (!line.upgrade || !line.quote || !line.target || line.misfit) continue;
+    const parent = built.get(line.target.rowId);
+    const u = CREATION_UPGRADES[line.file];
+    if (!parent || !u) continue;
+    const { item, quote: q } = line;
+    if (!Array.isArray(parent[u.sub])) parent[u.sub] = [];
+    if (line.file === 'accessories') {
+      parent.accessories.push(accessoryFrom(makeId, ctx, { id: item.id, name: item.name }, { mount: line.mount ?? '', cost: q.unitCost, paid: q.unitCost, ...(q.rating ? { rating: q.rating } : {}) }, item));
+    } else {
+      const m = { id: makeId('mod'), catalogId: item.id, name: item.name, capacity: line.capacity ?? 0, cost: q.unitCost, paid: q.unitCost, avail: item.avail || '' };
+      if (item.nameFr) m.nameFr = item.nameFr;
+      if (q.rating) m.rating = q.rating;
+      if (item.stats?.armor) m.effects = { armor: Number(item.stats.armor) || 0 };
+      if (item.stats?.bonus && Object.keys(item.stats.bonus).length) {
+        m.bonus = {};
+        for (const [k, v] of Object.entries(item.stats.bonus)) m.bonus[k] = typeof v === 'string' ? evalAt(rules, v, q.rating) : v;
+      }
+      parent.mods.push(m);
+    }
+  }
   // Essence loss → Magic / Resonance loss (1 per started point lost)
   const loss = Math.max(0, Math.ceil(6 - actor.attributes.ESS - 1e-9));
   if (loss) for (const k of ['MAG', 'RES']) if (actor.attributes[k] > 0) actor.attributes[k] = Math.max(0, actor.attributes[k] - loss);
@@ -1154,7 +1287,15 @@ export function buildActor(rawData, ctx = {}, opts = {}) {
   const best = bodies.reduce((b, a) => (!b || (Number(a.rating) || 0) > (Number(b.rating) || 0) ? a : b), null);
   for (const a of actor.armor) if (a.stack || a === best) a.equipped = true;
 
-  if (result.lifestyle) actor.lifestyle = { name: result.lifestyle.name, monthlyCost: result.lifestyle.monthly, monthsPaid: result.lifestyle.months };
+  if (result.lifestyle) {
+    // Starting lifestyle → lifestyles[0] (see shared/lifestyle.js); the dwarf/troll surcharge is part of the base cost.
+    const it = result.lifestyle.item || {};
+    const base = /^Hospitalized/i.test(it.name || '') ? 'Hospitalized' : it.name || 'Medium';
+    actor.lifestyles = [{
+      id: makeId('ls'), name: result.lifestyle.name, base, ...(it.id ? { catalogId: it.id } : {}), baseCost: result.lifestyle.monthly, monthsPaid: result.lifestyle.months,
+      primary: true, qualities: [], monthlyCost: result.lifestyle.monthly, notes: '',
+    }];
+  }
   for (const k of data.contacts) {
     if (!k.name.trim()) continue;
     const row = { id: makeId('ct'), name: k.name.trim(), connection: k.connection, loyalty: k.loyalty };

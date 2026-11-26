@@ -1,0 +1,434 @@
+{
+ "2050": {
+  "name": "Shadowrun 2050 (German-Only)",
+  "nameFr": "Shadowrun 2050 (exclusivement allemand)"
+ },
+ "AP": {
+  "name": "Assassin's Primer",
+  "nameFr": "Manuel de l'assassin",
+  "match": {
+   "text": "Whether we want to admit it or not,",
+   "page": 2
+  }
+ },
+ "GH3": {
+  "name": "Gun Heaven 3",
+  "nameFr": "Gun Heaven 3",
+  "match": {
+   "text": "The weapon is designed to be hand loaded",
+   "page": 3
+  }
+ },
+ "RG": {
+  "name": "Run and Gun",
+  "nameFr": "Run & Gun",
+  "match": {
+   "text": "The whole run was a setup. It had to be",
+   "page": 6
+  }
+ },
+ "SR5": {
+  "name": "Shadowrun 5th Edition",
+  "nameFr": "Shadowrun 5e Édition",
+  "match": {
+   "text": "Welcome to Shadowrun, Fifth Edition. Welcome to the",
+   "page": 8
+  }
+ },
+ "SG": {
+  "name": "Street Grimoire",
+  "nameFr": "Grimoire des Ombres",
+  "match": {
+   "text": "Sixth World that has developed a taste for Awakened",
+   "page": 5
+  }
+ },
+ "SGE": {
+  "name": "Street Grimoire Errata",
+  "nameFr": "Street Grimoire Errata",
+  "match": {
+   "text": "PROTECT VEHICLE SUB-HEADER",
+   "page": 2
+  }
+ },
+ "BB": {
+  "name": "Bullets & Bandages",
+  "nameFr": "Balles & pansements",
+  "match": {
+   "text": "an average troll to stand in. He was lying among a pile of",
+   "page": 3
+  }
+ },
+ "SASS": {
+  "name": "Sail Away, Sweet Sister",
+  "nameFr": "Sail Away, Sweet Sister",
+  "match": {
+   "text": "Cut to the damn chase, Eddie",
+   "page": 2
+  }
+ },
+ "SS": {
+  "name": "Stolen Souls",
+  "nameFr": "Âmes volées",
+  "match": {
+   "text": "Freedom is a prison all its own",
+   "page": 4
+  }
+ },
+ "RF": {
+  "name": "Run Faster",
+  "nameFr": "Run Faster",
+  "match": {
+   "text": "Less than a day before",
+   "page": 6
+  }
+ },
+ "SSP": {
+  "name": "Shadow Spells",
+  "nameFr": "Shadow Spells",
+  "match": {
+   "text": "The subject of magic is broad enough",
+   "page": 3
+  }
+ },
+ "NP": {
+  "name": "Nothing Personal",
+  "nameFr": "Nothing Personal",
+  "match": {
+   "text": "I let the warm water trickle down my body. Not warm",
+   "page": 2
+  }
+ },
+ "DT": {
+  "name": "Data Trails",
+  "nameFr": "Data Trails",
+  "match": {
+   "text": "The Matrix is the vast, wild, and wooly frontier",
+   "page": 3
+  }
+ },
+ "DTD": {
+  "name": "Data Trails (Dissonant Echoes)",
+  "nameFr": "Data Trails (Échos Dissonnants)",
+  "match": {
+   "text": "The Matrix is the vast, wild, and wooly frontier",
+   "page": 3
+  }
+ },
+ "CF": {
+  "name": "Chrome Flesh",
+  "nameFr": "Chrome Flesh",
+  "match": {
+   "text": "The tragedy of a shadowrunner",
+   "page": 3
+  }
+ },
+ "HT": {
+  "name": "Hard Targets",
+  "nameFr": "Hard Targets",
+  "match": {
+   "text": "Shadowrunners will punch you in the face",
+   "page": 5
+  }
+ },
+ "BLB": {
+  "name": "Bloody Business",
+  "nameFr": "Bloody Business",
+  "match": {
+   "text": "Operations in bad times are pretty much the same",
+   "page": 5
+  }
+ },
+ "SHB": {
+  "name": "Schattenhandbuch (German-Only)",
+  "nameFr": "Schattenhandbuch (exclusivement allemand)"
+ },
+ "SHB2": {
+  "name": "Schattenhandbuch 2 (German-Only)",
+  "nameFr": "Schattenhandbuch 2 (exclusivement allemand)"
+ },
+ "SHB3": {
+  "name": "Schattenhandbuch 3 (German-Only)",
+  "nameFr": "Schattenhandbuch 3 (exclusivement allemand)"
+ },
+ "SHB4": {
+  "name": "Schattenhandbuch 4 (German-Only)",
+  "nameFr": "Schattenhandbuch 4 (exclusivement allemand)"
+ },
+ "R5": {
+  "name": "Rigger 5.0",
+  "nameFr": "Rigger 5.0",
+  "match": {
+   "text": "There are obvious uses for riggers",
+   "page": 5
+  }
+ },
+ "HS": {
+  "name": "Howling Shadows",
+  "nameFr": "Howling Shadows",
+  "match": {
+   "text": "In the Sixth World, people usually assume that the thing",
+   "page": 5
+  }
+ },
+ "TVG": {
+  "name": "The Vladivostok Gauntlet",
+  "nameFr": "The Vladivostok Gauntlet",
+  "match": {
+   "text": "They grinned like wolves",
+   "page": 2
+  }
+ },
+ "SPS": {
+  "name": "Splintered State",
+  "nameFr": "Fragmentation",
+  "match": {
+   "text": "FBI Agent Seth Dietrich had seen plenty of danger or",
+   "page": 3
+  }
+ },
+ "SFB": {
+  "name": "Shadows In Focus: Butte",
+  "nameFr": "Shadows In Focus : Butte",
+  "match": {
+   "text": "This isn’t a run, this is a high school prank",
+   "page": 3
+  }
+ },
+ "HKS": {
+  "name": "Hong Kong Sourcebook",
+  "nameFr": "Hong Kong Sourcebook",
+  "match": {
+   "text": "Hong Kong: Neon Contrails fleshes out the sprawl",
+   "page": 3
+  }
+ },
+ "LCD": {
+  "name": "Lockdown",
+  "nameFr": "Lockdown",
+  "match": {
+   "text": "A breakdown of civilization, new threats, crazy danger, corporate desperation, and secrets",
+   "page": 8
+  }
+ },
+ "SFM": {
+  "name": "Shadows In Focus: San Francisco Metroplex",
+  "nameFr": "Shadows In Focus : San Francisco Metroplex",
+  "match": {
+   "text": "Known for the fog rolling in off the water",
+   "page": 3
+  }
+ },
+ "SFME": {
+  "name": "Shadows In Focus: Metropole",
+  "nameFr": "Shadows In Focus : Metropole",
+  "match": {
+   "text": "And he was ugly",
+   "page": 3
+  }
+ },
+ "CA": {
+  "name": "Cutting Aces",
+  "nameFr": "Cutting Aces",
+  "match": {
+   "text": "Real con artists know they never have to ask anyone",
+   "page": 3
+  }
+ },
+ "PBG": {
+  "name": "Parabotany (German-Only)",
+  "nameFr": "Parabotany (German-Only)"
+ },
+ "PGG": {
+  "name": "Parageology (German-Only)",
+  "nameFr": "Parageology (German-Only)"
+ },
+ "PZG": {
+  "name": "Parazoology (German-Only)",
+  "nameFr": "Parazoology (German-Only)"
+ },
+ "BOTL": {
+  "name": "Book of the Lost",
+  "nameFr": "Book of the Lost",
+  "match": {
+   "text": "Of course there are risks!",
+   "page": 5
+  }
+ },
+ "FA": {
+  "name": "Forbidden Arcana",
+  "nameFr": "Forbidden Arcana",
+  "match": {
+   "text": "The world of magic is infinite",
+   "page": 6
+  }
+ },
+ "SAG": {
+  "name": "State of the Art ADL (German-Only)",
+  "nameFr": "State of the Art ADL (exclusivement allemand)"
+ },
+ "TCT": {
+  "name": "The Complete Trog",
+  "nameFr": "The Complete Trog",
+  "match": {
+   "text": "That’s why trogs are taking it back.",
+   "page": 6
+  }
+ },
+ "SFCC": {
+  "name": "Shadows In Focus: Sioux Nation: Counting Coup",
+  "nameFr": "Shadows In Focus : Sioux Nation: Counting Coup",
+  "match": {
+   "text": "Motherfucking dammit, Charlie!",
+   "page": 3
+  }
+ },
+ "DTR": {
+  "name": "Dark Terrors",
+  "nameFr": "Dark Terrors",
+  "match": {
+   "text": "Knowing your opponent is a critical part of",
+   "page": 6
+  }
+ },
+ "TSG": {
+  "name": "The Seattle Gambit",
+  "nameFr": "The Seattle Gambit",
+  "match": {
+   "text": "Hey, what you got in there, old man?",
+   "page": 2
+  }
+ },
+ "SL": {
+  "name": "Street Lethal",
+  "nameFr": "Street Lethal",
+  "match": {
+   "text": "There is no better way to get a shadowrunner",
+   "page": 6
+  }
+ },
+ "KC": {
+  "name": "Kill Code",
+  "nameFr": "Kill Code",
+  "match": {
+   "text": "The Matrix is not a place, but it is everywhere",
+   "page": 6
+  }
+ },
+ "HAMG": {
+  "name": "Datapuls Hamburg (German-Only)",
+  "nameFr": "Datapuls Hamburg (exclusivement allemand)"
+ },
+ "BTB": {
+  "name": "Better Than Bad",
+  "nameFr": "Better Than Bad",
+  "match": {
+   "text": "This book is not about them",
+   "page": 6
+  }
+ },
+ "AET": {
+  "name": "Aetherology",
+  "nameFr": "Aetherology",
+  "match": {
+   "text": "Once Big D offered all that nuyen for the study of danger",
+   "page": 3
+  }
+ },
+ "NF": {
+  "name": "No Future",
+  "nameFr": "No Future",
+  "match": {
+   "text": "There is no future",
+   "page": 6
+  }
+ },
+ "SOTG": {
+  "name": "Datapuls SOTA 2080 (German-Only)",
+  "nameFr": "Datapuls SOTA 2080 (exclusivement allemand)"
+ },
+ "SOXG": {
+  "name": "Datapuls SOX 2080 (German-Only)",
+  "nameFr": "Datapuls SOX 2080 (German-Only)"
+ },
+ "KK": {
+  "name": "Krime Katalog",
+  "nameFr": "Krime Katalog",
+  "match": {
+   "text": "KRIME!!!!!!!",
+   "page": 2
+  }
+ },
+ "SRM0803": {
+  "name": "Shadowrun Missions 0803: 10 Block Tango",
+  "nameFr": "Shadowrun Missions 0803: 10 Block Tango",
+  "match": {
+   "text": "SRM 08-03: 10 Block Tango is a Shadowrun Missions",
+   "page": 3
+  }
+ },
+ "SRM0804": {
+  "name": "Shadowrun Missions 0804: Dirty Laundry",
+  "nameFr": "Shadowrun Missions 0804: Dirty Laundry",
+  "match": {
+   "text": "SRM 08-04 Dirty Laundry is a Shadowrun Missions living",
+   "page": 3
+  }
+ },
+ "QSR": {
+  "name": "Shadowrun Quick-Start Rules",
+  "nameFr": "Shadowrun Quick-Start Rules",
+  "match": {
+   "text": "We have specifically designed these quick-start rules",
+   "page": 2
+  }
+ },
+ "GE": {
+  "name": "Grimmes Erwachen (German-Only)",
+  "nameFr": "Grimmes Erwachen (German-Only)"
+ },
+ "SW": {
+  "name": "Sprawl Wilds",
+  "nameFr": "Sprawl Wilds",
+  "match": {
+   "text": "By 2075, commlinks have become a universal appliance. Because",
+   "page": 4
+  }
+ },
+ "SFMO": {
+  "name": "Shadows In Focus: Morocco",
+  "nameFr": "Shadows In Focus: Morocco",
+  "match": {
+   "text": "Morocco is my kind of place. It’s a combination of",
+   "page": 4
+  }
+ },
+ "SFCR": {
+  "name": "Shadows In Focus: Casablanca-Rabat",
+  "nameFr": "Shadows In Focus: Casablanca-Rabat",
+  "match": {
+   "text": "me say that modern Morocco was shaped largely by the",
+   "page": 3
+  }
+ },
+ "DATG": {
+  "name": "Datapuls Österreich (German-Only)",
+  "nameFr": "Datapuls Österreich (German-Only)"
+ },
+ "GRST2019": {
+  "name": "Der Almanach – Gratisrollenspieltag 2019 (German-Only)",
+  "nameFr": "Der Almanach – Gratisrollenspieltag 2019 (German-Only)"
+ },
+ "SLG2": {
+  "name": "Schattenload 2 (German-Only)",
+  "nameFr": "Schattenload 2 (German-Only)"
+ },
+ "SLG3": {
+  "name": "Schattenload 3 (German-Only)",
+  "nameFr": "Schattenload 3 (German-Only)"
+ },
+ "SLG7": {
+  "name": "Schattenload 7 (German-Only)",
+  "nameFr": "Schattenload 7 (German-Only)"
+ }
+}

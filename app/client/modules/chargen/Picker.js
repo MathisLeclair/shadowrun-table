@@ -3,6 +3,7 @@ import { useMemo, useState } from 'preact/hooks';
 import { html, SearchBox, Select, Empty, Button } from '../../lib/ui.js';
 import { t, tn, compare } from '../../lib/i18n.js';
 import { fold } from './common.js';
+import { ItemRef } from '../books/BookRef.js';
 
 const PAGE = 60;
 
@@ -41,7 +42,7 @@ export default function Picker({ items, name, meta, categories, category, extraF
         const why = disabled ? disabled(it) : null;
         return html`<div key=${it.id} class=${'cg-picker-row' + (isSel ? ' sel' : '')}>
           <div class="grow">
-            <div class="cg-picker-name">${name(it)}${it.nameFr && it.nameFr !== it.name && name(it) !== it.name ? html` <span class="faint small">${it.name}</span>` : ''}</div>
+            <div class="cg-picker-name">${name(it)}${it.nameFr && it.nameFr !== it.name && name(it) !== it.name ? html` <span class="faint small">${it.name}</span>` : ''} <${ItemRef} item=${it} /></div>
             <div class="small muted">${meta(it)}</div>
           </div>
           ${isSel

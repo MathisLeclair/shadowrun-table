@@ -142,3 +142,22 @@
   .shop-table th:nth-child(2), .shop-table td:nth-child(2) { white-space: nowrap; }
   .shop-order-foot > * { flex: 1 1 auto; }
 }
+
+/* ---------- upgrades, lifestyles, martial arts ---------- */
+.shop-inv-sub td { padding-top: 2px; padding-bottom: 4px; border-top: none; }
+.shop-inv-sub td:first-child { padding-left: 22px; }
+.shop-inv-ls { gap: 4px; padding: 8px 0; border-bottom: 1px dashed var(--line2); }
+.shop-inv-ls:last-child { border-bottom: none; }
+.shop-inv-lsq { gap: 6px; align-items: center; padding-left: 6px; }
+.shop-inv-art { padding: 3px 0; }
+.shop-martial { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.shop-martial.wide { grid-template-columns: minmax(0, 1fr) 370px; align-items: start; }
+.shop-martial-list { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.shop-martial-grid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.shop-martial-card { text-align: left; display: flex; flex-direction: column; gap: 4px; color: var(--text); font: inherit; }
+.shop-martial-card.selected { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan) inset; }
+.shop-martial-techs { display: flex; flex-direction: column; gap: 4px; max-height: 320px; overflow: auto; }
+.shop-martial-detail { position: sticky; top: 0; }
+
+/* 📖 rulebook chips in catalog rows */
+.shop-row-name .bookref, .shop-inv .bookref { margin-left: 4px; }

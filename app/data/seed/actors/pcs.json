@@ -253,7 +253,7 @@
         "category": "Corps à corps",
         "kind": "melee",
         "skill": "unarmed_combat",
-        "accuracy": 8,
+        "accuracy": "Physical",
         "damage": "(STR)S",
         "ap": 0,
         "mode": "",
@@ -319,7 +319,7 @@
         "category": "Combat à mains nues",
         "kind": "melee",
         "skill": "unarmed_combat",
-        "accuracy": 8,
+        "accuracy": "Physical",
         "damage": "8S",
         "ap": -5,
         "mode": "",
@@ -336,7 +336,7 @@
         "category": "Arme de jet",
         "kind": "ranged",
         "skill": "throwing_weapons",
-        "accuracy": 8,
+        "accuracy": "Physical",
         "damage": "10S",
         "ap": -4,
         "mode": "",
@@ -352,7 +352,7 @@
         "category": "Arme de jet",
         "kind": "ranged",
         "skill": "throwing_weapons",
-        "accuracy": 8,
+        "accuracy": "Physical",
         "damage": "18P",
         "ap": 5,
         "mode": "",
@@ -409,7 +409,9 @@
         "ammo": "6",
         "reach": 0,
         "equipped": true,
-        "notes": "Ares Alpha Grenade Launcher (SR5 428)"
+        "notes": "Ares Alpha Grenade Launcher (SR5 428)",
+        "source": "SR5",
+        "page": 428
       }
     ],
     "armor": [
@@ -676,11 +678,32 @@
         ]
       }
     ],
-    "lifestyle": {
-      "name": "Anthony's lifestyle (Moyen)",
-      "monthlyCost": 7083,
-      "monthsPaid": 1
-    },
+    "lifestyles": [
+      {
+        "id": "ls_anthony00",
+        "name": "Anthony's lifestyle (Moyen)",
+        "base": "Medium",
+        "baseCost": 5000,
+        "monthsPaid": 1,
+        "primary": true,
+        "qualities": [
+          {
+            "id": "lsq_anthony01",
+            "catalogId": "4f2d39cd-fbc7-4d02-a3eb-f8decdb9a415",
+            "name": "DocWagon Contract, Gold",
+            "category": "Contracts",
+            "cost": 2083,
+            "multiplier": 0,
+            "nameFr": "Contrat DocWagon (Or)",
+            "lp": 0,
+            "notes": "Déduit du loyer Foundry (7 083 ¥ = Moyen 5 000 ¥ + DocWagon Or 2 083 ¥), aucun fichier Chummer — à vérifier"
+          }
+        ],
+        "monthlyCost": 7083,
+        "notes": "",
+        "catalogId": "9cb0222c-14c1-4bea-bf83-055513a1f33e"
+      }
+    ],
     "karma": 27,
     "karmaTotal": 27,
     "nuyen": 31847,
@@ -715,7 +738,7 @@
       "id": "8RLyHqM47QR56DTo",
       "world": "test-world",
       "importedAt": 1795629244307,
-      "hash": "345aeb1f5c86",
+      "hash": "f5543c77da9c",
       "snapshot": {
         "s": {
           "karma": 27,
@@ -767,20 +790,20 @@
         },
         "items": {
           "weapons": {
-            "fvtt_Dtk9ui4OSmwXXnJw": "53c1f7a80ed7",
-            "fvtt_2cQIIYkKrRxiNUeR": "99442aa0110f",
-            "fvtt_SjM0aaww96kxVueJ": "c726ab0d8ebf",
+            "fvtt_Dtk9ui4OSmwXXnJw": "af24f93bc321",
+            "fvtt_2cQIIYkKrRxiNUeR": "96afcdfda80f",
+            "fvtt_SjM0aaww96kxVueJ": "5521106c179c",
             "fvtt_ktWotmSZbqkcu695": "b567e1bf3dbe",
-            "fvtt_9Wew96JuhjjGHUUB": "e0e7496e4da0",
-            "fvtt_W8dcgjfyDmy7ivNi": "375da282369b",
-            "fvtt_ejEwGCVoJcX2A23P": "ca8c037ef944",
-            "fvtt_JUafFzFQr2BsVJnG": "28e2162c7f30",
+            "fvtt_9Wew96JuhjjGHUUB": "a2a694dfad3c",
+            "fvtt_W8dcgjfyDmy7ivNi": "32623d644f12",
+            "fvtt_ejEwGCVoJcX2A23P": "0161cff21dfe",
+            "fvtt_JUafFzFQr2BsVJnG": "04a9445d1045",
             "fvtt_Mu38LLsOGepD6TTx": "fe22949cf959",
-            "fvtt_TiTAtU2FqV5PWlVk": "59c1a2ccbc28"
+            "fvtt_TiTAtU2FqV5PWlVk": "a8b6f4cdd24e"
           },
           "armor": {
-            "fvtt_BvFtNTWWs5UfNkl5": "3c24b0ea948f",
-            "fvtt_C21GQUVNImGCREU6": "cea737a56c91"
+            "fvtt_BvFtNTWWs5UfNkl5": "97f12492f2e3",
+            "fvtt_C21GQUVNImGCREU6": "d21092a4c219"
           },
           "augmentations": {},
           "gear": {
@@ -839,10 +862,12 @@
             "fvtt_KPcY4BldJEYOXAc9": "5d176f1967b9",
             "fvtt_kxEqmYxvsShr9Ej5": "750cf876d3f7",
             "fvtt_Ewrwu0J4ZACYTols": "73e40051d5b9"
+          },
+          "lifestyles": {
+            "fvtt_r25iudLi0V9rlApI": "ad219d09c9b3"
           }
         },
         "matrix": "c8b737d581e8",
-        "lifestyle": "21b59363288a",
         "vision": "bf21a9e8fbc5"
       },
       "user": "Tonikou"
@@ -1218,7 +1243,7 @@
         "category": "Corps à corps",
         "kind": "melee",
         "skill": "unarmed_combat",
-        "accuracy": 5,
+        "accuracy": "Physical",
         "damage": "(STR)S",
         "ap": 0,
         "mode": "",
@@ -1241,7 +1266,24 @@
         "ammo": "4",
         "reach": 0,
         "catalogId": "7d5bcc0b-9ec2-4c87-aaa7-a4d531d7974e",
-        "notes": "Defiance EX Shocker (SR5 424)"
+        "notes": "Defiance EX Shocker (SR5 424)",
+        "mounts": [
+          "Top",
+          "Stock",
+          "Side"
+        ],
+        "accessories": [
+          {
+            "id": "acc_jane05",
+            "catalogId": "ea64527d-0e1e-4248-957b-7c02d79dad30",
+            "name": "Concealed Quick-Draw Holster",
+            "mount": "",
+            "cost": 275,
+            "avail": "6",
+            "nameFr": "Holster moulé pour dégainage rapide",
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier"
+          }
+        ]
       },
       {
         "id": "fvtt_rkS7Y5o6dM6CchmE",
@@ -1258,7 +1300,30 @@
         "reach": 0,
         "equipped": true,
         "catalogId": "622bd915-0e0c-431b-9da5-e0c0c31e2122",
-        "notes": "Enfield AS-7 (SR5 429)"
+        "notes": "Enfield AS-7 (SR5 429)",
+        "mounts": [
+          "Stock",
+          "Side",
+          "Barrel",
+          "Top",
+          "Under"
+        ],
+        "accessories": [
+          {
+            "id": "acc_jane08",
+            "catalogId": "521f9c2e-dfb2-42a6-b707-9808ae4885de",
+            "name": "Laser Sight",
+            "mount": "Internal",
+            "cost": 0,
+            "avail": "2",
+            "nameFr": "Visée laser",
+            "effects": {
+              "accuracy": 1
+            },
+            "included": true,
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier"
+          }
+        ]
       },
       {
         "id": "fvtt_Yj5oyh0NuDUyh0DR",
@@ -1266,7 +1331,7 @@
         "category": "Arme de jet",
         "kind": "ranged",
         "skill": "throwing_weapons",
-        "accuracy": 5,
+        "accuracy": "Physical",
         "damage": "10S",
         "ap": 0,
         "mode": "",
@@ -1282,7 +1347,7 @@
         "category": "Arme de jet",
         "kind": "ranged",
         "skill": "throwing_weapons",
-        "accuracy": 5,
+        "accuracy": "Physical",
         "damage": "10S",
         "ap": 0,
         "mode": "",
@@ -1297,7 +1362,7 @@
         "category": "Arme de jet",
         "kind": "ranged",
         "skill": "throwing_weapons",
-        "accuracy": 5,
+        "accuracy": "Physical",
         "damage": "10S",
         "ap": -4,
         "mode": "",
@@ -1312,7 +1377,7 @@
         "category": "Arme de jet",
         "kind": "ranged",
         "skill": "throwing_weapons",
-        "accuracy": 5,
+        "accuracy": "Physical",
         "damage": "10S",
         "ap": 0,
         "mode": "",
@@ -1327,7 +1392,7 @@
         "category": "Arme de jet",
         "kind": "ranged",
         "skill": "throwing_weapons",
-        "accuracy": 5,
+        "accuracy": "Physical",
         "damage": "18P",
         "ap": 5,
         "mode": "",
@@ -1342,7 +1407,7 @@
         "category": "Arme de jet",
         "kind": "ranged",
         "skill": "throwing_weapons",
-        "accuracy": 5,
+        "accuracy": "Physical",
         "damage": "Spécial",
         "ap": 0,
         "mode": "",
@@ -1365,7 +1430,42 @@
         "ammo": "14",
         "reach": 0,
         "catalogId": "50cec60d-a421-4edd-9baa-d10bfbc08e70",
-        "notes": "Ares Desert Strike (SR5 428)"
+        "notes": "Ares Desert Strike (SR5 428)",
+        "mounts": [
+          "Stock",
+          "Side",
+          "Barrel",
+          "Top",
+          "Under"
+        ],
+        "accessories": [
+          {
+            "id": "acc_jane06",
+            "catalogId": "46596db4-6f25-4990-80cc-c4102eaf80f7",
+            "name": "Shock Pad",
+            "mount": "Internal",
+            "cost": 0,
+            "avail": "2",
+            "nameFr": "Rembourrage antichoc",
+            "effects": {
+              "rc": 1,
+              "rcGroup": 2
+            },
+            "included": true,
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier"
+          },
+          {
+            "id": "acc_jane07",
+            "catalogId": "2905095e-937e-4dbc-aa56-3b66676e1559",
+            "name": "Imaging Scope",
+            "mount": "Internal",
+            "cost": 0,
+            "avail": "2",
+            "nameFr": "Lunette de visée",
+            "included": true,
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier"
+          }
+        ]
       }
     ],
     "armor": [
@@ -1376,7 +1476,30 @@
         "equipped": false,
         "stack": false,
         "notes": "Actioneer Business Clothes",
-        "catalogId": "5a650844-8f24-48e7-829f-0443d9ff5cf7"
+        "catalogId": "5a650844-8f24-48e7-829f-0443d9ff5cf7",
+        "capacity": 8,
+        "mods": [
+          {
+            "id": "mod_jane09",
+            "catalogId": "9ee8e6ad-2472-485d-ae42-d1978749b456",
+            "name": "Electrochromic Clothing",
+            "capacity": 0,
+            "cost": 500,
+            "avail": "2",
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier",
+            "nameFr": "Modification électrochrome"
+          },
+          {
+            "id": "mod_jane10",
+            "catalogId": "ed43ded4-1b2f-410a-9322-166c39306d03",
+            "name": "Gel Packs",
+            "capacity": 0,
+            "cost": 1500,
+            "avail": "6",
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier",
+            "nameFr": "Poches de gel"
+          }
+        ]
       },
       {
         "id": "fvtt_6f2aB4NDqctyJ37g",
@@ -1385,7 +1508,72 @@
         "equipped": true,
         "stack": false,
         "notes": "Zoé: Heritage 12",
-        "catalogId": "d4804f1b-4443-4e97-a7d2-9c1659732c6b"
+        "catalogId": "d4804f1b-4443-4e97-a7d2-9c1659732c6b",
+        "capacity": 6,
+        "mods": [
+          {
+            "id": "mod_jane11",
+            "catalogId": "480b7c5d-758b-4833-8bfd-9487e2455f7d",
+            "name": "Chemical Protection",
+            "capacity": 6,
+            "cost": 1500,
+            "avail": "6",
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier",
+            "nameFr": "Protection chimique",
+            "rating": 6
+          },
+          {
+            "id": "mod_jane12",
+            "catalogId": "cf8accf5-4117-4419-ab73-957489038ab9",
+            "name": "YNT Softweave Armor",
+            "capacity": -3,
+            "cost": 8000,
+            "avail": "4",
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier",
+            "nameFr": "Armure YNT Softweave"
+          },
+          {
+            "id": "mod_jane13",
+            "catalogId": "851f226f-2116-4001-8937-408d4570396e",
+            "name": "AR Fashion",
+            "capacity": 0,
+            "cost": 50,
+            "avail": "0",
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier",
+            "nameFr": "Superposition esthétique RA"
+          },
+          {
+            "id": "mod_jane14",
+            "catalogId": "ed43ded4-1b2f-410a-9322-166c39306d03",
+            "name": "Gel Packs",
+            "capacity": 0,
+            "cost": 1500,
+            "avail": "6",
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier",
+            "nameFr": "Poches de gel"
+          },
+          {
+            "id": "mod_jane15",
+            "catalogId": "0cfb049a-a1bd-4daa-96be-9468c37d9c3c",
+            "name": "Nonconductivity",
+            "capacity": 3,
+            "cost": 750,
+            "avail": "6",
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier",
+            "nameFr": "Protection électrique",
+            "rating": 3
+          },
+          {
+            "id": "mod_jane16",
+            "catalogId": "9ee8e6ad-2472-485d-ae42-d1978749b456",
+            "name": "Electrochromic Clothing",
+            "capacity": 0,
+            "cost": 500,
+            "avail": "2",
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier",
+            "nameFr": "Modification électrochrome"
+          }
+        ]
       },
       {
         "id": "fvtt_bYX4zpTKLE5gYSDm",
@@ -1394,7 +1582,21 @@
         "equipped": true,
         "stack": true,
         "notes": "Zoé: Second Skin",
-        "catalogId": "739b029d-b2a0-48cb-ac2e-51636fc495c2"
+        "catalogId": "739b029d-b2a0-48cb-ac2e-51636fc495c2",
+        "capacity": 2,
+        "mods": [
+          {
+            "id": "mod_jane17",
+            "catalogId": "b5283cb0-3676-44d3-a7e9-dee099416295",
+            "name": "Radiation Shielding",
+            "capacity": 2,
+            "cost": 400,
+            "avail": "2",
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier",
+            "nameFr": "Protection antiradiations",
+            "rating": 2
+          }
+        ]
       }
     ],
     "augmentations": [],
@@ -1459,7 +1661,9 @@
         "id": "fvtt_BxJ6rLQlW9Y4ohkB",
         "name": "Custom Commlink (Fashion Link)",
         "category": "Commlink",
-        "qty": 1
+        "qty": 1,
+        "source": "SR5",
+        "page": 438
       },
       {
         "id": "fvtt_pNJOhjdBJIkkNgFO",
@@ -1555,7 +1759,9 @@
         "id": "fvtt_nio8Uj9gzrFcicd7",
         "name": "Rapelling Gloves",
         "category": "Équipement",
-        "qty": 1
+        "qty": 1,
+        "source": "SR5",
+        "page": 449
       },
       {
         "id": "fvtt_QJKHOCSVI3P7abIB",
@@ -1694,7 +1900,9 @@
         "pilot": 1,
         "sensor": 1,
         "notes": "Type : air",
-        "img": "/assets/foundry/img/nightwing.jpg"
+        "img": "/assets/foundry/img/nightwing.jpg",
+        "source": "SR5",
+        "page": 464
       }
     ],
     "matrix": {
@@ -1783,11 +1991,66 @@
         ]
       }
     ],
-    "lifestyle": {
-      "name": "Best Home (Moyen)",
-      "monthlyCost": 5000,
-      "monthsPaid": 1
-    },
+    "lifestyles": [
+      {
+        "id": "ls_jane00",
+        "name": "Best Home (Moyen)",
+        "base": "Medium",
+        "baseCost": 5000,
+        "monthsPaid": 1,
+        "primary": true,
+        "qualities": [
+          {
+            "id": "lsq_jane01",
+            "catalogId": "4f2d39cd-fbc7-4d02-a3eb-f8decdb9a415",
+            "name": "DocWagon Contract, Gold",
+            "category": "Contracts",
+            "cost": 2083,
+            "multiplier": 0,
+            "nameFr": "Contrat DocWagon (Or)",
+            "lp": 0,
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier"
+          },
+          {
+            "id": "lsq_jane02",
+            "catalogId": "4fb84713-6171-409d-ad7c-ccbc44b891ad",
+            "name": "Extra Secure",
+            "category": "Positive",
+            "cost": 0,
+            "multiplier": 20,
+            "baseOnly": true,
+            "nameFr": "Ultra-sécurisé",
+            "lp": 1,
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier"
+          },
+          {
+            "id": "lsq_jane03",
+            "catalogId": "eeb6f3b7-70b3-478b-88c6-af47bb233b44",
+            "name": "Pheromone Detection",
+            "category": "Contracts",
+            "cost": 250,
+            "multiplier": 0,
+            "nameFr": "Service d'analyse de phéromones en ligne",
+            "lp": 0,
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier"
+          },
+          {
+            "id": "lsq_jane04",
+            "catalogId": "c5eef5c6-288a-47c0-8d2a-42353a896077",
+            "name": "Vocal Tension Lie Detection",
+            "category": "Contracts",
+            "cost": 250,
+            "multiplier": 0,
+            "nameFr": "Détecteur de mensonges en ligne",
+            "lp": 0,
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier"
+          }
+        ],
+        "monthlyCost": 8583,
+        "notes": "",
+        "catalogId": "9cb0222c-14c1-4bea-bf83-055513a1f33e"
+      }
+    ],
     "karma": 22,
     "karmaTotal": 83,
     "nuyen": 98188,
@@ -1815,7 +2078,7 @@
       "id": "M47wzFIaLKTq9Nnb",
       "world": "test-world",
       "importedAt": 1795629244307,
-      "hash": "29c3b89f2aea",
+      "hash": "baab36dab54b",
       "snapshot": {
         "s": {
           "karma": 22,
@@ -1873,21 +2136,21 @@
         },
         "items": {
           "weapons": {
-            "fvtt_hz8IOOlysqrmYie1": "1fe959290554",
-            "fvtt_9EzHwCdrydKGarJL": "55dfc6d2589d",
-            "fvtt_rkS7Y5o6dM6CchmE": "a3154a72b886",
-            "fvtt_Yj5oyh0NuDUyh0DR": "07eba6bddf75",
-            "fvtt_fhk18LQKhMYn534G": "18e67c56bbcd",
-            "fvtt_Ds5A6qreqCpL8Dzq": "e32ee501557f",
-            "fvtt_EbIJJ9Zt15iJHi6r": "73b2d796bd27",
-            "fvtt_1v3pqCP5LUjSgGiV": "4815e6a8a12a",
-            "fvtt_JwWl6ngUOvfn3MTK": "57309dd2c110",
-            "fvtt_z0d0D3M9DQ8s5Mjc": "c8cd79209e99"
+            "fvtt_hz8IOOlysqrmYie1": "23e45858c9c8",
+            "fvtt_9EzHwCdrydKGarJL": "3dc4efae6f7a",
+            "fvtt_rkS7Y5o6dM6CchmE": "38e89365cae4",
+            "fvtt_Yj5oyh0NuDUyh0DR": "04aa9168face",
+            "fvtt_fhk18LQKhMYn534G": "c9d872dd6506",
+            "fvtt_Ds5A6qreqCpL8Dzq": "aeedc8e31c5c",
+            "fvtt_EbIJJ9Zt15iJHi6r": "f00374e38e44",
+            "fvtt_1v3pqCP5LUjSgGiV": "3b4a83a44c9a",
+            "fvtt_JwWl6ngUOvfn3MTK": "62b4df0fce26",
+            "fvtt_z0d0D3M9DQ8s5Mjc": "af4ea26bea27"
           },
           "armor": {
-            "fvtt_PFVhZGlgrRGkKkNS": "482d2c47d68e",
-            "fvtt_6f2aB4NDqctyJ37g": "169a385ff146",
-            "fvtt_bYX4zpTKLE5gYSDm": "edc514cf02e4"
+            "fvtt_PFVhZGlgrRGkKkNS": "f3fc0e03848b",
+            "fvtt_6f2aB4NDqctyJ37g": "f935486c09cc",
+            "fvtt_bYX4zpTKLE5gYSDm": "cb219d7acf23"
           },
           "augmentations": {},
           "gear": {
@@ -1975,10 +2238,12 @@
             "fvtt_WZgisUm92WJ0cBN2": "834aeb4a1968",
             "fvtt_Fjionj4Hpci99sod": "8a2ca767b109",
             "fvtt_KLT5s190qDP9E6ef": "102e2fd02f34"
+          },
+          "lifestyles": {
+            "fvtt_1eFZ4ZgrmXVfddI1": "c054c1b6b3e5"
           }
         },
         "matrix": "8934c83eb83c",
-        "lifestyle": "1be95ec8a094",
         "vision": "f3d1cf29241f"
       },
       "user": "Baptou"
@@ -2207,7 +2472,7 @@
         "category": "Corps à corps",
         "kind": "melee",
         "skill": "unarmed_combat",
-        "accuracy": 5,
+        "accuracy": "Physical",
         "damage": "(STR)S",
         "ap": 0,
         "mode": "",
@@ -2231,7 +2496,41 @@
         "ammo": "12(m)",
         "reach": 0,
         "catalogId": "f5ae45ef-f4f6-4d9a-873f-81e4ee973dc1",
-        "notes": "Beretta Northstar (SL 39)"
+        "notes": "Beretta Northstar (SL 39)",
+        "mounts": [
+          "Stock",
+          "Side",
+          "Barrel",
+          "Under",
+          "Top"
+        ],
+        "accessories": [
+          {
+            "id": "acc_bricks02",
+            "catalogId": "d2a1cc9b-72e3-49df-957c-8ed6fb47a813",
+            "name": "Additional Clip/Magazine",
+            "mount": "Internal",
+            "cost": 0,
+            "avail": "10R",
+            "nameFr": "Chargeur supplémentaire",
+            "included": true,
+            "notes": "Restauré depuis Chummer (fichier du 07/07/2026) — à vérifier"
+          },
+          {
+            "id": "acc_bricks03",
+            "catalogId": "d57d2c64-1f61-4f5f-a465-8ce0dfacec6a",
+            "name": "Smartgun System, Internal",
+            "mount": "Internal",
+            "cost": 0,
+            "avail": "2R",
+            "nameFr": "Système Smartgun, interne",
+            "effects": {
+              "smartgun": true
+            },
+            "included": true,
+            "notes": "Restauré depuis Chummer (fichier du 07/07/2026) — à vérifier"
+          }
+        ]
       },
       {
         "id": "fvtt_wGGgCkZyiirl5Hkc",
@@ -2239,7 +2538,7 @@
         "category": "Arme de jet",
         "kind": "ranged",
         "skill": "throwing_weapons",
-        "accuracy": 5,
+        "accuracy": "Physical",
         "damage": "Spécial",
         "ap": 0,
         "mode": "",
@@ -2255,7 +2554,7 @@
         "category": "Arme de jet",
         "kind": "ranged",
         "skill": "throwing_weapons",
-        "accuracy": 5,
+        "accuracy": "Physical",
         "damage": "Spécial",
         "ap": 0,
         "mode": "",
@@ -2474,11 +2773,32 @@
         ]
       }
     ],
-    "lifestyle": {
-      "name": "Seattle Downtown Outskirts (Moyen)",
-      "monthlyCost": 5000,
-      "monthsPaid": 1
-    },
+    "lifestyles": [
+      {
+        "id": "ls_bricks00",
+        "name": "Seattle Downtown Outskirts (Moyen)",
+        "base": "Medium",
+        "baseCost": 5000,
+        "monthsPaid": 1,
+        "primary": true,
+        "qualities": [
+          {
+            "id": "lsq_bricks01",
+            "catalogId": "4f2d39cd-fbc7-4d02-a3eb-f8decdb9a415",
+            "name": "DocWagon Contract, Gold",
+            "category": "Contracts",
+            "cost": 2083,
+            "multiplier": 0,
+            "nameFr": "Contrat DocWagon (Or)",
+            "lp": 0,
+            "notes": "Restauré depuis Chummer (fichier du 07/07/2026) — à vérifier"
+          }
+        ],
+        "monthlyCost": 7083,
+        "notes": "",
+        "catalogId": "9cb0222c-14c1-4bea-bf83-055513a1f33e"
+      }
+    ],
     "karma": 20,
     "karmaTotal": 20,
     "nuyen": 16494,
@@ -2507,7 +2827,7 @@
       "id": "VnN4tesgg1VVUtrC",
       "world": "test-world",
       "importedAt": 1795629244307,
-      "hash": "b8f1356c35f1",
+      "hash": "2a91ebed0a6f",
       "snapshot": {
         "s": {
           "karma": 20,
@@ -2560,15 +2880,15 @@
         },
         "items": {
           "weapons": {
-            "fvtt_k8eZzULlmMG92x1E": "f409619e2fef",
-            "fvtt_T3sUXHGLeVWMZpHB": "d0c3c16fcdb1",
-            "fvtt_wGGgCkZyiirl5Hkc": "6c350573a70c",
-            "fvtt_wvH7DD2JTNo9DmYn": "0308c6ac9fe3",
-            "fvtt_yN3thI6ZLjmTocEL": "21e628587eab",
-            "fvtt_vnw2PtRHqgt6sau2": "f12642984c85"
+            "fvtt_k8eZzULlmMG92x1E": "0b39b2263a3a",
+            "fvtt_T3sUXHGLeVWMZpHB": "2261ed26903d",
+            "fvtt_wGGgCkZyiirl5Hkc": "bad2c5d23976",
+            "fvtt_wvH7DD2JTNo9DmYn": "645e174e6528",
+            "fvtt_yN3thI6ZLjmTocEL": "950a9c862b6c",
+            "fvtt_vnw2PtRHqgt6sau2": "f78c62efb09f"
           },
           "armor": {
-            "fvtt_wQ48BeLNpRQEo4Qi": "d1bb36240599"
+            "fvtt_wQ48BeLNpRQEo4Qi": "e59a10d25a08"
           },
           "augmentations": {
             "fvtt_GY8q5cng2PzdpxhB": "914b2ff3c362",
@@ -2609,10 +2929,12 @@
             "fvtt_qqEUz2rqfo5CPpID": "939f1d9dd7cc",
             "fvtt_o1qkSDMniKGCsAiz": "54b77c25f06a",
             "fvtt_VrsQEqO0uFL6gYwy": "709f3e26d0cb"
+          },
+          "lifestyles": {
+            "fvtt_Rpexyi7jZUQ6C7Uf": "0d91705a4f00"
           }
         },
         "matrix": "2bcc1f89f11e",
-        "lifestyle": "5256ca14d7c6",
         "vision": "1c31d95620ad"
       },
       "user": "Tangouche"
@@ -2883,7 +3205,7 @@
         "category": "Corps à corps",
         "kind": "melee",
         "skill": "unarmed_combat",
-        "accuracy": 12,
+        "accuracy": "Physical",
         "damage": "(STR)S",
         "ap": 0,
         "mode": "",
@@ -2994,7 +3316,7 @@
         "category": "Arme de jet",
         "kind": "ranged",
         "skill": "throwing_weapons",
-        "accuracy": 12,
+        "accuracy": "Physical",
         "damage": "11P",
         "ap": -1,
         "mode": "",
@@ -3025,7 +3347,7 @@
         "category": "Arme de jet",
         "kind": "ranged",
         "skill": "throwing_weapons",
-        "accuracy": 11,
+        "accuracy": "Physical-1",
         "damage": "12P",
         "ap": 0,
         "mode": "",
@@ -3040,7 +3362,7 @@
         "category": "Arme de jet",
         "kind": "ranged",
         "skill": "throwing_weapons",
-        "accuracy": 12,
+        "accuracy": "Physical",
         "damage": "Spécial",
         "ap": 0,
         "mode": "",
@@ -3099,7 +3421,52 @@
         "equipped": true,
         "stack": false,
         "notes": "Zoé: Executive Suite",
-        "catalogId": "5341cfd0-5cd7-49d5-8a95-0266355f391a"
+        "catalogId": "5341cfd0-5cd7-49d5-8a95-0266355f391a",
+        "capacity": 4,
+        "mods": [
+          {
+            "id": "mod_anklay01",
+            "catalogId": "9ee8e6ad-2472-485d-ae42-d1978749b456",
+            "name": "Electrochromic Clothing",
+            "capacity": 0,
+            "cost": 500,
+            "avail": "2",
+            "notes": "Restauré depuis Chummer (fichier du 09/05/2020) — à vérifier",
+            "nameFr": "Modification électrochrome"
+          },
+          {
+            "id": "mod_anklay02",
+            "catalogId": "cf8accf5-4117-4419-ab73-957489038ab9",
+            "name": "YNT Softweave Armor",
+            "capacity": -2,
+            "cost": 2000,
+            "avail": "4",
+            "notes": "Restauré depuis Chummer (fichier du 09/05/2020) — à vérifier",
+            "nameFr": "Armure YNT Softweave"
+          },
+          {
+            "id": "mod_anklay03",
+            "catalogId": "0cfb049a-a1bd-4daa-96be-9468c37d9c3c",
+            "name": "Nonconductivity",
+            "capacity": 3,
+            "cost": 750,
+            "avail": "6",
+            "notes": "Restauré depuis Chummer (fichier du 09/05/2020) — à vérifier",
+            "nameFr": "Protection électrique",
+            "rating": 3
+          },
+          {
+            "id": "mod_anklay04",
+            "catalogId": "80effbdd-047d-4b1f-8159-f13f86bba4e6",
+            "name": "Grey Mana Integration",
+            "capacity": 3,
+            "cost": 3000,
+            "avail": "6F",
+            "notes": "Restauré depuis Chummer (fichier du 09/05/2020) — à vérifier",
+            "nameFr": "Intégration Grey Mana",
+            "rating": 3
+          }
+        ]
       },
       {
         "id": "fvtt_DofI1yvxHFkAQXw1",
@@ -3108,7 +3475,93 @@
         "equipped": true,
         "stack": true,
         "notes": "Mortimer of London: Argentum Coat",
-        "catalogId": "dceda713-a138-4161-8bd2-b909ffed7f85"
+        "catalogId": "dceda713-a138-4161-8bd2-b909ffed7f85",
+        "capacity": 14,
+        "mods": [
+          {
+            "id": "mod_anklay05",
+            "catalogId": "9ee8e6ad-2472-485d-ae42-d1978749b456",
+            "name": "Electrochromic Clothing",
+            "capacity": 0,
+            "cost": 500,
+            "avail": "2",
+            "notes": "Restauré depuis Chummer (fichier du 09/05/2020) — à vérifier",
+            "nameFr": "Modification électrochrome"
+          },
+          {
+            "id": "mod_anklay06",
+            "catalogId": "cf8accf5-4117-4419-ab73-957489038ab9",
+            "name": "YNT Softweave Armor",
+            "capacity": -7,
+            "cost": 3600,
+            "avail": "4",
+            "notes": "Restauré depuis Chummer (fichier du 09/05/2020) — à vérifier",
+            "nameFr": "Armure YNT Softweave"
+          },
+          {
+            "id": "mod_anklay07",
+            "catalogId": "dbdaf817-9bfa-4938-a195-b53c63b53e7c",
+            "name": "Shock Frills",
+            "capacity": 2,
+            "cost": 250,
+            "avail": "6R",
+            "notes": "Restauré depuis Chummer (fichier du 09/05/2020) — à vérifier",
+            "nameFr": "Vrilles électriques"
+          },
+          {
+            "id": "mod_anklay08",
+            "catalogId": "ed43ded4-1b2f-410a-9322-166c39306d03",
+            "name": "Gel Packs",
+            "capacity": 0,
+            "cost": 1500,
+            "avail": "6",
+            "notes": "Restauré depuis Chummer (fichier du 09/05/2020) — à vérifier",
+            "nameFr": "Poches de gel"
+          },
+          {
+            "id": "mod_anklay09",
+            "catalogId": "497b5d6b-df0c-401d-91de-42a224b1fa87",
+            "name": "Insulation",
+            "capacity": 6,
+            "cost": 1500,
+            "avail": "6",
+            "notes": "Restauré depuis Chummer (fichier du 09/05/2020) — à vérifier",
+            "nameFr": "Protection thermique",
+            "rating": 6
+          },
+          {
+            "id": "mod_anklay10",
+            "catalogId": "dd246520-7306-40fb-88b4-c9cb031208fc",
+            "name": "Fire Resistance",
+            "capacity": 6,
+            "cost": 1500,
+            "avail": "6",
+            "notes": "Restauré depuis Chummer (fichier du 09/05/2020) — à vérifier",
+            "nameFr": "Protection ignifuge",
+            "rating": 6
+          },
+          {
+            "id": "mod_anklay11",
+            "catalogId": "5a0965bd-759c-4e41-8c47-2b87c9de06d6",
+            "name": "Auto-Injector",
+            "capacity": 2,
+            "cost": 1500,
+            "avail": "4",
+            "notes": "Restauré depuis Chummer (fichier du 09/05/2020) — à vérifier",
+            "nameFr": "Auto-injecteur"
+          },
+          {
+            "id": "mod_anklay12",
+            "catalogId": "480b7c5d-758b-4833-8bfd-9487e2455f7d",
+            "name": "Chemical Protection",
+            "capacity": 5,
+            "cost": 1250,
+            "avail": "6",
+            "notes": "Restauré depuis Chummer (fichier du 09/05/2020) — à vérifier",
+            "nameFr": "Protection chimique",
+            "rating": 5
+          }
+        ]
       },
       {
         "id": "fvtt_FAUVrjq31mqnLPiH",
@@ -3117,7 +3570,21 @@
         "equipped": true,
         "stack": true,
         "notes": "Zoé: Second Skin",
-        "catalogId": "739b029d-b2a0-48cb-ac2e-51636fc495c2"
+        "catalogId": "739b029d-b2a0-48cb-ac2e-51636fc495c2",
+        "capacity": 2,
+        "mods": [
+          {
+            "id": "mod_anklay13",
+            "catalogId": "b5283cb0-3676-44d3-a7e9-dee099416295",
+            "name": "Radiation Shielding",
+            "capacity": 2,
+            "cost": 400,
+            "avail": "2",
+            "notes": "Restauré depuis Chummer (fichier du 09/05/2020) — à vérifier",
+            "nameFr": "Protection antiradiations",
+            "rating": 2
+          }
+        ]
       }
     ],
     "augmentations": [
@@ -3599,16 +4066,25 @@
       "firewall": 7,
       "programs": []
     },
-    "lifestyle": {
-      "name": "Home (Bas)",
-      "monthlyCost": 2000,
-      "monthsPaid": 1
-    },
+    "lifestyles": [
+      {
+        "id": "ls_anklay00",
+        "name": "Home (Bas)",
+        "base": "Low",
+        "baseCost": 2000,
+        "monthsPaid": 1,
+        "primary": true,
+        "qualities": [],
+        "monthlyCost": 2000,
+        "notes": "",
+        "catalogId": "451eef87-d18e-4bee-a972-1ee165b08522"
+      }
+    ],
     "foundry": {
       "id": "gRpohjIKhNi6WmlF",
       "world": "test-world",
       "importedAt": 1795629244307,
-      "hash": "4cf540d8a3b1",
+      "hash": "fcbe2888c556",
       "snapshot": {
         "s": {
           "karma": 16,
@@ -3666,25 +4142,25 @@
         },
         "items": {
           "weapons": {
-            "fvtt_mlgk78MZOO3JJir7": "718d683bc5ef",
+            "fvtt_mlgk78MZOO3JJir7": "a55b4364a762",
             "fvtt_xjdqEmwEh5mr1wPf": "211c94947018",
             "fvtt_rQmTulbiFrMktuRG": "4a498a065e30",
             "fvtt_5tExIwt01gcEgVEa": "8fc155bb69b8",
             "fvtt_ac1Pji1IOwBNYGkN": "7bd11066f3ee",
             "fvtt_DH603oDdUWfjx87m": "0e9d96827304",
             "fvtt_fWKmr5875gjqGzwx": "2949b85c885d",
-            "fvtt_vcAkWmQ6uwVcmo2S": "eeda6d990d6a",
+            "fvtt_vcAkWmQ6uwVcmo2S": "c2ccb74a0f23",
             "fvtt_BcIyvACDhN7kDlFX": "2228138acb1b",
-            "fvtt_lqjuh4fwMNoLfnDH": "aedcba4a8092",
-            "fvtt_txh9pRKMFKxW2eBB": "9c50c844d737",
+            "fvtt_lqjuh4fwMNoLfnDH": "600953283b68",
+            "fvtt_txh9pRKMFKxW2eBB": "8a5a73ba85c6",
             "fvtt_JtK2nwpUoaoFykMa": "58c28bb7ce22",
-            "fvtt_u7PxWqcBH1moeS6M": "949bf798dc9b"
+            "fvtt_u7PxWqcBH1moeS6M": "d544bfbe675c"
           },
           "armor": {
-            "fvtt_2gPkkO4IEJ6V1d6D": "acda229c5980",
-            "fvtt_25XxJ7NoYYuz6Ja5": "6405d879e39a",
-            "fvtt_DofI1yvxHFkAQXw1": "8bc19e4ecd8e",
-            "fvtt_FAUVrjq31mqnLPiH": "8f5bac2acccd"
+            "fvtt_2gPkkO4IEJ6V1d6D": "df1ee0e3d647",
+            "fvtt_25XxJ7NoYYuz6Ja5": "21cc5354a61e",
+            "fvtt_DofI1yvxHFkAQXw1": "eb4f6df4923b",
+            "fvtt_FAUVrjq31mqnLPiH": "4ee39883c417"
           },
           "augmentations": {
             "fvtt_9sMsUK5CAUYaqmsp": "77fe76f8f542",
@@ -3770,10 +4246,12 @@
             "fvtt_0jmHznMEFeTbKtIv": "0398c94fd5f1",
             "fvtt_vwfnNTEeN28wajXL": "09b0778139d9",
             "fvtt_xHffrb93L9wQHkf0": "0b272d5cb978"
+          },
+          "lifestyles": {
+            "fvtt_wFWuYtm16eSpdDnP": "5153e9b44296"
           }
         },
         "matrix": "6f027afed084",
-        "lifestyle": "654faaa2e712",
         "vision": "f3d1cf29241f"
       },
       "user": "Jean Michou"
@@ -4055,7 +4533,7 @@
         "category": "Corps à corps",
         "kind": "melee",
         "skill": "unarmed_combat",
-        "accuracy": 5,
+        "accuracy": "Physical",
         "damage": "(STR)S",
         "ap": 0,
         "mode": "",
@@ -4078,7 +4556,38 @@
         "ammo": "14(c)",
         "reach": 0,
         "catalogId": "6366691e-c1e0-4d5e-b7a6-1c0371708714",
-        "notes": "Colt Government 2066 (SR5 426)"
+        "notes": "Colt Government 2066 (SR5 426)",
+        "mounts": [
+          "Barrel",
+          "Top",
+          "Stock",
+          "Side"
+        ],
+        "accessories": [
+          {
+            "id": "acc_christopher01",
+            "catalogId": "521f9c2e-dfb2-42a6-b707-9808ae4885de",
+            "name": "Laser Sight",
+            "mount": "Top",
+            "cost": 125,
+            "avail": "2",
+            "nameFr": "Visée laser",
+            "effects": {
+              "accuracy": 1
+            },
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier"
+          },
+          {
+            "id": "acc_christopher02",
+            "catalogId": "0da6149e-982f-4051-825b-52c1b79c7e52",
+            "name": "Silencer/Suppressor",
+            "mount": "Barrel",
+            "cost": 500,
+            "avail": "9F",
+            "nameFr": "Silencieux",
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier"
+          }
+        ]
       },
       {
         "id": "fvtt_gVDyjqVk7I3OrwoU",
@@ -4094,7 +4603,37 @@
         "ammo": "16(c)",
         "reach": 0,
         "catalogId": "93722378-dcb6-4988-ba4e-54ce545644fe",
-        "notes": "Ares Light Fire 75 (SR5 425)"
+        "notes": "Ares Light Fire 75 (SR5 425)",
+        "mounts": [
+          "Barrel",
+          "Top"
+        ],
+        "accessories": [
+          {
+            "id": "acc_christopher03",
+            "catalogId": "d57d2c64-1f61-4f5f-a465-8ce0dfacec6a",
+            "name": "Smartgun System, Internal",
+            "mount": "Internal",
+            "cost": 0,
+            "avail": "2R",
+            "nameFr": "Système Smartgun, interne",
+            "effects": {
+              "smartgun": true
+            },
+            "included": true,
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier"
+          },
+          {
+            "id": "acc_christopher04",
+            "catalogId": "7f66a669-917a-4423-bd83-cf0e0a1fb2a8",
+            "name": "Concealable Holster",
+            "mount": "",
+            "cost": 150,
+            "avail": "2",
+            "nameFr": "Holster dissimulable",
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier"
+          }
+        ]
       },
       {
         "id": "fvtt_qbPkuKQQucnBfYe2",
@@ -4110,7 +4649,19 @@
         "ammo": "",
         "reach": 0,
         "catalogId": "656906d8-b6a4-47a2-9554-de365097eba0",
-        "notes": "Combat Knife (SR5 422)"
+        "notes": "Combat Knife (SR5 422)",
+        "accessories": [
+          {
+            "id": "acc_christopher05",
+            "catalogId": "7f66a669-917a-4423-bd83-cf0e0a1fb2a8",
+            "name": "Concealable Holster",
+            "mount": "",
+            "cost": 150,
+            "avail": "2",
+            "nameFr": "Holster dissimulable",
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier"
+          }
+        ]
       },
       {
         "id": "fvtt_oKJpENfQmDzziduU",
@@ -4223,7 +4774,31 @@
         "equipped": true,
         "stack": false,
         "notes": "Zoé: Heritage 12",
-        "catalogId": "d4804f1b-4443-4e97-a7d2-9c1659732c6b"
+        "catalogId": "d4804f1b-4443-4e97-a7d2-9c1659732c6b",
+        "capacity": 6,
+        "mods": [
+          {
+            "id": "mod_christopher06",
+            "catalogId": "9ee8e6ad-2472-485d-ae42-d1978749b456",
+            "name": "Electrochromic Clothing",
+            "capacity": 0,
+            "cost": 500,
+            "avail": "2",
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier",
+            "nameFr": "Modification électrochrome"
+          },
+          {
+            "id": "mod_christopher07",
+            "catalogId": "dd246520-7306-40fb-88b4-c9cb031208fc",
+            "name": "Fire Resistance",
+            "capacity": 2,
+            "cost": 500,
+            "avail": "6",
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier",
+            "nameFr": "Protection ignifuge",
+            "rating": 2
+          }
+        ]
       },
       {
         "id": "fvtt_bgzKpPH9YxbTde8D",
@@ -4232,7 +4807,30 @@
         "equipped": true,
         "stack": true,
         "notes": "Mortimer of London: Greatcoat Coat",
-        "catalogId": "446ec9ad-9a52-46fe-8f27-873a51ef6291"
+        "catalogId": "446ec9ad-9a52-46fe-8f27-873a51ef6291",
+        "capacity": 10,
+        "mods": [
+          {
+            "id": "mod_christopher08",
+            "catalogId": "9ee8e6ad-2472-485d-ae42-d1978749b456",
+            "name": "Electrochromic Clothing",
+            "capacity": 0,
+            "cost": 500,
+            "avail": "2",
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier",
+            "nameFr": "Modification électrochrome"
+          },
+          {
+            "id": "mod_christopher09",
+            "catalogId": "dbdaf817-9bfa-4938-a195-b53c63b53e7c",
+            "name": "Shock Frills",
+            "capacity": 2,
+            "cost": 250,
+            "avail": "6R",
+            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier",
+            "nameFr": "Vrilles électriques"
+          }
+        ]
       },
       {
         "id": "fvtt_zzSimmXN96t0XE8R",
@@ -4672,11 +5270,19 @@
         ]
       }
     ],
-    "lifestyle": {
-      "name": "The Lounge (Haut)",
-      "monthlyCost": 10000,
-      "monthsPaid": 1
-    },
+    "lifestyles": [
+      {
+        "id": "ls_christopher00",
+        "name": "The Lounge (Haut)",
+        "base": "High",
+        "baseCost": 10000,
+        "monthsPaid": 1,
+        "primary": true,
+        "qualities": [],
+        "monthlyCost": 10000,
+        "notes": "Historique Chummer (fichier du 01/08/2020) : « The Hut », Moyen (points RF Confort 3 / Sécurité 4 / Voisinage 5) avec Endroit dangereux (−20 %), Contrat DocWagon (Or) 2 083 ¥, Garage (gros véhicule, Body 5+) 100 ¥ (pour l’Ares Roadmaster), Pilier de bar (The Jeffrey’s) 25 ¥ — 6 248 ¥/mois. Non restauré : la fiche actuelle (Foundry) a « The Lounge » (Haut), conservé."
+      }
+    ],
     "karma": 5,
     "karmaTotal": 69,
     "nuyen": 207159,
@@ -4698,7 +5304,7 @@
       "id": "vlPeWy4Ke53a5jT7",
       "world": "test-world",
       "importedAt": 1795629244307,
-      "hash": "3df5de4a310f",
+      "hash": "4d975b0a8f1e",
       "snapshot": {
         "s": {
           "karma": 5,
@@ -4756,11 +5362,11 @@
         },
         "items": {
           "weapons": {
-            "fvtt_sksbnqSorW3mLnMn": "f22e95682196",
-            "fvtt_fXWysWvXpgiZzFlH": "b5fe64635ac7",
-            "fvtt_gVDyjqVk7I3OrwoU": "604fac9aafdf",
+            "fvtt_sksbnqSorW3mLnMn": "3594c6025f02",
+            "fvtt_fXWysWvXpgiZzFlH": "39d21d58cd17",
+            "fvtt_gVDyjqVk7I3OrwoU": "438b598b6163",
             "fvtt_qbPkuKQQucnBfYe2": "a916b1ae7856",
-            "fvtt_oKJpENfQmDzziduU": "bba92713268c",
+            "fvtt_oKJpENfQmDzziduU": "164a9b828fab",
             "fvtt_BoL7YRWIJHvboXi7": "b2880f0aa469",
             "fvtt_OLGm04DlyQsTgLpR": "351378979235",
             "fvtt_cvRDBKaMGhz0cWmv": "79aed9aea084",
@@ -4768,9 +5374,9 @@
             "fvtt_6ahUiYvHws35fzq0": "5b16288b52a3"
           },
           "armor": {
-            "fvtt_g6WYjOvCudou2uXO": "b81a95b44f32",
-            "fvtt_K2m8o9QSd2Vw67bE": "10c7d6e94700",
-            "fvtt_bgzKpPH9YxbTde8D": "3548bf232ed0",
+            "fvtt_g6WYjOvCudou2uXO": "a2a410755e7d",
+            "fvtt_K2m8o9QSd2Vw67bE": "bffde30fc1e2",
+            "fvtt_bgzKpPH9YxbTde8D": "f4f60f7b7075",
             "fvtt_zzSimmXN96t0XE8R": "54ba050a234f"
           },
           "augmentations": {
@@ -4851,10 +5457,12 @@
             "fvtt_M0GnGCdFfZm2Ddn5": "880c1cbc5e20",
             "fvtt_7sK4CEpu5bOy7zcq": "9cdb453f95eb",
             "fvtt_rkVaxRaqoD6wdMyx": "ad8ed472b44d"
+          },
+          "lifestyles": {
+            "fvtt_CXxYRrfxid5HrjRQ": "5c4f58cc5a44"
           }
         },
         "matrix": "a7057b31d572",
-        "lifestyle": "add22bfb3763",
         "vision": "bf21a9e8fbc5"
       }
     }

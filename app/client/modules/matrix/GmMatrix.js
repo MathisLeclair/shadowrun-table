@@ -9,6 +9,7 @@ import {
   icInitiative, icAttackPool, deckStats, isCyberdeck,
 } from '/shared/matrix.js';
 import { act, personaOf, OsMeter, MatrixMonitor, marksDots, icName, markName, linkLockName, asdfShort, asdfLabel, modeLabel } from './common.js';
+import { RuleRef } from '../books/BookRef.js';
 
 // ---------------------------------------------------------------------------
 // Deckers
@@ -105,7 +106,7 @@ function IcSection({ game, host }) {
   const [targets, setTargets] = useState({});
   const ini = icInitiative(host);
   return html`<div class="mx-gm-section">
-    <div class="mx-panel-title spread"><span>${t('IC')}</span><span class="faint small">${t('attaque {n} dés · init. {init}', { n: icAttackPool(host), init: ini.text })}</span></div>
+    <div class="mx-panel-title spread"><span>${t('IC')} <${RuleRef} rule="ic" /></span><span class="faint small">${t('attaque {n} dés · init. {init}', { n: icAttackPool(host), init: ini.text })}</span></div>
     ${host.ic.length === 0 && html`<div class="muted small">${t('Aucune IC.')}</div>`}
     ${host.ic.map((ic) => {
       const def = IC_TYPES[ic.type] || {};

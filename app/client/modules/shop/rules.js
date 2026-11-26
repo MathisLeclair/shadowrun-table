@@ -16,12 +16,50 @@ export const GRADES = {
 export const GRADE_IDS = Object.keys(GRADES);
 
 /** Catalog files that can be sold in the shop (state.shop.categories keys). */
-export const SHOP_FILES = ['weapons', 'armor', 'gear', 'cyberware', 'bioware', 'vehicles', 'programs', 'lifestyles'];
+export const SHOP_FILES = [
+  'weapons', 'armor', 'gear', 'cyberware', 'bioware', 'vehicles', 'programs', 'lifestyles',
+  'accessories', 'armormods', 'vehiclemods', 'lifestylequalities',
+];
 export const FILE_LABELS = {
   weapons: tk('Armes'), armor: tk('Armures'), gear: tk('Équipement'), cyberware: tk('Cyberware'), bioware: tk('Bioware'),
   vehicles: tk('Véhicules & drones'), programs: tk('Programmes'), lifestyles: tk('Train de vie'),
+  accessories: tk('Accessoires d’armes'), armormods: tk('Modifications d’armure'), vehiclemods: tk('Modifications de véhicule'),
+  lifestylequalities: tk('Options de train de vie'), martialarts: tk('Arts martiaux'),
   qualities: tk('Traits'), spells: tk('Sorts'), powers: tk('Pouvoirs d’adepte'),
 };
+
+/**
+ * Upgrade catalogs: installed on something the character already owns (ARCHITECTURE.md « Upgrades »).
+ * file → { list: actor list of the target, sub: nested list on the target item }.
+ */
+export const UPGRADE_FILES = {
+  accessories: { list: 'weapons', sub: 'accessories' },
+  armormods: { list: 'armor', sub: 'mods' },
+  vehiclemods: { list: 'vehicles', sub: 'mods' },
+  lifestylequalities: { list: 'lifestyles', sub: 'qualities' },
+};
+/** Martial arts: karma, not nuyen (catalog martialarts.json, not in SHOP_FILES). RG p.128: a style includes its first technique. */
+export const MARTIAL_KARMA = { style: 7, technique: 5 };
+
+/**
+ * Karma for learning `newTechniques` techniques of a martial art style (catalog item; stats.karma = style cost, e.g. 15 for
+ * Way of Unified Mana). known = the actor's martialArts entry of that style, or null. RG p.128: the style price includes
+ * its first technique — also when the style is known but has no technique yet (bought without, imported).
+ */
+export function martialKarma(style, known, newTechniques) {
+  const tech = Number(style?.stats?.techniqueKarma) || MARTIAL_KARMA.technique;
+  const n = Math.max(0, Math.round(Number(newTechniques) || 0));
+  if (!known) return (Number(style?.stats?.karma) || MARTIAL_KARMA.style) + Math.max(0, n - 1) * tech;
+  const hasTech = Array.isArray(known.techniques) && known.techniques.length > 0;
+  return (hasTech ? n : Math.max(0, n - 1)) * tech;
+}
+
+/** A lifestyle option (catalog item or lifestyle quality) that lowers the rent: players need the GM's approval. */
+export function lowersRent(q) {
+  if (!q) return false;
+  const mult = q.stats ? q.stats.multiplier : q.multiplier;
+  return q.category === 'Negative' || Number(mult) < 0 || Number(q.cost) < 0;
+}
 
 /** Gear categories that belong to the « Matrice » and « Magie » storefront sections. */
 export const MATRIX_GEAR = new Set([
@@ -45,8 +83,18 @@ export const SECTIONS = [
   { id: 'vehicles', label: tk('Véhicules & drones'), icon: '⛟', files: ['vehicles'], match: (f) => f === 'vehicles' },
   { id: 'matrix', label: tk('Matrice'), icon: '⌨', files: ['gear', 'programs'], match: (f, it) => f === 'programs' || (f === 'gear' && MATRIX_GEAR.has(it.category)) },
   { id: 'magic', label: tk('Magie'), icon: '✶', files: ['gear'], match: (f, it) => f === 'gear' && MAGIC_GEAR.has(it.category) },
-  { id: 'lifestyles', label: tk('Train de vie'), icon: '⌂', files: ['lifestyles'], match: (f) => f === 'lifestyles' },
+  { id: 'lifestyles', label: tk('Train de vie'), icon: '⌂', files: ['lifestyles', 'lifestylequalities'], match: (f) => f === 'lifestyles' || f === 'lifestylequalities' },
 ];
+
+/** Storefront-only sections (upgrades installed on owned items, martial arts). Not offered by the character creator. */
+export const UPGRADE_SECTIONS = [
+  { id: 'accessories', label: tk('Accessoires d’armes'), icon: '⌖', files: ['accessories'], match: (f) => f === 'accessories', after: 'weapons' },
+  { id: 'armormods', label: tk('Modifications d’armure'), icon: '⛉', files: ['armormods'], match: (f) => f === 'armormods', after: 'armor' },
+  { id: 'vehiclemods', label: tk('Modifications de véhicule'), icon: '⚒', files: ['vehiclemods'], match: (f) => f === 'vehiclemods', after: 'vehicles' },
+  { id: 'martialarts', label: tk('Arts martiaux'), icon: '☯', files: [], karma: true, match: () => false, after: 'lifestyles' },
+];
+/** Every storefront section in display order. */
+export const STORE_SECTIONS = SECTIONS.flatMap((s) => [s, ...UPGRADE_SECTIONS.filter((u) => u.after === s.id)]);
 
 /** Which actor list a purchase lands in. */
 export function targetList(file, item) {
@@ -55,7 +103,8 @@ export function targetList(file, item) {
   if (file === 'armor') return st.mod ? 'gear' : 'armor';
   if (file === 'cyberware' || file === 'bioware') return 'augmentations';
   if (file === 'vehicles') return 'vehicles';
-  if (file === 'lifestyles') return 'lifestyle';
+  if (file === 'lifestyles') return 'lifestyles';
+  if (UPGRADE_FILES[file]) return 'upgrade';
   return 'gear';
 }
 
@@ -81,8 +130,9 @@ function tokenize(src) {
 }
 
 /**
- * Evaluate a Chummer-style formula. vars: { Rating, MinRating }. Returns a number (throws on bad input).
- * FixedValues(a,b,c) picks the entry for Rating (1-based, clamped).
+ * Evaluate a Chummer-style formula. vars: { Rating, MinRating, ...extra numeric variables (Body, Speed, Handling,
+ * Acceleration, Seats, VehicleCost, WeaponCost, ArmorCost…) }. Returns a number (throws on bad input).
+ * FixedValues(a,b,c) picks the entry for Rating (1-based, clamped). `a div b` = a / b, `a mod b` = remainder.
  */
 export function evalFormula(src, vars = {}) {
   if (typeof src === 'number') return src;
@@ -98,6 +148,7 @@ export function evalFormula(src, vars = {}) {
     p++;
   };
   const env = { Rating: Number(vars.Rating ?? 1), MinRating: Number(vars.MinRating ?? 1) };
+  for (const [k, v] of Object.entries(vars)) if (/^[A-Za-z][A-Za-z0-9]*$/.test(k) && k !== 'number' && Number.isFinite(Number(v)) && v !== null && v !== '') env[k] = Number(v);
 
   function primary() {
     const t = next();
@@ -114,7 +165,7 @@ export function evalFormula(src, vars = {}) {
       const idx = Math.max(0, Math.min(args.length - 1, Math.round(env.Rating) - 1));
       return args[idx];
     }
-    if (t in env) return env[t];
+    if (Object.prototype.hasOwnProperty.call(env, t)) return env[t];
     throw new Error(`Variable inconnue « ${t} » dans ${text}`); // i18n-ignore (catalog formula error, developer-facing)
   }
   function unary() {
@@ -124,10 +175,12 @@ export function evalFormula(src, vars = {}) {
   }
   function mul() {
     let x = unary();
-    while (peek() === '*' || peek() === '/') {
+    while (peek() === '*' || peek() === '/' || peek() === 'div' || peek() === 'mod') {
       const op = next();
       const y = unary();
-      x = op === '*' ? x * y : y === 0 ? 0 : x / y;
+      if (op === '*') x = x * y;
+      else if (op === 'mod') x = y === 0 ? 0 : x % y;
+      else x = y === 0 ? 0 : x / y;
     }
     return x;
   }
@@ -180,12 +233,13 @@ const round4 = (n) => Math.round(n * 10000) / 10000;
 
 /**
  * Full price sheet of one unit of a catalog item.
- * opts: { rating, grade, markup (percent), price (for Variable-cost items: wanted price, clamped to the range) }
+ * opts: { rating, grade, markup (percent), price (for Variable-cost items: wanted price, clamped to the range), vars (extra formula variables) }
  * → { rating, grade, base, unitCost, availValue, legality, avail: '8R', essence }
  */
 export function quote(item, opts = {}) {
   const rating = clampRating(item, opts.rating);
-  const vars = { Rating: rating ?? 1, MinRating: item?.rating?.min ?? 1 };
+  // opts.vars: extra formula variables of the target (vehicle Body/Speed…, WeaponCost, ArmorCost, VehicleCost).
+  const vars = { ...(opts.vars || {}), Rating: rating ?? 1, MinRating: item?.rating?.min ?? 1 };
   const grades = allowedGrades(item);
   const isWare = item?.essence !== undefined || Array.isArray(item?.grades);
   let grade = null;
@@ -239,4 +293,258 @@ export const LEGALITY_LABEL = { '': tk('Légal'), R: tk('Restreint'), F: tk('Int
 export function magicLoss(before, after) {
   const lost = (e) => Math.ceil(Math.max(0, 6 - e) - 1e-9);
   return Math.max(0, lost(after) - lost(before));
+}
+
+// ---------------------------------------------------------------------------
+// Upgrades: weapon accessories (mounts), armor modifications (capacity), vehicle modifications (slots).
+// Fit checks return { problem: null } when OK, else a message: French key string (static) or { key, params } (dynamic).
+// Target items keep the schema of ARCHITECTURE.md « Upgrades »: weapon.mounts/accessories, armor.capacity/mods, vehicle.mods.
+// ---------------------------------------------------------------------------
+const n0 = (v) => {
+  const x = Number(v);
+  return Number.isFinite(x) ? x : 0;
+};
+/** Standard SR5 mount points, used for ranged weapons that predate weapon.mounts and have no catalog entry. */
+export const STANDARD_MOUNTS = ['Top', 'Under', 'Barrel', 'Stock', 'Side'];
+export const MOUNT_LABELS = { Top: tk('Dessus'), Under: tk('Dessous'), Barrel: tk('Canon'), Stock: tk('Crosse'), Side: tk('Flanc'), Internal: tk('Interne'), '': tk('Sans montage') };
+
+/**
+ * Mount points of a weapon: its own list, else its catalog item's (none when the catalog lists no <accessorymounts>:
+ * bows, holdouts, crossbows…), else standard ones for ranged weapons without a catalog entry.
+ */
+export function weaponMounts(weapon, catItem) {
+  let base;
+  if (Array.isArray(weapon?.mounts)) base = weapon.mounts;
+  else if (catItem) base = Array.isArray(catItem.stats?.mounts) ? catItem.stats.mounts : [];
+  else base = weapon?.kind === 'melee' ? [] : STANDARD_MOUNTS;
+  // Accessories like a slide mount add mount points (catalog stats.extraMount, copied on the accessory as extraMount).
+  const extra = (weapon?.accessories || []).flatMap((a) => (Array.isArray(a?.extraMount) ? a.extraMount : []));
+  return [...new Set([...base, ...extra])];
+}
+
+/** Mount points already taken by installed accessories (included ones sit on « Internal »). */
+export function usedMounts(weapon) {
+  return (weapon?.accessories || []).filter((a) => a && a.mount && a.mount !== 'Internal' && !a.included).map((a) => a.mount);
+}
+
+/** Free mount points of the weapon accepted by this accessory (catalog item). [''] = needs no mount. */
+export function freeMounts(weapon, weaponCat, accItem) {
+  const wants = Array.isArray(accItem?.stats?.mount) ? accItem.stats.mount : [];
+  if (!wants.length) return [''];
+  const have = weaponMounts(weapon, weaponCat);
+  const used = usedMounts(weapon);
+  return wants.filter((m) => have.includes(m) && !used.includes(m));
+}
+
+const lowerList = (l) => (Array.isArray(l) ? l.map((x) => String(x).toLowerCase()) : []);
+/** Does a catalog requirement (build-catalog detailsOf: names / namesContains / categories / categoriesContains / types) list anything? */
+const hasDetails = (det) => !!det && ['names', 'namesContains', 'categories', 'categoriesContains', 'types'].some((k) => Array.isArray(det[k]) && det[k].length);
+/** Any listed value matches (exact, or substring for the *Contains lists). names / cat / type: the item's lower-cased values. */
+function detailsMatch(det, names, cat, type) {
+  if (!hasDetails(det)) return false;
+  const eqNames = lowerList(det.names);
+  const inNames = lowerList(det.namesContains);
+  const eqCats = lowerList(det.categories);
+  const inCats = lowerList(det.categoriesContains);
+  const types = lowerList(det.types);
+  return (
+    names.some((x) => eqNames.includes(x) || inNames.some((p) => x.includes(p))) ||
+    (!!cat && (eqCats.includes(cat) || inCats.some((p) => cat.includes(p)))) ||
+    (!!type && types.includes(type))
+  );
+}
+function matchDetails(det, weapon, weaponCat) {
+  const wNames = [weapon?.name, weaponCat?.name, weaponCat?.nameFr].filter(Boolean).map((x) => String(x).toLowerCase());
+  const wCat = String(weaponCat?.category || weapon?.category || '').toLowerCase();
+  const wType = weapon?.kind === 'melee' || weaponCat?.stats?.type === 'melee' ? 'melee' : 'ranged';
+  return detailsMatch(det, wNames, wCat, wType);
+}
+
+/**
+ * Can this accessory (catalog item) go on this weapon? opts: { mount } (wanted mount point).
+ * → { mount, problem } — mount = the mount point it will use ('' = none), problem = null or a message.
+ */
+export function accessoryFit(weapon, weaponCat, accItem, opts = {}) {
+  const st = accItem?.stats || {};
+  const params = { item: accItem?.nameFr || accItem?.name || '?', weapon: weapon?.name || '?' };
+  if (hasDetails(st.requires) && !matchDetails(st.requires, weapon, weaponCat)) return { mount: null, problem: { key: tk('{item} ne s’adapte pas sur {weapon}'), params } };
+  if (hasDetails(st.forbids) && matchDetails(st.forbids, weapon, weaponCat)) return { mount: null, problem: { key: tk('{item} ne s’adapte pas sur {weapon}'), params } };
+  if ((weapon?.accessories || []).some((a) => a.catalogId && a.catalogId === accItem?.id)) return { mount: null, problem: { key: tk('{item} est déjà installé sur {weapon}'), params } };
+  const free = freeMounts(weapon, weaponCat, accItem);
+  if (!free.length) return { mount: null, problem: { key: tk('Aucun emplacement libre ({mounts}) sur {weapon}'), params: { mounts: (st.mount || []).join(' / '), weapon: params.weapon } } };
+  const mount = opts.mount !== undefined && opts.mount !== null && free.includes(opts.mount) ? opts.mount : free[0];
+  return { mount, problem: null };
+}
+
+/** Accessory effects stored on weapon.accessories[].effects (sheet: weaponMods()). */
+export function accessoryEffects(accItem) {
+  const st = accItem?.stats || {};
+  const e = {};
+  if (st.accuracy) e.accuracy = n0(st.accuracy);
+  if (st.rc) e.rc = n0(st.rc);
+  if (st.rcGroup) e.rcGroup = n0(st.rcGroup);
+  if (st.smartgun) e.smartgun = true;
+  return e;
+}
+
+const LEGALITY_RANK = { '': 0, R: 1, F: 2 };
+/**
+ * Availability of an upgrade on its target: catalog items flagged `availRelative` (Chummer « +2R »: Smartgun System,
+ * Internal; YNT Softweave…) add the target's availability (targetQuote = quote() of the target's catalog item, or null)
+ * and keep the stricter legality. Returns a new quote-like object.
+ */
+export function upgradeAvail(q, item, targetQuote) {
+  if (!item?.availRelative || !targetQuote) return q;
+  const availValue = Math.max(0, Math.round(n0(q.availValue) + n0(targetQuote.availValue)));
+  const a = q.legality || '';
+  const b = targetQuote.legality || '';
+  const legality = (LEGALITY_RANK[b] || 0) > (LEGALITY_RANK[a] || 0) ? b : a;
+  return { ...q, availValue, legality, avail: `${availValue}${legality}` };
+}
+
+/** Armor capacity: armor.capacity, else the catalog's, else the armor rating (SR5 p.436: capacity = armor rating). */
+export function armorCapacity(armor, armorCat) {
+  if (armor?.capacity !== undefined && armor.capacity !== null && armor.capacity !== '') return n0(armor.capacity);
+  if (armorCat?.stats?.capacity !== undefined) return n0(armorCat.stats.capacity);
+  return n0(armor?.rating);
+}
+/** Capacity used by installed mods (negative capacity, e.g. YNT Softweave, adds space). */
+export function armorCapacityUsed(armor) {
+  return Math.round((armor?.mods || []).reduce((s, m) => s + (m && m.equipped !== false ? n0(m.capacity) : 0), 0) * 100) / 100;
+}
+/** Capacity an armor mod (catalog item) takes at this rating on an armor of this capacity. */
+export function armorModCapacity(modItem, rating, capacity) {
+  const c = modItem?.stats?.capacity ?? 0;
+  if (typeof c === 'number') return c;
+  try {
+    return Math.round(evalFormula(c, { Rating: rating ?? 1, Capacity: capacity }) * 100) / 100;
+  } catch {
+    return 0;
+  }
+}
+export function armorModFit(armor, armorCat, modItem, rating) {
+  const cap = armorCapacity(armor, armorCat);
+  const need = armorModCapacity(modItem, rating, cap);
+  const used = armorCapacityUsed(armor);
+  const params = { item: modItem?.nameFr || modItem?.name || '?', armor: armor?.name || '?' };
+  if ((armor?.mods || []).some((m) => m.catalogId && m.catalogId === modItem?.id)) return { need, used, cap, problem: { key: tk('{item} est déjà installé sur {armor}'), params } };
+  if (need > 0 && used + need > cap) {
+    return { need, used, cap, problem: { key: tk('Capacité insuffisante sur {armor} : {need} requis, {free} libre(s)'), params: { armor: params.armor, need, free: Math.max(0, Math.round((cap - used) * 100) / 100) } } };
+  }
+  return { need, used, cap, problem: null };
+}
+
+/** First number of a vehicle stat ('5/3' → 5). */
+const statNum = (v) => n0(String(v ?? '').split('/')[0]);
+/** Formula variables of a vehicle for mod prices/slots (R5). */
+export function vehicleVars(vehicle, vehicleCat, vehicleCost) {
+  const st = vehicleCat?.stats || {};
+  const pick = (k) => (vehicle?.[k] !== undefined && vehicle[k] !== null && vehicle[k] !== '' ? statNum(vehicle[k]) : statNum(st[k]));
+  return {
+    Body: pick('body'), Speed: pick('speed'), Handling: pick('handling'), Acceleration: pick('accel'), Pilot: pick('pilot'),
+    Sensor: pick('sensor'), Seats: pick('seats'), Armor: pick('armor'), VehicleCost: n0(vehicleCost),
+  };
+}
+/** R5 modification categories with their own slot pool on (non-drone) vehicles. */
+export const VEHICLE_SLOT_CATEGORIES = ['Powertrain', 'Protection', 'Weapons', 'Body', 'Electromagnetic', 'Cosmetic'];
+/** One slot pool for every mod: drones, and vehicles without a catalog entry (their type is unknown). */
+export function singleSlotPool(vehicle, vehicleCat) {
+  return !vehicleCat || !!vehicleCat.stats?.drone || /^Drones/i.test(vehicleCat.category || '');
+}
+/**
+ * Slot pool a mod category uses on this vehicle: 'all' (drones: single « Mod Slots » pool), a VEHICLE_SLOT_CATEGORIES
+ * entry, or null (« All », « Model-Specific », drone-attribute categories: no category pool on a vehicle).
+ */
+export function vehicleSlotPool(vehicle, vehicleCat, category) {
+  if (singleSlotPool(vehicle, vehicleCat)) return 'all';
+  return VEHICLE_SLOT_CATEGORIES.includes(category) ? category : null;
+}
+/**
+ * Modification slots of a vehicle (R5). Drones: Body + <modslots>. Other vehicles: one pool per category = Body +
+ * <xxxmodslots> of the model (catalog stats.slotBonus[pool]). vehicle.slots overrides.
+ */
+export function vehicleSlots(vehicle, vehicleCat, pool) {
+  if (vehicle?.slots !== undefined && vehicle.slots !== null && vehicle.slots !== '') return n0(vehicle.slots);
+  const body = vehicleVars(vehicle, vehicleCat).Body;
+  if (singleSlotPool(vehicle, vehicleCat)) return body + n0(vehicleCat?.stats?.modSlots);
+  return Math.max(0, body + n0(vehicleCat?.stats?.slotBonus?.[pool]));
+}
+/** Slots used by installed (non built-in) mods of one pool ('all' / undefined = every mod). */
+export function vehicleSlotsUsed(vehicle, pool) {
+  return (vehicle?.mods || []).reduce((s, m) => s + (m && !m.included && (!pool || pool === 'all' || m.category === pool) ? n0(m.slots) : 0), 0);
+}
+/** Slots a vehicle mod (catalog item) takes at this rating on this vehicle (vars = vehicleVars()). */
+export function vehicleModSlots(modItem, rating, vars) {
+  const s = modItem?.stats?.slots ?? 0;
+  if (typeof s === 'number') return s;
+  try {
+    return Math.round(evalFormula(s, { ...(vars || {}), Rating: rating ?? 1 }));
+  } catch {
+    return 0;
+  }
+}
+/** Max rating of a vehicle mod on this vehicle (stats.ratingVar: Body / Seats), or the catalog max. */
+export function vehicleModMaxRating(modItem, vars) {
+  const v = modItem?.stats?.ratingVar;
+  if (v === 'Body' || v === 'Seats') return Math.max(1, n0(vars?.[v]));
+  return modItem?.rating?.max ?? null;
+}
+/**
+ * Can this vehicle mod (catalog item) go on this vehicle? → { need, used, cap, pool, problem }: cap / used of the mod's
+ * slot pool (vehicleSlotPool); a mod without a pool (null: « All », « Model-Specific »… on a vehicle) is not limited.
+ */
+export function vehicleModFit(vehicle, vehicleCat, modItem, rating, vars) {
+  const pool = vehicleSlotPool(vehicle, vehicleCat, modItem?.category);
+  const cap = pool ? vehicleSlots(vehicle, vehicleCat, pool) : null;
+  const used = pool ? vehicleSlotsUsed(vehicle, pool) : 0;
+  const need = vehicleModSlots(modItem, rating, vars);
+  const st = modItem?.stats || {};
+  const params = { item: modItem?.nameFr || modItem?.name || '?', vehicle: vehicle?.name || '?' };
+  const vNames = [vehicle?.name, vehicleCat?.name, vehicleCat?.nameFr].filter(Boolean).map((x) => String(x).toLowerCase());
+  const vCat = String(vehicleCat?.category || '').toLowerCase();
+  if ((hasDetails(st.requires) && !detailsMatch(st.requires, vNames, vCat, '')) || (hasDetails(st.forbids) && detailsMatch(st.forbids, vNames, vCat, ''))) {
+    return { need, used, cap, pool, problem: { key: tk('{item} ne s’adapte pas sur {vehicle}'), params } };
+  }
+  if ((vehicle?.mods || []).some((m) => m.catalogId && m.catalogId === modItem?.id)) return { need, used, cap, pool, problem: { key: tk('{item} est déjà installé sur {vehicle}'), params } };
+  if (pool && need > 0 && used + need > cap) {
+    return { need, used, cap, pool, problem: { key: tk('Emplacements insuffisants sur {vehicle} : {need} requis, {free} libre(s)'), params: { vehicle: params.vehicle, need, free: Math.max(0, cap - used) } } };
+  }
+  return { need, used, cap, pool, problem: null };
+}
+/** Numeric bonuses of a vehicle mod at a rating ({ handling: 1, … }), stored as vehicle.mods[].effects. */
+export function vehicleModEffects(modItem, rating, vars) {
+  const out = {};
+  for (const [k, f] of Object.entries(modItem?.stats?.bonus || {})) {
+    try {
+      const v = Math.round(evalFormula(f, { ...(vars || {}), Rating: rating ?? 1 }));
+      if (v) out[k] = v;
+    } catch {}
+  }
+  return out;
+}
+
+/**
+ * Target-dependent fields of an upgrade picked from a catalog for one owned item (sheet nested editor; the shop prices
+ * with the same rules). parent = the weapon / armor / vehicle, parentCat = its catalog item (or null), parentValue = its
+ * price (« Weapon Cost »…, or null when unknown). → { cost?, capacity?, slots? } (cost left out when it cannot be priced).
+ */
+export function upgradeFields(file, entry, parent, { rating, parentCat = null, parentValue = null } = {}) {
+  const out = {};
+  const price = (vars) => {
+    if (!entry?.costFormula) return;
+    if (parentValue === null && /(Weapon|Armor|Vehicle)Cost/.test(entry.costFormula)) return;
+    try {
+      out.cost = quote(entry, { rating, vars }).unitCost;
+    } catch {}
+  };
+  if (file === 'armormods') {
+    const cap = armorCapacity(parent, parentCat);
+    out.capacity = armorModCapacity(entry, rating, cap);
+    price({ ArmorCost: parentValue ?? 0, Capacity: cap });
+  } else if (file === 'vehiclemods') {
+    const vars = vehicleVars(parent, parentCat, parentValue ?? 0);
+    out.slots = vehicleModSlots(entry, rating, vars);
+    price(vars);
+  } else if (file === 'accessories') price({ WeaponCost: parentValue ?? 0 });
+  return out;
 }

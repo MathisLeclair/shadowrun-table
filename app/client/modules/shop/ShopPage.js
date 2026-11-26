@@ -51,7 +51,7 @@ export default function ShopPage({ game }) {
 
   const actor = actors.find((a) => a.id === actorId) || null;
   const lines = useCart(actor?.id);
-  const cartTotal = catalog ? pricedCart(lines, catalog, game).reduce((s, p) => s + p.total, 0) : 0;
+  const cartTotal = catalog ? pricedCart(lines, catalog, game, actor).reduce((s, p) => s + p.total, 0) : 0;
   const orders = game.shop?.orders || [];
   const pending = orders.filter((o) => o.status === 'pending').length;
 

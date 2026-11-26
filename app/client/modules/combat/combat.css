@@ -111,6 +111,7 @@
 .sb-chip { background: var(--panel2); border: 1px solid var(--line2); border-radius: 6px; padding: 3px 8px; font-size: 12.5px; }
 .sb-chip b { font-family: var(--mono); color: var(--cyan); margin-left: 4px; }
 .sb-chip i { color: var(--dim); font-style: normal; font-size: 11.5px; }
+.sb-chip .bookref { margin-left: 5px; padding: 0 5px; font-size: 10px; line-height: 14px; }
 .sb-table-wrap { overflow-x: auto; }
 .sb table.sr td, .sb table.sr th { padding: 5px 6px; white-space: nowrap; }
 .sb table.sr td.wname { white-space: normal; min-width: 140px; }

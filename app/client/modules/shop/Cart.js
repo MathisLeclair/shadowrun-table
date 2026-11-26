@@ -4,13 +4,18 @@ import { html, Button, IconButton, Empty, NumberInput, Badge, confirmAction } fr
 import { send } from '../../lib/net.js';
 import { toast } from '../../lib/ui-store.js';
 import { t } from '../../lib/i18n.js';
-import { magicLoss } from './rules.js';
+import { magicLoss, UPGRADE_FILES, MOUNT_LABELS } from './rules.js';
+import { upgradePreview, msgText } from './upgrades.js';
 import { setCart, specialEntry, priceEntry, buyStatus, nuyen, gradeLabel, lineKey } from './common.js';
 
-/** Resolve cart lines against the catalog/specials. Unknown refs are flagged so they can be removed. */
-export function pricedCart(lines, catalog, game) {
+/**
+ * Resolve cart lines against the catalog/specials. Unknown refs are flagged so they can be removed.
+ * Upgrade lines (accessories, mods, lifestyle options) are checked together on the actor's items (same sim as the server).
+ */
+export function pricedCart(lines, catalog, game, actor) {
   const shop = game.shop || {};
   const isGM = game.me.role === 'gm';
+  const sim = new Map();
   return lines.map((l) => {
     let entry = null;
     if (l.ref.startsWith('special:')) {
@@ -18,6 +23,13 @@ export function pricedCart(lines, catalog, game) {
       if (sp) entry = specialEntry(sp, catalog);
     } else entry = catalog?.byId.get(l.ref) || null;
     if (!entry) return { line: l, missing: true, total: 0 };
+    if (!entry.special && UPGRADE_FILES[entry.file]) {
+      const pv = upgradePreview(entry, actor, catalog, shop, { targetId: l.target?.itemId, mount: l.mount, rating: l.rating }, sim);
+      const q = { ...pv.q, unitCost: pv.unitCost };
+      let st = buyStatus(shop, entry, q, isGM);
+      if (st.ok && pv.problem) st = { ok: false, reason: msgText(pv.problem), approval: false };
+      return { line: l, entry, q, st, pv, total: pv.unitCost };
+    }
     const q = priceEntry(entry, { rating: l.rating, grade: l.grade, price: l.price }, shop);
     const st = buyStatus(shop, entry, q, isGM);
     const stockOut = entry.special && entry.special.stock !== null && entry.special.stock !== undefined && entry.special.stock < l.qty;
@@ -34,7 +46,7 @@ export default function Cart({ game, actor, catalog, lines, onClose }) {
     return () => removeEventListener('keydown', k);
   }, [onClose]);
 
-  const priced = pricedCart(lines, catalog, game);
+  const priced = pricedCart(lines, catalog, game, actor);
   const total = priced.reduce((s, p) => s + p.total, 0);
   const have = Number(actor?.nuyen) || 0;
   const after = have - total;
@@ -88,13 +100,18 @@ export default function Cart({ game, actor, catalog, lines, onClose }) {
                 ${p.line.grade && p.line.grade !== 'standard' ? html`<span>${gradeLabel(p.line.grade)}</span>` : null}
                 ${p.q?.essence ? html`<span>${t('Ess {n}', { n: Math.round(p.q.essence * p.line.qty * 1000) / 1000 })}</span>` : null}
                 ${p.line.setMatrix ? html`<${Badge} color="cyan">${t('Appareil Matriciel')}</${Badge}>` : null}
+                ${p.pv?.target ? html`<span class="cyan">→ ${p.pv.target.name}${p.pv.mount ? ` [${t(MOUNT_LABELS[p.pv.mount] || p.pv.mount)}]` : ''}</span>` : null}
+                ${p.pv?.monthlyDelta ? html`<span>${t('{delta}/mois', { delta: `${p.pv.monthlyDelta > 0 ? '+' : '−'}${nuyen(Math.abs(p.pv.monthlyDelta))}` })}</span>` : null}
+                ${p.line.lifestyleName ? html`<span>« ${p.line.lifestyleName} »</span>` : null}
                 ${p.missing && html`<span class="red">${t('Article retiré du catalogue')}</span>`}
                 ${p.st && !p.st.ok && html`<span class="red">${p.st.reason}</span>`}
                 ${p.stockOut && html`<span class="red">${t('Stock insuffisant')}</span>`}
                 ${p.st?.ok && p.st.approval && html`<span class="amber">${t('Validation MJ')}</span>`}
               </div>
             </div>
-            ${p.entry?.file !== 'lifestyles'
+            ${p.pv
+              ? null
+              : p.entry?.file !== 'lifestyles'
               ? html`<${NumberInput} small value=${p.line.qty} min=${1} max=${999} onChange=${(v) => update(i, { qty: v })} />`
               : html`<span class="small muted">${t('{n} mois', { n: p.line.qty })}</span>`}
             <div class="shop-cart-price mono">${nuyen(p.total)}</div>

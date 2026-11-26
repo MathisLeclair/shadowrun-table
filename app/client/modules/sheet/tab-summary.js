@@ -5,20 +5,27 @@ import { send } from '../../lib/net.js';
 import { attr } from '/shared/sr5.js';
 import { t, tk, attrLabel, attrShort } from '../../lib/i18n.js';
 import { ConditionTrack, EdgePips, actorStatus, statusColor, statusLabel, fmtNum, tRich } from './common.js';
+import { limitValueText, limitTitle, sourcesTitle } from './modifiers-ui.js';
+import { BookRef, RuleRef } from '../books/BookRef.js';
+import { ruleRef } from '/shared/bookrefs.js';
 
 const BASE_ATTRS = ['BOD', 'AGI', 'REA', 'STR', 'WIL', 'LOG', 'INT', 'CHA', 'EDG'];
 
-/** Clickable stat box that opens a roll. */
-export function RollStat({ label, value, onClick, title, accent, sub }) {
-  const cls = 'stat sh-stat' + (accent ? ` stat-${accent}` : '') + (onClick ? ' sh-clickable' : '');
+/**
+ * Clickable stat box that opens a roll. `book` = rulebook reference of the rule ({ source, page }: ruleRef('limits'),
+ * skillRef('hacking')…): a 📖 chip in the box's corner (outside the button: no nested buttons).
+ */
+export function RollStat({ label, value, onClick, title, accent, sub, book }) {
+  const cls = 'stat sh-stat' + (accent ? ` stat-${accent}` : '') + (onClick ? ' sh-clickable' : '') + (book ? ' sh-has-book' : '');
   const inner = html`<span class="stat-value">${value}</span><span class="stat-label">${label}</span>${sub ? html`<span class="sh-stat-sub">${sub}</span>` : null}`;
-  return onClick
+  const box = onClick
     ? html`<button type="button" class=${cls} title=${title || t('Lancer : {label}', { label })} onClick=${onClick}>${inner}</button>`
     : html`<div class=${cls} title=${title}>${inner}</div>`;
+  return book ? html`<div class="sh-stat-wrap">${box}<${BookRef} source=${book.source} page=${book.page} class="sh-stat-book" /></div>` : box;
 }
 
 function AttrCell({ s, k }) {
-  const { actor, edit } = s;
+  const { actor, edit, dm } = s;
   const base = Number(actor.attributes[k] ?? 0);
   const eff = attr(actor, k);
   const aug = eff - base;
@@ -32,11 +39,18 @@ function AttrCell({ s, k }) {
         : null}
     </div>`;
   }
-  return html`<button type="button" class=${'sh-attr' + (aug ? ' augmented' : '')} title=${t('{attr} — lancer un test d’attribut', { attr: attrLabel(k) })} onClick=${() => s.roll({ attr: k })}>
+  const augTitle = sourcesTitle(dm?.sources?.[`attr.${k}`], t('{attr} — lancer un test d’attribut', { attr: attrLabel(k) }));
+  return html`<button type="button" class=${'sh-attr' + (aug ? ' augmented' : '')} title=${augTitle || t('{attr} — lancer un test d’attribut', { attr: attrLabel(k) })} onClick=${() => s.roll({ attr: k })}>
     <span class="sh-attr-key">${attrShort(k)}</span>
     <span class="sh-attr-val">${eff}</span>
     <span class="sh-attr-base">${aug ? t('base {base} +{aug}', { base, aug }) : attrLabel(k)}</span>
   </button>`;
+}
+
+/** A limit with its modifiers: « 9 (11 si visible) », tooltip = sources. */
+export function LimitStat({ s, name, label }) {
+  const { d, dm } = s;
+  return html`<${RollStat} label=${label} value=${limitValueText(dm, name)} title=${limitTitle(d, dm, name)} accent=${dm.limitsAlt?.[name] !== undefined ? 'amber' : null} book=${ruleRef('limits')} />`;
 }
 
 function QuickDamage({ s }) {
@@ -53,7 +67,7 @@ function QuickDamage({ s }) {
 }
 
 export function SummaryTab({ s }) {
-  const { actor, d, edit, own } = s;
+  const { actor, d, dm, edit, own } = s;
   const attrs = [...BASE_ATTRS];
   if (actor.attributes.MAG !== undefined && actor.attributes.MAG !== null) attrs.push('MAG');
   if (actor.attributes.RES !== undefined && actor.attributes.RES !== null) attrs.push('RES');
@@ -83,23 +97,23 @@ export function SummaryTab({ s }) {
     </section>
 
     <section>
-      <h4 class="section-title">${t('Valeurs dérivées')}</h4>
+      <h4 class="section-title">${t('Valeurs dérivées')} <${RuleRef} rule="derived" /></h4>
       <div class="sh-derived">
-        <${RollStat} label=${t('Initiative')} value=${d.initiative.text} accent="cyan" title=${d.woundModifier ? t('Blessures {n} au score', { n: d.woundModifier }) : `${attrLabel('REA')} + ${attrLabel('INT')}`} />
-        ${attrs.includes('MAG') && html`<${RollStat} label=${t('Init. astrale')} value=${`${d.astralInitiative.base} + 2D6`} />`}
-        ${actor.matrix && html`<${RollStat} label=${t('Init. RV chaude')} value=${`${d.matrixInitiative.hot.base} + 4D6`} title=${t('RA : {ar} · RV froide : {cold} + 3D6', { ar: d.initiative.text, cold: d.matrixInitiative.cold.base })} />`}
-        <${RollStat} label=${t('Limite physique')} value=${d.limits.physical} />
-        <${RollStat} label=${t('Limite mentale')} value=${d.limits.mental} />
-        <${RollStat} label=${t('Limite sociale')} value=${d.limits.social} />
-        ${d.limits.astral ? html`<${RollStat} label=${t('Limite astrale')} value=${d.limits.astral} />` : null}
-        <${RollStat} label=${t('Défense')} value=${d.defense} sub=${`${attrShort('REA')} + ${attrShort('INT')}`} onClick=${() => s.roll({ attr: 'REA', attr2: 'INT', label: tk('Défense') })} />
-        <${RollStat} label=${t('Encaissement')} value=${d.soak} sub=${t('{attr} + armure', { attr: attrShort('BOD') })} onClick=${() => s.roll({ attr: 'BOD', label: tk('Encaissement'), applyWounds: false, limit: null, bonus: [{ label: tk('armure'), value: d.armor }] })} />
-        <${RollStat} label=${t('Armure')} value=${d.armor} />
-        <${RollStat} label=${t('Sang-froid')} value=${d.composure} sub=${`${attrShort('CHA')} + ${attrShort('WIL')}`} onClick=${() => s.roll({ attr: 'CHA', attr2: 'WIL', label: tk('Sang-froid') })} />
-        <${RollStat} label=${t('Jauger intentions')} value=${d.judgeIntentions} sub=${`${attrShort('CHA')} + ${attrShort('INT')}`} onClick=${() => s.roll({ attr: 'CHA', attr2: 'INT', label: tk('Jauger les intentions') })} />
-        <${RollStat} label=${t('Mémoire')} value=${d.memory} sub=${`${attrShort('LOG')} + ${attrShort('WIL')}`} onClick=${() => s.roll({ attr: 'LOG', attr2: 'WIL', label: tk('Mémoire') })} />
-        <${RollStat} label=${t('Soulever / porter')} value=${d.liftCarry} sub=${`${attrShort('BOD')} + ${attrShort('STR')}`} onClick=${() => s.roll({ attr: 'BOD', attr2: 'STR', label: tk('Soulever / porter') })} />
-        <${RollStat} label=${t('Déplacement')} value=${`${d.movement.walk}/${d.movement.run} m`} title=${t('Marche / course par tour')} />
+        <${RollStat} label=${t('Initiative')} value=${d.initiative.text} accent="cyan" book=${ruleRef('initiative')} title=${sourcesTitle(dm.sources.initiative, d.woundModifier ? t('Blessures {n} au score', { n: d.woundModifier }) : `${attrLabel('REA')} + ${attrLabel('INT')}`) || (d.woundModifier ? t('Blessures {n} au score', { n: d.woundModifier }) : `${attrLabel('REA')} + ${attrLabel('INT')}`)} />
+        ${attrs.includes('MAG') && html`<${RollStat} label=${t('Init. astrale')} value=${`${d.astralInitiative.base} + 2D6`} book=${ruleRef('initiative')} />`}
+        ${actor.matrix && html`<${RollStat} label=${t('Init. RV chaude')} book=${ruleRef('matrixInitiative')} value=${`${dm.matrixInitiative.hot.base} + ${dm.matrixInitiative.hot.dice}D6`} title=${t('RA : {ar} · RV froide : {cold} + {dice}D6', { ar: d.initiative.text, cold: dm.matrixInitiative.cold.base, dice: dm.matrixInitiative.cold.dice }) + (dm.sources.matrixInitiative ? '\n' + sourcesTitle(dm.sources.matrixInitiative) : '')} />`}
+        <${LimitStat} s=${s} name="physical" label=${t('Limite physique')} />
+        <${LimitStat} s=${s} name="mental" label=${t('Limite mentale')} />
+        <${LimitStat} s=${s} name="social" label=${t('Limite sociale')} />
+        ${d.limits.astral ? html`<${LimitStat} s=${s} name="astral" label=${t('Limite astrale')} />` : null}
+        <${RollStat} label=${t('Défense')} value=${dm.defense} sub=${`${attrShort('REA')} + ${attrShort('INT')}`} book=${ruleRef('defense')} title=${sourcesTitle(dm.sources.defense)} onClick=${() => s.roll({ attr: 'REA', attr2: 'INT', label: tk('Défense'), test: 'defense' })} />
+        <${RollStat} label=${t('Encaissement')} value=${dm.soak} sub=${t('{attr} + armure', { attr: attrShort('BOD') })} book=${ruleRef('soak')} title=${sourcesTitle([...(dm.sources.armor || []), ...(dm.sources.soak || [])])} onClick=${() => s.roll({ attr: 'BOD', label: tk('Encaissement'), applyWounds: false, limit: null, test: 'soak' })} />
+        <${RollStat} label=${t('Armure')} value=${dm.armor} book=${ruleRef('armor')} title=${sourcesTitle(dm.sources.armor, t('Armures portées : {n}', { n: d.armor }))} />
+        <${RollStat} label=${t('Sang-froid')} value=${dm.composure} book=${ruleRef('attributeTests')} sub=${`${attrShort('CHA')} + ${attrShort('WIL')}`} title=${sourcesTitle(dm.sources.composure)} onClick=${() => s.roll({ attr: 'CHA', attr2: 'WIL', label: tk('Sang-froid'), test: 'composure' })} />
+        <${RollStat} label=${t('Jauger intentions')} value=${dm.judgeIntentions} book=${ruleRef('attributeTests')} sub=${`${attrShort('CHA')} + ${attrShort('INT')}`} title=${sourcesTitle(dm.sources.judgeIntentions)} onClick=${() => s.roll({ attr: 'CHA', attr2: 'INT', label: tk('Jauger les intentions'), test: 'judgeIntentions' })} />
+        <${RollStat} label=${t('Mémoire')} value=${dm.memory} book=${ruleRef('attributeTests')} sub=${`${attrShort('LOG')} + ${attrShort('WIL')}`} title=${sourcesTitle(dm.sources.memory)} onClick=${() => s.roll({ attr: 'LOG', attr2: 'WIL', label: tk('Mémoire'), test: 'memory' })} />
+        <${RollStat} label=${t('Soulever / porter')} value=${dm.liftCarry} book=${ruleRef('attributeTests')} sub=${`${attrShort('BOD')} + ${attrShort('STR')}`} title=${sourcesTitle(dm.sources.liftCarry)} onClick=${() => s.roll({ attr: 'BOD', attr2: 'STR', label: tk('Soulever / porter'), test: 'liftCarry' })} />
+        <${RollStat} label=${t('Déplacement')} value=${`${d.movement.walk}/${d.movement.run} m`} title=${t('Marche / course par tour')} book=${ruleRef('movement')} />
       </div>
       ${(vision.lowLight || vision.thermo || vision.darkRange) && html`<div class="row wrap sh-vision">
         ${vision.lowLight && html`<${Badge} color="cyan">${t('Vision nocturne')}</${Badge}>`}
@@ -119,24 +133,25 @@ export function SummaryTab({ s }) {
 
     <section>
       <div class="sh-sec-head">
-        <h4 class="section-title">${t('Moniteurs de condition')}</h4>
+        <h4 class="section-title">${t('Moniteurs de condition')} <${RuleRef} rule="conditionMonitor" /></h4>
         <div class="row wrap">
           <${Badge} color=${statusColor(status)}>${statusLabel(status)}</${Badge}>
-          ${d.woundModifier ? html`<${Badge} color="red" title=${t('Malus de blessures à tous les tests et à l’initiative')}>${t('Blessures {n}', { n: d.woundModifier })}</${Badge}>` : null}
+          ${dm.woundModifier ? html`<${Badge} color="red" title=${t('Malus de blessures à tous les tests et à l’initiative') + (dm.sources.woundModifier ? '\n' + sourcesTitle(dm.sources.woundModifier) : '')}>${t('Blessures {n}', { n: dm.woundModifier })}</${Badge}>` : null}
         </div>
       </div>
       <div class="sh-tracks">
-        <${ConditionTrack} label=${t('Physique')} kind="physical" max=${d.physicalMonitor} value=${c.physical || 0} readOnly=${!own} onSet=${setCond('physical')} />
-        <${ConditionTrack} label=${t('Étourdissant')} kind="stun" max=${d.stunMonitor} value=${c.stun || 0} readOnly=${!own} onSet=${setCond('stun')} />
-        <${ConditionTrack} label=${t('Surplus')} kind="overflow" max=${d.overflowMax} value=${Math.min(c.overflow || 0, d.overflowMax)} wounds=${false} readOnly=${!own} onSet=${setCond('overflow')} />
+        <${ConditionTrack} label=${t('Physique')} kind="physical" max=${dm.physicalMonitor} value=${c.physical || 0} readOnly=${!own} onSet=${setCond('physical')} />
+        <${ConditionTrack} label=${t('Étourdissant')} kind="stun" max=${dm.stunMonitor} value=${c.stun || 0} readOnly=${!own} onSet=${setCond('stun')} />
+        <${ConditionTrack} label=${t('Surplus')} kind="overflow" max=${dm.overflowMax} value=${Math.min(c.overflow || 0, dm.overflowMax)} wounds=${false} readOnly=${!own} onSet=${setCond('overflow')} />
       </div>
-      ${(c.overflow || 0) > d.overflowMax && html`<div class="error small">${t('Le surplus dépasse la Constitution : {name} est mort·e.', { name: actor.name })}</div>`}
+      ${['physicalMonitor', 'stunMonitor', 'overflowMax'].some((k) => dm.sources[k]) && html`<div class="faint small" title=${sourcesTitle(['physicalMonitor', 'stunMonitor', 'overflowMax'].flatMap((k) => dm.sources[k] || []))}>${t('Moniteurs modifiés par l’équipement / les qualités (survol pour le détail).')}</div>`}
+      ${(c.overflow || 0) > dm.overflowMax && html`<div class="error small">${t('Le surplus dépasse la Constitution : {name} est mort·e.', { name: actor.name })}</div>`}
       ${own && html`<${QuickDamage} s=${s} />`}
     </section>
 
     <section>
       <div class="sh-sec-head">
-        <h4 class="section-title">${t('Chance')}</h4>
+        <h4 class="section-title">${t('Chance')} <${RuleRef} rule="edge" /></h4>
         <div class="row wrap">
           <${EdgePips} actor=${actor} canUse=${own} size="lg" />
           <span class="mono">${actor.edge?.current ?? 0}/${attr(actor, 'EDG')}</span>

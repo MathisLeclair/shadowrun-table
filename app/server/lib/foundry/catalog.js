@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const CATALOG_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'data', 'catalog');
-const FILES = ['weapons', 'armor', 'gear', 'cyberware', 'bioware', 'qualities', 'powers', 'spells', 'programs', 'vehicles', 'lifestyles'];
+const FILES = ['weapons', 'armor', 'gear', 'cyberware', 'bioware', 'qualities', 'powers', 'spells', 'programs', 'vehicles', 'lifestyles', 'lifestylequalities', 'accessories', 'armormods', 'vehiclemods', 'martialarts'];
 
 export const norm = (s) =>
   String(s || '')

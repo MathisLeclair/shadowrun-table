@@ -19,6 +19,8 @@ import SettingsPage from './core/SettingsPage.js';
 import MatrixPage from './matrix/MatrixPage.js';
 import ChargenPage from './chargen/ChargenPage.js';
 import NotesPage from './notes/NotesPage.js';
+import BooksPage from './books/BooksPage.js';
+import BookViewer from './books/BookViewer.js';
 import { unreadHandouts } from './campaign/common.js';
 import { tk } from '../lib/i18n.js';
 
@@ -36,6 +38,7 @@ export const mainTabs = [
   { id: 'shop', label: tk('Boutique'), icon: '¥', roles: ['gm', 'player'], component: ShopPage, badge: (g) => (g.me.role === 'gm' ? pending(g.shop?.orders) : null) },
   { id: 'training', label: tk('Progression'), icon: '▲', roles: ['gm', 'player'], component: TrainingPage, badge: (g) => (g.me.role === 'gm' ? pending(g.training?.requests) : null) },
   { id: 'notes', label: tk('Notes'), icon: '✎', roles: ['gm', 'player'], component: NotesPage },
+  { id: 'books', label: tk('Règles'), icon: '§', roles: ['gm', 'player'], component: BooksPage },
   { id: 'audio', label: tk('Ambiance'), icon: '♫', roles: ['gm'], component: AudioPage },
   { id: 'campaign', label: tk('Campagne'), icon: '✦', roles: ['gm'], component: CampaignPage },
   { id: 'dossiers', label: tk('Dossiers'), icon: '✉', roles: ['player'], component: DossiersPage, badge: (g) => unreadHandouts(g) || null },
@@ -53,4 +56,4 @@ export const dockTabs = [
 export const SheetView = SheetViewImpl;
 
 /** Mounted once for every user, outside the tabs (audio playback, overlays…). */
-export const globalComponents = [AudioEngine];
+export const globalComponents = [AudioEngine, BookViewer]; // BookViewer: rulebook drawer (openBook() from anywhere)

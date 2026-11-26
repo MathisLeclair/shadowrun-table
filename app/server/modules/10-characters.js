@@ -7,10 +7,17 @@ import { derive, attr, skillPool, rollDice, SKILL_BY_ID, ATTR_LABELS, ATTR_SHORT
 import { uid, deepClone, nuyen as fmtNuyen } from '../../shared/util.js';
 import {
   ITEM_LISTS, PLAYER_ITEM_FIELDS, PLAYER_ACTOR_KEYS, MERGE_KEYS, normalizeActor, blankActor, healthStatus, categoryToSkill,
-  evalFormula, slugify, METATYPE_FR, MELEE_SKILLS,
+  evalFormula, slugify, METATYPE_FR, MELEE_SKILLS, SUB_LISTS,
 } from '../../client/modules/sheet/sheet-data.js';
-import { applyBonus, removeBonus, weaponFromStats, wareCatalogItem, detachAugmentation } from '../lib/augment.js';
+import { monthlyCost as lifestyleMonthlyCost } from '../../shared/lifestyle.js';
+import { removeBonus, weaponFromStats, wareCatalogItem, detachAugmentation, bakeItemBonus, itemBonusSpec } from '../lib/augment.js';
 import { errorBody } from '../lib/i18n.js';
+import { actorModifiers, deriveFull } from '../lib/modifiers.js';
+import { fillActorRefs } from '../lib/bookrefs.js';
+import {
+  poolModifiers, limitFor, rollContext, cleanConditions, derivedWithModifiers, weaponAccuracy, checkedTest, woundsApply, importedItem,
+  MATRIX_LIMITS, MATRIX_LIMIT_SKILLS,
+} from '../../shared/modifiers.js';
 
 /** Marker for the i18n checker: French keys stored as data (history texts…), translated by the client. */
 const tk = (s) => s;
@@ -37,7 +44,7 @@ function requireOwn(ctx, actorId) {
 
 /** Keep condition boxes within the monitors (overflow may reach BOD + 1 = dead). */
 function clampCondition(a) {
-  const d = derive(a);
+  const d = deriveFull(a);
   const c = a.condition;
   c.physical = clampInt(c.physical, 0, d.physicalMonitor);
   c.stun = clampInt(c.stun, 0, d.stunMonitor);
@@ -45,7 +52,7 @@ function clampCondition(a) {
 }
 
 function statusOf(a) {
-  const d = derive(a);
+  const d = deriveFull(a);
   return healthStatus(a.condition, d.physicalMonitor, d.stunMonitor, d.overflowMax);
 }
 
@@ -168,11 +175,104 @@ function findItem(ctx, a, list, itemId, index) {
   return idx;
 }
 
-function sanitizeItem(list, item) {
+const realNum = (v, lo, hi, d = 0) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.max(lo, Math.min(hi, Math.round(n * 100) / 100)) : d;
+};
+const MOUNTS = ['Top', 'Under', 'Barrel', 'Stock', 'Side', 'Internal', ''];
+const VEHICLE_MOD_EFFECTS = ['armor', 'handling', 'speed', 'accel', 'body', 'sensor', 'pilot', 'seats'];
+const ARMOR_MOD_BONUS = ['fire', 'cold', 'electricity', 'acid', 'falling', 'toxin', 'pathogen', 'radiation'];
+
+/** Accessory / mod / lifestyle quality / technique (nested list `sub`). `partial` = patch (only the given keys). */
+function sanitizeSub(ctx, sub, x, partial = false) {
+  if (!isObj(x)) ctx.fail('Élément invalide');
+  const out = {};
+  const has = (k) => x[k] !== undefined;
+  if (!partial || has('name')) out.name = str(x.name, 120).trim() || (partial ? undefined : 'Option');
+  if (out.name === undefined) delete out.name;
+  for (const k of ['nameFr', 'catalogId', 'chummerGuid', 'avail', 'category']) if (has(k)) out[k] = x[k] === null ? null : str(x[k], k === 'category' ? 60 : 120);
+  if (has('notes')) out.notes = x.notes === null ? null : str(x.notes, 2000);
+  // Rulebook reference (📖 chip): book code + printed page (filled from the catalog by server/lib/bookrefs.js when missing).
+  if (has('source')) out.source = x.source === null || x.source === '' ? null : str(x.source, 12).trim();
+  if (has('page')) out.page = x.page === null || x.page === '' ? null : clampInt(x.page, 1, 9999);
+  if (has('rating')) out.rating = x.rating === null || x.rating === '' ? null : clampInt(x.rating, 0, 99);
+  for (const k of ['included', 'equipped']) if (has(k)) out[k] = !!x[k];
+  if (has('cost')) out.cost = realNum(x.cost, -1e8, 1e8);
+  // Shop-only fields (40-shop installUpgrade) survive GM edits: price paid (resale value), choice (Chummer <extra>).
+  if (has('paid')) out.paid = x.paid === null || x.paid === '' ? null : realNum(x.paid, 0, 1e9);
+  if (has('choice')) out.choice = x.choice === null ? null : str(x.choice, 120);
+  if (sub === 'accessories') {
+    if (has('mount')) out.mount = MOUNTS.includes(x.mount) ? x.mount : '';
+    if (has('extraMount')) out.extraMount = Array.isArray(x.extraMount) ? x.extraMount.map((m) => str(m, 20)).filter((m) => MOUNTS.includes(m) && m).slice(0, 6) : [];
+    if (has('effects')) {
+      const e = isObj(x.effects) ? x.effects : {};
+      out.effects = {};
+      for (const k of ['accuracy', 'rc', 'dicePool']) if (Number(e[k])) out.effects[k] = clampInt(e[k], -20, 20);
+      if (Number(e.rcGroup)) out.effects.rcGroup = clampInt(e.rcGroup, 0, 99);
+      if (e.smartgun) out.effects.smartgun = true;
+    }
+  } else if (sub === 'mods') {
+    if (has('capacity')) out.capacity = realNum(x.capacity, -50, 50);
+    if (has('slots')) out.slots = realNum(x.slots, -50, 99);
+    if (has('effects')) {
+      // Armor mods: { armor }; vehicle mods: { handling, speed, accel, armor, body, sensor, pilot, seats } (evaluated at the rating).
+      const e = isObj(x.effects) ? x.effects : {};
+      out.effects = {};
+      for (const k of VEHICLE_MOD_EFFECTS) if (Number(e[k])) out.effects[k] = realNum(e[k], -50, 50);
+    }
+    if (has('bonus')) {
+      // Armor mods: { fire|cold|electricity|acid|falling|toxin|pathogen|radiation: n }.
+      const b = isObj(x.bonus) ? x.bonus : {};
+      out.bonus = {};
+      for (const k of ARMOR_MOD_BONUS) if (b[k] !== undefined && b[k] !== null && b[k] !== '') out.bonus[k] = Number.isFinite(Number(b[k])) ? realNum(b[k], -50, 50) : !!b[k];
+      if (!Object.keys(out.bonus).length) out.bonus = null;
+    }
+  } else if (sub === 'qualities') {
+    if (has('multiplier')) out.multiplier = realNum(x.multiplier, -100, 1000);
+    if (has('baseOnly')) out.baseOnly = !!x.baseOnly; // % of the base cost only (Extra Secure), shared/lifestyle.js
+    if (has('lp')) out.lp = x.lp === null ? null : clampInt(x.lp, -20, 20);
+  }
+  return out;
+}
+
+const subList = (ctx, list, items, sub) => (Array.isArray(items) ? items.slice(0, 60).map((x) => ({ ...sanitizeSub(ctx, sub, x), id: str(x?.id, 60) || ctx.uid('sub') })) : []);
+
+/** Lifestyles: derived monthly cost (shared/lifestyle.js) and a single primary lifestyle. */
+function settleLifestyles(a, primaryId) {
+  if (!Array.isArray(a.lifestyles)) return;
+  if (primaryId && a.lifestyles.some((l) => l.id === primaryId)) for (const l of a.lifestyles) l.primary = l.id === primaryId;
+  for (const l of a.lifestyles) {
+    l.qualities = Array.isArray(l.qualities) ? l.qualities : [];
+    l.monthlyCost = Math.round(Number(lifestyleMonthlyCost(l)) || 0);
+  }
+  if (a.lifestyles.length && !a.lifestyles.some((l) => l.primary)) a.lifestyles[0].primary = true;
+}
+
+function sanitizeItem(list, item, ctx) {
   const out = deepClone(item);
   delete out.__proto__;
+  if (ctx) {
+    const sub = SUB_LISTS[list];
+    if (sub && out[sub] !== undefined) out[sub] = subList(ctx, list, out[sub], sub);
+    if (list === 'weapons' && out.mounts !== undefined) out.mounts = Array.isArray(out.mounts) ? out.mounts.map((m) => str(m, 20)).filter((m) => MOUNTS.includes(m)) : [];
+    if (list === 'armor' && out.capacity !== undefined) out.capacity = realNum(out.capacity, 0, 99);
+    if (list === 'lifestyles') {
+      for (const k of ['base', 'catalogId']) if (out[k] !== undefined) out[k] = str(out[k], k === 'base' ? 40 : 80);
+      if (out.baseCost !== undefined) out.baseCost = clampInt(out.baseCost, 0, 1e8);
+      if (out.monthsPaid !== undefined) out.monthsPaid = clampInt(out.monthsPaid, 0, 999);
+      if (out.primary !== undefined) out.primary = !!out.primary;
+      if (out.points !== undefined) {
+        const p = isObj(out.points) ? out.points : null;
+        out.points = p ? Object.fromEntries(['comforts', 'security', 'neighborhood', 'entertainment'].filter((k) => p[k] !== undefined && p[k] !== null).map((k) => [k, clampInt(p[k], 0, 20)])) : null;
+      }
+      delete out.monthlyCost; // derived
+    }
+  }
   if (out.name !== undefined) out.name = String(out.name).slice(0, 120);
   if (out.notes !== undefined) out.notes = str(out.notes, 5000);
+  // Rulebook reference (📖 chip): book code + printed page.
+  if (out.source !== undefined && out.source !== null) out.source = str(out.source, 12).trim() || null;
+  if (out.page !== undefined && out.page !== null) out.page = out.page === '' ? null : clampInt(out.page, 1, 9999);
   for (const k of ['rating', 'qty', 'connection', 'loyalty', 'rc', 'reach', 'level', 'body', 'armor', 'pilot', 'sensor', 'seats', 'ammoLeft']) {
     if (out[k] !== undefined && out[k] !== null && out[k] !== '') {
       const n = Number(out[k]);
@@ -184,11 +284,40 @@ function sanitizeItem(list, item) {
   if (out.karma !== undefined) out.karma = Number(out.karma) || 0;
   if (list === 'qualities' && out.positive === undefined) out.positive = (out.karma || 0) >= 0;
   if (list === 'armor') out.equipped = !!out.equipped;
+  if (list === 'gear' && out.active !== undefined) out.active = !!out.active; // gear with catalog effects: worn / switched on (shared/modifiers.js)
+  if (out.choice !== undefined && out.choice !== null) out.choice = str(out.choice, 120); // Chummer <extra> / GM pick of a « select… » effect
+  if (out.itemRating !== undefined && out.itemRating !== null) out.itemRating = clampInt(out.itemRating, 0, 99); // armor: Chummer item rating (≠ armor value)
   if (list === 'sins' && typeof out.licenses === 'string') out.licenses = out.licenses.split(',').map((s) => s.trim()).filter(Boolean);
+  if (list === 'martialArts' && out.rating !== undefined) out.rating = clampInt(out.rating, 1, 20, 1);
   return out;
 }
 
+/** Nested list of an item: validates list/sub and returns { a, it, arr }. */
+function findSubParent(ctx, actorId, list, itemId, sub) {
+  const a = getActor(ctx, actorId);
+  if (!SUB_LISTS[list] || SUB_LISTS[list] !== sub) ctx.fail('Sous-liste inconnue : {sub}', { sub: `${String(list)}.${String(sub)}` });
+  const idx = findItem(ctx, a, list, itemId);
+  const it = a[list][idx];
+  if (!Array.isArray(it[sub])) it[sub] = [];
+  return { a, it, arr: it[sub] };
+}
+
 const LIMIT_LABEL = { physical: 'physique', mental: 'mentale', social: 'sociale', astral: 'astrale' };
+/** Lists whose items carry attribute / initiative bonuses stored on the actor (item.bonus, server/lib/augment.js). */
+const BONUS_LISTS = ['augmentations', 'powers', 'qualities'];
+const BONUS_FIELDS = ['rating', 'level', 'choice', 'catalogId', 'name'];
+
+/**
+ * Value of a named pool line a player's sheet sends ('dice/roll' bonus), recomputed from the actor; null = not one of them.
+ * « VOL »: total defense (REA + INT + WIL); « Firewall »: Matrix defense (INT + Firewall) / biofeedback (WIL + Firewall).
+ */
+function playerBonus(actor, label, { skillId, test, A1, A2 }) {
+  if (label === 'VOL' && test === 'defense') return attr(actor, 'WIL');
+  if (label === 'Firewall' && !skillId && !A2 && (test === 'biofeedback' || A1 === 'INT') && actor.matrix) return clampInt(actor.matrix.firewall, 0, 20);
+  return null;
+}
+/** 'dice/roll' payload.matrixLimit: device attribute used as the limit of a Matrix test from the sheet (stored French label). */
+const MATRIX_LIMIT_LABEL = { attack: 'Attaque', sleaze: 'Corruption', dataProcessing: 'Traitement', firewall: 'Firewall' };
 /** Upper-case status shown in PC damage logs (French keys). */
 const STATUS_UPPER = { 'hors de combat': tk('HORS DE COMBAT'), mort: tk('MORT') };
 
@@ -234,6 +363,7 @@ export default {
       }
       a.id = id;
       normalizeActor(a, uid);
+      fillActorRefs(a); // rulebook references of items created before item.source existed (idempotent)
     }
   },
 
@@ -255,6 +385,7 @@ export default {
           else if (v !== undefined) a[k] = sanitizeTop(k, v, a, ctx);
         }
         normalizeActor(a, uid);
+        fillActorRefs(a);
         if (fields.edge === undefined) a.edge.current = a.attributes.EDG;
         a.history.push({ ts: ctx.now, text: tk('Création du personnage') });
         ctx.state.actors[id] = a;
@@ -313,7 +444,7 @@ export default {
         const a = getActor(ctx, actorId);
         if (!ITEM_LISTS.includes(list)) ctx.fail('Liste inconnue : {list}', { list: String(list) });
         if (!isObj(item)) ctx.fail('Élément invalide');
-        const it = sanitizeItem(list, item);
+        const it = sanitizeItem(list, item, ctx);
         if (!Array.isArray(a[list])) a[list] = [];
         if (list === 'skills') {
           it.id = it.id || slugify(it.name || '');
@@ -333,16 +464,32 @@ export default {
           // Bonuses come from the catalog only (never from the client), recorded on the item so removal reverses them.
           delete it.bonus;
           const st = wareCatalogItem(it.catalogId)?.stats || {};
-          const applied = applyBonus(a, st.bonus, it.rating, 1);
-          if (applied) it.bonus = applied;
+          bakeItemBonus(a, list, it, st.bonus);
           if (st.weapon) {
             if (!Array.isArray(a.weapons)) a.weapons = [];
             a.weapons.push(weaponFromStats(ctx, it.name, it.category, st.weapon, { augId: it.id }));
           }
         }
         if (list === 'weapons') delete it.augId;
-        if (list === 'powers') delete it.bonus;
+        if (list === 'powers' || list === 'qualities') {
+          // Attribute / initiative bonus of the catalog effects (Improved Reflexes, Lightning Reflexes…) stored on the actor, recorded on item.bonus.
+          delete it.bonus;
+          bakeItemBonus(a, list, it);
+        }
+        if (list === 'lifestyles') {
+          it.base ||= 'Medium';
+          it.baseCost ??= 0;
+          it.monthsPaid ??= 0;
+          it.qualities ||= [];
+          if (!a.lifestyles.length) it.primary = true;
+        }
+        if (list === 'martialArts') {
+          it.rating ??= 1;
+          it.techniques ||= [];
+        }
         a[list].push(it);
+        fillActorRefs(a); // 📖 source / page from the catalog when the item has none
+        if (list === 'lifestyles') settleLifestyles(a, it.primary ? it.id : null);
         if (adjustEssence && list === 'augmentations' && it.essence) {
           a.attributes.ESS = Math.max(0, Math.round((a.attributes.ESS - it.essence) * 1000) / 1000);
         }
@@ -363,7 +510,7 @@ export default {
           const bad = Object.keys(patch).filter((k) => !allowed.includes(k));
           if (bad.length) ctx.fail(allowed.length ? tk('Tu peux seulement modifier : {fields}') : tk('Seul le MJ peut modifier cet élément'), allowed.length ? { fields: allowed.join(', ') } : undefined);
         }
-        const clean = sanitizeItem(list, patch);
+        const clean = sanitizeItem(list, patch, ctx);
         delete clean.id;
         if (list === 'skills' && clean.rating !== undefined) clean.rating = clampInt(clean.rating, 0, 13);
         if (list === 'gear' && clean.qty !== undefined) {
@@ -372,11 +519,65 @@ export default {
           const cur = Math.max(0, Number(a[list][idx].qty ?? 1) || 0);
           if (!ctx.isGM && clean.qty > cur) ctx.fail('Seul le MJ peut augmenter une quantité');
         }
-        if (list === 'augmentations' || list === 'powers') delete clean.bonus;
+        if (list === 'augmentations' || list === 'powers' || list === 'qualities') delete clean.bonus;
         if (list === 'weapons') delete clean.augId;
         if (list === 'weapons' && clean.ammoLeft !== undefined) clean.ammoLeft = clampInt(clean.ammoLeft, 0, 999);
+        const before = a[list][idx];
         a[list][idx] = { ...a[list][idx], ...clean };
         for (const [k, v] of Object.entries(a[list][idx])) if (v === null) delete a[list][idx][k];
+        if (BONUS_LISTS.includes(list) && BONUS_FIELDS.some((k) => clean[k] !== undefined && clean[k] !== before[k]) && !importedItem(before)) {
+          // New rating / level / choice: the stored attribute / initiative bonus follows (items whose bonus the app recorded, or that had none).
+          const st = list === 'augmentations' ? wareCatalogItem(a[list][idx].catalogId)?.stats || {} : {};
+          if (before.bonus || !itemBonusSpec(list, before, st.bonus)) bakeItemBonus(a, list, a[list][idx], st.bonus);
+        }
+        if (list === 'lifestyles') settleLifestyles(a, clean.primary ? a[list][idx].id : null);
+        return true;
+      },
+    },
+
+    // Nested lists (GM): weapon accessories, armor/vehicle mods, lifestyle qualities, martial art techniques.
+    // { actorId, list, itemId, sub: 'accessories'|'mods'|'qualities'|'techniques', item } → sub-item id
+    'actor/addSubItem': {
+      role: 'gm',
+      handler(ctx, { actorId, list, itemId, sub, item }) {
+        const { a, arr } = findSubParent(ctx, actorId, list, itemId, sub);
+        if (arr.length >= 60) ctx.fail('Trop d’éléments');
+        const x = sanitizeSub(ctx, sub, item);
+        for (const [k, v] of Object.entries(x)) if (v === null) delete x[k];
+        x.id = ctx.uid('sub');
+        arr.push(x);
+        fillActorRefs(a);
+        if (list === 'lifestyles') settleLifestyles(a);
+        return x.id;
+      },
+    },
+
+    // { actorId, list, itemId, sub, subId, patch }
+    'actor/updateSubItem': {
+      role: 'gm',
+      handler(ctx, { actorId, list, itemId, sub, subId, patch }) {
+        const { a, arr } = findSubParent(ctx, actorId, list, itemId, sub);
+        const i = arr.findIndex((x) => x.id === subId);
+        if (i < 0) ctx.fail('Élément introuvable');
+        const clean = sanitizeSub(ctx, sub, patch, true);
+        delete clean.id;
+        arr[i] = { ...arr[i], ...clean };
+        for (const [k, v] of Object.entries(arr[i])) if (v === null || v === undefined) delete arr[i][k];
+        if (list === 'lifestyles') settleLifestyles(a);
+        return true;
+      },
+    },
+
+    // { actorId, list, itemId, sub, subId }
+    'actor/removeSubItem': {
+      role: 'gm',
+      handler(ctx, { actorId, list, itemId, sub, subId }) {
+        const { a, it, arr } = findSubParent(ctx, actorId, list, itemId, sub);
+        const i = arr.findIndex((x) => x.id === subId);
+        if (i < 0) ctx.fail('Élément introuvable');
+        arr.splice(i, 1);
+        it[sub] = arr;
+        if (list === 'lifestyles') settleLifestyles(a);
         return true;
       },
     },
@@ -389,7 +590,8 @@ export default {
         const idx = findItem(ctx, a, list, itemId, index);
         const [it] = a[list].splice(idx, 1);
         if (list === 'augmentations') detachAugmentation(a, it); // its attribute/initiative bonus and implant weapon
-        if (list === 'powers') removeBonus(a, it.bonus); // e.g. Improved Reflexes bought through training
+        if (list === 'powers' || list === 'qualities') removeBonus(a, it.bonus); // e.g. Improved Reflexes, Lightning Reflexes
+        if (list === 'lifestyles') settleLifestyles(a);
         if (adjustEssence && list === 'augmentations' && it.essence) {
           a.attributes.ESS = Math.min(6, Math.round((a.attributes.ESS + Number(it.essence)) * 1000) / 1000);
         }
@@ -406,7 +608,7 @@ export default {
         const n = clampInt(amount, 0, 100);
         if (!n) ctx.fail('Indique un nombre de cases de dommages');
         if (!['P', 'S'].includes(type)) ctx.fail('Type de dommages invalide (P ou S)');
-        const d = derive(a);
+        const d = deriveFull(a);
         const c = a.condition;
         const wasStatus = statusOf(a);
         let toPhysical = 0;
@@ -562,9 +764,21 @@ export default {
         let pool = 0;
         let label = str(payload.label, 120).trim();
         let defaultLimit = null;
-        const skillId = payload.skillId ? String(payload.skillId) : null;
+        // Weapon attack: skill and limit (Accuracy + accessories) come from the weapon, its accessories add their dice.
+        let weapon = null;
+        if (payload.weaponId) {
+          if (!actor) ctx.fail('Choisis un personnage pour ce jet');
+          weapon = (actor.weapons || []).find((w) => w && w.id === String(payload.weaponId));
+          if (!weapon) ctx.fail('Arme introuvable');
+        }
+        // A weapon attack uses the weapon's skill (only the GM may roll it with another one).
+        const asked = payload.skillId ? String(payload.skillId).slice(0, 80) : null;
+        const skillId = weapon ? (ctx.isGM && asked) || weapon.skill || 'exotic_weapon' : asked;
         const A1 = payload.attr && ATTRS.includes(payload.attr) ? payload.attr : null;
         const A2 = payload.attr2 && ATTRS.includes(payload.attr2) ? payload.attr2 : null;
+        // An attribute test's own modifiers (soak: + armor, composure, judge intentions…) only for an attribute-only roll on that
+        // test's attributes (shared/modifiers.js TEST_ATTRS) — any other claim is ignored.
+        const test = checkedTest(payload.test, { skillId, weaponId: weapon?.id, attr: A1, attr2: A2 });
         if ((skillId || A1) && !actor) ctx.fail('Choisis un personnage pour ce jet');
         if (skillId) {
           const sk = actor.skills.find((s) => s.id === skillId || s.name === skillId);
@@ -604,19 +818,74 @@ export default {
           pool = clampInt(payload.pool, 0, 100);
           parts.push(`${pool} dés`);
         }
+        // Modifiers of the actor's gear, qualities, powers, implants (shared/modifiers.js) — computed here, never taken from the
+        // client: the client only says which situational switches are on (`conditions`, checked against the actor's modifiers)
+        // and which bonuses to leave out (`ignore`: players may only drop bonuses, the GM any modifier).
+        const mods = actor ? actorModifiers(actor, { weaponId: weapon?.id }) : [];
+        let conditions = cleanConditions(mods, payload.conditions);
+        const rctx = actor ? rollContext(actor, { skillId, attr: A1, attr2: A2, test, weaponId: weapon?.id }) : {};
+        // Matrix situation (« en RV chaude », « dans un hôte ») comes from the actor's persona, not from a switch — except for the
+        // GM rolling an actor that has no persona.
+        const persona = actor ? ctx.state.matrix?.personas?.[actor.id] : null;
+        if (actor && (persona || !ctx.isGM)) {
+          const online = !!persona?.online;
+          rctx.mode = online ? persona.mode || 'ar' : 'offline';
+          conditions = conditions.filter((k) => k !== 'in-host' && k !== 'hot-sim');
+          if (online && persona.hostId) conditions.push(...cleanConditions(mods, ['in-host']));
+        }
+        const modOpts = { conditions, ignore: Array.isArray(payload.ignore) ? payload.ignore.slice(0, 60).map((x) => String(x).slice(0, 200)) : [], isGM: ctx.isGM };
+        const modLines = [];
+        const pushLine = (l, kind) => modLines.push({
+          id: l.mod.id, kind, type: l.mod.type, name: l.mod.source.name, ...(l.mod.source.nameFr ? { nameFr: l.mod.source.nameFr } : {}),
+          value: l.value, state: l.state, ...(l.mod.condition ? { condition: l.mod.condition } : {}), ...(l.mod.wireless ? { wireless: true } : {}),
+          ...(l.mod.source.book ? { book: l.mod.source.book, page: l.mod.source.page } : {}),
+        });
+        if (actor && test === 'soak') {
+          // Soak: Body + armor (worn armor, its mods, implants / qualities armor) — never the client's figure.
+          const full = derivedWithModifiers(actor, mods);
+          pool += full.armor;
+          parts.push(`armure ${full.armor}`);
+        }
+        if (actor) {
+          const pm = poolModifiers(mods, rctx, modOpts);
+          for (const l of pm.lines) {
+            pushLine(l, 'pool');
+            if (l.state !== 'applied') continue;
+            pool += l.value;
+            parts.push(`${l.mod.source.name} ${l.value >= 0 ? '+' : '−'}${Math.abs(l.value)}`);
+          }
+        }
+        // Extra named lines: the GM's are kept as typed; a player's are only the sheet's own (total defense « VOL », Matrix defense /
+        // biofeedback « Firewall »), recomputed from the actor — anything else a player adds is counted under « mod. ».
+        let extraMod = 0;
+        const named = new Set();
         for (const b of Array.isArray(payload.bonus) ? payload.bonus.slice(0, 6) : []) {
-          const v = clampInt(b?.value, -50, 50);
+          const label = str(b?.label, 30).trim();
+          let v = clampInt(b?.value, -50, 50);
+          if (!ctx.isGM) {
+            const known = actor && !named.has(label) ? playerBonus(actor, label, { skillId, test, A1, A2 }) : null;
+            if (known === null) {
+              extraMod += v;
+              continue;
+            }
+            named.add(label);
+            v = known;
+          }
           if (!v) continue;
           pool += v;
-          parts.push(`${str(b.label, 30) || 'bonus'} ${v > 0 ? '+' : '−'}${Math.abs(v)}`);
+          parts.push(`${label || 'bonus'} ${v > 0 ? '+' : '−'}${Math.abs(v)}`);
         }
-        const mod = clampInt(payload.modifier, -50, 50);
+        const mod = clampInt(clampInt(payload.modifier, -50, 50) + extraMod, -50, 50);
         if (mod) {
           pool += mod;
           parts.push(`mod. ${mod > 0 ? '+' : '−'}${Math.abs(mod)}`);
         }
-        if (payload.applyWounds && actor) {
-          const w = derive(actor).woundModifier;
+        // Wound modifier: SR5 applies it to every test of the actor's skills / attributes but damage resistance (soak, drain,
+        // biofeedback, toxins). Players cannot leave it out; the GM may (applyWounds: false) or force it (true).
+        const statRoll = !!(skillId || A1);
+        const gmWounds = ctx.isGM && payload.applyWounds !== undefined && payload.applyWounds !== null;
+        if ((gmWounds ? !!payload.applyWounds : statRoll && woundsApply(test)) && actor) {
+          const w = derivedWithModifiers(actor, mods).woundModifier;
           if (w) {
             pool += w;
             parts.push(`blessures −${Math.abs(w)}`);
@@ -634,21 +903,53 @@ export default {
         if (pool <= 0) ctx.fail('Réserve de dés nulle : échec automatique');
         let limit = null;
         let limitLabel = null;
+        let limitBreakdown = null;
         if (!explode) {
-          // limit: number → that limit; null/0/'' → explicitly no limit; absent → default limit of the skill category.
+          // Computed limit: the weapon's Accuracy (+ accessories) or the skill's default limit, with the limit modifiers.
+          let auto = null;
+          if (weapon) {
+            const acc = weaponAccuracy(actor, weapon, mods, rctx, modOpts);
+            if (acc.total !== null) {
+              auto = Math.max(1, acc.total); // a limit lowered to 0 stays a limit (never « none »)
+              limitLabel = 'précision';
+              for (const l of acc.lines) pushLine(l, 'limit');
+              if (acc.parts.length > 1) limitBreakdown = acc.parts.map(([n, v], i) => (i ? `${n} ${v >= 0 ? '+' : '−'}${Math.abs(v)}` : `${n} ${v}`)).join(' + ');
+            }
+          } else if (actor && MATRIX_LIMITS.includes(payload.matrixLimit) && actor.matrix && MATRIX_LIMIT_SKILLS.includes(rctx.skillId)) {
+            // Matrix test from the sheet (Matrix skills only): the device attribute is the limit (no physical / mental / social modifier).
+            const v = Number(actor.matrix[payload.matrixLimit]) || 0;
+            if (v > 0) {
+              auto = v;
+              limitLabel = MATRIX_LIMIT_LABEL[payload.matrixLimit];
+            }
+          } else if (defaultLimit && actor) {
+            const lim = limitFor(actor, defaultLimit, mods, rctx, modOpts);
+            if (lim.total !== null) {
+              auto = Math.max(1, lim.total); // a limit lowered to 0 stays a limit (never « none »)
+              limitLabel = LIMIT_LABEL[defaultLimit];
+              for (const l of lim.lines) pushLine(l, 'limit');
+              const applied = lim.lines.filter((l) => l.state === 'applied');
+              if (applied.length) limitBreakdown = [`${LIMIT_LABEL[defaultLimit]} ${lim.base}`, ...applied.map((l) => `${l.mod.source.name} ${l.value >= 0 ? '+' : '−'}${Math.abs(l.value)}`)].join(' + ');
+            }
+          }
+          // limit: number → that limit; null/0/'' → explicitly no limit; absent → computed. Players can neither raise nor remove a
+          // computed limit (null / 0 / a higher number → the computed one).
           if (payload.limit !== undefined) {
             limit = clampInt(payload.limit, 0, 50) || null;
-          } else if (defaultLimit && actor) {
-            limit = derive(actor).limits[defaultLimit] || null;
-            limitLabel = LIMIT_LABEL[defaultLimit];
-          }
+            if (!ctx.isGM && auto !== null && (limit === null || limit > auto)) limit = auto;
+            if (limit !== auto) {
+              limitLabel = null;
+              limitBreakdown = null;
+            }
+          } else limit = auto;
         }
         if (explode) actor.edge.current -= 1;
         const r = rollDice(pool, { limit, explode });
         if (!label) label = `Jet de ${pool} dés`;
         const roll = {
           ...r, label, explode, edge: explode, actorId: actor?.id || null, breakdown: parts.join(' + '),
-          ...(limitLabel ? { limitLabel } : {}), ...(payload.secret ? { secret: true } : {}),
+          ...(limitLabel ? { limitLabel } : {}), ...(limitBreakdown ? { limitBreakdown } : {}), ...(payload.secret ? { secret: true } : {}),
+          ...(modLines.length ? { mods: modLines } : {}), ...(conditions.length ? { conditions } : {}),
         };
         const author = actor ? actor.name : ctx.displayName();
         const hidden = !!payload.secret || (actor && actor.type === 'npc' && ctx.isGM && actor.hidden);

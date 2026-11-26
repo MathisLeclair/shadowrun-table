@@ -6,18 +6,105 @@
 const tk = (s) => s;
 
 /** Item lists of an Actor that can be edited with actor/addItem, actor/updateItem, actor/removeItem. */
-export const ITEM_LISTS = ['weapons', 'armor', 'augmentations', 'gear', 'vehicles', 'contacts', 'sins', 'qualities', 'powers', 'spells', 'knowledge', 'skills', 'complexForms', 'skillGroups'];
+export const ITEM_LISTS = ['weapons', 'armor', 'augmentations', 'gear', 'vehicles', 'contacts', 'sins', 'qualities', 'powers', 'spells', 'knowledge', 'skills', 'complexForms', 'skillGroups', 'lifestyles', 'martialArts'];
 
 export const LIST_LABELS = {
   weapons: tk('Armes'), armor: tk('Armures'), augmentations: tk('Augmentations'), gear: tk('Équipement'), vehicles: tk('Véhicules'), contacts: tk('Contacts'),
   sins: tk('SIN'), qualities: tk('Qualités'), powers: tk('Pouvoirs d’adepte'), spells: tk('Sorts'), knowledge: tk('Connaissances'), skills: tk('Compétences'),
-  complexForms: tk('Formes complexes'), skillGroups: tk('Groupes de compétences'),
+  complexForms: tk('Formes complexes'), skillGroups: tk('Groupes de compétences'), lifestyles: tk('Modes de vie'), martialArts: tk('Arts martiaux'),
 };
+
+/** Nested item list of each list item (actor/addSubItem, updateSubItem, removeSubItem): weapon accessories, armor/vehicle mods… */
+export const SUB_LISTS = { weapons: 'accessories', armor: 'mods', vehicles: 'mods', lifestyles: 'qualities', martialArts: 'techniques' };
+export const SUB_LABELS = { accessories: tk('Accessoires'), mods: tk('Modifications'), qualities: tk('Options de mode de vie'), techniques: tk('martial::Techniques') };
+
+/** Chummer base lifestyles (stored in English) → French display keys and SR5/RF base cost per month. */
+export const LIFESTYLE_BASES = {
+  Street: { label: tk('Rue'), cost: 0 }, Squatter: { label: tk('Squatteur'), cost: 500 }, Low: { label: tk('Bas'), cost: 2000 },
+  Medium: { label: tk('Moyen'), cost: 5000 }, High: { label: tk('Élevé'), cost: 10000 }, Luxury: { label: tk('Luxe'), cost: 100000 },
+  'Bolt Hole': { label: tk('Planque'), cost: 1000 }, Traveler: { label: tk('Nomade'), cost: 3000 }, Commercial: { label: tk('Commercial'), cost: 8000 },
+  Hospitalized: { label: tk('Hospitalisé'), cost: 500 },
+};
+const LIFESTYLE_WORDS = [
+  [/luxe|luxu|luxury/i, 'Luxury'], [/haut|élevé|eleve|high/i, 'High'], [/moyen|middle|medium/i, 'Medium'], [/bas\b|low/i, 'Low'], [/squat/i, 'Squatter'],
+  [/\brue\b|street/i, 'Street'], [/planque|bolt.?hole|trou à rat/i, 'Bolt Hole'], [/nomade|voyageur|traveler/i, 'Traveler'], [/commercial/i, 'Commercial'], [/hospital/i, 'Hospitalized'],
+];
+/** Guess the Chummer base lifestyle from a free name ("Best Home (Moyen)" → 'Medium'), or ''. */
+export function guessLifestyleBase(name) {
+  const s = String(name || '');
+  for (const [re, base] of LIFESTYLE_WORDS) if (re.test(s)) return base;
+  return '';
+}
+
+/** Total bonus of a weapon's accessories: { accuracy, rc, dicePool, smartgun }. RC of a same `rcGroup` does not stack (best one). */
+export function weaponMods(w) {
+  let accuracy = 0;
+  let rc = 0;
+  let dicePool = 0;
+  let smartgun = false;
+  const groups = {};
+  for (const a of Array.isArray(w?.accessories) ? w.accessories : []) {
+    if (!a || typeof a !== 'object' || a.equipped === false) continue;
+    const e = a.effects && typeof a.effects === 'object' ? a.effects : {};
+    if (e.smartgun) smartgun = true;
+    accuracy += num(e.accuracy);
+    dicePool += num(e.dicePool);
+    const r = num(e.rc);
+    if (e.rcGroup) groups[e.rcGroup] = Math.max(groups[e.rcGroup] || 0, r);
+    else rc += r;
+  }
+  for (const v of Object.values(groups)) rc += v;
+  return { accuracy, rc, dicePool, smartgun };
+}
+
+/** Armor modifications: { used, total (capacity; a negative-capacity mod like YNT Softweave adds room), bonus (armor points added) }. */
+export function armorMods(ar) {
+  let used = 0;
+  let extra = 0;
+  let bonus = 0;
+  for (const m of Array.isArray(ar?.mods) ? ar.mods : []) {
+    if (!m || typeof m !== 'object' || m.equipped === false) continue;
+    const c = num(m.capacity);
+    if (c >= 0) used += c;
+    else extra -= c;
+    bonus += num(m.effects?.armor);
+  }
+  return { used: Math.round(used * 100) / 100, total: Math.round((num(ar?.capacity) + extra) * 100) / 100, bonus };
+}
+
+/** Vehicle modifications: total slots used. */
+export function vehicleSlots(v) {
+  return (Array.isArray(v?.mods) ? v.mods : []).reduce((s, m) => s + (m && !m.included ? num(m.slots) : 0), 0);
+}
+
+/** R5 mod categories with their own slot pool on vehicles (drones: one pool) → French display keys. */
+export const VEHICLE_MOD_CATEGORIES = {
+  Powertrain: tk('Motorisation'), Protection: tk('Protection'), Weapons: tk('Armement'), Body: tk('Carrosserie'), Electromagnetic: tk('Électromagnétique'), Cosmetic: tk('Esthétique'),
+};
+/** Slots used per R5 category pool (non built-in mods of those categories): { Protection: 6, Body: 3 }. */
+export function vehicleSlotsByCategory(v) {
+  const out = {};
+  for (const m of Array.isArray(v?.mods) ? v.mods : []) {
+    if (!m || m.included || !VEHICLE_MOD_CATEGORIES[m.category] || !num(m.slots)) continue;
+    out[m.category] = (out[m.category] || 0) + num(m.slots);
+  }
+  return out;
+}
+
+/** Legacy single `actor.lifestyle` ({ name, monthlyCost, monthsPaid }) → one lifestyles[] entry. */
+export function legacyLifestyle(ls, makeId) {
+  const base = guessLifestyleBase(ls.name) || 'Medium';
+  const cost = Math.max(0, num(ls.monthlyCost, LIFESTYLE_BASES[base]?.cost || 0));
+  return {
+    id: makeId('ls'), name: String(ls.name || base).slice(0, 120), base, baseCost: cost, monthsPaid: Math.max(0, Math.round(num(ls.monthsPaid))), primary: true,
+    qualities: [], monthlyCost: cost, notes: '', ...(ls.chummerGuid ? { chummerGuid: ls.chummerGuid } : {}),
+  };
+}
 
 /** Fields a player may change on items of their own actor. */
 export const PLAYER_ITEM_FIELDS = {
   armor: ['equipped'],
-  gear: ['qty', 'notes'],
+  gear: ['qty', 'notes', 'active'],
   contacts: ['notes'],
   weapons: ['notes', 'ammoLeft'],
 };
@@ -26,7 +113,7 @@ export const PLAYER_ITEM_FIELDS = {
 export const PLAYER_ACTOR_KEYS = ['condition', 'edge', 'notes', 'bio', 'portrait', 'color', 'concept'];
 
 /** Nested objects merged one level deep by actor/update. */
-export const MERGE_KEYS = ['attributes', 'augmented', 'initiative', 'monitors', 'condition', 'edge', 'matrix', 'lifestyle', 'npc', 'vision'];
+export const MERGE_KEYS = ['attributes', 'augmented', 'initiative', 'monitors', 'condition', 'edge', 'matrix', 'npc', 'vision'];
 
 export const METATYPE_FR = { Human: 'Humain', Elf: 'Elfe', Dwarf: 'Nain', Ork: 'Ork', Troll: 'Troll', Humain: 'Humain', Elfe: 'Elfe', Nain: 'Nain', Orc: 'Ork', Orque: 'Ork' };
 
@@ -109,13 +196,18 @@ export function catalogToItem(catalog, entry, rating) {
           ...base, rating: undefined, category: entry.categoryFr || entry.category || '', kind: melee ? 'melee' : 'ranged', skill,
           accuracy: s.accuracy ?? s.acc ?? '', damage: s.damage ?? s.dv ?? '', ap: s.ap ?? 0, mode: s.mode ?? '', rc: s.rc ?? 0,
           ammo: s.ammo ?? '', reach: num(s.reach, 0),
+          ...(Array.isArray(s.mounts) && s.mounts.length ? { mounts: s.mounts } : {}),
+          // Built-in accessories (smartgun system, silencer…) come with the weapon.
+          ...(Array.isArray(s.included) && s.included.length
+            ? { accessories: s.included.filter((x) => x && x.name).map((x) => ({ name: x.name, ...(x.nameFr ? { nameFr: x.nameFr } : {}), ...(x.id ? { catalogId: x.id } : {}), mount: 'Internal', cost: 0, included: true, effects: /smartgun/i.test(x.name) ? { smartgun: true } : {} })) }
+            : {}),
         },
       };
     }
     case 'armor': {
       const raw = s.armor ?? s.rating ?? entry.armor ?? 0;
       const stack = s.stack === true || String(raw).trim().startsWith('+') || /helmet|shield|casque|bouclier/i.test(`${entry.name} ${entry.category || ''}`);
-      return { list: 'armor', item: { ...base, rating: Math.abs(num(String(raw).replace('+', ''), 0)), equipped: false, stack } };
+      return { list: 'armor', item: { ...base, rating: Math.abs(num(String(raw).replace('+', ''), 0)), equipped: false, stack, ...(num(s.capacity) ? { capacity: num(s.capacity) } : {}) } };
     }
     case 'cyberware':
     case 'bioware': {
@@ -142,16 +234,77 @@ export function catalogToItem(catalog, entry, rating) {
         list: 'spells',
         item: { name, catalogId: entry.id, category: entry.categoryFr || entry.category || s.category || '', type: s.type || '', range: s.range || '', duration: s.duration || '', drain: s.drain || s.dv || '' },
       };
-    default:
+    case 'lifestyles': {
+      const b = Object.keys(LIFESTYLE_BASES).find((k) => String(entry.name || '').startsWith(k)) || entry.name || 'Medium';
+      const cost = num(entry.cost, LIFESTYLE_BASES[b]?.cost || 0);
+      return { list: 'lifestyles', item: { name, base: b, catalogId: entry.id, baseCost: cost, monthsPaid: 0, qualities: [], monthlyCost: cost } };
+    }
+    case 'martialarts': // techniques are chosen one by one (actor/addSubItem)
+      return { list: 'martialArts', item: { name, catalogId: entry.id, rating: 1, techniques: [] } };
+    default: {
+      const sub = subFromCatalog(catalog, entry, r);
+      if (sub) return sub;
       return { list: 'gear', item: { ...base, category: entry.categoryFr || entry.category || '', qty: 1 } };
+    }
+  }
+}
+
+const field = (entry, k) => entry?.stats?.[k] ?? entry?.[k];
+
+/**
+ * Catalog entry of a nested list (lifestylequalities, accessories, armormods, vehiclemods, techniques) → { list: null, sub, item }.
+ * Sub-items keep the English `name` and the French `nameFr` (display with itemName()). Returns null for other catalogs.
+ */
+export function subFromCatalog(catalog, entry, rating) {
+  if (!entry) return null;
+  const r = rating ?? (entry.rating && entry.rating.max ? entry.rating.min || 1 : undefined);
+  const head = { catalogId: entry.id, name: entry.name || entry.nameFr || 'Option', ...(entry.nameFr ? { nameFr: entry.nameFr } : {}) };
+  const fromFormula = entry.costFormula ? evalFormula(entry.costFormula, r || 1) : null;
+  const cost = field(entry, 'targetCost') ? 0 : fromFormula ?? num(entry.cost);
+  switch (catalog) {
+    case 'lifestylequalities': {
+      const mult = field(entry, 'multiplier') ?? field(entry, 'multiplierbaseonly');
+      return {
+        list: 'lifestyles', sub: 'qualities',
+        item: { ...head, category: entry.category || '', cost, multiplier: num(mult), ...(field(entry, 'baseOnly') ? { baseOnly: true } : {}), ...(field(entry, 'lp') != null ? { lp: num(field(entry, 'lp')) } : {}) },
+      };
+    }
+    case 'accessories': {
+      const effects = {};
+      const acc = num(field(entry, 'accuracy'));
+      const rc = num(field(entry, 'rc'));
+      if (field(entry, 'smartgun') || /smartgun/i.test(entry.name || '')) effects.smartgun = true;
+      else if (acc) effects.accuracy = acc;
+      if (rc) effects.rc = rc;
+      if (num(field(entry, 'rcgroup') ?? field(entry, 'rcGroup'))) effects.rcGroup = num(field(entry, 'rcgroup') ?? field(entry, 'rcGroup'));
+      const m = field(entry, 'mount');
+      const mount = Array.isArray(m) ? m[0] || '' : String(m || '').split('/')[0];
+      return { list: 'weapons', sub: 'accessories', item: { ...head, mount: mount === 'None' ? '' : mount, ...(r ? { rating: r } : {}), cost, avail: entry.avail || '', effects } };
+    }
+    case 'armormods': {
+      const capRaw = field(entry, 'capacity') ?? field(entry, 'armorcapacity');
+      const cap = typeof capRaw === 'number' ? capRaw : num(evalFormula(String(capRaw ?? '0').replace(/[[\]]/g, ''), r || 1));
+      const armor = num(String(field(entry, 'armor') ?? 0).replace('+', ''));
+      return { list: 'armor', sub: 'mods', item: { ...head, ...(r ? { rating: r } : {}), capacity: cap, cost, avail: entry.avail || '', ...(armor ? { effects: { armor } } : {}) } };
+    }
+    case 'vehiclemods': {
+      const slotsRaw = field(entry, 'slots');
+      const slots = typeof slotsRaw === 'number' ? slotsRaw : num(evalFormula(String(slotsRaw ?? '0'), r || 1));
+      return { list: 'vehicles', sub: 'mods', item: { ...head, ...(r ? { rating: r } : {}), slots, category: entry.category || '', cost, avail: entry.avail || '' } };
+    }
+    case 'techniques':
+      return { list: 'martialArts', sub: 'techniques', item: { ...head } };
+    default:
+      return null;
   }
 }
 
 /** Status shown to players for NPCs (they never see enemy stats). */
 export function healthStatus({ physical = 0, stun = 0, overflow = 0 } = {}, physMax = 10, stunMax = 10, bod = 3) {
   if (overflow > bod) return 'mort';
-  if (physical >= physMax || stun >= stunMax) return 'hors de combat';
-  const ratio = Math.max(physical / physMax, stun / stunMax);
+  // A track of 0 boxes does not exist (grunts / drones: no stun track, hosts: no physical track).
+  if ((physMax > 0 && physical >= physMax) || (stunMax > 0 && stun >= stunMax)) return 'hors de combat';
+  const ratio = Math.max(physMax > 0 ? physical / physMax : 0, stunMax > 0 ? stun / stunMax : 0);
   if (ratio >= 0.5) return 'grièvement blessé';
   if (physical > 0 || stun > 0) return 'blessé';
   return 'indemne';
@@ -167,7 +320,7 @@ export function blankActor(type = 'npc', name = 'Nouveau personnage') {
     type, name, metatype: 'Humain', concept: '', color: type === 'pc' ? '#3fd6d0' : '#e05c5c',
     attributes: { BOD: 3, AGI: 3, REA: 3, STR: 3, WIL: 3, LOG: 3, INT: 3, CHA: 3, EDG: 2, ESS: 6 },
     condition: { physical: 0, stun: 0, overflow: 0 }, edge: { current: 2 },
-    skills: [], knowledge: [], qualities: [], powers: [], spells: [], weapons: [], armor: [], augmentations: [], gear: [], vehicles: [], contacts: [], sins: [],
+    skills: [], knowledge: [], qualities: [], powers: [], spells: [], weapons: [], armor: [], augmentations: [], gear: [], vehicles: [], contacts: [], sins: [], lifestyles: [], martialArts: [],
     karma: 0, karmaTotal: 0, nuyen: 0, streetCred: 0, notoriety: 0, publicAwareness: 0, history: [],
     ...(type === 'npc' ? { npc: { professionalRating: 2, grunt: true, tactics: '', loot: '' } } : {}),
   };
@@ -196,6 +349,28 @@ export function normalizeActor(a, makeId) {
       if (!it.id) it.id = k === 'skills' ? slugify(it.name || 'competence') : makeId('itm');
     }
     a[k] = a[k].filter((it) => it && typeof it === 'object');
+  }
+  // Legacy single lifestyle → lifestyles[] (once; kept chummerGuid lets the Chummer export find its node).
+  if ('lifestyle' in a) {
+    if (a.lifestyle && typeof a.lifestyle === 'object' && !a.lifestyles.length && (a.lifestyle.name || a.lifestyle.monthlyCost)) a.lifestyles.push(legacyLifestyle(a.lifestyle, makeId));
+    delete a.lifestyle;
+  }
+  // Nested lists (accessories, mods, lifestyle qualities, techniques): arrays of objects with ids.
+  for (const [list, sub] of Object.entries(SUB_LISTS)) {
+    for (const it of a[list] || []) {
+      if (it[sub] === undefined) {
+        if (list === 'lifestyles' || list === 'martialArts') it[sub] = [];
+        continue;
+      }
+      it[sub] = Array.isArray(it[sub]) ? it[sub].filter((x) => x && typeof x === 'object') : [];
+      for (const x of it[sub]) if (!x.id) x.id = makeId('sub');
+    }
+  }
+  if (a.lifestyles.length && !a.lifestyles.some((l) => l.primary)) a.lifestyles[0].primary = true;
+  let primarySeen = false;
+  for (const l of a.lifestyles) {
+    if (l.primary && primarySeen) l.primary = false;
+    else if (l.primary) primarySeen = true;
   }
   const c = (a.condition = a.condition && typeof a.condition === 'object' ? a.condition : {});
   c.physical = Math.max(0, num(c.physical));

@@ -11,11 +11,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { syncPowerBonus } from '../lib/augment.js';
+import { syncPowerBonus, itemBonusSpec, bakeItemBonus, removeBonus } from '../lib/augment.js';
 import {
   DEFAULT_SETTINGS, quote, applyAdvance, normalizeRequest, catalogName, qualityInfo, powerInfo, spellInfo, formatDaysI18n,
 } from '../../shared/advancement.js';
 import { formatFr } from '../lib/i18n.js';
+import { fillActorRefs } from '../lib/bookrefs.js';
 
 /** Marks a translatable log/history key for tools/i18n-check.js (English in client/i18n/en/training.json). */
 const tk = (s) => s;
@@ -182,18 +183,25 @@ function findPowerFor(actor, req) {
 function advance(actor, req) {
   const before = req?.kind === 'power' ? findPowerFor(actor, req) : null;
   const fromLevel = before ? Math.max(1, Number(before.level) || 1) : 0;
+  const qualitiesBefore = new Set((actor.qualities || []).map((q) => q));
+  const removed = req?.kind === 'removeQuality' ? (actor.qualities || []).find((q) => q.id === req.target) : null;
   const summary = applyAdvance(actor, req);
   if (req?.kind === 'power' && req.catalogId) {
-    const bonus = findCatalog('powers', req.catalogId)?.stats?.bonus;
     const p = findPowerFor(actor, req);
+    // Catalog effects (REA, initiative dice, initiative score, « select attribute ») else stats.bonus, per level.
+    const bonus = p ? itemBonusSpec('powers', p, findCatalog('powers', req.catalogId)?.stats?.bonus) : null;
     if (bonus && p) syncPowerBonus(actor, p, bonus, fromLevel);
   }
+  // A new quality's attribute / initiative bonus (Lightning Reflexes…) is stored on the actor; a bought-off one gives it back.
+  if (req?.kind === 'quality') for (const q of actor.qualities || []) if (!qualitiesBefore.has(q)) bakeItemBonus(actor, 'qualities', q);
+  if (removed && !(actor.qualities || []).includes(removed)) removeBonus(actor, removed.bonus);
   return summary;
 }
 
 function completeJob(ctx, actor, job, { forced = false } = {}) {
   const tr = slice(ctx.state);
   const summary = advance(actor, job.request);
+  fillActorRefs(actor); // 📖 source / page of a new quality / spell / power / complex form
   actor.training = jobsOf(actor).filter((j) => j.id !== job.id);
   const req = tr.requests.find((r) => r.id === job.requestId);
   if (req) {
@@ -222,6 +230,7 @@ function approve(ctx, request, gmNote) {
   charge(actor, request);
   if (q.days <= 0) {
     advance(actor, q.req);
+    fillActorRefs(actor);
     request.status = 'done';
     request.doneTs = Date.now();
     publicLog(ctx, tk('▲ {actor} progresse : {label}'), { actor: actor.name, label: labelParam(q) });

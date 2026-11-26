@@ -72,7 +72,7 @@ await test('fixture: identity, attributes, skills, weapon', () => {
   assert.equal(colt.chummerGuid, '90db7564-dcb4-4391-854d-1ec77e7a3d28');
   const unarmed = fx.weapons.find((w) => w.name === 'Mains nues');
   assert.ok(unarmed && unarmed.skill === 'unarmed_combat' && unarmed.damage === '(STR)S', 'Unarmed Attack → Mains nues');
-  assert.equal(unarmed.accuracy, 4, 'accuracy = physical limit ceil((2×1+4+4)/3)');
+  assert.equal(unarmed.accuracy, 'Physical', 'accuracy = the physical limit, kept as « Physical » (follows STR / BOD / REA and its modifiers)');
   assert.equal(fx.weapons.length, 2);
   assert.equal(fx.qualities[0].karma, 20);
   assert.equal(fx.nuyen, 6000);
@@ -322,7 +322,7 @@ await test('diff labels are dictionary keys', () => {
   b.karma += 3;
   b.nuyen += 10;
   b.notes = 'autre';
-  b.lifestyle = { ...(b.lifestyle || {}), name: 'Luxe' };
+  b.lifestyles = [...(b.lifestyles || []), { id: 'ls_new', name: 'Luxe', base: 'Luxury', baseCost: 100000, monthsPaid: 0, qualities: [], monthlyCost: 100000 }];
   b.gear = [...(b.gear || []), { id: 'g_new', name: 'Truc' }];
   const d = diffActors(a, b);
   for (const sc of d.scalars) assert.ok(en[sc.label], `English for « ${sc.label} »`);
@@ -330,8 +330,223 @@ await test('diff labels are dictionary keys', () => {
   assert.ok(d.scalars.some((x) => x.label === 'Notes' && x.to === 'modifiées'));
 });
 
+console.log('Lifestyles, accessories, armor/vehicle mods, martial arts (Shadowrun_chum5_files, historic)');
+const CHUM_DIR = path.resolve(ROOT, '..', 'Shadowrun_chum5_files');
+const chum = (f) => fs.readFileSync(path.join(CHUM_DIR, f), 'utf8');
+const hasChumFiles = fs.existsSync(path.join(CHUM_DIR, 'Jane_Active.chum5'));
+const noIds = (x) => JSON.parse(JSON.stringify(x ?? null, (k, v) => (k === 'id' ? undefined : v)));
+const noGuids = (x) => JSON.parse(JSON.stringify(x ?? null, (k, v) => (k === 'id' || k === 'chummerGuid' ? undefined : v)));
+const nested = (a) => ({
+  lifestyles: a.lifestyles, accessories: a.weapons.map((w) => w.accessories || []), armorMods: a.armor.map((x) => x.mods || []),
+  vehicleMods: a.vehicles.map((v) => v.mods || []), martialArts: a.martialArts,
+});
+const GARAGE = '9e7cea76-8f2e-4d87-a5ce-60395a8d701f';
+const SMARTGUN_EXT = findSmartgunExt();
+function findSmartgunExt() {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'catalog', 'accessories.json'), 'utf8')).find((e) => e.name === 'Smartgun System, External') || null;
+  } catch {
+    return null;
+  }
+}
+if (!hasChumFiles) console.log('  (dossier Shadowrun_chum5_files absent — tests ignorés)');
+else {
+  const jane = parseChum5(chum('Jane_Active.chum5'), { fileName: 'Jane_Active.chum5' }).actor;
+  const chris = parseChum5(chum('Christopher_Armingstar_Active.chum5')).actor;
+  const ank = parseChum5(chum('Ank_Lay_Active.chum5')).actor;
+  await test('Jane: lifestyle « Best Home » (Medium) with DocWagon Gold, Extra Secure, Pheromone + Vocal Tension detection', () => {
+    assert.equal(jane.lifestyle, undefined);
+    assert.equal(jane.lifestyles.length, 1);
+    const ls = jane.lifestyles[0];
+    assert.equal(ls.name, 'Best Home');
+    assert.equal(ls.base, 'Medium');
+    assert.equal(ls.primary, true);
+    assert.equal(ls.baseCost, 5000);
+    assert.equal(ls.monthsPaid, 1);
+    assert.ok(ls.chummerGuid);
+    const names = ls.qualities.map((q) => q.name);
+    for (const n of ['DocWagon Contract, Gold', 'Extra Secure', 'Pheromone Detection', 'Vocal Tension Lie Detection']) assert.ok(names.includes(n), n);
+    const xs = ls.qualities.find((q) => q.name === 'Extra Secure');
+    assert.equal(xs.multiplier, 20); // <basemultiplier> of a standard lifestyle
+    assert.equal(xs.lp, 1);
+    assert.equal(ls.qualities.find((q) => q.name === 'DocWagon Contract, Gold').cost, 2083.33); // "25000 div 12"
+    assert.equal(ls.qualities.find((q) => q.name === 'Pheromone Detection').category, 'Contracts');
+    assert.equal(ls.monthlyCost, Math.round(5000 * 1.2 + 2083.33 + 250 + 250));
+  });
+  await test('Christopher: Garage upgrade (Run Faster) on his advanced lifestyle', () => {
+    const ls = chris.lifestyles.find((l) => l.primary);
+    const garage = ls.qualities.find((q) => /^Garage/.test(q.name));
+    assert.ok(garage, 'Garage');
+    assert.equal(garage.catalogId, GARAGE);
+    assert.equal(garage.category, 'Entertainment - Asset');
+    assert.equal(garage.cost, 100);
+    assert.ok(ls.qualities.some((q) => q.name === 'Dangerous Area' && q.multiplier === -20));
+    assert.ok(ls.qualities.some((q) => q.name === "Local Bar Patron (The Jeffrey's)"), 'extra kept in the name');
+    assert.ok(ls.points && ls.points.comforts >= 3, 'RF points of an advanced lifestyle');
+  });
+  await test('Jane / Ank’Lay: weapon accessories and armor mods are structured (no more notes)', () => {
+    const enfield = jane.weapons.find((w) => /Enfield/.test(w.name));
+    const laser = enfield.accessories.find((x) => x.name === 'Laser Sight');
+    assert.deepEqual(laser.effects, { accuracy: 1 });
+    assert.equal(laser.included, true);
+    assert.ok(!/Accessoires :/.test(enfield.notes || ''));
+    assert.ok(Array.isArray(enfield.mounts) && enfield.mounts.includes('Top'));
+    const strike = jane.weapons.find((w) => /Desert Strike/.test(w.name));
+    assert.ok(strike.accessories.some((x) => x.name === 'Shock Pad' && x.effects.rc === 1));
+    const shocker = jane.weapons.find((w) => /Defiance/.test(w.name));
+    assert.equal(shocker.accessories[0].name, 'Concealed Quick-Draw Holster');
+    assert.equal(shocker.accessories[0].cost, 275);
+    const heritage = jane.armor.find((a) => (a.mods || []).some((m) => m.name === 'Chemical Protection'));
+    assert.ok(heritage.capacity > 0);
+    const chem = heritage.mods.find((m) => m.name === 'Chemical Protection');
+    assert.equal(chem.rating, 6);
+    assert.equal(chem.capacity, 6);
+    assert.equal(chem.cost, 1500);
+    assert.ok(heritage.mods.some((m) => m.name === 'Gel Packs' && m.effects?.armor === 2));
+    assert.ok(!/Modifications :/.test(heritage.notes || ''));
+    const yntCap = heritage.mods.find((m) => m.name === 'YNT Softweave Armor').capacity;
+    assert.ok(yntCap < 0, 'YNT Softweave adds capacity');
+    const knife = ank.weapons.find((w) => (w.accessories || []).length);
+    assert.ok(knife.accessories.some((x) => x.name === 'Survival Knife Bonuses' && x.included));
+    const coat = ank.armor.find((a) => (a.mods || []).some((m) => m.name === 'Fire Resistance'));
+    assert.equal(coat.mods.find((m) => m.name === 'Fire Resistance').rating, 6);
+    assert.ok(coat.mods.length >= 8);
+    assert.equal(ank.lifestyles[0].base, 'Low');
+    assert.equal(ank.lifestyles[0].monthsPaid, 2);
+    const roadmaster = chris.vehicles.find((v) => (v.mods || []).length);
+    const armorMod = roadmaster.mods.find((m) => m.name === 'Armor (Concealed)');
+    assert.equal(armorMod.rating, 4);
+    assert.equal(armorMod.slots, 12); // Rating * 3
+    assert.equal(armorMod.category, 'Protection');
+  });
+  await test('export (patch mode) keeps lifestyles, accessories and mods: re-parse equal', () => {
+    for (const a of [jane, chris, ank]) {
+      const r = exportChum5(a);
+      assert.equal(r.mode, 'patch');
+      wellFormed(r.xml);
+      assert.deepEqual(noIds(nested(parseChum5(r.xml).actor)), noIds(nested(a)), a.name);
+    }
+  });
+  await test('export (generate mode, no stored file) rebuilds them from the Chummer data', () => {
+    const g = clone(jane);
+    delete g.chummer;
+    const r = exportChum5(g);
+    assert.equal(r.mode, 'generate');
+    wellFormed(r.xml);
+    const back = parseChum5(r.xml).actor;
+    assert.deepEqual(noGuids(back.lifestyles), noGuids(g.lifestyles));
+    assert.deepEqual(noGuids(back.weapons.map((w) => w.accessories || [])), noGuids(g.weapons.map((w) => w.accessories || [])));
+    assert.deepEqual(back.armor.map((x) => (x.mods || []).map((m) => m.name)), g.armor.map((x) => (x.mods || []).map((m) => m.name)));
+    assert.deepEqual(back.vehicles.map((v) => (v.mods || []).map((m) => m.name)), g.vehicles.map((v) => (v.mods || []).map((m) => m.name)));
+  });
+  await test('export (patch mode) applies app changes to nested items and assigns guids to new ones', () => {
+    const a = clone(jane);
+    const ls = a.lifestyles[0];
+    const vocal = ls.qualities.find((q) => q.name === 'Vocal Tension Lie Detection');
+    ls.qualities = ls.qualities.filter((q) => q !== vocal);
+    ls.qualities.push({ id: 'sub_garage', catalogId: GARAGE, name: 'Garage (Car (Body 5 or More))', category: 'Entertainment - Asset', cost: 100, multiplier: 0, lp: 2 });
+    ls.monthsPaid = 3;
+    const strike = a.weapons.find((w) => /Desert Strike/.test(w.name));
+    strike.accessories.push({ id: 'sub_smart', name: 'Smartgun System, External', catalogId: SMARTGUN_EXT?.id, mount: 'Top', cost: 200, effects: { smartgun: true } });
+    const heritage = a.armor.find((x) => (x.mods || []).some((m) => m.name === 'Chemical Protection'));
+    heritage.mods = heritage.mods.filter((m) => m.name !== 'AR Fashion');
+    heritage.mods.find((m) => m.name === 'Chemical Protection').rating = 4;
+    a.martialArts = [{ id: 'itm_ma', name: 'Aikido', catalogId: 'f0b55f24-a184-4d91-a4c2-71b480bace0b', rating: 1, techniques: [{ id: 'sub_tech', name: 'Counterstrike', catalogId: '11a90b83-af42-4972-a028-0ab4c60e1c33' }] }];
+    const r = exportChum5(a);
+    wellFormed(r.xml);
+    const back = parseChum5(r.xml).actor;
+    const bls = back.lifestyles[0];
+    assert.equal(bls.chummerGuid, ls.chummerGuid, 'same lifestyle node');
+    assert.equal(bls.monthsPaid, 3);
+    assert.ok(!bls.qualities.some((q) => q.name === 'Vocal Tension Lie Detection'), 'removed quality gone');
+    const g = bls.qualities.find((q) => /^Garage/.test(q.name));
+    assert.ok(g && g.catalogId === GARAGE && g.cost === 100 && g.lp === 2, 'new Garage quality');
+    assert.equal(r.assigned.sub.sub_garage, g.chummerGuid);
+    assert.equal(bls.qualities.find((q) => q.name === 'Extra Secure').chummerGuid, ls.qualities.find((q) => q.name === 'Extra Secure').chummerGuid, 'untouched qualities keep their guid');
+    const bstrike = back.weapons.find((w) => /Desert Strike/.test(w.name));
+    const smart = bstrike.accessories.find((x) => /Smartgun/.test(x.name));
+    assert.ok(smart?.effects.smartgun && smart.mount === 'Top', 'new accessory');
+    assert.equal(r.assigned.sub.sub_smart, smart.chummerGuid);
+    const bher = back.armor.find((x) => x.chummerGuid === heritage.chummerGuid);
+    assert.ok(!bher.mods.some((m) => m.name === 'AR Fashion'));
+    assert.equal(bher.mods.find((m) => m.name === 'Chemical Protection').rating, 4);
+    assert.equal(back.martialArts.length, 1);
+    assert.equal(back.martialArts[0].catalogId, 'f0b55f24-a184-4d91-a4c2-71b480bace0b');
+    assert.deepEqual(back.martialArts[0].techniques.map((x) => x.name), ['Counterstrike']);
+    assert.equal(r.assigned.martialArts.itm_ma, back.martialArts[0].chummerGuid);
+    assert.equal(r.assigned.sub.sub_tech, back.martialArts[0].techniques[0].chummerGuid);
+    // Re-export of the edited actor once the guids are recorded: nothing duplicated.
+    const a2 = clone(a);
+    for (const [list, sub] of [['lifestyles', 'qualities'], ['weapons', 'accessories'], ['armor', 'mods'], ['martialArts', 'techniques']]) {
+      for (const it of a2[list]) {
+        if (r.assigned[list]?.[it.id]) it.chummerGuid = r.assigned[list][it.id];
+        for (const x of it[sub] || []) if (r.assigned.sub[x.id]) x.chummerGuid = r.assigned.sub[x.id];
+      }
+    }
+    a2.chummer = { ...a2.chummer, xml: r.xml };
+    const r2 = exportChum5(a2);
+    assert.equal(count(r2.xml, 'lifestylequality'), count(r.xml, 'lifestylequality'));
+    assert.equal(count(r2.xml, 'accessory'), count(r.xml, 'accessory'));
+    assert.equal(count(r2.xml, 'martialarttechnique'), 1);
+  });
+  await test('3-way merge and diff know lifestyles and nested items', () => {
+    const base = clone(jane);
+    const theirs = clone(jane);
+    theirs.lifestyles[0].qualities = theirs.lifestyles[0].qualities.filter((q) => q.name !== 'Pheromone Detection');
+    theirs.lifestyles[0].monthlyCost -= 250;
+    const ours = clone(jane);
+    ours.lifestyles[0].monthsPaid = 4;
+    const m = mergeActor(ours, theirs, base);
+    assert.equal(m.lifestyles.length, 1);
+    assert.equal(m.lifestyles[0].monthsPaid, 4, 'app change kept');
+    assert.ok(!m.lifestyles[0].qualities.some((q) => q.name === 'Pheromone Detection'), 'Chummer change applied');
+    assert.equal(m.lifestyle, undefined);
+    const d = diffActors(ours, m);
+    const l = d.lists.find((x) => x.list === 'lifestyles');
+    assert.ok(l && l.changed.some((c) => /−Pheromone Detection/.test(c)), JSON.stringify(d.lists));
+    assert.ok(en[l.label], 'English list label');
+  });
+  await test('an app-side accessory / lifestyle option survives an unrelated Chummer upload; nested ids kept', () => {
+    // Same file parsed three times like 85-chummer prepareUpdate: theirs with fresh ids, base with ids 'base'.
+    const raw = chum('Jane_Active.chum5');
+    const ours = parseChum5(raw).actor;
+    const theirs = parseChum5(raw).actor;
+    const base = parseChum5(raw, { keepXml: false, makeId: () => 'base' }).actor;
+    const defiance = ours.weapons.find((w) => /Defiance/.test(w.name));
+    defiance.accessories.push({ id: 'acc_app', name: 'Silencer/Suppressor', mount: 'Barrel', cost: 500 });
+    ours.lifestyles[0].qualities.push({ id: 'lsq_app', name: 'Garage (Car (Body 5 or More))', catalogId: GARAGE, category: 'Entertainment - Asset', cost: 100, multiplier: 0 });
+    const m = mergeActor(ours, theirs, base);
+    const md = m.weapons.find((w) => w.id === defiance.id);
+    assert.ok(md.accessories.some((x) => x.id === 'acc_app'), 'shop accessory kept');
+    assert.ok(m.lifestyles[0].qualities.some((q) => q.id === 'lsq_app'), 'Garage kept');
+    const ids = (a) => a.weapons.flatMap((w) => (w.accessories || []).map((x) => x.id)).concat(a.lifestyles.flatMap((l) => l.qualities.map((q) => q.id))).sort();
+    assert.deepEqual(ids(m), ids(ours), 'nested ids unchanged');
+    // A Chummer-side change to a nested item still applies.
+    const theirs2 = parseChum5(raw).actor;
+    theirs2.lifestyles[0].qualities = theirs2.lifestyles[0].qualities.filter((q) => q.name !== 'Vocal Tension Lie Detection');
+    const m2 = mergeActor(ours, theirs2, base);
+    assert.ok(!m2.lifestyles[0].qualities.some((q) => q.name === 'Vocal Tension Lie Detection') && m2.lifestyles[0].qualities.some((q) => q.id === 'lsq_app'), 'Chummer removal applied, app option kept');
+    // A weapon deleted in the app (with accessories) does not come back from an unchanged file.
+    const ours3 = clone(ours);
+    ours3.weapons = ours3.weapons.filter((w) => w.id !== defiance.id);
+    assert.ok(!mergeActor(ours3, theirs, base).weapons.some((w) => /Defiance/.test(w.name)), 'deleted weapon stays deleted');
+  });
+  await test('Extra Secure <basemultiplier> → baseOnly; Gel Packs counted in the armor value', async () => {
+    const xs = jane.lifestyles[0].qualities.find((q) => q.name === 'Extra Secure');
+    assert.equal(xs.baseOnly, true);
+    assert.ok(!jane.lifestyles[0].qualities.find((q) => q.name === 'DocWagon Contract, Gold').baseOnly);
+    const { armorTotal, armorValue } = await import('../shared/sr5.js');
+    const actioneer = jane.armor.find((a) => /Actioneer/.test(a.name) && (a.mods || []).some((m) => m.name === 'Gel Packs'));
+    if (actioneer) assert.equal(armorValue(actioneer), Number(actioneer.rating) + 2, 'Actioneer + Gel Packs');
+    const heritage = jane.armor.find((a) => (a.mods || []).some((m) => m.name === 'Gel Packs'));
+    assert.equal(armorTotal({ armor: [{ ...heritage, equipped: true, stack: false }] }), Number(heritage.rating) + heritage.mods.reduce((s, m) => s + (Number(m.effects?.armor) || 0), 0));
+    const re = parseChum5(exportChum5(jane).xml).actor.lifestyles[0].qualities.find((q) => q.name === 'Extra Secure');
+    assert.equal(re.baseOnly, true, 'baseOnly survives the export');
+  });
+}
+
 console.log('HTTP routes & permissions');
-const srv = await startServer({ port: 3911 });
+const srv = await startServer({ port: Number(process.env.SR_TEST_PORT) || 3271 });
 try {
   const gmToken = await login(srv.url, { role: 'gm', password: 'lazarus' });
   const gm = await client(srv.url, gmToken);
@@ -508,6 +723,38 @@ try {
     assert.ok(xml.includes(`<mugshot>${png}</mugshot>`));
     assert.equal(xml.replace(/^﻿/, ''), withMug.replace(/^﻿/, ''), 'unchanged actor → identical file, portrait included');
   });
+
+  if (hasChumFiles) {
+    await test('Jane_Active import over HTTP: GM adds a Garage, the export records the guids of the new nested items', async () => {
+      const res = await post('/api/chummer/import?type=pc&fileName=Jane_Active.chum5', gmToken, chum('Jane_Active.chum5'));
+      const j = await res.json();
+      assert.equal(res.status, 200, j.error);
+      await settle(300);
+      const a = gm.state.actors[j.actorId];
+      const ls = a.lifestyles[0];
+      assert.equal(ls.name, 'Best Home');
+      assert.equal(ls.qualities.length, 4);
+      const subId = await gm.send('actor/addSubItem', { actorId: a.id, list: 'lifestyles', itemId: ls.id, sub: 'qualities', item: { name: 'Garage (Car (Body 5 or More))', catalogId: GARAGE, category: 'Entertainment - Asset', cost: 100, multiplier: 0, lp: 2 } });
+      const enfield = a.weapons.find((w) => /Enfield/.test(w.name));
+      const accId = await gm.send('actor/addSubItem', { actorId: a.id, list: 'weapons', itemId: enfield.id, sub: 'accessories', item: { name: 'Bipod', mount: 'Under', cost: 200, effects: { rc: 2 } } });
+      await settle(200);
+      assert.equal(gm.state.actors[a.id].lifestyles[0].monthlyCost, ls.monthlyCost + 100, 'monthly cost recomputed');
+      const xml = Buffer.from(await (await fetch(srv.url + `/api/chummer/export/${a.id}`, { headers: H(gmToken) })).arrayBuffer()).toString('utf8');
+      await settle(300);
+      const back = parseChum5(xml).actor;
+      const garage = back.lifestyles[0].qualities.find((q) => /^Garage/.test(q.name));
+      assert.ok(garage);
+      const after = gm.state.actors[a.id];
+      assert.equal(after.lifestyles[0].qualities.find((q) => q.id === subId).chummerGuid, garage.chummerGuid, 'quality guid recorded');
+      const bipod = back.weapons.find((w) => /Enfield/.test(w.name)).accessories.find((x) => x.name === 'Bipod');
+      assert.ok(bipod && bipod.effects.rc === 2);
+      assert.equal(after.weapons.find((w) => w.id === enfield.id).accessories.find((x) => x.id === accId).chummerGuid, bipod.chummerGuid, 'accessory guid recorded');
+      // Exporting again does not duplicate them.
+      const xml2 = Buffer.from(await (await fetch(srv.url + `/api/chummer/export/${a.id}`, { headers: H(gmToken) })).arrayBuffer()).toString('utf8');
+      assert.equal(count(xml2, 'lifestylequality'), 5);
+      assert.equal(parseChum5(xml2).actor.weapons.find((w) => /Enfield/.test(w.name)).accessories.filter((x) => x.name === 'Bipod').length, 1);
+    });
+  }
 
   await test('GM can unlink an actor from its Chummer file', async () => {
     await gm.send('chummer/unlink', { actorId });

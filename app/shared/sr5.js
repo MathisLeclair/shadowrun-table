@@ -120,11 +120,21 @@ export function attr(actor, key) {
   return base + aug;
 }
 
-/** Armor value: highest non-stacking equipped armor + all equipped stacking pieces (helmets, shields…). */
+/** Armor points added by an armor's installed modifications (armor.mods[].effects.armor: Gel Packs +2…; unequipped mods excluded). */
+export function armorModBonus(a) {
+  return (Array.isArray(a?.mods) ? a.mods : []).reduce((s, m) => s + (m && typeof m === 'object' && m.equipped !== false ? Number(m.effects?.armor) || 0 : 0), 0);
+}
+
+/** Armor value of one piece: rating + its modifications' armor bonus. */
+export function armorValue(a) {
+  return (Number(a?.rating) || 0) + armorModBonus(a);
+}
+
+/** Armor value: highest non-stacking equipped armor + all equipped stacking pieces (helmets, shields…), mods included. */
 export function armorTotal(actor) {
-  const eq = (actor?.armor || []).filter((a) => a.equipped);
-  const base = Math.max(0, ...eq.filter((a) => !a.stack).map((a) => Number(a.rating) || 0));
-  const extra = eq.filter((a) => a.stack).reduce((s, a) => s + (Number(a.rating) || 0), 0);
+  const eq = (actor?.armor || []).filter((a) => a && a.equipped);
+  const base = Math.max(0, ...eq.filter((a) => !a.stack).map(armorValue));
+  const extra = eq.filter((a) => a.stack).reduce((s, a) => s + armorValue(a), 0);
   return base + extra;
 }
 

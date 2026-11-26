@@ -315,7 +315,7 @@ function unitTests() {
   ok(actor.knowledge.some((k) => k.native && k.name === 'Français'), 'native language');
   ok(actor.qualities.some((q) => q.name === 'Vision nocturne') && actor.vision.lowLight, 'racial trait + vision');
   ok(actor.qualities.some((q) => q.karma === -5 && q.positive === false), 'negative quality karma');
-  ok(actor.contacts.length === 2 && actor.lifestyle?.monthsPaid === 1, 'contacts and lifestyle');
+  ok(actor.contacts.length === 2 && actor.lifestyles?.length === 1 && actor.lifestyles[0].monthsPaid === 1 && actor.lifestyles[0].primary && actor.lifestyles[0].base === 'Low' && !actor.lifestyle, 'contacts and lifestyle (lifestyles[0])');
   ok(actor.nuyen === 5000 && actor.karma === 7, 'carried nuyen / karma');
   const dv = derive(actor);
   ok(dv.initiative.dice === 2 && dv.armor === 12, 'derive() works on the built actor');

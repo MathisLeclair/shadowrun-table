@@ -2,7 +2,10 @@
 // Slices owned: state.bestiary, state.bestiaryRemoved, state.combat (see ARCHITECTURE.md).
 import fs from 'node:fs';
 import path from 'node:path';
-import { derive, rollInitiative, attr, ATTRS } from '../../shared/sr5.js';
+import { rollInitiative, attr, ATTRS } from '../../shared/sr5.js';
+// deriveFull = derive() + modifiers of gear / qualities / implants (monitors, pain tolerance, matrix initiative dice — shared/modifiers.js).
+import { deriveFull as derive } from '../lib/modifiers.js';
+import { fillActorRefs } from '../lib/bookrefs.js';
 import { uid, clamp, deepClone } from '../../shared/util.js';
 
 // ---------------------------------------------------------------------------
@@ -152,6 +155,7 @@ export function sanitizeTemplate(raw, { id } = {}) {
     loot: str(npc.loot, 20000),
   };
   if (Array.isArray(t.tags)) out.tags = t.tags.map((x) => str(x, 40)).filter(Boolean).slice(0, 20);
+  fillActorRefs(out); // 📖 rulebook references of the items (catalog id / name), shown in the stat blocks
   return out;
 }
 
@@ -184,7 +188,7 @@ function actorFromTemplate(tpl, { id, name, hidden }) {
 /** Runtime actor → template (used by bestiary/fromActor). */
 function templateFromActor(actor) {
   const t = deepClone(actor);
-  for (const k of ['id', 'type', 'templateId', 'condition', 'edge', 'history', 'training', 'player', 'retired', 'hidden', 'karma', 'karmaTotal', 'nuyen', 'streetCred', 'notoriety', 'publicAwareness', 'contacts', 'sins', 'lifestyle']) delete t[k];
+  for (const k of ['id', 'type', 'templateId', 'condition', 'edge', 'history', 'training', 'player', 'retired', 'hidden', 'karma', 'karmaTotal', 'nuyen', 'streetCred', 'notoriety', 'publicAwareness', 'contacts', 'sins', 'lifestyle', 'lifestyles']) delete t[k];
   if (actor.gmNotes) t.description = actor.gmNotes;
   delete t.gmNotes;
   return t;
@@ -585,6 +589,7 @@ export default {
         }
       }
     }
+    for (const t of Object.values(state.bestiary)) if (isObj(t)) fillActorRefs(t); // templates stored before item.source (idempotent)
     if (!isObj(state.combat)) state.combat = emptyCombat();
     const c = state.combat;
     if (!Array.isArray(c.entries)) c.entries = [];

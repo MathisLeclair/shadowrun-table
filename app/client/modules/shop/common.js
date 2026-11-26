@@ -3,10 +3,12 @@ import { useEffect, useMemo, useState } from 'preact/hooks';
 import { html, Badge } from '../../lib/ui.js';
 import { loadCatalog } from '../../lib/net.js';
 import { t, tk, fmtNuyen, fmtDate, itemName, getLang, compare } from '../../lib/i18n.js';
-import { SHOP_FILES, SECTIONS, quote, parseAvailString, fold, GRADES } from './rules.js';
+import { SHOP_FILES, STORE_SECTIONS, quote, parseAvailString, fold, GRADES, lowersRent } from './rules.js';
 
 /** Nuyen amount in the UI language ('12 500¥' / '12,500¥'). */
 export const nuyen = fmtNuyen;
+
+const UPGRADE_FILE_SET = new Set(['accessories', 'armormods', 'vehiclemods', 'lifestylequalities', 'lifestyles']);
 
 /** Catalog category in the UI language. */
 const categoryOf = (item) => (getLang() === 'fr' ? item.categoryFr || item.category : item.category || item.categoryFr);
@@ -22,7 +24,7 @@ function buildCatalog(parts) {
   const byId = new Map();
   for (const { file, list } of parts) {
     for (const item of list || []) {
-      const section = SECTIONS.find((s) => s.match(file, item))?.id || 'gear';
+      const section = STORE_SECTIONS.find((s) => s.match(file, item))?.id || 'gear';
       // name / category are getters: the catalog is cached across language switches.
       const e = {
         ref: item.id,
@@ -60,6 +62,21 @@ export function useShopCatalog() {
       ).then((parts) => (catalogCache = buildCatalog(parts)));
     }
     catalogPromise.then((c) => alive && setData(c));
+    return () => (alive = false);
+  }, []);
+  return data;
+}
+
+let martialCache = null;
+let martialPromise = null;
+/** Hook: martial art styles (data/catalog/martialarts.json — karma, not sold for nuyen), null while loading. */
+export function useMartialCatalog() {
+  const [data, setData] = useState(martialCache);
+  useEffect(() => {
+    if (martialCache) return;
+    let alive = true;
+    if (!martialPromise) martialPromise = loadCatalog('martialarts').then((l) => (martialCache = Array.isArray(l) ? l : [])).catch(() => (martialCache = []));
+    martialPromise.then((c) => alive && setData(c));
     return () => (alive = false);
   }, []);
   return data;
@@ -120,7 +137,8 @@ export function buyStatus(shop, entry, q, isGM) {
   if (q.availValue > shop.maxAvail) return { ok: false, reason: t('Dispo {avail} > {max}', { avail: q.availValue, max: shop.maxAvail }), approval: false };
   if (q.legality === 'F' && !shop.allowForbidden) return { ok: false, reason: t('Interdit'), approval: false };
   if (q.legality === 'R' && !shop.allowRestricted) return { ok: false, reason: t('Restreint'), approval: false };
-  const approval = shop.approval === 'always' || (shop.approval === 'restricted' && (!!q.legality || !!entry.item?.costRange));
+  // Lifestyle options that lower the rent always wait for the GM (server: 40-shop needsApproval).
+  const approval = shop.approval === 'always' || (entry.file === 'lifestylequalities' && lowersRent(entry.item)) || (shop.approval === 'restricted' && (!!q.legality || !!entry.item?.costRange));
   return { ok: true, approval };
 }
 
@@ -142,7 +160,7 @@ function saveCarts() {
   for (const l of cartListeners) l();
 }
 
-export const lineKey = (l) => [l.ref, l.rating ?? '', l.grade ?? '', l.price ?? '', l.setMatrix ? 1 : ''].join('|');
+export const lineKey = (l) => [l.ref, l.rating ?? '', l.grade ?? '', l.price ?? '', l.setMatrix ? 1 : '', l.target?.itemId ?? '', l.mount ?? '', l.lifestyleName ?? ''].join('|');
 
 export function getCart(actorId) {
   return (actorId && carts[actorId]) || [];
@@ -227,15 +245,29 @@ export function useShopActors(game) {
   }, [game.actors, game.me]);
 }
 
-/** Estimated full value (100%) of an owned item, for resale previews. Mirrors server itemValue(). */
+const SUBS = { weapons: 'accessories', armor: 'mods', vehicles: 'mods' };
+/** Value (100%) of an installed accessory / mod (0 for parts delivered with the item). Mirrors server subValue(). */
+export function subValue(s) {
+  if (!s || s.included) return 0;
+  if (s.paid !== undefined && s.paid !== null && s.paid !== '' && Number.isFinite(Number(s.paid))) return Number(s.paid);
+  return Math.max(0, Number(s.cost) || 0);
+}
+
+/** Estimated full value (100%) of an owned item (installed accessories/mods included), for resale previews. Mirrors server itemValue(). */
 export function ownedValue(list, it, catalog) {
+  const subs = SUBS[list] && Array.isArray(it[SUBS[list]]) ? it[SUBS[list]].reduce((s, x) => s + subValue(x), 0) : 0;
+  const own = ownedBaseValue(list, it, catalog);
+  return own === null ? (subs ? subs : null) : own + subs;
+}
+
+function ownedBaseValue(list, it, catalog) {
   if (it.paid !== undefined && it.paid !== null && it.paid !== '' && Number.isFinite(Number(it.paid))) return Number(it.paid);
   if (!catalog) return null;
   let e = it.catalogId ? catalog.byId.get(it.catalogId) : null;
   if (!e) {
     const k = fold(it.name);
     if (!k) return null;
-    e = catalog.entries.find((x) => fold(x.item.name) === k || fold(x.item.nameFr) === k) || null;
+    e = catalog.entries.find((x) => !UPGRADE_FILE_SET.has(x.file) && (fold(x.item.name) === k || fold(x.item.nameFr) === k)) || null;
   }
   if (!e) return null;
   const q = safeQuote(e.item, { rating: it.rating, grade: it.grade });

@@ -1,11 +1,11 @@
 {
- "generated": "2026-11-25T16:21:58.603Z",
+ "generated": "2026-11-26T15:05:22.851Z",
  "source": "Chummer5.226.0",
  "files": [
   {
    "name": "weapons",
-   "count": 500,
-   "bytes": 169050,
+   "count": 387,
+   "bytes": 170935,
    "categories": [
     {
      "name": "Assault Cannons",
@@ -146,28 +146,80 @@
      "name": "Underbarrel Weapons",
      "nameFr": "Armes montées",
      "count": 7
+    }
+   ]
+  },
+  {
+   "name": "accessories",
+   "count": 118,
+   "bytes": 37387,
+   "categories": [
+    {
+     "name": "Barrel",
+     "nameFr": "Canon",
+     "count": 8
     },
     {
-     "name": "Weapon Accessories",
-     "nameFr": "Accessoires d’armes",
-     "count": 113
+     "name": "Model-Specific",
+     "nameFr": "Spécifique à un modèle",
+     "count": 17
+    },
+    {
+     "name": "No Mount",
+     "nameFr": "Sans montage",
+     "count": 53
+    },
+    {
+     "name": "Side",
+     "nameFr": "Flanc",
+     "count": 6
+    },
+    {
+     "name": "Stock",
+     "nameFr": "Crosse",
+     "count": 6
+    },
+    {
+     "name": "Top",
+     "nameFr": "Dessus",
+     "count": 5
+    },
+    {
+     "name": "Top / Under",
+     "nameFr": "Dessus / Dessous",
+     "count": 4
+    },
+    {
+     "name": "Top / Under / Barrel / Side / Internal",
+     "nameFr": "Dessus / Dessous / Canon / Flanc / Interne",
+     "count": 3
+    },
+    {
+     "name": "Top / Under / Side",
+     "nameFr": "Dessus / Dessous / Flanc",
+     "count": 4
+    },
+    {
+     "name": "Under",
+     "nameFr": "Dessous",
+     "count": 11
+    },
+    {
+     "name": "Under / Barrel",
+     "nameFr": "Dessous / Canon",
+     "count": 1
     }
    ]
   },
   {
    "name": "armor",
-   "count": 243,
-   "bytes": 71045,
+   "count": 186,
+   "bytes": 62605,
    "categories": [
     {
      "name": "Armor",
      "nameFr": "Armures",
      "count": 20
-    },
-    {
-     "name": "Armor Modifications",
-     "nameFr": "Modifications d’armure",
-     "count": 57
     },
     {
      "name": "Cloaks",
@@ -192,9 +244,69 @@
    ]
   },
   {
+   "name": "armormods",
+   "count": 58,
+   "bytes": 19004,
+   "categories": [
+    {
+     "name": "Armor Liners (Rating 1)",
+     "count": 3
+    },
+    {
+     "name": "Armor Liners (Rating 2)",
+     "count": 3
+    },
+    {
+     "name": "Armor Liners (Rating 3)",
+     "count": 3
+    },
+    {
+     "name": "Armor Liners (Rating 4)",
+     "count": 3
+    },
+    {
+     "name": "Armor Liners (Rating 5)",
+     "count": 3
+    },
+    {
+     "name": "Armor Liners (Rating 6)",
+     "count": 3
+    },
+    {
+     "name": "Clothing",
+     "nameFr": "Vêtements renforcés",
+     "count": 1
+    },
+    {
+     "name": "Customized Ballistic Mask",
+     "count": 1
+    },
+    {
+     "name": "Full Body Armor Mods",
+     "count": 2
+    },
+    {
+     "name": "General",
+     "count": 31
+    },
+    {
+     "name": "Nightshade IR",
+     "count": 1
+    },
+    {
+     "name": "Rapid Transit Detailing",
+     "count": 3
+    },
+    {
+     "name": "Urban Explorer Jumpsuit Accessories",
+     "count": 1
+    }
+   ]
+  },
+  {
    "name": "gear",
    "count": 1264,
-   "bytes": 332005,
+   "bytes": 351368,
    "categories": [
     {
      "name": "Alchemical Preperations",
@@ -518,7 +630,7 @@
   {
    "name": "cyberware",
    "count": 283,
-   "bytes": 92714,
+   "bytes": 103946,
    "categories": [
     {
      "name": "Bodyware",
@@ -600,7 +712,7 @@
   {
    "name": "bioware",
    "count": 183,
-   "bytes": 55582,
+   "bytes": 71152,
    "categories": [
     {
      "name": "Basic",
@@ -675,7 +787,7 @@
   {
    "name": "vehicles",
    "count": 346,
-   "bytes": 109719,
+   "bytes": 110381,
    "categories": [
     {
      "name": "Bikes",
@@ -775,9 +887,75 @@
    ]
   },
   {
+   "name": "vehiclemods",
+   "count": 171,
+   "bytes": 52040,
+   "categories": [
+    {
+     "name": "Acceleration",
+     "count": 2
+    },
+    {
+     "name": "All",
+     "count": 52
+    },
+    {
+     "name": "Armor",
+     "count": 2
+    },
+    {
+     "name": "Body",
+     "nameFr": "Structure",
+     "count": 18
+    },
+    {
+     "name": "Cosmetic",
+     "nameFr": "Apparence",
+     "count": 15
+    },
+    {
+     "name": "Electromagnetic",
+     "nameFr": "Électronique",
+     "count": 11
+    },
+    {
+     "name": "Handling",
+     "count": 2
+    },
+    {
+     "name": "Model-Specific",
+     "nameFr": "Spécifique au modèle",
+     "count": 18
+    },
+    {
+     "name": "Powertrain",
+     "nameFr": "Groupe motopropulseur",
+     "count": 19
+    },
+    {
+     "name": "Protection",
+     "nameFr": "Blindage",
+     "count": 11
+    },
+    {
+     "name": "Sensor",
+     "count": 2
+    },
+    {
+     "name": "Speed",
+     "count": 2
+    },
+    {
+     "name": "Weapons",
+     "nameFr": "Armes",
+     "count": 17
+    }
+   ]
+  },
+  {
    "name": "qualities",
    "count": 795,
-   "bytes": 174932,
+   "bytes": 254228,
    "categories": [
     {
      "name": "Negative",
@@ -794,7 +972,7 @@
   {
    "name": "spells",
    "count": 358,
-   "bytes": 88330,
+   "bytes": 91240,
    "categories": [
     {
      "name": "Combat",
@@ -833,7 +1011,7 @@
   {
    "name": "powers",
    "count": 103,
-   "bytes": 22767,
+   "bytes": 29266,
    "categories": [
     {
      "name": "Adept Powers",
@@ -877,12 +1055,61 @@
   {
    "name": "lifestyles",
    "count": 11,
-   "bytes": 2974,
+   "bytes": 3706,
    "categories": [
     {
      "name": "Lifestyles",
      "nameFr": "Train de vie",
      "count": 11
+    }
+   ]
+  },
+  {
+   "name": "lifestylequalities",
+   "count": 111,
+   "bytes": 34609,
+   "categories": [
+    {
+     "name": "Contracts",
+     "nameFr": "Contrats",
+     "count": 24
+    },
+    {
+     "name": "Entertainment - Asset",
+     "nameFr": "Aménagements",
+     "count": 43
+    },
+    {
+     "name": "Entertainment - Outing",
+     "nameFr": "Loisirs",
+     "count": 9
+    },
+    {
+     "name": "Entertainment - Service",
+     "nameFr": "Services",
+     "count": 10
+    },
+    {
+     "name": "Negative",
+     "nameFr": "Négatifs",
+     "count": 19
+    },
+    {
+     "name": "Positive",
+     "nameFr": "Positifs",
+     "count": 6
+    }
+   ]
+  },
+  {
+   "name": "martialarts",
+   "count": 53,
+   "bytes": 64620,
+   "categories": [
+    {
+     "name": "Martial Arts",
+     "nameFr": "Arts martiaux",
+     "count": 53
     }
    ]
   }

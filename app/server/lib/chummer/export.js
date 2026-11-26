@@ -45,6 +45,8 @@ export const LISTS = {
   powers: { container: 'powers', node: 'power', kind: () => 'powers' },
   spells: { container: 'spells', node: 'spell', kind: () => 'spells' },
   complexForms: { container: 'complexforms', node: 'complexform', kind: () => 'complexforms' },
+  lifestyles: { container: 'lifestyles', node: 'lifestyle', kind: () => null },
+  martialArts: { container: 'martialarts', node: 'martialart', kind: () => 'martialarts' },
 };
 
 // ---------------------------------------------------------------------------
@@ -138,13 +140,14 @@ const SKILL_CATEGORY = {
   unarmed_combat: 'Unarmed', throwing_weapons: 'Throwing Weapons', archery: 'Bows', exotic_weapon: 'Exotic Ranged Weapons', gunnery: 'Assault Cannons',
 };
 
-function buildWeapon(item, data, guid) {
+function buildWeapon(item, data, guid, assignSub) {
   const n = templates().weapon.clone();
   const d = (k, fb = '') => (data ? data.val(k) : '') || fb;
   const melee = (data ? data.val('type') === 'Melee' : item.kind === 'melee');
   const mounts = data?.get('accessorymounts')?.all('mount').map((m) => m.text) || [];
   const damage = d('damage', String(item.damage || '').replace(/\bSTR\b/g, '{STR}'));
-  const builtIn = (data?.get('accessories')?.all('accessory') || []).map((a) => a.val('name')).filter(Boolean);
+  const have = new Set((item.accessories || []).map((x) => norm(x.name)));
+  const builtIn = (data?.get('accessories')?.all('accessory') || []).map((a) => a.val('name')).filter((nm) => nm && !have.has(norm(nm)));
   const notes = [item.notes || '', builtIn.length ? `Accessoires d’origine à rajouter dans Chummer : ${builtIn.join(', ')}` : ''].filter(Boolean).join(' — ');
   setMany(n, {
     sourceid: data ? data.val('id') : '00000000-0000-0000-0000-000000000000', guid,
@@ -159,6 +162,8 @@ function buildWeapon(item, data, guid) {
   if (!data) n.set('weaponname', item.name);
   // The template holds <accuracy> twice (Chummer writes it twice): set both.
   for (const acc of n.all('accuracy')) acc.text = d('accuracy', String(item.accuracy ?? (melee ? 'Physical' : '0')));
+  const accs = n.child('accessories') || n.insertAfter(el('accessories'), n.child('extramount') || n.child('mount'));
+  accs.children = subNodes('weapons', item, assignSub);
   return n;
 }
 
@@ -183,11 +188,12 @@ function buildQuality(item, data, guid) {
   return n;
 }
 
-function buildArmor(item, data, guid) {
+function buildArmor(item, data, guid, assignSub) {
   const n = data ? cloneData(data, { rating: 'maxrating' }) : el('armor', [el('name', item.name), el('category', 'Armor'), el('armor', String(item.stack ? `+${item.rating || 0}` : item.rating || 0)), el('armorcapacity', '0'), el('avail', '0'), el('cost', '0'), el('source', 'SR5'), el('page', '0')]);
   head(n, data?.val('id'), guid);
   setMany(n, { rating: String(item.rating && data?.has('maxrating') ? item.rating : 0), equipped: B(item.equipped), wirelesson: 'True', extra: '', notes: item.notes || '', location: '', armormods: '', gears: '' });
   if (!data) n.set('armorname', item.name);
+  n.child('armormods').children = subNodes('armor', item, assignSub);
   return n;
 }
 
@@ -232,13 +238,14 @@ function buildSin(item, guid) {
   return n;
 }
 
-function buildVehicle(item, data, guid) {
+function buildVehicle(item, data, guid, assignSub) {
   const n = data
     ? cloneData(data)
     : el('vehicle', [el('name', item.name), el('category', 'Cars'), el('avail', '0'), el('cost', '0'), el('source', 'SR5'), el('page', '0')]);
   head(n, data?.val('id'), guid);
   if (!data) setMany(n, { handling: item.handling || '0', accel: item.accel || '0', speed: item.speed || '0', pilot: item.pilot || 0, body: item.body || 0, armor: item.armor || 0, sensor: item.sensor || 0, seats: item.seats || 0 });
   setMany(n, { physicalcmfilled: '0', matrixcmfilled: '0', vehiclename: data ? '' : item.name, notes: item.notes || '', mods: '', weapons: '', gears: '', locations: '', homenode: 'False', wirelesson: 'True' });
+  n.child('mods').children = subNodes('vehicles', item, assignSub);
   return n;
 }
 
@@ -281,22 +288,174 @@ function buildComplexForm(item, data, guid) {
 }
 
 const LIFESTYLE_FR = { rue: 'Street', street: 'Street', squatter: 'Squatter', bas: 'Low', low: 'Low', 'bas de gamme': 'Low', moyen: 'Medium', middle: 'Medium', medium: 'Medium', 'classe moyenne': 'Medium', haut: 'High', high: 'High', 'haut de gamme': 'High', luxe: 'Luxury', luxury: 'Luxury', luxueux: 'Luxury', commercial: 'Commercial', planque: 'Bolt Hole', 'bolt hole': 'Bolt Hole', voyageur: 'Traveler', traveler: 'Traveler' };
-function buildLifestyle(ls, guid) {
-  // "Best Home (Moyen)" → Medium: try the name without parentheses, then each parenthesized part, then the raw name.
+/** Chummer base lifestyle data node of an app lifestyle (catalogId, base, then the name: "Best Home (Moyen)" → Medium). */
+function lifestyleData(ls) {
+  if (ls.catalogId) {
+    const n = findDataItem('lifestyles', { id: ls.catalogId });
+    if (n) return n;
+  }
+  if (ls.base) {
+    const n = findDataItem('lifestyles', { name: ls.base });
+    if (n) return n;
+  }
   const raw = String(ls.name || '');
   const keys = [raw.replace(/\s*\([^)]*\)/g, ''), ...[...raw.matchAll(/\(([^)]*)\)/g)].map((m) => m[1]), raw].map(norm);
   const en = keys.map((k) => LIFESTYLE_FR[k]).find(Boolean) || raw;
-  const data = findDataItem('lifestyles', { name: en }) || findDataItem('lifestyles', { name: 'Medium' });
+  return findDataItem('lifestyles', { name: en }) || findDataItem('lifestyles', { name: 'Medium' });
+}
+function buildLifestyle(ls, guid, assignSub) {
+  const data = lifestyleData(ls);
   const base = data?.val('name') || 'Medium';
+  const p = ls.points || null;
   return el('lifestyle', [
-    el('sourceid', data?.val('id') || '00000000-0000-0000-0000-000000000000'), el('guid', guid), el('name', ls.name || base), el('cost', fmtNum(ls.monthlyCost ?? num(data?.val('cost')))),
+    el('sourceid', data?.val('id') || '00000000-0000-0000-0000-000000000000'), el('guid', guid), el('name', ls.name || base), el('cost', fmtNum(ls.baseCost ?? num(data?.val('cost')))),
     el('dice', data?.val('dice') || '0'), el('lp', data?.val('lp') || '0'), el('baselifestyle', base), el('multiplier', data?.val('multiplier') || '0'), el('months', String(ls.monthsPaid ?? 1)),
     el('roommates', '0'), el('percentage', '100'), el('splitcostwithroommates', 'False'), el('purchased', 'False'), el('area', '0'), el('comforts', '0'), el('security', '0'),
-    el('basearea', '0'), el('basecomforts', '0'), el('basesecurity', '0'), el('maxarea', '0'), el('maxcomforts', '0'), el('maxsecurity', '0'),
+    el('basearea', String(p?.neighborhood ?? 0)), el('basecomforts', String(p?.comforts ?? 0)), el('basesecurity', String(p?.security ?? 0)), el('maxarea', '0'), el('maxcomforts', '0'), el('maxsecurity', '0'),
     el('costforarea', data?.val('costforarea') || '0'), el('costforcomforts', data?.val('costforcomforts') || '0'), el('costforsecurity', data?.val('costforsecurity') || '0'),
-    el('allowbonuslp', 'False'), el('bonuslp', '0'), el('trustfund', '0'), el('type', 'Standard'), el('increment', 'Month'),
-    el('source', data?.val('source') || 'SR5'), el('page', data?.val('page') || '0'), el('lifestylequalities', ''), el('freegrids', ''), el('notes', ''), el('city', ''), el('district', ''), el('borough', ''),
+    el('allowbonuslp', 'False'), el('bonuslp', '0'), el('trustfund', '0'), el('primarytenant', B(!!ls.primary)), el('type', p ? 'Advanced' : 'Standard'), el('increment', 'Month'),
+    el('source', data?.val('source') || 'SR5'), el('page', data?.val('page') || '0'),
+    el('lifestylequalities', subNodes('lifestyles', ls, assignSub)),
+    el('freegrids', ''), el('notes', ls.notes || ''), el('city', ''), el('district', ''), el('borough', ''),
   ]);
+}
+
+/** Chummer <extra> of a nested item: "Local Bar Patron (The Jeffrey’s)" with data "Local Bar Patron" → "The Jeffrey’s". */
+function extraOf(item, data) {
+  if (!data || norm(data.val('name')) === norm(item.name)) return '';
+  const dn = data.val('name');
+  if (String(item.name || '').startsWith(`${dn} (`)) return String(item.name).slice(dn.length + 2, -1);
+  return '';
+}
+
+const QUALITY_TYPE = (cat) => (/^Entertainment/i.test(cat) ? 'Entertainment' : cat || 'Positive');
+function buildLifestyleQuality(q, guid) {
+  const data = resolveData('lifestylequalities', q);
+  const cat = data?.val('category') || q.category || 'Positive';
+  const baseMult = data ? data.val('multiplierbaseonly') || '0' : q.baseOnly ? String(q.multiplier || 0) : '0';
+  const mult = data ? data.val('multiplier') || '0' : q.baseOnly ? '0' : String(q.multiplier || 0);
+  const bonus = data?.child('bonus') ? data.child('bonus').clone() : el('bonus');
+  bonus.attrs = [];
+  return el('lifestylequality', [
+    el('sourceid', data?.val('id') || '00000000-0000-0000-0000-000000000000'), el('guid', guid), el('name', data ? data.val('name') : q.name), el('category', cat),
+    el('extra', extraOf(q, data)), el('cost', data ? data.val('cost') : q.cost ? fmtNum(q.cost) : ''), el('multiplier', mult), el('basemultiplier', baseMult),
+    el('lp', data?.val('lp') || String(q.lp ?? 0)), el('areamaximum', data?.val('areamaximum') || '0'), el('comfortsmaximum', data?.val('comfortsmaximum') || '0'),
+    el('securitymaximum', data?.val('securitymaximum') || '0'), el('area', data?.val('area') || '0'), el('comforts', data?.val('comforts') || '0'), el('security', data?.val('security') || '0'),
+    el('contributetolimit', 'True'), el('print', 'True'), el('lifestylequalitytype', QUALITY_TYPE(cat)), el('lifestylequalitysource', 'Selected'),
+    el('source', data?.val('source') || 'SR5'), el('page', data?.val('page') || '0'), el('allowed', data?.val('allowed') || ''), bonus, el('notes', q.notes || ''),
+  ]);
+}
+
+function buildAccessory(x, guid) {
+  const data = resolveData('accessories', x);
+  const d = (k, fb = '') => (data ? data.val(k) : '') || fb;
+  const fx = x.effects || {};
+  const mount = x.mount || String(d('mount')).split('/')[0] || 'None';
+  return el('accessory', [
+    el('sourceid', data?.val('id') || '00000000-0000-0000-0000-000000000000'), el('guid', guid), el('name', data ? data.val('name') : x.name), el('mount', mount || 'None'),
+    el('extramount', d('extramount', 'None')), el('rc', d('rc', fx.rc ? String(fx.rc) : '')), el('maxrating', d('rating', '0')), el('rating', String(x.rating || 0)),
+    el('ratinglabel', 'String_Rating'), el('rcgroup', d('rcgroup', String(fx.rcGroup || 0))), el('rcdeployable', d('rcdeployable', 'False')), el('specialmodification', d('specialmodification', 'False')),
+    el('conceal', d('conceal', '0')), el('avail', d('avail', x.avail || '0')), el('cost', d('cost', fmtNum(x.cost || 0))), el('included', B(!!x.included)), el('equipped', B(x.equipped !== false)),
+    el('source', d('source', 'SR5')), el('page', d('page', '0')), el('accuracy', d('accuracy', String(fx.smartgun ? 2 : fx.accuracy || 0))),
+    el('ammoreplace', ''), el('ammoslots', d('ammoslots', '0')), el('modifyammocapacity', ''), el('damagetype', ''), el('damage', ''), el('damagereplace', ''), el('firemode', ''), el('firemodereplace', ''),
+    el('ap', ''), el('apreplace', ''), el('notes', x.notes || ''), el('discountedcost', 'False'), el('addmode', ''), el('singleshot', '0'), el('shortburst', '0'), el('longburst', '0'),
+    el('fullburst', '0'), el('suppressive', '0'), el('rangebonus', '0'), el('rangemodifier', '0'), el('extra', extraOf(x, data)), el('ammobonus', '0'), el('wirelesson', 'False'), el('wirelessbonus', ''),
+    el('stolen', 'False'), el('sortorder', '0'),
+  ]);
+}
+
+function buildArmorMod(m, guid) {
+  const data = resolveData('armormods', m);
+  const d = (k, fb = '') => (data ? data.val(k) : '') || fb;
+  const bonus = data?.child('bonus') ? data.child('bonus').clone() : el('bonus');
+  return el('armormod', [
+    el('sourceid', data?.val('id') || '00000000-0000-0000-0000-000000000000'), el('guid', guid), el('name', data ? data.val('name') : m.name), el('category', d('category', 'General')),
+    el('armor', d('armor', String(m.effects?.armor || 0))), el('armorcapacity', m.included ? '[0]' : d('armorcapacity', `[${fmtNum(m.capacity || 0)}]`)), el('gearcapacity', ''),
+    el('maxrating', d('maxrating', '0')), el('rating', String(m.rating || 0)), el('ratinglabel', 'String_Rating'), el('avail', d('avail', m.avail || '0')), el('cost', m.included ? '0' : d('cost', fmtNum(m.cost || 0))),
+    bonus, el('wirelessbonus', ''), el('wirelesson', 'False'), el('source', d('source', 'SR5')), el('page', d('page', '0')), el('included', B(!!m.included)), el('equipped', B(m.equipped !== false)),
+    el('extra', extraOf(m, data)), el('stolen', 'False'), el('notes', m.notes || ''), el('discountedcost', 'False'), el('sortorder', '0'),
+  ]);
+}
+
+function buildVehicleMod(m, guid) {
+  const data = resolveData('vehiclemods', m);
+  const d = (k, fb = '') => (data ? data.val(k) : '') || fb;
+  const bonus = data?.child('bonus') ? data.child('bonus').clone() : el('bonus');
+  return el('mod', [
+    el('sourceid', data?.val('id') || '00000000-0000-0000-0000-000000000000'), el('guid', guid), el('name', data ? data.val('name') : m.name), el('category', d('category', m.category || 'Body')),
+    el('limit', ''), el('slots', d('slots', fmtNum(m.slots || 0))), el('capacity', ''), el('rating', String(m.rating || 0)), el('maxrating', d('rating', '0')), el('ratinglabel', 'String_Rating'),
+    el('conditionmonitor', '0'), el('avail', d('avail', m.avail || '0')), el('cost', d('cost', fmtNum(m.cost || 0))), el('markup', '0'), el('extra', extraOf(m, data)), el('source', d('source', 'R5')), el('page', d('page', '0')),
+    el('included', B(!!m.included)), el('equipped', 'True'), el('wirelesson', 'False'), el('subsystems', ''), el('weaponmountcategories', ''), el('ammobonus', '0'), el('ammobonuspercent', '0'),
+    el('ammoreplace', ''), el('weapons', ''), bonus, el('notes', m.notes || ''), el('discountedcost', 'False'), el('sortorder', '0'), el('stolen', 'False'),
+  ]);
+}
+
+function buildTechnique(t, guid) {
+  const data = resolveData('techniques', t);
+  return el('martialarttechnique', [
+    el('guid', guid), el('sourceid', data?.val('id') || '00000000-0000-0000-0000-000000000000'), el('name', data ? data.val('name') : t.name), el('notes', t.notes || ''),
+    el('notesColor', 'Chocolate'), el('source', data?.val('source') || 'RG'), el('page', data?.val('page') || '0'),
+  ]);
+}
+
+function buildMartialArt(item, data, guid, assignSub) {
+  return el('martialart', [
+    el('name', data ? data.val('name') : item.name), el('sourceid', data?.val('id') || '00000000-0000-0000-0000-000000000000'), el('guid', guid),
+    el('source', data?.val('source') || 'RG'), el('page', data?.val('page') || '0'), el('rating', String(item.rating || 1)), el('cost', '7'), el('isquality', 'False'),
+    el('martialarttechniques', subNodes('martialArts', item, assignSub)), el('notes', item.notes || ''), el('notesColor', 'Chocolate'),
+  ]);
+}
+
+/** Nested lists of list items: where they live in the item node and how to build a new one. */
+const SUB_SPECS = {
+  weapons: { sub: 'accessories', container: 'accessories', node: 'accessory', build: buildAccessory },
+  armor: { sub: 'mods', container: 'armormods', node: 'armormod', build: buildArmorMod },
+  vehicles: { sub: 'mods', container: 'mods', node: 'mod', build: buildVehicleMod },
+  lifestyles: { sub: 'qualities', container: 'lifestylequalities', node: 'lifestylequality', build: buildLifestyleQuality },
+  martialArts: { sub: 'techniques', container: 'martialarttechniques', node: 'martialarttechnique', build: buildTechnique },
+};
+/** New nodes for the nested items of a NEW item node (a sub-item keeps its guid, else gets one recorded with assignSub). */
+function subNodes(list, it, assignSub = () => {}) {
+  const spec = SUB_SPECS[list];
+  return (Array.isArray(it[spec.sub]) ? it[spec.sub] : []).map((x) => {
+    const guid = x.chummerGuid || newGuid();
+    if (!x.chummerGuid) assignSub(x, guid);
+    return spec.build(x, guid);
+  });
+}
+const noIds = (list) => (list || []).map(({ id, ...rest }) => rest);
+
+/**
+ * Bring the nested nodes of an item node in line with the app item: sub-items removed in the app (by guid) are deleted,
+ * new ones (no node with their guid) are built and their guid recorded with assignSub(subItem, guid).
+ */
+function syncSubs(list, node, it, was, assignSub) {
+  const spec = SUB_SPECS[list];
+  if (!spec) return;
+  const want = Array.isArray(it[spec.sub]) ? it[spec.sub] : [];
+  const had = Array.isArray(was?.[spec.sub]) ? was[spec.sub] : [];
+  if (eq(noIds(want), noIds(had))) return;
+  let cont = node.child(spec.container);
+  if (!cont) {
+    if (!want.length) return;
+    cont = node.append(el(spec.container)).child(spec.container);
+  }
+  const byGuid = new Map(cont.all(spec.node).map((n) => [n.val('guid').trim().toLowerCase(), n]));
+  const keep = new Set(want.map((x) => x.chummerGuid).filter(Boolean));
+  for (const h of had) if (h.chummerGuid && !keep.has(h.chummerGuid) && byGuid.has(h.chummerGuid)) cont.remove(byGuid.get(h.chummerGuid));
+  const hadBy = new Map(had.filter((h) => h.chummerGuid).map((h) => [h.chummerGuid, h]));
+  for (const x of want) {
+    const n = x.chummerGuid && byGuid.get(x.chummerGuid);
+    if (n) {
+      const h = hadBy.get(x.chummerGuid);
+      if (h && !eq(x.rating || 0, h.rating || 0) && n.has('rating')) n.set('rating', String(x.rating || 0));
+      if (h && !eq(x.notes || '', h.notes || '') && n.has('notes') && !/^\s*\{\\rtf/.test(n.val('notes'))) n.set('notes', x.notes || '');
+      continue;
+    }
+    const guid = newGuid();
+    cont.children.push(spec.build(x, guid));
+    assignSub(x, guid);
+  }
 }
 
 function buildSkill(def, guid) {
@@ -550,6 +709,10 @@ export function exportChum5(actor, { now = Date.now(), mugshots = null } = {}) {
   const assign = (list, item, guid) => {
     (assigned[list] ||= {})[item.id] = guid;
   };
+  // Nested items (accessories, mods, lifestyle qualities, techniques): assigned.sub[subItemId] = guid.
+  const assignSub = (x, guid) => {
+    if (x?.id) (assigned.sub ||= {})[x.id] = guid;
+  };
   const changed = (k) => !eq(actor[k], base[k]);
 
   // --- identity & text
@@ -650,6 +813,7 @@ export function exportChum5(actor, { now = Date.now(), mugshots = null } = {}) {
       const was = it.chummerGuid && baseItems.get(it.chummerGuid);
       if (hit && was) {
         patchItem(list, hit.node, it, was);
+        syncSubs(list, hit.node, it, was, assignSub);
         continue;
       }
       if (hit) continue; // present in the file but not mapped by the parser (should not happen): leave it alone
@@ -663,7 +827,7 @@ export function exportChum5(actor, { now = Date.now(), mugshots = null } = {}) {
         }
       }
       const guid = it.chummerGuid || newGuid();
-      const node = buildItem(list, spec, it, guid, warnings);
+      const node = buildItem(list, spec, it, guid, warnings, assignSub);
       if (!node) continue;
       container(c, spec.container).children.push(node);
       assign(list, it, guid);
@@ -672,19 +836,6 @@ export function exportChum5(actor, { now = Date.now(), mugshots = null } = {}) {
 
   // --- matrix device (generate mode only: in patch mode the device already is a gear item)
   if (mode === 'generate' && actor.matrix?.device) addMatrixDevice(c, actor, warnings);
-
-  // --- lifestyle
-  const ls = actor.lifestyle;
-  if (ls && ls.name) {
-    const hit = ls.chummerGuid && idx.get(ls.chummerGuid);
-    if (hit) {
-      if (!eq(ls.monthsPaid, base.lifestyle?.monthsPaid)) hit.node.set('months', String(ls.monthsPaid ?? 0));
-    } else {
-      const guid = ls.chummerGuid || newGuid();
-      container(c, 'lifestyles').children.push(buildLifestyle(ls, guid));
-      (assigned.lifestyle ||= {}).guid = guid;
-    }
-  }
 
   // --- money, karma & the career log
   const careerBefore = careerKarmaOf(c);
@@ -745,15 +896,15 @@ export function detachMugshots(xml, save) {
   return { xml: serializeXml(doc), urls, mainIndex: num(doc.root.val('mainmugshotindex'), 0) };
 }
 
-function buildItem(list, spec, it, guid, warnings) {
+function buildItem(list, spec, it, guid, warnings, assignSub) {
   const kind = spec.kind(it);
   const data = kind ? resolveData(kind, it) : null;
-  if (!data && ['weapons', 'armor', 'vehicles', 'powers', 'spells', 'complexForms'].includes(list)) warnings.missing.push(it.name);
+  if (!data && ['weapons', 'armor', 'vehicles', 'powers', 'spells', 'complexForms', 'martialArts'].includes(list)) warnings.missing.push(it.name);
   switch (list) {
     case 'weapons':
-      return buildWeapon(it, data, guid);
+      return buildWeapon(it, data, guid, assignSub);
     case 'armor':
-      return buildArmor(it, data, guid);
+      return buildArmor(it, data, guid, assignSub);
     case 'augmentations': {
       const d = data || resolveData(kind === 'bioware' ? 'cyberware' : 'bioware', it);
       const k = d && d.name === 'bioware' ? 'bioware' : d ? 'cyberware' : kind;
@@ -766,7 +917,7 @@ function buildItem(list, spec, it, guid, warnings) {
     case 'sins':
       return buildSin(it, guid);
     case 'vehicles':
-      return buildVehicle(it, data, guid);
+      return buildVehicle(it, data, guid, assignSub);
     case 'contacts':
       return buildContact(it, guid);
     case 'qualities':
@@ -778,6 +929,10 @@ function buildItem(list, spec, it, guid, warnings) {
       return buildSpell(it, data, guid);
     case 'complexForms':
       return buildComplexForm(it, data, guid);
+    case 'lifestyles':
+      return buildLifestyle(it, guid, assignSub);
+    case 'martialArts':
+      return buildMartialArt(it, data, guid, assignSub);
     default:
       return null;
   }
@@ -798,6 +953,13 @@ function patchItem(list, node, it, was) {
   }
   if (list === 'powers' && diff('level')) node.set('rating', String(it.level || 1));
   if (list === 'vehicles' && diff('name') && node.has('vehiclename')) node.set('vehiclename', it.name);
+  if (list === 'lifestyles') {
+    if (diff('monthsPaid')) node.set('months', String(it.monthsPaid ?? 0));
+    if (diff('name')) node.set('name', it.name || node.val('baselifestyle'));
+    if (diff('baseCost')) node.set('cost', fmtNum(Math.max(0, num(node.val('cost')) + num(it.baseCost) - num(was.baseCost))));
+    if (diff('notes') && !/^\s*\{\\rtf/.test(node.val('notes'))) node.set('notes', it.notes || '');
+  }
+  if (list === 'martialArts' && diff('rating')) node.set('rating', String(it.rating || 1));
 }
 
 function addMatrixDevice(c, actor, warnings) {

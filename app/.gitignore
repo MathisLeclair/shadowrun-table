@@ -10,3 +10,8 @@ data/deleted/
 data/tmp/
 runtime/
 .env
+# Rulebook PDFs + text index (the owner's purchased books: never in git)
+data/books/
+runtime/books/
+# HMAC key of the rulebook PDF links (per install, never copied)
+data/books-sign.key

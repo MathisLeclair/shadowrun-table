@@ -8,6 +8,7 @@ import { attr } from '/shared/sr5.js';
 import { t, tn, tk, logText, attrShort, attrLabel, getLang } from '../../lib/i18n.js';
 import { isGM, ownsActor, DiceFaces, RollBadges, fmtTime, rollLabel, rollBreakdown, skillName } from './common.js';
 import { RollDialog } from './RollDialog.js';
+import { BookRef } from '../books/BookRef.js';
 
 loadCss('/modules/sheet/sheet.css');
 
@@ -89,6 +90,7 @@ function LogEntry({ e, game, gm }) {
             ${canSecond && html`<button type="button" class="ld-second" title=${t('Relancer les dés sans succès (1 point de Chance)')}
               onClick=${() => send('dice/secondChance', { logId: e.id }).catch(() => {})}>${t('2ᵉ chance')}</button>`}
           </div>
+          ${Array.isArray(r.mods) && r.mods.some((m) => m.state === 'applied') && html`<div class="ld-roll-mods">${r.mods.filter((m) => m.state === 'applied').map((m) => html`<span class="faint small" key=${m.kind + m.id}>${m.name} ${m.value >= 0 ? '+' : '−'}${Math.abs(m.value)}${m.kind === 'limit' ? ` (${t('limite')})` : ''}${m.book ? html` <${BookRef} source=${m.book} page=${m.page} />` : null}</span>`)}</div>`}
         </div>`
       : html`<div class="ld-text">${logText(e)}</div>`}
   </div>`;

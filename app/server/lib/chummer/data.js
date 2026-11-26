@@ -147,6 +147,12 @@ export const DATA_FILES = {
   lifestyles: ['lifestyles.xml', 'lifestyles', 'lifestyle'],
   vehicles: ['vehicles.xml', 'vehicles', 'vehicle'],
   complexforms: ['complexforms.xml', 'complexforms', 'complexform'],
+  lifestylequalities: ['lifestyles.xml', 'qualities', 'quality'],
+  accessories: ['weapons.xml', 'accessories', 'accessory'],
+  armormods: ['armor.xml', 'mods', 'mod'],
+  vehiclemods: ['vehicles.xml', 'mods', 'mod'],
+  martialarts: ['martialarts.xml', 'martialarts', 'martialart'],
+  techniques: ['martialarts.xml', 'techniques', 'technique'],
 };
 
 const indexCache = new Map();
@@ -217,6 +223,7 @@ export function appCatalog(name) {
 export const KIND_CATALOGS = {
   weapons: ['weapons'], armor: ['armor'], gear: ['gear', 'programs'], cyberware: ['cyberware'], bioware: ['bioware'],
   qualities: ['qualities'], powers: ['powers'], spells: ['spells'], lifestyles: ['lifestyles'], vehicles: ['vehicles'], complexforms: [],
+  lifestylequalities: ['lifestylequalities'], accessories: ['accessories'], armormods: ['armormods'], vehiclemods: ['vehiclemods'], martialarts: ['martialarts'], techniques: [],
 };
 
 /** App catalog entry by GUID or by English/French name. */

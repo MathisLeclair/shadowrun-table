@@ -5,7 +5,7 @@ import { send } from '../../lib/net.js';
 import { toast } from '../../lib/ui-store.js';
 import { t, skillLabel } from '../../lib/i18n.js';
 import { SKILLS } from '/shared/sr5.js';
-import { SHOP_FILES, FILE_LABELS, GRADE_IDS } from './rules.js';
+import { SHOP_FILES, FILE_LABELS, GRADE_IDS, UPGRADE_FILES } from './rules.js';
 import { nuyen, gradeLabel } from './common.js';
 
 const settings = (patch) => send('shop/updateSettings', patch).catch(() => {});
@@ -47,7 +47,7 @@ export function SettingsPanel({ game }) {
   </div>`;
 }
 
-const fileOptions = () => SHOP_FILES.filter((f) => f !== 'lifestyles').map((f) => ({ value: f, label: fileLabel(f) }));
+const fileOptions = () => SHOP_FILES.filter((f) => f !== 'lifestyles' && !UPGRADE_FILES[f]).map((f) => ({ value: f, label: fileLabel(f) }));
 const skillOptions = () => SKILLS.filter((s) => s.cat === 'combat').map((s) => ({ value: s.id, label: skillLabel(s) }));
 
 function SpecialEditor({ sp, game }) {

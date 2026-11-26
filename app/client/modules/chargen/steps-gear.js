@@ -1,14 +1,16 @@
 // Wizard step: Équipement & cyberware (shop catalog, resources budget, availability ≤ 12, Essence, lifestyle).
 import { useMemo, useState } from 'preact/hooks';
 import { html, Button, Select, NumberInput, Panel, IconButton, Toggle, SearchBox, Empty, Field, Stat, Badge } from '../../lib/ui.js';
-import { SECTIONS, quote, allowedGrades, GRADES, clampRating, fold } from '../shop/rules.js';
+import { STORE_SECTIONS, quote, allowedGrades, GRADES, clampRating, fold, targetList, upgradeAvail, MOUNT_LABELS, armorCapacity } from '../shop/rules.js';
 import { AvailBadge } from '../shop/common.js';
 import { statRows } from '../shop/ItemDetail.js';
-import { CREATION_GRADES, LIMITS, rowId } from '/shared/chargen.js';
+import { CREATION_GRADES, CREATION_UPGRADES, LIMITS, rowId } from '/shared/chargen.js';
 import { t, itemName, compare, fmtNumber } from '../../lib/i18n.js';
 import { Budget, StepIssues, nuyen } from './common.js';
+import { ItemRef } from '../books/BookRef.js';
 
-const GEAR_SECTIONS = SECTIONS.filter((s) => s.id !== 'lifestyles');
+// Creation sections: the shop's, with weapon accessories and armor mods (installed on a weapon / armor of the draft).
+const GEAR_SECTIONS = STORE_SECTIONS.filter((s) => !['lifestyles', 'vehiclemods', 'martialarts'].includes(s.id));
 const PAGE = 40;
 const memo = { section: 'weapons', category: '', q: '', availOk: true };
 
@@ -70,7 +72,7 @@ export function StepGear({ data, update, result, issues, rc }) {
             <thead><tr><th>${t('Article')}</th><th>${t('Catégorie')}</th><th>${t('Dispo')}</th><th class="right">${t('Prix')}</th></tr></thead>
             <tbody>
               ${shown.map(({ e, qt }) => html`<tr key=${e.ref} class=${'cg-gear-row' + (sel === e.ref ? ' sel' : '')} onClick=${() => setSel(e.ref)}>
-                <td><strong>${e.name}</strong>${e.item.rating ? html` <span class="faint small">${t('ind. {min}–{max}', { min: e.item.rating.min, max: e.item.rating.max })}</span>` : ''}</td>
+                <td><strong>${e.name}</strong> <${ItemRef} item=${e.item} />${e.item.rating ? html` <span class="faint small">${t('ind. {min}–{max}', { min: e.item.rating.min, max: e.item.rating.max })}</span>` : ''}</td>
                 <td class="small muted">${e.category}</td>
                 <td><${AvailBadge} avail=${qt.avail} value=${qt.availValue} legality=${qt.legality} max=${LIMITS.maxAvail} /></td>
                 <td class="num-cell">${e.item.costRange ? t('variable') : nuyen(qt.unitCost)}</td>
@@ -82,7 +84,7 @@ export function StepGear({ data, update, result, issues, rc }) {
         </div>
       </div>
       <div class="cg-gear-side">
-        ${sel && shop.byId.get(sel) && html`<${GearDetail} key=${sel} entry=${shop.byId.get(sel)} essence=${r.essence} onClose=${() => setSel(null)}
+        ${sel && shop.byId.get(sel) && html`<${GearDetail} key=${sel} entry=${shop.byId.get(sel)} essence=${r.essence} lines=${r.gearLines} onClose=${() => setSel(null)}
           onAdd=${(line) => update((d) => d.gear.push({ id: rowId('g'), ...line }))} />`}
         <${Panel} title=${t('Achats ({n})', { n: data.gear.length })} pad=${false}>
           <table class="sr cg-cart">
@@ -90,9 +92,9 @@ export function StepGear({ data, update, result, issues, rc }) {
               ${r.gearLines.map((l) => {
                 const row = l.row;
                 return html`<tr key=${row.id}>
-                  <td><strong>${l.item ? itemName(l.item) : l.name}</strong>
-                    <div class="small muted">${[l.quote?.rating ? t('ind. {n}', { n: l.quote.rating }) : '', l.quote?.grade && l.quote.grade !== 'standard' && GRADES[l.quote.grade] ? t(GRADES[l.quote.grade].label) : '', l.essence ? t('ess. {n}', { n: fmtNumber(l.essence) }) : '', l.quote ? l.quote.avail : ''].filter(Boolean).join(' · ')}</div></td>
-                  <td>${l.file === 'cyberware' || l.file === 'bioware' ? '' : html`<${NumberInput} small value=${row.qty} min=${1} max=${99} onChange=${(v) => setLine(row.id, 'qty', v)} />`}</td>
+                  <td><strong>${l.item ? itemName(l.item) : l.name}</strong> <${ItemRef} item=${l.item} />
+                    <div class="small muted">${[l.quote?.rating ? t('ind. {n}', { n: l.quote.rating }) : '', l.quote?.grade && l.quote.grade !== 'standard' && GRADES[l.quote.grade] ? t(GRADES[l.quote.grade].label) : '', l.essence ? t('ess. {n}', { n: fmtNumber(l.essence) }) : '', l.quote ? l.quote.avail : '', l.target ? t('sur {target}', { target: l.target.name }) : '', l.mount && MOUNT_LABELS[l.mount] ? t(MOUNT_LABELS[l.mount]) : ''].filter(Boolean).join(' · ')}</div></td>
+                  <td>${l.file === 'cyberware' || l.file === 'bioware' || l.upgrade ? '' : html`<${NumberInput} small value=${row.qty} min=${1} max=${99} onChange=${(v) => setLine(row.id, 'qty', v)} />`}</td>
                   <td class="num-cell">${l.total !== undefined ? nuyen(l.total) : '—'}</td>
                   <td><${IconButton} icon="✕" title=${t('Retirer')} onClick=${() => update((d) => (d.gear = d.gear.filter((x) => x.id !== row.id)))} /></td>
                 </tr>`;
@@ -131,18 +133,30 @@ export function StepGear({ data, update, result, issues, rc }) {
   </div>`;
 }
 
-function GearDetail({ entry, essence, onAdd, onClose }) {
+function GearDetail({ entry, essence, lines = [], onAdd, onClose }) {
   const item = entry.item;
   const ware = entry.file === 'cyberware' || entry.file === 'bioware';
+  // Weapon accessory / armor mod: installed on a weapon / armor already in the cart (price and fit depend on it).
+  const up = CREATION_UPGRADES[entry.file] || null;
+  const targets = up ? lines.filter((l) => !l.upgrade && l.file === up.file && l.item && l.quote && targetList(l.file, l.item) === up.list) : [];
+  const [targetRow, setTargetRow] = useState(targets[0]?.row.id || '');
+  const [mount, setMount] = useState('');
+  const tl = targets.find((l) => l.row.id === targetRow) || null;
   const grades = ware ? allowedGrades(item).filter((g) => CREATION_GRADES.includes(g)) : [];
   const [rating, setRating] = useState(item.rating ? item.rating.min : null);
   const [grade, setGrade] = useState(ware ? (grades.includes('standard') ? 'standard' : grades[0] || 'standard') : null);
   const [qty, setQty] = useState(1);
   let qt = null;
   try {
-    qt = quote(item, { rating, grade: grade || undefined });
+    if (!up) qt = quote(item, { rating, grade: grade || undefined });
+    else if (tl) {
+      const tst = tl.item.stats || {};
+      const vars = up.file === 'weapons' ? { WeaponCost: tl.quote.unitCost || 0 } : { ArmorCost: tl.quote.unitCost || 0, Capacity: armorCapacity({ capacity: tst.capacity, rating: Number(tst.armor) || 0 }, tl.item) };
+      qt = upgradeAvail(quote(item, { rating, vars }), item, tl.quote);
+    }
   } catch {}
   const rows = statRows(entry.file, item, item.stats, qt);
+  const mounts = up?.file === 'weapons' && Array.isArray(item.stats?.mount) ? item.stats.mount : [];
   const over = qt && qt.availValue > LIMITS.maxAvail;
   const essAfter = ware && qt ? Math.round((essence - (qt.essence || 0) * qty) * 1000) / 1000 : null;
   return html`<${Panel} title=${entry.name} actions=${html`<${IconButton} icon="✕" title=${t('Fermer')} onClick=${onClose} />`} class="cg-mb">
@@ -152,7 +166,10 @@ function GearDetail({ entry, essence, onAdd, onClose }) {
       <div class="row wrap">
         ${item.rating && html`<${Field} label=${t('Indice')}><${NumberInput} value=${rating} min=${item.rating.min} max=${item.rating.max} onChange=${(v) => setRating(clampRating(item, v))} /></${Field}>`}
         ${ware && html`<${Field} label=${t('Grade')}><${Select} value=${grade} onChange=${setGrade} options=${grades.map((g) => ({ value: g, label: t(GRADES[g].label) }))} /></${Field}>`}
-        ${!ware && html`<${Field} label=${t('Quantité')}><${NumberInput} value=${qty} min=${1} max=${99} onChange=${setQty} /></${Field}>`}
+        ${!ware && !up && html`<${Field} label=${t('Quantité')}><${NumberInput} value=${qty} min=${1} max=${99} onChange=${setQty} /></${Field}>`}
+        ${up && html`<${Field} label=${up.file === 'weapons' ? t('Sur l’arme') : t('Sur l’armure')}>
+          <${Select} value=${targetRow} onChange=${setTargetRow} options=${targets.length ? targets.map((l) => ({ value: l.row.id, label: itemName(l.item) })) : [{ value: '', label: up.file === 'weapons' ? t('— Ajoute d’abord une arme —') : t('— Ajoute d’abord une armure —') }]} /></${Field}>`}
+        ${mounts.length > 1 && html`<${Field} label=${t('Emplacement')}><${Select} value=${mount} onChange=${setMount} options=${[{ value: '', label: t('Automatique') }, ...mounts.map((m) => ({ value: m, label: MOUNT_LABELS[m] ? t(MOUNT_LABELS[m]) : m }))]} /></${Field}>`}
       </div>
       ${qt && html`<div class="spread row">
         <span><${AvailBadge} avail=${qt.avail} value=${qt.availValue} legality=${qt.legality} max=${LIMITS.maxAvail} />
@@ -160,7 +177,7 @@ function GearDetail({ entry, essence, onAdd, onClose }) {
         <strong class="mono amber">${item.costRange ? t('Prix variable') : nuyen(qt.unitCost * qty)}</strong>
       </div>`}
       ${over && html`<div class="cg-note err">${t('Disponibilité {avail} : au-dessus de {max}, interdit à la création.', { avail: qt.avail, max: LIMITS.maxAvail })}</div>`}
-      <${Button} variant="primary" disabled=${!qt || over} onClick=${() => onAdd({ ref: item.id, file: entry.file, name: item.nameFr || item.name, qty: ware ? 1 : qty, rating: item.rating ? rating : null, grade: ware ? grade : null })}>+ ${t('Ajouter')}</${Button}>
+      <${Button} variant="primary" disabled=${!qt || over || (up && !tl)} onClick=${() => onAdd({ ref: item.id, file: entry.file, name: item.nameFr || item.name, qty: ware || up ? 1 : qty, rating: item.rating ? rating : null, grade: ware ? grade : null, ...(up ? { target: targetRow, ...(mount ? { mount } : {}) } : {}) })}>+ ${t('Ajouter')}</${Button}>
     </div>
   </${Panel}>`;
 }

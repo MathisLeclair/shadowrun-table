@@ -23,3 +23,7 @@ app/data/deleted/
 app/data/tmp/
 app/runtime/
 app/.env
+# Rulebook library (purchased PDFs + extracted text): never in git
+app/data/books/
+app/runtime/books/
+setup/

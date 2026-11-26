@@ -545,5 +545,15 @@
   "Goule": "Ghoul",
   "Métahumains infectés par le VIHMH, aveugles mais redoutables.": "Metahumans infected with HMHVV, blind but fearsome.",
   "contact::Influence": "Connection",
-  "karma::Départ": "Starting"
+  "karma::Départ": "Starting",
+  "sur {target}": "on {target}",
+  "Sur l’arme": "On weapon",
+  "Sur l’armure": "On armor",
+  "— Ajoute d’abord une arme —": "— Add a weapon first —",
+  "— Ajoute d’abord une armure —": "— Add an armor first —",
+  "{name} : choisis l’arme sur laquelle l’installer.": "{name}: choose the weapon to install it on.",
+  "{name} : choisis l’armure sur laquelle l’installer.": "{name}: choose the armor to install it on.",
+  "Emplacement": "Mount",
+  "Automatique": "Automatic",
+  "Table des priorités": "Priority table"
 }

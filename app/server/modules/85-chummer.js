@@ -7,12 +7,13 @@ import path from 'node:path';
 import express from 'express';
 import { currentUploadDir, currentUploadUrl, localFileForUrl } from '../store.js';
 import { uid, deepClone } from '../../shared/util.js';
-import { normalizeActor, slugify } from '../../client/modules/sheet/sheet-data.js';
+import { normalizeActor, slugify, SUB_LISTS } from '../../client/modules/sheet/sheet-data.js';
 import { parseChum5, sha1, ChummerError } from '../lib/chummer/parse.js';
 import { exportChum5, detachMugshots } from '../lib/chummer/export.js';
 import { mergeActor, diffActors } from '../lib/chummer/merge.js';
 import { errorBody, formatFr } from '../lib/i18n.js';
 import { errorParam } from '../lib/chummer/messages.js';
+import { fillActorRefs } from '../lib/bookrefs.js';
 
 const tk = (s) => s; // marks French keys used as values (tools/i18n-check.js)
 /** HTTP error body for an error that may carry an i18n key (Chummer/XML errors). */
@@ -117,6 +118,7 @@ function prepareUpdate(actor, rawXml, fileName, now, mugshots = null) {
     if (!merged.portrait) merged.portrait = det.urls[det.mainIndex] || det.urls[0];
   }
   normalizeActor(merged, uid);
+  fillActorRefs(merged); // 📖 items added in the app since the last sync, items without <source> in the file
   return { merged, diff: diffActors(actor, merged), warnings: parsed.warnings, warningsI18n: parsed.warningsI18n, info: parsed.info, linked: !!base, xml: det.xml, mugshots: det.urls };
 }
 
@@ -216,8 +218,14 @@ export default {
         if (!a) ctx.fail('Personnage introuvable');
         if (!a.chummer) ctx.fail('Ce personnage n’est lié à aucun fichier Chummer');
         delete a.chummer;
-        for (const list of Object.values(a)) if (Array.isArray(list)) for (const it of list) if (isObj(it)) delete it.chummerGuid;
-        if (a.lifestyle) delete a.lifestyle.chummerGuid;
+        for (const list of Object.values(a)) {
+          if (!Array.isArray(list)) continue;
+          for (const it of list) {
+            if (!isObj(it)) continue;
+            delete it.chummerGuid;
+            for (const sub of Object.values(it)) if (Array.isArray(sub)) for (const x of sub) if (isObj(x)) delete x.chummerGuid; // accessories, mods…
+          }
+        }
         return true;
       },
     },
@@ -286,6 +294,7 @@ export default {
       actor.id = id;
       if (type === 'npc') actor.color ||= '#e05c5c';
       normalizeActor(actor, uid);
+      fillActorRefs(actor);
       state.actors[id] = actor;
       addLog({ kind: 'system', author: 'MJ', i18n: { key: actor.chummer ? tk('Fiche importée : {actor} (Chummer).') : tk('Fiche importée : {actor}.'), params: { actor: actor.name } }, gmOnly: true });
       done();
@@ -394,12 +403,12 @@ export default {
       // Remember the guids given to new items and keep the exported file as the new sync base, so the
       // file the player edits in Chummer can be merged back precisely.
       for (const [list, map] of Object.entries(result.assigned)) {
-        if (list === 'lifestyle') {
-          if (actor.lifestyle) actor.lifestyle.chummerGuid = map.guid;
-          continue;
-        }
+        if (list === 'sub') continue;
         for (const it of actor[list] || []) if (map[it.id]) it.chummerGuid = map[it.id];
       }
+      // Nested items (weapon accessories, armor/vehicle mods, lifestyle qualities, techniques)
+      const subMap = result.assigned.sub || {};
+      for (const [list, sub] of Object.entries(SUB_LISTS)) for (const it of actor[list] || []) for (const x of Array.isArray(it[sub]) ? it[sub] : []) if (subMap[x.id]) x.chummerGuid = subMap[x.id];
       const fileBase = (actor.name || 'personnage').replace(/[<>:"/\\|?*\u0000-\u001f]+/g, '_').trim() || 'personnage';
       actor.chummer = {
         ...(actor.chummer || {}), xml: stored.xml, ...(stored.urls.length ? { mugshots: stored.urls } : {}), fileName: actor.chummer?.fileName || `${fileBase}.chum5`, exportedAt: now, syncedAt: now,

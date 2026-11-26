@@ -4,10 +4,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { evalFormula } from '../../client/modules/shop/rules.js';
+import { bonusFromEffects, importedItem } from '../../shared/modifiers.js';
+import { effectsLookup } from './modifiers.js';
 
 const CATALOG_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'data', 'catalog');
 
-/** Apply a catalog bonus ({ attributes: { REA: 'Rating' }, initiativeDice: 'Rating' }) and return what was applied. */
+/**
+ * Apply a catalog bonus ({ attributes: { REA: 'Rating' }, initiativeDice: 'Rating', initiative: 'FixedValues(3,6,9)' }) and return
+ * what was applied (same shape, numbers) — stored on the item as item.bonus so removal / rating changes reverse exactly that.
+ */
 export function applyBonus(actor, bonus, rating, sign = 1) {
   if (!bonus) return undefined;
   const applied = {};
@@ -33,10 +38,21 @@ export function applyBonus(actor, bonus, rating, sign = 1) {
       applied.initiativeDice = v;
     }
   }
+  if (bonus.initiative) {
+    let v = 0;
+    try {
+      v = Math.round(evalFormula(bonus.initiative, { Rating: rating ?? 1 }));
+    } catch {}
+    if (v) {
+      actor.initiative = actor.initiative || { dice: 1, bonus: 0 };
+      actor.initiative.bonus = (Number(actor.initiative.bonus) || 0) + v * sign;
+      applied.initiative = v;
+    }
+  }
   return Object.keys(applied).length ? applied : undefined;
 }
 
-/** Reverse a bonus previously returned by applyBonus (stored on the augmentation / power). */
+/** Reverse a bonus previously returned by applyBonus (stored on the augmentation / power / quality). */
 export function removeBonus(actor, applied) {
   if (!applied) return;
   for (const [k, v] of Object.entries(applied.attributes || {})) {
@@ -45,6 +61,38 @@ export function removeBonus(actor, applied) {
     if (!actor.augmented[k]) delete actor.augmented[k];
   }
   if (applied.initiativeDice && actor.initiative) actor.initiative.dice = Math.max(1, Math.min(5, (Number(actor.initiative.dice) || 1) - applied.initiativeDice));
+  if (applied.initiative && actor.initiative) actor.initiative.bonus = (Number(actor.initiative.bonus) || 0) - applied.initiative;
+}
+
+const BONUS_FILES = { augmentations: ['cyberware', 'bioware'], powers: ['powers'], qualities: ['qualities'] };
+/** Rating used for « Rating » in an item's bonus (powers: level). */
+export const bonusRating = (list, item) => (list === 'powers' ? Number(item?.level) || 1 : Number(item?.rating ?? item?.level) || 1);
+
+/**
+ * Attribute / initiative bonus of an actor item (augmentation, adept power, quality) from its catalog effects
+ * (data/catalog/effects.json, matched by catalogId or name: initiative score, « select attribute » choice included),
+ * else `fallback` (the catalog's stats.bonus). Formulas, evaluated by applyBonus with the item's rating.
+ */
+export function itemBonusSpec(list, item, fallback) {
+  const files = list === 'augmentations' && item?.kind === 'bioware' ? ['bioware', 'cyberware'] : BONUS_FILES[list] || [];
+  const lookup = effectsLookup();
+  for (const f of files) {
+    const e = lookup(f, item?.catalogId, item?.name) || (item?.nameFr ? lookup(f, null, item.nameFr) : null);
+    if (e) return bonusFromEffects(e.effects, item);
+  }
+  return fallback || undefined;
+}
+
+/**
+ * Store an item's attribute / initiative bonus on the actor (actor.augmented / actor.initiative) and record it on item.bonus,
+ * replacing what the item recorded before (rating / level / choice change). Imported items are left alone: the import stored theirs.
+ */
+export function bakeItemBonus(actor, list, item, fallback) {
+  if (!item || importedItem(item)) return;
+  removeBonus(actor, item.bonus);
+  delete item.bonus;
+  const applied = applyBonus(actor, itemBonusSpec(list, item, fallback), bonusRating(list, item), 1);
+  if (applied) item.bonus = applied;
 }
 
 export function weaponFromStats(ctx, name, category, st, extra = {}) {
@@ -98,12 +146,13 @@ function bonusTotals(bonus, level) {
     } catch {}
     if (v) (out.attributes = out.attributes || {})[k] = v;
   }
-  if (bonus.initiativeDice) {
+  for (const k of ['initiativeDice', 'initiative']) {
+    if (!bonus[k]) continue;
     let v = 0;
     try {
-      v = Math.round(evalFormula(bonus.initiativeDice, { Rating: level }));
+      v = Math.round(evalFormula(bonus[k], { Rating: level }));
     } catch {}
-    if (v) out.initiativeDice = v;
+    if (v) out[k] = v;
   }
   return out;
 }
@@ -129,6 +178,11 @@ export function syncPowerBonus(actor, power, bonus, fromLevel = 0) {
   if (di) {
     actor.initiative = actor.initiative || { dice: 1, bonus: 0 };
     actor.initiative.dice = Math.max(1, Math.min(5, (Number(actor.initiative.dice) || 1) + di));
+  }
+  const dn = (next.initiative || 0) - (prev.initiative || 0);
+  if (dn) {
+    actor.initiative = actor.initiative || { dice: 1, bonus: 0 };
+    actor.initiative.bonus = (Number(actor.initiative.bonus) || 0) + dn;
   }
   if (Object.keys(next).length) power.bonus = next;
   else delete power.bonus;

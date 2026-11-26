@@ -15,6 +15,8 @@ import {
   asdfShort, asdfLabel, modeLabel, marksText, assistText, agentLabel,
 } from './common.js';
 import ActionModal from './ActionModal.js';
+import { BookRef, RuleRef } from '../books/BookRef.js';
+import { ProgramRef } from './common.js';
 
 const CAT_ORDER = ['attack', 'sleaze', 'info', 'control', 'util'];
 
@@ -91,7 +93,7 @@ function ProgramsPanel({ actor, persona, canEdit }) {
   const chip = (name, loadedChip) => {
     const def = PROGRAM_BY_ID[programId(name)];
     return html`<span class=${'mx-prog' + (loadedChip ? ' on' : '')} key=${name} title=${def ? t(def.effect) : t('Programme inconnu : effet au MJ')}>
-      <span>${programLabel(name)}</span>
+      <span>${programLabel(name)}</span><${ProgramRef} name=${name} />
       ${def?.auto && loadedChip ? html`<i class="mx-prog-auto" title=${t('Effet appliqué automatiquement')}>✓</i>` : null}
       ${canEdit && (loadedChip
         ? html`<button type="button" title=${t('Décharger')} onClick=${() => act('matrix/unloadProgram', { actorId: actor.id, name })}>✕</button>`
@@ -99,7 +101,7 @@ function ProgramsPanel({ actor, persona, canEdit }) {
     </span>`;
   };
   return html`<div class="mx-panel">
-    <div class="mx-panel-title">${t('Programmes')} <span class=${'mono ' + (slots.free < 0 ? 'red' : 'cyan')}>${slots.used}/${slots.total}</span></div>
+    <div class="mx-panel-title">${t('Programmes')} <span class=${'mono ' + (slots.free < 0 ? 'red' : 'cyan')}>${slots.used}/${slots.total}</span> <${RuleRef} rule="programs" /></div>
     <div class="mx-slots">${Array.from({ length: slots.total }, (_, i) => html`<i class=${i < slots.used ? 'on' : ''}></i>`)}</div>
     <div class="mx-progs">
       ${loaded.map((n) => chip(n, true))}
@@ -221,7 +223,7 @@ function HostPanel({ game, actor, persona, open }) {
         </div>`
       : html`<div class="small faint">${t('Indice et contenu inconnus : fais une Perception matricielle.')}</div>`}
     ${cur.spotted && html`<div class="small red">${t('La patrouille t’a repéré(e).')}</div>`}
-    <div class="mx-panel-sub">${t('IC actives')}</div>
+    <div class="mx-panel-sub">${t('IC actives')} <${RuleRef} rule="ic" /></div>
     ${ic.length === 0 && html`<div class="muted small">${t('Aucune IC active.')}</div>`}
     ${ic.map((x) => html`<div class="mx-icrow" key=${x.id}>
       <span class="grow" title=${IC_TYPES[x.type]?.desc ? t(IC_TYPES[x.type].desc) : ''}>${icName(x.type)}${x.rating ? html` <span class="faint small">${t('indice {n}', { n: x.rating })}</span>` : ''}</span>
@@ -269,7 +271,7 @@ function ActionsPanel({ actor, persona, open }) {
   const filters = [{ id: 'all', label: t('Toutes') }, { id: 'illegal', label: t('Illégales') }, { id: 'legal', label: t('Légales') }];
   return html`<div class="mx-panel mx-actions">
     <div class="mx-panel-title spread">
-      <span>${t('Actions matricielles')}</span>
+      <span>${t('Actions matricielles')} <${RuleRef} rule="matrixActions" /></span>
       <span class="mx-seg small">${filters.map((f) => html`<button type="button" class=${filter === f.id ? 'on' : ''} onClick=${() => setFilter(f.id)}>${f.label}</button>`)}</span>
     </div>
     ${CAT_ORDER.map((cat) => {
@@ -282,7 +284,7 @@ function ActionsPanel({ actor, persona, open }) {
           const pc = actionPool(actor, persona, a, {});
           return html`<div class="mx-actrow" key=${a.id}>
             <div class="grow mx-act-name" title=${t(a.desc)}>
-              <b>${actionName(a)}</b>${getLang() === 'fr' ? html` <span class="faint small">${a.en}</span>` : null}
+              <b>${actionName(a)}</b>${getLang() === 'fr' ? html` <span class="faint small">${a.en}</span>` : null}${a.page ? html` <${BookRef} source="SR5" page=${a.page} />` : null}
               <div class="small muted">${ACTION_TYPES[a.type] ? t(ACTION_TYPES[a.type]) : a.type}${a.marks ? ` · ${marksText(a.marks)}` : ''}${a.skill ? ` · ${a.limit ? `[${asdfLabel(a.limit)}]` : ''}` : ''}</div>
             </div>
             <span class="mx-act-pool mono">${a.noTest ? '—' : pc.impossible ? html`<span class="red small">${t('non formé')}</span>` : html`${pc.pool}<small>${pc.limit !== null ? ` [${pc.limit}]` : ''}</small>`}</span>

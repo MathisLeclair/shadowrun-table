@@ -234,3 +234,7 @@
 .cg-eg-spawn { align-items: flex-end; }
 .cg-eg-spawn .field select { min-width: 220px; }
 @media (max-width: 900px) { .cg-eg { grid-template-columns: 1fr; } .cg-eg-preview { max-height: none; } }
+
+/* 📖 rulebook chips in picker rows and the step title */
+.cg-head h2 .bookref { margin-left: 8px; font-size: 11px; }
+.cg-chip .bookref, .cg-form .bookref { padding: 0 5px; font-size: 10px; line-height: 14px; }

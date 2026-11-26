@@ -117,6 +117,8 @@ Registry (fixed — implement these default exports):
 | matrix/MatrixPage.js | `({game})` decker cockpit (players) / Matrix overview, hosts & IC (GM) | main tab `matrix` |
 | chargen/ChargenPage.js | `({game})` priority character creator (players) / approval queue (GM) | main tab `chargen` |
 | notes/NotesPage.js | `({game})` private notes + collaborative party notes (see « Notes ») | main tab `notes` |
+| books/BooksPage.js | `({game})` rulebooks: search, common rules, library (see « Rulebooks ») | main tab `books` |
+| books/BookViewer.js | rulebook viewer drawer, opened with `openBook(code, page)` | global |
 | core/SettingsPage.js | `({game})` GM settings (table language, players, backups, Foundry…) | main tab `settings` |
 
 The enemy generator (`chargen/EnemyGenerator.js`) is opened from the Bestiaire page. The server admin page (`/admin`) is `client/modules/admin/AdminPage.js`, mounted by app.js outside the table UI.
@@ -158,15 +160,17 @@ Actor = {
   powers: [{ id, name, level?, pp, notes? }],              // adept powers
   spells: [{ id, name, category, type, range, duration, drain, notes? }],
   complexForms?: [...],
-  weapons: [{ id, name, category, kind: 'melee'|'ranged', skill: 'pistols', accuracy, damage: '7P', ap: -1, mode: 'SA', rc, ammo: '15(c)', reach, notes?, catalogId? }],
-  armor: [{ id, name, rating, equipped: bool, stack?: bool (helmet/shield adds), notes?, catalogId? }],
+  weapons: [{ id, name, category, kind: 'melee'|'ranged', skill: 'pistols', accuracy, damage: '7P', ap: -1, mode: 'SA', rc, ammo: '15(c)', reach, notes?, catalogId?,
+              mounts?: ['Top'|'Under'|'Barrel'|'Stock'|'Side'], accessories?: [Accessory] }],   // accuracy / rc = BASE values, accessories add (see below)
+  armor: [{ id, name, rating, equipped: bool, stack?: bool (helmet/shield adds), notes?, catalogId?, capacity?, mods?: [ArmorMod] }],
   augmentations: [{ id, name, kind: 'cyberware'|'bioware', grade: 'standard'|'alpha'|'beta'|'delta'|'used', rating?, essence, notes?, catalogId? }],
-  gear: [{ id, name, category, rating?, qty, notes?, catalogId? }],
-  vehicles: [{ id, name, handling, speed, accel, body, armor, pilot, sensor, seats?, notes?, catalogId? }],
+  gear: [{ id, name, category, rating?, qty, notes?, catalogId?, active? (worn / switched on: its catalog effects count — « Modifiers ») }],
+  vehicles: [{ id, name, handling, speed, accel, body, armor, pilot, sensor, seats?, notes?, catalogId?, mods?: [VehicleMod] }],
   matrix?: { device, rating, attack, sleaze, dataProcessing, firewall, programs: [string] },
   contacts: [{ id, name, connection, loyalty, notes? }],
   sins: [{ id, name, rating, licenses: [string] }],
-  lifestyle?: { name, monthlyCost, monthsPaid },
+  lifestyles: [Lifestyle],   // see « Lifestyles, accessories, mods, martial arts » (the old single `lifestyle` is migrated by normalizeActor)
+  martialArts: [{ id, catalogId?, name, rating (1), techniques: [{ id, catalogId?, name, nameFr?, notes?, chummerGuid? }], notes?, chummerGuid? }],
   karma: number (available), karmaTotal: number (career), nuyen: number,
   streetCred, notoriety, publicAwareness,
   vision?: { lowLight?: bool, thermo?: bool, darkRange?: cells },   // used by the map
@@ -178,15 +182,69 @@ Actor = {
 }
 ```
 Extra actor fields: `realName?`, `metavariant?` (Chummer), `chummer?` (see Chummer below), items may carry `chummerGuid`,
+`source?` / `page?` on every item and nested item (rulebook reference: Chummer book code + printed page, see « Rulebooks › References everywhere »),
 `foundry: { id, world, importedAt }` (Foundry import), `magic?` (written by training, see Training below),
-`augmentations[].bonus` / `powers[].bonus` = attribute / initiative-dice bonus actually applied (`{ attributes: { REA: 1 }, initiativeDice: 1 }`, reversed on removal/sale),
+`augmentations[].bonus` / `powers[].bonus` / `qualities[].bonus` = attribute / initiative bonus actually stored on the actor (`{ attributes: { REA: 1 }, initiativeDice: 1, initiative: 6 }`, from the catalog effects — `server/lib/augment.js bakeItemBonus` — reversed on removal/sale, re-applied on a rating / level / choice change),
 `weapons[].augId` = implant weapon of that augmentation (removed with it, never sold separately),
 `gear[].paid` = unit price paid in the shop, map tokens `moveBudget: { key, meters }` (combat movement, maps module).
 Derived values: `import { derive, skillPool, rollDice, attr, SKILLS, SKILL_BY_ID } from '/shared/sr5.js'` — never store derived numbers.
 Default roll limit: `skillDefaultLimit(def, attr)` (shared/sr5.js) — a skill's own `limit` ('physical'|'mental'|'social'|'astral', or null = none, e.g. spellcasting/pilot) overrides its category.
-Player permissions on their own actor: condition, edge.current, armor equipped, gear qty (lower only — only the GM raises a quantity)/notes, notes, portrait, bio, color, contacts notes. Attributes/skills/karma/nuyen/qualities change only via GM edit, shop, or training.
+Player permissions on their own actor: condition, edge.current, armor equipped, gear qty (lower only — only the GM raises a quantity)/notes/active, notes, portrait, bio, color, contacts notes. Attributes/skills/karma/nuyen/qualities change only via GM edit, shop, or training.
 
-Dice: `'dice/roll'` (characters module) `{ pool, label, actorId?, limit?, explode? (Edge: Push the Limit — adds EDG to the pool, rule of six, ignores limit and spends 1 Edge), secret? (GM only: gmOnly log) , modifier? }` → logs `{ kind: 'roll', roll: {...} }` and emits `sfx { id: 'dice' }` to all. Server rolls (Math.random).
+#### Lifestyles, accessories, mods, martial arts (characters module + sheet + Chummer/Foundry mapping)
+Nested lists restore what the characters had in Chummer (upgrades lost on the way Chummer → Foundry → app). Sub-items keep the
+English Chummer/catalog `name` and the French `nameFr` (display with `itemName()`), `catalogId` = Chummer GUID, `chummerGuid` once synced.
+```js
+Lifestyle = { id, name (free: 'Best Home'), base: 'Street'|'Squatter'|'Low'|'Medium'|'High'|'Luxury'|'Bolt Hole'|'Traveler'|'Commercial'|'Hospitalized',
+  catalogId?, baseCost (¥/month), monthsPaid, primary: bool (exactly one), points?: { comforts, security, neighborhood, entertainment? } (RF), pointCost?,
+  qualities: [{ id, catalogId?, name, nameFr?, category ('Positive'|'Negative'|'Contracts'|'Entertainment - Asset'…), cost (flat ¥/month),
+                multiplier (%, e.g. −20 = Dangerous Area), baseOnly? (the % applies to baseCost only: Chummer <multiplierbaseonly> /
+                <basemultiplier>, Extra Secure +20), lp?, notes?, chummerGuid? }],
+  monthlyCost (derived, stored — shared/lifestyle.js monthlyCost(), Chummer's order: (baseCost × (1 + Σ baseOnly %/100) + Σ cost of non-'Contracts'
+    options + RF points × pointCost) × (1 + Σ other %/100) + Σ cost of 'Contracts' options; Medium + Garage + Dangerous Area = 4 080), notes, chummerGuid? }
+Accessory = { id, catalogId?, name, nameFr?, mount: 'Top'|'Under'|'Barrel'|'Stock'|'Side'|'Internal'|'', rating?, cost, avail, included? (built in),
+  equipped? (false = off), effects?: { accuracy?, rc?, rcGroup? (same group: best one only), dicePool?, smartgun? }, notes?, chummerGuid? }
+ArmorMod = { id, catalogId?, name, nameFr?, rating?, capacity (may be < 0: YNT Softweave adds room), cost, avail, included?, effects?: { armor? }, notes?, chummerGuid? }
+VehicleMod = { id, catalogId?, name, nameFr?, rating?, slots, category, cost, avail, included?, notes?, chummerGuid? }
+```
+- Pure helpers (`client/modules/sheet/sheet-data.js`): `SUB_LISTS` (`weapons → accessories`, `armor → mods`, `vehicles → mods`, `lifestyles → qualities`,
+  `martialArts → techniques`), `weaponMods(w)` → `{ accuracy, rc, dicePool, smartgun }`, `armorMods(ar)` → `{ used, total, bonus }`, `vehicleSlots(v)`
+  (total used) / `vehicleSlotsByCategory(v)` (per R5 pool, labels `VEHICLE_MOD_CATEGORIES`),
+  `catalogToItem()` / `subFromCatalog(catalog, entry, rating)` for the catalogs `lifestyles`, `martialarts`, `lifestylequalities`, `accessories`, `armormods`,
+  `vehiclemods`. `normalizeActor` gives every actor `lifestyles: []` / `martialArts: []`, ids to nested items, one primary lifestyle, and migrates a
+  legacy `lifestyle: { name, monthlyCost, monthsPaid }` once (base guessed from the name, `baseCost = monthlyCost`).
+- Actions (GM; players read-only): `actor/addItem|updateItem|removeItem` accept the lists `lifestyles` and `martialArts` (lifestyle: `monthlyCost` is
+  always recomputed, `primary: true` moves the primary flag) and sanitize nested arrays passed with an item; `actor/addSubItem { actorId, list, itemId,
+  sub: 'accessories'|'mods'|'qualities'|'techniques', item } → subId`, `actor/updateSubItem { …, subId, patch }`, `actor/removeSubItem { …, subId }`
+  (`sub` must match `SUB_LISTS[list]`, else « Sous-liste inconnue : {sub} »). Sanitizing (`sanitizeSub`) keeps the shop-only fields on GM edits: `paid`, `choice`, accessory `extraMount` / `effects`, armor-mod `effects.armor` / `bonus`, vehicle-mod `effects`.
+- Display: the sheet shows the accuracy / RC of a weapon WITH its accessories (`weaponMods`), a « smartgun » badge (+2 dice with a wireless smartlink:
+  a note, not added automatically), accessory `dicePool` added to the attack roll; armor rows show their mods, « Capacité used/total » and the mods'
+  armor bonus (`+2` from Gel Packs — counted: `shared/sr5.js armorTotal()` adds Σ `mods[].effects.armor` of equipped mods to each equipped armor,
+  `armorValue(a)` / `armorModBonus(a)`; armor `rating` is the BASE value: Chummer `<armor>`, Foundry `armor.base` — a Foundry rating taken from
+  `armor.value` (mods included) gets no `effects.armor`, nor do restored mods with `ratingIncludesMods`); vehicles their mods and slots (« 9 emplacements
+  utilisés (Protection 6 · Carrosserie 3) »); « Contacts & SIN » the lifestyles (cost breakdown, options); « Combat » the « Arts martiaux ». GM edit
+  mode: a « Accessoires / Modifications / Options / Techniques (n) » button on each row of the list editor opens the nested editor (blank or from the
+  catalog; techniques from the martial art's `stats.techniques`). A catalog pick gets the values that depend on the parent item from
+  `rules.js upgradeFields()` (the parent's catalog entry is loaded): capacity with its Capacity (YNT Softweave), slots with its Body (Gecko Tips),
+  price with its value (« Weapon Cost »…; left at the catalog price when the parent's value is unknown).
+- Chummer (`server/lib/chummer/`): parse reads every `<lifestyle>` (+ `<lifestylequalities>`, cost formulas like `25000 div 12`, `<basemultiplier>`
+  of standard / `<multiplier>` of advanced lifestyles, RF points, primary = `<primarytenant>` else the most expensive), weapon `<accessories>`
+  (+ `mounts` from the data `accessorymounts`), armor `<armormods>` (capacity evaluated with the armor's capacity), vehicle `<mods>` and
+  `<martialarts>/<martialarttechniques>` (`chummerEval()` evaluates Chummer formulas: Rating, Capacity, Body…, `FixedValues`, `div`, `mod`, `number()`).
+  Export: lifestyles and martial arts are ordinary lists; nested nodes are synced by guid in patch mode (removed → deleted, new → built from the
+  Chummer data, rating/notes patched) and built in generate mode; new nested guids come back in `assigned.sub[subItemId]` (stored by 85-chummer).
+  Re-import (merge.js): nested lists are merged entry by entry by `chummerGuid` like the parent lists (app ids kept; entries added in the app since
+  the last sync survive an upload that did not touch them); `sameItem` ignores nested ids. Quality `<basemultiplier>` ↔ `baseOnly`.
+- Foundry (`server/lib/foundry/convert-actor.js`): lifestyle items → `lifestyles[]` (`system.type` → base, comforts/security/neighborhood →
+  `points`, `system.mods` → qualities; `system.cost` is the TOTAL per month: without options it becomes `baseCost`, with options `baseCost` = the
+  catalog base and the options are added back — no double count); weapon/armor modifications embedded in the item
+  (`flags.shadowrun5e.embeddedItems`, `system.mod_weapon { mount_point, accuracy, rc, dice_pool }`, `system.mod_armor.value`) → accessories / mods.
+  A merge re-import whose snapshot predates `lifestyles[]` adopts the app lifestyle of the same name instead of duplicating it. `actor.foundry.snapshotVersion`
+  (2 = item hashes include `mounts` / `capacity` / `accessories` / `mods`): with an older snapshot an item that only differs by those fields counts as
+  unchanged; an item Foundry did change replaces the app's but keeps the nested entries the app added (absent from Foundry, matched by catalogId /
+  name, non-`fvtt_` ids) and `ammoLeft`.
+
+Dice: `'dice/roll'` (characters module) `{ pool, label, actorId?, skillId?, attr?, attr2?, useSpec?, test? ('composure'|'judgeIntentions'|'memory'|'liftCarry'|'defense'|'soak'|'drainResist'|'biofeedback'|'toxinResist': kept only on an attribute-only roll of that test's attributes, `shared/modifiers.js TEST_ATTRS` / `checkedTest`), weaponId? (the weapon's skill is used; only the GM may roll it with another `skillId`), matrixLimit? ('attack'|'sleaze'|'dataProcessing'|'firewall'; Matrix skills only: `MATRIX_LIMIT_SKILLS`), conditions?: [switch keys], ignore?: [modifier ids], limit? (number = that limit; null/0 = none; absent = computed — players can neither raise nor remove a computed limit; a computed limit is ≥ 1), applyWounds? (GM only: the wound modifier always applies to a player's skill / attribute roll except damage resistance tests `RESIST_TESTS`), bonus?: [{label, value}] (players: only « VOL » of total defense and « Firewall » of Matrix defense / biofeedback, recomputed; any other line counts as « mod. »), explode? (Edge: Push the Limit — adds EDG to the pool, rule of six, ignores limit and spends 1 Edge), secret? (GM only: gmOnly log), modifier? }` → logs `{ kind: 'roll', roll: {..., breakdown, limitLabel?, limitBreakdown?, mods?: [ModLine], conditions?} }` and emits `sfx { id: 'dice' }` to all. Server rolls (Math.random). Pool and limit modifiers are computed by the server (« Modifiers »).
 
 ### Bestiary & combat (owner: combat module `30-combat.js`)
 ```js
@@ -266,12 +324,87 @@ shop: {
   approval: 'never'|'restricted'|'always',     // when a purchase needs GM approval
   categories: { [catalogFile]: bool },           // which catalogs are on sale
   specials: [{ id, name, category, cost, avail, stock, notes, stats?, catalogRef? }],   // GM-curated items / fixer deals
-  orders: [{ id, ts, actorId, userId, by?, kind: 'buy'|'sell'|'give', items: [{ ref, name, qty, rating?, unitCost }], total, status: 'pending'|'approved'|'denied'|'done'|'cancelled', flags?: [string], gmNote?, resolvedTs? }],
+  orders: [{ id, ts, actorId, userId, by?, kind: 'buy'|'sell'|'give'|'karma', items: [{ ref, name, qty, rating?, unitCost, target?: { list, itemId, name }, mount?, subId?, karma?, techniqueIds? }], total, karma? (kind 'karma'), status: 'pending'|'approved'|'denied'|'done'|'cancelled', flags?: [string], gmNote?, resolvedTs? }],
+  restored?: [actorId],                          // historic Chummer upgrades already restored (GM view only)
 }
 ```
 `'shop/cancel'` (owner or GM) cancels a pending order. Transient event `'shop:resolved'` `{ orderId, status, note }` is sent to the actor's owners when the GM approves/denies.
 Selling: gear can only be sold up to its current `qty` (≥ 1); implant weapons (`augId`) are not sellable (sell the augmentation).
-Catalog files (generated, `data/catalog/<name>.json`, loaded with `useCatalog(name)` client-side and read from disk server-side for price validation): `weapons`, `armor`, `gear`, `cyberware`, `bioware`, `vehicles`, `qualities`, `spells`, `powers`, `programs`, `lifestyles`. Each item: `{ id, name, nameFr?, category, cost: number|null, costFormula?: string, avail: '8R', availValue: 8, legality: ''|'R'|'F', rating?: { min, max }, essence?: number|string, source, page, stats: {...type-specific} }`. Buying adds the item to the actor (weapons → `actor.weapons`, armor → `actor.armor`, cyber/bio → `actor.augmentations` (and reduces ESS), vehicles → `actor.vehicles`, everything else → `actor.gear`) and deducts nuyen, appends `actor.history` and a `kind:'shop'` log entry.
+Catalog files (generated, `data/catalog/<name>.json`, loaded with `useCatalog(name)` client-side and read from disk server-side for price validation): `weapons`, `armor`, `gear`, `cyberware`, `bioware`, `vehicles`, `qualities`, `spells`, `powers`, `programs`, `lifestyles`, and the upgrade catalogs `accessories`, `armormods`, `vehiclemods`, `lifestylequalities`, `martialarts` (see « Shop: upgrades, lifestyles, martial arts » below). Each item: `{ id, name, nameFr?, category, cost: number|null, costFormula?: string, avail: '8R', availValue: 8, legality: ''|'R'|'F', availRelative?: true (upgrade catalogs: Chummer « +2R », added to the target's availability — `avail` keeps the « + »), rating?: { min, max }, essence?: number|string, source, page, stats: {...type-specific} }`. Buying adds the item to the actor (weapons → `actor.weapons`, armor → `actor.armor`, cyber/bio → `actor.augmentations` (and reduces ESS), vehicles → `actor.vehicles`, everything else → `actor.gear`) and deducts nuyen, appends `actor.history` and a `kind:'shop'` log entry.
+
+#### Shop: upgrades, lifestyles, martial arts
+Schema of the nested lists: « Lifestyles, accessories, mods, martial arts » above. Shop-installed sub-items also carry `paid` (price paid; resale value =
+`paid`, else `cost`; included parts are worth 0 and never sold alone), accessories `extraMount` (mount points they add, e.g. slide mount), armor mods
+`bonus` (`{ fire|cold|electricity|acid|falling|toxin|pathogen|radiation: n }` evaluated at the rating), vehicle mods `effects` (`{ handling, speed, accel,
+armor, body, sensor, pilot, seats }` evaluated at the rating; never applied to the stored vehicle stats).
+- **Catalogs** (tools/build-catalog.js; id = Chummer GUID, `nameFr` from `lang/fr-fr_data.xml`, same price/avail fields as the other catalogs).
+  Formulas may use the TARGET's values (`rules.js quote(item, { vars })`, `evalFormula` accepts extra variables, `div`, `mod`): `WeaponCost`,
+  `ArmorCost` + `Capacity`, `VehicleCost` + `Body Speed Handling Acceleration Pilot Sensor Seats Armor`; `stats.targetCost: true` flags them.
+  - `accessories` (weapons.xml `<accessories>`): `stats { mount: ['Top','Under'] ([] = no mount needed), extraMount?, accuracy?, rc?, rcGroup?, conceal?,
+    smartgun? (no Accuracy: +1 die wired / +2 wireless, a note), requires?/forbids?: { names?, namesContains?, categories?, categoriesContains?, types? } }`
+    (any listed value matches; `*Contains` = Chummer `operation="contains"`, e.g. Shock Pad « Rifles », drone mods « Drones »; only name / category / type are
+    read: a required OR group that also tests conceal / ammo / useskill / NOT… is dropped — it passes — and unknown forbidden conditions never forbid). Weapons gain
+    `stats.mounts` (`<accessorymounts>`) and `stats.included: [{ id?, name }]` (accessories delivered with the weapon).
+  - `armormods` (armor.xml `<mods>`, « Custom Liners » kept as « Armor Liners (Rating N) »): `stats { capacity: n | formula (Rating, Capacity), armor?, bonus? }`. Armors keep `stats.capacity`.
+  - `vehiclemods` (vehicles.xml `<mods>`): `stats { slots: n | formula, ratingVar?: 'Body'|'Seats'|'qty' (max rating from the vehicle), bonus?, requires?/forbids? (same shape as accessories) }`.
+    Vehicles gain `stats.modSlots` (drones: extra slots, one pool = Body + modSlots) and `stats.slotBonus { Powertrain|Protection|Weapons|Body|Electromagnetic|Cosmetic: n }`
+    (`<xxxmodslots>`: other vehicles have one pool per category = Body + slotBonus[category], R5).
+  - `lifestylequalities` (lifestyles.xml `<qualities>`: SR5 + Run Faster Garage, Workshop, DocWagon, Extra Secure…): `cost` (¥/month, may be < 0),
+    `stats { multiplier? (%; baseOnly: Chummer <multiplierbaseonly>, % of the base only), lp, allowed?: [base lifestyles], multiple?, selectText?, comforts?, security?, neighborhood?,
+    forbids?: [option names] / requiresOneOf?: [option names] (<forbidden>/<required> <oneof><lifestylequality>), requiresLifestyle?: [bases] }`.
+    `lifestyles` gain `stats { lp, points: { comforts|neighborhood|security: [min, max] }, pointCost? }`.
+  - `martialarts` (martialarts.xml, karma): `stats { karma (7; Way of Unified Mana 15), techniqueKarma: 5, techniques: [{ id, name, nameFr?, source, page }] }` (not in SHOP_FILES).
+  - `data/catalog/coverage.md` = items per source book, Chummer XML vs catalog, with the dropped entries and why (regenerated by the build).
+  - Every entry has `source` + `page` (📖 chips). Model-specific vehicle mods have no page in Chummer (« ? »: Enviroseal, Smart Tires…): the build
+    gives them the page of the vehicle that ships them. Only 3 Chummer entries keep no page (Essence Hole / Antihole, HK MP75: « 0 » in Chummer).
+- **Rules** (pure, `client/modules/shop/rules.js`, shared with the browser): `UPGRADE_FILES` (file → `{ list, sub }`), `STORE_SECTIONS` (= `SECTIONS` +
+  `UPGRADE_SECTIONS` « Accessoires d’armes », « Modifications d’armure », « Modifications de véhicule », « Arts martiaux »; `SECTIONS`, used by the
+  character creator, gains only the lifestyle options in « Train de vie »), `weaponMounts / freeMounts / accessoryFit` (mount points of the weapon —
+  own `mounts`, else the catalog's (none when the catalog entry has no `<accessorymounts>`: bows, holdouts…), else standard ones for ranged weapons
+  without catalog entry — minus mounts taken by non-included accessories; requires/forbids; no duplicate), `upgradeAvail(q, item, targetQuote)`
+  (`availRelative`: + the target's availability, stricter legality), `armorCapacity / armorModFit` (capacity = `armor.capacity` › catalog › rating;
+  Σ mod capacity ≤ capacity), `vehicleVars / vehicleSlotPool / vehicleSlots(vehicle, cat, pool) / vehicleSlotsUsed(vehicle, pool) / vehicleModFit`
+  (`vehicle.slots` overrides; drones and vehicles without catalog entry: one pool 'all' = Body + modSlots; other vehicles: the mod's category pool
+  `VEHICLE_SLOT_CATEGORIES` = Body + slotBonus[category]; « All », « Model-Specific » and drone-attribute categories take no pool → not limited),
+  `vehicleModEffects`, `upgradeFields(file, entry, parent, { rating, parentCat, parentValue })` (sheet editor), `lowersRent(q)`, `MARTIAL_KARMA`,
+  `martialKarma(style, known, n)`. `shared/lifestyle.js`: `monthlyCost`, `costBreakdown`, `isContract`, `settleLifestyles` (stores monthlyCost, one
+  primary), `primaryLifestyle`, `lifestyleFromCatalog`, `qualityFromCatalog`, `qualityProblem(l, item, lookup?)` (allowed / required bases, duplicates,
+  options forbidden by / required with the other options — lookup(catalogId) → catalog item also catches an existing option that forbids the new one).
+  The client preview is `client/modules/shop/upgrades.js` (`upgradePreview`), the server stays the authority.
+- **Actions**:
+  - `shop/buy` / `shop/give` lines accept `target: { itemId }` (weapon / armor / vehicle / lifestyle id) for upgrade catalogs and `mount` (accessories);
+    the lines of one order are checked together (two Barrel accessories refused). Prices: catalog formulas with the target's values; lifestyle options cost
+    nothing up front except the rent difference × months already paid (`line.monthlyDelta`, `line.monthlyCost`), then change the monthly cost.
+    Options that lower the rent (`lowersRent`: category 'Negative', negative cost or multiplier) bought by a player ALWAYS wait for the GM (whatever the
+    approval mode; order flag `rent`, line `lowersRent`); the storefront shows « Validation MJ ».
+    Upgrade lines are re-checked when a pending order is approved. GM gifts skip prices and legality, never the fit (mounts, capacity, slots).
+  - Lifestyles: a `lifestyles` line (qty = months paid, `lifestyleName?`, `primary?`) ADDS a lifestyle (the first one is primary).
+    `shop/payLifestyle { actorId, lifestyleId? (default: primary), months 1–24 }` pays that lifestyle's `monthlyCost` (upgrades included).
+  - Bought weapons get `mounts` and their included accessories (`included: true`, mount 'Internal'); bought armors get `capacity`.
+  - `shop/sell { …, subId }` sells an installed accessory / mod (sell rate × `paid`/`cost`); selling a weapon / armor / vehicle sells its installed parts with it.
+  - `shop/removeUpgrade { actorId, list: 'weapons'|'armor'|'vehicles'|'lifestyles', itemId, subId }` removes without refund (players: own actor, not
+    rent-lowering lifestyle options — category 'Negative' / negative cost or multiplier — nor built-in parts: GM only).
+  - `shop/martialArt { actorId, styleId, techniqueIds, free? }`: karma (`martialKarma`) = the style's `stats.karma` (7; Hapsum-Do 15) for a new style
+    (its first technique included, RG p.128) + 5 per further technique, 5 per technique of a known style — a known style without any technique
+    (bought without, imported) still gets its first technique included. Players → pending order `kind: 'karma'` (one per style; the GM approves in « Commandes », karma spent
+    then, history `karma: -n`); GM → granted at once (`free` = no karma). The training module does not handle martial arts.
+- **Migration**: `normalizeActor` (characters) turns the old `actor.lifestyle` into `lifestyles[0]` (40-shop init has a safety net and recomputes every
+  `monthlyCost`). `data/seed/upgrades-restore.json` (Lazarus pack, generated from `../Shadowrun_chum5_files`, historic) lists lifestyle options, weapon
+  accessories and armor mods the PCs had in Chummer; 40-shop init applies it ONCE per actor (`shop.restored`), only to a lifestyle of the same name
+  that has no option yet (its `baseCost` becomes the catalog base cost) and to weapons / armors found by catalogId or name (restored armor mods carry no
+  `effects.armor`: the stored Foundry rating already counts them), with a history line « Options restaurées depuis Chummer : {n} ». The Lazarus seed
+  actors (`data/seed/actors/pcs.json`) already contain it. Per actor: `actorName`, `chummerFile`, `chummerDate`, `note` (notes of every restored
+  sub-item, « Restauré depuis Chummer (fichier du …) — à vérifier »), `lifestyleNote` (appended once to the primary lifestyle's notes: historic
+  lifestyle NOT restored, Christopher), `inferred: true` (not from a Chummer file: Anthony's DocWagon deduced from his 7083 ¥ rent — never applied by
+  the boot restore, only by `tools/restore-lifestyles.js --include-inferred`; the Lazarus seed already has it).
+  GM-facing comparison: `../Shadowrun/historique-chummer.md`.
+- **Restore on a running table**: `node tools/restore-lifestyles.js --url <server> [--table <slug>] --password <gm pw> [--dry-run] [--include-inferred]`
+  applies the LIFESTYLE part of that spec through GM actions (`actor/updateItem` catalogId/base/baseCost, `actor/addSubItem` qualities,
+  `lifestyleNote`): matches the actor by id then PC name, the lifestyle by name then the only/primary one; skips options already present (catalog id
+  or name), never removes anything, never touches karma/nuyen/items, refuses a server without `actor.lifestyles`; inferred specs only with
+  `--include-inferred`. After the boot restore it reports « Nothing to do ». Test: `node tools/test-restore-lifestyles.js` (ports 3290-3291).
+- Tests: `node tools/test-shop.js` (port 3250: mounts, capacity, slots, target-based prices, resale of parts, martial arts) and
+  `node tools/test-lifestyle.js` (ports 3251-3252: cost math, migration idempotence, restore, lifestyle options, rent per lifestyle, permissions).
 
 ### Training (owner: `50-training.js`)
 ```js
@@ -339,7 +472,7 @@ Seattle 2080, SR5. PCs: **Anthony Von Schloss** (street samurai / blades, player
   await gm.send('maps/…', {...}); await settle(); console.log(p1.state.maps);
   srv.stop();
   ```
-  Multi-table: `startServer({ port, tables: [{ id, name, pack, gmPassword, state? }] })` (no default table then), `login(url, { …, table: 'id' })`, `client(url, token, { table: 'id' })`, `await srv.admin()` → admin token, `startServer({ legacyState })` writes an old single-table `state.json`. Tests of this part: `tools/test-tables.js` (ports 3500-3599).
+  Multi-table: `startServer({ port, tables: [{ id, name, pack, gmPassword, state? }] })` (no default table then), `login(url, { …, table: 'id' })`, `client(url, token, { table: 'id' })`, `await srv.admin()` → admin token, `startServer({ legacyState })` writes an old single-table `state.json`. Tests of this part: `tools/test-tables.js` (ports 3500-3599; `tools/test-modifiers.js` uses 3500 and `tools/test-bookrefs.js` 3530-3531 — don't run them at the same time).
 - Put module tests in `tools/test-<module>.js` (run with `node tools/test-<module>.js`, exit code ≠ 0 on failure).
 - Check client files parse: `node --check client/modules/x/y.js` works for syntax (imports are browser paths, so don't execute them in Node). Shared modules (`shared/*.js`) can be imported and unit-tested in Node directly.
 - `node tools/smoke.js` = quick global smoke test.
@@ -476,6 +609,7 @@ chargen: { settings: { method: 'priority', allowPlayers: true, startingKarmaBonu
   drafts: [{ id, userId, userName, status: 'draft'|'pending'|'approved'|'rejected', data (normalizeDraft), gmNote, ts, createdTs, submittedTs?, resolvedTs?, actorId?, check: { errors, warnings } }] }
 ```
 - SR5 Priority system (A–E: metatype, attributes, magic/resonance, skills, resources), checked live client-side and again by the server with `compute(data, { lookup, rules, settings })`; gear prices come from `client/modules/shop/rules.js` (same authority as the shop).
+- Gear may include weapon accessories and armor mods (`GEAR_FILES` + `accessories`, `armormods`; `CREATION_UPGRADES`): a draft gear row `{ ref, file, target: <weapon/armor row id>, mount? }` is priced with its target's value (`WeaponCost`, `ArmorCost`, `Capacity`, « +2R » availability) and fitted with the shop rules (`accessoryFit`, `armorModFit` of `client/modules/shop/rules.js`, passed in `ctx.rules`: mount points incl. the weapon's included accessories, capacity, duplicates). `buildActor()` gives weapons their `mounts` and included accessories (like a shop purchase), armors their `capacity`, then installs the upgrades (`paid`, `effects`, armor-mod `bonus`). UI: « Accessoires d’armes » / « Modifications d’armure » sections of the gear step, « Sur l’arme / l’armure » + mount pickers.
 - Actions: `chargen/saveDraft {draftId?, data}` → `{ draftId, check }`, `chargen/submit`, `chargen/withdraw`, `chargen/delete` (owner or GM); GM: `chargen/resolve {draftId, approve, note?, force?, type?}` (approve = `buildActor()` → new PC assigned to the player, starting nuyen rolled when asked), `chargen/create {draftId?|data, type, assignTo?, force?}`, `chargen/settings`. Players only receive their own drafts. Transient event `chargen:resolved { draftId, status, note, actorId? }` to the owner + GM.
 
 ### Enemy generator (actions in `15-chargen.js`, rules in `shared/npcgen.js`, UI `chargen/EnemyGenerator.js` from the Bestiaire)
@@ -512,3 +646,197 @@ notes: {
 - `state.notes` is excluded from the core's deep clone in `buildView`; the module builds `view.notes` per user (filter/gmFilter).
 - The GM's « Télécharger la partie » (`/api/admin/export`) leaves out unshared private notes; server backups (host/admin) keep everything. `users/resetPin` logs a notice to the player.
 - Checkboxes carry `data-line`; `toggleCheckboxAt(body, line)` toggles them outside code blocks.
+
+## Rulebooks (owner: `90-books.js`, `server/lib/books/`, UI `client/modules/books/`, English `client/i18n/en/books.json`)
+The server owner's SR5 PDFs, readable by GM and players of the tables the admin allows: tab « Règles » (search, common
+rules, library) and a global viewer drawer opened from anywhere. **Server-wide**, not per table, never in git.
+```
+<books dir> = SR_BOOKS_DIR, else <runtime>/books
+  library.json        { books: [{ code (Chummer code: SR5, RG…), name, nameFr, file: '<CODE>.pdf', pages, offset, offsets?: [{ fromPrinted, offset }],
+                        confidence (0..1, folio agreement), verified? (Chummer's reference sentence found on the right page), matchPdfPage?,
+                        manual? (offset set by hand: a re-index keeps it), indexedAt, tables: 'all'|[tableId], size, extra? (not a Chummer book), source? }] }
+  <CODE>.pdf          the PDF
+  index/<CODE>.json   { v, code, pages, texts: [text of each PDF page], edges: [[numbers found in its header/footer]] }
+<runtime>/books-sign.key  HMAC key of the PDF links (SR_BOOKS_KEY_FILE; per install, deliberately outside the books folder, which is copied
+                          from the GM's PC to the VPS — an old books/.sign-key is deleted at first use)
+```
+- **Page numbers**: references everywhere are PRINTED pages (catalog `source`/`page`, Chummer). PDF page = printed + `offset`; `offsets` lists
+  changes (printed page n uses the last entry with `fromPrinted ≤ n`), for books with unnumbered inserts. `server/lib/books/offsets.js`
+  (`printedToPdf`, `pdfToPrinted`, `detectOffsets`) and the same helpers client-side in `client/modules/books/refs.js`. `printedToPdf` returns null for a
+  page outside the book (never clamped to the last page: a bad reference shows « Page {page} introuvable dans ce livre »).
+- **Detection** (`detectOffsets`): bare numbers in the top/bottom 8.5 % of each page vote for `pdfPage − n`; numbers printed on > 20 % of the
+  pages are noise (kept as weak candidates that may only continue a run); each change of offset kept for ≥ 3 pages becomes a range, starting right
+  after the last printed page of the previous range. Cross-checked with Chummer's reference sentence (`books.xml` `<match>`, names in
+  `server/lib/books/book-names.json`, regenerate with `node tools/books-setup.js --names`).
+- **CLI** `node tools/books-setup.js --from "<folder>" [--runtime <dir>|--books <dir>] [--only SR5,RG] [--map "file.pdf=CODE"] [--foundry <world>]`
+  copies the PDFs (code guessed from the file name, never modifies the source), extracts with pdfjs-dist (legacy build, ≈ 20 s for 10 books),
+  writes the index and library, prints a table (offsets, confidence, Chummer check, Foundry pdfoundry/pdf-pager hints) and runs the checks:
+  known references (RG 62 Heritage, SR5 240 Hack on the Fly, SR5 310 Improved Reflexes/Kinesics, RF 221 Garage…), the « Règles » quick links
+  (`client/modules/books/quicklinks.js`: each page must contain its heading) and catalog evidence (share of `data/catalog` items whose name is on
+  the announced page; warns when a ±1–3 shift would score better). `--reindex [CODES]`, `--check`, `--list`, `--strict` (exit 1 on a failed check).
+- **Routes** (any logged-in user of the table, `requireUser`): `GET /api/books` → `{ books: [{ code, name, nameFr, pages, offset, offsets?, indexed,
+  extra?, url, exp }], ttl, now }` (books allowed for the requester's table whose PDF exists; `url` = signed PDF link; `now` = server clock in ms, the
+  client judges expiry with it), `GET /api/books/search?q=&code=` →
+  `{ hits: [{ code, page (printed|null), pdfPage, snippet, marks: [[start, end]] }], total }` (accent/case-insensitive, every term required at a word
+  start, "quoted phrases", capitals headings first, max 50; `code` of a book not allowed → 403), `GET /api/books/:code/page/:n[?pdf=1]` →
+  `{ code, page, pdfPage, pages, text }` (page outside the book → 404 « Page introuvable »), `GET /api/books/:code/link` → fresh `{ url, exp }`.
+  `/page` and `/link` answer the same 404 for an unknown book and a book not allowed for the table (no existence oracle).
+  `GET /api/books/:code/file?k=…` = the PDF (`sendFile`: HTTP Range/206, `Cache-Control: private, max-age=3600`, `Content-Disposition: inline`,
+  `nosniff`, `Referrer-Policy: no-referrer`; these PDF headers only on success: an error is JSON with `no-store`, an unsatisfiable Range a bare 416,
+  a malformed Range is ignored → 200). `k` = base64url({ t: tableId, u: userId, s: sessionTag(token), c: code, e: expiry }) + HMAC-SHA256; expiry
+  rounded up to 30 min + 1 h (same URL for 30 min → browser cache). No `k` → 401; bad signature, other book, expired, table archived/unknown, user
+  removed, **session gone** (logout, kick, GM password change), book not allowed for that table → 403.
+- **Admin** (`server/lib/books/admin-routes.js`, registered by `registerAdminRoutes`, admin bearer token): `GET /api/admin/books` (books + `indexed`,
+  `present`, jobs, tables, known Chummer codes, max size), `POST /api/admin/books/upload?code=&replace=1` (body = PDF, streamed with `receiveToFile`,
+  `%PDF-` checked, `X-Filename` URI-encoded) → background index, `PATCH /api/admin/books/:code { name?, nameFr?, offset?, offsets?, tables?: 'all'|[ids] }`
+  (offset → `manual`), `POST …/:code/detect[?apply=0]` (re-run detection on the stored index; `apply=0` = preview for the edit dialog, saved only by
+  « Enregistrer »), `POST …/:code/reindex { detect? }`, `DELETE …/:code { confirm: code }`. Upload cap `SR_MAX_BOOK_BYTES` (120 MB).
+  Indexing runs in a `worker_threads` worker (`index-worker.js`, heap `SR_BOOKS_WORKER_MB`, `SR_BOOKS_JOBS` at a time, default 1) inside the server's
+  process: a job (and an upload with a Content-Length) is refused with « Mémoire insuffisante… » (`jobs.js memoryVerdict`, error key + `errorParams`)
+  when 6 × the PDF size exceeds the cgroup limit (`memory.max`, `SR_MEMORY_LIMIT_BYTES`) minus the server's RSS. pdfjs reads the file through a view
+  (no second copy). Only the main thread writes `library.json`. Search folds texts with one regex replace (a char-by-char `+=` cost ≈ 300 MB of heap).
+  UI: `client/modules/admin/BooksAdmin.js` (panel « Livres de règles » of `/admin`).
+- **Client API** (`import { BookRef, openBook, parseSourceRef } from '../books/BookRef.js'`):
+  `<${BookRef} source="RG" page="62" label? />` (also `source="SR5 p. 240"` or `source=${{ source, page }}`) renders a « 📖 RG 62 » chip (dashed when
+  the book is not on the server) that opens the drawer; `openBook(code, printedPage)` / `openBook('RG 62')`; `parseSourceRef('RG 62' | 'SR5 p. 240' |
+  { source, page })` → `{ code, page }` or null (a separator is required: « GH3 » is a code). `useBooks()` (store.js) = library list (links renewed
+  10 min before expiry by a timer and before any page change, judged on the server clock: `serverNow()` = `Date.now()` + skew from `/api/books` `now`).
+  `openBook()` with the list already loaded sets the page synchronously (the frame mounts once).
+- **Viewer** (`BookViewer.js`, in `globalComponents`, z-index 150 above the sheet modal): right drawer, resizable (width kept in `localStorage`
+  `sr.books.width`), Esc closes it first (capture listener). A `.modal-backdrop` that appears after the drawer opened (MutationObserver; baseline reset
+  by every `openBook*` through `viewer.raise`) puts the drawer behind it (`.behind`, z-index 90) and leaves Esc to that modal; book switcher, printed-page field + prev/next, « Texte » mode (extracted text of the page:
+  default on screens ≤ 760 px or without a built-in PDF viewer, with an « Ouvrir le PDF » link), new-tab link, search (this book / all books).
+  The PDF is the browser's own viewer in an `<iframe src="…/file?k=…#page=N">` (same origin: allowed by the page CSP); changing page remounts it.
+  The frame keeps the URL it was mounted with (a renewed link does not reload the PDF being read); a new page / book / mode takes the fresh one.
+- **Tests**: `node tools/test-books.js` (ports 3400-3449): hand-made 9-page PDF (cover, printed 1-4, unnumbered insert, printed 5-7, a constant
+  « 3 » in every footer) → CLI install, offset ranges, auth 401/403 (forged expired / other table / unknown user keys / dead session after a GM
+  password change), signing key outside the books folder, Range 206 / 416 / malformed, error headers, search, page text (out of range → 404),
+  same 404 for restricted books, admin permissions, upload + background index, memory guard, manual offset / detect (preview `apply=0`), table
+  restriction, delete; fold() equivalence + speed.
+
+### References everywhere (📖 chips)
+Every game element a player or GM looks at links to its rulebook page.
+```
+shared/bookrefs.js        pure tables + parsers: SKILL_PAGES (skill id → SR5 page, Chummer skills.xml), RULE_REFS (limits SR5 46, derived SR5 101,
+                          initiative 159, matrixInitiative 231, conditionMonitor / woundModifiers / armor 169, defense 188, soak 173, attributeTests 152,
+                          movement 161, edge 56, drain 282, powerPoints 278, adeptPowers 308, spellcasting 281, complexForms 252, matrixDamage 228,
+                          biofeedback 229, matrixActions 237, programs 245, ic 248, knowledgeSkills 147, lifestyles 369, martialArts RG 128,
+                          priorityTable 65, karmaAdvancement 103, initiation 324, submersion 257…), CHARGEN_STEP_REFS (creator steps, SR5 62-100),
+                          COMPLEX_FORM_PAGES / complexFormRef, ITEM_CATALOGS / SUB_CATALOGS (catalog files of each actor list), REF_LISTS,
+                          itemRef(item), normRef(source, page), parseRefText('SR5 p. 435'), refFromNotes('Name · SR5 66'), skillRef, ruleRef
+server/lib/bookrefs.js    catalog index (id → ref, folded EN / FR names per file, techniques included; global read-only data),
+                          resolveItemRef(list, item, sub?, { sourceText? }), fillItemRef, fillActorRefs(actor, { sources? }) → n filled
+client/modules/books/BookRef.js   <BookRef>, <ItemRef item />, <RuleRef rule="limits" />, <SkillRef id="pistols" /> (nothing without a reference)
+```
+- **Item references**: `item.source` (book code) + `item.page` (printed page; absent when unknown). Resolution order (`resolveItemRef`): the
+  item's own reference › catalog id › the import's own source text › « CODE page » in the notes (Foundry « Low-Light Vision · SR5 66 », Chummer
+  « SR5 p.71 — … », upper-case code required) › complex form table › English / French name in the list's catalogs (also without « (…) » and a
+  rating suffix: « Cyberyeux 2 (vision nocturne) » → Cybereyes; weapons also look in gear and armor: grenades, shields) › « Mains nues » /
+  Unarmed Attack → Unarmed Combat SR5 132. GM-typed French items without a catalog match stay without chip.
+- **Filled** (idempotent, never overwrites an existing reference): characters init (every actor at boot — one-time backfill of old tables),
+  `actor/create`, `actor/addItem`, `actor/addSubItem`; shop orders / martial arts / Chummer restore (40-shop); training (`advance()`); chargen
+  `buildActor`; bestiary `sanitizeTemplate` (+ combat init for stored templates; npcgen previews and templates go through it); Chummer import /
+  re-import (`parse.js` stores `<source>`/`<page>` on items and nested items, 85-chummer fills the rest); Foundry import (`convertSheet` returns
+  `itemSources { [appItemId]: system.description.source }`, applied by `buildPc` / `buildTemplate` AFTER the merge snapshot: converted items carry no
+  source, so item hashes and « unchanged » detection are not affected). GM edits: `sanitizeItem` / `sanitizeSub` keep `source` (≤ 12 chars) and `page` (int).
+- **UI**: sheet — Résumé / Combat / Magie / Matrice stat boxes carry their rule chip in the corner (`RollStat book={ruleRef(…)}`, outside the roll
+  button), section titles (condition monitors, Edge, derived values, adept powers, lifestyles, martial arts, knowledge), every item row (weapons,
+  armor, implants, gear, vehicles, qualities, powers, spells, complex forms — new table in the Matrice tab, also shown without a device —, martial
+  arts, lifestyles) and nested chips (accessories, mods, options, techniques), skills (SR5 page of each skill), programs (programs catalog), GM catalog
+  picker; roll dialog (skill / test rule, limits, Edge, modifier lines); item effects only repeat the chip for nested items; shop list rows, item
+  detail, inventory, martial arts; training (rule « ? » + SR5 103 / 324 / 257, skills, qualities, spells, powers, complex forms); creator (step header,
+  priority table, catalog pickers, gear, spells, powers, qualities, skills, complex forms); Matrix (action list + dialog page, skill, pool parts with a
+  source, programs, IC); bestiary / enemy generator stat blocks (weapons, spells, skills, armor, implants, powers, qualities, gear, vehicles).
+  Chip title « Ouvrir Run & Gun p. 62 » (« Livre non disponible sur ce serveur (RG p. 62) » + dashed chip when the book is absent).
+- **Tests**: `node tools/test-bookrefs.js` (ports 3530-3531): every catalog entry / technique has a parseable reference of a known Chummer book
+  (client parser agrees), SR5 skill / rule / creator-step pages checked against the SR5 text index when present, parsers, seed PCs fully resolved
+  (fill idempotent), bestiary items with a catalog id resolved, Chummer and Foundry imports (snapshot items without source), boot backfill of an
+  old table, GM catalog add / nested add / GM override, shop gift, martial art, training, bestiary template.
+
+## Modifiers (gear, clothing, qualities, adept powers, implants → rolls, limits, derived values)
+Chummer `<bonus>` / `<wirelessbonus>` data makes items count like in a real VTT: Jane wears « Zoé : Heritage 12 » (RG 62: +2 social limit while
+visible) → her Con test shows « Limite sociale 9 + Zoé : Heritage 12 +2 = 11 » when « Tenue visible » is on, and the sheet shows « 9 (11 si visible) ».
+```
+tools/lib/bonus-effects.js   Chummer XML <bonus> node → normalized effects (pure; build time)
+tools/build-catalog.js       catalog entries get `effects`; writes data/catalog/effects.json (runtime index) + effects-coverage.md
+shared/modifiers.js          collectModifiers / poolModifiers / limitFor / weaponAccuracy / derivedWithModifiers (pure, server + browser)
+server/lib/modifiers.js      effects index (global read-only catalog data), actorModifiers(actor, { weaponId }), deriveFull(actor)
+client/modules/sheet/modifiers-ui.js   useEffectsLookup / useModifiers / useDerivedModifiers, effect texts, chips with 📖 BookRef, tooltips
+```
+- **Catalog effects** (`entry.effects` on every catalog file whose XML has a bonus: armor, armormods, gear, cyberware, bioware, qualities, powers,
+  accessories, lifestylequalities, spells, martial-art techniques): `Effect = { type, target?, value (number | formula with Rating: 'Rating', '-Rating',
+  'FixedValues(1,2,3)', 'Rating * 2'), condition? (key), choice? ({ kind: 'skill'|'text'|'matrixAction'|'attribute'|'limit', limitTo?, categories? }),
+  wireless? (from <wirelessbonus>), tag (Chummer tag) }`. Types: `limit` (limitmodifier, physical/mental/social/astrallimit), `skill` (specificskill,
+  spellcategory focus, selectskill with a value), `skillCategory`, `skillGroup`, `skillAttribute` (skillattribute / skilllinkedattribute), `attribute`
+  (specificattribute val / selectattribute), `attributeMax`, `initiativeDice` (initiativepass), `initiative`, `matrixInitiativeDice`, `armor`, `monitor`
+  (conditionmonitor: physical / stun / overflow / threshold / thresholdOffset (each track) / sharedThresholdOffset (Damage Compensators: both tracks
+  together, Physical first)), `stat` (damageresistance → soak, composure, memory, liftandcarry,
+  dodge / defensetest → defense, judgeintentions (+ offense / defense), reach, unarmeddv / unarmedap, drain / fading / fatigue resist, surprise,
+  spellresistance, recovery, throw…), `resist` (toxin / pathogen / fire / cold… resistances and immunities: shown only), `accuracy` (weaponskillaccuracy,
+  weaponaccuracy), `matrixAction` (Codeslinger), `flag` (smartlink, unarmed physical), `choice` (selecttext / selectskill without a value), `info`
+  (addweapon). Any other tag → `{ type: 'unsupported', tag }` (kept on the catalog entry, never silently dropped). `data/catalog/effects-coverage.md` =
+  tag → supported / unsupported counts, effect types, and every **condition** key with Chummer's FR / EN strings (`lang/*.xml` `LimitCondition_*`) and
+  the app's labels. Index `data/catalog/effects.json` = `{ files: { [file]: { [catalogId]: { name, nameFr, source, page, effects } } }, names: { [file]:
+  { [lower-case EN / FR name]: id } } }` (runtime effects only: no unsupported / info / free-text choices / tag names; techniques under `techniques`).
+- **Conditions** (`shared/modifiers.js CONDITIONS`): Chummer `LimitCondition_Visible` → `visible`, `LimitCondition_IntimidationVisible` →
+  `intimidation-visible`, free-text conditions → `t-<slug>` (`t-urban`), spellcasting foci → `spell-<category>`. Each has a French label (« si visible »,
+  English in `client/i18n/en/sheet.json`), optional restrictions that make it apply to some tests only (`skills`, `groups`, `exclude`, `attrs`,
+  `knowledge`, `matrixActions`, `mode`) and a **switch** (`toggle`): `null` = automatic; several conditions share one switch (every « must be visible »
+  outfit → `visible`); unknown keys become their own switch (never applied silently). Wireless bonuses also need the `wireless` switch. Switch labels:
+  `TOGGLE_LABELS` (« Tenue visible », « Bonus sans fil actifs »…). `conditionState(key, ctx, toggles)` → 'na' | 'auto' | 'on' | 'off'.
+- **Sources** (`collectModifiers(actor, lookup, { weaponId? })`): EQUIPPED armor and its mods — like `armorTotal()`, one outfit at a time: only the best
+  non-stacking worn armor plus the `stack` pieces (`equipped !== false`; armor « Rating » formulas use
+  `armor.itemRating` — `armor.rating` is the armor value), augmentations (rating; not `disabled`), qualities, adept powers (Rating = `level`), gear with
+  `active: true` (players may toggle it on their own gear; the sheet shows an « actif » switch on gear whose catalog entry has effects; default off),
+  martial-art techniques, and with `weaponId` that weapon's equipped accessories (`effects.dicePool` → `weaponPool`). Items are matched by `catalogId`,
+  else by English / French name (Foundry imports), also without a trailing « (…) » / « R4 ». `Modifier = { id ('list:itemId[:subId]:i'), source: { list,
+  itemId, subId?, name, nameFr?, parentName?, catalogId?, book, page }, type, target, value (number, Rating resolved), condition, wireless?, baked?, info?,
+  needsChoice?, choice?, immune? }`. `select…` effects target `item.choice` (Chummer `<extra>`, stored by the Chummer import; the GM sets it in edit mode,
+  « Choix (effet) »: a skill name or id, a Matrix action, an attribute, a limit) — without a choice they are shown, not applied.
+- **No double counting**: attribute bonuses and initiative dice / score bonuses (`attribute`, `initiativeDice`, `initiative`) are already STORED on the
+  actor — `actor.augmented` / `actor.initiative`, filled by `server/lib/augment.js` (shop, sheet, training: `augmentations[].bonus`, `powers[].bonus`),
+  by the Foundry import (active effects + known boosts, `convert-actor.js`) and by the Chummer import (`<totalvalue>` and improvements, `parse.js`). They
+  are `baked: true` only when really stored: the item records it (`item.bonus`: `server/lib/augment.js bakeItemBonus` from the catalog effects — sheet
+  `actor/addItem` / `updateItem` of augmentations, powers, qualities; shop; training; creator; enemy generator — initiative score and « select attribute »
+  included), the item comes from an import (`fvtt_` id / `chummerGuid`: `importedItem()`), or the stored value still has room for it (hand-made
+  templates). Otherwise `unbaked: true`: shown « non compté (à reporter par le MJ) », never added. Everything else is stored nowhere and is applied:
+  skill ratings, limits, monitors and armor ratings of both imports are base values (Foundry armor `rating` = `armor.base`; Chummer monitors are
+  recomputed). An `actor.monitors` override wins over monitor bonuses (shown « ignoré : valeur forcée ») and is kept as is: 0 = no such track (grunts,
+  drones: stun damage goes to Physical; hosts). Imported unarmed / thrown weapons keep `accuracy: 'Physical'` (± n), never a frozen number.
+- **Helpers**: `rollContext(actor, { skillId?, attr?, attr2?, test?, weaponId?, actionId?, mode? })`; `poolModifiers(mods, ctx, { conditions, ignore,
+  isGM })` → `{ lines: [{ mod, value, state: 'applied'|'off'|'ignored'|'info', toggles }], total, toggles }`; `limitFor(actor, name, mods, ctx, opts)` →
+  `{ base, total, lines, toggles, alt, altConditions }`; `weaponAccuracy(actor, weapon, mods, ctx, opts)` (Accuracy or « Physical » + equipped accessories'
+  `effects.accuracy` + accuracy effects); `derivedWithModifiers(actor, mods)` = `derive()` + monitors (physical / stun / overflow), wound modifier (pain
+  tolerance), armor (implants, powers: Mystic Armor), soak, defense, composure, judge intentions, memory, lift / carry, limits (unconditional) +
+  `limitsAlt` / `limitsAltConditions` (value with the switches on), matrix initiative dice, and `sources[key]` (`limit.social`, `armor`,
+  `physicalMonitor`, `initiative`, `attr.REA`…) for tooltips. `cleanConditions(mods, list)` keeps only the switches this actor's modifiers use.
+- **Rolls (server authority)**: `dice/roll` recomputes the pool and the limit with `actorModifiers()`; the client only sends `conditions` (switches on,
+  filtered by `cleanConditions`) and `ignore` (modifier ids to leave out: players may only drop bonuses, the GM anything). Any other client field
+  (`mods`, `effects`…) is ignored; a player's `limit` above the computed one, `null` or 0 gives the computed one; `test` is checked against its
+  attributes (`checkedTest`), a weapon roll uses the weapon's skill, `matrixLimit` only applies to Matrix skills, the wound modifier is forced for
+  players (except damage resistance), player `bonus` lines are recomputed or counted as « mod. », and the Matrix switches « en RV chaude » /
+  « dans un hôte » come from the actor's persona (mode, `hostId`; the GM keeps them for an actor without persona). `roll.mods = [{ id, kind: 'pool'|'limit', type, name,
+  nameFr?, value, state, condition?, wireless?, book?, page? }]`, `roll.limitBreakdown` (« sociale 9 + Zoé : Heritage 12 +2 »), `roll.conditions`. Soak
+  (`test: 'soak'`) adds the armor with its modifiers itself; weapon attacks (`weaponId`) use `weaponAccuracy` and the accessories' dice; Matrix tests
+  from the sheet (`matrixLimit`) use the device attribute. Damage, status and combat (`30-combat.js`: initiative dice, incapacitation, wounds) use
+  `deriveFull()`.
+- **Matrix**: `shared/matrix.js actionPool(…, { mods, conditions })` adds skill / linked-attribute / Codeslinger dice (`modLines`, parts with their
+  source); `matrixInitiative(actor, persona, mode, mods)` adds matrix initiative dice (max 5D6). `45-matrix.js` passes the decker's modifiers (never the
+  agent's) and `p.conditions`; damage monitors use `deriveFull`. Matrix limits are the deck's attributes: no physical / mental / social modifier applies.
+- **UI**: `RollDialog` (preset `test`, `weaponId`, `matrixLimit`) lists every modifier of the test with its source and 📖 chip (players can uncheck a
+  bonus), the switches that change something (« Tenue visible (+2 Limite sociale) », remembered per actor in `localStorage['sr.rollToggles.<actorId>']`,
+  guarded) and the limit breakdown; the Matrix « Lancer » dialog shows the same switches. Sheet: limits « 9 (11 si visible) » with a source tooltip,
+  initiative / monitors / armor / soak / composure… with their sources, effect chips under armor, implants, qualities, powers and gear, gear « actif »
+  switch; GM edit mode: « Choix (effet) » on qualities / powers / implants / gear / armor, « Indice (objet) » on armor, « Actif » on gear. The log shows
+  the applied modifiers of a roll with their 📖 chips; the limit badge's tooltip has the limit breakdown.
+- **Not automated** (shown, or left to the GM): resistances / immunities, reach / unarmed DV, attribute maximums, karma / chargen tags (unsupported),
+  « Too Pretty To Hit » (empty `<bonus>` in Chummer: no data). Situational conditions without restriction (« avec la corpo concernée, si visible »)
+  are their own switch.
+- **Tests**: `node tools/test-modifiers.js` (port 3500): the normalizer on real Chummer entries (Heritage 12, Chameleon Suit, Improved Reflexes,
+  Kinesics, Muscle Replacement, Synaptic Booster, Tailored Pheromones, Codeslinger, Dimmer Bulb, Toughness / Will to Live / Catlike, Fire Resistance,
+  Spellcasting Focus), the Lazarus PCs (Jane's Con: pool 14 / 16 with Seduction, social limit 9 → 11 « visible »; Improved Reflexes baked; Ank'Lay's
+  ware baked; Bricks' Codeslinger), monitors / pain tolerance, chargen accessories / armor mods, and the server authority (no injected modifier, maluses
+  kept, limit not raised, weapon / soak / Matrix limits, gear switch, GM sub-item edits keep `paid` / `extraMount` / `bonus`), and the review
+  regressions: monitor override 0, baked / unbaked bonuses + stored GM additions (Improved Reflexes, Move-by-Wire, Lightning Reflexes), Damage
+  Compensators, one outfit, test claims, wounds, weapon skill, matrixLimit, limit removal / floor, player bonus lines, persona switches, imported
+  « Physical » accuracy.

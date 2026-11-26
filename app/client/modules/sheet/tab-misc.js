@@ -5,9 +5,15 @@ import { send } from '../../lib/net.js';
 import { attr, SKILL_BY_ID } from '/shared/sr5.js';
 import { t, tk, tIfKnown, attrShort, fmtNuyen, itemName } from '../../lib/i18n.js';
 import { fmtDate, fmtNum, signed } from './common.js';
-import { RollStat } from './tab-summary.js';
+import { RollStat, LimitStat } from './tab-summary.js';
+import { ItemEffects, sourcesTitle } from './modifiers-ui.js';
+import { collectModifiers, gearHasEffects } from '/shared/modifiers.js';
 import { ListEditor, CatalogPicker } from './editors.js';
-import { openMatrix } from '../matrix/common.js';
+import { SubChips, armorCapacityText, vehicleSlotsText, lifestyleBaseLabel, lifestyleBreakdown } from './sublists.js';
+import { armorMods } from './sheet-data.js';
+import { openMatrix, ProgramRef } from '../matrix/common.js';
+import { ItemRef, RuleRef } from '../books/BookRef.js';
+import { ruleRef, skillRef } from '/shared/bookrefs.js';
 
 // Roll labels are stored in French in the log; rollLabel() (common.js) translates them for each viewer.
 const drainRollLabel = (k) => `Résistance au drain (VOL + ${k})`; // i18n-ignore
@@ -29,26 +35,28 @@ export function MagicTab({ s }) {
   return html`<div class="sh-magic">
     <div class="sh-derived">
       <${RollStat} label=${t('Magie')} value=${mag} accent="magenta" />
-      <${RollStat} label=${t('Init. astrale')} value=${`${d.astralInitiative.base} + 2D6`} />
-      ${d.limits.astral ? html`<${RollStat} label=${t('Limite astrale')} value=${d.limits.astral} />` : null}
-      ${powers.length > 0 && html`<${RollStat} label=${t('Points de pouvoir')} value=${`${fmtNum(pp)} / ${mag}`} accent=${pp > mag ? 'magenta' : 'cyan'} title=${t('PP dépensés / Magie')} />`}
-      ${hasSkill(actor, 'assensing') && html`<${RollStat} label=${t('Observation astrale')} value=${attrShort('INT')} onClick=${() => s.roll({ skillId: 'assensing' })} />`}
-      ${hasSkill(actor, 'spellcasting') && html`<${RollStat} label=${t('Lancer un sort')} value=${attrShort('MAG')} onClick=${() => s.roll({ skillId: 'spellcasting', label: tk('Lancement de sort'), limit: null })} />`}
-      ${hasSkill(actor, 'counterspelling') && html`<${RollStat} label=${t('Contresort')} value=${attrShort('MAG')} onClick=${() => s.roll({ skillId: 'counterspelling' })} />`}
-      ${hasSkill(actor, 'summoning') && html`<${RollStat} label=${t('Invocation')} value=${attrShort('MAG')} onClick=${() => s.roll({ skillId: 'summoning', limit: null })} />`}
+      <${RollStat} label=${t('Init. astrale')} value=${`${d.astralInitiative.base} + 2D6`} book=${ruleRef('initiative')} />
+      ${d.limits.astral ? html`<${LimitStat} s=${s} name="astral" label=${t('Limite astrale')} />` : null}
+      ${powers.length > 0 && html`<${RollStat} label=${t('Points de pouvoir')} value=${`${fmtNum(pp)} / ${mag}`} accent=${pp > mag ? 'magenta' : 'cyan'} title=${t('PP dépensés / Magie')} book=${ruleRef('powerPoints')} />`}
+      ${hasSkill(actor, 'assensing') && html`<${RollStat} label=${t('Observation astrale')} value=${attrShort('INT')} book=${skillRef('assensing')} onClick=${() => s.roll({ skillId: 'assensing' })} />`}
+      ${hasSkill(actor, 'spellcasting') && html`<${RollStat} label=${t('Lancer un sort')} value=${attrShort('MAG')} book=${ruleRef('spellcasting')} onClick=${() => s.roll({ skillId: 'spellcasting', label: tk('Lancement de sort'), limit: null })} />`}
+      ${hasSkill(actor, 'counterspelling') && html`<${RollStat} label=${t('Contresort')} value=${attrShort('MAG')} book=${skillRef('counterspelling')} onClick=${() => s.roll({ skillId: 'counterspelling' })} />`}
+      ${hasSkill(actor, 'summoning') && html`<${RollStat} label=${t('Invocation')} value=${attrShort('MAG')} book=${skillRef('summoning')} onClick=${() => s.roll({ skillId: 'summoning', limit: null })} />`}
     </div>
     ${(spells.length > 0 || hasSkill(actor, 'spellcasting') || hasSkill(actor, 'summoning')) && html`<div class="row wrap">
-      <span class="muted small">${t('Résister au drain :')}</span>
-      ${['LOG', 'CHA', 'INT'].map((k) => html`<${Button} small key=${k} onClick=${() => s.roll({ attr: 'WIL', attr2: k, label: drainRollLabel(k), limit: null, applyWounds: false })}>${attrShort('WIL')} + ${attrShort(k)}</${Button}>`)}
+      <span class="muted small">${t('Résister au drain :')}</span><${RuleRef} rule="drain" />
+      ${['LOG', 'CHA', 'INT'].map((k) => html`<${Button} small key=${k} onClick=${() => s.roll({ attr: 'WIL', attr2: k, label: drainRollLabel(k), limit: null, applyWounds: false, test: 'drainResist' })}>${attrShort('WIL')} + ${attrShort(k)}</${Button}>`)}
     </div>`}
 
-    <h4 class="section-title">${t('Pouvoirs d’adepte')}</h4>
+    <h4 class="section-title">${t('Pouvoirs d’adepte')} <${RuleRef} rule="adeptPowers" /></h4>
     ${edit
       ? html`<${ListEditor} actor=${actor} list="powers" />`
       : powers.length
         ? html`<div class="sh-cards">${powers.map(
             (p) => html`<div class="sh-card" key=${p.id}>
-              <div class="row spread"><b>${p.name}${p.level ? ` ${p.level}` : ''}</b><span class="badge badge-magenta">${t('{v} PP', { v: fmtNum(p.pp) })}</span></div>
+              <div class="row spread"><span><b>${p.name}${p.level ? ` ${p.level}` : ''}</b> <${ItemRef} item=${p} /></span><span class="badge badge-magenta">${t('{v} PP', { v: fmtNum(p.pp) })}</span></div>
+              ${p.choice ? html`<div class="faint small">${t('Choix : {choice}', { choice: p.choice })}</div>` : null}
+              <${ItemEffects} mods=${s.mods} list="powers" itemId=${p.id} />
               ${p.notes && html`<div class="muted small">${p.notes}</div>`}
             </div>`
           )}</div>`
@@ -62,7 +70,7 @@ export function MagicTab({ s }) {
             <thead><tr><th>${t('Sort')}</th><th>${t('Catégorie')}</th><th>${t('Type')}</th><th>${t('Portée')}</th><th>${t('Durée')}</th><th>${t('Drain')}</th><th></th></tr></thead>
             <tbody>${spells.map(
               (sp) => html`<tr key=${sp.id}>
-                <td><b>${sp.name}</b>${sp.notes ? html`<div class="faint small">${sp.notes}</div>` : null}</td>
+                <td><b>${sp.name}</b> <${ItemRef} item=${sp} />${sp.notes ? html`<div class="faint small">${sp.notes}</div>` : null}</td>
                 <td class="small">${sp.category}</td><td>${sp.type}</td><td class="small">${sp.range}</td><td>${sp.duration}</td><td class="mono">${sp.drain}</td>
                 <td><${Button} small variant="accent" onClick=${() => s.roll({ skillId: 'spellcasting', label: spellRollLabel(sp.name), limit: null })} title=${t('Lancement de sorts + Magie (limite = Puissance, à régler)')}>${t('sort::Lancer')}</${Button}></td>
               </tr>`
@@ -76,14 +84,15 @@ export function MagicTab({ s }) {
 // Matrice
 // ---------------------------------------------------------------------------
 export function MatrixTab({ s }) {
-  const { actor, d, edit } = s;
+  const { actor, d, dm, edit } = s;
   const m = actor.matrix || null;
   const [picker, setPicker] = useState(false);
   const [newProg, setNewProg] = useState('');
   if (!m) {
     return html`<div class="empty">${t('Aucun appareil matriciel.')}
       ${edit && html`<div style=${{ marginTop: '10px' }}><${Button} variant="primary" onClick=${() => s.update({ matrix: { device: 'Commlink', rating: 3, attack: 0, sleaze: 0, dataProcessing: 3, firewall: 3, programs: [] } })}>${t('Ajouter un commlink / deck')}</${Button}></div>`}
-    </div>`;
+    </div>
+    <${ComplexForms} actor=${actor} />`;
   }
   const programs = m.programs || [];
   const setM = (patch) => s.update({ matrix: patch });
@@ -95,11 +104,11 @@ export function MatrixTab({ s }) {
   };
   // `label` is the French roll label stored in the log (each viewer translates it).
   const actions = [
-    { label: tk('Piratage'), skillId: 'hacking', limit: m.sleaze, sub: tk('Hacking + LOG [Corruption]') },
-    { label: tk('Force brute'), skillId: 'cybercombat', limit: m.attack, sub: tk('Cybercombat + LOG [Attaque]') },
-    { label: tk('Informatique'), skillId: 'computer', limit: m.dataProcessing, sub: tk('Informatique + LOG [Traitement]') },
-    { label: tk('Guerre électronique'), skillId: 'electronic_warfare', limit: m.dataProcessing, sub: tk('GE + LOG [Traitement]') },
-    { label: tk('Software'), skillId: 'software', limit: m.dataProcessing, sub: tk('Software + LOG [Traitement]') },
+    { label: tk('Piratage'), skillId: 'hacking', limit: m.sleaze, matrixLimit: 'sleaze', sub: tk('Hacking + LOG [Corruption]') },
+    { label: tk('Force brute'), skillId: 'cybercombat', limit: m.attack, matrixLimit: 'attack', sub: tk('Cybercombat + LOG [Attaque]') },
+    { label: tk('Informatique'), skillId: 'computer', limit: m.dataProcessing, matrixLimit: 'dataProcessing', sub: tk('Informatique + LOG [Traitement]') },
+    { label: tk('Guerre électronique'), skillId: 'electronic_warfare', limit: m.dataProcessing, matrixLimit: 'dataProcessing', sub: tk('GE + LOG [Traitement]') },
+    { label: tk('Software'), skillId: 'software', limit: m.dataProcessing, matrixLimit: 'dataProcessing', sub: tk('Software + LOG [Traitement]') },
   ].filter((a) => SKILL_BY_ID[a.skillId] && (hasSkill(actor, a.skillId) || SKILL_BY_ID[a.skillId].def));
   const num = (k, label) => html`<div class="field"><span class="field-label">${label}</span><${NumberInput} small value=${m[k] || 0} min=${0} max=${15} onChange=${(v) => setM({ [k]: v })} /></div>`;
   return html`<div class="sh-matrix">
@@ -117,17 +126,17 @@ export function MatrixTab({ s }) {
           </div>
         </div>`}
     <div class="sh-derived">
-      <${RollStat} label=${t('Init. RA')} value=${d.initiative.text} />
-      <${RollStat} label=${t('Init. RV froide')} value=${`${d.matrixInitiative.cold.base} + 3D6`} />
-      <${RollStat} label=${t('Init. RV chaude')} value=${`${d.matrixInitiative.hot.base} + 4D6`} accent="magenta" />
-      ${actions.map((a) => html`<${RollStat} key=${a.skillId} label=${t(a.label)} value=${a.limit ?? '—'} sub=${t(a.sub)} onClick=${() => s.roll({ skillId: a.skillId, label: a.label, limit: a.limit || undefined })} />`)}
+      <${RollStat} label=${t('Init. RA')} value=${d.initiative.text} book=${ruleRef('matrixInitiative')} />
+      <${RollStat} label=${t('Init. RV froide')} value=${`${dm.matrixInitiative.cold.base} + ${dm.matrixInitiative.cold.dice}D6`} book=${ruleRef('matrixInitiative')} title=${sourcesTitle(dm.sources.matrixInitiative)} />
+      <${RollStat} label=${t('Init. RV chaude')} value=${`${dm.matrixInitiative.hot.base} + ${dm.matrixInitiative.hot.dice}D6`} accent="magenta" book=${ruleRef('matrixInitiative')} title=${sourcesTitle(dm.sources.matrixInitiative)} />
+      ${actions.map((a) => html`<${RollStat} key=${a.skillId} label=${t(a.label)} value=${a.limit ?? '—'} sub=${t(a.sub)} book=${skillRef(a.skillId)} onClick=${() => s.roll({ skillId: a.skillId, label: a.label, ...(a.limit ? { matrixLimit: a.matrixLimit } : {}) })} />`)}
       <${RollStat} label=${t('Défense matricielle')} value=${attr(actor, 'INT') + (m.firewall || 0)} sub=${t('{attr} + Firewall', { attr: attrShort('INT') })} onClick=${() => s.roll({ attr: 'INT', label: tk('Défense matricielle'), limit: null, bonus: [{ label: 'Firewall', value: m.firewall || 0 }] })} />
-      <${RollStat} label=${t('Résister (dommages)')} value=${(m.rating || 0) + (m.firewall || 0)} sub=${t('Indice + Firewall')} onClick=${() => s.roll({ pool: (m.rating || 0) + (m.firewall || 0), label: tk('Résistance aux dommages matriciels'), limit: null, applyWounds: false })} />
-      ${(m.attack || m.sleaze) ? html`<${RollStat} label=${t('Biofeedback')} value=${attr(actor, 'WIL') + (m.firewall || 0)} sub=${t('{attr} + Firewall', { attr: attrShort('WIL') })} onClick=${() => s.roll({ attr: 'WIL', label: tk('Résistance au biofeedback'), limit: null, applyWounds: false, bonus: [{ label: 'Firewall', value: m.firewall || 0 }] })} />` : null}
+      <${RollStat} label=${t('Résister (dommages)')} value=${(m.rating || 0) + (m.firewall || 0)} sub=${t('Indice + Firewall')} book=${ruleRef('matrixDamage')} onClick=${() => s.roll({ pool: (m.rating || 0) + (m.firewall || 0), label: tk('Résistance aux dommages matriciels'), limit: null, applyWounds: false })} />
+      ${(m.attack || m.sleaze) ? html`<${RollStat} label=${t('Biofeedback')} value=${attr(actor, 'WIL') + (m.firewall || 0)} sub=${t('{attr} + Firewall', { attr: attrShort('WIL') })} book=${ruleRef('biofeedback')} onClick=${() => s.roll({ attr: 'WIL', label: tk('Résistance au biofeedback'), limit: null, applyWounds: false, test: 'biofeedback', bonus: [{ label: 'Firewall', value: m.firewall || 0 }] })} />` : null}
     </div>
     <h4 class="section-title">${t('Programmes ({n})', { n: programs.length })}</h4>
     <div class="sh-chips">
-      ${programs.map((p) => html`<span class="sh-chip" key=${p}>${p}${edit ? html`<button type="button" class="sh-chip-x" title=${t('Retirer')} onClick=${() => setM({ programs: programs.filter((x) => x !== p) })}>✕</button>` : null}</span>`)}
+      ${programs.map((p) => html`<span class="sh-chip" key=${p}>${p}<${ProgramRef} name=${p} />${edit ? html`<button type="button" class="sh-chip-x" title=${t('Retirer')} onClick=${() => setM({ programs: programs.filter((x) => x !== p) })}>✕</button>` : null}</span>`)}
       ${!programs.length && html`<span class="muted small">${t('Aucun programme.')}</span>`}
     </div>
     ${edit && html`<div class="row wrap" style=${{ marginTop: '8px' }}>
@@ -136,14 +145,29 @@ export function MatrixTab({ s }) {
       <${Button} small variant="primary" onClick=${() => setPicker(true)}>${t('Depuis le catalogue')}</${Button}>
     </div>`}
     ${picker && html`<${CatalogPicker} actor=${actor} list="gear" catalogs=${['programs']} onClose=${() => setPicker(false)} onPick=${(conv, e) => addProg(itemName(e))} />`}
+    <${ComplexForms} actor=${actor} />
   </div>`;
+}
+
+/** Complex forms of a technomancer (Chummer import, creator, training): name, target, duration, Fading, 📖 page. */
+function ComplexForms({ actor }) {
+  const forms = actor.complexForms || [];
+  if (!forms.length) return null;
+  return html`<h4 class="section-title">${t('Formes complexes')} <${RuleRef} rule="complexForms" /></h4>
+    <div class="sh-table-wrap"><table class="sr">
+      <thead><tr><th>${t('Forme complexe')}</th><th>${t('Cible')}</th><th>${t('Durée')}</th><th>${t('Fading')}</th></tr></thead>
+      <tbody>${forms.map((f) => html`<tr key=${f.id}>
+        <td><b>${f.name}</b> <${ItemRef} item=${f} />${f.notes ? html`<div class="faint small">${f.notes}</div>` : null}</td>
+        <td class="small">${f.target ? tIfKnown(f.target) : '—'}</td><td>${f.duration || '—'}</td><td class="mono">${f.fading || '—'}</td>
+      </tr>`)}</tbody>
+    </table></div>`;
 }
 
 // ---------------------------------------------------------------------------
 // Équipement
 // ---------------------------------------------------------------------------
 export function GearTab({ s }) {
-  const { actor, d, edit, own } = s;
+  const { actor, d, dm, edit, own } = s;
   const upItem = (list, id, patch) => send('actor/updateItem', { actorId: actor.id, list, itemId: id, patch }).catch(() => {});
   const armor = actor.armor || [];
   const augs = actor.augmentations || [];
@@ -159,17 +183,22 @@ export function GearTab({ s }) {
     </div>`;
   }
   return html`<div class="sh-gear">
-    <div class="sh-sec-head"><h4 class="section-title">${t('Armures')}</h4><span class="badge badge-cyan">${t('Armure totale {n}', { n: d.armor })}</span></div>
+    <div class="sh-sec-head"><h4 class="section-title">${t('Armures')}</h4><span class="badge badge-cyan" title=${sourcesTitle(dm.sources.armor, t('Armures portées : {n}', { n: d.armor }))}>${t('Armure totale {n}', { n: dm.armor })}</span></div>
     ${armor.length
-      ? html`<div class="sh-list">${armor.map(
-          (a) => html`<div class=${'sh-list-row' + (a.equipped ? ' on' : '')} key=${a.id}>
+      ? html`<div class="sh-list">${armor.map((a) => {
+          const am = armorMods(a);
+          const cap = armorCapacityText(a);
+          return html`<div class=${'sh-list-row' + (a.equipped ? ' on' : '')} key=${a.id}>
             ${own
               ? html`<${Toggle} value=${a.equipped} onChange=${(v) => upItem('armor', a.id, { equipped: v })} title=${t('Équiper / retirer')} />`
               : html`<span class=${'badge ' + (a.equipped ? 'badge-cyan' : '')}>${a.equipped ? t('portée') : t('rangée')}</span>`}
-            <div class="grow"><b>${a.name}</b>${a.notes ? html`<div class="faint small">${a.notes}</div>` : null}</div>
-            <span class="mono sh-big">${a.stack ? '+' : ''}${a.rating}</span>
-          </div>`
-        )}</div>`
+            <div class="grow"><b>${a.name}</b> <${ItemRef} item=${a} />${cap ? html` <span class=${'badge' + (am.used > am.total ? ' badge-red' : '')}>${cap}</span>` : null}
+              ${(a.mods || []).length > 0 && html`<div><${SubChips} sub="mods" items=${a.mods} /></div>`}
+              ${a.equipped ? html`<${ItemEffects} mods=${s.mods} list="armor" itemId=${a.id} />` : html`<${ItemEffects} mods=${collectModifiers({ armor: [{ ...a, equipped: true }] }, s.lookup)} list="armor" itemId=${a.id} />`}
+              ${a.notes ? html`<div class="faint small">${a.notes}</div>` : null}</div>
+            <span class="mono sh-big" title=${am.bonus ? t('{base} + {bonus} (modifications) = {total}, compté dans l’armure totale', { base: a.rating, bonus: am.bonus, total: (Number(a.rating) || 0) + am.bonus }) : ''}>${a.stack ? '+' : ''}${a.rating}${am.bonus ? html`<small class="cyan"> +${am.bonus}</small>` : null}</span>
+          </div>`;
+        })}</div>`
       : html`<div class="muted small">${t('Aucune armure.')}</div>`}
 
     <div class="sh-sec-head"><h4 class="section-title">${t('Augmentations')}</h4><span class="badge">${t('Essence {ess} (−{used})', { ess: fmtNum(Math.round(d.essence * 100) / 100), used: fmtNum(Math.round(essUsed * 100) / 100) })}</span></div>
@@ -177,7 +206,9 @@ export function GearTab({ s }) {
       ? html`<div class="sh-list">${augs.map(
           (a) => html`<div class="sh-list-row" key=${a.id}>
             <span class=${'badge ' + (a.kind === 'bioware' ? 'badge-green' : 'badge-cyan')}>${a.kind === 'bioware' ? 'Bio' : 'Cyber'}</span>
-            <div class="grow"><b>${a.name}</b>${a.rating ? ` (${t('indice {n}', { n: a.rating })})` : ''}${a.grade && a.grade !== 'standard' ? html` <span class="badge">${gradeLabel(a.grade)}</span>` : null}
+            <div class="grow"><b>${a.name}</b>${a.rating ? ` (${t('indice {n}', { n: a.rating })})` : ''} <${ItemRef} item=${a} />${a.grade && a.grade !== 'standard' ? html` <span class="badge">${gradeLabel(a.grade)}</span>` : null}
+              ${a.choice ? html` <span class="faint small">${t('Choix : {choice}', { choice: a.choice })}</span>` : null}
+              <${ItemEffects} mods=${s.mods} list="augmentations" itemId=${a.id} />
               ${a.notes ? html`<div class="faint small">${a.notes}</div>` : null}</div>
             <span class="mono">${t('{v} ESS', { v: fmtNum(Math.round((Number(a.essence) || 0) * 1000) / 1000) })}</span>
           </div>`
@@ -187,8 +218,10 @@ export function GearTab({ s }) {
     <h4 class="section-title">${t('Équipement')}</h4>
     ${gear.length
       ? html`<div class="sh-list">${gear.map(
-          (g) => html`<div class="sh-list-row" key=${g.id}>
-            <div class="grow"><b>${g.name}</b>${g.rating ? ` (${t('indice {n}', { n: g.rating })})` : ''} <span class="faint small">${g.category || ''}</span>
+          (g) => html`<div class=${'sh-list-row' + (g.active ? ' on' : '')} key=${g.id}>
+            ${gearHasEffects(g, s.lookup) ? (own ? html`<${Toggle} value=${!!g.active} onChange=${(v) => upItem('gear', g.id, { active: v })} title=${t('Porté / activé : ses effets comptent dans les jets')} />` : html`<span class=${'badge ' + (g.active ? 'badge-cyan' : '')}>${g.active ? t('actif') : t('inactif')}</span>`) : null}
+            <div class="grow"><b>${g.name}</b>${g.rating ? ` (${t('indice {n}', { n: g.rating })})` : ''} <${ItemRef} item=${g} /> <span class="faint small">${g.category || ''}</span>
+              ${gearHasEffects(g, s.lookup) ? html`<${ItemEffects} mods=${g.active ? s.mods : collectModifiers({ gear: [{ ...g, active: true }] }, s.lookup)} list="gear" itemId=${g.id} />` : null}
               ${own
                 ? html`<${TextInput} class="sh-inline-note" value=${g.notes || ''} placeholder=${t('Notes…')} onChange=${(v) => upItem('gear', g.id, { notes: v })} />`
                 : g.notes
@@ -202,14 +235,31 @@ export function GearTab({ s }) {
     ${vehicles.length > 0 && html`<h4 class="section-title">${t('Véhicules & drones')}</h4>
       <div class="sh-cards">${vehicles.map(
         (v) => html`<div class="sh-card" key=${v.id}>
-          <b>${v.name}</b>
+          <span><b>${v.name}</b> <${ItemRef} item=${v} /></span>
           <div class="sh-vstats">
             ${[[tk('Maniab.'), v.handling], [tk('Vitesse'), v.speed], [tk('Accél.'), v.accel], [tk('Struct.'), v.body], [tk('Blind.'), v.armor], [tk('Autopilote'), v.pilot], [tk('Senseurs'), v.sensor], [tk('Places'), v.seats]].map(([l, x]) => html`<span key=${l}><span class="faint">${t(l)}</span> <b>${x ?? '—'}</b></span>`)}
           </div>
+          ${(v.mods || []).length > 0 && html`<div class="faint small">${vehicleSlotsText(v)}</div><${SubChips} sub="mods" items=${v.mods} />`}
           ${v.notes && html`<div class="faint small">${v.notes}</div>`}
         </div>`
       )}</div>`}
   </div>`;
+}
+
+/** Lifestyles (« Modes de vie »): base, monthly cost with its breakdown, options (garage, DocWagon contract, security…). */
+function LifestylesView({ actor, showPaid }) {
+  const list = actor.lifestyles || [];
+  if (!list.length) return html`<div class="muted small">${t('Aucun mode de vie.')}</div>`;
+  return html`<div class="sh-cards">${list.map((l) => html`<div class=${'sh-card sh-lifestyle' + (l.primary ? ' primary' : '')} key=${l.id}>
+    <div class="row spread"><span><b>${l.name || lifestyleBaseLabel(l.base)}</b> <${ItemRef} item=${l} /></span>
+      <span class="row gap-s">${l.primary ? html`<span class="badge badge-amber">${t('principal')}</span>` : null}<span class="badge badge-cyan">${lifestyleBaseLabel(l.base)}</span></span></div>
+    <div class="row wrap gap-s"><span class="mono">${t('{cost}/mois', { cost: fmtNuyen(l.monthlyCost || 0) })}</span>
+      ${(l.qualities || []).length > 0 && html`<span class="faint small" title=${t('Coût de base, options en % du coût de base, options à prix fixe')}>(${lifestyleBreakdown(l)})</span>`}
+      ${showPaid ? html`<span class="muted small">· ${t('{n} mois payé(s)', { n: l.monthsPaid || 0 })}</span>` : null}</div>
+    ${l.points && html`<div class="faint small">${t('Confort {c} · Sécurité {s} · Quartier {n}', { c: l.points.comforts ?? '—', s: l.points.security ?? '—', n: l.points.neighborhood ?? '—' })}</div>`}
+    <${SubChips} sub="qualities" items=${l.qualities} />
+    ${l.notes && html`<div class="faint small">${l.notes}</div>`}
+  </div>`)}</div>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -219,18 +269,12 @@ export function ContactsTab({ s }) {
   const { actor, edit, own, gm } = s;
   const contacts = actor.contacts || [];
   const sins = actor.sins || [];
-  const ls = actor.lifestyle;
   const upItem = (id, patch) => send('actor/updateItem', { actorId: actor.id, list: 'contacts', itemId: id, patch }).catch(() => {});
   if (edit) {
     return html`<div>
       <h4 class="section-title">${t('Contacts')}</h4><${ListEditor} actor=${actor} list="contacts" />
       <h4 class="section-title">${t('SIN & licences')}</h4><${ListEditor} actor=${actor} list="sins" />
-      <h4 class="section-title">${t('Mode de vie')}</h4>
-      <div class="row wrap sh-edit-row">
-        <label class="field"><span class="field-label">${t('Niveau')}</span><${TextInput} value=${ls?.name || ''} placeholder=${t('Moyen…')} onChange=${(v) => s.update({ lifestyle: { name: v } })} /></label>
-        <div class="field"><span class="field-label">${t('Coût mensuel (¥)')}</span><${NumberInput} value=${ls?.monthlyCost || 0} min=${0} max=${1000000} step=${100} onChange=${(v) => s.update({ lifestyle: { monthlyCost: v } })} /></div>
-        <div class="field"><span class="field-label">${t('Mois payés')}</span><${NumberInput} value=${ls?.monthsPaid || 0} min=${0} max=${120} onChange=${(v) => s.update({ lifestyle: { monthsPaid: v } })} /></div>
-      </div>
+      <h4 class="section-title">${t('Modes de vie')}</h4><${ListEditor} actor=${actor} list="lifestyles" />
     </div>`;
   }
   return html`<div>
@@ -261,9 +305,7 @@ export function ContactsTab({ s }) {
         )}</div>`
       : html`<div class="muted small">${t('Aucun SIN.')}</div>`}
 
-    ${ls && html`<h4 class="section-title">${t('Mode de vie')}</h4>
-      <div class="row wrap"><span class="badge badge-cyan">${ls.name || '—'}</span><span class="muted">${t('{cost}/mois', { cost: fmtNuyen(ls.monthlyCost || 0) })}</span>
-        ${gm || own ? html`<span class="muted small">· ${t('{n} mois payé(s)', { n: ls.monthsPaid || 0 })}</span>` : null}</div>`}
+    ${(actor.lifestyles || []).length > 0 && html`<h4 class="section-title">${t('Modes de vie')} <${RuleRef} rule="lifestyles" /></h4><${LifestylesView} actor=${actor} showPaid=${gm || own} />`}
   </div>`;
 }
 
@@ -271,7 +313,7 @@ export function ContactsTab({ s }) {
 // Qualités
 // ---------------------------------------------------------------------------
 export function QualitiesTab({ s }) {
-  const { actor, edit } = s;
+  const { actor, edit, mods } = s;
   const qs = actor.qualities || [];
   if (edit) return html`<${ListEditor} actor=${actor} list="qualities" />`;
   const pos = qs.filter((q) => q.positive !== false && (q.karma || 0) >= 0);
@@ -281,7 +323,9 @@ export function QualitiesTab({ s }) {
     ${list.length
       ? html`<div class="sh-list">${list.map(
           (q) => html`<div class="sh-list-row" key=${q.id}>
-            <div class="grow"><b>${q.name}</b>${q.notes ? html`<div class="faint small">${q.notes}</div>` : null}</div>
+            <div class="grow"><b>${q.name}</b> <${ItemRef} item=${q} />${q.choice ? html` <span class="faint small">${t('Choix : {choice}', { choice: q.choice })}</span>` : null}
+              <${ItemEffects} mods=${mods} list="qualities" itemId=${q.id} />
+              ${q.notes ? html`<div class="faint small">${q.notes}</div>` : null}</div>
             <span class=${'mono ' + color}>${signed(q.karma || 0)}</span>
           </div>`
         )}</div>`

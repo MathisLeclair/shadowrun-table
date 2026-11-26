@@ -5,6 +5,7 @@ import { html, Button, Tabs, Toggle, Badge, TextInput, NumberInput, Select, Empt
 import { send, upload, api } from '../../lib/net.js';
 import { setUI, toast } from '../../lib/ui-store.js';
 import { derive, METATYPES } from '/shared/sr5.js';
+import { derivedWithModifiers } from '/shared/modifiers.js';
 import { t, fmtNuyen, metatypeLabel } from '../../lib/i18n.js';
 import { isGM, ownsActor, isRestricted, ownerOf, actorStatus, statusColor, statusLabel, Avatar, fmtNum } from './common.js';
 import { RollDialog } from './RollDialog.js';
@@ -14,6 +15,7 @@ import { CombatTab } from './tab-combat.js';
 import { MagicTab, MatrixTab, GearTab, ContactsTab, QualitiesTab, NotesTab, HistoryTab, NpcTab } from './tab-misc.js';
 import { slugify } from './sheet-data.js';
 import { ChummerSheetBar } from '../chummer/ChummerActions.js';
+import { useDerivedModifiers, useEffectsLookup } from './modifiers-ui.js';
 
 loadCss('/modules/sheet/sheet.css');
 
@@ -158,19 +160,22 @@ export default function SheetView({ game, actorId }) {
   const [edit, setEdit] = useState(false);
   const [rollPreset, setRollPreset] = useState(null);
   const actor = game?.actors?.[actorId];
+  // Modifiers of the actor's gear, qualities, powers, implants (shared/modifiers.js): s.mods, s.dm = derive() + modifiers.
+  const { mods, dm } = useDerivedModifiers(actor && !isRestricted(actor) ? actor : null);
+  const lookup = useEffectsLookup();
   if (!actor) return html`<${Empty}>${t('Personnage introuvable (supprimé ?).')}</${Empty}>`;
   if (isRestricted(actor)) return html`<${RestrictedView} actor=${actor} />`;
 
   const gm = isGM(game);
   const own = ownsActor(game, actor.id);
   const s = {
-    game, actor, gm, own, d: derive(actor),
+    game, actor, gm, own, d: derive(actor), dm: dm || derivedWithModifiers(actor, []), mods, lookup,
     edit: gm && edit, setEdit,
     roll: own ? (preset) => setRollPreset({ ...preset, _k: Date.now() }) : () => toast(t('Tu ne peux lancer les dés que pour ton personnage'), 'warn'),
     update: (patch) => send('actor/update', { actorId: actor.id, patch }).catch(() => {}),
   };
   const showMagic = s.edit || (actor.attributes.MAG !== undefined && actor.attributes.MAG !== null) || (actor.powers || []).length || (actor.spells || []).length;
-  const showMatrix = s.edit || !!actor.matrix;
+  const showMatrix = s.edit || !!actor.matrix || (actor.complexForms || []).length > 0;
   const tabs = [
     { id: 'summary', label: t('Résumé') },
     { id: 'skills', label: t('Compétences') },

@@ -1,6 +1,7 @@
 // Matrix UI helpers shared by the decker cockpit and the GM screens.
 import { html, Badge } from '../../lib/ui.js';
-import { send } from '../../lib/net.js';
+import { send, useCatalog } from '../../lib/net.js';
+import { BookRef } from '../books/BookRef.js';
 import { setUI } from '../../lib/ui-store.js';
 import { DiceFaces, fmtTime } from '../sheet/common.js';
 import { t, tn, tIfKnown, getLang, skillLabel, compare, logText } from '../../lib/i18n.js';
@@ -223,4 +224,14 @@ export const actionById = (id) => ACTION_BY_ID[id] || null;
 /** Open the Matrix tab on an actor's cockpit (closes the sheet modal). Used by the sheet's Matrice tab. */
 export function openMatrix(actorId) {
   setUI({ mainTab: 'matrix', sheetActorId: null, matrixFocus: { actorId, nonce: Date.now() } });
+}
+
+/** 📖 chip of a program stored by name: its entry in the programs catalog (official English name, French name or alias). */
+export function ProgramRef({ name }) {
+  const progs = useCatalog('programs');
+  if (!Array.isArray(progs) || !progs.length) return null;
+  const def = PROGRAM_BY_ID[programId(name)];
+  const keys = new Set([name, def?.en, def?.fr].filter(Boolean).map((x) => String(x).trim().toLowerCase()));
+  const e = progs.find((x) => keys.has(String(x.name).toLowerCase()) || keys.has(String(x.nameFr || '').toLowerCase()));
+  return e ? html` <${BookRef} source=${e.source} page=${e.page} />` : null;
 }

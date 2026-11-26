@@ -93,10 +93,10 @@ export default function DraftSummary({ data, result, rc, onJump, showBackground 
       ${d.limits.astral && html`<${Stat} label=${t('Limite astrale')} value=${d.limits.astral} />`}
     </div>`}
     ${actor && html`<${StatBlock} t=${{ ...actor, npc: { kind: 'metahuman' }, disposition: 'pc', color: data.concept.color }} />`}
-    ${(actor?.contacts?.length > 0 || actor?.lifestyle) && html`<${Panel} title=${t('Contacts & train de vie')} class="cg-mt">
+    ${(actor?.contacts?.length > 0 || actor?.lifestyles?.length > 0) && html`<${Panel} title=${t('Contacts & train de vie')} class="cg-mt">
       <div class="cg-chips">
         ${actor.contacts.map((c) => html`<span class="cg-chip">${c.name} <i>${t('Influence {c} · Loyauté {l}', { c: c.connection, l: c.loyalty })}${c.notes ? ` — ${c.notes}` : ''}</i></span>`)}
-        ${actor.lifestyle && html`<span class="cg-chip">${r.lifestyle?.item ? itemName(r.lifestyle.item) : actor.lifestyle.name} <i>${tn(actor.lifestyle.monthsPaid, '{n} mois payé', '{n} mois payés')}</i></span>`}
+        ${(actor.lifestyles || []).map((l) => html`<span class="cg-chip">${r.lifestyle?.item ? itemName(r.lifestyle.item) : l.name} <i>${tn(l.monthsPaid, '{n} mois payé', '{n} mois payés')}</i></span>`)}
       </div>
     </${Panel}>`}
     ${showBackground && data.concept.background && html`<${Panel} title=${t('bio::Historique')} class="cg-mt"><${Markdown} text=${data.concept.background} /></${Panel}>`}

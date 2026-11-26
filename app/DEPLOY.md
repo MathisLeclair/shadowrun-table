@@ -81,6 +81,25 @@ even if ufw blocks it. If the OVH control panel has a *Network firewall* enabled
 Packs `app\data\assets\foundry` into one tar (≈490 MB, temp file in `%TEMP%`), copies it with scp and unpacks it on the
 VPS. Re-run it whenever you import new Foundry content on your PC. No restart needed.
 
+## 2b. Rulebooks (PDFs, « Règles » tab)
+
+The SR5 PDFs are **not** in git or in the image: they live in `runtime/books/` on the VPS (`<CODE>.pdf` +
+`index/<CODE>.json` extracted text + `library.json`), shared by every table the admin allows. Two ways to fill it:
+
+- **Copy the library built on your PC** (fastest, offsets already checked): on the PC run
+  `node tools/books-setup.js --from "C:\Users\mathi\Documents\Foundry\Data\PDFs"` (fills `app\data\books\`), then copy
+  the whole folder to `~/shadowrun/app/runtime/books/` (e.g. `scp -r app\data\books ubuntu@152.228.134.90:~/shadowrun/app/runtime/`).
+  The server reads `library.json` on the fly: no restart. Keep the folder owned by uid 1000 (`ubuntu`).
+- **Upload from `/admin` → « Livres de règles »** (one PDF at a time, streamed, 120 MB max): the server extracts the
+  text in a worker thread (≈ 5 s for the core rulebook, ~250 MB of RAM while it runs, one book at a time) and detects
+  the page offset. The worker lives in the server's process, so a job only starts when the container's memory limit
+  leaves ≈ 6× the PDF's size free (otherwise « Mémoire insuffisante »: index that book on the PC and copy it instead).
+
+The short-lived PDF links are signed with `runtime/books-sign.key` (per server, created automatically, **outside** the
+books folder so copying the library never shares it; deleting it only invalidates the links currently open). A link
+only works while the session that asked for it exists (logout, kicked player or GM password change → dead link).
+An older version kept the key as `books/.sign-key`: the server deletes that file, never copy it.
+
 ## 3. Move the Project Lazarus game — `-Action migrate`
 
 Close the local server first (so the latest state is on disk), then:
@@ -198,6 +217,12 @@ GM password of a table forgotten: `/admin` → *Mot de passe MJ*.
 | `SR_FOUNDRY_LOCAL_PATHS` | allowed (image: `0`) | `0` = GMs may only read Foundry worlds uploaded to their table |
 | `SR_MAX_UPLOAD_BYTES` | `1500000000` | max size of an uploaded zip (Foundry world, table restore) |
 | `SR_MAX_UNZIPPED_BYTES` | `6000000000` | max uncompressed size of an uploaded Foundry zip |
+| `SR_BOOKS_DIR` | `<SR_RUNTIME_DIR>/books` | rulebook library (PDFs + index + library.json) |
+| `SR_MAX_BOOK_BYTES` | `120000000` | max size of one rulebook PDF uploaded from `/admin` |
+| `SR_BOOKS_WORKER_MB` | `320` | heap limit of the PDF indexing worker thread |
+| `SR_BOOKS_JOBS` | `1` | PDF indexing jobs run at the same time |
+| `SR_BOOKS_KEY_FILE` | `<SR_RUNTIME_DIR>/books-sign.key` | HMAC key of the PDF links (never inside the books folder) |
+| `SR_MEMORY_LIMIT_BYTES` | cgroup `memory.max` | memory limit used to refuse an indexing job that would not fit |
 | `SR_TRUST_PROXY` | off | `1` when served behind a reverse proxy (real client IP for the login rate limit) |
 | `PORT` | `3000` | port inside the container |
 

@@ -1,6 +1,6 @@
 // Tests for the Foundry import: node tools/test-foundry.js  (exit code ≠ 0 on failure)
 // 1) Converters on the GM's world (exploration dump if present, else the LevelDB read from a temp copy).
-// 2) scan/import actions through an isolated server (port 3910) pointing at a temp copy of the world,
+// 2) scan/import actions through an isolated server (port 3272) pointing at a temp copy of the world,
 //    with tiny placeholder asset files; re-import idempotence; merge vs replace.
 // Foundry folders are only read. Assets/journals of the test server go to temp dirs.
 import fs from 'node:fs';
@@ -9,7 +9,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { startServer, login, client, settle } from './test-client.js';
 import { readWorld, readDump, detectWorldPath, assemble } from '../server/lib/foundry/world.js';
-import { buildBundle, pcDiffEntries, pcDiff } from '../server/lib/foundry/importer.js';
+import { buildBundle, pcDiffEntries, pcDiff, buildPc, snapshotOf } from '../server/lib/foundry/importer.js';
+import { convertSheet } from '../server/lib/foundry/convert-actor.js';
 import { i18nError, plural, bytesParam } from '../server/lib/foundry/messages.js';
 import { t as tr, dictionary } from '../server/lib/i18n.js';
 import { htmlToMarkdown } from '../server/lib/foundry/html2md.js';
@@ -49,6 +50,53 @@ console.log('html2md / assemble');
   ok(w.actors[0].items[0].name === 'Item' && w.actors[0].items[0].effects[0].name === 'Eff', 'embedded documents assembled (2 levels)');
 }
 
+console.log('lifestyle / armor-mod conversion, merge re-import of upgrades');
+{
+  const gel = { _id: 'gel1', type: 'modification', name: 'Gel Packs', system: { type: 'armor', mod_armor: { value: 2 }, technology: {} } };
+  const fa = {
+    _id: 'pcx', name: 'Testeur', type: 'character', system: { attributes: {} },
+    items: [
+      { _id: 'ls1', type: 'lifestyle', name: 'Planque', system: { type: 'middle', cost: 7083, paid: 1, mods: ['DocWagon Contract, Gold'] } },
+      { _id: 'ls2', type: 'lifestyle', name: 'Trou', system: { type: 'low', cost: 2500, paid: 1 } },
+      { _id: 'ar1', type: 'armor', name: 'Armor Jacket', system: { armor: { base: 12 }, technology: { equipped: true } }, flags: { shadowrun5e: { embeddedItems: [gel] } } },
+      { _id: 'ar2', type: 'armor', name: 'Armor Vest', system: { armor: { base: 0, value: 11 }, technology: { equipped: true } }, flags: { shadowrun5e: { embeddedItems: [{ ...gel, _id: 'gel2' }] } } },
+    ],
+  };
+  const sheet = convertSheet(fa, {});
+  const planque = sheet.lifestyles.find((l) => l.name === 'Planque');
+  ok(planque.baseCost === 5000 && planque.qualities.length === 1 && planque.monthlyCost === 7083, `Foundry total cost with options: catalog base + options, no double count (${JSON.stringify(planque)})`);
+  const trou = sheet.lifestyles.find((l) => l.name === 'Trou');
+  ok(trou.baseCost === 2500 && trou.monthlyCost === 2500, 'Foundry total cost without options = base cost');
+  const jacket = sheet.armor.find((a) => a._en === 'Armor Jacket');
+  const vest = sheet.armor.find((a) => a !== jacket);
+  ok(jacket.rating === 12 && jacket.mods[0].effects?.armor === 2, 'Foundry base rating: mod armor bonus kept (added by armorTotal)');
+  ok(vest.rating === 11 && !vest.mods[0].effects?.armor, 'Foundry total value (no base): mod armor bonus not counted twice');
+
+  // Merge re-import: a snapshot from the version-1 converter (no mounts / accessories / mods / capacity) must not wipe
+  // the accessories and armor mods restored in the app; a real Foundry change keeps the app-added sub-items.
+  const pcSheet = {
+    metatype: 'Humain', attributes: { BOD: 3 }, augmented: {}, initiative: { dice: 1, bonus: 0 }, condition: {}, edge: { current: 1 }, skills: [], knowledge: [], qualities: [],
+    powers: [], spells: [], augmentations: [], gear: [], vehicles: [], contacts: [], sins: [], lifestyles: [], karma: 0, karmaTotal: 0, nuyen: 0,
+    weapons: [{ id: 'fvtt_w1', name: 'Ares Predator V', kind: 'ranged', damage: '8P', catalogId: 'x', mounts: ['Top', 'Barrel'] }],
+    armor: [{ id: 'fvtt_a1', name: 'Veste', rating: 12, equipped: true, capacity: 12 }],
+  };
+  const pc = { appId: 'pc_t', fid: 'pcx', name: 'Testeur', sheet: pcSheet, owner: { name: 'P' } };
+  const legacySnap = snapshotOf({ ...pcSheet, weapons: [{ id: 'fvtt_w1', name: 'Ares Predator V', kind: 'ranged', damage: '8P', catalogId: 'x' }], armor: [{ id: 'fvtt_a1', name: 'Veste', rating: 12, equipped: true }] });
+  const existing = {
+    id: 'pc_t', type: 'pc', name: 'Testeur', ...JSON.parse(JSON.stringify(pcSheet)),
+    weapons: [{ id: 'fvtt_w1', name: 'Ares Predator V', kind: 'ranged', damage: '8P', catalogId: 'x', ammoLeft: 7, accessories: [{ id: 'acc_r', name: 'Silencer/Suppressor', mount: 'Barrel' }] }],
+    armor: [{ id: 'fvtt_a1', name: 'Veste', rating: 12, equipped: true, mods: [{ id: 'mod_r', name: 'Gel Packs', capacity: 2 }] }],
+    foundry: { id: 'pcx', snapshot: legacySnap },
+  };
+  const merged = buildPc(pc, existing, { mode: 'merge' });
+  ok(merged.weapons[0].accessories?.some((x) => x.id === 'acc_r') && merged.weapons[0].ammoLeft === 7, 'legacy snapshot: unchanged weapon keeps its restored accessory and ammo');
+  ok(merged.armor[0].mods?.some((m) => m.id === 'mod_r'), 'legacy snapshot: unchanged armor keeps its restored mod');
+  ok(merged.foundry.snapshotVersion === 2, 'snapshot version recorded');
+  const changed = { ...pc, sheet: { ...pcSheet, weapons: [{ ...pcSheet.weapons[0], damage: '9P' }] } };
+  const merged2 = buildPc(changed, merged, { mode: 'merge' });
+  ok(merged2.weapons[0].damage === '9P' && merged2.weapons[0].accessories?.some((x) => x.id === 'acc_r') && merged2.weapons[0].ammoLeft === 7, 'weapon changed in Foundry: replaced, app accessory and ammo kept');
+}
+
 // ---------------------------------------------------------------------------
 // 2. Converters on the real world
 // ---------------------------------------------------------------------------
@@ -84,6 +132,24 @@ const bundle = buildBundle(world, {});
     ok(jane.sheet.vision.lowLight, 'Jane low-light vision (quality)');
     ok(jane.sheet.vehicles.length >= 1, 'Jane owns vehicles (SAAB/Nightwing)');
     ok(jane.sheet.sins.length === 3 && jane.sheet.sins.every((s) => s.licenses.every((l) => l.trim())), 'SINs with licenses');
+    // Lifestyles & weapon modifications (flags.shadowrun5e.embeddedItems)
+    ok(jane.sheet.lifestyle === undefined && jane.sheet.lifestyles.length === 1, 'Jane lifestyles[] (no legacy lifestyle)');
+    const jl = jane.sheet.lifestyles[0];
+    ok(jl.name === 'Best Home' && jl.base === 'Medium' && jl.primary && jl.baseCost === 5000 && jl.monthlyCost === 5000 && jl.id.startsWith('fvtt_'), `Jane Foundry lifestyle (${JSON.stringify(jl)})`);
+    const enfield = jane.sheet.weapons.find((w) => /Enfield/.test(w._en || w.name));
+    const laser = enfield?.accessories?.find((x) => x.name === 'Laser Sight');
+    ok(laser && laser.effects.accuracy === 1 && laser.catalogId && laser.nameFr, `Enfield laser sight accessory (${JSON.stringify(laser)})`);
+    const strike = jane.sheet.weapons.find((w) => /Desert Strike/.test(w._en || w.name));
+    ok(strike?.accessories?.some((x) => x.name === 'Shock Pad' && x.effects.rc === 1) && strike.accessories.some((x) => x.name === 'Imaging Scope'), 'Desert Strike accessories');
+  }
+  const anthony = bundle.pcs.find((p) => p.appId === 'pc_anthony');
+  if (anthony) {
+    const al = anthony.sheet.lifestyles[0];
+    ok(al && al.base === 'Medium' && al.baseCost === 7083 && al.points?.neighborhood === 3, `Anthony lifestyle cost/points from Foundry (${JSON.stringify(al)})`);
+    const colt = anthony.sheet.weapons.find((w) => /Colt Government/.test(w._en || w.name));
+    ok(colt?.accessories?.some((x) => /Smartgun/.test(x.name) && x.effects.smartgun) && colt.accessories.some((x) => x.name === 'Silencer/Suppressor'), 'Colt accessories (smartgun, silencer)');
+    const tiger = anthony.sheet.armor.find((a) => (a.mods || []).length);
+    ok(tiger?.mods.some((m) => m.name === 'Gel Packs' && m.effects?.armor === 2) && tiger.mods.some((m) => m.name === 'Fire Resistance' && m.rating === 6 && m.capacity === 6), `armor mods (${JSON.stringify(tiger?.mods?.map((m) => [m.name, m.rating, m.capacity]))})`);
   }
   const bricks = bundle.pcs.find((p) => p.appId === 'pc_bricks');
   if (bricks) {
@@ -131,7 +197,7 @@ const bundle = buildBundle(world, {});
 // ---------------------------------------------------------------------------
 // 3. Server: scan / import / re-import
 // ---------------------------------------------------------------------------
-console.log('server (port 3910)');
+console.log('server (port 3272)');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sr-foundry-test-'));
 const dataRoot = path.join(tmp, 'Data');
 const worldCopy = path.join(dataRoot, 'worlds', path.basename(WORLD));
@@ -212,7 +278,7 @@ console.log('i18n');
 /** Raw action reply (to read errorKey / params, which client.send() hides). */
 const rawSend = (c, type, payload = {}) => new Promise((res) => c.socket.emit('action', { type, payload }, res));
 
-const srv = await startServer({ port: 3910 });
+const srv = await startServer({ port: Number(process.env.SR_TEST_PORT) || 3272 });
 try {
   const gm = await client(srv.url, await login(srv.url, { role: 'gm', password: 'lazarus' }));
   await settle();

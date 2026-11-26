@@ -8,6 +8,7 @@ import { convertJournals, convertPlaylists } from './convert-misc.js';
 import { createAssets, formatBytes } from './assets.js';
 import { norm } from './catalog.js';
 import { normalizeActor } from '../../../client/modules/sheet/sheet-data.js';
+import { fillActorRefs } from '../bookrefs.js';
 import { uid, deepClone, nuyen as fmtNuyen } from '../../../shared/util.js';
 import { ATTR_SHORT, SKILL_BY_ID } from '../../../shared/sr5.js';
 import { formatFr } from '../../../client/i18n/format.js';
@@ -55,8 +56,8 @@ export const SCENE_TO_APP_MAP = {
 };
 
 const PC_COLORS = ['#7a8cff', '#4fc38a', '#d9a441', '#b469d6', '#3fa7d6'];
-const SHEET_FIELDS = ['metatype', 'attributes', 'augmented', 'initiative', 'condition', 'edge', 'skills', 'knowledge', 'qualities', 'powers', 'spells', 'weapons', 'armor', 'augmentations', 'gear', 'vehicles', 'matrix', 'contacts', 'sins', 'lifestyle', 'karma', 'karmaTotal', 'nuyen', 'streetCred', 'notoriety', 'publicAwareness', 'vision'];
-const ITEM_LISTS = ['weapons', 'armor', 'augmentations', 'gear', 'vehicles', 'contacts', 'sins', 'qualities', 'powers', 'spells', 'knowledge'];
+const SHEET_FIELDS = ['metatype', 'attributes', 'augmented', 'initiative', 'condition', 'edge', 'skills', 'knowledge', 'qualities', 'powers', 'spells', 'weapons', 'armor', 'augmentations', 'gear', 'vehicles', 'matrix', 'contacts', 'sins', 'lifestyles', 'karma', 'karmaTotal', 'nuyen', 'streetCred', 'notoriety', 'publicAwareness', 'vision'];
+const ITEM_LISTS = ['weapons', 'armor', 'augmentations', 'gear', 'vehicles', 'contacts', 'sins', 'qualities', 'powers', 'spells', 'knowledge', 'lifestyles'];
 const SCALARS = ['karma', 'karmaTotal', 'nuyen', 'streetCred', 'notoriety', 'publicAwareness', 'metatype'];
 const BIO_MARK = '### Historique (Foundry)';
 
@@ -204,13 +205,48 @@ export function snapshotOf(fresh) {
     sk: Object.fromEntries((fresh.skills || []).map((x) => [x.id, stableHash(x)])),
     items,
     matrix: stableHash(fresh.matrix || null),
-    lifestyle: stableHash(fresh.lifestyle || null),
     vision: stableHash(fresh.vision || {}),
   };
 }
 
-/** Merge mode: only values that changed in Foundry since the last import overwrite the app's. */
-function mergeInto(a, fresh, snap) {
+/** Snapshot format: 2 = item hashes include the upgrade fields (weapon mounts / accessories, armor capacity / mods). */
+export const SNAPSHOT_VERSION = 2;
+/** Upgrade fields the converter added after snapshot version 1, and nested lists the app may have filled. */
+const UPGRADE_FIELDS = ['mounts', 'capacity', 'accessories', 'mods'];
+const SUB_OF = { weapons: 'accessories', armor: 'mods', vehicles: 'mods', lifestyles: 'qualities' };
+/** Hash of an item as the version-1 converter produced it (no upgrade fields). */
+const legacyItemHash = (it) => {
+  const copy = { ...it };
+  for (const k of UPGRADE_FIELDS) delete copy[k];
+  return stableHash(copy);
+};
+/** Item fields only the app sets (kept when Foundry replaces the item). */
+const APP_ONLY_FIELDS = ['ammoLeft'];
+
+/**
+ * Replacement of an app item by the fresh Foundry one: nested entries the app added (shop / restored accessories,
+ * armor mods, lifestyle options — absent from Foundry, matched by catalogId or name) and app-only fields survive.
+ */
+function replaceKeeping(mine, it, list) {
+  const out = deepClone(it);
+  const sub = SUB_OF[list];
+  if (sub && Array.isArray(mine?.[sub]) && mine[sub].length) {
+    const key = (x) => (x?.catalogId ? `id:${x.catalogId}` : `n:${String(x?.name || '').toLowerCase()}`);
+    const have = new Set((Array.isArray(out[sub]) ? out[sub] : []).map(key));
+    const kept = mine[sub].filter((x) => x && !String(x.id || '').startsWith('fvtt_') && !have.has(key(x)));
+    if (kept.length) out[sub] = [...(Array.isArray(out[sub]) ? out[sub] : []), ...deepClone(kept)];
+    if (Array.isArray(mine.mounts) && !Array.isArray(out.mounts)) out.mounts = [...mine.mounts];
+    if (mine.capacity !== undefined && out.capacity === undefined) out.capacity = mine.capacity;
+  }
+  for (const k of APP_ONLY_FIELDS) if (mine?.[k] !== undefined && out[k] === undefined) out[k] = mine[k];
+  return out;
+}
+
+/**
+ * Merge mode: only values that changed in Foundry since the last import overwrite the app's.
+ * legacy = the snapshot predates SNAPSHOT_VERSION 2: an item is « unchanged » when it matches without the upgrade fields.
+ */
+function mergeInto(a, fresh, snap, { legacy = false } = {}) {
   for (const k of SCALARS) if (fresh[k] !== undefined && fresh[k] !== snap.s?.[k]) a[k] = fresh[k];
   a.attributes ||= {};
   for (const [k, v] of Object.entries(fresh.attributes || {})) if (v !== snap.a?.[k]) a.attributes[k] = v;
@@ -239,6 +275,18 @@ function mergeInto(a, fresh, snap) {
     else a.skills.push(deepClone(sk));
   }
   for (const id of Object.keys(snap.sk || {})) if (!freshSk.has(id)) a.skills = a.skills.filter((x) => x.id !== id);
+  // Snapshot from before lifestyles[] (single `lifestyle`): adopt the app lifestyle of the same name (migrated from the
+  // old field) under the Foundry id instead of adding a duplicate.
+  if (snap.items && !snap.items.lifestyles) {
+    snap.items.lifestyles = {};
+    for (const fl of fresh.lifestyles || []) {
+      const mine = (a.lifestyles || []).find((x) => !String(x.id).startsWith('fvtt_') && String(x.name || '').startsWith(fl.name));
+      if (mine) {
+        mine.id = fl.id;
+        snap.items.lifestyles[fl.id] = stableHash(fl);
+      }
+    }
+  }
   // Item lists by Foundry item id
   for (const l of ITEM_LISTS) {
     a[l] ||= [];
@@ -247,15 +295,15 @@ function mergeInto(a, fresh, snap) {
     for (const it of freshList) {
       const h = stableHash(it);
       if (prev[it.id] === h) continue; // unchanged in Foundry: keep the app's version
+      if (legacy && prev[it.id] && prev[it.id] === legacyItemHash(it)) continue; // only the new converter fields differ
       const i = a[l].findIndex((x) => x.id === it.id);
-      if (i >= 0) a[l][i] = deepClone(it);
+      if (i >= 0) a[l][i] = replaceKeeping(a[l][i], it, l);
       else a[l].push(deepClone(it));
     }
     const freshIds = new Set(freshList.map((x) => x.id));
     for (const id of Object.keys(prev)) if (!freshIds.has(id)) a[l] = a[l].filter((x) => x.id !== id);
   }
   if (stableHash(fresh.matrix || null) !== snap.matrix && fresh.matrix) a.matrix = deepClone(fresh.matrix);
-  if (stableHash(fresh.lifestyle || null) !== snap.lifestyle && fresh.lifestyle) a.lifestyle = deepClone(fresh.lifestyle);
   if (stableHash(fresh.vision || {}) !== snap.vision) a.vision = deepClone(fresh.vision);
 }
 
@@ -295,7 +343,7 @@ export function buildPc(pc, existing, { mode = 'replace', now = Date.now(), worl
     };
   } else {
     a = deepClone(existing);
-    if (mode === 'merge' && existing.foundry?.snapshot) mergeInto(a, fresh, existing.foundry.snapshot);
+    if (mode === 'merge' && existing.foundry?.snapshot) mergeInto(a, fresh, existing.foundry.snapshot, { legacy: (existing.foundry.snapshotVersion || 1) < SNAPSHOT_VERSION });
     else for (const k of SHEET_FIELDS) if (fresh[k] !== undefined) a[k] = deepClone(fresh[k]);
     a.bio = mergeBio(existing.bio, sheet.description);
   }
@@ -323,8 +371,9 @@ export function buildPc(pc, existing, { mode = 'replace', now = Date.now(), worl
     const i18n = { key: tk('Valeurs importées de Foundry ({world}) : {karma} karma, {nuyen}'), params: { world: worldId, karma: a.karma, nuyen: fmtNuyen(a.nuyen) } };
     a.history = [{ ts: now, text: formatFr(i18n.key, i18n.params), i18n, karma: a.karma, nuyen: a.nuyen }];
   }
-  a.foundry = { id: pc.fid, world: worldId, importedAt: now, hash, snapshot: snap, ...(pc.owner ? { user: pc.owner.name } : {}) };
+  a.foundry = { id: pc.fid, world: worldId, importedAt: now, hash, snapshot: snap, snapshotVersion: SNAPSHOT_VERSION, ...(pc.owner ? { user: pc.owner.name } : {}) };
   normalizeActor(a, uid);
+  fillActorRefs(a, { sources: sheet.itemSources }); // 📖 after the snapshot: never part of the item hashes
   return a;
 }
 
@@ -474,6 +523,7 @@ export function buildTemplate(npc, existing, { now = Date.now(), worldId = '' } 
   t.foundryWorld = worldId;
   t.foundryImportedAt = now;
   t.foundryHash = hash;
+  fillActorRefs(t, { sources: s.itemSources });
   return t;
 }
 

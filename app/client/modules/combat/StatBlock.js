@@ -2,6 +2,7 @@
 import { html, Badge, Stat, Markdown } from '../../lib/ui.js';
 import { t, attrShort, skillLabel, metatypeLabel, fmtNumber, getLang } from '../../lib/i18n.js';
 import { attr, SKILL_BY_ID } from '/shared/sr5.js';
+import { ItemRef, SkillRef } from '../books/BookRef.js';
 import { safeDerive, poolFor, damageText, initials, avatarStyle, signed, npcKindLabel, dispoLabel, DISPO_BADGE, initModeLabel } from './combat-common.js';
 
 const CORE_ATTRS = ['BOD', 'AGI', 'REA', 'STR', 'WIL', 'LOG', 'INT', 'CHA', 'EDG'];
@@ -60,7 +61,7 @@ function WeaponsTable({ tpl, d }) {
         const skName = w.skill ? skillName(tpl, w.skill, '') : '';
         const acc = w.accuracy === null || w.accuracy === undefined || w.accuracy === '' ? (d ? `${d.limits.physical}*` : '—') : w.accuracy;
         return html`<tr>
-          <td class="wname"><strong>${w.name}</strong>${w.reach ? html` <span class="faint small">${t('allonge {n}', { n: w.reach })}</span>` : ''}
+          <td class="wname"><strong>${w.name}</strong> <${ItemRef} item=${w} />${w.reach ? html` <span class="faint small">${t('allonge {n}', { n: w.reach })}</span>` : ''}
             ${(skName || w.notes) && html`<span class="note">${skName}${skName && w.notes ? ' — ' : ''}${w.notes || ''}</span>`}</td>
           <td class="pool">${pool ?? '—'}</td>
           <td class="mono" title=${typeof acc === 'string' && acc.endsWith('*') ? t('Limite physique') : ''}>${acc}</td>
@@ -82,7 +83,7 @@ function SpellsTable({ spells }) {
     <div class="sb-table-wrap"><table class="sr">
       <thead><tr><th>${t('Sort')}</th><th>${t('Catégorie')}</th><th>${t('Type')}</th><th>${t('Portée')}</th><th>${t('Durée')}</th><th>${t('Drain')}</th></tr></thead>
       <tbody>${spells.map((s) => html`<tr>
-        <td class="wname"><strong>${s.name}</strong>${s.notes && html`<span class="note">${s.notes}</span>`}</td>
+        <td class="wname"><strong>${s.name}</strong> <${ItemRef} item=${s} />${s.notes && html`<span class="note">${s.notes}</span>`}</td>
         <td>${s.category || ''}</td><td class="mono">${s.type || ''}</td><td class="mono">${s.range || ''}</td><td class="mono">${s.duration || ''}</td><td class="mono">${s.drain || ''}</td>
       </tr>`)}</tbody>
     </table></div>
@@ -139,18 +140,18 @@ export default function StatBlock({ t: tpl }) {
 
       <${Chips} title=${t('Compétences')} items=${tpl.skills} render=${(s) => {
         const pool = poolFor(tpl, s.id);
-        return html`<span class="sb-chip" title=${s.spec ? t('Spécialisation : {spec} (+2)', { spec: s.spec }) : ''}>${skillName(tpl, s.id, s.name)} ${s.rating}${s.spec ? html` <i>(${s.spec})</i>` : ''}<b>${pool ?? '—'}</b></span>`;
+        return html`<span class="sb-chip" title=${s.spec ? t('Spécialisation : {spec} (+2)', { spec: s.spec }) : ''}>${skillName(tpl, s.id, s.name)} ${s.rating}${s.spec ? html` <i>(${s.spec})</i>` : ''}<b>${pool ?? '—'}</b><${SkillRef} id=${s.id} /></span>`;
       }} />
       <${WeaponsTable} tpl=${tpl} d=${d} />
-      <${Chips} title=${t('Armure')} items=${armorItems} render=${(a) => html`<span class="sb-chip" title=${a.notes || ''}>${a.name}<b>${a.stack ? '+' : ''}${a.rating}</b></span>`} />
-      <${Chips} title=${t('Augmentations')} items=${tpl.augmentations} render=${(x) => html`<span class="sb-chip" title=${x.notes || ''}>${x.name}${x.grade && x.grade !== 'standard' ? html` <i>${x.grade}</i>` : ''} <i>${t('ess. {n}', { n: fmtNumber(x.essence ?? 0) })}</i></span>`} />
-      <${Chips} title=${t('Pouvoirs')} items=${tpl.powers} render=${(p) => html`<span class="sb-chip" title=${p.notes || ''}>${p.name}${p.level ? ` ${p.level}` : ''}${p.notes ? html` <i>— ${p.notes}</i>` : ''}</span>`} />
+      <${Chips} title=${t('Armure')} items=${armorItems} render=${(a) => html`<span class="sb-chip" title=${a.notes || ''}>${a.name}<b>${a.stack ? '+' : ''}${a.rating}</b><${ItemRef} item=${a} /></span>`} />
+      <${Chips} title=${t('Augmentations')} items=${tpl.augmentations} render=${(x) => html`<span class="sb-chip" title=${x.notes || ''}>${x.name}${x.grade && x.grade !== 'standard' ? html` <i>${x.grade}</i>` : ''} <i>${t('ess. {n}', { n: fmtNumber(x.essence ?? 0) })}</i><${ItemRef} item=${x} /></span>`} />
+      <${Chips} title=${t('Pouvoirs')} items=${tpl.powers} render=${(p) => html`<span class="sb-chip" title=${p.notes || ''}>${p.name}${p.level ? ` ${p.level}` : ''}${p.notes ? html` <i>— ${p.notes}</i>` : ''}<${ItemRef} item=${p} /></span>`} />
       <${SpellsTable} spells=${tpl.spells} />
-      <${Chips} title=${t('Qualités')} items=${tpl.qualities} render=${(q) => html`<span class="sb-chip" title=${q.notes || ''} style=${{ borderColor: q.positive === false ? '#6a2c2c' : '' }}>${q.name}${q.notes ? html` <i>— ${q.notes}</i>` : ''}</span>`} />
+      <${Chips} title=${t('Qualités')} items=${tpl.qualities} render=${(q) => html`<span class="sb-chip" title=${q.notes || ''} style=${{ borderColor: q.positive === false ? '#6a2c2c' : '' }}>${q.name}${q.notes ? html` <i>— ${q.notes}</i>` : ''}<${ItemRef} item=${q} /></span>`} />
       <${MatrixLine} m=${tpl.matrix} />
       <${Chips} title=${t('Connaissances')} items=${tpl.knowledge} render=${(k) => html`<span class="sb-chip">${k.name}${k.native ? html` <i>${t('langue maternelle')}</i>` : html`<b>${k.rating}</b>`}</span>`} />
-      <${Chips} title=${t('Équipement')} items=${tpl.gear} render=${(g) => html`<span class="sb-chip" title=${g.notes || ''}>${g.name}${g.qty > 1 ? html` <i>×${g.qty}</i>` : ''}</span>`} />
-      <${Chips} title=${t('Véhicules & drones')} items=${tpl.vehicles} render=${(v) => html`<span class="sb-chip" title=${v.notes || ''}>${v.name} <i>${t('Mani {handling} · Vit {speed} · Str {body} · Bli {armor} · Pil {pilot}', { handling: v.handling ?? '—', speed: v.speed ?? '—', body: v.body ?? '—', armor: v.armor ?? '—', pilot: v.pilot ?? '—' })}</i></span>`} />
+      <${Chips} title=${t('Équipement')} items=${tpl.gear} render=${(g) => html`<span class="sb-chip" title=${g.notes || ''}>${g.name}${g.qty > 1 ? html` <i>×${g.qty}</i>` : ''}<${ItemRef} item=${g} /></span>`} />
+      <${Chips} title=${t('Véhicules & drones')} items=${tpl.vehicles} render=${(v) => html`<span class="sb-chip" title=${v.notes || ''}>${v.name} <i>${t('Mani {handling} · Vit {speed} · Str {body} · Bli {armor} · Pil {pilot}', { handling: v.handling ?? '—', speed: v.speed ?? '—', body: v.body ?? '—', armor: v.armor ?? '—', pilot: v.pilot ?? '—' })}</i><${ItemRef} item=${v} /></span>`} />
 
       ${tpl.description && html`<div class="sb-sec"><h4>${t('Description')}</h4><div class="sb-text"><${Markdown} text=${tpl.description} /></div></div>`}
       ${tpl.npc?.tactics && html`<div class="sb-sec"><h4>${t('Tactique')}</h4><div class="sb-text tactics"><${Markdown} text=${tpl.npc.tactics} /></div></div>`}

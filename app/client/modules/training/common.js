@@ -4,6 +4,10 @@ import { send } from '../../lib/net.js';
 import { toast, openSheet } from '../../lib/ui-store.js';
 import { t, tn, tk, fmtNuyen, locale } from '../../lib/i18n.js';
 import { DEFAULT_SETTINGS, RULE_TEXT, KIND_LABELS, quote, formatDaysI18n } from '/shared/advancement.js';
+import { RuleRef } from '../books/BookRef.js';
+
+/** Rulebook page of each advancement kind (shared/bookrefs.js RULE_REFS): karma costs and training times, SR5 p. 103. */
+const KIND_RULES = { initiation: 'initiation', submersion: 'submersion' };
 
 export const STATUS = {
   pending: { label: tk('En attente'), color: 'amber' },
@@ -85,7 +89,7 @@ export function Rule({ kind }) {
       e.preventDefault();
       e.stopPropagation();
       toast(text, 'info', 7000);
-    }}>?</button>`;
+    }}>?</button> <${RuleRef} rule=${KIND_RULES[kind] || 'karmaAdvancement'} />`;
 }
 
 /** "25 karma · 5 semaines" or the reason it's impossible. */

@@ -11,6 +11,7 @@ import {
 import { slug } from '/shared/util.js';
 import { makeQuoter, Rule, CostCell, MAGIC_TYPES, errorOf, warningsOf, msgText } from './common.js';
 import ConfirmModal from './ConfirmModal.js';
+import { ItemRef, SkillRef, BookRef } from '../books/BookRef.js';
 
 const norm = (s) => slug(String(s || '')).replace(/-/g, ' ');
 const matches = (q, ...fields) => !q || fields.some((f) => norm(f).includes(norm(q)));
@@ -123,7 +124,7 @@ function SkillsTab({ actor, q, open, prof }) {
               const warnings = warningsOf(qt);
               return html`<tr key=${s.id}>
                 <td>
-                  <strong>${skillLabel(s)}</strong> <span class="muted small mono">${s.attr || def?.attr || ''}</span>
+                  <strong>${skillLabel(s)}</strong> <span class="muted small mono">${s.attr || def?.attr || ''}</span> <${SkillRef} id=${s.id} />
                   ${def?.group && html` <span class="faint small">· ${skillGroupLabel(def.group)}</span>`}
                   ${s.spec && html`<div class="small cyan">↳ ${s.spec}</div>`}
                 </td>
@@ -274,7 +275,7 @@ function QualitiesTab({ actor, q, open }) {
               return html`<li key=${x.item.id} class=${owns ? 'owned' : ''}>
                 <div class="grow">
                   <strong>${x.label}</strong>${x.item.nameFr && x.item.name !== x.item.nameFr && alt ? html` <span class="faint small">${alt}</span>` : ''}
-                  <div class="small muted">${t('{karma} karma de qualité · {source}', { karma: x.info.karma, source: `${x.item.source || ''} ${x.item.page ? `p.${x.item.page}` : ''}`.trim() })}</div>
+                  <div class="small muted">${t('{karma} karma de qualité', { karma: x.info.karma })} <${ItemRef} item=${x.item} /></div>
                 </div>
                 ${owns ? html`<${Badge} color="green">${t('possédée')}</${Badge}>` : html`<${CostCell} qt=${qt} /><${PlusButton} qt=${qt} label=${t('Choisir')} onClick=${() => open(req)} />`}
               </li>`;
@@ -335,7 +336,7 @@ function SpellsSection({ actor, q, open }) {
   const manualReq = manual.trim() ? { kind: 'spell', name: manual.trim() } : null;
   const manualQt = manualReq ? q(manualReq) : null;
   return html`<div class="section-title">${t('Sorts ({n} connus)', { n: known.length })} <${Rule} kind="spell" /></div>
-    ${known.length ? html`<div class="small muted training-known">${known.map((s) => s.name).join(' · ')}</div>` : ''}
+    ${known.length ? html`<div class="small muted training-known">${known.map((s, i) => html`${i ? ' · ' : ''}${s.name} <${ItemRef} item=${s} />`)}</div>` : ''}
     ${catalog.length
       ? html`<${SearchBox} value=${search} onChange=${setSearch} placeholder=${t('Chercher un sort (Boule de feu, Soins…)')} />
         <ul class="training-catalog">
@@ -346,7 +347,7 @@ function SpellsSection({ actor, q, open }) {
             const qt = k ? null : q(req);
             return html`<li key=${s.id} class=${k ? 'owned' : ''}>
               <div class="grow">
-                <strong>${itemName(s)}</strong>
+                <strong>${itemName(s)}</strong> <${ItemRef} item=${s} />
                 <div class="small muted">${[spellCategory(s, info), info.type, info.range, info.duration, info.drain && t('Drain {dv}', { dv: info.drain })].filter(Boolean).join(' · ')}</div>
               </div>
               ${k ? html`<${Badge} color="green">${t('connu')}</${Badge}>` : html`<${CostCell} qt=${qt} /><${PlusButton} qt=${qt} label=${t('Apprendre')} onClick=${() => open(req)} />`}
@@ -390,7 +391,7 @@ function PowersSection({ actor, q, open, prof }) {
             if (!req.catalogId) delete req.catalogId;
             const qt = leveled ? q(req) : null;
             return html`<li key=${p.id || p.name}>
-              <div class="grow"><strong>${p.name}</strong>${p.level ? html` <span class="mono">${t('niv. {n}', { n: p.level })}</span>` : ''} <span class="faint small mono">${t('{pp} PP', { pp: p.pp })}</span></div>
+              <div class="grow"><strong>${p.name}</strong>${p.level ? html` <span class="mono">${t('niv. {n}', { n: p.level })}</span>` : ''} <span class="faint small mono">${t('{pp} PP', { pp: p.pp })}</span> <${ItemRef} item=${p.source ? p : item} /></div>
               ${leveled ? html`<${PlusButton} qt=${info ? qt : null} label=${t('+1 niveau')} onClick=${() => open(req)} />` : ''}
             </li>`;
           })}
@@ -405,11 +406,10 @@ function PowersSection({ actor, q, open, prof }) {
             const req = { kind: 'power', catalogId: i.id, name: catalogName(i), pp: info.pp, levels: info.levels, maxLevel: info.maxLevel, to: 1 };
             const qt = has ? null : q(req);
             const cost = info.levels ? t('{pp} PP par niveau', { pp: info.pp }) : t('{pp} PP', { pp: info.pp });
-            const source = `${i.source || ''} ${i.page ? `p.${i.page}` : ''}`;
             return html`<li key=${i.id} class=${has ? 'owned' : ''}>
               <div class="grow">
-                <strong>${itemName(i)}</strong>
-                <div class="small muted">${cost}${info.maxLevel ? ` · ${t('max {n}', { n: info.maxLevel })}` : ''} · ${source}</div>
+                <strong>${itemName(i)}</strong> <${ItemRef} item=${i} />
+                <div class="small muted">${cost}${info.maxLevel ? ` · ${t('max {n}', { n: info.maxLevel })}` : ''}</div>
               </div>
               ${has ? html`<${Badge} color="green">${t('acquis')}</${Badge}>` : html`<${PlusButton} qt=${qt} label=${t('Choisir')} onClick=${() => open(req)} />`}
             </li>`;
@@ -425,7 +425,7 @@ function ComplexFormsSection({ actor, q, open }) {
   const req = name.trim() ? { kind: 'complexForm', name: name.trim() } : null;
   const qt = req ? q(req) : null;
   return html`<div class="section-title">${t('Formes complexes ({n})', { n: known.length })} <${Rule} kind="complexForm" /></div>
-    ${known.length ? html`<div class="small muted training-known">${known.map((s) => s.name).join(' · ')}</div>` : ''}
+    ${known.length ? html`<div class="small muted training-known">${known.map((s, i) => html`${i ? ' · ' : ''}${s.name} <${ItemRef} item=${s} />`)}</div>` : ''}
     <div class="training-learn">
       <${Field} label=${t('Forme complexe')}><${TextInput} live value=${name} placeholder=${t('ex. Nettoyeur, Pointeur…')} onChange=${setName} /></${Field}>
       <div class="training-learn-cta">${qt && html`<${CostCell} qt=${qt} />`}<${Button} variant="primary" disabled=${!req || !!qt?.error} onClick=${() => req && open(req)}>${t('Apprendre…')}</${Button}></div>

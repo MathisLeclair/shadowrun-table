@@ -4,6 +4,7 @@ import { SKILLS, SKILL_BY_ID, SKILL_GROUPS, SKILL_CATEGORIES } from '/shared/sr5
 import { t, attrShort, skillLabel, skillGroupLabel, skillCategoryLabel } from '../../lib/i18n.js';
 import { KNOWLEDGE_TYPES, skillAllowed, rowId, LIMITS } from '/shared/chargen.js';
 import { Budget, PointsKarma, StepIssues } from './common.js';
+import { SkillRef } from '../books/BookRef.js';
 
 // ---------------------------------------------------------------------------
 // Active skills
@@ -56,7 +57,7 @@ export function StepSkills({ data, update, result, issues }) {
             const rating = base + s.points + s.karma;
             const locked = grp > 0;
             return html`<tr key=${id} class=${rating > 6 ? 'over' : ''}>
-              <td><strong>${skillLabel(def)}</strong> <span class="faint small mono">${attrShort(def.attr)}</span>${def.group ? html` <span class="faint small">· ${skillGroupLabel(def.group)}</span>` : ''}</td>
+              <td><strong>${skillLabel(def)}</strong> <${SkillRef} id=${def.id} /> <span class="faint small mono">${attrShort(def.attr)}</span>${def.group ? html` <span class="faint small">· ${skillGroupLabel(def.group)}</span>` : ''}</td>
               <td class="mono small">${free ? html`<${Badge} color="magenta">${t('{n} magie', { n: free })}</${Badge}>` : grp ? html`<${Badge} color="cyan">${t('{n} groupe', { n: grp })}</${Badge}>` : html`<span class="faint">—</span>`}</td>
               <td><${PointsKarma} points=${s.points} karma=${s.karma} disabled=${locked} maxPoints=${Math.max(0, 7 - base)} maxKarma=${Math.max(0, 7 - base)}
                 onPoints=${(v) => setField(id, 'points', v)} onKarma=${(v) => setField(id, 'karma', v)} /></td>

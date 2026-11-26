@@ -1,13 +1,15 @@
-// Shop module test: node tools/test-shop.js  (isolated server on port 3104, exit code != 0 on failure)
+// Shop module test: node tools/test-shop.js  (isolated server on port 3250, exit code != 0 on failure)
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { login, client, settle } from './test-client.js';
+import { accessoryFit, weaponMounts, vehicleModFit, vehicleVars, vehicleSlots, upgradeAvail, upgradeFields, martialKarma, quote, lowersRent } from '../client/modules/shop/rules.js';
+import { armorTotal } from '../shared/sr5.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const PORT = 3104;
+const PORT = 3250;
 
 /** i18n check: entries render to their stored French text, and every key has an English entry. Returns English texts. */
 async function renderI18n(entries, label) {
@@ -31,6 +33,7 @@ async function renderI18n(entries, label) {
   return en;
 }
 const cat = (name) => JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'catalog', `${name}.json`), 'utf8'));
+const itemFr = (it) => it.nameFr || it.name;
 const find = (file, name) => {
   const it = cat(file).find((x) => x.name === name);
   if (!it) throw new Error(`catalog item not found: ${file}/${name}`);
@@ -81,6 +84,68 @@ async function rejects(promise, re, msg) {
   } catch (e) {
     ok(re.test(e.message), `${msg} — got: ${e.message}`);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Pure upgrade rules (regressions of the rules review)
+// ---------------------------------------------------------------------------
+{
+  console.log('• upgrade rules (pure)');
+  // Armor mods' armor bonus counts in the Armor value (Gel Packs +2; unequipped mods do not).
+  const gelMod = { id: 'm1', name: 'Gel Packs', capacity: 2, effects: { armor: 2 } };
+  ok(armorTotal({ armor: [{ id: 'a', rating: 8, equipped: true, mods: [gelMod] }] }) === 10, 'armorTotal: Actioneer 8 + Gel Packs 2 = 10');
+  ok(armorTotal({ armor: [{ id: 'a', rating: 8, equipped: true, mods: [{ ...gelMod, equipped: false }] }, { id: 'h', rating: 2, stack: true, equipped: true, mods: [{ id: 'm2', effects: { armor: 1 } }] }] }) === 11, 'armorTotal: unequipped mod ignored, stacking helmet mod counted');
+  // operation="contains" requirements (drones, Shock Pad).
+  const alpha = find('weapons', 'Ares Alpha');
+  const desert = find('weapons', 'Ares Desert Strike');
+  const shock = find('accessories', 'Shock Pad');
+  const asW = (c) => ({ id: 'w', name: c.name, catalogId: c.id, kind: 'ranged', accessories: [] });
+  ok(!accessoryFit(asW(alpha), alpha, shock).problem && !accessoryFit(asW(desert), desert, shock).problem, 'Shock Pad fits assault and sniper rifles (category contains « Rifles »)');
+  const l36 = find('weapons', 'Colt America L36');
+  ok(!!accessoryFit(asW(l36), l36, shock).problem, 'Shock Pad still refused on a light pistol');
+  const ammoDrone = find('vehicles', 'Ammo Drone (Small)');
+  const droneArm = find('vehiclemods', 'Drone Arm');
+  const dv = { id: 'v', name: ammoDrone.name, catalogId: ammoDrone.id, mods: [] };
+  ok(!vehicleModFit(dv, ammoDrone, droneArm, 1, vehicleVars(dv, ammoDrone)).problem, 'Drone Arm fits Ammo Drone (Small) (category contains « Drones »)');
+  ok(!!vehicleModFit({ id: 'v2', name: 'Scoot', mods: [] }, find('vehicles', 'Dodge Scoot (Scooter)'), droneArm, 1, {}).problem, 'Drone Arm refused on a scooter');
+  // R5 per-category slot pools on vehicles (drones: one pool).
+  const chinook = find('vehicles', 'Airstream Traveler Chinook');
+  const workshop = find('vehiclemods', 'Workshop');
+  const smugC = find('vehiclemods', 'Smuggling Compartment');
+  const armStd = find('vehiclemods', 'Armor (Standard)');
+  const cv = { id: 'c', name: chinook.name, catalogId: chinook.id, mods: [{ catalogId: workshop.id, slots: 6, category: 'Body' }, { catalogId: smugC.id, slots: 3, category: 'Body' }] };
+  const cvars = vehicleVars(cv, chinook);
+  const fit3 = vehicleModFit(cv, chinook, armStd, 3, cvars);
+  ok(!fit3.problem && fit3.pool === 'Protection' && fit3.cap === 14 && fit3.used === 0 && fit3.need === 6, `Chinook (Body 14) with Workshop + Smuggling Compartment (Body 9/14): Armor (Standard) 3 fits the Protection pool (${JSON.stringify(fit3)})`);
+  const fitBig = vehicleModFit(cv, chinook, armStd, 8, cvars);
+  ok(/Emplacements insuffisants/.test(fitBig.problem?.key || '') && fitBig.cap === 14, 'Armor (Standard) 8 (16 slots) exceeds the Protection pool (14)');
+  ok(vehicleSlots(cv, chinook, 'Body') === 14, 'Body pool = Body 14');
+  const tank = find('vehicles', 'Krime Euskaldunak Tankette');
+  ok(vehicleSlots({ name: tank.name }, tank, 'Powertrain') === 0 && vehicleSlots({ name: tank.name }, tank, 'Cosmetic') === 4, 'Tankette: Body 7 − 7 = 0 powertrain slots, 7 − 3 = 4 cosmetic');
+  ok(vehicleSlots(dv, ammoDrone, 'Protection') === vehicleSlots(dv, ammoDrone), 'drones: one pool');
+  // Catalog weapons without <accessorymounts> get no mount (bows, holdouts…); weapons without catalog entry: standard ones.
+  const bow = find('weapons', 'Bow (Rating 1)');
+  ok(weaponMounts({ name: bow.name, kind: 'ranged' }, bow).length === 0, 'Bow: no mount point');
+  ok(!!accessoryFit(asW(bow), bow, find('accessories', 'Silencer/Suppressor')).problem && !!accessoryFit(asW(bow), bow, find('accessories', 'Bipod')).problem, 'no silencer / bipod on a bow');
+  ok(weaponMounts({ name: 'Arme maison', kind: 'ranged' }, null).length === 5, 'weapon without catalog entry: standard mounts');
+  // « +2R » availability relative to the target.
+  const sgi = find('accessories', 'Smartgun System, Internal');
+  const relQ = upgradeAvail(quote(sgi, { vars: { WeaponCost: l36.cost } }), sgi, quote(l36, {}));
+  ok(sgi.availRelative && relQ.availValue === l36.availValue + 2 && relQ.legality === 'R', `Smartgun System, Internal on a Colt L36 (4R): 6R (got ${relQ.avail})`);
+  ok(upgradeAvail(quote(sgi, { vars: { WeaponCost: 500 } }), sgi, quote(find('weapons', 'Ares Light Fire 75'), {})).legality === 'F', 'stricter legality of the target kept (F)');
+  ok(upgradeAvail(quote(shock, {}), shock, quote(alpha, {})).availValue === shock.availValue, 'absolute availability unchanged');
+  // Martial arts karma: catalog style cost, first technique included even for a known style without technique.
+  const hapsum = cat('martialarts').find((m) => /Hapsum-Do/.test(m.name));
+  ok(martialKarma(hapsum, null, 1) === 15 && martialKarma(hapsum, null, 2) === 20, 'Way of Unified Mana: style 15 karma (+5 per further technique)');
+  ok(martialKarma(hapsum, { techniques: [] }, 1) === 0 && martialKarma(hapsum, { techniques: [] }, 2) === 5, 'known style without technique: first technique included');
+  ok(martialKarma(hapsum, { techniques: [{ id: 't' }] }, 1) === 5, 'further techniques 5 karma');
+  // Sheet editor: values that depend on the parent item.
+  const yf = upgradeFields('armormods', find('armormods', 'YNT Softweave Armor'), { name: 'Veste', capacity: 12, rating: 12 }, { parentValue: 1000 });
+  ok(yf.capacity === -6 && yf.cost === 1000, `YNT Softweave on capacity 12: −6 capacity, Armor Cost (got ${JSON.stringify(yf)})`);
+  const gk = upgradeFields('vehiclemods', find('vehiclemods', 'Gecko Tips'), { name: 'Scoot', body: 4 }, { parentValue: 3000 });
+  ok(gk.slots === 4 && gk.cost === 5000, `Gecko Tips on Body 4: 4 slots, 5000 ¥ (got ${JSON.stringify(gk)})`);
+  ok(upgradeFields('accessories', sgi, { name: 'Colt' }, { parentValue: 350 }).cost === 350 && upgradeFields('accessories', sgi, { name: 'Colt' }, {}).cost === undefined, 'Smartgun internal: Weapon Cost, unknown without a price');
+  ok(lowersRent(find('lifestylequalities', 'Dangerous Area')) && lowersRent({ category: 'Positive', multiplier: -10, cost: 0 }) && !lowersRent(find('lifestylequalities', 'Garage (Car (Body 5 or More))')), 'lowersRent');
 }
 
 const state = {
@@ -268,13 +333,150 @@ try {
   const low = cat('lifestyles').find((l) => l.name === 'Low');
   await gm.send('shop/give', { actorId: 'pc_jane', ref: low.id, qty: 1 });
   await settle();
-  ok(A(jane, 'pc_jane').lifestyle?.monthlyCost === 2000 && A(jane, 'pc_jane').lifestyle.monthsPaid === 1, 'lifestyle set');
+  const jl = A(jane, 'pc_jane').lifestyles || [];
+  ok(jl.length === 1 && jl[0].baseCost === 2000 && jl[0].monthlyCost === 2000 && jl[0].monthsPaid === 1 && jl[0].primary && !('lifestyle' in A(jane, 'pc_jane')), 'lifestyle set (lifestyles[0], primary)');
   const n3 = A(jane, 'pc_jane').nuyen;
-  r = await jane.send('shop/payLifestyle', { actorId: 'pc_jane', months: 2 });
+  r = await jane.send('shop/payLifestyle', { actorId: 'pc_jane', lifestyleId: jl[0].id, months: 2 });
   await settle();
   ok(r.monthsPaid === 3 && A(jane, 'pc_jane').nuyen === n3 - 4000, 'pay lifestyle');
   await rejects(bricks.send('shop/payLifestyle', { actorId: 'pc_bricks', months: 1 }), /train de vie/, 'no lifestyle → error');
   await rejects(jane.send('shop/payLifestyle', { actorId: 'pc_jane', months: 500 }), /mois/, 'months bounded');
+
+  console.log('• weapon accessories: mounts, included parts, prices, resale');
+  await gm.send('shop/updateSettings', { approval: 'never', allowForbidden: true, maxAvail: 20 });
+  const predator = find('weapons', 'Ares Predator V');
+  const laser = find('accessories', 'Laser Sight');
+  const scope = find('accessories', 'Imaging Scope');
+  const bipod = find('accessories', 'Bipod');
+  const silencer = find('accessories', 'Silencer/Suppressor');
+  const sgInternal = find('accessories', 'Smartgun System, Internal');
+  await gm.send('shop/give', { actorId: 'pc_jane', items: [{ ref: predator.id }, { ref: find('weapons', 'Colt America L36').id }] });
+  await settle();
+  const pred = A(jane, 'pc_jane').weapons.find((x) => x.catalogId === predator.id);
+  const colt = A(jane, 'pc_jane').weapons.find((x) => x.name === itemFr(find('weapons', 'Colt America L36')));
+  ok(pred && JSON.stringify(pred.mounts) === JSON.stringify(predator.stats.mounts), 'weapon.mounts copied from the catalog');
+  ok(pred.accessories?.length === 1 && pred.accessories[0].catalogId === sgInternal.id && pred.accessories[0].included && pred.accessories[0].effects?.smartgun, 'included smartgun installed');
+  let nw = A(jane, 'pc_jane').nuyen;
+  r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: laser.id, target: { itemId: pred.id } }] });
+  await settle();
+  let pw = A(jane, 'pc_jane').weapons.find((x) => x.id === pred.id);
+  const las = pw.accessories.find((x) => x.catalogId === laser.id);
+  ok(r.total === laser.cost && A(jane, 'pc_jane').nuyen === nw - laser.cost, 'accessory priced from the catalog');
+  ok(las && las.mount === 'Top' && las.effects?.accuracy === 1 && las.paid === laser.cost, 'laser on the Top mount (Predator has no Under mount), accuracy +1');
+  await rejects(jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: scope.id, target: { itemId: pred.id } }] }), /emplacement libre/, 'Top already taken → scope refused');
+  await rejects(jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: bipod.id, target: { itemId: pred.id } }] }), /emplacement libre/, 'no Under mount on the Predator');
+  await rejects(jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: laser.id, target: { itemId: pred.id } }] }), /déjà installé/, 'same accessory twice refused');
+  await rejects(jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: silencer.id, target: { itemId: colt.id } }, { ref: find('accessories', 'Gas-Vent 2 System').id, target: { itemId: colt.id } }] }), /emplacement libre/, 'two Barrel accessories in one cart refused');
+  r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: scope.id, target: { itemId: colt.id } }, { ref: silencer.id, target: { itemId: colt.id } }] });
+  await settle();
+  const cw = A(jane, 'pc_jane').weapons.find((x) => x.id === colt.id);
+  ok(r.total === scope.cost + silencer.cost && cw.accessories.map((x) => x.mount).sort().join() === 'Barrel,Top', 'two accessories on two mounts in one cart');
+  await gm.send('shop/give', { actorId: 'pc_jane', ref: find('weapons', 'Colt America L36').id });
+  await settle();
+  const colt2 = A(jane, 'pc_jane').weapons.filter((x) => x.name === colt.name).find((x) => x.id !== colt.id);
+  nw = A(jane, 'pc_jane').nuyen;
+  r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: sgInternal.id, target: { itemId: colt2.id } }] });
+  await settle();
+  ok(r.total === find('weapons', 'Colt America L36').cost, '« Weapon Cost » formula: internal smartgun = the weapon price');
+  await gm.send('shop/give', { actorId: 'pc_jane', ref: find('weapons', 'Combat Knife').id });
+  await settle();
+  await rejects(jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: laser.id, target: { itemId: A(jane, 'pc_jane').weapons.find((x) => x.kind === 'melee').id } }] }), /emplacement|adapte/, 'no accessory on a melee weapon');
+  await rejects(jane.send('shop/sell', { actorId: 'pc_jane', list: 'weapons', itemId: pred.id, subId: pred.accessories[0].id }), /origine/, 'included accessory not sold separately');
+  nw = A(jane, 'pc_jane').nuyen;
+  r = await jane.send('shop/sell', { actorId: 'pc_jane', list: 'weapons', itemId: pred.id, subId: las.id });
+  await settle();
+  pw = A(jane, 'pc_jane').weapons.find((x) => x.id === pred.id);
+  ok(r.total === Math.round(laser.cost / 2) && A(jane, 'pc_jane').nuyen === nw + r.total && !pw.accessories.some((x) => x.id === las.id), 'accessory sold at the sell rate');
+  r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: scope.id, target: { itemId: pred.id } }] });
+  ok(r.status === 'done', 'freed mount reusable');
+
+  console.log('• armor modifications: capacity');
+  const chem = find('armormods', 'Chemical Protection');
+  const fire = find('armormods', 'Fire Resistance');
+  const insul = find('armormods', 'Insulation');
+  const gel = find('armormods', 'Gel Packs');
+  await gm.send('shop/give', { actorId: 'pc_jane', ref: jacket.id });
+  await settle();
+  const jk = A(jane, 'pc_jane').armor.filter((x) => x.catalogId === jacket.id).pop();
+  ok(jk.capacity === 12, 'armor capacity copied from the catalog');
+  nw = A(jane, 'pc_jane').nuyen;
+  r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: chem.id, rating: 6, target: { itemId: jk.id } }, { ref: fire.id, rating: 5, target: { itemId: jk.id } }] });
+  await settle();
+  let ja2 = A(jane, 'pc_jane').armor.find((x) => x.id === jk.id);
+  ok(r.total === 6 * 250 + 5 * 250 && ja2.mods.length === 2 && ja2.mods.reduce((s, m) => s + m.capacity, 0) === 11, 'rated mods priced by formula, capacity 6 + 5');
+  ok(ja2.mods.find((m) => m.catalogId === fire.id).bonus?.fire === 5, 'mod bonus evaluated at its rating');
+  await rejects(jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: insul.id, rating: 2, target: { itemId: jk.id } }] }), /Capacité insuffisante/, 'capacity exceeded');
+  r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: insul.id, rating: 1, target: { itemId: jk.id } }, { ref: gel.id, target: { itemId: jk.id } }] });
+  await settle();
+  ja2 = A(jane, 'pc_jane').armor.find((x) => x.id === jk.id);
+  ok(r.status === 'done' && ja2.mods.length === 4 && ja2.mods.find((m) => m.catalogId === gel.id).effects?.armor === 2 && ja2.rating === 12, 'last capacity point used; armor bonus stored as effects (rating unchanged)');
+  await jane.send('actor/updateItem', { actorId: 'pc_jane', list: 'armor', itemId: jk.id, patch: { equipped: true } });
+  await settle();
+  ok(armorTotal(A(jane, 'pc_jane')) === 14, `bought Gel Packs count in the Armor value: 12 + 2 (got ${armorTotal(A(jane, 'pc_jane'))})`);
+  await jane.send('actor/updateItem', { actorId: 'pc_jane', list: 'armor', itemId: jk.id, patch: { equipped: false } });
+  await rejects(jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: chem.id, target: { itemId: A(jane, 'pc_jane').weapons[0].id } }] }), /introuvable/, 'armor mod needs an armor');
+
+  console.log('• vehicle modifications: slots, target-based prices');
+  const scoot = find('vehicles', 'Dodge Scoot (Scooter)');
+  const smug = find('vehiclemods', 'Smuggling Compartment');
+  const armorStd = find('vehiclemods', 'Armor (Standard)');
+  const offroad = find('vehiclemods', 'Off-Road Suspension');
+  const gecko = find('vehiclemods', 'Gecko Tips');
+  await gm.send('shop/give', { actorId: 'pc_jane', ref: scoot.id });
+  await settle();
+  const sc = A(jane, 'pc_jane').vehicles.find((x) => x.catalogId === scoot.id);
+  const rigger = find('vehiclemods', 'Rigger Interface');
+  r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: offroad.id, target: { itemId: sc.id } }, { ref: rigger.id, target: { itemId: sc.id } }] });
+  await settle();
+  let sv = A(jane, 'pc_jane').vehicles.find((x) => x.id === sc.id);
+  ok(r.total === scoot.cost * 0.25 + rigger.cost, `« Vehicle Cost » formula: off-road = 25 % of the vehicle (${r.total})`);
+  ok(sv.mods.length === 2 && sv.mods.reduce((s, m) => s + m.slots, 0) === 2 && sv.mods.find((m) => m.catalogId === offroad.id).effects?.handling === -1, 'slots and effects stored');
+  await rejects(jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: gecko.id, target: { itemId: sc.id } }] }), /Emplacements insuffisants.*4 requis, 2 libre/, 'Body formula: gecko tips need 4 slots on Body 4, 2 free');
+  // R5: one pool per category (Body 4 each on the scooter): the Body and Protection pools are still empty.
+  await gm.send('shop/give', { actorId: 'pc_jane', ref: smug.id, target: { itemId: sc.id } });
+  await settle();
+  await rejects(gm.send('shop/give', { actorId: 'pc_jane', ref: find('vehiclemods', 'Workshop').id, target: { itemId: sc.id } }), /Emplacements insuffisants.*6 requis, 1 libre/, 'Body pool: smuggling compartment 3/4, workshop (6) refused');
+  await rejects(gm.send('shop/give', { actorId: 'pc_jane', ref: armorStd.id, rating: 3, target: { itemId: sc.id } }), /Emplacements insuffisants.*6 requis, 4 libre/, 'GM gifts still respect slots (Protection pool 4)');
+  await gm.send('shop/give', { actorId: 'pc_jane', ref: armorStd.id, rating: 1, target: { itemId: sc.id } });
+  await settle();
+  sv = A(jane, 'pc_jane').vehicles.find((x) => x.id === sc.id);
+  const arStd = sv.mods.find((m) => m.catalogId === armorStd.id);
+  ok(arStd && arStd.rating === 1 && arStd.slots === 2 && arStd.effects?.armor === 1, 'vehicle armor rating 1: 2 slots, +1 armor');
+  r = await gm.send('shop/give', { actorId: 'pc_jane', items: [{ ref: offroad.id, target: { itemId: sc.id } }] }).catch((e) => e);
+  ok(/déjà installé|Emplacements/.test(r?.message || ''), 'same mod twice refused');
+
+  console.log('• martial arts (karma)');
+  const ma = cat('martialarts').find((m) => m.name === 'Krav Maga') || cat('martialarts')[0];
+  const [t1, t2] = ma.stats.techniques;
+  await rejects(jane.send('shop/martialArt', { actorId: 'pc_jane', styleId: ma.id, techniqueIds: [t1.id] }), /Karma insuffisant/, 'karma checked for players');
+  await gm.send('actor/update', { actorId: 'pc_jane', patch: { karma: 20 } });
+  r = await jane.send('shop/martialArt', { actorId: 'pc_jane', styleId: ma.id, techniqueIds: [t1.id, t2.id] });
+  await settle();
+  ok(r.status === 'pending' && r.karma === 12 && A(jane, 'pc_jane').karma === 20, 'player request pending: style 7 (first technique included) + 5');
+  await rejects(jane.send('shop/martialArt', { actorId: 'pc_jane', styleId: ma.id, techniqueIds: [t1.id] }), /attend déjà/, 'one pending request per style');
+  await gm.send('shop/resolve', { orderId: r.orderId, approve: true });
+  await settle();
+  let jm = A(jane, 'pc_jane').martialArts?.find((m) => m.catalogId === ma.id);
+  ok(jm && jm.techniques.length === 2 && A(jane, 'pc_jane').karma === 8 && A(jane, 'pc_jane').history.some((h) => h.karma === -12), 'GM approval grants the style and spends karma');
+  await rejects(gm.send('shop/martialArt', { actorId: 'pc_jane', styleId: ma.id, techniqueIds: [t1.id] }), /Rien de nouveau/, 'known techniques refused');
+  if (ma.stats.techniques[2]) {
+    r = await gm.send('shop/martialArt', { actorId: 'pc_jane', styleId: ma.id, techniqueIds: [ma.stats.techniques[2].id], free: true });
+    await settle();
+    jm = A(jane, 'pc_jane').martialArts.find((m) => m.catalogId === ma.id);
+    ok(jm.techniques.length === 3 && A(jane, 'pc_jane').karma === 8, 'GM free grant of a technique');
+  }
+  await rejects(jane.send('shop/martialArt', { actorId: 'pc_jane', styleId: 'nope' }), /inconnu/, 'unknown style');
+  const hapsumDo = cat('martialarts').find((m) => /Hapsum-Do/.test(m.name));
+  await gm.send('actor/update', { actorId: 'pc_jane', patch: { karma: 30 } });
+  r = await jane.send('shop/martialArt', { actorId: 'pc_jane', styleId: hapsumDo.id, techniqueIds: [hapsumDo.stats.techniques[0].id] });
+  ok(r.status === 'pending' && r.karma === 15, `catalog style cost: Hapsum-Do 15 karma (got ${r.karma})`);
+  await gm.send('shop/cancel', { orderId: r.orderId });
+  const bare = cat('martialarts').find((m) => m.stats.karma === 7 && m.id !== ma.id && m.stats.techniques.length >= 2 && m.stats.techniques.every((x) => x.id));
+  await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'martialArts', item: { name: bare.name, catalogId: bare.id, rating: 1, techniques: [] } });
+  await settle();
+  r = await jane.send('shop/martialArt', { actorId: 'pc_jane', styleId: bare.id, techniqueIds: [bare.stats.techniques[0].id, bare.stats.techniques[1].id] });
+  ok(r.status === 'pending' && r.karma === 5, `known style without technique (import): first technique included, 2 techniques = 5 karma (got ${r.karma})`);
+  await gm.send('shop/cancel', { orderId: r.orderId });
 
   console.log('• markup');
   await gm.send('shop/updateSettings', { markup: 20 });

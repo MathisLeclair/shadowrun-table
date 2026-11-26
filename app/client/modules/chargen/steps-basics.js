@@ -10,6 +10,7 @@ import {
   PHYSICAL, MENTAL, priorityText, magicOptions, magicOptionText, karmaSteps, SKILL_POINTS, RESOURCES,
 } from '/shared/chargen.js';
 import { Budget, PointsKarma, StepIssues, nuyen, i18n } from './common.js';
+import { RuleRef } from '../books/BookRef.js';
 
 // ---------------------------------------------------------------------------
 // Concept
@@ -95,6 +96,7 @@ export function StepPriorities({ data, update, issues }) {
   return html`<div class="cg-step">
     <p class="cg-lead">${t('Chaque lettre de A (le mieux) à E ne sert qu’une fois. Clique une case pour donner cette priorité à la colonne : si la lettre était déjà prise, les deux colonnes échangent leurs lettres.')}</p>
     <div class="row wrap gap-s cg-presets">
+      <span class="small muted">${t('Table des priorités')} <${RuleRef} rule="priorityTable" /></span>
       <span class="small muted">${t('Répartitions types :')}</span>
       ${PRESETS.map((pr) => html`<${Button} small variant="ghost" onClick=${() => update((d) => (d.priorities = { ...pr.p }))}>${t(pr.label)}</${Button}>`)}
     </div>

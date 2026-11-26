@@ -9,6 +9,8 @@ import {
   actionPool, isIllegal, ACTION_TYPES, ACTION_CATS, MARK_PENALTY, matrixMonitor,
 } from '/shared/matrix.js';
 import { isGM, targetOptions, marksRequired, msgText, outcomeTexts, partLabel, actionName, marksText, assistText } from './common.js';
+import { useModifiers, toggleText, effectText, loadRollToggles, saveRollToggles } from '../sheet/modifiers-ui.js';
+import { BookRef, SkillRef } from '../books/BookRef.js';
 
 const FILE_OPS = [
   { value: 'read', label: tk('Lire') },
@@ -21,7 +23,7 @@ function PoolLine({ pc, title }) {
   if (!pc) return null;
   return html`<div class="mx-pool">
     <div class="mx-pool-main"><span class="mx-pool-n">${pc.pool}</span><span class="mx-pool-u">${t('dés')}</span>${pc.limit !== null && pc.limit !== undefined ? html`<span class="mx-pool-lim">[${pc.limit}]</span>` : html`<span class="mx-pool-lim faint">${t('sans limite')}</span>`}</div>
-    <div class="mx-pool-parts">${title && html`<b>${t('{title} : ', { title })}</b>`}${pc.parts.map((p, i) => html`<span key=${i}>${partLabel(p)} <b class=${p.value < 0 ? 'red' : ''}>${p.value >= 0 ? '+' : '−'}${Math.abs(p.value)}</b></span>`)}
+    <div class="mx-pool-parts">${title && html`<b>${t('{title} : ', { title })}</b>`}${pc.parts.map((p, i) => html`<span key=${i}>${partLabel(p)} <b class=${p.value < 0 ? 'red' : ''}>${p.value >= 0 ? '+' : '−'}${Math.abs(p.value)}</b>${p.mod?.book ? html` <${BookRef} source=${p.mod.book} page=${p.mod.page} />` : null}</span>`)}
       ${pc.limitParts?.length ? html`<span class="faint">· ${t('limite : {parts}', { parts: pc.limitParts.map((p) => `${partLabel(p)} ${p.value}`).join(' + ') })}</span>` : null}
     </div>
   </div>`;
@@ -68,13 +70,23 @@ export default function ActionModal({ game, actor, persona, action, preset = {},
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null); // { who, res }
   const [assistRes, setAssistRes] = useState(null);
+  // Modifiers of the decker's gear / qualities / implants (Codeslinger, skill bonuses…) and the situational switches (shared with the roll dialog).
+  const mods = useModifiers(actor);
+  const [conds, setConds] = useState(() => loadRollToggles(actor.id));
+  const setCond = (k, on) => {
+    const next = on ? [...new Set([...conds, k])] : conds.filter((x) => x !== k);
+    setConds(next);
+    saveRollToggles(actor.id, next);
+  };
 
   const ag = persona.agent;
   const pending = persona.pendingAssist && persona.pendingAssist.skill === action.skill ? persona.pendingAssist : null;
   const assist = useAssist && pending ? { dice: pending.dice, limitBonus: pending.limitBonus } : null;
   const sk = (actor.skills || []).find((s) => s.id === action.skill);
   const edgeLeft = actor.edge?.current ?? 0;
-  const pc = action.noTest ? null : actionPool(actor, persona, action, { useSpec, marks, modifier, assist, edge });
+  const pc = action.noTest ? null : actionPool(actor, persona, action, { useSpec, marks, modifier, assist, edge, mods, conditions: conds });
+  const switches = {};
+  for (const l of pc?.modLines || []) if (!l.mod.baked && !l.mod.info && l.value !== null) for (const k of l.toggles || []) (switches[k] ||= []).push(l);
   const agentPc = action.noTest || !ag ? null : actionPool(actor, persona, action, { agent: true, marks, modifier });
   const target = flat.find((o) => o.id === targetId);
   const need = marksRequired(action, { controlMarks });
@@ -97,7 +109,7 @@ export default function ActionModal({ game, actor, persona, action, preset = {},
   const run = async () => {
     setBusy(true);
     try {
-      const res = await send('matrix/action', { ...payload(), useSpec, edge, assistFromAgent: !!assist });
+      const res = await send('matrix/action', { ...payload(), useSpec, edge, assistFromAgent: !!assist, conditions: conds });
       setResult({ who: actor.name, res });
       setUseAssist(false);
       setEdge(false);
@@ -131,7 +143,7 @@ export default function ActionModal({ game, actor, persona, action, preset = {},
         <${Badge}>${t(ACTION_CATS[action.cat])}</${Badge}>
         <${Badge}>${ACTION_TYPES[action.type] ? t(ACTION_TYPES[action.type]) : action.type}</${Badge}>
         ${need ? html`<${Badge} color=${marksOk ? 'cyan' : 'red'}>${tn(need, '{n} marque requise', '{n} marques requises')}</${Badge}>` : null}
-        ${action.page && html`<span class="faint small">${t('SR5 p. {page}', { page: action.page })}</span>`}
+        ${action.page ? html`<${BookRef} source="SR5" page=${action.page} />` : null}${action.skill ? html`<${SkillRef} id=${action.skill} />` : null}
       </div>
       <p class="mx-desc">${t(action.desc)}</p>
       ${!legal && html`<p class="small magenta">${t('Action illégale : les succès du défenseur s’ajoutent à ton Score d’Overwatch.')}</p>`}
@@ -175,6 +187,8 @@ export default function ActionModal({ game, actor, persona, action, preset = {},
           ${!action.noTest && html`<div class="row wrap mx-modal-opts">
             ${sk?.spec && html`<${Toggle} value=${useSpec} onChange=${setUseSpec} label=${t('Spécialisation « {spec} » (+2)', { spec: sk.spec })} />`}
             <${Toggle} value=${edge} onChange=${(v) => setEdge(v && edgeLeft > 0)} label=${t('Chance : repousser les limites ({n})', { n: edgeLeft })} title=${t('+Chance en dés, règle des 6, sans limite — coûte 1 point')} />
+            ${Object.entries(switches).map(([k, ls]) => html`<${Toggle} key=${k} value=${conds.includes(k)} onChange=${(v) => setCond(k, v)}
+              label=${t('{switch} ({effects})', { switch: toggleText(k), effects: [...new Set(ls.map((l) => effectText(l.mod)))].join(', ') })} />`)}
           </div>`}
           ${pc && html`<${PoolLine} pc=${pc} />`}
           ${pc?.impossible && html`<p class="small red">${pc.reasonKey ? t(pc.reasonKey, pc.reasonParams) : pc.reason}</p>`}
