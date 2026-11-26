@@ -373,5 +373,8 @@
   "Nom": "Name",
   "Type": "Type",
   "Ouvrir": "Open",
-  "Notes MJ": "GM notes"
+  "Notes MJ": "GM notes",
+  "Placer un PJ ici": "Place a PC here",
+  "Déplacer {name} ici": "Move {name} here",
+  "Placer {name} ici": "Place {name} here"
 }

@@ -853,11 +853,32 @@ export default {
     // Drop a token for every active PC not yet on the map, near (x, y) or the entry region / map center.
     'maps/placePCs': {
       role: 'gm',
-      handler(ctx, { mapId, x, y }) {
+      // payload: { mapId, x?, y?, actorIds?: [pc ids] (default: every active PC), move?: bool (PCs already on the map are moved to x,y) }
+      handler(ctx, { mapId, x, y, actorIds, move }) {
         const map = getMap(ctx, mapId);
-        const pcs = Object.values(ctx.state.actors || {}).filter((a) => a && a.type === 'pc' && !a.retired && !map.tokens.some((t) => t.actorId === a.id));
-        if (!pcs.length) return [];
+        const only = Array.isArray(actorIds) ? new Set(actorIds.map(String).slice(0, 50)) : null;
+        const chosen = Object.values(ctx.state.actors || {}).filter((a) => a && a.type === 'pc' && !a.retired && (!only || only.has(a.id)));
+        if (only && !chosen.length) ctx.fail('Personnage introuvable');
         const at = x != null && y != null && Number.isFinite(Number(x)) && Number.isFinite(Number(y)) ? { x: Number(x), y: Number(y) } : entryPoint(map);
+        if (move && only) {
+          // Move the chosen PCs' existing tokens first, then place the missing ones.
+          const present = chosen.filter((a) => map.tokens.some((t) => t.actorId === a.id));
+          if (present.length) {
+            const tokens = present.map((a) => map.tokens.find((t) => t.actorId === a.id));
+            const others = map.tokens.filter((t) => !tokens.includes(t));
+            const saved = map.tokens;
+            map.tokens = others; // free cells are searched ignoring the tokens being moved
+            const spots = freeCellsNear(map, at.x, at.y, tokens.length);
+            map.tokens = saved;
+            if (!spots.length) ctx.fail('Aucune case libre pour placer les personnages');
+            tokens.forEach((t, i) => Object.assign(t, spots[i] || spots[spots.length - 1]));
+          }
+        }
+        const pcs = chosen.filter((a) => !map.tokens.some((t) => t.actorId === a.id));
+        if (!pcs.length) {
+          refreshFog(ctx.state, map);
+          return [];
+        }
         const cells = freeCellsNear(map, at.x, at.y, pcs.length);
         if (!cells.length) ctx.fail('Aucune case libre pour placer les personnages');
         const ids = [];

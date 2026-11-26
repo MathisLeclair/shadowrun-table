@@ -612,12 +612,21 @@ function LiveMap({ game, map, ui, isGM }) {
     const wallDoor = menu.wallDoorId ? (map.walls || []).find((w) => w.id === menu.wallDoorId && w.door) : null;
     const door = wallDoor ? { ...wallDoor.door, id: wallDoor.id } : doorAt(x, y);
     const lightsHere = (map.lights || []).filter((l) => l.x === x && l.y === y);
+    const pcList = Object.values(actors).filter((a) => a && a.type === 'pc' && !a.retired).sort((a, b) => a.name.localeCompare(b.name));
     const notesHere = (map.notes || []).filter((n) => n.x === x && n.y === y);
     return html`<div class="map-menu-head">${t('Case {x}, {y}', { x, y })}</div>
       <button class="map-menu-item" onClick=${act(() => ping({ fx: menu.fx, fy: menu.fy }))}>${t('Pinger ici')}</button>
       ${inside &&
       html`
         <button class="map-menu-item" onClick=${act(() => send('maps/placePCs', { mapId, x, y }).then((ids) => toast(ids?.length ? t('{n} PJ placé(s)', { n: ids.length }) : t('Tous les PJ sont déjà sur la carte')), quiet))}>${t('Placer les PJ ici')}</button>
+        ${pcList.length > 0 &&
+        html`<div class="map-menu-label">${t('Placer un PJ ici')}</div>
+          <div class="map-menu-row">${pcList.map((a) => {
+            const onMap = (map.tokens || []).some((tk) => tk.actorId === a.id);
+            return html`<button class="chip" style=${a.color ? { '--chip': a.color } : null}
+              title=${onMap ? t('Déplacer {name} ici', { name: a.name }) : t('Placer {name} ici', { name: a.name })}
+              onClick=${act(() => send('maps/placePCs', { mapId, x, y, actorIds: [a.id], move: true }).catch(quiet))}>${onMap ? '↦ ' : '＋ '}${a.name}</button>`;
+          })}</div>`}
         <button class="map-menu-item" onClick=${act(() => send('maps/addLight', { mapId, light: { x, y, radius: 6, color: '#ffcc88', on: true } }).catch(quiet))}>${t('Ajouter une lumière ici')}</button>
         <button class="map-menu-item" onClick=${act(async () => {
           const text = await promptText(t('Note MJ (visible par toi seul)'));
