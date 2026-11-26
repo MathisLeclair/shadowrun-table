@@ -13,8 +13,8 @@ import { t, tk, compare } from '../../lib/i18n.js';
 import { tRich } from '../sheet/common.js';
 import { RollDialog } from '../sheet/RollDialog.js';
 import { setTarget, setAimPoint, PENDING } from '../combat/attack-common.js';
-import { cellDistance, rangeFor, isAreaWeapon, blastOf, blastReach } from '/shared/combat.js';
-import { isUnarmed } from '../sheet/inventory.js';
+import { cellDistance, rangeFor, rangeClass, isAreaWeapon, blastOf, blastReach } from '/shared/combat.js';
+import { isUnarmed, isLauncherProfile, launcherRounds } from '../sheet/inventory.js';
 
 loadCss('/modules/map/map.css');
 
@@ -75,7 +75,7 @@ function playerSideMap(map) {
 function defaultWeapon(actor, meters, grenade) {
   const ready = (actor?.weapons || []).filter((w) => w && (w.equipped !== false || isUnarmed(w)));
   if (grenade) {
-    const g = ready.find((w) => isAreaWeapon(w));
+    const g = ready.find((w) => isAreaWeapon(w) && !isLauncherProfile(w));
     if (g) return g;
   }
   const melee = ready.filter((w) => w.kind === 'melee');
@@ -87,7 +87,9 @@ function defaultWeapon(actor, meters, grenade) {
 /** Blast reach (meters) of the grenade the banner would throw — preview ring around the aimed point. */
 function grenadeReach(actor) {
   const w = defaultWeapon(actor, null, true);
-  return w && isAreaWeapon(w) ? blastReach(blastOf(w, actor)) : 0;
+  if (!w || !isAreaWeapon(w)) return 0;
+  const round = rangeClass(w) === 'grenadeLauncher' ? launcherRounds(actor, w)[0]?.w : null; // launcher: its first round (as the roll dialog)
+  return blastReach(blastOf(round || w, actor));
 }
 
 export default function MapView({ game }) {

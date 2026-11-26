@@ -492,5 +492,9 @@
   "Dans un véhicule en mouvement": "Inside a moving vehicle",
   "Attaque de zone": "Area-effect attack",
   "différence d’allonge": "reach difference",
-  "défenses précédentes ce tour": "previous defenses this turn"
+  "défenses précédentes ce tour": "previous defenses this turn",
+  "chargée": "loaded",
+  "catalogue": "catalog",
+  "Munition inconnue pour ce lance-grenades": "Unknown ammunition for this grenade launcher",
+  "Choisis la minigrenade tirée": "Choose the minigrenade to fire"
 }

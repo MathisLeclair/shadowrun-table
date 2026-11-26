@@ -268,7 +268,7 @@ VehicleMod = { id, catalogId?, name, nameFr?, rating?, slots, category, cost, av
   for `dice/roll`, `weapon/fire` and `weapon/reload`.
   Grenades (`isGrenade` = `isThrownExplosive`: throwing skill or none, name / category « grenade » / « explosive »; never a magazine — Chummer's
   « <ammo>1</ammo> » is dropped): a throw uses one `qty` (default 1), the last one removes the weapon (`roll.fire.item`). Launcher profiles
-  (`isLauncherProfile`: « Minigrenade: … » entries) and grenade launchers are not single-use (the launcher's magazine is used).
+  (`isLauncherProfile`: « Minigrenade: … » entries, never offered as a weapon) and grenade launchers are not single-use (the launcher's magazine is used).
   `weapon/fire { actorId, weaponId, mode?, override? }` = the same without a roll (logged). Melee weapons are untouched.
   **Reload** `weapon/reload { actorId, weaponId, sourceItemId?, free? (GM) }` (owner / GM) — one action (`reloadPlan`, SR5 p. 163 simplified): rounds come from
   compatible ammunition gear (`ammoFits`: ammo class from Chummer `ammoFor` / names — « Ammo: », « Arrow: », « Taser Dart »…, Foundry's original name kept
@@ -331,7 +331,9 @@ Attack = { id, ts, mapId, kind: 'ranged'|'melee'|'blast', attackerId, attackerNa
   status: 'defense'|'soak'|'missed'|'done'|'cancelled', defenseHits?, net?, modifiedDv?, soakHits?, damage?, damageType?, resolvedTs?, gmOnly? }
 ```
 - `attack/roll` (any, owner of the attacker): the `dice/roll` payload + `{ targetTokenId? | targetActorId?, point?: { x, y }, actionId?, profileId? (launcher
-  ammunition profile), mapId? (GM) }`. Ranged weapon + attacker token on the map → range modifier line « portée moyenne (18 m) −1 » (SR5 p. 185).
+  round: a « Minigrenade: … » sheet profile id or a `MINIGRENADES` catalog id), mapId? (GM) }`. Grenade launcher: the round fired gives DV / AP /
+  blast (`launcherRounds`: sheet profiles, then the catalog minigrenades the sheet does not list, the one matching `ammoKind` first); without
+  `profileId` the loaded or first sheet round, none → refused (« Choisis la minigrenade tirée »). Ranged weapon + attacker token on the map → range modifier line « portée moyenne (18 m) −1 » (SR5 p. 185).
   Special action (`COMBAT_ACTIONS`): unlocked by a quality / power / martial art technique of the same name (French, English, or the
   « English name · BOOK page » notes of Foundry imports — `unlockNames`; the GM may use any), dice / DV / AP / reach, fewer rounds (Double Tap…),
   Edge and initiative costs paid after the roll, `once` per Combat Turn. Area weapon (`isAreaWeapon`: thrown grenade, grenade / missile launcher) +

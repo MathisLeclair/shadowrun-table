@@ -4,10 +4,10 @@
 // State: attacks: { list: [Attack] (newest first, max 60), blasts: [Blast] (max 12), turn: { [actorId]: { key, defended, boosts, once } } }.
 import { parseDamage } from '../../shared/sr5.js';
 import {
-  ACTION_BY_ID, isUnlocked, rangeFor, cellDistance, isAreaWeapon, scatterDice, rollScatter, blastOf, blastDvAt, blastReach, defenseLines, finalDamageType,
+  ACTION_BY_ID, isUnlocked, rangeFor, rangeClass, cellDistance, isAreaWeapon, scatterDice, rollScatter, blastOf, blastDvAt, blastReach, defenseLines, finalDamageType,
   DEFENSE_BY_ID, SITUATION_BY_ID,
 } from '../../shared/combat.js';
-import { FIRE_BY_ID, isLauncherProfile, fireOptions, usesAmmo } from '../../client/modules/sheet/inventory.js';
+import { FIRE_BY_ID, isLauncherProfile, launcherRounds, fireOptions, usesAmmo } from '../../client/modules/sheet/inventory.js';
 import { performRoll, applyDamage } from './10-characters.js';
 import { spendInitiative, combatTurnKey } from './30-combat.js';
 
@@ -237,7 +237,15 @@ export default {
         }
         if (action?.dice) bonus.push({ label: action.name, value: action.dice });
         // Launcher ammunition: the minigrenade profile listed on the sheet gives DV / AP / blast.
-        const profile = p.profileId ? (actor.weapons || []).find((w) => w && w.id === str(p.profileId, 60) && isLauncherProfile(w)) || null : null;
+        // Without one (Chummer did not list it): the loaded minigrenade, or the catalog minigrenade chosen in the dialog.
+        let profile = null;
+        if (weapon && rangeClass(weapon) === 'grenadeLauncher' && !isLauncherProfile(weapon)) {
+          const rounds = launcherRounds(actor, weapon);
+          const pick = p.profileId ? rounds.find((r) => r.id === str(p.profileId, 60)) : rounds.find((r) => r.loaded || r.sheet);
+          if (p.profileId && !pick) ctx.fail('Munition inconnue pour ce lance-grenades');
+          if (!pick) ctx.fail('Choisis la minigrenade tirée');
+          profile = pick.w;
+        }
         const source = profile || weapon;
         const dmg = source ? weaponDamage(actor, source) : { dv: null, type: 'P' };
         const atkId = ctx.uid('atk');

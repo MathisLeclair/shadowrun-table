@@ -24,7 +24,7 @@ import { ReloadDialog, fireSelectOptions, ammoKindLabel, actionLabel } from './w
 import { useUI, setUI } from '../../lib/ui-store.js';
 import { actionsForWeapon, ACTION_BY_ID, isAreaWeapon, rangeFor, rangeClass, blastOf, blastReach, cellDistance, isUnlocked } from '/shared/combat.js';
 import { targetCandidates, attackMap, tokenOfActor, turnInfo } from '../combat/attack-common.js';
-import { isLauncherProfile } from './inventory.js';
+import { isLauncherProfile, launcherRounds } from './inventory.js';
 
 const MATRIX_LIMIT_LABELS = { attack: tk('Attaque'), sleaze: tk('Corruption'), dataProcessing: tk('Traitement'), firewall: tk('Firewall') };
 
@@ -158,9 +158,11 @@ export function RollDialog({ game, actor, preset: initialPreset = {}, onClose })
   const aim = area && ui.aimPoint && amap && ui.aimPoint.mapId === amap.id ? ui.aimPoint : null;
   const [useAim, setUseAim] = useState(true);
   const point = area ? (aim && useAim ? { x: aim.x, y: aim.y } : target ? { x: target.token.x, y: target.token.y } : null) : null;
-  const profiles = weapon && rangeClass(weapon) === 'grenadeLauncher' ? (sheet.weapons || []).filter((w) => isLauncherProfile(w)) : [];
-  const [profileId, setProfileId] = useState(() => profiles[0]?.id || '');
-  const profile = profiles.find((w) => w.id === profileId) || null;
+  // Grenade launcher: the round fired (sheet profile, else catalog minigrenade; the loaded one first) gives DV / AP / blast.
+  const rounds = weapon && sheet && rangeClass(weapon) === 'grenadeLauncher' && !isLauncherProfile(weapon) ? launcherRounds(sheet, weapon) : [];
+  const [profileId, setProfileId] = useState(() => rounds[0]?.id || '');
+  const round = rounds.find((r) => r.id === profileId) || rounds[0] || null;
+  const profile = round?.w || null;
   const blast = area ? blastOf(profile || weapon, sheet) : null;
   const aimAt = point || (target ? { x: target.token.x, y: target.token.y } : null);
   const range = weapon && weapon.kind !== 'melee' && myToken && aimAt ? rangeFor(weapon, sheet, cellDistance(myToken, aimAt, Number(amap.metersPerCell) || 1)) : null;
@@ -277,7 +279,7 @@ export function RollDialog({ game, actor, preset: initialPreset = {}, onClose })
         if (point && area && aim && useAim) payload.point = point;
         else if (targetId) payload.targetTokenId = targetId;
         if (actionId) payload.actionId = actionId;
-        if (profile) payload.profileId = profile.id;
+        if (round) payload.profileId = round.id;
         if (gm && amap) payload.mapId = amap.id;
       }
       const r = await send(attackRoll ? 'attack/roll' : 'dice/roll', payload);
@@ -315,7 +317,7 @@ export function RollDialog({ game, actor, preset: initialPreset = {}, onClose })
       ${initialPreset.weaponId && sheet && html`<div class="col gap-s sh-rd-weapon">
         <div class="row wrap gap-s">
           <${Select} value=${weaponId || ''} onChange=${(v) => { setWeaponId(v); setFireMode(null); setAmmoOverride(false); }}
-            options=${(sheet.weapons || []).filter((w) => allWeapons || w.equipped !== false || isUnarmed(w) || w.id === weaponId).map((w) => ({ value: w.id, label: itemLabel(w) + (w.equipped === false && !isUnarmed(w) ? ` (${t('rangée')})` : '') }))} />
+            options=${(sheet.weapons || []).filter((w) => w.id === weaponId || (!isLauncherProfile(w) && (allWeapons || w.equipped !== false || isUnarmed(w)))).map((w) => ({ value: w.id, label: itemLabel(w) + (w.equipped === false && !isUnarmed(w) ? ` (${t('rangée')})` : '') }))} />
           <${Toggle} value=${allWeapons} onChange=${setAllWeapons} label=${t('afficher tout')} title=${t('Montrer aussi les armes rangées')} />
         </div>
         ${!weapon && !result && html`<div class="error small">${t('Arme introuvable')}</div>`}
@@ -344,8 +346,8 @@ export function RollDialog({ game, actor, preset: initialPreset = {}, onClose })
           ${action.rounds ? html` <span class="badge">${tn(action.rounds, '{n} balle', '{n} balles')}</span>` : null}
           ${usedOnce ? html` <span class="badge badge-red">${t('déjà utilisée ce tour')}</span>` : null}
           ${!isUnlocked(action, sheet) ? html` <span class="badge badge-amber">${t('non débloquée (MJ)')}</span>` : null}</div>`}
-        ${profiles.length > 0 && html`<div class="row wrap gap-s"><span class="field-label">${t('Munition')}</span>
-          <${Select} value=${profileId} onChange=${setProfileId} options=${profiles.map((w) => ({ value: w.id, label: itemLabel(w) }))} /></div>`}
+        ${rounds.length > 0 && html`<div class="row wrap gap-s"><span class="field-label">${t('Munition')}</span>
+          <${Select} value=${round.id} onChange=${setProfileId} options=${rounds.map((r) => ({ value: r.id, label: itemLabel(r.w) + (r.loaded ? ` · ${t('chargée')}` : r.sheet ? '' : ` · ${t('catalogue')}`) }))} /></div>`}
         <div class="row wrap gap-s">
           <span class="field-label">${area ? t('Cible / point visé') : t('Cible')}</span>
           <${Select} value=${targetId} onChange=${setTargetId} options=${[{ value: '', label: candidates.length ? t('— aucune —') : t('— aucun pion sur la carte —') }, ...candidates.map((c) => ({ value: c.token.id, label: c.name + (c.meters !== null ? ` · ${c.meters} m` : '') + (c.range ? ` · ${t(c.range.label)}${c.range.mod ? ` ${c.range.mod}` : ''}` : '') }))]} />

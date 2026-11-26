@@ -2,6 +2,7 @@
 // grenade scatter / blast, player permissions and view filter. Run: node tools/test-attacks.js
 import assert from 'node:assert/strict';
 import { startServer, login, client, settle } from './test-client.js';
+import { launcherRounds } from '../client/modules/sheet/inventory.js';
 import { rollScatter, blastOf, blastDvAt, blastReach, rangeFor, defenseLines, actionsForWeapon, unlockedActions, finalDamageType } from '../shared/combat.js';
 
 const srv = await startServer({ port: Number(process.env.SR_TEST_PORT) || 3291 });
@@ -170,6 +171,36 @@ try {
     await gm.send('attack/clear', { all: true });
     await settle();
     assert.equal(gm.state.attacks.blasts.length, 0);
+  });
+  await test('grenade launcher without a minigrenade profile: the catalog round chosen gives the blast, a round is used', async () => {
+    const alpha = gm.state.actors.pc_anthony.weapons.find((w) => /Alpha Grenade Launcher/.test(w.name));
+    const rounds = launcherRounds(gm.state.actors.pc_anthony, alpha);
+    assert.ok(rounds.length && rounds.every((r) => !r.sheet), 'catalog rounds offered');
+    await rejects(gm.send('attack/roll', { actorId: 'pc_anthony', weaponId: alpha.id, skillId: alpha.skill, point: { x: npcToken.x, y: npcToken.y } }), /minigrenade/);
+    const he = rounds.find((r) => /High Explosive/.test(r.w.name));
+    const before = gm.state.actors.pc_anthony.weapons.find((w) => w.id === alpha.id).ammoLoaded;
+    const r = await gm.send('attack/roll', { actorId: 'pc_anthony', weaponId: alpha.id, skillId: alpha.skill, profileId: he.id, point: { x: npcToken.x, y: npcToken.y } });
+    await settle();
+    const b = gm.state.attacks.blasts.find((x) => x.id === r.blastId);
+    assert.equal(b.dv, 16);
+    assert.equal(b.falloff, 2);
+    assert.equal(b.reach, 7);
+    assert.equal(gm.state.actors.pc_anthony.weapons.find((w) => w.id === alpha.id).ammoLoaded, before - 1);
+  });
+  await test('launcher rounds: the sheet profiles first, the loaded minigrenade before them; the sheet profile is the default', async () => {
+    const chris = gm.state.actors.pc_christopher;
+    const mgl = chris.weapons.find((w) => /MGL/.test(w.name));
+    const names = launcherRounds(chris, mgl).map((r) => r.w.name);
+    assert.deepEqual(names.slice(0, 2), ['Minigrenade: High Explosive', 'Minigrenade: Gas']);
+    assert.equal(names.filter((n) => n === 'Minigrenade: High Explosive').length, 1, 'catalog duplicate of a sheet profile dropped');
+    const loaded = launcherRounds(chris, { ...mgl, ammoKind: { name: 'Minigrenade: Smoke', catalogId: 'b6381691-1a96-4299-b9df-129ffee64c45' } });
+    assert.equal(loaded[0].w.name, 'Minigrenade: Smoke');
+    assert.ok(loaded[0].loaded);
+    await gm.send('maps/addToken', { mapId, token: { actorId: 'pc_christopher', x: 5, y: 12 } });
+    const r = await gm.send('attack/roll', { actorId: 'pc_christopher', weaponId: mgl.id, skillId: mgl.skill, point: { x: npcToken.x, y: npcToken.y } });
+    assert.equal(r.blast.dv, 16, 'sheet HE profile used by default');
+    await gm.send('attack/clear', { all: true });
+    await settle();
   });
 } catch (err) {
   failures++;

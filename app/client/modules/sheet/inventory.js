@@ -104,6 +104,38 @@ export function isLauncherProfile(w) {
 }
 
 /**
+ * Catalog minigrenades (data/catalog/gear.json, SR5 p. 435) a grenade launcher can fire when the sheet lists no profile for them.
+ * The Hornet Direct-Fire round is left out: it is a direct hit, not an area round.
+ */
+export const MINIGRENADES = [
+  { catalogId: 'daecdfc8-15d5-4864-9e20-13e4a0dca88e', name: 'Minigrenade: High Explosive', nameFr: 'Mini-Grenades hautement explosive', damage: '16P (-2/m)', ap: -2 },
+  { catalogId: '8e1583bf-4cc5-4498-a800-36cb61d3fb27', name: 'Minigrenade: Fragmentation', nameFr: 'Mini-Grenades à fragmentation', damage: '18P(f) (-1/m)', ap: 5 },
+  { catalogId: 'f092fca8-46a9-4351-a06a-362846e6546a', name: 'Minigrenade: Flash-Bang', nameFr: 'Mini-Grenades Flashbang', damage: '10S (10m Radius)', ap: -4 },
+  { catalogId: '74284124-57a0-479b-9ab1-3433bdb9e3b7', name: 'Minigrenade: Gas', nameFr: 'Mini-Grenades à gaz', damage: 'Chemical (10m Radius)', ap: 0 },
+  { catalogId: '7c00891f-6554-497d-9726-058d7c4a598e', name: 'Minigrenade: Flash-Pak', nameFr: 'Mini-Grenades Flash-pak', damage: 'Special', ap: 0 },
+  { catalogId: 'b6381691-1a96-4299-b9df-129ffee64c45', name: 'Minigrenade: Smoke', nameFr: 'Mini-Grenades fumigène', damage: '(10m Radius)', ap: 0 },
+  { catalogId: 'e2252b3c-1bae-496e-adbb-f1c3d6e0b32b', name: 'Minigrenade: Thermal Smoke', nameFr: 'Mini-Grenades fumigène infrarouge', damage: '(10m Radius)', ap: 0 },
+];
+
+/**
+ * Rounds a grenade launcher can fire, best guess first: [{ id, w (weapon-like stats for blastOf), loaded, sheet }].
+ * The sheet's « Minigrenade: … » profiles (Chummer stats), then the catalog minigrenades the sheet does not list; the round matching the
+ * launcher's loaded ammunition (ammoKind) comes first. id = the profile's weapon id, or the catalog id.
+ */
+export function launcherRounds(actor, launcher) {
+  const kind = launcher?.ammoKind || null;
+  const matches = (w, catalogId) => !!kind && ((kind.catalogId && catalogId && kind.catalogId === catalogId) || namesOf(w).some((n) => norm(n) === norm(kind.name) || (kind.nameFr && norm(n) === norm(kind.nameFr))));
+  const sheet = (actor?.weapons || []).filter((w) => isLauncherProfile(w)).map((w) => ({ id: w.id, w, sheet: true, loaded: matches(w, w.catalogId) }));
+  const listed = new Set(sheet.flatMap((r) => namesOf(r.w).map(norm)));
+  const catalog = MINIGRENADES.filter((m) => !listed.has(norm(m.name)) && !listed.has(norm(m.nameFr))).map((m) => {
+    const w = { kind: 'ranged', skill: 'heavy_weapons', catalogId: m.catalogId, name: m.name, nameFr: m.nameFr, damage: m.damage, ap: m.ap };
+    return { id: m.catalogId, w, sheet: false, loaded: matches(w, m.catalogId) };
+  });
+  const all = [...sheet, ...catalog];
+  return [...all.filter((r) => r.loaded), ...all.filter((r) => !r.loaded)];
+}
+
+/**
  * Single-use thrown explosive (hand grenade: throwing skill or no skill, name / category « grenade » / « explosive »): throwing it uses
  * one unit (qty), its ammunition is never tracked (Chummer gives hand grenades « <ammo>1</ammo> »). Launcher profiles and weapons of
  * another skill (grenade launchers) are not.
