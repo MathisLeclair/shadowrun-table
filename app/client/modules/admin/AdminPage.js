@@ -7,6 +7,7 @@ import { api, setTableToken, uploadWithProgress } from '../../lib/net.js';
 import { toast, useLang } from '../../lib/ui-store.js';
 import { t, tn, tIfKnown, fmtDate } from '../../lib/i18n.js';
 import { fmtBytes, Progress } from './common.js';
+import AssistantAdmin from './AssistantAdmin.js';
 
 const TOKEN_KEY = 'sr.adminToken';
 const readToken = () => {
@@ -380,6 +381,10 @@ export default function AdminPage({ onLang }) {
             ${data && html`<${RestoreTable} maxBytes=${data.maxUploadBytes} onDone=${reload} />`}
           </${Panel}>
         </div>
+
+        <${Panel} title=${t('Assistant IA')} style="margin-top:14px">
+          <${AssistantAdmin} adminApi=${adminApi} run=${run} />
+        </${Panel}>
 
         <div class="grid-2" style="margin-top:14px">
           <${Panel} title=${t('Archives des tables supprimées ou remplacées')}>

@@ -19,6 +19,7 @@ import SettingsPage from './core/SettingsPage.js';
 import MatrixPage from './matrix/MatrixPage.js';
 import ChargenPage from './chargen/ChargenPage.js';
 import NotesPage from './notes/NotesPage.js';
+import AssistantDock from './assistant/AssistantDock.js';
 import { unreadHandouts } from './campaign/common.js';
 import { tk } from '../lib/i18n.js';
 
@@ -47,6 +48,7 @@ export const dockTabs = [
   { id: 'log', label: tk('Journal & dés'), roles: ['gm', 'player'], component: LogDock },
   { id: 'combat', label: tk('Initiative'), roles: ['gm', 'player'], component: CombatDock, badge: (g) => (g.combat?.active ? '●' : null) },
   { id: 'sounds', label: tk('Sons'), roles: ['gm'], component: SoundDock },
+  { id: 'assistant', label: tk('Assistant'), roles: ['gm'], component: AssistantDock },
 ];
 
 /** Full character sheet, rendered inside the global modal: <SheetView game actorId />. */

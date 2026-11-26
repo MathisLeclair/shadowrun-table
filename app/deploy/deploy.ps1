@@ -9,7 +9,8 @@
   -Action update    (default) Snapshot the data, git pull, rebuild and restart, wait until healthy.
   -Action assets    Copy app/data/assets/foundry (~490 MB, Foundry images/music of Project Lazarus) to the VPS.
   -Action migrate   Send the local Project Lazarus table (state, uploads, campaign docs) to the VPS.
-  -Action backup    Download a .tar.gz of every table from the VPS into -BackupDir.
+  -Action ai-setup  GM assistant: write the Claude Workload Identity Federation ids (org, rule…) to .env, restart.
+  -Action backup    Download a .tar.gz of every table from the VPS into -BackupDir (assistant signing key left out).
   -Action rollback  Go back to the image (and commit) that ran before the last update.
   -Action status    Container state, health, disk usage.   -Action logs   Last 200 log lines.
   See DEPLOY.md for the whole procedure.
@@ -20,7 +21,7 @@
 #>
 [CmdletBinding()]
 param(
-  [ValidateSet('setup', 'update', 'assets', 'migrate', 'backup', 'rollback', 'status', 'logs')]
+  [ValidateSet('setup', 'update', 'assets', 'migrate', 'ai-setup', 'backup', 'rollback', 'status', 'logs')]
   [string]$Action = 'update',
   [string]$VpsHost = '152.228.134.90',
   [string]$VpsUser = 'ubuntu',
@@ -300,12 +301,43 @@ wait_healthy
     Write-Host "`nProject Lazarus est en ligne : http://${VpsHost}:8095/t/lazarus/  (meme mot de passe MJ qu'en local)" -ForegroundColor Green
   }
 
+  'ai-setup' {
+    # GM assistant: Workload Identity Federation ids (not secrets) written to ~/shadowrun/app/.env, container recreated.
+    Write-Host 'Identifiants de la Console Claude (Workload identity). Aucun secret : la cle privee reste sur le VPS.' -ForegroundColor Yellow
+    $org = (Read-Host 'ID de l''organisation (UUID)').Trim()
+    $rule = (Read-Host 'ID de la regle de federation (fdrl_...)').Trim()
+    $ws = (Read-Host 'ID de l''espace de travail (wrkspc_..., Entree si la regle ne couvre qu''un espace)').Trim()
+    $sa = (Read-Host 'ID du compte de service (svac_..., Entree pour laisser la regle choisir)').Trim()
+    foreach ($v in @($org, $rule, $ws, $sa)) {
+      if ($v -and $v -notmatch '^[A-Za-z0-9_-]{4,100}$') { throw "Identifiant invalide : $v" }
+    }
+    if (-not $org -or -not $rule) { throw 'L''organisation et la regle sont obligatoires.' }
+    Invoke-Remote @'
+ENV="$APP/.env"
+touch "$ENV"; chmod 600 "$ENV"
+# Replace previous assistant settings; an API key would outrank federation, so it never stays in .env.
+grep -vE '^(ANTHROPIC_ORGANIZATION_ID|ANTHROPIC_FEDERATION_RULE_ID|ANTHROPIC_WORKSPACE_ID|ANTHROPIC_SERVICE_ACCOUNT_ID|ANTHROPIC_API_KEY)=' "$ENV" > "$ENV.tmp" || true
+{
+  echo "ANTHROPIC_ORGANIZATION_ID=__ORG__"
+  echo "ANTHROPIC_FEDERATION_RULE_ID=__RULE__"
+  [ -n "__WS__" ] && echo "ANTHROPIC_WORKSPACE_ID=__WS__"
+  [ -n "__SA__" ] && echo "ANTHROPIC_SERVICE_ACCOUNT_ID=__SA__"
+  true
+} >> "$ENV.tmp"
+mv "$ENV.tmp" "$ENV"; chmod 600 "$ENV"
+dc up -d --no-build
+wait_healthy
+echo "Assistant settings applied. Check /admin -> Assistant IA -> Tester la connexion."
+'@ -Vars @{ ORG = $org; RULE = $rule; WS = $ws; SA = $sa }
+    Write-Host "`nOuvre http://${VpsHost}:8095/admin -> Assistant IA -> « Tester la connexion », puis active la table." -ForegroundColor Green
+  }
+
   'backup' {
     New-Item -ItemType Directory -Force $BackupDir | Out-Null
     Write-Step 'Sauvegarde des tables sur le VPS'
     $name = 'shadowrun-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.tar.gz'
     Invoke-Remote @'
-tar -czf "$HOME/__NAME__" -C "$APP" --exclude='runtime/tables/*/foundry' --exclude='runtime/tmp' runtime
+tar -czf "$HOME/__NAME__" -C "$APP" --exclude='runtime/tables/*/foundry' --exclude='runtime/tmp' --exclude='runtime/assistant/signing-key.pem' runtime
 echo "Archive: $(du -h "$HOME/__NAME__" | cut -f1)"
 '@ -Vars @{ NAME = $name }
     & $Scp @SshOpts "${Target}:$name" (Join-Path $BackupDir $name)

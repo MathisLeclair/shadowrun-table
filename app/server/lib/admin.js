@@ -11,6 +11,7 @@ import {
 } from './tables.js';
 import { ZipError, listZip, safeEntryPath, extractZip, writeZip, writeZipFile, walkFiles, dirSize, receiveToFile } from './zip.js';
 import { errorBody } from './i18n.js';
+import { registerAssistantAdminRoutes } from './assistant/admin-routes.js';
 
 const MAX_RESTORE = Number(process.env.SR_MAX_UPLOAD_BYTES) || 1.5e9;
 
@@ -421,4 +422,7 @@ export function registerAdminRoutes(app, api) {
       if (!res.headersSent) fail(res, err.status || 500, err.message || 'Restauration impossible');
     }
   });
+
+  // ----- GM assistant (server-wide settings, see ARCHITECTURE.md « Assistant MJ ») -----
+  registerAssistantAdminRoutes(app, { requireAdmin, fail, listMetas });
 }

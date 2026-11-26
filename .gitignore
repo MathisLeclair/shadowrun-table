@@ -22,4 +22,6 @@ app/data/server.json*
 app/data/deleted/
 app/data/tmp/
 app/runtime/
+# GM assistant: signing key, settings, spend ledger (never commit the key)
+app/data/assistant/
 app/.env
