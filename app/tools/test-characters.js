@@ -169,6 +169,26 @@ try {
     r = await gm.send('actor/heal', { actorId: 'pc_anthony', type: 'all' });
     assert.deepEqual(r.condition, { physical: 0, stun: 0, overflow: 0 });
   });
+  await test('health status sets the unconscious / dead token markers', async () => {
+    // Anthony: physical 11, BOD 5.
+    const mapId = await gm.send('maps/create', { name: 'Markers', width: 8, height: 8, folder: 'Tests' });
+    const tokId = await gm.send('maps/addToken', { mapId, token: { actorId: 'pc_anthony', x: 2, y: 2, status: ['à terre'] } });
+    const tok = () => gm.state.maps[mapId].tokens.find((t) => t.id === tokId);
+    await gm.send('actor/damage', { actorId: 'pc_anthony', amount: 13, type: 'P' }); // full + 2 overflow
+    await settle();
+    assert.deepEqual(tok().status, ['à terre', 'inconscient']);
+    await gm.send('actor/damage', { actorId: 'pc_anthony', amount: 4, type: 'P' }); // overflow 6 > BOD
+    await settle();
+    assert.deepEqual(tok().status, ['à terre', 'mort']);
+    await gm.send('actor/heal', { actorId: 'pc_anthony', type: 'all' });
+    await settle();
+    assert.deepEqual(tok().status, ['à terre']);
+    await gm.send('actor/update', { actorId: 'pc_anthony', patch: { condition: { stun: 99 } } });
+    await settle();
+    assert.deepEqual(tok().status, ['à terre', 'inconscient'], 'GM editing the boxes');
+    await gm.send('actor/heal', { actorId: 'pc_anthony', type: 'all' });
+    await gm.send('maps/delete', { mapId });
+  });
   await test('damage permissions + NPC status for players', async () => {
     await rejects(p1.send('actor/damage', { actorId: 'pc_bricks', amount: 2, type: 'P' }), /appartient/);
     await rejects(p1.send('actor/damage', { actorId: 'pc_jane', amount: 2, type: 'X' }), /Type/);

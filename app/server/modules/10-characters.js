@@ -62,6 +62,29 @@ function statusOf(a) {
   return healthStatus(a.condition, d.physicalMonitor, d.stunMonitor, d.overflowMax);
 }
 
+/** Health token markers set from the condition monitors (SR5: full track = unconscious, overflow > BOD = dead). */
+const HEALTH_MARKERS = { 'hors de combat': 'inconscient', mort: 'mort' };
+
+/**
+ * After a condition change: refresh the combat tracker's KO flag and, when the health status changed,
+ * swap the automatic 'inconscient' / 'mort' markers on the actor's tokens (other markers stay as they are).
+ */
+function syncHealth(state, a, wasStatus) {
+  const status = statusOf(a);
+  const down = status === 'hors de combat' || status === 'mort';
+  for (const e of state.combat?.entries || []) if (e.actorId === a.id) e.down = down;
+  if (status === wasStatus) return status;
+  const marker = HEALTH_MARKERS[status];
+  for (const m of Object.values(state.maps || {})) {
+    for (const t of m?.tokens || []) {
+      if (t.actorId !== a.id) continue;
+      const kept = (Array.isArray(t.status) ? t.status : []).filter((x) => x !== 'inconscient' && x !== 'mort');
+      t.status = marker ? [...kept, marker] : kept;
+    }
+  }
+  return status;
+}
+
 function cleanColor(v) {
   const s = String(v || '');
   return /^#[0-9a-fA-F]{3,8}$/.test(s) ? s : null;
@@ -636,7 +659,7 @@ export function applyDamage(ctx, a, n, type) {
     }
   }
   c.overflow = Math.min(c.overflow, d.overflowMax + 1);
-  const status = statusOf(a);
+  const status = syncHealth(ctx.state, a, wasStatus);
   // Translatable log line (status values are stored French words, translated as nested keys).
   let i18n;
   if (a.type === 'npc') {
@@ -950,7 +973,9 @@ export default {
       handler(ctx, { actorId, patch }) {
         const a = getActor(ctx, actorId);
         requireOwn(ctx, actorId);
+        const wasStatus = statusOf(a);
         applyPatch(ctx, a, patch);
+        syncHealth(ctx.state, a, wasStatus);
         return true;
       },
     },
@@ -1314,6 +1339,7 @@ export default {
         const a = getActor(ctx, actorId);
         requireOwn(ctx, actorId);
         const c = a.condition;
+        const wasStatus = statusOf(a);
         if (type === 'all') {
           c.physical = 0;
           c.stun = 0;
@@ -1330,7 +1356,7 @@ export default {
           } else ctx.fail('Type de soin invalide');
         }
         sfx(ctx, 'heal', a.type === 'npc' ? 'gm' : 'all');
-        return { condition: { ...c }, status: statusOf(a) };
+        return { condition: { ...c }, status: syncHealth(ctx.state, a, wasStatus) };
       },
     },
 

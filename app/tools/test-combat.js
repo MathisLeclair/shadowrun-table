@@ -162,6 +162,17 @@ try {
   ok(c.entries.filter((e) => e.kind === 'npc').every((e) => !e.toRoll && e.rolls.length === 1 && e.score === e.base + e.rolls[0]), 'NPCs auto-rolled');
   await expectFail(gm.send('combat/start', {}), 'cannot start twice');
 
+  // KO flag follows damage right away (not only on the next combat action)
+  {
+    const koE = c.entries.find((e) => e.kind === 'npc');
+    await gm.send('actor/damage', { actorId: koE.actorId, amount: 40, type: 'S' });
+    await settle();
+    ok(gm.state.combat.entries.find((e) => e.id === koE.id).down === true, 'damage sets the KO flag immediately');
+    await gm.send('actor/heal', { actorId: koE.actorId, type: 'all' });
+    await settle();
+    ok(!gm.state.combat.entries.find((e) => e.id === koE.id).down, 'healing clears the KO flag');
+  }
+
   // Player view filtering
   let pc = p1.state.combat;
   ok(pc.entries.length === 5, 'player sees non-hidden entries');

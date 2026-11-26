@@ -211,7 +211,7 @@
   "indemne": "unharmed",
   "blessé": "wounded",
   "grièvement blessé": "badly wounded",
-  "hors de combat": "out of action",
+  "hors de combat": "KO",
   "Type de chargeur : {ammo}": "Magazine: {ammo}",
   "Tirer une munition": "Fire one round",
   "Recharger": "Reload",
