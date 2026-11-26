@@ -63,8 +63,8 @@ export function mintIdentityToken(now = Date.now()) {
   const { privateKey, kid } = signingKey();
   const iat = Math.floor(now / 1000);
   const header = { alg: 'ES256', typ: 'JWT', kid };
-  const payload = { iss: ISSUER, sub: SUBJECT, iat, nbf: iat - 5, exp: iat + JWT_LIFETIME_S, jti: crypto.randomUUID() };
-  if (env('SR_ASSISTANT_AUDIENCE')) payload.aud = env('SR_ASSISTANT_AUDIENCE');
+  // The token endpoint rejects assertions without `aud` (reason jwt_required_claim_missing), even though rules need not match on it.
+  const payload = { iss: ISSUER, sub: SUBJECT, aud: env('SR_ASSISTANT_AUDIENCE') || API_BASE, iat, nbf: iat - 5, exp: iat + JWT_LIFETIME_S, jti: crypto.randomUUID() };
   const input = `${b64url(JSON.stringify(header))}.${b64url(JSON.stringify(payload))}`;
   const sig = crypto.sign('sha256', Buffer.from(input), { key: privateKey, dsaEncoding: 'ieee-p1363' });
   return `${input}.${b64url(sig)}`;

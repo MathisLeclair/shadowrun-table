@@ -51,6 +51,8 @@ await test('signing key is created 0600 and the minted JWT verifies with the pub
   assert.ok(payload.sub.startsWith(auth.SUBJECT_PREFIX));
   assert.ok(payload.exp - payload.iat <= 600 && payload.exp > payload.iat);
   assert.ok(payload.jti);
+  // Anthropic's token endpoint refuses assertions without aud (jwt_required_claim_missing), seen live on 2026-11-26.
+  assert.equal(payload.aud, 'https://api.anthropic.com');
   const keyFile = path.join(tmp, 'signing-key.pem');
   assert.ok(fs.existsSync(keyFile));
   if (process.platform !== 'win32') assert.equal(fs.statSync(keyFile).mode & 0o777, 0o600);
