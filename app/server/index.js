@@ -354,6 +354,46 @@ function makeCtx(table, user) {
   };
 }
 
+/**
+ * Run one action for a user on a table: role check, handler inside the table scope, then save + broadcast.
+ * The single path for socket actions and for server-side callers (the GM assistant's « Appliquer »).
+ * Returns { ok: true, result } | { ok: false, error, errorKey?, params? } — never throws.
+ */
+function runAction(t, user, type, payload) {
+  const def = actions[type];
+  if (!def) return { ok: false, ...errorBody('Action inconnue : {type}', { type: String(type).slice(0, 80) }) };
+  if (def.role === 'gm' && user.role !== 'gm') return { ok: false, ...errorBody('Action réservée au MJ') };
+  try {
+    const result = tableScope.run(t, () => def.handler(makeCtx(t, user), payload || {}));
+    t.store.saveSoon();
+    scheduleTableBroadcast(t);
+    syncMetaFromState(t);
+    return { ok: true, result };
+  } catch (err) {
+    if (!(err instanceof ActionError)) console.error(`[action ${type} @${t.id}]`, err);
+    const i18n = err instanceof ActionError && err.i18nKey ? { errorKey: err.i18nKey, ...(err.i18nParams ? { params: err.i18nParams } : {}) } : {};
+    return { ok: false, error: err.message || String(err), ...i18n };
+  }
+}
+
+/**
+ * Run an action handler on a throwaway deep copy of the table state (nothing saved, logged, emitted or broadcast).
+ * Used to validate and preview a change exactly as the real action would make it. Returns { ok, result, state }.
+ */
+function simulateAction(t, user, type, payload, state = deepClone(t.state)) {
+  const def = actions[type];
+  if (!def) return { ok: false, ...errorBody('Action inconnue : {type}', { type: String(type).slice(0, 80) }), state };
+  const fake = Object.create(t, { state: { value: state } }); // same table (id, info…), copied state
+  const ctx = { ...makeCtx(fake, user), log: (e) => e, emitTo: () => {} };
+  try {
+    const result = tableScope.run(t, () => def.handler(ctx, payload || {}));
+    return { ok: true, result, state };
+  } catch (err) {
+    const i18n = err instanceof ActionError && err.i18nKey ? { errorKey: err.i18nKey, ...(err.i18nParams ? { params: err.i18nParams } : {}) } : {};
+    return { ok: false, error: err.message || String(err), ...i18n, state };
+  }
+}
+
 // ---------------------------------------------------------------------------
 // HTTP
 // ---------------------------------------------------------------------------
@@ -771,20 +811,7 @@ io.on('connection', (socket) => {
       return;
     }
     entry.user = user;
-    const def = actions[type];
-    if (!def) return reply({ ok: false, ...errorBody('Action inconnue : {type}', { type: String(type).slice(0, 80) }) });
-    if (def.role === 'gm' && user.role !== 'gm') return reply({ ok: false, ...errorBody('Action réservée au MJ') });
-    try {
-      const result = tableScope.run(t, () => def.handler(makeCtx(t, user), payload || {}));
-      t.store.saveSoon();
-      scheduleTableBroadcast(t);
-      syncMetaFromState(t);
-      reply({ ok: true, result });
-    } catch (err) {
-      if (!(err instanceof ActionError)) console.error(`[action ${type} @${t.id}]`, err);
-      const i18n = err instanceof ActionError && err.i18nKey ? { errorKey: err.i18nKey, ...(err.i18nParams ? { params: err.i18nParams } : {}) } : {};
-      reply({ ok: false, error: err.message || String(err), ...i18n });
-    }
+    reply(runAction(t, user, type, payload));
   });
 
   socket.on('disconnect', () => {
@@ -810,7 +837,7 @@ const scoped = scopedApp(app);
 for (const m of modules) {
   if (typeof m.routes !== 'function') continue;
   try {
-    m.routes(scoped, { requireGM, requireUser, getState, scheduleBroadcast, emitTo, addLog, saveSoon, tableApi });
+    m.routes(scoped, { requireGM, requireUser, getState, scheduleBroadcast, emitTo, addLog, saveSoon, tableApi, runAction, simulateAction, actions });
   } catch (err) {
     console.error(`[modules] routes failed for ${m.name}:`, err);
   }

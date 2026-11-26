@@ -40,6 +40,7 @@ const AREA_EXTRA = {
   campaign: ['server/modules/70-campaign.js'],
   foundry: ['server/modules/80-foundry.js', 'server/lib/foundry'],
   chummer: ['server/modules/85-chummer.js', 'server/lib/chummer'],
+  assistant: ['server/modules/95-assistant.js', 'server/lib/assistant', 'client/modules/admin/AssistantAdmin.js'],
 };
 const DEFAULT_ROOTS = ['client', 'shared', 'server'];
 const SKIP = [/[\\/]node_modules[\\/]/, /[\\/]client[\\/]i18n[\\/]/, /[\\/]server[\\/]lib[\\/]foundry[\\/]dump-child\.js$/];

@@ -15,3 +15,4 @@ data/books/
 runtime/books/
 # HMAC key of the rulebook PDF links (per install, never copied)
 data/books-sign.key
+data/assistant/

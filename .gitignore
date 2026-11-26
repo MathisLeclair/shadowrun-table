@@ -22,8 +22,11 @@ app/data/server.json*
 app/data/deleted/
 app/data/tmp/
 app/runtime/
+# GM assistant: signing key, settings, spend ledger (never commit the key)
+app/data/assistant/
 app/.env
 # Rulebook library (purchased PDFs + extracted text): never in git
 app/data/books/
 app/runtime/books/
 setup/
+.claude/

@@ -306,6 +306,8 @@ try {
 
   gm.close();
   await test('languages survive a server restart', async () => {
+    // Windows kills the server without a signal (no shutdown flush): let the debounced save (400 ms) land first.
+    await new Promise((r) => setTimeout(r, 900));
     await srv.stopAndWait({ keep: true });
     const srv2 = await startServer({ port: srv.port + 1, runtime: srv.runtime, keepRuntime: true });
     try {

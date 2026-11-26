@@ -19,7 +19,7 @@ uploads and backups). The owner is the **admin** (`/admin`) and creates the tabl
 ```
 ~/shadowrun/                      git clone of github.com/MathisLeclair/shadowrun-table (private)
 ~/shadowrun/app/docker-compose.yml
-~/shadowrun/app/.env              SR_ADMIN_PASSWORD=…   (chmod 600, never committed)
+~/shadowrun/app/.env              SR_ADMIN_PASSWORD=…, assistant federation ids   (chmod 600, never committed)
 ~/shadowrun/app/runtime/          ← all game data (bind mount → /app/runtime in the container)
     server.json                   table registry + admin password hash
     tables/<id>/state.json        a table's game state (+ backups/ uploads/ docs/ assets/ foundry/ table.json)
@@ -207,6 +207,40 @@ Without the variable (local PC use), a password is generated at the first start 
 
 GM password of a table forgotten: `/admin` → *Mot de passe MJ*.
 
+## GM assistant (Claude) — `-Action ai-setup`
+
+The GM dock « Assistant » calls the Claude API. There is **no API key on the server**: the app authenticates with
+**Workload Identity Federation**. It is its own small OIDC issuer: an EC key pair is created in
+`runtime/assistant/signing-key.pem` (0600, stays on the VPS, left out of `-Action backup` downloads). Its public half is
+registered in the Claude Console. Each token exchange signs a fresh 10-minute JWT, which the SDK trades for a
+short-lived token scoped to one workspace.
+
+One-time setup (≈ 5 min):
+
+1. **Deploy this version**, open `http://152.228.134.90:8095/admin` → **Assistant IA**. It shows the *issuer URL*,
+   the *subject prefix* (`shadowrun-table:`) and the **JWKS** (public key) with copy buttons.
+2. **Claude Console → Workspaces** → create `shadowrun-table`, set its **monthly spend limit** (e.g. $80). This is
+   the hard stop, outside the app.
+3. **Console → Workload identity → Connect workload → Custom OIDC**:
+   - issuer URL = the one shown in /admin, JWKS **inline** = paste the JWKS from /admin;
+   - service account `shadowrun-table`, member of the `shadowrun-table` workspace only;
+   - rule: workspace = `shadowrun-table`, scope **`workspace:inference`** (Messages only), match
+     **subject prefix `shadowrun-table:`**, token lifetime 600 s.
+   Note the **organization ID** and the **rule ID** (`fdrl_…`).
+4. On your PC: `.\deploy\deploy.ps1 -Action ai-setup`. Paste the organization ID and the rule ID (the workspace ID and
+   service account ID are optional). It writes them to `~/shadowrun/app/.env`, removes any `ANTHROPIC_API_KEY` (it would
+   outrank federation) and recreates the container.
+5. /admin → Assistant IA → **Tester la connexion** (one tiny call). Then switch on **Lazarus** under *Tables
+   autorisées*, and set the in-app **monthly cap** (default $80, all tables together).
+
+Day to day: the dock shows this month's spend. At the cap, questions are refused until the next month (or until you
+raise the cap / reset the counter in /admin). To revoke access at once, archive the rule in the Console. To rotate the
+key: stop the container, delete `runtime/assistant/signing-key.pem`, start it, then paste the new JWKS in the Console.
+Restoring a PC backup creates a new key: paste the new JWKS in the Console.
+
+Local development: set `ANTHROPIC_API_KEY` in the shell that starts the server (the dock then works with that key), or
+add the PC's own JWKS (/admin on localhost) to the same issuer in the Console; the inline JWKS takes several keys.
+
 ## Environment variables
 
 | Variable | Default | Meaning |
@@ -225,6 +259,12 @@ GM password of a table forgotten: `/admin` → *Mot de passe MJ*.
 | `SR_MEMORY_LIMIT_BYTES` | cgroup `memory.max` | memory limit used to refuse an indexing job that would not fit |
 | `SR_TRUST_PROXY` | off | `1` when served behind a reverse proxy (real client IP for the login rate limit) |
 | `PORT` | `3000` | port inside the container |
+| `ANTHROPIC_ORGANIZATION_ID`, `ANTHROPIC_FEDERATION_RULE_ID` | — | GM assistant through Workload Identity Federation (`-Action ai-setup`) |
+| `ANTHROPIC_WORKSPACE_ID`, `ANTHROPIC_SERVICE_ACCOUNT_ID` | — | optional, when the rule covers several workspaces / accounts |
+| `ANTHROPIC_API_KEY` | — | local development only: GM assistant with an API key instead of federation |
+| `SR_ASSISTANT_HOST` | hostname (image: `ovh-vps`) | stable part of the assistant's JWT subject (`shadowrun-table:<host>`) |
+| `SR_ASSISTANT_ISSUER` | `https://shadowrun-table.internal` | issuer string of the assistant's JWTs (must match the Console) |
+| `SR_ASSISTANT_DIR` | `<runtime>/assistant` | signing key, assistant settings, spend ledger |
 
 ## Security notes
 

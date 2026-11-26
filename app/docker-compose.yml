@@ -16,6 +16,13 @@ services:
       SR_ADMIN_PASSWORD: ${SR_ADMIN_PASSWORD:?Set SR_ADMIN_PASSWORD in .env}
       # Max size of one uploaded zip (Foundry world, table restore), in bytes.
       SR_MAX_UPLOAD_BYTES: ${SR_MAX_UPLOAD_BYTES:-1500000000}
+      # GM assistant (Claude API through Workload Identity Federation; ids written by deploy.ps1 -Action ai-setup).
+      # The signing key lives in runtime/assistant/ (never in the image). No API key on the server.
+      ANTHROPIC_ORGANIZATION_ID: ${ANTHROPIC_ORGANIZATION_ID:-}
+      ANTHROPIC_FEDERATION_RULE_ID: ${ANTHROPIC_FEDERATION_RULE_ID:-}
+      ANTHROPIC_WORKSPACE_ID: ${ANTHROPIC_WORKSPACE_ID:-}
+      ANTHROPIC_SERVICE_ACCOUNT_ID: ${ANTHROPIC_SERVICE_ACCOUNT_ID:-}
+      SR_ASSISTANT_HOST: ovh-vps   # stable JWT subject (the container hostname changes on every recreate)
     volumes:
       # Registry (server.json) + every table (state, backups, uploads, docs, uploaded Foundry worlds).
       - ./runtime:/app/runtime
