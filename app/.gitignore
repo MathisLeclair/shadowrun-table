@@ -4,6 +4,8 @@ data/state.json.tmp
 data/backups/
 data/uploads/
 data/assets/foundry/
+data/assets/music/
+data/music-inbox/
 data/tables/
 data/server.json*
 data/deleted/

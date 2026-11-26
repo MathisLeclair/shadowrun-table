@@ -81,6 +81,11 @@ even if ufw blocks it. If the OVH control panel has a *Network firewall* enabled
 Packs `app\data\assets\foundry` into one tar (≈490 MB, temp file in `%TEMP%`), copies it with scp and unpacks it on the
 VPS. Re-run it whenever you import new Foundry content on your PC. No restart needed.
 
+**Music library** — `.\deploy\deploy.ps1 -Action music` does the same for `app\data\assets\music` (≈330 MB, Karl Casey /
+White Bat Audio and Dan Cramp tracks shared by every table, served at `/assets/music/…`, credits in its `CREDITS.md`).
+Not in git: the licences don't allow redistributing the files. Without it, the `trk_lib_*` tracks of the audio seed
+are silent on the VPS.
+
 ## 2b. Rulebooks (PDFs, « Règles » tab)
 
 The SR5 PDFs are **not** in git or in the image: they live in `runtime/books/` on the VPS (`<CODE>.pdf` +

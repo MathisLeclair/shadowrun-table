@@ -56,7 +56,9 @@ const scenes = (audioSeed.scenes || []).filter((s) => GENERIC_SCENES.has(s.id)).
 fs.mkdirSync(path.join(OUT, 'bestiary'), { recursive: true });
 const write = (rel, value) => fs.writeFileSync(path.join(OUT, rel), JSON.stringify(value, null, 2) + '\n');
 write('bestiary/generic.json', templates);
-write('audio.json', { tracks: [], scenes });
+// The music library (data/assets/music, shared by every table) is generic: Foundry playlists are not.
+const tracks = (audioSeed.tracks || []).filter((t) => String(t.url || '').startsWith('/assets/music/'));
+write('audio.json', { tracks, scenes });
 write('shop.json', { specials: [] });
 write('campaign.json', { acts: [], quests: [], sessions: [], threads: [], handouts: [], playerRecap: '', notes: '' });
 console.log(`pack vierge : ${templates.length} modèles (${[...new Set(templates.map((t) => t.folder))].join(', ')}), ${scenes.length} scènes audio → ${path.relative(ROOT, OUT)}`);

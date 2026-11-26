@@ -8,6 +8,7 @@
                     admin password, data folders, ufw rule for 8095/tcp, docker compose up -d --build.
   -Action update    (default) Snapshot the data, git pull, rebuild and restart, wait until healthy.
   -Action assets    Copy app/data/assets/foundry (~490 MB, Foundry images/music of Project Lazarus) to the VPS.
+  -Action music     Copy app/data/assets/music (~330 MB, shared music library: Karl Casey, Dan Cramp) to the VPS.
   -Action migrate   Send the local Project Lazarus table (state, uploads, campaign docs) to the VPS.
   -Action ai-setup  GM assistant: write the Claude Workload Identity Federation ids (org, rule…) to .env, restart.
   -Action backup    Download a .tar.gz of every table from the VPS into -BackupDir (assistant signing key left out).
@@ -21,7 +22,7 @@
 #>
 [CmdletBinding()]
 param(
-  [ValidateSet('setup', 'update', 'assets', 'migrate', 'ai-setup', 'backup', 'rollback', 'status', 'logs')]
+  [ValidateSet('setup', 'update', 'assets', 'music', 'migrate', 'ai-setup', 'backup', 'rollback', 'status', 'logs')]
   [string]$Action = 'update',
   [string]$VpsHost = '152.228.134.90',
   [string]$VpsUser = 'ubuntu',
@@ -174,8 +175,8 @@ git clone --branch "__BRANCH__" "git@github-shadowrun:__REPO__.git" "$R"
 
     Write-Step 'Dossiers de donnees, pare-feu, premier demarrage'
     Invoke-Remote @'
-mkdir -p "$APP/runtime" "$APP/data/assets/foundry"
-fix_owner "$APP/runtime"; fix_owner "$APP/data/assets/foundry"
+mkdir -p "$APP/runtime" "$APP/data/assets/foundry" "$APP/data/assets/music"
+fix_owner "$APP/runtime"; fix_owner "$APP/data/assets/foundry"; fix_owner "$APP/data/assets/music"
 if command -v ufw >/dev/null && sudo ufw status | grep -q "Status: active"; then
   sudo ufw allow 8095/tcp comment 'shadowrun table' >/dev/null && echo "ufw: 8095/tcp allowed"
 else
@@ -213,26 +214,28 @@ docker image prune -f --filter label=app=shadowrun-table >/dev/null
     Write-Host "`nA jour : http://${VpsHost}:8095/" -ForegroundColor Green
   }
 
-  'assets' {
-    $src = Join-Path $AppDir 'data\assets\foundry'
+  { $_ -in 'assets', 'music' } {
+    # assets = Foundry images/music of Project Lazarus; music = shared music library (every table).
+    $folder = if ($Action -eq 'music') { 'music' } else { 'foundry' }
+    $src = Join-Path $AppDir "data\assets\$folder"
     if (-not (Test-Path $src)) { throw "Rien a envoyer : $src n'existe pas" }
     $size = (Get-ChildItem $src -Recurse -File | Measure-Object Length -Sum).Sum
-    Write-Step ("Envoi des fichiers Foundry ({0:N0} Mo)" -f ($size / 1MB))
-    $tmp = Join-Path $env:TEMP 'sr-foundry-assets.tar'
+    Write-Step ("Envoi de data/assets/$folder ({0:N0} Mo)" -f ($size / 1MB))
+    $tmp = Join-Path $env:TEMP "sr-$folder-assets.tar"
     if (Test-Path $tmp) { Remove-Item $tmp -Force }
-    & $Tar -cf $tmp -C (Join-Path $AppDir 'data\assets') foundry
+    & $Tar -cf $tmp -C (Join-Path $AppDir 'data\assets') $folder
     if ($LASTEXITCODE -ne 0) { throw 'Archive tar impossible' }
     try {
-      Send-File $tmp 'sr-foundry-assets.tar'
+      Send-File $tmp "sr-$folder-assets.tar"
       Invoke-Remote @'
 mkdir -p "$APP/data/assets"
-tar -xf "$HOME/sr-foundry-assets.tar" -C "$APP/data/assets"
-rm -f "$HOME/sr-foundry-assets.tar"
-fix_owner "$APP/data/assets/foundry"
-echo "Foundry assets: $(du -sh "$APP/data/assets/foundry" | cut -f1)"
-'@
+tar -xf "$HOME/sr-__FOLDER__-assets.tar" -C "$APP/data/assets"
+rm -f "$HOME/sr-__FOLDER__-assets.tar"
+fix_owner "$APP/data/assets/__FOLDER__"
+echo "data/assets/__FOLDER__: $(du -sh "$APP/data/assets/__FOLDER__" | cut -f1)"
+'@ -Vars @{ FOLDER = $folder }
     } finally { Remove-Item $tmp -Force -ErrorAction SilentlyContinue }
-    Write-Host 'Fichiers Foundry en place (servis sous /assets/foundry, pas besoin de redemarrer).' -ForegroundColor Green
+    Write-Host "Fichiers en place (servis sous /assets/$folder, pas besoin de redemarrer)." -ForegroundColor Green
   }
 
   'migrate' {
@@ -364,7 +367,7 @@ echo "Rolled back to $(git -C "$R" log -1 --format='%h %s'). The next update ret
 dc ps
 echo; echo "Health: $(curl -fsS -m 5 http://127.0.0.1:8095/api/health || echo unreachable)"
 echo; echo "Code: $(git -C "$R" log -1 --format='%h %s (%cr)')"
-echo; du -sh "$APP/runtime" "$APP/data/assets/foundry" 2>/dev/null || true
+echo; du -sh "$APP/runtime" "$APP/data/assets/foundry" "$APP/data/assets/music" 2>/dev/null || true
 df -h "$APP" | tail -1
 echo; ls -1t "$BK" 2>/dev/null | head -5
 '@ -AllowFail

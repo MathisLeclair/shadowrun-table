@@ -523,10 +523,11 @@ audio: {
   master: 0.8,
   ambient: { trackId: string|null, volume: 0.5 },   // looping atmosphere, synced to everyone
   music: { trackId: string|null, volume: 0.4 },
-  tracks: [{ id, name, kind: 'ambient'|'music'|'sfx', source: 'synth'|'url', preset?: 'rain'|..., url?, tags? }],
+  tracks: [{ id, name, kind: 'ambient'|'music'|'sfx', source: 'synth'|'url', preset?: 'rain'|..., url?, tags?, credit? }],
   scenes?: [{ id, name, ambient, music, mapId? }],   // one-click presets
 }
 ```
+Music library: `data/assets/music/` (not in git, served at `/assets/music/`, credits in its `CREDITS.md`) = seed tracks `trk_lib_*` (tags: mood + artist), also shipped in the `vierge` pack. A seed scene may carry `replaces: { music: oldValue }`: on an existing table the channel is upgraded only if it still holds `oldValue` (the GM never changed it).
 Transient event `'sfx'` `{ id, volume? }` → every client plays it. **Standard sfx ids** (any module may emit them): `dice`, `door-open`, `door-close`, `door-locked`, `gunshot-pistol`, `gunshot-rifle`, `gunshot-auto`, `explosion`, `hit-melee`, `glass-break`, `alarm`, `footsteps`, `notify`, `matrix-glitch`, `spell-cast`, `heal`, `death`, `cash`, `level-up`, `ping`.
 
 ### Campaign (owner: `70-campaign.js`)

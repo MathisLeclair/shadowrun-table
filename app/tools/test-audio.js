@@ -699,11 +699,35 @@ await test('init: defaults, built-ins merged by id, seeds, stale references clea
   audioMod.init({}, { readSeed: () => null }); // empty state + missing seed file
 });
 
+await test('init: seed scene `replaces` upgrades only untouched channels, keeps credit', () => {
+  const state = { audio: { scenes: [
+    { id: 'scn-a', name: 'A', ambient: 'keep', music: 'mus-combat' },
+    { id: 'scn-b', name: 'B', ambient: 'keep', music: 'mus-chase' },
+  ] } };
+  const seed = {
+    tracks: [{ id: 'trk_lib_x', name: 'X', kind: 'music', source: 'url', url: '/assets/music/x.mp3', credit: 'Music by Someone' }],
+    scenes: [
+      { id: 'scn-a', name: 'A', ambient: 'keep', music: 'trk_lib_x', replaces: { music: 'mus-combat' } },
+      { id: 'scn-b', name: 'B', ambient: 'keep', music: 'trk_lib_x', replaces: { music: 'mus-combat' } },
+      { id: 'scn-c', name: 'C', ambient: null, music: 'trk_lib_x', replaces: { music: 'mus-menu' } },
+    ],
+  };
+  audioMod.init(state, { readSeed: () => seed });
+  const a = state.audio;
+  assert.equal(a.scenes.find((s) => s.id === 'scn-a').music, 'trk_lib_x');
+  assert.equal(a.scenes.find((s) => s.id === 'scn-b').music, 'mus-chase', 'GM-changed channel overwritten');
+  const c = a.scenes.find((s) => s.id === 'scn-c');
+  assert.equal(c.music, 'trk_lib_x');
+  assert.equal('replaces' in c, false);
+  assert.equal(a.tracks.find((t) => t.id === 'trk_lib_x').credit, 'Music by Someone');
+});
+
 await test('seed file: scenes reference existing tracks and known maps', async () => {
   const fs = await import('node:fs');
   const seed = JSON.parse(fs.readFileSync(new URL('../data/seed/audio.json', import.meta.url), 'utf8'));
-  const ids = new Set(catalog.builtinTracks().map((t) => t.id));
+  const ids = new Set([...catalog.builtinTracks(), ...seed.tracks].map((t) => t.id));
   for (const s of seed.scenes) {
+    for (const [ch, old] of Object.entries(s.replaces || {})) assert.ok(ids.has(old), `${s.id}.replaces.${ch} = ${old}`);
     for (const ch of ['ambient', 'music']) if (s[ch] && s[ch] !== 'keep') assert.ok(ids.has(s[ch]), `${s.id}.${ch} = ${s[ch]}`);
   }
   assert.equal(new Set(seed.scenes.map((s) => s.id)).size, seed.scenes.length);
@@ -858,8 +882,8 @@ try {
     await gm.send('audio/applyScene', { sceneId: 'scn-combat' });
     await sync();
     assert.equal(gm.state.audio.ambient.trackId, 'amb-lab');
-    assert.equal(gm.state.audio.music.trackId, 'mus-combat');
-    assert.equal(p1.state.audio.music.trackId, 'mus-combat');
+    assert.equal(gm.state.audio.music.trackId, 'trk_lib_decapitator');
+    assert.equal(p1.state.audio.music.trackId, 'trk_lib_decapitator');
     await gm.send('audio/applyScene', { sceneId: 'scn-bar-porfla' });
     await sync();
     assert.equal(gm.state.audio.ambient.trackId, 'amb-bar');

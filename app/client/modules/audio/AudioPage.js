@@ -218,7 +218,7 @@ function TrackCard({ game, track, previewKey, onEdit }) {
     <div class="audio-track-icon">${trackIcon(track)}</div>
     <div class="audio-track-body">
       <div class="audio-track-name" title=${name}>${name}</div>
-      ${(desc || track.source === 'url') && html`<div class="audio-track-desc">${desc || t('Fichier importé')}</div>`}
+      ${(desc || track.source === 'url') && html`<div class="audio-track-desc">${desc || track.credit || t('Fichier importé')}</div>`}
       ${(track.source === 'url' || track.tags?.length > 0) &&
       html`<div class="row wrap gap-s">
         ${track.source === 'url' && html`<${Badge} color="amber">${KIND_LABELS[track.kind] ? t(KIND_LABELS[track.kind]) : track.kind}</${Badge}>`}

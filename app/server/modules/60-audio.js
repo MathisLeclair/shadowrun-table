@@ -110,11 +110,21 @@ export default {
       if (Number.isFinite(Number(t.volume))) track.volume = Math.max(0, Math.min(2, Number(t.volume)));
       if (typeof t.loop === 'boolean') track.loop = t.loop;
       if (t.foundry) track.foundry = t.foundry;
+      if (t.credit) track.credit = str(t.credit, 120);
       a.tracks.push(track);
     }
     for (const s of Array.isArray(seed.scenes) ? seed.scenes : []) {
-      if (!s?.id || a.scenes.some((x) => x.id === s.id)) continue;
-      a.scenes.push({ ...s, name: str(s.name) || s.id });
+      if (!s?.id) continue;
+      const { replaces, ...scene } = s;
+      const cur = a.scenes.find((x) => x.id === s.id);
+      if (!cur) {
+        a.scenes.push({ ...scene, name: str(s.name) || s.id });
+        continue;
+      }
+      // Seed upgrade: `replaces: { music: oldValue }` swaps a channel the GM never changed.
+      for (const ch of CHANNELS) {
+        if (replaces && ch in replaces && cur[ch] === replaces[ch] && findTrack(a, scene[ch])) cur[ch] = scene[ch];
+      }
     }
     // Channels pointing at removed tracks fall silent.
     for (const ch of CHANNELS) {
