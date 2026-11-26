@@ -5,6 +5,7 @@ import { findCatalog, norm } from './catalog.js';
 import { htmlToMarkdown } from './html2md.js';
 import { monthlyCost } from '../../../shared/lifestyle.js';
 import { chummerEval } from '../chummer/parse.js';
+import { guessContainerKind } from '../../../client/modules/sheet/inventory.js';
 
 export const ATTR_KEYS = { body: 'BOD', agility: 'AGI', reaction: 'REA', strength: 'STR', willpower: 'WIL', logic: 'LOG', intuition: 'INT', charisma: 'CHA', edge: 'EDG', magic: 'MAG', resonance: 'RES', essence: 'ESS' };
 const CORE = ['BOD', 'AGI', 'REA', 'STR', 'WIL', 'LOG', 'INT', 'CHA'];
@@ -145,6 +146,9 @@ function weaponOf(it, physical = null) {
     reach: num(s.melee?.reach, 0),
   };
   if (tech(it).equipped) out.equipped = true;
+  // Inventory (client/modules/sheet/inventory.js): rounds in the weapon, units of a thrown weapon (grenades).
+  if (out.ammo && ammoMax) out.ammoLoaded = Math.max(0, Math.min(ammoMax, Math.round(num(s.ammo?.current?.value, ammoMax))));
+  if (cat === 'thrown') out.qty = Math.max(1, Math.round(num(tech(it).quantity, 1)));
   if (hit) out.catalogId = hit.entry.id;
   const accessories = embedded(it, 'weapon').map(accessoryOf);
   if (accessories.length) out.accessories = accessories;
@@ -336,6 +340,9 @@ export function convertSheet(fa, ctx = {}) {
       };
     });
 
+  // --- Inventories (system.inventories: { 'Duffel Bag': { name, itemIds } }, « All » = the whole list) → containers + item locations
+  const { containers, locationOf } = inventoriesOf(fa);
+
   // --- Weapons, armor, augmentations
   // Physical limit (SR5 p. 46) with the augmented attributes (+4 max), for the thrown weapons' « Physical » accuracy.
   const effAttr = (k) => (attributes[k] || 1) + Math.min(4, augmented[k] || 0);
@@ -423,6 +430,13 @@ export function convertSheet(fa, ctx = {}) {
   }
   for (const g of gear) if (g.rating === undefined) delete g.rating;
   for (const g of gear) if (g.notes === undefined) delete g.notes;
+  // A weapon / armor Foundry marks equipped stays « Sur soi » (ready / worn) even when an inventory lists it.
+  for (const list of [weapons, armor, gear]) {
+    for (const x of list) {
+      const loc = locationOf.get(String(x.id).replace(/^fvtt_/, ''));
+      if (loc && !(list !== gear && x.equipped)) x.location = loc;
+    }
+  }
 
   // --- Contacts, SINs, lifestyle
   const contacts = items
@@ -539,11 +553,34 @@ export function convertSheet(fa, ctx = {}) {
     notoriety: Math.round(num(s.notoriety, 0)),
     publicAwareness: Math.round(num(s.public_awareness, 0)),
     vision,
+    containers,
     portrait,
     description: md(s.description?.value, ctx),
     gmNotesExtra: notesGm.join('\n'),
     itemSources,
   };
+}
+
+/**
+ * Foundry inventories (system.inventories, the shadowrun5e « sub-inventories ») → actor.containers + item id → container id.
+ * The built-in « All » inventory (showAll) is the whole list, not a place. Ids are stable (fvtt_inv_<slug>) so a re-import
+ * finds the same containers. The kind is guessed from the name (« Duffel Bag » → bag, « House » → safehouse…).
+ */
+export function inventoriesOf(fa) {
+  const containers = [];
+  const locationOf = new Map();
+  const inv = fa?.system?.inventories;
+  if (!inv || typeof inv !== 'object') return { containers, locationOf };
+  for (const [key, v] of Object.entries(inv)) {
+    if (!v || typeof v !== 'object' || v.showAll || /^all$/i.test(String(v.name || key))) continue;
+    const name = String(v.name || v.label || key).trim().slice(0, 60);
+    if (!name) continue;
+    const id = `fvtt_inv_${snake(key) || containers.length}`;
+    if (containers.some((c) => c.id === id)) continue;
+    containers.push({ id, name, kind: guessContainerKind(name) });
+    for (const itemId of Array.isArray(v.itemIds) ? v.itemIds : []) if (itemId && !locationOf.has(String(itemId))) locationOf.set(String(itemId), id);
+  }
+  return { containers, locationOf };
 }
 
 /** Foundry vehicle actor → actor.vehicles[] item. */

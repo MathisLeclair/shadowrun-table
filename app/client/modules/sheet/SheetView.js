@@ -13,6 +13,7 @@ import { SummaryTab } from './tab-summary.js';
 import { SkillsTab } from './tab-skills.js';
 import { CombatTab } from './tab-combat.js';
 import { MagicTab, MatrixTab, GearTab, ContactsTab, QualitiesTab, NotesTab, HistoryTab, NpcTab } from './tab-misc.js';
+import { InventoryTab } from './tab-inventory.js';
 import { slugify } from './sheet-data.js';
 import { ChummerSheetBar } from '../chummer/ChummerActions.js';
 import { useDerivedModifiers, useEffectsLookup } from './modifiers-ui.js';
@@ -183,6 +184,7 @@ export default function SheetView({ game, actorId }) {
     showMagic && { id: 'magic', label: t('Magie') },
     showMatrix && { id: 'matrix', label: t('Matrice') },
     { id: 'gear', label: t('Équipement') },
+    !s.edit && { id: 'inventory', label: t('Inventaire') },
     { id: 'contacts', label: t('Contacts & SIN') },
     { id: 'qualities', label: t('Qualités') },
     { id: 'notes', label: t('Notes') },
@@ -197,6 +199,7 @@ export default function SheetView({ game, actorId }) {
     magic: () => html`<${MagicTab} s=${s} />`,
     matrix: () => html`<${MatrixTab} s=${s} />`,
     gear: () => html`<${GearTab} s=${s} />`,
+    inventory: () => html`<${InventoryTab} s=${s} />`,
     contacts: () => html`<${ContactsTab} s=${s} />`,
     qualities: () => html`<${QualitiesTab} s=${s} />`,
     notes: () => html`<${NotesTab} s=${s} />`,

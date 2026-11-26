@@ -162,10 +162,12 @@ Actor = {
   spells: [{ id, name, category, type, range, duration, drain, notes? }],
   complexForms?: [...],
   weapons: [{ id, name, category, kind: 'melee'|'ranged', skill: 'pistols', accuracy, damage: '7P', ap: -1, mode: 'SA', rc, ammo: '15(c)', reach, notes?, catalogId?,
-              mounts?: ['Top'|'Under'|'Barrel'|'Stock'|'Side'], accessories?: [Accessory] }],   // accuracy / rc = BASE values, accessories add (see below)
-  armor: [{ id, name, rating, equipped: bool, stack?: bool (helmet/shield adds), notes?, catalogId?, capacity?, mods?: [ArmorMod] }],
+              mounts?: ['Top'|'Under'|'Barrel'|'Stock'|'Side'], accessories?: [Accessory],   // accuracy / rc = BASE values, accessories add (see below)
+              equipped: bool (ready / stowed), location, ammoMax?, ammoType?, ammoLoaded?, ammoKind?: { name, nameFr?, catalogId? } | null, qty? (grenades) }],   // « Inventaire »
+  armor: [{ id, name, rating, equipped: bool, stack?: bool (helmet/shield adds), notes?, catalogId?, capacity?, mods?: [ArmorMod], location }],
   augmentations: [{ id, name, kind: 'cyberware'|'bioware', grade: 'standard'|'alpha'|'beta'|'delta'|'used', rating?, essence, notes?, catalogId? }],
-  gear: [{ id, name, category, rating?, qty, notes?, catalogId?, active? (worn / switched on: its catalog effects count — « Modifiers ») }],
+  gear: [{ id, name, category, rating?, qty, notes?, catalogId?, active? (worn / switched on: its catalog effects count — « Modifiers »), location, ammoFor? (Chummer) }],
+  containers: [{ id, name, kind: 'body'|'bag'|'vehicle'|'safehouse'|'other', notes? }],   // places of the inventory; « Sur soi » = 'on', implicit
   vehicles: [{ id, name, handling, speed, accel, body, armor, pilot, sensor, seats?, notes?, catalogId?, mods?: [VehicleMod] }],
   matrix?: { device, rating, attack, sleaze, dataProcessing, firewall, programs: [string] },
   contacts: [{ id, name, connection, loyalty, notes? }],
@@ -190,7 +192,7 @@ Extra actor fields: `realName?`, `metavariant?` (Chummer), `chummer?` (see Chumm
 `gear[].paid` = unit price paid in the shop, map tokens `moveBudget: { key, meters }` (combat movement, maps module).
 Derived values: `import { derive, skillPool, rollDice, attr, SKILLS, SKILL_BY_ID } from '/shared/sr5.js'` — never store derived numbers.
 Default roll limit: `skillDefaultLimit(def, attr)` (shared/sr5.js) — a skill's own `limit` ('physical'|'mental'|'social'|'astral', or null = none, e.g. spellcasting/pilot) overrides its category.
-Player permissions on their own actor: condition, edge.current, armor equipped, gear qty (lower only — only the GM raises a quantity)/notes/active, notes, portrait, bio, color, contacts notes. Attributes/skills/karma/nuyen/qualities change only via GM edit, shop, or training.
+Player permissions on their own actor: condition, edge.current, armor equipped/location, gear qty (lower only — only the GM raises a quantity)/notes/active/location, weapon notes/equipped/location/ammoLoaded (lower only), containers (inventory/*), fire & reload (weapon/*), notes, portrait, bio, color, contacts notes. Attributes/skills/karma/nuyen/qualities change only via GM edit, shop, or training.
 
 #### Lifestyles, accessories, mods, martial arts (characters module + sheet + Chummer/Foundry mapping)
 Nested lists restore what the characters had in Chummer (upgrades lost on the way Chummer → Foundry → app). Sub-items keep the
@@ -245,7 +247,61 @@ VehicleMod = { id, catalogId?, name, nameFr?, rating?, slots, category, cost, av
   unchanged; an item Foundry did change replaces the app's but keeps the nested entries the app added (absent from Foundry, matched by catalogId /
   name, non-`fvtt_` ids) and `ammoLeft`.
 
-Dice: `'dice/roll'` (characters module) `{ pool, label, actorId?, skillId?, attr?, attr2?, useSpec?, test? ('composure'|'judgeIntentions'|'memory'|'liftCarry'|'defense'|'soak'|'drainResist'|'biofeedback'|'toxinResist': kept only on an attribute-only roll of that test's attributes, `shared/modifiers.js TEST_ATTRS` / `checkedTest`), weaponId? (the weapon's skill is used; only the GM may roll it with another `skillId`), matrixLimit? ('attack'|'sleaze'|'dataProcessing'|'firewall'; Matrix skills only: `MATRIX_LIMIT_SKILLS`), conditions?: [switch keys], ignore?: [modifier ids], limit? (number = that limit; null/0 = none; absent = computed — players can neither raise nor remove a computed limit; a computed limit is ≥ 1), applyWounds? (GM only: the wound modifier always applies to a player's skill / attribute roll except damage resistance tests `RESIST_TESTS`), bonus?: [{label, value}] (players: only « VOL » of total defense and « Firewall » of Matrix defense / biofeedback, recomputed; any other line counts as « mod. »), explode? (Edge: Push the Limit — adds EDG to the pool, rule of six, ignores limit and spends 1 Edge), secret? (GM only: gmOnly log), modifier? }` → logs `{ kind: 'roll', roll: {..., breakdown, limitLabel?, limitBreakdown?, mods?: [ModLine], conditions?} }` and emits `sfx { id: 'dice' }` to all. Server rolls (Math.random). Pool and limit modifiers are computed by the server (« Modifiers »).
+#### Inventaire (characters module, rules `client/modules/sheet/inventory.js` — pure, shared by server and sheet; UI `tab-inventory.js`, `weapon-ui.js`)
+- **Names in both languages**: `item.nameFr` / `item.nameEn` and `categoryFr` / `categoryEn` (weapons, armor, gear, augmentations, vehicles) are filled by
+  `10-characters.js fillItemNames` (boot + every characters action, missing fields only) from the catalog entry of `catalogId` — names only when the stored
+  name IS a catalog name (renamed items keep theirs), categories when the stored one is the catalog's or empty; an item without `catalogId` gets one by
+  exact English / French catalog name (never overwritten; weapons also take names from weapon-like gear: grenades). A GM change of name / category /
+  catalogId clears them. Display: `common.js itemLabel(item)` (FR: nameFr › name; EN: nameEn › name), `itemTitle` (stored / other name in the tooltip),
+  `categoryLabel`, `modeLabel` (FR CC/SA/TR/TA, EN SS/SA/BF/FA), `damageLabel` (FR « E » = Stun). The stored `name` is never changed. A weapon ammo
+  without reload type (Foundry « 14 ») takes the catalog's (« 14(c) ») when the capacity matches (`fillItemNames` returns true then and the caller runs
+  `normalizeActor` again, so `ammoType` follows at once). Log / error params name items with `biName(item)` = `{ fr, en }` (format.js picks the viewer's
+  language); a weapon attack roll carries `labelI18n { key: 'Attaque — {weapon}', params: { weapon: { fr, en } } }` (common.js `rollLabel`).
+- **Ammunition**: `ammo` « 15(c) » → `ammoMax` 15 / `ammoType` (c clip, m internal magazine, b break action, d drum, cy cylinder, belt, ml muzzle loader;
+  Foundry 'ceinture' / 'tambour' mapped), recomputed by `normalizeActor` (`normalizeInventory`); `ammoLoaded` defaults to full (the old `ammoLeft` is
+  adopted then deleted; `actor/updateItem { ammoLeft }` still means ammoLoaded); `ammoKind` defaults to regular rounds (`DEFAULT_AMMO`: gun / taser / bow).
+  **Firing**: `dice/roll` with the `weaponId` of a weapon with `ammoMax` uses the rounds of `fireMode` (`FIRE_OPTIONS`: SS / SA 1, SB semi-auto burst 3, BF 3,
+  LB long burst 6, FA 6 (Simple) / FAC 10 (Complex), SUP suppressive 20 — SR5 p. 179; absent = the weapon's first mode; a mode the weapon lacks is refused),
+  checked before the roll. Fewer rounds than the mode (SR5 p. 180): fires what is left, `short` = missing rounds, defense modifier `min(0, defense + short)`
+  (`defense`), suppressive fire 1 m narrower per 2 missing rounds (`narrower`); an empty weapon → « Plus assez de munitions — recharge » (GM: `ammoOverride`
+  fires 0 round); `roll.fire = { mode, rounds, left, max, short?, defense?, narrower? }`. The weapon must be within reach (carried or in a bag; GM: anywhere)
+  for `dice/roll`, `weapon/fire` and `weapon/reload`.
+  Grenades (`isGrenade` = `isThrownExplosive`: throwing skill or none, name / category « grenade » / « explosive »; never a magazine — Chummer's
+  « <ammo>1</ammo> » is dropped): a throw uses one `qty` (default 1), the last one removes the weapon (`roll.fire.item`). Launcher profiles
+  (`isLauncherProfile`: « Minigrenade: … » entries) and grenade launchers are not single-use (the launcher's magazine is used).
+  `weapon/fire { actorId, weaponId, mode?, override? }` = the same without a roll (logged). Melee weapons are untouched.
+  **Reload** `weapon/reload { actorId, weaponId, sourceItemId?, free? (GM) }` (owner / GM) — one action (`reloadPlan`, SR5 p. 163 simplified): rounds come from
+  compatible ammunition gear (`ammoFits`: ammo class from Chummer `ammoFor` / names — « Ammo: », « Arrow: », « Taser Dart »…, Foundry's original name kept
+  in `notes` —; firearm rounds restricted by the weapon category in parentheses « (Sniper Rifles) » or Chummer `choice`), carried first then bags, never
+  from a vehicle / safehouse; the box's `qty` goes down (kept at 0). A spare clip of that weapon (« Spare Clip (Ares Desert Strike) », `clipFits`) = clip
+  change: ONE Simple Action (simplification: SR5 counts remove + insert clip as a Simple Action each; drum / belt: Complex), clips kept; without one
+  (« Fill Clip / Belt / Drum ») = AGI rounds per Complex Action; internal magazine / cylinder AGI rounds, break action 2, muzzle loader 1 per Complex Action;
+  cylinder + speed loader: Complex, full. Other ammunition than the loaded kind: the rounds taken out go back to a box of their kind (within reach first;
+  created « Sur soi » if none). Without `sourceItemId`, a weapon that still holds rounds is only reloaded from its loaded kind (« Plus de {ammo} à portée :
+  choisis d’autres munitions »); the sheet's ↻ opens the chooser instead of reloading at once when the only source is another kind.
+  Returns `{ loaded, ammoLoaded, max, action, swap, sourceId, clipId, returned, dropped }`; logged.
+- **Ready weapons / locations**: `weapon.equipped` (« prête » / « rangée »; unarmed always ready). Defaults (idempotent): flags already set are kept;
+  otherwise the first carried ranged weapon and the first carried melee weapon when none is ready. Soft limit: more than 2 ranged + 2 melee ready (unarmed,
+  grenades not counted) → warning (`readyCount`), never a block. The Combat tab and the roll dialog list the ready weapons (« afficher tout »).
+  `item.location` (weapons, armor, gear) = 'on' (« Sur soi », implicit) or a container id; unknown → 'on'. In a 'bag' / 'vehicle' / 'safehouse' / 'other'
+  container an item is never ready / worn / active (switched off); readying / wearing / activating it moves it 'on' from a bag (`settleItem`); from a
+  vehicle / safehouse / other place players are refused (« hors de portée »; GM: moved 'on'). 'body' containers (holster, vest) count as carried.
+  Players cannot change the kind of a vehicle / safehouse / other container, nor remove one that still holds items; moving an item out of one (`inventory/move`,
+  `location` patch) is allowed and logged (« {name} récupère {item} ({place}) ») so the GM sees it. Actions (owner / GM): `inventory/addContainer { actorId, name, kind? }` → id (kind guessed from the name),
+  `inventory/updateContainer { actorId, containerId, patch: { name?, kind?, notes? } }`, `inventory/removeContainer` (contents back 'on') → count,
+  `inventory/move { actorId, list, itemId, location }` → `{ location, stowed }`; `actor/updateItem` also accepts `location` / `equipped` from players.
+- **Imports**: Foundry `system.inventories` (« All » skipped) → containers `fvtt_inv_<slug>` + item locations (a weapon / armor Foundry marks equipped
+  stays 'on'), weapon `ammoLoaded` (system.ammo.current.value), thrown weapon `qty`. These inventory fields are never part of the Foundry item hashes
+  (`importer.js INVENTORY_FIELDS`: old snapshots stay valid); a merge keeps the app's location / ammoLoaded / ammoKind / grenade qty, adds the Foundry
+  containers the app lacks and moves the matching items that are still 'on' into them (live actors adopt Foundry's bags once). Chummer: `<gearlocations>`
+  / `<armorlocations>` / `<weaponlocations>` → containers `chum_<guid>`, item `<location>` (guid, or name in old files), weapon `<equipped>`, active clip
+  count / ammo (`<clips>`, `<activeammoslot>`), gear `<ammoforweapontype>` → `ammoFor`; weapon `<equipped>` is NOT imported as ready (Chummer marks
+  nearly every weapon equipped: the app's ready defaults apply) and never written from it; export writes `<location>` (creating the Chummer location of an
+  app container, matched by guid then name), the active clip's count when the file has clips; re-import (merge.js) adds new containers.
+- **Live table migration**: `init` runs `normalizeActor` (containers [], locations 'on', ammo fields, ready defaults) and `fillItemNames` on every actor at
+  every boot — idempotent (`tools/test-inventory.js` boots twice). Tests: `node tools/test-inventory.js` (ports 3443-3445).
+
+Dice: `'dice/roll'` (characters module) `{ pool, label, actorId?, skillId?, attr?, attr2?, useSpec?, test? ('composure'|'judgeIntentions'|'memory'|'liftCarry'|'defense'|'soak'|'drainResist'|'biofeedback'|'toxinResist': kept only on an attribute-only roll of that test's attributes, `shared/modifiers.js TEST_ATTRS` / `checkedTest`), weaponId? (the weapon's skill is used; only the GM may roll it with another `skillId`), matrixLimit? ('attack'|'sleaze'|'dataProcessing'|'firewall'; Matrix skills only: `MATRIX_LIMIT_SKILLS`), conditions?: [switch keys], ignore?: [modifier ids], limit? (number = that limit; null/0 = none; absent = computed — players can neither raise nor remove a computed limit; a computed limit is ≥ 1), applyWounds? (GM only: the wound modifier always applies to a player's skill / attribute roll except damage resistance tests `RESIST_TESTS`), bonus?: [{label, value}] (players: only « VOL » of total defense and « Firewall » of Matrix defense / biofeedback, recomputed; any other line counts as « mod. »), explode? (Edge: Push the Limit — adds EDG to the pool, rule of six, ignores limit and spends 1 Edge), secret? (GM only: gmOnly log), modifier?, fireMode?, ammoOverride? (GM; see « Inventaire ») }` → logs `{ kind: 'roll', roll: {..., breakdown, limitLabel?, limitBreakdown?, mods?: [ModLine], conditions?} }` and emits `sfx { id: 'dice' }` to all. Server rolls (Math.random). Pool and limit modifiers are computed by the server (« Modifiers »).
 
 ### Bestiary & combat (owner: combat module `30-combat.js`)
 ```js
@@ -258,6 +314,43 @@ combat: {
 - `'bestiary/spawn'` `{ templateId, mapId, x, y, count = 1, hidden? }` creates NPC actors (copy of template, new id, `type:'npc'`, `templateId`, names numbered « Nettoyeur AG Chemie 2 ») **and** tokens on the map (Token schema below, `disposition:'hostile'`). Returns the new actor ids.
 - Initiative uses `derive(actor).initiative` (+ wound modifiers apply to initiative score in SR5). SR5 passes: each pass subtracts 10; actors with score > 0 act again.
 - Damage: `'actor/damage'` `{ actorId, amount, type: 'P'|'S' }` (characters module) — stun overflow rolls into physical; physical overflow into `overflow`. Combat UI calls it.
+
+### Attacks (owner: attacks module `33-attacks.js`, rules `shared/combat.js`, UI `client/modules/combat/AttackTray.js` + `attack-common.js`)
+Targeted attacks resolved step by step; every roll goes through the characters module's `performRoll(ctx, payload, internal)` (the body of
+`dice/roll`: same modifiers, log entry, Edge — `internal` = trusted named dice lines, fewer rounds, AP on soak, extra log fields) and the
+damage through `applyDamage(ctx, actor, n, type)` (body of `actor/damage`). Initiative costs: `spendInitiative(ctx, actorId, cost, label)` (combat module).
+```js
+attacks: {
+  list: [Attack],   // newest first, max 60
+  blasts: [{ id, mapId, attackerId, weaponName: { fr, en }, from, aim: { x, y }, x, y (landing cell, may be fractional), meters (scatter), scattered,
+             dir: [d6, d6], dist: [d6…], fumble?, glitch?, dv, type, ap, falloff | radius, reach (m), hits: [{ actorId, tokenId, name, dv, meters, attackId }] }], // max 12
+  turn: { [actorId]: { key: combatTurnKey, defended, boosts: [defense option ids paid for the turn], once: [action ids] } },   // GM only
+}
+Attack = { id, ts, mapId, kind: 'ranged'|'melee'|'blast', attackerId, attackerName, targetId, targetTokenId, targetName, weaponName, actionId?, actionName?,
+  hits, dv (null = no damage code), type, ap, reach, defenseMod (fire mode), actionDefense, noDamage?, range?, meters? (blast),
+  status: 'defense'|'soak'|'missed'|'done'|'cancelled', defenseHits?, net?, modifiedDv?, soakHits?, damage?, damageType?, resolvedTs?, gmOnly? }
+```
+- `attack/roll` (any, owner of the attacker): the `dice/roll` payload + `{ targetTokenId? | targetActorId?, point?: { x, y }, actionId?, profileId? (launcher
+  ammunition profile), mapId? (GM) }`. Ranged weapon + attacker token on the map → range modifier line « portée moyenne (18 m) −1 » (SR5 p. 185).
+  Special action (`COMBAT_ACTIONS`): unlocked by a quality / power / martial art technique of the same name (French, English, or the
+  « English name · BOOK page » notes of Foundry imports — `unlockNames`; the GM may use any), dice / DV / AP / reach, fewer rounds (Double Tap…),
+  Edge and initiative costs paid after the roll, `once` per Combat Turn. Area weapon (`isAreaWeapon`: thrown grenade, grenade / missile launcher) +
+  point (or the target token's cell): 3 hits = no scatter, else 2D6 direction (7 = beyond the target, 2/12 = back) and (N D6 − hits) m (N: 1
+  grenade, 2 aerodynamic, 3 launcher, 4 missile, 5 rocket), glitch ×2, critical glitch = at the thrower's feet; blast (`blastOf`: « −N/m » / « N m
+  Radius » in the damage, else the SR5 p. 435 table by name) → a `soak` attack for each token with a sheet in reach. Otherwise: a `defense` attack
+  (0 hits = `missed`). Returns the roll + `attackId` / `blast`.
+- `attack/defend` (owner of the target, GM for NPCs) `{ attackId, options: ['dodge'|'parry'|'block'|'full'|'agile'|'acrobatic'|'perceptive'|'pretty'],
+  situations: ['cover-partial'|'cover-good'|'running'|'prone'|'in-melee'|'vehicle'], modifier, explode }`: REA + INT + `defenseLines()` (one active
+  defense, turn-long ones paid once, fire mode, action, area −2, reach difference, −1 per defense already made this Combat Turn). net ≤ 0 →
+  `missed`; no damage code → `done`; else `soak` with DV + net hits. Dodge also works against ranged attacks (SR5 p. 191; Chummer's data lists it for melee only).
+- `attack/soak` `{ attackId, modifier, explode }`: BOD + max(0, armor + AP); damage = DV − hits, Stun when the DV is below the modified armor
+  (`finalDamageType`). GM: `attack/auto` (defense then soak without options), `attack/resolve { outcome: 'missed'|'damage', amount, type }`,
+  `attack/clear { all?, blasts? }`, `attack/removeBlast`; attacker or GM: `attack/cancel`.
+- Player view: no attack on a hidden NPC, a hidden attacker's name is `?`, blasts of the shown map only, `myTurn` = their characters' turn record.
+- Client: `ui.targetTokenId` (players: click another token; everyone: token menu « Cibler »), `ui.aimPoint` (cell menu « Viser ce point »); the map draws
+  `scene.combatMarks` (reticle, aimed point + blast preview ring, attack arrows, blasts with DV rings — `renderer.drawCombatMarks`) and a target
+  banner with « Attaquer » (RollDialog). RollDialog: « Action » / « Cible » / « Munition » for weapon attacks → `attack/roll`. The sheet's Combat tab
+  lists the unlocked « Actions spéciales » (« Utiliser »). `AttackTray` (global): defend / soak prompts, results, GM shortcuts.
 
 ### Maps (owner: maps module `20-maps.js`)
 ```js
@@ -280,6 +373,7 @@ Map = {
   movementLocked: false,            // GM freeze: players can't move tokens
   background?: { url, opacity },    // optional image underlay
   theme?: 'street'|'bar'|'corp'|'lab'|'industrial'|'residential'|'matrix'|'club',
+  library?: { slug, version, linkedAt, syncedAt?, migrated? },   // copy of a server-wide library map, GM only (see « Map library »)
 }
 Token = {
   id, actorId: string|null, name, x, y (integer cells), size: 1,
@@ -454,7 +548,9 @@ Each table has a content pack: `project-lazarus` = `data/seed/`, `vierge` = `dat
 The pack is merged at boot, by id, adding only what's missing (so GM edits survive restarts):
 - `actors/*.json` — array of PC actors (characters module)
 - `bestiary/*.json` — array of templates (combat module)
-- `maps/*.json` — one Map per file (maps module)
+- `maps/*.json` — one Map per file (maps module). `maps/lib-<slug>.json` (Lazarus) = library instances for the campaign's locations
+  (`map_lib_<slug>`, `map.library = { slug, version }`, GM notes), written by `node tools/maplib-campaign-seeds.js` (same build as
+  `maps/fromLibrary`; choices in `../Shadowrun/cartes-campagne.md`, one fragmap per location); test `tools/test-maplib-campaign.js` (ports 3940-3941)
 - `campaign.json` — campaign slice (campaign module; merge acts/quests/sessions/threads by id)
 - `audio.json` — tracks & scenes (audio module)
 - `shop.json` — specials (shop module)
@@ -676,16 +772,18 @@ rules, library) and a global viewer drawer opened from anywhere. **Server-wide**
   (`client/modules/books/quicklinks.js`: each page must contain its heading) and catalog evidence (share of `data/catalog` items whose name is on
   the announced page; warns when a ±1–3 shift would score better). `--reindex [CODES]`, `--check`, `--list`, `--strict` (exit 1 on a failed check).
 - **Routes** (any logged-in user of the table, `requireUser`): `GET /api/books` → `{ books: [{ code, name, nameFr, pages, offset, offsets?, indexed,
-  extra?, url, exp }], ttl, now }` (books allowed for the requester's table whose PDF exists; `url` = signed PDF link; `now` = server clock in ms, the
-  client judges expiry with it), `GET /api/books/search?q=&code=` →
+  extra?, url, exp, version, size }], ttl, now, pdfjs }` (books allowed for the requester's table whose PDF exists; `url` = signed PDF link; `now` = server
+  clock in ms, the client judges expiry with it; `version` = base36 `size-mtime` of the PDF = the reader's cache key and the file's ETag; `size` = bytes,
+  for the progress bar; `pdfjs` = `/vendor/pdfjs/<pdfjs-dist version>`), `GET /api/books/search?q=&code=` →
   `{ hits: [{ code, page (printed|null), pdfPage, snippet, marks: [[start, end]] }], total }` (accent/case-insensitive, every term required at a word
   start, "quoted phrases", capitals headings first, max 50; `code` of a book not allowed → 403), `GET /api/books/:code/page/:n[?pdf=1]` →
   `{ code, page, pdfPage, pages, text }` (page outside the book → 404 « Page introuvable »), `GET /api/books/:code/link` → fresh `{ url, exp }`.
   `/page` and `/link` answer the same 404 for an unknown book and a book not allowed for the table (no existence oracle).
-  `GET /api/books/:code/file?k=…` = the PDF (`sendFile`: HTTP Range/206, `Cache-Control: private, max-age=3600`, `Content-Disposition: inline`,
+  `GET /api/books/:code/file?k=…` = the PDF (`sendFile`: HTTP Range/206, `Cache-Control: private, max-age=86400`, strong `ETag: "<version>"` +
+  `Last-Modified` → `If-None-Match` / `If-Modified-Since` 304 and `If-Range`, all checked AFTER the signature, `Content-Disposition: inline`,
   `nosniff`, `Referrer-Policy: no-referrer`; these PDF headers only on success: an error is JSON with `no-store`, an unsatisfiable Range a bare 416,
   a malformed Range is ignored → 200). `k` = base64url({ t: tableId, u: userId, s: sessionTag(token), c: code, e: expiry }) + HMAC-SHA256; expiry
-  rounded up to 30 min + 1 h (same URL for 30 min → browser cache). No `k` → 401; bad signature, other book, expired, table archived/unknown, user
+  rounded up to the next UTC midnight + 24 h (`access.js` STEP = LINK_TTL = 86400: the same URL all day, valid 24-48 h → HTTP cache hits). No `k` → 401; bad signature, other book, expired, table archived/unknown, user
   removed, **session gone** (logout, kick, GM password change), book not allowed for that table → 403.
 - **Admin** (`server/lib/books/admin-routes.js`, registered by `registerAdminRoutes`, admin bearer token): `GET /api/admin/books` (books + `indexed`,
   `present`, jobs, tables, known Chummer codes, max size), `POST /api/admin/books/upload?code=&replace=1` (body = PDF, streamed with `receiveToFile`,
@@ -702,18 +800,42 @@ rules, library) and a global viewer drawer opened from anywhere. **Server-wide**
   the book is not on the server) that opens the drawer; `openBook(code, printedPage)` / `openBook('RG 62')`; `parseSourceRef('RG 62' | 'SR5 p. 240' |
   { source, page })` → `{ code, page }` or null (a separator is required: « GH3 » is a code). `useBooks()` (store.js) = library list (links renewed
   10 min before expiry by a timer and before any page change, judged on the server clock: `serverNow()` = `Date.now()` + skew from `/api/books` `now`).
-  `openBook()` with the list already loaded sets the page synchronously (the frame mounts once).
+  `openBook()` with the list already loaded sets the page synchronously. `openBookPdf(code, pdfPage, { q })` (search hits: `q` is highlighted on that page).
+  Viewer state: `nav` is bumped by every navigation request (the reader scrolls), `reportPdfPage()` = the reader's own scrolling (no bump).
 - **Viewer** (`BookViewer.js`, in `globalComponents`, z-index 150 above the sheet modal): right drawer, resizable (width kept in `localStorage`
   `sr.books.width`), Esc closes it first (capture listener). A `.modal-backdrop` that appears after the drawer opened (MutationObserver; baseline reset
-  by every `openBook*` through `viewer.raise`) puts the drawer behind it (`.behind`, z-index 90) and leaves Esc to that modal; book switcher, printed-page field + prev/next, « Texte » mode (extracted text of the page:
-  default on screens ≤ 760 px or without a built-in PDF viewer, with an « Ouvrir le PDF » link), new-tab link, search (this book / all books).
-  The PDF is the browser's own viewer in an `<iframe src="…/file?k=…#page=N">` (same origin: allowed by the page CSP); changing page remounts it.
-  The frame keeps the URL it was mounted with (a renewed link does not reload the PDF being read); a new page / book / mode takes the fresh one.
-- **Tests**: `node tools/test-books.js` (ports 3400-3449): hand-made 9-page PDF (cover, printed 1-4, unnumbered insert, printed 5-7, a constant
+  by every `openBook*` through `viewer.raise`) puts the drawer behind it (`.behind`, z-index 90) and leaves Esc to that modal; book switcher, printed-page
+  field + prev/next, zoom (− / % / +, the % toggles fit width ↔ fit page; kept in `localStorage` `sr.books.zoom`), « Texte » mode (extracted text of the
+  page, with an « Ouvrir le PDF » link), new-tab link (browser's own viewer), search (this book / all books), ⚙ settings (zoom presets, mode, cache).
+- **Reader** (in-app pdf.js, desktop and mobile): `PdfReader.js` (Preact shell: progress bar, errors, retry) → `pdfdoc.js` (loads pdf.js from
+  `/vendor/pdfjs/<v>/build/` — or `legacy/build/` when the browser lacks `Promise.withResolvers` —, ONE open document kept across drawer close for
+  10 min, `getDocument({ data, isEvalSupported: false, cMapUrl, standardFontDataUrl })`, a 403 download renews the links once) → `pdfview.js`
+  (imperative: one box per page sized from the PDF, continuous scroll, only pages within 1.5 screens drawn — HiDPI canvas, devicePixelRatio ≤ 2,
+  ≤ 16 Mpx — with a pdf.js `TextLayer` (selection, search highlights `.books-hl`), pages further away released (canvas freed, `page.cleanup()`),
+  ≤ 10 drawn; Ctrl+wheel and two-finger pinch zoom around the pointer; page jumps scroll inside the same document, nothing is reloaded).
+  Pure helpers (Node-tested): `readerlib.js` (fold/terms/matches, page tops, fit scale, zoom steps, canvas density), `cachepolicy.js`.
+  pdf.js is served by `90-books.js` from `node_modules/pdfjs-dist` (only `{build,legacy/build}/pdf{,.worker}.min.mjs`, `cmaps/*.bcmap`,
+  `standard_fonts/*.{pfb,ttf}`; `Cache-Control: immutable`, 1 year). **No CSP change**: the module worker is same-origin (`default-src 'self'` covers
+  `worker-src`), fonts are `FontFace` objects, eval is disabled.
+- **Book cache** (`bookcache.js`, rules in `cachepolicy.js`): each PDF is downloaded ONCE per browser (`fetch` + progress from Content-Length / `size`)
+  and kept under the key `<CODE>@<version>` (never the signed URL). Backend: Cache Storage `caches.open('sr-books')` (fake request URLs
+  `/__sr-books/<key>`, last use in `localStorage` `sr.books.used`) in a secure context (https, localhost); **IndexedDB** `sr-books` (stores `meta` +
+  `data` = Blob) otherwise — the production URL `http://<ip>:8095` is not a secure context, `caches` is undefined there; nothing persistent when both
+  fail (private mode: the open document still stays in memory). With a persistent backend the download is `cache: 'no-store'` (no second copy in the
+  HTTP cache; `cachepolicy.js downloadOptions`); opening another book aborts the running download (`pdfdoc.js ensureDoc` AbortController). Store: other versions of that book dropped, then least recently used books evicted to
+  stay ≤ 12 books / 600 MB (a bigger book is read but not kept; a quota error evicts the oldest and retries). Every fresh `/api/books` list drops
+  entries whose code now has another version (`pruneStale`). « Vider le cache des livres » in ⚙ and under the Règles library (which also shows
+  « en cache » per book, current version only). Measured (SR5, 41 MB, 502 pages, headless Edge, local server): first open ≈ 0.6-0.7 s to the first
+  drawn page over loopback (on the VPS: the time to download 41 MB once), reopen from cache ≈ 0.45 s (Cache Storage and IndexedDB alike), page jump
+  ≈ 0.05-0.15 s, 0 PDF requests after the first download, also after a full page reload.
+- **Tests**: `node tools/test-books.js` (ports 3420-3439): hand-made 9-page PDF (cover, printed 1-4, unnumbered insert, printed 5-7, a constant
   « 3 » in every footer) → CLI install, offset ranges, auth 401/403 (forged expired / other table / unknown user keys / dead session after a GM
   password change), signing key outside the books folder, Range 206 / 416 / malformed, error headers, search, page text (out of range → 404),
   same 404 for restricted books, admin permissions, upload + background index, memory guard, manual offset / detect (preview `apply=0`), table
-  restriction, delete; fold() equivalence + speed.
+  restriction, delete; fold() equivalence + speed; reader: `version` / `size` / `pdfjs` in the list, same URL on every list call and for the whole day,
+  ETag = version, 304 (If-None-Match, If-Modified-Since, never before the signature check), If-Range, new version + ETag when the PDF changes,
+  pdf.js files served (JS MIME, immutable) and nothing else of the package; pure cache key / eviction / stale-version / backend choice, highlight
+  matching, layout and zoom math.
 
 ### References everywhere (📖 chips)
 Every game element a player or GM looks at links to its rulebook page.
@@ -851,3 +973,72 @@ GM dock tab « Assistant » (GM only): a chat with Claude about the campaign, th
 - **Routes** (GM, table must be enabled): `GET /api/assistant/status`, `GET|POST /api/assistant/conversations`, `GET|DELETE /api/assistant/conversations/:id` (view = items `user | assistant | tool | proposal | notice`; raw API messages stay server-side), `POST /api/assistant/ask { conversationId?, text, lang }` → `{ conversationId }` (the answer streams over the socket), `POST /api/assistant/stop`, `POST /api/assistant/proposals/:id/apply|dismiss`.
 - Core additions: `runAction(table, user, type, payload)` and `simulateAction(table, user, type, payload, state?)` in server/index.js, passed to module routes as helpers (with `actions`).
 - Tests: `node tools/test-assistant.js` (ports 3990-3999) — a local fake Claude API (`ANTHROPIC_BASE_URL`) replays scripted streamed responses: JWT signature/claims, pricing and ledger, gating (admin/GM/player/disabled table), tool loop and step limit, proposals (map, invalid map → tool error, NPC, unrevealed handout, quest) applied through the normal actions, nothing leaks to players, cap → 402. i18n: `node tools/i18n-check.js --area assistant --strict`.
+
+## Map library (owner: `server/lib/maplib.js`, `server/lib/maplib-admin.js`, `server/lib/maplib-thumb.js`, `server/modules/22-maplib.js`, `shared/maplib.js`, UI `client/modules/map/LibraryBrowser.js` + `maplib-client.js`, `client/modules/admin/MaplibAdmin.js`; English in `map.json` / `admin.json`)
+Raw fragmaps (image + walls/doors/lights/regions, no tokens, no fog) are **server-wide**: every table can use them. A table works on its own
+**instance** (an ordinary table Map), so tokens, fog, door states and GM edits never leak between tables. Only fragmaps go to the library:
+custom-made maps may be spoilers and can never be published (no `map.library` → refused).
+```
+data/maplib/<slug>.json      IN GIT — one library map: { id: 'lib_<slug>', slug, name (EN), nameFr, source: 'fragmap'|'fragmaps-free',
+                             image (file in <maplib>/images) | imagePath (relative to data/assets, e.g. foundry/scenes/x.jpg), imageW, imageH,
+                             gridPx (px per cell, float ok), offsetX, offsetY (px of the grid origin), width, height (cells), metersPerCell, theme,
+                             lighting, tags [FR+EN], description (FR), walls [{ id, x1, y1, x2, y2, move, sight, door: null|{ state, kind } }] (CELL
+                             units from the grid origin), lights [{ id, x, y, radius, color, on }], regions [{ id, name, x, y, w, h, gmOnly: false }],
+                             entry?: { x, y }, traced: { by, at, quality: 'good'|'rough', notes }, version }   (folder: SR_MAPLIB_SOURCE)
+<maplib> = SR_MAPLIB_DIR, else <runtime>/maplib        PER SERVER, never in git (on the PC <runtime> = data/, so it sits next to the git files)
+  library.json               { version: 1, settings: { publishAdminOnly }, maps: { [slug]: Meta } } — Meta = descriptive fields + geometry + version
+                             (current revision), origin: 'git'|'seed'|'edited'|'upload', originRef { kind, file, hash }, overrides (admin names/tags…),
+                             gitNewer?, deleted? (tombstone), counts, versionInfo { at, by }, history: [{ version, at, by, origin, counts }] (5 kept)
+  entries/<slug>.json        { slug, versions: { [n]: { walls, lights, regions, entry?, geometry } } } — current + the 5 previous versions
+  images/<file>              artwork (tools/maplib-build.js copies it from ../fragmap, or an /admin upload) — the owner's paid content
+  thumbs/<slug>.jpg          ≤ 480 px JPEG (tools/maplib-build.js, or an /admin JPEG upload). Also accepted: thumbs/<slug>.webp|.png and
+                             thumbs/<image file name>[.jpg]; migrated Foundry scenes fall back to their Foundry thumbnail (thumbPath).
+<runtime>/maplib-sign.key    HMAC key of the image links (SR_MAPLIB_KEY_FILE) — outside <maplib>, which is copied PC → VPS
+```
+- **Boot sync** (`ensureLibrary()`, once per process, from the first table init): every git file is applied — a new slug → version 1 (origin
+  `git`); an entry still following its source (`git` / `seed`) whose file hash changed gets a new version; an `edited` (published / rolled back)
+  or `upload` entry never gets git walls (its descriptive fields still follow git, and `gitNewer` makes /admin show « git plus récent »).
+  Admin `overrides` (names, tags, description, theme, lighting) always win. Deleted entries are tombstones: git does not bring them back.
+- **Foundry fragmaps-free migration**: `data/seed/maps/foundry-*.json` whose image is one of the 26 fragmaps-free images (`FRAGMAPS_FREE`,
+  lower-case file names, with French name / tags / description) become entries (origin `seed`, `imagePath` = the existing `foundry/scenes/<file>`,
+  grid from the « Image W×H px » line of the map description). Custom Foundry maps (Club House, Garage, Seattle, appartement…) stay out.
+  Every table init runs `linkTableMaps` (idempotent): a table map showing such an image gets `map.library = { slug, version, linkedAt, migrated: true }`
+  (no entry for that image yet → one is made from that map); the table data (walls, background URL, tokens, fog) is untouched.
+- **Instances**: `map.library = { slug, version, linkedAt, syncedAt?, migrated? }` on a table Map, stripped from player views.
+  - `maps/fromLibrary { slug, name?, folder? = 'Bibliothèque' }` (GM) → map id. Name = `nameFr` (French table) / `name`; `background = { url:
+    '/api/maplib/image/<slug>', mode: 'image', x: -offsetX/gridPx, y, w: imageW/gridPx, h }`, tiles all floor, walls / lights / regions copied with
+    fresh ids, `entry` → a GM-only region « Entrée » (id `libentry_…`, found by `maps/placePCs`).
+  - `maps/libraryDiff { mapId }` → `{ slug, name, nameFr, current, latest, diff: { walls|doors|lights|regions: { add, remove }, resized, width, height,
+    keptDoorStates, same }, publishAllowed, migrated }` (`add` = only in the library, `remove` = only in the table map).
+  - `maps/libraryUpdate { mapId }` → `{ version, diff }`: walls / doors / lights / regions from the latest version; tokens, GM notes, fog (remapped
+    when the size changes), GM-only regions, the background URL, door states (+ names) of doors at the same position and light switches are kept.
+  - `maps/publishToLibrary { mapId, force? }` → `{ version }`: walls (doors closed, door names dropped), lights and public regions become a new version
+    (shifted back when the map was moved against its image); tokens, notes, fog and GM-only regions are never published. Refused for maps without
+    `map.library`, when /admin reserved publishing to the admin, and when the library moved past the map's version (error key « La bibliothèque a
+    changé depuis ta dernière synchronisation… »; `force` overrides — the replaced version stays in the history). Logs a GM-only line.
+  - `maps/libraryUnlink { mapId }` → an ordinary table map again.
+- **Routes**: `GET /api/maplib/key` (any logged-in user) → `{ k, exp, ttl, now }`; `GET /api/maplib` (GM) → `{ maps: [{ id, slug, name, nameFr, source,
+  tags, description, theme, lighting, width, height, metersPerCell, gridPx, quality, version, counts, origin, updatedAt, thumb, hasImage, hasThumb }],
+  settings }`; `GET /api/maplib/:slug` (GM) → the same + `walls, lights, regions, entry, geometry`; `GET /api/maplib/image/:slug?k=` and
+  `/api/maplib/thumb/:slug?k=` are the only way to the files (no static route, no listing). `k` = base64url({ t: tableId, u: userId, s: sessionTag(token),
+  e }) + HMAC-SHA256 (the rulebooks' scheme, own key, `maplib:` prefix), one key for every library image, expiry rounded up to 30 min + 1 h; or
+  { a: 1, s: admin session tag, e } for /admin. No `k` → 401; bad signature, expired, unknown / archived table, removed user, dead session (logout,
+  kick, GM password change), dead admin session → 403. Success: `Cache-Control: private, max-age=3600`, `nosniff`. Missing file → 200 grey SVG
+  placeholder (`X-Maplib-Missing: 1`, `no-store`). Deleted entries keep serving their image (instances made from them still need it).
+- **Admin** (`/api/admin/maplib…`, admin bearer): `GET` (entries + history, overrides, files, `usedBy: [{ tableId, tableName, maps: [{ id, name, version }] }]`),
+  `GET /key`, `PATCH /settings { publishAdminOnly }`, `PATCH /:slug { name?, nameFr?, tags?, description?, theme?, lighting? }`, `DELETE /:slug { confirm: slug }`,
+  `POST /:slug/rollback { version }` (old content → new version), `POST /:slug/revert` (git file, else the Foundry seed scene; follows git again),
+  `POST /:slug/publish { tableId, mapId, force? }` (« Publier depuis une table »), `POST /upload?slug=&name=&nameFr=&gridPx=&offsetX=&offsetY=&source=&replace=1`
+  (body = JPEG / PNG / WebP, `X-Filename`, streamed, header-checked, ≤ 160 × 160 cells, `SR_MAX_MAPLIB_IMAGE_BYTES` = 60 MB; a new entry without walls,
+  or a new version with the new grid for an existing slug; JPEGs ≤ 40 MP get a thumbnail made by `maplib-thumb.js` in a worker thread).
+- **Client**: the GM « Cartes » page has tabs « Cartes de la table » / « Bibliothèque » (search in FR/EN names + tags, filters ambiance / source / tracé,
+  thumbnails, « Aperçu » = the real renderer (`MapCanvas`) on a throwaway Map with the walls shown, « Ajouter à cette table »). Library-linked cards carry
+  a « Bibliothèque » badge (amber ↑ when a newer version exists) and a « Bibliothèque… » button (also in the editor header) → `LibraryLinkModal`
+  (diff, update, publish, detach). `renderer.js getImage()` loads `/api/maplib/…` URLs with the signed key of `maplib-client.js` (`ensureLibKey()`,
+  renewed 10 min before expiry; the image cache stays keyed by the bare URL, so a renewed key never reloads an image). Players see nothing new
+  (only the image of the shown map).
+- **Tests**: `node tools/test-maplib.js` (ports 3910-3912): shared helpers, boot seeding from a fixture git folder + the Foundry seeds, image auth
+  (401 / 403, forged / expired / dead-session keys, admin key, no listing, placeholder), instances in one table only, player view without `library`,
+  publish (version + history, nothing private published), update keeping tokens / notes / fog / door states, stale publish + force, admin-only
+  setting, custom maps refused, rollback, revert, rename, delete, upload + thumbnail, map_fvtt_* migration idempotent across restarts, git updates
+  vs edited entries.

@@ -10,6 +10,7 @@ import { TILE_INFO } from '/shared/vision.js';
 import { MapCanvas } from './MapCanvas.js';
 import { themeOptions, lightingOptions, DISPO, tileSwatch, getImage, wallKind } from './renderer.js';
 import { t, tk, compare } from '../../lib/i18n.js';
+import { LibraryLinkModal } from './LibraryBrowser.js';
 
 // Labels of the module-level tables below are French keys (tk), translated at render time.
 /** Select options with translated labels. */
@@ -166,6 +167,7 @@ export function MapEditor({ game, map, onBack }) {
   const [tokenOpts, setTokenOpts] = useState(() => ({ actorId: '', name: t('PNJ'), disposition: 'hostile', hidden: false }));
   const [sel, setSel] = useState(null); // { type: 'door'|'light'|'region'|'note'|'token', id }
   const [panel, setPanel] = useState({ tools: false, props: false });
+  const [libOpen, setLibOpen] = useState(false); // « Bibliothèque » dialog (library-linked maps)
   const [resize, setResize] = useState({ width: map.width, height: map.height, anchor: 'c' });
   const [, forceTick] = useState(0);
   const bump = () => setVer((v) => v + 1);
@@ -1024,12 +1026,14 @@ export function MapEditor({ game, map, onBack }) {
       <${IconButton} icon="↶" title=${t('Annuler (Ctrl+Z)')} disabled=${!undoRef.current.length} onClick=${undo} />
       <${IconButton} icon="↷" title=${t('Rétablir (Ctrl+Y)')} disabled=${!redoRef.current.length} onClick=${redo} />
       <span class="grow"></span>
+      ${map.library && html`<${Button} small variant="ghost" title=${t('Mettre à jour depuis la bibliothèque ou y publier tes corrections')} onClick=${() => setLibOpen(true)}>${t('Bibliothèque…')}</${Button}>`}
       ${shown ? html`<${Badge} color="green">● ${t('Affichée aux joueurs')}</${Badge}>` : html`<${Button} small variant="accent" onClick=${() => send('maps/setActive', { mapId }).then(() => toast(t('Carte affichée aux joueurs'), 'success'), quiet)}>${t('Montrer aux joueurs')}</${Button}>`}
       <${Button} small onClick=${async () => { await flush(); setUI({ viewMapId: mapId, mainTab: 'map' }); }}>${t('Voir en jeu')}</${Button}>
       <${IconButton} icon="⌖" title=${t('Recentrer')} onClick=${() => rRef.current?.fit()} />
       <${Button} small class="mapedit-mobile-tabs" onClick=${() => setPanel({ tools: !panel.tools, props: false })}>${t('Outils')}</${Button}>
       <${Button} small class="mapedit-mobile-tabs" onClick=${() => setPanel({ props: !panel.props, tools: false })}>${t('Propriétés')}</${Button}>
     </header>
+    ${libOpen && map.library && html`<${LibraryLinkModal} map=${map} beforeAction=${flush} onClose=${() => setLibOpen(false)} />`}
 
     <aside class="mapedit-tools">
       <div class="mapedit-section">

@@ -100,6 +100,24 @@ books folder so copying the library never shares it; deleting it only invalidate
 only works while the session that asked for it exists (logout, kicked player or GM password change → dead link).
 An older version kept the key as `books/.sign-key`: the server deletes that file, never copy it.
 
+## Map library images (« Bibliothèque de cartes »)
+
+The wall data of the library is in git (`app/data/maplib/<slug>.json`) and arrives with every deploy; the server builds its own
+`runtime/maplib/library.json` from it at start-up. The **images are not in git** (paid Fragmaps content) and must be copied by hand:
+
+1. On the PC: `node tools/maplib-build.js` — copies the images used by `data/maplib/*.json` from `..\fragmap` into `data/maplib/images/` and makes
+   the thumbnails in `data/maplib/thumbs/`.
+2. Copy **only** those two folders to the VPS (never `library.json` nor `entries/`: they hold the VPS's own versions, GM publications and history):
+   ```powershell
+   scp -i $HOME\.ssh\gachabackend_deploy -r app\data\maplib\images app\data\maplib\thumbs ubuntu@152.228.134.90:~/shadowrun/app/runtime/maplib/
+   ```
+   (create `~/shadowrun/app/runtime/maplib/` first if it does not exist; it must belong to uid 1000 / `ubuntu`). No restart needed: images are read
+   on each request. Re-run both steps when new fragmaps are traced. A missing image shows a grey placeholder in the app.
+3. The fragmaps-free scenes already imported from Foundry use the existing `data/assets/foundry/scenes/` images (`-Action assets`).
+
+Images are only served to logged-in users (signed links, key `runtime/maplib-sign.key`, created automatically, per server). An admin can also
+upload one image at a time in `/admin` → « Bibliothèque de cartes » (60 MB max, thumbnail made on the server for JPEGs).
+
 ## 3. Move the Project Lazarus game — `-Action migrate`
 
 Close the local server first (so the latest state is on disk), then:
@@ -255,6 +273,9 @@ add the PC's own JWKS (/admin on localhost) to the same issuer in the Console; t
 | `SR_MAX_BOOK_BYTES` | `120000000` | max size of one rulebook PDF uploaded from `/admin` |
 | `SR_BOOKS_WORKER_MB` | `320` | heap limit of the PDF indexing worker thread |
 | `SR_BOOKS_JOBS` | `1` | PDF indexing jobs run at the same time |
+| `SR_MAPLIB_DIR` | `<SR_RUNTIME_DIR>/maplib` | map library of this server (library.json, entries/, images/, thumbs/) |
+| `SR_MAPLIB_KEY_FILE` | `<SR_RUNTIME_DIR>/maplib-sign.key` | HMAC key of the map image links |
+| `SR_MAX_MAPLIB_IMAGE_BYTES` | `60000000` | max size of a map image uploaded from `/admin` |
 | `SR_BOOKS_KEY_FILE` | `<SR_RUNTIME_DIR>/books-sign.key` | HMAC key of the PDF links (never inside the books folder) |
 | `SR_MEMORY_LIMIT_BYTES` | cgroup `memory.max` | memory limit used to refuse an indexing job that would not fit |
 | `SR_TRUST_PROXY` | off | `1` when served behind a reverse proxy (real client IP for the login rate limit) |

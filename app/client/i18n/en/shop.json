@@ -377,5 +377,13 @@
   "{item} : réservé aux trains de vie {allowed}": "{item}: only for {allowed} lifestyles",
   "{item} est déjà sur ce train de vie": "{item} is already on this lifestyle",
   "{item} est incompatible avec {other}": "{item} cannot be combined with {other}",
-  "{item} demande d’abord : {list}": "{item} first requires: {list}"
+  "{item} demande d’abord : {list}": "{item} first requires: {list}",
+  "Compétence des armes compatibles": "Skill of the compatible weapons",
+  "Compétence liée": "Linked skill",
+  "Toutes armes": "All weapons",
+  "Toutes compétences": "All skills",
+  "Sans compétence liée": "No linked skill",
+  "Seulement les articles liés aux compétences de {name}": "Only items linked to {name}’s skills",
+  "Mes compétences": "My skills",
+  "{name} n’a aucune compétence liée à ces articles.": "{name} has no skill linked to these items."
 }

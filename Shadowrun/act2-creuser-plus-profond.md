@@ -46,7 +46,7 @@ Une jauge de **0 à 10**, tenue par le MJ, jamais montrée aux joueurs (montrez-
 Si Family Business n'a pas été joué, ne le jouez pas tel quel : il arrive trop tard pour être une surprise. Fusionnez-le dans l'ouverture d'**Inheritance** en une scène et demie :
 
 - **Le message codé** (**ho_message_klee**) arrive à la fin de la session 4. Anthony le déchiffre sans test : c'est le chiffre de chasse que son père lui apprenait enfant, sur les terres de Hesse. Il est signé R.K.
-- **La rencontre avec Klee** (map_penthouse_office) se joue comme la Phase 1 de Family Business, mais Klee sait déjà ce que la table sait aussi : l'acheteur est **Hollow Pine Holdings**, représentée par **Dorian Ashe**. Il a peur, il a honte de faire appel à « l'enfant qu'on a chassé », et il a un délai : l'offre finale expire dans six jours.
+- **La rencontre avec Klee** (map_fvtt_penthouse-office) se joue comme la Phase 1 de Family Business, mais Klee sait déjà ce que la table sait aussi : l'acheteur est **Hollow Pine Holdings**, représentée par **Dorian Ashe**. Il a peur, il a honte de faire appel à « l'enfant qu'on a chassé », et il a un délai : l'offre finale expire dans six jours.
 - **La pression de la rue** (Phase 3 de Family Business) devient l'ouverture d'Inheritance : deux gros bras (tpl_corpsec_human_r3 ou tpl_corpsec_troll_r3, en civil) attendent Klee devant la holding le soir même. Un combat court ou une intimidation — et dans la rue d'en face, un vieil homme en manteau sombre qui regarde la scène sans bouger, puis s'en va. Anthony le reconnaît à sa démarche avant même de voir son visage (aucun test : c'est Adachi Morinaga).
 
 Récompenses de Family Business intégrées à celles d'Inheritance (Klee devient contact, 1 500¥ symboliques).
@@ -71,7 +71,7 @@ Deux jauges de **0 à 6** : **Piste du groupe** et **Piste du Passeur**. Le Pass
 
 Chaque porte donne de la Piste ; il en faut 6. Les trois premières sont les portes principales ; la quatrième est la porte de secours.
 
-**Porte A — L'adresse de Fruitland (la liste de surveillance de Hollow Pine).** Un parc de mobil-homes à Puyallup, secteur Fruitland (map_parc_mobilhomes_fruitland). Le mobil-home 14 est loué depuis 2078 à une vieille orque, **Mama Odile Tusker**, qui élève des poulets mutants dans un enclos grillagé. Elle a connu « la fille aux lunettes » : Windows est partie en 2078, sans laisser d'adresse, mais lui envoie chaque mois un colis de graines « pour les poules ». Etiquette (Street) + Charisme seuil 2 ou 50¥ et un peu de patience → l'adresse de réexpédition du colis : une boîte postale dans une épicerie de Puyallup centre (**+2 Piste**). **Complication garantie** : le Passeur arrive au parc dans la même heure (voir Phase 2, « Le face-à-face de Fruitland »).
+**Porte A — L'adresse de Fruitland (la liste de surveillance de Hollow Pine).** Un parc de mobil-homes à Puyallup, secteur Fruitland (map_lib_nomad-camp). Le mobil-home 14 est loué depuis 2078 à une vieille orque, **Mama Odile Tusker**, qui élève des poulets mutants dans un enclos grillagé. Elle a connu « la fille aux lunettes » : Windows est partie en 2078, sans laisser d'adresse, mais lui envoie chaque mois un colis de graines « pour les poules ». Etiquette (Street) + Charisme seuil 2 ou 50¥ et un peu de patience → l'adresse de réexpédition du colis : une boîte postale dans une épicerie de Puyallup centre (**+2 Piste**). **Complication garantie** : le Passeur arrive au parc dans la même heure (voir Phase 2, « Le face-à-face de Fruitland »).
 
 **Porte B — Les fenêtres de Windows (Matrice, Bricks).** À Knight Errant, Rebecca signait ses messages en laissant une « fenêtre » ouverte : un tag RA dans le décor public, invisible sans le bon filtre. Bricks connaît le filtre. Matrix Search étendue (Computer + Intuition [Data Processing], **seuil 10, intervalle 1 heure**) pour retrouver des fenêtres récentes dans la grille de Puyallup : chaque palier de 5 succès donne **+1 Piste**, et la dernière fenêtre trouvée contient une ligne : *« Le linge propre ne ment pas. »* Alternative plus risquée : remonter le mouchard que Windows a posé sur les comptes de Harlan Kessler (Hacking + Logic [Sleaze] contre le Sleaze + Logic de Windows, 7 + 6 = 13 dés ; réussite **+2 Piste**, échec : Windows sait qu'on la traque — elle déplace ses drones, Phase 3 plus dure).
 
@@ -93,7 +93,7 @@ Options :
 - **Combattre.** Possible, salissant, en plein jour, devant des témoins orks qui n'aiment pas les flics mais encore moins les fusillades. Le Passeur décroche à la première blessure grave d'un de ses membres. Horloge +1.
 - **Bluffer.** Jane fait croire que Windows est déjà morte ou déjà partie (Con + Charisme contre Con + Intuition du Passeur, 9 dés ; Kinesics s'applique). Réussite : le Passeur perd **2 Piste**.
 
-### Phase 3 — La laverie (map_laverie_windows)
+### Phase 3 — La laverie (map_lib_tailor-shop ; sous-sol : map_lib_basement-utility-room ; rue et allée : map_laverie_windows)
 
 **Suds'n'Duds**, une laverie automatique de quartier à Puyallup, ouverte 24 h/24, néons fatigués, quatorze machines dont six marchent. Propriétaire : Rae Calder. Windows vit au sous-sol, dans une ancienne réserve qu'elle a transformée en **cage de Faraday** — aucune connexion sans fil n'y entre ni n'en sort.
 
@@ -159,7 +159,7 @@ Il emmène Windows vers un point de livraison : un parking souterrain de Bellevu
 
 ### Cartes nécessaires
 
-map_parc_mobilhomes_fruitland, map_laverie_windows. Plus map_hacker_lair pour la Porte B.
+map_lib_nomad-camp (Fruitland), map_lib_tailor-shop (laverie) et map_lib_basement-utility-room (planque), map_laverie_windows pour la rue et l'allée. Plus map_fvtt_hacker-s-lair pour la Porte B et map_lib_electronics-repair-shop (boutique d'Old Lin) pour la Porte C.
 
 ---
 
@@ -226,7 +226,7 @@ Le gala se joue comme une **scène sociale en temps limité** : la soirée dure 
 
 ### Phase 4 — La suite privée et le mouchard
 
-La **suite privée** (map_gala_ravenswood, extrémité nord) : un salon, un bureau, la galerie vitrée. Son **PAN privé** (rating 6, Firewall 8 ; c'est le commlink de Wyatt-Brandt qui en est le maître, avec deux appareils esclaves : le coffre numérique et le terminal du bureau) n'est accessible qu'à 30 mètres. À 22 h 30, Wyatt-Brandt y monte avec ses invités ; à 23 h 15, le Jardinier quitte la galerie par un ascenseur privé, avec Morinaga.
+La **suite privée** (map_gala_ravenswood, extrémité nord ; en gros plan : map_lib_executive-suite) : un salon, un bureau, la galerie vitrée. Son **PAN privé** (rating 6, Firewall 8 ; c'est le commlink de Wyatt-Brandt qui en est le maître, avec deux appareils esclaves : le coffre numérique et le terminal du bureau) n'est accessible qu'à 30 mètres. À 22 h 30, Wyatt-Brandt y monte avec ses invités ; à 23 h 15, le Jardinier quitte la galerie par un ascenseur privé, avec Morinaga.
 
 Façons de poser le mouchard ou de copier la liste :
 - **Jane monte avec eux.** Si Jane a impressionné Wyatt-Brandt (Etiquette, 3 succès nets sur la soirée cumulés), il l'invite à monter « boire quelque chose de meilleur ». Elle peut poser un **mouchard physique** (Palming + Agility [Physical] seuil 3, sous le regard des gardes du corps : +1 au seuil) sur le terminal du bureau.
@@ -265,7 +265,7 @@ Complications au choix (une ou deux) :
 
 ### Cartes nécessaires
 
-map_gala_ravenswood. Optionnel : map_maison_kessler si le groupe va chercher l'« assurance » de Kessler.
+map_lib_high-class-restaurant (salle Aurore), map_lib_executive-suite (suite privée), map_lib_industrial-kitchen (office et cuisines), map_gala_ravenswood (plan d'ensemble de l'étage). Optionnel : map_lib_1-bdrm (appartement de Margaux), map_maison_kessler si le groupe va chercher l'« assurance » de Kessler.
 
 ---
 
@@ -298,7 +298,7 @@ Le Site Glacier peut être localisé par :
 
 **Tess « Scorch » Delgado** (fiche plus bas), lieutenante de Crimson Crush, gère le contrat de gardiennage. C'est elle qui a fourni les gros bras du kidnapping de la femme secourue — les motards aperçus pendant le job Kidnapping étaient ses hommes. Elle se fiche des blouses blanches ; elle veut l'argent. Mais il y a un problème qu'elle n'avoue à personne : **son petit frère Nico** a disparu il y a quatre mois, et elle a entendu des gardes AG Chemie rire d'« un gamin du Crush dans le lot D ». Elle n'a pas osé demander. Le Crush ne peut pas se permettre de perdre le contrat.
 
-Façons de traiter avec elle (au bar du Crush, le **Rusty Piston**, Touristville — utilisez map_bar_porfla rhabillée si besoin) :
+Façons de traiter avec elle (au bar du Crush, le **Rusty Piston**, Touristville — map_lib_dive-bar) :
 - **L'acheter.** 10 000¥ pour que ses hommes regardent ailleurs une nuit. Negotiation + Charisme contre Negotiation + Charisme (7 dés). Elle accepte, mais pas plus de 30 minutes.
 - **Lui dire pour Nico.** Si le groupe a une preuve (une liste de donneurs, un nom, une photo — Bricks peut fouiller le host du site à distance pour trouver « D-14, Delgado N., 17 ans »), Scorch bascule. Elle ne se contente pas de regarder ailleurs : elle ouvre la grille principale, et au moment voulu, ses motards font une diversion bruyante (ils « se rebellent » contre la sécurité AG Chemie). Crimson Crush devient un allié pour Burn Notice et Severance (voir Acte 3).
 - **L'intimider.** Intimidation + Charisme contre Willpower + Charisme (8 dés). Elle cède sur le moment, et vend le groupe à Stadler dès qu'il a le dos tourné (Horloge +1, et la sécurité est en alerte à l'arrivée).
@@ -361,7 +361,7 @@ Si les renforts arrivent, c'est Reyes. Elle connaît maintenant le groupe (au mo
 
 ### Cartes nécessaires
 
-map_site_glacier. Optionnel : map_bar_porfla rhabillée en Rusty Piston (bar du Crush), map_funerarium_hargrove (si les sujets y sont amenés).
+map_site_glacier (+ map_lib_xenoform-research-lab pour le Pavillon L et le labo de Dufresne). Optionnel : map_lib_dive-bar (Rusty Piston, bar du Crush), map_lib_minute-clinic (clinique de rue), map_funerarium_hargrove (si les sujets y sont amenés).
 
 ---
 
@@ -385,7 +385,7 @@ Reinhardt Klee appelle Anthony à 6 h du matin. Il parle bas : « L'offre finale
 
 ### Phase 1 — La réunion de rachat
 
-À la holding (**map_penthouse_office**). Klee, son avocate fatiguée (**Mme Brigitte Ortner**, non-combattante), et Anthony (en garde du corps, en neveu, en conseiller — selon comment il veut se présenter). En face : **Dorian Ashe**, un avocat de Hollow Pine (**Me Desmond Pryce**, Negotiation 5, Etiquette 4) et **Adachi Morinaga**, qui reste debout près de la baie vitrée et ne dit rien.
+À la holding (**map_fvtt_penthouse-office**). Klee, son avocate fatiguée (**Mme Brigitte Ortner**, non-combattante), et Anthony (en garde du corps, en neveu, en conseiller — selon comment il veut se présenter). En face : **Dorian Ashe**, un avocat de Hollow Pine (**Me Desmond Pryce**, Negotiation 5, Etiquette 4) et **Adachi Morinaga**, qui reste debout près de la baie vitrée et ne dit rien.
 
 **Le dossier d'Ashe** : une offre à 30 % de la valeur, et un **chantage** — des preuves (fabriquées) que Klee a détourné de l'argent de la holding pendant dix ans. Si Klee ne signe pas, le dossier part à Francfort et au parquet de Seattle.
 
@@ -424,12 +424,12 @@ Que la réunion ait échoué ou réussi, AG Chemie passe au « protocole Hérita
 
 **Indices pour le retrouver** (n'importe lequel suffit) :
 - Klee a déclenché sa balise de détresse (un vieux médaillon de famille avec un émetteur — un cadeau du père d'Anthony, ironiquement). Le signal mène à **Harbor Island**.
-- Les hommes de main ont utilisé la camionnette réfrigérée de la holding elle-même, avec ses codes d'accès : ils l'emmènent à **l'entrepôt frigorifique n°3 de VSP** (map_entrepot_vsp).
+- Les hommes de main ont utilisé la camionnette réfrigérée de la holding elle-même, avec ses codes d'accès : ils l'emmènent à **l'entrepôt frigorifique n°3 de VSP** (map_lib_seafood-packing-facility).
 - Un message de Morinaga, laissé au dojo ou envoyé à Anthony : une seule ligne, « Harbor Island, entrepôt 3. Viens seul si tu veux qu'il vive. Viens avec tes amis si tu veux qu'il vive vraiment. »
 
 ### Phase 4 — L'entrepôt frigorifique
 
-**L'entrepôt n°3** (map_entrepot_vsp) : quai de chargement, hall de stockage à –5 °C plein de palettes de containers biomédicaux, trois chambres froides à –25 °C, une mezzanine de bureaux. Klee est attaché à une chaise dans le bureau de la mezzanine, devant un terminal où l'avocat Pryce attend sa signature. Morinaga est sur la mezzanine, assis en seiza, les yeux fermés.
+**L'entrepôt n°3** (map_lib_seafood-packing-facility ; ancien plan : map_entrepot_vsp) : quai de chargement, hall de stockage à –5 °C plein de palettes de containers biomédicaux, trois chambres froides à –25 °C, une mezzanine de bureaux. Klee est attaché à une chaise dans le bureau de la mezzanine, devant un terminal où l'avocat Pryce attend sa signature. Morinaga est sur la mezzanine, assis en seiza, les yeux fermés.
 
 **Les gardes** : 4 Crimson Crush dans le hall (deux près du quai, deux près des palettes), 2 Nettoyeurs sur la mezzanine, Pryce (non-combattant, terrifié). Si l'Horloge est à 6 ou plus, **Reyes** supervise depuis la cabine du quai, avec un fusil. Le froid : chaque heure passée dans le hall sans tenue adaptée, –1 aux tests physiques (Body + Willpower seuil 2 pour l'éviter).
 
@@ -467,7 +467,7 @@ Une fois Klee libre, Morinaga parle — une fois, à Anthony seul, sur le quai o
 
 ### Cartes nécessaires
 
-map_penthouse_office, map_dojo_morinaga, map_entrepot_vsp. Optionnel : map_construction_site (si la pression de la rue se joue dehors, voir Quête 2.0).
+map_fvtt_penthouse-office, map_dojo_morinaga, map_lib_seafood-packing-facility. Optionnel : map_fvtt_construction-site (si la pression de la rue se joue dehors, voir Quête 2.0).
 
 ---
 
@@ -652,7 +652,7 @@ Utilisez **tpl_reyes** avec les modificateurs suivants à partir de Windows Open
 
 ## Cartes nécessaires — Acte 2
 
-Cartes existantes réutilisées : map_hacker_lair, map_penthouse_office, map_bar_porfla (rhabillé en Rusty Piston), map_construction_site (Quête 2.0), map_jane_apartment.
+Cartes existantes réutilisées : map_fvtt_hacker-s-lair, map_fvtt_penthouse-office, map_fvtt_construction-site (Quête 2.0), map_fvtt_apartement / map_jane_apartment. Les lieux se jouent d'abord sur les cartes Fragmaps de la bibliothèque (map_lib_*, voir **cartes-campagne.md**) ; les plans maison ci-dessous restent la référence du contenu et servent de plan d'ensemble quand une carte Fragmaps ne couvre qu'une partie du lieu.
 
 **map_parc_mobilhomes_fruitland — Parc de mobil-homes, Fruitland (Puyallup)** — Windows Open, Phase 1.
 Terrain d'environ 60 × 40 m, sol de gravier et de boue, éclairé par trois lampadaires dont un clignote (pénombre la nuit : –1 visuel sans low-light). Une seule entrée carrossable au sud (barrière levante cassée), une clôture grillagée sur trois côtés avec un trou au nord-est. Seize mobil-homes en deux rangées (chacun environ 12 × 4 m, parois minces : Armor 4, Structure 6 — les balles traversent). **Mobil-home 14** (au centre de la rangée nord) : celui de Mama Tusker, avec à côté un **enclos à poulets mutants** grillagé de 8 × 6 m (bruyant : toute intrusion fait caqueter les poules, Perception +2 pour les habitants). Entre les rangées : une allée de 8 m de large, deux carcasses de voitures (couverture lourde, Armor 8), un barbecue collectif en béton (couverture lourde). Au sud-est, un bâtiment commun en parpaings de 6 × 5 m (laverie hors service, boîtes aux lettres — la boîte de Windows en 2077, vide aujourd'hui). Témoins : une dizaine d'habitants, majoritairement orks, qui n'aiment ni les flics ni les fusillades. Le Passeur arrive par l'entrée sud, la camionnette se gare devant le bâtiment commun.

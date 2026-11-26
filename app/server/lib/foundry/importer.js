@@ -56,7 +56,7 @@ export const SCENE_TO_APP_MAP = {
 };
 
 const PC_COLORS = ['#7a8cff', '#4fc38a', '#d9a441', '#b469d6', '#3fa7d6'];
-const SHEET_FIELDS = ['metatype', 'attributes', 'augmented', 'initiative', 'condition', 'edge', 'skills', 'knowledge', 'qualities', 'powers', 'spells', 'weapons', 'armor', 'augmentations', 'gear', 'vehicles', 'matrix', 'contacts', 'sins', 'lifestyles', 'karma', 'karmaTotal', 'nuyen', 'streetCred', 'notoriety', 'publicAwareness', 'vision'];
+const SHEET_FIELDS = ['metatype', 'attributes', 'augmented', 'initiative', 'condition', 'edge', 'skills', 'knowledge', 'qualities', 'powers', 'spells', 'weapons', 'armor', 'augmentations', 'gear', 'vehicles', 'matrix', 'contacts', 'sins', 'lifestyles', 'karma', 'karmaTotal', 'nuyen', 'streetCred', 'notoriety', 'publicAwareness', 'vision', 'containers'];
 const ITEM_LISTS = ['weapons', 'armor', 'augmentations', 'gear', 'vehicles', 'contacts', 'sins', 'qualities', 'powers', 'spells', 'knowledge', 'lifestyles'];
 const SCALARS = ['karma', 'karmaTotal', 'nuyen', 'streetCred', 'notoriety', 'publicAwareness', 'metatype'];
 const BIO_MARK = '### Historique (Foundry)';
@@ -194,7 +194,7 @@ function freshPcFields(pc) {
 /** Compact snapshot of the Foundry values at import time (for 'merge' re-imports). */
 export function snapshotOf(fresh) {
   const items = {};
-  for (const l of ITEM_LISTS) items[l] = Object.fromEntries((fresh[l] || []).map((it) => [it.id, stableHash(it)]));
+  for (const l of ITEM_LISTS) items[l] = Object.fromEntries((fresh[l] || []).map((it) => [it.id, itemHash(l, it)]));
   return {
     s: Object.fromEntries(SCALARS.map((k) => [k, fresh[k]])),
     a: { ...(fresh.attributes || {}) },
@@ -209,19 +209,35 @@ export function snapshotOf(fresh) {
   };
 }
 
+/**
+ * Inventory fields (client/modules/sheet/inventory.js) the converter added after snapshot version 2: never part of the item hashes,
+ * so the snapshots stored on the live actors stay valid, and the app's state (where an item is, rounds loaded, grenades left) is
+ * never mistaken for a Foundry change.
+ */
+const INVENTORY_FIELDS = { weapons: ['location', 'ammoLoaded', 'qty'], armor: ['location'], gear: ['location'] };
+/** Hash of a fresh item as stored in a snapshot. */
+function itemHash(list, it) {
+  const skip = INVENTORY_FIELDS[list];
+  if (!skip || !it || typeof it !== 'object') return stableHash(it);
+  const copy = { ...it };
+  for (const k of skip) delete copy[k];
+  return stableHash(copy);
+}
+
 /** Snapshot format: 2 = item hashes include the upgrade fields (weapon mounts / accessories, armor capacity / mods). */
 export const SNAPSHOT_VERSION = 2;
 /** Upgrade fields the converter added after snapshot version 1, and nested lists the app may have filled. */
 const UPGRADE_FIELDS = ['mounts', 'capacity', 'accessories', 'mods'];
 const SUB_OF = { weapons: 'accessories', armor: 'mods', vehicles: 'mods', lifestyles: 'qualities' };
 /** Hash of an item as the version-1 converter produced it (no upgrade fields). */
-const legacyItemHash = (it) => {
+const legacyItemHash = (list, it) => {
   const copy = { ...it };
   for (const k of UPGRADE_FIELDS) delete copy[k];
-  return stableHash(copy);
+  return itemHash(list, copy);
 };
-/** Item fields only the app sets (kept when Foundry replaces the item). */
-const APP_ONLY_FIELDS = ['ammoLeft'];
+/** Item fields the app keeps when Foundry replaces the item (its own state: rounds loaded and their kind, place, grenades left). */
+const APP_ONLY_FIELDS = ['ammoLeft', 'ammoLoaded', 'ammoKind', 'location'];
+const APP_ONLY_BY_LIST = { weapons: ['qty'] };
 
 /**
  * Replacement of an app item by the fresh Foundry one: nested entries the app added (shop / restored accessories,
@@ -238,7 +254,7 @@ function replaceKeeping(mine, it, list) {
     if (Array.isArray(mine.mounts) && !Array.isArray(out.mounts)) out.mounts = [...mine.mounts];
     if (mine.capacity !== undefined && out.capacity === undefined) out.capacity = mine.capacity;
   }
-  for (const k of APP_ONLY_FIELDS) if (mine?.[k] !== undefined && out[k] === undefined) out[k] = mine[k];
+  for (const k of [...APP_ONLY_FIELDS, ...(APP_ONLY_BY_LIST[list] || [])]) if (mine?.[k] !== undefined) out[k] = deepClone(mine[k]);
   return out;
 }
 
@@ -293,9 +309,9 @@ function mergeInto(a, fresh, snap, { legacy = false } = {}) {
     const prev = snap.items?.[l] || {};
     const freshList = fresh[l] || [];
     for (const it of freshList) {
-      const h = stableHash(it);
+      const h = itemHash(l, it);
       if (prev[it.id] === h) continue; // unchanged in Foundry: keep the app's version
-      if (legacy && prev[it.id] && prev[it.id] === legacyItemHash(it)) continue; // only the new converter fields differ
+      if (legacy && prev[it.id] && prev[it.id] === legacyItemHash(l, it)) continue; // only the new converter fields differ
       const i = a[l].findIndex((x) => x.id === it.id);
       if (i >= 0) a[l][i] = replaceKeeping(a[l][i], it, l);
       else a[l].push(deepClone(it));
@@ -303,8 +319,37 @@ function mergeInto(a, fresh, snap, { legacy = false } = {}) {
     const freshIds = new Set(freshList.map((x) => x.id));
     for (const id of Object.keys(prev)) if (!freshIds.has(id)) a[l] = a[l].filter((x) => x.id !== id);
   }
+  mergeContainers(a, fresh);
   if (stableHash(fresh.matrix || null) !== snap.matrix && fresh.matrix) a.matrix = deepClone(fresh.matrix);
   if (stableHash(fresh.vision || {}) !== snap.vision) a.vision = deepClone(fresh.vision);
+}
+
+/**
+ * Merge re-import of the Foundry inventories: containers the app does not have yet are added (same stable fvtt_inv_ ids), and the
+ * app items Foundry puts in them are moved there when they are still « Sur soi » (first import of the containers: a live actor
+ * migrated before inventories existed adopts Foundry's bags). Containers the app already has, and items moved in the app, are kept.
+ */
+function mergeContainers(a, fresh) {
+  a.containers = Array.isArray(a.containers) ? a.containers : [];
+  const have = new Set(a.containers.map((c) => c?.id));
+  const added = new Set();
+  for (const c of fresh.containers || []) {
+    if (!c?.id || have.has(c.id)) continue;
+    a.containers.push(deepClone(c));
+    added.add(c.id);
+  }
+  if (!added.size) return;
+  for (const l of ['weapons', 'armor', 'gear']) {
+    const freshLoc = new Map((fresh[l] || []).filter((x) => added.has(x.location)).map((x) => [x.id, x.location]));
+    for (const it of a[l] || []) {
+      const loc = freshLoc.get(it?.id);
+      if (loc && (!it.location || it.location === 'on')) {
+        it.location = loc;
+        if (l === 'gear') it.active = false;
+        else it.equipped = false;
+      }
+    }
+  }
 }
 
 function mergeBio(bio, foundryDesc) {
@@ -451,9 +496,18 @@ function mergeNamed(appList, freshList) {
   });
 }
 
+/** Items without their inventory fields (template hashes predate them). */
+function withoutInventory(list, items) {
+  return (items || []).map((it) => {
+    if (!it || typeof it !== 'object') return it;
+    const copy = { ...it };
+    for (const k of INVENTORY_FIELDS[list] || []) delete copy[k];
+    return copy;
+  });
+}
 function templateStats(npc) {
   const s = npc.sheet;
-  return { metatype: s.metatype, attributes: s.attributes, augmented: s.augmented, initiative: s.initiative, skills: s.skills, knowledge: s.knowledge, qualities: s.qualities, powers: s.powers, spells: s.spells, weapons: stripTemp(s.weapons), armor: stripTemp(s.armor), augmentations: s.augmentations, gear: s.gear, matrix: s.matrix || null, vision: s.vision, description: s.description, portrait: s.portrait };
+  return { metatype: s.metatype, attributes: s.attributes, augmented: s.augmented, initiative: s.initiative, skills: s.skills, knowledge: s.knowledge, qualities: s.qualities, powers: s.powers, spells: s.spells, weapons: withoutInventory('weapons', stripTemp(s.weapons)), armor: withoutInventory('armor', stripTemp(s.armor)), augmentations: s.augmentations, gear: withoutInventory('gear', s.gear), matrix: s.matrix || null, vision: s.vision, description: s.description, portrait: s.portrait };
 }
 
 /** Build the bestiary template for a bundle NPC (existing = current template or null). */

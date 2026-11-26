@@ -9,7 +9,7 @@ import { accessoryFit, weaponMounts, vehicleModFit, vehicleVars, vehicleSlots, u
 import { armorTotal } from '../shared/sr5.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const PORT = 3250;
+const PORT = Number(process.env.SHOP_TEST_PORT) || 3250;
 
 /** i18n check: entries render to their stored French text, and every key has an English entry. Returns English texts. */
 async function renderI18n(entries, label) {
@@ -158,6 +158,51 @@ const state = {
     pc_bricks: baseActor('pc_bricks', 'Bricks', { nuyen: 500, matrix: { device: 'Vieux deck', rating: 1, attack: 1, sleaze: 1, dataProcessing: 1, firewall: 1, programs: ['Browse'] } }),
   },
 };
+
+// « Compétence » storefront filter (pure helpers, client/modules/shop/skills.js).
+{
+  console.log('• skill filter (pure)');
+  const S = await import('../client/modules/shop/skills.js');
+  const files = ['weapons', 'gear', 'vehicles', 'programs', 'accessories', 'cyberware'];
+  const entries = files.flatMap((file) => cat(file).map((item) => ({ ref: item.id, file, item })));
+  const catalog = { entries };
+  const t0 = Date.now();
+  const idx = S.skillIndex(catalog);
+  ok(Date.now() - t0 < 2000, `skill index is fast (${Date.now() - t0} ms)`);
+  ok(S.skillIndex(catalog) === idx, 'skill index cached per catalog');
+  const sk = (file, name) => idx.get(find(file, name).id);
+  ok(entries.filter((e) => e.file === 'weapons').every((e) => idx.get(e.ref).length === 1), 'every weapon has its skill');
+  ok(sk('weapons', 'Ares Alpha').join() === 'automatics', 'Ares Alpha → automatics');
+  ok(sk('weapons', 'Ares Predator V').join() === 'pistols', 'Predator → pistols');
+  ok(sk('vehicles', 'Ares-Segway Terrier').join() === 'pilot_ground_craft', 'bike → Pilot Ground Craft');
+  ok(entries.filter((e) => e.file === 'vehicles' && /^Drones/.test(e.item.category)).every((e) => !idx.get(e.ref).length), 'drones: no skill (ambiguous)');
+  ok(entries.filter((e) => e.file === 'vehicles' && /hover/i.test(e.item.name)).every((e) => !idx.get(e.ref).length), 'hovercraft: no skill');
+  ok(sk('gear', 'Spellcasting Focus, Combat').includes('spellcasting'), 'spellcasting focus → spellcasting');
+  ok(sk('gear', 'Summoning Focus').join() === 'summoning', 'summoning focus → summoning');
+  ok(!sk('gear', 'Power Focus').length && !sk('gear', 'Weapon Focus').length, 'power / weapon focus: no skill');
+  ok(sk('gear', 'Grenade: Fragmentation').join() === 'throwing_weapons', 'grenade → throwing weapons');
+  ok(sk('gear', 'Minigrenade: Fragmentation').join() === 'heavy_weapons', 'minigrenade → heavy weapons');
+  ok(sk('gear', 'Arrow: Standard').join() === 'archery', 'arrow → archery');
+  ok(sk('gear', 'Plastic Explosive').join() === 'demolitions', 'explosive → demolitions');
+  ok(sk('gear', 'Medkit').join() === 'first_aid', 'medkit → first aid');
+  const deck = entries.find((e) => e.file === 'gear' && e.item.category === 'Cyberdecks');
+  ok(idx.get(deck.ref).join() === 'cybercombat,hacking', 'cyberdeck → hacking + cybercombat');
+  ok(!idx.get(entries.find((e) => e.file === 'gear' && e.item.category === 'Commlinks').ref).length, 'commlink: no skill');
+  ok(sk('accessories', 'Vindicator 200-Round Belt').join() === 'heavy_weapons', 'accessory requires a minigun → heavy weapons only');
+  ok(sk('accessories', 'Collapsed Frame').join() === 'automatics', 'accessory requires a machine pistol → automatics only');
+  ok(!sk('accessories', 'Long Barrel').includes('blades'), 'barrel accessory not for blades');
+  ok(sk('accessories', 'Long Barrel').includes('pistols'), 'barrel accessory fits pistols');
+  // Ratings and matching
+  const ratings = S.actorSkillRatings({ skills: [{ id: 'automatics', rating: 5 }, { id: 'pistols', rating: 0 }, { id: 'custom_x', name: 'Armes lourdes', rating: 2 }] });
+  ok(ratings.get('automatics') === 5 && !ratings.has('pistols') && ratings.get('heavy_weapons') === 2, 'actor ratings (> 0, by id or French name)');
+  ok(S.matchSkill(['automatics'], 'automatics', false, ratings) && !S.matchSkill(['pistols'], 'automatics', false, ratings), 'match by skill');
+  ok(S.matchSkill(['automatics'], '', true, ratings) && !S.matchSkill(['pistols'], '', true, ratings) && !S.matchSkill([], '', true, ratings), 'match « my skills »');
+  ok(S.matchSkill([], S.NO_SKILL, false, ratings) && !S.matchSkill(['pistols'], S.NO_SKILL, false, ratings), 'match « no linked skill »');
+  const weapons = entries.filter((e) => e.file === 'weapons');
+  const o = S.skillOptions(weapons, (e) => idx.get(e.ref), ratings);
+  ok(o.options[0].id === 'automatics' && o.options[0].rating === 5 && o.options[1].id === 'heavy_weapons' && o.none === 0, `options: the character's skills first (${o.options.map((x) => x.id).join()})`);
+  ok(o.options.reduce((n, x) => n + x.count, 0) === weapons.length, 'option counts');
+}
 
 const srv = await startWithState(state);
 try {

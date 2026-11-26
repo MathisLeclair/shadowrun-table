@@ -23,8 +23,44 @@
 .books-mode { border: 1px solid var(--line2); background: var(--panel3); color: var(--dim); border-radius: 6px; padding: 3px 8px; font-size: 12px; cursor: pointer; }
 .books-mode.active, .books-mode:hover { color: var(--cyan); border-color: var(--cyan); }
 .books-body { flex: 1; min-height: 0; display: flex; flex-direction: column; background: #1b1d22; }
-.books-frame { flex: 1; width: 100%; border: 0; background: #525659; }
-.books-frame.dragging { pointer-events: none; }
+.books-zoom { display: flex; align-items: center; gap: 2px; }
+.books-zoom-label { min-width: 52px; border: 1px solid var(--line2); background: var(--panel3); color: var(--dim); border-radius: 6px; padding: 3px 6px;
+  font: inherit; font-size: 12px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.books-zoom-label:hover { color: var(--cyan); border-color: var(--cyan); }
+.books-tools .icon-btn.books-on { color: var(--cyan); border-color: var(--cyan); }
+
+/* ----- pdf.js reader (PdfReader / pdfview.js) ----- */
+.books-reader { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.books-scroll { flex: 1; min-height: 0; overflow: auto; background: #3a3d44; touch-action: pan-x pan-y; outline: none; overscroll-behavior: contain; }
+.books-drawer.dragging .books-scroll { pointer-events: none; }
+/* padding and gap = GAP of pdfview.js (page tops are computed from them) */
+.books-pages { display: flex; flex-direction: column; gap: 12px; padding: 12px; width: max-content; min-width: 100%; box-sizing: border-box; transform-origin: 0 0; }
+.books-page { position: relative; flex: none; margin: 0 auto; background: #fff; box-shadow: 0 1px 6px #0009; overflow: hidden; }
+.books-page::before { content: attr(data-n); position: absolute; inset: 0; display: grid; place-items: center; color: #bbb; font: 600 20px var(--mono); }
+.books-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.books-loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 24px;
+  text-align: center; background: var(--panel); color: var(--text); z-index: 3; }
+.books-progress { width: min(320px, 80%); height: 8px; border-radius: 4px; background: var(--panel3); border: 1px solid var(--line2); overflow: hidden; }
+.books-progress-bar { height: 100%; background: var(--cyan); transition: width .15s linear; }
+
+/* pdf.js text layer (subset of pdfjs-dist/web/pdf_viewer.css): transparent text over the canvas, for selection + highlights */
+.books-page .textLayer { position: absolute; text-align: initial; inset: 0; overflow: clip; opacity: 1; line-height: 1; -webkit-text-size-adjust: none;
+  text-size-adjust: none; forced-color-adjust: none; transform-origin: 0 0; caret-color: CanvasText; z-index: 1; }
+.books-page .textLayer :is(span, br) { color: transparent; position: absolute; white-space: pre; cursor: text; transform-origin: 0% 0%; }
+.books-page .textLayer > :not(.markedContent), .books-page .textLayer .markedContent span:not(.markedContent) { z-index: 1; }
+.books-page .textLayer span.markedContent { top: 0; height: 0; }
+.books-page .textLayer ::selection { background: color-mix(in srgb, #2a6cff 35%, transparent); }
+.books-page .textLayer br::selection { background: transparent; }
+.books-page .textLayer .endOfContent { display: block; position: absolute; inset: 100% 0 0; z-index: 0; cursor: default; user-select: none; }
+.books-page .textLayer span.books-hl { position: static; color: transparent; background: rgb(255 190 0 / .45); border-radius: 2px; box-shadow: 0 0 0 1px rgb(255 150 0 / .6); }
+
+/* ----- settings ----- */
+.books-settings { padding: 8px 10px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; background: var(--panel); }
+.books-settings-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.books-settings-label { min-width: 64px; }
+.books-settings-cache { align-items: flex-start; }
+.books-settings-cache .col { gap: 2px; min-width: 180px; }
+.books-cacheline { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .books-empty { padding: 24px; display: flex; flex-direction: column; gap: 8px; color: var(--text); background: var(--panel); flex: 1; }
 .books-textmode { flex: 1; overflow: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; background: var(--panel); }
 .books-pagetext { white-space: pre-wrap; line-height: 1.55; font-size: 13px; color: var(--text); max-width: 75ch; }
@@ -54,4 +90,4 @@
 .books-center { text-align: center; }
 
 @media (max-width: 900px) { .books-grid { grid-template-columns: minmax(0, 1fr); } }
-@media (max-width: 760px) { .books-drawer { width: 100vw !important; } .books-resize { display: none; } }
+@media (max-width: 760px) { .books-drawer { width: 100vw !important; } .books-resize { display: none; } .books-head { gap: 4px; } .books-switch { flex-basis: 100%; max-width: none; } }

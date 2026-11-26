@@ -1,6 +1,7 @@
 // Pure helpers for actors / character sheets, shared by the characters server module and the sheet UI.
-// IMPORTANT: no imports here (this file is loaded both by Node and by the browser).
+// IMPORTANT: only relative imports of pure modules here (this file is loaded both by Node and by the browser).
 // Labels stay French here (they are also stored / used by the server); the UI renders them with t(…).
+import { normalizeInventory } from './inventory.js';
 
 /** Marker for the i18n checker (French keys rendered with t() by the UI). */
 const tk = (s) => s;
@@ -103,10 +104,11 @@ export function legacyLifestyle(ls, makeId) {
 
 /** Fields a player may change on items of their own actor. */
 export const PLAYER_ITEM_FIELDS = {
-  armor: ['equipped'],
-  gear: ['qty', 'notes', 'active'],
+  armor: ['equipped', 'location'],
+  gear: ['qty', 'notes', 'active', 'location'],
   contacts: ['notes'],
-  weapons: ['notes', 'ammoLeft'],
+  // ammoLoaded / ammoLeft (legacy): lower only — rounds come back with weapon/reload.
+  weapons: ['notes', 'equipped', 'location', 'ammoLoaded', 'ammoLeft'],
 };
 
 /** Top-level actor keys a player may change on their own actor. */
@@ -381,6 +383,7 @@ export function normalizeActor(a, makeId) {
   for (const k of ['karma', 'karmaTotal', 'nuyen', 'streetCred', 'notoriety', 'publicAwareness']) a[k] = num(a[k], 0);
   if (!Array.isArray(a.history)) a.history = [];
   if (a.type === 'npc' && (!a.npc || typeof a.npc !== 'object')) a.npc = { professionalRating: 0, grunt: false, tactics: '', loot: '' };
+  normalizeInventory(a, makeId); // containers, locations, ammo, ready weapons (inventory.js)
   return a;
 }
 

@@ -104,9 +104,9 @@ Trois avertissements, dans l'ordre que vous voulez ; un seul suffit à ce que le
 
 **Cellule A (Brandauer + 3 opérateurs + la mage)** frappe l'endroit où se trouvent la majorité des PJ — par défaut l'appartement de Jane (map_jane_apartment), sinon la planque que le groupe a choisie. Méthode : coupure de courant de l'immeuble, la mage lance un sort de détection puis un Stunball par une fenêtre, les opérateurs entrent par la porte et par l'escalier de secours avec des grenades flash-bang. Objectif : tuer vite, récupérer L-07 si elle est là, repartir en moins de 4 minutes.
 
-**Cellule B (3 opérateurs + tireur + rigger)** frappe le second lieu — le Hacker's Lair de Bricks (map_hacker_lair) si elle y dort, sinon un autre PJ isolé. Le tireur couvre la sortie depuis un toit voisin, les drones bloquent la rue, les opérateurs entrent.
+**Cellule B (3 opérateurs + tireur + rigger)** frappe le second lieu — le Hacker's Lair de Bricks (map_fvtt_hacker-s-lair) si elle y dort, sinon un autre PJ isolé. Le tireur couvre la sortie depuis un toit voisin, les drones bloquent la rue, les opérateurs entrent.
 
-**Reyes et ses Nettoyeurs** vont chercher Porfla (map_bar_porfla), Windows (où qu'elle soit cachée — la qualité de la planque trouvée par le groupe compte ici : une planque de Cabana à 3 000¥ résiste ; un motel, non), et L-07 si elle n'est pas avec le groupe.
+**Reyes et ses Nettoyeurs** vont chercher Porfla (map_fvtt_bar), Windows (où qu'elle soit cachée — la qualité de la planque trouvée par le groupe compte ici : une planque de Cabana à 3 000¥ résiste ; un motel, non), et L-07 si elle n'est pas avec le groupe.
 
 **Le groupe ne peut pas être partout.** C'est le cœur de la scène. Si les PJ ont été prévenus, laissez-les choisir qui ils protègent et qui ils préviennent ; si quelqu'un est laissé seul, il faut que ça coûte. Si les PJ n'ont pas été prévenus, ouvrez sur la coupure de courant, et jouez.
 
@@ -179,7 +179,7 @@ Sur un terrain paysager de trois hectares à Bellevue, au bord du lac Sammamish 
 - **Niveau -2** — le pavillon des sujets stabilisés, la **Pépinière** (le lot D de Halcyon : une vingtaine de donneurs), le laboratoire principal, le **coffre de données** (serveurs isolés, sans connexion sans fil : il faut y être physiquement).
 - **Niveau -3** — **la Serre** : le bureau-jardin de Wendt, la chambre de traitement de L-00, et l'archive des spécimens (dont la cuve L-04). Un tunnel d'évacuation vers le parking d'un immeuble voisin.
 
-Cartes : **map_halcyon_surface** et **map_halcyon_sous_sols** (descriptions détaillées en fin de document).
+Cartes : **map_halcyon_surface** et **map_halcyon_sous_sols** (plans d'ensemble, descriptions détaillées en fin de document) ; en gros plan, les cartes Fragmaps map_lib_boutique-clinic (hall et salons), map_lib_predator-lab (laboratoire du -2), map_lib_server-room (coffre de données) et map_lib_greenhouse-rnd-lab (la Serre du -3) — voir cartes-campagne.md.
 
 **Sécurité.**
 - **Surface** : 4 gardes Werkschutz en ronde (tpl_corpsec_r4), 2 au poste d'accueil de nuit (tpl_corpsec_human_r3), caméras partout sauf dans les chambres des clients, 2 drones de surveillance (MCT Fly-Spy) sur les jardins, un **esprit gardien** (esprit de l'air, Force 4, lié par le mage de sécurité) qui patrouille l'astral au-dessus des jardins.
@@ -478,7 +478,7 @@ Utilisez **tpl_reyes** avec les modificateurs de l'Acte 2, plus :
 
 ## Cartes nécessaires — Acte 3
 
-Cartes existantes réutilisées : map_jane_apartment et map_hacker_lair (Burn Notice, Phase 2), map_bar_porfla (cible secondaire), map_dojo_morinaga (refuge), map_maison_kessler (l'assurance de Kessler).
+Cartes existantes réutilisées : map_fvtt_apartement / map_jane_apartment et map_fvtt_hacker-s-lair (Burn Notice, Phase 2), map_fvtt_bar (cible secondaire), map_lib_kingpins-meeting-room (planque Monobe), map_lib_seafood-packing-facility (entrepôt VSP, approche E), map_dojo_morinaga (refuge), map_maison_kessler (l'assurance de Kessler).
 
 **map_funerarium_hargrove — Funérarium Hargrove & Fils (Renton), planque de secours de Cabana** — Burn Notice, Phase 3 (et hôpital de fortune pour les sujets).
 Bâtiment de briques de deux étages et un sous-sol, fermé depuis 2076, racheté par Cabana via un prête-nom.

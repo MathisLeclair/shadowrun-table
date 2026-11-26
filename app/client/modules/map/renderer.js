@@ -7,6 +7,7 @@
 import { buildGrid, lineOfSightMask, mapLights, wallIsDoor, wallMidpoint, pointSegmentDistance } from '/shared/vision.js';
 import { derive } from '/shared/sr5.js';
 import { t, tk, tIfKnown } from '../../lib/i18n.js';
+import { isLibUrl, ensureLibKey, signedUrl } from './maplib-client.js';
 
 // ---------------------------------------------------------------------------
 // Shared image cache (backgrounds, portraits): each url loads once for every renderer / thumbnail.
@@ -35,7 +36,9 @@ export function getImage(url, onLoad = null) {
       for (const r of LIVE_RENDERERS) r.dirty = true;
       entry.waiters.clear();
     };
-    img.src = url;
+    // Library images (/api/maplib/image/<slug>) need the signed key: cached under the bare URL, loaded once the key is known.
+    if (isLibUrl(url)) ensureLibKey().then((k) => (k ? (img.src = signedUrl(url, k)) : img.onerror()));
+    else img.src = url;
     IMAGE_CACHE.set(url, e);
   }
   if (!e.ok && !e.failed && onLoad) e.waiters.add(onLoad);
@@ -1065,7 +1068,7 @@ export class MapRenderer {
     if (this.anims.size || this.pings.length) return 'fast';
     const sc = this.scene;
     if (!sc?.map) return false;
-    if (sc.turnTokenId || this.machinery.length || this.overlay?.animate) return 'slow';
+    if (sc.turnTokenId || this.machinery.length || this.overlay?.animate || sc.combatMarks?.targetTokenId || sc.combatMarks?.aim) return 'slow';
     return false;
   }
 
@@ -1322,6 +1325,7 @@ export class MapRenderer {
     }
     // ghost tokens (drag)
     for (const g of ov.ghosts || []) this.drawToken(ctx, g.token, { x: g.x, y: g.y }, { now, alpha: 0.6, ghost: true });
+    if (sc.combatMarks) this.drawCombatMarks(ctx, sc.combatMarks, now);
     if (ov.pathLabel && ov.labelAt) this.drawLabel(ctx, ov.labelAt, ov.pathLabel, ov.pathColor || '#3fd6d0');
     if (ov.box) {
       ctx.strokeStyle = '#3fd6d0';
@@ -1672,6 +1676,164 @@ export class MapRenderer {
     ctx.arc(p.x, p.y, Math.max(3, this.view.scale * 0.12), 0, Math.PI * 2);
     ctx.fillStyle = color;
     ctx.fill();
+    ctx.restore();
+  }
+
+  /**
+   * Combat marks (scene.combatMarks, attacks module): blasts (aimed point → landing point, falloff rings, tokens caught), attack lines
+   * (attacker → target of pending attacks), the user's target (reticle) and aimed point. Coordinates = cells (top-left), centre = +0.5.
+   */
+  drawCombatMarks(ctx, cm, now) {
+    const scale = this.view.scale;
+    const C = (x, y) => this.toScreen(x + 0.5, y + 0.5);
+    const tokPos = (id) => {
+      const tok = (this.scene.map.tokens || []).find((tt) => tt.id === id);
+      if (!tok) return null;
+      const p = this.tokenDrawPos(tok.id, tok, now);
+      const size = tok.size || 1;
+      return { x: this.view.x + (p.x + size / 2) * scale, y: this.view.y + (p.y + size / 2) * scale, r: Math.max(5, size * scale * 0.42) };
+    };
+    const mpc = Number(this.scene.map.metersPerCell) || 1;
+    ctx.save();
+    for (const b of cm.blasts || []) {
+      const c = C(b.x, b.y);
+      const reach = (Number(b.reach) || 0) / mpc;
+      const col = b.dv ? (b.type === 'S' ? '#3fa9e0' : '#e0663f') : '#b8c2cc';
+      if (reach > 0) {
+        const g = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, (reach + 0.5) * scale);
+        g.addColorStop(0, rgba(col, b.radius ? 0.28 : 0.42));
+        g.addColorStop(b.radius ? 0.92 : 0.15, rgba(col, b.radius ? 0.22 : 0.25));
+        g.addColorStop(1, rgba(col, 0.02));
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, (reach + 0.5) * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = rgba(col, 0.8);
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([6, 4]);
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, (reach + 0.5) * scale, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // falloff rings every few meters (DV labels)
+        if (b.falloff && b.dv && scale >= 10) {
+          const step = Math.max(1, Math.ceil(reach / 4));
+          ctx.font = '600 10px Segoe UI, system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          for (let m = step; m < reach; m += step) {
+            ctx.strokeStyle = rgba(col, 0.35);
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(c.x, c.y, m * scale, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.fillStyle = rgba(col, 0.9);
+            ctx.fillText(`${Math.max(0, b.dv - b.falloff * Math.round(m * mpc))}${b.type}`, c.x, c.y - m * scale - 3);
+          }
+          ctx.textAlign = 'left';
+        }
+      }
+      if (b.aim && (b.aim.x !== b.x || b.aim.y !== b.y)) {
+        const a = C(b.aim.x, b.aim.y);
+        ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(c.x, c.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        const s = Math.max(4, scale * 0.22);
+        ctx.beginPath();
+        ctx.moveTo(a.x - s, a.y - s);
+        ctx.lineTo(a.x + s, a.y + s);
+        ctx.moveTo(a.x + s, a.y - s);
+        ctx.lineTo(a.x - s, a.y + s);
+        ctx.stroke();
+      }
+      ctx.fillStyle = col;
+      ctx.strokeStyle = '#05070a';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, Math.max(4, scale * 0.18), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      for (const h of b.hits || []) {
+        const p = tokPos(h.tokenId);
+        if (!p) continue;
+        ctx.strokeStyle = rgba(col, 0.95);
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r + 4, 0, Math.PI * 2);
+        ctx.stroke();
+        this.drawLabel(ctx, this.toWorld(p.x, p.y - p.r - 14), `${h.dv}${b.type}`, col);
+      }
+      if (b.label) this.drawLabel(ctx, { x: b.x + 0.5, y: b.y + 0.5 + Math.max(0.9, reach * 0.15 + 0.9) }, b.label, col);
+    }
+    for (const l of cm.lines || []) {
+      const a = tokPos(l.from);
+      const z = tokPos(l.to);
+      if (!a || !z) continue;
+      const ang = Math.atan2(z.y - a.y, z.x - a.x);
+      const ax = a.x + Math.cos(ang) * a.r, ay = a.y + Math.sin(ang) * a.r;
+      const zx = z.x - Math.cos(ang) * (z.r + 4), zy = z.y - Math.sin(ang) * (z.r + 4);
+      ctx.strokeStyle = rgba(l.color || '#e05c5c', 0.85);
+      ctx.lineWidth = 2;
+      ctx.setLineDash(l.dashed ? [6, 5] : []);
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(zx, zy);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = rgba(l.color || '#e05c5c', 0.95);
+      ctx.beginPath();
+      ctx.moveTo(zx, zy);
+      ctx.lineTo(zx - Math.cos(ang - 0.4) * 10, zy - Math.sin(ang - 0.4) * 10);
+      ctx.lineTo(zx - Math.cos(ang + 0.4) * 10, zy - Math.sin(ang + 0.4) * 10);
+      ctx.closePath();
+      ctx.fill();
+      if (l.label) this.drawLabel(ctx, this.toWorld((ax + zx) / 2, (ay + zy) / 2 - 12), l.label, l.color || '#e05c5c');
+    }
+    const k = (Math.sin(now / 300) + 1) / 2;
+    if (cm.targetTokenId) {
+      const p = tokPos(cm.targetTokenId);
+      if (p) {
+        const r = p.r + 6 + k * 2;
+        ctx.strokeStyle = rgba('#ff4d4d', 0.85 + k * 0.15);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        for (const a of [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2]) {
+          ctx.moveTo(p.x + Math.cos(a) * (r - 5), p.y + Math.sin(a) * (r - 5));
+          ctx.lineTo(p.x + Math.cos(a) * (r + 7), p.y + Math.sin(a) * (r + 7));
+        }
+        ctx.stroke();
+        if (cm.targetLabel) this.drawLabel(ctx, this.toWorld(p.x, p.y + r + 14), cm.targetLabel, '#ff4d4d');
+      }
+    }
+    if (cm.aim) {
+      const c = C(cm.aim.x, cm.aim.y);
+      const r = Math.max(8, scale * 0.45) + k * 2;
+      ctx.strokeStyle = rgba('#ffb347', 0.95);
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, r, 0, Math.PI * 2);
+      ctx.moveTo(c.x - r - 6, c.y);
+      ctx.lineTo(c.x + r + 6, c.y);
+      ctx.moveTo(c.x, c.y - r - 6);
+      ctx.lineTo(c.x, c.y + r + 6);
+      ctx.stroke();
+      if (cm.aimReach) {
+        ctx.setLineDash([5, 5]);
+        ctx.strokeStyle = rgba('#ffb347', 0.5);
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, (cm.aimReach / mpc + 0.5) * scale, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      if (cm.aimLabel) this.drawLabel(ctx, { x: cm.aim.x + 0.5, y: cm.aim.y - 0.6 }, cm.aimLabel, '#ffb347');
+    }
     ctx.restore();
   }
 

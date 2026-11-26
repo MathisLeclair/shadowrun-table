@@ -22,6 +22,7 @@ import NotesPage from './notes/NotesPage.js';
 import BooksPage from './books/BooksPage.js';
 import BookViewer from './books/BookViewer.js';
 import AssistantDock from './assistant/AssistantDock.js';
+import AttackTray from './combat/AttackTray.js';
 import { unreadHandouts } from './campaign/common.js';
 import { tk } from '../lib/i18n.js';
 
@@ -58,4 +59,4 @@ export const dockTabs = [
 export const SheetView = SheetViewImpl;
 
 /** Mounted once for every user, outside the tabs (audio playback, overlays…). */
-export const globalComponents = [AudioEngine, BookViewer]; // BookViewer: rulebook drawer (openBook() from anywhere)
+export const globalComponents = [AudioEngine, BookViewer, AttackTray]; // BookViewer: rulebook drawer (openBook() from anywhere); AttackTray: defend / soak prompts

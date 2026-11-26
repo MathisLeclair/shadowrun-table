@@ -213,6 +213,54 @@ export function EdgePips({ actor, canUse, size = 'md' }) {
   </span>`;
 }
 
+// ---------------------------------------------------------------------------
+// Item names, categories, fire modes and damage in the UI language
+// ---------------------------------------------------------------------------
+/**
+ * Name of an actor item in the UI language: the catalog's French / English name (nameFr / nameEn, filled by the characters
+ * module from the catalog when the stored name is the catalog one), else the stored name (typed / renamed: never changed).
+ */
+export function itemLabel(item) {
+  if (!item) return '';
+  return (getLang() === 'fr' ? item.nameFr : item.nameEn) || item.name || item.nameFr || item.nameEn || '';
+}
+/** Tooltip of an item name: the stored / other-language name and Foundry's original name (kept in the notes) when they differ. */
+export function itemTitle(item) {
+  if (!item) return '';
+  const shown = itemLabel(item);
+  const other = getLang() === 'fr' ? item.nameEn : item.nameFr;
+  return [...new Set([item.name, other].filter((n) => n && n !== shown))].join(' · ');
+}
+// Categories the app itself stores (French, translated in English with these keys).
+const OWN_CATEGORIES = [tk('Corps à corps'), tk('Arme de jet'), tk('Arme à distance'), tk('Munitions'), tk('Équipement'), tk('Vêtements'), tk('Commlink'), tk('Cyberdeck')];
+/** Category of an item in the UI language (catalog categoryFr / categoryEn, the app's own French categories, else as stored). */
+export function categoryLabel(item) {
+  if (!item) return '';
+  const c = getLang() === 'fr' ? item.categoryFr : item.categoryEn;
+  if (c) return c;
+  return OWN_CATEGORIES.includes(item.category) ? t(item.category) : tIfKnown(String(item.category || ''));
+}
+const MODE_CODES = { SS: 'SS', CC: 'SS', SA: 'SA', BF: 'BF', TR: 'BF', FA: 'FA', TA: 'FA', RA: 'FA' };
+const MODE_FR = { SS: 'CC', SA: 'SA', BF: 'TR', FA: 'TA' };
+/** Fire modes « SA/BF/FA » (Chummer) or « SA/TR/TA » (Foundry) in the UI language: French CC/SA/TR/TA, English SS/SA/BF/FA. */
+export function modeLabel(mode) {
+  const s = String(mode ?? '').trim();
+  if (!s || s === '0') return '—';
+  return s.split('/').map((p) => {
+    const code = MODE_CODES[p.trim().toUpperCase()];
+    return code ? (getLang() === 'fr' ? MODE_FR[code] : code) : p.trim();
+  }).join('/');
+}
+/** Damage code in the UI language: French uses « E » (étourdissant) for Stun, « P » stays (physique / Physical). « Special » → « Spécial ». */
+export function damageLabel(text) {
+  let s = String(text ?? '').trim();
+  if (!s) return '—';
+  if (/^(sp[ée]cial)$/i.test(s)) return t('Spécial');
+  if (getLang() === 'fr') s = s.replace(/(\d|\))S(?![a-z])/g, '$1E');
+  else s = s.replace(/(\d|\))E(?![a-z])/g, '$1S');
+  return s;
+}
+
 /** Accuracy text ("5", "Physique", "Physique−1") → number limit. */
 export function accuracyLimit(actor, accuracy) {
   const s = String(accuracy ?? '').trim();

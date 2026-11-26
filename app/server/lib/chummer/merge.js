@@ -150,6 +150,10 @@ export function mergeActor(current, theirs, base, { now = Date.now(), fileName =
     m[l] = mergeList(current[l] || [], theirs[l] || [], base ? base[l] || [] : null, oursGuids);
   }
   if (!m.complexForms?.length) delete m.complexForms;
+  // Containers (Chummer locations, ids chum_<guid>): the app's are kept, the file's new ones are added (items may point at them).
+  const cts = Array.isArray(current.containers) ? [...current.containers] : [];
+  for (const ct of Array.isArray(theirs.containers) ? theirs.containers : []) if (ct?.id && !cts.some((x) => x?.id === ct.id)) cts.push({ ...ct });
+  if (cts.length) m.containers = cts;
   // Keep the previous sync point when merging: app-side karma/nuyen entries made since then are not in the uploaded
   // file and must still become Chummer expenses at the next export (entries flagged `chummer` are skipped).
   m.chummer = { ...theirs.chummer, importedAt: current.chummer?.importedAt || theirs.chummer.importedAt, syncedAt: hasBase ? current.chummer?.syncedAt || now : now, updatedAt: now };

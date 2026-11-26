@@ -40,10 +40,11 @@
 .sh-quickdmg { margin-top: 10px; }
 
 /* mini bars */
-.sh-minibar { --c: var(--red); position: relative; height: 14px; border-radius: 7px; background: var(--bg2); border: 1px solid var(--line); overflow: hidden; min-width: 60px; }
+/* Flex box with its own line-height: the inherited 1.45 line box (body) used to push the label below a 14px box and clip it. */
+.sh-minibar { --c: var(--red); position: relative; display: flex; align-items: center; height: 20px; border-radius: 10px; background: var(--bg2); border: 1px solid var(--line); overflow: hidden; min-width: 60px; line-height: 1; box-sizing: border-box; }
 .sh-minibar-stun { --c: var(--amber); }
 .sh-minibar-fill { position: absolute; inset: 0 auto 0 0; background: color-mix(in srgb, var(--c) 70%, transparent); transition: width .2s; }
-.sh-minibar-text { position: relative; font: 700 9.5px var(--mono); color: var(--text); padding-left: 6px; line-height: 13px; text-shadow: 0 0 3px #000; }
+.sh-minibar-text { position: relative; font: 700 11px/1 var(--mono); color: var(--text); padding: 0 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0 3px #000; }
 
 /* edge pips */
 .sh-pips { display: inline-flex; gap: 4px; align-items: center; flex-wrap: wrap; }
@@ -159,6 +160,31 @@ tr.sh-skill:hover .sh-die-btn { color: var(--pc); }
 .sh-weapon-name { font-weight: 700; color: var(--text); }
 .sh-ammo { display: inline-flex; align-items: center; gap: 2px; }
 .sh-ammo .icon-btn { width: 24px; height: 24px; font-size: 13px; }
+.sh-weapons tr.sh-stowed td { opacity: .6; }
+.sh-ready-cell { width: 44px; }
+.sh-rd-weapon { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line2); background: var(--bg2); }
+.sh-rd-weapon .input { width: auto; max-width: 100%; }
+
+/* inventory (tab « Inventaire »): one card per place, drag & drop between cards */
+.sh-inventory { display: flex; flex-direction: column; gap: 10px; }
+.sh-inv-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 10px; align-items: start; }
+.sh-inv-card { background: var(--panel2); border: 1px solid var(--line); border-left: 3px solid var(--pc); border-radius: 8px; padding: 8px 10px; min-width: 0; transition: border-color .12s, background .12s; }
+.sh-inv-card.sh-inv-bag { border-left-color: var(--amber); } .sh-inv-card.sh-inv-vehicle { border-left-color: var(--blue); }
+.sh-inv-card.sh-inv-safehouse { border-left-color: var(--violet); } .sh-inv-card.sh-inv-other { border-left-color: var(--line2); }
+.sh-inv-card.over { border-color: var(--cyan); background: color-mix(in srgb, var(--cyan) 8%, var(--panel2)); }
+.sh-inv-head { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.sh-inv-toggle { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 6px; background: none; border: none; color: var(--text); font: inherit; cursor: pointer; padding: 2px 0; text-align: left; }
+.sh-inv-toggle b { overflow-wrap: anywhere; }
+.sh-inv-kind { padding: 2px 6px; font-size: 12px; width: auto; }
+.sh-inv-list { display: flex; flex-direction: column; gap: 3px; margin-top: 6px; }
+.sh-inv-row { display: flex; align-items: center; gap: 8px; padding: 5px 7px; border-radius: 6px; background: var(--panel); border: 1px solid var(--line); min-width: 0; flex-wrap: wrap; }
+.sh-inv-row.draggable { cursor: grab; }
+.sh-inv-row.draggable:active { cursor: grabbing; }
+.sh-inv-icon { width: 16px; text-align: center; color: var(--dim); flex: none; }
+.sh-inv-name { min-width: 120px; overflow-wrap: anywhere; }
+.sh-inv-move { width: auto; max-width: 150px; padding: 2px 6px; font-size: 12px; }
+.sh-inv-empty { padding: 8px 2px 2px; }
+.sh-inv-add .input { flex: 1; min-width: 160px; width: auto; }
 
 /* cards & lists */
 .sh-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
@@ -246,7 +272,7 @@ tr.sh-skill:hover .sh-die-btn { color: var(--pc); }
 .ch-card-top .sh-avatar { --av: var(--pc); }
 .ch-card h4 { color: #fff; font-size: 16px; }
 .ch-ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ch-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.ch-bars { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
 .ch-stats { font-size: 13px; gap: 6px 12px; }
 .ch-assign { gap: 8px; }
 .ch-assign .input { padding: 4px 8px; font-size: 12.5px; }
@@ -264,7 +290,7 @@ tr.sh-skill:hover .sh-die-btn { color: var(--pc); }
 .ch-npc-name { background: none; border: none; color: var(--text); font: 600 13px var(--sans); cursor: pointer; padding: 0; text-align: left; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ch-npc-name:hover { color: var(--cyan); }
 .ch-npc-bars { display: flex; flex-direction: column; gap: 2px; width: 90px; flex: none; }
-.ch-npc-bars .sh-minibar { height: 8px; }
+.ch-npc-bars .sh-minibar { height: 8px; min-width: 0; }
 .ch-npc-bars .sh-minibar-text { display: none; }
 .ch-reward-pcs { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
 .ch-reward-pc { --pc: var(--cyan); display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line2); cursor: pointer; background: var(--panel2); }

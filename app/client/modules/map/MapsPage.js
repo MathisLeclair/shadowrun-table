@@ -1,7 +1,7 @@
 // GM maps page: list grouped by folder (previews, active badge, create / import / export / duplicate / delete)
 // and the full editor (editor.js) for the selected map.
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { html, Button, Badge, Empty, Modal, Field, Select, SearchBox, NumberInput, loadCss, confirmAction } from '../../lib/ui.js';
+import { html, Button, Badge, Empty, Modal, Field, Select, SearchBox, NumberInput, Tabs, loadCss, confirmAction } from '../../lib/ui.js';
 import { send } from '../../lib/net.js';
 import { useUI, setUI, getUI, toast } from '../../lib/ui-store.js';
 import { themeOptions, lightingOptions, themeLabel, lightingLabel, renderThumbnail, isImageMap, wallsKey } from './renderer.js';
@@ -9,6 +9,8 @@ import { t, compare, getLang } from '../../lib/i18n.js';
 
 const byName = (a, b) => String(a).localeCompare(String(b), getLang(), { numeric: true });
 import { MapEditor } from './editor.js';
+import { LibraryBrowser, LibraryLinkModal } from './LibraryBrowser.js';
+import { useLibrary } from './maplib-client.js';
 
 loadCss('/modules/map/map.css');
 
@@ -38,16 +40,31 @@ export default function MapsPage({ game }) {
   const ui = useUI();
   const maps = game.maps || {};
   const editing = ui.mapsEditId && maps[ui.mapsEditId] ? maps[ui.mapsEditId] : null;
+  const [tab, setTab] = useState(lastTab);
+  const pick = (v) => setTab((lastTab = v));
   if (editing) return html`<${MapEditor} key=${editing.id} game=${game} map=${editing} onBack=${() => setUI({ mapsEditId: null })} />`;
-  return html`<${MapsList} game=${game} />`;
+  const tabs = html`<${Tabs} value=${tab} onChange=${pick} tabs=${[{ id: 'table', label: t('Cartes de la table') }, { id: 'library', label: t('Bibliothèque') }]} />`;
+  if (tab === 'library') {
+    return html`<div class="page">
+      <div class="page-title"><h2>${t('Cartes')}</h2></div>
+      ${tabs}
+      <${LibraryBrowser} game=${game} onAdded=${() => pick('table')} />
+    </div>`;
+  }
+  return html`<${MapsList} game=${game} tabs=${tabs} />`;
 }
+let lastTab = 'table'; // tab kept while the editor is open
 
-function MapsList({ game }) {
+function MapsList({ game, tabs }) {
   const maps = game.maps || {};
   const [q, setQ] = useState('');
   const [creating, setCreating] = useState(false);
   const fileRef = useRef(null);
   const activeId = game.scene?.activeMapId;
+  const [linkMap, setLinkMap] = useState(null);
+  const hasLinked = Object.values(maps).some((m) => m.library);
+  const lib = useLibrary(hasLinked).data;
+  const latest = useMemo(() => Object.fromEntries((lib?.maps || []).map((e) => [e.slug, e.version])), [lib]);
 
   const groups = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -91,6 +108,7 @@ function MapsList({ game }) {
         <${Button} variant="primary" onClick=${() => setCreating(true)}>${t('+ Nouvelle carte')}</${Button}>
       </div>
     </div>
+    ${tabs}
     <div class="row wrap small muted" style=${{ marginBottom: '4px' }}>
       ${t('Carte affichée aux joueurs :')} <strong class="green">${maps[activeId]?.name || t('aucune')}</strong>
       ${activeId && html`<${Button} small variant="ghost" onClick=${() => send('maps/setActive', { mapId: null }).catch(quiet)}>${t('Masquer la carte')}</${Button}>`}
@@ -99,14 +117,15 @@ function MapsList({ game }) {
     ${groups.map(
       ([folder, list]) => html`<div class="maps-folder">
         <div class="section-title">${folder || t('Sans dossier')} <span class="muted">(${list.length})</span></div>
-        <div class="maps-grid">${list.map((m) => html`<${MapCard} key=${m.id} map=${m} active=${m.id === activeId} />`)}</div>
+        <div class="maps-grid">${list.map((m) => html`<${MapCard} key=${m.id} map=${m} active=${m.id === activeId} latest=${m.library ? latest[m.library.slug] : null} onLibrary=${() => setLinkMap(m.id)} />`)}</div>
       </div>`
     )}
     ${creating && html`<${CreateMapModal} game=${game} onClose=${() => setCreating(false)} />`}
+    ${linkMap && maps[linkMap] && html`<${LibraryLinkModal} map=${maps[linkMap]} onClose=${() => setLinkMap(null)} />`}
   </div>`;
 }
 
-function MapCard({ map, active }) {
+function MapCard({ map, active, latest, onLibrary }) {
   const ref = useRef(null);
   const bg = map.background;
   const sig = `${map.width}x${map.height}|${map.theme}|${map.tiles.join('')}|${(map.doors || []).map((d) => d.state + d.kind).join()}|${(map.tokens || []).map((t) => t.x + ',' + t.y + t.disposition).join()}|${bg ? `${bg.url}${bg.mode}${bg.x},${bg.y},${bg.w},${bg.h},${bg.opacity}` : ''}|${wallsKey(map)}`;
@@ -130,6 +149,7 @@ function MapCard({ map, active }) {
     <div class="maps-thumb" onClick=${edit} title=${t('Éditer')}>
       <canvas ref=${ref}></canvas>
       ${active && html`<${Badge} color="green">● ${t('Affichée')}</${Badge}>`}
+      ${map.library && html`<span class="maps-lib-badge"><${Badge} color=${latest > (map.library.version || 0) ? 'amber' : 'cyan'} title=${latest > (map.library.version || 0) ? t('Nouvelle version disponible dans la bibliothèque') : t('Copie d’une carte de la bibliothèque')}>${t('Bibliothèque')}${latest > (map.library.version || 0) ? ' ↑' : ''}</${Badge}></span>`}
     </div>
     <div class="maps-card-body">
       <h4>${map.name}</h4>
@@ -147,6 +167,7 @@ function MapCard({ map, active }) {
       ${active
         ? html`<${Button} small onClick=${() => setUI({ viewMapId: map.id, mainTab: 'map' })}>${t('Voir en jeu')}</${Button}>`
         : html`<${Button} small variant="accent" onClick=${() => send('maps/setActive', { mapId: map.id }).then(() => toast(t('Carte affichée aux joueurs'), 'success'), quiet)}>${t('Afficher')}</${Button}>`}
+      ${map.library && html`<${Button} small variant="ghost" onClick=${onLibrary} title=${t('Mettre à jour depuis la bibliothèque ou y publier tes corrections')}>${t('Bibliothèque…')}</${Button}>`}
       <${Button} small variant="ghost" onClick=${dup}>${t('Dupliquer')}</${Button}>
       <${Button} small variant="ghost" onClick=${() => exportMap(map)}>${t('Exporter')}</${Button}>
       <${Button} small variant="ghost" onClick=${del} title=${t('Supprimer')}>✕</${Button}>

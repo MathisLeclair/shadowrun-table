@@ -10,8 +10,11 @@ import crypto from 'node:crypto';
 import { RUNTIME_DIR } from '../../store.js';
 
 export const BOOKS_DIR = process.env.SR_BOOKS_DIR ? path.resolve(process.env.SR_BOOKS_DIR) : path.join(RUNTIME_DIR, 'books');
-export const LINK_TTL = 3600; // seconds
-const STEP = 1800; // expiries are rounded up to this step: the same URL for 30 min (browser cache hits), valid 1 h to 1 h 30
+export const LINK_TTL = 86400; // seconds
+// Expiries are rounded up to this step: a link stays the SAME URL for a whole day (UTC), valid 24 h to 48 h. A stable URL
+// lets the browser's HTTP cache (Cache-Control: private, max-age=86400 + ETag) and the reader's own cache hit; the link
+// still dies with its session (logout, kick, GM password change), which is what really bounds it.
+const STEP = 86400;
 
 /** File holding the HMAC key (outside the books folder, see above). */
 export const keyFile = () => (process.env.SR_BOOKS_KEY_FILE ? path.resolve(process.env.SR_BOOKS_KEY_FILE) : path.join(RUNTIME_DIR, 'books-sign.key'));

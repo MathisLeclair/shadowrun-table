@@ -7,7 +7,7 @@ import { toast } from '../../lib/ui-store.js';
 import { attr } from '/shared/sr5.js';
 import { t, tn, tk, logText, attrShort, attrLabel, getLang } from '../../lib/i18n.js';
 import { isGM, ownsActor, DiceFaces, RollBadges, fmtTime, rollLabel, rollBreakdown, skillName } from './common.js';
-import { RollDialog } from './RollDialog.js';
+import { RollDialog, fireText } from './RollDialog.js';
 import { BookRef } from '../books/BookRef.js';
 
 loadCss('/modules/sheet/sheet.css');
@@ -78,7 +78,7 @@ function LogEntry({ e, game, gm }) {
           <div class="ld-roll-head">
             <span class="ld-label">${rollLabel(r) || logText(e)}</span>
             ${typeof r.hits === 'number'
-              ? html`<span class=${'ld-hits' + (r.critGlitch ? ' crit' : r.glitch ? ' glitch' : r.hits === 0 ? ' zero' : '')}>${r.hits}<small> ${tn(r.hits, 'succès::one', 'succès::other')}</small></span>`
+              ? html`<span class=${'ld-hits' + (r.critGlitch ? ' crit' : r.glitch ? ' glitch' : r.hits === 0 ? ' zero' : '')}>${r.hits}<small> ${tn(r.hits, 'one::succès', 'other::succès')}</small></span>`
               : r.total !== undefined
                 ? html`<span class="ld-hits">${r.total}</span>`
                 : null}
@@ -87,6 +87,7 @@ function LogEntry({ e, game, gm }) {
           <div class="ld-roll-foot">
             <span class="faint small">${r.breakdown ? rollBreakdown(r.breakdown) : r.pool ? tn(r.pool, '{n} dé', '{n} dés') : ''}</span>
             <${RollBadges} roll=${r} />
+            ${r.fire ? html`<span class="badge" title=${t('Munitions utilisées par ce tir')}>${fireText(r.fire)}</span>` : null}
             ${canSecond && html`<button type="button" class="ld-second" title=${t('Relancer les dés sans succès (1 point de Chance)')}
               onClick=${() => send('dice/secondChance', { logId: e.id }).catch(() => {})}>${t('2ᵉ chance')}</button>`}
           </div>

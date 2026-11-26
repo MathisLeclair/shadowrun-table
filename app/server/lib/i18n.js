@@ -69,7 +69,7 @@ export function dictionary(lang) {
 /** Translate a French key into `lang` (falls back to French), interpolated. */
 export function t(lang, key, params) {
   const d = dictionary(lang);
-  const tr = (k, p) => interpolate(lookup(d, lang, k).text, p, tr);
+  const tr = (k, p) => interpolate(lookup(d, lang, k).text, p, tr, lang);
   return tr(key, params);
 }
 

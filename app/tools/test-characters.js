@@ -133,8 +133,9 @@ try {
     await gm.send('actor/updateItem', { actorId: 'pc_jane', list: 'gear', itemId: gear.id, patch: { qty: 5 } });
     await p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'gear', itemId: gear.id, patch: { qty: 4, notes: 'ok' } });
     await rejects(p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'gear', itemId: gear.id, patch: { qty: 9999 } }), /MJ/);
-    const w = jane.weapons[0];
-    await p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, patch: { ammoLeft: 7, notes: '3 tirs' } });
+    const w = jane.weapons.find((x) => x.ammoMax > 7);
+    await p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, patch: { ammoLeft: 7, notes: '3 tirs' } }); // legacy field = ammoLoaded
+    await rejects(p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, patch: { ammoLoaded: 9 } }), /Recharger/);
     await rejects(p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, patch: { damage: '20P' } }), /seulement/);
     await rejects(p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'armor', itemId: armor.id, patch: { rating: 20 } }), /seulement/);
     await rejects(p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'qualities', itemId: jane.qualities[0].id, patch: { karma: 0 } }), /MJ/);
@@ -144,7 +145,8 @@ try {
     const j = gm.state.actors.pc_jane;
     assert.equal(j.armor[0].equipped, false);
     assert.equal(j.gear[0].qty, 4);
-    assert.equal(j.weapons[0].ammoLeft, 7);
+    assert.equal(j.weapons.find((x) => x.id === w.id).ammoLoaded, 7);
+    assert.equal(j.weapons.find((x) => x.id === w.id).ammoLeft, undefined);
   });
 
   console.log('Damage, healing, Edge');

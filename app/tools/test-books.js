@@ -1,8 +1,9 @@
-// Rulebook library tests (ports 3400-3449): pure helpers, a hand-made PDF fixture indexed by tools/books-setup.js
+// Rulebook library tests (ports 3420-3439): pure helpers (server + the reader's cache / layout / highlight rules), a hand-made PDF fixture indexed by tools/books-setup.js
 // (offset detection with an unnumbered insert), HTTP auth of /api/books* (401/403, signed links, expiry, Range 206),
 // search, page text, and the /api/admin/books routes (permissions, upload, offsets, tables, delete).
 // Review regressions: fold() memory, memory guard of indexing jobs, links bound to the session, signing key outside the
 // books folder, error/416 headers of /file, printed page outside the book, same 404 for restricted books, detect preview.
+// Reader cache: `version` in the list, ETag / 304 / If-Range, links stable for a day, pdf.js served from /vendor/pdfjs/<v>/.
 //   node tools/test-books.js
 import fs from 'node:fs';
 import os from 'node:os';
@@ -16,10 +17,12 @@ import { parseQuery, fold, searchPages } from '../server/lib/books/search.js';
 import { parseSourceRef, printedToPdf as clientPrintedToPdf, pdfToPrinted as clientPdfToPrinted } from '../client/modules/books/refs.js';
 import { memoryVerdict } from '../server/lib/books/jobs.js';
 import { readBytes } from '../server/lib/books/pdftext.js';
+import { cacheKey, parseCacheKey, planEviction, staleEntries, cachedByCode, pickBackendName, downloadOptions, MAX_BOOKS, MAX_BYTES } from '../client/modules/books/cachepolicy.js';
+import { queryTerms, findMatches, splitByRanges, computeTops, pageAt, scaleFor, zoomStep, outputScale, clampScale } from '../client/modules/books/readerlib.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const PORT = 3400 + (process.pid % 50);
-const PORT2 = 3400 + ((process.pid + 25) % 50); // memory-guard server (env SR_MEMORY_LIMIT_BYTES)
+const PORT = 3420 + (process.pid % 10);
+const PORT2 = 3430 + (process.pid % 10); // memory-guard server (env SR_MEMORY_LIMIT_BYTES)
 let failed = 0;
 let passed = 0;
 function ok(cond, msg) {
@@ -164,6 +167,60 @@ console.log('Fonctions pures…');
 }
 
 // ---------------------------------------------------------------------------
+console.log('Lecteur : cache et mise en page (fonctions pures)…');
+{
+  // Cache key = code + version, never the signed URL.
+  eq(cacheKey({ code: 'rg', version: 'abc-12', url: '/api/books/RG/file?k=x' }), 'RG@abc-12', 'clé de cache = code@version');
+  eq([cacheKey({ code: 'RG' }), cacheKey({ code: 'RG', version: 'a/b' }), cacheKey({ code: '../x', version: 'a' })], [null, null, null], 'clé de cache invalide → null');
+  eq(parseCacheKey('SR5@1a-2b'), { code: 'SR5', version: '1a-2b' }, 'parseCacheKey');
+  eq(parseCacheKey('bad'), null, 'parseCacheKey invalide');
+  const MB = 1024 * 1024;
+  const e = (key, size, usedAt) => ({ key, size: size * MB, usedAt });
+  // Another version of the book being stored goes first; then the least recently used, until the budget fits.
+  let plan = planEviction([e('RG@old', 30, 900), e('SR5@v', 40, 100), e('SG@v', 20, 50)], { key: 'RG@new', size: 30 * MB }, { maxBytes: 100 * MB });
+  eq(plan, { evict: ['RG@old'], store: true }, 'ancienne version du livre retirée');
+  plan = planEviction([e('SR5@v', 40, 100), e('SG@v', 20, 50), e('CF@v', 30, 300)], { key: 'RG@new', size: 30 * MB }, { maxBytes: 100 * MB });
+  eq(plan, { evict: ['SG@v'], store: true }, 'moins récemment lu retiré (budget en octets)');
+  plan = planEviction([e('A@1', 1, 3), e('B@1', 1, 1), e('C@1', 1, 2)], { key: 'D@1', size: MB }, { maxBooks: 2, maxBytes: 100 * MB });
+  eq(plan, { evict: ['B@1', 'C@1'], store: true }, 'nombre de livres plafonné (LRU)');
+  plan = planEviction([e('A@1', 1, 3)], { key: 'D@1', size: 700 * MB });
+  eq(plan, { evict: [], store: false }, 'livre plus gros que le budget : lu sans être gardé');
+  plan = planEviction([e('A@1', 50, 1), e('B@1', 50, 2)], { key: 'C@1', size: 60 * MB }, { maxBytes: 100 * MB, keep: ['A@1'] });
+  eq(plan, { evict: ['B@1'], store: false }, 'clé protégée jamais retirée');
+  eq(planEviction([e('RG@v', 30, 1)], { key: 'RG@v', size: 30 * MB }).evict, [], 'même clé : rien à retirer');
+  eq([MAX_BOOKS, MAX_BYTES / MB], [12, 600], 'plafonds par défaut (12 livres / 600 Mo)');
+  const books = [{ code: 'RG', version: 'new' }, { code: 'SR5', version: 'v' }];
+  eq(staleEntries([e('RG@old', 1, 1), e('SR5@v', 1, 1), e('XX@1', 1, 1), { key: 'junk' }], books), ['RG@old', 'junk'], 'versions remplacées retirées, livres inconnus gardés');
+  eq([...cachedByCode([e('RG@old', 1, 1), e('SR5@v', 2, 1)], books).keys()], ['SR5'], '« en cache » seulement pour la version actuelle');
+  eq(
+    [pickBackendName({ secure: true, hasCaches: true, hasIdb: true }), pickBackendName({ secure: false, hasCaches: true, hasIdb: true }), pickBackendName({ secure: false, hasCaches: false, hasIdb: false })],
+    ['cache', 'idb', 'none'],
+    'Cache Storage en contexte sécurisé, IndexedDB sur http://<ip> (production), sinon rien'
+  );
+  // Regression: with a persistent cache the HTTP cache must not keep a second copy of the PDF; the download is abortable.
+  const sig = { aborted: false };
+  eq(downloadOptions({ persistent: true, signal: sig }), { credentials: 'same-origin', signal: sig, cache: 'no-store' }, 'cache persistant : téléchargement en no-store, annulable');
+  eq(downloadOptions({ persistent: false }), { credentials: 'same-origin' }, 'sans cache persistant : cache HTTP du navigateur');
+
+  // Highlight of the search terms in a page's text layer.
+  eq(queryTerms('"Hack on the fly" Zoé a'), ['hack', 'the', 'fly', 'zoe', 'on'], 'termes à surligner');
+  eq(findMatches('Zoé: Heritage line, HERITAGES and inheritance', ['heritage', 'zoe']), [[0, 3], [5, 13], [20, 28]], 'surlignage en début de mot, sans accents ni casse');
+  eq(splitByRanges('Edge rules', [[0, 4]]), [{ text: 'Edge', hit: true }, { text: ' rules', hit: false }], 'découpage du texte');
+  eq(findMatches('hacking', ['hack', 'hacking']), [[0, 7]], 'plages fusionnées');
+
+  // Continuous-scroll layout.
+  const { tops, total } = computeTops([100, 200, 100], 10);
+  eq([tops, total], [[10, 120, 330], 440], 'hauts des pages');
+  eq([pageAt(tops, 0), pageAt(tops, 119), pageAt(tops, 120), pageAt(tops, 5000)], [1, 1, 2, 3], 'page sous une position');
+  eq(scaleFor('width', { width: 612, height: 792 }, { width: 612, height: 400 }), 1, 'largeur de page');
+  ok(Math.abs(scaleFor('page', { width: 612, height: 792 }, { width: 612, height: 396 }) - 0.5) < 1e-9, 'page entière');
+  eq([scaleFor(9, { width: 1, height: 1 }, { width: 1, height: 1 }), clampScale(0.01)], [5, 0.25], 'zoom borné');
+  eq([zoomStep(1, 1), zoomStep(1, -1), zoomStep(1.05, 1), zoomStep(5, 1), zoomStep(0.25, -1)], [1.1, 0.9, 1.1, 5, 0.25], 'paliers de zoom');
+  eq([outputScale(800, 1000, 2), outputScale(800, 1000, 3), outputScale(800, 1000, 1)], [2, 2, 1], 'canvas HiDPI (densité max 2)');
+  ok(outputScale(4000, 5000, 2) ** 2 * 4000 * 5000 <= 16e6 + 1, 'canvas plafonné à 16 Mpx');
+}
+
+// ---------------------------------------------------------------------------
 console.log('Installation (tools/books-setup.js)…');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sr-books-test-'));
 const src = path.join(tmp, 'pdfs');
@@ -227,13 +284,74 @@ try {
   ok(!fs.existsSync(path.join(runtime, 'books', '.sign-key')), 'ancienne clé du dossier des livres supprimée');
   ok(/^[0-9a-f]{64}$/.test(fs.readFileSync(path.join(runtime, 'books-sign.key'), 'utf8')), 'clé de signature hors du dossier des livres');
 
+  // ----- reader cache: version, stable links, pdf.js -----
+  ok(/^[0-9a-z]+-[0-9a-z]+$/.test(rgA.version || '') && rgA.size === pdf.length, `version + taille dans la liste (${rgA.version} / ${rgA.size})`);
+  ok(rgA.exp - Date.now() / 1000 >= 86400 - 5, 'lien valable au moins 24 h');
+  const again = await json(await get('/api/books', { token: pA, table: 'alpha' }));
+  eq(again.body.books.find((b) => b.code === 'RG').url, rgA.url, 'même lien d’une requête à l’autre (cache navigateur)');
+  {
+    process.env.SR_RUNTIME_DIR = runtime;
+    const { signLink } = await import('../server/lib/books/access.js');
+    const day = Math.floor(Date.now() / 86400000) * 86400000;
+    const args = [path.join(runtime, 'books'), { tableId: 'alpha', userId: 'gm', session: 'x', code: 'RG' }];
+    const a = signLink(...args, { now: day + 1000 });
+    const b = signLink(...args, { now: day + 23 * 3600 * 1000 });
+    ok(a.k === b.k && a.exp * 1000 >= day + 23 * 3600 * 1000 + 86400 * 1000, 'signature stable sur toute la journée, valable 24 h après');
+    ok(signLink(...args, { now: day + 86400 * 1000 + 1000 }).k !== a.k, 'nouveau lien le lendemain');
+  }
+  const base = r.body.pdfjs;
+  ok(/^\/vendor\/pdfjs\/\d+\.\d+\.\d+$/.test(base || ''), `pdf.js servi par l’application (${base})`);
+  for (const p of ['/build/pdf.min.mjs', '/build/pdf.worker.min.mjs', '/legacy/build/pdf.min.mjs', '/legacy/build/pdf.worker.min.mjs']) {
+    const v = await fetch(U + base + p, { method: 'HEAD' });
+    ok(v.status === 200 && /javascript/.test(v.headers.get('content-type') || '') && /immutable/.test(v.headers.get('cache-control') || ''), `${p} : ${v.status} ${v.headers.get('content-type')} ${v.headers.get('cache-control')}`);
+  }
+  for (const p of ['/cmaps/Adobe-Japan1-UCS2.bcmap', '/standard_fonts/FoxitSerif.pfb']) eq((await fetch(U + base + p, { method: 'HEAD' })).status, 200, `pdf.js ${p}`);
+  for (const p of ['/package.json', '/build/pdf.mjs.map', '/web/pdf_viewer.mjs', '/build/../package.json', '/%2e%2e/package.json'])
+    eq((await fetch(U + base + p)).status, 404, `pdf.js : ${p} non servi`);
+  {
+    const miss = await fetch(U + base + '/cmaps/Absent-Map.bcmap');
+    ok(miss.status === 404 && /json/.test(miss.headers.get('content-type') || ''), 'pdf.js : fichier absent → 404 JSON (pas de pile ENOENT)');
+  }
+
   // ----- file -----
   eq((await get('/api/books/RG/file')).status, 401, 'PDF sans clé → 401');
   let f = await get(rgA.url);
   eq(f.status, 200, 'PDF avec clé → 200');
   eq(f.headers.get('content-type'), 'application/pdf', 'type PDF');
   ok(/^inline/.test(f.headers.get('content-disposition') || ''), 'Content-Disposition inline');
-  ok(/private/.test(f.headers.get('cache-control') || ''), 'Cache-Control private');
+  eq(f.headers.get('cache-control'), 'private, max-age=86400', 'Cache-Control private, 24 h');
+  eq(f.headers.get('etag'), `"${rgA.version}"`, 'ETag = version du livre');
+  const lastMod = f.headers.get('last-modified');
+  ok(!!lastMod, 'Last-Modified');
+  await f.arrayBuffer();
+  f = await get(rgA.url, { headers: { 'Cache-Control': 'max-age=0', 'If-None-Match': `"${rgA.version}"` } });
+  eq([f.status, (await f.arrayBuffer()).byteLength], [304, 0], 'If-None-Match → 304 sans corps');
+  eq(f.headers.get('cache-control'), 'private, max-age=86400', '304 garde Cache-Control');
+  f = await get(rgA.url, { headers: { 'Cache-Control': 'max-age=0', 'If-Modified-Since': lastMod } });
+  eq(f.status, 304, 'If-Modified-Since → 304');
+  await f.arrayBuffer();
+  f = await get(rgA.url, { headers: { 'Cache-Control': 'max-age=0', 'If-None-Match': '"autre"' } });
+  eq([f.status, (await f.arrayBuffer()).byteLength], [200, pdf.length], 'autre ETag → 200 complet');
+  f = await get(rgA.url.slice(0, -3) + 'abc', { headers: { 'Cache-Control': 'max-age=0', 'If-None-Match': `"${rgA.version}"` } });
+  eq(f.status, 403, 'If-None-Match ne contourne pas la signature');
+  await f.arrayBuffer();
+  f = await get(rgA.url, { headers: { Range: 'bytes=0-9', 'If-Range': `"${rgA.version}"` } });
+  eq([f.status, (await f.arrayBuffer()).byteLength], [206, 10], 'If-Range avec l’ETag → 206');
+  f = await get(rgA.url, { headers: { Range: 'bytes=0-9', 'If-Range': '"perime"' } });
+  eq([f.status, (await f.arrayBuffer()).byteLength], [200, pdf.length], 'If-Range périmé → 200 complet');
+  // Replacing the PDF changes its version (the reader drops its cached copy) and its ETag.
+  {
+    const pdfPath = path.join(runtime, 'books', 'RG.pdf');
+    const st = fs.statSync(pdfPath);
+    fs.utimesSync(pdfPath, st.atime, new Date(st.mtimeMs + 5000));
+    const rgNew = (await json(await get('/api/books', { token: pA, table: 'alpha' }))).body.books.find((b) => b.code === 'RG');
+    ok(rgNew.version && rgNew.version !== rgA.version, `nouvelle version après remplacement (${rgA.version} → ${rgNew.version})`);
+    f = await get(rgNew.url, { headers: { 'Cache-Control': 'max-age=0', 'If-None-Match': `"${rgA.version}"` } });
+    ok(f.status === 200 && f.headers.get('etag') === `"${rgNew.version}"`, 'ancien ETag → 200 avec le nouvel ETag');
+    await f.arrayBuffer();
+    fs.utimesSync(pdfPath, st.atime, st.mtime);
+  }
+  f = await get(rgA.url);
   eq(f.headers.get('accept-ranges'), 'bytes', 'Accept-Ranges');
   eq(Buffer.from(await f.arrayBuffer()).length, pdf.length, 'PDF complet');
   f = await get(rgA.url, { headers: { Range: 'bytes=0-99' } });

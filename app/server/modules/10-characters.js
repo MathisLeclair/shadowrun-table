@@ -14,6 +14,11 @@ import { removeBonus, weaponFromStats, wareCatalogItem, detachAugmentation, bake
 import { errorBody } from '../lib/i18n.js';
 import { actorModifiers, deriveFull } from '../lib/modifiers.js';
 import { fillActorRefs } from '../lib/bookrefs.js';
+import { appCatalog, norm as catNorm } from '../lib/chummer/data.js';
+import {
+  ON_BODY, CONTAINER_KINDS, LOCATED_LISTS, isCarried, containerOf, guessContainerKind, usesAmmo, isGrenade, fireOptions,
+  ammoFits, clipFits, reloadPlan, ammoKindOf, sameAmmoKind, parseAmmo,
+} from '../../client/modules/sheet/inventory.js';
 import {
   poolModifiers, limitFor, rollContext, cleanConditions, derivedWithModifiers, weaponAccuracy, checkedTest, woundsApply, importedItem,
   MATRIX_LIMITS, MATRIX_LIMIT_SKILLS,
@@ -35,6 +40,7 @@ function getActor(ctx, id) {
   if (!a) ctx.fail('Personnage introuvable');
   // Actors created by other modules (bestiary spawn…) may lack item ids / arrays: fix them lazily.
   normalizeActor(a, uid);
+  if (fillItemNames(a)) normalizeActor(a, uid); // a weapon `ammo` completed from the catalog: reload type re-parsed
   return a;
 }
 
@@ -273,7 +279,7 @@ function sanitizeItem(list, item, ctx) {
   // Rulebook reference (📖 chip): book code + printed page.
   if (out.source !== undefined && out.source !== null) out.source = str(out.source, 12).trim() || null;
   if (out.page !== undefined && out.page !== null) out.page = out.page === '' ? null : clampInt(out.page, 1, 9999);
-  for (const k of ['rating', 'qty', 'connection', 'loyalty', 'rc', 'reach', 'level', 'body', 'armor', 'pilot', 'sensor', 'seats', 'ammoLeft']) {
+  for (const k of ['rating', 'qty', 'connection', 'loyalty', 'rc', 'reach', 'level', 'body', 'armor', 'pilot', 'sensor', 'seats', 'ammoLeft', 'ammoLoaded']) {
     if (out[k] !== undefined && out[k] !== null && out[k] !== '') {
       const n = Number(out[k]);
       if (Number.isFinite(n)) out[k] = n;
@@ -283,8 +289,23 @@ function sanitizeItem(list, item, ctx) {
   if (out.pp !== undefined) out.pp = Math.max(0, Number(out.pp) || 0);
   if (out.karma !== undefined) out.karma = Number(out.karma) || 0;
   if (list === 'qualities' && out.positive === undefined) out.positive = (out.karma || 0) >= 0;
-  if (list === 'armor') out.equipped = !!out.equipped;
+  if (list === 'armor' && out.equipped !== undefined) out.equipped = !!out.equipped;
   if (list === 'gear' && out.active !== undefined) out.active = !!out.active; // gear with catalog effects: worn / switched on (shared/modifiers.js)
+  // Inventory (client/modules/sheet/inventory.js): location ('on' or a container id, checked by the handlers), ready weapons, ammo.
+  if (LOCATED_LISTS.includes(list) && out.location !== undefined) out.location = str(out.location, 60).trim() || ON_BODY;
+  for (const k of BILINGUAL) if (out[k] !== undefined && out[k] !== null) out[k] = str(out[k], 120);
+  if (list === 'weapons') {
+    if (out.equipped !== undefined) out.equipped = !!out.equipped;
+    for (const k of ['ammoLoaded', 'ammoLeft', 'qty']) if (out[k] !== undefined && out[k] !== null) out[k] = clampInt(out[k], 0, 999);
+    delete out.ammoMax; // derived from `ammo` by normalizeActor
+    delete out.ammoType;
+    if (out.ammoKind !== undefined) {
+      const k = out.ammoKind;
+      out.ammoKind = isObj(k) && String(k.name || '').trim()
+        ? { name: str(k.name, 120).trim(), ...(k.nameFr ? { nameFr: str(k.nameFr, 120) } : {}), ...(k.catalogId ? { catalogId: str(k.catalogId, 80) } : {}) }
+        : null;
+    }
+  }
   if (out.choice !== undefined && out.choice !== null) out.choice = str(out.choice, 120); // Chummer <extra> / GM pick of a « select… » effect
   if (out.itemRating !== undefined && out.itemRating !== null) out.itemRating = clampInt(out.itemRating, 0, 99); // armor: Chummer item rating (≠ armor value)
   if (list === 'sins' && typeof out.licenses === 'string') out.licenses = out.licenses.split(',').map((s) => s.trim()).filter(Boolean);
@@ -331,11 +352,538 @@ function names(list) {
   return { t: '{list} et {last}', params: { list: list.slice(0, -1).join(', '), last: list[list.length - 1] } };
 }
 
+// ---------------------------------------------------------------------------
+// Item names in both languages (catalog)
+// ---------------------------------------------------------------------------
+/** Catalog files of each list: catalogId lookup and one-time backfill by exact name. */
+const NAME_CATALOGS = { weapons: ['weapons'], armor: ['armor'], gear: ['gear', 'programs', 'armor'], augmentations: ['cyberware', 'bioware'], vehicles: ['vehicles'] };
+/** Gear entries that describe a weapon (grenades, throwing knives, grapple gun…): their names serve weapon items (no catalogId). */
+let weaponGear = null;
+function weaponGearByName() {
+  if (!weaponGear) {
+    weaponGear = new Map();
+    for (const e of appCatalog('gear').list) {
+      if (!e?.stats?.weapon) continue;
+      for (const n of [e.name, e.nameFr]) {
+        const k = catNorm(n);
+        if (k && !weaponGear.has(k)) weaponGear.set(k, e);
+      }
+    }
+  }
+  return weaponGear;
+}
+const BILINGUAL = ['nameFr', 'nameEn', 'categoryFr', 'categoryEn'];
+
+/**
+ * Catalog names / categories in both languages on the items (shown by the sheet in the UI language, the stored name in the tooltip):
+ * nameFr / nameEn only when the stored name IS a catalog name (a renamed item keeps its own name), categoryFr / categoryEn when the
+ * stored category is the catalog's (or empty). Items without catalogId get one by exact English / French name (never overwrites an
+ * existing catalogId). Missing fields only: idempotent, cheap (Map lookups).
+ * Returns true when a weapon's `ammo` was completed (« 14 » → « 14(c) »): the caller runs normalizeActor again so that
+ * ammoType / ammoMax follow (the inventory migration must give the same state at every boot).
+ */
+function fillItemNames(a) {
+  let ammoChanged = false;
+  for (const [list, files] of Object.entries(NAME_CATALOGS)) {
+    for (const it of Array.isArray(a[list]) ? a[list] : []) {
+      if (!isObj(it) || !it.name) continue;
+      let e = null;
+      if (it.catalogId) {
+        const id = String(it.catalogId).toLowerCase();
+        for (const f of files) if ((e = appCatalog(f).byId.get(id))) break;
+      } else {
+        const k = catNorm(it.name);
+        for (const f of files) if ((e = appCatalog(f).byName.get(k))) break;
+        if (e) it.catalogId = e.id;
+        else if (list === 'weapons') e = weaponGearByName().get(k) || null;
+      }
+      if (!e) continue;
+      const names = [catNorm(e.name), catNorm(e.nameFr)];
+      if (names.includes(catNorm(it.name))) {
+        if (!it.nameFr && (e.nameFr || e.name)) it.nameFr = e.nameFr || e.name; // no French name in Chummer: same name
+        if (!it.nameEn && e.name) it.nameEn = e.name;
+      }
+      // Weapon ammo without its reload type (Foundry « 14 »): the catalog's (« 14(c) ») when the capacity is the same.
+      if (list === 'weapons' && it.catalogId && e.stats?.ammo) {
+        const mine = parseAmmo(it.ammo);
+        const cat = parseAmmo(e.stats.ammo);
+        if (mine.max && !mine.type && cat.type && cat.max === mine.max) {
+          it.ammo = String(e.stats.ammo).slice(0, 40);
+          ammoChanged = true;
+        }
+      }
+      if (!it.category || [catNorm(e.category), catNorm(e.categoryFr)].includes(catNorm(it.category))) {
+        if (!it.categoryFr && e.categoryFr) it.categoryFr = e.categoryFr;
+        if (!it.categoryEn && e.category) it.categoryEn = e.category;
+      }
+    }
+  }
+  return ammoChanged;
+}
+
+// ---------------------------------------------------------------------------
+// Inventory: locations, firing, reloading (rules: client/modules/sheet/inventory.js)
+// ---------------------------------------------------------------------------
+/** 'on' or an existing container id of the actor. */
+function cleanLocation(ctx, a, loc) {
+  const v = String(loc ?? '').trim().slice(0, 60) || ON_BODY;
+  if (v !== ON_BODY && !containerOf(a, v)) ctx.fail('Contenant introuvable');
+  return v;
+}
+
+/**
+ * After a location / equipped / active change. An item stored away (bag, vehicle, safehouse) can be neither ready, worn nor active:
+ * readying it (`flagged`) takes it out of a bag (« Sur soi »); an item in a vehicle / safehouse stays there switched off (players are
+ * refused before, see requireReach — only the GM's `flagged` takes it from anywhere). Storing it switches it off.
+ * Returns 'taken' | 'stowed' | null.
+ */
+function settleItem(a, list, it, flagged, isGM = false) {
+  if (!LOCATED_LISTS.includes(list) || !it) return null;
+  const flag = list === 'gear' ? 'active' : 'equipped';
+  if (isCarried(a, it.location) || !it[flag]) return null;
+  if (flagged && (isGM || reachOf(a, it.location) < 2)) {
+    it.location = ON_BODY;
+    return 'taken';
+  }
+  it[flag] = false;
+  return 'stowed';
+}
+
+/** Name of an item in both languages, for log / error params ({ fr, en }: each viewer reads their language). */
+const biName = (it) => {
+  const fr = String(it?.nameFr || it?.name || '');
+  const en = String(it?.nameEn || it?.name || it?.nameFr || '');
+  return fr === en ? fr : { fr, en };
+};
+/** Same for a loaded ammunition descriptor ({ name: English, nameFr }). */
+const biAmmo = (k) => (k ? biName({ name: k.name, nameEn: k.name, nameFr: k.nameFr }) : '—');
+const placeName = (a, loc) => containerOf(a, loc)?.name || '';
+
+/** Players cannot use (fire, reload, ready) an item kept in a vehicle / safehouse / other place: within reach = carried or in a bag. */
+function requireReach(ctx, a, it) {
+  if (ctx.isGM || reachOf(a, it.location) < 2) return;
+  ctx.fail('{item} est hors de portée ({place})', { item: biName(it), place: placeName(a, it.location) });
+}
+
+/**
+ * Items taken out of a vehicle / safehouse / other place by a player (move, location patch): allowed (the runner went there),
+ * written to the log so the GM sees it (out of reach in the middle of a fight is the GM's call).
+ */
+function noteRetrieval(ctx, a, it, from) {
+  if (ctx.isGM || reachOf(a, from) < 2 || reachOf(a, it.location) >= 2) return;
+  ctx.log({
+    kind: 'system', userId: ctx.user.id, author: a.name,
+    i18n: { key: tk('{name} récupère {item} ({place})'), params: { name: a.name, item: biName(it), place: placeName(a, from) } },
+  });
+}
+
+/** Rounds of a weapon's magazine (0..ammoMax). */
+const loadedOf = (w) => Math.max(0, Math.min(Number(w.ammoMax) || 0, Math.round(Number(w.ammoLoaded) || 0)));
+
+/**
+ * What a weapon attack uses, checked BEFORE the roll: rounds of the fire option (SS/SA 1, SA burst 3, BF 3, long burst 6, FA 6 / 10,
+ * suppressive 20) or one grenade. The weapon must be within reach (carried or in a bag; GM: anywhere).
+ * Fewer rounds than the option (SR5 p. 180): the shot fires what is left and the defense modifier is reduced by 1 per missing round
+ * (`short`, `defense`); suppressive fire: the area is 1 m narrower per 2 missing rounds (`narrower`). Empty magazine → « Plus assez
+ * de munitions — recharge » (GM: ammoOverride fires anyway, 0 round). null for melee weapons and weapons without tracked ammunition.
+ */
+function planShot(ctx, a, w, { fireMode, ammoOverride, rounds: fewer } = {}) {
+  requireReach(ctx, a, w);
+  const override = ctx.isGM && !!ammoOverride;
+  if (usesAmmo(w)) {
+    const opts = fireOptions(w);
+    const asked = fireMode ? String(fireMode).slice(0, 8) : '';
+    if (asked && !opts.some((o) => o.id === asked)) ctx.fail('Mode de tir impossible avec cette arme : {mode}', { mode: asked });
+    const opt = opts.find((o) => o.id === asked) || opts[0];
+    const loaded = loadedOf(w);
+    if (loaded < 1 && !override) ctx.fail('Plus assez de munitions — recharge');
+    const wanted = fewer > 0 ? Math.min(opt.rounds, Math.round(fewer)) : opt.rounds; // R&G Double Tap / Aimed Burst / Brain Blaster
+    const rounds = Math.min(loaded, wanted);
+    const shot = { kind: 'ammo', mode: opt.id, rounds, action: opt.action };
+    const short = wanted - rounds;
+    if (short > 0 && rounds > 0) {
+      shot.short = short;
+      if (opt.defense === null) shot.narrower = Math.floor(short / 2);
+      else shot.defense = Math.min(0, opt.defense + short);
+    }
+    return shot;
+  }
+  if (isGrenade(w)) {
+    const qty = w.qty === undefined || w.qty === null ? 1 : Math.max(0, Math.round(Number(w.qty) || 0));
+    if (qty < 1 && !override) ctx.fail('Plus aucun exemplaire : {weapon}', { weapon: biName(w) });
+    return { kind: 'item', rounds: qty ? 1 : 0 };
+  }
+  return null;
+}
+
+/** Consume what planShot() allowed. A thrown grenade leaves the sheet with its last unit. */
+function applyShot(a, w, shot) {
+  if (shot.kind === 'ammo') {
+    w.ammoLoaded = Math.max(0, loadedOf(w) - shot.rounds);
+    const out = { mode: shot.mode, rounds: shot.rounds, left: w.ammoLoaded, max: Number(w.ammoMax) || 0 };
+    if (shot.short) {
+      out.short = shot.short;
+      if (shot.defense !== undefined) out.defense = shot.defense;
+      if (shot.narrower !== undefined) out.narrower = shot.narrower;
+    }
+    return out;
+  }
+  const qty = (w.qty === undefined || w.qty === null ? 1 : Math.max(0, Number(w.qty) || 0)) - shot.rounds;
+  if (qty <= 0) {
+    a.weapons = a.weapons.filter((x) => x !== w);
+    return { item: true, left: 0, removed: true };
+  }
+  w.qty = qty;
+  return { item: true, left: qty };
+}
+
+/** 0 = carried, 1 = in a bag, 2 = out of reach (vehicle, safehouse, other place). */
+function reachOf(a, loc) {
+  if (isCarried(a, loc)) return 0;
+  return containerOf(a, loc)?.kind === 'bag' ? 1 : 2;
+}
+const qtyOf = (g) => Math.max(0, Math.round(Number(g?.qty ?? 1) || 0));
+
+/**
+ * One reload action (SR5 p. 163, simplified — inventory.js reloadPlan): rounds come from compatible ammunition in the inventory
+ * (qty = rounds; carried first, then bags; never from a vehicle / safehouse), the ammo box's qty goes down. A spare clip of the
+ * weapon = clip change (Simple Action, clips are kept); loose rounds = Complex Action. Other ammunition than the loaded one: the
+ * rounds still in the weapon go back to a matching box (or are dropped, noted). GM `free`: fill up without using the inventory.
+ */
+function reloadWeapon(ctx, a, w, { sourceItemId, free } = {}) {
+  if (!usesAmmo(w)) ctx.fail('Cette arme ne se recharge pas');
+  requireReach(ctx, a, w);
+  const max = Number(w.ammoMax) || 0;
+  const loaded = loadedOf(w);
+  const gear = (Array.isArray(a.gear) ? a.gear : []).filter(isObj);
+  const usable = (g) => reachOf(a, g.location) < 2 && qtyOf(g) > 0;
+  let source = null;
+  if (sourceItemId) {
+    source = gear.find((g) => g.id === String(sourceItemId));
+    if (!source) ctx.fail('Élément introuvable');
+    if (!ammoFits(source, w)) ctx.fail('Munitions incompatibles avec {weapon}', { weapon: biName(w) });
+    if (!qtyOf(source)) ctx.fail('{item} est vide', { item: biName(source) });
+    if (reachOf(a, source.location) >= 2 && !ctx.isGM) ctx.fail('{item} est hors de portée ({place})', { item: biName(source), place: placeName(a, source.location) });
+  } else if (!(ctx.isGM && free)) {
+    const cands = gear.filter((g) => usable(g) && ammoFits(g, w));
+    const same = (g) => (w.ammoKind && sameAmmoKind(ammoKindOf(g), w.ammoKind) ? 0 : 1);
+    cands.sort((x, y) => same(x) - same(y) || reachOf(a, x.location) - reachOf(a, y.location) || qtyOf(y) - qtyOf(x));
+    source = cands[0] || null;
+    if (!source) ctx.fail('Aucune munition compatible dans l’inventaire de {name}', { name: a.name });
+    // Rounds still loaded: an automatic pick never swaps them for another ammunition (that is chosen explicitly: sourceItemId).
+    if (loaded > 0 && w.ammoKind && same(source)) ctx.fail('Plus de {ammo} à portée : choisis d’autres munitions', { ammo: biAmmo(w.ammoKind) });
+  }
+  const newKind = source ? ammoKindOf(source) : w.ammoKind || null;
+  let base = loaded;
+  let returned = 0;
+  let dropped = 0;
+  if (source && loaded > 0 && w.ammoKind && !sameAmmoKind(w.ammoKind, newKind)) {
+    // Other ammunition: the rounds (or the clip) taken out go back to a box of their kind, a new one « Sur soi » when there is none.
+    const old = w.ammoKind;
+    const back = gear
+      .filter((g) => g !== source && ammoFits(g, w) && sameAmmoKind(ammoKindOf(g), old))
+      .sort((x, y) => reachOf(a, x.location) - reachOf(a, y.location))[0]; // a box within reach first
+    if (back) back.qty = qtyOf(back) + loaded;
+    else if (old.name) {
+      const box = { id: ctx.uid('itm'), name: old.nameFr || old.name, ...(old.nameFr ? { nameFr: old.nameFr } : {}), nameEn: old.name, category: 'Munitions', qty: loaded, location: ON_BODY };
+      if (old.catalogId) box.catalogId = old.catalogId;
+      if (ammoFits(box, w)) {
+        a.gear.push(box);
+        gear.push(box);
+      } else dropped = loaded;
+    } else dropped = loaded;
+    if (!dropped) returned = loaded;
+    base = 0;
+  }
+  if (base >= max) ctx.fail('{weapon} est déjà chargée', { weapon: biName(w) });
+  const clip = gear.find((g) => reachOf(a, g.location) < 2 && qtyOf(g) > 0 && clipFits(g, w, 'clip'));
+  const loader = w.ammoType === 'cy' ? gear.find((g) => reachOf(a, g.location) < 2 && qtyOf(g) > 0 && clipFits(g, w, 'loader')) : null;
+  const plan = reloadPlan(w, { agi: attr(a, 'AGI'), clip: !!clip, loader: !!loader });
+  const avail = source ? qtyOf(source) : Infinity;
+  const n = Math.min(max - base, plan.perAction, avail);
+  if (source) source.qty = avail - n;
+  w.ammoLoaded = base + n;
+  if (newKind) w.ammoKind = newKind;
+  const params = { name: a.name, weapon: biName(w), n, loaded: w.ammoLoaded, max, ammo: biAmmo(newKind), action: { t: plan.action === 'simple' ? tk('action simple') : tk('action complexe') } };
+  const key = plan.swap ? tk('{name} change le chargeur de {weapon} : {loaded}/{max} ({ammo}) — {action}') : tk('{name} recharge {weapon} : +{n} → {loaded}/{max} ({ammo}) — {action}');
+  ctx.log({ kind: 'combat', userId: ctx.user.id, author: a.name, i18n: { key, params }, gmOnly: a.type === 'npc' ? true : undefined });
+  return { loaded: n, ammoLoaded: w.ammoLoaded, max, action: plan.action, swap: plan.swap, sourceId: source?.id || null, clipId: plan.swap ? (clip || loader)?.id || null : null, returned, dropped };
+}
+
 // Chummer5 import/export lives in server/modules/85-chummer.js (+ server/lib/chummer/).
 
 // ---------------------------------------------------------------------------
 // Module
 // ---------------------------------------------------------------------------
+/** Fill n boxes of damage (stun overflow rolls into physical, physical into overflow), log it. Callers check ownership. */
+export function applyDamage(ctx, a, n, type) {
+  const d = deriveFull(a);
+  const c = a.condition;
+  const wasStatus = statusOf(a);
+  let toPhysical = 0;
+  if (type === 'S') {
+    c.stun += n;
+    if (c.stun > d.stunMonitor) {
+      toPhysical = c.stun - d.stunMonitor;
+      c.stun = d.stunMonitor;
+    }
+  } else toPhysical = n;
+  if (toPhysical) {
+    c.physical += toPhysical;
+    if (c.physical > d.physicalMonitor) {
+      c.overflow += c.physical - d.physicalMonitor;
+      c.physical = d.physicalMonitor;
+    }
+  }
+  c.overflow = Math.min(c.overflow, d.overflowMax + 1);
+  const status = statusOf(a);
+  // Translatable log line (status values are stored French words, translated as nested keys).
+  let i18n;
+  if (a.type === 'npc') {
+    const damage = { t: type === 'S' ? tk('{n} case(s) de dommages étourdissants') : tk('{n} case(s) de dommages physiques'), params: { n } };
+    i18n = status !== wasStatus
+      ? { key: tk('{name} encaisse {damage} — {status}.'), params: { name: a.name, damage, status: { t: status } } }
+      : { key: tk('{name} encaisse {damage}.'), params: { name: a.name, damage } };
+  } else {
+    const damage = type === 'S'
+      ? { t: n > 1 ? tk('{n} dommages étourdissants') : tk('{n} dommage étourdissant'), params: { n } }
+      : { t: n > 1 ? tk('{n} dommages physiques') : tk('{n} dommage physique'), params: { n } };
+    const trackParams = { p: c.physical, pm: d.physicalMonitor, s: c.stun, sm: d.stunMonitor, o: c.overflow, om: d.overflowMax };
+    const track = { t: c.overflow ? tk('P {p}/{pm} · É {s}/{sm} · surplus {o}/{om}') : tk('P {p}/{pm} · É {s}/{sm}'), params: trackParams };
+    i18n = status !== wasStatus && STATUS_UPPER[status]
+      ? { key: tk('{name} subit {damage} ({track}) — {status}'), params: { name: a.name, damage, track, status: { t: STATUS_UPPER[status] } } }
+      : { key: tk('{name} subit {damage} ({track})'), params: { name: a.name, damage, track } };
+  }
+  ctx.log({ kind: 'combat', userId: ctx.user.id, author: a.name, i18n, gmOnly: a.type === 'npc' && !!a.hidden ? true : undefined });
+  if (status === 'mort' && wasStatus !== 'mort') sfx(ctx, 'death');
+  return { condition: { ...c }, status };
+}
+
+/**
+ * A dice roll with every modifier computed here (dice/roll, attacks module). `internal` never comes from a client:
+ * { bonus: [{ label, value }] trusted named lines (attack actions, range, defense options), rounds (fire fewer rounds: Double Tap…),
+ *   ap (soak: the attack's AP modifies the armor), logExtra (fields merged into the log entry's roll) }.
+ */
+export function performRoll(ctx, p, internal = {}) {
+  const payload = p || {};
+  let actor = null;
+  if (payload.actorId) {
+    actor = getActor(ctx, payload.actorId);
+    if (!ctx.owns(payload.actorId)) ctx.fail('Tu ne peux lancer que pour ton personnage');
+  }
+  if (payload.secret && !ctx.isGM) ctx.fail('Seul le MJ peut faire un jet secret');
+  const parts = [];
+  let pool = 0;
+  let label = str(payload.label, 120).trim();
+  let defaultLimit = null;
+  // Weapon attack: skill and limit (Accuracy + accessories) come from the weapon, its accessories add their dice.
+  let weapon = null;
+  if (payload.weaponId) {
+    if (!actor) ctx.fail('Choisis un personnage pour ce jet');
+    weapon = (actor.weapons || []).find((w) => w && w.id === String(payload.weaponId));
+    if (!weapon) ctx.fail('Arme introuvable');
+  }
+  // A ranged attack fires rounds of the chosen fire mode (or throws a grenade): checked now, used after the checks below.
+  const shot = weapon ? planShot(ctx, actor, weapon, { fireMode: payload.fireMode, ammoOverride: payload.ammoOverride, rounds: internal.rounds }) : null;
+  // A weapon attack uses the weapon's skill (only the GM may roll it with another one).
+  const asked = payload.skillId ? String(payload.skillId).slice(0, 80) : null;
+  const skillId = weapon ? (ctx.isGM && asked) || weapon.skill || 'exotic_weapon' : asked;
+  const A1 = payload.attr && ATTRS.includes(payload.attr) ? payload.attr : null;
+  const A2 = payload.attr2 && ATTRS.includes(payload.attr2) ? payload.attr2 : null;
+  // An attribute test's own modifiers (soak: + armor, composure, judge intentions…) only for an attribute-only roll on that
+  // test's attributes (shared/modifiers.js TEST_ATTRS) — any other claim is ignored.
+  const test = checkedTest(payload.test, { skillId, weaponId: weapon?.id, attr: A1, attr2: A2 });
+  if ((skillId || A1) && !actor) ctx.fail('Choisis un personnage pour ce jet');
+  if (skillId) {
+    const sk = actor.skills.find((s) => s.id === skillId || s.name === skillId);
+    const kno = !sk && actor.knowledge.find((k) => k.id === skillId);
+    if (kno) {
+      const at = A1 || (kno.type === 'academic' || kno.type === 'professional' ? 'LOG' : 'INT');
+      const r = Number(kno.rating) || 0;
+      const spec = payload.useSpec && String(kno.spec || '').trim() ? 2 : 0;
+      pool = r + attr(actor, at) + spec;
+      parts.push(`${kno.name} ${r}`, `${ATTR_SHORT[at]} ${attr(actor, at)}`);
+      if (spec) parts.push('spé. +2');
+      if (!label) label = kno.name;
+      defaultLimit = 'mental';
+    } else {
+      const def = SKILL_BY_ID[skillId];
+      const res = skillPool(actor, skillId, { useSpec: !!payload.useSpec, attrOverride: A1 || undefined });
+      if (res.impossible) ctx.fail('{skill} ne peut pas être utilisée sans formation', { skill: def?.fr ? { t: def.fr } : sk?.name || skillId });
+      const at = A1 || sk?.attr || def?.attr || 'AGI';
+      pool = res.pool;
+      if (res.defaulting) parts.push(`${ATTR_SHORT[at]} ${attr(actor, at)}`, 'par défaut −1');
+      else {
+        parts.push(`${sk?.name || def?.fr || skillId} ${sk.rating}`, `${ATTR_SHORT[at]} ${attr(actor, at)}`);
+        if (payload.useSpec && sk.spec) parts.push(`spé. +2`);
+      }
+      if (!label) label = sk?.name || def?.fr || skillId;
+      defaultLimit = skillDefaultLimit(def, at);
+    }
+  } else if (A1) {
+    pool = attr(actor, A1);
+    parts.push(`${ATTR_SHORT[A1]} ${pool}`);
+    if (A2) {
+      pool += attr(actor, A2);
+      parts.push(`${ATTR_SHORT[A2]} ${attr(actor, A2)}`);
+    }
+    if (!label) label = A2 ? `${ATTR_LABELS[A1]} + ${ATTR_LABELS[A2]}` : ATTR_LABELS[A1];
+  } else {
+    pool = clampInt(payload.pool, 0, 100);
+    parts.push(`${pool} dés`);
+  }
+  // Modifiers of the actor's gear, qualities, powers, implants (shared/modifiers.js) — computed here, never taken from the
+  // client: the client only says which situational switches are on (`conditions`, checked against the actor's modifiers)
+  // and which bonuses to leave out (`ignore`: players may only drop bonuses, the GM any modifier).
+  const mods = actor ? actorModifiers(actor, { weaponId: weapon?.id }) : [];
+  let conditions = cleanConditions(mods, payload.conditions);
+  const rctx = actor ? rollContext(actor, { skillId, attr: A1, attr2: A2, test, weaponId: weapon?.id }) : {};
+  // Matrix situation (« en RV chaude », « dans un hôte ») comes from the actor's persona, not from a switch — except for the
+  // GM rolling an actor that has no persona.
+  const persona = actor ? ctx.state.matrix?.personas?.[actor.id] : null;
+  if (actor && (persona || !ctx.isGM)) {
+    const online = !!persona?.online;
+    rctx.mode = online ? persona.mode || 'ar' : 'offline';
+    conditions = conditions.filter((k) => k !== 'in-host' && k !== 'hot-sim');
+    if (online && persona.hostId) conditions.push(...cleanConditions(mods, ['in-host']));
+  }
+  const modOpts = { conditions, ignore: Array.isArray(payload.ignore) ? payload.ignore.slice(0, 60).map((x) => String(x).slice(0, 200)) : [], isGM: ctx.isGM };
+  const modLines = [];
+  const pushLine = (l, kind) => modLines.push({
+    id: l.mod.id, kind, type: l.mod.type, name: l.mod.source.name, ...(l.mod.source.nameFr ? { nameFr: l.mod.source.nameFr } : {}),
+    value: l.value, state: l.state, ...(l.mod.condition ? { condition: l.mod.condition } : {}), ...(l.mod.wireless ? { wireless: true } : {}),
+    ...(l.mod.source.book ? { book: l.mod.source.book, page: l.mod.source.page } : {}),
+  });
+  if (actor && test === 'soak') {
+    // Soak: Body + armor (worn armor, its mods, implants / qualities armor) — never the client's figure.
+    const full = derivedWithModifiers(actor, mods);
+    const ap = Math.round(Number(internal.ap) || 0);
+    const armor = Math.max(0, full.armor + ap);
+    pool += armor;
+    parts.push(ap ? `armure ${full.armor} PA ${ap > 0 ? '+' : '−'}${Math.abs(ap)}` : `armure ${full.armor}`);
+    internal.armorUsed = armor;
+  }
+  if (actor) {
+    const pm = poolModifiers(mods, rctx, modOpts);
+    for (const l of pm.lines) {
+      pushLine(l, 'pool');
+      if (l.state !== 'applied') continue;
+      pool += l.value;
+      parts.push(`${l.mod.source.name} ${l.value >= 0 ? '+' : '−'}${Math.abs(l.value)}`);
+    }
+  }
+  // Extra named lines: the GM's are kept as typed; a player's are only the sheet's own (total defense « VOL », Matrix defense /
+  // biofeedback « Firewall »), recomputed from the actor — anything else a player adds is counted under « mod. ».
+  for (const b of Array.isArray(internal.bonus) ? internal.bonus : []) {
+    const v = clampInt(b?.value, -50, 50);
+    if (!v) continue;
+    pool += v;
+    parts.push(`${str(b.label, 40) || 'bonus'} ${v > 0 ? '+' : '−'}${Math.abs(v)}`);
+  }
+  let extraMod = 0;
+  const named = new Set();
+  for (const b of Array.isArray(payload.bonus) ? payload.bonus.slice(0, 6) : []) {
+    const label = str(b?.label, 30).trim();
+    let v = clampInt(b?.value, -50, 50);
+    if (!ctx.isGM) {
+      const known = actor && !named.has(label) ? playerBonus(actor, label, { skillId, test, A1, A2 }) : null;
+      if (known === null) {
+        extraMod += v;
+        continue;
+      }
+      named.add(label);
+      v = known;
+    }
+    if (!v) continue;
+    pool += v;
+    parts.push(`${label || 'bonus'} ${v > 0 ? '+' : '−'}${Math.abs(v)}`);
+  }
+  const mod = clampInt(clampInt(payload.modifier, -50, 50) + extraMod, -50, 50);
+  if (mod) {
+    pool += mod;
+    parts.push(`mod. ${mod > 0 ? '+' : '−'}${Math.abs(mod)}`);
+  }
+  // Wound modifier: SR5 applies it to every test of the actor's skills / attributes but damage resistance (soak, drain,
+  // biofeedback, toxins). Players cannot leave it out; the GM may (applyWounds: false) or force it (true).
+  const statRoll = !!(skillId || A1);
+  const gmWounds = ctx.isGM && payload.applyWounds !== undefined && payload.applyWounds !== null;
+  if ((gmWounds ? !!payload.applyWounds : statRoll && woundsApply(test)) && actor) {
+    const w = derivedWithModifiers(actor, mods).woundModifier;
+    if (w) {
+      pool += w;
+      parts.push(`blessures −${Math.abs(w)}`);
+    }
+  }
+  const explode = !!payload.explode;
+  if (explode) {
+    if (!actor) ctx.fail('Choisis un personnage pour utiliser la Chance');
+    if (actor.edge.current <= 0) ctx.fail('{name} n’a plus de point de Chance', { name: actor.name });
+    const e = attr(actor, 'EDG');
+    pool += e;
+    parts.push(`Chance +${e}`);
+  }
+  pool = Math.min(100, pool);
+  if (pool <= 0) ctx.fail('Réserve de dés nulle : échec automatique');
+  let limit = null;
+  let limitLabel = null;
+  let limitBreakdown = null;
+  if (!explode) {
+    // Computed limit: the weapon's Accuracy (+ accessories) or the skill's default limit, with the limit modifiers.
+    let auto = null;
+    if (weapon) {
+      const acc = weaponAccuracy(actor, weapon, mods, rctx, modOpts);
+      if (acc.total !== null) {
+        auto = Math.max(1, acc.total); // a limit lowered to 0 stays a limit (never « none »)
+        limitLabel = 'précision';
+        for (const l of acc.lines) pushLine(l, 'limit');
+        if (acc.parts.length > 1) limitBreakdown = acc.parts.map(([n, v], i) => (i ? `${n} ${v >= 0 ? '+' : '−'}${Math.abs(v)}` : `${n} ${v}`)).join(' + ');
+      }
+    } else if (actor && MATRIX_LIMITS.includes(payload.matrixLimit) && actor.matrix && MATRIX_LIMIT_SKILLS.includes(rctx.skillId)) {
+      // Matrix test from the sheet (Matrix skills only): the device attribute is the limit (no physical / mental / social modifier).
+      const v = Number(actor.matrix[payload.matrixLimit]) || 0;
+      if (v > 0) {
+        auto = v;
+        limitLabel = MATRIX_LIMIT_LABEL[payload.matrixLimit];
+      }
+    } else if (defaultLimit && actor) {
+      const lim = limitFor(actor, defaultLimit, mods, rctx, modOpts);
+      if (lim.total !== null) {
+        auto = Math.max(1, lim.total); // a limit lowered to 0 stays a limit (never « none »)
+        limitLabel = LIMIT_LABEL[defaultLimit];
+        for (const l of lim.lines) pushLine(l, 'limit');
+        const applied = lim.lines.filter((l) => l.state === 'applied');
+        if (applied.length) limitBreakdown = [`${LIMIT_LABEL[defaultLimit]} ${lim.base}`, ...applied.map((l) => `${l.mod.source.name} ${l.value >= 0 ? '+' : '−'}${Math.abs(l.value)}`)].join(' + ');
+      }
+    }
+    // limit: number → that limit; null/0/'' → explicitly no limit; absent → computed. Players can neither raise nor remove a
+    // computed limit (null / 0 / a higher number → the computed one).
+    if (payload.limit !== undefined) {
+      limit = clampInt(payload.limit, 0, 50) || null;
+      if (!ctx.isGM && auto !== null && (limit === null || limit > auto)) limit = auto;
+      if (limit !== auto) {
+        limitLabel = null;
+        limitBreakdown = null;
+      }
+    } else limit = auto;
+  }
+  if (explode) actor.edge.current -= 1;
+  const fire = shot ? applyShot(actor, weapon, shot) : null;
+  const r = rollDice(pool, { limit, explode });
+  if (!label) label = `Jet de ${pool} dés`;
+  // Weapon attack (« Attaque — <arme> »): the weapon's name in both languages, each viewer reads their own (common.js rollLabel).
+  const labelI18n = weapon && /^Attaque — /.test(label) ? { key: tk('Attaque — {weapon}'), params: { weapon: biName(weapon) } } : null;
+  const roll = {
+    ...r, label, ...(labelI18n ? { labelI18n } : {}), explode, edge: explode, actorId: actor?.id || null, breakdown: parts.join(' + '), ...(fire ? { fire } : {}),
+    ...(limitLabel ? { limitLabel } : {}), ...(limitBreakdown ? { limitBreakdown } : {}), ...(payload.secret ? { secret: true } : {}),
+    ...(modLines.length ? { mods: modLines } : {}), ...(conditions.length ? { conditions } : {}), ...(internal.logExtra || {}),
+  };
+  const author = actor ? actor.name : ctx.displayName();
+  const hidden = !!payload.secret || (actor && actor.type === 'npc' && ctx.isGM && actor.hidden);
+  const entry = ctx.log({ kind: 'roll', userId: ctx.user.id, author, text: label, roll, ...(hidden ? { gmOnly: true } : {}) });
+  sfx(ctx, 'dice', hidden ? 'gm' : 'all');
+  return { ...roll, logId: entry.id, entry };
+}
+
 export default {
   name: 'characters',
 
@@ -362,8 +910,11 @@ export default {
         continue;
       }
       a.id = id;
-      normalizeActor(a, uid);
+      normalizeActor(a, uid); // also the inventory migration: containers, locations, ammo, ready weapons (idempotent)
       fillActorRefs(a); // rulebook references of items created before item.source existed (idempotent)
+      // Catalog names in both languages, catalogId backfill by exact name (idempotent). A completed weapon `ammo` (Foundry « 14 » →
+      // « 14(c) ») is parsed again by the migration, so the second boot finds the same state.
+      if (fillItemNames(a)) normalizeActor(a, uid);
     }
   },
 
@@ -487,8 +1038,12 @@ export default {
           it.rating ??= 1;
           it.techniques ||= [];
         }
+        if (LOCATED_LISTS.includes(list) && it.location !== undefined) it.location = cleanLocation(ctx, a, it.location);
         a[list].push(it);
+        settleItem(a, list, it, false);
+        if (LOCATED_LISTS.includes(list)) normalizeActor(a, uid); // ammo capacity / loaded rounds / location of the new item
         fillActorRefs(a); // 📖 source / page from the catalog when the item has none
+        if (fillItemNames(a)) normalizeActor(a, uid);
         if (list === 'lifestyles') settleLifestyles(a, it.primary ? it.id : null);
         if (adjustEssence && list === 'augmentations' && it.essence) {
           a.attributes.ESS = Math.max(0, Math.round((a.attributes.ESS - it.essence) * 1000) / 1000);
@@ -521,16 +1076,37 @@ export default {
         }
         if (list === 'augmentations' || list === 'powers' || list === 'qualities') delete clean.bonus;
         if (list === 'weapons') delete clean.augId;
-        if (list === 'weapons' && clean.ammoLeft !== undefined) clean.ammoLeft = clampInt(clean.ammoLeft, 0, 999);
+        if (list === 'weapons' && clean.ammoLeft !== undefined) {
+          // Legacy field (before ammoLoaded): same meaning.
+          if (clean.ammoLoaded === undefined) clean.ammoLoaded = clean.ammoLeft;
+          delete clean.ammoLeft;
+        }
+        if (list === 'weapons' && clean.ammoLoaded !== undefined && !usesAmmo(a[list][idx]) && !String(patch.ammo ?? '').trim()) delete clean.ammoLoaded;
+        if (list === 'weapons' && clean.ammoLoaded !== undefined && !ctx.isGM && clean.ammoLoaded > loadedOf(a[list][idx])) {
+          ctx.fail('Recharge avec le bouton « Recharger » : les balles viennent de l’inventaire');
+        }
+        if (LOCATED_LISTS.includes(list) && clean.location !== undefined) clean.location = cleanLocation(ctx, a, clean.location);
+        if (LOCATED_LISTS.includes(list) && (clean.equipped === true || clean.active === true)) {
+          // Readying / wearing / switching on: within reach only (a bag is emptied onto the body by settleItem).
+          requireReach(ctx, a, { ...a[list][idx], location: clean.location ?? a[list][idx].location });
+        }
+        // A new name / category / catalog entry: the catalog names in both languages are looked up again (fillItemNames).
+        if (clean.name !== undefined && clean.nameFr === undefined) clean.nameFr = clean.nameEn = null;
+        if (clean.category !== undefined && clean.categoryFr === undefined) clean.categoryFr = clean.categoryEn = null;
+        if (clean.catalogId !== undefined && clean.catalogId !== a[list][idx].catalogId) for (const k of BILINGUAL) if (clean[k] === undefined) clean[k] = null;
         const before = a[list][idx];
         a[list][idx] = { ...a[list][idx], ...clean };
         for (const [k, v] of Object.entries(a[list][idx])) if (v === null) delete a[list][idx][k];
+        settleItem(a, list, a[list][idx], clean.equipped === true || clean.active === true, ctx.isGM);
+        if (LOCATED_LISTS.includes(list) && clean.location !== undefined) noteRetrieval(ctx, a, a[list][idx], before.location);
         if (BONUS_LISTS.includes(list) && BONUS_FIELDS.some((k) => clean[k] !== undefined && clean[k] !== before[k]) && !importedItem(before)) {
           // New rating / level / choice: the stored attribute / initiative bonus follows (items whose bonus the app recorded, or that had none).
           const st = list === 'augmentations' ? wareCatalogItem(a[list][idx].catalogId)?.stats || {} : {};
           if (before.bonus || !itemBonusSpec(list, before, st.bonus)) bakeItemBonus(a, list, a[list][idx], st.bonus);
         }
         if (list === 'lifestyles') settleLifestyles(a, clean.primary ? a[list][idx].id : null);
+        if (LOCATED_LISTS.includes(list)) normalizeActor(a, uid); // new `ammo` → capacity, loaded rounds clamped
+        if (fillItemNames(a)) normalizeActor(a, uid);
         return true;
       },
     },
@@ -599,6 +1175,125 @@ export default {
       },
     },
 
+    // ----- Inventory (owner or GM): containers, item locations, firing without a roll, reloading -----
+    // { actorId, name, kind?: 'body'|'bag'|'vehicle'|'safehouse'|'other', notes? } → container id
+    'inventory/addContainer': {
+      role: 'any',
+      handler(ctx, { actorId, name, kind, notes }) {
+        const a = getActor(ctx, actorId);
+        requireOwn(ctx, actorId);
+        const n = str(name, 60).trim();
+        if (!n) ctx.fail('Donne un nom au contenant');
+        if (a.containers.length >= 30) ctx.fail('Trop de contenants');
+        const c = { id: ctx.uid('ct'), name: n, kind: CONTAINER_KINDS[kind] ? kind : guessContainerKind(n) };
+        if (notes) c.notes = str(notes, 500);
+        a.containers.push(c);
+        return c.id;
+      },
+    },
+
+    // { actorId, containerId, patch: { name?, kind?, notes? } }
+    'inventory/updateContainer': {
+      role: 'any',
+      handler(ctx, { actorId, containerId, patch }) {
+        const a = getActor(ctx, actorId);
+        requireOwn(ctx, actorId);
+        const c = containerOf(a, containerId);
+        if (!c) ctx.fail('Contenant introuvable');
+        if (!isObj(patch)) ctx.fail('Modification invalide');
+        if (patch.name !== undefined) {
+          const n = str(patch.name, 60).trim();
+          if (!n) ctx.fail('Donne un nom au contenant');
+          c.name = n;
+        }
+        if (patch.kind !== undefined) {
+          if (!CONTAINER_KINDS[patch.kind]) ctx.fail('Type de contenant inconnu');
+          // A vehicle / safehouse / other place does not become a bag or « worn » (its contents would come within reach): GM only.
+          if (patch.kind !== c.kind && !ctx.isGM && reachOf(a, c.id) >= 2) ctx.fail('Seul le MJ peut changer le type de {place}', { place: c.name });
+          c.kind = patch.kind;
+        }
+        if (patch.notes !== undefined) {
+          if (patch.notes) c.notes = str(patch.notes, 500);
+          else delete c.notes;
+        }
+        normalizeActor(a, uid); // a bag that became a vehicle / safehouse: what it holds is switched off
+        return true;
+      },
+    },
+
+    // { actorId, containerId } — what it holds goes back « Sur soi ».
+    'inventory/removeContainer': {
+      role: 'any',
+      handler(ctx, { actorId, containerId }) {
+        const a = getActor(ctx, actorId);
+        requireOwn(ctx, actorId);
+        const c = containerOf(a, containerId);
+        if (!c) ctx.fail('Contenant introuvable');
+        // A vehicle / safehouse that still holds items: removing it would bring them all « Sur soi » at once (GM only).
+        if (!ctx.isGM && reachOf(a, c.id) >= 2 && LOCATED_LISTS.some((l) => (a[l] || []).some((it) => it && it.location === c.id))) {
+          ctx.fail('{place} contient encore des objets : récupère-les d’abord', { place: c.name });
+        }
+        a.containers = a.containers.filter((x) => x.id !== containerId);
+        let moved = 0;
+        for (const list of LOCATED_LISTS) {
+          for (const it of a[list] || []) {
+            if (it.location === containerId) {
+              it.location = ON_BODY;
+              moved++;
+            }
+          }
+        }
+        return moved;
+      },
+    },
+
+    // { actorId, list: 'weapons'|'armor'|'gear', itemId, location: 'on'|containerId } → { location, stowed }
+    // Stored away (bag, vehicle, safehouse): the item stops being ready / worn / active.
+    'inventory/move': {
+      role: 'any',
+      handler(ctx, { actorId, list, itemId, location }) {
+        const a = getActor(ctx, actorId);
+        requireOwn(ctx, actorId);
+        if (!LOCATED_LISTS.includes(list)) ctx.fail('Liste inconnue : {list}', { list: String(list) });
+        const it = a[list][findItem(ctx, a, list, itemId)];
+        const from = it.location;
+        it.location = cleanLocation(ctx, a, location);
+        noteRetrieval(ctx, a, it, from);
+        return { location: it.location, stowed: settleItem(a, list, it, false) === 'stowed' };
+      },
+    },
+
+    // { actorId, weaponId, mode?: 'SS'|'SA'|'SB'|'BF'|'LB'|'FA'|'FAC'|'SUP', override? (GM) } → { rounds, left, max } — rounds used without a roll.
+    'weapon/fire': {
+      role: 'any',
+      handler(ctx, { actorId, weaponId, mode, override }) {
+        const a = getActor(ctx, actorId);
+        requireOwn(ctx, actorId);
+        const w = (a.weapons || []).find((x) => x && x.id === String(weaponId));
+        if (!w) ctx.fail('Arme introuvable');
+        const shot = planShot(ctx, a, w, { fireMode: mode, ammoOverride: override });
+        if (!shot) ctx.fail('Cette arme n’utilise pas de munitions');
+        const res = applyShot(a, w, shot);
+        const i18n = shot.kind === 'ammo'
+          ? { key: tk('{name} tire {n} balle(s) avec {weapon} — reste {left}/{max}'), params: { name: a.name, n: shot.rounds, weapon: biName(w), left: res.left, max: res.max } }
+          : { key: tk('{name} lance {weapon}'), params: { name: a.name, weapon: biName(w) } };
+        ctx.log({ kind: 'combat', userId: ctx.user.id, author: a.name, i18n, gmOnly: a.type === 'npc' ? true : undefined });
+        return res;
+      },
+    },
+
+    // { actorId, weaponId, sourceItemId?, free? (GM: no ammunition used) } → { loaded, ammoLoaded, max, action, swap, sourceId, clipId, returned, dropped }
+    'weapon/reload': {
+      role: 'any',
+      handler(ctx, { actorId, weaponId, sourceItemId, free }) {
+        const a = getActor(ctx, actorId);
+        requireOwn(ctx, actorId);
+        const w = (a.weapons || []).find((x) => x && x.id === String(weaponId));
+        if (!w) ctx.fail('Arme introuvable');
+        return reloadWeapon(ctx, a, w, { sourceItemId, free });
+      },
+    },
+
     // { actorId, amount, type: 'P'|'S' } → { condition, status }
     'actor/damage': {
       role: 'any',
@@ -608,46 +1303,7 @@ export default {
         const n = clampInt(amount, 0, 100);
         if (!n) ctx.fail('Indique un nombre de cases de dommages');
         if (!['P', 'S'].includes(type)) ctx.fail('Type de dommages invalide (P ou S)');
-        const d = deriveFull(a);
-        const c = a.condition;
-        const wasStatus = statusOf(a);
-        let toPhysical = 0;
-        if (type === 'S') {
-          c.stun += n;
-          if (c.stun > d.stunMonitor) {
-            toPhysical = c.stun - d.stunMonitor;
-            c.stun = d.stunMonitor;
-          }
-        } else toPhysical = n;
-        if (toPhysical) {
-          c.physical += toPhysical;
-          if (c.physical > d.physicalMonitor) {
-            c.overflow += c.physical - d.physicalMonitor;
-            c.physical = d.physicalMonitor;
-          }
-        }
-        c.overflow = Math.min(c.overflow, d.overflowMax + 1);
-        const status = statusOf(a);
-        // Translatable log line (status values are stored French words, translated as nested keys).
-        let i18n;
-        if (a.type === 'npc') {
-          const damage = { t: type === 'S' ? tk('{n} case(s) de dommages étourdissants') : tk('{n} case(s) de dommages physiques'), params: { n } };
-          i18n = status !== wasStatus
-            ? { key: tk('{name} encaisse {damage} — {status}.'), params: { name: a.name, damage, status: { t: status } } }
-            : { key: tk('{name} encaisse {damage}.'), params: { name: a.name, damage } };
-        } else {
-          const damage = type === 'S'
-            ? { t: n > 1 ? tk('{n} dommages étourdissants') : tk('{n} dommage étourdissant'), params: { n } }
-            : { t: n > 1 ? tk('{n} dommages physiques') : tk('{n} dommage physique'), params: { n } };
-          const trackParams = { p: c.physical, pm: d.physicalMonitor, s: c.stun, sm: d.stunMonitor, o: c.overflow, om: d.overflowMax };
-          const track = { t: c.overflow ? tk('P {p}/{pm} · É {s}/{sm} · surplus {o}/{om}') : tk('P {p}/{pm} · É {s}/{sm}'), params: trackParams };
-          i18n = status !== wasStatus && STATUS_UPPER[status]
-            ? { key: tk('{name} subit {damage} ({track}) — {status}'), params: { name: a.name, damage, track, status: { t: STATUS_UPPER[status] } } }
-            : { key: tk('{name} subit {damage} ({track})'), params: { name: a.name, damage, track } };
-        }
-        ctx.log({ kind: 'combat', userId: ctx.user.id, author: a.name, i18n, gmOnly: a.type === 'npc' && !!a.hidden ? true : undefined });
-        if (status === 'mort' && wasStatus !== 'mort') sfx(ctx, 'death');
-        return { condition: { ...c }, status };
+        return applyDamage(ctx, a, n, type);
       },
     },
 
@@ -753,209 +1409,8 @@ export default {
     'dice/roll': {
       role: 'any',
       handler(ctx, p) {
-        const payload = p || {};
-        let actor = null;
-        if (payload.actorId) {
-          actor = getActor(ctx, payload.actorId);
-          if (!ctx.owns(payload.actorId)) ctx.fail('Tu ne peux lancer que pour ton personnage');
-        }
-        if (payload.secret && !ctx.isGM) ctx.fail('Seul le MJ peut faire un jet secret');
-        const parts = [];
-        let pool = 0;
-        let label = str(payload.label, 120).trim();
-        let defaultLimit = null;
-        // Weapon attack: skill and limit (Accuracy + accessories) come from the weapon, its accessories add their dice.
-        let weapon = null;
-        if (payload.weaponId) {
-          if (!actor) ctx.fail('Choisis un personnage pour ce jet');
-          weapon = (actor.weapons || []).find((w) => w && w.id === String(payload.weaponId));
-          if (!weapon) ctx.fail('Arme introuvable');
-        }
-        // A weapon attack uses the weapon's skill (only the GM may roll it with another one).
-        const asked = payload.skillId ? String(payload.skillId).slice(0, 80) : null;
-        const skillId = weapon ? (ctx.isGM && asked) || weapon.skill || 'exotic_weapon' : asked;
-        const A1 = payload.attr && ATTRS.includes(payload.attr) ? payload.attr : null;
-        const A2 = payload.attr2 && ATTRS.includes(payload.attr2) ? payload.attr2 : null;
-        // An attribute test's own modifiers (soak: + armor, composure, judge intentions…) only for an attribute-only roll on that
-        // test's attributes (shared/modifiers.js TEST_ATTRS) — any other claim is ignored.
-        const test = checkedTest(payload.test, { skillId, weaponId: weapon?.id, attr: A1, attr2: A2 });
-        if ((skillId || A1) && !actor) ctx.fail('Choisis un personnage pour ce jet');
-        if (skillId) {
-          const sk = actor.skills.find((s) => s.id === skillId || s.name === skillId);
-          const kno = !sk && actor.knowledge.find((k) => k.id === skillId);
-          if (kno) {
-            const at = A1 || (kno.type === 'academic' || kno.type === 'professional' ? 'LOG' : 'INT');
-            const r = Number(kno.rating) || 0;
-            const spec = payload.useSpec && String(kno.spec || '').trim() ? 2 : 0;
-            pool = r + attr(actor, at) + spec;
-            parts.push(`${kno.name} ${r}`, `${ATTR_SHORT[at]} ${attr(actor, at)}`);
-            if (spec) parts.push('spé. +2');
-            if (!label) label = kno.name;
-            defaultLimit = 'mental';
-          } else {
-            const def = SKILL_BY_ID[skillId];
-            const res = skillPool(actor, skillId, { useSpec: !!payload.useSpec, attrOverride: A1 || undefined });
-            if (res.impossible) ctx.fail('{skill} ne peut pas être utilisée sans formation', { skill: def?.fr ? { t: def.fr } : sk?.name || skillId });
-            const at = A1 || sk?.attr || def?.attr || 'AGI';
-            pool = res.pool;
-            if (res.defaulting) parts.push(`${ATTR_SHORT[at]} ${attr(actor, at)}`, 'par défaut −1');
-            else {
-              parts.push(`${sk?.name || def?.fr || skillId} ${sk.rating}`, `${ATTR_SHORT[at]} ${attr(actor, at)}`);
-              if (payload.useSpec && sk.spec) parts.push(`spé. +2`);
-            }
-            if (!label) label = sk?.name || def?.fr || skillId;
-            defaultLimit = skillDefaultLimit(def, at);
-          }
-        } else if (A1) {
-          pool = attr(actor, A1);
-          parts.push(`${ATTR_SHORT[A1]} ${pool}`);
-          if (A2) {
-            pool += attr(actor, A2);
-            parts.push(`${ATTR_SHORT[A2]} ${attr(actor, A2)}`);
-          }
-          if (!label) label = A2 ? `${ATTR_LABELS[A1]} + ${ATTR_LABELS[A2]}` : ATTR_LABELS[A1];
-        } else {
-          pool = clampInt(payload.pool, 0, 100);
-          parts.push(`${pool} dés`);
-        }
-        // Modifiers of the actor's gear, qualities, powers, implants (shared/modifiers.js) — computed here, never taken from the
-        // client: the client only says which situational switches are on (`conditions`, checked against the actor's modifiers)
-        // and which bonuses to leave out (`ignore`: players may only drop bonuses, the GM any modifier).
-        const mods = actor ? actorModifiers(actor, { weaponId: weapon?.id }) : [];
-        let conditions = cleanConditions(mods, payload.conditions);
-        const rctx = actor ? rollContext(actor, { skillId, attr: A1, attr2: A2, test, weaponId: weapon?.id }) : {};
-        // Matrix situation (« en RV chaude », « dans un hôte ») comes from the actor's persona, not from a switch — except for the
-        // GM rolling an actor that has no persona.
-        const persona = actor ? ctx.state.matrix?.personas?.[actor.id] : null;
-        if (actor && (persona || !ctx.isGM)) {
-          const online = !!persona?.online;
-          rctx.mode = online ? persona.mode || 'ar' : 'offline';
-          conditions = conditions.filter((k) => k !== 'in-host' && k !== 'hot-sim');
-          if (online && persona.hostId) conditions.push(...cleanConditions(mods, ['in-host']));
-        }
-        const modOpts = { conditions, ignore: Array.isArray(payload.ignore) ? payload.ignore.slice(0, 60).map((x) => String(x).slice(0, 200)) : [], isGM: ctx.isGM };
-        const modLines = [];
-        const pushLine = (l, kind) => modLines.push({
-          id: l.mod.id, kind, type: l.mod.type, name: l.mod.source.name, ...(l.mod.source.nameFr ? { nameFr: l.mod.source.nameFr } : {}),
-          value: l.value, state: l.state, ...(l.mod.condition ? { condition: l.mod.condition } : {}), ...(l.mod.wireless ? { wireless: true } : {}),
-          ...(l.mod.source.book ? { book: l.mod.source.book, page: l.mod.source.page } : {}),
-        });
-        if (actor && test === 'soak') {
-          // Soak: Body + armor (worn armor, its mods, implants / qualities armor) — never the client's figure.
-          const full = derivedWithModifiers(actor, mods);
-          pool += full.armor;
-          parts.push(`armure ${full.armor}`);
-        }
-        if (actor) {
-          const pm = poolModifiers(mods, rctx, modOpts);
-          for (const l of pm.lines) {
-            pushLine(l, 'pool');
-            if (l.state !== 'applied') continue;
-            pool += l.value;
-            parts.push(`${l.mod.source.name} ${l.value >= 0 ? '+' : '−'}${Math.abs(l.value)}`);
-          }
-        }
-        // Extra named lines: the GM's are kept as typed; a player's are only the sheet's own (total defense « VOL », Matrix defense /
-        // biofeedback « Firewall »), recomputed from the actor — anything else a player adds is counted under « mod. ».
-        let extraMod = 0;
-        const named = new Set();
-        for (const b of Array.isArray(payload.bonus) ? payload.bonus.slice(0, 6) : []) {
-          const label = str(b?.label, 30).trim();
-          let v = clampInt(b?.value, -50, 50);
-          if (!ctx.isGM) {
-            const known = actor && !named.has(label) ? playerBonus(actor, label, { skillId, test, A1, A2 }) : null;
-            if (known === null) {
-              extraMod += v;
-              continue;
-            }
-            named.add(label);
-            v = known;
-          }
-          if (!v) continue;
-          pool += v;
-          parts.push(`${label || 'bonus'} ${v > 0 ? '+' : '−'}${Math.abs(v)}`);
-        }
-        const mod = clampInt(clampInt(payload.modifier, -50, 50) + extraMod, -50, 50);
-        if (mod) {
-          pool += mod;
-          parts.push(`mod. ${mod > 0 ? '+' : '−'}${Math.abs(mod)}`);
-        }
-        // Wound modifier: SR5 applies it to every test of the actor's skills / attributes but damage resistance (soak, drain,
-        // biofeedback, toxins). Players cannot leave it out; the GM may (applyWounds: false) or force it (true).
-        const statRoll = !!(skillId || A1);
-        const gmWounds = ctx.isGM && payload.applyWounds !== undefined && payload.applyWounds !== null;
-        if ((gmWounds ? !!payload.applyWounds : statRoll && woundsApply(test)) && actor) {
-          const w = derivedWithModifiers(actor, mods).woundModifier;
-          if (w) {
-            pool += w;
-            parts.push(`blessures −${Math.abs(w)}`);
-          }
-        }
-        const explode = !!payload.explode;
-        if (explode) {
-          if (!actor) ctx.fail('Choisis un personnage pour utiliser la Chance');
-          if (actor.edge.current <= 0) ctx.fail('{name} n’a plus de point de Chance', { name: actor.name });
-          const e = attr(actor, 'EDG');
-          pool += e;
-          parts.push(`Chance +${e}`);
-        }
-        pool = Math.min(100, pool);
-        if (pool <= 0) ctx.fail('Réserve de dés nulle : échec automatique');
-        let limit = null;
-        let limitLabel = null;
-        let limitBreakdown = null;
-        if (!explode) {
-          // Computed limit: the weapon's Accuracy (+ accessories) or the skill's default limit, with the limit modifiers.
-          let auto = null;
-          if (weapon) {
-            const acc = weaponAccuracy(actor, weapon, mods, rctx, modOpts);
-            if (acc.total !== null) {
-              auto = Math.max(1, acc.total); // a limit lowered to 0 stays a limit (never « none »)
-              limitLabel = 'précision';
-              for (const l of acc.lines) pushLine(l, 'limit');
-              if (acc.parts.length > 1) limitBreakdown = acc.parts.map(([n, v], i) => (i ? `${n} ${v >= 0 ? '+' : '−'}${Math.abs(v)}` : `${n} ${v}`)).join(' + ');
-            }
-          } else if (actor && MATRIX_LIMITS.includes(payload.matrixLimit) && actor.matrix && MATRIX_LIMIT_SKILLS.includes(rctx.skillId)) {
-            // Matrix test from the sheet (Matrix skills only): the device attribute is the limit (no physical / mental / social modifier).
-            const v = Number(actor.matrix[payload.matrixLimit]) || 0;
-            if (v > 0) {
-              auto = v;
-              limitLabel = MATRIX_LIMIT_LABEL[payload.matrixLimit];
-            }
-          } else if (defaultLimit && actor) {
-            const lim = limitFor(actor, defaultLimit, mods, rctx, modOpts);
-            if (lim.total !== null) {
-              auto = Math.max(1, lim.total); // a limit lowered to 0 stays a limit (never « none »)
-              limitLabel = LIMIT_LABEL[defaultLimit];
-              for (const l of lim.lines) pushLine(l, 'limit');
-              const applied = lim.lines.filter((l) => l.state === 'applied');
-              if (applied.length) limitBreakdown = [`${LIMIT_LABEL[defaultLimit]} ${lim.base}`, ...applied.map((l) => `${l.mod.source.name} ${l.value >= 0 ? '+' : '−'}${Math.abs(l.value)}`)].join(' + ');
-            }
-          }
-          // limit: number → that limit; null/0/'' → explicitly no limit; absent → computed. Players can neither raise nor remove a
-          // computed limit (null / 0 / a higher number → the computed one).
-          if (payload.limit !== undefined) {
-            limit = clampInt(payload.limit, 0, 50) || null;
-            if (!ctx.isGM && auto !== null && (limit === null || limit > auto)) limit = auto;
-            if (limit !== auto) {
-              limitLabel = null;
-              limitBreakdown = null;
-            }
-          } else limit = auto;
-        }
-        if (explode) actor.edge.current -= 1;
-        const r = rollDice(pool, { limit, explode });
-        if (!label) label = `Jet de ${pool} dés`;
-        const roll = {
-          ...r, label, explode, edge: explode, actorId: actor?.id || null, breakdown: parts.join(' + '),
-          ...(limitLabel ? { limitLabel } : {}), ...(limitBreakdown ? { limitBreakdown } : {}), ...(payload.secret ? { secret: true } : {}),
-          ...(modLines.length ? { mods: modLines } : {}), ...(conditions.length ? { conditions } : {}),
-        };
-        const author = actor ? actor.name : ctx.displayName();
-        const hidden = !!payload.secret || (actor && actor.type === 'npc' && ctx.isGM && actor.hidden);
-        const entry = ctx.log({ kind: 'roll', userId: ctx.user.id, author, text: label, roll, ...(hidden ? { gmOnly: true } : {}) });
-        sfx(ctx, 'dice', hidden ? 'gm' : 'all');
-        return { ...roll, logId: entry.id };
+        const { entry, ...out } = performRoll(ctx, p);
+        return out;
       },
     },
 

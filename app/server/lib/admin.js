@@ -13,6 +13,8 @@ import { ZipError, listZip, safeEntryPath, extractZip, writeZip, writeZipFile, w
 import { errorBody } from './i18n.js';
 import { registerBookAdminRoutes } from './books/admin-routes.js';
 import { registerAssistantAdminRoutes } from './assistant/admin-routes.js';
+import { registerMaplibAdminRoutes } from './maplib-admin.js';
+import { sessionTag } from './books/access.js';
 
 const MAX_RESTORE = Number(process.env.SR_MAX_UPLOAD_BYTES) || 1.5e9;
 
@@ -428,4 +430,11 @@ export function registerAdminRoutes(app, api) {
   registerBookAdminRoutes(app, { requireAdmin, fail, listMetas });
   // ----- GM assistant (server-wide settings, see ARCHITECTURE.md « Assistant MJ ») -----
   registerAssistantAdminRoutes(app, { requireAdmin, fail, listMetas });
+  // ----- map library (server-wide fragmaps, see ARCHITECTURE.md « Map library ») -----
+  // adminSessionAlive: thumbnails on /admin are signed with the admin session's tag (dead with the session).
+  const adminSessionAlive = (tag) => {
+    for (const [tok, exp] of sessions) if (exp > Date.now() && sessionTag(tok) === tag) return true;
+    return false;
+  };
+  registerMaplibAdminRoutes(app, { requireAdmin, fail, listMetas, tables, adminSessionAlive, scheduleTableBroadcast });
 }

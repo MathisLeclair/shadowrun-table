@@ -156,7 +156,7 @@ function buildWeapon(item, data, guid, assignSub) {
     ap: d('ap', String(item.ap ?? 0)), mode: d('mode', item.mode || '0'), rc: d('rc', String(item.rc ?? 0)), ammo: d('ammo', item.ammo || '0'),
     conceal: d('conceal', '0'), avail: d('avail', '0'), cost: d('cost', '0'), useskill: d('useskill'), useskillspec: d('useskillspec'),
     range: d('range'), alternaterange: d('alternaterange'), source: d('source', 'SR5'), page: d('page', '0'),
-    allowaccessory: B(mounts.length > 0), weaponslots: mounts.join('/'), weaponname: data ? '' : '', equipped: 'True',
+    allowaccessory: B(mounts.length > 0), weaponslots: mounts.join('/'), weaponname: data ? '' : '', equipped: 'True', // the app's « ready » is not Chummer's <equipped>
     notes, weapontype: d('weapontype', melee ? 'melee' : 'gun'), ammocategory: d('ammocategory'),
   });
   if (!data) n.set('weaponname', item.name);
@@ -813,6 +813,7 @@ export function exportChum5(actor, { now = Date.now(), mugshots = null } = {}) {
       const was = it.chummerGuid && baseItems.get(it.chummerGuid);
       if (hit && was) {
         patchItem(list, hit.node, it, was);
+        if (LOCATION_LISTS[list] && (it.location || 'on') !== (was.location || 'on')) setItemLocation(c, list, hit.node, it, actor);
         syncSubs(list, hit.node, it, was, assignSub);
         continue;
       }
@@ -829,6 +830,7 @@ export function exportChum5(actor, { now = Date.now(), mugshots = null } = {}) {
       const guid = it.chummerGuid || newGuid();
       const node = buildItem(list, spec, it, guid, warnings, assignSub);
       if (!node) continue;
+      if (LOCATION_LISTS[list] && it.location && it.location !== 'on') setItemLocation(c, list, node, it, actor);
       container(c, spec.container).children.push(node);
       assign(list, it, guid);
     }
@@ -938,9 +940,39 @@ function buildItem(list, spec, it, guid, warnings, assignSub) {
   }
 }
 
+/** Chummer location list of each app list (app containers ↔ Chummer locations, see parse.js locationsOf). */
+const LOCATION_LISTS = { weapons: 'weaponlocations', armor: 'armorlocations', gear: 'gearlocations' };
+
+/**
+ * <location> of an item node = the guid of the Chummer location matching the item's app container (same guid for containers that came
+ * from Chummer — id chum_<guid> —, else same name; created when missing). « Sur soi » / unknown container = no location.
+ */
+function setItemLocation(c, list, node, it, actor) {
+  const ct = it.location && it.location !== 'on' ? (actor.containers || []).find((x) => x && x.id === it.location) : null;
+  if (!ct) {
+    node.set('location', '');
+    return;
+  }
+  const holder = container(c, LOCATION_LISTS[list]);
+  const want = String(ct.id).startsWith('chum_') ? String(ct.id).slice(5).toLowerCase() : '';
+  let loc = holder.all('location').find((l) => (want && l.val('guid').toLowerCase() === want) || l.val('name').trim().toLowerCase() === String(ct.name).trim().toLowerCase());
+  if (!loc) {
+    const guid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(want) ? want : newGuid();
+    loc = el('location', [el('guid', guid), el('name', ct.name), el('notes', ct.notes || ''), el('notesColor', ''), el('sortorder', String(holder.all('location').length))]);
+    holder.children.push(loc);
+  }
+  node.set('location', loc.val('guid'));
+}
+
 /** Fields the app may change on an item that already exists in the file. */
 function patchItem(list, node, it, was) {
   const diff = (k) => !eq(it[k], was[k]);
+  if (list === 'weapons' && it.ammoLoaded !== undefined && was.ammoLoaded !== undefined && diff('ammoLoaded')) {
+    // Rounds in the active clip (only when the file has clips: the parse read them from there).
+    const clips = node.get('clips')?.all('clip') || [];
+    const slot = clips[Math.max(0, (Number(node.val('activeammoslot')) || 1) - 1)] || clips[0];
+    if (slot) slot.set(slot.has('count') ? 'count' : 'ammo', String(Math.max(0, Math.round(it.ammoLoaded))));
+  }
   if (list === 'armor' && diff('equipped')) node.set('equipped', B(it.equipped));
   if ((list === 'gear' || list === 'sins') && diff('rating')) node.set('rating', String(it.rating || 0));
   if (list === 'gear' && diff('qty')) node.set('qty', String(it.qty ?? 1));

@@ -165,7 +165,7 @@ export function t(key, params) {
   const k = String(key ?? '');
   const r = lookup(dict, lang, k);
   if (r.missing) noteMissing(k);
-  return interpolate(r.text, params, t);
+  return interpolate(r.text, params, t, lang);
 }
 
 /**
@@ -191,7 +191,7 @@ export const tk = (s) => s;
  */
 export function tIfKnown(text, params) {
   if (typeof text !== 'string' || !text) return text;
-  if (!(text in dict)) return interpolate(text, params, t);
+  if (!(text in dict)) return interpolate(text, params, t, lang);
   return t(text, params);
 }
 

@@ -295,7 +295,8 @@
         "reach": 0,
         "equipped": true,
         "catalogId": "6366691e-c1e0-4d5e-b7a6-1c0371708714",
-        "notes": "Colt Government 2066 (SR5 426)"
+        "notes": "Colt Government 2066 (SR5 426)",
+        "ammoLoaded": 14
       },
       {
         "id": "fvtt_ktWotmSZbqkcu695",
@@ -344,7 +345,8 @@
         "ammo": "",
         "reach": 0,
         "equipped": true,
-        "notes": "Grenade: Flash-Bang (SR5 435)"
+        "notes": "Grenade: Flash-Bang (SR5 435)",
+        "qty": 1
       },
       {
         "id": "fvtt_ejEwGCVoJcX2A23P",
@@ -360,7 +362,8 @@
         "ammo": "",
         "reach": 0,
         "equipped": true,
-        "notes": "Grenade: Fragmentation (SR5 435)"
+        "notes": "Grenade: Fragmentation (SR5 435)",
+        "qty": 1
       },
       {
         "id": "fvtt_JUafFzFQr2BsVJnG",
@@ -377,7 +380,8 @@
         "reach": 0,
         "equipped": true,
         "catalogId": "3a7a90ce-fbb5-4599-a857-b9849eb9769c",
-        "notes": "Ares Alpha (SR5 428)"
+        "notes": "Ares Alpha (SR5 428)",
+        "ammoLoaded": 42
       },
       {
         "id": "fvtt_Mu38LLsOGepD6TTx",
@@ -411,7 +415,8 @@
         "equipped": true,
         "notes": "Ares Alpha Grenade Launcher (SR5 428)",
         "source": "SR5",
-        "page": 428
+        "page": 428,
+        "ammoLoaded": 6
       }
     ],
     "armor": [
@@ -1283,7 +1288,8 @@
             "nameFr": "Holster moulé pour dégainage rapide",
             "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier"
           }
-        ]
+        ],
+        "ammoLoaded": 4
       },
       {
         "id": "fvtt_rkS7Y5o6dM6CchmE",
@@ -1323,7 +1329,8 @@
             "included": true,
             "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier"
           }
-        ]
+        ],
+        "ammoLoaded": 10
       },
       {
         "id": "fvtt_Yj5oyh0NuDUyh0DR",
@@ -1339,7 +1346,8 @@
         "ammo": "",
         "reach": 0,
         "equipped": true,
-        "notes": "Grenade: Gas (SR5 435)"
+        "notes": "Grenade: Gas (SR5 435)",
+        "qty": 2
       },
       {
         "id": "fvtt_fhk18LQKhMYn534G",
@@ -1354,7 +1362,9 @@
         "rc": 2,
         "ammo": "",
         "reach": 0,
-        "notes": "Grenade: Thermal Smoke (SR5 435)"
+        "notes": "Grenade: Thermal Smoke (SR5 435)",
+        "location": "fvtt_inv_duffel_bag",
+        "qty": 4
       },
       {
         "id": "fvtt_Ds5A6qreqCpL8Dzq",
@@ -1369,7 +1379,9 @@
         "rc": 2,
         "ammo": "",
         "reach": 0,
-        "notes": "Grenade: Flash-Bang (SR5 435)"
+        "notes": "Grenade: Flash-Bang (SR5 435)",
+        "location": "fvtt_inv_duffel_bag",
+        "qty": 2
       },
       {
         "id": "fvtt_EbIJJ9Zt15iJHi6r",
@@ -1384,7 +1396,9 @@
         "rc": 2,
         "ammo": "",
         "reach": 0,
-        "notes": "Grenade: Gas, Aerodynamic (SR5 435)"
+        "notes": "Grenade: Gas, Aerodynamic (SR5 435)",
+        "location": "fvtt_inv_duffel_bag",
+        "qty": 4
       },
       {
         "id": "fvtt_1v3pqCP5LUjSgGiV",
@@ -1399,7 +1413,9 @@
         "rc": 2,
         "ammo": "",
         "reach": 0,
-        "notes": "Grenade: Fragmentation (SR5 435)"
+        "notes": "Grenade: Fragmentation (SR5 435)",
+        "location": "fvtt_inv_duffel_bag",
+        "qty": 2
       },
       {
         "id": "fvtt_JwWl6ngUOvfn3MTK",
@@ -1414,7 +1430,9 @@
         "rc": 2,
         "ammo": "",
         "reach": 0,
-        "notes": "Grenade: Flash-Pak (SR5 435)"
+        "notes": "Grenade: Flash-Pak (SR5 435)",
+        "location": "fvtt_inv_duffel_bag",
+        "qty": 2
       },
       {
         "id": "fvtt_z0d0D3M9DQ8s5Mjc",
@@ -1465,7 +1483,9 @@
             "included": true,
             "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier"
           }
-        ]
+        ],
+        "location": "fvtt_inv_duffel_bag",
+        "ammoLoaded": 14
       }
     ],
     "armor": [
@@ -1687,7 +1707,8 @@
         "category": "Outils",
         "qty": 1,
         "catalogId": "8459fade-af0f-48a6-b283-b4969d1fe6b7",
-        "notes": "Backpack (Nice)"
+        "notes": "Backpack (Nice)",
+        "location": "fvtt_inv_house"
       },
       {
         "id": "fvtt_0JNa5eeBqrwZd1AD",
@@ -1695,7 +1716,8 @@
         "category": "Appareils optiques et d'imagerie",
         "qty": 2,
         "catalogId": "fa6fa434-107b-4f36-a138-f98b044dae76",
-        "notes": "Camera, Micro"
+        "notes": "Camera, Micro",
+        "location": "fvtt_inv_backpack"
       },
       {
         "id": "fvtt_k2Tyy0pahq0SRMHL",
@@ -1713,7 +1735,8 @@
         "rating": 2,
         "qty": 1,
         "catalogId": "c03e4428-f3fe-434c-881a-68d638408715",
-        "notes": "Concealable Surveillance Gear"
+        "notes": "Concealable Surveillance Gear",
+        "location": "fvtt_inv_backpack"
       },
       {
         "id": "fvtt_mX6dRmKMGEfroR73",
@@ -1721,7 +1744,8 @@
         "category": "Lance-Grappin",
         "qty": 1,
         "catalogId": "76890101-9f90-41db-a6f0-6f5fd4802896",
-        "notes": "Stealth Rope (100m)"
+        "notes": "Stealth Rope (100m)",
+        "location": "fvtt_inv_duffel_bag"
       },
       {
         "id": "fvtt_dEIbFrtDSCcGxykM",
@@ -1729,7 +1753,8 @@
         "category": "Munitions",
         "qty": 10,
         "catalogId": "4b844ac3-20e8-4982-8711-20579b5295a8",
-        "notes": "Ammo: Tracker Rounds, Stealth Tag (Sniper Rifles)"
+        "notes": "Ammo: Tracker Rounds, Stealth Tag (Sniper Rifles)",
+        "location": "fvtt_inv_duffel_bag"
       },
       {
         "id": "fvtt_XdOCanGnze5ZbIQY",
@@ -1737,7 +1762,8 @@
         "category": "Munitions",
         "qty": 23,
         "catalogId": "ef9c8aae-26df-4fe6-88b3-79fbb5eb77c5",
-        "notes": "Ammo: APDS (Sniper Rifles)"
+        "notes": "Ammo: APDS (Sniper Rifles)",
+        "location": "fvtt_inv_duffel_bag"
       },
       {
         "id": "fvtt_V2X8ti8hu4pYdvPZ",
@@ -1745,7 +1771,8 @@
         "category": "Munitions",
         "qty": 68,
         "catalogId": "8afe5065-5815-4a98-b047-2a7fed85db55",
-        "notes": "Ammo: Taser Dart (Tasers)"
+        "notes": "Ammo: Taser Dart (Tasers)",
+        "location": "fvtt_inv_backpack"
       },
       {
         "id": "fvtt_CYfZBRDzGFeCrJAh",
@@ -1753,7 +1780,8 @@
         "category": "Munitions",
         "qty": 1,
         "catalogId": "75ccb148-e774-429c-b854-a27816439626",
-        "notes": "Spare Clip (Ares Desert Strike)"
+        "notes": "Spare Clip (Ares Desert Strike)",
+        "location": "fvtt_inv_duffel_bag"
       },
       {
         "id": "fvtt_nio8Uj9gzrFcicd7",
@@ -1761,7 +1789,8 @@
         "category": "Équipement",
         "qty": 1,
         "source": "SR5",
-        "page": 449
+        "page": 449,
+        "location": "fvtt_inv_duffel_bag"
       },
       {
         "id": "fvtt_QJKHOCSVI3P7abIB",
@@ -1769,7 +1798,8 @@
         "category": "Outils",
         "qty": 1,
         "catalogId": "64fa5212-1d58-4e94-9cc1-9e3eb10773ed",
-        "notes": "Tool Kit (Disguise)"
+        "notes": "Tool Kit (Disguise)",
+        "location": "fvtt_inv_duffel_bag"
       },
       {
         "id": "fvtt_lk8StnnthkP3Uimp",
@@ -1778,7 +1808,8 @@
         "rating": 6,
         "qty": 1,
         "catalogId": "314566c7-4ea1-4f8d-94cd-f213af1e0535",
-        "notes": "Fashion Respirator"
+        "notes": "Fashion Respirator",
+        "location": "fvtt_inv_backpack"
       },
       {
         "id": "fvtt_nV5FoVzewu22dX1q",
@@ -1786,7 +1817,8 @@
         "category": "Outils",
         "qty": 1,
         "catalogId": "c22784cf-6ff2-4f65-9120-0be4d8eec1e3",
-        "notes": "Duffel Bag (Nice)"
+        "notes": "Duffel Bag (Nice)",
+        "location": "fvtt_inv_house"
       },
       {
         "id": "fvtt_6M7K13pzPdo2bsJl",
@@ -1794,7 +1826,8 @@
         "category": "Communications et Brouilleurs",
         "qty": 2,
         "catalogId": "d1fca845-ae01-4b39-a176-1506da699e0e",
-        "notes": "Micro-Transceiver"
+        "notes": "Micro-Transceiver",
+        "location": "fvtt_inv_backpack"
       },
       {
         "id": "fvtt_EoJZ6zr0q8gCSGqT",
@@ -1802,7 +1835,8 @@
         "category": "Lance-Grappin",
         "qty": 1,
         "catalogId": "dff54f55-846d-4017-84e2-dd1f1c29861f",
-        "notes": "Catalyst Stick"
+        "notes": "Catalyst Stick",
+        "location": "fvtt_inv_duffel_bag"
       },
       {
         "id": "fvtt_0pYbzmxEBUmimw7X",
@@ -1810,7 +1844,8 @@
         "category": "Matériel de Survie",
         "qty": 1,
         "catalogId": "a17cae86-4d6f-4e00-acb6-03f0ccfb2807",
-        "notes": "Climbing Gear"
+        "notes": "Climbing Gear",
+        "location": "fvtt_inv_duffel_bag"
       },
       {
         "id": "fvtt_SgNGftu3CR59ugDf",
@@ -1818,7 +1853,8 @@
         "category": "Matériel de Survie",
         "qty": 1,
         "catalogId": "44acc4c0-5795-47a4-84fb-bd2374276360",
-        "notes": "Flashlight, Low-light"
+        "notes": "Flashlight, Low-light",
+        "location": "fvtt_inv_backpack"
       },
       {
         "id": "fvtt_Kk0GTvvnoyd6caVC",
@@ -1826,7 +1862,8 @@
         "category": "Munitions",
         "qty": 34,
         "catalogId": "d9f69780-93eb-41ff-9a9c-893f8c52794e",
-        "notes": "Ammo: Stick-n-Shock (Shotguns)"
+        "notes": "Ammo: Stick-n-Shock (Shotguns)",
+        "location": "fvtt_inv_backpack"
       },
       {
         "id": "fvtt_XGazTbKTuSdVDCwM",
@@ -1835,7 +1872,8 @@
         "rating": 6,
         "qty": 1,
         "catalogId": "026f00c9-376e-4b4a-b615-9242db87afb3",
-        "notes": "Microphone, Laser"
+        "notes": "Microphone, Laser",
+        "location": "fvtt_inv_backpack"
       },
       {
         "id": "fvtt_9IN4WLUW1VPwdoSG",
@@ -1844,7 +1882,8 @@
         "rating": 2,
         "qty": 1,
         "catalogId": "c03e4428-f3fe-434c-881a-68d638408715",
-        "notes": "Concealable Surveillance Gear"
+        "notes": "Concealable Surveillance Gear",
+        "location": "fvtt_inv_backpack"
       },
       {
         "id": "fvtt_GedSiu0xwYbnVoDJ",
@@ -1853,7 +1892,8 @@
         "rating": 6,
         "qty": 1,
         "catalogId": "6576cfa9-f2f5-4624-bbde-60a8f3f13785",
-        "notes": "Jammer, Area"
+        "notes": "Jammer, Area",
+        "location": "fvtt_inv_duffel_bag"
       },
       {
         "id": "fvtt_amCHTxXdhxQqR0uh",
@@ -2247,7 +2287,24 @@
         "vision": "f3d1cf29241f"
       },
       "user": "Baptou"
-    }
+    },
+    "containers": [
+      {
+        "id": "fvtt_inv_duffel_bag",
+        "name": "Duffel Bag",
+        "kind": "bag"
+      },
+      {
+        "id": "fvtt_inv_backpack",
+        "name": "Backpack",
+        "kind": "bag"
+      },
+      {
+        "id": "fvtt_inv_house",
+        "name": "House",
+        "kind": "safehouse"
+      }
+    ]
   },
   {
     "id": "pc_bricks",
@@ -2530,7 +2587,8 @@
             "included": true,
             "notes": "Restauré depuis Chummer (fichier du 07/07/2026) — à vérifier"
           }
-        ]
+        ],
+        "ammoLoaded": 12
       },
       {
         "id": "fvtt_wGGgCkZyiirl5Hkc",
@@ -2546,7 +2604,8 @@
         "ammo": "",
         "reach": 0,
         "equipped": true,
-        "notes": "Grenade: Douser (KC 53)"
+        "notes": "Grenade: Douser (KC 53)",
+        "qty": 1
       },
       {
         "id": "fvtt_wvH7DD2JTNo9DmYn",
@@ -2562,7 +2621,8 @@
         "ammo": "",
         "reach": 0,
         "equipped": true,
-        "notes": "Grenade: COS (KC 54)"
+        "notes": "Grenade: COS (KC 54)",
+        "qty": 1
       },
       {
         "id": "fvtt_yN3thI6ZLjmTocEL",
@@ -2578,7 +2638,8 @@
         "ammo": "30(c)",
         "reach": 0,
         "catalogId": "7dff8ab0-c659-4901-ac3b-cb8b4f3839bf",
-        "notes": "Fichetti Security 600 (SR5 426)"
+        "notes": "Fichetti Security 600 (SR5 426)",
+        "ammoLoaded": 30
       },
       {
         "id": "fvtt_vnw2PtRHqgt6sau2",
@@ -2594,7 +2655,8 @@
         "ammo": "32(c)",
         "reach": 0,
         "catalogId": "b2eefb04-0e33-4faa-8e92-5c4bcbfc3f16",
-        "notes": "Colt Cobra TZ-120 (SR5 427)"
+        "notes": "Colt Cobra TZ-120 (SR5 427)",
+        "location": "fvtt_inv_go_bag"
       }
     ],
     "armor": [
@@ -2938,7 +3000,14 @@
         "vision": "1c31d95620ad"
       },
       "user": "Tangouche"
-    }
+    },
+    "containers": [
+      {
+        "id": "fvtt_inv_go_bag",
+        "name": "Go Bag",
+        "kind": "bag"
+      }
+    ]
   },
   {
     "id": "pc_anklay",
@@ -3323,7 +3392,8 @@
         "rc": 5,
         "ammo": "",
         "reach": 0,
-        "notes": "Throwing Knife (SR5 424)"
+        "notes": "Throwing Knife (SR5 424)",
+        "qty": 1
       },
       {
         "id": "fvtt_BcIyvACDhN7kDlFX",
@@ -3354,7 +3424,8 @@
         "rc": 5,
         "ammo": "",
         "reach": 0,
-        "notes": "Boomerang (RG 24)"
+        "notes": "Boomerang (RG 24)",
+        "qty": 1
       },
       {
         "id": "fvtt_txh9pRKMFKxW2eBB",
@@ -3369,7 +3440,8 @@
         "rc": 5,
         "ammo": "",
         "reach": 0,
-        "notes": "Grenade: Flash-Pak (SR5 435)"
+        "notes": "Grenade: Flash-Pak (SR5 435)",
+        "qty": 1
       },
       {
         "id": "fvtt_JtK2nwpUoaoFykMa",
@@ -3401,7 +3473,8 @@
         "ammo": "32",
         "reach": 0,
         "catalogId": "b2eefb04-0e33-4faa-8e92-5c4bcbfc3f16",
-        "notes": "Colt Cobra TZ-120 (SR5 427)"
+        "notes": "Colt Cobra TZ-120 (SR5 427)",
+        "ammoLoaded": 32
       }
     ],
     "armor": [

@@ -199,7 +199,7 @@ function cleanNote(n, map) {
 }
 
 /** Bring any map-like object to the canonical shape (in place). Doors force their cell to 'D'. */
-function normalizeMap(m) {
+export function normalizeMap(m) {
   m.id = str(m.id, 80) || uid('map');
   m.name = str(m.name || 'Carte sans nom', 80);
   if (m.folder != null) m.folder = str(m.folder, 60);
@@ -305,7 +305,7 @@ function visionContext(map) {
 }
 
 /** OR every player's current visibility into map.explored (only the map players currently see). */
-function refreshFog(state, map) {
+export function refreshFog(state, map) {
   if (!map || map.fog === false || state.scene?.activeMapId !== map.id) return;
   const n = map.width * map.height;
   let vctx = null;

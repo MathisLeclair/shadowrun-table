@@ -356,6 +356,30 @@ function sortEntries(state, c) {
   c.turn = idx;
 }
 
+/**
+ * Pay an initiative cost (interrupt actions, R&G Finishing Move…) for an actor in the running combat: score − cost, logged.
+ * Returns the new score, or null when the actor is not in an active combat (nothing to pay). `label` = French key.
+ */
+export function spendInitiative(ctx, actorId, cost, label) {
+  const c = ctx.state.combat;
+  const n = Math.max(0, Math.round(Number(cost) || 0));
+  if (!c?.active || !n) return null;
+  const e = c.entries.find((x) => x.actorId === actorId && !x.out);
+  if (!e || e.toRoll) return null;
+  syncActors(ctx.state, c);
+  e.score -= n;
+  e.adjust = (e.adjust || 0) - n;
+  logCombat(ctx, tk('{name} : {label} ({delta} initiative → {score})'), { name: e.name, label: { t: label }, delta: `-${n}`, score: e.score }, { gmOnly: !!e.hidden });
+  sortEntries(ctx.state, c);
+  return e.score;
+}
+
+/** Key of the current Combat Turn (« once per turn » actions, defenses already made this turn) or null outside combat. */
+export function combatTurnKey(state) {
+  const c = state.combat;
+  return c?.active ? `${c.startedAt || 0}:${c.round || 1}` : null;
+}
+
 function ownersOf(state, actorId) {
   return Object.values(state.users || {})
     .filter((u) => (u.characterIds || []).includes(actorId))

@@ -156,3 +156,26 @@
   .bst-back { display: inline-flex; }
   .sb-head h3 { font-size: 16px; }
 }
+
+/* ---------- attack tray (AttackTray.js) ---------- */
+.atk-tray { position: fixed; left: 14px; bottom: 70px; /* above the floating sound button (audio.css) */ width: min(340px, calc(100vw - 24px)); z-index: 90; background: var(--panel); border: 1px solid var(--line2); border-left: 3px solid var(--red); border-radius: 10px; box-shadow: 0 14px 40px #000b; display: flex; flex-direction: column; max-height: 46vh; }
+.atk-tray-head { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px 6px 10px; border-bottom: 1px solid var(--line); font-weight: 600; font-size: 13px; }
+.atk-tray-list { overflow: auto; padding: 6px; display: flex; flex-direction: column; gap: 6px; }
+.atk-card { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; display: flex; flex-direction: column; gap: 3px; }
+.atk-card.act { border-color: var(--red); box-shadow: 0 0 0 1px #e05c5c55 inset; animation: atkPulse 1.6s ease-in-out infinite; }
+.atk-card.missed, .atk-card.cancelled { opacity: .75; }
+@keyframes atkPulse { 50% { box-shadow: 0 0 0 1px #e05c5c, 0 0 12px #e05c5c55; } }
+.atk-card-title { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.atk-card-title .link { cursor: pointer; }
+.atk-card-title .atk-x { margin-left: auto; }
+.atk-card-actions { margin-top: 2px; }
+.atk-outcome { font-size: 12px; color: var(--dim); }
+.atk-outcome.hit, .atk-big.hit { color: var(--red); }
+.atk-big { font-size: 15px; font-weight: 600; color: var(--green); }
+.atk-dlg-attack { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 13px; }
+.atk-opt { display: flex; align-items: center; gap: 8px; padding: 3px 4px; border-radius: 6px; cursor: pointer; }
+.atk-opt:hover { background: var(--panel2); }
+.atk-opt.locked { opacity: .5; cursor: default; }
+.atk-target { display: flex; flex-direction: column; gap: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel2); }
+.atk-action-note { font-size: 12px; color: var(--dim); }
+@media (max-width: 700px) { .atk-tray { bottom: 70px; left: 8px; } }

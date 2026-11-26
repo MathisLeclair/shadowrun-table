@@ -9,6 +9,7 @@ import { SKILL_BY_ID } from '../../../shared/sr5.js';
 import { blankActor, categoryToSkill, evalFormula, MELEE_SKILLS, LIFESTYLE_BASES } from '../../../client/modules/sheet/sheet-data.js';
 import { monthlyCost } from '../../../shared/lifestyle.js';
 import { uid } from '../../../shared/util.js';
+import { guessContainerKind, ammoKindOf, isThrownExplosive, parseAmmo } from '../../../client/modules/sheet/inventory.js';
 
 /** User-facing import error (French message, no stack needed). */
 export class ChummerError extends Error {}
@@ -140,6 +141,8 @@ export function parseChum5(xml, { fileName = '', now = Date.now(), makeId = uid,
   const warnings = warn.list;
   const v = (n) => c.val(n).trim();
   const imps = improvementsOf(c);
+  // Chummer locations (<gearlocations>/<armorlocations>/<weaponlocations>) → actor.containers; items' <location> → item.location.
+  const locs = locationsOf(c);
 
   const alias = v('alias');
   const realName = v('name');
@@ -276,6 +279,22 @@ export function parseChum5(xml, { fileName = '', now = Date.now(), makeId = uid,
     a.qualities.push(withRef({ id: makeId('itm'), name: displayName('qualities', q), karma, positive, ...(note ? { notes: note } : {}) }, q));
   }
 
+  const ammoRefs = []; // [weapon, guid of the gear loaded in its active clip]
+  // Units of a gear item by guid (a hand grenade's weapon node points at its gear with <parentid>).
+  let gearQtys = null;
+  const gearQty = (guid) => {
+    if (!gearQtys) {
+      gearQtys = new Map();
+      const walk = (node) => {
+        for (const ch of node.elements) {
+          if (ch.name === 'gear' && ch.val('guid')) gearQtys.set(ch.val('guid').trim().toLowerCase(), num(ch.val('qty'), 1));
+          walk(ch);
+        }
+      };
+      walk(c);
+    }
+    return gearQtys.get(String(guid || '').trim().toLowerCase()) || 0;
+  };
   // Weapons. Chummer's built-in Unarmed Attack becomes the app's « Mains nues » (accuracy « Physical »: the physical limit with its
   // modifiers, recomputed when STR / BOD / REA change — shared/modifiers.js weaponAccuracy).
   let unarmedDone = false;
@@ -291,7 +310,23 @@ export function parseChum5(xml, { fileName = '', now = Date.now(), makeId = uid,
       }, w));
       continue;
     }
-    a.weapons.push(weaponFromNode(w, makeId));
+    const wi = weaponFromNode(w, makeId);
+    placeItem(wi, w, locs);
+    // Chummer's <equipped> is not « ready » (Chummer marks nearly every weapon equipped): the app's ready defaults apply
+    // (sheet/inventory.js normalizeInventory) and the export never writes the ready state back.
+    // Hand grenades (« <ammo>1</ammo> », throwing skill) are single-use items, not one-round guns: no magazine, a unit count.
+    if (isThrownExplosive(wi)) {
+      wi.ammo = '';
+      wi.qty = Math.max(1, Math.round(gearQty(w.val('parentid')) || 1));
+      a.weapons.push(wi);
+      continue;
+    }
+    const clip = parseAmmo(wi.ammo).max > 0 ? activeClip(w) : null;
+    if (clip) {
+      wi.ammoLoaded = clip.count;
+      if (clip.gearGuid) ammoRefs.push([wi, clip.gearGuid]);
+    }
+    a.weapons.push(wi);
   }
 
   // Armor
@@ -302,10 +337,10 @@ export function parseChum5(xml, { fileName = '', now = Date.now(), makeId = uid,
     const capacity = Math.max(0, chummerEval(ar.val('armorcapacity'), { Rating: num(ar.val('rating'), 1) }) ?? 0);
     const mods = (ar.get('armormods')?.all('armormod') || []).filter((m) => m.val('name')).map((m) => armorModFromNode(m, capacity, makeId));
     const note = [srcNote(ar), longText(ar.val('notes'))].filter(Boolean).join(' — ');
-    a.armor.push(withRef({
+    a.armor.push(placeItem(withRef({
       id: makeId('itm'), name: displayName('armor', ar), rating, equipped: bool(ar.val('equipped')), ...(raw.trim().startsWith('+') ? { stack: true } : {}),
       ...(capacity ? { capacity } : {}), ...(mods.length ? { mods } : {}), ...(note ? { notes: note } : {}),
-    }, ar));
+    }, ar), ar, locs));
     for (const g of ar.get('gears')?.all('gear') || []) pushGear(g, `dans ${ar.val('name')}`);
   }
 
@@ -364,14 +399,24 @@ export function parseChum5(xml, { fileName = '', now = Date.now(), makeId = uid,
       };
     }
     const rating = num(g.val('rating'));
-    const note = [where || '', g.val('location') ? `emplacement : ${g.val('location')}` : '', srcNote(g), longText(g.val('notes'))].filter(Boolean).join(' — ');
+    const loc = locs.resolve(g.val('location'));
+    const note = [where || '', g.val('location') && !loc ? `emplacement : ${g.val('location')}` : '', srcNote(g), longText(g.val('notes'))].filter(Boolean).join(' — ');
     const custom = g.val('gearname');
+    // Ammunition: Chummer <ammoforweapontype> (file, else data) tells which weapons it feeds (client/modules/sheet/inventory.js).
+    const ammoFor = /^Ammunition$/i.test(category) ? g.val('ammoforweapontype') || findDataItem('gear', { id: sourceOf(g) })?.val('ammoforweapontype') || '' : '';
     a.gear.push(withRef({
       id: makeId('itm'), name: custom || displayName('gear', g), category: frenchCategory('gear', sourceOf(g)) || category, ...(rating ? { rating } : {}), qty: num(g.val('qty'), 1) || 1, ...(note ? { notes: note } : {}),
+      ...(loc ? { location: loc } : {}), ...(ammoFor ? { ammoFor: String(ammoFor).slice(0, 40) } : {}),
     }, g));
     for (const ch of g.get('children')?.all('gear') || []) pushGear(ch, `dans ${custom || name}`);
   }
   for (const g of c.get('gears')?.all('gear') || []) pushGear(g, '');
+  // Loaded ammunition of the weapons (the gear of their active clip).
+  for (const [wi, guid] of ammoRefs) {
+    const g = a.gear.find((x) => x.chummerGuid === guid);
+    if (g) wi.ammoKind = ammoKindOf(g);
+  }
+  if (locs.containers.length) a.containers = locs.containers;
 
   // Vehicles & drones
   for (const vh of c.get('vehicles')?.all('vehicle') || []) {
@@ -589,6 +634,57 @@ function lifestyleQualityFromNode(q, makeId) {
     ...subHead('lifestylequalities', q, makeId), category: q.val('category'), cost: costOf(q, {}), multiplier: mult || baseMult, ...(!mult && baseMult ? { baseOnly: true } : {}),
     lp: num(q.val('lp')), ...(notes ? { notes } : {}),
   };
+}
+
+/**
+ * Chummer locations → { containers: [{ id: 'chum_<guid>', name, kind }], resolve(<location> value) → container id | undefined }.
+ * Recent files store the location's guid in the item's <location>, older ones its name. Same name in several lists = one container.
+ */
+function locationsOf(c) {
+  const containers = [];
+  const byGuid = new Map();
+  const byName = new Map();
+  const add = (name, guid) => {
+    const n = String(name || '').trim().slice(0, 60);
+    if (!n) return null;
+    let ct = byName.get(n.toLowerCase());
+    if (!ct) {
+      ct = { id: guid ? `chum_${guid}` : `chum_${n.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || containers.length}`, name: n, kind: guessContainerKind(n) };
+      containers.push(ct);
+      byName.set(n.toLowerCase(), ct);
+    }
+    if (guid) byGuid.set(guid, ct);
+    return ct;
+  };
+  for (const list of ['gearlocations', 'armorlocations', 'weaponlocations']) {
+    for (const l of c.get(list)?.all('location') || []) add(l.val('name'), l.val('guid').trim().toLowerCase() || null);
+  }
+  const GUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const resolve = (v) => {
+    const s = String(v || '').trim();
+    if (!s || /^0{8}-/.test(s)) return undefined;
+    if (GUID.test(s)) return byGuid.get(s.toLowerCase())?.id;
+    return (byName.get(s.toLowerCase()) || add(s, null))?.id;
+  };
+  return { containers, resolve };
+}
+
+/** item.location from the node's <location> (Chummer location guid or name); returns the item. */
+function placeItem(item, node, locs) {
+  const loc = locs.resolve(node.val('location'));
+  if (loc) item.location = loc;
+  return item;
+}
+
+/** Active clip of a weapon node (<clips><clip>, <activeammoslot> 1-based): { count, gearGuid } or null when the file has none. */
+function activeClip(w) {
+  const clips = w.get('clips')?.all('clip') || [];
+  if (!clips.length) return null;
+  const slot = clips[Math.max(0, num(w.val('activeammoslot'), 1) - 1)] || clips[0];
+  const raw = slot.has('count') ? slot.val('count') : slot.val('ammo');
+  if (!/^\s*\d+\s*$/.test(raw)) return null;
+  const id = (slot.val('id') || slot.val('guid')).trim().toLowerCase();
+  return { count: Math.max(0, Math.round(num(raw))), gearGuid: id && !/^0{8}-/.test(id) ? id : null };
 }
 
 function withRef(item, node) {

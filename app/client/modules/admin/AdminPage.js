@@ -9,6 +9,7 @@ import { t, tn, tIfKnown, fmtDate } from '../../lib/i18n.js';
 import { fmtBytes, Progress } from './common.js';
 import BooksAdmin from './BooksAdmin.js';
 import AssistantAdmin from './AssistantAdmin.js';
+import MaplibAdmin from './MaplibAdmin.js';
 
 const TOKEN_KEY = 'sr.adminToken';
 const readToken = () => {
@@ -385,6 +386,9 @@ export default function AdminPage({ onLang }) {
 
         <${Panel} title=${t('Livres de règles')} style="margin-top:14px">
           <${BooksAdmin} adminApi=${adminApi} token=${adminToken} run=${run} />
+        </${Panel}>
+        <${Panel} title=${t('Bibliothèque de cartes')} style="margin-top:14px">
+          <${MaplibAdmin} adminApi=${adminApi} token=${adminToken} run=${run} />
         </${Panel}>
         <${Panel} title=${t('Assistant IA')} style="margin-top:14px">
           <${AssistantAdmin} adminApi=${adminApi} run=${run} />

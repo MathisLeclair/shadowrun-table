@@ -2,9 +2,10 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { html, Button, IconButton, Badge, Empty, SearchBox, Select, Toggle, Modal } from '../../lib/ui.js';
 import { toast } from '../../lib/ui-store.js';
-import { t, tn, tk, compare } from '../../lib/i18n.js';
+import { t, tn, tk, compare, skillLabel, getLang } from '../../lib/i18n.js';
 import { STORE_SECTIONS, UPGRADE_FILES, fold } from './rules.js';
 import { specialEntry, priceEntry, buyStatus, addToCart, nuyen, AvailBadge, useMedia, useMartialCatalog } from './common.js';
+import { skillIndex, entrySkills, actorSkillRatings, skillOptions, matchSkill, NO_SKILL } from './skills.js';
 import ItemDetail from './ItemDetail.js';
 import MartialArts from './MartialArts.js';
 import { ItemRef } from '../books/BookRef.js';
@@ -12,6 +13,24 @@ import { ItemRef } from '../books/BookRef.js';
 const PAGE = 40;
 // Remember the view between tab switches (module-level, per browser tab).
 const memo = { section: null, category: '', sort: 'name', search: '', hideUnavailable: true, showR: true, showF: true, minPrice: '', maxPrice: '' };
+
+// « Compétence » filter per section ({ [section]: { skill, mine } }), kept in localStorage (guarded: private mode, quota).
+const SKILL_KEY = 'sr.shop.skillFilter';
+let skillMemo = {};
+try {
+  const v = JSON.parse(localStorage.getItem(SKILL_KEY) || '{}');
+  if (v && typeof v === 'object' && !Array.isArray(v)) skillMemo = v;
+} catch {}
+function saveSkillMemo(section, value) {
+  skillMemo = { ...skillMemo, [section]: value };
+  try {
+    localStorage.setItem(SKILL_KEY, JSON.stringify(skillMemo));
+  } catch {}
+}
+const skillPref = (section) => {
+  const v = skillMemo[section];
+  return { skill: typeof v?.skill === 'string' ? v.skill : '', mine: !!v?.mine };
+};
 
 const SORTS = [
   { value: 'name', label: tk('Nom') },
@@ -47,12 +66,14 @@ export default function Storefront({ game, actor, catalog }) {
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [skillPrefRaw, setSkillPrefRaw] = useState(() => skillPref(section));
 
   const setSection = (s) => {
     memo.section = s;
     memo.category = '';
     setSectionRaw(s);
     setCategoryRaw('');
+    setSkillPrefRaw(skillPref(s));
     setPage(0);
   };
   const setCategory = (c) => {
@@ -68,6 +89,12 @@ export default function Storefront({ game, actor, catalog }) {
   const setSearch = (s) => {
     memo.search = s;
     setSearchRaw(s);
+    setPage(0);
+  };
+  const setSkillPref = (patch) => {
+    const next = { ...skillPrefRaw, ...patch };
+    saveSkillMemo(section, next);
+    setSkillPrefRaw(next);
     setPage(0);
   };
   const setFilter = (k, v) => {
@@ -98,6 +125,18 @@ export default function Storefront({ game, actor, catalog }) {
   // A remembered category may not exist any more (other section, or other UI language): show everything then.
   const category = categoryRaw && categories.some((c) => c.name === categoryRaw) ? categoryRaw : '';
 
+  // « Compétence » filter: skills linked to the section's items (weapon skill, pilot skill, focus…), see skills.js.
+  const skillIdx = useMemo(() => (catalog ? skillIndex(catalog) : null), [catalog]);
+  const skillsOf = (e) => entrySkills(e, skillIdx);
+  const ratings = useMemo(() => actorSkillRatings(actor), [actor?.skills]);
+  const skillOpts = useMemo(() => skillOptions(base, skillsOf, ratings, skillLabel, compare), [base, skillIdx, ratings, getLang()]);
+  const hasSkillFilter = skillOpts.options.length > 0;
+  const mine = hasSkillFilter && !!actor && skillPrefRaw.mine;
+  const visibleSkillOpts = mine ? skillOpts.options.filter((o) => o.rating > 0) : skillOpts.options;
+  const showNoSkill = !mine && skillOpts.none > 0 && section !== 'accessories';
+  // A remembered skill absent from this list (other character, catalog change): any skill then.
+  const skill = !hasSkillFilter ? '' : skillPrefRaw.skill === NO_SKILL ? (showNoSkill ? NO_SKILL : '') : visibleSkillOpts.some((o) => o.id === skillPrefRaw.skill) ? skillPrefRaw.skill : '';
+
   const results = useMemo(() => {
     const words = fold(search).split(/\s+/).filter(Boolean);
     const minP = filters.minPrice === '' ? null : Number(filters.minPrice);
@@ -106,6 +145,7 @@ export default function Storefront({ game, actor, catalog }) {
     for (const e of base) {
       if (category && e.category !== category) continue;
       if (words.length && !words.every((w) => e.search.includes(w))) continue;
+      if ((skill || mine) && !matchSkill(skillsOf(e), skill, mine, ratings)) continue;
       const q = priceEntry(e, {}, shop);
       if (!filters.showR && q.legality === 'R') continue;
       if (!filters.showF && q.legality === 'F') continue;
@@ -121,7 +161,7 @@ export default function Storefront({ game, actor, catalog }) {
     else if (sort === 'avail') out.sort((a, b) => a.q.availValue - b.q.availValue || byName(a, b));
     else out.sort(byName);
     return out;
-  }, [base, category, search, sort, filters, shop, isGM]);
+  }, [base, category, search, sort, filters, shop, isGM, skill, mine, ratings, skillIdx]);
 
   const pages = Math.max(1, Math.ceil(results.length / PAGE));
   const curPage = Math.min(page, pages - 1);
@@ -181,6 +221,20 @@ export default function Storefront({ game, actor, catalog }) {
     <div class="row wrap">
       <${SearchBox} value=${search} onChange=${setSearch} placeholder=${t('Rechercher (FR ou EN)…')} />
       ${narrow && categories.length > 1 && html`<${Select} class="shop-cat-select" value=${category} onChange=${setCategory} options=${[{ value: '', label: t('Toutes catégories ({n})', { n: base.length }) }, ...categories.map((c) => ({ value: c.name, label: `${c.name} (${c.count})` }))]} />`}
+      ${hasSkillFilter &&
+      html`<span class="row gap-s shop-skill-filter">
+        <${Select} class=${'shop-skill-select' + (skill ? ' active' : '')} value=${skill} onChange=${(v) => setSkillPref({ skill: v })}
+          title=${section === 'accessories' ? t('Compétence des armes compatibles') : t('Compétence liée')}
+          aria-label=${section === 'accessories' ? t('Compétence des armes compatibles') : t('Compétence liée')}
+          options=${[
+            { value: '', label: section === 'accessories' ? t('Toutes armes') : t('Toutes compétences') },
+            ...visibleSkillOpts.map((o) => ({ value: o.id, label: o.rating > 0 ? `${o.label} (${o.rating})` : o.label })),
+            ...(showNoSkill ? [{ value: NO_SKILL, label: t('Sans compétence liée') }] : []),
+          ]} />
+        <${Button} small variant=${mine ? 'primary' : 'ghost'} disabled=${!actor} aria-pressed=${mine ? 'true' : 'false'}
+          title=${actor ? t('Seulement les articles liés aux compétences de {name}', { name: actor.name }) : t('Choisis d’abord un personnage')}
+          onClick=${() => setSkillPref({ mine: !skillPrefRaw.mine })}>${t('Mes compétences')}</${Button}>
+      </span>`}
       <${Select} class="shop-sort" value=${sort} onChange=${setSort} options=${SORTS.map((s) => ({ value: s.value, label: t(s.label) }))} />
       <${Button} small variant=${showFilters ? 'primary' : 'ghost'} onClick=${() => setShowFilters(!showFilters)}>${t('Filtres')}</${Button}>
       <span class="muted small grow right">${tn(results.length, '{n} article', '{n} articles')}</span>
@@ -220,7 +274,11 @@ export default function Storefront({ game, actor, catalog }) {
         </div>`
       : html`<div class="shop-results">
           ${!shown.length
-            ? html`<${Empty}>${catalog.error && !catalog.entries.length ? t('Catalogue introuvable — le MJ doit lancer « npm run build:catalog ».') : t('Rien ne correspond à ta recherche.')}</${Empty}>`
+            ? html`<${Empty}>${catalog.error && !catalog.entries.length
+                ? t('Catalogue introuvable — le MJ doit lancer « npm run build:catalog ».')
+                : mine && !visibleSkillOpts.length
+                  ? t('{name} n’a aucune compétence liée à ces articles.', { name: actor.name })
+                  : t('Rien ne correspond à ta recherche.')}</${Empty}>`
             : html`<table class="sr shop-table">
                 <thead><tr><th>${t('Article')}</th>${!narrow && html`<th>${t('Catégorie')}</th>`}<th>${t('Dispo')}</th><th class="right">${t('Prix')}</th><th></th></tr></thead>
                 <tbody>

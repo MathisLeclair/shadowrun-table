@@ -9,6 +9,8 @@ const ui = {
   sheetActorId: null, // actor sheet open in the modal (null = closed)
   viewMapId: null, // GM: map currently displayed (defaults to scene.activeMapId)
   selectedTokenIds: [], // map selection
+  targetTokenId: null, // the user's attack target (map token, attacks module)
+  aimPoint: null, // { mapId, x, y } aimed point for grenades / launchers
   toasts: [],
 };
 const listeners = new Set();

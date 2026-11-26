@@ -21,3 +21,9 @@ tools
 data/books
 data/books-sign.key
 data/assistant
+# Map library: only data/maplib/<slug>.json goes in the image (images are paid content, the rest is per server)
+data/maplib/images
+data/maplib/thumbs
+data/maplib/entries
+data/maplib/library.json*
+data/maplib-sign.key

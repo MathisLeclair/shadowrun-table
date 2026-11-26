@@ -16,3 +16,10 @@ runtime/books/
 # HMAC key of the rulebook PDF links (per install, never copied)
 data/books-sign.key
 data/assistant/
+# Map library runtime + images (the Fragmaps images are paid content: never in git; data/maplib/<slug>.json is)
+data/maplib/images/
+data/maplib/thumbs/
+data/maplib/entries/
+data/maplib/library.json*
+data/maplib-sign.key
+runtime/maplib/

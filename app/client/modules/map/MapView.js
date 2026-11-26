@@ -11,6 +11,10 @@ import { MapCanvas } from './MapCanvas.js';
 import { DISPO, STATUS_GLYPHS, isImageMap, lightingOptions, dispoLabel, statusText } from './renderer.js';
 import { t, tk, compare } from '../../lib/i18n.js';
 import { tRich } from '../sheet/common.js';
+import { RollDialog } from '../sheet/RollDialog.js';
+import { setTarget, setAimPoint, PENDING } from '../combat/attack-common.js';
+import { cellDistance, rangeFor, isAreaWeapon, blastOf, blastReach } from '/shared/combat.js';
+import { isUnarmed } from '../sheet/inventory.js';
 
 loadCss('/modules/map/map.css');
 
@@ -67,6 +71,25 @@ function playerSideMap(map) {
   };
 }
 
+/** Weapon offered by the target banner: a grenade for an aimed point, melee within 2 m, else the first ready ranged weapon. */
+function defaultWeapon(actor, meters, grenade) {
+  const ready = (actor?.weapons || []).filter((w) => w && (w.equipped !== false || isUnarmed(w)));
+  if (grenade) {
+    const g = ready.find((w) => isAreaWeapon(w));
+    if (g) return g;
+  }
+  const melee = ready.filter((w) => w.kind === 'melee');
+  const ranged = ready.filter((w) => w.kind !== 'melee' && !isAreaWeapon(w));
+  if (meters !== null && meters <= 2 && melee.length) return melee.find((w) => !isUnarmed(w)) || melee[0];
+  return ranged[0] || melee[0] || null;
+}
+
+/** Blast reach (meters) of the grenade the banner would throw — preview ring around the aimed point. */
+function grenadeReach(actor) {
+  const w = defaultWeapon(actor, null, true);
+  return w && isAreaWeapon(w) ? blastReach(blastOf(w, actor)) : 0;
+}
+
 export default function MapView({ game }) {
   const ui = useUI();
   const isGM = game.me.role === 'gm';
@@ -110,6 +133,7 @@ function LiveMap({ game, map, ui, isGM }) {
   const [spawnOpts, setSpawnOpts] = useState({ count: 1, hidden: false });
   const [toolsOpen, setToolsOpen] = useState(() => typeof window === 'undefined' || window.innerWidth > 700);
   const [tip, setTip] = useState(null);
+  const [attacking, setAttacking] = useState(null); // { actorId, weaponId } roll dialog opened from the target banner
   const [showWalls, setShowWalls] = usePref('sr.map.showWalls', true);
   const [showGrid, setShowGrid] = usePref('sr.map.showGrid', true);
   const hoverWallRef = useRef(null);
@@ -168,8 +192,39 @@ function LiveMap({ game, map, ui, isGM }) {
   const turnTokenId = combat?.active ? (combat.entries || []).find((e) => e.id === combat.currentId)?.tokenId || null : null;
   const inCombat = !!combat?.active && (!combat.mapId || combat.mapId === map.id);
 
+  // Combat marks: my target, my aimed point, blasts and pending attacks of this map (attacks module).
+  const targetTok = ui.targetTokenId ? (map.tokens || []).find((tt) => tt.id === ui.targetTokenId) || null : null;
+  const attackerTok = isGM
+    ? (map.tokens || []).find((tt) => selected.has(tt.id) && tt.id !== targetTok?.id && tt.actorId && actors[tt.actorId]?.attributes) || null
+    : (map.tokens || []).find((tt) => ownsToken(tt)) || null;
+  const mpc = Number(map.metersPerCell) || 1;
+  const targetMeters = targetTok && attackerTok ? cellDistance(attackerTok, targetTok, mpc) : null;
+  const aimHere = ui.aimPoint && ui.aimPoint.mapId === map.id ? ui.aimPoint : null;
+  const attacksSlice = game.attacks;
+  const combatMarks = useMemo(() => {
+    const blasts = (attacksSlice?.blasts || []).filter((b) => b.mapId === map.id).slice(0, 4);
+    const lines = [];
+    for (const a of attacksSlice?.list || []) {
+      if (a.mapId !== map.id || !PENDING.has(a.status) || a.kind === 'blast') continue;
+      const from = (map.tokens || []).find((tt) => tt.actorId && tt.actorId === a.attackerId);
+      if (!from || !a.targetTokenId) continue;
+      lines.push({ from: from.id, to: a.targetTokenId, color: a.status === 'soak' ? '#e0663f' : '#e05c5c', dashed: a.status === 'defense', label: a.status === 'soak' ? `${a.modifiedDv}${a.type}` : null });
+    }
+    if (!targetTok && !aimHere && !blasts.length && !lines.length) return null;
+    return {
+      targetTokenId: targetTok?.id || null,
+      targetLabel: targetTok ? (targetMeters !== null ? `${targetTok.name} · ${targetMeters} m` : targetTok.name) : null,
+      aim: aimHere ? { x: aimHere.x, y: aimHere.y } : null,
+      aimLabel: aimHere && attackerTok ? `${cellDistance(attackerTok, aimHere, mpc)} m` : null,
+      aimReach: aimHere && attackerTok ? grenadeReach(actors[attackerTok.actorId]) : 0,
+      blasts: blasts.map((b) => ({ ...b, label: b.scattered ? t('dévie de {m} m', { m: b.meters }) : null })),
+      lines,
+    };
+  }, [attacksSlice, map.id, map.tokens, targetTok, aimHere, attackerTok, targetMeters, actors]);
+
   const scene = useMemo(
     () => ({
+      combatMarks,
       map: view.map,
       actors,
       role: me.role,
@@ -187,7 +242,7 @@ function LiveMap({ game, map, ui, isGM }) {
       showGrid,
       barsFor: (tok, actor) => isGM || ownsToken(tok) || ((tok.disposition === 'pc' || tok.disposition === 'ally') && !!actor),
     }),
-    [view, actors, selected, turnTokenId, isGM, showWalls, showGrid]
+    [view, actors, selected, turnTokenId, isGM, showWalls, showGrid, combatMarks]
   );
 
   // ---------------- server events ----------------
@@ -406,6 +461,11 @@ function LiveMap({ game, map, ui, isGM }) {
     onClick(info) {
       setMenu(null);
       if (info.alt) return ping(info);
+      // Players: a click on another character's token targets it (again: clears the target).
+      if (!isGM && !placing) {
+        const tok = rRef.current?.tokenAt(info.fx, info.fy);
+        if (tok && !ownsToken(tok) && tok.actorId) return setTarget(tok.id);
+      }
       if (placing) {
         if (info.cx < 0 || info.cy < 0 || info.cx >= map.width || info.cy >= map.height) return;
         spawnAt(placing.templateId, info.cx, info.cy);
@@ -546,8 +606,18 @@ function LiveMap({ game, map, ui, isGM }) {
       ${isGM && !shownToPlayers && html`<div class="map-banner dim">${t('Les joueurs voient : {name}', { name: game.maps?.[game.scene?.activeMapId]?.name || t('aucune carte') })}</div>`}
       ${turnEntry && inCombat && html`<div class="map-banner combat">${tRich(t('Round {round} · Tour de {name}'), { round: combat.round, name: html`<strong>${turnEntry.hidden && !isGM ? '???' : turnEntry.name}</strong>` })}</div>`}
       ${placing && html`<div class="map-banner info">${t('Clique une case pour placer « {name} » ×{n} · Maj+clic : en placer plusieurs · Échap : annuler', { name: placing.name, n: spawnOpts.count })}</div>`}
+      ${(targetTok || aimHere) && html`<div class="map-banner target">
+        ${targetTok ? html`🎯 ${tRich(t('Cible : {name}'), { name: html`<strong>${targetTok.name}</strong>` })}${targetMeters !== null ? ` · ${targetMeters} m` : ''}` : null}
+        ${aimHere ? html`${targetTok ? ' · ' : ''}💣 ${t('Point visé ({x}, {y})', { x: aimHere.x, y: aimHere.y })}` : null}
+        ${attackerTok && html`<button class="map-banner-btn" onClick=${() => setAttacking({ actorId: attackerTok.actorId, weaponId: defaultWeapon(actors[attackerTok.actorId], targetMeters, !!aimHere && !targetTok)?.id || null })}
+          title=${t('Jet d’attaque de {name}', { name: attackerTok.name })}>⚔ ${isGM ? t('Attaquer avec {name}', { name: attackerTok.name }) : t('Attaquer')}</button>`}
+        ${isGM && !attackerTok && targetTok && html`<span class="faint small">${t('sélectionne l’attaquant')}</span>`}
+        <button class="map-banner-x" onClick=${() => { setTarget(null); setAimPoint(null); }} title=${t('Effacer la cible')}>✕</button>
+      </div>`}
     </div>
-    ${!isGM && html`<div class="map-hint">${t('Glisse ton pion pour te déplacer · clic sur une porte proche : ouvrir/fermer · double-clic : fiche · Alt+clic ou appui long : ping')}</div>`}
+    ${attacking && actors[attacking.actorId]?.attributes && html`<${RollDialog} game=${game} actor=${actors[attacking.actorId]} onClose=${() => setAttacking(null)}
+      preset=${attacking.weaponId ? (() => { const w = actors[attacking.actorId].weapons.find((x) => x.id === attacking.weaponId); return { skillId: w?.skill || 'exotic_weapon', weaponId: attacking.weaponId, label: `Attaque — ${w?.nameFr || w?.name || ''}`, targetTokenId: targetTok?.id }; })() : { label: 'Attaque', targetTokenId: targetTok?.id }} />`}
+    ${!isGM && html`<div class="map-hint">${t('Glisse ton pion pour te déplacer · clic sur un autre pion : le cibler · clic sur une porte proche : ouvrir/fermer · double-clic : fiche · Alt+clic ou appui long : ping')}</div>`}
     ${isGM && drawer && html`<${BestiaryDrawer} game=${game} opts=${spawnOpts} setOpts=${setSpawnOpts} placing=${placing} setPlacing=${setPlacing} onClose=${() => setDrawer(false)} />`}
     ${tip && html`<div class="map-tip" style=${{ left: tip.x + 14 + 'px', top: tip.y + 14 + 'px' }}>${tip.text}</div>`}
     ${menu && html`<${ContextMenu} menu=${menu} onClose=${() => setMenu(null)}>${menuContent()}</${ContextMenu}>`}
@@ -571,7 +641,9 @@ function LiveMap({ game, map, ui, isGM }) {
       if (!isGM) {
         if (!ownsToken(tok)) {
           return html`<div class="map-menu-head">${tok.name}</div>
+            ${tok.actorId && html`<button class="map-menu-item" onClick=${act(() => setTarget(tok.id))}>${ui.targetTokenId === tok.id ? t('Ne plus cibler') : '🎯 ' + t('Cibler')}</button>`}
             ${tok.actorId && actors[tok.actorId] && html`<button class="map-menu-item" onClick=${act(() => openSheet(tok.actorId))}>${t('Ouvrir la fiche')}</button>`}
+            <button class="map-menu-item" onClick=${act(() => setAimPoint(mapId, tok.x, tok.y))}>💣 ${t('Viser ce point (grenade)')}</button>
             <button class="map-menu-item" onClick=${act(() => ping({ fx: menu.fx, fy: menu.fy }))}>${t('Pinger ici')}</button>`;
         }
         return html`<div class="map-menu-head">${tok.name}</div>
@@ -586,6 +658,7 @@ function LiveMap({ game, map, ui, isGM }) {
       return html`<div class="map-menu-head">${multi ? t('{n} pions sélectionnés', { n: targets.length }) : tok.name}
           ${!multi && html`<${Badge} color=${{ pc: 'cyan', ally: 'green', neutral: 'amber', hostile: 'red' }[tok.disposition] || 'dim'}>${dispoLabel(tok.disposition)}</${Badge}>`}</div>
         ${!multi && tok.actorId && actors[tok.actorId] && html`<button class="map-menu-item" onClick=${act(() => openSheet(tok.actorId))}>${t('Ouvrir la fiche')}</button>`}
+        ${!multi && tok.actorId && html`<button class="map-menu-item" onClick=${act(() => setTarget(tok.id))} title=${t('Cible des attaques du pion sélectionné')}>${ui.targetTokenId === tok.id ? t('Ne plus cibler') : '🎯 ' + t('Cibler')}</button>`}
         <button class="map-menu-item" onClick=${act(() => updateTokens(ids, { hidden: !allHidden }))}>${allHidden ? t('Montrer aux joueurs') : t('Cacher aux joueurs')}</button>
         <div class="map-menu-label">${t('Disposition')}</div>
         <div class="map-menu-row">${Object.entries(DISPO).map(
@@ -606,8 +679,10 @@ function LiveMap({ game, map, ui, isGM }) {
     }
     // empty cell
     const inside = x >= 0 && y >= 0 && x < map.width && y < map.height;
+    const aimItems = inside && html`<button class="map-menu-item" onClick=${act(() => setAimPoint(mapId, x, y))}>💣 ${t('Viser ce point (grenade)')}</button>
+      ${aimHere && html`<button class="map-menu-item" onClick=${act(() => setAimPoint(null))}>${t('Effacer le point visé')}</button>`}`;
     if (!isGM || view.preview) {
-      return html`<button class="map-menu-item" onClick=${act(() => ping({ fx: menu.fx, fy: menu.fy }))}>${t('Pinger ici')}</button>`;
+      return html`<button class="map-menu-item" onClick=${act(() => ping({ fx: menu.fx, fy: menu.fy }))}>${t('Pinger ici')}</button>${aimItems}`;
     }
     const wallDoor = menu.wallDoorId ? (map.walls || []).find((w) => w.id === menu.wallDoorId && w.door) : null;
     const door = wallDoor ? { ...wallDoor.door, id: wallDoor.id } : doorAt(x, y);
@@ -616,6 +691,7 @@ function LiveMap({ game, map, ui, isGM }) {
     const notesHere = (map.notes || []).filter((n) => n.x === x && n.y === y);
     return html`<div class="map-menu-head">${t('Case {x}, {y}', { x, y })}</div>
       <button class="map-menu-item" onClick=${act(() => ping({ fx: menu.fx, fy: menu.fy }))}>${t('Pinger ici')}</button>
+      ${aimItems}
       ${inside &&
       html`
         <button class="map-menu-item" onClick=${act(() => send('maps/placePCs', { mapId, x, y }).then((ids) => toast(ids?.length ? t('{n} PJ placé(s)', { n: ids.length }) : t('Tous les PJ sont déjà sur la carte')), quiet))}>${t('Placer les PJ ici')}</button>

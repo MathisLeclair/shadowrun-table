@@ -34,7 +34,9 @@
 
 .shop-toolbar { display: flex; flex-direction: column; gap: 8px; }
 .shop-toolbar .search { max-width: 320px; flex: 1 1 200px; }
-.shop-sort, .shop-cat-select { width: auto; max-width: 220px; }
+.shop-sort, .shop-cat-select, .shop-skill-select { width: auto; max-width: 220px; }
+.shop-skill-select.active { border-color: var(--cyan); }
+.shop-skill-filter { flex-wrap: nowrap; }
 .shop-filters { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; gap: 16px; }
 .shop-price-input { width: 96px; padding: 5px 8px; }
 .shop-closed { background: #3a1d1d; border: 1px solid #6a2c2c; color: #ffc9c9; padding: 10px 14px; border-radius: 8px; }

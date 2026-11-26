@@ -36,7 +36,7 @@ Laissez la table s'équiper et se répartir les rôles, sans transformer ça en 
 
 ## Phase 3, Approche A — Le hack à distance (la scène de Bricks)
 
-**Depuis où.** Le Hacker's Lair (map_hacker_lair) ou n'importe quel point de la grille de Downtown. Bricks n'a pas besoin d'être sur place ; elle subit le bruit normal de la grille publique.
+**Depuis où.** Le Hacker's Lair (map_fvtt_hacker-s-lair) ou n'importe quel point de la grille de Downtown. Bricks n'a pas besoin d'être sur place ; elle subit le bruit normal de la grille publique.
 
 ### Le host Hollow Pine Holdings
 
@@ -77,7 +77,7 @@ Ne laissez pas deux joueurs regarder un troisième jouer seul pendant une heure.
 
 ## Phase 3, Approche B — L'infiltration physique (Corp Lobby + Server Room)
 
-**Les cartes.** Le rez-de-chaussée de la tour se joue en narration (hall commun, comptoir de sécurité, portiques). Le quatorzième étage se joue sur **map_corp_lobby** (accueil et bureaux de Hollow Pine) et **map_server_room** (la salle serveur de la suite). Les repères ci-dessous décrivent ce qui doit s'y trouver ; adaptez la position exacte des pièces à la carte existante.
+**Les cartes.** Le rez-de-chaussée de la tour se joue en narration (hall commun, comptoir de sécurité, portiques). Le quatorzième étage se joue sur **map_lib_office-floor** (« Hollow Pine — suite 1408 », carte Fragmaps : accueil, plateau, salle de réunion, bureau d'Ashe et local serveur sur la même carte ; le hall du rez-de-chaussée, si besoin, sur map_fvtt_corp-lobby). Les repères ci-dessous décrivent ce qui doit s'y trouver ; adaptez la position exacte des pièces à la carte existante.
 
 ### La tour Meridian (rez-de-chaussée, narration)
 
@@ -87,7 +87,7 @@ Ne laissez pas deux joueurs regarder un troisième jouer seul pendant une heure.
 - **Parking souterrain :** deux niveaux, accès badge, caméras basse résolution. C'est par là qu'arrive Reyes.
 - **Toit :** nacelle de laveur de vitres sur rail (accessible depuis la cage d'escalier du 22e, porte en maglock rating 3). Le **grappin d'Anthony** et la nacelle permettent d'atteindre la façade du 14e : fenêtre de la salle de réunion de Hollow Pine, verre renforcé non ouvrant (Structure 6, Armor 6 — il faut la découper : 10 minutes avec un outil adapté, ou un test d'Athletics/Gymnastics pour tenir en place pendant que quelqu'un d'autre découpe).
 
-### Le 14e étage — Suite 1408, Hollow Pine Holdings (map_corp_lobby)
+### Le 14e étage — Suite 1408, Hollow Pine Holdings (map_lib_office-floor)
 
 - **Palier d'ascenseur** commun, moquette bleu nuit, une caméra du gestionnaire de la tour (non esclave du host Hollow Pine).
 - **Porte de la suite :** verre dépoli et cadre en acier, logo — un pin creux stylisé. **Maglock rating 4** (badge + code à 4 chiffres). Caméra n°1 au-dessus de la porte, côté intérieur.
@@ -95,7 +95,7 @@ Ne laissez pas deux joueurs regarder un troisième jouer seul pendant une heure.
 - **Plateau ouvert (environ 10 × 6 m) :** quatre postes vides, très peu personnalisés — c'est une coquille, personne ne travaille vraiment ici. Les tiroirs contiennent des fournitures neuves et des baux commerciaux sans intérêt. Couverture : bureaux (couverture partielle), cloison vitrée (aucune).
 - **Salle de réunion (environ 5 × 4 m) :** table en verre, baie vitrée sur la ville (la fenêtre que la nacelle permet d'atteindre).
 - **Bureau de Dorian Ashe (environ 5 × 4 m) :** le seul endroit vivant de la suite — orchidées, un portrait encadré d'Ashe avec un homme en smoking au gala Halcyon de l'an dernier (Cornelius Wyatt-Brandt, voir Acte 2), une bibliothèque de droit des sociétés. Derrière un panneau de la bibliothèque : **le coffre** (serrure mécanique + pavé, rating 4 ; Locksmith + Agility [Physical] seuil 4, ou autopicker). Contenu : voir Phase 4.
-- **Salle serveur (map_server_room, environ 4 × 3 m) :** porte blindée, **maglock biométrique rating 5** (paume d'Ashe ou de l'administrateur du prestataire). Deux baies de serveurs, une console de maintenance, une climatisation bruyante (–2 dés aux tests de Perception auditive à l'intérieur). Caméra n°3. Porte renforcée : Structure 12, Armor 12 si quelqu'un veut l'enfoncer — ça déclenche l'alarme.
+- **Salle serveur (le « Local serveur » de map_lib_office-floor, environ 4 × 3 m) :** porte blindée, **maglock biométrique rating 5** (paume d'Ashe ou de l'administrateur du prestataire). Deux baies de serveurs, une console de maintenance, une climatisation bruyante (–2 dés aux tests de Perception auditive à l'intérieur). Caméra n°3. Porte renforcée : Structure 12, Armor 12 si quelqu'un veut l'enfoncer — ça déclenche l'alarme.
 - **Éclairage :** de nuit, veilleuses au sol seulement (pénombre : –1 aux tests visuels sans Low-Light ; Jane a Low-Light Vision). Les détecteurs de mouvement allument les plafonniers de l'accueil et du plateau si le host est en alerte.
 
 **Si Bricks se branche dans la salle serveur (ou sur le terminal de l'accueil) :** connexion directe. Pas de bruit, **+2 dés** à toutes ses actions contre le host, et la Patrol IC subit **–2 dés** pour la repérer (elle « regarde » vers la grille, pas vers l'intérieur). C'est la vraie récompense de l'approche physique.
@@ -256,7 +256,7 @@ Si la session se passe mal (échec de l'approche, report au lendemain, Reyes pas
 - **Dorian Ashe** (tpl_dorian_ashe) + 2 gardes de jour (tpl_corpsec_human_r3) — option sociale ou complication 3.
 - **Knight Errant** (gabarits génériques) — si l'approche bruyante dérape.
 - **Priya Raman**, réceptionniste — non-combattante, pas de fiche.
-- Cartes : **map_hacker_lair** (approche A), **map_corp_lobby** et **map_server_room** (approche B), **map_jane_apartment** (complication 4 ou embuscade).
+- Cartes : **map_fvtt_hacker-s-lair** (approche A), **map_lib_office-floor** (approche B, + map_fvtt_corp-lobby pour le hall), **map_fvtt_apartement** / **map_jane_apartment** (complication 4 ou embuscade). Choix des cartes : cartes-campagne.md.
 
 ## Points de continuité à ne pas perdre
 

@@ -21,7 +21,7 @@ export const LIST_FIELDS = {
     { k: 'name', label: tk('Nom'), w: 170 }, { k: 'kind', label: tk('Type'), type: 'select', options: [{ value: 'melee', label: tk('Mêlée') }, { value: 'ranged', label: tk('Distance') }] },
     { k: 'skill', label: tk('Compétence'), type: 'select', options: combatSkillOptions }, { k: 'accuracy', label: tk('Préc.'), w: 70 }, { k: 'damage', label: tk('VD'), w: 90 },
     { k: 'ap', label: tk('PA'), w: 50 }, { k: 'mode', label: tk('Mode'), w: 80 }, { k: 'rc', label: tk('RC'), type: 'num' }, { k: 'ammo', label: tk('Munitions'), w: 80 },
-    { k: 'reach', label: tk('Allonge'), type: 'num' }, { k: 'category', label: tk('Catégorie'), w: 110 }, { k: 'notes', label: tk('Notes'), w: 180 },
+    { k: 'reach', label: tk('Allonge'), type: 'num' }, { k: 'qty', label: tk('Qté'), type: 'num' }, { k: 'category', label: tk('Catégorie'), w: 110 }, { k: 'notes', label: tk('Notes'), w: 180 },
   ],
   armor: [
     { k: 'name', label: tk('Nom'), w: 200 }, { k: 'rating', label: tk('Indice'), type: 'num' }, { k: 'equipped', label: tk('armure::Portée'), type: 'bool' },

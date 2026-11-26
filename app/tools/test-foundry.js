@@ -77,24 +77,24 @@ console.log('lifestyle / armor-mod conversion, merge re-import of upgrades');
   const pcSheet = {
     metatype: 'Humain', attributes: { BOD: 3 }, augmented: {}, initiative: { dice: 1, bonus: 0 }, condition: {}, edge: { current: 1 }, skills: [], knowledge: [], qualities: [],
     powers: [], spells: [], augmentations: [], gear: [], vehicles: [], contacts: [], sins: [], lifestyles: [], karma: 0, karmaTotal: 0, nuyen: 0,
-    weapons: [{ id: 'fvtt_w1', name: 'Ares Predator V', kind: 'ranged', damage: '8P', catalogId: 'x', mounts: ['Top', 'Barrel'] }],
+    weapons: [{ id: 'fvtt_w1', name: 'Ares Predator V', kind: 'ranged', damage: '8P', ammo: '15(c)', catalogId: 'x', mounts: ['Top', 'Barrel'] }],
     armor: [{ id: 'fvtt_a1', name: 'Veste', rating: 12, equipped: true, capacity: 12 }],
   };
   const pc = { appId: 'pc_t', fid: 'pcx', name: 'Testeur', sheet: pcSheet, owner: { name: 'P' } };
-  const legacySnap = snapshotOf({ ...pcSheet, weapons: [{ id: 'fvtt_w1', name: 'Ares Predator V', kind: 'ranged', damage: '8P', catalogId: 'x' }], armor: [{ id: 'fvtt_a1', name: 'Veste', rating: 12, equipped: true }] });
+  const legacySnap = snapshotOf({ ...pcSheet, weapons: [{ id: 'fvtt_w1', name: 'Ares Predator V', kind: 'ranged', damage: '8P', ammo: '15(c)', catalogId: 'x' }], armor: [{ id: 'fvtt_a1', name: 'Veste', rating: 12, equipped: true }] });
   const existing = {
     id: 'pc_t', type: 'pc', name: 'Testeur', ...JSON.parse(JSON.stringify(pcSheet)),
-    weapons: [{ id: 'fvtt_w1', name: 'Ares Predator V', kind: 'ranged', damage: '8P', catalogId: 'x', ammoLeft: 7, accessories: [{ id: 'acc_r', name: 'Silencer/Suppressor', mount: 'Barrel' }] }],
+    weapons: [{ id: 'fvtt_w1', name: 'Ares Predator V', kind: 'ranged', damage: '8P', ammo: '15(c)', catalogId: 'x', ammoLeft: 7, accessories: [{ id: 'acc_r', name: 'Silencer/Suppressor', mount: 'Barrel' }] }],
     armor: [{ id: 'fvtt_a1', name: 'Veste', rating: 12, equipped: true, mods: [{ id: 'mod_r', name: 'Gel Packs', capacity: 2 }] }],
     foundry: { id: 'pcx', snapshot: legacySnap },
   };
   const merged = buildPc(pc, existing, { mode: 'merge' });
-  ok(merged.weapons[0].accessories?.some((x) => x.id === 'acc_r') && merged.weapons[0].ammoLeft === 7, 'legacy snapshot: unchanged weapon keeps its restored accessory and ammo');
+  ok(merged.weapons[0].accessories?.some((x) => x.id === 'acc_r') && merged.weapons[0].ammoLoaded === 7, 'legacy snapshot: unchanged weapon keeps its restored accessory and ammo');
   ok(merged.armor[0].mods?.some((m) => m.id === 'mod_r'), 'legacy snapshot: unchanged armor keeps its restored mod');
   ok(merged.foundry.snapshotVersion === 2, 'snapshot version recorded');
   const changed = { ...pc, sheet: { ...pcSheet, weapons: [{ ...pcSheet.weapons[0], damage: '9P' }] } };
   const merged2 = buildPc(changed, merged, { mode: 'merge' });
-  ok(merged2.weapons[0].damage === '9P' && merged2.weapons[0].accessories?.some((x) => x.id === 'acc_r') && merged2.weapons[0].ammoLeft === 7, 'weapon changed in Foundry: replaced, app accessory and ammo kept');
+  ok(merged2.weapons[0].damage === '9P' && merged2.weapons[0].accessories?.some((x) => x.id === 'acc_r') && merged2.weapons[0].ammoLoaded === 7, 'weapon changed in Foundry: replaced, app accessory and ammo kept');
 }
 
 // ---------------------------------------------------------------------------

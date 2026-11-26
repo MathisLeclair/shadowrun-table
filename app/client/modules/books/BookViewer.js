@@ -1,15 +1,21 @@
 // Global rulebook viewer: a resizable drawer on the right (mounted once by the registry, above the sheet modal).
-// Desktop: the browser's own PDF viewer in an <iframe> at the right page. Mobile / no built-in viewer: « Ouvrir le
-// PDF » link + the page's extracted text. Prev/next page, book switcher, full-text search. Esc closes it.
+// The PDF is drawn by the app's own pdf.js reader (PdfReader.js: downloaded once per browser and cached, continuous
+// scroll, zoom, text selection, search highlights), on desktop and mobile; « Texte » shows the page's extracted text.
+// Prev/next page, printed-page field, zoom, book switcher, full-text search, settings (zoom, browser cache). Esc closes it.
 // A modal opened while the drawer is open (confirm dialog, item editor…) goes in front of it: the drawer steps behind
 // (.behind) and leaves Esc to that modal until it closes or a book reference is opened again.
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { html, IconButton, loadCss } from '../../lib/ui.js';
+import { html, IconButton, Button, loadCss, confirmAction } from '../../lib/ui.js';
 import { api } from '../../lib/net.js';
-import { t, tn } from '../../lib/i18n.js';
+import { t, tn, fmtNumber } from '../../lib/i18n.js';
 import { toast } from '../../lib/ui-store.js';
 import { useViewer, useBooks, findBook, closeBook, gotoPdfPage, openBookPdf, printedToPdf, pdfToPrinted, searchBooks, setViewerSearch, loadBooks } from './store.js';
 import { bookName } from './BookRef.js';
+import { PdfReader, fmtMB } from './PdfReader.js';
+import { useBookCache, clearBookCache } from './bookcache.js';
+import { cachedByCode, MAX_BOOKS, MAX_BYTES } from './cachepolicy.js';
+import { releaseDocSoon } from './pdfdoc.js';
+import { zoomStep } from './readerlib.js';
 
 loadCss('/modules/books/books.css');
 
@@ -27,13 +33,21 @@ const saveWidth = (w) => {
   } catch {}
 };
 const clampWidth = (w) => Math.max(320, Math.min(window.innerWidth - 40, w));
-const inlinePdf = () => {
+const ZOOM_KEY = 'sr.books.zoom'; // 'width' | 'page' | number
+const readZoom = () => {
   try {
-    return navigator.pdfViewerEnabled !== false && !window.matchMedia('(max-width: 760px)').matches;
+    const z = localStorage.getItem(ZOOM_KEY);
+    return z === 'page' ? 'page' : Number(z) > 0 ? Number(z) : 'width';
   } catch {
-    return true;
+    return 'width';
   }
 };
+const saveZoom = (z) => {
+  try {
+    localStorage.setItem(ZOOM_KEY, String(z));
+  } catch {}
+};
+const BACKENDS = { cache: 'Cache Storage', idb: 'IndexedDB' };
 
 /** Snippet with highlighted ranges ([[start, end]] from the server). */
 export function Snippet({ text, marks }) {
@@ -113,7 +127,46 @@ function ViewerSearch({ code, onClose }) {
     ${busy && html`<div class="muted small">${t('Recherche…')}</div>`}
     ${res?.error && html`<div class="error small">${res.error}</div>`}
     ${res && !res.error && html`<div class="muted small">${res.total ? tn(res.total, '{n} résultat', '{n} résultats') : t('Aucun résultat')}${res.total > res.hits.length ? ` · ${t('{n} premiers affichés', { n: res.hits.length })}` : ''}</div>`}
-    ${res?.hits?.length > 0 && html`<${HitList} hits=${res.hits} showBook=${scope === 'all'} onPick=${(h) => openBookPdf(h.code, h.pdfPage)} />`}
+    ${res?.hits?.length > 0 && html`<${HitList} hits=${res.hits} showBook=${scope === 'all'} onPick=${(h) => openBookPdf(h.code, h.pdfPage, { q: q.trim() })} />`}
+  </div>`;
+}
+
+/** Viewer settings: zoom presets, display mode, and this browser's book cache (« Vider le cache des livres »). */
+function ViewerSettings({ book, list, zoom, setZoom, mode, setMode }) {
+  const cache = useBookCache();
+  const cached = cachedByCode(cache.entries, list || []);
+  const mine = book ? cached.get(book.code) : null;
+  const clear = async () => {
+    if (!(await confirmAction(t('Supprimer les livres gardés par ce navigateur ? Ils seront retéléchargés à la prochaine ouverture.')))) return;
+    await clearBookCache();
+    toast(t('Cache des livres vidé'));
+  };
+  const opt = (active, label, onClick) => html`<button type="button" class=${'books-mode' + (active ? ' active' : '')} onClick=${onClick}>${label}</button>`;
+  return html`<div class="books-settings" role="group" aria-label=${t('Réglages du lecteur')}>
+    <div class="books-settings-row">
+      <span class="muted small books-settings-label">${t('Zoom')}</span>
+      ${opt(zoom === 'width', t('Largeur de page'), () => setZoom('width'))}
+      ${opt(zoom === 'page', t('Page entière'), () => setZoom('page'))}
+      ${opt(zoom === 1, '100 %', () => setZoom(1))}
+    </div>
+    <div class="books-settings-row">
+      <span class="muted small books-settings-label">${t('Affichage')}</span>
+      ${opt(mode === 'pdf', t('PDF'), () => setMode('pdf'))}
+      ${opt(mode === 'text', t('Texte'), () => setMode('text'))}
+    </div>
+    <div class="books-settings-row books-settings-cache">
+      <span class="muted small books-settings-label">${t('Cache')}</span>
+      <div class="grow col">
+        ${!cache.ready
+          ? html`<span class="muted small">${t('Chargement…')}</span>`
+          : cache.backend === 'none'
+            ? html`<span class="muted small">${t('Ce navigateur ne garde pas les livres (navigation privée ?) : chaque ouverture les retélécharge.')}</span>`
+            : html`<span class="small">${tn(cache.entries.length, '{n} livre gardé par ce navigateur ({size})', '{n} livres gardés par ce navigateur ({size})', { size: fmtMB(cache.bytes) })}</span>
+              <span class="muted small">${t('Au plus {n} livres / {size}, les moins lus sont retirés d’abord', { n: MAX_BOOKS, size: fmtMB(MAX_BYTES) })} · <span class="mono">${BACKENDS[cache.backend] || cache.backend}</span></span>
+              ${book && html`<span class="muted small">${mine ? t('{code} : en cache ({size})', { code: book.code, size: fmtMB(mine.size) }) : t('{code} : pas encore en cache', { code: book.code })}</span>`}`}
+      </div>
+      <${Button} small variant="danger" disabled=${!cache.entries.length} onClick=${clear}>${t('Vider le cache des livres')}</${Button}>
+    </div>
   </div>`;
 }
 
@@ -123,10 +176,16 @@ export default function BookViewer() {
   const [width, setWidth] = useState(() => clampWidth(readWidth() || Math.min(760, window.innerWidth * 0.5)));
   const [dragging, setDragging] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [mode, setMode] = useState(() => (inlinePdf() ? 'pdf' : 'text'));
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [mode, setMode] = useState('pdf');
+  const [zoom, setZoomState] = useState(readZoom);
+  const [scale, setScale] = useState(null);
   const [pageInput, setPageInput] = useState('');
   const [behind, setBehind] = useState(false);
-  const frame = useRef({ key: null, url: null });
+  const setZoom = (z) => {
+    setZoomState(z);
+    saveZoom(z);
+  };
 
   // Modals opened after the drawer (or after the last openBook) go in front of it.
   useEffect(() => {
@@ -155,26 +214,27 @@ export default function BookViewer() {
       if (e.key !== 'Escape') return;
       e.stopPropagation();
       e.preventDefault();
-      if (searchOpen) setSearchOpen(false);
+      if (settingsOpen) setSettingsOpen(false);
+      else if (searchOpen) setSearchOpen(false);
       else closeBook();
     };
     window.addEventListener('keydown', k, true);
     return () => window.removeEventListener('keydown', k, true);
-  }, [v.open, searchOpen, behind]);
+  }, [v.open, searchOpen, settingsOpen, behind]);
 
-  // Renew signed links when the drawer opens (they last at least an hour).
+  // Renew signed links when the drawer opens (valid a day; only used for downloads and the new-tab link).
   useEffect(() => {
     if (v.open) loadBooks();
   }, [v.open, v.code]);
 
+  // Closed drawer: the open document is kept 10 min (reopening / another reference is instant), then freed.
+  useEffect(() => {
+    if (!v.open) releaseDocSoon();
+  }, [v.open]);
+
   const book = list ? findBook(v.code) : null;
   const printed = book && v.pdfPage ? pdfToPrinted(book, v.pdfPage) : null;
   useEffect(() => setPageInput(printed ? String(printed) : ''), [printed, v.code]);
-
-  // The frame keeps the URL it was mounted with: renewing the links (timer) must not reload a PDF being read.
-  // A new page / book / mode / reopening takes the current (fresh) link.
-  const frameKey = v.open && book && v.pdfPage ? `${mode}-${book.code}-${v.pdfPage}` : null;
-  if (frameKey !== frame.current.key) frame.current = { key: frameKey, url: frameKey ? `${book.url}#page=${v.pdfPage}` : null };
 
   if (!v.open) return null;
 
@@ -219,8 +279,7 @@ export default function BookViewer() {
       <p class="muted small">${t('La référence ne correspond à aucune page de ce PDF : vérifie le décalage du livre (page Administration).')}</p>
     </div>`;
   else if (!v.pdfPage) body = html`<div class="books-empty muted">${t('Chargement…')}</div>`;
-  else if (mode === 'pdf')
-    body = html`<iframe key=${`${book.code}-${v.pdfPage}`} class=${'books-frame' + (dragging ? ' dragging' : '')} src=${frame.current.url} title=${bookName(book)}></iframe>`;
+  else if (mode === 'pdf') body = html`<${PdfReader} key=${book.code} book=${book} v=${v} zoom=${zoom} onScale=${setScale} onTextMode=${() => setMode('text')} />`;
   else
     body = html`<div class="books-textmode">
       <a class="btn btn-primary" href=${pdfUrl} target="_blank" rel="noopener">${t('Ouvrir le PDF')}</a>
@@ -244,14 +303,23 @@ export default function BookViewer() {
         </label>
         <${IconButton} icon="▶" title=${t('Page suivante')} disabled=${(v.pdfPage || 1) >= book.pages} onClick=${() => gotoPdfPage((v.pdfPage || 1) + 1)} />
       </div>`}
+      ${book && mode === 'pdf' &&
+      html`<div class="books-zoom">
+        <${IconButton} icon="−" title=${t('Zoom arrière')} onClick=${() => setZoom(zoomStep(scale || 1, -1))} />
+        <button type="button" class="books-zoom-label" onClick=${() => setZoom(zoom === 'width' ? 'page' : 'width')}
+          title=${zoom === 'width' ? t('Largeur de page (cliquer : page entière)') : t('Cliquer : largeur de page')}>${scale ? `${fmtNumber(Math.round(scale * 100))} %` : '…'}</button>
+        <${IconButton} icon="+" title=${t('Zoom avant')} onClick=${() => setZoom(zoomStep(scale || 1, 1))} />
+      </div>`}
       <div class="books-tools">
         ${book && html`<button type="button" class=${'books-mode' + (mode === 'text' ? ' active' : '')} title=${mode === 'pdf' ? t('Afficher le texte de la page') : t('Afficher le PDF')}
           onClick=${() => setMode(mode === 'pdf' ? 'text' : 'pdf')}>${mode === 'pdf' ? t('Texte') : t('PDF')}</button>`}
         ${book && html`<a class="icon-btn" href=${pdfUrl} target="_blank" rel="noopener" title=${t('Ouvrir dans un nouvel onglet')}>↗</a>`}
         <${IconButton} icon="⌕" title=${t('Rechercher dans les règles')} onClick=${() => setSearchOpen(!searchOpen)} />
+        <${IconButton} icon="⚙" class=${settingsOpen ? 'books-on' : ''} title=${t('Réglages du lecteur')} aria-expanded=${settingsOpen} onClick=${() => setSettingsOpen(!settingsOpen)} />
         <${IconButton} icon="✕" title=${t('Fermer (Échap)')} onClick=${closeBook} />
       </div>
     </header>
+    ${settingsOpen && html`<${ViewerSettings} book=${book} list=${list} zoom=${zoom} setZoom=${setZoom} mode=${mode} setMode=${setMode} />`}
     ${searchOpen && html`<${ViewerSearch} code=${v.code} onClose=${() => setSearchOpen(false)} />`}
     <div class="books-body">${body}</div>
   </aside>`;

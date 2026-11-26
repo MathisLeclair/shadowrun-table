@@ -4,7 +4,8 @@ import { html, Button, NumberInput, TextInput, Toggle, Markdown, Select } from '
 import { send } from '../../lib/net.js';
 import { attr, SKILL_BY_ID } from '/shared/sr5.js';
 import { t, tk, tIfKnown, attrShort, fmtNuyen, itemName } from '../../lib/i18n.js';
-import { fmtDate, fmtNum, signed } from './common.js';
+import { fmtDate, fmtNum, signed, itemLabel, itemTitle, categoryLabel } from './common.js';
+import { containerOf } from './inventory.js';
 import { RollStat, LimitStat } from './tab-summary.js';
 import { ItemEffects, sourcesTitle } from './modifiers-ui.js';
 import { collectModifiers, gearHasEffects } from '/shared/modifiers.js';
@@ -166,6 +167,12 @@ function ComplexForms({ actor }) {
 // ---------------------------------------------------------------------------
 // Équipement
 // ---------------------------------------------------------------------------
+/** Where an item is when it is not « Sur soi » (bag, vehicle, safehouse — tab « Inventaire »). */
+function PlaceBadge({ actor, it }) {
+  const c = containerOf(actor, it.location);
+  return c ? html` <span class="badge" title=${t('Rangé : ne compte pas tant qu’il n’est pas sur soi')}>${c.name}</span>` : null;
+}
+
 export function GearTab({ s }) {
   const { actor, d, dm, edit, own } = s;
   const upItem = (list, id, patch) => send('actor/updateItem', { actorId: actor.id, list, itemId: id, patch }).catch(() => {});
@@ -192,7 +199,7 @@ export function GearTab({ s }) {
             ${own
               ? html`<${Toggle} value=${a.equipped} onChange=${(v) => upItem('armor', a.id, { equipped: v })} title=${t('Équiper / retirer')} />`
               : html`<span class=${'badge ' + (a.equipped ? 'badge-cyan' : '')}>${a.equipped ? t('portée') : t('rangée')}</span>`}
-            <div class="grow"><b>${a.name}</b> <${ItemRef} item=${a} />${cap ? html` <span class=${'badge' + (am.used > am.total ? ' badge-red' : '')}>${cap}</span>` : null}
+            <div class="grow"><b title=${itemTitle(a)}>${itemLabel(a)}</b> <${ItemRef} item=${a} /><${PlaceBadge} actor=${actor} it=${a} />${cap ? html` <span class=${'badge' + (am.used > am.total ? ' badge-red' : '')}>${cap}</span>` : null}
               ${(a.mods || []).length > 0 && html`<div><${SubChips} sub="mods" items=${a.mods} /></div>`}
               ${a.equipped ? html`<${ItemEffects} mods=${s.mods} list="armor" itemId=${a.id} />` : html`<${ItemEffects} mods=${collectModifiers({ armor: [{ ...a, equipped: true }] }, s.lookup)} list="armor" itemId=${a.id} />`}
               ${a.notes ? html`<div class="faint small">${a.notes}</div>` : null}</div>
@@ -206,7 +213,7 @@ export function GearTab({ s }) {
       ? html`<div class="sh-list">${augs.map(
           (a) => html`<div class="sh-list-row" key=${a.id}>
             <span class=${'badge ' + (a.kind === 'bioware' ? 'badge-green' : 'badge-cyan')}>${a.kind === 'bioware' ? 'Bio' : 'Cyber'}</span>
-            <div class="grow"><b>${a.name}</b>${a.rating ? ` (${t('indice {n}', { n: a.rating })})` : ''} <${ItemRef} item=${a} />${a.grade && a.grade !== 'standard' ? html` <span class="badge">${gradeLabel(a.grade)}</span>` : null}
+            <div class="grow"><b title=${itemTitle(a)}>${itemLabel(a)}</b>${a.rating ? ` (${t('indice {n}', { n: a.rating })})` : ''} <${ItemRef} item=${a} />${a.grade && a.grade !== 'standard' ? html` <span class="badge">${gradeLabel(a.grade)}</span>` : null}
               ${a.choice ? html` <span class="faint small">${t('Choix : {choice}', { choice: a.choice })}</span>` : null}
               <${ItemEffects} mods=${s.mods} list="augmentations" itemId=${a.id} />
               ${a.notes ? html`<div class="faint small">${a.notes}</div>` : null}</div>
@@ -220,7 +227,7 @@ export function GearTab({ s }) {
       ? html`<div class="sh-list">${gear.map(
           (g) => html`<div class=${'sh-list-row' + (g.active ? ' on' : '')} key=${g.id}>
             ${gearHasEffects(g, s.lookup) ? (own ? html`<${Toggle} value=${!!g.active} onChange=${(v) => upItem('gear', g.id, { active: v })} title=${t('Porté / activé : ses effets comptent dans les jets')} />` : html`<span class=${'badge ' + (g.active ? 'badge-cyan' : '')}>${g.active ? t('actif') : t('inactif')}</span>`) : null}
-            <div class="grow"><b>${g.name}</b>${g.rating ? ` (${t('indice {n}', { n: g.rating })})` : ''} <${ItemRef} item=${g} /> <span class="faint small">${g.category || ''}</span>
+            <div class="grow"><b title=${itemTitle(g)}>${itemLabel(g)}</b>${g.rating ? ` (${t('indice {n}', { n: g.rating })})` : ''} <${ItemRef} item=${g} /> <span class="faint small">${categoryLabel(g)}</span><${PlaceBadge} actor=${actor} it=${g} />
               ${gearHasEffects(g, s.lookup) ? html`<${ItemEffects} mods=${g.active ? s.mods : collectModifiers({ gear: [{ ...g, active: true }] }, s.lookup)} list="gear" itemId=${g.id} />` : null}
               ${own
                 ? html`<${TextInput} class="sh-inline-note" value=${g.notes || ''} placeholder=${t('Notes…')} onChange=${(v) => upItem('gear', g.id, { notes: v })} />`
@@ -235,7 +242,7 @@ export function GearTab({ s }) {
     ${vehicles.length > 0 && html`<h4 class="section-title">${t('Véhicules & drones')}</h4>
       <div class="sh-cards">${vehicles.map(
         (v) => html`<div class="sh-card" key=${v.id}>
-          <span><b>${v.name}</b> <${ItemRef} item=${v} /></span>
+          <span><b title=${itemTitle(v)}>${itemLabel(v)}</b> <${ItemRef} item=${v} /></span>
           <div class="sh-vstats">
             ${[[tk('Maniab.'), v.handling], [tk('Vitesse'), v.speed], [tk('Accél.'), v.accel], [tk('Struct.'), v.body], [tk('Blind.'), v.armor], [tk('Autopilote'), v.pilot], [tk('Senseurs'), v.sensor], [tk('Places'), v.seats]].map(([l, x]) => html`<span key=${l}><span class="faint">${t(l)}</span> <b>${x ?? '—'}</b></span>`)}
           </div>

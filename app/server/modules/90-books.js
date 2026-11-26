@@ -1,8 +1,14 @@
 // Rulebooks (see ARCHITECTURE.md « Rulebooks »): the server owner's SR5 PDFs, shared by every table that is allowed
 // to read them. Any logged-in user (GM or player) can list them, search their text and open a page.
-// The PDF itself is fetched by an <iframe>, which cannot send our Authorization header: it carries a short-lived
-// signed key instead (?k=…, HMAC of table + user + session + book + expiry, see server/lib/books/access.js).
+// The PDF itself is downloaded by the in-app reader (pdf.js, client/modules/books/PdfReader.js) or opened in a new tab,
+// neither of which sends our Authorization header: it carries a signed key instead (?k=…, HMAC of table + user +
+// session + book + expiry, see server/lib/books/access.js), stable for a day so caches hit.
+// The reader keeps each book in the browser (Cache Storage / IndexedDB) keyed by code + `version` (size + mtime).
+// pdf.js itself is served from node_modules under /vendor/pdfjs/<version>/ (immutable, no CDN).
 import fs from 'node:fs';
+import path from 'node:path';
+import { createRequire } from 'node:module';
+import express from 'express';
 import { errorBody } from '../lib/i18n.js';
 import { BOOKS_DIR, signLink, verifyLink, sessionTag, sessionAlive, LINK_TTL } from '../lib/books/access.js';
 import { readLibrary, loadIndex, allowedFor, cleanCode, pdfFile } from '../lib/books/library.js';
@@ -22,9 +28,42 @@ const tokenOf = (req) => {
 /** A syntactically valid HTTP Range header (« bytes=0-99 », « bytes=-500 », lists). Anything else is ignored (RFC 9110). */
 const RANGE_RE = /^bytes=\s*(?:\d+-\d*|-\d+)(?:\s*,\s*(?:\d+-\d*|-\d+))*\s*$/;
 
-/** Books readable from a table, as sent to clients (no file names, sizes or table lists). */
+// ---------------------------------------------------------------------------
+// pdf.js (pdfjs-dist browser builds), served from the app: /vendor/pdfjs/<version>/{build,legacy/build,cmaps,standard_fonts}/…
+// The version is in the URL, so the files are immutable for the browser.
+// ---------------------------------------------------------------------------
+const require = createRequire(import.meta.url);
+let PDFJS_DIR = null;
+let PDFJS_VERSION = null;
+try {
+  const pkg = require.resolve('pdfjs-dist/package.json');
+  PDFJS_DIR = path.dirname(pkg);
+  PDFJS_VERSION = String(JSON.parse(fs.readFileSync(pkg, 'utf8')).version || '0').replace(/[^0-9A-Za-z.-]/g, '');
+} catch {}
+export const PDFJS_BASE = PDFJS_VERSION ? `/vendor/pdfjs/${PDFJS_VERSION}` : null;
+/** Only these files of the package are public (the two browser builds, CMaps, standard fonts). */
+const PDFJS_PUBLIC = /^\/(?:build|legacy\/build)\/pdf(?:\.worker)?\.min\.mjs$|^\/cmaps\/[\w.-]+\.bcmap$|^\/standard_fonts\/[\w.-]+\.(?:pfb|ttf)$/;
+
+/** Content version of a book's PDF (changes when the file is replaced): base36 size + mtime. Also its strong ETag. */
+const statCache = new Map(); // code -> { mtimeMs, size, version }
+export function bookVersion(code) {
+  let st;
+  try {
+    st = fs.statSync(pdfFile(BOOKS_DIR, code));
+  } catch {
+    return null;
+  }
+  const prev = statCache.get(code);
+  if (prev && prev.mtimeMs === st.mtimeMs && prev.size === st.size) return prev;
+  const v = { mtimeMs: st.mtimeMs, size: st.size, version: `${st.size.toString(36)}-${Math.floor(st.mtimeMs).toString(36)}` };
+  statCache.set(code, v);
+  return v;
+}
+
+/** Books readable from a table, as sent to clients (no file names or table lists). */
 function publicBook(b, req) {
   const { k, exp } = signLink(BOOKS_DIR, { tableId: req.srTable.id, userId: req.user.id, session: sessionTag(tokenOf(req)), code: b.code });
+  const v = bookVersion(b.code);
   return {
     code: b.code,
     name: b.name,
@@ -36,6 +75,8 @@ function publicBook(b, req) {
     ...(b.extra ? { extra: true } : {}),
     url: `/api/books/${encodeURIComponent(b.code)}/file?k=${encodeURIComponent(k)}`,
     exp,
+    // Cache key of the reader (code + version: never the signed URL) and download size (progress bar).
+    ...(v ? { version: v.version, size: v.size } : {}),
   };
 }
 
@@ -50,10 +91,18 @@ export default {
   name: 'books',
   init() {},
   routes(app, { requireUser, tableApi }) {
+    if (PDFJS_DIR) {
+      // fallthrough: a missing file answers the same JSON 404 (no ENOENT stack in the server log).
+      const serve = express.static(PDFJS_DIR, { index: false, dotfiles: 'deny', immutable: true, maxAge: 365 * 86400 * 1000, fallthrough: true,
+        setHeaders: (res) => res.setHeader('X-Content-Type-Options', 'nosniff') });
+      const notFound = (res) => res.status(404).json(errorBody('Introuvable'));
+      app.use(PDFJS_BASE, (req, res) => (PDFJS_PUBLIC.test(req.path) ? serve(req, res, () => notFound(res)) : notFound(res)));
+    }
+
     app.get('/api/books', requireUser, (req, res) => {
       res.setHeader('Cache-Control', 'no-store');
       // now = server clock (ms): clients judge link expiry with it, not with their own clock.
-      res.json({ books: visibleBooks(req).map((b) => publicBook(b, req)), ttl: LINK_TTL, now: Date.now() });
+      res.json({ books: visibleBooks(req).map((b) => publicBook(b, req)), ttl: LINK_TTL, now: Date.now(), pdfjs: PDFJS_BASE });
     });
 
     app.get('/api/books/search', requireUser, (req, res) => {
@@ -98,7 +147,7 @@ export default {
       res.json({ url, exp });
     });
 
-    /** The PDF (HTTP Range supported: PDF viewers stream it). Auth = ?k= signed key only. */
+    /** The PDF (HTTP Range, conditional GET: strong ETag "<version>" → 304). Auth = ?k= signed key only (checked first). */
     app.get('/api/books/:code/file', (req, res) => {
       res.setHeader('Cache-Control', 'no-store'); // errors are never cached; a successful send replaces it
       const code = cleanCode(req.params.code);
@@ -120,7 +169,9 @@ export default {
       if (req.headers.range && !RANGE_RE.test(req.headers.range)) delete req.headers.range;
       // root + relative name: only the file name is checked for dotfiles (the books dir itself may sit under a dot folder).
       // The PDF headers go through `headers` (applied by send once the file is found)…
-      const headers = { 'Cache-Control': 'private, max-age=3600', 'Content-Disposition': `inline; filename="${code}.pdf"`, 'Content-Type': 'application/pdf' };
+      // Strong ETag = the book's version (also valid for If-Range); send() answers If-None-Match / If-Modified-Since with 304.
+      const ver = bookVersion(code);
+      const headers = { 'Cache-Control': 'private, max-age=86400', 'Content-Disposition': `inline; filename="${code}.pdf"`, 'Content-Type': 'application/pdf', ...(ver ? { ETag: `"${ver.version}"` } : {}) };
       res.sendFile(`${code}.pdf`, { root: BOOKS_DIR, cacheControl: false, acceptRanges: true, dotfiles: 'deny', headers }, (err) => {
         if (!err || res.headersSent) return;
         // …but send applies them before checking the Range, so an error answer must drop them: never a cacheable « PDF » error.

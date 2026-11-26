@@ -17,6 +17,14 @@ import { knowledgeAttr } from './sheet-data.js';
 import { BookRef, SkillRef, RuleRef } from '../books/BookRef.js';
 import { ruleRef } from '/shared/bookrefs.js';
 import { useModifiers, ModChip, effectText, toggleText, sourceName, loadRollToggles as loadToggles, saveRollToggles as saveToggles } from './modifiers-ui.js';
+import { Select } from '../../lib/ui.js';
+import { itemLabel } from './common.js';
+import { usesAmmo, isGrenade, fireOptions, isUnarmed } from './inventory.js';
+import { ReloadDialog, fireSelectOptions, ammoKindLabel, actionLabel } from './weapon-ui.js';
+import { useUI, setUI } from '../../lib/ui-store.js';
+import { actionsForWeapon, ACTION_BY_ID, isAreaWeapon, rangeFor, rangeClass, blastOf, blastReach, cellDistance, isUnlocked } from '/shared/combat.js';
+import { targetCandidates, attackMap, tokenOfActor, turnInfo } from '../combat/attack-common.js';
+import { isLauncherProfile } from './inventory.js';
 
 const MATRIX_LIMIT_LABELS = { attack: tk('Attaque'), sleaze: tk('Corruption'), dataProcessing: tk('Traitement'), firewall: tk('Firewall') };
 
@@ -85,8 +93,10 @@ export function presetLabel(actor, preset) {
   return 'Jet de dés';
 }
 
-/** The same label in the UI language. */
+/** The same label in the UI language (a weapon attack names the weapon in the UI language too). */
 export function presetDisplayLabel(actor, preset) {
+  const w = preset.weaponId && /^Attaque — /.test(preset.label || '') ? (actor?.weapons || []).find((x) => x && x.id === preset.weaponId) : null;
+  if (w) return t('Attaque — {weapon}', { weapon: itemLabel(w) });
   if (preset.label) return rollLabel(preset.label);
   if (preset.skillId) {
     const sk = (actor?.skills || []).find((s) => s.id === preset.skillId);
@@ -119,9 +129,59 @@ function computeLimit(actor, preset, prev, mods, rctx, opts) {
   return { total: l.total, lines: l.lines, parts, name: prev.defaultLimit };
 }
 
-export function RollDialog({ game, actor, preset = {}, onClose }) {
+export function RollDialog({ game, actor, preset: initialPreset = {}, onClose }) {
   const gm = isGM(game);
   const sheet = actor && !actor.status && actor.attributes ? actor : null;
+  // Weapon attack: the weapon can be switched in the dialog (ready weapons, « afficher tout » for the stowed ones); its skill and label follow.
+  const [weaponId, setWeaponId] = useState(initialPreset.weaponId || null);
+  const [allWeapons, setAllWeapons] = useState(false);
+  const weapon = weaponId && sheet ? (sheet.weapons || []).find((w) => w && w.id === weaponId) || null : null;
+  const preset = weapon && weaponId !== initialPreset.weaponId
+    ? { ...initialPreset, weaponId, skillId: weapon.skill || 'exotic_weapon', label: `Attaque — ${weapon.nameFr || weapon.name}` } // i18n-ignore: stored French label (rollLabel)
+    : initialPreset;
+  const [fireMode, setFireMode] = useState(null);
+  const [ammoOverride, setAmmoOverride] = useState(false);
+  // Target (map token), special action, launcher ammunition, aimed point — attacks module (attack/roll).
+  const ui = useUI();
+  const [actionId, setActionId] = useState(initialPreset.actionId || '');
+  const action = actionId ? ACTION_BY_ID[actionId] || null : null;
+  const canTarget = !!sheet && (!!initialPreset.weaponId || action?.kind === 'test');
+  const candidates = canTarget ? targetCandidates(game, sheet.id, weapon, sheet) : [];
+  const [targetId, setTargetId] = useState(() => {
+    const want = initialPreset.targetTokenId ?? ui.targetTokenId;
+    return want && candidates.some((c) => c.token.id === want) ? want : '';
+  });
+  const target = candidates.find((c) => c.token.id === targetId) || null;
+  const amap = canTarget ? attackMap(game) : null;
+  const myToken = amap && sheet ? tokenOfActor(amap, sheet.id) : null;
+  const area = !!weapon && isAreaWeapon(weapon);
+  const aim = area && ui.aimPoint && amap && ui.aimPoint.mapId === amap.id ? ui.aimPoint : null;
+  const [useAim, setUseAim] = useState(true);
+  const point = area ? (aim && useAim ? { x: aim.x, y: aim.y } : target ? { x: target.token.x, y: target.token.y } : null) : null;
+  const profiles = weapon && rangeClass(weapon) === 'grenadeLauncher' ? (sheet.weapons || []).filter((w) => isLauncherProfile(w)) : [];
+  const [profileId, setProfileId] = useState(() => profiles[0]?.id || '');
+  const profile = profiles.find((w) => w.id === profileId) || null;
+  const blast = area ? blastOf(profile || weapon, sheet) : null;
+  const aimAt = point || (target ? { x: target.token.x, y: target.token.y } : null);
+  const range = weapon && weapon.kind !== 'melee' && myToken && aimAt ? rangeFor(weapon, sheet, cellDistance(myToken, aimAt, Number(amap.metersPerCell) || 1)) : null;
+  const weaponActions = sheet && weapon ? actionsForWeapon(sheet, weapon, { allowLocked: gm, fireIds: usesAmmo(weapon) ? fireOptions(weapon).map((o) => o.id) : [] }) : [];
+  const turn = sheet ? turnInfo(game, sheet.id) : null;
+  const usedOnce = !!(action?.once && turn?.once?.includes(action.id));
+  const pickAction = (id) => {
+    setActionId(id);
+    const a = id ? ACTION_BY_ID[id] : null;
+    if (a?.fire) setFireMode(a.fire);
+  };
+  const [reloading, setReloading] = useState(false);
+  const fireOpts = weapon && usesAmmo(weapon) ? fireOptions(weapon) : [];
+  const fire = fireOpts.find((o) => o.id === (action?.fire || fireMode)) || fireOpts[0] || null;
+  const loaded = weapon && usesAmmo(weapon) ? Number(weapon.ammoLoaded ?? weapon.ammoMax) || 0 : 0;
+  const grenadeLeft = weapon && isGrenade(weapon) ? Number(weapon.qty ?? 1) : null;
+  // SR5 p. 180: fewer rounds than the mode fires what is left (defense modifier −1 smaller per missing round); only an empty weapon is blocked.
+  const outOfAmmo = (fire && loaded < 1) || (grenadeLeft !== null && grenadeLeft <= 0);
+  const short = fire && loaded > 0 && loaded < fire.rounds ? fire.rounds - loaded : 0;
+  const shownDefense = fire && fire.defense ? Math.min(0, fire.defense + short) : 0;
+  const blockedByAmmo = outOfAmmo && !(gm && ammoOverride);
   const mods = useModifiers(sheet, { weaponId: preset.weaponId });
   const dm = useMemo(() => (sheet ? derivedWithModifiers(sheet, mods) : null), [sheet, mods]);
   // Same rules as the server: a test key only on its own attributes; the wound modifier on every test but damage resistance
@@ -167,10 +227,17 @@ export function RollDialog({ game, actor, preset = {}, onClose }) {
   const edgeMax = live && live.attributes ? attr(live, 'EDG') : 0;
   const woundMod = wounds && dm ? dm.woundModifier : 0;
   const soakArmor = test === 'soak' && dm ? dm.armor : 0;
-  const total = Math.max(0, prev.pool + pm.total + soakArmor + modifier + woundMod + (explode ? edgeMax : 0));
+  const extraParts = [];
+  if (range?.mod) extraParts.push([`${t(range.label)} (${range.meters} m)`, range.mod]);
+  if (action?.dice) extraParts.push([t(action.name), action.dice]);
+  const extra = extraParts.reduce((n, [, v]) => n + v, 0);
+  const total = Math.max(0, prev.pool + pm.total + soakArmor + modifier + woundMod + extra + (explode ? edgeMax : 0));
   const label = presetLabel(actor, preset);
   const shownLabel = presetDisplayLabel(actor, preset);
   const canEdge = !!live && ownsActor(game, live.id) && edgeLeft > 0 && !!live.attributes;
+  const edgeNeeded = (action?.edge || 0) + (explode ? 1 : 0);
+  const edgeShort = edgeNeeded > 0 && edgeLeft < edgeNeeded;
+  const attackRoll = canTarget && (!!targetId || !!point || !!actionId);
 
   // Modifier lines of this test (dice pool + limit) and the switches that would change something.
   const lines = [...pm.lines.map((l) => ({ ...l, kind: 'pool' })), ...(lim?.lines || []).map((l) => ({ ...l, kind: 'limit' }))];
@@ -197,6 +264,7 @@ export function RollDialog({ game, actor, preset = {}, onClose }) {
         label, actorId: actor?.id, skillId: preset.skillId, attr: preset.attr, attr2: preset.attr2, useSpec,
         modifier, applyWounds: wounds, explode, secret: gm && secret, bonus: preset.bonus,
         ...(test ? { test } : {}), ...(preset.weaponId ? { weaponId: preset.weaponId } : {}), ...(preset.matrixLimit ? { matrixLimit: preset.matrixLimit } : {}),
+        ...(fire ? { fireMode: fire.id } : {}), ...(gm && ammoOverride && outOfAmmo ? { ammoOverride: true } : {}),
         conditions: [...toggles], ignore: [...ignored],
       };
       // Limit: none, a value typed in the dialog, the caller's fixed value — otherwise the server computes it (the value shown).
@@ -205,8 +273,16 @@ export function RollDialog({ game, actor, preset = {}, onClose }) {
       else if (preset.limit !== undefined && preset.limit !== null) payload.limit = preset.limit;
       else if (autoLimit === null || autoLimit === undefined) payload.limit = limit; // a limit turned on without a computed one: the value shown
       if (!preset.skillId && !preset.attr) payload.pool = prev.pool;
-      const r = await send('dice/roll', payload);
+      if (attackRoll) {
+        if (point && area && aim && useAim) payload.point = point;
+        else if (targetId) payload.targetTokenId = targetId;
+        if (actionId) payload.actionId = actionId;
+        if (profile) payload.profileId = profile.id;
+        if (gm && amap) payload.mapId = amap.id;
+      }
+      const r = await send(attackRoll ? 'attack/roll' : 'dice/roll', payload);
       setResult(r);
+      if (r?.blast) setUI({ aimPoint: null }); // the grenade is gone: the blast marker replaces the aimed point
       if (explode) setExplode(false);
     } catch {
       /* toast already shown */
@@ -229,12 +305,59 @@ export function RollDialog({ game, actor, preset = {}, onClose }) {
         ${prev.parts.map(([l, v], i) => html`<span class=${'sh-rd-part' + (v < 0 ? ' bad' : '')}><span>${l}</span><b>${i > 0 && v >= 0 ? '+' : ''}${v}</b></span>`)}
         ${soakArmor ? html`<span class="sh-rd-part"><span>${t('armure')}</span><b>+${soakArmor}</b></span>` : null}
         ${pm.lines.filter((l) => l.state === 'applied').map((l) => html`<span class=${'sh-rd-part mod' + (l.value < 0 ? ' bad' : '')} key=${l.mod.id} title=${effectText(l.mod)}><span>${sourceName(l.mod.source)}</span><b>${l.value >= 0 ? '+' : ''}${l.value}</b></span>`)}
+        ${extraParts.map(([l, v]) => html`<span class=${'sh-rd-part mod' + (v < 0 ? ' bad' : '')} key=${l}><span>${l}</span><b>${v >= 0 ? '+' : ''}${v}</b></span>`)}
         ${modifier ? html`<span class="sh-rd-part"><span>${t('mod.')}</span><b>${modifier > 0 ? '+' : ''}${modifier}</b></span>` : null}
         ${woundMod ? html`<span class="sh-rd-part bad"><span>${t('blessures')}</span><b>${woundMod}</b></span>` : null}
         ${explode ? html`<span class="sh-rd-part edge"><span>${t('Chance')}</span><b>+${edgeMax}</b></span>` : null}
         <span class="sh-rd-total">${tn(total, '= {n} dé', '= {n} dés')}</span>
       </div>
-      ${prev.impossible && html`<div class="error small">${t('Compétence non maîtrisée : impossible de l’utiliser par défaut.')}</div>`}
+      ${prev.impossible && !(result && !weapon) && html`<div class="error small">${t('Compétence non maîtrisée : impossible de l’utiliser par défaut.')}</div>`}
+      ${initialPreset.weaponId && sheet && html`<div class="col gap-s sh-rd-weapon">
+        <div class="row wrap gap-s">
+          <${Select} value=${weaponId || ''} onChange=${(v) => { setWeaponId(v); setFireMode(null); setAmmoOverride(false); }}
+            options=${(sheet.weapons || []).filter((w) => allWeapons || w.equipped !== false || isUnarmed(w) || w.id === weaponId).map((w) => ({ value: w.id, label: itemLabel(w) + (w.equipped === false && !isUnarmed(w) ? ` (${t('rangée')})` : '') }))} />
+          <${Toggle} value=${allWeapons} onChange=${setAllWeapons} label=${t('afficher tout')} title=${t('Montrer aussi les armes rangées')} />
+        </div>
+        ${!weapon && !result && html`<div class="error small">${t('Arme introuvable')}</div>`}
+        ${fireOpts.length > 0 && html`<div class="row wrap gap-s">
+          ${fireOpts.length > 1 ? html`<${Select} value=${fire.id} options=${fireSelectOptions(weapon)} onChange=${setFireMode} />` : html`<span class="small">${fireSelectOptions(weapon)[0].label}</span>`}
+          <span class=${'badge mono' + (outOfAmmo ? ' badge-red' : '')} title=${weapon.ammoKind ? t('Chargée : {ammo}', { ammo: ammoKindLabel(weapon.ammoKind) }) : ''}>${loaded}/${weapon.ammoMax}</span>
+          ${ownsActor(game, sheet.id) && html`<${Button} small variant="ghost" onClick=${() => setReloading(true)}>↻ ${t('Recharger')}</${Button}>`}
+          ${shownDefense ? html`<span class="faint small">${t('Défense de la cible {n}', { n: shownDefense })} · ${actionLabel(fire.action)}</span>` : html`<span class="faint small">${actionLabel(fire.action)}</span>`}
+        </div>`}
+        ${short > 0 && html`<div class="amber small">${fire.defense === null
+          ? tn(loaded, 'Seulement {n} balle : zone de barrage réduite de {m} m.', 'Seulement {n} balles : zone de barrage réduite de {m} m.', { m: Math.floor(short / 2) })
+          : tn(loaded, 'Seulement {n} balle : modificateur de défense réduit de {short}.', 'Seulement {n} balles : modificateur de défense réduit de {short}.', { short })}</div>`}
+        ${grenadeLeft !== null && html`<div class="muted small">${tn(grenadeLeft, '{n} exemplaire — le jet le consomme.', '{n} exemplaires — le jet en consomme un.')}</div>`}
+        ${outOfAmmo && html`<div class="row wrap gap-s"><span class="error small">${t('Plus assez de munitions — recharge')}</span>
+          ${gm && html`<${Toggle} value=${ammoOverride} onChange=${setAmmoOverride} label=${t('Tirer quand même (MJ)')} />`}</div>`}
+      </div>`}
+      ${reloading && weapon && html`<${ReloadDialog} actor=${sheet} w=${weapon} gm=${gm} onClose=${() => setReloading(false)} />`}
+      ${canTarget && !result && html`<div class="atk-target">
+        ${weapon && weaponActions.length > 0 && html`<div class="row wrap gap-s">
+          <span class="field-label">${t('Action')}</span>
+          <${Select} value=${actionId} onChange=${pickAction} options=${[{ value: '', label: t('Attaque normale') }, ...weaponActions.map((a) => ({ value: a.id, label: t(a.name) + (a.locked ? ` (${t('non débloquée')})` : '') }))]} />
+        </div>`}
+        ${action && html`<div class="atk-action-note">${t(action.note)} <${BookRef} source=${action.source} page=${action.page} />
+          ${action.edge ? html` <span class=${'badge ' + (edgeShort ? 'badge-red' : 'badge-magenta')}>${t('−{n} Chance', { n: action.edge })}</span>` : null}
+          ${action.ini ? html` <span class="badge">${t('−{n} init.', { n: action.ini })}</span>` : null}
+          ${action.rounds ? html` <span class="badge">${tn(action.rounds, '{n} balle', '{n} balles')}</span>` : null}
+          ${usedOnce ? html` <span class="badge badge-red">${t('déjà utilisée ce tour')}</span>` : null}
+          ${!isUnlocked(action, sheet) ? html` <span class="badge badge-amber">${t('non débloquée (MJ)')}</span>` : null}</div>`}
+        ${profiles.length > 0 && html`<div class="row wrap gap-s"><span class="field-label">${t('Munition')}</span>
+          <${Select} value=${profileId} onChange=${setProfileId} options=${profiles.map((w) => ({ value: w.id, label: itemLabel(w) }))} /></div>`}
+        <div class="row wrap gap-s">
+          <span class="field-label">${area ? t('Cible / point visé') : t('Cible')}</span>
+          <${Select} value=${targetId} onChange=${setTargetId} options=${[{ value: '', label: candidates.length ? t('— aucune —') : t('— aucun pion sur la carte —') }, ...candidates.map((c) => ({ value: c.token.id, label: c.name + (c.meters !== null ? ` · ${c.meters} m` : '') + (c.range ? ` · ${t(c.range.label)}${c.range.mod ? ` ${c.range.mod}` : ''}` : '') }))]} />
+        </div>
+        ${area && aim && html`<${Toggle} value=${useAim} onChange=${setUseAim} label=${t('Viser le point marqué sur la carte ({x}, {y})', { x: aim.x, y: aim.y })} />`}
+        ${area && !aim && html`<div class="faint small">${t('Astuce : clic droit sur la carte → « Viser ce point » pour lancer sur une case.')}</div>`}
+        ${area && blast && html`<div class="faint small">${blast.damaging
+          ? (blast.radius ? t('Souffle : {dv}{type} dans un rayon de {r} m.', { dv: blast.dv, type: blast.type, r: blast.radius }) : t('Souffle : {dv}{type}, −{f} par mètre (jusqu’à {r} m).', { dv: blast.dv, type: blast.type, f: blast.falloff, r: blastReach(blast) }))
+          : t('Pas de dommages de souffle (fumée, gaz…).')} ${t('3 succès : pas de dispersion.')}</div>`}
+        ${range && html`<div class=${'small ' + (range.beyond || range.tooClose ? 'error' : 'muted')}>${range.beyond ? t('Hors de portée ({m} m, max {max} m)', { m: range.meters, max: range.max }) : range.tooClose ? t('Trop près : portée minimale {min} m', { min: range.min }) : t('{band} ({m} m) : {mod} dés', { band: t(range.label), m: range.meters, mod: range.mod })}</div>`}
+        ${!myToken && (targetId || point) && weapon?.kind !== 'melee' && html`<div class="faint small">${t('Pas de pion de ce personnage sur la carte : portée non calculée.')}</div>`}
+      </div>`}
       ${lines.length > 0 && html`<div class="sh-rd-mods">
         <div class="field-label">${t('Modificateurs (équipement, qualités, pouvoirs, implants)')}</div>
         ${lines.map((l) => {
@@ -275,10 +398,13 @@ export function RollDialog({ game, actor, preset = {}, onClose }) {
       </div>
 
       ${result && html`<div class="sh-rd-result">
-        <div class="sh-rd-hits"><b>${result.hits}</b><span>${tn(result.hits, 'succès::one', 'succès::other')}</span></div>
+        <div class="sh-rd-hits"><b>${result.hits}</b><span>${tn(result.hits, 'one::succès', 'other::succès')}</span></div>
         <div class="grow col gap-s">
           <${DiceFaces} roll=${result} />
           <${RollBadges} roll=${result} />
+          ${result.fire && html`<span class="muted small">${fireText(result.fire)}</span>`}
+          ${result.attackId && !result.blast && html`<span class="small cyan">${result.hits > 0 ? t('Attaque envoyée à {target} : en attente de sa défense.', { target: result.targetName || '' }) : t('Raté : aucun succès.')}</span>`}
+          ${result.blast && html`<span class="small amber">${result.blast.fumble ? t('Échec critique : la grenade part dans les pieds du lanceur !') : result.blast.scattered ? t('Dévie de {m} m (direction {d} au diagramme).', { m: result.blast.meters, d: (result.blast.dir || [0, 0]).reduce((a, b) => a + b, 0) }) : t('Pile sur le point visé.')}${result.blast.hits?.length ? ' ' + tn(result.blast.hits.length, '{n} cible dans le souffle.', '{n} cibles dans le souffle.') : ''}</span>`}
         </div>
       </div>`}
 
@@ -288,11 +414,22 @@ export function RollDialog({ game, actor, preset = {}, onClose }) {
         </div>
         <div class="row">
           <${Button} variant="ghost" onClick=${onClose}>${t('Fermer')}</${Button}>
-          <${Button} variant="primary" disabled=${busy || total <= 0 || prev.impossible} onClick=${roll}>${result ? tn(total, 'Relancer {n} dé', 'Relancer {n} dés') : tn(total, 'Lancer {n} dé', 'Lancer {n} dés')}</${Button}>
+          <${Button} variant="primary" disabled=${busy || total <= 0 || prev.impossible || blockedByAmmo || (initialPreset.weaponId && !weapon) || (attackRoll && (edgeShort || usedOnce))} onClick=${roll}>${result ? tn(total, 'Relancer {n} dé', 'Relancer {n} dés') : tn(total, 'Lancer {n} dé', 'Lancer {n} dés')}</${Button}>
         </div>
       </div>
     </div>
   </${Overlay}>`;
+}
+
+/** « 3 balles · reste 9/15 » / « reste 1 » of a roll's fire record (roll.fire). */
+export function fireText(f) {
+  if (!f) return '';
+  if (f.item) return f.removed ? t('dernier exemplaire utilisé') : t('reste {n}', { n: f.left });
+  const base = t('{rounds} · reste {left}/{max}', { rounds: tn(f.rounds, '{n} balle', '{n} balles'), left: f.left, max: f.max });
+  if (!f.short) return base;
+  // Short burst (SR5 p. 180): the reduced defense modifier / narrower suppressive area.
+  const extra = f.narrower !== undefined ? t('zone réduite de {m} m', { m: f.narrower }) : t('défense de la cible {n}', { n: f.defense ?? 0 });
+  return `${base} · ${extra}`;
 }
 
 /** Rule (shared/bookrefs.js RULE_REFS) of each ROLL_TESTS test. */

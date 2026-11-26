@@ -40,3 +40,8 @@
 .admin-world { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; padding: 6px 10px; background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; }
 .admin-world .mono { color: var(--dim); font-size: 12px; word-break: break-all; }
 .foundry-upload .btn.disabled { opacity: .5; pointer-events: none; }
+
+/* « Bibliothèque de cartes » (MaplibAdmin.js) */
+.admin-maplib-list { max-height: 560px; overflow: auto; }
+.admin-maplib-thumb { width: 72px; }
+.admin-maplib-thumb img { width: 64px; height: 48px; object-fit: cover; border-radius: 4px; display: block; }

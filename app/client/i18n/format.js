@@ -26,18 +26,20 @@ export function placeholders(str) {
 
 /**
  * Replace {name} by params.name. Unknown names are left as-is. A param value may itself be translatable:
- * { t: 'key', params } (translated with `tr`, or formatted in French when no `tr` is given); arrays are joined with ', '.
+ * { t: 'key', params } (translated with `tr`, or formatted in French when no `tr` is given); { fr, en } (a name stored in both
+ * languages — item names —: the one of `lang`, French when no `lang` is given, the other one when empty); arrays are joined with ', '.
  */
-export function interpolate(str, params, tr) {
+export function interpolate(str, params, tr, lang) {
   if (typeof str !== 'string' || !params || typeof params !== 'object' || str.indexOf('{') < 0) return str;
-  return str.replace(/\{(\w+)\}/g, (m, name) => (Object.prototype.hasOwnProperty.call(params, name) ? paramText(params[name], tr) : m));
+  return str.replace(/\{(\w+)\}/g, (m, name) => (Object.prototype.hasOwnProperty.call(params, name) ? paramText(params[name], tr, lang) : m));
 }
 
-function paramText(v, tr) {
+function paramText(v, tr, lang) {
   if (v === null || v === undefined) return '';
-  if (Array.isArray(v)) return v.map((x) => paramText(x, tr)).join(', ');
+  if (Array.isArray(v)) return v.map((x) => paramText(x, tr, lang)).join(', ');
   if (typeof v === 'object') {
-    if (typeof v.t === 'string') return tr ? tr(v.t, v.params) : interpolate(stripContext(v.t), v.params);
+    if (typeof v.t === 'string') return tr ? tr(v.t, v.params) : interpolate(stripContext(v.t), v.params, undefined, lang);
+    if (typeof v.fr === 'string' || typeof v.en === 'string') return String((lang === 'en' ? v.en || v.fr : v.fr || v.en) || '');
     return '';
   }
   return String(v);
@@ -91,6 +93,13 @@ export function cleanParams(params) {
   return out;
 }
 function cleanNested(v) {
+  if (v && typeof v.t !== 'string' && (typeof v.fr === 'string' || typeof v.en === 'string')) {
+    // A name in both languages ({ fr, en }: item names in log / error params).
+    const n = {};
+    if (typeof v.fr === 'string') n.fr = v.fr.slice(0, 200);
+    if (typeof v.en === 'string') n.en = v.en.slice(0, 200);
+    return n;
+  }
   if (!v || typeof v.t !== 'string') return undefined;
   const n = { t: v.t.slice(0, 500) };
   const p = v.params ? cleanParams(v.params) : undefined;

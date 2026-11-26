@@ -23,6 +23,8 @@ COPY client ./client
 COPY data/seed ./data/seed
 COPY data/packs ./data/packs
 COPY data/catalog ./data/catalog
+# Map library wall files (data/maplib/<slug>.json); the images are never in the image (.dockerignore, runtime/maplib/images)
+COPY data/maplib ./data/maplib
 # The app writes only to the mounted folders; everything else stays root-owned (read-only for the app user).
 RUN mkdir -p /app/runtime /app/data/assets/foundry && chown -R node:node /app/runtime /app/data/assets
 USER node

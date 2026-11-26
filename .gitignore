@@ -30,3 +30,13 @@ app/data/books/
 app/runtime/books/
 setup/
 .claude/
+# Map library (see app/ARCHITECTURE.md « Map library »): the Fragmaps images are the owner's paid Patreon content —
+# never in git. Only the wall files app/data/maplib/<slug>.json are committed; runtime files stay out.
+fragmap/
+app/data/maplib/images/
+app/data/maplib/thumbs/
+app/data/maplib/entries/
+app/data/maplib/library.json*
+app/data/maplib-sign.key
+app/runtime/maplib/
+app/runtime/maplib-sign.key
