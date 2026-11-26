@@ -3,8 +3,9 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { html, IconButton, Select } from '../../lib/ui.js';
 import { send } from '../../lib/net.js';
 import { throttle } from './theory.js';
-import { AMBIENT_PRESETS, MUSIC_PRESETS, SFX_PRESETS, trackIcon } from './catalog.js';
+import { AMBIENT_PRESETS, MUSIC_PRESETS, SFX_PRESETS, trackIcon, presetMeta } from './catalog.js';
 import { useAudioState, setLocalVolume, setMuted, unlock } from './audio-core.js';
+import { t, tIfKnown, compare } from '../../lib/i18n.js';
 
 export function lsGet(key, fallback) {
   try {
@@ -29,28 +30,47 @@ const ORDER = {};
 /** Tracks of a kind: built-ins in catalog order, then uploads by name. */
 export function tracksOf(game, kind) {
   return (game?.audio?.tracks || [])
-    .filter((t) => t.kind === kind)
+    .filter((tr) => tr.kind === kind)
     .sort((a, b) => {
       if (a.source !== b.source) return a.source === 'synth' ? -1 : 1;
       if (a.source === 'synth') return (ORDER[a.preset] ?? 99) - (ORDER[b.preset] ?? 99);
-      return String(a.name).localeCompare(String(b.name), 'fr');
+      return compare(a.name, b.name);
     });
 }
+
+/**
+ * Display name of a track: built-in presets still carrying their catalog (French) name are translated;
+ * names given by the GM (renamed presets, uploads) are shown as typed.
+ */
+export function trackName(track) {
+  if (!track) return '';
+  const m = presetMeta(track);
+  return m && track.name === m.name ? t(m.label || m.name) : String(track.name ?? '');
+}
+
+/** Translated catalog description of a built-in track ('' for uploads). */
+export function presetDesc(track) {
+  const m = presetMeta(track);
+  return m?.desc ? t(m.desc) : '';
+}
+
+/** Tag label: built-in tags are dictionary keys, tags typed by the GM stay as typed. */
+export const tagLabel = (tag) => tIfKnown(String(tag ?? ''));
 
 export function findTrack(game, id) {
   return id ? (game?.audio?.tracks || []).find((t) => t.id === id) || null : null;
 }
 
 export function trackLabel(game, id) {
-  const t = findTrack(game, id);
-  return t ? `${trackIcon(t)} ${t.name}` : null;
+  const tr = findTrack(game, id);
+  return tr ? `${trackIcon(tr)} ${trackName(tr)}` : null;
 }
 
 /** Human label of a scene channel value ('keep' | null | trackId). */
 export function sceneValueLabel(game, v) {
-  if (v === 'keep' || v === undefined) return 'inchangée';
-  if (!v) return 'silence';
-  return trackLabel(game, v) || 'piste supprimée';
+  if (v === 'keep' || v === undefined) return t('inchangée');
+  if (!v) return t('silence');
+  return trackLabel(game, v) || t('piste supprimée');
 }
 
 /** True if the scene's channels match what is playing now. */
@@ -72,7 +92,7 @@ export function channelOptions(game, channel) {
   const list = tracksOf(game, kind);
   const cur = findTrack(game, game?.audio?.[channel]?.trackId);
   if (cur && !list.includes(cur)) list.unshift(cur);
-  return [{ value: '', label: '— Silence —' }, ...list.map((t) => ({ value: t.id, label: `${trackIcon(t)} ${t.name}` }))];
+  return [{ value: '', label: t('— Silence —') }, ...list.map((tr) => ({ value: tr.id, label: `${trackIcon(tr)} ${trackName(tr)}` }))];
 }
 
 export function setChannelTrack(channel, trackId) {
@@ -156,21 +176,21 @@ export function sendVolume(channel, volume) {
 }
 
 /** This device's volume + mute (not shared). */
-export function LocalVolume({ label = 'Cet appareil' }) {
+export function LocalVolume({ label }) {
   const st = useAudioState();
   const silent = st.muted || st.local === 0;
   return html`<div class="audio-local">
-    <${IconButton} icon=${silent ? '🔇' : '🔊'} title=${st.muted ? 'Réactiver le son sur cet appareil' : 'Couper le son sur cet appareil'} onClick=${() => setMuted(!st.muted)} />
-    <${VolumeSlider} value=${st.muted ? 0 : st.local} onChange=${setLocalVolume} label=${label} title="Volume de cet appareil uniquement" />
+    <${IconButton} icon=${silent ? '🔇' : '🔊'} title=${st.muted ? t('Réactiver le son sur cet appareil') : t('Couper le son sur cet appareil')} onClick=${() => setMuted(!st.muted)} />
+    <${VolumeSlider} value=${st.muted ? 0 : st.local} onChange=${setLocalVolume} label=${label ?? t('Cet appareil')} title=${t('Volume de cet appareil uniquement')} />
   </div>`;
 }
 
 /** Warning strip shown in GM screens while the browser still blocks audio. */
 export function UnlockNotice() {
   const st = useAudioState();
-  if (!st.supported) return html`<div class="audio-notice">Ce navigateur ne gère pas le son (Web Audio indisponible).</div>`;
+  if (!st.supported) return html`<div class="audio-notice">${t('Ce navigateur ne gère pas le son (Web Audio indisponible).')}</div>`;
   if (st.unlocked) return null;
-  return html`<button class="audio-notice clickable" onClick=${unlock}>🔇 Le navigateur bloque le son sur ce poste — cliquer pour l’activer</button>`;
+  return html`<button class="audio-notice clickable" onClick=${unlock}>🔇 ${t('Le navigateur bloque le son sur ce poste — cliquer pour l’activer')}</button>`;
 }
 
 /** Channel row: select + stop + volume. */
@@ -184,8 +204,8 @@ export function ChannelControl({ game, channel, label, compact }) {
     </div>
     <div class="audio-channel-row">
       <${Select} class="audio-channel-select" value=${current} options=${channelOptions(game, channel)} onChange=${(v) => setChannelTrack(channel, v)} />
-      <${IconButton} icon="■" title="Arrêter" disabled=${!current} onClick=${() => setChannelTrack(channel, null)} />
+      <${IconButton} icon="■" title=${t('Arrêter')} disabled=${!current} onClick=${() => setChannelTrack(channel, null)} />
     </div>
-    <${VolumeSlider} value=${ch.volume ?? 0.5} onChange=${(v) => sendVolume(channel, v)} title=${'Volume ' + label.toLowerCase() + ' (pour tout le monde)'} />
+    <${VolumeSlider} value=${ch.volume ?? 0.5} onChange=${(v) => sendVolume(channel, v)} title=${channel === 'music' ? t('Volume musique (pour tout le monde)') : t('Volume ambiance (pour tout le monde)')} />
   </div>`;
 }

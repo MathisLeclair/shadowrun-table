@@ -6,14 +6,19 @@
 //             instructor, ppCost, status: 'pending'|'approved'|'denied'|'done'|'cancelled', note?, gmNote?,
 //             manual?: bool (not verified against the catalog → always needs GM approval), request: normalized request,
 //             resolvedTs?, doneTs?, jobId? }
-// actor.training = [{ id, requestId, kind, label, daysTotal, daysDone, startedTs, request }]
+// actor.training = [{ id, requestId, kind, label, labelI18n, daysTotal, daysDone, startedTs, request }]
+// label = French text, labelI18n = { key, params } (same text, translated by the client: t(key, params)).
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { syncPowerBonus } from '../lib/augment.js';
 import {
-  DEFAULT_SETTINGS, quote, applyAdvance, normalizeRequest, catalogName, qualityInfo, powerInfo, spellInfo, formatDays,
+  DEFAULT_SETTINGS, quote, applyAdvance, normalizeRequest, catalogName, qualityInfo, powerInfo, spellInfo, formatDaysI18n,
 } from '../../shared/advancement.js';
+import { formatFr } from '../lib/i18n.js';
+
+/** Marks a translatable log/history key for tools/i18n-check.js (English in client/i18n/en/training.json). */
+const tk = (s) => s;
 
 const CATALOG_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'data', 'catalog');
 const MAX_REQUESTS = 400;
@@ -106,11 +111,18 @@ function ownersOf(state, actorId) {
     .map((u) => u.id);
 }
 /** Log entry visible to the actor's owners and the GM only. */
-function privateLog(ctx, actorId, text) {
-  return ctx.log({ kind: 'training', userId: ctx.user.id, author: 'Progression', text, to: [...new Set([...ownersOf(ctx.state, actorId), 'gm'])] });
+function privateLog(ctx, actorId, key, params) {
+  return ctx.log({ kind: 'training', userId: ctx.user.id, author: 'Progression', i18n: { key, params }, to: [...new Set([...ownersOf(ctx.state, actorId), 'gm'])] });
 }
-function publicLog(ctx, text) {
-  return ctx.log({ kind: 'training', userId: ctx.user.id, author: 'Progression', text });
+function publicLog(ctx, key, params) {
+  return ctx.log({ kind: 'training', userId: ctx.user.id, author: 'Progression', i18n: { key, params } });
+}
+/** Label of a request/job as a log/error param: translatable when the i18n form is known. */
+const labelParam = (x) => (x?.labelI18n?.key ? { t: x.labelI18n.key, ...(x.labelI18n.params ? { params: x.labelI18n.params } : {}) } : x?.label || '');
+/** Fail with the rule message of a quote (French text + i18n key). */
+function failQuote(ctx, q) {
+  if (q.errorI18n) ctx.fail(q.errorI18n.key, q.errorI18n.params);
+  ctx.fail(q.error);
 }
 
 function jobsOf(actor) {
@@ -140,9 +152,10 @@ function trimRequests(tr) {
   });
 }
 
-function pushHistory(actor, entry) {
+/** History entry: { text (French), i18n: { key, params } } + karma/nuyen deltas. */
+function pushHistory(actor, key, params, extra) {
   actor.history = Array.isArray(actor.history) ? actor.history : [];
-  actor.history.push({ ts: Date.now(), ...entry });
+  actor.history.push({ ts: Date.now(), text: formatFr(key, params), i18n: { key, params }, ...extra });
 }
 
 function charge(actor, request) {
@@ -151,10 +164,11 @@ function charge(actor, request) {
   actor.karma = (Number(actor.karma) || 0) - k;
   if (n) actor.nuyen = (Number(actor.nuyen) || 0) - n;
   if (k || n) {
-    const entry = { text: `Progression : ${request.label}${n ? ' (instructeur)' : ''}` };
-    if (k) entry.karma = -k;
-    if (n) entry.nuyen = -n;
-    pushHistory(actor, entry);
+    const extra = {};
+    if (k) extra.karma = -k;
+    if (n) extra.nuyen = -n;
+    if (n) pushHistory(actor, tk('Progression : {label} (instructeur)'), { label: labelParam(request) }, extra);
+    else pushHistory(actor, tk('Progression : {label}'), { label: labelParam(request) }, extra);
   }
 }
 
@@ -186,9 +200,11 @@ function completeJob(ctx, actor, job, { forced = false } = {}) {
     req.status = 'done';
     req.doneTs = Date.now();
   }
-  publicLog(ctx, `▲ ${actor.name} a terminé : ${job.label}${forced ? ' (validé par le MJ)' : ''}`);
+  const p = { actor: actor.name, label: labelParam(job) };
+  if (forced) publicLog(ctx, tk('▲ {actor} a terminé : {label} (validé par le MJ)'), p);
+  else publicLog(ctx, tk('▲ {actor} a terminé : {label}'), p);
   ctx.emitTo([...ownersOf(ctx.state, actor.id), 'gm'], 'sfx', { id: 'level-up' });
-  return { actorId: actor.id, actorName: actor.name, label: job.label, summary };
+  return { actorId: actor.id, actorName: actor.name, label: job.label, labelI18n: job.labelI18n, summary };
 }
 
 /** Approve: charge karma/nuyen, then apply now or start a downtime job. */
@@ -197,9 +213,9 @@ function approve(ctx, request, gmNote) {
   const actor = ctx.state.actors[request.actorId];
   if (!actor) ctx.fail('Personnage introuvable');
   const q = quote(actor, request.request, tr.settings, contextFor(tr, actor, request.id));
-  if (q.error) ctx.fail(q.error);
+  if (q.error) failQuote(ctx, q);
   Object.assign(request, {
-    from: q.from, to: q.to, label: q.label, karmaCost: q.karmaCost, nuyenCost: q.nuyenCost, days: q.days, daysBase: q.daysBase,
+    from: q.from, to: q.to, label: q.label, labelI18n: q.labelI18n, karmaCost: q.karmaCost, nuyenCost: q.nuyenCost, days: q.days, daysBase: q.daysBase,
     instructor: q.instructor, ppCost: q.ppCost, request: q.req, status: 'approved', resolvedTs: Date.now(),
   });
   if (gmNote) request.gmNote = gmNote;
@@ -208,14 +224,16 @@ function approve(ctx, request, gmNote) {
     advance(actor, q.req);
     request.status = 'done';
     request.doneTs = Date.now();
-    publicLog(ctx, `▲ ${actor.name} progresse : ${q.label}`);
+    publicLog(ctx, tk('▲ {actor} progresse : {label}'), { actor: actor.name, label: labelParam(q) });
     ctx.emitTo([...ownersOf(ctx.state, actor.id), 'gm'], 'sfx', { id: 'level-up' });
     return request;
   }
-  const job = { id: ctx.uid('job'), requestId: request.id, kind: q.kind, label: q.label, daysTotal: q.days, daysDone: 0, startedTs: Date.now(), request: q.req };
+  const job = { id: ctx.uid('job'), requestId: request.id, kind: q.kind, label: q.label, labelI18n: q.labelI18n, daysTotal: q.days, daysDone: 0, startedTs: Date.now(), request: q.req };
   actor.training = [...jobsOf(actor), job];
   request.jobId = job.id;
-  privateLog(ctx, actor.id, `${actor.name} commence l’entraînement : ${q.label} — ${formatDays(q.days)}${q.instructor ? ' avec instructeur' : ''}`);
+  const p = { actor: actor.name, label: labelParam(q), days: formatDaysI18n(q.days) };
+  if (q.instructor) privateLog(ctx, actor.id, tk('{actor} commence l’entraînement : {label} — {days} avec instructeur'), p);
+  else privateLog(ctx, actor.id, tk('{actor} commence l’entraînement : {label} — {days}'), p);
   return request;
 }
 
@@ -262,11 +280,11 @@ export default {
         if (!ctx.isGM) req.free = false;
         const verified = enrichFromCatalog(req);
         const q = quote(actor, req, tr.settings, contextFor(tr, actor));
-        if (q.error) ctx.fail(q.error);
+        if (q.error) failQuote(ctx, q);
         const manual = !verified || q.manual;
         const request = {
           id: ctx.uid('trq'), ts: Date.now(), actorId: actor.id, userId: ctx.user.id, kind: q.kind, target: q.target,
-          from: q.from, to: q.to, label: q.label, karmaCost: q.karmaCost, nuyenCost: q.nuyenCost, days: q.days, daysBase: q.daysBase,
+          from: q.from, to: q.to, label: q.label, labelI18n: q.labelI18n, karmaCost: q.karmaCost, nuyenCost: q.nuyenCost, days: q.days, daysBase: q.daysBase,
           instructor: q.instructor, ppCost: q.ppCost, status: 'pending', manual, request: q.req,
         };
         if (req.note) request.note = req.note;
@@ -281,7 +299,11 @@ export default {
             throw err;
           }
         } else {
-          privateLog(ctx, actor.id, `${actor.name} demande : ${q.label} — ${q.karmaCost} karma${q.nuyenCost ? `, ${q.nuyenCost}¥` : ''}${manual ? ' (saisie manuelle)' : ''}`);
+          const p = { actor: actor.name, label: labelParam(q), karma: q.karmaCost, nuyen: q.nuyenCost };
+          if (q.nuyenCost && manual) privateLog(ctx, actor.id, tk('{actor} demande : {label} — {karma} karma, {nuyen}¥ (saisie manuelle)'), p);
+          else if (q.nuyenCost) privateLog(ctx, actor.id, tk('{actor} demande : {label} — {karma} karma, {nuyen}¥'), p);
+          else if (manual) privateLog(ctx, actor.id, tk('{actor} demande : {label} — {karma} karma (saisie manuelle)'), p);
+          else privateLog(ctx, actor.id, tk('{actor} demande : {label} — {karma} karma'), p);
           ctx.emitTo('gm', 'sfx', { id: 'notify' });
         }
         return { requestId: request.id, status: request.status };
@@ -302,7 +324,9 @@ export default {
           request.resolvedTs = Date.now();
           if (gmNote) request.gmNote = gmNote;
           const actor = ctx.state.actors[request.actorId];
-          privateLog(ctx, request.actorId, `Demande refusée pour ${actor?.name || '?'} : ${request.label}${gmNote ? ` — « ${gmNote} »` : ''}`);
+          const p = { actor: actor?.name || '?', label: labelParam(request), note: gmNote };
+          if (gmNote) privateLog(ctx, request.actorId, tk('Demande refusée pour {actor} : {label} — « {note} »'), p);
+          else privateLog(ctx, request.actorId, tk('Demande refusée pour {actor} : {label}'), p);
         }
         return { status: request.status };
       },
@@ -332,13 +356,15 @@ export default {
             actor.karma = (Number(actor.karma) || 0) + k;
             if (n) actor.nuyen = (Number(actor.nuyen) || 0) + n;
             if (k || n) {
-              const entry = { text: `Remboursement : ${request.label} (entraînement interrompu)` };
-              if (k) entry.karma = k;
-              if (n) entry.nuyen = n;
-              pushHistory(actor, entry);
+              const extra = {};
+              if (k) extra.karma = k;
+              if (n) extra.nuyen = n;
+              pushHistory(actor, tk('Remboursement : {label} (entraînement interrompu)'), { label: labelParam(request) }, extra);
             }
           }
-          privateLog(ctx, request.actorId, `Entraînement interrompu pour ${actor.name} : ${request.label}${refund ? ' (remboursé)' : ''}`);
+          const p = { actor: actor.name, label: labelParam(request) };
+          if (refund) privateLog(ctx, request.actorId, tk('Entraînement interrompu pour {actor} : {label} (remboursé)'), p);
+          else privateLog(ctx, request.actorId, tk('Entraînement interrompu pour {actor} : {label}'), p);
         }
         request.status = 'cancelled';
         request.resolvedTs = Date.now();
@@ -365,7 +391,10 @@ export default {
           }
         }
         if (!only) tr.daysElapsed += d;
-        ctx.log({ kind: 'training', userId: ctx.user.id, author: 'Progression', text: `⏱ Temps mort : ${formatDays(d)}.${completed.length ? ` ${completed.length} entraînement(s) terminé(s).` : ''}` });
+        const p = { days: formatDaysI18n(d), n: completed.length };
+        if (!completed.length) publicLog(ctx, tk('⏱ Temps mort : {days}.'), p);
+        else if (completed.length === 1) publicLog(ctx, tk('un::⏱ Temps mort : {days}. {n} entraînement(s) terminé(s).'), p);
+        else publicLog(ctx, tk('⏱ Temps mort : {days}. {n} entraînement(s) terminé(s).'), p);
         return { days: d, completed, progressed };
       },
     },

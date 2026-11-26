@@ -8,25 +8,38 @@ import { send, upload } from '../../lib/net.js';
 import { setUI, toast, openSheet } from '../../lib/ui-store.js';
 import { TILE_INFO } from '/shared/vision.js';
 import { MapCanvas } from './MapCanvas.js';
-import { THEME_OPTIONS, LIGHTING_OPTIONS, DISPO, tileSwatch, getImage, wallKind } from './renderer.js';
+import { themeOptions, lightingOptions, DISPO, tileSwatch, getImage, wallKind } from './renderer.js';
+import { t, tk, compare } from '../../lib/i18n.js';
+
+// Labels of the module-level tables below are French keys (tk), translated at render time.
+/** Select options with translated labels. */
+const tr = (list) => list.map((o) => ({ value: o.value, label: t(o.label) }));
+/** Tile names (same French text as TILE_INFO[ch].fr in shared/vision.js). */
+const TILE_LABELS = {
+  ' ': tk('Vide (hors carte)'), '.': tk('Sol intérieur'), ',': tk('Sol extérieur / rue'), '#': tk('Mur'), D: tk('Porte / passage'), W: tk('Fenêtre'),
+  '=': tk('Comptoir / muret / rambarde'), T: tk('Table / mobilier'), c: tk('Caisses / couvert'), o: tk('Pilier / colonne'), m: tk('Machines / serveurs / étagères'),
+  v: tk('Véhicule'), b: tk('Lit / canapé'), s: tk('Escalier / rampe'), e: tk('Ascenseur'), '~': tk('Eau'), g: tk('Herbe / végétation'), r: tk('Gravats (terrain difficile)'),
+  x: tk('Danger (feu, chimie, électricité)'), t: tk('Arbres / buissons denses'), _: tk('Tapis / scène / piste de danse'),
+};
+const tileLabel = (ch) => (TILE_LABELS[ch] ? t(TILE_LABELS[ch]) : TILE_INFO[ch]?.fr || ch);
 
 const WALL_TOOLS = new Set(['wall', 'wdoor']);
 const WALL_TYPES = [
-  { value: 'wall', label: 'Mur (bloque tout)' },
-  { value: 'window', label: 'Fenêtre (bloque le passage)' },
-  { value: 'curtain', label: 'Rideau (bloque la vue)' },
-  { value: 'ethereal', label: 'Repère (ne bloque rien)' },
-  { value: 'door', label: 'Porte' },
-  { value: 'secret', label: 'Porte secrète' },
+  { value: 'wall', label: tk('Mur (bloque tout)') },
+  { value: 'window', label: tk('Fenêtre (bloque le passage)') },
+  { value: 'curtain', label: tk('Rideau (bloque la vue)') },
+  { value: 'ethereal', label: tk('Repère (ne bloque rien)') },
+  { value: 'door', label: tk('Porte') },
+  { value: 'secret', label: tk('Porte secrète') },
 ];
 const WDOOR_KINDS = [
-  { value: 'door', label: 'Porte' },
-  { value: 'secret', label: 'Porte secrète' },
-  { value: 'window', label: 'Fenêtre' },
+  { value: 'door', label: tk('Porte') },
+  { value: 'secret', label: tk('Porte secrète') },
+  { value: 'window', label: tk('Fenêtre') },
 ];
 const BG_MODES = [
-  { value: 'image', label: 'Image = sol (carte illustrée)' },
-  { value: 'underlay', label: 'Calque sous les tuiles' },
+  { value: 'image', label: tk('Image = sol (carte illustrée)') },
+  { value: 'underlay', label: tk('Calque sous les tuiles') },
 ];
 const newWallId = () => 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 /** Wall type of a segment, including doors. */
@@ -45,51 +58,51 @@ function wallsSig(walls) {
 }
 
 const TOOLS = [
-  { id: 'brush', icon: '✎', label: 'Pinceau', key: 'b' },
-  { id: 'line', icon: '╱', label: 'Ligne', key: 'l' },
-  { id: 'rect', icon: '■', label: 'Rect.', key: 'r' },
-  { id: 'outline', icon: '□', label: 'Contour', key: 'o' },
-  { id: 'room', icon: '⌂', label: 'Pièce', key: 'p' },
-  { id: 'fill', icon: '◍', label: 'Remplir', key: 'f' },
-  { id: 'eraser', icon: '⌫', label: 'Gomme', key: 'e' },
-  { id: 'pan', icon: '✥', label: 'Main', key: 'h' },
-  { id: 'wall', icon: '┃', label: 'Mur', key: 'w' },
-  { id: 'wdoor', icon: '⊓', label: 'Porte-mur', key: 'k' },
-  { id: 'door', icon: '▯', label: 'Porte', key: 'd' },
-  { id: 'light', icon: '✺', label: 'Lumière', key: 'i' },
-  { id: 'region', icon: '⬚', label: 'Zone', key: 'z' },
-  { id: 'note', icon: '!', label: 'Note', key: 'n' },
-  { id: 'token', icon: '●', label: 'Pion', key: 't' },
-  { id: 'select', icon: '➚', label: 'Choisir', key: 's' },
+  { id: 'brush', icon: '✎', label: tk('Pinceau'), key: 'b' },
+  { id: 'line', icon: '╱', label: tk('Ligne'), key: 'l' },
+  { id: 'rect', icon: '■', label: tk('Rect.'), key: 'r' },
+  { id: 'outline', icon: '□', label: tk('Contour'), key: 'o' },
+  { id: 'room', icon: '⌂', label: tk('Pièce'), key: 'p' },
+  { id: 'fill', icon: '◍', label: tk('Remplir'), key: 'f' },
+  { id: 'eraser', icon: '⌫', label: tk('Gomme'), key: 'e' },
+  { id: 'pan', icon: '✥', label: tk('Main'), key: 'h' },
+  { id: 'wall', icon: '┃', label: tk('Mur'), key: 'w' },
+  { id: 'wdoor', icon: '⊓', label: tk('Porte-mur'), key: 'k' },
+  { id: 'door', icon: '▯', label: tk('Porte'), key: 'd' },
+  { id: 'light', icon: '✺', label: tk('Lumière'), key: 'i' },
+  { id: 'region', icon: '⬚', label: tk('Zone'), key: 'z' },
+  { id: 'note', icon: '!', label: tk('Note'), key: 'n' },
+  { id: 'token', icon: '●', label: tk('Pion'), key: 't' },
+  { id: 'select', icon: '➚', label: tk('outil::Choisir'), key: 's' },
 ];
 const PAINT = new Set(['brush', 'line', 'rect', 'outline', 'room', 'fill', 'eraser']);
 const PALETTE = ['.', ',', '#', 'D', 'W', '=', 'T', 'c', 'o', 'm', 'v', 'b', 's', 'e', '~', 'g', 'r', 'x', 't', '_', ' '];
 const TOOL_HELP = {
-  brush: 'Clic-glisser pour peindre. Alt+clic ou clic droit : pipette.',
-  line: 'Glisse du point de départ au point d’arrivée.',
-  rect: 'Glisse pour remplir un rectangle avec la tuile choisie.',
-  outline: 'Glisse pour tracer le contour d’un rectangle.',
-  room: 'Glisse pour créer une pièce : murs autour, sol (tuile choisie) dedans.',
-  fill: 'Clic : remplit la zone contiguë de même tuile.',
-  eraser: 'Efface (vide) sous le pinceau.',
-  pan: 'Glisse pour déplacer la vue. Astuce : Espace + glisser, clic molette ou clic droit glissé marchent avec tous les outils.',
-  wall: 'Glisse pour tracer un mur (aimanté aux coins / demi-cases et aux extrémités des murs ; Alt : placement libre ; Maj : repartir du dernier point). Clic : sélectionner (Maj+clic : ajouter). Ctrl+glisser : sélection par cadre. Suppr : effacer.',
-  wdoor: 'Glisse pour tracer une porte sur un mur. Clic sur un mur existant : le convertir selon le type choisi (porte, secrète, fenêtre).',
-  door: 'Clic sur une case : pose une porte. Clic sur une porte : la sélectionner.',
-  light: 'Clic : ajoute une lumière. Glisse une lumière pour la déplacer.',
-  region: 'Glisse pour délimiter une zone nommée (pièce, secteur…).',
-  note: 'Clic : épingle une note MJ (jamais visible des joueurs).',
-  token: 'Clic : pose un pion. Glisse un pion pour le déplacer.',
-  select: 'Clic sur un objet (pion, lumière, porte, mur, note, zone) pour le modifier.',
+  brush: tk('Clic-glisser pour peindre. Alt+clic ou clic droit : pipette.'),
+  line: tk('Glisse du point de départ au point d’arrivée.'),
+  rect: tk('Glisse pour remplir un rectangle avec la tuile choisie.'),
+  outline: tk('Glisse pour tracer le contour d’un rectangle.'),
+  room: tk('Glisse pour créer une pièce : murs autour, sol (tuile choisie) dedans.'),
+  fill: tk('Clic : remplit la zone contiguë de même tuile.'),
+  eraser: tk('Efface (vide) sous le pinceau.'),
+  pan: tk('Glisse pour déplacer la vue. Astuce : Espace + glisser, clic molette ou clic droit glissé marchent avec tous les outils.'),
+  wall: tk('Glisse pour tracer un mur (aimanté aux coins / demi-cases et aux extrémités des murs ; Alt : placement libre ; Maj : repartir du dernier point). Clic : sélectionner (Maj+clic : ajouter). Ctrl+glisser : sélection par cadre. Suppr : effacer.'),
+  wdoor: tk('Glisse pour tracer une porte sur un mur. Clic sur un mur existant : le convertir selon le type choisi (porte, secrète, fenêtre).'),
+  door: tk('Clic sur une case : pose une porte. Clic sur une porte : la sélectionner.'),
+  light: tk('Clic : ajoute une lumière. Glisse une lumière pour la déplacer.'),
+  region: tk('Glisse pour délimiter une zone nommée (pièce, secteur…).'),
+  note: tk('Clic : épingle une note MJ (jamais visible des joueurs).'),
+  token: tk('Clic : pose un pion. Glisse un pion pour le déplacer.'),
+  select: tk('Clic sur un objet (pion, lumière, porte, mur, note, zone) pour le modifier.'),
 };
 const ANCHORS = [
-  { value: 'nw', label: '↖ Haut-gauche' }, { value: 'n', label: '↑ Haut' }, { value: 'ne', label: '↗ Haut-droite' },
-  { value: 'w', label: '← Gauche' }, { value: 'c', label: '• Centre' }, { value: 'e', label: '→ Droite' },
-  { value: 'sw', label: '↙ Bas-gauche' }, { value: 's', label: '↓ Bas' }, { value: 'se', label: '↘ Bas-droite' },
+  { value: 'nw', label: tk('↖ Haut-gauche') }, { value: 'n', label: tk('↑ Haut') }, { value: 'ne', label: tk('↗ Haut-droite') },
+  { value: 'w', label: tk('← Gauche') }, { value: 'c', label: tk('• Centre') }, { value: 'e', label: tk('→ Droite') },
+  { value: 'sw', label: tk('↙ Bas-gauche') }, { value: 's', label: tk('↓ Bas') }, { value: 'se', label: tk('↘ Bas-droite') },
 ];
-const DOOR_STATES = [{ value: 'closed', label: 'Fermée' }, { value: 'open', label: 'Ouverte' }, { value: 'locked', label: 'Verrouillée' }];
-const DOOR_KINDS = [{ value: 'door', label: 'Porte' }, { value: 'gate', label: 'Grille' }, { value: 'shutter', label: 'Rideau métallique' }, { value: 'secret', label: 'Secrète' }];
-const DISPO_OPTIONS = Object.entries(DISPO).map(([value, d]) => ({ value, label: d.label }));
+const DOOR_STATES = [{ value: 'closed', label: tk('Fermée') }, { value: 'open', label: tk('Ouverte') }, { value: 'locked', label: tk('Verrouillée') }];
+const DOOR_KINDS = [{ value: 'door', label: tk('Porte') }, { value: 'gate', label: tk('porte::Grille') }, { value: 'shutter', label: tk('Rideau métallique') }, { value: 'secret', label: tk('Secrète') }];
+const DISPO_OPTIONS = Object.entries(DISPO).map(([value, d]) => ({ value, label: d.label })); // d.label: French key
 const quiet = () => {};
 /** Like Field but a <div>: a <label> would forward clicks on its text to the stepper buttons. */
 const NumField = ({ label, children }) => html`<div class="field"><span class="field-label">${label}</span>${children}</div>`;
@@ -150,7 +163,7 @@ export function MapEditor({ game, map, onBack }) {
   const [doorOpts, setDoorOpts] = useState({ state: 'closed', kind: 'door' });
   const [lightOpts, setLightOpts] = useState({ radius: 6, color: '#ffcc88', on: true });
   const [regionOpts, setRegionOpts] = useState({ color: '#e0468f', gmOnly: false });
-  const [tokenOpts, setTokenOpts] = useState({ actorId: '', name: 'PNJ', disposition: 'hostile', hidden: false });
+  const [tokenOpts, setTokenOpts] = useState(() => ({ actorId: '', name: t('PNJ'), disposition: 'hostile', hidden: false }));
   const [sel, setSel] = useState(null); // { type: 'door'|'light'|'region'|'note'|'token', id }
   const [panel, setPanel] = useState({ tools: false, props: false });
   const [resize, setResize] = useState({ width: map.width, height: map.height, anchor: 'c' });
@@ -213,7 +226,7 @@ export function MapEditor({ game, map, onBack }) {
     } catch (e) {
       dirtyRef.current = true;
       setSaveState('error');
-      toast(`Sauvegarde de la carte impossible : ${e.message}`, 'error');
+      toast(t('Sauvegarde de la carte impossible : {error}', { error: e.message }), 'error');
     } finally {
       savingRef.current = false;
       if (dirtyRef.current) timerRef.current = setTimeout(flush, 1500);
@@ -337,7 +350,7 @@ export function MapEditor({ game, map, onBack }) {
     if (!n) return;
     editWalls((walls) => walls.filter((w) => !set.has(w.id)));
     setWallSel([]);
-    toast(n > 1 ? `${n} murs supprimés (Ctrl+Z pour annuler)` : 'Mur supprimé (Ctrl+Z pour annuler)');
+    toast(n > 1 ? t('{n} murs supprimés (Ctrl+Z pour annuler)', { n }) : t('Mur supprimé (Ctrl+Z pour annuler)'));
   };
 
   const floodFill = (start, ch) => {
@@ -376,24 +389,24 @@ export function MapEditor({ game, map, onBack }) {
   // ---------------- objects ----------------
   const objectAt = (fx, fy, types = ['token', 'light', 'door', 'note', 'wall', 'region'], sx = null, sy = null) => {
     const cx = Math.floor(fx), cy = Math.floor(fy);
-    for (const t of types) {
-      if (t === 'wall') {
+    for (const tt of types) {
+      if (tt === 'wall') {
         if (sx == null) continue;
         const w = rRef.current?.wallAtScreen(sx, sy, 8);
         if (w) return { type: 'wall', id: w.id };
-      } else if (t === 'token') {
+      } else if (tt === 'token') {
         const tok = rRef.current?.tokenAt(fx, fy);
         if (tok) return { type: 'token', id: tok.id };
-      } else if (t === 'light') {
+      } else if (tt === 'light') {
         const l = (map.lights || []).find((o) => o.x === cx && o.y === cy);
         if (l) return { type: 'light', id: l.id };
-      } else if (t === 'door') {
+      } else if (tt === 'door') {
         const d = (map.doors || []).find((o) => o.x === cx && o.y === cy);
         if (d) return { type: 'door', id: d.id };
-      } else if (t === 'note') {
+      } else if (tt === 'note') {
         const n = (map.notes || []).find((o) => o.x === cx && o.y === cy);
         if (n) return { type: 'note', id: n.id };
-      } else if (t === 'region') {
+      } else if (tt === 'region') {
         const r = [...(map.regions || [])].reverse().find((o) => cx >= o.x && cy >= o.y && cx < o.x + o.w && cy < o.y + o.h);
         if (r) return { type: 'region', id: r.id };
       }
@@ -455,7 +468,7 @@ export function MapEditor({ game, map, onBack }) {
       return next.door ? { ...next, door: { ...next.door, state: w.door ? w.door.state : wdoorOpts.state } } : next;
     });
     pick({ type: 'wall', id });
-    toast(`Mur converti : ${WDOOR_KINDS.find((k) => k.value === wdoorOpts.kind)?.label.toLowerCase()}`);
+    toast(t('Mur converti : {kind}', { kind: t(WDOOR_KINDS.find((k) => k.value === wdoorOpts.kind)?.label || '').toLowerCase() }));
   };
 
   const addDoorAt = (x, y) => {
@@ -467,7 +480,7 @@ export function MapEditor({ game, map, onBack }) {
   };
   const addToken = (x, y) => {
     const a = tokenOpts.actorId ? game.actors?.[tokenOpts.actorId] : null;
-    const token = a ? { actorId: a.id, x, y, hidden: tokenOpts.hidden } : { name: tokenOpts.name || 'Pion', disposition: tokenOpts.disposition, hidden: tokenOpts.hidden, x, y };
+    const token = a ? { actorId: a.id, x, y, hidden: tokenOpts.hidden } : { name: tokenOpts.name || t('Pion'), disposition: tokenOpts.disposition, hidden: tokenOpts.hidden, x, y };
     if (a && tokenOpts.disposition && a.type !== 'pc') token.disposition = tokenOpts.disposition;
     send('maps/addToken', { mapId, token }).then((id) => setSel({ type: 'token', id }), quiet);
   };
@@ -540,7 +553,7 @@ export function MapEditor({ game, map, onBack }) {
         const hit = objectAt(info.fx, info.fy, ['note']);
         if (hit) setSel(hit);
         else
-          promptText('Note MJ (jamais visible des joueurs)').then((text) => {
+          promptText(t('Note MJ (jamais visible des joueurs)')).then((text) => {
             if (text && text.trim()) send('maps/addNote', { mapId, note: { x: c.x, y: c.y, text: text.trim() } }).then((id) => setSel({ type: 'note', id }), quiet);
           });
         return true;
@@ -572,7 +585,7 @@ export function MapEditor({ game, map, onBack }) {
         if (s.target && s.target.x === c.x && s.target.y === c.y) return;
         s.target = c;
         if (s.drag.type === 'token') {
-          const tok = map.tokens.find((t) => t.id === s.drag.id);
+          const tok = map.tokens.find((tt) => tt.id === s.drag.id);
           if (tok) rRef.current?.setOverlay(overlayFor({ ghosts: [{ token: tok, x: c.x, y: c.y }] }));
         } else rRef.current?.setOverlay(overlayFor({ hoverCell: c, hoverColor: '#ffcc88' }));
         return;
@@ -607,7 +620,7 @@ export function MapEditor({ game, map, onBack }) {
         setSel(null);
         setWallSel(next);
         r.setOverlay(overlayFor({ selectedWallIds: new Set(next) }));
-        if (hits.length) toast(`${hits.length} mur(s) sélectionné(s)`);
+        if (hits.length) toast(t('{n} mur(s) sélectionné(s)', { n: hits.length }));
         return;
       }
       if (s.seg) {
@@ -649,7 +662,7 @@ export function MapEditor({ game, map, onBack }) {
           if (hit) setSel(hit);
           return;
         }
-        promptText('Nom de la zone', 'Zone').then((name) => {
+        promptText(t('Nom de la zone'), t('Zone')).then((name) => {
           if (name && name.trim()) send('maps/addRegion', { mapId, region: { ...r, name: name.trim(), ...regionOpts } }).then((id) => setSel({ type: 'region', id }), quiet);
         });
         return;
@@ -680,7 +693,7 @@ export function MapEditor({ game, map, onBack }) {
         if (ch != null) {
           setTile(ch);
           if (tool === 'eraser') setTool('brush');
-          toast(`Pipette : ${TILE_INFO[ch]?.fr || ch}`);
+          toast(t('Pipette : {tile}', { tile: tileLabel(ch) }));
         }
         return;
       }
@@ -757,8 +770,8 @@ export function MapEditor({ game, map, onBack }) {
       }
       if (e.key === '[') return setSize((s) => Math.max(1, s - 1));
       if (e.key === ']') return setSize((s) => Math.min(3, s + 1));
-      const t = TOOLS.find((x) => x.key === k);
-      if (t) setTool(t.id);
+      const tt = TOOLS.find((x) => x.key === k);
+      if (tt) setTool(tt.id);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -766,8 +779,14 @@ export function MapEditor({ game, map, onBack }) {
 
   const deleteSelected = async () => {
     if (!sel || !selected) return;
-    const labels = { door: 'cette porte', light: 'cette lumière', region: `la zone « ${selected.name} »`, note: 'cette note', token: `le pion « ${selected.name} »` };
-    if (!(await confirmAction(`Supprimer ${labels[sel.type]} ?`))) return;
+    const question = {
+      door: () => t('Supprimer cette porte ?'),
+      light: () => t('Supprimer cette lumière ?'),
+      region: () => t('Supprimer la zone « {name} » ?', { name: selected.name }),
+      note: () => t('Supprimer cette note ?'),
+      token: () => t('Supprimer le pion « {name} » ?', { name: selected.name }),
+    }[sel.type];
+    if (!question || !(await confirmAction(question()))) return;
     const action = { door: 'maps/removeDoor', light: 'maps/removeLight', region: 'maps/removeRegion', note: 'maps/removeNote', token: 'maps/removeToken' }[sel.type];
     const idKey = { door: 'doorId', light: 'lightId', region: 'regionId', note: 'noteId', token: 'tokenId' }[sel.type];
     send(action, { mapId, [idKey]: sel.id }).then(() => setSel(null), quiet);
@@ -812,25 +831,25 @@ export function MapEditor({ game, map, onBack }) {
     try {
       const res = await upload(f);
       await send('maps/update', { mapId, patch: { background: { ...(bg || bgDefaults()), url: res.url } } });
-      toast('Image de fond ajoutée', 'success');
+      toast(t('Image de fond ajoutée'), 'success');
     } catch (err) {
-      toast(`Envoi impossible : ${err.message}`, 'error');
+      toast(t('Envoi impossible : {error}', { error: err.message }), 'error');
     }
   };
   const fitBg = () => setBg({ x: 0, y: 0, w: map.width, h: map.height });
   const bgAspect = () => {
     const img = bg?.url ? getImage(bg.url) : null;
-    if (!img || !img.naturalWidth) return toast('Image pas encore chargée — réessaie dans un instant', 'warn');
+    if (!img || !img.naturalWidth) return toast(t('Image pas encore chargée — réessaie dans un instant'), 'warn');
     setBg({ h: Math.round(((bg.w || map.width) * img.naturalHeight * 100) / img.naturalWidth) / 100 });
   };
   const fillInterior = async () => {
-    if (!(await confirmAction('Remplacer toutes les tuiles par du sol intérieur « . » ? Les murs/portes en tuiles disparaissent (les murs en segments restent). Annulable avec Ctrl+Z.'))) return;
+    if (!(await confirmAction(t('Remplacer toutes les tuiles par du sol intérieur « . » ? Les murs/portes en tuiles disparaissent (les murs en segments restent). Annulable avec Ctrl+Z.')))) return;
     beginStroke();
     const cells = [];
     for (let y = 0; y < map.height; y++) for (let x = 0; x < map.width; x++) cells.push({ x, y });
     applyCells(cells, '.');
     endStroke();
-    toast('Toute la carte est maintenant du sol', 'success');
+    toast(t('Toute la carte est maintenant du sol'), 'success');
   };
   const wallStats = useMemo(() => {
     const s = { wall: 0, window: 0, curtain: 0, ethereal: 0, door: 0, secret: 0 };
@@ -840,66 +859,66 @@ export function MapEditor({ game, map, onBack }) {
   const doResize = async () => {
     const { width, height, anchor } = resize;
     if (width === map.width && height === map.height) return;
-    if ((width < map.width || height < map.height) && !(await confirmAction('Réduire la carte supprime ce qui dépasse. Continuer ?'))) return;
+    if ((width < map.width || height < map.height) && !(await confirmAction(t('Réduire la carte supprime ce qui dépasse. Continuer ?')))) return;
     await flush();
-    send('maps/resize', { mapId, width, height, anchor }).then(() => toast('Carte redimensionnée', 'success'), quiet);
+    send('maps/resize', { mapId, width, height, anchor }).then(() => toast(t('Carte redimensionnée'), 'success'), quiet);
   };
   const actorOptions = useMemo(() => {
     const list = Object.values(game.actors || {}).filter((a) => !a.retired);
     return [
-      { value: '', label: 'Pion libre (sans fiche)' },
-      ...list.filter((a) => a.type === 'pc').map((a) => ({ value: a.id, label: `PJ — ${a.name}` })),
-      ...list.filter((a) => a.type !== 'pc').sort((a, b) => a.name.localeCompare(b.name)).map((a) => ({ value: a.id, label: `PNJ — ${a.name}` })),
+      { value: '', label: t('Pion libre (sans fiche)') },
+      ...list.filter((a) => a.type === 'pc').map((a) => ({ value: a.id, label: t('PJ — {name}', { name: a.name }) })),
+      ...list.filter((a) => a.type !== 'pc').sort((a, b) => compare(a.name, b.name)).map((a) => ({ value: a.id, label: t('PNJ — {name}', { name: a.name }) })),
     ];
   }, [game.actors]);
   const centerOn = (o) => rRef.current?.centerOn(o.x + (o.w ? o.w / 2 - 0.5 : 0), o.y + (o.h ? o.h / 2 - 0.5 : 0), 28);
   const shown = game.scene?.activeMapId === mapId;
-  const saveLabel = { saved: '✓ Enregistré', dirty: '● Modifié', saving: '… Enregistrement', error: '⚠ Erreur — nouvel essai' }[saveState];
+  const saveLabel = { saved: () => '✓ ' + t('Enregistré'), dirty: () => '● ' + t('Modifié'), saving: () => '… ' + t('Enregistrement'), error: () => '⚠ ' + t('Erreur — nouvel essai') }[saveState]?.() || '';
 
   const toolOptions = () => {
     if (PAINT.has(tool) && tool !== 'eraser') {
       return html`<div class="mapedit-opts">
-        <div class="row"><img src=${tileSwatch(tile, map.theme, 30)} width="24" height="24" alt="" /><strong class="small">${TILE_INFO[tile]?.fr || tile}</strong></div>
-        ${(tool === 'brush') && html`<div class="row spread"><span class="small muted">Taille</span><${NumberInput} small value=${size} min=${1} max=${3} onChange=${setSize} /></div>`}
-        ${tool === 'room' && html`<span class="small muted">Murs « # » autour, ${tile === '#' || tile === ' ' ? 'sol intérieur' : (TILE_INFO[tile]?.fr || tile).toLowerCase()} dedans.</span>`}
+        <div class="row"><img src=${tileSwatch(tile, map.theme, 30)} width="24" height="24" alt="" /><strong class="small">${tileLabel(tile)}</strong></div>
+        ${(tool === 'brush') && html`<div class="row spread"><span class="small muted">${t('Taille')}</span><${NumberInput} small value=${size} min=${1} max=${3} onChange=${setSize} /></div>`}
+        ${tool === 'room' && html`<span class="small muted">${t('Murs « # » autour, {floor} dedans.', { floor: tile === '#' || tile === ' ' ? t('sol intérieur') : tileLabel(tile).toLowerCase() })}</span>`}
       </div>`;
     }
-    if (tool === 'eraser') return html`<div class="mapedit-opts"><div class="row spread"><span class="small muted">Taille</span><${NumberInput} small value=${size} min=${1} max=${3} onChange=${setSize} /></div></div>`;
+    if (tool === 'eraser') return html`<div class="mapedit-opts"><div class="row spread"><span class="small muted">${t('Taille')}</span><${NumberInput} small value=${size} min=${1} max=${3} onChange=${setSize} /></div></div>`;
     if (tool === 'wall')
       return html`<div class="mapedit-opts">
-        <${Field} label="Type de mur"><${Select} value=${wallOpts.type} options=${WALL_TYPES} onChange=${(v) => setWallOpts({ ...wallOpts, type: v })} /></${Field}>
-        <span class="small muted">${wallStats.wall + wallStats.window + wallStats.curtain + wallStats.ethereal} mur(s) · ${wallStats.door + wallStats.secret} porte(s)</span>
+        <${Field} label=${t('Type de mur')}><${Select} value=${wallOpts.type} options=${tr(WALL_TYPES)} onChange=${(v) => setWallOpts({ ...wallOpts, type: v })} /></${Field}>
+        <span class="small muted">${t('{walls} mur(s) · {doors} porte(s)', { walls: wallStats.wall + wallStats.window + wallStats.curtain + wallStats.ethereal, doors: wallStats.door + wallStats.secret })}</span>
       </div>`;
     if (tool === 'wdoor')
       return html`<div class="mapedit-opts">
-        <${Field} label="Type"><${Select} value=${wdoorOpts.kind} options=${WDOOR_KINDS} onChange=${(v) => setWdoorOpts({ ...wdoorOpts, kind: v })} /></${Field}>
-        ${wdoorOpts.kind !== 'window' && html`<${Field} label="État"><${Select} value=${wdoorOpts.state} options=${DOOR_STATES} onChange=${(v) => setWdoorOpts({ ...wdoorOpts, state: v })} /></${Field}>`}
+        <${Field} label=${t('Type')}><${Select} value=${wdoorOpts.kind} options=${tr(WDOOR_KINDS)} onChange=${(v) => setWdoorOpts({ ...wdoorOpts, kind: v })} /></${Field}>
+        ${wdoorOpts.kind !== 'window' && html`<${Field} label=${t('État')}><${Select} value=${wdoorOpts.state} options=${tr(DOOR_STATES)} onChange=${(v) => setWdoorOpts({ ...wdoorOpts, state: v })} /></${Field}>`}
       </div>`;
     if (tool === 'door')
       return html`<div class="mapedit-opts">
-        <${Field} label="Type"><${Select} value=${doorOpts.kind} options=${DOOR_KINDS} onChange=${(v) => setDoorOpts({ ...doorOpts, kind: v })} /></${Field}>
-        <${Field} label="État"><${Select} value=${doorOpts.state} options=${DOOR_STATES} onChange=${(v) => setDoorOpts({ ...doorOpts, state: v })} /></${Field}>
+        <${Field} label=${t('Type')}><${Select} value=${doorOpts.kind} options=${tr(DOOR_KINDS)} onChange=${(v) => setDoorOpts({ ...doorOpts, kind: v })} /></${Field}>
+        <${Field} label=${t('État')}><${Select} value=${doorOpts.state} options=${tr(DOOR_STATES)} onChange=${(v) => setDoorOpts({ ...doorOpts, state: v })} /></${Field}>
       </div>`;
     if (tool === 'light')
       return html`<div class="mapedit-opts">
-        <div class="row spread"><span class="small muted">Rayon (cases)</span><${NumberInput} small value=${lightOpts.radius} min=${1} max=${40} onChange=${(v) => setLightOpts({ ...lightOpts, radius: v })} /></div>
-        <div class="row spread"><span class="small muted">Couleur</span><input type="color" class="mapedit-color" value=${lightOpts.color} onInput=${(e) => setLightOpts({ ...lightOpts, color: e.target.value })} /></div>
+        <div class="row spread"><span class="small muted">${t('Rayon (cases)')}</span><${NumberInput} small value=${lightOpts.radius} min=${1} max=${40} onChange=${(v) => setLightOpts({ ...lightOpts, radius: v })} /></div>
+        <div class="row spread"><span class="small muted">${t('Couleur')}</span><input type="color" class="mapedit-color" value=${lightOpts.color} onInput=${(e) => setLightOpts({ ...lightOpts, color: e.target.value })} /></div>
         <div class="row wrap gap-s">${['#ffcc88', '#fff1cc', '#3fd6d0', '#e0468f', '#9d7ce0', '#e05c5c', '#4fd17a'].map(
           (c) => html`<button class="mapedit-swatch" style=${{ background: c, width: '18px', height: '18px', cursor: 'pointer' }} title=${c} onClick=${() => setLightOpts({ ...lightOpts, color: c })}></button>`
         )}</div>
       </div>`;
     if (tool === 'region')
       return html`<div class="mapedit-opts">
-        <div class="row spread"><span class="small muted">Couleur</span><input type="color" class="mapedit-color" value=${regionOpts.color} onInput=${(e) => setRegionOpts({ ...regionOpts, color: e.target.value })} /></div>
-        <${Toggle} label="Réservée au MJ" value=${regionOpts.gmOnly} onChange=${(v) => setRegionOpts({ ...regionOpts, gmOnly: v })} />
+        <div class="row spread"><span class="small muted">${t('Couleur')}</span><input type="color" class="mapedit-color" value=${regionOpts.color} onInput=${(e) => setRegionOpts({ ...regionOpts, color: e.target.value })} /></div>
+        <${Toggle} label=${t('Réservée au MJ')} value=${regionOpts.gmOnly} onChange=${(v) => setRegionOpts({ ...regionOpts, gmOnly: v })} />
       </div>`;
     if (tool === 'token')
       return html`<div class="mapedit-opts">
-        <${Field} label="Fiche liée"><${Select} value=${tokenOpts.actorId} options=${actorOptions} onChange=${(v) => setTokenOpts({ ...tokenOpts, actorId: v })} /></${Field}>
-        ${!tokenOpts.actorId && html`<${Field} label="Nom"><input class="input" value=${tokenOpts.name} onInput=${(e) => setTokenOpts({ ...tokenOpts, name: e.target.value })} /></${Field}>`}
-        <${Field} label="Disposition"><${Select} value=${tokenOpts.disposition} options=${DISPO_OPTIONS} onChange=${(v) => setTokenOpts({ ...tokenOpts, disposition: v })} /></${Field}>
-        <${Toggle} label="Caché aux joueurs" value=${tokenOpts.hidden} onChange=${(v) => setTokenOpts({ ...tokenOpts, hidden: v })} />
-        <${Button} small onClick=${() => send('maps/placePCs', { mapId }).then((ids) => toast(ids?.length ? `${ids.length} PJ placé(s)` : 'Tous les PJ sont déjà sur la carte'), quiet)}>Placer tous les PJ</${Button}>
+        <${Field} label=${t('Fiche liée')}><${Select} value=${tokenOpts.actorId} options=${actorOptions} onChange=${(v) => setTokenOpts({ ...tokenOpts, actorId: v })} /></${Field}>
+        ${!tokenOpts.actorId && html`<${Field} label=${t('Nom')}><input class="input" value=${tokenOpts.name} onInput=${(e) => setTokenOpts({ ...tokenOpts, name: e.target.value })} /></${Field}>`}
+        <${Field} label=${t('Disposition')}><${Select} value=${tokenOpts.disposition} options=${tr(DISPO_OPTIONS)} onChange=${(v) => setTokenOpts({ ...tokenOpts, disposition: v })} /></${Field}>
+        <${Toggle} label=${t('Caché aux joueurs')} value=${tokenOpts.hidden} onChange=${(v) => setTokenOpts({ ...tokenOpts, hidden: v })} />
+        <${Button} small onClick=${() => send('maps/placePCs', { mapId }).then((ids) => toast(ids?.length ? t('{n} PJ placé(s)', { n: ids.length }) : t('Tous les PJ sont déjà sur la carte')), quiet)}>${t('Placer tous les PJ')}</${Button}>
       </div>`;
     return null;
   };
@@ -907,25 +926,25 @@ export function MapEditor({ game, map, onBack }) {
   const wallInspector = () => {
     if (!selWalls.length) return null;
     const ids = selWalls.map((w) => w.id);
-    const head = (title) => html`<div class="row spread"><h5>${title}</h5><${IconButton} icon="✕" title="Désélectionner" onClick=${() => setWallSel([])} /></div>`;
+    const head = (title) => html`<div class="row spread"><h5>${title}</h5><${IconButton} icon="✕" title=${t('Désélectionner')} onClick=${() => setWallSel([])} /></div>`;
     const types = new Set(selWalls.map(wallType));
     const typeValue = types.size === 1 ? [...types][0] : '';
-    const typeSelect = html`<${Field} label="Type"><${Select} value=${typeValue}
-        options=${typeValue ? WALL_TYPES : [{ value: '', label: '(plusieurs types)' }, ...WALL_TYPES]}
+    const typeSelect = html`<${Field} label=${t('Type')}><${Select} value=${typeValue}
+        options=${typeValue ? tr(WALL_TYPES) : [{ value: '', label: t('(plusieurs types)') }, ...tr(WALL_TYPES)]}
         onChange=${(v) => v && patchWalls(ids, (w) => withType(w, v))} /></${Field}>`;
-    const del = html`<${Button} small variant="danger" onClick=${() => deleteWalls(ids)}>Supprimer${ids.length > 1 ? ` (${ids.length})` : ''}</${Button}>`;
+    const del = html`<${Button} small variant="danger" onClick=${() => deleteWalls(ids)}>${ids.length > 1 ? t('Supprimer ({n})', { n: ids.length }) : t('Supprimer')}</${Button}>`;
     if (selWalls.length > 1) {
-      return html`<div class="mapedit-inspector">${head(`${selWalls.length} murs`)}${typeSelect}
-        <span class="small muted">Suppr : effacer · Ctrl+Z : annuler</span>${del}</div>`;
+      return html`<div class="mapedit-inspector">${head(t('{n} murs', { n: selWalls.length }))}${typeSelect}
+        <span class="small muted">${t('Suppr : effacer · Ctrl+Z : annuler')}</span>${del}</div>`;
     }
     const w = selWalls[0];
     const len = Math.hypot(w.x2 - w.x1, w.y2 - w.y1);
     const setCoord = (k) => (v) => patchWalls(ids, (x) => ({ ...x, [k]: v }));
-    return html`<div class="mapedit-inspector">${head(w.door ? (w.door.kind === 'secret' ? 'Porte secrète (mur)' : 'Porte (mur)') : 'Mur')}
+    return html`<div class="mapedit-inspector">${head(w.door ? (w.door.kind === 'secret' ? t('Porte secrète (mur)') : t('Porte (mur)')) : t('Mur'))}
       ${typeSelect}
       ${w.door && html`
-        <${Field} label="État"><${Select} value=${w.door.state} options=${DOOR_STATES} onChange=${(v) => patchWalls(ids, (x) => ({ ...x, door: { ...x.door, state: v } }))} /></${Field}>
-        <${Field} label="Nom (optionnel)"><${TextInput} value=${w.door.name || ''} placeholder="ex. Porte du labo" onChange=${(v) => patchWalls(ids, (x) => {
+        <${Field} label=${t('État')}><${Select} value=${w.door.state} options=${tr(DOOR_STATES)} onChange=${(v) => patchWalls(ids, (x) => ({ ...x, door: { ...x.door, state: v } }))} /></${Field}>
+        <${Field} label=${t('Nom (optionnel)')}><${TextInput} value=${w.door.name || ''} placeholder=${t('ex. Porte du labo')} onChange=${(v) => patchWalls(ids, (x) => {
           const door = { ...x.door };
           if (v.trim()) door.name = v.trim();
           else delete door.name;
@@ -934,7 +953,7 @@ export function MapEditor({ game, map, onBack }) {
       <div class="grid-2">
         ${['x1', 'y1', 'x2', 'y2'].map((k) => html`<${NumField} label=${k.toUpperCase()}><${NumberInput} small value=${w[k]} step=${0.5} min=${-10} max=${(k[0] === 'x' ? map.width : map.height) + 10} onChange=${setCoord(k)} /></${NumField}>`)}
       </div>
-      <span class="small muted">Longueur ${Math.round(len * (map.metersPerCell || 1) * 10) / 10} m${w.foundry ? ' · importé de Foundry' : ''}</span>
+      <span class="small muted">${t('Longueur {m} m', { m: Math.round(len * (map.metersPerCell || 1) * 10) / 10 })}${w.foundry ? ' · ' + t('importé de Foundry') : ''}</span>
       ${del}</div>`;
   };
 
@@ -942,48 +961,48 @@ export function MapEditor({ game, map, onBack }) {
     if (wallSel.length) return wallInspector();
     if (!sel || !selected) return null;
     const o = selected;
-    const del = html`<${Button} small variant="danger" onClick=${deleteSelected}>Supprimer</${Button}>`;
-    const head = (title) => html`<div class="row spread"><h5>${title}</h5><${IconButton} icon="✕" title="Désélectionner" onClick=${() => setSel(null)} /></div>`;
+    const del = html`<${Button} small variant="danger" onClick=${deleteSelected}>${t('Supprimer')}</${Button}>`;
+    const head = (title) => html`<div class="row spread"><h5>${title}</h5><${IconButton} icon="✕" title=${t('Désélectionner')} onClick=${() => setSel(null)} /></div>`;
     if (sel.type === 'door')
-      return html`<div class="mapedit-inspector">${head(`Porte (${o.x}, ${o.y})`)}
-        <${Field} label="Nom (optionnel)"><${TextInput} value=${o.name || ''} placeholder="ex. Porte du labo" onChange=${(v) => send('maps/setDoor', { mapId, doorId: o.id, name: v }).catch(quiet)} /></${Field}>
-        <${Field} label="Type"><${Select} value=${o.kind} options=${DOOR_KINDS} onChange=${(v) => send('maps/setDoor', { mapId, doorId: o.id, kind: v }).catch(quiet)} /></${Field}>
-        <${Field} label="État"><${Select} value=${o.state} options=${DOOR_STATES} onChange=${(v) => send('maps/setDoor', { mapId, doorId: o.id, state: v }).catch(quiet)} /></${Field}>
+      return html`<div class="mapedit-inspector">${head(t('Porte ({x}, {y})', { x: o.x, y: o.y }))}
+        <${Field} label=${t('Nom (optionnel)')}><${TextInput} value=${o.name || ''} placeholder=${t('ex. Porte du labo')} onChange=${(v) => send('maps/setDoor', { mapId, doorId: o.id, name: v }).catch(quiet)} /></${Field}>
+        <${Field} label=${t('Type')}><${Select} value=${o.kind} options=${tr(DOOR_KINDS)} onChange=${(v) => send('maps/setDoor', { mapId, doorId: o.id, kind: v }).catch(quiet)} /></${Field}>
+        <${Field} label=${t('État')}><${Select} value=${o.state} options=${tr(DOOR_STATES)} onChange=${(v) => send('maps/setDoor', { mapId, doorId: o.id, state: v }).catch(quiet)} /></${Field}>
         ${del}</div>`;
     if (sel.type === 'light')
-      return html`<div class="mapedit-inspector">${head(`Lumière (${o.x}, ${o.y})`)}
-        <${Toggle} label=${o.on !== false ? 'Allumée' : 'Éteinte'} value=${o.on !== false} onChange=${() => send('maps/toggleLight', { mapId, lightId: o.id }).catch(quiet)} />
-        <div class="row spread"><span class="small muted">Rayon (cases)</span><${NumberInput} small value=${o.radius} min=${1} max=${40} onChange=${(v) => send('maps/updateLight', { mapId, lightId: o.id, patch: { radius: v } }).catch(quiet)} /></div>
-        <div class="row spread"><span class="small muted">Couleur</span><input type="color" class="mapedit-color" value=${o.color} onChange=${(e) => send('maps/updateLight', { mapId, lightId: o.id, patch: { color: e.target.value } }).catch(quiet)} /></div>
+      return html`<div class="mapedit-inspector">${head(t('Lumière ({x}, {y})', { x: o.x, y: o.y }))}
+        <${Toggle} label=${o.on !== false ? t('Allumée') : t('Éteinte')} value=${o.on !== false} onChange=${() => send('maps/toggleLight', { mapId, lightId: o.id }).catch(quiet)} />
+        <div class="row spread"><span class="small muted">${t('Rayon (cases)')}</span><${NumberInput} small value=${o.radius} min=${1} max=${40} onChange=${(v) => send('maps/updateLight', { mapId, lightId: o.id, patch: { radius: v } }).catch(quiet)} /></div>
+        <div class="row spread"><span class="small muted">${t('Couleur')}</span><input type="color" class="mapedit-color" value=${o.color} onChange=${(e) => send('maps/updateLight', { mapId, lightId: o.id, patch: { color: e.target.value } }).catch(quiet)} /></div>
         ${del}</div>`;
     if (sel.type === 'region')
-      return html`<div class="mapedit-inspector">${head('Zone')}
-        <${Field} label="Nom"><${TextInput} value=${o.name} onChange=${(v) => send('maps/updateRegion', { mapId, regionId: o.id, patch: { name: v } }).catch(quiet)} /></${Field}>
-        <div class="row spread"><span class="small muted">Couleur</span><input type="color" class="mapedit-color" value=${o.color || '#e0468f'} onChange=${(e) => send('maps/updateRegion', { mapId, regionId: o.id, patch: { color: e.target.value } }).catch(quiet)} /></div>
-        <${Toggle} label="Réservée au MJ" value=${o.gmOnly} onChange=${(v) => send('maps/updateRegion', { mapId, regionId: o.id, patch: { gmOnly: v } }).catch(quiet)} />
+      return html`<div class="mapedit-inspector">${head(t('Zone'))}
+        <${Field} label=${t('Nom')}><${TextInput} value=${o.name} onChange=${(v) => send('maps/updateRegion', { mapId, regionId: o.id, patch: { name: v } }).catch(quiet)} /></${Field}>
+        <div class="row spread"><span class="small muted">${t('Couleur')}</span><input type="color" class="mapedit-color" value=${o.color || '#e0468f'} onChange=${(e) => send('maps/updateRegion', { mapId, regionId: o.id, patch: { color: e.target.value } }).catch(quiet)} /></div>
+        <${Toggle} label=${t('Réservée au MJ')} value=${o.gmOnly} onChange=${(v) => send('maps/updateRegion', { mapId, regionId: o.id, patch: { gmOnly: v } }).catch(quiet)} />
         <div class="grid-2">
-          ${['x', 'y', 'w', 'h'].map((k) => html`<${NumField} label=${{ x: 'X', y: 'Y', w: 'Largeur', h: 'Hauteur' }[k]}><${NumberInput} small value=${o[k]} min=${k === 'w' || k === 'h' ? 1 : 0} max=${k === 'x' || k === 'w' ? map.width : map.height} onChange=${(v) => send('maps/updateRegion', { mapId, regionId: o.id, patch: { [k]: v } }).catch(quiet)} /></${NumField}>`)}
+          ${['x', 'y', 'w', 'h'].map((k) => html`<${NumField} label=${{ x: 'X', y: 'Y', w: t('Largeur'), h: t('Hauteur') }[k]}><${NumberInput} small value=${o[k]} min=${k === 'w' || k === 'h' ? 1 : 0} max=${k === 'x' || k === 'w' ? map.width : map.height} onChange=${(v) => send('maps/updateRegion', { mapId, regionId: o.id, patch: { [k]: v } }).catch(quiet)} /></${NumField}>`)}
         </div>
         ${del}</div>`;
     if (sel.type === 'note')
-      return html`<div class="mapedit-inspector">${head(`Note MJ (${o.x}, ${o.y})`)}
+      return html`<div class="mapedit-inspector">${head(t('Note MJ ({x}, {y})', { x: o.x, y: o.y }))}
         <${TextInput} multiline rows=${5} value=${o.text} onChange=${(v) => send('maps/updateNote', { mapId, noteId: o.id, patch: { text: v } }).catch(quiet)} />
         ${del}</div>`;
     if (sel.type === 'token') {
       const actor = o.actorId ? game.actors?.[o.actorId] : null;
       const tp = (patch) => send('maps/updateToken', { mapId, tokenId: o.id, patch }).catch(quiet);
-      return html`<div class="mapedit-inspector">${head('Pion')}
-        <${Field} label="Nom"><${TextInput} value=${o.name} onChange=${(v) => tp({ name: v })} /></${Field}>
-        ${actor && html`<div class="row spread"><span class="small muted">Fiche : ${actor.name}</span><${Button} small variant="ghost" onClick=${() => openSheet(actor.id)}>Ouvrir</${Button}></div>`}
-        <${Field} label="Disposition"><${Select} value=${o.disposition} options=${DISPO_OPTIONS} onChange=${(v) => tp({ disposition: v })} /></${Field}>
-        <${Toggle} label="Caché aux joueurs" value=${o.hidden} onChange=${(v) => tp({ hidden: v })} />
-        <div class="row spread"><span class="small muted">Couleur</span><input type="color" class="mapedit-color" value=${o.color || actor?.color || '#2a3340'} onChange=${(e) => tp({ color: e.target.value })} /></div>
-        <div class="row spread"><span class="small muted">Taille (cases)</span><${NumberInput} small value=${o.size || 1} min=${1} max=${4} onChange=${(v) => tp({ size: v })} /></div>
-        <div class="row spread"><span class="small muted">Lampe (rayon)</span><${NumberInput} small value=${o.light?.radius || 0} min=${0} max=${30} onChange=${(v) => tp({ light: v ? { radius: v, color: o.light?.color || '#fff1cc' } : null })} /></div>
-        <div class="row spread"><span class="small muted">Vision dans le noir</span><${NumberInput} small value=${o.vision?.darkRange ?? 0} min=${0} max=${40} onChange=${(v) => tp({ vision: { ...(o.vision || {}), darkRange: v } })} /></div>
+      return html`<div class="mapedit-inspector">${head(t('Pion'))}
+        <${Field} label=${t('Nom')}><${TextInput} value=${o.name} onChange=${(v) => tp({ name: v })} /></${Field}>
+        ${actor && html`<div class="row spread"><span class="small muted">${t('Fiche : {name}', { name: actor.name })}</span><${Button} small variant="ghost" onClick=${() => openSheet(actor.id)}>${t('Ouvrir')}</${Button}></div>`}
+        <${Field} label=${t('Disposition')}><${Select} value=${o.disposition} options=${tr(DISPO_OPTIONS)} onChange=${(v) => tp({ disposition: v })} /></${Field}>
+        <${Toggle} label=${t('Caché aux joueurs')} value=${o.hidden} onChange=${(v) => tp({ hidden: v })} />
+        <div class="row spread"><span class="small muted">${t('Couleur')}</span><input type="color" class="mapedit-color" value=${o.color || actor?.color || '#2a3340'} onChange=${(e) => tp({ color: e.target.value })} /></div>
+        <div class="row spread"><span class="small muted">${t('Taille (cases)')}</span><${NumberInput} small value=${o.size || 1} min=${1} max=${4} onChange=${(v) => tp({ size: v })} /></div>
+        <div class="row spread"><span class="small muted">${t('Lampe (rayon)')}</span><${NumberInput} small value=${o.light?.radius || 0} min=${0} max=${30} onChange=${(v) => tp({ light: v ? { radius: v, color: o.light?.color || '#fff1cc' } : null })} /></div>
+        <div class="row spread"><span class="small muted">${t('Vision dans le noir')}</span><${NumberInput} small value=${o.vision?.darkRange ?? 0} min=${0} max=${40} onChange=${(v) => tp({ vision: { ...(o.vision || {}), darkRange: v } })} /></div>
         <div class="row wrap">
-          <${Toggle} label="Vision nocturne" value=${!!o.vision?.lowLight} onChange=${(v) => tp({ vision: { ...(o.vision || {}), lowLight: v } })} />
-          <${Toggle} label="Thermo" value=${!!o.vision?.thermo} onChange=${(v) => tp({ vision: { ...(o.vision || {}), thermo: v } })} />
+          <${Toggle} label=${t('Vision nocturne')} value=${!!o.vision?.lowLight} onChange=${(v) => tp({ vision: { ...(o.vision || {}), lowLight: v } })} />
+          <${Toggle} label=${t('Thermo')} value=${!!o.vision?.thermo} onChange=${(v) => tp({ vision: { ...(o.vision || {}), thermo: v } })} />
         </div>
         ${del}</div>`;
     }
@@ -992,42 +1011,42 @@ export function MapEditor({ game, map, onBack }) {
 
   const objectList = (label, list, type, render) =>
     list.length
-      ? html`<div class="mapedit-section"><h5>${label} (${list.length})</h5><div class="mapedit-list">
+      ? html`<div class="mapedit-section"><h5>${t('{label} ({n})', { label, n: list.length })}</h5><div class="mapedit-list">
           ${list.map((o) => html`<button class=${sel?.id === o.id ? 'on' : ''} onClick=${() => { setSel({ type, id: o.id }); centerOn(o); }}>${render(o)}</button>`)}
         </div></div>`
       : null;
 
   return html`<div class=${'mapedit' + (panel.tools ? ' tools-open' : '') + (panel.props ? ' props-open' : '')}>
     <header class="mapedit-head">
-      <${Button} small variant="ghost" onClick=${async () => { await flush(); onBack(); }}>← Cartes</${Button}>
+      <${Button} small variant="ghost" onClick=${async () => { await flush(); onBack(); }}>← ${t('Cartes')}</${Button}>
       <h2 title=${map.name}>${map.name}</h2>
-      <span class=${'mapedit-save ' + saveState} title="Les tuiles et les murs sont enregistrés automatiquement (Ctrl+S pour forcer)">${saveLabel}</span>
-      <${IconButton} icon="↶" title="Annuler (Ctrl+Z)" disabled=${!undoRef.current.length} onClick=${undo} />
-      <${IconButton} icon="↷" title="Rétablir (Ctrl+Y)" disabled=${!redoRef.current.length} onClick=${redo} />
+      <span class=${'mapedit-save ' + saveState} title=${t('Les tuiles et les murs sont enregistrés automatiquement (Ctrl+S pour forcer)')}>${saveLabel}</span>
+      <${IconButton} icon="↶" title=${t('Annuler (Ctrl+Z)')} disabled=${!undoRef.current.length} onClick=${undo} />
+      <${IconButton} icon="↷" title=${t('Rétablir (Ctrl+Y)')} disabled=${!redoRef.current.length} onClick=${redo} />
       <span class="grow"></span>
-      ${shown ? html`<${Badge} color="green">● Affichée aux joueurs</${Badge}>` : html`<${Button} small variant="accent" onClick=${() => send('maps/setActive', { mapId }).then(() => toast('Carte affichée aux joueurs', 'success'), quiet)}>Montrer aux joueurs</${Button}>`}
-      <${Button} small onClick=${async () => { await flush(); setUI({ viewMapId: mapId, mainTab: 'map' }); }}>Voir en jeu</${Button}>
-      <${IconButton} icon="⌖" title="Recentrer" onClick=${() => rRef.current?.fit()} />
-      <${Button} small class="mapedit-mobile-tabs" onClick=${() => setPanel({ tools: !panel.tools, props: false })}>Outils</${Button}>
-      <${Button} small class="mapedit-mobile-tabs" onClick=${() => setPanel({ props: !panel.props, tools: false })}>Propriétés</${Button}>
+      ${shown ? html`<${Badge} color="green">● ${t('Affichée aux joueurs')}</${Badge}>` : html`<${Button} small variant="accent" onClick=${() => send('maps/setActive', { mapId }).then(() => toast(t('Carte affichée aux joueurs'), 'success'), quiet)}>${t('Montrer aux joueurs')}</${Button}>`}
+      <${Button} small onClick=${async () => { await flush(); setUI({ viewMapId: mapId, mainTab: 'map' }); }}>${t('Voir en jeu')}</${Button}>
+      <${IconButton} icon="⌖" title=${t('Recentrer')} onClick=${() => rRef.current?.fit()} />
+      <${Button} small class="mapedit-mobile-tabs" onClick=${() => setPanel({ tools: !panel.tools, props: false })}>${t('Outils')}</${Button}>
+      <${Button} small class="mapedit-mobile-tabs" onClick=${() => setPanel({ props: !panel.props, tools: false })}>${t('Propriétés')}</${Button}>
     </header>
 
     <aside class="mapedit-tools">
       <div class="mapedit-section">
-        <h5>Outils</h5>
+        <h5>${t('Outils')}</h5>
         <div class="mapedit-toolgrid">
-          ${TOOLS.map((t) => html`<button class=${'mapedit-tool' + (tool === t.id ? ' active' : '')} title=${`${t.label} (${t.key.toUpperCase()})`} onClick=${() => setTool(t.id)}><span>${t.icon}</span><span>${t.label}</span></button>`)}
+          ${TOOLS.map((tt) => html`<button class=${'mapedit-tool' + (tool === tt.id ? ' active' : '')} title=${`${t(tt.label)} (${tt.key.toUpperCase()})`} onClick=${() => setTool(tt.id)}><span>${tt.icon}</span><span>${t(tt.label)}</span></button>`)}
         </div>
-        <div class="mapedit-help">${TOOL_HELP[tool]}</div>
+        <div class="mapedit-help">${TOOL_HELP[tool] ? t(TOOL_HELP[tool]) : ''}</div>
       </div>
       ${toolOptions()}
       <div class="mapedit-section">
-        <h5>Tuiles</h5>
+        <h5>${t('Tuiles')}</h5>
         <div class="mapedit-palette">
-          ${PALETTE.map((ch) => html`<button class=${'mapedit-tile' + (tile === ch && PAINT.has(tool) && tool !== 'eraser' ? ' active' : '')} title=${`${TILE_INFO[ch].fr}${TILE_INFO[ch].blockMove ? ' · bloque le passage' : ''}${TILE_INFO[ch].blockSight ? ' · bloque la vue' : ''}`}
+          ${PALETTE.map((ch) => html`<button class=${'mapedit-tile' + (tile === ch && PAINT.has(tool) && tool !== 'eraser' ? ' active' : '')} title=${`${tileLabel(ch)}${TILE_INFO[ch].blockMove ? ' · ' + t('bloque le passage') : ''}${TILE_INFO[ch].blockSight ? ' · ' + t('bloque la vue') : ''}`}
               onClick=${() => { setTile(ch); if (!PAINT.has(tool) || tool === 'eraser') setTool('brush'); }}>
             <img src=${tileSwatch(ch, map.theme, 30)} alt="" />
-            <span>${TILE_INFO[ch].fr}</span>
+            <span>${tileLabel(ch)}</span>
           </button>`)}
         </div>
       </div>
@@ -1040,73 +1059,73 @@ export function MapEditor({ game, map, onBack }) {
     <aside class="mapedit-props">
       ${inspector()}
       <div class="mapedit-section">
-        <h5>Carte</h5>
-        <${Field} label="Nom"><${TextInput} value=${map.name} onChange=${(v) => upd({ name: v })} /></${Field}>
-        <${Field} label="Dossier"><${TextInput} value=${map.folder || ''} placeholder="ex. Acte 2" onChange=${(v) => upd({ folder: v })} /></${Field}>
+        <h5>${t('Carte')}</h5>
+        <${Field} label=${t('Nom')}><${TextInput} value=${map.name} onChange=${(v) => upd({ name: v })} /></${Field}>
+        <${Field} label=${t('Dossier')}><${TextInput} value=${map.folder || ''} placeholder=${t('ex. Acte 2')} onChange=${(v) => upd({ folder: v })} /></${Field}>
         <div class="grid-2">
-          <${Field} label="Ambiance"><${Select} value=${map.theme || 'street'} options=${THEME_OPTIONS} onChange=${(v) => upd({ theme: v })} /></${Field}>
-          <${Field} label="Éclairage"><${Select} value=${map.lighting || 'bright'} options=${LIGHTING_OPTIONS} onChange=${(v) => upd({ lighting: v })} /></${Field}>
+          <${Field} label=${t('carte::Ambiance')}><${Select} value=${map.theme || 'street'} options=${themeOptions()} onChange=${(v) => upd({ theme: v })} /></${Field}>
+          <${Field} label=${t('Éclairage')}><${Select} value=${map.lighting || 'bright'} options=${lightingOptions()} onChange=${(v) => upd({ lighting: v })} /></${Field}>
         </div>
-        <${Toggle} label="Brouillard de guerre" value=${map.fog !== false} onChange=${(v) => upd({ fog: v })} />
-        <${Toggle} label="Vision partagée du groupe" value=${map.sharedVision !== false} onChange=${(v) => upd({ sharedVision: v })} />
-        <div class="row spread"><span class="small muted">Mètres par case</span><${NumberInput} small value=${map.metersPerCell || 1} min=${0.5} max=${20} step=${0.5} onChange=${(v) => upd({ metersPerCell: v })} /></div>
-        <${Field} label="Description (MJ)"><${TextInput} multiline rows=${3} value=${map.description || ''} placeholder="Notes de scène, PNJ présents, pièges…" onChange=${(v) => upd({ description: v })} /></${Field}>
+        <${Toggle} label=${t('Brouillard de guerre')} value=${map.fog !== false} onChange=${(v) => upd({ fog: v })} />
+        <${Toggle} label=${t('Vision partagée du groupe')} value=${map.sharedVision !== false} onChange=${(v) => upd({ sharedVision: v })} />
+        <div class="row spread"><span class="small muted">${t('Mètres par case')}</span><${NumberInput} small value=${map.metersPerCell || 1} min=${0.5} max=${20} step=${0.5} onChange=${(v) => upd({ metersPerCell: v })} /></div>
+        <${Field} label=${t('Description (MJ)')}><${TextInput} multiline rows=${3} value=${map.description || ''} placeholder=${t('Notes de scène, PNJ présents, pièges…')} onChange=${(v) => upd({ description: v })} /></${Field}>
       </div>
       <div class="mapedit-section">
-        <h5>Image de fond</h5>
-        <${Field} label="Adresse de l'image"><${TextInput} value=${bg?.url || ''} placeholder="/assets/… ou https://…" onChange=${(v) => (v.trim() ? setBg({ url: v.trim() }) : upd({ background: null }))} /></${Field}>
+        <h5>${t('Image de fond')}</h5>
+        <${Field} label=${t("Adresse de l'image")}><${TextInput} value=${bg?.url || ''} placeholder=${t('/assets/… ou https://…')} onChange=${(v) => (v.trim() ? setBg({ url: v.trim() }) : upd({ background: null }))} /></${Field}>
         <div class="row wrap">
-          <label class="btn btn-sm">${bg?.url ? 'Remplacer…' : 'Importer une image…'}<input type="file" accept="image/*" hidden onChange=${onBg} /></label>
-          ${bg?.url && html`<${Button} small variant="danger" onClick=${() => upd({ background: null })}>Retirer</${Button}>`}
+          <label class="btn btn-sm">${bg?.url ? t('Remplacer…') : t('Importer une image…')}<input type="file" accept="image/*" hidden onChange=${onBg} /></label>
+          ${bg?.url && html`<${Button} small variant="danger" onClick=${() => upd({ background: null })}>${t('Retirer')}</${Button}>`}
         </div>
         ${bg?.url &&
         html`<div class="col">
-          <${Field} label="Mode"><${Select} value=${bg.mode || 'underlay'} options=${BG_MODES} onChange=${(v) => setBg({ mode: v, ...(v === 'image' && (bg.opacity ?? 0.6) < 1 ? { opacity: 1 } : {}) })} /></${Field}>
+          <${Field} label=${t('Mode')}><${Select} value=${bg.mode || 'underlay'} options=${tr(BG_MODES)} onChange=${(v) => setBg({ mode: v, ...(v === 'image' && (bg.opacity ?? 0.6) < 1 ? { opacity: 1 } : {}) })} /></${Field}>
           <span class="small muted">${bg.mode === 'image'
-            ? 'L’image est le sol : les tuiles ne sont plus dessinées (elles servent encore aux déplacements et à la vision). Trace les murs en segments.'
-            : 'Les tuiles sont dessinées et l’image se superpose selon l’opacité.'}</span>
-          <span class="small muted">Opacité ${Math.round((bg.opacity ?? 0.6) * 100)} %</span>
+            ? t('L’image est le sol : les tuiles ne sont plus dessinées (elles servent encore aux déplacements et à la vision). Trace les murs en segments.')
+            : t('Les tuiles sont dessinées et l’image se superpose selon l’opacité.')}</span>
+          <span class="small muted">${t('Opacité {n} %', { n: Math.round((bg.opacity ?? 0.6) * 100) })}</span>
           <input type="range" class="mapedit-range" min="0" max="1" step="0.05" value=${bg.opacity ?? 0.6} onChange=${(e) => setBg({ opacity: Number(e.target.value) })} />
           <div class="grid-2">
-            ${[['x', 'X (cases)'], ['y', 'Y (cases)'], ['w', 'Largeur'], ['h', 'Hauteur']].map(
-              ([k, label]) => html`<${NumField} label=${label}><${NumberInput} small value=${bg[k] ?? (k === 'w' ? map.width : k === 'h' ? map.height : 0)} step=${0.5} min=${k === 'w' || k === 'h' ? 0.5 : -640} max=${640} onChange=${(v) => setBg({ [k]: v })} /></${NumField}>`
+            ${[['x', tk('X (cases)')], ['y', tk('Y (cases)')], ['w', tk('Largeur')], ['h', tk('Hauteur')]].map(
+              ([k, label]) => html`<${NumField} label=${t(label)}><${NumberInput} small value=${bg[k] ?? (k === 'w' ? map.width : k === 'h' ? map.height : 0)} step=${0.5} min=${k === 'w' || k === 'h' ? 0.5 : -640} max=${640} onChange=${(v) => setBg({ [k]: v })} /></${NumField}>`
             )}
           </div>
           <div class="row wrap">
-            <${Button} small onClick=${fitBg} title="Étirer l'image sur toute la carte">Ajuster à la carte</${Button}>
-            <${Button} small variant="ghost" onClick=${bgAspect} title="Recalculer la hauteur pour garder les proportions de l'image">Proportions de l'image</${Button}>
+            <${Button} small onClick=${fitBg} title=${t("Étirer l'image sur toute la carte")}>${t('Ajuster à la carte')}</${Button}>
+            <${Button} small variant="ghost" onClick=${bgAspect} title=${t("Recalculer la hauteur pour garder les proportions de l'image")}>${t("Proportions de l'image")}</${Button}>
           </div>
-          ${bg.mode === 'image' && html`<${Button} small variant="ghost" onClick=${fillInterior} title="Toutes les cases deviennent du sol « . » (les cartes illustrées n'ont que des murs en segments)">Remplir l'intérieur</${Button}>`}
+          ${bg.mode === 'image' && html`<${Button} small variant="ghost" onClick=${fillInterior} title=${t("Toutes les cases deviennent du sol « . » (les cartes illustrées n'ont que des murs en segments)")}>${t("Remplir l'intérieur")}</${Button}>`}
         </div>`}
       </div>
       <div class="mapedit-section">
-        <h5>Murs en segments (${wallsRef.current.length})</h5>
-        <span class="small muted">${wallStats.wall} mur(s) · ${wallStats.window} fenêtre(s) · ${wallStats.curtain} rideau(x) · ${wallStats.door} porte(s) · ${wallStats.secret} secrète(s)</span>
+        <h5>${t('Murs en segments ({n})', { n: wallsRef.current.length })}</h5>
+        <span class="small muted">${t('{walls} mur(s) · {windows} fenêtre(s) · {curtains} rideau(x) · {doors} porte(s) · {secrets} secrète(s)', { walls: wallStats.wall, windows: wallStats.window, curtains: wallStats.curtain, doors: wallStats.door, secrets: wallStats.secret })}</span>
         <div class="row wrap">
-          <${Button} small onClick=${() => setTool('wall')}>Tracer des murs</${Button}>
-          ${wallsRef.current.length > 0 && html`<${Button} small variant="ghost" onClick=${() => setWallSel(wallsRef.current.filter((w) => w.door).map((w) => w.id))}>Sélectionner les portes</${Button}>`}
+          <${Button} small onClick=${() => setTool('wall')}>${t('Tracer des murs')}</${Button}>
+          ${wallsRef.current.length > 0 && html`<${Button} small variant="ghost" onClick=${() => setWallSel(wallsRef.current.filter((w) => w.door).map((w) => w.id))}>${t('Sélectionner les portes')}</${Button}>`}
           ${wallsRef.current.length > 0 && html`<${Button} small variant="ghost" onClick=${async () => {
-            if (await confirmAction(`Supprimer les ${wallsRef.current.length} murs en segments ? (Ctrl+Z pour annuler)`)) deleteWalls(wallsRef.current.map((w) => w.id));
-          }}>Tout supprimer</${Button}>`}
+            if (await confirmAction(t('Supprimer les {n} murs en segments ? (Ctrl+Z pour annuler)', { n: wallsRef.current.length }))) deleteWalls(wallsRef.current.map((w) => w.id));
+          }}>${t('Tout supprimer')}</${Button}>`}
         </div>
       </div>
       <div class="mapedit-section">
-        <h5>Taille (${map.width} × ${map.height})</h5>
+        <h5>${t('Taille ({w} × {h})', { w: map.width, h: map.height })}</h5>
         <div class="grid-2">
-          <${NumField} label="Largeur"><${NumberInput} small value=${resize.width} min=${4} max=${160} onChange=${(v) => setResize({ ...resize, width: v })} /></${NumField}>
-          <${NumField} label="Hauteur"><${NumberInput} small value=${resize.height} min=${4} max=${160} onChange=${(v) => setResize({ ...resize, height: v })} /></${NumField}>
+          <${NumField} label=${t('Largeur')}><${NumberInput} small value=${resize.width} min=${4} max=${160} onChange=${(v) => setResize({ ...resize, width: v })} /></${NumField}>
+          <${NumField} label=${t('Hauteur')}><${NumberInput} small value=${resize.height} min=${4} max=${160} onChange=${(v) => setResize({ ...resize, height: v })} /></${NumField}>
         </div>
-        <${Field} label="Ancrage du contenu"><${Select} value=${resize.anchor} options=${ANCHORS} onChange=${(v) => setResize({ ...resize, anchor: v })} /></${Field}>
-        <${Button} small disabled=${resize.width === map.width && resize.height === map.height} onClick=${doResize}>Redimensionner</${Button}>
+        <${Field} label=${t('Ancrage du contenu')}><${Select} value=${resize.anchor} options=${tr(ANCHORS)} onChange=${(v) => setResize({ ...resize, anchor: v })} /></${Field}>
+        <${Button} small disabled=${resize.width === map.width && resize.height === map.height} onClick=${doResize}>${t('Redimensionner')}</${Button}>
       </div>
-      ${objectList('Pions', map.tokens || [], 'token', (o) => html`<span class="mapedit-swatch" style=${{ background: DISPO[o.disposition]?.color }}></span>${o.name}${o.hidden ? ' (caché)' : ''}`)}
-      ${objectList('Portes', map.doors || [], 'door', (o) => html`<span class="mapedit-swatch" style=${{ background: o.kind === 'secret' ? '#e0468f' : o.state === 'open' ? '#4fd17a' : '#e0a63f' }}></span>${o.name || DOOR_KINDS.find((k) => k.value === o.kind)?.label} · ${DOOR_STATES.find((s) => s.value === o.state)?.label.toLowerCase()}`)}
-      ${objectList('Lumières', map.lights || [], 'light', (o) => html`<span class="mapedit-swatch" style=${{ background: o.on !== false ? o.color : 'transparent' }}></span>Rayon ${o.radius} · (${o.x}, ${o.y})`)}
-      ${objectList('Zones', map.regions || [], 'region', (o) => html`<span class="mapedit-swatch" style=${{ background: o.gmOnly ? '#e0468f' : o.color || '#e0468f' }}></span>${o.name}${o.gmOnly ? ' (MJ)' : ''}`)}
-      ${objectList('Notes MJ', map.notes || [], 'note', (o) => html`<span class="mapedit-swatch" style=${{ background: '#e0a63f' }}></span>${o.text.slice(0, 40)}`)}
+      ${objectList(t('Pions'), map.tokens || [], 'token', (o) => html`<span class="mapedit-swatch" style=${{ background: DISPO[o.disposition]?.color }}></span>${o.hidden ? t('{name} (caché)', { name: o.name }) : o.name}`)}
+      ${objectList(t('Portes'), map.doors || [], 'door', (o) => html`<span class="mapedit-swatch" style=${{ background: o.kind === 'secret' ? '#e0468f' : o.state === 'open' ? '#4fd17a' : '#e0a63f' }}></span>${o.name || t(DOOR_KINDS.find((k) => k.value === o.kind)?.label || '')} · ${t(DOOR_STATES.find((s) => s.value === o.state)?.label || '').toLowerCase()}`)}
+      ${objectList(t('Lumières'), map.lights || [], 'light', (o) => html`<span class="mapedit-swatch" style=${{ background: o.on !== false ? o.color : 'transparent' }}></span>${t('Rayon {r} · ({x}, {y})', { r: o.radius, x: o.x, y: o.y })}`)}
+      ${objectList(t('Zones'), map.regions || [], 'region', (o) => html`<span class="mapedit-swatch" style=${{ background: o.gmOnly ? '#e0468f' : o.color || '#e0468f' }}></span>${o.gmOnly ? t('{name} (MJ)', { name: o.name }) : o.name}`)}
+      ${objectList(t('Notes MJ'), map.notes || [], 'note', (o) => html`<span class="mapedit-swatch" style=${{ background: '#e0a63f' }}></span>${o.text.slice(0, 40)}`)}
       <div class="mapedit-section">
-        <h5>Brouillard</h5>
-        <${Button} small variant="ghost" onClick=${async () => { if (await confirmAction('Effacer la mémoire du brouillard pour tous les joueurs ?')) send('maps/resetFog', { mapId }).then(() => toast('Brouillard réinitialisé'), quiet); }}>Réinitialiser le brouillard</${Button}>
+        <h5>${t('Brouillard')}</h5>
+        <${Button} small variant="ghost" onClick=${async () => { if (await confirmAction(t('Effacer la mémoire du brouillard pour tous les joueurs ?'))) send('maps/resetFog', { mapId }).then(() => toast(t('Brouillard réinitialisé')), quiet); }}>${t('Réinitialiser le brouillard')}</${Button}>
       </div>
     </aside>
   </div>`;

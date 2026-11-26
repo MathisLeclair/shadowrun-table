@@ -2,10 +2,14 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { html, Badge } from '../../lib/ui.js';
 import { loadCatalog } from '../../lib/net.js';
-import { nuyen } from '/shared/util.js';
-import { SHOP_FILES, SECTIONS, quote, parseAvailString, itemName, fold, GRADES } from './rules.js';
+import { t, tk, fmtNuyen, fmtDate, itemName, getLang, compare } from '../../lib/i18n.js';
+import { SHOP_FILES, SECTIONS, quote, parseAvailString, fold, GRADES } from './rules.js';
 
-export { nuyen };
+/** Nuyen amount in the UI language ('12 500¥' / '12,500¥'). */
+export const nuyen = fmtNuyen;
+
+/** Catalog category in the UI language. */
+const categoryOf = (item) => (getLang() === 'fr' ? item.categoryFr || item.category : item.category || item.categoryFr);
 
 // ---------------------------------------------------------------------------
 // Catalog
@@ -19,13 +23,18 @@ function buildCatalog(parts) {
   for (const { file, list } of parts) {
     for (const item of list || []) {
       const section = SECTIONS.find((s) => s.match(file, item))?.id || 'gear';
+      // name / category are getters: the catalog is cached across language switches.
       const e = {
         ref: item.id,
         file,
         item,
         section,
-        name: itemName(item),
-        category: item.categoryFr || item.category,
+        get name() {
+          return itemName(item);
+        },
+        get category() {
+          return categoryOf(item);
+        },
         search: fold(`${item.name} ${item.nameFr || ''} ${item.category} ${item.categoryFr || ''}`),
       };
       entries.push(e);
@@ -66,7 +75,7 @@ export function specialEntry(sp, catalog) {
     special: sp,
     section: 'specials',
     name: sp.name,
-    category: sp.category || base?.category || 'Offre',
+    category: sp.category || base?.category || t('Offre'),
     search: fold(`${sp.name} ${sp.category || ''} ${base?.item?.name || ''}`),
   };
 }
@@ -97,20 +106,20 @@ function safeQuote(item, opts) {
 }
 
 /**
- * Can this user buy it? → { ok, reason?, approval: bool }
+ * Can this user buy it? → { ok, reason?, approval: bool } — reason is already translated.
  * Mirrors the server rules (server/modules/40-shop.js checkRules) — the server stays the authority.
  */
 export function buyStatus(shop, entry, q, isGM) {
   if (isGM) return { ok: true, approval: false };
-  if (!shop?.open) return { ok: false, reason: 'Boutique fermée', approval: false };
+  if (!shop?.open) return { ok: false, reason: t('Boutique fermée'), approval: false, closed: true };
   if (entry.special) {
-    if (entry.special.stock !== null && entry.special.stock !== undefined && entry.special.stock <= 0) return { ok: false, reason: 'Épuisé', approval: false };
+    if (entry.special.stock !== null && entry.special.stock !== undefined && entry.special.stock <= 0) return { ok: false, reason: t('Épuisé'), approval: false };
     return { ok: true, approval: shop.approval === 'always' };
   }
-  if (shop.categories?.[entry.file] === false) return { ok: false, reason: 'Rayon fermé', approval: false };
-  if (q.availValue > shop.maxAvail) return { ok: false, reason: `Dispo ${q.availValue} > ${shop.maxAvail}`, approval: false };
-  if (q.legality === 'F' && !shop.allowForbidden) return { ok: false, reason: 'Interdit', approval: false };
-  if (q.legality === 'R' && !shop.allowRestricted) return { ok: false, reason: 'Restreint', approval: false };
+  if (shop.categories?.[entry.file] === false) return { ok: false, reason: t('Rayon fermé'), approval: false };
+  if (q.availValue > shop.maxAvail) return { ok: false, reason: t('Dispo {avail} > {max}', { avail: q.availValue, max: shop.maxAvail }), approval: false };
+  if (q.legality === 'F' && !shop.allowForbidden) return { ok: false, reason: t('Interdit'), approval: false };
+  if (q.legality === 'R' && !shop.allowRestricted) return { ok: false, reason: t('Restreint'), approval: false };
   const approval = shop.approval === 'always' || (shop.approval === 'restricted' && (!!q.legality || !!entry.item?.costRange));
   return { ok: true, approval };
 }
@@ -185,32 +194,35 @@ export function useMedia(query) {
 export function AvailBadge({ avail, value, legality, max }) {
   const over = max !== undefined && value > max;
   const color = legality === 'F' ? 'red' : legality === 'R' ? 'amber' : 'green';
-  const title = `${legality === 'F' ? 'Interdit' : legality === 'R' ? 'Restreint' : 'Légal'} — disponibilité ${value}${over ? ` (au-dessus de la limite ${max})` : ''}`;
+  const legal = legality === 'F' ? t('Interdit') : legality === 'R' ? t('Restreint') : t('Légal');
+  const title = over ? t('{legal} — disponibilité {value} (au-dessus de la limite {max})', { legal, value, max }) : t('{legal} — disponibilité {value}', { legal, value });
   return html`<span class=${'shop-avail' + (over ? ' over' : '')}><${Badge} color=${color} title=${title}>${avail}</${Badge}></span>`;
 }
 
+/** 'alpha' → « Alphaware » (translated). */
 export function gradeLabel(g) {
-  return GRADES[g]?.label || g || '';
+  return GRADES[g] ? t(GRADES[g].label) : g || '';
 }
 
-export const STATUS_LABEL = { pending: 'En attente', approved: 'Validée', denied: 'Refusée', done: 'Effectuée', cancelled: 'Annulée' };
+// Constant tables hold French keys (tk): render with t(STATUS_LABEL[s]) / t(FLAG_LABEL[f]).
+export const STATUS_LABEL = { pending: tk('En attente'), approved: tk('Validée'), denied: tk('Refusée'), done: tk('Effectuée'), cancelled: tk('Annulée') };
 export const STATUS_COLOR = { pending: 'amber', approved: 'green', denied: 'red', done: 'cyan', cancelled: 'dim' };
-export const FLAG_LABEL = { restricted: 'Restreint', forbidden: 'Interdit', avail: 'Dispo > limite', price: 'Prix à fixer' };
+export const FLAG_LABEL = { restricted: tk('Restreint'), forbidden: tk('Interdit'), avail: tk('Dispo > limite'), price: tk('Prix à fixer') };
 export const FLAG_COLOR = { restricted: 'amber', forbidden: 'red', avail: 'magenta', price: 'cyan' };
 
 export function timeAgo(ts) {
   const d = Date.now() - ts;
-  if (d < 60e3) return 'à l’instant';
-  if (d < 3600e3) return `il y a ${Math.floor(d / 60e3)} min`;
-  if (d < 86400e3) return `il y a ${Math.floor(d / 3600e3)} h`;
-  return new Date(ts).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  if (d < 60e3) return t('à l’instant');
+  if (d < 3600e3) return t('il y a {n} min', { n: Math.floor(d / 60e3) });
+  if (d < 86400e3) return t('il y a {n} h', { n: Math.floor(d / 3600e3) });
+  return fmtDate(ts, { day: 'numeric', month: 'short' });
 }
 
 /** PCs the current user can shop for (player: own characters; GM: every active PC). */
 export function useShopActors(game) {
   return useMemo(() => {
     const actors = Object.values(game.actors || {});
-    if (game.me.role === 'gm') return actors.filter((a) => a.type === 'pc' && !a.retired).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+    if (game.me.role === 'gm') return actors.filter((a) => a.type === 'pc' && !a.retired).sort((a, b) => compare(a.name, b.name));
     return (game.me.characterIds || []).map((id) => game.actors?.[id]).filter(Boolean);
   }, [game.actors, game.me]);
 }

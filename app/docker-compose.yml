@@ -1,0 +1,29 @@
+# Shadowrun table on the VPS — its own compose project, plain HTTP on host port 8095 (see DEPLOY.md).
+# Another stack owns ports 80/443 on this host: this file never touches them.
+#   cd ~/shadowrun/app && docker compose up -d --build
+name: shadowrun
+
+services:
+  shadowrun:
+    build: .
+    image: shadowrun-app:latest
+    container_name: shadowrun
+    restart: unless-stopped
+    ports:
+      - "8095:3000"
+    environment:
+      # Admin password for /admin (read from .env next to this file; applied again whenever it changes).
+      SR_ADMIN_PASSWORD: ${SR_ADMIN_PASSWORD:?Set SR_ADMIN_PASSWORD in .env}
+      # Max size of one uploaded zip (Foundry world, table restore), in bytes.
+      SR_MAX_UPLOAD_BYTES: ${SR_MAX_UPLOAD_BYTES:-1500000000}
+    volumes:
+      # Registry (server.json) + every table (state, backups, uploads, docs, uploaded Foundry worlds).
+      - ./runtime:/app/runtime
+      # Foundry assets of the historical « Project Lazarus » table (~490 MB, copied with deploy.ps1 -Action assets).
+      - ./data/assets/foundry:/app/data/assets/foundry
+    mem_limit: 512m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

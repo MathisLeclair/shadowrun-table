@@ -1,0 +1,20 @@
+# Keep the build context small and never bake game data or secrets into the image.
+node_modules
+.git
+.env
+.env.*
+runtime
+deploy
+*.md
+Lancer la table.bat
+data/state.json
+data/state.json.*
+data/server.json
+data/server.json.*
+data/tables
+data/backups
+data/uploads
+data/deleted
+data/tmp
+data/assets
+tools

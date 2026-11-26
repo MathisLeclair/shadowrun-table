@@ -9,7 +9,11 @@ import { createAssets, formatBytes } from './assets.js';
 import { norm } from './catalog.js';
 import { normalizeActor } from '../../../client/modules/sheet/sheet-data.js';
 import { uid, deepClone, nuyen as fmtNuyen } from '../../../shared/util.js';
-import { ATTR_SHORT } from '../../../shared/sr5.js';
+import { ATTR_SHORT, SKILL_BY_ID } from '../../../shared/sr5.js';
+import { formatFr } from '../../../client/i18n/format.js';
+import { plural } from './messages.js';
+
+const tk = (s) => s; // marks French keys stored as values (tools/i18n-check.js)
 
 // Fixed app ids for the campaign PCs (keeps references in campaign docs, quests, users…).
 export const PC_IDS = { 'anthony von schloss': 'pc_anthony', jane: 'pc_jane', bricks: 'pc_bricks', 'ank lay': 'pc_anklay', 'christopher armingstar': 'pc_christopher' };
@@ -55,6 +59,9 @@ const SHEET_FIELDS = ['metatype', 'attributes', 'augmented', 'initiative', 'cond
 const ITEM_LISTS = ['weapons', 'armor', 'augmentations', 'gear', 'vehicles', 'contacts', 'sins', 'qualities', 'powers', 'spells', 'knowledge'];
 const SCALARS = ['karma', 'karmaTotal', 'nuyen', 'streetCred', 'notoriety', 'publicAwareness', 'metatype'];
 const BIO_MARK = '### Historique (Foundry)';
+
+/** URL of an asset copied by a Foundry import (/assets/foundry/… or, for non-legacy tables, /t/<slug>/assets/foundry/…). */
+const isFoundryAsset = (u) => /^\/(t\/[a-z0-9-]+\/)?assets\/foundry\//.test(String(u || ''));
 
 export function stableHash(v) {
   const s = JSON.stringify(v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map((kk) => [kk, x[kk]])) : x));
@@ -147,7 +154,7 @@ export function buildBundle(world, { now = Date.now(), assets } = {}) {
   for (const s of allScenes) {
     const map = convertScene(s, { folderPath, asset: A.asset, actorNames: links.actors, templateFor, worldId, journalNames: links.journals, allScenes, now });
     if (!map) {
-      skippedScenes.push({ fid: s._id, name: s.name, reason: 'pas d’image de fond' });
+      skippedScenes.push({ fid: s._id, name: s.name, reason: tk('pas d’image de fond') }); // shown translated by the panel
       continue;
     }
     scenes.push({ fid: s._id, name: s.name, folder: folderPath(s.folder), map, hash: stableHash({ ...map, foundry: undefined, explored: undefined }), appMapId: SCENE_TO_APP_MAP[norm(s.name)] || null });
@@ -296,7 +303,7 @@ export function buildPc(pc, existing, { mode = 'replace', now = Date.now(), worl
   a.type = 'pc';
   a.retired = !!(existing?.retired || pc.retired);
   if (!a.retired) delete a.retired;
-  const ownPortrait = mode === 'merge' && existing?.portrait && !String(existing.portrait).startsWith('/assets/foundry/'); // set by the player in the app
+  const ownPortrait = mode === 'merge' && existing?.portrait && !isFoundryAsset(existing.portrait); // set by the player in the app
   if (sheet.portrait && !ownPortrait) a.portrait = sheet.portrait;
   else a.portrait = a.portrait || '';
   if (sheet.gmNotesExtra && !String(a.gmNotes || '').includes(sheet.gmNotesExtra)) a.gmNotes = [a.gmNotes, sheet.gmNotesExtra].filter(Boolean).join('\n\n');
@@ -309,38 +316,49 @@ export function buildPc(pc, existing, { mode = 'replace', now = Date.now(), worl
     const dn = (a.nuyen || 0) - (existing.nuyen || 0);
     if (dk || dn) {
       a.history = Array.isArray(a.history) ? a.history : [];
-      a.history.push({ ts: now, text: `Synchronisation Foundry (${worldId}) : ${a.karma} karma, ${fmtNuyen(a.nuyen)}`, ...(dk ? { karma: dk } : {}), ...(dn ? { nuyen: dn } : {}) });
+      const i18n = { key: tk('Synchronisation Foundry ({world}) : {karma} karma, {nuyen}'), params: { world: worldId, karma: a.karma, nuyen: fmtNuyen(a.nuyen) } };
+      a.history.push({ ts: now, text: formatFr(i18n.key, i18n.params), i18n, ...(dk ? { karma: dk } : {}), ...(dn ? { nuyen: dn } : {}) });
     }
   } else if (a.karma || a.nuyen) {
-    a.history = [{ ts: now, text: `Valeurs importées de Foundry (${worldId}) : ${a.karma} karma, ${fmtNuyen(a.nuyen)}`, karma: a.karma, nuyen: a.nuyen }];
+    const i18n = { key: tk('Valeurs importées de Foundry ({world}) : {karma} karma, {nuyen}'), params: { world: worldId, karma: a.karma, nuyen: fmtNuyen(a.nuyen) } };
+    a.history = [{ ts: now, text: formatFr(i18n.key, i18n.params), i18n, karma: a.karma, nuyen: a.nuyen }];
   }
   a.foundry = { id: pc.fid, world: worldId, importedAt: now, hash, snapshot: snap, ...(pc.owner ? { user: pc.owner.name } : {}) };
   normalizeActor(a, uid);
   return a;
 }
 
-/** Human-readable differences app actor → Foundry (French). */
-export function pcDiff(app, pc) {
-  if (!app) return ['Nouveau personnage'];
+/**
+ * Differences app actor → Foundry, as translatable entries [{ t: key, params }] (the panel renders them with t();
+ * formatFr() gives the French text). Names (skills, items) are data and stay as typed, except official skill names.
+ */
+export function pcDiffEntries(app, pc) {
+  if (!app) return [{ t: 'Nouveau personnage' }];
   const fresh = freshPcFields(pc);
   const out = [];
-  if ((app.karma || 0) !== fresh.karma) out.push(`Karma ${app.karma || 0} → ${fresh.karma}`);
-  if ((app.karmaTotal || 0) !== fresh.karmaTotal) out.push(`Karma de carrière ${app.karmaTotal || 0} → ${fresh.karmaTotal}`);
-  if ((app.nuyen || 0) !== fresh.nuyen) out.push(`Nuyens ${fmtNuyen(app.nuyen)} → ${fmtNuyen(fresh.nuyen)}`);
-  for (const k of ['streetCred', 'notoriety', 'publicAwareness']) if ((app[k] || 0) !== fresh[k]) out.push(`${{ streetCred: 'Street Cred', notoriety: 'Notoriété', publicAwareness: 'Rumeur publique' }[k]} ${app[k] || 0} → ${fresh[k]}`);
+  if ((app.karma || 0) !== fresh.karma) out.push({ t: 'Karma {from} → {to}', params: { from: app.karma || 0, to: fresh.karma } });
+  if ((app.karmaTotal || 0) !== fresh.karmaTotal) out.push({ t: 'Karma de carrière {from} → {to}', params: { from: app.karmaTotal || 0, to: fresh.karmaTotal } });
+  if ((app.nuyen || 0) !== fresh.nuyen) out.push({ t: 'Nuyens {from} → {to}', params: { from: fmtNuyen(app.nuyen), to: fmtNuyen(fresh.nuyen) } });
+  const repKey = { streetCred: { t: 'Street Cred {from} → {to}' }, notoriety: { t: 'Notoriété {from} → {to}' }, publicAwareness: { t: 'Rumeur publique {from} → {to}' } };
+  for (const k of ['streetCred', 'notoriety', 'publicAwareness']) if ((app[k] || 0) !== fresh[k]) out.push({ t: repKey[k].t, params: { from: app[k] || 0, to: fresh[k] } });
   const at = [];
-  for (const [k, v] of Object.entries(fresh.attributes || {})) if (Number(app.attributes?.[k] ?? 0) !== Number(v)) at.push(`${ATTR_SHORT[k] || k} ${app.attributes?.[k] ?? '—'} → ${v}`);
-  if (at.length) out.push(`Attributs : ${at.join(', ')}`);
+  for (const [k, v] of Object.entries(fresh.attributes || {})) {
+    if (Number(app.attributes?.[k] ?? 0) === Number(v)) continue;
+    const short = ATTR_SHORT[k] || k;
+    at.push({ t: '{attr} {from} → {to}', params: { attr: short === k ? short : { t: short }, from: app.attributes?.[k] ?? '—', to: v } });
+  }
+  if (at.length) out.push({ t: 'Attributs : {list}', params: { list: at } });
   const sk = [];
   const appSk = new Map((app.skills || []).map((s) => [s.id, s]));
+  const skillName = (s) => (SKILL_BY_ID[s.id]?.fr === s.name ? { t: s.name } : s.name);
   for (const s of fresh.skills || []) {
     const cur = appSk.get(s.id);
-    if (!cur) sk.push(`+${s.name} ${s.rating}`);
-    else if (Number(cur.rating) !== s.rating) sk.push(`${s.name} ${cur.rating} → ${s.rating}`);
+    if (!cur) sk.push({ t: '+{skill} {rating}', params: { skill: skillName(s), rating: s.rating } });
+    else if (Number(cur.rating) !== s.rating) sk.push({ t: '{skill} {from} → {to}', params: { skill: skillName(cur), from: cur.rating, to: s.rating } });
   }
   const freshSk = new Set((fresh.skills || []).map((s) => s.id));
-  for (const s of app.skills || []) if (!freshSk.has(s.id) && s.rating > 0) sk.push(`−${s.name}`);
-  if (sk.length) out.push(`Compétences : ${short(sk)}`);
+  for (const s of app.skills || []) if (!freshSk.has(s.id) && s.rating > 0) sk.push({ t: '−{skill}', params: { skill: skillName(s) } });
+  if (sk.length) out.push(sk.length > SHORT ? { t: 'Compétences : {list}…', params: { list: sk.slice(0, SHORT) } } : { t: 'Compétences : {list}', params: { list: sk } });
   const added = [];
   const removed = [];
   for (const l of ITEM_LISTS) {
@@ -351,14 +369,17 @@ export function pcDiff(app, pc) {
     for (const it of fresh[l] || []) if (!appIds.has(it.id) && !appNames.has(norm(it.name))) added.push(it.name);
     for (const it of app[l] || []) if (!freshIds.has(it.id) && !freshNames.has(norm(it.name))) removed.push(it.name);
   }
-  if (added.length) out.push(`Ajouts (${added.length}) : ${short(added)}`);
-  if (removed.length) out.push(`Retraits (${removed.length}) : ${short(removed)}`);
+  if (added.length) out.push(added.length > SHORT ? { t: 'Ajouts ({n}) : {list}…', params: { n: added.length, list: added.slice(0, SHORT) } } : { t: 'Ajouts ({n}) : {list}', params: { n: added.length, list: added } });
+  if (removed.length) out.push(removed.length > SHORT ? { t: 'Retraits ({n}) : {list}…', params: { n: removed.length, list: removed.slice(0, SHORT) } } : { t: 'Retraits ({n}) : {list}', params: { n: removed.length, list: removed } });
   return out;
 }
 
-function short(list, n = 8) {
-  return list.length > n ? `${list.slice(0, n).join(', ')}…` : list.join(', ');
+/** Human-readable differences app actor → Foundry (French strings, e.g. for tools/foundry-import.js). */
+export function pcDiff(app, pc) {
+  return pcDiffEntries(app, pc).map((e) => formatFr(e.t, e.params));
 }
+
+const SHORT = 8; // diff lists longer than this are cut with '…'
 
 // ---------------------------------------------------------------------------
 // NPC templates
@@ -408,7 +429,7 @@ export function buildTemplate(npc, existing, { now = Date.now(), worldId = '' } 
       // Empty Foundry stat block: keep the app's numbers, only add what Foundry knows.
       if (!t.skills?.length) t.skills = deepClone(s.skills);
     }
-    if (s.portrait && (!t.portrait || String(t.portrait).startsWith('/assets/foundry/'))) t.portrait = s.portrait;
+    if (s.portrait && (!t.portrait || isFoundryAsset(t.portrait))) t.portrait = s.portrait;
     if (NAME_OVERRIDE[t.id]) t.name = NAME_OVERRIDE[t.id];
     const desc = String(s.description || '').trim();
     const base = String(t.description || '').replace(/\n*---\n\*Foundry :\*[\s\S]*$/, '').trim();
@@ -499,6 +520,9 @@ function docStatus(dir, d) {
   }
 }
 
+/** PC diff for the scan reply: French strings (`diff`, older clients/tools) + translatable entries (`diffI18n`). */
+const diffFields = (entries) => ({ diff: entries.map((e) => formatFr(e.t, e.params)), diffI18n: entries });
+
 /** Summary of what can be imported, with match status and PC diffs. */
 export function scanBundle(state, bundle, { docsDir } = {}) {
   const pcs = bundle.pcs.map((pc) => {
@@ -507,7 +531,7 @@ export function scanBundle(state, bundle, { docsDir } = {}) {
     return {
       fid: pc.fid, name: pc.name, appId: app?.id || pc.appId, appName: app?.name || null, status, player: pc.owner?.name || '', retired: !!(app?.retired || pc.retired),
       portrait: pc.sheet.portrait || app?.portrait || '', karma: pc.sheet.karma, nuyen: pc.sheet.nuyen,
-      vehicles: pc.sheet.vehicles.map((v) => v.name), diff: status === 'unchanged' ? [] : pcDiff(app, pc), lastImport: app?.foundry?.importedAt || null,
+      vehicles: pc.sheet.vehicles.map((v) => v.name), ...diffFields(status === 'unchanged' ? [] : pcDiffEntries(app, pc)), lastImport: app?.foundry?.importedAt || null,
     };
   });
   const npcs = bundle.npcs.map((npc) => {
@@ -545,7 +569,7 @@ export function scanBundle(state, bundle, { docsDir } = {}) {
  * Apply the import to the live state.
  * opts: { select: { pcs: [fid]|'all', npcs, scenes, journals: bool, playlists: bool }, pcMode, now, docsDir,
  *         sanitizeTemplate?(t) → t, assignPlayers?: bool }
- * Returns { summary, logText, urls: { sync: Set, audio: Set } } — the caller copies the assets.
+ * Returns { summary, logText, logI18n: { key, params }, urls: { sync: Set, audio: Set } } — the caller copies the assets.
  */
 export function applyImport(state, bundle, opts = {}) {
   const now = opts.now || Date.now();
@@ -639,12 +663,17 @@ export function applyImport(state, bundle, opts = {}) {
     }
   }
 
+  // Log line, translatable: { key, params } (parts = list of nested { t, params }), and its French text.
   const parts = [];
-  if (summary.pcs.length) parts.push(`${summary.pcs.length} PJ (${mode === 'merge' ? 'fusion' : 'remplacement'})`);
-  if (summary.npcs.length) parts.push(`${summary.npcs.length} PNJ`);
-  if (summary.maps.length) parts.push(`${summary.maps.length} carte${summary.maps.length > 1 ? 's' : ''}`);
-  if (summary.journals.length) parts.push(`${summary.journals.length} journaux`);
-  if (summary.tracks) parts.push(`${summary.tracks} pistes audio`);
-  const logText = `Import Foundry : ${parts.join(', ') || 'rien de sélectionné'} — monde « ${bundle.worldTitle} »`;
-  return { summary, logText, urls: { sync: syncUrls, audio: audioUrls } };
+  const nPcs = summary.pcs.length;
+  if (nPcs) parts.push(mode === 'merge' ? { t: '{n} PJ (fusion)', params: { n: nPcs } } : { t: '{n} PJ (remplacement)', params: { n: nPcs } });
+  if (summary.npcs.length) parts.push(plural(summary.npcs.length, { t: '{n} PNJ' }, { t: '{n} PNJ' }, { t: 'pluriel::{n} PNJ' }));
+  if (summary.maps.length) parts.push(plural(summary.maps.length, { t: '{n} carte' }, { t: '{n} carte' }, { t: '{n} cartes' }));
+  if (summary.journals.length) parts.push(plural(summary.journals.length, { t: '{n} journaux' }, { t: 'un::{n} journaux' }, { t: '{n} journaux' }));
+  if (summary.tracks) parts.push(plural(summary.tracks, { t: '{n} pistes audio' }, { t: 'un::{n} pistes audio' }, { t: '{n} pistes audio' }));
+  const logI18n = parts.length
+    ? { key: tk('Import Foundry : {parts} — monde « {world} »'), params: { parts, world: bundle.worldTitle } }
+    : { key: tk('Import Foundry : rien de sélectionné — monde « {world} »'), params: { world: bundle.worldTitle } };
+  const logText = formatFr(logI18n.key, logI18n.params);
+  return { summary, logText, logI18n, urls: { sync: syncUrls, audio: audioUrls } };
 }

@@ -131,7 +131,7 @@ fs.rmSync(tmp, { recursive: true, force: true });
 // Live server
 // ---------------------------------------------------------------------------
 console.log('Server');
-const srv = await startServer({ port: 3107 });
+const srv = await startServer({ port: 3913 });
 try {
   const gmToken = await login(srv.url, { role: 'gm', password: 'lazarus' });
   const gm = await client(srv.url, gmToken);

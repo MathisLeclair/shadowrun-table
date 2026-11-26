@@ -1,0 +1,95 @@
+{
+  "hosts": [
+    {
+      "id": "host_hollow_pine",
+      "name": "Hollow Pine Holdings",
+      "folder": "Acte 1 — Open Book",
+      "rating": 5,
+      "attack": 6,
+      "sleaze": 8,
+      "dataProcessing": 5,
+      "firewall": 7,
+      "alert": "none",
+      "visible": false,
+      "spider": "tpl_spider_junior",
+      "spiderAlert": "tpl_spider_standard",
+      "description": "Un host corporatif sobre, presque vide : façade grise d’une société d’immobilier et de « conseil ».",
+      "notes": "Quête 1.2 — Open Book, Phase 3. Défense légère, à l’image d’une coquille : une IC de patrouille qui fait des rondes, une Junior Security Spider (tpl_spider_junior) qui passe la main à une Standard Security Spider (tpl_spider_standard) si l’alerte se déclenche. Doit rester gagnable pour un seul decker : Hollow Pine n’est qu’un relais, pas la vraie cible.\n\nPhase 4 : le vieux numéro de dossier Knight Errant (fichier protégé) renvoie à l’enquête interne classée sans suite — celle de l’escouade de Bricks.",
+      "ic": [
+        { "id": "ic_hp_patrol", "type": "patrol", "rating": 5, "active": true, "damage": 0 },
+        { "id": "ic_hp_probe", "type": "probe", "rating": 5, "active": false, "damage": 0 }
+      ],
+      "files": [
+        { "id": "file_hp_registry", "name": "Registre social — Hollow Pine Holdings", "protected": false, "protection": 0, "bomb": 0, "value": 500, "content": "Société-écran (immobilier, « conseil »). Un seul dirigeant enregistré : Dorian Ashe. Adresse du bureau de Seattle." },
+        { "id": "file_hp_relay", "name": "Journal du relais d’écoute", "protected": true, "protection": 5, "bomb": 0, "value": 2000, "content": "Salves intermittentes reçues depuis un implant oculaire Ares. Étiquette du flux : « Subject L-07 — Rejuvenation Index 0.83 »." },
+        { "id": "file_hp_ke", "name": "Archive — référence KE", "protected": true, "protection": 5, "bomb": 4, "value": 5000, "content": "Un vieux numéro de dossier Knight Errant : enquête interne classée sans suite. Le dossier de l’escouade de Bricks." }
+      ],
+      "devices": [
+        { "id": "dev_hp_relay", "name": "Relais Matrice (écoute de l’implant)", "rating": 5 },
+        { "id": "dev_hp_cams", "name": "Caméras du bureau de Seattle", "rating": 3 },
+        { "id": "dev_hp_maglock", "name": "Maglock du bureau", "rating": 4 }
+      ]
+    },
+    {
+      "id": "host_ravenswood",
+      "name": "Hôtel Ravenswood",
+      "folder": "Acte 2 — The Guest List",
+      "rating": 5,
+      "attack": 6,
+      "sleaze": 5,
+      "dataProcessing": 7,
+      "firewall": 8,
+      "alert": "none",
+      "visible": false,
+      "spider": "tpl_spider_standard",
+      "spiderAlert": "tpl_spider_standard",
+      "description": "Host de luxe aux couleurs noir et argent, saturé d’invitations au gala « l’éternel printemps ».",
+      "notes": "Quête 2.2. Patrol IC, puis Probe, Killer et Black IC en alerte sérieuse (hôtel de luxe). Standard Security Spider en poste toute la soirée. La suite privée n’est PAS esclave du host (PAN séparé). Ajouter un nom à la liste des invités : Edit File contre 13 dés.",
+      "ic": [
+        { "id": "ic_rw_patrol", "type": "patrol", "rating": 5, "active": true, "damage": 0 },
+        { "id": "ic_rw_probe", "type": "probe", "rating": 5, "active": false, "damage": 0 },
+        { "id": "ic_rw_killer", "type": "killer", "rating": 5, "active": false, "damage": 0 },
+        { "id": "ic_rw_black", "type": "black", "rating": 5, "active": false, "damage": 0 }
+      ],
+      "files": [
+        { "id": "file_rw_guests", "name": "Liste des invités du gala", "protected": false, "protection": 0, "bomb": 0, "value": 1500, "content": "220 invités. Puces RFID d’invitation Halcyon signées." }
+      ],
+      "devices": [
+        { "id": "dev_rw_cams", "name": "Caméras des espaces publics", "rating": 5 },
+        { "id": "dev_rw_elevators", "name": "Ascenseurs", "rating": 5 },
+        { "id": "dev_rw_lights", "name": "Éclairage de la salle de bal", "rating": 4 }
+      ]
+    },
+    {
+      "id": "host_site_glacier",
+      "name": "Glacier Springs Bottling (Site Glacier)",
+      "folder": "Acte 2 — Lazarus Cell",
+      "rating": 4,
+      "attack": 5,
+      "sleaze": 4,
+      "dataProcessing": 6,
+      "firewall": 7,
+      "alert": "none",
+      "visible": false,
+      "spider": "tpl_spider_junior",
+      "spiderAlert": "tpl_spider_junior",
+      "description": "Le host d’une usine d’embouteillage censée être à l’abandon.",
+      "notes": "Quête 2.3. Patrol IC, puis Acid, Binder et Killer. Junior Spider dans la salle de sécurité. Maglocks intérieurs indice 4 esclaves du host. Le host a un protocole de purge relié à la salle des donneurs (voir Phase 4).",
+      "ic": [
+        { "id": "ic_sg_patrol", "type": "patrol", "rating": 4, "active": true, "damage": 0 },
+        { "id": "ic_sg_acid", "type": "acid", "rating": 4, "active": false, "damage": 0 },
+        { "id": "ic_sg_binder", "type": "binder", "rating": 4, "active": false, "damage": 0 },
+        { "id": "ic_sg_killer", "type": "killer", "rating": 4, "active": false, "damage": 0 }
+      ],
+      "files": [
+        { "id": "file_sg_donors", "name": "Registre des donneurs — lot D", "protected": true, "protection": 4, "bomb": 0, "value": 3000, "content": "… D-14, Delgado N., 17 ans …" },
+        { "id": "file_sg_purge", "name": "Protocole de purge", "protected": true, "protection": 4, "bomb": 0, "value": null, "content": "Procédure d’urgence reliée à la salle des donneurs." }
+      ],
+      "devices": [
+        { "id": "dev_sg_maglocks", "name": "Maglocks intérieurs", "rating": 4 },
+        { "id": "dev_sg_cams", "name": "Caméras du hangar", "rating": 4 },
+        { "id": "dev_sg_fire", "name": "Alarme incendie", "rating": 4 }
+      ]
+    }
+  ]
+}

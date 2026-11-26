@@ -4,45 +4,48 @@ import { html, Button, NumberInput, TextInput, Select, Toggle, SearchBox, Empty,
 import { send, loadCatalog } from '../../lib/net.js';
 import { toast } from '../../lib/ui-store.js';
 import { SKILLS } from '/shared/sr5.js';
-import { Overlay } from './common.js';
+import { t, tk, getLang, itemName, skillLabel, fmtNuyen, compare } from '../../lib/i18n.js';
+import { Overlay, tRich } from './common.js';
 import { catalogToItem, LIST_LABELS, KNOWLEDGE_TYPES } from './sheet-data.js';
 
-const COMBAT_SKILLS = SKILLS.filter((s) => s.cat === 'combat' || s.id === 'gunnery').map((s) => ({ value: s.id, label: s.fr }));
+// Options are built at render time (labels in the UI language).
+const combatSkillOptions = () => SKILLS.filter((s) => s.cat === 'combat' || s.id === 'gunnery').map((s) => ({ value: s.id, label: skillLabel(s.id) }));
+const knowledgeTypeOptions = () => Object.entries(KNOWLEDGE_TYPES).map(([value, label]) => ({ value, label: t(label) }));
 
-/** Field schemas of each item list, for the GM editor. */
+/** Field schemas of each item list, for the GM editor. Labels / option labels are French keys (rendered with t()). */
 export const LIST_FIELDS = {
   weapons: [
-    { k: 'name', label: 'Nom', w: 170 }, { k: 'kind', label: 'Type', type: 'select', options: [{ value: 'melee', label: 'Mêlée' }, { value: 'ranged', label: 'Distance' }] },
-    { k: 'skill', label: 'Compétence', type: 'select', options: COMBAT_SKILLS }, { k: 'accuracy', label: 'Préc.', w: 70 }, { k: 'damage', label: 'VD', w: 90 },
-    { k: 'ap', label: 'PA', w: 50 }, { k: 'mode', label: 'Mode', w: 80 }, { k: 'rc', label: 'RC', type: 'num' }, { k: 'ammo', label: 'Munitions', w: 80 },
-    { k: 'reach', label: 'Allonge', type: 'num' }, { k: 'category', label: 'Catégorie', w: 110 }, { k: 'notes', label: 'Notes', w: 180 },
+    { k: 'name', label: tk('Nom'), w: 170 }, { k: 'kind', label: tk('Type'), type: 'select', options: [{ value: 'melee', label: tk('Mêlée') }, { value: 'ranged', label: tk('Distance') }] },
+    { k: 'skill', label: tk('Compétence'), type: 'select', options: combatSkillOptions }, { k: 'accuracy', label: tk('Préc.'), w: 70 }, { k: 'damage', label: tk('VD'), w: 90 },
+    { k: 'ap', label: tk('PA'), w: 50 }, { k: 'mode', label: tk('Mode'), w: 80 }, { k: 'rc', label: tk('RC'), type: 'num' }, { k: 'ammo', label: tk('Munitions'), w: 80 },
+    { k: 'reach', label: tk('Allonge'), type: 'num' }, { k: 'category', label: tk('Catégorie'), w: 110 }, { k: 'notes', label: tk('Notes'), w: 180 },
   ],
   armor: [
-    { k: 'name', label: 'Nom', w: 200 }, { k: 'rating', label: 'Indice', type: 'num' }, { k: 'equipped', label: 'Portée', type: 'bool' },
-    { k: 'stack', label: 'Cumulable', type: 'bool' }, { k: 'notes', label: 'Notes', w: 220 },
+    { k: 'name', label: tk('Nom'), w: 200 }, { k: 'rating', label: tk('Indice'), type: 'num' }, { k: 'equipped', label: tk('armure::Portée'), type: 'bool' },
+    { k: 'stack', label: tk('Cumulable'), type: 'bool' }, { k: 'notes', label: tk('Notes'), w: 220 },
   ],
   augmentations: [
-    { k: 'name', label: 'Nom', w: 200 }, { k: 'kind', label: 'Type', type: 'select', options: [{ value: 'cyberware', label: 'Cyberware' }, { value: 'bioware', label: 'Bioware' }] },
-    { k: 'grade', label: 'Grade', type: 'select', options: [{ value: 'standard', label: 'Standard' }, { value: 'used', label: 'Occasion' }, { value: 'alpha', label: 'Alpha' }, { value: 'beta', label: 'Bêta' }, { value: 'delta', label: 'Delta' }] },
-    { k: 'rating', label: 'Indice', type: 'num' }, { k: 'essence', label: 'Essence', type: 'num', step: 0.05 }, { k: 'notes', label: 'Notes', w: 220 },
+    { k: 'name', label: tk('Nom'), w: 200 }, { k: 'kind', label: tk('Type'), type: 'select', options: [{ value: 'cyberware', label: tk('Cyberware') }, { value: 'bioware', label: tk('Bioware') }] },
+    { k: 'grade', label: tk('Grade'), type: 'select', options: [{ value: 'standard', label: tk('Standard') }, { value: 'used', label: tk('Occasion') }, { value: 'alpha', label: tk('Alpha') }, { value: 'beta', label: tk('Bêta') }, { value: 'delta', label: tk('Delta') }] },
+    { k: 'rating', label: tk('Indice'), type: 'num' }, { k: 'essence', label: tk('Essence'), type: 'num', step: 0.05 }, { k: 'notes', label: tk('Notes'), w: 220 },
   ],
-  gear: [{ k: 'name', label: 'Nom', w: 200 }, { k: 'category', label: 'Catégorie', w: 120 }, { k: 'rating', label: 'Indice', type: 'num' }, { k: 'qty', label: 'Qté', type: 'num' }, { k: 'notes', label: 'Notes', w: 200 }],
+  gear: [{ k: 'name', label: tk('Nom'), w: 200 }, { k: 'category', label: tk('Catégorie'), w: 120 }, { k: 'rating', label: tk('Indice'), type: 'num' }, { k: 'qty', label: tk('Qté'), type: 'num' }, { k: 'notes', label: tk('Notes'), w: 200 }],
   vehicles: [
-    { k: 'name', label: 'Nom', w: 180 }, { k: 'handling', label: 'Maniab.', w: 60 }, { k: 'speed', label: 'Vitesse', w: 60 }, { k: 'accel', label: 'Accél.', w: 60 },
-    { k: 'body', label: 'Struct.', type: 'num' }, { k: 'armor', label: 'Blind.', type: 'num' }, { k: 'pilot', label: 'Autopilote', type: 'num' }, { k: 'sensor', label: 'Senseurs', type: 'num' },
-    { k: 'seats', label: 'Places', type: 'num' }, { k: 'notes', label: 'Notes', w: 180 },
+    { k: 'name', label: tk('Nom'), w: 180 }, { k: 'handling', label: tk('Maniab.'), w: 60 }, { k: 'speed', label: tk('Vitesse'), w: 60 }, { k: 'accel', label: tk('Accél.'), w: 60 },
+    { k: 'body', label: tk('Struct.'), type: 'num' }, { k: 'armor', label: tk('Blind.'), type: 'num' }, { k: 'pilot', label: tk('Autopilote'), type: 'num' }, { k: 'sensor', label: tk('Senseurs'), type: 'num' },
+    { k: 'seats', label: tk('Places'), type: 'num' }, { k: 'notes', label: tk('Notes'), w: 180 },
   ],
-  contacts: [{ k: 'name', label: 'Nom', w: 180 }, { k: 'role', label: 'Rôle', w: 140 }, { k: 'connection', label: 'Connexion', type: 'num' }, { k: 'loyalty', label: 'Loyauté', type: 'num' }, { k: 'notes', label: 'Notes', w: 220 }],
-  sins: [{ k: 'name', label: 'Identité', w: 200 }, { k: 'rating', label: 'Indice', type: 'num' }, { k: 'licenses', label: 'Licences (séparées par des virgules)', type: 'tags', w: 240 }, { k: 'notes', label: 'Notes', w: 160 }],
-  qualities: [{ k: 'name', label: 'Nom', w: 200 }, { k: 'karma', label: 'Karma', type: 'num' }, { k: 'positive', label: 'Positive', type: 'bool' }, { k: 'notes', label: 'Notes', w: 260 }],
-  powers: [{ k: 'name', label: 'Pouvoir', w: 200 }, { k: 'level', label: 'Niveau', type: 'num' }, { k: 'pp', label: 'PP', type: 'num', step: 0.25 }, { k: 'notes', label: 'Notes', w: 260 }],
+  contacts: [{ k: 'name', label: tk('Nom'), w: 180 }, { k: 'role', label: tk('Rôle'), w: 140 }, { k: 'connection', label: tk('contact::Connexion'), type: 'num' }, { k: 'loyalty', label: tk('Loyauté'), type: 'num' }, { k: 'notes', label: tk('Notes'), w: 220 }],
+  sins: [{ k: 'name', label: tk('Identité'), w: 200 }, { k: 'rating', label: tk('Indice'), type: 'num' }, { k: 'licenses', label: tk('Licences (séparées par des virgules)'), type: 'tags', w: 240 }, { k: 'notes', label: tk('Notes'), w: 160 }],
+  qualities: [{ k: 'name', label: tk('Nom'), w: 200 }, { k: 'karma', label: tk('Karma'), type: 'num' }, { k: 'positive', label: tk('Positive'), type: 'bool' }, { k: 'notes', label: tk('Notes'), w: 260 }],
+  powers: [{ k: 'name', label: tk('Pouvoir'), w: 200 }, { k: 'level', label: tk('Niveau'), type: 'num' }, { k: 'pp', label: tk('PP'), type: 'num', step: 0.25 }, { k: 'notes', label: tk('Notes'), w: 260 }],
   spells: [
-    { k: 'name', label: 'Sort', w: 160 }, { k: 'category', label: 'Catégorie', w: 100 }, { k: 'type', label: 'Type', w: 50 }, { k: 'range', label: 'Portée', w: 70 },
-    { k: 'duration', label: 'Durée', w: 60 }, { k: 'drain', label: 'Drain', w: 70 }, { k: 'notes', label: 'Notes', w: 180 },
+    { k: 'name', label: tk('Sort'), w: 160 }, { k: 'category', label: tk('Catégorie'), w: 100 }, { k: 'type', label: tk('Type'), w: 50 }, { k: 'range', label: tk('Portée'), w: 70 },
+    { k: 'duration', label: tk('Durée'), w: 60 }, { k: 'drain', label: tk('Drain'), w: 70 }, { k: 'notes', label: tk('Notes'), w: 180 },
   ],
   knowledge: [
-    { k: 'name', label: 'Connaissance', w: 200 }, { k: 'type', label: 'Type', type: 'select', options: Object.entries(KNOWLEDGE_TYPES).map(([value, label]) => ({ value, label })) },
-    { k: 'rating', label: 'Indice', type: 'num' }, { k: 'native', label: 'Langue maternelle', type: 'bool' },
+    { k: 'name', label: tk('Connaissance'), w: 200 }, { k: 'type', label: tk('Type'), type: 'select', options: knowledgeTypeOptions },
+    { k: 'rating', label: tk('Indice'), type: 'num' }, { k: 'native', label: tk('Langue maternelle'), type: 'bool' },
   ],
 };
 
@@ -51,26 +54,34 @@ export const LIST_CATALOGS = {
   weapons: ['weapons'], armor: ['armor'], augmentations: ['cyberware', 'bioware'], gear: ['gear'], vehicles: ['vehicles'],
   qualities: ['qualities'], powers: ['powers'], spells: ['spells'],
 };
-const CATALOG_LABELS = { weapons: 'Armes', armor: 'Armures', gear: 'Équipement', cyberware: 'Cyberware', bioware: 'Bioware', vehicles: 'Véhicules', qualities: 'Qualités', powers: 'Pouvoirs', spells: 'Sorts', programs: 'Programmes' };
+const CATALOG_LABELS = { weapons: tk('Armes'), armor: tk('Armures'), gear: tk('Équipement'), cyberware: tk('Cyberware'), bioware: tk('Bioware'), vehicles: tk('Véhicules'), qualities: tk('Qualités'), powers: tk('Pouvoirs'), spells: tk('Sorts'), programs: tk('Programmes') };
+const catalogLabel = (c) => (CATALOG_LABELS[c] ? t(CATALOG_LABELS[c]) : c);
 
+// Default names are French keys: the new item is stored with the name in the GM's language.
 const BLANK = {
-  weapons: { name: 'Nouvelle arme', kind: 'ranged', skill: 'pistols', accuracy: '5', damage: '7P', ap: 0, mode: 'SA', rc: 0, ammo: '' },
-  armor: { name: 'Nouvelle armure', rating: 6, equipped: false },
-  augmentations: { name: 'Nouvel implant', kind: 'cyberware', grade: 'standard', essence: 0.1 },
-  gear: { name: 'Nouvel objet', qty: 1 },
-  vehicles: { name: 'Nouveau véhicule', handling: '3/3', speed: '3', accel: '2', body: 8, armor: 4, pilot: 1, sensor: 1, seats: 2 },
-  contacts: { name: 'Nouveau contact', role: '', connection: 1, loyalty: 1 },
-  sins: { name: 'Nouvelle identité', rating: 3, licenses: [] },
-  qualities: { name: 'Nouvelle qualité', karma: 5, positive: true },
-  powers: { name: 'Nouveau pouvoir', pp: 0.5 },
-  spells: { name: 'Nouveau sort', category: 'Combat', type: 'M', range: 'LdV', duration: 'I', drain: 'F−3' },
-  knowledge: { name: 'Nouvelle connaissance', type: 'street', rating: 1 },
+  weapons: { name: tk('Nouvelle arme'), kind: 'ranged', skill: 'pistols', accuracy: '5', damage: '7P', ap: 0, mode: 'SA', rc: 0, ammo: '' },
+  armor: { name: tk('Nouvelle armure'), rating: 6, equipped: false },
+  augmentations: { name: tk('Nouvel implant'), kind: 'cyberware', grade: 'standard', essence: 0.1 },
+  gear: { name: tk('Nouvel objet'), qty: 1 },
+  vehicles: { name: tk('Nouveau véhicule'), handling: '3/3', speed: '3', accel: '2', body: 8, armor: 4, pilot: 1, sensor: 1, seats: 2 },
+  contacts: { name: tk('Nouveau contact'), role: '', connection: 1, loyalty: 1 },
+  sins: { name: tk('Nouvelle identité'), rating: 3, licenses: [] },
+  qualities: { name: tk('Nouvelle qualité'), karma: 5, positive: true },
+  powers: { name: tk('Nouveau pouvoir'), pp: 0.5 },
+  spells: { name: tk('Nouveau sort'), category: 'Combat', type: 'M', range: 'LdV', duration: 'I', drain: 'F−3' },
+  knowledge: { name: tk('Nouvelle connaissance'), type: 'street', rating: 1 },
 };
+const BLANK_OTHER = tk('Nouvel élément');
+
+function fieldOptions(f) {
+  if (typeof f.options === 'function') return f.options();
+  return (f.options || []).map((o) => ({ value: o.value, label: t(o.label) }));
+}
 
 function FieldInput({ f, value, onChange }) {
   if (f.type === 'num') return html`<${NumberInput} small value=${Number(value) || 0} step=${f.step || 1} min=${f.k === 'essence' || f.k === 'pp' ? 0 : -99} onChange=${onChange} />`;
   if (f.type === 'bool') return html`<${Toggle} value=${!!value} onChange=${onChange} />`;
-  if (f.type === 'select') return html`<${Select} value=${value || ''} options=${[{ value: '', label: '—' }, ...f.options]} onChange=${onChange} />`;
+  if (f.type === 'select') return html`<${Select} value=${value || ''} options=${[{ value: '', label: '—' }, ...fieldOptions(f)]} onChange=${onChange} />`;
   if (f.type === 'tags') return html`<${TextInput} value=${(value || []).join(', ')} onChange=${(v) => onChange(v.split(',').map((s) => s.trim()).filter(Boolean))} />`;
   return html`<${TextInput} value=${value ?? ''} onChange=${onChange} style=${{ minWidth: (f.w || 90) + 'px' }} />`;
 }
@@ -81,29 +92,32 @@ export function ListEditor({ actor, list, fields = LIST_FIELDS[list] }) {
   const items = actor[list] || [];
   const up = (it, i, k, v) => send('actor/updateItem', { actorId: actor.id, list, itemId: it.id, index: i, patch: { [k]: v } }).catch(() => {});
   const remove = async (it, i) => {
-    if (!(await confirmAction(`Retirer « ${it.name} » ?`))) return;
-    const essence = list === 'augmentations' && it.essence ? await confirmAction(`Rendre ${it.essence} point(s) d’Essence à ${actor.name} ?`) : false;
+    if (!(await confirmAction(t('Retirer « {name} » ?', { name: it.name })))) return;
+    const essence = list === 'augmentations' && it.essence ? await confirmAction(t('Rendre {n} point(s) d’Essence à {name} ?', { n: it.essence, name: actor.name })) : false;
     send('actor/removeItem', { actorId: actor.id, list, itemId: it.id, index: i, adjustEssence: essence }).catch(() => {});
   };
-  const addBlank = () => send('actor/addItem', { actorId: actor.id, list, item: { ...(BLANK[list] || { name: 'Nouvel élément' }) } }).catch(() => {});
+  const addBlank = () => {
+    const blank = BLANK[list] || { name: BLANK_OTHER };
+    send('actor/addItem', { actorId: actor.id, list, item: { ...blank, name: t(blank.name) } }).catch(() => {});
+  };
   return html`<div class="sh-editor">
     <div class="sh-table-wrap">
       <table class="sr sh-edit-table">
-        <thead><tr>${fields.map((f) => html`<th>${f.label}</th>`)}<th></th></tr></thead>
+        <thead><tr>${fields.map((f) => html`<th>${t(f.label)}</th>`)}<th></th></tr></thead>
         <tbody>
           ${items.map(
             (it, i) => html`<tr key=${it.id || i}>
               ${fields.map((f) => html`<td><${FieldInput} f=${f} value=${it[f.k]} onChange=${(v) => up(it, i, f.k, v)} /></td>`)}
-              <td><${IconButton} icon="✕" title="Retirer" onClick=${() => remove(it, i)} /></td>
+              <td><${IconButton} icon="✕" title=${t('Retirer')} onClick=${() => remove(it, i)} /></td>
             </tr>`
           )}
-          ${!items.length && html`<tr><td colspan=${fields.length + 1} class="muted small">Aucun élément.</td></tr>`}
+          ${!items.length && html`<tr><td colspan=${fields.length + 1} class="muted small">${t('Aucun élément.')}</td></tr>`}
         </tbody>
       </table>
     </div>
     <div class="row wrap">
-      <${Button} small onClick=${addBlank}>+ Ajouter (vierge)</${Button}>
-      ${LIST_CATALOGS[list] && html`<${Button} small variant="primary" onClick=${() => setPicker(true)}>+ Depuis le catalogue</${Button}>`}
+      <${Button} small onClick=${addBlank}>${t('+ Ajouter (vierge)')}</${Button}>
+      ${LIST_CATALOGS[list] && html`<${Button} small variant="primary" onClick=${() => setPicker(true)}>${t('+ Depuis le catalogue')}</${Button}>`}
     </div>
     ${picker && html`<${CatalogPicker} actor=${actor} list=${list} catalogs=${LIST_CATALOGS[list]} onClose=${() => setPicker(false)} />`}
   </div>`;
@@ -111,14 +125,22 @@ export function ListEditor({ actor, list, fields = LIST_FIELDS[list] }) {
 
 const statLine = (catalog, e) => {
   const s = e.stats || {};
-  if (catalog === 'weapons') return [s.accuracy && `Préc. ${s.accuracy}`, s.damage && `VD ${s.damage}`, s.ap !== undefined && `PA ${s.ap}`, s.mode && s.mode !== '0' && s.mode, s.ammo && s.ammo !== '0' && s.ammo].filter(Boolean).join(' · ');
-  if (catalog === 'armor') return `Armure ${s.armor ?? s.rating ?? '?'}`;
-  if (catalog === 'cyberware' || catalog === 'bioware') return `Essence ${e.essence ?? s.essence ?? '?'}`;
-  if (catalog === 'vehicles') return [s.handling && `Man. ${s.handling}`, s.speed && `Vit. ${s.speed}`, s.body && `Struct. ${s.body}`, s.armor && `Blind. ${s.armor}`].filter(Boolean).join(' · ');
-  if (catalog === 'qualities') return `${s.karma ?? e.karma ?? '?'} karma`;
-  if (catalog === 'powers') return `${s.points ?? s.pp ?? '?'} PP`;
-  if (catalog === 'spells') return [s.type, s.range, s.duration, (s.drain || s.dv) && `Drain ${s.drain || s.dv}`].filter(Boolean).join(' · ');
+  if (catalog === 'weapons') return [s.accuracy && t('Préc. {v}', { v: s.accuracy }), s.damage && t('VD {v}', { v: s.damage }), s.ap !== undefined && t('PA {v}', { v: s.ap }), s.mode && s.mode !== '0' && s.mode, s.ammo && s.ammo !== '0' && s.ammo].filter(Boolean).join(' · ');
+  if (catalog === 'armor') return t('Armure {v}', { v: s.armor ?? s.rating ?? '?' });
+  if (catalog === 'cyberware' || catalog === 'bioware') return t('Essence {v}', { v: e.essence ?? s.essence ?? '?' });
+  if (catalog === 'vehicles') return [s.handling && t('Man. {v}', { v: s.handling }), s.speed && t('Vit. {v}', { v: s.speed }), s.body && t('Struct. {v}', { v: s.body }), s.armor && t('Blind. {v}', { v: s.armor })].filter(Boolean).join(' · ');
+  if (catalog === 'qualities') return t('{v} karma', { v: s.karma ?? e.karma ?? '?' });
+  if (catalog === 'powers') return t('{v} PP', { v: s.points ?? s.pp ?? '?' });
+  if (catalog === 'spells') return [s.type, s.range, s.duration, (s.drain || s.dv) && t('Drain {v}', { v: s.drain || s.dv })].filter(Boolean).join(' · ');
   return '';
+};
+
+/** Catalog category label: French categoryFr in French, the catalog's English category otherwise. */
+const categoryName = (e) => (getLang() === 'fr' ? e.categoryFr || e.category : e.category || e.categoryFr);
+/** The item name in the other language (shown small next to the main name), or ''. */
+const altName = (e) => {
+  const other = getLang() === 'fr' ? e.name : e.nameFr;
+  return other && other !== itemName(e) ? other : '';
 };
 
 /** Catalog browser: adds the chosen entry to `list` of the actor for free (GM). */
@@ -140,8 +162,8 @@ export function CatalogPicker({ actor, list, catalogs, onClose, onPick }) {
   }, [cat]);
   const categories = useMemo(() => {
     const m = new Map();
-    for (const e of data || []) if (e.category && !m.has(e.category)) m.set(e.category, e.categoryFr || e.category);
-    return [...m].map(([value, label]) => ({ value, label })).sort((a, b) => a.label.localeCompare(b.label, 'fr'));
+    for (const e of data || []) if (e.category && !m.has(e.category)) m.set(e.category, categoryName(e));
+    return [...m].map(([value, label]) => ({ value, label })).sort((a, b) => compare(a.label, b.label));
   }, [data]);
   const results = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -151,39 +173,42 @@ export function CatalogPicker({ actor, list, catalogs, onClose, onPick }) {
     const r = e.rating && e.rating.max ? ratings[e.id] || e.rating.min || 1 : undefined;
     const conv = catalogToItem(cat, e, r);
     if (!conv) return;
+    // Stored name in the GM's language (French: unchanged, nameFr).
+    if (getLang() !== 'fr' && conv.item && itemName(e)) conv.item.name = itemName(e);
     if (onPick) return onPick(conv, e);
     try {
       await send('actor/addItem', { actorId: actor.id, list: conv.list, item: conv.item, adjustEssence: conv.list === 'augmentations' && essence });
-      toast(`${conv.item.name} ajouté à ${actor.name}`, 'success');
+      toast(t('{item} ajouté à {name}', { item: conv.item.name, name: actor.name }), 'success');
     } catch {}
   };
-  return html`<${Overlay} title=${`Catalogue — ${LIST_LABELS[list] || ''}`} onClose=${onClose} width=${760}>
+  const listLabel = LIST_LABELS[list] ? t(LIST_LABELS[list]) : '';
+  return html`<${Overlay} title=${t('Catalogue — {list}', { list: listLabel })} onClose=${onClose} width=${760}>
     <div class="col">
       <div class="row wrap">
-        ${catalogs.length > 1 && html`<${Select} value=${cat} options=${catalogs.map((c) => ({ value: c, label: CATALOG_LABELS[c] || c }))} onChange=${setCat} style=${{ width: 'auto' }} />`}
+        ${catalogs.length > 1 && html`<${Select} value=${cat} options=${catalogs.map((c) => ({ value: c, label: catalogLabel(c) }))} onChange=${setCat} style=${{ width: 'auto' }} />`}
         <${SearchBox} value=${q} onChange=${setQ} />
-        ${categories.length > 1 && html`<${Select} value=${category} options=${[{ value: '', label: 'Toutes catégories' }, ...categories]} onChange=${setCategory} style=${{ width: 'auto', maxWidth: '220px' }} />`}
-        ${list === 'augmentations' && html`<${Toggle} value=${essence} onChange=${setEssence} label="Déduire l’Essence" />`}
+        ${categories.length > 1 && html`<${Select} value=${category} options=${[{ value: '', label: t('Toutes catégories') }, ...categories]} onChange=${setCategory} style=${{ width: 'auto', maxWidth: '220px' }} />`}
+        ${list === 'augmentations' && html`<${Toggle} value=${essence} onChange=${setEssence} label=${t('Déduire l’Essence')} />`}
       </div>
       ${data === null
-        ? html`<div class="muted">Chargement du catalogue…</div>`
+        ? html`<div class="muted">${t('Chargement du catalogue…')}</div>`
         : !data.length
-          ? html`<${Empty}>Catalogue « ${CATALOG_LABELS[cat] || cat} » indisponible. Lance <code>npm run build:catalog</code> sur le PC du MJ, ou ajoute un élément vierge.</${Empty}>`
+          ? html`<${Empty}>${t('Catalogue « {name} » indisponible.', { name: catalogLabel(cat) })} ${tRich(t('Lance {cmd} sur le PC du MJ, ou ajoute un élément vierge.'), { cmd: html`<code>npm run build:catalog</code>` })}</${Empty}>`
           : html`<div class="sh-cat-list">
               ${results.slice(0, 150).map(
                 (e) => html`<div class="sh-cat-row" key=${e.id}>
                   <div class="grow">
-                    <div><b>${e.nameFr || e.name}</b>${e.nameFr && e.nameFr !== e.name ? html` <span class="faint small">${e.name}</span>` : null}</div>
-                    <div class="muted small">${[e.categoryFr || e.category, statLine(cat, e), e.avail && `Dispo ${e.avail}`, e.cost != null && `${Number(e.cost).toLocaleString('fr-FR')}¥`].filter(Boolean).join(' · ')}</div>
+                    <div><b>${itemName(e)}</b>${altName(e) ? html` <span class="faint small">${altName(e)}</span>` : null}</div>
+                    <div class="muted small">${[categoryName(e), statLine(cat, e), e.avail && t('Dispo {v}', { v: e.avail }), e.cost != null && fmtNuyen(e.cost)].filter(Boolean).join(' · ')}</div>
                   </div>
                   ${e.rating && e.rating.max ? html`<${NumberInput} small value=${ratings[e.id] || e.rating.min || 1} min=${e.rating.min || 1} max=${e.rating.max} onChange=${(v) => setRatings({ ...ratings, [e.id]: v })} />` : null}
-                  <${Button} small variant="primary" onClick=${() => add(e)}>Ajouter</${Button}>
+                  <${Button} small variant="primary" onClick=${() => add(e)}>${t('Ajouter')}</${Button}>
                 </div>`
               )}
-              ${results.length > 150 && html`<div class="muted small center">${results.length - 150} résultats de plus — affine la recherche.</div>`}
-              ${!results.length && html`<div class="muted small center">Aucun résultat.</div>`}
+              ${results.length > 150 && html`<div class="muted small center">${t('{n} résultats de plus — affine la recherche.', { n: results.length - 150 })}</div>`}
+              ${!results.length && html`<div class="muted small center">${t('Aucun résultat.')}</div>`}
             </div>`}
-      <div class="muted small">Ajout gratuit (édition MJ). Pour un achat avec nuyens, passe par la Boutique.</div>
+      <div class="muted small">${t('Ajout gratuit (édition MJ). Pour un achat avec nuyens, passe par la Boutique.')}</div>
     </div>
   </${Overlay}>`;
 }

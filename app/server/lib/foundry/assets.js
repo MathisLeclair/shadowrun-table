@@ -31,10 +31,10 @@ function decode(src) {
 }
 
 /**
- * createAssets({ dataRoot, outDir }) → { asset(src, kind, hint?, sub?), entries(), missing, copySync(kinds), copyAsync(kinds, onProgress) }
+ * createAssets({ dataRoot, outDir, urlBase }) → { asset(src, kind, hint?, sub?), entries(), missing, copySync(kinds), copyAsync(kinds, onProgress) }
  * asset() returns '' for missing files, and the original URL for http(s) sources (no copy).
  */
-export function createAssets({ dataRoot, outDir = process.env.SR_FOUNDRY_ASSET_DIR || DEFAULT_ASSET_DIR } = {}) {
+export function createAssets({ dataRoot, outDir = process.env.SR_FOUNDRY_ASSET_DIR || DEFAULT_ASSET_DIR, urlBase = URL_BASE } = {}) {
   const plan = new Map(); // rel dest -> { from, kind, size, mtimeMs }
   const bySource = new Map(); // `${kind}|${from}` -> rel
   const missing = [];
@@ -42,7 +42,7 @@ export function createAssets({ dataRoot, outDir = process.env.SR_FOUNDRY_ASSET_D
   function asset(src, kind = 'img', hint = '', sub = '') {
     const raw = String(src || '').trim();
     if (!raw) return '';
-    if (/^https?:\/\//i.test(raw) || raw.startsWith('/assets/') || raw.startsWith('/uploads/')) return raw;
+    if (/^https?:\/\//i.test(raw) || raw.startsWith('/assets/') || raw.startsWith('/uploads/') || raw.startsWith('/t/')) return raw;
     if (/^icons\//.test(raw)) return ''; // Foundry core icons are not in the Data folder
     const rel = decode(raw);
     const from = path.resolve(dataRoot, rel);
@@ -71,7 +71,7 @@ export function createAssets({ dataRoot, outDir = process.env.SR_FOUNDRY_ASSET_D
   }
 
   function toUrl(rel) {
-    return `${URL_BASE}/${rel.split('/').map(encodeURIComponent).join('/')}`;
+    return `${urlBase}/${rel.split('/').map(encodeURIComponent).join('/')}`;
   }
 
   function needsCopy(dest, e) {
@@ -142,7 +142,7 @@ export function createAssets({ dataRoot, outDir = process.env.SR_FOUNDRY_ASSET_D
     return { files: l.length, bytes: l.reduce((s, [, e]) => s + e.size, 0) };
   }
 
-  return { asset, missing, copySync, copyAsync, totals, entries: () => [...plan.entries()], outDir };
+  return { asset, missing, copySync, copyAsync, totals, entries: () => [...plan.entries()], outDir, urlBase };
 }
 
 export function formatBytes(n) {

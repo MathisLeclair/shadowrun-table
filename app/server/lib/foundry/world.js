@@ -10,6 +10,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { i18nError } from './messages.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const FALLBACK_WORLD = 'C:/Users/mathi/Documents/Foundry/Data/worlds/test-world';
@@ -77,14 +78,14 @@ export function detectWorldPath() {
 /** Validate a world folder; returns its world.json (throws a French message otherwise). */
 export function checkWorld(worldPath) {
   const wp = String(worldPath || '').trim();
-  if (!wp) throw new Error('Chemin du monde Foundry manquant');
+  if (!wp) throw i18nError({ t: 'Chemin du monde Foundry manquant' });
   let meta;
   try {
     meta = JSON.parse(fs.readFileSync(path.join(wp, 'world.json'), 'utf8'));
   } catch {
-    throw new Error(`Aucun monde Foundry trouvé dans « ${wp} » (world.json manquant)`);
+    throw i18nError({ t: 'Aucun monde Foundry trouvé dans « {path} » (world.json manquant)', params: { path: wp } });
   }
-  if (!fs.existsSync(path.join(wp, 'data', 'actors'))) throw new Error(`Le monde « ${meta.title || wp} » n’a pas de base LevelDB (Foundry v11+ requis)`);
+  if (!fs.existsSync(path.join(wp, 'data', 'actors'))) throw i18nError({ t: 'Le monde « {world} » n’a pas de base LevelDB (Foundry v11+ requis)', params: { world: meta.title || wp } });
   return meta;
 }
 
@@ -225,7 +226,7 @@ export function readWorldSync(worldPath, { collections = COLLECTIONS, timeout = 
     return JSON.parse(fs.readFileSync(outFile, 'utf8'));
   } catch (err) {
     const msg = String(err.stderr || err.message || err).trim().split('\n').pop();
-    throw new Error(`Lecture du monde Foundry impossible : ${msg}`);
+    throw i18nError({ t: 'Lecture du monde Foundry impossible : {error}', params: { error: msg } });
   } finally {
     fs.rmSync(outFile, { force: true });
   }

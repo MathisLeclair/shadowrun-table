@@ -2,16 +2,37 @@
 import { html, Badge, Button, Stat, confirmAction } from '../../lib/ui.js';
 import { send } from '../../lib/net.js';
 import { toast, openSheet } from '../../lib/ui-store.js';
-import { DEFAULT_SETTINGS, RULE_TEXT, quote, formatDays } from '/shared/advancement.js';
-import { nuyen } from '/shared/util.js';
+import { t, tn, tk, fmtNuyen, locale } from '../../lib/i18n.js';
+import { DEFAULT_SETTINGS, RULE_TEXT, KIND_LABELS, quote, formatDaysI18n } from '/shared/advancement.js';
 
 export const STATUS = {
-  pending: { label: 'En attente', color: 'amber' },
-  approved: { label: 'En cours', color: 'cyan' },
-  done: { label: 'Acquise', color: 'green' },
-  denied: { label: 'Refusée', color: 'red' },
-  cancelled: { label: 'Annulée', color: 'dim' },
+  pending: { label: tk('En attente'), color: 'amber' },
+  approved: { label: tk('En cours'), color: 'cyan' },
+  done: { label: tk('Acquise'), color: 'green' },
+  denied: { label: tk('Refusée'), color: 'red' },
+  cancelled: { label: tk('Annulée'), color: 'dim' },
 };
+
+// ---------------------------------------------------------------------------
+// i18n helpers (texts computed by shared/advancement.js come with { key, params })
+// ---------------------------------------------------------------------------
+/** 'skill' → « Compétence » / « Skill ». */
+export const kindLabel = (kind) => (KIND_LABELS[kind] ? t(KIND_LABELS[kind]) : String(kind ?? ''));
+/** SR5 rule summary of a kind (or 'instructor'), translated. */
+export const ruleText = (kind) => (RULE_TEXT[kind] ? t(RULE_TEXT[kind]) : '');
+/** 14 → « 2 semaines » / « 2 weeks ». */
+export function fmtDays(days) {
+  const v = formatDaysI18n(days);
+  return t(v.t, v.params);
+}
+/** Label of a quote / request / job, in the UI language (stored requests keep their French `label`). */
+export const labelOf = (x) => (x?.labelI18n?.key ? t(x.labelI18n.key, x.labelI18n.params) : x?.label || '');
+/** Error of a quote, translated (null when none). */
+export const errorOf = (qt) => (qt?.error ? (qt.errorI18n?.key ? t(qt.errorI18n.key, qt.errorI18n.params) : qt.error) : null);
+/** Warnings of a quote, translated. */
+export const warningsOf = (qt) => (qt?.warningsI18n?.length ? qt.warningsI18n.map((w) => t(w.key, w.params)) : qt?.warnings || []);
+/** { key, params } message → text. */
+export const msgText = (m, fallback = '') => (m?.key ? t(m.key, m.params) : fallback);
 
 export function settingsOf(game) {
   const s = game?.training?.settings || {};
@@ -47,19 +68,19 @@ export function makeQuoter(game, actor) {
 export function fmtDate(ts) {
   if (!ts) return '';
   const d = new Date(ts);
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleDateString(locale(), { day: '2-digit', month: 'short' }) + ' ' + d.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' });
 }
 
 export function StatusBadge({ status }) {
-  const s = STATUS[status] || { label: status, color: 'dim' };
-  return html`<${Badge} color=${s.color}>${s.label}</${Badge}>`;
+  const s = STATUS[status];
+  return html`<${Badge} color=${s?.color || 'dim'}>${s ? t(s.label) : status}</${Badge}>`;
 }
 
 /** Small « ? » showing the SR5 rule (tooltip on desktop, toast on tap). */
 export function Rule({ kind }) {
-  const text = RULE_TEXT[kind];
+  const text = ruleText(kind);
   if (!text) return null;
-  return html`<button type="button" class="training-rule" title=${text} aria-label=${`Règle : ${text}`}
+  return html`<button type="button" class="training-rule" title=${text} aria-label=${t('Règle : {text}', { text })}
     onClick=${(e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -70,8 +91,8 @@ export function Rule({ kind }) {
 /** "25 karma · 5 semaines" or the reason it's impossible. */
 export function CostCell({ qt }) {
   if (!qt) return null;
-  if (qt.error) return html`<span class="training-err small">${qt.error}</span>`;
-  return html`<span class="training-cost"><span class="mono amber">${qt.karmaCost} karma</span><span class="muted"> · ${formatDays(qt.days)}</span></span>`;
+  if (qt.error) return html`<span class="training-err small">${errorOf(qt)}</span>`;
+  return html`<span class="training-cost"><span class="mono amber">${t('{n} karma', { n: qt.karmaCost })}</span><span class="muted"> · ${fmtDays(qt.days)}</span></span>`;
 }
 
 export function ProgressBar({ value, max, compact }) {
@@ -85,21 +106,21 @@ export function KarmaHeader({ game, actor }) {
   const ctx = quoteContext(game, actor);
   const avail = Number(actor.karma) || 0;
   return html`<div class="training-stats">
-    <${Stat} label="Karma dispo" value=${avail - ctx.reservedKarma} accent="cyan" title=${ctx.reservedKarma ? `${avail} au total, dont ${ctx.reservedKarma} engagés par des demandes en attente` : 'Karma disponible'} />
-    ${ctx.reservedKarma > 0 && html`<${Stat} label="Engagé" value=${ctx.reservedKarma} accent="amber" title="Karma réservé par des demandes en attente de validation" />`}
-    <${Stat} label="Carrière" value=${Number(actor.karmaTotal) || 0} title="Karma total gagné" />
-    <${Stat} label="Nuyens" value=${nuyen(actor.nuyen)} accent="magenta" />
+    <${Stat} label=${t('Karma dispo')} value=${avail - ctx.reservedKarma} accent="cyan" title=${ctx.reservedKarma ? t('{total} au total, dont {reserved} engagés par des demandes en attente', { total: avail, reserved: ctx.reservedKarma }) : t('Karma disponible')} />
+    ${ctx.reservedKarma > 0 && html`<${Stat} label=${t('Engagé')} value=${ctx.reservedKarma} accent="amber" title=${t('Karma réservé par des demandes en attente de validation')} />`}
+    <${Stat} label=${t('Carrière')} value=${Number(actor.karmaTotal) || 0} title=${t('Karma total gagné')} />
+    <${Stat} label=${t('Nuyens')} value=${fmtNuyen(actor.nuyen)} accent="magenta" />
   </div>`;
 }
 
-/** In-progress trainings of one actor. GM can finish or interrupt them. */
-export function JobList({ game, actor, isGM, empty = 'Aucun entraînement en cours.' }) {
+/** In-progress trainings of one actor. GM can finish or interrupt them. `empty` = already translated text. */
+export function JobList({ game, actor, isGM, empty }) {
   const jobs = jobsOf(actor);
-  if (!jobs.length) return html`<div class="muted small training-empty">${empty}</div>`;
-  const finish = (job) => send('training/complete', { actorId: actor.id, jobId: job.id }).then(() => toast(`${job.label} : terminé`, 'success')).catch(() => {});
+  if (!jobs.length) return html`<div class="muted small training-empty">${empty || t('Aucun entraînement en cours.')}</div>`;
+  const finish = (job) => send('training/complete', { actorId: actor.id, jobId: job.id }).then(() => toast(t('{label} : terminé', { label: labelOf(job) }), 'success')).catch(() => {});
   const stop = async (job) => {
-    if (!(await confirmAction(`Interrompre « ${job.label} » pour ${actor.name} ?\nLe karma (et l’éventuel instructeur) sera remboursé.`))) return;
-    send('training/cancel', { requestId: job.requestId, refund: true }).then(() => toast('Entraînement interrompu, karma remboursé', 'warn')).catch(() => {});
+    if (!(await confirmAction(t('Interrompre « {label} » pour {name} ?\nLe karma (et l’éventuel instructeur) sera remboursé.', { label: labelOf(job), name: actor.name })))) return;
+    send('training/cancel', { requestId: job.requestId, refund: true }).then(() => toast(t('Entraînement interrompu, karma remboursé'), 'warn')).catch(() => {});
   };
   return html`<ul class="training-jobs">
     ${jobs.map((job) => {
@@ -107,16 +128,16 @@ export function JobList({ game, actor, isGM, empty = 'Aucun entraînement en cou
       const total = Number(job.daysTotal) || 0;
       return html`<li key=${job.id} class="training-job">
         <div class="row spread wrap">
-          <strong class="training-job-label">${job.label}</strong>
-          <span class="small mono muted">${done} / ${total} j</span>
+          <strong class="training-job-label">${labelOf(job)}</strong>
+          <span class="small mono muted">${t('{done} / {total} j', { done, total })}</span>
         </div>
         <${ProgressBar} value=${done} max=${total} />
         <div class="row spread wrap small">
-          <span class="muted">Reste ${formatDays(Math.max(0, total - done))}</span>
+          <span class="muted">${t('Reste {time}', { time: fmtDays(Math.max(0, total - done)) })}</span>
           ${isGM &&
           html`<span class="row gap-s">
-            <${Button} small variant="ghost" title="Terminer maintenant" onClick=${() => finish(job)}>✓ Terminer</${Button}>
-            <${Button} small variant="ghost" title="Interrompre et rembourser" onClick=${() => stop(job)}>✕</${Button}>
+            <${Button} small variant="ghost" title=${t('Terminer maintenant')} onClick=${() => finish(job)}>✓ ${t('Terminer')}</${Button}>
+            <${Button} small variant="ghost" title=${t('Interrompre et rembourser')} onClick=${() => stop(job)}>✕</${Button}>
           </span>`}
         </div>
       </li>`;
@@ -124,13 +145,13 @@ export function JobList({ game, actor, isGM, empty = 'Aucun entraînement en cou
   </ul>`;
 }
 
-/** Request history. showActor: prefix with the actor name (GM). */
-export function RequestList({ game, requests, isGM, showActor, limit = 40, empty = 'Aucune demande pour l’instant.' }) {
+/** Request history. showActor: prefix with the actor name (GM). `empty` = already translated text. */
+export function RequestList({ game, requests, isGM, showActor, limit = 40, empty }) {
   const list = [...(requests || [])].sort((a, b) => (b.ts || 0) - (a.ts || 0));
-  if (!list.length) return html`<div class="muted small training-empty">${empty}</div>`;
+  if (!list.length) return html`<div class="muted small training-empty">${empty || t('Aucune demande pour l’instant.')}</div>`;
   const cancel = async (r) => {
-    if (!(await confirmAction(`Annuler la demande « ${r.label} » ?`))) return;
-    send('training/cancel', { requestId: r.id }).then(() => toast('Demande annulée')).catch(() => {});
+    if (!(await confirmAction(t('Annuler la demande « {label} » ?', { label: labelOf(r) })))) return;
+    send('training/cancel', { requestId: r.id }).then(() => toast(t('Demande annulée'))).catch(() => {});
   };
   return html`<ul class="training-requests">
     ${list.slice(0, limit).map((r) => {
@@ -139,24 +160,24 @@ export function RequestList({ game, requests, isGM, showActor, limit = 40, empty
         <div class="row spread wrap gap-s">
           <span class="grow">
             ${showActor && html`<button class="training-link" onClick=${() => actor && openSheet(actor.id)}>${actor?.name || '?'}</button> · `}
-            <span>${r.label}</span>
+            <span>${labelOf(r)}</span>
           </span>
           <${StatusBadge} status=${r.status} />
         </div>
         <div class="row wrap small muted gap-s">
           <span>${fmtDate(r.ts)}</span>
-          ${r.karmaCost > 0 && html`<span class="mono">· ${r.karmaCost} karma</span>`}
-          ${r.nuyenCost > 0 && html`<span class="mono">· ${nuyen(r.nuyenCost)}</span>`}
-          ${r.days > 0 && html`<span>· ${formatDays(r.days)}${r.instructor ? ' (instructeur)' : ''}</span>`}
-          ${r.manual && html`<${Badge} color="magenta" title="Saisie manuelle, non vérifiée par le catalogue">manuel</${Badge}>`}
+          ${r.karmaCost > 0 && html`<span class="mono">· ${t('{n} karma', { n: r.karmaCost })}</span>`}
+          ${r.nuyenCost > 0 && html`<span class="mono">· ${fmtNuyen(r.nuyenCost)}</span>`}
+          ${r.days > 0 && html`<span>· ${r.instructor ? t('{time} (instructeur)', { time: fmtDays(r.days) }) : fmtDays(r.days)}</span>`}
+          ${r.manual && html`<${Badge} color="magenta" title=${t('Saisie manuelle, non vérifiée par le catalogue')}>${t('manuel')}</${Badge}>`}
         </div>
         ${r.note && html`<div class="small training-note">« ${r.note} »</div>`}
-        ${r.gmNote && html`<div class="small training-gmnote">MJ : ${r.gmNote}</div>`}
-        ${r.status === 'pending' && !isGM && html`<div class="right"><${Button} small variant="ghost" onClick=${() => cancel(r)}>Annuler</${Button}></div>`}
+        ${r.gmNote && html`<div class="small training-gmnote">${t('MJ : {note}', { note: r.gmNote })}</div>`}
+        ${r.status === 'pending' && !isGM && html`<div class="right"><${Button} small variant="ghost" onClick=${() => cancel(r)}>${t('Annuler')}</${Button}></div>`}
       </li>`;
     })}
   </ul>
-  ${list.length > limit && html`<div class="muted small center">… ${list.length - limit} demande(s) plus ancienne(s)</div>`}`;
+  ${list.length > limit && html`<div class="muted small center">${tn(list.length - limit, 'un::… {n} demande(s) plus ancienne(s)', '… {n} demande(s) plus ancienne(s)')}</div>`}`;
 }
 
-export const MAGIC_TYPES = { adept: 'Adepte', mystic: 'Adepte mystique', magician: 'Magicien', technomancer: 'Technomancien' };
+export const MAGIC_TYPES = { adept: tk('Adepte'), mystic: tk('Adepte mystique'), magician: tk('Magicien'), technomancer: tk('Technomancien') };

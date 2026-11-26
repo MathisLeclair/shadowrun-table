@@ -10,6 +10,7 @@ import { parseXml, serializeXml, el } from '../server/lib/chummer/xml.js';
 import { parseChum5 } from '../server/lib/chummer/parse.js';
 import { exportChum5 } from '../server/lib/chummer/export.js';
 import { mergeActor, diffActors } from '../server/lib/chummer/merge.js';
+import { t as tr, dictionary } from '../server/lib/i18n.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const FIXTURE = path.join(ROOT, 'tools', 'fixtures', 'chummer-test.chum5');
@@ -272,8 +273,65 @@ await test('first import into an app-made actor: the file wins, app-only data ke
   assert.ok(m.bio, 'empty Chummer text never erases app text');
 });
 
+console.log('i18n (French unchanged, English from client/i18n/en/chummer.json)');
+const en = dictionary('en');
+await test('XML / file errors carry a translatable key, French message unchanged', () => {
+  let e1;
+  try {
+    parseXml('<character><a></b></character>');
+  } catch (err) {
+    e1 = err;
+  }
+  assert.equal(e1.message, 'XML invalide (ligne 1) : </b> ferme <a>');
+  assert.equal(e1.i18nKey, 'XML invalide (ligne {line}) : {error}');
+  assert.equal(tr('en', e1.i18nKey, e1.i18nParams), 'Invalid XML (line 1): </b> closes <a>');
+  let e2;
+  try {
+    parseChum5('<character><name>x</character>');
+  } catch (err) {
+    e2 = err;
+  }
+  assert.match(e2.message, /^Fichier \.chum5 illisible — XML invalide \(ligne 1\) : /);
+  assert.match(tr('en', e2.i18nKey, e2.i18nParams), /^Unreadable \.chum5 file — Invalid XML \(line 1\): /);
+  let e3;
+  try {
+    parseChum5('<root/>');
+  } catch (err) {
+    e3 = err;
+  }
+  assert.equal(e3.i18nKey, 'Ce fichier n’est pas une fiche Chummer5 (.chum5)');
+  assert.ok(en[e3.i18nKey]);
+});
+await test('warnings: French strings kept, translatable copy alongside', () => {
+  const p = parseChum5(src.replace(/<created>True<\/created>/, '<created>False</created>'), { fileName: 'x.chum5' });
+  assert.equal(p.warnings.length, p.warningsI18n.length);
+  assert.ok(p.warnings.some((w) => /mode création/.test(w)), JSON.stringify(p.warnings));
+  for (const w of p.warningsI18n) assert.ok(en[w.t], `English for « ${w.t} »`);
+  const jane = clone(seeds.find((a) => a.id === 'pc_jane'));
+  const r = exportChum5(jane, { now: 1 });
+  assert.equal(r.warnings.length, r.warningsI18n.length);
+  assert.equal(r.warnings.add, undefined, 'no helper left on the returned array');
+  r.warningsI18n.forEach((w, i) => {
+    assert.ok(en[w.t], `English for « ${w.t} »`);
+    assert.equal(tr('fr', w.t, w.params), r.warnings[i]);
+  });
+});
+await test('diff labels are dictionary keys', () => {
+  const a = clone(fx);
+  const b = clone(fx);
+  b.karma += 3;
+  b.nuyen += 10;
+  b.notes = 'autre';
+  b.lifestyle = { ...(b.lifestyle || {}), name: 'Luxe' };
+  b.gear = [...(b.gear || []), { id: 'g_new', name: 'Truc' }];
+  const d = diffActors(a, b);
+  for (const sc of d.scalars) assert.ok(en[sc.label], `English for « ${sc.label} »`);
+  for (const l of d.lists) assert.ok(en[l.label], `English for « ${l.label} »`);
+  assert.ok(d.scalars.some((x) => x.label === 'Notes' && x.to === 'modifiées'));
+});
+
 console.log('HTTP routes & permissions');
-const srv = await startServer({ port: 3203 });
+const srv = await startServer({ port: 3911 });
 try {
   const gmToken = await login(srv.url, { role: 'gm', password: 'lazarus' });
   const gm = await client(srv.url, gmToken);
@@ -302,7 +360,13 @@ try {
     assert.equal(bad.status, 400);
     const badXml = await post('/api/chummer/import', gmToken, '<character><name>x</character>');
     assert.equal(badXml.status, 400);
-    assert.match((await badXml.json()).error, /illisible/);
+    const badJ = await badXml.json();
+    assert.match(badJ.error, /illisible/);
+    assert.equal(badJ.errorKey, 'Fichier .chum5 illisible — {error}', 'route error carries its key');
+    const notChar = await (await post('/api/chummer/import', gmToken, 'hello')).json();
+    assert.equal(notChar.errorKey, 'Fichier non reconnu : envoie un .chum5 (Chummer5) ou un export JSON de fiche');
+    const logE = gm.state.log.find((e) => e.i18n?.key === 'Fiche importée : {actor} (Chummer).');
+    assert.ok(logE && logE.text === 'Fiche importée : Test Chummer (Chummer).', 'import log translatable, French text unchanged');
   });
 
   await test('players never receive the stored XML; only their own pending requests', async () => {
@@ -375,6 +439,11 @@ try {
     assert.equal(a.chummer.fileName, 'edit.chum5');
     assert.match(a.history[a.history.length - 1].text, /Mise à jour depuis Chummer/);
     assert.ok(gm.state.log.some((e) => /mis à jour depuis Chummer/.test(e.text)));
+    const logE = [...gm.state.log].reverse().find((e) => e.i18n?.key === '{actor} mis à jour depuis Chummer ({file}) par {user} : {summary}.');
+    assert.ok(logE, 'update log entry has a key');
+    assert.match(logE.text, /^Test Chummer mis à jour depuis Chummer \(edit\.chum5\) par Testeur Chummer : Nuyens .+ → .+\.$/);
+    assert.match(tr('en', logE.i18n.key, logE.i18n.params), /^Test Chummer updated from Chummer \(edit\.chum5\) by Testeur Chummer: Nuyen .+ → .+\.$/);
+    assert.ok(Array.isArray(uj.warningsI18n), 'update reply carries translatable warnings');
   });
 
   await test('GM approval mode: player upload → pending request → GM validates', async () => {
@@ -392,6 +461,9 @@ try {
     assert.equal(gm.state.actors[actorId].nuyen, nuyenBefore, 'not applied yet');
     const req = p1.state.chummer.pending.find((r) => r.id === up.requestId);
     assert.ok(req, 'player sees own request');
+    assert.ok(Array.isArray(req.summaryI18n) && req.summaryI18n.length, 'pending request carries a translatable summary');
+    assert.equal(req.summary, req.summaryI18n.map((p) => tr('fr', p.t, p.params)).join(', '), 'French summary unchanged');
+    assert.match(req.summaryI18n.map((p) => tr('en', p.t, p.params)).join(', '), /^Nuyen /);
     assert.equal(req.xml, undefined, 'without the XML');
     const p2 = await client(srv.url, p2Token);
     assert.equal(p2.state.chummer.pending.length, 0, 'other players do not see it');
@@ -444,6 +516,9 @@ try {
     assert.ok(gm.state.actors[actorId].weapons.every((w) => !w.chummerGuid));
     const r = await fetch(srv.url + `/api/chummer/export/${actorId}`, { headers: H(gmToken) });
     assert.equal(r.headers.get('x-chummer-mode'), 'generate');
+    const wI18n = JSON.parse(decodeURIComponent(r.headers.get('x-chummer-warnings-i18n') || '%5B%5D'));
+    const wFr = JSON.parse(decodeURIComponent(r.headers.get('x-chummer-warnings') || '%5B%5D'));
+    assert.equal(wI18n.length, wFr.length, 'export: translatable warnings header');
   });
 
   gm.close();

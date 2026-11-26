@@ -2,6 +2,7 @@
 import { useState } from 'preact/hooks';
 import { html, Tabs, Empty, Badge } from '../../lib/ui.js';
 import { send } from '../../lib/net.js';
+import { t } from '../../lib/i18n.js';
 import { campaignOf, currentAct, usePersistent, parseDocRef, MdEditor } from './common.js';
 import Dashboard from './Dashboard.js';
 import QuestsView from './QuestsView.js';
@@ -17,7 +18,7 @@ export default function CampaignPage({ game }) {
   const c = campaignOf(game);
 
   if (!game.campaign) {
-    return html`<div class="page"><${Empty}>Le module campagne n'est pas chargé côté serveur.</${Empty}></div>`;
+    return html`<div class="page"><${Empty}>${t("Le module campagne n'est pas chargé côté serveur.")}</${Empty}></div>`;
   }
 
   const nav = {
@@ -36,18 +37,18 @@ export default function CampaignPage({ game }) {
 
   const pendingHandouts = c.handouts.filter((h) => h.revealedTo !== 'all' && !(h.revealedTo || []).length).length;
   const activeQuests = c.quests.filter((q) => q.status === 'active').length;
-  const openThreads = c.threads.filter((t) => t.state === 'open').length;
+  const openThreads = c.threads.filter((th) => th.state === 'open').length;
   const tabs = [
-    { id: 'dash', label: 'Tableau de bord' },
-    { id: 'quests', label: 'Quêtes', badge: activeQuests || null },
-    { id: 'sessions', label: 'Séances' },
-    { id: 'threads', label: 'Fils narratifs', badge: openThreads || null },
-    { id: 'docs', label: 'Documents' },
-    { id: 'handouts', label: 'Dossiers joueurs', badge: pendingHandouts || null },
-    { id: 'notes', label: 'Notes MJ' },
-    { id: 'recap', label: 'Récap joueurs' },
+    { id: 'dash', label: t('Tableau de bord') },
+    { id: 'quests', label: t('Quêtes'), badge: activeQuests || null },
+    { id: 'sessions', label: t('Séances') },
+    { id: 'threads', label: t('Fils narratifs'), badge: openThreads || null },
+    { id: 'docs', label: t('Documents') },
+    { id: 'handouts', label: t('Dossiers joueurs'), badge: pendingHandouts || null },
+    { id: 'notes', label: t('Notes MJ') },
+    { id: 'recap', label: t('Récap joueurs') },
   ];
-  const current = tabs.some((t) => t.id === tab) ? tab : 'dash';
+  const current = tabs.some((x) => x.id === tab) ? tab : 'dash';
   const act = currentAct(c);
   const focusFor = (kind) => (focus && focus.kind === kind ? focus : null);
 
@@ -70,17 +71,17 @@ export default function CampaignPage({ game }) {
       break;
     case 'notes':
       body = html`<div class="camp-text-page">
-        <p class="muted small">Ton bloc-notes de MJ — jamais visible par les joueurs. Markdown accepté ; enregistrement en quittant le champ ou avec Ctrl+S.</p>
-        <${MdEditor} value=${c.notes} initialMode="split" rows=${26} tall placeholder="Idées, prochaines étapes, PNJ à improviser…"
+        <p class="muted small">${t('Ton bloc-notes de MJ — jamais visible par les joueurs. Markdown accepté ; enregistrement en quittant le champ ou avec Ctrl+S.')}</p>
+        <${MdEditor} value=${c.notes} initialMode="split" rows=${26} tall placeholder=${t('Idées, prochaines étapes, PNJ à improviser…')}
           onSave=${(text) => send('campaign/updateNotes', { text })} />
       </div>`;
       break;
     case 'recap':
       body = html`<div class="camp-text-page">
         <div class="camp-warn small">
-          <strong>Visible par tous les joueurs</strong> dans leur onglet « Dossiers » (section « L'histoire jusqu'ici »). Pas de secrets de MJ ici !
+          <strong>${t('Visible par tous les joueurs')}</strong> ${t("dans leur onglet « Dossiers » (section « L'histoire jusqu'ici »). Pas de secrets de MJ ici !")}
         </div>
-        <${MdEditor} value=${c.playerRecap} initialMode="split" rows=${26} tall placeholder="Ce que les runners savent…"
+        <${MdEditor} value=${c.playerRecap} initialMode="split" rows=${26} tall placeholder=${t('Ce que les runners savent…')}
           onSave=${(text) => send('campaign/updatePlayerRecap', { text })} />
       </div>`;
       break;
@@ -90,8 +91,8 @@ export default function CampaignPage({ game }) {
 
   return html`<div class="page camp-page">
     <div class="page-title">
-      <h2>Campagne</h2>
-      ${act && html`<div class="row gap-s camp-act-chip" title="Acte en cours"><${Badge} color="magenta">${act.title}</${Badge}></div>`}
+      <h2>${t('Campagne')}</h2>
+      ${act && html`<div class="row gap-s camp-act-chip" title=${t('Acte en cours')}><${Badge} color="magenta">${act.title}</${Badge}></div>`}
     </div>
     <${Tabs} class="camp-tabs" tabs=${tabs} value=${current} onChange=${setTab} />
     <div class="camp-body">${body}</div>

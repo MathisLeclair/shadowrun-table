@@ -1,0 +1,41 @@
+{
+  "tracks": [],
+  "scenes": [
+    {
+      "id": "scn-matrice",
+      "name": "Plongée dans la Matrice",
+      "ambient": "amb-matrix",
+      "music": "keep"
+    },
+    {
+      "id": "scn-chantier",
+      "name": "Chantier",
+      "ambient": "amb-industrial",
+      "music": null
+    },
+    {
+      "id": "scn-combat",
+      "name": "Combat !",
+      "ambient": "keep",
+      "music": "mus-combat"
+    },
+    {
+      "id": "scn-poursuite",
+      "name": "Course-poursuite",
+      "ambient": "amb-city-night",
+      "music": "mus-chase"
+    },
+    {
+      "id": "scn-victoire",
+      "name": "Victoire",
+      "ambient": "keep",
+      "music": "mus-victory"
+    },
+    {
+      "id": "scn-accueil",
+      "name": "Accueil / pause",
+      "ambient": null,
+      "music": "mus-menu"
+    }
+  ]
+}

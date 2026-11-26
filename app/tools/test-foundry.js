@@ -1,6 +1,6 @@
 // Tests for the Foundry import: node tools/test-foundry.js  (exit code ≠ 0 on failure)
 // 1) Converters on the GM's world (exploration dump if present, else the LevelDB read from a temp copy).
-// 2) scan/import actions through an isolated server (port 3202) pointing at a temp copy of the world,
+// 2) scan/import actions through an isolated server (port 3910) pointing at a temp copy of the world,
 //    with tiny placeholder asset files; re-import idempotence; merge vs replace.
 // Foundry folders are only read. Assets/journals of the test server go to temp dirs.
 import fs from 'node:fs';
@@ -9,7 +9,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { startServer, login, client, settle } from './test-client.js';
 import { readWorld, readDump, detectWorldPath, assemble } from '../server/lib/foundry/world.js';
-import { buildBundle } from '../server/lib/foundry/importer.js';
+import { buildBundle, pcDiffEntries, pcDiff } from '../server/lib/foundry/importer.js';
+import { i18nError, plural, bytesParam } from '../server/lib/foundry/messages.js';
+import { t as tr, dictionary } from '../server/lib/i18n.js';
 import { htmlToMarkdown } from '../server/lib/foundry/html2md.js';
 import { SKILL_BY_ID, parseDamage } from '../shared/sr5.js';
 
@@ -129,7 +131,7 @@ const bundle = buildBundle(world, {});
 // ---------------------------------------------------------------------------
 // 3. Server: scan / import / re-import
 // ---------------------------------------------------------------------------
-console.log('server (port 3202)');
+console.log('server (port 3910)');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sr-foundry-test-'));
 const dataRoot = path.join(tmp, 'Data');
 const worldCopy = path.join(dataRoot, 'worlds', path.basename(WORLD));
@@ -165,7 +167,52 @@ const assetsOut = path.join(tmp, 'assets');
 const docsOut = path.join(tmp, 'docs');
 process.env.SR_FOUNDRY_ASSET_DIR = assetsOut;
 process.env.SR_FOUNDRY_DOCS_DIR = docsOut;
-const srv = await startServer({ port: 3202 });
+// ---------------------------------------------------------------------------
+// 3. i18n: translatable diffs / messages (French unchanged, English from client/i18n/en/foundry.json)
+// ---------------------------------------------------------------------------
+console.log('i18n');
+{
+  const en = dictionary('en');
+  // Every key (also nested { t } params) must have an English entry.
+  const keysOf = (e, out = []) => {
+    if (Array.isArray(e)) e.forEach((x) => keysOf(x, out));
+    else if (e && typeof e === 'object') {
+      if (typeof e.t === 'string') out.push(e.t);
+      if (typeof e.key === 'string') out.push(e.key);
+      for (const v of Object.values(e.params || {})) keysOf(v, out);
+    }
+    return out;
+  };
+  ok(JSON.stringify(pcDiffEntries(null, bundle.pcs[0])) === JSON.stringify([{ t: 'Nouveau personnage' }]), 'new PC diff entry');
+  const pc = bundle.pcs.find((p) => (p.sheet.skills || []).length) || bundle.pcs[0];
+  const app = { karma: -1, karmaTotal: 0, nuyen: 1, attributes: { BOD: 0 }, skills: [], streetCred: 99 };
+  const entries = pcDiffEntries(app, pc);
+  const fr = pcDiff(app, pc);
+  ok(entries.length >= 3 && entries.length === fr.length, `diff entries (${entries.length}) match French lines (${fr.length})`);
+  ok(fr[0] === `Karma -1 → ${pc.sheet.karma ?? 0}` || fr.some((l) => l.startsWith('Karma -1 → ')), `French diff line unchanged (${fr[0]})`);
+  ok(fr.some((l) => /^Attributs : .*CON 0 → /.test(l)), `French attribute diff keeps CON (${fr.find((l) => l.startsWith('Attributs'))})`);
+  const enLines = entries.map((e) => tr('en', e.t, e.params));
+  ok(enLines.some((l) => /^Attributes: .*BOD 0 → /.test(l)), `English attribute diff uses BOD (${enLines.find((l) => l.startsWith('Attrib'))})`);
+  ok(enLines.some((l) => l.startsWith('Street Cred 99 → ')), 'English street cred line');
+  const missing = [...new Set(keysOf(entries))].filter((k) => !en[k]);
+  ok(!missing.length, `diff keys translated (${missing.join(' | ')})`);
+  // Errors carrying keys
+  const e = i18nError({ t: 'Aucun monde Foundry trouvé dans « {path} » (world.json manquant)', params: { path: 'X' } });
+  ok(e.message === 'Aucun monde Foundry trouvé dans « X » (world.json manquant)' && e.i18nKey.startsWith('Aucun monde') && e.i18nParams.path === 'X', 'i18nError: French message + key + params');
+  ok(tr('en', e.i18nKey, e.i18nParams) === 'No Foundry world found in “X” (world.json missing)', 'i18nError key translated');
+  // Server-side plural: French keeps the old text, English pluralizes 0
+  const p0 = plural(0, { t: 'zero::{n} fichier copié' }, { t: '{n} fichier copié' }, { t: '{n} fichiers copiés' });
+  ok(tr('fr', p0.t, p0.params) === '0 fichier copié' && tr('en', p0.t, p0.params) === '0 files copied', `plural(0) fr/en (${tr('en', p0.t, p0.params)})`);
+  const p2 = plural(2, { t: 'zero::{n} fichier copié' }, { t: '{n} fichier copié' }, { t: '{n} fichiers copiés' });
+  ok(tr('fr', p2.t, p2.params) === '2 fichiers copiés' && tr('en', p2.t, p2.params) === '2 files copied', 'plural(2) fr/en');
+  const b = bytesParam(12.34e6);
+  ok(tr('fr', b.t, b.params) === '12,3 Mo' && tr('en', b.t, b.params) === '12,3 MB', `bytesParam (${tr('en', b.t, b.params)})`);
+}
+
+/** Raw action reply (to read errorKey / params, which client.send() hides). */
+const rawSend = (c, type, payload = {}) => new Promise((res) => c.socket.emit('action', { type, payload }, res));
+
+const srv = await startServer({ port: 3910 });
 try {
   const gm = await client(srv.url, await login(srv.url, { role: 'gm', password: 'lazarus' }));
   await settle();
@@ -208,6 +255,8 @@ try {
   ok(scan.scenes.every((s) => s.status === 'unchanged'), 'scenes unchanged vs seeds');
   ok(scan.journals.docs.every((d) => d.status === 'new'), 'journals new in temp docs dir');
   ok(scan.playlists.some((p) => p.tracks === combatSounds.length), 'only existing audio files become tracks');
+  ok(scan.pcs.every((p) => Array.isArray(p.diffI18n) && p.diffI18n.length === p.diff.length), 'scan PCs carry translatable diffs (diffI18n)');
+  ok(scan.skippedScenes.every((x) => x.reason === 'pas d’image de fond'), 'skipped scene reason is a French key');
 
   const counts = () => ({ actors: Object.keys(st().actors).length, tpl: Object.keys(st().bestiary).length, maps: Object.keys(st().maps).length, tracks: (st().audio?.tracks || []).length });
   const before = counts();
@@ -232,6 +281,11 @@ try {
   ok(fs.existsSync(path.join(docsOut, '_index.md')) && fs.readdirSync(docsOut).length >= 10, 'journals written');
   ok(fs.existsSync(path.join(assetsOut, 'img', 'jane_pic.png')), 'portrait copied');
   ok(st().log.some((e) => /Import Foundry/.test(e.text)), 'system log entry');
+  const logE = [...st().log].reverse().find((e) => e.author === 'Foundry' && e.i18n?.key === 'Import Foundry : {parts} — monde « {world} »');
+  ok(logE && logE.text === r1.text, `log entry translatable, French text unchanged (${logE?.text})`);
+  ok(/^Import Foundry : \d+ PJ \(fusion\), /.test(r1.text), `French import summary unchanged (${r1.text})`);
+  ok(r1.textI18n?.key === logE?.i18n?.key && /^Foundry import: \d+ PC\(s\) \(merge\), /.test(tr('en', r1.textI18n.key, r1.textI18n.params)), `English import summary (${tr('en', r1.textI18n?.key, r1.textI18n?.params)})`);
+  ok(typeof r1.assets.bytes === 'number', 'import result has asset bytes');
   ok(st().foundry?.lastImport?.counts?.pcs === bundle.pcs.length, 'lastImport recorded');
 
   // Re-import is idempotent
@@ -261,6 +315,13 @@ try {
     rejected = /monde Foundry/i.test(e.message);
   }
   ok(rejected, 'invalid world path → French error');
+  const bad = await rawSend(gm, 'foundry/scan', { worldPath: path.join(tmp, 'nope') });
+  ok(bad.errorKey === 'Aucun monde Foundry trouvé dans « {path} » (world.json manquant)' && bad.params?.path && bad.error.includes('nope'), `world path error carries its key (${bad.errorKey})`);
+  // Upload route errors are translatable too (409 while busy is hard to provoke: check a bad zip instead)
+  const tok = await login(srv.url, { role: 'gm', password: 'lazarus' });
+  const up = await fetch(srv.url + '/api/foundry/upload?kind=world', { method: 'POST', headers: { Authorization: `Bearer ${tok}`, 'content-type': 'application/zip' }, body: Buffer.from('not a zip') });
+  const upj = await up.json();
+  ok(!up.ok && typeof upj.error === 'string' && upj.error.length > 0, `bad zip upload → readable error (${upj.error})`);
   gm.close();
   p1.close();
 } catch (err) {

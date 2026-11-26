@@ -710,7 +710,7 @@ await test('seed file: scenes reference existing tracks and known maps', async (
 });
 
 const { startServer, login, client, settle } = await import('./test-client.js');
-const srv = await startServer({ port: 3106 });
+const srv = await startServer({ port: 3912 });
 let gm, p1;
 try {
   gm = await client(srv.url, await login(srv.url, { role: 'gm', password: 'lazarus' }));

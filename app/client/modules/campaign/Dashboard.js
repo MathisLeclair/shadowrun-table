@@ -1,6 +1,7 @@
 // GM campaign dashboard: everything needed at the table in one screen.
 import { html, Panel, Button, Badge, Markdown, Empty } from '../../lib/ui.js';
 import { send } from '../../lib/net.js';
+import { t } from '../../lib/i18n.js';
 import {
   campaignOf, currentAct, nextSession, QUEST_STATUS_BY_ID, THREAD_STATES, npcInfo, mapInfo, spawnNpc,
   showMapToPlayers, openMap, revealHandout, useDocs, docTitle, DocButton, cx, fmtSessionDate,
@@ -9,7 +10,7 @@ import {
 function Progress({ phases }) {
   const done = phases.filter((p) => p.done).length;
   const pct = phases.length ? Math.round((done / phases.length) * 100) : 0;
-  return html`<div class="camp-progress" title=${`${done} / ${phases.length} phases`}>
+  return html`<div class="camp-progress" title=${t('{done} / {total} phases', { done, total: phases.length })}>
     <div class="camp-progress-bar"><span style=${{ width: pct + '%' }}></span></div>
     <span class="mono small muted">${done}/${phases.length}</span>
   </div>`;
@@ -34,24 +35,24 @@ function ActiveQuest({ game, quest, nav }) {
             </li>`
           )}
         </ul>`
-      : html`<div class="muted small">Toutes les phases sont cochées — penser à clore la quête.</div>`}
+      : html`<div class="muted small">${t('Toutes les phases sont cochées — penser à clore la quête.')}</div>`}
     <div class="camp-quick">
       ${quest.npcs.map((id) => {
         const n = npcInfo(game, id);
-        return html`<span class=${cx('camp-chip', n.kind === 'missing' && 'missing')} title=${n.kind === 'missing' ? `Fiche introuvable : ${id}` : n.folder}>
+        return html`<span class=${cx('camp-chip', n.kind === 'missing' && 'missing')} title=${n.kind === 'missing' ? t('Fiche introuvable : {id}', { id }) : n.folder}>
           ☠ ${n.name}
-          ${n.kind === 'template' && html`<button class="camp-chip-act" title="Placer sur la carte" onClick=${() => spawnNpc(game, id)}>+ Placer</button>`}
+          ${n.kind === 'template' && html`<button class="camp-chip-act" title=${t('Placer sur la carte')} onClick=${() => spawnNpc(game, id)}>+ ${t('Placer')}</button>`}
         </span>`;
       })}
       ${quest.maps.map((id) => {
         const m = mapInfo(game, id);
-        return html`<span class=${cx('camp-chip camp-chip-map', !m.exists && 'missing', activeMap === id && 'live')} title=${m.exists ? '' : `Carte introuvable : ${id}`}>
+        return html`<span class=${cx('camp-chip camp-chip-map', !m.exists && 'missing', activeMap === id && 'live')} title=${m.exists ? '' : t('Carte introuvable : {id}', { id })}>
           ▦ ${m.name}
           ${m.exists &&
-          html`<button class="camp-chip-act" title="Ouvrir la carte" onClick=${() => openMap(id)}>Ouvrir</button>
+          html`<button class="camp-chip-act" title=${t('Ouvrir la carte')} onClick=${() => openMap(id)}>${t('Ouvrir')}</button>
             ${activeMap === id
-              ? html`<span class="camp-live">● En jeu</span>`
-              : html`<button class="camp-chip-act" title="Afficher aux joueurs" onClick=${() => showMapToPlayers(game, id)}>Afficher</button>`}`}
+              ? html`<span class="camp-live">● ${t('En jeu')}</span>`
+              : html`<button class="camp-chip-act" title=${t('Afficher aux joueurs')} onClick=${() => showMapToPlayers(game, id)}>${t('Afficher')}</button>`}`}
         </span>`;
       })}
       ${quest.doc && html`<${DocButton} docRef=${quest.doc} nav=${nav} />`}
@@ -72,10 +73,10 @@ export default function Dashboard({ game, nav }) {
 
   return html`<div class="camp-dash">
     <div class="camp-dash-main">
-      <${Panel} title="Acte en cours" class="camp-dash-act"
-        actions=${html`<select class="input camp-mini-select" value=${c.currentActId || ''} title="Choisir l'acte en cours"
+      <${Panel} title=${t('Acte en cours')} class="camp-dash-act"
+        actions=${html`<select class="input camp-mini-select" value=${c.currentActId || ''} title=${t('Choisir l\'acte en cours')}
           onChange=${(e) => send('campaign/setCurrentAct', { actId: e.target.value || null })}>
-          <option value="">Automatique</option>
+          <option value="">${t('Automatique')}</option>
           ${c.acts.map((a) => html`<option value=${a.id}>${a.title}</option>`)}
         </select>`}>
         ${act
@@ -84,83 +85,83 @@ export default function Dashboard({ game, nav }) {
               <div class="row wrap gap-s">
                 ${actQuests.map((q) => {
                   const st = QUEST_STATUS_BY_ID[q.status];
-                  return html`<button class=${cx('camp-qpill', `st-${q.status}`)} title=${st?.label} onClick=${() => nav.open('quest', q.id)}>${q.title}</button>`;
+                  return html`<button class=${cx('camp-qpill', `st-${q.status}`)} title=${st ? t(st.label) : ''} onClick=${() => nav.open('quest', q.id)}>${q.title}</button>`;
                 })}
               </div>`
-          : html`<${Empty}>Aucun acte défini.</${Empty}>`}
+          : html`<${Empty}>${t('Aucun acte défini.')}</${Empty}>`}
       </${Panel}>
 
-      <${Panel} title=${`Quêtes en cours (${active.length})`} actions=${html`<${Button} small variant="ghost" onClick=${() => nav.go('quests')}>Toutes les quêtes</${Button}>`}>
+      <${Panel} title=${t('Quêtes en cours ({n})', { n: active.length })} actions=${html`<${Button} small variant="ghost" onClick=${() => nav.go('quests')}>${t('Toutes les quêtes')}</${Button}>`}>
         ${active.length
           ? active.map((q) => html`<${ActiveQuest} game=${game} quest=${q} nav=${nav} />`)
-          : html`<div class="muted">Aucune quête en cours.${upcomingInAct.length
-              ? html` Prochaine possible : <button class="camp-link" onClick=${() => send('campaign/setQuestStatus', { questId: upcomingInAct[0].id, status: 'active' })}>lancer « ${upcomingInAct[0].title} »</button>`
+          : html`<div class="muted">${t('Aucune quête en cours.')}${upcomingInAct.length
+              ? html` ${t('Prochaine possible :')} <button class="camp-link" onClick=${() => send('campaign/setQuestStatus', { questId: upcomingInAct[0].id, status: 'active' })}>${t('lancer « {title} »', { title: upcomingInAct[0].title })}</button>`
               : null}</div>`}
       </${Panel}>
 
-      <${Panel} title=${session ? `Prochaine séance — n°${session.number}` : 'Prochaine séance'}
+      <${Panel} title=${session ? t('Prochaine séance — n°{n}', { n: session.number }) : t('Prochaine séance')}
         actions=${html`${session?.doc && html`<${DocButton} docRef=${session.doc} nav=${nav} />`}
           ${session
-            ? html`<${Button} small variant="ghost" onClick=${() => nav.open('session', session.id)}>Ouvrir</${Button}>`
+            ? html`<${Button} small variant="ghost" onClick=${() => nav.open('session', session.id)}>${t('Ouvrir')}</${Button}>`
             : html`<${Button} small onClick=${async () => {
                 const id = await send('campaign/addSession', {});
                 nav.open('session', id);
-              }}>+ Préparer la prochaine séance</${Button}>`}`}>
+              }}>+ ${t('Préparer la prochaine séance')}</${Button}>`}`}>
         ${session
-          ? html`<div class="row spread wrap"><h3 class="camp-sess-title">${session.title || `Séance ${session.number}`}</h3>
+          ? html`<div class="row spread wrap"><h3 class="camp-sess-title">${session.title || t('Séance {n}', { n: session.number })}</h3>
                 ${session.date && html`<span class="muted small">${fmtSessionDate(session.date)}</span>`}</div>
-              ${session.plan ? html`<${Markdown} class="camp-dash-plan" text=${session.plan} />` : html`<div class="muted">Plan encore vide.</div>`}
+              ${session.plan ? html`<${Markdown} class="camp-dash-plan" text=${session.plan} />` : html`<div class="muted">${t('Plan encore vide.')}</div>`}
               <div class="row gap-s camp-mt">
-                <${Button} small onClick=${() => send('campaign/updateSession', { sessionId: session.id, patch: { played: true } })}>✓ Marquer comme jouée</${Button}>
+                <${Button} small onClick=${() => send('campaign/updateSession', { sessionId: session.id, patch: { played: true } })}>✓ ${t('Marquer comme jouée')}</${Button}>
               </div>`
-          : html`<div class="muted">Toutes les séances prévues ont été jouées.</div>`}
+          : html`<div class="muted">${t('Toutes les séances prévues ont été jouées.')}</div>`}
         ${lastPlayed &&
         html`<details class="camp-details">
-          <summary>Dernière séance jouée — n°${lastPlayed.number} ${lastPlayed.title ? `· ${lastPlayed.title}` : ''}</summary>
-          ${lastPlayed.recap ? html`<${Markdown} text=${lastPlayed.recap} />` : html`<div class="muted small">Pas encore de récap.</div>`}
+          <summary>${t('Dernière séance jouée — n°{n}', { n: lastPlayed.number })} ${lastPlayed.title ? `· ${lastPlayed.title}` : ''}</summary>
+          ${lastPlayed.recap ? html`<${Markdown} text=${lastPlayed.recap} />` : html`<div class="muted small">${t('Pas encore de récap.')}</div>`}
         </details>`}
       </${Panel}>
     </div>
 
     <div class="camp-dash-side">
-      <${Panel} title="Fils narratifs" actions=${html`<${Button} small variant="ghost" onClick=${() => nav.go('threads')}>Tableau</${Button}>`}>
+      <${Panel} title=${t('Fils narratifs')} actions=${html`<${Button} small variant="ghost" onClick=${() => nav.go('threads')}>${t('Tableau')}</${Button}>`}>
         <div class="camp-thread-counts">
-          ${THREAD_STATES.map((s) => html`<div class=${`camp-tc tc-${s.id}`}><span class="mono">${c.threads.filter((t) => t.state === s.id).length}</span><span>${s.label}</span></div>`)}
+          ${THREAD_STATES.map((s) => html`<div class=${`camp-tc tc-${s.id}`}><span class="mono">${c.threads.filter((th) => th.state === s.id).length}</span><span>${t(s.label)}</span></div>`)}
         </div>
         <ul class="camp-thread-list">
           ${c.threads
-            .filter((t) => t.state === 'open')
-            .map((t) => html`<li><button class="camp-link" title=${t.notes} onClick=${() => nav.open('thread', t.id)}>${t.label}</button></li>`)}
+            .filter((th) => th.state === 'open')
+            .map((th) => html`<li><button class="camp-link" title=${th.notes} onClick=${() => nav.open('thread', th.id)}>${th.label}</button></li>`)}
         </ul>
       </${Panel}>
 
-      <${Panel} title=${`Documents à révéler (${pending.length})`} actions=${html`<${Button} small variant="ghost" onClick=${() => nav.go('handouts')}>Gérer</${Button}>`}>
+      <${Panel} title=${t('Documents à révéler ({n})', { n: pending.length })} actions=${html`<${Button} small variant="ghost" onClick=${() => nav.go('handouts')}>${t('Gérer')}</${Button}>`}>
         ${pending.length
           ? html`<ul class="camp-pending">
               ${pending.map(
                 (h) => html`<li>
                   <button class="camp-link grow" onClick=${() => nav.open('handout', h.id)}>${h.title}</button>
-                  <${Button} small variant="accent" title="Révéler à tous les joueurs" onClick=${() => revealHandout(h.id, 'all')}>Révéler</${Button}>
+                  <${Button} small variant="accent" title=${t('Révéler à tous les joueurs')} onClick=${() => revealHandout(h.id, 'all')}>${t('Révéler')}</${Button}>
                 </li>`
               )}
             </ul>`
-          : html`<div class="muted small">Tous les documents préparés ont été montrés.</div>`}
+          : html`<div class="muted small">${t('Tous les documents préparés ont été montrés.')}</div>`}
       </${Panel}>
 
-      <${Panel} title="Documents de campagne" actions=${html`<${Button} small variant="ghost" onClick=${() => nav.go('docs')}>Lecteur</${Button}>`}>
+      <${Panel} title=${t('Documents de campagne')} actions=${html`<${Button} small variant="ghost" onClick=${() => nav.go('docs')}>${t('Lecteur')}</${Button}>`}>
         ${docs.error
           ? html`<div class="error small">${docs.error}</div>`
           : docs.loading
-            ? html`<div class="muted small">Chargement…</div>`
+            ? html`<div class="muted small">${t('Chargement…')}</div>`
             : docs.list.length
               ? html`<div class="camp-doc-links">${docs.list.map((d) => html`<button class="camp-doc-link" onClick=${() => nav.openDoc(d.name)}>❐ ${docTitle(d.name)}</button>`)}</div>`
-              : html`<div class="muted small">Aucun document .md trouvé.</div>`}
+              : html`<div class="muted small">${t('Aucun document .md trouvé.')}</div>`}
       </${Panel}>
 
-      <${Panel} title="Raccourcis">
+      <${Panel} title=${t('Raccourcis')}>
         <div class="col gap-s">
-          <${Button} small onClick=${() => nav.go('notes')}>✎ Notes MJ</${Button}>
-          <${Button} small onClick=${() => nav.go('recap')}>✉ Récap joueurs</${Button}>
+          <${Button} small onClick=${() => nav.go('notes')}>✎ ${t('Notes MJ')}</${Button}>
+          <${Button} small onClick=${() => nav.go('recap')}>✉ ${t('Récap joueurs')}</${Button}>
         </div>
       </${Panel}>
     </div>

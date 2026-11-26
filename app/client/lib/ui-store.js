@@ -1,5 +1,6 @@
 // Client-only UI state shared across modules (no server round-trip).
 import { useEffect, useState } from 'preact/hooks';
+import { getLang, onLangChange } from './i18n.js';
 
 const ui = {
   mainTab: null, // id of the main tab shown
@@ -29,6 +30,19 @@ export function useUI() {
     return () => listeners.delete(set);
   }, []);
   return s;
+}
+
+/**
+ * Hook: current UI language ('fr'|'en'); re-renders the component when it changes. The app root uses it, so
+ * modules normally don't need it (the whole tree re-renders on a language switch).
+ */
+export function useLang() {
+  const [l, set] = useState(getLang());
+  useEffect(() => {
+    if (getLang() !== l) set(getLang());
+    return onLangChange(set);
+  }, []);
+  return l;
 }
 
 /** Open any actor's sheet in the global modal. */

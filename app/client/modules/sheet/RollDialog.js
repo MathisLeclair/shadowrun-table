@@ -4,13 +4,12 @@
 import { useState } from 'preact/hooks';
 import { html, Button, NumberInput, Toggle } from '../../lib/ui.js';
 import { send } from '../../lib/net.js';
-import { derive, attr, skillPool, SKILL_BY_ID, ATTR_SHORT, ATTR_LABELS, skillDefaultLimit } from '/shared/sr5.js';
-import { Overlay, DiceFaces, RollBadges, isGM, ownsActor } from './common.js';
+import { derive, attr, skillPool, SKILL_BY_ID, ATTR_LABELS, skillDefaultLimit } from '/shared/sr5.js';
+import { t, tn, tIfKnown, attrShort, attrLabel, limitLabel } from '../../lib/i18n.js';
+import { Overlay, DiceFaces, RollBadges, isGM, ownsActor, skillName, rollLabel } from './common.js';
 import { knowledgeAttr } from './sheet-data.js';
 
-const LIMIT_FR = { physical: 'physique', mental: 'mentale', social: 'sociale', astral: 'astrale' };
-
-/** Client-side preview of the server pool computation (the server stays authoritative). */
+/** Client-side preview of the server pool computation (the server stays authoritative). Part labels are display text. */
 export function previewPool(actor, preset, { useSpec } = {}) {
   const parts = [];
   let pool = 0;
@@ -23,11 +22,11 @@ export function previewPool(actor, preset, { useSpec } = {}) {
     if (kno) {
       const at = preset.attr || knowledgeAttr(kno.type);
       pool = (Number(kno.rating) || 0) + attr(actor, at);
-      parts.push([kno.name, kno.rating || 0], [ATTR_SHORT[at], attr(actor, at)]);
+      parts.push([kno.name, kno.rating || 0], [attrShort(at), attr(actor, at)]);
       spec = kno.spec || '';
       if (useSpec && kno.spec) {
         pool += 2;
-        parts.push([`spé. ${kno.spec}`, 2]);
+        parts.push([t('spé. {spec}', { spec: kno.spec }), 2]);
       }
       defaultLimit = 'mental';
     } else {
@@ -37,32 +36,33 @@ export function previewPool(actor, preset, { useSpec } = {}) {
       impossible = !!r.impossible;
       pool = r.pool;
       spec = sk?.spec || '';
-      if (r.defaulting) parts.push([ATTR_SHORT[at], attr(actor, at)], ['par défaut', -1]);
+      if (r.defaulting) parts.push([attrShort(at), attr(actor, at)], [t('par défaut'), -1]);
       else {
-        parts.push([sk?.name || def?.fr, sk.rating], [ATTR_SHORT[at], attr(actor, at)]);
-        if (useSpec && sk.spec) parts.push([`spé. ${sk.spec}`, 2]);
+        parts.push([skillName(sk, preset.skillId), sk.rating], [attrShort(at), attr(actor, at)]);
+        if (useSpec && sk.spec) parts.push([t('spé. {spec}', { spec: sk.spec }), 2]);
       }
       defaultLimit = skillDefaultLimit(def, at);
     }
   } else if (actor && preset.attr) {
     pool = attr(actor, preset.attr);
-    parts.push([ATTR_SHORT[preset.attr], pool]);
+    parts.push([attrShort(preset.attr), pool]);
     if (preset.attr2) {
       pool += attr(actor, preset.attr2);
-      parts.push([ATTR_SHORT[preset.attr2], attr(actor, preset.attr2)]);
+      parts.push([attrShort(preset.attr2), attr(actor, preset.attr2)]);
     }
   } else {
     pool = Math.max(0, Number(preset.pool) || 0);
-    parts.push(['dés', pool]);
+    parts.push([t('dés'), pool]);
   }
   for (const b of preset.bonus || []) {
     if (!b.value) continue;
     pool += b.value;
-    parts.push([b.label, b.value]);
+    parts.push([tIfKnown(b.label), b.value]);
   }
   return { pool, parts, defaultLimit, spec, impossible };
 }
 
+/** Label sent to the server and stored in the log: French source text (each viewer translates it). */
 export function presetLabel(actor, preset) {
   if (preset.label) return preset.label;
   if (preset.skillId) {
@@ -72,6 +72,19 @@ export function presetLabel(actor, preset) {
   }
   if (preset.attr) return preset.attr2 ? `${ATTR_LABELS[preset.attr]} + ${ATTR_LABELS[preset.attr2]}` : ATTR_LABELS[preset.attr];
   return 'Jet de dés';
+}
+
+/** The same label in the UI language. */
+export function presetDisplayLabel(actor, preset) {
+  if (preset.label) return rollLabel(preset.label);
+  if (preset.skillId) {
+    const sk = (actor?.skills || []).find((s) => s.id === preset.skillId);
+    const kno = (actor?.knowledge || []).find((k) => k.id === preset.skillId);
+    if (sk || !kno) return skillName(sk, preset.skillId);
+    return kno.name;
+  }
+  if (preset.attr) return preset.attr2 ? `${attrLabel(preset.attr)} + ${attrLabel(preset.attr2)}` : attrLabel(preset.attr);
+  return t('Jet de dés');
 }
 
 export function RollDialog({ game, actor, preset = {}, onClose }) {
@@ -95,6 +108,7 @@ export function RollDialog({ game, actor, preset = {}, onClose }) {
   const woundMod = wounds && d ? d.woundModifier : 0;
   const total = Math.max(0, prev.pool + modifier + woundMod + (explode ? edgeMax : 0));
   const label = presetLabel(actor, preset);
+  const shownLabel = presetDisplayLabel(actor, preset);
   const canEdge = !!live && ownsActor(game, live.id) && edgeLeft > 0 && !!live.attributes;
 
   const roll = async () => {
@@ -122,37 +136,37 @@ export function RollDialog({ game, actor, preset = {}, onClose }) {
     } catch {}
   };
 
-  return html`<${Overlay} title=${'Jet — ' + label} onClose=${onClose} width=${480}>
+  return html`<${Overlay} title=${t('Jet — {label}', { label: shownLabel })} onClose=${onClose} width=${480}>
     <div class="sh-rd">
       ${actor && html`<div class="muted small">${actor.name}</div>`}
       <div class="sh-rd-breakdown">
         ${prev.parts.map(([l, v], i) => html`<span class=${'sh-rd-part' + (v < 0 ? ' bad' : '')}><span>${l}</span><b>${i > 0 && v >= 0 ? '+' : ''}${v}</b></span>`)}
-        ${modifier ? html`<span class="sh-rd-part"><span>mod.</span><b>${modifier > 0 ? '+' : ''}${modifier}</b></span>` : null}
-        ${woundMod ? html`<span class="sh-rd-part bad"><span>blessures</span><b>${woundMod}</b></span>` : null}
-        ${explode ? html`<span class="sh-rd-part edge"><span>Chance</span><b>+${edgeMax}</b></span>` : null}
-        <span class="sh-rd-total">= ${total} dé${total > 1 ? 's' : ''}</span>
+        ${modifier ? html`<span class="sh-rd-part"><span>${t('mod.')}</span><b>${modifier > 0 ? '+' : ''}${modifier}</b></span>` : null}
+        ${woundMod ? html`<span class="sh-rd-part bad"><span>${t('blessures')}</span><b>${woundMod}</b></span>` : null}
+        ${explode ? html`<span class="sh-rd-part edge"><span>${t('Chance')}</span><b>+${edgeMax}</b></span>` : null}
+        <span class="sh-rd-total">${tn(total, '= {n} dé', '= {n} dés')}</span>
       </div>
-      ${prev.impossible && html`<div class="error small">Compétence non maîtrisée : impossible de l’utiliser par défaut.</div>`}
+      ${prev.impossible && html`<div class="error small">${t('Compétence non maîtrisée : impossible de l’utiliser par défaut.')}</div>`}
 
       <div class="sh-rd-grid">
-        <div class="field"><span class="field-label">Modificateur</span><${NumberInput} value=${modifier} min=${-30} max=${30} onChange=${setModifier} /></div>
-        <div class="field"><span class="field-label">Limite</span>
+        <div class="field"><span class="field-label">${t('Modificateur')}</span><${NumberInput} value=${modifier} min=${-30} max=${30} onChange=${setModifier} /></div>
+        <div class="field"><span class="field-label">${t('Limite')}</span>
           <div class="row">
-            ${!explode && !noLimit ? html`<${NumberInput} value=${limit} min=${1} max=${30} onChange=${setLimit} small />` : html`<span class="muted small">${explode ? 'aucune (Chance)' : 'aucune'}</span>`}
-            ${!explode && html`<${Toggle} value=${!noLimit} onChange=${(v) => setNoLimit(!v)} title="Appliquer une limite" />`}
+            ${!explode && !noLimit ? html`<${NumberInput} value=${limit} min=${1} max=${30} onChange=${setLimit} small />` : html`<span class="muted small">${explode ? t('aucune (Chance)') : t('aucune')}</span>`}
+            ${!explode && html`<${Toggle} value=${!noLimit} onChange=${(v) => setNoLimit(!v)} title=${t('Appliquer une limite')} />`}
           </div>
-          ${prev.defaultLimit && !explode && html`<span class="field-hint">Limite ${LIMIT_FR[prev.defaultLimit]} : ${d?.limits?.[prev.defaultLimit] ?? '—'}</span>`}
+          ${prev.defaultLimit && !explode && html`<span class="field-hint">${t('{limit} : {value}', { limit: limitLabel(prev.defaultLimit), value: d?.limits?.[prev.defaultLimit] ?? '—' })}</span>`}
         </div>
       </div>
       <div class="col gap-s">
-        ${prev.spec && html`<${Toggle} value=${useSpec} onChange=${setUseSpec} label=${`Spécialisation (${prev.spec}) +2`} />`}
-        ${d && d.woundModifier < 0 && html`<${Toggle} value=${wounds} onChange=${setWounds} label=${`Malus de blessures (${d.woundModifier})`} />`}
-        ${canEdge && html`<${Toggle} value=${explode} onChange=${setExplode} label=${`Repousser les limites (+${edgeMax} dés, règle des 6) — Chance ${edgeLeft}/${edgeMax}`} />`}
-        ${gm && html`<${Toggle} value=${secret} onChange=${setSecret} label="Jet secret (visible du MJ seulement)" />`}
+        ${prev.spec && html`<${Toggle} value=${useSpec} onChange=${setUseSpec} label=${t('Spécialisation ({spec}) +2', { spec: prev.spec })} />`}
+        ${d && d.woundModifier < 0 && html`<${Toggle} value=${wounds} onChange=${setWounds} label=${t('Malus de blessures ({n})', { n: d.woundModifier })} />`}
+        ${canEdge && html`<${Toggle} value=${explode} onChange=${setExplode} label=${t('Repousser les limites (+{n} dés, règle des 6) — Chance {left}/{max}', { n: edgeMax, left: edgeLeft, max: edgeMax })} />`}
+        ${gm && html`<${Toggle} value=${secret} onChange=${setSecret} label=${t('Jet secret (visible du MJ seulement)')} />`}
       </div>
 
       ${result && html`<div class="sh-rd-result">
-        <div class="sh-rd-hits"><b>${result.hits}</b><span>succès</span></div>
+        <div class="sh-rd-hits"><b>${result.hits}</b><span>${tn(result.hits, 'succès::one', 'succès::other')}</span></div>
         <div class="grow col gap-s">
           <${DiceFaces} roll=${result} />
           <${RollBadges} roll=${result} />
@@ -161,11 +175,11 @@ export function RollDialog({ game, actor, preset = {}, onClose }) {
 
       <div class="row spread wrap">
         <div class="row">
-          ${result && !result.explode && !result.secondChance && canEdge && html`<${Button} small variant="accent" onClick=${secondChance} title="Relancer tous les dés qui ne sont pas des succès (1 point de Chance)">Seconde chance</${Button}>`}
+          ${result && !result.explode && !result.secondChance && canEdge && html`<${Button} small variant="accent" onClick=${secondChance} title=${t('Relancer tous les dés qui ne sont pas des succès (1 point de Chance)')}>${t('Seconde chance')}</${Button}>`}
         </div>
         <div class="row">
-          <${Button} variant="ghost" onClick=${onClose}>Fermer</${Button}>
-          <${Button} variant="primary" disabled=${busy || total <= 0 || prev.impossible} onClick=${roll}>${result ? 'Relancer' : 'Lancer'} ${total} dé${total > 1 ? 's' : ''}</${Button}>
+          <${Button} variant="ghost" onClick=${onClose}>${t('Fermer')}</${Button}>
+          <${Button} variant="primary" disabled=${busy || total <= 0 || prev.impossible} onClick=${roll}>${result ? tn(total, 'Relancer {n} dé', 'Relancer {n} dés') : tn(total, 'Lancer {n} dé', 'Lancer {n} dés')}</${Button}>
         </div>
       </div>
     </div>

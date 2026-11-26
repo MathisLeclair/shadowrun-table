@@ -16,30 +16,35 @@ import AudioEngine from './audio/AudioEngine.js';
 import CampaignPage from './campaign/CampaignPage.js';
 import DossiersPage from './campaign/DossiersPage.js';
 import SettingsPage from './core/SettingsPage.js';
+import MatrixPage from './matrix/MatrixPage.js';
+import ChargenPage from './chargen/ChargenPage.js';
 import { unreadHandouts } from './campaign/common.js';
+import { tk } from '../lib/i18n.js';
 
 const pending = (list) => (list || []).filter((r) => r.status === 'pending').length || null;
 
-/** Main tabs (top bar). roles: who sees it. badge(game) -> number|null. */
+/** Main tabs (top bar). roles: who sees it. badge(game) -> number|null. label: French key marked with tk(), rendered with t(label). */
 export const mainTabs = [
-  { id: 'map', label: 'Carte', icon: '⌖', roles: ['gm', 'player'], component: MapView },
-  { id: 'sheet', label: 'Ma fiche', icon: '☰', roles: ['player'], component: MySheet },
-  { id: 'characters', label: 'Personnages', icon: '☰', roles: ['gm'], component: CharactersPage },
-  { id: 'bestiary', label: 'Bestiaire', icon: '☠', roles: ['gm'], component: BestiaryPage },
-  { id: 'maps', label: 'Cartes', icon: '▦', roles: ['gm'], component: MapsPage },
-  { id: 'shop', label: 'Boutique', icon: '¥', roles: ['gm', 'player'], component: ShopPage, badge: (g) => (g.me.role === 'gm' ? pending(g.shop?.orders) : null) },
-  { id: 'training', label: 'Progression', icon: '▲', roles: ['gm', 'player'], component: TrainingPage, badge: (g) => (g.me.role === 'gm' ? pending(g.training?.requests) : null) },
-  { id: 'audio', label: 'Ambiance', icon: '♫', roles: ['gm'], component: AudioPage },
-  { id: 'campaign', label: 'Campagne', icon: '✦', roles: ['gm'], component: CampaignPage },
-  { id: 'dossiers', label: 'Dossiers', icon: '✉', roles: ['player'], component: DossiersPage, badge: (g) => unreadHandouts(g) || null },
-  { id: 'settings', label: 'Réglages', icon: '⚙', roles: ['gm'], component: SettingsPage },
+  { id: 'map', label: tk('Carte'), icon: '⌖', roles: ['gm', 'player'], component: MapView },
+  { id: 'sheet', label: tk('Ma fiche'), icon: '☰', roles: ['player'], component: MySheet },
+  { id: 'characters', label: tk('Personnages'), icon: '☰', roles: ['gm'], component: CharactersPage },
+  { id: 'bestiary', label: tk('Bestiaire'), icon: '☠', roles: ['gm'], component: BestiaryPage },
+  { id: 'maps', label: tk('Cartes'), icon: '▦', roles: ['gm'], component: MapsPage },
+  { id: 'matrix', label: tk('Matrice'), icon: '⌬', roles: ['gm', 'player'], component: MatrixPage },
+  { id: 'chargen', label: tk('Création'), icon: '✚', roles: ['gm', 'player'], component: ChargenPage, badge: (g) => (g.me.role === 'gm' ? pending(g.chargen?.drafts) : null) },
+  { id: 'shop', label: tk('Boutique'), icon: '¥', roles: ['gm', 'player'], component: ShopPage, badge: (g) => (g.me.role === 'gm' ? pending(g.shop?.orders) : null) },
+  { id: 'training', label: tk('Progression'), icon: '▲', roles: ['gm', 'player'], component: TrainingPage, badge: (g) => (g.me.role === 'gm' ? pending(g.training?.requests) : null) },
+  { id: 'audio', label: tk('Ambiance'), icon: '♫', roles: ['gm'], component: AudioPage },
+  { id: 'campaign', label: tk('Campagne'), icon: '✦', roles: ['gm'], component: CampaignPage },
+  { id: 'dossiers', label: tk('Dossiers'), icon: '✉', roles: ['player'], component: DossiersPage, badge: (g) => unreadHandouts(g) || null },
+  { id: 'settings', label: tk('Réglages'), icon: '⚙', roles: ['gm'], component: SettingsPage },
 ];
 
 /** Right dock tabs. */
 export const dockTabs = [
-  { id: 'log', label: 'Journal & dés', roles: ['gm', 'player'], component: LogDock },
-  { id: 'combat', label: 'Initiative', roles: ['gm', 'player'], component: CombatDock, badge: (g) => (g.combat?.active ? '●' : null) },
-  { id: 'sounds', label: 'Sons', roles: ['gm'], component: SoundDock },
+  { id: 'log', label: tk('Journal & dés'), roles: ['gm', 'player'], component: LogDock },
+  { id: 'combat', label: tk('Initiative'), roles: ['gm', 'player'], component: CombatDock, badge: (g) => (g.combat?.active ? '●' : null) },
+  { id: 'sounds', label: tk('Sons'), roles: ['gm'], component: SoundDock },
 ];
 
 /** Full character sheet, rendered inside the global modal: <SheetView game actorId />. */

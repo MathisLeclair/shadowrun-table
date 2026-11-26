@@ -1,0 +1,4025 @@
+[
+  {
+    "type": "npc",
+    "metatype": "Ork",
+    "portrait": "",
+    "disposition": "hostile",
+    "augmented": {},
+    "initiative": {
+      "dice": 1,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "clubs",
+        "name": "Armes contondantes",
+        "attr": "AGI",
+        "rating": 4,
+        "group": "close_combat"
+      },
+      {
+        "id": "blades",
+        "name": "Armes tranchantes",
+        "attr": "AGI",
+        "rating": 4,
+        "group": "close_combat"
+      },
+      {
+        "id": "unarmed_combat",
+        "name": "Combat à mains nues",
+        "attr": "AGI",
+        "rating": 4,
+        "group": "close_combat"
+      },
+      {
+        "id": "pistols",
+        "name": "Pistolets",
+        "attr": "AGI",
+        "rating": 4,
+        "group": "firearms"
+      },
+      {
+        "id": "intimidation",
+        "name": "Intimidation",
+        "attr": "CHA",
+        "rating": 3
+      }
+    ],
+    "knowledge": [],
+    "qualities": [],
+    "powers": [],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "fvtt_cyPMQFpcvvdUweO5",
+        "name": "Colt America L36",
+        "category": "Pistolets légers",
+        "kind": "ranged",
+        "skill": "pistols",
+        "accuracy": 7,
+        "damage": "7P",
+        "ap": 0,
+        "mode": "SA",
+        "rc": 0,
+        "ammo": "11",
+        "reach": 0,
+        "catalogId": "676660a2-3320-4b4a-acaf-f645f2ba6cd7",
+        "notes": "Colt America L36 (SR5 425)"
+      },
+      {
+        "id": "fvtt_MQmKl5r9rL1zNgUB",
+        "name": "Massue",
+        "category": "Armes contondantes",
+        "kind": "melee",
+        "skill": "clubs",
+        "accuracy": 4,
+        "damage": "(STR+3)P",
+        "ap": 0,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 1,
+        "catalogId": "5af85697-7d67-4bf7-b539-dbd4e63a34d1",
+        "notes": "Club (SR5 422)"
+      },
+      {
+        "id": "fvtt_YzuWCfxVzlzSu3Ab",
+        "name": "Couteau",
+        "category": "Armes tranchantes",
+        "kind": "melee",
+        "skill": "blades",
+        "accuracy": 5,
+        "damage": "(STR+1)P",
+        "ap": 0,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "catalogId": "eb16de72-e646-4880-aa5b-21a5a0a2b342",
+        "notes": "Knife (SR5 422)"
+      },
+      {
+        "id": "fvtt_1jjY0I76ku2MQl4K",
+        "name": "Mains nues",
+        "category": "Mains nues",
+        "kind": "melee",
+        "skill": "unarmed_combat",
+        "accuracy": 5,
+        "damage": "(STR)S",
+        "ap": 0,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "notes": "Précision = limite physique"
+      }
+    ],
+    "armor": [
+      {
+        "id": "fvtt_9hPzEXLJ1fReBFmp",
+        "name": "Gilet pare-balles",
+        "rating": 9,
+        "equipped": true,
+        "stack": false,
+        "notes": "Armor Vest",
+        "catalogId": "4ad1eeab-daf3-4495-a73d-fbb0ce89be5b"
+      }
+    ],
+    "augmentations": [],
+    "gear": [
+      {
+        "id": "g13",
+        "name": "Commlink (indice 1)",
+        "category": "Équipement",
+        "qty": 1,
+        "rating": 1
+      },
+      {
+        "id": "g14",
+        "name": "Couleurs du gang (blouson rouge)",
+        "category": "Équipement",
+        "qty": 1
+      }
+    ],
+    "vehicles": [
+      {
+        "id": "v1",
+        "name": "Harley-Davidson Scorpion",
+        "handling": "4/3",
+        "speed": 4,
+        "accel": 2,
+        "body": 8,
+        "armor": 9,
+        "pilot": 1,
+        "sensor": 2,
+        "seats": 1
+      }
+    ],
+    "vision": {
+      "lowLight": true
+    },
+    "id": "tpl_crimson_ganger",
+    "name": "Ganger Crimson Crush",
+    "folder": "Gangs",
+    "color": "#c0392b",
+    "concept": "Motard du gang Crimson Crush",
+    "attributes": {
+      "BOD": 5,
+      "AGI": 4,
+      "REA": 4,
+      "STR": 5,
+      "WIL": 3,
+      "LOG": 2,
+      "INT": 3,
+      "CHA": 3,
+      "EDG": 1,
+      "ESS": 6
+    },
+    "description": "Gang de motards aperçu pendant le job Kidnapping. Muscle de base, en meute de 4-6 autour d’un **Sarge**.",
+    "npc": {
+      "professionalRating": 2,
+      "grunt": true,
+      "kind": "metahuman",
+      "tactics": "- Charge à moto, encercle, intimide avant de frapper.\n- Fuit si le Sarge tombe ou si la moitié de la meute est à terre."
+    },
+    "matrix": {
+      "device": "Meta Link (commlink)",
+      "rating": 1,
+      "attack": 0,
+      "sleaze": 0,
+      "dataProcessing": 1,
+      "firewall": 1,
+      "programs": []
+    },
+    "foundryWorld": "test-world",
+    "foundryImportedAt": 1795629244307,
+    "foundryHash": "2d7c46338c40"
+  },
+  {
+    "type": "npc",
+    "metatype": "Ork",
+    "disposition": "hostile",
+    "augmented": {},
+    "initiative": {
+      "dice": 1,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "clubs",
+        "name": "Armes contondantes",
+        "attr": "AGI",
+        "rating": 6,
+        "group": "close_combat"
+      },
+      {
+        "id": "blades",
+        "name": "Armes tranchantes",
+        "attr": "AGI",
+        "rating": 6,
+        "group": "close_combat"
+      },
+      {
+        "id": "unarmed_combat",
+        "name": "Combat à mains nues",
+        "attr": "AGI",
+        "rating": 6,
+        "group": "close_combat"
+      },
+      {
+        "id": "etiquette",
+        "name": "Étiquette",
+        "attr": "CHA",
+        "rating": 6,
+        "group": "influence"
+      },
+      {
+        "id": "intimidation",
+        "name": "Intimidation",
+        "attr": "CHA",
+        "rating": 6
+      },
+      {
+        "id": "pistols",
+        "name": "Pistolets",
+        "attr": "AGI",
+        "rating": 6,
+        "group": "firearms"
+      },
+      {
+        "id": "longarms",
+        "name": "Armes d’épaule",
+        "attr": "AGI",
+        "rating": 4,
+        "group": "firearms"
+      },
+      {
+        "id": "leadership",
+        "name": "Leadership",
+        "attr": "CHA",
+        "rating": 2,
+        "group": "influence"
+      }
+    ],
+    "knowledge": [],
+    "qualities": [
+      {
+        "id": "fvtt_lHSEpIEaswbaPKuB",
+        "name": "Dur à cuire",
+        "karma": 9,
+        "positive": true,
+        "notes": "Toughness · SR5 77",
+        "catalogId": "00cc6499-db13-447e-8116-278d317a9e31"
+      }
+    ],
+    "powers": [],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "fvtt_dghXd8EGBeoc7bQ8",
+        "name": "Couteau",
+        "category": "Armes tranchantes",
+        "kind": "melee",
+        "skill": "blades",
+        "accuracy": 5,
+        "damage": "(STR+1)P",
+        "ap": 0,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "catalogId": "eb16de72-e646-4880-aa5b-21a5a0a2b342",
+        "notes": "Knife (SR5 422)"
+      },
+      {
+        "id": "fvtt_qLJpkb89FjwVxc8a",
+        "name": "Colt America L36",
+        "category": "Pistolets légers",
+        "kind": "ranged",
+        "skill": "pistols",
+        "accuracy": 7,
+        "damage": "7P",
+        "ap": 0,
+        "mode": "SA",
+        "rc": 0,
+        "ammo": "11",
+        "reach": 0,
+        "catalogId": "676660a2-3320-4b4a-acaf-f645f2ba6cd7",
+        "notes": "Colt America L36 (SR5 425)"
+      },
+      {
+        "id": "fvtt_qW9pxydMn0CuEZGs",
+        "name": "Defiance T-250 (canon scié)",
+        "category": "Fusil à pompe",
+        "kind": "ranged",
+        "skill": "longarms",
+        "accuracy": 4,
+        "damage": "10P",
+        "ap": -1,
+        "mode": "CC/SA",
+        "rc": 0,
+        "ammo": "5",
+        "reach": 0,
+        "catalogId": "c2c0e756-a099-4f9d-b6bb-18f412d670a3",
+        "notes": "Portée de pistolet lourd"
+      }
+    ],
+    "armor": [
+      {
+        "id": "fvtt_eLp0t8e05DpwUOsb",
+        "name": "Veste pare-balles",
+        "rating": 12,
+        "equipped": true,
+        "stack": false,
+        "notes": "Armor Jacket",
+        "catalogId": "36a4cd30-c32c-44d0-847a-0c15fb51072a"
+      }
+    ],
+    "augmentations": [
+      {
+        "id": "fvtt_LTxxbWyTPWVHPIAf",
+        "name": "Éperons",
+        "kind": "cyberware",
+        "grade": "standard",
+        "rating": 1,
+        "essence": 0.3,
+        "notes": "Non installé (Foundry)",
+        "catalogId": "c9e4a11f-ef4f-4cb6-9392-ce7378456d82"
+      }
+    ],
+    "gear": [
+      {
+        "id": "g15",
+        "name": "Commlink (indice 2)",
+        "category": "Équipement",
+        "qty": 1,
+        "rating": 2
+      }
+    ],
+    "vehicles": [
+      {
+        "id": "v2",
+        "name": "Harley-Davidson Scorpion",
+        "handling": "4/3",
+        "speed": 4,
+        "accel": 2,
+        "body": 8,
+        "armor": 9,
+        "pilot": 1,
+        "sensor": 2,
+        "seats": 1
+      }
+    ],
+    "vision": {
+      "lowLight": true
+    },
+    "id": "tpl_crimson_sarge",
+    "name": "Sarge Crimson Crush",
+    "folder": "Gangs",
+    "color": "#ff4d4d",
+    "concept": "Lieutenant du gang Crimson Crush",
+    "attributes": {
+      "BOD": 8,
+      "AGI": 4,
+      "REA": 4,
+      "STR": 7,
+      "WIL": 4,
+      "LOG": 2,
+      "INT": 5,
+      "CHA": 4,
+      "EDG": 0,
+      "ESS": 6
+    },
+    "description": "Chef de meute ork, couturé de cicatrices. Tient ses gangers par la peur.",
+    "npc": {
+      "professionalRating": 3,
+      "grunt": false,
+      "kind": "metahuman",
+      "tactics": "- Reste en retrait, fusil à pompe à la main, et hurle des ordres.\n- Si on le met à terre, la meute se disperse.\n- Négociable si on lui offre du respect… et des nuyens."
+    },
+    "matrix": {
+      "device": "Meta Link (commlink)",
+      "rating": 1,
+      "attack": 0,
+      "sleaze": 0,
+      "dataProcessing": 1,
+      "firewall": 1,
+      "programs": []
+    },
+    "foundryWorld": "test-world",
+    "foundryImportedAt": 1795629244307,
+    "foundryHash": "33341446a521"
+  },
+  {
+    "type": "npc",
+    "metatype": "Humain",
+    "portrait": "",
+    "disposition": "hostile",
+    "augmented": {},
+    "initiative": {
+      "dice": 1,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "clubs",
+        "name": "Armes contondantes",
+        "attr": "AGI",
+        "rating": 2,
+        "group": "close_combat"
+      },
+      {
+        "id": "intimidation",
+        "name": "Intimidation",
+        "attr": "CHA",
+        "rating": 2
+      },
+      {
+        "id": "unarmed_combat",
+        "name": "Combat à mains nues",
+        "attr": "AGI",
+        "rating": 2,
+        "group": "close_combat"
+      },
+      {
+        "id": "pistols",
+        "name": "Pistolets",
+        "attr": "AGI",
+        "rating": 1,
+        "group": "firearms"
+      }
+    ],
+    "knowledge": [],
+    "qualities": [],
+    "powers": [],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "w16",
+        "kind": "melee",
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 1,
+        "ap": 0,
+        "name": "Batte / matraque",
+        "category": "Arme contondante",
+        "skill": "clubs",
+        "accuracy": 4,
+        "damage": "(STR+3)P"
+      },
+      {
+        "id": "w17",
+        "kind": "ranged",
+        "rc": 0,
+        "reach": 0,
+        "ap": 0,
+        "name": "Streetline Special",
+        "category": "Pistolet de poche",
+        "skill": "pistols",
+        "accuracy": 4,
+        "damage": "6P",
+        "mode": "SA",
+        "ammo": "6(c)"
+      },
+      {
+        "id": "w18",
+        "kind": "melee",
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "ap": 0,
+        "name": "Mains nues",
+        "category": "Mains nues",
+        "skill": "unarmed_combat",
+        "accuracy": null,
+        "damage": "(STR)S",
+        "notes": "Précision = limite physique"
+      }
+    ],
+    "armor": [
+      {
+        "id": "a9",
+        "name": "Vêtements pare-balles",
+        "rating": 6,
+        "equipped": true
+      }
+    ],
+    "augmentations": [],
+    "gear": [
+      {
+        "id": "g16",
+        "name": "Commlink (indice 1)",
+        "category": "Équipement",
+        "qty": 1,
+        "rating": 1
+      }
+    ],
+    "vehicles": [],
+    "vision": {},
+    "id": "tpl_street_thug",
+    "name": "Voyou de rue",
+    "folder": "Gangs",
+    "color": "#a0785a",
+    "concept": "Gros bras sans envergure (PR 1)",
+    "attributes": {
+      "BOD": 3,
+      "AGI": 3,
+      "REA": 3,
+      "STR": 3,
+      "WIL": 3,
+      "LOG": 2,
+      "INT": 3,
+      "CHA": 2,
+      "EDG": 1,
+      "ESS": 6
+    },
+    "description": "Petite frappe de coin de rue, racketteur ou homme de main bon marché.",
+    "npc": {
+      "professionalRating": 1,
+      "grunt": true,
+      "kind": "metahuman",
+      "tactics": "Courageux en groupe, lâche seul. Fuit au premier mort ou à la première blessure sérieuse."
+    }
+  },
+  {
+    "type": "npc",
+    "metatype": "Humain",
+    "portrait": "",
+    "disposition": "hostile",
+    "augmented": {},
+    "initiative": {
+      "dice": 1,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "blades",
+        "name": "Armes tranchantes",
+        "attr": "AGI",
+        "rating": 3,
+        "group": "close_combat"
+      },
+      {
+        "id": "clubs",
+        "name": "Armes contondantes",
+        "attr": "AGI",
+        "rating": 2,
+        "group": "close_combat"
+      },
+      {
+        "id": "pistols",
+        "name": "Pistolets",
+        "attr": "AGI",
+        "rating": 3,
+        "group": "firearms"
+      },
+      {
+        "id": "automatics",
+        "name": "Armes automatiques",
+        "attr": "AGI",
+        "rating": 2,
+        "group": "firearms"
+      },
+      {
+        "id": "intimidation",
+        "name": "Intimidation",
+        "attr": "CHA",
+        "rating": 2
+      },
+      {
+        "id": "running",
+        "name": "Course",
+        "attr": "STR",
+        "rating": 2,
+        "group": "athletics"
+      },
+      {
+        "id": "unarmed_combat",
+        "name": "Combat à mains nues",
+        "attr": "AGI",
+        "rating": 3,
+        "group": "close_combat"
+      }
+    ],
+    "knowledge": [],
+    "qualities": [],
+    "powers": [],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "w19",
+        "kind": "ranged",
+        "rc": 0,
+        "reach": 0,
+        "ap": 0,
+        "name": "Ceska Black Scorpion",
+        "category": "Pistolet mitrailleur",
+        "skill": "automatics",
+        "accuracy": 5,
+        "damage": "6P",
+        "mode": "SA/TR",
+        "ammo": "35(c)"
+      },
+      {
+        "id": "w20",
+        "kind": "melee",
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "ap": -1,
+        "name": "Couteau",
+        "category": "Lame",
+        "skill": "blades",
+        "accuracy": 5,
+        "damage": "(STR+1)P"
+      },
+      {
+        "id": "w21",
+        "kind": "melee",
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "ap": 0,
+        "name": "Mains nues",
+        "category": "Mains nues",
+        "skill": "unarmed_combat",
+        "accuracy": null,
+        "damage": "(STR)S",
+        "notes": "Précision = limite physique"
+      }
+    ],
+    "armor": [
+      {
+        "id": "a10",
+        "name": "Vêtements pare-balles",
+        "rating": 6,
+        "equipped": true
+      }
+    ],
+    "augmentations": [],
+    "gear": [
+      {
+        "id": "g17",
+        "name": "Commlink (indice 1)",
+        "category": "Équipement",
+        "qty": 1,
+        "rating": 1
+      }
+    ],
+    "vehicles": [],
+    "vision": {},
+    "id": "tpl_street_ganger",
+    "name": "Ganger de rue",
+    "folder": "Gangs",
+    "color": "#b5654a",
+    "concept": "Membre de gang armé (PR 2)",
+    "attributes": {
+      "BOD": 4,
+      "AGI": 4,
+      "REA": 3,
+      "STR": 3,
+      "WIL": 3,
+      "LOG": 2,
+      "INT": 3,
+      "CHA": 3,
+      "EDG": 1,
+      "ESS": 6
+    },
+    "description": "Ganger de quartier, défend son territoire et son business.",
+    "npc": {
+      "professionalRating": 2,
+      "grunt": true,
+      "kind": "metahuman",
+      "tactics": "Tirs de couverture désordonnés, cherche à flanquer. Décroche quand le chef tombe."
+    }
+  },
+  {
+    "type": "npc",
+    "metatype": "Humain",
+    "portrait": "",
+    "disposition": "hostile",
+    "augmented": {},
+    "initiative": {
+      "dice": 1,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "blades",
+        "name": "Armes tranchantes",
+        "attr": "AGI",
+        "rating": 3,
+        "group": "close_combat"
+      },
+      {
+        "id": "clubs",
+        "name": "Armes contondantes",
+        "attr": "AGI",
+        "rating": 3,
+        "group": "close_combat"
+      },
+      {
+        "id": "intimidation",
+        "name": "Intimidation",
+        "attr": "CHA",
+        "rating": 2
+      },
+      {
+        "id": "pistols",
+        "name": "Pistolets",
+        "attr": "AGI",
+        "rating": 2,
+        "group": "firearms"
+      },
+      {
+        "id": "running",
+        "name": "Course",
+        "attr": "STR",
+        "rating": 2,
+        "group": "athletics"
+      },
+      {
+        "id": "unarmed_combat",
+        "name": "Combat à mains nues",
+        "attr": "AGI",
+        "rating": 3,
+        "group": "close_combat"
+      }
+    ],
+    "knowledge": [],
+    "qualities": [],
+    "powers": [],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "w22",
+        "kind": "melee",
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "ap": -1,
+        "name": "Couteau",
+        "category": "Lame",
+        "skill": "blades",
+        "accuracy": 5,
+        "damage": "(STR+1)P"
+      },
+      {
+        "id": "w23",
+        "kind": "melee",
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 1,
+        "ap": 0,
+        "name": "Batte cloutée",
+        "category": "Arme contondante",
+        "skill": "clubs",
+        "accuracy": 4,
+        "damage": "(STR+3)P"
+      },
+      {
+        "id": "w24",
+        "kind": "ranged",
+        "rc": 0,
+        "reach": 0,
+        "ap": 0,
+        "name": "Colt America L36",
+        "category": "Pistolet léger",
+        "skill": "pistols",
+        "accuracy": 7,
+        "damage": "7P",
+        "mode": "SA",
+        "ammo": "11(c)"
+      },
+      {
+        "id": "w25",
+        "kind": "melee",
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "ap": 0,
+        "name": "Mains nues",
+        "category": "Mains nues",
+        "skill": "unarmed_combat",
+        "accuracy": null,
+        "damage": "(STR)S",
+        "notes": "Précision = limite physique"
+      }
+    ],
+    "armor": [
+      {
+        "id": "a11",
+        "name": "Vêtements pare-balles",
+        "rating": 6,
+        "equipped": true
+      }
+    ],
+    "augmentations": [],
+    "gear": [
+      {
+        "id": "g18",
+        "name": "Maquillage de citrouille / masque",
+        "category": "Équipement",
+        "qty": 1
+      },
+      {
+        "id": "g19",
+        "name": "Commlink (indice 1)",
+        "category": "Équipement",
+        "qty": 1,
+        "rating": 1
+      }
+    ],
+    "vehicles": [],
+    "vision": {},
+    "id": "tpl_halloweener",
+    "name": "Ganger Halloweener",
+    "folder": "Gangs",
+    "color": "#ff8c1a",
+    "concept": "Ganger maquillé façon Halloweeners (PR 1)",
+    "attributes": {
+      "BOD": 4,
+      "AGI": 3,
+      "REA": 4,
+      "STR": 3,
+      "WIL": 3,
+      "LOG": 2,
+      "INT": 3,
+      "CHA": 3,
+      "EDG": 1,
+      "ESS": 6
+    },
+    "description": "Visage peint en citrouille, couleurs orange et noir. Imprévisible, adore le feu et la mise en scène.",
+    "npc": {
+      "professionalRating": 1,
+      "grunt": true,
+      "kind": "metahuman",
+      "tactics": "Embuscades bruyantes, cocktails Molotov à l’occasion. Fuit si la cible résiste vraiment."
+    }
+  },
+  {
+    "type": "npc",
+    "metatype": "Humain",
+    "disposition": "hostile",
+    "augmented": {},
+    "initiative": {
+      "dice": 1,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "pistols",
+        "name": "Pistolets",
+        "attr": "AGI",
+        "rating": 5,
+        "group": "firearms"
+      },
+      {
+        "id": "automatics",
+        "name": "Armes automatiques",
+        "attr": "AGI",
+        "rating": 4,
+        "group": "firearms"
+      },
+      {
+        "id": "running",
+        "name": "Course",
+        "attr": "STR",
+        "rating": 4,
+        "group": "athletics"
+      },
+      {
+        "id": "perception",
+        "name": "Perception",
+        "attr": "INT",
+        "rating": 3
+      }
+    ],
+    "knowledge": [],
+    "qualities": [],
+    "powers": [],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "fvtt_5tJ3ExvNvDzp72Ar",
+        "name": "Colt Cobra TZ-120",
+        "category": "Mitraillettes",
+        "kind": "ranged",
+        "skill": "automatics",
+        "accuracy": 4,
+        "damage": "7P",
+        "ap": 0,
+        "mode": "SA/TR/TA",
+        "rc": 0,
+        "ammo": "32",
+        "reach": 0,
+        "equipped": true,
+        "catalogId": "b2eefb04-0e33-4faa-8e92-5c4bcbfc3f16",
+        "notes": "Colt Cobra TZ-120 (SR5 427)"
+      },
+      {
+        "id": "fvtt_q5MSMM1B99HAYlG1",
+        "name": "Fichetti Security 600",
+        "category": "Pistolet léger",
+        "kind": "ranged",
+        "skill": "pistols",
+        "accuracy": 6,
+        "damage": "7P",
+        "ap": 0,
+        "mode": "SA",
+        "rc": 0,
+        "ammo": "30",
+        "reach": 0,
+        "catalogId": "7dff8ab0-c659-4901-ac3b-cb8b4f3839bf",
+        "notes": "Fichetti Security 600 (SR5 426)"
+      }
+    ],
+    "armor": [
+      {
+        "id": "fvtt_XICh0otMxiWFDLoO",
+        "name": "Veste pare-balles",
+        "rating": 12,
+        "equipped": true,
+        "stack": false,
+        "notes": "Armor Jacket",
+        "catalogId": "36a4cd30-c32c-44d0-847a-0c15fb51072a"
+      },
+      {
+        "id": "fvtt_HCj4nUq0xRU9GP0J",
+        "name": "Gilet pare-balles",
+        "rating": 9,
+        "equipped": true,
+        "stack": false,
+        "notes": "Armor Vest",
+        "catalogId": "4ad1eeab-daf3-4495-a73d-fbb0ce89be5b"
+      }
+    ],
+    "augmentations": [],
+    "gear": [
+      {
+        "id": "g20",
+        "name": "Commlink (indice 3)",
+        "category": "Équipement",
+        "qty": 1,
+        "rating": 3
+      },
+      {
+        "id": "g21",
+        "name": "Menottes plastiques",
+        "category": "Équipement",
+        "qty": 2
+      },
+      {
+        "id": "g22",
+        "name": "Lampe torche",
+        "category": "Équipement",
+        "qty": 1
+      }
+    ],
+    "vehicles": [],
+    "vision": {},
+    "id": "tpl_corpsec_human_r3",
+    "name": "Sécurité corpo humaine R3",
+    "folder": "Sécurité corpo",
+    "color": "#5c9be0",
+    "concept": "Agent de sécurité corporatiste",
+    "attributes": {
+      "BOD": 5,
+      "AGI": 4,
+      "REA": 4,
+      "STR": 3,
+      "WIL": 3,
+      "LOG": 2,
+      "INT": 3,
+      "CHA": 4,
+      "EDG": 0,
+      "ESS": 6
+    },
+    "description": "Sécurité d’hôpital, de bureau ou garde du corps bas de gamme.\n\nUn agent sur trois porte un **Colt Cobra TZ-120** (7P, SA/TR/TA, RC 2) à la place du pistolet.",
+    "npc": {
+      "professionalRating": 3,
+      "grunt": true,
+      "kind": "metahuman",
+      "tactics": "- Donne l’alerte d’abord, tire ensuite.\n- Se met à couvert et attend les renforts (5 à 10 min).\n- Ne meurt pas pour son salaire : se rend face à une force clairement supérieure."
+    },
+    "matrix": {
+      "device": "Renraku Sensei (commlink)",
+      "rating": 3,
+      "attack": 0,
+      "sleaze": 0,
+      "dataProcessing": 3,
+      "firewall": 3,
+      "programs": []
+    },
+    "foundryWorld": "test-world",
+    "foundryImportedAt": 1795629244307,
+    "foundryHash": "523db6d0c587"
+  },
+  {
+    "type": "npc",
+    "metatype": "Troll",
+    "disposition": "hostile",
+    "augmented": {},
+    "initiative": {
+      "dice": 1,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "pistols",
+        "name": "Pistolets",
+        "attr": "AGI",
+        "rating": 5,
+        "group": "firearms"
+      },
+      {
+        "id": "automatics",
+        "name": "Armes automatiques",
+        "attr": "AGI",
+        "rating": 4,
+        "group": "firearms"
+      },
+      {
+        "id": "clubs",
+        "name": "Armes contondantes",
+        "attr": "AGI",
+        "rating": 4,
+        "group": "close_combat"
+      },
+      {
+        "id": "unarmed_combat",
+        "name": "Combat à mains nues",
+        "attr": "AGI",
+        "rating": 4,
+        "group": "close_combat"
+      },
+      {
+        "id": "perception",
+        "name": "Perception",
+        "attr": "INT",
+        "rating": 3
+      }
+    ],
+    "knowledge": [],
+    "qualities": [],
+    "powers": [],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "fvtt_bbTT0fHDck0TSY2v",
+        "name": "Colt Cobra TZ-120",
+        "category": "Mitraillettes",
+        "kind": "ranged",
+        "skill": "automatics",
+        "accuracy": 4,
+        "damage": "7P",
+        "ap": 0,
+        "mode": "SA/TR/TA",
+        "rc": 0,
+        "ammo": "32",
+        "reach": 0,
+        "equipped": true,
+        "catalogId": "b2eefb04-0e33-4faa-8e92-5c4bcbfc3f16",
+        "notes": "Colt Cobra TZ-120 (SR5 427)"
+      },
+      {
+        "id": "fvtt_EzbxorVIeSPlwJX8",
+        "name": "Fichetti Security 600",
+        "category": "Pistolets légers",
+        "kind": "ranged",
+        "skill": "pistols",
+        "accuracy": 6,
+        "damage": "7P",
+        "ap": 0,
+        "mode": "SA",
+        "rc": 0,
+        "ammo": "30",
+        "reach": 0,
+        "catalogId": "7dff8ab0-c659-4901-ac3b-cb8b4f3839bf",
+        "notes": "Fichetti Security 600 (SR5 426)"
+      }
+    ],
+    "armor": [
+      {
+        "id": "fvtt_z7CRWcdlATG7joee",
+        "name": "Armure corporelle intégrale",
+        "rating": 15,
+        "equipped": true,
+        "stack": false,
+        "notes": "Full Body Armor",
+        "catalogId": "9ee80c97-9197-4dd5-baed-f77cfd2cee17"
+      }
+    ],
+    "augmentations": [],
+    "gear": [
+      {
+        "id": "g23",
+        "name": "Commlink (indice 3)",
+        "category": "Équipement",
+        "qty": 1,
+        "rating": 3
+      }
+    ],
+    "vehicles": [],
+    "vision": {
+      "thermo": true
+    },
+    "id": "tpl_corpsec_troll_r3",
+    "name": "Sécurité corpo troll R3",
+    "folder": "Sécurité corpo",
+    "color": "#3b73b8",
+    "concept": "Gros bras de sécurité corporatiste",
+    "attributes": {
+      "BOD": 5,
+      "AGI": 4,
+      "REA": 4,
+      "STR": 3,
+      "WIL": 3,
+      "LOG": 1,
+      "INT": 3,
+      "CHA": 4,
+      "EDG": 0,
+      "ESS": 6
+    },
+    "description": "Un mur de muscles en uniforme. Sert surtout à impressionner… et à encaisser.",
+    "npc": {
+      "professionalRating": 3,
+      "grunt": true,
+      "kind": "metahuman",
+      "tactics": "Avance au contact pour bloquer un couloir ou une porte, protège ses collègues humains."
+    },
+    "matrix": {
+      "device": "Renraku Sensei (commlink)",
+      "rating": 3,
+      "attack": 0,
+      "sleaze": 0,
+      "dataProcessing": 3,
+      "firewall": 3,
+      "programs": []
+    },
+    "foundryWorld": "test-world",
+    "foundryImportedAt": 1795629244307,
+    "foundryHash": "ef0a96ec3441"
+  },
+  {
+    "type": "npc",
+    "metatype": "Humain",
+    "disposition": "hostile",
+    "augmented": {},
+    "initiative": {
+      "dice": 1,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "automatics",
+        "name": "Armes automatiques",
+        "attr": "AGI",
+        "rating": 6,
+        "group": "firearms"
+      },
+      {
+        "id": "pistols",
+        "name": "Pistolets",
+        "attr": "AGI",
+        "rating": 6,
+        "group": "firearms"
+      },
+      {
+        "id": "clubs",
+        "name": "Armes contondantes",
+        "attr": "AGI",
+        "rating": 5,
+        "group": "close_combat"
+      },
+      {
+        "id": "running",
+        "name": "Course",
+        "attr": "STR",
+        "rating": 5,
+        "group": "athletics"
+      },
+      {
+        "id": "perception",
+        "name": "Perception",
+        "attr": "INT",
+        "rating": 4
+      }
+    ],
+    "knowledge": [],
+    "qualities": [],
+    "powers": [],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "fvtt_kl7iTUQgd1i7e5vj",
+        "name": "Colt Cobra TZ-120",
+        "category": "Mitraillette",
+        "kind": "ranged",
+        "skill": "automatics",
+        "accuracy": 4,
+        "damage": "7P",
+        "ap": 0,
+        "mode": "SA/TR/TA",
+        "rc": 0,
+        "ammo": "32",
+        "reach": 0,
+        "equipped": true,
+        "catalogId": "b2eefb04-0e33-4faa-8e92-5c4bcbfc3f16",
+        "notes": "Colt Cobra TZ-120 (SR5 427)"
+      },
+      {
+        "id": "fvtt_GIqk1FsNgfE89FVG",
+        "name": "Fichetti Security 600",
+        "category": "Pistolets légers",
+        "kind": "ranged",
+        "skill": "pistols",
+        "accuracy": 6,
+        "damage": "7P",
+        "ap": 0,
+        "mode": "SA",
+        "rc": 0,
+        "ammo": "30",
+        "reach": 0,
+        "catalogId": "7dff8ab0-c659-4901-ac3b-cb8b4f3839bf",
+        "notes": "Fichetti Security 600 (SR5 426)"
+      }
+    ],
+    "armor": [
+      {
+        "id": "fvtt_QriiZlwdCyljMx3q",
+        "name": "Veste pare-balles",
+        "rating": 12,
+        "equipped": true,
+        "stack": false,
+        "notes": "Armor Jacket",
+        "catalogId": "36a4cd30-c32c-44d0-847a-0c15fb51072a"
+      }
+    ],
+    "augmentations": [
+      {
+        "id": "x5",
+        "name": "Datajack",
+        "kind": "cyberware",
+        "grade": "standard",
+        "essence": 0.1
+      },
+      {
+        "id": "x6",
+        "name": "Cyberyeux 1 (vision nocturne, compensation antiflash)",
+        "kind": "cyberware",
+        "grade": "standard",
+        "essence": 0.1,
+        "rating": 1
+      }
+    ],
+    "gear": [
+      {
+        "id": "g24",
+        "name": "Commlink (indice 4)",
+        "category": "Équipement",
+        "qty": 1,
+        "rating": 4
+      },
+      {
+        "id": "g25",
+        "name": "Menottes plastiques",
+        "category": "Équipement",
+        "qty": 2
+      }
+    ],
+    "vehicles": [],
+    "vision": {
+      "lowLight": true
+    },
+    "id": "tpl_corpsec_r4",
+    "name": "Sécurité corporatiste R4",
+    "folder": "Sécurité corpo",
+    "color": "#2f7fd6",
+    "concept": "Équipe d’intervention corporatiste",
+    "attributes": {
+      "BOD": 5,
+      "AGI": 5,
+      "REA": 4,
+      "STR": 3,
+      "WIL": 4,
+      "LOG": 2,
+      "INT": 3,
+      "CHA": 4,
+      "EDG": 0,
+      "ESS": 6
+    },
+    "description": "Équipe de réaction rapide d’une corpo de rang A. Bien équipée, coordonnée par commlink.",
+    "npc": {
+      "professionalRating": 4,
+      "grunt": true,
+      "kind": "metahuman",
+      "tactics": "- Progresse par binômes, tir de suppression puis flash-bang.\n- Se replie sur un point fortifié si elle perd la moitié de l’équipe."
+    },
+    "matrix": {
+      "device": "Renraku Sensei (commlink)",
+      "rating": 3,
+      "attack": 0,
+      "sleaze": 0,
+      "dataProcessing": 3,
+      "firewall": 3,
+      "programs": []
+    },
+    "foundryWorld": "test-world",
+    "foundryImportedAt": 1795629244307,
+    "foundryHash": "91f2d7762306"
+  },
+  {
+    "type": "npc",
+    "metatype": "Troll",
+    "portrait": "",
+    "disposition": "hostile",
+    "augmented": {},
+    "initiative": {
+      "dice": 1,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "automatics",
+        "name": "Armes automatiques",
+        "attr": "AGI",
+        "rating": 6,
+        "group": "firearms"
+      },
+      {
+        "id": "unarmed_combat",
+        "name": "Combat à mains nues",
+        "attr": "AGI",
+        "rating": 5,
+        "group": "close_combat"
+      },
+      {
+        "id": "perception",
+        "name": "Perception",
+        "attr": "INT",
+        "rating": 5
+      },
+      {
+        "id": "pistols",
+        "name": "Pistolets",
+        "attr": "AGI",
+        "rating": 5,
+        "group": "firearms"
+      },
+      {
+        "id": "running",
+        "name": "Course",
+        "attr": "STR",
+        "rating": 4,
+        "group": "athletics"
+      }
+    ],
+    "knowledge": [],
+    "qualities": [],
+    "powers": [],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "fvtt_KyCv2fNVvgM46hrx",
+        "name": "Mains nues",
+        "category": "Corps à corps",
+        "kind": "melee",
+        "skill": "unarmed_combat",
+        "accuracy": 5,
+        "damage": "(STR)S",
+        "ap": 0,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "notes": "Unarmed Attack (SR5 132)"
+      },
+      {
+        "id": "fvtt_FI9sUqxzQ7ZpR6Qs",
+        "name": "Ares Alpha",
+        "category": "Fusils d'assaut",
+        "kind": "ranged",
+        "skill": "automatics",
+        "accuracy": 5,
+        "damage": "11P",
+        "ap": -6,
+        "mode": "SA/TR/TA",
+        "rc": 5,
+        "ammo": "42",
+        "reach": 0,
+        "catalogId": "3a7a90ce-fbb5-4599-a857-b9849eb9769c",
+        "notes": "Ares Alpha (SR5 428)"
+      }
+    ],
+    "armor": [
+      {
+        "id": "fvtt_3PMjyyS98rwReeb4",
+        "name": "Veste pare-balles",
+        "rating": 12,
+        "equipped": true,
+        "stack": false,
+        "notes": "Armor Jacket",
+        "catalogId": "36a4cd30-c32c-44d0-847a-0c15fb51072a"
+      }
+    ],
+    "augmentations": [
+      {
+        "id": "x7",
+        "name": "Réflexes câblés 2",
+        "kind": "cyberware",
+        "grade": "standard",
+        "essence": 3,
+        "rating": 2,
+        "notes": "+2 RÉA, +2D6 initiative"
+      },
+      {
+        "id": "x8",
+        "name": "Cyberyeux 2 (smartlink, vision nocturne, antiflash)",
+        "kind": "cyberware",
+        "grade": "standard",
+        "essence": 0.3,
+        "rating": 2
+      }
+    ],
+    "gear": [
+      {
+        "id": "g26",
+        "name": "Commlink (indice 5)",
+        "category": "Équipement",
+        "qty": 1,
+        "rating": 5
+      },
+      {
+        "id": "g27",
+        "name": "Médikit (indice 3)",
+        "category": "Équipement",
+        "qty": 1,
+        "rating": 3
+      }
+    ],
+    "vehicles": [],
+    "vision": {
+      "lowLight": true,
+      "thermo": true
+    },
+    "id": "tpl_elite_bodyguard_r5",
+    "name": "Garde du corps d’élite R5",
+    "folder": "Sécurité corpo",
+    "color": "#1fb5c7",
+    "concept": "Protection rapprochée de cadre (niveau boss)",
+    "attributes": {
+      "BOD": 7,
+      "AGI": 5,
+      "REA": 5,
+      "STR": 6,
+      "WIL": 5,
+      "LOG": 3,
+      "INT": 4,
+      "CHA": 3,
+      "EDG": 3,
+      "ESS": 5.5
+    },
+    "description": "Professionnel froid et rapide. Sa priorité absolue : sortir le VIP vivant, pas tuer les runners.",
+    "npc": {
+      "professionalRating": 5,
+      "grunt": false,
+      "kind": "metahuman",
+      "tactics": "- Se place entre le VIP et la menace, riposte au pistolet avec précision chirurgicale.\n- Interrompt (Intercepter, Parer) dès qu’on approche du VIP.\n- Évacue le VIP par le chemin le plus sûr au lieu de tenir la position."
+    },
+    "matrix": {
+      "device": "Meta Link (commlink)",
+      "rating": 1,
+      "attack": 0,
+      "sleaze": 0,
+      "dataProcessing": 1,
+      "firewall": 1,
+      "programs": []
+    },
+    "foundryWorld": "test-world",
+    "foundryImportedAt": 1795629244307,
+    "foundryHash": "b4d4a23a00e9"
+  },
+  {
+    "type": "npc",
+    "metatype": "Humain",
+    "portrait": "",
+    "disposition": "neutral",
+    "augmented": {},
+    "initiative": {
+      "dice": 1,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "automatics",
+        "name": "Armes automatiques",
+        "attr": "AGI",
+        "rating": 3,
+        "group": "firearms"
+      },
+      {
+        "id": "clubs",
+        "name": "Armes contondantes",
+        "attr": "AGI",
+        "rating": 4,
+        "group": "close_combat"
+      },
+      {
+        "id": "intimidation",
+        "name": "Intimidation",
+        "attr": "CHA",
+        "rating": 3
+      },
+      {
+        "id": "perception",
+        "name": "Perception",
+        "attr": "INT",
+        "rating": 4
+      },
+      {
+        "id": "pistols",
+        "name": "Pistolets",
+        "attr": "AGI",
+        "rating": 4,
+        "group": "firearms"
+      },
+      {
+        "id": "unarmed_combat",
+        "name": "Combat à mains nues",
+        "attr": "AGI",
+        "rating": 4,
+        "group": "close_combat"
+      },
+      {
+        "id": "pilot_ground_craft",
+        "name": "Pilotage (véhicules terrestres)",
+        "attr": "REA",
+        "rating": 3
+      },
+      {
+        "id": "first_aid",
+        "name": "Premiers soins",
+        "attr": "LOG",
+        "rating": 2,
+        "group": "biotech"
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "k1",
+        "name": "Procédures policières",
+        "rating": 4,
+        "type": "professional"
+      },
+      {
+        "id": "k2",
+        "name": "Gangs de Seattle",
+        "rating": 3,
+        "type": "street"
+      }
+    ],
+    "qualities": [],
+    "powers": [],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "w39",
+        "kind": "ranged",
+        "rc": 0,
+        "reach": 0,
+        "ap": -1,
+        "name": "Ares Predator V",
+        "category": "Pistolet lourd",
+        "skill": "pistols",
+        "accuracy": 5,
+        "damage": "8P",
+        "mode": "SA",
+        "ammo": "15(c)"
+      },
+      {
+        "id": "w40",
+        "kind": "ranged",
+        "rc": 0,
+        "reach": 0,
+        "ap": -5,
+        "name": "Defiance EX Shocker",
+        "category": "Taser",
+        "skill": "pistols",
+        "accuracy": 4,
+        "damage": "9S(e)",
+        "mode": "CC",
+        "ammo": "4(m)"
+      },
+      {
+        "id": "w41",
+        "kind": "melee",
+        "mode": "",
+        "rc": 0,
+        "ammo": "10 charges",
+        "reach": 1,
+        "ap": -5,
+        "name": "Matraque électrique",
+        "category": "Arme contondante",
+        "skill": "clubs",
+        "accuracy": 4,
+        "damage": "9S(e)"
+      }
+    ],
+    "armor": [
+      {
+        "id": "a19",
+        "name": "Veste pare-balles",
+        "rating": 12,
+        "equipped": true
+      },
+      {
+        "id": "a20",
+        "name": "Casque",
+        "rating": 2,
+        "equipped": true,
+        "stack": true
+      }
+    ],
+    "augmentations": [
+      {
+        "id": "x9",
+        "name": "Datajack",
+        "kind": "cyberware",
+        "grade": "standard",
+        "essence": 0.1
+      }
+    ],
+    "gear": [
+      {
+        "id": "g28",
+        "name": "Commlink (indice 4)",
+        "category": "Équipement",
+        "qty": 1,
+        "rating": 4
+      },
+      {
+        "id": "g29",
+        "name": "Menottes plastiques",
+        "category": "Équipement",
+        "qty": 4
+      },
+      {
+        "id": "g30",
+        "name": "Caméra corporelle",
+        "category": "Équipement",
+        "qty": 1
+      },
+      {
+        "id": "g31",
+        "name": "Lunettes connectées (vision nocturne)",
+        "category": "Équipement",
+        "qty": 1
+      }
+    ],
+    "vehicles": [],
+    "vision": {
+      "lowLight": true
+    },
+    "id": "tpl_ke_patrol",
+    "name": "Patrouilleur Knight Errant",
+    "folder": "Sécurité corpo",
+    "color": "#4a8fe0",
+    "concept": "Officier de patrouille (PR 4)",
+    "attributes": {
+      "BOD": 4,
+      "AGI": 4,
+      "REA": 4,
+      "STR": 4,
+      "WIL": 4,
+      "LOG": 3,
+      "INT": 4,
+      "CHA": 3,
+      "EDG": 2,
+      "ESS": 5.9
+    },
+    "description": "Flic sous contrat de Knight Errant. Travaille en binôme avec voiture de patrouille ; tout est enregistré et remonté au QG. (Bricks connaît très bien leurs procédures…)",
+    "npc": {
+      "professionalRating": 4,
+      "grunt": true,
+      "kind": "metahuman",
+      "tactics": "- Sommations, taser d’abord, arme létale ensuite.\n- Appelle des renforts dès le premier coup de feu (SWAT en 10-15 min).\n- Ne poursuit pas seul dans un lieu inconnu."
+    }
+  },
+  {
+    "type": "npc",
+    "metatype": "Humain",
+    "portrait": "",
+    "disposition": "hostile",
+    "augmented": {
+      "REA": 1
+    },
+    "initiative": {
+      "dice": 2,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "automatics",
+        "name": "Armes automatiques",
+        "attr": "AGI",
+        "rating": 6,
+        "group": "firearms"
+      },
+      {
+        "id": "longarms",
+        "name": "Armes d’épaule",
+        "attr": "AGI",
+        "rating": 4,
+        "group": "firearms"
+      },
+      {
+        "id": "pistols",
+        "name": "Pistolets",
+        "attr": "AGI",
+        "rating": 5,
+        "group": "firearms"
+      },
+      {
+        "id": "perception",
+        "name": "Perception",
+        "attr": "INT",
+        "rating": 4
+      },
+      {
+        "id": "unarmed_combat",
+        "name": "Combat à mains nues",
+        "attr": "AGI",
+        "rating": 4,
+        "group": "close_combat"
+      },
+      {
+        "id": "throwing_weapons",
+        "name": "Armes de jet",
+        "attr": "AGI",
+        "rating": 4
+      },
+      {
+        "id": "sneaking",
+        "name": "Furtivité",
+        "attr": "AGI",
+        "rating": 3,
+        "group": "stealth"
+      },
+      {
+        "id": "first_aid",
+        "name": "Premiers soins",
+        "attr": "LOG",
+        "rating": 2,
+        "group": "biotech"
+      }
+    ],
+    "knowledge": [],
+    "qualities": [],
+    "powers": [],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "w42",
+        "kind": "ranged",
+        "rc": 2,
+        "reach": 0,
+        "ap": -2,
+        "name": "Ares Alpha",
+        "category": "Fusil d’assaut",
+        "skill": "automatics",
+        "accuracy": 7,
+        "damage": "11P",
+        "mode": "SA/TR/TA",
+        "ammo": "42(c)",
+        "notes": "Lance-grenades sous le canon (Préc. 6, 6(c))"
+      },
+      {
+        "id": "w43",
+        "kind": "ranged",
+        "rc": 0,
+        "reach": 0,
+        "ap": -1,
+        "name": "Ares Predator V (smartlink)",
+        "category": "Pistolet lourd",
+        "skill": "pistols",
+        "accuracy": 7,
+        "damage": "8P",
+        "mode": "SA",
+        "ammo": "15(c)"
+      },
+      {
+        "id": "w44",
+        "kind": "ranged",
+        "rc": 0,
+        "reach": 0,
+        "ap": -4,
+        "name": "Grenade flash-bang (×2)",
+        "category": "Grenade",
+        "skill": "throwing_weapons",
+        "accuracy": null,
+        "damage": "10S",
+        "mode": "",
+        "ammo": "",
+        "notes": "Rayon 10 m, Précision = limite physique"
+      },
+      {
+        "id": "w45",
+        "kind": "ranged",
+        "rc": 0,
+        "reach": 0,
+        "ap": 0,
+        "name": "Grenade lacrymogène (×1)",
+        "category": "Grenade",
+        "skill": "throwing_weapons",
+        "accuracy": null,
+        "damage": "Chimique",
+        "mode": "",
+        "ammo": "",
+        "notes": "Rayon 10 m, CS/lacrymogène"
+      },
+      {
+        "id": "w46",
+        "kind": "melee",
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "ap": -3,
+        "name": "Couteau de combat",
+        "category": "Lame",
+        "skill": "blades",
+        "accuracy": 6,
+        "damage": "(STR+2)P"
+      }
+    ],
+    "armor": [
+      {
+        "id": "a21",
+        "name": "Armure corporelle intégrale",
+        "rating": 15,
+        "equipped": true,
+        "notes": "Isolation chimique"
+      },
+      {
+        "id": "a22",
+        "name": "Casque d’armure intégrale",
+        "rating": 3,
+        "equipped": true,
+        "stack": true
+      }
+    ],
+    "augmentations": [
+      {
+        "id": "x10",
+        "name": "Réflexes câblés 1",
+        "kind": "cyberware",
+        "grade": "alpha",
+        "essence": 1.5,
+        "rating": 1
+      },
+      {
+        "id": "x11",
+        "name": "Smartlink (cyberyeux)",
+        "kind": "cyberware",
+        "grade": "standard",
+        "essence": 0.2
+      }
+    ],
+    "gear": [
+      {
+        "id": "g32",
+        "name": "Commlink (indice 5)",
+        "category": "Équipement",
+        "qty": 1,
+        "rating": 5
+      },
+      {
+        "id": "g33",
+        "name": "Respirateur intégré",
+        "category": "Équipement",
+        "qty": 1
+      },
+      {
+        "id": "g34",
+        "name": "Médikit (indice 4)",
+        "category": "Équipement",
+        "qty": 1,
+        "rating": 4
+      },
+      {
+        "id": "g35",
+        "name": "Bélier / charge de brèche",
+        "category": "Équipement",
+        "qty": 1
+      }
+    ],
+    "vehicles": [],
+    "vision": {
+      "lowLight": true,
+      "thermo": true
+    },
+    "id": "tpl_ke_swat",
+    "name": "Tactique Knight Errant (SWAT)",
+    "folder": "Sécurité corpo",
+    "color": "#2563c9",
+    "concept": "Équipe d’intervention lourde (PR 5)",
+    "attributes": {
+      "BOD": 5,
+      "AGI": 5,
+      "REA": 5,
+      "STR": 4,
+      "WIL": 4,
+      "LOG": 3,
+      "INT": 4,
+      "CHA": 3,
+      "EDG": 2,
+      "ESS": 4.3
+    },
+    "description": "Unité tactique : arrive en fourgon blindé par équipe de 4-6, avec soutien drone et mage de combat si l’alerte le justifie.",
+    "npc": {
+      "professionalRating": 5,
+      "grunt": true,
+      "kind": "metahuman",
+      "tactics": "- Brèche + flash-bang + entrée simultanée par deux accès.\n- Tir de suppression (TA) pour clouer, flanquement en binômes.\n- Somme de se rendre une fois la zone sécurisée — ils veulent des arrestations, pas des cadavres."
+    }
+  },
+  {
+    "type": "npc",
+    "metatype": "Elfe",
+    "portrait": "",
+    "disposition": "hostile",
+    "augmented": {},
+    "initiative": {
+      "dice": 1,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "longarms",
+        "name": "Armes d’épaule",
+        "attr": "AGI",
+        "rating": 6,
+        "group": "firearms"
+      },
+      {
+        "id": "perception",
+        "name": "Perception",
+        "attr": "INT",
+        "rating": 5
+      },
+      {
+        "id": "sneaking",
+        "name": "Furtivité",
+        "attr": "AGI",
+        "rating": 4,
+        "group": "stealth"
+      }
+    ],
+    "knowledge": [],
+    "qualities": [],
+    "powers": [],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "fvtt_VuT3VGb0qIVTnGqG",
+        "name": "Mains nues",
+        "category": "Corps à corps",
+        "kind": "melee",
+        "skill": "unarmed_combat",
+        "accuracy": 5,
+        "damage": "(STR)S",
+        "ap": 0,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "notes": "Unarmed Attack (SR5 132)"
+      },
+      {
+        "id": "fvtt_su9Xhoj95pe363hN",
+        "name": "Enfield AS-7",
+        "category": "Fusils à pompe",
+        "kind": "ranged",
+        "skill": "longarms",
+        "accuracy": 4,
+        "damage": "11S",
+        "ap": -5,
+        "mode": "SA/TR",
+        "rc": 2,
+        "ammo": "10(c)",
+        "reach": 0,
+        "catalogId": "622bd915-0e0c-431b-9da5-e0c0c31e2122",
+        "notes": "Enfield AS-7 (SR5 429)"
+      }
+    ],
+    "armor": [
+      {
+        "id": "fvtt_2ONNjsAQrSEYdaUS",
+        "name": "Gilet pare-balles",
+        "rating": 9,
+        "equipped": true,
+        "stack": false,
+        "notes": "Armor Vest",
+        "catalogId": "4ad1eeab-daf3-4495-a73d-fbb0ce89be5b"
+      }
+    ],
+    "augmentations": [
+      {
+        "id": "x12",
+        "name": "Cyberyeux 3 (smartlink, grossissement, thermo, vision nocturne)",
+        "kind": "cyberware",
+        "grade": "standard",
+        "essence": 0.4,
+        "rating": 3
+      },
+      {
+        "id": "x13",
+        "name": "Amplificateurs d’audition",
+        "kind": "cyberware",
+        "grade": "standard",
+        "essence": 0.4
+      }
+    ],
+    "gear": [
+      {
+        "id": "g36",
+        "name": "Commlink (indice 4)",
+        "category": "Équipement",
+        "qty": 1,
+        "rating": 4
+      },
+      {
+        "id": "g37",
+        "name": "Bipied",
+        "category": "Équipement",
+        "qty": 1
+      },
+      {
+        "id": "g38",
+        "name": "Tapis de camouflage IR",
+        "category": "Équipement",
+        "qty": 1
+      }
+    ],
+    "vehicles": [],
+    "vision": {
+      "lowLight": true,
+      "thermo": true
+    },
+    "id": "tpl_corp_sniper",
+    "name": "Tireur d’élite corpo",
+    "folder": "Spécialistes",
+    "color": "#d4a017",
+    "concept": "Sniper de sécurité ou de contre-run",
+    "attributes": {
+      "BOD": 3,
+      "AGI": 6,
+      "REA": 4,
+      "STR": 3,
+      "WIL": 3,
+      "LOG": 4,
+      "INT": 5,
+      "CHA": 2,
+      "EDG": 2,
+      "ESS": 6
+    },
+    "description": "Posté en hauteur à 200-500 m. On ne le voit pas, on l’entend une fois.",
+    "npc": {
+      "professionalRating": 4,
+      "grunt": false,
+      "kind": "metahuman",
+      "tactics": "- Vise d’abord la menace magique ou le leader.\n- Action : Viser (+1 dé/action, max ½ limite) avant le premier tir.\n- Change de position après 2 tirs ; décroche si contre-sniper ou drone."
+    },
+    "matrix": {
+      "device": "Meta Link (commlink)",
+      "rating": 1,
+      "attack": 0,
+      "sleaze": 0,
+      "dataProcessing": 1,
+      "firewall": 1,
+      "programs": []
+    },
+    "foundryWorld": "test-world",
+    "foundryImportedAt": 1795629244307,
+    "foundryHash": "f2c416a99c55"
+  },
+  {
+    "type": "npc",
+    "metatype": "Humain",
+    "portrait": "",
+    "disposition": "hostile",
+    "augmented": {},
+    "initiative": {
+      "dice": 1,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "gunnery",
+        "name": "Artillerie",
+        "attr": "AGI",
+        "rating": 5
+      },
+      {
+        "id": "electronic_warfare",
+        "name": "Guerre électronique",
+        "attr": "LOG",
+        "rating": 4,
+        "group": "cracking"
+      },
+      {
+        "id": "perception",
+        "name": "Perception",
+        "attr": "INT",
+        "rating": 3
+      },
+      {
+        "id": "pistols",
+        "name": "Pistolets",
+        "attr": "AGI",
+        "rating": 2,
+        "group": "firearms"
+      }
+    ],
+    "knowledge": [],
+    "qualities": [],
+    "powers": [],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "fvtt_pLevqBAtmlkiXhkX",
+        "name": "Mains nues",
+        "category": "Corps à corps",
+        "kind": "melee",
+        "skill": "unarmed_combat",
+        "accuracy": 5,
+        "damage": "(STR)S",
+        "ap": 0,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "notes": "Unarmed Attack (SR5 132)"
+      },
+      {
+        "id": "fvtt_yUmmrglzu5pkyWM9",
+        "name": "Colt Cobra TZ-120",
+        "category": "Mitraillettes",
+        "kind": "ranged",
+        "skill": "automatics",
+        "accuracy": 4,
+        "damage": "7P",
+        "ap": 0,
+        "mode": "SA/TR/TA",
+        "rc": 0,
+        "ammo": "32",
+        "reach": 0,
+        "equipped": true,
+        "catalogId": "b2eefb04-0e33-4faa-8e92-5c4bcbfc3f16",
+        "notes": "Colt Cobra TZ-120 (SR5 427)"
+      }
+    ],
+    "armor": [
+      {
+        "id": "a24",
+        "name": "Veste pare-balles",
+        "rating": 12,
+        "equipped": true
+      }
+    ],
+    "augmentations": [
+      {
+        "id": "x14",
+        "name": "Interface de contrôle (Control rig) 1",
+        "kind": "cyberware",
+        "grade": "standard",
+        "essence": 1,
+        "rating": 1,
+        "notes": "+1 dé aux tests de véhicule en immersion"
+      },
+      {
+        "id": "x15",
+        "name": "Datajack",
+        "kind": "cyberware",
+        "grade": "standard",
+        "essence": 0.1
+      },
+      {
+        "id": "x16",
+        "name": "Cyberyeux 1",
+        "kind": "cyberware",
+        "grade": "standard",
+        "essence": 0.2,
+        "rating": 1
+      },
+      {
+        "id": "x17",
+        "name": "Audition améliorée",
+        "kind": "cyberware",
+        "grade": "standard",
+        "essence": 0.1
+      }
+    ],
+    "gear": [],
+    "vehicles": [
+      {
+        "id": "v3",
+        "name": "Steel Lynx (drone de combat)",
+        "handling": "5",
+        "speed": 4,
+        "accel": 2,
+        "body": 6,
+        "armor": 12,
+        "pilot": 3,
+        "sensor": 3,
+        "notes": "Arme montée : FN HAR (10P, AP -2). Voir le modèle « Drone de combat Steel Lynx »."
+      },
+      {
+        "id": "v4",
+        "name": "GM-Nissan Doberman",
+        "handling": "5",
+        "speed": 3,
+        "accel": 1,
+        "body": 4,
+        "armor": 4,
+        "pilot": 3,
+        "sensor": 3,
+        "notes": "Arme montée : Ingram Smartgun X"
+      },
+      {
+        "id": "v5",
+        "name": "MCT Fly-Spy (minidrone)",
+        "handling": "4",
+        "speed": 3,
+        "accel": 2,
+        "body": 1,
+        "armor": 0,
+        "pilot": 3,
+        "sensor": 3,
+        "notes": "Reconnaissance"
+      },
+      {
+        "id": "v6",
+        "name": "GMC Bulldog (fourgon)",
+        "handling": "3/3",
+        "speed": 3,
+        "accel": 1,
+        "body": 16,
+        "armor": 12,
+        "pilot": 1,
+        "sensor": 2,
+        "seats": 6
+      }
+    ],
+    "vision": {},
+    "id": "tpl_rigger",
+    "name": "Rigger",
+    "folder": "Spécialistes",
+    "color": "#9acd32",
+    "concept": "Pilote de drones (connecté en VR chaude)",
+    "attributes": {
+      "BOD": 3,
+      "AGI": 3,
+      "REA": 4,
+      "STR": 2,
+      "WIL": 3,
+      "LOG": 5,
+      "INT": 4,
+      "CHA": 3,
+      "EDG": 3,
+      "ESS": 6
+    },
+    "matrix": {
+      "device": "Aztechnology Shadow Warrior",
+      "rating": 3,
+      "attack": 6,
+      "sleaze": 5,
+      "dataProcessing": 4,
+      "firewall": 3,
+      "programs": [
+        "Autosoft Ciblage (Armes automatiques) 3",
+        "Autosoft Manœuvre 3",
+        "Autosoft Clearsight 3",
+        "Encryption",
+        "Armure"
+      ]
+    },
+    "description": "Reste dans le fourgon, connecté en **VR chaude** via sa RCC : l’initiative du tracker utilise la VR chaude (Traitement de données + INT + 4D6). Ses drones agissent avec son initiative quand il les pilote en immersion, sinon avec leur autopilote (indice ×2 + 4D6).\n\nTest d’attaque d’un drone piloté : Artillerie + Logique [Précision] (en immersion).",
+    "npc": {
+      "professionalRating": 4,
+      "grunt": false,
+      "kind": "metahuman",
+      "initMode": "hot",
+      "tactics": "- Envoie le Fly-Spy en éclaireur, le Steel Lynx au contact.\n- Brouille les communications adverses (Guerre électronique).\n- Si on remonte jusqu’au fourgon, il fuit au volant."
+    },
+    "foundryWorld": "test-world",
+    "foundryImportedAt": 1795629244307,
+    "foundryHash": "fd93256fa160"
+  },
+  {
+    "type": "npc",
+    "metatype": "Drone",
+    "portrait": "",
+    "disposition": "hostile",
+    "augmented": {},
+    "initiative": {
+      "dice": 4,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "autosoft_targeting",
+        "name": "Autosoft Ciblage (Armes automatiques)",
+        "attr": "LOG",
+        "rating": 3
+      },
+      {
+        "id": "autosoft_maneuver",
+        "name": "Autosoft Manœuvre",
+        "attr": "LOG",
+        "rating": 3
+      },
+      {
+        "id": "autosoft_clearsight",
+        "name": "Autosoft Clearsight",
+        "attr": "LOG",
+        "rating": 3
+      }
+    ],
+    "knowledge": [],
+    "qualities": [],
+    "powers": [],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "w52",
+        "kind": "ranged",
+        "rc": 2,
+        "reach": 0,
+        "ap": -2,
+        "name": "FN HAR",
+        "category": "Fusil d’assaut",
+        "skill": "autosoft_targeting",
+        "accuracy": 5,
+        "damage": "10P",
+        "mode": "SA/TR/TA",
+        "ammo": "35(c)",
+        "notes": "Monture d’arme : réserve = Autopilote 3 + Ciblage 3 = 6 dés"
+      }
+    ],
+    "armor": [
+      {
+        "id": "a25",
+        "name": "Blindage de véhicule",
+        "rating": 12,
+        "equipped": true
+      }
+    ],
+    "augmentations": [],
+    "gear": [],
+    "vehicles": [],
+    "vision": {
+      "lowLight": true,
+      "thermo": true
+    },
+    "id": "tpl_drone_steel_lynx",
+    "name": "Drone de combat Steel Lynx",
+    "folder": "Spécialistes",
+    "color": "#7a8f2a",
+    "concept": "Drone de combat large (autopilote)",
+    "attributes": {
+      "BOD": 6,
+      "AGI": 0,
+      "REA": 3,
+      "STR": 0,
+      "WIL": 0,
+      "LOG": 0,
+      "INT": 3,
+      "CHA": 0,
+      "EDG": 0,
+      "ESS": 0
+    },
+    "monitors": {
+      "physical": 11,
+      "stun": 0
+    },
+    "description": "Maniabilité 5, Vitesse 4, Accél. 2, Structure 6, Blindage 12, Autopilote 3, Senseurs 3.\n\n**Autopilote** : initiative = Autopilote ×2 + 4D6 (6 + 4D6). Réserve d’attaque = Autopilote + autosoft Ciblage. Moniteur = 8 + Structure/2 (11), pas de moniteur étourdissant.\n\nSi le rigger le pilote en immersion, retire ce drone du tracker : il agit avec l’initiative du rigger.",
+    "npc": {
+      "professionalRating": 4,
+      "grunt": true,
+      "kind": "drone",
+      "tactics": "Avance en ligne droite vers la menace la plus proche, tir en rafales (TR), ignore la peur et la douleur."
+    }
+  },
+  {
+    "type": "npc",
+    "metatype": "Humain",
+    "portrait": "",
+    "disposition": "hostile",
+    "augmented": {},
+    "initiative": {
+      "dice": 1,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "spellcasting",
+        "name": "Lancement de sorts",
+        "attr": "MAG",
+        "rating": 6,
+        "group": "sorcery"
+      },
+      {
+        "id": "counterspelling",
+        "name": "Contresort",
+        "attr": "MAG",
+        "rating": 4,
+        "group": "sorcery"
+      },
+      {
+        "id": "perception",
+        "name": "Perception",
+        "attr": "INT",
+        "rating": 4
+      },
+      {
+        "id": "assensing",
+        "name": "Observation astrale",
+        "attr": "INT",
+        "rating": 3
+      }
+    ],
+    "knowledge": [],
+    "qualities": [
+      {
+        "id": "q2",
+        "name": "Magicien (tradition hermétique)",
+        "karma": 15,
+        "positive": true,
+        "notes": "Drain : Logique + Volonté = 9 dés"
+      }
+    ],
+    "powers": [],
+    "spells": [
+      {
+        "id": "fvtt_jszmd6L73jsB5OS3",
+        "name": "Éclair étourdissant",
+        "category": "Combat",
+        "type": "M",
+        "range": "LDV",
+        "duration": "I",
+        "drain": "F-3",
+        "notes": "Stunbolt · SR5 284",
+        "catalogId": "47423962-6b73-4cc3-ad4e-e8d037cf9507"
+      },
+      {
+        "id": "fvtt_TeNo3p5BDpcQpidO",
+        "name": "Éclair de force",
+        "category": "Combat",
+        "type": "P",
+        "range": "LDV",
+        "duration": "I",
+        "drain": "F-3",
+        "notes": "Powerbolt · SR5 284",
+        "catalogId": "a7f17805-3e3e-4a12-8580-b9de0d7499ef"
+      },
+      {
+        "id": "fvtt_rPSgcq2HWGqaishg",
+        "name": "Augmentation de réflexes",
+        "category": "Santé",
+        "type": "P",
+        "range": "Contact",
+        "duration": "M",
+        "drain": "F+0",
+        "notes": "Increase Reflexes · SR5 288",
+        "catalogId": "37b3d6ac-624a-42d4-bd6e-a12142dc5725"
+      },
+      {
+        "id": "fvtt_PU1BJNPkqHOKIoCc",
+        "name": "Armure",
+        "category": "Manipulation",
+        "type": "P",
+        "range": "LDV",
+        "duration": "M",
+        "drain": "F-2",
+        "notes": "Armor · SR5 292",
+        "catalogId": "794f21eb-dc8d-45e8-b9b0-b85b810437f3"
+      }
+    ],
+    "weapons": [
+      {
+        "id": "fvtt_msRT7Pp7eMAVKApw",
+        "name": "Mains nues",
+        "category": "Corps à corps",
+        "kind": "melee",
+        "skill": "unarmed_combat",
+        "accuracy": 5,
+        "damage": "(STR)S",
+        "ap": 0,
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "notes": "Unarmed Attack (SR5 132)"
+      }
+    ],
+    "armor": [
+      {
+        "id": "a26",
+        "name": "Manteau renforcé",
+        "rating": 9,
+        "equipped": true
+      }
+    ],
+    "augmentations": [],
+    "gear": [
+      {
+        "id": "g39",
+        "name": "Focus de puissance (indice 2)",
+        "category": "Équipement",
+        "qty": 1,
+        "rating": 2,
+        "notes": "+2 dés aux tests de Magie (lié)"
+      },
+      {
+        "id": "g40",
+        "name": "Commlink (indice 3)",
+        "category": "Équipement",
+        "qty": 1,
+        "rating": 3
+      },
+      {
+        "id": "g41",
+        "name": "Reagents",
+        "category": "Équipement",
+        "qty": 20
+      }
+    ],
+    "vehicles": [],
+    "vision": {},
+    "id": "tpl_hired_mage",
+    "name": "Mage mercenaire",
+    "folder": "Spécialistes",
+    "color": "#b05cff",
+    "concept": "Mage hermétique de combat",
+    "attributes": {
+      "BOD": 3,
+      "AGI": 3,
+      "REA": 4,
+      "STR": 2,
+      "WIL": 5,
+      "LOG": 4,
+      "INT": 4,
+      "CHA": 4,
+      "EDG": 3,
+      "MAG": 5,
+      "ESS": 6
+    },
+    "description": "Mage engagé à la mission. Puissance des sorts typique : 5 (Magie). **Drain** : Logique + Volonté (9 dés). Peut invoquer un esprit de l’air ou du feu de Puissance 4 (3 services).\n\nInitiative astrale : INT ×2 + 2D6 (8 + 2D6) — passer l’entrée en mode « Astral » dans le tracker s’il se projette.",
+    "npc": {
+      "professionalRating": 4,
+      "grunt": false,
+      "kind": "metahuman",
+      "tactics": "- Lance Armure sur lui-même avant l’engagement, invoque un esprit en soutien.\n- Boule étourdissante sur les groupes, Éclair de mana sur la cible la plus dangereuse.\n- Contresort pour son équipe ; fuit sous Invisibilité si blessé."
+    },
+    "matrix": {
+      "device": "Meta Link (commlink)",
+      "rating": 1,
+      "attack": 0,
+      "sleaze": 0,
+      "dataProcessing": 1,
+      "firewall": 1,
+      "programs": []
+    },
+    "foundryWorld": "test-world",
+    "foundryImportedAt": 1795629244307,
+    "foundryHash": "21f642e60cc0"
+  },
+  {
+    "type": "npc",
+    "metatype": "Humain",
+    "portrait": "",
+    "disposition": "hostile",
+    "augmented": {
+      "REA": 2,
+      "AGI": 1
+    },
+    "initiative": {
+      "dice": 3,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "automatics",
+        "name": "Armes automatiques",
+        "attr": "AGI",
+        "rating": 6,
+        "group": "firearms"
+      },
+      {
+        "id": "blades",
+        "name": "Armes tranchantes",
+        "attr": "AGI",
+        "rating": 5,
+        "group": "close_combat"
+      },
+      {
+        "id": "pistols",
+        "name": "Pistolets",
+        "attr": "AGI",
+        "rating": 5,
+        "group": "firearms"
+      },
+      {
+        "id": "unarmed_combat",
+        "name": "Combat à mains nues",
+        "attr": "AGI",
+        "rating": 4,
+        "group": "close_combat"
+      },
+      {
+        "id": "perception",
+        "name": "Perception",
+        "attr": "INT",
+        "rating": 4
+      },
+      {
+        "id": "sneaking",
+        "name": "Furtivité",
+        "attr": "AGI",
+        "rating": 3,
+        "group": "stealth"
+      },
+      {
+        "id": "intimidation",
+        "name": "Intimidation",
+        "attr": "CHA",
+        "rating": 3
+      },
+      {
+        "id": "gymnastics",
+        "name": "Gymnastique",
+        "attr": "AGI",
+        "rating": 3,
+        "group": "athletics"
+      }
+    ],
+    "knowledge": [],
+    "qualities": [],
+    "powers": [],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "w55",
+        "kind": "ranged",
+        "rc": 2,
+        "reach": 0,
+        "ap": -2,
+        "name": "FN HAR",
+        "category": "Fusil d’assaut",
+        "skill": "automatics",
+        "accuracy": 7,
+        "damage": "10P",
+        "mode": "SA/TR/TA",
+        "ammo": "35(c)"
+      },
+      {
+        "id": "w56",
+        "kind": "melee",
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 1,
+        "ap": -3,
+        "name": "Katana",
+        "category": "Lame",
+        "skill": "blades",
+        "accuracy": 7,
+        "damage": "(STR+3)P"
+      },
+      {
+        "id": "w57",
+        "kind": "ranged",
+        "rc": 0,
+        "reach": 0,
+        "ap": -1,
+        "name": "Ares Predator V (smartlink)",
+        "category": "Pistolet lourd",
+        "skill": "pistols",
+        "accuracy": 7,
+        "damage": "8P",
+        "mode": "SA",
+        "ammo": "15(c)"
+      },
+      {
+        "id": "w58",
+        "kind": "melee",
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "ap": 0,
+        "name": "Mains nues",
+        "category": "Mains nues",
+        "skill": "unarmed_combat",
+        "accuracy": null,
+        "damage": "(STR)S",
+        "notes": "Précision = limite physique"
+      }
+    ],
+    "armor": [
+      {
+        "id": "a27",
+        "name": "Veste pare-balles",
+        "rating": 12,
+        "equipped": true
+      },
+      {
+        "id": "a28",
+        "name": "Plaques dermiques 2",
+        "rating": 2,
+        "equipped": true,
+        "stack": true,
+        "notes": "Cyberware"
+      }
+    ],
+    "augmentations": [
+      {
+        "id": "x18",
+        "name": "Réflexes câblés 2",
+        "kind": "cyberware",
+        "grade": "standard",
+        "essence": 3,
+        "rating": 2
+      },
+      {
+        "id": "x19",
+        "name": "Plaques dermiques 2",
+        "kind": "cyberware",
+        "grade": "standard",
+        "essence": 1,
+        "rating": 2
+      },
+      {
+        "id": "x20",
+        "name": "Toniques musculaires 1",
+        "kind": "bioware",
+        "grade": "standard",
+        "essence": 0.2,
+        "rating": 1
+      },
+      {
+        "id": "x21",
+        "name": "Cyberyeux 2 (smartlink, vision nocturne, antiflash)",
+        "kind": "cyberware",
+        "grade": "standard",
+        "essence": 0.4,
+        "rating": 2
+      }
+    ],
+    "gear": [
+      {
+        "id": "g42",
+        "name": "Commlink (indice 3)",
+        "category": "Équipement",
+        "qty": 1,
+        "rating": 3
+      },
+      {
+        "id": "g43",
+        "name": "Patchs de trauma",
+        "category": "Équipement",
+        "qty": 2
+      }
+    ],
+    "vehicles": [],
+    "vision": {
+      "lowLight": true
+    },
+    "id": "tpl_street_sam_merc",
+    "name": "Samouraï des rues mercenaire",
+    "folder": "Spécialistes",
+    "color": "#ff5f3f",
+    "concept": "Mercenaire cybernétisé (PR 4)",
+    "attributes": {
+      "BOD": 6,
+      "AGI": 5,
+      "REA": 5,
+      "STR": 5,
+      "WIL": 4,
+      "LOG": 3,
+      "INT": 4,
+      "CHA": 2,
+      "EDG": 3,
+      "ESS": 1.4
+    },
+    "description": "Chrome et cicatrices. Loué à la mission par des fixers peu regardants. Moniteur physique 11.",
+    "npc": {
+      "professionalRating": 4,
+      "grunt": false,
+      "kind": "metahuman",
+      "tactics": "- Ouvre en rafale longue, puis ferme la distance au katana.\n- Cherche le duel avec le samouraï adverse (Anthony).\n- Se replie s’il est seul et gravement blessé : c’est un pro, pas un martyr."
+    }
+  },
+  {
+    "type": "npc",
+    "metatype": "Humain",
+    "portrait": "",
+    "disposition": "hostile",
+    "augmented": {},
+    "initiative": {
+      "dice": 1,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "cybercombat",
+        "name": "Cybercombat",
+        "attr": "LOG",
+        "rating": 6,
+        "group": "cracking"
+      },
+      {
+        "id": "hacking",
+        "name": "Hacking",
+        "attr": "LOG",
+        "rating": 5,
+        "group": "cracking"
+      },
+      {
+        "id": "computer",
+        "name": "Informatique",
+        "attr": "LOG",
+        "rating": 5,
+        "group": "electronics"
+      },
+      {
+        "id": "electronic_warfare",
+        "name": "Guerre électronique",
+        "attr": "LOG",
+        "rating": 4,
+        "group": "cracking"
+      },
+      {
+        "id": "software",
+        "name": "Software",
+        "attr": "LOG",
+        "rating": 3,
+        "group": "electronics"
+      },
+      {
+        "id": "pistols",
+        "name": "Pistolets",
+        "attr": "AGI",
+        "rating": 3,
+        "group": "firearms"
+      },
+      {
+        "id": "perception",
+        "name": "Perception",
+        "attr": "INT",
+        "rating": 3
+      }
+    ],
+    "knowledge": [],
+    "qualities": [],
+    "powers": [],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "w59",
+        "kind": "ranged",
+        "rc": 0,
+        "reach": 0,
+        "ap": 0,
+        "name": "Fichetti Security 600",
+        "category": "Pistolet léger",
+        "skill": "pistols",
+        "accuracy": 6,
+        "damage": "7P",
+        "mode": "SA",
+        "ammo": "30(c)"
+      }
+    ],
+    "armor": [
+      {
+        "id": "a29",
+        "name": "Vêtements pare-balles",
+        "rating": 6,
+        "equipped": true
+      }
+    ],
+    "augmentations": [
+      {
+        "id": "x22",
+        "name": "Datajack",
+        "kind": "cyberware",
+        "grade": "standard",
+        "essence": 0.1
+      },
+      {
+        "id": "x23",
+        "name": "Cyberyeux 1 (vision nocturne)",
+        "kind": "cyberware",
+        "grade": "standard",
+        "essence": 0.2,
+        "rating": 1
+      }
+    ],
+    "gear": [],
+    "vehicles": [],
+    "vision": {},
+    "id": "tpl_combat_decker",
+    "name": "Decker de combat",
+    "folder": "Spécialistes",
+    "color": "#00e5ff",
+    "concept": "Hacker offensif en VR chaude",
+    "attributes": {
+      "BOD": 3,
+      "AGI": 3,
+      "REA": 4,
+      "STR": 2,
+      "WIL": 4,
+      "LOG": 6,
+      "INT": 5,
+      "CHA": 2,
+      "EDG": 3,
+      "ESS": 5.7
+    },
+    "matrix": {
+      "device": "Novatech Navigator (indice 3)",
+      "rating": 3,
+      "attack": 6,
+      "sleaze": 3,
+      "dataProcessing": 5,
+      "firewall": 4,
+      "programs": [
+        "Armure",
+        "Biofeedback",
+        "Blackout",
+        "Marteau",
+        "Verrouillage",
+        "Boîte à outils",
+        "Décryptage"
+      ]
+    },
+    "description": "Mercenaire de la Matrice. En VR chaude : initiative Traitement de données + INT + 4D6 (10 + 4D6).\n\n**Cybercombat** : Cybercombat + Logique [Attaque] = 12 dés. **Brick/Pic de données** : Cybercombat + Logique vs Intuition + Firewall.",
+    "npc": {
+      "professionalRating": 4,
+      "grunt": false,
+      "kind": "metahuman",
+      "initMode": "hot",
+      "tactics": "- Brique le commlink et les armes connectées des runners (Pic de données, Brique).\n- Verrouille (link-lock) le decker adverse puis lance Biofeedback.\n- Se déconnecte proprement s’il descend sous la moitié de son moniteur matriciel."
+    }
+  },
+  {
+    "type": "npc",
+    "metatype": "Humain",
+    "portrait": "",
+    "disposition": "hostile",
+    "augmented": {},
+    "initiative": {
+      "dice": 1,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "cybercombat",
+        "name": "Cybercombat",
+        "attr": "LOG",
+        "rating": 3,
+        "group": "cracking"
+      },
+      {
+        "id": "electronic_warfare",
+        "name": "Guerre électronique",
+        "attr": "LOG",
+        "rating": 3,
+        "group": "cracking"
+      },
+      {
+        "id": "hacking",
+        "name": "Hacking",
+        "attr": "LOG",
+        "rating": 3,
+        "group": "cracking"
+      },
+      {
+        "id": "hardware",
+        "name": "Hardware",
+        "attr": "LOG",
+        "rating": 3,
+        "group": "electronics"
+      },
+      {
+        "id": "computer",
+        "name": "Informatique",
+        "attr": "LOG",
+        "rating": 3,
+        "group": "electronics"
+      },
+      {
+        "id": "software",
+        "name": "Software",
+        "attr": "LOG",
+        "rating": 3,
+        "group": "electronics"
+      }
+    ],
+    "knowledge": [],
+    "qualities": [],
+    "powers": [],
+    "spells": [],
+    "weapons": [],
+    "armor": [
+      {
+        "id": "a30",
+        "name": "Vêtements pare-balles",
+        "rating": 6,
+        "equipped": true
+      }
+    ],
+    "augmentations": [
+      {
+        "id": "x24",
+        "name": "Datajack",
+        "kind": "cyberware",
+        "grade": "standard",
+        "essence": 0.1
+      }
+    ],
+    "gear": [],
+    "vehicles": [],
+    "vision": {},
+    "id": "tpl_spider_junior",
+    "name": "Spider de sécurité junior",
+    "folder": "Matrice",
+    "color": "#26c6da",
+    "concept": "Decker de sécurité débutant",
+    "attributes": {
+      "BOD": 2,
+      "AGI": 2,
+      "REA": 3,
+      "STR": 2,
+      "WIL": 3,
+      "LOG": 3,
+      "INT": 3,
+      "CHA": 2,
+      "EDG": 2,
+      "ESS": 6
+    },
+    "matrix": {
+      "device": "Microdeck Summit",
+      "rating": 1,
+      "attack": 1,
+      "sleaze": 3,
+      "dataProcessing": 5,
+      "firewall": 3,
+      "programs": [
+        "Armure",
+        "Boîte à outils",
+        "Marteau"
+      ]
+    },
+    "description": "Surveille le host depuis un poste de sécurité. Initiative en VR chaude : 8 + 4D6.",
+    "npc": {
+      "professionalRating": 2,
+      "grunt": false,
+      "kind": "metahuman",
+      "initMode": "hot",
+      "tactics": "Lance une Trace sur l’intrus, appelle l’IC, et prévient son supérieur au moindre doute."
+    },
+    "foundryWorld": "test-world",
+    "foundryImportedAt": 1795629244307,
+    "foundryHash": "f121e880a062"
+  },
+  {
+    "type": "npc",
+    "metatype": "Humain",
+    "portrait": "",
+    "disposition": "hostile",
+    "augmented": {},
+    "initiative": {
+      "dice": 1,
+      "bonus": 0
+    },
+    "skills": [],
+    "knowledge": [],
+    "qualities": [],
+    "powers": [],
+    "spells": [],
+    "weapons": [],
+    "armor": [
+      {
+        "id": "a31",
+        "name": "Vêtements pare-balles",
+        "rating": 6,
+        "equipped": true
+      }
+    ],
+    "augmentations": [
+      {
+        "id": "x25",
+        "name": "Datajack",
+        "kind": "cyberware",
+        "grade": "standard",
+        "essence": 0.1
+      },
+      {
+        "id": "x26",
+        "name": "Cyberyeux 1",
+        "kind": "cyberware",
+        "grade": "standard",
+        "essence": 0.2,
+        "rating": 1
+      }
+    ],
+    "gear": [],
+    "vehicles": [],
+    "vision": {},
+    "id": "tpl_spider_standard",
+    "name": "Spider de sécurité standard",
+    "folder": "Matrice",
+    "color": "#00acc1",
+    "concept": "Decker de sécurité confirmé",
+    "attributes": {
+      "BOD": 3,
+      "AGI": 4,
+      "REA": 4,
+      "STR": 2,
+      "WIL": 4,
+      "LOG": 4,
+      "INT": 4,
+      "CHA": 3,
+      "EDG": 3,
+      "ESS": 6
+    },
+    "matrix": {
+      "device": "Novatech Navigator",
+      "rating": 3,
+      "attack": 7,
+      "sleaze": 3,
+      "dataProcessing": 6,
+      "firewall": 4,
+      "programs": [
+        "Armure",
+        "Biofeedback",
+        "Verrouillage",
+        "Marteau",
+        "Boîte à outils",
+        "Pistage"
+      ]
+    },
+    "description": "Decker professionnel de la sécurité Matrice. Initiative en VR chaude : 10 + 4D6. Cybercombat + Logique = 10 dés.",
+    "npc": {
+      "professionalRating": 4,
+      "grunt": false,
+      "kind": "metahuman",
+      "initMode": "hot",
+      "tactics": "- Active l’IC tueuse, verrouille l’intrus, puis l’attaque au Biofeedback.\n- Lance une Trace pour envoyer la sécurité physique à sa porte."
+    },
+    "foundryWorld": "test-world",
+    "foundryImportedAt": 1795629244307,
+    "foundryHash": "6a37bfaa56d2"
+  },
+  {
+    "type": "npc",
+    "metatype": "IC",
+    "portrait": "",
+    "disposition": "hostile",
+    "augmented": {},
+    "initiative": {
+      "dice": 4,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "ic_attack",
+        "name": "Perception matricielle (H×2)",
+        "attr": "INT",
+        "rating": 5
+      }
+    ],
+    "knowledge": [],
+    "qualities": [],
+    "powers": [],
+    "spells": [],
+    "weapons": [],
+    "armor": [],
+    "augmentations": [],
+    "gear": [],
+    "vehicles": [],
+    "vision": {},
+    "attributes": {
+      "BOD": 0,
+      "AGI": 0,
+      "REA": 5,
+      "STR": 0,
+      "WIL": 5,
+      "LOG": 5,
+      "INT": 5,
+      "CHA": 0,
+      "EDG": 0,
+      "ESS": 0
+    },
+    "monitors": {
+      "physical": 11,
+      "stun": 0
+    },
+    "matrix": {
+      "device": "Host (indice 5)",
+      "rating": 5,
+      "attack": 6,
+      "sleaze": 8,
+      "dataProcessing": 5,
+      "firewall": 7,
+      "programs": []
+    },
+    "id": "tpl_ic_patrol",
+    "name": "IC de patrouille",
+    "folder": "Matrice",
+    "color": "#80deea",
+    "description": "Fait des rondes dans le host et effectue des tests de **Perception matricielle** sur chaque icône. Ne fait pas de dégâts : repère les persona en mode silencieux (opposé à Logique + Corruption) et **déclenche l’alerte**.\n\n**Règles IC (indice du host = H)** — Initiative : H ×2 + 4D6 (VR chaude). Réserve d’attaque : H ×2. Moniteur matriciel : 8 + H/2. Défense : H + Firewall du host. Pour un autre host, ajuste RÉA/INT/VOL/LOG = H et le moniteur.",
+    "npc": {
+      "professionalRating": 0,
+      "grunt": true,
+      "kind": "ic",
+      "initMode": "hot",
+      "tactics": "Ronde régulière ; dès qu’elle repère une icône illégale, l’alerte est donnée et le host lance son IC offensive / prévient le spider."
+    }
+  },
+  {
+    "type": "npc",
+    "metatype": "IC",
+    "portrait": "",
+    "disposition": "hostile",
+    "augmented": {},
+    "initiative": {
+      "dice": 4,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "ic_attack",
+        "name": "Attaque d’IC (H×2)",
+        "attr": "INT",
+        "rating": 5
+      }
+    ],
+    "knowledge": [],
+    "qualities": [],
+    "powers": [],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "w60",
+        "kind": "ranged",
+        "rc": 0,
+        "reach": 0,
+        "ap": 0,
+        "name": "Attaque matricielle",
+        "category": "IC",
+        "skill": "ic_attack",
+        "accuracy": 6,
+        "damage": "6M",
+        "mode": "",
+        "ammo": "",
+        "notes": "H×2 [Attaque] vs Intuition + Firewall. Dommages matriciels = Attaque du host + succès nets."
+      }
+    ],
+    "armor": [],
+    "augmentations": [],
+    "gear": [],
+    "vehicles": [],
+    "vision": {},
+    "attributes": {
+      "BOD": 0,
+      "AGI": 0,
+      "REA": 5,
+      "STR": 0,
+      "WIL": 5,
+      "LOG": 5,
+      "INT": 5,
+      "CHA": 0,
+      "EDG": 0,
+      "ESS": 0
+    },
+    "monitors": {
+      "physical": 11,
+      "stun": 0
+    },
+    "matrix": {
+      "device": "Host (indice 5)",
+      "rating": 5,
+      "attack": 6,
+      "sleaze": 8,
+      "dataProcessing": 5,
+      "firewall": 7,
+      "programs": []
+    },
+    "id": "tpl_ic_killer",
+    "name": "IC tueuse",
+    "folder": "Matrice",
+    "color": "#ff6e6e",
+    "description": "IC offensive standard. **Attaque** : H ×2 [Attaque] contre Intuition + Firewall. Dommages **matriciels** = Attaque du host (6) + succès nets.\n\n**Règles IC (indice du host = H)** — Initiative : H ×2 + 4D6 (VR chaude). Réserve d’attaque : H ×2. Moniteur matriciel : 8 + H/2. Défense : H + Firewall du host. Pour un autre host, ajuste RÉA/INT/VOL/LOG = H et le moniteur.",
+    "npc": {
+      "professionalRating": 0,
+      "grunt": true,
+      "kind": "ic",
+      "initMode": "hot",
+      "tactics": "Cible l’intrus le plus visible (le plus de marques ou d’OS), frappe à chaque passe."
+    }
+  },
+  {
+    "type": "npc",
+    "metatype": "IC",
+    "portrait": "",
+    "disposition": "hostile",
+    "augmented": {},
+    "initiative": {
+      "dice": 4,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "ic_attack",
+        "name": "Attaque d’IC (H×2)",
+        "attr": "INT",
+        "rating": 5
+      }
+    ],
+    "knowledge": [],
+    "qualities": [],
+    "powers": [],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "w61",
+        "kind": "ranged",
+        "rc": 0,
+        "reach": 0,
+        "ap": 0,
+        "name": "Attaque biofeedback",
+        "category": "IC",
+        "skill": "ic_attack",
+        "accuracy": 6,
+        "damage": "6M",
+        "mode": "",
+        "ammo": "",
+        "notes": "H×2 [Attaque] vs Intuition + Firewall. Dommages matriciels = Attaque + succès nets, et autant de biofeedback (P en VR chaude, E en VR froide). Verrouille le persona."
+      }
+    ],
+    "armor": [],
+    "augmentations": [],
+    "gear": [],
+    "vehicles": [],
+    "vision": {},
+    "attributes": {
+      "BOD": 0,
+      "AGI": 0,
+      "REA": 5,
+      "STR": 0,
+      "WIL": 5,
+      "LOG": 5,
+      "INT": 5,
+      "CHA": 0,
+      "EDG": 0,
+      "ESS": 0
+    },
+    "monitors": {
+      "physical": 11,
+      "stun": 0
+    },
+    "matrix": {
+      "device": "Host (indice 5)",
+      "rating": 5,
+      "attack": 6,
+      "sleaze": 8,
+      "dataProcessing": 5,
+      "firewall": 7,
+      "programs": []
+    },
+    "id": "tpl_ic_black",
+    "name": "IC noire",
+    "folder": "Matrice",
+    "color": "#b71c1c",
+    "description": "L’IC la plus dangereuse : **Attaque** H ×2 [Attaque] contre Intuition + Firewall. Dommages matriciels = Attaque du host + succès nets, **plus autant de dommages biofeedback** (Physiques en VR chaude, Étourdissants en VR froide ; résistance Volonté + Firewall). Verrouille aussi le persona (link-lock) s’il ne l’est pas déjà.\n\n**Règles IC (indice du host = H)** — Initiative : H ×2 + 4D6 (VR chaude). Réserve d’attaque : H ×2. Moniteur matriciel : 8 + H/2. Défense : H + Firewall du host. Pour un autre host, ajuste RÉA/INT/VOL/LOG = H et le moniteur.",
+    "npc": {
+      "professionalRating": 0,
+      "grunt": true,
+      "kind": "ic",
+      "initMode": "hot",
+      "tactics": "Verrouille d’abord, tue ensuite. Ne lâche jamais une cible verrouillée."
+    }
+  },
+  {
+    "type": "npc",
+    "metatype": "Créature",
+    "portrait": "",
+    "disposition": "hostile",
+    "augmented": {},
+    "initiative": {
+      "dice": 2,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "exotic_weapon",
+        "name": "Arme exotique",
+        "attr": "AGI",
+        "rating": 4,
+        "spec": "Attaque élémentaire"
+      },
+      {
+        "id": "sneaking",
+        "name": "Furtivité",
+        "attr": "AGI",
+        "rating": 5,
+        "group": "stealth"
+      },
+      {
+        "id": "intimidation",
+        "name": "Intimidation",
+        "attr": "CHA",
+        "rating": 3
+      },
+      {
+        "id": "running",
+        "name": "Course",
+        "attr": "STR",
+        "rating": 4,
+        "group": "athletics"
+      },
+      {
+        "id": "perception",
+        "name": "Perception",
+        "attr": "INT",
+        "rating": 3
+      },
+      {
+        "id": "tracking",
+        "name": "Pistage",
+        "attr": "INT",
+        "rating": 5,
+        "group": "outdoors"
+      },
+      {
+        "id": "unarmed_combat",
+        "name": "Combat à mains nues",
+        "attr": "AGI",
+        "rating": 3,
+        "group": "close_combat"
+      }
+    ],
+    "knowledge": [],
+    "qualities": [],
+    "powers": [
+      {
+        "id": "p1",
+        "name": "Armure",
+        "pp": 0,
+        "level": 2,
+        "notes": "Armure naturelle 2"
+      },
+      {
+        "id": "p2",
+        "name": "Double nature",
+        "pp": 0
+      },
+      {
+        "id": "p3",
+        "name": "Attaque élémentaire (feu)",
+        "pp": 0
+      },
+      {
+        "id": "p4",
+        "name": "Sens améliorés",
+        "pp": 0,
+        "notes": "Ouïe, vision nocturne, odorat"
+      },
+      {
+        "id": "p5",
+        "name": "Peur",
+        "pp": 0
+      },
+      {
+        "id": "p6",
+        "name": "Immunité (feu)",
+        "pp": 0
+      },
+      {
+        "id": "p7",
+        "name": "Arme naturelle",
+        "pp": 0,
+        "notes": "Morsure (FOR+1)P, PA −1"
+      }
+    ],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "w62",
+        "kind": "melee",
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "ap": -1,
+        "name": "Morsure",
+        "category": "Arme naturelle",
+        "skill": "unarmed_combat",
+        "accuracy": null,
+        "damage": "(STR+1)P"
+      },
+      {
+        "id": "w63",
+        "kind": "ranged",
+        "rc": 0,
+        "reach": 0,
+        "ap": 0,
+        "name": "Souffle de feu (attaque élémentaire)",
+        "category": "Pouvoir",
+        "skill": "exotic_weapon",
+        "accuracy": null,
+        "damage": "5P",
+        "mode": "CC",
+        "ammo": "",
+        "notes": "VD = Magie, effet élémentaire de feu (peut enflammer). Portée LdV."
+      }
+    ],
+    "armor": [
+      {
+        "id": "a32",
+        "name": "Armure naturelle (pouvoir)",
+        "rating": 2,
+        "equipped": true,
+        "notes": "Pouvoir de critter : réduit aussi la VD des attaques"
+      }
+    ],
+    "augmentations": [],
+    "gear": [],
+    "vehicles": [],
+    "vision": {
+      "lowLight": true
+    },
+    "id": "tpl_hellhound",
+    "name": "Chien de l’Enfer",
+    "folder": "Créatures",
+    "color": "#ff3d00",
+    "concept": "Critter paranormal (molosse à souffle de feu)",
+    "attributes": {
+      "BOD": 6,
+      "AGI": 4,
+      "REA": 5,
+      "STR": 6,
+      "WIL": 4,
+      "LOG": 2,
+      "INT": 4,
+      "CHA": 3,
+      "EDG": 3,
+      "ESS": 6,
+      "MAG": 5
+    },
+    "description": "Molosse noir aux yeux rougeoyants, souvent dressé comme chien de garde par les corpos ou les mages peu scrupuleux. Double nature : visible et attaquable dans l’astral.",
+    "npc": {
+      "professionalRating": 0,
+      "grunt": false,
+      "kind": "critter",
+      "tactics": "- Chasse en meute de 2-3, encercle la proie.\n- Utilise Peur pour disperser le groupe, puis souffle de feu sur la cible isolée."
+    }
+  },
+  {
+    "type": "npc",
+    "metatype": "Créature",
+    "portrait": "",
+    "disposition": "hostile",
+    "augmented": {},
+    "initiative": {
+      "dice": 2,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "gymnastics",
+        "name": "Gymnastique",
+        "attr": "AGI",
+        "rating": 5,
+        "group": "athletics"
+      },
+      {
+        "id": "running",
+        "name": "Course",
+        "attr": "STR",
+        "rating": 2,
+        "group": "athletics"
+      },
+      {
+        "id": "perception",
+        "name": "Perception",
+        "attr": "INT",
+        "rating": 4
+      },
+      {
+        "id": "sneaking",
+        "name": "Furtivité",
+        "attr": "AGI",
+        "rating": 6,
+        "group": "stealth"
+      },
+      {
+        "id": "unarmed_combat",
+        "name": "Combat à mains nues",
+        "attr": "AGI",
+        "rating": 5,
+        "group": "close_combat"
+      }
+    ],
+    "knowledge": [],
+    "qualities": [],
+    "powers": [
+      {
+        "id": "p8",
+        "name": "Contrôle animal (rats ordinaires)",
+        "pp": 0
+      },
+      {
+        "id": "p9",
+        "name": "Camouflage",
+        "pp": 0,
+        "notes": "Rend la meute très difficile à repérer (−MAG dés en Perception)"
+      },
+      {
+        "id": "p10",
+        "name": "Immunité (toxines)",
+        "pp": 0
+      },
+      {
+        "id": "p11",
+        "name": "Arme naturelle",
+        "pp": 0,
+        "notes": "Morsure (FOR+1)P, allonge −1"
+      },
+      {
+        "id": "p12",
+        "name": "Allergie (soleil, légère)",
+        "pp": 0
+      }
+    ],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "w64",
+        "kind": "melee",
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": -1,
+        "ap": 0,
+        "name": "Morsure",
+        "category": "Arme naturelle",
+        "skill": "unarmed_combat",
+        "accuracy": null,
+        "damage": "(STR+1)P",
+        "notes": "Peut transmettre des maladies"
+      }
+    ],
+    "armor": [],
+    "augmentations": [],
+    "gear": [],
+    "vehicles": [],
+    "vision": {
+      "lowLight": true
+    },
+    "id": "tpl_devil_rat",
+    "name": "Rat du diable (meute)",
+    "folder": "Créatures",
+    "color": "#8d6e63",
+    "concept": "Critter paranormal des égouts",
+    "attributes": {
+      "BOD": 2,
+      "AGI": 5,
+      "REA": 5,
+      "STR": 1,
+      "WIL": 3,
+      "LOG": 2,
+      "INT": 5,
+      "CHA": 5,
+      "EDG": 2,
+      "ESS": 6,
+      "MAG": 3
+    },
+    "description": "Rat de la taille d’un chat, intelligent et vicieux. À jouer en **meute de 4 à 8** (fais-en apparaître plusieurs d’un coup), accompagnée d’une nuée de rats ordinaires.",
+    "npc": {
+      "professionalRating": 0,
+      "grunt": true,
+      "kind": "critter",
+      "tactics": "Surgit des conduits sous Camouflage, mord et se replie. Fuit la lumière vive."
+    }
+  },
+  {
+    "type": "npc",
+    "metatype": "Créature",
+    "portrait": "",
+    "disposition": "hostile",
+    "augmented": {},
+    "initiative": {
+      "dice": 2,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "intimidation",
+        "name": "Intimidation",
+        "attr": "CHA",
+        "rating": 7
+      },
+      {
+        "id": "perception",
+        "name": "Perception",
+        "attr": "INT",
+        "rating": 6
+      },
+      {
+        "id": "running",
+        "name": "Course",
+        "attr": "STR",
+        "rating": 5,
+        "group": "athletics"
+      },
+      {
+        "id": "tracking",
+        "name": "Pistage",
+        "attr": "INT",
+        "rating": 6,
+        "group": "outdoors"
+      },
+      {
+        "id": "unarmed_combat",
+        "name": "Combat à mains nues",
+        "attr": "AGI",
+        "rating": 8,
+        "group": "close_combat"
+      }
+    ],
+    "knowledge": [],
+    "qualities": [],
+    "powers": [
+      {
+        "id": "p13",
+        "name": "Armure",
+        "pp": 0,
+        "level": 3,
+        "notes": "Armure naturelle 3"
+      },
+      {
+        "id": "p14",
+        "name": "Double nature",
+        "pp": 0
+      },
+      {
+        "id": "p15",
+        "name": "Sens améliorés",
+        "pp": 0,
+        "notes": "Ouïe, odorat, sonar"
+      },
+      {
+        "id": "p16",
+        "name": "Peur",
+        "pp": 0
+      },
+      {
+        "id": "p17",
+        "name": "Immunité (hurlements de barghest)",
+        "pp": 0
+      },
+      {
+        "id": "p18",
+        "name": "Arme naturelle",
+        "pp": 0,
+        "notes": "Morsure (FOR+2)P, PA −1"
+      },
+      {
+        "id": "p19",
+        "name": "Hurlement paralysant",
+        "pp": 0,
+        "notes": "Test opposé ; les cibles qui échouent sont paralysées"
+      }
+    ],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "w65",
+        "kind": "melee",
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "ap": -1,
+        "name": "Morsure",
+        "category": "Arme naturelle",
+        "skill": "unarmed_combat",
+        "accuracy": null,
+        "damage": "(STR+2)P"
+      }
+    ],
+    "armor": [
+      {
+        "id": "a33",
+        "name": "Armure naturelle (pouvoir)",
+        "rating": 3,
+        "equipped": true,
+        "notes": "Pouvoir de critter : réduit aussi la VD des attaques"
+      }
+    ],
+    "augmentations": [],
+    "gear": [],
+    "vehicles": [],
+    "vision": {
+      "lowLight": true
+    },
+    "id": "tpl_barghest",
+    "name": "Barghest",
+    "folder": "Créatures",
+    "color": "#6a1b9a",
+    "concept": "Critter paranormal (chien hurleur)",
+    "attributes": {
+      "BOD": 8,
+      "AGI": 5,
+      "REA": 6,
+      "STR": 6,
+      "WIL": 4,
+      "LOG": 2,
+      "INT": 5,
+      "CHA": 5,
+      "EDG": 4,
+      "ESS": 6,
+      "MAG": 5
+    },
+    "description": "Énorme chien aux crocs saillants dont le hurlement paralyse. Redoutable gardien de périmètre.",
+    "npc": {
+      "professionalRating": 0,
+      "grunt": false,
+      "kind": "critter",
+      "tactics": "Hurlement paralysant à la première passe, puis s’acharne sur la cible paralysée."
+    }
+  },
+  {
+    "type": "npc",
+    "metatype": "Créature",
+    "portrait": "",
+    "disposition": "hostile",
+    "augmented": {},
+    "initiative": {
+      "dice": 1,
+      "bonus": 0
+    },
+    "skills": [
+      {
+        "id": "assensing",
+        "name": "Observation astrale",
+        "attr": "INT",
+        "rating": 4
+      },
+      {
+        "id": "sneaking",
+        "name": "Furtivité",
+        "attr": "AGI",
+        "rating": 6,
+        "group": "stealth"
+      },
+      {
+        "id": "running",
+        "name": "Course",
+        "attr": "STR",
+        "rating": 3,
+        "group": "athletics"
+      },
+      {
+        "id": "perception",
+        "name": "Perception",
+        "attr": "INT",
+        "rating": 5
+      },
+      {
+        "id": "unarmed_combat",
+        "name": "Combat à mains nues",
+        "attr": "AGI",
+        "rating": 6,
+        "group": "close_combat"
+      }
+    ],
+    "knowledge": [],
+    "qualities": [],
+    "powers": [
+      {
+        "id": "p20",
+        "name": "Armure",
+        "pp": 0,
+        "level": 1,
+        "notes": "Armure naturelle 1"
+      },
+      {
+        "id": "p21",
+        "name": "Double nature",
+        "pp": 0
+      },
+      {
+        "id": "p22",
+        "name": "Sens améliorés",
+        "pp": 0,
+        "notes": "Ouïe, odorat"
+      },
+      {
+        "id": "p23",
+        "name": "Arme naturelle",
+        "pp": 0,
+        "notes": "Griffes (FOR+1)P, PA −1"
+      },
+      {
+        "id": "p24",
+        "name": "Sapience",
+        "pp": 0
+      },
+      {
+        "id": "p25",
+        "name": "Allergie (soleil, modérée)",
+        "pp": 0
+      },
+      {
+        "id": "p26",
+        "name": "Régime alimentaire (chair métahumaine)",
+        "pp": 0
+      },
+      {
+        "id": "p27",
+        "name": "Sens réduits (aveugle)",
+        "pp": 0,
+        "notes": "Perçoit par l’astral"
+      }
+    ],
+    "spells": [],
+    "weapons": [
+      {
+        "id": "w66",
+        "kind": "melee",
+        "mode": "",
+        "rc": 0,
+        "ammo": "",
+        "reach": 0,
+        "ap": -1,
+        "name": "Griffes",
+        "category": "Arme naturelle",
+        "skill": "unarmed_combat",
+        "accuracy": null,
+        "damage": "(STR+1)P"
+      }
+    ],
+    "armor": [
+      {
+        "id": "a34",
+        "name": "Armure naturelle (pouvoir)",
+        "rating": 1,
+        "equipped": true,
+        "notes": "Pouvoir de critter : réduit aussi la VD des attaques"
+      }
+    ],
+    "augmentations": [],
+    "gear": [],
+    "vehicles": [],
+    "vision": {
+      "darkRange": 8
+    },
+    "id": "tpl_ghoul",
+    "name": "Goule",
+    "folder": "Créatures",
+    "color": "#607d8b",
+    "concept": "Métahumain infecté (VIHMH)",
+    "attributes": {
+      "BOD": 7,
+      "AGI": 3,
+      "REA": 5,
+      "STR": 6,
+      "WIL": 5,
+      "LOG": 2,
+      "INT": 4,
+      "CHA": 1,
+      "EDG": 3,
+      "ESS": 5,
+      "MAG": 1
+    },
+    "description": "Métahumain infecté par le VIHMH. Aveugle physiquement, il « voit » par perception astrale. Souvent organisé en bandes dans les ruines (Redmond Barrens).",
+    "npc": {
+      "professionalRating": 0,
+      "grunt": true,
+      "kind": "critter",
+      "tactics": "Attaque en groupe dans le noir, cible les blessés. Une goule sapiente peut parlementer pour de la viande."
+    }
+  }
+]

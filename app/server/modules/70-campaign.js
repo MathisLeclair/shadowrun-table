@@ -223,25 +223,37 @@ function camp(ctx) {
   if (!ctx.state.campaign) ensureSlice(ctx.state, ctx.uid);
   return ctx.state.campaign;
 }
-function find(ctx, key, id, label) {
+// « Not found » error of each collection (whole sentences: translatable keys, tk marks them for tools/i18n-check.js).
+const tk = (s) => s;
+const NOT_FOUND = {
+  acts: tk('Acte introuvable'),
+  quests: tk('Quête introuvable'),
+  sessions: tk('Séance introuvable'),
+  threads: tk('Fil narratif introuvable'),
+  handouts: tk('Document introuvable'),
+};
+function notFound(ctx, key) {
+  ctx.fail(NOT_FOUND[key] || tk('Élément introuvable'));
+}
+function find(ctx, key, id) {
   const item = camp(ctx)[key].find((x) => x.id === id);
-  if (!item) ctx.fail(`${label} introuvable`);
+  if (!item) notFound(ctx, key);
   return item;
 }
-function remove(ctx, key, id, label) {
+function remove(ctx, key, id) {
   const c = camp(ctx);
   const i = c[key].findIndex((x) => x.id === id);
-  if (i < 0) ctx.fail(`${label} introuvable`);
+  if (i < 0) notFound(ctx, key);
   const [item] = c[key].splice(i, 1);
   const hk = `${key}:${id}`;
   // A deleted seed item must not come back at the next boot.
   if (c._seed?.hashes?.[hk] && !c._seed.deleted.includes(hk)) c._seed.deleted.push(hk);
   return item;
 }
-function move(ctx, key, id, dir, label) {
+function move(ctx, key, id, dir) {
   const list = camp(ctx)[key];
   const i = list.findIndex((x) => x.id === id);
-  if (i < 0) ctx.fail(`${label} introuvable`);
+  if (i < 0) notFound(ctx, key);
   const j = i + (Number(dir) < 0 ? -1 : 1);
   if (j < 0 || j >= list.length) return;
   [list[i], list[j]] = [list[j], list[i]];
@@ -294,21 +306,21 @@ export default {
     },
     'campaign/updateAct': {
       handler(ctx, { actId, patch } = {}) {
-        patchItem(ctx, 'acts', find(ctx, 'acts', actId, 'Acte'), patch, ['title', 'summary']);
+        patchItem(ctx, 'acts', find(ctx, 'acts', actId), patch, ['title', 'summary']);
       },
     },
     'campaign/deleteAct': {
       handler(ctx, { actId } = {}) {
         const c = camp(ctx);
         if (c.quests.some((q) => q.actId === actId)) ctx.fail('Cet acte contient encore des quêtes');
-        remove(ctx, 'acts', actId, 'Acte');
+        remove(ctx, 'acts', actId);
         if (c.currentActId === actId) c.currentActId = null;
       },
     },
     // null = automatic (act of the first active quest)
     'campaign/setCurrentAct': {
       handler(ctx, { actId } = {}) {
-        if (actId) find(ctx, 'acts', actId, 'Acte');
+        if (actId) find(ctx, 'acts', actId);
         camp(ctx).currentActId = actId || null;
       },
     },
@@ -326,20 +338,20 @@ export default {
     },
     'campaign/updateQuest': {
       handler(ctx, { questId, patch } = {}) {
-        const q = find(ctx, 'quests', questId, 'Quête');
+        const q = find(ctx, 'quests', questId);
         patchItem(ctx, 'quests', q, patch, ['actId', 'title', 'status', 'summary', 'phases', 'npcs', 'maps', 'rewards', 'gmNotes', 'doc']);
       },
     },
     'campaign/deleteQuest': {
       handler(ctx, { questId } = {}) {
-        remove(ctx, 'quests', questId, 'Quête');
+        remove(ctx, 'quests', questId);
       },
     },
     'campaign/moveQuest': {
       handler(ctx, { questId, dir } = {}) {
         // Move within the same act: swap with the previous/next quest of that act.
         const list = camp(ctx).quests;
-        const q = find(ctx, 'quests', questId, 'Quête');
+        const q = find(ctx, 'quests', questId);
         const same = list.filter((x) => x.actId === q.actId);
         const k = same.indexOf(q) + (Number(dir) < 0 ? -1 : 1);
         if (k < 0 || k >= same.length) return;
@@ -351,12 +363,12 @@ export default {
     'campaign/setQuestStatus': {
       handler(ctx, { questId, status } = {}) {
         if (!QUEST_STATUS.includes(status)) ctx.fail('Statut invalide');
-        find(ctx, 'quests', questId, 'Quête').status = status;
+        find(ctx, 'quests', questId).status = status;
       },
     },
     'campaign/togglePhase': {
       handler(ctx, { questId, phaseId, done } = {}) {
-        const q = find(ctx, 'quests', questId, 'Quête');
+        const q = find(ctx, 'quests', questId);
         const p = q.phases.find((x) => x.id === phaseId);
         if (!p) ctx.fail('Phase introuvable');
         p.done = typeof done === 'boolean' ? done : !p.done;
@@ -366,7 +378,7 @@ export default {
     },
     'campaign/addPhase': {
       handler(ctx, { questId, title, text } = {}) {
-        const q = find(ctx, 'quests', questId, 'Quête');
+        const q = find(ctx, 'quests', questId);
         if (q.phases.length >= 50) ctx.fail('Trop de phases');
         const p = normPhase({ title, text }, ctx.uid);
         p.id = ctx.uid('ph');
@@ -376,7 +388,7 @@ export default {
     },
     'campaign/updatePhase': {
       handler(ctx, { questId, phaseId, patch } = {}) {
-        const q = find(ctx, 'quests', questId, 'Quête');
+        const q = find(ctx, 'quests', questId);
         const p = q.phases.find((x) => x.id === phaseId);
         if (!p) ctx.fail('Phase introuvable');
         if (!patch || typeof patch !== 'object') ctx.fail('Modification invalide');
@@ -386,7 +398,7 @@ export default {
     },
     'campaign/deletePhase': {
       handler(ctx, { questId, phaseId } = {}) {
-        const q = find(ctx, 'quests', questId, 'Quête');
+        const q = find(ctx, 'quests', questId);
         const before = q.phases.length;
         q.phases = q.phases.filter((p) => p.id !== phaseId);
         if (q.phases.length === before) ctx.fail('Phase introuvable');
@@ -394,7 +406,7 @@ export default {
     },
     'campaign/movePhase': {
       handler(ctx, { questId, phaseId, dir } = {}) {
-        const q = find(ctx, 'quests', questId, 'Quête');
+        const q = find(ctx, 'quests', questId);
         const i = q.phases.findIndex((p) => p.id === phaseId);
         if (i < 0) ctx.fail('Phase introuvable');
         const j = i + (Number(dir) < 0 ? -1 : 1);
@@ -418,13 +430,13 @@ export default {
     'campaign/updateSession': {
       handler(ctx, { sessionId, patch } = {}) {
         const c = camp(ctx);
-        patchItem(ctx, 'sessions', find(ctx, 'sessions', sessionId, 'Séance'), patch, ['number', 'title', 'date', 'plan', 'recap', 'played', 'doc']);
+        patchItem(ctx, 'sessions', find(ctx, 'sessions', sessionId), patch, ['number', 'title', 'date', 'plan', 'recap', 'played', 'doc']);
         c.sessions.sort((a, b) => a.number - b.number);
       },
     },
     'campaign/deleteSession': {
       handler(ctx, { sessionId } = {}) {
-        remove(ctx, 'sessions', sessionId, 'Séance');
+        remove(ctx, 'sessions', sessionId);
       },
     },
 
@@ -439,17 +451,17 @@ export default {
     },
     'campaign/updateThread': {
       handler(ctx, { threadId, patch } = {}) {
-        patchItem(ctx, 'threads', find(ctx, 'threads', threadId, 'Fil narratif'), patch, ['label', 'state', 'notes']);
+        patchItem(ctx, 'threads', find(ctx, 'threads', threadId), patch, ['label', 'state', 'notes']);
       },
     },
     'campaign/deleteThread': {
       handler(ctx, { threadId } = {}) {
-        remove(ctx, 'threads', threadId, 'Fil narratif');
+        remove(ctx, 'threads', threadId);
       },
     },
     'campaign/moveThread': {
       handler(ctx, { threadId, dir } = {}) {
-        move(ctx, 'threads', threadId, dir, 'Fil narratif');
+        move(ctx, 'threads', threadId, dir);
       },
     },
 
@@ -464,18 +476,18 @@ export default {
     },
     'campaign/updateHandout': {
       handler(ctx, { handoutId, patch } = {}) {
-        patchItem(ctx, 'handouts', find(ctx, 'handouts', handoutId, 'Document'), patch, ['title', 'body', 'image', 'gmNotes']);
+        patchItem(ctx, 'handouts', find(ctx, 'handouts', handoutId), patch, ['title', 'body', 'image', 'gmNotes']);
       },
     },
     'campaign/deleteHandout': {
       handler(ctx, { handoutId } = {}) {
-        remove(ctx, 'handouts', handoutId, 'Document');
+        remove(ctx, 'handouts', handoutId);
       },
     },
     // to: 'all' | [userId]. Notifies only the players who did not have it yet.
     'campaign/revealHandout': {
       handler(ctx, { handoutId, to } = {}) {
-        const h = find(ctx, 'handouts', handoutId, 'Document');
+        const h = find(ctx, 'handouts', handoutId);
         const users = playerIds(ctx.state);
         const before = h.revealedTo === 'all' ? users : h.revealedTo;
         let recipients;
@@ -492,13 +504,13 @@ export default {
           h.revealedTo = [...h.revealedTo, ...recipients];
         }
         h.revealedAt = ctx.now;
-        const text = `Nouveau document : ${h.title}`;
+        const i18n = { key: 'Nouveau document : {title}', params: { title: h.title } };
         if (to === 'all') {
-          ctx.log({ kind: 'system', author: 'MJ', text });
+          ctx.log({ kind: 'system', author: 'MJ', i18n });
           ctx.emitTo('players', 'sfx', { id: 'notify' });
           ctx.emitTo('players', 'campaign/handout', { id: h.id, title: h.title });
         } else if (recipients.length) {
-          ctx.log({ kind: 'system', author: 'MJ', text, to: [...recipients, 'gm'] });
+          ctx.log({ kind: 'system', author: 'MJ', i18n, to: [...recipients, 'gm'] });
           ctx.emitTo(recipients, 'sfx', { id: 'notify' });
           ctx.emitTo(recipients, 'campaign/handout', { id: h.id, title: h.title });
         }
@@ -508,7 +520,7 @@ export default {
     // userId given: hide from that player only; otherwise hide from everyone.
     'campaign/hideHandout': {
       handler(ctx, { handoutId, userId } = {}) {
-        const h = find(ctx, 'handouts', handoutId, 'Document');
+        const h = find(ctx, 'handouts', handoutId);
         if (!userId) {
           h.revealedTo = [];
           return;

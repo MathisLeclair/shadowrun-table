@@ -3,6 +3,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { html, Button, IconButton, Empty, NumberInput, Badge, confirmAction } from '../../lib/ui.js';
 import { send } from '../../lib/net.js';
 import { toast } from '../../lib/ui-store.js';
+import { t } from '../../lib/i18n.js';
 import { magicLoss } from './rules.js';
 import { setCart, specialEntry, priceEntry, buyStatus, nuyen, gradeLabel, lineKey } from './common.js';
 
@@ -43,7 +44,7 @@ export default function Cart({ game, actor, catalog, lines, onClose }) {
   const essBefore = Math.round(Number(actor?.attributes?.ESS ?? 6) * 1000) / 1000;
   const essAfter = Math.round((essBefore - ess) * 1000) / 1000;
   const loss = ess > 0 ? magicLoss(essBefore, essAfter) : 0;
-  const awakened = Number(actor?.attributes?.MAG) > 0 ? 'Magie' : Number(actor?.attributes?.RES) > 0 ? 'Résonance' : null;
+  const awakened = Number(actor?.attributes?.MAG) > 0 ? 'MAG' : Number(actor?.attributes?.RES) > 0 ? 'RES' : null;
 
   const update = (i, patch) => {
     const next = lines.slice();
@@ -55,15 +56,16 @@ export default function Cart({ game, actor, catalog, lines, onClose }) {
 
   const checkout = async (mode) => {
     if (!actor || !lines.length) return;
-    if (mode === 'give' && !(await confirmAction(`Donner gratuitement ces ${lines.length} article(s) à ${actor.name} ?`))) return;
-    if (mode === 'buy' && isGM && !(await confirmAction(`Débiter ${nuyen(total)} à ${actor.name} ?`))) return;
+    if (mode === 'give' && !(await confirmAction(t('Donner gratuitement ces {n} article(s) à {name} ?', { n: lines.length, name: actor.name })))) return;
+    if (mode === 'buy' && isGM && !(await confirmAction(t('Débiter {cost} à {name} ?', { cost: nuyen(total), name: actor.name })))) return;
     setBusy(true);
     try {
       const res = await send(mode === 'give' ? 'shop/give' : 'shop/buy', { actorId: actor.id, items: payload() });
       setCart(actor.id, []);
-      if (res?.status === 'pending') toast('Commande transmise à Cabana — en attente de validation du MJ', 'info', 4500);
-      else toast(mode === 'give' ? `Livré à ${actor.name}` : `Achat effectué : ${nuyen(res?.total ?? total)}`, 'success');
-      if (res?.notes?.length) toast(res.notes.join(' · '), 'warn', 5000);
+      if (res?.status === 'pending') toast(t('Commande transmise à Cabana — en attente de validation du MJ'), 'info', 4500);
+      else toast(mode === 'give' ? t('Livré à {name}', { name: actor.name }) : t('Achat effectué : {cost}', { cost: nuyen(res?.total ?? total) }), 'success');
+      const notes = res?.notesI18n?.length ? res.notesI18n.map((n) => t(n.key, n.params)) : res?.notes || [];
+      if (notes.length) toast(notes.join(' · '), 'warn', 5000);
       onClose();
     } catch {}
     setBusy(false);
@@ -72,60 +74,61 @@ export default function Cart({ game, actor, catalog, lines, onClose }) {
   return html`<div class="shop-drawer-backdrop" onMouseDown=${(e) => e.target === e.currentTarget && onClose()}>
     <aside class="shop-drawer">
       <header class="shop-drawer-head">
-        <h3>Panier${actor ? html` <span class="muted">— ${actor.name}</span>` : null}</h3>
-        <${IconButton} icon="✕" title="Fermer" onClick=${onClose} />
+        <h3>${t('Panier')}${actor ? html` <span class="muted">— ${actor.name}</span>` : null}</h3>
+        <${IconButton} icon="✕" title=${t('Fermer')} onClick=${onClose} />
       </header>
       <div class="shop-drawer-body">
-        ${!lines.length && html`<${Empty}>Panier vide. Ajoute des articles depuis le catalogue.</${Empty}>`}
+        ${!lines.length && html`<${Empty}>${t('Panier vide. Ajoute des articles depuis le catalogue.')}</${Empty}>`}
         ${priced.map(
           (p, i) => html`<div class=${'shop-cart-line' + (p.missing || !p.st?.ok || p.stockOut ? ' bad' : '')} key=${lineKey(p.line)}>
             <div class="grow">
               <div class="shop-cart-name">${p.entry?.name || p.line.name || p.line.ref}</div>
               <div class="row wrap gap-s small muted">
-                ${p.line.rating ? html`<span>Indice ${p.line.rating}</span>` : null}
+                ${p.line.rating ? html`<span>${t('Indice {n}', { n: p.line.rating })}</span>` : null}
                 ${p.line.grade && p.line.grade !== 'standard' ? html`<span>${gradeLabel(p.line.grade)}</span>` : null}
-                ${p.q?.essence ? html`<span>Ess ${Math.round(p.q.essence * p.line.qty * 1000) / 1000}</span>` : null}
-                ${p.line.setMatrix ? html`<${Badge} color="cyan">Appareil Matriciel</${Badge}>` : null}
-                ${p.missing && html`<span class="red">Article retiré du catalogue</span>`}
+                ${p.q?.essence ? html`<span>${t('Ess {n}', { n: Math.round(p.q.essence * p.line.qty * 1000) / 1000 })}</span>` : null}
+                ${p.line.setMatrix ? html`<${Badge} color="cyan">${t('Appareil Matriciel')}</${Badge}>` : null}
+                ${p.missing && html`<span class="red">${t('Article retiré du catalogue')}</span>`}
                 ${p.st && !p.st.ok && html`<span class="red">${p.st.reason}</span>`}
-                ${p.stockOut && html`<span class="red">Stock insuffisant</span>`}
-                ${p.st?.ok && p.st.approval && html`<span class="amber">Validation MJ</span>`}
+                ${p.stockOut && html`<span class="red">${t('Stock insuffisant')}</span>`}
+                ${p.st?.ok && p.st.approval && html`<span class="amber">${t('Validation MJ')}</span>`}
               </div>
             </div>
             ${p.entry?.file !== 'lifestyles'
               ? html`<${NumberInput} small value=${p.line.qty} min=${1} max=${999} onChange=${(v) => update(i, { qty: v })} />`
-              : html`<span class="small muted">${p.line.qty} mois</span>`}
+              : html`<span class="small muted">${t('{n} mois', { n: p.line.qty })}</span>`}
             <div class="shop-cart-price mono">${nuyen(p.total)}</div>
-            <${IconButton} icon="✕" title="Retirer" onClick=${() => remove(i)} />
+            <${IconButton} icon="✕" title=${t('Retirer')} onClick=${() => remove(i)} />
           </div>`
         )}
       </div>
       ${lines.length > 0 &&
       html`<footer class="shop-drawer-foot">
         <div class="shop-sum">
-          <div class="spread row"><span>Total</span><strong class="shop-price">${nuyen(total)}</strong></div>
+          <div class="spread row"><span>${t('Total')}</span><strong class="shop-price">${nuyen(total)}</strong></div>
           ${actor &&
-          html`<div class="spread row small"><span class="muted">Nuyens</span>
+          html`<div class="spread row small"><span class="muted">${t('Nuyens')}</span>
             <span class="mono">${nuyen(have)} → <span class=${after < 0 ? 'red' : 'green'}>${nuyen(after)}</span></span></div>`}
           ${ess > 0 &&
-          html`<div class="spread row small"><span class="muted">Essence</span>
+          html`<div class="spread row small"><span class="muted">${t('Essence')}</span>
             <span class="mono">${essBefore} → <span class=${essAfter <= 0 ? 'red' : 'amber'}>${essAfter}</span></span></div>`}
-          ${loss > 0 && awakened && html`<div class="shop-ess warn small">⚠ ${awakened} −${loss} après l’implantation.</div>`}
-          ${essAfter <= 0 && ess > 0 && html`<div class="shop-blocked small">Essence à zéro : implantation impossible.</div>`}
-          ${after < 0 && html`<div class="shop-blocked small">Fonds insuffisants.</div>`}
-          ${approval && html`<div class="shop-approval small">Certains articles demandent l’accord du MJ : rien n’est débité avant sa validation.</div>`}
+          ${loss > 0 && awakened === 'MAG' && html`<div class="shop-ess warn small">⚠ ${t('Magie −{n} après l’implantation.', { n: loss })}</div>`}
+          ${loss > 0 && awakened === 'RES' && html`<div class="shop-ess warn small">⚠ ${t('Résonance −{n} après l’implantation.', { n: loss })}</div>`}
+          ${essAfter <= 0 && ess > 0 && html`<div class="shop-blocked small">${t('Essence à zéro : implantation impossible.')}</div>`}
+          ${after < 0 && html`<div class="shop-blocked small">${t('Fonds insuffisants.')}</div>`}
+          ${approval && html`<div class="shop-approval small">${t('Certains articles demandent l’accord du MJ : rien n’est débité avant sa validation.')}</div>`}
         </div>
         <div class="row wrap">
           ${!isGM &&
           html`<${Button} variant="primary" class="grow" disabled=${busy || blocked.length > 0 || after < 0 || !game.shop?.open || (ess > 0 && essAfter <= 0)} onClick=${() => checkout('buy')}>
-            ${approval ? 'Envoyer la commande' : 'Acheter'} — ${nuyen(total)}
+            ${approval ? t('Envoyer la commande') : t('Acheter')} — ${nuyen(total)}
           </${Button}>`}
           ${isGM &&
           html`
-            <${Button} variant="accent" class="grow" disabled=${busy || after < 0 || priced.some((p) => p.missing || p.stockOut)} onClick=${() => checkout('buy')}>Vendre au PJ — ${nuyen(total)}</${Button}>
-            <${Button} class="grow" disabled=${busy || priced.some((p) => p.missing || p.stockOut)} onClick=${() => checkout('give')}>Donner (gratuit)</${Button}>
+            <${Button} variant="accent" class="grow" disabled=${busy || after < 0 || priced.some((p) => p.missing || p.stockOut)} onClick=${() => checkout('buy')}>${t('Vendre au PJ — {cost}', { cost: nuyen(total) })}</${Button}>
+            <${Button} class="grow" disabled=${busy || priced.some((p) => p.missing || p.stockOut)} onClick=${() => checkout('give')}>${t('Donner (gratuit)')}</${Button}>
           `}
-          <${Button} variant="ghost" small onClick=${() => setCart(actor.id, [])}>Vider</${Button}>
+          <${Button} variant="ghost" small onClick=${() => setCart(actor.id, [])}>${t('Vider')}</${Button}>
         </div>
       </footer>`}
     </aside>

@@ -10,6 +10,10 @@ import {
   evalFormula, slugify, METATYPE_FR, MELEE_SKILLS,
 } from '../../client/modules/sheet/sheet-data.js';
 import { applyBonus, removeBonus, weaponFromStats, wareCatalogItem, detachAugmentation } from '../lib/augment.js';
+import { errorBody } from '../lib/i18n.js';
+
+/** Marker for the i18n checker: French keys stored as data (history texts…), translated by the client. */
+const tk = (s) => s;
 
 const clampInt = (v, lo, hi, d = 0) => {
   const n = Math.round(Number(v));
@@ -104,7 +108,7 @@ function applyPatch(ctx, a, patch) {
   if (!isObj(patch)) ctx.fail('Modification invalide');
   if (!ctx.isGM) {
     const bad = Object.keys(patch).filter((k) => !PLAYER_ACTOR_KEYS.includes(k));
-    if (bad.length) ctx.fail(`Tu ne peux pas modifier ça toi-même (${bad.join(', ')}) — demande au MJ, à la boutique ou à l’entraînement.`);
+    if (bad.length) ctx.fail('Tu ne peux pas modifier ça toi-même ({fields}) — demande au MJ, à la boutique ou à l’entraînement.', { fields: bad.join(', ') });
   }
   for (const [k, v] of Object.entries(patch)) {
     if (BAD_KEYS.has(k)) continue;
@@ -114,7 +118,7 @@ function applyPatch(ctx, a, patch) {
         delete a[k];
         continue;
       }
-      if (!isObj(v)) ctx.fail(`Format invalide pour ${k}`);
+      if (!isObj(v)) ctx.fail('Format invalide pour {field}', { field: k });
       if (!ctx.isGM && k === 'condition') {
         const allowed = ['physical', 'stun', 'overflow'];
         if (Object.keys(v).some((x) => !allowed.includes(x))) ctx.fail('Champ de condition inconnu');
@@ -156,7 +160,7 @@ function removeActor(state, id) {
 
 /** Index of an item by id; `index` is a fallback for items that had no id when the client rendered them. */
 function findItem(ctx, a, list, itemId, index) {
-  if (!ITEM_LISTS.includes(list)) ctx.fail(`Liste inconnue : ${list}`);
+  if (!ITEM_LISTS.includes(list)) ctx.fail('Liste inconnue : {list}', { list: String(list) });
   if (!Array.isArray(a[list])) a[list] = [];
   let idx = itemId ? a[list].findIndex((i) => i.id === itemId) : -1;
   if (idx < 0 && !itemId && Number.isInteger(index) && a[list][index]) idx = index;
@@ -185,14 +189,17 @@ function sanitizeItem(list, item) {
 }
 
 const LIMIT_LABEL = { physical: 'physique', mental: 'mentale', social: 'sociale', astral: 'astrale' };
+/** Upper-case status shown in PC damage logs (French keys). */
+const STATUS_UPPER = { 'hors de combat': tk('HORS DE COMBAT'), mort: tk('MORT') };
 
 function sfx(ctx, id, target = 'all') {
   ctx.emitTo(target, 'sfx', { id });
 }
 
+/** 'A, B et C' as a translatable log param. */
 function names(list) {
   if (list.length <= 1) return list.join('');
-  return list.slice(0, -1).join(', ') + ' et ' + list[list.length - 1];
+  return { t: '{list} et {last}', params: { list: list.slice(0, -1).join(', '), last: list[list.length - 1] } };
 }
 
 // Chummer5 import/export lives in server/modules/85-chummer.js (+ server/lib/chummer/).
@@ -249,7 +256,7 @@ export default {
         }
         normalizeActor(a, uid);
         if (fields.edge === undefined) a.edge.current = a.attributes.EDG;
-        a.history.push({ ts: ctx.now, text: 'Création du personnage' });
+        a.history.push({ ts: ctx.now, text: tk('Création du personnage') });
         ctx.state.actors[id] = a;
         return id;
       },
@@ -290,9 +297,9 @@ export default {
         const src = getActor(ctx, actorId);
         const a = deepClone(src);
         a.id = ctx.uid(a.type);
-        a.name = String(name || `${src.name} (copie)`).slice(0, 80);
+        a.name = String(name || ctx.t(tk('{name} (copie)'), { name: src.name })).slice(0, 80); // stored in the table language
         for (const k of ITEM_LISTS) if (Array.isArray(a[k]) && k !== 'skills') for (const it of a[k]) it.id = ctx.uid('itm');
-        a.history = [...(a.history || []), { ts: ctx.now, text: `Copie de ${src.name}` }];
+        a.history = [...(a.history || []), { ts: ctx.now, text: `Copie de ${src.name}`, i18n: { key: 'Copie de {name}', params: { name: src.name } } }];
         normalizeActor(a, uid);
         ctx.state.actors[a.id] = a;
         return a.id;
@@ -304,7 +311,7 @@ export default {
       role: 'gm',
       handler(ctx, { actorId, list, item, adjustEssence }) {
         const a = getActor(ctx, actorId);
-        if (!ITEM_LISTS.includes(list)) ctx.fail(`Liste inconnue : ${list}`);
+        if (!ITEM_LISTS.includes(list)) ctx.fail('Liste inconnue : {list}', { list: String(list) });
         if (!isObj(item)) ctx.fail('Élément invalide');
         const it = sanitizeItem(list, item);
         if (!Array.isArray(a[list])) a[list] = [];
@@ -354,7 +361,7 @@ export default {
         if (!ctx.isGM) {
           const allowed = PLAYER_ITEM_FIELDS[list] || [];
           const bad = Object.keys(patch).filter((k) => !allowed.includes(k));
-          if (bad.length) ctx.fail(allowed.length ? `Tu peux seulement modifier : ${allowed.join(', ')}` : 'Seul le MJ peut modifier cet élément');
+          if (bad.length) ctx.fail(allowed.length ? tk('Tu peux seulement modifier : {fields}') : tk('Seul le MJ peut modifier cet élément'), allowed.length ? { fields: allowed.join(', ') } : undefined);
         }
         const clean = sanitizeItem(list, patch);
         delete clean.id;
@@ -419,14 +426,24 @@ export default {
         }
         c.overflow = Math.min(c.overflow, d.overflowMax + 1);
         const status = statusOf(a);
-        const kind = type === 'S' ? 'étourdissant' : 'physique';
-        let text;
-        if (a.type === 'npc') text = `${a.name} encaisse ${n} ${type === 'S' ? 'case(s) de dommages étourdissants' : 'case(s) de dommages physiques'}${status !== wasStatus ? ` — ${status}` : ''}.`;
-        else {
-          text = `${a.name} subit ${n} dommage${n > 1 ? 's' : ''} ${kind}${n > 1 ? 's' : ''} (P ${c.physical}/${d.physicalMonitor} · É ${c.stun}/${d.stunMonitor}${c.overflow ? ` · surplus ${c.overflow}/${d.overflowMax}` : ''})`;
-          if (status !== wasStatus && ['hors de combat', 'mort'].includes(status)) text += ` — ${status.toUpperCase()}`;
+        // Translatable log line (status values are stored French words, translated as nested keys).
+        let i18n;
+        if (a.type === 'npc') {
+          const damage = { t: type === 'S' ? tk('{n} case(s) de dommages étourdissants') : tk('{n} case(s) de dommages physiques'), params: { n } };
+          i18n = status !== wasStatus
+            ? { key: tk('{name} encaisse {damage} — {status}.'), params: { name: a.name, damage, status: { t: status } } }
+            : { key: tk('{name} encaisse {damage}.'), params: { name: a.name, damage } };
+        } else {
+          const damage = type === 'S'
+            ? { t: n > 1 ? tk('{n} dommages étourdissants') : tk('{n} dommage étourdissant'), params: { n } }
+            : { t: n > 1 ? tk('{n} dommages physiques') : tk('{n} dommage physique'), params: { n } };
+          const trackParams = { p: c.physical, pm: d.physicalMonitor, s: c.stun, sm: d.stunMonitor, o: c.overflow, om: d.overflowMax };
+          const track = { t: c.overflow ? tk('P {p}/{pm} · É {s}/{sm} · surplus {o}/{om}') : tk('P {p}/{pm} · É {s}/{sm}'), params: trackParams };
+          i18n = status !== wasStatus && STATUS_UPPER[status]
+            ? { key: tk('{name} subit {damage} ({track}) — {status}'), params: { name: a.name, damage, track, status: { t: STATUS_UPPER[status] } } }
+            : { key: tk('{name} subit {damage} ({track})'), params: { name: a.name, damage, track } };
         }
-        ctx.log({ kind: 'combat', userId: ctx.user.id, author: a.name, text, gmOnly: a.type === 'npc' && !!a.hidden ? true : undefined });
+        ctx.log({ kind: 'combat', userId: ctx.user.id, author: a.name, i18n, gmOnly: a.type === 'npc' && !!a.hidden ? true : undefined });
         if (status === 'mort' && wasStatus !== 'mort') sfx(ctx, 'death');
         return { condition: { ...c }, status };
       },
@@ -468,11 +485,12 @@ export default {
         const dk = clampInt(karma, -10000, 10000);
         const dn = clampInt(nuyen, -1e8, 1e8);
         if (!dk && !dn) ctx.fail('Rien à ajuster (karma et nuyens à 0)');
-        const why = str(reason, 300).trim() || (dk > 0 || dn > 0 ? 'Récompense' : 'Ajustement MJ');
+        const typed = str(reason, 300).trim();
+        const why = typed || (dk > 0 || dn > 0 ? tk('Récompense') : tk('Ajustement MJ'));
         const actors = ids.map((id) => getActor(ctx, id));
         for (const a of actors) {
-          if (a.karma + dk < 0) ctx.fail(`${a.name} n’a pas assez de karma (${a.karma})`);
-          if (a.nuyen + dn < 0) ctx.fail(`${a.name} n’a pas assez de nuyens (${fmtNuyen(a.nuyen)})`);
+          if (a.karma + dk < 0) ctx.fail('{name} n’a pas assez de karma ({karma})', { name: a.name, karma: a.karma });
+          if (a.nuyen + dn < 0) ctx.fail('{name} n’a pas assez de nuyens ({nuyen})', { name: a.name, nuyen: fmtNuyen(a.nuyen) });
         }
         for (const a of actors) {
           a.karma += dk;
@@ -481,10 +499,13 @@ export default {
           a.history.push({ ts: ctx.now, text: why, ...(dk ? { karma: dk } : {}), ...(dn ? { nuyen: dn } : {}) });
         }
         const parts = [];
-        if (dk) parts.push(`${dk > 0 ? '+' : ''}${dk} karma`);
+        if (dk) parts.push({ t: '{v} karma', params: { v: `${dk > 0 ? '+' : ''}${dk}` } });
         if (dn) parts.push(`${dn > 0 ? '+' : '−'}${fmtNuyen(Math.abs(dn))}`);
         const pcs = actors.filter((a) => !(a.type === 'npc' && a.hidden));
-        ctx.log({ kind: 'system', author: 'MJ', text: `${why} : ${parts.join(', ')} pour ${names(actors.map((a) => a.name))}.`, gmOnly: pcs.length ? undefined : true });
+        ctx.log({
+          kind: 'system', author: 'MJ', gmOnly: pcs.length ? undefined : true,
+          i18n: { key: '{reason} : {changes} pour {names}.', params: { reason: typed || { t: why }, changes: parts, names: names(actors.map((a) => a.name)) } },
+        });
         if (dk > 0) sfx(ctx, 'level-up');
         else if (dn > 0) sfx(ctx, 'cash');
         return true;
@@ -497,9 +518,13 @@ export default {
       handler(ctx, { actorId, reason }) {
         const a = getActor(ctx, actorId);
         requireOwn(ctx, actorId);
-        if (a.edge.current <= 0) ctx.fail(`${a.name} n’a plus de point de Chance`);
+        if (a.edge.current <= 0) ctx.fail('{name} n’a plus de point de Chance', { name: a.name });
         a.edge.current -= 1;
-        ctx.log({ kind: 'system', userId: ctx.user.id, author: a.name, text: `${a.name} dépense 1 point de Chance${reason ? ` (${str(reason, 120)})` : ''} — reste ${a.edge.current}/${a.attributes.EDG}.`, gmOnly: a.type === 'npc' ? true : undefined });
+        const edgeParams = { name: a.name, cur: a.edge.current, max: a.attributes.EDG };
+        const i18n = reason
+          ? { key: tk('{name} dépense 1 point de Chance ({reason}) — reste {cur}/{max}.'), params: { ...edgeParams, reason: str(reason, 120) } }
+          : { key: tk('{name} dépense 1 point de Chance — reste {cur}/{max}.'), params: edgeParams };
+        ctx.log({ kind: 'system', userId: ctx.user.id, author: a.name, i18n, gmOnly: a.type === 'npc' ? true : undefined });
         return a.edge.current;
       },
     },
@@ -512,7 +537,7 @@ export default {
           if (!ctx.isGM) ctx.fail('Réservé au MJ');
           const pcs = Object.values(ctx.state.actors).filter((a) => a.type === 'pc' && !a.retired);
           for (const a of pcs) a.edge.current = attr(a, 'EDG');
-          ctx.log({ kind: 'system', author: 'MJ', text: 'La Chance de tous les runners est rechargée.' });
+          ctx.log({ kind: 'system', author: 'MJ', i18n: { key: 'La Chance de tous les runners est rechargée.' } });
           return pcs.length;
         }
         const a = getActor(ctx, actorId);
@@ -556,7 +581,7 @@ export default {
           } else {
             const def = SKILL_BY_ID[skillId];
             const res = skillPool(actor, skillId, { useSpec: !!payload.useSpec, attrOverride: A1 || undefined });
-            if (res.impossible) ctx.fail(`${def?.fr || sk?.name || skillId} ne peut pas être utilisée sans formation`);
+            if (res.impossible) ctx.fail('{skill} ne peut pas être utilisée sans formation', { skill: def?.fr ? { t: def.fr } : sk?.name || skillId });
             const at = A1 || sk?.attr || def?.attr || 'AGI';
             pool = res.pool;
             if (res.defaulting) parts.push(`${ATTR_SHORT[at]} ${attr(actor, at)}`, 'par défaut −1');
@@ -600,7 +625,7 @@ export default {
         const explode = !!payload.explode;
         if (explode) {
           if (!actor) ctx.fail('Choisis un personnage pour utiliser la Chance');
-          if (actor.edge.current <= 0) ctx.fail(`${actor.name} n’a plus de point de Chance`);
+          if (actor.edge.current <= 0) ctx.fail('{name} n’a plus de point de Chance', { name: actor.name });
           const e = attr(actor, 'EDG');
           pool += e;
           parts.push(`Chance +${e}`);
@@ -645,7 +670,7 @@ export default {
         requireOwn(ctx, r.actorId);
         if (r.explode) ctx.fail('Impossible : la Chance a déjà été utilisée pour ce jet (Repousser les limites)');
         if (r.secondChance) ctx.fail('Seconde chance déjà utilisée pour ce jet');
-        if (a.edge.current <= 0) ctx.fail(`${a.name} n’a plus de point de Chance`);
+        if (a.edge.current <= 0) ctx.fail('{name} n’a plus de point de Chance', { name: a.name });
         a.edge.current -= 1;
         const before = [...r.dice];
         const rerolled = before.map((d) => (d >= 5 ? d : 1 + Math.floor(Math.random() * 6)));
@@ -690,7 +715,7 @@ export default {
     // Export one actor as JSON (GM).
     app.get('/api/actors/:id/export', requireGM, (req, res) => {
       const a = getState().actors[req.params.id];
-      if (!a) return res.status(404).json({ error: 'Personnage introuvable' });
+      if (!a) return res.status(404).json(errorBody('Personnage introuvable'));
       res.setHeader('Content-Disposition', `attachment; filename="${slugify(a.name)}.json"`);
       res.json(a);
     });

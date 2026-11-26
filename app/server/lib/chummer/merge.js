@@ -7,7 +7,10 @@
 // sync (no guid yet) are kept. Without a base (first import into an app-made actor) the file wins.
 import { ITEM_LISTS } from '../../../client/modules/sheet/sheet-data.js';
 import { ATTR_LABELS } from '../../../shared/sr5.js';
+import { formatFr } from '../../../client/i18n/format.js';
 import { nuyen as fmtNuyen } from '../../../shared/util.js';
+
+const tk = (s) => s; // marks French keys stored as values (tools/i18n-check.js)
 
 const eq = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 const isEmpty = (v) => v === undefined || v === null || v === '';
@@ -141,16 +144,18 @@ export function mergeActor(current, theirs, base, { now = Date.now(), fileName =
   m.chummer = { ...theirs.chummer, importedAt: current.chummer?.importedAt || theirs.chummer.importedAt, syncedAt: hasBase ? current.chummer?.syncedAt || now : now, updatedAt: now };
   const dk = m.karma - (current.karma || 0);
   const dn = m.nuyen - (current.nuyen || 0);
-  m.history = [...(current.history || []), { ts: now, chummer: true, text: `Mise à jour depuis Chummer${fileName ? ` (${fileName})` : ''}`, ...(dk ? { karma: dk } : {}), ...(dn ? { nuyen: dn } : {}) }];
+  const i18n = fileName ? { key: tk('Mise à jour depuis Chummer ({file})'), params: { file: fileName } } : { key: tk('Mise à jour depuis Chummer') };
+  m.history = [...(current.history || []), { ts: now, chummer: true, text: formatFr(i18n.key, i18n.params), i18n, ...(dk ? { karma: dk } : {}), ...(dn ? { nuyen: dn } : {}) }];
   return m;
 }
 
 // ---------------------------------------------------------------------------
 // Diff (shown before applying)
 // ---------------------------------------------------------------------------
+// Labels are French keys (stored with pending requests); the Chummer UI shows them with t().
 const LIST_LABELS = {
-  weapons: 'Armes', armor: 'Armures', augmentations: 'Augmentations', gear: 'Équipement', vehicles: 'Véhicules', contacts: 'Contacts', sins: 'SIN',
-  qualities: 'Qualités', powers: 'Pouvoirs', spells: 'Sorts', knowledge: 'Connaissances', complexForms: 'Formes complexes',
+  weapons: tk('Armes'), armor: tk('Armures'), augmentations: tk('Augmentations'), gear: tk('Équipement'), vehicles: tk('Véhicules'), contacts: tk('Contacts'), sins: tk('SIN'),
+  qualities: tk('Qualités'), powers: tk('Pouvoirs'), spells: tk('Sorts'), knowledge: tk('Connaissances'), complexForms: tk('Formes complexes'),
 };
 const ITEM_FIELDS = { gear: ['qty', 'rating'], armor: ['rating', 'equipped'], augmentations: ['rating', 'grade', 'essence'], contacts: ['connection', 'loyalty'], powers: ['level'], knowledge: ['rating'], sins: ['rating'] };
 const label = (it) => (it.rating && !['contacts'].includes(it.kind) ? `${it.name}` : it.name);
@@ -161,21 +166,21 @@ export function diffActors(before, after) {
   const push = (lbl, a, b, fmt = (x) => x) => {
     if (!eq(a ?? '', b ?? '')) scalars.push({ label: lbl, from: isEmpty(a) ? '—' : fmt(a), to: isEmpty(b) ? '—' : fmt(b) });
   };
-  push('Nom', before.name, after.name);
-  push('Métatype', before.metatype, after.metatype);
-  push('Karma', before.karma, after.karma);
-  push('Karma de carrière', before.karmaTotal, after.karmaTotal);
-  push('Nuyens', before.nuyen, after.nuyen, fmtNuyen);
-  push('Street Cred', before.streetCred || 0, after.streetCred || 0);
-  push('Notoriété', before.notoriety || 0, after.notoriety || 0);
-  push('Exposition', before.publicAwareness || 0, after.publicAwareness || 0);
-  push('Dés d’initiative', before.initiative?.dice || 1, after.initiative?.dice || 1);
-  push('Dommages physiques', before.condition?.physical || 0, after.condition?.physical || 0);
-  push('Dommages étourdissants', before.condition?.stun || 0, after.condition?.stun || 0);
-  push('Mode de vie', before.lifestyle?.name, after.lifestyle?.name);
-  push('Concept', before.concept, after.concept);
-  if (!eq(before.bio || '', after.bio || '')) scalars.push({ label: 'Description', from: '…', to: 'modifiée' });
-  if (!eq(before.notes || '', after.notes || '')) scalars.push({ label: 'Notes', from: '…', to: 'modifiées' });
+  push(tk('Nom'), before.name, after.name);
+  push(tk('Métatype'), before.metatype, after.metatype);
+  push(tk('Karma'), before.karma, after.karma);
+  push(tk('Karma de carrière'), before.karmaTotal, after.karmaTotal);
+  push(tk('Nuyens'), before.nuyen, after.nuyen, fmtNuyen);
+  push(tk('Street Cred'), before.streetCred || 0, after.streetCred || 0);
+  push(tk('Notoriété'), before.notoriety || 0, after.notoriety || 0);
+  push(tk('Exposition'), before.publicAwareness || 0, after.publicAwareness || 0);
+  push(tk('Dés d’initiative'), before.initiative?.dice || 1, after.initiative?.dice || 1);
+  push(tk('Dommages physiques'), before.condition?.physical || 0, after.condition?.physical || 0);
+  push(tk('Dommages étourdissants'), before.condition?.stun || 0, after.condition?.stun || 0);
+  push(tk('Mode de vie'), before.lifestyle?.name, after.lifestyle?.name);
+  push(tk('Concept'), before.concept, after.concept);
+  if (!eq(before.bio || '', after.bio || '')) scalars.push({ label: tk('Description'), from: '…', to: tk('modifiée') });
+  if (!eq(before.notes || '', after.notes || '')) scalars.push({ label: tk('Notes'), from: '…', to: tk('modifiées') });
 
   const attributes = [];
   for (const k of ['BOD', 'AGI', 'REA', 'STR', 'WIL', 'LOG', 'INT', 'CHA', 'EDG', 'MAG', 'RES', 'ESS']) {

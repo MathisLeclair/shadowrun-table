@@ -4,3 +4,9 @@ data/state.json.tmp
 data/backups/
 data/uploads/
 data/assets/foundry/
+data/tables/
+data/server.json*
+data/deleted/
+data/tmp/
+runtime/
+.env

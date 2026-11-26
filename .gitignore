@@ -16,3 +16,10 @@ app/data/assets/foundry/
 
 # Old standalone page / obsolete macro
 Shadowrun/create-act1-npcs-macro.js
+# Multi-table runtime data (round 3)
+app/data/tables/
+app/data/server.json*
+app/data/deleted/
+app/data/tmp/
+app/runtime/
+app/.env

@@ -2,7 +2,8 @@
 import { useState } from 'preact/hooks';
 import { html, Tabs, Empty, loadCss } from '../../lib/ui.js';
 import SheetView from './SheetView.js';
-import { Avatar } from './common.js';
+import { t } from '../../lib/i18n.js';
+import { Avatar, tRich } from './common.js';
 
 loadCss('/modules/sheet/sheet.css');
 
@@ -12,8 +13,8 @@ export default function MySheet({ game }) {
   if (!ids.length) {
     return html`<div class="page"><div class="sh-nochar">
       <div class="logo-mark"></div>
-      <h2>Aucun personnage</h2>
-      <p class="muted">Le MJ ne t’a pas encore attribué de personnage. Demande-lui de t’en assigner un depuis l’onglet <b>Personnages</b> — ta fiche apparaîtra ici automatiquement.</p>
+      <h2>${t('Aucun personnage')}</h2>
+      <p class="muted">${tRich(t('Le MJ ne t’a pas encore attribué de personnage. Demande-lui de t’en assigner un depuis l’onglet {tab} — ta fiche apparaîtra ici automatiquement.'), { tab: html`<b>${t('Personnages')}</b>` })}</p>
     </div></div>`;
   }
   const current = ids.includes(sel) ? sel : ids[0];
@@ -25,6 +26,6 @@ export default function MySheet({ game }) {
       value=${current}
       onChange=${setSel}
     />`}
-    ${game.actors[current] ? html`<${SheetView} key=${current} game=${game} actorId=${current} />` : html`<${Empty}>Personnage introuvable.</${Empty}>`}
+    ${game.actors[current] ? html`<${SheetView} key=${current} game=${game} actorId=${current} />` : html`<${Empty}>${t('Personnage introuvable.')}</${Empty}>`}
   </div>`;
 }

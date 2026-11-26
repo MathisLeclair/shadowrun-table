@@ -1,22 +1,26 @@
 // Shop rules shared by the server (price authority, server/modules/40-shop.js) and the browser (previews).
 // Pure ES module: no DOM, no Node APIs, no imports — keep it that way so both sides can load it.
+//
+// i18n: labels below are French dictionary keys (marked with tk() for tools/i18n-check.js, English in
+// client/i18n/en/shop.json). Render them with t(label) on the client; never translate at module level.
+const tk = (s) => s;
 
 /** SR5 'ware grades (core rulebook p.451). */
 export const GRADES = {
-  standard: { label: 'Standard', ess: 1, cost: 1, avail: 0 },
-  alpha: { label: 'Alphaware', ess: 0.8, cost: 1.2, avail: 2 },
-  beta: { label: 'Betaware', ess: 0.7, cost: 1.5, avail: 4 },
-  delta: { label: 'Deltaware', ess: 0.5, cost: 2.5, avail: 8 },
-  used: { label: "D'occasion", ess: 1.25, cost: 0.75, avail: -4 },
+  standard: { label: tk('Standard'), ess: 1, cost: 1, avail: 0 },
+  alpha: { label: tk('Alphaware'), ess: 0.8, cost: 1.2, avail: 2 },
+  beta: { label: tk('Betaware'), ess: 0.7, cost: 1.5, avail: 4 },
+  delta: { label: tk('Deltaware'), ess: 0.5, cost: 2.5, avail: 8 },
+  used: { label: tk("D'occasion"), ess: 1.25, cost: 0.75, avail: -4 },
 };
 export const GRADE_IDS = Object.keys(GRADES);
 
 /** Catalog files that can be sold in the shop (state.shop.categories keys). */
 export const SHOP_FILES = ['weapons', 'armor', 'gear', 'cyberware', 'bioware', 'vehicles', 'programs', 'lifestyles'];
 export const FILE_LABELS = {
-  weapons: 'Armes', armor: 'Armures', gear: 'Équipement', cyberware: 'Cyberware', bioware: 'Bioware',
-  vehicles: 'Véhicules & drones', programs: 'Programmes', lifestyles: 'Train de vie',
-  qualities: 'Traits', spells: 'Sorts', powers: 'Pouvoirs d’adepte',
+  weapons: tk('Armes'), armor: tk('Armures'), gear: tk('Équipement'), cyberware: tk('Cyberware'), bioware: tk('Bioware'),
+  vehicles: tk('Véhicules & drones'), programs: tk('Programmes'), lifestyles: tk('Train de vie'),
+  qualities: tk('Traits'), spells: tk('Sorts'), powers: tk('Pouvoirs d’adepte'),
 };
 
 /** Gear categories that belong to the « Matrice » and « Magie » storefront sections. */
@@ -31,17 +35,17 @@ export const MAGIC_GEAR = new Set([
 /** Gear categories whose items can become the actor's Matrix device (actor.matrix). */
 export const DEVICE_GEAR = new Set(['Commlinks', 'Cyberdecks', 'Rigger Command Consoles', 'Cyberterminals']);
 
-/** Storefront sections (sidebar). `match(file, item)` says which catalog entries a section shows. */
+/** Storefront sections (sidebar). `match(file, item)` says which catalog entries a section shows. `label` = French key: render t(label). */
 export const SECTIONS = [
-  { id: 'weapons', label: 'Armes', icon: '⚔', files: ['weapons'], match: (f) => f === 'weapons' },
-  { id: 'armor', label: 'Armures', icon: '⛨', files: ['armor'], match: (f) => f === 'armor' },
-  { id: 'gear', label: 'Équipement', icon: '⚙', files: ['gear'], match: (f, it) => f === 'gear' && !MATRIX_GEAR.has(it.category) && !MAGIC_GEAR.has(it.category) },
-  { id: 'cyberware', label: 'Cyberware', icon: '⌬', files: ['cyberware'], match: (f) => f === 'cyberware' },
-  { id: 'bioware', label: 'Bioware', icon: '❦', files: ['bioware'], match: (f) => f === 'bioware' },
-  { id: 'vehicles', label: 'Véhicules & drones', icon: '⛟', files: ['vehicles'], match: (f) => f === 'vehicles' },
-  { id: 'matrix', label: 'Matrice', icon: '⌨', files: ['gear', 'programs'], match: (f, it) => f === 'programs' || (f === 'gear' && MATRIX_GEAR.has(it.category)) },
-  { id: 'magic', label: 'Magie', icon: '✶', files: ['gear'], match: (f, it) => f === 'gear' && MAGIC_GEAR.has(it.category) },
-  { id: 'lifestyles', label: 'Train de vie', icon: '⌂', files: ['lifestyles'], match: (f) => f === 'lifestyles' },
+  { id: 'weapons', label: tk('Armes'), icon: '⚔', files: ['weapons'], match: (f) => f === 'weapons' },
+  { id: 'armor', label: tk('Armures'), icon: '⛨', files: ['armor'], match: (f) => f === 'armor' },
+  { id: 'gear', label: tk('Équipement'), icon: '⚙', files: ['gear'], match: (f, it) => f === 'gear' && !MATRIX_GEAR.has(it.category) && !MAGIC_GEAR.has(it.category) },
+  { id: 'cyberware', label: tk('Cyberware'), icon: '⌬', files: ['cyberware'], match: (f) => f === 'cyberware' },
+  { id: 'bioware', label: tk('Bioware'), icon: '❦', files: ['bioware'], match: (f) => f === 'bioware' },
+  { id: 'vehicles', label: tk('Véhicules & drones'), icon: '⛟', files: ['vehicles'], match: (f) => f === 'vehicles' },
+  { id: 'matrix', label: tk('Matrice'), icon: '⌨', files: ['gear', 'programs'], match: (f, it) => f === 'programs' || (f === 'gear' && MATRIX_GEAR.has(it.category)) },
+  { id: 'magic', label: tk('Magie'), icon: '✶', files: ['gear'], match: (f, it) => f === 'gear' && MAGIC_GEAR.has(it.category) },
+  { id: 'lifestyles', label: tk('Train de vie'), icon: '⌂', files: ['lifestyles'], match: (f) => f === 'lifestyles' },
 ];
 
 /** Which actor list a purchase lands in. */
@@ -69,7 +73,7 @@ function tokenize(src) {
     if (/\s/.test(s[i])) { i++; continue; }
     re.lastIndex = i;
     const m = re.exec(s);
-    if (!m) throw new Error(`Formule invalide : ${s}`);
+    if (!m) throw new Error(`Formule invalide : ${s}`); // i18n-ignore (catalog formula error, developer-facing)
     toks.push(m[1]);
     i = re.lastIndex;
   }
@@ -90,14 +94,14 @@ export function evalFormula(src, vars = {}) {
   const peek = () => toks[p];
   const next = () => toks[p++];
   const expect = (t) => {
-    if (toks[p] !== t) throw new Error(`Formule invalide : ${text}`);
+    if (toks[p] !== t) throw new Error(`Formule invalide : ${text}`); // i18n-ignore (catalog formula error, developer-facing)
     p++;
   };
   const env = { Rating: Number(vars.Rating ?? 1), MinRating: Number(vars.MinRating ?? 1) };
 
   function primary() {
     const t = next();
-    if (t === undefined) throw new Error(`Formule incomplète : ${text}`);
+    if (t === undefined) throw new Error(`Formule incomplète : ${text}`); // i18n-ignore (catalog formula error, developer-facing)
     if (t === '(') { const x = cmp(); expect(')'); return x; }
     if (t === '[') { const x = cmp(); expect(']'); return x; }
     if (/^\d/.test(t)) return Number(t);
@@ -111,7 +115,7 @@ export function evalFormula(src, vars = {}) {
       return args[idx];
     }
     if (t in env) return env[t];
-    throw new Error(`Variable inconnue « ${t} » dans ${text}`);
+    throw new Error(`Variable inconnue « ${t} » dans ${text}`); // i18n-ignore (catalog formula error, developer-facing)
   }
   function unary() {
     if (peek() === '-') { next(); return -unary(); }
@@ -151,8 +155,8 @@ export function evalFormula(src, vars = {}) {
     return x;
   }
   const out = cmp();
-  if (p !== toks.length) throw new Error(`Formule invalide : ${text}`);
-  if (!Number.isFinite(out)) throw new Error(`Résultat invalide : ${text}`);
+  if (p !== toks.length) throw new Error(`Formule invalide : ${text}`); // i18n-ignore (catalog formula error, developer-facing)
+  if (!Number.isFinite(out)) throw new Error(`Résultat invalide : ${text}`); // i18n-ignore (catalog formula error, developer-facing)
   return out;
 }
 
@@ -216,7 +220,7 @@ export function parseAvailString(avail) {
   return { value: m ? Number(m[1]) : 0, legality: m && m[2] ? m[2].toUpperCase() : '' };
 }
 
-/** Display name (French when available). */
+/** French display name (stored on the actor / server side). The client shows catalog items with itemName() of lib/i18n.js. */
 export function itemName(item) {
   return item?.nameFr || item?.name || '?';
 }
@@ -229,7 +233,7 @@ export function fold(s) {
     .toLowerCase();
 }
 
-export const LEGALITY_LABEL = { '': 'Légal', R: 'Restreint', F: 'Interdit' };
+export const LEGALITY_LABEL = { '': tk('Légal'), R: tk('Restreint'), F: tk('Interdit') };
 
 /** Magic/Resonance points lost when Essence drops from `before` to `after` (SR5: 1 per started point lost). */
 export function magicLoss(before, after) {

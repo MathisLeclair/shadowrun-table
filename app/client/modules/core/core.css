@@ -1,0 +1,13 @@
+/* Core shell extras (loaded by app.js on every page): language switch, translation tools. */
+.lang-switch { display: inline-flex; border: 1px solid var(--line2); border-radius: 6px; overflow: hidden; flex: none; }
+.lang-opt { background: none; border: none; color: var(--dim); font: 600 11px var(--mono); letter-spacing: .5px; padding: 4px 7px; cursor: pointer; line-height: 1.2; }
+.lang-opt + .lang-opt { border-left: 1px solid var(--line2); }
+.lang-opt:hover { color: var(--text); background: var(--panel2); }
+.lang-opt.active { color: var(--cyan); background: #0f2a2a; cursor: default; }
+.lang-opt:focus-visible { outline: 1px solid var(--cyan); outline-offset: -1px; }
+.login-lang { align-self: flex-end; margin-bottom: -6px; }
+
+.i18n-missing { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.i18n-missing .i18n-count { font: 600 13px var(--mono); color: var(--amber); }
+.i18n-missing .i18n-count.zero { color: var(--green); }
+.i18n-missing-list { max-height: 180px; overflow: auto; background: var(--bg2); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font: 12px var(--mono); color: var(--dim); white-space: pre-wrap; word-break: break-word; }

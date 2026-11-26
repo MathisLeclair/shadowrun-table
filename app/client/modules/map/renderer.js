@@ -6,6 +6,7 @@
 // segment walls are drawn for the GM only (toggle), segment doors for everyone as clickable icons.
 import { buildGrid, lineOfSightMask, mapLights, wallIsDoor, wallMidpoint, pointSegmentDistance } from '/shared/vision.js';
 import { derive } from '/shared/sr5.js';
+import { t, tk, tIfKnown } from '../../lib/i18n.js';
 
 // ---------------------------------------------------------------------------
 // Shared image cache (backgrounds, portraits): each url loads once for every renderer / thumbnail.
@@ -63,27 +64,38 @@ export function wallsKey(map) {
 }
 
 export const THEMES = {
-  street: { label: 'Rue', floor: '#1b2027', ext: '#15181d', wall: '#2a303a', wallTop: '#343b47', glow: '#3fd6d0', accent: '#e0468f', wood: '#4a3a2c', metal: '#3b4451', carpet: '#33203a', fabric: '#3a3550' },
-  bar: { label: 'Bar', floor: '#231a19', ext: '#17171a', wall: '#33262a', wallTop: '#3e2e33', glow: '#e0a63f', accent: '#e0468f', wood: '#5b3d25', metal: '#463a3a', carpet: '#4a1830', fabric: '#4a2430' },
-  corp: { label: 'Corpo', floor: '#1c232c', ext: '#161a20', wall: '#2c3846', wallTop: '#374657', glow: '#5c9be0', accent: '#3fd6d0', wood: '#3e4754', metal: '#47535f', carpet: '#1f3048', fabric: '#2b3a55' },
-  lab: { label: 'Labo', floor: '#1d2527', ext: '#151a1b', wall: '#2c3b3e', wallTop: '#36494c', glow: '#4fd17a', accent: '#3fd6d0', wood: '#3a4949', metal: '#4b5b5d', carpet: '#1d3a33', fabric: '#2c4a44' },
-  industrial: { label: 'Industriel', floor: '#201e1a', ext: '#181715', wall: '#36322b', wallTop: '#423d34', glow: '#e0a63f', accent: '#e05c5c', wood: '#4d3b25', metal: '#4a463e', carpet: '#3a2a18', fabric: '#44382a' },
-  residential: { label: 'Résidentiel', floor: '#221d1b', ext: '#171615', wall: '#362e2a', wallTop: '#433832', glow: '#e0a63f', accent: '#9d7ce0', wood: '#5a4030', metal: '#4a4440', carpet: '#3a2440', fabric: '#4a3a5a' },
-  matrix: { label: 'Matrice', floor: '#08151a', ext: '#061014', wall: '#0f2b33', wallTop: '#14404a', glow: '#3fd6d0', accent: '#4fd17a', wood: '#123a40', metal: '#14404a', carpet: '#0a2a2a', fabric: '#0f3a3a', grid: 'rgba(63,214,208,0.16)' },
-  club: { label: 'Club', floor: '#170f1d', ext: '#120d16', wall: '#2a1832', wallTop: '#35203f', glow: '#e0468f', accent: '#9d7ce0', wood: '#3a2040', metal: '#3a2a48', carpet: '#3a1040', fabric: '#4a1e52' },
+  street: { label: tk('Rue'), floor: '#1b2027', ext: '#15181d', wall: '#2a303a', wallTop: '#343b47', glow: '#3fd6d0', accent: '#e0468f', wood: '#4a3a2c', metal: '#3b4451', carpet: '#33203a', fabric: '#3a3550' },
+  bar: { label: tk('Bar'), floor: '#231a19', ext: '#17171a', wall: '#33262a', wallTop: '#3e2e33', glow: '#e0a63f', accent: '#e0468f', wood: '#5b3d25', metal: '#463a3a', carpet: '#4a1830', fabric: '#4a2430' },
+  corp: { label: tk('Corpo'), floor: '#1c232c', ext: '#161a20', wall: '#2c3846', wallTop: '#374657', glow: '#5c9be0', accent: '#3fd6d0', wood: '#3e4754', metal: '#47535f', carpet: '#1f3048', fabric: '#2b3a55' },
+  lab: { label: tk('Labo'), floor: '#1d2527', ext: '#151a1b', wall: '#2c3b3e', wallTop: '#36494c', glow: '#4fd17a', accent: '#3fd6d0', wood: '#3a4949', metal: '#4b5b5d', carpet: '#1d3a33', fabric: '#2c4a44' },
+  industrial: { label: tk('Industriel'), floor: '#201e1a', ext: '#181715', wall: '#36322b', wallTop: '#423d34', glow: '#e0a63f', accent: '#e05c5c', wood: '#4d3b25', metal: '#4a463e', carpet: '#3a2a18', fabric: '#44382a' },
+  residential: { label: tk('Résidentiel'), floor: '#221d1b', ext: '#171615', wall: '#362e2a', wallTop: '#433832', glow: '#e0a63f', accent: '#9d7ce0', wood: '#5a4030', metal: '#4a4440', carpet: '#3a2440', fabric: '#4a3a5a' },
+  matrix: { label: tk('Matrice'), floor: '#08151a', ext: '#061014', wall: '#0f2b33', wallTop: '#14404a', glow: '#3fd6d0', accent: '#4fd17a', wood: '#123a40', metal: '#14404a', carpet: '#0a2a2a', fabric: '#0f3a3a', grid: 'rgba(63,214,208,0.16)' },
+  club: { label: tk('Club'), floor: '#170f1d', ext: '#120d16', wall: '#2a1832', wallTop: '#35203f', glow: '#e0468f', accent: '#9d7ce0', wood: '#3a2040', metal: '#3a2a48', carpet: '#3a1040', fabric: '#4a1e52' },
 };
-export const THEME_OPTIONS = Object.entries(THEMES).map(([value, t]) => ({ value, label: t.label }));
+// Labels below are French keys: render them with t() (or use the *Options() / *Label() helpers).
+export const THEME_OPTIONS = Object.entries(THEMES).map(([value, th]) => ({ value, label: th.label }));
 export const LIGHTING_OPTIONS = [
-  { value: 'bright', label: 'Jour' },
-  { value: 'dim', label: 'Pénombre' },
-  { value: 'dark', label: 'Obscurité' },
+  { value: 'bright', label: tk('Jour') },
+  { value: 'dim', label: tk('Pénombre') },
+  { value: 'dark', label: tk('Obscurité') },
 ];
-export const DISPO = {
-  pc: { color: '#3fd6d0', label: 'PJ' },
-  ally: { color: '#4fd17a', label: 'Allié' },
-  neutral: { color: '#e0a63f', label: 'Neutre' },
-  hostile: { color: '#e05c5c', label: 'Hostile' },
+/** Select options in the UI language (call at render time). */
+export const themeOptions = () => THEME_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }));
+export const lightingOptions = () => LIGHTING_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }));
+export const themeLabel = (k) => (THEMES[k] ? t(THEMES[k].label) : k || '');
+export const lightingLabel = (k) => {
+  const o = LIGHTING_OPTIONS.find((x) => x.value === k);
+  return o ? t(o.label) : k || '';
 };
+export const DISPO = {
+  pc: { color: '#3fd6d0', label: tk('PJ') },
+  ally: { color: '#4fd17a', label: tk('Allié') },
+  neutral: { color: '#e0a63f', label: tk('Neutre') },
+  hostile: { color: '#e05c5c', label: tk('Hostile') },
+};
+/** Token disposition label in the UI language. */
+export const dispoLabel = (k) => (DISPO[k] ? t(DISPO[k].label) : '');
 /** Flat colours per tile (thumbnails, palette fallback). */
 export const TILE_FLAT = {
   ' ': '#05070a', '.': '#2a323c', ',': '#20242b', '#': '#56606e', D: '#3fd6d0', W: '#5cc8ff', '=': '#7a5a3a', T: '#6b5038',
@@ -91,6 +103,10 @@ export const TILE_FLAT = {
   g: '#24452c', r: '#4a4f57', x: '#b0702a', t: '#1f4a28', _: '#5a2a5a',
 };
 export const STATUS_GLYPHS = { 'à terre': '↧', inconscient: 'z', mort: '✝', étourdi: '✶', 'en feu': '♨', aveuglé: '◌', 'à couvert': '▣', caché: '◐', paniqué: '!', saignement: '♦', entravé: '⛓' };
+// Token statuses are stored in French (keys above); these markers give the checker their dictionary keys.
+export const STATUS_KEYS = [tk('à terre'), tk('inconscient'), tk('mort'), tk('étourdi'), tk('en feu'), tk('aveuglé'), tk('à couvert'), tk('caché'), tk('paniqué'), tk('saignement'), tk('entravé')];
+/** Stored token status ('à terre'…) in the UI language (custom statuses unchanged). */
+export const statusText = (s) => tIfKnown(String(s ?? ''));
 
 const EMPTY = new Set([' ']);
 const OPEN_FOR_GLOW = (ch) => ch !== '#' && ch !== ' ';
@@ -1082,7 +1098,7 @@ export class MapRenderer {
     this.ensureLayers();
     const { scale, x: vx, y: vy } = this.view;
     const th = THEMES[map.theme] || THEMES.street;
-    const t = now / 1000;
+    const time = now / 1000;
 
     // ---------- world space ----------
     ctx.save();
@@ -1150,7 +1166,7 @@ export class MapRenderer {
         if (!inView(mx, my)) continue;
         for (let k = 0; k < 2; k++) {
           const ph = hash(mx, my, 20 + k);
-          const on = Math.sin(t * (1.5 + ph * 3) + ph * 10) > 0.1;
+          const on = Math.sin(time * (1.5 + ph * 3) + ph * 10) > 0.1;
           if (!on) continue;
           ctx.fillStyle = k === 0 ? th.glow : ph > 0.7 ? '#e05c5c' : '#4fd17a';
           ctx.beginPath();
@@ -1256,7 +1272,7 @@ export class MapRenderer {
       for (const r of map.regions || []) {
         const p = this.toScreen(r.x + 0.15, r.y + 0.12);
         const col = r.gmOnly ? '#e0468f' : r.color || th.accent;
-        const label = r.gmOnly ? `${r.name} (MJ)` : r.name;
+        const label = r.gmOnly ? t('{name} (MJ)', { name: r.name }) : r.name;
         ctx.fillStyle = 'rgba(5,7,10,0.6)';
         const tw = ctx.measureText(label).width;
         ctx.fillRect(p.x - 3, p.y - 2, tw + 6, Math.max(10, Math.min(14, scale * 0.38)) + 4);
@@ -1292,7 +1308,7 @@ export class MapRenderer {
     // segment door icons (clickable)
     this.drawDoorIcons(ctx);
     if (imageMode && sc.gmLayer && imageStatus(bg.url) === 'failed') {
-      this.drawLabel(ctx, { x: map.width / 2, y: map.height / 2 }, `Image de fond introuvable : ${String(bg.url).slice(-60)}`, '#e05c5c');
+      this.drawLabel(ctx, { x: map.width / 2, y: map.height / 2 }, t('Image de fond introuvable : {url}', { url: String(bg.url).slice(-60) }), '#e05c5c');
     }
 
     // path preview (under tokens)

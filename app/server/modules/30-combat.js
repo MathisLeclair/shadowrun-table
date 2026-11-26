@@ -11,14 +11,23 @@ import { uid, clamp, deepClone } from '../../shared/util.js';
 const DISPOSITIONS = ['pc', 'ally', 'neutral', 'hostile'];
 const NPC_KINDS = ['metahuman', 'critter', 'drone', 'ic', 'host', 'spirit', 'other'];
 const INIT_MODES = ['physical', 'astral', 'ar', 'cold', 'hot'];
-const INIT_MODE_LABELS = { physical: 'physique', astral: 'astrale', ar: 'RA', cold: 'VR froide', hot: 'VR chaude' };
+/** Marks a translatable key for tools/i18n-check.js (English in client/i18n/en/combat.json). */
+const tk = (s) => s;
+const INIT_MODE_LABELS = { physical: tk('physique'), astral: tk('astrale'), ar: tk('RA'), cold: tk('VR froide'), hot: tk('VR chaude') };
+/** Interrupt-action labels sent by the combat dock (French keys, translated by the client in the log). */
+const ADJUST_LABELS = new Set([tk('Esquive / parade'), tk('Défense totale')]);
 // Tiles a token may stand on (see the tile legend). 'D' is handled separately (door state).
 const PASSABLE = new Set(['.', ',', 's', 'e', 'g', 'r', 'x', 't', '_']);
 const AUTHOR = 'Initiative';
 const UNDO_MAX = 30;
 
-// In-memory undo stack for combat/prev (not persisted: an undo across restarts is not needed).
-let undoStack = [];
+// In-memory undo stacks for combat/prev, one per table state (not persisted: an undo across restarts is not needed).
+const undoStacks = new WeakMap(); // state -> [combat snapshots]
+function undoOf(state) {
+  let s = undoStacks.get(state);
+  if (!s) undoStacks.set(state, (s = []));
+  return s;
+}
 
 // ---------------------------------------------------------------------------
 // Sanitizing (templates come from the GM UI, imports and seeds)
@@ -349,8 +358,9 @@ function ownersOf(state, actorId) {
     .map((u) => u.id);
 }
 
-function logCombat(ctx, text, { gmOnly = false } = {}) {
-  ctx.log({ kind: 'combat', author: AUTHOR, userId: ctx.user.id, text, ...(gmOnly ? { gmOnly: true } : {}) });
+/** Combat log entry: `key` = French text with {placeholders} (translated by the client), `params` = named values. */
+function logCombat(ctx, key, params, { gmOnly = false } = {}) {
+  ctx.log({ kind: 'combat', author: AUTHOR, userId: ctx.user.id, i18n: { key, params }, ...(gmOnly ? { gmOnly: true } : {}) });
 }
 
 function setCurrent(ctx, c, entry) {
@@ -388,13 +398,17 @@ function doRoll(ctx, c, e, { blitz = false } = {}) {
   return e;
 }
 
+/** Initiative roll detail as a translatable value { t, params } (French: « 14 — 8 + 2D6 (3, 3) · -1 blessures »). */
 function rollText(e) {
-  const parts = [`${e.base} + ${e.dice}D6 (${(e.rolls || []).join(', ')})`];
-  if (e.wound) parts.push(`${e.wound} blessures`);
-  if (e.mode && e.mode !== 'physical') parts.push(INIT_MODE_LABELS[e.mode]);
-  if (e.blitz) parts.push('Blitz');
-  return `${e.total} — ${parts.join(' · ')}`;
+  let detail = { t: tk('{base} + {dice}D6 ({rolls})'), params: { base: e.base, dice: e.dice, rolls: (e.rolls || []).join(', ') } };
+  const add = (part) => (detail = { t: '{a} · {b}', params: { a: detail, b: part } });
+  if (e.wound) add({ t: '{n} blessures', params: { n: e.wound } });
+  if (e.mode && e.mode !== 'physical') add({ t: INIT_MODE_LABELS[e.mode] });
+  if (e.blitz) add('Blitz');
+  return { t: '{total} — {detail}', params: { total: e.total, detail } };
 }
+/** "Name 12, Other 9" (names and numbers only, no translation needed). */
+const scoreList = (entries, withRolls = false) => entries.map((e) => (withRolls ? `${e.name} ${e.total} [${e.rolls.join(',')}]` : `${e.name} ${e.total}`)).join(', ');
 
 /** Once nobody is waiting to roll, the first actor gets the turn. */
 function maybeAutoStart(ctx, c) {
@@ -404,7 +418,7 @@ function maybeAutoStart(ctx, c) {
   const first = firstActable(ctx.state, c);
   if (first) {
     setCurrent(ctx, c, first);
-    logCombat(ctx, `Tour ${c.round} : ${first.name} agit en premier.`, { gmOnly: !!first.hidden });
+    logCombat(ctx, tk('Tour {round} : {name} agit en premier.'), { round: c.round, name: first.name }, { gmOnly: !!first.hidden });
   }
 }
 
@@ -472,14 +486,15 @@ function addEntries(ctx, c, { tokenIds, actorIds, rollNpcs = true }) {
       npcRolls.push(e);
     }
   }
-  if (npcRolls.length) logCombat(ctx, `Initiative PNJ : ${npcRolls.map((e) => `${e.name} ${e.total}`).join(', ')}`, { gmOnly: true });
+  if (npcRolls.length) logCombat(ctx, tk('Initiative PNJ : {list}'), { list: scoreList(npcRolls) }, { gmOnly: true });
   sortEntries(state, c);
   return added;
 }
 
-function pushUndo(c) {
-  undoStack.push(deepClone(c));
-  if (undoStack.length > UNDO_MAX) undoStack.shift();
+function pushUndo(ctx, c) {
+  const stack = undoOf(ctx.state);
+  stack.push(deepClone(c));
+  if (stack.length > UNDO_MAX) stack.shift();
 }
 
 /** New combat turn: everybody rerolls (NPCs automatically, PCs « à lancer »). */
@@ -504,8 +519,8 @@ function newCombatTurn(ctx, c) {
       npcRolls.push(e);
     }
   }
-  logCombat(ctx, `— Tour de combat ${c.round} — lancez l’initiative !`);
-  if (npcRolls.length) logCombat(ctx, `Initiative PNJ : ${npcRolls.map((e) => `${e.name} ${e.total}`).join(', ')}`, { gmOnly: true });
+  logCombat(ctx, tk('— Tour de combat {round} — lancez l’initiative !'), { round: c.round });
+  if (npcRolls.length) logCombat(ctx, tk('Initiative PNJ : {list}'), { list: scoreList(npcRolls) }, { gmOnly: true });
   sortEntries(ctx.state, c);
   const waiting = c.entries.filter((e) => e.toRoll && !e.out && !e.down);
   for (const e of waiting) {
@@ -532,7 +547,7 @@ function advance(ctx, c, { markActed = true } = {}) {
         e.acted = false;
         e.delayed = false;
       }
-      logCombat(ctx, `Passe d’initiative ${c.pass}`);
+      logCombat(ctx, tk('Passe d’initiative {n}'), { n: c.pass });
       next = firstActable(ctx.state, c);
     } else {
       newCombatTurn(ctx, c);
@@ -577,7 +592,7 @@ export default {
     c.pass = c.pass || 1;
     if (c.currentId === undefined) c.currentId = null;
     c.active = !!c.active;
-    undoStack = [];
+    undoStacks.delete(state);
   },
 
   actions: {
@@ -751,12 +766,12 @@ export default {
         const map = mid ? state.maps?.[mid] : null;
         if (mapId && !map) ctx.fail('Carte introuvable');
         const c = (state.combat = { ...emptyCombat(), active: true, mapId: map ? map.id : null, startedAt: ctx.now });
-        undoStack = [];
+        undoStacks.delete(state);
         if (map && includeMapTokens !== false) {
           const tokenIds = (map.tokens || []).filter((t) => !t.hidden && t.actorId && state.actors[t.actorId]).map((t) => t.id);
           addEntries(ctx, c, { tokenIds, rollNpcs });
         }
-        logCombat(ctx, '⚔ Le combat commence ! Lancez l’initiative.');
+        logCombat(ctx, tk('⚔ Le combat commence ! Lancez l’initiative.'));
         ctx.emitTo('players', 'sfx', { id: 'notify' });
         maybeAutoStart(ctx, c);
         return { entries: c.entries.length };
@@ -804,8 +819,11 @@ export default {
         syncActors(ctx.state, c);
         doRoll(ctx, c, e, { blitz: !!blitz });
         const pcLike = e.kind === 'pc';
-        logCombat(ctx, `${e.name} — initiative ${rollText(e)}${blitz ? ' (1 point de Chance dépensé)' : ''}`, { gmOnly: !!e.hidden || !pcLike });
-        if (!e.hidden && !pcLike) logCombat(ctx, `${e.name} a lancé son initiative.`);
+        const rp = { name: e.name, roll: rollText(e) };
+        const gmOnly = !!e.hidden || !pcLike;
+        if (blitz) logCombat(ctx, tk('{name} — initiative {roll} (1 point de Chance dépensé)'), rp, { gmOnly });
+        else logCombat(ctx, tk('{name} — initiative {roll}'), rp, { gmOnly });
+        if (!e.hidden && !pcLike) logCombat(ctx, tk('{name} a lancé son initiative.'), { name: e.name });
         ctx.emitTo('all', 'sfx', { id: 'dice' });
         sortEntries(ctx.state, c);
         maybeAutoStart(ctx, c);
@@ -825,11 +843,14 @@ export default {
           doRoll(ctx, c, e);
           rolled.push(e);
         }
-        if (!rolled.length) ctx.fail(npcOnly ? 'Aucun PNJ à lancer' : 'Personne à lancer');
+        if (!rolled.length) {
+          if (npcOnly) ctx.fail('Aucun PNJ à lancer');
+          ctx.fail('Personne à lancer');
+        }
         const pcs = rolled.filter((e) => e.kind === 'pc' && !e.hidden);
         const npcs = rolled.filter((e) => !(e.kind === 'pc' && !e.hidden));
-        if (pcs.length) logCombat(ctx, `Le MJ lance l’initiative : ${pcs.map((e) => `${e.name} ${e.total}`).join(', ')}`);
-        if (npcs.length) logCombat(ctx, `Initiative PNJ : ${npcs.map((e) => `${e.name} ${e.total} [${e.rolls.join(',')}]`).join(', ')}`, { gmOnly: true });
+        if (pcs.length) logCombat(ctx, tk('Le MJ lance l’initiative : {list}'), { list: scoreList(pcs) });
+        if (npcs.length) logCombat(ctx, tk('Initiative PNJ : {list}'), { list: scoreList(npcs, true) }, { gmOnly: true });
         ctx.emitTo('all', 'sfx', { id: 'dice' });
         sortEntries(ctx.state, c);
         maybeAutoStart(ctx, c);
@@ -871,7 +892,9 @@ export default {
         e.score += d;
         e.adjust = (e.adjust || 0) + d;
         const what = str(label, 40).trim();
-        logCombat(ctx, `${e.name} : ${what ? what + ' ' : ''}(${d > 0 ? '+' : ''}${d} initiative → ${e.score})`, { gmOnly: !!e.hidden });
+        const ap = { name: e.name, delta: `${d > 0 ? '+' : ''}${d}`, score: e.score };
+        if (what) logCombat(ctx, tk('{name} : {label} ({delta} initiative → {score})'), { ...ap, label: ADJUST_LABELS.has(what) ? { t: what } : what }, { gmOnly: !!e.hidden });
+        else logCombat(ctx, tk('{name} : ({delta} initiative → {score})'), ap, { gmOnly: !!e.hidden });
         sortEntries(ctx.state, c);
         return { score: e.score };
       },
@@ -892,16 +915,16 @@ export default {
           // Nobody is acting yet (waiting for rolls): the GM forces the start with whoever has rolled.
           const first = firstActable(ctx.state, c);
           if (!first && c.entries.some((e) => e.toRoll && !e.out && !e.down)) ctx.fail('En attente des jets d’initiative');
-          pushUndo(c);
+          pushUndo(ctx, c);
           if (!first) {
             newCombatTurn(ctx, c);
             return { currentId: c.currentId, round: c.round, pass: c.pass };
           }
           setCurrent(ctx, c, first);
-          logCombat(ctx, `Tour ${c.round} : ${first.name} agit en premier.`, { gmOnly: !!first.hidden });
+          logCombat(ctx, tk('Tour {round} : {name} agit en premier.'), { round: c.round, name: first.name }, { gmOnly: !!first.hidden });
           return { currentId: c.currentId, round: c.round, pass: c.pass };
         }
-        pushUndo(c);
+        pushUndo(ctx, c);
         advance(ctx, c);
         return { currentId: c.currentId, round: c.round, pass: c.pass };
       },
@@ -910,7 +933,7 @@ export default {
     'combat/prev': {
       handler(ctx) {
         combatOf(ctx);
-        const snap = undoStack.pop();
+        const snap = undoOf(ctx.state).pop();
         if (!snap) ctx.fail('Rien à annuler');
         ctx.state.combat = snap;
         sortEntries(ctx.state, snap);
@@ -922,7 +945,7 @@ export default {
       handler(ctx) {
         const c = combatOf(ctx);
         syncActors(ctx.state, c);
-        pushUndo(c);
+        pushUndo(ctx, c);
         newCombatTurn(ctx, c);
         return { round: c.round };
       },
@@ -938,9 +961,9 @@ export default {
         syncActors(ctx.state, c);
         const others = c.entries.filter((x) => x.id !== e.id && canAct(x));
         if (!others.length) ctx.fail('Personne d’autre n’agit dans cette passe');
-        pushUndo(c);
+        pushUndo(ctx, c);
         e.delayed = true;
-        logCombat(ctx, `${e.name} retarde son action.`, { gmOnly: !!e.hidden });
+        logCombat(ctx, tk('{name} retarde son action.'), { name: e.name }, { gmOnly: !!e.hidden });
         advance(ctx, c, { markActed: false });
         return { currentId: c.currentId };
       },
@@ -953,14 +976,14 @@ export default {
         const e = getEntry(ctx, c, entryId);
         requireOwner(ctx, e);
         if (!e.delayed) ctx.fail('Cette action n’a pas été retardée');
-        pushUndo(c);
+        pushUndo(ctx, c);
         const cur = c.entries.find((x) => x.id === c.currentId);
         e.delayed = false;
         if (cur && cur.score < e.score) {
           e.total -= e.score - cur.score;
           e.score = cur.score;
         }
-        logCombat(ctx, `${e.name} agit maintenant (action retardée).`, { gmOnly: !!e.hidden });
+        logCombat(ctx, tk('{name} agit maintenant (action retardée).'), { name: e.name }, { gmOnly: !!e.hidden });
         setCurrent(ctx, c, e);
         return { currentId: e.id };
       },
@@ -978,7 +1001,7 @@ export default {
         if ((actor.edge?.current ?? 0) < 1) ctx.fail('Plus de points de Chance');
         actor.edge = { ...(actor.edge || {}), current: actor.edge.current - 1 };
         e.seized = true;
-        logCombat(ctx, `${e.name} saisit l’initiative (1 point de Chance) !`, { gmOnly: !!e.hidden });
+        logCombat(ctx, tk('{name} saisit l’initiative (1 point de Chance) !'), { name: e.name }, { gmOnly: !!e.hidden });
         sortEntries(ctx.state, c);
         return { ok: true };
       },
@@ -1009,7 +1032,7 @@ export default {
         }
         const actor = ctx.state.actors[e.actorId];
         if (actor && actor.type !== 'pc') actor.hidden = false;
-        logCombat(ctx, `${e.name} entre dans le combat !`);
+        logCombat(ctx, tk('{name} entre dans le combat !'), { name: e.name });
         sortEntries(ctx.state, c);
         return { ok: true };
       },
@@ -1030,8 +1053,11 @@ export default {
         const c = ctx.state.combat;
         const rounds = c?.round || 1;
         ctx.state.combat = emptyCombat();
-        undoStack = [];
-        if (c?.active) logCombat(ctx, `Fin du combat (${rounds} tour${rounds > 1 ? 's' : ''}).`);
+        undoStacks.delete(ctx.state);
+        if (c?.active) {
+          if (rounds > 1) logCombat(ctx, tk('Fin du combat ({n} tours).'), { n: rounds });
+          else logCombat(ctx, tk('Fin du combat ({n} tour).'), { n: rounds });
+        }
         return { ok: true };
       },
     },

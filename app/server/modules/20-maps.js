@@ -9,6 +9,8 @@ import {
   tokenInMask, encodeBits, decodeBits, orBits, remapBits, isPcToken, stepBlocked, wallMidpoint, pointSegmentDistance,
 } from '../../shared/vision.js';
 
+/** Marker for the i18n checker: French error keys passed around before ctx.fail(). */
+const tk = (s) => s;
 const MAX_DIM = 160;
 const MAX_WALLS = 6000;
 const WALL_DOOR_KINDS = ['door', 'secret'];
@@ -329,9 +331,10 @@ function getToken(ctx, map, tokenId) {
   if (!t) ctx.fail('Pion introuvable');
   return t;
 }
-function findById(ctx, list, id, label) {
+/** `notFound` = translatable error key ('Lumière introuvable'…). */
+function findById(ctx, list, id, notFound) {
   const o = list.find((x) => x.id === id);
-  if (!o) ctx.fail(`${label} introuvable`);
+  if (!o) ctx.fail(notFound);
   return o;
 }
 function cellArg(ctx, map, x, y) {
@@ -449,7 +452,7 @@ function doMove(ctx, map, token, x, y, { ignoreWalls = false } = {}) {
         run = derive(actor).movement.run;
       } catch {}
       if (run != null && used + meters > run) {
-        ctx.fail(`Trop loin pour ce tour : ${meters} m demandés, il reste ${Math.max(0, Math.round((run - used) * 10) / 10)} m (course max ${run} m)`);
+        ctx.fail('Trop loin pour ce tour : {step} m demandés, il reste {left} m (course max {run} m)', { step: meters, left: Math.max(0, Math.round((run - used) * 10) / 10), run });
       }
     }
     token.moveBudget = { key, meters: Math.round((used + meters) * 100) / 100 };
@@ -513,7 +516,7 @@ function doorSfxOnChange(ctx, before, after) {
   else if (after === 'open') sfx(ctx, 'door-open');
 }
 
-function crudList(listKey, cleaner, label, { refresh = false } = {}) {
+function crudList(listKey, cleaner, notFound, { refresh = false } = {}) {
   return {
     add: {
       role: 'gm',
@@ -531,7 +534,7 @@ function crudList(listKey, cleaner, label, { refresh = false } = {}) {
       handler(ctx, p) {
         const map = getMap(ctx, p.mapId);
         const id = p.id ?? p[listKey.slice(0, -1) + 'Id'];
-        const cur = findById(ctx, map[listKey], id, label);
+        const cur = findById(ctx, map[listKey], id, notFound);
         const next = cleaner({ ...cur, ...(p.patch || {}), id: cur.id }, map);
         Object.keys(cur).forEach((k) => delete cur[k]);
         Object.assign(cur, next);
@@ -544,16 +547,16 @@ function crudList(listKey, cleaner, label, { refresh = false } = {}) {
       handler(ctx, p) {
         const map = getMap(ctx, p.mapId);
         const id = p.id ?? p[listKey.slice(0, -1) + 'Id'];
-        findById(ctx, map[listKey], id, label);
+        findById(ctx, map[listKey], id, notFound);
         map[listKey] = map[listKey].filter((x) => x.id !== id);
         if (refresh) refreshFog(ctx.state, map);
       },
     },
   };
 }
-const lightsCrud = crudList('lights', cleanLight, 'Lumière', { refresh: true });
-const regionsCrud = crudList('regions', cleanRegion, 'Zone');
-const notesCrud = crudList('notes', cleanNote, 'Note');
+const lightsCrud = crudList('lights', cleanLight, tk('Lumière introuvable'), { refresh: true });
+const regionsCrud = crudList('regions', cleanRegion, tk('Zone introuvable'));
+const notesCrud = crudList('notes', cleanNote, tk('Note introuvable'));
 
 // ---------------------------------------------------------------------------
 // Module
@@ -800,7 +803,7 @@ export default {
             for (const e of c.entries) {
               if (e.tokenId === tok.id && e.hidden) {
                 e.hidden = false;
-                ctx.log({ kind: 'combat', author: 'Initiative', userId: ctx.user.id, text: `${e.name} entre dans le combat !` });
+                ctx.log({ kind: 'combat', author: 'Initiative', userId: ctx.user.id, i18n: { key: '{name} entre dans le combat !', params: { name: e.name } } });
               }
             }
           }

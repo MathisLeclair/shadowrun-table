@@ -311,6 +311,36 @@ try {
   check(cleared.removed > 0, 'historique nettoyé');
   await settle();
   check(gm.state.training.requests.every((r) => ['pending', 'approved'].includes(r.status)), 'seules les demandes ouvertes restent');
+
+  // i18n: log entries, history entries and request labels render to the stored French text, and have English.
+  {
+    const I = await import('../client/lib/i18n.js');
+    const dir = new URL('../client/i18n/en/', import.meta.url);
+    const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json')).sort((a, b) => (a === 'glossary.json' ? -1 : b === 'glossary.json' ? 1 : a.localeCompare(b)));
+    const dict = {};
+    for (const f of files) Object.assign(dict, JSON.parse(fs.readFileSync(new URL(f, dir), 'utf8')));
+    I.setDictionary(dict);
+    I.clearMissing();
+    const logs = gm.state.log.filter((l) => l.kind === 'training');
+    const hist = Object.values(gm.state.actors).flatMap((a) => (a.history || []).filter((h) => h.i18n));
+    const labels = Object.values(gm.state.actors).flatMap((a) => a.training || []).concat(gm.state.training.requests).filter((x) => x.labelI18n).map((x) => ({ text: x.label, i18n: x.labelI18n }));
+    const all = [...logs, ...hist, ...labels];
+    check(logs.length > 0 && logs.every((l) => l.i18n?.key), 'i18n : entrées du journal traduisibles');
+    check(hist.length > 0 && labels.length > 0, 'i18n : historique et libellés traduisibles');
+    const text = (e) => I.t(e.i18n.key, e.i18n.params);
+    I.setLang('fr');
+    const bad = all.filter((e) => text(e) !== e.text);
+    check(!bad.length, 'i18n : rendu français = texte stocké', bad.map((e) => `${text(e)} ≠ ${e.text}`).join(' | '));
+    I.setLang('en');
+    const en = all.map(text);
+    I.setLang('fr');
+    const missing = Object.keys(I.missingKeys());
+    check(!missing.length, 'i18n : toutes les clés ont une traduction anglaise', missing.join(' | '));
+    check(en.some((x) => /^⏱ Downtime: /.test(x)) && en.some((x) => /requests: /.test(x)), 'i18n : journal en anglais');
+    // Quote errors / labels (shared/advancement.js) are translatable too.
+    const q = quote(sam(), { kind: 'skill', target: 'pistols', to: 12 });
+    check(q.errorI18n?.key && I.t(q.errorI18n.key, q.errorI18n.params) === q.error, 'i18n : erreur de devis = texte français');
+  }
 } catch (e) {
   check(false, `exception: ${e.stack}`);
 } finally {

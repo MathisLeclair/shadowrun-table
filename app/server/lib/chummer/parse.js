@@ -3,6 +3,7 @@
 // which lets export.js patch the original file and the 3-way merge (merge.js) match items across versions.
 import crypto from 'node:crypto';
 import { parseXml, XmlError } from './xml.js';
+import { i18nError, errorParam, warningList } from './messages.js';
 import { skillsData, appSkillId, metatypeData, METATYPE_FROM_EN, frenchName, frenchCategory, gradeTable, norm } from './data.js';
 import { SKILL_BY_ID } from '../../../shared/sr5.js';
 import { blankActor, categoryToSkill, evalFormula, MELEE_SKILLS } from '../../../client/modules/sheet/sheet-data.js';
@@ -83,20 +84,21 @@ function improvementsOf(c) {
 }
 
 /**
- * Parse a .chum5 file. Returns { actor, warnings, info: { created, appVersion, buildMethod, mugshot } }.
- * Throws Error (French message) when the file is not a Chummer character.
+ * Parse a .chum5 file. Returns { actor, warnings (French), warningsI18n ([{ t, params }]), info: { created, appVersion, buildMethod, mugshot } }.
+ * Throws ChummerError (French message + i18nKey/i18nParams) when the file is not a Chummer character.
  */
 export function parseChum5(xml, { fileName = '', now = Date.now(), makeId = uid, keepXml = true } = {}) {
   let doc;
   try {
     doc = parseXml(xml);
   } catch (err) {
-    if (err instanceof XmlError) throw new ChummerError(`Fichier .chum5 illisible — ${err.message}`);
+    if (err instanceof XmlError) throw i18nError({ t: 'Fichier .chum5 illisible — {error}', params: { error: errorParam(err) } }, ChummerError);
     throw err;
   }
   const c = doc.root;
-  if (c.name !== 'character') throw new ChummerError('Ce fichier n’est pas une fiche Chummer5 (.chum5)');
-  const warnings = [];
+  if (c.name !== 'character') throw i18nError({ t: 'Ce fichier n’est pas une fiche Chummer5 (.chum5)' }, ChummerError);
+  const warn = warningList();
+  const warnings = warn.list;
   const v = (n) => c.val(n).trim();
   const imps = improvementsOf(c);
 
@@ -106,7 +108,7 @@ export function parseChum5(xml, { fileName = '', now = Date.now(), makeId = uid,
   if (alias && realName && realName !== alias) a.realName = realName.slice(0, 120);
   const metaEn = v('metatype') || 'Human';
   a.metatype = METATYPE_FROM_EN[metaEn] || metaEn;
-  if (!METATYPE_FROM_EN[metaEn]) warnings.push(`Métatype « ${metaEn} » inconnu de l’app (gardé tel quel).`);
+  if (!METATYPE_FROM_EN[metaEn]) warn.add({ t: 'Métatype « {metatype} » inconnu de l’app (gardé tel quel).', params: { metatype: metaEn } });
   const gender = v('gender') || v('sex');
   a.gender = { Male: 'Homme', Female: 'Femme' }[gender] || gender;
   const age = v('age');
@@ -151,7 +153,7 @@ export function parseChum5(xml, { fileName = '', now = Date.now(), makeId = uid,
   a.streetCred = Math.max(0, streetBase + impSum('StreetCred') + Math.round(num(v('streetcred'))) - Math.round(num(v('burntstreetcred'))));
   a.notoriety = Math.max(0, Math.round(num(v('notoriety')) + impSum('Notoriety') + num(v('burntstreetcred'))));
   a.publicAwareness = Math.max(0, Math.round(num(v('publicawareness')) + impSum('PublicAwareness')));
-  if (!created) warnings.push('Personnage encore en mode création dans Chummer : karma et nuyens restants peuvent différer de ce qu’affiche Chummer.');
+  if (!created) warn.add({ t: 'Personnage encore en mode création dans Chummer : karma et nuyens restants peuvent différer de ce qu’affiche Chummer.' });
 
   // Attributes: value = metatype min + base + karma; totalvalue (when present) includes augmentations.
   const magEnabled = bool(v('magenabled'));
@@ -424,14 +426,14 @@ export function parseChum5(xml, { fileName = '', now = Date.now(), makeId = uid,
 
   a.history = [{ ts: now, chummer: true, text: `Import Chummer5${fileName ? ` (${fileName})` : ''}`, karma: a.karma, nuyen: a.nuyen }];
   const meta = metatypeData(metaEn);
-  if (!meta && METATYPE_FROM_EN[metaEn]) warnings.push('Données de métatype Chummer introuvables.');
+  if (!meta && METATYPE_FROM_EN[metaEn]) warn.add({ t: 'Données de métatype Chummer introuvables.' });
   if (keepXml) {
     a.chummer = {
       xml: String(xml).replace(/^﻿/, ''), fileName: String(fileName || '').slice(0, 200), importedAt: now, syncedAt: now, sourceHash: sha1(xml),
       created, appVersion: v('appversion'),
     };
   }
-  return { actor: a, warnings, info: { created, appVersion: v('appversion'), buildMethod: v('buildmethod'), mugshot } };
+  return { actor: a, warnings, warningsI18n: warn.i18n, info: { created, appVersion: v('appversion'), buildMethod: v('buildmethod'), mugshot } };
 }
 
 function withRef(item, node) {

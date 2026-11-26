@@ -5,12 +5,18 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import express from 'express';
-import { UPLOAD_DIR, DATA_DIR } from '../store.js';
+import { currentUploadDir, currentUploadUrl, localFileForUrl } from '../store.js';
 import { uid, deepClone } from '../../shared/util.js';
 import { normalizeActor, slugify } from '../../client/modules/sheet/sheet-data.js';
 import { parseChum5, sha1, ChummerError } from '../lib/chummer/parse.js';
 import { exportChum5, detachMugshots } from '../lib/chummer/export.js';
 import { mergeActor, diffActors } from '../lib/chummer/merge.js';
+import { errorBody, formatFr } from '../lib/i18n.js';
+import { errorParam } from '../lib/chummer/messages.js';
+
+const tk = (s) => s; // marks French keys used as values (tools/i18n-check.js)
+/** HTTP error body for an error that may carry an i18n key (Chummer/XML errors). */
+const errBody = (err, fallback) => (err?.i18nKey ? errorBody(err.i18nKey, err.i18nParams) : err?.message ? { error: err.message } : errorBody(fallback));
 
 const MAX_PENDING = 20;
 const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
@@ -64,9 +70,13 @@ function saveMugshot(b64) {
     else if (buf.slice(8, 12).toString() === 'WEBP') ext = 'webp';
     if (!ext) return null;
     const file = `chummer-${sha1(buf).slice(0, 12)}.${ext}`;
-    const full = path.join(UPLOAD_DIR, file);
-    if (!fs.existsSync(full)) fs.writeFileSync(full, buf);
-    return `/uploads/${file}`;
+    const dir = currentUploadDir(); // uploads of the current table
+    const full = path.join(dir, file);
+    if (!fs.existsSync(full)) {
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(full, buf);
+    }
+    return `${currentUploadUrl()}/${file}`;
   } catch {
     return null;
   }
@@ -78,12 +88,11 @@ function mugshotsFor(actor) {
   const out = [];
   for (const u of urls) {
     // Local images only (uploads or imported assets), in formats Chummer (.NET System.Drawing) can read.
-    const m = /^\/(uploads|assets)\/([^?#]+\.(png|jpe?g|gif|bmp))$/i.exec(String(u || ''));
-    if (!m) continue;
-    const parts = decodeURIComponent(m[2]).split('/');
-    if (parts.some((p) => !p || p === '.' || p === '..' || p.includes('\\'))) continue;
+    if (!/\.(png|jpe?g|gif|bmp)$/i.test(String(u || '').split(/[?#]/)[0])) continue;
+    const file = localFileForUrl(u); // /uploads, /assets or this table's /t/<slug>/… (null for anything else)
+    if (!file) continue;
     try {
-      const buf = fs.readFileSync(path.join(m[1] === 'uploads' ? UPLOAD_DIR : path.join(DATA_DIR, 'assets'), ...parts));
+      const buf = fs.readFileSync(file);
       if (buf.length < 8e6) out.push(buf.toString('base64'));
     } catch {}
   }
@@ -108,23 +117,30 @@ function prepareUpdate(actor, rawXml, fileName, now, mugshots = null) {
     if (!merged.portrait) merged.portrait = det.urls[det.mainIndex] || det.urls[0];
   }
   normalizeActor(merged, uid);
-  return { merged, diff: diffActors(actor, merged), warnings: parsed.warnings, info: parsed.info, linked: !!base, xml: det.xml, mugshots: det.urls };
+  return { merged, diff: diffActors(actor, merged), warnings: parsed.warnings, warningsI18n: parsed.warningsI18n, info: parsed.info, linked: !!base, xml: det.xml, mugshots: det.urls };
 }
 
-function summaryText(diff) {
+/** Short summary of a diff as translatable parts [{ t, params }] (a list param: joined with ', '). */
+function summaryParts(diff) {
   const parts = [];
-  for (const s of diff.scalars) if (['Karma', 'Nuyens'].includes(s.label)) parts.push(`${s.label} ${s.from} → ${s.to}`);
-  if (diff.attributes.length) parts.push(`${diff.attributes.length} attribut(s)`);
-  if (diff.skills.length) parts.push(`${diff.skills.length} compétence(s)`);
+  for (const s of diff.scalars) if (['Karma', 'Nuyens'].includes(s.label)) parts.push({ t: '{label} {from} → {to}', params: { label: { t: s.label }, from: s.from, to: s.to } });
+  if (diff.attributes.length) parts.push({ t: '{n} attribut(s)', params: { n: diff.attributes.length } });
+  if (diff.skills.length) parts.push({ t: '{n} compétence(s)', params: { n: diff.skills.length } });
   const items = diff.lists.reduce((n, l) => n + l.added.length + l.removed.length + l.changed.length, 0);
-  if (items) parts.push(`${items} élément(s) d’inventaire`);
-  return parts.join(', ') || 'aucun changement';
+  if (items) parts.push({ t: '{n} élément(s) d’inventaire', params: { n: items } });
+  return parts.length ? parts : [{ t: 'aucun changement' }];
 }
+/** French text of the summary (stored in pending requests, as before). */
+const summaryText = (parts) => formatFr('{list}', { list: parts });
 
 function applyUpdate(state, actorId, merged, { by, fileName, diff, addLog }) {
   merged.id = actorId;
   state.actors[actorId] = merged;
-  addLog({ kind: 'system', author: 'Chummer', text: `${merged.name} mis à jour depuis Chummer${fileName ? ` (${fileName})` : ''}${by ? ` par ${by}` : ''} : ${summaryText(diff)}.`, gmOnly: true });
+  const params = { actor: merged.name, file: fileName, user: by, summary: summaryParts(diff) };
+  const key = fileName
+    ? by ? tk('{actor} mis à jour depuis Chummer ({file}) par {user} : {summary}.') : tk('{actor} mis à jour depuis Chummer ({file}) : {summary}.')
+    : by ? tk('{actor} mis à jour depuis Chummer par {user} : {summary}.') : tk('{actor} mis à jour depuis Chummer : {summary}.');
+  addLog({ kind: 'system', author: 'Chummer', i18n: { key, params }, gmOnly: true });
 }
 
 export default {
@@ -163,7 +179,7 @@ export default {
           try {
             prep = prepareUpdate(actor, r.xml, r.fileName, ctx.now, r.mugshots || []);
           } catch (err) {
-            ctx.fail(err.message || 'Fichier illisible');
+            ctx.fail(err.i18nKey || err.message || tk('Fichier illisible'), err.i18nParams);
           }
           applyUpdate(ctx.state, r.actorId, prep.merged, { by: r.userName, fileName: r.fileName, diff: prep.diff, addLog: ctx.log });
           ctx.emitTo(r.userId, 'sfx', { id: 'notify' });
@@ -238,15 +254,16 @@ export default {
       const fileName = cleanFileName(req.query.fileName || req.headers['x-filename'] || '');
       let actor;
       let warnings = [];
+      let warningsI18n = [];
       if (/^\s*[{[]/.test(raw)) {
         let body;
         try {
           body = JSON.parse(raw);
         } catch {
-          return res.status(400).json({ error: 'JSON invalide' });
+          return res.status(400).json(errorBody('JSON invalide'));
         }
         const src = isObj(body?.actor) ? body.actor : body;
-        if (!isObj(src) || !src.name || !isObj(src.attributes)) return res.status(400).json({ error: 'Ce JSON ne ressemble pas à une fiche de personnage (name + attributes attendus)' });
+        if (!isObj(src) || !src.name || !isObj(src.attributes)) return res.status(400).json(errorBody('Ce JSON ne ressemble pas à une fiche de personnage (name + attributes attendus)'));
         actor = deepClone(src);
         actor.type = actor.type === 'npc' ? 'npc' : 'pc';
         delete actor.training;
@@ -255,12 +272,13 @@ export default {
         const parsed = parseChum5(det.xml, { fileName, now: Date.now() });
         actor = parsed.actor;
         warnings = parsed.warnings;
+        warningsI18n = parsed.warningsI18n;
         if (det.urls.length) {
           actor.chummer.mugshots = det.urls;
           actor.portrait = det.urls[det.mainIndex] || det.urls[0];
         }
       } else {
-        return res.status(400).json({ error: 'Fichier non reconnu : envoie un .chum5 (Chummer5) ou un export JSON de fiche' });
+        return res.status(400).json(errorBody('Fichier non reconnu : envoie un .chum5 (Chummer5) ou un export JSON de fiche'));
       }
       const type = req.query.type === 'npc' ? 'npc' : req.query.type === 'pc' ? 'pc' : actor.type;
       actor.type = type;
@@ -269,9 +287,9 @@ export default {
       if (type === 'npc') actor.color ||= '#e05c5c';
       normalizeActor(actor, uid);
       state.actors[id] = actor;
-      addLog({ kind: 'system', author: 'MJ', text: `Fiche importée : ${actor.name}${actor.chummer ? ' (Chummer)' : ''}.`, gmOnly: true });
+      addLog({ kind: 'system', author: 'MJ', i18n: { key: actor.chummer ? tk('Fiche importée : {actor} (Chummer).') : tk('Fiche importée : {actor}.'), params: { actor: actor.name } }, gmOnly: true });
       done();
-      replyAfterBroadcast(res, { actorId: id, warnings });
+      replyAfterBroadcast(res, { actorId: id, warnings, warningsI18n });
     }
 
     function targetActor(req, res) {
@@ -279,11 +297,11 @@ export default {
       const actorId = String(req.query.actorId || '');
       const actor = state.actors[actorId];
       if (!actor) {
-        res.status(404).json({ error: 'Personnage introuvable' });
+        res.status(404).json(errorBody('Personnage introuvable'));
         return null;
       }
       if (!owns(req.user, actorId)) {
-        res.status(403).json({ error: 'Ce personnage ne t’appartient pas' });
+        res.status(403).json(errorBody('Ce personnage ne t’appartient pas'));
         return null;
       }
       return actor;
@@ -291,7 +309,7 @@ export default {
 
     function checkChum5(raw, res) {
       if (!raw.includes('<character')) {
-        res.status(400).json({ error: 'Ce fichier n’est pas une fiche Chummer5 (.chum5)' });
+        res.status(400).json(errorBody('Ce fichier n’est pas une fiche Chummer5 (.chum5)'));
         return false;
       }
       return true;
@@ -311,20 +329,21 @@ export default {
       if (gm || s.allowPlayerImport) {
         applyUpdate(state, actor.id, prep.merged, { by: gm ? null : req.user.name, fileName, diff: prep.diff, addLog });
         done();
-        return replyAfterBroadcast(res, { applied: true, actorId: actor.id, diff: prep.diff, warnings: prep.warnings });
+        return replyAfterBroadcast(res, { applied: true, actorId: actor.id, diff: prep.diff, warnings: prep.warnings, warningsI18n: prep.warningsI18n });
       }
       // Player without permission: one pending request per actor & user (the newest replaces the older one).
       s.pending = s.pending.filter((r) => !(r.status === 'pending' && r.actorId === actor.id && r.userId === req.user.id));
       const request = {
         id: uid('chq'), ts: Date.now(), actorId: actor.id, actorName: actor.name, userId: req.user.id, userName: req.user.name,
-        fileName, xml: prep.xml, mugshots: prep.mugshots, diff: prep.diff, summary: summaryText(prep.diff), warnings: prep.warnings, status: 'pending',
+        fileName, xml: prep.xml, mugshots: prep.mugshots, diff: prep.diff, summary: '', summaryI18n: summaryParts(prep.diff), warnings: prep.warnings, warningsI18n: prep.warningsI18n, status: 'pending',
       };
+      request.summary = summaryText(request.summaryI18n);
       s.pending.push(request);
       while (s.pending.length > MAX_PENDING) s.pending.splice(s.pending.findIndex((r) => r.status !== 'pending') >= 0 ? s.pending.findIndex((r) => r.status !== 'pending') : 0, 1);
-      addLog({ kind: 'system', author: 'Chummer', text: `${req.user.name} demande à mettre à jour ${actor.name} depuis Chummer (${request.summary}).`, gmOnly: true });
+      addLog({ kind: 'system', author: 'Chummer', i18n: { key: '{user} demande à mettre à jour {actor} depuis Chummer ({summary}).', params: { user: req.user.name, actor: actor.name, summary: request.summaryI18n } }, gmOnly: true });
       emitTo('gm', 'sfx', { id: 'notify' });
       done();
-      replyAfterBroadcast(res, { applied: false, pending: true, requestId: request.id, diff: prep.diff, warnings: prep.warnings });
+      replyAfterBroadcast(res, { applied: false, pending: true, requestId: request.id, diff: prep.diff, warnings: prep.warnings, warningsI18n: prep.warningsI18n });
     }
 
     const wrap = (fn) => (req, res) => {
@@ -332,14 +351,14 @@ export default {
         fn(req, res);
       } catch (err) {
         if (!(err instanceof ChummerError)) console.error('[chummer]', err);
-        if (!res.headersSent) res.status(400).json({ error: err.message || 'Opération Chummer impossible' });
+        if (!res.headersSent) res.status(400).json(errBody(err, tk('Opération Chummer impossible')));
       }
     };
 
     // POST /api/chummer/import[?type=pc|npc][&fileName=] — GM: new actor. Player: ?actorId= → same as update.
     app.post('/api/chummer/import', requireUser, textBody, wrap((req, res) => {
       if (req.query.actorId) return update(req, res);
-      if (req.user.role !== 'gm') return res.status(403).json({ error: 'Seul le MJ peut créer un personnage depuis un fichier' });
+      if (req.user.role !== 'gm') return res.status(403).json(errorBody('Seul le MJ peut créer un personnage depuis un fichier'));
       importNew(req, res);
     }));
     // Legacy URL (characters module used to own it): GM import of a .chum5 or Actor JSON.
@@ -355,7 +374,7 @@ export default {
       const prep = prepareUpdate(actor, raw, fileName, Date.now());
       const s = slice(getState());
       res.json({
-        actorId: actor.id, fileName, diff: prep.diff, warnings: prep.warnings, linked: prep.linked, created: prep.info.created,
+        actorId: actor.id, fileName, diff: prep.diff, warnings: prep.warnings, warningsI18n: prep.warningsI18n, linked: prep.linked, created: prep.info.created,
         needsApproval: req.user.role !== 'gm' && !s.allowPlayerImport,
       });
     }));
@@ -367,8 +386,8 @@ export default {
     app.get('/api/chummer/export/:actorId', requireUser, wrap((req, res) => {
       const state = getState();
       const actor = state.actors[req.params.actorId];
-      if (!actor || !actor.attributes) return res.status(404).json({ error: 'Personnage introuvable' });
-      if (!owns(req.user, actor.id)) return res.status(403).json({ error: 'Ce personnage ne t’appartient pas' });
+      if (!actor || !actor.attributes) return res.status(404).json(errorBody('Personnage introuvable'));
+      if (!owns(req.user, actor.id)) return res.status(403).json(errorBody('Ce personnage ne t’appartient pas'));
       const now = Date.now();
       const result = exportChum5(actor, { now, mugshots: mugshotsFor(actor) });
       const stored = detachMugshots(result.xml, saveMugshot);
@@ -391,7 +410,8 @@ export default {
       res.setHeader('Content-Disposition', `attachment; filename="${slugify(fileBase)}.chum5"; filename*=UTF-8''${encodeURIComponent(fileBase)}.chum5`);
       res.setHeader('X-Chummer-Mode', result.mode);
       res.setHeader('X-Chummer-Warnings', encodeURIComponent(JSON.stringify(result.warnings.slice(0, 30))));
-      res.setHeader('Access-Control-Expose-Headers', 'X-Chummer-Mode, X-Chummer-Warnings, Content-Disposition');
+      res.setHeader('X-Chummer-Warnings-I18n', encodeURIComponent(JSON.stringify((result.warningsI18n || []).slice(0, 30))));
+      res.setHeader('Access-Control-Expose-Headers', 'X-Chummer-Mode, X-Chummer-Warnings, X-Chummer-Warnings-I18n, Content-Disposition');
       res.send(Buffer.from('﻿' + result.xml, 'utf8'));
     }));
   },

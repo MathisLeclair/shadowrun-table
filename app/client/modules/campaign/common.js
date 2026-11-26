@@ -3,22 +3,24 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { html, Badge, Markdown, Modal, IconButton, loadCss } from '../../lib/ui.js';
 import { api, send } from '../../lib/net.js';
 import { toast, setUI, getUI } from '../../lib/ui-store.js';
+import { t, tn, tk, locale, compare } from '../../lib/i18n.js';
 
 loadCss('/modules/campaign/campaign.css');
 
+// Labels are French keys (tk): render them with t(s.label) / t(s.one).
 export const QUEST_STATUS = [
-  { id: 'active', label: 'En cours', color: 'cyan' },
-  { id: 'upcoming', label: 'À venir', color: 'amber' },
-  { id: 'done', label: 'Terminée', color: 'green' },
-  { id: 'skipped', label: 'Ignorée', color: 'dim' },
+  { id: 'active', label: tk('quête::En cours'), color: 'cyan' },
+  { id: 'upcoming', label: tk('quête::À venir'), color: 'amber' },
+  { id: 'done', label: tk('quête::Terminée'), color: 'green' },
+  { id: 'skipped', label: tk('quête::Ignorée'), color: 'dim' },
 ];
 export const QUEST_STATUS_BY_ID = Object.fromEntries(QUEST_STATUS.map((s) => [s.id, s]));
 
 export const THREAD_STATES = [
-  { id: 'open', label: 'Ouverts', one: 'Ouvert', color: 'cyan' },
-  { id: 'dormant', label: 'En sommeil', one: 'En sommeil', color: 'amber' },
-  { id: 'resolved', label: 'Résolus', one: 'Résolu', color: 'green' },
-  { id: 'dead', label: 'Abandonnés', one: 'Abandonné', color: 'dim' },
+  { id: 'open', label: tk('fils::Ouverts'), one: tk('fil::Ouvert'), color: 'cyan' },
+  { id: 'dormant', label: tk('fils::En sommeil'), one: tk('fil::En sommeil'), color: 'amber' },
+  { id: 'resolved', label: tk('fils::Résolus'), one: tk('fil::Résolu'), color: 'green' },
+  { id: 'dead', label: tk('fils::Abandonnés'), one: tk('fil::Abandonné'), color: 'dim' },
 ];
 export const THREAD_STATE_BY_ID = Object.fromEntries(THREAD_STATES.map((s) => [s.id, s]));
 
@@ -114,10 +116,10 @@ export function resolveTemplateId(game, id) {
 
 export function npcInfo(game, id) {
   const tid = resolveTemplateId(game, id);
-  const t = tid && game.bestiary[tid];
-  if (t) return { id: tid, name: t.name || tid, kind: 'template', folder: t.folder || '' };
+  const tpl = tid && game.bestiary[tid];
+  if (tpl) return { id: tid, name: tpl.name || tid, kind: 'template', folder: tpl.folder || '' };
   const a = game.actors?.[id];
-  if (a) return { id, name: a.name || id, kind: 'actor', folder: a.type === 'pc' ? 'PJ' : 'PNJ en jeu' };
+  if (a) return { id, name: a.name || id, kind: 'actor', folder: a.type === 'pc' ? t('PJ') : t('PNJ en jeu') };
   return { id, name: prettyId(id), kind: 'missing', folder: '' };
 }
 
@@ -128,21 +130,21 @@ export function mapInfo(game, id) {
 
 export function templateOptions(game) {
   return Object.entries(game.bestiary || {})
-    .map(([id, t]) => ({ id, name: t?.name || id, folder: t?.folder || 'Divers' }))
-    .sort((a, b) => a.folder.localeCompare(b.folder, 'fr') || a.name.localeCompare(b.name, 'fr'));
+    .map(([id, tpl]) => ({ id, name: tpl?.name || id, folder: tpl?.folder || t('Divers') }))
+    .sort((a, b) => compare(a.folder, b.folder) || compare(a.name, b.name));
 }
 
 export function mapOptions(game) {
   return Object.entries(game.maps || {})
     .map(([id, m]) => ({ id, name: m?.name || id, folder: m?.folder || '' }))
-    .sort((a, b) => a.folder.localeCompare(b.folder, 'fr') || a.name.localeCompare(b.name, 'fr'));
+    .sort((a, b) => compare(a.folder, b.folder) || compare(a.name, b.name));
 }
 
 /** Group options by folder into <optgroup>s. */
 export function groupedOptions(list) {
   const groups = new Map();
   for (const o of list) {
-    const g = o.folder || 'Divers';
+    const g = o.folder || t('Divers');
     if (!groups.has(g)) groups.set(g, []);
     groups.get(g).push(o);
   }
@@ -161,15 +163,20 @@ export async function spawnNpc(game, linkedId, { hidden = false, count = 1 } = {
     const res = await send('bestiary/spawn', { templateId, mapId, count, hidden });
     const name = npcInfo(game, templateId).name;
     const placed = Array.isArray(res?.tokenIds) ? res.tokenIds.length : count;
-    if (placed) toast(`${name} placé${placed > 1 ? 's' : ''} sur la carte${mapId ? ` « ${mapInfo(game, mapId).name} »` : ''}${hidden ? ' (caché)' : ''}`, 'success');
-    else toast(`${name} créé, mais aucune carte n'est affichée (ou plus de place libre)`, 'warn');
+    if (placed) {
+      const map = mapId ? mapInfo(game, mapId).name : '';
+      let msg;
+      if (map) msg = hidden ? tn(placed, '{name} placé sur la carte « {map} » (caché)', '{name} placés sur la carte « {map} » (caché)', { name, map }) : tn(placed, '{name} placé sur la carte « {map} »', '{name} placés sur la carte « {map} »', { name, map });
+      else msg = hidden ? tn(placed, '{name} placé sur la carte (caché)', '{name} placés sur la carte (caché)', { name }) : tn(placed, '{name} placé sur la carte', '{name} placés sur la carte', { name });
+      toast(msg, 'success');
+    } else toast(t("{name} créé, mais aucune carte n'est affichée (ou plus de place libre)", { name }), 'warn');
   } catch {}
 }
 
 export async function showMapToPlayers(game, mapId) {
   try {
     await send('maps/setActive', { mapId });
-    toast(`Carte affichée aux joueurs : ${mapInfo(game, mapId).name}`, 'success');
+    toast(t('Carte affichée aux joueurs : {map}', { map: mapInfo(game, mapId).name }), 'success');
   } catch {}
 }
 
@@ -178,7 +185,7 @@ export async function revealHandout(handoutId, to) {
   try {
     const res = await send('campaign/revealHandout', { handoutId, to });
     const n = Array.isArray(res?.notified) ? res.notified.length : 0;
-    toast(to === 'all' ? 'Document révélé à tous les joueurs' : n ? 'Document envoyé' : 'Ce joueur l’avait déjà', n || to === 'all' ? 'success' : 'info');
+    toast(to === 'all' ? t('Document révélé à tous les joueurs') : n ? t('Document envoyé') : t('Ce joueur l’avait déjà'), n || to === 'all' ? 'success' : 'info');
   } catch {}
 }
 
@@ -199,7 +206,7 @@ export function reloadDocs() {
       throw err;
     });
   const p = docsCache;
-  p.then((list) => docsListeners.forEach((l) => l({ list, error: null }))).catch((err) => docsListeners.forEach((l) => l({ list: [], error: err.message || 'Erreur' })));
+  p.then((list) => docsListeners.forEach((l) => l({ list, error: null }))).catch((err) => docsListeners.forEach((l) => l({ list: [], error: err.message || t('Erreur') })));
   return p;
 }
 export function useDocs() {
@@ -208,7 +215,7 @@ export function useDocs() {
     let alive = true;
     const l = (v) => alive && setS({ ...v, loading: false });
     docsListeners.add(l);
-    (docsCache || reloadDocs()).then((list) => l({ list, error: null })).catch((err) => l({ list: [], error: err.message || 'Erreur' }));
+    (docsCache || reloadDocs()).then((list) => l({ list, error: null })).catch((err) => l({ list: [], error: err.message || t('Erreur') }));
     return () => {
       alive = false;
       docsListeners.delete(l);
@@ -235,8 +242,8 @@ export function DocSelect({ value, onChange, docs }) {
   const name = ref?.name || '';
   const known = docs.some((d) => d.name === name);
   return html`<select class="input camp-doc-select" value=${name} onChange=${(e) => onChange(e.target.value)}>
-    <option value="">— Aucun document —</option>
-    ${name && !known && html`<option value=${name}>${name} (introuvable)</option>`}
+    <option value="">${t('— Aucun document —')}</option>
+    ${name && !known && html`<option value=${name}>${t('{name} (introuvable)', { name })}</option>`}
     ${docs.map((d) => html`<option value=${d.name}>${docTitle(d.name)}</option>`)}
   </select>`;
 }
@@ -245,7 +252,7 @@ export function DocSelect({ value, onChange, docs }) {
 export function DocButton({ docRef, nav, small = true, label }) {
   const r = parseDocRef(docRef);
   if (!r) return null;
-  return html`<button class=${cx('btn btn-ghost camp-doc-btn', small && 'btn-sm')} title=${'Ouvrir ' + docRef} onClick=${(e) => {
+  return html`<button class=${cx('btn btn-ghost camp-doc-btn', small && 'btn-sm')} title=${t('Ouvrir {doc}', { doc: docRef })} onClick=${(e) => {
     e.stopPropagation();
     nav.openDoc(docRef);
   }}>
@@ -256,7 +263,7 @@ export function DocButton({ docRef, nav, small = true, label }) {
 // ---------------------------------------------------------------------------
 // Markdown editor: write / preview / side by side. Commits on blur, Ctrl+S, or unmount.
 // ---------------------------------------------------------------------------
-export function MdEditor({ value, onSave, rows = 8, placeholder = '', initialMode = 'preview', emptyText = 'Vide — clique sur « Écrire » pour rédiger.', label, class: klass, tall }) {
+export function MdEditor({ value, onSave, rows = 8, placeholder = '', initialMode = 'preview', emptyText, label, class: klass, tall }) {
   const [mode, setMode] = useState(initialMode);
   const [draft, setDraft] = useState(value || '');
   const [dirty, setDirty] = useState(false);
@@ -289,12 +296,12 @@ export function MdEditor({ value, onSave, rows = 8, placeholder = '', initialMod
     if (e.key === 'Tab' && !e.shiftKey && e.target.selectionStart === e.target.selectionEnd) {
       // Insert two spaces instead of leaving the field (lists indentation).
       e.preventDefault();
-      const t = e.target;
-      const s = t.selectionStart;
-      const next = t.value.slice(0, s) + '  ' + t.value.slice(s);
+      const ta = e.target;
+      const s = ta.selectionStart;
+      const next = ta.value.slice(0, s) + '  ' + ta.value.slice(s);
       setDraft(next);
       setDirty(true);
-      requestAnimationFrame(() => t.setSelectionRange(s + 2, s + 2));
+      requestAnimationFrame(() => ta.setSelectionRange(s + 2, s + 2));
     }
   };
 
@@ -306,19 +313,19 @@ export function MdEditor({ value, onSave, rows = 8, placeholder = '', initialMod
     onBlur=${commit} onKeyDown=${onKeyDown}></textarea>`;
   const preview = draft.trim()
     ? html`<${Markdown} class="camp-md-preview" text=${draft} />`
-    : html`<div class="camp-md-preview camp-md-empty" onDblClick=${() => setMode('edit')}>${emptyText}</div>`;
+    : html`<div class="camp-md-preview camp-md-empty" onDblClick=${() => setMode('edit')}>${emptyText ?? t('Vide — clique sur « Écrire » pour rédiger.')}</div>`;
 
   const modes = [
-    { id: 'preview', label: 'Aperçu' },
-    { id: 'edit', label: 'Écrire' },
-    { id: 'split', label: 'Côte à côte' },
+    { id: 'preview', label: t('Aperçu') },
+    { id: 'edit', label: t('Écrire') },
+    { id: 'split', label: t('Côte à côte') },
   ];
   return html`<div class=${cx('camp-md', `camp-md-${mode}`, tall && 'camp-md-tall', klass)}>
     <div class="camp-md-bar">
       ${label && html`<span class="camp-md-label">${label}</span>`}
       <span class="grow"></span>
       ${dirty
-        ? html`<button class="camp-md-save" title="Enregistrer (Ctrl+S)" onMouseDown=${(e) => e.preventDefault()} onClick=${commit}>● Enregistrer</button>`
+        ? html`<button class="camp-md-save" title=${t('Enregistrer (Ctrl+S)')} onMouseDown=${(e) => e.preventDefault()} onClick=${commit}>● ${t('Enregistrer')}</button>`
         : null}
       <div class="camp-seg">
         ${modes.map((m) => html`<button class=${cx(m.id === mode && 'active', m.id === 'split' && 'camp-seg-wide')} onMouseDown=${(e) => e.preventDefault()} onClick=${() => {
@@ -340,19 +347,19 @@ export function fmtDate(ts, withTime = true) {
   if (!ts) return '';
   const d = new Date(ts);
   if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleString('fr-FR', withTime ? { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' } : { day: 'numeric', month: 'long', year: 'numeric' });
+  return d.toLocaleString(locale(), withTime ? { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' } : { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 export function fmtSessionDate(s) {
   if (!s) return '';
   const d = new Date(s + (s.length === 10 ? 'T12:00:00' : ''));
-  return Number.isNaN(d.getTime()) ? s : d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
+  return Number.isNaN(d.getTime()) ? s : d.toLocaleDateString(locale(), { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 // ---------------------------------------------------------------------------
 // Handout card (player dossier look) — used by DossiersPage and the GM preview.
 // ---------------------------------------------------------------------------
-export function HandoutCard({ handout, unread, open = true, onToggle, stamp = 'Confidentiel' }) {
+export function HandoutCard({ handout, unread, open = true, onToggle, stamp }) {
   const [zoom, setZoom] = useState(false);
   const h = handout;
   return html`<article class=${cx('dos-card', unread && 'unread', open && 'open')}>
@@ -360,9 +367,9 @@ export function HandoutCard({ handout, unread, open = true, onToggle, stamp = 'C
       <span class="dos-tab"></span>
       <div class="grow">
         <div class="dos-card-meta">
-          <span class="dos-stamp">${stamp}</span>
-          ${h.revealedAt && html`<span class="faint small">reçu ${fmtDate(h.revealedAt)}</span>`}
-          ${unread && html`<${Badge} color="magenta">Nouveau</${Badge}>`}
+          <span class="dos-stamp">${stamp ?? t('Confidentiel')}</span>
+          ${h.revealedAt && html`<span class="faint small">${t('reçu {date}', { date: fmtDate(h.revealedAt) })}</span>`}
+          ${unread && html`<${Badge} color="magenta">${t('Nouveau')}</${Badge}>`}
         </div>
         <h3 class="dos-card-title">${h.title}</h3>
       </div>
@@ -371,8 +378,8 @@ export function HandoutCard({ handout, unread, open = true, onToggle, stamp = 'C
     ${open &&
     html`<div class="dos-card-body">
       ${h.image &&
-      html`<button class="dos-img" title="Agrandir" onClick=${() => setZoom(true)}><img src=${h.image} alt=${h.title} loading="lazy" /></button>`}
-      ${h.body ? html`<${Markdown} class="dos-md" text=${h.body} />` : !h.image && html`<div class="faint small">Document vide.</div>`}
+      html`<button class="dos-img" title=${t('Agrandir')} onClick=${() => setZoom(true)}><img src=${h.image} alt=${h.title} loading="lazy" /></button>`}
+      ${h.body ? html`<${Markdown} class="dos-md" text=${h.body} />` : !h.image && html`<div class="faint small">${t('Document vide.')}</div>`}
     </div>`}
     ${zoom &&
     html`<${Modal} title=${h.title} width=${1200} onClose=${() => setZoom(false)}>
@@ -382,8 +389,8 @@ export function HandoutCard({ handout, unread, open = true, onToggle, stamp = 'C
 }
 
 /** Small inline confirm-free "remove" chip button. */
-export function ChipX({ onClick, title = 'Retirer' }) {
-  return html`<${IconButton} icon="✕" class="camp-chip-x" title=${title} onClick=${(e) => {
+export function ChipX({ onClick, title }) {
+  return html`<${IconButton} icon="✕" class="camp-chip-x" title=${title || t('Retirer')} onClick=${(e) => {
     e.stopPropagation();
     onClick();
   }} />`;

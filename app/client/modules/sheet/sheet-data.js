@@ -1,13 +1,17 @@
 // Pure helpers for actors / character sheets, shared by the characters server module and the sheet UI.
 // IMPORTANT: no imports here (this file is loaded both by Node and by the browser).
+// Labels stay French here (they are also stored / used by the server); the UI renders them with t(…).
+
+/** Marker for the i18n checker (French keys rendered with t() by the UI). */
+const tk = (s) => s;
 
 /** Item lists of an Actor that can be edited with actor/addItem, actor/updateItem, actor/removeItem. */
 export const ITEM_LISTS = ['weapons', 'armor', 'augmentations', 'gear', 'vehicles', 'contacts', 'sins', 'qualities', 'powers', 'spells', 'knowledge', 'skills', 'complexForms', 'skillGroups'];
 
 export const LIST_LABELS = {
-  weapons: 'Armes', armor: 'Armures', augmentations: 'Augmentations', gear: 'Équipement', vehicles: 'Véhicules', contacts: 'Contacts',
-  sins: 'SIN', qualities: 'Qualités', powers: 'Pouvoirs d’adepte', spells: 'Sorts', knowledge: 'Connaissances', skills: 'Compétences',
-  complexForms: 'Formes complexes', skillGroups: 'Groupes de compétences',
+  weapons: tk('Armes'), armor: tk('Armures'), augmentations: tk('Augmentations'), gear: tk('Équipement'), vehicles: tk('Véhicules'), contacts: tk('Contacts'),
+  sins: tk('SIN'), qualities: tk('Qualités'), powers: tk('Pouvoirs d’adepte'), spells: tk('Sorts'), knowledge: tk('Connaissances'), skills: tk('Compétences'),
+  complexForms: tk('Formes complexes'), skillGroups: tk('Groupes de compétences'),
 };
 
 /** Fields a player may change on items of their own actor. */
@@ -26,7 +30,7 @@ export const MERGE_KEYS = ['attributes', 'augmented', 'initiative', 'monitors', 
 
 export const METATYPE_FR = { Human: 'Humain', Elf: 'Elfe', Dwarf: 'Nain', Ork: 'Ork', Troll: 'Troll', Humain: 'Humain', Elfe: 'Elfe', Nain: 'Nain', Orc: 'Ork', Orque: 'Ork' };
 
-export const KNOWLEDGE_TYPES = { street: 'Rue', academic: 'Académique', professional: 'Professionnelle', interest: 'Centre d’intérêt', language: 'Langue' };
+export const KNOWLEDGE_TYPES = { street: tk('Rue'), academic: tk('Académique'), professional: tk('Professionnelle'), interest: tk('Centre d’intérêt'), language: tk('Langue') };
 
 /** Linked attribute of a knowledge skill (SR5: street/interest → INT, academic/professional → LOG, language → INT). */
 export function knowledgeAttr(type) {
@@ -154,6 +158,8 @@ export function healthStatus({ physical = 0, stun = 0, overflow = 0 } = {}, phys
 }
 
 export const STATUS_COLORS = { indemne: 'green', 'blessé': 'amber', 'grièvement blessé': 'red', 'hors de combat': 'magenta', mort: 'dim' };
+/** Display keys of the statuses above (the stored value stays French). */
+export const STATUS_LABELS = { indemne: tk('indemne'), 'blessé': tk('blessé'), 'grièvement blessé': tk('grièvement blessé'), 'hors de combat': tk('hors de combat'), mort: tk('mort') };
 
 /** A blank actor (all SR5 attributes at 3). */
 export function blankActor(type = 'npc', name = 'Nouveau personnage') {

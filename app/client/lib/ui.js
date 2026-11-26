@@ -4,6 +4,7 @@ import { h } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import htm from 'htm';
 import { renderMarkdown } from './markdown.js';
+import { t, LANGS } from './i18n.js';
 
 export const html = htm.bind(h);
 
@@ -54,7 +55,7 @@ export function Modal({ title, onClose, width = 720, children, actions }) {
     <div class="modal" style=${{ width: `min(${width}px, calc(100vw - 24px))` }}>
       <header class="modal-head">
         <h2>${title}</h2>
-        <div class="row gap-s">${actions}<${IconButton} icon="✕" title="Fermer" onClick=${onClose} /></div>
+        <div class="row gap-s">${actions}<${IconButton} icon="✕" title=${t('Fermer')} onClick=${onClose} /></div>
       </header>
       <div class="modal-body">${children}</div>
     </div>
@@ -168,8 +169,19 @@ export function Empty({ children }) {
   return html`<div class="empty">${children}</div>`;
 }
 
-export function SearchBox({ value, onChange, placeholder = 'Rechercher…' }) {
-  return html`<input class="input search" type="search" value=${value} placeholder=${placeholder} onInput=${(e) => onChange(e.target.value)} />`;
+export function SearchBox({ value, onChange, placeholder }) {
+  return html`<input class="input search" type="search" value=${value} placeholder=${placeholder ?? t('Rechercher…')} onInput=${(e) => onChange(e.target.value)} />`;
+}
+
+const LANG_NAMES = { fr: 'Français', en: 'English' }; // endonyms: never translated
+/** FR | EN switch. value: 'fr'|'en'; onChange(lang). */
+export function LangSwitch({ value, onChange, class: klass }) {
+  return html`<span class=${cx('lang-switch', klass)} role="group" aria-label=${t('Langue')}>
+    ${LANGS.map(
+      (l) => html`<button type="button" class=${cx('lang-opt', l === value && 'active')} lang=${l} title=${LANG_NAMES[l]}
+        aria-pressed=${l === value ? 'true' : 'false'} onClick=${() => l !== value && onChange(l)}>${l.toUpperCase()}</button>`
+    )}
+  </span>`;
 }
 
 /** Renders markdown (headings, lists, bold/italic, links, tables, quotes, code). */
@@ -182,7 +194,7 @@ export function Stat({ label, value, title, accent }) {
   return html`<div class=${cx('stat', accent && `stat-${accent}`)} title=${title}><span class="stat-value">${value}</span><span class="stat-label">${label}</span></div>`;
 }
 
-/** Promise-based confirm (native dialog, keeps things simple). */
+/** Promise-based confirm (native dialog, keeps things simple). Pass an already translated message: confirmAction(t('…')). */
 export function confirmAction(message) {
   return Promise.resolve(window.confirm(message));
 }

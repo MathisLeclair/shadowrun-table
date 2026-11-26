@@ -1,27 +1,36 @@
 // Shared helpers for the combat dock and the bestiary (pure functions + tiny components).
 import { html } from '../../lib/ui.js';
+import { t, tk } from '../../lib/i18n.js';
 import { derive, attr, skillPool, SKILL_BY_ID } from '/shared/sr5.js';
 
-export const DISPO_LABELS = { pc: 'Runner', ally: 'Allié', neutral: 'Neutre', hostile: 'Hostile' };
+// Constant tables hold French keys (tk); render them with the helpers below (or t(label)).
+export const DISPO_LABELS = { pc: tk('Runner'), ally: tk('Allié'), neutral: tk('Neutre'), hostile: tk('Hostile') };
 export const DISPO_BADGE = { pc: 'cyan', ally: 'green', neutral: 'amber', hostile: 'red' };
 export const INIT_MODES = [
-  { value: 'physical', label: 'Physique' },
-  { value: 'astral', label: 'Astrale' },
-  { value: 'ar', label: 'Matrice (RA)' },
-  { value: 'cold', label: 'VR froide' },
-  { value: 'hot', label: 'VR chaude' },
+  { value: 'physical', label: tk('Physique') },
+  { value: 'astral', label: tk('Astrale') },
+  { value: 'ar', label: tk('Matrice (RA)') },
+  { value: 'cold', label: tk('VR froide') },
+  { value: 'hot', label: tk('VR chaude') },
 ];
 export const INIT_MODE_LABEL = Object.fromEntries(INIT_MODES.map((m) => [m.value, m.label]));
 export const NPC_KINDS = [
-  { value: 'metahuman', label: 'Métahumain' },
-  { value: 'critter', label: 'Créature' },
-  { value: 'spirit', label: 'Esprit' },
-  { value: 'drone', label: 'Drone / véhicule' },
-  { value: 'ic', label: 'IC' },
-  { value: 'host', label: 'Host (référence)' },
-  { value: 'other', label: 'Autre' },
+  { value: 'metahuman', label: tk('Métahumain') },
+  { value: 'critter', label: tk('Créature') },
+  { value: 'spirit', label: tk('Esprit') },
+  { value: 'drone', label: tk('Drone / véhicule') },
+  { value: 'ic', label: tk('IC') },
+  { value: 'host', label: tk('Host (référence)') },
+  { value: 'other', label: tk('Autre') },
 ];
 export const NPC_KIND_LABEL = Object.fromEntries(NPC_KINDS.map((k) => [k.value, k.label]));
+
+/** Translated labels / <Select> options (call at render time). */
+export const dispoLabel = (d) => (DISPO_LABELS[d] ? t(DISPO_LABELS[d]) : String(d ?? ''));
+export const initModeLabel = (m) => (INIT_MODE_LABEL[m] ? t(INIT_MODE_LABEL[m]) : String(m ?? ''));
+export const npcKindLabel = (k) => (NPC_KIND_LABEL[k] ? t(NPC_KIND_LABEL[k]) : String(k ?? ''));
+export const initModeOptions = () => INIT_MODES.map((m) => ({ value: m.value, label: t(m.label) }));
+export const npcKindOptions = () => NPC_KINDS.map((k) => ({ value: k.value, label: t(k.label) }));
 
 export function initials(name) {
   const words = String(name || '?').replace(/[«»"'’()—-]/g, ' ').split(/\s+/).filter(Boolean);
@@ -76,17 +85,17 @@ export function signed(n) {
 
 /** Tooltip describing an initiative roll. */
 export function rollTooltip(e, pass) {
-  if (e.toRoll) return 'Initiative pas encore lancée';
-  if (e.rolls === undefined) return `Score actuel : ${e.score}`;
+  if (e.toRoll) return t('Initiative pas encore lancée');
+  if (e.rolls === undefined) return t('Score actuel : {n}', { n: e.score });
   const parts = [];
   if (e.rolls.length) parts.push(`${e.base} + [${e.rolls.join(' · ')}]`);
-  else parts.push(`Score fixé par le MJ : ${e.base}`);
-  if (e.wound) parts.push(`${signed(e.wound)} blessures`);
-  if (e.adjust) parts.push(`${signed(e.adjust)} actions`);
-  if (pass > 1) parts.push(`−${10 * (pass - 1)} passes`);
-  if (e.mode && e.mode !== 'physical') parts.push(INIT_MODE_LABEL[e.mode]);
-  if (e.blitz) parts.push('Blitz (5D6)');
-  if (e.seized) parts.push('Initiative saisie');
+  else parts.push(t('Score fixé par le MJ : {n}', { n: e.base }));
+  if (e.wound) parts.push(t('{n} blessures', { n: signed(e.wound) }));
+  if (e.adjust) parts.push(t('{n} actions', { n: signed(e.adjust) }));
+  if (pass > 1) parts.push(t('−{n} passes', { n: 10 * (pass - 1) }));
+  if (e.mode && e.mode !== 'physical') parts.push(initModeLabel(e.mode));
+  if (e.blitz) parts.push(t('Blitz (5D6)'));
+  if (e.seized) parts.push(t('Initiative saisie'));
   return `${parts.join('  ')}  =  ${e.score}`;
 }
 
@@ -96,7 +105,7 @@ export function MonitorBar({ label, value, max, kind }) {
   const v = Math.max(0, Math.min(max, Number(value) || 0));
   const boxes = [];
   for (let i = 0; i < max; i++) boxes.push(html`<span class=${'cbt-box ' + kind + (i < v ? ' on' : '')}></span>`);
-  return html`<div class="cbt-bar" title=${`${label === 'P' ? 'Physique' : 'Étourdissant'} : ${v}/${max}`}>
+  return html`<div class="cbt-bar" title=${kind === 'p' ? t('Physique : {v}/{max}', { v, max }) : t('Étourdissant : {v}/{max}', { v, max })}>
     <span>${label}</span><span class="cbt-boxes">${boxes}</span><span class="right">${v}/${max}</span>
   </div>`;
 }
@@ -107,8 +116,8 @@ export function parseDamageInput(text) {
   if (!m) return null;
   const amount = Number(m[1].replace(/\s/g, ''));
   if (!amount) return null;
-  const t = (m[2] || 'P').toUpperCase();
-  return { amount, type: t === 'P' ? 'P' : 'S' };
+  const kind = (m[2] || 'P').toUpperCase();
+  return { amount, type: kind === 'P' ? 'P' : 'S' };
 }
 
 /** Download a JSON file in the browser. */

@@ -9,6 +9,10 @@ import {
   magicLoss, allowedGrades, fold,
 } from '../../client/modules/shop/rules.js';
 import { applyBonus, removeBonus, weaponFromStats } from '../lib/augment.js';
+import { formatFr } from '../lib/i18n.js';
+
+/** Marks a translatable key for tools/i18n-check.js (English in client/i18n/en/shop.json). */
+const tk = (s) => s;
 
 const CATALOG_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'data', 'catalog');
 const LISTS = ['weapons', 'armor', 'augmentations', 'gear', 'vehicles'];
@@ -89,13 +93,15 @@ function notifyOwners(ctx, actorId, event, data) {
   ctx.emitTo(targets, event, data);
 }
 
-function shopLog(ctx, actorId, text) {
-  ctx.log({ kind: 'shop', userId: ctx.user.id, author: 'Boutique', text, to: [...new Set([...ownersOf(ctx.state, actorId), 'gm'])] });
+/** Shop log entry (visible to the actor's owners and the GM): key = French text with {placeholders}, translated by the client. */
+function shopLog(ctx, actorId, key, params) {
+  ctx.log({ kind: 'shop', userId: ctx.user.id, author: 'Boutique', i18n: { key, params }, to: [...new Set([...ownersOf(ctx.state, actorId), 'gm'])] });
 }
 
-function history(actor, text, delta) {
+/** Actor history entry: { text (French), i18n: { key, params } } + nuyen delta. */
+function history(actor, key, params, delta) {
   actor.history = Array.isArray(actor.history) ? actor.history : [];
-  const h = { ts: Date.now(), text };
+  const h = { ts: Date.now(), text: formatFr(key, params), i18n: { key, params } };
   if (delta) h.nuyen = delta;
   actor.history.push(h);
   if (actor.history.length > 500) actor.history.splice(0, actor.history.length - 500);
@@ -116,7 +122,18 @@ function pushOrder(shop, order) {
   }
 }
 
-const summary = (items) => items.map((l) => `${l.name}${l.rating ? ` (ind. ${l.rating})` : ''}${l.grade && l.grade !== 'standard' ? ` [${GRADES[l.grade]?.label || l.grade}]` : ''}${l.qty > 1 ? ` ×${l.qty}` : ''}`).join(', ');
+/** One order line as a translatable value: « Name (ind. 3) [Alphaware] ×2 ». */
+function lineText(l) {
+  let v = l.name;
+  if (l.rating) v = { t: tk('{name} (ind. {rating})'), params: { name: v, rating: l.rating } };
+  if (l.grade && l.grade !== 'standard') v = { t: '{name} [{grade}]', params: { name: v, grade: GRADES[l.grade] ? { t: GRADES[l.grade].label } : l.grade } };
+  if (l.qty > 1) v = { t: '{name} ×{n}', params: { name: v, n: l.qty } };
+  return v;
+}
+/** Order lines as a translatable list param (rendered « a, b, c »). */
+const summary = (items) => items.map(lineText);
+/** Notes ({ key, params }) as a translatable list param. */
+const notesParam = (notes) => notes.map((n) => ({ t: n.key, ...(n.params ? { params: n.params } : {}) }));
 
 // ---------------------------------------------------------------------------
 // Purchase lines
@@ -155,7 +172,7 @@ function resolveLine(ctx, raw, actorId) {
   if (!entry) ctx.fail('Article inconnu du catalogue');
   const { item, file } = entry;
   const ware = file === 'cyberware' || file === 'bioware';
-  if (ware && raw.grade && !allowedGrades(item).includes(raw.grade)) ctx.fail(`Grade « ${GRADES[raw.grade]?.label || raw.grade} » indisponible pour ${itemName(item)}`);
+  if (ware && raw.grade && !allowedGrades(item).includes(raw.grade)) ctx.fail('Grade « {grade} » indisponible pour {item}', { grade: GRADES[raw.grade] ? { t: GRADES[raw.grade].label } : raw.grade, item: itemName(item) });
   const q = quote(item, { rating: raw.rating, grade: raw.grade, markup: file === 'lifestyles' ? 0 : shop.markup, price: raw.price });
   return {
     ref, catalogId: item.id, file, name: itemName(item), category: item.categoryFr || item.category, qty, rating: q.rating, grade: ware ? q.grade || 'standard' : null,
@@ -179,10 +196,10 @@ function checkRules(ctx, lines) {
   if (!shop.open) ctx.fail('Cabana n’est pas joignable pour l’instant');
   for (const l of lines) {
     if (l.specialId) continue; // fixer deals are GM-curated
-    if (shop.categories[l.file] === false) ctx.fail(`${FILE_LABELS[l.file] || l.file} : rayon fermé pour l’instant`);
-    if (l.availValue > shop.maxAvail) ctx.fail(`${l.name} : disponibilité ${l.availValue} au-dessus de la limite (${shop.maxAvail}) — vois avec le MJ`);
-    if (l.legality === 'F' && !shop.allowForbidden) ctx.fail(`${l.name} est interdit : Cabana ne prend pas ce risque`);
-    if (l.legality === 'R' && !shop.allowRestricted) ctx.fail(`${l.name} est restreint : pas de vente sans licence pour l’instant`);
+    if (shop.categories[l.file] === false) ctx.fail('{section} : rayon fermé pour l’instant', { section: FILE_LABELS[l.file] ? { t: FILE_LABELS[l.file] } : l.file });
+    if (l.availValue > shop.maxAvail) ctx.fail('{item} : disponibilité {avail} au-dessus de la limite ({max}) — vois avec le MJ', { item: l.name, avail: l.availValue, max: shop.maxAvail });
+    if (l.legality === 'F' && !shop.allowForbidden) ctx.fail('{item} est interdit : Cabana ne prend pas ce risque', { item: l.name });
+    if (l.legality === 'R' && !shop.allowRestricted) ctx.fail('{item} est restreint : pas de vente sans licence pour l’instant', { item: l.name });
   }
 }
 
@@ -192,7 +209,10 @@ function checkStock(ctx, lines) {
   for (const [id, n] of Object.entries(need)) {
     const sp = ctx.state.shop.specials.find((s) => s.id === id);
     if (!sp) ctx.fail('Une offre de la commande n’existe plus');
-    if (sp.stock !== null && sp.stock !== undefined && Number(sp.stock) < n) ctx.fail(`${sp.name} : stock insuffisant (${sp.stock} restant${sp.stock > 1 ? 's' : ''})`);
+    if (sp.stock !== null && sp.stock !== undefined && Number(sp.stock) < n) {
+      if (sp.stock > 1) ctx.fail('{item} : stock insuffisant ({n} restants)', { item: sp.name, n: sp.stock });
+      ctx.fail('{item} : stock insuffisant ({n} restant)', { item: sp.name, n: sp.stock });
+    }
   }
 }
 
@@ -202,12 +222,12 @@ function checkEssence(ctx, actor, lines) {
   const cost = essenceCost(lines);
   if (cost <= 0) return;
   const ess = Number(actor.attributes?.ESS ?? 6);
-  if (ess - cost <= 0) ctx.fail(`Essence insuffisante : ${ess} − ${cost} tuerait ${actor.name}`);
+  if (ess - cost <= 0) ctx.fail('Essence insuffisante : {ess} − {cost} tuerait {name}', { ess, cost, name: actor.name });
 }
 
 function checkFunds(ctx, actor, total) {
   const have = Number(actor.nuyen) || 0;
-  if (have < total) ctx.fail(`Fonds insuffisants : ${nuyen(total)} requis, ${nuyen(have)} disponibles`);
+  if (have < total) ctx.fail('Fonds insuffisants : {cost} requis, {have} disponibles', { cost: nuyen(total), have: nuyen(have) });
 }
 
 // ---------------------------------------------------------------------------
@@ -224,7 +244,7 @@ const evalStat = (v, rating) => {
   }
 };
 
-/** Add one priced line to the actor. paid = unit price actually paid (undefined for GM gifts). Returns a short note. */
+/** Add one priced line to the actor. paid = unit price actually paid (undefined for GM gifts). Returns notes [{ key, params }]. */
 function addLine(ctx, actor, line, { paid }) {
   const entry = line.catalogId ? INDEX.get(line.catalogId) : null;
   const item = entry?.item || { stats: line.stats || {} };
@@ -269,7 +289,8 @@ function addLine(ctx, actor, line, { paid }) {
         for (const k of ['MAG', 'RES']) {
           if (loss && Number(actor.attributes[k]) > 0) {
             actor.attributes[k] = Math.max(0, Number(actor.attributes[k]) - loss);
-            notes.push(`${k === 'MAG' ? 'Magie' : 'Résonance'} −${loss}`);
+            if (k === 'MAG') notes.push({ key: tk('Magie −{n}'), params: { n: loss } });
+            else notes.push({ key: tk('Résonance −{n}'), params: { n: loss } });
           }
         }
       }
@@ -321,13 +342,13 @@ function addLine(ctx, actor, line, { paid }) {
         programs: Array.isArray(actor.matrix?.programs) ? actor.matrix.programs : [],
         gearId: gearItem.id,
       };
-      notes.push(`${line.name} devient l’appareil Matriciel`);
+      notes.push({ key: tk('{item} devient l’appareil Matriciel'), params: { item: line.name } });
     }
   }
   return notes;
 }
 
-/** Apply a buy/give order to its actor (nuyen, items, stock). */
+/** Apply a buy/give order to its actor (nuyen, items, stock). Returns notes [{ key, params }]. */
 function applyOrder(ctx, actor, order, { free = false } = {}) {
   const notes = [];
   for (const line of order.items) {
@@ -338,9 +359,22 @@ function applyOrder(ctx, actor, order, { free = false } = {}) {
     }
   }
   if (!free) actor.nuyen = (Number(actor.nuyen) || 0) - order.total;
-  const what = summary(order.items);
-  history(actor, `${free ? 'Reçu du MJ' : 'Achat'} : ${what}${notes.length ? ` (${notes.join(', ')})` : ''}`, free ? 0 : -order.total);
-  shopLog(ctx, actor.id, free ? `${actor.name} reçoit : ${what}` : `${actor.name} achète : ${what} — ${nuyen(order.total)}${notes.length ? ` · ${notes.join(', ')}` : ''}`);
+  const items = summary(order.items);
+  const np = notesParam(notes);
+  if (free) {
+    if (notes.length) history(actor, tk('Reçu du MJ : {items} ({notes})'), { items, notes: np }, 0);
+    else history(actor, tk('Reçu du MJ : {items}'), { items }, 0);
+    shopLog(ctx, actor.id, tk('{actor} reçoit : {items}'), { actor: actor.name, items });
+  } else {
+    const cost = nuyen(order.total);
+    if (notes.length) {
+      history(actor, tk('Achat : {items} ({notes})'), { items, notes: np }, -order.total);
+      shopLog(ctx, actor.id, tk('{actor} achète : {items} — {cost} · {notes}'), { actor: actor.name, items, cost, notes: np });
+    } else {
+      history(actor, tk('Achat : {items}'), { items }, -order.total);
+      shopLog(ctx, actor.id, tk('{actor} achète : {items} — {cost}'), { actor: actor.name, items, cost });
+    }
+  }
   notifyOwners(ctx, actor.id, 'sfx', { id: 'cash' });
   return notes;
 }
@@ -377,8 +411,8 @@ function applySell(ctx, actor, order) {
   if (list === 'weapons' && it.augId) ctx.fail('Arme intégrée à un implant : revends l’implant lui-même');
   if (list === 'gear') {
     const have = Math.max(0, Number(it.qty ?? 1) || 0);
-    if (have < 1) ctx.fail(`Plus aucun exemplaire de ${it.name} à revendre`);
-    if (line.qty > have) ctx.fail(`Il ne reste que ${have} ${it.name}`);
+    if (have < 1) ctx.fail('Plus aucun exemplaire de {item} à revendre', { item: it.name });
+    if (line.qty > have) ctx.fail('Il ne reste que {n} {item}', { n: have, item: it.name });
     if (line.qty < have) it.qty = have - line.qty;
     else actor.gear = actor.gear.filter((g) => g.id !== it.id);
   } else {
@@ -393,9 +427,9 @@ function applySell(ctx, actor, order) {
     delete actor.matrix.gearId;
   }
   actor.nuyen = (Number(actor.nuyen) || 0) + order.total;
-  const what = `${line.name}${line.qty > 1 ? ` ×${line.qty}` : ''}`;
-  history(actor, `Revente : ${what}`, order.total);
-  shopLog(ctx, actor.id, `${actor.name} revend ${what} — ${nuyen(order.total)}`);
+  const item = lineText({ name: line.name, qty: line.qty });
+  history(actor, tk('Revente : {item}'), { item }, order.total);
+  shopLog(ctx, actor.id, tk('{actor} revend {item} — {cost}'), { actor: actor.name, item, cost: nuyen(order.total) });
   notifyOwners(ctx, actor.id, 'sfx', { id: 'cash' });
 }
 
@@ -481,13 +515,13 @@ export default {
         };
         if (needsApproval) {
           pushOrder(shop, order);
-          shopLog(ctx, actorId, `${actor.name} passe commande : ${summary(lines)} — ${nuyen(total)} (en attente du MJ)`);
+          shopLog(ctx, actorId, tk('{actor} passe commande : {items} — {cost} (en attente du MJ)'), { actor: actor.name, items: summary(lines), cost: nuyen(total) });
           ctx.emitTo('gm', 'sfx', { id: 'notify' });
           return { status: 'pending', orderId: order.id, total };
         }
         const notes = applyOrder(ctx, actor, order);
         pushOrder(shop, order);
-        return { status: 'done', orderId: order.id, total, notes };
+        return { status: 'done', orderId: order.id, total, notes: notes.map((n) => formatFr(n.key, n.params)), notesI18n: notes };
       },
     },
 
@@ -507,7 +541,7 @@ export default {
         const order = { id: ctx.uid('ord'), ts: ctx.now, actorId, userId: ctx.user.id, by: 'MJ', kind: 'give', items: lines, total: 0, status: 'done', flags: [] };
         const notes = applyOrder(ctx, actor, order, { free: true });
         pushOrder(ctx.state.shop, order);
-        return { status: 'done', orderId: order.id, notes };
+        return { status: 'done', orderId: order.id, notes: notes.map((n) => formatFr(n.key, n.params)), notesI18n: notes };
       },
     },
 
@@ -535,7 +569,9 @@ export default {
         };
         if (!ctx.isGM && (shop.approval === 'always' || total === null)) {
           pushOrder(shop, order);
-          shopLog(ctx, actorId, `${actor.name} propose de revendre ${it.name}${n > 1 ? ` ×${n}` : ''}${total !== null ? ` — ${nuyen(total)}` : ' (prix à fixer)'} (en attente du MJ)`);
+          const item = lineText({ name: it.name, qty: n });
+          if (total !== null) shopLog(ctx, actorId, tk('{actor} propose de revendre {item} — {cost} (en attente du MJ)'), { actor: actor.name, item, cost: nuyen(total) });
+          else shopLog(ctx, actorId, tk('{actor} propose de revendre {item} (prix à fixer) (en attente du MJ)'), { actor: actor.name, item });
           ctx.emitTo('gm', 'sfx', { id: 'notify' });
           return { status: 'pending', orderId: order.id, total };
         }
@@ -559,7 +595,14 @@ export default {
         if (!approve) {
           order.status = 'denied';
           order.resolvedTs = ctx.now;
-          if (actor) shopLog(ctx, actor.id, `Commande refusée pour ${actor.name} : ${order.kind === 'sell' ? 'revente de ' : ''}${summary(order.items)}${order.gmNote ? ` — « ${order.gmNote} »` : ''}`);
+          if (actor) {
+            const p = { actor: actor.name, items: summary(order.items), note: order.gmNote || '' };
+            if (order.kind === 'sell') {
+              if (order.gmNote) shopLog(ctx, actor.id, tk('Commande refusée pour {actor} : revente de {items} — « {note} »'), p);
+              else shopLog(ctx, actor.id, tk('Commande refusée pour {actor} : revente de {items}'), p);
+            } else if (order.gmNote) shopLog(ctx, actor.id, tk('Commande refusée pour {actor} : {items} — « {note} »'), p);
+            else shopLog(ctx, actor.id, tk('Commande refusée pour {actor} : {items}'), p);
+          }
           notifyOwners(ctx, order.actorId, 'shop:resolved', { orderId, status: 'denied', note: order.gmNote || '' });
           return { status: 'denied' };
         }
@@ -688,8 +731,8 @@ export default {
         checkFunds(ctx, actor, total);
         actor.nuyen = (Number(actor.nuyen) || 0) - total;
         lf.monthsPaid = (Number(lf.monthsPaid) || 0) + m;
-        history(actor, `Loyer : ${lf.name} — ${m} mois`, -total);
-        shopLog(ctx, actorId, `${actor.name} paie ${m} mois de train de vie (${lf.name}) — ${nuyen(total)}`);
+        history(actor, tk('Loyer : {name} — {n} mois'), { name: lf.name, n: m }, -total);
+        shopLog(ctx, actorId, tk('{actor} paie {n} mois de train de vie ({name}) — {cost}'), { actor: actor.name, n: m, name: lf.name, cost: nuyen(total) });
         notifyOwners(ctx, actorId, 'sfx', { id: 'cash' });
         return { monthsPaid: lf.monthsPaid, total };
       },

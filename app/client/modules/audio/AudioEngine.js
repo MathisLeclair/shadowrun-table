@@ -8,6 +8,7 @@ import { send, useServerEvent } from '../../lib/net.js';
 import { toast } from '../../lib/ui-store.js';
 import { syncAudio, playSfx, stopAllSfx, unlock, useAudioState, tryEarlyUnlock } from './audio-core.js';
 import { LocalVolume, trackLabel, lsGet, lsSet } from './widgets.js';
+import { t } from '../../lib/i18n.js';
 
 loadCss('/modules/audio/audio.css');
 
@@ -24,7 +25,7 @@ function useAutoScene(game) {
     const scene = (audio.scenes || []).find((s) => s.mapId === mapId);
     if (!scene) return;
     send('audio/applyScene', { sceneId: scene.id }, { silent: true }).then(
-      () => toast(`Ambiance : ${scene.name}`, 'info', 2500),
+      () => toast(t('Ambiance : {name}', { name: scene.name }), 'info', 2500),
       () => {}
     );
   }, [mapId]);
@@ -41,16 +42,16 @@ function PlayerControl({ game, st }) {
   const silent = st.muted || st.local === 0;
   return html`<div class=${'audio-float' + (open ? ' open' : '')}>
     <button class=${'audio-float-btn' + ((amb || mus) && !silent ? ' playing' : '')} onClick=${toggle}
-      title=${open ? 'Masquer le réglage du son' : 'Réglage du son'} aria-label="Réglage du son" aria-expanded=${open}>
+      title=${open ? t('Masquer le réglage du son') : t('Réglage du son')} aria-label=${t('Réglage du son')} aria-expanded=${open}>
       ${silent ? '🔇' : amb || mus ? '🔊' : '🔈'}
     </button>
     ${open &&
     html`<div class="audio-float-panel">
       <div class="audio-float-now">
-        <span>Ambiance : <b>${amb || '—'}</b></span>
-        <span>Musique : <b>${mus || '—'}</b></span>
+        <span>${t('Ambiance :')} <b>${amb || '—'}</b></span>
+        <span>${t('Musique :')} <b>${mus || '—'}</b></span>
       </div>
-      <${LocalVolume} label="Volume" />
+      <${LocalVolume} label=${t('Volume')} />
     </div>`}
   </div>`;
 }
@@ -88,7 +89,7 @@ export default function AudioEngine({ game }) {
 
   if (!st.supported || !game) return null;
   if (!st.unlocked) {
-    return html`<button class="audio-unlock" onClick=${unlock} title="Le navigateur bloque le son tant qu’on n’a pas interagi avec la page">🔊 Activer le son</button>`;
+    return html`<button class="audio-unlock" onClick=${unlock} title=${t('Le navigateur bloque le son tant qu’on n’a pas interagi avec la page')}>🔊 ${t('Activer le son')}</button>`;
   }
   if (game.me?.role === 'gm') return null; // the GM has full controls in the Ambiance tab and Sons dock
   return html`<${PlayerControl} game=${game} st=${st} />`;

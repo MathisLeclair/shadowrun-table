@@ -2,39 +2,41 @@
 import { useState } from 'preact/hooks';
 import { html, Button, NumberInput, TextInput, Select, Toggle, IconButton, confirmAction } from '../../lib/ui.js';
 import { send } from '../../lib/net.js';
-import { SKILLS, SKILL_BY_ID, SKILL_CATEGORIES, SKILL_GROUPS, ATTR_SHORT, attr, skillPool } from '/shared/sr5.js';
+import { SKILLS, SKILL_BY_ID, SKILL_CATEGORIES, attr, skillPool } from '/shared/sr5.js';
+import { t, attrShort, skillLabel, skillGroupLabel, skillCategoryLabel, getLang, compare } from '../../lib/i18n.js';
 import { ListEditor } from './editors.js';
 import { KNOWLEDGE_TYPES, knowledgeAttr } from './sheet-data.js';
+import { skillName } from './common.js';
 
-const ATTR_OPTIONS = ['AGI', 'BOD', 'REA', 'STR', 'CHA', 'INT', 'LOG', 'WIL', 'MAG', 'RES'].map((k) => ({ value: k, label: ATTR_SHORT[k] }));
+const attrOptions = () => ['AGI', 'BOD', 'REA', 'STR', 'CHA', 'INT', 'LOG', 'WIL', 'MAG', 'RES'].map((k) => ({ value: k, label: attrShort(k) }));
 
 function SkillRow({ s, sk, def, ghost }) {
   const { actor, edit } = s;
   const at = sk?.attr || def?.attr || 'AGI';
   const res = skillPool(actor, sk?.id || def.id);
-  const name = sk?.name || def?.fr || sk?.id;
+  const name = skillName(sk, def?.id);
   const up = (patch) => send('actor/updateItem', { actorId: actor.id, list: 'skills', itemId: sk.id, patch }).catch(() => {});
   const remove = async () => {
-    if (await confirmAction(`Retirer la compétence ${name} ?`)) send('actor/removeItem', { actorId: actor.id, list: 'skills', itemId: sk.id }).catch(() => {});
+    if (await confirmAction(t('Retirer la compétence {name} ?', { name }))) send('actor/removeItem', { actorId: actor.id, list: 'skills', itemId: sk.id }).catch(() => {});
   };
   if (edit && sk) {
     return html`<tr>
       <td><b>${name}</b>${sk.notes ? html` <span class="badge badge-amber" title=${sk.notes}>!</span>` : null}</td>
-      <td><${Select} value=${at} options=${ATTR_OPTIONS} onChange=${(v) => up({ attr: v })} /></td>
+      <td><${Select} value=${at} options=${attrOptions()} onChange=${(v) => up({ attr: v })} /></td>
       <td><${NumberInput} small value=${sk.rating || 0} min=${0} max=${13} onChange=${(v) => up({ rating: v })} /></td>
-      <td><${TextInput} value=${sk.spec || ''} placeholder="Spécialisation" onChange=${(v) => up({ spec: v })} /></td>
+      <td><${TextInput} value=${sk.spec || ''} placeholder=${t('Spécialisation')} onChange=${(v) => up({ spec: v })} /></td>
       <td class="num-cell">${res.pool}</td>
-      <td><${IconButton} icon="✕" title="Retirer" onClick=${remove} /></td>
+      <td><${IconButton} icon="✕" title=${t('Retirer')} onClick=${remove} /></td>
     </tr>`;
   }
   const disabled = res.impossible;
   return html`<tr class=${'sh-skill' + (ghost ? ' ghost' : '') + (disabled ? ' disabled' : '')} onClick=${disabled ? null : () => s.roll({ skillId: sk?.id || def.id })}
-    title=${disabled ? 'Ne peut pas être utilisée sans formation' : `Lancer ${name}`}>
-    <td><span class="sh-skill-name">${name}</span>${def?.group ? html` <span class="faint small">${SKILL_GROUPS[def.group]}</span>` : null}
+    title=${disabled ? t('Ne peut pas être utilisée sans formation') : t('Lancer {name}', { name })}>
+    <td><span class="sh-skill-name">${name}</span>${def?.group ? html` <span class="faint small">${skillGroupLabel(def.group)}</span>` : null}
       ${sk?.notes ? html` <span class="badge badge-amber" title=${sk.notes}>${sk.notes}</span>` : null}</td>
-    <td class="muted small">${ATTR_SHORT[at]} ${attr(actor, at)}</td>
+    <td class="muted small">${attrShort(at)} ${attr(actor, at)}</td>
     <td class="num-cell">${ghost ? '—' : sk.rating}</td>
-    <td class="small">${sk?.spec ? html`<span class="badge badge-cyan" title="+2 dés avec la spécialisation">${sk.spec}</span>` : null}</td>
+    <td class="small">${sk?.spec ? html`<span class="badge badge-cyan" title=${t('+2 dés avec la spécialisation')}>${sk.spec}</span>` : null}</td>
     <td class="num-cell sh-pool">${disabled ? '—' : res.pool}${sk?.spec && !ghost ? html`<span class="faint"> (${res.pool + 2})</span>` : null}</td>
     <td class="sh-roll-cell">${disabled ? null : html`<span class="sh-die-btn" aria-hidden="true">⚄</span>`}</td>
   </tr>`;
@@ -47,16 +49,18 @@ function AddSkill({ s }) {
   const [custom, setCustom] = useState('');
   const [customAttr, setCustomAttr] = useState('LOG');
   const have = new Set((actor.skills || []).map((x) => x.id));
-  const options = [{ value: '', label: 'Choisir une compétence…' }, ...SKILLS.filter((x) => !have.has(x.id)).map((x) => ({ value: x.id, label: `${x.fr} (${ATTR_SHORT[x.attr]})` }))];
+  const choices = SKILLS.filter((x) => !have.has(x.id)).map((x) => ({ value: x.id, label: `${skillLabel(x.id)} (${attrShort(x.attr)})` }));
+  if (getLang() !== 'fr') choices.sort((a, b) => compare(a.label, b.label)); // French list keeps its curated order
+  const options = [{ value: '', label: t('Choisir une compétence…') }, ...choices];
   const add = (item) => send('actor/addItem', { actorId: actor.id, list: 'skills', item }).then(() => { setId(''); setCustom(''); }).catch(() => {});
   return html`<div class="sh-add-skill row wrap">
     <${Select} value=${id} options=${options} onChange=${setId} style=${{ maxWidth: '260px' }} />
     <${NumberInput} small value=${rating} min=${0} max=${13} onChange=${setRating} />
-    <${Button} small variant="primary" disabled=${!id} onClick=${() => add({ id, rating })}>Ajouter</${Button}>
-    <span class="faint">ou</span>
-    <${TextInput} live value=${custom} placeholder="Compétence personnalisée" onChange=${setCustom} style=${{ maxWidth: '200px' }} />
-    <${Select} value=${customAttr} options=${ATTR_OPTIONS} onChange=${setCustomAttr} style=${{ width: 'auto' }} />
-    <${Button} small disabled=${!custom.trim()} onClick=${() => add({ name: custom.trim(), attr: customAttr, rating })}>Créer</${Button}>
+    <${Button} small variant="primary" disabled=${!id} onClick=${() => add({ id, rating })}>${t('Ajouter')}</${Button}>
+    <span class="faint">${t('ou')}</span>
+    <${TextInput} live value=${custom} placeholder=${t('Compétence personnalisée')} onChange=${setCustom} style=${{ maxWidth: '200px' }} />
+    <${Select} value=${customAttr} options=${attrOptions()} onChange=${setCustomAttr} style=${{ width: 'auto' }} />
+    <${Button} small disabled=${!custom.trim()} onClick=${() => add({ name: custom.trim(), attr: customAttr, rating })}>${t('Créer')}</${Button}>
   </div>`;
 }
 
@@ -74,33 +78,33 @@ export function SkillsTab({ s }) {
     for (const def of SKILLS) if (!have.has(def.id) && def.def) (groups[def.cat] ||= []).push({ def, ghost: true });
   }
   const cats = [...Object.keys(SKILL_CATEGORIES), 'custom'].filter((c) => groups[c]?.length);
-  for (const c of cats) groups[c].sort((a, b) => (a.ghost ? 1 : 0) - (b.ghost ? 1 : 0) || ((b.sk?.rating || 0) - (a.sk?.rating || 0)) || String(a.sk?.name || a.def?.fr).localeCompare(String(b.sk?.name || b.def?.fr)));
+  for (const c of cats) groups[c].sort((a, b) => (a.ghost ? 1 : 0) - (b.ghost ? 1 : 0) || ((b.sk?.rating || 0) - (a.sk?.rating || 0)) || compare(skillName(a.sk, a.def?.id), skillName(b.sk, b.def?.id)));
   const knowledge = actor.knowledge || [];
   return html`<div class="sh-skills">
     <div class="row spread wrap">
-      <div class="muted small">${edit ? 'Modifie les indices et spécialisations directement.' : 'Clique une compétence pour lancer les dés (indice + attribut).'}</div>
-      ${!edit && html`<${Toggle} value=${showAll} onChange=${setShowAll} label="Afficher les jets par défaut" />`}
+      <div class="muted small">${edit ? t('Modifie les indices et spécialisations directement.') : t('Clique une compétence pour lancer les dés (indice + attribut).')}</div>
+      ${!edit && html`<${Toggle} value=${showAll} onChange=${setShowAll} label=${t('Afficher les jets par défaut')} />`}
     </div>
     ${edit && html`<${AddSkill} s=${s} />`}
-    ${!cats.length && html`<div class="empty">Aucune compétence.</div>`}
+    ${!cats.length && html`<div class="empty">${t('Aucune compétence.')}</div>`}
     <div class="sh-skill-cols">
       ${cats.map(
         (c) => html`<section class="sh-skill-cat" key=${c}>
-          <h4 class="section-title">${SKILL_CATEGORIES[c] || 'Autres'}</h4>
+          <h4 class="section-title">${SKILL_CATEGORIES[c] ? skillCategoryLabel(c) : t('Autres')}</h4>
           <div class="sh-table-wrap"><table class="sr sh-skill-table">
-            <thead><tr><th>Compétence</th><th>Attr.</th><th class="right">Ind.</th><th>Spé.</th><th class="right">Réserve</th><th></th></tr></thead>
+            <thead><tr><th>${t('Compétence')}</th><th>${t('Attr.')}</th><th class="right">${t('Ind.')}</th><th>${t('Spé.')}</th><th class="right">${t('Réserve')}</th><th></th></tr></thead>
             <tbody>${groups[c].map((g) => html`<${SkillRow} s=${s} sk=${g.sk} def=${g.def} ghost=${g.ghost} key=${g.sk?.id || g.def.id} />`)}</tbody>
           </table></div>
         </section>`
       )}
     </div>
 
-    <h4 class="section-title">Connaissances & langues</h4>
+    <h4 class="section-title">${t('Connaissances & langues')}</h4>
     ${edit
       ? html`<${ListEditor} actor=${actor} list="knowledge" />`
       : knowledge.length
         ? html`<div class="sh-table-wrap"><table class="sr">
-            <thead><tr><th>Connaissance</th><th>Type</th><th class="right">Ind.</th><th class="right">Réserve</th></tr></thead>
+            <thead><tr><th>${t('Connaissance')}</th><th>${t('Type')}</th><th class="right">${t('Ind.')}</th><th class="right">${t('Réserve')}</th></tr></thead>
             <tbody>${[...knowledge]
               .sort((a, b) => (a.type === 'language' ? 1 : 0) - (b.type === 'language' ? 1 : 0) || (b.rating || 0) - (a.rating || 0))
               .map((k) => {
@@ -108,12 +112,12 @@ export function SkillsTab({ s }) {
                 const pool = (Number(k.rating) || 0) + attr(actor, at);
                 return html`<tr key=${k.id} class=${k.native ? '' : 'sh-skill'} onClick=${k.native ? null : () => s.roll({ skillId: k.id })}>
                   <td>${k.name}${k.notes ? html` <span class="badge badge-amber" title=${k.notes}>${k.notes}</span>` : null}</td>
-                  <td class="muted small">${KNOWLEDGE_TYPES[k.type] || k.type}</td>
-                  <td class="num-cell">${k.native ? html`<span class="badge badge-cyan">Maternelle</span>` : k.rating}</td>
-                  <td class="num-cell sh-pool">${k.native ? '—' : `${pool}`}<span class="faint small"> ${k.native ? '' : ATTR_SHORT[at]}</span></td>
+                  <td class="muted small">${KNOWLEDGE_TYPES[k.type] ? t(KNOWLEDGE_TYPES[k.type]) : k.type}</td>
+                  <td class="num-cell">${k.native ? html`<span class="badge badge-cyan">${t('Maternelle')}</span>` : k.rating}</td>
+                  <td class="num-cell sh-pool">${k.native ? '—' : `${pool}`}<span class="faint small"> ${k.native ? '' : attrShort(at)}</span></td>
                 </tr>`;
               })}</tbody>
           </table></div>`
-        : html`<div class="muted small">Aucune connaissance.</div>`}
+        : html`<div class="muted small">${t('Aucune connaissance.')}</div>`}
   </div>`;
 }

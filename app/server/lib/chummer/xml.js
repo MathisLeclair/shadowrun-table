@@ -4,6 +4,8 @@
 //   elements), so an untouched file round-trips byte-for-byte (minus the BOM, see serialize()).
 // No dependencies: Chummer XML is plain (no namespaces, no DTD), a hand-written scanner is enough and fast.
 
+import { i18nError } from './messages.js';
+
 export class XmlError extends Error {}
 
 const ENTITIES = { lt: '<', gt: '>', amp: '&', quot: '"', apos: "'" };
@@ -150,9 +152,10 @@ export function parseXml(input) {
   const newline = s.includes('\r\n') ? '\r\n' : '\n';
   let i = 0;
   const n = s.length;
-  const fail = (msg) => {
+  // fail('French key {x}', { x }) — the message stays French; the key travels to the client (see messages.js).
+  const fail = (msg, params) => {
     const line = s.slice(0, i).split('\n').length;
-    throw new XmlError(`XML invalide (ligne ${line}) : ${msg}`);
+    throw i18nError({ t: 'XML invalide (ligne {line}) : {error}', params: { line, error: params ? { t: msg, params } : { t: msg } } }, XmlError);
   };
   let declaration = null;
   const prolog = [];
@@ -228,11 +231,11 @@ export function parseXml(input) {
       i += 2;
       const name = readName();
       skipWs();
-      if (s[i] !== '>') fail(`« > » attendu après </${name}`);
+      if (s[i] !== '>') fail('« > » attendu après </{tag}', { tag: name });
       i++;
       const open = stack.pop();
-      if (!open) fail(`balise fermante </${name}> sans ouverture`);
-      if (open.name !== name) fail(`</${name}> ferme <${open.name}>`);
+      if (!open) fail('balise fermante </{tag}> sans ouverture', { tag: name });
+      if (open.name !== name) fail('</{tag}> ferme <{open}>', { tag: name, open: open.name });
       if (!stack.length) pushNode(open);
     } else {
       i++;
@@ -254,22 +257,22 @@ export function parseXml(input) {
           stack.push(e);
           break;
         }
-        if (i >= n) fail(`balise <${name}> non fermée`);
+        if (i >= n) fail('balise <{tag}> non fermée', { tag: name });
         const key = readName();
         skipWs();
-        if (s[i] !== '=') fail(`« = » attendu pour l’attribut ${key}`);
+        if (s[i] !== '=') fail('« = » attendu pour l’attribut {attr}', { attr: key });
         i++;
         skipWs();
         const q = s[i];
-        if (q !== '"' && q !== "'") fail(`valeur d’attribut ${key} sans guillemets`);
+        if (q !== '"' && q !== "'") fail('valeur d’attribut {attr} sans guillemets', { attr: key });
         const end = s.indexOf(q, i + 1);
-        if (end < 0) fail(`attribut ${key} non fermé`);
+        if (end < 0) fail('attribut {attr} non fermé', { attr: key });
         attrs.push([key, decodeEntities(s.slice(i + 1, end))]);
         i = end + 1;
       }
     }
   }
-  if (stack.length) fail(`<${stack[stack.length - 1].name}> n’est jamais fermée`);
+  if (stack.length) fail('<{tag}> n’est jamais fermée', { tag: stack[stack.length - 1].name });
   if (!root) fail('aucun élément racine');
   return { bom, declaration, prolog, root, newline };
 }

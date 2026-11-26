@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { html, Button, IconButton, Empty } from '../../lib/ui.js';
 import { api } from '../../lib/net.js';
+import { t } from '../../lib/i18n.js';
 import { renderMarkdown } from '../../lib/markdown.js';
 import { useDocs, reloadDocs, docTitle, cx, fmtDate } from './common.js';
 
@@ -70,11 +71,11 @@ export default function DocsView({ target, setTarget }) {
     setLoading(true);
     setError('');
     api(`/api/docs/${encodeURIComponent(name)}`)
-      .then((t) => alive && setText(typeof t === 'string' ? t : JSON.stringify(t, null, 2)))
+      .then((body) => alive && setText(typeof body === 'string' ? body : JSON.stringify(body, null, 2)))
       .catch((err) => {
         if (!alive) return;
         setText(null);
-        setError(err.message || 'Document introuvable');
+        setError(err.message || t('Document introuvable'));
       })
       .finally(() => alive && setLoading(false));
     return () => {
@@ -137,42 +138,42 @@ export default function DocsView({ target, setTarget }) {
     reloadDocs().catch(() => {});
     setReloadKey((k) => k + 1);
   };
-  const minLevel = toc.length ? Math.min(...toc.map((t) => t.level)) : 1;
+  const minLevel = toc.length ? Math.min(...toc.map((x) => x.level)) : 1;
   const meta = docs.list.find((d) => d.name === name);
 
   return html`<div class=${cx('camp-docs', listOpen && 'list-open')}>
     <aside class="camp-docs-side">
       <div class="camp-docs-sidehead">
-        <span class="camp-docs-label">Documents</span>
-        <${IconButton} icon="⟳" title="Rafraîchir la liste et le document" onClick=${refresh} />
+        <span class="camp-docs-label">${t('Documents')}</span>
+        <${IconButton} icon="⟳" title=${t('Rafraîchir la liste et le document')} onClick=${refresh} />
       </div>
       ${docs.error && html`<div class="error small">${docs.error}</div>`}
-      ${!docs.loading && !docs.list.length && !docs.error && html`<div class="muted small">Aucun fichier .md dans le dossier Shadowrun.</div>`}
+      ${!docs.loading && !docs.list.length && !docs.error && html`<div class="muted small">${t('Aucun fichier .md dans le dossier Shadowrun.')}</div>`}
       <ul class="camp-docs-list">
         ${docs.list.map(
           (d) => html`<li><button class=${cx('camp-docs-item', d.name === name && 'active')} title=${d.name} onClick=${() => select(d.name)}>
             <span>${docTitle(d.name)}</span>
-            <span class="faint small">${Math.max(1, Math.round(d.size / 1024))} Ko · ${fmtDate(d.mtime)}</span>
+            <span class="faint small">${t('{kb} Ko · {date}', { kb: Math.max(1, Math.round(d.size / 1024)), date: fmtDate(d.mtime) })}</span>
           </button></li>`
         )}
       </ul>
       ${toc.length > 0 &&
-      html`<div class="camp-docs-sidehead camp-mt"><span class="camp-docs-label">Sommaire</span></div>
+      html`<div class="camp-docs-sidehead camp-mt"><span class="camp-docs-label">${t('Sommaire')}</span></div>
         <nav class="camp-toc">
           ${toc.map(
-            (t) => html`<button class=${`camp-toc-item lvl-${Math.min(4, t.level - minLevel + 1)}`} title=${t.text} onClick=${() => jump(t.i)}>${t.text}</button>`
+            (x) => html`<button class=${`camp-toc-item lvl-${Math.min(4, x.level - minLevel + 1)}`} title=${x.text} onClick=${() => jump(x.i)}>${x.text}</button>`
           )}
         </nav>`}
     </aside>
     <section class="camp-docs-main">
       <div class="camp-docs-bar">
-        <button class="btn btn-sm btn-ghost camp-docs-toggle" onClick=${() => setListOpen(!listOpen)}>☰ Documents & sommaire</button>
+        <button class="btn btn-sm btn-ghost camp-docs-toggle" onClick=${() => setListOpen(!listOpen)}>☰ ${t('Documents & sommaire')}</button>
         <div class="camp-docs-title">
-          <strong>${name ? docTitle(name) : 'Aucun document'}</strong>
+          <strong>${name ? docTitle(name) : t('Aucun document')}</strong>
           ${meta && html`<span class="faint small mono">${name}</span>`}
         </div>
         <div class="camp-docs-search">
-          <input ref=${searchRef} class="input search" type="search" placeholder="Chercher dans le document…" value=${query}
+          <input ref=${searchRef} class="input search" type="search" placeholder=${t('Chercher dans le document…')} value=${query}
             onInput=${(e) => setQuery(e.target.value)}
             onKeyDown=${(e) => {
               if (e.key === 'Enter') {
@@ -182,15 +183,15 @@ export default function DocsView({ target, setTarget }) {
               if (e.key === 'Escape') setQuery('');
             }} />
           <span class="mono small muted camp-hitcount">${query.trim().length >= 2 ? (count ? `${(((cur % count) + count) % count) + 1}/${count}` : '0') : ''}</span>
-          <${IconButton} icon="↑" title="Résultat précédent (Maj+Entrée)" disabled=${!count} onClick=${() => setCur((c) => c - 1)} />
-          <${IconButton} icon="↓" title="Résultat suivant (Entrée)" disabled=${!count} onClick=${() => setCur((c) => c + 1)} />
+          <${IconButton} icon="↑" title=${t('Résultat précédent (Maj+Entrée)')} disabled=${!count} onClick=${() => setCur((c) => c - 1)} />
+          <${IconButton} icon="↓" title=${t('Résultat suivant (Entrée)')} disabled=${!count} onClick=${() => setCur((c) => c + 1)} />
         </div>
-        <${Button} small variant="ghost" title="Recharger le fichier depuis le disque" onClick=${refresh}>⟳ Rafraîchir</${Button}>
+        <${Button} small variant="ghost" title=${t('Recharger le fichier depuis le disque')} onClick=${refresh}>⟳ ${t('Rafraîchir')}</${Button}>
       </div>
       <div class="camp-docs-scroll">
-        ${loading && text == null && html`<div class="muted">Chargement…</div>`}
+        ${loading && text == null && html`<div class="muted">${t('Chargement…')}</div>`}
         ${error && html`<div class="error">${error}</div>`}
-        ${!name && !docs.loading && html`<${Empty}>Choisis un document dans la liste.</${Empty}>`}
+        ${!name && !docs.loading && html`<${Empty}>${t('Choisis un document dans la liste.')}</${Empty}>`}
         <div ref=${contentRef} class="md camp-doc-md"></div>
       </div>
     </section>

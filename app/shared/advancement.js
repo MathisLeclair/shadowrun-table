@@ -19,40 +19,61 @@
 import { METATYPES, SKILLS, SKILL_BY_ID, SKILL_GROUPS, ATTR_LABELS } from './sr5.js';
 import { slug, uid } from './util.js';
 
+// i18n (see ARCHITECTURE.md « i18n »): French stays the source text. Static texts are marked with tk() and
+// rendered with t() by the client; dynamic texts are also returned as { key, params } (labelI18n, errorI18n,
+// warningsI18n, reasonI18n) and nested translatable params use the { t: key, params } form.
+function tk(s) {
+  return s;
+}
+/** French rendering of a key with {placeholders} (nested { t, params } values allowed) — same output as formatFr(). */
+function fr(key, params) {
+  const val = (v) => {
+    if (v === null || v === undefined) return '';
+    if (Array.isArray(v)) return v.map(val).join(', ');
+    if (typeof v === 'object') return typeof v.t === 'string' ? fr(v.t.includes('::') ? v.t.slice(v.t.indexOf('::') + 2) : v.t, v.params) : '';
+    return String(v);
+  };
+  return String(key ?? '').replace(/\{(\w+)\}/g, (m, n) => (params && Object.prototype.hasOwnProperty.call(params, n) ? val(params[n]) : m));
+}
+/** { key, params } → nested translatable param value { t, params }. */
+const nested = (m) => (m && typeof m === 'object' && m.key ? { t: m.key, ...(m.params ? { params: m.params } : {}) } : m ?? '');
+/** Translatable param for a skill name: SR5 skills (French name) are dictionary keys, custom names stay as typed. */
+const skillParam = (name, def) => (def && (!name || name === def.fr) ? { t: def.fr } : name || '');
+
 export const KINDS = ['attribute', 'skill', 'skillGroup', 'specialization', 'knowledge', 'quality', 'removeQuality', 'spell', 'complexForm', 'power', 'powerPoint', 'initiation', 'other'];
 
 export const KIND_LABELS = {
-  attribute: 'Attribut',
-  skill: 'Compétence',
-  skillGroup: 'Groupe de compétences',
-  specialization: 'Spécialisation',
-  knowledge: 'Connaissance',
-  quality: 'Qualité',
-  removeQuality: 'Rachat de qualité',
-  spell: 'Sort',
-  complexForm: 'Forme complexe',
-  power: 'Pouvoir d’adepte',
-  powerPoint: 'Point de pouvoir',
-  initiation: 'Initiation',
-  other: 'Autre',
+  attribute: tk('Attribut'),
+  skill: tk('Compétence'),
+  skillGroup: tk('Groupe de compétences'),
+  specialization: tk('Spécialisation'),
+  knowledge: tk('Connaissance'),
+  quality: tk('Qualité'),
+  removeQuality: tk('Rachat de qualité'),
+  spell: tk('Sort'),
+  complexForm: tk('Forme complexe'),
+  power: tk('Pouvoir d’adepte'),
+  powerPoint: tk('Point de pouvoir'),
+  initiation: tk('Initiation'),
+  other: tk('Autre'),
 };
 
 /** Human-readable rules, used as tooltips in the UI. */
 export const RULE_TEXT = {
-  attribute: 'Attribut : nouveau rang × 5 karma (somme de chaque rang) · Durée : nouveau rang × 1 semaine',
-  skill: 'Compétence active : nouveau rang × 2 karma (nouvelle compétence : 2) · Durée : rangs 1–4 = rang en jours, 5–8 = rang en semaines, 9+ = rang × 2 semaines',
-  skillGroup: 'Groupe de compétences : nouveau rang × 5 karma (nouveau groupe : 5) · Durée : nouveau rang × 2 semaines · Impossible si le groupe est rompu',
-  specialization: 'Spécialisation : 7 karma · Durée : 1 mois',
-  knowledge: 'Connaissance / langue : nouveau rang × 1 karma (nouvelle : 1) · Durée : rangs 1–4 = rang en jours, 5+ = rang en semaines',
-  quality: 'Qualité positive : coût de la qualité × 2 karma · Durée (règle maison) : 1 semaine par tranche de 5 karma de la qualité',
-  removeQuality: 'Racheter une qualité négative : bonus de la qualité × 2 karma · Durée (règle maison) : 1 semaine par tranche de 5 karma',
-  spell: 'Sort, rituel ou préparation alchimique : 5 karma · Durée : 1 jour',
-  complexForm: 'Forme complexe : 4 karma · Durée : 1 jour',
-  power: 'Pouvoir d’adepte : se paie en points de pouvoir libres (pas de karma), immédiat',
-  powerPoint: 'Point de pouvoir (adepte mystique) : 5 karma, maximum = Magie',
-  initiation: 'Initiation / submersion : 10 + (nouveau grade × 3) karma, −10 % par option (groupe, ordalie, école) · Durée : 1 mois',
-  other: 'Progression libre : coût et durée fixés à la main (toujours validée par le MJ)',
-  instructor: 'Instructeur : un test d’Enseignement réduit le temps d’entraînement (réduction fixée par le MJ) — coût en nuyens par semaine',
+  attribute: tk('Attribut : nouveau rang × 5 karma (somme de chaque rang) · Durée : nouveau rang × 1 semaine'),
+  skill: tk('Compétence active : nouveau rang × 2 karma (nouvelle compétence : 2) · Durée : rangs 1–4 = rang en jours, 5–8 = rang en semaines, 9+ = rang × 2 semaines'),
+  skillGroup: tk('Groupe de compétences : nouveau rang × 5 karma (nouveau groupe : 5) · Durée : nouveau rang × 2 semaines · Impossible si le groupe est rompu'),
+  specialization: tk('Spécialisation : 7 karma · Durée : 1 mois'),
+  knowledge: tk('Connaissance / langue : nouveau rang × 1 karma (nouvelle : 1) · Durée : rangs 1–4 = rang en jours, 5+ = rang en semaines'),
+  quality: tk('Qualité positive : coût de la qualité × 2 karma · Durée (règle maison) : 1 semaine par tranche de 5 karma de la qualité'),
+  removeQuality: tk('Racheter une qualité négative : bonus de la qualité × 2 karma · Durée (règle maison) : 1 semaine par tranche de 5 karma'),
+  spell: tk('Sort, rituel ou préparation alchimique : 5 karma · Durée : 1 jour'),
+  complexForm: tk('Forme complexe : 4 karma · Durée : 1 jour'),
+  power: tk('Pouvoir d’adepte : se paie en points de pouvoir libres (pas de karma), immédiat'),
+  powerPoint: tk('Point de pouvoir (adepte mystique) : 5 karma, maximum = Magie'),
+  initiation: tk('Initiation / submersion : 10 + (nouveau grade × 3) karma, −10 % par option (groupe, ordalie, école) · Durée : 1 mois'),
+  other: tk('Progression libre : coût et durée fixés à la main (toujours validée par le MJ)'),
+  instructor: tk('Instructeur : un test d’Enseignement réduit le temps d’entraînement (réduction fixée par le MJ) — coût en nuyens par semaine'),
 };
 
 export const DEFAULT_SETTINGS = {
@@ -63,11 +84,11 @@ export const DEFAULT_SETTINGS = {
 };
 
 export const KNOWLEDGE_TYPES = {
-  street: 'Rue',
-  academic: 'Académique',
-  professional: 'Professionnelle',
-  interest: 'Centre d’intérêt',
-  language: 'Langue',
+  street: tk('Rue'),
+  academic: tk('Académique'),
+  professional: tk('Professionnelle'),
+  interest: tk('Centre d’intérêt'),
+  language: tk('Langue'),
 };
 
 export const SKILL_MAX = 12; // in play (13 with Aptitude)
@@ -81,9 +102,16 @@ const ATTR_WORDS = {
   EDG: ['chance', 'edge'], MAG: ['magie', 'magic'], RES: ['resonance'],
 };
 
-class RuleError extends Error {}
-const bad = (msg) => {
-  throw new RuleError(msg);
+class RuleError extends Error {
+  constructor(key, params) {
+    super(fr(key, params));
+    this.key = key;
+    this.params = params;
+  }
+}
+/** Throw a rule violation: bad(tk('Texte {x}'), { x }) — French message + i18n key/params. */
+const bad = (key, params) => {
+  throw new RuleError(key, params);
 };
 
 const int = (v, d = 0) => {
@@ -122,6 +150,20 @@ export function formatDays(days) {
   const w = Math.floor(d / 7);
   const r = d % 7;
   return r ? `${plural(w, 'semaine', 'semaines')} et ${plural(r, 'jour', 'jours')}` : plural(w, 'semaine', 'semaines');
+}
+
+/** formatDays() as a translatable value { t, params } (render: t(v.t, v.params); same French text). */
+export function formatDaysI18n(days) {
+  const d = Math.max(0, Math.round(Number(days) || 0));
+  if (d === 0) return { t: 'immédiat' };
+  const months = (n) => (n > 1 ? { t: '{n} mois', params: { n } } : { t: 'un::{n} mois', params: { n } });
+  const dayN = (n) => (n > 1 ? { t: '{n} jours', params: { n } } : { t: '{n} jour', params: { n } });
+  const weekN = (n) => (n > 1 ? { t: '{n} semaines', params: { n } } : { t: '{n} semaine', params: { n } });
+  if (d % 30 === 0) return months(d / 30);
+  if (d < 7) return dayN(d);
+  const w = Math.floor(d / 7);
+  const r = d % 7;
+  return r ? { t: '{weeks} et {days}', params: { weeks: weekN(w), days: dayN(r) } } : weekN(w);
 }
 
 // ---------------------------------------------------------------------------
@@ -348,10 +390,11 @@ export function groupState(actor, groupId) {
   const ratings = members.map((id) => Math.max(int(findSkill(actor, id)?.rating), gr));
   const withSpec = members.filter((id) => String(findSkill(actor, id)?.spec || '').trim());
   const same = ratings.every((r) => r === ratings[0]);
-  let reason = '';
-  if (!same) reason = 'les compétences du groupe n’ont pas toutes le même indice';
-  else if (withSpec.length) reason = `spécialisation sur ${withSpec.map((id) => SKILL_BY_ID[id]?.fr || id).join(', ')}`;
-  return { intact: same && !withSpec.length, rating: same ? ratings[0] || 0 : 0, owned: !!grp, reason, members, ratings };
+  let reasonI18n = null;
+  if (!same) reasonI18n = { key: tk('les compétences du groupe n’ont pas toutes le même indice') };
+  else if (withSpec.length) reasonI18n = { key: tk('spécialisation sur {skills}'), params: { skills: withSpec.map((id) => (SKILL_BY_ID[id] ? { t: SKILL_BY_ID[id].fr } : id)) } };
+  const reason = reasonI18n ? fr(reasonI18n.key, reasonI18n.params) : '';
+  return { intact: same && !withSpec.length, rating: same ? ratings[0] || 0 : 0, owned: !!grp, reason, reasonI18n, members, ratings };
 }
 
 // ---------------------------------------------------------------------------
@@ -476,8 +519,28 @@ export function describe(actor, raw) {
   return q.label;
 }
 
+/** Translatable label of a request: { key, params } (render with t(key, params)). */
+export function describeI18n(actor, raw) {
+  const q = quote(actor, raw, { ...DEFAULT_SETTINGS, useTime: false }, { skipChecks: true });
+  return q.labelI18n;
+}
+
+function setLabel(out, key, params) {
+  out.labelI18n = params ? { key, params } : { key };
+  out.label = fr(key, params);
+}
+/** Append to the current label: key must contain {label}. */
+function addToLabel(out, key, params) {
+  setLabel(out, key, { label: nested(out.labelI18n), ...(params || {}) });
+}
+function warn(out, key, params) {
+  out.warnings.push(fr(key, params));
+  out.warningsI18n.push(params ? { key, params } : { key });
+}
+
 /**
  * Full computation for a request: from/to, label, karma, days, nuyen, warnings, error.
+ * Texts are French; labelI18n / errorI18n / warningsI18n carry the same texts as { key, params } for translation.
  * settings: training settings. ctx: {
  *   active: [request] (other pending requests + in-progress jobs of this actor, normalized or raw),
  *   reservedKarma, reservedNuyen (engaged by pending requests), skipChecks (no karma/conflict checks) }
@@ -486,13 +549,14 @@ export function quote(actor, raw, settings = DEFAULT_SETTINGS, ctx = {}) {
   const req = normalizeRequest(raw);
   const st = { ...DEFAULT_SETTINGS, ...(settings || {}) };
   const out = {
-    kind: req.kind, target: req.target, from: 0, to: req.to ?? 0, label: KIND_LABELS[req.kind] || 'Progression',
-    karmaCost: 0, daysBase: 0, days: 0, nuyenCost: 0, instructor: false, ppCost: 0, warnings: [], error: null,
+    kind: req.kind, target: req.target, from: 0, to: req.to ?? 0, label: '', labelI18n: null,
+    karmaCost: 0, daysBase: 0, days: 0, nuyenCost: 0, instructor: false, ppCost: 0, warnings: [], warningsI18n: [], error: null, errorI18n: null,
     manual: false, req,
   };
+  setLabel(out, KIND_LABELS[req.kind] || tk('Progression'));
   try {
-    if (!actor) bad('Personnage introuvable');
-    if (!req.kind) bad('Type de progression inconnu');
+    if (!actor) bad(tk('Personnage introuvable'));
+    if (!req.kind) bad(tk('Type de progression inconnu'));
     const costOpts = { spec: false, karma: 0, options: req.options, days: req.days };
     resolveKind(actor, req, out, costOpts);
     req.to = out.to; // the stored request carries the resolved target rating (used by applyAdvance)
@@ -510,18 +574,25 @@ export function quote(actor, raw, settings = DEFAULT_SETTINGS, ctx = {}) {
       for (const other of ctx.active || []) {
         const keys = conflictKeys(actor, other.request || other);
         if (keys.some((k) => mine.includes(k))) {
-          if (mine.includes('attribute') && keys.includes('attribute')) bad('Un seul attribut à la fois : un entraînement d’attribut est déjà en cours ou en attente');
-          bad(`Déjà en cours ou en attente : ${other.label || describe(actor, other.request || other)}`);
+          if (mine.includes('attribute') && keys.includes('attribute')) bad(tk('Un seul attribut à la fois : un entraînement d’attribut est déjà en cours ou en attente'));
+          const label = other.labelI18n ? nested(other.labelI18n) : other.label || nested(describeI18n(actor, other.request || other));
+          bad(tk('Déjà en cours ou en attente : {label}'), { label });
         }
       }
       const karma = num(actor.karma) - num(ctx.reservedKarma);
-      if (out.karmaCost > karma) bad(`Karma insuffisant : ${out.karmaCost} requis, ${Math.max(0, karma)} disponible${karma > 1 ? 's' : ''}`);
+      if (out.karmaCost > karma) {
+        const p = { cost: out.karmaCost, have: Math.max(0, karma) };
+        if (karma > 1) bad(tk('Karma insuffisant : {cost} requis, {have} disponibles'), p);
+        else bad(tk('Karma insuffisant : {cost} requis, {have} disponible'), p);
+      }
       const nuyen = num(actor.nuyen) - num(ctx.reservedNuyen);
-      if (out.nuyenCost > nuyen) bad(`Nuyens insuffisants pour l’instructeur : ${out.nuyenCost}¥ requis, ${Math.max(0, nuyen)}¥ disponibles`);
+      if (out.nuyenCost > nuyen) bad(tk('Nuyens insuffisants pour l’instructeur : {cost}¥ requis, {have}¥ disponibles'), { cost: out.nuyenCost, have: Math.max(0, nuyen) });
     }
   } catch (e) {
-    if (e instanceof RuleError) out.error = e.message;
-    else throw e;
+    if (e instanceof RuleError) {
+      out.error = e.message;
+      out.errorI18n = e.params ? { key: e.key, params: e.params } : { key: e.key };
+    } else throw e;
   }
   return out;
 }
@@ -534,7 +605,7 @@ export function validate(actor, request, settings = DEFAULT_SETTINGS, ctx = {}) 
 function targetTo(req, out, cur) {
   out.from = cur;
   out.to = req.to ?? cur + 1;
-  if (out.to <= cur) bad(`Le nouveau rang doit dépasser le rang actuel (${cur})`);
+  if (out.to <= cur) bad(tk('Le nouveau rang doit dépasser le rang actuel ({cur})'), { cur });
 }
 
 function resolveKind(actor, req, out, costOpts) {
@@ -542,84 +613,90 @@ function resolveKind(actor, req, out, costOpts) {
   switch (req.kind) {
     case 'attribute': {
       const key = req.target.toUpperCase();
-      if (!TRAINABLE_ATTRS.includes(key)) bad('Attribut inconnu ou non entraînable');
+      if (!TRAINABLE_ATTRS.includes(key)) bad(tk('Attribut inconnu ou non entraînable'));
       req.target = key;
       out.target = key;
       const cur = Math.max(0, int(actor.attributes?.[key]));
-      if (key === 'MAG' && cur <= 0) bad('Ce personnage n’est pas Éveillé (pas de Magie)');
-      if (key === 'RES' && cur <= 0) bad('Ce personnage n’est pas Émergé (pas de Résonance)');
-      out.label = `${ATTR_LABELS[key]} ${cur} → ${req.to ?? cur + 1}`;
+      if (key === 'MAG' && cur <= 0) bad(tk('Ce personnage n’est pas Éveillé (pas de Magie)'));
+      if (key === 'RES' && cur <= 0) bad(tk('Ce personnage n’est pas Émergé (pas de Résonance)'));
+      const attr = { t: ATTR_LABELS[key] };
+      setLabel(out, tk('{attr} {from} → {to}'), { attr, from: cur, to: req.to ?? cur + 1 });
       targetTo(req, out, cur);
       const max = attrMax(actor, key);
       if (out.to > max) {
-        const why = key === 'MAG' || key === 'RES' ? 'essence et grade inclus' : actor.metatype || 'Humain';
-        bad(`${ATTR_LABELS[key]} : maximum ${max} (${why})`);
+        const meta = actor.metatype || 'Humain';
+        const why = key === 'MAG' || key === 'RES' ? { t: 'essence et grade inclus' } : METATYPES[meta] ? { t: meta } : meta;
+        bad(tk('{attr} : maximum {max} ({why})'), { attr, max, why });
       }
       return;
     }
     case 'skill': {
       const entry = findSkill(actor, req.target);
       const id = entry?.id || (SKILL_BY_ID[req.target] ? req.target : slug(req.name || req.target));
-      if (!id) bad('Compétence inconnue');
+      if (!id) bad(tk('Compétence inconnue'));
       const def = SKILL_BY_ID[id];
       const name = entry?.name || def?.fr || req.name || req.target;
-      if (!def && !entry && !req.name) bad('Indique le nom de la nouvelle compétence');
+      const nameP = skillParam(name, def);
+      if (!def && !entry && !req.name) bad(tk('Indique le nom de la nouvelle compétence'));
       req.target = id;
       out.target = id;
-      if (def?.cat === 'magic' && prof.MAG <= 0) bad('Compétence magique : il faut être Éveillé');
-      if (def?.cat === 'resonance' && prof.RES <= 0) bad('Compétence de résonance : il faut être technomancien');
+      if (def?.cat === 'magic' && prof.MAG <= 0) bad(tk('Compétence magique : il faut être Éveillé'));
+      if (def?.cat === 'resonance' && prof.RES <= 0) bad(tk('Compétence de résonance : il faut être technomancien'));
       const cur = skillRating(actor, id);
-      out.label = cur === 0 ? `Nouvelle compétence : ${name} ${req.to ?? 1}` : `${name} ${cur} → ${req.to ?? cur + 1}`;
+      if (cur === 0) setLabel(out, tk('Nouvelle compétence : {name} {to}'), { name: nameP, to: req.to ?? 1 });
+      else setLabel(out, tk('{name} {from} → {to}'), { name: nameP, from: cur, to: req.to ?? cur + 1 });
       targetTo(req, out, cur);
       const max = SKILL_MAX + (hasAptitude(actor, id, name) ? 1 : 0);
-      if (out.to > max) bad(`${name} : maximum ${max} en jeu`);
-      if (def?.group && intactGroupEntry(actor, def.group)) out.warnings.push(`Rompt le groupe ${SKILL_GROUPS[def.group]}`);
+      if (out.to > max) bad(tk('{name} : maximum {max} en jeu'), { name: nameP, max });
+      if (def?.group && intactGroupEntry(actor, def.group)) warn(out, tk('Rompt le groupe {group}'), { group: { t: SKILL_GROUPS[def.group] } });
       if (req.spec) {
         costOpts.spec = true;
-        out.label += ` (spé. ${req.spec})`;
+        addToLabel(out, tk('{label} (spé. {spec})'), { spec: req.spec });
         const existing = String(entry?.spec || '');
-        if (existing && norm(existing).includes(norm(req.spec))) bad('Spécialisation déjà acquise');
+        if (existing && norm(existing).includes(norm(req.spec))) bad(tk('Spécialisation déjà acquise'));
       }
       return;
     }
     case 'skillGroup': {
       const gid = req.target;
-      if (!SKILL_GROUPS[gid]) bad('Groupe de compétences inconnu');
+      if (!SKILL_GROUPS[gid]) bad(tk('Groupe de compétences inconnu'));
       const members = groupMembers(gid).map((id) => SKILL_BY_ID[id]);
-      if (members.some((m) => m.cat === 'magic') && prof.MAG <= 0) bad('Groupe magique : il faut être Éveillé');
-      if (members.some((m) => m.cat === 'resonance') && prof.RES <= 0) bad('Groupe de résonance : il faut être technomancien');
+      if (members.some((m) => m.cat === 'magic') && prof.MAG <= 0) bad(tk('Groupe magique : il faut être Éveillé'));
+      if (members.some((m) => m.cat === 'resonance') && prof.RES <= 0) bad(tk('Groupe de résonance : il faut être technomancien'));
       const g = groupState(actor, gid);
-      const name = SKILL_GROUPS[gid];
-      if (!g.intact) bad(`Groupe ${name} rompu : ${g.reason}`);
-      out.label = g.rating === 0 ? `Nouveau groupe : ${name} ${req.to ?? 1}` : `Groupe ${name} ${g.rating} → ${req.to ?? g.rating + 1}`;
+      const name = { t: SKILL_GROUPS[gid] };
+      if (!g.intact) bad(tk('Groupe {name} rompu : {reason}'), { name, reason: nested(g.reasonI18n) });
+      if (g.rating === 0) setLabel(out, tk('Nouveau groupe : {name} {to}'), { name, to: req.to ?? 1 });
+      else setLabel(out, tk('Groupe {name} {from} → {to}'), { name, from: g.rating, to: req.to ?? g.rating + 1 });
       targetTo(req, out, g.rating);
-      if (out.to > GROUP_MAX) bad(`Groupe ${name} : maximum ${GROUP_MAX}`);
+      if (out.to > GROUP_MAX) bad(tk('Groupe {name} : maximum {max}'), { name, max: GROUP_MAX });
       return;
     }
     case 'specialization': {
       const sk = findSkill(actor, req.target);
       const kn = sk ? null : findKnowledge(actor, req.target);
       const entry = sk || kn;
-      if (!entry) bad('Compétence introuvable');
+      if (!entry) bad(tk('Compétence introuvable'));
       const rating = sk ? skillRating(actor, sk.id) : int(kn.rating);
-      if (rating < 1) bad('Il faut au moins 1 rang dans la compétence');
-      if (!req.spec || req.spec.length < 2) bad('Indique la spécialisation');
+      if (rating < 1) bad(tk('Il faut au moins 1 rang dans la compétence'));
+      if (!req.spec || req.spec.length < 2) bad(tk('Indique la spécialisation'));
       const existing = String(entry.spec || '');
-      if (existing && norm(existing).includes(norm(req.spec))) bad('Spécialisation déjà acquise');
+      if (existing && norm(existing).includes(norm(req.spec))) bad(tk('Spécialisation déjà acquise'));
       req.target = entry.id;
       out.target = entry.id;
       out.from = 0;
       out.to = 1;
-      out.label = `Spécialisation : ${entry.name || SKILL_BY_ID[entry.id]?.fr || entry.id} (${req.spec})`;
+      const def = sk ? SKILL_BY_ID[entry.id] : null;
+      setLabel(out, tk('Spécialisation : {name} ({spec})'), { name: skillParam(entry.name || def?.fr || entry.id, def), spec: req.spec });
       const g = sk ? SKILL_BY_ID[sk.id]?.group : null;
-      if (g && intactGroupEntry(actor, g)) out.warnings.push(`Rompt le groupe ${SKILL_GROUPS[g]}`);
+      if (g && intactGroupEntry(actor, g)) warn(out, tk('Rompt le groupe {group}'), { group: { t: SKILL_GROUPS[g] } });
       return;
     }
     case 'knowledge': {
       const entry = findKnowledge(actor, req.target) || (req.name ? findKnowledge(actor, req.name) : null);
       const name = entry?.name || req.name || req.target;
-      if (!entry && (!name || name.length < 2)) bad('Indique le nom de la connaissance');
-      if (entry?.native) bad('Langue maternelle : pas besoin de l’entraîner');
+      if (!entry && (!name || name.length < 2)) bad(tk('Indique le nom de la connaissance'));
+      if (entry?.native) bad(tk('Langue maternelle : pas besoin de l’entraîner'));
       if (entry) req.target = entry.id;
       else {
         req.name = name;
@@ -627,139 +704,153 @@ function resolveKind(actor, req, out, costOpts) {
       }
       out.target = req.target;
       const cur = Math.max(0, int(entry?.rating));
-      out.label = cur === 0 ? `Nouvelle ${(entry?.type || req.ktype) === 'language' ? 'langue' : 'connaissance'} : ${name} ${req.to ?? 1}` : `${name} ${cur} → ${req.to ?? cur + 1}`;
+      if (cur === 0) {
+        if ((entry?.type || req.ktype) === 'language') setLabel(out, tk('Nouvelle langue : {name} {to}'), { name, to: req.to ?? 1 });
+        else setLabel(out, tk('Nouvelle connaissance : {name} {to}'), { name, to: req.to ?? 1 });
+      } else setLabel(out, tk('{name} {from} → {to}'), { name, from: cur, to: req.to ?? cur + 1 });
       targetTo(req, out, cur);
-      if (out.to > KNOWLEDGE_MAX) bad(`${name} : maximum ${KNOWLEDGE_MAX}`);
+      if (out.to > KNOWLEDGE_MAX) bad(tk('{name} : maximum {max}'), { name, max: KNOWLEDGE_MAX });
       if (req.spec) {
         costOpts.spec = true;
-        out.label += ` (spé. ${req.spec})`;
+        addToLabel(out, tk('{label} (spé. {spec})'), { spec: req.spec });
       }
       return;
     }
     case 'quality': {
       const name = req.name || req.target;
-      if (!name) bad('Indique la qualité');
-      if (!req.positive) bad('Qualité négative : on ne peut que la racheter');
-      if (req.karma <= 0) bad('Indique le coût en karma de la qualité');
-      if ((actor.qualities || []).some((q) => (req.catalogId && q.catalogId === req.catalogId) || sameName(q.name, name, req.altName))) bad('Qualité déjà possédée');
+      if (!name) bad(tk('Indique la qualité'));
+      if (!req.positive) bad(tk('Qualité négative : on ne peut que la racheter'));
+      if (req.karma <= 0) bad(tk('Indique le coût en karma de la qualité'));
+      if ((actor.qualities || []).some((q) => (req.catalogId && q.catalogId === req.catalogId) || sameName(q.name, name, req.altName))) bad(tk('Qualité déjà possédée'));
       req.name = name;
       costOpts.karma = req.karma;
       out.from = 0;
       out.to = 1;
-      out.label = `Qualité : ${name} (${req.karma})`;
+      setLabel(out, tk('Qualité : {name} ({karma})'), { name, karma: req.karma });
       return;
     }
     case 'removeQuality': {
       const q = (actor.qualities || []).find((x) => x.id === req.target) || (actor.qualities || []).find((x) => norm(x.name) === norm(req.target || req.name));
-      if (!q) bad('Qualité introuvable sur ce personnage');
+      if (!q) bad(tk('Qualité introuvable sur ce personnage'));
       const negative = q.positive === false || num(q.karma) < 0;
-      if (!negative) bad('Seules les qualités négatives peuvent être rachetées');
+      if (!negative) bad(tk('Seules les qualités négatives peuvent être rachetées'));
       req.target = q.id;
       out.target = q.id;
       const k = Math.abs(num(q.karma)) || req.karma;
-      if (!k) bad('Indique la valeur en karma de la qualité');
+      if (!k) bad(tk('Indique la valeur en karma de la qualité'));
       req.karma = k;
       costOpts.karma = k;
       out.from = 1;
       out.to = 0;
-      out.label = `Racheter : ${q.name} (${k})`;
+      setLabel(out, tk('Racheter : {name} ({karma})'), { name: q.name, karma: k });
       return;
     }
     case 'spell': {
-      if (!prof.canCast) bad('Seuls les magiciens et adeptes mystiques apprennent des sorts');
+      if (!prof.canCast) bad(tk('Seuls les magiciens et adeptes mystiques apprennent des sorts'));
       const name = req.name || req.target;
-      if (!name) bad('Indique le sort');
-      if ((actor.spells || []).some((s) => (req.catalogId && s.catalogId === req.catalogId) || sameName(s.name, name, req.altName))) bad('Sort déjà connu');
+      if (!name) bad(tk('Indique le sort'));
+      if ((actor.spells || []).some((s) => (req.catalogId && s.catalogId === req.catalogId) || sameName(s.name, name, req.altName))) bad(tk('Sort déjà connu'));
       req.name = name;
       out.from = 0;
       out.to = 1;
-      out.label = `Sort : ${name}`;
+      setLabel(out, tk('Sort : {name}'), { name });
       return;
     }
     case 'complexForm': {
-      if (prof.RES <= 0) bad('Seuls les technomanciens apprennent des formes complexes');
+      if (prof.RES <= 0) bad(tk('Seuls les technomanciens apprennent des formes complexes'));
       const name = req.name || req.target;
-      if (!name) bad('Indique la forme complexe');
-      if ((actor.complexForms || []).some((s) => norm(s.name) === norm(name))) bad('Forme complexe déjà connue');
+      if (!name) bad(tk('Indique la forme complexe'));
+      if ((actor.complexForms || []).some((s) => norm(s.name) === norm(name))) bad(tk('Forme complexe déjà connue'));
       req.name = name;
       out.from = 0;
       out.to = 1;
-      out.label = `Forme complexe : ${name}`;
+      setLabel(out, tk('Forme complexe : {name}'), { name });
       return;
     }
     case 'power': {
-      if (!prof.hasPowers) bad('Réservé aux adeptes et adeptes mystiques');
+      if (!prof.hasPowers) bad(tk('Réservé aux adeptes et adeptes mystiques'));
       const name = req.name || req.target;
-      if (!name) bad('Indique le pouvoir');
+      if (!name) bad(tk('Indique le pouvoir'));
       req.name = name;
-      if (req.pp <= 0) bad('Indique le coût en points de pouvoir');
+      if (req.pp <= 0) bad(tk('Indique le coût en points de pouvoir'));
       const existing = (req.target && (actor.powers || []).find((p) => p.id === req.target)) || (actor.powers || []).find((p) => (req.catalogId && p.catalogId === req.catalogId) || sameName(p.name, name, req.altName));
-      if (existing && !req.levels) bad('Pouvoir déjà acquis');
+      if (existing && !req.levels) bad(tk('Pouvoir déjà acquis'));
       const cur = existing ? Math.max(1, int(existing.level, 1)) : 0;
       if (existing) {
         req.target = existing.id;
         req.name = existing.name;
       }
       if (req.levels) {
-        out.label = `Pouvoir : ${name} ${cur ? `${cur} → ` : ''}${req.to ?? cur + 1}`;
+        if (cur) setLabel(out, tk('Pouvoir : {name} {from} → {to}'), { name, from: cur, to: req.to ?? cur + 1 });
+        else setLabel(out, tk('Pouvoir : {name} {to}'), { name, to: req.to ?? cur + 1 });
         targetTo(req, out, cur);
-        if (req.maxLevel && out.to > req.maxLevel) bad(`${name} : niveau maximum ${req.maxLevel}`);
-        if (out.to > prof.MAG) bad(`${name} : le niveau ne peut dépasser la Magie (${prof.MAG})`);
+        if (req.maxLevel && out.to > req.maxLevel) bad(tk('{name} : niveau maximum {max}'), { name, max: req.maxLevel });
+        if (out.to > prof.MAG) bad(tk('{name} : le niveau ne peut dépasser la Magie ({mag})'), { name, mag: prof.MAG });
       } else {
         out.from = 0;
         out.to = 1;
-        out.label = `Pouvoir : ${name}`;
+        setLabel(out, tk('Pouvoir : {name}'), { name });
       }
       out.ppCost = round2(req.pp * (out.to - out.from) + (cur === 0 ? req.extraPP : 0));
       const pp = powerPoints(actor);
-      if (out.ppCost > pp.free + 1e-9) bad(`Points de pouvoir insuffisants : ${out.ppCost} requis, ${Math.max(0, pp.free)} libre${pp.free > 1 ? 's' : ''}`);
-      out.label += ` (${out.ppCost} PP)`;
+      if (out.ppCost > pp.free + 1e-9) {
+        const p = { cost: out.ppCost, free: Math.max(0, pp.free) };
+        if (pp.free > 1) bad(tk('Points de pouvoir insuffisants : {cost} requis, {free} libres'), p);
+        else bad(tk('Points de pouvoir insuffisants : {cost} requis, {free} libre'), p);
+      }
+      addToLabel(out, tk('{label} ({pp} PP)'), { pp: out.ppCost });
       return;
     }
     case 'powerPoint': {
-      if (prof.type !== 'mystic') bad('Seuls les adeptes mystiques achètent des points de pouvoir (les adeptes en gagnent avec la Magie ou l’initiation)');
+      if (prof.type !== 'mystic') bad(tk('Seuls les adeptes mystiques achètent des points de pouvoir (les adeptes en gagnent avec la Magie ou l’initiation)'));
       const cur = Math.max(0, int(actor.magic?.extraPP));
-      out.label = `Points de pouvoir achetés ${cur} → ${req.to ?? cur + 1}`;
+      setLabel(out, tk('Points de pouvoir achetés {from} → {to}'), { from: cur, to: req.to ?? cur + 1 });
       targetTo(req, out, cur);
-      if (out.to > prof.MAG) bad(`Points de pouvoir : maximum = Magie (${prof.MAG})`);
+      if (out.to > prof.MAG) bad(tk('Points de pouvoir : maximum = Magie ({mag})'), { mag: prof.MAG });
       return;
     }
     case 'initiation': {
       const sub = prof.MAG <= 0 && prof.RES > 0;
-      if (prof.MAG <= 0 && prof.RES <= 0) bad('Il faut être Éveillé ou Émergé pour s’initier');
+      if (prof.MAG <= 0 && prof.RES <= 0) bad(tk('Il faut être Éveillé ou Émergé pour s’initier'));
       const cur = sub ? submersionGrade(actor) : initiationGrade(actor);
       req.target = sub ? 'submersion' : 'initiation';
       out.target = req.target;
       out.from = cur;
       out.to = cur + 1;
-      const word = sub ? 'Submersion' : 'Initiation';
-      out.label = `${word} : grade ${out.to}`;
-      if (req.to !== null && req.to !== out.to) bad(`${word} : un grade à la fois`);
+      if (sub) setLabel(out, tk('Submersion : grade {grade}'), { grade: out.to });
+      else setLabel(out, tk('Initiation : grade {grade}'), { grade: out.to });
+      if (req.to !== null && req.to !== out.to) {
+        if (sub) bad(tk('Submersion : un grade à la fois'));
+        else bad(tk('Initiation : un grade à la fois'));
+      }
       const att = sub ? prof.RES : prof.MAG;
-      if (out.to > att) bad(`${word} : le grade ne peut dépasser ${sub ? 'la Résonance' : 'la Magie'} (${att})`);
+      if (out.to > att) {
+        if (sub) bad(tk('Submersion : le grade ne peut dépasser la Résonance ({max})'), { max: att });
+        else bad(tk('Initiation : le grade ne peut dépasser la Magie ({max})'), { max: att });
+      }
       const opts = ['group', 'ordeal', 'schooling'].filter((k) => req.options[k]);
-      if (opts.length) out.label += ` (−${opts.length * 10} %)`;
-      if (req.options.metamagic) out.label += ` · ${req.options.metamagic}`;
+      if (opts.length) addToLabel(out, tk('{label} (−{pct} %)'), { pct: opts.length * 10 });
+      if (req.options.metamagic) addToLabel(out, tk('{label} · {metamagic}'), { metamagic: req.options.metamagic });
       if (req.options.powerPoint) {
-        if (!prof.hasPowers) bad('Seuls les adeptes peuvent gagner un point de pouvoir par l’initiation');
-        out.label += ' · +1 PP';
+        if (!prof.hasPowers) bad(tk('Seuls les adeptes peuvent gagner un point de pouvoir par l’initiation'));
+        addToLabel(out, tk('{label} · +1 PP'));
       }
       return;
     }
     case 'other': {
       const name = req.name || req.target;
-      if (!name) bad('Décris la progression');
+      if (!name) bad(tk('Décris la progression'));
       req.name = name;
       costOpts.karma = req.karma;
       costOpts.days = req.days;
       out.from = 0;
       out.to = 1;
-      out.label = name;
+      setLabel(out, '{name}', { name });
       out.manual = true;
       return;
     }
     default:
-      bad('Type de progression inconnu');
+      bad(tk('Type de progression inconnu'));
   }
 }
 
