@@ -313,27 +313,30 @@ sessions stay valid. To undo: stop the server, copy `data/tables/lazarus/state.j
 
 ## Auto-deploy on push to `main`
 
-A systemd timer on the VPS (`shadowrun-autodeploy.timer`) runs `app/deploy/autodeploy.sh` every minute. When
-`origin/main` has a new commit it:
+The GitHub Action `.github/workflows/deploy.yml` runs on every push to `main` (and by hand: *Actions → Deploy → Run
+workflow*). It SSHes into the VPS, which runs `app/deploy/autodeploy.sh`:
 
-1. snapshots `app/runtime/` (all tables) into `~/shadowrun-backups/runtime-<date>-<oldcommit>.tgz` (10 newest kept);
-2. tags the running image `shadowrun-app:previous`, `git reset --hard` to the new commit, `docker compose up -d --build`;
-3. waits up to 3 minutes for `/api/health`;
-4. on failure: goes back to the previous commit and image, and remembers the failed commit so it is not retried
-   until a newer commit is pushed. Game data is never rolled back automatically (restore a snapshot by hand if needed).
+1. fetches `origin/main` with the VPS's read-only deploy key (`~/.ssh/shadowrun_deploy`, ssh alias `github-shadowrun`);
+   nothing to do if it is already there;
+2. snapshots `app/runtime/` (all tables) into `~/shadowrun-backups/runtime-<date>-<oldcommit>.tgz` (10 newest kept);
+3. tags the running image `shadowrun-app:previous`, `git reset --hard` to the new commit, `docker compose up -d --build`;
+4. waits up to 3 minutes for `/api/health`;
+5. on failure: goes back to the previous commit and image and the job fails (GitHub emails you). Game data is never
+   rolled back automatically (restore a snapshot by hand if needed). *Re-run jobs* retries the same commit.
 
-So: **push to `main` → live about 1–3 minutes later.** No secret is stored on GitHub; the VPS pulls with its read-only
-deploy key (`~/.ssh/shadowrun_deploy`, ssh alias `github-shadowrun`).
+So: **push to `main` → live about 1 minute later**, with the deploy log in the Actions tab. Pushes are deployed one at
+a time (workflow `concurrency`), and a deploy keeps running on the VPS even if the job is cancelled (`ci-trigger.sh`
+starts it in its own session; log in `/tmp/shadowrun-ci-deploy.log`).
 
-```bash
-journalctl -u shadowrun-autodeploy -n 50 --no-pager     # what the last deploys did
-systemctl list-timers shadowrun-autodeploy.timer         # next check
-sudo systemctl stop shadowrun-autodeploy.timer           # pause auto-deploy (start to resume)
+How the Action gets in: repo secret `VPS_DEPLOY_KEY` is an SSH key whose line in the VPS's `~/.ssh/authorized_keys` is
+
+```
+restrict,command="/bin/bash /home/ubuntu/shadowrun/app/deploy/ci-trigger.sh" ssh-ed25519 AAAA… github-actions shadowrun-table deploy
 ```
 
-Install (once, on the VPS, after the clone):
+so it can only start that script: no shell, no file access, no forwarding. `VPS_KNOWN_HOSTS` pins the VPS's ed25519
+host key. To rotate the key: `ssh-keygen -t ed25519 -N "" -f gha_deploy`, replace that line on the VPS, then
+`gh secret set VPS_DEPLOY_KEY < gha_deploy` and delete the local files. To pause auto-deploy: *Actions → Deploy →
+⋯ → Disable workflow*. `deploy.ps1 -Action update` still deploys by hand.
 
-```bash
-sudo cp ~/shadowrun/app/deploy/systemd/shadowrun-autodeploy.* /etc/systemd/system/
-sudo systemctl daemon-reload && sudo systemctl enable --now shadowrun-autodeploy.timer
-```
+(Until 2026-11-26 a systemd timer polled GitHub every minute instead; it has been removed from the VPS.)

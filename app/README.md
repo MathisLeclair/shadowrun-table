@@ -64,4 +64,4 @@ See `ARCHITECTURE.md`. Tests: `node tools/test-<module>.js` (each starts an isol
 
 ## Live server
 
-Hosted at **http://152.228.134.90:8095** (admin: `/admin`). Every push to `main` is deployed automatically within ~1–3 minutes, with a data snapshot before each deploy and an automatic rollback if the new version doesn't start. See `DEPLOY.md` → « Auto-deploy ».
+Hosted at **http://152.228.134.90:8095** (admin: `/admin`). Every push to `main` is deployed automatically by a GitHub Action (about a minute), with a data snapshot before each deploy and an automatic rollback if the new version doesn't start. See `DEPLOY.md` → « Auto-deploy ».

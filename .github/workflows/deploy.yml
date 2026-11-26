@@ -1,0 +1,32 @@
+# Deploy every push to main to the OVH VPS (http://152.228.134.90:8095), see app/DEPLOY.md.
+# The SSH key in VPS_DEPLOY_KEY is pinned on the VPS to app/deploy/ci-trigger.sh (forced command): it can only start
+# a deploy of origin/main, which the VPS pulls itself with its own read-only GitHub deploy key.
+# Re-run a failed job to retry the same commit.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Deploy on the VPS
+        env:
+          DEPLOY_KEY: ${{ secrets.VPS_DEPLOY_KEY }}
+          KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes -o BatchMode=yes -o ServerAliveInterval=30 \
+            ubuntu@152.228.134.90
