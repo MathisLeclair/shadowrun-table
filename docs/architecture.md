@@ -76,6 +76,7 @@ Run: `npm start` (port 3000, or `PORT=xxxx`). A fresh install has one table « l
 | `50-training.ts` | `training/` | [modules/training.md](modules/training.md) |
 | `60-audio.ts` | `audio/` | [modules/audio.md](modules/audio.md) |
 | `70-campaign.ts` | `campaign/` | [modules/campaign.md](modules/campaign.md) |
+| `72-city.ts` | `city/` | [modules/city.md](modules/city.md) |
 | `75-notes.ts` | `notes/` | [modules/notes.md](modules/notes.md) |
 | `80-foundry.ts` | `foundry/`, `admin/FoundryUpload.tsx` | [modules/foundry.md](modules/foundry.md) |
 | `85-chummer.ts` | `chummer/` | [modules/chummer.md](modules/chummer.md) |

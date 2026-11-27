@@ -236,7 +236,7 @@ function Shell() {
   }, [!!game, hasOwnLang]);
   if (!game) return <div className="loading">{t('Connexion à la Matrice…')}</div>;
   const role = game.me.role;
-  const tabs = mainTabs.filter((tb) => tb.roles.includes(role));
+  const tabs = mainTabs.filter((tb) => tb.roles.includes(role) && (!tb.visible || tb.visible(game)));
   const docks = dockTabs.filter((tb) => tb.roles.includes(role));
   const current = tabs.find((tb) => tb.id === ui.mainTab) || tabs[0];
   const dock = docks.find((tb) => tb.id === ui.dockTab) || docks[0];

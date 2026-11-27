@@ -1,6 +1,6 @@
 // Home of a lifestyle (shared/home.js): map viewer, first pick among a few layouts, moving (paid), GM « play map ».
 // Opened from the lifestyle cards of the sheet (« Contacts & SIN »), for the GM and the runner's owner.
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Button, Modal, confirmAction } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
 import { setUI, goTab, toast } from '../../lib/ui-store.ts';
@@ -9,6 +9,8 @@ import { homeLayoutsFor, homeLayout, homeMoveCost, buildHome, homeArea, type Hom
 import { drawStaticMap, type MapRenderer, type MapScene } from '../map/renderer.ts';
 import { lifestyleBaseLabel } from './sublists.tsx';
 import { fmtDate } from './common.tsx';
+import { HTR_REF, HTR_RESPONSE, homeSecurity } from '/shared/city.ts';
+import { BookRef } from '../books/BookRef.tsx';
 
 import type { Actor, GameMap, GameView, Lifestyle } from '../../../shared/types.ts';
 import './home.css';
@@ -99,26 +101,35 @@ interface ChooserProps {
   canMove: boolean;
   gm: boolean;
   onPick: (lay: HomeLayoutDef, fee: number) => void;
+  /** Fee of a pick (default: a move when a flat is already chosen). The city map passes it: a new spot is a move too. */
+  fee?: number;
+  /** Shown before the options (city map: « Garder le logement actuel »). */
+  extra?: ReactNode;
+  /** The current flat can be picked again (the move is about the spot). */
+  allowCurrent?: boolean;
 }
-function Chooser({ lifestyle, current, canMove, gm, onPick }: ChooserProps) {
+/** Option cards of the lifestyle level's layouts. Exported for the city map (pick the flat after the spot). */
+export function Chooser({ lifestyle, current, canMove, gm, onPick, fee: feeIn, extra, allowCurrent }: ChooserProps) {
   const layouts = layoutsFor(lifestyle.base);
-  const fee: number = current && !gm ? homeMoveCost(lifestyle) : 0;
+  const fee: number = feeIn ?? (current && !gm ? homeMoveCost(lifestyle) : 0);
+  const moving = feeIn !== undefined ? feeIn > 0 || !!current || !!lifestyle.place : !!current;
   const builds = useMemo(() => layouts.map((lay) => build(lifestyle, lay.id, { tr: t })), [lifestyle, layouts.length]);
   return <div className="hm-choose">
     <p className="small muted">
-      {current
-        ? fee ? t('Déménager coûte un mois de loyer de base : {cost}. Le nouveau logement est ensuite fixé jusqu’au prochain déménagement.', { cost: fmtNuyen(fee) }) : t('Le MJ déménage gratuitement.')
+      {moving
+        ? fee ? t('Déménager coûte un mois de loyer de base : {cost}. Le nouveau logement est ensuite fixé jusqu’au prochain déménagement.', { cost: fmtNuyen(fee) }) : gm ? t('Le MJ déménage gratuitement.') : ''
         : t('Choisis où vit ton personnage. Ce choix est gratuit, puis fixé : en changer plus tard est un déménagement payant.')}
       {' '}{t('Les options du train de vie (garage, atelier, cour…) sont ajoutées au plan.')}
     </p>
+    {extra}
     <div className="hm-options">
       {builds.map(({ layout: lay, map, ...rest }) => <div className={'hm-option' + (current?.id === lay.id ? ' current' : '')} key={lay.id}>
       <div className="hm-option-head"><b>{t(lay.name)}</b>{current?.id === lay.id && <span className="badge badge-cyan">{t('actuel')}</span>}</div>
       <div className="hm-preview-box"><HomePreview map={map} /></div>
       <div className="small">{t(lay.desc)}</div>
       <RoomList built={{ map, ...rest }} />
-      {canMove && current?.id !== lay.id && <Button small variant="primary" onClick={() => onPick(lay, fee)}>
-        {current ? (fee ? t('Déménager ici ({cost})', { cost: fmtNuyen(fee) }) : t('Déménager ici')) : t('Emménager ici')}
+      {canMove && (allowCurrent || current?.id !== lay.id) && <Button small variant="primary" onClick={() => onPick(lay, fee)}>
+        {moving ? (fee ? t('Déménager ici ({cost})', { cost: fmtNuyen(fee) }) : t('Déménager ici')) : t('Emménager ici')}
       </Button>}
     </div>)}
     </div>
@@ -141,7 +152,7 @@ export function HomeModal({ game, actor, lifestyle, canMove, onClose }: HomeProp
     } else if (!(await confirmAction(t('Emménager dans « {name} » ? Ensuite, changer de logement sera un déménagement payant.', { name: t(lay.name) })))) return;
     setBusy(true);
     try {
-      await send('shop/chooseHome', { actorId: actor.id, lifestyleId: lifestyle.id, layout: lay.id });
+      await send('shop/move', { actorId: actor.id, lifestyleId: lifestyle.id, layout: lay.id });
       setChoosing(false);
     } catch {
       // error toast shown by send()
@@ -181,9 +192,34 @@ export function HomeModal({ game, actor, lifestyle, canMove, onClose }: HomeProp
           <div><b>{t(current.name)}</b></div>
           <div className="small">{t(current.desc)}</div>
           <RoomList built={built} />
+          <PlaceInfo game={game} lifestyle={lifestyle} />
           {lifestyle.home?.since ? <div className="small faint">{t('Depuis le {date}', { date: fmtDate(lifestyle.home.since) })}</div> : null}
           <div className="small faint">{t('Glisser pour déplacer, molette pour zoomer.')}</div>
         </div>
       </div>}
   </Modal>;
+}
+
+/** District of the home (city map) and the security rating of its housing type (SR5 p. 352). */
+export function PlaceInfo({ game, lifestyle }: { game: GameView; lifestyle: Lifestyle }) {
+  const district = lifestyle.place?.district ? game.city?.districts.find((d) => d.id === lifestyle.place!.district) : null;
+  const rating = homeSecurity(lifestyle.base);
+  return <>
+    {lifestyle.place && <div className="small">📍 {district ? district.name : t('Hors des districts')}</div>}
+    {rating && <div className="small hm-security">
+      {t('Sécurité du quartier : {rating} — réponse de la sécurité en {time}', { rating, time: HTR_RESPONSE[rating] })}{' '}
+      <BookRef source={HTR_REF.source} page={HTR_REF.page} />
+    </div>}
+  </>;
+}
+
+/** Lifestyle card: « 📍 Renton » (or « Placer sur la carte ») → Seattle tab, focused on that home or placing it. */
+export function CityPlaceButton({ game, actor, lifestyle }: { game: GameView; actor: Actor; lifestyle: Lifestyle }) {
+  if (!game.city?.map) return null;
+  const d = lifestyle.place ? game.city.districts.find((x) => x.id === lifestyle.place!.district)?.name || t('Hors des districts') : null;
+  const go = () => {
+    setUI({ cityFocus: { actorId: actor.id, lifestyleId: lifestyle.id, place: !lifestyle.place }, sheetActorId: null });
+    goTab('city');
+  };
+  return <Button small variant="ghost" className="hm-btn" onClick={go} title={t('Voir sur la carte de la ville')}>📍 {d || t('Placer sur la carte')}</Button>;
 }

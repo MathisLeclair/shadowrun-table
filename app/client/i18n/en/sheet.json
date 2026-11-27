@@ -1127,5 +1127,9 @@
   "Antre de méditation": "Zen den",
   "Chambre froide": "Walk-in freezer",
   "Tunnel d’évasion": "Escape tunnel",
-  "Cachette secrète": "Secret hideout"
+  "Cachette secrète": "Secret hideout",
+  "Hors des districts": "Outside the districts",
+  "Sécurité du quartier : {rating} — réponse de la sécurité en {time}": "Neighborhood security: {rating} — security response in {time}",
+  "Voir sur la carte de la ville": "Show on the city map",
+  "Placer sur la carte": "Place on the map"
 }

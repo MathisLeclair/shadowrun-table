@@ -695,6 +695,90 @@ export interface Lifestyle extends ItemBase {
   /** Derived and stored (shared/lifestyle.js monthlyCost). */
   monthlyCost: number;
   home?: LifestyleHome | null;
+  /** Where the home is on the city map (« Seattle » tab, shared/city.ts). Set by shop/move only. */
+  place?: LifestylePlace | null;
+}
+
+// ---- City map (« Seattle » tab, shared/city.ts, server/modules/72-city.ts) ----
+
+/** HTR response ratings (SR5 p. 352). */
+export type SecurityRating = 'AAA' | 'AA' | 'A' | 'B' | 'C' | 'Z';
+
+/** A security rating the source gives for a named area of a district. */
+export interface CitySecurity {
+  /** Area as the book names it (« Downtown Seattle », « Redmond Barrens »). */
+  area: string;
+  rating: SecurityRating;
+  source: string;
+  page: number;
+}
+
+/** A district of the city map: even-odd rings in cells (several rings = islands; a ring inside another = a hole). */
+export interface CityDistrict {
+  id: string;
+  name: string;
+  /** Fill colour of the district on the image (#rrggbb). */
+  color: string;
+  rings: Array<Array<[number, number]>>;
+  /** Only when the source rates it (SR5 p. 352). */
+  security?: CitySecurity[];
+}
+
+/** District shapes traced from one city image (data/city/<id>.json, tools/city-districts.ts). */
+export interface CityShapes {
+  id: string;
+  name: string;
+  /** Background URL of the map image the shapes match. */
+  background: string;
+  width: number;
+  height: number;
+  traced?: string;
+  districts: CityDistrict[];
+}
+
+/** `state.city`. */
+export interface CityState {
+  /** Table map used as the city (its background image is drawn); null = no city tab. */
+  mapId: MapId | null;
+  /** id of the CityShapes the districts come from. */
+  shapes: string | null;
+  districts: CityDistrict[];
+}
+
+/** Where a lifestyle's home is on the city map. */
+export interface LifestylePlace {
+  /** Cells of the city map (floats). */
+  x: number;
+  y: number;
+  /** District id at (x, y), computed by the server. */
+  district: string | null;
+  at: Timestamp;
+  /** Runners the GM « invited »: their players see this home too. GM only. */
+  guests?: ActorId[];
+}
+
+/** A home on the city map as a user receives it. */
+export interface CityPin {
+  actorId: ActorId;
+  lifestyleId: string;
+  /** Runner name. */
+  actor: string;
+  lifestyle: string;
+  base: LifestyleBase;
+  x: number;
+  y: number;
+  district: string | null;
+  layout: string | null;
+  /** One of the user's own runners (GM: always true). */
+  own: boolean;
+  guests: ActorId[];
+}
+
+/** `game.city`: the city map image and shapes, plus the homes this user may see. */
+export interface CityView {
+  map: { id: MapId; name: string; width: number; height: number; background: MapBackground } | null;
+  districts: CityDistrict[];
+  pins: CityPin[];
 }
 
 export interface MartialArtTechnique extends ItemBase {}
@@ -2619,6 +2703,7 @@ export interface TableState {
   chargen: ChargenState;
   foundry: FoundryState;
   chummer: ChummerState;
+  city: CityState;
 }
 
 /**
@@ -2657,6 +2742,8 @@ export interface GameView {
   /** GM only. */
   foundry?: FoundryState;
   chummer: ChummerState;
+  /** Built by the city module for everyone (state.city is never sent as is). */
+  city: CityView;
 }
 
 // =====================================================================================================================

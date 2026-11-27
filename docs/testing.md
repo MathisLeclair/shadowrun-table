@@ -44,6 +44,7 @@ run at the same time.
 | `test-characters.ts` | 3270 | [characters](modules/characters.md) |
 | `test-chargen.ts` | 3711 | [chargen](modules/chargen.md) |
 | `test-chummer.ts` | 3271 | [chummer](modules/chummer.md) |
+| `test-city.ts` | 3254 | [city](modules/city.md) |
 | `test-combat.ts` | 3103 | [combat](modules/combat.md) |
 | `test-contacts.ts` | 3962 (inside the `test-demo.ts` range) | [contacts-sins](modules/contacts-sins.md) |
 | `test-demo.ts` | 3960-3969 (uses 3960-3961; short reset timers through the `SR_DEMO_*` variables) | [demo-table](modules/demo-table.md) |

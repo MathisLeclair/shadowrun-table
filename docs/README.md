@@ -32,6 +32,7 @@ read the one you need, not all of them. Repo rules and commands: [AGENTS.md](../
 | [modules/dice.md](modules/dice.md) | `dice/roll` payload, `performRoll`, Second Chance, 3D dice |
 | [modules/inventory.md](modules/inventory.md) | FR/EN item names, ammunition, firing, reloading, ready weapons, containers, import of locations |
 | [modules/lifestyles.md](modules/lifestyles.md) | lifestyles and options, homes (apartment layouts), legacy migration, historic Chummer restore |
+| [modules/city.md](modules/city.md) | « Seattle » tab: traced districts, homes on the city map, district zoom, invitations, `shop/move` |
 | [modules/contacts-sins.md](modules/contacts-sins.md) | fake SINs and their checks, contact dossiers and rolls |
 | [modules/modifiers.md](modules/modifiers.md) | catalog effects, conditions and switches, modifier sources, helpers, server authority on rolls |
 | [modules/chargen.md](modules/chargen.md) | priority character creator (drafts, approval), enemy generator |
