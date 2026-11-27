@@ -30,6 +30,7 @@ import type {
   ActionContext, Actor, ActorId, AttrKey, Container, ContainerKind, DamageType, FireInfo, HealthStatus, I18nEntry, I18nMessage,
   I18nParams, I18nParamValue, ItemListName, LogEntry, RollModLine, RollRecord, ServerModule, SessionUser, SfxId, EmitTarget,
   TableState, GameView, InitOptions, Weapon, AmmoKind, Template, GameMap, User, BiName, Gear, ActorMatrix, SinCheckInfo, ContactRollInfo,
+  GearStats, WareStats,
 } from '../../shared/types.ts';
 
 /**
@@ -49,6 +50,8 @@ const clampInt = (v: unknown, lo: number, hi: number, d = 0): number => {
 };
 const str = (v: unknown, max = 4000): string => (v === undefined || v === null ? '' : String(v).slice(0, max));
 const isObj = (v: unknown): v is Loose => !!v && typeof v === 'object' && !Array.isArray(v);
+/** Is an untrusted value one of the entries of a constant list (list names, attributes…)? */
+const listed = (arr: readonly string[], v: unknown): boolean => arr.includes(v as string);
 const BAD_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 
 function getActor(ctx: ActionContext, id: unknown): Actor {
@@ -212,7 +215,7 @@ function removeActor(state: TableState, id: ActorId): void {
 
 /** Index of an item by id; `index` is a fallback for items that had no id when the client rendered them. */
 function findItem(ctx: ActionContext, a: Actor, list: string, itemId: unknown, index?: unknown): number {
-  if (!ITEM_LISTS.includes(list)) ctx.fail('Liste inconnue : {list}', { list: String(list) });
+  if (!listed(ITEM_LISTS, list)) ctx.fail('Liste inconnue : {list}', { list: String(list) });
   const A = loose(a);
   if (!Array.isArray(A[list])) A[list] = [];
   let idx: number = itemId ? A[list].findIndex((i: Loose) => i.id === itemId) : -1;
@@ -292,7 +295,7 @@ function settleLifestyles(a: Actor, primaryId?: string | null): void {
 }
 
 function sanitizeItem(list: string, item: unknown, ctx?: ActionContext): Loose {
-  const out: Loose = deepClone(item);
+  const out: Loose = deepClone(item as Loose);
   delete out.__proto__;
   if (ctx) {
     const sub = (SUB_LISTS as Record<string, string | undefined>)[list];
@@ -332,7 +335,7 @@ function sanitizeItem(list: string, item: unknown, ctx?: ActionContext): Loose {
   if (list === 'armor' && out.equipped !== undefined) out.equipped = !!out.equipped;
   if (list === 'gear' && out.active !== undefined) out.active = !!out.active; // gear with catalog effects: worn / switched on (shared/modifiers.js)
   // Inventory (client/modules/sheet/inventory.js): location ('on' or a container id, checked by the handlers), ready weapons, ammo.
-  if (LOCATED_LISTS.includes(list) && out.location !== undefined) out.location = str(out.location, 60).trim() || ON_BODY;
+  if (listed(LOCATED_LISTS, list) && out.location !== undefined) out.location = str(out.location, 60).trim() || ON_BODY;
   for (const k of BILINGUAL) if (out[k] !== undefined && out[k] !== null) out[k] = str(out[k], 120);
   if (list === 'weapons') {
     if (out.equipped !== undefined) out.equipped = !!out.equipped;
@@ -404,7 +407,7 @@ function weaponGearByName(): Map<string, Loose> {
   if (!weaponGear) {
     weaponGear = new Map();
     for (const e of appCatalog('gear').list) {
-      if (!e?.stats?.weapon) continue;
+      if (!(e?.stats as GearStats | undefined)?.weapon) continue;
       for (const n of [e.name, e.nameFr]) {
         const k = catNorm(n);
         if (k && !weaponGear.has(k)) weaponGear.set(k, e);
@@ -467,10 +470,10 @@ function fillItemNames(a: Actor): boolean {
       let e: Loose | null = null;
       if (it.catalogId) {
         const id = String(it.catalogId).toLowerCase();
-        for (const f of files) if ((e = appCatalog(f).byId.get(id))) break;
+        for (const f of files) if ((e = appCatalog(f).byId.get(id) || null)) break;
       } else {
         const k = catNorm(it.name);
-        for (const f of files) if ((e = appCatalog(f).byName.get(k))) break;
+        for (const f of files) if ((e = appCatalog(f).byName.get(k) || null)) break;
         if (e) it.catalogId = e.id;
         else if (list === 'weapons') e = weaponGearByName().get(k) || null;
       }
@@ -515,7 +518,7 @@ function cleanLocation(ctx: ActionContext, a: Actor, loc: unknown): string {
  * Returns 'taken' | 'stowed' | null.
  */
 function settleItem(a: Actor, list: string, it: Loose | undefined, flagged: boolean, isGM = false): 'taken' | 'stowed' | null {
-  if (!LOCATED_LISTS.includes(list) || !it) return null;
+  if (!listed(LOCATED_LISTS, list) || !it) return null;
   const flag = list === 'gear' ? 'active' : 'equipped';
   if (isCarried(a, it.location) || !it[flag]) return null;
   if (flagged && (isGM || reachOf(a, it.location) < 2)) {
@@ -567,7 +570,7 @@ const loadedOf = (w: Loose): number => Math.max(0, Math.min(Number(w.ammoMax) ||
 /** What planShot() allows: rounds of a fire option, or one thrown item. */
 type Shot = { kind: 'ammo' | 'item'; mode?: string; rounds: number; action?: string; short?: number; narrower?: number; defense?: number };
 /** applyShot() result (roll.fire): rounds left, or the thrown item's remaining quantity. */
-type ShotResult = { mode?: string; rounds?: number; left: number; max?: number; short?: number; defense?: number; narrower?: number; item?: boolean; removed?: boolean };
+type ShotResult = FireInfo;
 
 function planShot(ctx: ActionContext, a: Actor, w: Loose, { fireMode, ammoOverride, rounds: fewer }: { fireMode?: unknown; ammoOverride?: unknown; rounds?: number } = {}): Shot | null {
   requireReach(ctx, a, w);
@@ -808,8 +811,8 @@ export function performRoll(ctx: ActionContext, p: RollPayload | null | undefine
   // A weapon attack uses the weapon's skill (only the GM may roll it with another one).
   const asked = payload.skillId ? String(payload.skillId).slice(0, 80) : null;
   const skillId = weapon ? (ctx.isGM && asked) || weapon.skill || 'exotic_weapon' : asked;
-  const A1 = payload.attr && ATTRS.includes(payload.attr) ? (payload.attr as AttrKey) : null;
-  const A2 = payload.attr2 && ATTRS.includes(payload.attr2) ? (payload.attr2 as AttrKey) : null;
+  const A1 = payload.attr && listed(ATTRS, payload.attr) ? (payload.attr as AttrKey) : null;
+  const A2 = payload.attr2 && listed(ATTRS, payload.attr2) ? (payload.attr2 as AttrKey) : null;
   // An attribute test's own modifiers (soak: + armor, composure, judge intentions…) only for an attribute-only roll on that
   // test's attributes (shared/modifiers.js TEST_ATTRS) — any other claim is ignored.
   const test = checkedTest(payload.test, { skillId, weaponId: weapon?.id, attr: A1, attr2: A2 });
@@ -888,8 +891,9 @@ export function performRoll(ctx: ActionContext, p: RollPayload | null | undefine
     for (const l of pm.lines) {
       pushLine(l, 'pool');
       if (l.state !== 'applied') continue;
-      pool += l.value;
-      parts.push(`${l.mod.source.name} ${l.value >= 0 ? '+' : '−'}${Math.abs(l.value)}`);
+      const v = l.value ?? 0;
+      pool += v;
+      parts.push(`${l.mod.source.name} ${v >= 0 ? '+' : '−'}${Math.abs(v)}`);
     }
   }
   // Extra named lines: the GM's are kept as typed; a player's are only the sheet's own (total defense « VOL », Matrix defense /
@@ -992,9 +996,8 @@ export function performRoll(ctx: ActionContext, p: RollPayload | null | undefine
   if (!label) label = `Jet de ${pool} dés`;
   // Weapon attack (« Attaque — <arme> »): the weapon's name in both languages, each viewer reads their own (common.js rollLabel).
   const labelI18n = weapon && /^Attaque — /.test(label) ? { key: tk('Attaque — {weapon}'), params: { weapon: biName(weapon) } } : null;
-  // roll.fire of a thrown item is { item: true, left, removed? } (no mode / rounds): FireInfo in shared/types.ts only covers ammunition.
   const roll: RollRecord = {
-    ...r, label, ...(labelI18n ? { labelI18n } : {}), explode, edge: explode, actorId: actor?.id || null, breakdown: parts.join(' + '), ...(fire ? { fire: fire as FireInfo } : {}),
+    ...r, label, ...(labelI18n ? { labelI18n } : {}), explode, edge: explode, actorId: actor?.id || null, breakdown: parts.join(' + '), ...(fire ? { fire } : {}),
     ...(limitLabel ? { limitLabel } : {}), ...(limitBreakdown ? { limitBreakdown } : {}), ...(payload.secret ? { secret: true } : {}),
     ...(modLines.length ? { mods: modLines } : {}), ...(conditions.length ? { conditions } : {}), ...(internal.logExtra || {}),
   };
@@ -1053,7 +1056,8 @@ const mod: ServerModule<ExpressApp> = {
           console.error(`[characters] seed ${f} invalide :`, (err as Error).message);
           continue;
         }
-        for (const a of (Array.isArray(list) ? list : [list]) as Loose[]) {
+        // Seed files: actors as stored (foreign JSON).
+        for (const a of (Array.isArray(list) ? list : [list]) as Actor[]) {
           if (a && a.id && !state.actors[a.id]) state.actors[a.id] = deepClone(a);
         }
       }
@@ -1149,7 +1153,7 @@ const mod: ServerModule<ExpressApp> = {
       role: 'gm',
       handler(ctx: ActionContext, { actorId, list, item, adjustEssence }: AddItemPayload) {
         const a = getActor(ctx, actorId);
-        if (!ITEM_LISTS.includes(list)) ctx.fail('Liste inconnue : {list}', { list: String(list) });
+        if (!listed(ITEM_LISTS, list)) ctx.fail('Liste inconnue : {list}', { list: String(list) });
         if (!isObj(item)) ctx.fail('Élément invalide');
         const it = sanitizeItem(list, item, ctx);
         if (!Array.isArray(loose(a)[list])) loose(a)[list] = [];
@@ -1170,7 +1174,7 @@ const mod: ServerModule<ExpressApp> = {
         if (list === 'augmentations') {
           // Bonuses come from the catalog only (never from the client), recorded on the item so removal reverses them.
           delete it.bonus;
-          const st = wareCatalogItem(it.catalogId)?.stats || {};
+          const st: Partial<WareStats> = wareCatalogItem(it.catalogId)?.stats || {};
           bakeItemBonus(a, list, it, st.bonus);
           if (st.weapon) {
             if (!Array.isArray(a.weapons)) a.weapons = [];
@@ -1194,10 +1198,10 @@ const mod: ServerModule<ExpressApp> = {
           it.rating ??= 1;
           it.techniques ||= [];
         }
-        if (LOCATED_LISTS.includes(list) && it.location !== undefined) it.location = cleanLocation(ctx, a, it.location);
+        if (listed(LOCATED_LISTS, list) && it.location !== undefined) it.location = cleanLocation(ctx, a, it.location);
         loose(a)[list].push(it);
         settleItem(a, list, it, false);
-        if (LOCATED_LISTS.includes(list)) normalizeActor(a, uid); // ammo capacity / loaded rounds / location of the new item
+        if (listed(LOCATED_LISTS, list)) normalizeActor(a, uid); // ammo capacity / loaded rounds / location of the new item
         fillActorRefs(a); // 📖 source / page from the catalog when the item has none
         if (fillItemNames(a)) normalizeActor(a, uid);
         if (list === 'lifestyles') settleLifestyles(a, it.primary ? it.id : null);
@@ -1241,8 +1245,8 @@ const mod: ServerModule<ExpressApp> = {
         if (list === 'weapons' && clean.ammoLoaded !== undefined && !ctx.isGM && clean.ammoLoaded > loadedOf(loose(a)[list][idx])) {
           ctx.fail('Recharge avec le bouton « Recharger » : les balles viennent de l’inventaire');
         }
-        if (LOCATED_LISTS.includes(list) && clean.location !== undefined) clean.location = cleanLocation(ctx, a, clean.location);
-        if (LOCATED_LISTS.includes(list) && (clean.equipped === true || clean.active === true)) {
+        if (listed(LOCATED_LISTS, list) && clean.location !== undefined) clean.location = cleanLocation(ctx, a, clean.location);
+        if (listed(LOCATED_LISTS, list) && (clean.equipped === true || clean.active === true)) {
           // Readying / wearing / switching on: within reach only (a bag is emptied onto the body by settleItem).
           requireReach(ctx, a, { ...loose(a)[list][idx], location: clean.location ?? loose(a)[list][idx].location });
         }
@@ -1254,14 +1258,14 @@ const mod: ServerModule<ExpressApp> = {
         loose(a)[list][idx] = { ...loose(a)[list][idx], ...clean };
         for (const [k, v] of Object.entries(loose(a)[list][idx])) if (v === null) delete loose(a)[list][idx][k];
         settleItem(a, list, loose(a)[list][idx], clean.equipped === true || clean.active === true, ctx.isGM);
-        if (LOCATED_LISTS.includes(list) && clean.location !== undefined) noteRetrieval(ctx, a, loose(a)[list][idx], before.location);
+        if (listed(LOCATED_LISTS, list) && clean.location !== undefined) noteRetrieval(ctx, a, loose(a)[list][idx], before.location);
         if (BONUS_LISTS.includes(list) && BONUS_FIELDS.some((k) => clean[k] !== undefined && clean[k] !== before[k]) && !importedItem(before)) {
           // New rating / level / choice: the stored attribute / initiative bonus follows (items whose bonus the app recorded, or that had none).
-          const st = list === 'augmentations' ? wareCatalogItem(loose(a)[list][idx].catalogId)?.stats || {} : {};
+          const st: Partial<WareStats> = list === 'augmentations' ? wareCatalogItem(loose(a)[list][idx].catalogId)?.stats || {} : {};
           if (before.bonus || !itemBonusSpec(list, before, st.bonus)) bakeItemBonus(a, list, loose(a)[list][idx], st.bonus);
         }
         if (list === 'lifestyles') settleLifestyles(a, clean.primary ? loose(a)[list][idx].id : null);
-        if (LOCATED_LISTS.includes(list)) normalizeActor(a, uid); // new `ammo` → capacity, loaded rounds clamped
+        if (listed(LOCATED_LISTS, list)) normalizeActor(a, uid); // new `ammo` → capacity, loaded rounds clamped
         if (fillItemNames(a)) normalizeActor(a, uid);
         return true;
       },
@@ -1411,7 +1415,7 @@ const mod: ServerModule<ExpressApp> = {
       handler(ctx: ActionContext, { actorId, list, itemId, location }: MovePayload) {
         const a = getActor(ctx, actorId);
         requireOwn(ctx, actorId);
-        if (!LOCATED_LISTS.includes(list)) ctx.fail('Liste inconnue : {list}', { list: String(list) });
+        if (!listed(LOCATED_LISTS, list)) ctx.fail('Liste inconnue : {list}', { list: String(list) });
         const it: Loose = loose(a)[list][findItem(ctx, a, list, itemId)];
         const from = it.location;
         it.location = cleanLocation(ctx, a, location);
@@ -1661,7 +1665,7 @@ const mod: ServerModule<ExpressApp> = {
         const a = getActor(ctx, actorId);
         requireOwn(ctx, actorId);
         if (p.secret && !ctx.isGM) ctx.fail('Seul le MJ peut faire un jet secret');
-        if (!CONTACT_ROLLS.includes(kind as string)) ctx.fail('Jet de contact inconnu');
+        if (!listed(CONTACT_ROLLS, kind)) ctx.fail('Jet de contact inconnu');
         const c = (a.contacts || []).find((x) => x && x.id === String(contactId));
         if (!c) ctx.fail('Contact introuvable');
         const name = str(c.name, 120) || '?';

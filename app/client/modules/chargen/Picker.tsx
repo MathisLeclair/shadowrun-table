@@ -3,8 +3,8 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { SearchBox, Select, Empty, Button } from '../../lib/ui.tsx';
 import { t, tn, compare } from '../../lib/i18n.ts';
 import { fold } from './common.tsx';
-import { ItemRef } from '../combat/legacy-components.ts';
 import type { LooseCatalogItem } from './types.ts';
+import { ItemRef } from '../books/BookRef.tsx';
 
 const PAGE = 60;
 

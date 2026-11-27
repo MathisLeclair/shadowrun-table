@@ -8,13 +8,13 @@ import { openSheet } from '../../lib/ui-store.ts';
 import { attr, derive } from '/shared/sr5.ts';
 import { derivedWithModifiers } from '/shared/modifiers.ts';
 import { t, tn, getLang } from '../../lib/i18n.ts';
-import { Overlay, DiceFaces, RollBadges } from './legacy-components.ts';
 import { useModifiers } from '../sheet/modifiers-ui.tsx';
-import { BookRef } from './legacy-components.ts';
 import { DEFENSE_OPTIONS, DEFENSE_SITUATIONS, defenseLines, isUnlocked, unlockNames, finalDamageType, TOXIN_BY_ID, AFFLICTIONS } from '/shared/combat.ts';
 import { ownsActorId, turnInfo, PENDING } from './attack-common.ts';
 import type { Actor, Attack, BiName, GameView, RollRecord } from '../../../shared/types.ts';
 import './combat.css';
+import { Overlay, DiceFaces, RollBadges } from '../sheet/common.tsx';
+import { BookRef } from '../books/BookRef.tsx';
 
 /** isUnlocked() of shared/combat.js (its JS default `names = null` narrows the inferred type). */
 const isUnlockedFor = isUnlocked as (def: unknown, actor: Actor, names?: Set<string> | null) => boolean;

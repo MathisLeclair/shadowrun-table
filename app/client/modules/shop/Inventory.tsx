@@ -8,9 +8,9 @@ import { t, tk, tn, tIfKnown, itemName } from '../../lib/i18n.ts';
 import { costBreakdown } from '/shared/lifestyle.ts';
 import { MOUNT_LABELS } from './rules.ts';
 import { ownedValue, subValue, nuyen, gradeLabel, timeAgo } from './common.tsx';
-import { ItemRef } from './bookrefs.ts';
 import type { Actor, GameView, HistoryEntry, Lifestyle } from '../../../shared/types.ts';
 import type { OwnedItem, ShopCatalog } from './types.ts';
+import { ItemRef } from '../books/BookRef.tsx';
 
 const MOUNTS = MOUNT_LABELS as Record<string, string>;
 
@@ -74,9 +74,8 @@ export default function Inventory({ game, actor, catalog }: InventoryProps) {
   const [qtys, setQtys] = useState<Record<string, number>>({});
   if (!actor) return <Empty>{t('Aucun personnage sélectionné.')}</Empty>;
   const rate = Number(shop.sellRate) || 0;
-  // Sell orders carry the sold item id as `itemId` (not in shared/types.ts OrderLine).
   const pendingSales = new Set(
-    (shop.orders || []).filter((o) => o.status === 'pending' && o.kind === 'sell').map((o) => o.items[0]?.subId || (o.items[0] as { itemId?: string } | undefined)?.itemId)
+    (shop.orders || []).filter((o) => o.status === 'pending' && o.kind === 'sell').map((o) => o.items[0]?.subId || o.items[0]?.itemId)
   );
   const canSell = isGM || shop.open;
 

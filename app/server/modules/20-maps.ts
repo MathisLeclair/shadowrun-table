@@ -5,7 +5,7 @@ import path from 'node:path';
 import { uid, deepClone } from '../../shared/util.ts';
 import { derive } from '../../shared/sr5.ts';
 import {
-  isTileChar, buildGrid, findPath, pathLength, createVisionContext, visibilityForUser as visibilityForUserJs, viewersForUser,
+  isTileChar, buildGrid, findPath, pathLength, createVisionContext, visibilityForUser, viewersForUser,
   tokenInMask, encodeBits, decodeBits, orBits, remapBits, isPcToken, stepBlocked, wallMidpoint, pointSegmentDistance,
 } from '../../shared/vision.ts';
 import type {
@@ -22,10 +22,6 @@ type MapSize = { width: number; height: number };
 /** A door found by id: tile door (map.doors) or segment door (a wall with a `door`). */
 type FoundDoor = { type: 'tile'; door: MapDoor; wall?: undefined } | { type: 'wall'; wall: MapWall; door: WallDoor };
 type VisionCtx = ReturnType<typeof createVisionContext>;
-// shared/vision.js is still JavaScript: its `vctx = null` default is inferred as null-only, widened here.
-const visibilityForUser = visibilityForUserJs as (
-  map: GameMap, user: SessionUser, actors: TableState['actors'], vctx?: VisionCtx | null,
-) => ReturnType<typeof visibilityForUserJs>;
 
 /** Marker for the i18n checker: French error keys passed around before ctx.fail(). */
 const tk = (s: string): string => s;

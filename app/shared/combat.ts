@@ -118,7 +118,7 @@ export interface EnvironmentInput {
   map?: Partial<Pick<GameMap, 'weather' | 'metersPerCell' | 'lighting' | 'width'>> | null;
   from?: Point | null;
   to?: Point | null;
-  meters?: number;
+  meters?: number | null;
   rangeIndex?: number | null;
   litRatio?: ArrayLike<number> | null;
   blasts?: Array<Pick<Blast, 'x' | 'y'> & Partial<Pick<Blast, 'radius' | 'reach' | 'effect'>>> | null;
@@ -302,9 +302,9 @@ export function weaponRanges(w: WeaponLike | null | undefined, actor?: ActorLike
 }
 
 /** Range band of a distance: { band, mod, label, meters, beyond?, tooClose? } — null for melee / unknown weapons. */
-export function rangeFor(w: WeaponLike | null | undefined, actor: ActorLike | null | undefined, meters: number): RangeInfo | null {
+export function rangeFor(w: WeaponLike | null | undefined, actor: ActorLike | null | undefined, meters: number | null | undefined): RangeInfo | null {
   const r = weaponRanges(w, actor);
-  if (!r || !Number.isFinite(meters)) return null;
+  if (!r || meters == null || !Number.isFinite(meters)) return null;
   const m = Math.max(0, Math.round(meters));
   const i = r.bands.findIndex((b) => m <= b);
   if (i < 0) return { ...RANGE_BANDS[3], meters: m, beyond: true, max: r.bands[3] };
@@ -312,6 +312,8 @@ export function rangeFor(w: WeaponLike | null | undefined, actor: ActorLike | nu
 }
 
 /** Meters between two cells (token top-left cells; centre to centre), map scale = metersPerCell. */
+export function cellDistance(a: Partial<Point>, b: Partial<Point>, metersPerCell?: unknown): number;
+export function cellDistance(a: Partial<Point> | null | undefined, b: Partial<Point> | null | undefined, metersPerCell?: unknown): number | null;
 export function cellDistance(a: Partial<Point> | null | undefined, b: Partial<Point> | null | undefined, metersPerCell: unknown = 1): number | null {
   if (!a || !b) return null;
   const dx = num(a.x) - num(b.x);
@@ -656,7 +658,7 @@ export function environmentFor({ map, from, to, meters = 0, rangeIndex = null, l
   }
   if (senses.ultrasound) {
     lower('visibility', 1, tk('ultrasons'));
-    if (meters <= 50) lower('light', 3, tk('ultrasons'));
+    if ((meters ?? 0) <= 50) lower('light', 3, tk('ultrasons'));
   }
   if (senses.flare) lower('glare', 3, tk('compensation anti-flash'));
   if (senses.smartlink) lower('wind', 1, tk('smartlink'));

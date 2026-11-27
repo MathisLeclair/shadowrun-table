@@ -88,8 +88,8 @@ export interface DetectedAgent {
   name?: string;
   gearRating?: number | null;
 }
-/** Persona-like input: a stored persona, a player's view of it, or a partial one (tests, previews). */
-export type PersonaLike = Partial<Persona>;
+/** Persona-like input: a stored persona, a player's view of it, or a partial one (tests, previews); fields may be null. */
+export type PersonaLike = { [K in keyof Persona]?: Persona[K] | null };
 /** deckStats() result. */
 export interface DeckStats {
   deviceRating: number;

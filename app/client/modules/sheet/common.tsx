@@ -69,7 +69,7 @@ export function skillName(sk: Partial<Skill> | null | undefined, id?: string): s
 export const cssVars = (style: Record<string, string | number | undefined>): CSSProperties => style as CSSProperties;
 
 export const signed = (n: number): string => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');
-export const fmtNum = (n: number | string): string => (getLang() === 'en' ? String(n) : String(n).replace('.', ','));
+export const fmtNum = (n: number | string | null | undefined): string => (getLang() === 'en' ? String(n) : String(n).replace('.', ','));
 
 /** What the avatar needs of an actor (contacts pass a stand-in { name, portrait, color }). */
 export interface AvatarActor {

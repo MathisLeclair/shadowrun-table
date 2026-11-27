@@ -9,6 +9,8 @@
 // - Timestamps are milliseconds since the epoch (Date.now()).
 // - Shapes come from the module init()/sanitizers in server/modules/*.js and from ARCHITECTURE.md « State shape ».
 
+import type { TableApi } from '../server/lib/tables.ts';
+
 // =====================================================================================================================
 // Common primitives
 // =====================================================================================================================
@@ -145,6 +147,8 @@ export interface TableMeta {
   legacy?: boolean;
   docsDir?: string;
   demo?: boolean;
+  /** When a single-table install was migrated into the multi-table layout. */
+  migratedAt?: Timestamp;
 }
 
 // =====================================================================================================================
@@ -209,19 +213,21 @@ export interface RollModLine {
 
 /** Ammunition use of a firing roll (`roll.fire`). */
 export interface FireInfo {
-  /** Fire option id: 'SS' | 'SA' | 'SB' | 'BF' | 'LB' | 'FA' | 'FAC' | 'SUP'. */
-  mode: string;
-  rounds: number;
+  /** Fire option id: 'SS' | 'SA' | 'SB' | 'BF' | 'LB' | 'FA' | 'FAC' | 'SUP' (absent for a thrown item). */
+  mode?: string;
+  rounds?: number;
   left: number;
-  max: number;
+  max?: number;
   /** Missing rounds (fewer than the mode needs). */
   short?: number;
   /** Defense modifier after missing rounds. */
   defense?: number;
   /** Suppressive fire: metres narrower. */
   narrower?: number;
-  /** A thrown grenade: the weapon item that was used up. */
-  item?: string;
+  /** A thrown item (grenade, throwing weapon): true, or the weapon item that was used up. */
+  item?: string | boolean;
+  /** Thrown item: the last one was used up and removed from the inventory. */
+  removed?: boolean;
 }
 
 /** `roll.sinCheck` of an 'actor/sinCheck' roll. */
@@ -257,11 +263,14 @@ export interface AvailRollInfo {
   testId: string;
   value: number;
   legality: Legality;
-  dice: number;
+  /** Availability dice (one face per die). */
+  dice: number[];
   hits: number;
   baseHours: number;
   tries: number;
   contact?: string;
+  /** Extra dice bought by overpaying (shop « surenchère »). */
+  overpay?: number;
 }
 
 /** `entry.roll`: the dice result plus what the server adds (performRoll and module `logExtra`). */
@@ -385,6 +394,8 @@ export interface Skill {
   group?: string;
   source?: string | null;
   page?: number | null;
+  /** Chummer / Foundry import note. */
+  notes?: string;
 }
 
 export interface SkillGroupRating {
@@ -401,6 +412,10 @@ export interface KnowledgeSkill {
   type: KnowledgeType;
   native?: boolean;
   spec?: string;
+  /** Chummer / Foundry import note. */
+  notes?: string;
+  /** Chummer GUID once synced with a .chum5 file. */
+  chummerGuid?: string;
 }
 
 export interface Quality extends ItemBase {
@@ -431,6 +446,8 @@ export interface Spell extends ItemBase {
 }
 
 export interface ComplexForm extends ItemBase {
+  /** Target (Chummer import: 'Device', 'Persona'…). */
+  target?: string;
   duration?: string;
   fading?: string;
 }
@@ -547,7 +564,8 @@ export interface Armor extends ItemBase {
 }
 
 export type WareKind = 'cyberware' | 'bioware';
-export type WareGrade = 'standard' | 'alpha' | 'beta' | 'delta' | 'used';
+/** 'gamma' / 'omega' only come from Foundry imports (kept as Foundry stores them). */
+export type WareGrade = 'standard' | 'alpha' | 'beta' | 'delta' | 'used' | 'gamma' | 'omega';
 
 export interface Augmentation extends ItemBase {
   kind: WareKind;
@@ -616,6 +634,8 @@ export interface ActorMatrix {
 }
 
 export interface Contact extends ItemBase {
+  /** What the contact does (« Fixer », « Barman »…). */
+  role?: string;
   /** 1–12. */
   connection: number;
   /** 1–6. */
@@ -939,6 +959,8 @@ export interface Template
   martialArts?: MartialArt[];
   /** Enemy generator preview only. */
   unitName?: string;
+  /** Foundry VTT actor id (Foundry imports). */
+  foundryId?: string;
 }
 
 export type CombatEntryKind = 'pc' | 'npc' | 'ic' | 'agent';
@@ -1047,7 +1069,8 @@ export interface Attack {
   soakHits?: number;
   soakLogId?: string;
   damage?: number;
-  damageType?: DamageType;
+  /** null when a toxin does no damage. */
+  damageType?: DamageType | null;
   /** Toxin: Power − hits left. */
   left?: number;
   /** Toxin afflictions inflicted. */
@@ -1093,10 +1116,10 @@ export interface Blast {
   dv: number | null;
   type: DamageType;
   ap: number;
-  /** DV lost per metre. */
-  falloff?: number;
-  /** Radius in metres. */
-  radius?: number;
+  /** DV lost per metre (null: no blast profile). */
+  falloff?: number | null;
+  /** Radius in metres (null: no blast profile). */
+  radius?: number | null;
   /** Reach in metres. */
   reach: number;
   hits: BlastHit[];
@@ -1351,7 +1374,8 @@ export interface ShopSpecial {
   forActorIds?: ActorId[];
   rating?: number | null;
   grade?: WareGrade;
-  essence?: number | null;
+  /** Number, or the GM's raw text ('' = none). */
+  essence?: number | string | null;
   catalogRef?: string | null;
   stats?: CatalogStats;
 }
@@ -1384,7 +1408,8 @@ export interface OrderLine {
   qty: number;
   rating?: number | null;
   grade?: WareGrade | null;
-  unitCost: number;
+  /** null on sell lines the GM prices. */
+  unitCost: number | null;
   availValue?: number;
   legality?: Legality;
   essence?: number;
@@ -1405,11 +1430,15 @@ export interface OrderLine {
   lifestyleName?: string;
   primary?: boolean;
   setMatrix?: boolean;
-  /** Sell lines: the sold sub-item. */
+  /** Sell lines: list and id of the sold item, and the sold sub-item. */
+  list?: string;
+  itemId?: string;
   subId?: string;
   /** Karma orders (martial arts). */
   karma?: number;
   techniqueIds?: string[];
+  /** Karma orders: names of the techniques learnt. */
+  techniques?: string[];
   availTest?: OrderLineAvailTest;
   /** Overpay surcharge per unit (included in the total). */
   surcharge?: number;
@@ -1829,6 +1858,8 @@ export interface MatrixMark {
   /** 'host:<id>', 'ic:<hostId>:<icId>', 'dev:…', persona key… */
   targetId: string;
   name: string;
+  /** Generated name as a message (« Fichier {n} »…). */
+  nameI18n?: I18nMessage;
   count: number;
 }
 
@@ -1836,6 +1867,7 @@ export interface MatrixMark {
 export interface MatrixMarkOnMe {
   sourceId: string;
   name: string;
+  nameI18n?: I18nMessage;
   count: number;
 }
 
@@ -1855,6 +1887,8 @@ export interface PendingAssist {
   dice: number;
   limitBonus: number;
   hits: number;
+  glitch?: boolean;
+  ts?: Timestamp;
 }
 
 export interface LinkLock {
@@ -1897,6 +1931,10 @@ export interface Persona {
   /** Player view: the real OS is hidden (no Baby Monitor). */
   overwatchHidden?: boolean;
   osKnown: number | null;
+  /** When osKnown was last checked (player view, hidden OS). */
+  osKnownAt?: Timestamp | null;
+  /** When the persona was last converged on. */
+  convergedAt?: Timestamp;
   matrixDamage: number;
   noise: number;
   hostId: string | null;
@@ -2142,15 +2180,19 @@ export interface ChummerRequest {
   fileName: string;
   /** Raw .chum5 — server state only (stripped from every view). */
   xml?: string;
-  mugshots?: unknown;
+  /** Chummer portraits detached from the file (upload URLs). */
+  mugshots?: string[];
   /** Merge diff (server/lib/chummer/merge.js). */
   diff: unknown;
   /** French summary. */
   summary: string;
-  summaryI18n?: unknown;
+  summaryI18n?: I18nMessage[];
   warnings?: string[];
   warningsI18n?: I18nMessage[];
   status: 'pending' | 'approved' | 'denied' | 'cancelled';
+  resolvedAt?: Timestamp;
+  /** GM's note when resolving. */
+  gmNote?: string;
 }
 
 /** `state.chummer`. Players see their own requests only. */
@@ -2705,7 +2747,7 @@ export interface RouteHelpers<Middleware = unknown> {
   addLog(entry: NewLogEntry): LogEntry | null;
   saveSoon(): void;
   /** Multi-table internals (tables registry, openTable, initModules…), used by admin-like routes. */
-  tableApi: unknown;
+  tableApi: TableApi;
   runAction(table: unknown, user: SessionUser, type: string, payload: ActionPayload): ActionResponse;
   simulateAction(table: unknown, user: SessionUser, type: string, payload: ActionPayload, state?: TableState): ActionResponse & { state: TableState };
   actions: Record<string, ActionDef>;
@@ -2748,4 +2790,8 @@ export interface ServerEvents {
   'assistant:step': { conversationId: string; phase: 'thinking' | 'message' | 'tools' };
   'assistant:delta': { conversationId: string; text: string };
   'assistant:done': { conversationId: string };
+  /** A handout was revealed to the player. */
+  'campaign/handout': { id: string; title: string };
+  /** Foundry import: audio copy progress (GM). */
+  'foundry/audio': { total?: number; done?: number; bytes?: number; running: boolean; errors?: unknown[]; error?: string };
 }

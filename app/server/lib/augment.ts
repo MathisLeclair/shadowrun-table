@@ -9,7 +9,7 @@ import { effectsLookup } from './modifiers.ts';
 import type { ActionContext, Actor, AttrKey, CatalogBonus, CatalogItem, CatalogWeaponProfile, ItemBase, ItemBonus, Weapon, WareStats } from '../../shared/types.ts';
 
 /** An actor item that may carry a baked bonus: augmentation, adept power or quality. */
-type BonusItem = ItemBase & { bonus?: ItemBonus; rating?: number | null; level?: number | null; kind?: string };
+type BonusItem = Partial<ItemBase> & { bonus?: ItemBonus; rating?: number | null; level?: number | null; kind?: string };
 /** Lists whose items carry attribute / initiative bonuses. */
 type BonusList = 'augmentations' | 'powers' | 'qualities' | (string & {});
 const formula = evalFormula as (src: unknown, vars?: Record<string, number>) => number;
@@ -104,7 +104,7 @@ export function bakeItemBonus(actor: Actor, list: BonusList, item: BonusItem | n
   if (applied) item.bonus = applied;
 }
 
-export function weaponFromStats(ctx: Pick<ActionContext, 'uid'>, name: string, category: string | null | undefined, st: CatalogWeaponProfile, extra: Partial<Weapon> = {}): Weapon {
+export function weaponFromStats(ctx: Pick<ActionContext, 'uid'>, name: string, category: string | null | undefined, st: Partial<CatalogWeaponProfile>, extra: Partial<Weapon> = {}): Weapon {
   return {
     id: ctx.uid('wpn'),
     name,

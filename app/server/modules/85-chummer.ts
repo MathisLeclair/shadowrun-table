@@ -4,7 +4,6 @@
 // Library code lives in server/lib/chummer/ (xml.js, data.js, parse.js, export.js, merge.js).
 import fs from 'node:fs';
 import path from 'node:path';
-// @ts-ignore -- no @types/express in the app yet (the server-core conversion adds it)
 import express from 'express';
 import { currentUploadDir, currentUploadUrl, localFileForUrl } from '../store.ts';
 import { uid, deepClone } from '../../shared/util.ts';
@@ -31,7 +30,6 @@ type Res = any;
 /** An error thrown by the Chummer / XML code: may carry an i18n key. */
 type ChummerFailure = Error & { i18nKey?: string; i18nParams?: I18nParams };
 /** A pending request once resolved (fields not in ChummerRequest, shared/types.ts). */
-type PendingRequest = ChummerRequest & { resolvedAt?: number; gmNote?: string };
 /** Merge diff of server/lib/chummer/merge.js diffActors (the fields summaryParts reads). */
 interface ActorDiff {
   scalars: Array<{ label: string; from: unknown; to: unknown }>;
@@ -50,7 +48,7 @@ const errBody = (err: ChummerFailure | undefined, fallback: string) => (err?.i18
 const MAX_PENDING = 20;
 const isObj = (v: unknown): v is Loose => !!v && typeof v === 'object' && !Array.isArray(v);
 
-function slice(state: TableState): Omit<ChummerState, 'pending'> & { pending: PendingRequest[] } {
+function slice(state: TableState): Omit<ChummerState, 'pending'> & { pending: ChummerRequest[] } {
   state.chummer = isObj(state.chummer) ? state.chummer : ({} as ChummerState);
   const s = state.chummer;
   if (typeof s.allowPlayerImport !== 'boolean') s.allowPlayerImport = true;
@@ -129,8 +127,9 @@ function mugshotsFor(actor: Actor): string[] {
 }
 
 /** Parse + merge an uploaded file against an existing actor (no state change). `mugshots`: already detached images. */
-function prepareUpdate(actor: Actor, rawXml: unknown, fileName: string, now: number, mugshots: string[] | null = null) {
-  const det = mugshots ? { xml: rawXml, urls: mugshots, mainIndex: 0 } : detachMugshots(String(rawXml).replace(/^﻿/, ''), saveMugshot);
+function prepareUpdate(actor: Actor, rawXml: string | undefined, fileName: string, now: number, mugshots: string[] | null = null) {
+  // A stored request always keeps its xml (stripped from the views only).
+  const det = mugshots ? { xml: rawXml as string, urls: mugshots, mainIndex: 0 } : detachMugshots(String(rawXml).replace(/^﻿/, ''), saveMugshot);
   const parsed = parseChum5(det.xml, { fileName, now });
   let base: Actor | null = null;
   if (actor.chummer?.xml) {
@@ -142,7 +141,7 @@ function prepareUpdate(actor: Actor, rawXml: unknown, fileName: string, now: num
   }
   const merged = mergeActor(actor, parsed.actor, base, { now, fileName });
   if (det.urls.length) {
-    merged.chummer.mugshots = det.urls;
+    merged.chummer!.mugshots = det.urls; // mergeActor() always sets the Chummer link
     if (!merged.portrait) merged.portrait = det.urls[det.mainIndex] || det.urls[0];
   }
   normalizeActor(merged, uid);
@@ -227,7 +226,7 @@ const mod: ServerModule<HttpApp> = {
         if (approve) {
           let prep: ReturnType<typeof prepareUpdate>;
           try {
-            prep = prepareUpdate(actor, r.xml, r.fileName, ctx.now, (r.mugshots as string[] | undefined) || []);
+            prep = prepareUpdate(actor, r.xml, r.fileName, ctx.now, r.mugshots || []);
           } catch (e) {
             const err = e as ChummerFailure;
             return ctx.fail(err.i18nKey || err.message || tk('Fichier illisible'), err.i18nParams);
@@ -392,14 +391,14 @@ const mod: ServerModule<HttpApp> = {
       }
       // Player without permission: one pending request per actor & user (the newest replaces the older one).
       s.pending = s.pending.filter((r) => !(r.status === 'pending' && r.actorId === actor.id && r.userId === req.user.id));
-      const request: PendingRequest = {
+      const request: ChummerRequest = {
         id: uid('chq'), ts: Date.now(), actorId: actor.id, actorName: actor.name, userId: req.user.id, userName: req.user.name,
         fileName, xml: prep.xml, mugshots: prep.mugshots, diff: prep.diff, summary: '', summaryI18n: summaryParts(prep.diff), warnings: prep.warnings, warningsI18n: prep.warningsI18n, status: 'pending',
       };
-      request.summary = summaryText(request.summaryI18n as I18nMessage[]);
+      request.summary = summaryText(request.summaryI18n!);
       s.pending.push(request);
       while (s.pending.length > MAX_PENDING) s.pending.splice(s.pending.findIndex((r) => r.status !== 'pending') >= 0 ? s.pending.findIndex((r) => r.status !== 'pending') : 0, 1);
-      addLog({ kind: 'system', author: 'Chummer', i18n: { key: '{user} demande à mettre à jour {actor} depuis Chummer ({summary}).', params: { user: req.user.name, actor: actor.name, summary: request.summaryI18n as I18nMessage[] } }, gmOnly: true });
+      addLog({ kind: 'system', author: 'Chummer', i18n: { key: '{user} demande à mettre à jour {actor} depuis Chummer ({summary}).', params: { user: req.user.name, actor: actor.name, summary: request.summaryI18n! } }, gmOnly: true });
       emitTo('gm', 'sfx', { id: 'notify' });
       done();
       replyAfterBroadcast(res, { applied: false, pending: true, requestId: request.id, diff: prep.diff, warnings: prep.warnings, warningsI18n: prep.warningsI18n });
@@ -448,8 +447,7 @@ const mod: ServerModule<HttpApp> = {
       if (!actor || !actor.attributes) return res.status(404).json(errorBody('Personnage introuvable'));
       if (!owns(req.user, actor.id)) return res.status(403).json(errorBody('Ce personnage ne t’appartient pas'));
       const now = Date.now();
-      // The options are cast: the JS signature (destructuring defaults) is inferred with mugshots: null.
-      const result = exportChum5(actor, { now, mugshots: mugshotsFor(actor) } as unknown as Parameters<typeof exportChum5>[1]);
+      const result = exportChum5(actor, { now, mugshots: mugshotsFor(actor) });
       const stored = detachMugshots(result.xml, saveMugshot);
       // Remember the guids given to new items and keep the exported file as the new sync base, so the
       // file the player edits in Chummer can be merged back precisely.

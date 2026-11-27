@@ -70,8 +70,8 @@ export interface CombatBlastMark {
   effect?: string | null;
   dv?: number | null;
   type?: string;
-  radius?: number;
-  falloff?: number;
+  radius?: number | null;
+  falloff?: number | null;
   aim?: Point | null;
   hits?: Array<{ tokenId: string; dv: number }>;
   label?: string | null;
@@ -831,8 +831,6 @@ export function tileSwatch(ch: string, theme: string = 'street', size = 30): str
 // ---------------------------------------------------------------------------
 // Renderer
 // ---------------------------------------------------------------------------
-// shared/vision.js (untyped JS) infers its `out = null` parameter as null-only: it fills and returns the given mask.
-const losInto = lineOfSightMask as unknown as (grid: ReturnType<typeof buildGrid>, ox: number, oy: number, maxDepth: number, out: Uint8Array) => Uint8Array;
 const LIGHT_F = 4; // light sub-samples per cell
 const FOG_F = 2;
 
@@ -1190,7 +1188,7 @@ export class MapRenderer {
       const r = l.radius + 0.5;
       const reach = Math.ceil(r);
       los.fill(0);
-      losInto(grid, l.x, l.y, reach, los);
+      lineOfSightMask(grid, l.x, l.y, reach, los);
       const [cr, cg, cb] = hexToRgb(l.color);
       const lx = l.x + 0.5, ly = l.y + 0.5;
       for (let cy = Math.max(0, l.y - reach); cy <= Math.min(h - 1, l.y + reach); cy++)

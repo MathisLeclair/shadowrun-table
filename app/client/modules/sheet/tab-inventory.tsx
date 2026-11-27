@@ -9,9 +9,9 @@ import { t, tk, tn } from '../../lib/i18n.ts';
 import { itemLabel, itemTitle, categoryLabel } from './common.tsx';
 import { ON_BODY, CONTAINER_KINDS, isCarried, usesAmmo, isGrenade, isUnarmed, readyCount } from './inventory.ts';
 import { gearHasEffects } from '/shared/modifiers.ts';
-import { ItemRef } from './ext.ts';
 import type { Actor, Container, ContainerKind } from '../../../shared/types.ts';
 import type { AnyItem, SheetCtx } from './types.ts';
+import { ItemRef } from '../books/BookRef.tsx';
 
 type LocatedList = 'weapons' | 'armor' | 'gear';
 /** An item of the three located lists (weapons, armor, gear), with its list. */

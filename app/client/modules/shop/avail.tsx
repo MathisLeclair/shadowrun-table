@@ -220,9 +220,9 @@ export function AvailCartRow({ game, actor, p, match, last, required }: AvailCar
 }
 
 interface AvailRollLineProps {
-  roll: RollRecord | null | undefined;
+  roll: Partial<RollRecord> | null | undefined;
   /** Dice faces component of the log dock (passed in to avoid an import cycle). */
-  Dice?: ComponentType<{ roll: { dice: number }; small?: boolean }>;
+  Dice?: ComponentType<{ roll: { dice: number[] }; small?: boolean }>;
 }
 
 /** Result line of an availability roll in the log: the Availability dice and the outcome (live after a « Seconde chance »). */

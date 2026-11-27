@@ -1,7 +1,6 @@
 // Matrix UI helpers shared by the decker cockpit and the GM screens.
 import { Badge } from '../../lib/ui.tsx';
 import { send, useCatalog } from '../../lib/net.ts';
-import { BookRef, DiceFaces, fmtTime } from './legacy.ts';
 import { setUI } from '../../lib/ui-store.ts';
 import { t, tn, tk, tIfKnown, getLang, skillLabel, compare, logText } from '../../lib/i18n.ts';
 import {
@@ -10,6 +9,8 @@ import {
   type AnyHost, type HostView, type MatrixAction, type OwnedAgent, type PendingAssistLike, type PersonaView, type PoolPart,
 } from './types.ts';
 import type { Actor, GameView, LinkLock, LogEntry, MatrixMarkOnMe, ViewActor } from '../../../shared/types.ts';
+import { BookRef } from '../books/BookRef.tsx';
+import { DiceFaces, fmtTime } from '../sheet/common.tsx';
 
 export const isGM = (game: GameView | null | undefined) => game?.me?.role === 'gm';
 

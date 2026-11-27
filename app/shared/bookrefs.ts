@@ -151,9 +151,10 @@ export function normRef(source: unknown, page: unknown): BookRef | null {
 }
 
 /** Reference stored on an actor item: { source, page } or null. */
-export function itemRef(item: BookRefFields | null | undefined): BookRef | null {
+export function itemRef(item: unknown): BookRef | null {
   if (!item || typeof item !== 'object') return null;
-  return normRef(item.source, item.page);
+  const it = item as BookRefFields;
+  return normRef(it.source, it.page);
 }
 
 /**

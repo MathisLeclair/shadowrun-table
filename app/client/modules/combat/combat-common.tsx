@@ -53,7 +53,7 @@ export function avatarStyle(portrait: string | null | undefined, color: string |
   return st;
 }
 
-/** Result of sr5.derive() (inferred from the JS module). */
+/** Result of sr5.derive(). */
 export type Derived = ReturnType<typeof derive>;
 
 /** Safe derive (actors filtered for players may miss most fields). */

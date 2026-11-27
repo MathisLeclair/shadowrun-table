@@ -86,7 +86,7 @@ const fileOptions = () => SHOP_FILE_LIST.filter((f) => f !== 'lifestyles' && !(U
 const skillOptions = () => SKILLS.filter((s: { cat: string }) => s.cat === 'combat').map((s: { id: string }) => ({ value: s.id, label: skillLabel(s) }));
 
 /** Patch of 'shop/updateSpecial' (essence is sent as typed, the server parses it). */
-type SpecialPatch = Partial<Omit<ShopSpecial, 'essence' | 'stats'>> & { essence?: number | string | null; stats?: LooseStats };
+type SpecialPatch = Partial<Omit<ShopSpecial, 'stats'>> & { stats?: LooseStats };
 
 function SpecialEditor({ sp, game }: { sp: ShopSpecial; game: GameView }) {
   const upd = (patch: SpecialPatch) => send('shop/updateSpecial', { id: sp.id, patch }).catch(() => {});

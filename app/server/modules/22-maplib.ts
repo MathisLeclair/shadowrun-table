@@ -4,7 +4,7 @@
 // Instances are ordinary table maps (20-maps.js) carrying map.library = { slug, version, linkedAt, syncedAt?, migrated? }.
 import { uid } from '../../shared/util.ts';
 import { decodeBits, encodeBits, remapBits } from '../../shared/vision.ts';
-import { libImageUrl, libGeometry, instanceContent as instanceContentJs, libraryDiff, versionFromMap, ENTRY_REGION_PREFIX } from '../../shared/maplib.ts';
+import { libImageUrl, libGeometry, instanceContent, libraryDiff, versionFromMap, ENTRY_REGION_PREFIX } from '../../shared/maplib.ts';
 import * as L from '../lib/maplib.ts';
 import { errorBody } from '../lib/i18n.ts';
 import { normalizeMap, refreshFog } from './20-maps.ts';
@@ -17,23 +17,8 @@ type ExpressApp = any;
 type Req = any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Res = any;
-/** Multi-table internals passed to routes() as `tableApi` (server/index.js, still JavaScript). */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type TableApi = any;
 /** Library error thrown by server/lib/maplib.js libError(): a translatable key and its params. */
 type LibError = { libKey?: string; libParams?: I18nParams };
-
-// server/lib/maplib.js and shared/maplib.js are still JavaScript: their `= null` option defaults are inferred as
-// null-only, widened here.
-const instanceContent = instanceContentJs as (
-  version: Parameters<typeof instanceContentJs>[0], makeId: Parameters<typeof instanceContentJs>[1], opts?: { previous?: GameMap },
-) => ReturnType<typeof instanceContentJs>;
-const entryFromFoundryMap = L.entryFromFoundryMap as unknown as (
-  map: GameMap, opts: { origin: string; originRef: { kind: string; tableId: string } },
-) => ReturnType<typeof L.entryFromFoundryMap>;
-const publish = L.publish as unknown as (
-  slug: string, content: unknown, by: unknown, opts: { baseVersion: number; force: boolean },
-) => ReturnType<typeof L.publish>;
 
 /** Marker for the i18n checker. */
 const tk = (s: string): string => s;
@@ -76,7 +61,7 @@ export function linkTableMaps(state: TableState, tableId: string): boolean {
     if (!map || typeof map !== 'object' || map.library) continue;
     const base = L.foundrySceneImage(map.background?.url);
     if (!base || !(L.FRAGMAPS_FREE as Record<string, unknown>)[base]) continue;
-    const entry = L.findByImage(base) || entryFromFoundryMap(map, { origin: 'edited', originRef: { kind: 'table', tableId } });
+    const entry = L.findByImage(base) || L.entryFromFoundryMap(map, { origin: 'edited', originRef: { kind: 'table', tableId } });
     if (!entry) continue;
     map.library = { slug: entry.slug, version: entry.version, linkedAt: Date.now(), migrated: true };
     changed = true;
@@ -146,7 +131,7 @@ const mod: ServerModule<ExpressApp> = {
         const map = getMap(ctx, mapId);
         const m = linkedEntry(ctx, map);
         const link = map.library!; // checked by linkedEntry
-        const v = L.getVersion(m.slug);
+        const v = L.getVersion(m.slug)!; // the linked entry's current version
         const e = L.effective(m);
         return {
           slug: m.slug, name: e.name, nameFr: e.nameFr, current: link.version || 0, latest: m.version,
@@ -207,7 +192,7 @@ const mod: ServerModule<ExpressApp> = {
         const shift = { x: (Number(bg.x) || 0) - g.bgX, y: (Number(bg.y) || 0) - g.bgY };
         const content = { ...versionFromMap(map, { shift }), ...(cur?.entry ? { entry: cur.entry } : {}) };
         const n = libCall(ctx, () =>
-          publish(m.slug, content, { kind: 'gm', tableId: ctx.tableId, table: tableName(ctx), mapId: map.id }, { baseVersion: link.version ?? 0, force: !!force })
+          L.publish(m.slug, content, { kind: 'gm', tableId: ctx.tableId, table: tableName(ctx), mapId: map.id }, { baseVersion: link.version ?? 0, force: !!force })
         );
         map.library = { ...link, version: n, syncedAt: ctx.now };
         delete map.library.migrated;
@@ -232,8 +217,7 @@ const mod: ServerModule<ExpressApp> = {
     for (const m of Object.values(view.maps || {})) if (m && typeof m === 'object') delete m.library;
   },
 
-  routes(app: ExpressApp, { requireGM, requireUser, tableApi: api }) {
-    const tableApi: TableApi = api;
+  routes(app: ExpressApp, { requireGM, requireUser, tableApi }) {
     /** Signed key for library images (any logged-in user: players need the image of the shown map). */
     app.get('/api/maplib/key', requireUser, (req: Req, res: Res) => {
       res.setHeader('Cache-Control', 'no-store');
@@ -254,9 +238,9 @@ const mod: ServerModule<ExpressApp> = {
       if (v.a) {
         if (!L.isAdminSessionAlive(v.s)) return res.status(403).json(errorBody(BAD_LINK));
       } else {
-        const t = tableApi.tables.get(v.t);
+        const t = v.t ? tableApi.tables.get(v.t) : undefined;
         const live = t && tableApi.usableTable(t) === t && !t.meta?.archived;
-        const userOk = live && (v.u === 'gm' || !!t.state?.users?.[v.u]) && L.sessionAlive(t.state?.sessions, v.u, v.s);
+        const userOk = live && !!v.u && (v.u === 'gm' || !!t.state?.users?.[v.u]) && L.sessionAlive(t.state?.sessions, v.u, v.s);
         if (!userOk) return res.status(403).json(errorBody(BAD_LINK));
         // Public demo table: only the images of its own maps (the library artwork is the server owner's, not public).
         if (t.meta?.demo && !usesLibraryMap(t.state, req.params.slug)) return res.status(404).json(errorBody(NOT_FOUND));

@@ -24,9 +24,9 @@ import {
   RESOURCES,
 } from '/shared/chargen.ts';
 import { Budget, PointsKarma, StepIssues, nuyen, i18n } from './common.tsx';
-import { RuleRef } from '../combat/legacy-components.ts';
 import type { AttrKey, DraftData, PriorityColumn, PriorityLetter } from '../../../shared/types.ts';
 import type { DraftUpdate, StepProps } from './types.ts';
+import { RuleRef } from '../books/BookRef.tsx';
 
 // ---------------------------------------------------------------------------
 // Concept
@@ -190,7 +190,7 @@ export function StepPriorities({ data, update, issues }: StepProps) {
 function explain(col: PriorityColumn, l: PriorityLetter): string {
   if (!l) return t('Pas encore de priorité.');
   if (col === 'metatype') {
-    const row: Record<string, number> = METATYPE_PRIORITY[l];
+    const row = METATYPE_PRIORITY[l];
     return t('Métatypes possibles et points d’attributs spéciaux (Chance, Magie, Résonance) : {list}.', {
       list: Object.entries(row)
         .map(([m, n]) => `${metatypeLabel(m)} ${n}`)
@@ -200,7 +200,7 @@ function explain(col: PriorityColumn, l: PriorityLetter): string {
   if (col === 'attributes') return t('{n} points à répartir dans les attributs physiques et mentaux.', { n: ATTRIBUTE_POINTS[l] });
   if (col === 'skills') return t('{skills} points de compétences et {groups} points de groupes de compétences.', { skills: SKILL_POINTS[l][0], groups: SKILL_POINTS[l][1] });
   if (col === 'resources') return t('{nuyen} pour l’équipement, le cyberware et le train de vie (5 000¥ maximum conservés).', { nuyen: nuyen(RESOURCES[l]) });
-  const opts = (magicOptions(l) as Array<{ type: string }>).filter((o) => o.type !== 'none');
+  const opts = magicOptions(l).filter((o) => o.type !== 'none');
   if (!opts.length) return t('Profane : ni magie ni résonance.');
   return opts.map((o) => magicOptionText(o, i18n())).join(' — ');
 }
@@ -210,7 +210,7 @@ function explain(col: PriorityColumn, l: PriorityLetter): string {
 // ---------------------------------------------------------------------------
 const CORE_KEYS: AttrKey[] = ['BOD', 'AGI', 'REA', 'STR', 'WIL', 'LOG', 'INT', 'CHA', 'EDG'];
 export function StepMetatype({ data, update, issues }: StepProps) {
-  const row: Record<string, number> | undefined = data.priorities.metatype ? METATYPE_PRIORITY[data.priorities.metatype] : undefined;
+  const row = data.priorities.metatype ? METATYPE_PRIORITY[data.priorities.metatype] : undefined;
   return (
     <div className="cg-step">
       {!row && <div className="cg-note warn">{t('Attribue d’abord une priorité à la colonne Métatype.')}</div>}

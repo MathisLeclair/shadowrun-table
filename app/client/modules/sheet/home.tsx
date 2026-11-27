@@ -5,32 +5,21 @@ import { Button, Modal, confirmAction } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
 import { setUI, goTab, toast } from '../../lib/ui-store.ts';
 import { t, fmtNuyen } from '../../lib/i18n.ts';
-import { homeLayoutsFor, homeLayout, homeMoveCost, buildHome, homeArea } from '/shared/home.ts';
-import { MapCanvas } from './ext.ts';
-import { drawStaticMap } from '../map/renderer.ts';
+import { homeLayoutsFor, homeLayout, homeMoveCost, buildHome, homeArea, type HomeBuild, type HomeLayout, type HomeMap } from '/shared/home.ts';
+import { drawStaticMap, type MapRenderer, type MapScene } from '../map/renderer.ts';
 import { lifestyleBaseLabel } from './sublists.tsx';
 import { fmtDate } from './common.tsx';
 
 import type { Actor, GameMap, GameView, Lifestyle } from '../../../shared/types.ts';
 import './home.css';
+import { MapCanvas } from '../map/MapCanvas.tsx';
 
-/** A HOME_LAYOUTS entry of shared/home.js. */
-interface HomeLayoutDef {
-  id: string;
-  name: string;
-  desc: string;
-  bases: string[];
-}
-/** buildHome() of shared/home.js: the drawn map, its layout and the lifestyle options placed / skipped. */
-interface BuiltHome {
-  map: GameMap;
-  layout: HomeLayoutDef;
-  placed: Array<{ name: string }>;
-  skipped: Array<{ name: string }>;
-}
-const layoutsFor = homeLayoutsFor as (base: string | null | undefined) => HomeLayoutDef[];
-const layoutOf = homeLayout as (l: Lifestyle | null | undefined) => HomeLayoutDef | null;
-const build = buildHome as unknown as (l: Lifestyle, layoutId: string, opts: { tr: (s: string) => string }) => BuiltHome;
+type HomeLayoutDef = HomeLayout;
+type BuiltHome = HomeBuild;
+const layoutsFor = homeLayoutsFor;
+const layoutOf = homeLayout;
+/** buildHome() of a known layout id (never null). */
+const build = (l: Lifestyle, layoutId: string, opts: { tr: (s: string) => string }): BuiltHome => buildHome(l, layoutId, opts)!;
 
 /** Does this lifestyle level have homes to draw (Street: no)? */
 export const hasHomes = (l: Lifestyle | null | undefined): boolean => layoutsFor(l?.base).length > 0;
@@ -55,7 +44,7 @@ export function HomeButton({ game, actor, lifestyle, canMove }: HomeProps) {
 }
 
 /** Flat drawing of a home (chooser cards). */
-function HomePreview({ map, max = 280 }: { map: GameMap; max?: number }) {
+function HomePreview({ map, max = 280 }: { map: HomeMap; max?: number }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const c = ref.current;
@@ -81,9 +70,10 @@ function HomePreview({ map, max = 280 }: { map: GameMap; max?: number }) {
 }
 
 /** Pan / zoom view of a home with the map renderer (no tokens, no fog). */
-function HomeViewer({ game, map }: { game: GameView; map: GameMap }) {
-  const rRef = useRef<{ fit(): void } | null>(null);
-  const scene = useMemo(() => ({ map, actors: {}, role: 'player', me: game.me, selected: new Set(), gmLayer: false, editor: false, fog: null, unseen: null }), [map, game.me]);
+function HomeViewer({ game, map }: { game: GameView; map: HomeMap }) {
+  const rRef = useRef<MapRenderer | null>(null);
+  // A drawn home has every field of a table map the renderer reads.
+  const scene = useMemo((): MapScene => ({ map: map as GameMap, actors: {}, role: 'player', me: game.me, selected: new Set(), gmLayer: false, editor: false, fog: null, unseen: null }), [map, game.me]);
   return <div className="hm-viewer">
     <MapCanvas rendererRef={rRef} scene={scene} handlers={{}} />
     <button className="hm-fit" title={t('Recentrer')} onClick={() => rRef.current?.fit()}>⤢</button>

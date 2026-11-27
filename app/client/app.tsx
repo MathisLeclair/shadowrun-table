@@ -13,16 +13,6 @@ import type { GameView } from '../shared/types.ts';
 import './modules/admin/admin.css'; // table picker + admin page + login extras
 import './modules/core/core.css'; // language switch, translation tools
 
-/** Entry of the main or dock tab lists (modules/registry.ts). */
-interface TabEntry {
-  id: string;
-  label: string;
-  icon?: string;
-  roles: string[];
-  component: ComponentType<GameProps>;
-  badge?: (game: GameView) => string | number | null;
-}
-
 // ---------------------------------------------------------------------------
 // Login
 // ---------------------------------------------------------------------------
@@ -246,13 +236,13 @@ function Shell() {
   }, [!!game, hasOwnLang]);
   if (!game) return <div className="loading">{t('Connexion à la Matrice…')}</div>;
   const role = game.me.role;
-  const tabs = (mainTabs as TabEntry[]).filter((tb) => tb.roles.includes(role));
-  const docks = (dockTabs as TabEntry[]).filter((tb) => tb.roles.includes(role));
+  const tabs = mainTabs.filter((tb) => tb.roles.includes(role));
+  const docks = dockTabs.filter((tb) => tb.roles.includes(role));
   const current = tabs.find((tb) => tb.id === ui.mainTab) || tabs[0];
   const dock = docks.find((tb) => tb.id === ui.dockTab) || docks[0];
   const Main = current.component;
   const Dock = dock?.component;
-  const Sheet = SheetView as ComponentType<GameProps & { actorId: string }>;
+  const Sheet = SheetView;
   const sheetActor = ui.sheetActorId ? game.actors[ui.sheetActorId] : null;
 
   // key=lang on the page, dock and sheet: a language switch remounts them, so nothing cached keeps the old language.
@@ -309,7 +299,7 @@ function Shell() {
           <Sheet key={lang} game={game} actorId={ui.sheetActorId} />
         </Modal>
       )}
-      {(globalComponents as ComponentType<GameProps>[]).map((C, i) => (
+      {globalComponents.map((C, i) => (
         <C key={i} game={game} />
       ))}
     </div>

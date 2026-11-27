@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type {
   ActionContext, Campaign, CampaignAct, CampaignSession, CampaignThread, Handout, InitOptions, PlayerCampaignView, Quest, QuestPhase,
-  QuestStatus, ServerModule, TableState, ThreadState, UserId,
+  QuestStatus, ServerEvents, ServerModule, TableState, ThreadState, UserId,
 } from '../../shared/types.ts';
 
 /** Raw item of a seed file or of a client payload: every field is sanitized by the normalizers. */
@@ -350,10 +350,8 @@ interface TextPayload {
   text?: string;
 }
 
-/** Transient event not listed in ServerEvents (shared/types.ts): a handout was revealed to the player. */
-type HandoutEvent = { id: string; title: string };
-const emitHandout = (ctx: ActionContext, to: 'players' | UserId[], data: HandoutEvent) =>
-  (ctx.emitTo as (target: 'players' | UserId[], event: string, data: HandoutEvent) => void)(to, 'campaign/handout', data);
+/** A handout was revealed to the player(s). */
+const emitHandout = (ctx: ActionContext, to: 'players' | UserId[], data: ServerEvents['campaign/handout']) => ctx.emitTo(to, 'campaign/handout', data);
 
 // ---------------------------------------------------------------------------
 // Module

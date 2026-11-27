@@ -8,7 +8,6 @@ import { attr } from '/shared/sr5.ts';
 import { t, tn, tk, logText, attrShort, attrLabel, getLang } from '../../lib/i18n.ts';
 import { isGM, ownsActor, DiceFaces, RollBadges, fmtTime, rollLabel, rollBreakdown, skillName } from './common.tsx';
 import { RollDialog, fireText } from './RollDialog.tsx';
-import { BookRef } from './ext.ts';
 import { AvailRollLine } from '../shop/avail.tsx';
 import { SinCheckLine } from './sins.tsx';
 import { ContactRollLine } from './contacts.tsx';
@@ -18,6 +17,7 @@ import type { GameProps } from '../../lib/net.ts';
 import type { Actor, GameView, LogEntry as LogEntryData } from '../../../shared/types.ts';
 import type { RollPreset, ShownRoll } from './types.ts';
 import './sheet.css';
+import { BookRef } from '../books/BookRef.tsx';
 
 /** Preferences of the dock kept in this browser. */
 interface DockPrefs {

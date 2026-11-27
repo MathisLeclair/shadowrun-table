@@ -1,34 +1,18 @@
 // Wizard step: Équipement & cyberware (shop catalog, resources budget, availability ≤ 12, Essence, lifestyle).
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Button, Select, NumberInput, Panel, IconButton, Toggle, SearchBox, Empty, Field, Stat, Badge } from '../../lib/ui.tsx';
-import { STORE_SECTIONS, quote, allowedGrades, GRADES, clampRating, fold, targetList, upgradeAvail, MOUNT_LABELS, armorCapacity } from '../shop/rules.ts';
-import { AvailBadge } from '../combat/legacy-components.ts';
+import { STORE_SECTIONS, quote, allowedGrades, GRADES, clampRating, fold, targetList, upgradeAvail, MOUNT_LABELS, armorCapacity, type Quote } from '../shop/rules.ts';
 import { statRows } from '../shop/ItemDetail.tsx';
-import { CREATION_GRADES, CREATION_UPGRADES, LIMITS, rowId } from '/shared/chargen.ts';
+import { CREATION_GRADES, CREATION_UPGRADES, LIMITS, rowId, type GearLine } from '/shared/chargen.ts';
 import { t, itemName, compare, fmtNumber } from '../../lib/i18n.ts';
 import { Budget, StepIssues, nuyen } from './common.tsx';
-import { ItemRef } from '../combat/legacy-components.ts';
-import type { DraftData } from '../../../shared/types.ts';
+import type { ArmorStats, DraftData } from '../../../shared/types.ts';
 import type { LooseCatalogItem, ShopEntry, StepProps } from './types.ts';
+import { AvailBadge } from '../shop/common.tsx';
+import { ItemRef } from '../books/BookRef.tsx';
 
 /** shop/rules.js STORE_SECTIONS entry. */
 type StoreSection = { id: string; label: string; icon: string; match: (file: string, item: LooseCatalogItem) => boolean };
-/** shop/rules.js quote() result (only the fields read here). */
-// quote() returns a loosely shaped object (avail, availValue, legality, unitCost, essence, rating, grade…).
-type Quote = Record<string, any>;
-/** compute() gear line. */
-interface GearLine {
-  row: DraftData['gear'][number];
-  item: LooseCatalogItem | null;
-  name: string;
-  file: string;
-  quote: Quote | null;
-  essence?: number;
-  total?: number;
-  upgrade?: boolean;
-  target?: { name: string } | null;
-  mount?: string;
-}
 type GearLineInput = Omit<DraftData['gear'][number], 'id'>;
 
 /** Lookup tables of shop/rules.js and shared/chargen.js, indexed by any id. */
@@ -87,7 +71,7 @@ export function StepGear({ data, update, result, issues, rc }: StepProps) {
       const x = d.gear.find((y) => y.id === id);
       if (x) x[k] = v;
     });
-  const gearLines = r.gearLines as GearLine[];
+  const gearLines = r.gearLines;
   const selEntry = sel ? shop.byId.get(sel) : undefined;
 
   return (
@@ -323,7 +307,7 @@ function GearDetail({ entry, essence, lines = [], onAdd, onClose }: GearDetailPr
   const [targetRow, setTargetRow] = useState(targets[0]?.row.id || '');
   const [mount, setMount] = useState('');
   const tl = targets.find((l) => l.row.id === targetRow) || null;
-  const grades: string[] = ware ? (allowedGrades(item) as string[]).filter((g) => CREATION_GRADES.includes(g)) : [];
+  const grades: string[] = ware ? allowedGrades(item).filter((g) => (CREATION_GRADES as string[]).includes(g)) : [];
   const [rating, setRating] = useState<number | null>(item.rating ? item.rating.min : null);
   const [grade, setGrade] = useState<string | null>(ware ? (grades.includes('standard') ? 'standard' : grades[0] || 'standard') : null);
   const [qty, setQty] = useState(1);
@@ -331,12 +315,13 @@ function GearDetail({ entry, essence, lines = [], onAdd, onClose }: GearDetailPr
   try {
     if (!up) qt = quote(item, { rating, grade: grade || undefined });
     else if (tl && tl.item && tl.quote) {
-      const tst = tl.item.stats || {};
+      // The target of an armor mod is an armor row.
+      const tst: Partial<ArmorStats> = (tl.item.stats as ArmorStats | undefined) || {};
       const vars = up.file === 'weapons' ? { WeaponCost: tl.quote.unitCost || 0 } : { ArmorCost: tl.quote.unitCost || 0, Capacity: armorCapacity({ capacity: tst.capacity, rating: Number(tst.armor) || 0 }, tl.item) };
       qt = upgradeAvail(quote(item, { rating, vars }), item, tl.quote);
     }
   } catch {}
-  const rows: Array<[string, string | number]> = statRows(entry.file, item, item.stats, qt);
+  const rows: Array<[string, ReactNode]> = statRows(entry.file, item, item.stats, qt);
   const mounts: string[] = up?.file === 'weapons' && Array.isArray(item.stats?.mount) ? item.stats.mount : [];
   const over = !!qt && qt.availValue > LIMITS.maxAvail;
   const essAfter = ware && qt ? Math.round((essence - (qt.essence || 0) * qty) * 1000) / 1000 : null;

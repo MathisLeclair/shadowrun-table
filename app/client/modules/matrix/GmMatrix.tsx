@@ -9,8 +9,8 @@ import {
   act, personaOf, OsMeter, MatrixMonitor, marksDots, icName, markName, linkLockName, asdfShort, asdfLabel, modeLabel, msgText, outcomeTexts,
   deviceLinkState, linkStateText, isFullActor, type ActionResult, type MsgLike,
 } from './common.tsx';
-import { RuleRef } from './legacy.ts';
 import type { Actor, DeviceLink, GameMap, GameView, Host, HostDevice, HostFile, IcType, Persona } from '../../../shared/types.ts';
+import { RuleRef } from '../books/BookRef.tsx';
 
 /** Re-render every `ms` (countdowns). */
 function useNow(ms = 30000) {

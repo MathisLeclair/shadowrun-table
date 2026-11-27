@@ -8,14 +8,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
-// @ts-ignore -- no @types/express in the app yet (the server-core conversion adds it)
 import express from 'express';
 import { errorBody } from '../lib/i18n.ts';
 import { BOOKS_DIR, signLink, verifyLink, sessionTag, sessionAlive, LINK_TTL } from '../lib/books/access.ts';
-import { readLibrary, loadIndex, allowedFor, cleanCode, pdfFile } from '../lib/books/library.ts';
+import { readLibrary, loadIndex, allowedFor, cleanCode, pdfFile, type LibraryBook } from '../lib/books/library.ts';
 import { parseQuery, searchPages, queryHeadline } from '../lib/books/search.ts';
 import { pdfToPrinted, printedToPdf } from '../lib/books/offsets.ts';
-import type { BookOffset, ServerModule, TableMeta, TableState } from '../../shared/types.ts';
+import type { ServerModule } from '../../shared/types.ts';
 
 // No Express types in the app yet (@types/express arrives with the server-core conversion): loose local aliases.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped Express app / request / response
@@ -24,24 +23,6 @@ type HttpApp = any;
 type Req = any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Res = any;
-
-/** A book of library.json (server/lib/books/library.js cleanBook). */
-interface LibraryBook {
-  code: string;
-  name: string;
-  nameFr?: string;
-  pages: number;
-  offset: number;
-  offsets?: BookOffset[];
-  indexedAt?: number;
-  extra?: boolean;
-}
-
-/** The part of the multi-table internals (`tableApi`, server/index.js) this module uses. */
-interface TableApi {
-  tables: Map<string, { meta?: TableMeta; state?: TableState }>;
-  usableTable<T>(t: T): T | null;
-}
 
 /** Cached content version of a book's PDF. */
 interface BookVersion {
@@ -127,8 +108,7 @@ const tableBook = (req: Req, rawCode: unknown): LibraryBook | null => {
 const mod: ServerModule<HttpApp> = {
   name: 'books',
   init() {},
-  routes(app, { requireUser, tableApi: rawTableApi }) {
-    const tableApi = rawTableApi as TableApi;
+  routes(app, { requireUser, tableApi }) {
     if (PDFJS_DIR) {
       // fallthrough: a missing file answers the same JSON 404 (no ENOENT stack in the server log).
       const serve = express.static(PDFJS_DIR, { index: false, dotfiles: 'deny', immutable: true, maxAge: 365 * 86400 * 1000, fallthrough: true,

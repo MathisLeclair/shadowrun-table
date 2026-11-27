@@ -17,9 +17,9 @@ import {
   asdfShort, asdfLabel, modeLabel, marksText, assistText, agentLabel, deviceLinkState, linkStateText, isFullActor, hostOf, hostsOf, hostMap,
 } from './common.tsx';
 import ActionModal, { type ActionPreset } from './ActionModal.tsx';
-import { BookRef, RuleRef } from './legacy.ts';
 import { ProgramRef } from './common.tsx';
 import type { Actor, GameView, MatrixMarkOnMe, MatrixMode } from '../../../shared/types.ts';
+import { BookRef, RuleRef } from '../books/BookRef.tsx';
 
 const CAT_ORDER = ['attack', 'sleaze', 'info', 'control', 'util'];
 

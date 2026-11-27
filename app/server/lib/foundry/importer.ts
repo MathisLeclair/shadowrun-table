@@ -95,8 +95,6 @@ export interface PcSnapshot {
   matrix: string;
   vision: string;
 }
-/** Bestiary template as imported (shared/types.ts Template has no foundryId). */
-type FoundryTemplate = Template & { foundryId?: string };
 /** applyImport() options. */
 export interface ApplyOptions {
   select?: { pcs?: unknown; npcs?: unknown; scenes?: unknown; journals?: boolean; playlists?: boolean };
@@ -729,8 +727,8 @@ function findPc(state: Partial<TableState>, pc: BundlePc): Actor | null {
   return pcsList.find((a) => a.foundry?.id === pc.fid) || (state.actors?.[pc.appId]?.type === 'pc' ? state.actors[pc.appId] : null) || pcsList.find((a) => norm(a.name) === norm(pc.name)) || null;
 }
 
-function findTemplate(state: Partial<TableState>, npc: BundleNpc): FoundryTemplate | null {
-  const b: Record<string, FoundryTemplate> = state.bestiary || {};
+function findTemplate(state: Partial<TableState>, npc: BundleNpc): Template | null {
+  const b: Record<string, Template> = state.bestiary || {};
   return Object.values(b).find((t) => t && t.foundryId === npc.fid) || b[npc.templateId] || null;
 }
 
@@ -798,8 +796,8 @@ export function applyImport(state: Partial<TableState>, bundle: Bundle, opts: Ap
   const sel = opts.select || {};
   const pick = <T extends { fid: string }>(list: T[], key: unknown): T[] => (key === 'all' || key === true ? list : Array.isArray(key) ? list.filter((x) => key.includes(x.fid)) : []);
   const mode = opts.pcMode === 'merge' ? 'merge' : 'replace';
-  const syncUrls = new Set();
-  const audioUrls = new Set();
+  const syncUrls = new Set<string>();
+  const audioUrls = new Set<string | undefined>();
   const summary: ImportSummary = { pcs: [], npcs: [], maps: [], journals: [], tracks: 0, questLinks: 0, users: [] };
 
   // PCs

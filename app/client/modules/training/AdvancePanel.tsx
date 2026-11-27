@@ -11,9 +11,9 @@ import {
 import { slug } from '/shared/util.ts';
 import { makeQuoter, Rule, CostCell, MAGIC_TYPES, errorOf, warningsOf, msgText } from './common.tsx';
 import ConfirmModal from './ConfirmModal.tsx';
-import { ItemRef, SkillRef } from './bookrefs.ts';
 import type { Actor, AttrKey, CatalogItem, GameView, ItemBase, PowerStats, QualityStats, SpellStats } from '../../../shared/types.ts';
 import type { TrainingDraft, TrainingQuote } from './types.ts';
+import { ItemRef, SkillRef } from '../books/BookRef.tsx';
 
 type Profile = ReturnType<typeof magicProfile>;
 type Quoter = (req: TrainingDraft) => TrainingQuote;

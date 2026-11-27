@@ -11,14 +11,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseXml, serializeXml, Element, el, type XmlDocument } from './xml.ts';
-import { parseChum5, APP_ATTRS, type ChummerKnowledge, type ParsedActor } from './parse.ts';
+import { parseChum5, APP_ATTRS, type ParsedActor } from './parse.ts';
 import { warningList } from './messages.ts';
 import {
   skillsData, chummerSkillFor, metatypeData, METATYPE_EN, findDataItem, findCatalogEntry, norm, type ChummerSkillDef, type DataKind,
 } from './data.ts';
 import { KNOWLEDGE_TYPES } from '../../../client/modules/sheet/sheet-data.ts';
 import type {
-  Accessory, Actor, AdeptPower, Armor, ArmorMod, Augmentation, ComplexForm, Contact, I18nMessage, ItemBase, Lifestyle, LifestyleQuality, MartialArt,
+  Accessory, Actor, AdeptPower, Armor, ArmorMod, Augmentation, ComplexForm, Contact, I18nMessage, ItemBase, KnowledgeSkill, Lifestyle, LifestyleQuality, MartialArt,
   MartialArtTechnique, Quality, Sin, Spell, Vehicle, VehicleMod, Weapon,
 } from '../../../shared/types.ts';
 
@@ -310,7 +310,7 @@ function buildVehicle(item: Vehicle, data: Element | null, guid: string, assignS
   return n;
 }
 
-function buildContact(item: Contact & { role?: string }, guid: string): Element {
+function buildContact(item: Contact, guid: string): Element {
   const enemy = /ENNEMI/.test(item.notes || '');
   return el('contact', [
     el('name', item.name), el('role', item.role || ''), el('location', ''), el('connection', String(item.connection ?? 1)), el('loyalty', String(item.loyalty ?? 1)),
@@ -530,7 +530,7 @@ function buildSkill(def: ChummerSkillDef, guid: string): Element {
 }
 
 const KNO_EN: Record<string, string> = { street: 'Street', academic: 'Academic', professional: 'Professional', interest: 'Interest', language: 'Language' };
-function buildKnowledge(k: ChummerKnowledge, guid: string): Element {
+function buildKnowledge(k: KnowledgeSkill, guid: string): Element {
   const type = KNO_EN[k.type] || 'Interest';
   const def = skillsData().knoByName.get(norm(k.name));
   const n = templates().skill.clone();
@@ -842,10 +842,10 @@ export function exportChum5(actor: Actor, { now = Date.now(), mugshots = null }:
   // --- knowledge skills (matched by guid)
   const knoNode = c.get('newskills/knoskills') || c.get('newskills')!.append(el('knoskills')).child('knoskills')!;
   const idx = guidIndex(c);
-  const baseKno = new Map(((base.knowledge || []) as ChummerKnowledge[]).filter((k) => k.chummerGuid).map((k) => [k.chummerGuid!, k]));
-  const appKnoGuids = new Set(((actor.knowledge || []) as ChummerKnowledge[]).map((k) => k.chummerGuid).filter(Boolean));
+  const baseKno = new Map((base.knowledge || []).filter((k) => k.chummerGuid).map((k) => [k.chummerGuid!, k]));
+  const appKnoGuids = new Set((actor.knowledge || []).map((k) => k.chummerGuid).filter(Boolean));
   for (const [g] of baseKno) if (!appKnoGuids.has(g)) idx.get(g)?.parent.remove(idx.get(g)!.node);
-  for (const k of (actor.knowledge || []) as ChummerKnowledge[]) {
+  for (const k of actor.knowledge || []) {
     const hit = k.chummerGuid && idx.get(k.chummerGuid);
     if (hit && baseKno.has(k.chummerGuid!)) {
       const was = baseKno.get(k.chummerGuid!)!;

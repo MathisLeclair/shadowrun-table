@@ -8,7 +8,6 @@ import { toast } from '../../lib/ui-store.ts';
 import { t, tn, tk, fmtNuyen } from '../../lib/i18n.ts';
 import { skillPool, derive } from '/shared/sr5.ts';
 import { Avatar, DiceFaces, cssVars } from './common.tsx';
-import { RuleRef } from './ext.ts';
 import {
   CONNECTION_DETAILS, LOYALTY_LEVELS, FAVOR_RATINGS, MAX_CONNECTION, MAX_LOYALTY, connectionOf, loyaltyOf, contactFees, bribeCost, contactSheet,
 } from '/shared/contacts.ts';
@@ -26,14 +25,13 @@ interface ContactSheetView {
   etiquette?: number;
   social?: number;
 }
-/** Contacts carry a role (« Fixer ») that shared/types.ts Contact lacks. */
-type SheetContact = Contact & { role?: string };
 const LOYALTY = LOYALTY_LEVELS as Record<number, { name: string; text: string } | undefined>;
 const CONNECTIONS = CONNECTION_DETAILS as Record<number, string>;
 
 import type { Actor, Contact, GameView } from '../../../shared/types.ts';
 import type { ShownRoll } from './types.ts';
 import './contacts.css'; // also needed by the log dock (ContactRollLine)
+import { RuleRef } from '../books/BookRef.tsx';
 
 /** Stable hue per contact name (initials avatar without a sheet). */
 function nameColor(name: string): string {
@@ -42,7 +40,7 @@ function nameColor(name: string): string {
   return `hsl(${h} 55% 55%)`;
 }
 /** Short decorative file number. */
-function fileNo(c: SheetContact): string {
+function fileNo(c: Contact): string {
   let h = 7;
   for (const ch of String(c.id || c.name || '')) h = (h * 33 + ch.charCodeAt(0)) >>> 0;
   return h.toString(16).toUpperCase().padStart(6, '0').slice(-6);
@@ -56,7 +54,7 @@ function reachOdds(n: number): number {
 const pct = (x: number): string => `${Math.round(x * 100)} %`;
 
 /** The contact's sheet: GM computes it from the bestiary / NPCs, players get it from the shop view (bestiary hidden). */
-export function sheetOf(game: GameView, actor: Actor, c: SheetContact): ContactSheetView {
+export function sheetOf(game: GameView, actor: Actor, c: Contact): ContactSheetView {
   if (game?.bestiary || !game?.shop?.contactSearch) return contactSheet(game, c) as ContactSheetView;
   return ((game.shop.contactSearch as Record<string, ContactSheetView[] | undefined>)[actor.id] || []).find((x) => x.id === c.id) || { id: c.id, name: c.name, connection: connectionOf(c), known: false };
 }
@@ -71,7 +69,7 @@ function Gauge({ value, max, kind }: { value: number; max: number; kind: string 
 interface ContactCardProps {
   game: GameView;
   actor: Actor;
-  c: SheetContact;
+  c: Contact;
   big?: boolean;
   children?: ReactNode;
 }
@@ -156,7 +154,7 @@ function LastRoll({ r }: { r: ShownRoll | null }) {
 }
 
 /** Rolls of the « Contacter » view. */
-function RollPanel({ game, actor, c, gm }: { game: GameView; actor: Actor; c: SheetContact; gm: boolean }) {
+function RollPanel({ game, actor, c, gm }: { game: GameView; actor: Actor; c: Contact; gm: boolean }) {
   const sh = sheetOf(game, actor, c);
   const cn = connectionOf(c);
   const loy = loyaltyOf(c);
@@ -237,7 +235,7 @@ function RollPanel({ game, actor, c, gm }: { game: GameView; actor: Actor; c: Sh
 }
 
 /** Fees + favors this contact will do without negotiating. */
-function Terms({ c }: { c: SheetContact }) {
+function Terms({ c }: { c: Contact }) {
   const f = contactFees(c);
   const loy = loyaltyOf(c);
   return <div className="ct-terms">
@@ -257,7 +255,7 @@ function Terms({ c }: { c: SheetContact }) {
 interface ContactModalProps {
   game: GameView;
   actor: Actor;
-  c: SheetContact;
+  c: Contact;
   gm: boolean;
   canRoll: boolean;
   onClose: () => void;

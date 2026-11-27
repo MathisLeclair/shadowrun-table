@@ -10,7 +10,6 @@ import { SubChips, weaponWithMods } from './sublists.tsx';
 import { rollContext } from '/shared/modifiers.ts';
 import { LimitStat } from './tab-summary.tsx';
 import { sourcesTitle, sourceName, effectText, poolModsOf, accuracyOf } from './modifiers-ui.tsx';
-import { ItemRef, SkillRef, RuleRef, BookRef } from './ext.ts';
 import { ruleRef } from '/shared/bookrefs.ts';
 import { AmmoCell, ReadyToggle } from './weapon-ui.tsx';
 import { readyCount, isUnarmed, isGrenade, usesAmmo, fireOptions } from './inventory.ts';
@@ -18,7 +17,8 @@ import { COMBAT_ACTIONS, unlockedActions, isUnlocked, AFFLICTIONS, stillActive }
 import { send } from '../../lib/net.ts';
 import type { ReactNode } from 'react';
 import type { Actor, Weapon } from '../../../shared/types.ts';
-import type { SheetCtx, SheetSkill } from './types.ts';
+import type { SheetCtx } from './types.ts';
+import { ItemRef, SkillRef, RuleRef, BookRef } from '../books/BookRef.tsx';
 
 type CombatAction = (typeof COMBAT_ACTIONS)[number];
 

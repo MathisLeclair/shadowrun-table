@@ -13,34 +13,15 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { syncPowerBonus, itemBonusSpec, bakeItemBonus, removeBonus } from '../lib/augment.ts';
 import {
-  DEFAULT_SETTINGS, quote, applyAdvance, normalizeRequest, catalogName, qualityInfo, powerInfo, spellInfo, formatDaysI18n,
+  DEFAULT_SETTINGS, quote, applyAdvance, normalizeRequest, catalogName, qualityInfo, powerInfo, spellInfo, formatDaysI18n, type AdvanceQuote,
 } from '../../shared/advancement.ts';
 import { formatFr } from '../lib/i18n.ts';
 import { fillActorRefs } from '../lib/bookrefs.ts';
 import type {
-  ActionContext, Actor, ActorId, AdeptPower, AdvancementRequest, CatalogItem, HistoryEntry, I18nEntry, I18nParams, I18nParamValue, Quality, ServerModule,
+  ActionContext, Actor, ActorId, AdeptPower, AdvancementRequest, CatalogBonus, CatalogItem, HistoryEntry, I18nEntry, I18nParams, I18nParamValue, Quality, ServerModule,
   TableState, TrainingJob, TrainingRequest, TrainingSettings, TrainingState, UserId,
 } from '../../shared/types.ts';
 
-/** Result of shared/advancement.js quote() (the fields this module reads). */
-interface Quote {
-  error?: string | null;
-  errorI18n?: I18nEntry | null;
-  manual?: boolean;
-  kind: TrainingRequest['kind'];
-  target: string;
-  from: number | null;
-  to: number | null;
-  label: string;
-  labelI18n?: I18nEntry | null;
-  karmaCost: number;
-  nuyenCost: number;
-  days: number;
-  daysBase: number;
-  instructor: boolean;
-  ppCost?: number;
-  req: AdvancementRequest;
-}
 /** Anything with a label (request, job, quote). */
 type Labelled = { label?: string; labelI18n?: I18nEntry | null } | null | undefined;
 
@@ -147,7 +128,7 @@ function publicLog(ctx: ActionContext, key: string, params: I18nParams) {
 /** Label of a request/job as a log/error param: translatable when the i18n form is known. */
 const labelParam = (x: Labelled): I18nParamValue => (x?.labelI18n?.key ? { t: x.labelI18n.key, ...(x.labelI18n.params ? { params: x.labelI18n.params } : {}) } : x?.label || '');
 /** Fail with the rule message of a quote (French text + i18n key). */
-function failQuote(ctx: ActionContext, q: Quote): never {
+function failQuote(ctx: ActionContext, q: AdvanceQuote): never {
   if (q.errorI18n) ctx.fail(q.errorI18n.key, q.errorI18n.params);
   return ctx.fail(q.error as string);
 }
@@ -215,7 +196,7 @@ function advance(actor: Actor, req: AdvancementRequest) {
   if (req?.kind === 'power' && req.catalogId) {
     const p = findPowerFor(actor, req);
     // Catalog effects (REA, initiative dice, initiative score, « select attribute ») else stats.bonus, per level.
-    const bonus = p ? itemBonusSpec('powers', p, (findCatalog('powers', req.catalogId)?.stats as { bonus?: unknown } | undefined)?.bonus) : null;
+    const bonus = p ? itemBonusSpec('powers', p, (findCatalog('powers', req.catalogId)?.stats as { bonus?: CatalogBonus } | undefined)?.bonus) : null;
     if (bonus && p) syncPowerBonus(actor, p, bonus, fromLevel);
   }
   // A new quality's attribute / initiative bonus (Lightning Reflexes…) is stored on the actor; a bought-off one gives it back.
@@ -246,7 +227,7 @@ function approve(ctx: ActionContext, request: TrainingRequest, gmNote?: string):
   const tr = slice(ctx.state);
   const actor = ctx.state.actors[request.actorId];
   if (!actor) return ctx.fail('Personnage introuvable');
-  const q: Quote = quote(actor, request.request, tr.settings, contextFor(tr, actor, request.id));
+  const q: AdvanceQuote = quote(actor, request.request, tr.settings, contextFor(tr, actor, request.id));
   if (q.error) failQuote(ctx, q);
   Object.assign(request, {
     from: q.from, to: q.to, label: q.label, labelI18n: q.labelI18n, karmaCost: q.karmaCost, nuyenCost: q.nuyenCost, days: q.days, daysBase: q.daysBase,
@@ -263,7 +244,7 @@ function approve(ctx: ActionContext, request: TrainingRequest, gmNote?: string):
     ctx.emitTo([...ownersOf(ctx.state, actor.id), 'gm'], 'sfx', { id: 'level-up' });
     return request;
   }
-  const job: TrainingJob = { id: ctx.uid('job'), requestId: request.id, kind: q.kind, label: q.label, labelI18n: q.labelI18n as I18nEntry | undefined, daysTotal: q.days, daysDone: 0, startedTs: Date.now(), request: q.req };
+  const job: TrainingJob = { id: ctx.uid('job'), requestId: request.id, kind: q.kind!, label: q.label, labelI18n: q.labelI18n, daysTotal: q.days, daysDone: 0, startedTs: Date.now(), request: q.req };
   actor.training = [...jobsOf(actor), job];
   request.jobId = job.id;
   const p = { actor: actor.name, label: labelParam(q), days: formatDaysI18n(q.days) };
@@ -348,12 +329,12 @@ const mod: ServerModule = {
         const req: AdvancementRequest = normalizeRequest(payload);
         if (!ctx.isGM) req.free = false;
         const verified = enrichFromCatalog(req);
-        const q: Quote = quote(actor, req, tr.settings, contextFor(tr, actor));
+        const q: AdvanceQuote = quote(actor, req, tr.settings, contextFor(tr, actor));
         if (q.error) failQuote(ctx, q);
         const manual = !verified || q.manual;
         const request: TrainingRequest = {
-          id: ctx.uid('trq'), ts: Date.now(), actorId: actor.id, userId: ctx.user.id, kind: q.kind, target: q.target,
-          from: q.from, to: q.to, label: q.label, labelI18n: q.labelI18n as I18nEntry | undefined, karmaCost: q.karmaCost, nuyenCost: q.nuyenCost, days: q.days, daysBase: q.daysBase,
+          id: ctx.uid('trq'), ts: Date.now(), actorId: actor.id, userId: ctx.user.id, kind: q.kind!, target: q.target, // a valid quote (no error) has a kind
+          from: q.from, to: q.to, label: q.label, labelI18n: q.labelI18n, karmaCost: q.karmaCost, nuyenCost: q.nuyenCost, days: q.days, daysBase: q.daysBase,
           instructor: q.instructor, ppCost: q.ppCost, status: 'pending', manual, request: q.req,
         };
         if (req.note) request.note = req.note;

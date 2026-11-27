@@ -151,7 +151,7 @@ export function baseOf(name: unknown): string {
  * opts: { id, name?, months, primary }
  */
 export function lifestyleFromCatalog(
-  item: LifestyleCatalogItem | null | undefined,
+  item: Partial<LifestyleCatalogItem> | null | undefined,
   opts: { id?: string; name?: string; months?: number; primary?: boolean } = {},
 ): Lifestyle {
   const st: LifestyleStats = (item?.stats as LifestyleStats | undefined) || {};

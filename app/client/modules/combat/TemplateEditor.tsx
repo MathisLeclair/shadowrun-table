@@ -4,7 +4,7 @@ import { Button, IconButton, Modal, Tabs, Panel, TextInput, NumberInput, Select,
 import { useCatalog, upload } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
 import { t, tk, attrLabel, attrShort, skillLabel, skillCategoryLabel, itemName, getLang } from '../../lib/i18n.ts';
-import { SKILLS, SKILL_BY_ID, SKILL_CATEGORIES, METATYPES } from '/shared/sr5.ts';
+import { SKILLS, SKILL_BY_ID, SKILL_CATEGORIES, METATYPES, type SkillDef } from '/shared/sr5.ts';
 import { uid, deepClone } from '/shared/util.ts';
 import { npcKindOptions, initModeOptions, dispoLabel, poolFor, safeDerive } from './combat-common.tsx';
 import StatBlock from './StatBlock.tsx';
@@ -12,8 +12,6 @@ import type { ActorMatrix, Armor, AttrKey, CatalogItem, Template, Weapon } from 
 
 const EDIT_ATTRS: AttrKey[] = ['BOD', 'AGI', 'REA', 'STR', 'WIL', 'LOG', 'INT', 'CHA', 'EDG', 'MAG', 'RES'];
 const attrOptions = () => EDIT_ATTRS.map((k) => ({ value: k, label: attrShort(k) as string }));
-/** sr5.js SKILLS entry. */
-type SkillDef = (typeof SKILLS)[number];
 const COMBAT_SKILLS: SkillDef[] = SKILLS.filter((s: SkillDef) => ['combat', 'vehicle'].includes(s.cat) || ['unarmed_combat', 'cybercombat', 'spellcasting'].includes(s.id));
 const METATYPE_OPTIONS = [...Object.keys(METATYPES), 'Créature', 'Esprit', 'Drone', 'IC', 'Host', 'Autre'];
 

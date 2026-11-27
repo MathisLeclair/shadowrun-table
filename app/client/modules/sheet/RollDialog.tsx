@@ -14,7 +14,6 @@ import { rollContext, derivedWithModifiers, checkedTest, woundsApply, TEST_BY_LA
 import { t, tk, tn, tIfKnown, attrShort, attrLabel, limitLabel } from '../../lib/i18n.ts';
 import { Overlay, DiceFaces, RollBadges, isGM, ownsActor, skillName, rollLabel } from './common.tsx';
 import { knowledgeAttr } from './sheet-data.ts';
-import { BookRef, SkillRef, RuleRef } from './ext.ts';
 import { ruleRef } from '/shared/bookrefs.ts';
 import { useModifiers, ModChip, effectText, toggleText, sourceName, loadRollToggles as loadToggles, saveRollToggles as saveToggles, poolModsOf, limitOf, accuracyOf, type ModLine } from './modifiers-ui.tsx';
 import { Select } from '../../lib/ui.tsx';
@@ -28,25 +27,9 @@ import { targetCandidates, attackMap, tokenOfActor, turnInfo } from '../combat/a
 import { isLauncherProfile, launcherRounds } from './inventory.ts';
 import type { Actor, FireInfo, GameView, ViewActor, Weapon } from '../../../shared/types.ts';
 import type { DerivedMods, RollPreset, SheetModifier, ShownRoll } from './types.ts';
+import { BookRef, SkillRef, RuleRef } from '../books/BookRef.tsx';
 
-type CombatAction = (typeof COMBAT_ACTIONS)[number];
 type TargetCandidate = ReturnType<typeof targetCandidates>[number];
-
-// shared/*.js signatures as TypeScript infers them from the JS are too narrow (defaults typed null / {}): typed views.
-const skillPoolOf = skillPool as unknown as (actor: Actor, skillId: string, opts?: { useSpec?: boolean; attrOverride?: string }) => { pool: number; impossible?: boolean; defaulting?: boolean };
-const environmentOf = environmentFor as unknown as (req: Record<string, unknown>) => { value: number; rangeOnly?: boolean; parts: string[]; notes: string[] };
-const actionsOf = actionsForWeapon as unknown as (actor: Actor, w: Weapon, opts: { allowLocked?: boolean; fireIds?: string[] | null }) => Array<CombatAction & { locked?: boolean }>;
-/** rangeFor() of shared/combat.js. */
-interface RangeInfo {
-  id: string;
-  mod: number;
-  label: string;
-  meters: number;
-  beyond?: boolean;
-  tooClose?: boolean;
-  max?: number;
-  min?: number;
-}
 
 /** Result of computeLimit(). */
 interface LimitInfo {
@@ -90,7 +73,7 @@ export function previewPool(actor: Actor | null | undefined, preset: RollPreset,
     } else {
       const def = SKILL_BY_ID[preset.skillId];
       const at = preset.attr || sk?.attr || def?.attr || 'AGI';
-      const r = skillPoolOf(actor, preset.skillId, { useSpec, attrOverride: preset.attr || undefined });
+      const r = skillPool(actor, preset.skillId, { useSpec, attrOverride: preset.attr || undefined });
       impossible = !!r.impossible;
       pool = r.pool;
       spec = sk?.spec || '';
@@ -165,7 +148,7 @@ function computeLimit(actor: Actor | null, preset: RollPreset, prev: PoolPreview
   if (!prev.defaultLimit) return null;
   const l = limitOf(actor, prev.defaultLimit, mods, rctx, opts);
   if (l.total === null) return null;
-  const parts: Array<[string, number]> = [[limitLabel(prev.defaultLimit), l.base], ...l.lines.filter((x) => x.state === 'applied').map((x): [string, number] => [sourceName(x.mod.source), x.value])];
+  const parts: Array<[string, number]> = [[limitLabel(prev.defaultLimit), l.base ?? 0], ...l.lines.filter((x) => x.state === 'applied').map((x): [string, number] => [sourceName(x.mod.source), x.value ?? 0])];
   return { total: l.total, lines: l.lines, parts, name: prev.defaultLimit };
 }
 
@@ -192,7 +175,7 @@ export function RollDialog({ game, actor: viewActor, preset: initialPreset = {},
   // Target (map token), special action, launcher ammunition, aimed point — attacks module (attack/roll).
   const ui = useUI();
   const [actionId, setActionId] = useState(initialPreset.actionId || '');
-  const action = actionId ? (ACTION_BY_ID as Record<string, CombatAction>)[actionId] || null : null;
+  const action = actionId ? ACTION_BY_ID[actionId] || null : null;
   const canTarget = !!sheet && (!!initialPreset.weaponId || action?.kind === 'test');
   const candidates: TargetCandidate[] = canTarget && sheet ? targetCandidates(game, sheet.id, weapon, sheet) : [];
   const [targetId, setTargetId] = useState(() => {
@@ -213,26 +196,26 @@ export function RollDialog({ game, actor: viewActor, preset: initialPreset = {},
   const profile = round?.w || null;
   const blast = area ? blastOf(profile || weapon, sheet) : null;
   const aimAt = point || (target ? { x: target.token.x, y: target.token.y } : null);
-  const range = weapon && weapon.kind !== 'melee' && myToken && aimAt && amap ? (rangeFor(weapon, sheet, cellDistance(myToken, aimAt, Number(amap.metersPerCell) || 1)) as RangeInfo) : null;
+  const range = weapon && weapon.kind !== 'melee' && myToken && aimAt && amap ? rangeFor(weapon, sheet, cellDistance(myToken, aimAt, Number(amap.metersPerCell) || 1)) : null;
   // Environmental modifier (SR5 p. 175, same computation as the server): range + light at the target + weather + smoke / flash-pak.
   const litRatio = useMemo(() => (amap && (amap.lighting || 'bright') !== 'bright' ? createVisionContext(amap).litRatio : null), [amap]);
   const env = weapon && weapon.kind !== 'melee' && myToken && aimAt && amap
-    ? environmentOf({
+    ? environmentFor({
       map: amap, from: myToken, to: aimAt, meters: range?.meters ?? cellDistance(myToken, aimAt, Number(amap.metersPerCell) || 1),
       rangeIndex: range ? RANGE_BANDS.findIndex((b) => b.id === range.id) : null, litRatio,
       blasts: activeBlasts((game.attacks?.blasts || []).filter((b) => b.mapId === amap.id), game.combat, Date.now()),
-      senses: (attackSenses as unknown as (actor: Actor | null, vision: unknown, w: Weapon) => unknown)(sheet, tokenVision(myToken, sheet), weapon),
+      senses: attackSenses(sheet, tokenVision(myToken, sheet), weapon),
     })
     : null;
   // Gas grenade: the toxin it holds (named in the grenade, else chosen here; CS by default).
   const gas = area && areaEffectOf(profile || weapon) === 'gas';
   const [toxinId, setToxinId] = useState(() => toxinFromText(profile || weapon) || 'cs');
-  const weaponActions = sheet && weapon ? actionsOf(sheet, weapon, { allowLocked: gm, fireIds: usesAmmo(weapon) ? fireOptions(weapon).map((o) => o.id) : [] }) : [];
+  const weaponActions = sheet && weapon ? actionsForWeapon(sheet, weapon, { allowLocked: gm, fireIds: usesAmmo(weapon) ? fireOptions(weapon).map((o) => o.id) : [] }) : [];
   const turn = sheet ? turnInfo(game, sheet.id) : null;
   const usedOnce = !!(action?.once && turn?.once?.includes(action.id));
   const pickAction = (id: string) => {
     setActionId(id);
-    const a = id ? (ACTION_BY_ID as Record<string, CombatAction>)[id] : null;
+    const a = id ? ACTION_BY_ID[id] : null;
     if (a?.fire) setFireMode(a.fire);
   };
   const [reloading, setReloading] = useState(false);
@@ -371,9 +354,9 @@ export function RollDialog({ game, actor: viewActor, preset: initialPreset = {},
       </div>}
       <div className="sh-rd-breakdown">
         {prev.parts.map(([l, v], i) => <span key={i} className={'sh-rd-part' + (v < 0 ? ' bad' : '')}><span>{l}</span><b>{i > 0 && v >= 0 ? '+' : ''}{v}</b></span>)}{soakArmor ? <span className="sh-rd-part"><span>{t('armure')}</span><b>+{soakArmor}</b></span> : null}
-        {pm.lines.filter((l) => l.state === 'applied').map((l) => <span className={'sh-rd-part mod' + (l.value < 0 ? ' bad' : '')} key={l.mod.id} title={effectText(l.mod)}>
+        {pm.lines.filter((l) => l.state === 'applied').map((l) => <span className={'sh-rd-part mod' + ((l.value ?? 0) < 0 ? ' bad' : '')} key={l.mod.id} title={effectText(l.mod)}>
           <span>{sourceName(l.mod.source)}</span>
-          <b>{l.value >= 0 ? '+' : ''}{l.value}</b>
+          <b>{(l.value ?? 0) >= 0 ? '+' : ''}{l.value}</b>
         </span>)}
         {extraParts.map(([l, v]) => <span className={'sh-rd-part mod' + (v < 0 ? ' bad' : '')} key={l}><span>{l}</span><b>{v >= 0 ? '+' : ''}{v}</b></span>)}{modifier ? <span className="sh-rd-part"><span>{t('mod.')}</span><b>{modifier > 0 ? '+' : ''}{modifier}</b></span> : null}{woundMod ? <span className="sh-rd-part bad"><span>{t('blessures')}</span><b>{woundMod}</b></span> : null}{explode ? <span className="sh-rd-part edge"><span>{t('Chance')}</span><b>+{edgeMax}</b></span> : null}
         <span className="sh-rd-total">{tn(total, '= {n} dé', '= {n} dés')}</span>
@@ -447,7 +430,7 @@ export function RollDialog({ game, actor: viewActor, preset: initialPreset = {},
       {lines.length > 0 && <div className="sh-rd-mods">
         <div className="field-label">{t('Modificateurs (équipement, qualités, pouvoirs, implants)')}</div>
         {lines.map((l) => {
-          const canDrop = (l.state === 'applied' || l.state === 'ignored') && (gm || l.value > 0);
+          const canDrop = (l.state === 'applied' || l.state === 'ignored') && (gm || (l.value ?? 0) > 0);
           return <div className="sh-rd-mod" key={l.kind + l.mod.id}>
             {canDrop
               ? <input type="checkbox" checked={l.state === 'applied'} onChange={(e) => setIgnore(l.mod.id, !e.target.checked)} title={t('Compter ce modificateur')} />
@@ -518,7 +501,7 @@ export function RollDialog({ game, actor: viewActor, preset: initialPreset = {},
 }
 
 /** « 3 balles · reste 9/15 » / « reste 1 » of a roll's fire record (roll.fire). */
-export function fireText(f: (FireInfo & { removed?: boolean }) | null | undefined): string {
+export function fireText(f: FireInfo | null | undefined): string {
   if (!f) return '';
   if (f.item) return f.removed ? t('dernier exemplaire utilisé') : t('reste {n}', { n: f.left });
   const base = t('{rounds} · reste {left}/{max}', { rounds: tn(f.rounds, '{n} balle', '{n} balles'), left: f.left, max: f.max });

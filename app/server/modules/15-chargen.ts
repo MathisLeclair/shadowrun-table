@@ -16,13 +16,13 @@ import combat, { sanitizeTemplate } from './30-combat.ts';
 import { formatFr } from '../lib/i18n.ts';
 import { fillActorRefs } from '../lib/bookrefs.ts';
 import type {
-  ActionContext, Actor, ActorId, ChargenDraft, ChargenState, DraftData, GameView, I18nMessage, I18nParams, MapId, ServerEvents,
+  ActionContext, Actor, ActorId, CatalogFile, CatalogItem, ChargenDraft, ChargenState, DraftData, GameView, I18nMessage, I18nParams, MapId, ServerEvents,
   ServerModule, SessionUser, TableState, Template, UserId,
 } from '../../shared/types.ts';
 
 /**
- * Catalog entries, validation results of shared/chargen.js and generated enemies of shared/npcgen.js (still JavaScript):
- * foreign JSON-like data read field by field.
+ * Validation results of shared/chargen.ts, generated enemies of shared/npcgen.ts and untrusted payloads:
+ * JSON-like data read field by field.
  */
 type Loose = Record<string, any>;
 
@@ -39,13 +39,14 @@ const MAX_DATA_BYTES = 400000;
 // ---------------------------------------------------------------------------
 // Catalog index (validation authority)
 // ---------------------------------------------------------------------------
-const BY_ID = new Map<string, { item: Loose; file: string }>(); // id -> { item, file }
-const BY_NAME = new Map<string, Loose>(); // 'file:Name' -> item
+// Catalog JSON files (data/catalog/*.json), read as the catalog item type shared/chargen.ts expects.
+const BY_ID = new Map<string, { item: CatalogItem; file: CatalogFile }>(); // id -> { item, file }
+const BY_NAME = new Map<string, CatalogItem>(); // 'file:Name' -> item
 function loadCatalogs() {
   BY_ID.clear();
   BY_NAME.clear();
   for (const file of FILES) {
-    let list: Loose[] = [];
+    let list: CatalogItem[] = [];
     try {
       list = JSON.parse(fs.readFileSync(path.join(CATALOG_DIR, `${file}.json`), 'utf8'));
     } catch {
@@ -54,7 +55,7 @@ function loadCatalogs() {
     }
     for (const item of list) {
       if (!item?.id) continue;
-      BY_ID.set(item.id, { item, file });
+      BY_ID.set(item.id, { item, file: file as CatalogFile });
       const k = `${file}:${item.name}`;
       if (!BY_NAME.has(k)) BY_NAME.set(k, item);
     }
@@ -143,7 +144,9 @@ function rollStartingNuyen(lifestyle: Loose | null | undefined): { dice: number;
 function createActor(ctx: ActionContext, data: DraftData, { type = 'pc', assignTo = null, source = '' }: { type?: 'pc' | 'npc'; assignTo?: UserId | null; source?: string } = {}) {
   const state = ctx.state;
   const owner = assignTo && state.users?.[assignTo] ? state.users[assignTo] : null;
-  const { actor, result } = buildActor(data, rulesCtx(state), { makeId: (p: string) => ctx.uid(p), type, player: owner?.name }) as unknown as { actor: Actor; result: Loose };
+  const built = buildActor(data, rulesCtx(state), { makeId: (p: string) => ctx.uid(p), type, player: owner?.name });
+  const actor = built.actor as Actor; // gets its id just below
+  const result = built.result;
   const id = ctx.uid(type === 'pc' ? 'pc' : 'npc');
   actor.id = id;
   const p = result.data.priorities;
@@ -159,7 +162,7 @@ function createActor(ctx: ActionContext, data: DraftData, { type = 'pc', assignT
     roll = rollStartingNuyen(result.lifestyle);
     if (roll) {
       actor.nuyen += roll.total;
-      actor.history.push(historyEntry(ctx, tk('Nuyen de départ ({lifestyle}) : {dice}D6 [{rolls}] × {mult}'), { lifestyle: result.lifestyle.name, dice: roll.dice, rolls: roll.rolls.join(' '), mult: roll.multiplier }, { nuyen: roll.total }));
+      actor.history.push(historyEntry(ctx, tk('Nuyen de départ ({lifestyle}) : {dice}D6 [{rolls}] × {mult}'), { lifestyle: result.lifestyle!.name, dice: roll.dice, rolls: roll.rolls.join(' '), mult: roll.multiplier }, { nuyen: roll.total }));
     }
   }
   normalizeActor(actor, (prefix: string) => ctx.uid(prefix));

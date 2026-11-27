@@ -3,13 +3,13 @@ import { Field, Select, TextInput, NumberInput, Badge, Panel, IconButton } from 
 import { SKILLS } from '/shared/sr5.ts';
 import { t, tk, getLang, skillLabel, skillGroupLabel, itemName } from '../../lib/i18n.ts';
 import { powerInfo, SPELL_CATEGORIES } from '/shared/advancement.ts';
-import { MAGIC_TYPES, ASPECTS, TRADITIONS, COMPLEX_FORMS, magicOptions, magicOptionParts, aspectGroup, rowId } from '/shared/chargen.ts';
+import { MAGIC_TYPES, ASPECTS, TRADITIONS, COMPLEX_FORMS, magicOptions, magicOptionParts, aspectGroup, rowId, type MagicOption } from '/shared/chargen.ts';
 import { Budget, StepIssues, i18n } from './common.tsx';
 import Picker from './Picker.tsx';
-import { ItemRef, BookRef } from '../combat/legacy-components.ts';
 import { complexFormRef } from '/shared/bookrefs.ts';
 import type { DraftData, MagicType } from '../../../shared/types.ts';
 import type { ChargenResult, DraftUpdate, LooseCatalogItem, RulesCtx, StepProps } from './types.ts';
+import { ItemRef, BookRef } from '../books/BookRef.tsx';
 
 /** Spell categories: French label from the catalog table, official English category (the key) in English. */
 const spellCats = () => (Object.entries(SPELL_CATEGORIES) as Array<[string, string]>).map(([value, label]) => ({ value, label: getLang() === 'fr' ? label : value }));
@@ -25,8 +25,6 @@ const TYPE_TEXT: Record<MagicType, string> = {
   technomancer: tk('Résonance : la Matrice sans appareil, formes complexes et sprites.'),
 };
 
-/** magicOptions() entry. */
-type MagicOption = { type: MagicType; [k: string]: unknown };
 /** Free skills of the magic priority row: { n, rating, cat }. */
 type FreeSkillCfg = { n: number; rating: number; cat: string };
 
@@ -115,11 +113,8 @@ export function StepMagic({ data, update, result, issues, rc }: StepProps) {
   );
 }
 
-/** sr5.js SKILLS entry. */
-type SkillDef = { id: string; cat: string; [k: string]: unknown };
-
 function FreeSkills({ data, update, cfg }: { data: DraftData; update: DraftUpdate; cfg: FreeSkillCfg }) {
-  const allowed = (SKILLS as SkillDef[]).filter((s) => (cfg.cat === 'active' ? s.cat !== 'magic' && s.cat !== 'resonance' : s.cat === cfg.cat));
+  const allowed = SKILLS.filter((s) => (cfg.cat === 'active' ? s.cat !== 'magic' && s.cat !== 'resonance' : s.cat === cfg.cat));
   const slots = Array.from({ length: cfg.n }, (_, i) => data.magic.freeSkills[i] || '');
   const set = (i: number, v: string) =>
     update((d) => {

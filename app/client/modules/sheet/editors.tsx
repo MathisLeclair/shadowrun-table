@@ -8,9 +8,9 @@ import { t, tk, getLang, itemName, skillLabel, fmtNuyen, compare } from '../../l
 import { Overlay, tRich } from './common.tsx';
 import { catalogToItem, LIST_LABELS, KNOWLEDGE_TYPES, SUB_LISTS, SUB_LABELS, LIFESTYLE_BASES } from './sheet-data.ts';
 import { SubEditor } from './sublists.tsx';
-import { ItemRef } from './ext.ts';
 import type { Actor, CatalogItem } from '../../../shared/types.ts';
 import type { AnyItem, CatalogConversion, FieldDef } from './types.ts';
+import { ItemRef } from '../books/BookRef.tsx';
 
 // Options are built at render time (labels in the UI language).
 const combatSkillOptions = () => SKILLS.filter((s) => s.cat === 'combat' || s.id === 'gunnery').map((s) => ({ value: s.id, label: skillLabel(s.id) }));

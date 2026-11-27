@@ -5,7 +5,7 @@ import path from 'node:path';
 import { rollInitiative, attr, ATTRS } from '../../shared/sr5.ts';
 // deriveFull = derive() + modifiers of gear / qualities / implants (monitors, pain tolerance, matrix initiative dice — shared/modifiers.js).
 import { deriveFull as derive, actorModifiers } from '../lib/modifiers.ts';
-import { icInitiative, agentInitiative, matrixInitiative as matrixInitiativeJs } from '../../shared/matrix.ts';
+import { icInitiative, agentInitiative, matrixInitiative } from '../../shared/matrix.ts';
 import { fillActorRefs } from '../lib/bookrefs.ts';
 import { uid, clamp, deepClone } from '../../shared/util.ts';
 import { pruneExpired } from '../../shared/combat.ts';
@@ -20,8 +20,6 @@ import type {
 type Loose = Record<string, any>;
 /** Initiative of an entry: base + dice. */
 type InitValue = { base: number; dice: number };
-// shared/matrix.js is still JavaScript (its `mods = null` default is inferred as the only type): typed at the boundary.
-const matrixInitiative = matrixInitiativeJs as (actor: Actor, persona: unknown, mode: unknown, mods: unknown) => InitValue;
 
 // ---------------------------------------------------------------------------
 // Constants

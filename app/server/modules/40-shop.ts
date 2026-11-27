@@ -39,8 +39,6 @@ interface IndexEntry {
   item: Cat;
   file: CatalogFile;
 }
-/** Order line, with the fields of sell / karma lines that OrderLine (shared/types.ts) lacks. */
-type Line = OrderLine & { list?: string; itemId?: string; techniques?: string[] };
 /** One element of a list param (order lines, notes). */
 type ParamItem = string | number | boolean | null | BiName | I18nMessage;
 /** A note returned to the buyer: French key + params. */
@@ -208,7 +206,7 @@ function pushOrder(shop: ShopState, order: ShopOrder): void {
 }
 
 /** One order line as a translatable value: « Name (ind. 3) [Alphaware] ×2 → Target ». */
-function lineText(l: Omit<Partial<Line>, 'target'> & { target?: { name?: string } }): string | I18nMessage {
+function lineText(l: Omit<Partial<OrderLine>, 'target'> & { target?: { name?: string } }): string | I18nMessage {
   let v: string | I18nMessage = l.name as string;
   if (l.rating) v = { t: tk('{name} (ind. {rating})'), params: { name: v, rating: l.rating } };
   if (l.grade && l.grade !== 'standard') v = { t: '{name} [{grade}]', params: { name: v, grade: GRADES[l.grade] ? { t: GRADES[l.grade].label } : l.grade } };
@@ -217,7 +215,7 @@ function lineText(l: Omit<Partial<Line>, 'target'> & { target?: { name?: string 
   return v;
 }
 /** Order lines as a translatable list param (rendered « a, b, c »). */
-const summary = (items: Line[]): ParamItem[] => items.map(lineText);
+const summary = (items: OrderLine[]): ParamItem[] => items.map(lineText);
 /** Notes ({ key, params }) as a translatable list param. */
 const notesParam = (notes: Note[]): ParamItem[] => notes.map((n) => ({ t: n.key, ...(n.params ? { params: n.params } : {}) }));
 
@@ -314,7 +312,7 @@ function priceUpgrade(ctx: ActionContext, actor: ShopActor, file: string, item: 
 // Purchase lines
 // ---------------------------------------------------------------------------
 /** Normalize one cart line into a priced, validated line. sim = simulated upgrade targets of the order. */
-function resolveLine(ctx: ActionContext, raw: CartLine, actor: ShopActor, sim: Sim = new Map()): Line {
+function resolveLine(ctx: ActionContext, raw: CartLine, actor: ShopActor, sim: Sim = new Map()): OrderLine {
   const shop = ctx.state.shop;
   const actorId = actor.id;
   const ref = str(raw?.ref, 120);
@@ -349,7 +347,7 @@ function resolveLine(ctx: ActionContext, raw: CartLine, actor: ShopActor, sim: S
   const { item, file } = entry;
   if (isUpgradeFile(file)) {
     const p = priceUpgrade(ctx, actor, file, item, raw || {}, sim);
-    const line: Line & Loose = {
+    const line: OrderLine & Loose = {
       ref, catalogId: item.id, file, name: itemName(item), category: item.categoryFr || item.category, qty: 1, rating: p.q.rating,
       unitCost: p.unitCost, availValue: p.q.availValue, legality: p.q.legality, target: p.target,
     };
@@ -360,7 +358,7 @@ function resolveLine(ctx: ActionContext, raw: CartLine, actor: ShopActor, sim: S
   const ware = file === 'cyberware' || file === 'bioware';
   if (ware && raw.grade && !allowedGrades(item).includes(raw.grade)) ctx.fail('Grade « {grade} » indisponible pour {item}', { grade: GRADES[raw.grade as keyof typeof GRADES] ? { t: GRADES[raw.grade as keyof typeof GRADES].label } : raw.grade, item: itemName(item) });
   const q = quote(item, { rating: raw.rating, grade: raw.grade, markup: file === 'lifestyles' ? 0 : shop.markup, price: raw.price });
-  const line: Line = {
+  const line: OrderLine = {
     ref, catalogId: item.id, file, name: itemName(item), category: item.categoryFr || item.category, qty: file === 'lifestyles' ? Math.min(qty, 24) : qty,
     rating: q.rating, grade: ware ? q.grade || 'standard' : null,
     unitCost: q.unitCost, availValue: q.availValue, legality: q.legality, essence: ware ? q.essence ?? 0 : undefined,
@@ -375,7 +373,7 @@ function resolveLine(ctx: ActionContext, raw: CartLine, actor: ShopActor, sim: S
 }
 
 /** Resolve all lines of a cart (upgrade lines are checked together against the same simulated targets). */
-function resolveLines(ctx: ActionContext, actor: ShopActor, raws: CartLine[]): Line[] {
+function resolveLines(ctx: ActionContext, actor: ShopActor, raws: CartLine[]): OrderLine[] {
   const sim: Sim = new Map();
   return raws.map((raw) => {
     const l = resolveLine(ctx, raw || {}, actor, sim);
@@ -384,7 +382,7 @@ function resolveLines(ctx: ActionContext, actor: ShopActor, raws: CartLine[]): L
   });
 }
 
-function lineFlags(shop: ShopState, l: Line): string[] {
+function lineFlags(shop: ShopState, l: OrderLine): string[] {
   const f: string[] = [];
   if (l.legality === 'R') f.push('restricted');
   if (l.legality === 'F') f.push('forbidden');
@@ -395,7 +393,7 @@ function lineFlags(shop: ShopState, l: Line): string[] {
 }
 
 /** Player-side shop rules (the GM bypasses them). */
-function checkRules(ctx: ActionContext, lines: Line[]): void {
+function checkRules(ctx: ActionContext, lines: OrderLine[]): void {
   const shop = ctx.state.shop;
   if (!shop.open) ctx.fail('Cabana n’est pas joignable pour l’instant');
   for (const l of lines) {
@@ -407,7 +405,7 @@ function checkRules(ctx: ActionContext, lines: Line[]): void {
   }
 }
 
-function checkStock(ctx: ActionContext, lines: Line[]): void {
+function checkStock(ctx: ActionContext, lines: OrderLine[]): void {
   const need: Record<string, number> = {};
   for (const l of lines) if (l.specialId) need[l.specialId] = (need[l.specialId] || 0) + l.qty;
   for (const [id, n] of Object.entries(need)) {
@@ -440,7 +438,7 @@ function liveTest(state: TableState, test: AvailTest) {
  * Player purchase: the successful tests the lines need, written on the lines (`availTest`). Mode « required » refuses a line
  * without one; « helper » only records the tests that exist. Returns the ids of the tests to mark as used.
  */
-function claimAvailTests(ctx: ActionContext, actor: ShopActor, lines: Line[]): string[] {
+function claimAvailTests(ctx: ActionContext, actor: ShopActor, lines: OrderLine[]): string[] {
   const shop = ctx.state.shop;
   const need = lines.map((l) => ({ ref: l.ref, targetId: l.target?.itemId || '', availValue: l.availValue, needsTest: needsAvailTest(shop, { file: l.file, special: !!l.specialId, availValue: l.availValue }) }));
   if (!need.some((n) => n.needsTest)) return [];
@@ -470,7 +468,7 @@ function claimAvailTests(ctx: ActionContext, actor: ShopActor, lines: Line[]): s
 const contactInfo = contactSheet; // shared/contacts.js (also used by the sheet and 'actor/contactRoll')
 
 /** The contact's Availability roll, logged like a dice roll (no runner modifiers, no Edge: it is not the runner's test). */
-function contactRoll(ctx: ActionContext, actor: ShopActor, contact: Contact, line: Line, avail: Loose, modifier: unknown, overpay: number) {
+function contactRoll(ctx: ActionContext, actor: ShopActor, contact: Contact, line: OrderLine, avail: Loose, modifier: unknown, overpay: number) {
   const c: ContactSheet = contactInfo(ctx.state, contact);
   if (!c.known) ctx.fail('{contact} n’a pas de fiche (Charisme, Négociation) : le MJ peut créer un PNJ de ce nom dans le Bestiaire', { contact: contact.name });
   const mod = clampInt(modifier, -20, 20, 0);
@@ -503,9 +501,9 @@ function releaseTests(shop: ShopState, orderId: string): void {
   }
 }
 
-const essenceCost = (lines: Line[]): number => round3(lines.reduce((s, l) => s + (l.essence ? l.essence * l.qty : 0), 0));
+const essenceCost = (lines: OrderLine[]): number => round3(lines.reduce((s, l) => s + (l.essence ? l.essence * l.qty : 0), 0));
 
-function checkEssence(ctx: ActionContext, actor: ShopActor, lines: Line[]): void {
+function checkEssence(ctx: ActionContext, actor: ShopActor, lines: OrderLine[]): void {
   const cost = essenceCost(lines);
   if (cost <= 0) return;
   const ess = Number(actor.attributes?.ESS ?? 6);
@@ -542,7 +540,7 @@ function accessoryItem(ctx: Pick<ActionContext, 'uid'>, accItem: Cat, extra: Loo
 }
 
 /** Install an upgrade line on its (real) target. Re-checks the fit (a pending order may be approved later). */
-function installUpgrade(ctx: ActionContext, actor: ShopActor, line: Line, { paid }: { paid?: number }): Note[] {
+function installUpgrade(ctx: ActionContext, actor: ShopActor, line: OrderLine, { paid }: { paid?: number }): Note[] {
   const entry = INDEX.get(line.catalogId as string);
   if (!entry || !isUpgradeFile(entry.file)) return ctx.fail('Article inconnu du catalogue');
   const { item, file } = entry;
@@ -590,7 +588,7 @@ function installUpgrade(ctx: ActionContext, actor: ShopActor, line: Line, { paid
 }
 
 /** Add one priced line to the actor. paid = unit price actually paid (undefined for GM gifts). Returns notes [{ key, params }]. */
-function addLine(ctx: ActionContext, actor: ShopActor, line: Line, { paid }: { paid?: number }): Note[] {
+function addLine(ctx: ActionContext, actor: ShopActor, line: OrderLine, { paid }: { paid?: number }): Note[] {
   const entry = line.catalogId ? INDEX.get(line.catalogId) : null;
   const item: Loose = entry?.item || { stats: line.stats || {} };
   const st: Loose = line.stats || item.stats || {};
@@ -656,7 +654,7 @@ function addLine(ctx: ActionContext, actor: ShopActor, line: Line, { paid }: { p
         }
       }
       // Attribute / initiative dice / initiative score bonus (catalog effects, else stats.bonus), recorded on aug.bonus.
-      bakeItemBonus(actor, 'augmentations', aug, st.bonus);
+      bakeItemBonus(actor as Actor, 'augmentations', aug, st.bonus);
       if (st.weapon) actor.weapons.push(weaponFromStats(ctx, line.name, line.category, st.weapon, { augId: aug.id, catalogId: line.catalogId || undefined }));
       actor.augmentations.push(aug);
     }
@@ -712,8 +710,8 @@ function addLine(ctx: ActionContext, actor: ShopActor, line: Line, { paid }: { p
 /** Apply a buy/give order to its actor (nuyen, items, stock). Returns notes [{ key, params }]. */
 function applyOrder(ctx: ActionContext, actor: ShopActor, order: ShopOrder, { free = false }: { free?: boolean } = {}): Note[] {
   const notes: Note[] = [];
-  for (const line of order.items as Line[]) {
-    notes.push(...addLine(ctx, actor, line, { paid: free ? undefined : line.unitCost }));
+  for (const line of order.items) {
+    notes.push(...addLine(ctx, actor, line, { paid: free ? undefined : (line.unitCost ?? undefined) })); // buy / give lines are always priced
     if (line.availTest?.delayHours) {
       const p = { item: line.name, delay: durationText(line.availTest.delayHours) as I18nMessage };
       if (line.surcharge) notes.push({ key: tk('{item} : trouvé en {delay} (surenchère {cost})'), params: { ...p, cost: nuyen(line.surcharge * line.qty) } });
@@ -790,7 +788,7 @@ function findSub(ctx: ActionContext, it: Loose, list: string, subId: unknown): L
 }
 
 function applySell(ctx: ActionContext, actor: ShopActor, order: ShopOrder): void {
-  const line = order.items[0] as Line;
+  const line = order.items[0];
   const it = findOwned(ctx, actor, line.list, line.itemId);
   const list = line.list as string;
   if (line.subId) {
@@ -809,7 +807,7 @@ function applySell(ctx: ActionContext, actor: ShopActor, order: ShopOrder): void
       actor[list] = actor[list].filter((x: Loose) => x.id !== it.id);
     }
     if (list === 'augmentations') {
-      removeBonus(actor, it.bonus);
+      removeBonus(actor as Actor, it.bonus);
       if (Array.isArray(actor.weapons)) actor.weapons = actor.weapons.filter((w: Loose) => w.augId !== it.id);
     }
     if (list === 'gear' && actor.matrix?.gearId === it.id && !actor.gear.some((g: Loose) => g.id === it.id)) {
@@ -1151,7 +1149,7 @@ const mod: ServerModule = {
         checkStock(ctx, lines);
         checkEssence(ctx, actor, lines);
         const testIds = ctx.isGM ? [] : claimAvailTests(ctx, actor, lines);
-        const total = lines.reduce((s, l) => s + (l.unitCost + (l.surcharge || 0)) * l.qty, 0);
+        const total = lines.reduce((s, l) => s + ((l.unitCost ?? 0) + (l.surcharge || 0)) * l.qty, 0);
         checkFunds(ctx, actor, total);
         const flags = [...new Set(lines.flatMap((l) => lineFlags(shop, l)))];
         // Lifestyle options that lower the rent (negative qualities: Thrifty, Dangerous Area…) always wait for the GM.
@@ -1196,7 +1194,7 @@ const mod: ServerModule = {
         const baseHours = availBaseHours(line.unitCost);
         const testId = ctx.uid('av');
         const overpay = clampOverpay(rawOverpay);
-        const avail = { testId, value: line.availValue, legality: line.legality, dice: opp.dice, hits: opp.hits, baseHours, tries, ...(overpay ? { overpay } : {}) };
+        const avail = { testId, value: line.availValue!, legality: line.legality!, dice: opp.dice, hits: opp.hits, baseHours, tries, ...(overpay ? { overpay } : {}) };
         let r: { hits: number; glitch?: boolean; critGlitch?: boolean; logId: string };
         let contact: Contact | null | undefined = null;
         if (contactId) {
@@ -1268,12 +1266,12 @@ const mod: ServerModule = {
           value = itemValue(list as string, it);
         }
         const key = subId || itemId;
-        if (ctx.state.shop.orders.some((o) => o.status === 'pending' && o.kind === 'sell' && (o.items[0]?.subId || (o.items[0] as Line | undefined)?.itemId) === key)) ctx.fail('Une revente de cet objet attend déjà le MJ');
+        if (ctx.state.shop.orders.some((o) => o.status === 'pending' && o.kind === 'sell' && (o.items[0]?.subId || o.items[0]?.itemId) === key)) ctx.fail('Une revente de cet objet attend déjà le MJ');
         let total = value === null ? null : Math.round(value * n * (Number(shop.sellRate) || 0) / 100);
         if (ctx.isGM && price !== undefined && price !== null && price !== '') total = Math.max(0, int(price));
         if (ctx.isGM && total === null) ctx.fail('Prix inconnu : indique un montant de revente');
         // unitCost null = unknown value (the GM sets the price).
-        const line = { list, itemId, name, qty: n, rating: it.rating ?? null, unitCost: (value === null ? null : Math.round(value * (Number(shop.sellRate) || 0) / 100)) as number } as Line;
+        const line = { list, itemId, name, qty: n, rating: it.rating ?? null, unitCost: value === null ? null : Math.round(value * (Number(shop.sellRate) || 0) / 100) } as OrderLine;
         if (subId) Object.assign(line, { subId, target: { list, itemId, name: it.name } });
         const order: ShopOrder = {
           id: ctx.uid('ord'), ts: ctx.now, actorId: actorId as ActorId, userId: ctx.user.id, by: ctx.isGM ? 'MJ' : ctx.user.name, kind: 'sell',
@@ -1394,7 +1392,7 @@ const mod: ServerModule = {
         if ((Number(actor.karma) || 0) < plan.karma) ctx.fail('Karma insuffisant : {cost} requis, {have} disponible(s)', { cost: plan.karma, have: Number(actor.karma) || 0 });
         if (ctx.state.shop.orders.some((o) => o.status === 'pending' && o.kind === 'karma' && o.actorId === actorId && o.items[0]?.ref === plan.style.id)) ctx.fail('Une demande pour cet art martial attend déjà le MJ');
         const names = plan.techniques.map((t) => t.nameFr || t.name);
-        const line: Line = { ref: plan.style.id, file: 'martialarts', name: itemName(plan.style), qty: 1, unitCost: 0, karma: plan.karma, techniqueIds: plan.techniques.map((t) => t.id), techniques: names };
+        const line: OrderLine = { ref: plan.style.id, file: 'martialarts', name: itemName(plan.style), qty: 1, unitCost: 0, karma: plan.karma, techniqueIds: plan.techniques.map((t) => t.id), techniques: names };
         const order: ShopOrder = { id: ctx.uid('ord'), ts: ctx.now, actorId: actorId as ActorId, userId: ctx.user.id, by: ctx.user.name, kind: 'karma', items: [line], total: 0, karma: plan.karma, status: 'pending', flags: [] };
         pushOrder(ctx.state.shop, order);
         shopLog(ctx, actorId as ActorId, tk('{actor} demande à apprendre {style} ({techniques}) — {karma} karma (en attente du MJ)'), { actor: actor.name, style: line.name, techniques: names.join(', ') || '—', karma: plan.karma });

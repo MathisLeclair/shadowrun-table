@@ -1,4 +1,4 @@
-// Local types of the combat folder (gaps of shared/types.ts are listed in the migration report).
+// Local types of the combat folder.
 import type { Actor } from '../../../shared/types.ts';
 
 /**

@@ -13,17 +13,14 @@ import { ListEditor, CatalogPicker } from './editors.tsx';
 import { SubChips, armorCapacityText, vehicleSlotsText, lifestyleBaseLabel, lifestyleBreakdown } from './sublists.tsx';
 import { armorMods } from './sheet-data.ts';
 import { openMatrix, ProgramRef } from '../matrix/common.tsx';
-import { ItemRef, RuleRef } from './ext.ts';
 import { ruleRef, skillRef } from '/shared/bookrefs.ts';
 import { SinCards } from './sins.tsx';
 import { ContactCards } from './contacts.tsx';
 import { HomeButton } from './home.tsx';
 import type { Actor, ActorMatrix, ComplexForm, GameView, Quality } from '../../../shared/types.ts';
 import type { AnyItem, SheetCtx, SheetModifier } from './types.ts';
+import { ItemRef, RuleRef } from '../books/BookRef.tsx';
 
-/** Complex forms may carry a target (Chummer import): missing from shared/types.ts ComplexForm. */
-type SheetComplexForm = ComplexForm & { target?: string };
-const collectMods = collectModifiers as unknown as (actor: Partial<Actor>, lookup: SheetCtx['lookup']) => SheetModifier[];
 
 // Roll labels are stored in French in the log; rollLabel() (common.js) translates them for each viewer.
 const drainRollLabel = (k: string): string => `Résistance au drain (VOL + ${k})`; // i18n-ignore
@@ -174,7 +171,7 @@ export function MatrixTab({ s }: { s: SheetCtx }) {
           </Button>
         </div>
         <div className="sh-asdf">
-          {[[tk('Attaque'), m.attack], [tk('Corruption'), m.sleaze], [tk('Traitement'), m.dataProcessing], [tk('Firewall'), m.firewall]].map(([l, v]) => <div className="sh-asdf-cell" key={l}><b>{v || 0}</b><span>{t(l)}</span></div>)}
+          {([[tk('Attaque'), m.attack], [tk('Corruption'), m.sleaze], [tk('Traitement'), m.dataProcessing], [tk('Firewall'), m.firewall]] as const).map(([l, v]) => <div className="sh-asdf-cell" key={l}><b>{v || 0}</b><span>{t(l)}</span></div>)}
         </div>
       </div>}
     <div className="sh-derived">
@@ -209,7 +206,7 @@ export function MatrixTab({ s }: { s: SheetCtx }) {
 
 /** Complex forms of a technomancer (Chummer import, creator, training): name, target, duration, Fading, 📖 page. */
 function ComplexForms({ actor }: { actor: Actor }) {
-  const forms = (actor.complexForms || []) as SheetComplexForm[];
+  const forms = actor.complexForms || [];
   if (!forms.length) return null;
   return <>
     <h4 className="section-title">{t('Formes complexes')}{' '}<RuleRef rule="complexForms" /></h4>
@@ -279,7 +276,7 @@ export function GearTab({ s }: { s: SheetCtx }) {
               {' '}
               <ItemRef item={a} />
               <PlaceBadge actor={actor} it={a} />
-              {cap ? <>{' '}<span className={'badge' + (am.used > am.total ? ' badge-red' : '')}>{cap}</span></> : null}{(a.mods || []).length > 0 && <div><SubChips sub="mods" items={a.mods} /></div>}{a.equipped ? <ItemEffects mods={s.mods} list="armor" itemId={a.id} /> : <ItemEffects mods={collectMods({ armor: [{ ...a, equipped: true }] }, s.lookup)} list="armor" itemId={a.id} />}{a.notes ? <div className="faint small">{a.notes}</div> : null}
+              {cap ? <>{' '}<span className={'badge' + (am.used > am.total ? ' badge-red' : '')}>{cap}</span></> : null}{(a.mods || []).length > 0 && <div><SubChips sub="mods" items={a.mods} /></div>}{a.equipped ? <ItemEffects mods={s.mods} list="armor" itemId={a.id} /> : <ItemEffects mods={collectModifiers({ armor: [{ ...a, equipped: true }] }, s.lookup)} list="armor" itemId={a.id} />}{a.notes ? <div className="faint small">{a.notes}</div> : null}
             </div>
             <span className="mono sh-big" title={am.bonus ? t('{base} + {bonus} (modifications) = {total}, compté dans l’armure totale', { base: a.rating, bonus: am.bonus, total: (Number(a.rating) || 0) + am.bonus }) : ''}>
               {a.stack ? '+' : ''}{a.rating}{am.bonus ? <small className="cyan"> +{am.bonus}</small> : null}
@@ -325,7 +322,7 @@ export function GearTab({ s }: { s: SheetCtx }) {
               {' '}
               <span className="faint small">{categoryLabel(g)}</span>
               <PlaceBadge actor={actor} it={g} />
-              {gearHasEffects(g, s.lookup) ? <ItemEffects mods={g.active ? s.mods : collectMods({ gear: [{ ...g, active: true }] }, s.lookup)} list="gear" itemId={g.id} /> : null}
+              {gearHasEffects(g, s.lookup) ? <ItemEffects mods={g.active ? s.mods : collectModifiers({ gear: [{ ...g, active: true }] }, s.lookup)} list="gear" itemId={g.id} /> : null}
               {own
                 ? <TextInput className="sh-inline-note" value={g.notes || ''} placeholder={t('Notes…')} onChange={(v) => upItem('gear', g.id, { notes: v })} />
                 : g.notes
@@ -344,7 +341,7 @@ export function GearTab({ s }: { s: SheetCtx }) {
         (v) => <div className="sh-card" key={v.id}>
           <span><b title={itemTitle(v)}>{itemLabel(v)}</b>{' '}<ItemRef item={v} /></span>
           <div className="sh-vstats">
-            {[[tk('Maniab.'), v.handling], [tk('Vitesse'), v.speed], [tk('Accél.'), v.accel], [tk('Struct.'), v.body], [tk('Blind.'), v.armor], [tk('Autopilote'), v.pilot], [tk('Senseurs'), v.sensor], [tk('Places'), v.seats]].map(([l, x]) => <span key={l}><span className="faint">{t(l)}</span>{' '}<b>{x ?? '—'}</b></span>)}
+            {([[tk('Maniab.'), v.handling], [tk('Vitesse'), v.speed], [tk('Accél.'), v.accel], [tk('Struct.'), v.body], [tk('Blind.'), v.armor], [tk('Autopilote'), v.pilot], [tk('Senseurs'), v.sensor], [tk('Places'), v.seats]] as const).map(([l, x]) => <span key={l}><span className="faint">{t(l)}</span>{' '}<b>{x ?? '—'}</b></span>)}
           </div>
           {(v.mods || []).length > 0 && <><div className="faint small">{vehicleSlotsText(v)}</div><SubChips sub="mods" items={v.mods} /></>}{v.notes && <div className="faint small">{v.notes}</div>}
         </div>

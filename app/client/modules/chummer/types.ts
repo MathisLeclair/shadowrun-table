@@ -22,10 +22,7 @@ export interface ChummerPreview {
   fileName: string;
 }
 
-/** `state.chummer.pending[]` with the fields shared/types.ts does not list yet. */
-export interface ChummerRequestView extends Omit<ChummerRequest, 'diff' | 'summaryI18n'> {
+/** `state.chummer.pending[]` with its merge diff typed. */
+export interface ChummerRequestView extends Omit<ChummerRequest, 'diff'> {
   diff: ChummerDiff;
-  summaryI18n?: I18nMessage[];
-  resolvedAt?: number;
-  gmNote?: string;
 }

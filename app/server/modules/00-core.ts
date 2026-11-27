@@ -1,9 +1,6 @@
 // Core actions: chat, whispers, settings, player management, language, pings.
-import { isLang as isLangJs } from '../lib/i18n.ts';
+import { isLang } from '../lib/i18n.ts';
 import type { ActionContext, InitOptions, Lang, ServerModule, TableConfig, TableState, UserId, ActorId, MapId } from '../../shared/types.ts';
-
-// lib/i18n.js is still JavaScript: give its predicate a type guard.
-const isLang = (l: unknown): l is Lang => isLangJs(l);
 
 type ChatSendPayload = {
   text?: unknown;

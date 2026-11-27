@@ -7,26 +7,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT } from '../store.ts';
-import * as fmt from '../../client/i18n/format.ts';
+import { LANGS, DEFAULT_LANG, isLang, formatFr, cleanParams, lookup, interpolate, pluralKey, type PluralForms, type Translator } from '../../client/i18n/format.ts';
 import type { I18nParams, Lang, LogEntry, NewLogEntry } from '../../shared/types.ts';
 
-// client/i18n/format.js is plain JS (shared with the browser): typed here for the server.
-export const LANGS = fmt.LANGS as Lang[];
-export const DEFAULT_LANG = fmt.DEFAULT_LANG as Lang;
-export const isLang = fmt.isLang as (l: unknown) => l is Lang;
-export const formatFr = fmt.formatFr as (key: string, params?: I18nParams | null) => string;
-export const cleanParams = fmt.cleanParams as (params: unknown) => I18nParams | undefined;
-const lookup = fmt.lookup as (dict: Record<string, string>, lang: string, key: string) => { text: string; missing: boolean };
-type Translator = (key: string, params?: I18nParams | null) => string;
-const interpolate = fmt.interpolate as (str: string, params: I18nParams | null | undefined, tr?: Translator, lang?: string) => string;
-const pluralKey = fmt.pluralKey as (lang: string, n: number, forms: PluralForms) => string;
-
-/** Plural forms of a French key: { zero?, one, other }. */
-export interface PluralForms {
-  zero?: string;
-  one: string;
-  other: string;
-}
+export { LANGS, DEFAULT_LANG, isLang, formatFr, cleanParams };
+export type { PluralForms };
 
 export const I18N_DIR = path.join(ROOT, 'client', 'i18n');
 const cache = new Map<string, { dict: Record<string, string>; sig: string; checkedAt: number }>(); // lang -> { dict, sig, checkedAt }

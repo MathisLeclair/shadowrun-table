@@ -1,17 +1,9 @@
-// Local types of the chargen folder (gaps of shared/types.ts are listed in the migration report).
-import type { compute } from '/shared/chargen.ts';
-import type { CatalogItem, DraftData, GameView } from '../../../shared/types.ts';
+// Local types of the chargen folder.
+import type { ChargenCtx, ChargenIssue, ChargenResult } from '/shared/chargen.ts';
+import type { CatalogFile, CatalogItem, DraftData, GameView } from '../../../shared/types.ts';
+export type { ChargenIssue, ChargenResult };
 
-/** shared/chargen.js compute() result (inferred from the JS module). */
-export type ChargenResult = ReturnType<typeof compute>;
 
-/** A validation issue of compute(): { step, key, params, text… }. */
-export interface ChargenIssue {
-  step: string;
-  key?: string;
-  text?: string;
-  params?: Record<string, unknown>;
-}
 /** Errors / warnings of one wizard step (issuesByStep). */
 export interface StepIssueList {
   errors: ChargenIssue[];
@@ -25,7 +17,7 @@ export type LooseCatalogItem = CatalogItem<Record<string, any>>;
 /** Shop catalog of shop/common.js useShopCatalog(): every sold item with its file. */
 export interface ShopEntry {
   ref: string;
-  file: string;
+  file: CatalogFile;
   item: LooseCatalogItem;
   section: string;
   name: string;
@@ -40,13 +32,13 @@ export interface ShopCatalog {
 
 /** Catalog context for compute() / buildActor() (see common.tsx useRulesCtx). */
 export interface RulesCtx {
-  ctx: { rules: unknown; settings: object; lookup?: (id: string) => { item: LooseCatalogItem; file: string } | null };
+  ctx: ChargenCtx;
   ready: boolean;
   shop: ShopCatalog | null;
   qualities: LooseCatalogItem[];
   spells: LooseCatalogItem[];
   powers: LooseCatalogItem[];
-  lookup: (id: string) => { item: LooseCatalogItem; file: string } | null;
+  lookup: (id: string) => { item: LooseCatalogItem; file: CatalogFile } | null;
 }
 
 /** Draft mutation: update(d => { d.x = 1 }) on a copy of the draft. */

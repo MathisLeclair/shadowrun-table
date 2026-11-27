@@ -67,6 +67,8 @@ export interface LibOriginRef {
   file?: string;
   hash?: string;
   version?: number;
+  /** Edited table map: the table it comes from. */
+  tableId?: string;
 }
 /** Who made a version: { kind: 'git'|'seed'|'admin'|'gm'|'migration', ... }. */
 export interface LibBy {

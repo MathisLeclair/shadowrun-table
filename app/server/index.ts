@@ -45,22 +45,12 @@ interface RegisteredAction extends ActionDef {
 const modules: CoreModule[] = [];
 const actions: Record<string, RegisteredAction> = {}; // type -> { role, handler, module }
 
-/** TRANSITIONAL (TypeScript migration): a converted module leaves a one-line `export * from './x.ts'` stub at its old .js path. */
-const STUB_RE = /^\s*export \* from '\.\/[^']+\.ts';\s*(?:export \{ default \} from '\.\/[^']+\.ts';\s*)?$/;
-function isStub(file: string): boolean {
-  try {
-    return STUB_RE.test(fs.readFileSync(file, 'utf8'));
-  } catch {
-    return false;
-  }
-}
-
-/** Module files in load order: x.ts, else x.js while the migration lasts (never a stub, never both). */
+/** Module files (server/modules/*.ts) in load order: by file name (NN-name.ts). */
 function moduleFiles(dir: string): string[] {
-  const all = fs.readdirSync(dir);
-  const ts = new Set(all.filter((f) => f.endsWith('.ts') && !f.endsWith('.d.ts')).map((f) => f.slice(0, -3)));
-  const js = all.filter((f) => f.endsWith('.js') && !ts.has(f.slice(0, -3)) && !isStub(path.join(dir, f)));
-  return [...[...ts].map((b) => `${b}.ts`), ...js].sort((a, b) => a.replace(/\.[jt]s$/, '').localeCompare(b.replace(/\.[jt]s$/, '')));
+  return fs
+    .readdirSync(dir)
+    .filter((f) => f.endsWith('.ts') && !f.endsWith('.d.ts'))
+    .sort((a, b) => a.slice(0, -3).localeCompare(b.slice(0, -3)));
 }
 
 async function loadModules(): Promise<void> {

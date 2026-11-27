@@ -4,41 +4,36 @@ import { useEffect, useRef, useState, type ReactNode, type ButtonHTMLAttributes,
 import { renderMarkdown } from './markdown.ts';
 import { t, LANGS } from './i18n.ts';
 
-
 /** Joins class names, skipping falsy values. */
 export const cx = (...c: unknown[]): string => c.filter(Boolean).join(' ');
 
-/** TRANSITIONAL: unconverted callers still pass `class`; merge it with className. */
-type Legacy = { class?: string };
-const klass = (p: { className?: string } & Legacy) => cx(p.className, p.class);
-
 export type ButtonVariant = 'default' | 'primary' | 'ghost' | 'danger' | 'accent';
 
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & Legacy & { variant?: ButtonVariant; small?: boolean };
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & { variant?: ButtonVariant; small?: boolean };
 /** <Button variant="primary|ghost|danger|accent" small onClick title disabled>Label</Button> */
-export function Button({ variant = 'default', small, className, class: legacy, children, ...rest }: ButtonProps) {
+export function Button({ variant = 'default', small, className, children, ...rest }: ButtonProps) {
   return (
-    <button className={cx('btn', `btn-${variant}`, small && 'btn-sm', className, legacy)} {...rest}>
+    <button className={cx('btn', `btn-${variant}`, small && 'btn-sm', className)} {...rest}>
       {children}
     </button>
   );
 }
 
-type IconButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & Legacy & { icon: ReactNode };
+type IconButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & { icon: ReactNode };
 /** Square icon button: <IconButton icon="✕" title="Fermer" onClick=... /> */
-export function IconButton({ icon, className, class: legacy, ...rest }: IconButtonProps) {
+export function IconButton({ icon, className, ...rest }: IconButtonProps) {
   return (
-    <button className={cx('icon-btn', className, legacy)} {...rest}>
+    <button className={cx('icon-btn', className)} {...rest}>
       {icon}
     </button>
   );
 }
 
-type PanelProps = Omit<HTMLAttributes<HTMLElement>, 'title'> & Legacy & { title?: ReactNode; actions?: ReactNode; pad?: boolean };
+type PanelProps = Omit<HTMLAttributes<HTMLElement>, 'title'> & { title?: ReactNode; actions?: ReactNode; pad?: boolean };
 /** Bordered box with optional title bar and actions on the right. */
-export function Panel({ title, actions, children, className, class: legacy, pad = true, ...rest }: PanelProps) {
+export function Panel({ title, actions, children, className, pad = true, ...rest }: PanelProps) {
   return (
-    <section className={cx('panel', className, legacy)} {...rest}>
+    <section className={cx('panel', className)} {...rest}>
       {(title || actions) && (
         <header className="panel-head">
           <h3>{title}</h3>
@@ -101,7 +96,7 @@ export interface TabDef<Id extends string = string> {
   label: ReactNode;
   badge?: ReactNode;
 }
-interface TabsProps<Id extends string> extends Legacy {
+interface TabsProps<Id extends string> {
   tabs: TabDef<Id>[];
   value: Id;
   onChange: (id: Id) => void;
@@ -111,7 +106,7 @@ interface TabsProps<Id extends string> extends Legacy {
 export function Tabs<Id extends string>(props: TabsProps<Id>) {
   const { tabs, value, onChange } = props;
   return (
-    <nav className={cx('tabs', klass(props))}>
+    <nav className={cx('tabs', props.className)}>
       {tabs.map((tb) => (
         <button key={tb.id} type="button" className={cx('tab', tb.id === value && 'active')} onClick={() => onChange(tb.id)}>
           {tb.label}
@@ -122,7 +117,7 @@ export function Tabs<Id extends string>(props: TabsProps<Id>) {
   );
 }
 
-interface FieldProps extends Legacy {
+interface FieldProps {
   label?: ReactNode;
   hint?: ReactNode;
   children?: ReactNode;
@@ -133,7 +128,7 @@ export function Field(props: FieldProps) {
   const { label, hint, children } = props;
   // A div (not <label>): a label would forward clicks on its text to the first button inside (NumberInput's "−").
   return (
-    <div className={cx('field', klass(props))}>
+    <div className={cx('field', props.className)}>
       <span className="field-label">{label}</span>
       {children}
       {hint && <span className="field-hint">{hint}</span>}
@@ -141,7 +136,7 @@ export function Field(props: FieldProps) {
   );
 }
 
-interface TextInputProps extends Legacy {
+interface TextInputProps {
   value?: string | null;
   onChange?: (value: string) => void;
   multiline?: boolean;
@@ -156,7 +151,7 @@ interface TextInputProps extends Legacy {
  * Text input that only commits on blur/Enter (avoids a server round-trip per keystroke).
  * Pass live=true to call onChange on every keystroke instead.
  */
-export function TextInput({ value, onChange, multiline, live, placeholder, rows = 4, className, class: legacy, ...rest }: TextInputProps) {
+export function TextInput({ value, onChange, multiline, live, placeholder, rows = 4, className, ...rest }: TextInputProps) {
   const [v, setV] = useState(value ?? '');
   const focused = useRef(false);
   useEffect(() => {
@@ -167,7 +162,7 @@ export function TextInput({ value, onChange, multiline, live, placeholder, rows 
     if ((value ?? '') !== v) onChange?.(v);
   };
   const props = {
-    className: cx('input', className, legacy),
+    className: cx('input', className),
     value: v,
     placeholder,
     onFocus: () => (focused.current = true),
@@ -184,7 +179,7 @@ export function TextInput({ value, onChange, multiline, live, placeholder, rows 
   return multiline ? <textarea rows={rows} {...props} /> : <input type="text" {...props} />;
 }
 
-interface NumberInputProps extends Legacy {
+interface NumberInputProps {
   value?: number | string | null;
   onChange?: (value: number) => void;
   min?: number;
@@ -195,7 +190,7 @@ interface NumberInputProps extends Legacy {
   disabled?: boolean;
 }
 /** Numeric input with −/+ steppers. Commits on blur/Enter/step. */
-export function NumberInput({ value, onChange, min = -Infinity, max = Infinity, step = 1, small, className, class: legacy, disabled }: NumberInputProps) {
+export function NumberInput({ value, onChange, min = -Infinity, max = Infinity, step = 1, small, className, disabled }: NumberInputProps) {
   const [v, setV] = useState(String(value ?? 0));
   // Latest committed value: lets quick repeated clicks step from the value just committed, before the
   // parent has re-rendered with it (otherwise two fast "+" clicks both send value+1).
@@ -219,7 +214,7 @@ export function NumberInput({ value, onChange, min = -Infinity, max = Infinity, 
   // The input comes FIRST in the DOM (the − button is moved before it with CSS order): if a caller wraps
   // this in a <label>, clicks on the label text then focus the input instead of pressing "−".
   return (
-    <span className={cx('num', small && 'num-sm', className, legacy)}>
+    <span className={cx('num', small && 'num-sm', className)}>
       <input
         type="number"
         disabled={disabled}
@@ -242,7 +237,7 @@ export function NumberInput({ value, onChange, min = -Infinity, max = Infinity, 
 }
 
 export type SelectOption<V extends string = string> = V | { value: V; label: ReactNode; disabled?: boolean };
-interface SelectProps<V extends string> extends Legacy {
+interface SelectProps<V extends string> {
   value: V | null | undefined;
   onChange: (value: V) => void;
   options: SelectOption<V>[];
@@ -250,10 +245,10 @@ interface SelectProps<V extends string> extends Legacy {
   [attr: string]: unknown;
 }
 /** options: string[] or [{ value, label }] */
-export function Select<V extends string>({ value, onChange, options, className, class: legacy, ...rest }: SelectProps<V>) {
+export function Select<V extends string>({ value, onChange, options, className, ...rest }: SelectProps<V>) {
   const opts = options.map((o) => (typeof o === 'object' ? o : { value: o, label: o }));
   return (
-    <select className={cx('input', className, legacy)} value={value ?? ''} onChange={(e) => onChange(e.target.value as V)} {...rest}>
+    <select className={cx('input', className)} value={value ?? ''} onChange={(e) => onChange(e.target.value as V)} {...rest}>
       {opts.map((o) => (
         <option key={o.value} value={o.value} disabled={'disabled' in o ? o.disabled : undefined}>
           {o.label}
@@ -301,10 +296,10 @@ export function SearchBox({ value, onChange, placeholder }: { value: string; onC
 
 const LANG_NAMES: Record<string, string> = { fr: 'Français', en: 'English' }; // endonyms: never translated
 /** FR | EN switch. value: 'fr'|'en'; onChange(lang). */
-export function LangSwitch(props: { value: string; onChange: (lang: string) => void; className?: string } & Legacy) {
+export function LangSwitch(props: { value: string; onChange: (lang: string) => void; className?: string }) {
   const { value, onChange } = props;
   return (
-    <span className={cx('lang-switch', klass(props))} role="group" aria-label={t('Langue')}>
+    <span className={cx('lang-switch', props.className)} role="group" aria-label={t('Langue')}>
       {(LANGS as string[]).map((l) => (
         <button
           key={l}
@@ -323,8 +318,8 @@ export function LangSwitch(props: { value: string; onChange: (lang: string) => v
 }
 
 /** Renders markdown (headings, lists, bold/italic, links, tables, quotes, code). */
-export function Markdown(props: { text?: string | null; className?: string; style?: CSSProperties } & Legacy) {
-  return <div className={cx('md', klass(props))} style={props.style} dangerouslySetInnerHTML={{ __html: renderMarkdown(props.text || '') }} />;
+export function Markdown(props: { text?: string | null; className?: string; style?: CSSProperties }) {
+  return <div className={cx('md', props.className)} style={props.style} dangerouslySetInnerHTML={{ __html: renderMarkdown(props.text || '') }} />;
 }
 
 /** Labelled stat box: <Stat label="Init" value="10 + 2D6" /> */

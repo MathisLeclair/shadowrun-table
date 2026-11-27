@@ -7,15 +7,15 @@ import { t, attrShort, skillLabel, skillGroupLabel, skillCategoryLabel, getLang,
 import { ListEditor } from './editors.tsx';
 import { KNOWLEDGE_TYPES, knowledgeAttr } from './sheet-data.ts';
 import { skillName } from './common.tsx';
-import { SkillRef, RuleRef } from './ext.ts';
-import type { AttrKey } from '../../../shared/types.ts';
-import type { SheetCtx, SheetKnowledge, SheetSkill, SkillDef } from './types.ts';
+import type { AttrKey, KnowledgeSkill, Skill } from '../../../shared/types.ts';
+import type { SheetCtx, SkillDef } from './types.ts';
+import { SkillRef, RuleRef } from '../books/BookRef.tsx';
 
 const attrOptions = () => ['AGI', 'BOD', 'REA', 'STR', 'CHA', 'INT', 'LOG', 'WIL', 'MAG', 'RES'].map((k) => ({ value: k, label: attrShort(k) }));
 
 interface SkillRowProps {
   s: SheetCtx;
-  sk?: SheetSkill;
+  sk?: Skill;
   def?: SkillDef;
   ghost?: boolean;
 }
@@ -25,7 +25,7 @@ function SkillRow({ s, sk, def, ghost }: SkillRowProps) {
   const skillId = (sk?.id || def?.id) as string;
   const res = skillPool(actor, skillId);
   const name = skillName(sk, def?.id);
-  const up = (patch: Partial<SheetSkill>) => send('actor/updateItem', { actorId: actor.id, list: 'skills', itemId: sk?.id, patch }).catch(() => {});
+  const up = (patch: Partial<Skill>) => send('actor/updateItem', { actorId: actor.id, list: 'skills', itemId: sk?.id, patch }).catch(() => {});
   const remove = async () => {
     if (await confirmAction(t('Retirer la compétence {name} ?', { name }))) send('actor/removeItem', { actorId: actor.id, list: 'skills', itemId: sk?.id }).catch(() => {});
   };
@@ -65,7 +65,7 @@ function AddSkill({ s }: { s: SheetCtx }) {
   const choices = SKILLS.filter((x) => !have.has(x.id)).map((x) => ({ value: x.id, label: `${skillLabel(x.id)} (${attrShort(x.attr)})` }));
   if (getLang() !== 'fr') choices.sort((a, b) => compare(a.label, b.label)); // French list keeps its curated order
   const options = [{ value: '', label: t('Choisir une compétence…') }, ...choices];
-  const add = (item: Partial<SheetSkill>) => send('actor/addItem', { actorId: actor.id, list: 'skills', item }).then(() => { setId(''); setCustom(''); }).catch(() => {});
+  const add = (item: Partial<Skill>) => send('actor/addItem', { actorId: actor.id, list: 'skills', item }).then(() => { setId(''); setCustom(''); }).catch(() => {});
   return <div className="sh-add-skill row wrap">
     <Select value={id} options={options} onChange={setId} style={{ maxWidth: '260px' }} />
     <NumberInput small value={rating} min={0} max={13} onChange={setRating} />
@@ -80,8 +80,8 @@ function AddSkill({ s }: { s: SheetCtx }) {
 export function SkillsTab({ s }: { s: SheetCtx }) {
   const { actor, edit } = s;
   const [showAll, setShowAll] = useState(false);
-  const skills = (actor.skills || []) as SheetSkill[];
-  const groups: Record<string, Array<{ sk?: SheetSkill; def?: SkillDef; ghost?: boolean }>> = {};
+  const skills = actor.skills || [];
+  const groups: Record<string, Array<{ sk?: Skill; def?: SkillDef; ghost?: boolean }>> = {};
   for (const sk of skills) {
     const cat = SKILL_BY_ID[sk.id]?.cat || 'custom';
     (groups[cat] ||= []).push({ sk, def: SKILL_BY_ID[sk.id] });
@@ -92,7 +92,7 @@ export function SkillsTab({ s }: { s: SheetCtx }) {
   }
   const cats = [...Object.keys(SKILL_CATEGORIES), 'custom'].filter((c) => groups[c]?.length);
   for (const c of cats) groups[c].sort((a, b) => (a.ghost ? 1 : 0) - (b.ghost ? 1 : 0) || ((b.sk?.rating || 0) - (a.sk?.rating || 0)) || compare(skillName(a.sk, a.def?.id), skillName(b.sk, b.def?.id)));
-  const knowledge = (actor.knowledge || []) as SheetKnowledge[];
+  const knowledge = actor.knowledge || [];
   return <div className="sh-skills">
     <div className="row spread wrap">
       <div className="muted small">

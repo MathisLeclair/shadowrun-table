@@ -6,11 +6,9 @@ import { t, tk, getLang, fmtNumber, fmtNuyen, fmtDate, metatypeLabel } from '../
 import { compute, normalizeDraft, issuesByStep, issueText as sharedIssueText, MAGIC_TYPES } from '/shared/chargen.ts';
 import * as rules from '../shop/rules.ts';
 import { useShopCatalog } from '../shop/common.tsx';
-import type { ChargenDraft, DraftData, DraftStatus, GameView } from '../../../shared/types.ts';
+import type { CatalogFile, ChargenDraft, DraftData, DraftStatus, GameView } from '../../../shared/types.ts';
 /** MAGIC_TYPES of shared/chargen.js, indexed by any magic type id. */
 const MAGIC_TYPE_DEFS = MAGIC_TYPES as Record<string, { label: string }>;
-/** fmtDate() of i18n.js with any Intl options (its JS default parameter narrows the inferred type). */
-const fmtDateOpts = fmtDate as (ts: number, opts?: Intl.DateTimeFormatOptions) => string;
 import type { ChargenIssue, ChargenResult, LooseCatalogItem, RulesCtx, ShopCatalog, StepIssueList } from './types.ts';
 
 /** 12500 → « 12 500¥ » (fr) / « 12,500¥ » (en). */
@@ -64,7 +62,7 @@ export function useRulesCtx(game: GameView | null | undefined): RulesCtx {
   const settings = game?.chargen?.settings;
   return useMemo(() => {
     const ready = !!shop && qualities.length > 0 && spells.length > 0 && powers.length > 0;
-    const extra = new Map<string, { item: LooseCatalogItem; file: string }>();
+    const extra = new Map<string, { item: LooseCatalogItem; file: CatalogFile }>();
     for (const [file, list] of [
       ['qualities', qualities],
       ['spells', spells],
@@ -105,7 +103,7 @@ export function timeAgo(ts: number | null | undefined): string {
   if (m < 60) return t('il y a {n} min', { n: m });
   const h = Math.round(m / 60);
   if (h < 24) return t('il y a {n} h', { n: h });
-  return fmtDateOpts(ts, { day: 'numeric', month: 'short' });
+  return fmtDate(ts, { day: 'numeric', month: 'short' });
 }
 
 interface BudgetProps {

@@ -13,13 +13,11 @@ const kindLabel = (k: string) => (KIND_LABEL[k] ? t(KIND_LABEL[k]) : k);
 /** Who placed the order: the server stores 'MJ' for the GM, else the player's name. */
 const byLabel = (by: string | undefined) => (by === 'MJ' ? t('MJ') : by || '?');
 
-/** Martial art lines also carry the technique names (not in shared/types.ts OrderLine). */
-type Line = OrderLine & { techniques?: string[] };
 
 function Lines({ order }: { order: ShopOrder }) {
   return (
     <ul className="shop-order-lines">
-      {(order.items as Line[]).map((l, i) => (
+      {order.items.map((l, i) => (
         <li key={i}>
           <span className="grow">
             {l.name}

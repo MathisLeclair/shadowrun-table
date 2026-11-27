@@ -38,11 +38,11 @@ export function pdfToPrinted(book: PagedBook | null | undefined, pdfPage: unknow
  * Parse a book reference: 'RG 62', 'SR5 p. 240', 'SR5 p.240', 'SR5:240', 'RF 221, SR5 12' (first one),
  * { source: 'RG', page: '62' } or { code, page }. Returns { code, page } (page = printed page number) or null.
  */
-export function parseSourceRef(
-  ref: string | { source?: string | null; code?: string | null; page?: string | number | null } | null | undefined,
-  page?: string | number | null
-): SourceRef | null {
-  if (ref && typeof ref === 'object') return parseSourceRef(ref.source ?? ref.code, ref.page ?? page);
+export function parseSourceRef(ref: unknown, page?: string | number | null): SourceRef | null {
+  if (ref && typeof ref === 'object') {
+    const o = ref as { source?: string | null; code?: string | null; page?: string | number | null };
+    return parseSourceRef(o.source ?? o.code, o.page ?? page);
+  }
   const s = String(ref ?? '').trim();
   if (!s) return null;
   if (page !== undefined && page !== null && page !== '') {

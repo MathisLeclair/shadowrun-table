@@ -7,10 +7,10 @@ import { fileURLToPath } from 'node:url';
 import { attr, derive, rollDice } from '../../shared/sr5.ts';
 import {
   ACTION_BY_ID, ASDF, ASDF_LABELS, MODE_LABELS, MODES, IC_TYPES, MAX_MARKS, OS_MAX, CONVERGENCE_DV, HOST_PRESETS,
-  PROGRAM_BY_ID, isIllegal, isCyberdeck, isPermutation, identityAsdf, deckStats as rawDeckStats, actionPool, hostDefensePool,
+  PROGRAM_BY_ID, isIllegal, isCyberdeck, isPermutation, identityAsdf, deckStats, actionPool, hostDefensePool,
   personaDefensePool, programId, programSlots, programSum, availablePrograms, detectAgents, matrixMonitor,
   matrixInitiative, dumpshock, hostAttributes, defaultIcFor, icAttackPool, skillRating, loadedProgramIds,
-  OS_TICK_MS, DEVICE_LINK_KINDS, DEVICE_CMD_LABELS, deviceWorks,
+  OS_TICK_MS, DEVICE_LINK_KINDS, DEVICE_CMD_LABELS, deviceWorks, type MatrixActionDef, type MatrixTargetKind,
 } from '../../shared/matrix.ts';
 import { uid, deepClone, slug } from '../../shared/util.ts';
 import { cleanConditions } from '../../shared/modifiers.ts';
@@ -22,22 +22,14 @@ import notesModule from './75-notes.ts';
 import campaignModule from './70-campaign.ts';
 import type {
   ActionContext, ActionDef, Actor, ActorId, AsdfKey, EmitTarget, GameView, Host, HostDevice, HostFile, HostIc, I18nMessage, I18nParams, IcType,
-  MatrixMark, MatrixMarkOnMe, MatrixMode, MatrixState, NewLogEntry, PersonaFile, PlayerHostView, ServerModule, SessionUser, SfxId, TableState, UserId,
+  MatrixMark, MatrixMarkOnMe, MatrixMode, MatrixState, NewLogEntry, Persona, PersonaFile, PlayerHostView, ServerModule, SessionUser, SfxId, TableState, UserId,
 } from '../../shared/types.ts';
-import type { Persona as BasePersona } from '../../shared/types.ts';
 
 /** Dynamic data read field by field (rules data of shared/matrix.js, GM patches, map objects). */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Loose = Record<string, any>;
 /** A message or a plain string (names stored as text). */
 type MsgLike = string | I18nMessage;
-/** A mark entry with the generated name as a message (nameI18n: not in shared/types.ts). */
-type Mark = MatrixMark & { nameI18n?: I18nMessage };
-type MarkOnMe = MatrixMarkOnMe & { nameI18n?: I18nMessage };
-/** A persona as stored, with the fields shared/types.ts lacks (convergedAt, osKnownAt, pendingAssist extras). */
-type Persona = Omit<BasePersona, 'marks' | 'marksOnMe'> & { marks: Mark[]; marksOnMe: MarkOnMe[]; convergedAt?: number; osKnownAt?: number };
-/** A Matrix action of shared/matrix.js ACTIONS (id, fr, skill, cat, targets, defense, marks…). */
-type MatrixAction = Loose;
 /** A resolved action target (resolveTarget). */
 interface Target {
   kind: string;
@@ -50,15 +42,12 @@ interface Target {
   file?: HostFile;
   actor?: Actor | null;
   persona?: Persona | null;
-  mark?: MarkOnMe;
+  mark?: MatrixMarkOnMe;
 }
 /** A defense pool (null = no opposition, pending = the GM rolls). */
 type Defense = { pending?: false; pool: number; parts: Array<{ label: string; value: number; key?: string; params?: I18nParams }>; labelMsg: MsgLike } | { pending: true } | null;
 /** An action handler of this module (payload typed per action). */
 type Handler<P> = (ctx: ActionContext, p: P) => unknown;
-
-/** shared/matrix.js deckStats, typed loosely (its JS-inferred `eff` is {} until shared/matrix.js is converted). */
-const deckStats = (actor: Actor, persona: Persona | null | undefined): Loose => rawDeckStats(actor, persona);
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -94,7 +83,7 @@ const icNameMsg = (type: IcType, hostName: string | undefined): I18nMessage => (
 /** Name of the IC holding a link-lock (older saves only have the French name). */
 const linkLockMsg = (ll: Persona['linkLocked'] | undefined): MsgLike => (ll?.icType ? icNameMsg(ll.icType, ll.hostName) : ll?.name || '');
 /** Display name of a mark entry (nameI18n when the name was generated, else the stored name). */
-const markNameMsg = (m: Mark | MarkOnMe | undefined): MsgLike => m?.nameI18n || m?.name || '';
+const markNameMsg = (m: MatrixMark | MatrixMarkOnMe | undefined): MsgLike => m?.nameI18n || m?.name || '';
 const agentAuthorMsg = (ag: { name: string }, actor: { name: string }): I18nMessage => ({ t: '{agent} (agent de {name})', params: { agent: ag.name, name: actor.name } });
 
 // ---------------------------------------------------------------------------
@@ -270,7 +259,7 @@ function effectiveMarks(persona: Persona, target: Target | null | undefined): nu
   return n;
 }
 /** msg (optional): the name as a message when it is generated text (« fichier « X » »), stored as nameI18n. */
-function setMarkName(e: Mark | MarkOnMe, name: string, msg?: MsgLike): void {
+function setMarkName(e: MatrixMark | MatrixMarkOnMe, name: string, msg?: MsgLike): void {
   e.name = name || e.name;
   if (msg && typeof msg === 'object') e.nameI18n = msg;
   else if (name) delete e.nameI18n;
@@ -593,7 +582,7 @@ function syncMatrixCombat(ctx: ActionContext): void {
     if (host) for (const ic of host.ic || []) if (ic.active && (IC_TYPES as Loose)[ic.type]) wantIc.set(icEntryKey(host.id, ic.id), { host, ic });
   }
   const gone = c.entries.filter((e) => isVirtual(e) && !e.out && !wantIc.has(e.matrixKey as string) && !wantAgent.has(e.matrixKey as string)).map((e) => e.matrixKey);
-  for (const key of gone) setVirtualOut(ctx, key);
+  for (const key of gone) setVirtualOut(ctx, key as string);
   for (const [key, { host, ic }] of wantIc) {
     const nameI18n = icNameMsg(ic.type, host.name);
     upsertVirtualEntry(ctx, { kind: 'ic', key, name: fr(nameI18n), nameI18n, hostId: host.id, icId: ic.id, disposition: 'hostile' });
@@ -637,7 +626,7 @@ const perceivedBy = (host: Host, actorIds: string[]) => (host.perceivedBy || [])
  * name = French display (stored on marks), nameMsg = the same as a message param (string or { t, params }).
  * Formats: host:<id> · ic:<host>:<id> · device:<host>:<id> · file:<host>:<id> · persona:<actorId> · manual · mark:<sourceId>
  */
-function resolveTarget(ctx: ActionContext, persona: Persona, action: MatrixAction, p: MatrixActionPayload): Target {
+function resolveTarget(ctx: ActionContext, persona: Persona, action: MatrixActionDef, p: MatrixActionPayload): Target {
   const raw = str(p.targetId, 200);
   const allow = action.targets || ['none'];
   if (!raw || raw === 'none') {
@@ -702,17 +691,17 @@ function resolveTarget(ctx: ActionContext, persona: Persona, action: MatrixActio
     t.key = `manual:${slug(name || 'cible inconnue') || 'cible'}`;
     t.nameMsg = name || { t: 'cible inconnue' };
   } else ctx.fail('Cible invalide');
-  if (!allow.includes(t.kind)) ctx.fail('Cette action ne peut pas viser ce type de cible');
+  if (!allow.includes(t.kind as MatrixTargetKind)) ctx.fail('Cette action ne peut pas viser ce type de cible');
   t.name = fr(t.nameMsg);
   return t;
 }
 
 /** Defense pool for an action against a target, or null (no opposition) / { pending: true } (GM to roll). labelMsg = who defends. */
-function defenseFor(ctx: ActionContext, action: MatrixAction, target: Target, p: MatrixActionPayload): Defense {
+function defenseFor(ctx: ActionContext, action: MatrixActionDef, target: Target, p: MatrixActionPayload): Defense {
   const d = action.defense;
   if (!d) return null;
-  if (d.fixed) return { pool: d.fixed, parts: [{ label: 'GOD', value: d.fixed }], labelMsg: { t: 'le GOD' } };
-  if (d.x2) {
+  if ('fixed' in d && d.fixed) return { pool: d.fixed, parts: [{ label: 'GOD', value: d.fixed }], labelMsg: { t: 'le GOD' } };
+  if ('x2' in d && d.x2) {
     let r = 0;
     let label = '';
     if (d.x2 === 'protection') {
@@ -810,7 +799,7 @@ function explodeBomb(ctx: ActionContext, actor: Actor, persona: Persona, host: H
 // ---------------------------------------------------------------------------
 // Action resolution (decker or agent)
 // ---------------------------------------------------------------------------
-function performAction(ctx: ActionContext, actor: Actor, persona: Persona, action: MatrixAction, p: MatrixActionPayload, { agent = false }: { agent?: boolean } = {}) {
+function performAction(ctx: ActionContext, actor: Actor, persona: Persona, action: MatrixActionDef, p: MatrixActionPayload, { agent = false }: { agent?: boolean } = {}) {
   const ag = persona.agent!;
   const who = agent ? ag.name : actor.name;
   const authorMsg = agent ? agentAuthorMsg(ag, actor) : null;
@@ -909,7 +898,7 @@ function performAction(ctx: ActionContext, actor: Actor, persona: Persona, actio
   const mods = agent ? null : actorModifiers(actor);
   const conditions = mods ? cleanConditions(mods, p.conditions) : [];
   const pc = actionPool(actor, persona, action, { useSpec: !!p.useSpec && !agent, marks: marksWanted, modifier: clampInt(p.modifier, -30, 30, 0), assist, edge, agent, ...(mods ? { mods, conditions } : {}) });
-  if (pc.impossible) ctx.fail(pc.reasonKey || pc.reason, pc.reasonParams);
+  if (pc.impossible) ctx.fail(pc.reasonKey || pc.reason || '', pc.reasonParams);
   if (pc.pool <= 0) ctx.fail('Réserve de dés nulle : l’action échoue automatiquement');
   if (edge) actor.edge!.current -= 1;
 
@@ -1085,7 +1074,7 @@ function performAction(ctx: ActionContext, actor: Actor, persona: Persona, actio
   } else if (success === false) {
     if (action.id === 'disarmDataBomb' && target.file) outcomes.push(...explodeBomb(ctx, actor, persona, target.host!, target.file, { agent }));
     // Failed Sleaze action: the target marks you and raises the alarm
-    if (action.cat === 'sleaze' && dr && target.kind !== 'none' && !action.defense?.fixed) {
+    if (action.cat === 'sleaze' && dr && target.kind !== 'none' && !(action.defense && 'fixed' in action.defense && action.defense.fixed)) {
       const sourceId = target.host ? `host:${target.host.id}` : target.key;
       const sourceMsg = (target.host ? target.host.name : target.nameMsg) as MsgLike;
       if (sourceId) {
@@ -1425,7 +1414,7 @@ const actions: Record<string, ActionDef> = {
     const was = persona.online ? persona.mode : null;
     persona.mode = mode as MatrixMode;
     persona.online = true;
-    const ini = matrixInitiative(actor, persona, mode, actorModifiers(actor) as unknown as null);
+    const ini = matrixInitiative(actor, persona, mode, actorModifiers(actor));
     if (was !== mode) {
       const params = { name: actor.name, mode: { t: MODE_LABELS[mode as MatrixMode] }, ini: ini.text };
       mlog(ctx, { author: actor.name, msgs: [was ? { t: '{name} passe en {mode} (initiative {ini}).', params } : { t: '{name} se connecte à la Matrice en {mode} (initiative {ini}).', params }], matrix: { event: 'connect', actorId, mode } });
@@ -1530,7 +1519,7 @@ const actions: Record<string, ActionDef> = {
     requireOnline(ctx, actor, persona);
     const ag = persona.agent;
     if (!ag || !ag.loaded) ctx.fail('Ton agent n’est pas chargé');
-    const action: MatrixAction | undefined = (ACTION_BY_ID as Loose)[actionId as string];
+    const action: MatrixActionDef | undefined = ACTION_BY_ID[actionId as string];
     if (!action || action.noTest || !action.skill) ctx.fail('Cette action ne se prête pas au travail d’équipe');
     const pc = actionPool(actor, persona, action, { agent: true });
     if (pc.pool <= 0) ctx.fail('Réserve de dés nulle pour l’agent');
@@ -1559,7 +1548,7 @@ const actions: Record<string, ActionDef> = {
           : { t: '{agent} apporte +{n} dés et +1 à la limite pour « {action} ».', params });
       if (dice < r.hits) outcomes.push({ t: 'Bonus plafonné à la compétence de {name} ({cap}).', params: { name: actor.name, cap } });
     } else outcomes.push({ t: '{agent} ne trouve rien d’utile (aucun succès).', params: { agent } });
-    persona.pendingAssist = r.critGlitch ? null : ({ actionId: action.id, skill: action.skill, dice, limitBonus, hits: r.hits, glitch: r.glitch, ts: Date.now() } as Persona['pendingAssist']);
+    persona.pendingAssist = r.critGlitch ? null : ({ actionId: action.id, skill: action.skill, dice, limitBonus, hits: r.hits, glitch: r.glitch, ts: Date.now() });
     const authorMsg = agentAuthorMsg(ag, actor);
     const labelMsg = { t: 'Assistance — {action}', params: { action: { t: action.fr } } };
     mlog(ctx, {
@@ -1576,7 +1565,7 @@ const actions: Record<string, ActionDef> = {
     const { actor, persona } = ownPersona(ctx, p.actorId);
     requireOnline(ctx, actor, persona);
     if (!persona.agent || !persona.agent.loaded) ctx.fail('Ton agent n’est pas chargé');
-    const action: MatrixAction | undefined = (ACTION_BY_ID as Loose)[p.actionId as string];
+    const action: MatrixActionDef | undefined = ACTION_BY_ID[p.actionId as string];
     if (!action) return ctx.fail('Action matricielle inconnue');
     if (action.noTest || action.id === 'jackOut') ctx.fail('Ton agent ne peut pas faire cette action à ta place');
     return performAction(ctx, actor, persona, action, { ...p, assistFromAgent: false, edge: false, useSpec: false }, { agent: true });
@@ -1585,7 +1574,7 @@ const actions: Record<string, ActionDef> = {
   // { actorId, actionId, targetId?, modifier?, edge?, useSpec?, marks?, assistFromAgent?, fileOp?, command?, threshold?, targetName?, defensePool? (GM) }
   'matrix/action': any((ctx: ActionContext, p: MatrixActionPayload = {}) => {
     const { actor, persona } = ownPersona(ctx, p.actorId);
-    const action: MatrixAction | undefined = (ACTION_BY_ID as Loose)[p.actionId as string];
+    const action: MatrixActionDef | undefined = ACTION_BY_ID[p.actionId as string];
     if (!action) return ctx.fail('Action matricielle inconnue');
     // Rebooting your own deck also works offline (clears the Overwatch Score and marks).
     if (action.id === 'rebootSelf' && !persona.online) {
@@ -1730,7 +1719,7 @@ const actions: Record<string, ActionDef> = {
     const h = getHost(ctx, hostId);
     const templateId = h.alert === 'active' ? h.spiderAlert || h.spider : h.spider || h.spiderAlert;
     if (!templateId || !ctx.state.bestiary?.[templateId]) ctx.fail('Aucune araignée choisie pour cet hôte');
-    return combatModule.actions['bestiary/spawn'].handler(ctx, { templateId, mapId: null, addToCombat: true } as Parameters<typeof combatModule.actions['bestiary/spawn']['handler']>[1]);
+    return combatModule.actions!['bestiary/spawn'].handler(ctx, { templateId, mapId: null, addToCombat: true });
   }),
 
   // { actorId } — 15 minutes go by: the decker's OS rises by 2D6 (rolled in secret, GM-only log).

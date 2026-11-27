@@ -19,8 +19,6 @@ import type {
 export type MakeId = (prefix: string) => string;
 /** A parsed actor: the Actor without its id (the caller gives it one). */
 export type ParsedActor = Omit<Actor, 'id'> & { id?: string };
-/** Knowledge skill as parsed: keeps the Chummer guid (shared/types.ts KnowledgeSkill has no chummerGuid). */
-export type ChummerKnowledge = KnowledgeSkill & { chummerGuid?: string };
 /** parseChum5() options. */
 export interface ParseOptions {
   fileName?: string;
@@ -313,7 +311,7 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
     const type = KNO_TYPES[norm(s.val('type') || s.val('skillcategory'))] || 'interest';
     const native = bool(s.val('isnativelanguage'));
     const specs = (s.get('specs')?.all('spec') || []).map((sp) => sp.val('name')).filter(Boolean);
-    const kno: ChummerKnowledge = {
+    const kno: KnowledgeSkill = {
       id: makeId('kno'), name, rating: native ? 0 : num(s.val('base')) + num(s.val('karma')) + (freeBase[norm(name)] || 0), type,
       ...(native ? { native: true } : {}), ...(specs.length ? { spec: specs.join(', ') } : {}), ...(guidOf(s) ? { chummerGuid: guidOf(s)! } : {}),
     };

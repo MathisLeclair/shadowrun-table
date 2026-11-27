@@ -1,15 +1,13 @@
 // Wizard steps: Compétences (active skills, groups, specializations) and Contacts & connaissances.
 import { Button, Select, TextInput, NumberInput, Badge, Panel, IconButton, Field } from '../../lib/ui.tsx';
-import { SKILLS, SKILL_BY_ID, SKILL_GROUPS, SKILL_CATEGORIES } from '/shared/sr5.ts';
+import { SKILLS, SKILL_BY_ID, SKILL_GROUPS, SKILL_CATEGORIES, type SkillDef } from '/shared/sr5.ts';
 import { t, attrShort, skillLabel, skillGroupLabel, skillCategoryLabel } from '../../lib/i18n.ts';
 import { KNOWLEDGE_TYPES, skillAllowed, rowId, LIMITS } from '/shared/chargen.ts';
 import { Budget, PointsKarma, StepIssues } from './common.tsx';
-import { SkillRef } from '../combat/legacy-components.ts';
 import type { DraftData, KnowledgeType } from '../../../shared/types.ts';
 import type { StepProps } from './types.ts';
+import { SkillRef } from '../books/BookRef.tsx';
 
-/** sr5.js SKILLS entry. */
-type SkillDef = { id: string; cat: string; attr: string; group?: string; [k: string]: unknown };
 type SkillRow = DraftData['skills'][number];
 type KnowledgeRow = DraftData['knowledge'][number];
 type ContactRow = DraftData['contacts'][number];
@@ -35,7 +33,7 @@ export function StepSkills({ data, update, result, issues }: StepProps) {
   const taken = new Set(rows);
   const options = [{ value: '', label: t('+ Ajouter une compétence…') }];
   for (const cat of Object.keys(SKILL_CATEGORIES)) {
-    const list = (SKILLS as SkillDef[]).filter((s) => s.cat === cat && !taken.has(s.id) && skillAllowed(data, s.id) && !(s.group && groupR[s.group] > 0));
+    const list = SKILLS.filter((s) => s.cat === cat && !taken.has(s.id) && skillAllowed(data, s.id) && !(s.group && groupR[s.group] > 0));
     if (!list.length) continue;
     options.push({ value: `__${cat}`, label: `— ${skillCategoryLabel(cat)} —` });
     for (const s of list) options.push({ value: s.id, label: `${skillLabel(s)} (${attrShort(s.attr)})` });
@@ -43,7 +41,7 @@ export function StepSkills({ data, update, result, issues }: StepProps) {
   const groupOpts = [
     { value: '', label: t('+ Ajouter un groupe…') },
     ...Object.keys(SKILL_GROUPS)
-      .filter((gid) => !data.groups.some((g) => g.id === gid) && (SKILLS as SkillDef[]).filter((s) => s.group === gid).every((s) => skillAllowed(data, s.id)))
+      .filter((gid) => !data.groups.some((g) => g.id === gid) && SKILLS.filter((s) => s.group === gid).every((s) => skillAllowed(data, s.id)))
       .map((value) => ({ value, label: skillGroupLabel(value) as string })),
   ];
   const attrVal = (k: string): number => (r.final as Record<string, number>)[k] ?? 0;
@@ -80,7 +78,7 @@ export function StepSkills({ data, update, result, issues }: StepProps) {
               {rows.map((id) => {
                 const def: SkillDef = SKILL_BY_ID[id];
                 const s = data.skills.find((x) => x.id === id) || { points: 0, karma: 0, spec: '', specKarma: false };
-                const free: number = freeIds.includes(id) ? r.magic.row.skills.rating : 0;
+                const free: number = freeIds.includes(id) ? (r.magic.row?.skills?.rating ?? 0) : 0;
                 const grp = def.group && groupR[def.group] ? groupR[def.group] : 0;
                 const base = Math.max(free, grp);
                 const rating = base + s.points + s.karma;
@@ -184,7 +182,7 @@ export function StepSkills({ data, update, result, issues }: StepProps) {
                   <td>
                     <strong>{skillGroupLabel(g.id)}</strong>
                     <div className="small faint">
-                      {(SKILLS as SkillDef[])
+                      {SKILLS
                         .filter((s) => s.group === g.id)
                         .map((s) => skillLabel(s))
                         .join(', ')}

@@ -77,8 +77,7 @@ export function armorMods(ar: Partial<Armor> | null | undefined): { used: number
   let used = 0;
   let extra = 0;
   let bonus = 0;
-  // `equipped` is not in shared/types.ts ArmorMod yet (switched-off mods).
-  for (const m of (Array.isArray(ar?.mods) ? ar.mods : []) as (ArmorMod & { equipped?: boolean })[]) {
+  for (const m of Array.isArray(ar?.mods) ? ar.mods : []) {
     if (!m || typeof m !== 'object' || m.equipped === false) continue;
     const c = num(m.capacity);
     if (c >= 0) used += c;

@@ -5,7 +5,6 @@ import { send } from '../../lib/net.ts';
 import { toast, openSheet } from '../../lib/ui-store.ts';
 import { STEPS, normalizeDraft, emptyDraft } from '/shared/chargen.ts';
 import { CHARGEN_STEP_REFS } from '/shared/bookrefs.ts';
-import { BookRef } from '../combat/legacy-components.ts';
 import { t, tn, fmtNumber, compare, metatypeLabel } from '../../lib/i18n.ts';
 import { useRulesCtx, useComputed, produce, StatusBadge, timeAgo, nuyen } from './common.tsx';
 import { StepConcept, StepPriorities, StepMetatype, StepAttributes } from './steps-basics.tsx';
@@ -16,6 +15,7 @@ import { StepGear } from './steps-gear.tsx';
 import DraftSummary from './Summary.tsx';
 import type { ChargenDraft, DraftData, GameView } from '../../../shared/types.ts';
 import type { ChargenResult, RulesCtx, StepProps } from './types.ts';
+import { BookRef } from '../books/BookRef.tsx';
 
 const COMPONENTS: Record<string, ComponentType<StepProps>> = {
   concept: StepConcept,

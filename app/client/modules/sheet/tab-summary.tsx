@@ -2,15 +2,15 @@
 import { useState } from 'react';
 import { Button, NumberInput, Toggle, Badge } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
-import { attr } from '/shared/sr5.ts';
+import { attr, type LimitKey } from '/shared/sr5.ts';
 import { t, tk, attrLabel, attrShort } from '../../lib/i18n.ts';
 import { ConditionTrack, EdgePips, actorStatus, statusColor, statusLabel, fmtNum, tRich } from './common.tsx';
 import { limitValueText, limitTitle, sourcesTitle } from './modifiers-ui.tsx';
-import { BookRef, RuleRef } from './ext.ts';
 import { ruleRef } from '/shared/bookrefs.ts';
 import type { ReactNode } from 'react';
 import type { SheetCtx } from './types.ts';
 import type { SourceLine } from './modifiers-ui.tsx';
+import { BookRef, RuleRef } from '../books/BookRef.tsx';
 
 const BASE_ATTRS: string[] = ['BOD', 'AGI', 'REA', 'STR', 'WIL', 'LOG', 'INT', 'CHA', 'EDG'];
 
@@ -34,7 +34,7 @@ export function RollStat({ label, value, onClick, title, accent, sub, book }: Ro
   const box = onClick
     ? <button type="button" className={cls} title={title || t('Lancer : {label}', { label })} onClick={onClick}>{inner}</button>
     : <div className={cls} title={title}>{inner}</div>;
-  return book ? <div className="sh-stat-wrap">{box}<BookRef source={book.source} page={book.page} class="sh-stat-book" /></div> : box;
+  return book ? <div className="sh-stat-wrap">{box}<BookRef source={book.source} page={book.page} className="sh-stat-book" /></div> : box;
 }
 
 function AttrCell({ s, k }: { s: SheetCtx; k: string }) {
@@ -63,7 +63,7 @@ function AttrCell({ s, k }: { s: SheetCtx; k: string }) {
 }
 
 /** A limit with its modifiers: « 9 (11 si visible) », tooltip = sources. */
-export function LimitStat({ s, name, label }: { s: SheetCtx; name: string; label: ReactNode }) {
+export function LimitStat({ s, name, label }: { s: SheetCtx; name: LimitKey; label: ReactNode }) {
   const { d, dm } = s;
   return <RollStat label={label} value={limitValueText(dm, name)} title={limitTitle(d, dm, name)} accent={dm.limitsAlt?.[name] !== undefined ? 'amber' : null} book={ruleRef('limits')} />;
 }

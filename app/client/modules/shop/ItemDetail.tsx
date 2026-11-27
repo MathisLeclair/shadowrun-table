@@ -8,10 +8,10 @@ import { SKILL_BY_ID } from '/shared/sr5.ts';
 import { GRADES, allowedGrades, evalFormula, magicLoss, DEVICE_GEAR, LEGALITY_LABEL, UPGRADE_FILES, MOUNT_LABELS } from './rules.ts';
 import { targetsFor, upgradePreview, msgText } from './upgrades.ts';
 import { priceEntry, buyStatus, addToCart, nuyen, AvailBadge, gradeLabel } from './common.tsx';
-import { ItemRef } from './bookrefs.ts';
 import type { ReactNode } from 'react';
 import type { Actor, GameView } from '../../../shared/types.ts';
 import type { CartLine, LooseStats, PriceQuote, ShopCatalog, ShopEntry, ShopItem } from './types.ts';
+import { ItemRef } from '../books/BookRef.tsx';
 
 // Labels of armor-mod / vehicle-mod bonuses (French keys, render with t()).
 const BONUS_LABEL: Record<string, string> = {

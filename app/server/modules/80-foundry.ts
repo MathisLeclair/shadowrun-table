@@ -6,14 +6,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { currentTable, currentTableId, currentDocsDir, TMP_DIR } from '../store.ts';
-import { readWorldSync, detectWorldPath, listWorlds, worldFingerprint, checkWorld, COLLECTIONS, dataRootOf } from '../lib/foundry/world.ts';
-import { buildBundle, scanBundle, applyImport } from '../lib/foundry/importer.ts';
+import { readWorldSync, detectWorldPath, listWorlds, worldFingerprint, checkWorld, COLLECTIONS, dataRootOf, type FoundryWorld } from '../lib/foundry/world.ts';
+import { buildBundle, scanBundle, applyImport, type Bundle as FoundryBundle } from '../lib/foundry/importer.ts';
 import { createAssets, formatBytes } from '../lib/foundry/assets.ts';
 import { uploadedWorlds, isInsideUploads, installWorldZip, installDataZip, uploadsSize, removeUploads } from '../lib/foundry/upload.ts';
 import { ZipError, receiveToFile } from '../lib/zip.ts';
 import { errorBody } from '../lib/i18n.ts';
 import { i18nError, errorParam, plural, bytesParam } from '../lib/foundry/messages.ts';
-import type { ActionContext, FoundryState, GameView, I18nParams, RouteHelpers, ServerModule, TableState, Template } from '../../shared/types.ts';
+import type { ActionContext, FoundryState, GameView, I18nParams, RouteHelpers, ServerEvents, ServerModule, TableState, Template } from '../../shared/types.ts';
 
 // No Express types in the app yet (@types/express arrives with the server-core conversion): loose local aliases.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped Express app / request / response
@@ -25,27 +25,19 @@ type Res = any;
 
 /** An error thrown by the Foundry readers / zip code: may carry an i18n key and an HTTP status. */
 type FoundryError = Error & { i18nKey?: string; i18nParams?: I18nParams; status?: number };
-/** A world as read by server/lib/foundry/world.js (parsed LevelDB: genuinely dynamic data). */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type FoundryWorld = any;
-/** Import bundle of server/lib/foundry/importer.js (buildBundle). */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type FoundryBundle = any;
 /** Progress of the async audio copy of one table. */
 interface AudioJob {
   total: number;
   done: number;
   bytes: number;
 }
-/** Transient GM events of this module (not listed in ServerEvents, shared/types.ts). */
-type FoundryEmit = (target: 'gm', event: 'foundry/audio', data: Record<string, unknown>) => void;
 
 const tk = (s: string): string => s; // marks French keys returned as values (tools/i18n-check.ts)
 /** HTTP error body for an error that may carry an i18n key (Foundry/zip errors). */
 const errBody = (err: FoundryError | undefined, fallback: string) => (err?.i18nKey ? errorBody(err.i18nKey, err.i18nParams) : err?.message ? { error: err.message } : errorBody(fallback));
 
 const combat = await import('./30-combat.ts').catch(() => null);
-const sanitizeTemplate = typeof combat?.sanitizeTemplate === 'function' ? (t: Template) => combat.sanitizeTemplate(t, { id: t.id }) : null;
+const sanitizeTemplate = typeof combat?.sanitizeTemplate === 'function' ? (t: Template) => combat.sanitizeTemplate(t, { id: t.id }) : undefined;
 
 // Journals go to the table's docs folder (…/foundry), unless SR_FOUNDRY_DOCS_DIR overrides it (tests, offline tool).
 const docsOut = () => (process.env.SR_FOUNDRY_DOCS_DIR ? path.resolve(process.env.SR_FOUNDRY_DOCS_DIR) : path.join(currentDocsDir(), 'foundry'));
@@ -55,7 +47,7 @@ const MAX_UPLOAD = Number(process.env.SR_MAX_UPLOAD_BYTES) || 1.5e9;
 
 let helpers: RouteHelpers | null = null; // routes() helpers: addLog, scheduleBroadcast, saveSoon, emitTo (for the async audio copy)
 let cache: { key: string; world: FoundryWorld } | null = null; // { key, world } — keyed by world path + fingerprint, so tables never share a wrong world
-const audioJobs = new Map<string, AudioJob>(); // tableId -> { total, done, bytes } while audio files are being copied
+const audioJobs = new Map<string | null, AudioJob>(); // tableId -> { total, done, bytes } while audio files are being copied
 const uploadBusy = new Set<string>(); // tableIds with a zip being received/extracted
 
 function ensureSlice(state: TableState): FoundryState {
@@ -105,12 +97,11 @@ function bundleFor(ctx: ActionContext, worldPath: string): FoundryBundle {
     ctx.fail(err.i18nKey || err.message, err.i18nParams);
   }
   const table = currentTable();
-  // The option objects are cast: the JS signatures (destructuring defaults) are inferred without dataRoot / assets.
-  const assets = createAssets({ dataRoot: world.dataRoot || dataRootOf(worldPath), ...(table ? { outDir: table.assetsDir, urlBase: table.assetsUrl } : {}) } as Parameters<typeof createAssets>[0]);
-  return buildBundle(world, { now: ctx.now, assets } as Parameters<typeof buildBundle>[1]);
+  const assets = createAssets({ dataRoot: world.dataRoot || dataRootOf(worldPath), ...(table ? { outDir: table.assetsDir, urlBase: table.assetsUrl } : {}) });
+  return buildBundle(world, { now: ctx.now, assets });
 }
 
-function startAudioCopy(ctx: ActionContext, bundle: FoundryBundle, urls: Set<string>) {
+function startAudioCopy(ctx: ActionContext, bundle: FoundryBundle, urls: Set<string | undefined>) {
   if (!urls.size) return null;
   const tid = ctx.tableId || currentTableId();
   const { files, bytes } = bundle.assets.totals({ kinds: ['audio'], urls });
@@ -118,7 +109,7 @@ function startAudioCopy(ctx: ActionContext, bundle: FoundryBundle, urls: Set<str
   audioJobs.set(tid, { total: files, done: 0, bytes });
   const job = () => audioJobs.get(tid)!;
   // The copy outlives the action: it keeps the table scope (AsyncLocalStorage) and uses ctx for this table's events.
-  const emit = (ev: 'foundry/audio', data: Record<string, unknown>) => (ctx.emitTo as FoundryEmit)('gm', ev, data);
+  const emit = (ev: 'foundry/audio', data: ServerEvents['foundry/audio']) => ctx.emitTo('gm', ev, data);
   emit('foundry/audio', { ...job(), running: true });
   bundle.assets
     .copyAsync({ kinds: ['audio'], urls }, (p: { done: number; total: number }) => {
@@ -201,8 +192,7 @@ const mod: ServerModule<HttpApp> = {
         const wp = resolveWorldPath(ctx.state, worldPath);
         const bundle = bundleFor(ctx, wp);
         const sel = normSelect(select);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- import result of server/lib/foundry/importer.js
-        let res: any;
+        let res: ReturnType<typeof applyImport>;
         try {
           res = applyImport(ctx.state, bundle, { select: sel, pcMode, now: ctx.now, docsDir: docsOut(), sanitizeTemplate, assignPlayers: !!assignPlayers });
         } catch (err) {

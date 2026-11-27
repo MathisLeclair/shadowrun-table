@@ -4,13 +4,11 @@ import { Button, IconButton, Badge, Toggle, Modal, TextInput, confirmAction } fr
 import { send, type ServerError } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
 import { t, fmtDate } from '../../lib/i18n.ts';
-import { renderNote as renderNoteJs, toggleCheckboxAt, applyFormat, decodeRef } from './notes-md.ts';
+import { renderNote, toggleCheckboxAt, applyFormat, decodeRef } from './notes-md.ts';
 import { cx, canWrite, canComment, userLabel, storedName, mentionNames, foreignLock, findByTitle, copyText, errorGate, MAX_BODY, isGM } from './common.ts';
 import { NoteComments } from './NoteComments.tsx';
 import type { GameView, NotePage } from '../../../shared/types.ts';
 
-// TRANSITIONAL: notes-md.js stays JS (Node tests import it); its options type is inferred from the defaults.
-const renderNote = renderNoteJs as (body: string, opts: { resolve?: (title: string) => string | null; mentions?: string[]; editable?: boolean }) => { html: string };
 
 const SAVE_DELAY = 1500;
 const RENEW_MS = 20_000;

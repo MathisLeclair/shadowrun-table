@@ -4,6 +4,7 @@
 // i18n: labels below are French dictionary keys (marked with tk() for tools/i18n-check.ts, English in
 // client/i18n/en/shop.json). Render them with t(label) on the client; never translate at module level.
 const tk = (s: string): string => s;
+import type { Legality, WareGrade } from '../../../shared/types.ts';
 
 /**
  * Catalog items (data/catalog/*.json: stats vary by catalog file) and owned items / stubs (weapon, armor, vehicle: stored items,
@@ -20,11 +21,11 @@ export interface FitProblem {
 /** quote(): price sheet of one unit. */
 export interface Quote {
   rating: number | null;
-  grade: string | null;
+  grade: WareGrade | null;
   base: number;
   unitCost: number;
   availValue: number;
-  legality: string;
+  legality: Legality;
   avail: string;
   essence: number | undefined;
 }
@@ -149,14 +150,14 @@ export const UPGRADE_SECTIONS: StoreSection[] = [
 export const STORE_SECTIONS: StoreSection[] = SECTIONS.flatMap((s) => [s, ...UPGRADE_SECTIONS.filter((u) => u.after === s.id)]);
 
 /** Which actor list a purchase lands in. */
-export function targetList(file: string, item: Loose): string {
+export function targetList(file: string | null | undefined, item: Loose): string {
   const st = item?.stats || {};
   if (file === 'weapons') return st.accessory ? 'gear' : 'weapons';
   if (file === 'armor') return st.mod ? 'gear' : 'armor';
   if (file === 'cyberware' || file === 'bioware') return 'augmentations';
   if (file === 'vehicles') return 'vehicles';
   if (file === 'lifestyles') return 'lifestyles';
-  if (UPGRADE_FILES[file]) return 'upgrade';
+  if (file && UPGRADE_FILES[file]) return 'upgrade';
   return 'gear';
 }
 
@@ -294,8 +295,8 @@ export function quote(item: Loose, opts: QuoteOptions = {}): Quote {
   const vars = { ...(opts.vars || {}), Rating: rating ?? 1, MinRating: item?.rating?.min ?? 1 };
   const grades = allowedGrades(item);
   const isWare = item?.essence !== undefined || Array.isArray(item?.grades);
-  let grade: string | null = null;
-  if (isWare) grade = grades.includes(opts.grade as string) ? (opts.grade as string) : grades.includes('standard') ? 'standard' : grades[0] || null;
+  let grade: WareGrade | null = null;
+  if (isWare) grade = (grades.includes(opts.grade as string) ? (opts.grade as string) : grades.includes('standard') ? 'standard' : grades[0] || null) as WareGrade | null;
   const g = (grade !== null && GRADES[grade]) || GRADES.standard;
 
   let base: number;
@@ -310,7 +311,7 @@ export function quote(item: Loose, opts: QuoteOptions = {}): Quote {
 
   let availValue = item.availFormula ? evalFormula(item.availFormula, vars) : Number(item.availValue) || 0;
   availValue = Math.max(0, Math.round(availValue + (grade ? g.avail : 0)));
-  const legality = item.legality || '';
+  const legality: Legality = item.legality || '';
 
   let essence: number | undefined;
   if (item.essence !== undefined) {

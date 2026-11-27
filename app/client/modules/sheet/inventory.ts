@@ -13,6 +13,8 @@ export type RawData = any;
 export type MakeId = (prefix: string) => string;
 /** What the inventory rules read of an actor. */
 export interface InventoryActor {
+  /** Any actor (an NPC stub has no inventory: no weapons, no containers). */
+  id?: string;
   weapons?: WeaponLike[];
   containers?: Container[];
 }
@@ -363,13 +365,13 @@ export function guessContainerKind(name: unknown): ContainerKind {
   return 'other';
 }
 
-export function containerOf(actor: InventoryActor | null | undefined, loc: string | null | undefined): Container | null {
+export function containerOf(actor: InventoryActor | null | undefined, loc: unknown): Container | null {
   if (!loc || loc === ON_BODY) return null;
   return (Array.isArray(actor?.containers) ? actor.containers : []).find((c) => c && c.id === loc) || null;
 }
 
 /** Is an item at this location within reach (on the body or in a worn container)? Unknown container = carried. */
-export function isCarried(actor: InventoryActor | null | undefined, loc: string | null | undefined): boolean {
+export function isCarried(actor: InventoryActor | null | undefined, loc: unknown): boolean {
   const c = containerOf(actor, loc);
   return !c || c.kind === 'body';
 }

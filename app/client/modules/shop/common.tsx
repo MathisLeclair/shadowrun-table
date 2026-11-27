@@ -128,7 +128,7 @@ export function priceEntry(entry: ShopEntry, opts: PriceOpts, shop: Partial<Shop
     let essence: number | undefined;
     if (ware) {
       // essence may come as a string from the specials editor (TextInput)
-      const spEss = sp.essence as number | string | null | undefined;
+      const spEss = sp.essence;
       if (spEss !== undefined && spEss !== null && spEss !== '') essence = Number(spEss) || 0;
       else if (entry.item) essence = safeQuote(entry.item, { rating: sp.rating, grade: sp.grade }).essence ?? 0;
       else essence = 0;

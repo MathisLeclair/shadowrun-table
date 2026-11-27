@@ -8,11 +8,11 @@ import type { BiName, I18nMessage, I18nParams, I18nParamValue, Lang } from '../.
 
 /**
  * Params of a translated string: named values (string, number, { fr, en } name, nested { t, params } message, arrays of those).
- * Loose on purpose: callers pass their own objects; unknown values render as ''.
+ * Loose on purpose: callers pass their own objects (interfaces included); unknown values render as ''.
  */
-export type TParams = Record<string, unknown>;
+export type TParams = object;
 /** A translate function (t of client/lib/i18n.ts, tr of server/lib/i18n.js). */
-export type Translator = (key: string, params?: TParams) => string;
+export type Translator = (key: string, params?: TParams | null) => string;
 /** Plural forms: French keys. `zero`, when given, wins for n === 0 in every language. */
 export interface PluralForms {
   zero?: string;
@@ -52,7 +52,7 @@ export function placeholders(str: unknown): string[] {
  */
 export function interpolate(str: string, params?: TParams | null, tr?: Translator, lang?: string): string {
   if (typeof str !== 'string' || !params || typeof params !== 'object' || str.indexOf('{') < 0) return str;
-  return str.replace(/\{(\w+)\}/g, (m, name: string) => (Object.prototype.hasOwnProperty.call(params, name) ? paramText(params[name], tr, lang) : m));
+  return str.replace(/\{(\w+)\}/g, (m, name: string) => (Object.prototype.hasOwnProperty.call(params, name) ? paramText((params as Record<string, unknown>)[name], tr, lang) : m));
 }
 
 function paramText(v: unknown, tr: Translator | undefined, lang: string | undefined): string {

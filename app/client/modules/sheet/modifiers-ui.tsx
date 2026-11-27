@@ -2,26 +2,21 @@
 // rulebook reference (📖 BookRef) and tooltips listing the sources of a derived value. See ARCHITECTURE.md « Modifiers ».
 import { useMemo } from 'react';
 import { useCatalog } from '../../lib/net.ts';
-import { lookupFromIndex, collectModifiers, derivedWithModifiers, CONDITIONS, toggleLabel, conditionLabel, signedValue, poolModifiers, limitFor, weaponAccuracy } from '/shared/modifiers.ts';
+import { lookupFromIndex, collectModifiers, derivedWithModifiers, CONDITIONS, toggleLabel, conditionLabel, signedValue, poolModifiers, limitFor, weaponAccuracy, type EffectsIndex, type ModifierLine } from '/shared/modifiers.ts';
 import { t, tk, limitLabel, skillLabel, skillGroupLabel, skillCategoryLabel, attrLabel } from '../../lib/i18n.ts';
-import { BookRef } from './ext.ts';
 import { KNOWLEDGE_TYPES } from './sheet-data.ts';
 import type { Actor, ConditionState, Weapon } from '../../../shared/types.ts';
 import type { Derived, DerivedMods, EffectsLookup, SheetModifier, SourceLine } from './types.ts';
+import { BookRef } from '../books/BookRef.tsx';
 
 export type { SourceLine };
 
 /** A modifier line of poolModifiers() / limitFor() / weaponAccuracy() (shared/modifiers.js). */
-export interface ModLine {
-  mod: SheetModifier;
-  value: number;
-  state: string;
-  toggles?: string[];
-}
-// Typed views of shared/modifiers.js (TypeScript infers the JS defaults too narrowly: ctx = {}, opts = {}).
-export const poolModsOf = poolModifiers as unknown as (mods: SheetModifier[], ctx: object, opts: object) => { lines: ModLine[]; total: number };
-export const limitOf = limitFor as unknown as (actor: Actor, name: string, mods: SheetModifier[], ctx: object, opts: object) => { base: number; total: number | null; lines: ModLine[] };
-export const accuracyOf = weaponAccuracy as unknown as (actor: Actor, w: Weapon, mods: SheetModifier[], ctx: object, opts: object) => { total: number | null; lines: ModLine[]; parts: Array<[string, number]> };
+/** A modifier line of a test (shared/modifiers.ts poolModifiers / limitFor / weaponAccuracy). */
+export type ModLine = ModifierLine;
+export const poolModsOf = poolModifiers;
+export const limitOf = limitFor;
+export const accuracyOf = weaponAccuracy;
 
 // Switches turned on, remembered per actor in this browser (« Tenue visible » stays on for Jane). Storage may be blocked.
 const togglesKey = (id: string) => `sr.rollToggles.${id}`;
@@ -46,8 +41,8 @@ const noLookup: EffectsLookup = () => null;
 /** lookup(file, catalogId, name) over /catalog/effects.json (no effect while it loads). */
 export function useEffectsLookup(): EffectsLookup {
   // The effects index is one object (not an array): useCatalog types it as a list.
-  const ix = useCatalog('effects') as unknown as { files?: unknown } | unknown[];
-  return useMemo(() => (ix && !Array.isArray(ix) && ix.files ? (lookupFromIndex(ix) as EffectsLookup) : noLookup), [ix]);
+  const ix = useCatalog('effects') as unknown as EffectsIndex | unknown[];
+  return useMemo(() => (ix && !Array.isArray(ix) && ix.files ? lookupFromIndex(ix) : noLookup), [ix]);
 }
 
 /** Modifiers of an actor (memoized on the actor object). opts.weaponId adds that weapon's accessories. */
@@ -185,7 +180,7 @@ interface ModChipProps {
   book?: boolean;
 }
 export function ModChip({ m, showSource = true, state, book = true }: ModChipProps) {
-  const cls = 'sh-mod' + (m.baked || m.unbaked || m.info ? ' info' : '') + (m.unbaked ? ' unbaked' : '') + (state === 'off' ? ' off' : '') + (state === 'ignored' ? ' ignored' : '') + (m.value < 0 ? ' bad' : '');
+  const cls = 'sh-mod' + (m.baked || m.unbaked || m.info ? ' info' : '') + (m.unbaked ? ' unbaked' : '') + (state === 'off' ? ' off' : '') + (state === 'ignored' ? ' ignored' : '') + ((m.value ?? 0) < 0 ? ' bad' : '');
   return <span className={cls}>
     {showSource ? <><b>{sourceName(m.source)}</b>{' '}</> : null}
     <span>{modText(m)}</span>

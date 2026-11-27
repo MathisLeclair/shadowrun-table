@@ -9,7 +9,7 @@ import { t, tk, tn, getLang } from '../../lib/i18n.ts';
 import { Overlay, itemLabel, itemTitle, modeLabel } from './common.tsx';
 import {
   usesAmmo, isGrenade, ammoFits, clipFits, reloadPlan, isCarried, containerOf, fireOptions, AMMO_TYPE_LABELS, MODE_SHORT_FR, readyCount, ON_BODY,
-  ammoKindOf, sameAmmoKind,
+  ammoKindOf, sameAmmoKind, type AmmoInfo,
 } from './inventory.ts';
 import type { Actor, AmmoKind, Gear, Weapon } from '../../../shared/types.ts';
 import type { SheetCtx } from './types.ts';
@@ -50,7 +50,7 @@ export function reloadSources(actor: Actor, w: Weapon): Gear[] {
   const reach = (g: Gear) => (isCarried(actor, g.location) ? 0 : containerOf(actor, g.location)?.kind === 'bag' ? 1 : 2);
   return (actor.gear || []).filter((g) => g && Number(g.qty ?? 1) > 0 && reach(g) < 2 && ammoFits(g, w)).sort((a, b) => reach(a) - reach(b) || Number(b.qty ?? 1) - Number(a.qty ?? 1));
 }
-const spareClip = (actor: Actor, w: Weapon, kind = 'clip'): Gear | undefined => (actor.gear || []).find((g) => g && Number(g.qty ?? 1) > 0 && (isCarried(actor, g.location) || containerOf(actor, g.location)?.kind === 'bag') && clipFits(g, w, kind));
+const spareClip = (actor: Actor, w: Weapon, kind: AmmoInfo['kind'] = 'clip'): Gear | undefined => (actor.gear || []).find((g) => g && Number(g.qty ?? 1) > 0 && (isCarried(actor, g.location) || containerOf(actor, g.location)?.kind === 'bag') && clipFits(g, w, kind));
 
 /** Reload (one action): toast with the action type; errors are toasted by send(). */
 async function doReload(actor: Actor, w: Weapon, sourceItemId?: string | null, free?: boolean): Promise<ReloadReply | null> {

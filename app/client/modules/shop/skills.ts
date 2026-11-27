@@ -122,7 +122,7 @@ export function skillIndex(catalog: StorefrontCatalog | null | undefined): Skill
 }
 
 /** Skills of a storefront entry (fixer specials borrow their catalog item's). */
-export function entrySkills(entry: { ref?: string; special?: { catalogRef?: string } | null } | null | undefined, idx: SkillIndex | null | undefined): string[] {
+export function entrySkills(entry: { ref?: string; special?: { catalogRef?: string | null } | null } | null | undefined, idx: SkillIndex | null | undefined): string[] {
   if (!entry || !idx) return [];
   if (entry.special) return (entry.special.catalogRef && idx.get(entry.special.catalogRef)) || [];
   return idx.get(entry.ref as string) || [];

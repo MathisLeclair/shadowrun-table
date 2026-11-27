@@ -3,32 +3,19 @@
 //   <ChummerImportButton />                — GM, CharactersPage: new actor from a file
 //   <ChummerSheetBar game actor />         — sheet header (GM + owning player): export / update / status
 //   <ChummerGmPanel game />                — CharactersPage: « autoriser les joueurs… » + pending requests
-import { useRef, useState, type ComponentType, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { Button, Badge, Toggle, Empty, confirmAction, type ButtonVariant } from '../../lib/ui.tsx';
 import { send, api, getToken, type GameView } from '../../lib/net.ts';
 import { openSheet, toast } from '../../lib/ui-store.ts';
 import { t, tIfKnown, errorText, attrLabel, skillLabel, metatypeLabel, fmtDate } from '../../lib/i18n.ts';
-import { Overlay as SheetOverlay } from '../sheet/common.tsx';
+import { Overlay } from '../sheet/common.tsx';
 import type { ViewActor, I18nMessage } from '../../../shared/types.ts';
 import type { ChummerDiff, ChummerPreview, ChummerRequestView } from './types.ts';
 import './chummer.css';
 
-// sheet/common.js is not converted yet: its Overlay's props are typed here (TS infers them all as required from the JS).
-interface OverlayProps {
-  title: ReactNode;
-  onClose: () => void;
-  width?: number;
-  actions?: ReactNode;
-  children?: ReactNode;
-  class?: string;
-  className?: string;
-}
-const Overlay = SheetOverlay as unknown as ComponentType<OverlayProps>;
-
 const isGM = (game: GameView | null | undefined) => game?.me?.role === 'gm';
 
-// fmtDate is untyped JS: its options type is inferred from its default value, hence the cast.
-const WHEN_OPTS = { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' } as unknown as Parameters<typeof fmtDate>[1];
+const WHEN_OPTS: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' };
 /** Short date + time ('26/11 14:05' in French). */
 function fmtWhen(ts: number | null | undefined): string {
   if (!ts) return '';
@@ -40,7 +27,7 @@ const texts = (list: unknown[] | null | undefined, i18n: I18nMessage[] | null | 
   Array.isArray(i18n) && i18n.length ? i18n.map((w) => t(w.t, w.params)) : (list || []).map((w) => tIfKnown(String(w ?? '')));
 
 /** Pending requests of the view (players see their own only). */
-const requestsOf = (game: GameView): ChummerRequestView[] => (game.chummer?.pending || []) as unknown as ChummerRequestView[];
+const requestsOf = (game: GameView): ChummerRequestView[] => (game.chummer?.pending || []) as ChummerRequestView[];
 
 /** Hidden file input + trigger. onFile(file, text) */
 function useFilePicker(onFile: (file: File, text: string) => void): [ReactNode, () => void] {
@@ -251,9 +238,8 @@ interface UpdateDialogProps {
 /** Confirmation dialog for a re-import. */
 function UpdateDialog({ actor, preview, busy, onConfirm, onClose, gm }: UpdateDialogProps) {
   const needsApproval = preview.needsApproval;
-  // `class` = what the unconverted Overlay (sheet/common.js) reads; className for when it is converted.
   return (
-    <Overlay title={t('Mettre à jour {name} depuis Chummer', { name: actor.name })} onClose={onClose} width={680} class="chm-modal" className="chm-modal">
+    <Overlay title={t('Mettre à jour {name} depuis Chummer', { name: actor.name })} onClose={onClose} width={680} className="chm-modal">
       <div className="col">
         <div className="muted small">
           {withBold(t('Fichier {file}', { file: MARK }), preview.fileName || t('(sans nom)'))}

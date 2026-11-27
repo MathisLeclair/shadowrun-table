@@ -26,11 +26,24 @@ import AttackTray from './combat/AttackTray.tsx';
 import Dice3D from './sheet/Dice3D.tsx';
 import { unreadHandouts } from './campaign/common.tsx';
 import { tk } from '../lib/i18n.ts';
+import type { ComponentType } from 'react';
+import type { GameProps } from '../lib/net.ts';
+import type { GameView } from '../../shared/types.ts';
 
-const pending = (list) => (list || []).filter((r) => r.status === 'pending').length || null;
+/** Entry of the main or dock tab lists. */
+export interface TabEntry {
+  id: string;
+  label: string;
+  icon?: string;
+  roles: string[];
+  component: ComponentType<GameProps>;
+  badge?: (game: GameView) => string | number | null;
+}
+
+const pending = (list: Array<{ status: string }> | null | undefined) => (list || []).filter((r) => r.status === 'pending').length || null;
 
 /** Main tabs (top bar). roles: who sees it. badge(game) -> number|null. label: French key marked with tk(), rendered with t(label). */
-export const mainTabs = [
+export const mainTabs: TabEntry[] = [
   { id: 'map', label: tk('Carte'), icon: '⌖', roles: ['gm', 'player'], component: MapView },
   { id: 'sheet', label: tk('Ma fiche'), icon: '☰', roles: ['player'], component: MySheet },
   { id: 'characters', label: tk('Personnages'), icon: '☰', roles: ['gm'], component: CharactersPage },
@@ -49,7 +62,7 @@ export const mainTabs = [
 ];
 
 /** Right dock tabs. */
-export const dockTabs = [
+export const dockTabs: TabEntry[] = [
   { id: 'log', label: tk('Journal & dés'), roles: ['gm', 'player'], component: LogDock },
   { id: 'combat', label: tk('Initiative'), roles: ['gm', 'player'], component: CombatDock, badge: (g) => (g.combat?.active ? '●' : null) },
   { id: 'sounds', label: tk('Sons'), roles: ['gm'], component: SoundDock },
@@ -57,7 +70,7 @@ export const dockTabs = [
 ];
 
 /** Full character sheet, rendered inside the global modal: <SheetView game actorId />. */
-export const SheetView = SheetViewImpl;
+export const SheetView: ComponentType<GameProps & { actorId: string }> = SheetViewImpl;
 
 /** Mounted once for every user, outside the tabs (audio playback, overlays…). */
-export const globalComponents = [AudioEngine, BookViewer, AttackTray, Dice3D]; // BookViewer: rulebook drawer (openBook() from anywhere); AttackTray: defend / soak prompts; Dice3D: 3D dice overlay
+export const globalComponents: ComponentType<GameProps>[] = [AudioEngine, BookViewer, AttackTray, Dice3D]; // BookViewer: rulebook drawer (openBook() from anywhere); AttackTray: defend / soak prompts; Dice3D: 3D dice overlay

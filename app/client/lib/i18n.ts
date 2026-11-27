@@ -196,7 +196,7 @@ export function clearMissing(): void {
 // Translate
 // ---------------------------------------------------------------------------
 /** Translate a French source string; {placeholders} are filled from params (named values, never fragments). */
-export function t(key: string, params?: TParams | null): string {
+export function t(key: string | null | undefined, params?: TParams | null): string {
   const k = String(key ?? '');
   const r = lookup(dict, lang, k);
   if (r.missing) noteMissing(k);
@@ -207,9 +207,9 @@ export function t(key: string, params?: TParams | null): string {
  * Plural: tn(n, '{n} objet', '{n} objets', params) or tn(n, { zero: 'Aucun objet', one: '{n} objet', other: '{n} objets' }, params).
  * {n} is always available. Each form is its own dictionary key. French: 0 and 1 use `one`; English: only 1.
  */
-export function tn(n: number, forms: PluralForms, params?: TParams | null): string;
-export function tn(n: number, one: string, other: string, params?: TParams | null): string;
-export function tn(n: number, one: string | PluralForms, other?: string | TParams | null, params?: TParams | null): string {
+export function tn(n: number | null | undefined, forms: PluralForms, params?: TParams | null): string;
+export function tn(n: number | null | undefined, one: string, other: string, params?: TParams | null): string;
+export function tn(n: number | null | undefined, one: string | PluralForms, other?: string | TParams | null, params?: TParams | null): string {
   let forms: PluralForms;
   let p: TParams | null | undefined;
   if (typeof one === 'string') {

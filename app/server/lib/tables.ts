@@ -17,8 +17,8 @@ import type { StateStore } from '../store.ts';
 import type { Lang, PackId, SessionUser, TableInfo, TableMeta, TableState } from '../../shared/types.ts';
 import type { Socket } from 'socket.io';
 
-/** A registry entry as stored (TableMeta plus the migration date of the legacy table). */
-export type StoredMeta = TableMeta & { migratedAt?: number };
+/** A registry entry as stored. */
+export type StoredMeta = TableMeta;
 /** One connected socket of a table. */
 export interface SocketEntry {
   socket: Socket;

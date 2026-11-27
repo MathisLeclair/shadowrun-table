@@ -452,7 +452,7 @@ export function convertSheet(fa: FoundryDoc, ctx: ActorContext = {}): ConvertedS
       id: fid(it),
       name: hit?.entry?.nameFr || it.name,
       kind: it.type === 'bioware' ? 'bioware' : 'cyberware',
-      // 'gamma' / 'omega' are kept as Foundry stores them (not in WareGrade).
+      // 'gamma' / 'omega' are kept as Foundry stores them.
       grade: (['standard', 'alpha', 'beta', 'delta', 'used', 'gamma', 'omega'].includes(it.system?.grade) ? it.system.grade : 'standard') as WareGrade,
       ...(rating > 0 ? { rating } : {}),
       essence: r2(num(it.system?.essence, 0)),

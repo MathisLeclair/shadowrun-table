@@ -1,6 +1,6 @@
-// Types local to the sheet module (gaps of shared/types.ts are listed in the migration report).
-import type { derive, SKILLS } from '/shared/sr5.ts';
-import type { derivedWithModifiers } from '/shared/modifiers.ts';
+// Types local to the sheet module.
+import type { derive, SkillDef } from '/shared/sr5.ts';
+import type { DerivedWithModifiers, ModifierLookup } from '/shared/modifiers.ts';
 import type { Actor, GameView, KnowledgeSkill, Modifier, RollRecord, Skill } from '../../../shared/types.ts';
 
 /** derive(actor) of shared/sr5.js. */
@@ -12,13 +12,8 @@ export interface SourceLine {
   applied?: boolean;
   note?: string;
 }
-/** derivedWithModifiers(actor, mods) of shared/modifiers.js (its keyed objects are inferred as {} from the JS). */
-export type DerivedMods = Omit<ReturnType<typeof derivedWithModifiers>, 'limits' | 'limitsAlt' | 'limitsAltConditions' | 'sources'> & {
-  limits: Derived['limits'] & Record<string, number | null>;
-  limitsAlt: Record<string, number | null | undefined>;
-  limitsAltConditions: Record<string, string[] | undefined>;
-  sources: Record<string, SourceLine[] | undefined>;
-};
+/** derivedWithModifiers(actor, mods) of shared/modifiers.ts. */
+export type DerivedMods = DerivedWithModifiers;
 
 /**
  * A modifier as the sheet reads it: shared/types.ts Modifier plus fields shared/modifiers.js also sets
@@ -27,7 +22,7 @@ export type DerivedMods = Omit<ReturnType<typeof derivedWithModifiers>, 'limits'
 export type SheetModifier = Modifier & { unbaked?: boolean; note?: string };
 
 /** lookup(file, catalogId, name) over the effects index (shared/modifiers.js lookupFromIndex). */
-export type EffectsLookup = (file: string, catalogId?: string | null, name?: string) => unknown;
+export type EffectsLookup = ModifierLookup;
 
 /** Preset of the roll dialog (see RollDialog.tsx header). */
 export interface RollPreset {
@@ -76,11 +71,8 @@ export type ShownRoll = Partial<RollRecord> & {
   [extra: string]: any; // replies of dice/roll, attack/roll, actor/contactRoll… carry module-specific fields
 };
 
-/** An entry of shared/sr5.js SKILLS. */
-export type SkillDef = (typeof SKILLS)[number];
-/** Skills and knowledge skills may carry a note (Chummer / Foundry imports): missing from shared/types.ts. */
-export type SheetSkill = Skill & { notes?: string };
-export type SheetKnowledge = KnowledgeSkill & { notes?: string };
+/** An entry of shared/sr5.ts SKILLS. */
+export type { SkillDef };
 
 /** An item of any actor list, as the generic GM editors handle it (fields depend on the list). */
 export type AnyItem = Record<string, any>; // generic editor over every item list: fields vary per list

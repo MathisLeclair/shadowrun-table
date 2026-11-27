@@ -8,8 +8,9 @@ import { actionPool, isIllegal, ACTION_TYPES, ACTION_CATS, MARK_PENALTY, matrixM
 import type { MatrixAction, PendingAssistLike, PersonaView, PoolCalc, PoolModLine } from './types.ts';
 import { isGM, targetOptions, marksRequired, msgText, outcomeTexts, partLabel, actionName, marksText, assistText, type ActionResult, type MsgLike } from './common.tsx';
 import { useModifiers, toggleText, effectText, loadRollToggles, saveRollToggles } from '../sheet/modifiers-ui.tsx';
-import { BookRef, SkillRef, DiceFaces } from './legacy.ts';
 import type { Actor, GameView, RollResult } from '../../../shared/types.ts';
+import { BookRef, SkillRef } from '../books/BookRef.tsx';
+import { DiceFaces } from '../sheet/common.tsx';
 
 const FILE_OPS = [
   { value: 'read', label: tk('Lire') },

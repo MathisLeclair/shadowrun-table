@@ -6,9 +6,9 @@ import { t, getLang, attrLabel, skillLabel, itemName } from '../../lib/i18n.ts';
 import { MAGIC_QUALITY_NAMES, LIMITS, rowId } from '/shared/chargen.ts';
 import { Budget, StepIssues } from './common.tsx';
 import Picker from './Picker.tsx';
-import { ItemRef } from '../combat/legacy-components.ts';
 import type { DraftData } from '../../../shared/types.ts';
 import type { LooseCatalogItem, StepProps } from './types.ts';
+import { ItemRef } from '../books/BookRef.tsx';
 
 const CHOICE_ATTRS = ['BOD', 'AGI', 'REA', 'STR', 'WIL', 'LOG', 'INT', 'CHA', 'MAG', 'RES'];
 const NEEDS_CHOICE: Record<string, 'attr' | 'skill'> = {

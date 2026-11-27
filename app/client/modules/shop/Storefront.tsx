@@ -8,9 +8,9 @@ import { specialEntry, priceEntry, buyStatus, addToCart, nuyen, AvailBadge, useM
 import { skillIndex, entrySkills, actorSkillRatings, skillOptions, matchSkill, NO_SKILL } from './skills.ts';
 import ItemDetail from './ItemDetail.tsx';
 import MartialArts from './MartialArts.tsx';
-import { ItemRef } from './bookrefs.ts';
 import type { Actor, CatalogEntry, GameView, ShopState } from '../../../shared/types.ts';
 import type { BuyStatus, CartLine, PriceQuote, ShopCatalog, ShopEntry } from './types.ts';
+import { ItemRef } from '../books/BookRef.tsx';
 
 const PAGE = 40;
 

@@ -4,10 +4,10 @@
 // State: attacks: { list: [Attack] (newest first, max 60), blasts: [Blast] (max 12), turn: { [actorId]: { key, defended, boosts, once } } }.
 import { parseDamage } from '../../shared/sr5.ts';
 import {
-  ACTION_BY_ID, isUnlocked, rangeFor, rangeClass, RANGE_BANDS, environmentFor as environmentForJs, attackSenses as attackSensesJs, activeBlasts, pruneExpired, areaEffectOf,
-  LASTING_EFFECTS, TOXIN_BY_ID, toxinFromText as toxinFromTextJs, toxinOutcome as toxinOutcomeJs, toxinProtection, untilFor, AFFLICTIONS as AFFLICTIONS_JS,
-  cellDistance as cellDistanceJs, isAreaWeapon, scatterDice, rollScatter as rollScatterJs, blastOf as blastOfJs, blastDvAt as blastDvAtJs, blastReach, defenseLines,
-  finalDamageType as finalDamageTypeJs, DEFENSE_BY_ID, SITUATION_BY_ID,
+  ACTION_BY_ID, isUnlocked, rangeFor, rangeClass, RANGE_BANDS, environmentFor, attackSenses, activeBlasts, pruneExpired, areaEffectOf,
+  LASTING_EFFECTS, TOXIN_BY_ID, toxinFromText, toxinOutcome, toxinProtection, untilFor, AFFLICTIONS,
+  cellDistance, isAreaWeapon, scatterDice, rollScatter, blastOf, blastDvAt, blastReach, defenseLines,
+  finalDamageType, DEFENSE_BY_ID, SITUATION_BY_ID,
 } from '../../shared/combat.ts';
 import { FIRE_BY_ID, isLauncherProfile, launcherRounds, fireOptions, usesAmmo } from '../../client/modules/sheet/inventory.ts';
 import { createVisionContext, tokenVision } from '../../shared/vision.ts';
@@ -19,7 +19,7 @@ import type {
   I18nParams, Point, ServerModule, SessionUser, TableState, Token,
 } from '../../shared/types.ts';
 
-/** Weapons / launcher profiles / catalog entries as the shared rules (still JavaScript) hand them over: loosely shaped. */
+/** Weapons / launcher profiles / catalog entries / player payloads of several shapes: read field by field. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Loose = Record<string, any>;
 /** Anything with catalog names (weapon, launcher profile). */
@@ -30,18 +30,6 @@ type Landing = { x: number; y: number; meters: number; scattered?: boolean; fumb
 type BlastProfile = { dv: number | null; type: DamageType; ap: number; falloff: number | null; radius: number | null; damaging: boolean };
 /** doDefend / doSoak options (player fields checked inside). */
 type ResolveOpts = { options?: string[]; situations?: string[]; modifier?: unknown; explode?: unknown };
-
-// shared/combat.js is still JavaScript: types inferred from its `null` / `[]` defaults are too narrow, so they are given here.
-const environmentFor = environmentForJs as unknown as (opts: Loose) => Loose;
-const attackSenses = attackSensesJs as unknown as (actor: Actor, vision: unknown, weapon: Loose | null | undefined) => Loose;
-const toxinOutcome = toxinOutcomeJs as (toxin: Loose, left: number, wil: unknown) => { damage: number; damageType: DamageType | null; afflictions: AfflictionKind[] };
-const AFFLICTIONS = AFFLICTIONS_JS as Record<string, { name: string; en: string; turns?: number }>;
-const cellDistance = cellDistanceJs as (a: Point, b: Point, metersPerCell?: number) => number;
-const rollScatter = rollScatterJs as (opts: Loose) => Landing;
-const blastOf = blastOfJs as (w: Loose | null | undefined, actor: Actor) => BlastProfile | null;
-const blastDvAt = blastDvAtJs as (blast: BlastProfile, meters: number) => number;
-const toxinFromText = toxinFromTextJs as (w: Loose | null | undefined) => string | null;
-const finalDamageType = finalDamageTypeJs as (type: DamageType, modifiedDv: number, modifiedArmor: number) => DamageType;
 
 const tk = (s: string): string => s;
 const MAX_ATTACKS = 60;
@@ -169,7 +157,7 @@ function doToxin(ctx: ActionContext, atk: Attack, target: Actor, { modifier = 0,
   atk.soakHits = roll.hits;
   atk.soakLogId = roll.logId;
   atk.damage = out.damage;
-  atk.damageType = out.damageType as DamageType; // null when the toxin does no damage (see the report on shared/types.ts)
+  atk.damageType = out.damageType; // null when the toxin does no damage
   atk.left = left;
   atk.effects = out.afflictions;
   atk.status = 'done';
@@ -185,7 +173,7 @@ function doToxin(ctx: ActionContext, atk: Attack, target: Actor, { modifier = 0,
   if (!left) logAttack(ctx, tk('{target} résiste au gaz ({toxin}).'), { target: atk.targetName, toxin: { t: toxin.name } }, atk.gmOnly);
   else if (out.afflictions.length) {
     logAttack(ctx, tk('{target} subit le gaz ({toxin}) : {effects}.'), {
-      target: atk.targetName, toxin: { t: toxin.name }, effects: { fr: out.afflictions.map((k: string) => AFFLICTIONS[k].name).join(', '), en: out.afflictions.map((k: string) => AFFLICTIONS[k].en).join(', ') },
+      target: atk.targetName, toxin: { t: toxin.name }, effects: { fr: out.afflictions.map((k) => AFFLICTIONS[k].name).join(', '), en: out.afflictions.map((k) => AFFLICTIONS[k].en).join(', ') },
     }, atk.gmOnly);
   }
   return roll;
@@ -445,7 +433,7 @@ const mod: ServerModule = {
             ...(land.fumble ? { fumble: true } : {}), ...(land.glitch ? { glitch: true } : {}), hitsRolled: roll.hits,
             dv: blast.damaging ? blast.dv : null, type: blast.type, ap: blast.ap, falloff: blast.falloff, radius: blast.radius, reach: blastReach(blast), hits, ...(gmOnly ? { gmOnly: true } : {}),
             effect, until: untilFor(ctx.state.combat, ctx.now, lasting ? { long: true } : { turns: 1 }), ...(toxin ? { toxinId: toxin.id, toxinName: { fr: toxin.name, en: toxin.en } } : {}),
-          } as Blast, MAX_BLASTS); // falloff / radius may be null (no blast profile): see the report on shared/types.ts
+          }, MAX_BLASTS);
           if (land.scattered) logAttack(ctx, tk('{weapon} dévie de {m} m ({dir} au diagramme).'), { weapon: biName(source), m: land.meters, dir: land.dir ? land.dir[0] + land.dir[1] : '—' }, gmOnly);
           else logAttack(ctx, tk('{weapon} tombe exactement au point visé.'), { weapon: biName(source) }, gmOnly);
           return { ...roll, entry: undefined, blastId: b.id, blast: b };
@@ -455,7 +443,7 @@ const mod: ServerModule = {
           return out;
         }
         // Targeted attack: the defender rolls next (no hit = missed at once).
-        const fireDef = roll.fire ? (roll.fire.defense !== undefined ? roll.fire.defense : FIRE_BY_ID[roll.fire.mode]?.defense || 0) : 0;
+        const fireDef = roll.fire ? (roll.fire.defense !== undefined ? roll.fire.defense : FIRE_BY_ID[roll.fire.mode ?? '']?.defense || 0) : 0;
         const atk = push<Attack>(ctx.state, s.list, {
           ...base, id: atkId, kind: weapon?.kind === 'melee' || action?.kind === 'test' ? 'melee' : 'ranged', targetId: target.id, targetTokenId: targetToken?.id || null, targetName,
           dv: action?.noDamage ? null : dmg.dv === null ? null : dmg.dv + (action?.dv || 0), type: dmg.type, ap: apOf(source) + (action?.ap || 0),

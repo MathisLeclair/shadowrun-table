@@ -7,7 +7,6 @@ import { send } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
 import { t, tk, fmtDate } from '../../lib/i18n.ts';
 import { Avatar, DiceFaces, cssVars } from './common.tsx';
-import { RuleRef } from './ext.ts';
 import {
   FAKE_SIN_DETAILS, VERIFICATION_DETAILS, OUTCOME_LABELS, MAX_DEVICE_RATING, isRealSin, sinRating, sinIdentity, sinLicenses, sinNumber,
   verificationPool, checkOdds,
@@ -16,6 +15,7 @@ import {
 import type { Actor, Sin, SinCheckInfo } from '../../../shared/types.ts';
 import type { ShownRoll } from './types.ts';
 import './sins.css';
+import { RuleRef } from '../books/BookRef.tsx';
 
 const FAKE_DETAILS = FAKE_SIN_DETAILS as Record<number, string>;
 const DEVICE_DETAILS = VERIFICATION_DETAILS as Record<number, string>;

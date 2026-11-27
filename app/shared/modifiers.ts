@@ -861,10 +861,10 @@ export const RESIST_TESTS: string[] = ['soak', 'drainResist', 'biofeedback', 'to
  * The server ignores any other claim (a skill roll « soak » would add the whole armor).
  */
 export function checkedTest(
-  test: string,
+  test: unknown,
   { skillId, weaponId, attr: a1, attr2: a2 }: { skillId?: string | null; weaponId?: string | null; attr?: string | null; attr2?: string | null } = {},
 ): string | null {
-  if (!ROLL_TESTS.includes(test) || skillId || weaponId || !a1) return null;
+  if (typeof test !== 'string' || !ROLL_TESTS.includes(test) || skillId || weaponId || !a1) return null;
   const got = [a1, a2].filter(Boolean).sort().join('+');
   return TEST_ATTRS[test].some((set) => [...set].sort().join('+') === got) ? test : null;
 }

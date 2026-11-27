@@ -11,10 +11,10 @@ import { CatalogPicker } from './editors.tsx';
 import { SUB_LISTS, SUB_LABELS, LIFESTYLE_BASES, VEHICLE_MOD_CATEGORIES, weaponMods, armorMods, vehicleSlots, vehicleSlotsByCategory } from './sheet-data.ts';
 import { fmtNum, signed } from './common.tsx';
 import { quote, upgradeFields, fold } from '../shop/rules.ts';
-import { ItemRef, BookRef } from './ext.ts';
 import type { ReactNode } from 'react';
 import type { Actor, Armor, CatalogItem, Lifestyle, Vehicle, Weapon } from '../../../shared/types.ts';
 import type { AnyItem, CatalogConversion, FieldDef } from './types.ts';
+import { ItemRef, BookRef } from '../books/BookRef.tsx';
 
 const MOUNT_LABELS: Record<string, string> = { Top: tk('Dessus'), Under: tk('Dessous'), Barrel: tk('Canon'), Stock: tk('Crosse'), Side: tk('Côté'), Internal: tk('Interne'), '': tk('Sans montage') };
 export const mountLabel = (m: string | null | undefined): string => t(MOUNT_LABELS[m || ''] || m);
@@ -42,8 +42,7 @@ async function withParentValues(file: string, item: AnyItem, entry: CatalogItem 
       parentValue = quote(parentCat, { rating: parent.rating }).unitCost;
     } catch {}
   }
-  const fields = upgradeFields as unknown as (file: string, entry: CatalogItem, parent: AnyItem, opts: { rating?: number; parentCat: CatalogItem | null; parentValue: number | null }) => AnyItem;
-  return { ...item, ...fields(file, entry, parent, { rating: item.rating, parentCat, parentValue }) };
+  return { ...item, ...upgradeFields(file, entry, parent, { rating: item.rating, parentCat, parentValue }) };
 }
 
 /** Catalogs that feed each nested list (GM « + Depuis le catalogue »). Techniques come from the martial art's own entry. */

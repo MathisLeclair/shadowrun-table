@@ -5,7 +5,7 @@ import { send, useServerEvent, type GameProps } from '../../lib/net.ts';
 import { useUI, setUI, openSheet, toast, type UIState } from '../../lib/ui-store.ts';
 import { derive } from '/shared/sr5.ts';
 import {
-  buildGrid, findPath, pathLength, computeVisibility, createVisionContext, viewersForUser, decodeBits, orBits, isPcToken,
+  buildGrid, findPath, pathLength, computeVisibility, createVisionContext, viewersForUser, decodeBits, orBits, isPcToken, type VisionContext,
 } from '/shared/vision.ts';
 import { MapCanvas, type MapHandlers, type MapPointerInfo } from './MapCanvas.tsx';
 import { DISPO, STATUS_GLYPHS, isImageMap, lightingOptions, dispoLabel, statusText, getTileStyle, setTileStyle, type MapRenderer, type MapScene, type FogMasks, type CombatMarks, type CombatLineMark, type Point } from './renderer.ts';
@@ -26,9 +26,6 @@ const DOOR_LABEL: Record<string, string> = { open: tk('Ouverte'), closed: tk('Fe
 const doorLabel = (s: string | undefined) => (s && DOOR_LABEL[s] ? t(DOOR_LABEL[s]) : '');
 const NEXT_DOOR_STATE: Record<string, DoorState> = { open: 'closed', closed: 'locked', locked: 'open' };
 const TORCH = { radius: 6, color: '#fff1cc' };
-// shared/vision.js is untyped JS: its `ctx = null` default makes TS infer a null-only parameter. Real signature:
-type VisionContext = ReturnType<typeof createVisionContext>;
-const visibility = computeVisibility as unknown as (map: GameMap, viewers: Token[], actors: Record<string, ViewActor>, ctx?: VisionContext | null) => Uint8Array;
 
 /** Full sheet (not an NPC stub). */
 const hasSheet = (a: ViewActor | undefined | null): a is Actor => !!a && 'attributes' in a && !!a.attributes;
@@ -258,7 +255,7 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
     let vctx: VisionContext | null = null;
     if (needParty) {
       vctx = createVisionContext(map);
-      party = visibility(map, (map.tokens || []).filter((tt) => isPcToken(tt, actors)), actors, vctx);
+      party = computeVisibility(map, (map.tokens || []).filter((tt) => isPcToken(tt, actors)), actors, vctx);
     }
     if (preview) {
       const shown = playerSideMap(map);
@@ -270,7 +267,7 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
         for (const enc of Object.values(map.explored || {})) orBits(explored, decodeBits(enc, n));
       } else {
         const u = game.users?.[preview];
-        visible = visibility(map, viewersForUser(map, { characterIds: u?.characterIds || [] }, actors), actors, vctx);
+        visible = computeVisibility(map, viewersForUser(map, { characterIds: u?.characterIds || [] }, actors), actors, vctx);
         explored = decodeBits(map.explored?.[preview], n);
       }
       orBits(explored, visible);
