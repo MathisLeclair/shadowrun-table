@@ -2,35 +2,44 @@
 // drawn as recognisable objects. A rectangle of identical tiles is ONE object: 4×2 `v` = a car, 1×3 `b` = a sofa,
 // 2×2 `b` = a bed, 1×1 `T` = a round table with chairs… Same contract as drawStaticMap: ctx in pixels, S px per cell,
 // returns the machinery cells that get animated LEDs.
+import type { ThemeColors, TileMap, Cell } from './renderer.ts';
 
-const FLOOR_STYLE = { street: 'concrete', bar: 'planks', corp: 'tiles', lab: 'smalltiles', industrial: 'concrete', residential: 'planks', matrix: 'panels', club: 'polished' };
-const MACHINE_STYLE = { street: 'shelf', bar: 'shelf', residential: 'shelf', industrial: 'machine', corp: 'rack', lab: 'rack', matrix: 'rack', club: 'rack' };
+/** A rectangle of identical object tiles (cells). */
+interface ObjRect {
+  x0: number;
+  y0: number;
+  w: number;
+  h: number;
+}
+
+const FLOOR_STYLE: Record<string, string> = { street: 'concrete', bar: 'planks', corp: 'tiles', lab: 'smalltiles', industrial: 'concrete', residential: 'planks', matrix: 'panels', club: 'polished' };
+const MACHINE_STYLE: Record<string, string> = { street: 'shelf', bar: 'shelf', residential: 'shelf', industrial: 'machine', corp: 'rack', lab: 'rack', matrix: 'rack', club: 'rack' };
 const CAR_COLORS = ['#5a6b82', '#8a3442', '#3a6a52', '#6a6e74', '#8a7238', '#2c4170', '#b8bcc4', '#3d434c'];
 const BOTTLES = ['#c9a24a', '#4f8a4a', '#9fc4d6', '#8a3a3a', '#d0b080', '#6a4a8a'];
 const BOXES = ['#6a5a44', '#4a5a6a', '#7a4a3a', '#4a6a4a', '#8a7a5a', '#5a4a6a'];
 
-function hash(x, y, s = 0) {
+function hash(x: number, y: number, s = 0): number {
   let h = (x * 374761393 + y * 668265263 + s * 2147483647) | 0;
   h = Math.imul(h ^ (h >>> 13), 1274126177);
   return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
 }
-function hexToRgb(hex) {
+function hexToRgb(hex: string | null | undefined): number[] {
   let h = String(hex || '#ffffff').replace('#', '');
   if (h.length === 3 || h.length === 4) h = h.split('').slice(0, 3).map((c) => c + c).join('');
   const n = parseInt(h.slice(0, 6), 16);
   if (Number.isNaN(n)) return [255, 255, 255];
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
-function rgba(hex, a) {
+function rgba(hex: string, a: number): string {
   const [r, g, b] = hexToRgb(hex);
   return `rgba(${r},${g},${b},${a})`;
 }
 /** Lighten (f > 0, toward white) or darken (f < 0, toward black) a hex colour; returns hex. */
-function tone(hex, f) {
+function tone(hex: string, f: number): string {
   const t = f > 0 ? 255 : 0, k = Math.min(1, Math.abs(f));
   return '#' + hexToRgb(hex).map((v) => Math.round(v + (t - v) * k).toString(16).padStart(2, '0')).join('');
 }
-function rrect(ctx, x, y, w, h, r) {
+function rrect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number | number[]): void {
   const [tl, tr, br, bl] = (Array.isArray(r) ? r : [r, r, r, r]).map((v) => Math.max(0, Math.min(v, w / 2, h / 2)));
   ctx.moveTo(x + tl, y);
   ctx.lineTo(x + w - tr, y);
@@ -44,19 +53,19 @@ function rrect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-const WALLISH = (c) => c === '#' || c === 'W' || c === ' ' || c === 'D';
-const OPEN_FOR_GLOW = (ch) => ch !== '#' && ch !== ' ';
+const WALLISH = (c: string) => c === '#' || c === 'W' || c === ' ' || c === 'D';
+const OPEN_FOR_GLOW = (ch: string) => ch !== '#' && ch !== ' ';
 const OBJECT_CHARS = new Set(['T', 'b', 'v', 'm', 's', 'e', 'x']);
 
-export function drawDetailedMap(ctx, map, S, th, themeKey) {
+export function drawDetailedMap(ctx: CanvasRenderingContext2D, map: TileMap, S: number, th: ThemeColors, themeKey: string): Cell[] {
   const w = map.width, h = map.height;
-  const T = (x, y) => (x < 0 || y < 0 || x >= w || y >= h ? ' ' : (map.tiles[y] || '')[x] ?? ' ');
+  const T = (x: number, y: number): string => (x < 0 || y < 0 || x >= w || y >= h ? ' ' : (map.tiles[y] || '')[x] ?? ' ');
   const px = 1 / S;
   const floorStyle = FLOOR_STYLE[themeKey] || 'concrete';
   const machineStyle = MACHINE_STYLE[themeKey] || 'rack';
-  const machinery = [];
-  const outdoorish = (ch) => ch === ',' || ch === 'g' || ch === 't' || ch === '~';
-  const isExt = (x, y) => {
+  const machinery: Cell[] = [];
+  const outdoorish = (ch: string) => ch === ',' || ch === 'g' || ch === 't' || ch === '~';
+  const isExt = (x: number, y: number) => {
     let o = 0, i = 0;
     for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
       const c = T(x + dx, y + dy);
@@ -77,19 +86,19 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
   };
-  const fillRR = (x, y, ww, hh, r, color) => {
+  const fillRR = (x: number, y: number, ww: number, hh: number, r: number | number[], color: string | CanvasGradient) => {
     ctx.fillStyle = color;
     ctx.beginPath();
     rrect(ctx, x, y, ww, hh, r);
     ctx.fill();
   };
-  const dot = (x, y, r, color) => {
+  const dot = (x: number, y: number, r: number, color: string) => {
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
   };
-  const line = (x1, y1, x2, y2, color, lw) => {
+  const line = (x1: number, y1: number, x2: number, y2: number, color: string, lw: number) => {
     ctx.strokeStyle = color;
     ctx.lineWidth = lw;
     ctx.beginPath();
@@ -106,7 +115,7 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
   // -------------------------------------------------------------------------
   // Ground materials
   // -------------------------------------------------------------------------
-  const floorCell = (x, y) => {
+  const floorCell = (x: number, y: number) => {
     ctx.fillStyle = th.floor;
     ctx.fillRect(x, y, 1 + px, 1 + px);
     switch (floorStyle) {
@@ -178,7 +187,7 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
       }
     }
   };
-  const crack = (x, y) => {
+  const crack = (x: number, y: number) => {
     ctx.strokeStyle = 'rgba(0,0,0,0.28)';
     ctx.lineWidth = Math.max(px, 0.02);
     ctx.beginPath();
@@ -191,7 +200,7 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
     }
     ctx.stroke();
   };
-  const asphaltCell = (x, y) => {
+  const asphaltCell = (x: number, y: number) => {
     ctx.fillStyle = th.ext;
     ctx.fillRect(x, y, 1 + px, 1 + px);
     const n = hash(x, y, 40) - 0.5;
@@ -224,7 +233,7 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
       ctx.stroke();
     }
   };
-  const grassCell = (x, y) => {
+  const grassCell = (x: number, y: number) => {
     ctx.fillStyle = '#142a1b';
     ctx.fillRect(x, y, 1 + px, 1 + px);
     for (let k = 0; k < 3; k++) dot(x + hash(x, y, k + 60), y + hash(x, y, k + 63), 0.18 + hash(x, y, k + 66) * 0.2, hash(x, y, k + 69) > 0.5 ? 'rgba(40,90,50,0.35)' : 'rgba(5,15,8,0.35)');
@@ -240,10 +249,10 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
     }
     if (hash(x, y, 72) > 0.96) dot(x + hash(x, y, 73) * 0.8 + 0.1, y + hash(x, y, 74) * 0.8 + 0.1, 0.05, '#d7c95a');
   };
-  const waterCell = (x, y) => {
+  const waterCell = (x: number, y: number) => {
     ctx.fillStyle = '#0b2536';
     ctx.fillRect(x, y, 1 + px, 1 + px);
-    const sameW = (dx, dy) => T(x + dx, y + dy) === '~';
+    const sameW = (dx: number, dy: number) => T(x + dx, y + dy) === '~';
     if (sameW(1, 0) && sameW(-1, 0) && sameW(0, 1) && sameW(0, -1)) {
       ctx.fillStyle = 'rgba(0,0,0,0.2)';
       ctx.fillRect(x, y, 1 + px, 1 + px);
@@ -268,7 +277,7 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
     ctx.stroke();
     if (hash(x, y, 80) > 0.6) dot(x + hash(x, y, 81) * 0.8 + 0.1, y + hash(x, y, 82) * 0.8 + 0.1, 0.025, 'rgba(200,240,255,0.5)');
   };
-  const carpetCell = (x, y) => {
+  const carpetCell = (x: number, y: number) => {
     ctx.fillStyle = th.carpet;
     ctx.fillRect(x, y, 1 + px, 1 + px);
     for (let k = 0; k < 5; k++) {
@@ -276,7 +285,7 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
       ctx.fillRect(x + hash(x, y, k + 90) * 0.95, y + hash(x, y, k + 95) * 0.95, 0.05, 0.05);
     }
     // border only against the room (walls / bare floor), not around furniture standing on the carpet
-    const same = (dx, dy) => { const c = T(x + dx, y + dy); return c !== '.' && c !== ',' && c !== '#' && c !== 'D' && c !== 'W' && c !== ' '; };
+    const same = (dx: number, dy: number) => { const c = T(x + dx, y + dy); return c !== '.' && c !== ',' && c !== '#' && c !== 'D' && c !== 'W' && c !== ' '; };
     ctx.strokeStyle = rgba(th.accent, 0.5);
     ctx.lineWidth = 0.05;
     ctx.beginPath();
@@ -313,7 +322,7 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
   // Ambient occlusion: floors darken toward the walls that enclose them
   // -------------------------------------------------------------------------
   const AO = 0.42;
-  const aoGrad = (x0, y0, x1, y1) => {
+  const aoGrad = (x0: number, y0: number, x1: number, y1: number) => {
     const g = ctx.createLinearGradient(x0, y0, x1, y1);
     g.addColorStop(0, 'rgba(0,0,0,0.5)');
     g.addColorStop(0.45, 'rgba(0,0,0,0.18)');
@@ -321,7 +330,7 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
     return g;
   };
   const aoTop = aoGrad(0, 0, 0, AO), aoBot = aoGrad(0, 1, 0, 1 - AO), aoLeft = aoGrad(0, 0, AO, 0), aoRight = aoGrad(1, 0, 1 - AO, 0);
-  const occludes = (c) => c === '#' || c === 'W';
+  const occludes = (c: string) => c === '#' || c === 'W';
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       const ch = T(x, y);
@@ -340,7 +349,7 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
   // -------------------------------------------------------------------------
   // Objects: rectangles of identical tiles
   // -------------------------------------------------------------------------
-  const rects = { T: [], b: [], v: [], m: [], s: [], e: [], x: [] };
+  const rects: Record<string, ObjRect[]> = { T: [], b: [], v: [], m: [], s: [], e: [], x: [] };
   {
     const used = new Uint8Array(w * h);
     for (let y = 0; y < h; y++)
@@ -359,8 +368,8 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
       }
   }
   /** Chars just outside one side of a rect: side 0 top, 1 right, 2 bottom, 3 left. */
-  const outside = (r, side) => {
-    const out = [];
+  const outside = (r: ObjRect, side: number): string[] => {
+    const out: string[] = [];
     if (side === 0 || side === 2) for (let i = 0; i < r.w; i++) out.push(T(r.x0 + i, side === 0 ? r.y0 - 1 : r.y0 + r.h));
     else for (let j = 0; j < r.h; j++) out.push(T(side === 3 ? r.x0 - 1 : r.x0 + r.w, r.y0 + j));
     return out;
@@ -390,7 +399,7 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
           ctx.stroke();
         }
       } else if (ch === 'x') {
-        const same = (dx, dy) => T(x + dx, y + dy) === 'x';
+        const same = (dx: number, dy: number) => T(x + dx, y + dy) === 'x';
         ctx.save();
         ctx.beginPath();
         ctx.rect(x, y, 1, 1);
@@ -498,7 +507,7 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
   ctx.stroke(grid);
 
   // ---- crates / barrels / containers (per cell)
-  const crate = (x, y) => {
+  const crate = (x: number, y: number) => {
     const k = hash(x, y, 4);
     if (k < 0.5) {
       const s = 0.74 + hash(x, y, 6) * 0.12, a = (hash(x, y, 5) - 0.5) * 0.3;
@@ -540,7 +549,7 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
       ctx.fillStyle = rgba(th.accent, 0.55);
       ctx.fillRect(x + 0.2, y + 0.42, 0.22, 0.12);
     } else {
-      const barrel = (cx, cy, r, col) => {
+      const barrel = (cx: number, cy: number, r: number, col: string) => {
         shadow(0.12, 0.06);
         dot(cx, cy, r, col);
         noShadow();
@@ -564,8 +573,8 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
   };
 
   // ---- counters (indoors) / railings and fences (outdoors), connected per cell
-  const counterCell = (x, y) => {
-    const same = (dx, dy) => T(x + dx, y + dy) === '=';
+  const counterCell = (x: number, y: number) => {
+    const same = (dx: number, dy: number) => T(x + dx, y + dy) === '=';
     if (isExt(x, y)) {
       const col = tone(th.metal, 0.2);
       ctx.beginPath();
@@ -624,7 +633,7 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
   };
 
   // ---- chairs, tables
-  const chair = (cx, cy, ang) => {
+  const chair = (cx: number, cy: number, ang: number) => {
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(ang); // back of the chair toward -y
@@ -637,7 +646,7 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
     ctx.restore();
   };
   const tableTop = () => (themeKey === 'lab' || themeKey === 'matrix' ? th.metal : th.wood);
-  const tableItem = (x, y) => {
+  const tableItem = (x: number, y: number) => {
     const k = hash(x, y, 41);
     if (k < 0.55) return;
     const cx = x + 0.5 + (hash(x, y, 42) - 0.5) * 0.3, cy = y + 0.5 + (hash(x, y, 43) - 0.5) * 0.15;
@@ -663,7 +672,7 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
     }
   };
   const SEAT_BLOCK = new Set(['#', 'W', ' ', 'b', '=', 'm', 'T', 'c', 'v', 'o', '~', 't']);
-  const table = (r) => {
+  const table = (r: ObjRect) => {
     const top = tableTop();
     if (r.w === 1 && r.h === 1) {
       const { x0: x, y0: y } = r;
@@ -724,9 +733,9 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
   };
 
   // ---- beds (2+ cells both ways) and sofas / booths / armchairs (1 cell thick)
-  const bed = (r) => {
+  const bed = (r: ObjRect) => {
     // head = the short side against a wall
-    const score = (side) => outside(r, side).filter(WALLISH).length;
+    const score = (side: number) => outside(r, side).filter(WALLISH).length;
     const shortSides = r.w > r.h ? [3, 1] : r.h > r.w ? [0, 2] : [0, 3, 1, 2];
     let head = shortSides[0];
     for (const s of shortSides) if (score(s) > score(head)) head = s;
@@ -759,9 +768,9 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
     ctx.stroke();
     ctx.restore();
   };
-  const sofa = (r) => {
+  const sofa = (r: ObjRect) => {
     const sides = r.w === 1 && r.h === 1 ? [0, 1, 2, 3] : r.w > r.h ? [0, 2] : [3, 1];
-    const sideScore = (side) =>
+    const sideScore = (side: number) =>
       outside(r, side).reduce((s, c) => s + (WALLISH(c) ? 3 : c === 'T' ? -6 : c === '=' || c === 'm' ? 2 : 1), 0);
     let back = sides[0];
     for (const s of sides) if (sideScore(s) > sideScore(back)) back = s;
@@ -789,7 +798,7 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
   };
 
   // ---- vehicles
-  const vehicle = (r) => {
+  const vehicle = (r: ObjRect) => {
     const vertical = r.h > r.w;
     const L = vertical ? r.h : r.w, Wd = vertical ? r.w : r.h;
     ctx.save();
@@ -818,7 +827,7 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
     noShadow();
     ctx.fillStyle = 'rgba(255,255,255,0.07)';
     ctx.beginPath(); rrect(ctx, -bl / 2 + 0.12, -bw * 0.22, bl - 0.24, bw * 0.44, 0.12); ctx.fill();
-    const glass = (pts) => {
+    const glass = (pts: number[][]) => {
       const g = ctx.createLinearGradient(0, -bw / 2, 0, bw / 2);
       g.addColorStop(0, '#2b4256'); g.addColorStop(0.5, '#16212c'); g.addColorStop(1, '#2b4256');
       ctx.fillStyle = g;
@@ -864,8 +873,8 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
   };
 
   // ---- machinery: server racks / shelves / industrial machines
-  const machine = (r) => {
-    const cells = [];
+  const machine = (r: ObjRect) => {
+    const cells: Cell[] = [];
     for (let j = 0; j < r.h; j++) for (let i = 0; i < r.w; i++) cells.push([r.x0 + i, r.y0 + j]);
     if (machineStyle === 'shelf') {
       shadow();
@@ -1042,7 +1051,7 @@ export function drawDetailedMap(ctx, map, S, th, themeKey) {
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       if (T(x, y) !== 'W') continue;
-      const solid = (c) => c === '#' || c === 'W' || c === 'D' || c === 'o' || c === 'm';
+      const solid = (c: string) => c === '#' || c === 'W' || c === 'D' || c === 'o' || c === 'm';
       const hz = (solid(T(x - 1, y)) ? 1 : 0) + (solid(T(x + 1, y)) ? 1 : 0) >= (solid(T(x, y - 1)) ? 1 : 0) + (solid(T(x, y + 1)) ? 1 : 0);
       ctx.save();
       ctx.translate(x + 0.5, y + 0.5);
