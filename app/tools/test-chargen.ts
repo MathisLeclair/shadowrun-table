@@ -106,7 +106,7 @@ const EN: Record<string, string> = {};
 for (const f of fs.readdirSync(DICT_DIR).filter((x) => x.endsWith('.json')).sort((a, b) => (a === 'glossary.json' ? -1 : b === 'glossary.json' ? 1 : a.localeCompare(b)))) {
   Object.assign(EN, JSON.parse(fs.readFileSync(path.join(DICT_DIR, f), 'utf8')));
 }
-const enT = (key: string, params?: TParams): string => (EN[key] ? interpolate(EN[key], params, enT) : `⟦${stripContext(key)}⟧`);
+const enT = (key: string, params?: TParams | null): string => (EN[key] ? interpolate(EN[key], params, enT) : `⟦${stripContext(key)}⟧`);
 const enI18n = { t: enT, lang: 'en', fmtNumber: (n: number) => Number(n).toLocaleString('en-US') };
 /** Every key of a message, nested params included. */
 // Any message shape (issue, log / history i18n, raw action response), walked loosely.

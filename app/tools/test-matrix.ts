@@ -87,7 +87,7 @@ const EN: Dictionary = {};
 for (const f of fs.readdirSync(DICT_DIR).filter((x) => x.endsWith('.json')).sort((a, b) => (a === 'glossary.json' ? -1 : b === 'glossary.json' ? 1 : a.localeCompare(b)))) {
   Object.assign(EN, JSON.parse(fs.readFileSync(path.join(DICT_DIR, f), 'utf8')));
 }
-const enT = (key: string, params?: TParams): string => (EN[key] ? interpolate(EN[key], params, enT) : `⟦${stripContext(key)}⟧`);
+const enT = (key: string, params?: TParams | null): string => (EN[key] ? interpolate(EN[key], params, enT) : `⟦${stripContext(key)}⟧`);
 /** Every translatable key inside a message / { key, params } (nested params included). */
 type MsgLike = { t?: unknown; key?: unknown; params?: object };
 function msgKeys(m: unknown, out: string[] = []): string[] {
