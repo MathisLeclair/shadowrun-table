@@ -17,7 +17,7 @@ export function loadPdfjs() {
       if (!base) throw new Error('pdf.js');
       const modern = typeof Promise.withResolvers === 'function';
       const dir = `${base}/${modern ? 'build' : 'legacy/build'}`;
-      const lib = await import(`${dir}/pdf.min.mjs`);
+      const lib = await import(/* @vite-ignore */ `${dir}/pdf.min.mjs`);
       lib.GlobalWorkerOptions.workerSrc = `${dir}/pdf.worker.min.mjs`;
       return { lib, base };
     })();

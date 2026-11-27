@@ -6,6 +6,16 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
 
+# Browser bundle (Vite): needs the dev dependencies, only dist/ is kept.
+FROM node:22-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY vite.config.js tsconfig.json ./
+COPY client ./client
+COPY shared ./shared
+RUN npm run build
+
 FROM node:22-alpine
 LABEL app=shadowrun-table
 ENV NODE_ENV=production \
@@ -20,6 +30,7 @@ COPY package.json ./
 COPY server ./server
 COPY shared ./shared
 COPY client ./client
+COPY --from=build /app/dist ./dist
 COPY data/seed ./data/seed
 COPY data/packs ./data/packs
 COPY data/catalog ./data/catalog

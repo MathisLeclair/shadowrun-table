@@ -36,7 +36,7 @@ app/
   tools/                 offline scripts (catalog build, checks)
 ```
 
-No build step. The browser loads ES modules directly. Preact 10 + htm (`html\`...\``) + hooks. Import paths in client code are **relative** (`../../lib/ui.js`) or absolute for shared (`/shared/sr5.js`). Server imports shared with `../../shared/sr5.js`.
+Client delivery (see AGENTS.md « Commands »): `npm run dev` runs Vite as middleware inside the server (hot reload); `npm run build` writes `dist/client/`, which `npm start` serves when present, else it serves the raw `client/` files with the import map (no build). Module CSS (`loadCss`) and `client/i18n/` are served from `client/` in every mode. Migration to React + TypeScript in progress (AGENTS.md). Today: Preact 10 + htm (`html\`...\``) + hooks. Import paths in client code are **relative** (`../../lib/ui.js`) or absolute for shared (`/shared/sr5.js`). Server imports shared with `../../shared/sr5.js`.
 
 Run: `npm start` (port 3000, or `PORT=xxxx`). A fresh install has one table « lazarus » (GM password `lazarus`); `/admin` manages tables. VPS: see DEPLOY.md (Docker, port 8095).
 

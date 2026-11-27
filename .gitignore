@@ -7,6 +7,7 @@ Chummer5.226.0.zip
 
 # App runtime data
 app/node_modules/
+app/dist/
 app/data/state.json
 app/data/state.json.tmp
 app/data/backups/

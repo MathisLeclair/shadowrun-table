@@ -7,9 +7,14 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-if not exist node_modules (
-  echo Premiere installation des dependances...
-  call npm install
+echo Mise a jour des dependances...
+call npm install --no-audit --no-fund
+echo Construction de l'interface...
+call npm run build
+if errorlevel 1 (
+  echo La construction de l'interface a echoue.
+  pause
+  exit /b 1
 )
 start "" /min cmd /c "timeout /t 3 >nul & start http://localhost:3000"
 node server/index.js

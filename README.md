@@ -8,10 +8,10 @@ The GM runs one small Node server. Players join from any browser — laptop, tab
 Maps, sheets, dice, the Matrix, the shop and the soundtrack stay in sync for everyone.
 
 ![Node](https://img.shields.io/badge/node-%E2%89%A520-3c873a?style=flat-square&logo=node.js&logoColor=white)
-![Preact](https://img.shields.io/badge/preact-htm-673ab8?style=flat-square&logo=preact&logoColor=white)
+![Vite](https://img.shields.io/badge/vite-8-646cff?style=flat-square&logo=vite&logoColor=white)
+![TypeScript](https://img.shields.io/badge/typescript-migrating-3178c6?style=flat-square&logo=typescript&logoColor=white)
 ![Socket.IO](https://img.shields.io/badge/socket.io-realtime-010101?style=flat-square&logo=socket.io&logoColor=white)
 ![Docker](https://img.shields.io/badge/docker-ready-2496ed?style=flat-square&logo=docker&logoColor=white)
-![No build step](https://img.shields.io/badge/build_step-none-ff2a6d?style=flat-square)
 ![FR / EN](https://img.shields.io/badge/UI-FR%20%7C%20EN-05d9e8?style=flat-square)
 
 **[▶ Try the live demo table](https://DEMO-URL-TO-COME/t/demo/)** — no account, no password: enter as GM or as a player.
@@ -92,8 +92,11 @@ assistant, rulebooks and Foundry import are off there. Run your own with `SR_DEM
 ```bash
 cd app
 npm install
+npm run build   # sub-second Vite build of the browser client
 npm start
 ```
+
+For development, `npm run dev` runs the server with hot reload instead (no build needed).
 
 Then open:
 
@@ -120,14 +123,14 @@ app/
 │   ├── modules/       feature modules (maps, combat, shop, matrix, …), auto-loaded in order
 │   └── lib/           tables, Chummer, Foundry, rulebooks, assistant
 ├── shared/            pure SR5 rules used by both server and browser (dice, derive, matrix, chargen…)
-├── client/            Preact + htm via an import map: no bundler, no build step
+├── client/            browser UI, bundled by Vite (moving from Preact + htm to React + TypeScript)
 │   ├── modules/       one folder per tab
 │   └── i18n/en/       English dictionaries (French is the source text)
 ├── data/              rules catalogue, seed content, content packs
 └── tools/             catalogue builders, importers, test suites
 ```
 
-- **No build step.** The browser loads ES modules directly; edit a file and reload.
+- **Fast loop.** `npm run dev` hot-reloads the client; the production build takes under a second.
 - **Rules live in `shared/`**, so the server validates every action with the same code the UI uses to preview it.
 - **Ambiguous rules follow Chummer**, so imported characters compute the same numbers in both tools.
 - **State is a JSON file per table**, written atomically, with rolling backups every 15 minutes.

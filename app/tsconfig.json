@@ -1,0 +1,24 @@
+{
+  // One config for the whole app. JavaScript files are allowed but not type-checked yet (checkJs: false):
+  // files are converted to .ts/.tsx module by module, and those are checked strictly. `npm run typecheck`.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "types": ["node", "vite/client"],
+    "paths": { "/shared/*": ["./shared/*"] }
+  },
+  "include": ["client", "shared", "server", "tools", "vite.config.js"],
+  "exclude": ["node_modules", "dist", "data", "runtime", "client/vendor"]
+}

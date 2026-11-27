@@ -748,9 +748,20 @@ app.use('/t/:slug/assets', (req, res, next) => {
 app.use('/catalog', express.static(path.join(DATA_DIR, 'catalog')));
 app.use('/assets', express.static(GLOBAL_ASSETS_DIR, assetHeaders));
 
+// Client delivery, three modes (AGENTS.md « Commands »):
+//  - `npm run dev` (--vite): Vite runs as middleware on this server (hot reload, sources transformed on the fly);
+//  - dist/client/index.html exists (`npm run build`): the production bundle;
+//  - otherwise: the raw client/ files (import map, no build) — kept while the code is still plain JS.
+// client/ is served as a fallback in every mode: module stylesheets (loadCss) and the i18n dictionaries live there.
+const CLIENT_DIR = path.join(ROOT, 'client');
+const DIST_DIR = path.join(ROOT, 'dist', 'client');
+const VITE_DEV = process.argv.includes('--vite');
+const BUILT = !VITE_DEV && fs.existsSync(path.join(DIST_DIR, 'index.html'));
+let vite = null; // Vite dev server (middleware mode), created once the HTTP server exists (HMR shares its port)
+
 // Content-Security-Policy for the app page: no inline scripts/handlers and no javascript: URLs (defence in depth
 // against HTML injection). The only inline script is the import map, allowed by its hash (computed from the file).
-const INDEX_FILE = path.join(ROOT, 'client', 'index.html');
+const INDEX_FILE = path.join(BUILT ? DIST_DIR : CLIENT_DIR, 'index.html');
 function pageCsp() {
   let hash = '';
   try {
@@ -772,22 +783,35 @@ function pageCsp() {
   ].join('; ');
 }
 const PAGE_CSP = pageCsp();
-function sendPage(req, res) {
+function sendPage(req, res, next) {
   res.setHeader('Content-Security-Policy', PAGE_CSP);
   res.setHeader('Cache-Control', 'no-cache');
-  res.sendFile(INDEX_FILE);
+  if (!vite) return res.sendFile(INDEX_FILE);
+  vite.transformIndexHtml(req.originalUrl, fs.readFileSync(INDEX_FILE, 'utf8'))
+    .then((html) => res.type('html').send(html))
+    .catch(next);
 }
 // The same page serves the table picker (/), the admin page (/admin) and every table (/t/<slug>/).
-app.get('/', (req, res) => {
+app.get('/', (req, res, next) => {
   const listed = listMetas().filter((m) => !m.archived && !m.hidden && usableTable(tables.get(m.id)));
   // Old bookmarks: with a single table, / goes straight to it (/?choisir shows the picker anyway).
   if (listed.length === 1 && req.query.choisir === undefined) return res.redirect(302, `/t/${listed[0].slug}/`);
-  sendPage(req, res);
+  sendPage(req, res, next);
 });
 app.get(['/admin', '/admin/'], sendPage);
 // (non-strict routing: '/t/:slug' also matches '/t/x/')
-app.get('/t/:slug', (req, res) => (req.path.endsWith('/') ? sendPage(req, res) : res.redirect(301, `/t/${encodeURIComponent(req.params.slug)}/`)));
-app.use(express.static(path.join(ROOT, 'client'), {
+app.get('/t/:slug', (req, res, next) => (req.path.endsWith('/') ? sendPage(req, res, next) : res.redirect(301, `/t/${encodeURIComponent(req.params.slug)}/`)));
+app.use((req, res, next) => (vite ? vite.middlewares(req, res, next) : next()));
+if (BUILT) {
+  app.use(express.static(DIST_DIR, {
+    index: false,
+    setHeaders(res, filePath) {
+      if (filePath.toLowerCase().endsWith('.html')) res.setHeader('Content-Security-Policy', PAGE_CSP);
+      else if (filePath.includes(`${path.sep}build${path.sep}`)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); // hashed names
+    },
+  }));
+}
+app.use(express.static(CLIENT_DIR, {
   index: false,
   setHeaders(res, filePath) {
     if (filePath.toLowerCase().endsWith('.html')) res.setHeader('Content-Security-Policy', PAGE_CSP);
@@ -804,6 +828,14 @@ server.requestTimeout = 4 * 3600 * 1000;
 server.headersTimeout = 60 * 1000;
 // perMessageDeflate: full-state broadcasts are large but very repetitive JSON (≈10× smaller compressed).
 const io = new Server(server, { maxHttpBufferSize: 20e6, perMessageDeflate: { threshold: 2048 } });
+if (VITE_DEV) {
+  const { createServer } = await import('vite'); // dev dependency: only loaded by `npm run dev`
+  vite = await createServer({
+    configFile: path.join(ROOT, 'vite.config.js'),
+    appType: 'custom',
+    server: { middlewareMode: true, hmr: { server } },
+  });
+}
 
 io.use((socket, next) => {
   const auth = socket.handshake.auth || {};
