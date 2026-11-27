@@ -6,6 +6,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import type { Express, Request, Response, RequestHandler } from 'express';
 import { receiveToFile } from './zip.ts';
+import type { ZipError } from './zip.ts';
 import * as L from './maplib.ts';
 import { makeThumb } from './maplib-thumb.ts';
 import { versionFromMap, libGeometry } from '../../shared/maplib.ts';
@@ -152,9 +153,10 @@ export function registerMaplibAdminRoutes(app: Express, { requireAdmin, fail, li
       if (size.type === 'jpeg' && size.width * size.height <= MAX_THUMB_MP * 1e6) thumb = await makeThumb(dest, path.join(L.THUMBS_DIR, `${slug}.jpg`));
       res.json({ ok: true, entry: L.adminEntry(m), thumb });
     } catch (e) {
-      const err = e as { libKey?: string; status?: number };
+      const err = e as Partial<ZipError> & { libKey?: string };
       fs.rmSync(tmp, { force: true });
       if (err?.libKey) return libFail(res, err);
+      if (err?.i18nKey) return fail(res, err.status || 500, err.i18nKey, {}, err.i18nParams); // upload ZipError
       return fail(res, err.status || 500, err.status === 413 ? 'File too large' : 'Upload interrupted');
     }
   });

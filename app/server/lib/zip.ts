@@ -10,6 +10,8 @@ import { Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import type { Writable } from 'node:stream';
 import type { IncomingMessage } from 'node:http';
+import { formatSource } from '../../client/i18n/format.ts';
+import type { I18nParams } from '../../shared/types.ts';
 
 /** One entry of a zip's central directory (listZip). */
 export interface ZipEntry {
@@ -33,11 +35,19 @@ export interface WalkedFile {
 /** An item to write into a zip: a file on disk, or in-memory data. */
 export type ZipItem = { name: string; file: string; data?: undefined } | { name: string; data: Buffer | string; file?: undefined };
 
+/**
+ * Zip / upload error: `key` is an English i18n key with {placeholders}, `params` its values. `message` is the English
+ * text (logs); routes reply with errorBody(err.i18nKey, err.i18nParams) (errorFrom() in lib/i18n.ts) so the client translates it.
+ */
 export class ZipError extends Error {
   status: number;
-  constructor(message: string, status = 400) {
-    super(message);
+  i18nKey: string;
+  i18nParams?: I18nParams;
+  constructor(key: string, status = 400, params?: I18nParams) {
+    super(formatSource(key, params));
     this.status = status;
+    this.i18nKey = key;
+    if (params) this.i18nParams = params;
   }
 }
 
@@ -77,7 +87,7 @@ export function listZip(file: string, { maxEntries = 200000 }: { maxEntries?: nu
   const fd = fs.openSync(file, 'r');
   try {
     const size = fs.fstatSync(fd).size;
-    if (size < 22) throw new ZipError('Archive ZIP invalide (fichier trop court)');
+    if (size < 22) throw new ZipError('Invalid ZIP archive (file too short)');
     const tailLen = Math.min(size, 22 + 0xffff);
     const tail = readAt(fd, size - tailLen, tailLen);
     let eocd = -1;
@@ -87,27 +97,27 @@ export function listZip(file: string, { maxEntries = 200000 }: { maxEntries?: nu
         break;
       }
     }
-    if (eocd < 0) throw new ZipError('Archive ZIP invalide (fin de répertoire introuvable)');
+    if (eocd < 0) throw new ZipError('Invalid ZIP archive (end of central directory not found)');
     let count = tail.readUInt16LE(eocd + 10);
     let cdSize = tail.readUInt32LE(eocd + 12);
     let cdOffset = tail.readUInt32LE(eocd + 16);
     if (count === 0xffff || cdSize === U32 || cdOffset === U32) {
       const locPos = size - tailLen + eocd - 20;
       const loc = locPos >= 0 ? readAt(fd, locPos, 20) : null;
-      if (!loc || loc.readUInt32LE(0) !== SIG_EOCD64_LOC) throw new ZipError('Archive ZIP64 invalide');
+      if (!loc || loc.readUInt32LE(0) !== SIG_EOCD64_LOC) throw new ZipError('Invalid ZIP64 archive');
       const e64 = readAt(fd, u64(loc, 8), 56);
-      if (e64.readUInt32LE(0) !== SIG_EOCD64) throw new ZipError('Archive ZIP64 invalide');
+      if (e64.readUInt32LE(0) !== SIG_EOCD64) throw new ZipError('Invalid ZIP64 archive');
       count = u64(e64, 32);
       cdSize = u64(e64, 40);
       cdOffset = u64(e64, 48);
     }
-    if (count > maxEntries) throw new ZipError(`Archive trop volumineuse (${count} fichiers, ${maxEntries} max)`);
-    if (cdOffset + cdSize > size) throw new ZipError('Archive ZIP tronquée (envoi interrompu ?)');
+    if (count > maxEntries) throw new ZipError('Archive too large ({count} files, {max} max)', 400, { count, max: maxEntries });
+    if (cdOffset + cdSize > size) throw new ZipError('Truncated ZIP archive (upload interrupted?)');
     const cd = readAt(fd, cdOffset, cdSize);
     const entries: ZipEntry[] = [];
     let p = 0;
     for (let i = 0; i < count; i++) {
-      if (p + 46 > cd.length || cd.readUInt32LE(p) !== SIG_CEN) throw new ZipError('Répertoire ZIP endommagé');
+      if (p + 46 > cd.length || cd.readUInt32LE(p) !== SIG_CEN) throw new ZipError('Damaged ZIP directory');
       const flags = cd.readUInt16LE(p + 8);
       const method = cd.readUInt16LE(p + 10);
       const crc = cd.readUInt32LE(p + 16);
@@ -170,7 +180,7 @@ function crcCounter(expectedSize: number, label: string): Transform & { result()
   const t = new Transform({
     transform(chunk: Buffer, _enc, cb) {
       bytes += chunk.length;
-      if (bytes > expectedSize) return cb(new ZipError(`Fichier « ${label} » plus gros qu’annoncé dans l’archive (archive piégée ?)`));
+      if (bytes > expectedSize) return cb(new ZipError('File “{name}” is larger than the archive says (booby-trapped archive?)', 400, { name: label }));
       crc = zlib.crc32(chunk, crc);
       cb(null, chunk);
     },
@@ -202,7 +212,7 @@ export async function extractZip(
   let skipped = 0;
   for (const e of entries) {
     const rel = safeEntryPath(e.name);
-    if (!rel) throw new ZipError(`Chemin interdit dans l’archive : « ${String(e.name).slice(0, 120)} »`);
+    if (!rel) throw new ZipError('Forbidden path in the archive: “{path}”', 400, { path: String(e.name).slice(0, 120) });
     if (e.isLink) {
       skipped++;
       continue;
@@ -213,17 +223,17 @@ export async function extractZip(
       continue;
     }
     const safe = safeEntryPath(mapped);
-    if (!safe) throw new ZipError(`Chemin interdit dans l’archive : « ${String(e.name).slice(0, 120)} »`);
+    if (!safe) throw new ZipError('Forbidden path in the archive: “{path}”', 400, { path: String(e.name).slice(0, 120) });
     const dest = path.resolve(root, ...safe.split('/'));
-    if (dest !== root && !dest.startsWith(root + path.sep)) throw new ZipError(`Chemin interdit dans l’archive : « ${String(e.name).slice(0, 120)} »`);
+    if (dest !== root && !dest.startsWith(root + path.sep)) throw new ZipError('Forbidden path in the archive: “{path}”', 400, { path: String(e.name).slice(0, 120) });
     if (e.isDir) {
       plan.push({ e, dest, dir: true });
       continue;
     }
-    if (e.flags & 1) throw new ZipError('Archive chiffrée (mot de passe) : non supportée');
-    if (e.method !== 0 && e.method !== 8) throw new ZipError(`Méthode de compression non supportée (${e.method}) pour « ${safe} » — recompresse l’archive en ZIP standard (Deflate)`);
+    if (e.flags & 1) throw new ZipError('Encrypted (password-protected) archive: not supported');
+    if (e.method !== 0 && e.method !== 8) throw new ZipError('Unsupported compression method ({method}) for “{name}” — recompress the archive as standard ZIP (Deflate)', 400, { method: e.method, name: safe });
     total += e.size;
-    if (total > maxTotal) throw new ZipError('Archive trop volumineuse une fois décompressée', 413);
+    if (total > maxTotal) throw new ZipError('Archive too large once unzipped', 413);
     plan.push({ e, dest, rel: safe });
   }
   fs.mkdirSync(root, { recursive: true });
@@ -238,9 +248,9 @@ export async function extractZip(
         continue;
       }
       const { e } = item;
-      if (!e.compSize && e.size) throw new ZipError(`Entrée ZIP endommagée : « ${item.rel} »`);
+      if (!e.compSize && e.size) throw new ZipError('Damaged ZIP entry: “{name}”', 400, { name: item.rel });
       const loc = readAt(fd, e.localOffset, 30);
-      if (loc.length < 30 || loc.readUInt32LE(0) !== SIG_LOC) throw new ZipError(`Entrée ZIP endommagée : « ${item.rel} »`);
+      if (loc.length < 30 || loc.readUInt32LE(0) !== SIG_LOC) throw new ZipError('Damaged ZIP entry: “{name}”', 400, { name: item.rel });
       const start = e.localOffset + 30 + loc.readUInt16LE(26) + loc.readUInt16LE(28);
       fs.mkdirSync(path.dirname(item.dest), { recursive: true });
       const counter = crcCounter(e.size, item.rel);
@@ -257,10 +267,10 @@ export async function extractZip(
           fs.rmSync(item.dest, { force: true });
         } catch {}
         if (err instanceof ZipError) throw err;
-        throw new ZipError(`Décompression impossible de « ${item.rel} » : ${(err as Error).message}`);
+        throw new ZipError('Could not unzip “{name}”: {error}', 400, { name: item.rel, error: (err as Error).message });
       }
       const r = counter.result();
-      if (src && (r.bytes !== e.size || r.crc !== e.crc)) throw new ZipError(`Fichier corrompu dans l’archive : « ${item.rel} » (CRC)`);
+      if (src && (r.bytes !== e.size || r.crc !== e.crc)) throw new ZipError('Corrupted file in the archive: “{name}” (CRC)', 400, { name: item.rel });
       bytes += r.bytes;
       done++;
       onProgress?.({ done, total: files, bytes });
@@ -324,7 +334,7 @@ export function dirSize(dir: string): number {
  */
 export async function writeZip(out: Writable, items: ZipItem[]): Promise<{ bytes: number; files: number }> {
   const estimate = items.reduce((s, it) => s + (it.data != null ? Buffer.byteLength(it.data) : fs.statSync(it.file!).size) + 200, 22);
-  if (estimate > MAX_ZIP) throw new ZipError('Archive de plus de 4 Go : non supportée', 413);
+  if (estimate > MAX_ZIP) throw new ZipError('Archive over 4 GB: not supported', 413);
   let offset = 0;
   const central: Buffer[] = [];
   const write = (buf: Buffer) =>
@@ -394,7 +404,7 @@ export async function writeZip(out: Writable, items: ZipItem[]): Promise<{ bytes
     await write(Buffer.concat([loc, nameBuf]));
     if (payload) await write(payload);
     else for await (const chunk of fs.createReadStream(it.file!)) await write(chunk as Buffer);
-    if (offset > MAX_ZIP) throw new ZipError('Archive de plus de 4 Go : non supportée', 413);
+    if (offset > MAX_ZIP) throw new ZipError('Archive over 4 GB: not supported', 413);
     const cen = Buffer.alloc(46);
     cen.writeUInt32LE(SIG_CEN, 0);
     cen.writeUInt16LE(0x031e, 4); // made by: unix, 3.0
@@ -454,7 +464,7 @@ export function receiveToFile(req: IncomingMessage, dest: string, { maxBytes = 1
     const declared = Number(req.headers['content-length']);
     if (Number.isFinite(declared) && declared > maxBytes) {
       req.resume();
-      return reject(new ZipError(`Fichier trop volumineux (${Math.round(maxBytes / 1e6)} Mo max)`, 413));
+      return reject(new ZipError('File too large ({mb} MB max)', 413, { mb: Math.round(maxBytes / 1e6) }));
     }
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     const out = fs.createWriteStream(dest);
@@ -473,11 +483,11 @@ export function receiveToFile(req: IncomingMessage, dest: string, { maxBytes = 1
     };
     req.on('data', (chunk: Buffer) => {
       bytes += chunk.length;
-      if (bytes > maxBytes) fail(new ZipError(`Fichier trop volumineux (${Math.round(maxBytes / 1e6)} Mo max)`, 413));
+      if (bytes > maxBytes) fail(new ZipError('File too large ({mb} MB max)', 413, { mb: Math.round(maxBytes / 1e6) }));
     });
-    req.on('aborted', () => fail(new ZipError('Envoi interrompu')));
-    req.on('error', (e: Error) => fail(new ZipError(`Envoi interrompu (${e.message})`)));
-    out.on('error', (e: NodeJS.ErrnoException) => fail(new ZipError(`Écriture impossible sur le serveur (${e.code || e.message})`, 500)));
+    req.on('aborted', () => fail(new ZipError('Upload interrupted')));
+    req.on('error', (e: Error) => fail(new ZipError('Upload interrupted ({error})', 400, { error: e.message })));
+    out.on('error', (e: NodeJS.ErrnoException) => fail(new ZipError('Could not write on the server ({reason})', 500, { reason: e.code || e.message })));
     out.on('finish', () => {
       if (finished) return;
       finished = true;

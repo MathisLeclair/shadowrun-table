@@ -340,9 +340,9 @@ export function registerAdminRoutes(app: Express, api: TableApi): void {
       res.end();
     } catch (err) {
       console.error('[admin] backup zip failed', err);
-      const e = err as Error & { status?: number };
-      if (!res.headersSent) fail(res, e.status || 500, e.message);
-      else res.destroy(e);
+      const e = err as Partial<ZipError>;
+      if (!res.headersSent) fail(res, e.status || 500, e.i18nKey || e.message || 'Server error', {}, e.i18nParams);
+      else res.destroy(err as Error);
     }
   });
 
@@ -394,17 +394,17 @@ export function registerAdminRoutes(app: Express, api: TableApi): void {
           .map((e) => safeEntryPath(e.name))
           .filter((p): p is string => !!p && (p === 'state.json' || p.endsWith('/state.json')) && !p.split('/').includes('backups'))
           .sort((a, b) => a.split('/').length - b.split('/').length);
-        if (!states.length) throw new ZipError('Cette archive ne contient pas de state.json : ce n’est pas une sauvegarde de table');
+        if (!states.length) throw new ZipError('This archive has no state.json: it is not a table backup');
         const prefix = states[0].slice(0, -'state.json'.length);
         await extractZip(upload, staging, { map: (rel) => (rel.startsWith(prefix) && !rel.slice(prefix.length).startsWith('foundry/') ? rel.slice(prefix.length) : null) });
       } else {
-        if (fs.statSync(upload).size > 300e6) throw new ZipError('Fichier JSON trop volumineux');
+        if (fs.statSync(upload).size > 300e6) throw new ZipError('JSON file too large');
         const json = readJson<unknown>(upload, null);
-        if (!json) throw new ZipError('Fichier non reconnu : envoie le .zip d’une table ou un export JSON de partie');
+        if (!json) throw new ZipError('Unrecognized file: send a table .zip or a game JSON export');
         writeJsonAtomic(path.join(staging, 'state.json'), json);
       }
       const state = readJson(path.join(staging, 'state.json'), null); // uploaded file: foreign JSON
-      if (!state || typeof state !== 'object' || !state.actors || typeof state.actors !== 'object') throw new ZipError('state.json invalide (pas de personnages)');
+      if (!state || typeof state !== 'object' || !state.actors || typeof state.actors !== 'object') throw new ZipError('Invalid state.json (no characters)');
       const tj = readJson(path.join(staging, 'table.json'), {}) || {}; // uploaded file: foreign JSON
       const id = String(req.query.slug || tj.id || slugify(req.query.name || state.config?.campaignName || '')).toLowerCase();
       const bad = slugError(id);
@@ -439,8 +439,8 @@ export function registerAdminRoutes(app: Express, api: TableApi): void {
     } catch (err) {
       cleanup();
       if (!(err instanceof ZipError)) console.error('[admin] restore failed', err);
-      const e = err as Error & { status?: number };
-      if (!res.headersSent) fail(res, e.status || 500, e.message || 'Restore failed');
+      const e = err as Partial<ZipError>; // ZipError: translatable key + params; other errors: raw text
+      if (!res.headersSent) fail(res, e.status || 500, e.i18nKey || e.message || 'Restore failed', {}, e.i18nParams);
     }
   });
 

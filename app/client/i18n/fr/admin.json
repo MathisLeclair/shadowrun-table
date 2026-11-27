@@ -197,5 +197,9 @@
   "Demo (blank + pregens, maps, host)": "Démo (vierge + prétirés, cartes, host)",
   "Invalid identifier: lowercase letters, digits and dashes (2 to 40 characters)": "Identifiant invalide : lettres minuscules, chiffres et tirets (2 à 40 caractères)",
   "Identifier too short (2 characters minimum)": "Identifiant trop court (2 caractères minimum)",
-  "This identifier is reserved": "Cet identifiant est réservé"
+  "This identifier is reserved": "Cet identifiant est réservé",
+  "This archive has no state.json: it is not a table backup": "Cette archive ne contient pas de state.json : ce n’est pas une sauvegarde de table",
+  "JSON file too large": "Fichier JSON trop volumineux",
+  "Unrecognized file: send a table .zip or a game JSON export": "Fichier non reconnu : envoie le .zip d’une table ou un export JSON de partie",
+  "Invalid state.json (no characters)": "state.json invalide (pas de personnages)"
 }

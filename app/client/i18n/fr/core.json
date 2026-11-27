@@ -152,5 +152,22 @@
   "Wrong PIN for this player": "Code PIN incorrect pour ce joueur",
   "Your character": "Ton personnage",
   "Your name": "Ton nom",
-  "Upload interrupted": "Envoi interrompu"
+  "Upload interrupted": "Envoi interrompu",
+  "Invalid ZIP archive (file too short)": "Archive ZIP invalide (fichier trop court)",
+  "Invalid ZIP archive (end of central directory not found)": "Archive ZIP invalide (fin de répertoire introuvable)",
+  "Invalid ZIP64 archive": "Archive ZIP64 invalide",
+  "Archive too large ({count} files, {max} max)": "Archive trop volumineuse ({count} fichiers, {max} max)",
+  "Truncated ZIP archive (upload interrupted?)": "Archive ZIP tronquée (envoi interrompu ?)",
+  "Damaged ZIP directory": "Répertoire ZIP endommagé",
+  "File “{name}” is larger than the archive says (booby-trapped archive?)": "Fichier « {name} » plus gros qu’annoncé dans l’archive (archive piégée ?)",
+  "Forbidden path in the archive: “{path}”": "Chemin interdit dans l’archive : « {path} »",
+  "Encrypted (password-protected) archive: not supported": "Archive chiffrée (mot de passe) : non supportée",
+  "Unsupported compression method ({method}) for “{name}” — recompress the archive as standard ZIP (Deflate)": "Méthode de compression non supportée ({method}) pour « {name} » — recompresse l’archive en ZIP standard (Deflate)",
+  "Archive too large once unzipped": "Archive trop volumineuse une fois décompressée",
+  "Damaged ZIP entry: “{name}”": "Entrée ZIP endommagée : « {name} »",
+  "Could not unzip “{name}”: {error}": "Décompression impossible de « {name} » : {error}",
+  "Corrupted file in the archive: “{name}” (CRC)": "Fichier corrompu dans l’archive : « {name} » (CRC)",
+  "Archive over 4 GB: not supported": "Archive de plus de 4 Go : non supportée",
+  "File too large ({mb} MB max)": "Fichier trop volumineux ({mb} Mo max)",
+  "Upload interrupted ({error})": "Envoi interrompu ({error})"
 }

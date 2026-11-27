@@ -5,6 +5,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import type { Express, Request, Response, RequestHandler } from 'express';
 import { receiveToFile } from '../zip.ts';
+import type { ZipError } from '../zip.ts';
 import { BOOKS_DIR } from './access.ts';
 import { cleanCode, knownBooks, readLibrary, upsertBook, removeBook, pdfFile, loadIndex } from './library.ts';
 import type { LibraryBook } from './library.ts';
@@ -107,8 +108,8 @@ export function registerBookAdminRoutes(app: Express, { requireAdmin, fail, list
       try {
         fs.rmSync(tmp, { force: true });
       } catch {}
-      const e = err as Error & { status?: number };
-      if (!res.headersSent) fail(res, e.status || 500, e.message || 'Upload failed');
+      const e = err as Partial<ZipError>; // ZipError: translatable key + params; other errors: raw text
+      if (!res.headersSent) fail(res, e.status || 500, e.i18nKey || e.message || 'Upload failed', {}, e.i18nParams);
     }
   });
 
