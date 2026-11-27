@@ -56,7 +56,7 @@
   "Masquer la liste": "Hide the list",
   "Voir la liste": "Show the list",
   "Remettre à zéro": "Reset",
-  "Textes affichés depuis l’ouverture de cette page sans traduction anglaise. Les traducteurs complètent client/i18n/en/*.json (outil : node tools/i18n-check.js).": "Texts shown since this page was opened that have no English translation. Translators fill in client/i18n/en/*.json (tool: node tools/i18n-check.js).",
+  "Textes affichés depuis l’ouverture de cette page sans traduction anglaise. Les traducteurs complètent client/i18n/en/*.json (outil : node tools/i18n-check.ts).": "Texts shown since this page was opened that have no English translation. Translators fill in client/i18n/en/*.json (tool: node tools/i18n-check.ts).",
   "Remplacer toute la partie par cette sauvegarde ? (une sauvegarde automatique est faite avant)": "Replace the whole game with this save? (an automatic backup is made first)",
   "Fichier de sauvegarde invalide": "Invalid save file",
   "Sauvegarde importée": "Save imported",

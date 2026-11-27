@@ -41,7 +41,7 @@
   "échec": "failed",
   "non indexé": "not indexed",
   "Réindexer": "Re-index",
-  "Aucun livre. Envoie tes PDF ci-dessous ou lance tools/books-setup.js sur le serveur.": "No book. Upload your PDFs below or run tools/books-setup.js on the server.",
+  "Aucun livre. Envoie tes PDF ci-dessous ou lance tools/books-setup.ts sur le serveur.": "No book. Upload your PDFs below or run tools/books-setup.ts on the server.",
   "Ajouter un livre": "Add a book",
   "{n} livre partagé par les tables autorisées. Les joueurs les consultent depuis l’onglet « Règles » et les références de page.": "{n} book shared by the allowed tables. Players read it from the “Rules” tab and the page references.",
   "{n} livres partagés par les tables autorisées. Les joueurs les consultent depuis l’onglet « Règles » et les références de page.": "{n} books shared by the allowed tables. Players read them from the “Rules” tab and the page references.",

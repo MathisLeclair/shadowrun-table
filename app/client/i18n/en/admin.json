@@ -165,7 +165,7 @@
   "Publier": "Publish",
   "Aucune table n’utilise cette carte.": "No table uses this map.",
   "Carte {slug} ajoutée": "Map {slug} added",
-  "Carte {slug} ajoutée (sans miniature : lance tools/maplib-build.js)": "Map {slug} added (no thumbnail: run tools/maplib-build.js)",
+  "Carte {slug} ajoutée (sans miniature : lance tools/maplib-build.ts)": "Map {slug} added (no thumbnail: run tools/maplib-build.ts)",
   "Identifiant": "Id",
   "minuscules, chiffres, tirets": "lowercase, digits, dashes",
   "Pixels par case": "Pixels per cell",
