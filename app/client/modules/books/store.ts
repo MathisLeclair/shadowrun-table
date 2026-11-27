@@ -1,8 +1,9 @@
 // Rulebook client state: the library list (signed PDF links, renewed before they expire; `version` = cache key of the
 // reader) and the global viewer drawer (which book / page is open). Shared by BookRef, BookViewer and BooksPage.
-import { useEffect, useState } from 'preact/hooks';
-import { api } from '../../lib/net.js';
-import { pruneStale } from './bookcache.js';
+import { useEffect, useState } from 'react';
+import { api } from '../../lib/net.ts';
+import { pruneStale } from './bookcache.ts';
+import type { LibBook, ViewerState, SearchResult } from './types.ts';
 
 import { offsetFor, printedToPdf, pdfToPrinted, parseSourceRef } from './refs.js';
 
@@ -11,14 +12,14 @@ export { offsetFor, printedToPdf, pdfToPrinted, parseSourceRef };
 // ---------------------------------------------------------------------------
 // Library list
 // ---------------------------------------------------------------------------
-let books = null; // [{ code, name, nameFr, pages, offset, offsets?, indexed, url, exp, version, size }] | null (not loaded)
-let pdfjs = null; // base URL of the app's pdf.js copy (/vendor/pdfjs/<version>), from /api/books
-let loading = null;
-let loadError = null;
+let books: LibBook[] | null = null; // null = not loaded
+let pdfjs: string | null = null; // base URL of the app's pdf.js copy (/vendor/pdfjs/<version>), from /api/books
+let loading: Promise<LibBook[]> | null = null;
+let loadError: Error | null = null;
 let skew = 0; // server clock − this browser's clock (ms): link expiry is judged on the server's clock
-let renewTimer = null;
+let renewTimer: ReturnType<typeof setTimeout> | null = null;
 const RENEW_BEFORE = 10 * 60 * 1000; // links are renewed 10 min before they expire
-const libListeners = new Set();
+const libListeners = new Set<(list: LibBook[] | null) => void>();
 const emitLib = () => {
   for (const l of libListeners) l(books);
 };
@@ -30,36 +31,47 @@ const isStale = () => !!books && books.some((b) => b.exp * 1000 - serverNow() < 
 
 /** Renew the links before they expire, while someone uses them (a drawer left open for hours keeps working). */
 function scheduleRenew() {
-  clearTimeout(renewTimer);
+  if (renewTimer) clearTimeout(renewTimer);
   renewTimer = null;
   if (!books || !books.length) return;
   const first = Math.min(...books.map((b) => b.exp * 1000));
   const delay = Math.max(60 * 1000, first - RENEW_BEFORE - serverNow() + 1000);
-  renewTimer = setTimeout(() => {
-    renewTimer = null;
-    if (libListeners.size || viewer.open) loadBooks();
-  }, Math.min(delay, 2 ** 31 - 1));
+  renewTimer = setTimeout(
+    () => {
+      renewTimer = null;
+      if (libListeners.size || viewer.open) loadBooks();
+    },
+    Math.min(delay, 2 ** 31 - 1)
+  );
+}
+
+interface BooksReply {
+  books?: LibBook[];
+  pdfjs?: string;
+  now?: number;
 }
 
 /** Load (or refresh) the list. Links are renewed when they expire within 10 minutes. */
-export function loadBooks(force = false) {
+export function loadBooks(force = false): Promise<LibBook[]> {
   if (books && !force && !isStale() && !loadError) return Promise.resolve(books);
   if (loading) return loading;
   const t0 = Date.now();
-  loading = api('/api/books')
+  loading = api<BooksReply>('/api/books')
     .then((r) => {
       const t1 = Date.now();
       if (Number(r.now) > 0) skew = Number(r.now) - (t0 + t1) / 2;
-      books = r.books || [];
+      const list = r.books || [];
+      books = list;
       if (r.pdfjs) pdfjs = r.pdfjs;
       loadError = null;
-      pruneStale(books); // cached copies of replaced PDFs are dropped
-      return books;
+      pruneStale(list); // cached copies of replaced PDFs are dropped
+      return list;
     })
-    .catch((err) => {
+    .catch((err: Error) => {
       loadError = err;
-      books = books || [];
-      return books;
+      const list = books || [];
+      books = list;
+      return list;
     })
     .finally(() => {
       loading = null;
@@ -71,15 +83,17 @@ export function loadBooks(force = false) {
 export const getBooks = () => books;
 export const pdfjsBase = () => pdfjs;
 export const booksError = () => loadError;
-export const findBook = (code) => (books || []).find((b) => b.code === String(code || '').toUpperCase()) || null;
+export const findBook = (code: string | null | undefined): LibBook | null => (books || []).find((b) => b.code === String(code || '').toUpperCase()) || null;
 
 /** Hook: the library list (null while loading). */
-export function useBooks() {
-  const [list, setList] = useState(books);
+export function useBooks(): LibBook[] | null {
+  const [list, setList] = useState<LibBook[] | null>(books);
   useEffect(() => {
     libListeners.add(setList);
     loadBooks().then(setList);
-    return () => libListeners.delete(setList);
+    return () => {
+      libListeners.delete(setList);
+    };
   }, []);
   return list;
 }
@@ -92,25 +106,32 @@ export function useBooks() {
 //   comes back in front of modals opened before), nav (bumped by every navigation REQUEST: the reader scrolls to
 //   pdfPage; a page change reported by the reader's own scrolling does not bump it), hl ({ q, pdfPage }: search terms
 //   to highlight on that page, set by a search hit) }
-let viewer = { open: false, code: null, pdfPage: null, printed: null, badPage: false, searchQ: '', raise: 0, nav: 0, hl: null };
-const viewListeners = new Set();
-function setViewer(patch) {
+let viewer: ViewerState = { open: false, code: null, pdfPage: null, printed: null, badPage: false, searchQ: '', raise: 0, nav: 0, hl: null };
+const viewListeners = new Set<(v: ViewerState) => void>();
+function setViewer(patch: Partial<ViewerState>) {
   viewer = { ...viewer, ...patch };
   for (const l of viewListeners) l(viewer);
 }
 export const getViewer = () => viewer;
-export function useViewer() {
+export function useViewer(): ViewerState {
   const [v, setV] = useState(viewer);
   useEffect(() => {
     viewListeners.add(setV);
     if (v !== viewer) setV(viewer);
-    return () => viewListeners.delete(setV);
+    return () => {
+      viewListeners.delete(setV);
+    };
   }, []);
   return v;
 }
 
+interface Ref {
+  code: string;
+  page: number | null;
+}
+
 /** Where a printed reference lands in the loaded list: { pdfPage, badPage }. */
-function pageOf(ref) {
+function pageOf(ref: Ref): { pdfPage: number | null; badPage: boolean } {
   const b = findBook(ref.code);
   if (!b) return { pdfPage: null, badPage: false };
   if (!ref.page) return { pdfPage: 1, badPage: false };
@@ -119,8 +140,8 @@ function pageOf(ref) {
 }
 
 /** Open the viewer drawer at a printed page of a book (page null = first page). Accepts openBook('RG 62') too. */
-export async function openBook(code, page) {
-  const ref = parseSourceRef(code, page) || { code: String(code || '').toUpperCase(), page: null };
+export async function openBook(code: unknown, page?: number | string | null) {
+  const ref: Ref = parseSourceRef(code, page) || { code: String(code || '').toUpperCase(), page: null };
   const base = { open: true, code: ref.code, printed: ref.page, raise: viewer.raise + 1, nav: viewer.nav + 1, hl: null };
   // List loaded with fresh links: one state change, so the PDF frame mounts once, at the right page.
   if (books && !isStale() && !loadError) return setViewer({ ...base, ...pageOf(ref) });
@@ -130,7 +151,7 @@ export async function openBook(code, page) {
 }
 
 /** Open the viewer at a PDF page (search hits, book list). opts.q = search query to highlight on that page. */
-export async function openBookPdf(code, pdfPage, opts = {}) {
+export async function openBookPdf(code: string, pdfPage: number, opts: { q?: string } = {}) {
   await loadBooks();
   const b = findBook(code);
   const p = b ? Math.max(1, Math.min(b.pages || 1, Number(pdfPage) || 1)) : null;
@@ -138,7 +159,7 @@ export async function openBookPdf(code, pdfPage, opts = {}) {
 }
 
 /** Go to a PDF page of the open book (the reader scrolls there; the document is never reloaded). */
-export async function gotoPdfPage(pdfPage) {
+export async function gotoPdfPage(pdfPage: number) {
   if (isStale() || loadError) await loadBooks();
   const b = findBook(viewer.code);
   if (!b) return;
@@ -147,17 +168,17 @@ export async function gotoPdfPage(pdfPage) {
 }
 
 /** The reader scrolled to another page (no navigation request: nav unchanged). */
-export function reportPdfPage(pdfPage) {
+export function reportPdfPage(pdfPage: number) {
   const b = findBook(viewer.code);
   if (!b || pdfPage === viewer.pdfPage) return;
   setViewer({ pdfPage, printed: pdfToPrinted(b, pdfPage), badPage: false });
 }
 export const closeBook = () => setViewer({ open: false });
-export const setViewerSearch = (q) => setViewer({ searchQ: q });
+export const setViewerSearch = (q: string) => setViewer({ searchQ: q });
 
 /** Full-text search: { hits: [{ code, page, pdfPage, snippet, marks }], total }. */
-export function searchBooks(q, code) {
+export function searchBooks(q: string, code?: string | null): Promise<SearchResult> {
   const qs = new URLSearchParams({ q });
   if (code) qs.set('code', code);
-  return api(`/api/books/search?${qs}`);
+  return api<SearchResult>(`/api/books/search?${qs}`);
 }
