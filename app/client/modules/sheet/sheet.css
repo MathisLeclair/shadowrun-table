@@ -367,6 +367,11 @@ tr.sh-skill:hover .sh-die-btn { color: var(--pc); }
 .sh-sub-title { font: 600 12px var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: .04em; }
 .sh-edit-table td.nowrap { white-space: nowrap; }
 .sh-lifestyle.primary { border-left-color: var(--amber); }
+.sh-lifestyle-head { align-items: flex-start; row-gap: 4px; }
+.sh-lifestyle-name { flex: 1 1 140px; min-width: 0; overflow-wrap: anywhere; }
+/* Chips inside a card wrap instead of running past its edge (long option names: « DocWagon Contract, Gold +2,083¥ SR5 450 »). */
+.sh-card .sh-subchips { max-width: 100%; }
+.sh-card .sh-subchip { white-space: normal; max-width: 100%; flex-wrap: wrap; overflow-wrap: anywhere; }
 
 /* Modifiers (shared/modifiers.js): effect chips on items, roll dialog lines and switches */
 .sh-mods { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }

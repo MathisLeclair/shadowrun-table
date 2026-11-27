@@ -246,7 +246,7 @@ const legacyItemHash = (list, it) => {
 };
 /** Item fields the app keeps when Foundry replaces the item (its own state: rounds loaded and their kind, place, grenades left). */
 const APP_ONLY_FIELDS = ['ammoLeft', 'ammoLoaded', 'ammoKind', 'location'];
-const APP_ONLY_BY_LIST = { weapons: ['qty'] };
+const APP_ONLY_BY_LIST = { weapons: ['qty'], lifestyles: ['home'] };
 
 /**
  * Replacement of an app item by the fresh Foundry one: nested entries the app added (shop / restored accessories,

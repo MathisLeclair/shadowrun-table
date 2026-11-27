@@ -10,6 +10,7 @@ import {
   evalFormula, slugify, METATYPE_FR, MELEE_SKILLS, SUB_LISTS,
 } from '../../client/modules/sheet/sheet-data.js';
 import { normalizeLifestyle } from '../../shared/lifestyle.js';
+import { sanitizeHome } from '../../shared/home.js';
 import { contactSheet, connectionOf, loyaltyOf, bribeCost, MAX_CONNECTION, ROLL_KINDS as CONTACT_ROLLS } from '../../shared/contacts.js';
 import { isRealSin, sinRating, sinIdentity, sinLicenses, sinCheckOutcome, verificationPool, MAX_DEVICE_RATING } from '../../shared/sins.js';
 import { removeBonus, weaponFromStats, wareCatalogItem, detachAugmentation, bakeItemBonus, itemBonusSpec } from '../lib/augment.js';
@@ -291,6 +292,7 @@ function sanitizeItem(list, item, ctx) {
       if (out.extraCost !== undefined) out.extraCost = clampInt(out.extraCost, 0, 1e8);
       if (out.monthsPaid !== undefined) out.monthsPaid = clampInt(out.monthsPaid, 0, 999);
       if (out.primary !== undefined) out.primary = !!out.primary;
+      if (out.home !== undefined) out.home = sanitizeHome(out.home); // shared/home.js (null → removed: the player picks again)
       if (out.points !== undefined) {
         const p = isObj(out.points) ? out.points : null;
         out.points = p ? Object.fromEntries(['comforts', 'security', 'neighborhood', 'entertainment'].filter((k) => p[k] !== undefined && p[k] !== null).map((k) => [k, clampInt(p[k], 0, 20)])) : null;

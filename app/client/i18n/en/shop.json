@@ -453,5 +453,11 @@
   "Surenchère (dés)": "Overpay (dice)",
   "+{pct} % du prix = +{cost}": "+{pct} % of the price = +{cost}",
   "{item} : trouvé en {delay} (surenchère {cost})": "{item}: found in {delay} (overpay {cost})",
-  "surenchère": "overpay"
+  "surenchère": "overpay",
+  "Déménagement : {name}": "Moving: {name}",
+  "{actor} déménage ({name}) — {cost}": "{actor} moves ({name}) — {cost}",
+  "{actor} déménage ({name})": "{actor} moves ({name})",
+  "{actor} emménage ({name})": "{actor} moves in ({name})",
+  "Ce logement ne correspond pas à ce train de vie": "This home does not match this lifestyle",
+  "Tu habites déjà ici": "You already live here"
 }

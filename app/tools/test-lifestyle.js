@@ -240,6 +240,30 @@ try {
   await settle();
   ok(r.total === 8583 && A(pj, 'pc_jane').nuyen === n0 - 8583, 'Jane pays her restored rent');
 
+  console.log('• homes (shared/home.js)');
+  n0 = A(pl, 'pc_low').nuyen;
+  r = await pl.send('shop/chooseHome', { actorId: 'pc_low', lifestyleId: appart, layout: 'medium-loft' });
+  await settle();
+  ap = A(pl, 'pc_low').lifestyles.find((l) => l.id === appart);
+  ok(r.fee === 0 && ap.home?.layout === 'medium-loft' && ap.home.moves === 0 && A(pl, 'pc_low').nuyen === n0, 'first home pick is free');
+  await rejects(pl.send('shop/chooseHome', { actorId: 'pc_low', lifestyleId: appart, layout: 'medium-loft' }), /déjà/, 'same home refused');
+  await rejects(pl.send('shop/chooseHome', { actorId: 'pc_low', lifestyleId: appart, layout: 'low-studio' }), /correspond/, 'layout of another level refused');
+  await rejects(pl.send('shop/chooseHome', { actorId: 'pc_low', lifestyleId: appart, layout: 'nope' }), /correspond/, 'unknown layout refused');
+  await rejects(pb.send('shop/chooseHome', { actorId: 'pc_low', lifestyleId: appart, layout: 'medium-classic' }), /pas ton personnage/, 'cannot move someone else');
+  r = await pl.send('shop/chooseHome', { actorId: 'pc_low', lifestyleId: appart, layout: 'medium-classic' });
+  await settle();
+  ap = A(pl, 'pc_low').lifestyles.find((l) => l.id === appart);
+  ok(r.fee === 5000 && ap.home.layout === 'medium-classic' && ap.home.moves === 1 && A(pl, 'pc_low').nuyen === n0 - 5000, 'moving costs one month of base rent');
+  n0 = A(pl, 'pc_low').nuyen;
+  r = await gm.send('shop/chooseHome', { actorId: 'pc_low', lifestyleId: appart, layout: 'medium-family' });
+  await settle();
+  ok(r.fee === 0 && A(pl, 'pc_low').nuyen === n0 && A(pl, 'pc_low').lifestyles.find((l) => l.id === appart).home.moves === 2, 'GM moves for free');
+  await gm.send('actor/updateItem', { actorId: 'pc_low', list: 'lifestyles', itemId: appart, patch: { home: { layout: 'evil', x: 1 } } });
+  await settle();
+  ok(!A(gm, 'pc_low').lifestyles.find((l) => l.id === appart).home, 'GM edit with a bad home → removed (player picks again)');
+  await gm.send('shop/chooseHome', { actorId: 'pc_low', lifestyleId: appart, layout: 'medium-family' });
+  await settle();
+
   console.log('• idempotence across reboots');
   const before = JSON.stringify(A(gm, 'pc_jane').lifestyles);
   const histLen = A(gm, 'pc_jane').history.length;
@@ -255,6 +279,7 @@ try {
   ok(JSON.stringify(A(gm, 'pc_jane').lifestyles) === before, 'lifestyles unchanged after a reboot (no second migration / restore)');
   ok(A(gm, 'pc_jane').history.length === histLen, 'no second restore entry');
   ok(A(gm, 'pc_low').lifestyles.length === 2, 'purchased lifestyles kept');
+  ok(A(gm, 'pc_low').lifestyles.find((l) => l.id === appart)?.home?.layout === 'medium-family', 'home kept after a reboot');
   const errors = srv.output().split('\n').filter((l) => /\[action|Error|failed/i.test(l));
   ok(!errors.length, `no server errors: ${errors.join(' | ')}`);
   gm.close();

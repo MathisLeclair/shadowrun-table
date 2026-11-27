@@ -205,7 +205,8 @@ Lifestyle = { id, name (free: 'Best Home'), base: 'Street'|'Squatter'|'Low'|'Med
                 multiplier (%, e.g. −20 = Dangerous Area), baseOnly? (the % applies to baseCost only: Chummer <multiplierbaseonly> /
                 <basemultiplier>, Extra Secure +20), lp?, notes?, chummerGuid? }],
   monthlyCost (derived, stored — shared/lifestyle.js monthlyCost(), Chummer's order: (baseCost × (1 + Σ baseOnly %/100) + Σ cost of non-'Contracts'
-    options + RF points × pointCost) × (1 + Σ other %/100) + Σ cost of 'Contracts' options; Medium + Garage + Dangerous Area = 4 080), notes, chummerGuid? }
+    options + RF points × pointCost) × (1 + Σ other %/100) + Σ cost of 'Contracts' options; Medium + Garage + Dangerous Area = 4 080), notes, chummerGuid?,
+  home?: { layout, since, moves } }   // the apartment drawn for this lifestyle, see « Homes » below
 Accessory = { id, catalogId?, name, nameFr?, mount: 'Top'|'Under'|'Barrel'|'Stock'|'Side'|'Internal'|'', rating?, cost, avail, included? (built in),
   equipped? (false = off), effects?: { accuracy?, rc?, rcGroup? (same group: best one only), dicePool?, smartgun? }, notes?, chummerGuid? }
 ArmorMod = { id, catalogId?, name, nameFr?, rating?, capacity (may be < 0: YNT Softweave adds room), cost, avail, included?, effects?: { armor? }, notes?, chummerGuid? }
@@ -231,6 +232,19 @@ VehicleMod = { id, catalogId?, name, nameFr?, rating?, slots, category, cost, av
   catalog; techniques from the martial art's `stats.techniques`). A catalog pick gets the values that depend on the parent item from
   `rules.js upgradeFields()` (the parent's catalog entry is loaded): capacity with its Capacity (YNT Softweave), slots with its Body (Gecko Tips),
   price with its value (« Weapon Cost »…; left at the catalog price when the parent's value is unknown).
+- **Homes** (`shared/home.js`, UI `client/modules/sheet/home.js` + `home.css`, tests `tools/test-home.js` + the « homes » part of
+  `tools/test-lifestyle.js`): each lifestyle level has 1–3 hand-drawn layouts (`HOME_LAYOUTS`: ASCII rows in the map tile legend + `E` entrance,
+  `d` open door, `L` locked, `%` secret, `G` shutter, digits = room markers flood-filled into labelled regions; `out` rooms = corridor / street /
+  shared kitchen, never glued onto). Street has none. Lifestyle options that are places (`homeModuleKey`: garages, workshop, yard, pool, gym,
+  armory, panic room, bat cave, escape tunnel…) become modules glued onto a free wall (`buildHome`: 4 rotations, every offset, the module's top
+  row must share ≥ 3 wall cells with the home and get a door onto the living room > another room > another add-on; outside of entrances
+  stays free; « Pas de place pour : … » when nothing fits). The map is rebuilt on the fly (never stored), so a bought / removed garage shows at
+  once. `shop/chooseHome { actorId, lifestyleId, layout }` (owner or GM): first pick free; another layout of the same level = a move, paid
+  `homeMoveCost` (one month of the level's rent — house rule, SR5 has none) by players, free for the GM; logs « emménage / déménage ».
+  `lifestyle.home` is sanitized on GM edits (`sanitizeHome`, bad → removed), kept by Chummer re-imports (app-only field) and Foundry merges
+  (`APP_ONLY_BY_LIST.lifestyles`); a layout of another level counts as none (new level → free pick). The sheet's lifestyle card has a
+  « 🏠 » button (GM / owner): chooser with previews (`drawStaticMap`), pan/zoom viewer (`MapCanvas`), GM « Créer une carte de jeu »
+  (`maps/import` of the built map, folder « Logements »).
 - Chummer (`server/lib/chummer/`): parse reads every `<lifestyle>` (+ `<lifestylequalities>`, cost formulas like `25000 div 12`, `<basemultiplier>`
   of standard / `<multiplier>` of advanced lifestyles, RF points, primary = `<primarytenant>` else the most expensive), weapon `<accessories>`
   (+ `mounts` from the data `accessorymounts`), armor `<armormods>` (capacity evaluated with the armor's capacity), vehicle `<mods>` and

@@ -16,6 +16,7 @@ import {
 import { rollDice } from '../../shared/sr5.js';
 import { contactSheet } from '../../shared/contacts.js';
 import { performRoll } from './10-characters.js';
+import { HOME_LAYOUTS, homeLayout, homeMoveCost } from '../../shared/home.js';
 import { monthlyCost, settleLifestyles, primaryLifestyle, lifestyleFromCatalog, qualityFromCatalog, qualityProblem, baseOf } from '../../shared/lifestyle.js';
 import { removeBonus, weaponFromStats, bakeItemBonus } from '../lib/augment.js';
 import { formatFr } from '../lib/i18n.js';
@@ -1370,6 +1371,32 @@ export default {
         shopLog(ctx, actorId, tk('{actor} paie {n} mois de train de vie ({name}) — {cost}'), { actor: actor.name, n: m, name: lf.name, cost: nuyen(total) });
         notifyOwners(ctx, actorId, 'sfx', { id: 'cash' });
         return { monthsPaid: lf.monthsPaid, total, lifestyleId: lf.id };
+      },
+    },
+
+    // Home of a lifestyle (shared/home.js): the first pick is free; another layout on the same level is a move,
+    // paid one month of the level's rent by the player (house rule — the GM moves runners for free).
+    'shop/chooseHome': {
+      role: 'any',
+      handler(ctx, { actorId, lifestyleId, layout }) {
+        const actor = getActor(ctx, actorId);
+        const lf = (actor.lifestyles || []).find((l) => l.id === lifestyleId);
+        if (!lf) ctx.fail('Train de vie introuvable');
+        const next = typeof layout === 'string' && Object.prototype.hasOwnProperty.call(HOME_LAYOUTS, layout) ? HOME_LAYOUTS[layout] : null;
+        if (!next || !next.bases.includes(String(lf.base || ''))) ctx.fail('Ce logement ne correspond pas à ce train de vie');
+        const current = homeLayout(lf);
+        if (current?.id === next.id) ctx.fail('Tu habites déjà ici');
+        const fee = current && !ctx.isGM ? homeMoveCost(lf) : 0;
+        if (fee > 0) {
+          checkFunds(ctx, actor, fee);
+          actor.nuyen = (Number(actor.nuyen) || 0) - fee;
+          history(actor, tk('Déménagement : {name}'), { name: lf.name }, -fee);
+          notifyOwners(ctx, actorId, 'sfx', { id: 'cash' });
+        }
+        lf.home = { layout: next.id, since: ctx.now, moves: (Number(lf.home?.moves) || 0) + (current ? 1 : 0) };
+        if (current) shopLog(ctx, actorId, fee ? tk('{actor} déménage ({name}) — {cost}') : tk('{actor} déménage ({name})'), { actor: actor.name, name: lf.name, cost: nuyen(fee) });
+        else shopLog(ctx, actorId, tk('{actor} emménage ({name})'), { actor: actor.name, name: lf.name });
+        return { layout: next.id, fee };
       },
     },
 

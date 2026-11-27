@@ -17,6 +17,7 @@ import { ItemRef, RuleRef } from '../books/BookRef.js';
 import { ruleRef, skillRef } from '/shared/bookrefs.js';
 import { SinCards } from './sins.js';
 import { ContactCards } from './contacts.js';
+import { HomeButton } from './home.js';
 
 // Roll labels are stored in French in the log; rollLabel() (common.js) translates them for each viewer.
 const drainRollLabel = (k) => `Résistance au drain (VOL + ${k})`; // i18n-ignore
@@ -256,11 +257,11 @@ export function GearTab({ s }) {
 }
 
 /** Lifestyles (« Modes de vie »): base, monthly cost with its breakdown, options (garage, DocWagon contract, security…). */
-function LifestylesView({ actor, showPaid }) {
+function LifestylesView({ game, actor, showPaid }) {
   const list = actor.lifestyles || [];
   if (!list.length) return html`<div class="muted small">${t('Aucun mode de vie.')}</div>`;
   return html`<div class="sh-cards">${list.map((l) => html`<div class=${'sh-card sh-lifestyle' + (l.primary ? ' primary' : '')} key=${l.id}>
-    <div class="row spread"><span><b>${l.name || lifestyleBaseLabel(l.base)}</b> <${ItemRef} item=${l} /></span>
+    <div class="row spread wrap sh-lifestyle-head"><span class="sh-lifestyle-name"><b>${l.name || lifestyleBaseLabel(l.base)}</b> <${ItemRef} item=${l} /></span>
       <span class="row gap-s">${l.primary ? html`<span class="badge badge-amber">${t('principal')}</span>` : null}<span class="badge badge-cyan">${lifestyleBaseLabel(l.base)}</span></span></div>
     <div class="row wrap gap-s"><span class="mono">${t('{cost}/mois', { cost: fmtNuyen(l.monthlyCost || 0) })}</span>
       ${(l.qualities || []).length > 0 && html`<span class="faint small" title=${t('Coût de base, options en % du coût de base, options à prix fixe')}>(${lifestyleBreakdown(l)})</span>`}
@@ -268,6 +269,7 @@ function LifestylesView({ actor, showPaid }) {
     ${l.points && html`<div class="faint small">${t('Confort {c} · Sécurité {s} · Quartier {n}', { c: l.points.comforts ?? '—', s: l.points.security ?? '—', n: l.points.neighborhood ?? '—' })}</div>`}
     <${SubChips} sub="qualities" items=${l.qualities} />
     ${l.notes && html`<div class="faint small">${l.notes}</div>`}
+    ${showPaid && game ? html`<div><${HomeButton} game=${game} actor=${actor} lifestyle=${l} canMove=${showPaid} /></div>` : null}
   </div>`)}</div>`;
 }
 
@@ -290,7 +292,7 @@ export function ContactsTab({ s }) {
     <h4 class="section-title">${t('SIN & licences')} <${RuleRef} rule="fakeSin" /></h4>
     <${SinCards} actor=${actor} gm=${gm} own=${own} />
 
-    ${(actor.lifestyles || []).length > 0 && html`<h4 class="section-title">${t('Modes de vie')} <${RuleRef} rule="lifestyles" /></h4><${LifestylesView} actor=${actor} showPaid=${gm || own} />`}
+    ${(actor.lifestyles || []).length > 0 && html`<h4 class="section-title">${t('Modes de vie')} <${RuleRef} rule="lifestyles" /></h4><${LifestylesView} game=${s.game} actor=${actor} showPaid=${gm || own} />`}
   </div>`;
 }
 
