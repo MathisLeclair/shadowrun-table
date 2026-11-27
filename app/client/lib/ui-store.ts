@@ -64,7 +64,10 @@ export function useLang(): string {
   const [l, set] = useState<string>(getLang());
   useEffect(() => {
     if (getLang() !== l) set(getLang());
-    return onLangChange(set);
+    const off = onLangChange(set);
+    return () => {
+      off();
+    };
   }, []);
   return l;
 }
