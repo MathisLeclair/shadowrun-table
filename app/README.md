@@ -1,6 +1,6 @@
 # Shadowrun Table — Project Lazarus
 
-Real-time web app to run Shadowrun 5E campaigns: the GM runs it on their PC (or a VPS, see `DEPLOY.md`), players join from their browser (laptop, tablet or phone). One server can host several independent tables. The interface is in **French or English**.
+Real-time web app to run Shadowrun 5E campaigns: the GM runs it on their PC (or a VPS, see [docs/deploy.md](../docs/deploy.md)), players join from their browser (laptop, tablet or phone). One server can host several independent tables. The interface is in **French or English**.
 
 ## Start a session
 
@@ -59,8 +59,8 @@ Each table's markdown docs live in its own folder, `data/tables/<table>/docs/` (
 
 ## For developers
 
-See `AGENTS.md` (repo root) and `ARCHITECTURE.md`. `npm run dev` = server with hot reload (Vite); `npm run build` = production client bundle, served by `npm start`. Tests: `node tools/test-<module>.ts` (each starts an isolated server), `node tools/smoke.ts`, translations `node tools/i18n-check.ts`. Regenerate the gear catalogue: `npm run build:catalog`. Re-generate seeds from Foundry: `node tools/foundry-import.ts --write-seeds`.
+See [AGENTS.md](../AGENTS.md) (repo root) and the developer docs in [docs/](../docs/README.md). `npm run dev` = server with hot reload (Vite); `npm run build` = production client bundle, served by `npm start`. Tests: `node tools/test-<module>.ts` (each starts an isolated server), `node tools/smoke.ts`, translations `node tools/i18n-check.ts`. Regenerate the gear catalogue: `npm run build:catalog`. Re-generate seeds from Foundry: `node tools/foundry-import.ts --write-seeds`.
 
 ## Live server
 
-Hosted at **http://152.228.134.90:8095** (admin: `/admin`). Every push to `main` is deployed automatically by a GitHub Action (about a minute), with a data snapshot before each deploy and an automatic rollback if the new version doesn't start. See `DEPLOY.md` → « Auto-deploy ».
+Hosted at **http://152.228.134.90:8095** (admin: `/admin`). Every push to `main` is deployed automatically by a GitHub Action (about a minute), with a data snapshot before each deploy and an automatic rollback if the new version doesn't start. See [docs/deploy.md](../docs/deploy.md#auto-deploy-on-push-to-main) → « Auto-deploy ».

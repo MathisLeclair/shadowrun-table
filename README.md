@@ -84,7 +84,7 @@ name and pick one of the four pre-made runners. It comes with a warehouse map, a
 devices open the map's doors, and a short scenario in the **Campagne** tab. Open it again in a private window to play
 the players' side at the same time. Everything is visible to other visitors and wiped at the next reset; the GM
 assistant, rulebooks and Foundry import are off there. Run your own with `SR_DEMO_TABLE=demo npm start`
-(see [app/DEPLOY.md](app/DEPLOY.md#4b-public-demo-table)).
+(see [docs/deploy.md](docs/deploy.md#4b-public-demo-table)).
 
 ## Quick start
 
@@ -113,7 +113,7 @@ On Windows you can just double-click **`app/Lancer la table.bat`**. Playing remo
 ## Deploying
 
 The app ships with a `Dockerfile` and `docker-compose.yml`. All game data lives in a single bind-mounted `runtime/`
-folder, so rebuilding the image never touches it. See **[app/DEPLOY.md](app/DEPLOY.md)** for the full VPS setup,
+folder, so rebuilding the image never touches it. See **[docs/deploy.md](docs/deploy.md)** for the full VPS setup,
 push-to-deploy GitHub Action and backup routine.
 
 ## Under the hood
@@ -138,8 +138,8 @@ app/
 - **Ambiguous rules follow Chummer**, so imported characters compute the same numbers in both tools.
 - **State is a JSON file per table**, written atomically, with rolling backups every 15 minutes.
 
-The full module contract is in **[app/ARCHITECTURE.md](app/ARCHITECTURE.md)** and the user guide in
-**[app/README.md](app/README.md)**.
+The developer docs (module contracts, data model, features, SR5 rules) are in **[docs/](docs/README.md)** and the user
+guide in **[app/README.md](app/README.md)**.
 
 ## Tests
 

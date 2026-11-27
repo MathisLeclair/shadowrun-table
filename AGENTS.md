@@ -1,8 +1,7 @@
 # AGENTS.md — working on Shadowrun Table
 
-Guide for AI coding agents (and humans) working in this repository. Read this first. Full details are in
-[`app/ARCHITECTURE.md`](app/ARCHITECTURE.md), which is being split into `docs/`. Search it by section instead of
-reading all of it.
+Guide for AI coding agents (and humans) working in this repository. Read this first. Details are in
+[`docs/`](docs/README.md), one page per topic: open the page you need (« Where to look » below), not all of them.
 
 ## What this is
 
@@ -53,10 +52,10 @@ Runtime data (`data/tables/`, `runtime/`, uploads, rulebook PDFs, map images) is
 - **Tests:** run only the test files for the areas you touched, once. Never the whole suite. Never start a server on
   port 3000 or without `SR_RUNTIME_DIR`: other sessions may be running. Use `tools/test-client.ts`
   (`startServer({ port })`), which gives each test its own port and temp folder. Port ranges per test are listed in
-  ARCHITECTURE.md « Testing ».
+  [docs/testing.md](docs/testing.md).
 - **Server actions:** `server/modules/NN-x.ts` exports `{ name, init, actions, filter, gmFilter, routes }`. Action
   names are `<module>/<verb>`. Handlers are synchronous and mutate `ctx.state`; the core saves and broadcasts. Validate
-  every player payload. No per-table data in module-level variables. See ARCHITECTURE.md « Server module contract ».
+  every player payload. No per-table data in module-level variables. See [docs/architecture.md](docs/architecture.md).
 - **Client:** components get `{ game }` (the user's view). Call `send(type, payload)` for actions. Use `TextInput` for
   anything sent to the server (it commits on blur). Module CSS sits next to the component and is imported (`import './x.css';`),
   with classes prefixed by the module name. React: every `.map()` list gets a stable `key`; a text field that sends to
@@ -72,14 +71,14 @@ Runtime data (`data/tables/`, `runtime/`, uploads, rulebook PDFs, map images) is
 
 ## Where to look
 
-| Topic | ARCHITECTURE.md section |
+| Topic | Page |
 |---|---|
-| data model types (state, view, actors, maps, catalog, server contract) | `app/shared/types.ts` (the code is the reference) |
-| state shape (actors, maps, combat, shop, campaign…) | « State shape » |
-| client tabs and components | « Client contract » (registry table) |
-| translations | « i18n » |
-| multi-table, admin, demo table | « Multi-table hosting », « Demo table » |
-| Matrix, chargen, enemy generator | « Round 3 additions » |
-| rulebooks and page references | « Rulebooks » |
-| modifiers (qualities, 'ware, powers → dice) | « Modifiers » |
-| deployment | [`app/DEPLOY.md`](app/DEPLOY.md) |
+| data model types (state, view, actors, maps, catalog, server contract) | `app/shared/types.ts` (the code is the reference); [docs/data-model.md](docs/data-model.md) |
+| module contracts, which page covers which module, routing, security | [docs/architecture.md](docs/architecture.md) |
+| a feature (sheet, maps, combat, shop, Matrix, chargen, notes, books…) | [docs/README.md](docs/README.md) « Features » → `docs/modules/<feature>.md` |
+| SR5 rules implemented, with book and page | [docs/rules/](docs/rules/README.md) |
+| modifiers (qualities, 'ware, powers → dice) | [docs/modules/modifiers.md](docs/modules/modifiers.md), [docs/rules/modifiers-stacking.md](docs/rules/modifiers-stacking.md) |
+| tests and their ports | [docs/testing.md](docs/testing.md) |
+| translations | [docs/i18n.md](docs/i18n.md) |
+| multi-table, admin, demo table | [docs/modules/multi-table.md](docs/modules/multi-table.md), [docs/modules/demo-table.md](docs/modules/demo-table.md) |
+| deployment | [docs/deploy.md](docs/deploy.md) |
