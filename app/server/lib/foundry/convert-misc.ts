@@ -1,9 +1,44 @@
 // Foundry journals → markdown documents, playlists → audio tracks.
-import { htmlToMarkdown } from './html2md.js';
+import { htmlToMarkdown } from './html2md.ts';
 import { slug } from '../../../shared/util.js';
+import type { FoundryDoc } from './world.ts';
+import type { AssetFn } from './assets.ts';
+import type { HtmlLinks } from './html2md.ts';
+import type { AudioTrack, TrackKind } from '../../../shared/types.ts';
+
+/** A journal converted to a markdown document. */
+export interface JournalDoc {
+  file: string;
+  title: string;
+  folder: string;
+  foundryId: string;
+  content: string;
+  pages: number;
+}
+/** A PDF page of a journal (rule books: not imported, listed in the index). */
+export interface JournalPdf {
+  title: string;
+  page: string;
+  folder: string;
+  path: string;
+}
+/** convertJournals() result. */
+export interface ConvertedJournals {
+  docs: JournalDoc[];
+  pdfs: JournalPdf[];
+  index: string;
+}
+/** A playlist converted to audio tracks. */
+export interface ConvertedPlaylist {
+  id: string;
+  name: string;
+  kind: TrackKind;
+  mode: unknown;
+  tracks: AudioTrack[];
+}
 
 /** Windows-safe file name part. */
-export function fileSafe(s) {
+export function fileSafe(s: unknown): string {
   return String(s || '')
     .replace(/[<>:"/\\|?*\u0000-\u001f]+/g, ' ')
     .replace(/\s+/g, ' ')
@@ -17,23 +52,26 @@ export function fileSafe(s) {
  * Returns { docs: [{ file, title, folder, foundryId, content, pages }], pdfs: [{ title, folder, path }], index }.
  * PDF-only entries (rule books) are skipped and listed in the index.
  */
-export function convertJournals(journals, ctx = {}) {
-  const docs = [];
-  const pdfs = [];
-  const used = new Set();
+export function convertJournals(
+  journals: FoundryDoc[] | null | undefined,
+  ctx: { folderPath?: (id: string | null | undefined) => string; asset?: AssetFn; links?: HtmlLinks; worldTitle?: string } = {}
+): ConvertedJournals {
+  const docs: JournalDoc[] = [];
+  const pdfs: JournalPdf[] = [];
+  const used = new Set<string>();
   const sorted = [...(journals || [])].sort((a, b) => String(ctx.folderPath?.(a.folder) || '').localeCompare(String(ctx.folderPath?.(b.folder) || '')) || String(a.name).localeCompare(String(b.name)));
   for (const j of sorted) {
     const folder = ctx.folderPath ? ctx.folderPath(j.folder) : '';
-    const pages = (j.pages || []).slice().sort((a, b) => (a.sort || 0) - (b.sort || 0));
+    const pages: FoundryDoc[] = (j.pages || []).slice().sort((a: FoundryDoc, b: FoundryDoc) => (a.sort || 0) - (b.sort || 0));
     const pdfPages = pages.filter((p) => p.type === 'pdf');
     const contentPages = pages.filter((p) => p.type !== 'pdf');
     for (const p of pdfPages) pdfs.push({ title: j.name, page: p.name, folder, path: decodeSafe(p.src || '') });
     if (!contentPages.length) continue;
-    const parts = [];
+    const parts: string[] = [];
     for (const p of contentPages) {
       const multi = contentPages.length > 1;
       if (p.type === 'text') {
-        let body = htmlToMarkdown(p.text?.content || '', { links: ctx.links, mapImage: (src) => (ctx.asset ? ctx.asset(src, 'journal') : src), shiftHeadings: multi ? 1 : 0 });
+        let body = htmlToMarkdown(p.text?.content || '', { links: ctx.links, mapImage: (src: string) => (ctx.asset ? ctx.asset(src, 'journal') : src), shiftHeadings: multi ? 1 : 0 });
         if (p.text?.markdown && !body) body = p.text.markdown;
         if (multi) parts.push(`## ${p.name}`);
         if (body) parts.push(body);
@@ -60,7 +98,7 @@ export function convertJournals(journals, ctx = {}) {
     docs.push({ file, title: j.name, folder, foundryId: j._id, content: header + content + footer, pages: contentPages.length });
   }
   const lines = ['# Journaux Foundry', '', `Importés du monde Foundry${ctx.worldTitle ? ` « ${ctx.worldTitle} »` : ''}. Relance l'import (Réglages → Foundry VTT) pour les mettre à jour.`, ''];
-  let lastFolder = null;
+  let lastFolder: string | null = null;
   for (const d of docs) {
     if (d.folder !== lastFolder) {
       lines.push('', `## ${d.folder || 'Sans dossier'}`, '');
@@ -75,7 +113,7 @@ export function convertJournals(journals, ctx = {}) {
   return { docs, pdfs, index: lines.join('\n') + '\n' };
 }
 
-function decodeSafe(s) {
+function decodeSafe(s: unknown): string {
   try {
     return decodeURIComponent(String(s || ''));
   } catch {
@@ -83,7 +121,7 @@ function decodeSafe(s) {
   }
 }
 
-function playlistKind(p) {
+function playlistKind(p: FoundryDoc): TrackKind {
   const n = String(p.name || '').toLowerCase();
   if (/sfx|effet|bruitage|sound ?fx/.test(n) || p.mode === -1) return 'sfx';
   if (/ambien|atmos|rain|pluie|city|ville|nature|wind/.test(n)) return 'ambient';
@@ -91,19 +129,19 @@ function playlistKind(p) {
 }
 
 /** Playlists → [{ playlist, kind, tracks: [track] }]. Track = audio module schema + volume/loop. */
-export function convertPlaylists(playlists, ctx = {}) {
-  const out = [];
+export function convertPlaylists(playlists: FoundryDoc[] | null | undefined, ctx: { asset?: AssetFn } = {}): ConvertedPlaylist[] {
+  const out: ConvertedPlaylist[] = [];
   for (const p of playlists || []) {
-    const sounds = (p.sounds || []).filter((s) => s && s.path);
+    const sounds: FoundryDoc[] = (p.sounds || []).filter((s: FoundryDoc | null) => s && s.path);
     if (!sounds.length) continue;
     const kind = playlistKind(p);
-    const seen = new Set();
-    const tracks = [];
+    const seen = new Set<string>();
+    const tracks: AudioTrack[] = [];
     for (const s of sounds) {
       const url = ctx.asset ? ctx.asset(s.path, 'audio', '', slug(p.name) || 'playlist') : s.path;
       if (!url || seen.has(url)) continue;
       seen.add(url);
-      const track = {
+      const track: AudioTrack = {
         id: `trk_fvtt_${s._id}`,
         name: String(s.name || 'Piste').slice(0, 120),
         kind: kind === 'music' && s.repeat && /ambien/i.test(s.name || '') ? 'ambient' : kind,
