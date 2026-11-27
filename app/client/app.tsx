@@ -4,7 +4,7 @@
 import { useEffect, useState, type ComponentType, type FormEvent } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Button, Badge, Modal, Tabs, LangSwitch, loadCss } from './lib/ui.tsx';
-import { connect, getToken, setToken, useGame, useConnected, logout, api, send, TABLE } from './lib/net.ts';
+import { connect, getToken, setToken, useGame, useConnected, logout, api, send, TABLE, type GameProps } from './lib/net.ts';
 import { useUI, setUI, toast, useLang } from './lib/ui-store.ts';
 import { t, tn, errorText, getLang, setLang, isLang, storedLang, storeLang, browserLang, expectUserLang, loadDictionaries } from './lib/i18n.js';
 import { mainTabs, dockTabs, SheetView, globalComponents } from './modules/registry.js';
@@ -13,10 +13,6 @@ import type { GameView } from '../shared/types.ts';
 loadCss('/modules/admin/admin.css'); // table picker + admin page + login extras
 loadCss('/modules/core/core.css'); // language switch, translation tools
 
-/** Props every tab, dock and global component receives. */
-export interface GameProps {
-  game: GameView;
-}
 /** Entry of the main or dock tab lists (modules/registry.js). */
 interface TabEntry {
   id: string;

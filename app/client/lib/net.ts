@@ -6,6 +6,10 @@ import { t, tk, errorText, setLang, langFromGame } from './i18n.js';
 import type { GameView } from '../../shared/types.ts';
 
 export type { GameView };
+/** Props of every tab, dock and global component (see modules/registry.js). */
+export interface GameProps {
+  game: GameView;
+}
 /** Error thrown by send()/api(): message translated, plus the server's key/params/code. */
 export interface ServerError extends Error {
   key?: string;
