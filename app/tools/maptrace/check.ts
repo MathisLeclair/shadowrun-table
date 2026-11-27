@@ -5,7 +5,7 @@
 // Checks: schema (ids, enums, geometry vs image size, FR/EN fields), bounds, zero-length / duplicate / overlapping
 // walls, door length (≥ 0.6 cell), wall joints (« leak » = an endpoint 0.01–0.4 cell from another wall: light and
 // sight pass through; « opening » = two free wall ends 0.4–1.6 cells apart without a door: archway or missing door),
-// reachability of every region from `entry` with all doors open (shared/vision.js buildGrid/canStep/findPath).
+// reachability of every region from `entry` with all doors open (shared/vision.ts buildGrid/canStep/findPath).
 // --fix snaps leaks (endpoint → the other endpoint, or onto the other wall), rounds to 0.001 and rewrites the file
 // in the canonical layout (one wall / light / region per line).
 import fs from 'node:fs';
@@ -13,24 +13,53 @@ import path from 'node:path';
 import { buildGrid, canStep, findPath, pointSegmentDistance } from '../../shared/vision.ts';
 import { LIB_THEMES, LIB_LIGHTINGS, LIB_SOURCES, wallGeoKey } from '../../shared/maplib.ts';
 import { args, isMain, findImage, jpegSize, readJpeg, MAPLIB_SRC } from './lib.ts';
+import type { Img } from './lib.ts';
+import type { LibLight, LibWall } from '../../shared/maplib.ts';
+import type { VisionMap } from '../../shared/vision.ts';
+
+export type IssueLevel = 'error' | 'warn' | 'info';
+/** A finding of checkMap(); x/y/tag (cells) when it has a position. */
+export interface MapIssue {
+  level: IssueLevel;
+  code: string;
+  msg: string;
+  x?: number;
+  y?: number;
+  tag?: string;
+}
+export interface MapStats {
+  walls: number;
+  windows: number;
+  doors: number;
+  lights: number;
+  regions: number;
+  wallLength: number;
+  cells: number;
+  joinedEnds: string;
+  openings: number;
+  reachable?: string;
+  reachesBorder?: boolean;
+  outsideCells?: number;
+}
+type Wall = LibWall & { id: string };
 
 const JOIN = 0.01; // endpoints closer than this are joined
 const LEAK = 0.4; // up to this: a leak (snap it)
 const OPENING = 1.6; // free ends up to this apart: an opening without a door
-const r3 = (v) => Math.round(v * 1000) / 1000;
-const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
-const len = (w) => Math.hypot(w.x2 - w.x1, w.y2 - w.y1);
+const r3 = (v: number): number => Math.round(v * 1000) / 1000;
+const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+const len = (w: LibWall): number => Math.hypot(w.x2 - w.x1, w.y2 - w.y1);
 
 /** Nearest other wall to point (x, y): { d, j, end: [x, y]|null (when the closest point is an endpoint), t }. */
-function nearestOther(walls, i, x, y) {
-  let best = { d: Infinity, j: -1, end: null };
+function nearestOther(walls: LibWall[], i: number, x: number, y: number): { d: number; j: number; end: [number, number] | null } {
+  let best: { d: number; j: number; end: [number, number] | null } = { d: Infinity, j: -1, end: null };
   for (let j = 0; j < walls.length; j++) {
     if (j === i || joinedWalls(walls[i], walls[j])) continue;
     const w = walls[j];
     const d = pointSegmentDistance(x, y, w.x1, w.y1, w.x2, w.y2);
     if (d < best.d) {
       const d1 = Math.hypot(x - w.x1, y - w.y1), d2 = Math.hypot(x - w.x2, y - w.y2);
-      const end = Math.min(d1, d2) <= d + 0.05 ? (d1 <= d2 ? [w.x1, w.y1] : [w.x2, w.y2]) : null;
+      const end: [number, number] | null = Math.min(d1, d2) <= d + 0.05 ? (d1 <= d2 ? [w.x1, w.y1] : [w.x2, w.y2]) : null;
       best = { d, j, end };
     }
   }
@@ -38,26 +67,26 @@ function nearestOther(walls, i, x, y) {
 }
 /** True when two walls already touch (an endpoint of one lies on the other): neighbours, never a leak of each other. */
 /** True when the point touches another wall (≤ JOIN). */
-function isJoined(walls, i, x, y) {
+function isJoined(walls: LibWall[], i: number, x: number, y: number): boolean {
   for (let j = 0; j < walls.length; j++) if (j !== i && pointSegmentDistance(x, y, walls[j].x1, walls[j].y1, walls[j].x2, walls[j].y2) <= JOIN) return true;
   return false;
 }
-function joinedWalls(a, b) {
+function joinedWalls(a: LibWall, b: LibWall): boolean {
   for (const [p, q] of [[a, b], [b, a]])
     for (const [x, y] of [[p.x1, p.y1], [p.x2, p.y2]]) if (pointSegmentDistance(x, y, q.x1, q.y1, q.x2, q.y2) <= JOIN) return true;
   return false;
 }
-const angleOf = (x1, y1, x2, y2) => Math.atan2(y2 - y1, x2 - x1);
-function projectOnto(w, x, y) {
+const angleOf = (x1: number, y1: number, x2: number, y2: number): number => Math.atan2(y2 - y1, x2 - x1);
+function projectOnto(w: LibWall, x: number, y: number): [number, number] {
   const dx = w.x2 - w.x1, dy = w.y2 - w.y1, L2 = dx * dx + dy * dy || 1;
   const t = Math.max(0, Math.min(1, ((x - w.x1) * dx + (y - w.y1) * dy) / L2));
   return [w.x1 + t * dx, w.y1 + t * dy];
 }
-const collinearOverlap = (a, b) => {
+const collinearOverlap = (a: LibWall, b: LibWall): number => {
   const ax = a.x2 - a.x1, ay = a.y2 - a.y1, La = Math.hypot(ax, ay);
   if (La < 1e-6) return 0;
   const ux = ax / La, uy = ay / La;
-  const off = (x, y) => Math.abs((x - a.x1) * uy - (y - a.y1) * ux);
+  const off = (x: number, y: number) => Math.abs((x - a.x1) * uy - (y - a.y1) * ux);
   if (off(b.x1, b.y1) > 0.03 || off(b.x2, b.y2) > 0.03) return 0;
   const t1 = (b.x1 - a.x1) * ux + (b.y1 - a.y1) * uy, t2 = (b.x2 - a.x1) * ux + (b.y2 - a.y1) * uy;
   return Math.min(La, Math.max(t1, t2)) - Math.max(0, Math.min(t1, t2));
@@ -67,9 +96,10 @@ const collinearOverlap = (a, b) => {
  * Check one maplib object. opts: { file (for slug/name checks), image: true (compare with the real image size) }.
  * Returns { issues: [{ level, code, msg, x?, y?, tag? }], stats }.
  */
-export function checkMap(raw, { file = null, image = true } = {}) {
-  const issues = [];
-  const add = (level, code, msg, at = null, tag = null) => issues.push({ level, code, msg, ...(at ? { x: at[0], y: at[1], tag: tag || code } : {}) });
+// `raw` is any parsed JSON: this function is the validator, it checks every field before trusting it.
+export function checkMap(raw: any, { file = null, image = true }: { file?: string | null; image?: boolean } = {}): { issues: MapIssue[]; stats: Partial<MapStats> } {
+  const issues: MapIssue[] = [];
+  const add = (level: IssueLevel, code: string, msg: string, at: readonly number[] | null = null, tag: string | null = null) => issues.push({ level, code, msg, ...(at ? { x: at[0], y: at[1], tag: tag || code } : {}) });
   if (!raw || typeof raw !== 'object') return { issues: [{ level: 'error', code: 'json', msg: 'not an object' }], stats: {} };
   // ---- schema ----
   const slug = raw.slug;
@@ -82,7 +112,7 @@ export function checkMap(raw, { file = null, image = true } = {}) {
   if (!LIB_THEMES.includes(raw.theme)) add('error', 'theme', `theme must be one of ${LIB_THEMES.join('|')}`);
   if (!LIB_LIGHTINGS.includes(raw.lighting)) add('error', 'lighting', `lighting must be one of ${LIB_LIGHTINGS.join('|')}`);
   if (raw.metersPerCell !== 1.5) add('warn', 'meters', 'metersPerCell should be 1.5');
-  if (!Array.isArray(raw.tags) || raw.tags.length < 4 || raw.tags.some((t) => typeof t !== 'string' || !t.trim())) add('warn', 'tags', 'tags: at least 4 non-empty strings (French + English)');
+  if (!Array.isArray(raw.tags) || raw.tags.length < 4 || raw.tags.some((t: unknown) => typeof t !== 'string' || !t.trim())) add('warn', 'tags', 'tags: at least 4 non-empty strings (French + English)');
   if (typeof raw.description === 'string' && raw.description.length > 700) add('warn', 'description', 'description too long (1-3 sentences)');
   if (!Number.isInteger(raw.version) || raw.version < 1) add('error', 'version', 'version must be an integer ≥ 1');
   const t = raw.traced;
@@ -104,11 +134,11 @@ export function checkMap(raw, { file = null, image = true } = {}) {
     }
   }
   const W = Number(raw.width) || 0, H = Number(raw.height) || 0;
-  const inB = (x, y, m = 0.05) => x >= -m && y >= -m && x <= W + m && y <= H + m;
+  const inB = (x: number, y: number, m = 0.05) => x >= -m && y >= -m && x <= W + m && y <= H + m;
   // ---- walls ----
-  const walls = Array.isArray(raw.walls) ? raw.walls : (add('error', 'walls', 'walls must be an array'), []);
-  const ids = new Set();
-  const good = [];
+  const walls: any[] = Array.isArray(raw.walls) ? raw.walls : (add('error', 'walls', 'walls must be an array'), []);
+  const ids = new Set<string>();
+  const good: Wall[] = [];
   walls.forEach((w, i) => {
     const tag = w?.id || `#${i}`;
     if (!w || typeof w !== 'object' || ![w.x1, w.y1, w.x2, w.y2].every(isNum)) return add('error', 'wall', `wall ${tag}: x1 y1 x2 y2 must be numbers`);
@@ -128,7 +158,7 @@ export function checkMap(raw, { file = null, image = true } = {}) {
     }
     good.push(w);
   });
-  const keys = new Map();
+  const keys = new Map<string, string>();
   for (const w of good) {
     const k = wallGeoKey(w);
     if (keys.has(k)) add('error', 'duplicate', `walls ${keys.get(k)} and ${w.id} are identical`, [(w.x1 + w.x2) / 2, (w.y1 + w.y2) / 2], w.id);
@@ -144,7 +174,7 @@ export function checkMap(raw, { file = null, image = true } = {}) {
     }
   // ---- joints ----
   let joined = 0, ends = 0;
-  const free = [];
+  const free: Array<{ w: Wall; x: number; y: number; i: number }> = [];
   good.forEach((w, i) => {
     for (const [x, y] of [[w.x1, w.y1], [w.x2, w.y2]]) {
       ends++;
@@ -157,7 +187,7 @@ export function checkMap(raw, { file = null, image = true } = {}) {
       else free.push({ w, x, y, i });
     }
   });
-  const usedFree = new Set();
+  const usedFree = new Set<number>();
   let openings = 0;
   for (let a = 0; a < free.length; a++) {
     if (usedFree.has(a)) continue;
@@ -175,8 +205,8 @@ export function checkMap(raw, { file = null, image = true } = {}) {
     }
   }
   // ---- lights / regions / entry ----
-  const lights = Array.isArray(raw.lights) ? raw.lights : (add('error', 'lights', 'lights must be an array'), []);
-  const lids = new Set();
+  const lights: any[] = Array.isArray(raw.lights) ? raw.lights : (add('error', 'lights', 'lights must be an array'), []);
+  const lids = new Set<string>();
   for (const l of lights) {
     if (!l || !isNum(l.x) || !isNum(l.y) || !isNum(l.radius)) {
       add('error', 'light', `light ${l?.id}: x, y, radius must be numbers`);
@@ -189,8 +219,8 @@ export function checkMap(raw, { file = null, image = true } = {}) {
     if (!/^#[0-9a-f]{6}$/i.test(l.color || '')) add('error', 'light', `light ${l.id}: color must be #rrggbb`);
     if (typeof l.on !== 'boolean') add('error', 'light', `light ${l.id}: on must be a boolean`);
   }
-  const regions = Array.isArray(raw.regions) ? raw.regions : (add('error', 'regions', 'regions must be an array'), []);
-  const rids = new Set();
+  const regions: any[] = Array.isArray(raw.regions) ? raw.regions : (add('error', 'regions', 'regions must be an array'), []);
+  const rids = new Set<string>();
   for (const r of regions) {
     if (!r || ![r.x, r.y, r.w, r.h].every(Number.isInteger) || r.w < 1 || r.h < 1) {
       add('error', 'region', `region ${r?.id}: x, y, w, h must be integers (w, h ≥ 1)`);
@@ -203,7 +233,7 @@ export function checkMap(raw, { file = null, image = true } = {}) {
     if (r.x < 0 || r.y < 0 || r.x + r.w > W || r.y + r.h > H) add('error', 'bounds', `region ${r.id} outside the map`, [r.x + r.w / 2, r.y + r.h / 2], r.id);
   }
   // ---- reachability (all doors open) ----
-  const stats = {
+  const stats: MapStats = {
     walls: good.filter((w) => !w.door && w.sight !== false).length,
     windows: good.filter((w) => !w.door && w.sight === false && w.move !== false).length,
     doors: good.filter((w) => w.door).length,
@@ -215,7 +245,7 @@ export function checkMap(raw, { file = null, image = true } = {}) {
     openings,
   };
   if (W > 0 && H > 0 && W * H <= 200 * 200) {
-    const map = { width: W, height: H, tiles: Array.from({ length: H }, () => '.'.repeat(W)), walls: good.map((w) => ({ ...w, door: w.door ? { ...w.door, state: 'open' } : null })) };
+    const map: VisionMap = { width: W, height: H, tiles: Array.from({ length: H }, () => '.'.repeat(W)), walls: good.map((w) => ({ ...w, door: w.door ? { ...w.door, state: 'open' } : null })) };
     const grid = buildGrid(map);
     const e = raw.entry;
     if (!e) add('warn', 'entry', 'no entry point: reachability not checked');
@@ -223,10 +253,10 @@ export function checkMap(raw, { file = null, image = true } = {}) {
     else {
       const sx = Math.min(W - 1, Math.floor(e.x)), sy = Math.min(H - 1, Math.floor(e.y));
       const seen = new Uint8Array(W * H);
-      const q = [[sx, sy]];
+      const q: Array<[number, number]> = [[sx, sy]];
       seen[sy * W + sx] = 1;
       while (q.length) {
-        const [x, y] = q.pop();
+        const [x, y] = q.pop()!;
         for (let dy = -1; dy <= 1; dy++)
           for (let dx = -1; dx <= 1; dx++) {
             const nx = x + dx, ny = y + dy;
@@ -251,13 +281,13 @@ export function checkMap(raw, { file = null, image = true } = {}) {
       if (imgFile && isNum(gridPx)) {
         const bgCells = backgroundCells(readJpeg(imgFile), W, H, gridPx, offX, offY);
         if (bgCells) {
-          const closedMap = { ...map, walls: good };
+          const closedMap: VisionMap = { ...map, walls: good };
           const cg = buildGrid(closedMap);
           const seen2 = new Uint8Array(W * H);
-          const q2 = [[sx, sy]];
+          const q2: Array<[number, number]> = [[sx, sy]];
           seen2[sy * W + sx] = 1;
           while (q2.length) {
-            const [x, y] = q2.pop();
+            const [x, y] = q2.pop()!;
             for (let dy = -1; dy <= 1; dy++)
               for (let dx = -1; dx <= 1; dx++) {
                 const nx = x + dx, ny = y + dy;
@@ -268,7 +298,7 @@ export function checkMap(raw, { file = null, image = true } = {}) {
                 }
               }
           }
-          const out = [];
+          const out: Array<[number, number]> = [];
           for (let i = 0; i < W * H; i++) if (seen2[i] && bgCells[i]) out.push([i % W, Math.floor(i / W)]);
           stats.outsideCells = out.length;
           if (out.length) {
@@ -291,14 +321,14 @@ export function checkMap(raw, { file = null, image = true } = {}) {
 }
 
 /** Cells whose centre shows the uniform background colour of the image corners (null when the corners differ). */
-export function backgroundCells(img, W, H, gridPx, offX = 0, offY = 0) {
-  const at = (x, y) => {
+export function backgroundCells(img: Img, W: number, H: number, gridPx: number, offX = 0, offY = 0): Uint8Array | null {
+  const at = (x: number, y: number): number[] => {
     const i = (Math.max(0, Math.min(img.height - 1, Math.round(y))) * img.width + Math.max(0, Math.min(img.width - 1, Math.round(x)))) * 4;
     return [img.data[i], img.data[i + 1], img.data[i + 2]];
   };
   const corners = [at(2, 2), at(img.width - 3, 2), at(2, img.height - 3), at(img.width - 3, img.height - 3)];
   const bg = [0, 1, 2].map((k) => corners.map((c) => c[k]).sort((a, b) => a - b)[1]);
-  const near = (c) => Math.hypot(c[0] - bg[0], c[1] - bg[1], c[2] - bg[2]) < 14;
+  const near = (c: number[]) => Math.hypot(c[0] - bg[0], c[1] - bg[1], c[2] - bg[2]) < 14;
   if (corners.filter(near).length < 3) return null;
   const out = new Uint8Array(W * H);
   const r = Math.max(1, Math.round(gridPx * 0.12));
@@ -311,12 +341,12 @@ export function backgroundCells(img, W, H, gridPx, offX = 0, offY = 0) {
     }
   // keep only background connected to the map border (dark floors / furniture inside the building are not « outside »)
   const keep = new Uint8Array(W * H);
-  const q = [];
+  const q: Array<[number, number]> = [];
   for (let y = 0; y < H; y++)
     for (let x = 0; x < W; x++)
       if ((x === 0 || y === 0 || x === W - 1 || y === H - 1) && out[y * W + x]) (keep[y * W + x] = 1), q.push([x, y]);
   while (q.length) {
-    const [x, y] = q.pop();
+    const [x, y] = q.pop()!;
     for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
       const nx = x + dx, ny = y + dy, i = ny * W + nx;
       if (nx < 0 || ny < 0 || nx >= W || ny >= H || keep[i] || !out[i]) continue;
@@ -328,13 +358,13 @@ export function backgroundCells(img, W, H, gridPx, offX = 0, offY = 0) {
 }
 
 /** Snap leaks and round coordinates (in place). Returns the number of moved endpoints. */
-export function fixMap(raw) {
+export function fixMap(raw: { walls?: LibWall[] | null; lights?: LibLight[] | null }): number {
   const walls = (raw.walls || []).filter((w) => w && [w.x1, w.y1, w.x2, w.y2].every(isNum));
   let moved = 0;
   // pass 0 only applies snaps that keep the moved wall's direction (a vertical wall stays vertical); pass 1 the rest
   for (let pass = 0; pass < 2; pass++)
     walls.forEach((w, i) => {
-      for (const [kx, ky] of [['x1', 'y1'], ['x2', 'y2']]) {
+      for (const [kx, ky] of [['x1', 'y1'], ['x2', 'y2']] as const) {
         if (isJoined(walls, i, w[kx], w[ky])) continue;
         const n = nearestOther(walls, i, w[kx], w[ky]);
         if (n.d > LEAK) continue;
@@ -349,13 +379,14 @@ export function fixMap(raw) {
         moved++;
       }
     });
-  for (const w of raw.walls || []) for (const k of ['x1', 'y1', 'x2', 'y2']) if (isNum(w[k])) w[k] = r3(w[k]);
-  for (const l of raw.lights || []) for (const k of ['x', 'y', 'radius']) if (isNum(l[k])) l[k] = r3(l[k]);
+  for (const w of raw.walls || []) for (const k of ['x1', 'y1', 'x2', 'y2'] as const) if (isNum(w[k])) w[k] = r3(w[k]);
+  for (const l of raw.lights || []) for (const k of ['x', 'y', 'radius'] as const) if (isNum(l[k])) l[k] = r3(l[k]);
   return moved;
 }
 
 /** Canonical file layout: pretty top level, one wall / light / region per line. */
-export function formatMaplib(raw) {
+export function formatMaplib(obj: object): string {
+  const raw = obj as Record<string, unknown>;
   const order = ['id', 'slug', 'name', 'nameFr', 'source', 'image', 'imageW', 'imageH', 'gridPx', 'offsetX', 'offsetY', 'width', 'height', 'metersPerCell', 'theme', 'lighting', 'tags', 'description', 'entry', 'walls', 'lights', 'regions', 'traced', 'version'];
   const keys = [...order.filter((k) => k in raw), ...Object.keys(raw).filter((k) => !order.includes(k))];
   const lines = keys.map((k) => {
@@ -366,9 +397,9 @@ export function formatMaplib(raw) {
   return `{\n${lines.join(',\n')}\n}\n`;
 }
 
-function filesOf(argsList) {
+function filesOf(argsList: string[]): string[] {
   if (!argsList.length) argsList = [MAPLIB_SRC];
-  const out = [];
+  const out: string[] = [];
   for (const a of argsList) {
     let p = a;
     if (!fs.existsSync(p)) p = path.join(MAPLIB_SRC, a.endsWith('.json') ? a : `${a}.json`);
@@ -386,13 +417,14 @@ function filesOf(argsList) {
 if (isMain(import.meta.url)) {
   const a = args();
   let errors = 0, warns = 0;
-  const report = [];
+  const report: Array<{ file: string; issues: MapIssue[]; stats: Partial<MapStats> }> = [];
   for (const file of filesOf(a._)) {
-    let raw;
+    // Parsed JSON of unknown shape: checkMap() validates it.
+    let raw: any;
     try {
       raw = JSON.parse(fs.readFileSync(file, 'utf8'));
     } catch (err) {
-      console.log(`✗ ${path.basename(file)}: invalid JSON (${err.message})`);
+      console.log(`✗ ${path.basename(file)}: invalid JSON (${(err as Error).message})`);
       errors++;
       continue;
     }

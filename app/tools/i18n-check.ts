@@ -3,7 +3,7 @@
 //
 //   node tools/i18n-check.ts                    whole app: missing English entries + suspicious French literals
 //   node tools/i18n-check.ts --area sheet       one area (client/modules/sheet, its server module and shared files)
-//   node tools/i18n-check.ts client/app.js …    only these files / folders
+//   node tools/i18n-check.ts client/app.tsx …   only these files / folders
 // Options:
 //   --add-missing=<file>.json   append the missing keys (value "") to client/i18n/en/<file>.json, ready to translate
 //   --no-literals               skip the untranslated-French heuristic
@@ -26,31 +26,34 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DICT_DIR = path.join(ROOT, 'client', 'i18n', 'en');
 
 // Area → files (relative to app/). Every area also gets its client folder client/modules/<area>/.
-const AREA_EXTRA = {
-  core: ['client/app.js', 'client/lib', 'client/modules/registry.js', 'client/modules/core', 'client/modules/admin', 'server/index.js', 'server/modules/00-core.js', 'server/lib/admin.js', 'server/lib/tables.js', 'server/lib/zip.js'],
-  map: ['server/modules/20-maps.js', 'shared/vision.js'],
-  sheet: ['server/modules/10-characters.js', 'shared/sr5.js', 'server/lib/augment.js'],
-  combat: ['server/modules/30-combat.js'],
-  shop: ['server/modules/40-shop.js'],
-  matrix: ['server/modules/45-matrix.js', 'shared/matrix.js'],
-  notes: ['server/modules/75-notes.js'],
-  chargen: ['server/modules/15-chargen.js', 'shared/chargen.js', 'shared/npcgen.js'],
-  training: ['server/modules/50-training.js', 'shared/advancement.js'],
-  audio: ['server/modules/60-audio.js'],
-  campaign: ['server/modules/70-campaign.js'],
-  foundry: ['server/modules/80-foundry.js', 'server/lib/foundry'],
-  chummer: ['server/modules/85-chummer.js', 'server/lib/chummer'],
-  assistant: ['server/modules/95-assistant.js', 'server/lib/assistant', 'client/modules/admin/AssistantAdmin.js'],
+const AREA_EXTRA: Record<string, string[]> = {
+  core: ['client/app.tsx', 'client/lib', 'client/modules/registry.ts', 'client/modules/core', 'client/modules/admin', 'server/index.ts', 'server/errors.ts', 'server/modules/00-core.ts', 'server/lib/admin.ts', 'server/lib/tables.ts', 'server/lib/zip.ts'],
+  map: ['server/modules/20-maps.ts', 'server/modules/22-maplib.ts', 'shared/vision.ts', 'shared/maplib.ts'],
+  sheet: ['server/modules/10-characters.ts', 'shared/sr5.ts', 'shared/modifiers.ts', 'server/lib/augment.ts', 'server/lib/modifiers.ts'],
+  combat: ['server/modules/30-combat.ts', 'server/modules/33-attacks.ts', 'shared/combat.ts'],
+  shop: ['server/modules/40-shop.ts'],
+  matrix: ['server/modules/45-matrix.ts', 'shared/matrix.ts'],
+  notes: ['server/modules/75-notes.ts'],
+  chargen: ['server/modules/15-chargen.ts', 'shared/chargen.ts', 'shared/npcgen.ts'],
+  training: ['server/modules/50-training.ts', 'shared/advancement.ts'],
+  audio: ['server/modules/60-audio.ts'],
+  campaign: ['server/modules/70-campaign.ts'],
+  foundry: ['server/modules/80-foundry.ts', 'server/lib/foundry'],
+  chummer: ['server/modules/85-chummer.ts', 'server/lib/chummer'],
+  books: ['server/modules/90-books.ts', 'server/lib/books', 'server/lib/bookrefs.ts', 'shared/bookrefs.ts', 'client/modules/admin/BooksAdmin.tsx'],
+  assistant: ['server/modules/95-assistant.ts', 'server/lib/assistant', 'client/modules/admin/AssistantAdmin.tsx'],
 };
 const DEFAULT_ROOTS = ['client', 'shared', 'server'];
-const SKIP = [/[\\/]node_modules[\\/]/, /[\\/]client[\\/]i18n[\\/]/, /[\\/]server[\\/]lib[\\/]foundry[\\/]dump-child\.js$/];
+const SKIP = [/[\\/]node_modules[\\/]/, /[\\/]client[\\/]i18n[\\/]/, /[\\/]client[\\/]vendor[\\/]/, /[\\/]server[\\/]lib[\\/]foundry[\\/]dump-child\.ts$/];
+/** Scanned sources: JavaScript and TypeScript (JSX included), not declaration files. */
+const isSource = (f: string): boolean => /\.(js|ts|tsx)$/.test(f) && !f.endsWith('.d.ts');
 
 // ---------------------------------------------------------------------------
 // CLI
 // ---------------------------------------------------------------------------
 const args = process.argv.slice(2);
-const opt = (name) => args.includes(`--${name}`);
-const optVal = (name) => {
+const opt = (name: string): boolean => args.includes(`--${name}`);
+const optVal = (name: string): string | null => {
   const a = args.find((x) => x.startsWith(`--${name}=`));
   if (a) return a.slice(name.length + 3);
   const i = args.indexOf(`--${name}`);
@@ -60,22 +63,25 @@ const area = optVal('area');
 const addMissing = optVal('add-missing');
 const positional = args.filter((a, i) => !a.startsWith('--') && !(i > 0 && ['--area', '--add-missing'].includes(args[i - 1])));
 
-function listJs(p) {
+function listSources(p: string): string[] {
   const abs = path.resolve(ROOT, p);
-  if (!fs.existsSync(abs)) return [];
+  if (!fs.existsSync(abs)) {
+    console.error(`Introuvable : ${p}`);
+    return [];
+  }
   const st = fs.statSync(abs);
-  if (st.isFile()) return abs.endsWith('.js') ? [abs] : [];
-  const out = [];
+  if (st.isFile()) return isSource(abs) ? [abs] : [];
+  const out: string[] = [];
   for (const e of fs.readdirSync(abs, { withFileTypes: true })) {
     const f = path.join(abs, e.name);
     if (SKIP.some((r) => r.test(f + (e.isDirectory() ? path.sep : '')))) continue;
-    if (e.isDirectory()) out.push(...listJs(f));
-    else if (e.name.endsWith('.js')) out.push(f);
+    if (e.isDirectory()) out.push(...listSources(f));
+    else if (isSource(e.name)) out.push(f);
   }
   return out;
 }
 
-let targets;
+let targets: string[];
 if (positional.length) targets = positional;
 else if (area) {
   if (!AREA_EXTRA[area] && !fs.existsSync(path.join(ROOT, 'client', 'modules', area))) {
@@ -84,21 +90,22 @@ else if (area) {
   }
   targets = [...(area === 'core' ? [] : [`client/modules/${area}`]), ...(AREA_EXTRA[area] || [])];
 } else targets = DEFAULT_ROOTS;
-const files = [...new Set(targets.flatMap(listJs))].filter((f) => !SKIP.some((r) => r.test(f)) || positional.length).sort();
+const files = [...new Set(targets.flatMap(listSources))].filter((f) => !SKIP.some((r) => r.test(f)) || positional.length).sort();
 const fullScan = !positional.length && !area;
 
 // ---------------------------------------------------------------------------
 // Dictionaries
 // ---------------------------------------------------------------------------
-const problems = []; // { file, msg, fatal }
-const dict = new Map(); // key -> { value, file }
+interface Problem { file: string; msg: string; fatal?: boolean }
+const problems: Problem[] = [];
+const dict = new Map<string, { value: string; file: string }>(); // key -> English value and its dictionary
 const dictFiles = fs.existsSync(DICT_DIR) ? fs.readdirSync(DICT_DIR).filter((f) => f.endsWith('.json') && f !== 'index.json').sort() : [];
 for (const f of dictFiles) {
-  let data;
+  let data: unknown; // a translator-edited file: validated below
   try {
     data = JSON.parse(fs.readFileSync(path.join(DICT_DIR, f), 'utf8'));
   } catch (err) {
-    problems.push({ file: `client/i18n/en/${f}`, msg: `JSON invalide : ${err.message}`, fatal: true });
+    problems.push({ file: `client/i18n/en/${f}`, msg: `JSON invalide : ${(err as Error).message}`, fatal: true });
     continue;
   }
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
@@ -120,13 +127,15 @@ for (const f of dictFiles) {
     if (!prev || (v && !prev.value)) dict.set(k, { value: v, file: f });
   }
 }
-const hasEnglish = (k) => !!dict.get(k)?.value;
+const hasEnglish = (k: string): boolean => !!dict.get(k)?.value;
 
 // ---------------------------------------------------------------------------
 // JS scanning helpers
 // ---------------------------------------------------------------------------
+interface StrLit { value: string; end: number; dynamic: boolean }
+
 /** Read a JS string literal starting at src[i] (quote char). Returns { value, end, dynamic } or null. */
-function readString(src, i) {
+function readString(src: string, i: number): StrLit | null {
   const q = src[i];
   if (q !== "'" && q !== '"' && q !== '`') return null;
   let out = '';
@@ -136,7 +145,7 @@ function readString(src, i) {
     const c = src[j];
     if (c === '\\') {
       const n = src[j + 1];
-      const map = { n: '\n', t: '\t', r: '\r', b: '\b', f: '\f', v: '\v', 0: '\0' };
+      const map: Record<string, string> = { n: '\n', t: '\t', r: '\r', b: '\b', f: '\f', v: '\v', 0: '\0' };
       if (n === 'u') {
         const m = /^u\{([0-9a-fA-F]+)\}|^u([0-9a-fA-F]{4})/.exec(src.slice(j + 1, j + 12));
         if (m) {
@@ -173,9 +182,9 @@ function readString(src, i) {
 }
 
 /** From an opening bracket at src[i] ('{', '(' or '['), return the index just after its match (strings/templates aware). */
-function skipBalanced(src, i) {
+function skipBalanced(src: string, i: number): number {
   const open = src[i];
-  const close = { '{': '}', '(': ')', '[': ']' }[open];
+  const close = ({ '{': '}', '(': ')', '[': ']' } as Record<string, string>)[open];
   let depth = 0;
   let j = i;
   while (j < src.length) {
@@ -205,13 +214,13 @@ function skipBalanced(src, i) {
   return src.length;
 }
 
-const skipWs = (src, i) => {
+const skipWs = (src: string, i: number): number => {
   while (i < src.length && /\s/.test(src[i])) i++;
   return i;
 };
 
 /** Index just after the first top-level argument starting at i (stops at ',' or ')'). */
-function skipArg(src, i) {
+function skipArg(src: string, i: number): number {
   let j = i;
   while (j < src.length) {
     const c = src[j];
@@ -234,9 +243,9 @@ function skipArg(src, i) {
  * Same text with comments replaced by spaces (offsets and line numbers kept), so examples in comments are not
  * read as keys. Strings, template literals (with nested ${}) and regex literals are left untouched.
  */
-function blankComments(src) {
+function blankComments(src: string): string {
   const out = src.split('');
-  const blank = (a, b) => {
+  const blank = (a: number, b: number) => {
     for (let k = a; k < b; k++) if (out[k] !== '\n') out[k] = ' ';
   };
   let i = 0;
@@ -284,10 +293,10 @@ function blankComments(src) {
   return out.join('');
 }
 
-function lineIndex(src) {
+function lineIndex(src: string): (pos: number) => number {
   const starts = [0];
   for (let i = 0; i < src.length; i++) if (src[i] === '\n') starts.push(i + 1);
-  return (pos) => {
+  return (pos: number) => {
     let lo = 0;
     let hi = starts.length - 1;
     while (lo < hi) {
@@ -308,7 +317,7 @@ const FR_WORDS = new Set(
     'niveau objet objets arme armes armure sort sorts nom notes acheter vendre prix quantité dégâts blessure blessures combat initiative tour round')
     .split(/\s+/)
 );
-function looksFrench(text) {
+function looksFrench(text: string): boolean {
   const s = String(text || '').trim();
   if (!s || !/\p{L}{2,}/u.test(s)) return false;
   if (/^[\w.-]+$/.test(s) && !FR_CHARS.test(s) && !/\s/.test(s) && /[-_.]/.test(s)) return false; // css class / id
@@ -321,10 +330,12 @@ function looksFrench(text) {
 // ---------------------------------------------------------------------------
 // Scan
 // ---------------------------------------------------------------------------
-const found = []; // { file, line, key, kind }
-const dynamicKeys = []; // { file, line, text, kind }
-const literals = []; // { file, line, text, kind }
-const usedKeys = new Set();
+interface FoundKey { file: string; line: number; key: string; kind: string }
+interface FoundText { file: string; line: number; text: string; kind: string }
+const found: FoundKey[] = [];
+const dynamicKeys: FoundText[] = []; // keys built with ${…}
+const literals: FoundText[] = []; // French-looking untranslated text
+const usedKeys = new Set<string>();
 
 for (const abs of files) {
   const rel = path.relative(ROOT, abs).split(path.sep).join('/');
@@ -332,11 +343,11 @@ for (const abs of files) {
   const src = blankComments(raw);
   const lineOf = lineIndex(src);
   const lines = raw.split('\n');
-  const ignored = (pos) => /i18n-ignore/.test(lines[lineOf(pos) - 1] || '');
+  const ignored = (pos: number): boolean => /i18n-ignore/.test(lines[lineOf(pos) - 1] || '');
   const isServer = rel.startsWith('server/');
   const isClient = !isServer && !rel.startsWith('shared/'); // UI code (client/, or a file named on the command line)
 
-  const addKey = (s, pos, kind) => {
+  const addKey = (s: StrLit | null, pos: number, kind: string) => {
     if (!s || ignored(pos)) return;
     if (s.dynamic) {
       dynamicKeys.push({ file: rel, line: lineOf(pos), text: s.value, kind });
@@ -409,7 +420,7 @@ for (const abs of files) {
 
   if (!isClient || opt('no-literals')) continue;
   // ----- untranslated French literals (heuristic) -----
-  const flag = (text, pos, kind) => {
+  const flag = (text: string, pos: number, kind: string) => {
     const v = String(text).replace(/\s+/g, ' ').trim();
     if (!ignored(pos) && looksFrench(v)) literals.push({ file: rel, line: lineOf(pos), text: v.length > 90 ? v.slice(0, 87) + '…' : v, kind });
   };
@@ -417,7 +428,7 @@ for (const abs of files) {
   for (const m of src.matchAll(/(?<![\w$])html`/g)) {
     let j = m.index + m[0].length;
     let inTag = false;
-    let quote = null;
+    let quote: string | null = null;
     let text = '';
     let textStart = j;
     let tag = '';
@@ -467,6 +478,18 @@ for (const abs of files) {
     }
     flushText();
   }
+  if (rel.endsWith('.tsx')) {
+    // JSX string attributes: <input placeholder="…">  (expressions like title={t('…')} are keys, read above)
+    for (const m of src.matchAll(/(?<=[\s<])(title|placeholder|label|hint|alt|aria-label|serverLabel)="([^"]*)"/g)) flag(m[2], m.index, m[1] + '=');
+    // JSX text nodes: the static text between a tag's closing '>' and the next '<' or '{'. The '>' must end a tag
+    // (follows a name, a quote, '}' or '/'; not '=>' nor a spaced comparison) and the text must not look like code.
+    for (const m of src.matchAll(/(?<=[\w"'}/])>([^<>{}]+)(?=[<{])/g)) {
+      const text = m[1];
+      if (!text.trim() || /[;=]|&&|\|\||\?\./.test(text)) continue;
+      if (/^\s*[(),:?.\]]/.test(text)) continue; // `send<T>(…`, `</b> : other ? …`: code between elements, not text
+      flag(text, m.index + 1, 'texte');
+    }
+  }
   // JS literals given to user-facing calls / props
   for (const m of src.matchAll(/(?<![\w$.])(toast|confirmAction|promptText|setErr|Error|alert)\(\s*/g)) {
     const s = readString(src, m.index + m[0].length);
@@ -492,12 +515,12 @@ if (addMissing) {
     process.exit(2);
   }
   const file = path.join(DICT_DIR, name);
-  let data = {};
+  let data: Record<string, string> = {};
   if (fs.existsSync(file)) {
     try {
       data = JSON.parse(fs.readFileSync(file, 'utf8'));
     } catch (err) {
-      console.error(`${name} illisible, rien n'est écrit : ${err.message}`);
+      console.error(`${name} illisible, rien n'est écrit : ${(err as Error).message}`);
       process.exit(2);
     }
   }
@@ -512,14 +535,14 @@ const fatal = problems.some((p) => p.fatal);
 if (opt('json')) {
   console.log(JSON.stringify({ files: files.length, dictionaries: dictFiles, entries: dict.size, keys: usedKeys.size, missing, dynamic: dynamicKeys, literals, problems, unused }, null, 2));
 } else {
-  const where = (x) => `${x.file}:${x.line}`;
+  const where = (x: { file: string; line: number }) => `${x.file}:${x.line}`;
   console.log(`i18n-check — ${files.length} fichier(s), ${dictFiles.length} dictionnaire(s), ${dict.size} entrée(s), ${usedKeys.size} clé(s) utilisée(s)`);
   if (problems.length) {
     console.log(`\nDictionnaires (${problems.length}) :`);
     for (const p of problems) console.log(`  ${p.fatal ? 'ERREUR' : 'attention'}  ${p.file}  ${p.msg}`);
   }
   console.log(`\nTraductions anglaises manquantes : ${missingUnique.length}`);
-  const seen = new Set();
+  const seen = new Set<string>();
   for (const m of missing) {
     if (seen.has(m.key)) continue;
     seen.add(m.key);
@@ -535,7 +558,7 @@ if (opt('json')) {
   }
   if (unused) {
     console.log(`\nEntrées de dictionnaire jamais utilisées dans le code : ${unused.length} (normal pour le glossaire et les textes venant des données)`);
-    for (const k of unused) console.log(`  ${dict.get(k).file}  ${JSON.stringify(k)}`);
+    for (const k of unused) console.log(`  ${dict.get(k)!.file}  ${JSON.stringify(k)}`);
   }
 }
 process.exit(fatal || (opt('strict') && missingUnique.length) ? 1 : 0);

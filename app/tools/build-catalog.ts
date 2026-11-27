@@ -14,6 +14,30 @@ import { XMLParser } from 'fast-xml-parser';
 import { evalFormula } from '../client/modules/shop/rules.ts';
 import { entryEffects, conditionKey } from './lib/bonus-effects.ts';
 import { CONDITIONS, conditionToggle } from '../shared/modifiers.ts';
+import type { CatalogItem, Effect, Formula } from '../shared/types.ts';
+
+/** A fast-xml-parser node of Chummer data: dynamic shape (attributes '@x', text '#text'). */
+type XmlNode = any;
+/**
+ * `stats` while an item is built: assembled field by field from the XML, with undefined fields that lean() drops. After
+ * lean() each file matches CatalogStatsByFile (shared/types.ts); during the build the shape is per file, hence `any`.
+ */
+type Stats = Record<string, any>;
+/** A catalog item while it is built (page may still be Chummer's text, e.g. « ? »). */
+type BuiltItem = Omit<CatalogItem, 'stats' | 'page' | 'effects'> & { page: number | string; stats?: Stats; effects?: Effect[] };
+type Rating = { min: number; max: number };
+/** A martial-art technique entry (stats.techniques). */
+type Technique = { id?: string; name: string; nameFr?: string; source?: string; page?: number | string; effects?: Effect[] };
+type DetailKey = 'names' | 'namesContains' | 'categories' | 'categoriesContains' | 'types';
+interface BaseOptions {
+  ratingRaw?: XmlNode;
+  minRaw?: XmlNode;
+  /** null: the item has no cost / availability. */
+  costRaw?: XmlNode | null;
+  availRaw?: XmlNode | null;
+  frFile?: string;
+  catOverride?: string;
+}
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CHUMMER = path.resolve(process.argv[2] || path.join(ROOT, '..', 'Chummer5.226.0', 'data'));
@@ -27,18 +51,18 @@ if (!fs.existsSync(CHUMMER)) {
 fs.mkdirSync(OUT, { recursive: true });
 
 const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@', parseTagValue: false, trimValues: true });
-const readXml = (file) => parser.parse(fs.readFileSync(file, 'utf8')).chummer;
-const arr = (v) => (v === undefined || v === null ? [] : Array.isArray(v) ? v : [v]);
-const txt = (v) => (v === undefined || v === null ? '' : typeof v === 'object' ? String(v['#text'] ?? '') : String(v)).trim();
-const clean = (s) => String(s || '').replace(/[​­]/g, '').replace(/\s+/g, ' ').trim();
-const isNum = (s) => /^-?\d+(\.\d+)?$/.test(String(s).trim());
-const num = (s) => (isNum(s) ? Number(s) : undefined);
+const readXml = (file: string): XmlNode => parser.parse(fs.readFileSync(file, 'utf8')).chummer;
+const arr = (v: XmlNode): XmlNode[] => (v === undefined || v === null ? [] : Array.isArray(v) ? v : [v]);
+const txt = (v: XmlNode): string => (v === undefined || v === null ? '' : typeof v === 'object' ? String(v['#text'] ?? '') : String(v)).trim();
+const clean = (s: unknown): string => String(s || '').replace(/[​­]/g, '').replace(/\s+/g, ' ').trim();
+const isNum = (s: unknown) => /^-?\d+(\.\d+)?$/.test(String(s).trim());
+const num = (s: unknown): number | undefined => (isNum(s) ? Number(s) : undefined);
 
 // Sourcebooks we never sell (Shadowrun 2050 era conversions).
 const SKIP_SOURCES = new Set(['2050']);
-const stats = { dropped: {}, droppedItems: [] };
+const stats: { dropped: Record<string, number>; droppedItems: Array<{ file: string; why: string; name: string; source: string }> } = { dropped: {}, droppedItems: [] };
 /** Record a dropped XML entry (x = the XML node when known, for the coverage report). */
-const drop = (file, why, x) => {
+const drop = (file: string, why: string, x?: XmlNode): null => {
   const k = `${file}: ${why}`;
   stats.dropped[k] = (stats.dropped[k] || 0) + 1;
   if (x && typeof x === 'object') stats.droppedItems.push({ file, why, name: clean(txt(x.name)), source: txt(x.source) || '?' });
@@ -48,7 +72,7 @@ const drop = (file, why, x) => {
 // ---------------------------------------------------------------------------
 // French translations: per file, id -> name, English name -> name, category -> category.
 // ---------------------------------------------------------------------------
-const FR = {};
+const FR: Record<string, { byId: Record<string, string>; byName: Record<string, string>; cats: Record<string, string> }> = {};
 function loadFrench() {
   if (!fs.existsSync(LANG)) {
     console.warn('French translation file not found, names stay in English:', LANG);
@@ -58,9 +82,9 @@ function loadFrench() {
   for (const sec of arr(doc.chummer)) {
     const file = String(sec['@file'] || '').replace(/\.xml$/, '');
     if (!file) continue;
-    const t = (FR[file] = { byId: {}, byName: {}, cats: {} });
-    const walk = (node, key) => {
-      if (Array.isArray(node)) return node.forEach((n) => walk(n, key));
+    const t: (typeof FR)[string] = (FR[file] = { byId: {}, byName: {}, cats: {} });
+    const walk = (node: XmlNode, key: string): void => {
+      if (Array.isArray(node)) return node.forEach((n: XmlNode) => walk(n, key));
       if (!node || typeof node !== 'object') return;
       if (/categor/i.test(key || '') && node['@translate'] && node['#text']) {
         t.cats[clean(node['#text'])] = clean(node['@translate']);
@@ -79,13 +103,13 @@ function loadFrench() {
   }
 }
 
-function french(file, id, name) {
+function french(file: string, id: string, name: string): string | undefined {
   const t = FR[file];
   if (!t) return undefined;
   const fr = t.byId[id] || t.byName[name];
   return fr && fr !== name ? fr : undefined;
 }
-function frenchCat(file, cat) {
+function frenchCat(file: string, cat: string): string | undefined {
   const fr = FR[file]?.cats[cat];
   return fr && fr !== cat ? fr : undefined;
 }
@@ -94,21 +118,21 @@ function frenchCat(file, cat) {
 // Field parsing
 // ---------------------------------------------------------------------------
 // Formula variables: Rating/MinRating everywhere; upgrade catalogs also use their target's values (resolved when
-// the upgrade is installed: rules.js quote(item, { vars })). Sample values below only validate/preview the formula.
+// the upgrade is installed: rules.ts quote(item, { vars })). Sample values below only validate/preview the formula.
 const BASE_VARS = new Set(['Rating', 'MinRating', 'number', 'FixedValues', 'div', 'mod']);
-const SAMPLE_VARS = {
+const SAMPLE_VARS: Record<string, number> = {
   WeaponCost: 1000, ArmorCost: 1000, VehicleCost: 20000,
   Body: 10, Speed: 4, Handling: 4, Acceleration: 2, Pilot: 3, Sensor: 3, Seats: 4, Armor: 6, Capacity: 12,
 };
 /** Extra variables allowed per output file. */
-const FILE_VARS = {
+const FILE_VARS: Record<string, string[]> = {
   accessories: ['WeaponCost'],
   armormods: ['ArmorCost', 'Capacity'],
   vehiclemods: ['VehicleCost', 'Body', 'Speed', 'Handling', 'Acceleration', 'Pilot', 'Sensor', 'Seats', 'Armor'],
 };
-let currentVars = [];
+let currentVars: string[] = [];
 
-function normFormula(s) {
+function normFormula(s: unknown): string {
   return String(s)
     .replace(/\{([A-Za-z ]+)\}/g, '$1')
     .replace(/\b(Weapon|Armor|Vehicle|Gear) Cost\b/g, '$1Cost')
@@ -118,7 +142,7 @@ function normFormula(s) {
 }
 
 /** Validate a formula over the rating range; returns false if it can't be evaluated. */
-function formulaOk(f, rating) {
+function formulaOk(f: string, rating: Rating | undefined): boolean {
   const ids = String(f).match(/[A-Za-z_][A-Za-z_0-9]*/g) || [];
   if (ids.some((id) => !BASE_VARS.has(id) && !currentVars.includes(id))) return false;
   try {
@@ -130,12 +154,12 @@ function formulaOk(f, rating) {
     return false;
   }
 }
-const evalSample = (f, rating) => evalFormula(f, { ...SAMPLE_VARS, Rating: rating?.min ?? 1, MinRating: rating?.min ?? 1 });
+const evalSample = (f: string, rating: Rating | undefined) => evalFormula(f, { ...SAMPLE_VARS, Rating: rating?.min ?? 1, MinRating: rating?.min ?? 1 });
 /** Formula string uses a target variable (price depends on the weapon/armor/vehicle it is installed on). */
-const usesTargetVars = (f) => currentVars.some((v) => new RegExp(`\\b${v}\\b`).test(String(f || '')));
+const usesTargetVars = (f: unknown) => currentVars.some((v) => new RegExp(`\\b${v}\\b`).test(String(f || '')));
 
 /** Parse <rating>/<minrating> into { min, max } (undefined when the item has no rating). */
-function parseRating(maxRaw, minRaw) {
+function parseRating(maxRaw: XmlNode, minRaw: XmlNode): { ok: boolean; rating: Rating | undefined } {
   const max = num(txt(maxRaw));
   if (!max || max <= 0) return { ok: !txt(maxRaw) || isNum(txt(maxRaw)), rating: undefined };
   const min = num(txt(minRaw)) ?? 1;
@@ -143,7 +167,7 @@ function parseRating(maxRaw, minRaw) {
 }
 
 /** cost → { cost, costFormula?, costRange? } or null when unusable. */
-function parseCost(raw, rating) {
+function parseCost(raw: XmlNode, rating: Rating | undefined): Pick<BuiltItem, 'cost' | 'costFormula' | 'costRange'> | null {
   let s = normFormula(txt(raw) || '0');
   if (isNum(s)) return { cost: Number(s) };
   const v = s.match(/^Variable\((\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)\)$/i);
@@ -164,12 +188,12 @@ const UPGRADE_CATALOGS = new Set(['accessories', 'armormods', 'vehiclemods']);
 let currentFile = '';
 
 /** avail → { avail, availValue, legality, availFormula?, availRelative? } or null. */
-function parseAvail(raw, rating) {
+function parseAvail(raw: XmlNode, rating: Rating | undefined): Pick<BuiltItem, 'avail' | 'availValue' | 'legality' | 'availFormula' | 'availRelative'> | null {
   let s = normFormula(txt(raw) || '0').replace(/\s+or\s+Gear$/i, '');
-  // « +2R » (Smartgun System, Internal; YNT Softweave…): added to the target's availability (rules.js upgradeAvail).
+  // « +2R » (Smartgun System, Internal; YNT Softweave…): added to the target's availability (rules.ts upgradeAvail).
   const relative = s.startsWith('+');
   if (relative) s = s.slice(1).trim();
-  let legality = '';
+  let legality: '' | 'R' | 'F' = '';
   const fixed = s.match(/^FixedValues\((.*)\)$/i);
   if (fixed) {
     const parts = fixed[1].split(',').map((x) => x.trim());
@@ -179,12 +203,12 @@ function parseAvail(raw, rating) {
   } else {
     const m = s.match(/^(.*?)\s*([RF])$/);
     if (m && m[1] !== '') {
-      legality = m[2];
+      legality = m[2] as 'R' | 'F';
       s = m[1].trim();
     }
   }
   if (s === '' || s === '-') s = '0';
-  const rel = relative && UPGRADE_CATALOGS.has(currentFile) ? { availRelative: true } : {};
+  const rel: { availRelative?: boolean } = relative && UPGRADE_CATALOGS.has(currentFile) ? { availRelative: true } : {};
   const sign = rel.availRelative ? '+' : '';
   if (isNum(s)) {
     const v = Number(s);
@@ -195,7 +219,7 @@ function parseAvail(raw, rating) {
   return { avail: `${sign}${v}${legality}`, availValue: v, legality, availFormula: s, ...rel };
 }
 
-function parseEssence(raw, rating) {
+function parseEssence(raw: XmlNode, rating: Rating | undefined): Formula | undefined {
   const s = normFormula(txt(raw) || '0');
   if (isNum(s)) return Number(s);
   if (!formulaOk(s, rating) || (!rating && /Rating/.test(s))) return undefined;
@@ -203,10 +227,12 @@ function parseEssence(raw, rating) {
 }
 
 /** Remove undefined / null / '' / empty arrays & objects (recursively for stats). */
-function lean(o) {
+function lean<T>(o: T): T;
+function lean(o: any): any {
+  // Walks any JSON value.
   if (Array.isArray(o)) return o.map(lean);
   if (!o || typeof o !== 'object') return o;
-  const out = {};
+  const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(o)) {
     if (v === undefined || v === null || v === '') continue;
     const lv = lean(v);
@@ -217,17 +243,17 @@ function lean(o) {
   return out;
 }
 
-const hidden = (x) => x.hide !== undefined;
+const hidden = (x: XmlNode) => x.hide !== undefined;
 
 /** Normalized Chummer <bonus>/<wirelessbonus> effects (tools/lib/bonus-effects.ts) attached to a catalog entry as `effects`. */
-function withEffects(file, it, x) {
+function withEffects<T extends { effects?: Effect[] }>(file: string, it: T, x: XmlNode): T {
   const eff = entryEffects(x);
   if (eff.length) it.effects = eff;
   return it;
 }
 
 /** Common fields; returns null if the entry must be dropped. */
-function base(file, x, { ratingRaw, minRaw, costRaw, availRaw, frFile = file, catOverride } = {}) {
+function base(file: string, x: XmlNode, { ratingRaw, minRaw, costRaw, availRaw, frFile = file, catOverride }: BaseOptions = {}): BuiltItem | null {
   const name = clean(txt(x.name));
   const id = txt(x.id);
   if (!id || !name) return drop(file, 'no id/name', x);
@@ -238,7 +264,8 @@ function base(file, x, { ratingRaw, minRaw, costRaw, availRaw, frFile = file, ca
   if (/^Custom( |$)/i.test(category)) return drop(file, 'custom category', x);
   const { ok, rating } = parseRating(ratingRaw === undefined ? x.rating : ratingRaw, minRaw === undefined ? x.minrating : minRaw);
   if (!ok) return drop(file, 'rating formula', x);
-  const out = { id, name, nameFr: french(frFile, id, name), category, categoryFr: frenchCat(frFile, category) };
+  // source / page are filled last (key order of the generated JSON).
+  const out = { id, name, nameFr: french(frFile, id, name), category, categoryFr: frenchCat(frFile, category) } as BuiltItem;
   if (costRaw !== null) {
     const c = parseCost(costRaw === undefined ? x.cost : costRaw, rating);
     if (!c) return drop(file, 'cost formula', x);
@@ -259,7 +286,7 @@ function base(file, x, { ratingRaw, minRaw, costRaw, availRaw, frFile = file, ca
 // ---------------------------------------------------------------------------
 // Weapons
 // ---------------------------------------------------------------------------
-const SKILL_BY_CATEGORY = {
+const SKILL_BY_CATEGORY: Record<string, string> = {
   Blades: 'blades', Clubs: 'clubs', 'Improvised Weapons': 'clubs', 'Exotic Melee Weapons': 'exotic_weapon',
   'Exotic Ranged Weapons': 'exotic_weapon', 'Bio-Weapon': 'unarmed_combat', Cyberweapon: 'blades', Unarmed: 'unarmed_combat',
   Bows: 'archery', Crossbows: 'archery', Tasers: 'pistols', Holdouts: 'pistols', 'Light Pistols': 'pistols',
@@ -270,15 +297,15 @@ const SKILL_BY_CATEGORY = {
   'Laser Weapons': 'exotic_weapon', Flamethrowers: 'exotic_weapon', 'Underbarrel Weapons': 'heavy_weapons',
   Gear: 'throwing_weapons', Quality: 'unarmed_combat',
 };
-const SKILL_BY_NAME = {
+const SKILL_BY_NAME: Record<string, string> = {
   'Throwing Weapons': 'throwing_weapons', 'Unarmed Combat': 'unarmed_combat', 'Exotic Ranged Weapon': 'exotic_weapon',
   'Exotic Melee Weapon': 'exotic_weapon', 'Heavy Weapons': 'heavy_weapons', Longarms: 'longarms', Archery: 'archery',
   Clubs: 'clubs', Blades: 'blades', Automatics: 'automatics', Pistols: 'pistols', Gunnery: 'gunnery',
 };
 
-function weaponStats(x) {
+function weaponStats(x: XmlNode): Stats {
   const type = txt(x.type) === 'Melee' ? 'melee' : 'ranged';
-  const fix = (s) => clean(txt(s)).replace(/\{STR\}/g, 'STR').replace(/\{MAG\}/g, 'MAG').replace(/\{Rating\}/g, 'Rating');
+  const fix = (s: XmlNode) => clean(txt(s)).replace(/\{STR\}/g, 'STR').replace(/\{MAG\}/g, 'MAG').replace(/\{Rating\}/g, 'Rating');
   const ap = fix(x.ap);
   const rc = fix(x.rc);
   const acc = fix(x.accuracy);
@@ -296,11 +323,11 @@ function weaponStats(x) {
   };
 }
 
-const hiddenWeapons = new Map(); // name -> weapon stats (used by grenades & cyber implant weapons)
+const hiddenWeapons = new Map<string, Stats>(); // name -> weapon stats (used by grenades & cyber implant weapons)
 
-function buildWeapons() {
+function buildWeapons(): BuiltItem[] {
   const x = readXml(path.join(CHUMMER, 'weapons.xml'));
-  const out = [];
+  const out: BuiltItem[] = [];
   for (const w of arr(x.weapons?.weapon)) {
     const name = clean(txt(w.name));
     hiddenWeapons.set(name, { name, ...weaponStats(w) });
@@ -313,9 +340,9 @@ function buildWeapons() {
     it.stats = weaponStats(w);
     // Accessory mount points (weapon.mounts) and accessories delivered with the weapon (installed as included).
     const mounts = arr(w.accessorymounts?.mount).map((m) => clean(txt(m))).filter(Boolean);
-    if (mounts.length) it.stats.mounts = mounts;
+    if (mounts.length) it.stats!.mounts = mounts;
     const included = arr(w.accessories?.accessory).map((a) => clean(txt(a.name))).filter(Boolean);
-    if (included.length) it.stats.included = included;
+    if (included.length) it.stats!.included = included;
     out.push(it);
   }
   return out;
@@ -324,7 +351,7 @@ function buildWeapons() {
 // ---------------------------------------------------------------------------
 // Weapon accessories (installed on a weapon: weapon.accessories)
 // ---------------------------------------------------------------------------
-const MOUNT_FR = { Top: 'Dessus', Under: 'Dessous', Barrel: 'Canon', Stock: 'Crosse', Side: 'Flanc', Internal: 'Interne' };
+const MOUNT_FR: Record<string, string> = { Top: 'Dessus', Under: 'Dessous', Barrel: 'Canon', Stock: 'Crosse', Side: 'Flanc', Internal: 'Interne' };
 
 /**
  * <required>/<forbidden> weapondetails / vehicledetails → { names?, namesContains?, categories?, categoriesContains?, types? }
@@ -333,12 +360,12 @@ const MOUNT_FR = { Top: 'Dessus', Under: 'Dessous', Barrel: 'Canon', Stock: 'Cro
  * — the requirement passes instead of refusing every weapon; top-level conditions not understood pass. mode
  * 'forbidden': conditions not understood never forbid.
  */
-function detailsOf(wd, mode) {
+function detailsOf(wd: XmlNode, mode: 'required' | 'forbidden'): Partial<Record<DetailKey, string[]>> | undefined {
   if (!wd || typeof wd !== 'object') return undefined;
-  const KEYS = { name: 'names', category: 'categories', type: 'types' };
-  const lists = { names: [], namesContains: [], categories: [], categoriesContains: [], types: [] };
+  const KEYS: Record<string, 'names' | 'categories' | 'types'> = { name: 'names', category: 'categories', type: 'types' };
+  const lists: Record<DetailKey, string[]> = { names: [], namesContains: [], categories: [], categoriesContains: [], types: [] };
   let unparsed = false;
-  const read = (node) => {
+  const read = (node: XmlNode) => {
     for (const [k, v] of Object.entries(node)) {
       if (k.startsWith('@')) {
         if (k === '@NOT') unparsed = true;
@@ -356,7 +383,7 @@ function detailsOf(wd, mode) {
           unparsed = true;
           continue;
         }
-        lists[op === 'contains' && k !== 'type' ? `${KEYS[k]}Contains` : KEYS[k]].push(val);
+        lists[op === 'contains' && k !== 'type' ? (`${KEYS[k]}Contains` as DetailKey) : KEYS[k]].push(val);
       }
     }
   };
@@ -368,11 +395,11 @@ function detailsOf(wd, mode) {
   const out = lean(lists);
   return Object.keys(out).length ? out : undefined;
 }
-const weaponDetails = (node, mode) => detailsOf(node?.weapondetails, mode);
+const weaponDetails = (node: XmlNode, mode: 'required' | 'forbidden') => detailsOf(node?.weapondetails, mode);
 
-function buildAccessories() {
+function buildAccessories(): BuiltItem[] {
   const x = readXml(path.join(CHUMMER, 'weapons.xml'));
-  const out = [];
+  const out: BuiltItem[] = [];
   currentVars = FILE_VARS.accessories;
   for (const a of arr(x.accessories?.accessory)) {
     const max = num(txt(a.rating)) || 0;
@@ -408,9 +435,9 @@ function buildAccessories() {
 // ---------------------------------------------------------------------------
 // Armor
 // ---------------------------------------------------------------------------
-function buildArmor() {
+function buildArmor(): BuiltItem[] {
   const x = readXml(path.join(CHUMMER, 'armor.xml'));
-  const out = [];
+  const out: BuiltItem[] = [];
   for (const a of arr(x.armors?.armor)) {
     const it = base('armor', a);
     if (!it) continue;
@@ -435,14 +462,14 @@ function buildArmor() {
 // ---------------------------------------------------------------------------
 // Armor modifications (installed on an armor: armor.mods, uses its capacity)
 // ---------------------------------------------------------------------------
-const ARMOR_BONUS = {
+const ARMOR_BONUS: Record<string, string> = {
   firearmor: 'fire', coldarmor: 'cold', electricityarmor: 'electricity', acidarmor: 'acid', fallingarmor: 'falling',
   toxincontactresist: 'toxin', pathogencontactresist: 'pathogen', radiationresist: 'radiation',
 };
 
-function buildArmorMods() {
+function buildArmorMods(): BuiltItem[] {
   const x = readXml(path.join(CHUMMER, 'armor.xml'));
-  const out = [];
+  const out: BuiltItem[] = [];
   currentVars = FILE_VARS.armormods;
   for (const m of arr(x.mods?.mod)) {
     const max = num(txt(m.maxrating)) || 0;
@@ -451,7 +478,7 @@ function buildArmorMods() {
     const it = base('armormods', m, { ratingRaw: String(max > 1 ? max : 0), minRaw: '1', frFile: 'armor', catOverride: cat });
     if (!it) continue;
     const capRaw = normFormula(txt(m.armorcapacity) || '0');
-    let capacity;
+    let capacity: Formula;
     if (isNum(capRaw)) capacity = Number(capRaw);
     else if (formulaOk(capRaw, it.rating)) capacity = capRaw;
     else {
@@ -459,7 +486,7 @@ function buildArmorMods() {
       continue;
     }
     const rawArmor = txt(m.armor).replace(/^\+/, '');
-    const bonus = {};
+    const bonus: Record<string, Formula | true> = {};
     for (const [k, v] of Object.entries(m.bonus || {})) {
       if (!ARMOR_BONUS[k]) continue;
       const s = normFormula(txt(v));
@@ -483,9 +510,9 @@ function buildArmorMods() {
 // ---------------------------------------------------------------------------
 const GEAR_SKIP_CATEGORIES = new Set(['Currency', 'Paydata', 'Custom', 'Custom Cyberdeck Attributes', 'Custom Drug']);
 
-function buildGear(programNames) {
+function buildGear(programNames: Set<string>): BuiltItem[] {
   const x = readXml(path.join(CHUMMER, 'gear.xml'));
-  const out = [];
+  const out: BuiltItem[] = [];
   for (const g of arr(x.gears?.gear)) {
     const cat = clean(txt(g.category));
     if (GEAR_SKIP_CATEGORIES.has(cat)) {
@@ -502,7 +529,7 @@ function buildGear(programNames) {
     }
     const it = base('gear', g);
     if (!it) continue;
-    const s = {};
+    const s: Stats = {};
     const costFor = num(txt(g.costfor));
     if (costFor && costFor > 1) s.costFor = costFor;
     const dr = txt(g.devicerating);
@@ -518,7 +545,7 @@ function buildGear(programNames) {
     if (cap && cap !== '0') s.capacity = cap;
     const addw = clean(txt(g.addweapon));
     if (addw && hiddenWeapons.has(addw)) {
-      const { name, ...w } = hiddenWeapons.get(addw);
+      const { name, ...w } = hiddenWeapons.get(addw)!;
       s.weapon = w;
     }
     if (s.deviceRating !== undefined && typeof s.deviceRating === 'string' && !it.rating) delete s.deviceRating;
@@ -532,11 +559,11 @@ function buildGear(programNames) {
 // ---------------------------------------------------------------------------
 // Cyberware / Bioware
 // ---------------------------------------------------------------------------
-const GRADE_KEY = { Standard: 'standard', Alphaware: 'alpha', Betaware: 'beta', Deltaware: 'delta', Used: 'used' };
+const GRADE_KEY: Record<string, string> = { Standard: 'standard', Alphaware: 'alpha', Betaware: 'beta', Deltaware: 'delta', Used: 'used' };
 
-function wareBonus(bonus) {
+function wareBonus(bonus: XmlNode): Stats | undefined {
   if (!bonus || typeof bonus !== 'object') return undefined;
-  const out = {};
+  const out: Stats = {};
   for (const sa of arr(bonus.specificattribute)) {
     const name = txt(sa.name);
     const val = normFormula(txt(sa.val));
@@ -552,9 +579,9 @@ function wareBonus(bonus) {
   return Object.keys(out).length ? out : undefined;
 }
 
-function buildWare(file, tag, kind) {
+function buildWare(file: string, tag: string, kind: 'cyberware' | 'bioware'): BuiltItem[] {
   const x = readXml(path.join(CHUMMER, `${file}.xml`));
-  const out = [];
+  const out: BuiltItem[] = [];
   for (const c of arr(x[`${tag}s`]?.[tag])) {
     if (c.requireparent !== undefined) {
       drop(file, 'requires parent');
@@ -570,13 +597,13 @@ function buildWare(file, tag, kind) {
     it.essence = ess;
     const force = txt(c.forcegrade);
     const banned = new Set(arr(c.bannedgrades?.grade).map((g) => GRADE_KEY[txt(g)]).filter(Boolean));
-    if (force) it.grades = GRADE_KEY[force] ? [GRADE_KEY[force]] : [];
-    else if (banned.size) it.grades = Object.values(GRADE_KEY).filter((g) => !banned.has(g));
+    if (force) it.grades = (GRADE_KEY[force] ? [GRADE_KEY[force]] : []) as BuiltItem['grades'];
+    else if (banned.size) it.grades = Object.values(GRADE_KEY).filter((g) => !banned.has(g)) as BuiltItem['grades'];
     const capacity = txt(c.capacity);
-    const s = { kind, capacity: capacity && capacity !== '0' ? capacity : undefined, bonus: wareBonus(c.bonus) };
+    const s: Stats = { kind, capacity: capacity && capacity !== '0' ? capacity : undefined, bonus: wareBonus(c.bonus) };
     const addw = clean(txt(c.addweapon));
     if (addw && hiddenWeapons.has(addw)) {
-      const { name, ...w } = hiddenWeapons.get(addw);
+      const { name, ...w } = hiddenWeapons.get(addw)!;
       s.weapon = { name, ...w };
     }
     if (c.isgeneware !== undefined) s.geneware = true;
@@ -590,15 +617,15 @@ function buildWare(file, tag, kind) {
 // ---------------------------------------------------------------------------
 // Vehicles & drones
 // ---------------------------------------------------------------------------
-const VEHICLE_SLOT_FIELDS = [
+const VEHICLE_SLOT_FIELDS: Array<[string, string]> = [
   ['powertrainmodslots', 'Powertrain'], ['protectionmodslots', 'Protection'], ['weaponmodslots', 'Weapons'], ['bodymodslots', 'Body'],
   ['electromagneticmodslots', 'Electromagnetic'], ['cosmeticmodslots', 'Cosmetic'],
 ];
 
-function buildVehicles() {
+function buildVehicles(): BuiltItem[] {
   const x = readXml(path.join(CHUMMER, 'vehicles.xml'));
-  const out = [];
-  const n = (v) => {
+  const out: BuiltItem[] = [];
+  const n = (v: XmlNode) => {
     const s = txt(v);
     return isNum(s) ? Number(s) : s || undefined;
   };
@@ -621,12 +648,12 @@ function buildVehicles() {
 // ---------------------------------------------------------------------------
 // Vehicle modifications (installed on a vehicle: vehicle.mods, uses slots — R5: Body + modSlots)
 // ---------------------------------------------------------------------------
-const VEHICLE_BONUS = { handling: 'handling', speed: 'speed', accel: 'accel', armor: 'armor', body: 'body', sensor: 'sensor', pilot: 'pilot', seats: 'seats' };
-const RATING_VARS = { qty: 'qty', body: 'Body', seats: 'Seats' };
+const VEHICLE_BONUS: Record<string, string> = { handling: 'handling', speed: 'speed', accel: 'accel', armor: 'armor', body: 'body', sensor: 'sensor', pilot: 'pilot', seats: 'seats' };
+const RATING_VARS: Record<string, string> = { qty: 'qty', body: 'Body', seats: 'Seats' };
 
-function buildVehicleMods() {
+function buildVehicleMods(): BuiltItem[] {
   const x = readXml(path.join(CHUMMER, 'vehicles.xml'));
-  const out = [];
+  const out: BuiltItem[] = [];
   currentVars = FILE_VARS.vehiclemods;
   for (const m of arr(x.mods?.mod)) {
     const rRaw = txt(m.rating);
@@ -635,14 +662,14 @@ function buildVehicleMods() {
     const it = base('vehiclemods', m, { ratingRaw: String(max), minRaw: txt(m.minrating) || '1', frFile: 'vehicles' });
     if (!it) continue;
     const slotsRaw = normFormula(txt(m.slots) || '0');
-    let slots;
+    let slots: Formula;
     if (isNum(slotsRaw)) slots = Number(slotsRaw);
     else if (formulaOk(slotsRaw, it.rating)) slots = slotsRaw;
     else {
       drop('vehiclemods', 'slots formula', m);
       continue;
     }
-    const bonus = {};
+    const bonus: Record<string, Formula> = {};
     for (const [k, v] of Object.entries(m.bonus || {})) {
       if (!VEHICLE_BONUS[k]) continue;
       const s = normFormula(txt(v)).replace(/^\+/, '');
@@ -665,9 +692,9 @@ function buildVehicleMods() {
 // ---------------------------------------------------------------------------
 // Programs
 // ---------------------------------------------------------------------------
-function buildPrograms() {
+function buildPrograms(): BuiltItem[] {
   const x = readXml(path.join(CHUMMER, 'programs.xml'));
-  const out = [];
+  const out: BuiltItem[] = [];
   for (const p of arr(x.programs?.program)) {
     const it = base('programs', p);
     if (!it) continue;
@@ -680,11 +707,11 @@ function buildPrograms() {
 // ---------------------------------------------------------------------------
 // Lifestyles (monthly cost)
 // ---------------------------------------------------------------------------
-function buildLifestyles() {
+function buildLifestyles(): BuiltItem[] {
   const x = readXml(path.join(CHUMMER, 'lifestyles.xml'));
-  const out = [];
+  const out: BuiltItem[] = [];
   // RF point grids: { [lifestyle name]: { comforts|neighborhood|security: [minimum, limit] } }
-  const grid = {};
+  const grid: Record<string, Record<string, [number, number]>> = {};
   for (const [key, list, tag] of [['comforts', 'comforts', 'comfort'], ['neighborhood', 'neighborhoods', 'neighborhood'], ['security', 'securities', 'security']]) {
     for (const g of arr(x[list]?.[tag])) (grid[clean(txt(g.name))] ||= {})[key] = [num(txt(g.minimum)) ?? 0, num(txt(g.limit)) ?? 0];
   }
@@ -717,9 +744,9 @@ function buildLifestyles() {
 // Lifestyle qualities / upgrades (SR5 p.370 + Run Faster p.220: Garage, Workshop, DocWagon, Extra Secure…)
 // Monthly: flat cost (¥/month, may be negative) and/or a multiplier (% of the lifestyle base cost).
 // ---------------------------------------------------------------------------
-function buildLifestyleQualities() {
+function buildLifestyleQualities(): BuiltItem[] {
   const x = readXml(path.join(CHUMMER, 'lifestyles.xml'));
-  const out = [];
+  const out: BuiltItem[] = [];
   for (const q of arr(x.qualities?.quality)) {
     const it = base('lifestylequalities', q, { availRaw: null, ratingRaw: '0', frFile: 'lifestyles' });
     if (!it) continue;
@@ -753,24 +780,24 @@ function buildLifestyleQualities() {
 // ---------------------------------------------------------------------------
 // Martial arts (Run & Gun): styles (karma 7) with their techniques (karma 5 each) — karma, not nuyen.
 // ---------------------------------------------------------------------------
-function buildMartialArts() {
+function buildMartialArts(): BuiltItem[] {
   const x = readXml(path.join(CHUMMER, 'martialarts.xml'));
-  const tech = new Map();
+  const tech = new Map<string, Technique>();
   for (const t of arr(x.techniques?.technique)) {
     if (hidden(t) || SKIP_SOURCES.has(txt(t.source))) continue;
     const name = clean(txt(t.name));
-    const te = lean({ id: txt(t.id), name, nameFr: french('martialarts', txt(t.id), name), source: txt(t.source), page: num(txt(t.page)) ?? txt(t.page) });
+    const te: Technique = lean({ id: txt(t.id), name, nameFr: french('martialarts', txt(t.id), name), source: txt(t.source), page: num(txt(t.page)) ?? txt(t.page) });
     withEffects('techniques', te, t);
     tech.set(name, te);
   }
-  const out = [];
+  const out: BuiltItem[] = [];
   for (const m of arr(x.martialarts?.martialart)) {
     const it = base('martialarts', m, { costRaw: null, availRaw: null, ratingRaw: '0', catOverride: 'Martial Arts' });
     if (!it) continue;
     it.categoryFr = 'Arts martiaux';
     const techniques = arr(m.techniques?.technique)
       .map((t) => tech.get(clean(txt(t.name))) || (clean(txt(t.name)) ? { name: clean(txt(t.name)) } : null))
-      .filter(Boolean);
+      .filter((t): t is Technique => !!t);
     it.stats = { karma: num(txt(m.cost)) || 7, techniqueKarma: 5, techniques };
     out.push(it);
   }
@@ -780,9 +807,9 @@ function buildMartialArts() {
 // ---------------------------------------------------------------------------
 // Qualities, spells, adept powers (karma-based, used by the training module)
 // ---------------------------------------------------------------------------
-function buildQualities() {
+function buildQualities(): BuiltItem[] {
   const x = readXml(path.join(CHUMMER, 'qualities.xml'));
-  const out = [];
+  const out: BuiltItem[] = [];
   for (const q of arr(x.qualities?.quality)) {
     const it = base('qualities', q, { costRaw: null, availRaw: null, ratingRaw: '0' });
     if (!it) continue;
@@ -801,9 +828,9 @@ function buildQualities() {
   return out;
 }
 
-function buildSpells() {
+function buildSpells(): BuiltItem[] {
   const x = readXml(path.join(CHUMMER, 'spells.xml'));
-  const out = [];
+  const out: BuiltItem[] = [];
   for (const s of arr(x.spells?.spell)) {
     const it = base('spells', s, { costRaw: null, availRaw: null, ratingRaw: '0' });
     if (!it) continue;
@@ -817,9 +844,9 @@ function buildSpells() {
   return out;
 }
 
-function buildPowers() {
+function buildPowers(): BuiltItem[] {
   const x = readXml(path.join(CHUMMER, 'powers.xml'));
-  const out = [];
+  const out: BuiltItem[] = [];
   for (const p of arr(x.powers?.power)) {
     const it = base('powers', p, { costRaw: null, availRaw: null, ratingRaw: '0', catOverride: 'Adept Powers' });
     if (!it) continue;
@@ -845,7 +872,7 @@ loadFrench();
 const programs = buildPrograms();
 const programNames = new Set(programs.map((p) => p.name));
 const weapons = buildWeapons(); // first: fills hiddenWeapons
-const files = {
+const files: Record<string, BuiltItem[]> & Record<'weapons' | 'accessories' | 'vehiclemods', BuiltItem[]> = {
   weapons,
   accessories: buildAccessories(),
   armor: buildArmor(),
@@ -868,9 +895,9 @@ const files = {
 // They are described with the vehicle that ships them as standard equipment: take that vehicle's page (same book).
 {
   const vx = readXml(path.join(CHUMMER, 'vehicles.xml'));
-  const pageOfMod = new Map();
+  const pageOfMod = new Map<string, { page: number; source: string }>();
   for (const v of arr(vx.vehicles?.vehicle)) {
-    const page = num(txt(v.page));
+    const page = num(txt(v.page)) as number;
     if (!(page > 0)) continue;
     for (const m of arr(v.mods?.name)) if (txt(m) && !pageOfMod.has(txt(m))) pageOfMod.set(txt(m), { page, source: txt(v.source) });
     for (const m of arr(v.mods?.mod)) if (txt(m?.name) && !pageOfMod.has(txt(m.name))) pageOfMod.set(txt(m.name), { page, source: txt(v.source) });
@@ -885,17 +912,17 @@ const files = {
 // Weapon accessories delivered with a weapon: resolve their names to accessory catalog ids (installed as « included »).
 const accByName = new Map(files.accessories.map((a) => [a.name, a.id]));
 for (const w of files.weapons) {
-  if (!w.stats.included) continue;
-  w.stats.included = w.stats.included.map((name) => (accByName.has(name) ? { id: accByName.get(name), name } : { name }));
+  if (!w.stats?.included) continue;
+  w.stats.included = w.stats.included.map((name: string) => (accByName.has(name) ? { id: accByName.get(name), name } : { name }));
 }
 
-const index = { generated: new Date().toISOString(), source: path.basename(path.dirname(CHUMMER)), files: [] };
-const seen = new Set();
-const written = {};
+const index: { generated: string; source: string; files: Array<{ name: string; count: number; bytes: number; categories: Array<{ name: string; nameFr?: string; count: number }> }> } = { generated: new Date().toISOString(), source: path.basename(path.dirname(CHUMMER)), files: [] };
+const seen = new Set<string>();
+const written: Record<string, BuiltItem[]> = {};
 for (const [name, list] of Object.entries(files)) {
   // Drop duplicate ids (and exact name duplicates inside a file).
-  const names = new Set();
-  const items = [];
+  const names = new Set<string>();
+  const items: BuiltItem[] = [];
   for (const it of list) {
     const key = `${it.name}|${it.category}`;
     if (seen.has(it.id) || names.has(key)) {
@@ -910,7 +937,7 @@ for (const [name, list] of Object.entries(files)) {
   written[name] = items;
   const json = JSON.stringify(items);
   fs.writeFileSync(path.join(OUT, `${name}.json`), json);
-  const cats = {};
+  const cats: Record<string, { name: string; nameFr?: string; count: number }> = {};
   for (const it of items) {
     cats[it.category] = cats[it.category] || { name: it.category, nameFr: it.categoryFr, count: 0 };
     cats[it.category].count++;
@@ -925,7 +952,7 @@ for (const [k, v] of Object.entries(stats.dropped).sort()) console.log(`  ${k}: 
 // ---------------------------------------------------------------------------
 // Coverage report (data/catalog/coverage.md): XML entries per source book vs catalog items.
 // ---------------------------------------------------------------------------
-const XML_SECTIONS = [
+const XML_SECTIONS: Array<[string, string, (x: XmlNode) => XmlNode]> = [
   ['weapons', 'weapons.xml', (x) => x.weapons?.weapon],
   ['accessories', 'weapons.xml', (x) => x.accessories?.accessory],
   ['armor', 'armor.xml', (x) => x.armors?.armor],
@@ -943,22 +970,23 @@ const XML_SECTIONS = [
   ['lifestylequalities', 'lifestyles.xml', (x) => x.qualities?.quality],
   ['martialarts', 'martialarts.xml', (x) => x.martialarts?.martialart],
 ];
-const books = {};
+const books: Record<string, string> = {};
 try {
   for (const b of arr(readXml(path.join(CHUMMER, 'books.xml')).books?.book)) books[txt(b.code)] = clean(txt(b.name));
 } catch {}
 // Books the table actually used: <source> codes found in the old Chummer characters (historic view), if present.
 const CHUM_DIR = path.join(ROOT, '..', 'Shadowrun_chum5_files');
-const used = {};
+const used: Record<string, number> = {};
 if (fs.existsSync(CHUM_DIR)) {
   for (const f of fs.readdirSync(CHUM_DIR).filter((n) => n.endsWith('.chum5'))) {
     const s = fs.readFileSync(path.join(CHUM_DIR, f), 'utf8');
     for (const m of s.matchAll(/<source>([A-Za-z0-9]+)<\/source>/g)) used[m[1]] = (used[m[1]] || 0) + 1;
   }
 }
-const cov = {}; // book -> { xml, hidden, catalog, dropped, sections: { name: [xml, catalog] } }
-const row = (b) => (cov[b] ||= { xml: 0, hidden: 0, catalog: 0, dropped: 0, sections: {} });
-const xmlCache = {};
+type CoverageRow = { xml: number; hidden: number; catalog: number; dropped: number; sections: Record<string, [number, number]> };
+const cov: Record<string, CoverageRow> = {}; // book -> { xml, hidden, catalog, dropped, sections: { name: [xml, catalog] } }
+const row = (b: string) => (cov[b] ||= { xml: 0, hidden: 0, catalog: 0, dropped: 0, sections: {} });
+const xmlCache: Record<string, XmlNode> = {};
 for (const [name, file, pick] of XML_SECTIONS) {
   const doc = (xmlCache[file] ||= readXml(path.join(CHUMMER, file)));
   for (const x of arr(pick(doc))) {
@@ -1002,7 +1030,7 @@ lines.push(`| **Total** | | | ${tot.xml} | ${tot.hidden} | ${tot.catalog} | ${to
 lines.push('', '## Per catalog file', '', '| file | items | KB |', '|---|---:|---:|');
 for (const f of index.files) lines.push(`| ${f.name} | ${f.count} | ${Math.round(f.bytes / 1024)} |`);
 lines.push('', '## Dropped entries (excluding Chummer-hidden ones)', '');
-const byReason = {};
+const byReason: Record<string, string[]> = {};
 for (const d of stats.droppedItems) if (d.why !== 'hidden') (byReason[`${d.file}: ${d.why}`] ||= []).push(`${d.name} (${d.source})`);
 for (const [k, list] of Object.entries(byReason).sort()) {
   const shown = /source 2050/.test(k) ? `${list.length} items (Shadowrun 2050 conversions, never sold)` : list.slice(0, 40).join(', ') + (list.length > 40 ? `, … (+${list.length - 40})` : '');
@@ -1013,18 +1041,18 @@ fs.writeFileSync(path.join(OUT, 'coverage.md'), lines.join('\n'));
 console.log(`\nCoverage report: ${path.relative(ROOT, path.join(OUT, 'coverage.md'))}`);
 
 // ---------------------------------------------------------------------------
-// Effects index (data/catalog/effects.json, read by shared/modifiers.js through server/lib/modifiers.js and the sheet)
+// Effects index (data/catalog/effects.json, read by shared/modifiers.ts through server/lib/modifiers.ts and the sheet)
 // and effects coverage report (data/catalog/effects-coverage.md): Chummer bonus tag → effects supported / unsupported.
 // ---------------------------------------------------------------------------
 const EFFECT_FILES = ['armor', 'armormods', 'gear', 'cyberware', 'bioware', 'qualities', 'powers', 'accessories', 'lifestylequalities', 'spells'];
-const effIndex = { generated: index.generated, files: {}, names: {} };
+const effIndex: { generated: string; files: Record<string, Record<string, unknown>>; names: Record<string, Record<string, string>> } = { generated: index.generated, files: {}, names: {} };
 // Runtime index: only the effects the app uses (no unsupported tags, no free-text choices, no Chummer tag names).
 const RUNTIME_SKIP = new Set(['unsupported', 'info']);
-const runtimeEffect = (e) => !RUNTIME_SKIP.has(e.type) && !(e.type === 'choice' && e.choice?.kind === 'text');
-const allEff = []; // [file, item] of every catalog entry with effects (coverage)
-const addEff = (file, it) => {
+const runtimeEffect = (e: Effect) => !RUNTIME_SKIP.has(e.type) && !(e.type === 'choice' && e.choice?.kind === 'text');
+const allEff: Array<[string, { id?: string; effects: Effect[] }]> = []; // [file, item] of every catalog entry with effects (coverage)
+const addEff = (file: string, it: BuiltItem | Technique) => {
   if (!it?.effects?.length || !it.id) return;
-  allEff.push([file, it]);
+  allEff.push([file, it as { id?: string; effects: Effect[] }]);
   const eff = it.effects.filter(runtimeEffect).map(({ tag, ...e }) => e);
   if (!eff.length) return;
   const f = (effIndex.files[file] ||= {});
@@ -1036,8 +1064,8 @@ for (const file of EFFECT_FILES) for (const it of written[file] || []) addEff(fi
 for (const style of written.martialarts || []) for (const tq of style.stats?.techniques || []) addEff('techniques', tq);
 fs.writeFileSync(path.join(OUT, 'effects.json'), JSON.stringify(effIndex));
 
-const tagCov = {}; // tag -> { supported, unsupported, files: Set, types: Set }
-const typeCov = {};
+const tagCov: Record<string, { supported: number; unsupported: number; files: Set<string>; types: Set<string> }> = {}; // tag -> { supported, unsupported, files: Set, types: Set }
+const typeCov: Record<string, number> = {};
 let withEff = 0;
 let withUnsupported = 0;
 {
@@ -1045,7 +1073,7 @@ let withUnsupported = 0;
     withEff++;
     if (it.effects.some((e) => e.type === 'unsupported')) withUnsupported++;
     for (const e of it.effects) {
-      const r = (tagCov[e.tag] ||= { supported: 0, unsupported: 0, files: new Set(), types: new Set() });
+      const r = (tagCov[e.tag!] ||= { supported: 0, unsupported: 0, files: new Set(), types: new Set() });
       r[e.type === 'unsupported' ? 'unsupported' : 'supported']++;
       r.files.add(file);
       if (e.type !== 'unsupported') {
@@ -1078,14 +1106,14 @@ eLines.push('', '## Effect types', '', '| type | count |', '|---|---:|');
 for (const [ty, n] of Object.entries(typeCov).sort((a, b) => b[1] - a[1])) eLines.push(`| ${ty} | ${n} |`);
 
 // Conditions: every condition key the effects use, with Chummer's own strings (lang/fr-fr.xml, lang/en-us.xml: LimitCondition_*)
-// and the app label (shared/modifiers.js CONDITIONS, English in client/i18n/en/sheet.json). « switch » = roll-dialog toggle key.
-const langStrings = (file) => {
-  const out = {};
+// and the app label (shared/modifiers.ts CONDITIONS, English in client/i18n/en/sheet.json). « switch » = roll-dialog toggle key.
+const langStrings = (file: string) => {
+  const out: Record<string, { code: string; text: string }> = {};
   try {
-    const doc = parser.parse(fs.readFileSync(path.join(CHUMMER, '..', 'lang', file), 'utf8')).chummer;
-    for (const st of [].concat(doc?.strings?.string || [])) {
+    const doc: XmlNode = parser.parse(fs.readFileSync(path.join(CHUMMER, '..', 'lang', file), 'utf8')).chummer;
+    for (const st of ([] as XmlNode[]).concat(doc?.strings?.string || [])) {
       const k = String(st?.key ?? '');
-      if (k.startsWith('LimitCondition_')) out[conditionKey(k)] = { code: k, text: String(st.text ?? '').trim() };
+      if (k.startsWith('LimitCondition_')) out[conditionKey(k) as string] = { code: k, text: String(st.text ?? '').trim() };
     }
   } catch {
     /* no language file: Chummer columns stay empty */
@@ -1094,15 +1122,15 @@ const langStrings = (file) => {
 };
 const condFr = langStrings('fr-fr.xml');
 const condEn = langStrings('en-us.xml');
-let enDict = {};
+let enDict: Record<string, string> = {};
 try {
   enDict = JSON.parse(fs.readFileSync(path.join(ROOT, 'client', 'i18n', 'en', 'sheet.json'), 'utf8'));
 } catch {
   /* dictionary missing */
 }
-const condCount = {};
+const condCount: Record<string, number> = {};
 for (const [, it] of allEff) for (const e of it.effects) if (e.condition) condCount[e.condition] = (condCount[e.condition] || 0) + 1;
-const cell = (x) => String(x ?? '').trim().replace(/\|/g, '\\|');
+const cell = (x: unknown) => String(x ?? '').trim().replace(/\|/g, '\\|');
 eLines.push('', '## Conditions', '', 'Condition keys of the effects (`effects[].condition`). Unknown keys become their own switch (never applied silently).', '',
   '| key | effects | Chummer code | Chummer FR | Chummer EN | app label (FR) | app label (EN) | switch |', '|---|---:|---|---|---|---|---|---|');
 for (const [k, n] of Object.entries(condCount).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))) {

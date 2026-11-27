@@ -20,11 +20,58 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { login, client } from './test-client.ts';
+import type { Actor, ActorId, CatalogEntry, Lifestyle, LifestyleQuality } from '../shared/types.ts';
+
+type QualityItem = CatalogEntry<'lifestylequalities'>;
+type LifestyleItem = CatalogEntry<'lifestyles'>;
+
+interface Options {
+  url?: string;
+  table?: string;
+  password?: string;
+  spec: string;
+  dryRun: boolean;
+  includeInferred: boolean;
+  help?: boolean;
+}
+
+/** One actor of the restore spec (data/seed/upgrades-restore.json `actors`). */
+export interface RestoreSpecActor {
+  actorName?: string;
+  /** Not from a Chummer file: applied only with --include-inferred. */
+  inferred?: boolean;
+  note?: string;
+  /** Historic lifestyle text appended to the primary lifestyle's notes. */
+  lifestyleNote?: string;
+  lifestyle?: { match: string; base: string; qualities?: string[] };
+}
+export interface RestoreSpec {
+  actors?: Record<string, RestoreSpecActor>;
+}
+
+/** What planRestore reads of an actor (an old server's actor has `lifestyle` instead of `lifestyles`). */
+export type RestoreActor = Pick<Actor, 'id' | 'name' | 'type'> & { lifestyles?: Lifestyle[]; lifestyle?: unknown; karma?: number; nuyen?: number };
+
+/** The payload of a lifestyle option as sent to actor/addSubItem. */
+type QualityPayload = Omit<LifestyleQuality, 'id'>;
+
+export type StepKind = 'patch' | 'addQuality' | 'addLifestyle' | 'note';
+export interface RestoreStep {
+  actorId: ActorId;
+  actorName: string;
+  kind: StepKind;
+  payload: Record<string, unknown>;
+  text: string;
+}
+export interface RestoreMessage {
+  level: 'warn' | 'info';
+  text: string;
+}
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-function parseArgs(argv) {
-  const o = { dryRun: false, includeInferred: false, spec: path.join(ROOT, 'data/seed/upgrades-restore.json') };
+function parseArgs(argv: string[]): Options {
+  const o: Options = { dryRun: false, includeInferred: false, spec: path.join(ROOT, 'data/seed/upgrades-restore.json') };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     const val = () => {
@@ -45,17 +92,17 @@ function parseArgs(argv) {
   return o;
 }
 
-const fold = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-const readCatalog = (name) => {
+const fold = (s: unknown) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+const readCatalog = <T>(name: string): T[] => {
   const j = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/catalog', `${name}.json`), 'utf8'));
   return Array.isArray(j) ? j : j.items || [];
 };
-const fmt = (n) => `${Math.round(Number(n) || 0).toLocaleString('fr-FR').replace(/ | /g, ' ')} ¥`;
+const fmt = (n: unknown) => `${Math.round(Number(n) || 0).toLocaleString('fr-FR').replace(/ | /g, ' ')} ¥`;
 
 /** Quality (lifestyle option) payload for actor/addSubItem, from a catalog entry. */
-export function qualityPayload(item, notes) {
+export function qualityPayload(item: QualityItem, notes?: string): QualityPayload {
   const st = item.stats || {};
-  const q = { catalogId: item.id, name: item.name, category: item.category || '', cost: Math.round(Number(item.cost) || 0), multiplier: Number(st.multiplier) || 0, ...(st.baseOnly ? { baseOnly: true } : {}) };
+  const q: QualityPayload = { catalogId: item.id, name: item.name, category: item.category || '', cost: Math.round(Number(item.cost) || 0), multiplier: Number(st.multiplier) || 0, ...(st.baseOnly ? { baseOnly: true } : {}) };
   if (item.nameFr) q.nameFr = item.nameFr;
   if (st.lp !== undefined) q.lp = Number(st.lp) || 0;
   if (notes) q.notes = String(notes).slice(0, 500);
@@ -63,7 +110,7 @@ export function qualityPayload(item, notes) {
 }
 
 /** Find the actor of a spec: same id, else a PC with the same name. */
-function findActor(actors, id, spec) {
+function findActor(actors: Record<string, RestoreActor>, id: string, spec: RestoreSpecActor): RestoreActor | null {
   const byId = actors[id];
   if (byId) return byId;
   const want = fold(spec.actorName);
@@ -71,7 +118,7 @@ function findActor(actors, id, spec) {
 }
 
 /** Find the lifestyle a spec targets: name match, else the only / primary lifestyle. Returns { l, how }. */
-function findLifestyle(actor, match) {
+function findLifestyle(actor: RestoreActor, match: string): { l: Lifestyle | null; how: 'name' | 'only' | 'primary' | 'none' } {
   const list = actor.lifestyles || [];
   const m = fold(match);
   const byName = m && list.find((l) => fold(l.name).includes(m));
@@ -85,10 +132,14 @@ function findLifestyle(actor, match) {
  * Plan the changes for every actor of the spec (pure: reads `actors`, returns steps). A step is
  * { actorId, actorName, kind: 'patch'|'addQuality'|'addLifestyle'|'note', payload, text } ; info/warn lines go to `messages`.
  */
-export function planRestore(actors, spec, { qualities, lifestyles, includeInferred = false }) {
+export function planRestore(
+  actors: Record<string, RestoreActor>,
+  spec: RestoreSpec,
+  { qualities, lifestyles, includeInferred = false }: { qualities: QualityItem[]; lifestyles: LifestyleItem[]; includeInferred?: boolean },
+): { steps: RestoreStep[]; messages: RestoreMessage[] } {
   const qById = new Map(qualities.map((q) => [q.id, q]));
-  const steps = [];
-  const messages = [];
+  const steps: RestoreStep[] = [];
+  const messages: RestoreMessage[] = [];
   for (const [id, s] of Object.entries(spec.actors || {})) {
     if (!s.lifestyle && !s.lifestyleNote) continue;
     const a = findActor(actors, id, s);
@@ -102,21 +153,23 @@ export function planRestore(actors, spec, { qualities, lifestyles, includeInferr
       continue;
     }
     const base = { actorId: a.id, actorName: a.name };
+    const lifestyleList = a.lifestyles;
     if (s.lifestyle) {
-      const { l, how } = findLifestyle(a, s.lifestyle.match);
-      const baseItem = lifestyles.find((x) => x.name === s.lifestyle.base);
+      const want = s.lifestyle;
+      const { l, how } = findLifestyle(a, want.match);
+      const baseItem = lifestyles.find((x) => x.name === want.base);
       if (!l) {
-        if (a.lifestyles.length) { messages.push({ level: 'warn', text: `${a.name}: several lifestyles and none named « ${s.lifestyle.match} », skipped` }); continue; }
+        if (lifestyleList.length) { messages.push({ level: 'warn', text: `${a.name}: several lifestyles and none named « ${s.lifestyle.match} », skipped` }); continue; }
         if (!baseItem) { messages.push({ level: 'warn', text: `${a.name}: unknown base lifestyle ${s.lifestyle.base}, skipped` }); continue; }
         // No lifestyle at all: add the historic one (no months paid), then its options.
         const item = { name: s.lifestyle.match, base: s.lifestyle.base, catalogId: baseItem.id, baseCost: Math.round(Number(baseItem.cost) || 0), monthsPaid: 0, primary: true, notes: s.note || '',
-          qualities: (s.lifestyle.qualities || []).map((qid) => qById.get(qid)).filter(Boolean).map((q) => qualityPayload(q, s.note)) };
+          qualities: (s.lifestyle.qualities || []).map((qid) => qById.get(qid)).filter((q): q is QualityItem => !!q).map((q) => qualityPayload(q, s.note)) };
         steps.push({ ...base, kind: 'addLifestyle', payload: { actorId: a.id, list: 'lifestyles', item }, text: `add lifestyle « ${item.name} » (${s.lifestyle.base}) with ${item.qualities.length} option(s)` });
         continue;
       }
       if (how !== 'name') messages.push({ level: 'info', text: `${a.name}: lifestyle « ${l.name} » used (${how}; the Chummer one was « ${s.lifestyle.match} »)` });
       const present = l.qualities || [];
-      const toAdd = [];
+      const toAdd: QualityItem[] = [];
       for (const qid of s.lifestyle.qualities || []) {
         const q = qById.get(qid);
         if (!q) { messages.push({ level: 'warn', text: `${a.name}: option ${qid} not in data/catalog/lifestylequalities.json, skipped` }); continue; }
@@ -130,7 +183,7 @@ export function planRestore(actors, spec, { qualities, lifestyles, includeInferr
         if (l.base && l.base !== s.lifestyle.base) {
           messages.push({ level: 'warn', text: `${a.name} / ${l.name}: base ${l.base} on the sheet, ${s.lifestyle.base} in Chummer — base left as is` });
         } else {
-          const patch = { catalogId: baseItem.id };
+          const patch: Partial<Lifestyle> = { catalogId: baseItem.id };
           if (!l.base) patch.base = s.lifestyle.base;
           const catCost = Math.round(Number(baseItem.cost) || 0);
           if (toAdd.length && !present.length && Number(l.baseCost) !== catCost) patch.baseCost = catCost;
@@ -145,7 +198,7 @@ export function planRestore(actors, spec, { qualities, lifestyles, includeInferr
       }
     }
     if (s.lifestyleNote) {
-      const l = (a.lifestyles || []).find((x) => x.primary) || a.lifestyles[0];
+      const l = (lifestyleList || []).find((x) => x.primary) || lifestyleList[0];
       if (!l) messages.push({ level: 'warn', text: `${a.name}: no lifestyle to carry the historic note` });
       else if (String(l.notes || '').includes(String(s.lifestyleNote).slice(0, 60))) messages.push({ level: 'info', text: `${a.name} / ${l.name}: historic note already present` });
       else {
@@ -157,13 +210,13 @@ export function planRestore(actors, spec, { qualities, lifestyles, includeInferr
   return { steps, messages };
 }
 
-const ACTION = { patch: 'actor/updateItem', note: 'actor/updateItem', addQuality: 'actor/addSubItem', addLifestyle: 'actor/addItem' };
+const ACTION: Record<StepKind, string> = { patch: 'actor/updateItem', note: 'actor/updateItem', addQuality: 'actor/addSubItem', addLifestyle: 'actor/addItem' };
 
-function summary(a) {
+function summary(a: RestoreActor): string[] {
   return (a.lifestyles || []).map((l) => `${l.primary ? '*' : ' '} ${l.name} [${l.base || '?'}] ${fmt(l.monthlyCost)}/month — ${(l.qualities || []).map((q) => q.nameFr || q.name).join(', ') || 'no option'}`);
 }
 
-async function main() {
+async function main(): Promise<number> {
   const o = parseArgs(process.argv.slice(2));
   if (o.help || !o.url) {
     console.log('Usage: node tools/restore-lifestyles.ts --url <server url> [--table <slug>] --password <gm password> [--dry-run] [--spec <file>] [--include-inferred]');
@@ -175,8 +228,8 @@ async function main() {
   const url = u.origin;
   const password = o.password ?? process.env.SR_GM_PASSWORD;
   if (!password) throw new Error('GM password required (--password or SR_GM_PASSWORD)');
-  const spec = JSON.parse(fs.readFileSync(o.spec, 'utf8'));
-  const catalogs = { qualities: readCatalog('lifestylequalities'), lifestyles: readCatalog('lifestyles') };
+  const spec = JSON.parse(fs.readFileSync(o.spec, 'utf8')) as RestoreSpec;
+  const catalogs = { qualities: readCatalog<QualityItem>('lifestylequalities'), lifestyles: readCatalog<LifestyleItem>('lifestyles') };
 
   console.log(`${o.dryRun ? '[dry-run] ' : ''}${url}${table ? ` table « ${table} »` : ' (default table)'}`);
   const token = await login(url, { role: 'gm', password, ...(table ? { table } : {}) });
@@ -220,5 +273,5 @@ async function main() {
 
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
-  main().then((code) => process.exit(code), (e) => { console.error(`Error: ${e.message}`); process.exit(1); });
+  main().then((code) => process.exit(code), (e: Error) => { console.error(`Error: ${e.message}`); process.exit(1); });
 }

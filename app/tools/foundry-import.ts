@@ -13,25 +13,26 @@ import { fileURLToPath } from 'node:url';
 import { readWorld, readDump, detectWorldPath } from '../server/lib/foundry/world.ts';
 import { buildBundle, buildPc, buildTemplate, buildMap, scanBundle } from '../server/lib/foundry/importer.ts';
 import { createAssets, formatBytes } from '../server/lib/foundry/assets.ts';
+import type { Actor, AudioState, AudioTrack, Campaign, GameMap, Template } from '../shared/types.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SEED = path.join(ROOT, 'data', 'seed');
 const DOCS_OUT = path.resolve(ROOT, '..', 'Shadowrun', 'foundry');
 
 const args = process.argv.slice(2);
-const flag = (n) => args.includes(n);
-const opt = (n) => {
+const flag = (n: string) => args.includes(n);
+const opt = (n: string): string | null => {
   const i = args.indexOf(n);
   return i >= 0 ? args[i + 1] : null;
 };
-const readJson = (f, fb) => {
+const readJson = <T>(f: string, fb: T): T => {
   try {
     return JSON.parse(fs.readFileSync(f, 'utf8'));
   } catch {
     return fb;
   }
 };
-const writeJson = (f, v, indent = 2) => {
+const writeJson = (f: string, v: unknown, indent = 2) => {
   fs.mkdirSync(path.dirname(f), { recursive: true });
   fs.writeFileSync(f, JSON.stringify(v, null, indent) + '\n', 'utf8');
 };
@@ -45,20 +46,22 @@ const assets = createAssets({ dataRoot: world.dataRoot });
 const bundle = buildBundle(world, { now, assets });
 
 // Pseudo-state from the current seeds, for status/diffs.
-const seedPcs = readJson(path.join(SEED, 'actors', 'pcs.json'), []);
+const seedPcs = readJson<Actor[]>(path.join(SEED, 'actors', 'pcs.json'), []);
 const corePath = path.join(SEED, 'bestiary', 'core.json');
 const foundryTplPath = path.join(SEED, 'bestiary', 'foundry.json');
-const core = readJson(corePath, []);
-const foundryTpl = readJson(foundryTplPath, []);
+/** A seed template; older seeds still carry the Foundry id at the top level. */
+type SeedTemplate = Template & { foundryId?: string };
+const core = readJson<SeedTemplate[]>(corePath, []);
+const foundryTpl = readJson<Template[]>(foundryTplPath, []);
 const mapsDir = path.join(SEED, 'maps');
 const seedMaps = Object.fromEntries(
-  fs.readdirSync(mapsDir).filter((f) => f.endsWith('.json')).map((f) => readJson(path.join(mapsDir, f), null)).filter(Boolean).map((m) => [m.id, m]),
+  fs.readdirSync(mapsDir).filter((f) => f.endsWith('.json')).map((f) => readJson<GameMap | null>(path.join(mapsDir, f), null)).filter((m): m is GameMap => !!m).map((m) => [m.id, m]),
 );
 const pseudo = {
   actors: Object.fromEntries(seedPcs.map((a) => [a.id, a])),
   bestiary: Object.fromEntries([...core, ...foundryTpl].map((t) => [t.id, t])),
   maps: seedMaps,
-  audio: readJson(path.join(SEED, 'audio.json'), { tracks: [] }),
+  audio: readJson(path.join(SEED, 'audio.json'), { tracks: [] as AudioTrack[] }) as AudioState,
 };
 const scan = scanBundle(pseudo, bundle, { docsDir: DOCS_OUT });
 console.log(`\nPJ : ${scan.pcs.map((p) => `${p.name} [${p.status}]`).join(', ')}`);
@@ -76,7 +79,7 @@ if (!flag('--write-seeds')) {
 
 // --- PCs
 const order = ['pc_anthony', 'pc_jane', 'pc_bricks', 'pc_anklay', 'pc_christopher'];
-const outPcs = [];
+const outPcs: Actor[] = [];
 bundle.pcs.forEach((pc, i) => {
   const existing = seedPcs.find((a) => a.id === pc.appId) || null;
   const a = buildPc(pc, existing, { mode: 'replace', now, worldId: bundle.worldId, index: i });
@@ -90,7 +93,7 @@ writeJson(path.join(SEED, 'actors', 'pcs.json'), outPcs);
 console.log(`\n✔ data/seed/actors/pcs.json : ${outPcs.map((a) => `${a.id}${a.retired ? ' (retraité)' : ''}`).join(', ')}`);
 
 // --- Bestiary
-const newTpl = [];
+const newTpl: Template[] = [];
 let updated = 0;
 for (const npc of bundle.npcs) {
   const i = core.findIndex((t) => t.id === npc.templateId || (t.foundryId && t.foundryId === npc.fid));
@@ -107,7 +110,7 @@ writeJson(foundryTplPath, newTpl, 1);
 console.log(`✔ bestiaire : ${updated} modèles mis à jour (core.json), ${newTpl.length} nouveaux (foundry.json)`);
 
 // --- Maps
-const written = new Set();
+const written = new Set<string>();
 for (const sc of bundle.scenes) {
   const file = `foundry-${sc.map.id.replace(/^map_fvtt_/, '')}.json`;
   const m = buildMap(sc, null);
@@ -119,16 +122,16 @@ console.log(`✔ cartes : ${written.size} fichiers data/seed/maps/foundry-*.json
 
 // --- Audio tracks
 const audioPath = path.join(SEED, 'audio.json');
-const audio = readJson(audioPath, { tracks: [], scenes: [] });
+const audio = readJson<Pick<AudioState, 'tracks' | 'scenes'>>(audioPath, { tracks: [], scenes: [] });
 const fvttTracks = bundle.playlists.flatMap((p) => p.tracks);
 audio.tracks = [...(audio.tracks || []).filter((t) => !String(t.id).startsWith('trk_fvtt_')), ...fvttTracks];
-const line = (o) => `    ${JSON.stringify(o)}`;
+const line = (o: unknown) => `    ${JSON.stringify(o)}`;
 fs.writeFileSync(audioPath, `{\n  "tracks": [\n${audio.tracks.map(line).join(',\n')}\n  ],\n  "scenes": [\n${(audio.scenes || []).map(line).join(',\n')}\n  ]\n}\n`, 'utf8');
 console.log(`✔ audio.json : ${fvttTracks.length} pistes Foundry`);
 
 // --- Quest map links (campaign.json)
 const campPath = path.join(SEED, 'campaign.json');
-const camp = readJson(campPath, null);
+const camp = readJson<Campaign | null>(campPath, null);
 let links = 0;
 if (camp?.quests) {
   for (const sc of bundle.scenes) {
@@ -157,7 +160,7 @@ const kinds = ['img', 'scene', 'thumb', 'journal', ...(flag('--no-audio') ? [] :
 const t0 = Date.now();
 const res = assets.copySync(kinds);
 console.log(`✔ fichiers : ${res.copied} copiés, ${res.skipped} déjà à jour — ${formatBytes(res.bytes)} dans data/assets/foundry (${Math.round((Date.now() - t0) / 100) / 10} s)`);
-const byKind = {};
+const byKind: Record<string, number> = {};
 for (const [, e] of assets.entries()) byKind[e.kind] = (byKind[e.kind] || 0) + e.size;
 console.log(`  détail : ${Object.entries(byKind).map(([k, v]) => `${k} ${formatBytes(v)}`).join(', ')}`);
 if (res.errors.length) console.log(`  erreurs : ${res.errors.slice(0, 5).join(' ; ')}`);

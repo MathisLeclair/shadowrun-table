@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 // Project Lazarus: table maps (instances) made from the map library for the campaign's locations — the
 // « Fragmaps first » choice of Shadowrun/cartes-campagne.md. Writes data/seed/maps/lib-<slug>.json (one Map per file,
-// map.library = { slug, version }), built exactly like the GM action maps/fromLibrary (server/modules/22-maplib.js):
+// map.library = { slug, version }), built exactly like the GM action maps/fromLibrary (server/modules/22-maplib.ts):
 // same geometry, walls / doors / lights / regions with ids, « Entrée » GM region — plus the campaign name, folder,
 // GM description and GM notes below. Ids are deterministic, so re-running only rewrites what changed.
 //   node tools/maplib-campaign-seeds.ts [--dry]
 // The library is loaded into a throw-away folder (os tmpdir): data/maplib/*.json + the Foundry fragmaps-free seeds.
-// Seeds only ADD maps to a table (20-maps.js init): a live table keeps its own copy once it has one.
+// Seeds only ADD maps to a table (20-maps.ts init): a live table keeps its own copy once it has one.
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { GameMap, Lighting } from '../shared/types.ts';
 
 const APP = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(APP, 'data', 'seed', 'maps');
@@ -31,7 +32,21 @@ const A1 = 'Acte 1', A2 = 'Acte 2', A3 = 'Acte 3';
 // The campaign locations. `slug` = library entry (git data/maplib), or `image` = a Foundry fragmaps-free scene image
 // (its library slug is made at boot from the seed). Notes: `at` = a region name of the library map (centre), or [x, y].
 // ---------------------------------------------------------------------------------------------------------------
-const LOCATIONS = [
+/** A campaign location: a library entry (`slug`) or a Foundry scene image (`image`), with its campaign texts. */
+interface CampaignLocation {
+  slug?: string;
+  image?: string;
+  folder: string;
+  quest: string;
+  name: string;
+  use: string;
+  adapt: string;
+  lighting?: Lighting;
+  /** `at`: a region name of the library map (its centre) or a cell [x, y]. */
+  notes: Array<{ at: string | [number, number]; text: string }>;
+}
+
+const LOCATIONS: CampaignLocation[] = [
   {
     slug: 'office-floor', folder: A1, quest: 'Open Book (séance 4, approche B)',
     name: 'Hollow Pine — suite 1408 (tour Meridian, 14e)',
@@ -234,17 +249,18 @@ const LOCATIONS = [
 
 // ---------------------------------------------------------------------------------------------------------------
 L.ensureLibrary();
-const written = [];
+const written: Array<{ id: string; slug: string; size: string; walls: number; notes: number; name: string }> = [];
 for (const loc of LOCATIONS) {
-  const m = loc.slug ? L.getMeta(loc.slug) : L.findByImage(loc.image);
+  const m = loc.slug ? L.getMeta(loc.slug) : L.findByImage(loc.image || '');
   if (!m) throw new Error(`library entry not found: ${loc.slug || loc.image}`);
   const v = L.getVersion(m.slug);
+  if (!v) throw new Error(`library entry without a version: ${m.slug}`);
   const e = L.effective(m);
   const g = libGeometry({ ...e, ...(v.geometry || {}) });
   let n = 0;
-  const uid = (p) => `${p}_${m.slug}_${++n}`;
+  const uid = (p: string) => `${p}_${m.slug}_${++n}`;
   const content = instanceContent(v, uid);
-  const regionAt = (name) => {
+  const regionAt = (name: string): [number, number] => {
     const r = (v.regions || []).find((x) => x.name === name);
     if (!r) throw new Error(`${m.slug}: no region « ${name} »`);
     return [Math.floor(r.x + r.w / 2), Math.floor(r.y + r.h / 2)];
@@ -271,7 +287,7 @@ for (const loc of LOCATIONS) {
     walls: content.walls, lights: content.lights, regions: content.regions,
     doors: [], notes, tokens: [], fog: true,
   });
-  delete map.explored;
+  delete (map as Partial<GameMap>).explored;
   map.library = { slug: m.slug, version: m.version, linkedAt: LINKED_AT };
   const file = path.join(OUT, `lib-${m.slug}.json`);
   if (!DRY) fs.writeFileSync(file, JSON.stringify(map, null, 2) + '\n');

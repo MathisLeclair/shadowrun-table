@@ -1,4 +1,4 @@
-// Builds the « demo » content pack (data/packs/demo/) used by the public demo table (SR_DEMO_TABLE, server/lib/demo.js).
+// Builds the « demo » content pack (data/packs/demo/) used by the public demo table (SR_DEMO_TABLE, server/lib/demo.ts).
 //   node tools/build-demo.ts            (re-run after changing the content below, then commit data/packs/demo)
 // The pack is layered on the « vierge » pack (generic bestiary, shop, audio). This script holds the hand-written
 // content (warehouse tile map, Matrix host, scenario) and generates the rest through the real app: it starts a
@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { startServer, login, client, settle } from './test-client.ts';
+import type { Actor, GameMap, TableState } from '../shared/types.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ROOT, 'data', 'packs', 'demo');
@@ -20,13 +21,13 @@ const H = 22;
 /** Warehouse on the Tacoma docks: street on the left, dock and water on the right, foreman's office upstairs-right. */
 function warehouseMap() {
   const g = Array.from({ length: H }, () => Array(W).fill(','));
-  const set = (x, y, ch) => {
+  const set = (x: number, y: number, ch: string) => {
     if (x >= 0 && y >= 0 && x < W && y < H) g[y][x] = ch;
   };
-  const fill = (x, y, w, h, ch) => {
+  const fill = (x: number, y: number, w: number, h: number, ch: string) => {
     for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) set(i, j, ch);
   };
-  const box = (x, y, w, h) => {
+  const box = (x: number, y: number, w: number, h: number) => {
     fill(x, y, w, h, '#');
     fill(x + 1, y + 1, w - 2, h - 2, '.');
   };
@@ -216,44 +217,44 @@ const CAMPAIGN = {
 const srv = await startServer({ port: 3790, tables: [{ id: 'build', pack: 'vierge', gmPassword: 'build-demo-pw', name: 'Démo' }] });
 try {
   const gm = await client(srv.url, await login(srv.url, { role: 'gm', password: 'build-demo-pw', table: 'build' }), { table: 'build' });
-  const ids = {}; // generated id -> stable id
+  const ids: Record<string, string> = {}; // generated id -> stable id
 
-  const mapId = await gm.send('maps/import', { map: warehouseMap() });
+  const mapId = await gm.send<string>('maps/import', { map: warehouseMap() });
   ids[mapId] = 'map_demo_entrepot';
 
-  const pcIds = [];
+  const pcIds: string[] = [];
   for (const p of PCS) {
-    const r = await gm.send('npcgen/create', { archetype: p.archetype, tier: 4, metatype: p.metatype, seed: p.seed, name: p.name, grunt: false, spawn: { mapId: null, count: 1 } });
+    const r = await gm.send<{ actorIds: string[] }>('npcgen/create', { archetype: p.archetype, tier: 4, metatype: p.metatype, seed: p.seed, name: p.name, grunt: false, spawn: { mapId: null, count: 1 } });
     ids[r.actorIds[0]] = `pc_demo_${p.key}`;
     pcIds.push(r.actorIds[0]);
   }
   for (const n of NPCS) {
-    const r = await gm.send('bestiary/spawn', { templateId: n.templateId, mapId, x: n.x, y: n.y, count: n.count, hidden: !!n.hidden });
+    const r = await gm.send<{ actorIds: string[] }>('bestiary/spawn', { templateId: n.templateId, mapId, x: n.x, y: n.y, count: n.count, hidden: !!n.hidden });
     r.actorIds.forEach((id, i) => (ids[id] = `npc_demo_${n.templateId.replace(/^tpl_/, '')}_${i + 1}`));
     if (n.name) for (const id of r.actorIds) await gm.send('actor/update', { actorId: id, patch: { name: n.name } });
   }
 
   // A map-library copy (its artwork shows only where the server has the library images; walls and doors always work).
-  let barId = null;
+  let barId: string | null = null;
   try {
-    barId = await gm.send('maps/fromLibrary', { slug: 'dive-bar', name: 'Le Néon rouillé (bar des dockers)', folder: 'Démo' });
+    barId = await gm.send<string>('maps/fromLibrary', { slug: 'dive-bar', name: 'Le Néon rouillé (bar des dockers)', folder: 'Démo' });
     ids[barId] = 'map_demo_bar';
   } catch (err) {
-    console.warn('  (carte de bibliothèque ignorée :', err.message + ')');
+    console.warn('  (carte de bibliothèque ignorée :', (err as Error).message + ')');
   }
   await settle();
 
-  const res = await fetch(`${srv.url}/api/admin/export`, { headers: { Authorization: `Bearer ${gm.socket.auth.token}`, 'X-SR-Table': 'build' } });
-  const state = await res.json();
+  const res = await fetch(`${srv.url}/api/admin/export`, { headers: { Authorization: `Bearer ${(gm.socket.auth as { token: string }).token}`, 'X-SR-Table': 'build' } });
+  const state = (await res.json()) as TableState;
   gm.close();
 
   // Stable ids everywhere (actor ids in tokens, combat, etc.).
   let text = JSON.stringify({ actors: state.actors, maps: state.maps });
   for (const [from, to] of Object.entries(ids)) text = text.split(`"${from}"`).join(`"${to}"`);
-  const { actors, maps } = JSON.parse(text);
+  const { actors, maps } = JSON.parse(text) as { actors: Record<string, Actor>; maps: Record<string, GameMap> };
 
   // Generated runners → PCs (unowned: anyone joining can take one).
-  const pcs = [];
+  const pcs: Actor[] = [];
   for (const [i, p] of PCS.entries()) {
     const a = actors[ids[pcIds[i]]];
     a.type = 'pc';
@@ -264,14 +265,14 @@ try {
     a.karmaTotal = 5;
     a.nuyen = 5000;
     // NPC-only data of the generator (tactics, loot, professional rating, generator settings).
-    for (const k of ['templateId', 'grunt', 'hidden', 'npc', 'gmNotes', 'genArchetype', 'genTier', 'genSeed', 'genLieutenant', 'disposition']) delete a[k];
+    for (const k of ['templateId', 'grunt', 'hidden', 'npc', 'gmNotes', 'genArchetype', 'genTier', 'genSeed', 'genLieutenant', 'disposition']) delete (a as unknown as Record<string, unknown>)[k];
     a.history = [{ ts: Date.UTC(2080, 0, 1), text: 'Personnage prétiré de la table de démonstration' }];
     pcs.push(a);
   }
   const npcs = Object.values(actors).filter((a) => String(a.id).startsWith('npc_demo_'));
   for (const a of npcs) {
     a.history = [];
-    delete a.templateId;
+    delete (a as Partial<Actor>).templateId;
   }
 
   // PCs wait in the street next to their van.
@@ -285,7 +286,7 @@ try {
   fs.rmSync(OUT, { recursive: true, force: true });
   fs.mkdirSync(path.join(OUT, 'actors'), { recursive: true });
   fs.mkdirSync(path.join(OUT, 'maps'), { recursive: true });
-  const write = (rel, v) => fs.writeFileSync(path.join(OUT, rel), JSON.stringify(v, null, 1) + '\n');
+  const write = (rel: string, v: unknown) => fs.writeFileSync(path.join(OUT, rel), JSON.stringify(v, null, 1) + '\n');
   write('actors/demo.json', [...pcs, ...npcs]);
   write('maps/01-entrepot.json', wh); // first map file = the active map
   if (maps.map_demo_bar) write('maps/02-bar.json', maps.map_demo_bar);

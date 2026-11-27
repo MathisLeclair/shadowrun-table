@@ -7,6 +7,8 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { startServer, login, client, settle } from './test-client.ts';
+import type { TestClient } from './test-client.ts';
+import type { ActionPayload, ActionResponse, I18nEntry, I18nParams, Lang, NewLogEntry } from '../shared/types.ts';
 import * as F from '../client/i18n/format.ts';
 import * as I from '../client/lib/i18n.ts';
 import * as S from '../server/lib/i18n.ts';
@@ -16,14 +18,14 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DICT_DIR = path.join(ROOT, 'client', 'i18n', 'en');
 let passed = 0;
 let failed = 0;
-async function test(name, fn) {
+async function test(name: string, fn: () => unknown): Promise<void> {
   try {
     await fn();
     passed++;
     console.log(`  ok  ${name}`);
   } catch (err) {
     failed++;
-    console.log(`  FAIL ${name}\n       ${err.stack.split('\n').slice(0, 3).join('\n       ')}`);
+    console.log(`  FAIL ${name}\n       ${String((err as Error).stack).split('\n').slice(0, 3).join('\n       ')}`);
   }
 }
 
@@ -102,7 +104,7 @@ await test('tn: plural forms per language, {n} always available, zero form', () 
 });
 await test('language listeners, invalid languages ignored', () => {
   I.setLang('fr');
-  const seen = [];
+  const seen: Lang[] = [];
   const off = I.onLangChange((l) => seen.push(l));
   I.setLang('en');
   I.setLang('en');
@@ -175,7 +177,7 @@ await test('every client/i18n/en/*.json is a flat { string: string } object with
     }
   }
 });
-await test('glossary covers the SR5 labels of shared/sr5.js', () => {
+await test('glossary covers the SR5 labels of shared/sr5.ts', () => {
   const g = JSON.parse(fs.readFileSync(path.join(DICT_DIR, 'glossary.json'), 'utf8'));
   for (const fr of Object.values(ATTR_LABELS)) assert.ok(g[fr], `attribute ${fr}`);
   for (const s of SKILLS) assert.ok(g[s.fr], `skill ${s.fr}`);
@@ -195,11 +197,12 @@ await test('server t/tn read the same dictionaries; errorBody; normalizeLogEntry
   assert.equal(S.tn('fr', 1, '{n} joueur', '{n} joueurs'), '1 joueur');
   assert.deepEqual(S.errorBody('Ce personnage est déjà pris par {name}', { name: 'Bob' }), { error: 'Ce personnage est déjà pris par Bob', errorKey: 'Ce personnage est déjà pris par {name}', params: { name: 'Bob' } });
   assert.deepEqual(S.errorBody('Fichier vide', null, { code: 'x' }), { error: 'Fichier vide', errorKey: 'Fichier vide', code: 'x' });
-  const e = S.normalizeLogEntry({ kind: 'system', i18n: { key: '{actor} entre dans le combat !', params: { actor: 'Jane', bad: () => 0 } } });
+  // A function param is invalid input on purpose (dropped by normalizeLogEntry).
+  const e = S.normalizeLogEntry({ kind: 'system', i18n: { key: '{actor} entre dans le combat !', params: { actor: 'Jane', bad: (() => 0) as unknown as string } } } as NewLogEntry);
   assert.equal(e.text, 'Jane entre dans le combat !');
   assert.deepEqual(e.i18n, { key: '{actor} entre dans le combat !', params: { actor: 'Jane' } });
   assert.equal(S.normalizeLogEntry({ text: 'gardé', i18n: { key: 'K {x}', params: { x: 1 } } }).text, 'gardé');
-  const bad = S.normalizeLogEntry({ text: 't', i18n: { nokey: 1 } });
+  const bad = S.normalizeLogEntry({ text: 't', i18n: { nokey: 1 } as unknown as I18nEntry } as NewLogEntry); // malformed on purpose
   assert.equal(bad.i18n, undefined);
   assert.deepEqual(S.dictionaryFiles('en')[0], 'glossary.json');
   assert.deepEqual(S.dictionaryFiles('xx'), []);
@@ -207,7 +210,9 @@ await test('server t/tn read the same dictionaries; errorBody; normalizeLogEntry
 
 console.log('server integration');
 const srv = await startServer({ port: 3800 + Math.floor(Math.random() * 40), keepRuntime: true });
-const raw = (c, type, payload = {}) => new Promise((res) => c.socket.emit('action', { type, payload }, res));
+/** Raw socket reply: error replies keep their errorKey/params (send() only keeps the text). */
+type Reply = Extract<ActionResponse, { ok: false }> | { ok: true; result: unknown; error?: undefined; errorKey?: undefined; params?: I18nParams };
+const raw = (c: TestClient, type: string, payload: ActionPayload = {}) => new Promise<Reply>((res) => c.socket.emit('action', { type, payload }, res));
 try {
   await test('dictionaries are served, with a generated index', async () => {
     const idx = await (await fetch(`${srv.url}/i18n/en/index.json`)).json();
@@ -218,8 +223,7 @@ try {
     assert.equal(core.status, 200);
     assert.equal((await core.json())['Carte'], 'Map');
     assert.equal((await fetch(`${srv.url}/i18n/xx/index.json`)).status, 404);
-    assert.equal((await fetch(`${srv.url}/lib/i18n.js`)).status, 200);
-    assert.equal((await fetch(`${srv.url}/i18n/format.js`)).status, 200);
+    // (The client code itself is bundled by Vite now: its source modules are no longer served one by one.)
   });
 
   const gmToken = await login(srv.url, { role: 'gm', password: 'lazarus' });
@@ -254,14 +258,14 @@ try {
     assert.equal(nf.errorKey, 'Introuvable');
   });
 
-  let pToken;
+  let pToken = '';
   await test('language chosen at login is stored on the user (me.lang), the table language stays the default', async () => {
     pToken = await login(srv.url, { role: 'player', name: 'Anglo', characterId: pcIds[1], lang: 'en' });
     const p = await client(srv.url, pToken);
     assert.equal(p.state.me.lang, 'en');
     assert.equal(p.state.config.lang, 'fr');
-    assert.equal(p.state.config.gmLang, undefined, 'GM language never leaks into config views');
-    assert.equal(p.state.users[p.state.me.id].lang, undefined, 'other users’ languages are not exposed');
+    assert.equal((p.state.config as { gmLang?: unknown }).gmLang, undefined, 'GM language never leaks into config views');
+    assert.equal((p.state.users[p.state.me.id] as { lang?: unknown }).lang, undefined, 'other users’ languages are not exposed');
     p.close();
     const other = await client(srv.url, await login(srv.url, { role: 'player', name: 'Franco' }));
     assert.equal(other.state.me.lang, null);
@@ -295,11 +299,11 @@ try {
     await settle();
     assert.equal(gm.state.config.lang, 'en');
     assert.equal(gm.state.config.table.lang, 'en');
-    const list = await (await fetch(`${srv.url}/api/tables?choisir`)).json();
+    const list = await (await fetch(`${srv.url}/api/tables?choisir`)).json(); // HTTP bodies: untyped JSON (any)
     assert.equal(list.tables[0].lang, 'en');
     const adminToken = await srv.admin();
     const admin = await (await fetch(`${srv.url}/api/admin/tables`, { headers: { authorization: `Bearer ${adminToken}` } })).json();
-    assert.equal(admin.tables.find((x) => x.id === 'lazarus').lang, 'en');
+    assert.equal(admin.tables.find((x: { id: string }) => x.id === 'lazarus').lang, 'en');
     const lobby = await (await fetch(`${srv.url}/api/lobby?table=lazarus`)).json();
     assert.equal(lobby.table.lang, 'en');
   });
@@ -330,9 +334,21 @@ try {
 }
 
 console.log('tools');
+/** `node tools/i18n-check.ts --json` output (the fields read here). */
+interface CheckReport {
+  files: number;
+  keys: number;
+  problems: Array<{ file: string; msg: string; fatal?: boolean }>;
+  missing: Array<{ file: string; line: number; key: string; kind: string }>;
+  dynamic: Array<{ file: string; line: number; text: string; kind: string }>;
+  literals: Array<{ file: string; line: number; text: string; kind: string }>;
+}
+// The child node process runs the .ts tool: before Node 22.18 it needs the type-stripping flag.
+const NODE_TS = process.features.typescript ? [] : ['--experimental-strip-types'];
+const runCheck = (...args: string[]): CheckReport =>
+  JSON.parse(execFileSync(process.execPath, [...NODE_TS, 'tools/i18n-check.ts', ...args, '--json'], { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }));
 await test('i18n-check: core area fully translated (--strict), JSON output parses', () => {
-  const out = execFileSync(process.execPath, ['tools/i18n-check.ts', '--area', 'core', '--strict', '--json'], { cwd: ROOT, encoding: 'utf8' });
-  const j = JSON.parse(out);
+  const j = runCheck('--area', 'core', '--strict');
   assert.equal(j.problems.filter((p) => p.msg.startsWith('JSON')).length, 0);
   assert.deepEqual(j.missing, []);
   assert.deepEqual(j.literals, [], 'no untranslated French in core files');
@@ -351,7 +367,7 @@ await test('i18n-check: finds keys, dynamic keys and French literals in a sample
     "toast('Autre erreur en dur');",
   ].join('\n'));
   try {
-    const j = JSON.parse(execFileSync(process.execPath, ['tools/i18n-check.ts', path.relative(ROOT, file), '--json'], { cwd: ROOT, encoding: 'utf8' }));
+    const j = runCheck(path.relative(ROOT, file));
     const keys = j.missing.map((m) => m.key).sort();
     assert.deepEqual(keys, ['Clé jamais traduite {n}', 'Étiquette constante', '{n} pomme', '{n} pommes'].sort());
     assert.equal(j.dynamic.length, 1);
@@ -365,9 +381,43 @@ await test('i18n-check: finds keys, dynamic keys and French literals in a sample
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
-await test('client files of the i18n foundation parse', () => {
-  for (const f of ['client/app.js', 'client/lib/i18n.js', 'client/lib/net.js', 'client/lib/ui.js', 'client/lib/ui-store.js', 'client/modules/registry.js', 'client/modules/core/SettingsPage.js', 'client/modules/admin/AdminPage.js', 'client/modules/admin/FoundryUpload.js', 'client/modules/admin/common.js', 'client/i18n/format.js']) {
-    execFileSync(process.execPath, ['--check', path.join(ROOT, f)]);
+await test('i18n-check: reads keys and French literals in TSX (JSX text, attributes, {t()} children)', () => {
+  const dir = fs.mkdtempSync(path.join(ROOT, 'tools', '.i18n-sample-'));
+  const file = path.join(dir, 'Sample.tsx');
+  fs.writeFileSync(file, [
+    "import { t, tn } from '../lib/i18n.ts';",
+    'export function Sample({ n }: { n: number }) {',
+    "  const big = n > 2 ? send<string>('x/y', {}) : null;",
+    '  return (',
+    '    <div className="sample" title="Fermer la fenêtre">',
+    "      <b>{t('Clé JSX jamais traduite')}</b> <span title={t('Attribut JSX jamais traduit')}>{tn(n, '{n} poire', '{n} poires')}</span>",
+    '      <p>Aucun personnage pour le moment</p>',
+    '      {n > 1 && <i>Déjà là</i>}',
+    "      {big ? <b>{n}</b> : big ? 'a' : null}",
+    "      <p>{/* t('Commentaire JSX') */}Texte ignoré à dessein</p> {/* i18n-ignore */}",
+    '    </div>',
+    '  );',
+    '}',
+  ].join('\n'));
+  try {
+    const j = runCheck(path.relative(ROOT, file));
+    assert.deepEqual(j.missing.map((m) => m.key).sort(), ['Attribut JSX jamais traduit', 'Clé JSX jamais traduite', '{n} poire', '{n} poires'].sort());
+    assert.deepEqual(j.literals.map((l) => l.text).sort(), ['Aucun personnage pour le moment', 'Déjà là', 'Fermer la fenêtre'].sort(), 'JSX text and title= flagged; code between elements and ignored lines not');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+await test('client files of the i18n foundation exist and are type-checked by tsconfig.json', () => {
+  // These were checked with `node --check` when they were plain JS. The client is TypeScript now and `npm run typecheck`
+  // (tsc) is what validates it: here, the files exist and tsconfig's include/exclude cover them, with strict on.
+  const files = ['client/app.tsx', 'client/lib/i18n.ts', 'client/lib/net.ts', 'client/lib/ui.tsx', 'client/lib/ui-store.ts', 'client/modules/registry.ts', 'client/modules/core/SettingsPage.tsx', 'client/modules/admin/AdminPage.tsx', 'client/modules/admin/FoundryUpload.tsx', 'client/modules/admin/common.tsx', 'client/i18n/format.ts'];
+  // tsconfig.json is JSONC: drop whole-line comments before parsing.
+  const cfg = JSON.parse(fs.readFileSync(path.join(ROOT, 'tsconfig.json'), 'utf8').replace(/^\s*\/\/.*$/gm, '')) as { include: string[]; exclude: string[]; compilerOptions: { strict?: boolean } };
+  assert.equal(cfg.compilerOptions.strict, true);
+  for (const f of files) {
+    assert.ok(fs.existsSync(path.join(ROOT, f)), `${f} exists`);
+    assert.ok(cfg.include.some((inc) => f === inc || f.startsWith(inc + '/')), `${f} is in tsconfig include`);
+    assert.ok(!cfg.exclude.some((ex) => f === ex || f.startsWith(ex + '/')), `${f} is not excluded`);
   }
 });
 

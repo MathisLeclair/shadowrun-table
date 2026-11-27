@@ -16,9 +16,36 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_DIR = path.resolve(__dirname, '..', 'data', 'seed', 'maps');
 
+/**
+ * A parsed map file (or anything else JSON.parse returned). validateMap() checks every field before trusting it, so
+ * the fields and list entries are deliberately loose (`any`): this is untrusted JSON.
+ */
+export interface RawMapInput {
+  [key: string]: any;
+  tiles: any[];
+  doors: any[];
+  lights: any[];
+  regions: any[];
+  notes: any[];
+  tokens: any[];
+}
+/** Summary of a valid map (validateMap). */
+export interface SeedMapStats {
+  size: string;
+  walkable: number;
+  entries: number;
+  doors: number;
+  locked: number;
+  secret: number;
+  looseDoorways: number;
+  lights: number;
+  regions: number;
+  notes: number;
+}
+
 // ---------------------------------------------------------------- legend
 // char -> [blocksMove, blocksSight, label]
-export const LEGEND = {
+export const LEGEND: Record<string, [blocksMove: boolean, blocksSight: boolean, label: string]> = {
   ' ': [true, true, 'vide'],
   '.': [false, false, 'sol intérieur'],
   ',': [false, false, 'sol extérieur'],
@@ -48,23 +75,23 @@ const THEMES = ['street', 'bar', 'corp', 'lab', 'industrial', 'residential', 'ma
 const DISPOSITIONS = ['pc', 'ally', 'neutral', 'hostile'];
 const HEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 
-const isInt = (n) => Number.isInteger(n);
-const isStr = (s) => typeof s === 'string';
-const isBool = (b) => typeof b === 'boolean';
-const blocksMove = (ch) => (LEGEND[ch] ? LEGEND[ch][0] : true);
-const blocksSight = (ch) => (LEGEND[ch] ? LEGEND[ch][1] : true);
+const isInt = (n: unknown): n is number => Number.isInteger(n);
+const isStr = (s: unknown): s is string => typeof s === 'string';
+const isBool = (b: unknown): b is boolean => typeof b === 'boolean';
+const blocksMove = (ch: string): boolean => (LEGEND[ch] ? LEGEND[ch][0] : true);
+const blocksSight = (ch: string): boolean => (LEGEND[ch] ? LEGEND[ch][1] : true);
 
 // ---------------------------------------------------------------- validation
 /**
  * Validate one parsed map. Returns { errors: string[], warnings: string[], stats }.
  * Pure function (exported so other tools/tests can reuse it).
  */
-export function validateMap(map) {
-  const errors = [];
-  const warnings = [];
-  const err = (m) => errors.push(m);
-  const warn = (m) => warnings.push(m);
-  const stats = {};
+export function validateMap(map: RawMapInput | null | undefined): { errors: string[]; warnings: string[]; stats: Partial<SeedMapStats> } {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  const err = (m: string) => errors.push(m);
+  const warn = (m: string) => warnings.push(m);
+  const stats: Partial<SeedMapStats> = {};
 
   if (!map || typeof map !== 'object' || Array.isArray(map)) {
     err('le fichier ne contient pas un objet Map');
@@ -101,12 +128,12 @@ export function validateMap(map) {
 
   const W = map.width;
   const H = map.height;
-  const inside = (x, y) => isInt(x) && isInt(y) && x >= 0 && y >= 0 && x < W && y < H;
+  const inside = (x: number, y: number) => isInt(x) && isInt(y) && x >= 0 && y >= 0 && x < W && y < H;
 
   // --- tiles
   const errorsBeforeTiles = errors.length;
   if (map.tiles.length !== H) err(`tiles : ${map.tiles.length} lignes au lieu de ${H}`);
-  const bad = new Map();
+  const bad = new Map<string, string>();
   map.tiles.forEach((row, y) => {
     if (!isStr(row)) return err(`tiles[${y}] n'est pas une chaîne`);
     if (row.length !== W) err(`tiles[${y}] : ${row.length} caractères au lieu de ${W}`);
@@ -119,18 +146,18 @@ export function validateMap(map) {
   for (const [ch, at] of bad) err(`caractère hors légende ${JSON.stringify(ch)} (premier en ${at})`);
   const gridOk = errors.length === errorsBeforeTiles;
   // Safe accessor even on a malformed grid (short rows / non-strings read as void).
-  const tile = (x, y) => (inside(x, y) && isStr(map.tiles[y]) && x < map.tiles[y].length ? map.tiles[y][x] : ' ');
+  const tile = (x: number, y: number): string => (inside(x, y) && isStr(map.tiles[y]) && x < map.tiles[y].length ? map.tiles[y][x] : ' ');
 
   // --- sub-entity ids unique across the whole map
-  const ids = new Map();
-  const seeId = (kind, i, id) => {
+  const ids = new Map<string, string>();
+  const seeId = (kind: string, i: number, id: unknown) => {
     if (!isStr(id) || !id) return err(`${kind}[${i}] : id manquant`);
     if (ids.has(id)) err(`id dupliqué « ${id} » (${ids.get(id)} et ${kind}[${i}])`);
     else ids.set(id, `${kind}[${i}]`);
   };
 
   // --- doors
-  const doorAt = new Map();
+  const doorAt = new Map<string, unknown>();
   map.doors.forEach((d, i) => {
     const tag = `doors[${i}]${d && d.id ? ` (${d.id})` : ''}`;
     seeId('doors', i, d && d.id);
@@ -144,7 +171,7 @@ export function validateMap(map) {
     if (doorAt.has(k)) err(`${tag} : deux portes sur la même case ${k}`);
     doorAt.set(k, d);
     // A door should sit in a wall line: blocked on both sides along one axis.
-    const wallish = (x, y) => blocksMove(tile(x, y)) || tile(x, y) === 'D';
+    const wallish = (x: number, y: number) => blocksMove(tile(x, y)) || tile(x, y) === 'D';
     const horiz = wallish(d.x - 1, d.y) && wallish(d.x + 1, d.y);
     const vert = wallish(d.x, d.y - 1) && wallish(d.x, d.y + 1);
     if (!horiz && !vert) warn(`${tag} en ${k} n'est encadrée par aucun mur (porte « en plein champ »)`);
@@ -199,10 +226,10 @@ export function validateMap(map) {
 
   // --- reachability: flood from every entry point, doors (even locked/secret) count as passable
   if (!gridOk) return { errors, warnings, stats };
-  const walk = (x, y) => !blocksMove(tile(x, y));
+  const walk = (x: number, y: number) => !blocksMove(tile(x, y));
   const seen = new Uint8Array(W * H);
-  const queue = [];
-  const push = (x, y) => {
+  const queue: number[] = [];
+  const push = (x: number, y: number) => {
     const k = y * W + x;
     if (!seen[k] && walk(x, y)) {
       seen[k] = 1;
@@ -236,7 +263,7 @@ export function validateMap(map) {
     if (y > 0) push(x, y - 1);
   }
   // group unreached cells into pockets
-  const pockets = [];
+  const pockets: Array<{ x: number; y: number; size: number }> = [];
   const pseen = new Uint8Array(W * H);
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
@@ -278,7 +305,7 @@ export function validateMap(map) {
 }
 
 // ---------------------------------------------------------------- preview
-const ANSI = {
+const ANSI: Record<string, string> = {
   reset: '\x1b[0m',
   dim: '\x1b[2m',
   cyan: '\x1b[36m',
@@ -290,16 +317,16 @@ const ANSI = {
   white: '\x1b[97m',
   grey: '\x1b[90m',
 };
-const TILE_COLOR = {
+const TILE_COLOR: Record<string, string> = {
   '#': 'white', W: 'cyan', '=': 'amber', T: 'amber', c: 'amber', o: 'white', m: 'magenta', v: 'blue', b: 'amber',
   s: 'green', e: 'green', '~': 'blue', g: 'green', t: 'green', r: 'grey', x: 'red', _: 'magenta', '.': 'grey', ',': 'dim',
 };
 
 /** Render an ASCII preview. Doors are overlaid by state: / open, + closed, L locked, S secret; lights '*', notes '!'. */
-export function renderPreview(map, { color = false, overlay = true } = {}) {
+export function renderPreview(map: RawMapInput, { color = false, overlay = true }: { color?: boolean; overlay?: boolean } = {}): string {
   const W = map.width;
-  const grid = map.tiles.map((r) => [...r]);
-  const over = new Map();
+  const grid: string[][] = map.tiles.map((r) => [...r]);
+  const over = new Map<string, [string, string]>();
   if (overlay) {
     for (const l of map.lights || []) over.set(`${l.x},${l.y}`, ['*', l.on ? 'amber' : 'grey']);
     for (const n of map.notes || []) over.set(`${n.x},${n.y}`, ['!', 'red']);
@@ -308,7 +335,7 @@ export function renderPreview(map, { color = false, overlay = true } = {}) {
       over.set(`${d.x},${d.y}`, [ch, d.kind === 'secret' ? 'magenta' : d.state === 'locked' ? 'red' : 'cyan']);
     }
   }
-  const paint = (ch, c) => (color && c ? ANSI[c] + ch + ANSI.reset : ch);
+  const paint = (ch: string, c: string | undefined) => (color && c ? ANSI[c] + ch + ANSI.reset : ch);
   const tens = '    ' + Array.from({ length: W }, (_, x) => (x % 10 === 0 ? String(Math.floor(x / 10) % 10) : ' ')).join('');
   const ones = '    ' + Array.from({ length: W }, (_, x) => String(x % 10)).join('');
   const lines = [tens, ones];
@@ -324,8 +351,8 @@ export function renderPreview(map, { color = false, overlay = true } = {}) {
   return lines.join('\n');
 }
 
-function describe(map) {
-  const out = [];
+function describe(map: RawMapInput): string {
+  const out: string[] = [];
   out.push(`  Portes : / ouverte  + fermée  L verrouillée  S secrète  (D sans entrée = passage libre)   * lumière   ! note MJ`);
   for (const r of map.regions || []) out.push(`  [zone] ${r.name}${r.gmOnly ? ' (MJ)' : ''} — ${r.x},${r.y} ${r.w}×${r.h}`);
   for (const d of map.doors || []) out.push(`  [porte] ${d.id} ${d.x},${d.y} ${d.kind}/${d.state}${d.name ? ` « ${d.name} »` : ''}`);
@@ -335,12 +362,12 @@ function describe(map) {
 }
 
 // ---------------------------------------------------------------- CLI
-function main(argv) {
+function main(argv: string[]): number {
   const args = argv.slice(2);
   let dir = DEFAULT_DIR;
-  let preview = null;
+  let preview: string | null | undefined = null;
   let strict = false;
-  let color = process.stdout.isTTY && !process.env.NO_COLOR;
+  let color = !!process.stdout.isTTY && !process.env.NO_COLOR;
   for (let i = 0; i < args.length; i++) {
     const a = args[i];
     if (a === '--preview') preview = args[++i];
@@ -369,15 +396,16 @@ function main(argv) {
 
   let nErr = 0;
   let nWarn = 0;
-  const byId = new Map();
-  const loaded = [];
+  const byId = new Map<string, string>();
+  // Parsed map files (validated by validateMap before any use).
+  const loaded: Array<{ file: string; map: any; ok: boolean }> = [];
   for (const f of files) {
     const full = path.join(dir, f);
-    let map;
+    let map: any; // parsed JSON, validated below
     try {
       map = JSON.parse(fs.readFileSync(full, 'utf8'));
     } catch (e) {
-      console.log(`✗ ${f}\n    ERREUR JSON illisible : ${e.message}`);
+      console.log(`✗ ${f}\n    ERREUR JSON illisible : ${(e as Error).message}`);
       nErr++;
       continue;
     }

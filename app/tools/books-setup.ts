@@ -21,47 +21,69 @@ import { QUICK_LINKS } from '../client/modules/books/quicklinks.ts';
 import { indexBook } from '../server/lib/books/indexer.ts';
 import { printedToPdf } from '../server/lib/books/offsets.ts';
 import { fold } from '../server/lib/books/search.ts';
+import type { LibraryBook } from '../server/lib/books/library.ts';
+import type { CatalogItem } from '../shared/types.ts';
+
+/** A book name entry of server/lib/books/book-names.json. */
+interface BookName {
+  name: string;
+  nameFr: string;
+  /** Chummer's reference sentence (en-us) and its printed page. */
+  match?: { text: string; page: number };
+}
+/** guessCode() result: a book code, `extra` when it is not a Chummer book (then `name` is made from the file name). */
+interface GuessedCode {
+  code: string;
+  extra: boolean;
+  name?: string;
+}
+/** Foundry hints: { CODE: offset | null } plus { 'file:<pdf name>': CODE }. */
+type FoundryHints = Record<string, number | string | null>;
+/** A row of printTable(): a library entry plus what indexing found. */
+type TableRow = LibraryBook & { numbered?: number; matchPdfPage?: number | null };
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
-const has = (n) => args.includes(`--${n}`);
-const val = (n) => {
+const has = (n: string) => args.includes(`--${n}`);
+const val = (n: string): string | null => {
   const a = args.find((x) => x.startsWith(`--${n}=`));
   if (a) return a.slice(n.length + 3);
   const i = args.indexOf(`--${n}`);
   return i >= 0 && args[i + 1] && !args[i + 1].startsWith('--') ? args[i + 1] : null;
 };
-const vals = (n) => args.flatMap((a, i) => (a === `--${n}` && args[i + 1] ? [args[i + 1]] : a.startsWith(`--${n}=`) ? [a.slice(n.length + 3)] : []));
+const vals = (n: string): string[] => args.flatMap((a, i) => (a === `--${n}` && args[i + 1] ? [args[i + 1]] : a.startsWith(`--${n}=`) ? [a.slice(n.length + 3)] : []));
 
 const runtime = path.resolve(val('runtime') || process.env.SR_RUNTIME_DIR || path.join(ROOT, 'data'));
 const BOOKS = path.resolve(val('books') || (val('runtime') ? path.join(runtime, 'books') : process.env.SR_BOOKS_DIR || path.join(runtime, 'books')));
 const only = (val('only') || '').split(',').map(cleanCode).filter(Boolean);
 const quiet = has('quiet');
-const log = (...a) => !quiet && console.log(...a);
+const log = (...a: unknown[]) => !quiet && console.log(...a);
 
 // ---------------------------------------------------------------------------
 // --names: book names from Chummer (books.xml + lang/fr-fr_data.xml)
 // ---------------------------------------------------------------------------
-function buildNames(dataDir) {
+function buildNames(dataDir: string): Record<string, BookName> {
   const parser = new XMLParser({ ignoreAttributes: true, isArray: (n) => ['book', 'match'].includes(n) });
-  const xml = parser.parse(fs.readFileSync(path.join(dataDir, 'books.xml'), 'utf8'));
+  // Parsed Chummer XML: dynamic shape.
+  const xml: any = parser.parse(fs.readFileSync(path.join(dataDir, 'books.xml'), 'utf8'));
   const frFile = path.join(dataDir, '..', 'lang', 'fr-fr_data.xml');
-  const frById = {};
+  const frById: Record<string, string> = {};
   if (fs.existsSync(frFile)) {
-    const fr = parser.parse(fs.readFileSync(frFile, 'utf8'));
-    const list = fr?.chummer?.chummer?.find?.((c) => c?.books)?.books?.book || findBooks(fr);
+    const fr: any = parser.parse(fs.readFileSync(frFile, 'utf8'));
+    const list = fr?.chummer?.chummer?.find?.((c: any) => c?.books)?.books?.book || findBooks(fr);
     for (const b of list || []) if (b?.id) frById[b.id] = String(b.translate || '').replace(/[\u200b\u200c\u200d]/g, '');
   }
-  const out = {};
+  const out: Record<string, BookName> = {};
   for (const b of xml.chummer.books.book) {
     const code = cleanCode(b.code);
     if (!code) continue;
-    const m = (b.matches?.match || []).find((x) => x.language === 'en-us');
+    const m = (b.matches?.match || []).find((x: any) => x.language === 'en-us');
     out[code] = { name: String(b.name), nameFr: frById[b.id] || String(b.name), ...(m ? { match: { text: String(m.text), page: Number(m.page) } } : {}) };
   }
   return out;
 }
-function findBooks(node) {
+/** Parsed XML tree (dynamic) → the <book> list, or null. */
+function findBooks(node: any): any[] | null {
   // fr-fr_data.xml: <chummer><chummer file="books.xml"><books><book>… — search the tree for it.
   if (!node || typeof node !== 'object') return null;
   if (Array.isArray(node)) {
@@ -82,7 +104,7 @@ function findBooks(node) {
 // ---------------------------------------------------------------------------
 // File name → book code
 // ---------------------------------------------------------------------------
-const normName = (s) =>
+const normName = (s: string) =>
   fold(s)
     .replace(/\.pdf$/i, '')
     .replace(/[()[\]]/g, '')
@@ -90,14 +112,14 @@ const normName = (s) =>
     .replace(/&|\band\b/g, ' ')
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();
-const ALIASES = [
+const ALIASES: Array<[RegExp, string]> = [
   [/core ?rules|corerulebook|^\s*$/, 'SR5'],
 ];
-export function guessCode(fileName, known = knownBooks()) {
+export function guessCode(fileName: string, known = knownBooks()): GuessedCode {
   const raw = path.basename(fileName);
   const n = normName(raw.replace(/^\[Shadowrun\]\s*5thEdition/i, 'core rules'));
   for (const [re, code] of ALIASES) if (re.test(n)) return { code, extra: false };
-  let best = null;
+  let best: { code: string; len: number } | null = null;
   for (const [code, b] of Object.entries(known)) {
     const kn = normName(b.name);
     if (!kn) continue;
@@ -113,9 +135,10 @@ export function guessCode(fileName, known = knownBooks()) {
 // ---------------------------------------------------------------------------
 // Foundry world hints (pdfoundry / pdf-pager journal flags): { CODE: offset|null }
 // ---------------------------------------------------------------------------
-async function foundryHints(worldDir) {
-  const hints = {};
-  const add = (doc) => {
+async function foundryHints(worldDir: string): Promise<FoundryHints> {
+  const hints: FoundryHints = {};
+  // A Foundry journal document (raw JSON).
+  const add = (doc: any) => {
     const pd = doc?.flags?.pdfoundry?.PDFData;
     const pp = doc?.flags?.['pdf-pager'];
     for (const [code, off, url] of [[pd?.code, pd?.offset, pd?.url], [pp?.code, pp?.pageOffset, null]]) {
@@ -140,7 +163,7 @@ async function foundryHints(worldDir) {
       }
       await db.close();
     } catch (err) {
-      log(`  (journal LevelDB illisible : ${err.message})`);
+      log(`  (journal LevelDB illisible : ${(err as Error).message})`);
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }
@@ -170,7 +193,7 @@ export const REFERENCES = [
   { code: 'SR5', page: 281, text: 'Spellcasting', what: 'Lancement de sorts' },
 ];
 
-function pageHas(dir, book, printed, text) {
+function pageHas(dir: string, book: LibraryBook, printed: number, text: string) {
   const idx = loadIndex(dir, book.code);
   if (!idx) return null;
   const p = printedToPdf(book, printed);
@@ -178,23 +201,23 @@ function pageHas(dir, book, printed, text) {
 }
 
 /** Catalog evidence: share of catalog items (source=code, page) whose name is on the mapped PDF page, per candidate shift. */
-function catalogEvidence(dir, book) {
+function catalogEvidence(dir: string, book: LibraryBook) {
   const idx = loadIndex(dir, book.code);
   if (!idx) return null;
   const catDir = path.join(ROOT, 'data', 'catalog');
-  let items = [];
+  const found: CatalogItem[] = [];
   for (const f of fs.existsSync(catDir) ? fs.readdirSync(catDir) : []) {
     if (!f.endsWith('.json') || f === 'index.json') continue;
     try {
       const j = JSON.parse(fs.readFileSync(path.join(catDir, f), 'utf8'));
-      items.push(...(Array.isArray(j) ? j : j.items || []).filter((x) => x && x.source === book.code && Number(x.page) > 0 && x.name));
+      found.push(...(Array.isArray(j) ? j : j.items || []).filter((x: CatalogItem) => x && x.source === book.code && Number(x.page) > 0 && x.name));
     } catch {}
   }
   // Use the first words of the name (catalog names carry ratings / variants: « Zoé: Heritage 4 »).
-  items = items.map((x) => ({ page: Number(x.page), needle: fold(String(x.name).replace(/\(.*?\)|\b\d+\b/g, ' ')).replace(/\s+/g, ' ').trim().split(' ').slice(0, 3).join(' ') }))
+  const items = found.map((x) => ({ page: Number(x.page), needle: fold(String(x.name).replace(/\(.*?\)|\b\d+\b/g, ' ')).replace(/\s+/g, ' ').trim().split(' ').slice(0, 3).join(' ') }))
     .filter((x) => x.needle.length >= 4);
   if (!items.length) return null;
-  const score = (shift) => {
+  const score = (shift: number) => {
     let ok = 0;
     for (const it of items) {
       const p = printedToPdf(book, it.page);
@@ -211,7 +234,7 @@ function catalogEvidence(dir, book) {
   return { ...res, best };
 }
 
-function runChecks(dir) {
+function runChecks(dir: string) {
   const lib = readLibrary(dir);
   const byCode = Object.fromEntries(lib.books.map((b) => [b.code, b]));
   let failures = 0;
@@ -235,7 +258,7 @@ function runChecks(dir) {
       continue;
     }
     const idx = loadIndex(dir, b.code);
-    const ok = !!idx && (idx.texts[printedToPdf(b, q.page) - 1] || '').includes(q.heading);
+    const ok = !!idx && (idx.texts[(printedToPdf(b, q.page) ?? 0) - 1] || '').includes(q.heading);
     if (!ok) failures++;
     console.log(`  ${ok ? 'OK  ' : 'FAIL'} ${q.code} p.${q.page} « ${q.heading} »`);
   }
@@ -251,7 +274,7 @@ function runChecks(dir) {
 }
 
 // ---------------------------------------------------------------------------
-function printTable(rows, hints = {}) {
+function printTable(rows: TableRow[], hints: FoundryHints = {}) {
   const head = ['code', 'pages', 'offset(s)', 'confiance', 'Chummer', 'Foundry', 'nom'];
   const lines = rows.map((b) => [
     b.code,
@@ -263,13 +286,13 @@ function printTable(rows, hints = {}) {
     b.name + (b.extra ? ' (extra)' : ''),
   ]);
   const w = head.map((h, i) => Math.max(h.length, ...lines.map((l) => l[i].length)));
-  const fmt = (l) => l.map((c, i) => c.padEnd(w[i])).join('  ');
+  const fmt = (l: string[]) => l.map((c, i) => c.padEnd(w[i])).join('  ');
   console.log(fmt(head));
   console.log(w.map((n) => '-'.repeat(n)).join('  '));
   for (const l of lines) console.log(fmt(l));
 }
 
-async function indexOne(code, meta) {
+async function indexOne(code: string, meta: Partial<LibraryBook>) {
   const t0 = Date.now();
   let last = 0;
   const r = await indexBook(BOOKS, code, {
@@ -298,17 +321,19 @@ async function main() {
   }
   fs.mkdirSync(BOOKS, { recursive: true });
   log(`Bibliothèque : ${BOOKS}`);
-  const hints = val('foundry') ? await foundryHints(path.resolve(val('foundry'))) : {};
-  const rows = [];
+  const hints = val('foundry') ? await foundryHints(path.resolve(val('foundry')!)) : {};
+  const rows: Array<Awaited<ReturnType<typeof indexOne>>> = [];
 
   if (val('from')) {
-    const from = path.resolve(val('from'));
+    const from = path.resolve(val('from')!);
     const overrides = Object.fromEntries(vals('map').map((m) => m.split('=')).filter((p) => p.length === 2).map(([f, c]) => [f.toLowerCase(), cleanCode(c)]));
     const files = fs.readdirSync(from).filter((f) => f.toLowerCase().endsWith('.pdf')).sort();
     if (!files.length) throw new Error(`Aucun PDF dans ${from}`);
-    const used = new Set();
+    const used = new Set<string>();
     for (const f of files) {
-      const g = overrides[f.toLowerCase()] ? { code: overrides[f.toLowerCase()], extra: !knownBooks()[overrides[f.toLowerCase()]] } : hints[`file:${f}`] ? { code: hints[`file:${f}`], extra: !knownBooks()[hints[`file:${f}`]] } : guessCode(f);
+      const override = overrides[f.toLowerCase()];
+      const hinted = hints[`file:${f}`] as string | null | undefined;
+      const g: GuessedCode = override ? { code: override, extra: !knownBooks()[override] } : hinted ? { code: hinted, extra: !knownBooks()[hinted] } : guessCode(f);
       if (!g.code || used.has(g.code)) {
         console.warn(`  ! ${f} : code ${g.code || '?'} déjà pris ou inconnu — utilise --map "${f}=CODE"`);
         continue;
@@ -336,9 +361,9 @@ async function main() {
 
   // Tidy the library (sort, normalize) and print it.
   const lib = writeLibrary(BOOKS, readLibrary(BOOKS));
-  const printed = rows.length ? rows : lib.books;
+  const printed: Array<Partial<LibraryBook> & { numbered?: number; matchPdfPage?: number | null }> = rows.length ? rows : lib.books;
   console.log('');
-  printTable(printed.map((r) => ({ ...lib.books.find((b) => b.code === r.code), numbered: r.numbered, matchPdfPage: r.matchPdfPage })), hints);
+  printTable(printed.map((r) => ({ ...lib.books.find((b) => b.code === r.code), numbered: r.numbered, matchPdfPage: r.matchPdfPage })) as TableRow[], hints);
   if (has('list')) return;
   const failures = runChecks(BOOKS);
   if (failures) console.log(`\n${failures} vérification(s) à revoir.`);

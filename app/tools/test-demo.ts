@@ -8,19 +8,23 @@ import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
 import { startServer, login, client, settle } from './test-client.ts';
+import type { TestClient, TestServer } from './test-client.ts';
+import type { Table } from '../server/lib/tables.ts';
+import type { Campaign, DeviceLink } from '../shared/types.ts';
 
 let passed = 0;
 let failed = 0;
-const ok = (cond, msg) => {
+const ok = (cond: unknown, msg: string): void => {
   if (cond) passed++;
   else {
     failed++;
     console.log('  ✗ ' + msg);
   }
 };
-const section = (s) => console.log('• ' + s);
-const H = (token, table, extra = {}) => ({ Authorization: `Bearer ${token}`, ...(table ? { 'X-SR-Table': table } : {}), ...extra });
-const json = async (r) => {
+const section = (s: string) => console.log('• ' + s);
+const H = (token: string, table: string | null, extra: Record<string, string> = {}): Record<string, string> => ({ Authorization: `Bearer ${token}`, ...(table ? { 'X-SR-Table': table } : {}), ...extra });
+// Responses of many routes are read loosely (and non-JSON bodies come back as { raw }).
+const json = async (r: Response): Promise<any> => {
   const t = await r.text();
   try {
     return JSON.parse(t);
@@ -28,17 +32,18 @@ const json = async (r) => {
     return { raw: t };
   }
 };
-const rejects = async (p, re, msg) => {
+const rejects = async (p: Promise<unknown>, re: RegExp, msg: string) => {
   try {
     await p;
     ok(false, msg + ' (no error)');
-  } catch (err) {
+  } catch (e) {
+    const err = e as Error;
     ok(re.test(err.message), `${msg} (got: ${err.message})`);
   }
 };
-const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const wait = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 /** Poll until fn() is truthy (or timeout). */
-async function until(fn, ms = 8000) {
+async function until(fn: () => unknown, ms = 8000): Promise<boolean> {
   const end = Date.now() + ms;
   while (Date.now() < end) {
     if (await fn()) return true;
@@ -46,7 +51,7 @@ async function until(fn, ms = 8000) {
   }
   return false;
 }
-const png = (bytes) => Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(Math.max(0, bytes - 8), 1)]);
+const png = (bytes: number) => Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(Math.max(0, bytes - 8), 1)]);
 
 const runtime = fs.mkdtempSync(path.join(os.tmpdir(), 'sr-test-demo-'));
 // The assistant settings enable BOTH tables: the demo must refuse anyway.
@@ -62,17 +67,18 @@ const ENV = {
   SR_DEMO_MAX_USERS: '4',
   SR_DEMO_LOGIN_MAX: '40',
 };
-let srv = null;
-const sockets = [];
-const track = (c) => (sockets.push(c), c);
+let srv: TestServer | null = null;
+const sockets: TestClient[] = [];
+const track = (c: TestClient) => (sockets.push(c), c);
 
 try {
   srv = await startServer({ port: 3960, runtime, keepRuntime: true, env: ENV, tables: [{ id: 'alpha', pack: 'vierge', gmPassword: 'alpha-pw', hidden: true }] });
-  const url = srv.url;
+  const url: string = srv.url;
 
   // -------------------------------------------------------------------------
   section('creation from the demo pack');
-  const reg = JSON.parse(fs.readFileSync(path.join(runtime, 'server.json'), 'utf8'));
+  // server.json registry, read raw.
+  const reg: { tables: Array<{ id: string; demo?: boolean; pack?: string; hidden?: boolean }> } = JSON.parse(fs.readFileSync(path.join(runtime, 'server.json'), 'utf8'));
   const meta = reg.tables.find((t) => t.id === 'demo');
   ok(meta && meta.demo === true && meta.pack === 'demo' && !meta.hidden, 'SR_DEMO_TABLE created a visible demo table with the demo pack: ' + JSON.stringify(meta));
   const gmTok = await login(url, { role: 'gm', table: 'demo' }); // no password
@@ -86,9 +92,10 @@ try {
   ok(st.scene.activeMapId === 'map_demo_entrepot' && st.maps.map_demo_entrepot.tokens.length >= 8, 'warehouse map is active with its tokens');
   ok(!!st.maps.map_demo_bar, 'map-library copy present');
   const host = st.matrix?.hosts?.host_demo_entrepot;
-  ok(host && host.devices.some((d) => d.link?.mapId === 'map_demo_entrepot'), 'Matrix host with map-linked devices');
+  ok(host && host.devices.some((d) => (d.link as DeviceLink | undefined)?.mapId === 'map_demo_entrepot'), 'Matrix host with map-linked devices');
   ok(!!st.bestiary?.tpl_street_ganger && !!st.bestiary?.tpl_spider_junior, 'vierge bestiary layered under the demo pack');
-  ok(st.campaign?.acts?.some((a) => a.id === 'act_demo') && st.campaign?.handouts?.some((h) => h.id === 'ho_demo_brief'), 'demo scenario (act, handout)');
+  const campaign = st.campaign as Campaign; // GM view: the full campaign
+  ok(campaign?.acts?.some((a) => a.id === 'act_demo') && campaign?.handouts?.some((h) => h.id === 'ho_demo_brief'), 'demo scenario (act, handout)');
   ok(!JSON.stringify(st).includes('Lazarus'), 'no Project Lazarus content in the demo state');
   ok(st.config.table?.demo === true, 'view config carries the demo flag');
 
@@ -109,7 +116,7 @@ try {
   const bob = await login(url, { role: 'player', name: 'Bob', characterId: 'pc_demo_decker', table: 'demo' });
   ok(!!bob, 'two players may share a pre-made PC');
   const alice = track(await client(url, p1, { table: 'demo' }));
-  ok(alice.state.users && Object.values(gm.state.users || {}).every((u) => !u.pin), 'no PIN stored');
+  ok(alice.state.users && Object.values(gm.state.users || {}).every((u) => !(u as { pin?: unknown }).pin), 'no PIN stored');
   await login(url, { role: 'player', name: 'Chloé', table: 'demo' });
   await login(url, { role: 'player', name: 'Dan', table: 'demo' });
   await rejects(login(url, { role: 'player', name: 'Eve', table: 'demo' }), /pleine/, 'user cap (SR_DEMO_MAX_USERS=4)');
@@ -126,7 +133,7 @@ try {
   ok(statusA.enabled === true, 'a real table keeps its assistant setting');
   const adminTok = await srv.admin();
   const asst = await json(await fetch(url + '/api/admin/assistant', { method: 'PATCH', headers: H(adminTok, null, { 'content-type': 'application/json' }), body: JSON.stringify({ enabledTables: ['demo', 'alpha'] }) }));
-  ok(!asst.settings.enabledTables.includes('demo') && asst.settings.enabledTables.includes('alpha') && !asst.tables.some((t) => t.id === 'demo'), 'admin cannot enable the assistant on the demo');
+  ok(!asst.settings.enabledTables.includes('demo') && asst.settings.enabledTables.includes('alpha') && !asst.tables.some((t: { id: string }) => t.id === 'demo'), 'admin cannot enable the assistant on the demo');
   for (const [p, m] of [['/api/books/search?q=test', 'GET'], ['/api/books/SR5/page/1', 'GET'], ['/api/books/SR5/file', 'GET'], ['/api/foundry/uploads', 'GET'], ['/api/foundry/upload', 'POST'], ['/api/admin/backup', 'POST'], ['/api/maplib', 'GET'], ['/api/maplib/dive-bar', 'GET']]) {
     const r = await fetch(url + p, { method: m, headers: H(gmTok, 'demo') });
     const j = await json(r);
@@ -150,7 +157,7 @@ try {
 
   // -------------------------------------------------------------------------
   section('uploads and body caps');
-  const up = (tok, table, name, buf, extra = {}) => fetch(url + '/api/upload', { method: 'POST', headers: H(tok, table, { 'X-Filename': name, 'content-type': 'application/octet-stream', ...extra }), body: buf });
+  const up = (tok: string, table: string, name: string, buf: Buffer, extra: Record<string, string> = {}) => fetch(url + '/api/upload', { method: 'POST', headers: H(tok, table, { 'X-Filename': name, 'content-type': 'application/octet-stream', ...extra }), body: new Uint8Array(buf) });
   const u1 = await up(gmTok, 'demo', 'a.png', png(500 * 1024));
   ok(u1.status === 200, 'small image accepted: ' + u1.status);
   ok((await up(gmTok, 'demo', 'x.svg', Buffer.from('<svg/>'))).status === 400, 'SVG refused on the demo');
@@ -161,10 +168,10 @@ try {
   const full = await up(gmTok, 'demo', 'c.png', png(300 * 1024));
   ok(full.status === 400 && /plein/.test((await json(full)).error || ''), 'upload quota enforced: ' + full.status);
   // Chunked body without Content-Length: refused before reading.
-  const chunked = await new Promise((resolve) => {
+  const chunked = await new Promise<number>((resolve) => {
     const req = http.request(url + '/api/upload', { method: 'POST', headers: { ...H(gmTok, 'demo'), 'X-Filename': 'd.png', 'Transfer-Encoding': 'chunked' } }, (res) => {
       res.resume();
-      resolve(res.statusCode);
+      resolve(res.statusCode ?? 0);
     });
     req.on('error', () => resolve(0));
     req.write(png(1000));
@@ -189,7 +196,7 @@ try {
   // -------------------------------------------------------------------------
   section('idle reset');
   const gmB = track(await client(url, gmTok, { table: 'demo' })); // fresh socket: the rate limit is per socket
-  const created = await gmB.send('actor/create', { type: 'npc', name: 'Intrus de passage' });
+  const created = await gmB.send<string>('actor/create', { type: 'npc', name: 'Intrus de passage' });
   await gmB.send('maps/moveToken', { mapId: 'map_demo_entrepot', tokenId: 'tok_pc_demo_samurai', x: 6, y: 9 }).catch(() => {});
   await settle();
   ok(!!gmB.state.actors[created], 'change made');
@@ -202,21 +209,22 @@ try {
     return !s.actors[created];
   }, 10000);
   ok(reset, 'demo table reset after SR_DEMO_IDLE_MINUTES with nobody connected');
-  const after = JSON.parse(fs.readFileSync(path.join(runtime, 'tables', 'demo', 'state.json'), 'utf8'));
+  // Raw state files on disk (any: read as JSON).
+  const after: any = JSON.parse(fs.readFileSync(path.join(runtime, 'tables', 'demo', 'state.json'), 'utf8'));
   ok(Object.keys(after.users || {}).length === 0 && Object.keys(after.sessions || {}).length === 0, 'users and sessions wiped');
-  ok(!after.log.some((e) => /Salut la démo/.test(e.text || '')), 'chat log wiped');
+  ok(!after.log.some((e: { text?: string }) => /Salut la démo/.test(e.text || '')), 'chat log wiped');
   ok(Object.keys(after.actors).filter((id) => id.startsWith('pc_demo_')).length === 4, 'pre-made PCs back');
   ok(fs.readdirSync(uploads).length === 0, 'uploads emptied');
   ok((await fetch(url + '/api/me', { headers: H(gmTok, 'demo') })).status === 401, 'old tokens no longer work');
   ok(!fs.existsSync(path.join(runtime, 'tables', 'demo', 'backups')) || fs.readdirSync(path.join(runtime, 'tables', 'demo', 'backups')).length === 0, 'no backups kept for the demo');
-  const alphaState = JSON.parse(fs.readFileSync(path.join(runtime, 'tables', 'alpha', 'state.json'), 'utf8'));
-  ok(alphaState.log.some((e) => (e.text || '').length === 1500), 'the real table is untouched by the demo reset');
+  const alphaState: any = JSON.parse(fs.readFileSync(path.join(runtime, 'tables', 'alpha', 'state.json'), 'utf8'));
+  ok(alphaState.log.some((e: { text?: string }) => (e.text || '').length === 1500), 'the real table is untouched by the demo reset');
 
   // -------------------------------------------------------------------------
   section('GM reset (Réglages) on the demo');
   const gm2Tok = await login(url, { role: 'gm', table: 'demo' });
   const gm2 = track(await client(url, gm2Tok, { table: 'demo' }));
-  const extra = await gm2.send('actor/create', { type: 'npc', name: 'Encore un' });
+  const extra = await gm2.send<string>('actor/create', { type: 'npc', name: 'Encore un' });
   const r = await fetch(url + '/api/admin/reset', { method: 'POST', headers: H(gm2Tok, 'demo') });
   const rj = await json(r);
   ok(r.ok && rj.demo === true, 'GM reset answers as a demo reset');
@@ -232,7 +240,7 @@ try {
     try {
       await login(url, { role: 'gm', table: 'demo' });
     } catch (err) {
-      throttled = /Trop de tentatives/.test(err.message);
+      throttled = /Trop de tentatives/.test((err as Error).message);
     }
   }
   ok(throttled, 'demo logins are throttled per IP');
@@ -243,7 +251,7 @@ try {
   {
     // Dirty the demo directly on disk, then restart with SR_DEMO_TABLE pointing at the real table.
     const file = path.join(runtime, 'tables', 'demo', 'state.json');
-    const s = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const s: any = JSON.parse(fs.readFileSync(file, 'utf8'));
     s.actors.npc_left_over = { ...s.actors.pc_demo_face, id: 'npc_left_over', type: 'npc', name: 'Reste' };
     await srv.stopAndWait({ keep: true });
     fs.writeFileSync(file, JSON.stringify(s));
@@ -262,7 +270,8 @@ try {
     const demo = await import('../server/lib/demo.ts');
     const tmp = path.join(runtime, 'fake-state.json');
     fs.writeFileSync(tmp, '{}');
-    const fake = { id: 'fake', meta: { demo: true }, store: { stateFile: tmp } };
+    // Only the fields the reset rules read: a partial Table.
+    const fake = { id: 'fake', meta: { demo: true }, store: { stateFile: tmp } } as unknown as Table;
     demo.touchDemo(fake);
     ok(demo.resetReason(fake, { online: 1 }) === (demo.DEMO.resetHour === null ? null : 'nightly'), 'nobody-idle rule needs nobody online');
     ok(demo.resetReason(fake, { online: 0, now: Date.now() + demo.DEMO.idleMs + 1 }) === 'idle', 'idle rule');
@@ -278,7 +287,7 @@ try {
     const upDir = path.join(runtime, 'fake-uploads');
     fs.mkdirSync(upDir, { recursive: true });
     fs.writeFileSync(path.join(upDir, 'big.png'), Buffer.alloc(2 * demo.DEMO.uploadQuotaBytes + 10));
-    ok(demo.resetReason({ ...fake, uploadDir: upDir }, { online: 3 }) === 'size', 'an overfull uploads folder triggers a reset');
+    ok(demo.resetReason({ ...fake, uploadDir: upDir } as Table, { online: 3 }) === 'size', 'an overfull uploads folder triggers a reset');
   }
 } catch (err) {
   failed++;

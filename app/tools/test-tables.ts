@@ -6,41 +6,47 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { startServer, login, client, settle } from './test-client.ts';
+import type { TestClient, TestServer } from './test-client.ts';
+import type { Campaign } from '../shared/types.ts';
 import { writeZipFile, listZip, extractZip, safeEntryPath, ZipError } from '../server/lib/zip.ts';
 
 let passed = 0;
 let failed = 0;
-const ok = (cond, msg) => {
+const ok = (cond: unknown, msg: string) => {
   if (cond) passed++;
   else {
     failed++;
     console.log('  ✗ ' + msg);
   }
 };
-const section = (s) => console.log('• ' + s);
+const section = (s: string) => console.log('• ' + s);
 const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'sr-test-tables-'));
-const servers = [];
-const sockets = [];
-const track = (c) => (sockets.push(c), c);
-const H = (token, extra = {}) => ({ Authorization: `Bearer ${token}`, ...extra });
-async function json(res) {
+const servers: TestServer[] = [];
+const sockets: TestClient[] = [];
+const track = (c: TestClient) => (sockets.push(c), c);
+/** Session token a client connected with. */
+const tokenOf = (c: TestClient) => (c.socket.auth as { token: string }).token;
+const H = (token: string, extra: Record<string, string> = {}) => ({ Authorization: `Bearer ${token}`, ...extra });
+/** Parsed JSON body of an HTTP response: shapes vary per route, hence `any`. */
+async function json<T = any>(res: Response): Promise<T> {
   const t = await res.text();
   try {
     return JSON.parse(t);
   } catch {
-    return { raw: t };
+    return { raw: t } as T;
   }
 }
-async function rejects(p, re, msg) {
+async function rejects(p: Promise<unknown>, re: RegExp, msg: string) {
   try {
     await p;
     ok(false, msg + ' (no error)');
   } catch (err) {
-    ok(re.test(err.message), `${msg} (got: ${err.message})`);
+    const m = (err as Error).message;
+    ok(re.test(m), `${msg} (got: ${m})`);
   }
 }
 
-const actor = (id, name, extra = {}) => ({
+const actor = (id: string, name: string, extra: object = {}) => ({
   id, type: 'pc', name, metatype: 'Humain', color: '#3fd6d0',
   attributes: { BOD: 3, AGI: 4, REA: 3, STR: 3, WIL: 3, LOG: 3, INT: 3, CHA: 3, EDG: 3, ESS: 6 },
   condition: { physical: 0, stun: 0, overflow: 0 }, edge: { current: 3 },
@@ -48,7 +54,16 @@ const actor = (id, name, extra = {}) => ({
   karma: 0, karmaTotal: 0, nuyen: 0, history: [], ...extra,
 });
 /** Same map id in both tables; only alpha has a wall between the PC and the NPC. */
-function tableState(name, gmPassword, wall) {
+/** GET /api/tables (picker). */
+interface PublicTables { tables: Array<{ slug: string; name: string }> }
+/** GET /api/admin/tables. */
+interface AdminTables { tables: Array<{ id: string; name: string; sizeBytes: number }>; packs: Array<{ id: string }> }
+/** foundry/worlds action result. */
+interface FoundryWorlds { worlds: Array<{ id: string }>; localPaths: boolean; detected: string }
+/** <runtime>/server.json (tables registry). */
+interface Registry { tables: Array<{ id: string; name: string; pack: string; legacy?: boolean }> }
+
+function tableState(name: string, gmPassword: string, wall: boolean) {
   const row = wall ? '#...#....#' : '#........#';
   return {
     version: 1,
@@ -124,7 +139,7 @@ try {
   servers.push(srv);
   const health = await json(await fetch(srv.url + '/api/health'));
   ok(health.ok === true && health.tables === 2, 'health route: 2 tables open');
-  const pub = await json(await fetch(srv.url + '/api/tables'));
+  const pub = await json<PublicTables>(await fetch(srv.url + '/api/tables'));
   ok(pub.tables.map((t) => t.slug).sort().join() === 'alpha,beta', 'public table list');
   const rootRes = await fetch(srv.url + '/', { redirect: 'manual' });
   ok(rootRes.status === 200 && /<div id="app">/.test(await rootRes.text()), '/ with two tables serves the picker page');
@@ -138,9 +153,9 @@ try {
   ok((await fetch(srv.url + '/api/lobby')).status === 404, 'lobby without table and no default: 404');
 
   const gmA = track(await client(srv.url, await login(srv.url, { role: 'gm', password: 'secret-alpha', table: 'alpha' }), { table: 'alpha' }));
-  const gmATok = gmA.socket.auth.token;
+  const gmATok = tokenOf(gmA);
   const gmB = track(await client(srv.url, await login(srv.url, { role: 'gm', password: 'secret-beta', table: 'beta' }), { table: 'beta' }));
-  const gmBTok = gmB.socket.auth.token;
+  const gmBTok = tokenOf(gmB);
   await rejects(login(srv.url, { role: 'gm', password: 'secret-alpha', table: 'beta' }), /incorrect/, 'alpha password refused on beta');
   const pA = track(await client(srv.url, await login(srv.url, { role: 'player', name: 'Ana', characterId: 'pc1', table: 'alpha' }), { table: 'alpha' }));
   const pB = track(await client(srv.url, await login(srv.url, { role: 'player', name: 'Bob', characterId: 'pc1', table: 'beta' }), { table: 'beta' }));
@@ -151,11 +166,11 @@ try {
   // Packs
   const bestA = Object.values(gmA.state.bestiary || {});
   ok(bestA.length > 10 && !bestA.some((t) => /Lazarus|Acte|Passeur|Nachtigall|Foundry/.test(t.folder || '')), `vierge pack: generic bestiary only (${bestA.length})`);
-  ok(!gmA.state.bestiary.tpl_host_hollow_pine, 'vierge pack: no campaign host');
-  ok((gmA.state.campaign?.acts || []).length === 0 && (gmA.state.campaign?.quests || []).length === 0, 'vierge pack: no acts/quests');
+  ok(!gmA.state.bestiary?.tpl_host_hollow_pine, 'vierge pack: no campaign host');
+  ok(((gmA.state.campaign as Campaign)?.acts || []).length === 0 && ((gmA.state.campaign as Campaign)?.quests || []).length === 0, 'vierge pack: no acts/quests');
   ok(Object.keys(gmA.state.maps).join() === 'map_same', 'vierge pack: no seeded maps');
   ok(!(gmA.state.shop?.specials || []).length, 'vierge pack: no fixer deals');
-  ok(Object.keys(gmB.state.maps).length > 10 && Object.values(gmB.state.bestiary).some((t) => t.folder === 'Project Lazarus'), 'project-lazarus pack seeds beta');
+  ok(Object.keys(gmB.state.maps).length > 10 && Object.values(gmB.state.bestiary || {}).some((t) => t.folder === 'Project Lazarus'), 'project-lazarus pack seeds beta');
 
   // Log + broadcasts
   let betaStates = 0;
@@ -197,13 +212,13 @@ try {
   ok(expA.config?.campaignName === 'Alpha', 'token alone resolves its own table');
   const expB = await json(await fetch(srv.url + '/api/admin/export', { headers: H(gmBTok) }));
   ok(expB.config?.campaignName === 'Beta', 'beta export is beta');
-  ok((await fetch(srv.url + '/api/docs', { headers: H(pA.socket.auth.token) })).status === 403, 'players cannot read docs');
+  ok((await fetch(srv.url + '/api/docs', { headers: H(tokenOf(pA)) })).status === 403, 'players cannot read docs');
 
   // Docs per table
   fs.mkdirSync(path.join(srv.runtime, 'tables', 'alpha', 'docs'), { recursive: true });
   fs.writeFileSync(path.join(srv.runtime, 'tables', 'alpha', 'docs', 'secret-alpha.md'), '# Plan alpha');
-  const docsA = await json(await fetch(srv.url + '/api/docs', { headers: H(gmATok) }));
-  const docsB = await json(await fetch(srv.url + '/api/docs', { headers: H(gmBTok) }));
+  const docsA = await json<Array<{ name: string }>>(await fetch(srv.url + '/api/docs', { headers: H(gmATok) }));
+  const docsB = await json<Array<{ name: string }>>(await fetch(srv.url + '/api/docs', { headers: H(gmBTok) }));
   ok(docsA.some((d) => d.name === 'secret-alpha.md'), 'alpha docs listed');
   ok(!docsB.some((d) => d.name === 'secret-alpha.md'), 'beta does not see alpha docs');
   ok((await fetch(srv.url + '/api/docs/secret-alpha.md', { headers: H(gmBTok) })).status === 404, 'beta cannot read alpha doc');
@@ -233,9 +248,9 @@ try {
   ok(upW.status === 200 && upWj.world?.id === 'mon-monde', `world zip installed (${upW.status} ${upWj.error || ''})`);
   ok(fs.existsSync(path.join(srv.runtime, 'tables', 'alpha', 'foundry', 'Data', 'worlds', 'mon-monde', 'world.json')), 'world extracted under tables/alpha/foundry/Data/worlds');
   await settle(150);
-  const worldsA = await gmA.send('foundry/worlds', {});
+  const worldsA = await gmA.send<FoundryWorlds>('foundry/worlds', {});
   ok(worldsA.worlds.some((w) => w.id === 'mon-monde') && worldsA.localPaths === false && worldsA.detected === upWj.world.path, 'foundry/worlds lists the uploaded world (no local paths)');
-  const worldsB = await gmB.send('foundry/worlds', {});
+  const worldsB = await gmB.send<FoundryWorlds>('foundry/worlds', {});
   ok(!worldsB.worlds.length, 'beta sees no world of alpha');
   await rejects(gmB.send('foundry/scan', { worldPath: upWj.world.path }), /seuls les mondes téléversés|autre table/, 'beta cannot scan alpha’s uploaded world');
   await rejects(gmB.send('foundry/scan', { worldPath: 'C:/Users' }), /seuls les mondes téléversés/, 'local paths refused on a shared server');
@@ -253,7 +268,7 @@ try {
   ok(upBig.status === 413, `upload above SR_MAX_UPLOAD_BYTES refused (${upBig.status})`);
   const notZip = await fetch(srv.url + '/api/foundry/upload?kind=world', { method: 'POST', headers: H(gmATok, { 'Content-Type': 'application/zip' }), body: Buffer.from('not a zip at all') });
   ok(notZip.status === 400, 'garbage upload refused');
-  ok((await fetch(srv.url + '/api/foundry/upload?kind=world', { method: 'POST', headers: H(pA.socket.auth.token), body: fs.readFileSync(worldZip) })).status === 403, 'players cannot upload worlds');
+  ok((await fetch(srv.url + '/api/foundry/upload?kind=world', { method: 'POST', headers: H(tokenOf(pA)), body: fs.readFileSync(worldZip) })).status === 403, 'players cannot upload worlds');
   const okData = path.join(tmpRoot, 'data.zip');
   await writeZipFile(okData, [{ name: 'Data/Music/theme.mp3', data: 'ID3 fake' }]);
   const upOk = await json(await fetch(srv.url + '/api/foundry/upload?kind=data', { method: 'POST', headers: H(gmATok, { 'Content-Type': 'application/zip' }), body: fs.readFileSync(okData) }));
@@ -265,9 +280,9 @@ try {
   section('admin API');
   ok((await fetch(srv.url + '/api/admin/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: 'nope' }) })).status === 403, 'wrong admin password refused');
   const adm = await srv.admin();
-  const A = (p, opts = {}) => fetch(srv.url + p, { ...opts, headers: { 'content-type': 'application/json', ...H(adm), ...(opts.headers || {}) } });
+  const A = (p: string, opts: RequestInit & { headers?: Record<string, string> } = {}) => fetch(srv.url + p, { ...opts, headers: { 'content-type': 'application/json', ...H(adm), ...(opts.headers || {}) } });
   ok((await fetch(srv.url + '/api/admin/tables', { headers: H(gmATok) })).status === 401, 'a GM token is not an admin token');
-  const list0 = await json(await A('/api/admin/tables'));
+  const list0 = await json<AdminTables>(await A('/api/admin/tables'));
   ok(list0.tables.length === 2 && list0.packs.length === 3 && list0.packs.some((p) => p.id === 'demo') && list0.tables.every((t) => t.sizeBytes > 0), 'admin list with sizes and packs');
   ok((await A('/api/admin/tables', { method: 'POST', body: JSON.stringify({ name: 'X', slug: 'Bad Slug', pack: 'vierge', gmPassword: 'longenough' }) })).status === 400, 'invalid slug refused');
   ok((await A('/api/admin/tables', { method: 'POST', body: JSON.stringify({ name: 'X', slug: 'alpha', pack: 'vierge', gmPassword: 'longenough' }) })).status === 409, 'duplicate slug refused');
@@ -280,16 +295,16 @@ try {
   const gmG = track(await client(srv.url, await login(srv.url, { role: 'gm', password: 'gamma-pass', table: G }), { table: G }));
   ok(gmG.state.config.lang === 'en' && gmG.state.config.campaignName === 'Les Ombres de Lyon', 'new table: language + name');
   ok(!Object.values(gmG.state.actors).some((a) => a.type === 'pc'), 'new vierge table has no PCs');
-  ok((await json(await fetch(srv.url + '/api/tables'))).tables.some((t) => t.slug === G), 'new table on the picker');
+  ok((await json<PublicTables>(await fetch(srv.url + '/api/tables'))).tables.some((t) => t.slug === G), 'new table on the picker');
   // rename (state follows) and GM rename (registry follows)
   await A(`/api/admin/tables/${G}`, { method: 'PATCH', body: JSON.stringify({ name: 'Ombres de Lyon' }) });
   await settle();
   ok(gmG.state.config.campaignName === 'Ombres de Lyon', 'admin rename reaches the table view');
   await gmG.send('config/update', { campaignName: 'Lyon 2080' });
-  ok((await json(await A('/api/admin/tables'))).tables.find((t) => t.id === G).name === 'Lyon 2080', 'GM campaign rename updates the registry');
+  ok((await json<AdminTables>(await A('/api/admin/tables'))).tables.find((t) => t.id === G)!.name === 'Lyon 2080', 'GM campaign rename updates the registry');
   // hide
   await A(`/api/admin/tables/${G}`, { method: 'PATCH', body: JSON.stringify({ hidden: true }) });
-  ok(!(await json(await fetch(srv.url + '/api/tables'))).tables.some((t) => t.slug === G), 'hidden table not on the picker');
+  ok(!(await json<PublicTables>(await fetch(srv.url + '/api/tables'))).tables.some((t) => t.slug === G), 'hidden table not on the picker');
   ok((await fetch(srv.url + `/api/lobby?table=${G}`)).status === 200, 'hidden table still reachable by its link');
   // GM password reset
   await A(`/api/admin/tables/${G}/gm-password`, { method: 'POST', body: JSON.stringify({ password: 'nouveau-pass' }) });
@@ -310,7 +325,7 @@ try {
   await A(`/api/admin/tables/${G}`, { method: 'PATCH', body: JSON.stringify({ archived: false }) });
   const gmG3 = track(await client(srv.url, await login(srv.url, { role: 'gm', password: 'nouveau-pass', table: G }), { table: G }));
   ok(!!gmG3, 'unarchived table: login again');
-  ok((await json(await A('/api/admin/tables'))).tables.find((t) => t.id === G).name === 'Lyon 2081' && gmG3.state.config.campaignName === 'Lyon 2081', 'rename while archived survives unarchive');
+  ok((await json<AdminTables>(await A('/api/admin/tables'))).tables.find((t) => t.id === G)!.name === 'Lyon 2081' && gmG3.state.config.campaignName === 'Lyon 2081', 'rename while archived survives unarchive');
   // backup download (one-time ticket)
   const tk = await json(await A(`/api/admin/tables/${G}/download`, { method: 'POST', body: '{}' }));
   const dl = await fetch(srv.url + tk.url);
@@ -367,7 +382,7 @@ try {
   const legacyState = { ...tableState('Ma Campagne', 'vieux-mdp', false), sessions: { tok_legacy_gm: 'gm' } };
   const srvL = await startServer({ port: 3502, legacyState, runtime: rt });
   servers.push(srvL);
-  const reg = JSON.parse(fs.readFileSync(path.join(rt, 'server.json'), 'utf8'));
+  const reg: Registry = JSON.parse(fs.readFileSync(path.join(rt, 'server.json'), 'utf8'));
   const laz = reg.tables.find((t) => t.id === 'lazarus');
   ok(laz && laz.legacy && laz.name === 'Ma Campagne' && laz.pack === 'project-lazarus', 'registry: lazarus table, legacy, name from the state');
   ok(!fs.existsSync(path.join(rt, 'state.json')), 'old state.json moved away');

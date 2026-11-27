@@ -5,16 +5,35 @@
 // Writes overview.jpg (whole map ≤ 1400 px, yellow line + label every 5 cells) and tile_<x0>_<y0>.jpg crops of
 // tile×tile cells (overlapping), each ≤ --max px wide: thin white line every cell, yellow every 5 cells, the cell
 // number of every line in the margins (yellow = multiple of 5), « x,y » tags at 5×5 crossings.
-// When given a maplib JSON, the image / grid / offset come from it (and walls are NOT drawn: use overlay.js).
+// When given a maplib JSON, the image / grid / offset come from it (and walls are NOT drawn: use overlay.ts).
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { readJpeg, writeJpeg, findImage, args, isMain, loadMaplib, slugOf } from './lib.ts';
+import type { Img, MaplibFile } from './lib.ts';
 import { gridView, geometry } from './render.ts';
+import type { CellRect, Geo, GridView } from './render.ts';
 import { conventionPitch } from './scale.ts';
 
-export function resolveSource(arg, a = {}) {
-  let raw = null, imageFile;
+/** A map image ready for tracing: its maplib file (when given one), image and grid geometry. */
+export interface MapSource {
+  raw: MaplibFile | null;
+  imageFile: string;
+  img: Img;
+  geo: Geo;
+  slug: string;
+}
+/** One written crop of makeTiles(). */
+export interface TileFile {
+  file: string;
+  kind: 'overview' | 'tile';
+  ppc: number;
+  region?: CellRect;
+}
+
+/** `a`: the --grid / --offset command line options. */
+export function resolveSource(arg: string, a: { grid?: string | number | boolean; offset?: string; [key: string]: unknown } = {}): MapSource {
+  let raw: MaplibFile | null = null, imageFile: string | null;
   if (/\.json$/i.test(arg)) {
     raw = loadMaplib(arg).raw;
     imageFile = findImage(raw.image);
@@ -26,34 +45,34 @@ export function resolveSource(arg, a = {}) {
   const img = readJpeg(imageFile);
   const [ox, oy] = String(a.offset || '').split(',').map(Number);
   const gridPx = Number(a.grid) || raw?.gridPx || conventionPitch(img.width, img.height);
-  if (!gridPx) throw new Error('no --grid given and no standard pitch fits: run scale.js first');
+  if (!gridPx) throw new Error('no --grid given and no standard pitch fits: run scale.ts first');
   const geo = geometry({ ...(raw || {}), gridPx, offsetX: Number.isFinite(ox) ? ox : raw?.offsetX || 0, offsetY: Number.isFinite(oy) ? oy : raw?.offsetY || 0, imageW: img.width, imageH: img.height, ...(a.grid ? { width: 0, height: 0 } : {}) }, img);
   return { raw, imageFile, img, geo, slug: raw?.slug || slugOf(path.basename(imageFile)) };
 }
 
-export function overview(src, geo, { max = 1400, title = '' } = {}) {
+export function overview(src: Img, geo: Geo, { max = 1400, title = '' }: { max?: number; title?: string } = {}): GridView {
   const ppc = Math.min(max / geo.width, max / geo.height, geo.gridPx);
   return gridView(src, geo, { x: 0, y: 0, w: geo.width, h: geo.height }, ppc, { grid: ppc >= 18, title });
 }
 
 /** Tile rectangles (cells) covering the map with `overlap` cells shared between neighbours. */
-export function tileRects(geo, tile = 12, overlap = 2) {
+export function tileRects(geo: Pick<Geo, 'width' | 'height'>, tile = 12, overlap = 2): CellRect[] {
   const step = Math.max(1, tile - overlap);
-  const starts = (n) => {
+  const starts = (n: number): number[] => {
     if (n <= tile) return [0];
-    const s = [];
+    const s: number[] = [];
     for (let v = 0; v + tile < n; v += step) s.push(v);
     s.push(n - tile);
     return [...new Set(s)];
   };
-  const out = [];
+  const out: CellRect[] = [];
   for (const y of starts(geo.height)) for (const x of starts(geo.width)) out.push({ x, y, w: Math.min(tile, geo.width), h: Math.min(tile, geo.height) });
   return out;
 }
 
-export function makeTiles({ img, geo, slug }, { out, tile = 12, overlap = 2, max = 1100, quality = 85 } = {}) {
+export function makeTiles({ img, geo, slug }: Pick<MapSource, 'img' | 'geo' | 'slug'>, { out, tile = 12, overlap = 2, max = 1100, quality = 85 }: { out: string; tile?: number; overlap?: number; max?: number; quality?: number }): TileFile[] {
   fs.mkdirSync(out, { recursive: true });
-  const files = [];
+  const files: TileFile[] = [];
   const ov = overview(img, geo, { title: `${slug}  ${geo.width}x${geo.height} cells  grid ${geo.gridPx}px` });
   const ovFile = path.join(out, 'overview.jpg');
   writeJpeg(ov.img, ovFile, quality);
@@ -92,7 +111,7 @@ if (isMain(import.meta.url)) {
       for (const f of files) console.log(`  ${f.file}${f.region ? `  cells x ${f.region.x}-${f.region.x + f.region.w} y ${f.region.y}-${f.region.y + f.region.h}` : ''}  (${f.ppc} px/cell)`);
     }
   } catch (err) {
-    console.error('tiles: ' + err.message);
+    console.error('tiles: ' + (err as Error).message);
     process.exit(1);
   }
 }

@@ -8,17 +8,18 @@ import path from 'node:path';
 import http from 'node:http';
 import crypto from 'node:crypto';
 import { startServer, login, client, settle } from './test-client.ts';
+import type { Campaign } from '../shared/types.ts';
 
 let failures = 0;
 let passed = 0;
-async function test(name, fn) {
+async function test(name: string, fn: () => unknown): Promise<void> {
   try {
     await fn();
     passed++;
     console.log(`  ok  ${name}`);
   } catch (err) {
     failures++;
-    console.error(`  FAIL ${name}\n       ${err.stack || err}`);
+    console.error(`  FAIL ${name}\n       ${(err as Error).stack || err}`);
   }
 }
 
@@ -37,15 +38,15 @@ console.log('Identity token, pricing, ledger');
 await test('signing key is created 0600 and the minted JWT verifies with the published JWK', () => {
   const tok = auth.mintIdentityToken();
   const [h, p, s] = tok.split('.');
-  const header = JSON.parse(Buffer.from(h, 'base64url'));
-  const payload = JSON.parse(Buffer.from(p, 'base64url'));
+  const header = JSON.parse(Buffer.from(h, 'base64url').toString());
+  const payload = JSON.parse(Buffer.from(p, 'base64url').toString());
   const jwks = auth.publicJwks();
   assert.equal(jwks.keys.length, 1);
   const jwk = jwks.keys[0];
   assert.equal(header.alg, 'ES256');
   assert.equal(header.kid, jwk.kid);
   assert.ok(!('d' in jwk), 'the private part must never be published');
-  const key = crypto.createPublicKey({ key: jwk, format: 'jwk' });
+  const key = crypto.createPublicKey({ key: jwk as unknown as crypto.JsonWebKey, format: 'jwk' });
   assert.ok(crypto.verify('sha256', Buffer.from(`${h}.${p}`), { key, dsaEncoding: 'ieee-p1363' }, Buffer.from(s, 'base64url')));
   assert.equal(payload.iss, auth.ISSUER);
   assert.ok(payload.sub.startsWith(auth.SUBJECT_PREFIX));
@@ -58,7 +59,7 @@ await test('signing key is created 0600 and the minted JWT verifies with the pub
   if (process.platform !== 'win32') assert.equal(fs.statSync(keyFile).mode & 0o777, 0o600);
 });
 await test('every token has a fresh jti; the key survives a reload (same kid)', () => {
-  const jti = (t) => JSON.parse(Buffer.from(t.split('.')[1], 'base64url')).jti;
+  const jti = (t: string) => JSON.parse(Buffer.from(t.split('.')[1], 'base64url').toString()).jti;
   const a = auth.mintIdentityToken(), b = auth.mintIdentityToken();
   assert.notEqual(jti(a), jti(b));
   const kid = auth.publicJwks().keys[0].kid;
@@ -108,7 +109,7 @@ Contenu de test.
   const a = context.buildSystem({ docsDir: docs, campaignName: 'Project Lazarus' });
   const b = context.buildSystem({ docsDir: docs, campaignName: 'Project Lazarus' });
   assert.equal(JSON.stringify(a.system), JSON.stringify(b.system));
-  assert.deepEqual(a.system.at(-1).cache_control, { type: 'ephemeral', ttl: '1h' });
+  assert.deepEqual(a.system.at(-1)!.cache_control, { type: 'ephemeral', ttl: '1h' });
   assert.ok(a.coreDocs.length >= 3);
 });
 await test('doc paths cannot escape the docs folder', () => {
@@ -127,19 +128,24 @@ await test('tool definitions: unique names, propose tools present, no tool can r
 // ---------------------------------------------------------------------------
 // Fake Claude API
 // ---------------------------------------------------------------------------
-const requests = [];
-const script = []; // queue of responses: { content: [...blocks], stop_reason, usage }
+type ScriptBlock = { type: 'text'; text: string } | { type: 'tool_use'; id: string; name: string; input: unknown };
+/** A scripted model response. */
+interface Scripted { content: ScriptBlock[]; stop_reason: string; usage?: Record<string, number> }
+/** A request the server sent to the fake API; `body` is the SDK's JSON request, read freely by the checks (any). */
+interface FakeRequest { url?: string; headers: http.IncomingHttpHeaders; body: any }
+const requests: FakeRequest[] = [];
+const script: Scripted[] = []; // queue of responses
 let lastToolId = 0;
 const fake = http.createServer((req, res) => {
   let body = '';
   req.on('data', (d) => (body += d));
   req.on('end', () => {
-    let json = {};
+    let json: any = {}; // the SDK's request body
     try {
       json = JSON.parse(body || '{}');
     } catch {}
     requests.push({ url: req.url, headers: req.headers, body: json });
-    const next = script.shift() || { content: [{ type: 'text', text: 'OK' }], stop_reason: 'end_turn' };
+    const next: Scripted = script.shift() || { content: [{ type: 'text', text: 'OK' }], stop_reason: 'end_turn' };
     const usage = { input_tokens: 1000, output_tokens: 200, cache_creation_input_tokens: 0, cache_read_input_tokens: 30000, ...(next.usage || {}) };
     const msg = { id: `msg_${requests.length}`, type: 'message', role: 'assistant', model: json.model || 'claude-opus-5-5' };
     if (!json.stream) {
@@ -147,7 +153,7 @@ const fake = http.createServer((req, res) => {
       return res.end(JSON.stringify({ ...msg, content: next.content, stop_reason: next.stop_reason, stop_sequence: null, usage }));
     }
     res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache', 'request-id': 'req_test' });
-    const ev = (type, data) => res.write(`event: ${type}\ndata: ${JSON.stringify({ type, ...data })}\n\n`);
+    const ev = (type: string, data: object) => res.write(`event: ${type}\ndata: ${JSON.stringify({ type, ...data })}\n\n`);
     ev('message_start', { message: { ...msg, content: [], stop_reason: null, stop_sequence: null, usage: { ...usage, output_tokens: 1 } } });
     next.content.forEach((b, index) => {
       if (b.type === 'text') {
@@ -164,8 +170,8 @@ const fake = http.createServer((req, res) => {
     res.end();
   });
 });
-await new Promise((r) => fake.listen(3990, '127.0.0.1', r));
-const toolUse = (name, input) => ({ type: 'tool_use', id: `toolu_${++lastToolId}`, name, input });
+await new Promise<void>((r) => fake.listen(3990, '127.0.0.1', () => r()));
+const toolUse = (name: string, input: unknown): ScriptBlock => ({ type: 'tool_use', id: `toolu_${++lastToolId}`, name, input });
 
 const MAP = {
   name: 'Entrepôt test', folder: 'Tests', theme: 'industrial', lighting: 'dim', width: 8, height: 6,
@@ -175,11 +181,22 @@ const MAP = {
   notes: [{ x: 3, y: 2, text: 'SECRET-NOTE-XYZ' }],
 };
 
+// The table is created here (not the bootstrap table, whose docs folder is the GM's real ../Shadowrun campaign folder
+// when it exists): its docs are a fixture folder, <table>/docs, written before boot.
+const runtime = fs.mkdtempSync(path.join(os.tmpdir(), 'sr-assistant-rt-'));
+const tableDocs = path.join(runtime, 'tables', 'lazarus', 'docs');
+fs.mkdirSync(tableDocs, { recursive: true });
+for (const n of ['bible-mj-project-lazarus.md', 'campaign-outline.md', 'campaign-recap.md', 'session-1-plan.md']) fs.writeFileSync(path.join(tableDocs, n), `# ${n}\n\nHollow Pine, contenu de test.\n`);
 const srv = await startServer({
   port: 3991,
+  runtime,
+  tables: [{ id: 'lazarus', name: 'Project Lazarus', pack: 'project-lazarus', gmPassword: 'lazarus' }],
   env: { ANTHROPIC_API_KEY: 'test-key', ANTHROPIC_BASE_URL: 'http://127.0.0.1:3990', ANTHROPIC_FEDERATION_RULE_ID: '', ANTHROPIC_ORGANIZATION_ID: '', ANTHROPIC_AUTH_TOKEN: '', ANTHROPIC_PROFILE: '' },
 });
-const api = async (url, token, opts = {}) => {
+/** HTTP call; `body` is the untyped JSON reply (any), read freely by the checks. */
+/** An item of GET /api/assistant/conversations/:id (the fields read here). */
+interface ConvItem { type: string; text?: string; name?: string; key?: string; proposal?: any }
+const api = async (url: string, token: string, opts: { method?: string; body?: unknown } = {}): Promise<{ status: number; body: any }> => {
   const r = await fetch(srv.url + url, {
     method: opts.method || 'GET',
     headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
@@ -191,7 +208,7 @@ const api = async (url, token, opts = {}) => {
   } catch {}
   return { status: r.status, body: j };
 };
-const waitFor = async (pred, ms = 8000) => {
+const waitFor = async (pred: () => boolean | Promise<boolean>, ms = 8000) => {
   const end = Date.now() + ms;
   while (Date.now() < end) {
     if (await pred()) return true;
@@ -204,7 +221,7 @@ try {
   const adminTok = await srv.admin();
   const gmTok = await login(srv.url, { role: 'gm', password: 'lazarus' });
   const gm = await client(srv.url, gmTok);
-  const pcId = Object.values(gm.state.actors).find((a) => a.type === 'pc' && !a.retired).id;
+  const pcId = Object.values(gm.state.actors).find((a) => a.type === 'pc' && !a.retired)!.id;
   const plTok = await login(srv.url, { role: 'player', name: 'Testeur', characterId: pcId });
   const player = await client(srv.url, plTok);
   const tableId = gm.state.config.table?.id || 'lazarus';
@@ -216,7 +233,7 @@ try {
     assert.equal(r.body.auth.mode, 'apikey');
     assert.equal(r.body.jwks.keys.length, 1);
     assert.ok(!JSON.stringify(r.body.jwks).includes('"d"'));
-    assert.ok(r.body.tables.some((t) => t.id === tableId && !t.enabled));
+    assert.ok(r.body.tables.some((t: { id: string; enabled: boolean }) => t.id === tableId && !t.enabled));
     assert.equal(r.body.budget.spent, 0);
   });
   await test('admin routes need the admin token (a GM token is refused)', async () => {
@@ -235,7 +252,7 @@ try {
     assert.equal((await api('/api/assistant/ask', plTok, { method: 'POST', body: { text: 'x' } })).status, 403);
   });
 
-  let convId;
+  let convId = '';
   await test('ask → map proposal (simulated, not applied) → final answer; request shape is right', async () => {
     script.push({ content: [{ type: 'text', text: 'Je regarde.' }, toolUse('search_docs', { query: 'Hollow Pine' })], stop_reason: 'tool_use' });
     script.push({ content: [toolUse('propose_map', MAP)], stop_reason: 'tool_use' });
@@ -269,22 +286,22 @@ try {
     assert.equal(Object.keys(gm.state.maps).length, mapsBefore, 'a proposal changes nothing');
   });
 
-  let proposal;
+  let proposal: any; // from the conversation view JSON
   await test('conversation view: question, answer, tool badge, pending proposal with a normalized map preview', async () => {
     const r = await api(`/api/assistant/conversations/${convId}`, gmTok);
     assert.equal(r.status, 200);
-    const items = r.body.items;
+    const items: ConvItem[] = r.body.items;
     assert.equal(items[0].type, 'user');
     assert.equal(items[0].text, 'Fais-moi un entrepôt');
-    assert.ok(items.some((i) => i.type === 'tool' && i.name === 'search_docs'));
-    const p = items.find((i) => i.type === 'proposal');
+    assert.ok(items.some((i: ConvItem) => i.type === 'tool' && i.name === 'search_docs'));
+    const p = items.find((i: ConvItem) => i.type === 'proposal');
     assert.ok(p);
     proposal = p.proposal;
     assert.equal(proposal.status, 'pending');
     assert.equal(proposal.preview.map.width, 8);
     assert.equal(proposal.preview.map.doors.length, 1);
     assert.ok(!('input' in proposal), 'raw model input stays on the server');
-    assert.equal(items.at(-1).type, 'assistant');
+    assert.equal(items.at(-1)!.type, 'assistant');
     assert.ok(r.body.usd > 0);
   });
 
@@ -314,7 +331,7 @@ try {
     assert.equal(res.is_error, true);
     assert.match(res.content, /lignes/);
     const view = (await api(`/api/assistant/conversations/${convId}`, gmTok)).body;
-    assert.equal(view.items.filter((i) => i.type === 'proposal').length, 1);
+    assert.equal(view.items.filter((i: ConvItem) => i.type === 'proposal').length, 1);
   });
 
   await test('NPC, handout (unrevealed) and quest proposals apply through the normal actions', async () => {
@@ -331,19 +348,20 @@ try {
     await api('/api/assistant/ask', gmTok, { method: 'POST', body: { conversationId: convId, text: 'Prépare la suite' } });
     await waitFor(() => gm.events.some((e) => e.ev === 'assistant:done'));
     const view = (await api(`/api/assistant/conversations/${convId}`, gmTok)).body;
-    const props = view.items.filter((i) => i.type === 'proposal' && i.proposal.status === 'pending').map((i) => i.proposal);
+    const props = view.items.filter((i: ConvItem) => i.type === 'proposal' && i.proposal.status === 'pending').map((i: ConvItem) => i.proposal);
     assert.equal(props.length, 3);
     for (const p of props) {
       const r = await api(`/api/assistant/proposals/${p.id}/apply`, gmTok, { method: 'POST' });
       assert.equal(r.status, 200, JSON.stringify(r.body));
     }
     await settle();
-    assert.ok(Object.values(gm.state.bestiary).some((t) => t.name === 'Lieutenant Ork Test' && t.folder === 'Gangs'));
-    const h = gm.state.campaign.handouts.find((x) => x.title === 'Message intercepté');
+    assert.ok(Object.values(gm.state.bestiary!).some((t) => t.name === 'Lieutenant Ork Test' && t.folder === 'Gangs'));
+    const campaign = gm.state.campaign as Campaign; // GM view: the full campaign
+    const h = campaign.handouts.find((x) => x.title === 'Message intercepté');
     assert.ok(h);
     assert.ok(Array.isArray(h.revealedTo) && h.revealedTo.length === 0);
     assert.ok(!JSON.stringify(player.state).includes('HANDOUT-SECRET-123'));
-    assert.ok(gm.state.campaign.quests.some((q) => q.title === 'Quête test'));
+    assert.ok(campaign.quests.some((q) => q.title === 'Quête test'));
   });
 
   await test('the assistant file never reaches any view', async () => {
@@ -367,7 +385,7 @@ try {
     const r = await api('/api/admin/assistant/test', adminTok, { method: 'POST' });
     assert.equal(r.status, 200, JSON.stringify(r.body));
     assert.equal(requests.length - before, 1);
-    assert.ok(requests.at(-1).body.max_tokens <= 400);
+    assert.ok(requests.at(-1)!.body.max_tokens <= 400);
   });
 
   await test('a second question while one runs is refused (409); stop works', async () => {
@@ -390,7 +408,7 @@ try {
     await waitFor(() => gm.events.some((e) => e.ev === 'assistant:done'));
     assert.equal(requests.length - before, 8);
     const view = (await api(`/api/assistant/conversations/${r.body.conversationId}`, gmTok)).body;
-    assert.ok(view.items.some((i) => i.type === 'notice' && /Limite d’étapes/.test(i.key)));
+    assert.ok(view.items.some((i: ConvItem) => i.type === 'notice' && /Limite d’étapes/.test(i.key || '')));
     script.length = 0;
   });
 

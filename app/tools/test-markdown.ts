@@ -1,27 +1,27 @@
-// Regression tests for client/lib/markdown.js (pure module, importable in Node): node tools/test-markdown.ts
+// Regression tests for client/lib/markdown.ts (pure module, importable in Node): node tools/test-markdown.ts
 import { renderMarkdown } from '../client/lib/markdown.ts';
 
 let ok = 0;
 let ko = 0;
-const t = (name, fn) => {
+const t = (name: string, fn: () => void) => {
   try {
     fn();
     ok++;
     console.log('  ok ', name);
   } catch (err) {
     ko++;
-    console.log('  FAIL', name, '—', err.message);
+    console.log('  FAIL', name, '—', (err as Error).message);
   }
 };
-const assert = (c, m) => {
+const assert = (c: unknown, m: string) => {
   if (!c) throw new Error(m);
 };
 
 // Every tag must be well-formed: attributes are only name="value" pairs, never event handlers,
 // and no "<" may appear inside a quoted attribute value.
-function checkSafe(html) {
+function checkSafe(html: string) {
   const tagRe = /<([a-z0-9]+)((?:\s+[a-z-]+="[^"<]*")*)\s*\/?>|<\/[a-z0-9]+>/gi;
-  const stripped = html.replace(tagRe, (m, name, attrs) => {
+  const stripped = html.replace(tagRe, (m: string, name: string, attrs: string | undefined) => {
     if (attrs && /\son\w+=/i.test(attrs)) throw new Error('event handler attribute: ' + m);
     if (attrs && /(href|src)="\s*javascript:/i.test(attrs)) throw new Error('javascript: url: ' + m);
     return '';

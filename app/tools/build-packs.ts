@@ -7,6 +7,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { AudioScene, AudioTrack, Template } from '../shared/types.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SEED = path.join(ROOT, 'data', 'seed');
@@ -17,7 +18,7 @@ const EXCLUDED_IDS = new Set(['tpl_host_hollow_pine']);
 const CAMPAIGN_WORDS = /lazarus|ag chemie|hollow pine|dorian|ashe\b|cabana|porfla|passeur|nachtigall|family business|open book|cleanup crew/i;
 
 /** Remove campaign-specific sentences / Foundry notes from a markdown description. */
-function scrub(text) {
+function scrub(text: unknown): string {
   let s = String(text || '').replace(/\n*---\n\*Foundry :\*[\s\S]*$/, '');
   s = s
     .split('\n')
@@ -28,9 +29,12 @@ function scrub(text) {
   return s;
 }
 
-const templates = [];
+/** A seed template; older seeds still carry the Foundry id at the top level. */
+type SeedTemplate = Template & { foundryId?: string };
+
+const templates: SeedTemplate[] = [];
 for (const file of ['core.json']) {
-  const list = JSON.parse(fs.readFileSync(path.join(SEED, 'bestiary', file), 'utf8'));
+  const list: SeedTemplate[] = JSON.parse(fs.readFileSync(path.join(SEED, 'bestiary', file), 'utf8'));
   for (const t of list) {
     if (!GENERIC_FOLDERS.has(t.folder) || EXCLUDED_IDS.has(t.id)) continue;
     const c = structuredClone(t);
@@ -49,12 +53,12 @@ for (const file of ['core.json']) {
   }
 }
 
-const audioSeed = JSON.parse(fs.readFileSync(path.join(SEED, 'audio.json'), 'utf8'));
+const audioSeed: { tracks?: AudioTrack[]; scenes?: AudioScene[] } = JSON.parse(fs.readFileSync(path.join(SEED, 'audio.json'), 'utf8'));
 const GENERIC_SCENES = new Set(['scn-matrice', 'scn-chantier', 'scn-combat', 'scn-poursuite', 'scn-victoire', 'scn-accueil']);
 const scenes = (audioSeed.scenes || []).filter((s) => GENERIC_SCENES.has(s.id)).map(({ mapId, ...s }) => s);
 
 fs.mkdirSync(path.join(OUT, 'bestiary'), { recursive: true });
-const write = (rel, value) => fs.writeFileSync(path.join(OUT, rel), JSON.stringify(value, null, 2) + '\n');
+const write = (rel: string, value: unknown) => fs.writeFileSync(path.join(OUT, rel), JSON.stringify(value, null, 2) + '\n');
 write('bestiary/generic.json', templates);
 // The music library (data/assets/music, shared by every table) is generic: Foundry playlists are not.
 const tracks = (audioSeed.tracks || []).filter((t) => String(t.url || '').startsWith('/assets/music/'));

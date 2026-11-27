@@ -12,16 +12,18 @@ import { renderOverlay } from './maptrace/overlay.ts';
 import { checkMap, fixMap, formatMaplib } from './maptrace/check.ts';
 import { probe } from './maptrace/probe.ts';
 import { scaffold } from './maptrace/new.ts';
+import type { MaplibFile } from './maptrace/lib.ts';
+import type { DoorState, MapTheme } from '../shared/types.ts';
 
 const APP = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let failures = 0, passes = 0;
-const ok = (c, msg) => (c ? passes++ : (failures++, console.error('  ✗ ' + msg)));
-const section = (s) => console.log('• ' + s);
+const ok = (c: unknown, msg: string) => (c ? passes++ : (failures++, console.error('  ✗ ' + msg)));
+const section = (s: string) => console.log('• ' + s);
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'maptrace-test-'));
 const imgDir = path.join(tmp, 'img');
 fs.mkdirSync(imgDir);
 process.env.SR_FRAGMAP_DIRS = imgDir;
-const isJpeg = (file) => {
+const isJpeg = (file: string): boolean => {
   const b = fs.readFileSync(file);
   if (b[0] !== 0xff || b[1] !== 0xd8 || b[b.length - 2] !== 0xff || b[b.length - 1] !== 0xd9) return false;
   try {
@@ -64,7 +66,7 @@ section('font & drawing');
   L.writeJpeg(img, f);
   ok(isJpeg(f), 'drawn image is a valid JPEG');
   const s = L.jpegSize(f);
-  ok(s.width === 80 && s.height === 30, 'jpegSize reads the header');
+  ok(s?.width === 80 && s?.height === 30, 'jpegSize reads the header');
   const r = L.resize(L.newImage(10, 10, [100, 0, 0]), 25, 5);
   ok(r.width === 25 && r.height === 5 && r.data[0] === 100, 'resize up/down');
   const c = L.crop(L.newImage(10, 10, [9, 9, 9]), -5, -5, 10, 10);
@@ -74,7 +76,7 @@ section('font & drawing');
 section('scale');
 {
   const t = measureTwin(path.join(imgDir, 'test room.jpg'), path.join(imgDir, 'test room grid.jpg'));
-  ok(Math.abs(t.x.pitch - GP) < 0.6 && Math.abs(t.y.pitch - GP) < 0.6, `twin pitch ≈ ${GP} (got ${t.x.pitch} / ${t.y.pitch})`);
+  ok(Math.abs(Number(t.x.pitch) - GP) < 0.6 && Math.abs(Number(t.y.pitch) - GP) < 0.6, `twin pitch ≈ ${GP} (got ${t.x.pitch} / ${t.y.pitch})`);
   ok(conventionPitch(1540, 2520) === 140, 'dive bar → 140');
   ok(conventionPitch(1200, 1200) === 200, '1 BDRM → 200');
   ok(conventionPitch(6320, 4640) === 80, 'jungle landing pad → 80');
@@ -90,7 +92,7 @@ section('tiles');
   const src = resolveSource('test room.jpg', {});
   ok(src.geo.gridPx === 70 && src.geo.width === 12 && src.geo.height === 9, 'grid from the convention (840×630 → 70, 12×9)');
   const rects = tileRects({ width: 30, height: 20 }, 12, 2);
-  const covered = new Set();
+  const covered = new Set<string>();
   for (const r of rects) for (let y = r.y; y < r.y + r.h; y++) for (let x = r.x; x < r.x + r.w; x++) covered.add(`${x},${y}`);
   ok(covered.size === 600, `tiles cover every cell (${covered.size}/600)`);
   ok(rects.every((r) => r.w === 12 && r.h === 12 && r.x + r.w <= 30 && r.y + r.h <= 20), 'tiles inside the map');
@@ -98,7 +100,7 @@ section('tiles');
   const files = makeTiles({ ...src }, { out, tile: 6, overlap: 2, max: 700 });
   ok(files[0].kind === 'overview' && files.length === 1 + tileRects(src.geo, 6, 2).length, `overview + tiles written (${files.length})`);
   ok(files.every((f) => isJpeg(f.file)), 'every tile is a valid JPEG');
-  ok(files.filter((f) => f.kind === 'tile').every((f) => L.jpegSize(f.file).width <= 700), 'tiles ≤ --max px wide');
+  ok(files.filter((f) => f.kind === 'tile').every((f) => (L.jpegSize(f.file)?.width ?? Infinity) <= 700), 'tiles ≤ --max px wide');
   const tile = L.readJpeg(files[1].file);
   // the coordinate labels in the margin are yellow (5th lines) / grey: some bright yellow pixels must exist
   let yellow = 0;
@@ -106,7 +108,7 @@ section('tiles');
   ok(yellow > 30, `tiles carry yellow 5-cell lines / labels (${yellow})`);
 }
 
-const good = () => ({
+const good = (): MaplibFile => ({
   id: 'lib_test-room', slug: 'test-room', name: 'Test room', nameFr: 'Salle de test', source: 'fragmap', image: 'test room.jpg',
   imageW: 840, imageH: 630, gridPx: 70, offsetX: 0, offsetY: 0, width: 12, height: 9, metersPerCell: 1.5, theme: 'corp', lighting: 'dim',
   tags: ['test', 'salle', 'room', 'bureau'], description: 'Salle de test.',
@@ -149,7 +151,7 @@ section('check');
   ok(errs.length === 0, `valid fixture passes (${errs.map((i) => i.code + ': ' + i.msg).join(' | ')})`);
   ok(r0.stats.walls === 6 && r0.stats.doors === 1 && r0.stats.windows === 1, `stats (${JSON.stringify(r0.stats)})`);
   ok(r0.stats.outsideCells === 0, 'no outside cell reachable in a closed room');
-  const broken = (mut, code, level = 'error') => {
+  const broken = (mut: (r: MaplibFile) => unknown, code: string, level = 'error') => {
     const raw = good();
     mut(raw);
     const r = checkMap(raw, { file: 'test-room.json' });
@@ -157,7 +159,7 @@ section('check');
   };
   broken((r) => (r.id = 'test-room'), 'id');
   broken((r) => (r.slug = 'Test Room'), 'slug');
-  broken((r) => (r.theme = 'castle'), 'theme');
+  broken((r) => (r.theme = 'castle' as MapTheme), 'theme');
   broken((r) => (r.width = 13), 'size');
   broken((r) => (r.imageW = 841), 'size');
   broken((r) => (r.imageW = 910) && (r.width = 13), 'image');
@@ -170,7 +172,7 @@ section('check');
   broken((r) => (r.walls[5].y2 = 4.2), 'doorLen');
   broken((r) => (r.walls[1].x1 = 13), 'bounds');
   broken((r) => (r.walls[1].y1 = 1.2), 'leak', 'warn');
-  broken((r) => (r.walls[5].door = { state: 'ajar', kind: 'door' }), 'door');
+  broken((r) => (r.walls[5].door = { state: 'ajar' as DoorState, kind: 'door' }), 'door');
   broken((r) => (r.walls[5].door = null), 'unreachable');
   broken((r) => (r.regions[0].gmOnly = true), 'region');
   broken((r) => (r.lights[0].color = 'yellow'), 'light');
@@ -209,13 +211,13 @@ section('calibration maps');
 {
   for (const slug of ['1-bdrm', 'dive-bar']) {
     const file = path.join(APP, 'data', 'maplib', `${slug}.json`);
-    const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const raw = JSON.parse(fs.readFileSync(file, 'utf8')) as MaplibFile;
     delete process.env.SR_FRAGMAP_DIRS;
     const r = checkMap(raw, { file });
     process.env.SR_FRAGMAP_DIRS = imgDir;
     const bad = r.issues.filter((i) => i.level === 'error' || (i.level === 'warn' && i.code !== 'image'));
     ok(bad.length === 0, `${slug} is clean (${bad.map((i) => i.code + ': ' + i.msg).join(' | ')})`);
-    ok(r.stats.doors >= 2 && r.stats.walls >= 10 && raw.regions.length >= 4 && raw.lights.length >= 5, `${slug} has walls, doors, lights, regions`);
+    ok((r.stats.doors ?? 0) >= 2 && (r.stats.walls ?? 0) >= 10 && raw.regions.length >= 4 && raw.lights.length >= 5, `${slug} has walls, doors, lights, regions`);
   }
 }
 
@@ -229,12 +231,14 @@ section('maplib-build');
   fs.copyFileSync(path.join(imgDir, 'test room.jpg'), path.join(imgDir, 'sub', 'deck 1.jpg'));
   fs.writeFileSync(path.join(git, 'deck.json'), formatMaplib({ ...good(), id: 'lib_deck', slug: 'deck', image: 'sub/deck 1.jpg' }));
   const env = { ...process.env, SR_MAPLIB_SOURCE: git, SR_MAPLIB_DIR: lib, SR_FRAGMAP_DIRS: imgDir };
-  const run = () => spawnSync(process.execPath, [path.join(APP, 'tools', 'maplib-build.js')], { env, encoding: 'utf8' });
+  // Node runs the .ts script directly; before 22.18 type stripping needs a flag.
+  const stripTypes = process.features.typescript ? [] : ['--experimental-strip-types'];
+  const run = () => spawnSync(process.execPath, [...stripTypes, path.join(APP, 'tools', 'maplib-build.ts')], { env, encoding: 'utf8' });
   const a = run();
   ok(a.status === 1 && /MISSING: ghost/.test(a.stdout), `missing image reported, exit 1 (${a.status})`);
   ok(fs.existsSync(path.join(lib, 'images', 'test room.jpg')) && fs.existsSync(path.join(lib, 'images', 'sub', 'deck 1.jpg')), 'images copied (sub-folders kept)');
   ok(isJpeg(path.join(lib, 'thumbs', 'test-room.jpg')) && isJpeg(path.join(lib, 'thumbs', 'deck.jpg')), 'thumbnails are JPEGs');
-  ok(L.jpegSize(path.join(lib, 'thumbs', 'test-room.jpg')).width <= 480, 'thumbnail ≤ 480 px');
+  ok((L.jpegSize(path.join(lib, 'thumbs', 'test-room.jpg'))?.width ?? Infinity) <= 480, 'thumbnail ≤ 480 px');
   ok(/2 copied/.test(a.stdout), 'first run copies');
   const b = run();
   ok(/0 copied, 2 unchanged, 0 thumbnail/.test(b.stdout), `second run is a no-op (${b.stdout.split('\n').pop() || b.stdout.trim().split('\n').pop()})`);

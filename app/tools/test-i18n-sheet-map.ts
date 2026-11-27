@@ -4,33 +4,39 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { startServer, login, client, settle } from './test-client.ts';
+import type { TestClient } from './test-client.ts';
+import type { ActionPayload, I18nMessage, I18nParams, LogEntry } from '../shared/types.ts';
 import * as S from '../server/lib/i18n.ts';
 import { placeholders } from '../client/i18n/format.ts';
 
 let failures = 0;
-async function test(name, fn) {
+async function test(name: string, fn: () => unknown): Promise<void> {
   try {
     await fn();
     console.log('  ✓', name);
-  } catch (err) {
+  } catch (e) {
+    const err = e as Error;
     failures++;
     console.log('  ✗', name, '\n     ', err.stack?.split('\n').slice(0, 3).join('\n      ') || err.message);
   }
 }
+/** Whole action reply, read loosely: tests check `ok` then the error fields. */
+interface RawReply { ok: boolean; result?: unknown; error?: string; errorKey?: string; params?: I18nParams }
 /** Raw action call: resolves with the whole reply ({ ok, result } or { ok: false, error, errorKey, params }). */
-const raw = (c, type, payload = {}) => new Promise((res) => c.socket.emit('action', { type, payload }, res));
-const lastLog = (c, pred = () => true) => [...(c.state.log || [])].reverse().find(pred);
-const en = (entry) => S.t('en', entry.i18n.key, entry.i18n.params);
+const raw = (c: TestClient, type: string, payload: ActionPayload = {}) => new Promise<RawReply>((res) => c.socket.emit('action', { type, payload }, res));
+/** Last matching log entry (the tests then assert on its fields, so a missing one fails there). */
+const lastLog = (c: TestClient, pred: (e: LogEntry) => boolean = () => true): LogEntry => [...(c.state.log || [])].reverse().find(pred)!;
+const en = (entry: LogEntry) => S.t('en', entry.i18n!.key, entry.i18n!.params);
 
 console.log('Dictionaries (map.json, sheet.json)');
 for (const area of ['map', 'sheet']) {
   await test(`${area}.json: every entry translated, placeholders kept`, async () => {
-    const d = JSON.parse(fs.readFileSync(new URL(`../client/i18n/en/${area}.json`, import.meta.url), 'utf8'));
+    const d: Record<string, unknown> = JSON.parse(fs.readFileSync(new URL(`../client/i18n/en/${area}.json`, import.meta.url), 'utf8'));
     assert.ok(Object.keys(d).length > 100, 'dictionary filled');
     for (const [k, v] of Object.entries(d)) {
       assert.equal(typeof v, 'string', k);
-      assert.ok(v.trim(), `empty translation: ${k}`);
-      assert.deepEqual(placeholders(v).sort(), placeholders(k).sort(), `placeholders of ${k}`);
+      assert.ok((v as string).trim(), `empty translation: ${k}`);
+      assert.deepEqual(placeholders(v as string).sort(), placeholders(k).sort(), `placeholders of ${k}`);
     }
   });
 }
@@ -55,10 +61,11 @@ try {
     await gm.send('actor/damage', { actorId: 'pc_jane', amount: 3, type: 'S' });
     await settle();
     const e = lastLog(gm, (x) => x.kind === 'combat');
-    assert.equal(e.i18n.key, '{name} subit {damage} ({track})');
+    assert.equal(e.i18n!.key, '{name} subit {damage} ({track})');
     const c = jane().condition;
-    const pm = e.i18n.params.track.params.pm;
-    const sm = e.i18n.params.track.params.sm;
+    const track = e.i18n!.params!.track as I18nMessage;
+    const pm = track.params!.pm;
+    const sm = track.params!.sm;
     assert.equal(e.text, `${jane().name} subit 3 dommages étourdissants (P ${c.physical}/${pm} · É ${c.stun}/${sm})`);
     assert.equal(en(e), `${jane().name} takes 3 Stun damage (P ${c.physical}/${pm} · S ${c.stun}/${sm})`);
     await gm.send('actor/damage', { actorId: 'pc_jane', amount: 1, type: 'P' });
@@ -69,11 +76,11 @@ try {
   });
 
   await test('NPC damage with a status change', async () => {
-    const id = await gm.send('actor/create', { type: 'npc', name: 'Garde test' });
+    const id = await gm.send<string>('actor/create', { type: 'npc', name: 'Garde test' });
     await gm.send('actor/damage', { actorId: id, amount: 2, type: 'P' });
     await settle();
     const e = lastLog(gm, (x) => x.kind === 'combat');
-    assert.equal(e.i18n.key, '{name} encaisse {damage} — {status}.');
+    assert.equal(e.i18n!.key, '{name} encaisse {damage} — {status}.');
     assert.equal(e.text, 'Garde test encaisse 2 case(s) de dommages physiques — blessé.');
     assert.equal(en(e), 'Garde test takes 2 box(es) of Physical damage — wounded.');
     await gm.send('actor/damage', { actorId: id, amount: 1, type: 'S' });
@@ -104,20 +111,20 @@ try {
     const names = `${gm.state.actors.pc_jane.name} et ${gm.state.actors.pc_bricks.name}`;
     assert.equal(e.text, `Récompense : +5 karma pour ${names}.`);
     assert.equal(en(e), `Reward: +5 karma for ${names.replace(' et ', ' and ')}.`);
-    const h = jane().history.at(-1);
+    const h = jane().history.at(-1)!;
     assert.equal(h.text, 'Récompense');
     assert.equal(S.t('en', h.text), 'Reward');
   });
 
   await test('Duplicate: name in the table language, history entry with a key', async () => {
-    const id = await gm.send('actor/duplicate', { actorId: 'pc_bricks' });
+    const id = await gm.send<string>('actor/duplicate', { actorId: 'pc_bricks' });
     await settle();
     const copy = gm.state.actors[id];
     assert.equal(copy.name, `${gm.state.actors.pc_bricks.name} (copie)`);
-    const h = copy.history.at(-1);
-    assert.equal(h.i18n.key, 'Copie de {name}');
+    const h = copy.history.at(-1)!;
+    assert.equal(h.i18n!.key, 'Copie de {name}');
     assert.equal(h.text, `Copie de ${gm.state.actors.pc_bricks.name}`);
-    assert.equal(S.t('en', h.i18n.key, h.i18n.params), `Copy of ${gm.state.actors.pc_bricks.name}`);
+    assert.equal(S.t('en', h.i18n!.key, h.i18n!.params), `Copy of ${gm.state.actors.pc_bricks.name}`);
   });
 
   console.log('Characters: errors');
@@ -126,15 +133,15 @@ try {
     assert.equal(r.ok, false);
     assert.equal(r.error, 'Liste inconnue : nope');
     assert.equal(r.errorKey, 'Liste inconnue : {list}');
-    assert.equal(S.t('en', r.errorKey, r.params), 'Unknown list: nope');
+    assert.equal(S.t('en', r.errorKey!, r.params), 'Unknown list: nope');
     await gm.send('actor/update', { actorId: 'pc_jane', patch: { edge: { current: 0 } } });
     const r2 = await raw(p1, 'edge/spend', { actorId: 'pc_jane' });
     assert.equal(r2.errorKey, '{name} n’a plus de point de Chance');
     assert.equal(r2.error, `${jane().name} n’a plus de point de Chance`);
     const r3 = await raw(p1, 'actor/update', { actorId: 'pc_jane', patch: { karma: 99 } });
     assert.equal(r3.errorKey, 'Tu ne peux pas modifier ça toi-même ({fields}) — demande au MJ, à la boutique ou à l’entraînement.');
-    assert.equal(r3.params.fields, 'karma');
-    assert.match(S.t('en', r3.errorKey, r3.params), /^You can't change that yourself \(karma\)/);
+    assert.equal(r3.params!.fields, 'karma');
+    assert.match(S.t('en', r3.errorKey!, r3.params), /^You can't change that yourself \(karma\)/);
   });
 
   await test('untrained skill error names the skill through a nested key', async () => {
@@ -142,25 +149,25 @@ try {
     if (r.ok) return console.log('     (skipped: Jane knows Arcana)');
     assert.equal(r.errorKey, '{skill} ne peut pas être utilisée sans formation');
     assert.equal(r.error, 'Arcanes ne peut pas être utilisée sans formation');
-    assert.equal(S.t('en', r.errorKey, r.params), 'Arcana cannot be used untrained');
+    assert.equal(S.t('en', r.errorKey!, r.params), 'Arcana cannot be used untrained');
   });
 
   await test('HTTP export of a missing actor → errorBody', async () => {
     const res = await fetch(srv.url + '/api/actors/nope/export', { headers: { Authorization: `Bearer ${gmToken}` } });
     assert.equal(res.status, 404);
-    const body = await res.json();
+    const body = (await res.json()) as { error?: string; errorKey?: string };
     assert.equal(body.error, 'Personnage introuvable');
     assert.equal(body.errorKey, 'Personnage introuvable');
   });
 
   console.log('Maps');
-  const mapId = await gm.send('maps/create', { name: 'Test i18n', width: 12, height: 8, fill: '.' });
+  const mapId = await gm.send<string>('maps/create', { name: 'Test i18n', width: 12, height: 8, fill: '.' });
   await test('missing light / area / note → translatable « introuvable » keys', async () => {
     for (const [type, key, payload] of [
       ['maps/removeLight', 'Lumière introuvable', { lightId: 'x' }],
       ['maps/updateRegion', 'Zone introuvable', { regionId: 'x', patch: {} }],
       ['maps/removeNote', 'Note introuvable', { noteId: 'x' }],
-    ]) {
+    ] as Array<[string, string, ActionPayload]>) {
       const r = await raw(gm, type, { mapId, ...payload });
       assert.equal(r.ok, false, type);
       assert.equal(r.error, key);
@@ -170,8 +177,8 @@ try {
   });
 
   await test('revealing a hidden combatant logs a translatable entry', async () => {
-    const npc = await gm.send('actor/create', { type: 'npc', name: 'Sniper test' });
-    const tok = await gm.send('maps/addToken', { mapId, token: { actorId: npc, x: 2, y: 2, hidden: true } });
+    const npc = await gm.send<string>('actor/create', { type: 'npc', name: 'Sniper test' });
+    const tok = await gm.send<string>('maps/addToken', { mapId, token: { actorId: npc, x: 2, y: 2, hidden: true } });
     await gm.send('combat/start', { mapId }).catch(() => {});
     await gm.send('combat/add', { tokenIds: [tok] }).catch(() => {});
     await settle();

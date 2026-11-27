@@ -9,15 +9,19 @@ import path from 'node:path';
 import { args, isMain, findImage, jpegSize, slugOf, MAPLIB_SRC } from './lib.ts';
 import { conventionPitch } from './scale.ts';
 import { formatMaplib } from './check.ts';
+import type { CliArgs, MaplibFile } from './lib.ts';
 
-const titleCase = (s) => s.replace(/\b\w/g, (c) => c.toUpperCase());
+const titleCase = (s: string): string => s.replace(/\b\w/g, (c) => c.toUpperCase());
 
-export function scaffold(image, a = {}) {
+/** `a`: command line options (--grid, --slug, --name, --nameFr, --source, --theme, --lighting). */
+export function scaffold(image: string, a: CliArgs | Record<string, string> = {}): MaplibFile {
   const file = findImage(image);
   if (!file) throw new Error(`image « ${image} » not found (see SR_FRAGMAP_DIRS)`);
-  const { width: W, height: H } = jpegSize(file);
+  const size = jpegSize(file);
+  if (!size) throw new Error(`« ${image} » is not a JPEG`);
+  const { width: W, height: H } = size;
   const gridPx = Number(a.grid) || conventionPitch(W, H);
-  if (!gridPx) throw new Error('no standard pitch fits this image: pass --grid (see scale.js)');
+  if (!gridPx) throw new Error('no standard pitch fits this image: pass --grid (see scale.ts)');
   const base = path.basename(image).replace(/\.[^.]+$/, '');
   const slug = a.slug || slugOf(base);
   return {
@@ -45,7 +49,7 @@ if (isMain(import.meta.url)) {
     fs.writeFileSync(out, formatMaplib(raw));
     console.log(`${out}  ${raw.width}×${raw.height} cells @ ${raw.gridPx}px — fill nameFr, theme, lighting, tags, description, entry, walls, lights, regions, traced`);
   } catch (err) {
-    console.error('new: ' + err.message);
+    console.error('new: ' + (err as Error).message);
     process.exit(1);
   }
 }

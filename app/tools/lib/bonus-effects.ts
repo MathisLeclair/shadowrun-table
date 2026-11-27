@@ -4,17 +4,31 @@
 //
 // Effect = { type, target?, value?, condition?, exclude?, choice?, wireless?, tag }
 //   value: number, or a formula string evaluated with the item's rating at runtime ('Rating', '-Rating', 'FixedValues(3,6,9)'…)
-//   condition: stable key of shared/modifiers.js CONDITIONS (LimitCondition_Visible → 'visible', free text → 't-urban'…)
+//   condition: stable key of shared/modifiers.ts CONDITIONS (LimitCondition_Visible → 'visible', free text → 't-urban'…)
 //   choice: { kind: 'skill'|'text'|'matrixAction'|'attribute'|'limit', limitTo?, categories? } — the effect targets item.choice ('$choice')
 //   tag: the Chummer tag it comes from (coverage report). Unknown tags → { type: 'unsupported', tag }.
 import { SKILL_BY_ID, SKILL_GROUPS } from '../../shared/sr5.ts';
+import type { Effect, Formula } from '../../shared/types.ts';
 
-const arr = (v) => (v === undefined || v === null ? [] : Array.isArray(v) ? v : [v]);
-const txt = (v) => (v === undefined || v === null ? '' : typeof v === 'object' ? String(v['#text'] ?? '') : String(v)).trim();
-const isNum = (s) => /^[+-]?\d+(\.\d+)?$/.test(String(s).trim());
+/** A fast-xml-parser node of Chummer data: dynamic shape (attributes '@x', text '#text'). */
+type XmlNode = any;
+
+/** Choice constraints of an effect (Effect['choice'] plus the <selectskill> / <selectattribute> extras). */
+export type EffectChoice = NonNullable<Effect['choice']> & {
+  excludeCategories?: string[];
+  excludeSkills?: string[];
+  knowledge?: boolean;
+  attrs?: string[];
+};
+/** An effect before push(): condition false = chargen only (dropped), null/undefined fields are removed. */
+type RawEffect = Omit<Effect, 'condition' | 'choice' | 'tag' | 'value'> & { condition?: string | null | false; choice?: EffectChoice; value?: Formula | null };
+
+const arr = (v: XmlNode): XmlNode[] => (v === undefined || v === null ? [] : Array.isArray(v) ? v : [v]);
+const txt = (v: XmlNode): string => (v === undefined || v === null ? '' : typeof v === 'object' ? String(v['#text'] ?? '') : String(v)).trim();
+const isNum = (s: unknown) => /^[+-]?\d+(\.\d+)?$/.test(String(s).trim());
 
 /** '2' → 2, '+1' → 1, 'Rating' → 'Rating', '{Rating}' → 'Rating', '' → undefined. */
-export function effValue(raw) {
+export function effValue(raw: XmlNode): Formula | undefined {
   let s = txt(raw).replace(/\{([A-Za-z ]+)\}/g, '$1').replace(/\s+/g, ' ').trim();
   if (!s) return undefined;
   if (isNum(s)) return Number(s);
@@ -22,12 +36,12 @@ export function effValue(raw) {
   return s;
 }
 
-const SKILL_ALIASES = {
+const SKILL_ALIASES: Record<string, string> = {
   'exotic melee weapon': 'exotic_weapon', 'exotic ranged weapon': 'exotic_weapon', lockpicking: 'locksmith', 'pilot aerospace': 'pilot_aerospace',
   'pilot aircraft': 'pilot_aircraft', 'pilot walker': 'pilot_walker', 'pilot ground craft': 'pilot_ground_craft', 'pilot watercraft': 'pilot_watercraft',
 };
-/** Chummer English skill name → shared/sr5.js SKILLS id, or null (knowledge / exotic / unknown). */
-export function skillIdOf(name) {
+/** Chummer English skill name → shared/sr5.ts SKILLS id, or null (knowledge / exotic / unknown). */
+export function skillIdOf(name: unknown): string | null {
   const s = String(name || '').trim().toLowerCase();
   if (!s) return null;
   if (SKILL_ALIASES[s]) return SKILL_ALIASES[s];
@@ -35,20 +49,20 @@ export function skillIdOf(name) {
   return SKILL_BY_ID[id] ? id : null;
 }
 /** 'Close Combat' → 'close_combat' (SKILL_GROUPS key) or null. */
-export function groupIdOf(name) {
+export function groupIdOf(name: unknown): string | null {
   const id = String(name || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
   return SKILL_GROUPS[id] ? id : null;
 }
-const CATEGORY = {
+const CATEGORY: Record<string, string> = {
   'Social Active': 'social', 'Physical Active': 'physical', 'Combat Active': 'combat', 'Technical Active': 'technical', 'Vehicle Active': 'vehicle',
   'Magical Active': 'magic', 'Resonance Active': 'resonance', Academic: 'knowledge:academic', Interest: 'knowledge:interest', Language: 'knowledge:language',
   Professional: 'knowledge:professional', Street: 'knowledge:street',
 };
-export const categoryIdOf = (name) => CATEGORY[String(name || '').trim()] || null;
+export const categoryIdOf = (name: unknown): string | null => CATEGORY[String(name || '').trim()] || null;
 const ATTRS = ['BOD', 'AGI', 'REA', 'STR', 'WIL', 'LOG', 'INT', 'CHA', 'EDG', 'MAG', 'RES', 'ESS', 'DEP'];
 
 /** LimitCondition_IntimidationVisible → 'intimidation-visible'; free text → 't-' + slug; 'career' → null; 'create' → false (chargen only). */
-export function conditionKey(raw) {
+export function conditionKey(raw: XmlNode): string | false | null {
   const s = txt(raw);
   if (!s) return null;
   if (s === 'career') return null;
@@ -59,7 +73,7 @@ export function conditionKey(raw) {
 }
 
 // Single-value tags → stat targets (applied to the derived value of the same name, or to the matching test).
-const STATS = {
+const STATS: Record<string, string> = {
   damageresistance: 'soak', composure: 'composure', memory: 'memory', liftandcarry: 'liftCarry', dodge: 'defense', defensetest: 'defense',
   reach: 'reach', unarmedreach: 'reach', unarmeddv: 'unarmedDV', unarmedap: 'unarmedAP', drainresist: 'drainResist', fadingresist: 'fadingResist',
   surprise: 'surprise', spellresistance: 'spellResistance', physicalcmrecovery: 'physicalRecovery', stuncmrecovery: 'stunRecovery',
@@ -73,13 +87,13 @@ const RESISTS = new Set([
   'manaillusionresist', 'physicalillusionresist', 'detectionspellresist', 'directmanaspellresist', 'decreasebodresist', 'decreaseagiresist',
   'decreaserearesist', 'decreasestrresist', 'decreasecharesist', 'decreaseintresist', 'decreaselogresist', 'decreasewilresist',
 ]);
-const LIMIT_TAGS = { physicallimit: 'physical', mentallimit: 'mental', sociallimit: 'social', astrallimit: 'astral' };
+const LIMIT_TAGS: Record<string, string> = { physicallimit: 'physical', mentallimit: 'mental', sociallimit: 'social', astrallimit: 'astral' };
 const MONITOR_KEYS = { physical: 'physical', stun: 'stun', overflow: 'overflow', threshold: 'threshold', thresholdoffset: 'thresholdOffset', sharedthresholdoffset: 'sharedThresholdOffset' };
 
 /** Skill choice constraints of a <selectskill> node. */
-function skillChoice(node) {
+function skillChoice(node: XmlNode): EffectChoice {
   if (!node || typeof node !== 'object') return { kind: 'skill' };
-  const out = { kind: 'skill' };
+  const out: EffectChoice = { kind: 'skill' };
   const lim = txt(node['@limittoskill']);
   if (lim) out.limitTo = lim.split(',').map((s) => skillIdOf(s) || s.trim()).filter(Boolean);
   const cats = [txt(node['@skillcategory']), ...arr(node.skillcategories?.category).map(txt)].join(',');
@@ -97,16 +111,17 @@ function skillChoice(node) {
  * Normalize one <bonus> (or <wirelessbonus>) node. Returns an array of effects (possibly empty).
  * opts.wireless → every effect gets wireless: true (applies while the item's wireless bonus is on).
  */
-export function normalizeBonus(node, { wireless = false } = {}) {
+export function normalizeBonus(node: XmlNode, { wireless = false }: { wireless?: boolean } = {}): Effect[] {
   if (!node || typeof node !== 'object') return [];
-  const out = [];
-  const push = (e, tag) => {
+  const out: Effect[] = [];
+  const push = (e: RawEffect, tag: string) => {
     if (e.condition === false) return; // chargen-only ('create')
     if (e.condition === null || e.condition === undefined) delete e.condition;
-    for (const k of Object.keys(e)) if (e[k] === undefined) delete e[k];
-    out.push({ ...e, tag, ...(wireless ? { wireless: true } : {}) });
+    const rec = e as Record<string, unknown>;
+    for (const k of Object.keys(rec)) if (rec[k] === undefined) delete rec[k];
+    out.push({ ...(e as Effect), tag, ...(wireless ? { wireless: true } : {}) });
   };
-  const unsupported = (tag) => out.push({ type: 'unsupported', tag, ...(wireless ? { wireless: true } : {}) });
+  const unsupported = (tag: string) => out.push({ type: 'unsupported', tag, ...(wireless ? { wireless: true } : {}) });
   for (const [tag, raw] of Object.entries(node)) {
     if (tag.startsWith('@') || tag === '#text') continue;
     for (const v of arr(raw)) {
@@ -200,7 +215,7 @@ export function normalizeBonus(node, { wireless = false } = {}) {
 }
 
 /** Effects of a catalog XML entry: its <bonus> + <wirelessbonus> (wireless: true). */
-export function entryEffects(x) {
+export function entryEffects(x: XmlNode): Effect[] {
   if (!x || typeof x !== 'object') return [];
   return [...normalizeBonus(x.bonus), ...normalizeBonus(x.wirelessbonus, { wireless: true })];
 }

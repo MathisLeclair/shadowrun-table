@@ -1,8 +1,48 @@
 // Grid views of a map image (cell coordinates drawn in margins) + drawing of traced maplib content on top.
-// Used by tiles.js (tracing crops), overlay.js (QA) and the tests.
+// Used by tiles.ts (tracing crops), overlay.ts (QA) and the tests.
 import { crop, resize, newImage, paste, line, circle, rect, text, textWidth, hex, blend, dim } from './lib.ts';
+import type { Img, MaplibFile, Rgb } from './lib.ts';
+import type { LibGeometryInput, LibWall } from '../../shared/maplib.ts';
 
-export const COLORS = {
+/** Grid geometry of a map image: grid pitch and origin (px), size in cells. */
+export interface Geo {
+  gridPx: number;
+  offsetX: number;
+  offsetY: number;
+  width: number;
+  height: number;
+}
+/** A rectangle in cell units. */
+export interface CellRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+/** gridView() result: the rendered image and the cell → output pixel mapping. */
+export interface GridView {
+  img: Img;
+  toPx(x: number, y: number): [number, number];
+  ppc: number;
+  region: CellRect;
+  margin: number;
+  top: number;
+}
+export interface GridViewOptions {
+  grid?: boolean;
+  labels?: boolean;
+  title?: string;
+  darken?: number;
+  innerTags?: boolean;
+}
+/** Issue marker drawn by drawMaplib (cell coordinates). */
+export interface IssueMark {
+  x: number;
+  y: number;
+  tag?: string;
+}
+
+export const COLORS: Record<'wall' | 'window' | 'ethereal' | 'open' | 'closed' | 'locked' | 'secret' | 'light' | 'region' | 'entry' | 'issue' | 'grid' | 'grid5', Rgb> = {
   wall: [0, 235, 255],
   window: [70, 140, 255],
   ethereal: [255, 140, 0], // move:false sight:false? / odd combos
@@ -19,10 +59,10 @@ export const COLORS = {
 };
 
 /** Geometry of a map: { gridPx, offsetX, offsetY, width, height } (cells) from a maplib JSON or explicit values. */
-export function geometry(raw, img) {
+export function geometry(raw: LibGeometryInput, img?: Pick<Img, 'width' | 'height'> | null): Geo {
   const gridPx = Number(raw.gridPx) || 100;
   const offsetX = Number(raw.offsetX) || 0, offsetY = Number(raw.offsetY) || 0;
-  const W = raw.imageW || img?.width, H = raw.imageH || img?.height;
+  const W = Number(raw.imageW || img?.width), H = Number(raw.imageH || img?.height);
   return {
     gridPx,
     offsetX,
@@ -32,14 +72,14 @@ export function geometry(raw, img) {
   };
 }
 
-const labelStep = (ppc, minPx) => [1, 2, 5, 10, 20, 50].find((s) => s * ppc >= minPx) || 100;
+const labelStep = (ppc: number, minPx: number): number => [1, 2, 5, 10, 20, 50].find((s) => s * ppc >= minPx) || 100;
 
 /**
  * Render the cell rectangle `region` {x, y, w, h} of the image at `ppc` output px per cell, with a margin holding
  * coordinate labels. Returns { img, toPx(x, y) → [px, py], ppc, region }.
  * opts: grid (draw every-cell lines), every5 (stronger lines), labels, title, darken (0..1 multiplier), innerTags.
  */
-export function gridView(src, geo, region, ppc, opts = {}) {
+export function gridView(src: Img, geo: Geo, region: CellRect, ppc: number, opts: GridViewOptions = {}): GridView {
   const { grid = true, labels = true, title = '', darken = 1, innerTags = true } = opts;
   const M = labels ? 34 : 0, T = title ? 22 : 0;
   const ow = Math.round(region.w * ppc), oh = Math.round(region.h * ppc);
@@ -48,7 +88,7 @@ export function gridView(src, geo, region, ppc, opts = {}) {
   if (darken !== 1) dim(part, darken);
   const out = newImage(ow + 2 * M, oh + 2 * M + T, [18, 18, 22]);
   paste(out, part, M, M + T);
-  const toPx = (x, y) => [M + (x - region.x) * ppc, M + T + (y - region.y) * ppc];
+  const toPx = (x: number, y: number): [number, number] => [M + (x - region.x) * ppc, M + T + (y - region.y) * ppc];
   if (title) text(out, title, 6, 4, { scale: 2, color: [255, 255, 255], bg: null });
   const x0 = Math.ceil(region.x), x1 = Math.floor(region.x + region.w);
   const y0 = Math.ceil(region.y), y1 = Math.floor(region.y + region.h);
@@ -120,7 +160,7 @@ export function gridView(src, geo, region, ppc, opts = {}) {
   return { img: out, toPx, ppc, region, margin: M, top: T };
 }
 
-export function wallStyle(w) {
+export function wallStyle(w: LibWall): { color: Rgb; dash?: [number, number]; door?: boolean } {
   if (w.door) {
     if (w.door.kind === 'secret') return { color: COLORS.secret, dash: [6, 4], door: true };
     return { color: w.door.state === 'open' ? COLORS.open : w.door.state === 'locked' ? COLORS.locked : COLORS.closed, door: true };
@@ -135,7 +175,7 @@ export function wallStyle(w) {
  * Draw walls / doors / windows / lights / regions / entry / issues of a maplib JSON on a gridView.
  * opts: ids (label wall ids), issues ([{x, y, msg}]), endpoints (dots at wall ends).
  */
-export function drawMaplib(view, raw, opts = {}) {
+export function drawMaplib(view: GridView, raw: Partial<MaplibFile>, opts: { ids?: boolean; issues?: IssueMark[]; endpoints?: boolean } = {}): GridView {
   const { img, toPx, ppc } = view;
   const { ids = false, issues = [], endpoints = true } = opts;
   const lw = Math.max(2, Math.min(5, ppc * 0.06));
@@ -191,8 +231,8 @@ export function drawMaplib(view, raw, opts = {}) {
 }
 
 /** Legend strip appended under an overlay. */
-export function legend(view) {
-  const items = [
+export function legend(view: GridView): GridView {
+  const items: Array<[string, Rgb]> = [
     ['MUR', COLORS.wall], ['FENETRE', COLORS.window], ['PORTE FERMEE', COLORS.closed], ['OUVERTE', COLORS.open],
     ['VERROUILLEE', COLORS.locked], ['SECRETE', COLORS.secret], ['LUMIERE', COLORS.light], ['PROBLEME', COLORS.issue],
   ];

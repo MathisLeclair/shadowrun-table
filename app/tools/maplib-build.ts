@@ -2,7 +2,7 @@
 // Copies the artwork of the library maps (data/maplib/*.json → `image`) into <maplib>/images/ and makes their
 // thumbnails (<maplib>/thumbs/<slug>.jpg, ≤ 480 px, jpeg-js) — the files the server serves behind the signed links.
 //   node tools/maplib-build.ts [--only slug,slug] [--force] [--dry]
-// <maplib> = SR_MAPLIB_DIR, else <runtime>/maplib (runtime = SR_RUNTIME_DIR, else data/) — same rule as server/lib/maplib.js.
+// <maplib> = SR_MAPLIB_DIR, else <runtime>/maplib (runtime = SR_RUNTIME_DIR, else data/) — same rule as server/lib/maplib.ts.
 // Sources: SR_FRAGMAP_DIRS (path-list), else ../fragmap, the Foundry fragmaps-free module images, data/assets/foundry/scenes.
 // Idempotent: an image is copied again only when its size or mtime changed, a thumbnail is rebuilt only when older
 // than its image (or --force). The images are the owner's paid content: never commit them, never serve them unsigned.
@@ -16,19 +16,36 @@ const APP = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const GIT_DIR = process.env.SR_MAPLIB_SOURCE ? path.resolve(process.env.SR_MAPLIB_SOURCE) : path.join(APP, 'data', 'maplib');
 const RUNTIME = process.env.SR_RUNTIME_DIR ? path.resolve(process.env.SR_RUNTIME_DIR) : path.join(APP, 'data');
 const MAPLIB = process.env.SR_MAPLIB_DIR ? path.resolve(process.env.SR_MAPLIB_DIR) : path.join(RUNTIME, 'maplib');
-const mb = (n) => `${(n / 1048576).toFixed(2)} MB`;
-const kb = (n) => `${Math.round(n / 1024)} KB`;
+const mb = (n: number) => `${(n / 1048576).toFixed(2)} MB`;
+const kb = (n: number) => `${Math.round(n / 1024)} KB`;
 
-export function build({ only = null, force = false, dry = false, log = console.log } = {}) {
+export interface BuildOptions {
+  /** Only these slugs. */
+  only?: string[] | null;
+  force?: boolean;
+  dry?: boolean;
+  log?: (line: string) => void;
+}
+
+export interface BuildResult {
+  copied: number;
+  kept: number;
+  thumbs: number;
+  missing: string[];
+  bytes: number;
+  thumbBytes: number;
+}
+
+export function build({ only = null, force = false, dry = false, log = console.log }: BuildOptions = {}): BuildResult {
   const images = path.join(MAPLIB, 'images'), thumbs = path.join(MAPLIB, 'thumbs');
   const files = fs.existsSync(GIT_DIR) ? fs.readdirSync(GIT_DIR).filter((f) => f.endsWith('.json') && f !== 'library.json').sort() : [];
-  const res = { copied: 0, kept: 0, thumbs: 0, missing: [], bytes: 0, thumbBytes: 0 };
+  const res: BuildResult = { copied: 0, kept: 0, thumbs: 0, missing: [], bytes: 0, thumbBytes: 0 };
   for (const f of files) {
-    let raw;
+    let raw: { slug?: string; image?: string }; // a library entry file (only these fields are read)
     try {
       raw = JSON.parse(fs.readFileSync(path.join(GIT_DIR, f), 'utf8'));
     } catch (err) {
-      log(`  ✗ ${f}: invalid JSON (${err.message})`);
+      log(`  ✗ ${f}: invalid JSON (${(err as Error).message})`);
       continue;
     }
     const slug = raw.slug || f.slice(0, -5);
@@ -80,7 +97,7 @@ export function build({ only = null, force = false, dry = false, log = console.l
 
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
-  const a = args();
+  const a = args() as { dry?: string | boolean; only?: string | boolean; force?: string | boolean };
   console.log(`maplib-build: ${GIT_DIR} → ${MAPLIB}${a.dry ? '  (dry run)' : ''}`);
   console.log(`  image sources: ${sourceDirs().join(' | ')}`);
   const r = build({ only: a.only ? String(a.only).split(',') : null, force: !!a.force, dry: !!a.dry });

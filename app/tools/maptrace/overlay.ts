@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Visual QA of a traced library map: walls (cyan), doors (green closed / amber open / red locked / violet secret),
-// windows (blue dashed), lights (yellow), regions (labels), entry (pink X) and check.js issues (red circles) drawn
+// windows (blue dashed), lights (yellow), regions (labels), entry (pink X) and check.ts issues (red circles) drawn
 // over the image.
 //   node tools/maptrace/overlay.ts <maplib json|slug> [--out file.jpg] [--region x,y,w,h] [--ppc 120] [--ids] [--no-issues] [--max 1400]
 // Without --region: the whole map ≤ --max px. With --region: a zoomed crop (cells) — use it to check alignment.
@@ -9,13 +9,15 @@ import path from 'node:path';
 import { readJpeg, writeJpeg, findImage, args, isMain, loadMaplib } from './lib.ts';
 import { gridView, drawMaplib, legend, geometry } from './render.ts';
 import { checkMap } from './check.ts';
+import type { Img, MaplibFile } from './lib.ts';
+import type { CellRect, GridView, IssueMark } from './render.ts';
 
-export function renderOverlay(raw, img, { region = null, ppc = 0, ids = false, issues = true, max = 1400 } = {}) {
+export function renderOverlay(raw: MaplibFile, img: Img, { region = null, ppc = 0, ids = false, issues = true, max = 1400 }: { region?: CellRect | null; ppc?: number; ids?: boolean; issues?: boolean; max?: number } = {}): GridView {
   const geo = geometry(raw, img);
   const reg = region || { x: 0, y: 0, w: geo.width, h: geo.height };
   const p = ppc || Math.min((max - 68) / reg.w, (max - 90) / reg.h, geo.gridPx * 2);
   const view = gridView(img, geo, reg, p, { darken: 0.8, title: `${raw.slug || ''}  ${region ? `x ${+reg.x.toFixed(2)}-${+(reg.x + reg.w).toFixed(2)} y ${+reg.y.toFixed(2)}-${+(reg.y + reg.h).toFixed(2)}` : `${geo.width}x${geo.height}`}  walls ${(raw.walls || []).length}` });
-  const list = issues ? checkMap(raw, { image: false }).issues.filter((i) => Number.isFinite(i.x)).map((i) => ({ x: i.x, y: i.y, tag: i.tag })) : [];
+  const list = issues ? checkMap(raw, { image: false }).issues.filter((i) => Number.isFinite(i.x)).map((i) => ({ x: i.x, y: i.y, tag: i.tag }) as IssueMark) : [];
   drawMaplib(view, raw, { ids, issues: list });
   return legend(view);
 }
@@ -31,7 +33,7 @@ if (isMain(import.meta.url)) {
     const file = findImage(raw.image);
     if (!file) throw new Error(`image « ${raw.image} » not found`);
     const img = readJpeg(file);
-    let region = null;
+    let region: CellRect | null = null;
     if (a.region) {
       const [x, y, w, h] = String(a.region).split(',').map(Number);
       region = { x, y, w, h };
@@ -41,7 +43,7 @@ if (isMain(import.meta.url)) {
     writeJpeg(v.img, out, 88);
     console.log(`${out}  (${v.img.width}×${v.img.height}px, ${Math.round(v.ppc)} px/cell)`);
   } catch (err) {
-    console.error('overlay: ' + err.message);
+    console.error('overlay: ' + (err as Error).message);
     process.exit(1);
   }
 }

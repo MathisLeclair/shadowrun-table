@@ -5,43 +5,50 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { startServer, login, client, settle } from './test-client.ts';
+import type { TestClient } from './test-client.ts';
+import type { ActorId, Lifestyle, ShopState } from '../shared/types.ts';
+import type { RestoreSpec } from './restore-lifestyles.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BASE = Number(process.env.SR_TEST_PORT) || 3290;
 let failed = 0;
-const ok = (c, msg) => { console.log(`${c ? '  ok  ' : '  FAIL'} ${msg}`); if (!c) failed++; };
+const ok = (c: unknown, msg: string) => { console.log(`${c ? '  ok  ' : '  FAIL'} ${msg}`); if (!c) failed++; };
 
-const pcs = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/seed/actors/pcs.json'), 'utf8'));
-const spec = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/seed/upgrades-restore.json'), 'utf8'));
+// Seed PCs, deep-copied and reshaped below into the old format (raw JSON).
+const pcs: any[] = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/seed/actors/pcs.json'), 'utf8'));
+const spec: RestoreSpec & { actors: NonNullable<RestoreSpec['actors']> } = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/seed/upgrades-restore.json'), 'utf8'));
 const DOC_GOLD = '4f2d39cd-fbc7-4d02-a3eb-f8decdb9a415';
 const EXTRA_SECURE = '4fb84713-6171-409d-ad7c-ccbc44b891ad';
 
 /** The PCs as the live table had them before the lifestyles[] version: one legacy `lifestyle`, Foundry total rent. */
-const LIVE_RENT = { pc_anthony: 7083, pc_jane: 5000, pc_bricks: 5000, pc_anklay: 2000, pc_christopher: 10000 };
-function legacyActors() {
-  const out = {};
+const LIVE_RENT: Record<ActorId, number> = { pc_anthony: 7083, pc_jane: 5000, pc_bricks: 5000, pc_anklay: 2000, pc_christopher: 10000 };
+function legacyActors(): Record<ActorId, object> {
+  const out: Record<ActorId, object> = {};
   for (const a of pcs) {
     const x = JSON.parse(JSON.stringify(a));
-    const l = x.lifestyles.find((y) => y.primary) || x.lifestyles[0];
+    const l = x.lifestyles.find((y: Lifestyle) => y.primary) || x.lifestyles[0];
     x.lifestyle = { name: l.name, monthlyCost: LIVE_RENT[x.id] ?? l.monthlyCost, monthsPaid: l.monthsPaid };
     delete x.lifestyles;
     out[x.id] = x;
   }
   return out;
 }
-const tableState = (actors, shop) => ({ version: 1, config: { gmPassword: 'pw-restore', campaignName: 'Restore', lang: 'fr' }, users: {}, log: [], actors, ...(shop ? { shop } : {}) });
+const tableState = (actors: Record<ActorId, object>, shop?: Partial<ShopState>) => ({ version: 1, config: { gmPassword: 'pw-restore', campaignName: 'Restore', lang: 'fr' }, users: {}, log: [], actors, ...(shop ? { shop } : {}) });
 
-function run(args) {
+// Before Node 22.18, running a .ts file needs the type-stripping flag.
+const stripTypes = process.features.typescript ? [] : ['--experimental-strip-types'];
+function run(args: string[]): Promise<{ code: number | null; out: string }> {
   return new Promise((resolve) => {
-    const p = spawn(process.execPath, ['tools/restore-lifestyles.ts', ...args], { cwd: ROOT });
+    const p = spawn(process.execPath, [...stripTypes, 'tools/restore-lifestyles.ts', ...args], { cwd: ROOT });
     let out = '';
-    p.stdout.on('data', (d) => { out += d; });
-    p.stderr.on('data', (d) => { out += d; });
+    p.stdout.on('data', (d: Buffer) => { out += d; });
+    p.stderr.on('data', (d: Buffer) => { out += d; });
     p.on('exit', (code) => resolve({ code, out }));
   });
 }
-const life = (c, id) => c.state.actors[id].lifestyles;
-const prim = (c, id) => life(c, id).find((l) => l.primary);
+const life = (c: TestClient, id: ActorId) => c.state.actors[id].lifestyles;
+/** Primary lifestyle (the checks below assert on its fields, so a missing one fails there). */
+const prim = (c: TestClient, id: ActorId): Lifestyle => life(c, id).find((l) => l.primary)!;
 
 // --- 1. Boot restore skipped (shop.restored already lists the PCs): the script does the work ------------------------
 const ids = Object.keys(LIVE_RENT);
@@ -89,16 +96,16 @@ try {
   await settle();
   const j = prim(gm, 'pc_jane');
   ok(j.qualities.length === 4 && j.qualities.filter((q) => q.catalogId === EXTRA_SECURE).length === 1, 'Jane: 4 options, Extra Secure not duplicated');
-  ok(j.qualities.find((q) => q.catalogId === EXTRA_SECURE).notes === 'ajout MJ', 'existing option kept untouched');
+  ok(j.qualities.find((q) => q.catalogId === EXTRA_SECURE)!.notes === 'ajout MJ', 'existing option kept untouched');
   ok(j.monthlyCost === 8583 && j.baseCost === 5000 && j.catalogId, `Jane: 8583 ¥/month (got ${j.monthlyCost})`);
   const dg = j.qualities.find((q) => q.catalogId === DOC_GOLD);
-  ok(dg && dg.notes === spec.actors.pc_jane.note && /fichier du 01\/08\/2020/.test(dg.notes) && dg.nameFr === 'Contrat DocWagon (Or)', 'restored option carries « Restauré depuis Chummer (fichier du …) — à vérifier »');
+  ok(dg && dg.notes === spec.actors.pc_jane.note && /fichier du 01\/08\/2020/.test(dg.notes || '') && dg.nameFr === 'Contrat DocWagon (Or)', 'restored option carries « Restauré depuis Chummer (fichier du …) — à vérifier »');
   const b = prim(gm, 'pc_bricks');
   ok(b.name === 'Planque de Bricks' && b.qualities.length === 1 && b.monthlyCost === 7083, `Bricks: DocWagon Gold, 7083 ¥/month (got ${b.monthlyCost})`);
   const k = prim(gm, 'pc_anklay');
   ok(k.base === 'Low' && k.baseCost === 2000 && !k.qualities.length && k.catalogId === '451eef87-d18e-4bee-a972-1ee165b08522', 'Ank’Lay: Home (Low), no option');
   const c = prim(gm, 'pc_christopher');
-  ok(c.name === 'The Lounge (Haut)' && c.monthlyCost === 10000 && !c.qualities.length && /The Hut/.test(c.notes) && /Garage/.test(c.notes), 'Christopher: current lifestyle kept, historic one in the notes');
+  ok(c.name === 'The Lounge (Haut)' && c.monthlyCost === 10000 && !c.qualities.length && /The Hut/.test(c.notes || '') && /Garage/.test(c.notes || ''), 'Christopher: current lifestyle kept, historic one in the notes');
   const an = prim(gm, 'pc_anthony');
   ok(!an.qualities.length && an.baseCost === 5000 && an.monthlyCost === 5000, 'Anthony untouched: no option, Medium fixed base 5000 ¥/month');
   ok(ids.every((id) => JSON.stringify([gm.state.actors[id].karma, gm.state.actors[id].nuyen]) === JSON.stringify(money0[id])), 'karma and nuyen unchanged');
@@ -122,7 +129,7 @@ try {
   ok(r.code === 0 && /actor not found/.test(r.out) && /Nothing to do/.test(r.out), 'table without these PCs: nothing to do');
   const { planRestore } = await import('./restore-lifestyles.ts');
   let threw = '';
-  try { planRestore({ pc_jane: { id: 'pc_jane', name: 'Jane', type: 'pc', lifestyle: { name: 'Best Home', monthlyCost: 5000 } } }, spec, { qualities: [], lifestyles: [] }); } catch (e) { threw = e.message; }
+  try { planRestore({ pc_jane: { id: 'pc_jane', name: 'Jane', type: 'pc', lifestyle: { name: 'Best Home', monthlyCost: 5000 } } }, spec, { qualities: [], lifestyles: [] }); } catch (e) { threw = (e as Error).message; }
   ok(/deploy the lifestyles\[\] version first/.test(threw), 'old server (legacy lifestyle) → refuses with a clear message');
   gm.close();
 } finally {

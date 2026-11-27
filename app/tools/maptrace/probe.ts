@@ -7,13 +7,29 @@
 // use the centre as the wall coordinate. A luminance strip (" .:-=+*#%@", one char per step) helps reading.
 import { args, isMain } from './lib.ts';
 import { resolveSource } from './tiles.ts';
+import type { MapSource } from './tiles.ts';
+
+export interface ProbeOptions {
+  axis: 'row' | 'col';
+  /** Row y or column x (cells). */
+  at: number;
+  from: number;
+  to: number;
+  step?: number;
+  band?: number;
+}
+export interface ProbeRun {
+  kind: 'background' | 'dark' | 'content';
+  a: number;
+  b: number;
+}
 
 const SHADES = ' .:-=+*#%@';
 
-export function probe({ img, geo }, { axis, at, from, to, step = 0.02, band = 0.06 }) {
+export function probe({ img, geo }: Pick<MapSource, 'img' | 'geo'>, { axis, at, from, to, step = 0.02, band = 0.06 }: ProbeOptions): { runs: ProbeRun[]; strip: string; median: number; bg: number[] } {
   const { gridPx, offsetX, offsetY } = geo;
-  const px = (c, o) => o + c * gridPx;
-  const sampleRGB = (cx, cy) => {
+  const px = (c: number, o: number) => o + c * gridPx;
+  const sampleRGB = (cx: number, cy: number): number[] => {
     // mean colour over a small square (band × step) around the cell point
     const hx = Math.max(1, ((axis === 'row' ? step : band) * gridPx) / 2), hy = Math.max(1, ((axis === 'row' ? band : step) * gridPx) / 2);
     const x0 = Math.max(0, Math.floor(px(cx, offsetX) - hx)), x1 = Math.min(img.width - 1, Math.ceil(px(cx, offsetX) + hx));
@@ -35,7 +51,7 @@ export function probe({ img, geo }, { axis, at, from, to, step = 0.02, band = 0.
     return [img.data[i], img.data[i + 1], img.data[i + 2]];
   });
   const bg = [0, 1, 2].map((k) => corners.map((c) => c[k]).sort((a, b) => a - b)[1]);
-  const samples = [];
+  const samples: Array<{ t: number; lum: number; isBg: boolean }> = [];
   for (let t = from; t <= to + 1e-9; t += step) {
     const c = axis === 'row' ? sampleRGB(t, at) : sampleRGB(at, t);
     const lum = 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2];
@@ -45,10 +61,10 @@ export function probe({ img, geo }, { axis, at, from, to, step = 0.02, band = 0.
   const content = samples.filter((s) => !s.isBg).map((s) => s.lum).sort((a, b) => a - b);
   const med = content.length ? content[content.length >> 1] : 0;
   const dark = Math.max(12, med * 0.5);
-  const runs = [];
-  let cur = null;
+  const runs: ProbeRun[] = [];
+  let cur: ProbeRun | null = null;
   for (const s of samples) {
-    const kind = s.isBg ? 'background' : s.lum < dark ? 'dark' : 'content';
+    const kind: ProbeRun['kind'] = s.isBg ? 'background' : s.lum < dark ? 'dark' : 'content';
     if (!cur || cur.kind !== kind) {
       if (cur) runs.push(cur);
       cur = { kind, a: s.t, b: s.t };
@@ -59,7 +75,7 @@ export function probe({ img, geo }, { axis, at, from, to, step = 0.02, band = 0.
   runs.forEach((r, i) => {
     if (r.kind === 'background' && i !== 0 && i !== runs.length - 1) r.kind = 'dark';
   });
-  const merged = [];
+  const merged: ProbeRun[] = [];
   for (const r of runs) {
     const last = merged[merged.length - 1];
     if (last && last.kind === r.kind) last.b = r.b;
@@ -80,7 +96,7 @@ if (isMain(import.meta.url)) {
   }
   try {
     const s = resolveSource(a._[0], a);
-    const axis = a.row !== undefined ? 'row' : 'col';
+    const axis: ProbeOptions['axis'] = a.row !== undefined ? 'row' : 'col';
     const at = Number(axis === 'row' ? a.row : a.col);
     const from = a.from !== undefined ? Number(a.from) : 0;
     const to = a.to !== undefined ? Number(a.to) : axis === 'row' ? s.geo.width : s.geo.height;
@@ -100,7 +116,7 @@ if (isMain(import.meta.url)) {
     for (let i = 0; i < r.strip.length; i += per) line += r.strip[i];
     console.log(`  strip (1 char = 0.1 cell from ${from}): ${line}`);
   } catch (err) {
-    console.error('probe: ' + err.message);
+    console.error('probe: ' + (err as Error).message);
     process.exit(1);
   }
 }

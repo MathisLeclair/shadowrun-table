@@ -5,6 +5,52 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import jpeg from 'jpeg-js';
+import type { LibLight, LibRegion, LibWall } from '../../shared/maplib.ts';
+import type { Lighting, MapTheme, Point } from '../../shared/types.ts';
+
+/** RGBA image: `data` holds width × height × 4 bytes. */
+export interface Img {
+  width: number;
+  height: number;
+  data: Uint8Array;
+}
+/** RGB colour (0-255 each). */
+export type Rgb = readonly number[];
+
+/** A traced library map file (data/maplib/<slug>.json), in cell units. See check.ts for the validated schema. */
+export interface MaplibFile {
+  id: string;
+  slug: string;
+  name: string;
+  nameFr: string;
+  source: string;
+  image: string;
+  imageW: number;
+  imageH: number;
+  gridPx: number;
+  offsetX?: number;
+  offsetY?: number;
+  width: number;
+  height: number;
+  metersPerCell?: number;
+  theme?: MapTheme;
+  lighting?: Lighting;
+  tags?: string[];
+  description?: string;
+  entry?: Point | null;
+  walls: LibWall[];
+  lights: LibLight[];
+  regions: LibRegion[];
+  traced?: { by: string; at: string; quality: 'good' | 'rough'; notes?: string };
+  version?: number;
+}
+
+/** Parsed command line: positional args in `_`, `--key value` as a string, a bare `--flag` as true. */
+export interface CliArgs {
+  _: string[];
+  // Option values are whatever the user typed (string, or true for a bare flag): each script reads its own keys.
+  [key: string]: any;
+}
 
 export const APP_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const REPO_DIR = path.resolve(APP_DIR, '..');
@@ -12,12 +58,12 @@ export const MAPLIB_SRC = path.join(APP_DIR, 'data', 'maplib');
 export const FOUNDRY_FREE_DIR = 'C:\\Users\\mathi\\Documents\\Foundry\\Data\\modules\\fragmaps-free\\images';
 
 /** Folders searched for a library image (`image` field = path relative to one of them). SR_FRAGMAP_DIRS overrides. */
-export function sourceDirs() {
+export function sourceDirs(): string[] {
   if (process.env.SR_FRAGMAP_DIRS) return process.env.SR_FRAGMAP_DIRS.split(path.delimiter).filter(Boolean).map((d) => path.resolve(d));
   return [path.join(REPO_DIR, 'fragmap'), FOUNDRY_FREE_DIR, path.join(APP_DIR, 'data', 'assets', 'foundry', 'scenes')];
 }
 /** Absolute path of an image: an existing path as given, else `rel` inside the source folders. Null when not found. */
-export function findImage(rel) {
+export function findImage(rel: string | null | undefined): string | null {
   if (!rel) return null;
   if (fs.existsSync(rel) && fs.statSync(rel).isFile()) return path.resolve(rel);
   for (const d of sourceDirs()) {
@@ -28,7 +74,7 @@ export function findImage(rel) {
 }
 
 /** Width/height of a JPEG from its SOF header (no decode). */
-export function jpegSize(file) {
+export function jpegSize(file: string): { width: number; height: number } | null {
   const b = fs.readFileSync(file);
   if (b[0] !== 0xff || b[1] !== 0xd8) return null;
   let i = 2;
@@ -52,11 +98,11 @@ export function jpegSize(file) {
   }
   return null;
 }
-export const readJpeg = (file) => {
+export const readJpeg = (file: string): Img => {
   const img = jpeg.decode(fs.readFileSync(file), { useTArray: true, maxResolutionInMP: 120, maxMemoryUsageInMB: 1500, formatAsRGBA: true });
   return { width: img.width, height: img.height, data: img.data };
 };
-export function writeJpeg(img, file, quality = 85) {
+export function writeJpeg(img: Img, file: string, quality = 85): number {
   fs.mkdirSync(path.dirname(path.resolve(file)), { recursive: true });
   const enc = jpeg.encode({ width: img.width, height: img.height, data: img.data }, quality);
   const tmp = `${file}.tmp`;
@@ -64,7 +110,7 @@ export function writeJpeg(img, file, quality = 85) {
   fs.renameSync(tmp, file);
   return enc.data.length;
 }
-export function newImage(width, height, fill = [24, 24, 28]) {
+export function newImage(width: number, height: number, fill: Rgb = [24, 24, 28]): Img {
   const data = new Uint8Array(width * height * 4);
   for (let i = 0; i < data.length; i += 4) {
     data[i] = fill[0];
@@ -75,7 +121,7 @@ export function newImage(width, height, fill = [24, 24, 28]) {
   return { width, height, data };
 }
 /** Copy of a rectangle (px); parts outside the image are filled with a dark grey. */
-export function crop(img, x0, y0, w, h) {
+export function crop(img: Img, x0: number, y0: number, w: number, h: number): Img {
   x0 = Math.round(x0);
   y0 = Math.round(y0);
   w = Math.max(1, Math.round(w));
@@ -91,7 +137,7 @@ export function crop(img, x0, y0, w, h) {
   return out;
 }
 /** Resize: box filter when shrinking, bilinear when enlarging. */
-export function resize(img, tw, th) {
+export function resize(img: Img, tw: number, th: number): Img {
   tw = Math.max(1, Math.round(tw));
   th = Math.max(1, Math.round(th));
   const { width: w, height: h, data: src } = img;
@@ -137,7 +183,7 @@ export function resize(img, tw, th) {
   return out;
 }
 /** Paste `src` into `dst` at (x, y). */
-export function paste(dst, src, x0, y0) {
+export function paste(dst: Img, src: Img, x0: number, y0: number): void {
   for (let y = 0; y < src.height; y++) {
     const dy = y0 + y;
     if (dy < 0 || dy >= dst.height) continue;
@@ -152,7 +198,7 @@ export function paste(dst, src, x0, y0) {
   }
 }
 /** Darken / desaturate the whole image a bit so overlays stand out. */
-export function dim(img, k = 0.75) {
+export function dim(img: Img, k = 0.75): Img {
   const d = img.data;
   for (let i = 0; i < d.length; i += 4) {
     const l = (d[i] + d[i + 1] + d[i + 2]) / 3;
@@ -163,13 +209,13 @@ export function dim(img, k = 0.75) {
   return img;
 }
 
-export const hex = (s, fb = [255, 204, 136]) => {
+export const hex = (s: unknown, fb: Rgb = [255, 204, 136]): Rgb => {
   const m = /^#?([0-9a-f]{6})$/i.exec(String(s || ''));
   if (!m) return fb;
   const n = parseInt(m[1], 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 };
-export function blend(img, x, y, c, a) {
+export function blend(img: Img, x: number, y: number, c: Rgb, a: number): void {
   if (x < 0 || y < 0 || x >= img.width || y >= img.height || a <= 0) return;
   const o = (y * img.width + x) * 4, d = img.data;
   if (a >= 1) {
@@ -183,7 +229,7 @@ export function blend(img, x, y, c, a) {
   d[o + 2] += (c[2] - d[o + 2]) * a;
 }
 /** Anti-aliased thick segment. `dash` = [on, off] in px. */
-export function line(img, x1, y1, x2, y2, c, { width = 1, alpha = 1, dash = null } = {}) {
+export function line(img: Img, x1: number, y1: number, x2: number, y2: number, c: Rgb, { width = 1, alpha = 1, dash = null }: { width?: number; alpha?: number; dash?: readonly [number, number] | number[] | null } = {}): void {
   const hw = width / 2;
   const minX = Math.max(0, Math.floor(Math.min(x1, x2) - hw - 1)), maxX = Math.min(img.width - 1, Math.ceil(Math.max(x1, x2) + hw + 1));
   const minY = Math.max(0, Math.floor(Math.min(y1, y2) - hw - 1)), maxY = Math.min(img.height - 1, Math.ceil(Math.max(y1, y2) + hw + 1));
@@ -204,7 +250,7 @@ export function line(img, x1, y1, x2, y2, c, { width = 1, alpha = 1, dash = null
     }
   }
 }
-export function circle(img, cx, cy, r, c, { width = 2, alpha = 1, fill = 0 } = {}) {
+export function circle(img: Img, cx: number, cy: number, r: number, c: Rgb, { width = 2, alpha = 1, fill = 0 }: { width?: number; alpha?: number; fill?: number } = {}): void {
   const minX = Math.max(0, Math.floor(cx - r - width)), maxX = Math.min(img.width - 1, Math.ceil(cx + r + width));
   const minY = Math.max(0, Math.floor(cy - r - width)), maxY = Math.min(img.height - 1, Math.ceil(cy + r + width));
   for (let y = minY; y <= maxY; y++) {
@@ -217,7 +263,7 @@ export function circle(img, cx, cy, r, c, { width = 2, alpha = 1, fill = 0 } = {
     }
   }
 }
-export function rect(img, x, y, w, h, c, { alpha = 1, fill = false, width = 1 } = {}) {
+export function rect(img: Img, x: number, y: number, w: number, h: number, c: Rgb, { alpha = 1, fill = false, width = 1 }: { alpha?: number; fill?: boolean; width?: number } = {}): void {
   if (fill) {
     for (let yy = Math.max(0, Math.floor(y)); yy < Math.min(img.height, Math.ceil(y + h)); yy++)
       for (let xx = Math.max(0, Math.floor(x)); xx < Math.min(img.width, Math.ceil(x + w)); xx++) blend(img, xx, yy, c, alpha);
@@ -230,7 +276,7 @@ export function rect(img, x, y, w, h, c, { alpha = 1, fill = false, width = 1 } 
 }
 
 // ---- 5×7 pixel font (rows top → bottom, 5 bits each, MSB = left column) ----
-const G = {
+const G: Record<string, number[]> = {
   '0': [14, 17, 19, 21, 25, 17, 14], '1': [4, 12, 4, 4, 4, 4, 14], '2': [14, 17, 1, 2, 4, 8, 31], '3': [31, 2, 4, 2, 1, 17, 14],
   '4': [2, 6, 10, 18, 31, 2, 2], '5': [31, 16, 30, 1, 1, 17, 14], '6': [6, 8, 16, 30, 17, 17, 14], '7': [31, 1, 2, 4, 8, 8, 8],
   '8': [14, 17, 17, 14, 17, 17, 14], '9': [14, 17, 17, 15, 1, 2, 12],
@@ -247,14 +293,23 @@ const G = {
   '!': [4, 4, 4, 4, 4, 0, 4], '_': [0, 0, 0, 0, 0, 0, 31], '%': [24, 25, 2, 4, 8, 19, 3], ' ': [0, 0, 0, 0, 0, 0, 0],
 };
 export const FONT = G;
-const fold = (s) => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+const fold = (s: unknown): string => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
 /** Pixel width of a text at `scale` (each glyph 5 px + 1 px spacing, × scale). */
-export const textWidth = (s, scale = 2) => Math.max(0, fold(s).length * 6 - 1) * scale;
+export const textWidth = (s: unknown, scale = 2): number => Math.max(0, fold(s).length * 6 - 1) * scale;
 /**
  * Draw text with the 5×7 font. (x, y) = top-left, or centre with align:'center'. `bg` = colour of a padded box behind
  * the text (null = none).
  */
-export function text(img, s, x, y, { scale = 2, color = [255, 255, 255], bg = [0, 0, 0], bgAlpha = 0.75, align = 'left', valign = 'top' } = {}) {
+/** Options of text(). */
+export interface TextOptions {
+  scale?: number;
+  color?: Rgb;
+  bg?: Rgb | null;
+  bgAlpha?: number;
+  align?: 'left' | 'center' | 'right';
+  valign?: 'top' | 'middle' | 'bottom';
+}
+export function text(img: Img, s: unknown, x: number, y: number, { scale = 2, color = [255, 255, 255], bg = [0, 0, 0], bgAlpha = 0.75, align = 'left', valign = 'top' }: TextOptions = {}): { x: number; y: number; w: number; h: number } {
   const str = fold(s);
   const w = textWidth(str, scale), h = 7 * scale;
   let x0 = Math.round(align === 'center' ? x - w / 2 : align === 'right' ? x - w : x);
@@ -271,15 +326,15 @@ export function text(img, s, x, y, { scale = 2, color = [255, 255, 255], bg = [0
 }
 
 /** Load a maplib JSON (path or slug in data/maplib). */
-export function loadMaplib(arg) {
+export function loadMaplib(arg: string): { file: string; raw: MaplibFile } {
   let file = arg;
   if (!fs.existsSync(file)) file = path.join(MAPLIB_SRC, arg.endsWith('.json') ? arg : `${arg}.json`);
-  const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const raw = JSON.parse(fs.readFileSync(file, 'utf8')) as MaplibFile;
   return { file, raw };
 }
 /** Tiny argv parser: positional args + --key value / --flag. */
-export function args(argv = process.argv.slice(2)) {
-  const out = { _: [] };
+export function args(argv: string[] = process.argv.slice(2)): CliArgs {
+  const out: CliArgs = { _: [] };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a.startsWith('--')) {
@@ -293,7 +348,7 @@ export function args(argv = process.argv.slice(2)) {
   }
   return out;
 }
-export const slugOf = (name) =>
+export const slugOf = (name: unknown): string =>
   String(name)
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -302,4 +357,4 @@ export const slugOf = (name) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 /** True when the module at `metaUrl` is the script being run. */
-export const isMain = (metaUrl) => !!process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(metaUrl);
+export const isMain = (metaUrl: string): boolean => !!process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(metaUrl);
