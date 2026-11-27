@@ -5,11 +5,11 @@
   "type": "module",
   "main": "server/index.ts",
   "scripts": {
-    "start": "node server/index.ts",
-    "dev": "node --watch-path=server --watch-path=shared server/index.ts --vite",
+    "start": "node --experimental-strip-types --disable-warning=ExperimentalWarning server/index.ts",
+    "dev": "node --experimental-strip-types --disable-warning=ExperimentalWarning --watch-path=server --watch-path=shared server/index.ts --vite",
     "build": "vite build",
     "typecheck": "tsc -p tsconfig.json",
-    "build:catalog": "node tools/build-catalog.ts"
+    "build:catalog": "node --experimental-strip-types --disable-warning=ExperimentalWarning tools/build-catalog.ts"
   },
   "engines": {
     "node": ">=22.18"

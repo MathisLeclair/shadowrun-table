@@ -17,5 +17,5 @@ if errorlevel 1 (
   exit /b 1
 )
 start "" /min cmd /c "timeout /t 3 >nul & start http://localhost:3000"
-node server/index.ts
+node --experimental-strip-types --disable-warning=ExperimentalWarning server/index.ts
 pause
