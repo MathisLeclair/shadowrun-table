@@ -110,7 +110,9 @@ export function lookup(dict: Dictionary | null | undefined, lang: string, key: u
 
 /** Source (English) text of a key, interpolated: what the server sends as the readable `error` and stores in logs. */
 export function formatSource(key: unknown, params?: TParams | null, legacy?: Dictionary | null): string {
-  return interpolate(stripContext(currentKey(legacy, key)), params);
+  // Nested { t } params go through the legacy map too, and { fr, en } names render in English.
+  const tr: Translator = (k, p) => interpolate(stripContext(currentKey(legacy, k)), p, tr, SOURCE_LANG);
+  return tr(String(key ?? ''), params);
 }
 
 /** Keep only JSON-safe, small params (server → client: error params, log params). */
