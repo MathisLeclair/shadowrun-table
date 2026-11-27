@@ -771,7 +771,9 @@ function pageCsp() {
   } catch {}
   return [
     "default-src 'self'",
-    `script-src 'self'${hash}`,
+    // Dev only (npm run dev): Vite injects an inline React Refresh preamble and runs workers from blob: URLs.
+    VITE_DEV ? "script-src 'self' 'unsafe-inline' blob:" : `script-src 'self'${hash}`,
+    ...(VITE_DEV ? ["worker-src 'self' blob:"] : []),
     "style-src 'self' 'unsafe-inline'",
     'img-src * data: blob:',
     'media-src * data: blob:',

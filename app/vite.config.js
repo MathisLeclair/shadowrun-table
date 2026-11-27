@@ -6,18 +6,20 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   root: path.join(ROOT, 'client'),
+  plugins: [react()],
   publicDir: false,
   resolve: {
     // The client imports the shared rules modules as '/shared/x.js' (same URL the server used to serve).
     alias: [
       { find: /^\/shared\//, replacement: `${path.join(ROOT, 'shared')}/` },
-      // The raw client loads Socket.IO from the server's own route; the bundle takes the same file from the package.
-      { find: '/socket.io/socket.io.esm.min.js', replacement: path.join(ROOT, 'node_modules/socket.io-client/dist/socket.io.esm.min.js') },
+      // TRANSITIONAL (React migration): unconverted modules still import their hooks from Preact.
+      { find: /^preact\/hooks$/, replacement: 'react' },
     ],
   },
   server: {
