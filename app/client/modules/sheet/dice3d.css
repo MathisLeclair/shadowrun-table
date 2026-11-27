@@ -1,30 +1,19 @@
-/* 3D dice overlay (Dice3D.js). Per die: --x/--y final offset from the stage centre, --sx/--sy throw origin,
-   --rx0/--ry0/--rz0 → --rx/--ry/--rz cube rotation, --s size, --dur/--delay timing. --die = roller colour. */
-.d3-layer { position: fixed; inset: 0; z-index: 90; pointer-events: none; transition: opacity 0.35s ease; }
+/* 3D dice overlay (Dice3D.js). The layer is the camera (perspective, looking straight down at the table = the screen);
+   Dice3D.js drives every die each frame: .d3-die translate3d (z = height above the table), .d3-cube matrix3d,
+   .d3-shade opacity (lighting), .d3-shadow. --s = die size, --die = roller colour. */
+.d3-layer { position: fixed; inset: 0; z-index: 90; pointer-events: none; perspective: 1400px; transition: opacity 0.35s ease; }
 .d3-layer.out { opacity: 0; }
-.d3-stage { position: absolute; left: 50%; top: 48%; width: 0; height: 0; }
+.d3-stage { position: absolute; width: 0; height: 0; transform-style: preserve-3d; }
 
-.d3-die {
-  position: absolute; left: 0; top: 0; width: var(--s); height: var(--s);
-  transform: translate(calc(var(--x) - var(--s) / 2), calc(var(--y) - var(--s) / 2));
-  perspective: 700px;
-}
-.d3-throw {
-  position: absolute; inset: 0; transform-style: preserve-3d;
-  animation: d3-throw var(--dur) cubic-bezier(0.2, 0.7, 0.35, 1) var(--delay) both;
-}
-.d3-tilt { position: absolute; inset: 0; transform-style: preserve-3d; transform: rotateX(-18deg) rotateY(16deg); }
-.d3-cube {
-  position: absolute; inset: 0; transform-style: preserve-3d;
-  transform: rotateZ(var(--rz)) rotateX(var(--rx)) rotateY(var(--ry));
-  animation: d3-spin var(--dur) cubic-bezier(0.12, 0.65, 0.25, 1) var(--delay) both;
-}
+.d3-die, .d3-shadow { position: absolute; left: 0; top: 0; will-change: transform; }
+.d3-die { transform-style: preserve-3d; }
+.d3-cube { position: absolute; inset: 0; transform-style: preserve-3d; }
 .d3-face {
-  position: absolute; inset: 0; box-sizing: border-box; border-radius: 18%;
+  position: absolute; inset: 0; box-sizing: border-box; border-radius: 16%; overflow: hidden;
   display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); padding: 14%; place-items: center;
-  background: radial-gradient(circle at 30% 25%, color-mix(in srgb, var(--die) 45%, #1a2129), color-mix(in srgb, var(--die) 18%, #07090c) 75%);
+  background: radial-gradient(circle at 30% 25%, color-mix(in srgb, var(--die) 50%, #1d252e), color-mix(in srgb, var(--die) 22%, #07090c) 80%);
   border: 1px solid color-mix(in srgb, var(--die) 70%, #000);
-  box-shadow: inset 0 0 calc(var(--s) * 0.18) #000a;
+  box-shadow: inset 0 0 calc(var(--s) * 0.16) #0008;
   backface-visibility: hidden;
   transition: box-shadow 0.25s ease, border-color 0.25s ease, filter 0.25s ease;
 }
@@ -33,38 +22,16 @@
   background: radial-gradient(circle at 35% 30%, #fff, #d7e6ee 55%, #8fa3ae);
   box-shadow: 0 0 calc(var(--s) * 0.05) #fff6;
 }
-.d3-shadow {
-  position: absolute; left: 8%; right: 8%; bottom: -14%; height: 26%; border-radius: 50%;
-  background: radial-gradient(closest-side, #000c, transparent);
-  animation: d3-shadow var(--dur) cubic-bezier(0.2, 0.7, 0.35, 1) var(--delay) both;
-}
+/* Lighting: Dice3D.js sets the opacity from the face's angle to the light. */
+.d3-shade { position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none; }
+.d3-shadow { border-radius: 30%; background: radial-gradient(closest-side, #000d, #0000); filter: blur(3px); }
 
 /* After landing: hits glow green, ones red, the others dim. */
-.d3-die.hit .d3-face { border-color: var(--green, #5fe08a); box-shadow: inset 0 0 calc(var(--s) * 0.18) #000a, 0 0 calc(var(--s) * 0.35) color-mix(in srgb, var(--green, #5fe08a) 70%, transparent); }
-.d3-die.hit .d3-face.top .d3-pip { background: radial-gradient(circle at 35% 30%, #eaffef, var(--green, #5fe08a) 60%); }
-.d3-die.one .d3-face { border-color: var(--red, #ff5466); box-shadow: inset 0 0 calc(var(--s) * 0.18) #000a, 0 0 calc(var(--s) * 0.35) color-mix(in srgb, var(--red, #ff5466) 70%, transparent); }
-.d3-die.one .d3-face.top .d3-pip { background: radial-gradient(circle at 35% 30%, #ffe9ec, var(--red, #ff5466) 60%); }
+.d3-die.hit .d3-face { border-color: var(--green, #5fe08a); box-shadow: inset 0 0 calc(var(--s) * 0.16) #0008, inset 0 0 0 2px color-mix(in srgb, var(--green, #5fe08a) 80%, transparent); }
+.d3-die.hit .d3-face.top .d3-pip { background: radial-gradient(circle at 35% 30%, #eaffef, var(--green, #5fe08a) 60%); box-shadow: 0 0 calc(var(--s) * 0.12) var(--green, #5fe08a); }
+.d3-die.one .d3-face { border-color: var(--red, #ff5466); box-shadow: inset 0 0 calc(var(--s) * 0.16) #0008, inset 0 0 0 2px color-mix(in srgb, var(--red, #ff5466) 80%, transparent); }
+.d3-die.one .d3-face.top .d3-pip { background: radial-gradient(circle at 35% 30%, #ffe9ec, var(--red, #ff5466) 60%); box-shadow: 0 0 calc(var(--s) * 0.12) var(--red, #ff5466); }
 .d3-die.miss .d3-face { filter: brightness(0.6) saturate(0.6); }
-
-@keyframes d3-throw {
-  0% { transform: translate(var(--sx), var(--sy)) scale(1.6); opacity: 0; }
-  10% { opacity: 1; }
-  55% { transform: translate(calc(var(--sx) * 0.07), calc(var(--sy) * 0.07)) scale(1); }
-  70% { transform: translate(calc(var(--sx) * 0.025), calc(var(--sy) * 0.025)) scale(1.14); }
-  85% { transform: translate(0, 0) scale(1); }
-  93% { transform: translate(0, 0) scale(1.03); }
-  100% { transform: translate(0, 0) scale(1); opacity: 1; }
-}
-@keyframes d3-spin {
-  0% { transform: rotateZ(var(--rz0)) rotateX(var(--rx0)) rotateY(var(--ry0)); }
-  100% { transform: rotateZ(var(--rz)) rotateX(var(--rx)) rotateY(var(--ry)); }
-}
-@keyframes d3-shadow {
-  0% { transform: translate(var(--sx), var(--sy)) scale(0.6); opacity: 0; }
-  55% { transform: translate(calc(var(--sx) * 0.07), calc(var(--sy) * 0.07)) scale(1); opacity: 1; }
-  70% { transform: translate(calc(var(--sx) * 0.025), calc(var(--sy) * 0.025)) scale(0.8); }
-  85%, 100% { transform: translate(0, 0) scale(1); opacity: 1; }
-}
 
 .d3-banner {
   position: absolute; left: 50%; top: calc(var(--topbar-h, 48px) + 14px); transform: translateX(-50%);
@@ -82,7 +49,3 @@
 .d3-hits.glitch { color: var(--amber, #ffb84d); }
 .d3-hits.crit { color: var(--red, #ff5466); }
 @keyframes d3-pop { from { transform: translate(-50%, -10px) scale(0.96); } to { transform: translate(-50%, 0) scale(1); } }
-
-@media (prefers-reduced-motion: reduce) {
-  .d3-throw, .d3-cube, .d3-shadow { animation-duration: 1ms !important; animation-delay: 0ms !important; }
-}
