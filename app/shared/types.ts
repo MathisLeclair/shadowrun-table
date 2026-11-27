@@ -196,7 +196,7 @@ export interface RollModLine {
   /** Modifier id 'list:itemId[:subId]:i'. */
   id: string;
   kind: 'pool' | 'limit';
-  type: EffectType;
+  type: ModifierType;
   name: string;
   nameFr?: string;
   value: number;
@@ -412,8 +412,8 @@ export interface Quality extends ItemBase {
 
 export interface AdeptPower extends ItemBase {
   level?: number;
-  /** Power points. */
-  pp: number;
+  /** Power points (absent on critter powers). */
+  pp?: number;
   bonus?: ItemBonus;
 }
 
@@ -466,6 +466,8 @@ export interface ArmorMod extends ItemBase {
   included?: boolean;
   effects?: { armor?: number };
   bonus?: Partial<Record<ArmorModBonusKey, number | boolean>> | null;
+  /** false = switched off (its armor bonus no longer counts). */
+  equipped?: boolean;
   paid?: number | null;
 }
 
@@ -664,7 +666,8 @@ export interface Lifestyle extends ItemBase {
   primary: boolean;
   /** Run Faster points. */
   points?: { comforts?: number; security?: number; neighborhood?: number; entertainment?: number } | null;
-  pointCost?: number;
+  /** ¥ per Run Faster point of each category (from the catalog lifestyle). */
+  pointCost?: { comforts?: number; security?: number; neighborhood?: number; entertainment?: number } | null;
   /** Metatype surcharge in % (dwarf / troll). */
   metatypePct?: number;
   extraCost?: number;
@@ -883,6 +886,12 @@ export interface NpcStub {
 
 /** An actor in a client view: full sheet (GM; own and other PCs for players), or an NPC stub for players. */
 export type ViewActor = Actor | NpcStub;
+
+/**
+ * Actor-shaped input of the shared rules functions (shared/*.ts): a full Actor, a bestiary Template, an NPC stub, a
+ * chargen / enemy generator preview… Every field is optional and may be null: the rules read defensively.
+ */
+export type ActorLike = { [K in keyof Actor]?: Actor[K] | null };
 
 /** The actor item lists (`ITEM_LISTS` of sheet-data.js) and their item types. */
 export interface ActorItemLists {
@@ -2164,6 +2173,8 @@ export type Formula = number | string;
 /** Attribute / initiative bonus of a catalog entry (formulas in Rating). */
 export interface CatalogBonus {
   attributes?: Partial<Record<AttrKey, Formula>>;
+  /** Armor of an implant (Dermal Plating). */
+  armor?: Formula;
   initiativeDice?: Formula;
   initiative?: Formula;
 }
@@ -2434,20 +2445,26 @@ export type EffectType =
   | 'matrixInitiativeDice' | 'armor' | 'monitor' | 'stat' | 'resist' | 'accuracy' | 'matrixAction' | 'flag' | 'choice' | 'info'
   | 'unsupported' | 'allTests';
 
-/** Normalized Chummer <bonus> effect of a catalog entry. */
+/** Normalized Chummer <bonus> effect of a catalog entry (data/catalog/effects.json, tools/lib/bonus-effects.js). */
 export interface Effect {
   type: EffectType;
   target?: string;
-  /** Number or formula with Rating. */
-  value?: Formula;
+  /** Number or formula with Rating ('immune' on resist effects). */
+  value?: Formula | null;
   /** Condition key ('visible', 't-urban', 'spell-combat'…). */
   condition?: string;
   choice?: { kind: 'skill' | 'text' | 'matrixAction' | 'attribute' | 'limit'; limitTo?: string[]; categories?: string[] };
   /** From <wirelessbonus>. */
   wireless?: boolean;
-  /** Chummer tag. */
-  tag: string;
+  /** Chummer tag (absent from effects.json entries). */
+  tag?: string;
+  note?: string;
+  /** Skills / tests the effect does not apply to. */
+  exclude?: string[];
 }
+
+/** Modifier types: catalog effect types plus the ones shared/modifiers.ts makes (weapon accessories, afflictions). */
+export type ModifierType = EffectType | 'weaponPool' | 'woundFactor';
 
 /** A modifier collected from an actor's items (collectModifiers). */
 export interface Modifier {
@@ -2462,19 +2479,26 @@ export interface Modifier {
     parentName?: string;
     catalogId?: string;
     book?: string;
-    page?: number;
+    page?: number | string;
   };
-  type: EffectType;
-  target?: string;
-  /** Rating resolved. */
-  value: number;
-  condition?: string;
+  type: ModifierType;
+  target: string | null;
+  /** Rating resolved; null = could not be evaluated (shown only). */
+  value: number | null;
+  condition: string | null;
   wireless?: boolean;
+  /** The effect's « select… » definition (the pick is the item's `choice`). */
+  choice?: Effect['choice'];
+  note?: string;
+  immune?: boolean;
+  /** Already counted in actor.augmented / actor.initiative. */
   baked?: boolean;
+  /** An attribute / initiative bonus the stored values do not contain (« non compté »). */
+  unbaked?: boolean;
+  /** Shown, not applied. */
   info?: boolean;
   needsChoice?: boolean;
-  choice?: string;
-  immune?: boolean;
+  exclude?: string[];
 }
 
 /** conditionState(): 'na' not relevant to this test, 'auto' always on, 'on' / 'off' by its switch. */
