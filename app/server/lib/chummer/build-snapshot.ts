@@ -4,7 +4,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { skillsData, metatypeData, gradeTable, chummerDataDir } from './data.js';
+import { skillsData, metatypeData, gradeTable, chummerDataDir } from './data.ts';
 
 const out = path.join(path.dirname(fileURLToPath(import.meta.url)), 'snapshot.json');
 const sd = skillsData();

@@ -2,27 +2,42 @@
 // Canvas coordinates: the scene rectangle starts at (ceil(width*padding/size)*size, ceil(height*padding/size)*size);
 // the background image is drawn at that origin minus (shiftX, shiftY). Map cell (0,0) = that origin.
 import { slug } from '../../../shared/util.js';
+import type { FoundryDoc } from './world.ts';
+import type { AssetFn } from './assets.ts';
+import type { GameMap, Lighting, MapLight, MapNote, MapTheme, MapWall } from '../../../shared/types.ts';
+
+/** Context of convertScene() (see its doc). */
+export interface SceneContext {
+  folderPath?: (id: string | null | undefined) => string;
+  asset?: AssetFn;
+  actorNames?: Record<string, string>;
+  templateFor?: (actorId: string) => string | null;
+  worldId?: string;
+  journalNames?: Record<string, string>;
+  allScenes?: FoundryDoc[];
+  now?: number;
+}
 
 const MAX_DIM = 160;
-const r3 = (v) => Math.round(v * 1000) / 1000;
-const num = (v, d = 0) => {
+const r3 = (v: number): number => Math.round(v * 1000) / 1000;
+const num = (v: unknown, d = 0): number => {
   const n = Number(v);
   return Number.isFinite(n) ? n : d;
 };
 
 /** Background image path of a scene (v14: levels[].background.src; older: background.src / img). */
-export function sceneBackground(scene) {
-  const lv = (scene.levels || []).find((l) => l && l.background?.src) || null;
+export function sceneBackground(scene: FoundryDoc): string {
+  const lv = (scene.levels || []).find((l: FoundryDoc | null) => l && l.background?.src) || null;
   return lv?.background?.src || scene.background?.src || scene.img || '';
 }
 
 /** Thumbnail path (relative to the Foundry Data folder). */
-export function sceneThumb(scene) {
+export function sceneThumb(scene: FoundryDoc): string {
   return scene.thumb || '';
 }
 
 /** Stable map id for a scene. Duplicate names get a short id suffix. */
-export function mapIdFor(scene, allScenes = []) {
+export function mapIdFor(scene: FoundryDoc, allScenes: FoundryDoc[] = []): string {
   const base = slug(scene.name || scene._id) || scene._id.toLowerCase();
   const dupes = allScenes.filter((s) => (slug(s.name || s._id) || s._id.toLowerCase()) === base);
   if (dupes.length > 1) {
@@ -33,7 +48,7 @@ export function mapIdFor(scene, allScenes = []) {
 }
 
 /** Liang–Barsky clip of a segment to [0,w]×[0,h]; returns null when fully outside. */
-function clip(x1, y1, x2, y2, w, h) {
+function clip(x1: number, y1: number, x2: number, y2: number, w: number, h: number): [number, number, number, number] | null {
   let t0 = 0;
   let t1 = 1;
   const dx = x2 - x1;
@@ -57,7 +72,7 @@ function clip(x1, y1, x2, y2, w, h) {
   return [x1 + t0 * dx, y1 + t0 * dy, x1 + t1 * dx, y1 + t1 * dy];
 }
 
-function themeFor(name, folder) {
+function themeFor(name: string, folder: string): MapTheme {
   const n = `${name} ${folder}`.toLowerCase();
   if (/bar|club|diner|lounge/.test(n)) return 'bar';
   if (/lab/.test(n)) return 'lab';
@@ -73,7 +88,7 @@ function themeFor(name, folder) {
  * templateFor(actorId) → templateId|null, worldId, journalNames: {id: name}, allScenes }
  * Returns null when the scene has no background image.
  */
-export function convertScene(scene, ctx = {}) {
+export function convertScene(scene: FoundryDoc, ctx: SceneContext = {}): GameMap | null {
   const bg = sceneBackground(scene);
   if (!bg) return null;
   const g = scene.grid || {};
@@ -87,12 +102,12 @@ export function convertScene(scene, ctx = {}) {
   const height = Math.min(MAX_DIM, Math.ceil(H / size));
   const shiftX = num(scene.shiftX ?? scene.background?.offsetX, 0);
   const shiftY = num(scene.shiftY ?? scene.background?.offsetY, 0);
-  const toCell = (x, y) => [(x - px) / size, (y - py) / size];
+  const toCell = (x: number, y: number): [number, number] => [(x - px) / size, (y - py) / size];
   const folder = ctx.folderPath ? ctx.folderPath(scene.folder) : '';
   const id = mapIdFor(scene, ctx.allScenes || []);
 
   // Walls
-  const walls = [];
+  const walls: MapWall[] = [];
   let doors = 0;
   let secret = 0;
   let clipped = 0;
@@ -111,7 +126,7 @@ export function convertScene(scene, ctx = {}) {
       continue;
     }
     if (Math.hypot(cl[2] - cl[0], cl[3] - cl[1]) < 0.01) continue;
-    const wall = { id: `w${walls.length + 1}`, x1: r3(cl[0]), y1: r3(cl[1]), x2: r3(cl[2]), y2: r3(cl[3]), move: isDoor || move, sight: isDoor || sight, door: null };
+    const wall: MapWall = { id: `w${walls.length + 1}`, x1: r3(cl[0]), y1: r3(cl[1]), x2: r3(cl[2]), y2: r3(cl[3]), move: isDoor || move, sight: isDoor || sight, door: null };
     if (num(w.dir)) wall.foundry = { dir: num(w.dir) }; // one-way wall in Foundry (blocks from one side only)
     if (isDoor) {
       const kind = num(w.door) === 2 ? 'secret' : 'door';
@@ -125,7 +140,7 @@ export function convertScene(scene, ctx = {}) {
 
   // Lights
   const dist = Math.max(0.0001, num(g.distance, 1));
-  const lights = [];
+  const lights: MapLight[] = [];
   for (const l of scene.lights || []) {
     const [cx, cy] = toCell(num(l.x), num(l.y));
     const x = Math.floor(cx);
@@ -139,11 +154,11 @@ export function convertScene(scene, ctx = {}) {
   // Ambient light
   const env = scene.environment || {};
   const darkness = num(env.darknessLevel ?? scene.darkness, 0);
-  let lighting = darkness > 0.5 ? 'dark' : darkness > 0.2 ? 'dim' : 'bright';
+  let lighting: Lighting = darkness > 0.5 ? 'dark' : darkness > 0.2 ? 'dim' : 'bright';
   if (env.globalLight?.enabled && darkness <= 0.2) lighting = 'bright';
 
   // Journal pins → GM notes
-  const notes = [];
+  const notes: MapNote[] = [];
   for (const n of scene.notes || []) {
     const [cx, cy] = toCell(num(n.x), num(n.y));
     const x = Math.floor(cx);
@@ -154,7 +169,7 @@ export function convertScene(scene, ctx = {}) {
   }
 
   // Tokens: listed only (they are per-scene placements)
-  const tokCount = new Map();
+  const tokCount = new Map<string, number>();
   for (const t of scene.tokens || []) {
     const actorName = ctx.actorNames?.[t.actorId] || t.name || '?';
     const tpl = ctx.templateFor ? ctx.templateFor(t.actorId) : null;
