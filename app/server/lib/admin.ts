@@ -4,28 +4,38 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { TABLES_DIR, DELETED_DIR, TMP_DIR, RUNTIME_DIR, GLOBAL_ASSETS_DIR, readJson, writeJsonAtomic } from '../store.js';
+import { TABLES_DIR, DELETED_DIR, TMP_DIR, RUNTIME_DIR, GLOBAL_ASSETS_DIR, readJson, writeJsonAtomic } from '../store.ts';
+import type { Express, Request, Response, NextFunction } from 'express';
+import type { I18nParams, PackId, TableState } from '../../shared/types.ts';
+import type { StoredMeta, Table, TableApi } from './tables.ts';
 import {
   PACKS, LANGS, slugify, slugError, getRegistry, listMetas, getMeta, addMeta, updateMeta, removeMeta,
   createTableFiles, verifyPassword, setAdminPassword,
-} from './tables.js';
-import { ZipError, listZip, safeEntryPath, extractZip, writeZip, writeZipFile, walkFiles, dirSize, receiveToFile } from './zip.js';
-import { errorBody } from './i18n.js';
-import { registerBookAdminRoutes } from './books/admin-routes.js';
-import { registerAssistantAdminRoutes } from './assistant/admin-routes.js';
-import { registerMaplibAdminRoutes } from './maplib-admin.js';
-import { sessionTag } from './books/access.js';
+} from './tables.ts';
+import { ZipError, listZip, safeEntryPath, extractZip, writeZip, writeZipFile, walkFiles, dirSize, receiveToFile } from './zip.ts';
+import type { ZipItem } from './zip.ts';
+import { errorBody } from './i18n.ts';
+import { registerBookAdminRoutes } from './books/admin-routes.ts';
+import { registerAssistantAdminRoutes } from './assistant/admin-routes.ts';
+import { registerMaplibAdminRoutes } from './maplib-admin.ts';
+import { sessionTag } from './books/access.ts';
 
 const MAX_RESTORE = Number(process.env.SR_MAX_UPLOAD_BYTES) || 1.5e9;
 
+export interface RateLimiter {
+  blocked(key: string): boolean;
+  fail(key: string): void;
+  reset(key: string): boolean;
+}
+
 /** Tiny in-memory failure counter (brute-force throttle). */
-export function createRateLimiter({ max = 10, windowMs = 10 * 60 * 1000 } = {}) {
-  const hits = new Map(); // key -> { n, first }
+export function createRateLimiter({ max = 10, windowMs = 10 * 60 * 1000 }: { max?: number; windowMs?: number } = {}): RateLimiter {
+  const hits = new Map<string, { n: number; first: number }>(); // key -> { n, first }
   setInterval(() => {
     const now = Date.now();
     for (const [k, v] of hits) if (now - v.first > windowMs) hits.delete(k);
   }, windowMs).unref();
-  const live = (key) => {
+  const live = (key: string) => {
     const v = hits.get(key);
     if (v && Date.now() - v.first > windowMs) {
       hits.delete(key);
@@ -34,34 +44,37 @@ export function createRateLimiter({ max = 10, windowMs = 10 * 60 * 1000 } = {}) 
     return v;
   };
   return {
-    blocked: (key) => (live(key)?.n || 0) >= max,
-    fail(key) {
+    blocked: (key: string) => (live(key)?.n || 0) >= max,
+    fail(key: string) {
       const v = live(key);
       if (v) v.n++;
       else hits.set(key, { n: 1, first: Date.now() });
     },
-    reset: (key) => hits.delete(key),
+    reset: (key: string) => hits.delete(key),
   };
 }
 
-const bearer = (req) => {
+const bearer = (req: Request): string => {
   const h = req.headers.authorization || '';
   return h.startsWith('Bearer ') ? h.slice(7) : '';
 };
 const stamp = () => new Date().toISOString().replace(/[:.]/g, '-');
 /** Error reply: `key` = French message with {placeholders} (translated client-side from errorKey + params). */
-const fail = (res, status, key, extra = {}, params) => res.status(status).json(errorBody(key, params, extra));
+const fail = (res: Response, status: number, key: string, extra: Record<string, unknown> = {}, params?: I18nParams | null) => res.status(status).json(errorBody(key, params, extra));
 
 /** Files of a table to put in a backup zip (state, uploads, docs, imported assets; optional backups). */
-function tableZipItems(t, meta, { withBackups = false } = {}) {
+/** What a backup zip needs of a table: its folder and docs folder (a closed table gets a stand-in). */
+type ZipSource = Pick<Table, 'dir' | 'docsDir'>;
+
+function tableZipItems(t: ZipSource, meta: StoredMeta, { withBackups = false }: { withBackups?: boolean } = {}): ZipItem[] {
   const ext = externalDocs(t);
-  const under = (rel, dir) => rel === dir || rel.startsWith(dir + '/');
-  const exclude = (rel) =>
+  const under = (rel: string, dir: string) => rel === dir || rel.startsWith(dir + '/');
+  const exclude = (rel: string) =>
     under(rel, 'foundry') || // uploaded Foundry world sources (re-uploadable, huge)
     (!withBackups && under(rel, 'backups')) ||
     (!!ext && under(rel, 'docs')) ||
     rel === 'table.json' || rel.endsWith('.tmp') || rel.endsWith('.part') || /^state\.corrupt-/.test(rel);
-  const items = walkFiles(t.dir, { exclude }).map((f) => ({ name: f.rel, file: f.file }));
+  const items: ZipItem[] = walkFiles(t.dir, { exclude }).map((f) => ({ name: f.rel, file: f.file }));
   if (ext) {
     // Legacy table on the GM's PC: docs live in ../Shadowrun — ship the markdown files as docs/.
     for (const f of walkFiles(ext, { exclude: (rel, d) => rel.startsWith('.') || (d.isDirectory() && rel.split('/').length > 1) })) {
@@ -71,19 +84,22 @@ function tableZipItems(t, meta, { withBackups = false } = {}) {
   items.push({ name: 'table.json', data: JSON.stringify(meta, null, 2) });
   return items;
 }
-function externalDocs(t) {
+function externalDocs(t: ZipSource): string | null {
   const d = t.docsDir();
   return path.resolve(d) === path.resolve(t.dir, 'docs') ? null : d;
 }
 
-export function registerAdminRoutes(app, api) {
+/** One-time download ticket. */
+type Ticket = { kind: 'table'; id: string; exp: number; withBackups: boolean } | { kind: 'deleted'; file: string; exp: number };
+
+export function registerAdminRoutes(app: Express, api: TableApi): void {
   const { tables, openTable, closeTable, scheduleTableBroadcast, onlineUsers, issueToken } = api;
-  const sessions = new Map(); // admin token -> expiresAt
+  const sessions = new Map<string, number>(); // admin token -> expiresAt
   const TTL = 12 * 3600 * 1000;
-  const tickets = new Map(); // one-time download id -> { kind, id, exp, opts }
+  const tickets = new Map<string, Ticket>(); // one-time download id -> { kind, id, exp, opts }
   const limiter = createRateLimiter({ max: 8, windowMs: 15 * 60 * 1000 });
-  const sizeCache = new Map(); // dir -> { at, bytes }
-  const sizeOf = (dir, ttl = 60000) => {
+  const sizeCache = new Map<string, { at: number; bytes: number }>(); // dir -> { at, bytes }
+  const sizeOf = (dir: string, ttl = 60000): number => {
     const c = sizeCache.get(dir);
     if (c && Date.now() - c.at < ttl) return c.bytes;
     const bytes = dirSize(dir);
@@ -91,7 +107,7 @@ export function registerAdminRoutes(app, api) {
     return bytes;
   };
 
-  function requireAdmin(req, res, next) {
+  function requireAdmin(req: Request, res: Response, next: NextFunction) {
     const tok = bearer(req);
     const exp = tok && sessions.get(tok);
     if (!exp || exp < Date.now()) {
@@ -101,18 +117,18 @@ export function registerAdminRoutes(app, api) {
     sessions.set(tok, Date.now() + TTL);
     next();
   }
-  const metaOr404 = (req, res) => {
+  const metaOr404 = (req: Request, res: Response): StoredMeta | null => {
     const m = getMeta(req.params.id);
     if (!m) fail(res, 404, 'Table introuvable');
     return m;
   };
 
   /** Backup zip of a table folder into deleted/ (before delete / replace). Returns the file name. */
-  async function archiveToDeleted(meta, label) {
+  async function archiveToDeleted(meta: StoredMeta, label: string): Promise<string> {
     fs.mkdirSync(DELETED_DIR, { recursive: true });
     const t = tables.get(meta.id);
     if (t && !t.error) t.store.flush();
-    const fakeTable = t || { dir: path.join(TABLES_DIR, meta.id), docsDir: () => path.join(TABLES_DIR, meta.id, 'docs') };
+    const fakeTable: ZipSource = t || { dir: path.join(TABLES_DIR, meta.id), docsDir: () => path.join(TABLES_DIR, meta.id, 'docs') };
     const name = `${meta.id}-${stamp()}-${label}.zip`;
     await writeZipFile(path.join(DELETED_DIR, name), tableZipItems(fakeTable, meta, { withBackups: true }));
     return name;
@@ -162,12 +178,12 @@ export function registerAdminRoutes(app, api) {
         sizeBytes: sizeOf(path.join(TABLES_DIR, m.id)),
       };
     });
-    let disk = null;
+    let disk: { free: number; total: number } | null = null;
     try {
       const s = fs.statfsSync(RUNTIME_DIR);
       disk = { free: s.bavail * s.bsize, total: s.blocks * s.bsize };
     } catch {}
-    let deleted = [];
+    let deleted: { file: string; size: number }[] = [];
     try {
       deleted = fs.readdirSync(DELETED_DIR).filter((f) => f.endsWith('.zip')).sort().reverse().slice(0, 30)
         .map((f) => ({ file: f, size: fs.statSync(path.join(DELETED_DIR, f)).size }));
@@ -192,7 +208,7 @@ export function registerAdminRoutes(app, api) {
     const bad = slugError(id);
     if (bad) return fail(res, 400, bad);
     if (getMeta(id) || fs.existsSync(path.join(TABLES_DIR, id))) return fail(res, 409, 'L’identifiant « {id} » est déjà utilisé', {}, { id });
-    const pack = PACKS[b.pack] ? b.pack : null;
+    const pack: PackId | null = PACKS[b.pack as PackId] ? b.pack : null;
     if (!pack) return fail(res, 400, 'Contenu de départ inconnu');
     const lang = LANGS.includes(b.lang) ? b.lang : 'fr';
     const pw = String(b.gmPassword || '');
@@ -201,7 +217,7 @@ export function registerAdminRoutes(app, api) {
     try {
       meta = createTableFiles({ id, name, pack, lang, gmPassword: pw.slice(0, 80), hidden: !!b.hidden });
     } catch (err) {
-      return fail(res, 500, 'Création impossible : {error}', {}, { error: err.message });
+      return fail(res, 500, 'Création impossible : {error}', {}, { error: (err as Error).message });
     }
     const t = openTable(meta);
     if (t.error) return fail(res, 500, 'Table créée mais illisible : {error}', {}, { error: t.error });
@@ -214,7 +230,7 @@ export function registerAdminRoutes(app, api) {
     const m = metaOr404(req, res);
     if (!m) return;
     const b = req.body || {};
-    const patch = {};
+    const patch: Partial<StoredMeta> = {};
     if (b.name !== undefined) {
       const name = String(b.name).trim().slice(0, 80);
       if (!name) return fail(res, 400, 'Le nom ne peut pas être vide');
@@ -237,9 +253,9 @@ export function registerAdminRoutes(app, api) {
     } else if (!t && (patch.name || patch.lang)) {
       // Closed (archived) table: write the change into its state file, or reopening would bring the old name back.
       const file = path.join(TABLES_DIR, m.id, 'state.json');
-      const st = readJson(file, null);
+      const st = readJson<TableState>(file, null);
       if (st && typeof st === 'object') {
-        st.config = st.config || {};
+        st.config = st.config || ({} as TableState['config']);
         if (patch.name) st.config.campaignName = patch.name;
         if (patch.lang) st.config.lang = patch.lang;
         try {
@@ -251,7 +267,7 @@ export function registerAdminRoutes(app, api) {
     }
     if (patch.archived === true && !wasArchived) closeTable(m.id, { reason: 'archived' });
     if (patch.archived === false && wasArchived) {
-      const ot = openTable(getMeta(m.id));
+      const ot = openTable(getMeta(m.id)!);
       if (ot.error) return fail(res, 500, 'Table désarchivée mais illisible : {error}', {}, { error: ot.error });
       if (patch.name || patch.lang) {
         if (patch.name) ot.state.config.campaignName = patch.name;
@@ -313,7 +329,7 @@ export function registerAdminRoutes(app, api) {
     if (!meta) return fail(res, 404, 'Table introuvable');
     const t = tables.get(meta.id);
     if (t && !t.error) t.store.flush();
-    const target = t || { dir: path.join(TABLES_DIR, meta.id), docsDir: () => path.join(TABLES_DIR, meta.id, 'docs') };
+    const target: ZipSource = t || { dir: path.join(TABLES_DIR, meta.id), docsDir: () => path.join(TABLES_DIR, meta.id, 'docs') };
     const items = tableZipItems(target, meta, { withBackups: tk.withBackups });
     const fileName = `table-${meta.id}-${stamp().slice(0, 19)}.zip`;
     res.setHeader('Content-Type', 'application/zip');
@@ -324,8 +340,9 @@ export function registerAdminRoutes(app, api) {
       res.end();
     } catch (err) {
       console.error('[admin] backup zip failed', err);
-      if (!res.headersSent) fail(res, err.status || 500, err.message);
-      else res.destroy(err);
+      const e = err as Error & { status?: number };
+      if (!res.headersSent) fail(res, e.status || 500, e.message);
+      else res.destroy(e);
     }
   });
 
@@ -334,12 +351,12 @@ export function registerAdminRoutes(app, api) {
     const m = metaOr404(req, res);
     if (!m) return;
     if (String(req.body?.confirm || '') !== m.id) return fail(res, 400, 'Confirmation manquante : tape l’identifiant « {id} »', {}, { id: m.id });
-    let backup;
+    let backup: string;
     try {
       backup = await archiveToDeleted(m, 'deleted');
     } catch (err) {
       console.error('[admin] delete backup failed', err);
-      return fail(res, 500, 'Sauvegarde préalable impossible, suppression annulée : {error}', {}, { error: err.message });
+      return fail(res, 500, 'Sauvegarde préalable impossible, suppression annulée : {error}', {}, { error: (err as Error).message });
     }
     closeTable(m.id, { reason: 'deleted' });
     try {
@@ -375,25 +392,25 @@ export function registerAdminRoutes(app, api) {
         const entries = listZip(upload);
         const states = entries
           .map((e) => safeEntryPath(e.name))
-          .filter((p) => p && (p === 'state.json' || p.endsWith('/state.json')) && !p.split('/').includes('backups'))
+          .filter((p): p is string => !!p && (p === 'state.json' || p.endsWith('/state.json')) && !p.split('/').includes('backups'))
           .sort((a, b) => a.split('/').length - b.split('/').length);
         if (!states.length) throw new ZipError('Cette archive ne contient pas de state.json : ce n’est pas une sauvegarde de table');
         const prefix = states[0].slice(0, -'state.json'.length);
         await extractZip(upload, staging, { map: (rel) => (rel.startsWith(prefix) && !rel.slice(prefix.length).startsWith('foundry/') ? rel.slice(prefix.length) : null) });
       } else {
         if (fs.statSync(upload).size > 300e6) throw new ZipError('Fichier JSON trop volumineux');
-        const json = readJson(upload, null);
+        const json = readJson<unknown>(upload, null);
         if (!json) throw new ZipError('Fichier non reconnu : envoie le .zip d’une table ou un export JSON de partie');
         writeJsonAtomic(path.join(staging, 'state.json'), json);
       }
-      const state = readJson(path.join(staging, 'state.json'), null);
+      const state = readJson(path.join(staging, 'state.json'), null); // uploaded file: foreign JSON
       if (!state || typeof state !== 'object' || !state.actors || typeof state.actors !== 'object') throw new ZipError('state.json invalide (pas de personnages)');
-      const tj = readJson(path.join(staging, 'table.json'), {}) || {};
+      const tj = readJson(path.join(staging, 'table.json'), {}) || {}; // uploaded file: foreign JSON
       const id = String(req.query.slug || tj.id || slugify(req.query.name || state.config?.campaignName || '')).toLowerCase();
       const bad = slugError(id);
       if (bad) throw new ZipError(bad);
       const existing = getMeta(id);
-      let replaced = null;
+      let replaced: string | null = null;
       if (existing || fs.existsSync(path.join(TABLES_DIR, id))) {
         if (req.query.replace !== '1') return cleanup(), fail(res, 409, 'Une table « {id} » existe déjà : choisis un autre identifiant ou coche « Remplacer »', { code: 'exists' }, { id });
         if (existing) replaced = await archiveToDeleted(existing, 'replaced');
@@ -406,7 +423,7 @@ export function registerAdminRoutes(app, api) {
       const otherLegacy = listMetas().some((m) => m.legacy && m.id !== id);
       const name = String(req.query.name || tj.name || state.config?.campaignName || id).trim().slice(0, 80);
       const meta = addMeta({
-        id, name, pack: PACKS[tj.pack] ? tj.pack : 'vierge', lang: LANGS.includes(tj.lang) ? tj.lang : state.config?.lang === 'en' ? 'en' : 'fr',
+        id, name, pack: PACKS[tj.pack as PackId] ? tj.pack : 'vierge', lang: LANGS.includes(tj.lang) ? tj.lang : state.config?.lang === 'en' ? 'en' : 'fr',
         createdAt: Number(tj.createdAt) || Date.now(), hidden: !!tj.hidden, archived: false,
         ...(tj.legacy && !otherLegacy ? { legacy: true, docsDir: '../Shadowrun' } : {}),
       });
@@ -422,7 +439,8 @@ export function registerAdminRoutes(app, api) {
     } catch (err) {
       cleanup();
       if (!(err instanceof ZipError)) console.error('[admin] restore failed', err);
-      if (!res.headersSent) fail(res, err.status || 500, err.message || 'Restauration impossible');
+      const e = err as Error & { status?: number };
+      if (!res.headersSent) fail(res, e.status || 500, e.message || 'Restauration impossible');
     }
   });
 
@@ -432,7 +450,7 @@ export function registerAdminRoutes(app, api) {
   registerAssistantAdminRoutes(app, { requireAdmin, fail, listMetas });
   // ----- map library (server-wide fragmaps, see ARCHITECTURE.md « Map library ») -----
   // adminSessionAlive: thumbnails on /admin are signed with the admin session's tag (dead with the session).
-  const adminSessionAlive = (tag) => {
+  const adminSessionAlive = (tag: string): boolean => {
     for (const [tok, exp] of sessions) if (exp > Date.now() && sessionTag(tok) === tag) return true;
     return false;
   };

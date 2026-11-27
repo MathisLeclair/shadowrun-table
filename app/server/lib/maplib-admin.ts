@@ -4,47 +4,72 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { receiveToFile } from './zip.js';
-import * as L from './maplib.js';
-import { makeThumb } from './maplib-thumb.js';
+import type { Express, Request, Response, RequestHandler } from 'express';
+import { receiveToFile } from './zip.ts';
+import * as L from './maplib.ts';
+import { makeThumb } from './maplib-thumb.ts';
 import { versionFromMap, libGeometry } from '../../shared/maplib.js';
+import type { I18nParams } from '../../shared/types.ts';
+import type { StoredMeta, Table } from './tables.ts';
 
 const MAX_IMAGE = Number(process.env.SR_MAX_MAPLIB_IMAGE_BYTES) || 60e6;
 const MAX_THUMB_MP = 40; // bigger JPEGs get no automatic thumbnail (make it with tools/maplib-build.js)
-const bearer = (req) => {
+const bearer = (req: Request): string => {
   const h = req.headers.authorization || '';
   return h.startsWith('Bearer ') ? h.slice(7) : '';
 };
 
+/** Error reply of the admin routes (server/lib/admin.ts): `key` = French message with {placeholders}. */
+export type AdminFail = (res: Response, status: number, key: string, extra?: Record<string, unknown>, params?: I18nParams) => unknown;
+
+/** What registerAdminRoutes (server/lib/admin.ts) passes to registerMaplibAdminRoutes. */
+export interface MaplibAdminOptions {
+  requireAdmin: RequestHandler;
+  fail: AdminFail;
+  listMetas(): StoredMeta[];
+  /** Open tables (id -> Table). */
+  tables: Map<string, Table>;
+  /** Admin session tag -> still logged in? */
+  adminSessionAlive(tag: string): boolean;
+  scheduleTableBroadcast?(table: Table): void;
+}
+
+interface UsageTable {
+  tableId: string;
+  tableName: string;
+  maps: { id: string; name: string; version: number }[];
+}
+
 /**
- * Called by registerAdminRoutes (server/lib/admin.js):
+ * Called by registerAdminRoutes (server/lib/admin.ts):
  * { requireAdmin, fail(res, status, key, extra, params), listMetas(), tables (Map id → open Table), adminSessionAlive(tag) → bool,
  *   scheduleTableBroadcast(table) }.
  */
-export function registerMaplibAdminRoutes(app, { requireAdmin, fail, listMetas, tables, adminSessionAlive, scheduleTableBroadcast = () => {} }) {
+export function registerMaplibAdminRoutes(app: Express, { requireAdmin, fail, listMetas, tables, adminSessionAlive, scheduleTableBroadcast = () => {} }: MaplibAdminOptions): void {
   L.setAdminSessionCheck(adminSessionAlive);
-  const libFail = (res, err) => {
+  // err: whatever was thrown (a LibError from maplib.ts, or an unexpected error).
+  const libFail = (res: Response, err: any) => {
     if (err?.libKey) return fail(res, err.code === 'stale' ? 409 : 400, err.libKey, err.code ? { code: err.code } : {}, err.libParams);
     console.error('[maplib admin]', err);
     return fail(res, 500, 'Erreur du serveur');
   };
-  const entryOr404 = (req, res) => {
+  const entryOr404 = (req: Request, res: Response) => {
     const m = L.getMeta(req.params.slug);
     if (!m) fail(res, 404, 'Carte de bibliothèque introuvable');
     return m;
   };
   /** slug → [{ tableId, tableName, maps: [{ id, name, version }] }] over the open tables. */
-  function usage() {
-    const out = new Map();
+  function usage(): Map<string, Map<string, UsageTable>> {
+    const out = new Map<string, Map<string, UsageTable>>();
     for (const t of tables.values()) {
       if (t.error || !t.state?.maps) continue;
       for (const map of Object.values(t.state.maps)) {
         const slug = map?.library?.slug;
         if (!slug) continue;
         if (!out.has(slug)) out.set(slug, new Map());
-        const per = out.get(slug);
+        const per = out.get(slug)!;
         if (!per.has(t.id)) per.set(t.id, { tableId: t.id, tableName: t.state.config?.campaignName || t.meta?.name || t.id, maps: [] });
-        per.get(t.id).maps.push({ id: map.id, name: map.name, version: map.library.version || 0 });
+        per.get(t.id)!.maps.push({ id: map.id, name: map.name, version: map.library?.version || 0 });
       }
     }
     return out;
@@ -67,7 +92,7 @@ export function registerMaplibAdminRoutes(app, { requireAdmin, fail, listMetas, 
   /** Signed key so the admin page can show thumbnails (tied to this admin session). */
   app.get('/api/admin/maplib/key', requireAdmin, (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
-    const { k, exp } = L.signKey({ admin: true, session: L.sessionTag(bearer(req)) });
+    const { k, exp } = L.signKey({ admin: true, session: L.sessionTag(bearer(req)) as string });
     res.json({ k, exp, now: Date.now() });
   });
 
@@ -126,7 +151,8 @@ export function registerMaplibAdminRoutes(app, { requireAdmin, fail, listMetas, 
       let thumb = false;
       if (size.type === 'jpeg' && size.width * size.height <= MAX_THUMB_MP * 1e6) thumb = await makeThumb(dest, path.join(L.THUMBS_DIR, `${slug}.jpg`));
       res.json({ ok: true, entry: L.adminEntry(m), thumb });
-    } catch (err) {
+    } catch (e) {
+      const err = e as { libKey?: string; status?: number };
       fs.rmSync(tmp, { force: true });
       if (err?.libKey) return libFail(res, err);
       return fail(res, err.status || 500, err.status === 413 ? 'Fichier trop volumineux' : 'Envoi interrompu');
@@ -183,13 +209,13 @@ export function registerMaplibAdminRoutes(app, { requireAdmin, fail, listMetas, 
     try {
       const cur = L.getVersion(m.slug);
       const g = libGeometry({ ...L.effective(m), ...(cur?.geometry || {}) });
-      const bg = map.background || {};
+      const bg: Partial<NonNullable<typeof map.background>> = map.background || {};
       const content = { ...versionFromMap(map, { shift: { x: (Number(bg.x) || 0) - g.bgX, y: (Number(bg.y) || 0) - g.bgY } }), ...(cur?.entry ? { entry: cur.entry } : {}) };
-      const version = L.publish(m.slug, content, { kind: 'admin', tableId: t.id, table: t.state.config?.campaignName || t.id, mapId: map.id }, { baseVersion: map.library.version ?? 0, force: !!req.body?.force });
+      const version = L.publish(m.slug, content, { kind: 'admin', tableId: t!.id, table: t!.state.config?.campaignName || t!.id, mapId: map.id }, { baseVersion: map.library.version ?? 0, force: !!req.body?.force });
       map.library = { ...map.library, version, syncedAt: Date.now() };
       delete map.library.migrated;
-      t.store.saveSoon();
-      scheduleTableBroadcast(t);
+      t!.store.saveSoon();
+      scheduleTableBroadcast(t!);
       res.json({ version, entry: L.adminEntry(m) });
     } catch (err) {
       libFail(res, err);

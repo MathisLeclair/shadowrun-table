@@ -1,13 +1,13 @@
 # Shadowrun table — production image (see DEPLOY.md).
 # Runtime data (tables, registry) lives in /app/runtime and the legacy Foundry assets in /app/data/assets/foundry:
 # both are bind-mounted by docker-compose.yml so they survive rebuilds.
-FROM node:22-alpine AS deps
+FROM node:24-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
 
 # Browser bundle (Vite): needs the dev dependencies, only dist/ is kept.
-FROM node:22-alpine AS build
+FROM node:24-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
@@ -16,7 +16,7 @@ COPY client ./client
 COPY shared ./shared
 RUN npm run build
 
-FROM node:22-alpine
+FROM node:24-alpine
 LABEL app=shadowrun-table
 ENV NODE_ENV=production \
     PORT=3000 \
@@ -42,4 +42,4 @@ USER node
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
   CMD wget -qO- http://127.0.0.1:3000/api/health >/dev/null 2>&1 || exit 1
-CMD ["node", "server/index.js"]
+CMD ["node", "server/index.ts"]

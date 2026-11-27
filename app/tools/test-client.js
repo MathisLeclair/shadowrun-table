@@ -38,7 +38,9 @@ export async function startServer({
   for (const t of tables || []) writeTable(runtime, t);
   const childEnv = { ...process.env, PORT: String(port), SR_RUNTIME_DIR: runtime, SR_ADMIN_PASSWORD: adminPassword, ...env };
   if (tables && !bootstrap) childEnv.SR_BOOTSTRAP_TABLE = 'none';
-  const proc = spawn(process.execPath, ['server/index.js'], { cwd: ROOT, env: childEnv, stdio: ['ignore', 'pipe', 'pipe'] });
+  // Node runs the TypeScript server directly; before 22.18 type stripping needs a flag (no-op when NODE_OPTIONS already has it).
+  const stripTypes = process.features.typescript ? [] : ['--experimental-strip-types'];
+  const proc = spawn(process.execPath, [...stripTypes, 'server/index.ts'], { cwd: ROOT, env: childEnv, stdio: ['ignore', 'pipe', 'pipe'] });
   let out = '';
   proc.stdout.on('data', (d) => { out += d; if (!quiet) process.stdout.write(d); });
   proc.stderr.on('data', (d) => { out += d; process.stderr.write(d); });
