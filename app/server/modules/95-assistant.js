@@ -15,15 +15,17 @@ export default {
   name: 'assistant',
 
   routes(app, { requireGM, emitTo, runAction, simulateAction }) {
+    // A public demo table never reaches the (paid) API, whatever the admin settings say.
+    const allowed = (t) => !t.meta?.demo && isTableEnabled(t.id);
     const enabled = (req, res, next) => {
-      if (!isTableEnabled(req.srTable.id)) return res.status(403).json(errorBody('L’assistant n’est pas activé pour cette table (voir /admin).', null, { code: 'assistant-off' }));
+      if (!allowed(req.srTable)) return res.status(403).json(errorBody('L’assistant n’est pas activé pour cette table (voir /admin).', null, { code: 'assistant-off' }));
       next();
     };
 
     app.get('/api/assistant/status', requireGM, (req, res) => {
       const s = getSettings();
       res.json({
-        enabled: isTableEnabled(req.srTable.id),
+        enabled: allowed(req.srTable),
         connected: !!authMode(),
         model: s.model,
         modelLabel: MODELS[s.model]?.label || s.model,

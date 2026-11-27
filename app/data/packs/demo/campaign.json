@@ -1,0 +1,71 @@
+{
+ "acts": [
+  {
+   "id": "act_demo",
+   "title": "Démo — Cargaison volée",
+   "summary": "Un petit scénario pour essayer la table. Un fixer engage les runners pour récupérer une cargaison de drones volée par un gang des docks avant qu’elle ne soit revendue. Tout ce que vous faites ici est **public** et **effacé** à la prochaine remise à zéro."
+  }
+ ],
+ "quests": [
+  {
+   "id": "q_demo_cargo",
+   "actId": "act_demo",
+   "title": "Récupérer la cargaison",
+   "status": "active",
+   "summary": "Six caisses de drones reconditionnés dorment dans l’entrepôt 23, gardées par les Rats du port. Le fixer paie 12 000 ¥ pour les récupérer.",
+   "phases": [
+    {
+     "id": "p1",
+     "title": "Repérage",
+     "text": "Observer l’entrepôt depuis la rue : rondes, caméras, rideaux de quai. Essayez le brouillard de guerre et la vision partagée en déplaçant les pions."
+    },
+    {
+     "id": "p2",
+     "title": "Entrer",
+     "text": "Par les rideaux de quai, la porte de service (verrouillée) ou le quai. Le decker peut aussi ouvrir les portes depuis le host (onglet Matrice)."
+    },
+    {
+     "id": "p3",
+     "title": "Le gang",
+     "text": "Trois gangers et leur sergent. Lancez un combat depuis la carte (onglet Combat) : initiative, attaques, encaissement, dégâts automatiques."
+    },
+    {
+     "id": "p4",
+     "title": "Le bureau",
+     "text": "Le coffre mural contient le contrat de l’acheteur — aussi lisible dans le host (fichier protégé)."
+    }
+   ],
+   "maps": [
+    "map_demo_entrepot"
+   ],
+   "rewards": "12 000 ¥ et 5 karma chacun.",
+   "gmNotes": "Les rats du diable cachés au fond de l’entrepôt (pions masqués) n’apparaissent qu’aux yeux du MJ : révélez-les quand quelqu’un s’approche."
+  },
+  {
+   "id": "q_demo_buyer",
+   "actId": "act_demo",
+   "title": "Qui est « M. Brun » ?",
+   "status": "upcoming",
+   "summary": "Le contrat trouvé dans le bureau mène à un acheteur pressé. Une piste pour la suite (à inventer !).",
+   "phases": []
+  }
+ ],
+ "threads": [
+  {
+   "id": "th_demo_buyer",
+   "label": "L’acheteur de la cargaison",
+   "state": "open",
+   "notes": "Paie 40 000 ¥ pour des drones de livraison ? Il y a autre chose dans les caisses."
+  }
+ ],
+ "handouts": [
+  {
+   "id": "ho_demo_brief",
+   "title": "Message du fixer",
+   "body": "« Entrepôt 23, docks de Tacoma. Six caisses marquées *Tacoma Freight*. Les Rats du port les ont piquées hier et veulent les revendre jeudi. Ramenez-les intactes : 12 000 ¥. Discrétion appréciée, mais je ne vous paie pas pour faire dans la dentelle. »",
+   "revealedTo": "all"
+  }
+ ],
+ "playerRecap": "Le fixer vous a confié un job : récupérer six caisses volées dans l’entrepôt 23 des docks de Tacoma.",
+ "notes": "Bienvenue sur la table de démonstration ! Côté MJ, essayez : la carte (pions, portes, lumières, brouillard), le combat, le bestiaire et le générateur de PNJ, la Matrice (host lié aux portes de la carte), la boutique, les notes et la campagne. Ouvrez la table dans une fenêtre de navigation privée et entrez en joueur pour voir ce que voient les joueurs."
+}

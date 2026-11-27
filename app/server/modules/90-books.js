@@ -80,10 +80,12 @@ function publicBook(b, req) {
   };
 }
 
-const visibleBooks = (req) => readLibrary(BOOKS_DIR).books.filter((b) => allowedFor(b, req.srTable.id) && fs.existsSync(pdfFile(BOOKS_DIR, b.code)));
+// A public demo table never sees the server owner's rulebooks (also refused by server/lib/demo.js before reaching here).
+const visibleBooks = (req) => (req.srTable.meta?.demo ? [] : readLibrary(BOOKS_DIR).books.filter((b) => allowedFor(b, req.srTable.id) && fs.existsSync(pdfFile(BOOKS_DIR, b.code))));
 /** A book readable from the request's table, or null. Unknown and not-allowed books look the same (another table must not learn which books exist). */
 const tableBook = (req, rawCode) => {
   const code = cleanCode(rawCode);
+  if (req.srTable.meta?.demo) return null;
   return (code && readLibrary(BOOKS_DIR).books.find((x) => x.code === code && allowedFor(x, req.srTable.id))) || null;
 };
 
@@ -155,7 +157,7 @@ export default {
       if (!v.ok) return v.reason === 'missing' ? res.status(401).json(errorBody('Non connecté')) : res.status(403).json(errorBody(BAD_LINK));
       if (v.c !== code) return res.status(403).json(errorBody(BAD_LINK));
       const t = tableApi.tables.get(v.t);
-      const live = t && tableApi.usableTable(t) === t && !t.meta?.archived;
+      const live = t && tableApi.usableTable(t) === t && !t.meta?.archived && !t.meta?.demo;
       // The session that asked for the link must still exist (logout, kick, removed player, GM password change → dead link).
       const userOk = live && (v.u === 'gm' || !!t.state?.users?.[v.u]) && sessionAlive(t.state?.sessions, v.u, v.s);
       if (!userOk) return res.status(403).json(errorBody(BAD_LINK));

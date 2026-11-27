@@ -10,11 +10,14 @@ import crypto from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { Server } from 'socket.io';
 import { ROOT, DATA_DIR, GLOBAL_ASSETS_DIR, readJson, emptyState, tableScope, currentTable } from './store.js';
-import { Table, bootRegistry, listMetas, getMeta, updateMeta, setupAdminPassword } from './lib/tables.js';
+import { Table, bootRegistry, listMetas, getMeta, updateMeta, setupAdminPassword, ensureDemoTable } from './lib/tables.js';
 import { registerAdminRoutes, createRateLimiter } from './lib/admin.js';
 import { uid, deepClone } from '../shared/util.js';
 import { ActionError } from './errors.js';
 import { errorBody, normalizeLogEntry, dictionaryFiles, isLang, formatFr, cleanParams, t as translate } from './lib/i18n.js';
+import {
+  isDemo, DEMO, demoHttpGuard, demoUploadError, demoActionError, demoLoginBlocked, resetDemoTable, startDemoScheduler, instrumentDemo, demoPresence,
+} from './lib/demo.js';
 
 export { ActionError };
 const PORT = Number(process.env.PORT) || 3000;
@@ -47,16 +50,20 @@ async function loadModules() {
   }
 }
 
-/** Run every module's init on a table's state, with that table's content pack as seed source. */
+/**
+ * Run every module's init on a table's state, with that table's content pack as seed source. A pack built on a base
+ * pack (demo = vierge + extras) runs the inits once per folder, base first: inits only add what is missing.
+ */
 function initModules(table) {
-  const seedDir = table.packDir;
   tableScope.run(table, () => {
-    for (const m of modules) {
-      if (typeof m.init !== 'function') continue;
-      try {
-        m.init(table.state, { readSeed: (n, fb) => readJson(path.join(seedDir, n), fb), seedDir, tableId: table.id, table: table.info() });
-      } catch (err) {
-        console.error(`[modules] init failed for ${m.name} (table ${table.id}):`, err);
+    for (const seedDir of table.packDirs) {
+      for (const m of modules) {
+        if (typeof m.init !== 'function') continue;
+        try {
+          m.init(table.state, { readSeed: (n, fb) => readJson(path.join(seedDir, n), fb), seedDir, tableId: table.id, table: table.info() });
+        } catch (err) {
+          console.error(`[modules] init failed for ${m.name} (table ${table.id}):`, err);
+        }
       }
     }
     const c = table.state.config || (table.state.config = {});
@@ -74,6 +81,7 @@ const tables = new Map(); // id -> Table (open = loaded in memory; archived tabl
 function openTable(meta) {
   if (tables.has(meta.id)) return tables.get(meta.id);
   const t = new Table(meta);
+  instrumentDemo(t);
   try {
     tableScope.run(t, () => {
       t.store.load();
@@ -109,8 +117,9 @@ function closeTable(id, { reason = 'closed' } = {}) {
   tables.delete(id);
 }
 
-/** The GM renamed the campaign / changed its language: the table's registry entry follows. */
+/** The GM renamed the campaign / changed its language: the table's registry entry follows (not on a demo table). */
 function syncMetaFromState(t) {
+  if (isDemo(t)) return;
   const name = t.state?.config?.campaignName;
   const lang = t.state?.config?.lang;
   const patch = {};
@@ -400,7 +409,6 @@ function simulateAction(t, user, type, payload, state = deepClone(t.state)) {
 const app = express();
 app.disable('x-powered-by');
 app.set('trust proxy', process.env.SR_TRUST_PROXY === '1' ? 1 : false);
-app.use(express.json({ limit: '20mb' }));
 
 const bearer = (req) => {
   const h = req.headers.authorization || '';
@@ -420,6 +428,9 @@ app.use((req, res, next) => {
   else req.srTable = (token && tableForToken(token, null)) || defaultTable();
   next();
 });
+// Demo tables: blocked routes and body caps, checked before any body is read.
+app.use(demoHttpGuard);
+app.use(express.json({ limit: '20mb' }));
 
 function authUser(req) {
   return req.srTable ? userFromToken(req.srTable, bearer(req)) : null;
@@ -470,7 +481,7 @@ app.get('/api/tables', (req, res) => {
       .filter((m) => !m.archived && !m.hidden && usableTable(tables.get(m.id)))
       .map((m) => {
         const t = tables.get(m.id);
-        return { slug: m.slug, name: m.name, lang: t.info().lang, online: onlineUsers(t).length };
+        return { slug: m.slug, name: m.name, lang: t.info().lang, online: onlineUsers(t).length, ...(m.demo ? { demo: true } : {}) };
       }),
   });
 });
@@ -506,7 +517,15 @@ app.post('/api/login', (req, res) => {
     return noTable(req, res);
   }
   const state = t.state;
-  const { role, password, name, characterId, pin } = body;
+  const { role, password, name, characterId } = body;
+  const demo = isDemo(t);
+  // Demo table: no PINs (a name cannot be locked), PCs can be shared, logins throttled per IP.
+  const pin = demo ? '' : body.pin;
+  if (demo && demoLoginBlocked(t, req.ip)) return res.status(429).json(errorBody('Trop de tentatives : réessaie dans quelques minutes'));
+  if (role === 'gm' && demo) {
+    if (isLang(body.lang)) setUserLang(state, 'gm', body.lang);
+    return res.json({ token: issueToken(t, 'gm'), user: { ...GM_USER, lang: userLang(state, 'gm') }, table: t.info() });
+  }
   if (role === 'gm') {
     const key = `gm|${t.id}|${req.ip}`;
     if (loginLimiter.blocked(key)) return res.status(429).json(errorBody('Trop de tentatives : réessaie dans quelques minutes'));
@@ -524,7 +543,7 @@ app.post('/api/login', (req, res) => {
   if (!cleanName) return res.status(400).json(errorBody('Indique ton nom'));
   let user = Object.values(state.users).find((u) => u.name.toLowerCase() === cleanName.toLowerCase());
   if (user) {
-    if (user.pin) {
+    if (user.pin && !demo) {
       const key = `pin|${t.id}|${user.id}|${req.ip}`;
       if (loginLimiter.blocked(key)) return res.status(429).json(errorBody('Trop de tentatives : réessaie dans quelques minutes'));
       if (user.pin !== hashPin(pin)) {
@@ -533,6 +552,7 @@ app.post('/api/login', (req, res) => {
       }
     }
   } else {
+    if (demo && Object.keys(state.users).length >= DEMO.maxUsers) return res.status(429).json(errorBody('Table de démonstration pleine : réessaie plus tard'));
     user = { id: uid('usr'), name: cleanName, pin: pin ? hashPin(pin) : null, characterIds: [] };
     state.users[user.id] = user;
   }
@@ -540,7 +560,7 @@ app.post('/api/login', (req, res) => {
     const actor = state.actors[characterId];
     if (!actor || actor.type !== 'pc') return res.status(400).json(errorBody('Personnage introuvable'));
     const owner = Object.values(state.users).find((u) => u.id !== user.id && (u.characterIds || []).includes(characterId));
-    if (owner) return res.status(403).json(errorBody('Ce personnage est déjà pris par {name}', { name: owner.name }));
+    if (owner && !demo) return res.status(403).json(errorBody('Ce personnage est déjà pris par {name}', { name: owner.name }));
     if (!user.characterIds.includes(characterId)) user.characterIds.push(characterId);
   }
   if (isLang(body.lang)) user.lang = body.lang; // language picked on the login screen
@@ -559,6 +579,10 @@ app.post('/api/upload', requireUser, express.raw({ type: '*/*', limit: '80mb' })
   const allowed = ['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg', '.mp3', '.ogg', '.wav', '.m4a', '.webm', '.pdf', '.md', '.json', '.chum5', '.xml'];
   if (!allowed.includes(ext)) return res.status(400).json(errorBody('Type de fichier non supporté ({ext})', { ext }));
   if (!Buffer.isBuffer(req.body) || !req.body.length) return res.status(400).json(errorBody('Fichier vide'));
+  if (isDemo(t)) {
+    const bad = demoUploadError(t, ext, req.body.length);
+    if (bad) return res.status(bad.params ? 413 : 400).json(errorBody(bad.key, bad.params, { code: 'demo' }));
+  }
   const file = `${Date.now().toString(36)}-${original}`;
   try {
     fs.mkdirSync(t.uploadDir, { recursive: true });
@@ -653,6 +677,11 @@ app.post('/api/admin/import', requireGM, (req, res) => {
 });
 app.post('/api/admin/reset', requireGM, (req, res) => {
   const t = req.srTable;
+  // Demo table: « reset » brings back the demo content (and logs everyone out, this GM included).
+  if (isDemo(t)) {
+    resetDemoTable(t, { initModules, scheduleTableBroadcast }, { reason: 'gm' });
+    return res.json({ ok: true, demo: true });
+  }
   if (!t.store.backup('before-reset')) return res.status(500).json(errorBody('Sauvegarde préalable impossible : réinitialisation annulée'));
   const fresh = emptyState();
   fresh.config = t.state.config;
@@ -796,6 +825,7 @@ io.on('connection', (socket) => {
   socket.join(`table:${t.id}`);
   tableScope.run(t, () => socket.emit('state', buildView(t, entry.user)));
   scheduleTableBroadcast(t);
+  demoPresence(t);
 
   socket.on('action', (msg, ack) => {
     const reply = typeof ack === 'function' ? ack : () => {};
@@ -811,11 +841,16 @@ io.on('connection', (socket) => {
       return;
     }
     entry.user = user;
+    if (isDemo(t)) {
+      const bad = demoActionError(entry, type, payload);
+      if (bad) return reply({ ok: false, ...bad });
+    }
     reply(runAction(t, user, type, payload));
   });
 
   socket.on('disconnect', () => {
     t.sockets.delete(socket.id);
+    demoPresence(t);
     scheduleTableBroadcast(t);
   });
 });
@@ -825,8 +860,10 @@ io.on('connection', (socket) => {
 // ---------------------------------------------------------------------------
 await loadModules();
 bootRegistry();
+ensureDemoTable();
 setupAdminPassword();
 for (const meta of listMetas()) if (!meta.archived) openTable(meta);
+startDemoScheduler({ tables, initModules, scheduleTableBroadcast, onlineUsers });
 
 const tableApi = {
   tables, openTable, closeTable, initModules, importInto, scheduleTableBroadcast, onlineUsers, issueToken, getMeta, usableTable, tableBySlug,

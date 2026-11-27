@@ -230,7 +230,7 @@ export default function AssistantDock({ game }) {
     return html`<div class="assistant-empty">
       <div class="assistant-title">${t('Assistant MJ')}</div>
       <p>${t('L’assistant n’est pas activé pour cette table.')}</p>
-      <p class="muted small">${t('L’administrateur du serveur peut l’activer dans /admin → Assistant IA.')}</p>
+      <p class="muted small">${game?.config?.table?.demo ? t('Il n’est pas disponible sur la table de démonstration publique.') : t('L’administrateur du serveur peut l’activer dans /admin → Assistant IA.')}</p>
     </div>`;
   }
 

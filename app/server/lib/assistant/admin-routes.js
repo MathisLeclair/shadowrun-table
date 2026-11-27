@@ -24,7 +24,8 @@ export function registerAssistantAdminRoutes(app, { requireAdmin, fail, listMeta
       keyError,
       budget: budgetStatus(),
       usage: monthUsage(),
-      tables: listMetas().filter((m) => !m.archived).map((m) => ({ id: m.id, name: m.name, enabled: settings.enabledTables.includes(m.id) })),
+      // Public demo tables can never use the (paid) assistant: not offered here.
+      tables: listMetas().filter((m) => !m.archived && !m.demo).map((m) => ({ id: m.id, name: m.name, enabled: settings.enabledTables.includes(m.id) })),
     };
   };
 
@@ -34,7 +35,7 @@ export function registerAssistantAdminRoutes(app, { requireAdmin, fail, listMeta
     const b = req.body || {};
     const patch = {};
     if (Array.isArray(b.enabledTables)) {
-      const known = new Set(listMetas().map((m) => m.id));
+      const known = new Set(listMetas().filter((m) => !m.demo).map((m) => m.id));
       patch.enabledTables = b.enabledTables.filter((id) => known.has(id));
     }
     if (b.model !== undefined) {

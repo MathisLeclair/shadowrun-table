@@ -1,0 +1,368 @@
+{
+ "id": "map_demo_entrepot",
+ "name": "Entrepôt 23 — docks de Tacoma",
+ "folder": "Démo",
+ "description": "Un entrepôt de transit sur les docks, loué au mois par une société-écran. Les Rats du port y stockent une cargaison volée pour le compte d’un acheteur inconnu. Rideaux de quai à l’ouest, portail sur le quai à l’est, bureau du contremaître au nord-est.",
+ "width": 36,
+ "height": 22,
+ "metersPerCell": 1.5,
+ "theme": "industrial",
+ "lighting": "dim",
+ "fog": true,
+ "sharedVision": true,
+ "tiles": [
+  ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,=~~",
+  ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,=~~",
+  ",,,,####################WWW###,,,=~~",
+  ",,,,#................#.....mm#,,,=~~",
+  ",,,,#.mmmmm..mmmmm...#..TT...#,,,=~~",
+  ",,,,#................#..TT...#,,,=~~",
+  ",,,,#.mmmmm..mmmmm...#b......#,,,=~~",
+  ",vv,#................#b......#,,,=~~",
+  ",vv,D................###D#####,,,=~~",
+  ",vv,D........................#,,,=~~",
+  ",vv,D.......o.......o....xx..#,,,=~~",
+  ",,,,#...........cc...........#,,,=~~",
+  ",,,,#..ccc......cc...........D,,,=~~",
+  ",,,,#..ccc..............cc...D,,,=~~",
+  ",,,,#..ccc.cc.......v...cc...#,,,=~~",
+  ",,r,#......cc.......v........#,,,,~~",
+  ",,,,#........................#,,,=~~",
+  ",,,,##########D###############,,,=~~",
+  ",r,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,=~~",
+  ",,,,,,,,,,r,,,,,,,,,,,,,,,,,,,,,,=~~",
+  ",,,,,,,,,,,,,,,,,,,,,,,,,,,r,,,,,=~~",
+  ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,=~~"
+ ],
+ "doors": [
+  {
+   "id": "door_loading_1",
+   "x": 4,
+   "y": 8,
+   "state": "closed",
+   "kind": "shutter",
+   "name": "Rideau de quai (nord)"
+  },
+  {
+   "id": "door_loading_2",
+   "x": 4,
+   "y": 9,
+   "state": "closed",
+   "kind": "shutter",
+   "name": "Rideau de quai (centre)"
+  },
+  {
+   "id": "door_loading_3",
+   "x": 4,
+   "y": 10,
+   "state": "closed",
+   "kind": "shutter",
+   "name": "Rideau de quai (sud)"
+  },
+  {
+   "id": "door_back",
+   "x": 14,
+   "y": 17,
+   "state": "locked",
+   "kind": "door",
+   "name": "Porte de service"
+  },
+  {
+   "id": "door_dock_1",
+   "x": 29,
+   "y": 12,
+   "state": "closed",
+   "kind": "gate",
+   "name": "Portail du quai"
+  },
+  {
+   "id": "door_dock_2",
+   "x": 29,
+   "y": 13,
+   "state": "closed",
+   "kind": "gate",
+   "name": "Portail du quai"
+  },
+  {
+   "id": "door_office",
+   "x": 24,
+   "y": 8,
+   "state": "locked",
+   "kind": "door",
+   "name": "Bureau du contremaître"
+  }
+ ],
+ "lights": [
+  {
+   "id": "light_street",
+   "x": 2,
+   "y": 4,
+   "radius": 6,
+   "color": "#ffb766",
+   "on": true,
+   "name": "Réverbère"
+  },
+  {
+   "id": "light_hall_w",
+   "x": 10,
+   "y": 9,
+   "radius": 5,
+   "color": "#cfe8ff",
+   "on": true,
+   "name": "Néons de l’entrepôt (ouest)"
+  },
+  {
+   "id": "light_hall_e",
+   "x": 19,
+   "y": 13,
+   "radius": 5,
+   "color": "#cfe8ff",
+   "on": true,
+   "name": "Néons de l’entrepôt (est)"
+  },
+  {
+   "id": "light_office",
+   "x": 25,
+   "y": 5,
+   "radius": 4,
+   "color": "#ffd9a0",
+   "on": true,
+   "name": "Lampe du bureau"
+  },
+  {
+   "id": "light_dock",
+   "x": 31,
+   "y": 12,
+   "radius": 5,
+   "color": "#ff7a59",
+   "on": true,
+   "name": "Projecteur du quai"
+  }
+ ],
+ "regions": [
+  {
+   "id": "reg_street",
+   "name": "Rue des docks",
+   "x": 0,
+   "y": 0,
+   "w": 4,
+   "h": 22,
+   "color": "#3a4a5c",
+   "gmOnly": false
+  },
+  {
+   "id": "reg_hall",
+   "name": "Entrepôt",
+   "x": 5,
+   "y": 3,
+   "w": 24,
+   "h": 14,
+   "color": "#4a4f3a",
+   "gmOnly": false
+  },
+  {
+   "id": "reg_office",
+   "name": "Bureau du contremaître",
+   "x": 22,
+   "y": 3,
+   "w": 7,
+   "h": 5,
+   "color": "#5c3a4a",
+   "gmOnly": false
+  },
+  {
+   "id": "reg_dock",
+   "name": "Quai",
+   "x": 30,
+   "y": 0,
+   "w": 3,
+   "h": 22,
+   "color": "#2f4f5c",
+   "gmOnly": false
+  },
+  {
+   "id": "reg_cameras",
+   "name": "Champ des caméras",
+   "x": 5,
+   "y": 3,
+   "w": 16,
+   "h": 14,
+   "color": "#5c9be0",
+   "gmOnly": true
+  }
+ ],
+ "notes": [
+  {
+   "id": "note_cargo",
+   "x": 16,
+   "y": 11,
+   "text": "La cargaison : 6 caisses de drones de livraison Ares reconditionnés. Une caisse est piégée (grenade, Perception 3 pour la repérer).",
+   "gmOnly": true
+  },
+  {
+   "id": "note_safe",
+   "x": 24,
+   "y": 4,
+   "text": "Coffre mural (Serrurerie 4, ou via le host). Contient 4 000 ¥ en créditubes et le contrat de l’acheteur.",
+   "gmOnly": true
+  },
+  {
+   "id": "note_spill",
+   "x": 25,
+   "y": 10,
+   "text": "Flaque de solvant : traverser = test d’Agilité + Réaction (2), sinon chute.",
+   "gmOnly": true
+  }
+ ],
+ "tokens": [
+  {
+   "id": "tok_mwzcdwxh0a1px",
+   "actorId": "npc_demo_street_ganger_1",
+   "name": "Ganger de rue 1",
+   "x": 14,
+   "y": 9,
+   "size": 1,
+   "color": "#b5654a",
+   "disposition": "hostile",
+   "hidden": false,
+   "vision": {
+    "lowLight": false,
+    "thermo": false,
+    "darkRange": 0
+   },
+   "status": []
+  },
+  {
+   "id": "tok_mwzcdwxh0chol",
+   "actorId": "npc_demo_street_ganger_2",
+   "name": "Ganger de rue 2",
+   "x": 15,
+   "y": 9,
+   "size": 1,
+   "color": "#b5654a",
+   "disposition": "hostile",
+   "hidden": false,
+   "vision": {
+    "lowLight": false,
+    "thermo": false,
+    "darkRange": 0
+   },
+   "status": []
+  },
+  {
+   "id": "tok_mwzcdwxh0e1gs",
+   "actorId": "npc_demo_street_ganger_3",
+   "name": "Ganger de rue 3",
+   "x": 13,
+   "y": 9,
+   "size": 1,
+   "color": "#b5654a",
+   "disposition": "hostile",
+   "hidden": false,
+   "vision": {
+    "lowLight": false,
+    "thermo": false,
+    "darkRange": 0
+   },
+   "status": []
+  },
+  {
+   "id": "tok_mwzcdwxi0gsz3",
+   "actorId": "npc_demo_crimson_sarge_1",
+   "name": "Sarge Crimson Crush",
+   "x": 25,
+   "y": 6,
+   "size": 1,
+   "color": "#ff4d4d",
+   "disposition": "hostile",
+   "hidden": false,
+   "vision": {
+    "lowLight": true,
+    "thermo": false,
+    "darkRange": 0
+   },
+   "status": []
+  },
+  {
+   "id": "tok_mwzcdwy10i678",
+   "actorId": "npc_demo_devil_rat_1",
+   "name": "Rat du diable (meute) 1",
+   "x": 9,
+   "y": 16,
+   "size": 1,
+   "color": "#8d6e63",
+   "disposition": "hostile",
+   "hidden": true,
+   "vision": {
+    "lowLight": true,
+    "thermo": false,
+    "darkRange": 0
+   },
+   "status": []
+  },
+  {
+   "id": "tok_mwzcdwy10khiz",
+   "actorId": "npc_demo_devil_rat_2",
+   "name": "Rat du diable (meute) 2",
+   "x": 10,
+   "y": 16,
+   "size": 1,
+   "color": "#8d6e63",
+   "disposition": "hostile",
+   "hidden": true,
+   "vision": {
+    "lowLight": true,
+    "thermo": false,
+    "darkRange": 0
+   },
+   "status": []
+  },
+  {
+   "id": "tok_pc_demo_samurai",
+   "actorId": "pc_demo_samurai",
+   "name": "Rivet",
+   "x": 3,
+   "y": 12,
+   "size": 1,
+   "disposition": "pc",
+   "hidden": false,
+   "color": "#e05c5c"
+  },
+  {
+   "id": "tok_pc_demo_decker",
+   "actorId": "pc_demo_decker",
+   "name": "Pixel",
+   "x": 3,
+   "y": 13,
+   "size": 1,
+   "disposition": "pc",
+   "hidden": false,
+   "color": "#3fd6d0"
+  },
+  {
+   "id": "tok_pc_demo_mage",
+   "actorId": "pc_demo_mage",
+   "name": "Ombrelune",
+   "x": 3,
+   "y": 14,
+   "size": 1,
+   "disposition": "pc",
+   "hidden": false,
+   "color": "#9d7ce0"
+  },
+  {
+   "id": "tok_pc_demo_face",
+   "actorId": "pc_demo_face",
+   "name": "Velours",
+   "x": 3,
+   "y": 15,
+   "size": 1,
+   "disposition": "pc",
+   "hidden": false,
+   "color": "#e0468f"
+  }
+ ],
+ "explored": {},
+ "movementLocked": false,
+ "walls": []
+}

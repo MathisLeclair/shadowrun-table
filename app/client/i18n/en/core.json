@@ -145,5 +145,20 @@
   "Mot de passe MJ trop court (4 caractères minimum)": "GM password too short (4 characters minimum)",
   "Langue inconnue": "Unknown language",
   "Joueur introuvable": "Player not found",
-  "Le MJ a effacé le code PIN de {name}.": "The GM cleared {name}’s PIN."
+  "Le MJ a effacé le code PIN de {name}.": "The GM cleared {name}’s PIN.",
+  "Table de démonstration publique": "Public demo table",
+  "Entre comme MJ ou comme joueur, sans mot de passe. Tout ce qui se passe ici est visible par les autres visiteurs et effacé à la remise à zéro (chaque nuit, et après 30 minutes sans personne).": "Join as GM or as a player, no password needed. Everything here is visible to other visitors and wiped at the next reset (every night, and after 30 minutes with nobody connected).",
+  "Astuce : ouvre la table dans une fenêtre de navigation privée pour jouer en même temps côté joueur.": "Tip: open the table in a private window to play the players’ side at the same time.",
+  "Pas de mot de passe sur la démo : entre directement comme MJ.": "No password on the demo: enter straight away as GM.",
+  "La table de démonstration vient d’être remise à zéro : reconnecte-toi": "The demo table has just been reset: please log in again",
+  "démo": "demo",
+  "Table de démonstration pleine : réessaie plus tard": "The demo table is full: try again later",
+  "Désactivé sur la table de démonstration": "Disabled on the demo table",
+  "Taille de l’envoi inconnue": "Unknown upload size",
+  "Fichier trop volumineux pour la démo ({max} Ko max)": "File too large for the demo ({max} KB max)",
+  "Sur la démo, seules les images (PNG, JPEG, WebP, GIF) sont acceptées": "Only images (PNG, JPEG, WebP, GIF) are accepted on the demo",
+  "Espace d’envoi de la démo plein : il sera vidé à la prochaine remise à zéro": "The demo’s upload space is full: it will be emptied at the next reset",
+  "Trop d’actions d’un coup : ralentis un peu": "Too many actions at once: slow down a little",
+  "Action trop volumineuse pour la démo": "Action too large for the demo",
+  "Message trop long pour la démo ({max} caractères max)": "Message too long for the demo ({max} characters max)"
 }

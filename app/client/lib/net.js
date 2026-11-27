@@ -75,7 +75,7 @@ export function connect(onUnauthorized) {
     if (err?.message === 'unauthorized') onUnauthorized?.();
   });
   // The server revoked this session (user removed, state imported…): back to the login screen.
-  socket.on('unauthorized', () => onUnauthorized?.());
+  socket.on('unauthorized', (info) => onUnauthorized?.(info)); // info.reason: 'demo-reset' (demo table wiped)…
   return socket;
 }
 

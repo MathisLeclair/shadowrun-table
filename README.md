@@ -14,6 +14,9 @@ Maps, sheets, dice, the Matrix, the shop and the soundtrack stay in sync for eve
 ![No build step](https://img.shields.io/badge/build_step-none-ff2a6d?style=flat-square)
 ![FR / EN](https://img.shields.io/badge/UI-FR%20%7C%20EN-05d9e8?style=flat-square)
 
+**[▶ Try the live demo table](https://DEMO-URL-TO-COME/t/demo/)** — no account, no password: enter as GM or as a player.
+<br><sub>A public sandbox, wiped every night. The link goes live once HTTPS is set up.</sub>
+
 </div>
 
 ---
@@ -72,6 +75,15 @@ references that open the right PDF page.
 **Also:** Chummer5a `.chum5` import/export · Foundry VTT world import (scenes, actors, journals, playlists) ·
 multi-table hosting with an `/admin` panel · per-user French/English UI · zip backup and restore · an optional
 Claude-powered GM assistant.
+
+## Try it
+
+The live demo is a **public table** on the author's server: open it, pick **Maître de jeu** (no password) or type a
+name and pick one of the four pre-made runners. It comes with a warehouse map, a gang to fight, a Matrix host whose
+devices open the map's doors, and a short scenario in the **Campagne** tab. Open it again in a private window to play
+the players' side at the same time. Everything is visible to other visitors and wiped at the next reset; the GM
+assistant, rulebooks and Foundry import are off there. Run your own with `SR_DEMO_TABLE=demo npm start`
+(see [app/DEPLOY.md](app/DEPLOY.md#4b-public-demo-table)).
 
 ## Quick start
 

@@ -1,0 +1,572 @@
+{
+ "id": "map_demo_bar",
+ "name": "Le Néon rouillé (bar des dockers)",
+ "folder": "Démo",
+ "description": "Bar de quartier baigné de néons : long comptoir en biais, deux billards, banquettes, petite scène et une arrière-salle avec table de jeu. On y descend depuis la rue par un escalier. Idéal pour rencontrer un Johnson, une partie de cartes qui tourne mal ou une bagarre de gangers.",
+ "width": 11,
+ "height": 18,
+ "metersPerCell": 1.5,
+ "theme": "bar",
+ "lighting": "dim",
+ "tiles": [
+  "...........",
+  "...........",
+  "...........",
+  "...........",
+  "...........",
+  "...........",
+  "...........",
+  "...........",
+  "...........",
+  "...........",
+  "...........",
+  "...........",
+  "...........",
+  "...........",
+  "...........",
+  "...........",
+  "...........",
+  "..........."
+ ],
+ "background": {
+  "url": "/api/maplib/image/dive-bar",
+  "opacity": 1,
+  "mode": "image",
+  "x": 0,
+  "y": 0,
+  "w": 11,
+  "h": 18
+ },
+ "walls": [
+  {
+   "id": "wall_mwzcdwy60lq81",
+   "x1": 4.95,
+   "y1": 1.15,
+   "x2": 8.2,
+   "y2": 1.15,
+   "move": true,
+   "sight": true,
+   "door": null
+  },
+  {
+   "id": "wall_mwzcdwy60mm4m",
+   "x1": 8.2,
+   "y1": 1.15,
+   "x2": 9.45,
+   "y2": 2.45,
+   "move": true,
+   "sight": true,
+   "door": null
+  },
+  {
+   "id": "wall_mwzcdwy60n1qk",
+   "x1": 9.45,
+   "y1": 2.45,
+   "x2": 9.45,
+   "y2": 4.29,
+   "move": true,
+   "sight": true,
+   "door": null
+  },
+  {
+   "id": "wall_mwzcdwy60o78m",
+   "x1": 4.95,
+   "y1": 4.29,
+   "x2": 4.95,
+   "y2": 1.15,
+   "move": true,
+   "sight": true,
+   "door": null
+  },
+  {
+   "id": "wall_mwzcdwy60p4f8",
+   "x1": 4.15,
+   "y1": 4.29,
+   "x2": 5.22,
+   "y2": 4.29,
+   "move": true,
+   "sight": true,
+   "door": null
+  },
+  {
+   "id": "wall_mwzcdwy60qsgj",
+   "x1": 5.22,
+   "y1": 4.29,
+   "x2": 5.82,
+   "y2": 4.29,
+   "move": true,
+   "sight": true,
+   "door": {
+    "state": "closed",
+    "kind": "door"
+   }
+  },
+  {
+   "id": "wall_mwzcdwy60rh1t",
+   "x1": 5.82,
+   "y1": 4.29,
+   "x2": 9.5,
+   "y2": 4.29,
+   "move": true,
+   "sight": true,
+   "door": null
+  },
+  {
+   "id": "wall_mwzcdwy60suge",
+   "x1": 4.15,
+   "y1": 4.29,
+   "x2": 1.6,
+   "y2": 6.9,
+   "move": true,
+   "sight": true,
+   "door": null
+  },
+  {
+   "id": "wall_mwzcdwy60tcyi",
+   "x1": 1.6,
+   "y1": 6.9,
+   "x2": 1.6,
+   "y2": 8.85,
+   "move": true,
+   "sight": true,
+   "door": null
+  },
+  {
+   "id": "wall_mwzcdwy60ucmb",
+   "x1": 1.6,
+   "y1": 8.85,
+   "x2": 2.58,
+   "y2": 8.85,
+   "move": true,
+   "sight": true,
+   "door": null
+  },
+  {
+   "id": "wall_mwzcdwy60v2pb",
+   "x1": 2.58,
+   "y1": 8.85,
+   "x2": 2.58,
+   "y2": 11.17,
+   "move": true,
+   "sight": true,
+   "door": null
+  },
+  {
+   "id": "wall_mwzcdwy60w5gf",
+   "x1": 2.58,
+   "y1": 11.17,
+   "x2": 3.1,
+   "y2": 11.17,
+   "move": true,
+   "sight": true,
+   "door": null
+  },
+  {
+   "id": "wall_mwzcdwy60xbj1",
+   "x1": 3.1,
+   "y1": 11.17,
+   "x2": 3.1,
+   "y2": 12.32,
+   "move": true,
+   "sight": true,
+   "door": null
+  },
+  {
+   "id": "wall_mwzcdwy60yrgl",
+   "x1": 3.1,
+   "y1": 12.32,
+   "x2": 1.43,
+   "y2": 12.32,
+   "move": true,
+   "sight": true,
+   "door": null
+  },
+  {
+   "id": "wall_mwzcdwy60z53w",
+   "x1": 1.43,
+   "y1": 12.32,
+   "x2": 1.43,
+   "y2": 14.65,
+   "move": true,
+   "sight": true,
+   "door": null
+  },
+  {
+   "id": "wall_mwzcdwy610jfr",
+   "x1": 1.43,
+   "y1": 14.65,
+   "x2": 2.6,
+   "y2": 14.65,
+   "move": true,
+   "sight": true,
+   "door": null
+  },
+  {
+   "id": "wall_mwzcdwy611zxy",
+   "x1": 2.6,
+   "y1": 14.65,
+   "x2": 2.6,
+   "y2": 15.98,
+   "move": true,
+   "sight": true,
+   "door": null
+  },
+  {
+   "id": "wall_mwzcdwy612ajm",
+   "x1": 2.6,
+   "y1": 15.98,
+   "x2": 4.42,
+   "y2": 15.98,
+   "move": true,
+   "sight": true,
+   "door": null
+  },
+  {
+   "id": "wall_mwzcdwy613u1k",
+   "x1": 4.42,
+   "y1": 15.98,
+   "x2": 5.25,
+   "y2": 16.45,
+   "move": true,
+   "sight": true,
+   "door": null
+  },
+  {
+   "id": "wall_mwzcdwy61474h",
+   "x1": 5.25,
+   "y1": 16.45,
+   "x2": 8.4,
+   "y2": 16.45,
+   "move": true,
+   "sight": true,
+   "door": null
+  },
+  {
+   "id": "wall_mwzcdwy615cf0",
+   "x1": 8.13,
+   "y1": 15.05,
+   "x2": 8.4,
+   "y2": 16.45,
+   "move": true,
+   "sight": false,
+   "door": null
+  },
+  {
+   "id": "wall_mwzcdwy616c1b",
+   "x1": 8.4,
+   "y1": 16.45,
+   "x2": 8.63,
+   "y2": 17.65,
+   "move": true,
+   "sight": true,
+   "door": null
+  },
+  {
+   "id": "wall_mwzcdwy617n8v",
+   "x1": 8.63,
+   "y1": 17.65,
+   "x2": 9.72,
+   "y2": 17.65,
+   "move": true,
+   "sight": true,
+   "door": {
+    "state": "closed",
+    "kind": "door"
+   }
+  },
+  {
+   "id": "wall_mwzcdwy6181ow",
+   "x1": 9.5,
+   "y1": 4.29,
+   "x2": 9.5,
+   "y2": 14.3,
+   "move": true,
+   "sight": true,
+   "door": null
+  },
+  {
+   "id": "wall_mwzcdwy6199ei",
+   "x1": 9.5,
+   "y1": 14.3,
+   "x2": 9.72,
+   "y2": 15.3,
+   "move": true,
+   "sight": true,
+   "door": null
+  },
+  {
+   "id": "wall_mwzcdwy61awx4",
+   "x1": 9.72,
+   "y1": 15.3,
+   "x2": 9.72,
+   "y2": 17.65,
+   "move": true,
+   "sight": true,
+   "door": null
+  }
+ ],
+ "lights": [
+  {
+   "id": "light_mwzcdwy61bpkk",
+   "x": 7,
+   "y": 3,
+   "radius": 3,
+   "color": "#fff0d0",
+   "on": true
+  },
+  {
+   "id": "light_mwzcdwy61cjzp",
+   "x": 5,
+   "y": 3,
+   "radius": 1.5,
+   "color": "#40f0ff",
+   "on": true
+  },
+  {
+   "id": "light_mwzcdwy61dsd6",
+   "x": 9,
+   "y": 3,
+   "radius": 1.5,
+   "color": "#40ffd0",
+   "on": true
+  },
+  {
+   "id": "light_mwzcdwy61ejdb",
+   "x": 3,
+   "y": 6,
+   "radius": 3,
+   "color": "#ff40ff",
+   "on": true
+  },
+  {
+   "id": "light_mwzcdwy61flku",
+   "x": 2,
+   "y": 8,
+   "radius": 2,
+   "color": "#ffd040",
+   "on": true
+  },
+  {
+   "id": "light_mwzcdwy61gxxi",
+   "x": 4,
+   "y": 8,
+   "radius": 3,
+   "color": "#40f0ff",
+   "on": true
+  },
+  {
+   "id": "light_mwzcdwy61h3gv",
+   "x": 7,
+   "y": 5,
+   "radius": 3,
+   "color": "#ff50e0",
+   "on": true
+  },
+  {
+   "id": "light_mwzcdwy61i0wr",
+   "x": 9,
+   "y": 7,
+   "radius": 2,
+   "color": "#ffd8b0",
+   "on": true
+  },
+  {
+   "id": "light_mwzcdwy61jvkc",
+   "x": 9,
+   "y": 8,
+   "radius": 2,
+   "color": "#ffd8b0",
+   "on": true
+  },
+  {
+   "id": "light_mwzcdwy61kzln",
+   "x": 9,
+   "y": 10,
+   "radius": 1.5,
+   "color": "#ff3040",
+   "on": true
+  },
+  {
+   "id": "light_mwzcdwy61ly8e",
+   "x": 9,
+   "y": 11,
+   "radius": 2,
+   "color": "#ffd8b0",
+   "on": true
+  },
+  {
+   "id": "light_mwzcdwy61mgkw",
+   "x": 9,
+   "y": 13,
+   "radius": 2,
+   "color": "#ffd8b0",
+   "on": true
+  },
+  {
+   "id": "light_mwzcdwy61ndi3",
+   "x": 4,
+   "y": 10,
+   "radius": 2.5,
+   "color": "#b090ff",
+   "on": true
+  },
+  {
+   "id": "light_mwzcdwy61olso",
+   "x": 4,
+   "y": 13,
+   "radius": 2.5,
+   "color": "#b090ff",
+   "on": true
+  },
+  {
+   "id": "light_mwzcdwy61pbgx",
+   "x": 2,
+   "y": 13,
+   "radius": 2.5,
+   "color": "#ff40e0",
+   "on": true
+  },
+  {
+   "id": "light_mwzcdwy61q89d",
+   "x": 2,
+   "y": 14,
+   "radius": 1.5,
+   "color": "#ff3030",
+   "on": true
+  },
+  {
+   "id": "light_mwzcdwy61rty1",
+   "x": 4,
+   "y": 16,
+   "radius": 2.5,
+   "color": "#ffe0ff",
+   "on": true
+  },
+  {
+   "id": "light_mwzcdwy61swq9",
+   "x": 7,
+   "y": 16,
+   "radius": 2.5,
+   "color": "#f0d0ff",
+   "on": true
+  },
+  {
+   "id": "light_mwzcdwy61tk94",
+   "x": 9,
+   "y": 14,
+   "radius": 1.5,
+   "color": "#ff3030",
+   "on": true
+  },
+  {
+   "id": "light_mwzcdwy61u5q2",
+   "x": 9,
+   "y": 15,
+   "radius": 2,
+   "color": "#ff40c0",
+   "on": true
+  },
+  {
+   "id": "light_mwzcdwy61v84i",
+   "x": 9,
+   "y": 17,
+   "radius": 2,
+   "color": "#ff9070",
+   "on": true
+  }
+ ],
+ "regions": [
+  {
+   "id": "reg_mwzcdwy61w7ag",
+   "name": "Arrière-salle",
+   "x": 5,
+   "y": 1,
+   "w": 4,
+   "h": 3,
+   "gmOnly": false
+  },
+  {
+   "id": "reg_mwzcdwy61xl6y",
+   "name": "Bar",
+   "x": 2,
+   "y": 5,
+   "w": 2,
+   "h": 3,
+   "gmOnly": false
+  },
+  {
+   "id": "reg_mwzcdwy61ykut",
+   "name": "Scène",
+   "x": 6,
+   "y": 4,
+   "w": 2,
+   "h": 2,
+   "gmOnly": false
+  },
+  {
+   "id": "reg_mwzcdwy61z4zf",
+   "name": "Salle",
+   "x": 5,
+   "y": 7,
+   "w": 4,
+   "h": 6,
+   "gmOnly": false
+  },
+  {
+   "id": "reg_mwzcdwy620s0n",
+   "name": "Billards",
+   "x": 3,
+   "y": 9,
+   "w": 2,
+   "h": 5,
+   "gmOnly": false
+  },
+  {
+   "id": "reg_mwzcdwy621tv1",
+   "name": "Coin jeux",
+   "x": 1,
+   "y": 12,
+   "w": 2,
+   "h": 2,
+   "gmOnly": false
+  },
+  {
+   "id": "reg_mwzcdwy622z0k",
+   "name": "Banquettes",
+   "x": 3,
+   "y": 15,
+   "w": 5,
+   "h": 1,
+   "gmOnly": false
+  },
+  {
+   "id": "reg_mwzcdwy623ifi",
+   "name": "Escalier (rue)",
+   "x": 8,
+   "y": 15,
+   "w": 2,
+   "h": 2,
+   "gmOnly": false
+  },
+  {
+   "id": "libentry_mwzcdwy6242yg",
+   "name": "Entrée",
+   "x": 9,
+   "y": 17,
+   "w": 1,
+   "h": 1,
+   "gmOnly": true
+  }
+ ],
+ "doors": [],
+ "notes": [],
+ "tokens": [],
+ "fog": true,
+ "sharedVision": true,
+ "movementLocked": false,
+ "explored": {},
+ "library": {
+  "slug": "dive-bar",
+  "version": 1
+ }
+}

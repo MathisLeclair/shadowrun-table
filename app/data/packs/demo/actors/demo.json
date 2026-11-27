@@ -1,0 +1,2080 @@
+[
+ {
+  "name": "Rivet",
+  "metatype": "Ork",
+  "concept": "Samouraï des rues",
+  "color": "#e05c5c",
+  "id": "pc_demo_samurai",
+  "type": "pc",
+  "gender": "",
+  "portrait": "",
+  "attributes": {
+   "BOD": 8,
+   "AGI": 5,
+   "REA": 5,
+   "STR": 7,
+   "WIL": 5,
+   "LOG": 2,
+   "INT": 4,
+   "CHA": 3,
+   "EDG": 2,
+   "ESS": 3.1
+  },
+  "augmented": {
+   "REA": 1
+  },
+  "initiative": {
+   "dice": 2,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "automatics",
+    "name": "Armes automatiques",
+    "attr": "AGI",
+    "rating": 5,
+    "group": "firearms",
+    "spec": "Fusils d’assaut"
+   },
+   {
+    "id": "pistols",
+    "name": "Pistolets",
+    "attr": "AGI",
+    "rating": 5,
+    "group": "firearms"
+   },
+   {
+    "id": "blades",
+    "name": "Armes tranchantes",
+    "attr": "AGI",
+    "rating": 4,
+    "group": "close_combat"
+   },
+   {
+    "id": "unarmed_combat",
+    "name": "Combat à mains nues",
+    "attr": "AGI",
+    "rating": 4,
+    "group": "close_combat"
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 4
+   },
+   {
+    "id": "sneaking",
+    "name": "Furtivité",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "stealth"
+   },
+   {
+    "id": "longarms",
+    "name": "Armes d’épaule",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "firearms"
+   },
+   {
+    "id": "throwing_weapons",
+    "name": "Armes de jet",
+    "attr": "AGI",
+    "rating": 3
+   }
+  ],
+  "knowledge": [
+   {
+    "id": "k13",
+    "name": "Tactiques militaires",
+    "rating": 4,
+    "type": "professional"
+   },
+   {
+    "id": "k14",
+    "name": "Seattle (rue)",
+    "rating": 3,
+    "type": "street"
+   },
+   {
+    "id": "k15",
+    "name": "Japonais",
+    "rating": 0,
+    "type": "language",
+    "native": true
+   }
+  ],
+  "qualities": [],
+  "powers": [],
+  "spells": [],
+  "weapons": [
+   {
+    "id": "w1",
+    "name": "AK-97",
+    "category": "Fusils d'assaut",
+    "kind": "ranged",
+    "skill": "automatics",
+    "accuracy": 5,
+    "damage": "10P",
+    "ap": -2,
+    "mode": "SA/BF/FA",
+    "rc": 0,
+    "ammo": "38(c)",
+    "reach": 0,
+    "catalogId": "b625833a-88bc-4047-b3fc-bc432d96744b",
+    "source": "SR5",
+    "page": 428
+   },
+   {
+    "id": "w2",
+    "name": "Ares Predator V",
+    "category": "Pistolets lourds",
+    "kind": "ranged",
+    "skill": "pistols",
+    "accuracy": 5,
+    "damage": "8P",
+    "ap": -1,
+    "mode": "SA",
+    "rc": 0,
+    "ammo": "15(c)",
+    "reach": 0,
+    "catalogId": "971c711b-db32-4339-9203-865ef38f350e",
+    "source": "SR5",
+    "page": 426
+   },
+   {
+    "id": "w3",
+    "name": "Couteau de combat",
+    "category": "Armes tranchantes",
+    "kind": "melee",
+    "skill": "blades",
+    "accuracy": 6,
+    "damage": "(STR+2)P",
+    "ap": -3,
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "reach": 0,
+    "catalogId": "656906d8-b6a4-47a2-9554-de365097eba0",
+    "source": "SR5",
+    "page": 422
+   },
+   {
+    "id": "w12",
+    "name": "Grenades à fragmentation",
+    "category": "Munitions",
+    "kind": "ranged",
+    "skill": "throwing_weapons",
+    "accuracy": "",
+    "damage": "18P(f) (-1/m)",
+    "ap": "+5",
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "reach": 0,
+    "catalogId": "7c5e7573-d75e-43e3-949c-cb4c9d70329b",
+    "notes": "×2",
+    "source": "SR5",
+    "page": 435
+   }
+  ],
+  "armor": [
+   {
+    "id": "a4",
+    "name": "Veste pare-balles",
+    "rating": 12,
+    "equipped": true,
+    "catalogId": "36a4cd30-c32c-44d0-847a-0c15fb51072a",
+    "stack": false,
+    "source": "SR5",
+    "page": 437
+   },
+   {
+    "id": "a5",
+    "name": "Casque",
+    "rating": 2,
+    "equipped": true,
+    "catalogId": "fd6e194b-89ea-4030-9203-87341442eadb",
+    "stack": true,
+    "source": "SR5",
+    "page": 438
+   },
+   {
+    "id": "a10",
+    "name": "Armure dermique 1",
+    "rating": 1,
+    "equipped": true,
+    "stack": true,
+    "notes": "Implant"
+   }
+  ],
+  "augmentations": [
+   {
+    "id": "x6",
+    "name": "Réflexes câblés",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 2,
+    "catalogId": "bea0ded3-821f-449c-9507-815088f68b86",
+    "rating": 1,
+    "bonus": {
+     "initiativeDice": 1
+    },
+    "source": "SR5",
+    "page": 455
+   },
+   {
+    "id": "x7",
+    "name": "Yeux cybernétiques, système de base",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 0.2,
+    "catalogId": "8e414ade-2764-4dc7-bdc4-83bb4a086034",
+    "rating": 1,
+    "source": "SR5",
+    "page": 453
+   },
+   {
+    "id": "x8",
+    "name": "Smartlink",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 0.2,
+    "catalogId": "35dba0e2-1d3d-4386-a657-17fedca4622d",
+    "notes": "Précision +2 avec une arme smart",
+    "source": "SR5",
+    "page": 453
+   },
+   {
+    "id": "x9",
+    "name": "Armure dermique",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 0.5,
+    "catalogId": "6ba5239b-651e-456a-bcc9-f58d975d2397",
+    "rating": 1,
+    "source": "SR5",
+    "page": 454
+   }
+  ],
+  "gear": [
+   {
+    "id": "g11",
+    "name": "Erika Elite",
+    "category": "Commlinks",
+    "qty": 1,
+    "catalogId": "72d1ca07-71b1-4085-8a4d-bd720a6b1908",
+    "source": "SR5",
+    "page": 438
+   }
+  ],
+  "vehicles": [],
+  "vision": {
+   "lowLight": true,
+   "thermo": true
+  },
+  "condition": {
+   "physical": 0,
+   "stun": 0,
+   "overflow": 0
+  },
+  "edge": {
+   "current": 2
+  },
+  "contacts": [],
+  "sins": [],
+  "history": [
+   {
+    "ts": 3471292800000,
+    "text": "Personnage prétiré de la table de démonstration"
+   }
+  ],
+  "karma": 5,
+  "karmaTotal": 5,
+  "nuyen": 5000,
+  "streetCred": 0,
+  "notoriety": 0,
+  "publicAwareness": 0,
+  "player": ""
+ },
+ {
+  "name": "Pixel",
+  "metatype": "Elfe",
+  "concept": "Decker",
+  "color": "#3fd6d0",
+  "id": "pc_demo_decker",
+  "type": "pc",
+  "gender": "",
+  "portrait": "",
+  "attributes": {
+   "BOD": 3,
+   "AGI": 4,
+   "REA": 4,
+   "STR": 3,
+   "WIL": 4,
+   "LOG": 5,
+   "INT": 6,
+   "CHA": 6,
+   "EDG": 2,
+   "ESS": 5.9
+  },
+  "augmented": {},
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "hacking",
+    "name": "Hacking",
+    "attr": "LOG",
+    "rating": 5,
+    "group": "cracking",
+    "spec": "Appareils"
+   },
+   {
+    "id": "cybercombat",
+    "name": "Cybercombat",
+    "attr": "LOG",
+    "rating": 5,
+    "group": "cracking"
+   },
+   {
+    "id": "electronic_warfare",
+    "name": "Guerre électronique",
+    "attr": "LOG",
+    "rating": 4,
+    "group": "cracking"
+   },
+   {
+    "id": "computer",
+    "name": "Informatique",
+    "attr": "LOG",
+    "rating": 4,
+    "group": "electronics"
+   },
+   {
+    "id": "software",
+    "name": "Software",
+    "attr": "LOG",
+    "rating": 3,
+    "group": "electronics"
+   },
+   {
+    "id": "pistols",
+    "name": "Pistolets",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "firearms"
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 3
+   }
+  ],
+  "knowledge": [
+   {
+    "id": "k5",
+    "name": "Sécurité matricielle",
+    "rating": 4,
+    "type": "professional"
+   },
+   {
+    "id": "k6",
+    "name": "Seattle (rue)",
+    "rating": 3,
+    "type": "street"
+   },
+   {
+    "id": "k7",
+    "name": "Espagnol",
+    "rating": 0,
+    "type": "language",
+    "native": true
+   }
+  ],
+  "qualities": [],
+  "powers": [],
+  "spells": [],
+  "weapons": [
+   {
+    "id": "w1",
+    "name": "Ares Predator V",
+    "category": "Pistolets lourds",
+    "kind": "ranged",
+    "skill": "pistols",
+    "accuracy": 5,
+    "damage": "8P",
+    "ap": -1,
+    "mode": "SA",
+    "rc": 0,
+    "ammo": "15(c)",
+    "reach": 0,
+    "catalogId": "971c711b-db32-4339-9203-865ef38f350e",
+    "source": "SR5",
+    "page": 426
+   }
+  ],
+  "armor": [
+   {
+    "id": "a2",
+    "name": "Vêtements pare-balles",
+    "rating": 6,
+    "equipped": true,
+    "catalogId": "40826eaa-c22a-43da-8730-bc1867ea65a1",
+    "stack": false,
+    "source": "SR5",
+    "page": 437
+   }
+  ],
+  "augmentations": [
+   {
+    "id": "x3",
+    "name": "Datajack",
+    "kind": "cyberware",
+    "grade": "standard",
+    "essence": 0.1,
+    "catalogId": "47c48542-48c3-417e-91f0-b5a456183f05",
+    "source": "SR5",
+    "page": 452
+   }
+  ],
+  "gear": [
+   {
+    "id": "g4",
+    "name": "Novatech Navigator",
+    "category": "Cyberdecks",
+    "qty": 1,
+    "catalogId": "ab0a7547-3cb4-4816-a65a-cb03dd2186ac",
+    "source": "SR5",
+    "page": 439
+   }
+  ],
+  "vehicles": [],
+  "matrix": {
+   "device": "Novatech Navigator",
+   "rating": 3,
+   "attack": 6,
+   "sleaze": 5,
+   "dataProcessing": 4,
+   "firewall": 3,
+   "programs": [
+    "Navigateur",
+    "Configurateur",
+    "Édition",
+    "Gommage de bruit",
+    "Boîte à outils",
+    "Armure",
+    "Filtre de biofeedback",
+    "Exploitation",
+    "Furtivité",
+    "Marteau"
+   ]
+  },
+  "vision": {
+   "lowLight": true
+  },
+  "condition": {
+   "physical": 0,
+   "stun": 0,
+   "overflow": 0
+  },
+  "edge": {
+   "current": 2
+  },
+  "contacts": [],
+  "sins": [],
+  "history": [
+   {
+    "ts": 3471292800000,
+    "text": "Personnage prétiré de la table de démonstration"
+   }
+  ],
+  "karma": 5,
+  "karmaTotal": 5,
+  "nuyen": 5000,
+  "streetCred": 0,
+  "notoriety": 0,
+  "publicAwareness": 0,
+  "player": ""
+ },
+ {
+  "name": "Ombrelune",
+  "metatype": "Humain",
+  "concept": "Mage de combat",
+  "color": "#9d7ce0",
+  "id": "pc_demo_mage",
+  "type": "pc",
+  "gender": "",
+  "portrait": "",
+  "attributes": {
+   "BOD": 4,
+   "AGI": 4,
+   "REA": 3,
+   "STR": 3,
+   "WIL": 4,
+   "LOG": 5,
+   "INT": 4,
+   "CHA": 5,
+   "EDG": 2,
+   "MAG": 5,
+   "ESS": 6
+  },
+  "augmented": {},
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "spellcasting",
+    "name": "Lancement de sorts",
+    "attr": "MAG",
+    "rating": 5,
+    "group": "sorcery",
+    "spec": "Combat"
+   },
+   {
+    "id": "counterspelling",
+    "name": "Contresort",
+    "attr": "MAG",
+    "rating": 4,
+    "group": "sorcery"
+   },
+   {
+    "id": "assensing",
+    "name": "Observation astrale",
+    "attr": "INT",
+    "rating": 4
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 4
+   },
+   {
+    "id": "summoning",
+    "name": "Invocation",
+    "attr": "MAG",
+    "rating": 3,
+    "group": "conjuring"
+   },
+   {
+    "id": "pistols",
+    "name": "Pistolets",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "firearms"
+   },
+   {
+    "id": "arcana",
+    "name": "Arcanes",
+    "attr": "LOG",
+    "rating": 3
+   }
+  ],
+  "knowledge": [
+   {
+    "id": "k12",
+    "name": "Théorie magique",
+    "rating": 4,
+    "type": "professional"
+   },
+   {
+    "id": "k13",
+    "name": "Seattle (rue)",
+    "rating": 3,
+    "type": "street"
+   },
+   {
+    "id": "k14",
+    "name": "Espagnol",
+    "rating": 0,
+    "type": "language",
+    "native": true
+   }
+  ],
+  "qualities": [
+   {
+    "id": "q11",
+    "name": "Magicien",
+    "karma": 0,
+    "positive": true,
+    "notes": "Tradition hermétique",
+    "source": "SR5",
+    "page": 69
+   }
+  ],
+  "powers": [],
+  "spells": [
+   {
+    "id": "s5",
+    "name": "Éclair étourdissant",
+    "category": "Combat",
+    "type": "M",
+    "range": "LOS",
+    "duration": "I",
+    "drain": "F-3",
+    "catalogId": "47423962-6b73-4cc3-ad4e-e8d037cf9507",
+    "source": "SR5",
+    "page": 284
+   },
+   {
+    "id": "s6",
+    "name": "Éclair mana",
+    "category": "Combat",
+    "type": "M",
+    "range": "LOS",
+    "duration": "I",
+    "drain": "F-3",
+    "catalogId": "85c12bae-3954-483c-a211-d8ee43a1c65e",
+    "source": "SR5",
+    "page": 284
+   },
+   {
+    "id": "s7",
+    "name": "Armure",
+    "category": "Manipulation",
+    "type": "P",
+    "range": "LOS",
+    "duration": "S",
+    "drain": "F-2",
+    "catalogId": "794f21eb-dc8d-45e8-b9b0-b85b810437f3",
+    "source": "SR5",
+    "page": 292
+   },
+   {
+    "id": "s8",
+    "name": "Éclair de force",
+    "category": "Combat",
+    "type": "P",
+    "range": "LOS",
+    "duration": "I",
+    "drain": "F-3",
+    "catalogId": "a7f17805-3e3e-4a12-8580-b9de0d7499ef",
+    "source": "SR5",
+    "page": 284
+   },
+   {
+    "id": "s9",
+    "name": "Boule de feu",
+    "category": "Combat",
+    "type": "P",
+    "range": "LOS (A)",
+    "duration": "I",
+    "drain": "F-1",
+    "catalogId": "9ce1e699-3c30-4184-858b-d5539935ef96",
+    "source": "SR5",
+    "page": 284
+   },
+   {
+    "id": "s10",
+    "name": "Barrière physique",
+    "category": "Manipulation",
+    "type": "P",
+    "range": "LOS (A)",
+    "duration": "S",
+    "drain": "F-1",
+    "catalogId": "1e1e488d-d727-43f8-900d-5c171c320d1d",
+    "source": "SR5",
+    "page": 294
+   }
+  ],
+  "weapons": [
+   {
+    "id": "w1",
+    "name": "Browning Ultra-Power",
+    "category": "Pistolets lourds",
+    "kind": "ranged",
+    "skill": "pistols",
+    "accuracy": 5,
+    "damage": "8P",
+    "ap": -1,
+    "mode": "SA",
+    "rc": 0,
+    "ammo": "10(c)",
+    "reach": 0,
+    "catalogId": "6fb39402-3ae3-4a21-9ed1-50b2c2e1b2c8",
+    "source": "SR5",
+    "page": 426
+   }
+  ],
+  "armor": [
+   {
+    "id": "a2",
+    "name": "Manteau renforcé",
+    "rating": 9,
+    "equipped": true,
+    "catalogId": "013b9f3f-533b-4545-aa51-c6cf8d50f3b6",
+    "stack": false,
+    "source": "SR5",
+    "page": 437
+   }
+  ],
+  "augmentations": [],
+  "gear": [
+   {
+    "id": "g3",
+    "name": "Erika Elite",
+    "category": "Commlinks",
+    "qty": 1,
+    "catalogId": "72d1ca07-71b1-4085-8a4d-bd720a6b1908",
+    "source": "SR5",
+    "page": 438
+   },
+   {
+    "id": "g4",
+    "name": "Focus de pouvoir",
+    "category": "Focus",
+    "qty": 1,
+    "catalogId": "62bfb38d-5515-440b-83ed-289ed926d27e",
+    "rating": 1,
+    "source": "SR5",
+    "page": 319
+   }
+  ],
+  "vehicles": [],
+  "vision": {},
+  "condition": {
+   "physical": 0,
+   "stun": 0,
+   "overflow": 0
+  },
+  "edge": {
+   "current": 2
+  },
+  "contacts": [],
+  "sins": [],
+  "history": [
+   {
+    "ts": 3471292800000,
+    "text": "Personnage prétiré de la table de démonstration"
+   }
+  ],
+  "karma": 5,
+  "karmaTotal": 5,
+  "nuyen": 5000,
+  "streetCred": 0,
+  "notoriety": 0,
+  "publicAwareness": 0,
+  "player": ""
+ },
+ {
+  "name": "Velours",
+  "metatype": "Nain",
+  "concept": "Face",
+  "color": "#e0468f",
+  "id": "pc_demo_face",
+  "type": "pc",
+  "gender": "",
+  "portrait": "",
+  "attributes": {
+   "BOD": 5,
+   "AGI": 4,
+   "REA": 3,
+   "STR": 6,
+   "WIL": 6,
+   "LOG": 3,
+   "INT": 5,
+   "CHA": 5,
+   "EDG": 2,
+   "ESS": 6
+  },
+  "augmented": {},
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "negotiation",
+    "name": "Négociation",
+    "attr": "CHA",
+    "rating": 5,
+    "group": "influence",
+    "spec": "Marchandage"
+   },
+   {
+    "id": "con",
+    "name": "Escroquerie",
+    "attr": "CHA",
+    "rating": 5,
+    "group": "acting"
+   },
+   {
+    "id": "etiquette",
+    "name": "Étiquette",
+    "attr": "CHA",
+    "rating": 4,
+    "group": "influence"
+   },
+   {
+    "id": "intimidation",
+    "name": "Intimidation",
+    "attr": "CHA",
+    "rating": 4
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 4
+   },
+   {
+    "id": "leadership",
+    "name": "Leadership",
+    "attr": "CHA",
+    "rating": 3,
+    "group": "influence"
+   },
+   {
+    "id": "pistols",
+    "name": "Pistolets",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "firearms"
+   },
+   {
+    "id": "impersonation",
+    "name": "Imposture",
+    "attr": "CHA",
+    "rating": 3,
+    "group": "acting"
+   }
+  ],
+  "knowledge": [
+   {
+    "id": "k4",
+    "name": "Politique corporatiste",
+    "rating": 4,
+    "type": "professional"
+   },
+   {
+    "id": "k5",
+    "name": "Seattle (rue)",
+    "rating": 3,
+    "type": "street"
+   },
+   {
+    "id": "k6",
+    "name": "Espagnol",
+    "rating": 0,
+    "type": "language",
+    "native": true
+   }
+  ],
+  "qualities": [],
+  "powers": [],
+  "spells": [],
+  "weapons": [
+   {
+    "id": "w1",
+    "name": "Browning Ultra-Power",
+    "category": "Pistolets lourds",
+    "kind": "ranged",
+    "skill": "pistols",
+    "accuracy": 5,
+    "damage": "8P",
+    "ap": -1,
+    "mode": "SA",
+    "rc": 0,
+    "ammo": "10(c)",
+    "reach": 0,
+    "catalogId": "6fb39402-3ae3-4a21-9ed1-50b2c2e1b2c8",
+    "source": "SR5",
+    "page": 426
+   }
+  ],
+  "armor": [
+   {
+    "id": "a2",
+    "name": "Costume « Actioneer »",
+    "rating": 8,
+    "equipped": true,
+    "catalogId": "5a650844-8f24-48e7-829f-0443d9ff5cf7",
+    "stack": false,
+    "source": "SR5",
+    "page": 437
+   }
+  ],
+  "augmentations": [],
+  "gear": [
+   {
+    "id": "g3",
+    "name": "Erika Elite",
+    "category": "Commlinks",
+    "qty": 1,
+    "catalogId": "72d1ca07-71b1-4085-8a4d-bd720a6b1908",
+    "source": "SR5",
+    "page": 438
+   }
+  ],
+  "vehicles": [],
+  "vision": {
+   "thermo": true
+  },
+  "condition": {
+   "physical": 0,
+   "stun": 0,
+   "overflow": 0
+  },
+  "edge": {
+   "current": 2
+  },
+  "contacts": [],
+  "sins": [],
+  "history": [
+   {
+    "ts": 3471292800000,
+    "text": "Personnage prétiré de la table de démonstration"
+   }
+  ],
+  "karma": 5,
+  "karmaTotal": 5,
+  "nuyen": 5000,
+  "streetCred": 0,
+  "notoriety": 0,
+  "publicAwareness": 0,
+  "player": ""
+ },
+ {
+  "type": "npc",
+  "metatype": "Humain",
+  "portrait": "",
+  "disposition": "hostile",
+  "id": "npc_demo_street_ganger_1",
+  "name": "Ganger de rue 1",
+  "color": "#b5654a",
+  "concept": "Membre de gang armé (PR 2)",
+  "gender": "",
+  "attributes": {
+   "BOD": 4,
+   "AGI": 4,
+   "REA": 3,
+   "STR": 3,
+   "WIL": 3,
+   "LOG": 2,
+   "INT": 3,
+   "CHA": 3,
+   "EDG": 1,
+   "ESS": 6
+  },
+  "augmented": {},
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "blades",
+    "name": "Armes tranchantes",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "close_combat"
+   },
+   {
+    "id": "clubs",
+    "name": "Armes contondantes",
+    "attr": "AGI",
+    "rating": 2,
+    "group": "close_combat"
+   },
+   {
+    "id": "pistols",
+    "name": "Pistolets",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "firearms"
+   },
+   {
+    "id": "automatics",
+    "name": "Armes automatiques",
+    "attr": "AGI",
+    "rating": 2,
+    "group": "firearms"
+   },
+   {
+    "id": "intimidation",
+    "name": "Intimidation",
+    "attr": "CHA",
+    "rating": 2
+   },
+   {
+    "id": "running",
+    "name": "Course",
+    "attr": "STR",
+    "rating": 2,
+    "group": "athletics"
+   },
+   {
+    "id": "unarmed_combat",
+    "name": "Combat à mains nues",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "close_combat"
+   }
+  ],
+  "knowledge": [],
+  "qualities": [],
+  "powers": [],
+  "spells": [],
+  "weapons": [
+   {
+    "id": "w19",
+    "kind": "ranged",
+    "rc": 0,
+    "reach": 0,
+    "ap": 0,
+    "name": "Ceska Black Scorpion",
+    "category": "Pistolet mitrailleur",
+    "skill": "automatics",
+    "accuracy": 5,
+    "damage": "6P",
+    "mode": "SA/TR",
+    "ammo": "35(c)",
+    "source": "SR5",
+    "page": 427
+   },
+   {
+    "id": "w20",
+    "kind": "melee",
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "reach": 0,
+    "ap": -1,
+    "name": "Couteau",
+    "category": "Lame",
+    "skill": "blades",
+    "accuracy": 5,
+    "damage": "(STR+1)P",
+    "source": "SR5",
+    "page": 422
+   },
+   {
+    "id": "w21",
+    "kind": "melee",
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "reach": 0,
+    "ap": 0,
+    "name": "Mains nues",
+    "category": "Mains nues",
+    "skill": "unarmed_combat",
+    "accuracy": null,
+    "damage": "(STR)S",
+    "notes": "Précision = limite physique",
+    "source": "SR5",
+    "page": 132
+   }
+  ],
+  "armor": [
+   {
+    "id": "a10",
+    "name": "Vêtements pare-balles",
+    "rating": 6,
+    "equipped": true,
+    "stack": false,
+    "source": "SR5",
+    "page": 437
+   }
+  ],
+  "augmentations": [],
+  "gear": [
+   {
+    "id": "g17",
+    "name": "Commlink (indice 1)",
+    "category": "Équipement",
+    "qty": 1,
+    "rating": 1
+   }
+  ],
+  "vehicles": [],
+  "vision": {},
+  "npc": {
+   "professionalRating": 2,
+   "grunt": true,
+   "kind": "metahuman",
+   "initMode": "physical",
+   "tactics": "Tirs de couverture désordonnés, cherche à flanquer. Décroche quand le chef tombe.",
+   "loot": ""
+  },
+  "gmNotes": "Ganger de quartier, défend son territoire et son business.",
+  "condition": {
+   "physical": 0,
+   "stun": 0,
+   "overflow": 0
+  },
+  "edge": {
+   "current": 1
+  },
+  "contacts": [],
+  "sins": [],
+  "history": [],
+  "karma": 0,
+  "karmaTotal": 0,
+  "nuyen": 0,
+  "streetCred": 0,
+  "notoriety": 0,
+  "publicAwareness": 0,
+  "hidden": false
+ },
+ {
+  "type": "npc",
+  "metatype": "Humain",
+  "portrait": "",
+  "disposition": "hostile",
+  "id": "npc_demo_street_ganger_2",
+  "name": "Ganger de rue 2",
+  "color": "#b5654a",
+  "concept": "Membre de gang armé (PR 2)",
+  "gender": "",
+  "attributes": {
+   "BOD": 4,
+   "AGI": 4,
+   "REA": 3,
+   "STR": 3,
+   "WIL": 3,
+   "LOG": 2,
+   "INT": 3,
+   "CHA": 3,
+   "EDG": 1,
+   "ESS": 6
+  },
+  "augmented": {},
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "blades",
+    "name": "Armes tranchantes",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "close_combat"
+   },
+   {
+    "id": "clubs",
+    "name": "Armes contondantes",
+    "attr": "AGI",
+    "rating": 2,
+    "group": "close_combat"
+   },
+   {
+    "id": "pistols",
+    "name": "Pistolets",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "firearms"
+   },
+   {
+    "id": "automatics",
+    "name": "Armes automatiques",
+    "attr": "AGI",
+    "rating": 2,
+    "group": "firearms"
+   },
+   {
+    "id": "intimidation",
+    "name": "Intimidation",
+    "attr": "CHA",
+    "rating": 2
+   },
+   {
+    "id": "running",
+    "name": "Course",
+    "attr": "STR",
+    "rating": 2,
+    "group": "athletics"
+   },
+   {
+    "id": "unarmed_combat",
+    "name": "Combat à mains nues",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "close_combat"
+   }
+  ],
+  "knowledge": [],
+  "qualities": [],
+  "powers": [],
+  "spells": [],
+  "weapons": [
+   {
+    "id": "w19",
+    "kind": "ranged",
+    "rc": 0,
+    "reach": 0,
+    "ap": 0,
+    "name": "Ceska Black Scorpion",
+    "category": "Pistolet mitrailleur",
+    "skill": "automatics",
+    "accuracy": 5,
+    "damage": "6P",
+    "mode": "SA/TR",
+    "ammo": "35(c)",
+    "source": "SR5",
+    "page": 427
+   },
+   {
+    "id": "w20",
+    "kind": "melee",
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "reach": 0,
+    "ap": -1,
+    "name": "Couteau",
+    "category": "Lame",
+    "skill": "blades",
+    "accuracy": 5,
+    "damage": "(STR+1)P",
+    "source": "SR5",
+    "page": 422
+   },
+   {
+    "id": "w21",
+    "kind": "melee",
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "reach": 0,
+    "ap": 0,
+    "name": "Mains nues",
+    "category": "Mains nues",
+    "skill": "unarmed_combat",
+    "accuracy": null,
+    "damage": "(STR)S",
+    "notes": "Précision = limite physique",
+    "source": "SR5",
+    "page": 132
+   }
+  ],
+  "armor": [
+   {
+    "id": "a10",
+    "name": "Vêtements pare-balles",
+    "rating": 6,
+    "equipped": true,
+    "stack": false,
+    "source": "SR5",
+    "page": 437
+   }
+  ],
+  "augmentations": [],
+  "gear": [
+   {
+    "id": "g17",
+    "name": "Commlink (indice 1)",
+    "category": "Équipement",
+    "qty": 1,
+    "rating": 1
+   }
+  ],
+  "vehicles": [],
+  "vision": {},
+  "npc": {
+   "professionalRating": 2,
+   "grunt": true,
+   "kind": "metahuman",
+   "initMode": "physical",
+   "tactics": "Tirs de couverture désordonnés, cherche à flanquer. Décroche quand le chef tombe.",
+   "loot": ""
+  },
+  "gmNotes": "Ganger de quartier, défend son territoire et son business.",
+  "condition": {
+   "physical": 0,
+   "stun": 0,
+   "overflow": 0
+  },
+  "edge": {
+   "current": 1
+  },
+  "contacts": [],
+  "sins": [],
+  "history": [],
+  "karma": 0,
+  "karmaTotal": 0,
+  "nuyen": 0,
+  "streetCred": 0,
+  "notoriety": 0,
+  "publicAwareness": 0,
+  "hidden": false
+ },
+ {
+  "type": "npc",
+  "metatype": "Humain",
+  "portrait": "",
+  "disposition": "hostile",
+  "id": "npc_demo_street_ganger_3",
+  "name": "Ganger de rue 3",
+  "color": "#b5654a",
+  "concept": "Membre de gang armé (PR 2)",
+  "gender": "",
+  "attributes": {
+   "BOD": 4,
+   "AGI": 4,
+   "REA": 3,
+   "STR": 3,
+   "WIL": 3,
+   "LOG": 2,
+   "INT": 3,
+   "CHA": 3,
+   "EDG": 1,
+   "ESS": 6
+  },
+  "augmented": {},
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "blades",
+    "name": "Armes tranchantes",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "close_combat"
+   },
+   {
+    "id": "clubs",
+    "name": "Armes contondantes",
+    "attr": "AGI",
+    "rating": 2,
+    "group": "close_combat"
+   },
+   {
+    "id": "pistols",
+    "name": "Pistolets",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "firearms"
+   },
+   {
+    "id": "automatics",
+    "name": "Armes automatiques",
+    "attr": "AGI",
+    "rating": 2,
+    "group": "firearms"
+   },
+   {
+    "id": "intimidation",
+    "name": "Intimidation",
+    "attr": "CHA",
+    "rating": 2
+   },
+   {
+    "id": "running",
+    "name": "Course",
+    "attr": "STR",
+    "rating": 2,
+    "group": "athletics"
+   },
+   {
+    "id": "unarmed_combat",
+    "name": "Combat à mains nues",
+    "attr": "AGI",
+    "rating": 3,
+    "group": "close_combat"
+   }
+  ],
+  "knowledge": [],
+  "qualities": [],
+  "powers": [],
+  "spells": [],
+  "weapons": [
+   {
+    "id": "w19",
+    "kind": "ranged",
+    "rc": 0,
+    "reach": 0,
+    "ap": 0,
+    "name": "Ceska Black Scorpion",
+    "category": "Pistolet mitrailleur",
+    "skill": "automatics",
+    "accuracy": 5,
+    "damage": "6P",
+    "mode": "SA/TR",
+    "ammo": "35(c)",
+    "source": "SR5",
+    "page": 427
+   },
+   {
+    "id": "w20",
+    "kind": "melee",
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "reach": 0,
+    "ap": -1,
+    "name": "Couteau",
+    "category": "Lame",
+    "skill": "blades",
+    "accuracy": 5,
+    "damage": "(STR+1)P",
+    "source": "SR5",
+    "page": 422
+   },
+   {
+    "id": "w21",
+    "kind": "melee",
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "reach": 0,
+    "ap": 0,
+    "name": "Mains nues",
+    "category": "Mains nues",
+    "skill": "unarmed_combat",
+    "accuracy": null,
+    "damage": "(STR)S",
+    "notes": "Précision = limite physique",
+    "source": "SR5",
+    "page": 132
+   }
+  ],
+  "armor": [
+   {
+    "id": "a10",
+    "name": "Vêtements pare-balles",
+    "rating": 6,
+    "equipped": true,
+    "stack": false,
+    "source": "SR5",
+    "page": 437
+   }
+  ],
+  "augmentations": [],
+  "gear": [
+   {
+    "id": "g17",
+    "name": "Commlink (indice 1)",
+    "category": "Équipement",
+    "qty": 1,
+    "rating": 1
+   }
+  ],
+  "vehicles": [],
+  "vision": {},
+  "npc": {
+   "professionalRating": 2,
+   "grunt": true,
+   "kind": "metahuman",
+   "initMode": "physical",
+   "tactics": "Tirs de couverture désordonnés, cherche à flanquer. Décroche quand le chef tombe.",
+   "loot": ""
+  },
+  "gmNotes": "Ganger de quartier, défend son territoire et son business.",
+  "condition": {
+   "physical": 0,
+   "stun": 0,
+   "overflow": 0
+  },
+  "edge": {
+   "current": 1
+  },
+  "contacts": [],
+  "sins": [],
+  "history": [],
+  "karma": 0,
+  "karmaTotal": 0,
+  "nuyen": 0,
+  "streetCred": 0,
+  "notoriety": 0,
+  "publicAwareness": 0,
+  "hidden": false
+ },
+ {
+  "type": "npc",
+  "metatype": "Ork",
+  "disposition": "hostile",
+  "id": "npc_demo_crimson_sarge_1",
+  "name": "Sarge « Gros-Bill »",
+  "color": "#ff4d4d",
+  "concept": "Lieutenant du gang Crimson Crush",
+  "foundryWorld": "test-world",
+  "foundryImportedAt": 1795629244307,
+  "foundryHash": "33341446a521",
+  "gender": "",
+  "portrait": "",
+  "attributes": {
+   "BOD": 8,
+   "AGI": 4,
+   "REA": 4,
+   "STR": 7,
+   "WIL": 4,
+   "LOG": 2,
+   "INT": 5,
+   "CHA": 4,
+   "EDG": 0,
+   "ESS": 6
+  },
+  "augmented": {},
+  "initiative": {
+   "dice": 1,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "clubs",
+    "name": "Armes contondantes",
+    "attr": "AGI",
+    "rating": 6,
+    "group": "close_combat"
+   },
+   {
+    "id": "blades",
+    "name": "Armes tranchantes",
+    "attr": "AGI",
+    "rating": 6,
+    "group": "close_combat"
+   },
+   {
+    "id": "unarmed_combat",
+    "name": "Combat à mains nues",
+    "attr": "AGI",
+    "rating": 6,
+    "group": "close_combat"
+   },
+   {
+    "id": "etiquette",
+    "name": "Étiquette",
+    "attr": "CHA",
+    "rating": 6,
+    "group": "influence"
+   },
+   {
+    "id": "intimidation",
+    "name": "Intimidation",
+    "attr": "CHA",
+    "rating": 6
+   },
+   {
+    "id": "pistols",
+    "name": "Pistolets",
+    "attr": "AGI",
+    "rating": 6,
+    "group": "firearms"
+   },
+   {
+    "id": "longarms",
+    "name": "Armes d’épaule",
+    "attr": "AGI",
+    "rating": 4,
+    "group": "firearms"
+   },
+   {
+    "id": "leadership",
+    "name": "Leadership",
+    "attr": "CHA",
+    "rating": 2,
+    "group": "influence"
+   }
+  ],
+  "knowledge": [],
+  "qualities": [
+   {
+    "id": "fvtt_lHSEpIEaswbaPKuB",
+    "name": "Dur à cuire",
+    "karma": 9,
+    "positive": true,
+    "notes": "Toughness · SR5 77",
+    "catalogId": "00cc6499-db13-447e-8116-278d317a9e31",
+    "source": "SR5",
+    "page": 77
+   }
+  ],
+  "powers": [],
+  "spells": [],
+  "weapons": [
+   {
+    "id": "fvtt_dghXd8EGBeoc7bQ8",
+    "name": "Couteau",
+    "category": "Armes tranchantes",
+    "kind": "melee",
+    "skill": "blades",
+    "accuracy": 5,
+    "damage": "(STR+1)P",
+    "ap": 0,
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "reach": 0,
+    "catalogId": "eb16de72-e646-4880-aa5b-21a5a0a2b342",
+    "notes": "Knife (SR5 422)",
+    "source": "SR5",
+    "page": 422,
+    "location": "on",
+    "equipped": true,
+    "nameFr": "Couteau",
+    "nameEn": "Knife",
+    "categoryFr": "Armes tranchantes",
+    "categoryEn": "Blades"
+   },
+   {
+    "id": "fvtt_qLJpkb89FjwVxc8a",
+    "name": "Colt America L36",
+    "category": "Pistolets légers",
+    "kind": "ranged",
+    "skill": "pistols",
+    "accuracy": 7,
+    "damage": "7P",
+    "ap": 0,
+    "mode": "SA",
+    "rc": 0,
+    "ammo": "11(c)",
+    "reach": 0,
+    "catalogId": "676660a2-3320-4b4a-acaf-f645f2ba6cd7",
+    "notes": "Colt America L36 (SR5 425)",
+    "source": "SR5",
+    "page": 425,
+    "location": "on",
+    "ammoMax": 11,
+    "ammoType": "c",
+    "ammoLoaded": 11,
+    "ammoKind": {
+     "name": "Ammo: Regular Ammo",
+     "nameFr": "Mun. : Balles normales",
+     "catalogId": "b2a0b340-c793-4322-8422-8b03d18a6fae"
+    },
+    "equipped": true,
+    "nameFr": "Colt America L36",
+    "nameEn": "Colt America L36",
+    "categoryFr": "Pistolets légers",
+    "categoryEn": "Light Pistols"
+   },
+   {
+    "id": "fvtt_qW9pxydMn0CuEZGs",
+    "name": "Defiance T-250 (canon scié)",
+    "category": "Fusil à pompe",
+    "kind": "ranged",
+    "skill": "longarms",
+    "accuracy": 4,
+    "damage": "10P",
+    "ap": -1,
+    "mode": "CC/SA",
+    "rc": 0,
+    "ammo": "5(m)",
+    "reach": 0,
+    "catalogId": "c2c0e756-a099-4f9d-b6bb-18f412d670a3",
+    "notes": "Portée de pistolet lourd",
+    "source": "SR5",
+    "page": 429,
+    "location": "on",
+    "ammoMax": 5,
+    "ammoType": "m",
+    "ammoLoaded": 5,
+    "ammoKind": {
+     "name": "Ammo: Regular Ammo",
+     "nameFr": "Mun. : Balles normales",
+     "catalogId": "b2a0b340-c793-4322-8422-8b03d18a6fae"
+    },
+    "equipped": false
+   }
+  ],
+  "armor": [
+   {
+    "id": "fvtt_eLp0t8e05DpwUOsb",
+    "name": "Veste pare-balles",
+    "rating": 12,
+    "equipped": true,
+    "stack": false,
+    "notes": "Armor Jacket",
+    "catalogId": "36a4cd30-c32c-44d0-847a-0c15fb51072a",
+    "source": "SR5",
+    "page": 437,
+    "location": "on",
+    "nameFr": "Veste pare-balles",
+    "nameEn": "Armor Jacket",
+    "categoryFr": "Armures",
+    "categoryEn": "Armor"
+   }
+  ],
+  "augmentations": [
+   {
+    "id": "fvtt_LTxxbWyTPWVHPIAf",
+    "name": "Éperons",
+    "kind": "cyberware",
+    "grade": "standard",
+    "rating": 1,
+    "essence": 0.3,
+    "notes": "Non installé (Foundry)",
+    "catalogId": "c9e4a11f-ef4f-4cb6-9392-ce7378456d82",
+    "source": "SR5",
+    "page": 458,
+    "nameFr": "Éperons",
+    "nameEn": "Spurs",
+    "categoryFr": "Armes cyber-implantées",
+    "categoryEn": "Cyber Implant Weapon"
+   }
+  ],
+  "gear": [
+   {
+    "id": "g15",
+    "name": "Commlink (indice 2)",
+    "category": "Équipement",
+    "qty": 1,
+    "rating": 2,
+    "location": "on"
+   }
+  ],
+  "vehicles": [
+   {
+    "id": "v2",
+    "name": "Harley-Davidson Scorpion",
+    "handling": "4/3",
+    "speed": 4,
+    "accel": 2,
+    "body": 8,
+    "armor": 9,
+    "pilot": 1,
+    "sensor": 2,
+    "seats": 1
+   }
+  ],
+  "matrix": {
+   "device": "Meta Link (commlink)",
+   "rating": 1,
+   "attack": 0,
+   "sleaze": 0,
+   "dataProcessing": 1,
+   "firewall": 1,
+   "programs": []
+  },
+  "vision": {
+   "lowLight": true
+  },
+  "npc": {
+   "professionalRating": 3,
+   "grunt": false,
+   "kind": "metahuman",
+   "initMode": "physical",
+   "tactics": "- Reste en retrait, fusil à pompe à la main, et hurle des ordres.\n- Si on le met à terre, la meute se disperse.\n- Négociable si on lui offre du respect… et des nuyens.",
+   "loot": ""
+  },
+  "gmNotes": "Chef de meute ork, couturé de cicatrices. Tient ses gangers par la peur.",
+  "condition": {
+   "physical": 0,
+   "stun": 0,
+   "overflow": 0
+  },
+  "edge": {
+   "current": 0
+  },
+  "contacts": [],
+  "sins": [],
+  "history": [],
+  "karma": 0,
+  "karmaTotal": 0,
+  "nuyen": 0,
+  "streetCred": 0,
+  "notoriety": 0,
+  "publicAwareness": 0,
+  "hidden": false,
+  "lifestyles": [],
+  "martialArts": [],
+  "containers": []
+ },
+ {
+  "type": "npc",
+  "metatype": "Créature",
+  "portrait": "",
+  "disposition": "hostile",
+  "id": "npc_demo_devil_rat_1",
+  "name": "Rat du diable (meute) 1",
+  "color": "#8d6e63",
+  "concept": "Critter paranormal des égouts",
+  "gender": "",
+  "attributes": {
+   "BOD": 2,
+   "AGI": 5,
+   "REA": 5,
+   "STR": 1,
+   "WIL": 3,
+   "LOG": 2,
+   "INT": 5,
+   "CHA": 5,
+   "EDG": 2,
+   "MAG": 3,
+   "ESS": 6
+  },
+  "augmented": {},
+  "initiative": {
+   "dice": 2,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "gymnastics",
+    "name": "Gymnastique",
+    "attr": "AGI",
+    "rating": 5,
+    "group": "athletics"
+   },
+   {
+    "id": "running",
+    "name": "Course",
+    "attr": "STR",
+    "rating": 2,
+    "group": "athletics"
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 4
+   },
+   {
+    "id": "sneaking",
+    "name": "Furtivité",
+    "attr": "AGI",
+    "rating": 6,
+    "group": "stealth"
+   },
+   {
+    "id": "unarmed_combat",
+    "name": "Combat à mains nues",
+    "attr": "AGI",
+    "rating": 5,
+    "group": "close_combat"
+   }
+  ],
+  "knowledge": [],
+  "qualities": [],
+  "powers": [
+   {
+    "id": "p8",
+    "name": "Contrôle animal (rats ordinaires)",
+    "pp": 0
+   },
+   {
+    "id": "p9",
+    "name": "Camouflage",
+    "pp": 0,
+    "notes": "Rend la meute très difficile à repérer (−MAG dés en Perception)"
+   },
+   {
+    "id": "p10",
+    "name": "Immunité (toxines)",
+    "pp": 0
+   },
+   {
+    "id": "p11",
+    "name": "Arme naturelle",
+    "pp": 0,
+    "notes": "Morsure (FOR+1)P, allonge −1"
+   },
+   {
+    "id": "p12",
+    "name": "Allergie (soleil, légère)",
+    "pp": 0
+   }
+  ],
+  "spells": [],
+  "weapons": [
+   {
+    "id": "w64",
+    "kind": "melee",
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "reach": -1,
+    "ap": 0,
+    "name": "Morsure",
+    "category": "Arme naturelle",
+    "skill": "unarmed_combat",
+    "accuracy": null,
+    "damage": "(STR+1)P",
+    "notes": "Peut transmettre des maladies"
+   }
+  ],
+  "armor": [],
+  "augmentations": [],
+  "gear": [],
+  "vehicles": [],
+  "vision": {
+   "lowLight": true
+  },
+  "npc": {
+   "professionalRating": 0,
+   "grunt": true,
+   "kind": "critter",
+   "initMode": "physical",
+   "tactics": "Surgit des conduits sous Camouflage, mord et se replie. Fuit la lumière vive.",
+   "loot": ""
+  },
+  "gmNotes": "Rat de la taille d’un chat, intelligent et vicieux. À jouer en **meute de 4 à 8** (fais-en apparaître plusieurs d’un coup), accompagnée d’une nuée de rats ordinaires.",
+  "condition": {
+   "physical": 0,
+   "stun": 0,
+   "overflow": 0
+  },
+  "edge": {
+   "current": 2
+  },
+  "contacts": [],
+  "sins": [],
+  "history": [],
+  "karma": 0,
+  "karmaTotal": 0,
+  "nuyen": 0,
+  "streetCred": 0,
+  "notoriety": 0,
+  "publicAwareness": 0,
+  "hidden": true
+ },
+ {
+  "type": "npc",
+  "metatype": "Créature",
+  "portrait": "",
+  "disposition": "hostile",
+  "id": "npc_demo_devil_rat_2",
+  "name": "Rat du diable (meute) 2",
+  "color": "#8d6e63",
+  "concept": "Critter paranormal des égouts",
+  "gender": "",
+  "attributes": {
+   "BOD": 2,
+   "AGI": 5,
+   "REA": 5,
+   "STR": 1,
+   "WIL": 3,
+   "LOG": 2,
+   "INT": 5,
+   "CHA": 5,
+   "EDG": 2,
+   "MAG": 3,
+   "ESS": 6
+  },
+  "augmented": {},
+  "initiative": {
+   "dice": 2,
+   "bonus": 0
+  },
+  "skills": [
+   {
+    "id": "gymnastics",
+    "name": "Gymnastique",
+    "attr": "AGI",
+    "rating": 5,
+    "group": "athletics"
+   },
+   {
+    "id": "running",
+    "name": "Course",
+    "attr": "STR",
+    "rating": 2,
+    "group": "athletics"
+   },
+   {
+    "id": "perception",
+    "name": "Perception",
+    "attr": "INT",
+    "rating": 4
+   },
+   {
+    "id": "sneaking",
+    "name": "Furtivité",
+    "attr": "AGI",
+    "rating": 6,
+    "group": "stealth"
+   },
+   {
+    "id": "unarmed_combat",
+    "name": "Combat à mains nues",
+    "attr": "AGI",
+    "rating": 5,
+    "group": "close_combat"
+   }
+  ],
+  "knowledge": [],
+  "qualities": [],
+  "powers": [
+   {
+    "id": "p8",
+    "name": "Contrôle animal (rats ordinaires)",
+    "pp": 0
+   },
+   {
+    "id": "p9",
+    "name": "Camouflage",
+    "pp": 0,
+    "notes": "Rend la meute très difficile à repérer (−MAG dés en Perception)"
+   },
+   {
+    "id": "p10",
+    "name": "Immunité (toxines)",
+    "pp": 0
+   },
+   {
+    "id": "p11",
+    "name": "Arme naturelle",
+    "pp": 0,
+    "notes": "Morsure (FOR+1)P, allonge −1"
+   },
+   {
+    "id": "p12",
+    "name": "Allergie (soleil, légère)",
+    "pp": 0
+   }
+  ],
+  "spells": [],
+  "weapons": [
+   {
+    "id": "w64",
+    "kind": "melee",
+    "mode": "",
+    "rc": 0,
+    "ammo": "",
+    "reach": -1,
+    "ap": 0,
+    "name": "Morsure",
+    "category": "Arme naturelle",
+    "skill": "unarmed_combat",
+    "accuracy": null,
+    "damage": "(STR+1)P",
+    "notes": "Peut transmettre des maladies"
+   }
+  ],
+  "armor": [],
+  "augmentations": [],
+  "gear": [],
+  "vehicles": [],
+  "vision": {
+   "lowLight": true
+  },
+  "npc": {
+   "professionalRating": 0,
+   "grunt": true,
+   "kind": "critter",
+   "initMode": "physical",
+   "tactics": "Surgit des conduits sous Camouflage, mord et se replie. Fuit la lumière vive.",
+   "loot": ""
+  },
+  "gmNotes": "Rat de la taille d’un chat, intelligent et vicieux. À jouer en **meute de 4 à 8** (fais-en apparaître plusieurs d’un coup), accompagnée d’une nuée de rats ordinaires.",
+  "condition": {
+   "physical": 0,
+   "stun": 0,
+   "overflow": 0
+  },
+  "edge": {
+   "current": 2
+  },
+  "contacts": [],
+  "sins": [],
+  "history": [],
+  "karma": 0,
+  "karmaTotal": 0,
+  "nuyen": 0,
+  "streetCred": 0,
+  "notoriety": 0,
+  "publicAwareness": 0,
+  "hidden": true
+ }
+]

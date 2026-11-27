@@ -2,7 +2,8 @@
 //   <runtime>/server.json                 { version, tables: [TableMeta], adminPasswordHash, adminPasswordEnv }
 //   <runtime>/tables/<id>/state.json      the table's game state (+ backups/, uploads/, docs/, assets/, foundry/)
 //   <runtime>/tables/<id>/table.json      copy of its TableMeta (lets a copied/restored folder be adopted)
-// TableMeta = { id, slug (= id, immutable), name, createdAt, archived, hidden, pack, lang, legacy?, docsDir? }
+// TableMeta = { id, slug (= id, immutable), name, createdAt, archived, hidden, pack, lang, legacy?, docsDir?, demo? }
+// `demo: true`: public demo table (server/lib/demo.js) — passwordless logins, abuse limits, wiped back to its pack.
 // `legacy: true` (one table at most, the migrated « Project Lazarus »): keeps the historical URLs /uploads/… and
 // /assets/foundry/… and the ../Shadowrun docs folder.
 import fs from 'node:fs';
@@ -16,7 +17,14 @@ import {
 export const PACKS = {
   'project-lazarus': { label: 'Project Lazarus (campagne complète)', dir: SEED_DIR },
   vierge: { label: 'Campagne vierge (bestiaire générique)', dir: path.join(PACKS_DIR, 'vierge') },
+  // Public demo table content (tools/build-demo.js): the vierge pack plus pre-made PCs, maps, a Matrix host.
+  demo: { label: 'Démo (vierge + prétirés, cartes, host)', dir: path.join(PACKS_DIR, 'demo'), base: 'vierge' },
 };
+/** Seed folders of a pack, base pack first (module inits only add what is missing, so layering is safe). */
+export function packDirs(pack) {
+  const p = PACKS[pack] || PACKS['project-lazarus'];
+  return p.base && PACKS[p.base] ? [...packDirs(p.base), p.dir] : [p.dir];
+}
 export const LANGS = ['fr', 'en'];
 export const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/;
 const RESERVED = new Set(['admin', 'api', 't', 'uploads', 'assets', 'vendor', 'shared', 'catalog', 'modules', 'lib', 'socket-io', 'tables', 'health', 'deleted', 'tmp']);
@@ -53,6 +61,8 @@ export class Table {
     this.sockets = new Map(); // socket.id -> { socket, user }
     this.broadcastTimer = null;
     this.error = null; // set when the state could not be loaded
+    // A demo table is rebuilt from its pack on every reset: no backups (they would only fill the disk).
+    if (meta.demo) this.store.backup = () => null;
   }
   get id() {
     return this.meta.id;
@@ -103,9 +113,16 @@ export class Table {
   get packDir() {
     return (PACKS[this.meta.pack] || PACKS['project-lazarus']).dir;
   }
+  /** Seed folders, base pack first (see packDirs). */
+  get packDirs() {
+    return packDirs(this.meta.pack);
+  }
+  get demo() {
+    return !!this.meta.demo;
+  }
   /** What the client may know about the table. */
   info() {
-    return { id: this.id, slug: this.slug, name: this.name, lang: this.state?.config?.lang || this.meta.lang || 'fr' };
+    return { id: this.id, slug: this.slug, name: this.name, lang: this.state?.config?.lang || this.meta.lang || 'fr', ...(this.meta.demo ? { demo: true } : {}) };
   }
 }
 
@@ -141,6 +158,8 @@ function cleanMeta(m, fallbackId) {
     ...(m?.legacy ? { legacy: true } : {}),
     ...(typeof m?.docsDir === 'string' && m.docsDir ? { docsDir: m.docsDir } : {}),
     ...(m?.migratedAt ? { migratedAt: m.migratedAt } : {}),
+    // Never on the legacy table (a reset would wipe the real campaign).
+    ...(m?.demo && !m?.legacy ? { demo: true } : {}),
   };
 }
 
@@ -293,7 +312,7 @@ export function bootRegistry() {
 }
 
 /** Create the folder + initial state of a new table (modules seed it when it is opened). */
-export function createTableFiles({ id, name, pack, lang, gmPassword, hidden = false }) {
+export function createTableFiles({ id, name, pack, lang, gmPassword, hidden = false, demo = false }) {
   const dir = path.join(TABLES_DIR, id);
   if (fs.existsSync(path.join(dir, 'state.json'))) throw new Error('Ce dossier de table existe déjà sur le disque');
   fs.mkdirSync(path.join(dir, 'uploads'), { recursive: true });
@@ -301,7 +320,38 @@ export function createTableFiles({ id, name, pack, lang, gmPassword, hidden = fa
   const state = emptyState();
   state.config = { gmPassword: String(gmPassword), campaignName: name, lang };
   writeJsonAtomic(path.join(dir, 'state.json'), state);
-  return addMeta({ id, name, pack, lang, hidden, createdAt: Date.now() });
+  return addMeta({ id, name, pack, lang, hidden, createdAt: Date.now(), ...(demo ? { demo: true } : {}) });
+}
+
+/**
+ * SR_DEMO_TABLE=<id> (e.g. « demo »): make sure that public demo table exists (pack « demo », flag `demo`).
+ * Only ever CREATES it: an existing table that is not already a demo is never converted (its reset would wipe it).
+ * SR_DEMO_NAME / SR_DEMO_LANG name it on creation. Returns its meta, or null.
+ */
+export function ensureDemoTable() {
+  const id = String(process.env.SR_DEMO_TABLE || '').trim().toLowerCase();
+  if (!id || id === 'none') return null;
+  const bad = slugError(id);
+  if (bad) {
+    console.error(`[demo] SR_DEMO_TABLE=« ${id} » ignoré : ${bad}`);
+    return null;
+  }
+  const m = getMeta(id);
+  if (m && !m.demo) {
+    console.error(`[demo] la table « ${id} » existe déjà et n’est pas une table de démo : laissée telle quelle (choisis un autre SR_DEMO_TABLE).`);
+    return null;
+  }
+  if (m) return m.archived ? updateMeta(id, { archived: false }) : m;
+  const dir = path.join(TABLES_DIR, id);
+  if (fs.existsSync(path.join(dir, 'state.json'))) {
+    console.error(`[demo] un dossier tables/${id} non enregistré existe déjà : table de démo non créée.`);
+    return null;
+  }
+  const lang = LANGS.includes(process.env.SR_DEMO_LANG) ? process.env.SR_DEMO_LANG : 'fr';
+  const name = String(process.env.SR_DEMO_NAME || '').trim().slice(0, 80) || (lang === 'en' ? 'Demo table' : 'Table de démonstration');
+  const meta = createTableFiles({ id, name, pack: 'demo', lang, gmPassword: crypto.randomBytes(12).toString('hex'), demo: true });
+  console.log(`[demo] table publique de démonstration créée : /t/${id}/`);
+  return meta;
 }
 
 // ---------------------------------------------------------------------------

@@ -68,6 +68,7 @@ function Login({ onDone }) {
   const [password, setPassword] = useState('');
   const [err, setErr] = useState('');
   const [closed, setClosed] = useState(null); // table unknown / archived: no login form
+  const demo = !!lobby?.table?.demo; // public demo table: no GM password, no PIN, PCs can be shared
 
   useEffect(() => {
     takeLobby().then((r) => {
@@ -83,7 +84,7 @@ function Login({ onDone }) {
     setErr('');
     try {
       const chosen = storedLang(); // only an explicit choice is saved on the account; otherwise the table's language applies
-      const body = mode === 'gm' ? { role: 'gm', password, table: TABLE } : { role: 'player', name, pin, characterId, table: TABLE };
+      const body = mode === 'gm' ? { role: 'gm', password, table: TABLE } : { role: 'player', name, pin: demo ? '' : pin, characterId, table: TABLE };
       if (chosen) body.lang = chosen;
       const res = await api('/api/login', { method: 'POST', body });
       if (mode === 'player') lsSet('sr.lastName', name);
@@ -114,20 +115,29 @@ function Login({ onDone }) {
         <div class="logo-mark"></div>
         <div><h1>${lobby?.campaignName || 'Shadowrun'}</h1><div class="muted">${t('Shadowrun 5E — Seattle, 2080')}</div></div>
       </div>
+      ${demo &&
+      html`<div class="demo-banner">
+        <strong>${t('Table de démonstration publique')}</strong>
+        <span>${t('Entre comme MJ ou comme joueur, sans mot de passe. Tout ce qui se passe ici est visible par les autres visiteurs et effacé à la remise à zéro (chaque nuit, et après 30 minutes sans personne).')}</span>
+        <span class="muted small">${t('Astuce : ouvre la table dans une fenêtre de navigation privée pour jouer en même temps côté joueur.')}</span>
+      </div>`}
       <${Tabs} tabs=${[{ id: 'player', label: t('Joueur') }, { id: 'gm', label: t('Maître de jeu') }]} value=${mode} onChange=${setMode} />
       ${mode === 'gm'
-        ? html`<label class="field"><span class="field-label">${t('Mot de passe MJ')}</span>
+        ? demo
+          ? html`<div class="muted">${t('Pas de mot de passe sur la démo : entre directement comme MJ.')}</div>`
+          : html`<label class="field"><span class="field-label">${t('Mot de passe MJ')}</span>
             <input class="input" type="password" value=${password} onInput=${(e) => setPassword(e.target.value)} autofocus /></label>`
         : html`
           <label class="field"><span class="field-label">${t('Ton nom')}</span>
             <input class="input" value=${name} onInput=${(e) => setName(e.target.value)} placeholder=${t('ex. Baptiste')} autofocus /></label>
-          <label class="field"><span class="field-label">${t('Code PIN (optionnel, protège ton accès)')}</span>
-            <input class="input" type="password" inputmode="numeric" value=${pin} onInput=${(e) => setPin(e.target.value)} /></label>
+          ${!demo &&
+          html`<label class="field"><span class="field-label">${t('Code PIN (optionnel, protège ton accès)')}</span>
+            <input class="input" type="password" inputmode="numeric" value=${pin} onInput=${(e) => setPin(e.target.value)} /></label>`}
           <div class="field"><span class="field-label">${t('Ton personnage')}</span>
             <div class="pc-pick">
               ${(lobby?.pcs || []).map(
                 (pc) => html`<button type="button" class=${'pc-choice' + (characterId === pc.id ? ' active' : '')}
-                    disabled=${pc.claimedBy && pc.claimedBy.toLowerCase() !== name.trim().toLowerCase()}
+                    disabled=${!demo && pc.claimedBy && pc.claimedBy.toLowerCase() !== name.trim().toLowerCase()}
                     onClick=${() => setCharacterId(characterId === pc.id ? '' : pc.id)}>
                   <strong>${pc.name}</strong>
                   <span class="muted">${pc.claimedBy ? t('joué par {name}', { name: pc.claimedBy }) : pc.player || t('libre')}</span>
@@ -218,12 +228,13 @@ function App() {
   useEffect(() => {
     if (!authed) return;
     let done = false;
-    const s = connect(() => {
+    const s = connect((info) => {
       if (done) return;
       done = true;
       setToken(null);
       setAuthed(false);
-      toast(t('Session expirée, reconnecte-toi'), 'warn');
+      if (info?.reason === 'demo-reset') toast(t('La table de démonstration vient d’être remise à zéro : reconnecte-toi'), 'warn');
+      else toast(t('Session expirée, reconnecte-toi'), 'warn');
     });
     return () => s.disconnect();
   }, [authed]);
@@ -260,7 +271,7 @@ function TablePicker() {
       html`<div class="picker-list">
         ${list.map(
           (tb) => html`<a class="picker-table" href=${`/t/${tb.slug}/`}>
-            <span class="picker-name">${tb.name}</span>
+            <span class="picker-name">${tb.name}${tb.demo ? html` <span class="demo-pill">${t('démo')}</span>` : null}</span>
             <span class="muted small">${tb.online ? tn(tb.online, '{n} connecté', '{n} connectés') : t('personne en ligne')}${isLang(tb.lang) ? ` · ${tb.lang.toUpperCase()}` : ''}</span>
             <span class="btn btn-primary btn-sm">${t('Rejoindre')}</span>
           </a>`

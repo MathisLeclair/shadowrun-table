@@ -119,5 +119,6 @@
   "Bestiaire : {name}": "Bestiary: {name}",
   "Combat en cours": "Current combat",
   "Journal de la table": "Table log",
-  "Catalogue : {q}": "Catalog: {q}"
+  "Catalogue : {q}": "Catalog: {q}",
+  "Il n’est pas disponible sur la table de démonstration publique.": "It is not available on the public demo table."
 }

@@ -268,7 +268,7 @@ try {
   const A = (p, opts = {}) => fetch(srv.url + p, { ...opts, headers: { 'content-type': 'application/json', ...H(adm), ...(opts.headers || {}) } });
   ok((await fetch(srv.url + '/api/admin/tables', { headers: H(gmATok) })).status === 401, 'a GM token is not an admin token');
   const list0 = await json(await A('/api/admin/tables'));
-  ok(list0.tables.length === 2 && list0.packs.length === 2 && list0.tables.every((t) => t.sizeBytes > 0), 'admin list with sizes and packs');
+  ok(list0.tables.length === 2 && list0.packs.length === 3 && list0.packs.some((p) => p.id === 'demo') && list0.tables.every((t) => t.sizeBytes > 0), 'admin list with sizes and packs');
   ok((await A('/api/admin/tables', { method: 'POST', body: JSON.stringify({ name: 'X', slug: 'Bad Slug', pack: 'vierge', gmPassword: 'longenough' }) })).status === 400, 'invalid slug refused');
   ok((await A('/api/admin/tables', { method: 'POST', body: JSON.stringify({ name: 'X', slug: 'alpha', pack: 'vierge', gmPassword: 'longenough' }) })).status === 409, 'duplicate slug refused');
   ok((await A('/api/admin/tables', { method: 'POST', body: JSON.stringify({ name: 'X', slug: 'admin', pack: 'vierge', gmPassword: 'longenough' }) })).status === 400, 'reserved slug refused');

@@ -161,6 +161,29 @@ serveur → Téléverser un monde Foundry (.zip)**: zip the world folder (`Found
 second zip with extra Data folders (`Music/`, `img/`…), then **Analyser** / **Importer** as usual. Max 1.5 GB per zip
 (`SR_MAX_UPLOAD_BYTES`). A GM can only read worlds uploaded to their own table.
 
+## 4b. Public demo table
+
+A table anyone can open from the README to try the GM and player sides, without a password. It is rebuilt from the
+`demo` content pack (generic: pre-made runners, a warehouse map, bestiary NPCs, a Matrix host — no Project Lazarus) at
+every start, every night, and 30 minutes after the last visitor leaves. On it, the GM assistant, the rulebooks, Foundry,
+state import/backup and map-library browsing are off; uploads are small images only (see ARCHITECTURE.md « Demo table »).
+
+To enable it on the VPS:
+
+1. In `~/shadowrun/app/.env`, add `SR_DEMO_TABLE=demo` (optionally `SR_DEMO_NAME=…`, `SR_DEMO_LANG=en`,
+   `SR_DEMO_RESET_HOUR=4` — container time is UTC).
+2. `.\deploy\deploy.ps1` (or `docker compose up -d` on the VPS). The log shows
+   `[demo] table publique de démonstration créée : /t/demo/`.
+3. In `/admin`, tick **Masquer de l'accueil** on every real table (Project Lazarus, the friend's table). The picker then
+   lists only the demo and `/` redirects to it; real tables stay reachable by their link and still need their password.
+4. Once HTTPS is set up through Caddy (a host name → `http://127.0.0.1:8095`), set `SR_TRUST_PROXY=1` in `.env` so the
+   per-IP login limits see the visitors' real address, and replace the placeholder link in the root `README.md`.
+
+`SR_DEMO_TABLE` only ever creates a table: if the id already belongs to a real table, it is left untouched and the log
+says so. To remove the demo: delete `SR_DEMO_TABLE` from `.env` and delete the table in `/admin`. The map-library copy in
+the demo shows its artwork only if that image (`dive-bar`) is in the server's library; its walls and doors work anyway.
+Locally: `SR_DEMO_TABLE=demo npm start` (PowerShell: `$env:SR_DEMO_TABLE='demo'; npm start`).
+
 ## 5. Updates — `-Action update` (default)
 
 ```powershell
@@ -290,6 +313,13 @@ add the PC's own JWKS (/admin on localhost) to the same issuer in the Console; t
 | `SR_BOOKS_KEY_FILE` | `<SR_RUNTIME_DIR>/books-sign.key` | HMAC key of the PDF links (never inside the books folder) |
 | `SR_MEMORY_LIMIT_BYTES` | cgroup `memory.max` | memory limit used to refuse an indexing job that would not fit |
 | `SR_TRUST_PROXY` | off | `1` when served behind a reverse proxy (real client IP for the login rate limit) |
+| `SR_DEMO_TABLE` | — | id of the public demo table to create (e.g. `demo`, see « 4b ») |
+| `SR_DEMO_NAME`, `SR_DEMO_LANG` | `Table de démonstration`, `fr` | name and language of the demo table on creation |
+| `SR_DEMO_RESET_HOUR` | `4` | nightly demo reset, server local hour (`none` = off) |
+| `SR_DEMO_IDLE_MINUTES` | `30` | demo reset after this long with nobody connected |
+| `SR_DEMO_UPLOAD_KB`, `SR_DEMO_UPLOAD_QUOTA_MB` | `1024`, `20` | demo uploads: max image size, total per reset |
+| `SR_DEMO_MAX_USERS`, `SR_DEMO_LOGIN_MAX` | `40`, `30` | demo player accounts, logins per IP per 10 min |
+| `SR_DEMO_MAX_STATE_MB` | `12` | demo reset at once when its state grows past this |
 | `PORT` | `3000` | port inside the container |
 | `ANTHROPIC_ORGANIZATION_ID`, `ANTHROPIC_FEDERATION_RULE_ID` | — | GM assistant through Workload Identity Federation (`-Action ai-setup`) |
 | `ANTHROPIC_WORKSPACE_ID`, `ANTHROPIC_SERVICE_ACCOUNT_ID` | — | optional, when the rule covers several workspaces / accounts |
@@ -306,6 +336,8 @@ add the PC's own JWKS (/admin on localhost) to the same issuer in the Console; t
 - GM and admin logins are rate-limited per IP (10 failures / 10 min for GM passwords and PINs, 8 / 15 min for admin).
 - Anyone with a table link can join it as a **player** (as before on the LAN); PINs protect player names. Hide a table
   from the picker if you don't want it listed.
+- The **demo table** (if enabled) has no GM password by design; it never reaches the assistant's API, the rulebooks,
+  Foundry, the other tables' files or the map library's artwork, and it is wiped back to its pack automatically.
 - Uploaded files are served with a sandbox CSP and `nosniff`; zip uploads are extracted with path-traversal checks,
   size caps and CRC verification.
 

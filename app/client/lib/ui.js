@@ -66,7 +66,7 @@ export function Modal({ title, onClose, width = 720, children, actions }) {
 export function Tabs({ tabs, value, onChange, class: klass }) {
   return html`<nav class=${cx('tabs', klass)}>
     ${tabs.map(
-      (t) => html`<button class=${cx('tab', t.id === value && 'active')} onClick=${() => onChange(t.id)}>
+      (t) => html`<button type="button" class=${cx('tab', t.id === value && 'active')} onClick=${() => onChange(t.id)}>
         ${t.label}${t.badge ? html`<span class="tab-badge">${t.badge}</span>` : null}
       </button>`
     )}

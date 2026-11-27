@@ -23,6 +23,13 @@ services:
       ANTHROPIC_WORKSPACE_ID: ${ANTHROPIC_WORKSPACE_ID:-}
       ANTHROPIC_SERVICE_ACCOUNT_ID: ${ANTHROPIC_SERVICE_ACCOUNT_ID:-}
       SR_ASSISTANT_HOST: ovh-vps   # stable JWT subject (the container hostname changes on every recreate)
+      # Public demo table (DEPLOY.md « 4b »): its id, e.g. demo (empty = none) and the nightly reset hour (UTC here).
+      SR_DEMO_TABLE: ${SR_DEMO_TABLE:-}
+      SR_DEMO_NAME: ${SR_DEMO_NAME:-}
+      SR_DEMO_LANG: ${SR_DEMO_LANG:-}
+      SR_DEMO_RESET_HOUR: ${SR_DEMO_RESET_HOUR:-4}
+      # 1 once the app is behind a reverse proxy (Caddy): real client IPs for the login limits.
+      SR_TRUST_PROXY: ${SR_TRUST_PROXY:-}
     volumes:
       # Registry (server.json) + every table (state, backups, uploads, docs, uploaded Foundry worlds).
       - ./runtime:/app/runtime

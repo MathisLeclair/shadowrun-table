@@ -58,6 +58,12 @@ export function linkTableMaps(state, tableId) {
   return changed;
 }
 
+/** True when one of the table's maps shows this library entry. */
+function usesLibraryMap(state, slug) {
+  const url = libImageUrl(slug);
+  return Object.values(state?.maps || {}).some((m) => m && (m.library?.slug === slug || m.background?.url === url));
+}
+
 const bearer = (req) => {
   const h = req.headers.authorization || '';
   return h.startsWith('Bearer ') ? h.slice(7) : typeof req.query.token === 'string' ? req.query.token : '';
@@ -218,6 +224,8 @@ export default {
         const live = t && tableApi.usableTable(t) === t && !t.meta?.archived;
         const userOk = live && (v.u === 'gm' || !!t.state?.users?.[v.u]) && L.sessionAlive(t.state?.sessions, v.u, v.s);
         if (!userOk) return res.status(403).json(errorBody(BAD_LINK));
+        // Public demo table: only the images of its own maps (the library artwork is the server owner's, not public).
+        if (t.meta?.demo && !usesLibraryMap(t.state, req.params.slug)) return res.status(404).json(errorBody(NOT_FOUND));
       }
       // Deleted entries keep serving their image: table maps made from them still show it.
       const m = L.getMeta(req.params.slug, { withDeleted: true });

@@ -1,0 +1,112 @@
+{
+ "hosts": [
+  {
+   "id": "host_demo_entrepot",
+   "name": "Host de l’entrepôt 23",
+   "folder": "Démo",
+   "rating": 3,
+   "alert": "none",
+   "visible": true,
+   "spider": "tpl_spider_junior",
+   "description": "Le host bon marché de la société-écran qui loue l’entrepôt : façade grise, logo de transporteur, sécurité minimale.",
+   "notes": "Host de démonstration. Ses appareils sont liés à la carte « Entrepôt 23 » : un decker qui en prend le contrôle peut ouvrir les portes, couper les néons ou les caméras directement sur la carte.",
+   "ic": [
+    {
+     "id": "ic_demo_patrol",
+     "type": "patrol",
+     "rating": 3,
+     "active": true,
+     "damage": 0
+    },
+    {
+     "id": "ic_demo_killer",
+     "type": "killer",
+     "rating": 3,
+     "active": false,
+     "damage": 0
+    }
+   ],
+   "files": [
+    {
+     "id": "file_demo_manifest",
+     "name": "Manifeste de chargement",
+     "protected": false,
+     "protection": 0,
+     "bomb": 0,
+     "value": 300,
+     "content": "6 caisses « pièces détachées agricoles », expéditeur : Tacoma Freight Solutions. Poids incohérent avec le contenu déclaré."
+    },
+    {
+     "id": "file_demo_contract",
+     "name": "Contrat de l’acheteur",
+     "protected": true,
+     "protection": 3,
+     "bomb": 0,
+     "value": 1500,
+     "content": "Livraison prévue jeudi, 3 h, quai 23. Paiement à la livraison : 40 000 ¥. Contact : « M. Brun », numéro de commlink jetable."
+    },
+    {
+     "id": "file_demo_payroll",
+     "name": "Planning des vigiles",
+     "protected": false,
+     "protection": 0,
+     "bomb": 2,
+     "value": 100,
+     "content": "Une ronde toutes les deux heures, aucune la nuit du jeudi (« ordre de la direction »)."
+    }
+   ],
+   "devices": [
+    {
+     "id": "dev_demo_shutters",
+     "name": "Rideaux de quai",
+     "rating": 3,
+     "link": {
+      "mapId": "map_demo_entrepot",
+      "kind": "door",
+      "targetId": "door_loading_2"
+     }
+    },
+    {
+     "id": "dev_demo_office",
+     "name": "Serrure du bureau",
+     "rating": 3,
+     "link": {
+      "mapId": "map_demo_entrepot",
+      "kind": "door",
+      "targetId": "door_office"
+     }
+    },
+    {
+     "id": "dev_demo_back",
+     "name": "Serrure de la porte de service",
+     "rating": 3,
+     "link": {
+      "mapId": "map_demo_entrepot",
+      "kind": "door",
+      "targetId": "door_back"
+     }
+    },
+    {
+     "id": "dev_demo_lights",
+     "name": "Néons de l’entrepôt",
+     "rating": 2,
+     "link": {
+      "mapId": "map_demo_entrepot",
+      "kind": "light",
+      "targetId": "light_hall_w"
+     }
+    },
+    {
+     "id": "dev_demo_cams",
+     "name": "Caméras de surveillance",
+     "rating": 3,
+     "link": {
+      "mapId": "map_demo_entrepot",
+      "kind": "camera",
+      "targetId": "reg_cameras"
+     }
+    }
+   ]
+  }
+ ]
+}
