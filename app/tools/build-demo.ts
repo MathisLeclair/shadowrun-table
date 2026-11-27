@@ -1,6 +1,6 @@
 // Builds the « demo » content pack (data/packs/demo/) used by the public demo table (SR_DEMO_TABLE, server/lib/demo.ts).
 //   node tools/build-demo.ts            (re-run after changing the content below, then commit data/packs/demo)
-// The pack is layered on the « vierge » pack (generic bestiary, shop, audio). This script holds the hand-written
+// The pack is layered on the « blank » pack (generic bestiary, shop, audio). This script holds the hand-written
 // content (warehouse tile map, Matrix host, scenario) and generates the rest through the real app: it starts a
 // throwaway server, creates the PCs with the NPC generator, copies a map-library map, spawns bestiary NPCs, then
 // exports the state and writes the slices as seed files with stable ids. No Project Lazarus content.
@@ -120,7 +120,7 @@ const PCS = [
   { key: 'face', archetype: 'face', metatype: 'Nain', seed: 4242, name: 'Velours', concept: 'Face', color: '#e0468f' },
 ];
 
-/** Bestiary NPCs placed on the warehouse map (templates of the vierge pack). */
+/** Bestiary NPCs placed on the warehouse map (templates of the blank pack). */
 const NPCS = [
   { templateId: 'tpl_street_ganger', x: 14, y: 9, count: 3 },
   { templateId: 'tpl_crimson_sarge', x: 25, y: 6, count: 1, name: 'Sarge « Gros-Bill »' },
@@ -214,7 +214,7 @@ const CAMPAIGN = {
 // ---------------------------------------------------------------------------
 // Build
 // ---------------------------------------------------------------------------
-const srv = await startServer({ port: 3790, tables: [{ id: 'build', pack: 'vierge', gmPassword: 'build-demo-pw', name: 'Démo' }] });
+const srv = await startServer({ port: 3790, tables: [{ id: 'build', pack: 'blank', gmPassword: 'build-demo-pw', name: 'Démo' }] });
 try {
   const gm = await client(srv.url, await login(srv.url, { role: 'gm', password: 'build-demo-pw', table: 'build' }), { table: 'build' });
   const ids: Record<string, string> = {}; // generated id -> stable id
@@ -293,7 +293,7 @@ try {
   write('matrix.json', { hosts: [HOST] });
   write('campaign.json', CAMPAIGN);
   fs.writeFileSync(path.join(OUT, 'README.md'),
-    '# Demo pack\n\nContent of the public demo table (`SR_DEMO_TABLE`), layered on the `vierge` pack. **Generated** by `node tools/build-demo.ts`:\n' +
+    '# Demo pack\n\nContent of the public demo table (`SR_DEMO_TABLE`), layered on the `blank` pack. **Generated** by `node tools/build-demo.ts`:\n' +
     'edit the script, not these files. No Project Lazarus content.\n');
   console.log(`Demo pack written to ${path.relative(ROOT, OUT)}: ${pcs.length} PCs, ${npcs.length} NPCs, ${Object.keys(maps).length} map(s), 1 host.`);
 } finally {

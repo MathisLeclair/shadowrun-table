@@ -39,18 +39,23 @@ interface PackDef {
 
 export const PACKS: Record<PackId, PackDef> = {
   'project-lazarus': { label: 'Project Lazarus (full campaign)', dir: SEED_DIR },
-  vierge: { label: 'Blank campaign (generic bestiary)', dir: path.join(PACKS_DIR, 'vierge') },
-  // Public demo table content (tools/build-demo.ts): the vierge pack plus pre-made PCs, maps, a Matrix host.
-  demo: { label: 'Demo (blank + pregens, maps, host)', dir: path.join(PACKS_DIR, 'demo'), base: 'vierge' },
+  blank: { label: 'Blank campaign (generic bestiary)', dir: path.join(PACKS_DIR, 'blank') },
+  // Public demo table content (tools/build-demo.ts): the blank pack plus pre-made PCs, maps, a Matrix host.
+  demo: { label: 'Demo (blank + pregens, maps, host)', dir: path.join(PACKS_DIR, 'demo'), base: 'blank' },
 };
+/** Pack ids renamed since tables were first saved with them (table.json, backups): old id → current id. */
+const PACK_ALIASES: Record<string, PackId> = { vierge: 'blank' };
+/** Current pack id of a stored value (old ids are renamed), or null if unknown. */
+export const packId = (v: unknown): PackId | null =>
+  typeof v === 'string' ? (Object.hasOwn(PACKS, v) ? (v as PackId) : PACK_ALIASES[v] || null) : null;
 /** Seed folders of a pack, base pack first (module inits only add what is missing, so layering is safe). */
 export function packDirs(pack: string): string[] {
-  const p = PACKS[pack as PackId] || PACKS['project-lazarus'];
+  const p = PACKS[packId(pack) || 'project-lazarus'];
   return p.base && PACKS[p.base] ? [...packDirs(p.base), p.dir] : [p.dir];
 }
 export const LANGS: Lang[] = ['fr', 'en'];
 const isLangValue = (v: unknown): v is Lang => LANGS.includes(v as Lang);
-const isPack = (v: unknown): v is PackId => typeof v === 'string' && Object.hasOwn(PACKS, v);
+const isPack = (v: unknown): v is PackId => packId(v) === v;
 export const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/;
 const RESERVED = new Set(['admin', 'api', 't', 'uploads', 'assets', 'vendor', 'shared', 'catalog', 'modules', 'lib', 'socket-io', 'tables', 'health', 'deleted', 'tmp']);
 
@@ -143,7 +148,7 @@ export class Table {
     return own;
   }
   get packDir(): string {
-    return (PACKS[this.meta.pack] || PACKS['project-lazarus']).dir;
+    return PACKS[packId(this.meta.pack) || 'project-lazarus'].dir;
   }
   /** Seed folders, base pack first (see packDirs). */
   get packDirs(): string[] {
@@ -203,7 +208,7 @@ function cleanMeta(m: any, fallbackId?: string): StoredMeta {
     createdAt: Number(m?.createdAt) || Date.now(),
     archived: !!m?.archived,
     hidden: !!m?.hidden,
-    pack: isPack(m?.pack) ? m.pack : 'vierge',
+    pack: packId(m?.pack) || 'blank',
     lang: isLangValue(m?.lang) ? m.lang : 'fr',
     ...(m?.legacy ? { legacy: true } : {}),
     ...(typeof m?.docsDir === 'string' && m.docsDir ? { docsDir: m.docsDir } : {}),
@@ -321,7 +326,7 @@ function adoptOrphans(): void {
     if (!fs.existsSync(path.join(dir, 'state.json'))) continue;
     const tj = readJson(path.join(dir, 'table.json'), {}) || {};
     const st = readJson(path.join(dir, 'state.json'), {}) || {};
-    const meta = addMeta({ ...tj, id: d.name, name: tj.name || st.config?.campaignName || d.name, pack: tj.pack || 'vierge', archived: false });
+    const meta = addMeta({ ...tj, id: d.name, name: tj.name || st.config?.campaignName || d.name, pack: packId(tj.pack) || 'blank', archived: false });
     console.log(`[tables] folder "${d.name}" adopted as a table${meta.legacy ? ' (legacy URLs)' : ''}`);
   }
 }

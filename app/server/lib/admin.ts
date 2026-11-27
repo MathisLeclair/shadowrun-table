@@ -11,6 +11,7 @@ import type { StoredMeta, Table, TableApi } from './tables.ts';
 import {
   PACKS, LANGS, slugify, slugError, getRegistry, listMetas, getMeta, addMeta, updateMeta, removeMeta,
   createTableFiles, verifyPassword, setAdminPassword,
+  packId,
 } from './tables.ts';
 import { ZipError, listZip, safeEntryPath, extractZip, writeZip, writeZipFile, walkFiles, dirSize, receiveToFile } from './zip.ts';
 import type { ZipItem } from './zip.ts';
@@ -208,7 +209,7 @@ export function registerAdminRoutes(app: Express, api: TableApi): void {
     const bad = slugError(id);
     if (bad) return fail(res, 400, bad);
     if (getMeta(id) || fs.existsSync(path.join(TABLES_DIR, id))) return fail(res, 409, 'The identifier “{id}” is already in use', {}, { id });
-    const pack: PackId | null = PACKS[b.pack as PackId] ? b.pack : null;
+    const pack: PackId | null = packId(b.pack);
     if (!pack) return fail(res, 400, 'Unknown starting content');
     const lang = LANGS.includes(b.lang) ? b.lang : 'fr';
     const pw = String(b.gmPassword || '');
@@ -423,7 +424,7 @@ export function registerAdminRoutes(app: Express, api: TableApi): void {
       const otherLegacy = listMetas().some((m) => m.legacy && m.id !== id);
       const name = String(req.query.name || tj.name || state.config?.campaignName || id).trim().slice(0, 80);
       const meta = addMeta({
-        id, name, pack: PACKS[tj.pack as PackId] ? tj.pack : 'vierge', lang: LANGS.includes(tj.lang) ? tj.lang : state.config?.lang === 'en' ? 'en' : 'fr',
+        id, name, pack: packId(tj.pack) || 'blank', lang: LANGS.includes(tj.lang) ? tj.lang : state.config?.lang === 'en' ? 'en' : 'fr',
         createdAt: Number(tj.createdAt) || Date.now(), hidden: !!tj.hidden, archived: false,
         ...(tj.legacy && !otherLegacy ? { legacy: true, docsDir: '../Shadowrun' } : {}),
       });

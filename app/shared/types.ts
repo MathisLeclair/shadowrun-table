@@ -130,7 +130,7 @@ export interface ViewConfig {
   table: TableInfo;
 }
 
-export type PackId = 'project-lazarus' | 'vierge' | 'demo';
+export type PackId = 'project-lazarus' | 'blank' | 'demo';
 
 /** Entry of the server registry `<runtime>/server.json` (multi-table hosting). */
 export interface TableMeta {

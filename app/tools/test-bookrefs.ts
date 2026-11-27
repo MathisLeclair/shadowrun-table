@@ -156,7 +156,7 @@ const unarmed = jane.weapons.find((w) => w.name === 'Mains nues');
 ok(unarmed && unarmed.source === 'SR5' && unarmed.page === 132, 'unarmed attack → Unarmed Combat (SR5 132)');
 const heritage = jane.armor.find((x) => /heritage/i.test(x.name));
 ok(!heritage || (heritage.source === 'RG' && heritage.page === 62), 'Zoé : Heritage → RG 62');
-for (const dir of [['data', 'seed', 'bestiary'], ['data', 'packs', 'vierge', 'bestiary']]) {
+for (const dir of [['data', 'seed', 'bestiary'], ['data', 'packs', 'blank', 'bestiary']]) {
   const full = path.join(ROOT, ...dir);
   if (!fs.existsSync(full)) continue;
   for (const f of fs.readdirSync(full).filter((x) => x.endsWith('.json'))) {

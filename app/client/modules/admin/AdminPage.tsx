@@ -51,7 +51,7 @@ const slugify = (s: string) =>
 const LANG_LABEL: Record<string, string> = { fr: 'Français', en: 'English' }; // endonyms: never translated
 // Content packs: the server sends labels (server/lib/tables.ts PACKS), translated when they are dictionary keys.
 const packLabel = (p: AdminPack): string => tIfKnown(p.label || p.id);
-const packShort = (id: string) => (id === 'project-lazarus' ? 'Project Lazarus' : id === 'vierge' ? t('Blank') : id);
+const packShort = (id: string) => (id === 'project-lazarus' ? 'Project Lazarus' : id === 'blank' ? t('Blank') : id);
 
 /** Start a browser download from a one-time server URL. */
 function download(url: string) {
@@ -123,7 +123,7 @@ interface CreateForm {
 }
 
 function CreateTable({ packs, langs, onCreated, run }: { packs: AdminPack[]; langs: string[]; onCreated: () => void; run: RunFn }) {
-  const empty: CreateForm = { name: '', slug: '', pack: 'vierge', lang: 'fr', gmPassword: '', hidden: false };
+  const empty: CreateForm = { name: '', slug: '', pack: 'blank', lang: 'fr', gmPassword: '', hidden: false };
   const [f, setF] = useState<CreateForm>(empty);
   const [slugTouched, setSlugTouched] = useState(false);
   const set = (patch: Partial<CreateForm>) => setF((cur) => ({ ...cur, ...patch }));

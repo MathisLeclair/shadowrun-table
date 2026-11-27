@@ -80,7 +80,7 @@ async function loadModules(): Promise<void> {
 
 /**
  * Run every module's init on a table's state, with that table's content pack as seed source. A pack built on a base
- * pack (demo = vierge + extras) runs the inits once per folder, base first: inits only add what is missing.
+ * pack (demo = blank + extras) runs the inits once per folder, base first: inits only add what is missing.
  */
 function initModules(table: Table): void {
   tableScope.run(table, () => {

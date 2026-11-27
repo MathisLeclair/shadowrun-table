@@ -132,7 +132,7 @@ try {
     port: 3501,
     env: { SR_FOUNDRY_LOCAL_PATHS: '0', SR_MAX_UPLOAD_BYTES: '200000' },
     tables: [
-      { id: 'alpha', name: 'Alpha', pack: 'vierge', state: tableState('Alpha', 'secret-alpha', true) },
+      { id: 'alpha', name: 'Alpha', pack: 'blank', state: tableState('Alpha', 'secret-alpha', true) },
       { id: 'beta', name: 'Beta', pack: 'project-lazarus', state: tableState('Beta', 'secret-beta', false) },
     ],
   });

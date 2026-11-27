@@ -1,8 +1,8 @@
-// Builds the "vierge" (blank campaign) content pack from the Project Lazarus seeds: node tools/build-packs.ts
-//   data/packs/vierge/bestiary/generic.json  generic NPC templates only (no campaign cast, no Foundry-specific NPCs)
-//   data/packs/vierge/audio.json             generic audio scenes (no Foundry playlists, no map links)
-//   data/packs/vierge/shop.json              no fixer deals
-//   data/packs/vierge/campaign.json          empty acts/quests/sessions
+// Builds the "blank" (blank campaign) content pack from the Project Lazarus seeds: node tools/build-packs.ts
+//   data/packs/blank/bestiary/generic.json  generic NPC templates only (no campaign cast, no Foundry-specific NPCs)
+//   data/packs/blank/audio.json             generic audio scenes (no Foundry playlists, no map links)
+//   data/packs/blank/shop.json              no fixer deals
+//   data/packs/blank/campaign.json          empty acts/quests/sessions
 // No actors/ and no maps/: a blank table starts without PCs nor maps. Re-run after editing data/seed/bestiary/core.json.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -11,7 +11,7 @@ import type { AudioScene, AudioTrack, Template } from '../shared/types.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SEED = path.join(ROOT, 'data', 'seed');
-const OUT = path.join(ROOT, 'data', 'packs', 'vierge');
+const OUT = path.join(ROOT, 'data', 'packs', 'blank');
 
 const GENERIC_FOLDERS = new Set(['Gangs', 'Sécurité corpo', 'Spécialistes', 'Matrice', 'Créatures']);
 const EXCLUDED_IDS = new Set(['tpl_host_hollow_pine']);
@@ -65,4 +65,4 @@ const tracks = (audioSeed.tracks || []).filter((t) => String(t.url || '').starts
 write('audio.json', { tracks, scenes });
 write('shop.json', { specials: [] });
 write('campaign.json', { acts: [], quests: [], sessions: [], threads: [], handouts: [], playerRecap: '', notes: '' });
-console.log(`pack vierge: ${templates.length} templates (${[...new Set(templates.map((t) => t.folder))].join(', ')}), ${scenes.length} audio scenes → ${path.relative(ROOT, OUT)}`);
+console.log(`pack blank: ${templates.length} templates (${[...new Set(templates.map((t) => t.folder))].join(', ')}), ${scenes.length} audio scenes → ${path.relative(ROOT, OUT)}`);
