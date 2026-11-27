@@ -354,7 +354,7 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
   // ---------------------------------------------------------------- actions
   const folders = useMemo(() => [...new Set(pages.filter((p) => p.scope === page.scope && p.folder).map((p) => p.folder))].sort(), [pages, page.scope]);
 
-  const LOCK_KEY = '{name} est en train d’écrire dans cette note';
+  const LOCK_KEY = '{name} is typing in this note'; // server error key
   async function remove() {
     // Someone is typing in it: the server refuses unless forced, so ask with that in mind (their unsaved text is at stake).
     const confirmForce = (name: string) =>

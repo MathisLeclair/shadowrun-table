@@ -14,7 +14,7 @@ import { ItemRef } from '../books/BookRef.tsx';
 
 const MOUNTS = MOUNT_LABELS as Record<string, string>;
 
-/** An actor list shown in the inventory. `label` = French key (render t(label)); `detail` runs at render time. */
+/** An actor list shown in the inventory. `label` = UI key (render t(label)); `detail` runs at render time. */
 interface ListDef {
   id: 'weapons' | 'armor' | 'augmentations' | 'gear' | 'vehicles';
   label: string;
@@ -23,7 +23,7 @@ interface ListDef {
   detail: (it: OwnedItem) => string;
 }
 
-// `label` = French key (render t(label)); `detail` runs at render time.
+// `label` = UI key (render t(label)); `detail` runs at render time.
 const LISTS: ListDef[] = [
   { id: 'weapons', label: tk('Weapons'), sub: 'accessories', detail: (w) => [w.damage, w.ap ? t('AP {n}', { n: w.ap }) : '', w.mode].filter(Boolean).join(' · ') },
   {

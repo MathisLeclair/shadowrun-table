@@ -93,7 +93,7 @@ function PlusButton({ qt, onClick, label = '+1' }: { qt: TrainingQuote | null | 
 // ---------------------------------------------------------------------------------------------
 function AttributesTab({ actor, q, open }: TabProps) {
   const keys = (TRAINABLE_ATTRS as AttrKey[]).filter((k) => (k !== 'MAG' && k !== 'RES') || Number(actor.attributes?.[k]) > 0);
-  const meta = metatypeLabel(actor.metatype || 'Humain');
+  const meta = metatypeLabel(actor.metatype || 'Humain'); // stored metatype value (French)
   return (
     <>
       <div className="training-hint small muted">

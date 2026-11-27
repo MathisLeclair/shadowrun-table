@@ -3,7 +3,7 @@ import { useState, useMemo, useRef, type ChangeEvent, type CSSProperties } from 
 import { Button, Badge, Empty, Panel, NumberInput, Toggle, SearchBox, confirmAction, promptText } from '../../lib/ui.tsx';
 import { send, type GameProps } from '../../lib/net.ts';
 import { useUI, openSheet, toast, goTab, type UIState } from '../../lib/ui-store.ts';
-import { t, tn, metatypeLabel, compare } from '../../lib/i18n.ts';
+import { t, tn, tIfKnown, metatypeLabel, compare } from '../../lib/i18n.ts';
 import { initials, avatarStyle, safeDerive, downloadJson, npcKindLabel } from './combat-common.tsx';
 import StatBlock from './StatBlock.tsx';
 import TemplateEditor from './TemplateEditor.tsx';
@@ -11,6 +11,7 @@ import EnemyGenerator from '../chargen/EnemyGenerator.tsx';
 import type { Actor, GameMap, GameView, Template, Token } from '../../../shared/types.ts';
 import './combat.css';
 
+// Seed bestiary folders: stored names (French, kept for save compatibility), shown with folderLabel().
 const FOLDER_ORDER = ['Project Lazarus', 'Gangs', 'Sécurité corpo', 'Spécialistes', 'Matrice', 'Créatures'];
 const NO_MAP = '__none';
 const DEFAULT_FOLDER = 'Divers'; // stored default folder name (server side), shown translated
@@ -21,8 +22,8 @@ const norm = (s: string | null | undefined) =>
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase();
 
-/** Folder name to display (the server's default folder is translated, GM folders are shown as typed). */
-const folderLabel = (name: string) => (name === DEFAULT_FOLDER ? t('Miscellaneous') : name);
+/** Folder name to display (the default and seed folders are translated, GM folders are shown as typed). */
+const folderLabel = (name: string) => (name === DEFAULT_FOLDER ? t('Miscellaneous') : tIfKnown(name));
 
 function folderSort(a: string, b: string) {
   const ia = FOLDER_ORDER.indexOf(a);

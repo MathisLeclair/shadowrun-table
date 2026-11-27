@@ -106,7 +106,7 @@ export interface GeneratedTemplate extends Omit<Template, 'id' | 'type' | 'descr
 type Finder = (file: CatalogFile, name: string) => CatalogItem | null;
 type CoreKey = 'BOD' | 'AGI' | 'REA' | 'STR' | 'WIL' | 'LOG' | 'INT' | 'CHA';
 
-// i18n: tier/archetype labels and texts are French dictionary keys (client/i18n/en/chargen.json), shown with t().
+// i18n: tier/archetype labels and texts are English dictionary keys (French in client/i18n/fr/chargen.json), shown with t().
 // Generated templates (names, descriptions, tactics, gear) are stored data and stay in French.
 const tk = (s: string): string => s;
 
@@ -122,6 +122,7 @@ export const TIERS = [
   { pr: 5, label: tk('Elite'), text: tk('Response teams, Mafia hitters: augmented, cover their angles, never panic.') },
   { pr: 6, label: tk('Special forces / prime runner'), text: tk('Red Samurai, Tir Ghosts, legendary runners: they never give in, every runner mistake costs dearly.') },
 ];
+/** Bestiary folder of generated templates and metatype values: stored data, French for save compatibility (shown with tIfKnown / metatypeLabel). */
 export const GENERATED_FOLDER = 'Générés';
 export const METATYPE_CHOICES: string[] = ['random', 'Humain', 'Elfe', 'Nain', 'Ork', 'Troll'];
 export const GRUNT_RULES = tk(

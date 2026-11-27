@@ -6,7 +6,7 @@
 // Quality = { id, catalogId?, name, nameFr?, category, cost (flat ¥/month, may be < 0), multiplier (%), baseOnly? (the % applies to the
 //             base cost only: Chummer <multiplierbaseonly>, Extra Secure), lp?, notes? }
 //
-// i18n: static messages are French keys (tk), dynamic ones { key, params } — see ARCHITECTURE.md « i18n ».
+// i18n: static messages are English UI keys (tk), dynamic ones { key, params } — see docs/i18n.md.
 import type { ActorLike, CatalogItem, I18nEntry, Lifestyle, LifestyleQuality, LifestyleQualityStats, LifestyleStats } from './types.ts';
 
 /** Run Faster point category. */
@@ -158,7 +158,7 @@ export function lifestyleFromCatalog(
   // id may be undefined until the caller assigns one; monthlyCost is filled below
   const l: Omit<Lifestyle, 'id' | 'monthlyCost'> & { id: string | undefined; monthlyCost?: number } = {
     id: opts.id,
-    name: String(opts.name || item?.nameFr || item?.name || 'Train de vie').slice(0, 120),
+    name: String(opts.name || item?.nameFr || item?.name || 'Lifestyle').slice(0, 120), // fallback is a UI key (shown with tIfKnown)
     base: baseOf(item?.name),
     catalogId: item?.id,
     baseCost: Math.max(0, Math.round(num(item?.cost))),

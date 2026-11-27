@@ -1,5 +1,5 @@
 // Pure i18n core shared by the browser (client/lib/i18n.js), the server (server/lib/i18n.js) and the tools.
-// No imports (types only), no DOM/Node APIs. See ARCHITECTURE.md « i18n ».
+// No imports (types only), no DOM/Node APIs. See docs/i18n.md.
 //
 // Keys are the English source strings (code is written in English). A key may carry a disambiguation context before
 // '::' ('fem::current', 'verb::Attack') — the English output drops it, the dictionary is looked up with the full key.

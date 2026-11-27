@@ -68,7 +68,7 @@ const SORTS = [
 /** A sidebar section (rules.js STORE_SECTIONS, plus « Offres de Cabana » and « Tout le catalogue »). */
 interface Section {
   id: string;
-  /** French key. */
+  /** UI key. */
   label: string;
   icon: string;
   files: string[];
@@ -338,9 +338,9 @@ export default function Storefront({ game, actor, catalog }: StorefrontProps) {
           <Toggle value={filters.showF} onChange={(v) => setFilter('showF', v)} label={t('Forbidden (F)')} />
           <label className="row gap-s small">
             {t('Price')}
-            <input className="input shop-price-input" type="number" min="0" placeholder="min" value={filters.minPrice} onChange={(e) => setFilter('minPrice', e.target.value)} />
+            <input className="input shop-price-input" type="number" min="0" placeholder={t('min')} value={filters.minPrice} onChange={(e) => setFilter('minPrice', e.target.value)} />
             –
-            <input className="input shop-price-input" type="number" min="0" placeholder="max" value={filters.maxPrice} onChange={(e) => setFilter('maxPrice', e.target.value)} />
+            <input className="input shop-price-input" type="number" min="0" placeholder={t('max')} value={filters.maxPrice} onChange={(e) => setFilter('maxPrice', e.target.value)} />
           </label>
         </div>
       )}

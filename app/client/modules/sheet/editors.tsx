@@ -17,7 +17,7 @@ const combatSkillOptions = () => SKILLS.filter((s) => s.cat === 'combat' || s.id
 const knowledgeTypeOptions = () => Object.entries(KNOWLEDGE_TYPES).map(([value, label]) => ({ value, label: t(label) }));
 const lifestyleBaseOptions = () => Object.entries(LIFESTYLE_BASES).map(([value, b]) => ({ value, label: t(b.label) }));
 
-/** Field schemas of each item list, for the GM editor. Labels / option labels are French keys (rendered with t()). */
+/** Field schemas of each item list, for the GM editor. Labels / option labels are English UI keys (rendered with t()). */
 export const LIST_FIELDS: Record<string, FieldDef[]> = {
   weapons: [
     { k: 'name', label: tk('Name'), w: 170 }, { k: 'kind', label: tk('Type'), type: 'select', options: [{ value: 'melee', label: tk('Melee') }, { value: 'ranged', label: tk('Ranged') }] },
@@ -82,7 +82,7 @@ const CATALOG_LABELS: Record<string, string> = {
 };
 const catalogLabel = (c: string): string => (CATALOG_LABELS[c] ? t(CATALOG_LABELS[c]) : c);
 
-// Default names are French keys: the new item is stored with the name in the GM's language.
+// Default names are UI keys: the new item is stored with the name in the GM's language.
 const BLANK: Record<string, AnyItem> = {
   weapons: { name: tk('New weapon'), kind: 'ranged', skill: 'pistols', accuracy: '5', damage: '7P', ap: 0, mode: 'SA', rc: 0, ammo: '' },
   armor: { name: tk('New armor'), rating: 6, equipped: false },

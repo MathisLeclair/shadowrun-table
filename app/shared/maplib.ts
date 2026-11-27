@@ -214,7 +214,7 @@ export function instanceContent(
   const regions = (version.regions || []).map((r): MapRegion => ({ id: uid('reg'), name: r.name as string, x: r.x, y: r.y, w: r.w, h: r.h, gmOnly: false }));
   const e = version.entry;
   if (e && Number.isFinite(Number(e.x)) && Number.isFinite(Number(e.y))) {
-    regions.push({ id: uid(ENTRY_REGION_PREFIX), name: 'Entrée', x: Math.max(0, Math.floor(e.x as number)), y: Math.max(0, Math.floor(e.y as number)), w: 1, h: 1, gmOnly: true });
+    regions.push({ id: uid(ENTRY_REGION_PREFIX), name: 'Entrance', x: Math.max(0, Math.floor(e.x as number)), y: Math.max(0, Math.floor(e.y as number)), w: 1, h: 1, gmOnly: true });
   }
   return { walls, lights, regions };
 }
@@ -236,7 +236,7 @@ export function versionFromMap(map: LibMapLike, { shift = { x: 0, y: 0 } }: { sh
   n = 0;
   const lights = (map.lights || []).map((l): MapLight => ({ id: `l${++n}`, x: r3(l.x - sx), y: r3(l.y - sy), radius: Number(l.radius) || 5, color: l.color || '#ffcc88', on: l.on !== false }));
   n = 0;
-  const regions = publicRegions(map.regions).map((r): MapRegion => ({ id: `r${++n}`, name: String(r.name || 'Zone').slice(0, 80), x: Math.round(r.x - sx), y: Math.round(r.y - sy), w: r.w, h: r.h, gmOnly: false }));
+  const regions = publicRegions(map.regions).map((r): MapRegion => ({ id: `r${++n}`, name: String(r.name || 'Area').slice(0, 80), x: Math.round(r.x - sx), y: Math.round(r.y - sy), w: r.w, h: r.h, gmOnly: false }));
   return { walls, lights, regions };
 }
 

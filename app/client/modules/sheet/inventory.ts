@@ -1,7 +1,7 @@
 // Inventory realism rules (pure: no imports, loaded by the characters server module AND the sheet UI).
 // Ammunition (capacity / reload type / loaded rounds / fire modes and their round counts), reloading from the inventory,
 // equipped weapons, containers (« Sur soi », bags, vehicles, safehouses) and item locations. See ARCHITECTURE.md « Inventaire ».
-// Labels stay French here (French source keys); the UI renders them with t().
+// Labels are English UI keys here; the UI renders them with t().
 
 import type { AmmoKind, Container, ContainerKind, Weapon } from '../../../shared/types.ts';
 
@@ -49,7 +49,7 @@ export interface ReloadPlan {
   swap: boolean;
 }
 
-/** Marker for the i18n checker (French keys rendered with t() by the UI). */
+/** Marker for the i18n checker (UI keys rendered with t() by the UI). */
 const tk = (s: string): string => s;
 
 const num = (v: unknown, d = 0): number => {

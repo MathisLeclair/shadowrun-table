@@ -14,7 +14,7 @@ import { poolModifiers, rollContext, derivedWithModifiers } from './modifiers.ts
 import type { CollectedModifier, ModifierLine } from './modifiers.ts';
 import type { ActorLike, AsdfKey, AttrKey, DamageType, DeviceLinkKind, I18nMessage, I18nParams, IcType, MatrixMode, Persona, Skill } from './types.ts';
 
-// i18n: French labels are dictionary keys (client/i18n/en/matrix.json). tk() marks them for tools/i18n-check.ts;
+// i18n: labels are English dictionary keys (French in client/i18n/fr/matrix.json). tk() marks them for tools/i18n-check.ts;
 // the UI renders t(label). Dynamic texts (pool parts, reasons) carry { key, params } next to their French `label`.
 const tk = (s: string): string => s;
 const fill = (s: string, p?: I18nParams): string =>
@@ -68,7 +68,7 @@ export interface ProgramDef {
   osVisible?: boolean;
   showsValue?: boolean;
 }
-/** A pool / limit part (French label, i18n key + params, value). */
+/** A pool / limit part (label, i18n key + params, value). */
 export interface PoolPart {
   label: string;
   key?: string;
@@ -658,7 +658,7 @@ export const DEVICE_LINK_KINDS: Record<DeviceLinkKind, { label: string; icon: st
   light: { label: tk('Lighting'), icon: '💡', cmds: ['off', 'on'] },
   camera: { label: tk('Cameras (zone)'), icon: '📷', cmds: ['off', 'on'] },
 };
-/** Command labels by link kind (French keys). */
+/** Command labels by link kind (UI keys). */
 export const DEVICE_CMD_LABELS: Record<DeviceLinkKind, Record<string, string>> = {
   door: { open: tk('Open'), close: tk('Close'), unlock: tk('Unlock'), lock: tk('verb::Lock') },
   light: { off: tk('Switch off'), on: tk('Switch on') },

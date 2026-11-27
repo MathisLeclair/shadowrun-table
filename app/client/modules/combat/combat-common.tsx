@@ -5,7 +5,7 @@ import { derive, attr, skillPool, SKILL_BY_ID } from '/shared/sr5.ts';
 import type { CombatEntry, Disposition, InitMode, NpcKind, Weapon } from '../../../shared/types.ts';
 import type { ActorLike } from './types.ts';
 
-// Constant tables hold French keys (tk); render them with the helpers below (or t(label)).
+// Constant tables hold English UI keys (tk); render them with the helpers below (or t(label)).
 export const DISPO_LABELS: Record<Disposition, string> = { pc: tk('Runner'), ally: tk('Ally'), neutral: tk('Neutral'), hostile: tk('Hostile') };
 export const DISPO_BADGE: Record<Disposition, string> = { pc: 'cyan', ally: 'green', neutral: 'amber', hostile: 'red' };
 export const INIT_MODES: Array<{ value: InitMode; label: string }> = [

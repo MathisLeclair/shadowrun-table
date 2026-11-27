@@ -4,7 +4,7 @@
 // - the special combat actions (SR5 core + Run & Gun, from Chummer's data/actions.xml: dice, DV, AP, reach, initiative / Edge cost,
 //   unlocked by the martial art technique / quality of the same name — `requireunlock`),
 // - the defense options (Dodge / Parry / Block / Full Defense / R&G « Defender » qualities) and the situational defense modifiers (p. 189).
-// Labels are French source keys (tk); the UI renders them with t(), the server stores them as i18n params.
+// Labels are English source keys (tk); the UI renders them with t(), the server stores them as i18n params.
 import { attr } from './sr5.ts';
 import type { LimitKey } from './sr5.ts';
 import type { ActorLike, AfflictionKind, AttrKey, Blast, BlastEffect, CombatState, DamageType, EffectUntil, GameMap, Point, Weapon } from './types.ts';
@@ -130,7 +130,7 @@ export interface EnvironmentResult {
   levels: EnvLevels;
   /** Before compensation. */
   raw: EnvLevels & { glare: number };
-  /** French labels of what lowered a column. */
+  /** Labels (UI keys) of what lowered a column. */
   notes: string[];
   parts: string[];
   rangeOnly: boolean;
@@ -622,7 +622,7 @@ function segDist(p: Point, a: Point, b: Point): number {
 /**
  * Environmental modifier of a ranged attack. from / to = cells, meters = distance, rangeIndex = 0..3 (short … extreme, null = none),
  * litRatio from createVisionContext (null = bright map), blasts = active blast markers of the map, senses = attackSenses().
- * Returns { value, levels (after compensation), raw (before), notes: [French labels of what lowered a column], parts: [labels] }.
+ * Returns { value, levels (after compensation), raw (before), notes: [labels (UI keys) of what lowered a column], parts: [labels] }.
  */
 export function environmentFor({ map, from, to, meters = 0, rangeIndex = null, litRatio = null, blasts = [], senses = {} }: EnvironmentInput): EnvironmentResult {
   const weather: Partial<NonNullable<GameMap['weather']>> = map?.weather || {};
@@ -675,11 +675,12 @@ export function environmentFor({ map, from, to, meters = 0, rangeIndex = null, l
 // Special combat actions (SR5 core + Run & Gun — Chummer data/actions.xml)
 // ---------------------------------------------------------------------------
 /**
- * id, name (French) / en, kind: 'melee' | 'ranged' | 'any' (weapon attack), or 'test' (own pool, no weapon: Clinch…),
- * type: 'simple' | 'complex', unlock: names of the technique / quality that unlocks it (Chummer `requireunlock`),
+ * id, name (UI key, shown with t()) / en (official English name), kind: 'melee' | 'ranged' | 'any' (weapon attack), or 'test' (own pool, no weapon: Clinch…),
+ * type: 'simple' | 'complex', unlock: names of the technique / quality that unlocks it (Chummer `requireunlock`), in English
+ * and French: they are matched against the quality / technique names stored on the actor, so the French names stay,
  * dice (attack pool), defense (target's defense pool), dv, ap, reach, ini (initiative cost), edge (Edge cost),
  * fire: fire option required (rounds override `rounds`), noDamage (opposed test only), once: once per Combat Turn,
- * note: French summary of the rule, source / page.
+ * note: summary of the rule (UI key), source / page.
  */
 export const COMBAT_ACTIONS: CombatActionDef[] = [
   { id: 'called-shot', name: tk('Called Shot (damage)'), en: 'Called Shot (Increase Damage)', kind: 'any', dice: -4, dv: 2, source: 'SR5', page: 195,

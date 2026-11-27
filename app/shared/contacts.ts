@@ -10,7 +10,7 @@
 import { skillPool, derive, attr } from './sr5.ts';
 import type { ActorLike, Contact, ContactRollInfo, ContactSheet } from './types.ts';
 
-/** A level of LOYALTY_LEVELS / FAVOR_RATINGS: French keys. */
+/** A level of LOYALTY_LEVELS / FAVOR_RATINGS: English UI keys. */
 export interface RatingLevel {
   name: string;
   text: string;
@@ -24,7 +24,7 @@ export interface ContactSheetSource {
   bestiary?: Record<string, ActorLike | null | undefined> | null;
 }
 
-const tk = (s: string): string => s; // French keys for the i18n checker; the client renders them with t()
+const tk = (s: string): string => s; // UI keys for the i18n checker; the client renders them with t()
 
 export const MAX_CONNECTION = 12;
 export const MAX_LOYALTY = 6;

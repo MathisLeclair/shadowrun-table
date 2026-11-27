@@ -75,7 +75,7 @@ export interface CartLine {
  */
 export type OwnedItem = ItemBase & LooseStats;
 
-/** A rules message: French key string, or { key, params } (rules.js fit checks). */
+/** A rules message: UI key string, or { key, params } (rules.js fit checks). */
 export type RulesMessage = string | { key: string; params?: Record<string, unknown> } | null | undefined;
 
 /** Price & fit of an upgrade on one of the actor's items (upgrades.ts upgradePreview). */

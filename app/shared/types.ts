@@ -3,7 +3,8 @@
 // (the server runs .ts files with Node's type stripping).
 //
 // Conventions in this file:
-// - French text vs i18n key: fields named `text`, `label`, `name`… hold French text (the source language). `i18n` / `*I18n`
+// - Text vs i18n key: fields named `text`, `label`, `name`… hold untranslated text (English source keys; older saves:
+//   French text, translated through the legacy key map). `i18n` / `*I18n`
 //   fields hold `{ key, params }` (log, history) or `{ t, params }` (messages) that the client translates.
 // - Map coordinates are CELLS unless stated otherwise (`metersPerCell` converts); segment walls use fractional cells.
 // - Timestamps are milliseconds since the epoch (Date.now()).
@@ -30,7 +31,7 @@ export interface BiName {
   en?: string;
 }
 
-/** A translatable message: French key + params (nested messages allowed). Used by results, `nameI18n`, Matrix `msgs`. */
+/** A translatable message: English key + params (nested messages allowed). Used by results, `nameI18n`, Matrix `msgs`. */
 export interface I18nMessage {
   t: string;
   params?: I18nParams;
@@ -40,7 +41,7 @@ export interface I18nMessage {
 export type I18nParamValue = string | number | boolean | null | BiName | I18nMessage | Array<string | number | boolean | null | BiName | I18nMessage>;
 export type I18nParams = Record<string, I18nParamValue>;
 
-/** A translatable stored text: French key + params (log entries, actor history, training labels). */
+/** A translatable stored text: English key + params (log entries, actor history, training labels). */
 export interface I18nEntry {
   key: string;
   params?: I18nParams;
@@ -275,7 +276,7 @@ export interface AvailRollInfo {
 
 /** `entry.roll`: the dice result plus what the server adds (performRoll and module `logExtra`). */
 export interface RollRecord extends RollResult {
-  /** French label shown in the log. */
+  /** Label shown in the log (UI key or stored text). */
   label: string;
   labelI18n?: I18nEntry;
   explode?: boolean;
@@ -764,7 +765,7 @@ export interface Affliction {
 /** Money / karma ledger line (`actor.history`). */
 export interface HistoryEntry {
   ts: Timestamp;
-  /** French text (a French key when `i18n` is absent and the text is a known key). */
+  /** Text (a UI key when `i18n` is absent and the text is a known key). */
   text: string;
   i18n?: I18nEntry;
   /** Karma delta. */
@@ -2684,7 +2685,7 @@ export interface ActionContext {
   table: TableInfo;
   /** GM, or the player controls that actor. */
   owns(actorId: ActorId): boolean;
-  /** Throws: the client gets the French text plus `errorKey` / `params` and shows it translated. */
+  /** Throws: the client gets the text plus `errorKey` / `params` and shows it translated. */
   fail(msg: string, params?: I18nParams): never;
   /** Appends to state.log (max 600) and returns the stored entry. */
   log(entry: NewLogEntry): LogEntry;

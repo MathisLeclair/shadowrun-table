@@ -34,7 +34,7 @@ const adminApi: AdminApi = async (path, opts = {}) => {
     return await api(path, { ...opts, token: adminToken });
   } catch (err) {
     const e = err as ServerError;
-    if (e.code === 'admin-auth' || e.key === 'Session administrateur expirée') throw new AuthError(e.message);
+    if (e.code === 'admin-auth' || e.key === 'Administrator session expired') throw new AuthError(e.message);
     throw err;
   }
 };
@@ -49,7 +49,7 @@ const slugify = (s: string) =>
     .slice(0, 40)
     .replace(/-+$/g, '');
 const LANG_LABEL: Record<string, string> = { fr: 'Français', en: 'English' }; // endonyms: never translated
-// Content packs: the server sends French labels (server/lib/tables.js PACKS), translated when they are dictionary keys.
+// Content packs: the server sends labels (server/lib/tables.ts PACKS), translated when they are dictionary keys.
 const packLabel = (p: AdminPack): string => tIfKnown(p.label || p.id);
 const packShort = (id: string) => (id === 'project-lazarus' ? 'Project Lazarus' : id === 'vierge' ? t('Blank') : id);
 

@@ -72,7 +72,7 @@ export function CombatTab({ s }: { s: SheetCtx }) {
     <div className="sh-derived">
       <RollStat label={t('Initiative')} value={d.initiative.text} accent="cyan" book={ruleRef('initiative')} title={sourcesTitle(dm.sources.initiative)} />
       <RollStat label={t('Defense')} value={dm.defense} sub={`${attrShort('REA')} + ${attrShort('INT')}`} accent="amber" book={ruleRef('defense')} title={sourcesTitle(dm.sources.defense)} onClick={() => s.roll({ attr: 'REA', attr2: 'INT', label: tk('Defense'), test: 'defense' })} />
-      <RollStat label={t('Full defense')} value={dm.defense + attr(actor, 'WIL')} book={ruleRef('defense')} sub={`+ ${attrShort('WIL')}`} onClick={() => s.roll({ attr: 'REA', attr2: 'INT', label: tk('Full defense'), test: 'defense', bonus: [{ label: 'VOL', value: attr(actor, 'WIL') }] })} />
+      <RollStat label={t('Full defense')} value={dm.defense + attr(actor, 'WIL')} book={ruleRef('defense')} sub={`+ ${attrShort('WIL')}`} onClick={() => s.roll({ attr: 'REA', attr2: 'INT', label: tk('Full defense'), test: 'defense', bonus: [{ label: 'VOL', value: attr(actor, 'WIL') }] /* 'VOL': label the server recognizes (playerBonus), shown translated */ })} />
       <RollStat label={t('Soak')} value={dm.soak} sub={t('{attr} + armor', { attr: attrShort('BOD') })} accent="amber" book={ruleRef('soak')} title={sourcesTitle([...(dm.sources.armor || []), ...(dm.sources.soak || [])])} onClick={() => s.roll({ attr: 'BOD', label: tk('Soak'), applyWounds: false, limit: null, test: 'soak' })} />
       <RollStat label={t('Armor')} value={dm.armor} book={ruleRef('armor')} title={sourcesTitle(dm.sources.armor)} />
       <LimitStat s={s} name="physical" label={t('Physical Limit')} />

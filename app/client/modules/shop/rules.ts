@@ -2,7 +2,7 @@
 // Pure ES module: no DOM, no Node APIs, no imports — keep it that way so both sides can load it.
 //
 // i18n: labels below are French dictionary keys (marked with tk() for tools/i18n-check.ts, English in
-// client/i18n/en/shop.json). Render them with t(label) on the client; never translate at module level.
+// French in client/i18n/fr/shop.json). Render them with t(label) on the client; never translate at module level.
 const tk = (s: string): string => s;
 import type { Legality, WareGrade } from '../../../shared/types.ts';
 
@@ -13,7 +13,7 @@ import type { Legality, WareGrade } from '../../../shared/types.ts';
 export type Loose = any;
 /** Formula variables (Rating, MinRating, Body, WeaponCost…). */
 export type FormulaVars = Record<string, unknown>;
-/** A fit problem: French key + params (render with t(problem.key, problem.params)). */
+/** A fit problem: UI key + params (render with t(problem.key, problem.params)). */
 export interface FitProblem {
   key: string;
   params: Record<string, string | number>;
@@ -36,7 +36,7 @@ export interface QuoteOptions {
   price?: unknown;
   vars?: FormulaVars;
 }
-/** A storefront section: `match(file, item)` says which catalog entries it shows; `label` = French key. */
+/** A storefront section: `match(file, item)` says which catalog entries it shows; `label` = UI key. */
 export interface StoreSection {
   id: string;
   label: string;
@@ -126,7 +126,7 @@ export const MAGIC_GEAR = new Set([
 /** Gear categories whose items can become the actor's Matrix device (actor.matrix). */
 export const DEVICE_GEAR = new Set(['Commlinks', 'Cyberdecks', 'Rigger Command Consoles', 'Cyberterminals']);
 
-/** Storefront sections (sidebar). `match(file, item)` says which catalog entries a section shows. `label` = French key: render t(label). */
+/** Storefront sections (sidebar). `match(file, item)` says which catalog entries a section shows. `label` = UI key: render t(label). */
 export const SECTIONS: StoreSection[] = [
   { id: 'weapons', label: tk('Weapons'), icon: '⚔', files: ['weapons'], match: (f) => f === 'weapons' },
   { id: 'armor', label: tk('pl::Armor'), icon: '⛨', files: ['armor'], match: (f) => f === 'armor' },
@@ -175,7 +175,7 @@ function tokenize(src: unknown): string[] {
     if (/\s/.test(s[i])) { i++; continue; }
     re.lastIndex = i;
     const m = re.exec(s);
-    if (!m) throw new Error(`Formule invalide : ${s}`); // i18n-ignore (catalog formula error, developer-facing)
+    if (!m) throw new Error(`Invalid formula: ${s}`); // catalog formula error, developer-facing
     toks.push(m[1]);
     i = re.lastIndex;
   }
@@ -197,7 +197,7 @@ export function evalFormula(src: unknown, vars: FormulaVars = {}): number {
   const peek = () => toks[p];
   const next = () => toks[p++];
   const expect = (t: string) => {
-    if (toks[p] !== t) throw new Error(`Formule invalide : ${text}`); // i18n-ignore (catalog formula error, developer-facing)
+    if (toks[p] !== t) throw new Error(`Invalid formula: ${text}`); // catalog formula error, developer-facing
     p++;
   };
   const env: Record<string, number> = { Rating: Number(vars.Rating ?? 1), MinRating: Number(vars.MinRating ?? 1) };
@@ -205,7 +205,7 @@ export function evalFormula(src: unknown, vars: FormulaVars = {}): number {
 
   function primary(): number {
     const t = next();
-    if (t === undefined) throw new Error(`Formule incomplète : ${text}`); // i18n-ignore (catalog formula error, developer-facing)
+    if (t === undefined) throw new Error(`Incomplete formula: ${text}`); // catalog formula error, developer-facing
     if (t === '(') { const x = cmp(); expect(')'); return x; }
     if (t === '[') { const x = cmp(); expect(']'); return x; }
     if (/^\d/.test(t)) return Number(t);
@@ -219,7 +219,7 @@ export function evalFormula(src: unknown, vars: FormulaVars = {}): number {
       return args[idx];
     }
     if (Object.prototype.hasOwnProperty.call(env, t)) return env[t];
-    throw new Error(`Variable inconnue « ${t} » dans ${text}`); // i18n-ignore (catalog formula error, developer-facing)
+    throw new Error(`Unknown variable "${t}" in ${text}`); // catalog formula error, developer-facing
   }
   function unary(): number {
     if (peek() === '-') { next(); return -unary(); }
@@ -261,8 +261,8 @@ export function evalFormula(src: unknown, vars: FormulaVars = {}): number {
     return x;
   }
   const out = cmp();
-  if (p !== toks.length) throw new Error(`Formule invalide : ${text}`); // i18n-ignore (catalog formula error, developer-facing)
-  if (!Number.isFinite(out)) throw new Error(`Résultat invalide : ${text}`); // i18n-ignore (catalog formula error, developer-facing)
+  if (p !== toks.length) throw new Error(`Invalid formula: ${text}`); // catalog formula error, developer-facing
+  if (!Number.isFinite(out)) throw new Error(`Invalid result: ${text}`); // catalog formula error, developer-facing
   return out;
 }
 
@@ -350,7 +350,7 @@ export function magicLoss(before: number, after: number): number {
 
 // ---------------------------------------------------------------------------
 // Upgrades: weapon accessories (mounts), armor modifications (capacity), vehicle modifications (slots).
-// Fit checks return { problem: null } when OK, else a message: French key string (static) or { key, params } (dynamic).
+// Fit checks return { problem: null } when OK, else a message: UI key string (static) or { key, params } (dynamic).
 // Target items keep the schema of ARCHITECTURE.md « Upgrades »: weapon.mounts/accessories, armor.capacity/mods, vehicle.mods.
 // ---------------------------------------------------------------------------
 const n0 = (v: unknown): number => {
@@ -676,7 +676,7 @@ export function availOutcome(test: { hits?: unknown; availHits?: unknown; baseHo
   return { net, found, tie: found && net === 0, delayHours, retryHours: found ? null : base * 2, glitch: !!test?.glitch, critGlitch };
 }
 
-/** A duration in hours as a translatable value { t, params } (French source text; render with t(v.t, v.params)). */
+/** A duration in hours as a translatable value { t, params } (render with t(v.t, v.params)). */
 export function durationText(hours: unknown): DurationText {
   const h = Math.max(0, Number(hours) || 0);
   if (h === 168) return { t: tk('1 week') };

@@ -5,7 +5,7 @@ import { Panel, Stat, Markdown } from '../../lib/ui.tsx';
 import { derive } from '/shared/sr5.ts';
 import { buildActor, STEPS, COLUMNS, COLUMN_LABELS, MAGIC_TYPES } from '/shared/chargen.ts';
 import StatBlock from '../combat/StatBlock.tsx';
-import { t, tn, tk, fmtNumber, metatypeLabel, itemName } from '../../lib/i18n.ts';
+import { t, tn, tk, fmtNumber, metatypeLabel, itemName, getLang } from '../../lib/i18n.ts';
 import { nuyen, issueText } from './common.tsx';
 import type { Actor, DraftData, PriorityColumn } from '../../../shared/types.ts';
 import type { ChargenIssue, ChargenResult, RulesCtx } from './types.ts';
@@ -76,13 +76,13 @@ export function ValidationReport({ result, onJump, compact }: ValidationReportPr
 export function useActorPreview(data: DraftData, rc: RulesCtx): Actor | null {
   return useMemo(() => {
     try {
-      const { actor } = buildActor(data, rc.ctx, {});
+      const { actor } = buildActor(data, rc.ctx, { t }); // texts written into the actor in the UI language
       return actor as unknown as Actor;
     } catch (err) {
       console.error('[chargen] preview failed', err);
       return null;
     }
-  }, [data, rc.ctx]);
+  }, [data, rc.ctx, getLang()]);
 }
 
 interface DraftSummaryProps {

@@ -26,12 +26,15 @@ export interface MetatypeDef {
 }
 
 export const ATTRS: AttrKey[] = ['BOD', 'AGI', 'REA', 'STR', 'WIL', 'LOG', 'INT', 'CHA', 'EDG', 'MAG', 'RES', 'ESS'];
+/** Attribute names: UI keys (English), shown with attrLabel() / t(). */
 export const ATTR_LABELS: Record<AttrKey, string> = {
-  BOD: 'Constitution', AGI: 'Agilité', REA: 'Réaction', STR: 'Force', WIL: 'Volonté', LOG: 'Logique',
-  INT: 'Intuition', CHA: 'Charisme', EDG: 'Chance', MAG: 'Magie', RES: 'Résonance', ESS: 'Essence',
+  BOD: 'Body', AGI: 'Agility', REA: 'Reaction', STR: 'Strength', WIL: 'Willpower', LOG: 'Logic',
+  INT: 'Intuition', CHA: 'Charisma', EDG: 'Edge', MAG: 'Magic', RES: 'Resonance', ESS: 'Essence',
 };
+/** French attribute abbreviations (SR5 FR), used by attrShort() in French; English shows the key itself. */
 export const ATTR_SHORT: Record<AttrKey, string> = { BOD: 'CON', AGI: 'AGI', REA: 'RÉA', STR: 'FOR', WIL: 'VOL', LOG: 'LOG', INT: 'INT', CHA: 'CHA', EDG: 'CHC', MAG: 'MAG', RES: 'RES', ESS: 'ESS' };
 
+/** Keys are the stored metatype values (French, kept for save compatibility); shown with metatypeLabel(). */
 export const METATYPES: Record<string, MetatypeDef> = {
   Humain: { max: { BOD: 6, AGI: 6, REA: 6, STR: 6, WIL: 6, LOG: 6, INT: 6, CHA: 6, EDG: 7 }, vision: {} },
   Elfe: { max: { BOD: 6, AGI: 7, REA: 6, STR: 6, WIL: 6, LOG: 6, INT: 6, CHA: 8, EDG: 6 }, vision: { lowLight: true } },
@@ -41,7 +44,8 @@ export const METATYPES: Record<string, MetatypeDef> = {
 };
 
 /**
- * SR5 active skills. id = stable key (English, as in Chummer/Foundry), fr = French label,
+ * SR5 active skills. id = stable key (English, as in Chummer/Foundry), fr = French name (shown in French, and the name
+ * stored on actor skills — kept French for save compatibility; English shows the official name from the id),
  * attr = linked attribute, group = skill group, cat = category, def = can default (roll untrained).
  */
 // Optional `limit` on a skill overrides the category default: 'physical'|'mental'|'social'|'astral',
@@ -129,12 +133,14 @@ export const SKILLS: SkillDef[] = [
   { id: 'pilot_watercraft', fr: 'Pilotage (bateaux)', attr: 'REA', cat: 'vehicle', limit: null, def: true },
 ];
 export const SKILL_BY_ID: Record<string, SkillDef> = Object.fromEntries(SKILLS.map((s) => [s.id, s]));
+/** Skill group names: UI keys (English), shown with skillGroupLabel() / t(). */
 export const SKILL_GROUPS: Record<string, string> = {
-  acting: 'Comédie', athletics: 'Athlétisme', biotech: 'Biotech', close_combat: 'Combat rapproché', conjuring: 'Conjuration',
-  cracking: 'Piratage', electronics: 'Électronique', enchanting: 'Enchantement', engineering: 'Ingénierie', firearms: 'Armes à feu',
-  influence: 'Influence', outdoors: 'Plein air', sorcery: 'Sorcellerie', stealth: 'Furtivité', tasking: 'Technomancie',
+  acting: 'Acting', athletics: 'Athletics', biotech: 'Biotech', close_combat: 'Close Combat', conjuring: 'Conjuring',
+  cracking: 'Cracking', electronics: 'Electronics', enchanting: 'Enchanting', engineering: 'Engineering', firearms: 'Firearms',
+  influence: 'Influence', outdoors: 'Outdoors', sorcery: 'Sorcery', stealth: 'Stealth', tasking: 'Tasking',
 };
-export const SKILL_CATEGORIES: Record<SkillCategory, string> = { combat: 'Combat', physical: 'Physiques', social: 'Sociales', magic: 'Magiques', resonance: 'Résonance', technical: 'Techniques', vehicle: 'Véhicules' };
+/** Skill category names: UI keys (English), shown with skillCategoryLabel() / t(). */
+export const SKILL_CATEGORIES: Record<SkillCategory, string> = { combat: 'Combat', physical: 'pl::Physical', social: 'Social', magic: 'Magical', resonance: 'Resonance', technical: 'Technical', vehicle: 'Vehicles' };
 
 /** Result of skillPool(). */
 export interface SkillPool {

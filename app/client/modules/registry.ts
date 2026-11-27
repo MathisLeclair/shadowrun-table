@@ -42,7 +42,7 @@ export interface TabEntry {
 
 const pending = (list: Array<{ status: string }> | null | undefined) => (list || []).filter((r) => r.status === 'pending').length || null;
 
-/** Main tabs (top bar). roles: who sees it. badge(game) -> number|null. label: French key marked with tk(), rendered with t(label). */
+/** Main tabs (top bar). roles: who sees it. badge(game) -> number|null. label: English UI key marked with tk(), rendered with t(label). */
 export const mainTabs: TabEntry[] = [
   { id: 'map', label: tk('Map'), icon: '⌖', roles: ['gm', 'player'], component: MapView },
   { id: 'sheet', label: tk('My sheet'), icon: '☰', roles: ['player'], component: MySheet },

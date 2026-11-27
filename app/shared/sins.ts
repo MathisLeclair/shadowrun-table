@@ -18,7 +18,7 @@ export interface SinLicense {
   rating: number;
 }
 
-const tk = (s: string): string => s; // French keys for the i18n checker; the client renders them with t()
+const tk = (s: string): string => s; // UI keys for the i18n checker; the client renders them with t()
 
 export const MAX_DEVICE_RATING = 6;
 

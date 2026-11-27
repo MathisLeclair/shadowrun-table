@@ -22,7 +22,8 @@ import type { AnyItem, SheetCtx, SheetModifier } from './types.ts';
 import { ItemRef, RuleRef } from '../books/BookRef.tsx';
 
 
-// Roll labels are stored in French in the log; rollLabel() (common.js) translates them for each viewer.
+// These roll labels are stored in French in the log (formats rollLabel() recognizes); rollLabel() (common.tsx) translates
+// them for each viewer.
 const drainRollLabel = (k: string): string => `Résistance au drain (VOL + ${k})`; // i18n-ignore
 const spellRollLabel = (name: string): string => `Sort — ${name}`; // i18n-ignore
 const hasSkill = (actor: Actor, id: string): boolean => (actor.skills || []).some((s) => s.id === id && s.rating > 0);

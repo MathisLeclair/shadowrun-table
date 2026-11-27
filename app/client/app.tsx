@@ -1,6 +1,6 @@
 // App shell: table picker (/), admin page (/admin), and for a table (/t/<slug>/): login screen, header + main tabs,
 // right dock, sheet modal, toasts, global components. Dictionaries are loaded before the first render (no French
-// flash in an English session); a language switch re-renders the whole tree (see ARCHITECTURE.md « i18n »).
+// flash in an English session); a language switch re-renders the whole tree (see docs/i18n.md).
 import { useEffect, useState, type ComponentType, type FormEvent } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Button, Badge, Modal, Tabs, LangSwitch } from './lib/ui.tsx';

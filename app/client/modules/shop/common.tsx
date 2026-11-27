@@ -267,7 +267,7 @@ export function gradeLabel(g: string | null | undefined): string {
   return g && grades[g] ? t(grades[g].label) : g || '';
 }
 
-// Constant tables hold French keys (tk): render with t(STATUS_LABEL[s]) / t(FLAG_LABEL[f]).
+// Constant tables hold English UI keys (tk): render with t(STATUS_LABEL[s]) / t(FLAG_LABEL[f]).
 export const STATUS_LABEL: Record<string, string> = { pending: tk('Pending'), approved: tk('fem::Approved'), denied: tk('Denied'), done: tk('status::Done'), cancelled: tk('Cancelled') };
 export const STATUS_COLOR: Record<string, BadgeColor> = { pending: 'amber', approved: 'green', denied: 'red', done: 'cyan', cancelled: 'dim' };
 export const FLAG_LABEL: Record<string, string> = { restricted: tk('Restricted'), forbidden: tk('Forbidden'), avail: tk('Avail > limit'), price: tk('Price to be set') };

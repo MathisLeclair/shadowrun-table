@@ -1,6 +1,7 @@
 // Pure helpers for actors / character sheets, shared by the characters server module and the sheet UI.
 // IMPORTANT: only relative imports of pure modules here (this file is loaded both by Node and by the browser).
-// Labels stay French here (they are also stored / used by the server); the UI renders them with t(…).
+// Labels are English UI keys here, rendered with t(…) by the UI. Stored values (metatypes, health statuses) stay French
+// for save compatibility and are translated where they are shown.
 import { normalizeInventory } from './inventory.ts';
 import type { MakeId, RawData } from './inventory.ts';
 import type { Accessory, ActorType, Armor, ArmorMod, HealthStatus, ItemListName, SubListName, Vehicle, Weapon } from '../../../shared/types.ts';
@@ -17,7 +18,7 @@ export interface ItemFromCatalog {
   item: BuiltItem;
 }
 
-/** Marker for the i18n checker (French keys rendered with t() by the UI). */
+/** Marker for the i18n checker (UI keys rendered with t() by the UI). */
 const tk = (s: string): string => s;
 
 /** Item lists of an Actor that can be edited with actor/addItem, actor/updateItem, actor/removeItem. */
@@ -132,6 +133,7 @@ export const PLAYER_ACTOR_KEYS: string[] = ['condition', 'edge', 'notes', 'bio',
 /** Nested objects merged one level deep by actor/update. */
 export const MERGE_KEYS: string[] = ['attributes', 'augmented', 'initiative', 'monitors', 'condition', 'edge', 'matrix', 'npc', 'vision'];
 
+/** Metatype names (English, French, imports) → stored metatype value (French, kept for save compatibility). */
 export const METATYPE_FR: Record<string, string> = { Human: 'Humain', Elf: 'Elfe', Dwarf: 'Nain', Ork: 'Ork', Troll: 'Troll', Humain: 'Humain', Elfe: 'Elfe', Nain: 'Nain', Orc: 'Ork', Orque: 'Ork' };
 
 export const KNOWLEDGE_TYPES: Record<string, string> = { street: tk('Street'), academic: tk('Academic'), professional: tk('Professional'), interest: tk('Interest'), language: tk('Language') };
@@ -200,7 +202,7 @@ const num = (v: unknown, d = 0): number => {
 export function catalogToItem(catalog: string, entry: CatalogEntryData, rating?: number | null): ItemFromCatalog | null {
   if (!entry) return null;
   const s = entry.stats || {};
-  const name = entry.nameFr || entry.name || 'Objet';
+  const name = entry.nameFr || entry.name || 'Item';
   const r = rating ?? (entry.rating && entry.rating.max ? entry.rating.min || 1 : undefined);
   const base = { name, catalogId: entry.id, ...(r ? { rating: r } : {}) };
   switch (catalog) {
@@ -316,7 +318,7 @@ export function subFromCatalog(catalog: string, entry: CatalogEntryData, rating?
   }
 }
 
-/** Status shown to players for NPCs (they never see enemy stats). */
+/** Status shown to players for NPCs (they never see enemy stats). Stored French values (save compatibility), shown with STATUS_LABELS. */
 export function healthStatus(
   { physical = 0, stun = 0, overflow = 0 }: { physical?: number; stun?: number; overflow?: number } = {},
   physMax = 10,
@@ -337,9 +339,9 @@ export const STATUS_COLORS: Record<HealthStatus, string> = { indemne: 'green', '
 export const STATUS_LABELS: Record<HealthStatus, string> = { indemne: tk('unharmed'), 'blessé': tk('wounded'), 'grièvement blessé': tk('badly wounded'), 'hors de combat': tk('KO'), mort: tk('dead') };
 
 /** A blank actor (all SR5 attributes at 3). */
-export function blankActor(type: ActorType = 'npc', name = 'Nouveau personnage') {
+export function blankActor(type: ActorType = 'npc', name = 'New character') {
   return {
-    type, name, metatype: 'Humain', concept: '', color: type === 'pc' ? '#3fd6d0' : '#e05c5c',
+    type, name, metatype: 'Humain', // stored metatype value (French) concept: '', color: type === 'pc' ? '#3fd6d0' : '#e05c5c',
     attributes: { BOD: 3, AGI: 3, REA: 3, STR: 3, WIL: 3, LOG: 3, INT: 3, CHA: 3, EDG: 2, ESS: 6 },
     condition: { physical: 0, stun: 0, overflow: 0 }, edge: { current: 2 },
     skills: [], knowledge: [], qualities: [], powers: [], spells: [], weapons: [], armor: [], augmentations: [], gear: [], vehicles: [], contacts: [], sins: [], lifestyles: [], martialArts: [],
@@ -355,8 +357,8 @@ export function blankActor(type: ActorType = 'npc', name = 'Nouveau personnage')
 export function normalizeActor(a: RawData, makeId: MakeId): RawData {
   if (!a || typeof a !== 'object') return a;
   a.type = a.type === 'pc' ? 'pc' : 'npc';
-  a.name = String(a.name || 'Sans nom').slice(0, 80);
-  a.metatype = METATYPE_FR[a.metatype] || a.metatype || 'Humain';
+  a.name = String(a.name || 'Unnamed').slice(0, 80);
+  a.metatype = METATYPE_FR[a.metatype] || a.metatype || 'Humain'; // stored metatype value (French)
   const attrs = (a.attributes = a.attributes && typeof a.attributes === 'object' ? a.attributes : {});
   for (const k of ['BOD', 'AGI', 'REA', 'STR', 'WIL', 'LOG', 'INT', 'CHA', 'EDG']) attrs[k] = num(attrs[k], k === 'EDG' ? 1 : 1);
   for (const k of ['MAG', 'RES']) if (attrs[k] !== undefined && attrs[k] !== null) attrs[k] = num(attrs[k], 0);

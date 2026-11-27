@@ -570,5 +570,8 @@
   "With the selection ({n})": "Avec la sélection ({n})",
   "wound modifiers ×{n}": "malus de blessures ×{n}",
   "You can't target yourself": "Impossible de se cibler soi-même",
-  "Your agent acts: pick its action in the cockpit (“Let my agent act”).": "Ton agent agit : choisis son action dans le cockpit (« Laisser mon agent agir »)."
+  "Your agent acts: pick its action in the cockpit (“Let my agent act”).": "Ton agent agit : choisis son action dans le cockpit (« Laisser mon agent agir »).",
+  "Generated": "Générés",
+  "Specialists": "Spécialistes",
+  "folder::Corporate security": "Sécurité corpo"
 }

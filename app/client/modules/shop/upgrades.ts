@@ -10,7 +10,7 @@ import type { OwnedItem, PriceQuote, RulesMessage, ShopCatalog, ShopEntry, ShopI
 type UpgradeSpec = { list: string; sub: string };
 const UPGRADES = UPGRADE_FILES as Record<string, UpgradeSpec | undefined>;
 
-/** A rules message (French key string or { key, params }) translated. */
+/** A rules message (UI key string or { key, params }) translated. */
 export function msgText(m: RulesMessage): string {
   if (!m) return '';
   return typeof m === 'string' ? t(m) : t(m.key, m.params);

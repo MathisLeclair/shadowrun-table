@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode 
 import { Button, IconButton, Select, Toggle, Badge, Field, TextInput, NumberInput, confirmAction, promptText } from '../../lib/ui.tsx';
 import { send, upload } from '../../lib/net.ts';
 import { setUI, toast, openSheet } from '../../lib/ui-store.ts';
-import { TILE_INFO } from '/shared/vision.ts';
+import { TILE_INFO, type TileInfo } from '/shared/vision.ts';
 import { MapCanvas, type MapHandlers, type MapPointerInfo } from './MapCanvas.tsx';
 import { themeOptions, lightingOptions, DISPO, tileSwatch, getImage, wallKind, type MapRenderer, type MapOverlay, type MapScene, type Point, type Rect } from './renderer.ts';
 import { t, tk, compare } from '../../lib/i18n.ts';
@@ -14,19 +14,11 @@ import { LibraryLinkModal } from './LibraryBrowser.tsx';
 import type { GameMap, GameView, MapBackground, MapDoor, MapLight, MapNote, MapRegion, MapWall, Token, DoorState, WallDoor } from '../../../shared/types.ts';
 
 type Opt = { value: string; label: string };
-// Labels of the module-level tables below are French keys (tk), translated at render time.
+// Labels of the module-level tables below are English UI keys (tk), translated at render time.
 /** Select options with translated labels. */
 const tr = (list: Opt[]): Opt[] => list.map((o) => ({ value: o.value, label: t(o.label) }));
-/** Tile names (same French text as TILE_INFO[ch].fr in shared/vision.js). */
-const TILE_LABELS: Record<string, string> = {
-  ' ': tk('Void (outside the map)'), '.': tk('Interior floor'), ',': tk('Exterior ground / street'), '#': tk('Wall'), D: tk('Door / doorway'), W: tk('Window'),
-  '=': tk('Counter / low wall / railing'), T: tk('Table / furniture'), c: tk('Crates / cover'), o: tk('Pillar / column'), m: tk('Machinery / servers / shelves'),
-  v: tk('Vehicle'), b: tk('Bed / couch'), s: tk('Stairs / ramp'), e: tk('Elevator'), '~': tk('Water'), g: tk('Grass / vegetation'), r: tk('Rubble (difficult terrain)'),
-  x: tk('Hazard (fire, chemicals, electricity)'), t: tk('Trees / dense bushes'), _: tk('Carpet / stage / dance floor'),
-};
-type TileInfo = { fr: string; blockMove: boolean; blockSight: boolean };
 const TILES = TILE_INFO as Record<string, TileInfo>;
-const tileLabel = (ch: string): string => (TILE_LABELS[ch] ? t(TILE_LABELS[ch]) : TILES[ch]?.fr || ch);
+const tileLabel = (ch: string): string => (TILES[ch] ? t(TILES[ch].label) : ch);
 
 type WallType = 'wall' | 'window' | 'curtain' | 'ethereal' | 'door' | 'secret';
 const WALL_TOOLS = new Set(['wall', 'wdoor']);
@@ -111,7 +103,7 @@ const ANCHORS: Opt[] = [
 ];
 const DOOR_STATES: Opt[] = [{ value: 'closed', label: tk('Closed') }, { value: 'open', label: tk('fem::Open') }, { value: 'locked', label: tk('Locked') }];
 const DOOR_KINDS: Opt[] = [{ value: 'door', label: tk('Door') }, { value: 'gate', label: tk('door::Gate') }, { value: 'shutter', label: tk('Shutter') }, { value: 'secret', label: tk('fem::Secret') }];
-const DISPO_OPTIONS: Opt[] = Object.entries(DISPO).map(([value, d]) => ({ value, label: d.label })); // d.label: French key
+const DISPO_OPTIONS: Opt[] = Object.entries(DISPO).map(([value, d]) => ({ value, label: d.label })); // d.label: UI key
 const quiet = () => {};
 /** Like Field but a <div>: a <label> would forward clicks on its text to the stepper buttons. */
 const NumField = ({ label, children }: { label: ReactNode; children?: ReactNode }) => (

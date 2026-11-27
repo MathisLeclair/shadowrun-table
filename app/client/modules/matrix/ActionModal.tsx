@@ -163,6 +163,7 @@ export default function ActionModal({ game, actor, persona, action, preset = {},
   const linkKind = ['controlDevice', 'spoofCommand'].includes(action.id) && target?.linkKind && DEVICE_LINK_KINDS[target.linkKind] ? target.linkKind : null;
   const need = marksRequired(action, { controlMarks });
   let have = target?.marks || 0;
+  // Marks on a typed target are stored under manual:<slug>; the French fallback slug is a stored id (save compatibility).
   if (targetId === 'manual') have = (persona.marks || []).find((m) => m.targetId === `manual:${slug(targetName.trim() || 'cible inconnue') || 'cible'}`)?.count || 0;
   const marksOk = have >= need;
   const canAgent = ag && !action.noTest && action.id !== 'jackOut';

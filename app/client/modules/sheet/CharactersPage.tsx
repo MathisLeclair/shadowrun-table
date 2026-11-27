@@ -37,7 +37,7 @@ function PcCard({ game, actor }: { game: GameView; actor: Actor }) {
           {actor.player && <span className="faint">({actor.player})</span>}
         </div>
       </div>
-      {status !== 'indemne' && <Badge color={statusColor(status)}>{statusLabel(status)}</Badge>}
+      {status !== 'indemne' /* stored health status (French) */ && <Badge color={statusColor(status)}>{statusLabel(status)}</Badge>}
     </div>
     <div className="ch-bars">
       <MiniBar label={t('monitor::P')} kind="physical" value={c.physical || 0} max={d.physicalMonitor} />
@@ -67,6 +67,7 @@ function NpcRow({ actor }: { actor: Actor }) {
   const del = async () => {
     if (await confirmAction(t('Delete {name} (and their token)?', { name: actor.name }))) send('actor/delete', { actorId: actor.id }).catch(() => {});
   };
+  // status: stored health status (French values, see sheet-data.ts healthStatus())
   return <div className={'ch-npc' + (status === 'mort' || status === 'hors de combat' ? ' down' : '')}>
     <Avatar actor={actor} size={28} />
     <button type="button" className="ch-npc-name" onClick={() => openSheet(actor.id)} title={t('Open the sheet')}>{actor.name}</button>

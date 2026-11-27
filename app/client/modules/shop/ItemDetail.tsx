@@ -13,7 +13,7 @@ import type { Actor, GameView } from '../../../shared/types.ts';
 import type { CartLine, LooseStats, PriceQuote, ShopCatalog, ShopEntry, ShopItem } from './types.ts';
 import { ItemRef } from '../books/BookRef.tsx';
 
-// Labels of armor-mod / vehicle-mod bonuses (French keys, render with t()).
+// Labels of armor-mod / vehicle-mod bonuses (UI keys, render with t()).
 const BONUS_LABEL: Record<string, string> = {
   fire: tk('Fire'),
   cold: tk('Cold'),

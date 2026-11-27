@@ -219,7 +219,7 @@ export function StepGear({ data, update, result, issues, rc }: StepProps) {
                 label={t('Lifestyle')}
                 hint={
                   r.lifestyle
-                    ? data.metatype === 'Nain'
+                    ? data.metatype === 'Nain' // stored metatype value (French)
                       ? t('{nuyen} / month (dwarf +20%)', { nuyen: nuyen(r.lifestyle.monthly) })
                       : data.metatype === 'Troll'
                         ? t('{nuyen} / month (troll +100%)', { nuyen: nuyen(r.lifestyle.monthly) })

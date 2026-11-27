@@ -48,7 +48,7 @@ async function withParentValues(file: string, item: AnyItem, entry: CatalogItem 
 /** Catalogs that feed each nested list (GM « + Depuis le catalogue »). Techniques come from the martial art's own entry. */
 const SUB_CATALOGS: Record<string, string> = { 'weapons.accessories': 'accessories', 'armor.mods': 'armormods', 'vehicles.mods': 'vehiclemods', 'lifestyles.qualities': 'lifestylequalities' };
 
-/** Field schemas of the nested editors. `fx` = stored inside item.effects. Labels are French keys. */
+/** Field schemas of the nested editors. `fx` = stored inside item.effects. Labels are English UI keys. */
 const mountOptions = () => Object.keys(MOUNT_LABELS).map((m) => ({ value: m, label: mountLabel(m) }));
 const SUB_FIELDS: Record<string, FieldDef[]> = {
   'weapons.accessories': [

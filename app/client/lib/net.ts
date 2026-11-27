@@ -145,7 +145,7 @@ function replyError(res: Reply | null | undefined, fallback: string): ServerErro
   err.key = res?.errorKey || res?.error || fallback;
   err.params = res?.params;
   err.code = res?.code;
-  err.serverMessage = res?.error; // French text as sent by the server
+  err.serverMessage = res?.error; // untranslated text as sent by the server
   return err;
 }
 

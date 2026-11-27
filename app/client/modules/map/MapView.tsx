@@ -92,7 +92,7 @@ function defaultWeapon(actor: ViewActor | undefined | null, meters: number | nul
 /** Label under a blast marker: the cloud kind (smoke, gas + toxin, flash-pak) and the scatter. */
 function blastLabel(b: Pick<Blast, 'effect' | 'toxinId' | 'scattered' | 'meters'>): string | null {
   const kind = b.effect === 'smoke' ? t('smoke') : b.effect === 'thermalSmoke' ? t('thermal smoke') : b.effect === 'flashpak' ? t('flash-pak')
-    : b.effect === 'gas' ? t('gas: {toxin}', { toxin: t(TOXIN_BY_ID[b.toxinId as string]?.name || 'Gaz lacrymogène (CS)') }) : null;
+    : b.effect === 'gas' ? t('gas: {toxin}', { toxin: t(TOXIN_BY_ID[b.toxinId as string]?.name || 'CS/Tear Gas') }) : null;
   const drift = b.scattered ? t('scatters {m} m', { m: b.meters }) : null;
   return [kind, drift].filter(Boolean).join(' · ') || null;
 }
@@ -767,7 +767,7 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
 
   const attackPreset = () => {
     if (!attacking) return null;
-    if (!attacking.weaponId) return { label: 'Attaque', targetTokenId: targetTok?.id };
+    if (!attacking.weaponId) return { label: 'Attack', targetTokenId: targetTok?.id };
     const a = actors[attacking.actorId];
     const w = (hasSheet(a) ? a.weapons : []).find((x) => x.id === attacking.weaponId);
     return { skillId: w?.skill || 'exotic_weapon', weaponId: attacking.weaponId, label: `Attaque — ${w?.nameFr || w?.name || ''}`, targetTokenId: targetTok?.id };
@@ -907,7 +907,7 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
               {hasTorch ? t('Turn off the light') : t('Turn on a flashlight')}
             </button>
             <div className="map-menu-row">
-              {['à terre', 'à couvert'].map((s) => (
+              {['à terre', 'à couvert'].map((s) => ( // stored status values (French)
                 <button
                   key={s}
                   className={'chip' + (st.includes(s) ? ' on' : '')}

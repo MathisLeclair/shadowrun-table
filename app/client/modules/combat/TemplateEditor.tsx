@@ -3,7 +3,7 @@ import { useState, useMemo, type ChangeEvent, type ReactNode } from 'react';
 import { Button, IconButton, Modal, Tabs, Panel, TextInput, NumberInput, Select, Toggle, SearchBox, Empty, Badge, type SelectOption } from '../../lib/ui.tsx';
 import { useCatalog, upload } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
-import { t, tk, attrLabel, attrShort, skillLabel, skillCategoryLabel, itemName, getLang } from '../../lib/i18n.ts';
+import { t, tk, tIfKnown, attrLabel, attrShort, skillLabel, skillCategoryLabel, itemName, metatypeLabel, getLang } from '../../lib/i18n.ts';
 import { SKILLS, SKILL_BY_ID, SKILL_CATEGORIES, METATYPES, type SkillDef } from '/shared/sr5.ts';
 import { uid, deepClone } from '/shared/util.ts';
 import { npcKindOptions, initModeOptions, dispoLabel, poolFor, safeDerive } from './combat-common.tsx';
@@ -13,6 +13,7 @@ import type { ActorMatrix, Armor, AttrKey, CatalogItem, Template, Weapon } from 
 const EDIT_ATTRS: AttrKey[] = ['BOD', 'AGI', 'REA', 'STR', 'WIL', 'LOG', 'INT', 'CHA', 'EDG', 'MAG', 'RES'];
 const attrOptions = () => EDIT_ATTRS.map((k) => ({ value: k, label: attrShort(k) as string }));
 const COMBAT_SKILLS: SkillDef[] = SKILLS.filter((s: SkillDef) => ['combat', 'vehicle'].includes(s.cat) || ['unarmed_combat', 'cybercombat', 'spellcasting'].includes(s.id));
+/** Suggested metatype values: stored as typed (French, kept for save compatibility), labelled in the UI language. */
 const METATYPE_OPTIONS = [...Object.keys(METATYPES), 'Créature', 'Esprit', 'Drone', 'IC', 'Host', 'Autre'];
 
 /** Label + control without a <label> wrapper (avoids nested-label clicks on steppers/toggles). */
@@ -234,9 +235,9 @@ const TABS: Array<{ id: TabId; label: string }> = [
   { id: 'notes', label: tk('Notes & tactics') },
   { id: 'preview', label: tk('Preview') },
 ];
-/** Stored spell categories (French values) for the spell list editor. */
-const SPELL_CATS = [tk('Combat'), tk('Detection'), tk('Health'), tk('Illusion'), tk('Manipulation')];
-const DEFAULT_FOLDER = 'Divers';
+/** Stored spell categories (French values, as in the seed bestiary: kept for save compatibility), shown with t(). */
+const SPELL_CATS = ['Combat', 'Détection', 'Santé', 'Illusion', 'Manipulation'];
+const DEFAULT_FOLDER = 'Divers'; // stored default folder name (server side), shown translated
 
 interface TemplateEditorProps {
   template: Template;
@@ -319,7 +320,9 @@ export default function TemplateEditor({ template, folders, onSave, onClose }: T
             <input className="input" list="bst-metatypes" value={draft.metatype || ''} onChange={(e) => set(['metatype'], e.target.value)} />
             <datalist id="bst-metatypes">
               {METATYPE_OPTIONS.map((m) => (
-                <option key={m} value={m} />
+                <option key={m} value={m}>
+                  {metatypeLabel(m)}
+                </option>
               ))}
             </datalist>
           </F>
@@ -734,7 +737,7 @@ export default function TemplateEditor({ template, folders, onSave, onClose }: T
       title={draft.name ? t('Template: {name}', { name: draft.name }) : t('Template: unnamed')}
       width={1080}
       onClose={requestClose}
-      actions={<Badge color="dim">{folder === DEFAULT_FOLDER ? t('Miscellaneous') : folder}</Badge>}
+      actions={<Badge color="dim">{folder === DEFAULT_FOLDER ? t('Miscellaneous') : tIfKnown(folder)}</Badge>}
     >
       <div className="bed">
         <Tabs tabs={TABS.map((x) => ({ ...x, label: t(x.label) }))} value={tab} onChange={setTab} />

@@ -417,5 +417,6 @@
   "X (cells)": "X (cases)",
   "Y (cells)": "Y (cases)",
   "You can only change your token's appearance": "Tu ne peux modifier que l’apparence de ton pion",
-  "You have no token on this map": "Tu n’as pas de pion sur cette carte"
+  "You have no token on this map": "Tu n’as pas de pion sur cette carte",
+  "Entrance": "Entrée"
 }

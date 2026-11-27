@@ -13,14 +13,14 @@
 // Add-ons (garage, workshop, yard…) are modules from lifestyle options (catalog `name`). The top row of a module is
 // the wall it shares with the home: the generator tries every free wall (4 rotations) and opens a door there.
 //
-// i18n: names / descriptions are French keys (tk), translated by the caller (buildHome `tr`).
+// i18n: names / descriptions are English UI keys (tk), translated by the caller (buildHome `tr`).
 import type { DoorKind, DoorState, LifestyleHome, LifestyleQuality, Lighting, MapDoor, MapLight, MapNote, MapRegion, MapTheme, MapWall, Token } from './types.ts';
 
 const tk = (s: string): string => s;
 
 /** A room of a layout template (marker digit → room). */
 export interface HomeRoomSpec {
-  /** French key. */
+  /** UI key. */
   name: string;
   /** Floor tile of the room. */
   floor: string;
@@ -33,7 +33,7 @@ export interface HomeLayout {
   /** Lifestyle levels it belongs to. */
   bases: string[];
   theme: MapTheme;
-  /** French keys. */
+  /** UI keys. */
   name: string;
   desc: string;
   /** ASCII template. */
@@ -43,7 +43,7 @@ export interface HomeLayout {
 /** An add-on module (lifestyle option → room glued onto the home). */
 export interface HomeModule {
   key: string;
-  /** French key. */
+  /** UI key. */
   name: string;
   /** Template; the top row is the shared wall. */
   rows: string[];

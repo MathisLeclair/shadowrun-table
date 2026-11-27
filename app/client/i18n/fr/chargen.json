@@ -550,5 +550,8 @@
   "Withdraw and edit": "Retirer et modifier",
   "Withdraw request": "Retirer la demande",
   "Withdraw the request sent to the GM first": "Retire d’abord la demande envoyée au MJ",
-  "Your character has been approved by the GM!": "Ton personnage a été validé par le MJ !"
+  "Your character has been approved by the GM!": "Ton personnage a été validé par le MJ !",
+  "Tradition: {name}": "Tradition : {name}",
+  "Aspect: {name}": "Aspect : {name}",
+  "Mentor: {name}": "Mentor : {name}"
 }

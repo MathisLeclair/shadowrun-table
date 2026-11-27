@@ -271,7 +271,7 @@ export function LibraryBrowser({ game, onAdded }: LibraryBrowserProps) {
   );
 }
 
-const STALE_KEY = 'La bibliothèque a changé depuis ta dernière synchronisation (v{lib}, ta carte : v{mine})';
+const STALE_KEY = 'The library changed since your last sync (v{lib}, your map: v{mine})'; // server error key
 
 function diffLines(d: LibDiff): string[] {
   const line = (label: string, x: { add: number; remove: number }) =>

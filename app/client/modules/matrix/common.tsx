@@ -23,12 +23,12 @@ export const hostOf = (game: GameView, id: string | null | undefined): HostView 
 export const hostMap = (game: GameView): Record<string, AnyHost> => game.matrix?.hosts || {};
 
 // ---------------------------------------------------------------------------
-// i18n helpers. The server and shared/matrix.js send French labels plus translatable messages:
-// msgs = [{ t: 'French key {x}', params }], pool parts { label, key?, params?, skillId?, attr? }, names with nameI18n.
+// i18n helpers. The server and shared/matrix.ts send labels (UI keys) plus translatable messages:
+// msgs = [{ t: 'English key {x}', params }], pool parts { label, key?, params?, skillId?, attr? }, names with nameI18n.
 // ---------------------------------------------------------------------------
-/** A translatable message: { t, params } / { key, params } or a plain French string. */
+/** A translatable message: { t, params } / { key, params } or a plain string (a UI key or older French text). */
 export type MsgLike = string | { t?: string; key?: string; params?: Record<string, unknown> } | null | undefined;
-/** A message from the server ({ t, params } / { key, params }) or a plain French string, in the UI language. */
+/** A message from the server ({ t, params } / { key, params }) or a plain string, in the UI language. */
 export function msgText(m: MsgLike): string {
   if (m === null || m === undefined) return '';
   if (typeof m === 'string') return tIfKnown(m);

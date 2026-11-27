@@ -80,7 +80,7 @@ export type AnyItem = Record<string, any>; // generic editor over every item lis
 /** A field of the GM list / nested list editors (editors.tsx LIST_FIELDS, sublists.tsx SUB_FIELDS). */
 export interface FieldDef {
   k: string;
-  /** French key (rendered with t()). */
+  /** UI key (rendered with t()). */
   label: string;
   type?: 'num' | 'bool' | 'select' | 'tags' | 'ro';
   w?: number;

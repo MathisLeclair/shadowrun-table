@@ -73,7 +73,7 @@ function MissingTranslations() {
         </Button>
       </div>
       {open && count > 0 && <div className="i18n-missing-list">{Object.keys(missingKeys()).join('\n')}</div>}
-      <span className="field-hint">{t('Texts shown since this page was opened that have no English translation. Translators fill in client/i18n/en/*.json (tool: node tools/i18n-check.ts).')}</span>
+      <span className="field-hint">{t('Texts shown since this page was opened that have no French translation. Translators fill in client/i18n/fr/*.json (tool: node tools/i18n-check.ts).')}</span>
     </div>
   );
 }

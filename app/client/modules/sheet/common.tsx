@@ -18,6 +18,7 @@ export function ownerOf(game: GameView | null | undefined, actorId: string): Vie
   return Object.values(game?.users || {}).find((u) => (u.characterIds || []).includes(actorId)) || null;
 }
 
+/** Health status of an actor: a stored French value ('indemne'…, save compatibility), shown with statusLabel(). */
 export function actorStatus(actor: ViewActor | null | undefined): string {
   if (!actor) return 'indemne';
   if ('status' in actor && actor.status) return actor.status;
@@ -32,7 +33,7 @@ export const statusLabel = (s: string | null | undefined): string => {
 };
 
 /**
- * Translated sentence with markup inside: tRich(t('Avant : {push}.'), { push: <b>…</b> }) → array of
+ * Translated sentence with markup inside: tRich(t('Before: {push}.'), { push: <b>…</b> }) → array of
  * text/nodes. Pass the already translated text (t() without params keeps the {name} markers).
  */
 export function tRich(text: string, nodes?: Record<string, ReactNode>): ReactNode[] {
@@ -125,11 +126,11 @@ export function Overlay({ title, onClose, width = 560, children, actions, classN
   </div>;
 }
 
-// Roll labels and breakdowns are stored in French by the server ('Défense', 'Agilité + Logique', '6 dés',
+// Roll labels and breakdowns are stored as text ('Defense', 'Agility + Logic', older French entries 'Défense', '6 dés',
 // 'Pistolets 4 + AGI 5 + spé. +2'): every viewer sees them in their own language through these helpers.
-// Terms the server/dialogs put in breakdowns (French keys, translated when shown).
+// Terms the server/dialogs put in breakdowns (UI keys, translated when shown).
 export const ROLL_TERMS = [tk('spec.'), tk('mod.'), tk('wounds'), tk('defaulting'), tk('bonus'), tk('recoil'), tk('armor'), tk('accessories'),
-  // first term of roll.limitBreakdown (« sociale 9 + Zoé : Heritage 12 +2 »): the server's French limit adjectives
+  // first term of roll.limitBreakdown (« sociale 9 + Zoé : Heritage 12 +2 »): the server's limit adjectives
   tk('physical'), tk('mental'), tk('fem::social'), tk('astral')];
 
 function rollTermText(part: string): string {
@@ -141,12 +142,12 @@ function rollTermText(part: string): string {
   return tIfKnown(p);
 }
 
-/** Roll label (stored French text, or typed by a user) in the UI language. Accepts a roll or a label. */
+/** Roll label (stored text — UI key, older French text — or typed by a user) in the UI language. Accepts a roll or a label. */
 export function rollLabel(rollOrLabel: ShownRoll | string | null | undefined): string {
   if (rollOrLabel && typeof rollOrLabel === 'object' && rollOrLabel.labelI18n?.key) return t(rollOrLabel.labelI18n.key, rollOrLabel.labelI18n.params);
   const label: string = typeof rollOrLabel === 'string' ? rollOrLabel : rollOrLabel?.label || '';
   if (!label) return '';
-  if (label === 'Jet de dés') return t('Dice roll');
+  if (label === 'Jet de dés') return t('Dice roll'); // older stored label
   let m = label.match(/^(\d+) dés?$/);
   if (m) return tn(Number(m[1]), '{n} die', '{n} dice');
   m = label.match(/^Jet de (\d+) dés$/);
@@ -161,10 +162,9 @@ export function rollLabel(rollOrLabel: ShownRoll | string | null | undefined): s
   return tIfKnown(label);
 }
 
-/** Pool breakdown ('Pistolets 4 + AGI 5 + spé. +2') in the UI language. */
+/** Pool breakdown ('Pistolets 4 + AGI 5 + spé. +2') in the UI language (terms stored in either language). */
 export function rollBreakdown(text: string | null | undefined): string {
   if (!text) return '';
-  if (getLang() === 'fr') return text;
   return String(text).split(' + ').map(rollTermText).join(' + ');
 }
 
@@ -183,9 +183,10 @@ export function DiceFaces({ roll, small }: { roll: ShownRoll | null | undefined;
   </div>;
 }
 
-// roll.limitLabel is stored by the server as a French adjective ('physique'…) — older entries may hold any text.
+// roll.limitLabel is stored by the server as an adjective (French 'physique'… in older entries) — or any text.
 const LIMIT_TITLES: Record<string, string> = {
   physique: tk('Physical Limit'), mentale: tk('Mental Limit'), sociale: tk('Social Limit'), astrale: tk('Astral Limit'), précision: tk('Accuracy'),
+  physical: tk('Physical Limit'), mental: tk('Mental Limit'), social: tk('Social Limit'), astral: tk('Astral Limit'), accuracy: tk('Accuracy'),
   Attaque: tk('Attack'), Corruption: tk('Sleaze'), Traitement: tk('Data Processing'), Firewall: tk('Firewall'),
 };
 const limitTitle = (l: string): string => (LIMIT_TITLES[l] ? t(LIMIT_TITLES[l]) : t('{kind} limit', { kind: l }));

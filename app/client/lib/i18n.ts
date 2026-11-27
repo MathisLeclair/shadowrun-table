@@ -314,13 +314,11 @@ export function skillLabel(skill: SkillRef): string {
   return tIfKnown(name);
 }
 
-/** Skill group id ('firearms') → 'Armes à feu' / 'Firearms'. */
-export const skillGroupLabel = (id: string | null | undefined): string => (id && SKILL_GROUP_MAP[id] ? (lang === 'en' ? titleCase(id) : SKILL_GROUP_MAP[id]) : String(id ?? ''));
+/** Skill group id ('firearms') → 'Firearms' / 'Armes à feu'. */
+export const skillGroupLabel = (id: string | null | undefined): string => (id && SKILL_GROUP_MAP[id] ? t(SKILL_GROUP_MAP[id]) : String(id ?? ''));
 
-const CATEGORY_EN: Record<string, string> = { combat: 'Combat', physical: 'Physical', social: 'Social', magic: 'Magical', resonance: 'Resonance', technical: 'Technical', vehicle: 'Vehicle' };
-/** Skill category id ('technical') → 'Techniques' / 'Technical'. */
-export const skillCategoryLabel = (cat: string | null | undefined): string =>
-  lang === 'en' ? (cat && CATEGORY_EN[cat]) || String(cat ?? '') : (cat && SKILL_CATEGORY_MAP[cat]) || String(cat ?? '');
+/** Skill category id ('technical') → 'Technical' / 'Techniques'. */
+export const skillCategoryLabel = (cat: string | null | undefined): string => (cat && SKILL_CATEGORY_MAP[cat] ? t(SKILL_CATEGORY_MAP[cat]) : String(cat ?? ''));
 
 /** Limit kind ('physical'|'mental'|'social'|'astral') → 'Limite physique' / 'Physical Limit'. */
 const LIMIT_FR: Record<string, string> = { physical: tk('Physical Limit'), mental: tk('Mental Limit'), social: tk('Social Limit'), astral: tk('Astral Limit') };

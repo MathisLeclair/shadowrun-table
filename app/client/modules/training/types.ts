@@ -7,7 +7,7 @@ export interface TrainingQuote {
   target: string;
   from: number;
   to: number;
-  /** French label. */
+  /** Label (UI key, older requests: French text). */
   label: string;
   labelI18n: I18nEntry | null;
   karmaCost: number;

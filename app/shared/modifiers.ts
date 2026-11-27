@@ -19,7 +19,7 @@ import { AFFLICTIONS } from './combat.ts';
 import type { ActorLike, Actor, AttrKey, CatalogBonus, ConditionState, Effect, EffectType, Formula, Modifier, ModifierType, ItemBonus, KnowledgeType, MatrixMode, Weapon } from './types.ts';
 import type { AttrKeyish, LimitKey, Derived } from './sr5.ts';
 
-/** Marker for the i18n checker: French labels, rendered by the client with t(label). */
+/** Marker for the i18n checker: UI keys, rendered by the client with t(label). */
 const tk = (s: string): string => s;
 
 /** Catalog effect as read here (alias of types.ts Effect). */
@@ -315,11 +315,11 @@ export function conditionToggle(key: string): string | null {
   if (!c) return key;
   return c.toggle === undefined ? key : c.toggle;
 }
-/** French label of a toggle (render with t()). */
+/** Label (UI key) of a toggle (render with t()). */
 export function toggleLabel(key: string): string {
   return TOGGLE_LABELS[key] || CONDITIONS[key]?.label || key;
 }
-/** French label of a condition (render with t()); unknown keys are shown as is. */
+/** Label (UI key) of a condition (render with t()); unknown keys are shown as is. */
 export function conditionLabel(key: string): string {
   return CONDITIONS[key]?.label || key;
 }
@@ -810,7 +810,7 @@ export function accuracyModifiers(mods: CollectedModifier[] | null | undefined, 
 /**
  * Limit of a weapon attack: Accuracy (a number, or « Physical » = physical limit with its modifiers) + accessories
  * (accessories[].effects.accuracy, equipped ones) + accuracy modifiers (Enhanced Accuracy…).
- * Returns { base, total (null = no limit), lines, parts: [[French label, value]] }.
+ * Returns { base, total (null = no limit), lines, parts: [[label, value]] }.
  */
 export function weaponAccuracy(
   actor: ActorLike | null | undefined,
@@ -870,10 +870,10 @@ export function checkedTest(
 }
 /** Does the wound modifier apply to this test? (SR5: every test but damage resistance.) */
 export const woundsApply = (test: string | null | undefined): boolean => !RESIST_TESTS.includes(test as string);
-/** Stored French labels of the attribute-pair tests (log dock « Jet rapide ») → test key (soak excluded: its callers add the armor). */
+/** Labels (UI keys) of the attribute-pair tests (log dock « Quick test ») → test key (soak excluded: its callers add the armor). */
 export const TEST_BY_LABEL: Record<string, string> = {
-  Défense: 'defense', 'Sang-froid': 'composure', 'Jauger les intentions': 'judgeIntentions', Mémoire: 'memory', 'Soulever / porter': 'liftCarry',
-  'Résister aux toxines': 'toxinResist',
+  Defense: 'defense', Composure: 'composure', 'Judge Intentions': 'judgeIntentions', Memory: 'memory', 'Lift / Carry': 'liftCarry',
+  'Resist toxins': 'toxinResist',
 };
 /** Device attributes a Matrix test from the sheet uses as its limit ('dice/roll' payload.matrixLimit). */
 export const MATRIX_LIMITS: string[] = ['attack', 'sleaze', 'dataProcessing', 'firewall'];

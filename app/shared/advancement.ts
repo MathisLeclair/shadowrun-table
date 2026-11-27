@@ -79,7 +79,7 @@ export interface AdvanceQuote {
   target: string;
   from: number;
   to: number;
-  /** French label. */
+  /** Label (UI key, older requests: French text). */
   label: string;
   labelI18n: I18nEntry;
   karmaCost: number;
@@ -122,7 +122,7 @@ type LegacyGrades = ActorLike & {
   resonance?: { submersion?: number } | null;
 };
 
-// i18n (see ARCHITECTURE.md « i18n »): French stays the source text. Static texts are marked with tk() and
+// i18n (see docs/i18n.md): English is the source text. Static texts are marked with tk() and
 // rendered with t() by the client; dynamic texts are also returned as { key, params } (labelI18n, errorI18n,
 // warningsI18n, reasonI18n) and nested translatable params use the { t: key, params } form.
 function tk(s: string): string {
@@ -218,7 +218,7 @@ class RuleError extends Error {
     this.params = params;
   }
 }
-/** Throw a rule violation: bad(tk('Texte {x}'), { x }) — French message + i18n key/params. */
+/** Throw a rule violation: bad(tk('Text {x}'), { x }) — source message + i18n key/params. */
 function bad(key: string, params?: I18nParams): never {
   throw new RuleError(key, params);
 }
@@ -249,7 +249,7 @@ const sumSteps = (from: number, to: number, f: (r: number) => number): number =>
 // Formatting
 // ---------------------------------------------------------------------------
 
-/** 1 -> "1 jour", 14 -> "2 semaines", 30 -> "1 mois", 10 -> "1 semaine et 3 jours", 0 -> "immédiat". */
+/** Plain French text (legacy, tests): 1 -> "1 jour", 14 -> "2 semaines", 30 -> "1 mois", 10 -> "1 semaine et 3 jours", 0 -> "immédiat". The UI uses formatDaysI18n(). */
 export function formatDays(days: unknown): string {
   const d = Math.max(0, Math.round(Number(days) || 0));
   if (d === 0) return 'immédiat';
@@ -261,7 +261,7 @@ export function formatDays(days: unknown): string {
   return r ? `${plural(w, 'semaine', 'semaines')} et ${plural(r, 'jour', 'jours')}` : plural(w, 'semaine', 'semaines');
 }
 
-/** formatDays() as a translatable value { t, params } (render: t(v.t, v.params); same French text). */
+/** formatDays() as a translatable value { t, params } (render: t(v.t, v.params)). */
 export function formatDaysI18n(days: unknown): I18nMessage {
   const d = Math.max(0, Math.round(Number(days) || 0));
   if (d === 0) return { t: 'immediate' };
@@ -536,6 +536,7 @@ export function powerInfo(it: object | null | undefined): { pp: number; levels: 
   const extraPP = num(item?.extraPP ?? s.extrapointcost ?? s.extraPointCost ?? 0);
   return { pp, levels, maxLevel, extraPP };
 }
+/** Catalog spell category (English) → French name. spellInfo() stores the French name in requests (kept French for save compatibility); chargen shows it in French. */
 export const SPELL_CATEGORIES: Record<string, string> = { Combat: 'Combat', Detection: 'Détection', Health: 'Santé', Illusion: 'Illusion', Manipulation: 'Manipulation', Rituals: 'Rituels', Enchantments: 'Enchantements' };
 export function spellInfo(it: object | null | undefined): AdvancementRequest['data'] {
   const item = it as LooseItem | null | undefined;
@@ -632,7 +633,7 @@ export function conflictKeys(actor: ActorLike | null | undefined, raw: unknown):
   }
 }
 
-/** Short French label for a request. */
+/** Short label (source text) for a request. */
 export function describe(actor: ActorLike | null | undefined, raw: unknown): string {
   const q = quote(actor, raw, { ...DEFAULT_SETTINGS, useTime: false }, { skipChecks: true });
   return q.label;
@@ -754,7 +755,7 @@ function resolveKind(actor: ActorLike, req: AdvancementRequest, out: AdvanceQuot
       targetTo(req, out, cur);
       const max = attrMax(actor, key);
       if (out.to > max) {
-        const meta = actor.metatype || 'Humain';
+        const meta = actor.metatype || 'Humain'; // stored value, French for save compatibility
         const why = key === 'MAG' || key === 'RES' ? { t: 'Essence and grade included' } : METATYPES[meta] ? { t: meta } : meta;
         bad(tk('{attr}: maximum {max} ({why})'), { attr, max, why });
       }
@@ -1054,7 +1055,7 @@ export function applyAdvance(actor: ActorLike | null | undefined, raw: unknown):
         e.rating = Math.max(int(e.rating), g.rating);
         e.group = gid;
       }
-      return `Groupe ${SKILL_GROUPS[gid] || gid} ${g.rating}`;
+      return `Group ${SKILL_GROUPS[gid] || gid} ${g.rating}`;
     }
     case 'specialization': {
       const sk = findSkill(actor, req.target);
@@ -1139,7 +1140,7 @@ export function applyAdvance(actor: ActorLike | null | undefined, raw: unknown):
     case 'powerPoint': {
       const m = magic();
       m.extraPP = Math.max(num(m.extraPP), to);
-      return `${m.extraPP} point(s) de pouvoir achetés`;
+      return `${m.extraPP} power point(s) bought`;
     }
     case 'initiation': {
       const m = magic();

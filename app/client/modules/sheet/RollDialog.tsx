@@ -103,7 +103,7 @@ export function previewPool(actor: Actor | null | undefined, preset: RollPreset,
   return { pool, parts, defaultLimit, spec, impossible };
 }
 
-/** Label sent to the server and stored in the log: French source text (each viewer translates it). */
+/** Label sent to the server and stored in the log: UI key or stored name (each viewer translates it with rollLabel()). */
 export function presetLabel(actor: Actor | null | undefined, preset: RollPreset): string {
   if (preset.label) return preset.label;
   if (preset.skillId) {
@@ -113,7 +113,7 @@ export function presetLabel(actor: Actor | null | undefined, preset: RollPreset)
   }
   const labels = ATTR_LABELS as Record<string, string>;
   if (preset.attr) return preset.attr2 ? `${labels[preset.attr]} + ${labels[preset.attr2]}` : labels[preset.attr];
-  return 'Jet de dés';
+  return 'Dice roll';
 }
 
 /** The same label in the UI language (a weapon attack names the weapon in the UI language too). */
@@ -139,7 +139,7 @@ function computeLimit(actor: Actor | null, preset: RollPreset, prev: PoolPreview
     const w = (actor.weapons || []).find((x) => x && x.id === preset.weaponId);
     if (!w) return null;
     const acc = accuracyOf(actor, w, mods, rctx, opts);
-    return acc.total === null ? null : { total: acc.total, lines: acc.lines, parts: acc.parts.map(([l, v], i): [string, number] => [i === 0 || l === 'accessoires' ? t(l) : l, v]) };
+    return acc.total === null ? null : { total: acc.total, lines: acc.lines, parts: acc.parts.map(([l, v], i): [string, number] => [i === 0 || l === 'accessories' ? t(l) : l, v]) };
   }
   if (preset.matrixLimit && (MATRIX_LIMIT_SKILLS as string[]).includes(rctx.skillId ?? '')) {
     const v = Number((actor.matrix as unknown as Record<string, unknown> | undefined)?.[preset.matrixLimit]) || 0;

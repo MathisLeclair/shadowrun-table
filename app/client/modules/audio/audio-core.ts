@@ -299,7 +299,7 @@ function startTrack(track: AudioTrack | null | undefined, dest: AudioNode, { sta
     const preset = track.preset as string; // undefined → no generator (warned below)
     const gen = (track.kind === 'music' ? MUSIC : AMBIENCES)[preset] || AMBIENCES[preset] || MUSIC[preset];
     if (!gen) {
-      warnOnce('preset:' + track.preset, 'préréglage inconnu :', track.preset);
+      warnOnce('preset:' + track.preset, 'unknown preset:', track.preset);
       return null;
     }
     return gen(ctx, dest, { fadeIn });

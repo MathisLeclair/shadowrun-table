@@ -244,7 +244,7 @@ export const THEMES: Record<string, ThemeColors> = {
   matrix: { label: tk('Matrix'), floor: '#08151a', ext: '#061014', wall: '#0f2b33', wallTop: '#14404a', glow: '#3fd6d0', accent: '#4fd17a', wood: '#123a40', metal: '#14404a', carpet: '#0a2a2a', fabric: '#0f3a3a', grid: 'rgba(63,214,208,0.16)' },
   club: { label: tk('Club'), floor: '#170f1d', ext: '#120d16', wall: '#2a1832', wallTop: '#35203f', glow: '#e0468f', accent: '#9d7ce0', wood: '#3a2040', metal: '#3a2a48', carpet: '#3a1040', fabric: '#4a1e52' },
 };
-// Labels below are French keys: render them with t() (or use the *Options() / *Label() helpers).
+// Labels below are English UI keys: render them with t() (or use the *Options() / *Label() helpers).
 export const THEME_OPTIONS = Object.entries(THEMES).map(([value, th]) => ({ value, label: th.label }));
 export const LIGHTING_OPTIONS: Array<{ value: Lighting; label: string }> = [
   { value: 'bright', label: tk('Daylight') },
@@ -274,7 +274,8 @@ export const TILE_FLAT: Record<string, string> = {
   g: '#24452c', r: '#4a4f57', x: '#b0702a', t: '#1f4a28', _: '#5a2a5a',
 };
 export const STATUS_GLYPHS: Record<string, string> = { 'à terre': '↧', inconscient: 'z', mort: '✝', étourdi: '✶', 'en feu': '♨', aveuglé: '◌', 'à couvert': '▣', caché: '◐', paniqué: '!', saignement: '♦', entravé: '⛓' };
-// Token statuses are stored in French (keys above); these markers give the checker their dictionary keys.
+// Token statuses are stored in French (keys above, save compatibility); these markers give the checker the English keys
+// the legacy map translates them to.
 export const STATUS_KEYS = [tk('prone'), tk('unconscious'), tk('dead'), tk('stunned'), tk('on fire'), tk('blinded'), tk('in cover'), tk('hidden'), tk('panicked'), tk('bleeding'), tk('restrained')];
 /** Stored token status ('à terre'…) in the UI language (custom statuses unchanged). */
 export const statusText = (s: unknown): string => tIfKnown(String(s ?? ''));
@@ -1497,7 +1498,8 @@ export class MapRenderer {
       for (const r of map.regions || []) {
         const p = this.toScreen(r.x + 0.15, r.y + 0.12);
         const col = r.gmOnly ? '#e0468f' : r.color || th.accent;
-        const base = r.gmOnly ? t('{name} (GM)', { name: r.name }) : r.name;
+        const rname = tIfKnown(r.name); // default names ('Entrance', older 'Entrée') are UI keys, GM names stay as typed
+        const base = r.gmOnly ? t('{name} (GM)', { name: rname }) : rname;
         // Camera zone driven by a host device (matrix module): 📷 filmed, 📷✕ feed cut by a decker.
         const label = r.cams === 'off' ? t('📷✕ {name}', { name: base }) : r.cams === 'on' ? t('📷 {name}', { name: base }) : base;
         ctx.fillStyle = 'rgba(5,7,10,0.6)';
@@ -2092,7 +2094,7 @@ export class MapRenderer {
     const actor = tok.actorId ? sc.actors?.[tok.actorId] : null;
     const dispo = DISPO[tok.disposition] || DISPO.neutral;
     const status = tok.status || [];
-    const dead = status.includes('mort');
+    const dead = status.includes('mort'); // stored token status (French)
     const selected = !ghost && sc.selected?.has(tok.id);
     ctx.save();
     ctx.globalAlpha = alpha * (tok.hidden ? 0.5 : 1) * (dead ? 0.7 : 1);

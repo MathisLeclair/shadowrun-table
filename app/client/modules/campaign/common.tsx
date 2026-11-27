@@ -8,7 +8,7 @@ import type { Campaign, GameView, QuestStatus, ThreadState } from '../../../shar
 import type { CampaignNav, DocMeta, DocsState, HandoutLike } from './types.ts';
 import './campaign.css';
 
-// Labels are French keys (tk): render them with t(s.label) / t(s.one).
+// Labels are English UI keys (tk): render them with t(s.label) / t(s.one).
 export const QUEST_STATUS: Array<{ id: QuestStatus; label: string; color: string }> = [
   { id: 'active', label: tk('quest::Active'), color: 'cyan' },
   { id: 'upcoming', label: tk('quest::Upcoming'), color: 'amber' },

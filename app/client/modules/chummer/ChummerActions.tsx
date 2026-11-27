@@ -116,11 +116,11 @@ function withBold(sentence: string, bold: ReactNode) {
 // ---------------------------------------------------------------------------
 // Diff view
 // ---------------------------------------------------------------------------
-// Scalar values the server stores as French words (translated when known); other values are data.
+// Scalar values the server sends as UI keys (translated when known); other values are data.
 const TRANSLATED_VALUES = new Set(['Description', 'Notes']);
 function scalarValue(s: { label: string }, v: unknown): string {
   const text = String(v);
-  if (s.label === 'Métatype') return metatypeLabel(text);
+  if (s.label === 'Metatype' || s.label === 'Métatype') return metatypeLabel(text); // 'Métatype': diff from an older server
   return TRANSLATED_VALUES.has(s.label) ? tIfKnown(text) : text;
 }
 

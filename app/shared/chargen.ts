@@ -59,7 +59,7 @@ export interface Quote {
   avail: string;
   essence?: number;
 }
-/** Fit check problem of the shop rules: French key + params. */
+/** Fit check problem of the shop rules: UI key + params. */
 export interface FitProblem {
   key: string;
   params: I18nParams;
@@ -92,12 +92,12 @@ export interface ChargenCtx {
   rules?: ChargenRules;
   settings?: { startingKarmaBonus?: number };
 }
-/** Translator of the display helpers: French fill() by default, the client passes its own. */
+/** Translator of the display helpers: fill() (source text) by default, the client passes its own. */
 export interface ChargenI18n {
   t: (key: string, params?: I18nParams) => string;
   fmtNumber: (n: number) => string;
 }
-/** Validation issue of compute(): French text + key/params (and English values of item names in `en`). */
+/** Validation issue of compute(): source text + key/params (and English values of item names in `en`). */
 export interface ChargenIssue {
   step: string;
   text: string;
@@ -223,19 +223,24 @@ export interface BuildActorOptions {
   type?: 'pc' | 'npc';
   now?: number;
   player?: string;
+  /**
+   * Translator for the texts written into the actor (default name, quality notes): pass the table language's t() so
+   * they are stored in that language. Default: English source text (fill()).
+   */
+  t?: (key: string, params?: I18nParams | null) => string;
 }
 
 // ---------------------------------------------------------------------------
-// i18n (see ARCHITECTURE.md « i18n »). French labels are dictionary keys (client/i18n/en/chargen.json): tk() marks
-// them for tools/i18n-check.ts and the UI renders t(label). Validation issues carry { text (French), key, params,
+// i18n (see docs/i18n.md). Labels are English dictionary keys (French in client/i18n/fr/chargen.json): tk() marks
+// them for tools/i18n-check.ts and the UI renders t(label). Validation issues carry { text (English), key, params,
 // en? (English values of item names) } so the wizard shows them translated.
 // ---------------------------------------------------------------------------
 const tk = (s: string): string => s;
-/** French thousands (12 000) for `nuyen` params. */
+/** Thousands with a space (12 000) for `nuyen` params of fill(). */
 const frNum = (n: unknown): string => Math.round(Number(n) || 0).toLocaleString('fr-FR').replace(/[  ]/g, ' ');
 /** Params whose value is a nuyen amount: formatted per language when rendered. */
 export const NUYEN_PARAMS: string[] = ['nuyen'];
-/** French rendering of a key + params (nested { t, params } values translated recursively, nuyen params formatted). */
+/** Source-text (English) rendering of a key + params: context prefix (`ctx::`) dropped, nested { t, params } values filled recursively, nuyen params formatted. */
 export function fill(key: unknown, params?: I18nParams | null): string {
   const s = String(key ?? '');
   const k = s.includes('::') ? s.slice(s.indexOf('::') + 2) : s;
@@ -250,7 +255,7 @@ export function fill(key: unknown, params?: I18nParams | null): string {
     return String(v);
   });
 }
-/** Translator used by the display helpers below: French by default, the client passes { t, fmtNumber }. */
+/** Translator used by the display helpers below: source text by default, the client passes { t, fmtNumber }. */
 const frI18n: ChargenI18n = { t: fill, fmtNumber: frNum };
 
 // ---------------------------------------------------------------------------
@@ -273,6 +278,7 @@ export const METATYPE_PRIORITY: Record<string, Partial<Record<string, number>>> 
   D: { Humain: 3, Elfe: 0 },
   E: { Humain: 1 },
 };
+/** Stored metatype values (French, kept for save compatibility); shown with metatypeLabel() / t(). */
 export const METATYPE_IDS: MetatypeId[] = ['Humain', 'Elfe', 'Nain', 'Ork', 'Troll'];
 
 /** Metatype minimums (maximums come from shared/sr5.js METATYPES). */
@@ -338,27 +344,27 @@ export const MAGIC_TABLE: Record<string, Partial<Record<MagicType, MagicRow>>> =
   E: {},
 };
 export const ASPECTS: Record<Aspect, string> = { sorcery: tk('Sorcery'), conjuring: tk('Conjuring'), enchanting: tk('Enchanting') };
-/** Stored as the French name (data), shown with t(). */
+/** Stored as the English key (older data: the French name), shown with t(). */
 export const TRADITIONS: string[] = [tk('Hermetic'), tk('Shamanic'), tk('Chaos'), tk('Druid'), tk('Buddhist'), tk('Shinto'), tk('Wicca'), tk('Voodoo'), tk('Other')];
-/** Complex form targets (COMPLEX_FORMS[].target) — French keys. */
+/** Complex form targets (COMPLEX_FORMS[].target): UI keys, shown with t(). */
 export const FORM_TARGETS: string[] = [tk('Persona'), tk('Device'), tk('File'), tk('Self'), tk('Sprite')];
 
 /** SR5 core complex forms (p.256). fading = Fading Value (L = level). */
 export const COMPLEX_FORMS: ComplexFormDef[] = [
   { id: 'cleaner', name: 'Nettoyeur', en: 'Cleaner', target: 'Persona', duration: 'P', fading: 'L+1' },
-  { id: 'diffusion', name: 'Diffusion de [attribut]', en: 'Diffusion of [Matrix Attribute]', target: 'Appareil', duration: 'S', fading: 'L+1' },
-  { id: 'editor', name: 'Éditeur', en: 'Editor', target: 'Fichier', duration: 'P', fading: 'L+2' },
+  { id: 'diffusion', name: 'Diffusion de [attribut]', en: 'Diffusion of [Matrix Attribute]', target: 'Device', duration: 'S', fading: 'L+1' },
+  { id: 'editor', name: 'Éditeur', en: 'Editor', target: 'File', duration: 'P', fading: 'L+2' },
   { id: 'infusion', name: 'Infusion de [attribut]', en: 'Infusion of [Matrix Attribute]', target: 'Persona', duration: 'S', fading: 'L+1' },
   { id: 'pulse_storm', name: 'Tempête d’impulsions', en: 'Pulse Storm', target: 'Persona', duration: 'I', fading: 'L+1' },
-  { id: 'puppeteer', name: 'Marionnettiste', en: 'Puppeteer', target: 'Appareil', duration: 'I', fading: 'L+4' },
-  { id: 'resonance_channel', name: 'Canal de résonance', en: 'Resonance Channel', target: 'Appareil', duration: 'S', fading: 'L-1' },
-  { id: 'resonance_spike', name: 'Pic de résonance', en: 'Resonance Spike', target: 'Appareil', duration: 'I', fading: 'L' },
-  { id: 'resonance_veil', name: 'Voile de résonance', en: 'Resonance Veil', target: 'Appareil', duration: 'S', fading: 'L+1' },
-  { id: 'static_bomb', name: 'Bombe statique', en: 'Static Bomb', target: 'Soi', duration: 'I', fading: 'L+2' },
+  { id: 'puppeteer', name: 'Marionnettiste', en: 'Puppeteer', target: 'Device', duration: 'I', fading: 'L+4' },
+  { id: 'resonance_channel', name: 'Canal de résonance', en: 'Resonance Channel', target: 'Device', duration: 'S', fading: 'L-1' },
+  { id: 'resonance_spike', name: 'Pic de résonance', en: 'Resonance Spike', target: 'Device', duration: 'I', fading: 'L' },
+  { id: 'resonance_veil', name: 'Voile de résonance', en: 'Resonance Veil', target: 'Device', duration: 'S', fading: 'L+1' },
+  { id: 'static_bomb', name: 'Bombe statique', en: 'Static Bomb', target: 'Self', duration: 'I', fading: 'L+2' },
   { id: 'static_veil', name: 'Voile statique', en: 'Static Veil', target: 'Persona', duration: 'S', fading: 'L-1' },
   { id: 'stitches', name: 'Points de suture', en: 'Stitches', target: 'Sprite', duration: 'P', fading: 'L+1' },
   { id: 'tattletale', name: 'Mouchard', en: 'Tattletale', target: 'Persona', duration: 'P', fading: 'L-2' },
-  { id: 'transcendent_grid', name: 'Grille transcendante', en: 'Transcendent Grid', target: 'Soi', duration: 'I', fading: 'L+3' },
+  { id: 'transcendent_grid', name: 'Grille transcendante', en: 'Transcendent Grid', target: 'Self', duration: 'I', fading: 'L+3' },
 ];
 export const COMPLEX_FORM_BY_ID: Record<string, ComplexFormDef> = Object.fromEntries(COMPLEX_FORMS.map((f) => [f.id, f]));
 
@@ -468,7 +474,7 @@ export function normalizeDraft(raw: unknown): DraftData {
       color: /^#[0-9a-fA-F]{3,8}$/.test(str(c.color, 9)) ? str(c.color, 9) : '#3fd6d0',
     },
     priorities: Object.fromEntries(COLUMNS.map((k) => [k, letter(p[k])])) as Record<PriorityColumn, PriorityLetter>,
-    metatype: METATYPE_IDS.includes(d.metatype) ? d.metatype : 'Humain',
+    metatype: METATYPE_IDS.includes(d.metatype) ? d.metatype : 'Humain', // stored value, French for save compatibility
     attributes: {},
     attrKarma: {},
     magic: {
@@ -559,7 +565,7 @@ export function magicRow(data: Partial<DraftData> | null | undefined): MagicRow 
   return MAGIC_TABLE[data?.priorities?.magic as string]?.[t] || null;
 }
 /**
- * Short explanation of what a priority letter gives in a column. French by default; the client passes
+ * Short explanation of what a priority letter gives in a column. Source text by default; the client passes
  * i18n = { t, fmtNumber } to get it in the UI language.
  */
 export function priorityText(column: string, l: string, i18n: ChargenI18n = frI18n): string {
@@ -647,7 +653,7 @@ function qualityChoice(data: DraftData, ctx: ChargenCtx, re: RegExp): string | n
 
 /** Natural limits of an attribute for this draft: { min, max }. */
 export function attrLimits(data: DraftData, ctx: ChargenCtx, key: AttrKeyish): { min: number; max: number } {
-  const meta = data.metatype || 'Humain';
+  const meta = data.metatype || 'Humain'; // stored metatype value (French)
   if (key === 'MAG' || key === 'RES') return { min: 0, max: 6 + (qualityChoice(data, ctx, /^Exceptional Attribute$/) === key ? 1 : 0) };
   const min = METATYPE_MIN[meta]?.[key as MetaAttrKey] ?? 1;
   let max = METATYPES[meta]?.max?.[key as MetaAttrKey] ?? 6;
@@ -664,7 +670,7 @@ export function attrLimits(data: DraftData, ctx: ChargenCtx, key: AttrKeyish): {
 /**
  * Compute budgets, spending, final values and validation for a draft.
  * Returns { budgets, attrs, final, skills, karma, nuyen, gearLines, essence, magic, errors, warnings, ok }.
- * errors/warnings: [{ step, text (French), key, params?, en? }] — render with issueText() client-side. `ok` = no errors.
+ * errors/warnings: [{ step, text (source text), key, params?, en? }] — render with issueText() client-side. `ok` = no errors.
  */
 export function compute(rawData: unknown, ctx: ChargenCtx = {}) {
   const data = normalizeDraft(rawData);
@@ -1162,7 +1168,7 @@ export function issuesByStep(result: { errors?: ChargenIssue[]; warnings?: Charg
 }
 
 /**
- * Text of a validation issue in a language. tr = the client's t() (French fill() by default), lang = 'fr'|'en',
+ * Text of a validation issue in a language. tr = the client's t() (fill() by default), lang = 'fr'|'en',
  * fmtNumber formats nuyen params. A plain string (older data) is returned as-is.
  */
 export function issueText(
@@ -1271,8 +1277,9 @@ export function buildActor(rawData: unknown, ctx: ChargenCtx = {}, opts: BuildAc
   let n = 0;
   const makeId = opts.makeId || ((p: string) => `${p}_${Date.now().toString(36)}${(n++).toString(36)}`);
   const type = opts.type === 'npc' ? 'npc' : 'pc';
+  const tr = opts.t || fill;
   const c = data.concept;
-  const name = (c.alias || c.name || tk('New runner')).trim().slice(0, 80);
+  const name = (c.alias || c.name || tr(tk('New runner'))).trim().slice(0, 80);
   const f = result.final;
   const actor: ChargenActor = {
     type,
@@ -1349,16 +1356,16 @@ export function buildActor(rawData: unknown, ctx: ChargenCtx = {}, opts: BuildAc
   const mq = MAGIC_TYPES[m.type]?.quality;
   if (mq) {
     const bits: string[] = [];
-    if (data.magic.tradition && m.type !== 'adept') bits.push(`Tradition : ${data.magic.tradition}`);
-    if (m.type === 'aspected') bits.push(`Aspect : ${ASPECTS[aspectGroup(data.magic.aspect)]}`);
-    if (data.magic.mentor) bits.push(`Mentor : ${data.magic.mentor}`);
-    actor.qualities.push({ id: makeId('q'), name: mq, karma: 0, positive: true, notes: [tk('Magic/Resonance priority'), ...bits].join(' — ') });
+    if (data.magic.tradition && m.type !== 'adept') bits.push(tr(tk('Tradition: {name}'), { name: { t: data.magic.tradition } }));
+    if (m.type === 'aspected') bits.push(tr(tk('Aspect: {name}'), { name: { t: ASPECTS[aspectGroup(data.magic.aspect)] } }));
+    if (data.magic.mentor) bits.push(tr(tk('Mentor: {name}'), { name: data.magic.mentor }));
+    actor.qualities.push({ id: makeId('q'), name: mq, karma: 0, positive: true, notes: [tr(tk('Magic/Resonance priority')), ...bits].join(' — ') });
   }
-  for (const t of METATYPE_TRAITS[data.metatype] || []) actor.qualities.push({ id: makeId('q'), name: t, karma: 0, positive: true, notes: fill(tk('Racial trait ({meta})'), { meta: data.metatype }) });
+  for (const t of METATYPE_TRAITS[data.metatype] || []) actor.qualities.push({ id: makeId('q'), name: t, karma: 0, positive: true, notes: tr(tk('Racial trait ({meta})'), { meta: { t: data.metatype } }) });
   for (const q of result.qualities) {
     const notes: string[] = [];
     if (q.choice) {
-      const label = ATTR_LABELS[q.choice as AttrKey] || SKILL_BY_ID[q.choice]?.fr || q.choice;
+      const label = ATTR_LABELS[q.choice as AttrKey] ? tr(ATTR_LABELS[q.choice as AttrKey]) : SKILL_BY_ID[q.choice]?.fr || q.choice;
       notes.push(label);
     }
     if (q.notes) notes.push(q.notes);
@@ -1369,7 +1376,7 @@ export function buildActor(rawData: unknown, ctx: ChargenCtx = {}, opts: BuildAc
     if (qb) row.bonus = qb;
     actor.qualities.push(row);
   }
-  if (data.metatype === 'Troll') actor.armor.push({ id: makeId('arm'), name: tk('Dermal armor (troll)'), rating: 1, equipped: true, stack: true, notes: tk('Racial trait') });
+  if (data.metatype === 'Troll') actor.armor.push({ id: makeId('arm'), name: tk('Dermal armor (troll)'), rating: 1, equipped: true, stack: true, notes: tr(tk('Racial trait')) });
 
   for (const s of result.spells) {
     const { item, catalogId, name: sname, ...rest } = s;
@@ -1523,7 +1530,7 @@ export function buildActor(rawData: unknown, ctx: ChargenCtx = {}, opts: BuildAc
 }
 
 /**
- * Short one-line summary for lists: « Ork · Adepte · A/B/C/D/E ». French `name`/`text`; the UI rebuilds them
+ * Short one-line summary for lists: « Ork · Adept · A/B/C/D/E ». Untranslated `name`/`text`; the UI rebuilds them
  * translated from `unnamed`, `metatype`, `magicType`, `concept` (headlineText() client-side).
  */
 /** Result of compute(). */

@@ -129,7 +129,7 @@
   "Table not found": "Table introuvable",
   "Table temporarily unavailable (see the server logs)": "Table momentanément indisponible (voir les journaux du serveur)",
   "Table: {slug}": "Table : {slug}",
-  "Texts shown since this page was opened that have no English translation. Translators fill in client/i18n/en/*.json (tool: node tools/i18n-check.ts).": "Textes affichés depuis l’ouverture de cette page sans traduction anglaise. Les traducteurs complètent client/i18n/en/*.json (outil : node tools/i18n-check.ts).",
+  "Texts shown since this page was opened that have no French translation. Translators fill in client/i18n/fr/*.json (tool: node tools/i18n-check.ts).": "Textes affichés depuis l’ouverture de cette page sans traduction française. Les traducteurs complètent client/i18n/fr/*.json (outil : node tools/i18n-check.ts).",
   "The campaign name cannot be empty": "Le nom de la campagne ne peut pas être vide",
   "The demo table has just been reset: please log in again": "La table de démonstration vient d’être remise à zéro : reconnecte-toi",
   "The demo table is full: try again later": "Table de démonstration pleine : réessaie plus tard",

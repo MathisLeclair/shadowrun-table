@@ -18,7 +18,8 @@ import type { ActorLike, DoorState, Lighting, MapDoor, MapWall, Point, Token, To
 
 /** One tile of the legend. */
 export interface TileInfo {
-  fr: string;
+  /** UI key (English), shown with t(). */
+  label: string;
   blockMove: boolean;
   blockSight: boolean;
 }
@@ -126,29 +127,31 @@ export interface FindPathOptions {
   maxCost?: number;
 }
 
-/** Tile legend. blockMove / blockSight follow ARCHITECTURE.md. fr = French label for editors. */
+const tk = (s: string): string => s; // marks UI keys for the i18n checker; the client renders them with t()
+
+/** Tile legend. blockMove / blockSight follow ARCHITECTURE.md. label = UI key for editors (shown with t()). */
 export const TILE_INFO: Record<string, TileInfo> = {
-  ' ': { fr: 'Vide (hors carte)', blockMove: true, blockSight: true },
-  '.': { fr: 'Sol intérieur', blockMove: false, blockSight: false },
-  ',': { fr: 'Sol extérieur / rue', blockMove: false, blockSight: false },
-  '#': { fr: 'Mur', blockMove: true, blockSight: true },
-  D: { fr: 'Porte / passage', blockMove: false, blockSight: false }, // real state comes from doors[]
-  W: { fr: 'Fenêtre', blockMove: true, blockSight: false },
-  '=': { fr: 'Comptoir / muret / rambarde', blockMove: true, blockSight: false },
-  T: { fr: 'Table / mobilier', blockMove: true, blockSight: false },
-  c: { fr: 'Caisses / couvert', blockMove: true, blockSight: false },
-  o: { fr: 'Pilier / colonne', blockMove: true, blockSight: true },
-  m: { fr: 'Machines / serveurs / étagères', blockMove: true, blockSight: true },
-  v: { fr: 'Véhicule', blockMove: true, blockSight: false },
-  b: { fr: 'Lit / canapé', blockMove: true, blockSight: false },
-  s: { fr: 'Escalier / rampe', blockMove: false, blockSight: false },
-  e: { fr: 'Ascenseur', blockMove: false, blockSight: false },
-  '~': { fr: 'Eau', blockMove: true, blockSight: false },
-  g: { fr: 'Herbe / végétation', blockMove: false, blockSight: false },
-  r: { fr: 'Gravats (terrain difficile)', blockMove: false, blockSight: false },
-  x: { fr: 'Danger (feu, chimie, électricité)', blockMove: false, blockSight: false },
-  t: { fr: 'Arbres / buissons denses', blockMove: false, blockSight: true },
-  _: { fr: 'Tapis / scène / piste de danse', blockMove: false, blockSight: false },
+  ' ': { label: tk('Void (outside the map)'), blockMove: true, blockSight: true },
+  '.': { label: tk('Interior floor'), blockMove: false, blockSight: false },
+  ',': { label: tk('Exterior ground / street'), blockMove: false, blockSight: false },
+  '#': { label: tk('Wall'), blockMove: true, blockSight: true },
+  D: { label: tk('Door / doorway'), blockMove: false, blockSight: false }, // real state comes from doors[]
+  W: { label: tk('Window'), blockMove: true, blockSight: false },
+  '=': { label: tk('Counter / low wall / railing'), blockMove: true, blockSight: false },
+  T: { label: tk('Table / furniture'), blockMove: true, blockSight: false },
+  c: { label: tk('Crates / cover'), blockMove: true, blockSight: false },
+  o: { label: tk('Pillar / column'), blockMove: true, blockSight: true },
+  m: { label: tk('Machinery / servers / shelves'), blockMove: true, blockSight: true },
+  v: { label: tk('Vehicle'), blockMove: true, blockSight: false },
+  b: { label: tk('Bed / couch'), blockMove: true, blockSight: false },
+  s: { label: tk('Stairs / ramp'), blockMove: false, blockSight: false },
+  e: { label: tk('Elevator'), blockMove: false, blockSight: false },
+  '~': { label: tk('Water'), blockMove: true, blockSight: false },
+  g: { label: tk('Grass / vegetation'), blockMove: false, blockSight: false },
+  r: { label: tk('Rubble (difficult terrain)'), blockMove: false, blockSight: false },
+  x: { label: tk('Hazard (fire, chemicals, electricity)'), blockMove: false, blockSight: false },
+  t: { label: tk('Trees / dense bushes'), blockMove: false, blockSight: true },
+  _: { label: tk('Carpet / stage / dance floor'), blockMove: false, blockSight: false },
 };
 export const TILE_CHARS = Object.keys(TILE_INFO);
 export const isTileChar = (ch: string): boolean => Object.prototype.hasOwnProperty.call(TILE_INFO, ch);
