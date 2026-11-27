@@ -4,10 +4,10 @@ import { send, useCatalog } from '../../lib/net.js';
 import { BookRef } from '../books/BookRef.js';
 import { setUI } from '../../lib/ui-store.js';
 import { DiceFaces, fmtTime } from '../sheet/common.js';
-import { t, tn, tIfKnown, getLang, skillLabel, compare, logText } from '../../lib/i18n.js';
+import { t, tn, tk, tIfKnown, getLang, skillLabel, compare, logText } from '../../lib/i18n.js';
 import {
   OS_MAX, osLevel, IC_TYPES, matrixMonitor, identityAsdf, isCyberdeck, ACTION_BY_ID, MAX_MARKS, PROGRAM_BY_ID, programId,
-  ASDF_LABELS, ASDF_SHORT, ASDF_SHORT_EN, MODE_LABELS,
+  ASDF_LABELS, ASDF_SHORT, ASDF_SHORT_EN, MODE_LABELS, DEVICE_LINK_KINDS,
 } from '/shared/matrix.js';
 
 export const isGM = (game) => game?.me?.role === 'gm';
@@ -192,7 +192,10 @@ export function targetOptions(game, actor, persona, action) {
   if (allow.has('device')) {
     for (const h of hosts) {
       if (!gm && h.id !== persona.hostId && !h.perceived) continue;
-      const items = (h.devices || []).map((d) => ({ id: `device:${h.id}:${d.id}`, kind: 'device', marks: markOn(`device:${h.id}:${d.id}`, h.id), label: `${d.name}${d.offline ? ` ${t('(hors ligne)')}` : ''}` }));
+      const items = (h.devices || []).map((d) => ({
+        id: `device:${h.id}:${d.id}`, kind: 'device', marks: markOn(`device:${h.id}:${d.id}`, h.id), linkKind: d.link?.kind || null,
+        label: `${d.link?.kind && DEVICE_LINK_KINDS[d.link.kind] ? `${DEVICE_LINK_KINDS[d.link.kind].icon} ` : ''}${d.name}${d.offline ? ` ${t('(hors ligne)')}` : ''}`,
+      }));
       if (items.length) groups.push({ group: t('Appareils — {host}', { host: h.name }), items });
     }
   }
@@ -209,6 +212,35 @@ export function targetOptions(game, actor, persona, action) {
   }
   if (allow.has('manual')) groups.push({ group: t('Autre'), items: [{ id: 'manual', kind: 'manual', marks: 0, label: t('Autre cible…') }] });
   return groups;
+}
+
+/**
+ * State of the map object a host device is linked to: 'open'|'closed'|'locked' (door), 'on'|'off' (light, cameras), or null.
+ * Players receive it from the server (device.link.state); the GM computes it from the maps.
+ */
+export function deviceLinkState(game, device) {
+  const l = device?.link;
+  if (!l) return null;
+  if (l.state !== undefined) return l.state;
+  const map = game.maps?.[l.mapId];
+  if (!map) return null;
+  if (l.kind === 'door') {
+    const d = (map.doors || []).find((x) => x.id === l.targetId) || (map.walls || []).find((x) => x.id === l.targetId)?.door;
+    return d ? d.state : null;
+  }
+  if (l.kind === 'light') {
+    const li = (map.lights || []).find((x) => x.id === l.targetId);
+    return li ? (li.on ? 'on' : 'off') : null;
+  }
+  const r = (map.regions || []).find((x) => x.id === l.targetId);
+  return r ? r.cams || 'on' : null;
+}
+const LINK_STATE_LABELS = { open: tk('ouverte'), closed: tk('fermée'), locked: tk('verrouillée'), on: tk('allumé'), off: tk('coupé') };
+/** « 🚪 verrouillée » — the link's icon and current state. */
+export function linkStateText(kind, state) {
+  const icon = DEVICE_LINK_KINDS[kind]?.icon || '';
+  if (kind === 'camera' && state === 'on') return `${icon} ${t('filme')}`;
+  return state && LINK_STATE_LABELS[state] ? `${icon} ${t(LINK_STATE_LABELS[state])}` : icon;
 }
 
 /** Marks required by an action (Control Device: chosen 1-3). */

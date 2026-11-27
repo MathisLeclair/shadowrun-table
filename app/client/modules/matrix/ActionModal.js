@@ -6,7 +6,7 @@ import { DiceFaces } from '../sheet/common.js';
 import { t, tn, tk, getLang } from '../../lib/i18n.js';
 import { slug } from '/shared/util.js';
 import {
-  actionPool, isIllegal, ACTION_TYPES, ACTION_CATS, MARK_PENALTY, matrixMonitor,
+  actionPool, isIllegal, ACTION_TYPES, ACTION_CATS, MARK_PENALTY, matrixMonitor, DEVICE_LINK_KINDS, DEVICE_CMD_LABELS,
 } from '/shared/matrix.js';
 import { isGM, targetOptions, marksRequired, msgText, outcomeTexts, partLabel, actionName, marksText, assistText } from './common.js';
 import { useModifiers, toggleText, effectText, loadRollToggles, saveRollToggles } from '../sheet/modifiers-ui.js';
@@ -61,6 +61,7 @@ export default function ActionModal({ game, actor, persona, action, preset = {},
   const [controlMarks, setControlMarks] = useState(1);
   const [fileOp, setFileOp] = useState(preset.fileOp || 'copy');
   const [command, setCommand] = useState('');
+  const [deviceCmd, setDeviceCmd] = useState(preset.deviceCmd || '');
   const [program, setProgram] = useState('');
   const [threshold, setThreshold] = useState(0);
   const [modifier, setModifier] = useState(0);
@@ -89,6 +90,8 @@ export default function ActionModal({ game, actor, persona, action, preset = {},
   for (const l of pc?.modLines || []) if (!l.mod.baked && !l.mod.info && l.value !== null) for (const k of l.toggles || []) (switches[k] ||= []).push(l);
   const agentPc = action.noTest || !ag ? null : actionPool(actor, persona, action, { agent: true, marks, modifier });
   const target = flat.find((o) => o.id === targetId);
+  // Device linked to the map (door, light, camera zone): the command also acts on the map.
+  const linkKind = ['controlDevice', 'spoofCommand'].includes(action.id) && target?.linkKind && DEVICE_LINK_KINDS[target.linkKind] ? target.linkKind : null;
   const need = marksRequired(action, { controlMarks });
   let have = target?.marks || 0;
   if (targetId === 'manual') have = (persona.marks || []).find((m) => m.targetId === `manual:${slug(targetName.trim() || 'cible inconnue') || 'cible'}`)?.count || 0;
@@ -103,6 +106,7 @@ export default function ActionModal({ game, actor, persona, action, preset = {},
     targetName: targetId === 'manual' ? targetName : undefined,
     defensePool: targetId === 'manual' && gm ? defensePool : undefined,
     marks, controlMarks, fileOp, command: command || undefined, program: program || undefined,
+    deviceCmd: linkKind && deviceCmd ? deviceCmd : undefined,
     threshold: threshold || undefined, modifier,
   });
 
@@ -180,6 +184,9 @@ export default function ActionModal({ game, actor, persona, action, preset = {},
             ${['controlDevice', 'spoofCommand'].includes(action.id) || (action.id === 'editFile' && fileOp === 'edit')
               ? html`<${Field} label=${action.id === 'editFile' ? t('Modification') : t('Commande')} class="grow"><${TextInput} live value=${command} placeholder=${action.id === 'editFile' ? t('ex. ajouter un nom') : t('ex. ouvrir la porte')} onChange=${setCommand} /></${Field}>`
               : null}
+            ${linkKind && html`<${Field} label=${t('Sur la carte')} hint=${t('Appliqué automatiquement si l’action réussit')}>
+              <${Select} value=${deviceCmd} options=${[{ value: '', label: t('— rien —') }, ...DEVICE_LINK_KINDS[linkKind].cmds.map((c) => ({ value: c, label: `${DEVICE_LINK_KINDS[linkKind].icon} ${t(DEVICE_CMD_LABELS[linkKind][c])}` }))]} onChange=${setDeviceCmd} />
+            </${Field}>`}
             ${action.id === 'crashProgram' && html`<${Field} label=${t('Programme visé (optionnel)')}><${TextInput} live value=${program} onChange=${setProgram} /></${Field}>`}
             ${(action.id === 'matrixSearch' || (!action.defense && !action.noTest && action.id !== 'jamSignals')) && html`<${Field} label=${t('Seuil (optionnel)')}><${NumberInput} value=${threshold} min=${0} max=${20} onChange=${setThreshold} /></${Field}>`}
             ${!action.noTest && html`<${Field} label=${t('Modificateur')}><${NumberInput} value=${modifier} min=${-20} max=${20} onChange=${setModifier} /></${Field}>`}

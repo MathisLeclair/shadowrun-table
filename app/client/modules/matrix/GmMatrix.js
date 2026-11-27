@@ -1,14 +1,27 @@
 // GM Matrix screens: decker oversight (OS, damage, marks, convergence) and the hosts manager (templates, IC, files, devices).
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { html, Button, Badge, Field, NumberInput, Select, TextInput, Toggle, Empty, IconButton, confirmAction } from '../../lib/ui.js';
-import { openSheet } from '../../lib/ui-store.js';
+import { openSheet, toast } from '../../lib/ui-store.js';
 import { t, tn, compare } from '../../lib/i18n.js';
 import { uid } from '/shared/util.js';
 import {
-  ASDF, ASDF_LABELS, ASDF_SHORT, MODE_LABELS, IC_TYPES, IC_ORDER, HOST_PRESETS, OS_MAX, hostAttributes, matrixMonitor,
-  icInitiative, icAttackPool, deckStats, isCyberdeck,
+  ASDF, ASDF_LABELS, ASDF_SHORT, MODE_LABELS, IC_TYPES, IC_ORDER, HOST_PRESETS, OS_MAX, OS_TICK_MS, hostAttributes, matrixMonitor,
+  icInitiative, icAttackPool, deckStats, isCyberdeck, DEVICE_LINK_KINDS,
 } from '/shared/matrix.js';
-import { act, personaOf, OsMeter, MatrixMonitor, marksDots, icName, markName, linkLockName, asdfShort, asdfLabel, modeLabel } from './common.js';
+import {
+  act, personaOf, OsMeter, MatrixMonitor, marksDots, icName, markName, linkLockName, asdfShort, asdfLabel, modeLabel, msgText, outcomeTexts,
+  deviceLinkState, linkStateText,
+} from './common.js';
+
+/** Re-render every `ms` (countdowns). */
+function useNow(ms = 30000) {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), ms);
+    return () => clearInterval(id);
+  }, [ms]);
+  return now;
+}
 import { RuleRef } from '../books/BookRef.js';
 
 // ---------------------------------------------------------------------------
@@ -19,8 +32,18 @@ function DeckerCard({ game, actor, onCockpit }) {
   const ds = deckStats(actor, p);
   const host = p.hostId ? game.matrix?.hosts?.[p.hostId] : null;
   const set = (patch) => act('matrix/setPersona', { actorId: actor.id, patch });
+  const now = useNow();
+  const timerOn = !!game.matrix?.settings?.osTimer;
+  const nextTick = timerOn && p.online && p.overwatch > 0 && p.osClock ? Math.max(0, Math.ceil((p.osClock + OS_TICK_MS - now) / 60000)) : null;
   const converge = async () => {
-    if (await confirmAction(t('Déclencher la convergence sur {name} ? 12 cases de dommages matriciels, deck redémarré de force, marques perdues, position révélée.', { name: actor.name }))) act('matrix/converge', { actorId: actor.id });
+    const q = p.online && host
+      ? t('Déclencher la convergence sur {name} ? Dans l’hôte : il pose 3 marques, passe en alerte et lance une IC ; sortir de l’hôte déclenchera la convergence du GOD.', { name: actor.name })
+      : t('Déclencher la convergence sur {name} ? 12 VD matriciels (résistés), deck redémarré de force, marques perdues, position révélée.', { name: actor.name });
+    if (await confirmAction(q)) act('matrix/converge', { actorId: actor.id });
+  };
+  const tick = async () => {
+    const r = await act('matrix/osTick', { actorId: actor.id });
+    if (r) toast(t('SO de {name} +{n} (2D6) → {os}', { name: actor.name, n: r.added, os: r.overwatch }), 'info');
   };
   const dump = async () => {
     if (await confirmAction(t('Éjecter {name} de la Matrice (choc d’éjection en RV) ?', { name: actor.name }))) act('matrix/disconnect', { actorId: actor.id, dump: true });
@@ -43,8 +66,11 @@ function DeckerCard({ game, actor, onCockpit }) {
       <${Field} label=${t('Score d’Overwatch')}><${NumberInput} small value=${p.overwatch || 0} min=${0} max=${OS_MAX} onChange=${(v) => act('matrix/setOverwatch', { actorId: actor.id, value: v })} /></${Field}>
       <${Field} label=${t('Bruit')}><${NumberInput} small value=${p.noise || 0} min=${0} max=${20} onChange=${(v) => set({ noise: v })} /></${Field}>
       <${Field} label=${t('Emplacements')}><${NumberInput} small value=${p.programSlots || 4} min=${1} max=${20} onChange=${(v) => set({ programSlots: v })} /></${Field}>
+      <${Button} small title=${t('15 minutes passent : +2D6 au SO, lancés en secret (SR5 p. 232)')} onClick=${tick}>${t('+15 min (2D6)')}</${Button}>
       <${Button} small variant="danger" onClick=${converge}>${t('Convergence')}</${Button}>
     </div>
+    ${nextTick !== null && html`<div class="small faint">${t('Minuterie : prochain +2D6 dans {n} min (à la prochaine action matricielle).', { n: nextTick })}</div>`}
+    ${p.hostConverged && html`<div class="small red">${t('Convergence dans l’hôte : sortir déclenchera celle du GOD.')}</div>`}
     <${MatrixMonitor} value=${p.matrixDamage} deviceRating=${ds.deviceRating} onSet=${(n) => set({ matrixDamage: n })} />
     <div class="mx-chips">
       ${p.linkLocked && html`<span class="mx-chip-btn"><${Badge} color="red">${t('Verrou : {name}', { name: linkLockName(p.linkLocked) })}</${Badge}><button type="button" title=${t('Lever le verrou')} onClick=${() => set({ linkLocked: null })}>✕</button></span>`}
@@ -160,22 +186,94 @@ function FilesSection({ host }) {
   </div>`;
 }
 
-function DevicesSection({ host }) {
+/** Map objects a device can drive: tile doors, segment-wall doors, lights, regions (camera zones). value = 'kind:id'. */
+function linkOptions(map) {
+  if (!map) return [];
+  const opts = [];
+  for (const d of map.doors || []) opts.push({ value: `door:${d.id}`, label: `🚪 ${d.name || t('Porte ({x}, {y})', { x: d.x, y: d.y })}` });
+  for (const w of map.walls || []) if (w.door) opts.push({ value: `door:${w.id}`, label: `🚪 ${w.door.name || t('Porte ({x}, {y})', { x: Math.round((w.x1 + w.x2) / 2), y: Math.round((w.y1 + w.y2) / 2) })}` });
+  for (const l of map.lights || []) opts.push({ value: `light:${l.id}`, label: `💡 ${l.name || t('Lumière ({x}, {y})', { x: l.x, y: l.y })}` });
+  for (const r of map.regions || []) opts.push({ value: `camera:${r.id}`, label: `📷 ${t('Caméras : {zone}', { zone: r.name })}` });
+  return opts;
+}
+
+function DeviceLink({ game, device, onChange }) {
+  const l = device.link;
+  const maps = Object.values(game.maps || {}).sort((a, b) => compare(a.folder || '', b.folder || '') || compare(a.name, b.name));
+  const [mapId, setMapId] = useState(l?.mapId || '');
+  const map = mapId ? game.maps?.[mapId] : null;
+  const opts = linkOptions(map);
+  const state = l ? deviceLinkState(game, device) : null;
+  return html`<div class="row wrap mx-gm-link">
+    <span class="faint small">${t('Sur la carte :')}</span>
+    <${Select} value=${mapId} options=${[{ value: '', label: t('— non relié —') }, ...maps.map((m) => ({ value: m.id, label: m.folder ? `${m.folder} · ${m.name}` : m.name }))]}
+      onChange=${(v) => { setMapId(v); if (!v) onChange(null); }} />
+    ${map && html`<${Select} value=${l && l.mapId === mapId ? `${l.kind}:${l.targetId}` : ''} options=${[{ value: '', label: opts.length ? t('— choisir —') : t('rien à relier sur cette carte') }, ...opts]}
+      onChange=${(v) => { if (!v) return onChange(null); const i = v.indexOf(':'); onChange({ mapId, kind: v.slice(0, i), targetId: v.slice(i + 1) }); }} />`}
+    ${l && state && html`<span class="mx-link-chip">${linkStateText(l.kind, state)}</span>`}
+    ${l && !state && html`<span class="small red">${t('objet introuvable sur la carte')}</span>`}
+  </div>`;
+}
+
+function DevicesSection({ game, host }) {
   const save = (devices) => act('matrix/hostUpdate', { hostId: host.id, patch: { devices } });
   const upd = (id, patch) => save(host.devices.map((d) => (d.id === id ? { ...d, ...patch } : d)));
   return html`<div class="mx-gm-section">
     <div class="mx-panel-title">${t('Appareils esclaves')}</div>
+    <div class="small faint">${t('Relie un appareil à une porte, une lumière ou une zone de la carte : quand le decker le contrôle, la carte change toute seule.')}</div>
     ${host.devices.length === 0 && html`<div class="muted small">${t('Aucun appareil.')}</div>`}
-    ${host.devices.map((d) => html`<div class="row wrap mx-gm-file" key=${d.id}>
-      <${TextInput} value=${d.name} onChange=${(v) => upd(d.id, { name: v })} class="grow" />
-      <${Field} label=${t('Indice')}><${NumberInput} small value=${d.rating} min=${1} max=${12} onChange=${(v) => upd(d.id, { rating: v })} /></${Field}>
-      <${Toggle} value=${d.offline} onChange=${(v) => upd(d.id, { offline: v })} label=${t('Hors ligne')} />
-      ${d.formatted && html`<${Badge} color="red">${t('formaté')}</${Badge}>`}
-      ${d.bricked && html`<${Badge} color="red">${t('briqué')}</${Badge}>`}
-      ${(d.formatted || d.bricked || d.damage) ? html`<${Button} small variant="ghost" onClick=${() => upd(d.id, { formatted: false, bricked: false, damage: 0 })}>${t('Réparer')}</${Button}>` : null}
-      <${IconButton} icon="✕" title=${t('Supprimer')} onClick=${() => save(host.devices.filter((x) => x.id !== d.id))} />
+    ${host.devices.map((d) => html`<div class="mx-gm-file" key=${d.id}>
+      <div class="row wrap">
+        <${TextInput} value=${d.name} onChange=${(v) => upd(d.id, { name: v })} class="grow" />
+        <${Field} label=${t('Indice')}><${NumberInput} small value=${d.rating} min=${1} max=${12} onChange=${(v) => upd(d.id, { rating: v })} /></${Field}>
+        <${Toggle} value=${d.offline} onChange=${(v) => upd(d.id, { offline: v })} label=${t('Hors ligne')} />
+        ${d.formatted && html`<${Badge} color="red">${t('formaté')}</${Badge}>`}
+        ${d.bricked && html`<${Badge} color="red">${t('briqué')}</${Badge}>`}
+        ${(d.formatted || d.bricked || d.damage) ? html`<${Button} small variant="ghost" onClick=${() => upd(d.id, { formatted: false, bricked: false, damage: 0 })}>${t('Réparer')}</${Button}>` : null}
+        <${IconButton} icon="✕" title=${t('Supprimer')} onClick=${() => save(host.devices.filter((x) => x.id !== d.id))} />
+      </div>
+      <${DeviceLink} game=${game} device=${d} onChange=${(link) => upd(d.id, { link, on: true })} />
     </div>`)}
     <${Button} small onClick=${() => save([...host.devices, { id: uid('dev'), name: t('Nouvel appareil'), rating: host.rating }])}>${t('Ajouter un appareil')}</${Button}>
+  </div>`;
+}
+
+/** GM one-click host management: the host's turn, its next IC, its spider, and a cheat sheet. */
+function HostTurnBar({ game, host }) {
+  const [last, setLast] = useState(null);
+  const inside = Object.values(game.matrix?.personas || {}).filter((p) => p.online && p.hostId === host.id);
+  const inFight = !!game.combat?.active && (game.combat.entries || []).some((e) => e.kind === 'ic' && e.hostId === host.id && !e.out);
+  const spiderId = host.alert === 'active' ? host.spiderAlert || host.spider : host.spider || host.spiderAlert;
+  const turn = async () => {
+    const r = await act('matrix/hostTurn', { hostId: host.id });
+    if (r) setLast(r);
+  };
+  const next = () => act('matrix/launchNextIc', { hostId: host.id });
+  const spider = async () => {
+    const r = await act('matrix/spawnSpider', { hostId: host.id });
+    if (r) toast(game.combat?.active ? t('Araignée ajoutée au combat.') : t('Araignée créée (lance un combat pour son initiative).'), 'success');
+  };
+  const lines = last ? [...outcomeTexts(last), ...(last.results || []).map((x) => (x.skippedMsg ? msgText(x.skippedMsg) : `${icName((host.ic.find((i) => i.id === x.icId) || {}).type)} → ${game.actors?.[x.actorId]?.name || ''} : ${outcomeTexts(x.result).join(' ')}`))] : [];
+  return html`<div class="mx-gm-section mx-gm-turn">
+    <div class="row wrap">
+      <${Button} variant="accent" disabled=${!inside.length} title=${t('Une IC de plus si l’hôte est en alerte, puis chaque IC active agit sur une cible choisie automatiquement')} onClick=${turn}>⚡ ${t('Tour de l’hôte')}</${Button}>
+      <${Button} small onClick=${next} title=${t('Lance la prochaine IC de la liste (pas encore active)')}>${t('IC suivante')}</${Button}>
+      ${spiderId && html`<${Button} small onClick=${spider} title=${t('Ajoute l’araignée de l’hôte au combat (sans pion)')}>🕷 ${t('Araignée au combat')}</${Button}>`}
+      <span class="faint small grow">${inside.length ? t('Intrus : {names}', { names: inside.map((p) => game.actors?.[p.actorId]?.name).join(', ') }) : t('Personne dans l’hôte.')}</span>
+    </div>
+    ${inFight && html`<div class="small cyan">${t('Combat en cours : chaque IC a sa ligne dans l’initiative, avec un bouton « Agir » à son tour.')}</div>`}
+    ${lines.length > 0 && html`<ul class="mx-gm-turnlog">${lines.map((l, i) => html`<li key=${i}>${l}</li>`)}</ul>`}
+    <details class="mx-gm-help">
+      <summary>${t('Aide-mémoire du MJ')}</summary>
+      <ul class="small">
+        <li>${t('Hôte calme : seule la Patrouille tourne. « Tour de l’hôte » lui fait chercher les intrus.')}</li>
+        <li>${t('Une action illégale ratée ou une attaque met l’hôte en alerte (automatique).')}</li>
+        <li>${t('En alerte, l’hôte lance une IC de plus par tour de combat (automatique en combat, sinon « Tour de l’hôte »).')}</li>
+        <li>${t('Chaque IC vise l’intrus le mieux repéré. Crash, Traqueuse et Brouillage exigent 1, 2 ou 3 marques de l’hôte : la Sonde les pose.')}</li>
+        <li>${t('SO : chaque action illégale ajoute les succès du défenseur, plus 2D6 toutes les 15 minutes (« +15 min » ou minuterie). À 40 : convergence.')}</li>
+        <li>${t('L’araignée est un PNJ decker : ajoute-la au combat, elle agit à son initiative depuis le cockpit (onglet Cockpit).')}</li>
+      </ul>
+    </details>
   </div>`;
 }
 
@@ -193,6 +291,7 @@ function HostEditor({ game, host, onDeleted }) {
     }
   };
   return html`<div class=${'mx-gm-host' + (host.alert === 'active' ? ' alert' : '')}>
+    <${HostTurnBar} game=${game} host=${host} />
     <div class="row wrap">
       <${Field} label=${t('Nom')} class="grow"><${TextInput} value=${host.name} onChange=${(v) => upd({ name: v })} /></${Field}>
       <${Field} label=${t('Dossier')}><${TextInput} value=${host.folder || ''} onChange=${(v) => upd({ folder: v })} /></${Field}>
@@ -229,7 +328,7 @@ function HostEditor({ game, host, onDeleted }) {
     </div>
     <${IcSection} game=${game} host=${host} />
     <${FilesSection} host=${host} />
-    <${DevicesSection} host=${host} />
+    <${DevicesSection} game=${game} host=${host} />
     <div class="row spread mx-gm-row"><span></span><${Button} small variant="danger" onClick=${del}>${t('Supprimer l’hôte')}</${Button}></div>
   </div>`;
 }

@@ -118,6 +118,8 @@ function GmMatrixPage({ game }) {
       <h2>${t('Matrice')}</h2>
       <div class="row wrap">
         <${Toggle} value=${!!game.matrix?.settings?.hideOverwatch} onChange=${(v) => act('matrix/settings', { hideOverwatch: v })} label=${t('Cacher le SO aux joueurs')} title=${t('Les deckers ne voient que leur dernière vérification (sauf programme Surveillance)')} />
+        <${Toggle} value=${!!game.matrix?.settings?.osTimer} onChange=${(v) => act('matrix/settings', { osTimer: v })} label=${t('Minuterie du SO')} title=${t('+2D6 au SO toutes les 15 minutes réelles en ligne (SR5 p. 232), appliqué à la prochaine action matricielle')} />
+        <${Toggle} value=${game.matrix?.settings?.autoLaunchIc !== false} onChange=${(v) => act('matrix/settings', { autoLaunchIc: v })} label=${t('IC automatiques en combat')} title=${t('À chaque nouveau tour de combat, un hôte en alerte avec un intrus lance sa prochaine IC (SR5 p. 248)')} />
       </div>
     </div>
     <${Tabs} tabs=${tabs} value=${current} onChange=${setTab} class="mx-tabs" />

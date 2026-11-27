@@ -262,3 +262,23 @@
 
 /* 📖 rulebook chips inside dense rows (programs, action list, pool parts) */
 .mx-prog .bookref, .mx-actrow .bookref, .mx-pool-parts .bookref { padding: 0 5px; font-size: 10px; line-height: 14px; }
+
+/* next-step hints (player cockpit, « Conseils » toggle) */
+.mx-hints { margin-bottom: 10px; border-color: #e0a63f40; }
+.mx-hints .mx-panel-title { color: var(--amber); }
+.mx-hint { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 4px 0 4px 8px; border-left: 3px solid var(--cyan); flex-wrap: wrap; }
+.mx-hint.tone-warn { border-left-color: var(--amber); }
+.mx-hint.tone-danger { border-left-color: var(--red); color: #ffd6d6; }
+
+/* host devices linked to the map */
+.mx-link-chip { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 10px; background: #3fd6d01a; border: 1px solid #3fd6d040; color: var(--text); white-space: nowrap; }
+.mx-gm-link { padding-left: 4px; gap: 6px; }
+
+/* GM host turn bar + cheat sheet */
+.mx-gm-turn { border-top: none; padding-top: 0; background: #e0468f0d; border: 1px solid #e0468f30; border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; }
+.mx-gm-turnlog { margin: 0; padding-left: 18px; font-size: 12px; color: var(--dim); max-height: 160px; overflow: auto; }
+.mx-gm-help summary { cursor: pointer; font-size: 12px; color: var(--dim); }
+.mx-gm-help ul { margin: 6px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; }
+
+/* device rows: name on its own line, map commands below */
+.mx-devrow > .grow { flex-basis: 100%; }

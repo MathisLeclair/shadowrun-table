@@ -570,5 +570,14 @@
   "ultrasons": "ultrasound",
   "compensation anti-flash": "flare compensation",
   "smartlink": "smartlink",
-  "{toxin}, puissance {n}": "{toxin}, power {n}"
+  "{toxin}, puissance {n}": "{toxin}, power {n}",
+  "Ton agent agit : choisis son action dans le cockpit (« Laisser mon agent agir »).": "Your agent acts: pick its action in the cockpit (“Let my agent act”).",
+  "IC d’un hôte (initiative : indice × 2 + 4D6)": "A host’s IC (initiative: rating × 2 + 4D6)",
+  "Agent du decker (initiative : Traitement + indice + 4D6)": "The decker’s agent (initiative: Data Processing + rating + 4D6)",
+  "L’IC attaque l’intrus le mieux repéré, puis le tour passe": "The IC attacks the best-known intruder, then the turn passes",
+  "Agir et passer": "Act and pass",
+  "Ouvrir la Matrice": "Open the Matrix",
+  "{name} rejoint l’initiative ({roll}).": "{name} joins the initiative ({roll}).",
+  "IC": "IC",
+  "Agent": "Agent"
 }

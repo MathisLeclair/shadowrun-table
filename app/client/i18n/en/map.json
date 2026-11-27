@@ -438,5 +438,7 @@
   "La bibliothèque a changé depuis ta dernière synchronisation (v{lib}, ta carte : v{mine})": "The library changed since your last sync (v{lib}, your map: v{mine})",
   "Version introuvable": "Version not found",
   "Pas de version d’origine pour cette carte": "No original version for this map",
-  "Identifiant invalide (lettres minuscules, chiffres et tirets)": "Invalid id (lowercase letters, digits and dashes)"
+  "Identifiant invalide (lettres minuscules, chiffres et tirets)": "Invalid id (lowercase letters, digits and dashes)",
+  "📷✕ {name}": "📷✕ {name}",
+  "📷 {name}": "📷 {name}"
 }

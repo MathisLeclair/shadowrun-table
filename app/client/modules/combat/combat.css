@@ -179,3 +179,7 @@
 .atk-target { display: flex; flex-direction: column; gap: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel2); }
 .atk-action-note { font-size: 12px; color: var(--dim); }
 @media (max-width: 700px) { .atk-tray { bottom: 70px; left: 8px; } }
+
+/* Matrix entries (IC of a host, a decker's agent) */
+.cbt-entry.cbt-matrix .cbt-avatar { background: #0c1116; color: var(--cyan); font-size: 16px; display: flex; align-items: center; justify-content: center; }
+.cbt-entry.cbt-matrix.d-hostile .cbt-avatar { color: var(--magenta); }

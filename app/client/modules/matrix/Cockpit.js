@@ -2,17 +2,17 @@
 import { useEffect, useState } from 'preact/hooks';
 import { html, Button, Badge, Select, TextInput, confirmAction } from '../../lib/ui.js';
 import { send } from '../../lib/net.js';
-import { goTab } from '../../lib/ui-store.js';
+import { goTab, toast } from '../../lib/ui-store.js';
 import { t, getLang } from '../../lib/i18n.js';
 import { attr } from '/shared/sr5.js';
 import {
   ASDF, ASDF_LABELS, ASDF_SHORT, MODES, MODE_LABELS, ACTIONS, ACTION_CATS, ACTION_TYPES, IC_TYPES, PROGRAM_BY_ID,
   deckStats, actionPool, matrixInitiative, agentInitiative, programSlots, availablePrograms, detectAgents, isIllegal,
-  isCyberdeck, matrixMonitor, programId,
+  isCyberdeck, matrixMonitor, programId, DEVICE_LINK_KINDS, DEVICE_CMD_LABELS, nextStepHints, deviceWorks, ACTION_BY_ID,
 } from '/shared/matrix.js';
 import {
   isGM, act, personaOf, OsMeter, MatrixMonitor, MatrixLog, marksDots, actionName, icName, markName, linkLockName, programLabel,
-  asdfShort, asdfLabel, modeLabel, marksText, assistText, agentLabel,
+  asdfShort, asdfLabel, modeLabel, marksText, assistText, agentLabel, deviceLinkState, linkStateText,
 } from './common.js';
 import ActionModal from './ActionModal.js';
 import { BookRef, RuleRef } from '../books/BookRef.js';
@@ -239,10 +239,19 @@ function HostPanel({ game, actor, persona, open }) {
       <${Button} small variant="primary" disabled=${f.protected} onClick=${() => open('editFile', { targetId: `file:${cur.id}:${f.id}`, fileOp: 'copy' })}>${t('Éditer')}</${Button}>
     </div>`)}
     ${perceived && (cur.devices || []).length > 0 && html`<div class="mx-panel-sub">${t('Appareils esclaves')}</div>`}
-    ${perceived && (cur.devices || []).map((d) => html`<div class="mx-filerow" key=${d.id}>
-      <span class="grow">${d.name} <span class="faint small">${t('indice {n}', { n: d.rating })}</span>${d.offline ? html` <${Badge}>${t('hors ligne')}</${Badge}>` : ''}${d.bricked ? html` <${Badge} color="red">${t('briqué')}</${Badge}>` : ''}</span>
-      <${Button} small variant="primary" onClick=${() => open('controlDevice', { targetId: `device:${cur.id}:${d.id}` })}>${t('Contrôler')}</${Button}>
-    </div>`)}
+    ${perceived && (cur.devices || []).map((d) => {
+      const kind = d.link?.kind && DEVICE_LINK_KINDS[d.link.kind] ? d.link.kind : null;
+      const state = kind ? deviceLinkState(game, d) : null;
+      // Quick map commands: only the ones that change something (no « Ouvrir » on an open door).
+      const useless = (c) => (kind === 'door' ? (c === 'open' && state === 'open') || (c === 'close' && state !== 'open') || (c === 'lock' && state === 'locked') || (c === 'unlock' && state !== 'locked') : c === state);
+      const cmds = kind ? DEVICE_LINK_KINDS[kind].cmds.filter((c) => !useless(c)) : [];
+      return html`<div class="mx-filerow mx-devrow" key=${d.id}>
+        <span class="grow">${d.name} <span class="faint small">${t('indice {n}', { n: d.rating })}</span>${d.offline ? html` <${Badge}>${t('hors ligne')}</${Badge}>` : ''}${d.bricked ? html` <${Badge} color="red">${t('briqué')}</${Badge}>` : ''}${d.formatted ? html` <${Badge} color="red">${t('formaté')}</${Badge}>` : ''}
+          ${kind && html` <span class="mx-link-chip" title=${t('Relié à la carte : {what}', { what: t(DEVICE_LINK_KINDS[kind].label) })}>${linkStateText(kind, state)}</span>`}</span>
+        ${deviceWorks(d) && cmds.map((c) => html`<${Button} small key=${c} disabled=${!persona.online} onClick=${() => open('controlDevice', { targetId: `device:${cur.id}:${d.id}`, deviceCmd: c })}>${t(DEVICE_CMD_LABELS[kind][c])}</${Button}>`)}
+        <${Button} small variant="primary" onClick=${() => open('controlDevice', { targetId: `device:${cur.id}:${d.id}` })}>${t('Contrôler')}</${Button}>
+      </div>`;
+    })}
     <div class="row wrap mx-host-foot">
       <${Button} small onClick=${() => open('matrixPerception', { targetId: `host:${cur.id}` })}>${t('Perception')}</${Button}>
       <${Button} small variant="ghost" onClick=${() => act('matrix/action', { actorId: actor.id, actionId: 'exitHost' })}>${t('Sortir de l’hôte')}</${Button}>
@@ -250,19 +259,69 @@ function HostPanel({ game, actor, persona, open }) {
   </div>`;
 }
 
-function PaydataPanel({ persona }) {
+function PaydataPanel({ game, actor, persona, canEdit }) {
   const [openId, setOpenId] = useState(null);
   const files = persona.files || [];
   if (!files.length) return null;
+  const gm = isGM(game);
+  const share = async (f) => {
+    const q = gm
+      ? t('Montrer « {file} » à tous les joueurs (nouveau document dans leurs Dossiers) ?', { file: f.name })
+      : t('Partager « {file} » avec l’équipe (nouvelle note de groupe, dossier Matrice) ?', { file: f.name });
+    if (await confirmAction(q)) {
+      const r = await act('matrix/shareFile', { actorId: actor.id, fileId: f.id });
+      if (r) toast(gm ? t('Document révélé aux joueurs.') : t('Note de groupe créée.'), 'success');
+    }
+  };
   return html`<div class="mx-panel">
     <div class="mx-panel-title">${t('Données récupérées ({n})', { n: files.length })}</div>
     ${files.map((f) => html`<div class="mx-paydata" key=${f.id}>
-      <button type="button" class="mx-paydata-head" onClick=${() => setOpenId(openId === f.id ? null : f.id)}>
-        <span class="grow">${f.name}</span><span class="faint small">${f.hostName}${f.readOnly ? ` · ${t('lu')}` : ''}</span>
-      </button>
+      <div class="row">
+        <button type="button" class="mx-paydata-head grow" onClick=${() => setOpenId(openId === f.id ? null : f.id)}>
+          <span class="grow">${f.name}</span><span class="faint small">${f.hostName}${f.readOnly ? ` · ${t('lu')}` : ''}${f.value != null ? ` · ${f.value}¥` : ''}</span>
+        </button>
+        ${f.shared && html`<${Badge} color="green" title=${t('Déjà partagé avec l’équipe')}>${t('partagé')}</${Badge}>`}
+        ${canEdit && html`<${Button} small variant="ghost" title=${gm ? t('Révéler aux joueurs (Dossiers)') : t('Créer une note de groupe avec ce fichier')} onClick=${() => share(f)}>${t('Partager')}</${Button}>`}
+      </div>
       ${openId === f.id && html`<div class="mx-paydata-body">${f.content || html`<span class="muted">${t('Contenu à décrire par le MJ.')}</span>`}</div>`}
     </div>`)}
   </div>`;
+}
+
+/** « Conseils » panel: what to do next, each with a button opening the right action. Toggled per viewer (kept in this browser). */
+function HintsPanel({ game, actor, persona, open }) {
+  const hints = nextStepHints({ actor, persona, hosts: game.matrix?.hosts || {} }).slice(0, 4);
+  if (!hints.length) return null;
+  const run = (h) => {
+    const a = ACTION_BY_ID[h.actionId];
+    if (!a) return;
+    if (a.noTest) act('matrix/action', { actorId: actor.id, actionId: a.id, targetId: h.targetId });
+    else open(a.id, { targetId: h.targetId, ...(h.preset || {}) });
+  };
+  return html`<div class="mx-panel mx-hints">
+    <div class="mx-panel-title">💡 ${t('Conseils')}</div>
+    ${hints.map((h, i) => html`<div class=${'mx-hint tone-' + h.tone} key=${i}>
+      <span class="grow">${t(h.key, h.params)}</span>
+      ${h.actionId && ACTION_BY_ID[h.actionId] && html`<${Button} small variant=${i === 0 ? 'primary' : 'ghost'} onClick=${() => run(h)}>${actionName(ACTION_BY_ID[h.actionId])}</${Button}>`}
+    </div>`)}
+  </div>`;
+}
+
+function useHintsToggle() {
+  const [on, setOn] = useState(() => {
+    try {
+      return localStorage.getItem('sr.matrix.hints') !== '0';
+    } catch {
+      return true;
+    }
+  });
+  const set = (v) => {
+    setOn(v);
+    try {
+      localStorage.setItem('sr.matrix.hints', v ? '1' : '0');
+    } catch {}
+  };
+  return [on, set];
 }
 
 function ActionsPanel({ actor, persona, open }) {
@@ -299,6 +358,7 @@ function ActionsPanel({ actor, persona, open }) {
 export default function Cockpit({ game, actorId }) {
   const actor = game.actors?.[actorId];
   const [modal, setModal] = useState(null); // { actionId, preset }
+  const [hintsOn, setHintsOn] = useHintsToggle();
   const gm = isGM(game);
   const canEdit = !!actor && (gm || (game.me.characterIds || []).includes(actor.id));
   const isVirtual = !!actor?.matrix && !game.matrix?.personas?.[actorId];
@@ -327,9 +387,11 @@ export default function Cockpit({ game, actorId }) {
       </div>
       <${ModeSwitch} game=${game} actor=${actor} persona=${persona} onJackOut=${() => open('jackOut')} />
       <div class="mx-deck-btns">
+        ${!gm && html`<${Button} small variant=${hintsOn ? 'accent' : 'ghost'} onClick=${() => setHintsOn(!hintsOn)} title=${t('Afficher ou masquer les conseils (que faire ensuite)')}>💡 ${hintsOn ? t('Conseils : oui') : t('Conseils : non')}</${Button}>`}
         <${Button} small variant="ghost" disabled=${!canEdit || persona.bricked} onClick=${reboot} title=${t('Remet le Score d’Overwatch à 0')}>${t('Redémarrer le deck')}</${Button}>
       </div>
     </header>
+    ${hintsOn && canEdit && !gm && html`<${HintsPanel} game=${game} actor=${actor} persona=${persona} open=${open} />`}
     <div class="mx-grid">
       <div class="mx-col">
         <${AsdfPanel} actor=${actor} persona=${persona} canEdit=${canEdit} />
@@ -339,7 +401,7 @@ export default function Cockpit({ game, actorId }) {
       <div class="mx-col">
         <${StatusPanel} game=${game} actor=${actor} persona=${persona} />
         <${MarksPanel} persona=${persona} onErase=${persona.online ? (m) => open('eraseMark', { targetId: `mark:${m.sourceId}` }) : null} />
-        <${PaydataPanel} persona=${persona} />
+        <${PaydataPanel} game=${game} actor=${actor} persona=${persona} canEdit=${canEdit} />
       </div>
       <div class="mx-col">
         <${HostPanel} game=${game} actor=${actor} persona=${persona} open=${open} />

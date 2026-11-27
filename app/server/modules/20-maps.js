@@ -132,6 +132,8 @@ function cleanRegion(r, map) {
     h: int(r.h, 1, map.height - y, 1),
     ...(color(r.color, '') ? { color: color(r.color, '') } : {}),
     gmOnly: !!r.gmOnly,
+    // Camera zone driven by a host device (matrix module): 'on' = filmed, 'off' = feed cut. Absent = no camera.
+    ...(r.cams === 'on' || r.cams === 'off' ? { cams: r.cams } : {}),
   };
 }
 /** Segment wall door: null or { state, kind: 'door'|'secret', name? }. Accepts true / legacy tile kinds. */
@@ -501,7 +503,7 @@ function patchMapFields(ctx, map, patch) {
 // Doors (tile doors in map.doors, segment doors = walls with a `door`)
 // ---------------------------------------------------------------------------
 /** { type: 'tile', door } | { type: 'wall', wall, door } | null */
-function findAnyDoor(map, doorId) {
+export function findAnyDoor(map, doorId) {
   const d = map.doors.find((x) => x.id === doorId);
   if (d) return { type: 'tile', door: d };
   const w = (map.walls || []).find((x) => x.id === doorId && x.door);

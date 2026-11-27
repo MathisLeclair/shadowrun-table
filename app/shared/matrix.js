@@ -470,6 +470,94 @@ export function osLevel(os) {
   return { id: 'calm', label: tk('Discret'), color: 'green' };
 }
 
+// ---------------------------------------------------------------------------
+// Overwatch over time (SR5 p. 232): every 15 minutes after the first tally, the OS rises by 2D6 (GM, in secret).
+// ---------------------------------------------------------------------------
+export const OS_TICK_MS = 15 * 60 * 1000;
+
+// ---------------------------------------------------------------------------
+// Host devices linked to the map: a door (tile door or segment-wall door), a light, or a camera zone (map region).
+// device.link = { mapId, kind, targetId }. Commands go through Control Device / Spoof Command (deviceCmd).
+// ---------------------------------------------------------------------------
+export const DEVICE_LINK_KINDS = {
+  door: { label: tk('Porte'), icon: '🚪', cmds: ['open', 'close', 'unlock', 'lock'] },
+  light: { label: tk('Éclairage'), icon: '💡', cmds: ['off', 'on'] },
+  camera: { label: tk('Caméras (zone)'), icon: '📷', cmds: ['off', 'on'] },
+};
+/** Command labels by link kind (French keys). */
+export const DEVICE_CMD_LABELS = {
+  door: { open: tk('Ouvrir'), close: tk('Fermer'), unlock: tk('Déverrouiller'), lock: tk('Verrouiller') },
+  light: { off: tk('Éteindre'), on: tk('Allumer') },
+  camera: { off: tk('Couper le flux'), on: tk('Rétablir le flux') },
+};
+/** Is the device working (powered, not rebooting, not destroyed)? */
+export const deviceWorks = (d) => !!d && !d.offline && !d.bricked && !d.formatted;
+
+// ---------------------------------------------------------------------------
+// Next-step hints for the decker (cockpit « Conseils » toggle). Pure: works on the player's filtered view.
+// Returns [{ key, params?, actionId?, targetId?, preset?, tone: 'info'|'warn'|'danger' }], most urgent first.
+// ---------------------------------------------------------------------------
+const TONE_RANK = { danger: 0, warn: 1, info: 2 };
+/** Most urgent first (stable: same urgency keeps the order of the steps). */
+const byUrgency = (list) => list.sort((a, b) => (TONE_RANK[a.tone] ?? 2) - (TONE_RANK[b.tone] ?? 2));
+export function nextStepHints({ actor, persona, hosts = {} }) {
+  const out = [];
+  if (!actor?.matrix || !persona) return out;
+  const add = (key, extra = {}) => out.push({ key, tone: 'info', ...extra });
+  const ds = deckStats(actor, persona);
+  const marksOn = (key) => (persona.marks || []).find((m) => m.targetId === key)?.count || 0;
+  if (persona.bricked) {
+    add(tk('Ton deck est briqué : demande au MJ de le réparer avant de te reconnecter.'), { tone: 'danger' });
+    return byUrgency(out);
+  }
+  if (!persona.online) {
+    add(tk('Connecte-toi : RV chaude = +2 dés et plus d’initiative, mais le biofeedback fait des dommages physiques.'));
+    if ((persona.overwatch || 0) > 0) add(tk('Ton Score d’Overwatch n’est pas à zéro : redémarrer ton deck le remet à 0.'));
+    return byUrgency(out);
+  }
+  const os = persona.overwatchHidden ? persona.osKnown : persona.overwatch;
+  if (persona.linkLocked) add(tk('Verrou de lien : tu ne peux pas te déconnecter normalement. Détruis l’IC responsable, ou tente « Se déconnecter (Jack Out) ».'), { tone: 'danger', actionId: 'jackOut' });
+  if (ds.monitor && (persona.matrixDamage || 0) >= ds.monitor - 3) add(tk('Ton deck est presque briqué : sors de l’hôte ou déconnecte-toi.'), { tone: 'danger' });
+  if (os !== null && os !== undefined && os >= 30) add(tk('Score d’Overwatch {os}/40 : la convergence approche. Termine vite ou redémarre ton deck.'), { tone: 'danger', params: { os } });
+  else if (persona.overwatchHidden && (persona.overwatch === null || persona.overwatch === undefined)) add(tk('Tu ne connais pas ton Score d’Overwatch : vérifie-le de temps en temps (action « Vérifier le Score d’Overwatch »).'), { actionId: 'checkOverwatch' });
+  if (persona.agent?.loaded && !persona.pendingAssist) add(tk('Ton agent est chargé : fais-le assister ton prochain test (+dés, +1 limite) depuis « Lancer ».'));
+  else if (persona.agent && !persona.agent.loaded) add(tk('Ton agent dort : charge-le (panneau Agent) pour qu’il t’assiste ou agisse à ta place.'));
+  const cur = persona.hostId ? hosts[persona.hostId] : null;
+  if (!cur) {
+    const list = Object.values(hosts).filter((h) => h.visible || marksOn(`host:${h.id}`));
+    if (!list.length) {
+      add(tk('Aucun hôte repéré : le MJ te le révélera quand tu sauras où frapper (ou fais une Recherche matricielle).'), { actionId: 'matrixSearch' });
+      return byUrgency(out);
+    }
+    for (const h of list) {
+      if (marksOn(`host:${h.id}`)) add(tk('Tu as une marque sur {host} : entre dans l’hôte.'), { params: { host: h.name }, actionId: 'enterHost', targetId: `host:${h.id}` });
+      else add(tk('Place une marque sur {host} : Hacker à la volée (discret, Corruption) ou Force brute (bruyant, Attaque).'), { params: { host: h.name }, actionId: 'hackOnTheFly', targetId: `host:${h.id}` });
+    }
+    return byUrgency(out);
+  }
+  const hostId = cur.id;
+  const ic = (cur.ic || []).filter((x) => x.type && x.type !== 'patrol');
+  if (cur.alert === 'active' && ic.length) add(tk('L’hôte est en alerte et ses IC attaquent : abats-les (Pointe de données), passe en Défense matricielle totale, ou finis vite et sors.'), { tone: 'warn', actionId: 'dataSpike', targetId: `ic:${hostId}:${ic[0].id}` });
+  else if (cur.spotted) add(tk('La patrouille t’a repéré(e) : l’hôte va lancer des IC. Cache-toi (Se cacher) ou dépêche-toi.'), { tone: 'warn', actionId: 'hide', targetId: `host:${hostId}` });
+  if (!cur.perceived) {
+    add(tk('Fais une Perception matricielle sur l’hôte : elle révèle son indice, ses IC, ses fichiers et ses appareils.'), { actionId: 'matrixPerception', targetId: `host:${hostId}` });
+    return byUrgency(out);
+  }
+  const copied = new Set((persona.files || []).map((f) => f.sourceId));
+  for (const f of cur.files || []) {
+    const tid = `file:${hostId}:${f.id}`;
+    if (f.protected) add(tk('« {file} » est protégé : craque-le d’abord (Craquer un fichier).'), { params: { file: f.name }, actionId: 'crackFile', targetId: tid });
+    else if (f.bomb > 0 && !f.mine) add(tk('« {file} » est piégé (bombe {n}) : désamorce-la avant d’y toucher.'), { tone: 'warn', params: { file: f.name, n: f.bomb }, actionId: 'disarmDataBomb', targetId: tid });
+    else if (!copied.has(f.id)) add(tk('Copie « {file} » dans ton deck (Éditer un fichier).'), { params: { file: f.name }, actionId: 'editFile', targetId: tid, preset: { fileOp: 'copy' } });
+  }
+  for (const d of cur.devices || []) {
+    if (!d.link?.kind || !deviceWorks(d)) continue;
+    add(tk('{device} est relié à la carte : prends-en le contrôle pour aider l’équipe.'), { params: { device: d.name }, actionId: 'controlDevice', targetId: `device:${hostId}:${d.id}` });
+  }
+  if (out.every((h) => !h.actionId || h.actionId === 'jackOut')) add(tk('Rien d’évident à faire ici : sors de l’hôte avant que ton Score d’Overwatch grimpe.'), { actionId: 'exitHost' });
+  return byUrgency(out);
+}
+
 /** Dumpshock: 6 DV, Physical after hot sim, Stun after cold sim, none in AR; resisted with Willpower + Firewall. */
 export function dumpshock(mode) {
   if (mode === 'hot') return { dv: DUMPSHOCK_DV, type: 'P' };

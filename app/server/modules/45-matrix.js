@@ -10,11 +10,16 @@ import {
   PROGRAM_BY_ID, isIllegal, isCyberdeck, isPermutation, identityAsdf, deckStats, actionPool, hostDefensePool,
   personaDefensePool, programId, programSlots, programSum, availablePrograms, detectAgents, matrixMonitor,
   matrixInitiative, dumpshock, hostAttributes, defaultIcFor, icAttackPool, skillRating, loadedProgramIds,
+  OS_TICK_MS, DEVICE_LINK_KINDS, DEVICE_CMD_LABELS, deviceWorks,
 } from '../../shared/matrix.js';
 import { uid, deepClone, slug } from '../../shared/util.js';
 import { cleanConditions } from '../../shared/modifiers.js';
 import { actorModifiers, deriveFull } from '../lib/modifiers.js';
 import { formatFr } from '../lib/i18n.js';
+import combatModule, { combatHooks, upsertVirtualEntry, setVirtualOut, endTurnOf, isVirtual } from './30-combat.js';
+import { refreshFog, findAnyDoor } from './20-maps.js';
+import notesModule from './75-notes.js';
+import campaignModule from './70-campaign.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -100,6 +105,10 @@ function slice(state) {
   if (!isObj(m.hosts)) m.hosts = {};
   if (!isObj(m.settings)) m.settings = {};
   m.settings.hideOverwatch = !!m.settings.hideOverwatch;
+  // osTimer: +2D6 OS every 15 real minutes online (SR5 p. 232), applied at the next Matrix action. autoLaunchIc: during a
+  // fight, an alerted host with an intruder launches its next IC at each new Combat Turn (SR5 p. 248).
+  m.settings.osTimer = !!m.settings.osTimer;
+  m.settings.autoLaunchIc = m.settings.autoLaunchIc !== false;
   return m;
 }
 
@@ -114,6 +123,8 @@ function blankPersona(actor) {
     penalties: {}, linkLocked: null, fullDefense: false, bricked: false, traced: false, files: [],
     programSlots: computeSlots(actor), slotsOverride: false, deviceName: actor.matrix?.device || '',
     agent: null, pendingAssist: null,
+    osClock: null, // start of the current 15-minute Overwatch period (set when the OS starts being tallied)
+    hostConverged: null, // hostId: convergence happened inside this host (leaving it brings the grid's demiGOD)
   };
 }
 
@@ -290,6 +301,7 @@ function goOffline(ctx, actor, persona, { dumped }) {
   persona.fullDefense = false;
   persona.linkLocked = null;
   persona.pendingAssist = null;
+  persona.hostConverged = null;
   if (dumped) {
     const s = applyDumpshock(ctx, actor, persona, mode);
     if (s) out.push(s);
@@ -301,6 +313,7 @@ function goOffline(ctx, actor, persona, { dumped }) {
 function rebootDeck(ctx, actor, persona) {
   const wasOnline = persona.online;
   persona.overwatch = 0;
+  persona.osClock = null;
   persona.osKnown = null;
   persona.marks = [];
   persona.marksOnMe = [];
@@ -340,16 +353,35 @@ function damageAgent(actor, persona, boxes) {
   return out;
 }
 
-/** Convergence: 12 boxes of matrix damage, forced reboot (dumpshock), marks lost, physical location revealed. */
-function converge(ctx, actor, persona) {
-  const out = [{ t: 'CONVERGENCE ! Le GOD s’abat sur {name}.', params: { name: actor.name } }];
-  const mon = matrixMonitor(actor.matrix?.rating);
-  persona.matrixDamage = Math.min(mon, persona.matrixDamage + CONVERGENCE_DV);
-  out.push({ t: '{n} cases de dommages matriciels ({dmg}/{mon}).', params: { n: CONVERGENCE_DV, dmg: persona.matrixDamage, mon } });
-  if (persona.matrixDamage >= mon) {
-    persona.bricked = true;
-    out.push({ t: 'Le deck est briqué.' });
+/**
+ * Convergence (SR5 p. 232 and p. 247). On the grid: 12 DV Matrix damage resisted with Device Rating + Firewall, forced
+ * reboot (dumpshock in VR), marks lost, physical location revealed. Inside a host: the host puts 3 marks on the decker,
+ * goes on alert and deploys IC; the decker stays online, and leaving the host brings the grid convergence at once.
+ * grid = true forces the grid version (leaving the host after a host convergence).
+ */
+function converge(ctx, actor, persona, { grid = false } = {}) {
+  const host = !grid && persona.online && persona.hostId ? slice(ctx.state).hosts[persona.hostId] : null;
+  if (host) {
+    const out = [{ t: 'CONVERGENCE dans l’hôte {host} ! Il pose 3 marques sur {name} et déploie ses IC.', params: { host: host.name, name: actor.name } }];
+    persona.hostConverged = host.id;
+    addMarkOnMe(persona, `host:${host.id}`, host.name, MAX_MARKS);
+    const s = setAlert(ctx, host, { t: 'convergence' });
+    if (s) out.push(s);
+    const l = launchNextIc(ctx, host);
+    if (l) out.push(l);
+    out.push({ t: 'Sortir de l’hôte déclenchera aussitôt la convergence du GOD.' });
+    persona.convergedAt = Date.now();
+    mlog(ctx, { author: 'GOD', msgs: out, matrix: { event: 'convergence', actorId: actor.id, hostId: host.id } });
+    sfx(ctx, 'alarm');
+    sfx(ctx, 'matrix-glitch');
+    return out;
   }
+  const out = [{ t: 'CONVERGENCE ! Le GOD s’abat sur {name}.', params: { name: actor.name } }];
+  const ds = deckStats(actor, persona);
+  const res = roll(ds.deviceRating + ds.eff.firewall + programSum(persona, 'resistMatrix'), {}, 'actor');
+  const boxes = Math.max(0, CONVERGENCE_DV - res.hits);
+  out.push({ t: 'VD {dv} : {hits} en résistance.', params: { dv: CONVERGENCE_DV, hits: hitsM(res.hits) } });
+  if (boxes) out.push(...damageDeck(ctx, actor, persona, boxes));
   out.push({ t: 'Deck redémarré de force : toutes les marques sont perdues et la position physique est transmise aux autorités et au propriétaire de la grille.' });
   out.push(...rebootDeck(ctx, actor, persona));
   persona.traced = true;
@@ -377,6 +409,172 @@ function setAlert(ctx, host, reason) {
   sfx(ctx, 'alarm');
   return s;
 }
+
+/** Personas online inside a host. */
+function intrudersOf(state, host) {
+  return Object.values(slice(state).personas).filter((p) => p.online && p.hostId === host.id && state.actors?.[p.actorId]?.matrix);
+}
+
+/** Launch (or relaunch) an IC of the host: logged (public when someone is inside), added to a running fight. */
+function activateIc(ctx, host, ic) {
+  ic.active = true;
+  ic.crashed = false;
+  ic.damage = 0;
+  const inside = intrudersOf(ctx.state, host);
+  const msg = { t: '{host} lance : {ic}.', params: { host: host.name, ic: { t: IC_TYPES[ic.type].fr } } };
+  mlog(ctx, { author: host.name, gmOnly: !inside.length, msgs: [msg], matrix: { event: 'icLaunch', hostId: host.id, icType: ic.type } });
+  if (inside.length) sfx(ctx, 'matrix-glitch', 'all');
+  return msg;
+}
+
+/** SR5 p. 248: an alerted host launches one IC per Combat Turn — the next one of its suite not yet running. Message or null. */
+function launchNextIc(ctx, host) {
+  const ic = (host.ic || []).find((x) => !x.active && !x.crashed && IC_TYPES[x.type]);
+  return ic ? activateIc(ctx, host, ic) : null;
+}
+
+// ---------------------------------------------------------------------------
+// Overwatch over time (SR5 p. 232): +2D6 every 15 minutes after the first tally
+// ---------------------------------------------------------------------------
+/** Add to the OS; the first points start the 15-minute clock. */
+function addOverwatch(ctx, persona, n) {
+  if (!(n > 0)) return;
+  if (!persona.overwatch || !persona.osClock) persona.osClock = ctx.now || Date.now();
+  persona.overwatch = Math.min(OS_MAX, persona.overwatch + n);
+}
+const roll2d6 = () => 2 + Math.floor(Math.random() * 6) + Math.floor(Math.random() * 6);
+
+/** One or more 15-minute ticks on a persona (GM only log). Returns { added, msgs }. */
+function osTick(ctx, actor, persona, ticks = 1) {
+  let added = 0;
+  for (let i = 0; i < ticks; i++) added += roll2d6();
+  const before = persona.overwatch;
+  addOverwatch(ctx, persona, added);
+  const params = { name: actor.name, n: added, os: persona.overwatch, ticks };
+  mlog(ctx, { author: 'GOD', gmOnly: true, msgs: [ticks === 1 ? { t: 'Le temps passe : SO de {name} +{n} (2D6) → {os}.', params } : { t: 'Le temps passe ({ticks} × 15 min) : SO de {name} +{n} → {os}.', params }], matrix: { event: 'osTick', actorId: actor.id } });
+  let convergence = null;
+  if (before < OS_MAX && persona.overwatch >= OS_MAX && persona.online && !persona.hostConverged) convergence = converge(ctx, actor, persona);
+  return { added, convergence };
+}
+
+/** Automatic timer (setting osTimer): applied lazily at the start of every Matrix action. */
+function tickOverwatch(ctx) {
+  const m = slice(ctx.state);
+  if (!m.settings.osTimer) return;
+  const now = ctx.now || Date.now();
+  for (const p of Object.values(m.personas)) {
+    if (!p.online || !(p.overwatch > 0) || !p.osClock) continue;
+    const ticks = Math.floor((now - p.osClock) / OS_TICK_MS);
+    if (ticks <= 0) continue;
+    p.osClock += ticks * OS_TICK_MS;
+    const actor = ctx.state.actors?.[p.actorId];
+    if (actor) osTick(ctx, actor, p, Math.min(ticks, 20));
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Host devices ↔ map (doors, lights, camera zones)
+// ---------------------------------------------------------------------------
+/** The map object a device is linked to: { map, kind, door?, light?, region? } or null. */
+function linkedObject(state, device) {
+  const l = device?.link;
+  if (!l || !DEVICE_LINK_KINDS[l.kind]) return null;
+  const map = state.maps?.[l.mapId];
+  if (!map) return null;
+  if (l.kind === 'door') {
+    const found = findAnyDoor(map, l.targetId);
+    return found ? { map, kind: 'door', door: found.door } : null;
+  }
+  if (l.kind === 'light') {
+    const light = (map.lights || []).find((x) => x.id === l.targetId);
+    return light ? { map, kind: 'light', light } : null;
+  }
+  const region = (map.regions || []).find((x) => x.id === l.targetId);
+  return region ? { map, kind: 'camera', region } : null;
+}
+
+/** Current state of the linked object, for the cockpit: door state, 'on'/'off'. */
+function linkState(state, device) {
+  const o = linkedObject(state, device);
+  if (!o) return null;
+  if (o.kind === 'door') return o.door.state;
+  if (o.kind === 'light') return o.light.on ? 'on' : 'off';
+  return o.region.cams || 'on';
+}
+
+/** Lights and cameras follow the device: on only while it works and was not switched off. Doors keep their state. */
+function syncDeviceLink(ctx, device) {
+  const o = linkedObject(ctx.state, device);
+  if (!o || o.kind === 'door') return;
+  const on = deviceWorks(device) && device.on !== false;
+  if (o.kind === 'light') o.light.on = on;
+  else o.region.cams = on ? 'on' : 'off';
+  refreshFog(ctx.state, o.map);
+}
+
+/** Apply a command (DEVICE_CMD_LABELS) to the linked map object. Returns a message or null. */
+function applyDeviceCmd(ctx, device, cmd) {
+  const o = linkedObject(ctx.state, device);
+  if (!o || !DEVICE_CMD_LABELS[o.kind]?.[cmd]) return null;
+  if (o.kind === 'door') {
+    const before = o.door.state;
+    o.door.state = cmd === 'open' ? 'open' : cmd === 'lock' ? 'locked' : 'closed';
+    if (before !== o.door.state) sfx(ctx, o.door.state === 'open' ? 'door-open' : before === 'open' ? 'door-close' : 'door-locked');
+  } else {
+    device.on = cmd === 'on';
+    syncDeviceLink(ctx, device);
+  }
+  refreshFog(ctx.state, o.map);
+  return { t: 'Sur la carte : {device} → {cmd}.', params: { device: device.name, cmd: { t: DEVICE_CMD_LABELS[o.kind][cmd] } } };
+}
+
+// ---------------------------------------------------------------------------
+// Combat tracker sync: IC of a host with a decker in the fight, loaded agents of deckers in the fight
+// ---------------------------------------------------------------------------
+const icEntryKey = (hostId, icId) => `ic:${hostId}:${icId}`;
+const agentEntryKey = (actorId) => `agent:${actorId}`;
+
+function syncMatrixCombat(ctx) {
+  const c = ctx.state.combat;
+  if (!c?.active) return;
+  const m = slice(ctx.state);
+  const fighting = new Set(c.entries.filter((e) => !isVirtual(e) && !e.out && e.actorId).map((e) => e.actorId));
+  const wantIc = new Map();
+  const wantAgent = new Map();
+  for (const p of Object.values(m.personas)) {
+    const actor = ctx.state.actors?.[p.actorId];
+    if (!actor?.matrix || !p.online || !fighting.has(p.actorId)) continue;
+    // The decker's own entry follows the connection mode (next initiative roll).
+    const own = c.entries.find((e) => e.actorId === p.actorId && !isVirtual(e));
+    const mode = p.mode === 'ar' ? 'physical' : p.mode;
+    if (own && own.mode !== mode && (own.mode === 'physical' || own.mode === 'ar' || own.mode === 'cold' || own.mode === 'hot')) own.mode = mode;
+    if (p.agent?.loaded) wantAgent.set(agentEntryKey(p.actorId), { p, actor });
+    const host = p.hostId ? m.hosts[p.hostId] : null;
+    if (host) for (const ic of host.ic || []) if (ic.active && IC_TYPES[ic.type]) wantIc.set(icEntryKey(host.id, ic.id), { host, ic });
+  }
+  const gone = c.entries.filter((e) => isVirtual(e) && !e.out && !wantIc.has(e.matrixKey) && !wantAgent.has(e.matrixKey)).map((e) => e.matrixKey);
+  for (const key of gone) setVirtualOut(ctx, key);
+  for (const [key, { host, ic }] of wantIc) {
+    const nameI18n = icNameMsg(ic.type, host.name);
+    upsertVirtualEntry(ctx, { kind: 'ic', key, name: fr(nameI18n), nameI18n, hostId: host.id, icId: ic.id, disposition: 'hostile' });
+  }
+  for (const [key, { p, actor }] of wantAgent) {
+    const nameI18n = agentAuthorMsg(p.agent, actor);
+    upsertVirtualEntry(ctx, { kind: 'agent', key, name: fr(nameI18n), nameI18n, ownerId: actor.id, disposition: 'pc' });
+  }
+}
+
+// New Combat Turn: each alerted host with an intruder in the fight launches its next IC (setting autoLaunchIc).
+combatHooks.push((ctx, c, event) => {
+  if (event === 'newTurn' && slice(ctx.state).settings.autoLaunchIc) {
+    const fighting = new Set(c.entries.filter((e) => !isVirtual(e) && !e.out).map((e) => e.actorId));
+    for (const host of Object.values(slice(ctx.state).hosts)) {
+      if (host.alert !== 'active') continue;
+      if (intrudersOf(ctx.state, host).some((p) => fighting.has(p.actorId))) launchNextIc(ctx, host);
+    }
+  }
+  syncMatrixCombat(ctx);
+});
 
 // ---------------------------------------------------------------------------
 // Targets
@@ -542,6 +740,7 @@ function damageTarget(ctx, target, dv, attacker) {
     target.device.damage = Math.min(mon, (target.device.damage || 0) + boxes);
     if (target.device.damage >= mon && !target.device.bricked) {
       target.device.bricked = true;
+      syncDeviceLink(ctx, target.device);
       out.push({ t: '{device} est briqué !', params: { device: target.device.name } });
     }
   } else if (target.persona) {
@@ -608,8 +807,16 @@ function performAction(ctx, actor, persona, action, p, { agent = false } = {}) {
       if (!persona.hostId) ctx.fail('Tu n’es dans aucun hôte');
       const h = slice(ctx.state).hosts[persona.hostId];
       if (persona.linkLocked) ctx.fail('Verrou de lien : impossible de quitter l’hôte');
+      const convergedHere = persona.hostConverged && persona.hostConverged === persona.hostId;
       persona.hostId = null;
       msgs = [{ t: '{who} sort de l’hôte {host} et retourne sur la grille.', params: { who, host: h ? h.name : '' } }];
+      // SR5 p. 247: leaving a host after a convergence inside it → the grid's demiGOD converges at once.
+      if (convergedHere) {
+        persona.hostConverged = null;
+        done(msgs);
+        const conv = converge(ctx, actor, persona, { grid: true });
+        return { actionId: action.id, noTest: true, outcomes: msgs.map(fr), msgs, success: true, convergence: conv.map(fr), convergenceMsgs: conv };
+      }
     } else if (action.id === 'fullMatrixDefense') {
       persona.fullDefense = true;
       msgs = [{ t: '{who} passe en défense matricielle totale (+Volonté en défense, −10 en initiative).', params: { who } }];
@@ -694,7 +901,7 @@ function performAction(ctx, actor, persona, action, p, { agent = false } = {}) {
   // Overwatch: illegal actions add the defender's hits
   if (isIllegal(action) && dr && defHits > 0) {
     osDelta = defHits;
-    persona.overwatch = Math.min(OS_MAX, persona.overwatch + defHits);
+    addOverwatch(ctx, persona, defHits);
   }
 
   if (success) {
@@ -737,9 +944,12 @@ function performAction(ctx, actor, persona, action, p, { agent = false } = {}) {
       case 'jamSignals':
         outcomes.push({ t: 'Brouillage : bruit +{n} dans un rayon de 100 m.', params: { n: r.hits } });
         break;
-      case 'spoofCommand':
+      case 'spoofCommand': {
         outcomes.push(p.command ? { t: 'L’appareil exécute la commande usurpée : « {command} ».', params: { command: str(p.command, 120) } } : { t: 'L’appareil exécute la commande usurpée.' });
+        const mapMsg = target.device && p.deviceCmd ? applyDeviceCmd(ctx, target.device, str(p.deviceCmd, 20)) : null;
+        if (mapMsg) outcomes.push(mapMsg);
         break;
+      }
       case 'snoop':
         outcomes.push({ t: '{who} intercepte le trafic de {target}.', params: { who, target: tgt } });
         break;
@@ -748,11 +958,17 @@ function performAction(ctx, actor, persona, action, p, { agent = false } = {}) {
         outcomes.push({ t: '{target} perd la trace de {who}.', params: { target: tgt, who } });
         break;
       case 'formatDevice':
-        if (target.device) target.device.formatted = true;
+        if (target.device) {
+          target.device.formatted = true;
+          syncDeviceLink(ctx, target.device);
+        }
         outcomes.push({ t: '{target} est formaté : il ne redémarrera pas.', params: { target: tgt } });
         break;
       case 'rebootDevice':
-        if (target.device) target.device.offline = true;
+        if (target.device) {
+          target.device.offline = true;
+          syncDeviceLink(ctx, target.device);
+        }
         if (target.kind === 'persona' && target.persona?.online) outcomes.push(...rebootDeck(ctx, target.actor, target.persona));
         outcomes.push({ t: '{target} redémarre (hors ligne jusqu’à la fin du tour suivant).', params: { target: tgt } });
         break;
@@ -785,10 +1001,13 @@ function performAction(ctx, actor, persona, action, p, { agent = false } = {}) {
       case 'traceIcon':
         outcomes.push({ t: 'Position physique de {target} localisée.', params: { target: tgt } });
         break;
-      case 'controlDevice':
+      case 'controlDevice': {
         if (target.device) target.device.controlledBy = actor.id;
         outcomes.push(p.command ? { t: '{target} obéit : « {command} ».', params: { target: tgt, command: str(p.command, 120) } } : { t: '{target} obéit.', params: { target: tgt } });
+        const mapMsg = target.device && p.deviceCmd ? applyDeviceCmd(ctx, target.device, str(p.deviceCmd, 20)) : null;
+        if (mapMsg) outcomes.push(mapMsg);
         break;
+      }
       case 'editFile': {
         const f = target.file;
         const op = ['read', 'copy', 'edit', 'delete'].includes(p.fileOp) ? p.fileOp : 'copy';
@@ -800,6 +1019,7 @@ function performAction(ctx, actor, persona, action, p, { agent = false } = {}) {
             persona.files.push({ id: uid('pay'), sourceId: f.id, name: f.name, hostName: target.host.name, value: null, content: f.content || '', ts: Date.now(), readOnly: true });
           }
           outcomes.push(op === 'copy' ? { t: 'Fichier « {file} » copié dans le deck.', params: { file: f.name } } : { t: 'Fichier « {file} » lu.', params: { file: f.name } });
+          sfx(ctx, 'notify', 'gm'); // the GM may want to describe what the file says
         } else if (op === 'edit') {
           f.edited = true;
           outcomes.push(p.command ? { t: 'Fichier « {file} » modifié : {change}.', params: { file: f.name, change: str(p.command, 160) } } : { t: 'Fichier « {file} » modifié.', params: { file: f.name } });
@@ -855,7 +1075,7 @@ function performAction(ctx, actor, persona, action, p, { agent = false } = {}) {
   if (osDelta) outcomes.push({ t: 'Score d’Overwatch +{n}.', params: { n: osDelta } });
   if (pending && isIllegal(action)) outcomes.push({ t: 'Action illégale : le MJ ajoute les succès de la défense au Score d’Overwatch.' });
 
-  const converged = persona.overwatch >= OS_MAX && persona.online;
+  const converged = persona.overwatch >= OS_MAX && persona.online && !persona.hostConverged;
   const rollLabelMsg = agent ? { t: '{label} ({agent})', params: { label: labelMsg, agent: ag.name } } : labelMsg;
   const roll1 = { ...r, label: fr(rollLabelMsg), labelI18n: toI18n(rollLabelMsg), breakdown: sumParts(pc.parts) + (pc.limit ? ` [${pc.limit}]` : ''), explode: edge, edge };
   const defLabel = def && !def.pending ? fr(def.labelMsg) : '';
@@ -996,6 +1216,55 @@ function icAttack(ctx, host, ic, actor, persona) {
   return { hits: a.hits, defenseHits: d.hits, net, success: net > 0, outcomes: out.map(fr), msgs: out };
 }
 
+/** Marks the host holds on a persona. */
+const hostMarksOn = (persona, host) => persona.marksOnMe.find((m) => m.sourceId === `host:${host.id}`)?.count || 0;
+
+/**
+ * Who an IC goes after (GM « Tour de l'hôte » / « Agir » in the tracker): Patrol IC looks for intruders not spotted yet;
+ * the others attack the intruders the host knows best (spotted, then the most host marks), if they have the marks they need.
+ * Returns { actor, persona } or { reasonMsg }.
+ */
+function pickIcTarget(ctx, host, ic) {
+  const def = IC_TYPES[ic.type];
+  const icType = { t: def.fr };
+  let list = intrudersOf(ctx.state, host).map((p) => ensurePersona(ctx.state, ctx.state.actors[p.actorId]));
+  if (!list.length) return { reasonMsg: { t: '{ic} : personne dans l’hôte.', params: { ic: icType } } };
+  const spotted = new Set(host.spotted || []);
+  if (def.effect === 'spot') {
+    list = list.filter((p) => !spotted.has(p.actorId));
+    if (!list.length) return { reasonMsg: { t: '{ic} : tout le monde est déjà repéré, elle surveille.', params: { ic: icType } } };
+  } else {
+    if (def.needsMarks) list = list.filter((p) => hostMarksOn(p, host) >= def.needsMarks);
+    if (!list.length) {
+      const params = { ic: icType, n: def.needsMarks };
+      return { reasonMsg: def.needsMarks === 1 ? { t: '{ic} attend : il lui faut {n} marque de l’hôte sur sa cible.', params } : { t: '{ic} attend : il lui faut {n} marques de l’hôte sur sa cible.', params } };
+    }
+    list.sort((a, b) => Number(spotted.has(b.actorId)) - Number(spotted.has(a.actorId)) || hostMarksOn(b, host) - hostMarksOn(a, host));
+  }
+  return { persona: list[0], actor: ctx.state.actors[list[0].actorId] };
+}
+
+/** One IC acts (automatic target unless actorId). Returns { ic, result?, skipped?: message }. */
+function icTakesTurn(ctx, host, ic, actorId) {
+  if (!ic.active) ctx.fail('Cette IC n’est pas lancée');
+  let actor;
+  let persona;
+  if (actorId) {
+    actor = getActor(ctx, actorId);
+    if (!actor.matrix) ctx.fail('{name} n’a pas d’appareil matriciel', { name: actor.name });
+    persona = ensurePersona(ctx.state, actor);
+    if (!persona.online || persona.hostId !== host.id) ctx.fail('{name} n’est pas dans cet hôte', { name: actor.name });
+  } else {
+    const pick = pickIcTarget(ctx, host, ic);
+    if (!pick.persona) {
+      mlog(ctx, { author: host.name, gmOnly: true, msgs: [pick.reasonMsg], matrix: { event: 'icIdle', hostId: host.id, icType: ic.type } });
+      return { icId: ic.id, skipped: fr(pick.reasonMsg), skippedMsg: pick.reasonMsg };
+    }
+    ({ actor, persona } = pick);
+  }
+  return { icId: ic.id, actorId: actor.id, result: icAttack(ctx, host, ic, actor, persona) };
+}
+
 // ---------------------------------------------------------------------------
 // Host sanitizers (GM input)
 // ---------------------------------------------------------------------------
@@ -1017,10 +1286,13 @@ function cleanFile(x) {
 }
 function cleanDevice(x) {
   if (!isObj(x)) return null;
+  const l = x.link;
+  const link = isObj(l) && DEVICE_LINK_KINDS[l.kind] && l.mapId && l.targetId ? { mapId: str(l.mapId, 80), kind: l.kind, targetId: str(l.targetId, 80) } : null;
   return {
     id: str(x.id, 40) || uid('dev'), name: str(x.name, 80).trim() || 'Appareil', rating: clampInt(x.rating, 1, 12, 3),
     damage: clampInt(x.damage, 0, 30, 0), offline: !!x.offline, formatted: !!x.formatted, bricked: !!x.bricked,
     controlledBy: x.controlledBy ? str(x.controlledBy, 60) : null, notes: str(x.notes, 400),
+    link, on: x.on !== false,
   };
 }
 function normalizeHost(h, id) {
@@ -1047,8 +1319,15 @@ function normalizeHost(h, id) {
 // ---------------------------------------------------------------------------
 // Module
 // ---------------------------------------------------------------------------
-const any = (handler) => ({ role: 'any', handler });
-const gm = (handler) => ({ role: 'gm', handler });
+// Every Matrix action first applies the Overwatch timer (when on), then keeps the combat tracker in sync (IC, agents, VR mode).
+const wrap = (handler) => (ctx, p) => {
+  tickOverwatch(ctx);
+  const r = handler(ctx, p);
+  syncMatrixCombat(ctx);
+  return r;
+};
+const any = (handler) => ({ role: 'any', handler: wrap(handler) });
+const gm = (handler) => ({ role: 'gm', handler: wrap(handler) });
 
 // Rolls written to the log carry no roll.actorId on purpose: the LogDock would offer « 2ᵉ chance » (dice/secondChance
 // only handles kind 'roll'); the actor is in entry.matrix.actorId.
@@ -1236,6 +1515,30 @@ const actions = {
     return performAction(ctx, actor, persona, action, p);
   }),
 
+  // Owner/GM: { actorId, fileId } — share recovered paydata with the team. A player creates a party note (Notes › groupe,
+  // folder « Matrice »); the GM creates a handout revealed to every player (Dossiers). The text is stored in the table language.
+  'matrix/shareFile': any((ctx, { actorId, fileId } = {}) => {
+    const { actor, persona } = ownPersona(ctx, actorId);
+    const f = persona.files.find((x) => x.id === fileId);
+    if (!f) ctx.fail('Fichier introuvable');
+    const tr = (key, params) => (ctx.t ? ctx.t(key, params) : formatFr(key, params));
+    const head = f.hostName
+      ? tr(tk('Récupéré par {name} sur l’hôte « {host} ».'), { name: actor.name, host: f.hostName })
+      : tr(tk('Récupéré par {name} dans la Matrice.'), { name: actor.name });
+    const body = `*${head}*\n\n${f.content || tr(tk('Contenu à décrire par le MJ.'))}`;
+    let out;
+    if (ctx.isGM) {
+      const handoutId = campaignModule.actions['campaign/addHandout'].handler(ctx, { title: f.name, body });
+      campaignModule.actions['campaign/revealHandout'].handler(ctx, { handoutId, to: 'all' });
+      out = { handoutId };
+    } else {
+      out = notesModule.actions['notes/create'].handler(ctx, { scope: 'party', title: f.name, folder: tr(tk('Matrice')), body });
+      sfx(ctx, 'notify', 'gm');
+    }
+    f.shared = true;
+    return out;
+  }),
+
   // Owner/GM: end full matrix defense. { actorId, on }
   'matrix/setFullDefense': any((ctx, { actorId, on } = {}) => {
     const { persona } = ownPersona(ctx, actorId);
@@ -1261,9 +1564,13 @@ const actions = {
     const h = getHost(ctx, hostId);
     if (!isObj(patch)) ctx.fail('Modification invalide');
     const wasAlert = h.alert;
+    const devKey = (d) => `${deviceWorks(d)}|${d.on !== false}|${d.link ? `${d.link.mapId}:${d.link.kind}:${d.link.targetId}` : ''}`;
+    const devBefore = new Map((h.devices || []).map((d) => [d.id, devKey(d)]));
     const keys = ['name', 'rating', ...ASDF, 'alert', 'visible', 'notes', 'description', 'folder', 'spider', 'spiderAlert', 'ic', 'files', 'devices', 'perceivedBy', 'spotted'];
     for (const k of keys) if (patch[k] !== undefined) h[k] = patch[k];
     normalizeHost(h, h.id);
+    // Linked lights / cameras follow a device whose state or link changed (GM toggles « Hors ligne », repairs, links it).
+    for (const d of h.devices) if (devBefore.get(d.id) !== devKey(d)) syncDeviceLink(ctx, d);
     if (wasAlert !== h.alert) {
       const inside = Object.values(slice(ctx.state).personas).some((p) => p.online && p.hostId === h.id);
       const msg = h.alert === 'active' ? { t: 'L’hôte {host} passe en alerte !', params: { host: h.name } } : { t: 'L’hôte {host} revient au calme.', params: { host: h.name } };
@@ -1298,13 +1605,62 @@ const actions = {
       ic = { id: uid('ic'), type, rating: h.rating, active: false, damage: 0 };
       h.ic.push(ic);
     }
-    ic.active = true;
-    ic.crashed = false;
-    ic.damage = 0;
-    const inside = Object.values(slice(ctx.state).personas).filter((p) => p.online && p.hostId === h.id);
-    mlog(ctx, { author: h.name, gmOnly: !inside.length, msgs: [{ t: '{host} lance : {ic}.', params: { host: h.name, ic: { t: IC_TYPES[ic.type].fr } } }], matrix: { event: 'icLaunch', hostId: h.id, icType: ic.type } });
-    if (inside.length) sfx(ctx, 'matrix-glitch', 'all');
+    activateIc(ctx, h, ic);
     return { ic };
+  }),
+
+  // { hostId } — the next IC of the host's suite (not running, not crashed) is launched.
+  'matrix/launchNextIc': gm((ctx, { hostId } = {}) => {
+    const h = getHost(ctx, hostId);
+    const msg = launchNextIc(ctx, h);
+    if (!msg) ctx.fail('Toutes les IC de cet hôte tournent déjà (ou sont plantées)');
+    return { outcomes: [fr(msg)], msgs: [msg] };
+  }),
+
+  // { hostId, icId, actorId?, entryId? } — one IC acts (target picked automatically unless actorId). entryId: its combat
+  // entry, whose turn ends afterwards (« Agir et passer » in the tracker).
+  'matrix/icTurn': gm((ctx, { hostId, icId, actorId, entryId } = {}) => {
+    const h = getHost(ctx, hostId);
+    const ic = h.ic.find((x) => x.id === icId);
+    if (!ic) ctx.fail('IC introuvable');
+    const r = icTakesTurn(ctx, h, ic, actorId ? str(actorId, 60) : null);
+    if (entryId) r.advanced = endTurnOf(ctx, str(entryId, 60));
+    return r;
+  }),
+
+  // { hostId, launch = true } — the whole host acts once: an alerted host launches its next IC, then every running IC
+  // takes its action against an automatic target. Outside a fight, one click per Combat Turn.
+  'matrix/hostTurn': gm((ctx, { hostId, launch = true } = {}) => {
+    const h = getHost(ctx, hostId);
+    const msgs = [];
+    if (launch !== false && h.alert === 'active') {
+      const l = launchNextIc(ctx, h);
+      if (l) msgs.push(l);
+    }
+    const results = [];
+    for (const ic of h.ic.filter((x) => x.active && IC_TYPES[x.type])) {
+      if (!ic.active) continue; // crashed meanwhile
+      results.push(icTakesTurn(ctx, h, ic, null));
+    }
+    if (!results.length) msgs.push({ t: 'Aucune IC active dans {host}.', params: { host: h.name } });
+    return { results, outcomes: msgs.map(fr), msgs };
+  }),
+
+  // { hostId } — puts the host's spider (the alert one when the host is on alert) into the fight, without a token.
+  'matrix/spawnSpider': gm((ctx, { hostId } = {}) => {
+    const h = getHost(ctx, hostId);
+    const templateId = h.alert === 'active' ? h.spiderAlert || h.spider : h.spider || h.spiderAlert;
+    if (!templateId || !ctx.state.bestiary?.[templateId]) ctx.fail('Aucune araignée choisie pour cet hôte');
+    return combatModule.actions['bestiary/spawn'].handler(ctx, { templateId, mapId: null, addToCombat: true });
+  }),
+
+  // { actorId } — 15 minutes go by: the decker's OS rises by 2D6 (rolled in secret, GM-only log).
+  'matrix/osTick': gm((ctx, { actorId } = {}) => {
+    const actor = getActor(ctx, actorId);
+    if (!actor.matrix) ctx.fail('{name} n’a pas d’appareil matriciel', { name: actor.name });
+    const persona = ensurePersona(ctx.state, actor);
+    const r = osTick(ctx, actor, persona, 1);
+    return { added: r.added, overwatch: persona.overwatch, convergence: r.convergence ? r.convergence.map(fr) : null, convergenceMsgs: r.convergence };
   }),
 
   // { hostId, icId, patch: { active, damage, rating, detected } }
@@ -1342,9 +1698,12 @@ const actions = {
     if (!actor.matrix) ctx.fail('{name} n’a pas d’appareil matriciel', { name: actor.name });
     const persona = ensurePersona(ctx.state, actor);
     const next = delta !== undefined ? persona.overwatch + clampInt(delta, -40, 40, 0) : clampInt(value, 0, OS_MAX, persona.overwatch);
+    const before = persona.overwatch;
     persona.overwatch = Math.max(0, Math.min(OS_MAX, next));
+    if (!persona.overwatch) persona.osClock = null;
+    else if (!before || !persona.osClock) persona.osClock = ctx.now || Date.now();
     let convergence = null;
-    if (persona.overwatch >= OS_MAX && persona.online) convergence = converge(ctx, actor, persona);
+    if (persona.overwatch >= OS_MAX && persona.online && !persona.hostConverged) convergence = converge(ctx, actor, persona);
     return { overwatch: persona.overwatch, convergence: convergence ? convergence.map(fr) : null, convergenceMsgs: convergence };
   }),
 
@@ -1392,6 +1751,7 @@ const actions = {
       persona.hostId = patch.hostId || null;
     }
     if (patch.osKnown !== undefined) persona.osKnown = patch.osKnown === null ? null : clampInt(patch.osKnown, 0, OS_MAX, 0);
+    if (patch.osClock !== undefined) persona.osClock = patch.osClock === null ? null : clampInt(patch.osClock, 0, 9e15, Date.now());
     if (Array.isArray(patch.files)) persona.files = patch.files.filter(isObj).slice(0, 200).map((f) => ({ ...f, id: str(f.id, 40) || uid('pay'), name: str(f.name, 80), content: str(f.content, 4000) }));
     if (isObj(patch.agent) && persona.agent) {
       if (patch.agent.damage !== undefined) persona.agent.damage = clampInt(patch.agent.damage, 0, matrixMonitor(persona.agent.rating), 0);
@@ -1428,10 +1788,16 @@ const actions = {
     return { marksOnMe: persona.marksOnMe };
   }),
 
-  // { hideOverwatch }
+  // { hideOverwatch?, osTimer?, autoLaunchIc? }
   'matrix/settings': gm((ctx, p = {}) => {
     const m = slice(ctx.state);
     if (p.hideOverwatch !== undefined) m.settings.hideOverwatch = !!p.hideOverwatch;
+    if (p.osTimer !== undefined) {
+      m.settings.osTimer = !!p.osTimer;
+      // Turning the timer on starts the clock now (no burst of ticks for the time it was off).
+      if (m.settings.osTimer) for (const per of Object.values(m.personas)) if (per.overwatch > 0) per.osClock = ctx.now || Date.now();
+    }
+    if (p.autoLaunchIc !== undefined) m.settings.autoLaunchIc = !!p.autoLaunchIc;
     return { settings: m.settings };
   }),
 };
@@ -1500,7 +1866,10 @@ export default {
       } else out.ic = [];
       if (perceived) {
         out.files = (h.files || []).map((f) => ({ id: f.id, name: f.name, protected: f.protected, bomb: f.bomb, mine: !!f.bombBy && own.includes(f.bombBy), ...(evaluate && f.value !== null ? { value: f.value } : {}) }));
-        out.devices = (h.devices || []).map((d) => ({ id: d.id, name: d.name, rating: d.rating, offline: d.offline, formatted: d.formatted, bricked: d.bricked, damage: d.damage }));
+        out.devices = (h.devices || []).map((d) => ({
+          id: d.id, name: d.name, rating: d.rating, offline: d.offline, formatted: d.formatted, bricked: d.bricked, damage: d.damage,
+          ...(d.link && linkedObject(full, d) ? { link: { kind: d.link.kind, state: linkState(full, d) } } : {}),
+        }));
       } else {
         out.files = [];
         out.devices = [];

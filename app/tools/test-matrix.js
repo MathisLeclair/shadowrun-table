@@ -3,7 +3,7 @@
 import {
   programId, detectAgents, availablePrograms, deckStats, actionPool, matrixInitiative, matrixMonitor, ACTION_BY_ID,
   ACTIONS, PROGRAMS, IC_TYPES, hostAttributes, osLevel, dumpshock, programSlots, isPermutation, agentInitiative,
-  ACTION_CATS, ACTION_TYPES, TARGET_KIND_LABELS, HOST_PRESETS, MODE_LABELS, ASDF_LABELS,
+  ACTION_CATS, ACTION_TYPES, TARGET_KIND_LABELS, HOST_PRESETS, MODE_LABELS, ASDF_LABELS, nextStepHints, DEVICE_CMD_LABELS,
 } from '../shared/matrix.js';
 import { interpolate, stripContext } from '../client/i18n/format.js';
 import fs from 'node:fs';
@@ -107,6 +107,21 @@ const missingEn = (keys) => keys.filter((k) => !EN[k]);
   ok(Object.values(IC_TYPES).every((t) => EN[t.fr] === t.en), 'IC names match their official English name');
   const parts = actionPool(bricks, { mode: 'hot', noise: 2, asdf: null, loadedPrograms: ['Exploit'] }, ACTION_BY_ID.hackOnTheFly, { marks: 2, modifier: 1, useSpec: true, edge: true });
   ok(missingEn(parts.parts.concat(parts.limitParts).filter((p) => p.key).map((p) => p.key)).length === 0, 'pool part keys translated');
+  // Next-step hints (cockpit « Conseils »)
+  const hosts = { h1: { id: 'h1', name: 'H', visible: true } };
+  const base = { online: true, mode: 'hot', marks: [], overwatch: 0, files: [] };
+  let hs = nextStepHints({ actor: bricks, persona: { online: false }, hosts });
+  ok(/^Connecte-toi/.test(hs[0]?.key), 'hint: offline → connect');
+  hs = nextStepHints({ actor: bricks, persona: base, hosts });
+  ok(hs.some((h) => h.actionId === 'hackOnTheFly' && h.targetId === 'host:h1'), 'hint: visible host without mark → Hack on the Fly');
+  hs = nextStepHints({ actor: bricks, persona: { ...base, marks: [{ targetId: 'host:h1', count: 1 }] }, hosts });
+  ok(hs.some((h) => h.actionId === 'enterHost'), 'hint: marked host → enter');
+  hs = nextStepHints({ actor: bricks, persona: { ...base, hostId: 'h1' }, hosts: { h1: { ...hosts.h1, perceived: false } } });
+  ok(hs.some((h) => h.actionId === 'matrixPerception'), 'hint: inside, not perceived → Matrix Perception');
+  const files = [{ id: 'a', name: 'A', protected: true }, { id: 'b', name: 'B', bomb: 3 }, { id: 'c', name: 'C' }];
+  hs = nextStepHints({ actor: bricks, persona: { ...base, hostId: 'h1', overwatch: 32 }, hosts: { h1: { ...hosts.h1, perceived: true, files, devices: [{ id: 'd', name: 'Porte', link: { kind: 'door' } }] } } });
+  ok(hs[0].tone === 'danger' && ['crackFile', 'disarmDataBomb', 'editFile', 'controlDevice'].every((id) => hs.some((h) => h.actionId === id)), 'hint: OS 32 warning first, then crack / disarm / copy / control');
+  ok(missingEn(hs.map((h) => h.key)).length === 0 && Object.values(DEVICE_CMD_LABELS).every((m) => missingEn(Object.values(m)).length === 0), 'hints and device commands translated');
   const imp = actionPool(jane, { mode: 'cold' }, ACTION_BY_ID.snoop);
   ok(imp.reasonKey && EN[imp.reasonKey] && enT(imp.reasonKey, imp.reasonParams) === 'Electronic Warfare cannot be used untrained', `impossible reason translated (${enT(imp.reasonKey, imp.reasonParams)})`);
 }
@@ -254,13 +269,20 @@ try {
   await gm.send('matrix/setPersona', { actorId: 'pc_bricks', patch: { linkLocked: null, matrixDamage: 0 } });
   await gm.send('matrix/hostUpdate', { hostId: 'host_hollow_pine', patch: { rating: 5 } });
 
-  // Convergence
+  // Convergence inside a host (SR5 p. 247): 3 host marks, alert, IC deployed, still online; leaving → grid convergence
   await gm.send('matrix/setOverwatch', { actorId: 'pc_bricks', value: 39 });
   pl.events.length = 0;
   res = await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'snoop', targetId: 'device:host_hollow_pine:dev_hp_cams' });
   await settle();
-  ok(res.convergence && !P().online && P().overwatch === 0 && P().marks.length === 0 && P().traced, 'OS 40 → convergence: dumped, OS reset, marks lost, location revealed');
-  ok(P().matrixDamage >= 10, `convergence: 12 boxes of matrix damage (monitor 10, deck bricked) — ${P().matrixDamage}`);
+  ok(res.convergence && P().online && P().hostId === 'host_hollow_pine' && P().hostConverged === 'host_hollow_pine', 'OS 40 inside a host → host convergence, still online');
+  ok(P().marksOnMe.find((m) => m.sourceId === 'host:host_hollow_pine')?.count === 3 && M().hosts.host_hollow_pine.alert === 'active', 'host convergence: 3 host marks + alert');
+  ok(P().matrixDamage === 0, 'host convergence: no 12 DV');
+  res = await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'snoop', targetId: 'device:host_hollow_pine:dev_hp_cams' });
+  ok(!res.convergence, 'no second convergence while inside the converged host');
+  res = await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'exitHost' });
+  await settle();
+  ok(res.convergence && !P().online && P().overwatch === 0 && P().marks.length === 0 && P().traced, 'leaving the host → grid convergence: dumped, OS reset, marks lost, location revealed');
+  ok(P().matrixDamage >= 10, `grid convergence: 12 DV resisted with DR + Firewall (no hits on loaded dice) — ${P().matrixDamage}`);
   ok(P().bricked, 'deck bricked after convergence damage on a DR 3 deck');
   const evs = pl.events.filter((e) => e.ev === 'sfx').map((e) => e.data.id);
   ok(evs.includes('alarm') && evs.includes('matrix-glitch'), `convergence sfx (${evs.join(',')})`);
@@ -304,6 +326,121 @@ try {
   await gm.send('matrix/resetPersona', { actorId: 'pc_bricks' });
   await settle();
   ok(P() && !P().online && P().overwatch === 0, 'reset persona');
+
+  // ---------------------------------------------------------------- GM helpers: host turn, OS over time, combat tracker
+  await gm.send('matrix/testDice', { mode: 'actor' });
+  await pl.send('matrix/connect', { actorId: 'pc_bricks', mode: 'hot' });
+  await gm.send('matrix/setMarks', { actorId: 'pc_bricks', targetId: 'host:host_hollow_pine', name: 'Hollow Pine Holdings', count: 1 });
+  await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'enterHost', targetId: 'host:host_hollow_pine' });
+  await gm.send('matrix/hostUpdate', { hostId: 'host_hollow_pine', patch: { alert: 'none', spotted: [], ic: M().hosts.host_hollow_pine.ic.map((i) => ({ ...i, active: i.type === 'patrol', crashed: false, damage: 0 })) } });
+  await settle();
+  // Host turn, calm host: the patrol looks for Bricks (loaded dice: the decker side wins → she dodges), no IC launched
+  res = await gm.send('matrix/hostTurn', { hostId: 'host_hollow_pine' });
+  ok(res.results.length === 1 && res.results[0].actorId === 'pc_bricks' && res.results[0].result && !res.msgs.length, `calm host turn: only the patrol acts (${JSON.stringify(res.outcomes)})`);
+  await gm.send('matrix/hostUpdate', { hostId: 'host_hollow_pine', patch: { alert: 'active', spotted: ['pc_bricks'] } });
+  res = await gm.send('matrix/hostTurn', { hostId: 'host_hollow_pine' });
+  await settle();
+  const hpIc = () => M().hosts.host_hollow_pine.ic;
+  ok(hpIc().filter((i) => i.active).length === 2 && res.msgs.length === 1, 'alerted host turn: the next IC of the suite is launched');
+  ok(res.results.some((r) => r.skipped && /surveille/.test(r.skipped)), 'patrol skips when everyone is already spotted');
+  ok(res.results.some((r) => r.result && r.actorId === 'pc_bricks'), 'the launched IC attacks Bricks');
+  // Overwatch: manual 15-minute tick, then the automatic timer
+  await gm.send('matrix/setOverwatch', { actorId: 'pc_bricks', value: 5 });
+  res = await gm.send('matrix/osTick', { actorId: 'pc_bricks' });
+  await settle();
+  ok(res.added >= 2 && res.added <= 12 && P().overwatch === 5 + res.added, `+2D6 OS tick (${res.added})`);
+  ok(!pl.state.log.some((e) => e.matrix?.event === 'osTick') && gm.state.log.some((e) => e.matrix?.event === 'osTick'), 'OS tick is GM-only');
+  await gm.send('matrix/settings', { osTimer: true });
+  await gm.send('matrix/setOverwatch', { actorId: 'pc_bricks', value: 3 });
+  await gm.send('matrix/setPersona', { actorId: 'pc_bricks', patch: { osClock: Date.now() - 31 * 60 * 1000 } });
+  await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'matrixPerception', targetId: 'host:host_hollow_pine' });
+  await settle();
+  ok(P().overwatch >= 3 + 4 && P().overwatch <= 3 + 24 && Date.now() - P().osClock < 15 * 60 * 1000, `timer: 31 minutes online → two 2D6 ticks at the next action (OS ${P().overwatch})`);
+  await gm.send('matrix/settings', { osTimer: false });
+  await gm.send('matrix/setOverwatch', { actorId: 'pc_bricks', value: 0 });
+
+  // Combat tracker: the decker in VR, her agent and the host's running IC join the order
+  // (earlier random biofeedback / dumpshock may have knocked Bricks out: an incapacitated entry would not wait for her roll)
+  await gm.send('actor/heal', { actorId: 'pc_bricks', amount: 30, type: 'S' });
+  await gm.send('actor/heal', { actorId: 'pc_bricks', amount: 30, type: 'P' });
+  await pl.send('matrix/agentLoad', { actorId: 'pc_bricks', loaded: true });
+  await gm.send('combat/start', { includeMapTokens: false });
+  await gm.send('combat/add', { actorIds: ['pc_bricks'] });
+  await settle();
+  let ents = () => gm.state.combat.entries;
+  const icEnts = () => ents().filter((e) => e.kind === 'ic' && !e.out);
+  ok(icEnts().length === 2 && icEnts().every((e) => e.score > 0 && !e.toRoll), `running IC join the fight, rolled (${icEnts().map((e) => `${e.name} ${e.score}`).join(', ')})`);
+  ok(ents().some((e) => e.kind === 'agent' && e.ownerId === 'pc_bricks' && !e.out), 'the loaded agent joins the fight');
+  ok(ents().find((e) => e.actorId === 'pc_bricks').mode === 'hot', 'the decker’s entry uses her hot VR initiative');
+  ok(pl.state.combat.entries.some((e) => e.kind === 'agent'), 'the player sees her agent in the tracker');
+  // An IC with the best score acts first once the decker has rolled; then « Agir et passer »
+  const firstIc = icEnts()[0];
+  await gm.send('combat/setScore', { entryId: firstIc.id, score: 60 });
+  await pl.send('combat/roll', { entryId: ents().find((e) => e.actorId === 'pc_bricks').id });
+  await settle();
+  const deckerEntry = ents().find((e) => e.actorId === 'pc_bricks');
+  ok(deckerEntry.base === 7 && deckerEntry.dice === 4, `decker rolls DP + INT + 4D6 in hot VR (${deckerEntry.base} + ${deckerEntry.dice}D6)`);
+  ok(gm.state.combat.currentId === firstIc.id, 'the IC (score 60) has the first turn');
+  res = await gm.send('matrix/icTurn', { hostId: firstIc.hostId, icId: firstIc.icId, entryId: firstIc.id });
+  await settle();
+  ok(res.advanced && gm.state.combat.currentId !== firstIc.id, 'IC acts and passes its turn');
+  await expectFail(pl.send('matrix/icTurn', { hostId: firstIc.hostId, icId: firstIc.icId }), /MJ/, 'players cannot run IC turns');
+  // New Combat Turn: the alerted host launches one more IC, which joins the order
+  const activeBefore = hpIc().filter((i) => i.active).length;
+  await gm.send('combat/newTurn', {});
+  await settle();
+  ok(hpIc().filter((i) => i.active).length === Math.min(activeBefore + 1, hpIc().length) && icEnts().length === hpIc().filter((i) => i.active).length, 'new Combat Turn: alerted host launches its next IC (auto)');
+  // Leaving the host takes its IC out of the order; unloading the agent too
+  await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'exitHost' });
+  await pl.send('matrix/agentLoad', { actorId: 'pc_bricks', loaded: false });
+  await settle();
+  ok(icEnts().length === 0 && !ents().some((e) => e.kind === 'agent' && !e.out), 'IC and agent leave the order with the decker');
+  await gm.send('combat/end', {});
+
+  // ---------------------------------------------------------------- Devices linked to the map
+  const mapId = await gm.send('maps/create', { name: 'Test devices', width: 10, height: 8 });
+  const doorId = await gm.send('maps/addDoor', { mapId, door: { x: 4, y: 0, state: 'locked' } });
+  const lightId = await gm.send('maps/addLight', { mapId, light: { x: 2, y: 2, radius: 4, on: true } });
+  const regionId = await gm.send('maps/addRegion', { mapId, region: { name: 'Hall', x: 1, y: 1, w: 4, h: 4 } });
+  const devs = M().hosts.host_hollow_pine.devices.map((d) => ({ ...d }));
+  devs.find((d) => d.id === 'dev_hp_maglock').link = { mapId, kind: 'door', targetId: doorId };
+  devs.find((d) => d.id === 'dev_hp_cams').link = { mapId, kind: 'camera', targetId: regionId };
+  devs.push({ id: 'dev_test_light', name: 'Néons', rating: 3, link: { mapId, kind: 'light', targetId: lightId } });
+  await gm.send('matrix/hostUpdate', { hostId: 'host_hollow_pine', patch: { devices: devs } });
+  await settle();
+  const map = () => gm.state.maps[mapId];
+  ok(map().regions[0].cams === 'on', 'linking a camera zone marks it as filmed');
+  await gm.send('matrix/setMarks', { actorId: 'pc_bricks', targetId: 'host:host_hollow_pine', name: 'Hollow Pine Holdings', count: 3 });
+  await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'enterHost', targetId: 'host:host_hollow_pine' });
+  await settle();
+  const pdev = pl.state.matrix.hosts.host_hollow_pine.devices.find((d) => d.id === 'dev_hp_maglock');
+  ok(pdev?.link?.kind === 'door' && pdev.link.state === 'locked', `player sees the device's map link and state (${JSON.stringify(pdev?.link)})`);
+  res = await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'controlDevice', targetId: 'device:host_hollow_pine:dev_hp_maglock', deviceCmd: 'open' });
+  await settle();
+  ok(res.success && map().doors.find((d) => d.id === doorId).state === 'open', 'Control Device « open » opens the door on the map');
+  await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'controlDevice', targetId: 'device:host_hollow_pine:dev_hp_cams', deviceCmd: 'off' });
+  await settle();
+  ok(map().regions[0].cams === 'off', 'cutting the camera feed marks the zone');
+  await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'rebootDevice', targetId: 'device:host_hollow_pine:dev_test_light' });
+  await settle();
+  ok(map().lights[0].on === false, 'rebooting the light device turns the light off');
+  await gm.send('matrix/hostUpdate', { hostId: 'host_hollow_pine', patch: { devices: M().hosts.host_hollow_pine.devices.map((d) => (d.id === 'dev_test_light' ? { ...d, offline: false } : d)) } });
+  await settle();
+  ok(map().lights[0].on === true, 'back online (GM) → the light comes back');
+
+  // ---------------------------------------------------------------- Share paydata with the team
+  await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'editFile', targetId: 'file:host_hollow_pine:file_hp_registry', fileOp: 'copy' });
+  await settle();
+  const fileId = P().files[0]?.id;
+  res = await pl.send('matrix/shareFile', { actorId: 'pc_bricks', fileId });
+  await settle();
+  const note = Object.values(pl.state.notes?.pages || {}).find((n) => n.id === res.id);
+  ok(note && note.scope === 'party' && note.title === P().files[0].name && /L-07|Récupéré/.test(note.body), 'shared file → party note');
+  ok(P().files[0].shared, 'file flagged as shared');
+  await expectFail(pj.send('matrix/shareFile', { actorId: 'pc_bricks', fileId }), /appartient/, 'only the owner shares');
+  res = await gm.send('matrix/shareFile', { actorId: 'pc_bricks', fileId });
+  await settle();
+  ok(res.handoutId && pl.state.campaign.handouts.some((h) => h.id === res.handoutId), 'GM share → handout revealed to the players');
 
   // i18n: every matrix log entry of this run is translatable (keys, nested params, authors, roll labels)
   {

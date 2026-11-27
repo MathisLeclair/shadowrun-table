@@ -4,7 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { rollInitiative, attr, ATTRS } from '../../shared/sr5.js';
 // deriveFull = derive() + modifiers of gear / qualities / implants (monitors, pain tolerance, matrix initiative dice — shared/modifiers.js).
-import { deriveFull as derive } from '../lib/modifiers.js';
+import { deriveFull as derive, actorModifiers } from '../lib/modifiers.js';
+import { icInitiative, agentInitiative, matrixInitiative } from '../../shared/matrix.js';
 import { fillActorRefs } from '../lib/bookrefs.js';
 import { uid, clamp, deepClone } from '../../shared/util.js';
 import { pruneExpired } from '../../shared/combat.js';
@@ -268,6 +269,35 @@ export function findFreeCell(map, x, y, occ) {
 // ---------------------------------------------------------------------------
 // Combat helpers
 // ---------------------------------------------------------------------------
+/**
+ * Matrix entries without a sheet of their own (added and kept in sync by the matrix module, 45-matrix.js):
+ * kind 'ic' { hostId, icId } (initiative Host Rating × 2 + 4D6) and kind 'agent' { ownerId = the decker's actor id }
+ * (Data Processing + Rating + 4D6). They roll automatically like NPCs and are never wounded.
+ */
+export const isVirtual = (e) => e?.kind === 'ic' || e?.kind === 'agent';
+/** Actor controlling an entry (an agent belongs to its decker). */
+const ownerActorId = (e) => e?.actorId || e?.ownerId || null;
+function virtualInit(state, e) {
+  if (e.kind === 'ic') {
+    const host = state.matrix?.hosts?.[e.hostId];
+    return host && (host.ic || []).some((x) => x.id === e.icId) ? icInitiative(host) : null;
+  }
+  const actor = state.actors?.[e.ownerId];
+  const persona = state.matrix?.personas?.[e.ownerId];
+  return actor && persona?.agent ? agentInitiative(actor, persona) : null;
+}
+/** Hooks other modules register (matrix): fn(ctx, combat, event: 'start'|'add'|'newTurn'). Errors are logged, never thrown. */
+export const combatHooks = [];
+function runHooks(ctx, c, event) {
+  for (const fn of combatHooks) {
+    try {
+      fn(ctx, c, event);
+    } catch (err) {
+      console.error('[combat] hook:', err.message);
+    }
+  }
+}
+
 function emptyCombat() {
   return { active: false, mapId: null, round: 1, pass: 1, turn: -1, currentId: null, entries: [] };
 }
@@ -286,7 +316,8 @@ function getEntry(ctx, c, entryId) {
 
 function requireOwner(ctx, e) {
   if (ctx.isGM) return;
-  if (e.hidden || !e.actorId || !ctx.owns(e.actorId)) ctx.fail('Ce n’est pas ton personnage');
+  const id = ownerActorId(e);
+  if (e.hidden || !id || !ctx.owns(id)) ctx.fail('Ce n’est pas ton personnage');
 }
 
 function isPC(state, e) {
@@ -298,8 +329,14 @@ function canAct(e) {
   return !e.out && !e.down && !e.toRoll && !e.acted && !e.delayed && e.score > 0;
 }
 
-function initFor(actor, mode) {
+function initFor(actor, mode, state) {
   const d = derive(actor);
+  // A decker online in VR: the deck's Data Processing as configured (programs, IC penalties) + INT, modifiers' extra dice.
+  const persona = state?.matrix?.personas?.[actor.id];
+  if ((mode === 'cold' || mode === 'hot') && persona && actor.matrix) {
+    const m = matrixInitiative(actor, persona, mode, actorModifiers(actor));
+    return { base: m.base, dice: m.dice };
+  }
   switch (mode) {
     case 'astral':
       return d.astralInitiative;
@@ -324,6 +361,10 @@ function isIncapacitated(actor) {
 /** Apply wound modifier changes to scores (SR5: wound modifiers apply to the initiative score) and refresh 'down'. */
 function syncActors(state, c) {
   for (const e of c.entries) {
+    if (isVirtual(e)) {
+      e.down = false;
+      continue;
+    }
     const actor = state.actors[e.actorId];
     if (!actor) {
       e.out = true;
@@ -398,7 +439,7 @@ function setCurrent(ctx, c, entry) {
   c.currentId = entry ? entry.id : null;
   sortEntries(ctx.state, c);
   if (!entry) return;
-  const owners = ownersOf(ctx.state, entry.actorId);
+  const owners = ownersOf(ctx.state, ownerActorId(entry));
   if (owners.length) ctx.emitTo(owners, 'sfx', { id: 'notify' });
 }
 
@@ -409,13 +450,23 @@ function firstActable(state, c) {
 
 /** Roll initiative for one entry (mode from the entry, Blitz = 5D6). */
 function doRoll(ctx, c, e, { blitz = false } = {}) {
-  const actor = ctx.state.actors[e.actorId];
-  if (!actor) ctx.fail('Ce participant n’a pas de fiche');
-  const mode = INIT_MODES.includes(e.mode) ? e.mode : 'physical';
-  const { base, dice } = initFor(actor, mode);
+  let base;
+  let dice;
+  let wm = 0;
+  let actor = null;
+  if (isVirtual(e)) {
+    const ini = virtualInit(ctx.state, e);
+    if (!ini) ctx.fail('Ce participant n’a pas de fiche');
+    ({ base, dice } = ini);
+  } else {
+    actor = ctx.state.actors[e.actorId];
+    if (!actor) ctx.fail('Ce participant n’a pas de fiche');
+    const mode = INIT_MODES.includes(e.mode) ? e.mode : 'physical';
+    ({ base, dice } = initFor(actor, mode, ctx.state));
+    wm = derive(actor).woundModifier;
+  }
   const nd = blitz ? 5 : dice;
   const r = rollInitiative(base, nd);
-  const wm = derive(actor).woundModifier;
   e.base = base;
   e.dice = nd;
   e.rolls = r.rolls;
@@ -425,7 +476,7 @@ function doRoll(ctx, c, e, { blitz = false } = {}) {
   e.total = r.total + wm;
   e.score = e.total - 10 * ((c.pass || 1) - 1);
   e.toRoll = false;
-  e.down = isIncapacitated(actor);
+  e.down = actor ? isIncapacitated(actor) : false;
   return e;
 }
 
@@ -545,12 +596,13 @@ function newCombatTurn(ctx, c) {
       e.score = 0;
       e.total = 0;
       e.rolls = [];
-    } else if (ctx.state.actors[e.actorId]) {
+    } else if (isVirtual(e) ? !e.out && virtualInit(ctx.state, e) : ctx.state.actors[e.actorId]) {
       doRoll(ctx, c, e);
       npcRolls.push(e);
     }
   }
   logCombat(ctx, tk('— Tour de combat {round} — lancez l’initiative !'), { round: c.round });
+  runHooks(ctx, c, 'newTurn'); // an alerted host launches one IC per Combat Turn (matrix module)
   pruneExpired(ctx.state, ctx.now); // explosion markers of the last turn, afflictions that ran out (shared/combat.js)
   if (npcRolls.length) logCombat(ctx, tk('Initiative PNJ : {list}'), { list: scoreList(npcRolls) }, { gmOnly: true });
   sortEntries(ctx.state, c);
@@ -587,6 +639,65 @@ function advance(ctx, c, { markActed = true } = {}) {
     }
   }
   setCurrent(ctx, c, next);
+}
+
+// ---------------------------------------------------------------------------
+// Matrix entries API (used by 45-matrix.js)
+// ---------------------------------------------------------------------------
+/**
+ * Add a Matrix entry to the running combat, or bring it back in. Rolled at once (IC / agent initiative).
+ * spec = { kind: 'ic'|'agent', key (stable: 'ic:<hostId>:<icId>' / 'agent:<actorId>'), name (French), nameI18n?: { t, params },
+ *          hostId?, icId?, ownerId?, disposition }. Returns the entry, or null without an active combat.
+ */
+export function upsertVirtualEntry(ctx, spec) {
+  const c = ctx.state.combat;
+  if (!c?.active || !isVirtual(spec)) return null;
+  let e = c.entries.find((x) => x.matrixKey === spec.key);
+  if (e && !e.out) {
+    e.name = spec.name;
+    if (spec.nameI18n) e.nameI18n = spec.nameI18n;
+    return e;
+  }
+  if (!e) {
+    e = {
+      id: uid('ini'), actorId: null, tokenId: null, kind: spec.kind, matrixKey: spec.key, name: spec.name,
+      ...(spec.nameI18n ? { nameI18n: spec.nameI18n } : {}),
+      ...(spec.kind === 'ic' ? { hostId: spec.hostId, icId: spec.icId } : { ownerId: spec.ownerId }),
+      disposition: spec.disposition || (spec.kind === 'ic' ? 'hostile' : 'ally'),
+      base: 0, dice: 0, rolls: [], total: 0, score: 0, wound: 0, adjust: 0, acted: false, delayed: false,
+      hidden: false, out: false, down: false, toRoll: true, seized: false, blitz: false, mode: 'physical',
+    };
+    c.entries.push(e);
+  }
+  e.out = false;
+  e.acted = false;
+  e.delayed = false;
+  doRoll(ctx, c, e);
+  logCombat(ctx, tk('{name} rejoint l’initiative ({roll}).'), { name: e.nameI18n || e.name, roll: rollText(e) });
+  sortEntries(ctx.state, c);
+  maybeAutoStart(ctx, c);
+  return e;
+}
+
+/** Take a Matrix entry out of the order (IC crashed or withdrawn, agent unloaded, decker left the host). */
+export function setVirtualOut(ctx, key) {
+  const c = ctx.state.combat;
+  if (!c?.active) return;
+  const e = c.entries.find((x) => x.matrixKey === key);
+  if (!e || e.out) return;
+  e.out = true;
+  if (c.currentId === e.id) advance(ctx, c, { markActed: false });
+  else sortEntries(ctx.state, c);
+}
+
+/** End the turn of `entryId` when it is the current one (« Agir et passer » of an IC). Returns true when the turn moved. */
+export function endTurnOf(ctx, entryId) {
+  const c = ctx.state.combat;
+  if (!c?.active || !entryId || c.currentId !== entryId) return false;
+  syncActors(ctx.state, c);
+  pushUndo(ctx, c);
+  advance(ctx, c);
+  return true;
 }
 
 // ---------------------------------------------------------------------------
@@ -806,6 +917,7 @@ export default {
         }
         logCombat(ctx, tk('⚔ Le combat commence ! Lancez l’initiative.'));
         ctx.emitTo('players', 'sfx', { id: 'notify' });
+        runHooks(ctx, c, 'start');
         maybeAutoStart(ctx, c);
         return { entries: c.entries.length };
       },
@@ -817,6 +929,7 @@ export default {
         syncActors(ctx.state, c);
         const added = addEntries(ctx, c, { tokenIds, actorIds });
         if (!added.length) ctx.fail('Aucun nouveau participant (déjà dans le combat, ou sans fiche)');
+        runHooks(ctx, c, 'add');
         maybeAutoStart(ctx, c);
         return { added: added.map((e) => e.id) };
       },
@@ -844,8 +957,9 @@ export default {
         requireOwner(ctx, e);
         if (!ctx.isGM && !e.toRoll) ctx.fail('Initiative déjà lancée pour ce tour');
         const actor = ctx.state.actors[e.actorId];
-        if (!actor) ctx.fail('Ce participant n’a pas de fiche');
+        if (!actor && !isVirtual(e)) ctx.fail('Ce participant n’a pas de fiche');
         if (blitz) {
+          if (!actor) ctx.fail('Ce participant n’a pas de fiche');
           if ((actor.edge?.current ?? 0) < 1) ctx.fail('Plus de points de Chance');
           actor.edge = { ...(actor.edge || {}), current: actor.edge.current - 1 };
         }
@@ -872,7 +986,7 @@ export default {
         for (const e of c.entries) {
           if (npcOnly && e.kind === 'pc') continue;
           if (!reroll && !e.toRoll) continue;
-          if (!ctx.state.actors[e.actorId]) continue;
+          if (isVirtual(e) ? e.out || !virtualInit(ctx.state, e) : !ctx.state.actors[e.actorId]) continue;
           doRoll(ctx, c, e);
           rolled.push(e);
         }
@@ -939,7 +1053,7 @@ export default {
         const c = combatOf(ctx);
         const cur = c.entries.find((e) => e.id === c.currentId);
         if (!ctx.isGM) {
-          if (!cur || !cur.actorId || !ctx.owns(cur.actorId)) ctx.fail('Ce n’est pas ton tour');
+          if (!cur || !ownerActorId(cur) || !ctx.owns(ownerActorId(cur))) ctx.fail('Ce n’est pas ton tour');
         }
         if (entryId && entryId !== (c.currentId || null)) ctx.fail('Le tour a déjà changé');
         if (!c.entries.length) ctx.fail('Aucun participant');
@@ -1122,7 +1236,7 @@ export default {
       c.entries = c.entries.filter((e) => e.kind === 'pc' || mine.has(e.actorId) || !e.tokenId || !onMap.has(e.tokenId) || seen.has(e.tokenId));
     }
     for (const e of c.entries) {
-      if (e.kind !== 'pc' && !mine.has(e.actorId)) {
+      if (e.kind !== 'pc' && !mine.has(ownerActorId(e))) {
         delete e.rolls;
         delete e.base;
         delete e.dice;

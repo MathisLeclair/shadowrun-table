@@ -68,10 +68,16 @@ function Idle({ game, isGM, selected }) {
 // ---------------------------------------------------------------------------
 // Banners (players and GM for their own characters)
 // ---------------------------------------------------------------------------
+/** Matrix entries (IC of a host, a decker's agent) have no sheet: kept in sync by the matrix module. */
+const isMatrixEntry = (e) => e?.kind === 'ic' || e?.kind === 'agent';
+/** Display name: Matrix entries carry a translatable name. */
+const entryName = (e) => (e?.nameI18n?.t ? t(e.nameI18n.t, e.nameI18n.params) : e?.name || '');
+
 function YourTurn({ e }) {
   return html`<div class="cbt-banner cbt-yourturn">
     <div class="cbt-banner-title">${t('C’est ton tour !')}</div>
-    <div class="small">${e.name} · ${t('initiative')} <strong class="mono">${e.score}</strong></div>
+    <div class="small">${entryName(e)} · ${t('initiative')} <strong class="mono">${e.score}</strong></div>
+    ${e.kind === 'agent' && html`<div class="small muted">${t('Ton agent agit : choisis son action dans le cockpit (« Laisser mon agent agir »).')}</div>`}
     <div class="row wrap">
       <${Button} variant="accent" onClick=${() => act('combat/next', { entryId: e.id })}>${t('Terminer mon tour')} ✓</${Button}>
       <${Button} small variant="ghost" title=${t('Retarder ton action : tu pourras agir plus tard dans la passe')} onClick=${() => act('combat/delay', { entryId: e.id })}>${t('Retarder')}</${Button}>
@@ -100,6 +106,8 @@ function RollBanner({ e, actor }) {
 function EntryRow({ e, game, c, isGM, own, open, onToggle }) {
   const [editing, setEditing] = useState(false);
   const actor = game.actors?.[e.actorId];
+  const matrixE = isMatrixEntry(e);
+  const name = entryName(e);
   const showMonitor = isGM || own;
   const d = showMonitor ? safeDerive(actor) : null;
   const isCurrent = c.currentId === e.id;
@@ -113,8 +121,10 @@ function EntryRow({ e, game, c, isGM, own, open, onToggle }) {
   const focus = () => {
     // On phones the dock covers the map: close it so the focused token is visible.
     if (e.tokenId) setUI({ focusTokenId: e.tokenId, mainTab: 'map', ...(window.innerWidth <= 900 ? { dockOpen: false } : {}) });
+    else if (matrixE) setUI({ mainTab: 'matrix' });
     else if (isGM && actor) openSheet(e.actorId);
   };
+  const icAct = () => act('matrix/icTurn', { hostId: e.hostId, icId: e.icId, entryId: e.id });
   const commitScore = (v) => {
     setEditing(false);
     const n = Number(v);
@@ -130,7 +140,7 @@ function EntryRow({ e, game, c, isGM, own, open, onToggle }) {
     else act('actor/heal', { actorId: e.actorId, amount: -p.amount, type: p.type });
   };
   const remove = async () => {
-    if (await confirmAction(t('Retirer {name} du combat ?', { name: e.name }))) act('combat/remove', { entryId: e.id });
+    if (await confirmAction(t('Retirer {name} du combat ?', { name }))) act('combat/remove', { entryId: e.id });
   };
 
   let score;
@@ -151,12 +161,14 @@ function EntryRow({ e, game, c, isGM, own, open, onToggle }) {
       }}>${e.toRoll ? '…' : e.score}</button>`;
   }
 
-  return html`<div class=${cls} onClick=${focus} title=${e.tokenId ? t('Centrer la carte sur ce token') : ''}>
+  return html`<div class=${cls + (matrixE ? ' cbt-matrix' : '')} onClick=${focus} title=${e.tokenId ? t('Centrer la carte sur ce token') : matrixE ? t('Ouvrir la Matrice') : ''}>
     <div class="cbt-main">
-      <div class="cbt-avatar" style=${avatarStyle(actor?.portrait, actor?.color)}>${actor?.portrait ? '' : initials(e.name)}</div>
+      <div class="cbt-avatar" style=${matrixE ? '' : avatarStyle(actor?.portrait, actor?.color)}>${matrixE ? (e.kind === 'ic' ? '⛨' : '◈') : actor?.portrait ? '' : initials(e.name)}</div>
       <div class="cbt-name">
-        <strong>${e.name}</strong>
+        <strong>${name}</strong>
         <div class="cbt-tags">
+          ${e.kind === 'ic' && html`<${Badge} color="magenta" title=${t('IC d’un hôte (initiative : indice × 2 + 4D6)')}>${t('IC')}</${Badge}>`}
+          ${e.kind === 'agent' && html`<${Badge} color="cyan" title=${t('Agent du decker (initiative : Traitement + indice + 4D6)')}>${t('Agent')}</${Badge}>`}
           ${isCurrent && html`<${Badge} color="cyan">${t('Agit')}</${Badge}>`}
           ${e.toRoll && html`<${Badge} color="amber">${t('À lancer')}</${Badge}>`}
           ${e.delayed && html`<${Badge} color="amber" title=${t('Action retardée')}>${t('combat::En attente')}</${Badge}>`}
@@ -177,6 +189,9 @@ function EntryRow({ e, game, c, isGM, own, open, onToggle }) {
       }} />`}
     </div>
 
+    ${isGM && isCurrent && e.kind === 'ic' && !e.out && html`<div class="row" onClick=${stop}>
+      <${Button} small variant="danger" title=${t('L’IC attaque l’intrus le mieux repéré, puis le tour passe')} onClick=${icAct}>⚡ ${t('Agir et passer')}</${Button}>
+    </div>`}
     ${e.delayed && canControl && html`<div class="row" onClick=${stop}>
       <${Button} small variant="primary" onClick=${() => act('combat/act', { entryId: e.id })}>${t('Agir maintenant')}</${Button}>
     </div>`}
@@ -195,11 +210,11 @@ function EntryRow({ e, game, c, isGM, own, open, onToggle }) {
     ${open && canControl && html`<div class="cbt-actions" onClick=${stop}>
       ${e.toRoll && (own || isGM) && html`<${Button} small variant="primary" onClick=${() => act('combat/roll', { entryId: e.id })}>${t('Lancer')}</${Button}>`}
       ${!e.toRoll && isGM && html`<${Button} small title=${t('Relancer l’initiative')} onClick=${() => act('combat/roll', { entryId: e.id })}>${t('Relancer')}</${Button}>`}
-      ${!e.toRoll && html`<${Button} small title=${t('Esquive, parade, blocage, intercepter (−5)')} onClick=${() => act('combat/adjust', { entryId: e.id, delta: -5, label: tk('Esquive / parade') })}>${t('−5 Esquive')}</${Button}>
+      ${!e.toRoll && !matrixE && html`<${Button} small title=${t('Esquive, parade, blocage, intercepter (−5)')} onClick=${() => act('combat/adjust', { entryId: e.id, delta: -5, label: tk('Esquive / parade') })}>${t('−5 Esquive')}</${Button}>
         <${Button} small title=${t('Défense totale (−10)')} onClick=${() => act('combat/adjust', { entryId: e.id, delta: -10, label: tk('Défense totale') })}>${t('−10 Défense totale')}</${Button}>`}
-      ${!e.seized && html`<${Button} small disabled=${edge < 1} title=${t('Saisir l’initiative : 1 point de Chance, agit en premier ce tour')} onClick=${() => act('combat/seize', { entryId: e.id })}>${t('Saisir l’initiative')}</${Button}>`}
+      ${!e.seized && !matrixE && html`<${Button} small disabled=${edge < 1} title=${t('Saisir l’initiative : 1 point de Chance, agit en premier ce tour')} onClick=${() => act('combat/seize', { entryId: e.id })}>${t('Saisir l’initiative')}</${Button}>`}
       ${isCurrent && html`<${Button} small onClick=${() => act('combat/delay', { entryId: e.id })}>${t('Retarder')}</${Button}>`}
-      <${Select} value=${e.mode || 'physical'} options=${initModeOptions()} title=${t('Type d’initiative (prochain jet)')} onChange=${(m) => act('combat/setMode', { entryId: e.id, mode: m })} />
+      ${!matrixE && html`<${Select} value=${e.mode || 'physical'} options=${initModeOptions()} title=${t('Type d’initiative (prochain jet)')} onChange=${(m) => act('combat/setMode', { entryId: e.id, mode: m })} />`}
       ${isGM && html`
         ${e.hidden && html`<${Button} small variant="accent" onClick=${() => act('combat/reveal', { entryId: e.id })}>${t('Révéler')}</${Button}>`}
         <${Button} small variant="ghost" onClick=${() => act('combat/setOut', { entryId: e.id, out: !e.out })}>${e.out ? t('Réintégrer') : t('Hors combat')}</${Button}>
@@ -222,7 +237,7 @@ export default function CombatDock({ game }) {
   const mine = new Set(game.me.characterIds || []);
   const entries = c.entries || [];
   const current = entries.find((e) => e.id === c.currentId) || null;
-  const myCurrent = current && mine.has(current.actorId) ? current : null;
+  const myCurrent = current && (mine.has(current.actorId) || mine.has(current.ownerId)) ? current : null;
   const myToRoll = entries.filter((e) => mine.has(e.actorId) && e.toRoll && !e.out);
   const pending = entries.filter((e) => e.toRoll && !e.out && !e.down);
   const npcPending = pending.filter((e) => e.kind !== 'pc');
@@ -273,7 +288,7 @@ export default function CombatDock({ game }) {
 
     <div class="cbt-list">
       ${entries.map(
-        (e) => html`<${EntryRow} key=${e.id} e=${e} game=${game} c=${c} isGM=${isGM} own=${mine.has(e.actorId)}
+        (e) => html`<${EntryRow} key=${e.id} e=${e} game=${game} c=${c} isGM=${isGM} own=${mine.has(e.actorId) || mine.has(e.ownerId)}
           open=${openId === e.id} onToggle=${() => setOpenId(openId === e.id ? null : e.id)} />`
       )}
     </div>

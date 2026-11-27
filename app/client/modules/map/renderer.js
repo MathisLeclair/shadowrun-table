@@ -1275,7 +1275,9 @@ export class MapRenderer {
       for (const r of map.regions || []) {
         const p = this.toScreen(r.x + 0.15, r.y + 0.12);
         const col = r.gmOnly ? '#e0468f' : r.color || th.accent;
-        const label = r.gmOnly ? t('{name} (MJ)', { name: r.name }) : r.name;
+        const base = r.gmOnly ? t('{name} (MJ)', { name: r.name }) : r.name;
+        // Camera zone driven by a host device (matrix module): 📷 filmed, 📷✕ feed cut by a decker.
+        const label = r.cams === 'off' ? t('📷✕ {name}', { name: base }) : r.cams === 'on' ? t('📷 {name}', { name: base }) : base;
         ctx.fillStyle = 'rgba(5,7,10,0.6)';
         const tw = ctx.measureText(label).width;
         ctx.fillRect(p.x - 3, p.y - 2, tw + 6, Math.max(10, Math.min(14, scale * 0.38)) + 4);
