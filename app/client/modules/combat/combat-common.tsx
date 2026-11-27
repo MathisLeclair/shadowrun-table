@@ -6,24 +6,24 @@ import type { CombatEntry, Disposition, InitMode, NpcKind, Weapon } from '../../
 import type { ActorLike } from './types.ts';
 
 // Constant tables hold French keys (tk); render them with the helpers below (or t(label)).
-export const DISPO_LABELS: Record<Disposition, string> = { pc: tk('Runner'), ally: tk('Allié'), neutral: tk('Neutre'), hostile: tk('Hostile') };
+export const DISPO_LABELS: Record<Disposition, string> = { pc: tk('Runner'), ally: tk('Ally'), neutral: tk('Neutral'), hostile: tk('Hostile') };
 export const DISPO_BADGE: Record<Disposition, string> = { pc: 'cyan', ally: 'green', neutral: 'amber', hostile: 'red' };
 export const INIT_MODES: Array<{ value: InitMode; label: string }> = [
-  { value: 'physical', label: tk('Physique') },
-  { value: 'astral', label: tk('Astrale') },
-  { value: 'ar', label: tk('Matrice (RA)') },
-  { value: 'cold', label: tk('VR froide') },
-  { value: 'hot', label: tk('VR chaude') },
+  { value: 'physical', label: tk('Physical') },
+  { value: 'astral', label: tk('Astral') },
+  { value: 'ar', label: tk('Matrix (AR)') },
+  { value: 'cold', label: tk('Cold-sim VR') },
+  { value: 'hot', label: tk('Hot-sim VR') },
 ];
 export const INIT_MODE_LABEL: Record<string, string> = Object.fromEntries(INIT_MODES.map((m) => [m.value, m.label]));
 export const NPC_KINDS: Array<{ value: NpcKind; label: string }> = [
-  { value: 'metahuman', label: tk('Métahumain') },
-  { value: 'critter', label: tk('Créature') },
-  { value: 'spirit', label: tk('Esprit') },
-  { value: 'drone', label: tk('Drone / véhicule') },
+  { value: 'metahuman', label: tk('Metahuman') },
+  { value: 'critter', label: tk('Critter') },
+  { value: 'spirit', label: tk('Spirit') },
+  { value: 'drone', label: tk('Drone / vehicle') },
   { value: 'ic', label: tk('IC') },
-  { value: 'host', label: tk('Host (référence)') },
-  { value: 'other', label: tk('Autre') },
+  { value: 'host', label: tk('Host (reference)') },
+  { value: 'other', label: tk('Other') },
 ];
 export const NPC_KIND_LABEL: Record<string, string> = Object.fromEntries(NPC_KINDS.map((k) => [k.value, k.label]));
 
@@ -90,17 +90,17 @@ export function signed(n: number | string | null | undefined): string {
 
 /** Tooltip describing an initiative roll. */
 export function rollTooltip(e: CombatEntry, pass: number): string {
-  if (e.toRoll) return t('Initiative pas encore lancée');
-  if (e.rolls === undefined) return t('Score actuel : {n}', { n: e.score });
+  if (e.toRoll) return t('Initiative not rolled yet');
+  if (e.rolls === undefined) return t('Current score: {n}', { n: e.score });
   const parts: string[] = [];
   if (e.rolls.length) parts.push(`${e.base} + [${e.rolls.join(' · ')}]`);
-  else parts.push(t('Score fixé par le MJ : {n}', { n: e.base }));
-  if (e.wound) parts.push(t('{n} blessures', { n: signed(e.wound) }));
+  else parts.push(t('Score set by the GM: {n}', { n: e.base }));
+  if (e.wound) parts.push(t('{n} wounds', { n: signed(e.wound) }));
   if (e.adjust) parts.push(t('{n} actions', { n: signed(e.adjust) }));
   if (pass > 1) parts.push(t('−{n} passes', { n: 10 * (pass - 1) }));
   if (e.mode && e.mode !== 'physical') parts.push(initModeLabel(e.mode));
   if (e.blitz) parts.push(t('Blitz (5D6)'));
-  if (e.seized) parts.push(t('Initiative saisie'));
+  if (e.seized) parts.push(t('Initiative seized'));
   return `${parts.join('  ')}  =  ${e.score}`;
 }
 
@@ -117,7 +117,7 @@ export function MonitorBar({ label, value, max, kind }: MonitorBarProps) {
   const boxes = [];
   for (let i = 0; i < max; i++) boxes.push(<span key={i} className={'cbt-box ' + kind + (i < v ? ' on' : '')}></span>);
   return (
-    <div className="cbt-bar" title={kind === 'p' ? t('Physique : {v}/{max}', { v, max }) : t('Étourdissant : {v}/{max}', { v, max })}>
+    <div className="cbt-bar" title={kind === 'p' ? t('Physical: {v}/{max}', { v, max }) : t('Stun: {v}/{max}', { v, max })}>
       <span>{label}</span>
       <span className="cbt-boxes">{boxes}</span>
       <span className="right">

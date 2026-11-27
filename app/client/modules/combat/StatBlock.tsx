@@ -62,7 +62,7 @@ function MatrixLine({ m }: { m: ActorMatrix | null | undefined }) {
   if (!m) return null;
   return (
     <div className="sb-sec">
-      <h4>{t('Matrice')}</h4>
+      <h4>{t('Matrix')}</h4>
       <div className="sb-chips">
         {m.device && (
           <span className="sb-chip">
@@ -70,7 +70,7 @@ function MatrixLine({ m }: { m: ActorMatrix | null | undefined }) {
             {m.rating ? (
               <>
                 {' '}
-                <i>{t('indice {n}', { n: m.rating })}</i>
+                <i>{t('rating {n}', { n: m.rating })}</i>
               </>
             ) : (
               ''
@@ -78,15 +78,15 @@ function MatrixLine({ m }: { m: ActorMatrix | null | undefined }) {
           </span>
         )}
         <span className="sb-chip">
-          {t('Attaque')}
+          {t('Attack')}
           <b>{m.attack || 0}</b>
         </span>
         <span className="sb-chip">
-          {t('Corruption')}
+          {t('Sleaze')}
           <b>{m.sleaze || 0}</b>
         </span>
         <span className="sb-chip">
-          {t('Traitement')}
+          {t('Data Processing')}
           <b>{m.dataProcessing || 0}</b>
         </span>
         <span className="sb-chip">
@@ -94,7 +94,7 @@ function MatrixLine({ m }: { m: ActorMatrix | null | undefined }) {
           <b>{m.firewall || 0}</b>
         </span>
       </div>
-      {m.programs?.length > 0 && <div className="small muted">{t('Programmes : {list}', { list: m.programs.join(', ') })}</div>}
+      {m.programs?.length > 0 && <div className="small muted">{t('Programs: {list}', { list: m.programs.join(', ') })}</div>}
     </div>
   );
 }
@@ -119,19 +119,19 @@ function WeaponsTable({ tpl, d }: { tpl: ActorLike; d: Derived | null }) {
   if (!ws.length) return null;
   return (
     <div className="sb-sec">
-      <h4>{t('Armes')}</h4>
+      <h4>{t('Weapons')}</h4>
       <div className="sb-table-wrap">
         <table className="sr">
           <thead>
             <tr>
-              <th>{t('Arme')}</th>
-              <th title={t('Réserve de dés (compétence + attribut)')}>{t('Réserve')}</th>
-              <th>{t('Préc.')}</th>
-              <th>{t('VD')}</th>
-              <th>{t('PA')}</th>
+              <th>{t('Weapon')}</th>
+              <th title={t('Dice pool (skill + attribute)')}>{t('Pool')}</th>
+              <th>{t('Acc.')}</th>
+              <th>{t('DV')}</th>
+              <th>{t('AP')}</th>
               <th>{t('Mode')}</th>
               <th>{t('RC')}</th>
-              <th>{t('Mun.')}</th>
+              <th>{t('abbr::Ammo')}</th>
             </tr>
           </thead>
           <tbody>
@@ -146,7 +146,7 @@ function WeaponsTable({ tpl, d }: { tpl: ActorLike; d: Derived | null }) {
                     {w.reach ? (
                       <>
                         {' '}
-                        <span className="faint small">{t('allonge {n}', { n: w.reach })}</span>
+                        <span className="faint small">{t('reach {n}', { n: w.reach })}</span>
                       </>
                     ) : (
                       ''
@@ -160,7 +160,7 @@ function WeaponsTable({ tpl, d }: { tpl: ActorLike; d: Derived | null }) {
                     )}
                   </td>
                   <td className="pool">{pool ?? '—'}</td>
-                  <td className="mono" title={typeof acc === 'string' && acc.endsWith('*') ? t('Limite physique') : ''}>
+                  <td className="mono" title={typeof acc === 'string' && acc.endsWith('*') ? t('Physical Limit') : ''}>
                     {acc}
                   </td>
                   <td className="mono">{damageText(w, tpl) || '—'}</td>
@@ -182,16 +182,16 @@ function SpellsTable({ spells }: { spells: Spell[] | null | undefined }) {
   if (!spells?.length) return null;
   return (
     <div className="sb-sec">
-      <h4>{t('Sorts')}</h4>
+      <h4>{t('Spells')}</h4>
       <div className="sb-table-wrap">
         <table className="sr">
           <thead>
             <tr>
-              <th>{t('Sort')}</th>
-              <th>{t('Catégorie')}</th>
+              <th>{t('Spell')}</th>
+              <th>{t('Category')}</th>
               <th>{t('Type')}</th>
-              <th>{t('Portée')}</th>
-              <th>{t('Durée')}</th>
+              <th>{t('Range')}</th>
+              <th>{t('Duration')}</th>
               <th>{t('Drain')}</th>
             </tr>
           </thead>
@@ -251,20 +251,20 @@ export default function StatBlock({ t: tpl }: StatBlockProps) {
           <div className="sub">{[tpl.metatype && metatypeLabel(tpl.metatype), tpl.concept].filter(Boolean).join(' · ')}</div>
           <div className="row wrap gap-s" style={{ marginTop: '5px' }}>
             {pr > 0 && (
-              <Badge color="amber" title={t('Indice de professionnalisme')}>
+              <Badge color="amber" title={t('Professional Rating')}>
                 {t('PR {n}', { n: pr })}
               </Badge>
             )}
             {tpl.npc?.grunt && (
-              <Badge color="magenta" title={t('Sbire : à jouer en groupe')}>
-                {t('Sbire')}
+              <Badge color="magenta" title={t('Grunt: play them as a group')}>
+                {t('Grunt')}
               </Badge>
             )}
             {kind !== 'metahuman' && <Badge color="cyan">{npcKindLabel(kind)}</Badge>}
             {tpl.disposition && tpl.disposition !== 'hostile' && <Badge color={DISPO_BADGE[tpl.disposition]}>{dispoLabel(tpl.disposition)}</Badge>}
-            {tpl.vision?.lowLight && <Badge>{t('Vision nocturne')}</Badge>}
-            {tpl.vision?.thermo && <Badge>{t('Thermographique')}</Badge>}
-            {darkRange > 0 && <Badge>{t('Vision dans le noir {n} c.', { n: darkRange })}</Badge>}
+            {tpl.vision?.lowLight && <Badge>{t('Low-Light Vision')}</Badge>}
+            {tpl.vision?.thermo && <Badge>{t('Thermographic')}</Badge>}
+            {darkRange > 0 && <Badge>{t('Darkvision {n} sq.', { n: darkRange })}</Badge>}
           </div>
         </div>
       </header>
@@ -273,27 +273,27 @@ export default function StatBlock({ t: tpl }: StatBlockProps) {
         {d && !nonPhysical && (
           <div className="sb-stats">
             <Stat label={mode === 'physical' ? t('Initiative') : t('Init. {mode}', { mode: initModeLabel(mode) })} value={initText} accent="cyan" />
-            <Stat label={kind === 'ic' || kind === 'drone' ? t('Moniteur') : t('Physique')} value={d.physicalMonitor} accent="magenta" />
-            {d.stunMonitor > 0 && <Stat label={t('Étourdis.')} value={d.stunMonitor} accent="amber" />}
+            <Stat label={kind === 'ic' || kind === 'drone' ? t('Monitor') : t('Physical')} value={d.physicalMonitor} accent="magenta" />
+            {d.stunMonitor > 0 && <Stat label={t('abbr::Stun')} value={d.stunMonitor} accent="amber" />}
             {kind !== 'ic' && (
               <>
-                <Stat label={t('Armure')} value={d.armor} />
-                <Stat label={t('Défense')} value={d.defense} title={t('Réaction + Intuition')} />
-                <Stat label={t('Encaiss.')} value={d.soak} title={t('Constitution + Armure')} />
-                <Stat label={t('Limites')} value={`${d.limits.physical}/${d.limits.mental}/${d.limits.social}`} title={t('Physique / Mentale / Sociale')} />
+                <Stat label={t('Armor')} value={d.armor} />
+                <Stat label={t('Defense')} value={d.defense} title={t('Reaction + Intuition')} />
+                <Stat label={t('abbr::Soak')} value={d.soak} title={t('Body + Armor')} />
+                <Stat label={t('Limits')} value={`${d.limits.physical}/${d.limits.mental}/${d.limits.social}`} title={t('Physical / Mental / Social')} />
               </>
             )}
-            {mode !== 'physical' && kind === 'metahuman' && <Stat label={t('Init. physique')} value={d.initiative.text} />}
+            {mode !== 'physical' && kind === 'metahuman' && <Stat label={t('Physical init.')} value={d.initiative.text} />}
           </div>
         )}
 
         <Chips
-          title={t('Compétences')}
+          title={t('Skills')}
           items={tpl.skills}
           render={(s, i) => {
             const pool = poolFor(tpl, s.id);
             return (
-              <span key={s.id || i} className="sb-chip" title={s.spec ? t('Spécialisation : {spec} (+2)', { spec: s.spec }) : ''}>
+              <span key={s.id || i} className="sb-chip" title={s.spec ? t('Specialization: {spec} (+2)', { spec: s.spec }) : ''}>
                 {skillName(tpl, s.id, s.name)} {s.rating}
                 {s.spec ? (
                   <>
@@ -311,7 +311,7 @@ export default function StatBlock({ t: tpl }: StatBlockProps) {
         />
         <WeaponsTable tpl={tpl} d={d} />
         <Chips
-          title={t('Armure')}
+          title={t('Armor')}
           items={armorItems}
           render={(a, i) => (
             <span key={a.id || i} className="sb-chip" title={a.notes || ''}>
@@ -344,7 +344,7 @@ export default function StatBlock({ t: tpl }: StatBlockProps) {
           )}
         />
         <Chips
-          title={t('Pouvoirs')}
+          title={t('Powers')}
           items={tpl.powers}
           render={(p, i) => (
             <span key={p.id || i} className="sb-chip" title={p.notes || ''}>
@@ -364,7 +364,7 @@ export default function StatBlock({ t: tpl }: StatBlockProps) {
         />
         <SpellsTable spells={tpl.spells} />
         <Chips
-          title={t('Qualités')}
+          title={t('Qualities')}
           items={tpl.qualities}
           render={(q, i) => (
             <span key={q.id || i} className="sb-chip" title={q.notes || ''} style={{ borderColor: q.positive === false ? '#6a2c2c' : '' }}>
@@ -383,7 +383,7 @@ export default function StatBlock({ t: tpl }: StatBlockProps) {
         />
         <MatrixLine m={tpl.matrix} />
         <Chips
-          title={t('Connaissances')}
+          title={t('pl::Knowledge')}
           items={tpl.knowledge}
           render={(k, i) => (
             <span key={k.id || i} className="sb-chip">
@@ -391,7 +391,7 @@ export default function StatBlock({ t: tpl }: StatBlockProps) {
               {k.native ? (
                 <>
                   {' '}
-                  <i>{t('langue maternelle')}</i>
+                  <i>{t('native language')}</i>
                 </>
               ) : (
                 <b>{k.rating}</b>
@@ -400,7 +400,7 @@ export default function StatBlock({ t: tpl }: StatBlockProps) {
           )}
         />
         <Chips
-          title={t('Équipement')}
+          title={t('Gear')}
           items={tpl.gear}
           render={(g, i) => (
             <span key={g.id || i} className="sb-chip" title={g.notes || ''}>
@@ -418,13 +418,13 @@ export default function StatBlock({ t: tpl }: StatBlockProps) {
           )}
         />
         <Chips
-          title={t('Véhicules & drones')}
+          title={t('Vehicles & drones')}
           items={tpl.vehicles}
           render={(v, i) => (
             <span key={v.id || i} className="sb-chip" title={v.notes || ''}>
               {v.name}{' '}
               <i>
-                {t('Mani {handling} · Vit {speed} · Str {body} · Bli {armor} · Pil {pilot}', {
+                {t('Hand {handling} · Spd {speed} · Body {body} · Arm {armor} · Pilot {pilot}', {
                   handling: v.handling ?? '—',
                   speed: v.speed ?? '—',
                   body: v.body ?? '—',
@@ -447,7 +447,7 @@ export default function StatBlock({ t: tpl }: StatBlockProps) {
         )}
         {tpl.npc?.tactics && (
           <div className="sb-sec">
-            <h4>{t('Tactique')}</h4>
+            <h4>{t('Tactics')}</h4>
             <div className="sb-text tactics">
               <Markdown text={tpl.npc.tactics} />
             </div>
@@ -455,7 +455,7 @@ export default function StatBlock({ t: tpl }: StatBlockProps) {
         )}
         {tpl.npc?.loot && (
           <div className="sb-sec">
-            <h4>{t('Butin')}</h4>
+            <h4>{t('Loot')}</h4>
             <div className="sb-text loot">
               <Markdown text={tpl.npc.loot} />
             </div>

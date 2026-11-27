@@ -48,7 +48,7 @@ export interface PoolPreview {
   impossible: boolean;
 }
 
-const MATRIX_LIMIT_LABELS: Record<string, string> = { attack: tk('Attaque'), sleaze: tk('Corruption'), dataProcessing: tk('Traitement'), firewall: tk('Firewall') };
+const MATRIX_LIMIT_LABELS: Record<string, string> = { attack: tk('Attack'), sleaze: tk('Sleaze'), dataProcessing: tk('Data Processing'), firewall: tk('Firewall') };
 
 /** Client-side preview of the server pool computation (the server stays authoritative). Part labels are display text. */
 export function previewPool(actor: Actor | null | undefined, preset: RollPreset, { useSpec }: { useSpec?: boolean } = {}): PoolPreview {
@@ -67,7 +67,7 @@ export function previewPool(actor: Actor | null | undefined, preset: RollPreset,
       spec = kno.spec || '';
       if (useSpec && kno.spec) {
         pool += 2;
-        parts.push([t('spé. {spec}', { spec: kno.spec }), 2]);
+        parts.push([t('spec. {spec}', { spec: kno.spec }), 2]);
       }
       defaultLimit = 'mental';
     } else {
@@ -77,10 +77,10 @@ export function previewPool(actor: Actor | null | undefined, preset: RollPreset,
       impossible = !!r.impossible;
       pool = r.pool;
       spec = sk?.spec || '';
-      if (r.defaulting) parts.push([attrShort(at), attr(actor, at)], [t('par défaut'), -1]);
+      if (r.defaulting) parts.push([attrShort(at), attr(actor, at)], [t('defaulting'), -1]);
       else {
         parts.push([skillName(sk, preset.skillId), sk?.rating ?? 0], [attrShort(at), attr(actor, at)]);
-        if (useSpec && sk?.spec) parts.push([t('spé. {spec}', { spec: sk?.spec }), 2]);
+        if (useSpec && sk?.spec) parts.push([t('spec. {spec}', { spec: sk?.spec }), 2]);
       }
       defaultLimit = skillDefaultLimit(def, at);
     }
@@ -93,7 +93,7 @@ export function previewPool(actor: Actor | null | undefined, preset: RollPreset,
     }
   } else {
     pool = Math.max(0, Number(preset.pool) || 0);
-    parts.push([t('dés'), pool]);
+    parts.push([t('dice'), pool]);
   }
   for (const b of preset.bonus || []) {
     if (!b.value) continue;
@@ -119,7 +119,7 @@ export function presetLabel(actor: Actor | null | undefined, preset: RollPreset)
 /** The same label in the UI language (a weapon attack names the weapon in the UI language too). */
 export function presetDisplayLabel(actor: Actor | null | undefined, preset: RollPreset): string {
   const w = preset.weaponId && /^Attaque — /.test(preset.label || '') ? (actor?.weapons || []).find((x) => x && x.id === preset.weaponId) : null;
-  if (w) return t('Attaque — {weapon}', { weapon: itemLabel(w) });
+  if (w) return t('Attack — {weapon}', { weapon: itemLabel(w) });
   if (preset.label) return rollLabel(preset.label);
   if (preset.skillId) {
     const sk = (actor?.skills || []).find((s) => s.id === preset.skillId);
@@ -128,7 +128,7 @@ export function presetDisplayLabel(actor: Actor | null | undefined, preset: Roll
     return kno.name;
   }
   if (preset.attr) return preset.attr2 ? `${attrLabel(preset.attr)} + ${attrLabel(preset.attr2)}` : attrLabel(preset.attr);
-  return t('Jet de dés');
+  return t('Dice roll');
 }
 
 /** Limit of the test: fixed by the caller, weapon Accuracy, device attribute, or the skill's limit — with its modifiers. */
@@ -276,7 +276,7 @@ export function RollDialog({ game, actor: viewActor, preset: initialPreset = {},
   const soakArmor = test === 'soak' && dm ? dm.armor : 0;
   const extraParts: Array<[string, number]> = [];
   if (env && !env.rangeOnly) {
-    if (env.value) extraParts.push([t('environnement'), env.value]);
+    if (env.value) extraParts.push([t('environment'), env.value]);
   } else if (range?.mod) extraParts.push([`${t(range.label)} (${range.meters} m)`, range.mod]);
   if (action?.dice) extraParts.push([t(action.name), action.dice]);
   const extra = extraParts.reduce((n, [, v]) => n + v, 0);
@@ -347,96 +347,96 @@ export function RollDialog({ game, actor: viewActor, preset: initialPreset = {},
     } catch {}
   };
 
-  return <Overlay title={t('Jet — {label}', { label: shownLabel })} onClose={onClose} width={480}>
+  return <Overlay title={t('Roll — {label}', { label: shownLabel })} onClose={onClose} width={480}>
     <div className="sh-rd">
       {(actor || preset.skillId || testRef) && <div className="row wrap gap-s muted small">
         {actor ? <span>{actor.name}</span> : null}{preset.skillId ? <SkillRef id={preset.skillId} /> : null}{testRef ? <BookRef source={testRef.source} page={testRef.page} /> : null}
       </div>}
       <div className="sh-rd-breakdown">
-        {prev.parts.map(([l, v], i) => <span key={i} className={'sh-rd-part' + (v < 0 ? ' bad' : '')}><span>{l}</span><b>{i > 0 && v >= 0 ? '+' : ''}{v}</b></span>)}{soakArmor ? <span className="sh-rd-part"><span>{t('armure')}</span><b>+{soakArmor}</b></span> : null}
+        {prev.parts.map(([l, v], i) => <span key={i} className={'sh-rd-part' + (v < 0 ? ' bad' : '')}><span>{l}</span><b>{i > 0 && v >= 0 ? '+' : ''}{v}</b></span>)}{soakArmor ? <span className="sh-rd-part"><span>{t('armor')}</span><b>+{soakArmor}</b></span> : null}
         {pm.lines.filter((l) => l.state === 'applied').map((l) => <span className={'sh-rd-part mod' + ((l.value ?? 0) < 0 ? ' bad' : '')} key={l.mod.id} title={effectText(l.mod)}>
           <span>{sourceName(l.mod.source)}</span>
           <b>{(l.value ?? 0) >= 0 ? '+' : ''}{l.value}</b>
         </span>)}
-        {extraParts.map(([l, v]) => <span className={'sh-rd-part mod' + (v < 0 ? ' bad' : '')} key={l}><span>{l}</span><b>{v >= 0 ? '+' : ''}{v}</b></span>)}{modifier ? <span className="sh-rd-part"><span>{t('mod.')}</span><b>{modifier > 0 ? '+' : ''}{modifier}</b></span> : null}{woundMod ? <span className="sh-rd-part bad"><span>{t('blessures')}</span><b>{woundMod}</b></span> : null}{explode ? <span className="sh-rd-part edge"><span>{t('Chance')}</span><b>+{edgeMax}</b></span> : null}
-        <span className="sh-rd-total">{tn(total, '= {n} dé', '= {n} dés')}</span>
+        {extraParts.map(([l, v]) => <span className={'sh-rd-part mod' + (v < 0 ? ' bad' : '')} key={l}><span>{l}</span><b>{v >= 0 ? '+' : ''}{v}</b></span>)}{modifier ? <span className="sh-rd-part"><span>{t('mod.')}</span><b>{modifier > 0 ? '+' : ''}{modifier}</b></span> : null}{woundMod ? <span className="sh-rd-part bad"><span>{t('wounds')}</span><b>{woundMod}</b></span> : null}{explode ? <span className="sh-rd-part edge"><span>{t('Edge')}</span><b>+{edgeMax}</b></span> : null}
+        <span className="sh-rd-total">{tn(total, '= {n} die', '= {n} dice')}</span>
       </div>
-      {prev.impossible && !(result && !weapon) && <div className="error small">{t('Compétence non maîtrisée : impossible de l’utiliser par défaut.')}</div>}
+      {prev.impossible && !(result && !weapon) && <div className="error small">{t('Untrained skill: it can\'t be used by defaulting.')}</div>}
       {initialPreset.weaponId && sheet && <div className="col gap-s sh-rd-weapon">
         <div className="row wrap gap-s">
-          <Select value={weaponId || ''} onChange={(v) => { setWeaponId(v); setFireMode(null); setAmmoOverride(false); }} options={(sheet.weapons || []).filter((w) => w.id === weaponId || (!isLauncherProfile(w) && (allWeapons || w.equipped !== false || isUnarmed(w)))).map((w) => ({ value: w.id, label: itemLabel(w) + (w.equipped === false && !isUnarmed(w) ? ` (${t('rangée')})` : '') }))} />
-          <Toggle value={allWeapons} onChange={setAllWeapons} label={t('afficher tout')} title={t('Montrer aussi les armes rangées')} />
+          <Select value={weaponId || ''} onChange={(v) => { setWeaponId(v); setFireMode(null); setAmmoOverride(false); }} options={(sheet.weapons || []).filter((w) => w.id === weaponId || (!isLauncherProfile(w) && (allWeapons || w.equipped !== false || isUnarmed(w)))).map((w) => ({ value: w.id, label: itemLabel(w) + (w.equipped === false && !isUnarmed(w) ? ` (${t('stowed')})` : '') }))} />
+          <Toggle value={allWeapons} onChange={setAllWeapons} label={t('show all')} title={t('Also show stowed weapons')} />
         </div>
-        {!weapon && !result && <div className="error small">{t('Arme introuvable')}</div>}
+        {!weapon && !result && <div className="error small">{t('Weapon not found')}</div>}
         {weapon && fire && fireOpts.length > 0 && <div className="row wrap gap-s">
           {fireOpts.length > 1 ? <Select value={fire.id} options={fireSelectOptions(weapon)} onChange={setFireMode} /> : <span className="small">{fireSelectOptions(weapon)[0].label}</span>}
-          <span className={'badge mono' + (outOfAmmo ? ' badge-red' : '')} title={weapon.ammoKind ? t('Chargée : {ammo}', { ammo: ammoKindLabel(weapon.ammoKind) }) : ''}>
+          <span className={'badge mono' + (outOfAmmo ? ' badge-red' : '')} title={weapon.ammoKind ? t('Loaded: {ammo}', { ammo: ammoKindLabel(weapon.ammoKind) }) : ''}>
             {loaded}/{weapon.ammoMax}
           </span>
-          {ownsActor(game, sheet.id) && <Button small variant="ghost" onClick={() => setReloading(true)}>↻ {t('Recharger')}</Button>}{shownDefense ? <span className="faint small">{t('Défense de la cible {n}', { n: shownDefense })} · {actionLabel(fire.action)}</span> : <span className="faint small">{actionLabel(fire.action)}</span>}
+          {ownsActor(game, sheet.id) && <Button small variant="ghost" onClick={() => setReloading(true)}>↻ {t('Reload')}</Button>}{shownDefense ? <span className="faint small">{t('Target defense {n}', { n: shownDefense })} · {actionLabel(fire.action)}</span> : <span className="faint small">{actionLabel(fire.action)}</span>}
         </div>}
         {short > 0 && <div className="amber small">
           {fire.defense === null
-          ? tn(loaded, 'Seulement {n} balle : zone de barrage réduite de {m} m.', 'Seulement {n} balles : zone de barrage réduite de {m} m.', { m: Math.floor(short / 2) })
-          : tn(loaded, 'Seulement {n} balle : modificateur de défense réduit de {short}.', 'Seulement {n} balles : modificateur de défense réduit de {short}.', { short })}
+          ? tn(loaded, 'Only {n} round: suppressed area {m} m narrower.', 'Only {n} rounds: suppressed area {m} m narrower.', { m: Math.floor(short / 2) })
+          : tn(loaded, 'Only {n} round: defense modifier reduced by {short}.', 'Only {n} rounds: defense modifier reduced by {short}.', { short })}
         </div>}
-        {grenadeLeft !== null && <div className="muted small">{tn(grenadeLeft, '{n} exemplaire — le jet le consomme.', '{n} exemplaires — le jet en consomme un.')}</div>}
+        {grenadeLeft !== null && <div className="muted small">{tn(grenadeLeft, '{n} left — this roll uses it.', '{n} left — this roll uses one.')}</div>}
         {outOfAmmo && <div className="row wrap gap-s">
-          <span className="error small">{t('Plus assez de munitions — recharge')}</span>
-          {gm && <Toggle value={ammoOverride} onChange={setAmmoOverride} label={t('Tirer quand même (MJ)')} />}
+          <span className="error small">{t('Not enough ammo — reload')}</span>
+          {gm && <Toggle value={ammoOverride} onChange={setAmmoOverride} label={t('Fire anyway (GM)')} />}
         </div>}
       </div>}
       {reloading && weapon && sheet && <ReloadDialog actor={sheet} w={weapon} gm={gm} onClose={() => setReloading(false)} />}
       {canTarget && !result && <div className="atk-target">
         {weapon && weaponActions.length > 0 && <div className="row wrap gap-s">
           <span className="field-label">{t('Action')}</span>
-          <Select value={actionId} onChange={pickAction} options={[{ value: '', label: t('Attaque normale') }, ...weaponActions.map((a) => ({ value: a.id, label: t(a.name) + (a.locked ? ` (${t('non débloquée')})` : '') }))]} />
+          <Select value={actionId} onChange={pickAction} options={[{ value: '', label: t('Standard attack') }, ...weaponActions.map((a) => ({ value: a.id, label: t(a.name) + (a.locked ? ` (${t('fem::not unlocked')})` : '') }))]} />
         </div>}
         {action && <div className="atk-action-note">
           {t(action.note)}{' '}
           <BookRef source={action.source} page={action.page} />
-          {action.edge ? <>{' '}<span className={'badge ' + (edgeShort ? 'badge-red' : 'badge-magenta')}>{t('−{n} Chance', { n: action.edge })}</span></> : null}{action.ini ? <>{' '}<span className="badge">{t('−{n} init.', { n: action.ini })}</span></> : null}{action.rounds ? <>{' '}<span className="badge">{tn(action.rounds, '{n} balle', '{n} balles')}</span></> : null}{usedOnce ? <>{' '}<span className="badge badge-red">{t('déjà utilisée ce tour')}</span></> : null}{!isUnlocked(action, sheet) ? <>{' '}<span className="badge badge-amber">{t('non débloquée (MJ)')}</span></> : null}
+          {action.edge ? <>{' '}<span className={'badge ' + (edgeShort ? 'badge-red' : 'badge-magenta')}>{t('−{n} Edge', { n: action.edge })}</span></> : null}{action.ini ? <>{' '}<span className="badge">{t('−{n} init.', { n: action.ini })}</span></> : null}{action.rounds ? <>{' '}<span className="badge">{tn(action.rounds, '{n} round', '{n} rounds')}</span></> : null}{usedOnce ? <>{' '}<span className="badge badge-red">{t('already used this turn')}</span></> : null}{!isUnlocked(action, sheet) ? <>{' '}<span className="badge badge-amber">{t('not unlocked (GM)')}</span></> : null}
         </div>}
         {rounds.length > 0 && <div className="row wrap gap-s">
-          <span className="field-label">{t('Munition')}</span>
-          <Select value={round.id} onChange={setProfileId} options={rounds.map((r) => ({ value: r.id, label: itemLabel(r.w) + (r.loaded ? ` · ${t('chargée')}` : r.sheet ? '' : ` · ${t('catalogue')}`) }))} />
+          <span className="field-label">{t('Ammunition')}</span>
+          <Select value={round.id} onChange={setProfileId} options={rounds.map((r) => ({ value: r.id, label: itemLabel(r.w) + (r.loaded ? ` · ${t('fem::loaded')}` : r.sheet ? '' : ` · ${t('catalog')}`) }))} />
         </div>}
         <div className="row wrap gap-s">
-          <span className="field-label">{area ? t('Cible / point visé') : t('Cible')}</span>
-          <Select value={targetId} onChange={setTargetId} options={[{ value: '', label: candidates.length ? t('— aucune —') : t('— aucun pion sur la carte —') }, ...candidates.map((c) => ({ value: c.token.id, label: c.name + (c.meters !== null ? ` · ${c.meters} m` : '') + (c.range ? ` · ${t(c.range.label)}${c.range.mod ? ` ${c.range.mod}` : ''}` : '') }))]} />
+          <span className="field-label">{area ? t('Target / aimed point') : t('Target')}</span>
+          <Select value={targetId} onChange={setTargetId} options={[{ value: '', label: candidates.length ? t('— none —') : t('— no token on the map —') }, ...candidates.map((c) => ({ value: c.token.id, label: c.name + (c.meters !== null ? ` · ${c.meters} m` : '') + (c.range ? ` · ${t(c.range.label)}${c.range.mod ? ` ${c.range.mod}` : ''}` : '') }))]} />
         </div>
-        {area && aim && <Toggle value={useAim} onChange={setUseAim} label={t('Viser le point marqué sur la carte ({x}, {y})', { x: aim.x, y: aim.y })} />}{area && !aim && <div className="faint small">{t('Astuce : clic droit sur la carte → « Viser ce point » pour lancer sur une case.')}</div>}
+        {area && aim && <Toggle value={useAim} onChange={setUseAim} label={t('Aim at the point marked on the map ({x}, {y})', { x: aim.x, y: aim.y })} />}{area && !aim && <div className="faint small">{t('Tip: right-click the map → “Aim at this point” to throw at a cell.')}</div>}
         {area && blast && <div className="faint small">
           {gas
-          ? t('Nuage de gaz de {r} m : un test de Résistance aux toxines (CON + VOL) pour chaque pion dedans.', { r: blast.radius || 10 })
+          ? t('{r} m gas cloud: a Toxin Resistance Test (BOD + WIL) for every token inside.', { r: blast.radius || 10 })
           : blast.damaging
-          ? (blast.radius ? t('Souffle : {dv}{type} dans un rayon de {r} m.', { dv: blast.dv, type: blast.type, r: blast.radius }) : t('Souffle : {dv}{type}, −{f} par mètre (jusqu’à {r} m).', { dv: blast.dv, type: blast.type, f: blast.falloff, r: blastReach(blast) }))
-          : t('Pas de dommages de souffle (fumée, gaz…).')}
-          {' '}{t('3 succès : pas de dispersion.')}
+          ? (blast.radius ? t('Blast: {dv}{type} within a {r} m radius.', { dv: blast.dv, type: blast.type, r: blast.radius }) : t('Blast: {dv}{type}, −{f} per meter (up to {r} m).', { dv: blast.dv, type: blast.type, f: blast.falloff, r: blastReach(blast) }))
+          : t('No blast damage (smoke, gas…).')}
+          {' '}{t('3 hits: no scatter.')}
         </div>}
         {range && <div className={'small ' + (range.beyond || range.tooClose ? 'error' : 'muted')}>
-          {range.beyond ? t('Hors de portée ({m} m, max {max} m)', { m: range.meters, max: range.max }) : range.tooClose ? t('Trop près : portée minimale {min} m', { min: range.min }) : t('{band} ({m} m) : {mod} dés', { band: t(range.label), m: range.meters, mod: range.mod })}
+          {range.beyond ? t('Out of range ({m} m, max {max} m)', { m: range.meters, max: range.max }) : range.tooClose ? t('Too close: minimum range {min} m', { min: range.min }) : t('{band} ({m} m): {mod} dice', { band: t(range.label), m: range.meters, mod: range.mod })}
         </div>}
         {env && !env.rangeOnly && <div className={'small ' + (env.value ? 'amber' : 'muted')}>
-          {t('Environnement : {parts} → {mod} dés', { parts: [...(range?.mod ? [t(range.label)] : []), ...env.parts.map((p) => t(p))].join(', '), mod: env.value })}{env.notes.length ? ` (${t('compensé : {what}', { what: env.notes.map((n) => t(n)).join(', ') })})` : ''}{' '}
+          {t('Environment: {parts} → {mod} dice', { parts: [...(range?.mod ? [t(range.label)] : []), ...env.parts.map((p) => t(p))].join(', '), mod: env.value })}{env.notes.length ? ` (${t('compensated: {what}', { what: env.notes.map((n) => t(n)).join(', ') })})` : ''}{' '}
           <BookRef source="SR5" page={175} />
         </div>}
         {gas && <div className="row wrap gap-s">
-          <span className="field-label">{t('Gaz')}</span>
-          <Select value={toxinId} onChange={setToxinId} options={TOXINS.map((x) => ({ value: x.id, label: `${t(x.name)} · ${t('puissance {n}', { n: x.power })}` }))} />
+          <span className="field-label">{t('Gas')}</span>
+          <Select value={toxinId} onChange={setToxinId} options={TOXINS.map((x) => ({ value: x.id, label: `${t(x.name)} · ${t('power {n}', { n: x.power })}` }))} />
         </div>}
-        {!myToken && (targetId || point) && weapon?.kind !== 'melee' && <div className="faint small">{t('Pas de pion de ce personnage sur la carte : portée non calculée.')}</div>}
+        {!myToken && (targetId || point) && weapon?.kind !== 'melee' && <div className="faint small">{t('This character has no token on the map: range not computed.')}</div>}
       </div>}
       {lines.length > 0 && <div className="sh-rd-mods">
-        <div className="field-label">{t('Modificateurs (équipement, qualités, pouvoirs, implants)')}</div>
+        <div className="field-label">{t('Modifiers (gear, qualities, powers, implants)')}</div>
         {lines.map((l) => {
           const canDrop = (l.state === 'applied' || l.state === 'ignored') && (gm || (l.value ?? 0) > 0);
           return <div className="sh-rd-mod" key={l.kind + l.mod.id}>
             {canDrop
-              ? <input type="checkbox" checked={l.state === 'applied'} onChange={(e) => setIgnore(l.mod.id, !e.target.checked)} title={t('Compter ce modificateur')} />
+              ? <input type="checkbox" checked={l.state === 'applied'} onChange={(e) => setIgnore(l.mod.id, !e.target.checked)} title={t('Count this modifier')} />
               : <span className="sh-rd-mod-dot" aria-hidden="true">{l.state === 'applied' ? '●' : '○'}</span>}
             <ModChip m={l.mod} state={l.state} />
-            {l.kind === 'limit' ? <span className="faint small">{t('limite')}</span> : null}{l.state === 'off' ? <span className="faint small">{t('inactif')}</span> : null}
+            {l.kind === 'limit' ? <span className="faint small">{t('limit')}</span> : null}{l.state === 'off' ? <span className="faint small">{t('inactive')}</span> : null}
           </div>;
         })}
       </div>}
@@ -445,13 +445,13 @@ export function RollDialog({ game, actor: viewActor, preset: initialPreset = {},
       </div>}
       <div className="sh-rd-grid">
         <div className="field">
-          <span className="field-label">{t('Modificateur')}</span>
+          <span className="field-label">{t('Edit')}</span>
           <NumberInput value={modifier} min={-30} max={30} onChange={setModifier} />
         </div>
         <div className="field">
-          <span className="field-label">{t('Limite')}{' '}<RuleRef rule="limits" /></span>
+          <span className="field-label">{t('Limit')}{' '}<RuleRef rule="limits" /></span>
           <div className="row">
-            {!explode && !noLimit ? <NumberInput value={limit} min={1} max={30} onChange={setManualLimit} small /> : <span className="muted small">{explode ? t('aucune (Chance)') : t('aucune')}</span>}{!explode && !noLimit && manualLimit !== null && autoLimit !== null && manualLimit !== autoLimit ? <Button small variant="ghost" onClick={() => setManualLimit(null)} title={t('Revenir à la limite calculée')}>↺ {autoLimit}</Button> : null}{!explode && canRemoveLimit && <Toggle value={!noLimit} onChange={(v) => setNoLimit(!v)} title={t('Appliquer une limite')} />}
+            {!explode && !noLimit ? <NumberInput value={limit} min={1} max={30} onChange={setManualLimit} small /> : <span className="muted small">{explode ? t('none (Edge)') : t('none')}</span>}{!explode && !noLimit && manualLimit !== null && autoLimit !== null && manualLimit !== autoLimit ? <Button small variant="ghost" onClick={() => setManualLimit(null)} title={t('Back to the computed limit')}>↺ {autoLimit}</Button> : null}{!explode && canRemoveLimit && <Toggle value={!noLimit} onChange={(v) => setNoLimit(!v)} title={t('Apply a limit')} />}
           </div>
           {lim && !lim.fixed && lim.parts.length > 0 && !explode && <span className="field-hint">
             {lim.parts.map(([l, v], i) => `${i ? ' + ' : ''}${l} ${i && v >= 0 ? '+' : ''}${v}`).join('')}{lim.parts.length > 1 ? ` = ${lim.total}` : ''}
@@ -459,40 +459,40 @@ export function RollDialog({ game, actor: viewActor, preset: initialPreset = {},
         </div>
       </div>
       <div className="col gap-s">
-        {prev.spec && <Toggle value={useSpec} onChange={setUseSpec} label={t('Spécialisation ({spec}) +2', { spec: prev.spec })} />}
+        {prev.spec && <Toggle value={useSpec} onChange={setUseSpec} label={t('Specialization ({spec}) +2', { spec: prev.spec })} />}
         {dm && dm.woundModifier < 0 && (gm
-          ? <Toggle value={wounds} onChange={setWounds} label={t('Malus de blessures ({n})', { n: dm.woundModifier })} />
-          : wounds ? <span className="muted small">{t('Malus de blessures ({n})', { n: dm.woundModifier })}</span> : null)}
+          ? <Toggle value={wounds} onChange={setWounds} label={t('Wound modifier ({n})', { n: dm.woundModifier })} />
+          : wounds ? <span className="muted small">{t('Wound modifier ({n})', { n: dm.woundModifier })}</span> : null)}
         {canEdge && <div className="row gap-s">
-          <Toggle value={explode} onChange={setExplode} label={t('Repousser les limites (+{n} dés, règle des 6) — Chance {left}/{max}', { n: edgeMax, left: edgeLeft, max: edgeMax })} />
+          <Toggle value={explode} onChange={setExplode} label={t('Push the Limit (+{n} dice, rule of six) — Edge {left}/{max}', { n: edgeMax, left: edgeLeft, max: edgeMax })} />
           <RuleRef rule="edge" />
         </div>}
-        {gm && <Toggle value={secret} onChange={setSecret} label={t('Jet secret (visible du MJ seulement)')} />}
+        {gm && <Toggle value={secret} onChange={setSecret} label={t('Secret roll (visible to the GM only)')} />}
       </div>
       {result && <div className="sh-rd-result">
-        <div className="sh-rd-hits"><b>{result.hits}</b><span>{tn(result.hits, 'one::succès', 'other::succès')}</span></div>
+        <div className="sh-rd-hits"><b>{result.hits}</b><span>{tn(result.hits, 'one::hit', 'other::hits')}</span></div>
         <div className="grow col gap-s">
           <DiceFaces roll={result} />
           <RollBadges roll={result} />
           {result.fire && <span className="muted small">{fireText(result.fire)}</span>}
           {result.attackId && !result.blast && <span className="small cyan">
-            {(result.hits ?? 0) > 0 ? t('Attaque envoyée à {target} : en attente de sa défense.', { target: result.targetName || '' }) : t('Raté : aucun succès.')}
+            {(result.hits ?? 0) > 0 ? t('Attack sent to {target}: waiting for their defense.', { target: result.targetName || '' }) : t('Miss: no hits.')}
           </span>}
           {result.blast && <span className="small amber">
-            {result.blast.fumble ? t('Échec critique : la grenade part dans les pieds du lanceur !') : result.blast.scattered ? t('Dévie de {m} m (direction {d} au diagramme).', { m: result.blast.meters, d: ((result.blast.dir || [0, 0]) as number[]).reduce((a, b) => a + b, 0) }) : t('Pile sur le point visé.')}{result.blast.hits?.length ? ' ' + tn(result.blast.hits.length, '{n} cible dans le souffle.', '{n} cibles dans le souffle.') : ''}
+            {result.blast.fumble ? t('Critical glitch: the grenade lands at the thrower\'s feet!') : result.blast.scattered ? t('Scatters {m} m (direction {d} on the diagram).', { m: result.blast.meters, d: ((result.blast.dir || [0, 0]) as number[]).reduce((a, b) => a + b, 0) }) : t('Right on the aimed point.')}{result.blast.hits?.length ? ' ' + tn(result.blast.hits.length, '{n} target in the blast.', '{n} targets in the blast.') : ''}
           </span>}
         </div>
       </div>}
       <div className="row spread wrap">
         <div className="row">
-          {result && !result.explode && !result.secondChance && canEdge && <Button small variant="accent" onClick={secondChance} title={t('Relancer tous les dés qui ne sont pas des succès (1 point de Chance)')}>
-            {t('Seconde chance')}
+          {result && !result.explode && !result.secondChance && canEdge && <Button small variant="accent" onClick={secondChance} title={t('Reroll every die that isn\'t a hit (1 Edge point)')}>
+            {t('Second Chance')}
           </Button>}
         </div>
         <div className="row">
-          <Button variant="ghost" onClick={onClose}>{t('Fermer')}</Button>
+          <Button variant="ghost" onClick={onClose}>{t('Close')}</Button>
           <Button variant="primary" disabled={busy || total <= 0 || prev.impossible || blockedByAmmo || (initialPreset.weaponId && !weapon) || (attackRoll && (edgeShort || usedOnce))} onClick={roll}>
-            {result ? tn(total, 'Relancer {n} dé', 'Relancer {n} dés') : tn(total, 'Lancer {n} dé', 'Lancer {n} dés')}
+            {result ? tn(total, 'Reroll {n} die', 'Reroll {n} dice') : tn(total, 'Roll {n} die', 'Roll {n} dice')}
           </Button>
         </div>
       </div>
@@ -503,11 +503,11 @@ export function RollDialog({ game, actor: viewActor, preset: initialPreset = {},
 /** « 3 balles · reste 9/15 » / « reste 1 » of a roll's fire record (roll.fire). */
 export function fireText(f: FireInfo | null | undefined): string {
   if (!f) return '';
-  if (f.item) return f.removed ? t('dernier exemplaire utilisé') : t('reste {n}', { n: f.left });
-  const base = t('{rounds} · reste {left}/{max}', { rounds: tn(f.rounds, '{n} balle', '{n} balles'), left: f.left, max: f.max });
+  if (f.item) return f.removed ? t('last one used') : t('{n} left', { n: f.left });
+  const base = t('{rounds} · {left}/{max} left', { rounds: tn(f.rounds, '{n} round', '{n} rounds'), left: f.left, max: f.max });
   if (!f.short) return base;
   // Short burst (SR5 p. 180): the reduced defense modifier / narrower suppressive area.
-  const extra = f.narrower !== undefined ? t('zone réduite de {m} m', { m: f.narrower }) : t('défense de la cible {n}', { n: f.defense ?? 0 });
+  const extra = f.narrower !== undefined ? t('area {m} m narrower', { m: f.narrower }) : t('target defense {n}', { n: f.defense ?? 0 });
   return `${base} · ${extra}`;
 }
 

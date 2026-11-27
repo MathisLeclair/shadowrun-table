@@ -11,7 +11,7 @@ import { normalizeActor, slugify, SUB_LISTS } from '../../client/modules/sheet/s
 import { parseChum5, sha1, ChummerError } from '../lib/chummer/parse.ts';
 import { exportChum5, detachMugshots } from '../lib/chummer/export.ts';
 import { mergeActor, diffActors } from '../lib/chummer/merge.ts';
-import { errorBody, formatFr } from '../lib/i18n.ts';
+import { errorBody, formatSource } from '../lib/i18n.ts';
 import { errorParam } from '../lib/chummer/messages.ts';
 import { fillActorRefs } from '../lib/bookrefs.ts';
 import type {
@@ -153,14 +153,14 @@ function prepareUpdate(actor: Actor, rawXml: string | undefined, fileName: strin
 function summaryParts(diff: ActorDiff): I18nMessage[] {
   const parts: I18nMessage[] = [];
   for (const s of diff.scalars) if (['Karma', 'Nuyens'].includes(s.label)) parts.push({ t: '{label} {from} → {to}', params: { label: { t: s.label }, from: s.from as string | number, to: s.to as string | number } });
-  if (diff.attributes.length) parts.push({ t: '{n} attribut(s)', params: { n: diff.attributes.length } });
-  if (diff.skills.length) parts.push({ t: '{n} compétence(s)', params: { n: diff.skills.length } });
+  if (diff.attributes.length) parts.push({ t: '{n} attribute(s)', params: { n: diff.attributes.length } });
+  if (diff.skills.length) parts.push({ t: '{n} skill(s)', params: { n: diff.skills.length } });
   const items = diff.lists.reduce((n, l) => n + l.added.length + l.removed.length + l.changed.length, 0);
-  if (items) parts.push({ t: '{n} élément(s) d’inventaire', params: { n: items } });
-  return parts.length ? parts : [{ t: 'aucun changement' }];
+  if (items) parts.push({ t: '{n} inventory item(s)', params: { n: items } });
+  return parts.length ? parts : [{ t: 'no changes' }];
 }
 /** French text of the summary (stored in pending requests, as before). */
-const summaryText = (parts: I18nMessage[]): string => formatFr('{list}', { list: parts });
+const summaryText = (parts: I18nMessage[]): string => formatSource('{list}', { list: parts });
 
 function applyUpdate(
   state: TableState,
@@ -172,8 +172,8 @@ function applyUpdate(
   state.actors[actorId] = merged;
   const params = { actor: merged.name, file: fileName, user: by, summary: summaryParts(diff) };
   const key = fileName
-    ? by ? tk('{actor} mis à jour depuis Chummer ({file}) par {user} : {summary}.') : tk('{actor} mis à jour depuis Chummer ({file}) : {summary}.')
-    : by ? tk('{actor} mis à jour depuis Chummer par {user} : {summary}.') : tk('{actor} mis à jour depuis Chummer : {summary}.');
+    ? by ? tk('{actor} updated from Chummer ({file}) by {user}: {summary}.') : tk('{actor} updated from Chummer ({file}): {summary}.')
+    : by ? tk('{actor} updated from Chummer by {user}: {summary}.') : tk('{actor} updated from Chummer: {summary}.');
   addLog({ kind: 'system', author: 'Chummer', i18n: { key, params }, gmOnly: true });
 }
 
@@ -207,7 +207,7 @@ const mod: ServerModule<HttpApp> = {
       role: 'gm',
       handler(ctx: ActionContext, { allowPlayerImport }: SettingsPayload) {
         const s = slice(ctx.state);
-        if (typeof allowPlayerImport !== 'boolean') ctx.fail('Réglage invalide');
+        if (typeof allowPlayerImport !== 'boolean') ctx.fail('Invalid setting');
         s.allowPlayerImport = allowPlayerImport;
         return s.allowPlayerImport;
       },
@@ -219,17 +219,17 @@ const mod: ServerModule<HttpApp> = {
       handler(ctx: ActionContext, { requestId, approve, note }: ResolvePayload) {
         const s = slice(ctx.state);
         const r = s.pending.find((x) => x.id === requestId);
-        if (!r) return ctx.fail('Demande introuvable');
-        if (r.status !== 'pending') ctx.fail('Demande déjà traitée');
+        if (!r) return ctx.fail('Request not found');
+        if (r.status !== 'pending') ctx.fail('Request already handled');
         const actor = ctx.state.actors[r.actorId];
-        if (!actor) ctx.fail('Personnage introuvable');
+        if (!actor) ctx.fail('Character not found');
         if (approve) {
           let prep: ReturnType<typeof prepareUpdate>;
           try {
             prep = prepareUpdate(actor, r.xml, r.fileName, ctx.now, r.mugshots || []);
           } catch (e) {
             const err = e as ChummerFailure;
-            return ctx.fail(err.i18nKey || err.message || tk('Fichier illisible'), err.i18nParams);
+            return ctx.fail(err.i18nKey || err.message || tk('Unreadable file'), err.i18nParams);
           }
           applyUpdate(ctx.state, r.actorId, prep.merged, { by: r.userName, fileName: r.fileName, diff: prep.diff, addLog: ctx.log });
           ctx.emitTo(r.userId, 'sfx', { id: 'notify' });
@@ -251,8 +251,8 @@ const mod: ServerModule<HttpApp> = {
       handler(ctx: ActionContext, { requestId }: RequestPayload) {
         const s = slice(ctx.state);
         const r = s.pending.find((x) => x.id === requestId);
-        if (!r) return ctx.fail('Demande introuvable');
-        if (!ctx.isGM && r.userId !== ctx.user.id) ctx.fail('Ce n’est pas ta demande');
+        if (!r) return ctx.fail('Request not found');
+        if (!ctx.isGM && r.userId !== ctx.user.id) ctx.fail('This is not your request');
         s.pending = s.pending.filter((x) => x !== r);
         return true;
       },
@@ -263,8 +263,8 @@ const mod: ServerModule<HttpApp> = {
       role: 'gm',
       handler(ctx: ActionContext, { actorId }: ActorPayload) {
         const a = ctx.state.actors[actorId as ActorId];
-        if (!a) return ctx.fail('Personnage introuvable');
-        if (!a.chummer) ctx.fail('Ce personnage n’est lié à aucun fichier Chummer');
+        if (!a) return ctx.fail('Character not found');
+        if (!a.chummer) ctx.fail('This character is not linked to any Chummer file');
         delete a.chummer;
         for (const list of Object.values(a as Loose)) {
           if (!Array.isArray(list)) continue;
@@ -317,10 +317,10 @@ const mod: ServerModule<HttpApp> = {
         try {
           body = JSON.parse(raw);
         } catch {
-          return res.status(400).json(errorBody('JSON invalide'));
+          return res.status(400).json(errorBody('Invalid JSON'));
         }
         const src = isObj(body) && isObj(body.actor) ? body.actor : body;
-        if (!isObj(src) || !src.name || !isObj(src.attributes)) return res.status(400).json(errorBody('Ce JSON ne ressemble pas à une fiche de personnage (name + attributes attendus)'));
+        if (!isObj(src) || !src.name || !isObj(src.attributes)) return res.status(400).json(errorBody('This JSON does not look like a character sheet (name + attributes expected)'));
         actor = deepClone(src);
         actor.type = actor.type === 'npc' ? 'npc' : 'pc';
         delete actor.training;
@@ -335,7 +335,7 @@ const mod: ServerModule<HttpApp> = {
           actor.portrait = det.urls[det.mainIndex] || det.urls[0];
         }
       } else {
-        return res.status(400).json(errorBody('Fichier non reconnu : envoie un .chum5 (Chummer5) ou un export JSON de fiche'));
+        return res.status(400).json(errorBody('Unrecognized file: send a .chum5 (Chummer5) or a JSON sheet export'));
       }
       const type = req.query.type === 'npc' ? 'npc' : req.query.type === 'pc' ? 'pc' : actor.type;
       actor.type = type;
@@ -345,7 +345,7 @@ const mod: ServerModule<HttpApp> = {
       normalizeActor(actor, uid);
       fillActorRefs(actor);
       state.actors[id] = actor;
-      addLog({ kind: 'system', author: 'MJ', i18n: { key: actor.chummer ? tk('Fiche importée : {actor} (Chummer).') : tk('Fiche importée : {actor}.'), params: { actor: actor.name } }, gmOnly: true });
+      addLog({ kind: 'system', author: 'MJ', i18n: { key: actor.chummer ? tk('Sheet imported: {actor} (Chummer).') : tk('Sheet imported: {actor}.'), params: { actor: actor.name } }, gmOnly: true });
       done();
       replyAfterBroadcast(res, { actorId: id, warnings, warningsI18n });
     }
@@ -355,11 +355,11 @@ const mod: ServerModule<HttpApp> = {
       const actorId = String(req.query.actorId || '');
       const actor = state.actors[actorId];
       if (!actor) {
-        res.status(404).json(errorBody('Personnage introuvable'));
+        res.status(404).json(errorBody('Character not found'));
         return null;
       }
       if (!owns(req.user, actorId)) {
-        res.status(403).json(errorBody('Ce personnage ne t’appartient pas'));
+        res.status(403).json(errorBody('This character is not yours'));
         return null;
       }
       return actor;
@@ -367,7 +367,7 @@ const mod: ServerModule<HttpApp> = {
 
     function checkChum5(raw: string, res: Res): boolean {
       if (!raw.includes('<character')) {
-        res.status(400).json(errorBody('Ce fichier n’est pas une fiche Chummer5 (.chum5)'));
+        res.status(400).json(errorBody('This file is not a Chummer5 character (.chum5)'));
         return false;
       }
       return true;
@@ -398,7 +398,7 @@ const mod: ServerModule<HttpApp> = {
       request.summary = summaryText(request.summaryI18n!);
       s.pending.push(request);
       while (s.pending.length > MAX_PENDING) s.pending.splice(s.pending.findIndex((r) => r.status !== 'pending') >= 0 ? s.pending.findIndex((r) => r.status !== 'pending') : 0, 1);
-      addLog({ kind: 'system', author: 'Chummer', i18n: { key: '{user} demande à mettre à jour {actor} depuis Chummer ({summary}).', params: { user: req.user.name, actor: actor.name, summary: request.summaryI18n! } }, gmOnly: true });
+      addLog({ kind: 'system', author: 'Chummer', i18n: { key: '{user} asks to update {actor} from Chummer ({summary}).', params: { user: req.user.name, actor: actor.name, summary: request.summaryI18n! } }, gmOnly: true });
       emitTo('gm', 'sfx', { id: 'notify' });
       done();
       replyAfterBroadcast(res, { applied: false, pending: true, requestId: request.id, diff: prep.diff, warnings: prep.warnings, warningsI18n: prep.warningsI18n });
@@ -409,14 +409,14 @@ const mod: ServerModule<HttpApp> = {
         fn(req, res);
       } catch (err) {
         if (!(err instanceof ChummerError)) console.error('[chummer]', err);
-        if (!res.headersSent) res.status(400).json(errBody(err as ChummerFailure, tk('Opération Chummer impossible')));
+        if (!res.headersSent) res.status(400).json(errBody(err as ChummerFailure, tk('Chummer operation failed')));
       }
     };
 
     // POST /api/chummer/import[?type=pc|npc][&fileName=] — GM: new actor. Player: ?actorId= → same as update.
     app.post('/api/chummer/import', requireUser, textBody, wrap((req: Req, res: Res) => {
       if (req.query.actorId) return update(req, res);
-      if (req.user.role !== 'gm') return res.status(403).json(errorBody('Seul le MJ peut créer un personnage depuis un fichier'));
+      if (req.user.role !== 'gm') return res.status(403).json(errorBody('Only the GM can create a character from a file'));
       importNew(req, res);
     }));
     // Legacy URL (characters module used to own it): GM import of a .chum5 or Actor JSON.
@@ -444,8 +444,8 @@ const mod: ServerModule<HttpApp> = {
     app.get('/api/chummer/export/:actorId', requireUser, wrap((req: Req, res: Res) => {
       const state = getState()!;
       const actor = state.actors[req.params.actorId] as Actor & Loose;
-      if (!actor || !actor.attributes) return res.status(404).json(errorBody('Personnage introuvable'));
-      if (!owns(req.user, actor.id)) return res.status(403).json(errorBody('Ce personnage ne t’appartient pas'));
+      if (!actor || !actor.attributes) return res.status(404).json(errorBody('Character not found'));
+      if (!owns(req.user, actor.id)) return res.status(403).json(errorBody('This character is not yours'));
       const now = Date.now();
       const result = exportChum5(actor, { now, mugshots: mugshotsFor(actor) });
       const stored = detachMugshots(result.xml, saveMugshot);

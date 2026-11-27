@@ -31,16 +31,16 @@ export default function FoundryUpload({ onChanged }: { onChanged?: () => void })
 
   const send = async (kind: UploadKind, file: File | undefined) => {
     if (!file) return;
-    if (!/\.zip$/i.test(file.name)) return toast(t('Choisis un fichier .zip'), 'error');
-    if (info?.maxBytes && file.size > info.maxBytes) return toast(t('Fichier trop volumineux ({size} max)', { size: fmtBytes(info.maxBytes) }), 'error');
+    if (!/\.zip$/i.test(file.name)) return toast(t('Choose a .zip file'), 'error');
+    if (info?.maxBytes && file.size > info.maxBytes) return toast(t('File too large ({size} max)', { size: fmtBytes(info.maxBytes) }), 'error');
     setSending(kind);
     setProgress(0);
     try {
       const r = await uploadWithProgress<{ world: { title: string }; files: number; size: string }>(`/api/foundry/upload?kind=${kind}`, file, {
         onProgress: (p) => setProgress(p >= 1 ? 'server' : p),
       });
-      if (kind === 'world') toast(t('Monde « {title} » prêt sur le serveur : lance « Analyser »', { title: r.world.title }), 'success');
-      else toast(t('Fichiers ajoutés : {files} ({size})', { files: r.files, size: r.size }), 'success');
+      if (kind === 'world') toast(t('World “{title}” ready on the server: run “Scan”', { title: r.world.title }), 'success');
+      else toast(t('Files added: {files} ({size})', { files: r.files, size: r.size }), 'success');
       await load();
       // Let the state broadcast carrying the new world path arrive (30 ms debounce) before the panel reloads.
       setTimeout(() => onChanged?.(), 250);
@@ -57,10 +57,10 @@ export default function FoundryUpload({ onChanged }: { onChanged?: () => void })
     send(kind, f);
   };
   const removeAll = async () => {
-    if (!(await confirmAction(t('Effacer du serveur les mondes et fichiers Foundry téléversés pour cette table ? Les cartes, portraits et sons déjà importés restent.')))) return;
+    if (!(await confirmAction(t('Delete the Foundry worlds and files uploaded for this table from the server? Maps, portraits and sounds already imported stay.')))) return;
     try {
       await api('/api/foundry/uploads', { method: 'DELETE' });
-      toast(t('Fichiers Foundry téléversés effacés'), 'success');
+      toast(t('Uploaded Foundry files deleted'), 'success');
       await load();
       onChanged?.();
     } catch (err) {
@@ -70,11 +70,11 @@ export default function FoundryUpload({ onChanged }: { onChanged?: () => void })
 
   const busy = progress !== null;
   return (
-    <Panel title={t('Foundry VTT — monde sur le serveur')} className="foundry-upload">
+    <Panel title={t('Foundry VTT — world on the server')} className="foundry-upload">
       <div className="col">
         <p className="muted small">
           {t(
-            'Le serveur ne peut pas lire Foundry sur ton ordinateur : zippe le dossier de ton monde ({path}, avec ses sous-dossiers data, scenes…) et envoie-le ici, puis utilise « Analyser » dans le panneau Foundry ci-dessous. Si des images ou musiques sont hors du dossier du monde (Data/Music, Data/img…), envoie-les aussi dans un second .zip.',
+            'The server cannot read Foundry on your computer: zip your world\'s folder ({path}, with its data, scenes… subfolders) and upload it here, then use “Scan” in the Foundry panel below. If images or music live outside the world folder (Data/Music, Data/img…), upload them too in a second .zip.',
             { path: 'Foundry/Data/worlds/<…>' }
           )}
         </p>
@@ -88,27 +88,27 @@ export default function FoundryUpload({ onChanged }: { onChanged?: () => void })
             ))}
           </div>
         ) : (
-          <Empty>{t('Aucun monde téléversé pour cette table.')}</Empty>
+          <Empty>{t('No world uploaded for this table.')}</Empty>
         )}
-        {progress !== null && <Progress value={progress}serverLabel={sending === 'world' ? t('Décompression et vérification du monde…') : t('Décompression des fichiers…')} />}
+        {progress !== null && <Progress value={progress}serverLabel={sending === 'world' ? t('Unpacking and checking the world…') : t('Unpacking the files…')} />}
         <div className="row wrap">
           <label className={'btn btn-primary' + (busy ? ' disabled' : '')}>
-            {t('Téléverser un monde Foundry (.zip)')}
+            {t('Upload a Foundry world (.zip)')}
             <input type="file" accept=".zip" className="hidden" disabled={busy} onChange={pick('world')} />
           </label>
           <label className={'btn' + (busy ? ' disabled' : '')}>
-            {t('Ajouter des fichiers Data (.zip, optionnel)')}
+            {t('Add Data files (.zip, optional)')}
             <input type="file" accept=".zip" className="hidden" disabled={busy} onChange={pick('data')} />
           </label>
           {info && info.bytes > 0 && (
             <Button variant="ghost" disabled={busy} onClick={removeAll}>
-              {t('Effacer les fichiers téléversés ({size})', { size: fmtBytes(info.bytes) })}
+              {t('Delete the uploaded files ({size})', { size: fmtBytes(info.bytes) })}
             </Button>
           )}
         </div>
         <span className="field-hint">
-          {info?.maxBytes ? t('Taille max par fichier : {size}.', { size: fmtBytes(info.maxBytes) }) + ' ' : ''}
-          {info?.localPaths ? t('Sur ce PC, tu peux aussi indiquer directement le chemin du monde ci-dessous.') : ''}
+          {info?.maxBytes ? t('Max size per file: {size}.', { size: fmtBytes(info.maxBytes) }) + ' ' : ''}
+          {info?.localPaths ? t('On this PC, you can also enter the world\'s path directly below.') : ''}
         </span>
       </div>
     </Panel>

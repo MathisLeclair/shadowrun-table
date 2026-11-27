@@ -15,7 +15,7 @@ import {
 import { uid, deepClone, slug } from '../../shared/util.ts';
 import { cleanConditions } from '../../shared/modifiers.ts';
 import { actorModifiers, deriveFull } from '../lib/modifiers.ts';
-import { formatFr } from '../lib/i18n.ts';
+import { formatSource } from '../lib/i18n.ts';
 import combatModule, { combatHooks, upsertVirtualEntry, setVirtualOut, endTurnOf, isVirtual } from './30-combat.ts';
 import { refreshFog, findAnyDoor } from './20-maps.ts';
 import notesModule from './75-notes.ts';
@@ -64,12 +64,12 @@ const isObj = (v: unknown): v is Loose => !!v && typeof v === 'object' && !Array
 // ---------------------------------------------------------------------------
 const tk = (s: string): string => s;
 /** French text of a message (or a plain string). */
-const fr = (m: MsgLike | null | undefined): string => (typeof m === 'string' ? m : m ? formatFr(m.t, m.params) : '');
+const fr = (m: MsgLike | null | undefined): string => (typeof m === 'string' ? m : m ? formatSource(m.t, m.params) : '');
 /** Counted noun as a nested message: `zero` is the key used for 0 (French singular, English plural). */
 const count = (n: number, one: string, other: string, zero = other): I18nMessage => ({ t: n === 1 ? one : n === 0 ? zero : other, params: { n } });
-const boxesM = (n: number) => count(n, tk('{n} case'), tk('{n} cases'), tk('zero::{n} case'));
-const hitsM = (n: number) => count(n, tk('{n} succès'), tk('n::{n} succès'));
-const netM = (n: number) => count(n, tk('{n} succès net'), tk('{n} succès nets'), tk('zero::{n} succès net'));
+const boxesM = (n: number) => count(n, tk('{n} box'), tk('{n} boxes'), tk('zero::{n} boxes'));
+const hitsM = (n: number) => count(n, tk('{n} hit'), tk('n::{n} hits'));
+const netM = (n: number) => count(n, tk('{n} net hit'), tk('{n} net hits'), tk('zero::{n} net hits'));
 /** Several messages as one (a log entry has a single i18n key): '{a} {b}' chain. */
 function joinMsgs(list: MsgLike[]): I18nMessage | null {
   if (!list.length) return null;
@@ -84,7 +84,7 @@ const icNameMsg = (type: IcType, hostName: string | undefined): I18nMessage => (
 const linkLockMsg = (ll: Persona['linkLocked'] | undefined): MsgLike => (ll?.icType ? icNameMsg(ll.icType, ll.hostName) : ll?.name || '');
 /** Display name of a mark entry (nameI18n when the name was generated, else the stored name). */
 const markNameMsg = (m: MatrixMark | MatrixMarkOnMe | undefined): MsgLike => m?.nameI18n || m?.name || '';
-const agentAuthorMsg = (ag: { name: string }, actor: { name: string }): I18nMessage => ({ t: '{agent} (agent de {name})', params: { agent: ag.name, name: actor.name } });
+const agentAuthorMsg = (ag: { name: string }, actor: { name: string }): I18nMessage => ({ t: '{agent} ({name}’s agent)', params: { agent: ag.name, name: actor.name } });
 
 // ---------------------------------------------------------------------------
 // Catalog: program slots of known cyberdecks (data/catalog/gear.json → stats.programs)
@@ -182,7 +182,7 @@ function normalizePersona(p: Persona, actor: Actor | null | undefined): Persona 
 
 function getActor(ctx: ActionContext, actorId: unknown): Actor {
   const a = ctx.state.actors?.[actorId as ActorId];
-  if (!a) return ctx.fail('Personnage introuvable');
+  if (!a) return ctx.fail('Character not found');
   return a;
 }
 
@@ -209,19 +209,19 @@ function ensurePersona(state: TableState, actor: Actor): Persona {
 /** Owner (or GM) + actor with a device. */
 function ownPersona(ctx: ActionContext, actorId: unknown) {
   const actor = getActor(ctx, actorId);
-  if (!ctx.owns(actorId as ActorId)) ctx.fail('Ce personnage ne t’appartient pas');
-  if (!actor.matrix) ctx.fail('{name} n’a pas d’appareil matriciel (commlink ou cyberdeck)', { name: actor.name });
+  if (!ctx.owns(actorId as ActorId)) ctx.fail('This character is not yours');
+  if (!actor.matrix) ctx.fail('{name} has no Matrix device (commlink or cyberdeck)', { name: actor.name });
   return { actor, persona: ensurePersona(ctx.state, actor) };
 }
 
 function requireOnline(ctx: ActionContext, actor: Actor, persona: Persona): void {
-  if (persona.bricked) ctx.fail('Le deck de {name} est briqué : il doit être réparé', { name: actor.name });
-  if (!persona.online) ctx.fail('{name} n’est pas connecté(e) à la Matrice', { name: actor.name });
+  if (persona.bricked) ctx.fail('{name}’s deck is bricked: it must be repaired', { name: actor.name });
+  if (!persona.online) ctx.fail('{name} is not connected to the Matrix', { name: actor.name });
 }
 
 function getHost(ctx: ActionContext, hostId: unknown): Host {
   const h = slice(ctx.state).hosts[hostId as string];
-  if (!h) return ctx.fail('Hôte introuvable');
+  if (!h) return ctx.fail('Host not found');
   return h;
 }
 
@@ -315,10 +315,10 @@ function applyDumpshock(ctx: ActionContext, actor: Actor, persona: Persona, mode
   const boxes = Math.max(0, ds.dv - res.hits);
   applyActorDamage(actor, boxes, ds.type);
   const params = { boxes: boxesM(boxes), dv: ds.dv, hits: hitsM(res.hits) };
-  if (!boxes) return { t: 'Choc d’éjection entièrement résisté ({hits} contre VD {dv}).', params };
+  if (!boxes) return { t: 'Dumpshock fully resisted ({hits} vs DV {dv}).', params };
   return ds.type === 'P'
-    ? { t: 'Choc d’éjection : {boxes} de dommages physiques (VD {dv}, {hits} en résistance).', params }
-    : { t: 'Choc d’éjection : {boxes} de dommages étourdissants (VD {dv}, {hits} en résistance).', params };
+    ? { t: 'Dumpshock: {boxes} of Physical damage (DV {dv}, {hits} on the resistance test).', params }
+    : { t: 'Dumpshock: {boxes} of Stun damage (DV {dv}, {hits} on the resistance test).', params };
 }
 
 /** Leave the Matrix. dumped = forced (dumpshock in VR). Returns messages. */
@@ -358,10 +358,10 @@ function damageDeck(ctx: ActionContext, actor: Actor, persona: Persona, boxes: n
   const n = boxes + extra;
   const mon = matrixMonitor(actor.matrix?.rating);
   persona.matrixDamage = Math.min(mon, persona.matrixDamage + n);
-  out.push({ t: 'Le deck de {name} subit {boxes} de dommages matriciels ({dmg}/{mon}).', params: { name: actor.name, boxes: boxesM(n), dmg: persona.matrixDamage, mon } });
+  out.push({ t: '{name}’s deck takes {boxes} of Matrix damage ({dmg}/{mon}).', params: { name: actor.name, boxes: boxesM(n), dmg: persona.matrixDamage, mon } });
   if (persona.matrixDamage >= mon && !persona.bricked) {
     persona.bricked = true;
-    out.push({ t: 'Deck briqué ! {name} est éjecté(e) de la Matrice.', params: { name: actor.name } });
+    out.push({ t: 'Deck bricked! {name} is booted out of the Matrix.', params: { name: actor.name } });
     out.push(...goOffline(ctx, actor, persona, { dumped: true }));
     sfx(ctx, 'matrix-glitch');
   }
@@ -374,10 +374,10 @@ function damageAgent(actor: Actor, persona: Persona, boxes: number): I18nMessage
   if (!ag || boxes <= 0) return [];
   const mon = matrixMonitor(ag.rating);
   ag.damage = Math.min(mon, (ag.damage || 0) + boxes);
-  const out: I18nMessage[] = [{ t: '{agent} subit {boxes} de dommages matriciels ({dmg}/{mon}).', params: { agent: ag.name, boxes: boxesM(boxes), dmg: ag.damage, mon } }];
+  const out: I18nMessage[] = [{ t: '{agent} takes {boxes} of Matrix damage ({dmg}/{mon}).', params: { agent: ag.name, boxes: boxesM(boxes), dmg: ag.damage, mon } }];
   if (ag.damage >= mon) {
     ag.loaded = false;
-    out.push({ t: '{agent} plante et se décharge du deck.', params: { agent: ag.name } });
+    out.push({ t: '{agent} crashes and unloads from the deck.', params: { agent: ag.name } });
   }
   return out;
 }
@@ -391,27 +391,27 @@ function damageAgent(actor: Actor, persona: Persona, boxes: number): I18nMessage
 function converge(ctx: ActionContext, actor: Actor, persona: Persona, { grid = false }: { grid?: boolean } = {}): I18nMessage[] {
   const host = !grid && persona.online && persona.hostId ? slice(ctx.state).hosts[persona.hostId] : null;
   if (host) {
-    const out: I18nMessage[] = [{ t: 'CONVERGENCE dans l’hôte {host} ! Il pose 3 marques sur {name} et déploie ses IC.', params: { host: host.name, name: actor.name } }];
+    const out: I18nMessage[] = [{ t: 'CONVERGENCE inside the host {host}! It places 3 marks on {name} and deploys its IC.', params: { host: host.name, name: actor.name } }];
     persona.hostConverged = host.id;
     addMarkOnMe(persona, `host:${host.id}`, host.name, MAX_MARKS);
     const s = setAlert(ctx, host, { t: 'convergence' });
     if (s) out.push(s);
     const l = launchNextIc(ctx, host);
     if (l) out.push(l);
-    out.push({ t: 'Sortir de l’hôte déclenchera aussitôt la convergence du GOD.' });
+    out.push({ t: 'Leaving the host will trigger GOD convergence at once.' });
     persona.convergedAt = Date.now();
     mlog(ctx, { author: 'GOD', msgs: out, matrix: { event: 'convergence', actorId: actor.id, hostId: host.id } });
     sfx(ctx, 'alarm');
     sfx(ctx, 'matrix-glitch');
     return out;
   }
-  const out: I18nMessage[] = [{ t: 'CONVERGENCE ! Le GOD s’abat sur {name}.', params: { name: actor.name } }];
+  const out: I18nMessage[] = [{ t: 'CONVERGENCE! GOD comes down on {name}.', params: { name: actor.name } }];
   const ds = deckStats(actor, persona);
   const res = roll(ds.deviceRating + ds.eff.firewall + programSum(persona, 'resistMatrix'), {}, 'actor');
   const boxes = Math.max(0, CONVERGENCE_DV - res.hits);
-  out.push({ t: 'VD {dv} : {hits} en résistance.', params: { dv: CONVERGENCE_DV, hits: hitsM(res.hits) } });
+  out.push({ t: 'DV {dv}: {hits} on the resistance test.', params: { dv: CONVERGENCE_DV, hits: hitsM(res.hits) } });
   if (boxes) out.push(...damageDeck(ctx, actor, persona, boxes));
-  out.push({ t: 'Deck redémarré de force : toutes les marques sont perdues et la position physique est transmise aux autorités et au propriétaire de la grille.' });
+  out.push({ t: 'Forced deck reboot: all marks are lost and the physical location is sent to the authorities and the grid owner.' });
   out.push(...rebootDeck(ctx, actor, persona));
   persona.traced = true;
   persona.convergedAt = Date.now();
@@ -425,14 +425,14 @@ function converge(ctx: ActionContext, actor: Actor, persona: Persona, { grid = f
 function setAlert(ctx: ActionContext, host: Host, reason: MsgLike): I18nMessage | null {
   if (host.alert === 'active') return null;
   host.alert = 'active';
-  const s = { t: 'L’hôte {host} passe en alerte !', params: { host: host.name } };
+  const s = { t: 'Host {host} goes on alert!', params: { host: host.name } };
   if (host.spiderAlert || host.spider) {
     const tpl = ctx.state.bestiary?.[(host.spiderAlert || host.spider) as string];
     mlog(ctx, {
       author: host.name, gmOnly: true,
       msgs: [tpl
-        ? { t: 'Alerte ({reason}) : l’araignée passe à « {spider} » et l’hôte peut lancer ses IC.', params: { reason, spider: tpl.name } }
-        : { t: 'Alerte ({reason}) : pensez à l’araignée de garde et l’hôte peut lancer ses IC.', params: { reason } }],
+        ? { t: 'Alert ({reason}): the spider switches to “{spider}” and the host may launch its IC.', params: { reason, spider: tpl.name } }
+        : { t: 'Alert ({reason}): mind the spider on duty, and the host may launch its IC.', params: { reason } }],
     });
   }
   sfx(ctx, 'alarm');
@@ -450,7 +450,7 @@ function activateIc(ctx: ActionContext, host: Host, ic: HostIc): I18nMessage {
   ic.crashed = false;
   ic.damage = 0;
   const inside = intrudersOf(ctx.state, host);
-  const msg = { t: '{host} lance : {ic}.', params: { host: host.name, ic: { t: (IC_TYPES as Loose)[ic.type].fr } } };
+  const msg = { t: '{host} launches: {ic}.', params: { host: host.name, ic: { t: (IC_TYPES as Loose)[ic.type].fr } } };
   mlog(ctx, { author: host.name, gmOnly: !inside.length, msgs: [msg], matrix: { event: 'icLaunch', hostId: host.id, icType: ic.type } });
   if (inside.length) sfx(ctx, 'matrix-glitch', 'all');
   return msg;
@@ -480,7 +480,7 @@ function osTick(ctx: ActionContext, actor: Actor, persona: Persona, ticks = 1) {
   const before = persona.overwatch;
   addOverwatch(ctx, persona, added);
   const params = { name: actor.name, n: added, os: persona.overwatch, ticks };
-  mlog(ctx, { author: 'GOD', gmOnly: true, msgs: [ticks === 1 ? { t: 'Le temps passe : SO de {name} +{n} (2D6) → {os}.', params } : { t: 'Le temps passe ({ticks} × 15 min) : SO de {name} +{n} → {os}.', params }], matrix: { event: 'osTick', actorId: actor.id } });
+  mlog(ctx, { author: 'GOD', gmOnly: true, msgs: [ticks === 1 ? { t: 'Time passes: {name}’s OS +{n} (2D6) → {os}.', params } : { t: 'Time passes ({ticks} × 15 min): {name}’s OS +{n} → {os}.', params }], matrix: { event: 'osTick', actorId: actor.id } });
   let convergence: I18nMessage[] | null = null;
   if ((before as number) < OS_MAX && (persona.overwatch as number) >= OS_MAX && persona.online && !persona.hostConverged) convergence = converge(ctx, actor, persona);
   return { added, convergence };
@@ -554,7 +554,7 @@ function applyDeviceCmd(ctx: ActionContext, device: HostDevice, cmd: string): I1
     syncDeviceLink(ctx, device);
   }
   refreshFog(ctx.state, o.map);
-  return { t: 'Sur la carte : {device} → {cmd}.', params: { device: device.name, cmd: { t: (DEVICE_CMD_LABELS as Loose)[o.kind][cmd] } } };
+  return { t: 'On the map: {device} → {cmd}.', params: { device: device.name, cmd: { t: (DEVICE_CMD_LABELS as Loose)[o.kind][cmd] } } };
 }
 
 // ---------------------------------------------------------------------------
@@ -631,7 +631,7 @@ function resolveTarget(ctx: ActionContext, persona: Persona, action: MatrixActio
   const allow = action.targets || ['none'];
   if (!raw || raw === 'none') {
     if (allow.includes('none')) return { kind: 'none', key: null, name: '', nameMsg: '' };
-    ctx.fail('Choisis une cible pour cette action');
+    ctx.fail('Pick a target for this action');
   }
   const [kind, a, b] = raw.split(':');
   const t: Target = { kind };
@@ -640,10 +640,10 @@ function resolveTarget(ctx: ActionContext, persona: Persona, action: MatrixActio
     t.kind = 'markOnMe';
     const sourceId = raw.slice(raw.indexOf(':') + 1);
     const e = persona.marksOnMe.find((m) => m.sourceId === sourceId && m.count > 0);
-    if (!e) return ctx.fail('Cette marque n’existe plus');
+    if (!e) return ctx.fail('This mark no longer exists');
     t.mark = e;
     t.key = null;
-    t.nameMsg = { t: 'marque de {name}', params: { name: markNameMsg(e) } };
+    t.nameMsg = { t: 'mark from {name}', params: { name: markNameMsg(e) } };
     const [sk, sa] = sourceId.split(':');
     if (sk === 'host') t.host = slice(ctx.state).hosts[sa] || null;
     if (sk === 'persona') {
@@ -652,7 +652,7 @@ function resolveTarget(ctx: ActionContext, persona: Persona, action: MatrixActio
     }
   } else if (kind === 'host' || kind === 'ic' || kind === 'device' || kind === 'file') {
     const host = getHost(ctx, a);
-    if (!canSeeHost(ctx.state, ctx.user, host)) ctx.fail('Hôte introuvable');
+    if (!canSeeHost(ctx.state, ctx.user, host)) ctx.fail('Host not found');
     t.host = host;
     if (kind === 'host') {
       t.key = `host:${host.id}`;
@@ -661,26 +661,26 @@ function resolveTarget(ctx: ActionContext, persona: Persona, action: MatrixActio
       const inside = persona.hostId === host.id;
       if (kind === 'ic') {
         t.ic = (host.ic || []).find((x) => x.id === b);
-        if (!t.ic) return ctx.fail('IC introuvable');
-        if (own && (!inside || !t.ic.active)) ctx.fail('Cette IC n’est pas à portée (entre d’abord dans l’hôte)');
+        if (!t.ic) return ctx.fail('IC not found');
+        if (own && (!inside || !t.ic.active)) ctx.fail('This IC is out of reach (enter the host first)');
         t.nameMsg = icNameMsg(t.ic.type, host.name);
       } else if (kind === 'device') {
         t.device = (host.devices || []).find((x) => x.id === b);
-        if (!t.device) return ctx.fail('Appareil introuvable');
-        if (own && !perceivedBy(host, own)) ctx.fail('Repère d’abord cet appareil (Perception matricielle sur l’hôte)');
+        if (!t.device) return ctx.fail('Device not found');
+        if (own && !perceivedBy(host, own)) ctx.fail('Spot this device first (Matrix Perception on the host)');
         t.nameMsg = `${t.device.name} (${host.name})`;
       } else {
         t.file = (host.files || []).find((x) => x.id === b);
-        if (!t.file) return ctx.fail('Fichier introuvable');
-        if (own && (!inside || !perceivedBy(host, own))) ctx.fail('Ce fichier n’est pas à portée (entre dans l’hôte et repère-le par Perception matricielle)');
-        t.nameMsg = { t: 'fichier « {name} »', params: { name: t.file.name } };
+        if (!t.file) return ctx.fail('File not found');
+        if (own && (!inside || !perceivedBy(host, own))) ctx.fail('This file is out of reach (enter the host and spot it with Matrix Perception)');
+        t.nameMsg = { t: 'file “{name}”', params: { name: t.file.name } };
       }
       t.key = `${kind}:${host.id}:${b}`;
     }
   } else if (kind === 'persona') {
     const target = ctx.state.actors?.[a];
-    if (!target || (!ctx.isGM && target.type === 'npc' && target.hidden)) return ctx.fail('Persona introuvable');
-    if (target.id === persona.actorId) ctx.fail('Tu ne peux pas te cibler toi-même');
+    if (!target || (!ctx.isGM && target.type === 'npc' && target.hidden)) return ctx.fail('Persona not found');
+    if (target.id === persona.actorId) ctx.fail('You cannot target yourself');
     t.actor = target;
     t.persona = target.matrix ? ensurePersona(ctx.state, target) : null;
     t.key = `persona:${target.id}`;
@@ -689,9 +689,9 @@ function resolveTarget(ctx: ActionContext, persona: Persona, action: MatrixActio
     const name = str(p.targetName, 60).trim();
     // The key keeps the French default so marks stay found whatever the UI language (the client uses the same slug).
     t.key = `manual:${slug(name || 'cible inconnue') || 'cible'}`;
-    t.nameMsg = name || { t: 'cible inconnue' };
-  } else ctx.fail('Cible invalide');
-  if (!allow.includes(t.kind as MatrixTargetKind)) ctx.fail('Cette action ne peut pas viser ce type de cible');
+    t.nameMsg = name || { t: 'unknown target' };
+  } else ctx.fail('Invalid target');
+  if (!allow.includes(t.kind as MatrixTargetKind)) ctx.fail('This action cannot target that kind of icon');
   t.name = fr(t.nameMsg);
   return t;
 }
@@ -700,7 +700,7 @@ function resolveTarget(ctx: ActionContext, persona: Persona, action: MatrixActio
 function defenseFor(ctx: ActionContext, action: MatrixActionDef, target: Target, p: MatrixActionPayload): Defense {
   const d = action.defense;
   if (!d) return null;
-  if ('fixed' in d && d.fixed) return { pool: d.fixed, parts: [{ label: 'GOD', value: d.fixed }], labelMsg: { t: 'le GOD' } };
+  if ('fixed' in d && d.fixed) return { pool: d.fixed, parts: [{ label: 'GOD', value: d.fixed }], labelMsg: { t: 'GOD' } };
   if ('x2' in d && d.x2) {
     let r = 0;
     let label = '';
@@ -709,10 +709,10 @@ function defenseFor(ctx: ActionContext, action: MatrixActionDef, target: Target,
       label = tk('Protection');
     } else if (d.x2 === 'bomb') {
       r = Number(target.file?.bomb) || 0;
-      label = tk('Bombe de données');
+      label = tk('Data bomb');
     } else {
       r = Number(target.host?.rating) || 0;
-      label = tk('Indice de l’appareil');
+      label = tk('Device Rating');
     }
     const params = { what: { t: label }, r };
     return { pool: r * 2, parts: [{ label: fr({ t: '{what} {r} × 2', params }), key: '{what} {r} × 2', params, value: r * 2 }], labelMsg: { t: label } };
@@ -730,7 +730,7 @@ function defenseFor(ctx: ActionContext, action: MatrixActionDef, target: Target,
   if (target.kind === 'manual') {
     if (ctx.isGM && p.defensePool !== undefined && p.defensePool !== null && p.defensePool !== '') {
       const n = clampInt(p.defensePool, 0, 60, 0);
-      return { pool: n, parts: [{ label: 'Défense (MJ)', key: tk('Défense (MJ)'), value: n }], labelMsg: target.nameMsg as MsgLike };
+      return { pool: n, parts: [{ label: 'Défense (MJ)', key: tk('Defense (GM)'), value: n }], labelMsg: target.nameMsg as MsgLike };
     }
     return { pending: true };
   }
@@ -753,24 +753,24 @@ function damageTarget(ctx: ActionContext, target: Target, dv: number, attacker: 
     resistPool = ds.deviceRating + ds.eff.firewall + programSum(target.persona, 'resistMatrix');
     mon = ds.monitor;
   } else {
-    return { boxes: dv, sentences: [{ t: '{target} doit résister à {dv} dommages matriciels (au MJ).', params: { target: target.nameMsg as MsgLike, dv } }] as I18nMessage[] };
+    return { boxes: dv, sentences: [{ t: '{target} must resist {dv} Matrix damage (GM’s call).', params: { target: target.nameMsg as MsgLike, dv } }] as I18nMessage[] };
   }
   const res = roll(resistPool, {}, 'opposition');
   const boxes = Math.max(0, dv - res.hits);
-  const out: I18nMessage[] = [{ t: 'VD {dv} : {target} résiste avec {hits} et subit {boxes}.', params: { dv, target: target.nameMsg as MsgLike, hits: hitsM(res.hits), boxes: boxesM(boxes) } }];
+  const out: I18nMessage[] = [{ t: 'DV {dv}: {target} resists with {hits} and takes {boxes}.', params: { dv, target: target.nameMsg as MsgLike, hits: hitsM(res.hits), boxes: boxesM(boxes) } }];
   if (target.ic) {
     target.ic.damage = Math.min(mon, (target.ic.damage || 0) + boxes);
     if (target.ic.damage >= mon && target.ic.active) {
       target.ic.active = false;
       target.ic.crashed = true;
-      out.push({ t: '{target} est détruite !', params: { target: target.nameMsg as MsgLike } });
+      out.push({ t: '{target} is destroyed!', params: { target: target.nameMsg as MsgLike } });
     }
   } else if (target.device) {
     target.device.damage = Math.min(mon, (target.device.damage || 0) + boxes);
     if (target.device.damage >= mon && !target.device.bricked) {
       target.device.bricked = true;
       syncDeviceLink(ctx, target.device);
-      out.push({ t: '{device} est briqué !', params: { device: target.device.name } });
+      out.push({ t: '{device} is bricked!', params: { device: target.device.name } });
     }
   } else if (target.persona) {
     out.push(...damageDeck(ctx, target.actor!, target.persona, boxes));
@@ -788,10 +788,10 @@ function explodeBomb(ctx: ActionContext, actor: Actor, persona: Persona, host: H
   const pool = ds.deviceRating + ds.eff.firewall + programSum(persona, 'resistBomb') + programSum(persona, 'resistMatrix');
   const res = roll(pool, {}, 'actor');
   const boxes = Math.max(0, dv - res.hits);
-  const out: I18nMessage[] = [{ t: 'BOUM ! La bombe de données (indice {rating}) explose : VD {dv}, {hits} en résistance.', params: { rating, dv, hits: hitsM(res.hits) } }];
+  const out: I18nMessage[] = [{ t: 'BOOM! The data bomb (rating {rating}) goes off: DV {dv}, {hits} on the resistance test.', params: { rating, dv, hits: hitsM(res.hits) } }];
   out.push(...(agent ? damageAgent(actor, persona, boxes) : damageDeck(ctx, actor, persona, boxes)));
   host.files = (host.files || []).filter((f) => f.id !== file.id);
-  out.push({ t: 'Le fichier « {file} » est détruit.', params: { file: file.name } });
+  out.push({ t: 'The file “{file}” is destroyed.', params: { file: file.name } });
   sfx(ctx, 'explosion', [...ownersOf(ctx.state, actor.id), 'gm']);
   return out;
 }
@@ -820,25 +820,25 @@ function performAction(ctx: ActionContext, actor: Actor, persona: Persona, actio
   const have = effectiveMarks(persona, target);
   if (marksNeeded > have) {
     const params = { n: marksNeeded, target: target.nameMsg as MsgLike, have };
-    if (marksNeeded === 1) ctx.fail('Il faut {n} marque sur {target} ({have} actuellement)', params);
-    ctx.fail('Il faut {n} marques sur {target} ({have} actuellement)', params);
+    if (marksNeeded === 1) ctx.fail('You need {n} mark on {target} ({have} now)', params);
+    ctx.fail('You need {n} marks on {target} ({have} now)', params);
   }
 
   // Actions without a test
   if (action.noTest) {
-    if (agent) ctx.fail('Ton agent ne peut pas faire cette action à ta place');
+    if (agent) ctx.fail('Your agent cannot take this action for you');
     let msgs: I18nMessage[] = [];
     if (action.id === 'enterHost') {
       persona.hostId = target.host!.id;
       persona.fullDefense = false;
-      msgs = [{ t: '{who} entre dans l’hôte {host}.', params: { who, host: target.host!.name } }];
+      msgs = [{ t: '{who} enters the host {host}.', params: { who, host: target.host!.name } }];
     } else if (action.id === 'exitHost') {
-      if (!persona.hostId) ctx.fail('Tu n’es dans aucun hôte');
+      if (!persona.hostId) ctx.fail('You are not in any host');
       const h = slice(ctx.state).hosts[persona.hostId];
-      if (persona.linkLocked) ctx.fail('Verrou de lien : impossible de quitter l’hôte');
+      if (persona.linkLocked) ctx.fail('Link-lock: you cannot leave the host');
       const convergedHere = persona.hostConverged && persona.hostConverged === persona.hostId;
       persona.hostId = null;
-      msgs = [{ t: '{who} sort de l’hôte {host} et retourne sur la grille.', params: { who, host: h ? h.name : '' } }];
+      msgs = [{ t: '{who} leaves the host {host} and returns to the grid.', params: { who, host: h ? h.name : '' } }];
       // SR5 p. 247: leaving a host after a convergence inside it → the grid's demiGOD converges at once.
       if (convergedHere) {
         persona.hostConverged = null;
@@ -848,10 +848,10 @@ function performAction(ctx: ActionContext, actor: Actor, persona: Persona, actio
       }
     } else if (action.id === 'fullMatrixDefense') {
       persona.fullDefense = true;
-      msgs = [{ t: '{who} passe en défense matricielle totale (+Volonté en défense, −10 en initiative).', params: { who } }];
+      msgs = [{ t: '{who} goes on Full Matrix Defense (+Willpower on defense, −10 initiative).', params: { who } }];
     } else if (action.id === 'rebootSelf') {
       const out = rebootDeck(ctx, actor, persona);
-      msgs = [{ t: '{who} redémarre son deck : Score d’Overwatch remis à 0, marques effacées.', params: { who } }, ...out];
+      msgs = [{ t: '{who} reboots their deck: Overwatch Score reset to 0, marks erased.', params: { who } }, ...out];
     }
     done(msgs);
     return { actionId: action.id, noTest: true, outcomes: msgs.map(fr), msgs, success: true };
@@ -859,38 +859,38 @@ function performAction(ctx: ActionContext, actor: Actor, persona: Persona, actio
 
   // Jack out: free unless link-locked
   if (action.id === 'jackOut') {
-    if (agent) ctx.fail('Ton agent ne peut pas te déconnecter');
+    if (agent) ctx.fail('Your agent cannot jack you out');
     if (!persona.linkLocked) {
       goOffline(ctx, actor, persona, { dumped: false });
-      const msgs = done([{ t: '{who} se déconnecte proprement de la Matrice.', params: { who } }]);
+      const msgs = done([{ t: '{who} jacks out of the Matrix cleanly.', params: { who } }]);
       return { actionId: action.id, noTest: true, outcomes: msgs.map(fr), msgs, success: true };
     }
   }
 
   // File preconditions (before rolling)
   if (action.id === 'editFile' && target.file) {
-    if (target.file.protected) ctx.fail('Fichier protégé : il faut d’abord le craquer (Craquer un fichier)');
+    if (target.file.protected) ctx.fail('Protected file: crack it first (Crack File)');
     if (Number(target.file.bomb) > 0 && target.file.bombBy !== actor.id) {
       const out = done(explodeBomb(ctx, actor, persona, target.host!, target.file, { agent }), { agent });
       return { actionId: action.id, exploded: true, outcomes: out.map(fr), msgs: out, success: false };
     }
   }
-  if (action.id === 'crackFile' && target.file && !target.file.protected) ctx.fail('Ce fichier n’est pas protégé');
-  if (action.id === 'disarmDataBomb' && target.file && !(Number(target.file.bomb) > 0)) ctx.fail('Aucune bombe de données sur ce fichier (à ta connaissance)');
+  if (action.id === 'crackFile' && target.file && !target.file.protected) ctx.fail('This file is not protected');
+  if (action.id === 'disarmDataBomb' && target.file && !(Number(target.file.bomb) > 0)) ctx.fail('No data bomb on this file (as far as you know)');
 
   // Teamwork bonus from the agent
   let assist: { dice: number; limitBonus: number } | null = null;
   if (p.assistFromAgent && !agent) {
     const pa = persona.pendingAssist;
-    if (!pa) return ctx.fail('Aucune assistance de l’agent en attente : fais-le assister d’abord');
-    if (pa.skill !== action.skill) ctx.fail('L’assistance de l’agent portait sur une autre compétence');
+    if (!pa) return ctx.fail('No agent assist pending: have it assist first');
+    if (pa.skill !== action.skill) ctx.fail('The agent’s assist was for another skill');
     assist = { dice: pa.dice, limitBonus: pa.limitBonus };
     persona.pendingAssist = null;
   }
 
   // Edge
   const edge = !!p.edge && !agent;
-  if (edge && (actor.edge?.current || 0) <= 0) ctx.fail('{name} n’a plus de point de Chance', { name: actor.name });
+  if (edge && (actor.edge?.current || 0) <= 0) ctx.fail('{name} has no Edge left', { name: actor.name });
 
   const marksWanted = action.placesMarks ? clampInt(p.marks, 1, 3, 1) : 0;
   // Decker's modifiers (skill / linked attribute / Codeslinger dice: shared/modifiers.js), computed here; the client only says which
@@ -899,7 +899,7 @@ function performAction(ctx: ActionContext, actor: Actor, persona: Persona, actio
   const conditions = mods ? cleanConditions(mods, p.conditions) : [];
   const pc = actionPool(actor, persona, action, { useSpec: !!p.useSpec && !agent, marks: marksWanted, modifier: clampInt(p.modifier, -30, 30, 0), assist, edge, agent, ...(mods ? { mods, conditions } : {}) });
   if (pc.impossible) ctx.fail(pc.reasonKey || pc.reason || '', pc.reasonParams);
-  if (pc.pool <= 0) ctx.fail('Réserve de dés nulle : l’action échoue automatiquement');
+  if (pc.pool <= 0) ctx.fail('Dice pool of zero: the action fails automatically');
   if (edge) actor.edge!.current -= 1;
 
   const r = roll(pc.pool, { limit: pc.limit, explode: edge }, 'actor');
@@ -918,14 +918,14 @@ function performAction(ctx: ActionContext, actor: Actor, persona: Persona, actio
   let osDelta = 0;
   const tgt = target.nameMsg as MsgLike;
 
-  if (r.critGlitch) outcomes.push({ t: 'Échec critique ! {who} commet une erreur grave (au MJ).', params: { who } });
-  else if (r.glitch) outcomes.push({ t: 'Complication pour {who} (au MJ).', params: { who } });
-  if (pending) outcomes.push({ t: '{hits} : le MJ lance la défense de {target}.', params: { hits: hitsM(r.hits), target: tgt } });
+  if (r.critGlitch) outcomes.push({ t: 'Critical glitch! {who} makes a serious mistake (GM’s call).', params: { who } });
+  else if (r.glitch) outcomes.push({ t: 'Glitch for {who} (GM’s call).', params: { who } });
+  if (pending) outcomes.push({ t: '{hits}: the GM rolls the defense for {target}.', params: { hits: hitsM(r.hits), target: tgt } });
   else if (dr) {
     outcomes.push(success
-      ? { t: 'Réussite : {net} contre {d} pour {defender}.', params: { net: netM(net), d: defHits, defender: (def as Loose).labelMsg } }
-      : { t: 'Échec : {hits} contre {d} pour {defender}.', params: { hits: r.hits, d: defHits, defender: (def as Loose).labelMsg } });
-  } else outcomes.push(success ? { t: 'Réussite avec {hits}.', params: { hits: hitsM(r.hits) } } : { t: 'Échec ({hits}).', params: { hits: hitsM(r.hits) } });
+      ? { t: 'Success: {net} against {d} for {defender}.', params: { net: netM(net), d: defHits, defender: (def as Loose).labelMsg } }
+      : { t: 'Failure: {hits} against {d} for {defender}.', params: { hits: r.hits, d: defHits, defender: (def as Loose).labelMsg } });
+  } else outcomes.push(success ? { t: 'Success with {hits}.', params: { hits: hitsM(r.hits) } } : { t: 'Failure ({hits}).', params: { hits: hitsM(r.hits) } });
 
   // Overwatch: illegal actions add the defender's hits
   if (isIllegal(action) && dr && defHits > 0) {
@@ -939,7 +939,7 @@ function performAction(ctx: ActionContext, actor: Actor, persona: Persona, actio
       case 'bruteForce': {
         const n = addMark(persona, target.key as string, target.name as string, marksWanted, target.nameMsg);
         const params = { n: marksWanted, target: tgt, total: n };
-        outcomes.push(marksWanted === 1 ? { t: '{n} marque placée sur {target} (total {total}).', params } : { t: '{n} marques placées sur {target} (total {total}).', params });
+        outcomes.push(marksWanted === 1 ? { t: '{n} mark placed on {target} (total {total}).', params } : { t: '{n} marks placed on {target} (total {total}).', params });
         if (action.id === 'bruteForce' && Math.floor(net / 2) > 0 && (target.ic || target.device || target.kind === 'persona' || target.kind === 'manual')) {
           outcomes.push(...damageTarget(ctx, target, Math.floor(net / 2), actor).sentences);
         }
@@ -957,41 +957,41 @@ function performAction(ctx: ActionContext, actor: Actor, persona: Persona, actio
         const victim = progs.find((x: string) => x.toLowerCase() === wanted.toLowerCase()) || (progs.length ? progs[Math.floor(Math.random() * progs.length)] : null);
         if (victim && target.persona) {
           target.persona.loadedPrograms = progs.filter((x: string) => x !== victim);
-          outcomes.push({ t: 'Le programme {program} de {target} plante.', params: { program: victim, target: tgt } });
-        } else outcomes.push({ t: 'Un programme de {target} plante (au MJ).', params: { target: tgt } });
+          outcomes.push({ t: '{target}’s {program} program crashes.', params: { program: victim, target: tgt } });
+        } else outcomes.push({ t: 'One of {target}’s programs crashes (GM’s call).', params: { target: tgt } });
         break;
       }
       case 'crackFile':
         target.file!.protected = false;
-        outcomes.push({ t: 'La protection du fichier « {file} » saute.', params: { file: target.file!.name } });
+        outcomes.push({ t: 'The protection on file “{file}” is cracked.', params: { file: target.file!.name } });
         break;
       case 'eraseMark':
         target.mark!.count -= 1;
         persona.marksOnMe = persona.marksOnMe.filter((m) => m.count > 0);
-        outcomes.push({ t: 'Une marque de {name} est effacée.', params: { name: markNameMsg(target.mark) } });
+        outcomes.push({ t: 'A mark from {name} is erased.', params: { name: markNameMsg(target.mark) } });
         break;
       case 'jamSignals':
-        outcomes.push({ t: 'Brouillage : bruit +{n} dans un rayon de 100 m.', params: { n: r.hits } });
+        outcomes.push({ t: 'Jamming: noise +{n} within 100 m.', params: { n: r.hits } });
         break;
       case 'spoofCommand': {
-        outcomes.push(p.command ? { t: 'L’appareil exécute la commande usurpée : « {command} ».', params: { command: str(p.command, 120) } } : { t: 'L’appareil exécute la commande usurpée.' });
+        outcomes.push(p.command ? { t: 'The device executes the spoofed command: “{command}”.', params: { command: str(p.command, 120) } } : { t: 'The device executes the spoofed command.' });
         const mapMsg = target.device && p.deviceCmd ? applyDeviceCmd(ctx, target.device, str(p.deviceCmd, 20)) : null;
         if (mapMsg) outcomes.push(mapMsg);
         break;
       }
       case 'snoop':
-        outcomes.push({ t: '{who} intercepte le trafic de {target}.', params: { who, target: tgt } });
+        outcomes.push({ t: '{who} intercepts {target}’s traffic.', params: { who, target: tgt } });
         break;
       case 'hide':
         if (target.host) target.host.spotted = (target.host.spotted || []).filter((id) => id !== actor.id);
-        outcomes.push({ t: '{target} perd la trace de {who}.', params: { target: tgt, who } });
+        outcomes.push({ t: '{target} loses track of {who}.', params: { target: tgt, who } });
         break;
       case 'formatDevice':
         if (target.device) {
           target.device.formatted = true;
           syncDeviceLink(ctx, target.device);
         }
-        outcomes.push({ t: '{target} est formaté : il ne redémarrera pas.', params: { target: tgt } });
+        outcomes.push({ t: '{target} is formatted: it will not reboot.', params: { target: tgt } });
         break;
       case 'rebootDevice':
         if (target.device) {
@@ -999,19 +999,19 @@ function performAction(ctx: ActionContext, actor: Actor, persona: Persona, actio
           syncDeviceLink(ctx, target.device);
         }
         if (target.kind === 'persona' && target.persona?.online) outcomes.push(...rebootDeck(ctx, target.actor!, target.persona));
-        outcomes.push({ t: '{target} redémarre (hors ligne jusqu’à la fin du tour suivant).', params: { target: tgt } });
+        outcomes.push({ t: '{target} reboots (offline until the end of the next turn).', params: { target: tgt } });
         break;
       case 'setDataBomb': {
         const rating = Math.min(12, net + programSum(persona, 'bombBonus'));
         target.file!.bomb = rating;
         target.file!.bombBy = actor.id;
-        outcomes.push({ t: 'Bombe de données d’indice {rating} posée sur « {file} ».', params: { rating, file: target.file!.name } });
+        outcomes.push({ t: 'Rating {rating} data bomb set on “{file}”.', params: { rating, file: target.file!.name } });
         break;
       }
       case 'checkOverwatch':
         persona.osKnown = persona.overwatch;
         persona.osKnownAt = Date.now();
-        outcomes.push({ t: 'Score d’Overwatch actuel : {os}.', params: { os: persona.overwatch } });
+        outcomes.push({ t: 'Current Overwatch Score: {os}.', params: { os: persona.overwatch } });
         break;
       case 'matrixPerception': {
         if (target.host) {
@@ -1020,19 +1020,19 @@ function performAction(ctx: ActionContext, actor: Actor, persona: Persona, actio
           if (target.ic) target.ic.detected = true;
           if (target.kind === 'host' && persona.hostId === h.id) for (const ic of h.ic || []) if (ic.active) ic.detected = true;
           const params = { n: r.hits, target: tgt };
-          outcomes.push(r.hits === 1 ? { t: '{n} information obtenue sur {target}.', params } : { t: '{n} informations obtenues sur {target}.', params });
-        } else outcomes.push(r.hits === 1 ? { t: '{n} information (le MJ répond).', params: { n: r.hits } } : { t: '{n} informations (le MJ répond).', params: { n: r.hits } });
+          outcomes.push(r.hits === 1 ? { t: '{n} piece of information gained on {target}.', params } : { t: '{n} pieces of information gained on {target}.', params });
+        } else outcomes.push(r.hits === 1 ? { t: '{n} piece of information (the GM answers).', params: { n: r.hits } } : { t: '{n} pieces of information (the GM answers).', params: { n: r.hits } });
         break;
       }
       case 'matrixSearch':
-        outcomes.push({ t: '{hits} à la recherche (le MJ répond).', params: { hits: hitsM(r.hits) } });
+        outcomes.push({ t: '{hits} on the search (the GM answers).', params: { hits: hitsM(r.hits) } });
         break;
       case 'traceIcon':
-        outcomes.push({ t: 'Position physique de {target} localisée.', params: { target: tgt } });
+        outcomes.push({ t: '{target}’s physical location traced.', params: { target: tgt } });
         break;
       case 'controlDevice': {
         if (target.device) target.device.controlledBy = actor.id;
-        outcomes.push(p.command ? { t: '{target} obéit : « {command} ».', params: { target: tgt, command: str(p.command, 120) } } : { t: '{target} obéit.', params: { target: tgt } });
+        outcomes.push(p.command ? { t: '{target} obeys: “{command}”.', params: { target: tgt, command: str(p.command, 120) } } : { t: '{target} obeys.', params: { target: tgt } });
         const mapMsg = target.device && p.deviceCmd ? applyDeviceCmd(ctx, target.device, str(p.deviceCmd, 20)) : null;
         if (mapMsg) outcomes.push(mapMsg);
         break;
@@ -1048,24 +1048,24 @@ function performAction(ctx: ActionContext, actor: Actor, persona: Persona, actio
           if (op === 'read' && !persona.files.some((x) => x.sourceId === f.id)) {
             persona.files.push({ id: uid('pay'), sourceId: f.id, name: f.name, hostName: host.name, value: null, content: f.content || '', ts: Date.now(), readOnly: true });
           }
-          outcomes.push(op === 'copy' ? { t: 'Fichier « {file} » copié dans le deck.', params: { file: f.name } } : { t: 'Fichier « {file} » lu.', params: { file: f.name } });
+          outcomes.push(op === 'copy' ? { t: 'File “{file}” copied to the deck.', params: { file: f.name } } : { t: 'File “{file}” read.', params: { file: f.name } });
           sfx(ctx, 'notify', 'gm'); // the GM may want to describe what the file says
         } else if (op === 'edit') {
           f.edited = true;
-          outcomes.push(p.command ? { t: 'Fichier « {file} » modifié : {change}.', params: { file: f.name, change: str(p.command, 160) } } : { t: 'Fichier « {file} » modifié.', params: { file: f.name } });
+          outcomes.push(p.command ? { t: 'File “{file}” edited: {change}.', params: { file: f.name, change: str(p.command, 160) } } : { t: 'File “{file}” edited.', params: { file: f.name } });
         } else {
           host.files = host.files.filter((x) => x.id !== f.id);
-          outcomes.push({ t: 'Fichier « {file} » effacé.', params: { file: f.name } });
+          outcomes.push({ t: 'File “{file}” deleted.', params: { file: f.name } });
         }
         break;
       }
       case 'disarmDataBomb':
         target.file!.bomb = 0;
         target.file!.bombBy = null;
-        outcomes.push({ t: 'Bombe de données désamorcée sur « {file} ».', params: { file: target.file!.name } });
+        outcomes.push({ t: 'Data bomb disarmed on “{file}”.', params: { file: target.file!.name } });
         break;
       case 'jackOut':
-        outcomes.push({ t: '{who} brise le verrou de lien et se déconnecte.', params: { who } });
+        outcomes.push({ t: '{who} breaks the link-lock and jacks out.', params: { who } });
         goOffline(ctx, actor, persona, { dumped: false });
         break;
       default:
@@ -1079,31 +1079,31 @@ function performAction(ctx: ActionContext, actor: Actor, persona: Persona, actio
       const sourceMsg = (target.host ? target.host.name : target.nameMsg) as MsgLike;
       if (sourceId) {
         addMarkOnMe(persona, sourceId, fr(sourceMsg), 1, sourceMsg);
-        outcomes.push({ t: '{source} place une marque sur {name}.', params: { source: sourceMsg, name: actor.name } });
+        outcomes.push({ t: '{source} places a mark on {name}.', params: { source: sourceMsg, name: actor.name } });
       }
       if (target.host) {
-        const s = setAlert(ctx, target.host, { t: '{action} raté par {who}', params: { action: actionMsg, who } });
+        const s = setAlert(ctx, target.host, { t: '{action} failed by {who}', params: { action: actionMsg, who } });
         if (s) outcomes.push(s);
       }
     }
     // Failed Attack action: 1 box per net hit of the defender
     if (action.cat === 'attack' && dr && defHits > r.hits) {
       const back = defHits - r.hits;
-      outcomes.push({ t: 'Retour de flamme : {boxes} de dommages matriciels.', params: { boxes: boxesM(back) } });
+      outcomes.push({ t: 'Backlash: {boxes} of Matrix damage.', params: { boxes: boxesM(back) } });
       outcomes.push(...(agent ? damageAgent(actor, persona, back) : damageDeck(ctx, actor, persona, back)));
       if (target.host) {
-        const s = setAlert(ctx, target.host, { t: '{action} raté par {who}', params: { action: actionMsg, who } });
+        const s = setAlert(ctx, target.host, { t: '{action} failed by {who}', params: { action: actionMsg, who } });
         if (s) outcomes.push(s);
       }
     }
   }
   // Attacks are noticed by the target even when they succeed.
   if (success && action.cat === 'attack' && target.host && action.id !== 'crackFile' && action.id !== 'eraseMark') {
-    const s = setAlert(ctx, target.host, { t: '{action} de {who}', params: { action: actionMsg, who } });
+    const s = setAlert(ctx, target.host, { t: '{action} by {who}', params: { action: actionMsg, who } });
     if (s) outcomes.push(s);
   }
-  if (osDelta) outcomes.push({ t: 'Score d’Overwatch +{n}.', params: { n: osDelta } });
-  if (pending && isIllegal(action)) outcomes.push({ t: 'Action illégale : le MJ ajoute les succès de la défense au Score d’Overwatch.' });
+  if (osDelta) outcomes.push({ t: 'Overwatch Score +{n}.', params: { n: osDelta } });
+  if (pending && isIllegal(action)) outcomes.push({ t: 'Illegal action: the GM adds the defense’s hits to the Overwatch Score.' });
 
   const converged = (persona.overwatch as number) >= OS_MAX && persona.online && !persona.hostConverged;
   const rollLabelMsg: I18nMessage = agent ? { t: '{label} ({agent})', params: { label: labelMsg, agent: ag.name } } : labelMsg;
@@ -1135,15 +1135,15 @@ function performAction(ctx: ActionContext, actor: Actor, persona: Persona, actio
 // ---------------------------------------------------------------------------
 function icAttack(ctx: ActionContext, host: Host, ic: HostIc, actor: Actor, persona: Persona) {
   const def: Loose = (IC_TYPES as Loose)[ic.type];
-  if (!def) return ctx.fail('Type d’IC inconnu');
+  if (!def) return ctx.fail('Unknown IC type');
   const icMsg = icNameMsg(ic.type, host.name);
   const icName = fr(icMsg);
   const icType = { t: def.fr };
   const hostMarks = persona.marksOnMe.find((m) => m.sourceId === `host:${host.id}`)?.count || 0;
   if (def.needsMarks && hostMarks < def.needsMarks) {
     const params = { ic: icType, n: def.needsMarks, name: actor.name, have: hostMarks };
-    if (def.needsMarks === 1) ctx.fail('{ic} : il faut {n} marque de l’hôte sur {name} ({have} actuellement)', params);
-    ctx.fail('{ic} : il faut {n} marques de l’hôte sur {name} ({have} actuellement)', params);
+    if (def.needsMarks === 1) ctx.fail('{ic}: the host needs {n} mark on {name} ({have} now)', params);
+    ctx.fail('{ic}: the host needs {n} marks on {name} ({have} now)', params);
   }
   const pool = icAttackPool(host);
   const limit = Number((host as unknown as Loose)[def.limit]) || null;
@@ -1153,56 +1153,56 @@ function icAttack(ctx: ActionContext, host: Host, ic: HostIc, actor: Actor, pers
   const net = a.hits - d.hits;
   const out: I18nMessage[] = [];
   const name = actor.name;
-  if (net <= 0) out.push({ t: '{name} esquive ({d} contre {a}).', params: { name, d: d.hits, a: a.hits } });
+  if (net <= 0) out.push({ t: '{name} dodges ({d} vs {a}).', params: { name, d: d.hits, a: a.hits } });
   else {
-    out.push({ t: 'Touché : {net} ({a} contre {d}).', params: { net: netM(net), a: a.hits, d: d.hits } });
+    out.push({ t: 'Hit: {net} ({a} vs {d}).', params: { net: netM(net), a: a.hits, d: d.hits } });
     switch (def.effect) {
       case 'spot':
         host.spotted = [...new Set([...(host.spotted || []), actor.id])];
-        out.push({ t: '{name} est repéré(e) par la patrouille.', params: { name } });
+        out.push({ t: '{name} is spotted by Patrol IC.', params: { name } });
         {
-          const s = setAlert(ctx, host, { t: '{ic} a repéré {name}', params: { ic: icType, name } });
+          const s = setAlert(ctx, host, { t: '{ic} spotted {name}', params: { ic: icType, name } });
           if (s) out.push(s);
         }
         break;
       case 'mark': {
         const n = addMarkOnMe(persona, `host:${host.id}`, host.name, 1);
-        out.push({ t: 'L’hôte place une marque sur {name} ({n}/3).', params: { name, n } });
+        out.push({ t: 'The host places a mark on {name} ({n}/3).', params: { name, n } });
         break;
       }
       case 'penalty': {
         const k: AsdfKey = def.attrHit;
         persona.penalties[k] = (Number(persona.penalties[k]) || 0) + 1;
-        out.push({ t: '{attr} −1 jusqu’au redémarrage (total −{total}).', params: { attr: { t: ASDF_LABELS[k] }, total: persona.penalties[k] } });
+        out.push({ t: '{attr} −1 until reboot (total −{total}).', params: { attr: { t: ASDF_LABELS[k] }, total: persona.penalties[k] } });
         break;
       }
       case 'crash': {
         const progs = [...persona.loadedPrograms, ...(persona.agent?.loaded ? ['__agent__'] : [])];
-        if (!progs.length) out.push({ t: 'Aucun programme chargé à faire planter.' });
+        if (!progs.length) out.push({ t: 'No loaded program to crash.' });
         else {
           const v = progs[Math.floor(Math.random() * progs.length)];
           if (v === '__agent__') {
             persona.agent!.loaded = false;
-            out.push({ t: '{agent} plante !', params: { agent: persona.agent!.name } });
+            out.push({ t: '{agent} crashes!', params: { agent: persona.agent!.name } });
           } else {
             persona.loadedPrograms = persona.loadedPrograms.filter((x) => x !== v);
-            out.push({ t: 'Le programme {program} plante.', params: { program: v } });
+            out.push({ t: 'The {program} program crashes.', params: { program: v } });
           }
         }
         break;
       }
       case 'linklock':
         persona.linkLocked = { source: `host:${host.id}`, name: icName, icType: ic.type, hostName: host.name, pool: (Number(host.rating) || 0) + (Number(host.attack) || 0) };
-        out.push({ t: 'Verrou de lien : {name} ne peut plus se déconnecter normalement.', params: { name } });
+        out.push({ t: 'Link-lock: {name} can no longer jack out normally.', params: { name } });
         break;
       case 'reboot':
-        out.push({ t: '{name} est forcé(e) de redémarrer son deck.', params: { name } });
+        out.push({ t: '{name} is forced to reboot their deck.', params: { name } });
         out.push(...rebootDeck(ctx, actor, persona));
         break;
       case 'trace':
         persona.traced = true;
-        out.push({ t: 'La position physique de {name} est localisée.', params: { name } });
-        mlog(ctx, { author: host.name, gmOnly: true, msgs: [{ t: '{ic} : position physique de {name} transmise au propriétaire de l’hôte.', params: { ic: icType, name } }] });
+        out.push({ t: '{name}’s physical location is traced.', params: { name } });
+        mlog(ctx, { author: host.name, gmOnly: true, msgs: [{ t: '{ic}: {name}’s physical location sent to the host owner.', params: { ic: icType, name } }] });
         break;
       case 'damage': {
         // Same as a Data Spike: the host's Attack + net hits.
@@ -1211,7 +1211,7 @@ function icAttack(ctx: ActionContext, host: Host, ic: HostIc, actor: Actor, pers
         const rp = ds.deviceRating + ds.eff.firewall + programSum(persona, 'resistMatrix');
         const rr = roll(rp, {}, 'actor');
         const boxes = Math.max(0, dv - rr.hits);
-        out.push({ t: 'VD {dv} : {hits} en résistance.', params: { dv, hits: hitsM(rr.hits) } });
+        out.push({ t: 'DV {dv}: {hits} on the resistance test.', params: { dv, hits: hitsM(rr.hits) } });
         if (def.bio) {
           const type = def.bio === 'S' ? (persona.mode === 'ar' ? null : 'S') : persona.mode === 'hot' ? 'P' : persona.mode === 'cold' ? 'S' : null;
           if (type) {
@@ -1221,13 +1221,13 @@ function icAttack(ctx: ActionContext, host: Host, ic: HostIc, actor: Actor, pers
             applyActorDamage(actor, bb, type);
             const params = { boxes: boxesM(bb), hits: hitsM(br.hits) };
             out.push(type === 'P'
-              ? { t: 'Biofeedback : {boxes} de dommages physiques ({hits} en résistance).', params }
-              : { t: 'Biofeedback : {boxes} de dommages étourdissants ({hits} en résistance).', params });
-          } else out.push({ t: 'Pas de biofeedback en RA.' });
+              ? { t: 'Biofeedback: {boxes} of Physical damage ({hits} on the resistance test).', params }
+              : { t: 'Biofeedback: {boxes} of Stun damage ({hits} on the resistance test).', params });
+          } else out.push({ t: 'No biofeedback in AR.' });
         }
         if (def.linklock && persona.online) {
           persona.linkLocked = { source: `host:${host.id}`, name: icName, icType: ic.type, hostName: host.name, pool: (Number(host.rating) || 0) + (Number(host.attack) || 0) };
-          out.push({ t: 'Verrou de lien posé.' });
+          out.push({ t: 'Link-lock applied.' });
         }
         out.push(...damageDeck(ctx, actor, persona, boxes));
         break;
@@ -1258,16 +1258,16 @@ function pickIcTarget(ctx: ActionContext, host: Host, ic: HostIc): { persona?: P
   const def: Loose = (IC_TYPES as Loose)[ic.type];
   const icType = { t: def.fr };
   let list = intrudersOf(ctx.state, host).map((p) => ensurePersona(ctx.state, ctx.state.actors[p.actorId]));
-  if (!list.length) return { reasonMsg: { t: '{ic} : personne dans l’hôte.', params: { ic: icType } } };
+  if (!list.length) return { reasonMsg: { t: '{ic}: nobody in the host.', params: { ic: icType } } };
   const spotted = new Set(host.spotted || []);
   if (def.effect === 'spot') {
     list = list.filter((p) => !spotted.has(p.actorId));
-    if (!list.length) return { reasonMsg: { t: '{ic} : tout le monde est déjà repéré, elle surveille.', params: { ic: icType } } };
+    if (!list.length) return { reasonMsg: { t: '{ic}: everyone is already spotted, it keeps watch.', params: { ic: icType } } };
   } else {
     if (def.needsMarks) list = list.filter((p) => hostMarksOn(p, host) >= def.needsMarks);
     if (!list.length) {
       const params = { ic: icType, n: def.needsMarks };
-      return { reasonMsg: def.needsMarks === 1 ? { t: '{ic} attend : il lui faut {n} marque de l’hôte sur sa cible.', params } : { t: '{ic} attend : il lui faut {n} marques de l’hôte sur sa cible.', params } };
+      return { reasonMsg: def.needsMarks === 1 ? { t: '{ic} waits: it needs {n} host mark on its target.', params } : { t: '{ic} waits: it needs {n} host marks on its target.', params } };
     }
     list.sort((a, b) => Number(spotted.has(b.actorId)) - Number(spotted.has(a.actorId)) || hostMarksOn(b, host) - hostMarksOn(a, host));
   }
@@ -1276,14 +1276,14 @@ function pickIcTarget(ctx: ActionContext, host: Host, ic: HostIc): { persona?: P
 
 /** One IC acts (automatic target unless actorId). Returns { ic, result?, skipped?: message }. */
 function icTakesTurn(ctx: ActionContext, host: Host, ic: HostIc, actorId: string | null): Loose {
-  if (!ic.active) ctx.fail('Cette IC n’est pas lancée');
+  if (!ic.active) ctx.fail('This IC is not launched');
   let actor: Actor;
   let persona: Persona;
   if (actorId) {
     actor = getActor(ctx, actorId);
-    if (!actor.matrix) ctx.fail('{name} n’a pas d’appareil matriciel', { name: actor.name });
+    if (!actor.matrix) ctx.fail('{name} has no Matrix device', { name: actor.name });
     persona = ensurePersona(ctx.state, actor);
-    if (!persona.online || persona.hostId !== host.id) ctx.fail('{name} n’est pas dans cet hôte', { name: actor.name });
+    if (!persona.online || persona.hostId !== host.id) ctx.fail('{name} is not in this host', { name: actor.name });
   } else {
     const pick = pickIcTarget(ctx, host, ic);
     if (!pick.persona) {
@@ -1409,15 +1409,15 @@ const actions: Record<string, ActionDef> = {
   // { actorId, mode: 'ar'|'cold'|'hot' } — connect, or switch interface mode when already online.
   'matrix/connect': any((ctx: ActionContext, { actorId, mode }: ActorPayload & { mode?: MatrixMode } = {}) => {
     const { actor, persona } = ownPersona(ctx, actorId);
-    if (!MODES.includes(mode as MatrixMode)) ctx.fail('Mode de connexion inconnu');
-    if (persona.bricked) ctx.fail('Le deck de {name} est briqué : il doit être réparé', { name: actor.name });
+    if (!MODES.includes(mode as MatrixMode)) ctx.fail('Unknown connection mode');
+    if (persona.bricked) ctx.fail('{name}’s deck is bricked: it must be repaired', { name: actor.name });
     const was = persona.online ? persona.mode : null;
     persona.mode = mode as MatrixMode;
     persona.online = true;
     const ini = matrixInitiative(actor, persona, mode, actorModifiers(actor));
     if (was !== mode) {
       const params = { name: actor.name, mode: { t: MODE_LABELS[mode as MatrixMode] }, ini: ini.text };
-      mlog(ctx, { author: actor.name, msgs: [was ? { t: '{name} passe en {mode} (initiative {ini}).', params } : { t: '{name} se connecte à la Matrice en {mode} (initiative {ini}).', params }], matrix: { event: 'connect', actorId, mode } });
+      mlog(ctx, { author: actor.name, msgs: [was ? { t: '{name} switches to {mode} (initiative {ini}).', params } : { t: '{name} connects to the Matrix in {mode} (initiative {ini}).', params }], matrix: { event: 'connect', actorId, mode } });
     }
     return { mode, initiative: ini };
   }),
@@ -1427,9 +1427,9 @@ const actions: Record<string, ActionDef> = {
     const { actor, persona } = ownPersona(ctx, actorId);
     if (!persona.online) return { online: false };
     const forced = !!dump && ctx.isGM;
-    if (!forced && persona.linkLocked) ctx.fail('Verrou de lien : utilise l’action « Se déconnecter (Jack Out) » pour tenter de le briser');
+    if (!forced && persona.linkLocked) ctx.fail('Link-lock: use the “Jack Out” action to try to break it');
     const out = goOffline(ctx, actor, persona, { dumped: forced });
-    const head = forced ? { t: '{name} est éjecté(e) de la Matrice.', params: { name: actor.name } } : { t: '{name} se déconnecte de la Matrice.', params: { name: actor.name } };
+    const head = forced ? { t: '{name} is booted out of the Matrix.', params: { name: actor.name } } : { t: '{name} jacks out of the Matrix.', params: { name: actor.name } };
     mlog(ctx, { author: actor.name, msgs: [head, ...out], matrix: { event: 'disconnect', actorId } });
     if (forced) sfx(ctx, 'matrix-glitch', [...ownersOf(ctx.state, actorId as ActorId), 'gm']);
     return { online: false, outcomes: out.map(fr), msgs: out };
@@ -1438,16 +1438,16 @@ const actions: Record<string, ActionDef> = {
   // { actorId, swap: [a, b] } or { actorId, asdf: { attack: 'sleaze', … } } — cyberdecks only (Free Action).
   'matrix/setASDF': any((ctx: ActionContext, { actorId, swap, asdf }: ActorPayload & { swap?: AsdfKey[]; asdf?: Record<AsdfKey, AsdfKey> } = {}) => {
     const { actor, persona } = ownPersona(ctx, actorId);
-    if (!isCyberdeck(actor)) ctx.fail('Seul un cyberdeck peut permuter ses attributs');
+    if (!isCyberdeck(actor)) ctx.fail('Only a cyberdeck can swap its attributes');
     if (Array.isArray(swap)) {
       const [a, b] = swap;
-      if (!ASDF.includes(a) || !ASDF.includes(b) || a === b) ctx.fail('Permutation invalide');
+      if (!ASDF.includes(a) || !ASDF.includes(b) || a === b) ctx.fail('Invalid swap');
       const next = { ...persona.asdf };
       [next[a], next[b]] = [next[b], next[a]];
       persona.asdf = next;
     } else if (isPermutation(asdf)) {
       persona.asdf = Object.fromEntries((ASDF as AsdfKey[]).map((k) => [k, asdf![k]])) as Persona['asdf'];
-    } else ctx.fail('Configuration invalide');
+    } else ctx.fail('Invalid configuration');
     return { asdf: persona.asdf, eff: deckStats(actor, persona).eff };
   }),
 
@@ -1456,12 +1456,12 @@ const actions: Record<string, ActionDef> = {
     const { actor, persona } = ownPersona(ctx, actorId);
     const n = str(name, 80).trim();
     const prog = availablePrograms(actor).find((x) => x.name.toLowerCase() === n.toLowerCase());
-    if (!prog) ctx.fail('Programme absent de ton deck');
-    if (prog.id === 'agent') ctx.fail('L’agent se charge depuis son propre panneau');
-    if (persona.loadedPrograms.some((x) => x.toLowerCase() === n.toLowerCase())) ctx.fail('Programme déjà chargé');
+    if (!prog) ctx.fail('Program not on your deck');
+    if (prog.id === 'agent') ctx.fail('Load the agent from its own panel');
+    if (persona.loadedPrograms.some((x) => x.toLowerCase() === n.toLowerCase())) ctx.fail('Program already loaded');
     const s = programSlots(persona);
     const gain: number = prog.id === 'virtualMachine' ? (PROGRAM_BY_ID as Loose).virtualMachine.slots : 0;
-    if (s.used + 1 > s.total + gain) ctx.fail('Plus d’emplacement libre ({used}/{total}) : décharge d’abord un programme', { used: s.used, total: s.total });
+    if (s.used + 1 > s.total + gain) ctx.fail('No free slot ({used}/{total}): unload a program first', { used: s.used, total: s.total });
     persona.loadedPrograms.push(prog.name);
     return { loadedPrograms: persona.loadedPrograms, slots: programSlots(persona) };
   }),
@@ -1470,10 +1470,10 @@ const actions: Record<string, ActionDef> = {
     const { persona } = ownPersona(ctx, actorId);
     const n = str(name, 80).trim().toLowerCase();
     const idx = persona.loadedPrograms.findIndex((x) => x.toLowerCase() === n);
-    if (idx < 0) ctx.fail('Programme non chargé');
+    if (idx < 0) ctx.fail('Program not loaded');
     const next = persona.loadedPrograms.filter((_, i) => i !== idx);
     const s = programSlots({ ...persona, loadedPrograms: next });
-    if (s.used > s.total) ctx.fail('Décharge d’abord d’autres programmes : la Machine virtuelle fournit des emplacements occupés');
+    if (s.used > s.total) ctx.fail('Unload other programs first: Virtual Machine provides slots that are in use');
     persona.loadedPrograms = next;
     return { loadedPrograms: persona.loadedPrograms, slots: programSlots(persona) };
   }),
@@ -1485,8 +1485,8 @@ const actions: Record<string, ActionDef> = {
     const max = owned.reduce((m, x) => Math.max(m, x.rating), 0);
     const r = clampInt(rating, 1, 6, 1);
     if (!ctx.isGM) {
-      if (!max) ctx.fail('Aucun agent dans ton équipement : achète un Agent à la boutique (Logiciels)');
-      if (r > max) ctx.fail('Ton meilleur agent est d’indice {n}', { n: max });
+      if (!max) ctx.fail('No agent in your gear: buy an Agent in the shop (Software)');
+      if (r > max) ctx.fail('Your best agent is rating {n}', { n: max });
     }
     const prev: Partial<NonNullable<Persona['agent']>> = persona.agent || { loaded: false, damage: 0 };
     persona.agent = { ...(prev as NonNullable<Persona['agent']>), rating: r, name: str(name, 40).trim() || prev.name || `Agent ${r}`, source: prev.source || (ctx.isGM && !max ? 'gm' : 'gear') };
@@ -1498,11 +1498,11 @@ const actions: Record<string, ActionDef> = {
   'matrix/agentLoad': any((ctx: ActionContext, { actorId, loaded }: ActorPayload & { loaded?: boolean } = {}) => {
     const { persona } = ownPersona(ctx, actorId);
     const ag = persona.agent;
-    if (!ag) ctx.fail('Aucun agent configuré');
+    if (!ag) ctx.fail('No agent set up');
     if (loaded) {
       if (ag.loaded) return { agent: ag };
       const s = programSlots(persona);
-      if (s.used + 1 > s.total) ctx.fail('Plus d’emplacement libre pour l’agent ({used}/{total})', { used: s.used, total: s.total });
+      if (s.used + 1 > s.total) ctx.fail('No free slot for the agent ({used}/{total})', { used: s.used, total: s.total });
       ag.loaded = true;
       ag.damage = 0;
     } else {
@@ -1518,11 +1518,11 @@ const actions: Record<string, ActionDef> = {
     const { actor, persona } = ownPersona(ctx, actorId);
     requireOnline(ctx, actor, persona);
     const ag = persona.agent;
-    if (!ag || !ag.loaded) ctx.fail('Ton agent n’est pas chargé');
+    if (!ag || !ag.loaded) ctx.fail('Your agent is not loaded');
     const action: MatrixActionDef | undefined = ACTION_BY_ID[actionId as string];
-    if (!action || action.noTest || !action.skill) ctx.fail('Cette action ne se prête pas au travail d’équipe');
+    if (!action || action.noTest || !action.skill) ctx.fail('This action does not allow teamwork');
     const pc = actionPool(actor, persona, action, { agent: true });
-    if (pc.pool <= 0) ctx.fail('Réserve de dés nulle pour l’agent');
+    if (pc.pool <= 0) ctx.fail('Dice pool of zero for the agent');
     const r = roll(pc.pool, { limit: pc.limit }, 'actor');
     const cap = skillRating(actor, action.skill);
     let dice = Math.min(r.hits, cap);
@@ -1533,24 +1533,24 @@ const actions: Record<string, ActionDef> = {
       dice = 0;
       limitBonus = 0;
       ag.loaded = false;
-      outcomes.push({ t: 'Échec critique : {agent} plante et se décharge du deck. Aucune aide.', params: { agent } });
+      outcomes.push({ t: 'Critical glitch: {agent} crashes and unloads from the deck. No help.', params: { agent } });
       sfx(ctx, 'matrix-glitch', [...ownersOf(ctx.state, actorId as ActorId), 'gm']);
     } else if (r.glitch) {
       dice = 0;
       limitBonus = 0;
-      outcomes.push({ t: 'Complication : {agent} s’emmêle et n’apporte aucune aide.', params: { agent } });
+      outcomes.push({ t: 'Glitch: {agent} gets tangled up and provides no help.', params: { agent } });
     } else if (r.hits) {
       const params = { agent, n: dice, action: { t: action.fr } };
       outcomes.push(dice === 1
-        ? { t: '{agent} apporte +{n} dé et +1 à la limite pour « {action} ».', params }
+        ? { t: '{agent} provides +{n} die and +1 limit for “{action}”.', params }
         : dice === 0
-          ? { t: 'zero::{agent} apporte +{n} dé et +1 à la limite pour « {action} ».', params }
-          : { t: '{agent} apporte +{n} dés et +1 à la limite pour « {action} ».', params });
-      if (dice < r.hits) outcomes.push({ t: 'Bonus plafonné à la compétence de {name} ({cap}).', params: { name: actor.name, cap } });
-    } else outcomes.push({ t: '{agent} ne trouve rien d’utile (aucun succès).', params: { agent } });
+          ? { t: 'zero::{agent} provides +{n} dice and +1 limit for “{action}”.', params }
+          : { t: '{agent} provides +{n} dice and +1 limit for “{action}”.', params });
+      if (dice < r.hits) outcomes.push({ t: 'Bonus capped at {name}’s skill rating ({cap}).', params: { name: actor.name, cap } });
+    } else outcomes.push({ t: '{agent} finds nothing useful (no hits).', params: { agent } });
     persona.pendingAssist = r.critGlitch ? null : ({ actionId: action.id, skill: action.skill, dice, limitBonus, hits: r.hits, glitch: r.glitch, ts: Date.now() });
     const authorMsg = agentAuthorMsg(ag, actor);
-    const labelMsg = { t: 'Assistance — {action}', params: { action: { t: action.fr } } };
+    const labelMsg = { t: 'Assist — {action}', params: { action: { t: action.fr } } };
     mlog(ctx, {
       author: fr(authorMsg), authorI18n: toI18n(authorMsg), msgs: outcomes,
       roll: { ...r, label: fr(labelMsg), labelI18n: toI18n(labelMsg), breakdown: sumParts(pc.parts) + (pc.limit ? ` [${pc.limit}]` : '') },
@@ -1564,10 +1564,10 @@ const actions: Record<string, ActionDef> = {
   'matrix/agentAct': any((ctx: ActionContext, p: MatrixActionPayload = {}) => {
     const { actor, persona } = ownPersona(ctx, p.actorId);
     requireOnline(ctx, actor, persona);
-    if (!persona.agent || !persona.agent.loaded) ctx.fail('Ton agent n’est pas chargé');
+    if (!persona.agent || !persona.agent.loaded) ctx.fail('Your agent is not loaded');
     const action: MatrixActionDef | undefined = ACTION_BY_ID[p.actionId as string];
-    if (!action) return ctx.fail('Action matricielle inconnue');
-    if (action.noTest || action.id === 'jackOut') ctx.fail('Ton agent ne peut pas faire cette action à ta place');
+    if (!action) return ctx.fail('Unknown Matrix action');
+    if (action.noTest || action.id === 'jackOut') ctx.fail('Your agent cannot take this action for you');
     return performAction(ctx, actor, persona, action, { ...p, assistFromAgent: false, edge: false, useSpec: false }, { agent: true });
   }),
 
@@ -1575,10 +1575,10 @@ const actions: Record<string, ActionDef> = {
   'matrix/action': any((ctx: ActionContext, p: MatrixActionPayload = {}) => {
     const { actor, persona } = ownPersona(ctx, p.actorId);
     const action: MatrixActionDef | undefined = ACTION_BY_ID[p.actionId as string];
-    if (!action) return ctx.fail('Action matricielle inconnue');
+    if (!action) return ctx.fail('Unknown Matrix action');
     // Rebooting your own deck also works offline (clears the Overwatch Score and marks).
     if (action.id === 'rebootSelf' && !persona.online) {
-      if (persona.bricked) ctx.fail('Le deck de {name} est briqué : il doit être réparé', { name: actor.name });
+      if (persona.bricked) ctx.fail('{name}’s deck is bricked: it must be repaired', { name: actor.name });
     } else requireOnline(ctx, actor, persona);
     return performAction(ctx, actor, persona, action, p);
   }),
@@ -1588,19 +1588,19 @@ const actions: Record<string, ActionDef> = {
   'matrix/shareFile': any((ctx: ActionContext, { actorId, fileId }: ActorPayload & { fileId?: string } = {}) => {
     const { actor, persona } = ownPersona(ctx, actorId);
     const f = persona.files.find((x) => x.id === fileId);
-    if (!f) ctx.fail('Fichier introuvable');
-    const tr = (key: string, params?: I18nParams) => (ctx.t ? ctx.t(key, params) : formatFr(key, params));
+    if (!f) ctx.fail('File not found');
+    const tr = (key: string, params?: I18nParams) => (ctx.t ? ctx.t(key, params) : formatSource(key, params));
     const head = f.hostName
-      ? tr(tk('Récupéré par {name} sur l’hôte « {host} ».'), { name: actor.name, host: f.hostName })
-      : tr(tk('Récupéré par {name} dans la Matrice.'), { name: actor.name });
-    const body = `*${head}*\n\n${f.content || tr(tk('Contenu à décrire par le MJ.'))}`;
+      ? tr(tk('Recovered by {name} from the host “{host}”.'), { name: actor.name, host: f.hostName })
+      : tr(tk('Recovered by {name} in the Matrix.'), { name: actor.name });
+    const body = `*${head}*\n\n${f.content || tr(tk('Contents to be described by the GM.'))}`;
     let out: unknown;
     if (ctx.isGM) {
       const handoutId = campaignModule.actions!['campaign/addHandout'].handler(ctx, { title: f.name, body });
       campaignModule.actions!['campaign/revealHandout'].handler(ctx, { handoutId, to: 'all' });
       out = { handoutId };
     } else {
-      out = notesModule.actions!['notes/create'].handler(ctx, { scope: 'party', title: f.name, folder: tr(tk('Matrice')), body });
+      out = notesModule.actions!['notes/create'].handler(ctx, { scope: 'party', title: f.name, folder: tr(tk('Matrix')), body });
       sfx(ctx, 'notify', 'gm');
     }
     f.shared = true;
@@ -1621,7 +1621,7 @@ const actions: Record<string, ActionDef> = {
     const rating = clampInt(p.rating, 1, 12, 3);
     const preset = (HOST_PRESETS as Loose)[p.preset as string] ? p.preset : 'shell';
     const id = uid('host');
-    const host: Loose = { id, name: str(p.name, 80).trim() || (ctx.t ? ctx.t(tk('Hôte {n}'), { n: rating }) : formatFr('Hôte {n}', { n: rating })), rating, ...hostAttributes(rating, preset), alert: 'none', visible: false, folder: str(p.folder, 60) };
+    const host: Loose = { id, name: str(p.name, 80).trim() || (ctx.t ? ctx.t(tk('Host {n}'), { n: rating }) : formatSource('Host {n}', { n: rating })), rating, ...hostAttributes(rating, preset), alert: 'none', visible: false, folder: str(p.folder, 60) };
     host.ic = p.ic === false ? [] : defaultIcFor(rating).map((type, i) => ({ id: uid('ic'), type, rating, active: i === 0 && type === 'patrol', damage: 0 }));
     m.hosts[id] = normalizeHost(host, id);
     return { id };
@@ -1630,7 +1630,7 @@ const actions: Record<string, ActionDef> = {
   // { hostId, patch: { name, rating, attack, sleaze, dataProcessing, firewall, alert, visible, notes, description, folder, spider, spiderAlert, ic, files, devices, perceivedBy, spotted } }
   'matrix/hostUpdate': gm((ctx: ActionContext, { hostId, patch }: HostPayload & { patch?: Loose } = {}) => {
     const h = getHost(ctx, hostId);
-    if (!isObj(patch)) ctx.fail('Modification invalide');
+    if (!isObj(patch)) ctx.fail('Invalid change');
     const wasAlert = h.alert;
     const devKey = (d: HostDevice) => `${deviceWorks(d)}|${d.on !== false}|${d.link ? `${d.link.mapId}:${d.link.kind}:${d.link.targetId}` : ''}`;
     const devBefore = new Map((h.devices || []).map((d) => [d.id, devKey(d)]));
@@ -1641,7 +1641,7 @@ const actions: Record<string, ActionDef> = {
     for (const d of h.devices) if (devBefore.get(d.id) !== devKey(d)) syncDeviceLink(ctx, d);
     if (wasAlert !== h.alert) {
       const inside = Object.values(slice(ctx.state).personas).some((p) => p.online && p.hostId === h.id);
-      const msg = h.alert === 'active' ? { t: 'L’hôte {host} passe en alerte !', params: { host: h.name } } : { t: 'L’hôte {host} revient au calme.', params: { host: h.name } };
+      const msg = h.alert === 'active' ? { t: 'Host {host} goes on alert!', params: { host: h.name } } : { t: 'Host {host} stands down.', params: { host: h.name } };
       mlog(ctx, { author: h.name, gmOnly: !inside, msgs: [msg], matrix: { event: 'alert', hostId: h.id } });
       if (h.alert === 'active') sfx(ctx, 'alarm', inside ? 'all' : 'gm');
     }
@@ -1667,9 +1667,9 @@ const actions: Record<string, ActionDef> = {
     let ic: HostIc | undefined;
     if (icId) {
       ic = h.ic.find((x) => x.id === icId);
-      if (!ic) return ctx.fail('IC introuvable');
+      if (!ic) return ctx.fail('IC not found');
     } else {
-      if (!(IC_TYPES as Loose)[type as string]) ctx.fail('Type d’IC inconnu');
+      if (!(IC_TYPES as Loose)[type as string]) ctx.fail('Unknown IC type');
       ic = { id: uid('ic'), type, rating: h.rating, active: false, damage: 0 } as HostIc;
       h.ic.push(ic);
     }
@@ -1681,7 +1681,7 @@ const actions: Record<string, ActionDef> = {
   'matrix/launchNextIc': gm((ctx: ActionContext, { hostId }: HostPayload = {}) => {
     const h = getHost(ctx, hostId);
     const msg = launchNextIc(ctx, h);
-    if (!msg) ctx.fail('Toutes les IC de cet hôte tournent déjà (ou sont plantées)');
+    if (!msg) ctx.fail('Every IC of this host is already running (or crashed)');
     return { outcomes: [fr(msg)], msgs: [msg] };
   }),
 
@@ -1690,7 +1690,7 @@ const actions: Record<string, ActionDef> = {
   'matrix/icTurn': gm((ctx: ActionContext, { hostId, icId, actorId, entryId }: HostPayload & ActorPayload & { entryId?: string } = {}) => {
     const h = getHost(ctx, hostId);
     const ic = h.ic.find((x) => x.id === icId);
-    if (!ic) return ctx.fail('IC introuvable');
+    if (!ic) return ctx.fail('IC not found');
     const r = icTakesTurn(ctx, h, ic, actorId ? str(actorId, 60) : null);
     if (entryId) r.advanced = endTurnOf(ctx, str(entryId, 60));
     return r;
@@ -1710,7 +1710,7 @@ const actions: Record<string, ActionDef> = {
       if (!ic.active) continue; // crashed meanwhile
       results.push(icTakesTurn(ctx, h, ic, null));
     }
-    if (!results.length) msgs.push({ t: 'Aucune IC active dans {host}.', params: { host: h.name } });
+    if (!results.length) msgs.push({ t: 'No IC running in {host}.', params: { host: h.name } });
     return { results, outcomes: msgs.map(fr), msgs };
   }),
 
@@ -1718,14 +1718,14 @@ const actions: Record<string, ActionDef> = {
   'matrix/spawnSpider': gm((ctx: ActionContext, { hostId }: HostPayload = {}) => {
     const h = getHost(ctx, hostId);
     const templateId = h.alert === 'active' ? h.spiderAlert || h.spider : h.spider || h.spiderAlert;
-    if (!templateId || !ctx.state.bestiary?.[templateId]) ctx.fail('Aucune araignée choisie pour cet hôte');
+    if (!templateId || !ctx.state.bestiary?.[templateId]) ctx.fail('No spider chosen for this host');
     return combatModule.actions!['bestiary/spawn'].handler(ctx, { templateId, mapId: null, addToCombat: true });
   }),
 
   // { actorId } — 15 minutes go by: the decker's OS rises by 2D6 (rolled in secret, GM-only log).
   'matrix/osTick': gm((ctx: ActionContext, { actorId }: ActorPayload = {}) => {
     const actor = getActor(ctx, actorId);
-    if (!actor.matrix) ctx.fail('{name} n’a pas d’appareil matriciel', { name: actor.name });
+    if (!actor.matrix) ctx.fail('{name} has no Matrix device', { name: actor.name });
     const persona = ensurePersona(ctx.state, actor);
     const r = osTick(ctx, actor, persona, 1);
     return { added: r.added, overwatch: persona.overwatch, convergence: r.convergence ? r.convergence.map(fr) : null, convergenceMsgs: r.convergence };
@@ -1735,7 +1735,7 @@ const actions: Record<string, ActionDef> = {
   'matrix/icUpdate': gm((ctx: ActionContext, { hostId, icId, patch }: HostPayload & { patch?: Loose } = {}) => {
     const h = getHost(ctx, hostId);
     const idx = h.ic.findIndex((x) => x.id === icId);
-    if (idx < 0) ctx.fail('IC introuvable');
+    if (idx < 0) ctx.fail('IC not found');
     const next = cleanIc({ ...h.ic[idx], ...(isObj(patch) ? patch : {}), id: icId, type: h.ic[idx].type }, h);
     h.ic[idx] = next as HostIc;
     return { ic: next };
@@ -1751,19 +1751,19 @@ const actions: Record<string, ActionDef> = {
   'matrix/icAct': gm((ctx: ActionContext, { hostId, icId, actorId }: HostPayload & ActorPayload = {}) => {
     const h = getHost(ctx, hostId);
     const ic = h.ic.find((x) => x.id === icId);
-    if (!ic) return ctx.fail('IC introuvable');
-    if (!ic.active) ctx.fail('Cette IC n’est pas lancée');
+    if (!ic) return ctx.fail('IC not found');
+    if (!ic.active) ctx.fail('This IC is not launched');
     const actor = getActor(ctx, actorId);
-    if (!actor.matrix) ctx.fail('{name} n’a pas d’appareil matriciel', { name: actor.name });
+    if (!actor.matrix) ctx.fail('{name} has no Matrix device', { name: actor.name });
     const persona = ensurePersona(ctx.state, actor);
-    if (!persona.online || persona.hostId !== h.id) ctx.fail('{name} n’est pas dans cet hôte', { name: actor.name });
+    if (!persona.online || persona.hostId !== h.id) ctx.fail('{name} is not in this host', { name: actor.name });
     return icAttack(ctx, h, ic, actor, persona);
   }),
 
   // { actorId, value?, delta? }
   'matrix/setOverwatch': gm((ctx: ActionContext, { actorId, value, delta }: ActorPayload & { value?: number; delta?: number } = {}) => {
     const actor = getActor(ctx, actorId);
-    if (!actor.matrix) ctx.fail('{name} n’a pas d’appareil matriciel', { name: actor.name });
+    if (!actor.matrix) ctx.fail('{name} has no Matrix device', { name: actor.name });
     const persona = ensurePersona(ctx.state, actor);
     const next = delta !== undefined ? (persona.overwatch as number) + clampInt(delta, -40, 40, 0) : clampInt(value, 0, OS_MAX, persona.overwatch as number);
     const before = persona.overwatch;
@@ -1777,7 +1777,7 @@ const actions: Record<string, ActionDef> = {
 
   'matrix/converge': gm((ctx: ActionContext, { actorId }: ActorPayload = {}) => {
     const actor = getActor(ctx, actorId);
-    if (!actor.matrix) ctx.fail('{name} n’a pas d’appareil matriciel', { name: actor.name });
+    if (!actor.matrix) ctx.fail('{name} has no Matrix device', { name: actor.name });
     const persona = ensurePersona(ctx.state, actor);
     const msgs = converge(ctx, actor, persona);
     return { outcomes: msgs.map(fr), msgs };
@@ -1794,9 +1794,9 @@ const actions: Record<string, ActionDef> = {
   // { actorId, patch: { matrixDamage, noise, bricked, traced, linkLocked: null, penalties: {}, programSlots, fullDefense, hostId, osKnown, agent: { damage, loaded } , files } }
   'matrix/setPersona': gm((ctx: ActionContext, { actorId, patch }: ActorPayload & { patch?: Loose } = {}) => {
     const actor = getActor(ctx, actorId);
-    if (!actor.matrix) ctx.fail('{name} n’a pas d’appareil matriciel', { name: actor.name });
+    if (!actor.matrix) ctx.fail('{name} has no Matrix device', { name: actor.name });
     const persona = ensurePersona(ctx.state, actor);
-    if (!isObj(patch)) ctx.fail('Modification invalide');
+    if (!isObj(patch)) ctx.fail('Invalid change');
     const mon = matrixMonitor(actor.matrix!.rating);
     if (patch!.matrixDamage !== undefined) persona.matrixDamage = clampInt(patch.matrixDamage, 0, mon, 0);
     if (patch.noise !== undefined) persona.noise = clampInt(patch.noise, 0, 30, 0);
@@ -1815,7 +1815,7 @@ const actions: Record<string, ActionDef> = {
       }
     }
     if (patch.hostId !== undefined) {
-      if (patch.hostId && !slice(ctx.state).hosts[patch.hostId]) ctx.fail('Hôte introuvable');
+      if (patch.hostId && !slice(ctx.state).hosts[patch.hostId]) ctx.fail('Host not found');
       persona.hostId = patch.hostId || null;
     }
     if (patch.osKnown !== undefined) persona.osKnown = patch.osKnown === null ? null : clampInt(patch.osKnown, 0, OS_MAX, 0);
@@ -1833,10 +1833,10 @@ const actions: Record<string, ActionDef> = {
   // { actorId, targetId, name?, count } — set the marks a persona holds (0 removes).
   'matrix/setMarks': gm((ctx: ActionContext, { actorId, targetId, name, count }: ActorPayload & { targetId?: string; name?: string; count?: number } = {}) => {
     const actor = getActor(ctx, actorId);
-    if (!actor.matrix) ctx.fail('{name} n’a pas d’appareil matriciel', { name: actor.name });
+    if (!actor.matrix) ctx.fail('{name} has no Matrix device', { name: actor.name });
     const persona = ensurePersona(ctx.state, actor);
     const key = str(targetId, 200);
-    if (!key) ctx.fail('Cible invalide');
+    if (!key) ctx.fail('Invalid target');
     const n = clampInt(count, 0, MAX_MARKS, 0);
     persona.marks = persona.marks.filter((m) => m.targetId !== key);
     if (n) persona.marks.push({ targetId: key, name: str(name, 80) || key, count: n });
@@ -1846,10 +1846,10 @@ const actions: Record<string, ActionDef> = {
   // { actorId, sourceId, name?, count } — marks other icons have on the persona.
   'matrix/setMarkOnMe': gm((ctx: ActionContext, { actorId, sourceId, name, count }: ActorPayload & { sourceId?: string; name?: string; count?: number } = {}) => {
     const actor = getActor(ctx, actorId);
-    if (!actor.matrix) ctx.fail('{name} n’a pas d’appareil matriciel', { name: actor.name });
+    if (!actor.matrix) ctx.fail('{name} has no Matrix device', { name: actor.name });
     const persona = ensurePersona(ctx.state, actor);
     const key = str(sourceId, 200);
-    if (!key) ctx.fail('Source invalide');
+    if (!key) ctx.fail('Invalid source');
     const n = clampInt(count, 0, MAX_MARKS, 0);
     persona.marksOnMe = persona.marksOnMe.filter((m) => m.sourceId !== key);
     if (n) persona.marksOnMe.push({ sourceId: key, name: str(name, 80) || key, count: n });

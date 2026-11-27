@@ -21,7 +21,7 @@ export default function CampaignPage({ game }: GameProps) {
   if (!game.campaign) {
     return (
       <div className="page">
-        <Empty>{t("Le module campagne n'est pas chargé côté serveur.")}</Empty>
+        <Empty>{t("The campaign module is not loaded on the server.")}</Empty>
       </div>
     );
   }
@@ -44,14 +44,14 @@ export default function CampaignPage({ game }: GameProps) {
   const activeQuests = c.quests.filter((q) => q.status === 'active').length;
   const openThreads = c.threads.filter((th) => th.state === 'open').length;
   const tabs: TabDef[] = [
-    { id: 'dash', label: t('Tableau de bord') },
-    { id: 'quests', label: t('Quêtes'), badge: activeQuests || null },
-    { id: 'sessions', label: t('Séances') },
-    { id: 'threads', label: t('Fils narratifs'), badge: openThreads || null },
+    { id: 'dash', label: t('Dashboard') },
+    { id: 'quests', label: t('Quests'), badge: activeQuests || null },
+    { id: 'sessions', label: t('Sessions') },
+    { id: 'threads', label: t('Plot threads'), badge: openThreads || null },
     { id: 'docs', label: t('Documents') },
-    { id: 'handouts', label: t('Dossiers joueurs'), badge: pendingHandouts || null },
-    { id: 'notes', label: t('Notes MJ') },
-    { id: 'recap', label: t('Récap joueurs') },
+    { id: 'handouts', label: t('Player handouts'), badge: pendingHandouts || null },
+    { id: 'notes', label: t('GM notes') },
+    { id: 'recap', label: t('Player recap') },
   ];
   const current = tabs.some((x) => x.id === tab) ? tab : 'dash';
   const act = currentAct(c);
@@ -77,13 +77,13 @@ export default function CampaignPage({ game }: GameProps) {
     case 'notes':
       body = (
         <div className="camp-text-page">
-          <p className="muted small">{t('Ton bloc-notes de MJ — jamais visible par les joueurs. Markdown accepté ; enregistrement en quittant le champ ou avec Ctrl+S.')}</p>
+          <p className="muted small">{t('Your GM notepad — never visible to players. Markdown accepted; saved when you leave the field or press Ctrl+S.')}</p>
           <MdEditor
             value={c.notes}
             initialMode="split"
             rows={26}
             tall
-            placeholder={t('Idées, prochaines étapes, PNJ à improviser…')}
+            placeholder={t('Ideas, next steps, NPCs to improvise…')}
             onSave={(text) => send('campaign/updateNotes', { text })}
           />
         </div>
@@ -93,14 +93,14 @@ export default function CampaignPage({ game }: GameProps) {
       body = (
         <div className="camp-text-page">
           <div className="camp-warn small">
-            <strong>{t('Visible par tous les joueurs')}</strong> {t("dans leur onglet « Dossiers » (section « L'histoire jusqu'ici »). Pas de secrets de MJ ici !")}
+            <strong>{t('Visible to all players')}</strong> {t("in their “Dossiers” tab (“The story so far” section). No GM secrets here!")}
           </div>
           <MdEditor
             value={c.playerRecap}
             initialMode="split"
             rows={26}
             tall
-            placeholder={t('Ce que les runners savent…')}
+            placeholder={t('What the runners know…')}
             onSave={(text) => send('campaign/updatePlayerRecap', { text })}
           />
         </div>
@@ -113,9 +113,9 @@ export default function CampaignPage({ game }: GameProps) {
   return (
     <div className="page camp-page">
       <div className="page-title">
-        <h2>{t('Campagne')}</h2>
+        <h2>{t('Campaign')}</h2>
         {act && (
-          <div className="row gap-s camp-act-chip" title={t('Acte en cours')}>
+          <div className="row gap-s camp-act-chip" title={t('Current act')}>
             <Badge color="magenta">{act.title}</Badge>
           </div>
         )}

@@ -36,29 +36,29 @@ function attackSummary(a: Attack): string {
   if (a.actionName) bits.push(t(a.actionName));
   if (a.weaponName) bits.push(wName(a.weaponName));
   if (a.kind === 'toxin') {
-    bits.push(t('{toxin}, puissance {n}', { toxin: t((a.toxinId && TOXIN_BY_ID[a.toxinId]?.name) || ''), n: a.dv }));
+    bits.push(t('{toxin}, power {n}', { toxin: t((a.toxinId && TOXIN_BY_ID[a.toxinId]?.name) || ''), n: a.dv }));
     return bits.join(' · ');
   }
-  if (a.kind === 'blast') bits.push(t('souffle à {m} m', { m: a.meters }));
-  else bits.push(tn(a.hits, 'one::{n} succès', 'other::{n} succès'));
-  if (a.dv !== null && a.dv !== undefined) bits.push(t('VD {dv}{type}', { dv: a.modifiedDv ?? a.dv, type: a.type }) + (a.ap ? ` · ${t('PA {ap}', { ap: signed(a.ap) })}` : ''));
-  else if (a.noDamage) bits.push(t('sans dommages'));
+  if (a.kind === 'blast') bits.push(t('blast at {m} m', { m: a.meters }));
+  else bits.push(tn(a.hits, 'one::{n} hit', 'other::{n} hits'));
+  if (a.dv !== null && a.dv !== undefined) bits.push(t('DV {dv}{type}', { dv: a.modifiedDv ?? a.dv, type: a.type }) + (a.ap ? ` · ${t('AP {ap}', { ap: signed(a.ap) })}` : ''));
+  else if (a.noDamage) bits.push(t('no damage'));
   return bits.join(' · ');
 }
 
 function outcomeText(a: Attack): string {
-  if (a.status === 'cancelled') return t('annulée');
-  if (a.status === 'missed') return a.defenseHits !== undefined ? t('esquivée ({a} contre {d})', { a: a.hits, d: a.defenseHits }) : t('ratée');
+  if (a.status === 'cancelled') return t('cancelled');
+  if (a.status === 'missed') return a.defenseHits !== undefined ? t('dodged ({a} vs {d})', { a: a.hits, d: a.defenseHits }) : t('missed');
   if (a.status === 'done' && a.kind === 'toxin') {
-    if (!a.left) return t('toxine entièrement résistée');
+    if (!a.left) return t('toxin fully resisted');
     const fx = (a.effects || []).map((k) => t(AFFLICTIONS[k]?.name || k));
-    const dmg = a.damage ? (a.damageType === 'P' ? tn(a.damage, '{n} case physique', '{n} cases physiques') : tn(a.damage, '{n} case étourdissante', '{n} cases étourdissantes')) : '';
+    const dmg = a.damage ? (a.damageType === 'P' ? tn(a.damage, '{n} physical box', '{n} physical boxes') : tn(a.damage, '{n} stun box', '{n} stun boxes')) : '';
     return [dmg, ...fx].filter(Boolean).join(' · ');
   }
   if (a.status === 'done') {
-    if (a.noDamage || a.dv === null) return tn(a.net || 0, 'réussie : {n} succès net', 'réussie : {n} succès nets');
-    if (!a.damage) return t('tout encaissé');
-    return a.damageType === 'S' ? tn(a.damage, '{n} case étourdissante', '{n} cases étourdissantes') : tn(a.damage, '{n} case physique', '{n} cases physiques');
+    if (a.noDamage || a.dv === null) return tn(a.net || 0, 'success: {n} net hit', 'success: {n} net hits');
+    if (!a.damage) return t('fully resisted');
+    return a.damageType === 'S' ? tn(a.damage, '{n} stun box', '{n} stun boxes') : tn(a.damage, '{n} physical box', '{n} physical boxes');
   }
   return '';
 }
@@ -104,7 +104,7 @@ export default function AttackTray({ game }: GameProps) {
     <div className="atk-tray">
       <div className="atk-tray-head">
         <span>
-          ⚔ {t('Attaques')}
+          ⚔ {t('Attacks')}
           {pendingCount ? (
             <>
               {' '}
@@ -114,11 +114,11 @@ export default function AttackTray({ game }: GameProps) {
         </span>
         <span className="row gap-s">
           {gm && (
-            <Button small variant="ghost" onClick={() => send('attack/clear', {}).catch(() => {})} title={t('Effacer les attaques résolues et les souffles de la carte')}>
-              {t('Nettoyer')}
+            <Button small variant="ghost" onClick={() => send('attack/clear', {}).catch(() => {})} title={t('Clear resolved attacks and blasts from the map')}>
+              {t('Clean up')}
             </Button>
           )}
-          <IconButton icon={collapsed ? '▴' : '▾'} title={collapsed ? t('Déplier') : t('Replier')} onClick={() => setCollapsed(!collapsed)} />
+          <IconButton icon={collapsed ? '▴' : '▾'} title={collapsed ? t('Expand') : t('Collapse')} onClick={() => setCollapsed(!collapsed)} />
         </span>
       </div>
       {!collapsed && (
@@ -134,24 +134,24 @@ export default function AttackTray({ game }: GameProps) {
                   <b className="link" onClick={() => sheetOf(game, a.targetId) && openSheet(a.targetId)}>
                     {target}
                   </b>
-                  {!PENDING.has(a.status) && <IconButton icon="✕" className="atk-x" title={t('Masquer')} onClick={() => hide(a.id)} />}
+                  {!PENDING.has(a.status) && <IconButton icon="✕" className="atk-x" title={t('Hide')} onClick={() => hide(a.id)} />}
                 </div>
                 <div className="small muted">{attackSummary(a)}</div>
                 {PENDING.has(a.status) ? (
                   <div className="row wrap gap-s atk-card-actions">
                     {canAct && a.status === 'defense' && (
                       <Button small variant="primary" onClick={() => setDialog({ kind: 'defend', attackId: a.id })}>
-                        🛡 {t('Se défendre')}
+                        🛡 {t('Defend')}
                       </Button>
                     )}
                     {canAct && a.status === 'soak' && (
                       <Button small variant="primary" onClick={() => setDialog({ kind: 'soak', attackId: a.id })}>
-                        ✚ {a.kind === 'toxin' ? t('Résister au gaz') : t('Encaisser')}
+                        ✚ {a.kind === 'toxin' ? t('Resist the gas') : t('Resist damage')}
                       </Button>
                     )}
-                    {!canAct && <span className="faint small">{a.status === 'defense' ? t('en attente de la défense…') : t('en attente de l’encaissement…')}</span>}
+                    {!canAct && <span className="faint small">{a.status === 'defense' ? t('waiting for the defense…') : t('waiting for the damage resistance…')}</span>}
                     {gm && (
-                      <Button small variant="ghost" onClick={() => send('attack/auto', { attackId: a.id }).catch(() => {})} title={t('Lancer défense puis encaissement sans option')}>
+                      <Button small variant="ghost" onClick={() => send('attack/auto', { attackId: a.id }).catch(() => {})} title={t('Roll defense then damage resistance with no option')}>
                         ⚡ {t('Auto')}
                       </Button>
                     )}
@@ -160,21 +160,21 @@ export default function AttackTray({ game }: GameProps) {
                         small
                         variant="ghost"
                         onClick={async () => {
-                          const v = await promptText(t('Dommages à appliquer (ex. 6P, 4S, 0 = raté)'), a.modifiedDv ? `${a.modifiedDv}${a.type}` : '');
+                          const v = await promptText(t('Damage to apply (e.g. 6P, 4S, 0 = miss)'), a.modifiedDv ? `${a.modifiedDv}${a.type}` : '');
                           if (v === null || v === undefined) return;
                           const m = String(v).trim().match(/^(\d+)\s*([PSps])?$/);
                           if (!m) return;
                           const n = Number(m[1]);
                           send('attack/resolve', n ? { attackId: a.id, outcome: 'damage', amount: n, type: (m[2] || a.type || 'P').toUpperCase() } : { attackId: a.id, outcome: 'missed' }).catch(() => {});
                         }}
-                        title={t('Résoudre à la main')}
+                        title={t('Resolve by hand')}
                       >
                         ✎
                       </Button>
                     )}
                     {isMineAtk && (
-                      <Button small variant="ghost" onClick={() => send('attack/cancel', { attackId: a.id }).catch(() => {})} title={t('Annuler cette attaque')}>
-                        {t('Annuler')}
+                      <Button small variant="ghost" onClick={() => send('attack/cancel', { attackId: a.id }).catch(() => {})} title={t('Cancel this attack')}>
+                        {t('Cancel')}
                       </Button>
                     )}
                   </div>
@@ -204,14 +204,14 @@ interface DialogProps {
 function ResultOrSoak({ game, atk, onClose }: DialogProps & { dialog: DialogState }) {
   if (atk.status === 'soak') return <SoakDialog game={game} atk={atk} onClose={onClose} />;
   return (
-    <Overlay title={t('Résultat — {target}', { target: atk.targetName })} onClose={onClose} width={420}>
+    <Overlay title={t('Result — {target}', { target: atk.targetName })} onClose={onClose} width={420}>
       <div className="col gap-s">
         <div className={`atk-big ${atk.status === 'done' && atk.damage ? 'hit' : ''}`}>{outcomeText(atk)}</div>
         <div className="muted small">{attackSummary(atk)}</div>
         <div className="row spread">
           <span></span>
           <Button variant="primary" onClick={onClose}>
-            {t('Fermer')}
+            {t('Close')}
           </Button>
         </div>
       </div>
@@ -222,7 +222,7 @@ function ResultOrSoak({ game, atk, onClose }: DialogProps & { dialog: DialogStat
 /** Edge toggle shared by the dialogs. */
 function EdgeToggle({ actor, value, onChange, edgeMax }: { actor: Actor; value: boolean; onChange: (v: boolean) => void; edgeMax: number }) {
   if ((actor.edge?.current ?? 0) <= 0) return null;
-  return <Toggle value={value} onChange={onChange} label={t('Repousser les limites (+{n}) — Chance {left}', { n: edgeMax, left: actor.edge.current })} />;
+  return <Toggle value={value} onChange={onChange} label={t('Push the Limit (+{n}) — Edge {left}', { n: edgeMax, left: actor.edge.current })} />;
 }
 
 /** Defense test: REA + INT, active defense (one), turn-long defenses, situation, previous defenses this turn, Edge. */
@@ -238,8 +238,8 @@ export function DefenseDialog({ game, atk, onClose }: DialogProps) {
   const [result, setResult] = useState<RollReply | null>(null);
   if (!actor) {
     return (
-      <Overlay title={t('Défense')} onClose={onClose} width={420}>
-        <div className="muted">{t('Fiche de la cible indisponible.')}</div>
+      <Overlay title={t('Defense')} onClose={onClose} width={420}>
+        <div className="muted">{t('Target sheet unavailable.')}</div>
       </Overlay>
     );
   }
@@ -276,14 +276,14 @@ export function DefenseDialog({ game, atk, onClose }: DialogProps) {
   };
   const visibleOptions = DEFENSE_OPTIONS.filter((o: { melee?: boolean }) => (!o.melee || melee) && (isUnlockedFor(o, actor, names) || gm));
   return (
-    <Overlay title={t('Défense — {name}', { name: actor.name })} onClose={onClose} width={500}>
+    <Overlay title={t('Defense — {name}', { name: actor.name })} onClose={onClose} width={500}>
       <div className="col gap-s atk-dlg">
         <div className="atk-dlg-attack">
           <b>{atk.attackerName}</b> · {attackSummary(atk)}
         </div>
         {!result && (
           <>
-            <div className="field-label">{t('Défense active (interruption)')}</div>
+            <div className="field-label">{t('Active defense (interrupt)')}</div>
             <div className="col gap-s">
               {visibleOptions.map((o: (typeof DEFENSE_OPTIONS)[number]) => {
                 const paid = o.turn && turn.boosts.includes(o.id);
@@ -295,9 +295,9 @@ export function DefenseDialog({ game, atk, onClose }: DialogProps) {
                       {t(o.name)} <BookRef source={o.source} page={o.page} />
                     </span>
                     <span className="faint small">
-                      {paid ? t('actif ce tour') : t('−{n} init.', { n: o.ini })}
-                      {o.turn ? ` · ${t('tout le tour')}` : ''}
-                      {locked ? ` · ${t('non débloqué')}` : ''}
+                      {paid ? t('active this turn') : t('−{n} init.', { n: o.ini })}
+                      {o.turn ? ` · ${t('whole turn')}` : ''}
+                      {locked ? ` · ${t('not unlocked')}` : ''}
                     </span>
                   </label>
                 );
@@ -313,7 +313,7 @@ export function DefenseDialog({ game, atk, onClose }: DialogProps) {
             </div>
             <div className="sh-rd-breakdown">
               <span className="sh-rd-part">
-                <span>{t('RÉA + INT')}</span>
+                <span>{t('REA + INT')}</span>
                 <b>{base}</b>
               </span>
               {plan.lines.map((l: { key: string; label: string; value: number }) => (
@@ -324,7 +324,7 @@ export function DefenseDialog({ game, atk, onClose }: DialogProps) {
               ))}
               {wound ? (
                 <span className="sh-rd-part bad">
-                  <span>{t('blessures')}</span>
+                  <span>{t('wounds')}</span>
                   <b>{wound}</b>
                 </span>
               ) : null}
@@ -336,29 +336,29 @@ export function DefenseDialog({ game, atk, onClose }: DialogProps) {
               ) : null}
               {explode ? (
                 <span className="sh-rd-part edge">
-                  <span>{t('Chance')}</span>
+                  <span>{t('Edge')}</span>
                   <b>+{edgeMax}</b>
                 </span>
               ) : null}
-              <span className="sh-rd-total">{tn(total, '= {n} dé', '= {n} dés')}</span>
+              <span className="sh-rd-total">{tn(total, '= {n} die', '= {n} dice')}</span>
             </div>
             <div className="faint small">
-              {t('Les modificateurs d’équipement et de qualités sont ajoutés par le serveur.')}
-              {plan.ini ? ' ' + t('Coût : {n} d’initiative.', { n: plan.ini }) : ''}
+              {t('Gear and quality modifiers are added by the server.')}
+              {plan.ini ? ' ' + t('Cost: {n} initiative.', { n: plan.ini }) : ''}
             </div>
             <div className="row wrap gap-s">
               <div className="field">
-                <span className="field-label">{t('Modificateur')}</span>
+                <span className="field-label">{t('Edit')}</span>
                 <NumberInput value={modifier} min={-20} max={20} onChange={setModifier} small />
               </div>
               <EdgeToggle actor={actor} value={explode} onChange={setExplode} edgeMax={edgeMax} />
             </div>
             <div className="row spread">
               <Button variant="ghost" onClick={onClose}>
-                {t('Plus tard')}
+                {t('Later')}
               </Button>
               <Button variant="primary" disabled={busy} onClick={go}>
-                🛡 {tn(total, 'Défendre ({n} dé)', 'Défendre ({n} dés)')}
+                🛡 {tn(total, 'Defend ({n} die)', 'Defend ({n} dice)')}
               </Button>
             </div>
           </>
@@ -368,7 +368,7 @@ export function DefenseDialog({ game, atk, onClose }: DialogProps) {
             <div className="sh-rd-result">
               <div className="sh-rd-hits">
                 <b>{result.roll.hits}</b>
-                <span>{tn(result.roll.hits, 'one::succès', 'other::succès')}</span>
+                <span>{tn(result.roll.hits, 'one::hit', 'other::hits')}</span>
               </div>
               <div className="grow col gap-s">
                 <DiceFaces roll={result.roll} />
@@ -377,16 +377,16 @@ export function DefenseDialog({ game, atk, onClose }: DialogProps) {
             </div>
             <div className={`atk-big ${result.attack.status === 'soak' ? 'hit' : ''}`}>
               {result.attack.status === 'soak'
-                ? t('Touché : {net} succès net(s) → VD {dv}{type}', { net: result.attack.net, dv: result.attack.modifiedDv, type: result.attack.type })
+                ? t('Hit: {net} net hit(s) → DV {dv}{type}', { net: result.attack.net, dv: result.attack.modifiedDv, type: result.attack.type })
                 : outcomeText(result.attack)}
             </div>
             <div className="row spread">
               <span></span>
               {result.attack.status === 'soak' ? (
-                <span className="faint small">{t('Encaissement à suivre…')}</span>
+                <span className="faint small">{t('Damage resistance next…')}</span>
               ) : (
                 <Button variant="primary" onClick={onClose}>
-                  {t('Fermer')}
+                  {t('Close')}
                 </Button>
               )}
             </div>
@@ -404,7 +404,7 @@ function SoakResult({ result, a, hit, onClose }: { result: RollReply; a: Attack;
       <div className="sh-rd-result">
         <div className="sh-rd-hits">
           <b>{result.roll.hits}</b>
-          <span>{tn(result.roll.hits, 'one::succès', 'other::succès')}</span>
+          <span>{tn(result.roll.hits, 'one::hit', 'other::hits')}</span>
         </div>
         <div className="grow col gap-s">
           <DiceFaces roll={result.roll} />
@@ -415,7 +415,7 @@ function SoakResult({ result, a, hit, onClose }: { result: RollReply; a: Attack;
       <div className="row spread">
         <span></span>
         <Button variant="primary" onClick={onClose}>
-          {t('Fermer')}
+          {t('Close')}
         </Button>
       </div>
     </>
@@ -443,29 +443,29 @@ function ToxinDialog({ actor, atk, onClose }: { actor: Actor; atk: Attack; onClo
   };
   const a = result?.attack || atk;
   const fxText: Record<string, string> = {
-    disorientation: t('désorientation (−2 dés)'),
-    nausea: t('nausée (malus de blessures ×2, incapable d’agir si Puissance restante > VOL)'),
-    stun: t('dommages étourdissants'),
-    physical: t('dommages physiques'),
+    disorientation: t('disorientation (−2 dice)'),
+    nausea: t('nausea (wound modifiers ×2, incapacitated if remaining Power > WIL)'),
+    stun: t('lower::Stun damage'),
+    physical: t('lower::Physical damage'),
   };
   const fx = ((toxin?.effects || []) as string[]).map((k) => fxText[k]);
   return (
-    <Overlay title={t('Résister aux toxines — {name}', { name: actor.name })} onClose={onClose} width={460}>
+    <Overlay title={t('Toxin resistance — {name}', { name: actor.name })} onClose={onClose} width={460}>
       <div className="col gap-s atk-dlg">
         <div className="atk-dlg-attack">
           <b>{atk.attackerName}</b> · {attackSummary(atk)} <BookRef source="SR5" page={toxin?.page || 409} />
         </div>
-        <div className="atk-big hit">{t('Puissance {n}', { n: atk.dv })}</div>
-        <div className="small muted">{t('Chaque succès réduit la Puissance ; ce qui reste : {fx}.', { fx: fx.join(', ') })}</div>
+        <div className="atk-big hit">{t('Power {n}', { n: atk.dv })}</div>
+        <div className="small muted">{t('Each hit reduces the Power; what remains: {fx}.', { fx: fx.join(', ') })}</div>
         {!result && (
           <>
             <div className="sh-rd-breakdown">
               <span className="sh-rd-part">
-                <span>{t('CON')}</span>
+                <span>{t('BOD')}</span>
                 <b>{attr(actor, 'BOD')}</b>
               </span>
               <span className="sh-rd-part">
-                <span>{t('VOL')}</span>
+                <span>{t('WIL')}</span>
                 <b>+{attr(actor, 'WIL')}</b>
               </span>
               {modifier ? (
@@ -476,25 +476,25 @@ function ToxinDialog({ actor, atk, onClose }: { actor: Actor; atk: Attack; onClo
               ) : null}
               {explode ? (
                 <span className="sh-rd-part edge">
-                  <span>{t('Chance')}</span>
+                  <span>{t('Edge')}</span>
                   <b>+{edgeMax}</b>
                 </span>
               ) : null}
-              <span className="sh-rd-total">{tn(total, '= {n} dé', '= {n} dés')}</span>
+              <span className="sh-rd-total">{tn(total, '= {n} die', '= {n} dice')}</span>
             </div>
             <div className="row wrap gap-s">
               <div className="field">
-                <span className="field-label">{t('Modificateur')}</span>
+                <span className="field-label">{t('Edit')}</span>
                 <NumberInput value={modifier} min={-20} max={20} onChange={setModifier} small />
               </div>
               <EdgeToggle actor={actor} value={explode} onChange={setExplode} edgeMax={edgeMax} />
             </div>
             <div className="row spread">
               <Button variant="ghost" onClick={onClose}>
-                {t('Plus tard')}
+                {t('Later')}
               </Button>
               <Button variant="primary" disabled={busy} onClick={go}>
-                ✚ {tn(total, 'Résister ({n} dé)', 'Résister ({n} dés)')}
+                ✚ {tn(total, 'Resist ({n} die)', 'Resist ({n} dice)')}
               </Button>
             </div>
           </>
@@ -514,8 +514,8 @@ export function SoakDialog({ game, atk, onClose }: DialogProps) {
   const [result, setResult] = useState<RollReply | null>(null);
   if (!actor)
     return (
-      <Overlay title={t('Encaissement')} onClose={onClose} width={420}>
-        <div className="muted">{t('Fiche de la cible indisponible.')}</div>
+      <Overlay title={t('Soak')} onClose={onClose} width={420}>
+        <div className="muted">{t('Target sheet unavailable.')}</div>
       </Overlay>
     );
   if (atk.kind === 'toxin') return <ToxinDialog actor={actor} atk={atk} onClose={onClose} />;
@@ -540,17 +540,17 @@ export function SoakDialog({ game, atk, onClose }: DialogProps) {
   };
   const a = result?.attack || atk;
   return (
-    <Overlay title={t('Encaissement — {name}', { name: actor.name })} onClose={onClose} width={460}>
+    <Overlay title={t('Damage resistance — {name}', { name: actor.name })} onClose={onClose} width={460}>
       <div className="col gap-s atk-dlg">
         <div className="atk-dlg-attack">
           <b>{atk.attackerName}</b> · {attackSummary(atk)}
         </div>
         <div className="atk-big hit">
-          {t('VD {dv}{type} à encaisser', { dv, type: atk.type })}
+          {t('DV {dv}{type} to resist', { dv, type: atk.type })}
           {type !== atk.type ? (
             <>
               {' '}
-              <span className="small muted">({t('étourdissants : VD < armure modifiée')})</span>
+              <span className="small muted">({t('stun: DV < modified armor')})</span>
             </>
           ) : null}
         </div>
@@ -558,16 +558,16 @@ export function SoakDialog({ game, atk, onClose }: DialogProps) {
           <>
             <div className="sh-rd-breakdown">
               <span className="sh-rd-part">
-                <span>{t('CON')}</span>
+                <span>{t('BOD')}</span>
                 <b>{attr(actor, 'BOD')}</b>
               </span>
               <span className="sh-rd-part">
-                <span>{t('armure')}</span>
+                <span>{t('armor')}</span>
                 <b>+{armor}</b>
               </span>
               {ap ? (
                 <span className={'sh-rd-part' + (ap < 0 ? ' bad' : '')}>
-                  <span>{t('PA')}</span>
+                  <span>{t('AP')}</span>
                   <b>{signed(Math.max(ap, -armor))}</b>
                 </span>
               ) : null}
@@ -579,25 +579,25 @@ export function SoakDialog({ game, atk, onClose }: DialogProps) {
               ) : null}
               {explode ? (
                 <span className="sh-rd-part edge">
-                  <span>{t('Chance')}</span>
+                  <span>{t('Edge')}</span>
                   <b>+{edgeMax}</b>
                 </span>
               ) : null}
-              <span className="sh-rd-total">{tn(total, '= {n} dé', '= {n} dés')}</span>
+              <span className="sh-rd-total">{tn(total, '= {n} die', '= {n} dice')}</span>
             </div>
             <div className="row wrap gap-s">
               <div className="field">
-                <span className="field-label">{t('Modificateur')}</span>
+                <span className="field-label">{t('Edit')}</span>
                 <NumberInput value={modifier} min={-20} max={20} onChange={setModifier} small />
               </div>
               <EdgeToggle actor={actor} value={explode} onChange={setExplode} edgeMax={edgeMax} />
             </div>
             <div className="row spread">
               <Button variant="ghost" onClick={onClose}>
-                {t('Plus tard')}
+                {t('Later')}
               </Button>
               <Button variant="primary" disabled={busy} onClick={go}>
-                ✚ {tn(total, 'Encaisser ({n} dé)', 'Encaisser ({n} dés)')}
+                ✚ {tn(total, 'Soak ({n} die)', 'Soak ({n} dice)')}
               </Button>
             </div>
           </>

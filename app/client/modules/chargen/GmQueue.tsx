@@ -22,7 +22,7 @@ function DraftCard({ d, active, onClick, game }: { d: ChargenDraft; active: bool
       <div className="grow">
         <div className="spread row">
           <strong>{ht.name}</strong>
-          <span className="mono small faint" title={t('Métatype / Attributs / Magie / Compétences / Ressources')}>
+          <span className="mono small faint" title={t('Metatype / Attributes / Magic / Skills / Resources')}>
             {h.letters}
           </span>
         </div>
@@ -32,7 +32,7 @@ function DraftCard({ d, active, onClick, game }: { d: ChargenDraft; active: bool
           <span className="small faint">
             {owner} · {timeAgo(d.submittedTs && d.status === 'pending' ? d.submittedTs : d.ts)}
           </span>
-          {(d.check?.errors ?? 0) > 0 && <Badge color="red">{tn(d.check?.errors ?? 0, '{n} erreur', '{n} erreurs')}</Badge>}
+          {(d.check?.errors ?? 0) > 0 && <Badge color="red">{tn(d.check?.errors ?? 0, '{n} error', '{n} errors')}</Badge>}
         </div>
       </div>
     </div>
@@ -49,14 +49,14 @@ function Review({ game, d, rc, onDone, onEdit }: { game: GameView; d: ChargenDra
     if (
       approve &&
       !result.ok &&
-      !(await confirmAction(tn(result.errors.length, 'one::{n} erreur(s) de création. Valider quand même ce personnage ?', '{n} erreur(s) de création. Valider quand même ce personnage ?')))
+      !(await confirmAction(tn(result.errors.length, 'one::{n} creation error. Approve this character anyway?', '{n} creation errors. Approve this character anyway?')))
     )
       return;
-    if (!approve && !note.trim() && !(await confirmAction(t('Renvoyer sans expliquer ce qu’il faut changer ?')))) return;
+    if (!approve && !note.trim() && !(await confirmAction(t('Send it back without explaining what to change?')))) return;
     setBusy(true);
     try {
       const res = await send<{ actorId?: string }>('chargen/resolve', { draftId: d.id, approve, note, force: approve && !result.ok });
-      toast(approve ? t('Personnage validé et attribué') : t('Personnage renvoyé au joueur'), approve ? 'success' : 'info');
+      toast(approve ? t('Character approved and assigned') : t('Character sent back to the player'), approve ? 'success' : 'info');
       if (approve && res.actorId) openSheet(res.actorId);
       onDone();
     } catch {
@@ -67,47 +67,47 @@ function Review({ game, d, rc, onDone, onEdit }: { game: GameView; d: ChargenDra
   return (
     <div className="col">
       {d.status === 'pending' && (
-        <Panel title={t('Décision — {name}', { name: owner ? owner.name : t('MJ') })}>
+        <Panel title={t('Decision — {name}', { name: owner ? owner.name : t('GM') })}>
           <div className="col">
-            <Field label={t('Note au joueur (facultatif pour une validation)')}>
-              <TextInput live multiline rows={2} value={note} placeholder={t('ex. Remplace Allergie (commune) par une allergie plus rare.')} onChange={setNote} />
+            <Field label={t('Note to the player (optional when approving)')}>
+              <TextInput live multiline rows={2} value={note} placeholder={t('e.g. Replace Allergy (common) with a rarer allergy.')} onChange={setNote} />
             </Field>
             <div className="row wrap">
               <Button variant="primary" disabled={busy} onClick={() => resolve(true)}>
-                {result.ok ? `✓ ${t('Valider et créer la fiche')}` : `✓ ${t('Valider malgré les erreurs')}`}
+                {result.ok ? `✓ ${t('Approve and create the sheet')}` : `✓ ${t('Approve despite errors')}`}
               </Button>
               <Button variant="danger" disabled={busy} onClick={() => resolve(false)}>
-                ↺ {t('Demander des changements')}
+                ↺ {t('Ask for changes')}
               </Button>
               <span className="grow"></span>
               <Button variant="ghost" onClick={onEdit}>
-                {t('Ouvrir dans l’assistant')}
+                {t('Open in the wizard')}
               </Button>
             </div>
             <div className="small muted">
               {owner
-                ? t('La validation crée la fiche (nuyens de départ lancés si demandé) et la donne à {name}.', { name: owner.name })
-                : t('La validation crée la fiche (nuyens de départ lancés si demandé) et la donne à personne.')}
+                ? t('Approval creates the sheet (starting nuyen rolled if requested) and gives it to {name}.', { name: owner.name })
+                : t('Approval creates the sheet (starting nuyen rolled if requested) and gives it to nobody.')}
             </div>
           </div>
         </Panel>
       )}
       {d.status === 'approved' && d.actorId && (
         <div className="cg-note ok">
-          {t('Validé {when}.', { when: timeAgo(d.resolvedTs) })}{' '}
+          {t('Approved {when}.', { when: timeAgo(d.resolvedTs) })}{' '}
           {game.actors?.[d.actorId] ? (
             <button className="cg-link" onClick={() => openSheet(d.actorId as string)}>
-              {t('Ouvrir la fiche')} →
+              {t('Open the sheet')} →
             </button>
           ) : (
-            t('La fiche a été supprimée depuis.')
+            t('The sheet has since been deleted.')
           )}
         </div>
       )}
       {d.status === 'rejected' && (
-        <div className="cg-note err">{d.gmNote ? t('Renvoyé {when} : « {note} »', { when: timeAgo(d.resolvedTs), note: d.gmNote }) : t('Renvoyé {when}', { when: timeAgo(d.resolvedTs) })}</div>
+        <div className="cg-note err">{d.gmNote ? t('Sent back {when}: “{note}”', { when: timeAgo(d.resolvedTs), note: d.gmNote }) : t('Sent back {when}', { when: timeAgo(d.resolvedTs) })}</div>
       )}
-      {!rc.ready ? <div className="cg-loading">{t('Chargement des catalogues…')}</div> : <DraftSummary data={data} result={result} rc={rc} />}
+      {!rc.ready ? <div className="cg-loading">{t('Loading catalogs…')}</div> : <DraftSummary data={data} result={result} rc={rc} />}
     </div>
   );
 }
@@ -129,7 +129,7 @@ export default function GmQueue({ game, onOpenWizard }: { game: GameView; onOpen
   const remove = async (d: ChargenDraft) => {
     const name = headlineText(draftHeadline(d.data)).name;
     const question =
-      d.status === 'approved' ? t('Supprimer le brouillon « {name} » ?\n(La fiche déjà créée n’est pas touchée.)', { name }) : t('Supprimer le brouillon « {name} » ?', { name });
+      d.status === 'approved' ? t('Delete the draft “{name}”?\n(The sheet already created is not affected.)', { name }) : t('Delete the draft “{name}”?', { name });
     if (!(await confirmAction(question))) return;
     send('chargen/delete', { draftId: d.id })
       .then(() => setSelId(null))
@@ -141,9 +141,9 @@ export default function GmQueue({ game, onOpenWizard }: { game: GameView; onOpen
       <div className="row wrap spread cg-gm-bar">
         <Tabs<QueueTab>
           tabs={[
-            { id: 'queue', label: t('À valider'), badge: pending.length || null },
-            { id: 'all', label: t('Brouillons & historique ({n})', { n: others.length }) },
-            { id: 'settings', label: t('Réglages') },
+            { id: 'queue', label: t('To review'), badge: pending.length || null },
+            { id: 'all', label: t('Drafts & history ({n})', { n: others.length }) },
+            { id: 'settings', label: t('Settings') },
           ]}
           value={tab}
           onChange={(x) => {
@@ -152,23 +152,23 @@ export default function GmQueue({ game, onOpenWizard }: { game: GameView; onOpen
           }}
         />
         <Button variant="primary" onClick={() => onOpenWizard(null)}>
-          ✚ {t('Créer un personnage (MJ)')}
+          ✚ {t('Create a character (GM)')}
         </Button>
       </div>
 
       {tab === 'settings' ? (
-        <Panel title={t('Création de personnage')}>
+        <Panel title={t('Character creation')}>
           <div className="col">
             <Toggle
               value={settings.allowPlayers !== false}
               onChange={(v) => send('chargen/settings', { allowPlayers: v }).catch(() => null)}
-              label={t('Les joueurs peuvent créer et soumettre des personnages')}
+              label={t('Players can create and submit characters')}
             />
-            <Field label={t('Karma de départ supplémentaire')} hint={t('Ajouté aux 25 karma de création (campagne plus ou moins héroïque)')}>
+            <Field label={t('Extra starting karma')} hint={t('Added to the 25 creation karma (more or less heroic campaign)')}>
               <NumberInput value={settings.startingKarmaBonus || 0} min={-25} max={100} onChange={(v) => send('chargen/settings', { startingKarmaBonus: v }).catch(() => null)} />
             </Field>
             <div className="small muted">
-              {t('Méthode : priorités (SR5, livre de base p.62). Disponibilité 12 maximum, grades standard / alpha / d’occasion, 7 karma et 5 000¥ conservés au plus.')}
+              {t('Method: priorities (SR5 core rulebook p.62). Availability 12 maximum, standard / alpha / used grades, at most 7 karma and 5,000¥ kept.')}
             </div>
           </div>
         </Panel>
@@ -178,29 +178,29 @@ export default function GmQueue({ game, onOpenWizard }: { game: GameView; onOpen
             {list.map((d) => (
               <DraftCard key={d.id} d={d} game={game} active={sel?.id === d.id} onClick={() => setSelId(d.id)} />
             ))}
-            {!list.length && <Empty>{tab === 'queue' ? t('Aucun personnage en attente de validation.') : t('Aucun brouillon.')}</Empty>}
+            {!list.length && <Empty>{tab === 'queue' ? t('No character awaiting approval.') : t('No drafts.')}</Empty>}
           </div>
           <div className="cg-gm-detail">
             {sel ? (
               <>
                 <div className="row wrap cg-mb">
                   <Button small variant="ghost" className="cg-back" onClick={() => setSelId(null)}>
-                    ← {t('Liste')}
+                    ← {t('List')}
                   </Button>
                   <span className="grow"></span>
                   {sel.status !== 'approved' && (
                     <Button small onClick={() => onOpenWizard(sel)}>
-                      {t('Ouvrir dans l’assistant')}
+                      {t('Open in the wizard')}
                     </Button>
                   )}
                   <Button small variant="danger" onClick={() => remove(sel)}>
-                    {t('Supprimer')}
+                    {t('Delete')}
                   </Button>
                 </div>
                 <Review key={sel.id} game={game} d={sel} rc={rc} onDone={() => setSelId(null)} onEdit={() => onOpenWizard(sel)} />
               </>
             ) : (
-              <Empty>{tab === 'queue' ? t('Les personnages soumis par les joueurs apparaissent ici.') : t('Choisis un brouillon pour le relire.')}</Empty>
+              <Empty>{tab === 'queue' ? t('Characters submitted by players show up here.') : t('Pick a draft to review it.')}</Empty>
             )}
           </div>
         </div>

@@ -17,12 +17,12 @@ import './audio.css';
 const AUDIO_EXT = /\.(mp3|ogg|wav|m4a|webm)$/i;
 const MAX_UPLOAD = 80 * 1024 * 1024;
 const LEVELS = [
-  { value: '0.5', label: tk('50 % (plus doux)') },
+  { value: '0.5', label: tk('50% (softer)') },
   { value: '0.75', label: '75 %' },
-  { value: '1', label: tk('100 % (normal)') },
+  { value: '1', label: tk('100% (normal)') },
   { value: '1.25', label: '125 %' },
   { value: '1.5', label: '150 %' },
-  { value: '2', label: tk('200 % (plus fort)') },
+  { value: '2', label: tk('200% (louder)') },
 ]; // labels rendered with t()
 const kindOptions = () => Object.entries(KIND_LABELS as Record<TrackKind, string>).map(([value, label]) => ({ value: value as TrackKind, label: t(label) }));
 
@@ -46,8 +46,8 @@ function matches(track: AudioTrack, q: string) {
 
 function mapOptions(game: GameView, current: string | undefined) {
   const maps = Object.values(game.maps || {}).sort((a, b) => compare(`${a.folder || ''} ${a.name}`, `${b.folder || ''} ${b.name}`));
-  const opts = [{ value: '', label: t('— Aucune —') }, ...maps.map((m) => ({ value: m.id, label: (m.folder ? m.folder + ' · ' : '') + (m.name || m.id) }))];
-  if (current && !maps.some((m) => m.id === current)) opts.push({ value: current, label: t('(carte introuvable)') });
+  const opts = [{ value: '', label: t('— None —') }, ...maps.map((m) => ({ value: m.id, label: (m.folder ? m.folder + ' · ' : '') + (m.name || m.id) }))];
+  if (current && !maps.some((m) => m.id === current)) opts.push({ value: current, label: t('(map not found)') });
   return opts;
 }
 
@@ -58,8 +58,8 @@ function sceneChannelOptions(game: GameView, kind: Channel, current: string | nu
   const list = tracksOf(game, kind);
   const cur = findTrack(game, current);
   if (cur && !list.includes(cur)) list.unshift(cur);
-  const opts = [{ value: 'keep', label: t('(ne pas changer)') }, { value: '', label: t('— Silence —') }, ...list.map((tr) => ({ value: tr.id, label: `${trackIcon(tr)} ${trackName(tr)}` }))];
-  if (current && current !== 'keep' && !cur) opts.push({ value: current, label: t('(piste supprimée)') });
+  const opts = [{ value: 'keep', label: t('(don’t change)') }, { value: '', label: t('— Silence —') }, ...list.map((tr) => ({ value: tr.id, label: `${trackIcon(tr)} ${trackName(tr)}` }))];
+  if (current && current !== 'keep' && !cur) opts.push({ value: current, label: t('(track deleted)') });
   return opts;
 }
 
@@ -80,7 +80,7 @@ function SceneModal({ game, scene, onClose }: { game: GameView; scene: SceneDraf
   const save = async (e?: FormEvent) => {
     e?.preventDefault();
     const clean = name.trim();
-    if (!clean) return toast(t('Donne un nom à la scène'), 'warn');
+    if (!clean) return toast(t('Give the scene a name'), 'warn');
     setBusy(true);
     try {
       await send('audio/saveScene', {
@@ -92,7 +92,7 @@ function SceneModal({ game, scene, onClose }: { game: GameView; scene: SceneDraf
         ambientVolume: withVol ? av : null,
         musicVolume: withVol ? mv : null,
       });
-      toast(isNew ? t('Scène « {name} » créée', { name: clean }) : t('Scène enregistrée'), 'success');
+      toast(isNew ? t('Scene “{name}” created', { name: clean }) : t('Scene saved'), 'success');
       onClose();
     } catch {
       setBusy(false);
@@ -100,42 +100,42 @@ function SceneModal({ game, scene, onClose }: { game: GameView; scene: SceneDraf
   };
 
   return (
-    <Modal title={isNew ? t('Nouvelle scène sonore') : t('Modifier la scène')} width={560} onClose={onClose}>
+    <Modal title={isNew ? t('New sound scene') : t('Edit scene')} width={560} onClose={onClose}>
       <form className="col gap-l" onSubmit={save}>
-        <Field label={t('Nom')}>
-          <input className="input" value={name} maxLength={80} placeholder={t('ex. Bar de Porfla')} autoFocus onChange={(e) => setName(e.currentTarget.value)} />
+        <Field label={t('Name')}>
+          <input className="input" value={name} maxLength={80} placeholder={t('e.g. Porfla’s bar')} autoFocus onChange={(e) => setName(e.currentTarget.value)} />
         </Field>
         <div className="grid-2">
-          <Field label={t('Ambiance')}>
+          <Field label={t('Ambience')}>
             <Select value={ambient} options={sceneChannelOptions(game, 'ambient', scene.ambient)} onChange={setAmbient} />
           </Field>
-          <Field label={t('Musique')}>
+          <Field label={t('Music')}>
             <Select value={music} options={sceneChannelOptions(game, 'music', scene.music)} onChange={setMusic} />
           </Field>
         </div>
         <Field
-          label={t('Carte liée')}
-          hint={linked ? t('Déjà liée à « {name} » : c’est la première trouvée qui sera lancée.', { name: linked.name }) : t('Quand cette carte devient la carte active, la scène se lance (si l’option « scène auto » est activée).')}
+          label={t('Linked map')}
+          hint={linked ? t('Already linked to “{name}”: the first one found will be played.', { name: linked.name }) : t('When this map becomes the active map, the scene starts (if the “auto scene” option is on).')}
         >
           <Select value={mapId} options={mapOptions(game, scene.mapId)} onChange={setMapId} />
         </Field>
         <div className="col">
-          <Toggle value={withVol} onChange={setWithVol} label={t('Imposer aussi les volumes')} />
+          <Toggle value={withVol} onChange={setWithVol} label={t('Also apply the volumes')} />
           {withVol && (
             <div className="grid-2">
-              <VolumeSlider value={av} onChange={setAv} label={t('Ambiance')} />
-              <VolumeSlider value={mv} onChange={setMv} label={t('Musique')} />
+              <VolumeSlider value={av} onChange={setAv} label={t('Ambience')} />
+              <VolumeSlider value={mv} onChange={setMv} label={t('Music')} />
             </div>
           )}
         </div>
         <div className="row spread">
-          <span className="muted small">{t('« Ne pas changer » laisse la piste en cours (ex. scène « Combat ! »).')}</span>
+          <span className="muted small">{t('“Don’t change” keeps the current track playing (e.g. a “Combat!” scene).')}</span>
           <div className="row">
             <Button type="button" variant="ghost" onClick={onClose}>
-              {t('Annuler')}
+              {t('Cancel')}
             </Button>
             <Button type="submit" variant="primary" disabled={busy}>
-              {t('Enregistrer')}
+              {t('Save')}
             </Button>
           </div>
         </div>
@@ -150,19 +150,19 @@ function SceneCard({ game, scene, onEdit }: { game: GameView; scene: AudioScene;
   const map = scene.mapId ? game.maps?.[scene.mapId] : null;
   const apply = () =>
     send('audio/applyScene', { sceneId: scene.id }).then(
-      () => toast(t('Scène « {name} »', { name: scene.name }), 'success', 2000),
+      () => toast(t('Scene “{name}”', { name: scene.name }), 'success', 2000),
       () => {}
     );
   const remove = async (e: MouseEvent) => {
     e.stopPropagation();
-    if (await confirmAction(t('Supprimer la scène « {name} » ?', { name: scene.name }))) send('audio/deleteScene', { sceneId: scene.id }).catch(() => {});
+    if (await confirmAction(t('Delete the scene “{name}”?', { name: scene.name }))) send('audio/deleteScene', { sceneId: scene.id }).catch(() => {});
   };
   return (
     <div
       className={'audio-scene' + (active ? ' active' : '')}
       role="button"
       tabIndex={0}
-      title={t('Appliquer cette scène pour tout le monde')}
+      title={t('Apply this scene for everyone')}
       onClick={apply}
       onKeyDown={(e) => {
         if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
@@ -174,23 +174,23 @@ function SceneCard({ game, scene, onEdit }: { game: GameView; scene: AudioScene;
       <div className="audio-scene-name" title={scene.name}>
         {scene.name}
       </div>
-      <div className="audio-scene-line">{t('Ambiance : {value}', { value: sceneValueLabel(game, scene.ambient) })}</div>
-      <div className="audio-scene-line">{t('Musique : {value}', { value: sceneValueLabel(game, scene.music) })}</div>
+      <div className="audio-scene-line">{t('Ambience: {value}', { value: sceneValueLabel(game, scene.ambient) })}</div>
+      <div className="audio-scene-line">{t('Music: {value}', { value: sceneValueLabel(game, scene.music) })}</div>
       {scene.mapId && (
-        <div className="audio-scene-line" title={t('Carte liée')}>
-          ⌖ {map?.name || t('carte introuvable')}
+        <div className="audio-scene-line" title={t('Linked map')}>
+          ⌖ {map?.name || t('map not found')}
         </div>
       )}
       <div className="audio-scene-tools">
         <IconButton
           icon="✎"
-          title={t('Modifier')}
+          title={t('Edit')}
           onClick={(e) => {
             e.stopPropagation();
             onEdit(scene);
           }}
         />
-        <IconButton icon="🗑" title={t('Supprimer')} onClick={remove} />
+        <IconButton icon="🗑" title={t('Delete')} onClick={remove} />
       </div>
     </div>
   );
@@ -223,28 +223,28 @@ function TrackModal({ track, onClose }: { track: AudioTrack; onClose: () => void
   const known = LEVELS.map((l) => ({ ...l, label: t(l.label) }));
   const levels = LEVELS.some((l) => l.value === level) ? known : [...known, { value: level, label: `${Math.round(Number(level) * 100)} %` }];
   return (
-    <Modal title={t('Modifier la piste')} width={480} onClose={onClose}>
+    <Modal title={t('Edit track')} width={480} onClose={onClose}>
       <form className="col gap-l" onSubmit={save}>
-        <Field label={t('Nom')}>
+        <Field label={t('Name')}>
           <input className="input" value={name} maxLength={80} autoFocus onChange={(e) => setName(e.currentTarget.value)} />
         </Field>
         <div className="grid-2">
           <Field label={t('Type')}>
             <Select value={kind} disabled={track.source !== 'url'} options={kindOptions()} onChange={setKind} />
           </Field>
-          <Field label={t('Niveau')} hint={t('Corrige un fichier trop fort ou trop faible.')}>
+          <Field label={t('Level')} hint={t('Corrects a file that is too loud or too quiet.')}>
             <Select value={level} options={levels} onChange={setLevel} />
           </Field>
         </div>
-        <Field label={t('Étiquettes')} hint={t('Séparées par des virgules.')}>
-          <input className="input" value={tags} onChange={(e) => setTags(e.currentTarget.value)} placeholder={t('ex. combat, acte 2')} />
+        <Field label={t('Tags')} hint={t('Comma-separated.')}>
+          <input className="input" value={tags} onChange={(e) => setTags(e.currentTarget.value)} placeholder={t('e.g. combat, act 2')} />
         </Field>
         <div className="row" style={{ justifyContent: 'flex-end' }}>
           <Button type="button" variant="ghost" onClick={onClose}>
-            {t('Annuler')}
+            {t('Cancel')}
           </Button>
           <Button type="submit" variant="primary">
-            {t('Enregistrer')}
+            {t('Save')}
           </Button>
         </div>
       </form>
@@ -266,7 +266,7 @@ function TrackCard({ game, track, previewKey, onEdit }: TrackCardProps) {
   const playing = !isSfx && game.audio?.[channel]?.trackId === track.id;
   const previewing = previewKey === 'p:' + track.id;
   const remove = async () => {
-    if (await confirmAction(t('Retirer « {name} » de la bibliothèque ?\n(Le fichier reste sur le serveur.)', { name }))) send('audio/removeTrack', { id: track.id }).catch(() => {});
+    if (await confirmAction(t('Remove “{name}” from the library?\n(The file stays on the server.)', { name }))) send('audio/removeTrack', { id: track.id }).catch(() => {});
   };
   const play = () => (isSfx ? broadcastSfx(track.id) : setChannelTrack(channel, playing ? null : track.id));
   const tags = track.tags || [];
@@ -277,7 +277,7 @@ function TrackCard({ game, track, previewKey, onEdit }: TrackCardProps) {
         <div className="audio-track-name" title={name}>
           {name}
         </div>
-        {(desc || track.source === 'url') && <div className="audio-track-desc">{desc || track.credit || t('Fichier importé')}</div>}
+        {(desc || track.source === 'url') && <div className="audio-track-desc">{desc || track.credit || t('Uploaded file')}</div>}
         {(track.source === 'url' || tags.length > 0) && (
           <div className="row wrap gap-s">
             {track.source === 'url' && <Badge color="amber">{KIND_LABELS[track.kind] ? t(KIND_LABELS[track.kind]) : track.kind}</Badge>}
@@ -287,16 +287,16 @@ function TrackCard({ game, track, previewKey, onEdit }: TrackCardProps) {
           </div>
         )}
         <div className="audio-track-actions">
-          <Button small variant={playing ? 'accent' : 'primary'} onClick={play} title={isSfx ? t('Jouer pour tout le monde') : playing ? t('Arrêter pour tout le monde') : t('Diffuser à toute la table')}>
-            {isSfx ? '▶ ' + t('Jouer') : playing ? '■ ' + t('Arrêter') : '▶ ' + t('Diffuser')}
+          <Button small variant={playing ? 'accent' : 'primary'} onClick={play} title={isSfx ? t('Play for everyone') : playing ? t('Stop for everyone') : t('Broadcast to the whole table')}>
+            {isSfx ? '▶ ' + t('Play') : playing ? '■ ' + t('Stop') : '▶ ' + t('Broadcast')}
           </Button>
-          <Button small variant={previewing ? 'default' : 'ghost'} onClick={() => togglePreview(track)} title={t('Écouter en privé : seulement sur ce poste, les joueurs n’entendent rien')}>
-            {previewing ? '■ ' + t('Fin de l’écoute') : '🎧 ' + t('Écouter en privé')}
+          <Button small variant={previewing ? 'default' : 'ghost'} onClick={() => togglePreview(track)} title={t('Preview privately: only on this device, players hear nothing')}>
+            {previewing ? '■ ' + t('Stop preview') : '🎧 ' + t('Preview privately')}
           </Button>
           {track.source === 'url' && (
             <>
-              <IconButton icon="✎" title={t('Modifier')} onClick={() => onEdit(track)} />
-              <IconButton icon="🗑" title={t('Retirer de la bibliothèque')} onClick={remove} />
+              <IconButton icon="✎" title={t('Edit')} onClick={() => onEdit(track)} />
+              <IconButton icon="🗑" title={t('Remove from library')} onClick={remove} />
             </>
           )}
         </div>
@@ -314,24 +314,24 @@ function UploadPanel() {
   const onFiles = async (fileList: FileList | null | undefined) => {
     const files = [...(fileList || [])];
     const ok = files.filter((f) => AUDIO_EXT.test(f.name));
-    if (files.length && !ok.length) return toast(t('Formats acceptés : mp3, ogg, wav, m4a, webm'), 'warn');
+    if (files.length && !ok.length) return toast(t('Accepted formats: mp3, ogg, wav, m4a, webm'), 'warn');
     for (const f of ok) {
       if (f.size > MAX_UPLOAD) {
-        toast(t('« {name} » dépasse 80 Mo', { name: f.name }), 'error');
+        toast(t('“{name}” is larger than 80 MB', { name: f.name }), 'error');
         continue;
       }
-      const name = f.name.replace(/\.[^.]+$/, '').replace(/[_]+/g, ' ').trim().slice(0, 80) || t('Sans titre');
+      const name = f.name.replace(/\.[^.]+$/, '').replace(/[_]+/g, ' ').trim().slice(0, 80) || t('Untitled');
       setBusy((b) => b + 1);
       try {
         let res;
         try {
           res = await upload(f);
         } catch (err) {
-          toast(t('Échec de l’envoi de « {name} » : {error}', { name: f.name, error: (err as Error).message }), 'error');
+          toast(t('Upload of “{name}” failed: {error}', { name: f.name, error: (err as Error).message }), 'error');
           continue;
         }
         await send('audio/addTrack', { name, kind, url: res.url }).then(
-          () => toast(kind === 'music' ? t('« {name} » ajouté (musique)', { name }) : kind === 'sfx' ? t('« {name} » ajouté (bruitage)', { name }) : t('« {name} » ajouté (ambiance)', { name }), 'success'),
+          () => toast(kind === 'music' ? t('“{name}” added (music)', { name }) : kind === 'sfx' ? t('“{name}” added (sound effect)', { name }) : t('“{name}” added (ambience)', { name }), 'success'),
           () => {}
         );
       } finally {
@@ -356,14 +356,14 @@ function UploadPanel() {
         onFiles(e.dataTransfer?.files);
       }}
     >
-      <Field label={t('Importer comme')}>
+      <Field label={t('Import as')}>
         <Select value={kind} options={kindOptions()} onChange={setKind} />
       </Field>
       <input ref={input} className="audio-file" type="file" accept="audio/*,.mp3,.ogg,.wav,.m4a,.webm" multiple onChange={(e) => onFiles(e.currentTarget.files)} />
       <Button variant="primary" disabled={busy > 0} onClick={() => input.current?.click()}>
-        {busy > 0 ? t('Envoi… ({n})', { n: busy }) : '⇪ ' + t('Choisir des fichiers')}
+        {busy > 0 ? t('Uploading… ({n})', { n: busy }) : '⇪ ' + t('Choose files')}
       </Button>
-      <span className="muted small grow">{t('…ou glisser-déposer ici. mp3 / ogg / wav / m4a / webm, 80 Mo max. Les ambiances et musiques tournent en boucle.')}</span>
+      <span className="muted small grow">{t('…or drag and drop here. mp3 / ogg / wav / m4a / webm, 80 MB max. Ambiences and music loop.')}</span>
     </div>
   );
 }
@@ -389,7 +389,7 @@ export default function AudioPage({ game }: GameProps) {
   if (!audio)
     return (
       <div className="page">
-        <Empty>{t('Module audio indisponible (serveur).')}</Empty>
+        <Empty>{t('Audio module unavailable (server).')}</Empty>
       </div>
     );
 
@@ -418,16 +418,16 @@ export default function AudioPage({ game }: GameProps) {
   return (
     <div className="page audio-page">
       <div className="page-title">
-        <h2>{t('Ambiance & musique')}</h2>
+        <h2>{t('Ambience & music')}</h2>
         <div className="row wrap">
           <Toggle
             value={!!audio.autoScenes}
             onChange={(v) => send('audio/setOptions', { autoScenes: v }).catch(() => {})}
-            label={t('Scène auto au changement de carte')}
-            title={t('Quand la carte active change, lancer la scène sonore liée à cette carte')}
+            label={t('Auto scene on map change')}
+            title={t('When the active map changes, play the sound scene linked to that map')}
           />
-          <Button variant="danger" title={t('Coupe ambiance, musique et bruitages en cours, chez tout le monde')} onClick={() => send('audio/stopAll').catch(() => {})}>
-            ⏹ {t('Tout couper')}
+          <Button variant="danger" title={t('Stops the ambience, music and sound effects playing, for everyone')} onClick={() => send('audio/stopAll').catch(() => {})}>
+            ⏹ {t('Stop all')}
           </Button>
         </div>
       </div>
@@ -435,23 +435,23 @@ export default function AudioPage({ game }: GameProps) {
       <UnlockNotice />
 
       <div className="audio-now">
-        <ChannelControl game={game} channel="ambient" label={t('Ambiance')} />
-        <ChannelControl game={game} channel="music" label={t('Musique')} />
+        <ChannelControl game={game} channel="ambient" label={t('Ambience')} />
+        <ChannelControl game={game} channel="music" label={t('Music')} />
         <div className="audio-now-side">
-          <VolumeSlider value={audio.master ?? 0.8} onChange={(v) => sendVolume('master', v)} label={t('volume::Général')} title={t('Volume général, pour toute la table')} />
-          <LocalVolume label={t('Ce poste')} />
+          <VolumeSlider value={audio.master ?? 0.8} onChange={(v) => sendVolume('master', v)} label={t('volume::Master')} title={t('Master volume, for the whole table')} />
+          <LocalVolume label={t('This device')} />
         </div>
       </div>
 
-      <div className="section-title">{t('Scènes')}</div>
+      <div className="section-title">{t('Scenes')}</div>
       <div className="audio-toolbar">
-        <Button small variant="primary" onClick={fromCurrent} title={t('Crée une scène avec l’ambiance et la musique en cours')}>
-          + {t('Scène depuis l’ambiance actuelle')}
+        <Button small variant="primary" onClick={fromCurrent} title={t('Creates a scene from the ambience and music currently playing')}>
+          + {t('Scene from current ambience')}
         </Button>
         <Button small onClick={() => setSceneEdit({ name: '', ambient: 'keep', music: 'keep' })}>
-          + {t('Scène vide')}
+          + {t('Empty scene')}
         </Button>
-        <span className="muted small">{t('Un clic sur une scène la lance pour tout le monde.')}</span>
+        <span className="muted small">{t('Click a scene to play it for everyone.')}</span>
       </div>
       {scenes.length ? (
         <div className="audio-scenes">
@@ -460,29 +460,29 @@ export default function AudioPage({ game }: GameProps) {
           ))}
         </div>
       ) : (
-        <Empty>{t('Aucune scène. Lance une ambiance et une musique, puis « Scène depuis l’ambiance actuelle ».')}</Empty>
+        <Empty>{t('No scenes. Start an ambience and some music, then “Scene from current ambience”.')}</Empty>
       )}
 
-      <div className="section-title">{t('Bibliothèque')}</div>
+      <div className="section-title">{t('Library')}</div>
       <div className="audio-toolbar">
         <Tabs<LibTab>
           tabs={[
-            { id: 'ambient', label: t('Ambiances') },
-            { id: 'music', label: t('Musiques') },
-            { id: 'sfx', label: t('Bruitages') },
-            { id: 'files', label: t('Mes fichiers'), badge: uploads.length || null },
+            { id: 'ambient', label: t('Ambiences') },
+            { id: 'music', label: t('pl::Music') },
+            { id: 'sfx', label: t('Sound effects') },
+            { id: 'files', label: t('My files'), badge: uploads.length || null },
           ]}
           value={current}
           onChange={setTab}
         />
         <div className="grow"></div>
-        <SearchBox value={q} onChange={setQ} placeholder={t('Filtrer…')} />
+        <SearchBox value={q} onChange={setQ} placeholder={t('Filter…')} />
       </div>
 
       {current === 'sfx' ? (
         <div className="col">
           <div className="row wrap" style={{ maxWidth: 460 }}>
-            <VolumeSlider value={sfxVol} onChange={setSfxVol} label={t('Volume des bruitages')} title={t('Volume auquel vos bruitages sont joués chez tout le monde')} />
+            <VolumeSlider value={sfxVol} onChange={setSfxVol} label={t('Sound effects volume')} title={t('Volume at which your sound effects play for everyone')} />
           </div>
           {shown.length ? (
             <div className="audio-sfx-grid">
@@ -491,9 +491,9 @@ export default function AudioPage({ game }: GameProps) {
               ))}
             </div>
           ) : (
-            <Empty>{t('Aucun bruitage ne correspond.')}</Empty>
+            <Empty>{t('No matching sound effect.')}</Empty>
           )}
-          <span className="muted small">{t('Clic = joué chez tout le monde · 🎧 = écoute privée sur ce poste. Les autres modules (dés, portes, achats…) déclenchent aussi ces sons automatiquement.')}</span>
+          <span className="muted small">{t('Click = plays for everyone · 🎧 = private preview on this device. Other modules (dice, doors, purchases…) also trigger these sounds automatically.')}</span>
         </div>
       ) : current === 'files' ? (
         <div className="col gap-l">
@@ -505,7 +505,7 @@ export default function AudioPage({ game }: GameProps) {
               ))}
             </div>
           ) : (
-            <Empty>{uploads.length ? t('Aucun fichier ne correspond.') : t('Aucun fichier importé. Toutes les ambiances, musiques et bruitages intégrés sont synthétisés en direct.')}</Empty>
+            <Empty>{uploads.length ? t('No matching file.') : t('No uploaded files. All built-in ambiences, music and sound effects are synthesized live.')}</Empty>
           )}
         </div>
       ) : shown.length ? (
@@ -515,7 +515,7 @@ export default function AudioPage({ game }: GameProps) {
           ))}
         </div>
       ) : (
-        <Empty>{t('Aucune piste ne correspond.')}</Empty>
+        <Empty>{t('No matching track.')}</Empty>
       )}
 
       {sceneEdit && <SceneModal game={game} scene={sceneEdit} onClose={() => setSceneEdit(null)} />}

@@ -208,26 +208,26 @@ export function qualityProblem(
   item: LifestyleQualityCatalogItem | null | undefined,
   lookup?: ((catalogId: string) => LifestyleQualityCatalogItem | null | undefined) | null,
 ): string | I18nEntry | null {
-  if (!l || !item) return tk('Option inconnue');
+  if (!l || !item) return tk('Unknown option');
   const st: LifestyleQualityStats = (item.stats as LifestyleQualityStats | undefined) || {};
   if (Array.isArray(st.allowed) && st.allowed.length && l.base && !st.allowed.includes(l.base)) {
-    return { key: tk('{item} : réservé aux trains de vie {allowed}'), params: { item: item.nameFr || item.name, allowed: st.allowed.join(', ') } };
+    return { key: tk('{item}: only for {allowed} lifestyles'), params: { item: item.nameFr || item.name, allowed: st.allowed.join(', ') } };
   }
   if (!st.multiple && (l.qualities || []).some((q) => q.catalogId && q.catalogId === item.id)) {
-    return { key: tk('{item} est déjà sur ce train de vie'), params: { item: item.nameFr || item.name } };
+    return { key: tk('{item} is already on this lifestyle'), params: { item: item.nameFr || item.name } };
   }
   if (Array.isArray(st.requiresLifestyle) && st.requiresLifestyle.length && l.base && !st.requiresLifestyle.includes(l.base)) {
-    return { key: tk('{item} : réservé aux trains de vie {allowed}'), params: { item: item.nameFr || item.name, allowed: st.requiresLifestyle.join(', ') } };
+    return { key: tk('{item}: only for {allowed} lifestyles'), params: { item: item.nameFr || item.name, allowed: st.requiresLifestyle.join(', ') } };
   }
   // Options of the same lifestyle: Chummer <forbidden>/<required> <oneof><lifestylequality> (by English name).
   const names = new Set((l.qualities || []).map((q) => String(q?.name || '')));
   const clash = (Array.isArray(st.forbids) ? st.forbids : []).find((n) => names.has(n));
-  if (clash) return { key: tk('{item} est incompatible avec {other}'), params: { item: item.nameFr || item.name, other: clash } };
+  if (clash) return { key: tk('{item} cannot be combined with {other}'), params: { item: item.nameFr || item.name, other: clash } };
   // …and the reverse: an option already there whose catalog entry forbids this one (lookup(catalogId) → catalog item).
   const reverse = typeof lookup === 'function' ? (l.qualities || []).find((q) => q?.catalogId && ((lookup(q.catalogId)?.stats as LifestyleQualityStats | undefined)?.forbids || []).includes(item.name)) : null;
-  if (reverse) return { key: tk('{item} est incompatible avec {other}'), params: { item: item.nameFr || item.name, other: reverse.nameFr || reverse.name } };
+  if (reverse) return { key: tk('{item} cannot be combined with {other}'), params: { item: item.nameFr || item.name, other: reverse.nameFr || reverse.name } };
   if (Array.isArray(st.requiresOneOf) && st.requiresOneOf.length && !st.requiresOneOf.some((n) => names.has(n))) {
-    return { key: tk('{item} demande d’abord : {list}'), params: { item: item.nameFr || item.name, list: st.requiresOneOf.join(', ') } };
+    return { key: tk('{item} first requires: {list}'), params: { item: item.nameFr || item.name, list: st.requiresOneOf.join(', ') } };
   }
   return null;
 }

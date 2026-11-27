@@ -45,11 +45,11 @@ function CommlinkView({ game, actor }: { game: GameView; actor: Actor }) {
   const ds = deckStats(actor, p);
   const fw = ds.eff.firewall;
   const rows: Array<[string, string]> = [
-    [t('Défense contre le hacking (Hacker à la volée, Pointe de données…)'), t('Intuition + Firewall = {n} dés', { n: attr(actor, 'INT') + fw })],
-    [t('Défense contre la force brute'), t('Volonté + Firewall = {n} dés', { n: attr(actor, 'WIL') + fw })],
-    [t('Résister aux dommages matriciels'), t('Indice + Firewall = {n} dés', { n: ds.deviceRating + fw + programSum(p, 'resistMatrix') })],
-    [t('Initiative en RA'), matrixInitiative(actor, p, 'ar').text],
-    [t('Moniteur matriciel'), t('{n} cases', { n: matrixMonitor(ds.deviceRating) })],
+    [t('Defense against hacking (Hack on the Fly, Data Spike…)'), t('Intuition + Firewall = {n} dice', { n: attr(actor, 'INT') + fw })],
+    [t('Defense against Brute Force'), t('Willpower + Firewall = {n} dice', { n: attr(actor, 'WIL') + fw })],
+    [t('Resist Matrix damage'), t('Rating + Firewall = {n} dice', { n: ds.deviceRating + fw + programSum(p, 'resistMatrix') })],
+    [t('AR initiative'), matrixInitiative(actor, p, 'ar').text],
+    [t('Matrix Condition Monitor'), t('{n} boxes', { n: matrixMonitor(ds.deviceRating) })],
   ];
   const knownSkills = ACTIONS.filter((a) => a.skill && (actor.skills || []).some((s) => s.id === a.skill && s.rating > 0));
   return (
@@ -57,13 +57,13 @@ function CommlinkView({ game, actor }: { game: GameView; actor: Actor }) {
       <div className="mx-commlink-card">
         <div className="mx-deck-name">{actor.matrix?.device || 'Commlink'}</div>
         <div className="small muted">
-          {actor.name} · {t('indice {n}', { n: ds.deviceRating })}
+          {actor.name} · {t('rating {n}', { n: ds.deviceRating })}
         </div>
         <div className="mx-asdf two">
           <div className="mx-asdf-cell">
             <span className="mx-asdf-k">{asdfShort('dataProcessing')}</span>
             <b className="mono">{ds.eff.dataProcessing}</b>
-            <span className="mx-asdf-l">{t('Traitement')}</span>
+            <span className="mx-asdf-l">{t('Data Processing')}</span>
           </div>
           <div className="mx-asdf-cell">
             <span className="mx-asdf-k">{asdfShort('firewall')}</span>
@@ -73,12 +73,12 @@ function CommlinkView({ game, actor }: { game: GameView; actor: Actor }) {
         </div>
       </div>
       <div className="mx-panel">
-        <div className="mx-panel-title">{t('La Matrice, pour toi')}</div>
+        <div className="mx-panel-title">{t('The Matrix, for you')}</div>
         <p>
-          {t('Ton commlink te garde en ligne en réalité augmentée : messages, cartes, smartlink, affichages en surimpression. Pas de cyberdeck, donc pas d’attaque ni de discrétion matricielle — c’est le terrain du decker de l’équipe.')}
+          {t('Your commlink keeps you online in augmented reality: messages, maps, smartlink, overlays. No cyberdeck means no Matrix attacks or sleaze — that is the team decker’s turf.')}
         </p>
         <p className="small muted">
-          {t('Si un hacker ennemi s’en prend à ton commlink, le MJ lancera ta défense avec ces chiffres. Laisser ton appareil en mode silencieux ou le confier au PAN du decker te protège davantage.')}
+          {t('If an enemy hacker goes after your commlink, the GM rolls your defense with these numbers. Running silent or slaving your device to the decker’s PAN protects you better.')}
         </p>
         <table className="sr mx-commlink-table">
           <tbody>
@@ -90,7 +90,7 @@ function CommlinkView({ game, actor }: { game: GameView; actor: Actor }) {
             ))}
           </tbody>
         </table>
-        {knownSkills.length > 0 && <p className="small">{t('Tu connais quand même quelques gestes : {list}.', { list: [...new Set(knownSkills.map(actionName))].slice(0, 6).join(', ') })}</p>}
+        {knownSkills.length > 0 && <p className="small">{t('You still know a few moves: {list}.', { list: [...new Set(knownSkills.map(actionName))].slice(0, 6).join(', ') })}</p>}
       </div>
     </div>
   );
@@ -104,7 +104,7 @@ function PlayerMatrix({ game }: GameProps) {
   if (!mine.length)
     return (
       <div className="page">
-        <Empty>{t('Choisis un personnage pour accéder à la Matrice.')}</Empty>
+        <Empty>{t('Pick a character to access the Matrix.')}</Empty>
       </div>
     );
   if (!actors.length) {
@@ -112,8 +112,8 @@ function PlayerMatrix({ game }: GameProps) {
       <div className="page">
         <div className="mx-commlink">
           <div className="mx-panel">
-            <div className="mx-panel-title">{t('Matrice')}</div>
-            <p>{t('{name} n’a ni commlink ni cyberdeck sur sa fiche. Demande au MJ d’en ajouter un (onglet Matrice de la fiche) ou passe à la Boutique.', { name: mine[0].name })}</p>
+            <div className="mx-panel-title">{t('Matrix')}</div>
+            <p>{t('{name} has neither a commlink nor a cyberdeck on their sheet. Ask the GM to add one (Matrix tab of the sheet) or visit the Shop.', { name: mine[0].name })}</p>
           </div>
         </div>
       </div>
@@ -123,7 +123,7 @@ function PlayerMatrix({ game }: GameProps) {
   return (
     <div className="page mx-page">
       <div className="page-title">
-        <h2>{t('Matrice')}</h2>
+        <h2>{t('Matrix')}</h2>
         {actors.length > 1 && <Tabs tabs={actors.map((a) => ({ id: a.id, label: a.name }))} value={cur.id} onChange={setSel} />}
       </div>
       {isCyberdeck(cur) || game.matrix?.personas?.[cur.id]?.online ? <Cockpit game={game} actorId={cur.id} /> : <CommlinkView game={game} actor={cur} />}
@@ -142,9 +142,9 @@ function GmMatrixPage({ game }: GameProps) {
   const cockpitActor = actors.find((a) => a.id === cockpitId) || actors.find((a) => isCyberdeck(a)) || null;
   const tabs: TabDef[] = [
     { id: 'deckers', label: t('Deckers'), badge: online || null },
-    { id: 'hosts', label: t('Hôtes'), badge: alerts || null },
+    { id: 'hosts', label: t('Hosts'), badge: alerts || null },
     { id: 'cockpit', label: t('Cockpit') },
-    { id: 'log', label: t('Journal') },
+    { id: 'log', label: t('Log') },
   ];
   const current = tabs.some((x) => x.id === tab) ? tab : 'deckers';
   const openCockpit = (id: string) => {
@@ -155,25 +155,25 @@ function GmMatrixPage({ game }: GameProps) {
   return (
     <div className="page mx-page">
       <div className="page-title">
-        <h2>{t('Matrice')}</h2>
+        <h2>{t('Matrix')}</h2>
         <div className="row wrap">
           <Toggle
             value={!!game.matrix?.settings?.hideOverwatch}
             onChange={(v) => act('matrix/settings', { hideOverwatch: v })}
-            label={t('Cacher le SO aux joueurs')}
-            title={t('Les deckers ne voient que leur dernière vérification (sauf programme Surveillance)')}
+            label={t('Hide the OS from players')}
+            title={t('Deckers only see their last check (unless they run Baby Monitor)')}
           />
           <Toggle
             value={!!game.matrix?.settings?.osTimer}
             onChange={(v) => act('matrix/settings', { osTimer: v })}
-            label={t('Minuterie du SO')}
-            title={t('+2D6 au SO toutes les 15 minutes réelles en ligne (SR5 p. 232), appliqué à la prochaine action matricielle')}
+            label={t('OS timer')}
+            title={t('+2D6 OS every 15 real minutes online (SR5 p. 232), applied at the next Matrix action')}
           />
           <Toggle
             value={game.matrix?.settings?.autoLaunchIc !== false}
             onChange={(v) => act('matrix/settings', { autoLaunchIc: v })}
-            label={t('IC automatiques en combat')}
-            title={t('À chaque nouveau tour de combat, un hôte en alerte avec un intrus lance sa prochaine IC (SR5 p. 248)')}
+            label={t('Automatic IC in fights')}
+            title={t('At each new Combat Turn, an alerted host with an intruder launches its next IC (SR5 p. 248)')}
           />
         </div>
       </div>
@@ -185,14 +185,14 @@ function GmMatrixPage({ game }: GameProps) {
           (cockpitActor ? (
             <div>
               <div className="row wrap mx-gm-row">
-                <span className="faint small">{t('Piloter :')}</span>
+                <span className="faint small">{t('Pilot:')}</span>
                 {actors.map((a) => (
                   <button type="button" key={a.id} className={'mx-pill' + (a.id === cockpitActor.id ? ' on' : '')} onClick={() => setCockpitId(a.id)}>
                     {a.name}
                     {game.matrix?.personas?.[a.id]?.online ? (
                       <>
                         {' '}
-                        <Badge color="cyan">{t('en ligne')}</Badge>
+                        <Badge color="cyan">{t('online')}</Badge>
                       </>
                     ) : (
                       ''
@@ -203,11 +203,11 @@ function GmMatrixPage({ game }: GameProps) {
               <Cockpit game={game} actorId={cockpitActor.id} />
             </div>
           ) : (
-            <Empty>{t('Aucun personnage avec un appareil matriciel.')}</Empty>
+            <Empty>{t('No character with a Matrix device.')}</Empty>
           ))}
         {current === 'log' && (
           <div className="mx-panel">
-            <MatrixLog game={game} limit={60} title={t('Toute l’activité matricielle')} />
+            <MatrixLog game={game} limit={60} title={t('All Matrix activity')} />
           </div>
         )}
       </div>
@@ -219,7 +219,7 @@ export default function MatrixPage({ game }: GameProps) {
   if (!game.matrix)
     return (
       <div className="page">
-        <Empty>{t('Le module Matrice n’est pas chargé côté serveur.')}</Empty>
+        <Empty>{t('The Matrix module is not loaded on the server.')}</Empty>
       </div>
     );
   return isGM(game) ? <GmMatrixPage game={game} /> : <PlayerMatrix game={game} />;

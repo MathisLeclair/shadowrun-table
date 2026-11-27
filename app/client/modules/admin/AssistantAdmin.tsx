@@ -11,14 +11,14 @@ const usd = (n: unknown) => {
   const v = fmtNumber(Number(n) || 0, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   return getLang() === 'en' ? `$${v}` : `${v} $`;
 };
-const EFFORT_LABEL: Record<string, string> = { low: tk('Faible (rapide, économique)'), medium: tk('Moyen (recommandé)'), high: tk('Élevé (plus réfléchi, plus cher)') };
+const EFFORT_LABEL: Record<string, string> = { low: tk('Low (fast, cheap)'), medium: tk('Medium (recommended)'), high: tk('High (more thorough, more expensive)') };
 
 function copy(text: string) {
   try {
     navigator.clipboard.writeText(text);
-    toast(t('Copié'), 'success');
+    toast(t('Copied'), 'success');
   } catch {
-    toast(t('Copie impossible : sélectionne le texte à la main'), 'warn');
+    toast(t('Copy failed: select the text by hand'), 'warn');
   }
 }
 
@@ -62,7 +62,7 @@ export default function AssistantAdmin({ adminApi, run }: { adminApi: AdminApi; 
   useEffect(() => {
     load();
   }, []);
-  if (!d) return <div className="muted small">{t('Chargement…')}</div>;
+  if (!d) return <div className="muted small">{t('Loading…')}</div>;
 
   const patch = (body: object) =>
     run(async () => {
@@ -81,12 +81,12 @@ export default function AssistantAdmin({ adminApi, run }: { adminApi: AdminApi; 
     await run(async () => {
       const r = await adminApi<AssistantInfo>('/api/admin/assistant/test', { method: 'POST' });
       setD(r);
-      toast(t('Connexion OK ({model}) — coût {usd}', { model: r.model, usd: usd(r.usd) }), 'success');
+      toast(t('Connection OK ({model}) — cost {usd}', { model: r.model, usd: usd(r.usd) }), 'success');
     });
     setTesting(false);
   };
   const reset = async () => {
-    if (!(await confirmAction(t('Remettre à zéro le compteur de dépenses de ce mois ? (La limite de la Console Claude reste la vraie sécurité.)')))) return;
+    if (!(await confirmAction(t('Reset this month\'s spend counter? (The Claude Console limit remains the real safeguard.)')))) return;
     run(async () => setD(await adminApi<AssistantInfo>('/api/admin/assistant/reset-month', { method: 'POST' })));
   };
 
@@ -94,41 +94,41 @@ export default function AssistantAdmin({ adminApi, run }: { adminApi: AdminApi; 
   const jwksText = d.jwks ? JSON.stringify(d.jwks, null, 2) : '';
   const modeBadge =
     a.mode === 'wif' ? (
-      <Badge color="green">{t('Fédération d’identité')}</Badge>
+      <Badge color="green">{t('Identity federation')}</Badge>
     ) : a.mode === 'apikey' ? (
-      <Badge color="amber">{t('Clé API (développement)')}</Badge>
+      <Badge color="amber">{t('API key (development)')}</Badge>
     ) : (
-      <Badge color="red">{t('Non configuré')}</Badge>
+      <Badge color="red">{t('Not configured')}</Badge>
     );
   const b = d.budget;
 
   return (
     <div className="col" style={{ gap: 12 }}>
       <p className="field-hint">
-        {t('L’assistant MJ utilise Claude pour répondre aux questions du MJ et préparer cartes, PNJ et documents. Il n’est jamais visible des joueurs et ne modifie rien sans le bouton « Appliquer » du MJ.')}
+        {t('The GM assistant uses Claude to answer the GM\'s questions and prepare maps, NPCs and documents. Players never see it, and it changes nothing until the GM clicks « Apply ».')}
       </p>
 
       <div className="grid-2">
         <div className="col" style={{ gap: 8 }}>
           <div className="row wrap" style={{ gap: 8, alignItems: 'center' }}>
-            <strong>{t('Connexion')}</strong> {modeBadge}
+            <strong>{t('Connection')}</strong> {modeBadge}
           </div>
           <div className="small">
-            {a.lastOk ? <div>{t('Dernier appel réussi : {date}', { date: fmtDate(a.lastOk) })}</div> : null}
-            {a.lastError ? <div style={{ color: 'var(--red)' }}>{t('Dernière erreur ({date}) : {error}', { date: fmtDate(a.lastErrorAt), error: a.lastError })}</div> : null}
+            {a.lastOk ? <div>{t('Last successful call: {date}', { date: fmtDate(a.lastOk) })}</div> : null}
+            {a.lastError ? <div style={{ color: 'var(--red)' }}>{t('Last error ({date}): {error}', { date: fmtDate(a.lastErrorAt), error: a.lastError })}</div> : null}
             {a.mode !== 'wif' ? (
-              <div className="muted">{t('Règle de fédération : {rule} · Organisation : {org}', { rule: a.ruleConfigured ? '✓' : '✗', org: a.orgConfigured ? '✓' : '✗' })}</div>
+              <div className="muted">{t('Federation rule: {rule} · Organization: {org}', { rule: a.ruleConfigured ? '✓' : '✗', org: a.orgConfigured ? '✓' : '✗' })}</div>
             ) : null}
           </div>
           <div className="row" style={{ gap: 6 }}>
             <Button small disabled={!a.mode || testing} onClick={test}>
-              {testing ? t('Test…') : t('Tester la connexion')}
+              {testing ? t('Testing…') : t('Test the connection')}
             </Button>
           </div>
 
-          <strong style={{ marginTop: 6 }}>{t('Budget de ce mois ({month})', { month: b.month })}</strong>
+          <strong style={{ marginTop: 6 }}>{t('This month\'s budget ({month})', { month: b.month })}</strong>
           <div>
-            {t('{spent} dépensés sur {cap}', { spent: usd(b.spent), cap: usd(b.cap) })} · {t('{n} appels', { n: d.usage.calls })}
+            {t('{spent} spent of {cap}', { spent: usd(b.spent), cap: usd(b.cap) })} · {t('{n} calls', { n: d.usage.calls })}
           </div>
           {Object.keys(d.usage.tables || {}).length ? (
             <div className="small muted">
@@ -138,60 +138,60 @@ export default function AssistantAdmin({ adminApi, run }: { adminApi: AdminApi; 
             </div>
           ) : null}
           <Field
-            label={t('Plafond mensuel (USD, toutes tables)')}
-            hint={t('L’assistant refuse les questions une fois le plafond atteint. Mets la même limite sur l’espace de travail dans la Console Claude.')}
+            label={t('Monthly cap (USD, all tables)')}
+            hint={t('The assistant refuses questions once the cap is reached. Set the same limit on the workspace in the Claude Console.')}
           >
             <div className="row" style={{ gap: 6 }}>
               <input className="input" type="number" min="0" max={d.maxCap} step="1" value={cap} onChange={(e) => setCap(e.target.value)} style={{ maxWidth: 120 }} />
               <Button small disabled={Number(cap) === d.settings.monthlyCapUsd} onClick={() => patch({ monthlyCapUsd: Number(cap) })}>
-                {t('Enregistrer')}
+                {t('Save')}
               </Button>
               <Button small variant="ghost" onClick={reset}>
-                {t('Remettre à zéro')}
+                {t('Reset')}
               </Button>
             </div>
           </Field>
-          <Field label={t('Modèle')}>
+          <Field label={t('Model')}>
             <Select
               value={d.settings.model}
-              options={d.models.map((m) => ({ value: m.id, label: t('{label} — {input} $ / {output} $ par million de jetons', { label: m.label, input: m.input, output: m.output }) }))}
+              options={d.models.map((m) => ({ value: m.id, label: t('{label} — ${input} / ${output} per million tokens', { label: m.label, input: m.input, output: m.output }) }))}
               onChange={(v) => patch({ model: v })}
             />
           </Field>
           <Field label={t('Effort')}>
             <Select value={d.settings.effort} options={d.efforts.map((e) => ({ value: e, label: t(EFFORT_LABEL[e] || e) }))} onChange={(v) => patch({ effort: v })} />
           </Field>
-          <strong style={{ marginTop: 6 }}>{t('Tables autorisées')}</strong>
+          <strong style={{ marginTop: 6 }}>{t('Allowed tables')}</strong>
           {d.tables.map((tb) => (
             <Toggle key={tb.id} value={tb.enabled} label={tb.name} onChange={(v) => toggleTable(tb.id, v)} />
           ))}
         </div>
 
         <div className="col" style={{ gap: 8 }}>
-          <strong>{t('Configuration dans la Console Claude (une fois)')}</strong>
+          <strong>{t('Claude Console setup (once)')}</strong>
           <ol className="small" style={{ margin: 0, paddingLeft: 18, lineHeight: 1.6 }}>
-            <li>{t('Workspaces → créer un espace « shadowrun-table » avec une limite de dépenses mensuelle.')}</li>
-            <li>{t('Workload identity → Connect workload → Custom OIDC : URL de l’émetteur et JWKS en ligne (ci-dessous).')}</li>
-            <li>{t('Compte de service membre de cet espace uniquement ; règle limitée à cet espace, portée « workspace:inference », préfixe de sujet ci-dessous.')}</li>
-            <li>{t('Sur le serveur : deploy.ps1 -Action ai-setup avec l’identifiant de la règle et de l’organisation (voir DEPLOY.md).')}</li>
+            <li>{t('Workspaces → create a « shadowrun-table » workspace with a monthly spend limit.')}</li>
+            <li>{t('Workload identity → Connect workload → Custom OIDC: issuer URL and inline JWKS (below).')}</li>
+            <li>{t('Service account in that workspace only; rule limited to that workspace, scope « workspace:inference », subject prefix below.')}</li>
+            <li>{t('On the server: deploy.ps1 -Action ai-setup with the rule ID and organization ID (see DEPLOY.md).')}</li>
           </ol>
-          <Field label={t('URL de l’émetteur (issuer)')}>
+          <Field label={t('Issuer URL')}>
             <div className="row" style={{ gap: 6 }}>
               <input className="input mono" readOnly value={a.issuer ?? ''} />
               <Button small onClick={() => copy(a.issuer)}>
-                {t('Copier')}
+                {t('Copy')}
               </Button>
             </div>
           </Field>
-          <Field label={t('Préfixe de sujet (subject prefix)')} hint={t('Sujet de ce serveur : {sub}', { sub: a.subject })}>
+          <Field label={t('Subject prefix')} hint={t('This server\'s subject: {sub}', { sub: a.subject })}>
             <div className="row" style={{ gap: 6 }}>
               <input className="input mono" readOnly value={a.subjectPrefix ?? ''} />
               <Button small onClick={() => copy(a.subjectPrefix)}>
-                {t('Copier')}
+                {t('Copy')}
               </Button>
             </div>
           </Field>
-          <Field label={t('JWKS (clé publique, à coller en ligne)')} hint={t('Seule la clé publique est affichée : la clé privée ne quitte jamais le serveur.')}>
+          <Field label={t('JWKS (public key, paste inline)')} hint={t('Only the public key is shown: the private key never leaves the server.')}>
             {d.keyError ? (
               <div style={{ color: 'var(--red)' }} className="small">
                 {d.keyError}
@@ -201,7 +201,7 @@ export default function AssistantAdmin({ adminApi, run }: { adminApi: AdminApi; 
                 <textarea className="input mono" readOnly rows={8} style={{ fontSize: 11 }} value={jwksText} />
                 <div>
                   <Button small onClick={() => copy(jwksText)}>
-                    {t('Copier le JWKS')}
+                    {t('Copy the JWKS')}
                   </Button>
                 </div>
               </>

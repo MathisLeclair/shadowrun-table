@@ -25,7 +25,7 @@ type Place = { value: string; label: string };
 const CONTAINER_LABELS = CONTAINER_KINDS as Record<string, string>;
 
 const LIST_ICONS: Record<LocatedList, string> = { weapons: '⚔', armor: '⛨', gear: '◇' };
-const LIST_TITLES: Record<LocatedList, string> = { weapons: tk('Arme'), armor: tk('Armure'), gear: tk('Équipement') };
+const LIST_TITLES: Record<LocatedList, string> = { weapons: tk('Weapon'), armor: tk('Armor'), gear: tk('Gear') };
 const KIND_ICONS: Record<string, string> = { body: '🧥', bag: '🎒', vehicle: '🚗', safehouse: '🏠', other: '📦' };
 const kindOptions = () => Object.entries(CONTAINER_KINDS).map(([value, label]) => ({ value, label: t(label) }));
 
@@ -49,34 +49,34 @@ function ItemRow({ s, list, it, places, onDragStart }: ItemRowProps) {
   const move = async (location: string) => {
     try {
       const r = await send<{ stowed?: boolean }>('inventory/move', { actorId: actor.id, list, itemId: it.id, location });
-      if (r?.stowed) toast(t('{item} rangé : il ne compte plus (ni prêt, ni porté, ni actif).', { item: itemLabel(it) }), 'info');
+      if (r?.stowed) toast(t('{item} stowed: it no longer counts (not ready, worn or active).', { item: itemLabel(it) }), 'info');
     } catch {}
   };
   const carried = isCarried(actor, it.location);
   let status = null;
   if (list === 'weapons') {
     status = own && carried
-      ? <Toggle value={it.equipped !== false} onChange={(v) => up({ equipped: v })} title={t('Prête / rangée')} />
-      : <span className={'badge ' + (it.equipped !== false ? 'badge-cyan' : '')}>{it.equipped !== false ? t('prête') : t('rangée')}</span>;
+      ? <Toggle value={it.equipped !== false} onChange={(v) => up({ equipped: v })} title={t('Ready / stowed')} />
+      : <span className={'badge ' + (it.equipped !== false ? 'badge-cyan' : '')}>{it.equipped !== false ? t('ready') : t('stowed')}</span>;
   } else if (list === 'armor') {
     status = own && carried
-      ? <Toggle value={!!it.equipped} onChange={(v) => up({ equipped: v })} title={t('Équiper / retirer')} />
-      : <span className={'badge ' + (it.equipped ? 'badge-cyan' : '')}>{it.equipped ? t('portée') : t('rangée')}</span>;
+      ? <Toggle value={!!it.equipped} onChange={(v) => up({ equipped: v })} title={t('Equip / unequip')} />
+      : <span className={'badge ' + (it.equipped ? 'badge-cyan' : '')}>{it.equipped ? t('worn') : t('stowed')}</span>;
   } else if (gearHasEffects(it, s.lookup)) {
     status = own && carried
-      ? <Toggle value={!!it.active} onChange={(v) => up({ active: v })} title={t('Porté / activé : ses effets comptent dans les jets')} />
-      : <span className={'badge ' + (it.active ? 'badge-cyan' : '')}>{it.active ? t('actif') : t('inactif')}</span>;
+      ? <Toggle value={!!it.active} onChange={(v) => up({ active: v })} title={t('Worn / switched on: its effects count in rolls')} />
+      : <span className={'badge ' + (it.active ? 'badge-cyan' : '')}>{it.active ? t('active') : t('inactive')}</span>;
   }
   const extra = list === 'weapons' && usesAmmo(it) ? `${it.ammoLoaded ?? it.ammoMax}/${it.ammoMax}` : list === 'weapons' && isGrenade(it) ? `×${it.qty ?? 1}` : list === 'armor' ? `${it.stack ? '+' : ''}${it.rating ?? 0}` : null;
   return <div className={'sh-inv-row' + (own ? ' draggable' : '')} draggable={own} onDragStart={(e) => onDragStart(e, list, it)}>
     <span className="sh-inv-icon" title={t(LIST_TITLES[list])}>{LIST_ICONS[list]}</span>
     <div className="grow sh-inv-name">
       <span title={itemTitle(it)}>{itemLabel(it)}</span>
-      {it.rating && list === 'gear' ? <>{' '}<span className="faint small">{t('indice {n}', { n: it.rating })}</span></> : null}{' '}
+      {it.rating && list === 'gear' ? <>{' '}<span className="faint small">{t('rating {n}', { n: it.rating })}</span></> : null}{' '}
       <ItemRef item={it} />
       {categoryLabel(it) ? <div className="faint small">{categoryLabel(it)}</div> : null}
     </div>
-    {extra !== null ? <span className="mono small">{extra}</span> : null}{list === 'gear' ? <span className="mono small" title={t('Quantité')}>×{it.qty ?? 1}</span> : null}{status}{own && <Select className="sh-inv-move" value="" title={t('Déplacer vers…')} onChange={(v) => v && move(v)} options={[{ value: '', label: t('Déplacer vers…') }, ...places.filter((p) => p.value !== (it.location || ON_BODY))]} />}
+    {extra !== null ? <span className="mono small">{extra}</span> : null}{list === 'gear' ? <span className="mono small" title={t('Quantity')}>×{it.qty ?? 1}</span> : null}{status}{own && <Select className="sh-inv-move" value="" title={t('Move to…')} onChange={(v) => v && move(v)} options={[{ value: '', label: t('Move to…') }, ...places.filter((p) => p.value !== (it.location || ON_BODY))]} />}
   </div>;
 }
 
@@ -88,8 +88,8 @@ export function InventoryTab({ s }: { s: SheetCtx }) {
   const [newKind, setNewKind] = useState('bag');
   const containers = actor.containers || [];
   const items = locatedItems(actor);
-  const places: Place[] = [{ value: ON_BODY, label: t('Sur soi') }, ...containers.map((c) => ({ value: c.id, label: c.name }))];
-  const groups: Group[] = [{ id: ON_BODY, name: t('Sur soi'), kind: 'body', implicit: true } as Omit<Group, 'items'>, ...containers].map((c) => ({
+  const places: Place[] = [{ value: ON_BODY, label: t('Carried') }, ...containers.map((c) => ({ value: c.id, label: c.name }))];
+  const groups: Group[] = [{ id: ON_BODY, name: t('Carried'), kind: 'body', implicit: true } as Omit<Group, 'items'>, ...containers].map((c) => ({
     ...c, items: items.filter(({ it }) => (it.location || ON_BODY) === c.id || (c.id === ON_BODY && !containers.some((x) => x.id === it.location))),
   }));
   const ready = readyCount(actor);
@@ -118,7 +118,7 @@ export function InventoryTab({ s }: { s: SheetCtx }) {
     if (!cur || (cur.location || ON_BODY) === location) return;
     try {
       const r = await send<{ stowed?: boolean }>('inventory/move', { actorId: actor.id, list: data.list, itemId: data.id, location });
-      if (r?.stowed) toast(t('{item} rangé : il ne compte plus (ni prêt, ni porté, ni actif).', { item: itemLabel(cur) }), 'info');
+      if (r?.stowed) toast(t('{item} stowed: it no longer counts (not ready, worn or active).', { item: itemLabel(cur) }), 'info');
     } catch {}
   };
   const add = async () => {
@@ -130,18 +130,18 @@ export function InventoryTab({ s }: { s: SheetCtx }) {
     } catch {}
   };
   const rename = async (c: Group) => {
-    const name = await promptText(t('Nouveau nom :'), c.name);
+    const name = await promptText(t('New name:'), c.name);
     if (name && name.trim() && name.trim() !== c.name) send('inventory/updateContainer', { actorId: actor.id, containerId: c.id, patch: { name: name.trim() } }).catch(() => {});
   };
   const remove = async (c: Group) => {
-    if (await confirmAction(t('Supprimer « {name} » ? Ce qu’il contient revient « Sur soi ».', { name: c.name }))) send('inventory/removeContainer', { actorId: actor.id, containerId: c.id }).catch(() => {});
+    if (await confirmAction(t('Delete “{name}”? What it holds goes back to “Carried”.', { name: c.name }))) send('inventory/removeContainer', { actorId: actor.id, containerId: c.id }).catch(() => {});
   };
 
   return <div className="sh-inventory">
     <div className="muted small">
-      {t('Ce qui est rangé dans un sac, un véhicule ou une planque ne compte pas : armes non prêtes, armure non portée, équipement inactif. Les munitions se prennent sur soi ou dans un sac.')}
+      {t('What is stored in a bag, a vehicle or a safehouse does not count: weapons not ready, armor not worn, gear inactive. Ammunition is taken from your person or a bag.')}
     </div>
-    {ready.over && <div className="amber small">{t('Beaucoup d’armes prêtes ({ranged} à distance, {melee} de mêlée) : en principe 2 + 2 au plus.', ready)}</div>}
+    {ready.over && <div className="amber small">{t('Many ready weapons ({ranged} ranged, {melee} melee): usually 2 + 2 at most.', ready)}</div>}
     <div className="sh-inv-groups">
       {groups.map((c) => {
         const isClosed = closed.has(c.id);
@@ -153,13 +153,13 @@ export function InventoryTab({ s }: { s: SheetCtx }) {
               <span aria-hidden="true">{KIND_ICONS[c.kind] || KIND_ICONS.other}</span>
               {' '}
               <b>{c.name}</b>
-              <span className="faint small">{tn(c.items.length, '{n} objet', '{n} objets')}</span>
+              <span className="faint small">{tn(c.items.length, '{n} item', '{n} items')}</span>
             </button>
             {!c.implicit && <span className="badge">{t(CONTAINER_LABELS[c.kind] || CONTAINER_LABELS.other)}</span>}
             {own && !c.implicit && <span className="row gap-s">
-              {(s.gm || c.kind === 'body' || c.kind === 'bag') && <Select className="sh-inv-kind" value={c.kind} options={kindOptions()} title={t('Type de contenant')} onChange={(v) => send('inventory/updateContainer', { actorId: actor.id, containerId: c.id, patch: { kind: v } }).catch(() => {})} />}
-              <IconButton icon="✎" title={t('Renommer')} onClick={() => rename(c)} />
-              <IconButton icon="✕" title={t('Supprimer le contenant')} onClick={() => remove(c)} />
+              {(s.gm || c.kind === 'body' || c.kind === 'bag') && <Select className="sh-inv-kind" value={c.kind} options={kindOptions()} title={t('Container type')} onChange={(v) => send('inventory/updateContainer', { actorId: actor.id, containerId: c.id, patch: { kind: v } }).catch(() => {})} />}
+              <IconButton icon="✎" title={t('Rename')} onClick={() => rename(c)} />
+              <IconButton icon="✕" title={t('Delete the container')} onClick={() => remove(c)} />
             </span>}
           </header>
           {c.notes && !isClosed ? <div className="faint small">{c.notes}</div> : null}
@@ -167,14 +167,14 @@ export function InventoryTab({ s }: { s: SheetCtx }) {
             ? <div className="sh-inv-list">
               {c.items.map(({ list, it }) => <ItemRow key={list + it.id} s={s} list={list} it={it} places={places} onDragStart={onDragStart} />)}
             </div>
-            : <div className="muted small sh-inv-empty">{own ? t('Vide — glisse un objet ici.') : t('Vide.')}</div>)}
+            : <div className="muted small sh-inv-empty">{own ? t('Empty — drag an item here.') : t('Empty.')}</div>)}
         </section>;
       })}
     </div>
     {own && <div className="row wrap sh-inv-add">
-      <input className="input" value={newName} placeholder={t('Nouveau contenant (sac à dos, coffre de la voiture…)')} maxLength={60} onChange={(e) => setNewName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} />
+      <input className="input" value={newName} placeholder={t('New container (backpack, car trunk…)')} maxLength={60} onChange={(e) => setNewName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} />
       <Select value={newKind} options={kindOptions()} onChange={setNewKind} />
-      <Button small variant="primary" disabled={!newName.trim()} onClick={add}>{t('Ajouter')}</Button>
+      <Button small variant="primary" disabled={!newName.trim()} onClick={add}>{t('Add')}</Button>
     </div>}
   </div>;
 }

@@ -40,7 +40,7 @@ export function registerBookAdminRoutes(app: Express, { requireAdmin, fail, list
   const bookOr404 = (req: Request, res: Response): LibraryBook | null | undefined => {
     const code = cleanCode(req.params.code);
     const b = code ? readLibrary(dir).books.find((x) => x.code === code) : null;
-    if (!b) fail(res, 404, 'Livre introuvable');
+    if (!b) fail(res, 404, 'Book not found');
     return b;
   };
 
@@ -60,16 +60,16 @@ export function registerBookAdminRoutes(app: Express, { requireAdmin, fail, list
     const code = cleanCode(req.query.code);
     if (!code) {
       req.resume();
-      return fail(res, 400, 'Code de livre invalide (lettres majuscules et chiffres, ex. SR5, RG)');
+      return fail(res, 400, 'Invalid book code (capital letters and digits, e.g. SR5, RG)');
     }
     if (isBusy(code)) {
       req.resume();
-      return fail(res, 409, 'Ce livre est en cours d’indexation');
+      return fail(res, 409, 'This book is being indexed');
     }
     const exists = readLibrary(dir).books.some((b) => b.code === code) || fs.existsSync(pdfFile(dir, code));
     if (exists && req.query.replace !== '1') {
       req.resume();
-      return fail(res, 409, 'Le livre {code} existe déjà : coche « Remplacer »', { code: 'exists' }, { code });
+      return fail(res, 409, 'Book {code} already exists: tick “Replace”', { code: 'exists' }, { code });
     }
     // Refuse before streaming a file the server could not index anyway (the job checks again when it starts).
     const declared = Number(req.headers['content-length']) || 0;
@@ -87,7 +87,7 @@ export function registerBookAdminRoutes(app: Express, { requireAdmin, fail, list
       fs.closeSync(fd);
       if (head.toString('latin1') !== '%PDF-') {
         fs.rmSync(tmp, { force: true });
-        return fail(res, 400, 'Ce fichier n’est pas un PDF');
+        return fail(res, 400, 'This file is not a PDF');
       }
       fs.renameSync(tmp, pdfFile(dir, code));
       const known = knownBooks()[code];
@@ -121,7 +121,7 @@ export function registerBookAdminRoutes(app: Express, { requireAdmin, fail, list
     if (body.nameFr !== undefined) patch.nameFr = String(body.nameFr).trim().slice(0, 120) || b.nameFr;
     if (body.offset !== undefined || body.offsets !== undefined) {
       const off = Number(body.offset ?? b.offset);
-      if (!Number.isInteger(off) || Math.abs(off) > 2000) return fail(res, 400, 'Décalage invalide');
+      if (!Number.isInteger(off) || Math.abs(off) > 2000) return fail(res, 400, 'Invalid offset');
       patch.offset = off;
       patch.offsets = body.offsets !== undefined ? cleanOffsets(body.offsets) : b.offsets || null;
       patch.manual = true;
@@ -131,7 +131,7 @@ export function registerBookAdminRoutes(app: Express, { requireAdmin, fail, list
       else if (Array.isArray(body.tables)) {
         const ids = new Set(listMetas().map((m) => m.id));
         patch.tables = body.tables.map(String).filter((id: string) => ids.has(id));
-      } else return fail(res, 400, 'Liste de tables invalide');
+      } else return fail(res, 400, 'Invalid table list');
     }
     res.json({ book: upsertBook(dir, b.code, patch) });
   });
@@ -142,7 +142,7 @@ export function registerBookAdminRoutes(app: Express, { requireAdmin, fail, list
     const b = bookOr404(req, res);
     if (!b) return;
     const idx = loadIndex(dir, b.code);
-    if (!idx) return fail(res, 409, 'Livre pas encore indexé');
+    if (!idx) return fail(res, 409, 'Book not indexed yet');
     const off = computeOffsets(b.code, { pages: idx.pages, texts: idx.texts, edges: idx.edges });
     const patch: Partial<LibraryBook> = { offset: off.offset, offsets: off.offsets, confidence: off.confidence, verified: off.verified, matchPdfPage: off.matchPdfPage, manual: false };
     if (req.query.apply === '0') return res.json({ book: { ...b, ...patch, offsets: cleanOffsets(off.offsets) || undefined }, numbered: off.numbered, applied: false });
@@ -153,16 +153,16 @@ export function registerBookAdminRoutes(app: Express, { requireAdmin, fail, list
   app.post('/api/admin/books/:code/reindex', requireAdmin, (req, res) => {
     const b = bookOr404(req, res);
     if (!b) return;
-    if (!fs.existsSync(pdfFile(dir, b.code))) return fail(res, 409, 'Fichier PDF manquant sur le serveur');
-    if (!startIndexJob(dir, b.code, { detect: req.body?.detect !== false })) return fail(res, 409, 'Ce livre est en cours d’indexation');
+    if (!fs.existsSync(pdfFile(dir, b.code))) return fail(res, 409, 'PDF file missing on the server');
+    if (!startIndexJob(dir, b.code, { detect: req.body?.detect !== false })) return fail(res, 409, 'This book is being indexed');
     res.json({ jobs: jobList() });
   });
 
   app.delete('/api/admin/books/:code', requireAdmin, (req, res) => {
     const b = bookOr404(req, res);
     if (!b) return;
-    if (String(req.body?.confirm || '') !== b.code) return fail(res, 400, 'Confirmation manquante : tape le code « {code} »', {}, { code: b.code });
-    if (isBusy(b.code)) return fail(res, 409, 'Ce livre est en cours d’indexation');
+    if (String(req.body?.confirm || '') !== b.code) return fail(res, 400, 'Confirmation missing: type the code “{code}”', {}, { code: b.code });
+    if (isBusy(b.code)) return fail(res, 409, 'This book is being indexed');
     removeBook(dir, b.code);
     console.log(`[books] ${b.code} supprimé`);
     res.json({ ok: true });

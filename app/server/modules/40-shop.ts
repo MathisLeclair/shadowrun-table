@@ -19,7 +19,7 @@ import { performRoll } from './10-characters.ts';
 import { HOME_LAYOUTS, homeLayout, homeMoveCost } from '../../shared/home.ts';
 import { monthlyCost, settleLifestyles, primaryLifestyle, lifestyleFromCatalog, qualityFromCatalog, qualityProblem, baseOf } from '../../shared/lifestyle.ts';
 import { removeBonus, weaponFromStats, bakeItemBonus } from '../lib/augment.ts';
-import { formatFr } from '../lib/i18n.ts';
+import { formatSource } from '../lib/i18n.ts';
 import { fillActorRefs } from '../lib/bookrefs.ts';
 import { thrownGearToWeapons } from './10-characters.ts';
 import type {
@@ -165,8 +165,8 @@ function ownersOf(state: TableState, actorId: ActorId): UserId[] {
 
 function getActor(ctx: ActionContext, actorId: unknown): ShopActor {
   const actor = ctx.state.actors?.[actorId as ActorId];
-  if (!actor) return ctx.fail('Personnage introuvable');
-  if (!ctx.owns(actorId as ActorId)) ctx.fail("Ce n'est pas ton personnage");
+  if (!actor) return ctx.fail('Character not found');
+  if (!ctx.owns(actorId as ActorId)) ctx.fail("That is not your character");
   return actor;
 }
 
@@ -183,7 +183,7 @@ function shopLog(ctx: ActionContext, actorId: ActorId, key: string, params: I18n
 /** Actor history entry: { text (French), i18n: { key, params } } + nuyen / karma delta. */
 function history(actor: ShopActor, key: string, params: I18nParams, delta: number, karma?: number): void {
   actor.history = Array.isArray(actor.history) ? actor.history : [];
-  const h: HistoryEntry = { ts: Date.now(), text: formatFr(key, params), i18n: { key, params } };
+  const h: HistoryEntry = { ts: Date.now(), text: formatSource(key, params), i18n: { key, params } };
   if (delta) h.nuyen = delta;
   if (karma) h.karma = karma;
   actor.history.push(h);
@@ -208,7 +208,7 @@ function pushOrder(shop: ShopState, order: ShopOrder): void {
 /** One order line as a translatable value: « Name (ind. 3) [Alphaware] ×2 → Target ». */
 function lineText(l: Omit<Partial<OrderLine>, 'target'> & { target?: { name?: string } }): string | I18nMessage {
   let v: string | I18nMessage = l.name as string;
-  if (l.rating) v = { t: tk('{name} (ind. {rating})'), params: { name: v, rating: l.rating } };
+  if (l.rating) v = { t: tk('{name} (rtg {rating})'), params: { name: v, rating: l.rating } };
   if (l.grade && l.grade !== 'standard') v = { t: '{name} [{grade}]', params: { name: v, grade: GRADES[l.grade] ? { t: GRADES[l.grade].label } : l.grade } };
   if ((l.qty ?? 0) > 1) v = { t: '{name} ×{n}', params: { name: v, n: l.qty! } };
   if (l.target?.name) v = { t: tk('{name} → {target}'), params: { name: v, target: l.target.name } };
@@ -241,9 +241,9 @@ function baseValue(it: Loose | null | undefined): number | null {
 function upgradeTarget(ctx: ActionContext, actor: ShopActor, file: string, raw: CartLine, sim: Sim) {
   const { list, sub } = UPGRADE_FILES[file as keyof typeof UPGRADE_FILES] as { list: string; sub: string };
   const id = str(raw?.target?.itemId ?? raw?.targetId, 80);
-  if (!id) ctx.fail('Choisis sur quoi installer cet article');
+  if (!id) ctx.fail('Choose what to install this item on');
   const real: Loose | undefined = (Array.isArray(actor[list]) ? actor[list] : []).find((x: Loose) => x && x.id === id);
-  if (!real) return ctx.fail('Objet cible introuvable');
+  if (!real) return ctx.fail('Target item not found');
   const key = `${list}:${id}`;
   if (!sim.has(key)) sim.set(key, deepClone(real));
   const target = sim.get(key)!;
@@ -278,7 +278,7 @@ function priceUpgrade(ctx: ActionContext, actor: ShopActor, file: string, item: 
   const priced = (o: Loose) => upgradeAvail(quote(item, o), item, targetQ);
   if (file === 'accessories') {
     const value = baseValue(t.real);
-    if (item.stats?.targetCost && value === null) ctx.fail('Prix de {weapon} inconnu : impossible de chiffrer {item}', { weapon: t.real.name, item: itemName(item) });
+    if (item.stats?.targetCost && value === null) ctx.fail('Unknown price for {weapon}: cannot price {item}', { weapon: t.real.name, item: itemName(item) });
     const q = priced({ rating: raw.rating, markup: shop.markup, vars: { WeaponCost: value ?? 0 } });
     const fit = accessoryFit(t.target, t.cat, item, { mount: raw.mount === undefined ? undefined : str(raw.mount, 20) });
     if (fit.problem) failWith(ctx, fit.problem);
@@ -287,7 +287,7 @@ function priceUpgrade(ctx: ActionContext, actor: ShopActor, file: string, item: 
   }
   if (file === 'armormods') {
     const value = baseValue(t.real);
-    if (item.stats?.targetCost && value === null && /ArmorCost/.test(item.costFormula || '')) ctx.fail('Prix de {weapon} inconnu : impossible de chiffrer {item}', { weapon: t.real.name, item: itemName(item) });
+    if (item.stats?.targetCost && value === null && /ArmorCost/.test(item.costFormula || '')) ctx.fail('Unknown price for {weapon}: cannot price {item}', { weapon: t.real.name, item: itemName(item) });
     const cap = armorCapacity(t.target, t.cat);
     const q = priced({ rating: raw.rating, markup: shop.markup, vars: { ArmorCost: value ?? 0, Capacity: cap } });
     const fit = armorModFit(t.target, t.cat, item, q.rating);
@@ -298,7 +298,7 @@ function priceUpgrade(ctx: ActionContext, actor: ShopActor, file: string, item: 
   // vehiclemods
   const value = baseValue(t.real);
   const vars = vehicleVars(t.target, t.cat, value ?? 0);
-  if (/VehicleCost/.test(item.costFormula || '') && value === null) ctx.fail('Prix de {weapon} inconnu : impossible de chiffrer {item}', { weapon: t.real.name, item: itemName(item) });
+  if (/VehicleCost/.test(item.costFormula || '') && value === null) ctx.fail('Unknown price for {weapon}: cannot price {item}', { weapon: t.real.name, item: itemName(item) });
   const max = vehicleModMaxRating(item, vars);
   const wanted = raw.rating === undefined || raw.rating === null ? item.rating?.min : Math.min(int(raw.rating, 1), max ?? int(raw.rating, 1));
   const q = priced({ rating: wanted, markup: shop.markup, vars });
@@ -316,15 +316,15 @@ function resolveLine(ctx: ActionContext, raw: CartLine, actor: ShopActor, sim: S
   const shop = ctx.state.shop;
   const actorId = actor.id;
   const ref = str(raw?.ref, 120);
-  if (!ref) ctx.fail('Article manquant');
+  if (!ref) ctx.fail('Missing item');
   const qty = int(raw?.qty, 1);
-  if (qty < 1) ctx.fail('Quantité invalide');
-  if (qty > 999) ctx.fail('Quantité trop élevée');
+  if (qty < 1) ctx.fail('Invalid quantity');
+  if (qty > 999) ctx.fail('Quantity too high');
 
   if (ref.startsWith('special:')) {
     const sp = shop.specials.find((s) => s.id === ref.slice(8));
-    if (!sp || (!ctx.isGM && sp.hidden)) return ctx.fail('Cette offre n’existe plus');
-    if (!ctx.isGM && sp.forActorIds?.length && !sp.forActorIds.includes(actorId)) ctx.fail('Cette offre est réservée à un autre runner');
+    if (!sp || (!ctx.isGM && sp.hidden)) return ctx.fail('This deal no longer exists');
+    if (!ctx.isGM && sp.forActorIds?.length && !sp.forActorIds.includes(actorId)) ctx.fail('This deal is reserved for another runner');
     const cat = sp.catalogRef ? INDEX.get(sp.catalogRef) : null;
     const file: CatalogFile = SHOP_FILES.includes(sp.file) && !isUpgradeFile(sp.file) ? sp.file : cat?.file && !isUpgradeFile(cat.file) ? cat.file : 'gear';
     const av = parseAvailString(sp.avail);
@@ -343,7 +343,7 @@ function resolveLine(ctx: ActionContext, raw: CartLine, actor: ShopActor, sim: S
   }
 
   const entry = INDEX.get(ref);
-  if (!entry) return ctx.fail('Article inconnu du catalogue');
+  if (!entry) return ctx.fail('Item not in the catalog');
   const { item, file } = entry;
   if (isUpgradeFile(file)) {
     const p = priceUpgrade(ctx, actor, file, item, raw || {}, sim);
@@ -356,7 +356,7 @@ function resolveLine(ctx: ActionContext, raw: CartLine, actor: ShopActor, sim: S
     return line;
   }
   const ware = file === 'cyberware' || file === 'bioware';
-  if (ware && raw.grade && !allowedGrades(item).includes(raw.grade)) ctx.fail('Grade « {grade} » indisponible pour {item}', { grade: GRADES[raw.grade as keyof typeof GRADES] ? { t: GRADES[raw.grade as keyof typeof GRADES].label } : raw.grade, item: itemName(item) });
+  if (ware && raw.grade && !allowedGrades(item).includes(raw.grade)) ctx.fail('Grade « {grade} » not available for {item}', { grade: GRADES[raw.grade as keyof typeof GRADES] ? { t: GRADES[raw.grade as keyof typeof GRADES].label } : raw.grade, item: itemName(item) });
   const q = quote(item, { rating: raw.rating, grade: raw.grade, markup: file === 'lifestyles' ? 0 : shop.markup, price: raw.price });
   const line: OrderLine = {
     ref, catalogId: item.id, file, name: itemName(item), category: item.categoryFr || item.category, qty: file === 'lifestyles' ? Math.min(qty, 24) : qty,
@@ -395,13 +395,13 @@ function lineFlags(shop: ShopState, l: OrderLine): string[] {
 /** Player-side shop rules (the GM bypasses them). */
 function checkRules(ctx: ActionContext, lines: OrderLine[]): void {
   const shop = ctx.state.shop;
-  if (!shop.open) ctx.fail('Cabana n’est pas joignable pour l’instant');
+  if (!shop.open) ctx.fail('Cabana can’t be reached right now');
   for (const l of lines) {
     if (l.specialId) continue; // fixer deals are GM-curated
-    if (shop.categories[l.file!] === false) ctx.fail('{section} : rayon fermé pour l’instant', { section: FILE_LABELS[l.file!] ? { t: FILE_LABELS[l.file!] } : l.file! });
-    if (l.availValue! > shop.maxAvail) ctx.fail('{item} : disponibilité {avail} au-dessus de la limite ({max}) — vois avec le MJ', { item: l.name, avail: l.availValue!, max: shop.maxAvail });
-    if (l.legality === 'F' && !shop.allowForbidden) ctx.fail('{item} est interdit : Cabana ne prend pas ce risque', { item: l.name });
-    if (l.legality === 'R' && !shop.allowRestricted) ctx.fail('{item} est restreint : pas de vente sans licence pour l’instant', { item: l.name });
+    if (shop.categories[l.file!] === false) ctx.fail('{section}: section closed for now', { section: FILE_LABELS[l.file!] ? { t: FILE_LABELS[l.file!] } : l.file! });
+    if (l.availValue! > shop.maxAvail) ctx.fail('{item}: availability {avail} above the limit ({max}) — see the GM', { item: l.name, avail: l.availValue!, max: shop.maxAvail });
+    if (l.legality === 'F' && !shop.allowForbidden) ctx.fail('{item} is forbidden: Cabana won’t take the risk', { item: l.name });
+    if (l.legality === 'R' && !shop.allowRestricted) ctx.fail('{item} is restricted: no sale without a license for now', { item: l.name });
   }
 }
 
@@ -410,10 +410,10 @@ function checkStock(ctx: ActionContext, lines: OrderLine[]): void {
   for (const l of lines) if (l.specialId) need[l.specialId] = (need[l.specialId] || 0) + l.qty;
   for (const [id, n] of Object.entries(need)) {
     const sp = ctx.state.shop.specials.find((s) => s.id === id);
-    if (!sp) return ctx.fail('Une offre de la commande n’existe plus');
+    if (!sp) return ctx.fail('A deal in the order no longer exists');
     if (sp.stock !== null && sp.stock !== undefined && Number(sp.stock) < n) {
-      if (sp.stock > 1) ctx.fail('{item} : stock insuffisant ({n} restants)', { item: sp.name, n: sp.stock });
-      ctx.fail('{item} : stock insuffisant ({n} restant)', { item: sp.name, n: sp.stock });
+      if (sp.stock > 1) ctx.fail('{item}: not enough stock ({n} left)', { item: sp.name, n: sp.stock });
+      ctx.fail('one::{item}: not enough stock ({n} left)', { item: sp.name, n: sp.stock });
     }
   }
 }
@@ -446,7 +446,7 @@ function claimAvailTests(ctx: ActionContext, actor: ShopActor, lines: OrderLine[
   const matched = matchAvailTests(need, tests);
   if (shop.availTest === 'required') {
     const i = matched.findIndex((m: unknown, j: number) => need[j].needsTest && !m);
-    if (i >= 0) ctx.fail('{item} : réussis d’abord un test de disponibilité (dispo {avail})', { item: lines[i].name, avail: lines[i].availValue! });
+    if (i >= 0) ctx.fail('{item}: pass an availability test first (Availability {avail})', { item: lines[i].name, avail: lines[i].availValue! });
   }
   const ids: string[] = [];
   matched.forEach((m: Loose | null, i: number) => {
@@ -470,17 +470,17 @@ const contactInfo = contactSheet; // shared/contacts.js (also used by the sheet 
 /** The contact's Availability roll, logged like a dice roll (no runner modifiers, no Edge: it is not the runner's test). */
 function contactRoll(ctx: ActionContext, actor: ShopActor, contact: Contact, line: OrderLine, avail: Loose, modifier: unknown, overpay: number) {
   const c: ContactSheet = contactInfo(ctx.state, contact);
-  if (!c.known) ctx.fail('{contact} n’a pas de fiche (Charisme, Négociation) : le MJ peut créer un PNJ de ce nom dans le Bestiaire', { contact: contact.name });
+  if (!c.known) ctx.fail('{contact} has no stats (Charisma, Negotiation): the GM can create an NPC with this name in the Bestiary', { contact: contact.name });
   const mod = clampInt(modifier, -20, 20, 0);
   const pool = Math.min(100, c.pool! + mod + overpay);
-  if (pool <= 0) ctx.fail('Réserve de dés nulle : échec automatique');
+  if (pool <= 0) ctx.fail('Dice pool of zero: automatic failure');
   const parts = c.defaulting ? [`CHA ${c.cha}`, 'par défaut −1'] : [`CHA ${c.cha}`, `Négociation ${c.negotiation}`];
   if (overpay) parts.push(`surenchère +${overpay}`);
   if (mod) parts.push(`mod. ${mod > 0 ? '+' : '−'}${Math.abs(mod)}`);
   const r = rollDice(pool, { limit: c.limit });
   const label = `Disponibilité — ${line.name} (via ${contact.name})`;
   const roll: RollRecord = {
-    ...r, label, labelI18n: { key: tk('Disponibilité — {item} (via {contact})'), params: { item: line.name, contact: contact.name } },
+    ...r, label, labelI18n: { key: tk('Availability — {item} (via {contact})'), params: { item: line.name, contact: contact.name } },
     explode: false, edge: false, actorId: null, breakdown: parts.join(' + '), limitLabel: 'sociale',
     limitBreakdown: `sociale ${c.social} + Connexion ${c.connection}`, avail: { ...avail, contact: contact.name } as AvailRollInfo,
   };
@@ -507,12 +507,12 @@ function checkEssence(ctx: ActionContext, actor: ShopActor, lines: OrderLine[]):
   const cost = essenceCost(lines);
   if (cost <= 0) return;
   const ess = Number(actor.attributes?.ESS ?? 6);
-  if (ess - cost <= 0) ctx.fail('Essence insuffisante : {ess} − {cost} tuerait {name}', { ess, cost, name: actor.name });
+  if (ess - cost <= 0) ctx.fail('Insufficient Essence: {ess} − {cost} would kill {name}', { ess, cost, name: actor.name });
 }
 
 function checkFunds(ctx: ActionContext, actor: ShopActor, total: number): void {
   const have = Number(actor.nuyen) || 0;
-  if (have < total) ctx.fail('Fonds insuffisants : {cost} requis, {have} disponibles', { cost: nuyen(total), have: nuyen(have) });
+  if (have < total) ctx.fail('Insufficient funds: {cost} needed, {have} available', { cost: nuyen(total), have: nuyen(have) });
 }
 
 // ---------------------------------------------------------------------------
@@ -542,11 +542,11 @@ function accessoryItem(ctx: Pick<ActionContext, 'uid'>, accItem: Cat, extra: Loo
 /** Install an upgrade line on its (real) target. Re-checks the fit (a pending order may be approved later). */
 function installUpgrade(ctx: ActionContext, actor: ShopActor, line: OrderLine, { paid }: { paid?: number }): Note[] {
   const entry = INDEX.get(line.catalogId as string);
-  if (!entry || !isUpgradeFile(entry.file)) return ctx.fail('Article inconnu du catalogue');
+  if (!entry || !isUpgradeFile(entry.file)) return ctx.fail('Item not in the catalog');
   const { item, file } = entry;
   const { list, sub } = UPGRADE_FILES[file as keyof typeof UPGRADE_FILES] as { list: string; sub: string };
   const target: Loose | undefined = (Array.isArray(actor[list]) ? actor[list] : []).find((x: Loose) => x && x.id === line.target?.itemId);
-  if (!target) return ctx.fail('Objet cible introuvable');
+  if (!target) return ctx.fail('Target item not found');
   if (!Array.isArray(target[sub])) target[sub] = [];
   const cat = list === 'lifestyles' ? null : catalogOf(target)?.item || null;
   const extra = { ...(paid !== undefined ? { paid } : {}) };
@@ -648,8 +648,8 @@ function addLine(ctx: ActionContext, actor: ShopActor, line: OrderLine, { paid }
         for (const k of ['MAG', 'RES']) {
           if (loss && Number(actor.attributes[k]) > 0) {
             actor.attributes[k] = Math.max(0, Number(actor.attributes[k]) - loss);
-            if (k === 'MAG') notes.push({ key: tk('Magie −{n}'), params: { n: loss } });
-            else notes.push({ key: tk('Résonance −{n}'), params: { n: loss } });
+            if (k === 'MAG') notes.push({ key: tk('Magic −{n}'), params: { n: loss } });
+            else notes.push({ key: tk('Resonance −{n}'), params: { n: loss } });
           }
         }
       }
@@ -701,7 +701,7 @@ function addLine(ctx: ActionContext, actor: ShopActor, line: OrderLine, { paid }
         programs: Array.isArray(actor.matrix?.programs) ? actor.matrix.programs : [],
         gearId: gearItem.id,
       };
-      notes.push({ key: tk('{item} devient l’appareil Matriciel'), params: { item: line.name } });
+      notes.push({ key: tk('{item} becomes the Matrix device'), params: { item: line.name } });
     }
   }
   return notes;
@@ -714,8 +714,8 @@ function applyOrder(ctx: ActionContext, actor: ShopActor, order: ShopOrder, { fr
     notes.push(...addLine(ctx, actor, line, { paid: free ? undefined : (line.unitCost ?? undefined) })); // buy / give lines are always priced
     if (line.availTest?.delayHours) {
       const p = { item: line.name, delay: durationText(line.availTest.delayHours) as I18nMessage };
-      if (line.surcharge) notes.push({ key: tk('{item} : trouvé en {delay} (surenchère {cost})'), params: { ...p, cost: nuyen(line.surcharge * line.qty) } });
-      else notes.push({ key: tk('{item} : trouvé en {delay}'), params: p });
+      if (line.surcharge) notes.push({ key: tk('{item}: found in {delay} (overpay {cost})'), params: { ...p, cost: nuyen(line.surcharge * line.qty) } });
+      else notes.push({ key: tk('{item}: found in {delay}'), params: p });
     }
     if (line.specialId) {
       const sp = ctx.state.shop.specials.find((s) => s.id === line.specialId);
@@ -728,17 +728,17 @@ function applyOrder(ctx: ActionContext, actor: ShopActor, order: ShopOrder, { fr
   const items = summary(order.items);
   const np = notesParam(notes);
   if (free) {
-    if (notes.length) history(actor, tk('Reçu du MJ : {items} ({notes})'), { items, notes: np }, 0);
-    else history(actor, tk('Reçu du MJ : {items}'), { items }, 0);
-    shopLog(ctx, actor.id, tk('{actor} reçoit : {items}'), { actor: actor.name, items });
+    if (notes.length) history(actor, tk('Received from the GM: {items} ({notes})'), { items, notes: np }, 0);
+    else history(actor, tk('Received from the GM: {items}'), { items }, 0);
+    shopLog(ctx, actor.id, tk('{actor} receives: {items}'), { actor: actor.name, items });
   } else {
     const cost = nuyen(order.total);
     if (notes.length) {
-      history(actor, tk('Achat : {items} ({notes})'), { items, notes: np }, -order.total!);
-      shopLog(ctx, actor.id, tk('{actor} achète : {items} — {cost} · {notes}'), { actor: actor.name, items, cost, notes: np });
+      history(actor, tk('Purchase: {items} ({notes})'), { items, notes: np }, -order.total!);
+      shopLog(ctx, actor.id, tk('{actor} buys: {items} — {cost} · {notes}'), { actor: actor.name, items, cost, notes: np });
     } else {
-      history(actor, tk('Achat : {items}'), { items }, -order.total!);
-      shopLog(ctx, actor.id, tk('{actor} achète : {items} — {cost}'), { actor: actor.name, items, cost });
+      history(actor, tk('Purchase: {items}'), { items }, -order.total!);
+      shopLog(ctx, actor.id, tk('{actor} buys: {items} — {cost}'), { actor: actor.name, items, cost });
     }
   }
   notifyOwners(ctx, actor.id, 'sfx', { id: 'cash' });
@@ -771,19 +771,19 @@ function itemValue(list: string, it: Loose): number | null {
 }
 
 function findOwned(ctx: ActionContext, actor: ShopActor, list: unknown, itemId: unknown): Loose {
-  if (!LISTS.includes(list as string)) ctx.fail('Liste invalide');
+  if (!LISTS.includes(list as string)) ctx.fail('Invalid list');
   const arr: Loose[] = Array.isArray(actor[list as string]) ? actor[list as string] : [];
   const it = arr.find((x) => x.id === itemId);
-  if (!it) return ctx.fail('Objet introuvable dans l’inventaire');
+  if (!it) return ctx.fail('Item not found in the inventory');
   return it;
 }
 
 /** Installed accessory / mod of an owned item. */
 function findSub(ctx: ActionContext, it: Loose, list: string, subId: unknown): Loose {
   const sub = SUB_OF[list];
-  if (!sub || list === 'lifestyles') ctx.fail('Liste invalide');
+  if (!sub || list === 'lifestyles') ctx.fail('Invalid list');
   const s: Loose | undefined = (Array.isArray(it[sub]) ? it[sub] : []).find((x: Loose) => x && x.id === subId);
-  if (!s) return ctx.fail('Option introuvable');
+  if (!s) return ctx.fail('Option not found');
   return s;
 }
 
@@ -793,14 +793,14 @@ function applySell(ctx: ActionContext, actor: ShopActor, order: ShopOrder): void
   const list = line.list as string;
   if (line.subId) {
     const s = findSub(ctx, it, list, line.subId);
-    if (s.included) ctx.fail('Pièce d’origine de {item} : elle part avec lui', { item: it.name });
+    if (s.included) ctx.fail('Built-in part of {item}: it goes with it', { item: it.name });
     it[SUB_OF[list]] = it[SUB_OF[list]].filter((x: Loose) => x.id !== s.id);
   } else {
-    if (list === 'weapons' && it.augId) ctx.fail('Arme intégrée à un implant : revends l’implant lui-même');
+    if (list === 'weapons' && it.augId) ctx.fail('Weapon built into an implant: sell the implant itself');
     if (list === 'gear') {
       const have = Math.max(0, Number(it.qty ?? 1) || 0);
-      if (have < 1) ctx.fail('Plus aucun exemplaire de {item} à revendre', { item: it.name });
-      if (line.qty > have) ctx.fail('Il ne reste que {n} {item}', { n: have, item: it.name });
+      if (have < 1) ctx.fail('No copy of {item} left to sell', { item: it.name });
+      if (line.qty > have) ctx.fail('Only {n} {item} left', { n: have, item: it.name });
       if (line.qty < have) it.qty = have - line.qty;
       else actor.gear = actor.gear.filter((g: Loose) => g.id !== it.id);
     } else {
@@ -817,8 +817,8 @@ function applySell(ctx: ActionContext, actor: ShopActor, order: ShopOrder): void
   }
   actor.nuyen = (Number(actor.nuyen) || 0) + order.total!;
   const item = line.subId ? lineText({ name: line.name, target: { name: it.name } }) : lineText({ name: line.name, qty: line.qty });
-  history(actor, tk('Revente : {item}'), { item }, order.total!);
-  shopLog(ctx, actor.id, tk('{actor} revend {item} — {cost}'), { actor: actor.name, item, cost: nuyen(order.total) });
+  history(actor, tk('Resale: {item}'), { item }, order.total!);
+  shopLog(ctx, actor.id, tk('{actor} sells {item} — {cost}'), { actor: actor.name, item, cost: nuyen(order.total) });
   notifyOwners(ctx, actor.id, 'sfx', { id: 'cash' });
 }
 
@@ -828,23 +828,23 @@ function applySell(ctx: ActionContext, actor: ShopActor, order: ShopOrder): void
 /** Validate a martial art request → { style, existing, techniques (new catalog techniques), karma }. */
 function martialPlan(ctx: ActionContext, actor: ShopActor, styleId: unknown, techniqueIds: unknown) {
   const style = MARTIAL.get(str(styleId, 80));
-  if (!style) return ctx.fail('Art martial inconnu');
+  if (!style) return ctx.fail('Unknown martial art');
   const known: Loose | undefined = (Array.isArray(actor.martialArts) ? actor.martialArts : []).find((m: Loose) => m.catalogId === style.id);
   const ids = [...new Set((Array.isArray(techniqueIds) ? techniqueIds : []).map((x) => str(x, 80)).filter(Boolean))].slice(0, 20);
   const techs = ids.map((id) => {
     const t: Loose | undefined = (style.stats?.techniques || []).find((x: Loose) => x.id === id);
-    if (!t) return ctx.fail('Technique inconnue pour {style}', { style: itemName(style) });
+    if (!t) return ctx.fail('Unknown technique for {style}', { style: itemName(style) });
     return t;
   });
   const fresh = techs.filter((t) => !(known?.techniques || []).some((k: Loose) => k.catalogId === t.id));
-  if (known && !fresh.length) ctx.fail('Rien de nouveau à apprendre');
+  if (known && !fresh.length) ctx.fail('Nothing new to learn');
   const karma = martialKarma(style, known || null, fresh.length);
   return { style, known, techniques: fresh, karma };
 }
 
 /** Grant a martial art plan to an actor (karma deducted unless free). */
 function applyMartial(ctx: ActionContext, actor: ShopActor, plan: ReturnType<typeof martialPlan>, { free }: { free: boolean }): Loose {
-  if (!free && (Number(actor.karma) || 0) < plan.karma) ctx.fail('Karma insuffisant : {cost} requis, {have} disponible(s)', { cost: plan.karma, have: Number(actor.karma) || 0 });
+  if (!free && (Number(actor.karma) || 0) < plan.karma) ctx.fail('Not enough karma: {cost} needed, {have} available', { cost: plan.karma, have: Number(actor.karma) || 0 });
   actor.martialArts = Array.isArray(actor.martialArts) ? actor.martialArts : [];
   let m: Loose = actor.martialArts.find((x: Loose) => x.catalogId === plan.style.id);
   if (!m) {
@@ -861,8 +861,8 @@ function applyMartial(ctx: ActionContext, actor: ShopActor, plan: ReturnType<typ
   const names = plan.techniques.map((t) => t.nameFr || t.name).join(', ');
   const params = { style: m.name, techniques: names || '—', karma: free ? 0 : plan.karma };
   if (!free) actor.karma = (Number(actor.karma) || 0) - plan.karma;
-  history(actor, tk('Art martial : {style} ({techniques})'), params, 0, free ? 0 : -plan.karma);
-  shopLog(ctx, actor.id, tk('{actor} apprend {style} ({techniques}) — {karma} karma'), { actor: actor.name, ...params });
+  history(actor, tk('Martial art: {style} ({techniques})'), params, 0, free ? 0 : -plan.karma);
+  shopLog(ctx, actor.id, tk('{actor} learns {style} ({techniques}) — {karma} karma'), { actor: actor.name, ...params });
   notifyOwners(ctx, actor.id, 'sfx', { id: 'level-up' });
   return m;
 }
@@ -1124,7 +1124,7 @@ const mod: ServerModule = {
         fillActorRefs(a);
         shop.restored.push(id);
         if (added) {
-          history(a, tk('Options restaurées depuis Chummer : {n}'), { n: added }, 0);
+          history(a, tk('Options restored from Chummer: {n}'), { n: added }, 0);
           n += added;
         }
       }
@@ -1141,8 +1141,8 @@ const mod: ServerModule = {
       role: 'any',
       handler(ctx: ActionContext, { actorId, items }: BuyPayload) {
         const actor = getActor(ctx, actorId);
-        if (!Array.isArray(items) || !items.length) return ctx.fail('Panier vide');
-        if (items.length > 50) ctx.fail('Panier trop chargé (50 lignes max)');
+        if (!Array.isArray(items) || !items.length) return ctx.fail('Empty cart');
+        if (items.length > 50) ctx.fail('Cart too full (50 lines max)');
         const shop = ctx.state.shop;
         const lines = resolveLines(ctx, actor, items);
         if (!ctx.isGM) checkRules(ctx, lines);
@@ -1163,13 +1163,13 @@ const mod: ServerModule = {
         useTests(shop, testIds, order.id);
         if (needsApproval) {
           pushOrder(shop, order);
-          shopLog(ctx, actorId as ActorId, tk('{actor} passe commande : {items} — {cost} (en attente du MJ)'), { actor: actor.name, items: summary(lines), cost: nuyen(total) });
+          shopLog(ctx, actorId as ActorId, tk('{actor} places an order: {items} — {cost} (awaiting the GM)'), { actor: actor.name, items: summary(lines), cost: nuyen(total) });
           ctx.emitTo('gm', 'sfx', { id: 'notify' });
           return { status: 'pending', orderId: order.id, total };
         }
         const notes = applyOrder(ctx, actor, order);
         pushOrder(shop, order);
-        return { status: 'done', orderId: order.id, total, notes: notes.map((n) => formatFr(n.key, n.params)), notesI18n: notes };
+        return { status: 'done', orderId: order.id, total, notes: notes.map((n) => formatSource(n.key, n.params)), notesI18n: notes };
       },
     },
 
@@ -1182,11 +1182,11 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, { actorId, item, useSpec, explode, modifier, contactId, overpay: rawOverpay }: AvailTestPayload) {
         const actor = getActor(ctx, actorId);
         const shop = ctx.state.shop;
-        if (!ctx.isGM && shop.availTest === 'off') ctx.fail('Pas de test de disponibilité à cette table');
-        if (!ctx.isGM && !shop.open) ctx.fail('Cabana n’est pas joignable pour l’instant');
-        if (!item || typeof item !== 'object' || Array.isArray(item)) ctx.fail('Article manquant');
+        if (!ctx.isGM && shop.availTest === 'off') ctx.fail('No availability tests at this table');
+        if (!ctx.isGM && !shop.open) ctx.fail('Cabana can’t be reached right now');
+        if (!item || typeof item !== 'object' || Array.isArray(item)) ctx.fail('Missing item');
         const [line] = resolveLines(ctx, actor, [item as CartLine]);
-        if (!availTestable({ file: line.file, special: !!line.specialId, availValue: line.availValue })) ctx.fail('{item} : aucun test de disponibilité nécessaire', { item: line.name });
+        if (!availTestable({ file: line.file, special: !!line.specialId, availValue: line.availValue })) ctx.fail('{item}: no availability test needed', { item: line.name });
         if (!ctx.isGM) checkRules(ctx, [line]);
         const targetId = line.target?.itemId || '';
         const tries = shop.availTests.filter((x) => x.actorId === actor.id && x.ref === line.ref && (x.targetId || '') === targetId && x.status !== 'used').length + 1;
@@ -1199,13 +1199,13 @@ const mod: ServerModule = {
         let contact: Contact | null | undefined = null;
         if (contactId) {
           contact = (Array.isArray(actor.contacts) ? actor.contacts : []).find((c: Contact) => c && c.id === String(contactId));
-          if (!contact) return ctx.fail('Contact introuvable');
+          if (!contact) return ctx.fail('Contact not found');
           r = contactRoll(ctx, actor, contact, line, avail, modifier, overpay);
         } else {
           r = performRoll(
             ctx,
             { actorId: actor.id, skillId: 'negotiation', useSpec: !!useSpec, explode: !!explode, modifier, label: `Disponibilité — ${line.name}` },
-            { bonus: overpay ? [{ label: 'surenchère', value: overpay }] : [], logExtra: { labelI18n: { key: tk('Disponibilité — {item}'), params: { item: line.name } }, avail } },
+            { bonus: overpay ? [{ label: 'surenchère', value: overpay }] : [], logExtra: { labelI18n: { key: tk('Availability — {item}'), params: { item: line.name } }, avail } },
           );
         }
         const test: AvailTest = {
@@ -1237,7 +1237,7 @@ const mod: ServerModule = {
         const order: ShopOrder = { id: ctx.uid('ord'), ts: ctx.now, actorId: actorId as ActorId, userId: ctx.user.id, by: 'MJ', kind: 'give', items: lines, total: 0, status: 'done', flags: [] };
         const notes = applyOrder(ctx, actor, order, { free: true });
         pushOrder(ctx.state.shop, order);
-        return { status: 'done', orderId: order.id, notes: notes.map((n) => formatFr(n.key, n.params)), notesI18n: notes };
+        return { status: 'done', orderId: order.id, notes: notes.map((n) => formatSource(n.key, n.params)), notesI18n: notes };
       },
     },
 
@@ -1248,28 +1248,28 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, { actorId, list, itemId, subId, qty, price }: SellPayload) {
         const actor = getActor(ctx, actorId);
         const shop = ctx.state.shop;
-        if (!ctx.isGM && !shop.open) ctx.fail('Cabana n’est pas joignable pour l’instant');
+        if (!ctx.isGM && !shop.open) ctx.fail('Cabana can’t be reached right now');
         const it = findOwned(ctx, actor, list, itemId);
         let name = it.name;
         let value: number | null;
         let n = 1;
         if (subId) {
           const s = findSub(ctx, it, list as string, subId);
-          if (s.included) ctx.fail('Pièce d’origine de {item} : elle part avec lui', { item: it.name });
+          if (s.included) ctx.fail('Built-in part of {item}: it goes with it', { item: it.name });
           name = s.nameFr || s.name;
           value = subValue(s) || null;
         } else {
-          if (list === 'weapons' && it.augId) ctx.fail('Arme intégrée à un implant : revends l’implant lui-même');
+          if (list === 'weapons' && it.augId) ctx.fail('Weapon built into an implant: sell the implant itself');
           const have = list === 'gear' ? Math.max(0, int(it.qty ?? 1, 0)) : 1;
-          if (have < 1) ctx.fail('Plus aucun exemplaire à revendre');
+          if (have < 1) ctx.fail('No copy left to sell');
           n = list === 'gear' ? clampInt(qty ?? have, 1, have, 1) : 1;
           value = itemValue(list as string, it);
         }
         const key = subId || itemId;
-        if (ctx.state.shop.orders.some((o) => o.status === 'pending' && o.kind === 'sell' && (o.items[0]?.subId || o.items[0]?.itemId) === key)) ctx.fail('Une revente de cet objet attend déjà le MJ');
+        if (ctx.state.shop.orders.some((o) => o.status === 'pending' && o.kind === 'sell' && (o.items[0]?.subId || o.items[0]?.itemId) === key)) ctx.fail('A resale of this item is already waiting for the GM');
         let total = value === null ? null : Math.round(value * n * (Number(shop.sellRate) || 0) / 100);
         if (ctx.isGM && price !== undefined && price !== null && price !== '') total = Math.max(0, int(price));
-        if (ctx.isGM && total === null) ctx.fail('Prix inconnu : indique un montant de revente');
+        if (ctx.isGM && total === null) ctx.fail('Unknown price: enter a resale amount');
         // unitCost null = unknown value (the GM sets the price).
         const line = { list, itemId, name, qty: n, rating: it.rating ?? null, unitCost: value === null ? null : Math.round(value * (Number(shop.sellRate) || 0) / 100) } as OrderLine;
         if (subId) Object.assign(line, { subId, target: { list, itemId, name: it.name } });
@@ -1280,8 +1280,8 @@ const mod: ServerModule = {
         if (!ctx.isGM && (shop.approval === 'always' || total === null)) {
           pushOrder(shop, order);
           const item = lineText(line);
-          if (total !== null) shopLog(ctx, actorId as ActorId, tk('{actor} propose de revendre {item} — {cost} (en attente du MJ)'), { actor: actor.name, item, cost: nuyen(total) });
-          else shopLog(ctx, actorId as ActorId, tk('{actor} propose de revendre {item} (prix à fixer) (en attente du MJ)'), { actor: actor.name, item });
+          if (total !== null) shopLog(ctx, actorId as ActorId, tk('{actor} offers to sell {item} — {cost} (awaiting the GM)'), { actor: actor.name, item, cost: nuyen(total) });
+          else shopLog(ctx, actorId as ActorId, tk('{actor} offers to sell {item} (price to be set) (awaiting the GM)'), { actor: actor.name, item });
           ctx.emitTo('gm', 'sfx', { id: 'notify' });
           return { status: 'pending', orderId: order.id, total };
         }
@@ -1299,20 +1299,20 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, { actorId, list, itemId, subId }: RemoveUpgradePayload) {
         const actor = getActor(ctx, actorId);
         const sub = SUB_OF[list as string];
-        if (!sub) ctx.fail('Liste invalide');
+        if (!sub) ctx.fail('Invalid list');
         const it: Loose | undefined = (Array.isArray(actor[list as string]) ? actor[list as string] : []).find((x: Loose) => x && x.id === itemId);
-        if (!it) return ctx.fail('Objet introuvable dans l’inventaire');
+        if (!it) return ctx.fail('Item not found in the inventory');
         const s: Loose | undefined = (Array.isArray(it[sub]) ? it[sub] : []).find((x: Loose) => x && x.id === subId);
-        if (!s) return ctx.fail('Option introuvable');
+        if (!s) return ctx.fail('Option not found');
         if (!ctx.isGM) {
-          if (list === 'lifestyles' && (s.category === 'Negative' || Number(s.multiplier) < 0 || Number(s.cost) < 0)) ctx.fail('Seul le MJ peut retirer cette option');
-          if (s.included) ctx.fail('Seul le MJ peut retirer cette option');
+          if (list === 'lifestyles' && (s.category === 'Negative' || Number(s.multiplier) < 0 || Number(s.cost) < 0)) ctx.fail('Only the GM can remove this option');
+          if (s.included) ctx.fail('Only the GM can remove this option');
         }
         it[sub] = it[sub].filter((x: Loose) => x.id !== subId);
         if (list === 'lifestyles') settleLifestyles(actor);
         const params = { actor: actor.name, item: s.nameFr || s.name, target: it.name };
-        history(actor, tk('Option retirée : {item} ({target})'), params, 0);
-        shopLog(ctx, actor.id, tk('{actor} retire {item} de {target}'), params);
+        history(actor, tk('Option removed: {item} ({target})'), params, 0);
+        shopLog(ctx, actor.id, tk('{actor} removes {item} from {target}'), params);
         return { ok: true, monthlyCost: list === 'lifestyles' ? it.monthlyCost : undefined };
       },
     },
@@ -1323,8 +1323,8 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, { orderId, approve, note, total }: ResolvePayload) {
         const shop = ctx.state.shop;
         const order = shop.orders.find((o) => o.id === orderId);
-        if (!order) return ctx.fail('Commande introuvable');
-        if (order.status !== 'pending') ctx.fail('Cette commande a déjà été traitée');
+        if (!order) return ctx.fail('Order not found');
+        if (order.status !== 'pending') ctx.fail('This order has already been handled');
         const actor = ctx.state.actors?.[order.actorId] as ShopActor | undefined;
         if (note !== undefined) order.gmNote = str(note, 500) || undefined;
         if (!approve) {
@@ -1334,18 +1334,18 @@ const mod: ServerModule = {
           if (actor) {
             const p = { actor: actor.name, items: summary(order.items), note: order.gmNote || '' };
             if (order.kind === 'sell') {
-              if (order.gmNote) shopLog(ctx, actor.id, tk('Commande refusée pour {actor} : revente de {items} — « {note} »'), p);
-              else shopLog(ctx, actor.id, tk('Commande refusée pour {actor} : revente de {items}'), p);
-            } else if (order.gmNote) shopLog(ctx, actor.id, tk('Commande refusée pour {actor} : {items} — « {note} »'), p);
-            else shopLog(ctx, actor.id, tk('Commande refusée pour {actor} : {items}'), p);
+              if (order.gmNote) shopLog(ctx, actor.id, tk('Order denied for {actor}: resale of {items} — « {note} »'), p);
+              else shopLog(ctx, actor.id, tk('Order denied for {actor}: resale of {items}'), p);
+            } else if (order.gmNote) shopLog(ctx, actor.id, tk('Order denied for {actor}: {items} — « {note} »'), p);
+            else shopLog(ctx, actor.id, tk('Order denied for {actor}: {items}'), p);
           }
           notifyOwners(ctx, order.actorId, 'shop:resolved', { orderId: order.id, status: 'denied', note: order.gmNote || '' });
           return { status: 'denied' };
         }
-        if (!actor) return ctx.fail('Le personnage de cette commande n’existe plus');
+        if (!actor) return ctx.fail('The character of this order no longer exists');
         if (total !== undefined && total !== null && total !== '' && order.kind !== 'karma') order.total = Math.max(0, int(total));
         if (order.kind === 'sell') {
-          if (order.total === null || order.total === undefined) ctx.fail('Indique le montant de la revente');
+          if (order.total === null || order.total === undefined) ctx.fail('Enter the resale amount');
           applySell(ctx, actor, order);
         } else if (order.kind === 'karma') {
           const l = order.items[0];
@@ -1368,9 +1368,9 @@ const mod: ServerModule = {
       role: 'any',
       handler(ctx: ActionContext, { orderId }: OrderPayload) {
         const order = ctx.state.shop.orders.find((o) => o.id === orderId);
-        if (!order) return ctx.fail('Commande introuvable');
-        if (!ctx.isGM && order.userId !== ctx.user.id && !ctx.owns(order.actorId)) ctx.fail('Ce n’est pas ta commande');
-        if (order.status !== 'pending') ctx.fail('Cette commande n’est plus en attente');
+        if (!order) return ctx.fail('Order not found');
+        if (!ctx.isGM && order.userId !== ctx.user.id && !ctx.owns(order.actorId)) ctx.fail('That is not your order');
+        if (order.status !== 'pending') ctx.fail('This order is no longer pending');
         order.status = 'cancelled';
         order.resolvedTs = ctx.now;
         releaseTests(ctx.state.shop, order.id);
@@ -1389,13 +1389,13 @@ const mod: ServerModule = {
           const m = applyMartial(ctx, actor, plan, { free: !!free });
           return { status: 'done', martialArtId: m.id, karma: free ? 0 : plan.karma };
         }
-        if ((Number(actor.karma) || 0) < plan.karma) ctx.fail('Karma insuffisant : {cost} requis, {have} disponible(s)', { cost: plan.karma, have: Number(actor.karma) || 0 });
-        if (ctx.state.shop.orders.some((o) => o.status === 'pending' && o.kind === 'karma' && o.actorId === actorId && o.items[0]?.ref === plan.style.id)) ctx.fail('Une demande pour cet art martial attend déjà le MJ');
+        if ((Number(actor.karma) || 0) < plan.karma) ctx.fail('Not enough karma: {cost} needed, {have} available', { cost: plan.karma, have: Number(actor.karma) || 0 });
+        if (ctx.state.shop.orders.some((o) => o.status === 'pending' && o.kind === 'karma' && o.actorId === actorId && o.items[0]?.ref === plan.style.id)) ctx.fail('A request for this martial art is already waiting for the GM');
         const names = plan.techniques.map((t) => t.nameFr || t.name);
         const line: OrderLine = { ref: plan.style.id, file: 'martialarts', name: itemName(plan.style), qty: 1, unitCost: 0, karma: plan.karma, techniqueIds: plan.techniques.map((t) => t.id), techniques: names };
         const order: ShopOrder = { id: ctx.uid('ord'), ts: ctx.now, actorId: actorId as ActorId, userId: ctx.user.id, by: ctx.user.name, kind: 'karma', items: [line], total: 0, karma: plan.karma, status: 'pending', flags: [] };
         pushOrder(ctx.state.shop, order);
-        shopLog(ctx, actorId as ActorId, tk('{actor} demande à apprendre {style} ({techniques}) — {karma} karma (en attente du MJ)'), { actor: actor.name, style: line.name, techniques: names.join(', ') || '—', karma: plan.karma });
+        shopLog(ctx, actorId as ActorId, tk('{actor} asks to learn {style} ({techniques}) — {karma} karma (waiting for the GM)'), { actor: actor.name, style: line.name, techniques: names.join(', ') || '—', karma: plan.karma });
         ctx.emitTo('gm', 'sfx', { id: 'notify' });
         return { status: 'pending', orderId: order.id, karma: plan.karma };
       },
@@ -1413,11 +1413,11 @@ const mod: ServerModule = {
         if (p.allowRestricted !== undefined) shop.allowRestricted = !!p.allowRestricted;
         if (p.allowForbidden !== undefined) shop.allowForbidden = !!p.allowForbidden;
         if (p.approval !== undefined) {
-          if (!APPROVAL_MODES.includes(p.approval)) ctx.fail('Mode de validation inconnu');
+          if (!APPROVAL_MODES.includes(p.approval)) ctx.fail('Unknown approval mode');
           shop.approval = p.approval as ShopState['approval'];
         }
         if (p.availTest !== undefined) {
-          if (!AVAIL_TEST_MODES.includes(p.availTest)) ctx.fail('Mode de test de disponibilité inconnu');
+          if (!AVAIL_TEST_MODES.includes(p.availTest)) ctx.fail('Unknown availability test mode');
           shop.availTest = p.availTest as ShopState['availTest'];
         }
         if (p.availFree !== undefined) shop.availFree = clampInt(p.availFree, 0, 40, 0);
@@ -1435,8 +1435,8 @@ const mod: ServerModule = {
         let src: Loose = special && typeof special === 'object' ? { ...special } : {};
         if (fromRef) {
           const entry = INDEX.get(fromRef);
-          if (!entry) return ctx.fail('Article inconnu du catalogue');
-          if (isUpgradeFile(entry.file) || entry.file === 'lifestyles') ctx.fail('Cet article ne peut pas devenir une offre');
+          if (!entry) return ctx.fail('Item not in the catalog');
+          if (isUpgradeFile(entry.file) || entry.file === 'lifestyles') ctx.fail('This item cannot become a deal');
           const q = quote(entry.item, { rating: rest.rating, grade: rest.grade });
           src = {
             name: itemName(entry.item) + (q.rating ? ` (ind. ${q.rating})` : ''),
@@ -1469,7 +1469,7 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, { id, patch }: UpdateSpecialPayload) {
         const shop = ctx.state.shop;
         const i = shop.specials.findIndex((s) => s.id === id);
-        if (i < 0) ctx.fail('Offre introuvable');
+        if (i < 0) ctx.fail('Deal not found');
         shop.specials[i] = sanitizeSpecial(ctx, patch || {}, shop.specials[i]);
         return { ok: true };
       },
@@ -1480,7 +1480,7 @@ const mod: ServerModule = {
       role: 'gm',
       handler(ctx: ActionContext, { id }: IdPayload) {
         const shop = ctx.state.shop;
-        if (!shop.specials.some((s) => s.id === id)) ctx.fail('Offre introuvable');
+        if (!shop.specials.some((s) => s.id === id)) ctx.fail('Deal not found');
         shop.specials = shop.specials.filter((s) => s.id !== id);
         if (!shop.removedSeedIds!.includes(id as string)) shop.removedSeedIds!.push(id as string);
         return { ok: true };
@@ -1496,17 +1496,17 @@ const mod: ServerModule = {
         let lf: Loose | null | undefined;
         if (lifestyleId) {
           lf = (actor.lifestyles || []).find((l: Loose) => l.id === lifestyleId);
-          if (!lf) return ctx.fail('Train de vie introuvable');
+          if (!lf) return ctx.fail('Lifestyle not found');
         } else lf = primaryLifestyle(actor);
-        if (!lf || !(Number(lf.monthlyCost) > 0)) return ctx.fail('Aucun train de vie défini pour ce personnage');
+        if (!lf || !(Number(lf.monthlyCost) > 0)) return ctx.fail('No lifestyle set for this character');
         const m = int(months, 1);
-        if (m < 1 || m > 24) ctx.fail('Nombre de mois invalide (1 à 24)');
+        if (m < 1 || m > 24) ctx.fail('Invalid number of months (1 to 24)');
         const total = Math.round(Number(lf.monthlyCost) * m);
         checkFunds(ctx, actor, total);
         actor.nuyen = (Number(actor.nuyen) || 0) - total;
         lf.monthsPaid = (Number(lf.monthsPaid) || 0) + m;
-        history(actor, tk('Loyer : {name} — {n} mois'), { name: lf.name, n: m }, -total);
-        shopLog(ctx, actorId as ActorId, tk('{actor} paie {n} mois de train de vie ({name}) — {cost}'), { actor: actor.name, n: m, name: lf.name, cost: nuyen(total) });
+        history(actor, tk('Rent: {name} — {n} month(s)'), { name: lf.name, n: m }, -total);
+        shopLog(ctx, actorId as ActorId, tk('{actor} pays {n} month(s) of lifestyle ({name}) — {cost}'), { actor: actor.name, n: m, name: lf.name, cost: nuyen(total) });
         notifyOwners(ctx, actorId as ActorId, 'sfx', { id: 'cash' });
         return { monthsPaid: lf.monthsPaid, total, lifestyleId: lf.id };
       },
@@ -1519,21 +1519,21 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, { actorId, lifestyleId, layout }: ChooseHomePayload) {
         const actor = getActor(ctx, actorId);
         const lf: Loose | undefined = (actor.lifestyles || []).find((l: Loose) => l.id === lifestyleId);
-        if (!lf) return ctx.fail('Train de vie introuvable');
+        if (!lf) return ctx.fail('Lifestyle not found');
         const next = typeof layout === 'string' && Object.prototype.hasOwnProperty.call(HOME_LAYOUTS, layout) ? HOME_LAYOUTS[layout as keyof typeof HOME_LAYOUTS] : null;
-        if (!next || !next.bases.includes(String(lf.base || ''))) return ctx.fail('Ce logement ne correspond pas à ce train de vie');
+        if (!next || !next.bases.includes(String(lf.base || ''))) return ctx.fail('This home does not match this lifestyle');
         const current = homeLayout(lf);
-        if (current?.id === next.id) ctx.fail('Tu habites déjà ici');
+        if (current?.id === next.id) ctx.fail('You already live here');
         const fee = current && !ctx.isGM ? homeMoveCost(lf) : 0;
         if (fee > 0) {
           checkFunds(ctx, actor, fee);
           actor.nuyen = (Number(actor.nuyen) || 0) - fee;
-          history(actor, tk('Déménagement : {name}'), { name: lf.name }, -fee);
+          history(actor, tk('Moving: {name}'), { name: lf.name }, -fee);
           notifyOwners(ctx, actorId as ActorId, 'sfx', { id: 'cash' });
         }
         lf.home = { layout: next.id, since: ctx.now, moves: (Number(lf.home?.moves) || 0) + (current ? 1 : 0) };
-        if (current) shopLog(ctx, actorId as ActorId, fee ? tk('{actor} déménage ({name}) — {cost}') : tk('{actor} déménage ({name})'), { actor: actor.name, name: lf.name, cost: nuyen(fee) });
-        else shopLog(ctx, actorId as ActorId, tk('{actor} emménage ({name})'), { actor: actor.name, name: lf.name });
+        if (current) shopLog(ctx, actorId as ActorId, fee ? tk('{actor} moves ({name}) — {cost}') : tk('{actor} moves ({name})'), { actor: actor.name, name: lf.name, cost: nuyen(fee) });
+        else shopLog(ctx, actorId as ActorId, tk('{actor} moves in ({name})'), { actor: actor.name, name: lf.name });
         return { layout: next.id, fee };
       },
     },

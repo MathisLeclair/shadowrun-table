@@ -12,7 +12,7 @@ import './chargen.css';
 import '../combat/combat.css';
 
 const NO_MAP = '__none';
-const metaLabel = (m: string): string => (m === 'random' ? t('Aléatoire') : metatypeLabel(m));
+const metaLabel = (m: string): string => (m === 'random' ? t('Random') : metatypeLabel(m));
 // Remember the last setup while the GM keeps generating.
 const memo = { archetype: 'ganger', tier: 2, metatype: 'random' };
 
@@ -102,7 +102,7 @@ export default function EnemyGenerator({ game, onClose, onCreated }: EnemyGenera
     const timer = setTimeout(() => {
       send<PreviewReply>('npcgen/preview', { archetype, tier, metatype: metaLocked ? 'random' : metatype, seed, grunt, lieutenant: withLt }, { silent: true })
         .then((res) => n === req.current && setPreview(res))
-        .catch((err: Error) => n === req.current && toast(err.message || t('Aperçu impossible'), 'error'))
+        .catch((err: Error) => n === req.current && toast(err.message || t('Preview unavailable'), 'error'))
         .finally(() => n === req.current && setLoading(false));
     }, 120);
     return () => clearTimeout(timer);
@@ -132,7 +132,7 @@ export default function EnemyGenerator({ game, onClose, onCreated }: EnemyGenera
     setBusy(true);
     try {
       const res = await send<CreatedReply>('npcgen/create', { ...payload(), saveToBestiary: true });
-      toast(res.templateIds.length > 1 ? t('{n} modèles ajoutés au bestiaire (Générés)', { n: res.templateIds.length }) : t('Modèle ajouté au bestiaire (Générés)'), 'success');
+      toast(res.templateIds.length > 1 ? t('{n} templates added to the bestiary (Generated)', { n: res.templateIds.length }) : t('Template added to the bestiary (Generated)'), 'success');
       onCreated?.(res);
       setSeed(randomSeed());
       setName('');
@@ -155,12 +155,12 @@ export default function EnemyGenerator({ game, onClose, onCreated }: EnemyGenera
       toast(
         map
           ? hidden
-            ? t('{n} PNJ sur « {map} » (cachés)', { n, map: map.name })
-            : t('{n} PNJ sur « {map} »', { n, map: map.name })
-          : tn(n, '{n} PNJ créé (sans token)', '{n} PNJ créés (sans token)'),
+            ? t('{n} NPC(s) on “{map}” (hidden)', { n, map: map.name })
+            : t('{n} NPC(s) on “{map}”', { n, map: map.name })
+          : tn(n, '{n} NPC created (no token)', '{n} NPCs created (no token)'),
         'success'
       );
-      if (res.unplaced) toast(t('{n} PNJ sans place libre sur la carte (acteurs créés sans token)', { n: res.unplaced }), 'warn');
+      if (res.unplaced) toast(t('{n} NPC(s) with no free cell on the map (actors created without a token)', { n: res.unplaced }), 'warn');
       onCreated?.(res);
       onClose();
     } catch {
@@ -170,13 +170,13 @@ export default function EnemyGenerator({ game, onClose, onCreated }: EnemyGenera
   };
 
   const groups = [
-    { id: 'meta', label: t('Métahumains'), list: archetypes.filter((x) => x.kind !== 'critter') },
-    { id: 'critter', label: t('Créatures'), list: archetypes.filter((x) => x.kind === 'critter') },
+    { id: 'meta', label: t('Metahumans'), list: archetypes.filter((x) => x.kind !== 'critter') },
+    { id: 'critter', label: t('Critters'), list: archetypes.filter((x) => x.kind === 'critter') },
   ];
   const tierInfo = tiers[tier];
 
   return (
-    <Modal title={t('Créer un ennemi')} width={1180} onClose={onClose}>
+    <Modal title={t('Create an enemy')} width={1180} onClose={onClose}>
       <div className="cg-eg">
         <div className="cg-eg-left">
           {groups.map((g) => (
@@ -194,7 +194,7 @@ export default function EnemyGenerator({ game, onClose, onCreated }: EnemyGenera
           ))}
           <div className="small muted cg-eg-blurb">{t(a.blurb)}</div>
 
-          <div className="section-title">{t('Indice de professionnalisme')}</div>
+          <div className="section-title">{t('Professional Rating')}</div>
           <div className="cg-eg-tier">
             <input type="range" min="0" max="6" step="1" value={tier} onChange={(e) => setTier(Number(e.target.value))} />
             <div className="cg-eg-ticks">
@@ -212,7 +212,7 @@ export default function EnemyGenerator({ game, onClose, onCreated }: EnemyGenera
 
           <div className="section-title">{t('Options')}</div>
           <div className="cg-eg-opts">
-            <Field label={t('Métatype')}>
+            <Field label={t('Metatype')}>
               <Select
                 value={metaLocked ? 'random' : metatype}
                 disabled={metaLocked}
@@ -220,18 +220,18 @@ export default function EnemyGenerator({ game, onClose, onCreated }: EnemyGenera
                 options={(METATYPE_CHOICES as string[]).map((m) => ({ value: m, label: metaLocked ? '—' : metaLabel(m) }))}
               />
             </Field>
-            <Field label={t('Nombre')}>
+            <Field label={t('Count')}>
               <NumberInput value={count} min={1} max={20} onChange={setCount} />
             </Field>
-            <Field label={t('Groupe de sbires')}>
+            <Field label={t('Grunt group')}>
               <Toggle
                 value={grunt}
                 onChange={(v) => {
                   setGrunt(v);
                   if (!v) setLieutenant(false);
                 }}
-                label={grunt ? t('Oui') : t('Non')}
-                title={t('Moniteur unique, pas de Chance (règles SR5 des sbires)')}
+                label={grunt ? t('Yes') : t('No')}
+                title={t('Single condition monitor, no Edge (SR5 grunt rules)')}
               />
             </Field>
             {grunt && (
@@ -239,25 +239,25 @@ export default function EnemyGenerator({ game, onClose, onCreated }: EnemyGenera
                 <Toggle
                   value={lieutenant}
                   onChange={setLieutenant}
-                  label={lieutenant ? t('+1 (PR {pr})', { pr: Math.min(7, tier + 1) }) : t('Non')}
-                  title={t('Un chef PR +1 avec sa Chance, en plus du nombre choisi')}
+                  label={lieutenant ? t('+1 (PR {pr})', { pr: Math.min(7, tier + 1) }) : t('No')}
+                  title={t('A PR +1 leader with Edge, on top of the chosen count')}
                 />
               </Field>
             )}
           </div>
           <div className="cg-eg-names">
-            <Field label={count > 1 || grunt ? t('Nom du groupe (numéroté à l’apparition)') : t('Nom')}>
+            <Field label={count > 1 || grunt ? t('Group name (numbered when spawned)') : t('Name')}>
               <div className="row gap-s">
                 <TextInput live value={name || autoName} onChange={setName} />
-                <IconButton icon="↻" title={t('Autre nom')} onClick={() => setName(makeName(archetype, randomSeed()))} />
-                {name && <IconButton icon="↺" title={t('Nom automatique')} onClick={() => setName('')} />}
+                <IconButton icon="↻" title={t('Another name')} onClick={() => setName(makeName(archetype, randomSeed()))} />
+                {name && <IconButton icon="↺" title={t('Automatic name')} onClick={() => setName('')} />}
               </div>
             </Field>
             {withLt && (
-              <Field label={t('Nom du lieutenant')}>
+              <Field label={t('Lieutenant’s name')}>
                 <div className="row gap-s">
                   <TextInput live value={ltName || preview?.lieutenant?.name || ''} onChange={setLtName} />
-                  <IconButton icon="↻" title={t('Autre nom')} onClick={() => setLtName(makeName(archetype, randomSeed(), { lieutenant: true }))} />
+                  <IconButton icon="↻" title={t('Another name')} onClick={() => setLtName(makeName(archetype, randomSeed(), { lieutenant: true }))} />
                 </div>
               </Field>
             )}
@@ -270,28 +270,28 @@ export default function EnemyGenerator({ game, onClose, onCreated }: EnemyGenera
             {withLt ? (
               <Tabs
                 tabs={[
-                  { id: 'main', label: count > 1 ? t('Sbires ×{n}', { n: count }) : t('Sbire') },
+                  { id: 'main', label: count > 1 ? t('Grunts ×{n}', { n: count }) : t('Grunt') },
                   { id: 'lieutenant', label: t('Lieutenant') },
                 ]}
                 value={tab}
                 onChange={setTab}
               />
             ) : (
-              <strong className="cg-eg-prev-title">{t('Aperçu')}</strong>
+              <strong className="cg-eg-prev-title">{t('Preview')}</strong>
             )}
             <span className="grow"></span>
-            {loading && <span className="small faint">{t('Génération…')}</span>}
-            <Button small onClick={() => setSeed(randomSeed())} title={t('Nouveau tirage (même archétype et même PR)')}>
-              🎲 {t('tirage::Relancer')}
+            {loading && <span className="small faint">{t('Generating…')}</span>}
+            <Button small onClick={() => setSeed(randomSeed())} title={t('New roll (same archetype and PR)')}>
+              🎲 {t('roll::Reroll')}
             </Button>
           </div>
-          <div className={'cg-eg-preview' + (loading ? ' loading' : '')}>{shown ? <StatBlock t={shown} /> : <div className="cg-loading">{t('Génération…')}</div>}</div>
+          <div className={'cg-eg-preview' + (loading ? ' loading' : '')}>{shown ? <StatBlock t={shown} /> : <div className="cg-loading">{t('Generating…')}</div>}</div>
         </div>
       </div>
 
       <footer className="cg-eg-foot">
         <div className="row wrap cg-eg-spawn">
-          <Field label={t('Carte')}>
+          <Field label={t('Map')}>
             <select className="input" value={mapId} onChange={(e) => setMapChoice(e.target.value)}>
               {maps.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -299,34 +299,34 @@ export default function EnemyGenerator({ game, onClose, onCreated }: EnemyGenera
                   {m.id === game.scene?.activeMapId ? ` ${t('(active)')}` : ''}
                 </option>
               ))}
-              <option value={NO_MAP}>{t('— Aucune (fiches seulement) —')}</option>
+              <option value={NO_MAP}>{t('— None (sheets only) —')}</option>
             </select>
           </Field>
-          <Field label={t('Visibilité')}>
-            <Toggle value={hidden} onChange={setHidden} label={hidden ? t('Caché') : t('Visible')} />
+          <Field label={t('Visibility')}>
+            <Toggle value={hidden} onChange={setHidden} label={hidden ? t('Hidden') : t('Visible')} />
           </Field>
           {combatOn && (
             <Field label={t('Combat')}>
-              <Toggle value={addToCombat} onChange={setAddToCombat} label={t('Ajouter')} />
+              <Toggle value={addToCombat} onChange={setAddToCombat} label={t('Add')} />
             </Field>
           )}
-          <Field label={t('Bestiaire')}>
-            <Toggle value={keep} onChange={setKeep} label={t('Garder le modèle')} title={t('Enregistre aussi le modèle dans le dossier « Générés »')} />
+          <Field label={t('Bestiary')}>
+            <Toggle value={keep} onChange={setKeep} label={t('Keep the template')} title={t('Also saves the template in the “Generated” folder')} />
           </Field>
           <span className="grow"></span>
           <Button disabled={busy || !preview} onClick={saveOnly}>
-            {t('Ajouter au bestiaire')}
+            {t('Add to bestiary')}
           </Button>
           <Button variant="primary" disabled={busy || !preview} onClick={spawn}>
-            ☠ {map ? t('Faire apparaître sur la carte ({n})', { n: count + (withLt ? 1 : 0) }) : t('Faire apparaître ({n})', { n: count + (withLt ? 1 : 0) })}
+            ☠ {map ? t('Spawn on the map ({n})', { n: count + (withLt ? 1 : 0) }) : t('Spawn ({n})', { n: count + (withLt ? 1 : 0) })}
           </Button>
         </div>
         <div className="small faint">
           {map
             ? anchor
-              ? t('Près du token sélectionné ({name}).', { name: anchor.name })
-              : t('Au centre de la carte (sélectionne un token sur la carte pour les placer à côté).')
-            : t('Les PNJ seront créés sans token.')}
+              ? t('Next to the selected token ({name}).', { name: anchor.name })
+              : t('In the middle of the map (select a token on the map to place them next to it).')
+            : t('The NPCs will be created without a token.')}
         </div>
       </footer>
     </Modal>

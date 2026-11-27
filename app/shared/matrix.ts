@@ -184,16 +184,16 @@ export const MAX_MARKS = 3;
 export const MARK_PENALTY: Record<number, number> = { 1: 0, 2: -4, 3: -10 };
 
 export const ASDF: AsdfKey[] = ['attack', 'sleaze', 'dataProcessing', 'firewall'];
-export const ASDF_LABELS: Record<AsdfKey, string> = { attack: tk('Attaque'), sleaze: tk('Corruption'), dataProcessing: tk('Traitement'), firewall: tk('Firewall') };
+export const ASDF_LABELS: Record<AsdfKey, string> = { attack: tk('Attack'), sleaze: tk('Sleaze'), dataProcessing: tk('Data Processing'), firewall: tk('Firewall') };
 export const ASDF_SHORT: Record<AsdfKey, string> = { attack: 'A', sleaze: 'C', dataProcessing: 'T', firewall: 'F' };
 export const ASDF_EN: Record<AsdfKey, string> = { attack: 'Attack', sleaze: 'Sleaze', dataProcessing: 'Data Processing', firewall: 'Firewall' };
 /** One-letter slot names in English (A/S/D/F). */
 export const ASDF_SHORT_EN: Record<AsdfKey, string> = { attack: 'A', sleaze: 'S', dataProcessing: 'D', firewall: 'F' };
 
 export const MODES: MatrixMode[] = ['ar', 'cold', 'hot'];
-export const MODE_LABELS: Record<MatrixMode, string> = { ar: tk('RA'), cold: tk('RV froide'), hot: tk('RV chaude') };
+export const MODE_LABELS: Record<MatrixMode, string> = { ar: tk('AR'), cold: tk('Cold-sim VR'), hot: tk('Hot-sim VR') };
 
-const MENTAL_LABEL: Record<string, string> = { INT: tk('Intuition'), WIL: tk('Volonté'), LOG: tk('Logique') };
+const MENTAL_LABEL: Record<string, string> = { INT: tk('Intuition'), WIL: tk('Willpower'), LOG: tk('Logic') };
 
 /**
  * Matrix actions. cat: attack | sleaze (illegal, raise the Overwatch Score) | info | control | util.
@@ -204,66 +204,66 @@ const MENTAL_LABEL: Record<string, string> = { INT: tk('Intuition'), WIL: tk('Vo
  */
 export const ACTIONS: MatrixActionDef[] = [
   // --- Illegal: Attack actions
-  { id: 'bruteForce', fr: tk('Force brute'), en: 'Brute Force', cat: 'attack', type: 'complex', skill: 'cybercombat', attr: 'LOG', limit: 'attack', defense: ['WIL', 'firewall'], marks: 0, placesMarks: true, targets: ['host', 'ic', 'device', 'file', 'persona', 'manual'], page: 238,
-    desc: tk('Place des marques en force (1 marque, ou 2 à −4, 3 à −10). Chaque tranche de 2 succès nets inflige aussi 1 case de dommages matriciels. Échec : vous subissez 1 case par succès net du défenseur.') },
-  { id: 'dataSpike', fr: tk('Pointe de données'), en: 'Data Spike', cat: 'attack', type: 'complex', skill: 'cybercombat', attr: 'LOG', limit: 'attack', defense: ['INT', 'firewall'], marks: 0, targets: ['ic', 'device', 'persona', 'manual'], page: 240,
-    desc: tk('Attaque matricielle : VD = Attaque + succès nets + 2 par marque sur la cible, résistée par Indice + Firewall.') },
-  { id: 'crashProgram', fr: tk('Planter un programme'), en: 'Crash Program', cat: 'attack', type: 'complex', skill: 'cybercombat', attr: 'LOG', limit: 'attack', defense: ['INT', 'firewall'], marks: 1, targets: ['persona', 'manual'], page: 239,
-    desc: tk('Fait planter un programme chargé sur la cible (au choix du hacker).') },
-  { id: 'crackFile', fr: tk('Craquer un fichier'), en: 'Crack File', cat: 'attack', type: 'complex', skill: 'hacking', attr: 'LOG', limit: 'attack', defense: { x2: 'protection' }, marks: 1, targets: ['file'], page: 239,
-    desc: tk('Supprime la protection d’un fichier (défense : indice de protection × 2).') },
-  { id: 'eraseMark', fr: tk('Effacer une marque'), en: 'Erase Mark', cat: 'attack', type: 'complex', skill: 'computer', attr: 'LOG', limit: 'attack', defense: ['WIL', 'firewall'], marks: 0, targets: ['markOnMe'], page: 240,
-    desc: tk('Efface une marque qu’une autre icône a posée sur vous (défense de l’icône propriétaire de la marque).') },
-  { id: 'jamSignals', fr: tk('Brouiller les signaux'), en: 'Jam Signals', cat: 'attack', type: 'complex', skill: 'electronic_warfare', attr: 'LOG', limit: 'attack', defense: null, marks: 0, targets: ['none'], page: 241,
-    desc: tk('Chaque succès ajoute 1 point de bruit pour tout le monde dans 100 m (vous compris, sauf vos appareils).') },
+  { id: 'bruteForce', fr: tk('Brute Force'), en: 'Brute Force', cat: 'attack', type: 'complex', skill: 'cybercombat', attr: 'LOG', limit: 'attack', defense: ['WIL', 'firewall'], marks: 0, placesMarks: true, targets: ['host', 'ic', 'device', 'file', 'persona', 'manual'], page: 238,
+    desc: tk('Places marks by force (1 mark, or 2 at −4, 3 at −10). Every 2 net hits also inflict 1 box of Matrix damage. Failure: you take 1 box per net hit of the defender.') },
+  { id: 'dataSpike', fr: tk('Data Spike'), en: 'Data Spike', cat: 'attack', type: 'complex', skill: 'cybercombat', attr: 'LOG', limit: 'attack', defense: ['INT', 'firewall'], marks: 0, targets: ['ic', 'device', 'persona', 'manual'], page: 240,
+    desc: tk('Matrix attack: DV = Attack + net hits + 2 per mark on the target, resisted with Device Rating + Firewall.') },
+  { id: 'crashProgram', fr: tk('Crash Program'), en: 'Crash Program', cat: 'attack', type: 'complex', skill: 'cybercombat', attr: 'LOG', limit: 'attack', defense: ['INT', 'firewall'], marks: 1, targets: ['persona', 'manual'], page: 239,
+    desc: tk('Crashes a program running on the target (hacker’s choice).') },
+  { id: 'crackFile', fr: tk('Crack File'), en: 'Crack File', cat: 'attack', type: 'complex', skill: 'hacking', attr: 'LOG', limit: 'attack', defense: { x2: 'protection' }, marks: 1, targets: ['file'], page: 239,
+    desc: tk('Removes a file’s protection (defense: protection rating × 2).') },
+  { id: 'eraseMark', fr: tk('Erase Mark'), en: 'Erase Mark', cat: 'attack', type: 'complex', skill: 'computer', attr: 'LOG', limit: 'attack', defense: ['WIL', 'firewall'], marks: 0, targets: ['markOnMe'], page: 240,
+    desc: tk('Erases a mark another icon placed on you (defense of the icon that owns the mark).') },
+  { id: 'jamSignals', fr: tk('Jam Signals'), en: 'Jam Signals', cat: 'attack', type: 'complex', skill: 'electronic_warfare', attr: 'LOG', limit: 'attack', defense: null, marks: 0, targets: ['none'], page: 241,
+    desc: tk('Each hit adds 1 point of noise for everyone within 100 m (you included, except your own devices).') },
   // --- Illegal: Sleaze actions
-  { id: 'hackOnTheFly', fr: tk('Hacker à la volée'), en: 'Hack on the Fly', cat: 'sleaze', type: 'complex', skill: 'hacking', attr: 'LOG', limit: 'sleaze', defense: ['INT', 'firewall'], marks: 0, placesMarks: true, targets: ['host', 'ic', 'device', 'file', 'persona', 'manual'], page: 240,
-    desc: tk('Place des marques en douce (1 marque, ou 2 à −4, 3 à −10). Échec : la cible vous marque et l’hôte passe en alerte.') },
-  { id: 'spoofCommand', fr: tk('Usurper une commande'), en: 'Spoof Command', cat: 'sleaze', type: 'complex', skill: 'hacking', attr: 'INT', limit: 'sleaze', defense: ['LOG', 'firewall'], marks: 1, marksOnOwner: true, targets: ['device', 'manual'], page: 243,
-    desc: tk('Envoie à un appareil un ordre qui semble venir de son propriétaire (il faut 1 marque sur le propriétaire usurpé).') },
-  { id: 'snoop', fr: tk('Espionner'), en: 'Snoop', cat: 'sleaze', type: 'complex', skill: 'electronic_warfare', attr: 'INT', limit: 'sleaze', defense: ['LOG', 'firewall'], marks: 1, targets: ['device', 'persona', 'manual'], page: 243,
-    desc: tk('Intercepte le trafic de la cible (communications, flux de données).') },
-  { id: 'hide', fr: tk('Se cacher'), en: 'Hide', cat: 'sleaze', type: 'complex', skill: 'electronic_warfare', attr: 'INT', limit: 'sleaze', defense: ['INT', 'dataProcessing'], marks: 0, targets: ['host', 'ic', 'persona', 'manual'], page: 241,
-    desc: tk('La cible perd votre trace (une IC de patrouille ne vous voit plus).') },
-  { id: 'formatDevice', fr: tk('Formater un appareil'), en: 'Format Device', cat: 'sleaze', type: 'complex', skill: 'computer', attr: 'LOG', limit: 'sleaze', defense: ['WIL', 'firewall'], marks: 3, targets: ['device', 'persona', 'manual'], page: 240,
-    desc: tk('Efface le système de l’appareil : au prochain redémarrage, il ne fonctionne plus.') },
-  { id: 'setDataBomb', fr: tk('Poser une bombe de données'), en: 'Set Data Bomb', cat: 'sleaze', type: 'complex', skill: 'software', attr: 'LOG', limit: 'sleaze', defense: { x2: 'device' }, marks: 1, targets: ['file'], page: 243,
-    desc: tk('Piège un fichier : indice de la bombe = succès nets.') },
-  { id: 'checkOverwatch', fr: tk('Vérifier le Score d’Overwatch'), en: 'Check Overwatch Score', cat: 'sleaze', type: 'simple', skill: 'electronic_warfare', attr: 'LOG', limit: 'sleaze', defense: { fixed: 6 }, marks: 0, targets: ['none'], page: 238,
-    desc: tk('Opposé à 6 dés (le GOD). Réussite : vous connaissez votre SO actuel.') },
+  { id: 'hackOnTheFly', fr: tk('Hack on the Fly'), en: 'Hack on the Fly', cat: 'sleaze', type: 'complex', skill: 'hacking', attr: 'LOG', limit: 'sleaze', defense: ['INT', 'firewall'], marks: 0, placesMarks: true, targets: ['host', 'ic', 'device', 'file', 'persona', 'manual'], page: 240,
+    desc: tk('Places marks by stealth (1 mark, or 2 at −4, 3 at −10). Failure: the target marks you and the host goes on alert.') },
+  { id: 'spoofCommand', fr: tk('Spoof Command'), en: 'Spoof Command', cat: 'sleaze', type: 'complex', skill: 'hacking', attr: 'INT', limit: 'sleaze', defense: ['LOG', 'firewall'], marks: 1, marksOnOwner: true, targets: ['device', 'manual'], page: 243,
+    desc: tk('Sends a device a command that seems to come from its owner (requires 1 mark on the spoofed owner).') },
+  { id: 'snoop', fr: tk('Snoop'), en: 'Snoop', cat: 'sleaze', type: 'complex', skill: 'electronic_warfare', attr: 'INT', limit: 'sleaze', defense: ['LOG', 'firewall'], marks: 1, targets: ['device', 'persona', 'manual'], page: 243,
+    desc: tk('Intercepts the target’s traffic (communications, data streams).') },
+  { id: 'hide', fr: tk('self::Hide'), en: 'Hide', cat: 'sleaze', type: 'complex', skill: 'electronic_warfare', attr: 'INT', limit: 'sleaze', defense: ['INT', 'dataProcessing'], marks: 0, targets: ['host', 'ic', 'persona', 'manual'], page: 241,
+    desc: tk('The target loses track of you (a Patrol IC no longer sees you).') },
+  { id: 'formatDevice', fr: tk('Format Device'), en: 'Format Device', cat: 'sleaze', type: 'complex', skill: 'computer', attr: 'LOG', limit: 'sleaze', defense: ['WIL', 'firewall'], marks: 3, targets: ['device', 'persona', 'manual'], page: 240,
+    desc: tk('Wipes the device’s OS: at its next reboot, it no longer works.') },
+  { id: 'setDataBomb', fr: tk('Set Data Bomb'), en: 'Set Data Bomb', cat: 'sleaze', type: 'complex', skill: 'software', attr: 'LOG', limit: 'sleaze', defense: { x2: 'device' }, marks: 1, targets: ['file'], page: 243,
+    desc: tk('Booby-traps a file: bomb rating = net hits.') },
+  { id: 'checkOverwatch', fr: tk('Check Overwatch Score'), en: 'Check Overwatch Score', cat: 'sleaze', type: 'simple', skill: 'electronic_warfare', attr: 'LOG', limit: 'sleaze', defense: { fixed: 6 }, marks: 0, targets: ['none'], page: 238,
+    desc: tk('Opposed by 6 dice (GOD). Success: you learn your current OS.') },
   // --- Legal: information
-  { id: 'matrixPerception', fr: tk('Perception matricielle'), en: 'Matrix Perception', cat: 'info', type: 'complex', skill: 'computer', attr: 'INT', limit: 'dataProcessing', defense: null, marks: 0, targets: ['host', 'ic', 'device', 'file', 'persona', 'manual', 'none'], page: 241,
-    desc: tk('Chaque succès révèle une information. Sur un hôte : indice, attributs, IC, fichiers, appareils et bombes de données.') },
-  { id: 'matrixSearch', fr: tk('Recherche matricielle'), en: 'Matrix Search', cat: 'info', type: 'extended', skill: 'computer', attr: 'INT', limit: 'dataProcessing', defense: null, marks: 0, targets: ['none'], page: 241,
-    desc: tk('Recherche d’informations publiques ou cachées (seuil et durée fixés par le MJ).') },
-  { id: 'traceIcon', fr: tk('Tracer une icône'), en: 'Trace Icon', cat: 'info', type: 'complex', skill: 'computer', attr: 'INT', limit: 'dataProcessing', defense: ['WIL', 'sleaze'], marks: 2, targets: ['persona', 'device', 'manual'], page: 243,
-    desc: tk('Localise physiquement l’appareil derrière l’icône.') },
+  { id: 'matrixPerception', fr: tk('Matrix Perception'), en: 'Matrix Perception', cat: 'info', type: 'complex', skill: 'computer', attr: 'INT', limit: 'dataProcessing', defense: null, marks: 0, targets: ['host', 'ic', 'device', 'file', 'persona', 'manual', 'none'], page: 241,
+    desc: tk('Each hit reveals one piece of information. On a host: rating, attributes, IC, files, devices and data bombs.') },
+  { id: 'matrixSearch', fr: tk('Matrix Search'), en: 'Matrix Search', cat: 'info', type: 'extended', skill: 'computer', attr: 'INT', limit: 'dataProcessing', defense: null, marks: 0, targets: ['none'], page: 241,
+    desc: tk('Searches for public or hidden information (threshold and time set by the GM).') },
+  { id: 'traceIcon', fr: tk('Trace Icon'), en: 'Trace Icon', cat: 'info', type: 'complex', skill: 'computer', attr: 'INT', limit: 'dataProcessing', defense: ['WIL', 'sleaze'], marks: 2, targets: ['persona', 'device', 'manual'], page: 243,
+    desc: tk('Finds the physical location of the device behind the icon.') },
   // --- Legal: control & files
-  { id: 'controlDevice', fr: tk('Contrôler un appareil'), en: 'Control Device', cat: 'control', type: 'variable', skill: 'electronic_warfare', attr: 'LOG', limit: 'dataProcessing', defense: ['INT', 'firewall'], marks: 1, targets: ['device', 'manual'], page: 238,
-    desc: tk('Fait agir l’appareil (ouvrir une porte, couper une caméra…). Marques nécessaires : 1 à 3 selon l’ordre.') },
-  { id: 'editFile', fr: tk('Éditer un fichier'), en: 'Edit File', cat: 'control', type: 'complex', skill: 'computer', attr: 'LOG', limit: 'dataProcessing', defense: ['INT', 'firewall'], marks: 1, targets: ['file'], page: 239,
-    desc: tk('Lire, copier, modifier ou effacer un fichier (non protégé). Une bombe de données explose si elle n’est pas désamorcée.') },
-  { id: 'disarmDataBomb', fr: tk('Désamorcer une bombe de données'), en: 'Disarm Data Bomb', cat: 'control', type: 'complex', skill: 'software', attr: 'LOG', limit: 'firewall', defense: { x2: 'bomb' }, marks: 0, targets: ['file'], page: 239,
-    desc: tk('Réussite : la bombe est retirée. Échec : elle explose (indice D6 dommages matriciels, fichier détruit).') },
-  { id: 'rebootDevice', fr: tk('Redémarrer un appareil'), en: 'Reboot Device', cat: 'control', type: 'complex', skill: 'computer', attr: 'LOG', limit: 'dataProcessing', defense: ['WIL', 'firewall'], marks: 3, targets: ['device', 'persona', 'manual'], page: 242,
-    desc: tk('L’appareil s’éteint et redémarre à la fin du tour suivant (marques et liaisons perdues).') },
+  { id: 'controlDevice', fr: tk('Control Device'), en: 'Control Device', cat: 'control', type: 'variable', skill: 'electronic_warfare', attr: 'LOG', limit: 'dataProcessing', defense: ['INT', 'firewall'], marks: 1, targets: ['device', 'manual'], page: 238,
+    desc: tk('Makes the device act (open a door, shut a camera off…). Marks needed: 1 to 3 depending on the command.') },
+  { id: 'editFile', fr: tk('Edit File'), en: 'Edit File', cat: 'control', type: 'complex', skill: 'computer', attr: 'LOG', limit: 'dataProcessing', defense: ['INT', 'firewall'], marks: 1, targets: ['file'], page: 239,
+    desc: tk('Read, copy, change or delete an (unprotected) file. A data bomb goes off unless disarmed.') },
+  { id: 'disarmDataBomb', fr: tk('Disarm Data Bomb'), en: 'Disarm Data Bomb', cat: 'control', type: 'complex', skill: 'software', attr: 'LOG', limit: 'firewall', defense: { x2: 'bomb' }, marks: 0, targets: ['file'], page: 239,
+    desc: tk('Success: the bomb is removed. Failure: it goes off (rating D6 Matrix damage, file destroyed).') },
+  { id: 'rebootDevice', fr: tk('Reboot Device'), en: 'Reboot Device', cat: 'control', type: 'complex', skill: 'computer', attr: 'LOG', limit: 'dataProcessing', defense: ['WIL', 'firewall'], marks: 3, targets: ['device', 'persona', 'manual'], page: 242,
+    desc: tk('The device shuts down and restarts at the end of the next turn (marks and connections lost).') },
   // --- Legal: utilities (no test)
-  { id: 'enterHost', fr: tk('Entrer dans un hôte'), en: 'Enter Host', cat: 'util', type: 'complex', noTest: true, marks: 1, targets: ['host'], page: 240,
-    desc: tk('Il faut 1 marque sur l’hôte. À l’intérieur, ses IC peuvent vous attaquer.') },
-  { id: 'exitHost', fr: tk('Sortir de l’hôte'), en: 'Exit Host', cat: 'util', type: 'complex', noTest: true, marks: 0, targets: ['none'], page: 240,
-    desc: tk('Retour sur la grille.') },
-  { id: 'fullMatrixDefense', fr: tk('Défense matricielle totale'), en: 'Full Matrix Defense', cat: 'util', type: 'interrupt', noTest: true, marks: 0, targets: ['none'], page: 240,
-    desc: tk('Interruption (−10 initiative) : ajoute votre Volonté à vos tests de défense matricielle jusqu’à la fin du tour.') },
-  { id: 'jackOut', fr: tk('Se déconnecter (Jack Out)'), en: 'Jack Out', cat: 'util', type: 'simple', skill: 'hardware', attr: 'WIL', limit: 'firewall', defense: ['LOG', 'attack'], marks: 0, targets: ['none'], page: 241,
-    desc: tk('Déconnexion volontaire, sans choc d’éjection. Si un verrou de lien vous retient : Hardware + Volonté [Firewall] contre Logique + Attaque.') },
-  { id: 'rebootSelf', fr: tk('Redémarrer son deck'), en: 'Reboot Device (own deck)', cat: 'util', type: 'complex', noTest: true, marks: 0, targets: ['none'], page: 242,
-    desc: tk('Remet le Score d’Overwatch à 0 et efface toutes les marques, mais vous éjecte (choc d’éjection en RV).') },
+  { id: 'enterHost', fr: tk('Enter Host'), en: 'Enter Host', cat: 'util', type: 'complex', noTest: true, marks: 1, targets: ['host'], page: 240,
+    desc: tk('Requires 1 mark on the host. Inside, its IC can attack you.') },
+  { id: 'exitHost', fr: tk('Exit Host'), en: 'Exit Host', cat: 'util', type: 'complex', noTest: true, marks: 0, targets: ['none'], page: 240,
+    desc: tk('Back to the grid.') },
+  { id: 'fullMatrixDefense', fr: tk('Full Matrix Defense'), en: 'Full Matrix Defense', cat: 'util', type: 'interrupt', noTest: true, marks: 0, targets: ['none'], page: 240,
+    desc: tk('Interrupt (−10 initiative): adds your Willpower to your Matrix defense tests until the end of the turn.') },
+  { id: 'jackOut', fr: tk('Jack Out'), en: 'Jack Out', cat: 'util', type: 'simple', skill: 'hardware', attr: 'WIL', limit: 'firewall', defense: ['LOG', 'attack'], marks: 0, targets: ['none'], page: 241,
+    desc: tk('Voluntary disconnection, without dumpshock. If a link-lock holds you: Hardware + Willpower [Firewall] vs Logic + Attack.') },
+  { id: 'rebootSelf', fr: tk('Reboot own deck'), en: 'Reboot Device (own deck)', cat: 'util', type: 'complex', noTest: true, marks: 0, targets: ['none'], page: 242,
+    desc: tk('Resets the Overwatch Score to 0 and erases every mark, but disconnects you (dumpshock in VR).') },
 ];
 export const ACTION_BY_ID: Record<string, MatrixActionDef> = Object.fromEntries(ACTIONS.map((a) => [a.id, a]));
 export const isIllegal = (action: Partial<MatrixActionDef> | null | undefined) => action && (action.cat === 'attack' || action.cat === 'sleaze');
-export const ACTION_CATS: Record<MatrixActionCat, string> = { attack: tk('Attaque'), sleaze: tk('Discrétion'), info: tk('Information'), control: tk('Contrôle & fichiers'), util: tk('Utilitaires') };
-export const ACTION_TYPES: Record<MatrixActionType, string> = { complex: tk('Complexe'), simple: tk('Simple'), free: tk('Libre'), interrupt: tk('Interruption'), variable: tk('Variable'), extended: tk('Étendue') };
-export const TARGET_KIND_LABELS: Record<MatrixTargetKind, string> = { host: tk('Hôte'), ic: tk('IC'), device: tk('Appareil'), file: tk('Fichier'), persona: tk('Persona'), manual: tk('Autre cible'), markOnMe: tk('Marque sur moi'), none: tk('Sans cible') };
+export const ACTION_CATS: Record<MatrixActionCat, string> = { attack: tk('Attack'), sleaze: tk('Sleaze'), info: tk('Information'), control: tk('Control & files'), util: tk('Utilities') };
+export const ACTION_TYPES: Record<MatrixActionType, string> = { complex: tk('Complex'), simple: tk('Simple'), free: tk('Unassigned'), interrupt: tk('Interrupt'), variable: tk('Variable'), extended: tk('Extended') };
+export const TARGET_KIND_LABELS: Record<MatrixTargetKind, string> = { host: tk('Host'), ic: tk('IC'), device: tk('Device'), file: tk('File'), persona: tk('Persona'), manual: tk('Other target'), markOnMe: tk('Mark on me'), none: tk('No target') };
 
 /**
  * Programs (SR5 core p. 245-246 + Data Trails). auto = the cockpit applies the effect by itself;
@@ -272,51 +272,51 @@ export const TARGET_KIND_LABELS: Record<MatrixTargetKind, string> = { host: tk('
  */
 export const PROGRAMS: ProgramDef[] = [
   // Common programs
-  { id: 'browse', en: 'Browse', fr: 'Navigateur', kind: 'common', names: ['navigation'], effect: tk('Divise par deux le temps des Recherches matricielles.') },
-  { id: 'configurator', en: 'Configurator', fr: 'Configurateur', kind: 'common', effect: tk('Mémorise une configuration (programmes + attributs) chargeable d’une action libre.') },
-  { id: 'edit', en: 'Edit', fr: 'Édition', kind: 'common', auto: true, limitBonus: { editFile: 2 }, effect: tk('+2 à la limite des actions Éditer un fichier.') },
+  { id: 'browse', en: 'Browse', fr: 'Navigateur', kind: 'common', names: ['navigation'], effect: tk('Halves the time of Matrix Searches.') },
+  { id: 'configurator', en: 'Configurator', fr: 'Configurateur', kind: 'common', effect: tk('Stores a configuration (programs + attributes) you can load with a Free Action.') },
+  { id: 'edit', en: 'Edit', fr: 'Édition', kind: 'common', auto: true, limitBonus: { editFile: 2 }, effect: tk('+2 to the limit of Edit File actions.') },
   { id: 'encryption', en: 'Encryption', fr: 'Cryptage', kind: 'common', auto: true, attrBonus: { firewall: 1 }, effect: tk('+1 Firewall.') },
-  { id: 'signalScrub', en: 'Signal Scrub', fr: 'Gommage de bruit', kind: 'common', auto: true, noiseReduction: 2, effect: tk('Réduit le bruit de 2.') },
-  { id: 'toolbox', en: 'Toolbox', fr: 'Boîte à outils', kind: 'common', auto: true, attrBonus: { dataProcessing: 1 }, effect: tk('+1 Traitement de données.') },
-  { id: 'virtualMachine', en: 'Virtual Machine', fr: 'Machine virtuelle', kind: 'common', auto: true, slots: 2, extraDamage: 1, effect: tk('+2 emplacements de programme, mais +1 case à chaque dommage matriciel subi.') },
-  { id: 'bootstrap', en: 'Bootstrap', fr: 'Amorçage', kind: 'common', effect: tk('Data Trails : accélère le redémarrage / la reprise du deck (au MJ).') },
-  { id: 'shredder', en: 'Shredder', fr: 'Déchiqueteuse', kind: 'common', effect: tk('Data Trails : efface définitivement les fichiers supprimés (au MJ).') },
-  { id: 'search', en: 'Search', fr: 'Recherche', kind: 'common', effect: tk('Data Trails : aide aux Recherches matricielles (au MJ).') },
+  { id: 'signalScrub', en: 'Signal Scrub', fr: 'Gommage de bruit', kind: 'common', auto: true, noiseReduction: 2, effect: tk('Reduces noise by 2.') },
+  { id: 'toolbox', en: 'Toolbox', fr: 'Boîte à outils', kind: 'common', auto: true, attrBonus: { dataProcessing: 1 }, effect: tk('+1 Data Processing.') },
+  { id: 'virtualMachine', en: 'Virtual Machine', fr: 'Machine virtuelle', kind: 'common', auto: true, slots: 2, extraDamage: 1, effect: tk('+2 program slots, but +1 box whenever you take Matrix damage.') },
+  { id: 'bootstrap', en: 'Bootstrap', fr: 'Amorçage', kind: 'common', effect: tk('Data Trails: speeds up rebooting / recovering the deck (GM’s call).') },
+  { id: 'shredder', en: 'Shredder', fr: 'Déchiqueteuse', kind: 'common', effect: tk('Data Trails: permanently wipes deleted files (GM’s call).') },
+  { id: 'search', en: 'Search', fr: 'Recherche', kind: 'common', effect: tk('Data Trails: helps with Matrix Searches (GM’s call).') },
   // Hacking programs
-  { id: 'armor', en: 'Armor', fr: 'Armure', kind: 'hacking', auto: true, resistMatrix: 2, effect: tk('+2 dés pour résister aux dommages matriciels.') },
-  { id: 'babyMonitor', en: 'Baby Monitor', fr: 'Surveillance', kind: 'hacking', auto: true, osVisible: true, effect: tk('Vous connaissez toujours votre Score d’Overwatch.') },
-  { id: 'biofeedback', en: 'Biofeedback', fr: 'Biofeedback', kind: 'hacking', effect: tk('Vos attaques de cybercombat infligent aussi du biofeedback aux cibles vivantes (É en RV froide, P en RV chaude).') },
-  { id: 'biofeedbackFilter', en: 'Biofeedback Filter', fr: 'Filtre de biofeedback', kind: 'hacking', auto: true, resistBio: 2, effect: tk('+2 dés pour résister au biofeedback.') },
-  { id: 'blackout', en: 'Blackout', fr: 'Blackout', kind: 'hacking', effect: tk('Comme Biofeedback, mais toujours en dommages étourdissants.') },
-  { id: 'decryption', en: 'Decryption', fr: 'Décryptage', kind: 'hacking', auto: true, attrBonus: { attack: 1 }, effect: tk('+1 Attaque.') },
-  { id: 'defuse', en: 'Defuse', fr: 'Désamorçage', kind: 'hacking', auto: true, resistBomb: 4, effect: tk('+4 dés pour résister aux bombes de données.') },
-  { id: 'demolition', en: 'Demolition', fr: 'Démolition', kind: 'hacking', auto: true, bombBonus: 1, effect: tk('+1 à l’indice des bombes de données que vous posez.') },
-  { id: 'exploit', en: 'Exploit', fr: 'Exploitation', kind: 'hacking', auto: true, limitBonus: { hackOnTheFly: 2 }, effect: tk('+2 à la limite de Hacker à la volée.') },
-  { id: 'fork', en: 'Fork', fr: 'Fork', kind: 'hacking', effect: tk('Une même action matricielle peut viser deux cibles.') },
-  { id: 'guard', en: 'Guard', fr: 'Garde', kind: 'hacking', effect: tk('Réduit les dommages supplémentaires dus aux marques posées sur vous.') },
-  { id: 'hammer', en: 'Hammer', fr: 'Marteau', kind: 'hacking', effect: tk('Renforce les dommages de vos attaques matricielles (au MJ).') },
-  { id: 'lockdown', en: 'Lockdown', fr: 'Verrouillage', kind: 'hacking', effect: tk('Une cible que vous endommagez en cybercombat est verrouillée (ne peut pas se déconnecter).') },
-  { id: 'mugger', en: 'Mugger', fr: 'Agresseur', kind: 'hacking', effect: tk('Vos marques rapportent plus de dommages sur les Pointes de données (au MJ).') },
-  { id: 'shell', en: 'Shell', fr: 'Carapace', kind: 'hacking', auto: true, resistMatrix: 1, resistBio: 1, effect: tk('+1 dé pour résister aux dommages matriciels et au biofeedback.') },
-  { id: 'sneak', en: 'Sneak', fr: 'Discrétion', kind: 'hacking', effect: tk('Aide à passer inaperçu (au MJ).') },
-  { id: 'stealth', en: 'Stealth', fr: 'Furtivité', kind: 'hacking', auto: true, attrBonus: { sleaze: 1 }, effect: tk('+1 Corruption.') },
-  { id: 'track', en: 'Track', fr: 'Pistage', kind: 'hacking', auto: true, limitBonus: { traceIcon: 2 }, effect: tk('+2 à la limite de Tracer une icône.') },
-  { id: 'wrapper', en: 'Wrapper', fr: 'Maquillage', kind: 'hacking', effect: tk('Déguise votre icône en une autre (Perception matricielle pour voir au travers).') },
-  { id: 'crash', en: 'Crash (Program)', fr: 'Crash', kind: 'hacking', names: ['crash program'], effect: tk('Data Trails : aide à faire planter les programmes adverses (au MJ).') },
-  { id: 'evaluate', en: 'Evaluate', fr: 'Évaluation', kind: 'hacking', auto: true, showsValue: true, effect: tk('Estime la valeur marchande des fichiers (affichée dans l’hôte).') },
-  { id: 'paintjob', en: 'Paintjob', fr: 'Spray de peinture', kind: 'hacking', effect: tk('Data Trails : maquille la signature matricielle (au MJ).') },
-  { id: 'tarball', en: 'Tarball', fr: 'Tarball', kind: 'hacking', effect: tk('Data Trails : plantage de programmes en chaîne (au MJ).') },
-  { id: 'cloudless', en: 'Cloudless', fr: 'Copie locale', kind: 'hacking', effect: tk('Data Trails (au MJ).') },
-  { id: 'detonator', en: 'Detonator', fr: 'Détonateur', kind: 'hacking', effect: tk('Data Trails : bombes de données (au MJ).') },
-  { id: 'swerve', en: 'Swerve', fr: 'Déviation', kind: 'hacking', effect: tk('Data Trails (au MJ).') },
-  { id: 'smokeAndMirrors', en: 'Smoke and Mirrors', fr: 'Miroirs et fumée', kind: 'hacking', effect: tk('Data Trails (au MJ).') },
-  { id: 'flyOnAWall', en: 'Fly on a Wall', fr: 'Mouche au mur', kind: 'hacking', effect: tk('Data Trails (au MJ).') },
-  { id: 'tantrum', en: 'Tantrum', fr: 'Nausée', kind: 'hacking', effect: tk('Data Trails (au MJ).') },
-  { id: 'catsPaw', en: 'Cat’s Paw', fr: 'Patte de chat', kind: 'hacking', names: ["cat's paw"], effect: tk('Data Trails (au MJ).') },
-  { id: 'hitchhiker', en: 'Hitchhiker', fr: 'Routard', kind: 'hacking', effect: tk('Data Trails (au MJ).') },
-  { id: 'nukeFromOrbit', en: 'Nuke-from-Orbit', fr: 'Bombardement orbital', kind: 'hacking', effect: tk('Data Trails (au MJ).') },
+  { id: 'armor', en: 'Armor', fr: 'Armure', kind: 'hacking', auto: true, resistMatrix: 2, effect: tk('+2 dice to resist Matrix damage.') },
+  { id: 'babyMonitor', en: 'Baby Monitor', fr: 'Surveillance', kind: 'hacking', auto: true, osVisible: true, effect: tk('You always know your Overwatch Score.') },
+  { id: 'biofeedback', en: 'Biofeedback', fr: 'Biofeedback', kind: 'hacking', effect: tk('Your Cybercombat attacks also deal biofeedback to living targets (S in cold-sim, P in hot-sim).') },
+  { id: 'biofeedbackFilter', en: 'Biofeedback Filter', fr: 'Filtre de biofeedback', kind: 'hacking', auto: true, resistBio: 2, effect: tk('+2 dice to resist biofeedback.') },
+  { id: 'blackout', en: 'Blackout', fr: 'Blackout', kind: 'hacking', effect: tk('Like Biofeedback, but always Stun damage.') },
+  { id: 'decryption', en: 'Decryption', fr: 'Décryptage', kind: 'hacking', auto: true, attrBonus: { attack: 1 }, effect: tk('+1 Attack.') },
+  { id: 'defuse', en: 'Defuse', fr: 'Désamorçage', kind: 'hacking', auto: true, resistBomb: 4, effect: tk('+4 dice to resist data bombs.') },
+  { id: 'demolition', en: 'Demolition', fr: 'Démolition', kind: 'hacking', auto: true, bombBonus: 1, effect: tk('+1 to the rating of the data bombs you set.') },
+  { id: 'exploit', en: 'Exploit', fr: 'Exploitation', kind: 'hacking', auto: true, limitBonus: { hackOnTheFly: 2 }, effect: tk('+2 to the limit of Hack on the Fly.') },
+  { id: 'fork', en: 'Fork', fr: 'Fork', kind: 'hacking', effect: tk('A single Matrix action can target two icons.') },
+  { id: 'guard', en: 'Guard', fr: 'Garde', kind: 'hacking', effect: tk('Reduces the extra damage from marks placed on you.') },
+  { id: 'hammer', en: 'Hammer', fr: 'Marteau', kind: 'hacking', effect: tk('Boosts the damage of your Matrix attacks (GM’s call).') },
+  { id: 'lockdown', en: 'Lockdown', fr: 'Verrouillage', kind: 'hacking', effect: tk('A target you damage in Cybercombat is link-locked (cannot jack out).') },
+  { id: 'mugger', en: 'Mugger', fr: 'Agresseur', kind: 'hacking', effect: tk('Your marks add more damage to Data Spikes (GM’s call).') },
+  { id: 'shell', en: 'Shell', fr: 'Carapace', kind: 'hacking', auto: true, resistMatrix: 1, resistBio: 1, effect: tk('+1 die to resist Matrix damage and biofeedback.') },
+  { id: 'sneak', en: 'Sneak', fr: 'Discrétion', kind: 'hacking', effect: tk('Helps you go unnoticed (GM’s call).') },
+  { id: 'stealth', en: 'Stealth', fr: 'Furtivité', kind: 'hacking', auto: true, attrBonus: { sleaze: 1 }, effect: tk('+1 Sleaze.') },
+  { id: 'track', en: 'Track', fr: 'Pistage', kind: 'hacking', auto: true, limitBonus: { traceIcon: 2 }, effect: tk('+2 to the limit of Trace Icon.') },
+  { id: 'wrapper', en: 'Wrapper', fr: 'Maquillage', kind: 'hacking', effect: tk('Disguises your icon as another one (Matrix Perception to see through it).') },
+  { id: 'crash', en: 'Crash (Program)', fr: 'Crash', kind: 'hacking', names: ['crash program'], effect: tk('Data Trails: helps crash enemy programs (GM’s call).') },
+  { id: 'evaluate', en: 'Evaluate', fr: 'Évaluation', kind: 'hacking', auto: true, showsValue: true, effect: tk('Estimates the market value of files (shown in the host).') },
+  { id: 'paintjob', en: 'Paintjob', fr: 'Spray de peinture', kind: 'hacking', effect: tk('Data Trails: disguises your Matrix signature (GM’s call).') },
+  { id: 'tarball', en: 'Tarball', fr: 'Tarball', kind: 'hacking', effect: tk('Data Trails: chain program crashes (GM’s call).') },
+  { id: 'cloudless', en: 'Cloudless', fr: 'Copie locale', kind: 'hacking', effect: tk('Data Trails (GM’s call).') },
+  { id: 'detonator', en: 'Detonator', fr: 'Détonateur', kind: 'hacking', effect: tk('Data Trails: data bombs (GM’s call).') },
+  { id: 'swerve', en: 'Swerve', fr: 'Déviation', kind: 'hacking', effect: tk('Data Trails (GM’s call).') },
+  { id: 'smokeAndMirrors', en: 'Smoke and Mirrors', fr: 'Miroirs et fumée', kind: 'hacking', effect: tk('Data Trails (GM’s call).') },
+  { id: 'flyOnAWall', en: 'Fly on a Wall', fr: 'Mouche au mur', kind: 'hacking', effect: tk('Data Trails (GM’s call).') },
+  { id: 'tantrum', en: 'Tantrum', fr: 'Nausée', kind: 'hacking', effect: tk('Data Trails (GM’s call).') },
+  { id: 'catsPaw', en: 'Cat’s Paw', fr: 'Patte de chat', kind: 'hacking', names: ["cat's paw"], effect: tk('Data Trails (GM’s call).') },
+  { id: 'hitchhiker', en: 'Hitchhiker', fr: 'Routard', kind: 'hacking', effect: tk('Data Trails (GM’s call).') },
+  { id: 'nukeFromOrbit', en: 'Nuke-from-Orbit', fr: 'Bombardement orbital', kind: 'hacking', effect: tk('Data Trails (GM’s call).') },
   // Agent
-  { id: 'agent', en: 'Agent', fr: 'Agent', kind: 'agent', effect: tk('Programme autonome (indice 1-6) : il vous assiste (travail d’équipe) ou agit seul avec Indice × 2 dés.') },
+  { id: 'agent', en: 'Agent', fr: 'Agent', kind: 'agent', effect: tk('Autonomous program (rating 1-6): it assists you (teamwork) or acts alone with Rating × 2 dice.') },
 ];
 export const PROGRAM_BY_ID: Record<string, ProgramDef> = Object.fromEntries(PROGRAMS.map((p) => [p.id, p]));
 
@@ -497,22 +497,22 @@ export function actionPool(
   const deck = deckStats(actor, persona);
   if (opts.agent) {
     const r = Number(persona?.agent?.rating) || 0;
-    parts.push(part(tk('Agent (indice {r}) : compétence'), r, { r }), part(tk('Agent : attribut'), r));
+    parts.push(part(tk('Agent (rating {r}): skill'), r, { r }), part(tk('Agent: attribute'), r));
   } else {
     const def = SKILL_BY_ID[action.skill as string];
     const sk = skillOf(actor, action.skill);
     const a = attr(actor, action.attr as AttrKey);
     if (!sk || !sk.rating) {
       if (def && !def.def) {
-        const reasonKey = tk('{skill} ne peut pas être utilisée sans formation');
+        const reasonKey = tk('{skill} cannot be used untrained');
         const reasonParams: I18nParams = { skill: { t: def.fr } };
         return { pool: 0, parts, limit: null, limitParts, impossible: true, reason: fill(reasonKey, reasonParams), reasonKey, reasonParams };
       }
-      parts.push(part(tk('{attr} (par défaut −1)'), Math.max(0, a - 1), { attr: action.attr as AttrKey }));
+      parts.push(part(tk('{attr} (defaulting −1)'), Math.max(0, a - 1), { attr: action.attr as AttrKey }));
     } else {
       // skillId: the UI shows the official skill name; attr: the attribute code (the same in both languages).
       parts.push({ label: sk.name || def?.fr || (action.skill as string), skillId: action.skill, value: Number(sk.rating) }, { label: action.attr as AttrKey, attr: action.attr, value: a });
-      if (opts.useSpec && sk.spec) parts.push(part(tk('Spé. {spec}'), 2, { spec: sk.spec }));
+      if (opts.useSpec && sk.spec) parts.push(part(tk('Spec. {spec}'), 2, { spec: sk.spec }));
     }
     if (opts.mods) {
       const ctx = { ...rollContext(actor, { skillId: action.skill, attr: action.attr }), actionId: action.id, actionNames: [action.en, action.fr], mode: persona?.mode || null };
@@ -520,19 +520,19 @@ export function actionPool(
       modLines = pm.lines;
       for (const l of pm.lines) if (l.state === 'applied') parts.push({ label: l.mod.source.name, value: l.value as number, mod: { id: l.mod.id, book: l.mod.source.book, page: l.mod.source.page } });
     }
-    if (persona?.mode === 'hot') parts.push(part(tk('RV chaude'), HOT_SIM_BONUS));
+    if (persona?.mode === 'hot') parts.push(part(tk('Hot-sim VR'), HOT_SIM_BONUS));
     const w = (opts.mods ? derivedWithModifiers(actor, opts.mods) : derive(actor)).woundModifier;
-    if (w) parts.push(part(tk('Blessures'), w));
+    if (w) parts.push(part(tk('Wounds'), w));
   }
-  if (deck.noise) parts.push(part(tk('Bruit'), -deck.noise));
+  if (deck.noise) parts.push(part(tk('Noise'), -deck.noise));
   if (action.placesMarks) {
     const pen = MARK_PENALTY[clampN(opts.marks || 1, 1, 3)] || 0;
-    if (pen) parts.push(part(tk('{n} marques'), pen, { n: clampN(opts.marks, 1, 3) }));
+    if (pen) parts.push(part(tk('{n} marks'), pen, { n: clampN(opts.marks, 1, 3) }));
   }
-  if (opts.assist?.dice) parts.push(part(tk('Assistance de l’agent'), Number(opts.assist.dice)));
+  if (opts.assist?.dice) parts.push(part(tk('Agent assist'), Number(opts.assist.dice)));
   const mod = clampN(opts.modifier || 0, -30, 30);
-  if (mod) parts.push(part(tk('Modificateur'), mod));
-  if (opts.edge && !opts.agent) parts.push(part(tk('Chance'), attr(actor, 'EDG')));
+  if (mod) parts.push(part(tk('Edit'), mod));
+  if (opts.edge && !opts.agent) parts.push(part(tk('Edge'), attr(actor, 'EDG')));
   const pool = Math.max(0, parts.reduce((s, p) => s + p.value, 0));
   let limit: number | null = null;
   if (action.limit) {
@@ -542,11 +542,11 @@ export function actionPool(
     for (const id of deck.programs) lb += PROGRAM_BY_ID[id]?.limitBonus?.[action.id] || 0;
     if (lb) {
       limit! += lb;
-      limitParts.push(part(tk('Programmes'), lb));
+      limitParts.push(part(tk('Programs'), lb));
     }
     if (opts.assist?.limitBonus) {
       limit! += Number(opts.assist.limitBonus);
-      limitParts.push(part(tk('Assistance'), Number(opts.assist.limitBonus)));
+      limitParts.push(part(tk('Assist'), Number(opts.assist.limitBonus)));
     }
     if (opts.edge && !opts.agent) limit = null;
   }
@@ -563,7 +563,7 @@ export function hostDefensePool(
   const defense = action!.defense as [AttrKey, AsdfKey];
   const k = defense[1];
   const mental = MENTAL_LABEL[defense[0]];
-  return { pool: r + (Number(host[k]) || 0), parts: [part(tk('Indice de l’hôte ({attr})'), r, { attr: mental ? { t: mental } : defense[0] }), part(ASDF_LABELS[k], Number(host[k]) || 0)] };
+  return { pool: r + (Number(host[k]) || 0), parts: [part(tk('Host rating ({attr})'), r, { attr: mental ? { t: mental } : defense[0] }), part(ASDF_LABELS[k], Number(host[k]) || 0)] };
 }
 
 /** Defense pool of a persona (actor with a device): mental attribute + matrix attribute (+ WIL on full defense). */
@@ -576,9 +576,9 @@ export function personaDefensePool(
   const [a, k] = defense;
   const deck = deckStats(actor, persona);
   const parts: PoolPart[] = [MENTAL_LABEL[a] ? part(MENTAL_LABEL[a], attr(actor, a)) : { label: a, attr: a, value: attr(actor, a) }, part(ASDF_LABELS[k], deck.eff[k])];
-  if (persona?.fullDefense) parts.push(part(tk('Défense totale (VOL)'), attr(actor, 'WIL')));
+  if (persona?.fullDefense) parts.push(part(tk('Full defense (WIL)'), attr(actor, 'WIL')));
   const w = derive(actor).woundModifier;
-  if (w) parts.push(part(tk('Blessures'), w));
+  if (w) parts.push(part(tk('Wounds'), w));
   return { pool: Math.max(0, parts.reduce((s, p) => s + p.value, 0)), parts };
 }
 
@@ -587,10 +587,10 @@ export function personaDefensePool(
 // ---------------------------------------------------------------------------
 /** Standard host attribute arrays: rating R → R, R+1, R+2, R+3 distributed by profile. */
 export const HOST_PRESETS: Record<string, { label: string; offsets: Record<AsdfKey, number> }> = {
-  shell: { label: tk('Société-écran (Corruption)'), offsets: { attack: 1, sleaze: 3, dataProcessing: 0, firewall: 2 } },
-  fortress: { label: tk('Sécurisé (Firewall)'), offsets: { attack: 1, sleaze: 0, dataProcessing: 2, firewall: 3 } },
-  aggressive: { label: tk('Agressif (Attaque)'), offsets: { attack: 3, sleaze: 1, dataProcessing: 0, firewall: 2 } },
-  archive: { label: tk('Archives (Traitement)'), offsets: { attack: 0, sleaze: 1, dataProcessing: 3, firewall: 2 } },
+  shell: { label: tk('Shell company (Sleaze)'), offsets: { attack: 1, sleaze: 3, dataProcessing: 0, firewall: 2 } },
+  fortress: { label: tk('Hardened (Firewall)'), offsets: { attack: 1, sleaze: 0, dataProcessing: 2, firewall: 3 } },
+  aggressive: { label: tk('Aggressive (Attack)'), offsets: { attack: 3, sleaze: 1, dataProcessing: 0, firewall: 2 } },
+  archive: { label: tk('Archive (Data Processing)'), offsets: { attack: 0, sleaze: 1, dataProcessing: 3, firewall: 2 } },
 };
 
 /**
@@ -598,20 +598,20 @@ export const HOST_PRESETS: Record<string, { label: string; offsets: Record<AsdfK
  * have on the decker. effect = what the server applies on a hit.
  */
 export const IC_TYPES: Record<IcType, IcTypeDef> = {
-  patrol: { fr: tk('IC Patrouille'), en: 'Patrol IC', limit: 'dataProcessing', defense: ['LOG', 'sleaze'], effect: 'spot', desc: tk('Perception matricielle à chaque tour : vous repère et déclenche l’alerte.') },
-  probe: { fr: tk('IC Sonde'), en: 'Probe IC', limit: 'attack', defense: ['INT', 'firewall'], effect: 'mark', desc: tk('Place une marque sur vous à chaque attaque réussie.') },
-  killer: { fr: tk('IC Tueuse'), en: 'Killer IC', limit: 'attack', defense: ['INT', 'firewall'], effect: 'damage', desc: tk('Dommages matriciels : Attaque de l’hôte + succès nets.') },
-  acid: { fr: tk('IC Acide'), en: 'Acid IC', limit: 'attack', defense: ['WIL', 'firewall'], effect: 'penalty', attrHit: 'firewall', desc: tk('Firewall −1 (jusqu’au redémarrage).') },
-  binder: { fr: tk('IC Lieuse'), en: 'Binder IC', limit: 'attack', defense: ['WIL', 'dataProcessing'], effect: 'penalty', attrHit: 'dataProcessing', desc: tk('Traitement de données −1 (jusqu’au redémarrage).') },
-  jammer: { fr: tk('IC Brouilleuse'), en: 'Jammer IC', limit: 'attack', defense: ['WIL', 'attack'], effect: 'penalty', attrHit: 'attack', desc: tk('Attaque −1 (jusqu’au redémarrage).') },
-  marker: { fr: tk('IC Marqueuse'), en: 'Marker IC', limit: 'attack', defense: ['WIL', 'sleaze'], effect: 'penalty', attrHit: 'sleaze', desc: tk('Corruption −1 (jusqu’au redémarrage).') },
-  crash: { fr: tk('IC Crash'), en: 'Crash IC', limit: 'attack', defense: ['INT', 'firewall'], effect: 'crash', needsMarks: 1, desc: tk('Fait planter un de vos programmes au hasard (il faut 1 marque sur vous).') },
-  tarbaby: { fr: tk('IC Goudron'), en: 'Tar Baby IC', limit: 'attack', defense: ['LOG', 'firewall'], effect: 'linklock', desc: tk('Verrou de lien : vous ne pouvez plus vous déconnecter normalement.') },
-  scramble: { fr: tk('IC Brouillage'), en: 'Scramble IC', limit: 'attack', defense: ['WIL', 'firewall'], effect: 'reboot', needsMarks: 3, desc: tk('Force votre deck à redémarrer (choc d’éjection en RV). Il faut 3 marques sur vous.') },
-  track: { fr: tk('IC Traqueuse'), en: 'Track IC', limit: 'attack', defense: ['WIL', 'sleaze'], effect: 'trace', needsMarks: 2, desc: tk('Révèle votre position physique (il faut 2 marques sur vous).') },
-  blaster: { fr: tk('IC Blaster'), en: 'Blaster IC', limit: 'attack', defense: ['LOG', 'firewall'], effect: 'damage', bio: 'S', linklock: true, desc: tk('Dommages matriciels (Attaque + succès nets) + autant de biofeedback étourdissant, et verrou de lien.') },
-  black: { fr: tk('IC Noire'), en: 'Black IC', limit: 'attack', defense: ['INT', 'firewall'], effect: 'damage', bio: 'sim', linklock: true, desc: tk('Dommages matriciels (Attaque + succès nets) + autant de biofeedback (P en RV chaude, É en RV froide), et verrou de lien.') },
-  sparky: { fr: tk('IC Sparky'), en: 'Sparky IC', limit: 'attack', defense: ['INT', 'firewall'], effect: 'damage', bio: 'sim', desc: tk('Dommages matriciels (Attaque + succès nets) + autant de biofeedback.') },
+  patrol: { fr: tk('Patrol IC'), en: 'Patrol IC', limit: 'dataProcessing', defense: ['LOG', 'sleaze'], effect: 'spot', desc: tk('Matrix Perception every turn: spots you and triggers the alert.') },
+  probe: { fr: tk('Probe IC'), en: 'Probe IC', limit: 'attack', defense: ['INT', 'firewall'], effect: 'mark', desc: tk('Places a mark on you with every successful attack.') },
+  killer: { fr: tk('Killer IC'), en: 'Killer IC', limit: 'attack', defense: ['INT', 'firewall'], effect: 'damage', desc: tk('Matrix damage: host Attack + net hits.') },
+  acid: { fr: tk('Acid IC'), en: 'Acid IC', limit: 'attack', defense: ['WIL', 'firewall'], effect: 'penalty', attrHit: 'firewall', desc: tk('Firewall −1 (until reboot).') },
+  binder: { fr: tk('Binder IC'), en: 'Binder IC', limit: 'attack', defense: ['WIL', 'dataProcessing'], effect: 'penalty', attrHit: 'dataProcessing', desc: tk('Data Processing −1 (until reboot).') },
+  jammer: { fr: tk('Jammer IC'), en: 'Jammer IC', limit: 'attack', defense: ['WIL', 'attack'], effect: 'penalty', attrHit: 'attack', desc: tk('Attack −1 (until reboot).') },
+  marker: { fr: tk('Marker IC'), en: 'Marker IC', limit: 'attack', defense: ['WIL', 'sleaze'], effect: 'penalty', attrHit: 'sleaze', desc: tk('Sleaze −1 (until reboot).') },
+  crash: { fr: tk('Crash IC'), en: 'Crash IC', limit: 'attack', defense: ['INT', 'firewall'], effect: 'crash', needsMarks: 1, desc: tk('Crashes one of your programs at random (requires 1 mark on you).') },
+  tarbaby: { fr: tk('Tar Baby IC'), en: 'Tar Baby IC', limit: 'attack', defense: ['LOG', 'firewall'], effect: 'linklock', desc: tk('Link-lock: you can no longer jack out normally.') },
+  scramble: { fr: tk('Scramble IC'), en: 'Scramble IC', limit: 'attack', defense: ['WIL', 'firewall'], effect: 'reboot', needsMarks: 3, desc: tk('Forces your deck to reboot (dumpshock in VR). Requires 3 marks on you.') },
+  track: { fr: tk('Track IC'), en: 'Track IC', limit: 'attack', defense: ['WIL', 'sleaze'], effect: 'trace', needsMarks: 2, desc: tk('Reveals your physical location (requires 2 marks on you).') },
+  blaster: { fr: tk('Blaster IC'), en: 'Blaster IC', limit: 'attack', defense: ['LOG', 'firewall'], effect: 'damage', bio: 'S', linklock: true, desc: tk('Matrix damage (Attack + net hits) + as much Stun biofeedback, and link-lock.') },
+  black: { fr: tk('Black IC'), en: 'Black IC', limit: 'attack', defense: ['INT', 'firewall'], effect: 'damage', bio: 'sim', linklock: true, desc: tk('Matrix damage (Attack + net hits) + as much biofeedback (P in hot-sim, S in cold-sim), and link-lock.') },
+  sparky: { fr: tk('Sparky IC'), en: 'Sparky IC', limit: 'attack', defense: ['INT', 'firewall'], effect: 'damage', bio: 'sim', desc: tk('Matrix damage (Attack + net hits) + as much biofeedback.') },
 };
 export const IC_ORDER: IcType[] = ['patrol', 'probe', 'killer', 'acid', 'binder', 'jammer', 'marker', 'crash', 'tarbaby', 'scramble', 'track', 'blaster', 'black', 'sparky'];
 
@@ -637,11 +637,11 @@ export const icInitiative = (host: { rating?: number } | null | undefined): Init
 /** Overwatch Score level for the meter. */
 export function osLevel(os: unknown): { id: string; label: string; color: string } {
   const n = Number(os) || 0;
-  if (n >= 35) return { id: 'critical', label: tk('Convergence imminente'), color: 'red' };
+  if (n >= 35) return { id: 'critical', label: tk('Convergence imminent'), color: 'red' };
   if (n >= 30) return { id: 'danger', label: tk('Danger'), color: 'red' };
-  if (n >= 20) return { id: 'warn', label: tk('Surveillé'), color: 'amber' };
-  if (n >= 10) return { id: 'notice', label: tk('Remarqué'), color: 'cyan' };
-  return { id: 'calm', label: tk('Discret'), color: 'green' };
+  if (n >= 20) return { id: 'warn', label: tk('Watched'), color: 'amber' };
+  if (n >= 10) return { id: 'notice', label: tk('Noticed'), color: 'cyan' };
+  return { id: 'calm', label: tk('Low profile'), color: 'green' };
 }
 
 // ---------------------------------------------------------------------------
@@ -654,15 +654,15 @@ export const OS_TICK_MS = 15 * 60 * 1000;
 // device.link = { mapId, kind, targetId }. Commands go through Control Device / Spoof Command (deviceCmd).
 // ---------------------------------------------------------------------------
 export const DEVICE_LINK_KINDS: Record<DeviceLinkKind, { label: string; icon: string; cmds: string[] }> = {
-  door: { label: tk('Porte'), icon: '🚪', cmds: ['open', 'close', 'unlock', 'lock'] },
-  light: { label: tk('Éclairage'), icon: '💡', cmds: ['off', 'on'] },
-  camera: { label: tk('Caméras (zone)'), icon: '📷', cmds: ['off', 'on'] },
+  door: { label: tk('Door'), icon: '🚪', cmds: ['open', 'close', 'unlock', 'lock'] },
+  light: { label: tk('Lighting'), icon: '💡', cmds: ['off', 'on'] },
+  camera: { label: tk('Cameras (zone)'), icon: '📷', cmds: ['off', 'on'] },
 };
 /** Command labels by link kind (French keys). */
 export const DEVICE_CMD_LABELS: Record<DeviceLinkKind, Record<string, string>> = {
-  door: { open: tk('Ouvrir'), close: tk('Fermer'), unlock: tk('Déverrouiller'), lock: tk('Verrouiller') },
-  light: { off: tk('Éteindre'), on: tk('Allumer') },
-  camera: { off: tk('Couper le flux'), on: tk('Rétablir le flux') },
+  door: { open: tk('Open'), close: tk('Close'), unlock: tk('Unlock'), lock: tk('verb::Lock') },
+  light: { off: tk('Switch off'), on: tk('Switch on') },
+  camera: { off: tk('Cut the feed'), on: tk('Restore the feed') },
 };
 /** Is the device working (powered, not rebooting, not destroyed)? */
 export const deviceWorks = (d: { offline?: boolean; bricked?: boolean; formatted?: boolean } | null | undefined): boolean => !!d && !d.offline && !d.bricked && !d.formatted;
@@ -689,54 +689,54 @@ export function nextStepHints({
   const ds = deckStats(actor, persona);
   const marksOn = (key: string) => (persona.marks || []).find((m) => m.targetId === key)?.count || 0;
   if (persona.bricked) {
-    add(tk('Ton deck est briqué : demande au MJ de le réparer avant de te reconnecter.'), { tone: 'danger' });
+    add(tk('Your deck is bricked: ask the GM to repair it before you reconnect.'), { tone: 'danger' });
     return byUrgency(out);
   }
   if (!persona.online) {
-    add(tk('Connecte-toi : RV chaude = +2 dés et plus d’initiative, mais le biofeedback fait des dommages physiques.'));
-    if ((persona.overwatch || 0) > 0) add(tk('Ton Score d’Overwatch n’est pas à zéro : redémarrer ton deck le remet à 0.'));
+    add(tk('Connect: hot sim VR = +2 dice and more initiative, but biofeedback deals Physical damage.'));
+    if ((persona.overwatch || 0) > 0) add(tk('Your Overwatch Score is not zero: rebooting your deck resets it to 0.'));
     return byUrgency(out);
   }
   const os = persona.overwatchHidden ? persona.osKnown : persona.overwatch;
-  if (persona.linkLocked) add(tk('Verrou de lien : tu ne peux pas te déconnecter normalement. Détruis l’IC responsable, ou tente « Se déconnecter (Jack Out) ».'), { tone: 'danger', actionId: 'jackOut' });
-  if (ds.monitor && (persona.matrixDamage || 0) >= ds.monitor - 3) add(tk('Ton deck est presque briqué : sors de l’hôte ou déconnecte-toi.'), { tone: 'danger' });
-  if (os !== null && os !== undefined && os >= 30) add(tk('Score d’Overwatch {os}/40 : la convergence approche. Termine vite ou redémarre ton deck.'), { tone: 'danger', params: { os } });
-  else if (persona.overwatchHidden && (persona.overwatch === null || persona.overwatch === undefined)) add(tk('Tu ne connais pas ton Score d’Overwatch : vérifie-le de temps en temps (action « Vérifier le Score d’Overwatch »).'), { actionId: 'checkOverwatch' });
-  if (persona.agent?.loaded && !persona.pendingAssist) add(tk('Ton agent est chargé : fais-le assister ton prochain test (+dés, +1 limite) depuis « Lancer ».'));
-  else if (persona.agent && !persona.agent.loaded) add(tk('Ton agent dort : charge-le (panneau Agent) pour qu’il t’assiste ou agisse à ta place.'));
+  if (persona.linkLocked) add(tk('Link-locked: you cannot disconnect normally. Destroy the IC holding you, or try “Jack Out”.'), { tone: 'danger', actionId: 'jackOut' });
+  if (ds.monitor && (persona.matrixDamage || 0) >= ds.monitor - 3) add(tk('Your deck is almost bricked: leave the host or disconnect.'), { tone: 'danger' });
+  if (os !== null && os !== undefined && os >= 30) add(tk('Overwatch Score {os}/40: convergence is near. Finish fast or reboot your deck.'), { tone: 'danger', params: { os } });
+  else if (persona.overwatchHidden && (persona.overwatch === null || persona.overwatch === undefined)) add(tk('You do not know your Overwatch Score: check it now and then (“Check Overwatch Score” action).'), { actionId: 'checkOverwatch' });
+  if (persona.agent?.loaded && !persona.pendingAssist) add(tk('Your agent is loaded: have it assist your next test (+dice, +1 limit) from “Roll”.'));
+  else if (persona.agent && !persona.agent.loaded) add(tk('Your agent is idle: load it (Agent panel) so it can assist you or act for you.'));
   const cur = persona.hostId ? hosts[persona.hostId] : null;
   if (!cur) {
     const list = Object.values(hosts).filter((h) => h.visible || marksOn(`host:${h.id}`));
     if (!list.length) {
-      add(tk('Aucun hôte repéré : le MJ te le révélera quand tu sauras où frapper (ou fais une Recherche matricielle).'), { actionId: 'matrixSearch' });
+      add(tk('No host spotted: the GM will reveal it once you know where to strike (or run a Matrix Search).'), { actionId: 'matrixSearch' });
       return byUrgency(out);
     }
     for (const h of list) {
-      if (marksOn(`host:${h.id}`)) add(tk('Tu as une marque sur {host} : entre dans l’hôte.'), { params: { host: h.name }, actionId: 'enterHost', targetId: `host:${h.id}` });
-      else add(tk('Place une marque sur {host} : Hacker à la volée (discret, Corruption) ou Force brute (bruyant, Attaque).'), { params: { host: h.name }, actionId: 'hackOnTheFly', targetId: `host:${h.id}` });
+      if (marksOn(`host:${h.id}`)) add(tk('You have a mark on {host}: enter the host.'), { params: { host: h.name }, actionId: 'enterHost', targetId: `host:${h.id}` });
+      else add(tk('Place a mark on {host}: Hack on the Fly (quiet, Sleaze) or Brute Force (loud, Attack).'), { params: { host: h.name }, actionId: 'hackOnTheFly', targetId: `host:${h.id}` });
     }
     return byUrgency(out);
   }
   const hostId = cur.id;
   const ic = (cur.ic || []).filter((x) => x.type && x.type !== 'patrol');
-  if (cur.alert === 'active' && ic.length) add(tk('L’hôte est en alerte et ses IC attaquent : abats-les (Pointe de données), passe en Défense matricielle totale, ou finis vite et sors.'), { tone: 'warn', actionId: 'dataSpike', targetId: `ic:${hostId}:${ic[0].id}` });
-  else if (cur.spotted) add(tk('La patrouille t’a repéré(e) : l’hôte va lancer des IC. Cache-toi (Se cacher) ou dépêche-toi.'), { tone: 'warn', actionId: 'hide', targetId: `host:${hostId}` });
+  if (cur.alert === 'active' && ic.length) add(tk('The host is on alert and its IC attack: take them down (Data Spike), go to Full Matrix Defense, or finish fast and leave.'), { tone: 'warn', actionId: 'dataSpike', targetId: `ic:${hostId}:${ic[0].id}` });
+  else if (cur.spotted) add(tk('The patrol spotted you: the host will launch IC. Hide or hurry up.'), { tone: 'warn', actionId: 'hide', targetId: `host:${hostId}` });
   if (!cur.perceived) {
-    add(tk('Fais une Perception matricielle sur l’hôte : elle révèle son indice, ses IC, ses fichiers et ses appareils.'), { actionId: 'matrixPerception', targetId: `host:${hostId}` });
+    add(tk('Run Matrix Perception on the host: it reveals its rating, IC, files and devices.'), { actionId: 'matrixPerception', targetId: `host:${hostId}` });
     return byUrgency(out);
   }
   const copied = new Set((persona.files || []).map((f) => f.sourceId));
   for (const f of cur.files || []) {
     const tid = `file:${hostId}:${f.id}`;
-    if (f.protected) add(tk('« {file} » est protégé : craque-le d’abord (Craquer un fichier).'), { params: { file: f.name }, actionId: 'crackFile', targetId: tid });
-    else if (f.bomb > 0 && !f.mine) add(tk('« {file} » est piégé (bombe {n}) : désamorce-la avant d’y toucher.'), { tone: 'warn', params: { file: f.name, n: f.bomb }, actionId: 'disarmDataBomb', targetId: tid });
-    else if (!copied.has(f.id)) add(tk('Copie « {file} » dans ton deck (Éditer un fichier).'), { params: { file: f.name }, actionId: 'editFile', targetId: tid, preset: { fileOp: 'copy' } });
+    if (f.protected) add(tk('“{file}” is protected: crack it first (Crack File).'), { params: { file: f.name }, actionId: 'crackFile', targetId: tid });
+    else if (f.bomb > 0 && !f.mine) add(tk('“{file}” is booby-trapped (bomb {n}): disarm it before touching it.'), { tone: 'warn', params: { file: f.name, n: f.bomb }, actionId: 'disarmDataBomb', targetId: tid });
+    else if (!copied.has(f.id)) add(tk('Copy “{file}” to your deck (Edit File).'), { params: { file: f.name }, actionId: 'editFile', targetId: tid, preset: { fileOp: 'copy' } });
   }
   for (const d of cur.devices || []) {
     if (!d.link?.kind || !deviceWorks(d)) continue;
-    add(tk('{device} est relié à la carte : prends-en le contrôle pour aider l’équipe.'), { params: { device: d.name }, actionId: 'controlDevice', targetId: `device:${hostId}:${d.id}` });
+    add(tk('{device} is linked to the map: take control of it to help the team.'), { params: { device: d.name }, actionId: 'controlDevice', targetId: `device:${hostId}:${d.id}` });
   }
-  if (out.every((h) => !h.actionId || h.actionId === 'jackOut')) add(tk('Rien d’évident à faire ici : sors de l’hôte avant que ton Score d’Overwatch grimpe.'), { actionId: 'exitHost' });
+  if (out.every((h) => !h.actionId || h.actionId === 'jackOut')) add(tk('Nothing obvious left here: leave the host before your Overwatch Score climbs.'), { actionId: 'exitHost' });
   return byUrgency(out);
 }
 

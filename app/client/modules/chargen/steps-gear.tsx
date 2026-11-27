@@ -62,7 +62,7 @@ export function StepGear({ data, update, result, issues, rc }: StepProps) {
   if (!shop)
     return (
       <div className="cg-step">
-        <div className="cg-loading">{t('Chargement du catalogue…')}</div>
+        <div className="cg-loading">{t('Loading the catalog…')}</div>
       </div>
     );
 
@@ -77,13 +77,13 @@ export function StepGear({ data, update, result, issues, rc }: StepProps) {
   return (
     <div className="cg-step">
       <div className="row wrap cg-budget-row">
-        <Budget label={t('Nuyens')} used={r.nuyen.spent} total={r.nuyen.total} format={nuyen} title={t('Ressources + karma converti')} />
+        <Budget label={t('Nuyen')} used={r.nuyen.spent} total={r.nuyen.total} format={nuyen} title={t('Resources + converted karma')} />
         <div className={'cg-budget ' + (r.essence <= 0 ? 'over' : r.essence < 6 ? 'left' : 'ok')}>
           <span className="cg-budget-label">{t('Essence')}</span>
           <span className="cg-budget-value">{fmtNumber(r.essence)}</span>
         </div>
-        <div className="cg-budget left" title={t('Ce qui reste après la création (5 000¥ maximum)')}>
-          <span className="cg-budget-label">{t('Conservés')}</span>
+        <div className="cg-budget left" title={t('What is left after creation (5,000¥ maximum)')}>
+          <span className="cg-budget-label">{t('pl::Kept')}</span>
           <span className="cg-budget-value">{nuyen(r.nuyen.kept)}</span>
         </div>
       </div>
@@ -108,7 +108,7 @@ export function StepGear({ data, update, result, issues, rc }: StepProps) {
                 setCategory(v);
                 setPage(1);
               }}
-              options={[{ value: '', label: t('Toutes catégories') }, ...categories]}
+              options={[{ value: '', label: t('All categories') }, ...categories]}
             />
             <SearchBox
               value={q}
@@ -116,18 +116,18 @@ export function StepGear({ data, update, result, issues, rc }: StepProps) {
                 setQ(v);
                 setPage(1);
               }}
-              placeholder={t('Chercher…')}
+              placeholder={t('Search…')}
             />
-            <Toggle value={availOk} onChange={setAvailOk} label={t('Dispo ≤ 12')} title={t('Masquer ce qui n’est pas accessible à la création')} />
+            <Toggle value={availOk} onChange={setAvailOk} label={t('Avail ≤ 12')} title={t('Hide what is not available at creation')} />
           </div>
           <div className="cg-gear-list">
             <table className="sr">
               <thead>
                 <tr>
-                  <th>{t('Article')}</th>
-                  <th>{t('Catégorie')}</th>
-                  <th>{t('Dispo')}</th>
-                  <th className="right">{t('Prix')}</th>
+                  <th>{t('Item')}</th>
+                  <th>{t('Category')}</th>
+                  <th>{t('Avail.')}</th>
+                  <th className="right">{t('Price')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -138,7 +138,7 @@ export function StepGear({ data, update, result, issues, rc }: StepProps) {
                       {e.item.rating ? (
                         <>
                           {' '}
-                          <span className="faint small">{t('ind. {min}–{max}', { min: e.item.rating.min, max: e.item.rating.max })}</span>
+                          <span className="faint small">{t('rtg {min}–{max}', { min: e.item.rating.min, max: e.item.rating.max })}</span>
                         </>
                       ) : (
                         ''
@@ -154,7 +154,7 @@ export function StepGear({ data, update, result, issues, rc }: StepProps) {
                 {!list.length && (
                   <tr>
                     <td colSpan={4}>
-                      <Empty>{t('Rien ne correspond.')}</Empty>
+                      <Empty>{t('Nothing matches.')}</Empty>
                     </td>
                   </tr>
                 )}
@@ -163,7 +163,7 @@ export function StepGear({ data, update, result, issues, rc }: StepProps) {
             {shown.length < list.length && (
               <div className="center cg-pad">
                 <Button small variant="ghost" onClick={() => setPage(page + 1)}>
-                  {t('Afficher plus ({n})', { n: list.length - shown.length })}
+                  {t('Show more ({n})', { n: list.length - shown.length })}
                 </Button>
               </div>
             )}
@@ -173,7 +173,7 @@ export function StepGear({ data, update, result, issues, rc }: StepProps) {
           {sel && selEntry && (
             <GearDetail key={sel} entry={selEntry} essence={r.essence} lines={gearLines} onClose={() => setSel(null)} onAdd={(line) => update((d) => d.gear.push({ id: rowId('g'), ...line }))} />
           )}
-          <Panel title={t('Achats ({n})', { n: data.gear.length })} pad={false}>
+          <Panel title={t('Purchases ({n})', { n: data.gear.length })} pad={false}>
             <table className="sr cg-cart">
               <tbody>
                 {gearLines.map((l) => {
@@ -184,11 +184,11 @@ export function StepGear({ data, update, result, issues, rc }: StepProps) {
                         <strong>{l.item ? itemName(l.item) : l.name}</strong> <ItemRef item={l.item} />
                         <div className="small muted">
                           {[
-                            l.quote?.rating ? t('ind. {n}', { n: l.quote.rating }) : '',
+                            l.quote?.rating ? t('rtg {n}', { n: l.quote.rating }) : '',
                             l.quote?.grade && l.quote.grade !== 'standard' && GRADE_DEFS[l.quote.grade] ? t(GRADE_DEFS[l.quote.grade].label) : '',
                             l.essence ? t('ess. {n}', { n: fmtNumber(l.essence) }) : '',
                             l.quote ? l.quote.avail : '',
-                            l.target ? t('sur {target}', { target: l.target.name }) : '',
+                            l.target ? t('on {target}', { target: l.target.name }) : '',
                             l.mount && MOUNTS[l.mount] ? t(MOUNTS[l.mount]) : '',
                           ]
                             .filter(Boolean)
@@ -198,7 +198,7 @@ export function StepGear({ data, update, result, issues, rc }: StepProps) {
                       <td>{l.file === 'cyberware' || l.file === 'bioware' || l.upgrade ? '' : <NumberInput small value={row.qty} min={1} max={99} onChange={(v) => setLine(row.id, 'qty', v)} />}</td>
                       <td className="num-cell">{l.total !== undefined ? nuyen(l.total) : '—'}</td>
                       <td>
-                        <IconButton icon="✕" title={t('Retirer')} onClick={() => update((d) => (d.gear = d.gear.filter((x) => x.id !== row.id)))} />
+                        <IconButton icon="✕" title={t('Remove')} onClick={() => update((d) => (d.gear = d.gear.filter((x) => x.id !== row.id)))} />
                       </td>
                     </tr>
                   );
@@ -206,36 +206,36 @@ export function StepGear({ data, update, result, issues, rc }: StepProps) {
                 {!gearLines.length && (
                   <tr>
                     <td colSpan={4} className="muted center">
-                      {t('Clique un article à gauche pour l’ajouter.')}
+                      {t('Click an item on the left to add it.')}
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </Panel>
-          <Panel title={t('Train de vie & finances')} className="cg-mt">
+          <Panel title={t('Lifestyle & finances')} className="cg-mt">
             <div className="col">
               <Field
-                label={t('Train de vie')}
+                label={t('Lifestyle')}
                 hint={
                   r.lifestyle
                     ? data.metatype === 'Nain'
-                      ? t('{nuyen} / mois (nain +20 %)', { nuyen: nuyen(r.lifestyle.monthly) })
+                      ? t('{nuyen} / month (dwarf +20%)', { nuyen: nuyen(r.lifestyle.monthly) })
                       : data.metatype === 'Troll'
-                        ? t('{nuyen} / mois (troll +100 %)', { nuyen: nuyen(r.lifestyle.monthly) })
-                        : t('{nuyen} / mois', { nuyen: nuyen(r.lifestyle.monthly) })
-                    : t('Au moins un mois payé à la création')
+                        ? t('{nuyen} / month (troll +100%)', { nuyen: nuyen(r.lifestyle.monthly) })
+                        : t('{nuyen} / month', { nuyen: nuyen(r.lifestyle.monthly) })
+                    : t('At least one month paid at creation')
                 }
               >
                 <Select
                   value={data.lifestyle?.catalogId || ''}
                   onChange={(v) => update((d) => (d.lifestyle = v ? { catalogId: v, months: d.lifestyle?.months || 1 } : null))}
-                  options={[{ value: '', label: t('— Choisir —') }, ...lifestyles.map((e) => ({ value: e.ref, label: t('{name} — {nuyen}/mois', { name: e.name, nuyen: nuyen(e.item.cost as number) }) }))]}
+                  options={[{ value: '', label: t('— Choose —') }, ...lifestyles.map((e) => ({ value: e.ref, label: t('{name} — {nuyen}/month', { name: e.name, nuyen: nuyen(e.item.cost as number) }) }))]}
                 />
               </Field>
               {data.lifestyle && (
                 <div className="row wrap">
-                  <Field label={t('Mois payés')}>
+                  <Field label={t('Months paid')}>
                     <NumberInput
                       value={data.lifestyle.months}
                       min={1}
@@ -248,37 +248,37 @@ export function StepGear({ data, update, result, issues, rc }: StepProps) {
                     />
                   </Field>
                   <Field
-                    label={t('Nuyen de départ')}
-                    hint={r.lifestyle?.dice ? t('{dice}D6 × {mult}¥, lancés par le MJ à la validation', { dice: r.lifestyle.dice, mult: r.lifestyle.multiplier }) : t('Pas de jet pour ce train de vie')}
+                    label={t('Starting nuyen')}
+                    hint={r.lifestyle?.dice ? t('{dice}D6 × {mult}¥, rolled by the GM on approval', { dice: r.lifestyle.dice, mult: r.lifestyle.multiplier }) : t('No roll for this lifestyle')}
                   >
-                    <Toggle value={data.rollStartingNuyen} onChange={(v) => update((d) => (d.rollStartingNuyen = v))} label={t('Lancer')} />
+                    <Toggle value={data.rollStartingNuyen} onChange={(v) => update((d) => (d.rollStartingNuyen = v))} label={t('Roll')} />
                   </Field>
                 </div>
               )}
-              <Field label={t('Karma converti en nuyens')} hint={t('2 000¥ par karma, {max} maximum', { max: LIMITS.karmaToNuyenMax })}>
+              <Field label={t('Karma converted to nuyen')} hint={t('2,000¥ per karma, {max} maximum', { max: LIMITS.karmaToNuyenMax })}>
                 <NumberInput value={data.karmaToNuyen} min={0} max={LIMITS.karmaToNuyenMax} onChange={(v) => update((d) => (d.karmaToNuyen = v))} />
               </Field>
               <div className="cg-money small">
                 <div className="spread row">
-                  <span>{t('Ressources')}</span>
+                  <span>{t('Resources')}</span>
                   <span className="mono">{nuyen(r.nuyen.resources)}</span>
                 </div>
                 {r.nuyen.fromKarma > 0 && (
                   <div className="spread row">
-                    <span>{t('Karma converti')}</span>
+                    <span>{t('Converted karma')}</span>
                     <span className="mono">+{nuyen(r.nuyen.fromKarma)}</span>
                   </div>
                 )}
                 <div className="spread row">
-                  <span>{t('Équipement')}</span>
+                  <span>{t('Gear')}</span>
                   <span className="mono">−{nuyen(r.nuyen.gear)}</span>
                 </div>
                 <div className="spread row">
-                  <span>{t('Train de vie')}</span>
+                  <span>{t('Lifestyle')}</span>
                   <span className="mono">−{nuyen(r.nuyen.lifestyle)}</span>
                 </div>
                 <div className={'spread row cg-money-total ' + (r.nuyen.left < 0 ? 'red' : '')}>
-                  <span>{t('Reste')}</span>
+                  <span>{t('Left')}</span>
                   <span className="mono">{nuyen(r.nuyen.left)}</span>
                 </div>
               </div>
@@ -326,7 +326,7 @@ function GearDetail({ entry, essence, lines = [], onAdd, onClose }: GearDetailPr
   const over = !!qt && qt.availValue > LIMITS.maxAvail;
   const essAfter = ware && qt ? Math.round((essence - (qt.essence || 0) * qty) * 1000) / 1000 : null;
   return (
-    <Panel title={entry.name} actions={<IconButton icon="✕" title={t('Fermer')} onClick={onClose} />} className="cg-mb">
+    <Panel title={entry.name} actions={<IconButton icon="✕" title={t('Close')} onClick={onClose} />} className="cg-mb">
       <div className="col">
         <div className="small muted">
           {entry.category} · {item.source} p.{item.page}
@@ -340,7 +340,7 @@ function GearDetail({ entry, essence, lines = [], onAdd, onClose }: GearDetailPr
         )}
         <div className="row wrap">
           {item.rating && (
-            <Field label={t('Indice')}>
+            <Field label={t('Rating')}>
               <NumberInput value={rating} min={item.rating.min} max={item.rating.max} onChange={(v) => setRating(clampRating(item, v))} />
             </Field>
           )}
@@ -350,26 +350,26 @@ function GearDetail({ entry, essence, lines = [], onAdd, onClose }: GearDetailPr
             </Field>
           )}
           {!ware && !up && (
-            <Field label={t('Quantité')}>
+            <Field label={t('Quantity')}>
               <NumberInput value={qty} min={1} max={99} onChange={setQty} />
             </Field>
           )}
           {up && (
-            <Field label={up.file === 'weapons' ? t('Sur l’arme') : t('Sur l’armure')}>
+            <Field label={up.file === 'weapons' ? t('On weapon') : t('On armor')}>
               <Select
                 value={targetRow}
                 onChange={setTargetRow}
                 options={
                   targets.length
                     ? targets.map((l) => ({ value: l.row.id, label: itemName(l.item) }))
-                    : [{ value: '', label: up.file === 'weapons' ? t('— Ajoute d’abord une arme —') : t('— Ajoute d’abord une armure —') }]
+                    : [{ value: '', label: up.file === 'weapons' ? t('— Add a weapon first —') : t('— Add an armor first —') }]
                 }
               />
             </Field>
           )}
           {mounts.length > 1 && (
-            <Field label={t('Emplacement')}>
-              <Select value={mount} onChange={setMount} options={[{ value: '', label: t('Automatique') }, ...mounts.map((m) => ({ value: m, label: MOUNTS[m] ? t(MOUNTS[m]) : m }))]} />
+            <Field label={t('Mount')}>
+              <Select value={mount} onChange={setMount} options={[{ value: '', label: t('Automatic') }, ...mounts.map((m) => ({ value: m, label: MOUNTS[m] ? t(MOUNTS[m]) : m }))]} />
             </Field>
           )}
         </div>
@@ -384,10 +384,10 @@ function GearDetail({ entry, essence, lines = [], onAdd, onClose }: GearDetailPr
                 </>
               )}
             </span>
-            <strong className="mono amber">{item.costRange ? t('Prix variable') : nuyen(qt.unitCost * qty)}</strong>
+            <strong className="mono amber">{item.costRange ? t('Variable price') : nuyen(qt.unitCost * qty)}</strong>
           </div>
         )}
-        {over && qt && <div className="cg-note err">{t('Disponibilité {avail} : au-dessus de {max}, interdit à la création.', { avail: qt.avail, max: LIMITS.maxAvail })}</div>}
+        {over && qt && <div className="cg-note err">{t('Availability {avail}: above {max}, not allowed at creation.', { avail: qt.avail, max: LIMITS.maxAvail })}</div>}
         <Button
           variant="primary"
           disabled={!qt || over || (!!up && !tl)}
@@ -403,7 +403,7 @@ function GearDetail({ entry, essence, lines = [], onAdd, onClose }: GearDetailPr
             })
           }
         >
-          + {t('Ajouter')}
+          + {t('Add')}
         </Button>
       </div>
     </Panel>

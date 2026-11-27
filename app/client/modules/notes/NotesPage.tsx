@@ -69,7 +69,7 @@ export default function NotesPage({ game }: GameProps) {
 
   useServerEvent(
     'notes:comment',
-    (d: { author?: string; title?: string } | null) => d?.title && toast(t('{author} a commenté « {title} »', { author: tIfKnown(d.author), title: d.title }), 'info', 4500),
+    (d: { author?: string; title?: string } | null) => d?.title && toast(t('{author} commented on “{title}”', { author: tIfKnown(d.author), title: d.title }), 'info', 4500),
     []
   );
 
@@ -79,7 +79,7 @@ export default function NotesPage({ game }: GameProps) {
     if (busy) return null;
     setBusy(true);
     try {
-      const r = await send<{ id: string }>('notes/create', { scope, title: title || t('Nouvelle note') });
+      const r = await send<{ id: string }>('notes/create', { scope, title: title || t('New note') });
       setView('pages');
       setFresh(title ? null : r.id);
       pendingSel.current = { id: r.id, until: Date.now() + PENDING_MS };
@@ -94,7 +94,7 @@ export default function NotesPage({ game }: GameProps) {
 
   async function createLinked(title: string, scope: Scope) {
     const target = scope === 'party' && canCreateParty ? 'party' : 'private';
-    const msg = target === 'party' ? t('Créer la note de groupe « {title} » ?', { title }) : t('Créer la note personnelle « {title} » ?', { title });
+    const msg = target === 'party' ? t('Create the party note “{title}”?', { title }) : t('Create the personal note “{title}”?', { title });
     if (await confirmAction(msg)) create(target, title);
   }
 
@@ -120,23 +120,23 @@ export default function NotesPage({ game }: GameProps) {
       >
         <span className="notes-item-title">
           {p.pinned && (
-            <span className="notes-star" title={t('Épinglée')}>
+            <span className="notes-star" title={t('Pinned')}>
               ★
             </span>
           )}
-          <span className="grow">{p.title || t('Sans titre')}</span>
+          <span className="grow">{p.title || t('Untitled')}</span>
           {p.scope === 'private' && p.ownerId === game.me.id && p.shareWithGM && (
-            <span className="notes-ico" title={t('Partagée avec le MJ')}>
+            <span className="notes-ico" title={t('Shared with the GM')}>
               👁
             </span>
           )}
           {lock && (
-            <span className="notes-ico notes-lock" title={t('{name} est en train d’écrire…', { name: storedName(game, lock.userId, lock.name) })}>
+            <span className="notes-ico notes-lock" title={t('{name} is typing…', { name: storedName(game, lock.userId, lock.name) })}>
               ✎
             </span>
           )}
           {nComments > 0 && (
-            <span className="notes-ico" title={tn(nComments, '{n} commentaire', '{n} commentaires')}>
+            <span className="notes-ico" title={tn(nComments, '{n} comment', '{n} comments')}>
               💬{nComments}
             </span>
           )}
@@ -170,9 +170,9 @@ export default function NotesPage({ game }: GameProps) {
     <div className="notes-section">
       <div className="notes-section-head">
         <span>{title}</span>
-        {add && <IconButton icon="+" title={scope === 'party' ? t('Nouvelle note de groupe') : t('Nouvelle note personnelle')} disabled={busy} onClick={() => create(scope)} />}
+        {add && <IconButton icon="+" title={scope === 'party' ? t('New party note') : t('New personal note')} disabled={busy} onClick={() => create(scope)} />}
       </div>
-      {list.length ? grouped(list) : <div className="notes-none small faint">{needle ? t('Aucun résultat') : emptyText}</div>}
+      {list.length ? grouped(list) : <div className="notes-none small faint">{needle ? t('No results') : emptyText}</div>}
     </div>
   );
 
@@ -190,24 +190,24 @@ export default function NotesPage({ game }: GameProps) {
   const sidebar = (
     <aside className="notes-side">
       <div className="notes-side-top">
-        <SearchBox value={q} onChange={setQ} placeholder={t('Chercher dans les notes…')} />
+        <SearchBox value={q} onChange={setQ} placeholder={t('Search notes…')} />
       </div>
       {view === 'trash' ? (
         <Trash game={game} pages={trash} onBack={() => setView('pages')} onOpen={setSel} selId={selId} />
       ) : (
         <div className="notes-side-scroll">
-          {section(t('Mes notes'), mine, {
+          {section(t('My notes'), mine, {
             scope: 'private',
             add: true,
             emptyText: gm
-              ? t('Tes notes privées de MJ.')
-              : t('Tes notes privées : personne d’autre ne les voit, pas même le MJ, sauf si tu les partages avec lui. Seules les sauvegardes du serveur (gérées par l’hébergeur) les contiennent.'),
+              ? t('Your private GM notes.')
+              : t('Your private notes: nobody else sees them, not even the GM, unless you share them. Only the server backups (handled by the host) contain them.'),
           })}
-          {section(t('Notes du groupe'), party, { scope: 'party', add: canCreateParty, emptyText: t('Notes communes : tout le groupe et le MJ les lisent.') })}
+          {section(t('Party notes'), party, { scope: 'party', add: canCreateParty, emptyText: t('Shared notes: the whole party and the GM can read them.') })}
           {gm && (
             <div className="notes-section">
               <div className="notes-section-head">
-                <span>{t('Notes partagées par les joueurs')}</span>
+                <span>{t('Notes shared by players')}</span>
               </div>
               {sharedByOwner.length ? (
                 sharedByOwner.map(([owner, list]) => (
@@ -217,7 +217,7 @@ export default function NotesPage({ game }: GameProps) {
                   </div>
                 ))
               ) : (
-                <div className="notes-none small faint">{needle ? t('Aucun résultat') : t('Aucune note partagée pour l’instant.')}</div>
+                <div className="notes-none small faint">{needle ? t('No results') : t('No shared notes yet.')}</div>
               )}
             </div>
           )}
@@ -226,12 +226,12 @@ export default function NotesPage({ game }: GameProps) {
       <div className="notes-side-foot">
         {view === 'pages' && (
           <Button small variant="ghost" onClick={() => setView('trash')}>
-            🗑 {t('Corbeille')}
+            🗑 {t('Trash')}
             {trash.length ? ` (${trash.length})` : ''}
           </Button>
         )}
         {gm && (
-          <Toggle value={!!notes.settings?.gmCanEditParty} onChange={(v) => send('notes/settings', { gmCanEditParty: v })} label={t('Le MJ peut modifier les notes du groupe')} />
+          <Toggle value={!!notes.settings?.gmCanEditParty} onChange={(v) => send('notes/settings', { gmCanEditParty: v })} label={t('The GM can edit party notes')} />
         )}
       </div>
     </aside>
@@ -260,14 +260,14 @@ export default function NotesPage({ game }: GameProps) {
         ) : (
           <div className="notes-welcome">
             <h2 className="page-title">{t('Notes')}</h2>
-            <Empty>{t('Choisis une note à gauche ou crée-en une.')}</Empty>
+            <Empty>{t('Pick a note on the left or create one.')}</Empty>
             <div className="row wrap" style={{ justifyContent: 'center' }}>
               <Button variant="primary" disabled={busy} onClick={() => create('private')}>
-                {t('Nouvelle note personnelle')}
+                {t('New personal note')}
               </Button>
               {canCreateParty && (
                 <Button disabled={busy} onClick={() => create('party')}>
-                  {t('Nouvelle note de groupe')}
+                  {t('New party note')}
                 </Button>
               )}
             </div>
@@ -294,10 +294,10 @@ function Trash({ game, pages, onBack, onOpen, selId }: TrashProps) {
     <div className="notes-side-scroll">
       <div className="notes-section">
         <div className="notes-section-head">
-          <IconButton icon="←" title={t('Retour aux notes')} onClick={onBack} />
-          <span className="grow">{t('Corbeille')}</span>
+          <IconButton icon="←" title={t('Back to notes')} onClick={onBack} />
+          <span className="grow">{t('Trash')}</span>
         </div>
-        <div className="small faint notes-none">{t('Les notes supprimées restent ici 7 jours, puis disparaissent.')}</div>
+        <div className="small faint notes-none">{t('Deleted notes stay here for 7 days, then disappear.')}</div>
         {list.length ? (
           list.map((p) => {
             const deleted = p.deleted!;
@@ -306,17 +306,17 @@ function Trash({ game, pages, onBack, onOpen, selId }: TrashProps) {
               <div key={p.id} className={cx('notes-trash-item', p.id === selId && 'active')}>
                 <button className="notes-item" onClick={() => onOpen(p.id)}>
                   <span className="notes-item-title">
-                    <span className="grow">{p.title || t('Sans titre')}</span>
-                    <Badge color={p.scope === 'party' ? 'cyan' : 'dim'}>{p.scope === 'party' ? t('notes::Groupe') : t('Personnelle')}</Badge>
+                    <span className="grow">{p.title || t('Untitled')}</span>
+                    <Badge color={p.scope === 'party' ? 'cyan' : 'dim'}>{p.scope === 'party' ? t('notes::Party') : t('fem::Personal')}</Badge>
                   </span>
                   <span className="notes-item-sub">
-                    {t('Supprimée par {name} le {date}', { name: userLabel(game, deleted.by), date: fmtDate(deleted.at) })} · {tn(days, 'encore {n} jour', 'encore {n} jours')}
+                    {t('Deleted by {name} on {date}', { name: userLabel(game, deleted.by), date: fmtDate(deleted.at) })} · {tn(days, '{n} day left', '{n} days left')}
                   </span>
                 </button>
                 <div className="row gap-s">
                   {canRestore(p) && (
                     <Button small onClick={() => send('notes/restore', { id: p.id })}>
-                      {t('Restaurer')}
+                      {t('Restore')}
                     </Button>
                   )}
                   {canPurge(p) && (
@@ -324,10 +324,10 @@ function Trash({ game, pages, onBack, onOpen, selId }: TrashProps) {
                       small
                       variant="danger"
                       onClick={async () => {
-                        if (await confirmAction(t('Supprimer définitivement « {title} » ? Impossible de revenir en arrière.', { title: p.title }))) send('notes/purge', { id: p.id });
+                        if (await confirmAction(t('Permanently delete “{title}”? This cannot be undone.', { title: p.title }))) send('notes/purge', { id: p.id });
                       }}
                     >
-                      {t('Supprimer définitivement')}
+                      {t('Delete permanently')}
                     </Button>
                   )}
                 </div>
@@ -335,7 +335,7 @@ function Trash({ game, pages, onBack, onOpen, selId }: TrashProps) {
             );
           })
         ) : (
-          <Empty>{t('La corbeille est vide.')}</Empty>
+          <Empty>{t('The trash is empty.')}</Empty>
         )}
       </div>
     </div>

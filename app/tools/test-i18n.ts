@@ -69,7 +69,7 @@ await test('t: French source, English entry, fallback to French, interpolation',
   I.setLang('en');
   assert.equal(I.getLang(), 'en');
   assert.equal(I.t('Bonjour {name}', { name: 'Jane' }), 'Hello Jane');
-  assert.equal(I.t('Carte'), 'Map');
+  assert.equal(I.t('Map'), 'Map');
   assert.equal(I.t('magie::Force'), 'Force (spell)');
   assert.equal(I.t('Pas traduit {x}', { x: 1 }), 'Pas traduit 1');
   assert.equal(I.t('Vide pour l’instant'), 'Vide pour l’instant', 'an empty entry falls back to French');
@@ -81,7 +81,7 @@ await test('missing keys are collected (both languages), tIfKnown never counts',
   I.t('Clé absente A');
   I.setLang('fr');
   I.t('Clé absente B');
-  I.t('Carte');
+  I.t('Map');
   I.tIfKnown('Texte libre du joueur');
   I.t('');
   I.t('123');
@@ -93,13 +93,13 @@ await test('missing keys are collected (both languages), tIfKnown never counts',
 await test('tn: plural forms per language, {n} always available, zero form', () => {
   I.setDictionary({ '{n} objet': '{n} item', '{n} objets': '{n} items', 'Aucun objet': 'No items', '{n} objet pour {who}': '{n} item for {who}', '{n} objets pour {who}': '{n} items for {who}' });
   I.setLang('fr');
-  assert.equal(I.tn(0, '{n} objet', '{n} objets'), '0 objet');
-  assert.equal(I.tn(1, '{n} objet', '{n} objets'), '1 objet');
-  assert.equal(I.tn(4, '{n} objet', '{n} objets'), '4 objets');
+  assert.equal(I.tn(0, '{n} item', '{n} items'), '0 objet');
+  assert.equal(I.tn(1, '{n} item', '{n} items'), '1 objet');
+  assert.equal(I.tn(4, '{n} item', '{n} items'), '4 objets');
   I.setLang('en');
-  assert.equal(I.tn(0, '{n} objet', '{n} objets'), '0 items');
-  assert.equal(I.tn(1, '{n} objet', '{n} objets'), '1 item');
-  assert.equal(I.tn(0, { zero: 'Aucun objet', one: '{n} objet', other: '{n} objets' }), 'No items');
+  assert.equal(I.tn(0, '{n} item', '{n} items'), '0 items');
+  assert.equal(I.tn(1, '{n} item', '{n} items'), '1 item');
+  assert.equal(I.tn(0, { zero: 'Aucun objet', one: '{n} item', other: '{n} items' }), 'No items');
   assert.equal(I.tn(2, '{n} objet pour {who}', '{n} objets pour {who}', { who: 'Jane' }), '2 items for Jane');
 });
 await test('language listeners, invalid languages ignored', () => {
@@ -125,7 +125,7 @@ await test('langFromGame: own choice > table language; a fresh switch survives a
 await test('errorText / logText', () => {
   I.setDictionary({ 'Action inconnue : {type}': 'Unknown action: {type}', 'Message vide': 'Empty message', '{actor} dépense 1 point de Chance': '{actor} spends 1 Edge point', Erreur: 'Error' });
   I.setLang('en');
-  assert.equal(I.errorText({ error: 'Action inconnue : x', errorKey: 'Action inconnue : {type}', params: { type: 'x' } }), 'Unknown action: x');
+  assert.equal(I.errorText({ error: 'Action inconnue : x', errorKey: 'Unknown action: {type}', params: { type: 'x' } }), 'Unknown action: x');
   assert.equal(I.errorText({ error: 'Message vide' }), 'Empty message', 'plain French errors are translated when known');
   assert.equal(I.errorText({ error: 'Texte inconnu' }), 'Texte inconnu');
   assert.equal(I.errorText(null), 'Error');
@@ -193,10 +193,10 @@ await test('server t/tn read the same dictionaries; errorBody; normalizeLogEntry
   assert.equal(S.t('fr', 'Carte'), 'Carte');
   assert.equal(S.t('en', 'Action inconnue : {type}', { type: 'x/y' }), 'Unknown action: x/y');
   assert.equal(S.t('en', 'Clé inexistante {a}', { a: 1 }), 'Clé inexistante 1');
-  assert.equal(S.tn('en', 3, '{n} joueur', '{n} joueurs'), '3 players');
-  assert.equal(S.tn('fr', 1, '{n} joueur', '{n} joueurs'), '1 joueur');
-  assert.deepEqual(S.errorBody('Ce personnage est déjà pris par {name}', { name: 'Bob' }), { error: 'Ce personnage est déjà pris par Bob', errorKey: 'Ce personnage est déjà pris par {name}', params: { name: 'Bob' } });
-  assert.deepEqual(S.errorBody('Fichier vide', null, { code: 'x' }), { error: 'Fichier vide', errorKey: 'Fichier vide', code: 'x' });
+  assert.equal(S.tn('en', 3, '{n} player', '{n} players'), '3 players');
+  assert.equal(S.tn('fr', 1, '{n} player', '{n} players'), '1 joueur');
+  assert.deepEqual(S.errorBody('This character is already taken by {name}', { name: 'Bob' }), { error: 'Ce personnage est déjà pris par Bob', errorKey: 'This character is already taken by {name}', params: { name: 'Bob' } });
+  assert.deepEqual(S.errorBody('Empty file', null, { code: 'x' }), { error: 'Fichier vide', errorKey: 'Empty file', code: 'x' });
   // A function param is invalid input on purpose (dropped by normalizeLogEntry).
   const e = S.normalizeLogEntry({ kind: 'system', i18n: { key: '{actor} entre dans le combat !', params: { actor: 'Jane', bad: (() => 0) as unknown as string } } } as NewLogEntry);
   assert.equal(e.text, 'Jane entre dans le combat !');

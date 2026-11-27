@@ -45,19 +45,19 @@ function MissingTranslations() {
   }, []);
   const json = () => JSON.stringify(Object.fromEntries(Object.keys(missingKeys()).map((k) => [k, ''])), null, 2);
   const copy = async () => {
-    if (await copyText(json())) toast(t('Liste copiée dans le presse-papiers (JSON à compléter)'), 'success');
-    else toast(t('Copie impossible : ouvre la liste et copie-la à la main'), 'error');
+    if (await copyText(json())) toast(t('List copied to the clipboard (JSON to fill in)'), 'success');
+    else toast(t('Could not copy: open the list and copy it by hand'), 'error');
   };
   return (
     <div className="col gap-s">
       <div className="i18n-missing">
-        <span>{t('Traductions manquantes :')}</span>
+        <span>{t('Missing translations:')}</span>
         <span className={'i18n-count' + (count ? '' : ' zero')}>{count}</span>
         <Button small disabled={!count} onClick={copy}>
-          {t('Copier en JSON')}
+          {t('Copy as JSON')}
         </Button>
         <Button small variant="ghost" disabled={!count} onClick={() => setOpen(!open)}>
-          {open ? t('Masquer la liste') : t('Voir la liste')}
+          {open ? t('Hide the list') : t('Show the list')}
         </Button>
         <Button
           small
@@ -69,11 +69,11 @@ function MissingTranslations() {
             setOpen(false);
           }}
         >
-          {t('Remettre à zéro')}
+          {t('Reset')}
         </Button>
       </div>
       {open && count > 0 && <div className="i18n-missing-list">{Object.keys(missingKeys()).join('\n')}</div>}
-      <span className="field-hint">{t('Textes affichés depuis l’ouverture de cette page sans traduction anglaise. Les traducteurs complètent client/i18n/en/*.json (outil : node tools/i18n-check.ts).')}</span>
+      <span className="field-hint">{t('Texts shown since this page was opened that have no English translation. Translators fill in client/i18n/en/*.json (tool: node tools/i18n-check.ts).')}</span>
     </div>
   );
 }
@@ -91,16 +91,16 @@ export default function SettingsPage({ game }: GameProps) {
     const file = e.target.files?.[0];
     e.target.value = ''; // so picking the same (corrected) file again fires onChange
     if (!file) return;
-    if (!(await confirmAction(t('Remplacer toute la partie par cette sauvegarde ? (une sauvegarde automatique est faite avant)')))) return;
+    if (!(await confirmAction(t('Replace the whole game with this save? (an automatic backup is made first)')))) return;
     try {
       let body;
       try {
         body = JSON.parse(await file.text());
       } catch {
-        return toast(t('Fichier de sauvegarde invalide'), 'error');
+        return toast(t('Invalid save file'), 'error');
       }
       await api('/api/admin/import', { method: 'POST', body });
-      toast(t('Sauvegarde importée'), 'success');
+      toast(t('Save imported'), 'success');
     } catch (err) {
       toast((err as Error).message, 'error');
     }
@@ -109,18 +109,18 @@ export default function SettingsPage({ game }: GameProps) {
   return (
     <div className="page">
       <div className="page-title">
-        <h2>{t('Réglages')}</h2>
+        <h2>{t('Settings')}</h2>
       </div>
       <div className="grid-2">
-        <Panel title={t('Partie')}>
+        <Panel title={t('Game')}>
           <div className="col">
-            <Field label={t('Nom de la campagne')} hint={t('C’est aussi le nom de la table sur la page d’accueil.')}>
+            <Field label={t('Campaign name')} hint={t('It is also the table\'s name on the home page.')}>
               <TextInput value={game.config.campaignName} onChange={(v) => v.trim() && send('config/update', { campaignName: v })} />
             </Field>
-            <Field label={t('Langue de la table')} hint={t('Langue par défaut des joueurs qui n’en ont pas choisi une (sélecteur FR/EN en haut de l’écran).')}>
+            <Field label={t('Table language')} hint={t('Default language for players who have not picked one (FR/EN switch at the top of the screen).')}>
               <Select value={game.config.lang || 'fr'} options={LANG_OPTIONS} onChange={(v) => send('config/update', { lang: v })} />
             </Field>
-            <Field label={t('Nouveau mot de passe MJ')} hint={t('Choisis un mot de passe que les joueurs ne connaissent pas (le mot de passe d’installation « lazarus » doit être changé).')}>
+            <Field label={t('New GM password')} hint={t('Pick a password the players don\'t know (the installation password “lazarus” must be changed).')}>
               <div className="row">
                 <input className="input" type="password" value={pwd} onChange={(e) => setPwd(e.target.value)} />
                 <Button
@@ -128,21 +128,21 @@ export default function SettingsPage({ game }: GameProps) {
                     pwd &&
                     send('config/update', { gmPassword: pwd }).then(() => {
                       setPwd('');
-                      toast(t('Mot de passe changé'), 'success');
+                      toast(t('Password changed'), 'success');
                     })
                   }
                 >
-                  {t('Changer')}
+                  {t('Change')}
                 </Button>
               </div>
             </Field>
-            <Field label={t('Lien pour les joueurs')} hint={t('Envoie ce lien aux joueurs. Sur le même réseau Wi-Fi, remplace « localhost » par l’adresse IP affichée dans la console du serveur.')}>
+            <Field label={t('Link for the players')} hint={t('Send this link to the players. On the same Wi-Fi network, replace “localhost” with the IP address shown in the server console.')}>
               <code className="mono cyan">{playerUrl}</code>
             </Field>
-            <Field label={t('Bandeau d’annonce (visible par tous)')}>
+            <Field label={t('Announcement banner (visible to everyone)')}>
               <div className="row">
-                <TextInput value={announce} live onChange={setAnnounce} placeholder={t('ex. Pause 10 minutes')} />
-                <Button onClick={() => send('ui/announce', { text: announce })}>{t('Afficher')}</Button>
+                <TextInput value={announce} live onChange={setAnnounce} placeholder={t('e.g. 10-minute break')} />
+                <Button onClick={() => send('ui/announce', { text: announce })}>{t('Show')}</Button>
                 <Button
                   variant="ghost"
                   onClick={() => {
@@ -150,31 +150,31 @@ export default function SettingsPage({ game }: GameProps) {
                     send('ui/announce', { text: null });
                   }}
                 >
-                  {t('Effacer')}
+                  {t('Clear')}
                 </Button>
               </div>
             </Field>
           </div>
         </Panel>
 
-        <Panel title={t('Sauvegardes')}>
+        <Panel title={t('Backups')}>
           <div className="col">
-            <p className="muted small">{t('La partie est enregistrée automatiquement sur le serveur, avec une copie de secours toutes les 15 minutes (dossier backups/ de la table).')}</p>
+            <p className="muted small">{t('The game is saved automatically on the server, with a backup copy every 15 minutes (the table\'s backups/ folder).')}</p>
             <div className="row wrap">
               <Button
                 onClick={() =>
                   api<{ file: string }>('/api/admin/backup', { method: 'POST' })
-                    .then((r) => toast(t('Sauvegarde : {file}', { file: r.file }), 'success'))
-                    .catch((err: Error) => toast(err.message || t('Sauvegarde impossible'), 'error'))
+                    .then((r) => toast(t('Backup: {file}', { file: r.file }), 'success'))
+                    .catch((err: Error) => toast(err.message || t('Backup failed'), 'error'))
                 }
               >
-                {t('Créer une sauvegarde')}
+                {t('Create a backup')}
               </Button>
               <a className="btn" href={'/api/admin/export?token=' + getToken()} download="shadowrun-partie.json">
-                {t('Télécharger la partie')}
+                {t('Download the game')}
               </a>
               <label className="btn">
-                {t('Importer une partie')}
+                {t('Import a game')}
                 <input type="file" accept=".json" className="hidden" onChange={doImport} />
               </label>
             </div>
@@ -182,20 +182,20 @@ export default function SettingsPage({ game }: GameProps) {
               <Button
                 variant="danger"
                 onClick={async () => {
-                  if (await confirmAction(t('Réinitialiser la partie depuis les données de départ ? Personnages, cartes et journal reviennent à zéro (une sauvegarde est faite avant).'))) {
+                  if (await confirmAction(t('Reset the game from the starting data? Characters, maps and log go back to zero (a backup is made first).'))) {
                     try {
                       await api('/api/admin/reset', { method: 'POST' });
-                      toast(t('Partie réinitialisée'), 'success');
+                      toast(t('Game reset'), 'success');
                     } catch (err) {
-                      toast((err as Error).message || t('Réinitialisation impossible'), 'error');
+                      toast((err as Error).message || t('Reset failed'), 'error');
                     }
                   }
                 }}
               >
-                {t('Réinitialiser depuis les données de départ')}
+                {t('Reset from the starting data')}
               </Button>
-              <Button variant="ghost" onClick={async () => (await confirmAction(t('Vider le journal ?'))) && send('log/clear')}>
-                {t('Vider le journal')}
+              <Button variant="ghost" onClick={async () => (await confirmAction(t('Clear the log?'))) && send('log/clear')}>
+                {t('Clear the log')}
               </Button>
             </div>
           </div>
@@ -205,16 +205,16 @@ export default function SettingsPage({ game }: GameProps) {
       <FoundryUpload onChanged={() => setFoundryRev((n) => n + 1)} />
       <FoundryPanel key={foundryRev} game={game} />
 
-      <h3 className="section-title">{t('Joueurs')}</h3>
+      <h3 className="section-title">{t('Players')}</h3>
       <Panel pad={false}>
         {users.length ? (
           <table className="sr">
             <thead>
               <tr>
-                <th>{t('Joueur')}</th>
-                <th>{t('État')}</th>
-                <th>{t('Personnage(s)')}</th>
-                <th>{t('Attribuer')}</th>
+                <th>{t('Player')}</th>
+                <th>{t('Status')}</th>
+                <th>{t('Character(s)')}</th>
+                <th>{t('Assign')}</th>
                 <th></th>
               </tr>
             </thead>
@@ -224,7 +224,7 @@ export default function SettingsPage({ game }: GameProps) {
                   <td>
                     <strong>{u.name}</strong>
                   </td>
-                  <td>{(game.online || []).includes(u.id) ? <Badge color="green">{t('en ligne')}</Badge> : <Badge>{t('hors ligne')}</Badge>}</td>
+                  <td>{(game.online || []).includes(u.id) ? <Badge color="green">{t('online')}</Badge> : <Badge>{t('offline')}</Badge>}</td>
                   <td>
                     {(u.characterIds || []).map((id) => (
                       <Fragment key={id}>
@@ -233,7 +233,7 @@ export default function SettingsPage({ game }: GameProps) {
                           <button
                             className="icon-btn"
                             style={{ width: 16, height: 16, fontSize: 10 }}
-                            title={t('Retirer')}
+                            title={t('Remove')}
                             onClick={() => send('users/assign', { userId: u.id, characterId: id, assign: false })}
                           >
                             ✕
@@ -245,16 +245,16 @@ export default function SettingsPage({ game }: GameProps) {
                   <td>
                     <Select
                       value=""
-                      options={[{ value: '', label: t('— donner un personnage —') }, ...pcs.map((p) => ({ value: p.id, label: p.name }))]}
+                      options={[{ value: '', label: t('— give a character —') }, ...pcs.map((p) => ({ value: p.id, label: p.name }))]}
                       onChange={(id) => id && send('users/assign', { userId: u.id, characterId: id, assign: true })}
                     />
                   </td>
                   <td className="right">
-                    <Button small variant="ghost" onClick={() => send('users/resetPin', { userId: u.id }).then(() => toast(t('PIN effacé'), 'success'))}>
-                      {t('Effacer PIN')}
+                    <Button small variant="ghost" onClick={() => send('users/resetPin', { userId: u.id }).then(() => toast(t('PIN cleared'), 'success'))}>
+                      {t('Clear PIN')}
                     </Button>
-                    <Button small variant="danger" onClick={async () => (await confirmAction(t('Supprimer le joueur {name} ?', { name: u.name }))) && send('users/remove', { userId: u.id })}>
-                      {t('Supprimer')}
+                    <Button small variant="danger" onClick={async () => (await confirmAction(t('Delete player {name}?', { name: u.name }))) && send('users/remove', { userId: u.id })}>
+                      {t('Delete')}
                     </Button>
                   </td>
                 </tr>
@@ -262,11 +262,11 @@ export default function SettingsPage({ game }: GameProps) {
             </tbody>
           </table>
         ) : (
-          <Empty>{t('Aucun joueur ne s’est encore connecté. Envoie-leur le lien ci-dessus.')}</Empty>
+          <Empty>{t('No player has connected yet. Send them the link above.')}</Empty>
         )}
       </Panel>
 
-      <h3 className="section-title">{t('Traductions')}</h3>
+      <h3 className="section-title">{t('Translations')}</h3>
       <Panel>
         <MissingTranslations />
       </Panel>

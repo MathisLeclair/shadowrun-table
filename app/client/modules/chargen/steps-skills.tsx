@@ -31,7 +31,7 @@ export function StepSkills({ data, update, result, issues }: StepProps) {
   const setField = <K extends keyof SkillRow>(id: string, k: K, v: SkillRow[K]) => update((d) => (ensure(d, id)[k] = v));
   const remove = (id: string) => update((d) => (d.skills = d.skills.filter((s) => s.id !== id)));
   const taken = new Set(rows);
-  const options = [{ value: '', label: t('+ Ajouter une compétence…') }];
+  const options = [{ value: '', label: t('+ Add a skill…') }];
   for (const cat of Object.keys(SKILL_CATEGORIES)) {
     const list = SKILLS.filter((s) => s.cat === cat && !taken.has(s.id) && skillAllowed(data, s.id) && !(s.group && groupR[s.group] > 0));
     if (!list.length) continue;
@@ -39,7 +39,7 @@ export function StepSkills({ data, update, result, issues }: StepProps) {
     for (const s of list) options.push({ value: s.id, label: `${skillLabel(s)} (${attrShort(s.attr)})` });
   }
   const groupOpts = [
-    { value: '', label: t('+ Ajouter un groupe…') },
+    { value: '', label: t('+ Add a group…') },
     ...Object.keys(SKILL_GROUPS)
       .filter((gid) => !data.groups.some((g) => g.id === gid) && SKILLS.filter((s) => s.group === gid).every((s) => skillAllowed(data, s.id)))
       .map((value) => ({ value, label: skillGroupLabel(value) as string })),
@@ -50,26 +50,26 @@ export function StepSkills({ data, update, result, issues }: StepProps) {
     <div className="cg-step">
       <p className="cg-lead">
         {t(
-          'Indice 6 maximum à la création (7 avec la qualité Aptitude). Une spécialisation coûte 1 point de compétence (ou 7 karma) et donne +2 dés. Les compétences d’un groupe montent ensemble et ne se spécialisent pas séparément.'
+          'Rating 6 maximum at creation (7 with the Aptitude quality). A specialization costs 1 skill point (or 7 karma) and gives +2 dice. Skills in a group rise together and cannot be specialized separately.'
         )}
       </p>
       <div className="row wrap cg-budget-row">
-        <Budget label={t('Points de compétences')} used={r.spent.skillPoints} total={r.budgets.skillPoints} />
-        <Budget label={t('Points de groupes')} used={r.spent.groupPoints} total={r.budgets.groupPoints} />
-        <Budget label={t('Karma dépensé')} used={r.karma.spent} total={r.karma.total} />
+        <Budget label={t('Skill points')} used={r.spent.skillPoints} total={r.budgets.skillPoints} />
+        <Budget label={t('Skill group points')} used={r.spent.groupPoints} total={r.budgets.groupPoints} />
+        <Budget label={t('Karma spent')} used={r.karma.spent} total={r.karma.total} />
       </div>
-      <Panel title={t('Compétences actives')} pad={false}>
+      <Panel title={t('Active Skills')} pad={false}>
         <div className="cg-table-wrap">
           <table className="sr cg-skill-table">
             <thead>
               <tr>
-                <th>{t('Compétence')}</th>
-                <th title={t('Base gratuite (priorité Magie) ou groupe')}>{t('Base')}</th>
+                <th>{t('Skill')}</th>
+                <th title={t('Free base (Magic priority) or group')}>{t('Base')}</th>
                 <th>{t('Points · Karma')}</th>
-                <th>{t('Spécialisation')}</th>
-                <th className="right">{t('Indice')}</th>
-                <th className="right" title={t('Indice + attribut')}>
-                  {t('Réserve')}
+                <th>{t('Specialization')}</th>
+                <th className="right">{t('Rating')}</th>
+                <th className="right" title={t('Rating + attribute')}>
+                  {t('Pool')}
                 </th>
                 <th></th>
               </tr>
@@ -97,7 +97,7 @@ export function StepSkills({ data, update, result, issues }: StepProps) {
                       )}
                     </td>
                     <td className="mono small">
-                      {free ? <Badge color="magenta">{t('{n} magie', { n: free })}</Badge> : grp ? <Badge color="cyan">{t('{n} groupe', { n: grp })}</Badge> : <span className="faint">—</span>}
+                      {free ? <Badge color="magenta">{t('{n} magic', { n: free })}</Badge> : grp ? <Badge color="cyan">{t('{n} group', { n: grp })}</Badge> : <span className="faint">—</span>}
                     </td>
                     <td>
                       <PointsKarma
@@ -115,9 +115,9 @@ export function StepSkills({ data, update, result, issues }: StepProps) {
                         <span className="faint small">—</span>
                       ) : (
                         <span className="row gap-s">
-                          <TextInput live className="cg-spec" value={s.spec} placeholder={t('ex. Semi-automatiques')} onChange={(v) => setField(id, 'spec', v)} />
+                          <TextInput live className="cg-spec" value={s.spec} placeholder={t('e.g. Semi-automatics')} onChange={(v) => setField(id, 'spec', v)} />
                           {s.spec && (
-                            <label className="small muted cg-nowrap" title={t('Payer la spécialisation 7 karma au lieu d’1 point')}>
+                            <label className="small muted cg-nowrap" title={t('Pay 7 karma for the specialization instead of 1 point')}>
                               <input type="checkbox" checked={s.specKarma} onChange={(e) => setField(id, 'specKarma', e.target.checked)} /> 7 K
                             </label>
                           )}
@@ -138,14 +138,14 @@ export function StepSkills({ data, update, result, issues }: StepProps) {
                         ''
                       )}
                     </td>
-                    <td>{!free && <IconButton icon="✕" title={t('Retirer')} onClick={() => remove(id)} />}</td>
+                    <td>{!free && <IconButton icon="✕" title={t('Remove')} onClick={() => remove(id)} />}</td>
                   </tr>
                 );
               })}
               {!rows.length && (
                 <tr>
                   <td colSpan={7} className="muted center">
-                    {t('Aucune compétence : ajoute-en avec le menu ci-dessous.')}
+                    {t('No skills: add some with the menu below.')}
                   </td>
                 </tr>
               )}
@@ -171,7 +171,7 @@ export function StepSkills({ data, update, result, issues }: StepProps) {
         </div>
       </Panel>
 
-      <Panel title={t('Groupes de compétences')} pad={false} className="cg-mt">
+      <Panel title={t('Skill Groups')} pad={false} className="cg-mt">
         <table className="sr cg-skill-table">
           <tbody>
             {data.groups.map((g) => {
@@ -188,7 +188,7 @@ export function StepSkills({ data, update, result, issues }: StepProps) {
                         .join(', ')}
                     </div>
                   </td>
-                  <td className="mono small">{free ? <Badge color="magenta">{t('{n} magie', { n: free })}</Badge> : ''}</td>
+                  <td className="mono small">{free ? <Badge color="magenta">{t('{n} magic', { n: free })}</Badge> : ''}</td>
                   <td>
                     <PointsKarma
                       points={g.points}
@@ -212,7 +212,7 @@ export function StepSkills({ data, update, result, issues }: StepProps) {
                   <td className="num-cell">
                     <strong>{rating}</strong>
                   </td>
-                  <td>{!free && <IconButton icon="✕" title={t('Retirer')} onClick={() => update((d) => (d.groups = d.groups.filter((x) => x.id !== g.id)))} />}</td>
+                  <td>{!free && <IconButton icon="✕" title={t('Remove')} onClick={() => update((d) => (d.groups = d.groups.filter((x) => x.id !== g.id)))} />}</td>
                 </tr>
               );
             })}
@@ -222,11 +222,11 @@ export function StepSkills({ data, update, result, issues }: StepProps) {
                   <strong>{skillGroupLabel(r.magic.freeGroupId)}</strong>
                 </td>
                 <td>
-                  <Badge color="magenta">{t('{n} magie', { n: r.magic.row?.group?.rating })}</Badge>
+                  <Badge color="magenta">{t('{n} magic', { n: r.magic.row?.group?.rating })}</Badge>
                 </td>
                 <td>
                   <Button small variant="ghost" onClick={() => update((d) => d.groups.push({ id: r.magic.freeGroupId, points: 0, karma: 0 }))}>
-                    {t('Augmenter')}
+                    {t('Raise')}
                   </Button>
                 </td>
                 <td className="num-cell">
@@ -238,7 +238,7 @@ export function StepSkills({ data, update, result, issues }: StepProps) {
             {!data.groups.length && !r.magic.freeGroupId && (
               <tr>
                 <td colSpan={5} className="muted center">
-                  {t('Un groupe coûte 1 point de groupe par indice pour toutes ses compétences.')}
+                  {t('A group costs 1 group point per rating for all its skills.')}
                 </td>
               </tr>
             )}
@@ -273,20 +273,20 @@ export function StepContacts({ data, update, result, issues }: StepProps) {
   return (
     <div className="cg-step">
       <div className="row wrap cg-budget-row">
-        <Budget label={t('Points de connaissances')} used={r.spent.knowledgePoints} total={r.budgets.knowledgePoints} title={t('(Intuition + Logique) × 2')} />
-        <Budget label={t('Karma de contacts')} used={r.spent.contactKarma} total={r.budgets.contactKarma} title={t('Charisme × 3 gratuits, puis karma général')} />
-        <Budget label={t('Karma dépensé')} used={r.karma.spent} total={r.karma.total} />
+        <Budget label={t('Knowledge points')} used={r.spent.knowledgePoints} total={r.budgets.knowledgePoints} title={t('(Intuition + Logic) × 2')} />
+        <Budget label={t('Contact karma')} used={r.spent.contactKarma} total={r.budgets.contactKarma} title={t('Charisma × 3 free, then general karma')} />
+        <Budget label={t('Karma spent')} used={r.karma.spent} total={r.karma.total} />
       </div>
       <Panel
-        title={t('Connaissances & langues')}
+        title={t('Knowledge & languages')}
         pad={false}
         actions={
           <>
             <Button small onClick={() => update((d) => d.knowledge.push({ id: rowId('k'), name: '', type: 'language', points: 0, karma: 0, native: true } as KnowledgeRow))}>
-              + {t('Langue maternelle')}
+              + {t('Native language')}
             </Button>
             <Button small onClick={() => update((d) => d.knowledge.push({ id: rowId('k'), name: '', type: 'street', points: 1, karma: 0 } as KnowledgeRow))}>
-              + {t('Connaissance')}
+              + {t('Knowledge')}
             </Button>
           </>
         }
@@ -295,11 +295,11 @@ export function StepContacts({ data, update, result, issues }: StepProps) {
           <table className="sr cg-skill-table">
             <thead>
               <tr>
-                <th>{t('Nom')}</th>
+                <th>{t('Name')}</th>
                 <th>{t('Type')}</th>
                 <th>{t('Points · Karma')}</th>
-                <th>{t('Spécialisation')}</th>
-                <th className="right">{t('Indice')}</th>
+                <th>{t('Specialization')}</th>
+                <th className="right">{t('Rating')}</th>
                 <th></th>
               </tr>
             </thead>
@@ -307,12 +307,12 @@ export function StepContacts({ data, update, result, issues }: StepProps) {
               {data.knowledge.map((k) => (
                 <tr key={k.id}>
                   <td>
-                    <TextInput live value={k.name} placeholder={k.native ? t('ex. Français') : t('ex. Gangs de Seattle')} onChange={(v) => setK(k.id, 'name', v)} />
+                    <TextInput live value={k.name} placeholder={k.native ? t('e.g. English') : t('e.g. Seattle gangs')} onChange={(v) => setK(k.id, 'name', v)} />
                   </td>
-                  <td>{k.native ? <Badge color="cyan">{t('Langue maternelle')}</Badge> : <Select value={k.type} options={ktypes()} onChange={(v) => setK(k.id, 'type', v)} />}</td>
+                  <td>{k.native ? <Badge color="cyan">{t('Native language')}</Badge> : <Select value={k.type} options={ktypes()} onChange={(v) => setK(k.id, 'type', v)} />}</td>
                   <td>
                     {k.native ? (
-                      <span className="faint small">{t('gratuite')}</span>
+                      <span className="faint small">{t('free')}</span>
                     ) : (
                       <PointsKarma
                         points={k.points}
@@ -327,14 +327,14 @@ export function StepContacts({ data, update, result, issues }: StepProps) {
                   <td>{k.native ? '' : <TextInput live className="cg-spec" value={k.spec} placeholder={t('1 point')} onChange={(v) => setK(k.id, 'spec', v)} />}</td>
                   <td className="num-cell">{k.native ? 'N' : k.points + k.karma}</td>
                   <td>
-                    <IconButton icon="✕" title={t('Retirer')} onClick={() => update((d) => (d.knowledge = d.knowledge.filter((x) => x.id !== k.id)))} />
+                    <IconButton icon="✕" title={t('Remove')} onClick={() => update((d) => (d.knowledge = d.knowledge.filter((x) => x.id !== k.id)))} />
                   </td>
                 </tr>
               ))}
               {!data.knowledge.length && (
                 <tr>
                   <td colSpan={6} className="muted center">
-                    {t('Commence par la langue maternelle (gratuite), puis ce que ton runner connaît : rues, métiers, passions, langues.')}
+                    {t('Start with the native language (free), then what your runner knows: streets, trades, interests, languages.')}
                   </td>
                 </tr>
               )}
@@ -357,9 +357,9 @@ export function StepContacts({ data, update, result, issues }: StepProps) {
           <table className="sr cg-skill-table">
             <thead>
               <tr>
-                <th>{t('Nom & rôle')}</th>
-                <th title={t('Influence du contact (1-12)')}>{t('contact::Influence')}</th>
-                <th title={t('Ce qu’il ferait pour toi (1-6)')}>{t('Loyauté')}</th>
+                <th>{t('Name & role')}</th>
+                <th title={t('Contact’s Connection (1-12)')}>{t('contact::Connection')}</th>
+                <th title={t('What they would do for you (1-6)')}>{t('Loyalty')}</th>
                 <th>{t('Notes')}</th>
                 <th className="right">{t('Karma')}</th>
                 <th></th>
@@ -369,7 +369,7 @@ export function StepContacts({ data, update, result, issues }: StepProps) {
               {data.contacts.map((c) => (
                 <tr key={c.id}>
                   <td>
-                    <TextInput live value={c.name} placeholder={t('ex. Perrine Cabana (fixer)')} onChange={(v) => setC(c.id, 'name', v)} />
+                    <TextInput live value={c.name} placeholder={t('e.g. Perrine Cabana (fixer)')} onChange={(v) => setC(c.id, 'name', v)} />
                   </td>
                   <td>
                     <NumberInput small value={c.connection} min={1} max={LIMITS.contactConnectionMax} onChange={(v) => setC(c.id, 'connection', v)} />
@@ -378,18 +378,18 @@ export function StepContacts({ data, update, result, issues }: StepProps) {
                     <NumberInput small value={c.loyalty} min={1} max={LIMITS.contactLoyaltyMax} onChange={(v) => setC(c.id, 'loyalty', v)} />
                   </td>
                   <td>
-                    <TextInput live value={c.notes} placeholder={t('Comment vous vous connaissez')} onChange={(v) => setC(c.id, 'notes', v)} />
+                    <TextInput live value={c.notes} placeholder={t('How you know each other')} onChange={(v) => setC(c.id, 'notes', v)} />
                   </td>
                   <td className="num-cell">{c.connection + c.loyalty}</td>
                   <td>
-                    <IconButton icon="✕" title={t('Retirer')} onClick={() => update((d) => (d.contacts = d.contacts.filter((x) => x.id !== c.id)))} />
+                    <IconButton icon="✕" title={t('Remove')} onClick={() => update((d) => (d.contacts = d.contacts.filter((x) => x.id !== c.id)))} />
                   </td>
                 </tr>
               ))}
               {!data.contacts.length && (
                 <tr>
                   <td colSpan={6} className="muted center">
-                    {t('Chaque contact coûte Influence + Loyauté en karma ; Charisme × 3 sont offerts.')}
+                    {t('Each contact costs Connection + Loyalty in karma; Charisma × 3 are free.')}
                   </td>
                 </tr>
               )}
@@ -397,8 +397,8 @@ export function StepContacts({ data, update, result, issues }: StepProps) {
           </table>
         </div>
       </Panel>
-      <Panel title={t('Mot pour le MJ')} className="cg-mt">
-        <Field label={t('Questions, demandes particulières, liens avec l’équipe…')}>
+      <Panel title={t('Note for the GM')} className="cg-mt">
+        <Field label={t('Questions, special requests, ties to the team…')}>
           <TextInput live multiline rows={3} value={data.notes} onChange={(v) => update((d) => (d.notes = v))} />
         </Field>
       </Panel>

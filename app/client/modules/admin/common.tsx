@@ -24,7 +24,7 @@ export function Progress({ value, serverLabel }: { value: UploadProgress; server
       <div className={'admin-progress' + (server ? ' indeterminate' : '')}>
         <div style={{ width: `${pct}%` }}></div>
       </div>
-      <span className="muted small">{server ? serverLabel : t('Envoi… {pct} %', { pct })}</span>
+      <span className="muted small">{server ? serverLabel : t('Uploading… {pct}%', { pct })}</span>
     </div>
   );
 }

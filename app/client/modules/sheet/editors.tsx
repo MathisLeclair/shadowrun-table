@@ -20,54 +20,54 @@ const lifestyleBaseOptions = () => Object.entries(LIFESTYLE_BASES).map(([value, 
 /** Field schemas of each item list, for the GM editor. Labels / option labels are French keys (rendered with t()). */
 export const LIST_FIELDS: Record<string, FieldDef[]> = {
   weapons: [
-    { k: 'name', label: tk('Nom'), w: 170 }, { k: 'kind', label: tk('Type'), type: 'select', options: [{ value: 'melee', label: tk('Mêlée') }, { value: 'ranged', label: tk('Distance') }] },
-    { k: 'skill', label: tk('Compétence'), type: 'select', options: combatSkillOptions }, { k: 'accuracy', label: tk('Préc.'), w: 70 }, { k: 'damage', label: tk('VD'), w: 90 },
-    { k: 'ap', label: tk('PA'), w: 50 }, { k: 'mode', label: tk('Mode'), w: 80 }, { k: 'rc', label: tk('RC'), type: 'num' }, { k: 'ammo', label: tk('Munitions'), w: 80 },
-    { k: 'reach', label: tk('Allonge'), type: 'num' }, { k: 'qty', label: tk('Qté'), type: 'num' }, { k: 'category', label: tk('Catégorie'), w: 110 }, { k: 'notes', label: tk('Notes'), w: 180 },
+    { k: 'name', label: tk('Name'), w: 170 }, { k: 'kind', label: tk('Type'), type: 'select', options: [{ value: 'melee', label: tk('Melee') }, { value: 'ranged', label: tk('Ranged') }] },
+    { k: 'skill', label: tk('Skill'), type: 'select', options: combatSkillOptions }, { k: 'accuracy', label: tk('Acc.'), w: 70 }, { k: 'damage', label: tk('DV'), w: 90 },
+    { k: 'ap', label: tk('AP'), w: 50 }, { k: 'mode', label: tk('Mode'), w: 80 }, { k: 'rc', label: tk('RC'), type: 'num' }, { k: 'ammo', label: tk('Ammo'), w: 80 },
+    { k: 'reach', label: tk('Reach'), type: 'num' }, { k: 'qty', label: tk('Qty'), type: 'num' }, { k: 'category', label: tk('Category'), w: 110 }, { k: 'notes', label: tk('Notes'), w: 180 },
   ],
   armor: [
-    { k: 'name', label: tk('Nom'), w: 200 }, { k: 'rating', label: tk('Indice'), type: 'num' }, { k: 'equipped', label: tk('armure::Portée'), type: 'bool' },
-    { k: 'stack', label: tk('Cumulable'), type: 'bool' }, { k: 'itemRating', label: tk('Indice (objet)'), type: 'num' }, { k: 'choice', label: tk('Choix (effet)'), w: 110 },
+    { k: 'name', label: tk('Name'), w: 200 }, { k: 'rating', label: tk('Rating'), type: 'num' }, { k: 'equipped', label: tk('armor::Worn'), type: 'bool' },
+    { k: 'stack', label: tk('Stacks'), type: 'bool' }, { k: 'itemRating', label: tk('Rating (item)'), type: 'num' }, { k: 'choice', label: tk('Choice (effect)'), w: 110 },
     { k: 'notes', label: tk('Notes'), w: 220 },
   ],
   augmentations: [
-    { k: 'name', label: tk('Nom'), w: 200 }, { k: 'kind', label: tk('Type'), type: 'select', options: [{ value: 'cyberware', label: tk('Cyberware') }, { value: 'bioware', label: tk('Bioware') }] },
-    { k: 'grade', label: tk('Grade'), type: 'select', options: [{ value: 'standard', label: tk('Standard') }, { value: 'used', label: tk('Occasion') }, { value: 'alpha', label: tk('Alpha') }, { value: 'beta', label: tk('Bêta') }, { value: 'delta', label: tk('Delta') }] },
-    { k: 'rating', label: tk('Indice'), type: 'num' }, { k: 'essence', label: tk('Essence'), type: 'num', step: 0.05 }, { k: 'choice', label: tk('Choix (effet)'), w: 110 },
+    { k: 'name', label: tk('Name'), w: 200 }, { k: 'kind', label: tk('Type'), type: 'select', options: [{ value: 'cyberware', label: tk('Cyberware') }, { value: 'bioware', label: tk('Bioware') }] },
+    { k: 'grade', label: tk('Grade'), type: 'select', options: [{ value: 'standard', label: tk('Standard') }, { value: 'used', label: tk('Used') }, { value: 'alpha', label: tk('long::Alphaware') }, { value: 'beta', label: tk('long::Betaware') }, { value: 'delta', label: tk('long::Deltaware') }] },
+    { k: 'rating', label: tk('Rating'), type: 'num' }, { k: 'essence', label: tk('Essence'), type: 'num', step: 0.05 }, { k: 'choice', label: tk('Choice (effect)'), w: 110 },
     { k: 'notes', label: tk('Notes'), w: 220 },
   ],
   gear: [
-    { k: 'name', label: tk('Nom'), w: 200 }, { k: 'category', label: tk('Catégorie'), w: 120 }, { k: 'rating', label: tk('Indice'), type: 'num' }, { k: 'qty', label: tk('Qté'), type: 'num' },
-    { k: 'active', label: tk('Actif'), type: 'bool' }, { k: 'choice', label: tk('Choix (effet)'), w: 110 }, { k: 'notes', label: tk('Notes'), w: 200 },
+    { k: 'name', label: tk('Name'), w: 200 }, { k: 'category', label: tk('Category'), w: 120 }, { k: 'rating', label: tk('Rating'), type: 'num' }, { k: 'qty', label: tk('Qty'), type: 'num' },
+    { k: 'active', label: tk('Active'), type: 'bool' }, { k: 'choice', label: tk('Choice (effect)'), w: 110 }, { k: 'notes', label: tk('Notes'), w: 200 },
   ],
   vehicles: [
-    { k: 'name', label: tk('Nom'), w: 180 }, { k: 'handling', label: tk('Maniab.'), w: 60 }, { k: 'speed', label: tk('Vitesse'), w: 60 }, { k: 'accel', label: tk('Accél.'), w: 60 },
-    { k: 'body', label: tk('Struct.'), type: 'num' }, { k: 'armor', label: tk('Blind.'), type: 'num' }, { k: 'pilot', label: tk('Autopilote'), type: 'num' }, { k: 'sensor', label: tk('Senseurs'), type: 'num' },
-    { k: 'seats', label: tk('Places'), type: 'num' }, { k: 'notes', label: tk('Notes'), w: 180 },
+    { k: 'name', label: tk('Name'), w: 180 }, { k: 'handling', label: tk('Handl.'), w: 60 }, { k: 'speed', label: tk('Speed'), w: 60 }, { k: 'accel', label: tk('Accel.'), w: 60 },
+    { k: 'body', label: tk('vehicle-abbr::Body'), type: 'num' }, { k: 'armor', label: tk('vehicle-abbr::Armor'), type: 'num' }, { k: 'pilot', label: tk('Pilot'), type: 'num' }, { k: 'sensor', label: tk('Sensor'), type: 'num' },
+    { k: 'seats', label: tk('Seats'), type: 'num' }, { k: 'notes', label: tk('Notes'), w: 180 },
   ],
-  contacts: [{ k: 'name', label: tk('Nom'), w: 180 }, { k: 'role', label: tk('Rôle'), w: 140 }, { k: 'connection', label: tk('contact::Connexion'), type: 'num' }, { k: 'loyalty', label: tk('Loyauté'), type: 'num' }, { k: 'notes', label: tk('Notes'), w: 220 }],
-  sins: [{ k: 'name', label: tk('Identité'), w: 200 }, { k: 'rating', label: tk('Indice'), type: 'num' }, { k: 'licenses', label: tk('Licences (séparées par des virgules)'), type: 'tags', w: 240 }, { k: 'real', label: tk('Vrai SIN'), type: 'bool' }, { k: 'burned', label: tk('Grillé'), type: 'bool' }, { k: 'notes', label: tk('Notes'), w: 160 }],
+  contacts: [{ k: 'name', label: tk('Name'), w: 180 }, { k: 'role', label: tk('Role'), w: 140 }, { k: 'connection', label: tk('contact::Connection'), type: 'num' }, { k: 'loyalty', label: tk('Loyalty'), type: 'num' }, { k: 'notes', label: tk('Notes'), w: 220 }],
+  sins: [{ k: 'name', label: tk('Identity'), w: 200 }, { k: 'rating', label: tk('Rating'), type: 'num' }, { k: 'licenses', label: tk('Licenses (comma-separated)'), type: 'tags', w: 240 }, { k: 'real', label: tk('Real SIN'), type: 'bool' }, { k: 'burned', label: tk('Burned'), type: 'bool' }, { k: 'notes', label: tk('Notes'), w: 160 }],
   qualities: [
-    { k: 'name', label: tk('Nom'), w: 200 }, { k: 'karma', label: tk('Karma'), type: 'num' }, { k: 'positive', label: tk('Positive'), type: 'bool' },
-    { k: 'choice', label: tk('Choix (effet)'), w: 110 }, { k: 'notes', label: tk('Notes'), w: 260 },
+    { k: 'name', label: tk('Name'), w: 200 }, { k: 'karma', label: tk('Karma'), type: 'num' }, { k: 'positive', label: tk('Positive'), type: 'bool' },
+    { k: 'choice', label: tk('Choice (effect)'), w: 110 }, { k: 'notes', label: tk('Notes'), w: 260 },
   ],
   powers: [
-    { k: 'name', label: tk('Pouvoir'), w: 200 }, { k: 'level', label: tk('Niveau'), type: 'num' }, { k: 'pp', label: tk('PP'), type: 'num', step: 0.25 },
-    { k: 'choice', label: tk('Choix (effet)'), w: 110 }, { k: 'notes', label: tk('Notes'), w: 260 },
+    { k: 'name', label: tk('Power'), w: 200 }, { k: 'level', label: tk('Level'), type: 'num' }, { k: 'pp', label: tk('PP'), type: 'num', step: 0.25 },
+    { k: 'choice', label: tk('Choice (effect)'), w: 110 }, { k: 'notes', label: tk('Notes'), w: 260 },
   ],
   spells: [
-    { k: 'name', label: tk('Sort'), w: 160 }, { k: 'category', label: tk('Catégorie'), w: 100 }, { k: 'type', label: tk('Type'), w: 50 }, { k: 'range', label: tk('Portée'), w: 70 },
-    { k: 'duration', label: tk('Durée'), w: 60 }, { k: 'drain', label: tk('Drain'), w: 70 }, { k: 'notes', label: tk('Notes'), w: 180 },
+    { k: 'name', label: tk('Spell'), w: 160 }, { k: 'category', label: tk('Category'), w: 100 }, { k: 'type', label: tk('Type'), w: 50 }, { k: 'range', label: tk('Range'), w: 70 },
+    { k: 'duration', label: tk('Duration'), w: 60 }, { k: 'drain', label: tk('Drain'), w: 70 }, { k: 'notes', label: tk('Notes'), w: 180 },
   ],
   knowledge: [
-    { k: 'name', label: tk('Connaissance'), w: 200 }, { k: 'type', label: tk('Type'), type: 'select', options: knowledgeTypeOptions },
-    { k: 'rating', label: tk('Indice'), type: 'num' }, { k: 'native', label: tk('Langue maternelle'), type: 'bool' },
+    { k: 'name', label: tk('Knowledge'), w: 200 }, { k: 'type', label: tk('Type'), type: 'select', options: knowledgeTypeOptions },
+    { k: 'rating', label: tk('Rating'), type: 'num' }, { k: 'native', label: tk('Native language'), type: 'bool' },
   ],
   lifestyles: [
-    { k: 'name', label: tk('Nom'), w: 170 }, { k: 'base', label: tk('Niveau'), type: 'select', options: lifestyleBaseOptions }, { k: 'baseCost', label: tk('Coût de base (¥)'), type: 'ro' },
-    { k: 'monthsPaid', label: tk('Mois payés'), type: 'num' }, { k: 'primary', label: tk('Principal'), type: 'bool' }, { k: 'monthlyCost', label: tk('Total / mois'), type: 'ro' }, { k: 'notes', label: tk('Notes'), w: 160 },
+    { k: 'name', label: tk('Name'), w: 170 }, { k: 'base', label: tk('Level'), type: 'select', options: lifestyleBaseOptions }, { k: 'baseCost', label: tk('Base cost (¥)'), type: 'ro' },
+    { k: 'monthsPaid', label: tk('Months paid'), type: 'num' }, { k: 'primary', label: tk('Primary'), type: 'bool' }, { k: 'monthlyCost', label: tk('Total / month'), type: 'ro' }, { k: 'notes', label: tk('Notes'), w: 160 },
   ],
-  martialArts: [{ k: 'name', label: tk('Art martial'), w: 200 }, { k: 'rating', label: tk('Indice'), type: 'num' }, { k: 'notes', label: tk('Notes'), w: 260 }],
+  martialArts: [{ k: 'name', label: tk('Martial art'), w: 200 }, { k: 'rating', label: tk('Rating'), type: 'num' }, { k: 'notes', label: tk('Notes'), w: 260 }],
 };
 
 /** Which catalogs can feed a list. */
@@ -76,29 +76,29 @@ export const LIST_CATALOGS: Record<string, string[]> = {
   qualities: ['qualities'], powers: ['powers'], spells: ['spells'], lifestyles: ['lifestyles'], martialArts: ['martialarts'],
 };
 const CATALOG_LABELS: Record<string, string> = {
-  weapons: tk('Armes'), armor: tk('Armures'), gear: tk('Équipement'), cyberware: tk('Cyberware'), bioware: tk('Bioware'), vehicles: tk('Véhicules'), qualities: tk('Qualités'), powers: tk('Pouvoirs'),
-  spells: tk('Sorts'), programs: tk('Programmes'), lifestyles: tk('Modes de vie'), lifestylequalities: tk('Options de mode de vie'), accessories: tk('Accessoires d’arme'),
-  armormods: tk('Modifications d’armure'), vehiclemods: tk('Modifications de véhicule'), martialarts: tk('Arts martiaux'),
+  weapons: tk('Weapons'), armor: tk('pl::Armor'), gear: tk('Gear'), cyberware: tk('Cyberware'), bioware: tk('Bioware'), vehicles: tk('Vehicles'), qualities: tk('Qualities'), powers: tk('Powers'),
+  spells: tk('Spells'), programs: tk('Programs'), lifestyles: tk('Lifestyles'), lifestylequalities: tk('Lifestyle options'), accessories: tk('Weapon accessories'),
+  armormods: tk('Armor modifications'), vehiclemods: tk('Vehicle modifications'), martialarts: tk('Martial arts'),
 };
 const catalogLabel = (c: string): string => (CATALOG_LABELS[c] ? t(CATALOG_LABELS[c]) : c);
 
 // Default names are French keys: the new item is stored with the name in the GM's language.
 const BLANK: Record<string, AnyItem> = {
-  weapons: { name: tk('Nouvelle arme'), kind: 'ranged', skill: 'pistols', accuracy: '5', damage: '7P', ap: 0, mode: 'SA', rc: 0, ammo: '' },
-  armor: { name: tk('Nouvelle armure'), rating: 6, equipped: false },
-  augmentations: { name: tk('Nouvel implant'), kind: 'cyberware', grade: 'standard', essence: 0.1 },
-  gear: { name: tk('Nouvel objet'), qty: 1 },
-  vehicles: { name: tk('Nouveau véhicule'), handling: '3/3', speed: '3', accel: '2', body: 8, armor: 4, pilot: 1, sensor: 1, seats: 2 },
-  contacts: { name: tk('Nouveau contact'), role: '', connection: 1, loyalty: 1 },
-  sins: { name: tk('Nouvelle identité'), rating: 3, licenses: [] },
-  qualities: { name: tk('Nouvelle qualité'), karma: 5, positive: true },
-  powers: { name: tk('Nouveau pouvoir'), pp: 0.5 },
-  spells: { name: tk('Nouveau sort'), category: 'Combat', type: 'M', range: 'LdV', duration: 'I', drain: 'F−3' },
-  knowledge: { name: tk('Nouvelle connaissance'), type: 'street', rating: 1 },
-  lifestyles: { name: tk('Nouveau mode de vie'), base: 'Medium', baseCost: 5000, monthsPaid: 0 },
-  martialArts: { name: tk('Nouvel art martial'), rating: 1 },
+  weapons: { name: tk('New weapon'), kind: 'ranged', skill: 'pistols', accuracy: '5', damage: '7P', ap: 0, mode: 'SA', rc: 0, ammo: '' },
+  armor: { name: tk('New armor'), rating: 6, equipped: false },
+  augmentations: { name: tk('New implant'), kind: 'cyberware', grade: 'standard', essence: 0.1 },
+  gear: { name: tk('New item'), qty: 1 },
+  vehicles: { name: tk('New vehicle'), handling: '3/3', speed: '3', accel: '2', body: 8, armor: 4, pilot: 1, sensor: 1, seats: 2 },
+  contacts: { name: tk('New contact'), role: '', connection: 1, loyalty: 1 },
+  sins: { name: tk('New identity'), rating: 3, licenses: [] },
+  qualities: { name: tk('New quality'), karma: 5, positive: true },
+  powers: { name: tk('New power'), pp: 0.5 },
+  spells: { name: tk('New spell'), category: 'Combat', type: 'M', range: 'LdV', duration: 'I', drain: 'F−3' },
+  knowledge: { name: tk('New knowledge skill'), type: 'street', rating: 1 },
+  lifestyles: { name: tk('New lifestyle'), base: 'Medium', baseCost: 5000, monthsPaid: 0 },
+  martialArts: { name: tk('New martial art'), rating: 1 },
 };
-const BLANK_OTHER = tk('Nouvel élément');
+const BLANK_OTHER = tk('New item');
 
 function fieldOptions(f: FieldDef): Array<{ value: string; label: string }> {
   if (typeof f.options === 'function') return f.options();
@@ -122,8 +122,8 @@ export function ListEditor({ actor, list, fields = LIST_FIELDS[list] }: { actor:
   const items: AnyItem[] = (actor as unknown as Record<string, AnyItem[] | undefined>)[list] || [];
   const up = (it: AnyItem, i: number, k: string, v: unknown) => send('actor/updateItem', { actorId: actor.id, list, itemId: it.id, index: i, patch: { [k]: v } }).catch(() => {});
   const remove = async (it: AnyItem, i: number) => {
-    if (!(await confirmAction(t('Retirer « {name} » ?', { name: it.name })))) return;
-    const essence = list === 'augmentations' && it.essence ? await confirmAction(t('Rendre {n} point(s) d’Essence à {name} ?', { n: it.essence, name: actor.name })) : false;
+    if (!(await confirmAction(t('Remove “{name}”?', { name: it.name })))) return;
+    const essence = list === 'augmentations' && it.essence ? await confirmAction(t('Give {n} Essence point(s) back to {name}?', { n: it.essence, name: actor.name })) : false;
     send('actor/removeItem', { actorId: actor.id, list, itemId: it.id, index: i, adjustEssence: essence }).catch(() => {});
   };
   const addBlank = () => {
@@ -143,7 +143,7 @@ export function ListEditor({ actor, list, fields = LIST_FIELDS[list] }: { actor:
                   {sub && <Button small variant={open === it.id ? 'accent' : 'ghost'} onClick={() => setOpen(open === it.id ? null : it.id)}>
                   {t((SUB_LABELS as Record<string, string>)[sub])} ({(it[sub] || []).length})
                 </Button>}
-                  <IconButton icon="✕" title={t('Retirer')} onClick={() => remove(it, i)} />
+                  <IconButton icon="✕" title={t('Remove')} onClick={() => remove(it, i)} />
                 </td>
               </tr>
               {sub && open === it.id && <tr className="sh-sub-row">
@@ -151,13 +151,13 @@ export function ListEditor({ actor, list, fields = LIST_FIELDS[list] }: { actor:
               </tr>}
             </Fragment>
           )}
-          {!items.length && <tr><td colSpan={fields.length + 1} className="muted small">{t('Aucun élément.')}</td></tr>}
+          {!items.length && <tr><td colSpan={fields.length + 1} className="muted small">{t('No items.')}</td></tr>}
         </tbody>
       </table>
     </div>
     <div className="row wrap">
-      <Button small onClick={addBlank}>{t('+ Ajouter (vierge)')}</Button>
-      {LIST_CATALOGS[list] && <Button small variant="primary" onClick={() => setPicker(true)}>{t('+ Depuis le catalogue')}</Button>}
+      <Button small onClick={addBlank}>{t('+ Add (blank)')}</Button>
+      {LIST_CATALOGS[list] && <Button small variant="primary" onClick={() => setPicker(true)}>{t('+ From the catalog')}</Button>}
     </div>
     {picker && <CatalogPicker actor={actor} list={list} catalogs={LIST_CATALOGS[list]} onClose={() => setPicker(false)} />}
   </div>;
@@ -165,17 +165,17 @@ export function ListEditor({ actor, list, fields = LIST_FIELDS[list] }: { actor:
 
 const statLine = (catalog: string, e: CatalogItem): string => {
   const s: Record<string, any> = e.stats || {}; // stats of any catalog file
-  if (catalog === 'weapons') return [s.accuracy && t('Préc. {v}', { v: s.accuracy }), s.damage && t('VD {v}', { v: s.damage }), s.ap !== undefined && t('PA {v}', { v: s.ap }), s.mode && s.mode !== '0' && s.mode, s.ammo && s.ammo !== '0' && s.ammo].filter(Boolean).join(' · ');
-  if (catalog === 'armor') return t('Armure {v}', { v: s.armor ?? s.rating ?? '?' });
+  if (catalog === 'weapons') return [s.accuracy && t('Acc. {v}', { v: s.accuracy }), s.damage && t('DV {v}', { v: s.damage }), s.ap !== undefined && t('AP {v}', { v: s.ap }), s.mode && s.mode !== '0' && s.mode, s.ammo && s.ammo !== '0' && s.ammo].filter(Boolean).join(' · ');
+  if (catalog === 'armor') return t('Armor {v}', { v: s.armor ?? s.rating ?? '?' });
   if (catalog === 'cyberware' || catalog === 'bioware') return t('Essence {v}', { v: e.essence ?? s.essence ?? '?' });
-  if (catalog === 'vehicles') return [s.handling && t('Man. {v}', { v: s.handling }), s.speed && t('Vit. {v}', { v: s.speed }), s.body && t('Struct. {v}', { v: s.body }), s.armor && t('Blind. {v}', { v: s.armor })].filter(Boolean).join(' · ');
+  if (catalog === 'vehicles') return [s.handling && t('Handl. {v}', { v: s.handling }), s.speed && t('Speed {v}', { v: s.speed }), s.body && t('Body {v}', { v: s.body }), s.armor && t('vehicle::Armor {v}', { v: s.armor })].filter(Boolean).join(' · ');
   if (catalog === 'qualities') return t('{v} karma', { v: s.karma ?? (e as { karma?: number }).karma ?? '?' });
   if (catalog === 'powers') return t('{v} PP', { v: s.points ?? s.pp ?? '?' });
   if (catalog === 'spells') return [s.type, s.range, s.duration, (s.drain || s.dv) && t('Drain {v}', { v: s.drain || s.dv })].filter(Boolean).join(' · ');
-  if (catalog === 'lifestylequalities') return [s.multiplier && `${s.multiplier > 0 ? '+' : ''}${s.multiplier} %`, s.lp != null && t('{v} PS', { v: s.lp }), Array.isArray(s.allowed) && s.allowed.length && s.allowed.join('/')].filter(Boolean).join(' · ');
-  if (catalog === 'accessories') return [Array.isArray(s.mount) ? s.mount.join('/') : s.mount, s.accuracy && t('Préc. +{v}', { v: s.accuracy }), s.rc && t('RC +{v}', { v: s.rc }), s.smartgun && t('smartgun')].filter(Boolean).join(' · ');
-  if (catalog === 'armormods') return [s.capacity != null && t('Capacité {v}', { v: s.capacity }), s.armor && t('Armure +{v}', { v: s.armor })].filter(Boolean).join(' · ');
-  if (catalog === 'vehiclemods') return s.slots != null ? t('Emplacements {v}', { v: s.slots }) : '';
+  if (catalog === 'lifestylequalities') return [s.multiplier && `${s.multiplier > 0 ? '+' : ''}${s.multiplier} %`, s.lp != null && t('{v} LP', { v: s.lp }), Array.isArray(s.allowed) && s.allowed.length && s.allowed.join('/')].filter(Boolean).join(' · ');
+  if (catalog === 'accessories') return [Array.isArray(s.mount) ? s.mount.join('/') : s.mount, s.accuracy && t('Acc. +{v}', { v: s.accuracy }), s.rc && t('RC +{v}', { v: s.rc }), s.smartgun && t('smartgun')].filter(Boolean).join(' · ');
+  if (catalog === 'armormods') return [s.capacity != null && t('Capacity {v}', { v: s.capacity }), s.armor && t('Armor +{v}', { v: s.armor })].filter(Boolean).join(' · ');
+  if (catalog === 'vehiclemods') return s.slots != null ? t('Slots {v}', { v: s.slots }) : '';
   if (catalog === 'martialarts') return (s.techniques || []).length ? t('{n} techniques', { n: s.techniques.length }) : '';
   return '';
 };
@@ -233,22 +233,22 @@ export function CatalogPicker({ actor, list, catalogs, onClose, onPick }: Catalo
     if (onPick) return onPick(conv, e);
     try {
       await send('actor/addItem', { actorId: actor.id, list: conv.list, item: conv.item, adjustEssence: conv.list === 'augmentations' && essence });
-      toast(t('{item} ajouté à {name}', { item: conv.item.name, name: actor.name }), 'success');
+      toast(t('{item} added to {name}', { item: conv.item.name, name: actor.name }), 'success');
     } catch {}
   };
   const listLabel = (LIST_LABELS as Record<string, string>)[list] ? t((LIST_LABELS as Record<string, string>)[list]) : '';
-  return <Overlay title={t('Catalogue — {list}', { list: listLabel })} onClose={onClose} width={760}>
+  return <Overlay title={t('Catalog — {list}', { list: listLabel })} onClose={onClose} width={760}>
     <div className="col">
       <div className="row wrap">
         {catalogs.length > 1 && <Select value={cat} options={catalogs.map((c) => ({ value: c, label: catalogLabel(c) }))} onChange={setCat} style={{ width: 'auto' }} />}
         <SearchBox value={q} onChange={setQ} />
-        {categories.length > 1 && <Select value={category} options={[{ value: '', label: t('Toutes catégories') }, ...categories]} onChange={setCategory} style={{ width: 'auto', maxWidth: '220px' }} />}{list === 'augmentations' && <Toggle value={essence} onChange={setEssence} label={t('Déduire l’Essence')} />}
+        {categories.length > 1 && <Select value={category} options={[{ value: '', label: t('All categories') }, ...categories]} onChange={setCategory} style={{ width: 'auto', maxWidth: '220px' }} />}{list === 'augmentations' && <Toggle value={essence} onChange={setEssence} label={t('Deduct Essence')} />}
       </div>
       {data === null
-        ? <div className="muted">{t('Chargement du catalogue…')}</div>
+        ? <div className="muted">{t('Loading the catalog…')}</div>
         : !data.length
           ? <Empty>
-            {t('Catalogue « {name} » indisponible.', { name: catalogLabel(cat) })}{' '}{tRich(t('Lance {cmd} sur le PC du MJ, ou ajoute un élément vierge.'), { cmd: <code>npm run build:catalog</code> })}
+            {t('Catalog “{name}” unavailable.', { name: catalogLabel(cat) })}{' '}{tRich(t('Run {cmd} on the GM\'s PC, or add a blank item.'), { cmd: <code>npm run build:catalog</code> })}
           </Empty>
           : <div className="sh-cat-list">
             {results.slice(0, 150).map(
@@ -260,16 +260,16 @@ export function CatalogPicker({ actor, list, catalogs, onClose, onPick }: Catalo
                       <ItemRef item={e} />
                     </div>
                     <div className="muted small">
-                      {[categoryName(e), statLine(cat, e), e.avail && t('Dispo {v}', { v: e.avail }), e.cost != null && fmtNuyen(e.cost)].filter(Boolean).join(' · ')}
+                      {[categoryName(e), statLine(cat, e), e.avail && t('Avail {v}', { v: e.avail }), e.cost != null && fmtNuyen(e.cost)].filter(Boolean).join(' · ')}
                     </div>
                   </div>
                   {e.rating && e.rating.max ? <NumberInput small value={ratings[e.id] || e.rating.min || 1} min={e.rating.min || 1} max={e.rating.max} onChange={(v) => setRatings({ ...ratings, [e.id]: v })} /> : null}
-                  <Button small variant="primary" onClick={() => add(e)}>{t('Ajouter')}</Button>
+                  <Button small variant="primary" onClick={() => add(e)}>{t('Add')}</Button>
                 </div>
               )}
-            {results.length > 150 && <div className="muted small center">{t('{n} résultats de plus — affine la recherche.', { n: results.length - 150 })}</div>}{!results.length && <div className="muted small center">{t('Aucun résultat.')}</div>}
+            {results.length > 150 && <div className="muted small center">{t('{n} more results — refine your search.', { n: results.length - 150 })}</div>}{!results.length && <div className="muted small center">{t('No results.')}</div>}
           </div>}
-      <div className="muted small">{t('Ajout gratuit (édition MJ). Pour un achat avec nuyens, passe par la Boutique.')}</div>
+      <div className="muted small">{t('Added for free (GM edit). To buy with nuyen, go through the Shop.')}</div>
     </div>
   </Overlay>;
 }

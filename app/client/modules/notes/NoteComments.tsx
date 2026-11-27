@@ -33,7 +33,7 @@ export function NoteComments({ game, page }: { game: GameView; page: NotePage })
     <section className={cx('notes-comments', open && 'open')}>
       <button className="notes-comments-head" onClick={() => setOpen(!open)} aria-expanded={open ? 'true' : 'false'}>
         <span>{open ? '▾' : '▸'}</span>
-        <span>{list.length ? tn(list.length, '{n} commentaire', '{n} commentaires') : t('Commentaires')}</span>
+        <span>{list.length ? tn(list.length, '{n} comment', '{n} comments') : t('Comments')}</span>
       </button>
       {open && (
         <div className="notes-comments-body">
@@ -46,9 +46,9 @@ export function NoteComments({ game, page }: { game: GameView; page: NotePage })
                 {mayDelete(c) && (
                   <IconButton
                     icon="✕"
-                    title={t('Supprimer le commentaire')}
+                    title={t('Delete comment')}
                     onClick={async () => {
-                      if (await confirmAction(t('Supprimer ce commentaire ?'))) send('notes/deleteComment', { id: page.id, commentId: c.id });
+                      if (await confirmAction(t('Delete this comment?'))) send('notes/deleteComment', { id: page.id, commentId: c.id });
                     }}
                   />
                 )}
@@ -63,7 +63,7 @@ export function NoteComments({ game, page }: { game: GameView; page: NotePage })
                 rows={2}
                 value={text}
                 maxLength={2000}
-                placeholder={t('Ajouter un commentaire… (Ctrl+Entrée pour envoyer)')}
+                placeholder={t('Add a comment… (Ctrl+Enter to send)')}
                 onChange={(e) => setText(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
@@ -73,7 +73,7 @@ export function NoteComments({ game, page }: { game: GameView; page: NotePage })
                 }}
               ></textarea>
               <Button small variant="primary" disabled={busy || !text.trim()} onClick={post}>
-                {t('Commenter')}
+                {t('Comment')}
               </Button>
             </div>
           )}

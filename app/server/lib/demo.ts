@@ -72,12 +72,12 @@ const BLOCKED = [
 export function demoHttpGuard(req: Request, res: Response, next: NextFunction) {
   const t = req.srTable;
   if (!isDemo(t)) return next();
-  if (BLOCKED.some((re) => re.test(req.path))) return refuse(res, 403, tk('Désactivé sur la table de démonstration'));
+  if (BLOCKED.some((re) => re.test(req.path))) return refuse(res, 403, tk('Disabled on the demo table'));
   if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
     const max = req.path === '/api/upload' ? DEMO.uploadMaxBytes : DEMO.bodyMaxBytes;
     const len = req.headers['content-length'];
-    if (len === undefined && req.headers['transfer-encoding']) return refuse(res, 411, tk('Taille de l’envoi inconnue'));
-    if (Number(len) > max) return refuse(res, 413, tk('Fichier trop volumineux pour la démo ({max} Ko max)'), { max: Math.round(max / 1024) });
+    if (len === undefined && req.headers['transfer-encoding']) return refuse(res, 411, tk('Unknown upload size'));
+    if (Number(len) > max) return refuse(res, 413, tk('File too large for the demo ({max} KB max)'), { max: Math.round(max / 1024) });
   }
   next();
 }
@@ -97,10 +97,10 @@ function uploadsUsage(t: Table): { total: number; count: number } {
 
 /** Extra checks of an upload to a demo table: images only, file count and total size capped. Error key or null. */
 export function demoUploadError(t: Table, ext: string, bytes: number): { key: string; params?: I18nParams } | null {
-  if (!DEMO_UPLOAD_EXTS.includes(ext)) return { key: tk('Sur la démo, seules les images (PNG, JPEG, WebP, GIF) sont acceptées') };
-  if (bytes > DEMO.uploadMaxBytes) return { key: tk('Fichier trop volumineux pour la démo ({max} Ko max)'), params: { max: Math.round(DEMO.uploadMaxBytes / 1024) } };
+  if (!DEMO_UPLOAD_EXTS.includes(ext)) return { key: tk('Only images (PNG, JPEG, WebP, GIF) are accepted on the demo') };
+  if (bytes > DEMO.uploadMaxBytes) return { key: tk('File too large for the demo ({max} KB max)'), params: { max: Math.round(DEMO.uploadMaxBytes / 1024) } };
   const { total, count } = uploadsUsage(t);
-  if (count >= DEMO.uploadMaxFiles || total + bytes > DEMO.uploadQuotaBytes) return { key: tk('Espace d’envoi de la démo plein : il sera vidé à la prochaine remise à zéro') };
+  if (count >= DEMO.uploadMaxFiles || total + bytes > DEMO.uploadQuotaBytes) return { key: tk('The demo’s upload space is full: it will be emptied at the next reset') };
   return null;
 }
 
@@ -114,19 +114,19 @@ const actionLimiters = new WeakMap<SocketEntry, { n: number; first: number }>();
  */
 export function demoActionError(entry: SocketEntry, type: unknown, payload: any): ErrorBody | null { // payload: raw socket data
   const ty = String(type || '');
-  if (DENIED_ACTIONS.some((re) => re.test(ty))) return errorBody('Désactivé sur la table de démonstration', null, { code: 'demo' });
+  if (DENIED_ACTIONS.some((re) => re.test(ty))) return errorBody('Disabled on the demo table', null, { code: 'demo' });
   const now = Date.now();
   let h = actionLimiters.get(entry);
   if (!h || now - h.first > DEMO.actionRate.windowMs) actionLimiters.set(entry, (h = { n: 0, first: now }));
-  if (++h.n > DEMO.actionRate.max) return errorBody('Trop d’actions d’un coup : ralentis un peu', null, { code: 'demo' });
+  if (++h.n > DEMO.actionRate.max) return errorBody('Too many actions at once: slow down a little', null, { code: 'demo' });
   let size = 0;
   try {
     size = JSON.stringify(payload ?? null).length;
   } catch {
-    return errorBody('Requête invalide (JSON)', null, { code: 'demo' });
+    return errorBody('Invalid request (JSON)', null, { code: 'demo' });
   }
-  if (size > DEMO.actionMaxBytes) return errorBody('Action trop volumineuse pour la démo', null, { code: 'demo' });
-  if (ty === 'chat/send' && String(payload?.text ?? '').trim().length > DEMO.chatMax) return errorBody('Message trop long pour la démo ({max} caractères max)', { max: DEMO.chatMax }, { code: 'demo' });
+  if (size > DEMO.actionMaxBytes) return errorBody('Action too large for the demo', null, { code: 'demo' });
+  if (ty === 'chat/send' && String(payload?.text ?? '').trim().length > DEMO.chatMax) return errorBody('Message too long for the demo ({max} characters max)', { max: DEMO.chatMax }, { code: 'demo' });
   return null;
 }
 

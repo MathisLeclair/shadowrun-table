@@ -55,7 +55,7 @@ interface ThrowData {
 // ---------------------------------------------------------------------------
 const LS_KEY = 'sr.dice3d';
 const MODES: Mode[] = ['off', 'mine', 'all'];
-const MODE_LABEL: Record<Mode, string> = { off: tk('Dés 3D : non'), mine: tk('Dés 3D : mes jets'), all: tk('Dés 3D : tous les jets') };
+const MODE_LABEL: Record<Mode, string> = { off: tk('3D dice: off'), mine: tk('3D dice: my rolls'), all: tk('3D dice: all rolls') };
 const readMode = (): Mode => {
   try {
     const v = localStorage.getItem(LS_KEY) as Mode | null;
@@ -89,8 +89,8 @@ function useDice3dMode() {
 export function Dice3dPicker() {
   const m = useDice3dMode();
   const next = MODES[(MODES.indexOf(m) + 1) % MODES.length];
-  return <button type="button" className={'ld-filter d3-pick' + (m !== 'off' ? ' on' : '')} title={t(MODE_LABEL[m]) + ' — ' + t('cliquer pour changer')} aria-label={t(MODE_LABEL[m])} onClick={() => setDice3dMode(next)}>
-    🎲 {m === 'off' ? t('3D') : m === 'mine' ? t('3D : moi') : t('3D : tous')}
+  return <button type="button" className={'ld-filter d3-pick' + (m !== 'off' ? ' on' : '')} title={t(MODE_LABEL[m]) + ' — ' + t('click to change')} aria-label={t(MODE_LABEL[m])} onClick={() => setDice3dMode(next)}>
+    🎲 {m === 'off' ? t('3D') : m === 'mine' ? t('3D: me') : t('3D: all')}
   </button>;
 }
 
@@ -450,19 +450,19 @@ export default function Dice3D({ game }: GameProps) {
   // The entry may have changed since (second chance, deleted): show its live values in the banner.
   const live = (game.log || []).find((x) => x.id === cur.id) || cur.entry;
   const r = (live.roll || cur.entry.roll) as ShownRoll;
-  const author = live.authorI18n?.key ? t(live.authorI18n.key, live.authorI18n.params) : live.author === 'MJ' ? t('MJ') : live.author || '';
+  const author = live.authorI18n?.key ? t(live.authorI18n.key, live.authorI18n.params) : live.author === 'MJ' ? t('GM') : live.author || '';
   const landed = phase !== 'roll';
   return <div className={'d3-layer' + (phase === 'out' ? ' out' : '')} style={cssVars({ '--die': cur.color, perspectiveOrigin: `${cur.center.x}px ${cur.center.y}px` })} aria-hidden="true">
     <Throw key={cur.id} cur={cur} landed={landed} />
     {landed &&
-    <button type="button" className="d3-banner" onClick={next} title={t('Fermer')}>
+    <button type="button" className="d3-banner" onClick={next} title={t('Close')}>
       <span className="d3-who" style={{ color: cur.color }}>{author}</span>
       <span className="d3-label">{rollLabel(r) || logText(live)}</span>
       {typeof r.hits === 'number' ? <span className={'d3-hits' + (r.critGlitch ? ' crit' : r.glitch ? ' glitch' : r.hits === 0 ? ' zero' : '')}>
         {r.hits}
-        <small>{' '}{t('succès')}</small>
+        <small>{' '}{t('hits')}</small>
       </span> : r.total !== undefined ? <span className="d3-hits">{r.total}</span> : null}
-      {cur.hidden > 0 && <span className="muted small">{tn(cur.hidden, '+{n} dé non affiché', '+{n} dés non affichés')}</span>}
+      {cur.hidden > 0 && <span className="muted small">{tn(cur.hidden, '+{n} die not shown', '+{n} dice not shown')}</span>}
       <RollBadges roll={r} />
     </button>}
   </div>;

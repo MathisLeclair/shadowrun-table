@@ -20,8 +20,8 @@ export default function ChargenPage({ game }: GameProps) {
     'chargen:resolved',
     (e: { status: string; note?: string }) => {
       if (isGM) return;
-      if (e.status === 'approved') toast(t('Ton personnage a été validé par le MJ !'), 'success', 6000);
-      else toast(e.note ? t('Le MJ demande des changements : {note}', { note: e.note }) : t('Le MJ demande des changements'), 'warn', 8000);
+      if (e.status === 'approved') toast(t('Your character has been approved by the GM!'), 'success', 6000);
+      else toast(e.note ? t('The GM asks for changes: {note}', { note: e.note }) : t('The GM asks for changes'), 'warn', 8000);
     },
     [isGM]
   );
@@ -37,8 +37,8 @@ export default function ChargenPage({ game }: GameProps) {
   return (
     <div className="page cg-page">
       <div className="page-title">
-        <h2>{t('Création de personnage')}</h2>
-        <span className="small muted">{t('Système de priorités SR5')}</span>
+        <h2>{t('Character creation')}</h2>
+        <span className="small muted">{t('SR5 Priority system')}</span>
       </div>
       {isGM ? <GmQueue game={game} onOpenWizard={openWizard} /> : <PlayerHome game={game} onOpen={openWizard} />}
     </div>
@@ -56,23 +56,23 @@ function PlayerHome({ game, onOpen }: { game: GameView; onOpen: (draft: ChargenD
 
   const open = (d: ChargenDraft) => (d.status === 'draft' || d.status === 'rejected' ? onOpen(d) : setViewId(d.id));
   const remove = async (d: ChargenDraft) => {
-    if (!(await confirmAction(t('Supprimer « {name} » ?', { name: headlineText(draftHeadline(d.data)).name })))) return;
+    if (!(await confirmAction(t('Delete “{name}”?', { name: headlineText(draftHeadline(d.data)).name })))) return;
     send('chargen/delete', { draftId: d.id }).catch(() => null);
   };
   return (
     <div className="col gap-l">
-      {closed && <div className="cg-note warn">{t('Le MJ a fermé la création de personnage pour l’instant : tu peux consulter tes brouillons mais pas les modifier.')}</div>}
+      {closed && <div className="cg-note warn">{t('The GM has closed character creation for now: you can view your drafts but not edit them.')}</div>}
       <div className="cg-hero">
         <div className="grow">
-          <h3>{t('Un nouveau runner pour les Ombres de Seattle')}</h3>
+          <h3>{t('A new runner for the Seattle shadows')}</h3>
           <p className="muted">
             {t(
-              'L’assistant suit le livre de base : tu répartis les priorités A à E, puis les attributs, la magie, les compétences, les qualités, l’équipement et les contacts. Tout est vérifié en direct et enregistré automatiquement ; une fois prêt, tu l’envoies au MJ qui le valide.'
+              'The wizard follows the core rulebook: you assign priorities A to E, then attributes, magic, skills, qualities, gear and contacts. Everything is checked live and saved automatically; once ready, you send it to the GM for approval.'
             )}
           </p>
         </div>
         <Button variant="accent" disabled={closed} onClick={() => onOpen(null)}>
-          ✚ {t('Nouveau personnage')}
+          ✚ {t('New character')}
         </Button>
       </div>
       {drafts.length ? (
@@ -86,21 +86,21 @@ function PlayerHome({ game, onOpen }: { game: GameView; onOpen: (draft: ChargenD
                   <h4>{ht.name}</h4>
                   <StatusBadge status={d.status} />
                 </div>
-                <div className="small muted">{ht.text || t('Concept à définir')}</div>
+                <div className="small muted">{ht.text || t('Concept to be defined')}</div>
                 <div className="row wrap gap-s small faint cg-draft-meta">
-                  <span className="mono" title={t('Métatype / Attributs / Magie / Compétences / Ressources')}>
+                  <span className="mono" title={t('Metatype / Attributes / Magic / Skills / Resources')}>
                     {h.letters}
                   </span>
-                  <span>· {t('modifié {when}', { when: timeAgo(d.ts) })}</span>
+                  <span>· {t('edited {when}', { when: timeAgo(d.ts) })}</span>
                   {d.check && d.status !== 'approved' && (
-                    <span className={d.check.errors ? 'red' : 'green'}>· {d.check.errors ? tn(d.check.errors, '{n} erreur', '{n} erreurs') : t('valide')}</span>
+                    <span className={d.check.errors ? 'red' : 'green'}>· {d.check.errors ? tn(d.check.errors, '{n} error', '{n} errors') : t('valid')}</span>
                   )}
                 </div>
                 {d.status === 'rejected' && d.gmNote && <div className="cg-quote small">« {d.gmNote} »</div>}
                 <div className="row gap-s cg-draft-actions" onClick={(e) => e.stopPropagation()}>
                   {d.status === 'approved' && d.actorId && game.actors?.[d.actorId] && (
                     <Button small variant="primary" onClick={() => openSheet(d.actorId as string)}>
-                      {t('Ouvrir la fiche')}
+                      {t('Open the sheet')}
                     </Button>
                   )}
                   {d.status === 'pending' && (
@@ -108,16 +108,16 @@ function PlayerHome({ game, onOpen }: { game: GameView; onOpen: (draft: ChargenD
                       small
                       onClick={() =>
                         send('chargen/withdraw', { draftId: d.id })
-                          .then(() => toast(t('Demande retirée : tu peux de nouveau modifier ce personnage'), 'info'))
+                          .then(() => toast(t('Request withdrawn: you can edit this character again'), 'info'))
                           .catch(() => null)
                       }
                     >
-                      {t('Retirer la demande')}
+                      {t('Withdraw request')}
                     </Button>
                   )}
                   {d.status !== 'pending' && (
                     <Button small variant="ghost" onClick={() => remove(d)}>
-                      {t('Supprimer')}
+                      {t('Delete')}
                     </Button>
                   )}
                 </div>
@@ -126,7 +126,7 @@ function PlayerHome({ game, onOpen }: { game: GameView; onOpen: (draft: ChargenD
           })}
         </div>
       ) : (
-        <Empty>{t('Aucun brouillon pour l’instant.')}</Empty>
+        <Empty>{t('No drafts yet.')}</Empty>
       )}
     </div>
   );
@@ -141,7 +141,7 @@ function DraftView({ game, d, onBack, onEdit }: { game: GameView; d: ChargenDraf
     <div className="col">
       <div className="row wrap">
         <Button variant="ghost" onClick={onBack}>
-          ← {t('Mes personnages')}
+          ← {t('My characters')}
         </Button>
         <h3 className="grow">{h.name}</h3>
         <StatusBadge status={d.status} />
@@ -153,7 +153,7 @@ function DraftView({ game, d, onBack, onEdit }: { game: GameView; d: ChargenDraf
                 .catch(() => null)
             }
           >
-            {t('Retirer et modifier')}
+            {t('Withdraw and edit')}
           </Button>
         )}
         {d.status === 'approved' && d.actorId && game.actors?.[d.actorId] && (
@@ -164,12 +164,12 @@ function DraftView({ game, d, onBack, onEdit }: { game: GameView; d: ChargenDraf
               goTab('sheet');
             }}
           >
-            {t('Voir ma fiche')}
+            {t('View my sheet')}
           </Button>
         )}
       </div>
-      {d.status === 'pending' && <div className="cg-note">{t('Envoyé au MJ {when}. Tu seras prévenu dès qu’il l’aura relu.', { when: timeAgo(d.submittedTs) })}</div>}
-      {!rc.ready ? <div className="cg-loading">{t('Chargement des catalogues…')}</div> : <DraftSummary data={data} result={result} rc={rc} />}
+      {d.status === 'pending' && <div className="cg-note">{t('Sent to the GM {when}. You will be notified as soon as it has been reviewed.', { when: timeAgo(d.submittedTs) })}</div>}
+      {!rc.ready ? <div className="cg-loading">{t('Loading catalogs…')}</div> : <DraftSummary data={data} result={result} rc={rc} />}
     </div>
   );
 }

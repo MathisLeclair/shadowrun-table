@@ -37,8 +37,8 @@ function download(name: string, data: unknown) {
 function exportMap(map: GameMap) {
   const { explored, ...rest } = map;
   const clean = { ...rest, tokens: (rest.tokens || []).map(({ lastMove, ...t }) => t) };
-  const file = (map.name || t('carte')).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w-]+/g, '-').toLowerCase();
-  download(`${file || t('carte')}.json`, clean);
+  const file = (map.name || t('map')).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w-]+/g, '-').toLowerCase();
+  download(`${file || t('map')}.json`, clean);
 }
 
 type MapsTab = 'table' | 'library';
@@ -55,8 +55,8 @@ export default function MapsPage({ game }: GameProps) {
       value={tab}
       onChange={pick}
       tabs={[
-        { id: 'table', label: t('Cartes de la table') },
-        { id: 'library', label: t('Bibliothèque') },
+        { id: 'table', label: t('Table maps') },
+        { id: 'library', label: t('Library') },
       ]}
     />
   );
@@ -64,7 +64,7 @@ export default function MapsPage({ game }: GameProps) {
     return (
       <div className="page">
         <div className="page-title">
-          <h2>{t('Cartes')}</h2>
+          <h2>{t('Maps')}</h2>
         </div>
         {tabs}
         <LibraryBrowser game={game} onAdded={() => pick('table')} />
@@ -110,10 +110,10 @@ function MapsList({ game, tabs }: { game: GameView; tabs: ReactNode }) {
         const list = Array.isArray(data) ? data : [data];
         for (const m of list) {
           const id = await send<string>('maps/import', { map: m });
-          toast(t('Carte importée : {name}', { name: maps[id]?.name || m.name || f.name }), 'success');
+          toast(t('Map imported: {name}', { name: maps[id]?.name || m.name || f.name }), 'success');
         }
       } catch (err) {
-        toast(t('Import impossible ({file}) : {error}', { file: f.name, error: (err as Error).message }), 'error');
+        toast(t('Import failed ({file}): {error}', { file: f.name, error: (err as Error).message }), 'error');
       }
     }
   };
@@ -121,30 +121,30 @@ function MapsList({ game, tabs }: { game: GameView; tabs: ReactNode }) {
   return (
     <div className="page">
       <div className="page-title">
-        <h2>{t('Cartes')}</h2>
+        <h2>{t('Maps')}</h2>
         <div className="row wrap">
-          <SearchBox value={q} onChange={setQ} placeholder={t('Rechercher une carte…')} />
-          <Button onClick={() => fileRef.current?.click()}>{t('Importer…')}</Button>
+          <SearchBox value={q} onChange={setQ} placeholder={t('Search for a map…')} />
+          <Button onClick={() => fileRef.current?.click()}>{t('Importing…')}</Button>
           <input type="file" accept=".json,application/json" multiple hidden ref={fileRef} onChange={onImport} />
           <Button variant="primary" onClick={() => setCreating(true)}>
-            {t('+ Nouvelle carte')}
+            {t('+ New map')}
           </Button>
         </div>
       </div>
       {tabs}
       <div className="row wrap small muted" style={{ marginBottom: '4px' }}>
-        {t('Carte affichée aux joueurs :')} <strong className="green">{(activeId && maps[activeId]?.name) || t('aucune')}</strong>
+        {t('Map shown to players:')} <strong className="green">{(activeId && maps[activeId]?.name) || t('none')}</strong>
         {activeId && (
           <Button small variant="ghost" onClick={() => send('maps/setActive', { mapId: null }).catch(quiet)}>
-            {t('Masquer la carte')}
+            {t('Hide the map')}
           </Button>
         )}
       </div>
-      {!Object.keys(maps).length && <Empty>{t("Aucune carte pour l'instant. Crée-en une ou importe un fichier JSON.")}</Empty>}
+      {!Object.keys(maps).length && <Empty>{t("No maps yet. Create one or import a JSON file.")}</Empty>}
       {groups.map(([folder, list]) => (
         <div key={folder} className="maps-folder">
           <div className="section-title">
-            {folder || t('Sans dossier')} <span className="muted">({list.length})</span>
+            {folder || t('No folder')} <span className="muted">({list.length})</span>
           </div>
           <div className="maps-grid">
             {list.map((m) => (
@@ -177,25 +177,25 @@ function MapCard({ map, active, latest, onLibrary }: MapCardProps) {
   }, [sig]);
   const edit = () => setUI({ mapsEditId: map.id });
   const del = async () => {
-    if (!(await confirmAction(t('Supprimer définitivement la carte « {name} » ?', { name: map.name }) + (active ? '\n' + t('Elle est actuellement affichée aux joueurs.') : '')))) return;
+    if (!(await confirmAction(t('Permanently delete the map “{name}”?', { name: map.name }) + (active ? '\n' + t('It is currently shown to players.') : '')))) return;
     send('maps/delete', { mapId: map.id }).then(() => {
-      toast(t('Carte supprimée'));
+      toast(t('Map deleted'));
       const u = getUI();
       if (u.viewMapId === map.id) setUI({ viewMapId: null });
       if (u.mapsEditId === map.id) setUI({ mapsEditId: null });
     }, quiet);
   };
-  const dup = () => send('maps/duplicate', { mapId: map.id }).then(() => toast(t('Carte dupliquée'), 'success'), quiet);
+  const dup = () => send('maps/duplicate', { mapId: map.id }).then(() => toast(t('Map duplicated'), 'success'), quiet);
   const newer = (latest ?? 0) > (map.library?.version || 0);
   return (
     <div className={'maps-card' + (active ? ' active' : '')}>
-      <div className="maps-thumb" onClick={edit} title={t('Éditer')}>
+      <div className="maps-thumb" onClick={edit} title={t('Edit')}>
         <canvas ref={ref}></canvas>
-        {active && <Badge color="green">● {t('Affichée')}</Badge>}
+        {active && <Badge color="green">● {t('Shown')}</Badge>}
         {map.library && (
           <span className="maps-lib-badge">
-            <Badge color={newer ? 'amber' : 'cyan'} title={newer ? t('Nouvelle version disponible dans la bibliothèque') : t('Copie d’une carte de la bibliothèque')}>
-              {t('Bibliothèque')}
+            <Badge color={newer ? 'amber' : 'cyan'} title={newer ? t('New version available in the library') : t('Copy of a library map')}>
+              {t('Library')}
               {newer ? ' ↑' : ''}
             </Badge>
           </span>
@@ -210,34 +210,34 @@ function MapCard({ map, active, latest, onLibrary }: MapCardProps) {
           ·<span>{themeLabel(map.theme)}</span>·<span>{lightingLabel(map.lighting)}</span>
           {(map.tokens || []).length ? (
             <>
-              ·<span>{t('{n} pion(s)', { n: map.tokens.length })}</span>
+              ·<span>{t('{n} token(s)', { n: map.tokens.length })}</span>
             </>
           ) : null}
           {map.fog === false ? (
             <>
-              ·<span className="amber">{t('sans brouillard')}</span>
+              ·<span className="amber">{t('no fog')}</span>
             </>
           ) : null}
           {isImageMap(map) ? (
             <>
               ·
-              <span className="cyan" title={t("Carte illustrée : l'image sert de sol")}>
-                {t('illustrée')}
+              <span className="cyan" title={t("Illustrated map: the image is the floor")}>
+                {t('illustrated')}
               </span>
             </>
           ) : null}
           {walls.length ? (
             <>
               ·
-              <span title={t('Murs en segments')}>
-                {wallDoors ? t('{walls} mur(s), {doors} porte(s)', { walls: walls.length, doors: wallDoors }) : t('{n} mur(s)', { n: walls.length })}
+              <span title={t('Segment walls')}>
+                {wallDoors ? t('{walls} wall(s), {doors} door(s)', { walls: walls.length, doors: wallDoors }) : t('{n} wall(s)', { n: walls.length })}
               </span>
             </>
           ) : null}
           {map.foundry ? (
             <>
               ·
-              <span className="magenta" title={t('Importée de Foundry VTT')}>
+              <span className="magenta" title={t('Imported from Foundry VTT')}>
                 Foundry
               </span>
             </>
@@ -246,33 +246,33 @@ function MapCard({ map, active, latest, onLibrary }: MapCardProps) {
       </div>
       <div className="maps-card-actions">
         <Button small variant="primary" onClick={edit}>
-          {t('Éditer')}
+          {t('Edit')}
         </Button>
         {active ? (
           <Button small onClick={() => setUI({ viewMapId: map.id, mainTab: 'map' })}>
-            {t('Voir en jeu')}
+            {t('View in play')}
           </Button>
         ) : (
           <Button
             small
             variant="accent"
-            onClick={() => send('maps/setActive', { mapId: map.id }).then(() => toast(t('Carte affichée aux joueurs'), 'success'), quiet)}
+            onClick={() => send('maps/setActive', { mapId: map.id }).then(() => toast(t('Map shown to players'), 'success'), quiet)}
           >
-            {t('Afficher')}
+            {t('Show')}
           </Button>
         )}
         {map.library && (
-          <Button small variant="ghost" onClick={onLibrary} title={t('Mettre à jour depuis la bibliothèque ou y publier tes corrections')}>
-            {t('Bibliothèque…')}
+          <Button small variant="ghost" onClick={onLibrary} title={t('Update from the library or publish your fixes to it')}>
+            {t('Library…')}
           </Button>
         )}
         <Button small variant="ghost" onClick={dup}>
-          {t('Dupliquer')}
+          {t('Duplicate')}
         </Button>
         <Button small variant="ghost" onClick={() => exportMap(map)}>
-          {t('Exporter')}
+          {t('Export')}
         </Button>
-        <Button small variant="ghost" onClick={del} title={t('Supprimer')}>
+        <Button small variant="ghost" onClick={del} title={t('Delete')}>
           ✕
         </Button>
       </div>
@@ -303,7 +303,7 @@ function CreateMapModal({ game, onClose }: { game: GameView; onClose: () => void
     if (busy) return;
     setBusy(true);
     try {
-      const id = await send<string>('maps/create', { ...f, name: f.name.trim() || t('Nouvelle carte') });
+      const id = await send<string>('maps/create', { ...f, name: f.name.trim() || t('New map') });
       onClose();
       setUI({ mapsEditId: id });
     } catch {
@@ -312,20 +312,20 @@ function CreateMapModal({ game, onClose }: { game: GameView; onClose: () => void
   };
   return (
     <Modal
-      title={t('Nouvelle carte')}
+      title={t('New map')}
       width={520}
       onClose={onClose}
       actions={
         <Button variant="primary" disabled={busy} onClick={submit}>
-          {t('Créer et éditer')}
+          {t('Create and edit')}
         </Button>
       }
     >
       <form className="col" onSubmit={submit}>
-        <Field label={t('Nom')}>
-          <input className="input" value={f.name} placeholder={t('ex. Entrepôt de Tacoma')} autoFocus onChange={(e) => set('name')(e.target.value)} />
+        <Field label={t('Name')}>
+          <input className="input" value={f.name} placeholder={t('e.g. Tacoma warehouse')} autoFocus onChange={(e) => set('name')(e.target.value)} />
         </Field>
-        <Field label={t('Dossier')} hint={t('Regroupe les cartes (ex. Acte 1, Lieux récurrents)')}>
+        <Field label={t('Folder')} hint={t('Groups maps together (e.g. Act 1, Recurring places)')}>
           <input className="input" list="maps-folders" value={f.folder} onChange={(e) => set('folder')(e.target.value)} />
           <datalist id="maps-folders">
             {folders.map((x) => (
@@ -334,32 +334,32 @@ function CreateMapModal({ game, onClose }: { game: GameView; onClose: () => void
           </datalist>
         </Field>
         <div className="grid-2">
-          <NumField label={t('Largeur (cases)')}>
+          <NumField label={t('Width (cells)')}>
             <NumberInput value={f.width} min={4} max={160} onChange={set('width')} />
           </NumField>
-          <NumField label={t('Hauteur (cases)')}>
+          <NumField label={t('Height (cells)')}>
             <NumberInput value={f.height} min={4} max={160} onChange={set('height')} />
           </NumField>
-          <Field label={t('carte::Ambiance')}>
+          <Field label={t('map::Theme')}>
             <Select value={f.theme} options={themeOptions()} onChange={set('theme')} />
           </Field>
-          <Field label={t('Éclairage')}>
+          <Field label={t('Lighting')}>
             <Select value={f.lighting} options={lightingOptions()} onChange={set('lighting')} />
           </Field>
         </div>
-        <Field label={t('Départ')}>
+        <Field label={t('Start with')}>
           <Select
             value={f.fill}
             onChange={set('fill')}
             options={[
-              { value: '.', label: t('Intérieur : sol entouré de murs') },
-              { value: ',', label: t('Extérieur : rue / terrain entouré de murs') },
-              { value: ' ', label: t('Vide (tout dessiner)') },
-              { value: 'image', label: t('Carte illustrée : sol partout, image + murs en segments') },
+              { value: '.', label: t('Interior: floor surrounded by walls') },
+              { value: ',', label: t('Exterior: street / ground surrounded by walls') },
+              { value: ' ', label: t('Empty (draw everything)') },
+              { value: 'image', label: t('Illustrated map: floor everywhere, image + segment walls') },
             ]}
           />
         </Field>
-        <span className="small muted">{t("1 case = 1 mètre par défaut (modifiable dans l'éditeur).")}</span>
+        <span className="small muted">{t("1 cell = 1 meter by default (can be changed in the editor).")}</span>
         <button type="submit" hidden></button>
       </form>
     </Modal>

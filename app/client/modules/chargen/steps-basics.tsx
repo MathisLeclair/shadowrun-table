@@ -40,63 +40,63 @@ export function StepConcept({ data, update, issues, game }: StepProps) {
     const file = ev.target.files?.[0];
     ev.target.value = '';
     if (!file) return;
-    if (!/^image\//.test(file.type)) return toast(t('Choisis une image (png, jpg, webp)'), 'warn');
+    if (!/^image\//.test(file.type)) return toast(t('Pick an image (png, jpg, webp)'), 'warn');
     setBusy(true);
     try {
       const res = await upload(file);
       update((d) => (d.concept.portrait = res.url));
     } catch (e) {
-      toast((e as Error).message || t('Envoi impossible'), 'error');
+      toast((e as Error).message || t('Upload failed'), 'error');
     }
     setBusy(false);
   };
   return (
     <div className="cg-step">
       <p className="cg-lead">
-        {t('Qui est ton runner ? Un nom de rue, une idée forte en une phrase et quelques lignes d’histoire suffisent pour commencer : tout reste modifiable jusqu’à l’envoi au MJ.')}
+        {t('Who is your runner? A street name, a strong one-sentence idea and a few lines of background are enough to start: everything can be changed until you send it to the GM.')}
       </p>
       <div className="cg-concept">
         <div className="cg-portrait-box">
           <div className="cg-portrait" style={c.portrait ? { backgroundImage: `url("${c.portrait.replace(/"/g, '%22')}")`, borderColor: c.color } : { borderColor: c.color }}>
             {!c.portrait && <span>{(c.alias || c.name || '?').slice(0, 2).toUpperCase()}</span>}
           </div>
-          <label className="btn btn-sm" title={t('Image png, jpg ou webp')}>
-            {busy ? t('Envoi…') : c.portrait ? t('Changer le portrait') : t('Ajouter un portrait')}
+          <label className="btn btn-sm" title={t('png, jpg or webp image')}>
+            {busy ? t('Uploading…') : c.portrait ? t('Change the portrait') : t('Add a portrait')}
             <input type="file" accept="image/*" style={{ display: 'none' }} onChange={pickPortrait} />
           </label>
           {c.portrait && (
             <Button small variant="ghost" onClick={() => update((d) => (d.concept.portrait = ''))}>
-              {t('Retirer')}
+              {t('Remove')}
             </Button>
           )}
-          <Field label={t('Couleur du pion')}>
+          <Field label={t('Token color')}>
             <input type="color" className="cg-color" value={c.color} onChange={(e) => update((d) => (d.concept.color = e.target.value))} />
           </Field>
         </div>
         <div className="col grow">
           <div className="grid-2">
-            <Field label={t('Nom de rue')} hint={t('Affiché sur la carte et dans le journal')}>
-              <TextInput live value={c.alias} placeholder={t('ex. Rouille')} onChange={set('alias')} />
+            <Field label={t('Street name')} hint={t('Shown on the map and in the log')}>
+              <TextInput live value={c.alias} placeholder={t('e.g. Rust')} onChange={set('alias')} />
             </Field>
-            <Field label={t('Vrai nom (SIN)')}>
-              <TextInput live value={c.name} placeholder={t('ex. Marc Delorme')} onChange={set('name')} />
+            <Field label={t('Real name (SIN)')}>
+              <TextInput live value={c.name} placeholder={t('e.g. Marc Delorme')} onChange={set('name')} />
             </Field>
           </div>
-          <Field label={t('Concept')} hint={t('Une phrase : rôle dans l’équipe + ce qui le rend unique')}>
-            <TextInput live value={c.concept} placeholder={t('ex. Ancien ganger ork devenu samouraï des rues, loyal jusqu’à la bêtise')} onChange={set('concept')} />
+          <Field label={t('Concept')} hint={t('One sentence: role in the team + what makes them unique')}>
+            <TextInput live value={c.concept} placeholder={t('e.g. Former ork ganger turned street samurai, loyal to a fault')} onChange={set('concept')} />
           </Field>
           <div className="grid-3">
-            <Field label={t('Genre')}>
+            <Field label={t('Gender')}>
               <TextInput live value={c.gender} onChange={set('gender')} />
             </Field>
-            <Field label={t('Âge')}>
+            <Field label={t('Age')}>
               <TextInput live value={c.age} onChange={set('age')} />
             </Field>
-            <Field label={t('Joueur')}>
+            <Field label={t('Player')}>
               <TextInput live value={c.player} placeholder={game.me.role === 'gm' ? '' : game.me.name} onChange={set('player')} />
             </Field>
           </div>
-          <Field label={t('bio::Historique')} hint={t('Markdown accepté. Origine, ce qui l’a poussé dans les Ombres, ses dettes, ses rêves…')}>
+          <Field label={t('bio::Background')} hint={t('Markdown accepted. Origins, what pushed them into the shadows, their debts, their dreams…')}>
             <TextInput live multiline rows={8} value={c.background} onChange={set('background')} />
           </Field>
         </div>
@@ -111,12 +111,12 @@ export function StepConcept({ data, update, issues, game }: StepProps) {
 // ---------------------------------------------------------------------------
 type Priorities = Record<PriorityColumn, PriorityLetter>;
 const PRESETS: Array<{ label: string; p: Priorities }> = [
-  { label: tk('Samouraï des rues'), p: { metatype: 'C', attributes: 'A', magic: 'E', skills: 'B', resources: 'D' } },
+  { label: tk('Street samurai'), p: { metatype: 'C', attributes: 'A', magic: 'E', skills: 'B', resources: 'D' } },
   { label: tk('Mage'), p: { metatype: 'D', attributes: 'B', magic: 'A', skills: 'C', resources: 'E' } },
-  { label: tk('Adepte'), p: { metatype: 'C', attributes: 'A', magic: 'B', skills: 'D', resources: 'E' } },
+  { label: tk('Adept'), p: { metatype: 'C', attributes: 'A', magic: 'B', skills: 'D', resources: 'E' } },
   { label: tk('Decker'), p: { metatype: 'D', attributes: 'B', magic: 'E', skills: 'C', resources: 'A' } },
   { label: tk('Face'), p: { metatype: 'B', attributes: 'A', magic: 'E', skills: 'C', resources: 'D' } },
-  { label: tk('Technomancien'), p: { metatype: 'D', attributes: 'B', magic: 'A', skills: 'C', resources: 'E' } },
+  { label: tk('Technomancer'), p: { metatype: 'D', attributes: 'B', magic: 'A', skills: 'C', resources: 'E' } },
 ];
 const COLS = COLUMNS as PriorityColumn[];
 const LETTER_LIST = LETTERS as Exclude<PriorityLetter, ''>[];
@@ -134,13 +134,13 @@ export function StepPriorities({ data, update, issues }: StepProps) {
   return (
     <div className="cg-step">
       <p className="cg-lead">
-        {t('Chaque lettre de A (le mieux) à E ne sert qu’une fois. Clique une case pour donner cette priorité à la colonne : si la lettre était déjà prise, les deux colonnes échangent leurs lettres.')}
+        {t('Each letter from A (best) to E is used only once. Click a cell to give that priority to the column: if the letter was already taken, the two columns swap letters.')}
       </p>
       <div className="row wrap gap-s cg-presets">
         <span className="small muted">
-          {t('Table des priorités')} <RuleRef rule="priorityTable" />
+          {t('Priority table')} <RuleRef rule="priorityTable" />
         </span>
-        <span className="small muted">{t('Répartitions types :')}</span>
+        <span className="small muted">{t('Typical builds:')}</span>
         {PRESETS.map((pr) => (
           <Button key={pr.label} small variant="ghost" onClick={() => update((d) => (d.priorities = { ...pr.p }))}>
             {t(pr.label)}
@@ -188,20 +188,20 @@ export function StepPriorities({ data, update, issues }: StepProps) {
 }
 
 function explain(col: PriorityColumn, l: PriorityLetter): string {
-  if (!l) return t('Pas encore de priorité.');
+  if (!l) return t('No priority yet.');
   if (col === 'metatype') {
     const row = METATYPE_PRIORITY[l];
-    return t('Métatypes possibles et points d’attributs spéciaux (Chance, Magie, Résonance) : {list}.', {
+    return t('Available metatypes and special attribute points (Edge, Magic, Resonance): {list}.', {
       list: Object.entries(row)
         .map(([m, n]) => `${metatypeLabel(m)} ${n}`)
         .join(', '),
     });
   }
-  if (col === 'attributes') return t('{n} points à répartir dans les attributs physiques et mentaux.', { n: ATTRIBUTE_POINTS[l] });
-  if (col === 'skills') return t('{skills} points de compétences et {groups} points de groupes de compétences.', { skills: SKILL_POINTS[l][0], groups: SKILL_POINTS[l][1] });
-  if (col === 'resources') return t('{nuyen} pour l’équipement, le cyberware et le train de vie (5 000¥ maximum conservés).', { nuyen: nuyen(RESOURCES[l]) });
+  if (col === 'attributes') return t('{n} points to spread over physical and mental attributes.', { n: ATTRIBUTE_POINTS[l] });
+  if (col === 'skills') return t('{skills} skill points and {groups} skill group points.', { skills: SKILL_POINTS[l][0], groups: SKILL_POINTS[l][1] });
+  if (col === 'resources') return t('{nuyen} for gear, cyberware and lifestyle (5,000¥ kept at most).', { nuyen: nuyen(RESOURCES[l]) });
   const opts = magicOptions(l).filter((o) => o.type !== 'none');
-  if (!opts.length) return t('Profane : ni magie ni résonance.');
+  if (!opts.length) return t('Mundane: neither magic nor resonance.');
   return opts.map((o) => magicOptionText(o, i18n())).join(' — ');
 }
 
@@ -213,7 +213,7 @@ export function StepMetatype({ data, update, issues }: StepProps) {
   const row = data.priorities.metatype ? METATYPE_PRIORITY[data.priorities.metatype] : undefined;
   return (
     <div className="cg-step">
-      {!row && <div className="cg-note warn">{t('Attribue d’abord une priorité à la colonne Métatype.')}</div>}
+      {!row && <div className="cg-note warn">{t('Assign a priority to the Metatype column first.')}</div>}
       <div className="cg-meta-grid">
         {(METATYPE_IDS as DraftData['metatype'][]).map((m) => {
           const pts = row ? row[m] : undefined;
@@ -223,7 +223,7 @@ export function StepMetatype({ data, update, issues }: StepProps) {
             <div key={m} className={'cg-meta card' + (on ? ' on' : '') + (avail ? ' clickable' : ' off')} onClick={() => avail && update((d) => (d.metatype = m))}>
               <div className="spread row">
                 <h4>{metatypeLabel(m)}</h4>
-                {avail ? <Badge color="cyan">{pts === 1 ? t('1 point spécial') : t('{n} points spéciaux', { n: pts })}</Badge> : <Badge>{t('Indisponible')}</Badge>}
+                {avail ? <Badge color="cyan">{pts === 1 ? t('1 special point') : t('{n} special points', { n: pts })}</Badge> : <Badge>{t('Unavailable')}</Badge>}
               </div>
               <table className="cg-meta-attrs">
                 <tbody>
@@ -242,7 +242,7 @@ export function StepMetatype({ data, update, issues }: StepProps) {
                 </tbody>
               </table>
               <div className="small muted">
-                {METATYPE_TRAITS[m].length ? (METATYPE_TRAITS[m] as string[]).map((x) => t(x)).join(' · ') : t('Polyvalent : Chance jusqu’à 7, aucune restriction.')}
+                {METATYPE_TRAITS[m].length ? (METATYPE_TRAITS[m] as string[]).map((x) => t(x)).join(' · ') : t('Versatile: Edge up to 7, no restrictions.')}
               </div>
             </div>
           );
@@ -295,7 +295,7 @@ function AttrRow({ k, a, update, special }: { k: AttrKey; a: AttrState | undefin
         {special ? (
           <>
             {' '}
-            <span className="faint">{t('spécial')}</span>
+            <span className="faint">{t('special')}</span>
           </>
         ) : (
           ''
@@ -311,15 +311,15 @@ export function StepAttributes({ update, result, issues }: StepProps) {
   return (
     <div className="cg-step">
       <p className="cg-lead">
-        {t('Les points s’ajoutent au minimum du métatype. Un seul attribut physique ou mental peut atteindre son maximum naturel. La colonne K achète des indices supplémentaires en karma (nouvel indice × 5).')}
+        {t('Points are added to the metatype minimum. Only one physical or mental attribute may reach its natural maximum. The K column buys extra ratings with karma (new rating × 5).')}
       </p>
       <div className="row wrap cg-budget-row">
-        <Budget label={t('Points d’attributs')} used={r.spent.attrPoints} total={r.budgets.attrPoints} />
-        <Budget label={t('Points spéciaux')} used={r.spent.specialPoints} total={r.budgets.specialPoints} title={t('Chance, Magie, Résonance (priorité Métatype)')} />
-        <Budget label={t('Karma dépensé')} used={r.karma.spent} total={r.karma.total} title={t('25 karma de départ + qualités négatives')} />
+        <Budget label={t('Attribute points')} used={r.spent.attrPoints} total={r.budgets.attrPoints} />
+        <Budget label={t('Special points')} used={r.spent.specialPoints} total={r.budgets.specialPoints} title={t('Edge, Magic, Resonance (Metatype priority)')} />
+        <Budget label={t('Karma spent')} used={r.karma.spent} total={r.karma.total} title={t('25 starting karma + negative qualities')} />
       </div>
       <div className="grid-2">
-        <Panel title={t('Physiques')} pad={false}>
+        <Panel title={t('pl::Physical')} pad={false}>
           <table className="sr cg-attr-table">
             <tbody>
               {(PHYSICAL as AttrKey[]).map((k) => (
@@ -328,7 +328,7 @@ export function StepAttributes({ update, result, issues }: StepProps) {
             </tbody>
           </table>
         </Panel>
-        <Panel title={t('Mentaux')} pad={false}>
+        <Panel title={t('Mental')} pad={false}>
           <table className="sr cg-attr-table">
             <tbody>
               {(MENTAL as AttrKey[]).map((k) => (
@@ -338,7 +338,7 @@ export function StepAttributes({ update, result, issues }: StepProps) {
           </table>
         </Panel>
       </div>
-      <Panel title={t('Spéciaux')} pad={false} className="cg-mt">
+      <Panel title={t('pl::Special')} pad={false} className="cg-mt">
         <table className="sr cg-attr-table">
           <tbody>
             <AttrRow k="EDG" a={A.EDG} update={update} special />
@@ -346,7 +346,7 @@ export function StepAttributes({ update, result, issues }: StepProps) {
             <AttrRow k="RES" a={A.RES} update={update} special />
           </tbody>
         </table>
-        {A.MAG.inactive && A.RES.inactive && <div className="small faint cg-pad">{t('Magie et Résonance : choisis un type magique (étape Magie / Résonance) pour en disposer.')}</div>}
+        {A.MAG.inactive && A.RES.inactive && <div className="small faint cg-pad">{t('Magic and Resonance: pick a magic type (Magic / Resonance step) to get them.')}</div>}
       </Panel>
       <StepIssues issues={issues} />
     </div>

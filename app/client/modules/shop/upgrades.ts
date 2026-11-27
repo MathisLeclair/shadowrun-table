@@ -80,7 +80,7 @@ export function upgradePreview(
   const real = targetsFor(entry.file, actor).find((x) => x.id === opts.targetId);
   if (!real) {
     const q = safeQ({ rating: opts.rating });
-    return { q, unitCost: q.unitCost, problem: tk('Choisis sur quoi installer cet article'), missingTarget: true };
+    return { q, unitCost: q.unitCost, problem: tk('Choose what to install this item on'), missingTarget: true };
   }
   const key = `${spec.list}:${real.id}`;
   if (!sim.has(key)) sim.set(key, JSON.parse(JSON.stringify(real)));
@@ -110,7 +110,7 @@ export function upgradePreview(
     const mounts: string[] = freeMounts(target, targetCat, item);
     const fit = accessoryFit(target, targetCat, item, { mount: opts.mount });
     let problem: RulesMessage = fit.problem;
-    if (!problem && item.stats?.targetCost && value === null) problem = { key: tk('Prix de {weapon} inconnu : impossible de chiffrer {item}'), params: { weapon: real.name, item: item.nameFr || item.name } };
+    if (!problem && item.stats?.targetCost && value === null) problem = { key: tk('Unknown price for {weapon}: cannot price {item}'), params: { weapon: real.name, item: item.nameFr || item.name } };
     if (!problem) target.accessories.push({ catalogId: item.id, mount: fit.mount });
     return { ...out, q, unitCost: q.unitCost, problem, mount: fit.mount, mounts };
   }
@@ -128,7 +128,7 @@ export function upgradePreview(
   const q = relQ({ rating: wanted, vars });
   const fit = vehicleModFit(target, targetCat, item, q.rating, vars);
   let problem: RulesMessage = fit.problem;
-  if (!problem && /VehicleCost/.test(item.costFormula || '') && value === null) problem = { key: tk('Prix de {weapon} inconnu : impossible de chiffrer {item}'), params: { weapon: real.name, item: item.nameFr || item.name } };
+  if (!problem && /VehicleCost/.test(item.costFormula || '') && value === null) problem = { key: tk('Unknown price for {weapon}: cannot price {item}'), params: { weapon: real.name, item: item.nameFr || item.name } };
   if (!problem) target.mods.push({ catalogId: item.id, slots: fit.need, category: item.category || '' });
   // used / cap of the mod's slot pool (R5: per category on vehicles, one pool on drones; null = not limited).
   return {

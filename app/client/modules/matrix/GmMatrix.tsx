@@ -39,19 +39,19 @@ function DeckerCard({ game, actor, onCockpit }: { game: GameView; actor: Actor; 
   const converge = async () => {
     const q =
       p.online && host
-        ? t('Déclencher la convergence sur {name} ? Dans l’hôte : il pose 3 marques, passe en alerte et lance une IC ; sortir de l’hôte déclenchera la convergence du GOD.', { name: actor.name })
-        : t('Déclencher la convergence sur {name} ? 12 VD matriciels (résistés), deck redémarré de force, marques perdues, position révélée.', { name: actor.name });
+        ? t('Trigger convergence on {name}? Inside the host: it places 3 marks, goes on alert and launches an IC; leaving the host will trigger GOD convergence.', { name: actor.name })
+        : t('Trigger convergence on {name}? 12 Matrix DV (resisted), forced deck reboot, marks lost, location revealed.', { name: actor.name });
     if (await confirmAction(q)) act('matrix/converge', { actorId: actor.id });
   };
   const tick = async () => {
     const r = await act<{ added: number; overwatch: number }>('matrix/osTick', { actorId: actor.id });
-    if (r) toast(t('SO de {name} +{n} (2D6) → {os}', { name: actor.name, n: r.added, os: r.overwatch }), 'info');
+    if (r) toast(t('{name}’s OS +{n} (2D6) → {os}', { name: actor.name, n: r.added, os: r.overwatch }), 'info');
   };
   const dump = async () => {
-    if (await confirmAction(t('Éjecter {name} de la Matrice (choc d’éjection en RV) ?', { name: actor.name }))) act('matrix/disconnect', { actorId: actor.id, dump: true });
+    if (await confirmAction(t('Boot {name} out of the Matrix (dumpshock in VR)?', { name: actor.name }))) act('matrix/disconnect', { actorId: actor.id, dump: true });
   };
   const reset = async () => {
-    if (await confirmAction(t('Réinitialiser complètement le persona de {name} (SO, marques, programmes chargés, agent) ?', { name: actor.name }))) act('matrix/resetPersona', { actorId: actor.id });
+    if (await confirmAction(t('Fully reset {name}’s persona (OS, marks, loaded programs, agent)?', { name: actor.name }))) act('matrix/resetPersona', { actorId: actor.id });
   };
   return (
     <div className={'mx-gm-decker' + (p.online ? ' online' : '') + ((p.overwatch || 0) >= 30 ? ' danger' : '')}>
@@ -61,46 +61,46 @@ function DeckerCard({ game, actor, onCockpit }: { game: GameView; actor: Actor; 
             {actor.name}
           </button>
           <div className="small muted">
-            {actor.matrix?.device || t('Appareil')} · {t('indice {n}', { n: ds.deviceRating })} · {isCyberdeck(actor) ? t('cyberdeck') : t('commlink')}
+            {actor.matrix?.device || t('Device')} · {t('rating {n}', { n: ds.deviceRating })} · {isCyberdeck(actor) ? t('cyberdeck') : t('commlink')}
           </div>
         </div>
-        {p.online ? <Badge color="cyan">{modeLabel(p.mode)}</Badge> : <Badge>{t('hors ligne')}</Badge>}
+        {p.online ? <Badge color="cyan">{modeLabel(p.mode)}</Badge> : <Badge>{t('offline')}</Badge>}
         {host && <Badge color="amber">{host.name}</Badge>}
-        {p.bricked && <Badge color="red">{t('briqué')}</Badge>}
+        {p.bricked && <Badge color="red">{t('bricked')}</Badge>}
       </div>
       <OsMeter value={p.overwatch} compact />
       <div className="row wrap mx-gm-row">
-        <Field label={t('Score d’Overwatch')}>
+        <Field label={t('Overwatch Score')}>
           <NumberInput small value={p.overwatch || 0} min={0} max={OS_MAX} onChange={(v) => act('matrix/setOverwatch', { actorId: actor.id, value: v })} />
         </Field>
-        <Field label={t('Bruit')}>
+        <Field label={t('Noise')}>
           <NumberInput small value={p.noise || 0} min={0} max={20} onChange={(v) => set({ noise: v })} />
         </Field>
-        <Field label={t('Emplacements')}>
+        <Field label={t('Slots')}>
           <NumberInput small value={p.programSlots || 4} min={1} max={20} onChange={(v) => set({ programSlots: v })} />
         </Field>
-        <Button small title={t('15 minutes passent : +2D6 au SO, lancés en secret (SR5 p. 232)')} onClick={tick}>
+        <Button small title={t('15 minutes go by: +2D6 OS, rolled in secret (SR5 p. 232)')} onClick={tick}>
           {t('+15 min (2D6)')}
         </Button>
         <Button small variant="danger" onClick={converge}>
           {t('Convergence')}
         </Button>
       </div>
-      {nextTick !== null && <div className="small faint">{t('Minuterie : prochain +2D6 dans {n} min (à la prochaine action matricielle).', { n: nextTick })}</div>}
-      {p.hostConverged && <div className="small red">{t('Convergence dans l’hôte : sortir déclenchera celle du GOD.')}</div>}
+      {nextTick !== null && <div className="small faint">{t('Timer: next +2D6 in {n} min (at the next Matrix action).', { n: nextTick })}</div>}
+      {p.hostConverged && <div className="small red">{t('Converged inside the host: leaving will bring GOD convergence.')}</div>}
       <MatrixMonitor value={p.matrixDamage} deviceRating={ds.deviceRating} onSet={(n) => set({ matrixDamage: n })} />
       <div className="mx-chips">
         {p.linkLocked && (
           <span className="mx-chip-btn">
-            <Badge color="red">{t('Verrou : {name}', { name: linkLockName(p.linkLocked) })}</Badge>
-            <button type="button" title={t('Lever le verrou')} onClick={() => set({ linkLocked: null })}>
+            <Badge color="red">{t('Lock: {name}', { name: linkLockName(p.linkLocked) })}</Badge>
+            <button type="button" title={t('Lift the lock')} onClick={() => set({ linkLocked: null })}>
               ✕
             </button>
           </span>
         )}
         {p.fullDefense && (
           <span className="mx-chip-btn">
-            <Badge color="cyan">{t('Défense totale')}</Badge>
+            <Badge color="cyan">{t('Full defense')}</Badge>
             <button type="button" onClick={() => set({ fullDefense: false })}>
               ✕
             </button>
@@ -108,7 +108,7 @@ function DeckerCard({ game, actor, onCockpit }: { game: GameView; actor: Actor; 
         )}
         {p.traced && (
           <span className="mx-chip-btn">
-            <Badge color="magenta">{t('Localisé(e)')}</Badge>
+            <Badge color="magenta">{t('Traced')}</Badge>
             <button type="button" onClick={() => set({ traced: false })}>
               ✕
             </button>
@@ -134,11 +134,11 @@ function DeckerCard({ game, actor, onCockpit }: { game: GameView; actor: Actor; 
       </div>
       {(p.marks || []).length > 0 && (
         <div className="mx-gm-marks">
-          <span className="faint small">{t('Marques :')}</span>
+          <span className="faint small">{t('Marks:')}</span>
           {p.marks.map((m) => (
             <span className="mx-gm-mark" key={m.targetId}>
               {markName(m)} {marksDots(m.count)}
-              <button type="button" title={t('Retirer')} onClick={() => act('matrix/setMarks', { actorId: actor.id, targetId: m.targetId, count: 0 })}>
+              <button type="button" title={t('Remove')} onClick={() => act('matrix/setMarks', { actorId: actor.id, targetId: m.targetId, count: 0 })}>
                 ✕
               </button>
             </span>
@@ -147,11 +147,11 @@ function DeckerCard({ game, actor, onCockpit }: { game: GameView; actor: Actor; 
       )}
       {(p.marksOnMe || []).length > 0 && (
         <div className="mx-gm-marks">
-          <span className="faint small">{t('Sur lui/elle :')}</span>
+          <span className="faint small">{t('On them:')}</span>
           {p.marksOnMe.map((m) => (
             <span className="mx-gm-mark hostile" key={m.sourceId}>
               {markName(m)} {marksDots(m.count)}
-              <button type="button" title={t('Retirer')} onClick={() => act('matrix/setMarkOnMe', { actorId: actor.id, sourceId: m.sourceId, count: 0 })}>
+              <button type="button" title={t('Remove')} onClick={() => act('matrix/setMarkOnMe', { actorId: actor.id, sourceId: m.sourceId, count: 0 })}>
                 ✕
               </button>
             </span>
@@ -164,16 +164,16 @@ function DeckerCard({ game, actor, onCockpit }: { game: GameView; actor: Actor; 
         </Button>
         {p.online && (
           <Button small onClick={dump}>
-            {t('Éjecter')}
+            {t('Boot out')}
           </Button>
         )}
         {p.bricked && (
           <Button small onClick={() => set({ matrixDamage: 0, bricked: false })}>
-            {t('Réparer le deck')}
+            {t('Repair deck')}
           </Button>
         )}
         <Button small variant="ghost" onClick={reset}>
-          {t('Réinitialiser')}
+          {t('Reset')}
         </Button>
       </div>
     </div>
@@ -183,7 +183,7 @@ function DeckerCard({ game, actor, onCockpit }: { game: GameView; actor: Actor; 
 export function DeckersView({ game, onCockpit }: { game: GameView; onCockpit: (id: string) => void }) {
   const actors = Object.values(game.actors || {}).filter((a): a is Actor => isFullActor(a) && !!a.matrix && !a.retired && (isCyberdeck(a) || !!game.matrix?.personas?.[a.id]));
   actors.sort((a, b) => (a.type === b.type ? compare(a.name, b.name) : a.type === 'pc' ? -1 : 1));
-  if (!actors.length) return <Empty>{t('Aucun decker : un personnage avec un cyberdeck (Attaque/Corruption) apparaît ici, ou dès qu’un commlink se connecte.')}</Empty>;
+  if (!actors.length) return <Empty>{t('No decker: a character with a cyberdeck (Attack/Sleaze) shows up here, or as soon as a commlink connects.')}</Empty>;
   return (
     <div className="mx-gm-grid">
       {actors.map((a) => (
@@ -203,7 +203,7 @@ function NewHost({ onCreated }: { onCreated: (id: string) => void }) {
   const [ic, setIc] = useState(true);
   const attrs = hostAttributes(rating, preset);
   const create = async () => {
-    const r = await act<{ id: string }>('matrix/hostCreate', { name: name.trim() || t('Hôte {n}', { n: rating }), rating, preset, ic });
+    const r = await act<{ id: string }>('matrix/hostCreate', { name: name.trim() || t('Host {n}', { n: rating }), rating, preset, ic });
     if (r) {
       setName('');
       onCreated(r.id);
@@ -211,15 +211,15 @@ function NewHost({ onCreated }: { onCreated: (id: string) => void }) {
   };
   return (
     <div className="mx-gm-new">
-      <div className="mx-panel-title">{t('Nouvel hôte')}</div>
-      <Field label={t('Nom')}>
-        <TextInput live value={name} onChange={setName} placeholder={t('ex. Bureau de Renraku Tacoma')} />
+      <div className="mx-panel-title">{t('New host')}</div>
+      <Field label={t('Name')}>
+        <TextInput live value={name} onChange={setName} placeholder={t('e.g. Renraku Tacoma office')} />
       </Field>
       <div className="row wrap">
-        <Field label={t('Indice')}>
+        <Field label={t('Rating')}>
           <NumberInput small value={rating} min={1} max={12} onChange={setRating} />
         </Field>
-        <Field label={t('Profil')} className="grow">
+        <Field label={t('Profile')} className="grow">
           <Select value={preset} options={Object.entries(HOST_PRESETS).map(([v, p]) => ({ value: v, label: t(p.label) }))} onChange={setPreset} />
         </Field>
       </div>
@@ -230,9 +230,9 @@ function NewHost({ onCreated }: { onCreated: (id: string) => void }) {
           </span>
         ))}
       </div>
-      <Toggle value={ic} onChange={setIc} label={t('Suite d’IC standard (Patrouille active)')} />
+      <Toggle value={ic} onChange={setIc} label={t('Standard IC suite (Patrol active)')} />
       <Button variant="primary" onClick={create}>
-        {t('Créer l’hôte')}
+        {t('Create host')}
       </Button>
     </div>
   );
@@ -249,9 +249,9 @@ function IcSection({ game, host }: { game: GameView; host: Host }) {
         <span>
           {t('IC')} <RuleRef rule="ic" />
         </span>
-        <span className="faint small">{t('attaque {n} dés · init. {init}', { n: icAttackPool(host), init: ini.text })}</span>
+        <span className="faint small">{t('attack {n} dice · init. {init}', { n: icAttackPool(host), init: ini.text })}</span>
       </div>
-      {host.ic.length === 0 && <div className="muted small">{t('Aucune IC.')}</div>}
+      {host.ic.length === 0 && <div className="muted small">{t('No IC.')}</div>}
       {host.ic.map((ic) => {
         const def = IC_TYPES[ic.type] || {};
         const tgt = targets[ic.id] || inside[0]?.actorId || '';
@@ -261,13 +261,13 @@ function IcSection({ game, host }: { game: GameView; host: Host }) {
               <b title={def.desc ? t(def.desc) : ''}>{icName(ic.type)}</b>{' '}
               <span className="faint small">
                 {def.desc ? t(def.desc) : ''}
-                {def.needsMarks ? ` ${tn(def.needsMarks, 'one::({n} marque(s) requise(s))', '({n} marque(s) requise(s))')}` : ''}
+                {def.needsMarks ? ` ${tn(def.needsMarks, 'one::({n} mark required)', '({n} marks required)')}` : ''}
               </span>
             </div>
-            <Field label={t('Indice')}>
+            <Field label={t('Rating')}>
               <NumberInput small value={ic.rating} min={1} max={12} onChange={(v) => act('matrix/icUpdate', { hostId: host.id, icId: ic.id, patch: { rating: v } })} />
             </Field>
-            <Field label={t('Dommages /{n}', { n: matrixMonitor(ic.rating) })}>
+            <Field label={t('Damage /{n}', { n: matrixMonitor(ic.rating) })}>
               <NumberInput small value={ic.damage || 0} min={0} max={matrixMonitor(ic.rating)} onChange={(v) => act('matrix/icUpdate', { hostId: host.id, icId: ic.id, patch: { damage: v } })} />
             </Field>
             {ic.active ? (
@@ -282,29 +282,29 @@ function IcSection({ game, host }: { game: GameView; host: Host }) {
                       ))}
                     </select>
                     <Button small variant="danger" onClick={() => act('matrix/icAct', { hostId: host.id, icId: ic.id, actorId: tgt })}>
-                      {t('Attaquer')}
+                      {t('verb::Attack')}
                     </Button>
                   </>
                 ) : (
-                  <span className="faint small">{t('personne dans l’hôte')}</span>
+                  <span className="faint small">{t('nobody in the host')}</span>
                 )}
                 <Button small variant="ghost" onClick={() => act('matrix/icUpdate', { hostId: host.id, icId: ic.id, patch: { active: false } })}>
-                  {t('Retirer')}
+                  {t('Remove')}
                 </Button>
               </div>
             ) : (
               <Button small variant="accent" onClick={() => act('matrix/icLaunch', { hostId: host.id, icId: ic.id })}>
-                {ic.crashed ? t('Relancer') : t('ic::Lancer')}
+                {ic.crashed ? t('Relaunch') : t('ic::Launch')}
               </Button>
             )}
-            <IconButton icon="✕" title={t('Supprimer cette IC')} onClick={() => act('matrix/icRemove', { hostId: host.id, icId: ic.id })} />
+            <IconButton icon="✕" title={t('Delete this IC')} onClick={() => act('matrix/icRemove', { hostId: host.id, icId: ic.id })} />
           </div>
         );
       })}
       <div className="row wrap">
         <Select value={type} options={IC_ORDER.map((x) => ({ value: x, label: icName(x) }))} onChange={setType} />
         <Button small variant="accent" onClick={() => act('matrix/icLaunch', { hostId: host.id, type })}>
-          {t('Ajouter et lancer')}
+          {t('Add and launch')}
         </Button>
       </div>
     </div>
@@ -317,37 +317,37 @@ function FilesSection({ host }: { host: Host }) {
   const upd = (id: string, patch: Partial<HostFile>) => save(host.files.map((f) => (f.id === id ? { ...f, ...patch } : f)));
   return (
     <div className="mx-gm-section">
-      <div className="mx-panel-title">{t('Fichiers')}</div>
-      {host.files.length === 0 && <div className="muted small">{t('Aucun fichier.')}</div>}
+      <div className="mx-panel-title">{t('Files')}</div>
+      {host.files.length === 0 && <div className="muted small">{t('No files.')}</div>}
       {host.files.map((f) => (
         <div className="mx-gm-file" key={f.id}>
           <div className="row wrap">
             <TextInput value={f.name} onChange={(v) => upd(f.id, { name: v })} className="grow" />
-            <Toggle value={f.protected} onChange={(v) => upd(f.id, { protected: v, protection: v && !f.protection ? host.rating : f.protection })} label={t('Protégé')} />
+            <Toggle value={f.protected} onChange={(v) => upd(f.id, { protected: v, protection: v && !f.protection ? host.rating : f.protection })} label={t('Protected')} />
             {f.protected && (
               <Field label={t('Protection')}>
                 <NumberInput small value={f.protection || host.rating} min={1} max={12} onChange={(v) => upd(f.id, { protection: v })} />
               </Field>
             )}
-            <Field label={t('Bombe')}>
+            <Field label={t('Bomb')}>
               <NumberInput small value={f.bomb || 0} min={0} max={12} onChange={(v) => upd(f.id, { bomb: v, bombBy: v ? f.bombBy : null })} />
             </Field>
-            <Field label={t('Valeur ¥')}>
+            <Field label={t('Value ¥')}>
               <NumberInput small value={f.value || 0} min={0} max={1000000} step={100} onChange={(v) => upd(f.id, { value: v })} />
             </Field>
             <Button small variant="ghost" onClick={() => setOpenId(openId === f.id ? null : f.id)}>
-              {openId === f.id ? t('Fermer') : t('Contenu')}
+              {openId === f.id ? t('Close') : t('Content')}
             </Button>
-            <IconButton icon="✕" title={t('Supprimer')} onClick={() => save(host.files.filter((x) => x.id !== f.id))} />
+            <IconButton icon="✕" title={t('Delete')} onClick={() => save(host.files.filter((x) => x.id !== f.id))} />
           </div>
-          {f.edited && <span className="small amber">{t('modifié par un hacker')}</span>}
+          {f.edited && <span className="small amber">{t('edited by a hacker')}</span>}
           {openId === f.id && (
-            <TextInput multiline rows={3} value={f.content || ''} placeholder={t('Ce que le decker découvre en lisant ou copiant le fichier')} onChange={(v) => upd(f.id, { content: v })} />
+            <TextInput multiline rows={3} value={f.content || ''} placeholder={t('What the decker finds when reading or copying the file')} onChange={(v) => upd(f.id, { content: v })} />
           )}
         </div>
       ))}
-      <Button small onClick={() => save([...host.files, { id: uid('file'), name: t('Nouveau fichier'), protected: false, bomb: 0, value: null, content: '' }])}>
-        {t('Ajouter un fichier')}
+      <Button small onClick={() => save([...host.files, { id: uid('file'), name: t('New file'), protected: false, bomb: 0, value: null, content: '' }])}>
+        {t('Add a file')}
       </Button>
     </div>
   );
@@ -357,11 +357,11 @@ function FilesSection({ host }: { host: Host }) {
 function linkOptions(map: GameMap | null | undefined) {
   if (!map) return [];
   const opts: Array<{ value: string; label: string }> = [];
-  for (const d of map.doors || []) opts.push({ value: `door:${d.id}`, label: `🚪 ${d.name || t('Porte ({x}, {y})', { x: d.x, y: d.y })}` });
+  for (const d of map.doors || []) opts.push({ value: `door:${d.id}`, label: `🚪 ${d.name || t('Door ({x}, {y})', { x: d.x, y: d.y })}` });
   for (const w of map.walls || [])
-    if (w.door) opts.push({ value: `door:${w.id}`, label: `🚪 ${w.door.name || t('Porte ({x}, {y})', { x: Math.round((w.x1 + w.x2) / 2), y: Math.round((w.y1 + w.y2) / 2) })}` });
-  for (const l of map.lights || []) opts.push({ value: `light:${l.id}`, label: `💡 ${l.name || t('Lumière ({x}, {y})', { x: l.x, y: l.y })}` });
-  for (const r of map.regions || []) opts.push({ value: `camera:${r.id}`, label: `📷 ${t('Caméras : {zone}', { zone: r.name })}` });
+    if (w.door) opts.push({ value: `door:${w.id}`, label: `🚪 ${w.door.name || t('Door ({x}, {y})', { x: Math.round((w.x1 + w.x2) / 2), y: Math.round((w.y1 + w.y2) / 2) })}` });
+  for (const l of map.lights || []) opts.push({ value: `light:${l.id}`, label: `💡 ${l.name || t('Light ({x}, {y})', { x: l.x, y: l.y })}` });
+  for (const r of map.regions || []) opts.push({ value: `camera:${r.id}`, label: `📷 ${t('Cameras: {zone}', { zone: r.name })}` });
   return opts;
 }
 
@@ -374,10 +374,10 @@ function DeviceLinkRow({ game, device, onChange }: { game: GameView; device: Hos
   const state = l ? deviceLinkState(game, device) : null;
   return (
     <div className="row wrap mx-gm-link">
-      <span className="faint small">{t('Sur la carte :')}</span>
+      <span className="faint small">{t('On the map:')}</span>
       <Select
         value={mapId}
-        options={[{ value: '', label: t('— non relié —') }, ...maps.map((m) => ({ value: m.id, label: m.folder ? `${m.folder} · ${m.name}` : m.name }))]}
+        options={[{ value: '', label: t('— not linked —') }, ...maps.map((m) => ({ value: m.id, label: m.folder ? `${m.folder} · ${m.name}` : m.name }))]}
         onChange={(v) => {
           setMapId(v);
           if (!v) onChange(null);
@@ -386,7 +386,7 @@ function DeviceLinkRow({ game, device, onChange }: { game: GameView; device: Hos
       {map && (
         <Select
           value={l && l.mapId === mapId ? `${l.kind}:${l.targetId}` : ''}
-          options={[{ value: '', label: opts.length ? t('— choisir —') : t('rien à relier sur cette carte') }, ...opts]}
+          options={[{ value: '', label: opts.length ? t('— choose —') : t('nothing to link on this map') }, ...opts]}
           onChange={(v) => {
             if (!v) return onChange(null);
             const i = v.indexOf(':');
@@ -395,7 +395,7 @@ function DeviceLinkRow({ game, device, onChange }: { game: GameView; device: Hos
         />
       )}
       {l && state && <span className="mx-link-chip">{linkStateText(l.kind, state)}</span>}
-      {l && !state && <span className="small red">{t('objet introuvable sur la carte')}</span>}
+      {l && !state && <span className="small red">{t('object not found on the map')}</span>}
     </div>
   );
 }
@@ -405,31 +405,31 @@ function DevicesSection({ game, host }: { game: GameView; host: Host }) {
   const upd = (id: string, patch: Partial<HostDevice>) => save(host.devices.map((d) => (d.id === id ? { ...d, ...patch } : d)));
   return (
     <div className="mx-gm-section">
-      <div className="mx-panel-title">{t('Appareils esclaves')}</div>
-      <div className="small faint">{t('Relie un appareil à une porte, une lumière ou une zone de la carte : quand le decker le contrôle, la carte change toute seule.')}</div>
-      {host.devices.length === 0 && <div className="muted small">{t('Aucun appareil.')}</div>}
+      <div className="mx-panel-title">{t('Slaved devices')}</div>
+      <div className="small faint">{t('Link a device to a door, a light or a map zone: when the decker controls it, the map updates by itself.')}</div>
+      {host.devices.length === 0 && <div className="muted small">{t('No devices.')}</div>}
       {host.devices.map((d) => (
         <div className="mx-gm-file" key={d.id}>
           <div className="row wrap">
             <TextInput value={d.name} onChange={(v) => upd(d.id, { name: v })} className="grow" />
-            <Field label={t('Indice')}>
+            <Field label={t('Rating')}>
               <NumberInput small value={d.rating} min={1} max={12} onChange={(v) => upd(d.id, { rating: v })} />
             </Field>
-            <Toggle value={d.offline} onChange={(v) => upd(d.id, { offline: v })} label={t('Hors ligne')} />
-            {d.formatted && <Badge color="red">{t('formaté')}</Badge>}
-            {d.bricked && <Badge color="red">{t('briqué')}</Badge>}
+            <Toggle value={d.offline} onChange={(v) => upd(d.id, { offline: v })} label={t('Offline')} />
+            {d.formatted && <Badge color="red">{t('formatted')}</Badge>}
+            {d.bricked && <Badge color="red">{t('bricked')}</Badge>}
             {d.formatted || d.bricked || d.damage ? (
               <Button small variant="ghost" onClick={() => upd(d.id, { formatted: false, bricked: false, damage: 0 })}>
-                {t('Réparer')}
+                {t('Repair')}
               </Button>
             ) : null}
-            <IconButton icon="✕" title={t('Supprimer')} onClick={() => save(host.devices.filter((x) => x.id !== d.id))} />
+            <IconButton icon="✕" title={t('Delete')} onClick={() => save(host.devices.filter((x) => x.id !== d.id))} />
           </div>
           <DeviceLinkRow game={game} device={d} onChange={(link) => upd(d.id, { link, on: true })} />
         </div>
       ))}
-      <Button small onClick={() => save([...host.devices, { id: uid('dev'), name: t('Nouvel appareil'), rating: host.rating }])}>
-        {t('Ajouter un appareil')}
+      <Button small onClick={() => save([...host.devices, { id: uid('dev'), name: t('New device'), rating: host.rating }])}>
+        {t('Add a device')}
       </Button>
     </div>
   );
@@ -453,7 +453,7 @@ function HostTurnBar({ game, host }: { game: GameView; host: Host }) {
   const next = () => act('matrix/launchNextIc', { hostId: host.id });
   const spider = async () => {
     const r = await act('matrix/spawnSpider', { hostId: host.id });
-    if (r) toast(game.combat?.active ? t('Araignée ajoutée au combat.') : t('Araignée créée (lance un combat pour son initiative).'), 'success');
+    if (r) toast(game.combat?.active ? t('Spider added to the fight.') : t('Spider created (start a fight for its initiative).'), 'success');
   };
   const lines = last
     ? [
@@ -466,20 +466,20 @@ function HostTurnBar({ game, host }: { game: GameView; host: Host }) {
   return (
     <div className="mx-gm-section mx-gm-turn">
       <div className="row wrap">
-        <Button variant="accent" disabled={!inside.length} title={t('Une IC de plus si l’hôte est en alerte, puis chaque IC active agit sur une cible choisie automatiquement')} onClick={turn}>
-          ⚡ {t('Tour de l’hôte')}
+        <Button variant="accent" disabled={!inside.length} title={t('One more IC if the host is on alert, then every running IC acts on an automatically chosen target')} onClick={turn}>
+          ⚡ {t('Host turn')}
         </Button>
-        <Button small onClick={next} title={t('Lance la prochaine IC de la liste (pas encore active)')}>
-          {t('IC suivante')}
+        <Button small onClick={next} title={t('Launch the next IC of the list (not running yet)')}>
+          {t('Next IC')}
         </Button>
         {spiderId && (
-          <Button small onClick={spider} title={t('Ajoute l’araignée de l’hôte au combat (sans pion)')}>
-            🕷 {t('Araignée au combat')}
+          <Button small onClick={spider} title={t('Add the host’s spider to the fight (no token)')}>
+            🕷 {t('Spider to the fight')}
           </Button>
         )}
-        <span className="faint small grow">{inside.length ? t('Intrus : {names}', { names: inside.map((p) => game.actors?.[p.actorId]?.name).join(', ') }) : t('Personne dans l’hôte.')}</span>
+        <span className="faint small grow">{inside.length ? t('Intruders: {names}', { names: inside.map((p) => game.actors?.[p.actorId]?.name).join(', ') }) : t('Nobody in the host.')}</span>
       </div>
-      {inFight && <div className="small cyan">{t('Combat en cours : chaque IC a sa ligne dans l’initiative, avec un bouton « Agir » à son tour.')}</div>}
+      {inFight && <div className="small cyan">{t('Fight in progress: each IC has its own initiative row, with an “Act” button on its turn.')}</div>}
       {lines.length > 0 && (
         <ul className="mx-gm-turnlog">
           {lines.map((l, i) => (
@@ -488,14 +488,14 @@ function HostTurnBar({ game, host }: { game: GameView; host: Host }) {
         </ul>
       )}
       <details className="mx-gm-help">
-        <summary>{t('Aide-mémoire du MJ')}</summary>
+        <summary>{t('GM cheat sheet')}</summary>
         <ul className="small">
-          <li>{t('Hôte calme : seule la Patrouille tourne. « Tour de l’hôte » lui fait chercher les intrus.')}</li>
-          <li>{t('Une action illégale ratée ou une attaque met l’hôte en alerte (automatique).')}</li>
-          <li>{t('En alerte, l’hôte lance une IC de plus par tour de combat (automatique en combat, sinon « Tour de l’hôte »).')}</li>
-          <li>{t('Chaque IC vise l’intrus le mieux repéré. Crash, Traqueuse et Brouillage exigent 1, 2 ou 3 marques de l’hôte : la Sonde les pose.')}</li>
-          <li>{t('SO : chaque action illégale ajoute les succès du défenseur, plus 2D6 toutes les 15 minutes (« +15 min » ou minuterie). À 40 : convergence.')}</li>
-          <li>{t('L’araignée est un PNJ decker : ajoute-la au combat, elle agit à son initiative depuis le cockpit (onglet Cockpit).')}</li>
+          <li>{t('Calm host: only Patrol IC runs. “Host turn” makes it look for intruders.')}</li>
+          <li>{t('A failed illegal action or an attack puts the host on alert (automatic).')}</li>
+          <li>{t('On alert, the host launches one more IC per Combat Turn (automatic in a fight, otherwise “Host turn”).')}</li>
+          <li>{t('Each IC targets the best-known intruder. Crash, Track and Scramble need 1, 2 or 3 host marks: Probe places them.')}</li>
+          <li>{t('OS: each illegal action adds the defender’s hits, plus 2D6 every 15 minutes (“+15 min” or the timer). At 40: convergence.')}</li>
+          <li>{t('The spider is an NPC decker: add it to the fight, it acts on its initiative from the cockpit (Cockpit tab).')}</li>
         </ul>
       </details>
     </div>
@@ -508,11 +508,11 @@ function HostEditor({ game, host, onDeleted }: { game: GameView; host: Host; onD
   const spiders = Object.entries(game.bestiary || {})
     .map(([id, tpl]) => ({ value: id, label: tpl.name }))
     .sort((a, b) => compare(a.label, b.label));
-  const spiderOpts = [{ value: '', label: t('— aucune —') }, ...spiders];
+  const spiderOpts = [{ value: '', label: t('— none —') }, ...spiders];
   const deckers = Object.values(game.actors || {}).filter((a): a is Actor => isFullActor(a) && !!a.matrix && isCyberdeck(a) && !a.retired);
   const inside = Object.values(game.matrix?.personas || {}).filter((p) => p.online && p.hostId === host.id);
   const del = async () => {
-    if (await confirmAction(t('Supprimer l’hôte « {name} » ? Les marques posées dessus disparaissent.', { name: host.name }))) {
+    if (await confirmAction(t('Delete the host “{name}”? Marks placed on it are lost.', { name: host.name }))) {
       await act('matrix/hostDelete', { hostId: host.id });
       onDeleted();
     }
@@ -522,19 +522,19 @@ function HostEditor({ game, host, onDeleted }: { game: GameView; host: Host; onD
     <div className={'mx-gm-host' + (host.alert === 'active' ? ' alert' : '')}>
       <HostTurnBar game={game} host={host} />
       <div className="row wrap">
-        <Field label={t('Nom')} className="grow">
+        <Field label={t('Name')} className="grow">
           <TextInput value={host.name} onChange={(v) => upd({ name: v })} />
         </Field>
-        <Field label={t('Dossier')}>
+        <Field label={t('Folder')}>
           <TextInput value={host.folder || ''} onChange={(v) => upd({ folder: v })} />
         </Field>
       </div>
       <div className="row wrap">
-        <Toggle value={host.alert === 'active'} onChange={(v) => upd({ alert: v ? 'active' : 'none' })} label={t('Alerte')} />
-        <Toggle value={host.visible} onChange={(v) => upd({ visible: v })} label={t('Visible des joueurs (repéré sur la grille)')} />
+        <Toggle value={host.alert === 'active'} onChange={(v) => upd({ alert: v ? 'active' : 'none' })} label={t('Alert')} />
+        <Toggle value={host.visible} onChange={(v) => upd({ visible: v })} label={t('Visible to players (spotted on the grid)')} />
       </div>
       <div className="row wrap mx-gm-row">
-        <Field label={t('Indice')}>
+        <Field label={t('Rating')}>
           <NumberInput small value={host.rating} min={1} max={12} onChange={(v) => upd({ rating: v })} />
         </Field>
         {ASDF.map((k) => (
@@ -546,31 +546,31 @@ function HostEditor({ game, host, onDeleted }: { game: GameView; host: Host; onD
       <div className="row wrap">
         <Select value={preset} options={Object.entries(HOST_PRESETS).map(([v, p]) => ({ value: v, label: t(p.label) }))} onChange={setPreset} />
         <Button small variant="ghost" onClick={() => upd(hostAttributes(host.rating, preset))}>
-          {t('Recalculer les attributs (indice {n})', { n: host.rating })}
+          {t('Recompute attributes (rating {n})', { n: host.rating })}
         </Button>
       </div>
       <div className="grid-2">
-        <Field label={t('Araignée de garde')}>
+        <Field label={t('Spider on duty')}>
           <Select value={host.spider || ''} options={spiderOpts} onChange={(v) => upd({ spider: v || null })} />
         </Field>
-        <Field label={t('Araignée en alerte')}>
+        <Field label={t('Spider on alert')}>
           <Select value={host.spiderAlert || ''} options={spiderOpts} onChange={(v) => upd({ spiderAlert: v || null })} />
         </Field>
       </div>
-      {spiderOnDuty && <div className="small amber">{t('Araignée en poste : {name} (à placer depuis le Bestiaire)', { name: game.bestiary?.[spiderOnDuty]?.name || '?' })}</div>}
-      <Field label={t('Description (visible des deckers)')}>
+      {spiderOnDuty && <div className="small amber">{t('Spider on duty: {name} (place it from the Bestiary)', { name: game.bestiary?.[spiderOnDuty]?.name || '?' })}</div>}
+      <Field label={t('Description (visible to deckers)')}>
         <TextInput multiline rows={2} value={host.description || ''} onChange={(v) => upd({ description: v })} />
       </Field>
-      <Field label={t('Notes du MJ')}>
+      <Field label={t('GM notes')}>
         <TextInput multiline rows={4} value={host.notes || ''} onChange={(v) => upd({ notes: v })} />
       </Field>
 
       <div className="mx-gm-section">
         <div className="mx-panel-title">{t('Deckers')}</div>
         {inside.length ? (
-          <div className="small">{t('Dans l’hôte : {names}', { names: inside.map((p) => game.actors?.[p.actorId]?.name).join(', ') })}</div>
+          <div className="small">{t('In the host: {names}', { names: inside.map((p) => game.actors?.[p.actorId]?.name).join(', ') })}</div>
         ) : (
-          <div className="muted small">{t('Personne dans l’hôte.')}</div>
+          <div className="muted small">{t('Nobody in the host.')}</div>
         )}
         <div className="row wrap">
           {deckers.map((a) => {
@@ -580,8 +580,8 @@ function HostEditor({ game, host, onDeleted }: { game: GameView; host: Host; onD
                 key={a.id}
                 value={seen}
                 onChange={(v) => upd({ perceivedBy: v ? [...(host.perceivedBy || []), a.id] : (host.perceivedBy || []).filter((x) => x !== a.id) })}
-                label={t('{name} connaît l’hôte', { name: a.name })}
-                title={t('Révèle indice, IC, fichiers et appareils à ce decker (comme une Perception matricielle)')}
+                label={t('{name} knows the host', { name: a.name })}
+                title={t('Reveals rating, IC, files and devices to this decker (like Matrix Perception)')}
               />
             );
           })}
@@ -593,7 +593,7 @@ function HostEditor({ game, host, onDeleted }: { game: GameView; host: Host; onD
       <div className="row spread mx-gm-row">
         <span></span>
         <Button small variant="danger" onClick={del}>
-          {t('Supprimer l’hôte')}
+          {t('Delete host')}
         </Button>
       </div>
     </div>
@@ -615,12 +615,12 @@ export function HostsView({ game, selected, onSelect }: { game: GameView; select
                 <b>{h.name}</b>
                 <small className="faint">
                   {h.folder ? `${h.folder} · ` : ''}
-                  {t('indice {n}', { n: h.rating })} · {h.attack}/{h.sleaze}/{h.dataProcessing}/{h.firewall}
+                  {t('rating {n}', { n: h.rating })} · {h.attack}/{h.sleaze}/{h.dataProcessing}/{h.firewall}
                 </small>
               </span>
-              {h.alert === 'active' && <Badge color="red">{t('alerte')}</Badge>}
+              {h.alert === 'active' && <Badge color="red">{t('alert')}</Badge>}
               {!h.visible && (
-                <span className="faint small" title={t('Invisible des joueurs')}>
+                <span className="faint small" title={t('Hidden from players')}>
                   ◌
                 </span>
               )}
@@ -631,7 +631,7 @@ export function HostsView({ game, selected, onSelect }: { game: GameView; select
         <NewHost onCreated={onSelect} />
       </aside>
       <section className="mx-gm-hostmain">
-        {cur ? <HostEditor key={cur.id} game={game} host={cur} onDeleted={() => onSelect(null)} /> : <Empty>{t('Choisis un hôte à gauche, ou crée-en un depuis un profil standard.')}</Empty>}
+        {cur ? <HostEditor key={cur.id} game={game} host={cur} onDeleted={() => onSelect(null)} /> : <Empty>{t('Pick a host on the left, or create one from a standard profile.')}</Empty>}
       </section>
     </div>
   );

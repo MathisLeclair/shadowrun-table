@@ -36,8 +36,8 @@ export function HomeButton({ game, actor, lifestyle, canMove }: HomeProps) {
   if (!hasHomes(lifestyle)) return null;
   const lay = layoutOf(lifestyle);
   return <span className="hm-btn-wrap">
-    <Button small variant={lay ? 'ghost' : 'primary'} className="hm-btn" onClick={() => setOpen(true)} title={lay ? t('Voir le plan du logement') : t('Choisir le logement de ce train de vie')}>
-      🏠 {lay ? t(lay.name) : t('Choisir un logement')}
+    <Button small variant={lay ? 'ghost' : 'primary'} className="hm-btn" onClick={() => setOpen(true)} title={lay ? t('Show the floor plan') : t('Choose the home of this lifestyle')}>
+      🏠 {lay ? t(lay.name) : t('Choose a home')}
     </Button>
     {open && <HomeModal game={game} actor={actor} lifestyle={lifestyle} canMove={canMove} onClose={() => setOpen(false)} />}
   </span>;
@@ -76,7 +76,7 @@ function HomeViewer({ game, map }: { game: GameView; map: HomeMap }) {
   const scene = useMemo((): MapScene => ({ map: map as GameMap, actors: {}, role: 'player', me: game.me, selected: new Set(), gmLayer: false, editor: false, fog: null, unseen: null }), [map, game.me]);
   return <div className="hm-viewer">
     <MapCanvas rendererRef={rRef} scene={scene} handlers={{}} />
-    <button className="hm-fit" title={t('Recentrer')} onClick={() => rRef.current?.fit()}>⤢</button>
+    <button className="hm-fit" title={t('Re-center')} onClick={() => rRef.current?.fit()}>⤢</button>
   </div>;
 }
 
@@ -85,11 +85,11 @@ function RoomList({ built }: { built: Omit<BuiltHome, 'layout'> }) {
   const { map, placed, skipped } = built;
   const addonNames = new Set(placed.map((p) => p.name));
   return <div className="hm-rooms">
-    <div className="small muted">{t('{n} m² · {rooms} pièces', { n: homeArea(map), rooms: map.regions.length })}</div>
+    <div className="small muted">{t('{n} m² · {rooms} rooms', { n: homeArea(map), rooms: map.regions.length })}</div>
     <div className="hm-chips">
       {map.regions.map((r) => <span className={'hm-chip' + (addonNames.has(r.name) ? ' addon' : '')} key={r.id}>{r.name}</span>)}
     </div>
-    {skipped.length > 0 && <div className="small warn-text">{t('Pas de place pour : {list}', { list: skipped.map((s) => s.name).join(', ') })}</div>}
+    {skipped.length > 0 && <div className="small warn-text">{t('No room left for: {list}', { list: skipped.map((s) => s.name).join(', ') })}</div>}
   </div>;
 }
 
@@ -107,18 +107,18 @@ function Chooser({ lifestyle, current, canMove, gm, onPick }: ChooserProps) {
   return <div className="hm-choose">
     <p className="small muted">
       {current
-        ? fee ? t('Déménager coûte un mois de loyer de base : {cost}. Le nouveau logement est ensuite fixé jusqu’au prochain déménagement.', { cost: fmtNuyen(fee) }) : t('Le MJ déménage gratuitement.')
-        : t('Choisis où vit ton personnage. Ce choix est gratuit, puis fixé : en changer plus tard est un déménagement payant.')}
-      {' '}{t('Les options du train de vie (garage, atelier, cour…) sont ajoutées au plan.')}
+        ? fee ? t('Moving costs one month of base rent: {cost}. The new home is then fixed until the next move.', { cost: fmtNuyen(fee) }) : t('The GM moves runners for free.')
+        : t('Choose where your runner lives. This first pick is free, then fixed: changing later is a paid move.')}
+      {' '}{t('Lifestyle options (garage, workshop, yard…) are added to the plan.')}
     </p>
     <div className="hm-options">
       {builds.map(({ layout: lay, map, ...rest }) => <div className={'hm-option' + (current?.id === lay.id ? ' current' : '')} key={lay.id}>
-      <div className="hm-option-head"><b>{t(lay.name)}</b>{current?.id === lay.id && <span className="badge badge-cyan">{t('actuel')}</span>}</div>
+      <div className="hm-option-head"><b>{t(lay.name)}</b>{current?.id === lay.id && <span className="badge badge-cyan">{t('current')}</span>}</div>
       <div className="hm-preview-box"><HomePreview map={map} /></div>
       <div className="small">{t(lay.desc)}</div>
       <RoomList built={{ map, ...rest }} />
       {canMove && current?.id !== lay.id && <Button small variant="primary" onClick={() => onPick(lay, fee)}>
-        {current ? (fee ? t('Déménager ici ({cost})', { cost: fmtNuyen(fee) }) : t('Déménager ici')) : t('Emménager ici')}
+        {current ? (fee ? t('Move here ({cost})', { cost: fmtNuyen(fee) }) : t('Move here')) : t('Move in here')}
       </Button>}
     </div>)}
     </div>
@@ -135,10 +135,10 @@ export function HomeModal({ game, actor, lifestyle, canMove, onClose }: HomeProp
   const pick = async (lay: HomeLayoutDef, fee: number) => {
     if (current) {
       const msg = fee
-        ? t('Déménager vers « {name} » pour {cost} ? L’argent est retiré de {actor} et l’ancien logement est perdu.', { name: t(lay.name), cost: fmtNuyen(fee), actor: actor.name })
-        : t('Déménager vers « {name} » ?', { name: t(lay.name) });
+        ? t('Move to “{name}” for {cost}? The money is taken from {actor} and the old home is lost.', { name: t(lay.name), cost: fmtNuyen(fee), actor: actor.name })
+        : t('Move to “{name}”?', { name: t(lay.name) });
       if (!(await confirmAction(msg))) return;
-    } else if (!(await confirmAction(t('Emménager dans « {name} » ? Ensuite, changer de logement sera un déménagement payant.', { name: t(lay.name) })))) return;
+    } else if (!(await confirmAction(t('Move into “{name}”? Changing homes later will be a paid move.', { name: t(lay.name) })))) return;
     setBusy(true);
     try {
       await send('shop/chooseHome', { actorId: actor.id, lifestyleId: lifestyle.id, layout: lay.id });
@@ -152,10 +152,10 @@ export function HomeModal({ game, actor, lifestyle, canMove, onClose }: HomeProp
 
   const toPlayMap = async () => {
     if (!built || !current) return;
-    const map = { ...built.map, id: undefined, name: t('Logement de {actor} — {name}', { actor: actor.name, name: t(current.name) }), folder: t('Logements'), fog: true };
+    const map = { ...built.map, id: undefined, name: t('Home of {actor} — {name}', { actor: actor.name, name: t(current.name) }), folder: t('Homes'), fog: true };
     try {
       const id = await send<string>('maps/import', { map });
-      toast(t('Carte « {name} » créée', { name: map.name }), 'success');
+      toast(t('Map “{name}” created', { name: map.name }), 'success');
       setUI({ mapsEditId: id });
       goTab('maps');
       onClose();
@@ -165,10 +165,10 @@ export function HomeModal({ game, actor, lifestyle, canMove, onClose }: HomeProp
   const title = <>🏠 {lifestyle.name || lifestyleBaseLabel(lifestyle.base)}{' '}<span className="muted small">{lifestyleBaseLabel(lifestyle.base)}</span></>;
   const actions = <>
     {current && canMove && <Button small variant={choosing ? 'ghost' : 'default'} disabled={busy} onClick={() => setChoosing(!choosing)}>
-      {choosing ? t('Retour au plan') : t('Déménager…')}
+      {choosing ? t('Back to the plan') : t('Move…')}
     </Button>}
-    {gm && built && !choosing && <Button small variant="accent" onClick={toPlayMap} title={t('Copie ce plan dans les cartes de la table, pour y jouer une scène')}>
-      {t('Créer une carte de jeu')}
+    {gm && built && !choosing && <Button small variant="accent" onClick={toPlayMap} title={t('Copies this plan into the table’s maps, to play a scene there')}>
+      {t('Create a play map')}
     </Button>}
   </>;
 
@@ -181,8 +181,8 @@ export function HomeModal({ game, actor, lifestyle, canMove, onClose }: HomeProp
           <div><b>{t(current.name)}</b></div>
           <div className="small">{t(current.desc)}</div>
           <RoomList built={built} />
-          {lifestyle.home?.since ? <div className="small faint">{t('Depuis le {date}', { date: fmtDate(lifestyle.home.since) })}</div> : null}
-          <div className="small faint">{t('Glisser pour déplacer, molette pour zoomer.')}</div>
+          {lifestyle.home?.since ? <div className="small faint">{t('Since {date}', { date: fmtDate(lifestyle.home.since) })}</div> : null}
+          <div className="small faint">{t('Drag to pan, scroll to zoom.')}</div>
         </div>
       </div>}
   </Modal>;

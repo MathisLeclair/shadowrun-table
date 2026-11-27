@@ -60,31 +60,31 @@ export function useDerivedModifiers(actor: Actor | null | undefined): { mods: Sh
 }
 
 const STAT_LABELS: Record<string, string> = {
-  soak: tk('Encaissement'), composure: tk('Sang-froid'), memory: tk('Mémoire'), liftCarry: tk('Soulever / porter'), defense: tk('Défense'),
-  reach: tk('Allonge'), unarmedDV: tk('VD à mains nues'), unarmedAP: tk('PA à mains nues'), drainResist: tk('Résistance au drain'),
-  fadingResist: tk('Résistance au fading'), surprise: tk('Surprise'), spellResistance: tk('Résistance aux sorts'),
-  physicalRecovery: tk('Guérison (physique)'), stunRecovery: tk('Guérison (étourdissant)'), judgeIntentionsDefense: tk('Résister à Jauger les intentions'),
-  judgeIntentions: tk('Jauger les intentions'), fatigueResist: tk('Résistance à la fatigue'), throwSTR: tk('Force (lancer)'), throwRangeSTR: tk('Force (portée de lancer)'),
+  soak: tk('Soak'), composure: tk('Composure'), memory: tk('Memory'), liftCarry: tk('Lift / Carry'), defense: tk('Defense'),
+  reach: tk('Reach'), unarmedDV: tk('Unarmed DV'), unarmedAP: tk('Unarmed AP'), drainResist: tk('Drain Resistance'),
+  fadingResist: tk('Fading resistance'), surprise: tk('Surprise'), spellResistance: tk('Spell resistance'),
+  physicalRecovery: tk('Healing (physical)'), stunRecovery: tk('Healing (stun)'), judgeIntentionsDefense: tk('Resisting Judge Intentions'),
+  judgeIntentions: tk('Judge Intentions'), fatigueResist: tk('Fatigue resistance'), throwSTR: tk('Strength (throwing)'), throwRangeSTR: tk('Strength (throwing range)'),
 };
 const RESIST_LABELS: Record<string, string> = {
-  toxincontactresist: tk('toxines par contact'), toxiningestionresist: tk('toxines par ingestion'), toxininhalationresist: tk('toxines par inhalation'),
-  toxininjectionresist: tk('toxines par injection'), pathogencontactresist: tk('pathogènes par contact'), pathogeningestionresist: tk('pathogènes par ingestion'),
-  pathogeninhalationresist: tk('pathogènes par inhalation'), pathogeninjectionresist: tk('pathogènes par injection'), toxincontactimmune: tk('toxines par contact'),
-  toxininhalationimmune: tk('toxines par inhalation'), pathogencontactimmune: tk('pathogènes par contact'), pathogeninhalationimmune: tk('pathogènes par inhalation'),
-  firearmor: tk('feu'), coldarmor: tk('froid'), electricityarmor: tk('électricité'), acidarmor: tk('acide'), fallingarmor: tk('chutes'), radiationresist: tk('radiations'),
-  sonicresist: tk('attaques soniques'), mentalmanipulationresist: tk('sorts de manipulation mentale'), manaillusionresist: tk('illusions mana'),
-  physicalillusionresist: tk('illusions physiques'), detectionspellresist: tk('sorts de détection'), directmanaspellresist: tk('sorts de combat directs mana'),
-  decreasebodresist: tk('baisse de Constitution'), decreaseagiresist: tk('baisse d’Agilité'), decreaserearesist: tk('baisse de Réaction'),
-  decreasestrresist: tk('baisse de Force'), decreasecharesist: tk('baisse de Charisme'), decreaseintresist: tk('baisse d’Intuition'),
-  decreaselogresist: tk('baisse de Logique'), decreasewilresist: tk('baisse de Volonté'),
+  toxincontactresist: tk('contact toxins'), toxiningestionresist: tk('ingested toxins'), toxininhalationresist: tk('inhaled toxins'),
+  toxininjectionresist: tk('injected toxins'), pathogencontactresist: tk('contact pathogens'), pathogeningestionresist: tk('ingested pathogens'),
+  pathogeninhalationresist: tk('inhaled pathogens'), pathogeninjectionresist: tk('injected pathogens'), toxincontactimmune: tk('contact toxins'),
+  toxininhalationimmune: tk('inhaled toxins'), pathogencontactimmune: tk('contact pathogens'), pathogeninhalationimmune: tk('inhaled pathogens'),
+  firearmor: tk('fire'), coldarmor: tk('cold'), electricityarmor: tk('electricity'), acidarmor: tk('acid'), fallingarmor: tk('falling'), radiationresist: tk('radiation'),
+  sonicresist: tk('sonic attacks'), mentalmanipulationresist: tk('mental manipulation spells'), manaillusionresist: tk('mana illusions'),
+  physicalillusionresist: tk('physical illusions'), detectionspellresist: tk('detection spells'), directmanaspellresist: tk('direct mana combat spells'),
+  decreasebodresist: tk('Body decrease'), decreaseagiresist: tk('Agility decrease'), decreaserearesist: tk('Reaction decrease'),
+  decreasestrresist: tk('Strength decrease'), decreasecharesist: tk('Charisma decrease'), decreaseintresist: tk('Intuition decrease'),
+  decreaselogresist: tk('Logic decrease'), decreasewilresist: tk('Willpower decrease'),
 };
 const MONITOR_LABELS: Record<string, string> = {
-  physical: tk('{v} case(s) au moniteur physique'), stun: tk('{v} case(s) au moniteur étourdissant'), overflow: tk('{v} case(s) de surplus'),
-  threshold: tk('{v} case(s) par malus de blessure'), thresholdOffset: tk('{v} case(s) de dommages ignorée(s) pour les malus'),
-  sharedThresholdOffset: tk('{v} case(s) de dommages ignorée(s) pour les malus (physique puis étourdissant)'),
+  physical: tk('{v} Physical Condition Monitor box(es)'), stun: tk('{v} Stun Condition Monitor box(es)'), overflow: tk('{v} overflow box(es)'),
+  threshold: tk('{v} box(es) per wound modifier'), thresholdOffset: tk('{v} damage box(es) ignored for wound modifiers'),
+  sharedThresholdOffset: tk('{v} damage box(es) ignored for wound modifiers (Physical first, then Stun)'),
 };
 /** Short labels of the roll-dialog switches when shown next to a value (« 11 si visible »). */
-const SHORT_TOGGLES: Record<string, string> = { wireless: tk('sans fil') };
+const SHORT_TOGGLES: Record<string, string> = { wireless: tk('wireless') };
 
 const v = (m: SheetModifier): string => signedValue(m.value);
 const knowledgeLabel = (k: string): string => ((KNOWLEDGE_TYPES as Record<string, string>)[k] ? t((KNOWLEDGE_TYPES as Record<string, string>)[k]) : k);
@@ -95,51 +95,51 @@ export function effectText(m: SheetModifier): string {
   const tg = m.target ?? '';
   switch (m.type as string) { // 'weaponPool' (accessory dice) is set by shared/modifiers.js but missing from EffectType
     case 'limit':
-      return m.needsChoice ? t('{v} à une limite au choix', { v: v(m) }) : t('{v} {limit}', { v: v(m), limit: limitLabel(tg) });
+      return m.needsChoice ? t('{v} to a chosen limit', { v: v(m) }) : t('{v} {limit}', { v: v(m), limit: limitLabel(tg) });
     case 'skill':
-      if (m.needsChoice) return t('{v} dés à une compétence au choix', { v: v(m) });
-      return t('{v} dés : {skill}', { v: v(m), skill: nameTarget(tg) || skillLabel(tg) });
+      if (m.needsChoice) return t('{v} dice to a chosen skill', { v: v(m) });
+      return t('{v} dice: {skill}', { v: v(m), skill: nameTarget(tg) || skillLabel(tg) });
     case 'skillCategory':
       return String(tg).startsWith('knowledge:')
-        ? t('{v} dés : connaissances ({type})', { v: v(m), type: knowledgeLabel(String(tg).slice(10)) })
-        : t('{v} dés : compétences {cat}', { v: v(m), cat: skillCategoryLabel(tg) });
+        ? t('{v} dice: knowledge skills ({type})', { v: v(m), type: knowledgeLabel(String(tg).slice(10)) })
+        : t('{v} dice: {cat} skills', { v: v(m), cat: skillCategoryLabel(tg) });
     case 'skillGroup':
-      return t('{v} dés : groupe {group}', { v: v(m), group: skillGroupLabel(tg) });
+      return t('{v} dice: {group} group', { v: v(m), group: skillGroupLabel(tg) });
     case 'skillAttribute':
-      return t('{v} dés : compétences liées à {attr}', { v: v(m), attr: attrLabel(tg) });
+      return t('{v} dice: skills linked to {attr}', { v: v(m), attr: attrLabel(tg) });
     case 'attribute':
-      return m.needsChoice ? t('{v} à un attribut au choix', { v: v(m) }) : t('{v} {attr}', { v: v(m), attr: attrLabel(tg) });
+      return m.needsChoice ? t('{v} to a chosen attribute', { v: v(m) }) : t('{v} {attr}', { v: v(m), attr: attrLabel(tg) });
     case 'attributeMax':
-      return t('{attr} : maximum {v}', { v: v(m), attr: attrLabel(tg) });
+      return t('{attr}: maximum {v}', { v: v(m), attr: attrLabel(tg) });
     case 'initiativeDice':
-      return t('{v}D6 d’initiative', { v: v(m) });
+      return t('{v}D6 Initiative', { v: v(m) });
     case 'initiative':
-      return t('{v} au score d’initiative', { v: v(m) });
+      return t('{v} Initiative Score', { v: v(m) });
     case 'matrixInitiativeDice':
-      return t('{v}D6 d’initiative matricielle (RV)', { v: v(m) });
+      return t('{v}D6 Matrix Initiative (VR)', { v: v(m) });
     case 'armor':
-      return t('{v} armure', { v: v(m) });
+      return t('{v} Armor', { v: v(m) });
     case 'monitor':
       return MONITOR_LABELS[tg] ? t(MONITOR_LABELS[tg], { v: v(m) }) : t('{v} {what}', { v: v(m), what: tg });
     case 'stat':
       return t('{v} {what}', { v: v(m), what: STAT_LABELS[tg] ? t(STAT_LABELS[tg]) : tg });
     case 'resist':
       return m.immune
-        ? t('Immunité : {what}', { what: RESIST_LABELS[tg] ? t(RESIST_LABELS[tg]) : tg })
-        : t('{v} dés pour résister : {what}', { v: v(m), what: RESIST_LABELS[tg] ? t(RESIST_LABELS[tg]) : tg });
+        ? t('Immunity: {what}', { what: RESIST_LABELS[tg] ? t(RESIST_LABELS[tg]) : tg })
+        : t('{v} dice to resist: {what}', { v: v(m), what: RESIST_LABELS[tg] ? t(RESIST_LABELS[tg]) : tg });
     case 'flag':
-      return tg === 'smartlink' ? t('Smartlink') : tg === 'unarmedPhysical' ? t('Dommages physiques à mains nues') : String(tg);
+      return tg === 'smartlink' ? t('Smartlink') : tg === 'unarmedPhysical' ? t('Unarmed attacks deal Physical damage') : String(tg);
     case 'accuracy':
-      if (m.needsChoice) return t('{v} Précision (compétence au choix)', { v: v(m) });
-      return tg === 'all' ? t('{v} Précision (toutes les armes)', { v: v(m) }) : t('{v} Précision ({skill})', { v: v(m), skill: nameTarget(tg) || skillLabel(tg) });
+      if (m.needsChoice) return t('{v} Accuracy (chosen skill)', { v: v(m) });
+      return tg === 'all' ? t('{v} Accuracy (all weapons)', { v: v(m) }) : t('{v} Accuracy ({skill})', { v: v(m), skill: nameTarget(tg) || skillLabel(tg) });
     case 'matrixAction':
-      return m.needsChoice ? t('{v} dés à une action matricielle au choix', { v: v(m) }) : t('{v} dés : action matricielle {action}', { v: v(m), action: tg });
+      return m.needsChoice ? t('{v} dice to a chosen Matrix action', { v: v(m) }) : t('{v} dice: Matrix action {action}', { v: v(m), action: tg });
     case 'weaponPool':
-      return t('{v} dés (accessoire)', { v: v(m) });
+      return t('{v} dice (accessory)', { v: v(m) });
     case 'info':
-      return t('Arme naturelle : {name}', { name: m.note || tg || '' });
+      return t('Natural weapon: {name}', { name: m.note || tg || '' });
     case 'choice':
-      return m.needsChoice ? t('Choix à définir (MJ, mode édition)') : t('Choix : {choice}', { choice: tg });
+      return m.needsChoice ? t('Choice to set (GM, edit mode)') : t('Choice: {choice}', { choice: tg });
     default:
       return `${m.type} ${tg ?? ''} ${m.value ?? ''}`.trim();
   }
@@ -158,10 +158,10 @@ export function modText(m: SheetModifier): string {
   let s = effectText(m);
   const notes: string[] = [];
   if (m.condition) notes.push(conditionText(m.condition));
-  if (m.wireless) notes.push(t('sans fil'));
+  if (m.wireless) notes.push(t('wireless'));
   if (notes.length) s = t('{effect} ({cond})', { effect: s, cond: notes.join(', ') });
-  if (m.baked) s = t('{effect} — déjà compté', { effect: s });
-  else if (m.unbaked) s = t('{effect} — non compté (à reporter par le MJ)', { effect: s });
+  if (m.baked) s = t('{effect} — already counted', { effect: s });
+  else if (m.unbaked) s = t('{effect} — not counted (the GM must add it)', { effect: s });
   return s;
 }
 
@@ -204,7 +204,7 @@ export function sourcesTitle(lines: SourceLine[] | null | undefined, base?: stri
   if (!lines?.length) return '';
   const out = base ? [base] : [];
   for (const l of lines) {
-    const note = l.note === 'baked' ? t('déjà compté') : l.note === 'unbaked' ? t('non compté (à reporter par le MJ)') : l.note === 'override' ? t('ignoré : valeur forcée') : l.note === 'conditional' || l.note === 'info' ? t('selon la situation') : '';
+    const note = l.note === 'baked' ? t('already counted') : l.note === 'unbaked' ? t('not counted (the GM must add it)') : l.note === 'override' ? t('ignored: value overridden') : l.note === 'conditional' || l.note === 'info' ? t('depends on the situation') : '';
     out.push(`${sourceName(l.mod.source)} : ${modText({ ...l.mod, baked: false, unbaked: false })}${note ? ` — ${note}` : ''}${l.mod.source.book ? ` (${l.mod.source.book} ${l.mod.source.page ?? ''})`.replace(' )', ')') : ''}`);
   }
   return out.join('\n');
@@ -224,5 +224,5 @@ export function limitValueText(dm: DerivedMods | null | undefined, name: string)
 export function limitTitle(d: Derived | null | undefined, dm: DerivedMods | null | undefined, name: string): string {
   const lines = (dm?.sources as Record<string, SourceLine[]> | undefined)?.[`limit.${name}`];
   if (!lines?.length) return '';
-  return sourcesTitle(lines, t('{limit} de base : {n}', { limit: limitLabel(name), n: (d?.limits as Record<string, number> | undefined)?.[name] ?? '—' }));
+  return sourcesTitle(lines, t('Base {limit}: {n}', { limit: limitLabel(name), n: (d?.limits as Record<string, number> | undefined)?.[name] ?? '—' }));
 }

@@ -8,10 +8,10 @@ import { nuyen, gradeLabel, timeAgo, STATUS_LABEL, STATUS_COLOR, FLAG_LABEL, FLA
 import { durText } from './avail.tsx';
 import type { Actor, GameView, OrderLine, ShopOrder } from '../../../shared/types.ts';
 
-const KIND_LABEL: Record<string, string> = { buy: tk('Achat'), sell: tk('Revente'), give: tk('Don du MJ'), karma: tk('Art martial (karma)') };
+const KIND_LABEL: Record<string, string> = { buy: tk('Purchase'), sell: tk('Resale'), give: tk('GM gift'), karma: tk('Martial art (karma)') };
 const kindLabel = (k: string) => (KIND_LABEL[k] ? t(KIND_LABEL[k]) : k);
 /** Who placed the order: the server stores 'MJ' for the GM, else the player's name. */
-const byLabel = (by: string | undefined) => (by === 'MJ' ? t('MJ') : by || '?');
+const byLabel = (by: string | undefined) => (by === 'MJ' ? t('GM') : by || '?');
 
 
 function Lines({ order }: { order: ShopOrder }) {
@@ -23,29 +23,29 @@ function Lines({ order }: { order: ShopOrder }) {
             {l.name}
             {l.target?.name ? <span className="cyan"> → {l.target.name}</span> : null}
             {l.techniques?.length ? <span className="muted"> ({l.techniques.join(', ')})</span> : null}
-            {l.rating ? <span className="muted"> {t('ind. {n}', { n: l.rating })}</span> : null}
+            {l.rating ? <span className="muted"> {t('rtg {n}', { n: l.rating })}</span> : null}
             {l.grade && l.grade !== 'standard' ? <span className="muted"> {gradeLabel(l.grade)}</span> : null}
             {l.qty > 1 ? <span className="muted"> ×{l.qty}</span> : null}
           </span>
           {l.legality === 'F' ? <Badge color="red">F</Badge> : l.legality === 'R' ? <Badge color="amber">R</Badge> : null}
           {l.availValue !== undefined && order.kind !== 'sell' ? (
-            <span className="faint small mono" title={t('Disponibilité')}>
-              {t('D{n}', { n: l.availValue })}
+            <span className="faint small mono" title={t('Availability')}>
+              {t('A{n}', { n: l.availValue })}
             </span>
           ) : null}
           {l.essence ? <span className="faint small mono">{t('Ess {n}', { n: Math.round(l.essence * l.qty * 1000) / 1000 })}</span> : null}
           {l.availTest ? (
             <>
-              <span className="shop-avt ok small" title={t('{hits} succès contre {opp} (dispo {avail})', { hits: l.availTest.hits, opp: l.availTest.availHits, avail: l.availTest.avail })}>
+              <span className="shop-avt ok small" title={t('{hits} hits vs {opp} (Availability {avail})', { hits: l.availTest.hits, opp: l.availTest.availHits, avail: l.availTest.avail })}>
                 {l.availTest.contact
-                  ? t('trouvé par {contact} en {delay}', { contact: l.availTest.contact, delay: durText(l.availTest.delayHours) })
-                  : t('trouvé en {delay}', { delay: durText(l.availTest.delayHours) })}
-                {l.availTest.tie ? ` · ${t('égalité')}` : ''}
-                {l.availTest.tries > 1 ? ` · ${t('essai n° {n}', { n: l.availTest.tries })}` : ''}
+                  ? t('found by {contact} in {delay}', { contact: l.availTest.contact, delay: durText(l.availTest.delayHours) })
+                  : t('found in {delay}', { delay: durText(l.availTest.delayHours) })}
+                {l.availTest.tie ? ` · ${t('tie')}` : ''}
+                {l.availTest.tries > 1 ? ` · ${t('attempt #{n}', { n: l.availTest.tries })}` : ''}
               </span>
               {l.availTest.glitch ? (
-                <span className="shop-avt todo small" title={t('Complication sur le test de disponibilité : attention indésirable (flics, yakuza, rivaux…), le MJ décide')}>
-                  ⚠ {t('complication')}
+                <span className="shop-avt todo small" title={t('Glitch on the availability test: unwanted attention (cops, yakuza, rivals…), GM’s call')}>
+                  ⚠ {t('glitch')}
                 </span>
               ) : null}
             </>
@@ -55,8 +55,8 @@ function Lines({ order }: { order: ShopOrder }) {
             {l.surcharge ? (
               <>
                 {' '}
-                <span className="faint" title={t('Surenchère pour trouver l’objet (+25 % du prix par dé)')}>
-                  {t('dont +{cost}', { cost: nuyen(l.surcharge * l.qty) })}
+                <span className="faint" title={t('Overpay to find the item (+25 % of the price per die)')}>
+                  {t('incl. +{cost}', { cost: nuyen(l.surcharge * l.qty) })}
                 </span>
               </>
             ) : null}
@@ -79,13 +79,13 @@ function PendingCard({ order, game }: { order: ShopOrder; game: GameView }) {
   const karmaHave = Number(actor?.karma) || 0;
   const karmaAfter = karmaHave - (Number(order.karma) || 0);
   const resolve = async (approve: boolean) => {
-    if (!approve && !(await confirmAction(t('Refuser cette commande ?')))) return;
+    if (!approve && !(await confirmAction(t('Deny this order?')))) return;
     setBusy(true);
     try {
       const payload: { orderId: string; approve: boolean; note: string; total?: number } = { orderId: order.id, approve, note };
       if (approve && amount !== null && Number.isFinite(amount) && amount !== order.total) payload.total = amount;
       await send('shop/resolve', payload);
-      toast(approve ? t('Commande validée') : t('Commande refusée'), approve ? 'success' : 'info');
+      toast(approve ? t('Order approved') : t('Order denied'), approve ? 'success' : 'info');
     } catch {}
     setBusy(false);
   };
@@ -95,9 +95,9 @@ function PendingCard({ order, game }: { order: ShopOrder; game: GameView }) {
         <div className="row wrap gap-s">
           <Badge color={order.kind === 'sell' ? 'cyan' : 'magenta'}>{kindLabel(order.kind)}</Badge>
           <button className="shop-link" onClick={() => actor && openSheet(actor.id)}>
-            {actor?.name || t('Personnage supprimé')}
+            {actor?.name || t('Deleted character')}
           </button>
-          <span className="faint small">{t('par {name} · {when}', { name: byLabel(order.by), when: timeAgo(order.ts) })}</span>
+          <span className="faint small">{t('by {name} · {when}', { name: byLabel(order.by), when: timeAgo(order.ts) })}</span>
         </div>
         <div className="row gap-s">
           {(order.flags || []).map((f) => (
@@ -118,7 +118,7 @@ function PendingCard({ order, game }: { order: ShopOrder; game: GameView }) {
         ) : (
           <>
             <label className="row gap-s small">
-              {order.kind === 'sell' ? t('Paiement') : t('Total')}
+              {order.kind === 'sell' ? t('Payment') : t('Total')}
               <input className="input shop-price-input" type="number" min="0" value={total} placeholder="¥" onChange={(e) => setTotal(e.target.value)} />
             </label>
             {actor && (
@@ -128,17 +128,17 @@ function PendingCard({ order, game }: { order: ShopOrder; game: GameView }) {
             )}
           </>
         )}
-        <TextInput className="grow shop-note" live value={note} onChange={setNote} placeholder={t('Note pour le joueur (optionnel)')} />
+        <TextInput className="grow shop-note" live value={note} onChange={setNote} placeholder={t('Note for the player (optional)')} />
         <Button
           small
           variant="primary"
           disabled={busy || (karma ? karmaAfter < 0 : (order.kind === 'sell' && amount === null) || (order.kind !== 'sell' && after < 0))}
           onClick={() => resolve(true)}
         >
-          {t('Valider')}
+          {t('Approve')}
         </Button>
         <Button small variant="danger" disabled={busy} onClick={() => resolve(false)}>
-          {t('Refuser')}
+          {t('Deny')}
         </Button>
       </div>
     </div>
@@ -158,14 +158,14 @@ export default function Orders({ game, actor }: OrdersProps) {
   const done = all.filter((o) => o.status !== 'pending' && (!onlyActor || !actor || o.actorId === actor.id));
 
   const cancel = async (o: ShopOrder) => {
-    if (!(await confirmAction(t('Annuler cette commande ?')))) return;
+    if (!(await confirmAction(t('Cancel this order?')))) return;
     try {
       await send('shop/cancel', { orderId: o.id });
-      toast(t('Commande annulée'), 'info');
+      toast(t('Order cancelled'), 'info');
     } catch {}
   };
   const clear = async () => {
-    if (!(await confirmAction(t('Effacer l’historique des commandes traitées ? (les commandes en attente sont conservées)')))) return;
+    if (!(await confirmAction(t('Clear the history of handled orders? (pending orders are kept)')))) return;
     try {
       await send('shop/clearOrders');
     } catch {}
@@ -173,8 +173,8 @@ export default function Orders({ game, actor }: OrdersProps) {
 
   return (
     <div className="shop-orders">
-      <div className="section-title">{isGM ? t('À valider ({n})', { n: pending.length }) : t('En attente ({n})', { n: pending.length })}</div>
-      {!pending.length && <Empty>{t('Aucune commande en attente.')}</Empty>}
+      <div className="section-title">{isGM ? t('To approve ({n})', { n: pending.length }) : t('Pending ({n})', { n: pending.length })}</div>
+      {!pending.length && <Empty>{t('No pending orders.')}</Empty>}
       {pending.map((o) =>
         isGM ? (
           <PendingCard key={o.id} order={o} game={game} />
@@ -182,50 +182,50 @@ export default function Orders({ game, actor }: OrdersProps) {
           <div className="card shop-order pending" key={o.id}>
             <div className="spread row wrap">
               <div className="row gap-s">
-                <Badge color="amber">{t('En attente du MJ')}</Badge>
+                <Badge color="amber">{t('Awaiting the GM')}</Badge>
                 <span className="small">{game.actors?.[o.actorId]?.name || ''}</span>
                 <span className="faint small">{timeAgo(o.ts)}</span>
               </div>
               <Button small variant="ghost" onClick={() => cancel(o)}>
-                {t('Annuler')}
+                {t('Cancel')}
               </Button>
             </div>
             <Lines order={o} />
             <div className="right">
-              <span className="muted small">{o.kind === 'sell' ? t('Proposé :') : t('Total :')} </span>
-              <strong className="mono">{o.kind === 'karma' ? t('{n} karma', { n: o.karma }) : o.total === null || o.total === undefined ? t('à fixer') : nuyen(o.total)}</strong>
+              <span className="muted small">{o.kind === 'sell' ? t('Offered:') : t('Total:')} </span>
+              <strong className="mono">{o.kind === 'karma' ? t('{n} karma', { n: o.karma }) : o.total === null || o.total === undefined ? t('to be set') : nuyen(o.total)}</strong>
             </div>
           </div>
         )
       )}
 
       <div className="section-title row spread">
-        <span>{t('Historique')}</span>
+        <span>{t('History')}</span>
         <span className="row gap-s">
           {isGM && actor && (
             <label className="row gap-s small muted">
-              <input type="checkbox" checked={onlyActor} onChange={(e) => setOnlyActor(e.target.checked)} /> {t('{name} seulement', { name: actor.name })}
+              <input type="checkbox" checked={onlyActor} onChange={(e) => setOnlyActor(e.target.checked)} /> {t('{name} only', { name: actor.name })}
             </label>
           )}
           {isGM && done.length > 0 && (
             <Button small variant="ghost" onClick={clear}>
-              {t('Effacer')}
+              {t('Clear')}
             </Button>
           )}
         </span>
       </div>
-      {!done.length && <Empty>{t('Aucune transaction pour l’instant.')}</Empty>}
+      {!done.length && <Empty>{t('No transactions yet.')}</Empty>}
       {done.length > 0 && (
         <Panel pad={false}>
           <table className="sr shop-history">
             <thead>
               <tr>
-                <th>{t('Quand')}</th>
+                <th>{t('When')}</th>
                 <th>{t('Type')}</th>
                 <th>{t('Runner')}</th>
-                <th>{t('Articles')}</th>
-                <th className="right">{t('Montant')}</th>
-                <th>{t('Statut')}</th>
+                <th>{t('Items')}</th>
+                <th className="right">{t('Amount')}</th>
+                <th>{t('Status')}</th>
               </tr>
             </thead>
             <tbody>
@@ -242,7 +242,7 @@ export default function Orders({ game, actor }: OrdersProps) {
                     {o.kind === 'karma'
                       ? t('{n} karma', { n: `−${o.karma}` })
                       : o.kind === 'give'
-                        ? t('offert')
+                        ? t('free')
                         : o.total === null || o.total === undefined
                           ? '—'
                           : `${o.kind === 'sell' ? '+' : '−'}${nuyen(o.total)}`}

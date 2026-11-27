@@ -13,7 +13,7 @@ import { generateEncounter, ARCHETYPE_BY_ID, METATYPE_CHOICES, GENERATED_FOLDER 
 import { quote, evalFormula, targetList, DEVICE_GEAR, accessoryFit, armorModFit, armorCapacity, upgradeAvail, accessoryEffects } from '../../client/modules/shop/rules.ts';
 import { normalizeActor } from '../../client/modules/sheet/sheet-data.ts';
 import combat, { sanitizeTemplate } from './30-combat.ts';
-import { formatFr } from '../lib/i18n.ts';
+import { formatSource } from '../lib/i18n.ts';
 import { fillActorRefs } from '../lib/bookrefs.ts';
 import type {
   ActionContext, Actor, ActorId, CatalogFile, CatalogItem, ChargenDraft, ChargenState, DraftData, GameView, I18nMessage, I18nParams, MapId, ServerEvents,
@@ -91,8 +91,8 @@ function slice(ctx: ActionContext): ChargenState {
 
 function getDraft(ctx: ActionContext, draftId: unknown): ChargenDraft {
   const d = slice(ctx).drafts.find((x) => x.id === draftId);
-  if (!d) ctx.fail('Brouillon introuvable');
-  if (!ctx.isGM && d.userId !== ctx.user.id) ctx.fail('Ce brouillon ne t’appartient pas');
+  if (!d) ctx.fail('Draft not found');
+  if (!ctx.isGM && d.userId !== ctx.user.id) ctx.fail('This draft is not yours');
   return d;
 }
 
@@ -129,7 +129,7 @@ function nameParam(data: DraftData): string | I18nMessage {
 
 /** History entry with a translatable text (same shape as the training module). */
 function historyEntry(ctx: ActionContext, key: string, params: I18nParams, extra?: { karma?: number; nuyen?: number }) {
-  return { ts: ctx.now, text: formatFr(key, params), i18n: { key, params }, ...extra };
+  return { ts: ctx.now, text: formatSource(key, params), i18n: { key, params }, ...extra };
 }
 
 /** Roll the lifestyle starting nuyen (SR5: dice × multiplier). Returns { dice, multiplier, rolls, total } or null. */
@@ -151,18 +151,18 @@ function createActor(ctx: ActionContext, data: DraftData, { type = 'pc', assignT
   actor.id = id;
   const p = result.data.priorities;
   const letters = {
-    t: tk('Métatype {metatype} · Attributs {attributes} · Magie {magic} · Compétences {skills} · Ressources {resources}'),
+    t: tk('Metatype {metatype} · Attributes {attributes} · Magic {magic} · Skills {skills} · Resources {resources}'),
     params: { metatype: p.metatype, attributes: p.attributes, magic: p.magic, skills: p.skills, resources: p.resources },
   };
   actor.history.push(source
-    ? historyEntry(ctx, tk('Création (priorités : {letters}) — {source}'), { letters, source: { t: source } }, { karma: actor.karma, nuyen: actor.nuyen })
-    : historyEntry(ctx, tk('Création (priorités : {letters})'), { letters }, { karma: actor.karma, nuyen: actor.nuyen }));
+    ? historyEntry(ctx, tk('Creation (priorities: {letters}) — {source}'), { letters, source: { t: source } }, { karma: actor.karma, nuyen: actor.nuyen })
+    : historyEntry(ctx, tk('Creation (priorities: {letters})'), { letters }, { karma: actor.karma, nuyen: actor.nuyen }));
   let roll = null;
   if (result.data.rollStartingNuyen) {
     roll = rollStartingNuyen(result.lifestyle);
     if (roll) {
       actor.nuyen += roll.total;
-      actor.history.push(historyEntry(ctx, tk('Nuyen de départ ({lifestyle}) : {dice}D6 [{rolls}] × {mult}'), { lifestyle: result.lifestyle!.name, dice: roll.dice, rolls: roll.rolls.join(' '), mult: roll.multiplier }, { nuyen: roll.total }));
+      actor.history.push(historyEntry(ctx, tk('Starting nuyen ({lifestyle}): {dice}D6 [{rolls}] × {mult}'), { lifestyle: result.lifestyle!.name, dice: roll.dice, rolls: roll.rolls.join(' '), mult: roll.multiplier }, { nuyen: roll.total }));
     }
   }
   normalizeActor(actor, (prefix: string) => ctx.uid(prefix));
@@ -190,7 +190,7 @@ type NpcGenPayload = {
 
 function genOptions(ctx: ActionContext, p: NpcGenPayload) {
   const archetype = str(p.archetype, 40);
-  if (!(ARCHETYPE_BY_ID as Record<string, unknown>)[archetype]) ctx.fail('Archétype inconnu');
+  if (!(ARCHETYPE_BY_ID as Record<string, unknown>)[archetype]) ctx.fail('Unknown archetype');
   const metatype = METATYPE_CHOICES.includes(p.metatype as string) ? (p.metatype as string) : 'random';
   return {
     archetype,
@@ -255,29 +255,29 @@ const mod: ServerModule = {
       role: 'any',
       handler(ctx: ActionContext, { draftId, data }: SaveDraftPayload = {}) {
         const c = slice(ctx);
-        if (!ctx.isGM && !c.settings.allowPlayers) ctx.fail('La création de personnage est fermée pour l’instant (voir le MJ)');
-        if (!isObj(data)) ctx.fail('Données de personnage invalides');
+        if (!ctx.isGM && !c.settings.allowPlayers) ctx.fail('Character creation is closed for now (see the GM)');
+        if (!isObj(data)) ctx.fail('Invalid character data');
         let size = 0;
         try {
           size = JSON.stringify(data).length;
         } catch {
-          ctx.fail('Données de personnage invalides');
+          ctx.fail('Invalid character data');
         }
-        if (size > MAX_DATA_BYTES) ctx.fail('Brouillon trop volumineux');
+        if (size > MAX_DATA_BYTES) ctx.fail('Draft too large');
         const clean = normalizeDraft(data) as DraftData;
         let d: ChargenDraft;
         if (draftId) {
           d = getDraft(ctx, draftId);
-          if (d.status === 'pending' && !ctx.isGM) ctx.fail('Ce personnage attend la validation du MJ : retire la demande pour le modifier');
-          if (d.status === 'approved') ctx.fail('Ce personnage a déjà été validé');
+          if (d.status === 'pending' && !ctx.isGM) ctx.fail('This character is awaiting GM approval: withdraw the request to edit it');
+          if (d.status === 'approved') ctx.fail('This character has already been approved');
           if (d.status === 'rejected') d.status = 'draft';
         } else {
           const mine = c.drafts.filter((x) => x.userId === ctx.user.id && x.status !== 'approved');
-          if (!ctx.isGM && mine.length >= MAX_DRAFTS_PER_PLAYER) ctx.fail('Trop de brouillons en cours ({max} maximum) : supprimes-en un', { max: MAX_DRAFTS_PER_PLAYER });
+          if (!ctx.isGM && mine.length >= MAX_DRAFTS_PER_PLAYER) ctx.fail('Too many drafts in progress ({max} maximum): delete one', { max: MAX_DRAFTS_PER_PLAYER });
           if (c.drafts.length >= MAX_DRAFTS) {
             // Drop the oldest approved records first.
             const idx = c.drafts.findIndex((x) => x.status === 'approved');
-            if (idx < 0) ctx.fail('Trop de brouillons enregistrés');
+            if (idx < 0) ctx.fail('Too many saved drafts');
             c.drafts.splice(idx, 1);
           }
           d = { id: ctx.uid('cg'), userId: ctx.user.id, userName: userName(ctx.state, ctx.user.id), status: 'draft', data: clean, gmNote: '', ts: ctx.now, createdTs: ctx.now };
@@ -295,19 +295,19 @@ const mod: ServerModule = {
       role: 'any',
       handler(ctx: ActionContext, { draftId }: DraftPayload = {}) {
         const c = slice(ctx);
-        if (!ctx.isGM && !c.settings.allowPlayers) ctx.fail('La création de personnage est fermée pour l’instant (voir le MJ)');
+        if (!ctx.isGM && !c.settings.allowPlayers) ctx.fail('Character creation is closed for now (see the GM)');
         const d = getDraft(ctx, draftId);
-        if (d.status === 'pending') ctx.fail('Déjà envoyé au MJ');
-        if (d.status === 'approved') ctx.fail('Ce personnage a déjà été validé');
+        if (d.status === 'pending') ctx.fail('Already sent to the GM');
+        if (d.status === 'approved') ctx.fail('This character has already been approved');
         const result = compute(d.data, rulesCtx(ctx.state));
         d.check = checkSummary(result);
-        if (!result.ok) ctx.fail('Personnage incomplet ou illégal : {errors}', { errors: firstErrors(result) });
+        if (!result.ok) ctx.fail('Incomplete or illegal character: {errors}', { errors: firstErrors(result) });
         d.status = 'pending';
         d.submittedTs = ctx.now;
         d.ts = ctx.now;
         ctx.log({
           kind: 'system', userId: ctx.user.id, author: 'Création',
-          i18n: { key: '{user} soumet un personnage au MJ : {name}', params: { user: d.userId === 'gm' ? { t: 'MJ' } : d.userName, name: nameParam(d.data) } },
+          i18n: { key: '{user} submits a character to the GM: {name}', params: { user: d.userId === 'gm' ? { t: 'GM' } : d.userName, name: nameParam(d.data) } },
           to: [...new Set([ctx.user.id, 'gm'])],
         });
         ctx.emitTo('gm', 'sfx', { id: 'notify' });
@@ -320,7 +320,7 @@ const mod: ServerModule = {
       role: 'any',
       handler(ctx: ActionContext, { draftId }: DraftPayload = {}) {
         const d = getDraft(ctx, draftId);
-        if (d.status !== 'pending') ctx.fail('Ce personnage n’est pas en attente');
+        if (d.status !== 'pending') ctx.fail('This character is not pending');
         d.status = 'draft';
         d.ts = ctx.now;
         return { status: d.status };
@@ -332,7 +332,7 @@ const mod: ServerModule = {
       role: 'gm',
       handler(ctx: ActionContext, { draftId, approve, note, force, type }: ResolvePayload = {}) {
         const d = getDraft(ctx, draftId);
-        if (d.status !== 'pending') ctx.fail('Ce personnage n’est pas en attente de validation');
+        if (d.status !== 'pending') ctx.fail('This character is not awaiting approval');
         d.gmNote = str(note, 2000).trim();
         d.resolvedTs = ctx.now;
         const name = nameParam(d.data);
@@ -341,23 +341,23 @@ const mod: ServerModule = {
           d.ts = ctx.now;
           ctx.log({
             kind: 'system', userId: ctx.user.id, author: 'Création',
-            i18n: d.gmNote ? { key: 'Personnage à revoir : {name} — « {note} »', params: { name, note: d.gmNote } } : { key: 'Personnage à revoir : {name}', params: { name } },
+            i18n: d.gmNote ? { key: 'Character needs changes: {name} — “{note}”', params: { name, note: d.gmNote } } : { key: 'Character needs changes: {name}', params: { name } },
             to: [...new Set([d.userId, 'gm'])],
           });
           notifyOwner(ctx, d, 'chargen:resolved', { draftId: d.id, status: 'rejected', note: d.gmNote });
           return { status: 'rejected' };
         }
         const result = compute(d.data, rulesCtx(ctx.state));
-        if (!result.ok && !force) ctx.fail('Le personnage ne respecte pas les règles : {errors}', { errors: firstErrors(result) });
+        if (!result.ok && !force) ctx.fail('The character breaks the rules: {errors}', { errors: firstErrors(result) });
         const assignTo = d.userId !== 'gm' && ctx.state.users?.[d.userId] ? d.userId : null;
-        const { actorId, roll } = createActor(ctx, d.data, { type: type === 'npc' ? 'npc' : 'pc', assignTo, source: result.ok ? tk('validée par le MJ') : tk('validée par le MJ (hors règles)') });
+        const { actorId, roll } = createActor(ctx, d.data, { type: type === 'npc' ? 'npc' : 'pc', assignTo, source: result.ok ? tk('approved by the GM') : tk('approved by the GM (outside the rules)') });
         d.status = 'approved';
         d.actorId = actorId;
         d.ts = ctx.now;
         const params = { name, ...(roll ? { nuyen: roll.total } : {}), ...(d.gmNote ? { note: d.gmNote } : {}) };
         const key = roll
-          ? d.gmNote ? tk('Personnage validé : {name} (nuyen de départ : {nuyen}¥) — « {note} »') : tk('Personnage validé : {name} (nuyen de départ : {nuyen}¥)')
-          : d.gmNote ? tk('Personnage validé : {name} — « {note} »') : tk('Personnage validé : {name}');
+          ? d.gmNote ? tk('Character approved: {name} (starting nuyen: {nuyen}¥) — “{note}”') : tk('Character approved: {name} (starting nuyen: {nuyen}¥)')
+          : d.gmNote ? tk('Character approved: {name} — “{note}”') : tk('Character approved: {name}');
         ctx.log({ kind: 'system', userId: ctx.user.id, author: 'Création', i18n: { key, params }, to: [...new Set([d.userId, 'gm'])] });
         notifyOwner(ctx, d, 'chargen:resolved', { draftId: d.id, status: 'approved', note: d.gmNote, actorId });
         if (assignTo) ctx.emitTo(assignTo, 'sfx', { id: 'level-up' });
@@ -370,14 +370,14 @@ const mod: ServerModule = {
       role: 'gm',
       handler(ctx: ActionContext, { draftId, data, type, assignTo, force }: CreatePayload = {}) {
         const d = draftId ? getDraft(ctx, draftId) : null;
-        if (d && d.status === 'approved') ctx.fail('Ce personnage a déjà été créé');
+        if (d && d.status === 'approved') ctx.fail('This character has already been created');
         const src: DraftData | null = d ? d.data : isObj(data) ? (normalizeDraft(data) as DraftData) : null;
-        if (!src) ctx.fail('Données de personnage manquantes');
+        if (!src) ctx.fail('Missing character data');
         const result = compute(src, rulesCtx(ctx.state));
-        if (!result.ok && !force) ctx.fail('Le personnage ne respecte pas les règles : {errors}', { errors: firstErrors(result) });
-        if (assignTo && !ctx.state.users?.[assignTo]) ctx.fail('Joueur introuvable');
+        if (!result.ok && !force) ctx.fail('The character breaks the rules: {errors}', { errors: firstErrors(result) });
+        if (assignTo && !ctx.state.users?.[assignTo]) ctx.fail('Player not found');
         const t = type === 'npc' ? 'npc' : 'pc';
-        const { actorId } = createActor(ctx, src, { type: t, assignTo: t === 'pc' ? assignTo || null : null, source: tk('créé par le MJ') });
+        const { actorId } = createActor(ctx, src, { type: t, assignTo: t === 'pc' ? assignTo || null : null, source: tk('created by the GM') });
         if (d) {
           d.status = 'approved';
           d.actorId = actorId;
@@ -393,7 +393,7 @@ const mod: ServerModule = {
       role: 'any',
       handler(ctx: ActionContext, { draftId }: DraftPayload = {}) {
         const d = getDraft(ctx, draftId);
-        if (!ctx.isGM && d.status === 'pending') ctx.fail('Retire d’abord la demande envoyée au MJ');
+        if (!ctx.isGM && d.status === 'pending') ctx.fail('Withdraw the request sent to the GM first');
         const c = slice(ctx);
         c.drafts = c.drafts.filter((x) => x.id !== d.id);
         return { ok: true };
@@ -430,7 +430,7 @@ const mod: ServerModule = {
         const { enc } = encounter(ctx, payload);
         const save = !!payload.saveToBestiary;
         const spawn = isObj(payload.spawn) ? payload.spawn : null;
-        if (!save && !spawn) ctx.fail('Rien à faire : ajoute au bestiaire ou fais apparaître');
+        if (!save && !spawn) ctx.fail('Nothing to do: add to the bestiary or spawn');
         const state = ctx.state;
         const out: { templateIds: string[]; actorIds: ActorId[]; tokenIds: string[]; mapId: MapId | null; unplaced: number } = { templateIds: [], actorIds: [], tokenIds: [], mapId: null, unplaced: 0 };
         const list = [

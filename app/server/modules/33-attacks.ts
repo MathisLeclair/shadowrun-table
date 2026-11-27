@@ -64,12 +64,12 @@ function turnOf(state: TableState, actorId: ActorId): AttackTurnRecord | null {
 
 function getAttack(ctx: ActionContext, id: string): Attack {
   const a = slice(ctx.state).list.find((x) => x.id === id);
-  if (!a) ctx.fail('Attaque introuvable');
+  if (!a) ctx.fail('Attack not found');
   return a;
 }
 function actorOf(ctx: ActionContext, id: string): Actor {
   const a = ctx.state.actors[id];
-  if (!a) ctx.fail('Personnage introuvable');
+  if (!a) ctx.fail('Character not found');
   return a;
 }
 const nameOf = (w: Named): string => w?.nameFr || w?.name || '';
@@ -104,16 +104,16 @@ const apOf = (w: { ap?: unknown } | null | undefined): number => {
 
 /** Defense test of the target (REA + INT + options), then the attack moves to soak / missed / done. Returns the roll. */
 function doDefend(ctx: ActionContext, atk: Attack, { options = [], situations = [], modifier = 0, explode = false }: ResolveOpts = {}): PerformedRoll {
-  if (atk.status !== 'defense') ctx.fail('Cette attaque n’attend pas de défense');
+  if (atk.status !== 'defense') ctx.fail('This attack is not waiting for a defense');
   const target = actorOf(ctx, atk.targetId);
-  if (!ctx.owns(target.id)) ctx.fail('Seul le joueur de la cible (ou le MJ) peut défendre');
+  if (!ctx.owns(target.id)) ctx.fail('Only the target\'s player (or the GM) can defend');
   const turn = turnOf(ctx.state, target.id);
   const plan = defenseLines(target, atk, {
     options: options.filter((id: string) => DEFENSE_BY_ID[id]), situations: situations.filter((id: string) => SITUATION_BY_ID[id]),
     prior: turn ? turn.defended : 0, turnBoosts: turn ? turn.boosts : [],
   });
   const roll = performRoll(ctx, {
-    actorId: target.id, attr: 'REA', attr2: 'INT', test: 'defense', label: tk('Défense'), modifier: int(modifier, -30, 30), explode: !!explode,
+    actorId: target.id, attr: 'REA', attr2: 'INT', test: 'defense', label: tk('Defense'), modifier: int(modifier, -30, 30), explode: !!explode,
     secret: false,
   }, { bonus: plan.lines.map((l: RollBonusLine) => ({ label: l.label, value: l.value })), logExtra: { attackId: atk.id, defense: true } });
   for (const id of plan.paid) spendInitiative(ctx, target.id, DEFENSE_BY_ID[id].ini, DEFENSE_BY_ID[id].name);
@@ -128,15 +128,15 @@ function doDefend(ctx: ActionContext, atk: Attack, { options = [], situations = 
   if (atk.net <= 0) {
     atk.status = 'missed';
     atk.resolvedTs = ctx.now;
-    logAttack(ctx, tk('{target} évite l’attaque de {attacker}.'), { target: atk.targetName, attacker: atk.attackerName }, gmOnly);
+    logAttack(ctx, tk('{target} avoids {attacker}\'s attack.'), { target: atk.targetName, attacker: atk.attackerName }, gmOnly);
   } else if (atk.noDamage || atk.dv === null) {
     atk.status = 'done';
     atk.resolvedTs = ctx.now;
-    logAttack(ctx, tk('{attacker} réussit contre {target} : {n} succès net(s).'), { attacker: atk.attackerName, target: atk.targetName, n: atk.net }, gmOnly);
+    logAttack(ctx, tk('{attacker} succeeds against {target}: {n} net hit(s).'), { attacker: atk.attackerName, target: atk.targetName, n: atk.net }, gmOnly);
   } else {
     atk.status = 'soak';
     atk.modifiedDv = atk.dv + atk.net;
-    logAttack(ctx, tk('{attacker} touche {target} : VD {dv}{type}, PA {ap}.'), { attacker: atk.attackerName, target: atk.targetName, dv: atk.modifiedDv, type: atk.type, ap: atk.ap }, gmOnly);
+    logAttack(ctx, tk('{attacker} hits {target}: DV {dv}{type}, AP {ap}.'), { attacker: atk.attackerName, target: atk.targetName, dv: atk.modifiedDv, type: atk.type, ap: atk.ap }, gmOnly);
   }
   return roll;
 }
@@ -147,9 +147,9 @@ function doDefend(ctx: ActionContext, atk: Attack, { options = [], situations = 
  */
 function doToxin(ctx: ActionContext, atk: Attack, target: Actor, { modifier = 0, explode = false }: ResolveOpts = {}): PerformedRoll {
   const toxin = TOXIN_BY_ID[atk.toxinId as string];
-  if (!toxin) ctx.fail('Toxine inconnue');
+  if (!toxin) ctx.fail('Unknown toxin');
   const roll = performRoll(ctx, {
-    actorId: target.id, attr: 'BOD', attr2: 'WIL', test: 'toxinResist', label: tk('Résister aux toxines'), applyWounds: false, limit: null,
+    actorId: target.id, attr: 'BOD', attr2: 'WIL', test: 'toxinResist', label: tk('Resist toxins'), applyWounds: false, limit: null,
     modifier: int(modifier, -30, 30), explode: !!explode,
   }, { logExtra: { attackId: atk.id, soak: true } });
   const left = Math.max(0, toxin.power - roll.hits);
@@ -170,9 +170,9 @@ function doToxin(ctx: ActionContext, atk: Attack, target: Actor, { modifier = 0,
     }
   }
   if (out.damage > 0) applyDamage(ctx, target, out.damage, out.damageType as DamageType);
-  if (!left) logAttack(ctx, tk('{target} résiste au gaz ({toxin}).'), { target: atk.targetName, toxin: { t: toxin.name } }, atk.gmOnly);
+  if (!left) logAttack(ctx, tk('{target} resists the gas ({toxin}).'), { target: atk.targetName, toxin: { t: toxin.name } }, atk.gmOnly);
   else if (out.afflictions.length) {
-    logAttack(ctx, tk('{target} subit le gaz ({toxin}) : {effects}.'), {
+    logAttack(ctx, tk('{target} is affected by the gas ({toxin}): {effects}.'), {
       target: atk.targetName, toxin: { t: toxin.name }, effects: { fr: out.afflictions.map((k) => AFFLICTIONS[k].name).join(', '), en: out.afflictions.map((k) => AFFLICTIONS[k].en).join(', ') },
     }, atk.gmOnly);
   }
@@ -181,13 +181,13 @@ function doToxin(ctx: ActionContext, atk: Attack, target: Actor, { modifier = 0,
 
 /** Damage resistance (BOD + armor modified by AP), damage applied. Returns the roll. */
 function doSoak(ctx: ActionContext, atk: Attack, { modifier = 0, explode = false }: ResolveOpts = {}): PerformedRoll {
-  if (atk.status !== 'soak') ctx.fail('Cette attaque n’attend pas d’encaissement');
+  if (atk.status !== 'soak') ctx.fail('This attack is not waiting for damage resistance');
   const target = actorOf(ctx, atk.targetId);
-  if (!ctx.owns(target.id)) ctx.fail('Seul le joueur de la cible (ou le MJ) peut encaisser');
+  if (!ctx.owns(target.id)) ctx.fail('Only the target\'s player (or the GM) can resist the damage');
   if (atk.kind === 'toxin') return doToxin(ctx, atk, target, { modifier, explode });
   const internal: RollInternal = { ap: atk.ap, logExtra: { attackId: atk.id, soak: true } };
   const roll = performRoll(ctx, {
-    actorId: target.id, attr: 'BOD', test: 'soak', label: tk('Encaissement'), applyWounds: false, limit: null, modifier: int(modifier, -30, 30), explode: !!explode,
+    actorId: target.id, attr: 'BOD', test: 'soak', label: tk('Soak'), applyWounds: false, limit: null, modifier: int(modifier, -30, 30), explode: !!explode,
   }, internal);
   const dv = atk.modifiedDv ?? atk.dv ?? 0;
   const boxes = Math.max(0, dv - roll.hits);
@@ -199,7 +199,7 @@ function doSoak(ctx: ActionContext, atk: Attack, { modifier = 0, explode = false
   atk.status = 'done';
   atk.resolvedTs = ctx.now;
   if (boxes > 0) applyDamage(ctx, target, boxes, type);
-  else logAttack(ctx, tk('{target} encaisse tout ({dv}{type}).'), { target: atk.targetName, dv, type: atk.type }, atk.gmOnly);
+  else logAttack(ctx, tk('{target} resists it all ({dv}{type}).'), { target: atk.targetName, dv, type: atk.type }, atk.gmOnly);
   return roll;
 }
 
@@ -251,11 +251,11 @@ const mod: ServerModule = {
       role: 'any',
       handler(ctx: ActionContext, p: AttackRollPayload = {}) {
         const actor = actorOf(ctx, str(p.actorId, 60));
-        if (!ctx.owns(actor.id)) ctx.fail('Tu ne peux lancer que pour ton personnage');
+        if (!ctx.owns(actor.id)) ctx.fail('You can only roll for your own character');
         const weapon = p.weaponId ? (actor.weapons || []).find((w) => w && w.id === str(p.weaponId, 60)) : null;
-        if (p.weaponId && !weapon) ctx.fail('Arme introuvable');
+        if (p.weaponId && !weapon) ctx.fail('Weapon not found');
         const action = p.actionId ? ACTION_BY_ID[str(p.actionId, 40)] : null;
-        if (p.actionId && !action) ctx.fail('Action inconnue');
+        if (p.actionId && !action) ctx.fail('Unknown action');
         const payload: AttackRollPayload = { ...p };
         delete payload.targetTokenId;
         delete payload.targetActorId;
@@ -267,22 +267,22 @@ const mod: ServerModule = {
         delete payload.mapId;
         // Special action: unlocked (technique / quality), fits the weapon, once per turn, Edge.
         if (action) {
-          if (!ctx.isGM && !isUnlocked(action, actor)) ctx.fail('{name} n’a pas débloqué « {action} »', { name: actor.name, action: { t: action.name } });
+          if (!ctx.isGM && !isUnlocked(action, actor)) ctx.fail('{name} hasn\'t unlocked “{action}”', { name: actor.name, action: { t: action.name } });
           if (action.kind === 'test') {
-            if (weapon && !action.weaponSkill) ctx.fail('Cette action ne se fait pas avec une arme');
+            if (weapon && !action.weaponSkill) ctx.fail('This action isn\'t done with a weapon');
           } else {
-            if (!weapon) ctx.fail('Choisis une arme pour cette action');
-            if (action.kind === 'melee' && weapon.kind !== 'melee') ctx.fail('« {action} » demande une arme de mêlée', { action: { t: action.name } });
-            if (action.kind === 'ranged' && weapon.kind === 'melee') ctx.fail('« {action} » demande une arme à distance', { action: { t: action.name } });
+            if (!weapon) ctx.fail('Choose a weapon for this action');
+            if (action.kind === 'melee' && weapon.kind !== 'melee') ctx.fail('“{action}” needs a melee weapon', { action: { t: action.name } });
+            if (action.kind === 'ranged' && weapon.kind === 'melee') ctx.fail('“{action}” needs a ranged weapon', { action: { t: action.name } });
             if (action.fire) {
-              if (!usesAmmo(weapon) || !fireOptions(weapon).some((o) => o.id === action.fire)) ctx.fail('« {action} » : mode de tir impossible avec cette arme', { action: { t: action.name } });
+              if (!usesAmmo(weapon) || !fireOptions(weapon).some((o) => o.id === action.fire)) ctx.fail('“{action}”: fire mode not available with this weapon', { action: { t: action.name } });
               payload.fireMode = action.fire;
             }
           }
           const turn = turnOf(ctx.state, actor.id);
-          if (action.once && turn?.once.includes(action.id)) ctx.fail('« {action} » : une seule fois par tour de combat', { action: { t: action.name } });
+          if (action.once && turn?.once.includes(action.id)) ctx.fail('“{action}”: once per Combat Turn only', { action: { t: action.name } });
           const edgeNeeded = (action.edge || 0) + (payload.explode ? 1 : 0);
-          if (edgeNeeded && (actor.edge?.current ?? 0) < edgeNeeded) ctx.fail('{name} n’a plus assez de points de Chance', { name: actor.name });
+          if (edgeNeeded && (actor.edge?.current ?? 0) < edgeNeeded) ctx.fail('{name} doesn\'t have enough Edge left', { name: actor.name });
         }
         // Target: a token on the map (players: not a hidden one), or an actor (GM, no map).
         const map = mapFor(ctx, p.mapId);
@@ -290,14 +290,14 @@ const mod: ServerModule = {
         let target: Actor | null = null;
         if (p.targetTokenId) {
           targetToken = (map?.tokens || []).find((t) => t.id === str(p.targetTokenId, 60)) || null;
-          if (!targetToken || (!ctx.isGM && targetToken.hidden)) ctx.fail('Cible introuvable sur la carte');
+          if (!targetToken || (!ctx.isGM && targetToken.hidden)) ctx.fail('Target not found on the map');
           if (targetToken.actorId) target = ctx.state.actors[targetToken.actorId] || null;
         } else if (p.targetActorId) {
           target = actorOf(ctx, str(p.targetActorId, 60));
-          if (!ctx.isGM && target.type === 'npc' && target.hidden) ctx.fail('Cible introuvable');
+          if (!ctx.isGM && target.type === 'npc' && target.hidden) ctx.fail('Target not found');
           targetToken = tokenOf(map, target.id);
         }
-        if (target && target.id === actor.id) ctx.fail('Impossible de se cibler soi-même');
+        if (target && target.id === actor.id) ctx.fail('You can\'t target yourself');
         const attackerToken = tokenOf(map, actor.id);
         const mpc = Number(map?.metersPerCell) || 1;
         const area = weapon && isAreaWeapon(weapon);
@@ -337,8 +337,8 @@ const mod: ServerModule = {
         if (weapon && rangeClass(weapon) === 'grenadeLauncher' && !isLauncherProfile(weapon)) {
           const rounds = launcherRounds(actor, weapon);
           const pick = p.profileId ? rounds.find((r: Loose) => r.id === str(p.profileId, 60)) : rounds.find((r: Loose) => r.loaded || r.sheet);
-          if (p.profileId && !pick) ctx.fail('Munition inconnue pour ce lance-grenades');
-          if (!pick) ctx.fail('Choisis la minigrenade tirée');
+          if (p.profileId && !pick) ctx.fail('Unknown ammunition for this grenade launcher');
+          if (!pick) ctx.fail('Choose the minigrenade to fire');
           profile = pick.w;
         }
         const source = profile || weapon;
@@ -402,7 +402,7 @@ const mod: ServerModule = {
               const victim = ctx.state.actors[tok.actorId];
               const hidden = gmOnly || (victim.type === 'npc' && victim.hidden);
               if (toxinProtection(victim, toxin) === 'immune') {
-                logAttack(ctx, tk('{target} est protégé du gaz ({toxin}).'), { target: victim.name, toxin: { t: toxin.name } }, hidden);
+                logAttack(ctx, tk('{target} is protected from the gas ({toxin}).'), { target: victim.name, toxin: { t: toxin.name } }, hidden);
                 continue;
               }
               const atk = push<Attack>(ctx.state, s.list, {
@@ -434,8 +434,8 @@ const mod: ServerModule = {
             dv: blast.damaging ? blast.dv : null, type: blast.type, ap: blast.ap, falloff: blast.falloff, radius: blast.radius, reach: blastReach(blast), hits, ...(gmOnly ? { gmOnly: true } : {}),
             effect, until: untilFor(ctx.state.combat, ctx.now, lasting ? { long: true } : { turns: 1 }), ...(toxin ? { toxinId: toxin.id, toxinName: { fr: toxin.name, en: toxin.en } } : {}),
           }, MAX_BLASTS);
-          if (land.scattered) logAttack(ctx, tk('{weapon} dévie de {m} m ({dir} au diagramme).'), { weapon: biName(source), m: land.meters, dir: land.dir ? land.dir[0] + land.dir[1] : '—' }, gmOnly);
-          else logAttack(ctx, tk('{weapon} tombe exactement au point visé.'), { weapon: biName(source) }, gmOnly);
+          if (land.scattered) logAttack(ctx, tk('{weapon} scatters {m} m ({dir} on the diagram).'), { weapon: biName(source), m: land.meters, dir: land.dir ? land.dir[0] + land.dir[1] : '—' }, gmOnly);
+          else logAttack(ctx, tk('{weapon} lands right on the aimed point.'), { weapon: biName(source) }, gmOnly);
           return { ...roll, entry: undefined, blastId: b.id, blast: b };
         }
         if (!target) {
@@ -448,12 +448,12 @@ const mod: ServerModule = {
           ...base, id: atkId, kind: weapon?.kind === 'melee' || action?.kind === 'test' ? 'melee' : 'ranged', targetId: target.id, targetTokenId: targetToken?.id || null, targetName,
           dv: action?.noDamage ? null : dmg.dv === null ? null : dmg.dv + (action?.dv || 0), type: dmg.type, ap: apOf(source) + (action?.ap || 0),
           reach: weapon?.kind === 'melee' ? (Number(weapon.reach) || 0) + (action?.reach || 0) + (/troll/i.test(actor.metatype || '') ? 1 : 0) : 0,
-          defenseMod: fireDef || 0, ...(fireDef ? { defenseLabel: tk('mode de tir') } : {}), actionDefense: action?.defense || 0,
+          defenseMod: fireDef || 0, ...(fireDef ? { defenseLabel: tk('fire mode') } : {}), actionDefense: action?.defense || 0,
           ...(action?.noDamage ? { noDamage: true } : {}), ...(range ? { range: { band: range.id, meters: range.meters } } : {}),
           status: roll.hits > 0 ? 'defense' : 'missed', ...(roll.hits > 0 ? {} : { resolvedTs: ctx.now }),
           ...(target.type === 'npc' && target.hidden ? { gmOnly: true } : {}),
         }, MAX_ATTACKS);
-        if (atk.status === 'missed') logAttack(ctx, tk('{attacker} rate {target}.'), { attacker: atk.attackerName, target: atk.targetName }, atk.gmOnly);
+        if (atk.status === 'missed') logAttack(ctx, tk('{attacker} misses {target}.'), { attacker: atk.attackerName, target: atk.targetName }, atk.gmOnly);
         const { entry, ...out } = roll;
         return { ...out, attackId: atk.id };
       },
@@ -493,7 +493,7 @@ const mod: ServerModule = {
     'attack/resolve': {
       handler(ctx: ActionContext, p: ResolvePayload = {}) {
         const atk = getAttack(ctx, str(p.attackId, 60));
-        if (atk.status === 'done' || atk.status === 'missed' || atk.status === 'cancelled') ctx.fail('Attaque déjà résolue');
+        if (atk.status === 'done' || atk.status === 'missed' || atk.status === 'cancelled') ctx.fail('Attack already resolved');
         if (p.outcome === 'damage') {
           const n = int(p.amount, 0, 100);
           const type = p.type === 'S' ? 'S' : 'P';
@@ -503,7 +503,7 @@ const mod: ServerModule = {
           atk.status = 'done';
         } else {
           atk.status = 'missed';
-          logAttack(ctx, tk('{target} évite l’attaque de {attacker}.'), { target: atk.targetName, attacker: atk.attackerName }, atk.gmOnly);
+          logAttack(ctx, tk('{target} avoids {attacker}\'s attack.'), { target: atk.targetName, attacker: atk.attackerName }, atk.gmOnly);
         }
         atk.manual = true;
         atk.resolvedTs = ctx.now;
@@ -516,8 +516,8 @@ const mod: ServerModule = {
       role: 'any',
       handler(ctx: ActionContext, p: AttackIdPayload = {}) {
         const atk = getAttack(ctx, str(p.attackId, 60));
-        if (!ctx.isGM && !(atk.attackerId && ctx.owns(atk.attackerId))) ctx.fail('Seul l’attaquant (ou le MJ) peut annuler');
-        if (atk.status !== 'defense' && atk.status !== 'soak') ctx.fail('Attaque déjà résolue');
+        if (!ctx.isGM && !(atk.attackerId && ctx.owns(atk.attackerId))) ctx.fail('Only the attacker (or the GM) can cancel');
+        if (atk.status !== 'defense' && atk.status !== 'soak') ctx.fail('Attack already resolved');
         atk.status = 'cancelled';
         atk.resolvedTs = ctx.now;
         return { attack: atk };
@@ -539,7 +539,7 @@ const mod: ServerModule = {
       role: 'any',
       handler(ctx: ActionContext, p: RemoveAfflictionPayload = {}) {
         const actor = actorOf(ctx, str(p.actorId, 60));
-        if (!ctx.isGM) ctx.fail('Réservé au MJ');
+        if (!ctx.isGM) ctx.fail('GM only');
         actor.afflictions = (actor.afflictions || []).filter((a) => a.id !== str(p.afflictionId, 60));
         return {};
       },

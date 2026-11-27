@@ -1,14 +1,15 @@
-// Translation layer (browser). French is the source text: t('Texte français {name}', { name }) returns the
-// English dictionary entry when the language is 'en', else the French string — both interpolated.
-// Dictionaries: client/i18n/en/<area>.json, flat { "French": "English" }, all loaded at startup (index served
-// by the server). Missing English entries fall back to French and are collected (window.__i18nMissing,
-// counter in Réglages). See ARCHITECTURE.md « i18n ».
+// Translation layer (browser). English is the source text: t('English text {name}', { name }) returns the French
+// dictionary entry when the language is 'fr', else the English string — both interpolated.
+// Dictionaries: client/i18n/fr/<area>.json, flat { "English": "French" }, all loaded at startup (index served by the
+// server), plus client/i18n/legacy-fr-keys.json (old French keys still stored in saved data → English keys).
+// Missing French entries fall back to English and are collected (window.__i18nMissing, counter in Settings).
+// See docs/i18n.md.
 //
 // No framework import here (pure module, also unit-tested in Node): the re-render hook is useLang() in ui-store.js.
 //
 // Rule: never call t() at module top level (dictionaries are not loaded yet and the language can change):
 // translate at render time, and mark constant tables with tk('…') then render t(value).
-import { LANGS, DEFAULT_LANG, isLang, stripContext, interpolate, lookup, pluralKey } from '../i18n/format.ts';
+import { LANGS, DEFAULT_LANG, SOURCE_LANG, isLang, interpolate, lookup, pluralKey, currentKey } from '../i18n/format.ts';
 import type { Dictionary, PluralForms, TParams } from '../i18n/format.ts';
 import type { Lang } from '../../shared/types.ts';
 // Relative path on purpose: resolves to /shared/sr5.js in the browser (same module instance) and works in Node.
@@ -46,13 +47,14 @@ type LangListener = (lang: Lang) => void;
 
 const LS_KEY = 'sr.lang';
 let lang: Lang = DEFAULT_LANG;
-let dict: Dictionary = Object.create(null); // merged English dictionary
+let dict: Dictionary = Object.create(null); // merged French dictionary { English key: French }
+let legacy: Dictionary = Object.create(null); // old French key → English key (saved data from before the switch)
 let loaded = false; // missing keys are only collected once the dictionaries are in
 let pendingUserLang: { lang: Lang; until: number } | null = null; // { lang, until }: the user just switched, ignore stale state broadcasts for a moment
 const missing: Record<string, number> = Object.create(null); // key -> number of lookups
 const listeners = new Set<LangListener>();
 
-// Exposed for translators (browser console): the keys looked up without an English entry.
+// Exposed for translators (browser console): the keys looked up without a French entry.
 declare global {
   interface Window {
     __i18nMissing?: Record<string, number>;
@@ -137,20 +139,24 @@ export function langFromGame(game: { me?: { lang?: unknown } | null; config?: { 
 // ---------------------------------------------------------------------------
 // Dictionaries
 // ---------------------------------------------------------------------------
-/** Replace the dictionary (tests) — `entries` = { French: English }. */
-export function setDictionary(entries: Dictionary | null | undefined, { markLoaded = true }: { markLoaded?: boolean } = {}): void {
+/** Replace the dictionary (tests) — `entries` = { English: French }, `legacyKeys` = { old French key: English key }. */
+export function setDictionary(entries: Dictionary | null | undefined, { markLoaded = true, legacyKeys }: { markLoaded?: boolean; legacyKeys?: Dictionary | null } = {}): void {
   dict = Object.assign(Object.create(null), entries || {});
+  if (legacyKeys !== undefined) legacy = Object.assign(Object.create(null), legacyKeys || {});
   loaded = markLoaded;
 }
 
 /**
- * Fetch every /i18n/en/*.json listed by /i18n/en/index.json and merge them (glossary first, so an area file
- * can override a glossary term). Never rejects: on failure the UI simply stays in French.
+ * Fetch every /i18n/fr/*.json listed by /i18n/fr/index.json and merge them (glossary first, so an area file
+ * can override a glossary term), plus the legacy key map. Never rejects: on failure the UI simply stays in English.
  */
-export async function loadDictionaries({ base = '/i18n/en', timeoutMs = 5000 }: { base?: string; timeoutMs?: number } = {}): Promise<number> {
+export async function loadDictionaries({ base = '/i18n/fr', timeoutMs = 5000 }: { base?: string; timeoutMs?: number } = {}): Promise<number> {
   const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
   const timer = ctl ? setTimeout(() => ctl.abort(), timeoutMs) : null;
   try {
+    const legacyLoad = fetch(`${base.replace(/\/[^/]+$/, '')}/legacy-fr-keys.json`, { signal: ctl?.signal })
+      .then((r) => (r.ok ? r.json() : {}))
+      .catch(() => ({}));
     const idx: { files?: string[] } = await fetch(`${base}/index.json`, { signal: ctl?.signal }).then((r) => (r.ok ? r.json() : { files: [] }));
     const files = (idx.files || []).slice().sort((a, b) => (a === 'glossary.json' ? -1 : b === 'glossary.json' ? 1 : a.localeCompare(b)));
     const parts = await Promise.all(
@@ -158,7 +164,7 @@ export async function loadDictionaries({ base = '/i18n/en', timeoutMs = 5000 }: 
         fetch(`${base}/${encodeURIComponent(f)}`, { signal: ctl?.signal })
           .then((r): Promise<unknown> | unknown => (r.ok ? r.json() : {}))
           .catch((err: Error) => {
-            console.warn(`[i18n] ${f} illisible :`, err.message);
+            console.warn(`[i18n] ${f} unreadable:`, err.message);
             return {};
           })
       )
@@ -166,10 +172,12 @@ export async function loadDictionaries({ base = '/i18n/en', timeoutMs = 5000 }: 
     const merged: Dictionary = Object.create(null);
     for (const p of parts) if (p && typeof p === 'object' && !Array.isArray(p)) for (const [k, v] of Object.entries(p as Record<string, unknown>)) if (typeof v === 'string') merged[k] = v;
     dict = merged;
+    const lk = await legacyLoad;
+    if (lk && typeof lk === 'object' && !Array.isArray(lk)) legacy = Object.assign(Object.create(null), lk);
     loaded = true;
     return Object.keys(merged).length;
   } catch (err) {
-    console.warn('[i18n] dictionnaires non chargés :', (err as Error)?.message || err);
+    console.warn('[i18n] dictionaries not loaded:', (err as Error)?.message || err);
     return 0;
   } finally {
     if (timer) clearTimeout(timer);
@@ -177,13 +185,13 @@ export async function loadDictionaries({ base = '/i18n/en', timeoutMs = 5000 }: 
 }
 
 function noteMissing(key: string): void {
-  if (!loaded || !key || !/\p{L}/u.test(key)) return;
+  if (!loaded || lang === SOURCE_LANG || !key || !/\p{L}/u.test(key)) return;
   missing[key] = (missing[key] || 0) + 1;
 }
 
-/** Keys looked up without an English entry, sorted: { key: count }. */
+/** Keys looked up without a French entry, sorted: { key: count }. */
 export function missingKeys(): Record<string, number> {
-  return Object.fromEntries(Object.keys(missing).sort((a, b) => a.localeCompare(b, 'fr')).map((k) => [k, missing[k]]));
+  return Object.fromEntries(Object.keys(missing).sort((a, b) => a.localeCompare(b, 'en')).map((k) => [k, missing[k]]));
 }
 export function missingCount(): number {
   return Object.keys(missing).length;
@@ -195,16 +203,16 @@ export function clearMissing(): void {
 // ---------------------------------------------------------------------------
 // Translate
 // ---------------------------------------------------------------------------
-/** Translate a French source string; {placeholders} are filled from params (named values, never fragments). */
+/** Translate an English source string; {placeholders} are filled from params (named values, never fragments). */
 export function t(key: string | null | undefined, params?: TParams | null): string {
-  const k = String(key ?? '');
+  const k = currentKey(legacy, key);
   const r = lookup(dict, lang, k);
   if (r.missing) noteMissing(k);
   return interpolate(r.text, params, t, lang);
 }
 
 /**
- * Plural: tn(n, '{n} objet', '{n} objets', params) or tn(n, { zero: 'Aucun objet', one: '{n} objet', other: '{n} objets' }, params).
+ * Plural: tn(n, '{n} item', '{n} items', params) or tn(n, { zero: 'No item', one: '{n} item', other: '{n} items' }, params).
  * {n} is always available. Each form is its own dictionary key. French: 0 and 1 use `one`; English: only 1.
  */
 export function tn(n: number | null | undefined, forms: PluralForms, params?: TParams | null): string;
@@ -226,19 +234,20 @@ export function tn(n: number | null | undefined, one: string | PluralForms, othe
 export const tk = (s: string): string => s;
 
 /**
- * Translate a text that MAY be a dictionary key (French text received from the server or stored in data):
- * known → translated, unknown → returned as-is, never counted as missing.
+ * Translate a text that MAY be a dictionary key (text received from the server or stored in data, including old
+ * French keys): known → translated, unknown → returned as-is, never counted as missing.
  */
 export function tIfKnown(text: string, params?: TParams | null): string;
 export function tIfKnown<T>(text: T, params?: TParams | null): T | string;
 export function tIfKnown(text: unknown, params?: TParams | null): unknown {
   if (typeof text !== 'string' || !text) return text;
-  if (!(text in dict)) return interpolate(text, params, t, lang);
-  return t(text, params);
+  const k = currentKey(legacy, text);
+  if (k === text && !(text in dict)) return interpolate(text, params, t, lang);
+  return t(k, params);
 }
 
 /** Readable message of a server error reply / API error body: { error, errorKey?, params? }. */
-export function errorText(res: ErrorReply | null | undefined, fallback: string = tk('Erreur')): string {
+export function errorText(res: ErrorReply | null | undefined, fallback: string = tk('Error')): string {
   if (res?.errorKey) return t(res.errorKey, res.params);
   if (res?.error) return tIfKnown(String(res.error));
   return t(fallback);
@@ -314,7 +323,7 @@ export const skillCategoryLabel = (cat: string | null | undefined): string =>
   lang === 'en' ? (cat && CATEGORY_EN[cat]) || String(cat ?? '') : (cat && SKILL_CATEGORY_MAP[cat]) || String(cat ?? '');
 
 /** Limit kind ('physical'|'mental'|'social'|'astral') → 'Limite physique' / 'Physical Limit'. */
-const LIMIT_FR: Record<string, string> = { physical: tk('Limite physique'), mental: tk('Limite mentale'), social: tk('Limite sociale'), astral: tk('Limite astrale') };
+const LIMIT_FR: Record<string, string> = { physical: tk('Physical Limit'), mental: tk('Mental Limit'), social: tk('Social Limit'), astral: tk('Astral Limit') };
 export const limitLabel = (kind: string | null | undefined): string => (kind && LIMIT_FR[kind] ? t(LIMIT_FR[kind]) : String(kind ?? ''));
 
 /** Stored metatype ('Humain', 'Elfe'…) → label in the UI language. */

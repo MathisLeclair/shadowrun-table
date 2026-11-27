@@ -54,7 +54,7 @@ export default function Picker({ items, name, meta, categories, category, extraF
             setQ(v);
             setPage(1);
           }}
-          placeholder={placeholder || t('Rechercher…')}
+          placeholder={placeholder || t('Search…')}
         />
         {categories && (
           <Select
@@ -64,11 +64,11 @@ export default function Picker({ items, name, meta, categories, category, extraF
               setCat(v);
               setPage(1);
             }}
-            options={[{ value: '', label: t('Toutes catégories') }, ...categories]}
+            options={[{ value: '', label: t('All categories') }, ...categories]}
           />
         )}
         {toolbar}
-        <span className="small faint">{tn(list.length, '{n} résultat', '{n} résultats')}</span>
+        <span className="small faint">{tn(list.length, '{n} result', '{n} results')}</span>
       </div>
       <div className="cg-picker-list">
         {shown.map((it) => {
@@ -92,20 +92,20 @@ export default function Picker({ items, name, meta, categories, category, extraF
                 <div className="small muted">{meta(it)}</div>
               </div>
               {isSel ? (
-                <span className="small green">✓ {t('choisi')}</span>
+                <span className="small green">✓ {t('chosen')}</span>
               ) : (
                 <Button small disabled={!!why} title={why || ''} onClick={() => onAdd(it)}>
-                  + {t('Ajouter')}
+                  + {t('Add')}
                 </Button>
               )}
             </div>
           );
         })}
-        {!list.length && <Empty>{empty || t('Rien ne correspond.')}</Empty>}
+        {!list.length && <Empty>{empty || t('Nothing matches.')}</Empty>}
         {shown.length < list.length && (
           <div className="center">
             <Button small variant="ghost" onClick={() => setPage(page + 1)}>
-              {t('Afficher plus ({n})', { n: list.length - shown.length })}
+              {t('Show more ({n})', { n: list.length - shown.length })}
             </Button>
           </div>
         )}

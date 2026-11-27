@@ -229,10 +229,10 @@ const textOf = (w: WeaponLike | null | undefined) => norm([w?.name, w?.nameEn, w
 // Ranges (SR5 p. 185)
 // ---------------------------------------------------------------------------
 export const RANGE_BANDS: RangeBandDef[] = [
-  { id: 'short', mod: 0, label: tk('portée courte') },
-  { id: 'medium', mod: -1, label: tk('portée moyenne') },
-  { id: 'long', mod: -3, label: tk('portée longue') },
-  { id: 'extreme', mod: -6, label: tk('portée extrême') },
+  { id: 'short', mod: 0, label: tk('short range') },
+  { id: 'medium', mod: -1, label: tk('medium range') },
+  { id: 'long', mod: -3, label: tk('long range') },
+  { id: 'extreme', mod: -6, label: tk('extreme range') },
 ];
 /** Upper bound (meters) of each band; a function of STR for bows / thrown weapons. `min` = launcher minimum range. */
 const RANGE_TABLE: Record<RangeClass, number[] | { bands: number[]; min: number } | ((s: number) => number[])> = {
@@ -436,9 +436,9 @@ export const LASTING_EFFECTS: BlastEffect[] = ['smoke', 'thermalSmoke', 'gas', '
  * ('disorientation' | 'nausea' | 'stun' | 'physical'). Speed is not delayed here: the resistance test is rolled at once.
  */
 export const TOXINS: ToxinDef[] = [
-  { id: 'cs', name: tk('Gaz lacrymogène (CS)'), en: 'CS/Tear Gas', vector: ['contact', 'inhalation'], speed: 1, penetration: 0, power: 8, effects: ['disorientation', 'nausea', 'stun'], page: 409 },
-  { id: 'pepper', name: tk('Gaz poivre (Pepper Punch)'), en: 'Pepper Punch', vector: ['contact', 'inhalation'], speed: 1, penetration: 0, power: 11, effects: ['nausea', 'stun'], page: 410 },
-  { id: 'nausea', name: tk('Gaz vomitif'), en: 'Nausea Gas', vector: ['inhalation'], speed: 3, penetration: 0, power: 9, effects: ['disorientation', 'nausea'], page: 410 },
+  { id: 'cs', name: tk('CS/Tear Gas'), en: 'CS/Tear Gas', vector: ['contact', 'inhalation'], speed: 1, penetration: 0, power: 8, effects: ['disorientation', 'nausea', 'stun'], page: 409 },
+  { id: 'pepper', name: tk('Pepper Punch'), en: 'Pepper Punch', vector: ['contact', 'inhalation'], speed: 1, penetration: 0, power: 11, effects: ['nausea', 'stun'], page: 410 },
+  { id: 'nausea', name: tk('Nausea Gas'), en: 'Nausea Gas', vector: ['inhalation'], speed: 3, penetration: 0, power: 9, effects: ['disorientation', 'nausea'], page: 410 },
   { id: 'neurostun8', name: tk('Neuro-Stun VIII'), en: 'Neuro-Stun VIII', vector: ['contact', 'inhalation'], speed: 1, penetration: 0, power: 15, effects: ['disorientation', 'stun'], page: 410 },
   { id: 'neurostun9', name: tk('Neuro-Stun IX'), en: 'Neuro-Stun IX', vector: ['contact', 'inhalation'], speed: 1, penetration: 0, power: 15, effects: ['disorientation', 'stun'], page: 410 },
   { id: 'neurostun10', name: tk('Neuro-Stun X'), en: 'Neuro-Stun X', vector: ['contact', 'inhalation'], speed: 1, penetration: -2, power: 15, effects: ['disorientation', 'stun'], page: 410 },
@@ -483,9 +483,9 @@ export function toxinOutcome(toxin: ToxinDef | null | undefined, left: number, w
  * until: { round: 'startedAt:round' } (Combat Turns) | { combat: startedAt } (rest of the fight) | { ts } (out of combat).
  */
 export const AFFLICTIONS: Record<AfflictionKind, AfflictionDef> = {
-  disoriented: { name: tk('Désorienté'), en: 'Disoriented', dice: -2 },
-  nauseous: { name: tk('Nauséeux'), en: 'Nauseous', woundFactor: 2 },
-  incapacitated: { name: tk('Incapable d’agir (nausée)'), en: 'Incapacitated (nausea)', turns: 3 },
+  disoriented: { name: tk('Disoriented'), en: 'Disoriented', dice: -2 },
+  nauseous: { name: tk('Nauseous'), en: 'Nauseous', woundFactor: 2 },
+  incapacitated: { name: tk('Incapacitated (nausea)'), en: 'Incapacitated (nausea)', turns: 3 },
 };
 const LONG_MS = 10 * 60 * 1000; // 10 minutes (outside combat)
 const TURN_MS = 60 * 1000; // a few Combat Turns outside combat
@@ -554,10 +554,10 @@ export function toxinProtection(actor: ActorLike | null | undefined, toxin: Toxi
 export const ENV_LEVEL_MODS: number[] = [0, -1, -3, -6];
 export const ENV_COLUMNS: EnvColumn[] = ['visibility', 'light', 'wind', 'range'];
 export const ENV_LEVEL_LABELS: Record<'visibility' | 'light' | 'glare' | 'wind', string[]> = {
-  visibility: [tk('dégagé'), tk('pluie / brouillard / fumée légers'), tk('pluie / brouillard / fumée modérés'), tk('pluie / brouillard / fumée denses')],
-  light: [tk('pleine lumière'), tk('lumière partielle'), tk('faible lumière'), tk('obscurité totale')],
-  glare: [tk('sans éblouissement'), tk('léger éblouissement'), tk('éblouissement modéré'), tk('éblouissement aveuglant')],
-  wind: [tk('pas de vent'), tk('vent léger'), tk('vent modéré'), tk('vent fort')],
+  visibility: [tk('clear'), tk('light rain / fog / smoke'), tk('moderate rain / fog / smoke'), tk('heavy rain / fog / smoke')],
+  light: [tk('full light'), tk('partial light'), tk('dim light'), tk('total darkness')],
+  glare: [tk('no glare'), tk('weak glare'), tk('moderate glare'), tk('blinding glare')],
+  wind: [tk('no wind'), tk('light wind'), tk('moderate wind'), tk('strong wind')],
 };
 
 /** SR5: the worst column gives the modifier; two columns at that worst level → one level worse (two Heavy → −10). */
@@ -651,16 +651,16 @@ export function environmentFor({ map, from, to, meters = 0, rangeIndex = null, l
     lv[k] = Math.max(0, lv[k] - n);
     if (lv[k] < before && !notes.includes(why)) notes.push(why);
   };
-  if (senses.lowLight && (lv.light === 1 || lv.light === 2)) lower('light', lv.light, tk('vision nocturne'));
+  if (senses.lowLight && (lv.light === 1 || lv.light === 2)) lower('light', lv.light, tk('low-light vision'));
   if (senses.thermo) {
-    lower('light', 1, tk('vision thermographique'));
-    if (!thermalSmoke) lower('visibility', 1, tk('vision thermographique'));
+    lower('light', 1, tk('thermographic vision'));
+    if (!thermalSmoke) lower('visibility', 1, tk('thermographic vision'));
   }
   if (senses.ultrasound) {
-    lower('visibility', 1, tk('ultrasons'));
-    if ((meters ?? 0) <= 50) lower('light', 3, tk('ultrasons'));
+    lower('visibility', 1, tk('ultrasound'));
+    if ((meters ?? 0) <= 50) lower('light', 3, tk('ultrasound'));
   }
-  if (senses.flare) lower('glare', 3, tk('compensation anti-flash'));
+  if (senses.flare) lower('glare', 3, tk('flare compensation'));
   if (senses.smartlink) lower('wind', 1, tk('smartlink'));
   const levels = { visibility: lv.visibility, light: Math.max(lv.light, lv.glare), wind: lv.wind, range: lv.range };
   const parts: string[] = [];
@@ -682,42 +682,42 @@ export function environmentFor({ map, from, to, meters = 0, rangeIndex = null, l
  * note: French summary of the rule, source / page.
  */
 export const COMBAT_ACTIONS: CombatActionDef[] = [
-  { id: 'called-shot', name: tk('Tir ciblé (dommages)'), en: 'Called Shot (Increase Damage)', kind: 'any', dice: -4, dv: 2, source: 'SR5', page: 195,
-    note: tk('Viser une zone vulnérable : −4 dés, +2 VD (ou autre effet de tir ciblé au choix du MJ).') },
-  { id: 'charge', name: tk('Attaque en charge'), en: 'Charging Attack', kind: 'melee', dice: 2, source: 'SR5', page: 187,
-    note: tk('Courir au moins quelques mètres vers la cible avant de frapper : +2 dés.') },
-  { id: 'double-tap', name: tk('Double frappe'), en: 'Double Tap', kind: 'ranged', fire: 'SB', rounds: 2, dv: 1, source: 'RG', page: 120,
-    note: tk('Rafale semi-automatique de 2 balles au lieu de 3 : +1 VD.') },
-  { id: 'aimed-burst', name: tk('Rafale visée'), en: 'Aimed Burst', kind: 'ranged', fire: 'LB', rounds: 3, dv: 1, source: 'RG', page: 119,
-    note: tk('Rafale longue de 3 balles au lieu de 6 : +1 VD.') },
-  { id: 'brain-blaster', name: tk('Rafale cervicale'), en: 'Brain Blaster', kind: 'ranged', fire: 'FAC', rounds: 6, dv: 2, source: 'RG', page: 119,
-    note: tk('Tir automatique (complexe) de 6 balles au lieu de 10 : +2 VD.') },
-  { id: 'finishing-move', name: tk('Prise de finition'), en: 'Finishing Move', kind: 'melee', type: 'complex', unlock: ['Finishing Move', 'Prise de finition'],
-    dice: 2, ini: 10, edge: 1, once: true, source: 'RG', page: 120, note: tk('+2 dés, coûte 1 point de Chance et 10 d’initiative. Une fois par tour de combat.') },
-  { id: 'flying-kick', name: tk('Coup de pied sauté'), en: 'Flying Kick', kind: 'melee', type: 'complex', unlock: ['Flying Kick', 'Coup de pied sauté'], dice: 1, reach: 1,
-    source: 'RG', page: 121, note: tk('+1 dé, +1 allonge. En cas d’échec : −1 aux tests de défense jusqu’à sa prochaine action.') },
-  { id: 'full-offense', name: tk('Attaque pure'), en: 'Full Offense', kind: 'melee', type: 'complex', unlock: ['Full Offense', 'Attaque pure'], dice: 2, ini: 5,
-    source: 'RG', page: 121, note: tk('+2 dés, coûte 5 d’initiative. Ensuite, aucune action d’interruption défensive avant sa prochaine action.') },
+  { id: 'called-shot', name: tk('Called Shot (damage)'), en: 'Called Shot (Increase Damage)', kind: 'any', dice: -4, dv: 2, source: 'SR5', page: 195,
+    note: tk('Aim at a vulnerable spot: −4 dice, +2 DV (or another called shot effect at the GM\'s call).') },
+  { id: 'charge', name: tk('Charging Attack'), en: 'Charging Attack', kind: 'melee', dice: 2, source: 'SR5', page: 187,
+    note: tk('Run at least a few meters toward the target before striking: +2 dice.') },
+  { id: 'double-tap', name: tk('Double Tap'), en: 'Double Tap', kind: 'ranged', fire: 'SB', rounds: 2, dv: 1, source: 'RG', page: 120,
+    note: tk('Semi-auto burst of 2 rounds instead of 3: +1 DV.') },
+  { id: 'aimed-burst', name: tk('Aimed Burst'), en: 'Aimed Burst', kind: 'ranged', fire: 'LB', rounds: 3, dv: 1, source: 'RG', page: 119,
+    note: tk('Long burst of 3 rounds instead of 6: +1 DV.') },
+  { id: 'brain-blaster', name: tk('Brain Blaster'), en: 'Brain Blaster', kind: 'ranged', fire: 'FAC', rounds: 6, dv: 2, source: 'RG', page: 119,
+    note: tk('Full-auto (complex) of 6 rounds instead of 10: +2 DV.') },
+  { id: 'finishing-move', name: tk('Finishing Move'), en: 'Finishing Move', kind: 'melee', type: 'complex', unlock: ['Finishing Move', 'Prise de finition'],
+    dice: 2, ini: 10, edge: 1, once: true, source: 'RG', page: 120, note: tk('+2 dice, costs 1 Edge and 10 initiative. Once per Combat Turn.') },
+  { id: 'flying-kick', name: tk('Flying Kick'), en: 'Flying Kick', kind: 'melee', type: 'complex', unlock: ['Flying Kick', 'Coup de pied sauté'], dice: 1, reach: 1,
+    source: 'RG', page: 121, note: tk('+1 die, +1 Reach. On a failure: −1 to defense tests until your next action.') },
+  { id: 'full-offense', name: tk('Full Offense'), en: 'Full Offense', kind: 'melee', type: 'complex', unlock: ['Full Offense', 'Attaque pure'], dice: 2, ini: 5,
+    source: 'RG', page: 121, note: tk('+2 dice, costs 5 initiative. Afterwards, no defensive interrupt action until your next action.') },
   { id: 'ballestra', name: tk('Ballestra'), en: 'Ballestra', kind: 'melee', type: 'complex', unlock: ['Ballestra'], reach: 1, source: 'RG', page: 119,
-    note: tk('+1 allonge. Ensuite −1 aux tests de défense et pas de défense active jusqu’à sa prochaine action.') },
-  { id: 'half-sword', name: tk('Demi-épée'), en: 'Half Sword', kind: 'melee', type: 'complex', unlock: ['Half Sword', 'Demi-épée'], ap: -2, source: 'RG', page: 121,
-    note: tk('PA −2 supplémentaire, à deux mains. En cas d’échec : −2 à la prochaine action, ni parade ni blocage.') },
-  { id: 'haymaker', name: tk('Coup décisif'), en: 'Haymaker', kind: 'melee', type: 'complex', unlock: ['Haymaker', 'Coup décisif'], defense: 2, dv: 1, source: 'RG', page: 121,
-    note: tk('+1 VD, mais le défenseur gagne +2 dés.') },
-  { id: 'pouncing-dragon', name: tk('Poing du dragon'), en: 'Pouncing Dragon', kind: 'melee', type: 'complex', unlock: ['Pouncing Dragon', 'Poing du dragon'], dv: 2,
-    source: 'RG', page: 122, note: tk('+2 VD. Exige une position supérieure, perdue après l’action.') },
-  { id: 'herding', name: tk('Ruse du Berger'), en: 'Herding', kind: 'melee', type: 'complex', unlock: ['Herding', 'Ruse du Berger'], defense: 2, noDamage: true,
-    source: 'RG', page: 121, note: tk('Pas de dommages : repousse l’adversaire de 1 m par succès net (le défenseur gagne +2 dés).') },
-  { id: 'subduing', name: tk('Maîtrise'), en: 'Subduing', kind: 'melee', type: 'complex', noDamage: true, source: 'SR5', page: 195,
-    note: tk('Pas de dommages : si FOR + succès nets dépasse la limite physique de la cible, elle est immobilisée.') },
-  { id: 'push', name: tk('Repousser'), en: 'Push', kind: 'melee', type: 'simple', noDamage: true, source: 'RG', page: 123,
-    note: tk('Action simple, pas de dommages : la cible est repoussée hors d’allonge.') },
-  { id: 'clinch', name: tk('Accrochage'), en: 'Clinch', kind: 'test', type: 'simple', unlock: ['Clinch', 'Accrochage'], attr: 'AGI', skillId: 'gymnastics', limit: 'physical',
-    noDamage: true, source: 'RG', page: 119, note: tk('AGI + Gymnastique contre RÉA + INT : position supérieure, la cible ne peut pas s’éloigner.') },
+    note: tk('+1 Reach. Afterwards −1 to defense tests and no active defense until your next action.') },
+  { id: 'half-sword', name: tk('Half Sword'), en: 'Half Sword', kind: 'melee', type: 'complex', unlock: ['Half Sword', 'Demi-épée'], ap: -2, source: 'RG', page: 121,
+    note: tk('Extra AP −2, two-handed. On a failure: −2 to the next action, no parry or block.') },
+  { id: 'haymaker', name: tk('Haymaker'), en: 'Haymaker', kind: 'melee', type: 'complex', unlock: ['Haymaker', 'Coup décisif'], defense: 2, dv: 1, source: 'RG', page: 121,
+    note: tk('+1 DV, but the defender gets +2 dice.') },
+  { id: 'pouncing-dragon', name: tk('Pouncing Dragon'), en: 'Pouncing Dragon', kind: 'melee', type: 'complex', unlock: ['Pouncing Dragon', 'Poing du dragon'], dv: 2,
+    source: 'RG', page: 122, note: tk('+2 DV. Requires Superior Position, lost after the action.') },
+  { id: 'herding', name: tk('Herding'), en: 'Herding', kind: 'melee', type: 'complex', unlock: ['Herding', 'Ruse du Berger'], defense: 2, noDamage: true,
+    source: 'RG', page: 121, note: tk('No damage: moves the opponent 1 m per net hit (the defender gets +2 dice).') },
+  { id: 'subduing', name: tk('Subduing'), en: 'Subduing', kind: 'melee', type: 'complex', noDamage: true, source: 'SR5', page: 195,
+    note: tk('No damage: if STR + net hits exceeds the target\'s Physical limit, they are subdued.') },
+  { id: 'push', name: tk('Push'), en: 'Push', kind: 'melee', type: 'simple', noDamage: true, source: 'RG', page: 123,
+    note: tk('Simple Action, no damage: the target is pushed out of reach.') },
+  { id: 'clinch', name: tk('Clinch'), en: 'Clinch', kind: 'test', type: 'simple', unlock: ['Clinch', 'Accrochage'], attr: 'AGI', skillId: 'gymnastics', limit: 'physical',
+    noDamage: true, source: 'RG', page: 119, note: tk('AGI + Gymnastics vs REA + INT: Superior Position, the target cannot move away.') },
   { id: 'kip-up', name: tk('Kip-Up'), en: 'Kip-Up', kind: 'test', type: 'simple', unlock: ['Kip-Up'], attr: 'AGI', skillId: 'gymnastics', limit: 'physical', threshold: 3,
-    source: 'RG', page: 122, note: tk('AGI + Gymnastique (3) : se relever et attaquer aussitôt une cible proche.') },
-  { id: 'reading-defense', name: tk('Lire la défense'), en: 'Reading the Defense', kind: 'test', type: 'complex', attr: 'INT', weaponSkill: true, limit: 'mental', threshold: 3,
-    source: 'RG', page: 123, note: tk('INT + compétence de l’arme (3) : +3 dés à la prochaine attaque de mêlée contre la cible (−1 en cas d’échec).') },
+    source: 'RG', page: 122, note: tk('AGI + Gymnastics (3): get up and immediately attack a nearby target.') },
+  { id: 'reading-defense', name: tk('Reading the Defense'), en: 'Reading the Defense', kind: 'test', type: 'complex', attr: 'INT', weaponSkill: true, limit: 'mental', threshold: 3,
+    source: 'RG', page: 123, note: tk('INT + weapon skill (3): +3 dice on the next melee attack against the target (−1 on a failure).') },
 ];
 export const ACTION_BY_ID: Record<string, CombatActionDef> = Object.fromEntries(COMBAT_ACTIONS.map((a) => [a.id, a]));
 
@@ -726,25 +726,25 @@ export const ACTION_BY_ID: Record<string, CombatActionDef> = Object.fromEntries(
  * melee: melee attacks only; turn: lasts the rest of the Combat Turn (paid once).
  */
 export const DEFENSE_OPTIONS: DefenseOptionDef[] = [
-  { id: 'dodge', name: tk('Esquive'), en: 'Dodge', ini: 5, skill: 'gymnastics', source: 'SR5', page: 191 },
-  { id: 'parry', name: tk('Parade'), en: 'Parry', ini: 5, melee: true, skill: 'weapon', source: 'SR5', page: 191 },
-  { id: 'block', name: tk('Blocage'), en: 'Block', ini: 5, melee: true, skill: 'unarmed_combat', source: 'SR5', page: 191 },
-  { id: 'full', name: tk('Défense totale'), en: 'Full Defense', ini: 10, turn: true, attr: 'WIL', source: 'SR5', page: 191 },
-  { id: 'agile', name: tk('Défenseur agile'), en: 'Agile Defender', ini: 10, turn: true, attr: 'AGI', unlock: ['Agile Defender', 'Défenseur agile'], source: 'RG', page: 127 },
-  { id: 'acrobatic', name: tk('Défenseur acrobatique'), en: 'Acrobatic Defender', ini: 10, turn: true, skill: 'gymnastics', unlock: ['Acrobatic Defender', 'Défenseur acrobatique'], source: 'RG', page: 127 },
-  { id: 'perceptive', name: tk('Défenseur perspicace'), en: 'Perceptive Defender', ini: 10, turn: true, skill: 'perception', unlock: ['Perceptive Defender', 'Défenseur perspicace'], source: 'RG', page: 127 },
-  { id: 'pretty', name: tk('Trop beau pour être touché'), en: 'Too Pretty to Hit', ini: 10, turn: true, attr: 'CHA', unlock: ['Too Pretty to Hit', 'Trop beau pour être touché'], source: 'RG', page: 127 },
+  { id: 'dodge', name: tk('Dodge'), en: 'Dodge', ini: 5, skill: 'gymnastics', source: 'SR5', page: 191 },
+  { id: 'parry', name: tk('Parry'), en: 'Parry', ini: 5, melee: true, skill: 'weapon', source: 'SR5', page: 191 },
+  { id: 'block', name: tk('Block'), en: 'Block', ini: 5, melee: true, skill: 'unarmed_combat', source: 'SR5', page: 191 },
+  { id: 'full', name: tk('Full defense'), en: 'Full Defense', ini: 10, turn: true, attr: 'WIL', source: 'SR5', page: 191 },
+  { id: 'agile', name: tk('Agile Defender'), en: 'Agile Defender', ini: 10, turn: true, attr: 'AGI', unlock: ['Agile Defender', 'Défenseur agile'], source: 'RG', page: 127 },
+  { id: 'acrobatic', name: tk('Acrobatic Defender'), en: 'Acrobatic Defender', ini: 10, turn: true, skill: 'gymnastics', unlock: ['Acrobatic Defender', 'Défenseur acrobatique'], source: 'RG', page: 127 },
+  { id: 'perceptive', name: tk('Perceptive Defender'), en: 'Perceptive Defender', ini: 10, turn: true, skill: 'perception', unlock: ['Perceptive Defender', 'Défenseur perspicace'], source: 'RG', page: 127 },
+  { id: 'pretty', name: tk('Too Pretty to Hit'), en: 'Too Pretty to Hit', ini: 10, turn: true, attr: 'CHA', unlock: ['Too Pretty to Hit', 'Trop beau pour être touché'], source: 'RG', page: 127 },
 ];
 export const DEFENSE_BY_ID: Record<string, DefenseOptionDef> = Object.fromEntries(DEFENSE_OPTIONS.map((o) => [o.id, o]));
 
 /** Situational defense modifiers the defender chooses (SR5 p. 189). */
 export const DEFENSE_SITUATIONS: DefenseSituationDef[] = [
-  { id: 'cover-partial', name: tk('Couvert partiel'), value: 2 },
-  { id: 'cover-good', name: tk('Bon couvert'), value: 4 },
-  { id: 'running', name: tk('Défenseur en course'), value: 2 },
-  { id: 'prone', name: tk('Défenseur à terre'), value: -2 },
-  { id: 'in-melee', name: tk('En mêlée, visé à distance'), value: -3, ranged: true },
-  { id: 'vehicle', name: tk('Dans un véhicule en mouvement'), value: 3 },
+  { id: 'cover-partial', name: tk('Partial cover'), value: 2 },
+  { id: 'cover-good', name: tk('Good cover'), value: 4 },
+  { id: 'running', name: tk('Defender running'), value: 2 },
+  { id: 'prone', name: tk('Defender prone'), value: -2 },
+  { id: 'in-melee', name: tk('In melee, targeted at range'), value: -3, ranged: true },
+  { id: 'vehicle', name: tk('Inside a moving vehicle'), value: 3 },
 ];
 export const SITUATION_BY_ID: Record<string, DefenseSituationDef> = Object.fromEntries(DEFENSE_SITUATIONS.map((o) => [o.id, o]));
 
@@ -860,20 +860,20 @@ export function defenseLines(
       paid.push(o.id);
     }
   }
-  if (num(attack?.defenseMod)) lines.push({ label: attack!.defenseLabel || tk('mode de tir'), value: num(attack!.defenseMod), key: 'fire' });
+  if (num(attack?.defenseMod)) lines.push({ label: attack!.defenseLabel || tk('fire mode'), value: num(attack!.defenseMod), key: 'fire' });
   if (num(attack?.actionDefense)) lines.push({ label: attack!.actionName || tk('action'), value: num(attack!.actionDefense), key: 'action' });
-  if (attack?.kind === 'blast') lines.push({ label: tk('Attaque de zone'), value: -2, key: 'area' });
+  if (attack?.kind === 'blast') lines.push({ label: tk('Area-effect attack'), value: -2, key: 'area' });
   if (melee) {
     const myW = bestMeleeWeapon(actor);
     const diff = num(myW?.reach) + metatypeReach(actor) - num(attack?.reach);
-    if (diff) lines.push({ label: tk('différence d’allonge'), value: diff, key: 'reach' });
+    if (diff) lines.push({ label: tk('reach difference'), value: diff, key: 'reach' });
   }
   for (const id of opts.situations || []) {
     const s = SITUATION_BY_ID[id];
     if (!s || (s.ranged && melee)) continue;
     lines.push({ label: s.name, value: s.value, key: id });
   }
-  if (num(opts.prior) > 0) lines.push({ label: tk('défenses précédentes ce tour'), value: -num(opts.prior), key: 'prior' });
+  if (num(opts.prior) > 0) lines.push({ label: tk('previous defenses this turn'), value: -num(opts.prior), key: 'prior' });
   return { lines: lines.filter((l) => l.value), ini, paid };
 }
 

@@ -11,15 +11,15 @@ import { getViewer, reportPdfPage } from './store.ts';
 import type { LibBook, ViewerState, Zoom } from './types.ts';
 
 /** « 12,5 Mo » */
-export const fmtMB = (bytes: unknown): string => t('{n} Mo', { n: fmtNumber((Number(bytes) || 0) / 1048576, { maximumFractionDigits: 1 }) });
+export const fmtMB = (bytes: unknown): string => t('{n} MB', { n: fmtNumber((Number(bytes) || 0) / 1048576, { maximumFractionDigits: 1 }) });
 
 const hlFor = (v: ViewerState): Highlight | null => (v.hl && v.hl.pdfPage === v.pdfPage ? { terms: queryTerms(v.hl.q), scroll: true } : null);
 
 function Progress({ ds }: { ds: Pick<DocState, 'stage'> & Partial<DocState> }) {
-  let label = t('Ouverture du livre…');
-  if (ds.stage === 'lib') label = t('Chargement du lecteur…');
-  else if (ds.stage === 'cache') label = t('Lecture du cache…');
-  else if (ds.stage === 'download') label = t('Téléchargement du livre (une seule fois, il reste ensuite dans ce navigateur)…');
+  let label = t('Opening the book…');
+  if (ds.stage === 'lib') label = t('Loading the reader…');
+  else if (ds.stage === 'cache') label = t('Reading the cache…');
+  else if (ds.stage === 'download') label = t('Downloading the book (only once, this browser keeps it afterwards)…');
   const total = ds.total || 0;
   const loaded = ds.loaded || 0;
   const pct = ds.stage === 'download' && total > 0 ? Math.min(100, Math.round((loaded / total) * 100)) : null;
@@ -98,20 +98,20 @@ export function PdfReader({ book, v, zoom, onScale, onTextMode }: PdfReaderProps
   const loading = ds.code !== book.code || ds.status === 'loading' || ds.status === 'idle';
   return (
     <div className="books-reader">
-      <div className="books-scroll" ref={scrollRef} tabIndex={0} aria-label={t('Pages du livre')}></div>
+      <div className="books-scroll" ref={scrollRef} tabIndex={0} aria-label={t('Book pages')}></div>
       {loading && <Progress ds={ds.code === book.code ? ds : { stage: 'lib' }} />}
       {ds.code === book.code && ds.status === 'error' && (
         <div className="books-loading">
-          <div className="error">{t('Impossible d’ouvrir ce livre : {error}', { error: ds.error })}</div>
+          <div className="error">{t('Cannot open this book: {error}', { error: ds.error })}</div>
           <div className="row gap-s wrap">
             <Button small onClick={() => ensureDoc(book)}>
-              {t('Réessayer')}
+              {t('Retry')}
             </Button>
             <Button small onClick={onTextMode}>
-              {t('Afficher le texte de la page')}
+              {t('Show the page text')}
             </Button>
             <a className="btn btn-default btn-sm" href={`${book.url}#page=${v.pdfPage || 1}`} target="_blank" rel="noopener">
-              {t('Ouvrir dans un nouvel onglet')}
+              {t('Open in a new tab')}
             </a>
           </div>
         </div>

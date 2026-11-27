@@ -41,7 +41,7 @@ function Party({ game }: GameProps) {
   const mine = game.me.characterIds || [];
   return (
     <section className="dos-section">
-      <h3 className="dos-h">{t("L'équipe")}</h3>
+      <h3 className="dos-h">{t("The team")}</h3>
       <div className="dos-party">
         {pcs.map((a) => {
           const owner = users.find((u) => (u.characterIds || []).includes(a.id));
@@ -53,7 +53,7 @@ function Party({ game }: GameProps) {
               key={a.id}
               className={cx('dos-pc', isMine && 'mine')}
               disabled={!isMine}
-              title={isMine ? t('Ouvrir ma fiche') : a.name}
+              title={isMine ? t('Open my sheet') : a.name}
               onClick={() => isMine && openSheet(a.id)}
               style={{ '--pc-color': a.color || 'var(--cyan)' } as CSSProperties}
             >
@@ -64,10 +64,10 @@ function Party({ game }: GameProps) {
                 <span className="small faint">
                   {owner ? (
                     <>
-                      <span className={cx('camp-dot', online && 'on')}></span> {isMine ? t('{name} (toi)', { name: owner.name }) : owner.name}
+                      <span className={cx('camp-dot', online && 'on')}></span> {isMine ? t('{name} (you)', { name: owner.name }) : owner.name}
                     </>
                   ) : (
-                    a.player || t('Libre')
+                    a.player || t('Unassigned')
                   )}
                 </span>
               </span>
@@ -89,7 +89,7 @@ export default function DossiersPage({ game }: GameProps) {
   const [fresh, setFresh] = useState<string[]>(() => unread.map((h) => h.id));
   const isNew = (h: PlayerHandout) => !read.has(h.id) || fresh.includes(h.id);
 
-  useServerEvent('campaign/handout', (d: { title?: string } | null) => d?.title && toast(t('Nouveau document : {title}', { title: d.title }), 'info', 5000), []);
+  useServerEvent('campaign/handout', (d: { title?: string } | null) => d?.title && toast(t('New handout: {title}', { title: d.title }), 'info', 5000), []);
 
   // Open the newest unread document automatically the first time the page is shown.
   useEffect(() => {
@@ -107,15 +107,15 @@ export default function DossiersPage({ game }: GameProps) {
   return (
     <div className="page dos-page">
       <div className="page-title">
-        <h2>{t('Dossiers')}</h2>
-        {unread.length > 0 && <Badge color="magenta">{tn(unread.length, '{n} non lu', '{n} non lus')}</Badge>}
+        <h2>{t('handouts::Files')}</h2>
+        {unread.length > 0 && <Badge color="magenta">{tn(unread.length, '{n} unread', 'pl::{n} unread')}</Badge>}
       </div>
       <Party game={game} />
       <div className="dos-layout">
         <section className="dos-section dos-docs">
           <div className="row spread">
             <h3 className="dos-h">
-              {t('Documents reçus')} <span className="faint small">{handouts.length || ''}</span>
+              {t('Handouts received')} <span className="faint small">{handouts.length || ''}</span>
             </h3>
             {handouts.some(isNew) && (
               <Button
@@ -126,32 +126,32 @@ export default function DossiersPage({ game }: GameProps) {
                   setFresh([]);
                 }}
               >
-                {t('Tout marquer comme lu')}
+                {t('Mark all as read')}
               </Button>
             )}
           </div>
           {handouts.length ? (
             <div className="dos-list">
               {handouts.map((h) => (
-                <HandoutCard key={h.id} handout={h} unread={isNew(h)} open={openId === h.id} stamp={h.toAll ? t('Équipe') : t('Personnel')} onToggle={() => toggle(h)} />
+                <HandoutCard key={h.id} handout={h} unread={isNew(h)} open={openId === h.id} stamp={h.toAll ? t('Team') : t('Personal')} onToggle={() => toggle(h)} />
               ))}
             </div>
           ) : (
             <div className="dos-empty">
-              {t("Aucun document pour l'instant.")}
+              {t("No handouts yet.")}
               <br />
-              <span className="faint small">{t('Ce que le MJ te transmettra (preuves, messages, fiches de contact…) apparaîtra ici.')}</span>
+              <span className="faint small">{t('What the GM sends you (evidence, messages, contact files…) will appear here.')}</span>
             </div>
           )}
         </section>
         <section className="dos-section dos-story">
-          <h3 className="dos-h">{t("L'histoire jusqu'ici")}</h3>
+          <h3 className="dos-h">{t("The story so far")}</h3>
           {recap.trim() ? (
             <div className="dos-journal">
               <Markdown text={recap} />
             </div>
           ) : (
-            <Empty>{t("Le MJ n'a pas encore écrit de récapitulatif.")}</Empty>
+            <Empty>{t("The GM hasn't written a recap yet.")}</Empty>
           )}
         </section>
       </div>

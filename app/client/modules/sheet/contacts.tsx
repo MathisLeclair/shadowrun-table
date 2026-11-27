@@ -81,9 +81,9 @@ export function ContactCard({ game, actor, c, big, children }: ContactCardProps)
   const color = sh.color || nameColor(c.name);
   return <div className={'ct-card' + (big ? ' big' : '')} style={cssVars({ '--ct': color })}>
     <div className="ct-head">
-      <span className="ct-file mono">{t('CONTACT · DOSSIER {n}', { n: fileNo(c) })}</span>
-      {sh.known ? <span className="badge badge-cyan" title={t('Stats trouvées (PNJ ou Bestiaire : {name}) : le contact peut faire Enquête et Réseau lui-même', { name: sh.source })}>
-        {t('fiche PNJ')}
+      <span className="ct-file mono">{t('CONTACT · FILE {n}', { n: fileNo(c) })}</span>
+      {sh.known ? <span className="badge badge-cyan" title={t('Stats found (NPC or Bestiary: {name}): the contact can roll Legwork and Networking themselves', { name: sh.source })}>
+        {t('NPC sheet')}
       </span> : null}
     </div>
     <div className="ct-body">
@@ -91,13 +91,13 @@ export function ContactCard({ game, actor, c, big, children }: ContactCardProps)
       <div className="ct-id"><div className="ct-name">{c.name}</div>{c.role && <div className="ct-role muted small">{c.role}</div>}</div>
     </div>
     <div className="ct-stat" title={cn ? t(CONNECTIONS[cn]) : ''}>
-      <span className="ct-k">{t('contact::Connexion')}</span>
+      <span className="ct-k">{t('contact::Connection')}</span>
       <Gauge value={cn} max={MAX_CONNECTION} kind="cn" />
       <b className="mono">{cn}</b>
       {(big || cn > 0) && <span className="ct-desc faint small">{cn ? t(CONNECTIONS[cn]) : ''}</span>}
     </div>
     <div className="ct-stat" title={lv ? t(lv.text) : ''}>
-      <span className="ct-k">{t('Loyauté')}</span>
+      <span className="ct-k">{t('Loyalty')}</span>
       <Gauge value={loy} max={MAX_LOYALTY} kind="loy" />
       <b className="mono">{loy}</b>
       {lv && <span className="ct-desc faint small"><b>{t(lv.name)}</b> — {t(lv.text)}</span>}
@@ -107,8 +107,8 @@ export function ContactCard({ game, actor, c, big, children }: ContactCardProps)
 }
 
 const RESULT_TEXT = {
-  reachYes: tk('Décroche : {total} ≥ {cn}'),
-  reachNo: tk('Injoignable pour l’instant : {total} < {cn}'),
+  reachYes: tk('Picks up: {total} ≥ {cn}'),
+  reachNo: tk('Can’t be reached right now: {total} < {cn}'),
 };
 
 /** Result line of a contact roll (log + panel). */
@@ -120,24 +120,24 @@ export function ContactRollLine({ roll }: { roll: ShownRoll | null | undefined }
   let text;
   if (c.kind === 'reach') {
     cls = c.available ? 'ok' : 'bad';
-    tag = c.available ? t('Disponible') : t('Injoignable');
+    tag = c.available ? t('Available') : t('server::Unreachable');
     text = t(c.available ? RESULT_TEXT.reachYes : RESULT_TEXT.reachNo, { total: c.total, cn: c.connection });
   } else if (c.kind === 'negotiate') {
     cls = 'info';
-    tag = t('Négociation');
+    tag = t('Negotiation');
     text = c.bribe
-      ? t('Loyauté +{l} dés, {n} dés achetés ({cost})', { l: c.loyalty, n: c.bribe, cost: fmtNuyen(c.bribeCost) })
-      : t('Loyauté +{l} dés', { l: c.loyalty });
+      ? t('Loyalty +{l} dice, {n} bought dice ({cost})', { l: c.loyalty, n: c.bribe, cost: fmtNuyen(c.bribeCost) })
+      : t('Loyalty +{l} dice', { l: c.loyalty });
   } else if (c.kind === 'legwork') {
     cls = 'info';
-    tag = t('Enquête');
-    text = t('{contact} se renseigne pour {actor} : 1 heure, le MJ cumule les succès jusqu’au seuil', { contact: c.contact, actor: c.via || '' });
+    tag = t('Legwork');
+    text = t('{contact} asks around for {actor}: 1 hour, the GM adds up the hits until the threshold', { contact: c.contact, actor: c.via || '' });
   } else {
     cls = c.success ? 'ok' : 'bad';
-    tag = c.success ? t('Rendez-vous') : t('Pas de rendez-vous');
+    tag = c.success ? t('Meeting set') : t('No meeting');
     text = c.success
-      ? t('{hits} succès contre {th} : rencontre arrangée (environ 4D6 heures)', { hits: roll.hits, th: c.threshold })
-      : t('{hits} succès contre {th} : la personne ne veut pas (encore) rencontrer', { hits: roll.hits, th: c.threshold });
+      ? t('{hits} hits vs {th}: meeting arranged (about 4D6 hours)', { hits: roll.hits, th: c.threshold })
+      : t('{hits} hits vs {th}: they won’t meet (yet)', { hits: roll.hits, th: c.threshold });
   }
   return <div className={'ct-logline ' + cls}><span className="ct-logtag">{tag}</span><span className="small">{text}</span></div>;
 }
@@ -147,7 +147,7 @@ function LastRoll({ r }: { r: ShownRoll | null }) {
   return <div className="ct-result">
     <div className="row gap-s">
       <DiceFaces roll={r} small />
-      {typeof r.hits === 'number' ? <b>{r.hits}{' '}{tn(r.hits, 'one::succès', 'other::succès')}</b> : <b>{r.total}</b>}
+      {typeof r.hits === 'number' ? <b>{r.hits}{' '}{tn(r.hits, 'one::hit', 'other::hits')}</b> : <b>{r.total}</b>}
     </div>
     <ContactRollLine roll={r} />
   </div>;
@@ -185,48 +185,48 @@ function RollPanel({ game, actor, c, gm }: { game: GameView; actor: Actor; c: Co
     }
   };
   const KINDS = [
-    { id: 'reach', label: t('Joindre') },
-    { id: 'negotiate', label: t('Négocier') },
-    { id: 'legwork', label: t('Enquête'), off: !sh.known },
-    { id: 'network', label: t('Réseau'), off: !sh.known },
+    { id: 'reach', label: t('verb::Reach') },
+    { id: 'negotiate', label: t('Negotiate') },
+    { id: 'legwork', label: t('Legwork'), off: !sh.known },
+    { id: 'network', label: t('Networking'), off: !sh.known },
   ];
   let help: string;
   let poolText: string;
   if (kind === 'reach') {
-    help = t('Si le MJ n’a pas d’avis : 2D6, le contact décroche si le total atteint sa Connexion (plus il est influent, plus il est occupé).');
-    poolText = t('2D6 ≥ {cn} : {p}', { cn, p: pct(reachOdds(cn - mod)) });
+    help = t('If the GM has no preference: 2D6, the contact is available if the total reaches their Connection (the more influential, the busier).');
+    poolText = t('2D6 ≥ {cn}: {p}', { cn, p: pct(reachOdds(cn - mod)) });
   } else if (kind === 'negotiate') {
-    help = t('Pour qu’il partage une info confidentielle, baisser son tarif ou accepter une faveur au-dessus de sa Loyauté : Négociation + Charisme [Sociale] + Loyauté.');
-    poolText = t('{pool} + Loyauté {l}{bribe} [Sociale {s}]', { pool: neg.pool, l: loy, bribe: bribe ? ` + ${bribe}` : '', s: social ?? '?' });
+    help = t('To make them share confidential info, lower their fee or accept a favor above their Loyalty: Negotiation + Charisma [Social] + Loyalty.');
+    poolText = t('{pool} + Loyalty {l}{bribe} [Social {s}]', { pool: neg.pool, l: loy, bribe: bribe ? ` + ${bribe}` : '', s: social ?? '?' });
   } else if (kind === 'legwork') {
-    help = t('Il ne sait rien mais demande autour de lui : test étendu Connexion + Charisme [Sociale], un jet par heure, seuil fixé par le MJ selon la difficulté.');
-    poolText = sh.known ? t('Connexion {cn} + CHA {cha} [Sociale {s}]', { cn, cha: sh.cha, s: sh.social }) : '';
+    help = t('They don’t know but ask around: Extended Connection + Charisma [Social] Test, one roll per hour, threshold set by the GM from the difficulty.');
+    poolText = sh.known ? t('Connection {cn} + CHA {cha} [Social {s}]', { cn, cha: sh.cha, s: sh.social }) : '';
   } else {
-    help = t('Il arrange une rencontre : Étiquette + Charisme [Sociale] + Connexion, seuil = Connexion de la personne visée.');
-    poolText = sh.known ? t('Étiquette + CHA {e} + Connexion {cn} [Sociale {s}]', { e: sh.etiquette, cn, s: sh.social }) : '';
+    help = t('They arrange a meeting: Etiquette + Charisma [Social] + Connection, threshold = the target’s Connection.');
+    poolText = sh.known ? t('Etiquette + CHA {e} + Connection {cn} [Social {s}]', { e: sh.etiquette, cn, s: sh.social }) : '';
   }
   return <div className="ct-rolls">
-    <div className="row spread"><b>{t('Faire appel à lui')}</b><RuleRef rule="contacts" /></div>
+    <div className="row spread"><b>{t('Call on them')}</b><RuleRef rule="contacts" /></div>
     <div className="ct-kinds" role="tablist">
-      {KINDS.map((k) => <button type="button" key={k.id} className={'ct-kind' + (kind === k.id ? ' on' : '')} disabled={k.off} title={k.off ? t('{contact} n’a pas de fiche (Charisme, Étiquette) : le MJ peut créer un PNJ de ce nom dans le Bestiaire', { contact: c.name }) : ''} onClick={() => setKind(k.id)}>
+      {KINDS.map((k) => <button type="button" key={k.id} className={'ct-kind' + (kind === k.id ? ' on' : '')} disabled={k.off} title={k.off ? t('{contact} has no sheet (Charisma, Etiquette): the GM can create an NPC with that name in the Bestiary', { contact: c.name }) : ''} onClick={() => setKind(k.id)}>
         {k.label}
       </button>)}
     </div>
     <div className="muted small">{help}</div>
     <div className="row gap-s wrap ct-opts">
       {kind === 'negotiate' && <>
-        <label className="row gap-s small">{t('Dés achetés')}{' '}<NumberInput small value={bribe} min={0} max={6} onChange={setBribe} /></label>
-        {bribe > 0 && <span className="faint small">{t('{cost} à lui verser', { cost: fmtNuyen(bribeCost(c, bribe)) })}</span>}{spec && <Toggle value={useSpec} onChange={setUseSpec} label={t('Spécialisation ({spec})', { spec })} />}
-        <Toggle value={explode} onChange={setExplode} label={t('Repousser les limites')} title={t('Repousser les limites : +Chance, règle des 6, sans limite')} />
+        <label className="row gap-s small">{t('Bought dice')}{' '}<NumberInput small value={bribe} min={0} max={6} onChange={setBribe} /></label>
+        {bribe > 0 && <span className="faint small">{t('{cost} to pay them', { cost: fmtNuyen(bribeCost(c, bribe)) })}</span>}{spec && <Toggle value={useSpec} onChange={setUseSpec} label={t('Specialization ({spec})', { spec })} />}
+        <Toggle value={explode} onChange={setExplode} label={t('Push the Limit')} title={t('Push the Limit: +Edge, rule of six, no limit')} />
       </>}
       {kind === 'network' && <label className="row gap-s small">
-        {t('Connexion de la cible')}{' '}
+        {t('Target’s Connection')}{' '}
         <NumberInput small value={threshold} min={1} max={12} onChange={setThreshold} />
       </label>}
-      <label className="row gap-s small">{t('Modificateur')}{' '}<NumberInput small value={mod} min={-20} max={20} onChange={setMod} /></label>
+      <label className="row gap-s small">{t('Edit')}{' '}<NumberInput small value={mod} min={-20} max={20} onChange={setMod} /></label>
     </div>
     <div className="row gap-s wrap">
-      <Button variant="primary" disabled={busy} onClick={run}>{t('Lancer')}</Button>
+      <Button variant="primary" disabled={busy} onClick={run}>{t('Roll')}</Button>
       <span className="mono small muted">{poolText}</span>
       {gm && <Toggle value={secret} onChange={setSecret} label={t('Secret')} />}
     </div>
@@ -240,13 +240,13 @@ function Terms({ c }: { c: Contact }) {
   const loy = loyaltyOf(c);
   return <div className="ct-terms">
     <div className="small">
-      <b>{t('Tarif habituel')}</b> — {t('info : ~{info} · biens ou services : jusqu’à ~{goods} · remise entre amis : jusqu’à {pct} %', { info: fmtNuyen(f.info), goods: fmtNuyen(f.goods), pct: f.discountPct })}
+      <b>{t('Usual fee')}</b> — {t('info: ~{info} · goods or services: up to ~{goods} · friendly discount: up to {pct}%', { info: fmtNuyen(f.info), goods: fmtNuyen(f.goods), pct: f.discountPct })}
     </div>
     <div className="ct-favors">
       {Object.entries(FAVOR_RATINGS as Record<string, { name: string; text: string }>).map(([n, fv]) => <div key={n} className={'ct-favor' + (Number(n) <= loy ? ' ok' : '')} title={t(fv.text)}>
         <span className="mono">{n}</span>
         <span className="small">{t(fv.name)}</span>
-        <span className="faint small">{Number(n) <= loy ? t('accepte') : t('à négocier')}</span>
+        <span className="faint small">{Number(n) <= loy ? t('agrees') : t('negotiate')}</span>
       </div>)}
     </div>
   </div>;
@@ -274,7 +274,7 @@ function ContactModal({ game, actor, c, gm, canRoll, onClose }: ContactModalProp
 export function ContactCards({ game, actor, gm, own }: { game: GameView; actor: Actor; gm: boolean; own: boolean }) {
   const [open, setOpen] = useState<string | null>(null);
   const contacts = actor.contacts || [];
-  if (!contacts.length) return <div className="muted small">{t('Aucun contact.')}</div>;
+  if (!contacts.length) return <div className="muted small">{t('No contacts.')}</div>;
   const upItem = (id: string, patch: Partial<Contact>) => send('actor/updateItem', { actorId: actor.id, list: 'contacts', itemId: id, patch }).catch(() => {});
   const shown = open && contacts.find((x) => x.id === open);
   return <div className="ct-cards">
@@ -285,7 +285,7 @@ export function ContactCards({ game, actor, gm, own }: { game: GameView; actor: 
           : c.notes
             ? <div className="faint small">{c.notes}</div>
             : null}
-        <div className="row gap-s"><Button small onClick={() => setOpen(c.id)}>{t('Contacter')}</Button></div>
+        <div className="row gap-s"><Button small onClick={() => setOpen(c.id)}>{t('verb::Contact')}</Button></div>
       </ContactCard>
     )}
     {shown && <ContactModal game={game} actor={actor} c={shown} gm={gm} canRoll={gm || own} onClose={() => setOpen(null)} />}

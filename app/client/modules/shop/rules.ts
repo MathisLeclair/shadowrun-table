@@ -61,10 +61,10 @@ export interface DurationText {
 /** SR5 'ware grades (core rulebook p.451). */
 export const GRADES: Record<string, Grade> = {
   standard: { label: tk('Standard'), ess: 1, cost: 1, avail: 0 },
-  alpha: { label: tk('Alphaware'), ess: 0.8, cost: 1.2, avail: 2 },
-  beta: { label: tk('Betaware'), ess: 0.7, cost: 1.5, avail: 4 },
-  delta: { label: tk('Deltaware'), ess: 0.5, cost: 2.5, avail: 8 },
-  used: { label: tk("D'occasion"), ess: 1.25, cost: 0.75, avail: -4 },
+  alpha: { label: tk('long::Alphaware'), ess: 0.8, cost: 1.2, avail: 2 },
+  beta: { label: tk('long::Betaware'), ess: 0.7, cost: 1.5, avail: 4 },
+  delta: { label: tk('long::Deltaware'), ess: 0.5, cost: 2.5, avail: 8 },
+  used: { label: tk("Used"), ess: 1.25, cost: 0.75, avail: -4 },
 };
 export const GRADE_IDS: string[] = Object.keys(GRADES);
 
@@ -74,11 +74,11 @@ export const SHOP_FILES: string[] = [
   'accessories', 'armormods', 'vehiclemods', 'lifestylequalities',
 ];
 export const FILE_LABELS: Record<string, string> = {
-  weapons: tk('Armes'), armor: tk('Armures'), gear: tk('Équipement'), cyberware: tk('Cyberware'), bioware: tk('Bioware'),
-  vehicles: tk('Véhicules & drones'), programs: tk('Programmes'), lifestyles: tk('Train de vie'),
-  accessories: tk('Accessoires d’armes'), armormods: tk('Modifications d’armure'), vehiclemods: tk('Modifications de véhicule'),
-  lifestylequalities: tk('Options de train de vie'), martialarts: tk('Arts martiaux'),
-  qualities: tk('Traits'), spells: tk('Sorts'), powers: tk('Pouvoirs d’adepte'),
+  weapons: tk('Weapons'), armor: tk('pl::Armor'), gear: tk('Gear'), cyberware: tk('Cyberware'), bioware: tk('Bioware'),
+  vehicles: tk('Vehicles & drones'), programs: tk('Programs'), lifestyles: tk('Lifestyle'),
+  accessories: tk('pl::Weapon accessories'), armormods: tk('Armor modifications'), vehiclemods: tk('Vehicle modifications'),
+  lifestylequalities: tk('Lifestyle options'), martialarts: tk('Martial arts'),
+  qualities: tk('Traits'), spells: tk('Spells'), powers: tk('Adept Powers'),
 };
 
 /**
@@ -128,23 +128,23 @@ export const DEVICE_GEAR = new Set(['Commlinks', 'Cyberdecks', 'Rigger Command C
 
 /** Storefront sections (sidebar). `match(file, item)` says which catalog entries a section shows. `label` = French key: render t(label). */
 export const SECTIONS: StoreSection[] = [
-  { id: 'weapons', label: tk('Armes'), icon: '⚔', files: ['weapons'], match: (f) => f === 'weapons' },
-  { id: 'armor', label: tk('Armures'), icon: '⛨', files: ['armor'], match: (f) => f === 'armor' },
-  { id: 'gear', label: tk('Équipement'), icon: '⚙', files: ['gear'], match: (f, it) => f === 'gear' && !MATRIX_GEAR.has(it.category) && !MAGIC_GEAR.has(it.category) },
+  { id: 'weapons', label: tk('Weapons'), icon: '⚔', files: ['weapons'], match: (f) => f === 'weapons' },
+  { id: 'armor', label: tk('pl::Armor'), icon: '⛨', files: ['armor'], match: (f) => f === 'armor' },
+  { id: 'gear', label: tk('Gear'), icon: '⚙', files: ['gear'], match: (f, it) => f === 'gear' && !MATRIX_GEAR.has(it.category) && !MAGIC_GEAR.has(it.category) },
   { id: 'cyberware', label: tk('Cyberware'), icon: '⌬', files: ['cyberware'], match: (f) => f === 'cyberware' },
   { id: 'bioware', label: tk('Bioware'), icon: '❦', files: ['bioware'], match: (f) => f === 'bioware' },
-  { id: 'vehicles', label: tk('Véhicules & drones'), icon: '⛟', files: ['vehicles'], match: (f) => f === 'vehicles' },
-  { id: 'matrix', label: tk('Matrice'), icon: '⌨', files: ['gear', 'programs'], match: (f, it) => f === 'programs' || (f === 'gear' && MATRIX_GEAR.has(it.category)) },
-  { id: 'magic', label: tk('Magie'), icon: '✶', files: ['gear'], match: (f, it) => f === 'gear' && MAGIC_GEAR.has(it.category) },
-  { id: 'lifestyles', label: tk('Train de vie'), icon: '⌂', files: ['lifestyles', 'lifestylequalities'], match: (f) => f === 'lifestyles' || f === 'lifestylequalities' },
+  { id: 'vehicles', label: tk('Vehicles & drones'), icon: '⛟', files: ['vehicles'], match: (f) => f === 'vehicles' },
+  { id: 'matrix', label: tk('Matrix'), icon: '⌨', files: ['gear', 'programs'], match: (f, it) => f === 'programs' || (f === 'gear' && MATRIX_GEAR.has(it.category)) },
+  { id: 'magic', label: tk('Magic'), icon: '✶', files: ['gear'], match: (f, it) => f === 'gear' && MAGIC_GEAR.has(it.category) },
+  { id: 'lifestyles', label: tk('Lifestyle'), icon: '⌂', files: ['lifestyles', 'lifestylequalities'], match: (f) => f === 'lifestyles' || f === 'lifestylequalities' },
 ];
 
 /** Storefront-only sections (upgrades installed on owned items, martial arts). Not offered by the character creator. */
 export const UPGRADE_SECTIONS: StoreSection[] = [
-  { id: 'accessories', label: tk('Accessoires d’armes'), icon: '⌖', files: ['accessories'], match: (f) => f === 'accessories', after: 'weapons' },
-  { id: 'armormods', label: tk('Modifications d’armure'), icon: '⛉', files: ['armormods'], match: (f) => f === 'armormods', after: 'armor' },
-  { id: 'vehiclemods', label: tk('Modifications de véhicule'), icon: '⚒', files: ['vehiclemods'], match: (f) => f === 'vehiclemods', after: 'vehicles' },
-  { id: 'martialarts', label: tk('Arts martiaux'), icon: '☯', files: [], karma: true, match: () => false, after: 'lifestyles' },
+  { id: 'accessories', label: tk('pl::Weapon accessories'), icon: '⌖', files: ['accessories'], match: (f) => f === 'accessories', after: 'weapons' },
+  { id: 'armormods', label: tk('Armor modifications'), icon: '⛉', files: ['armormods'], match: (f) => f === 'armormods', after: 'armor' },
+  { id: 'vehiclemods', label: tk('Vehicle modifications'), icon: '⚒', files: ['vehiclemods'], match: (f) => f === 'vehiclemods', after: 'vehicles' },
+  { id: 'martialarts', label: tk('Martial arts'), icon: '☯', files: [], karma: true, match: () => false, after: 'lifestyles' },
 ];
 /** Every storefront section in display order. */
 export const STORE_SECTIONS: StoreSection[] = SECTIONS.flatMap((s) => [s, ...UPGRADE_SECTIONS.filter((u) => u.after === s.id)]);
@@ -340,7 +340,7 @@ export function fold(s: unknown): string {
     .toLowerCase();
 }
 
-export const LEGALITY_LABEL: Record<string, string> = { '': tk('Légal'), R: tk('Restreint'), F: tk('Interdit') };
+export const LEGALITY_LABEL: Record<string, string> = { '': tk('Legal'), R: tk('Restricted'), F: tk('Forbidden') };
 
 /** Magic/Resonance points lost when Essence drops from `before` to `after` (SR5: 1 per started point lost). */
 export function magicLoss(before: number, after: number): number {
@@ -359,7 +359,7 @@ const n0 = (v: unknown): number => {
 };
 /** Standard SR5 mount points, used for ranged weapons that predate weapon.mounts and have no catalog entry. */
 export const STANDARD_MOUNTS: string[] = ['Top', 'Under', 'Barrel', 'Stock', 'Side'];
-export const MOUNT_LABELS: Record<string, string> = { Top: tk('Dessus'), Under: tk('Dessous'), Barrel: tk('Canon'), Stock: tk('Crosse'), Side: tk('Flanc'), Internal: tk('Interne'), '': tk('Sans montage') };
+export const MOUNT_LABELS: Record<string, string> = { Top: tk('Top'), Under: tk('Under'), Barrel: tk('Barrel'), Stock: tk('inventory::Stock'), Side: tk('Side'), Internal: tk('Internal'), '': tk('No mount') };
 
 /**
  * Mount points of a weapon: its own list, else its catalog item's (none when the catalog lists no <accessorymounts>:
@@ -420,11 +420,11 @@ function matchDetails(det: Loose, weapon: Loose, weaponCat: Loose): boolean {
 export function accessoryFit(weapon: Loose, weaponCat: Loose, accItem: Loose, opts: { mount?: string | null } = {}): { mount: string | null; problem: FitProblem | null } {
   const st = accItem?.stats || {};
   const params = { item: accItem?.nameFr || accItem?.name || '?', weapon: weapon?.name || '?' };
-  if (hasDetails(st.requires) && !matchDetails(st.requires, weapon, weaponCat)) return { mount: null, problem: { key: tk('{item} ne s’adapte pas sur {weapon}'), params } };
-  if (hasDetails(st.forbids) && matchDetails(st.forbids, weapon, weaponCat)) return { mount: null, problem: { key: tk('{item} ne s’adapte pas sur {weapon}'), params } };
-  if ((weapon?.accessories || []).some((a: Loose) => a.catalogId && a.catalogId === accItem?.id)) return { mount: null, problem: { key: tk('{item} est déjà installé sur {weapon}'), params } };
+  if (hasDetails(st.requires) && !matchDetails(st.requires, weapon, weaponCat)) return { mount: null, problem: { key: tk('{item} does not fit on {weapon}'), params } };
+  if (hasDetails(st.forbids) && matchDetails(st.forbids, weapon, weaponCat)) return { mount: null, problem: { key: tk('{item} does not fit on {weapon}'), params } };
+  if ((weapon?.accessories || []).some((a: Loose) => a.catalogId && a.catalogId === accItem?.id)) return { mount: null, problem: { key: tk('{item} is already installed on {weapon}'), params } };
   const free = freeMounts(weapon, weaponCat, accItem);
-  if (!free.length) return { mount: null, problem: { key: tk('Aucun emplacement libre ({mounts}) sur {weapon}'), params: { mounts: (st.mount || []).join(' / '), weapon: params.weapon } } };
+  if (!free.length) return { mount: null, problem: { key: tk('No free mount ({mounts}) on {weapon}'), params: { mounts: (st.mount || []).join(' / '), weapon: params.weapon } } };
   const mount = opts.mount !== undefined && opts.mount !== null && free.includes(opts.mount) ? opts.mount : free[0];
   return { mount, problem: null };
 }
@@ -484,9 +484,9 @@ export function armorModFit(armor: Loose, armorCat: Loose, modItem: Loose, ratin
   const need = armorModCapacity(modItem, rating, cap);
   const used = armorCapacityUsed(armor);
   const params = { item: modItem?.nameFr || modItem?.name || '?', armor: armor?.name || '?' };
-  if ((armor?.mods || []).some((m: Loose) => m.catalogId && m.catalogId === modItem?.id)) return { need, used, cap, problem: { key: tk('{item} est déjà installé sur {armor}'), params } };
+  if ((armor?.mods || []).some((m: Loose) => m.catalogId && m.catalogId === modItem?.id)) return { need, used, cap, problem: { key: tk('{item} is already installed on {armor}'), params } };
   if (need > 0 && used + need > cap) {
-    return { need, used, cap, problem: { key: tk('Capacité insuffisante sur {armor} : {need} requis, {free} libre(s)'), params: { armor: params.armor, need, free: Math.max(0, Math.round((cap - used) * 100) / 100) } } };
+    return { need, used, cap, problem: { key: tk('Not enough capacity on {armor}: {need} needed, {free} free'), params: { armor: params.armor, need, free: Math.max(0, Math.round((cap - used) * 100) / 100) } } };
   }
   return { need, used, cap, problem: null };
 }
@@ -568,11 +568,11 @@ export function vehicleModFit(
   const vNames = [vehicle?.name, vehicleCat?.name, vehicleCat?.nameFr].filter(Boolean).map((x) => String(x).toLowerCase());
   const vCat = String(vehicleCat?.category || '').toLowerCase();
   if ((hasDetails(st.requires) && !detailsMatch(st.requires, vNames, vCat, '')) || (hasDetails(st.forbids) && detailsMatch(st.forbids, vNames, vCat, ''))) {
-    return { need, used, cap, pool, problem: { key: tk('{item} ne s’adapte pas sur {vehicle}'), params } };
+    return { need, used, cap, pool, problem: { key: tk('{item} does not fit on {vehicle}'), params } };
   }
-  if ((vehicle?.mods || []).some((m: Loose) => m.catalogId && m.catalogId === modItem?.id)) return { need, used, cap, pool, problem: { key: tk('{item} est déjà installé sur {vehicle}'), params } };
+  if ((vehicle?.mods || []).some((m: Loose) => m.catalogId && m.catalogId === modItem?.id)) return { need, used, cap, pool, problem: { key: tk('{item} is already installed on {vehicle}'), params } };
   if (pool && need > 0 && used + need > (cap as number)) {
-    return { need, used, cap, pool, problem: { key: tk('Emplacements insuffisants sur {vehicle} : {need} requis, {free} libre(s)'), params: { vehicle: params.vehicle, need, free: Math.max(0, (cap as number) - used) } } };
+    return { need, used, cap, pool, problem: { key: tk('Not enough slots on {vehicle}: {need} needed, {free} free'), params: { vehicle: params.vehicle, need, free: Math.max(0, (cap as number) - used) } } };
   }
   return { need, used, cap, pool, problem: null };
 }
@@ -679,8 +679,8 @@ export function availOutcome(test: { hits?: unknown; availHits?: unknown; baseHo
 /** A duration in hours as a translatable value { t, params } (French source text; render with t(v.t, v.params)). */
 export function durationText(hours: unknown): DurationText {
   const h = Math.max(0, Number(hours) || 0);
-  if (h === 168) return { t: tk('1 semaine') };
-  if (h === 720) return { t: tk('1 mois') };
+  if (h === 168) return { t: tk('1 week') };
+  if (h === 720) return { t: tk('1 month') };
   if (h < 1) return { t: tk('{n} min'), params: { n: Math.max(1, Math.round(h * 60)) } };
   if (h < 24) {
     let H = Math.floor(h);
@@ -691,8 +691,8 @@ export function durationText(hours: unknown): DurationText {
   let D = Math.floor(h / 24);
   let H = Math.round(h - D * 24);
   if (H === 24) (D += 1), (H = 0);
-  if (H) return { t: tk('{d} j {h} h'), params: { d: D, h: H } };
-  return D === 1 ? { t: tk('{n} jour'), params: { n: D } } : { t: tk('{n} jours'), params: { n: D } };
+  if (H) return { t: tk('{d} d {h} h'), params: { d: D, h: H } };
+  return D === 1 ? { t: tk('{n} day'), params: { n: D } } : { t: tk('{n} days'), params: { n: D } };
 }
 
 /**

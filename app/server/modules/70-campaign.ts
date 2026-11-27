@@ -258,14 +258,14 @@ function camp(ctx: ActionContext): Campaign {
 // « Not found » error of each collection (whole sentences: translatable keys, tk marks them for tools/i18n-check.ts).
 const tk = (s: string): string => s;
 const NOT_FOUND: Record<CollectionKey, string> = {
-  acts: tk('Acte introuvable'),
-  quests: tk('Quête introuvable'),
-  sessions: tk('Séance introuvable'),
-  threads: tk('Fil narratif introuvable'),
-  handouts: tk('Document introuvable'),
+  acts: tk('Act not found'),
+  quests: tk('Quest not found'),
+  sessions: tk('Session not found'),
+  threads: tk('Plot thread not found'),
+  handouts: tk('Document not found'),
 };
 function notFound(ctx: ActionContext, key: CollectionKey): never {
-  return ctx.fail(NOT_FOUND[key] || tk('Élément introuvable'));
+  return ctx.fail(NOT_FOUND[key] || tk('Item not found'));
 }
 function find<K extends CollectionKey>(ctx: ActionContext, key: K, id: unknown): CollectionItems[K] {
   const item = (camp(ctx)[key] as CollectionItems[K][]).find((x) => x.id === id);
@@ -293,7 +293,7 @@ function move(ctx: ActionContext, key: CollectionKey, id: unknown, dir: unknown)
 }
 /** Apply a whitelisted patch through the normalizer (keeps id). */
 function patchItem<K extends CollectionKey>(ctx: ActionContext, key: K, item: CollectionItems[K], patch: unknown, allowed: string[]): CollectionItems[K] {
-  if (!patch || typeof patch !== 'object') ctx.fail('Modification invalide');
+  if (!patch || typeof patch !== 'object') ctx.fail('Invalid change');
   const prev = item as unknown as Raw;
   const next: Raw = { ...prev };
   for (const k of allowed) if (Object.prototype.hasOwnProperty.call(patch, k)) next[k] = (patch as Raw)[k];
@@ -391,7 +391,7 @@ const mod: ServerModule = {
     'campaign/deleteAct': {
       handler(ctx: ActionContext, { actId }: ActPayload = {}) {
         const c = camp(ctx);
-        if (c.quests.some((q) => q.actId === actId)) ctx.fail('Cet acte contient encore des quêtes');
+        if (c.quests.some((q) => q.actId === actId)) ctx.fail('This act still contains quests');
         remove(ctx, 'acts', actId);
         if (c.currentActId === actId) c.currentActId = null;
       },
@@ -441,7 +441,7 @@ const mod: ServerModule = {
     },
     'campaign/setQuestStatus': {
       handler(ctx: ActionContext, { questId, status }: QuestPayload = {}) {
-        if (!oneOf(QUEST_STATUS, status)) return ctx.fail('Statut invalide');
+        if (!oneOf(QUEST_STATUS, status)) return ctx.fail('Invalid status');
         find(ctx, 'quests', questId).status = status;
       },
     },
@@ -449,7 +449,7 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, { questId, phaseId, done }: QuestPayload = {}) {
         const q = find(ctx, 'quests', questId);
         const p = q.phases.find((x) => x.id === phaseId);
-        if (!p) return ctx.fail('Phase introuvable');
+        if (!p) return ctx.fail('Phase not found');
         p.done = typeof done === 'boolean' ? done : !p.done;
         if (p.done && q.status === 'upcoming') q.status = 'active';
         return p.done;
@@ -458,7 +458,7 @@ const mod: ServerModule = {
     'campaign/addPhase': {
       handler(ctx: ActionContext, { questId, title, text }: QuestPayload = {}) {
         const q = find(ctx, 'quests', questId);
-        if (q.phases.length >= 50) ctx.fail('Trop de phases');
+        if (q.phases.length >= 50) ctx.fail('Too many phases');
         const p = normPhase({ title, text }, ctx.uid);
         p.id = ctx.uid('ph');
         q.phases.push(p);
@@ -469,8 +469,8 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, { questId, phaseId, patch }: QuestPayload = {}) {
         const q = find(ctx, 'quests', questId);
         const p = q.phases.find((x) => x.id === phaseId);
-        if (!p) return ctx.fail('Phase introuvable');
-        if (!patch || typeof patch !== 'object') ctx.fail('Modification invalide');
+        if (!p) return ctx.fail('Phase not found');
+        if (!patch || typeof patch !== 'object') ctx.fail('Invalid change');
         const next = normPhase({ ...p, ...pick(patch as Raw, ['title', 'text', 'done']) }, ctx.uid);
         Object.assign(p, next, { id: p.id });
       },
@@ -480,14 +480,14 @@ const mod: ServerModule = {
         const q = find(ctx, 'quests', questId);
         const before = q.phases.length;
         q.phases = q.phases.filter((p) => p.id !== phaseId);
-        if (q.phases.length === before) ctx.fail('Phase introuvable');
+        if (q.phases.length === before) ctx.fail('Phase not found');
       },
     },
     'campaign/movePhase': {
       handler(ctx: ActionContext, { questId, phaseId, dir }: QuestPayload = {}) {
         const q = find(ctx, 'quests', questId);
         const i = q.phases.findIndex((p) => p.id === phaseId);
-        if (i < 0) ctx.fail('Phase introuvable');
+        if (i < 0) ctx.fail('Phase not found');
         const j = i + (Number(dir) < 0 ? -1 : 1);
         if (j < 0 || j >= q.phases.length) return;
         [q.phases[i], q.phases[j]] = [q.phases[j], q.phases[i]];
@@ -577,14 +577,14 @@ const mod: ServerModule = {
           if (wasAll) return { notified: [] };
         } else {
           const ids = idList(Array.isArray(to) ? to : [to]).filter((id) => users.includes(id));
-          if (!ids.length) ctx.fail('Choisis au moins un joueur');
+          if (!ids.length) ctx.fail('Choose at least one player');
           if (h.revealedTo === 'all') return { notified: [] };
           const revealed = h.revealedTo;
           recipients = ids.filter((id) => !revealed.includes(id));
           h.revealedTo = [...h.revealedTo, ...recipients];
         }
         h.revealedAt = ctx.now;
-        const i18n = { key: 'Nouveau document : {title}', params: { title: h.title } };
+        const i18n = { key: 'New handout: {title}', params: { title: h.title } };
         if (to === 'all') {
           ctx.log({ kind: 'system', author: 'MJ', i18n });
           ctx.emitTo('players', 'sfx', { id: 'notify' });

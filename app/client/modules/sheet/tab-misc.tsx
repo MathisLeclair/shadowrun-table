@@ -27,7 +27,7 @@ const drainRollLabel = (k: string): string => `Résistance au drain (VOL + ${k})
 const spellRollLabel = (name: string): string => `Sort — ${name}`; // i18n-ignore
 const hasSkill = (actor: Actor, id: string): boolean => (actor.skills || []).some((s) => s.id === id && s.rating > 0);
 // Augmentation grade ids shown as stored in French ('alpha', 'used'…), translated in English.
-const GRADE_LABELS: Record<string, string> = { alpha: tk('grade::alpha'), beta: tk('grade::beta'), delta: tk('grade::delta'), used: tk('grade::used'), gamma: tk('grade::gamma'), omega: tk('grade::omega') };
+const GRADE_LABELS: Record<string, string> = { alpha: tk('grade::alphaware'), beta: tk('grade::betaware'), delta: tk('grade::deltaware'), used: tk('grade::used'), gamma: tk('grade::gammaware'), omega: tk('grade::omegaware') };
 const gradeLabel = (g: string): string => (GRADE_LABELS[g] ? t(GRADE_LABELS[g]) : g);
 
 // ---------------------------------------------------------------------------
@@ -41,18 +41,18 @@ export function MagicTab({ s }: { s: SheetCtx }) {
   const pp = powers.reduce((sum, p) => sum + (Number(p.pp) || 0), 0);
   return <div className="sh-magic">
     <div className="sh-derived">
-      <RollStat label={t('Magie')} value={mag} accent="magenta" />
-      <RollStat label={t('Init. astrale')} value={`${d.astralInitiative.base} + 2D6`} book={ruleRef('initiative')} />
-      {d.limits.astral ? <LimitStat s={s} name="astral" label={t('Limite astrale')} /> : null}{powers.length > 0 && <RollStat label={t('Points de pouvoir')} value={`${fmtNum(pp)} / ${mag}`} accent={pp > mag ? 'magenta' : 'cyan'} title={t('PP dépensés / Magie')} book={ruleRef('powerPoints')} />}{hasSkill(actor, 'assensing') && <RollStat label={t('Observation astrale')} value={attrShort('INT')} book={skillRef('assensing')} onClick={() => s.roll({ skillId: 'assensing' })} />}{hasSkill(actor, 'spellcasting') && <RollStat label={t('Lancer un sort')} value={attrShort('MAG')} book={ruleRef('spellcasting')} onClick={() => s.roll({ skillId: 'spellcasting', label: tk('Lancement de sort'), limit: null })} />}{hasSkill(actor, 'counterspelling') && <RollStat label={t('Contresort')} value={attrShort('MAG')} book={skillRef('counterspelling')} onClick={() => s.roll({ skillId: 'counterspelling' })} />}{hasSkill(actor, 'summoning') && <RollStat label={t('Invocation')} value={attrShort('MAG')} book={skillRef('summoning')} onClick={() => s.roll({ skillId: 'summoning', limit: null })} />}
+      <RollStat label={t('Magic')} value={mag} accent="magenta" />
+      <RollStat label={t('Astral Init.')} value={`${d.astralInitiative.base} + 2D6`} book={ruleRef('initiative')} />
+      {d.limits.astral ? <LimitStat s={s} name="astral" label={t('Astral Limit')} /> : null}{powers.length > 0 && <RollStat label={t('Power Points')} value={`${fmtNum(pp)} / ${mag}`} accent={pp > mag ? 'magenta' : 'cyan'} title={t('PP spent / Magic')} book={ruleRef('powerPoints')} />}{hasSkill(actor, 'assensing') && <RollStat label={t('Assensing')} value={attrShort('INT')} book={skillRef('assensing')} onClick={() => s.roll({ skillId: 'assensing' })} />}{hasSkill(actor, 'spellcasting') && <RollStat label={t('Cast a spell')} value={attrShort('MAG')} book={ruleRef('spellcasting')} onClick={() => s.roll({ skillId: 'spellcasting', label: tk('Spellcasting'), limit: null })} />}{hasSkill(actor, 'counterspelling') && <RollStat label={t('Counterspelling')} value={attrShort('MAG')} book={skillRef('counterspelling')} onClick={() => s.roll({ skillId: 'counterspelling' })} />}{hasSkill(actor, 'summoning') && <RollStat label={t('Summoning')} value={attrShort('MAG')} book={skillRef('summoning')} onClick={() => s.roll({ skillId: 'summoning', limit: null })} />}
     </div>
     {(spells.length > 0 || hasSkill(actor, 'spellcasting') || hasSkill(actor, 'summoning')) && <div className="row wrap">
-      <span className="muted small">{t('Résister au drain :')}</span>
+      <span className="muted small">{t('Resist Drain:')}</span>
       <RuleRef rule="drain" />
       {['LOG', 'CHA', 'INT'].map((k) => <Button small key={k} onClick={() => s.roll({ attr: 'WIL', attr2: k, label: drainRollLabel(k), limit: null, applyWounds: false, test: 'drainResist' })}>
         {attrShort('WIL')} + {attrShort(k)}
       </Button>)}
     </div>}
-    <h4 className="section-title">{t('Pouvoirs d’adepte')}{' '}<RuleRef rule="adeptPowers" /></h4>
+    <h4 className="section-title">{t('Adept Powers')}{' '}<RuleRef rule="adeptPowers" /></h4>
     {edit
       ? <ListEditor actor={actor} list="powers" />
       : powers.length
@@ -63,14 +63,14 @@ export function MagicTab({ s }: { s: SheetCtx }) {
                 <span><b>{p.name}{p.level ? ` ${p.level}` : ''}</b>{' '}<ItemRef item={p} /></span>
                 <span className="badge badge-magenta">{t('{v} PP', { v: fmtNum(p.pp) })}</span>
               </div>
-              {p.choice ? <div className="faint small">{t('Choix : {choice}', { choice: p.choice })}</div> : null}
+              {p.choice ? <div className="faint small">{t('Choice: {choice}', { choice: p.choice })}</div> : null}
               <ItemEffects mods={s.mods} list="powers" itemId={p.id} />
               {p.notes && <div className="muted small">{p.notes}</div>}
             </div>
           )}
         </div>
-        : <div className="muted small">{t('Aucun pouvoir.')}</div>}
-    <h4 className="section-title">{t('Sorts')}</h4>
+        : <div className="muted small">{t('No powers.')}</div>}
+    <h4 className="section-title">{t('Spells')}</h4>
     {edit
       ? <ListEditor actor={actor} list="spells" />
       : spells.length
@@ -78,11 +78,11 @@ export function MagicTab({ s }: { s: SheetCtx }) {
           <table className="sr">
             <thead>
               <tr>
-                <th>{t('Sort')}</th>
-                <th>{t('Catégorie')}</th>
+                <th>{t('Spell')}</th>
+                <th>{t('Category')}</th>
                 <th>{t('Type')}</th>
-                <th>{t('Portée')}</th>
-                <th>{t('Durée')}</th>
+                <th>{t('Range')}</th>
+                <th>{t('Duration')}</th>
                 <th>{t('Drain')}</th>
                 <th />
               </tr>
@@ -97,8 +97,8 @@ export function MagicTab({ s }: { s: SheetCtx }) {
                 <td>{sp.duration}</td>
                 <td className="mono">{sp.drain}</td>
                 <td>
-                  <Button small variant="accent" onClick={() => s.roll({ skillId: 'spellcasting', label: spellRollLabel(sp.name), limit: null })} title={t('Lancement de sorts + Magie (limite = Puissance, à régler)')}>
-                    {t('sort::Lancer')}
+                  <Button small variant="accent" onClick={() => s.roll({ skillId: 'spellcasting', label: spellRollLabel(sp.name), limit: null })} title={t('Spellcasting + Magic (limit = Force, set it yourself)')}>
+                    {t('spell::Cast')}
                   </Button>
                 </td>
               </tr>
@@ -106,7 +106,7 @@ export function MagicTab({ s }: { s: SheetCtx }) {
             </tbody>
           </table>
         </div>
-        : <div className="muted small">{t('Aucun sort.')}</div>}
+        : <div className="muted small">{t('No spells.')}</div>}
   </div>;
 }
 
@@ -121,10 +121,10 @@ export function MatrixTab({ s }: { s: SheetCtx }) {
   if (!m) {
     return <>
       <div className="empty">
-        {t('Aucun appareil matriciel.')}
+        {t('No Matrix device.')}
         {edit && <div style={{ marginTop: '10px' }}>
         <Button variant="primary" onClick={() => s.update({ matrix: { device: 'Commlink', rating: 3, attack: 0, sleaze: 0, dataProcessing: 3, firewall: 3, programs: [] } })}>
-          {t('Ajouter un commlink / deck')}
+          {t('Add a commlink / deck')}
         </Button>
       </div>}
       </div>
@@ -141,11 +141,11 @@ export function MatrixTab({ s }: { s: SheetCtx }) {
   };
   // `label` is the French roll label stored in the log (each viewer translates it).
   const actions = [
-    { label: tk('Piratage'), skillId: 'hacking', limit: m.sleaze, matrixLimit: 'sleaze', sub: tk('Hacking + LOG [Corruption]') },
-    { label: tk('Force brute'), skillId: 'cybercombat', limit: m.attack, matrixLimit: 'attack', sub: tk('Cybercombat + LOG [Attaque]') },
-    { label: tk('Informatique'), skillId: 'computer', limit: m.dataProcessing, matrixLimit: 'dataProcessing', sub: tk('Informatique + LOG [Traitement]') },
-    { label: tk('Guerre électronique'), skillId: 'electronic_warfare', limit: m.dataProcessing, matrixLimit: 'dataProcessing', sub: tk('GE + LOG [Traitement]') },
-    { label: tk('Software'), skillId: 'software', limit: m.dataProcessing, matrixLimit: 'dataProcessing', sub: tk('Software + LOG [Traitement]') },
+    { label: tk('Cracking'), skillId: 'hacking', limit: m.sleaze, matrixLimit: 'sleaze', sub: tk('Hacking + LOG [Sleaze]') },
+    { label: tk('Brute Force'), skillId: 'cybercombat', limit: m.attack, matrixLimit: 'attack', sub: tk('Cybercombat + LOG [Attack]') },
+    { label: tk('Computer'), skillId: 'computer', limit: m.dataProcessing, matrixLimit: 'dataProcessing', sub: tk('Computer + LOG [Data Processing]') },
+    { label: tk('Electronic Warfare'), skillId: 'electronic_warfare', limit: m.dataProcessing, matrixLimit: 'dataProcessing', sub: tk('EW + LOG [Data Processing]') },
+    { label: tk('Software'), skillId: 'software', limit: m.dataProcessing, matrixLimit: 'dataProcessing', sub: tk('Software + LOG [Data Processing]') },
   ].filter((a) => SKILL_BY_ID[a.skillId] && (hasSkill(actor, a.skillId) || SKILL_BY_ID[a.skillId].def));
   const mv = m as unknown as Record<string, number | undefined>;
   const num = (k: keyof ActorMatrix, label: string) => <div className="field">
@@ -156,48 +156,48 @@ export function MatrixTab({ s }: { s: SheetCtx }) {
     {edit
       ? <div className="row wrap sh-edit-row">
         <label className="field grow">
-          <span className="field-label">{t('Appareil')}</span>
+          <span className="field-label">{t('Device')}</span>
           <TextInput value={m.device || ''} onChange={(v) => setM({ device: v })} />
         </label>
-        {num('rating', t('Indice'))}{num('attack', t('Attaque'))}{num('sleaze', t('Corruption'))}{num('dataProcessing', t('Traitement'))}{num('firewall', t('Firewall'))}
-        <Button small variant="danger" onClick={() => s.update({ matrix: null })}>{t('Retirer l’appareil')}</Button>
+        {num('rating', t('Rating'))}{num('attack', t('Attack'))}{num('sleaze', t('Sleaze'))}{num('dataProcessing', t('Data Processing'))}{num('firewall', t('Firewall'))}
+        <Button small variant="danger" onClick={() => s.update({ matrix: null })}>{t('Remove the device')}</Button>
       </div>
       : <div className="sh-deck">
         <div className="sh-deck-name">
-          {m.device || t('Appareil')}{' '}
-          <span className="badge badge-cyan">{t('Indice {n}', { n: m.rating || 0 })}</span>
-          <Button small variant="primary" onClick={() => openMatrix(actor.id)} title={t('Cockpit matriciel : connexion, programmes, agent, actions')}>
-            {t('Ouvrir la Matrice')}
+          {m.device || t('Device')}{' '}
+          <span className="badge badge-cyan">{t('Rating {n}', { n: m.rating || 0 })}</span>
+          <Button small variant="primary" onClick={() => openMatrix(actor.id)} title={t('Matrix cockpit: connection, programs, agent, actions')}>
+            {t('Open the Matrix')}
           </Button>
         </div>
         <div className="sh-asdf">
-          {([[tk('Attaque'), m.attack], [tk('Corruption'), m.sleaze], [tk('Traitement'), m.dataProcessing], [tk('Firewall'), m.firewall]] as const).map(([l, v]) => <div className="sh-asdf-cell" key={l}><b>{v || 0}</b><span>{t(l)}</span></div>)}
+          {([[tk('Attack'), m.attack], [tk('Sleaze'), m.sleaze], [tk('Data Processing'), m.dataProcessing], [tk('Firewall'), m.firewall]] as const).map(([l, v]) => <div className="sh-asdf-cell" key={l}><b>{v || 0}</b><span>{t(l)}</span></div>)}
         </div>
       </div>}
     <div className="sh-derived">
-      <RollStat label={t('Init. RA')} value={d.initiative.text} book={ruleRef('matrixInitiative')} />
-      <RollStat label={t('Init. RV froide')} value={`${dm.matrixInitiative.cold.base} + ${dm.matrixInitiative.cold.dice}D6`} book={ruleRef('matrixInitiative')} title={sourcesTitle(dm.sources.matrixInitiative)} />
-      <RollStat label={t('Init. RV chaude')} value={`${dm.matrixInitiative.hot.base} + ${dm.matrixInitiative.hot.dice}D6`} accent="magenta" book={ruleRef('matrixInitiative')} title={sourcesTitle(dm.sources.matrixInitiative)} />
+      <RollStat label={t('AR Init.')} value={d.initiative.text} book={ruleRef('matrixInitiative')} />
+      <RollStat label={t('Cold-sim VR Init.')} value={`${dm.matrixInitiative.cold.base} + ${dm.matrixInitiative.cold.dice}D6`} book={ruleRef('matrixInitiative')} title={sourcesTitle(dm.sources.matrixInitiative)} />
+      <RollStat label={t('Hot-sim VR Init.')} value={`${dm.matrixInitiative.hot.base} + ${dm.matrixInitiative.hot.dice}D6`} accent="magenta" book={ruleRef('matrixInitiative')} title={sourcesTitle(dm.sources.matrixInitiative)} />
       {actions.map((a) => <RollStat key={a.skillId} label={t(a.label)} value={a.limit ?? '—'} sub={t(a.sub)} book={skillRef(a.skillId)} onClick={() => s.roll({ skillId: a.skillId, label: a.label, ...(a.limit ? { matrixLimit: a.matrixLimit } : {}) })} />)}
-      <RollStat label={t('Défense matricielle')} value={attr(actor, 'INT') + (m.firewall || 0)} sub={t('{attr} + Firewall', { attr: attrShort('INT') })} onClick={() => s.roll({ attr: 'INT', label: tk('Défense matricielle'), limit: null, bonus: [{ label: 'Firewall', value: m.firewall || 0 }] })} />
-      <RollStat label={t('Résister (dommages)')} value={(m.rating || 0) + (m.firewall || 0)} sub={t('Indice + Firewall')} book={ruleRef('matrixDamage')} onClick={() => s.roll({ pool: (m.rating || 0) + (m.firewall || 0), label: tk('Résistance aux dommages matriciels'), limit: null, applyWounds: false })} />
-      {(m.attack || m.sleaze) ? <RollStat label={t('Biofeedback')} value={attr(actor, 'WIL') + (m.firewall || 0)} sub={t('{attr} + Firewall', { attr: attrShort('WIL') })} book={ruleRef('biofeedback')} onClick={() => s.roll({ attr: 'WIL', label: tk('Résistance au biofeedback'), limit: null, applyWounds: false, test: 'biofeedback', bonus: [{ label: 'Firewall', value: m.firewall || 0 }] })} /> : null}
+      <RollStat label={t('Matrix Defense')} value={attr(actor, 'INT') + (m.firewall || 0)} sub={t('{attr} + Firewall', { attr: attrShort('INT') })} onClick={() => s.roll({ attr: 'INT', label: tk('Matrix Defense'), limit: null, bonus: [{ label: 'Firewall', value: m.firewall || 0 }] })} />
+      <RollStat label={t('Resist (damage)')} value={(m.rating || 0) + (m.firewall || 0)} sub={t('Rating + Firewall')} book={ruleRef('matrixDamage')} onClick={() => s.roll({ pool: (m.rating || 0) + (m.firewall || 0), label: tk('Matrix Damage Resistance'), limit: null, applyWounds: false })} />
+      {(m.attack || m.sleaze) ? <RollStat label={t('Biofeedback')} value={attr(actor, 'WIL') + (m.firewall || 0)} sub={t('{attr} + Firewall', { attr: attrShort('WIL') })} book={ruleRef('biofeedback')} onClick={() => s.roll({ attr: 'WIL', label: tk('Biofeedback Resistance'), limit: null, applyWounds: false, test: 'biofeedback', bonus: [{ label: 'Firewall', value: m.firewall || 0 }] })} /> : null}
     </div>
-    <h4 className="section-title">{t('Programmes ({n})', { n: programs.length })}</h4>
+    <h4 className="section-title">{t('Programs ({n})', { n: programs.length })}</h4>
     <div className="sh-chips">
       {programs.map((p) => <span className="sh-chip" key={p}>
         {p}
         <ProgramRef name={p} />
-        {edit ? <button type="button" className="sh-chip-x" title={t('Retirer')} onClick={() => setM({ programs: programs.filter((x) => x !== p) })}>
+        {edit ? <button type="button" className="sh-chip-x" title={t('Remove')} onClick={() => setM({ programs: programs.filter((x) => x !== p) })}>
           ✕
         </button> : null}
       </span>)}
-      {!programs.length && <span className="muted small">{t('Aucun programme.')}</span>}
+      {!programs.length && <span className="muted small">{t('No programs.')}</span>}
     </div>
     {edit && <div className="row wrap" style={{ marginTop: '8px' }}>
-      <TextInput live value={newProg} placeholder={t('Nom du programme')} onChange={setNewProg} onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && addProg(e.currentTarget.value)} style={{ maxWidth: '220px' }} />
-      <Button small onClick={() => addProg(newProg)}>{t('Ajouter')}</Button>
-      <Button small variant="primary" onClick={() => setPicker(true)}>{t('Depuis le catalogue')}</Button>
+      <TextInput live value={newProg} placeholder={t('Program name')} onChange={setNewProg} onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && addProg(e.currentTarget.value)} style={{ maxWidth: '220px' }} />
+      <Button small onClick={() => addProg(newProg)}>{t('Add')}</Button>
+      <Button small variant="primary" onClick={() => setPicker(true)}>{t('From the catalog')}</Button>
     </div>}
     {picker && <CatalogPicker actor={actor} list="gear" catalogs={['programs']} onClose={() => setPicker(false)} onPick={(conv, e) => addProg(itemName(e))} />}
     <ComplexForms actor={actor} />
@@ -209,10 +209,10 @@ function ComplexForms({ actor }: { actor: Actor }) {
   const forms = actor.complexForms || [];
   if (!forms.length) return null;
   return <>
-    <h4 className="section-title">{t('Formes complexes')}{' '}<RuleRef rule="complexForms" /></h4>
+    <h4 className="section-title">{t('Complex Forms')}{' '}<RuleRef rule="complexForms" /></h4>
     <div className="sh-table-wrap">
       <table className="sr">
-        <thead><tr><th>{t('Forme complexe')}</th><th>{t('Cible')}</th><th>{t('Durée')}</th><th>{t('Fading')}</th></tr></thead>
+        <thead><tr><th>{t('Complex Form')}</th><th>{t('Target')}</th><th>{t('Duration')}</th><th>{t('Fading')}</th></tr></thead>
         <tbody>
           {forms.map((f) => <tr key={f.id}>
         <td><b>{f.name}</b>{' '}<ItemRef item={f} />{f.notes ? <div className="faint small">{f.notes}</div> : null}</td>
@@ -232,7 +232,7 @@ function ComplexForms({ actor }: { actor: Actor }) {
 /** Where an item is when it is not « Sur soi » (bag, vehicle, safehouse — tab « Inventaire »). */
 function PlaceBadge({ actor, it }: { actor: Actor; it: AnyItem }) {
   const c = containerOf(actor, it.location);
-  return c ? <>{' '}<span className="badge" title={t('Rangé : ne compte pas tant qu’il n’est pas sur soi')}>{c.name}</span></> : null;
+  return c ? <>{' '}<span className="badge" title={t('Stored: does not count until it is carried')}>{c.name}</span></> : null;
 }
 
 export function GearTab({ s }: { s: SheetCtx }) {
@@ -245,21 +245,21 @@ export function GearTab({ s }: { s: SheetCtx }) {
   const essUsed = augs.reduce((sum, a) => sum + (Number(a.essence) || 0), 0);
   if (edit) {
     return <div className="sh-gear">
-      <h4 className="section-title">{t('Armures')}</h4>
+      <h4 className="section-title">{t('pl::Armor')}</h4>
       <ListEditor actor={actor} list="armor" />
       <h4 className="section-title">{t('Augmentations')}</h4>
       <ListEditor actor={actor} list="augmentations" />
-      <h4 className="section-title">{t('Équipement')}</h4>
+      <h4 className="section-title">{t('Gear')}</h4>
       <ListEditor actor={actor} list="gear" />
-      <h4 className="section-title">{t('Véhicules & drones')}</h4>
+      <h4 className="section-title">{t('Vehicles & drones')}</h4>
       <ListEditor actor={actor} list="vehicles" />
     </div>;
   }
   return <div className="sh-gear">
     <div className="sh-sec-head">
-      <h4 className="section-title">{t('Armures')}</h4>
-      <span className="badge badge-cyan" title={sourcesTitle(dm.sources.armor, t('Armures portées : {n}', { n: d.armor }))}>
-        {t('Armure totale {n}', { n: dm.armor })}
+      <h4 className="section-title">{t('pl::Armor')}</h4>
+      <span className="badge badge-cyan" title={sourcesTitle(dm.sources.armor, t('Worn armor: {n}', { n: d.armor }))}>
+        {t('Total armor {n}', { n: dm.armor })}
       </span>
     </div>
     {armor.length
@@ -269,8 +269,8 @@ export function GearTab({ s }: { s: SheetCtx }) {
           const cap = armorCapacityText(a);
           return <div className={'sh-list-row' + (a.equipped ? ' on' : '')} key={a.id}>
             {own
-              ? <Toggle value={a.equipped} onChange={(v) => upItem('armor', a.id, { equipped: v })} title={t('Équiper / retirer')} />
-              : <span className={'badge ' + (a.equipped ? 'badge-cyan' : '')}>{a.equipped ? t('portée') : t('rangée')}</span>}
+              ? <Toggle value={a.equipped} onChange={(v) => upItem('armor', a.id, { equipped: v })} title={t('Equip / unequip')} />
+              : <span className={'badge ' + (a.equipped ? 'badge-cyan' : '')}>{a.equipped ? t('worn') : t('stowed')}</span>}
             <div className="grow">
               <b title={itemTitle(a)}>{itemLabel(a)}</b>
               {' '}
@@ -278,13 +278,13 @@ export function GearTab({ s }: { s: SheetCtx }) {
               <PlaceBadge actor={actor} it={a} />
               {cap ? <>{' '}<span className={'badge' + (am.used > am.total ? ' badge-red' : '')}>{cap}</span></> : null}{(a.mods || []).length > 0 && <div><SubChips sub="mods" items={a.mods} /></div>}{a.equipped ? <ItemEffects mods={s.mods} list="armor" itemId={a.id} /> : <ItemEffects mods={collectModifiers({ armor: [{ ...a, equipped: true }] }, s.lookup)} list="armor" itemId={a.id} />}{a.notes ? <div className="faint small">{a.notes}</div> : null}
             </div>
-            <span className="mono sh-big" title={am.bonus ? t('{base} + {bonus} (modifications) = {total}, compté dans l’armure totale', { base: a.rating, bonus: am.bonus, total: (Number(a.rating) || 0) + am.bonus }) : ''}>
+            <span className="mono sh-big" title={am.bonus ? t('{base} + {bonus} (modifications) = {total}, counted in the total armor', { base: a.rating, bonus: am.bonus, total: (Number(a.rating) || 0) + am.bonus }) : ''}>
               {a.stack ? '+' : ''}{a.rating}{am.bonus ? <small className="cyan"> +{am.bonus}</small> : null}
             </span>
           </div>;
         })}
       </div>
-      : <div className="muted small">{t('Aucune armure.')}</div>}
+      : <div className="muted small">{t('No armor.')}</div>}
     <div className="sh-sec-head">
       <h4 className="section-title">{t('Augmentations')}</h4>
       <span className="badge">
@@ -298,9 +298,9 @@ export function GearTab({ s }: { s: SheetCtx }) {
             <span className={'badge ' + (a.kind === 'bioware' ? 'badge-green' : 'badge-cyan')}>{a.kind === 'bioware' ? 'Bio' : 'Cyber'}</span>
             <div className="grow">
               <b title={itemTitle(a)}>{itemLabel(a)}</b>
-              {a.rating ? ` (${t('indice {n}', { n: a.rating })})` : ''}{' '}
+              {a.rating ? ` (${t('rating {n}', { n: a.rating })})` : ''}{' '}
               <ItemRef item={a} />
-              {a.grade && a.grade !== 'standard' ? <>{' '}<span className="badge">{gradeLabel(a.grade)}</span></> : null}{a.choice ? <>{' '}<span className="faint small">{t('Choix : {choice}', { choice: a.choice })}</span></> : null}
+              {a.grade && a.grade !== 'standard' ? <>{' '}<span className="badge">{gradeLabel(a.grade)}</span></> : null}{a.choice ? <>{' '}<span className="faint small">{t('Choice: {choice}', { choice: a.choice })}</span></> : null}
               <ItemEffects mods={s.mods} list="augmentations" itemId={a.id} />
               {a.notes ? <div className="faint small">{a.notes}</div> : null}
             </div>
@@ -308,16 +308,16 @@ export function GearTab({ s }: { s: SheetCtx }) {
           </div>
         )}
       </div>
-      : <div className="muted small">{t('Aucune augmentation.')}</div>}
-    <h4 className="section-title">{t('Équipement')}</h4>
+      : <div className="muted small">{t('No augmentations.')}</div>}
+    <h4 className="section-title">{t('Gear')}</h4>
     {gear.length
       ? <div className="sh-list">
         {gear.map(
           (g) => <div className={'sh-list-row' + (g.active ? ' on' : '')} key={g.id}>
-            {gearHasEffects(g, s.lookup) ? (own ? <Toggle value={!!g.active} onChange={(v) => upItem('gear', g.id, { active: v })} title={t('Porté / activé : ses effets comptent dans les jets')} /> : <span className={'badge ' + (g.active ? 'badge-cyan' : '')}>{g.active ? t('actif') : t('inactif')}</span>) : null}
+            {gearHasEffects(g, s.lookup) ? (own ? <Toggle value={!!g.active} onChange={(v) => upItem('gear', g.id, { active: v })} title={t('Worn / switched on: its effects count in rolls')} /> : <span className={'badge ' + (g.active ? 'badge-cyan' : '')}>{g.active ? t('active') : t('inactive')}</span>) : null}
             <div className="grow">
               <b title={itemTitle(g)}>{itemLabel(g)}</b>
-              {g.rating ? ` (${t('indice {n}', { n: g.rating })})` : ''}{' '}
+              {g.rating ? ` (${t('rating {n}', { n: g.rating })})` : ''}{' '}
               <ItemRef item={g} />
               {' '}
               <span className="faint small">{categoryLabel(g)}</span>
@@ -333,15 +333,15 @@ export function GearTab({ s }: { s: SheetCtx }) {
           </div>
         )}
       </div>
-      : <div className="muted small">{t('Aucun équipement.')}</div>}
+      : <div className="muted small">{t('No gear.')}</div>}
     {vehicles.length > 0 && <>
-      <h4 className="section-title">{t('Véhicules & drones')}</h4>
+      <h4 className="section-title">{t('Vehicles & drones')}</h4>
       <div className="sh-cards">
         {vehicles.map(
         (v) => <div className="sh-card" key={v.id}>
           <span><b title={itemTitle(v)}>{itemLabel(v)}</b>{' '}<ItemRef item={v} /></span>
           <div className="sh-vstats">
-            {([[tk('Maniab.'), v.handling], [tk('Vitesse'), v.speed], [tk('Accél.'), v.accel], [tk('Struct.'), v.body], [tk('Blind.'), v.armor], [tk('Autopilote'), v.pilot], [tk('Senseurs'), v.sensor], [tk('Places'), v.seats]] as const).map(([l, x]) => <span key={l}><span className="faint">{t(l)}</span>{' '}<b>{x ?? '—'}</b></span>)}
+            {([[tk('Handl.'), v.handling], [tk('Speed'), v.speed], [tk('Accel.'), v.accel], [tk('vehicle-abbr::Body'), v.body], [tk('vehicle-abbr::Armor'), v.armor], [tk('Pilot'), v.pilot], [tk('Sensor'), v.sensor], [tk('Seats'), v.seats]] as const).map(([l, x]) => <span key={l}><span className="faint">{t(l)}</span>{' '}<b>{x ?? '—'}</b></span>)}
           </div>
           {(v.mods || []).length > 0 && <><div className="faint small">{vehicleSlotsText(v)}</div><SubChips sub="mods" items={v.mods} /></>}{v.notes && <div className="faint small">{v.notes}</div>}
         </div>
@@ -354,22 +354,22 @@ export function GearTab({ s }: { s: SheetCtx }) {
 /** Lifestyles (« Modes de vie »): base, monthly cost with its breakdown, options (garage, DocWagon contract, security…). */
 function LifestylesView({ game, actor, showPaid }: { game: GameView; actor: Actor; showPaid: boolean }) {
   const list = actor.lifestyles || [];
-  if (!list.length) return <div className="muted small">{t('Aucun mode de vie.')}</div>;
+  if (!list.length) return <div className="muted small">{t('No lifestyle.')}</div>;
   return <div className="sh-cards">
     {list.map((l) => <div className={'sh-card sh-lifestyle' + (l.primary ? ' primary' : '')} key={l.id}>
       <div className="row spread wrap sh-lifestyle-head">
         <span className="sh-lifestyle-name"><b>{l.name || lifestyleBaseLabel(l.base)}</b>{' '}<ItemRef item={l} /></span>
         <span className="row gap-s">
-          {l.primary ? <span className="badge badge-amber">{t('principal')}</span> : null}
+          {l.primary ? <span className="badge badge-amber">{t('primary')}</span> : null}
           <span className="badge badge-cyan">{lifestyleBaseLabel(l.base)}</span>
         </span>
       </div>
       <div className="row wrap gap-s">
-        <span className="mono">{t('{cost}/mois', { cost: fmtNuyen(l.monthlyCost || 0) })}</span>
-        {(l.qualities || []).length > 0 && <span className="faint small" title={t('Coût de base, options en % du coût de base, options à prix fixe')}>({lifestyleBreakdown(l)})</span>}{showPaid ? <span className="muted small">· {t('{n} mois payé(s)', { n: l.monthsPaid || 0 })}</span> : null}
+        <span className="mono">{t('{cost}/month', { cost: fmtNuyen(l.monthlyCost || 0) })}</span>
+        {(l.qualities || []).length > 0 && <span className="faint small" title={t('Base cost, options as % of the base cost, flat-price options')}>({lifestyleBreakdown(l)})</span>}{showPaid ? <span className="muted small">· {t('{n} month(s) paid', { n: l.monthsPaid || 0 })}</span> : null}
       </div>
       {l.points && <div className="faint small">
-      {t('Confort {c} · Sécurité {s} · Quartier {n}', { c: l.points.comforts ?? '—', s: l.points.security ?? '—', n: l.points.neighborhood ?? '—' })}
+      {t('Comforts {c} · Security {s} · Neighborhood {n}', { c: l.points.comforts ?? '—', s: l.points.security ?? '—', n: l.points.neighborhood ?? '—' })}
     </div>}
       <SubChips sub="qualities" items={l.qualities} />
       {l.notes && <div className="faint small">{l.notes}</div>}{showPaid && game ? <div><HomeButton game={game} actor={actor} lifestyle={l} canMove={showPaid} /></div> : null}
@@ -386,19 +386,19 @@ export function ContactsTab({ s }: { s: SheetCtx }) {
     return <div>
       <h4 className="section-title">{t('Contacts')}</h4>
       <ListEditor actor={actor} list="contacts" />
-      <h4 className="section-title">{t('SIN & licences')}</h4>
+      <h4 className="section-title">{t('SINs & licenses')}</h4>
       <ListEditor actor={actor} list="sins" />
-      <h4 className="section-title">{t('Modes de vie')}</h4>
+      <h4 className="section-title">{t('Lifestyles')}</h4>
       <ListEditor actor={actor} list="lifestyles" />
     </div>;
   }
   return <div>
     <h4 className="section-title">{t('Contacts')}{' '}<RuleRef rule="contacts" /></h4>
     <ContactCards game={s.game} actor={actor} gm={gm} own={own} />
-    <h4 className="section-title">{t('SIN & licences')}{' '}<RuleRef rule="fakeSin" /></h4>
+    <h4 className="section-title">{t('SINs & licenses')}{' '}<RuleRef rule="fakeSin" /></h4>
     <SinCards actor={actor} gm={gm} own={own} />
     {(actor.lifestyles || []).length > 0 && <>
-      <h4 className="section-title">{t('Modes de vie')}{' '}<RuleRef rule="lifestyles" /></h4>
+      <h4 className="section-title">{t('Lifestyles')}{' '}<RuleRef rule="lifestyles" /></h4>
       <LifestylesView game={s.game} actor={actor} showPaid={gm || own} />
     </>}
   </div>;
@@ -426,7 +426,7 @@ export function QualitiesTab({ s }: { s: SheetCtx }) {
               <b>{q.name}</b>
               {' '}
               <ItemRef item={q} />
-              {q.choice ? <>{' '}<span className="faint small">{t('Choix : {choice}', { choice: q.choice })}</span></> : null}
+              {q.choice ? <>{' '}<span className="faint small">{t('Choice: {choice}', { choice: q.choice })}</span></> : null}
               <ItemEffects mods={mods} list="qualities" itemId={q.id} />
               {q.notes ? <div className="faint small">{q.notes}</div> : null}
             </div>
@@ -434,9 +434,9 @@ export function QualitiesTab({ s }: { s: SheetCtx }) {
           </div>
         )}
       </div>
-      : <div className="muted small">{t('Aucune.')}</div>}
+      : <div className="muted small">{t('None.')}</div>}
   </section>;
-  return <div className="grid-2">{col(t('Qualités positives'), pos, 'green')}{col(t('Qualités négatives'), neg, 'red')}</div>;
+  return <div className="grid-2">{col(t('Positive Qualities'), pos, 'green')}{col(t('Negative Qualities'), neg, 'red')}</div>;
 }
 
 // ---------------------------------------------------------------------------
@@ -455,25 +455,25 @@ function MdField({ title, value, canEdit, onSave, placeholder, accent }: MdField
   return <section className={'sh-md' + (accent ? ' sh-md-' + accent : '')}>
     <div className="sh-sec-head">
       <h4 className="section-title">{title}</h4>
-      {canEdit && <Button small variant="ghost" onClick={() => setEditing(!editing)}>{editing ? t('Aperçu') : t('Modifier')}</Button>}
+      {canEdit && <Button small variant="ghost" onClick={() => setEditing(!editing)}>{editing ? t('Preview') : t('Edit')}</Button>}
     </div>
     {editing
       ? <>
         <TextInput multiline rows={10} value={value || ''} placeholder={placeholder} onChange={onSave} />
-        <div className="faint small">{t('Markdown : **gras**, *italique*, listes « - », titres « ## ». Enregistré en quittant le champ.')}</div>
+        <div className="faint small">{t('Markdown: **bold**, *italic*, “- ” lists, “## ” headings. Saved when you leave the field.')}</div>
       </>
       : value
         ? <Markdown text={value} />
-        : <div className="muted small">{canEdit ? t('Vide — clique « Modifier ».') : t('Rien pour l’instant.')}</div>}
+        : <div className="muted small">{canEdit ? t('Empty — click “Edit”.') : t('Nothing yet.')}</div>}
   </section>;
 }
 
 export function NotesTab({ s }: { s: SheetCtx }) {
   const { actor, own, gm } = s;
   return <div className="col gap-l">
-    {(own || actor.notes !== undefined) && <MdField title={gm ? t('Notes (joueur + MJ)') : t('Mes notes')} value={actor.notes} canEdit={own} onSave={(v) => s.update({ notes: v })} placeholder={t('Pistes, noms, dettes, plans…')} />}
-    <MdField title={t('Biographie')} value={actor.bio} canEdit={own} onSave={(v) => s.update({ bio: v })} placeholder={t('Passé, apparence, motivations…')} />
-    {gm && <MdField title={t('Notes du MJ (secrètes)')} accent="magenta" value={actor.gmNotes} canEdit={true} onSave={(v) => s.update({ gmNotes: v })} placeholder={t('Secrets, accroches, faiblesses à exploiter…')} />}
+    {(own || actor.notes !== undefined) && <MdField title={gm ? t('Notes (player + GM)') : t('My notes')} value={actor.notes} canEdit={own} onSave={(v) => s.update({ notes: v })} placeholder={t('Leads, names, debts, plans…')} />}
+    <MdField title={t('Biography')} value={actor.bio} canEdit={own} onSave={(v) => s.update({ bio: v })} placeholder={t('Background, appearance, motivations…')} />
+    {gm && <MdField title={t('GM notes (secret)')} accent="magenta" value={actor.gmNotes} canEdit={true} onSave={(v) => s.update({ gmNotes: v })} placeholder={t('Secrets, hooks, weaknesses to exploit…')} />}
   </div>;
 }
 
@@ -498,14 +498,14 @@ function AdjustForm({ actor }: { actor: Actor }) {
       <NumberInput small value={karma} min={-500} max={500} onChange={setKarma} />
     </div>
     <div className="field">
-      <span className="field-label">{t('Nuyens')}</span>
+      <span className="field-label">{t('Nuyen')}</span>
       <NumberInput small value={ny} min={-10000000} max={10000000} step={100} onChange={setNy} />
     </div>
     <label className="field grow">
-      <span className="field-label">{t('Raison')}</span>
-      <TextInput live value={reason} placeholder={t('Récompense de run, dette, achat hors boutique…')} onChange={setReason} />
+      <span className="field-label">{t('Reason')}</span>
+      <TextInput live value={reason} placeholder={t('Run reward, debt, purchase outside the shop…')} onChange={setReason} />
     </label>
-    <Button variant="primary" disabled={!karma && !ny} onClick={go}>{t('Appliquer')}</Button>
+    <Button variant="primary" disabled={!karma && !ny} onClick={go}>{t('Apply')}</Button>
   </div>;
 }
 
@@ -516,31 +516,31 @@ export function HistoryTab({ s }: { s: SheetCtx }) {
   const totN = (actor.history || []).reduce((sum, e) => sum + (e.nuyen || 0), 0);
   return <div>
     <div className="sh-derived">
-      <RollStat label={t('Karma disponible')} value={actor.karma} accent="amber" />
-      <RollStat label={t('Karma de carrière')} value={actor.karmaTotal} />
-      <RollStat label={t('Nuyens')} value={fmtNuyen(actor.nuyen)} accent="cyan" />
+      <RollStat label={t('Available karma')} value={actor.karma} accent="amber" />
+      <RollStat label={t('Career Karma')} value={actor.karmaTotal} />
+      <RollStat label={t('Nuyen')} value={fmtNuyen(actor.nuyen)} accent="cyan" />
       {edit && <>
         <div className="field">
           <span className="field-label">{t('Karma (direct)')}</span>
           <NumberInput small value={actor.karma} min={-999} max={99999} onChange={(v) => s.update({ karma: v })} />
         </div>
         <div className="field">
-          <span className="field-label">{t('Carrière')}</span>
+          <span className="field-label">{t('Career')}</span>
           <NumberInput small value={actor.karmaTotal} min={0} max={99999} onChange={(v) => s.update({ karmaTotal: v })} />
         </div>
         <div className="field">
-          <span className="field-label">{t('Nuyens (direct)')}</span>
+          <span className="field-label">{t('Nuyen (direct)')}</span>
           <NumberInput small value={actor.nuyen} min={0} max={1e9} step={100} onChange={(v) => s.update({ nuyen: v })} />
         </div>
       </>}
     </div>
-    {gm && <><h4 className="section-title">{t('Ajustement (consigné dans l’historique)')}</h4><AdjustForm actor={actor} /></>}
-    <h4 className="section-title">{t('Registre')}</h4>
+    {gm && <><h4 className="section-title">{t('Adjustment (recorded in the history)')}</h4><AdjustForm actor={actor} /></>}
+    <h4 className="section-title">{t('Ledger')}</h4>
     {h.length
       ? <div className="sh-table-wrap">
         <table className="sr">
           <thead>
-            <tr><th>{t('Date')}</th><th>{t('Opération')}</th><th className="right">{t('Karma')}</th><th className="right">{t('Nuyens')}</th></tr>
+            <tr><th>{t('Date')}</th><th>{t('Operation')}</th><th className="right">{t('Karma')}</th><th className="right">{t('Nuyen')}</th></tr>
           </thead>
           <tbody>
             {h.map(
@@ -559,14 +559,14 @@ export function HistoryTab({ s }: { s: SheetCtx }) {
           <tfoot>
             <tr>
               <td />
-              <td className="muted small">{t('Total des mouvements')}</td>
+              <td className="muted small">{t('Total of changes')}</td>
               <td className="num-cell">{signed(totK)}</td>
               <td className="num-cell">{fmtNuyen(totN)}</td>
             </tr>
           </tfoot>
         </table>
       </div>
-      : <div className="muted small">{t('Aucune opération.')}</div>}
+      : <div className="muted small">{t('No entries.')}</div>}
   </div>;
 }
 
@@ -581,18 +581,18 @@ export function NpcTab({ s, game }: { s: SheetCtx; game: GameView }) {
   return <div className="col gap-l">
     <div className="row wrap sh-edit-row">
       <div className="field">
-        <span className="field-label">{t('Indice de professionnalisme')}</span>
+        <span className="field-label">{t('Professional Rating')}</span>
         <NumberInput small value={npc.professionalRating || 0} min={0} max={7} onChange={(v) => setN({ professionalRating: v })} />
       </div>
-      <Toggle value={!!npc.grunt} onChange={(v) => setN({ grunt: v })} label={t('Sbire (moniteur de groupe)')} />
-      <Toggle value={!!actor.hidden} onChange={(v) => s.update({ hidden: v })} label={t('Caché aux joueurs')} />
+      <Toggle value={!!npc.grunt} onChange={(v) => setN({ grunt: v })} label={t('Grunt (group monitor)')} />
+      <Toggle value={!!actor.hidden} onChange={(v) => s.update({ hidden: v })} label={t('Hidden from players')} />
       <label className="field">
         <span className="field-label">{t('Type')}</span>
-        <Select value={actor.type} options={[{ value: 'npc', label: t('PNJ') }, { value: 'pc', label: t('PJ') }]} onChange={(v) => s.update({ type: v })} />
+        <Select value={actor.type} options={[{ value: 'npc', label: t('NPC') }, { value: 'pc', label: t('PC') }]} onChange={(v) => s.update({ type: v })} />
       </label>
-      {tpl ? <span className="badge badge-amber">{t('Modèle : {name}', { name: tpl.name })}</span> : actor.templateId ? <span className="badge">{t('Modèle {id}', { id: actor.templateId })}</span> : null}
+      {tpl ? <span className="badge badge-amber">{t('Template: {name}', { name: tpl.name })}</span> : actor.templateId ? <span className="badge">{t('Template {id}', { id: actor.templateId })}</span> : null}
     </div>
-    <MdField title={t('Tactiques')} accent="magenta" value={npc.tactics} canEdit={true} onSave={(v) => setN({ tactics: v })} placeholder={t('Comportement en combat, réactions, moral…')} />
-    <MdField title={t('Butin')} value={npc.loot} canEdit={true} onSave={(v) => setN({ loot: v })} placeholder={t('Ce que les runners trouvent sur le corps…')} />
+    <MdField title={t('pl::Tactics')} accent="magenta" value={npc.tactics} canEdit={true} onSave={(v) => setN({ tactics: v })} placeholder={t('Combat behavior, reactions, morale…')} />
+    <MdField title={t('Loot')} value={npc.loot} canEdit={true} onSave={(v) => setN({ loot: v })} placeholder={t('What the runners find on the body…')} />
   </div>;
 }

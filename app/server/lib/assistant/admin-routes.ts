@@ -51,16 +51,16 @@ export function registerAssistantAdminRoutes(app: Express, { requireAdmin, fail,
       patch.enabledTables = b.enabledTables.filter((id: unknown): id is string => known.has(id as string));
     }
     if (b.model !== undefined) {
-      if (!MODELS[b.model]) return fail(res, 400, 'Modèle d’IA inconnu');
+      if (!MODELS[b.model]) return fail(res, 400, 'Unknown AI model');
       patch.model = b.model;
     }
     if (b.effort !== undefined) {
-      if (!EFFORTS.includes(b.effort as Effort)) return fail(res, 400, 'Niveau d’effort inconnu');
+      if (!EFFORTS.includes(b.effort as Effort)) return fail(res, 400, 'Unknown effort level');
       patch.effort = b.effort;
     }
     if (b.monthlyCapUsd !== undefined) {
       const cap = Number(b.monthlyCapUsd);
-      if (!Number.isFinite(cap) || cap < 0 || cap > MAX_CAP) return fail(res, 400, 'Plafond invalide (0 à {max} $)', {}, { max: MAX_CAP });
+      if (!Number.isFinite(cap) || cap < 0 || cap > MAX_CAP) return fail(res, 400, 'Invalid cap (0 to ${max})', {}, { max: MAX_CAP });
       patch.monthlyCapUsd = cap;
     }
     updateSettings(patch);
@@ -75,8 +75,8 @@ export function registerAssistantAdminRoutes(app: Express, { requireAdmin, fail,
   // One tiny request to check the credentials end to end (costs a fraction of a cent, counted in the ledger).
   app.post('/api/admin/assistant/test', requireAdmin, async (req, res) => {
     const client = getClient();
-    if (!client) return fail(res, 503, 'L’assistant n’est pas connecté à l’API Claude (voir /admin).');
-    if (!budgetStatus().allowed) return fail(res, 402, 'Budget mensuel de l’assistant atteint ({cap} $).', {}, { cap: getSettings().monthlyCapUsd });
+    if (!client) return fail(res, 503, 'The assistant is not connected to the Claude API (see /admin).');
+    if (!budgetStatus().allowed) return fail(res, 402, 'The assistant\'s monthly budget is used up (${cap}).', {}, { cap: getSettings().monthlyCapUsd });
     const model = getSettings().model;
     try {
       const msg = await client.messages.create({
@@ -94,7 +94,7 @@ export function registerAssistantAdminRoutes(app: Express, { requireAdmin, fail,
       const status = e?.status;
       const message = String(e?.message || err).slice(0, 400);
       console.error('[assistant] admin test failed', status, message);
-      return fail(res, 502, 'Échec du test de connexion ({status}) : {message}', {}, { status: status ?? '?', message });
+      return fail(res, 502, 'Connection test failed ({status}): {message}', {}, { status: status ?? '?', message });
     }
   });
 }

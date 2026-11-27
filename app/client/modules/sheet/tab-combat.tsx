@@ -36,16 +36,16 @@ function Afflictions({ s }: { s: SheetCtx }) {
   const now = Date.now();
   const list = (s.actor.afflictions || []).filter((a) => a && (AFFLICTIONS as Record<string, unknown>)[a.kind] && stillActive(a.until, s.game.combat, now));
   if (!list.length) return null;
-  const effect = (def: { dice?: number; woundFactor?: number }): string => (def.dice ? t('{n} dés à tous les tests', { n: def.dice }) : def.woundFactor ? t('malus de blessures ×{n}', { n: def.woundFactor }) : t('aucune action'));
+  const effect = (def: { dice?: number; woundFactor?: number }): string => (def.dice ? t('{n} dice on all tests', { n: def.dice }) : def.woundFactor ? t('wound modifiers ×{n}', { n: def.woundFactor }) : t('no actions'));
   return <div className="row wrap gap-s">
-    <span className="field-label">{t('Effets en cours')}</span>
+    <span className="field-label">{t('Active effects')}</span>
     {list.map((a) => {
       const def = (AFFLICTIONS as Record<string, { name: string; dice?: number; woundFactor?: number }>)[a.kind];
       return <span className="badge badge-magenta" key={a.id} title={`${a.source ? t(a.source) + ' — ' : ''}${effect(def)}`}>
         {t(def.name)} · {effect(def)}
         {s.gm && <>
           {' '}
-          <button className="link" onClick={() => send('attack/removeAffliction', { actorId: s.actor.id, afflictionId: a.id }).catch(() => {})} title={t('Mettre fin à cet effet')}>
+          <button className="link" onClick={() => send('attack/removeAffliction', { actorId: s.actor.id, afflictionId: a.id }).catch(() => {})} title={t('End this effect')}>
             ✕
           </button>
         </>}
@@ -71,24 +71,24 @@ export function CombatTab({ s }: { s: SheetCtx }) {
   return <div className="sh-combat">
     <div className="sh-derived">
       <RollStat label={t('Initiative')} value={d.initiative.text} accent="cyan" book={ruleRef('initiative')} title={sourcesTitle(dm.sources.initiative)} />
-      <RollStat label={t('Défense')} value={dm.defense} sub={`${attrShort('REA')} + ${attrShort('INT')}`} accent="amber" book={ruleRef('defense')} title={sourcesTitle(dm.sources.defense)} onClick={() => s.roll({ attr: 'REA', attr2: 'INT', label: tk('Défense'), test: 'defense' })} />
-      <RollStat label={t('Défense totale')} value={dm.defense + attr(actor, 'WIL')} book={ruleRef('defense')} sub={`+ ${attrShort('WIL')}`} onClick={() => s.roll({ attr: 'REA', attr2: 'INT', label: tk('Défense totale'), test: 'defense', bonus: [{ label: 'VOL', value: attr(actor, 'WIL') }] })} />
-      <RollStat label={t('Encaissement')} value={dm.soak} sub={t('{attr} + armure', { attr: attrShort('BOD') })} accent="amber" book={ruleRef('soak')} title={sourcesTitle([...(dm.sources.armor || []), ...(dm.sources.soak || [])])} onClick={() => s.roll({ attr: 'BOD', label: tk('Encaissement'), applyWounds: false, limit: null, test: 'soak' })} />
-      <RollStat label={t('Armure')} value={dm.armor} book={ruleRef('armor')} title={sourcesTitle(dm.sources.armor)} />
-      <LimitStat s={s} name="physical" label={t('Limite physique')} />
-      <RollStat label={t('Blessures')} value={dm.woundModifier || 0} accent={dm.woundModifier ? 'magenta' : null} book={ruleRef('woundModifiers')} />
+      <RollStat label={t('Defense')} value={dm.defense} sub={`${attrShort('REA')} + ${attrShort('INT')}`} accent="amber" book={ruleRef('defense')} title={sourcesTitle(dm.sources.defense)} onClick={() => s.roll({ attr: 'REA', attr2: 'INT', label: tk('Defense'), test: 'defense' })} />
+      <RollStat label={t('Full defense')} value={dm.defense + attr(actor, 'WIL')} book={ruleRef('defense')} sub={`+ ${attrShort('WIL')}`} onClick={() => s.roll({ attr: 'REA', attr2: 'INT', label: tk('Full defense'), test: 'defense', bonus: [{ label: 'VOL', value: attr(actor, 'WIL') }] })} />
+      <RollStat label={t('Soak')} value={dm.soak} sub={t('{attr} + armor', { attr: attrShort('BOD') })} accent="amber" book={ruleRef('soak')} title={sourcesTitle([...(dm.sources.armor || []), ...(dm.sources.soak || [])])} onClick={() => s.roll({ attr: 'BOD', label: tk('Soak'), applyWounds: false, limit: null, test: 'soak' })} />
+      <RollStat label={t('Armor')} value={dm.armor} book={ruleRef('armor')} title={sourcesTitle(dm.sources.armor)} />
+      <LimitStat s={s} name="physical" label={t('Physical Limit')} />
+      <RollStat label={t('Wounds')} value={dm.woundModifier || 0} accent={dm.woundModifier ? 'magenta' : null} book={ruleRef('woundModifiers')} />
     </div>
     <div className="muted small">
-      {t('Encaissement : la PA de l’arme modifie l’armure (ajoute-la en modificateur). Tous les jets d’attaque utilisent la Précision de l’arme comme limite.')}
+      {t('Soak: the weapon\'s AP modifies armor (add it as a modifier). Every attack roll uses the weapon\'s Accuracy as its limit.')}
     </div>
     <Afflictions s={s} />
     <div className="sh-sec-head">
-      <h4 className="section-title">{t('Armes')}</h4>
+      <h4 className="section-title">{t('Weapons')}</h4>
       {!edit && stowed > 0 && <Button small variant="ghost" onClick={() => setShowAll(!showAll)}>
-        {showAll ? t('Armes prêtes seulement') : tn(stowed, 'Afficher tout ({n} rangée)', 'Afficher tout ({n} rangées)')}
+        {showAll ? t('Ready weapons only') : tn(stowed, 'Show all ({n} stowed)', 'pl::Show all ({n} stowed)')}
       </Button>}
     </div>
-    {!edit && ready.over && <div className="amber small">{t('Beaucoup d’armes prêtes ({ranged} à distance, {melee} de mêlée) : en principe 2 + 2 au plus.', ready)}</div>}
+    {!edit && ready.over && <div className="amber small">{t('Many ready weapons ({ranged} ranged, {melee} melee): usually 2 + 2 at most.', ready)}</div>}
     {edit
       ? <ListEditor actor={actor} list="weapons" />
       : weapons.length
@@ -96,15 +96,15 @@ export function CombatTab({ s }: { s: SheetCtx }) {
           <table className="sr sh-weapons">
             <thead>
               <tr>
-                <th title={t('Prête / rangée')} />
-                <th>{t('Arme')}</th>
-                <th className="right">{t('Réserve')}</th>
-                <th className="right">{t('Préc.')}</th>
-                <th>{t('VD')}</th>
-                <th className="right">{t('PA')}</th>
+                <th title={t('Ready / stowed')} />
+                <th>{t('Weapon')}</th>
+                <th className="right">{t('Pool')}</th>
+                <th className="right">{t('Acc.')}</th>
+                <th>{t('DV')}</th>
+                <th className="right">{t('AP')}</th>
                 <th>{t('Mode')}</th>
                 <th className="right">{t('RC')}</th>
-                <th>{t('Munitions')}</th>
+                <th>{t('Ammo')}</th>
                 <th />
               </tr>
             </thead>
@@ -119,10 +119,10 @@ export function CombatTab({ s }: { s: SheetCtx }) {
                 const pm = poolModsOf(s.mods, rctx, {});
                 const acc = accuracyOf(actor, w, s.mods, rctx, {});
                 const accMods = acc.lines.filter((l) => l.state === 'applied');
-                const accTitle = [wm.mods.accuracy ? t('Précision {base} {mod} (accessoires)', { base: wm.baseAccuracy ?? w.accuracy, mod: signed(wm.mods.accuracy) }) : '',
+                const accTitle = [wm.mods.accuracy ? t('Accuracy {base} {mod} (accessories)', { base: wm.baseAccuracy ?? w.accuracy, mod: signed(wm.mods.accuracy) }) : '',
                   ...accMods.map((l) => `${sourceName(l.mod.source)} : ${effectText(l.mod)}`)].filter(Boolean).join('\n');
                 const poolTitle = [`${def ? skillLabel(def.id) : w.skill} + ${attrShort(sk?.attr || def?.attr || 'AGI')}`, ...pm.lines.filter((l) => l.state === 'applied').map((l) => `${sourceName(l.mod.source)} : ${effectText(l.mod)}`)].join('\n');
-                const rcTitle = wm.mods.rc ? t('RC {base} {mod} (accessoires)', { base: Number(w.rc) || 0, mod: signed(wm.mods.rc) }) : '';
+                const rcTitle = wm.mods.rc ? t('RC {base} {mod} (accessories)', { base: Number(w.rc) || 0, mod: signed(wm.mods.rc) }) : '';
                 const cat = categoryLabel(w);
                 const empty = isGrenade(w) && Number(w.qty ?? 1) <= 0;
                 return <tr key={w.id} className={w.equipped === false ? 'sh-stowed' : ''}>
@@ -132,16 +132,16 @@ export function CombatTab({ s }: { s: SheetCtx }) {
                       <span title={itemTitle(w)}>{itemLabel(w)}</span>
                       {' '}
                       <ItemRef item={w} />
-                      {w.kind === 'melee' && w.reach ? <>{' '}<span className="badge" title={t('Allonge')}>{t('allonge {n}', { n: w.reach })}</span></> : null}
+                      {w.kind === 'melee' && w.reach ? <>{' '}<span className="badge" title={t('Reach')}>{t('reach {n}', { n: w.reach })}</span></> : null}
                       {wm.mods.smartgun ? <>
                         {' '}
-                        <span className="badge badge-cyan" title={t('Smartgun : +2 dés avec un smartlink sans fil (à ajouter au jet).')}>
+                        <span className="badge badge-cyan" title={t('Smartgun: +2 dice with a wireless smartlink (add it to the roll).')}>
                           {t('smartgun')}
                         </span>
                       </> : null}
                     </div>
                     <div className="faint small">
-                      {cat ? `${cat} · ` : ''}{def ? skillLabel(def.id) : w.skill || '—'}{def ? <>{' '}<SkillRef id={def.id} /></> : null}{sk ? '' : ` ${t('(non maîtrisée)')}`}{w.notes ? <> · <span title={w.notes}>{w.notes.length > 60 ? w.notes.slice(0, 60) + '…' : w.notes}</span></> : null}
+                      {cat ? `${cat} · ` : ''}{def ? skillLabel(def.id) : w.skill || '—'}{def ? <>{' '}<SkillRef id={def.id} /></> : null}{sk ? '' : ` ${t('(untrained)')}`}{w.notes ? <> · <span title={w.notes}>{w.notes.length > 60 ? w.notes.slice(0, 60) + '…' : w.notes}</span></> : null}
                     </div>
                     {(w.accessories || []).length > 0 && <div><SubChips sub="accessories" items={w.accessories} /></div>}
                   </td>
@@ -157,8 +157,8 @@ export function CombatTab({ s }: { s: SheetCtx }) {
                   <td className={'num-cell' + (wm.mods.rc ? ' cyan' : '')} title={rcTitle}>{wm.rc}</td>
                   <td><AmmoCell s={s} w={w} /></td>
                   <td>
-                    <Button small variant="primary" disabled={pool.impossible || empty} onClick={() => attack(w)} title={pool.impossible ? t('Compétence non maîtrisée') : t('Jet d’attaque')}>
-                      {t('Attaque')}
+                    <Button small variant="primary" disabled={pool.impossible || empty} onClick={() => attack(w)} title={pool.impossible ? t('Untrained skill') : t('Attack roll')}>
+                      {t('Attack')}
                     </Button>
                   </td>
                 </tr>;
@@ -166,28 +166,28 @@ export function CombatTab({ s }: { s: SheetCtx }) {
             </tbody>
           </table>
         </div>
-        : <div className="muted small">{all.length ? t('Aucune arme prête.') : t('Aucune arme.')}</div>}
-    {!edit && <SpecialActions s={s} />}{(edit || arts.length > 0) && <h4 className="section-title">{t('Arts martiaux')}{' '}<RuleRef rule="martialArts" /></h4>}
+        : <div className="muted small">{all.length ? t('No ready weapon.') : t('No weapons.')}</div>}
+    {!edit && <SpecialActions s={s} />}{(edit || arts.length > 0) && <h4 className="section-title">{t('Martial arts')}{' '}<RuleRef rule="martialArts" /></h4>}
     {edit
       ? <ListEditor actor={actor} list="martialArts" />
       : arts.length > 0 && <div className="sh-cards">
         {arts.map((m) => <div className="sh-card" key={m.id}>
           <div className="row spread">
             <span><b>{m.name}</b>{' '}<ItemRef item={m} /></span>
-            {m.rating > 1 ? <span className="badge badge-magenta">{t('Indice {n}', { n: m.rating })}</span> : null}
+            {m.rating > 1 ? <span className="badge badge-magenta">{t('Rating {n}', { n: m.rating })}</span> : null}
           </div>
-          <SubChips sub="techniques" items={m.techniques} empty={t('Aucune technique.')} />
+          <SubChips sub="techniques" items={m.techniques} empty={t('No technique.')} />
           {m.notes && <div className="faint small">{m.notes}</div>}
         </div>)}
       </div>}
     {!edit && (actor.armor || []).length > 0 && <>
-      <h4 className="section-title">{t('Armure portée')}</h4>
+      <h4 className="section-title">{t('Worn armor')}</h4>
       <div className="row wrap">
         {(actor.armor || []).filter((a) => a.equipped).map((a) => <span className="row gap-s" key={a.id}>
         <span className="badge badge-cyan" title={itemTitle(a)}>{itemLabel(a)}{' '}{a.stack ? '+' : ''}{a.rating}</span>
         <ItemRef item={a} />
       </span>)}
-        {!(actor.armor || []).some((a) => a.equipped) && <span className="muted small">{t('Aucune armure équipée (onglet Équipement).')}</span>}
+        {!(actor.armor || []).some((a) => a.equipped) && <span className="muted small">{t('No armor equipped (Gear tab).')}</span>}
       </div>
     </>}
   </div>;
@@ -228,20 +228,20 @@ function SpecialActions({ s }: { s: SheetCtx }) {
           <b>{t(a.name)}</b>
           {' '}
           <BookRef source={a.source} page={a.page} />
-          {a.edge ? <>{' '}<span className="badge badge-magenta">{t('−{n} Chance', { n: a.edge })}</span></> : null}{a.ini ? <>{' '}<span className="badge">{t('−{n} init.', { n: a.ini })}</span></> : null}{a.once ? <>{' '}<span className="badge">{t('1 fois / tour')}</span></> : null}{extra}
+          {a.edge ? <>{' '}<span className="badge badge-magenta">{t('−{n} Edge', { n: a.edge })}</span></> : null}{a.ini ? <>{' '}<span className="badge">{t('−{n} init.', { n: a.ini })}</span></> : null}{a.once ? <>{' '}<span className="badge">{t('1× / turn')}</span></> : null}{extra}
         </div>
         <div className="faint small">{t(a.note)}{w ? ` · ${itemLabel(w)}` : ''}</div>
       </div>
-      {s.own && <Button small variant="primary" disabled={noWeapon} title={noWeapon ? (a.kind === 'ranged' ? t('Aucune arme prête adaptée') : t('Aucune arme de mêlée prête')) : t('Jet d’attaque avec cette action')} onClick={() => use(a)}>
-        {t('Utiliser')}
+      {s.own && <Button small variant="primary" disabled={noWeapon} title={noWeapon ? (a.kind === 'ranged' ? t('No suitable ready weapon') : t('No ready melee weapon')) : t('Attack roll with this action')} onClick={() => use(a)}>
+        {t('Use')}
       </Button>}
     </div>;
   };
   return <>
     <div className="sh-sec-head">
-      <h4 className="section-title">{t('Actions spéciales')}</h4>
+      <h4 className="section-title">{t('Special actions')}</h4>
       <Button small variant="ghost" onClick={() => setShowAll(!showAll)}>
-        {showAll ? t('Masquer les actions communes') : tn(common.length, 'Actions communes ({n})', 'Actions communes ({n})')}
+        {showAll ? t('Hide common actions') : tn(common.length, 'Common actions ({n})', 'Common actions ({n})')}
       </Button>
     </div>
     {mine.actions.length || mine.defenses.length
@@ -254,16 +254,16 @@ function SpecialActions({ s }: { s: SheetCtx }) {
               <BookRef source={o.source} page={o.page} />
               {' '}
               <span className="badge">{t('−{n} init.', { n: o.ini })}</span>
-              <div className="faint small">{t('Défense : à cocher dans la fenêtre « Se défendre » quand on est attaqué (dure tout le tour).')}</div>
+              <div className="faint small">{t('Defense: tick it in the “Defend” window when attacked (lasts the whole turn).')}</div>
             </div>
           </div>)}
       </div>
-      : <div className="muted small">{t('Aucune action spéciale débloquée (techniques d’arts martiaux, qualités).')}</div>}
+      : <div className="muted small">{t('No special action unlocked (martial arts techniques, qualities).')}</div>}
     {showAll && <div className="sh-list">
-      {common.map((a) => row(a))}{locked.map((a) => row(a, <>{' '}<span className="badge badge-amber">{t('non débloquée (MJ)')}</span></>))}
+      {common.map((a) => row(a))}{locked.map((a) => row(a, <>{' '}<span className="badge badge-amber">{t('not unlocked (GM)')}</span></>))}
     </div>}
     <div className="faint small">
-      {t('Cible : clic sur un pion de la carte (ou dans la fenêtre du jet). La défense et les dommages suivent automatiquement.')}
+      {t('Target: click a token on the map (or pick it in the roll window). Defense and damage follow automatically.')}
     </div>
   </>;
 }

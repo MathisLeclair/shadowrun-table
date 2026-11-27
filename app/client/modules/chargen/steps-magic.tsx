@@ -17,12 +17,12 @@ const spellCats = () => (Object.entries(SPELL_CATEGORIES) as Array<[string, stri
 const spellCat = (item: LooseCatalogItem | null | undefined, fallback?: string): string =>
   getLang() === 'fr' ? (fallback ?? (item?.categoryFr || item?.category || '')) : item?.category || fallback || '';
 const TYPE_TEXT: Record<MagicType, string> = {
-  none: tk('Pas de magie ni de résonance : tout le potentiel va dans le corps, les compétences et l’équipement (le cyberware ne coûte rien de plus).'),
-  magician: tk('Lance des sorts, invoque des esprits, voit le plan astral. La tradition détermine le Drain et les esprits.'),
-  mystic: tk('Magicien et adepte à la fois : achète ses points de pouvoir en karma (5 karma le point, maximum Magie).'),
-  adept: tk('Canalise la magie dans son corps : points de pouvoir égaux à la Magie, pas de sorts.'),
-  aspected: tk('Magicien limité à un seul groupe : Sorcellerie, Conjuration ou Enchantement.'),
-  technomancer: tk('Résonance : la Matrice sans appareil, formes complexes et sprites.'),
+  none: tk('No magic or resonance: all the potential goes into body, skills and gear (cyberware costs nothing extra).'),
+  magician: tk('Casts spells, summons spirits, perceives the astral plane. The tradition sets Drain and spirits.'),
+  mystic: tk('Both magician and adept: buys power points with karma (5 karma per point, Magic maximum).'),
+  adept: tk('Channels magic through the body: power points equal to Magic, no spells.'),
+  aspected: tk('Magician limited to a single group: Sorcery, Conjuring or Enchanting.'),
+  technomancer: tk('Resonance: the Matrix without a device, complex forms and sprites.'),
 };
 
 /** Free skills of the magic priority row: { n, rating, cat }. */
@@ -49,25 +49,25 @@ export function StepMagic({ data, update, result, issues, rc }: StepProps) {
 
   return (
     <div className="cg-step">
-      {!letter && <div className="cg-note warn">{t('Attribue d’abord une priorité à la colonne Magie / Résonance.')}</div>}
+      {!letter && <div className="cg-note warn">{t('Assign a priority to the Magic / Resonance column first.')}</div>}
       <div className="cg-magic-types">
         {opts.map((o) => (
           <div key={o.type} className={'card clickable cg-mtype' + (m.type === o.type ? ' on' : '')} onClick={() => setType(o.type)}>
             <h4>{t(MAGIC_TYPES[o.type].label)}</h4>
-            <div className="small">{o.type === 'none' ? t('Aucune capacité surnaturelle') : magicOptionParts(o, i18n())}</div>
+            <div className="small">{o.type === 'none' ? t('No supernatural ability') : magicOptionParts(o, i18n())}</div>
             <div className="small muted">{t(TYPE_TEXT[o.type])}</div>
           </div>
         ))}
       </div>
       {m.type !== 'none' && !opts.some((o) => o.type === m.type) && (
-        <div className="cg-note err">{t('{type} n’est pas proposé avec la priorité {letter} : choisis une autre option.', { type: { t: MAGIC_TYPES[m.type].label }, letter: letter || '?' })}</div>
+        <div className="cg-note err">{t('{type} is not offered at priority {letter}: pick another option.', { type: { t: MAGIC_TYPES[m.type].label }, letter: letter || '?' })}</div>
       )}
 
       {m.type !== 'none' && (
         <div className="grid-3 cg-mt">
           {(m.type === 'magician' || m.type === 'mystic' || m.type === 'aspected') && (
             <Field label={t('Tradition')}>
-              <Select value={m.tradition} onChange={(v) => update((d) => (d.magic.tradition = v))} options={[{ value: '', label: t('— Choisir —') }, ...(TRADITIONS as string[]).map((x) => ({ value: x, label: t(x) }))]} />
+              <Select value={m.tradition} onChange={(v) => update((d) => (d.magic.tradition = v))} options={[{ value: '', label: t('— Choose —') }, ...(TRADITIONS as string[]).map((x) => ({ value: x, label: t(x) }))]} />
             </Field>
           )}
           {m.type === 'aspected' && (
@@ -86,12 +86,12 @@ export function StepMagic({ data, update, result, issues, rc }: StepProps) {
             </Field>
           )}
           {m.type !== 'technomancer' && (
-            <Field label={t('Mentor (facultatif)')}>
-              <TextInput live value={m.mentor} placeholder={t('ex. Chat, Dragon sage…')} onChange={(v) => update((d) => (d.magic.mentor = v))} />
+            <Field label={t('Mentor spirit (optional)')}>
+              <TextInput live value={m.mentor} placeholder={t('e.g. Cat, Wise Dragon…')} onChange={(v) => update((d) => (d.magic.mentor = v))} />
             </Field>
           )}
           {m.type === 'mystic' && (
-            <Field label={t('Points de pouvoir achetés')} hint={t('5 karma par point, maximum Magie')}>
+            <Field label={t('Power points bought')} hint={t('5 karma per point, Magic maximum')}>
               <NumberInput value={m.ppKarma} min={0} max={Math.max(0, r.magic.effMAG)} onChange={(v) => update((d) => (d.magic.ppKarma = v))} />
             </Field>
           )}
@@ -101,7 +101,7 @@ export function StepMagic({ data, update, result, issues, rc }: StepProps) {
       {mrow?.skills && <FreeSkills data={data} update={update} cfg={mrow.skills} />}
       {mrow?.group && (
         <div className="cg-note">
-          {t('Groupe gratuit à l’indice {r} :', { r: mrow.group.rating })} <strong>{skillGroupLabel(aspectGroup(m.aspect))}</strong> {t('(celui de ton aspect).')}
+          {t('Free group at rating {r}:', { r: mrow.group.rating })} <strong>{skillGroupLabel(aspectGroup(m.aspect))}</strong> {t('(that of your aspect).')}
         </div>
       )}
 
@@ -123,7 +123,7 @@ function FreeSkills({ data, update, cfg }: { data: DraftData; update: DraftUpdat
       d.magic.freeSkills = arr.filter(Boolean);
     });
   return (
-    <Panel title={cfg.n > 1 ? t('Compétences gratuites (indice {r})', { r: cfg.rating }) : t('Compétence gratuite (indice {r})', { r: cfg.rating })} className="cg-mt">
+    <Panel title={cfg.n > 1 ? t('Free skills (rating {r})', { r: cfg.rating }) : t('Free skill (rating {r})', { r: cfg.rating })} className="cg-mt">
       <div className="row wrap">
         {slots.map((v, i) => (
           <Select
@@ -132,14 +132,14 @@ function FreeSkills({ data, update, cfg }: { data: DraftData; update: DraftUpdat
             value={v}
             onChange={(x) => set(i, x)}
             options={[
-              { value: '', label: t('— Choisir —') },
-              ...allowed.map((s) => ({ value: s.id, label: slots.includes(s.id) && s.id !== v ? t('{skill} (déjà choisie)', { skill: skillLabel(s) }) : skillLabel(s) })),
+              { value: '', label: t('— Choose —') },
+              ...allowed.map((s) => ({ value: s.id, label: slots.includes(s.id) && s.id !== v ? t('{skill} (already chosen)', { skill: skillLabel(s) }) : skillLabel(s) })),
             ]}
           />
         ))}
       </div>
       <div className="small muted" style={{ marginTop: '6px' }}>
-        {t('Elles apparaissent dans l’étape Compétences à cet indice ; tu peux encore les augmenter avec des points.')}
+        {t('They show up in the Skills step at that rating; you can still raise them with points.')}
       </div>
     </Panel>
   );
@@ -171,17 +171,17 @@ function Spells({ data, update, result, rc }: SubProps) {
   const free = r.budgets.freeSpells;
   return (
     <Panel
-      title={t('Sorts')}
+      title={t('Spells')}
       className="cg-mt"
       actions={
         <Badge color={r.spent.spells > max ? 'red' : 'cyan'}>
-          {t('{n} / {free} gratuits', { n: r.spent.spells, free })}
+          {t('{n} / {free} free', { n: r.spent.spells, free })}
           {r.spent.spells > free ? ` · +${(r.spent.spells - free) * 5} K` : ''}
         </Badge>
       }
     >
       <div className="small muted">
-        {free ? t('{n} sorts gratuits, puis 5 karma par sort.', { n: free }) : t('5 karma par sort.')} {t('Maximum Magie × 2 = {max}.', { max })}
+        {free ? t('{n} free spells, then 5 karma per spell.', { n: free }) : t('5 karma per spell.')} {t('Maximum Magic × 2 = {max}.', { max })}
       </div>
       {data.spells.length > 0 && (
         <div className="cg-chips">
@@ -191,7 +191,7 @@ function Spells({ data, update, result, rc }: SubProps) {
               <i>
                 {spellCat(s.item, s.category)} · {s.type} · {s.range} · {s.duration} · {t('Drain {dv}', { dv: s.drain })}
               </i>
-              <IconButton icon="✕" title={t('Retirer')} onClick={() => update((d) => (d.spells = d.spells.filter((x) => x.catalogId !== s.catalogId)))} />
+              <IconButton icon="✕" title={t('Remove')} onClick={() => update((d) => (d.spells = d.spells.filter((x) => x.catalogId !== s.catalogId)))} />
             </span>
           ))}
         </div>
@@ -199,12 +199,12 @@ function Spells({ data, update, result, rc }: SubProps) {
       <Picker
         items={rc.spells}
         name={itemName}
-        placeholder={t('Chercher un sort…')}
+        placeholder={t('Search a spell…')}
         meta={(it) => `${spellCat(it)} · ${it.stats?.type || ''} · ${it.stats?.range || ''} · ${it.stats?.duration || ''} · ${t('Drain {dv}', { dv: it.stats?.dv || '?' })}`}
         categories={spellCats()}
         category={(it) => it.category}
         selected={selected}
-        disabled={() => (data.spells.length >= max ? t('Maximum {max} sorts', { max }) : null)}
+        disabled={() => (data.spells.length >= max ? t('Maximum {max} spells', { max }) : null)}
         onAdd={(it) => update((d) => d.spells.push({ id: rowId('s'), catalogId: it.id, name: it.nameFr || it.name }))}
       />
     </Panel>
@@ -223,7 +223,7 @@ function Powers({ data, update, result, rc }: SubProps) {
   const r = result;
   const selected = new Set(data.powers.map((p) => p.catalogId));
   return (
-    <Panel title={t('Pouvoirs d’adepte')} className="cg-mt" actions={<Budget label={t('Points de pouvoir')} used={r.spent.powerPoints} total={r.budgets.powerPoints} />}>
+    <Panel title={t('Adept Powers')} className="cg-mt" actions={<Budget label={t('Power Points')} used={r.spent.powerPoints} total={r.budgets.powerPoints} />}>
       {r.powers.length > 0 && (
         <table className="sr cg-mb">
           <tbody>
@@ -237,7 +237,7 @@ function Powers({ data, update, result, rc }: SubProps) {
                     {info.extraPP ? (
                       <>
                         {' '}
-                        <span className="faint small">{t('(+{pp} PP au 1er niveau)', { pp: info.extraPP })}</span>
+                        <span className="faint small">{t('(+{pp} PP at level 1)', { pp: info.extraPP })}</span>
                       </>
                     ) : (
                       ''
@@ -246,7 +246,7 @@ function Powers({ data, update, result, rc }: SubProps) {
                   <td>
                     {info.levels ? (
                       <span className="row gap-s">
-                        <span className="small muted">{t('Niveau')}</span>
+                        <span className="small muted">{t('Level')}</span>
                         <NumberInput
                           small
                           value={row?.level || 1}
@@ -268,7 +268,7 @@ function Powers({ data, update, result, rc }: SubProps) {
                     <TextInput
                       live
                       value={row?.choice || ''}
-                      placeholder={t('Précision (compétence, attribut…)')}
+                      placeholder={t('Detail (skill, attribute…)')}
                       onChange={(v) =>
                         update((d) => {
                           const x = d.powers.find((y) => y.catalogId === p.catalogId);
@@ -279,7 +279,7 @@ function Powers({ data, update, result, rc }: SubProps) {
                   </td>
                   <td className="num-cell">{p.pp} PP</td>
                   <td>
-                    <IconButton icon="✕" title={t('Retirer')} onClick={() => update((d) => (d.powers = d.powers.filter((x) => x.catalogId !== p.catalogId)))} />
+                    <IconButton icon="✕" title={t('Remove')} onClick={() => update((d) => (d.powers = d.powers.filter((x) => x.catalogId !== p.catalogId)))} />
                   </td>
                 </tr>
               );
@@ -290,10 +290,10 @@ function Powers({ data, update, result, rc }: SubProps) {
       <Picker
         items={rc.powers}
         name={itemName}
-        placeholder={t('Chercher un pouvoir…')}
+        placeholder={t('Search a power…')}
         meta={(it) => {
           const i = powerInfo(it);
-          return `${i.levels ? t('{pp} PP par niveau', { pp: i.pp }) : t('{pp} PP', { pp: i.pp })}${i.maxLevel ? ` ${t('(max {n})', { n: i.maxLevel })}` : ''}`;
+          return `${i.levels ? t('{pp} PP per level', { pp: i.pp }) : t('{pp} PP', { pp: i.pp })}${i.maxLevel ? ` ${t('(max {n})', { n: i.maxLevel })}` : ''}`;
         }}
         selected={selected}
         onAdd={(it) => update((d) => d.powers.push({ id: rowId('p'), catalogId: it.id, name: it.nameFr || it.name, level: 1, choice: '' }))}
@@ -322,16 +322,16 @@ function Forms({ data, update, result }: Omit<SubProps, 'rc'>) {
     });
   return (
     <Panel
-      title={t('Formes complexes')}
+      title={t('Complex Forms')}
       className="cg-mt"
       actions={
         <Badge color="cyan">
-          {t('{n} / {free} gratuites', { n: r.spent.forms, free: r.budgets.freeForms })}
+          {t('fem::{n} / {free} free', { n: r.spent.forms, free: r.budgets.freeForms })}
           {r.spent.forms > r.budgets.freeForms ? ` · +${(r.spent.forms - r.budgets.freeForms) * 4} K` : ''}
         </Badge>
       }
     >
-      <div className="small muted cg-mb">{t('{n} gratuites, puis 4 karma chacune. Maximum Logique ({max}).', { n: r.budgets.freeForms, max: (r.final as Record<string, number>).LOG })}</div>
+      <div className="small muted cg-mb">{t('{n} free, then 4 karma each. Logic maximum ({max}).', { n: r.budgets.freeForms, max: (r.final as Record<string, number>).LOG })}</div>
       <div className="cg-forms">
         {(COMPLEX_FORMS as ComplexFormDef[]).map((f) => (
           <label key={f.id} className={'cg-form' + (chosen.has(f.id) ? ' on' : '')}>
@@ -340,7 +340,7 @@ function Forms({ data, update, result }: Omit<SubProps, 'rc'>) {
               <strong>{getLang() === 'fr' ? f.name : f.en}</strong> <FormRef f={f} />
               <span className="small muted">
                 {' '}
-                · {t(f.target)} · {t('durée {d}', { d: f.duration })} · {t('estompage {f}', { f: f.fading })}
+                · {t(f.target)} · {t('duration {d}', { d: f.duration })} · {t('fading {f}', { f: f.fading })}
               </span>
             </span>
           </label>

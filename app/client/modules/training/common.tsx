@@ -12,11 +12,11 @@ import { RuleRef } from '../books/BookRef.tsx';
 const KIND_RULES: Record<string, string> = { initiation: 'initiation', submersion: 'submersion' };
 
 export const STATUS: Record<OrderStatus, { label: string; color: BadgeColor }> = {
-  pending: { label: tk('En attente'), color: 'amber' },
-  approved: { label: tk('En cours'), color: 'cyan' },
-  done: { label: tk('Acquise'), color: 'green' },
-  denied: { label: tk('Refusée'), color: 'red' },
-  cancelled: { label: tk('Annulée'), color: 'dim' },
+  pending: { label: tk('Pending'), color: 'amber' },
+  approved: { label: tk('In progress'), color: 'cyan' },
+  done: { label: tk('Gained'), color: 'green' },
+  denied: { label: tk('Denied'), color: 'red' },
+  cancelled: { label: tk('Cancelled'), color: 'dim' },
 };
 
 /** Full sheet of a view actor (players see other NPCs as stubs), or null. */
@@ -99,7 +99,7 @@ export function Rule({ kind }: { kind: string }) {
         type="button"
         className="training-rule"
         title={text}
-        aria-label={t('Règle : {text}', { text })}
+        aria-label={t('Rule: {text}', { text })}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -140,14 +140,14 @@ export function KarmaHeader({ game, actor }: { game: GameView; actor: Actor }) {
   return (
     <div className="training-stats">
       <Stat
-        label={t('Karma dispo')}
+        label={t('Available karma')}
         value={avail - ctx.reservedKarma}
         accent="cyan"
-        title={ctx.reservedKarma ? t('{total} au total, dont {reserved} engagés par des demandes en attente', { total: avail, reserved: ctx.reservedKarma }) : t('Karma disponible')}
+        title={ctx.reservedKarma ? t('{total} in total, {reserved} of it reserved by pending requests', { total: avail, reserved: ctx.reservedKarma }) : t('Available karma')}
       />
-      {ctx.reservedKarma > 0 && <Stat label={t('Engagé')} value={ctx.reservedKarma} accent="amber" title={t('Karma réservé par des demandes en attente de validation')} />}
-      <Stat label={t('Carrière')} value={Number(actor.karmaTotal) || 0} title={t('Karma total gagné')} />
-      <Stat label={t('Nuyens')} value={fmtNuyen(actor.nuyen)} accent="magenta" />
+      {ctx.reservedKarma > 0 && <Stat label={t('Reserved')} value={ctx.reservedKarma} accent="amber" title={t('Karma reserved by requests awaiting approval')} />}
+      <Stat label={t('Career')} value={Number(actor.karmaTotal) || 0} title={t('Total karma earned')} />
+      <Stat label={t('Nuyen')} value={fmtNuyen(actor.nuyen)} accent="magenta" />
     </div>
   );
 }
@@ -162,15 +162,15 @@ interface JobListProps {
 /** In-progress trainings of one actor. GM can finish or interrupt them. `empty` = already translated text. */
 export function JobList({ actor, isGM, empty }: JobListProps) {
   const jobs = jobsOf(actor);
-  if (!jobs.length) return <div className="muted small training-empty">{empty || t('Aucun entraînement en cours.')}</div>;
+  if (!jobs.length) return <div className="muted small training-empty">{empty || t('No training in progress.')}</div>;
   const finish = (job: TrainingJob) =>
     send('training/complete', { actorId: actor.id, jobId: job.id })
-      .then(() => toast(t('{label} : terminé', { label: labelOf(job) }), 'success'))
+      .then(() => toast(t('{label}: finished', { label: labelOf(job) }), 'success'))
       .catch(() => {});
   const stop = async (job: TrainingJob) => {
-    if (!(await confirmAction(t('Interrompre « {label} » pour {name} ?\nLe karma (et l’éventuel instructeur) sera remboursé.', { label: labelOf(job), name: actor.name })))) return;
+    if (!(await confirmAction(t('Interrupt « {label} » for {name}?\nThe karma (and the instructor, if any) will be refunded.', { label: labelOf(job), name: actor.name })))) return;
     send('training/cancel', { requestId: job.requestId, refund: true })
-      .then(() => toast(t('Entraînement interrompu, karma remboursé'), 'warn'))
+      .then(() => toast(t('Training interrupted, karma refunded'), 'warn'))
       .catch(() => {});
   };
   return (
@@ -182,17 +182,17 @@ export function JobList({ actor, isGM, empty }: JobListProps) {
           <li key={job.id} className="training-job">
             <div className="row spread wrap">
               <strong className="training-job-label">{labelOf(job)}</strong>
-              <span className="small mono muted">{t('{done} / {total} j', { done, total })}</span>
+              <span className="small mono muted">{t('{done} / {total} d', { done, total })}</span>
             </div>
             <ProgressBar value={done} max={total} />
             <div className="row spread wrap small">
-              <span className="muted">{t('Reste {time}', { time: fmtDays(Math.max(0, total - done)) })}</span>
+              <span className="muted">{t('{time} left', { time: fmtDays(Math.max(0, total - done)) })}</span>
               {isGM && (
                 <span className="row gap-s">
-                  <Button small variant="ghost" title={t('Terminer maintenant')} onClick={() => finish(job)}>
-                    ✓ {t('Terminer')}
+                  <Button small variant="ghost" title={t('Finish now')} onClick={() => finish(job)}>
+                    ✓ {t('Done')}
                   </Button>
-                  <Button small variant="ghost" title={t('Interrompre et rembourser')} onClick={() => stop(job)}>
+                  <Button small variant="ghost" title={t('Interrupt and refund')} onClick={() => stop(job)}>
                     ✕
                   </Button>
                 </span>
@@ -218,11 +218,11 @@ interface RequestListProps {
 /** Request history. showActor: prefix with the actor name (GM). `empty` = already translated text. */
 export function RequestList({ game, requests, isGM, showActor, limit = 40, empty }: RequestListProps) {
   const list = [...(requests || [])].sort((a, b) => (b.ts || 0) - (a.ts || 0));
-  if (!list.length) return <div className="muted small training-empty">{empty || t('Aucune demande pour l’instant.')}</div>;
+  if (!list.length) return <div className="muted small training-empty">{empty || t('No requests yet.')}</div>;
   const cancel = async (r: TrainingRequest) => {
-    if (!(await confirmAction(t('Annuler la demande « {label} » ?', { label: labelOf(r) })))) return;
+    if (!(await confirmAction(t('Cancel the request « {label} »?', { label: labelOf(r) })))) return;
     send('training/cancel', { requestId: r.id })
-      .then(() => toast(t('Demande annulée')))
+      .then(() => toast(t('Request cancelled')))
       .catch(() => {});
   };
   return (
@@ -250,19 +250,19 @@ export function RequestList({ game, requests, isGM, showActor, limit = 40, empty
                 <span>{fmtDate(r.ts)}</span>
                 {r.karmaCost > 0 && <span className="mono">· {t('{n} karma', { n: r.karmaCost })}</span>}
                 {r.nuyenCost > 0 && <span className="mono">· {fmtNuyen(r.nuyenCost)}</span>}
-                {r.days > 0 && <span>· {r.instructor ? t('{time} (instructeur)', { time: fmtDays(r.days) }) : fmtDays(r.days)}</span>}
+                {r.days > 0 && <span>· {r.instructor ? t('{time} (instructor)', { time: fmtDays(r.days) }) : fmtDays(r.days)}</span>}
                 {r.manual && (
-                  <Badge color="magenta" title={t('Saisie manuelle, non vérifiée par le catalogue')}>
-                    {t('manuel')}
+                  <Badge color="magenta" title={t('Manual entry, not checked against the catalog')}>
+                    {t('manual')}
                   </Badge>
                 )}
               </div>
               {r.note && <div className="small training-note">« {r.note} »</div>}
-              {r.gmNote && <div className="small training-gmnote">{t('MJ : {note}', { note: r.gmNote })}</div>}
+              {r.gmNote && <div className="small training-gmnote">{t('GM: {note}', { note: r.gmNote })}</div>}
               {r.status === 'pending' && !isGM && (
                 <div className="right">
                   <Button small variant="ghost" onClick={() => cancel(r)}>
-                    {t('Annuler')}
+                    {t('Cancel')}
                   </Button>
                 </div>
               )}
@@ -270,9 +270,9 @@ export function RequestList({ game, requests, isGM, showActor, limit = 40, empty
           );
         })}
       </ul>
-      {list.length > limit && <div className="muted small center">{tn(list.length - limit, 'un::… {n} demande(s) plus ancienne(s)', '… {n} demande(s) plus ancienne(s)')}</div>}
+      {list.length > limit && <div className="muted small center">{tn(list.length - limit, 'a::… {n} older request', '… {n} older requests')}</div>}
     </>
   );
 }
 
-export const MAGIC_TYPES: Record<string, string> = { adept: tk('Adepte'), mystic: tk('Adepte mystique'), magician: tk('Magicien'), technomancer: tk('Technomancien') };
+export const MAGIC_TYPES: Record<string, string> = { adept: tk('Adept'), mystic: tk('Mystic Adept'), magician: tk('Magician'), technomancer: tk('Technomancer') };

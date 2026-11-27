@@ -156,18 +156,18 @@ function replyError(res: Reply | null | undefined, fallback: string): ServerErro
  */
 export function send<R = any>(type: string, payload: object = {}, opts: { silent?: boolean } = {}): Promise<R> {
   return new Promise((resolve, reject) => {
-    if (!socket) return reject(new Error(t('Pas connecté')));
+    if (!socket) return reject(new Error(t('Not connected')));
     socket.timeout(15000).emit('action', { type, payload }, (err: Error | null, res: Reply) => {
       if (err) {
-        if (!opts.silent) toast(t('Le serveur ne répond pas'), 'error');
+        if (!opts.silent) toast(t('The server is not responding'), 'error');
         return reject(err);
       }
       if (!res?.ok) {
         if (res?.code === 'unauthorized') {
           unauthorizedCb?.();
-          return reject(replyError(res, tk('Session expirée')));
+          return reject(replyError(res, tk('Session expired')));
         }
-        const e = replyError(res, tk('Erreur'));
+        const e = replyError(res, tk('Error'));
         if (!opts.silent) toast(e.message, 'error');
         return reject(e);
       }
@@ -208,8 +208,8 @@ export async function api<R = any>(path: string, { method = 'GET', body, headers
   const ct = res.headers.get('content-type') || '';
   const data = ct.includes('json') ? await res.json() : await res.text();
   if (!res.ok) {
-    const reply: Reply = data && typeof data === 'object' && (data.error || data.errorKey) ? data : { error: `Erreur ${res.status}`, errorKey: tk('Erreur {status}'), params: { status: res.status } };
-    const err = replyError(reply, tk('Erreur'));
+    const reply: Reply = data && typeof data === 'object' && (data.error || data.errorKey) ? data : { error: `Erreur ${res.status}`, errorKey: tk('Error {status}'), params: { status: res.status } };
+    const err = replyError(reply, tk('Error'));
     err.status = res.status;
     throw err;
   }
@@ -240,13 +240,13 @@ export function uploadWithProgress<R = any>(
       } catch {}
       if (xhr.status >= 200 && xhr.status < 300) return resolve(data as R);
       const err: ServerError = data?.error || data?.errorKey
-        ? replyError(data, tk('Erreur'))
-        : new Error(xhr.status === 413 ? t('Fichier trop volumineux') : t('Erreur {status}', { status: xhr.status }));
+        ? replyError(data, tk('Error'))
+        : new Error(xhr.status === 413 ? t('File too large') : t('Error {status}', { status: xhr.status }));
       err.status = xhr.status;
       reject(err);
     };
-    xhr.onerror = () => reject(new Error(t('Connexion perdue pendant l’envoi')));
-    xhr.onabort = () => reject(new Error(t('Envoi annulé')));
+    xhr.onerror = () => reject(new Error(t('Connection lost during upload')));
+    xhr.onabort = () => reject(new Error(t('Upload cancelled')));
     xhr.send(file);
   });
 }

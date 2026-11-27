@@ -38,11 +38,11 @@ export function BookRef({ source, page, label, title, className }: BookRefProps)
     title ||
     (missing
       ? ref.page
-        ? t('Livre non disponible sur ce serveur ({code} p. {page})', { code: ref.code, page: ref.page })
-        : t('Livre non disponible sur ce serveur ({code})', { code: ref.code })
+        ? t('Book not available on this server ({code} p. {page})', { code: ref.code, page: ref.page })
+        : t('Book not available on this server ({code})', { code: ref.code })
       : ref.page
-        ? t('Ouvrir {book} p. {page}', { book: bookName(b) || ref.code, page: ref.page })
-        : t('Ouvrir {book}', { book: bookName(b) || ref.code }));
+        ? t('Open {book} p. {page}', { book: bookName(b) || ref.code, page: ref.page })
+        : t('Open {book}', { book: bookName(b) || ref.code }));
   const onClick = (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();

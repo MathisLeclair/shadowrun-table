@@ -40,20 +40,20 @@ function savePrefs(p: DockPrefs) {
   } catch {}
 }
 
-const KIND_LABEL: Record<string, string> = { system: tk('Système'), combat: tk('Combat'), shop: tk('Boutique'), training: tk('Progression') };
+const KIND_LABEL: Record<string, string> = { system: tk('System'), combat: tk('Combat'), shop: tk('Shop'), training: tk('Advancement') };
 // Labels are sent to the server in French (stored in the log), shown with t().
 const PAIRS = [
-  ['REA', 'INT', tk('Défense')],
-  ['CHA', 'WIL', tk('Sang-froid')],
-  ['CHA', 'INT', tk('Jauger les intentions')],
-  ['LOG', 'WIL', tk('Mémoire')],
-  ['BOD', 'STR', tk('Soulever / porter')],
-  ['BOD', 'WIL', tk('Résister aux toxines')],
+  ['REA', 'INT', tk('Defense')],
+  ['CHA', 'WIL', tk('Composure')],
+  ['CHA', 'INT', tk('Judge Intentions')],
+  ['LOG', 'WIL', tk('Memory')],
+  ['BOD', 'STR', tk('Lift / Carry')],
+  ['BOD', 'WIL', tk('Resist toxins')],
 ];
 
 /** Author shown on an entry: the GM's stored 'MJ' is translated, names stay as they are. */
 const authorText = (e: LogEntryData): string =>
-  e.authorI18n?.key ? t(e.authorI18n.key, e.authorI18n.params) : e.author === 'MJ' ? t('MJ') : e.author || (KIND_LABEL[e.kind] ? t(KIND_LABEL[e.kind]) : '');
+  e.authorI18n?.key ? t(e.authorI18n.key, e.authorI18n.params) : e.author === 'MJ' ? t('GM') : e.author || (KIND_LABEL[e.kind] ? t(KIND_LABEL[e.kind]) : '');
 
 function authorColor(game: GameView, e: LogEntryData): string {
   const rollColor = e.roll?.actorId ? game.actors?.[e.roll.actorId]?.color : undefined;
@@ -65,7 +65,7 @@ function authorColor(game: GameView, e: LogEntryData): string {
 }
 
 function userLabel(game: GameView, id: string): string {
-  if (id === 'gm') return t('MJ');
+  if (id === 'gm') return t('GM');
   const u = game.users?.[id];
   if (!u) return '?';
   const a = game.actors?.[(u.characterIds || [])[0]];
@@ -83,9 +83,9 @@ function LogEntry({ e, game, gm }: { e: LogEntryData; game: GameView; gm: boolea
   return <div className={`ld-entry ld-${e.kind}${e.gmOnly ? ' ld-gmonly' : ''}`}>
     <div className="ld-meta">
       <span className="ld-author" style={{ color }}>{authorText(e)}</span>
-      {e.kind === 'whisper' && <span className="ld-to">→ {recipients.join(', ') || t('MJ')}</span>}{e.gmOnly && <span className="ld-tag" title={t('Visible du MJ seulement')}>{t('MJ')}</span>}{KIND_LABEL[e.kind] && e.author && <span className="ld-tag">{t(KIND_LABEL[e.kind])}</span>}
+      {e.kind === 'whisper' && <span className="ld-to">→ {recipients.join(', ') || t('GM')}</span>}{e.gmOnly && <span className="ld-tag" title={t('Visible to the GM only')}>{t('GM')}</span>}{KIND_LABEL[e.kind] && e.author && <span className="ld-tag">{t(KIND_LABEL[e.kind])}</span>}
       <span className="ld-time">{fmtTime(e.ts)}</span>
-      {gm && <button type="button" className="ld-del" title={t('Supprimer cette entrée')} onClick={del}>✕</button>}
+      {gm && <button type="button" className="ld-del" title={t('Delete this entry')} onClick={del}>✕</button>}
     </div>
     {r
       ? <div className="ld-roll">
@@ -94,7 +94,7 @@ function LogEntry({ e, game, gm }: { e: LogEntryData; game: GameView; gm: boolea
           {typeof r.hits === 'number'
               ? <span className={'ld-hits' + (r.critGlitch ? ' crit' : r.glitch ? ' glitch' : r.hits === 0 ? ' zero' : '')}>
                 {r.hits}
-                <small>{' '}{tn(r.hits, 'one::succès', 'other::succès')}</small>
+                <small>{' '}{tn(r.hits, 'one::hit', 'other::hits')}</small>
               </span>
               : r.total !== undefined
                 ? <span className="ld-hits">{r.total}</span>
@@ -102,17 +102,17 @@ function LogEntry({ e, game, gm }: { e: LogEntryData; game: GameView; gm: boolea
         </div>
         <DiceFaces roll={r} small />
         <div className="ld-roll-foot">
-          <span className="faint small">{r.breakdown ? rollBreakdown(r.breakdown) : r.pool ? tn(r.pool, '{n} dé', '{n} dés') : ''}</span>
+          <span className="faint small">{r.breakdown ? rollBreakdown(r.breakdown) : r.pool ? tn(r.pool, '{n} die', '{n} dice') : ''}</span>
           <RollBadges roll={r} />
-          {r.fire ? <span className="badge" title={t('Munitions utilisées par ce tir')}>{fireText(r.fire)}</span> : null}
-          {canSecond && <button type="button" className="ld-second" title={t('Relancer les dés sans succès (1 point de Chance)')} onClick={() => send('dice/secondChance', { logId: e.id }).catch(() => {})}>
-              {t('2ᵉ chance')}
+          {r.fire ? <span className="badge" title={t('Ammunition used by this shot')}>{fireText(r.fire)}</span> : null}
+          {canSecond && <button type="button" className="ld-second" title={t('Reroll the dice without hits (1 Edge point)')} onClick={() => send('dice/secondChance', { logId: e.id }).catch(() => {})}>
+              {t('2nd Chance')}
             </button>}
         </div>
         {r.avail ? <AvailRollLine roll={r} Dice={DiceFaces} /> : null}{r.sinCheck ? <SinCheckLine roll={r} /> : null}{r.contactRoll ? <ContactRollLine roll={r} /> : null}
         {Array.isArray(r.mods) && r.mods.some((m) => (m.state as string) === 'applied') && <div className="ld-roll-mods">
             {r.mods.filter((m) => (m.state as string) === 'applied').map((m) => <span className="faint small" key={m.kind + m.id}>
-              {m.name}{' '}{m.value >= 0 ? '+' : '−'}{Math.abs(m.value)}{m.kind === 'limit' ? ` (${t('limite')})` : ''}{m.book ? <>{' '}<BookRef source={m.book} page={m.page} /></> : null}
+              {m.name}{' '}{m.value >= 0 ? '+' : '−'}{Math.abs(m.value)}{m.kind === 'limit' ? ` (${t('limit')})` : ''}{m.book ? <>{' '}<BookRef source={m.book} page={m.page} /></> : null}
             </span>)}
           </div>}
       </div>
@@ -136,12 +136,12 @@ function QuickTestSelect({ actor, onPick }: { actor: Actor | null | undefined; o
     else if (kind === 'pair') onPick({ attr: a, attr2: b, label: rest.join(':') });
   };
   return <select className="input ld-quicktest" onChange={change} value="">
-    <option value="">{t('Jet rapide…')}</option>
-    {skills.length > 0 && <optgroup label={t('Compétences')}>{skills.map((s) => <option key={s.id} value={'skill:' + s.id}>{s.shown} ({s.rating})</option>)}</optgroup>}{kno.length > 0 && <optgroup label={t('Connaissances')}>{kno.map((k) => <option key={k.id} value={'skill:' + k.id}>{k.name} ({k.rating})</option>)}</optgroup>}
+    <option value="">{t('Quick roll…')}</option>
+    {skills.length > 0 && <optgroup label={t('Skills')}>{skills.map((s) => <option key={s.id} value={'skill:' + s.id}>{s.shown} ({s.rating})</option>)}</optgroup>}{kno.length > 0 && <optgroup label={t('pl::Knowledge')}>{kno.map((k) => <option key={k.id} value={'skill:' + k.id}>{k.name} ({k.rating})</option>)}</optgroup>}
     <optgroup label={t('Tests')}>
       {PAIRS.map(([a, b, l]) => <option key={l} value={`pair:${a}:${b}:${l}`}>{t(l)} ({attrShort(a)} + {attrShort(b)})</option>)}
     </optgroup>
-    <optgroup label={t('Attributs')}>{attrs.map((k) => <option key={k} value={'attr:' + k}>{attrLabel(k)} ({attr(actor, k)})</option>)}</optgroup>
+    <optgroup label={t('Attributes')}>{attrs.map((k) => <option key={k} value={'attr:' + k}>{attrLabel(k)} ({attr(actor, k)})</option>)}</optgroup>
   </select>;
 }
 
@@ -175,32 +175,32 @@ function DiceRoller({ game, gm, actorId, setActorId, actorOptions }: DiceRollerP
   };
   return <div className="ld-roller">
     <div className="ld-grid">
-      {Array.from({ length: 20 }, (_, i) => <button key={i} type="button" className={'ld-q' + (i + 1 === pool ? ' on' : '')} title={tn(i + 1, 'Lancer {n} dé', 'Lancer {n} dés')} onClick={() => { setPool(i + 1); roll(i + 1); }}>
+      {Array.from({ length: 20 }, (_, i) => <button key={i} type="button" className={'ld-q' + (i + 1 === pool ? ' on' : '')} title={tn(i + 1, 'Roll {n} die', 'Roll {n} dice')} onClick={() => { setPool(i + 1); roll(i + 1); }}>
         {i + 1}
       </button>)}
     </div>
     <div className="row wrap ld-roller-row">
       <NumberInput small value={pool} min={1} max={60} onChange={setPool} />
-      <Button small variant="primary" onClick={() => roll(pool)}>{t('Lancer {n}', { n: pool })}</Button>
-      <span className="ld-limit" title={t('Limite (0 = aucune)')}>
+      <Button small variant="primary" onClick={() => roll(pool)}>{t('Roll {n}', { n: pool })}</Button>
+      <span className="ld-limit" title={t('Limit (0 = none)')}>
         {t('lim.')}{' '}
         <NumberInput small value={limit} min={0} max={30} onChange={setLimit} />
       </span>
     </div>
     <div className="row wrap ld-roller-row">
       {actorOptions.length > 0 && <select className="input ld-actor" value={actorId || ''} onChange={(e) => setActorId(e.target.value)}>
-        {gm && <option value="">{t('— MJ —')}</option>}{actorOptions.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+        {gm && <option value="">{t('— GM —')}</option>}{actorOptions.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
       </select>}
       {actor && <QuickTestSelect actor={actor} onPick={(preset) => setDialog({ ...preset, _k: Date.now() })} />}
     </div>
     <div className="row wrap ld-roller-row">
-      {actor && actor.attributes && <Toggle value={edge && canEdge} onChange={(v) => (canEdge ? setEdge(v) : toast(t('{name} n’a plus de Chance', { name: actor.name }), 'warn'))} label={t('Chance ({n})', { n: actor.edge?.current ?? 0 })} title={t('Repousser les limites : +Chance en dés, règle des 6, sans limite')} />}{gm && <Toggle value={secret} onChange={setSecret} label={t('Secret')} title={t('Jet visible du MJ seulement')} />}
+      {actor && actor.attributes && <Toggle value={edge && canEdge} onChange={(v) => (canEdge ? setEdge(v) : toast(t('{name} has no Edge left', { name: actor.name }), 'warn'))} label={t('Edge ({n})', { n: actor.edge?.current ?? 0 })} title={t('Push the Limit: +Edge in dice, rule of six, no limit')} />}{gm && <Toggle value={secret} onChange={setSecret} label={t('Secret')} title={t('Roll visible to the GM only')} />}
     </div>
     {dialog && actor && <RollDialog key={dialog._k} game={game} actor={actor} preset={dialog} onClose={() => setDialog(null)} />}
   </div>;
 }
 
-const helpText = () => t('Commandes : /r 12 (lancer 12 dés) · /r 12 l4 (limite 4) · /r 12 ! (Chance) · /w nom message (chuchoter) · /aide');
+const helpText = () => t('Commands: /r 12 (roll 12 dice) · /r 12 l4 (limit 4) · /r 12 ! (Edge) · /w name message (whisper) · /help');
 
 export default function LogDock({ game }: GameProps) {
   const gm = isGM(game);
@@ -250,9 +250,9 @@ export default function LogDock({ game }: GameProps) {
   };
 
   const users = Object.values(game.users || {}).filter((u) => u.id !== game.me.id);
-  const whisperOptions = [{ value: '', label: t('Tout le monde') }, ...(gm ? [] : [{ value: 'gm', label: t('MJ (chuchoter)') }]), ...users.map((u) => ({ value: u.id, label: `→ ${userLabel(game, u.id)}` }))];
+  const whisperOptions = [{ value: '', label: t('Everyone') }, ...(gm ? [] : [{ value: 'gm', label: t('GM (whisper)') }]), ...users.map((u) => ({ value: u.id, label: `→ ${userLabel(game, u.id)}` }))];
   const speakerOptions = gm
-    ? [{ value: '', label: t('MJ') }, ...(Object.values(game.actors || {}) as Actor[]).filter((a) => !a.retired).map((a) => ({ value: a.id, label: a.name }))]
+    ? [{ value: '', label: t('GM') }, ...(Object.values(game.actors || {}) as Actor[]).filter((a) => !a.retired).map((a) => ({ value: a.id, label: a.name }))]
     : myActors.length > 1
       ? myActors.map((a) => ({ value: a.id, label: a.name }))
       : [];
@@ -284,18 +284,18 @@ export default function LogDock({ game }: GameProps) {
           else if (tok === '!' || /^(chance|edge)$/i.test(tok)) explode = true;
           else label.push(tok);
         }
-        if (!pool) return toast(t('Indique un nombre de dés : /r 12'), 'warn');
+        if (!pool) return toast(t('Give a number of dice: /r 12'), 'warn');
         const actorId = effectiveRollActor || undefined;
-        if (explode && !actorId) return toast(t('Choisis un personnage pour utiliser la Chance'), 'warn');
+        if (explode && !actorId) return toast(t('Choose a character to use Edge'), 'warn');
         await send('dice/roll', { pool, limit, explode, actorId, label: label.join(' ') || `${pool} dé${pool > 1 ? 's' : ''}` }); // stored French label, shown with rollLabel()
       } else if (/^\/(w|whisper|chuchote)\s+/i.test(msg)) {
         const m = msg.match(/^\/\w+\s+(\S+)\s+([\s\S]+)$/);
-        if (!m) return toast(t('Format : /w nom message'), 'warn');
+        if (!m) return toast(t('Format: /w name message'), 'warn');
         const target = findTarget(m[1]);
-        if (!target) return toast(t('Personne ne s’appelle « {name} »', { name: m[1] }), 'warn');
+        if (!target) return toast(t('Nobody is called “{name}”', { name: m[1] }), 'warn');
         await send('chat/send', { text: m[2], to: [target], as: as || undefined });
       } else if (msg.startsWith('/')) {
-        return toast(t('Commande inconnue. {help}', { help: helpText() }), 'warn', 6000);
+        return toast(t('Unknown command. {help}', { help: helpText() }), 'warn', 6000);
       } else {
         await send('chat/send', { text: msg, to: to ? [to] : undefined, as: as || undefined });
       }
@@ -315,35 +315,35 @@ export default function LogDock({ game }: GameProps) {
     savePrefs({ ...loadPrefs(), roller: !showRoller });
   };
   const clearAll = async () => {
-    if (await confirmAction(t('Vider tout le journal pour tout le monde ?'))) send('log/clear').catch(() => {});
+    if (await confirmAction(t('Clear the whole log for everyone?'))) send('log/clear').catch(() => {});
   };
 
   return <div className="ld">
     <div className="ld-bar">
-      {[['all', tk('Tout')], ['rolls', tk('Jets')], ['chat', tk('Messages')]].map(([id, l]) => <button key={id} type="button" className={'ld-filter' + (filter === id ? ' on' : '')} onClick={() => setF(id)}>{t(l)}</button>)}
+      {[['all', tk('everything::All')], ['rolls', tk('Rolls')], ['chat', tk('Messages')]].map(([id, l]) => <button key={id} type="button" className={'ld-filter' + (filter === id ? ' on' : '')} onClick={() => setF(id)}>{t(l)}</button>)}
       <span className="grow" />
       <Dice3dPicker />
-      {gm && <IconButton icon="⌫" title={t('Vider le journal')} onClick={clearAll} />}
+      {gm && <IconButton icon="⌫" title={t('Clear the log')} onClick={clearAll} />}
     </div>
     <div className="ld-listwrap">
       <div className="ld-list" ref={listRef} onScroll={onScroll}>
-        {entries.length ? entries.map((e) => <LogEntry key={e.id} e={e} game={game} gm={gm} />) : <div className="empty">{t('Le journal est vide. Lance les dés ou écris un message.')}</div>}
+        {entries.length ? entries.map((e) => <LogEntry key={e.id} e={e} game={game} gm={gm} />) : <div className="empty">{t('The log is empty. Roll some dice or write a message.')}</div>}
       </div>
-      {unread > 0 && <button type="button" className="ld-unread" onClick={toBottom}>{tn(unread, '{n} nouveau ↓', '{n} nouveaux ↓')}</button>}
+      {unread > 0 && <button type="button" className="ld-unread" onClick={toBottom}>{tn(unread, '{n} new ↓', 'pl::{n} new ↓')}</button>}
     </div>
     <div className="ld-composer">
-      <button type="button" className="ld-roller-toggle" onClick={toggleRoller}>{showRoller ? '▾' : '▸'}{' '}{t('Lanceur de dés')}</button>
+      <button type="button" className="ld-roller-toggle" onClick={toggleRoller}>{showRoller ? '▾' : '▸'}{' '}{t('Dice roller')}</button>
       {showRoller && <DiceRoller game={game} gm={gm} actorId={effectiveRollActor} setActorId={setRollActorId} actorOptions={actorOptions} />}
       <div className="row ld-chat-opts">
-        <select className="input" value={to} onChange={(e) => setTo(e.target.value)} title={t('Destinataire')}>
+        <select className="input" value={to} onChange={(e) => setTo(e.target.value)} title={t('Recipient')}>
           {whisperOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
-        {speakerOptions.length > 0 && <select className="input" value={as} onChange={(e) => setAs(e.target.value)} title={t('Parler en tant que')}>
+        {speakerOptions.length > 0 && <select className="input" value={as} onChange={(e) => setAs(e.target.value)} title={t('Speak as')}>
           {speakerOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>}
       </div>
       <form className="row ld-input" onSubmit={(e) => { e.preventDefault(); submit(); }}>
-        <input className={'input' + (to ? ' whisper' : '')} value={text} maxLength={2000} placeholder={to ? t('Message privé…') : t('Message, /r 12, /w nom…')} onChange={(e) => setText(e.target.value)} />
+        <input className={'input' + (to ? ' whisper' : '')} value={text} maxLength={2000} placeholder={to ? t('Private message…') : t('Message, /r 12, /w name…')} onChange={(e) => setText(e.target.value)} />
         <Button variant="primary" type="submit" disabled={!text.trim()}>➤</Button>
       </form>
     </div>

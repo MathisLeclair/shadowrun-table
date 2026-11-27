@@ -22,7 +22,7 @@ const norm = (s: string | null | undefined) =>
     .toLowerCase();
 
 /** Folder name to display (the server's default folder is translated, GM folders are shown as typed). */
-const folderLabel = (name: string) => (name === DEFAULT_FOLDER ? t('Divers') : name);
+const folderLabel = (name: string) => (name === DEFAULT_FOLDER ? t('Miscellaneous') : name);
 
 function folderSort(a: string, b: string) {
   const ia = FOLDER_ORDER.indexOf(a);
@@ -46,7 +46,7 @@ function TemplateCard({ tpl, active, spawned, onClick }: TemplateCardProps) {
       <div className="bst-card-top">
         <strong title={tpl.name}>{tpl.name}</strong>
         {spawned > 0 && (
-          <Badge color="green" title={t('PNJ de ce modèle actuellement en jeu')}>
+          <Badge color="green" title={t('NPCs from this template currently in play')}>
             ×{spawned}
           </Badge>
         )}
@@ -54,7 +54,7 @@ function TemplateCard({ tpl, active, spawned, onClick }: TemplateCardProps) {
       <div className="sub">{[tpl.metatype && metatypeLabel(tpl.metatype), tpl.concept].filter(Boolean).join(' · ') || '—'}</div>
       <div className="meta">
         {pr > 0 && <Badge color="amber">{t('PR {n}', { n: pr })}</Badge>}
-        {tpl.npc?.grunt && <Badge color="magenta">{t('Sbire')}</Badge>}
+        {tpl.npc?.grunt && <Badge color="magenta">{t('Grunt')}</Badge>}
         {kind !== 'metahuman' && <Badge color="cyan">{npcKindLabel(kind)}</Badge>}
         {d && kind !== 'host' && <span className="mono small muted">{t('Init {text}', { text: d.initiative.text })}</span>}
       </div>
@@ -65,10 +65,10 @@ function TemplateCard({ tpl, active, spawned, onClick }: TemplateCardProps) {
 /** Toast text after a spawn (whole sentences, one per case). */
 function spawnMessage(n: number, mapName: string, hidden: boolean): string {
   const p = { map: mapName };
-  if (mapName && hidden) return tn(n, '{n} PNJ créé sur « {map} » (cachés)', '{n} PNJ créés sur « {map} » (cachés)', p);
-  if (mapName) return tn(n, '{n} PNJ créé sur « {map} »', '{n} PNJ créés sur « {map} »', p);
-  if (hidden) return tn(n, '{n} PNJ créé (cachés)', '{n} PNJ créés (cachés)');
-  return tn(n, '{n} PNJ créé', '{n} PNJ créés');
+  if (mapName && hidden) return tn(n, '{n} NPC created on « {map} » (hidden)', '{n} NPCs created on « {map} » (hidden)', p);
+  if (mapName) return tn(n, '{n} NPC created on « {map} »', '{n} NPCs created on « {map} »', p);
+  if (hidden) return tn(n, '{n} NPC created (hidden)', '{n} NPCs created (hidden)');
+  return tn(n, '{n} NPC created', '{n} NPCs created');
 }
 
 /** Reply of bestiary/spawn and npcgen/create. */
@@ -103,7 +103,7 @@ function SpawnBox({ game, tpl, ui }: { game: GameView; tpl: Template; ui: UIStat
       }
       const res = await send<SpawnReply>('bestiary/spawn', payload);
       toast(spawnMessage(res.actorIds.length, map ? map.name : '', hidden), 'success');
-      if (res.unplaced) toast(t('{n} PNJ sans place libre sur la carte (acteurs créés sans token)', { n: res.unplaced }), 'warn');
+      if (res.unplaced) toast(t('{n} NPC(s) with no free cell on the map (actors created without a token)', { n: res.unplaced }), 'warn');
     } catch {
       /* toasted */
     }
@@ -112,49 +112,49 @@ function SpawnBox({ game, tpl, ui }: { game: GameView; tpl: Template; ui: UIStat
 
   if (isHost) {
     return (
-      <Panel title={t('Faire apparaître')}>
-        <div className="bst-hint">{t('Fiche de référence : fais apparaître les IC et les spiders du dossier Matrice à la place.')}</div>
+      <Panel title={t('Spawn')}>
+        <div className="bst-hint">{t('Reference sheet: spawn the IC and spiders from the Matrix folder instead.')}</div>
       </Panel>
     );
   }
   return (
-    <Panel title={t('Faire apparaître')}>
+    <Panel title={t('Spawn')}>
       <div className="bst-spawn">
         <div className="field">
-          <span className="field-label">{t('Nombre')}</span>
+          <span className="field-label">{t('Count')}</span>
           <NumberInput value={count} min={1} max={20} onChange={setCount} />
         </div>
         <div className="field grow">
-          <span className="field-label">{t('Carte')}</span>
+          <span className="field-label">{t('Map')}</span>
           <select className="input" value={mapId} onChange={(e) => setMapChoice(e.target.value)}>
             {maps.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.id === game.scene?.activeMapId ? t('{name} (active)', { name: m.name }) : m.name}
               </option>
             ))}
-            <option value={NO_MAP}>{t('— Aucune (fiches seulement) —')}</option>
+            <option value={NO_MAP}>{t('— None (sheets only) —')}</option>
           </select>
         </div>
         <div className="field">
-          <span className="field-label">{t('Visibilité')}</span>
-          <Toggle value={hidden} onChange={setHidden} label={hidden ? t('Caché') : t('Visible')} />
+          <span className="field-label">{t('Visibility')}</span>
+          <Toggle value={hidden} onChange={setHidden} label={hidden ? t('Hidden') : t('Visible')} />
         </div>
         {combatOn && (
           <div className="field">
             <span className="field-label">{t('Combat')}</span>
-            <Toggle value={addToCombat} onChange={setAddToCombat} label={t('Ajouter')} />
+            <Toggle value={addToCombat} onChange={setAddToCombat} label={t('Add')} />
           </div>
         )}
         <Button variant="primary" disabled={busy} onClick={spawn}>
-          ☠ {t('Faire apparaître')}
+          ☠ {t('Spawn')}
         </Button>
       </div>
       <div className="bst-hint" style={{ marginTop: '6px' }}>
         {map
           ? anchor
-            ? t('Près du token sélectionné ({name}).', { name: anchor.name })
-            : t('Au centre de la carte (sélectionne un token sur la carte pour les placer à côté).')
-          : t('Les PNJ seront créés sans token.')}
+            ? t('Next to the selected token ({name}).', { name: anchor.name })
+            : t('In the middle of the map (select a token on the map to place them next to it).')
+          : t('The NPCs will be created without a token.')}
       </div>
     </Panel>
   );
@@ -177,17 +177,17 @@ function SpawnedList({ game, tpl }: { game: GameView; tpl: Template }) {
     send('combat/add', loc ? { tokenIds: [loc.token.id] } : { actorIds: [a.id] }).catch(() => null);
   };
   const saveAsTemplate = async (a: Actor) => {
-    const name = await promptText(t('Nom du nouveau modèle'), a.name.replace(/\s+\d+$/, ''));
+    const name = await promptText(t('Name of the new template'), a.name.replace(/\s+\d+$/, ''));
     if (!name) return;
     send('bestiary/fromActor', { actorId: a.id, name, folder: tpl.folder })
-      .then(() => toast(t('Modèle enregistré'), 'success'))
+      .then(() => toast(t('Template saved'), 'success'))
       .catch(() => null);
   };
   const remove = async (a: Actor) => {
-    if (await confirmAction(t('Supprimer définitivement {name} (fiche et token) ?', { name: a.name }))) send('actor/delete', { actorId: a.id }).catch(() => null);
+    if (await confirmAction(t('Permanently delete {name} (sheet and token)?', { name: a.name }))) send('actor/delete', { actorId: a.id }).catch(() => null);
   };
   return (
-    <Panel title={t('En jeu ({n})', { n: actors.length })}>
+    <Panel title={t('In play ({n})', { n: actors.length })}>
       <div className="bst-spawned">
         {actors.map((a) => {
           const d = safeDerive(a);
@@ -200,7 +200,7 @@ function SpawnedList({ game, tpl }: { game: GameView; tpl: Template }) {
                 {d && (
                   <>
                     {' '}
-                    <span className="mono small muted">{t('P {p}/{pmax} · É {s}/{smax}', { p: c.physical || 0, pmax: d.physicalMonitor, s: c.stun || 0, smax: d.stunMonitor })}</span>
+                    <span className="mono small muted">{t('P {p}/{pmax} · S {s}/{smax}', { p: c.physical || 0, pmax: d.physicalMonitor, s: c.stun || 0, smax: d.stunMonitor })}</span>
                   </>
                 )}
                 {loc && (
@@ -210,19 +210,19 @@ function SpawnedList({ game, tpl }: { game: GameView; tpl: Template }) {
                   </>
                 )}
               </span>
-              {a.hidden && <Badge>{t('Caché')}</Badge>}
+              {a.hidden && <Badge>{t('Hidden')}</Badge>}
               {game.combat?.active && !inCombat(a.id) && (
                 <Button small onClick={() => addCombat(a)}>
                   {t('+ Combat')}
                 </Button>
               )}
               <Button small variant="ghost" onClick={() => openSheet(a.id)}>
-                {t('Fiche')}
+                {t('Sheet')}
               </Button>
-              <Button small variant="ghost" title={t('Enregistrer cette version comme nouveau modèle')} onClick={() => saveAsTemplate(a)}>
-                {t('→ Modèle')}
+              <Button small variant="ghost" title={t('Save this version as a new template')} onClick={() => saveAsTemplate(a)}>
+                {t('→ Template')}
               </Button>
-              <Button small variant="danger" title={t('Supprimer')} onClick={() => remove(a)}>
+              <Button small variant="danger" title={t('Delete')} onClick={() => remove(a)}>
                 ✕
               </Button>
             </div>
@@ -272,7 +272,7 @@ export default function BestiaryPage({ game }: GameProps) {
   if (!isGM)
     return (
       <div className="page">
-        <Empty>{t('Le bestiaire est réservé au MJ.')}</Empty>
+        <Empty>{t('The bestiary is for the GM only.')}</Empty>
       </div>
     );
 
@@ -292,7 +292,7 @@ export default function BestiaryPage({ game }: GameProps) {
     try {
       const res = await send<{ templateId: string }>('bestiary/duplicate', { templateId: tpl.id });
       setSelId(res.templateId);
-      toast(t('Modèle dupliqué'), 'success');
+      toast(t('Template duplicated'), 'success');
     } catch {
       /* toasted */
     }
@@ -300,7 +300,7 @@ export default function BestiaryPage({ game }: GameProps) {
   const remove = async (tpl: Template) => {
     const n = spawnedCount[tpl.id] || 0;
     const ok = await confirmAction(
-      n ? t('Supprimer le modèle « {name} » ?\n({n} PNJ déjà en jeu restent sur leurs cartes.)', { name: tpl.name, n }) : t('Supprimer le modèle « {name} » ?', { name: tpl.name })
+      n ? t('Delete the template « {name} »?\n({n} NPC(s) already in play stay on their maps.)', { name: tpl.name, n }) : t('Delete the template « {name} »?', { name: tpl.name })
     );
     if (!ok) return;
     send('bestiary/delete', { templateId: tpl.id })
@@ -308,7 +308,7 @@ export default function BestiaryPage({ game }: GameProps) {
       .catch(() => null);
   };
   const renameFolder = async (name: string) => {
-    const to = await promptText(t('Renommer le dossier « {name} » en :', { name: folderLabel(name) }), name);
+    const to = await promptText(t('Rename the folder « {name} » to:', { name: folderLabel(name) }), name);
     if (!to || to === name) return;
     send('bestiary/renameFolder', { from: name, to })
       .then(() => {
@@ -317,7 +317,7 @@ export default function BestiaryPage({ game }: GameProps) {
       .catch(() => null);
   };
   const exportList = () => {
-    if (!filtered.length) return toast(t('Rien à exporter'), 'warn');
+    if (!filtered.length) return toast(t('Nothing to export'), 'warn');
     downloadJson(`bestiaire${folder ? '-' + norm(folder).replace(/[^a-z0-9]+/g, '-') : ''}.json`, filtered);
   };
   const importFile = async (ev: ChangeEvent<HTMLInputElement>) => {
@@ -328,13 +328,13 @@ export default function BestiaryPage({ game }: GameProps) {
     try {
       data = JSON.parse(await file.text());
     } catch {
-      return toast(t('Fichier JSON illisible'), 'error');
+      return toast(t('Unreadable JSON file'), 'error');
     }
     const obj = data as { templates?: unknown } | null;
     const list = Array.isArray(data) ? data : Array.isArray(obj?.templates) ? obj.templates : [data];
     try {
       const res = await send<{ count: number; ids?: string[] }>('bestiary/import', { templates: list });
-      toast(tn(res.count, '{n} modèle importé', '{n} modèles importés'), 'success');
+      toast(tn(res.count, '{n} template imported', '{n} templates imported'), 'success');
       if (res.ids?.[0]) setSelId(res.ids[0]);
     } catch {
       /* toasted */
@@ -343,27 +343,27 @@ export default function BestiaryPage({ game }: GameProps) {
   const saveEdit = async (draft: Template) => {
     if (!editing) return;
     await send('bestiary/update', { templateId: editing.id, patch: draft });
-    toast(t('Modèle enregistré'), 'success');
+    toast(t('Template saved'), 'success');
     setEditingId(null);
   };
 
   return (
     <div className="page">
       <div className="page-title">
-        <h2>{t('Bestiaire')}</h2>
+        <h2>{t('Bestiary')}</h2>
         <div className="row wrap">
-          <SearchBox value={q} onChange={setQ} placeholder={t('Nom, compétence, arme…')} />
+          <SearchBox value={q} onChange={setQ} placeholder={t('Name, skill, weapon…')} />
           <Button variant="accent" onClick={() => setGenOpen(true)}>
-            ☠ {t('Créer un ennemi')}
+            ☠ {t('Create an enemy')}
           </Button>
           <Button variant="primary" onClick={create}>
-            {t('+ Nouveau modèle')}
+            {t('+ New template')}
           </Button>
-          <Button variant="ghost" title={t('Importer un fichier JSON de modèles')} onClick={() => fileRef.current?.click()}>
-            {t('Importer')}
+          <Button variant="ghost" title={t('Import a JSON file of templates')} onClick={() => fileRef.current?.click()}>
+            {t('Import')}
           </Button>
-          <Button variant="ghost" title={t('Exporter les modèles affichés en JSON')} onClick={exportList}>
-            {t('Exporter')}
+          <Button variant="ghost" title={t('Export the templates shown as JSON')} onClick={exportList}>
+            {t('Export')}
           </Button>
           <input ref={fileRef} type="file" accept=".json,application/json" style={{ display: 'none' }} onChange={importFile} />
         </div>
@@ -372,7 +372,7 @@ export default function BestiaryPage({ game }: GameProps) {
       <div className={'bst' + (selected ? ' has-sel' : '')}>
         <nav className="bst-side">
           <button className={'bst-folder' + (!folder ? ' active' : '')} onClick={() => setFolder(null)}>
-            {t('Tous')}
+            {t('All')}
             <span className="count">{templates.length}</span>
           </button>
           {folders.map((f) => (
@@ -380,7 +380,7 @@ export default function BestiaryPage({ game }: GameProps) {
               <span>{folderLabel(f.name)}</span>
               <span
                 className="ren"
-                title={t('Renommer le dossier')}
+                title={t('Rename the folder')}
                 onClick={(e) => {
                   e.stopPropagation();
                   renameFolder(f.name);
@@ -397,7 +397,7 @@ export default function BestiaryPage({ game }: GameProps) {
           {filtered.map((tpl) => (
             <TemplateCard key={tpl.id} tpl={tpl} active={selected?.id === tpl.id} spawned={spawnedCount[tpl.id] || 0} onClick={() => setSelId(tpl.id)} />
           ))}
-          {!filtered.length && <Empty>{templates.length ? t('Aucun modèle ne correspond.') : t('Bestiaire vide.')}</Empty>}
+          {!filtered.length && <Empty>{templates.length ? t('No template matches.') : t('Empty bestiary.')}</Empty>}
         </div>
 
         <div className="bst-detail">
@@ -405,23 +405,23 @@ export default function BestiaryPage({ game }: GameProps) {
             <>
               <div className="bst-actions">
                 <Button small variant="ghost" className="bst-back" onClick={() => setSelId(null)}>
-                  {t('← Liste')}
+                  {t('← List')}
                 </Button>
                 <Button small variant="primary" onClick={() => setEditingId(selected.id)}>
-                  {t('Modifier')}
+                  {t('Edit')}
                 </Button>
                 <Button small onClick={() => duplicate(selected)}>
-                  {t('Dupliquer')}
+                  {t('Duplicate')}
                 </Button>
                 <Button small variant="ghost" onClick={() => downloadJson(`${norm(selected.name).replace(/[^a-z0-9]+/g, '-') || 'modele'}.json`, selected)}>
-                  {t('Exporter')}
+                  {t('Export')}
                 </Button>
                 <Button small variant="ghost" onClick={() => goTab('map')}>
-                  {t('Voir la carte')}
+                  {t('View the map')}
                 </Button>
                 <span className="grow"></span>
                 <Button small variant="danger" onClick={() => remove(selected)}>
-                  {t('Supprimer')}
+                  {t('Delete')}
                 </Button>
               </div>
               <SpawnBox key={'spawn-' + selected.id} game={game} tpl={selected} ui={ui} />
@@ -429,11 +429,11 @@ export default function BestiaryPage({ game }: GameProps) {
               <StatBlock t={selected} />
             </>
           ) : (
-            <Panel title={t('Bestiaire')}>
+            <Panel title={t('Bestiary')}>
               <div className="col">
-                <div className="muted">{t('Choisis un modèle pour voir son bloc de stats, le faire apparaître sur une carte ou le modifier.')}</div>
+                <div className="muted">{t('Pick a template to see its stat block, spawn it on a map or edit it.')}</div>
                 <div className="small faint">
-                  {t('{templates} modèles · {folders} dossiers · {npcs} PNJ en jeu', {
+                  {t('{templates} templates · {folders} folders · {npcs} NPCs in play', {
                     templates: templates.length,
                     folders: folders.length,
                     npcs: Object.values(spawnedCount).reduce((a, b) => a + b, 0),

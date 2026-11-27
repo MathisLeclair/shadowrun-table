@@ -113,7 +113,7 @@ const mod: ServerModule<HttpApp> = {
       // fallthrough: a missing file answers the same JSON 404 (no ENOENT stack in the server log).
       const serve = express.static(PDFJS_DIR, { index: false, dotfiles: 'deny', immutable: true, maxAge: 365 * 86400 * 1000, fallthrough: true,
         setHeaders: (res: Res) => res.setHeader('X-Content-Type-Options', 'nosniff') });
-      const notFound = (res: Res) => res.status(404).json(errorBody('Introuvable'));
+      const notFound = (res: Res) => res.status(404).json(errorBody('Not found'));
       app.use(PDFJS_BASE, (req: Req, res: Res) => (PDFJS_PUBLIC.test(req.path) ? serve(req, res, () => notFound(res)) : notFound(res)));
     }
 
@@ -132,7 +132,7 @@ const mod: ServerModule<HttpApp> = {
         .map(cleanCode)
         .filter(Boolean);
       const books = visibleBooks(req).filter((b) => !want.length || want.includes(b.code));
-      if (want.length && !books.length) return res.status(403).json(errorBody('Livre non disponible sur cette table'));
+      if (want.length && !books.length) return res.status(403).json(errorBody('Book not available on this table'));
       let hits: Array<{ code: string; page: number | null; pdfPage: number; snippet: string; marks: unknown; score?: number }> = [];
       for (const b of books) {
         const idx = loadIndex(BOOKS_DIR, b.code);
@@ -153,7 +153,7 @@ const mod: ServerModule<HttpApp> = {
       const n = Math.round(Number(req.params.n));
       const pdfPage = req.query.pdf === '1' ? (n >= 1 && n <= (b.pages || 1) ? n : null) : printedToPdf(b, n);
       const idx = loadIndex(BOOKS_DIR, b.code);
-      if (!pdfPage || !idx) return res.status(404).json(errorBody('Page introuvable'));
+      if (!pdfPage || !idx) return res.status(404).json(errorBody('Page not found'));
       res.json({ code: b.code, page: pdfToPrinted(b, pdfPage), pdfPage, pages: b.pages, text: idx.texts[pdfPage - 1] || '' });
     });
 
@@ -170,7 +170,7 @@ const mod: ServerModule<HttpApp> = {
       res.setHeader('Cache-Control', 'no-store'); // errors are never cached; a successful send replaces it
       const code = cleanCode(req.params.code);
       const v = verifyLink(BOOKS_DIR, typeof req.query.k === 'string' ? req.query.k : '');
-      if (!v.ok) return v.reason === 'missing' ? res.status(401).json(errorBody('Non connecté')) : res.status(403).json(errorBody(BAD_LINK));
+      if (!v.ok) return v.reason === 'missing' ? res.status(401).json(errorBody('Not logged in')) : res.status(403).json(errorBody(BAD_LINK));
       if (v.c !== code) return res.status(403).json(errorBody(BAD_LINK));
       const t = tableApi.tables.get(v.t);
       const live = t && tableApi.usableTable(t) === t && !t.meta?.archived && !t.meta?.demo;
@@ -178,7 +178,7 @@ const mod: ServerModule<HttpApp> = {
       const userOk = live && (v.u === 'gm' || !!t.state?.users?.[v.u]) && sessionAlive(t.state?.sessions, v.u, v.s);
       if (!userOk) return res.status(403).json(errorBody(BAD_LINK));
       const b: LibraryBook | undefined = readLibrary(BOOKS_DIR).books.find((x: LibraryBook) => x.code === code);
-      if (!b || !allowedFor(b, v.t)) return res.status(403).json(errorBody('Livre non disponible sur cette table'));
+      if (!b || !allowedFor(b, v.t)) return res.status(403).json(errorBody('Book not available on this table'));
       const file = pdfFile(BOOKS_DIR, code);
       if (!fs.existsSync(file)) return res.status(404).json(errorBody(NOT_HERE));
       res.setHeader('X-Content-Type-Options', 'nosniff');

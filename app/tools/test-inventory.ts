@@ -469,7 +469,7 @@ try {
     const flash = J().weapons.find((x) => /Flash-Bang/.test(x.nameEn || x.name))!;
     assert.ok(flash.nameEn && flash.nameFr && flash.nameEn !== flash.nameFr, `${flash.nameEn} / ${flash.nameFr}`);
     const roll = await gm.send('dice/roll', { actorId: 'pc_jane', weaponId: flash.id, skillId: flash.skill, label: `Attaque — ${flash.nameFr}` });
-    assert.deepEqual(roll.labelI18n, { key: 'Attaque — {weapon}', params: { weapon: { fr: flash.nameFr, en: flash.nameEn } } });
+    assert.deepEqual(roll.labelI18n, { key: 'Attack — {weapon}', params: { weapon: { fr: flash.nameFr, en: flash.nameEn } } });
     const { interpolate } = await import('../client/i18n/format.ts');
     assert.equal(interpolate('Attack — {weapon}', roll.labelI18n.params, null as unknown as undefined, 'en'), `Attack — ${flash.nameEn}`);
   });

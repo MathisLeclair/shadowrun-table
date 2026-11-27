@@ -23,14 +23,14 @@ type LibError = { libKey?: string; libParams?: I18nParams };
 /** Marker for the i18n checker. */
 const tk = (s: string): string => s;
 const MAX_DIM = 160;
-const NOT_FOUND = tk('Carte de bibliothèque introuvable');
-const BAD_LINK = tk('Lien d’image expiré ou invalide : recharge la page');
+const NOT_FOUND = tk('Library map not found');
+const BAD_LINK = tk('Image link expired or invalid: reload the page');
 const str = (v: unknown, max = 200): string => (v == null ? '' : String(v)).slice(0, max);
 const floorRows = (w: number, h: number): string[] => Array.from({ length: h }, () => '.'.repeat(w));
 
 function getMap(ctx: ActionContext, mapId: MapId): GameMap {
   const m = ctx.state.maps?.[mapId];
-  if (!m) ctx.fail('Carte introuvable');
+  if (!m) ctx.fail('Map not found');
   return m;
 }
 /** Library errors (server/lib/maplib.js libError) → translatable ctx.fail. */
@@ -44,7 +44,7 @@ function libCall<T>(ctx: ActionContext, fn: () => T): T {
   }
 }
 function linkedEntry(ctx: ActionContext, map: GameMap) {
-  if (!map.library?.slug) ctx.fail('Cette carte ne vient pas de la bibliothèque');
+  if (!map.library?.slug) ctx.fail('This map does not come from the library');
   const m = L.getMeta(map.library.slug);
   if (!m) ctx.fail(NOT_FOUND);
   return m;
@@ -104,7 +104,7 @@ const mod: ServerModule<ExpressApp> = {
         if (!v) ctx.fail(NOT_FOUND);
         const e = L.effective(m);
         const g = libGeometry({ ...e, ...(v.geometry || {}) });
-        if (g.width > MAX_DIM || g.height > MAX_DIM) ctx.fail('Carte trop grande ({w} × {h} cases, {max} max)', { w: g.width, h: g.height, max: MAX_DIM });
+        if (g.width > MAX_DIM || g.height > MAX_DIM) ctx.fail('Map too large ({w} × {h} cells, {max} max)', { w: g.width, h: g.height, max: MAX_DIM });
         const content = instanceContent(v, uid);
         const map = normalizeMap({
           id: uid('map'),
@@ -152,7 +152,7 @@ const mod: ServerModule<ExpressApp> = {
         const e = L.effective(m);
         const diff = libraryDiff(map, v, e);
         const g = libGeometry({ ...e, ...(v.geometry || {}) });
-        if (g.width > MAX_DIM || g.height > MAX_DIM) ctx.fail('Carte trop grande ({w} × {h} cases, {max} max)', { w: g.width, h: g.height, max: MAX_DIM });
+        if (g.width > MAX_DIM || g.height > MAX_DIM) ctx.fail('Map too large ({w} × {h} cells, {max} max)', { w: g.width, h: g.height, max: MAX_DIM });
         const content = instanceContent(v, uid, { previous: map });
         const keepRegions = (map.regions || []).filter((r) => r.gmOnly && !String(r.id).startsWith(ENTRY_REGION_PREFIX));
         if (g.width !== map.width || g.height !== map.height) {
@@ -181,11 +181,11 @@ const mod: ServerModule<ExpressApp> = {
       role: 'gm',
       handler(ctx: ActionContext, { mapId, force }: PublishPayload) {
         const map = getMap(ctx, mapId);
-        if (!map.library?.slug) ctx.fail('Seules les cartes venant de la bibliothèque peuvent y être publiées');
+        if (!map.library?.slug) ctx.fail('Only maps that come from the library can be published to it');
         const link = map.library;
         const m = L.getMeta(link.slug);
         if (!m) ctx.fail(NOT_FOUND);
-        if (L.getSettings().publishAdminOnly) ctx.fail('La publication dans la bibliothèque est réservée à l’administrateur');
+        if (L.getSettings().publishAdminOnly) ctx.fail('Publishing to the library is reserved to the admin');
         const cur = L.getVersion(m.slug);
         const g = libGeometry({ ...L.effective(m), ...(cur?.geometry || {}) });
         const bg: Partial<NonNullable<GameMap['background']>> = map.background || {};
@@ -196,7 +196,7 @@ const mod: ServerModule<ExpressApp> = {
         );
         map.library = { ...link, version: n, syncedAt: ctx.now };
         delete map.library.migrated;
-        ctx.log({ kind: 'system', gmOnly: true, author: 'MJ', i18n: { key: 'Corrections publiées dans la bibliothèque : {name} (version {version})', params: { name: map.name, version: n } } });
+        ctx.log({ kind: 'system', gmOnly: true, author: 'MJ', i18n: { key: 'Fixes published to the library: {name} (version {version})', params: { name: map.name, version: n } } });
         return { version: n };
       },
     },
@@ -206,7 +206,7 @@ const mod: ServerModule<ExpressApp> = {
       role: 'gm',
       handler(ctx: ActionContext, { mapId }: MapIdPayload) {
         const map = getMap(ctx, mapId);
-        if (!map.library) ctx.fail('Cette carte ne vient pas de la bibliothèque');
+        if (!map.library) ctx.fail('This map does not come from the library');
         delete map.library;
       },
     },
@@ -234,7 +234,7 @@ const mod: ServerModule<ExpressApp> = {
     const serve = (kind: 'image' | 'thumb') => (req: Req, res: Res) => {
       res.setHeader('Cache-Control', 'no-store'); // errors and placeholders are never cached; a real file replaces it
       const v = L.verifyKey(typeof req.query.k === 'string' ? req.query.k : '');
-      if (!v.ok) return v.reason === 'missing' ? res.status(401).json(errorBody('Non connecté')) : res.status(403).json(errorBody(BAD_LINK));
+      if (!v.ok) return v.reason === 'missing' ? res.status(401).json(errorBody('Not logged in')) : res.status(403).json(errorBody(BAD_LINK));
       if (v.a) {
         if (!L.isAdminSessionAlive(v.s)) return res.status(403).json(errorBody(BAD_LINK));
       } else {

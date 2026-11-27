@@ -28,9 +28,9 @@ export function canComment(game: GameView, page: NotePage | null | undefined): b
 /** Display name of a user id: the GM, the user's main character, else the user's name. */
 export function userLabel(game: GameView, userId: UserId | null | undefined): string {
   if (!userId) return '';
-  if (userId === 'gm') return t('MJ');
+  if (userId === 'gm') return t('GM');
   const u = game.users?.[userId];
-  if (!u) return t('Joueur parti');
+  if (!u) return t('Former player');
   const a = game.actors?.[(u.characterIds || [])[0]];
   return a?.name || u.name;
 }

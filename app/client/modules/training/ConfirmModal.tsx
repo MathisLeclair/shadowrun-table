@@ -43,19 +43,19 @@ export default function ConfirmModal({ game, actor, draft, isGM, onClose }: Conf
   const pp = req.kind === 'power' ? powerPoints(actor) : null;
 
   let approvalText;
-  if (isGM) approvalText = qt.days > 0 ? t('Validé directement (MJ) : l’entraînement démarre maintenant.') : t('Validé directement (MJ) : effet immédiat.');
+  if (isGM) approvalText = qt.days > 0 ? t('Approved directly (GM): training starts now.') : t('Approved directly (GM): immediate effect.');
   else if (settings.approval === 'always' || manual)
     approvalText = manual
-      ? t('Saisie manuelle : le MJ doit valider ta demande. Le karma n’est débité qu’à la validation.')
-      : t('le MJ doit valider ta demande. Le karma n’est débité qu’à la validation.');
-  else approvalText = qt.days > 0 ? t('Validation automatique : l’entraînement démarre dès l’envoi.') : t('Validation automatique : effet immédiat.');
+      ? t('Manual entry: the GM must approve your request. Karma is only spent on approval.')
+      : t('the GM must approve your request. Karma is only spent on approval.');
+  else approvalText = qt.days > 0 ? t('Automatic approval: training starts as soon as you send it.') : t('Automatic approval: immediate effect.');
 
   const submit = async () => {
     if (qt.error || busy) return;
     setBusy(true);
     try {
       const res = await send<{ status?: string }>('training/request', { ...effective, actorId: actor.id });
-      const msg = res?.status === 'pending' ? t('Demande envoyée au MJ') : res?.status === 'done' ? t('Progression acquise !') : t('Entraînement commencé');
+      const msg = res?.status === 'pending' ? t('Request sent to the GM') : res?.status === 'done' ? t('Advancement gained!') : t('Training started');
       toast(msg, 'success');
       onClose();
     } catch {
@@ -65,7 +65,7 @@ export default function ConfirmModal({ game, actor, draft, isGM, onClose }: Conf
 
   const toValue = req.to ?? qt.to;
   return (
-    <Modal title={req.kind ? kindLabel(req.kind) : t('Progression')} width={560} onClose={onClose}>
+    <Modal title={req.kind ? kindLabel(req.kind) : t('Advancement')} width={560} onClose={onClose}>
       <div className="training-confirm col gap-l">
         <div>
           <div className="training-confirm-label">{labelOf(qt)}</div>
@@ -76,55 +76,55 @@ export default function ConfirmModal({ game, actor, draft, isGM, onClose }: Conf
 
         <div className="training-confirm-fields">
           {multi && (
-            <Field label={req.kind === 'power' ? t('Niveau visé') : t('Rang visé')} hint={t('Actuel : {n}', { n: qt.from })}>
+            <Field label={req.kind === 'power' ? t('Target level') : t('Target rating')} hint={t('Current: {n}', { n: qt.from })}>
               <NumberInput value={toValue} min={qt.from + 1} max={MAX_TO[req.kind] || 12} onChange={(n) => set({ to: n })} />
             </Field>
           )}
           {(req.kind === 'skill' || req.kind === 'knowledge') && (
-            <Field label={t('Spécialisation (optionnel)')} hint={t('+7 karma · +1 mois')}>
-              <TextInput live value={req.spec || ''} placeholder={t('ex. Ares Predator')} onChange={(v) => set({ spec: v })} />
+            <Field label={t('Specialization (optional)')} hint={t('+7 karma · +1 month')}>
+              <TextInput live value={req.spec || ''} placeholder={t('e.g. Ares Predator')} onChange={(v) => set({ spec: v })} />
             </Field>
           )}
           {req.kind === 'specialization' && (
-            <Field label={t('Spécialisation')}>
-              <TextInput live value={req.spec || ''} placeholder={t('ex. Katana, Corpos, Drones…')} onChange={(v) => set({ spec: v })} autoFocus />
+            <Field label={t('Specialization')}>
+              <TextInput live value={req.spec || ''} placeholder={t('e.g. Katana, Corps, Drones…')} onChange={(v) => set({ spec: v })} autoFocus />
             </Field>
           )}
           {req.kind === 'power' && !req.catalogId && (
-            <Field label={t('Coût (PP par niveau)')}>
+            <Field label={t('Cost (PP per level)')}>
               <NumberInput value={req.pp || 0} min={0} max={10} step={0.25} onChange={(n) => set({ pp: n })} />
             </Field>
           )}
           {req.kind === 'power' && !draft.existing && (
-            <Field label={t('Précision (optionnel)')} hint={t('ex. Capacité améliorée (Pistolets)')}>
-              <TextInput live value={precision} placeholder={t('Compétence, sens…')} onChange={setPrecision} />
+            <Field label={t('Detail (optional)')} hint={t('e.g. Improved Ability (Pistols)')}>
+              <TextInput live value={precision} placeholder={t('Skill, sense…')} onChange={setPrecision} />
             </Field>
           )}
           {req.kind === 'initiation' && (
             <div className="col">
-              <span className="field-label">{t('Options (−10 % chacune)')}</span>
-              <Toggle label={t('Initiation de groupe')} value={req.options?.group} onChange={(v) => set({ options: { ...req.options, group: v } })} />
-              <Toggle label={t('Ordalie')} value={req.options?.ordeal} onChange={(v) => set({ options: { ...req.options, ordeal: v } })} />
-              <Toggle label={t('École / enseignement')} value={req.options?.schooling} onChange={(v) => set({ options: { ...req.options, schooling: v } })} />
-              <Field label={prof.MAG > 0 ? t('Métamagie apprise (optionnel)') : t('Écho appris (optionnel)')}>
+              <span className="field-label">{t('Options (−10% each)')}</span>
+              <Toggle label={t('Group initiation')} value={req.options?.group} onChange={(v) => set({ options: { ...req.options, group: v } })} />
+              <Toggle label={t('Ordeal')} value={req.options?.ordeal} onChange={(v) => set({ options: { ...req.options, ordeal: v } })} />
+              <Toggle label={t('Schooling')} value={req.options?.schooling} onChange={(v) => set({ options: { ...req.options, schooling: v } })} />
+              <Field label={prof.MAG > 0 ? t('Metamagic learned (optional)') : t('Echo learned (optional)')}>
                 <TextInput
                   live
                   value={req.options?.metamagic || ''}
-                  placeholder={prof.MAG > 0 ? t('ex. Centrage, Masquage…') : t('ex. Neuro-filtre…')}
+                  placeholder={prof.MAG > 0 ? t('e.g. Centering, Masking…') : t('e.g. Neuro Filter…')}
                   onChange={(v) => set({ options: { ...req.options, metamagic: v } })}
                 />
               </Field>
-              {prof.hasPowers && <Toggle label={t('Gagner un point de pouvoir')} value={req.options?.powerPoint} onChange={(v) => set({ options: { ...req.options, powerPoint: v } })} />}
+              {prof.hasPowers && <Toggle label={t('Gain a Power Point')} value={req.options?.powerPoint} onChange={(v) => set({ options: { ...req.options, powerPoint: v } })} />}
             </div>
           )}
         </div>
 
         {canInstructor && insPreview && (
           <div className="training-instructor">
-            <Toggle label={t('Avec instructeur')} value={!!req.instructor} onChange={(v) => set({ instructor: v })} title={ruleText('instructor')} />
+            <Toggle label={t('With an instructor')} value={!!req.instructor} onChange={(v) => set({ instructor: v })} title={ruleText('instructor')} />
             <div className="small muted">
-              {t('Seul : {solo} · Avec instructeur : {days} pour {cost}', { solo: fmtDays(soloDays), days: fmtDays(insPreview.days), cost: fmtNuyen(insPreview.nuyen) })}
-              <span className="faint"> {t('({rate}/semaine, −{pct} %)', { rate: fmtNuyen(insPreview.rate), pct: settings.instructorTimeReduction })}</span>
+              {t('Alone: {solo} · With an instructor: {days} for {cost}', { solo: fmtDays(soloDays), days: fmtDays(insPreview.days), cost: fmtNuyen(insPreview.nuyen) })}
+              <span className="faint"> {t('({rate}/week, −{pct}%)', { rate: fmtNuyen(insPreview.rate), pct: settings.instructorTimeReduction })}</span>
             </div>
           </div>
         )}
@@ -137,7 +137,7 @@ export default function ConfirmModal({ game, actor, draft, isGM, onClose }: Conf
             </span>
           </div>
           <div className="training-sum-row">
-            <span>{t('Durée')}</span>
+            <span>{t('Duration')}</span>
             <span>
               {fmtDays(qt.days)}
               {qt.instructor && soloDays !== qt.days ? (
@@ -151,7 +151,7 @@ export default function ConfirmModal({ game, actor, draft, isGM, onClose }: Conf
               {!settings.useTime ? (
                 <>
                   {' '}
-                  <span className="faint small">{t('(temps d’entraînement désactivé)')}</span>
+                  <span className="faint small">{t('(training time disabled)')}</span>
                 </>
               ) : (
                 ''
@@ -160,7 +160,7 @@ export default function ConfirmModal({ game, actor, draft, isGM, onClose }: Conf
           </div>
           {qt.nuyenCost > 0 && (
             <div className="training-sum-row">
-              <span>{t('Instructeur')}</span>
+              <span>{t('Instructor')}</span>
               <span className="mono">
                 {fmtNuyen(nuyenAvail)} → <strong className="magenta">{fmtNuyen(nuyenAvail - qt.nuyenCost)}</strong>
               </span>
@@ -168,9 +168,9 @@ export default function ConfirmModal({ game, actor, draft, isGM, onClose }: Conf
           )}
           {pp && (
             <div className="training-sum-row">
-              <span>{t('Points de pouvoir')}</span>
+              <span>{t('Power Points')}</span>
               <span className="mono">
-                {t('{n} libres', { n: pp.free })} → <strong className="cyan">{Math.round((pp.free - (qt.ppCost || 0)) * 100) / 100}</strong>
+                {t('{n} free', { n: pp.free })} → <strong className="cyan">{Math.round((pp.free - (qt.ppCost || 0)) * 100) / 100}</strong>
               </span>
             </div>
           )}
@@ -183,16 +183,16 @@ export default function ConfirmModal({ game, actor, draft, isGM, onClose }: Conf
         ))}
         {qt.error && <div className="error small">{errorOf(qt)}</div>}
 
-        {isGM && <Toggle label={t('Offert par le MJ (sans karma ni nuyens)')} value={!!req.free} onChange={(v) => set({ free: v })} />}
-        <Field label={isGM ? t('Note (historique)') : t('Note pour le MJ (optionnel)')}>
-          <TextInput live value={req.note || ''} placeholder={isGM ? '' : t('ex. Cours avec Perrine, salle de sport du quartier…')} onChange={(v) => set({ note: v })} />
+        {isGM && <Toggle label={t('Granted by the GM (no karma or nuyen)')} value={!!req.free} onChange={(v) => set({ free: v })} />}
+        <Field label={isGM ? t('Note (history)') : t('Note for the GM (optional)')}>
+          <TextInput live value={req.note || ''} placeholder={isGM ? '' : t('e.g. Lessons with Perrine, the local gym…')} onChange={(v) => set({ note: v })} />
         </Field>
 
         <div className="row spread wrap">
           <span className="small muted grow">
             {manual && !isGM ? (
               <>
-                <Badge color="magenta">{t('manuel')}</Badge>{' '}
+                <Badge color="magenta">{t('manual')}</Badge>{' '}
               </>
             ) : (
               ''
@@ -201,10 +201,10 @@ export default function ConfirmModal({ game, actor, draft, isGM, onClose }: Conf
           </span>
           <span className="row">
             <Button variant="ghost" onClick={onClose}>
-              {t('Annuler')}
+              {t('Cancel')}
             </Button>
             <Button variant="primary" disabled={!!qt.error || busy} onClick={submit}>
-              {isGM ? t('Appliquer') : settings.approval === 'always' || manual ? t('Envoyer la demande') : t('Valider')}
+              {isGM ? t('Apply') : settings.approval === 'always' || manual ? t('Send the request') : t('Approve')}
             </Button>
           </span>
         </div>

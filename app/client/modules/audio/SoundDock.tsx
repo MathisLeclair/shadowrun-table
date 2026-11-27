@@ -27,7 +27,7 @@ export function SfxButton({ track, onFire, onPreview }: SfxButtonProps) {
       className={'audio-sfx' + (fired ? ' fired' : '')}
       role="button"
       tabIndex={0}
-      title={t('Jouer « {name} » pour tout le monde', { name: trackName(track) })}
+      title={t('Play “{name}” for everyone', { name: trackName(track) })}
       onClick={fire}
       onKeyDown={(e) => {
         if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
@@ -41,7 +41,7 @@ export function SfxButton({ track, onFire, onPreview }: SfxButtonProps) {
       {onPreview && (
         <button
           className="audio-sfx-preview"
-          title={t('Écouter en privé (vous seul)')}
+          title={t('Preview privately (only you)')}
           onClick={(e) => {
             e.stopPropagation();
             onPreview(track);
@@ -59,7 +59,7 @@ export default function SoundDock({ game }: GameProps) {
   if (!audio)
     return (
       <div className="audio-dock">
-        <div className="muted small">{t('Module audio indisponible.')}</div>
+        <div className="muted small">{t('Audio module unavailable.')}</div>
       </div>
     );
   const scenes = audio.scenes || [];
@@ -69,15 +69,15 @@ export default function SoundDock({ game }: GameProps) {
   return (
     <div className="audio-dock">
       <UnlockNotice />
-      <ChannelControl game={game} channel="ambient" label={t('Ambiance')} compact />
-      <ChannelControl game={game} channel="music" label={t('Musique')} compact />
+      <ChannelControl game={game} channel="ambient" label={t('Ambience')} compact />
+      <ChannelControl game={game} channel="music" label={t('Music')} compact />
 
       {scenes.length > 0 && (
         <>
           <div className="audio-dock-title">
-            <span>{t('Scènes')}</span>
+            <span>{t('Scenes')}</span>
             <Button small variant="ghost" onClick={() => goTab('audio')}>
-              {t('Gérer')}
+              {t('Manage')}
             </Button>
           </div>
           <div className="audio-dock-scenes">
@@ -85,7 +85,7 @@ export default function SoundDock({ game }: GameProps) {
               <button
                 key={s.id}
                 className={'audio-chip' + (sceneIsActive(s, audio) ? ' active' : '')}
-                title={t('Appliquer la scène « {name} »', { name: s.name })}
+                title={t('Apply the scene “{name}”', { name: s.name })}
                 onClick={() => send('audio/applyScene', { sceneId: s.id }).catch(() => {})}
               >
                 {s.name}
@@ -96,7 +96,7 @@ export default function SoundDock({ game }: GameProps) {
       )}
 
       <div className="audio-dock-title">
-        <span>{t('Bruitages')}</span>
+        <span>{t('Sound effects')}</span>
       </div>
       <div className="audio-sfx-grid">
         {sfx.map((tr) => (
@@ -105,10 +105,10 @@ export default function SoundDock({ game }: GameProps) {
       </div>
 
       <div className="audio-dock-foot">
-        <VolumeSlider value={audio.master ?? 0.8} onChange={(v) => sendVolume('master', v)} label={t('volume::Général')} title={t('Volume général (pour tout le monde)')} />
-        <LocalVolume label={t('Ce poste')} />
-        <Button variant={playing ? 'danger' : 'default'} small title={t('Coupe ambiance, musique et bruitages en cours, chez tout le monde')} onClick={() => send('audio/stopAll').catch(() => {})}>
-          ⏹ {t('Tout couper')}
+        <VolumeSlider value={audio.master ?? 0.8} onChange={(v) => sendVolume('master', v)} label={t('volume::Master')} title={t('Master volume (for everyone)')} />
+        <LocalVolume label={t('This device')} />
+        <Button variant={playing ? 'danger' : 'default'} small title={t('Stops the ambience, music and sound effects playing, for everyone')} onClick={() => send('audio/stopAll').catch(() => {})}>
+          ⏹ {t('Stop all')}
         </Button>
       </div>
     </div>

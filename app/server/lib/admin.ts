@@ -112,14 +112,14 @@ export function registerAdminRoutes(app: Express, api: TableApi): void {
     const exp = tok && sessions.get(tok);
     if (!exp || exp < Date.now()) {
       if (tok) sessions.delete(tok);
-      return fail(res, 401, 'Session administrateur expirée', { code: 'admin-auth' });
+      return fail(res, 401, 'Administrator session expired', { code: 'admin-auth' });
     }
     sessions.set(tok, Date.now() + TTL);
     next();
   }
   const metaOr404 = (req: Request, res: Response): StoredMeta | null => {
     const m = getMeta(req.params.id);
-    if (!m) fail(res, 404, 'Table introuvable');
+    if (!m) fail(res, 404, 'Table not found');
     return m;
   };
 
@@ -137,10 +137,10 @@ export function registerAdminRoutes(app: Express, api: TableApi): void {
   // ----- session -----
   app.post('/api/admin/login', (req, res) => {
     const key = `admin|${req.ip}`;
-    if (limiter.blocked(key)) return fail(res, 429, 'Trop de tentatives : réessaie dans quelques minutes');
+    if (limiter.blocked(key)) return fail(res, 429, 'Too many attempts: try again in a few minutes');
     if (!verifyPassword(String(req.body?.password || ''), getRegistry().adminPasswordHash)) {
       limiter.fail(key);
-      return fail(res, 403, 'Mot de passe administrateur incorrect');
+      return fail(res, 403, 'Wrong administrator password');
     }
     limiter.reset(key);
     const token = crypto.randomBytes(24).toString('hex');
@@ -154,8 +154,8 @@ export function registerAdminRoutes(app: Express, api: TableApi): void {
   app.get('/api/admin/session', requireAdmin, (req, res) => res.json({ ok: true }));
   app.post('/api/admin/password', requireAdmin, (req, res) => {
     const { current, next } = req.body || {};
-    if (!verifyPassword(String(current || ''), getRegistry().adminPasswordHash)) return fail(res, 403, 'Mot de passe actuel incorrect');
-    if (String(next || '').length < 8) return fail(res, 400, 'Le nouveau mot de passe doit faire au moins 8 caractères');
+    if (!verifyPassword(String(current || ''), getRegistry().adminPasswordHash)) return fail(res, 403, 'Wrong current password');
+    if (String(next || '').length < 8) return fail(res, 400, 'The new password must be at least 8 characters long');
     setAdminPassword(String(next));
     res.json({ ok: true });
   });
@@ -203,24 +203,24 @@ export function registerAdminRoutes(app: Express, api: TableApi): void {
   app.post('/api/admin/tables', requireAdmin, (req, res) => {
     const b = req.body || {};
     const name = String(b.name || '').trim().slice(0, 80);
-    if (!name) return fail(res, 400, 'Donne un nom à la table');
+    if (!name) return fail(res, 400, 'Give the table a name');
     const id = String(b.slug || '').trim().toLowerCase() || slugify(name);
     const bad = slugError(id);
     if (bad) return fail(res, 400, bad);
-    if (getMeta(id) || fs.existsSync(path.join(TABLES_DIR, id))) return fail(res, 409, 'L’identifiant « {id} » est déjà utilisé', {}, { id });
+    if (getMeta(id) || fs.existsSync(path.join(TABLES_DIR, id))) return fail(res, 409, 'The identifier “{id}” is already in use', {}, { id });
     const pack: PackId | null = PACKS[b.pack as PackId] ? b.pack : null;
-    if (!pack) return fail(res, 400, 'Contenu de départ inconnu');
+    if (!pack) return fail(res, 400, 'Unknown starting content');
     const lang = LANGS.includes(b.lang) ? b.lang : 'fr';
     const pw = String(b.gmPassword || '');
-    if (pw.length < 6) return fail(res, 400, 'Le mot de passe MJ doit faire au moins 6 caractères');
+    if (pw.length < 6) return fail(res, 400, 'The GM password must be at least 6 characters long');
     let meta;
     try {
       meta = createTableFiles({ id, name, pack, lang, gmPassword: pw.slice(0, 80), hidden: !!b.hidden });
     } catch (err) {
-      return fail(res, 500, 'Création impossible : {error}', {}, { error: (err as Error).message });
+      return fail(res, 500, 'Could not create the table: {error}', {}, { error: (err as Error).message });
     }
     const t = openTable(meta);
-    if (t.error) return fail(res, 500, 'Table créée mais illisible : {error}', {}, { error: t.error });
+    if (t.error) return fail(res, 500, 'Table created but unreadable: {error}', {}, { error: t.error });
     console.log(`[admin] table créée : ${id} (${pack}, ${lang})`);
     res.json({ table: { ...meta, url: `/t/${id}/` } });
   });
@@ -233,12 +233,12 @@ export function registerAdminRoutes(app: Express, api: TableApi): void {
     const patch: Partial<StoredMeta> = {};
     if (b.name !== undefined) {
       const name = String(b.name).trim().slice(0, 80);
-      if (!name) return fail(res, 400, 'Le nom ne peut pas être vide');
+      if (!name) return fail(res, 400, 'The name cannot be empty');
       patch.name = name;
     }
     if (b.hidden !== undefined) patch.hidden = !!b.hidden;
     if (b.lang !== undefined) {
-      if (!LANGS.includes(b.lang)) return fail(res, 400, 'Langue inconnue');
+      if (!LANGS.includes(b.lang)) return fail(res, 400, 'Unknown language');
       patch.lang = b.lang;
     }
     if (b.archived !== undefined) patch.archived = !!b.archived;
@@ -268,7 +268,7 @@ export function registerAdminRoutes(app: Express, api: TableApi): void {
     if (patch.archived === true && !wasArchived) closeTable(m.id, { reason: 'archived' });
     if (patch.archived === false && wasArchived) {
       const ot = openTable(getMeta(m.id)!);
-      if (ot.error) return fail(res, 500, 'Table désarchivée mais illisible : {error}', {}, { error: ot.error });
+      if (ot.error) return fail(res, 500, 'Table unarchived but unreadable: {error}', {}, { error: ot.error });
       if (patch.name || patch.lang) {
         if (patch.name) ot.state.config.campaignName = patch.name;
         if (patch.lang) ot.state.config.lang = patch.lang;
@@ -282,9 +282,9 @@ export function registerAdminRoutes(app: Express, api: TableApi): void {
     const m = metaOr404(req, res);
     if (!m) return;
     const t = tables.get(m.id);
-    if (!t || t.error) return fail(res, 409, 'Table archivée ou indisponible : désarchive-la d’abord');
+    if (!t || t.error) return fail(res, 409, 'Table archived or unavailable: unarchive it first');
     const pw = String(req.body?.password || '');
-    if (pw.length < 6) return fail(res, 400, 'Le mot de passe MJ doit faire au moins 6 caractères');
+    if (pw.length < 6) return fail(res, 400, 'The GM password must be at least 6 characters long');
     t.state.config.gmPassword = pw.slice(0, 80);
     // Log out existing GM sessions of that table (the old password may have leaked).
     for (const [tok, uid] of Object.entries(t.state.sessions || {})) if (uid === 'gm') delete t.state.sessions[tok];
@@ -298,7 +298,7 @@ export function registerAdminRoutes(app: Express, api: TableApi): void {
     const m = metaOr404(req, res);
     if (!m) return;
     const t = tables.get(m.id);
-    if (!t || t.error) return fail(res, 409, 'Table archivée ou indisponible');
+    if (!t || t.error) return fail(res, 409, 'Table archived or unavailable');
     res.json({ token: issueToken(t, 'gm'), slug: m.slug, url: `/t/${m.slug}/` });
   });
 
@@ -312,7 +312,7 @@ export function registerAdminRoutes(app: Express, api: TableApi): void {
   });
   app.post('/api/admin/deleted/:file/download', requireAdmin, (req, res) => {
     const file = path.basename(String(req.params.file || ''));
-    if (!file.endsWith('.zip') || !fs.existsSync(path.join(DELETED_DIR, file))) return fail(res, 404, 'Archive introuvable');
+    if (!file.endsWith('.zip') || !fs.existsSync(path.join(DELETED_DIR, file))) return fail(res, 404, 'Archive not found');
     const id = crypto.randomBytes(16).toString('hex');
     tickets.set(id, { kind: 'deleted', file, exp: Date.now() + 120000 });
     res.json({ url: `/api/admin/download/${id}` });
@@ -320,13 +320,13 @@ export function registerAdminRoutes(app: Express, api: TableApi): void {
   app.get('/api/admin/download/:ticket', async (req, res) => {
     const tk = tickets.get(req.params.ticket);
     tickets.delete(req.params.ticket);
-    if (!tk || tk.exp < Date.now()) return fail(res, 404, 'Lien de téléchargement expiré : recommence depuis la page Administration');
+    if (!tk || tk.exp < Date.now()) return fail(res, 404, 'Download link expired: start again from the Administration page');
     if (tk.kind === 'deleted') {
       res.setHeader('Content-Type', 'application/zip');
       return res.download(path.join(DELETED_DIR, tk.file), tk.file);
     }
     const meta = getMeta(tk.id);
-    if (!meta) return fail(res, 404, 'Table introuvable');
+    if (!meta) return fail(res, 404, 'Table not found');
     const t = tables.get(meta.id);
     if (t && !t.error) t.store.flush();
     const target: ZipSource = t || { dir: path.join(TABLES_DIR, meta.id), docsDir: () => path.join(TABLES_DIR, meta.id, 'docs') };
@@ -350,13 +350,13 @@ export function registerAdminRoutes(app: Express, api: TableApi): void {
   app.delete('/api/admin/tables/:id', requireAdmin, async (req, res) => {
     const m = metaOr404(req, res);
     if (!m) return;
-    if (String(req.body?.confirm || '') !== m.id) return fail(res, 400, 'Confirmation manquante : tape l’identifiant « {id} »', {}, { id: m.id });
+    if (String(req.body?.confirm || '') !== m.id) return fail(res, 400, 'Confirmation missing: type the identifier “{id}”', {}, { id: m.id });
     let backup: string;
     try {
       backup = await archiveToDeleted(m, 'deleted');
     } catch (err) {
       console.error('[admin] delete backup failed', err);
-      return fail(res, 500, 'Sauvegarde préalable impossible, suppression annulée : {error}', {}, { error: (err as Error).message });
+      return fail(res, 500, 'Could not back up first, deletion cancelled: {error}', {}, { error: (err as Error).message });
     }
     closeTable(m.id, { reason: 'deleted' });
     try {
@@ -412,7 +412,7 @@ export function registerAdminRoutes(app: Express, api: TableApi): void {
       const existing = getMeta(id);
       let replaced: string | null = null;
       if (existing || fs.existsSync(path.join(TABLES_DIR, id))) {
-        if (req.query.replace !== '1') return cleanup(), fail(res, 409, 'Une table « {id} » existe déjà : choisis un autre identifiant ou coche « Remplacer »', { code: 'exists' }, { id });
+        if (req.query.replace !== '1') return cleanup(), fail(res, 409, 'A table “{id}” already exists: choose another identifier or tick “Replace”', { code: 'exists' }, { id });
         if (existing) replaced = await archiveToDeleted(existing, 'replaced');
         closeTable(id, { reason: 'replaced' });
         fs.rmSync(path.join(TABLES_DIR, id), { recursive: true, force: true, maxRetries: 3 });
@@ -433,7 +433,7 @@ export function registerAdminRoutes(app: Express, api: TableApi): void {
       }
       const t = openTable(meta);
       cleanup();
-      if (t.error) return fail(res, 500, 'Table restaurée mais illisible : {error}', {}, { error: t.error });
+      if (t.error) return fail(res, 500, 'Table restored but unreadable: {error}', {}, { error: t.error });
       console.log(`[admin] table restaurée : ${id}${replaced ? ` (ancienne version : deleted/${replaced})` : ''}`);
       res.json({ table: { ...meta, url: `/t/${id}/` }, replaced });
     } catch (err) {

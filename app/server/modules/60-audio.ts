@@ -51,8 +51,8 @@ function resolveLoopTrack(ctx: ActionContext, audio: AudioState, id: unknown, ch
       if (t) break;
     }
   }
-  if (!t) return ctx.fail('Piste introuvable');
-  if (t.kind === 'sfx') ctx.fail('Un bruitage ne peut pas tourner en boucle');
+  if (!t) return ctx.fail('Track not found');
+  if (t.kind === 'sfx') ctx.fail('A sound effect cannot loop');
   return t;
 }
 
@@ -69,7 +69,7 @@ function setChannel(ctx: ActionContext, audio: AudioState, channel: ChannelName,
 
 function cleanUrl(ctx: ActionContext, url: unknown): string {
   const u = str(url, 500);
-  if (!/^\/uploads\/[^\s?#]+$/.test(u) && !/^https?:\/\/[^\s]+$/i.test(u)) ctx.fail('Adresse de fichier invalide');
+  if (!/^\/uploads\/[^\s?#]+$/.test(u) && !/^https?:\/\/[^\s]+$/i.test(u)) ctx.fail('Invalid file address');
   return u;
 }
 
@@ -87,7 +87,7 @@ function sceneValue(ctx: ActionContext, audio: AudioState, v: unknown, channel: 
 
 function findScene(ctx: ActionContext, audio: AudioSlice, id: unknown): AudioScene {
   const s = audio.scenes.find((x) => x.id === id);
-  if (!s) return ctx.fail('Scène introuvable');
+  if (!s) return ctx.fail('Scene not found');
   return s;
 }
 
@@ -205,10 +205,10 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, { channel, volume }: VolumePayload = {}) {
         const a = ensureSlice(ctx.state);
         const v = vol(volume, NaN);
-        if (Number.isNaN(v)) ctx.fail('Volume invalide');
+        if (Number.isNaN(v)) ctx.fail('Invalid volume');
         if (channel === 'master') a.master = v;
         else if (CHANNELS.includes(channel as ChannelName)) a[channel as ChannelName].volume = v;
-        else ctx.fail('Canal inconnu');
+        else ctx.fail('Unknown channel');
         return v;
       },
     },
@@ -220,7 +220,7 @@ const mod: ServerModule = {
         const payload: ServerEvents['sfx'] & { url?: string } = { id: key, volume: vol(volume, 1) };
         if (!SFX_IDS.includes(key)) {
           const t = findTrack(a, key);
-          if (!t || t.kind !== 'sfx') return ctx.fail('Bruitage inconnu');
+          if (!t || t.kind !== 'sfx') return ctx.fail('Unknown sound effect');
           if (t.source === 'url') payload.url = t.url;
           else if (t.preset) payload.id = t.preset;
         }
@@ -232,8 +232,8 @@ const mod: ServerModule = {
     'audio/addTrack': {
       handler(ctx: ActionContext, { name, kind, url, tags }: AddTrackPayload = {}) {
         const a = ensureSlice(ctx.state);
-        if (!kind || !TRACK_KINDS.includes(kind)) ctx.fail('Type de piste invalide');
-        if (a.tracks.length >= MAX_TRACKS) ctx.fail('Trop de pistes');
+        if (!kind || !TRACK_KINDS.includes(kind)) ctx.fail('Invalid track type');
+        if (a.tracks.length >= MAX_TRACKS) ctx.fail('Too many tracks');
         const track: AudioTrack = { id: ctx.uid('trk'), name: str(name) || 'Sans titre', kind: kind as TrackKind, source: 'url', url: cleanUrl(ctx, url), tags: cleanTags(tags) };
         a.tracks.push(track);
         return track.id;
@@ -244,17 +244,17 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, { id, name, kind, tags, volume }: UpdateTrackPayload = {}) {
         const a = ensureSlice(ctx.state);
         const t = findTrack(a, id);
-        if (!t) return ctx.fail('Piste introuvable');
+        if (!t) return ctx.fail('Track not found');
         if (name !== undefined) t.name = str(name) || t.name;
         if (tags !== undefined) t.tags = cleanTags(tags);
         if (volume !== undefined) {
           const n = Number(volume);
-          if (!Number.isFinite(n)) ctx.fail('Niveau invalide');
+          if (!Number.isFinite(n)) ctx.fail('Invalid level');
           t.volume = Math.max(0, Math.min(2, n));
         }
         if (kind !== undefined && kind !== t.kind) {
-          if (t.source !== 'url') ctx.fail('Le type d’une piste intégrée ne peut pas changer');
-          if (!TRACK_KINDS.includes(kind)) ctx.fail('Type de piste invalide');
+          if (t.source !== 'url') ctx.fail('A built-in track’s type cannot change');
+          if (!TRACK_KINDS.includes(kind)) ctx.fail('Invalid track type');
           t.kind = kind;
           if (kind === 'sfx') for (const ch of CHANNELS) if (a[ch].trackId === t.id) a[ch].trackId = null;
         }
@@ -266,8 +266,8 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, { id }: IdPayload = {}) {
         const a = ensureSlice(ctx.state);
         const t = findTrack(a, id);
-        if (!t) return ctx.fail('Piste introuvable');
-        if (t.source !== 'url') ctx.fail('Les pistes intégrées ne peuvent pas être supprimées');
+        if (!t) return ctx.fail('Track not found');
+        if (t.source !== 'url') ctx.fail('Built-in tracks cannot be deleted');
         a.tracks = a.tracks.filter((x) => x.id !== id);
         for (const ch of CHANNELS) if (a[ch].trackId === id) a[ch].trackId = null;
         for (const s of a.scenes) for (const ch of CHANNELS) if (s[ch] === id) s[ch] = null;
@@ -279,9 +279,9 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, p: SaveScenePayload = {}) {
         const a = ensureSlice(ctx.state);
         let scene: AudioScene | null | undefined = p.id ? a.scenes.find((s) => s.id === p.id) : null;
-        if (p.id && !scene) ctx.fail('Scène introuvable');
+        if (p.id && !scene) ctx.fail('Scene not found');
         if (!scene) {
-          if (a.scenes.length >= MAX_SCENES) ctx.fail('Trop de scènes');
+          if (a.scenes.length >= MAX_SCENES) ctx.fail('Too many scenes');
           scene = { id: ctx.uid('scn'), name: '', ambient: a.ambient.trackId, music: a.music.trackId };
           a.scenes.push(scene);
           if (!str(p.name)) p = { ...p, name: 'Nouvelle scène' };

@@ -118,7 +118,7 @@ export function Overlay({ title, onClose, width = 560, children, actions, classN
     <div className={'modal ' + className} style={{ width: `min(${width}px, calc(100vw - 24px))` }} role="dialog" aria-label={typeof title === 'string' ? title : undefined}>
       <header className="modal-head">
         <h2>{title}</h2>
-        <div className="row gap-s">{actions}<IconButton icon="✕" title={t('Fermer')} onClick={onClose} /></div>
+        <div className="row gap-s">{actions}<IconButton icon="✕" title={t('Close')} onClick={onClose} /></div>
       </header>
       <div className="modal-body">{children}</div>
     </div>
@@ -128,14 +128,14 @@ export function Overlay({ title, onClose, width = 560, children, actions, classN
 // Roll labels and breakdowns are stored in French by the server ('Défense', 'Agilité + Logique', '6 dés',
 // 'Pistolets 4 + AGI 5 + spé. +2'): every viewer sees them in their own language through these helpers.
 // Terms the server/dialogs put in breakdowns (French keys, translated when shown).
-export const ROLL_TERMS = [tk('spé.'), tk('mod.'), tk('blessures'), tk('par défaut'), tk('bonus'), tk('recul'), tk('armure'), tk('accessoires'),
+export const ROLL_TERMS = [tk('spec.'), tk('mod.'), tk('wounds'), tk('defaulting'), tk('bonus'), tk('recoil'), tk('armor'), tk('accessories'),
   // first term of roll.limitBreakdown (« sociale 9 + Zoé : Heritage 12 +2 »): the server's French limit adjectives
-  tk('physique'), tk('mentale'), tk('sociale'), tk('astrale')];
+  tk('physical'), tk('mental'), tk('fem::social'), tk('astral')];
 
 function rollTermText(part: string): string {
   const p = String(part).trim();
   let m = p.match(/^(\d+) dés?$/);
-  if (m) return tn(Number(m[1]), '{n} dé', '{n} dés');
+  if (m) return tn(Number(m[1]), '{n} die', '{n} dice');
   m = p.match(/^(.*\S)\s+([+−-]?\d+(?:[.,]\d+)?)$/);
   if (m) return `${tIfKnown(m[1])} ${m[2]}`;
   return tIfKnown(p);
@@ -146,17 +146,17 @@ export function rollLabel(rollOrLabel: ShownRoll | string | null | undefined): s
   if (rollOrLabel && typeof rollOrLabel === 'object' && rollOrLabel.labelI18n?.key) return t(rollOrLabel.labelI18n.key, rollOrLabel.labelI18n.params);
   const label: string = typeof rollOrLabel === 'string' ? rollOrLabel : rollOrLabel?.label || '';
   if (!label) return '';
-  if (label === 'Jet de dés') return t('Jet de dés');
+  if (label === 'Jet de dés') return t('Dice roll');
   let m = label.match(/^(\d+) dés?$/);
-  if (m) return tn(Number(m[1]), '{n} dé', '{n} dés');
+  if (m) return tn(Number(m[1]), '{n} die', '{n} dice');
   m = label.match(/^Jet de (\d+) dés$/);
-  if (m) return t('Jet de {n} dés', { n: Number(m[1]) });
+  if (m) return t('Roll of {n} dice', { n: Number(m[1]) });
   m = label.match(/^Attaque — (.+)$/);
-  if (m) return t('Attaque — {weapon}', { weapon: m[1] });
+  if (m) return t('Attack — {weapon}', { weapon: m[1] });
   m = label.match(/^Sort — (.+)$/);
-  if (m) return t('Sort — {spell}', { spell: m[1] });
+  if (m) return t('Spell — {spell}', { spell: m[1] });
   m = label.match(/^Résistance au drain \(VOL \+ ([A-ZÉ]+)\)$/);
-  if (m) return t('Résistance au drain ({wil} + {attr})', { wil: attrShort('WIL'), attr: attrShort(m[1]) });
+  if (m) return t('Drain Resistance ({wil} + {attr})', { wil: attrShort('WIL'), attr: attrShort(m[1]) });
   if (/ \+ /.test(label)) return label.split(' + ').map((x) => tIfKnown(x)).join(' + ');
   return tIfKnown(label);
 }
@@ -175,31 +175,31 @@ export function DiceFaces({ roll, small }: { roll: ShownRoll | null | undefined;
   return <div className={'sh-dice' + (small ? ' sh-dice-sm' : '')}>
     {roll.dice.map((d, i) => {
       const rerolled = !!before && before[i] < 5;
-      return <span key={i} className={'sh-die' + (d >= 5 ? ' hit' : d === 1 ? ' one' : '') + (rerolled ? ' rerolled' : '')} title={rerolled ? t('Relancé (était {n})', { n: before[i] }) : ''}>
+      return <span key={i} className={'sh-die' + (d >= 5 ? ' hit' : d === 1 ? ' one' : '') + (rerolled ? ' rerolled' : '')} title={rerolled ? t('Rerolled (was {n})', { n: before[i] }) : ''}>
         {d}
       </span>;
     })}
-    {(roll.extra || []).map((d, i) => <span key={'x' + i} className={'sh-die extra' + (d >= 5 ? ' hit' : d === 1 ? ' one' : '')} title={t('Dé explosé (règle des 6)')}>{d}</span>)}
+    {(roll.extra || []).map((d, i) => <span key={'x' + i} className={'sh-die extra' + (d >= 5 ? ' hit' : d === 1 ? ' one' : '')} title={t('Exploded die (rule of six)')}>{d}</span>)}
   </div>;
 }
 
 // roll.limitLabel is stored by the server as a French adjective ('physique'…) — older entries may hold any text.
 const LIMIT_TITLES: Record<string, string> = {
-  physique: tk('Limite physique'), mentale: tk('Limite mentale'), sociale: tk('Limite sociale'), astrale: tk('Limite astrale'), précision: tk('Précision'),
-  Attaque: tk('Attaque'), Corruption: tk('Corruption'), Traitement: tk('Traitement'), Firewall: tk('Firewall'),
+  physique: tk('Physical Limit'), mentale: tk('Mental Limit'), sociale: tk('Social Limit'), astrale: tk('Astral Limit'), précision: tk('Accuracy'),
+  Attaque: tk('Attack'), Corruption: tk('Sleaze'), Traitement: tk('Data Processing'), Firewall: tk('Firewall'),
 };
-const limitTitle = (l: string): string => (LIMIT_TITLES[l] ? t(LIMIT_TITLES[l]) : t('Limite {kind}', { kind: l }));
+const limitTitle = (l: string): string => (LIMIT_TITLES[l] ? t(LIMIT_TITLES[l]) : t('{kind} limit', { kind: l }));
 
 /** Badges summarizing a roll (glitch, limit, Edge…). */
 export function RollBadges({ roll }: { roll: ShownRoll | null | undefined }) {
   if (!roll) return null;
   return <span className="sh-roll-badges">
-    {roll.critGlitch ? <span className="badge badge-red sh-glitch">{t('Échec critique !')}</span> : roll.glitch ? <span className="badge badge-amber">{t('Complication')}</span> : null}
-    {roll.limit ? <span className={'badge ' + (roll.limited ? 'badge-amber' : '')} title={(roll.limitLabel ? limitTitle(roll.limitLabel) : t('Limite')) + (roll.limitBreakdown ? `
+    {roll.critGlitch ? <span className="badge badge-red sh-glitch">{t('Critical glitch!')}</span> : roll.glitch ? <span className="badge badge-amber">{t('Glitch')}</span> : null}
+    {roll.limit ? <span className={'badge ' + (roll.limited ? 'badge-amber' : '')} title={(roll.limitLabel ? limitTitle(roll.limitLabel) : t('Limit')) + (roll.limitBreakdown ? `
 ${rollBreakdown(roll.limitBreakdown)}` : '')}>
       {t('lim. {n}', { n: roll.limit })}{roll.limited ? ` (${roll.rawHits} → ${roll.limit})` : ''}
     </span> : null}
-    {roll.explode ? <span className="badge badge-magenta" title={t('Repousser les limites : +Chance, règle des 6, sans limite')}>{t('Chance')}</span> : null}{roll.secondChance ? <span className="badge badge-magenta" title={t('Seconde chance : échecs relancés')}>{t('2ᵉ chance')}</span> : null}{roll.secret ? <span className="badge badge-dim">{t('secret')}</span> : null}
+    {roll.explode ? <span className="badge badge-magenta" title={t('Push the Limit: +Edge, rule of six, no limit')}>{t('Edge')}</span> : null}{roll.secondChance ? <span className="badge badge-magenta" title={t('Second Chance: misses rerolled')}>{t('2nd Chance')}</span> : null}{roll.secret ? <span className="badge badge-dim">{t('secret')}</span> : null}
   </span>;
 }
 
@@ -221,7 +221,7 @@ export function ConditionTrack({ label, max, value, onSet, kind = 'physical', re
   for (let i = 0; i < max; i++) {
     const filled = i < value;
     const mark = wounds && (i + 1) % 3 === 0 ? `−${(i + 1) / 3}` : '';
-    boxes.push(<button key={i} type="button" className={'sh-box' + (filled ? ' filled' : '')} disabled={readOnly} title={readOnly ? '' : filled && i + 1 === value ? t('Retirer cette case') : t('Mettre à {n}', { n: i + 1 })} onClick={() => onSet?.(filled && i + 1 === value ? i : i + 1)}>
+    boxes.push(<button key={i} type="button" className={'sh-box' + (filled ? ' filled' : '')} disabled={readOnly} title={readOnly ? '' : filled && i + 1 === value ? t('Clear this box') : t('Set to {n}', { n: i + 1 })} onClick={() => onSet?.(filled && i + 1 === value ? i : i + 1)}>
       {mark ? <span className="sh-box-mark">{mark}</span> : null}
     </button>);
   }
@@ -245,8 +245,8 @@ export function EdgePips({ actor, canUse, size = 'md' }: { actor: Actor; canUse:
   const max: number = attr(actor, 'EDG');
   const cur = actor.edge?.current ?? max;
   const set = (v: number) => send('actor/update', { actorId: actor.id, patch: { edge: { current: Math.max(0, Math.min(max, v)) } } }).catch(() => {});
-  return <span className={'sh-pips sh-pips-' + size} title={t('Chance {cur}/{max}', { cur, max })}>
-    {Array.from({ length: max }, (_, i) => <button key={i} type="button" className={'sh-pip' + (i < cur ? ' on' : '')} disabled={!canUse} onClick={() => set(i + 1 === cur ? i : i + 1)} aria-label={t('Chance {n}', { n: i + 1 })} />)}
+  return <span className={'sh-pips sh-pips-' + size} title={t('Edge {cur}/{max}', { cur, max })}>
+    {Array.from({ length: max }, (_, i) => <button key={i} type="button" className={'sh-pip' + (i < cur ? ' on' : '')} disabled={!canUse} onClick={() => set(i + 1 === cur ? i : i + 1)} aria-label={t('Edge {n}', { n: i + 1 })} />)}
   </span>;
 }
 
@@ -278,7 +278,7 @@ export function itemTitle(item: NamedItem | null | undefined): string {
   return [...new Set([item.name, other].filter((n) => n && n !== shown))].join(' · ');
 }
 // Categories the app itself stores (French, translated in English with these keys).
-const OWN_CATEGORIES: string[] = [tk('Corps à corps'), tk('Arme de jet'), tk('Arme à distance'), tk('Munitions'), tk('Équipement'), tk('Vêtements'), tk('Commlink'), tk('Cyberdeck')];
+const OWN_CATEGORIES: string[] = [tk('Melee'), tk('Throwing weapon'), tk('Ranged weapon'), tk('Ammo'), tk('Gear'), tk('Clothing'), tk('Commlink'), tk('Cyberdeck')];
 /** Category of an item in the UI language (catalog categoryFr / categoryEn, the app's own French categories, else as stored). */
 export function categoryLabel(item: NamedItem | null | undefined): string {
   if (!item) return '';
@@ -301,7 +301,7 @@ export function modeLabel(mode: string | null | undefined): string {
 export function damageLabel(text: string | null | undefined): string {
   let s = String(text ?? '').trim();
   if (!s) return '—';
-  if (/^(sp[ée]cial)$/i.test(s)) return t('Spécial');
+  if (/^(sp[ée]cial)$/i.test(s)) return t('Special');
   if (getLang() === 'fr') s = s.replace(/(\d|\))S(?![a-z])/g, '$1E');
   else s = s.replace(/(\d|\))E(?![a-z])/g, '$1S');
   return s;

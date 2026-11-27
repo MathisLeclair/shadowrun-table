@@ -8,11 +8,11 @@ import type { AudioJob, I18nText, ImportResult, ScanResult, ScanStatus, Selectio
 import './foundry.css';
 
 const STATUS: Record<ScanStatus, { label: string; color: string }> = {
-  new: { label: tk('Nouveau'), color: 'cyan' },
-  update: { label: tk('Mise à jour'), color: 'amber' },
-  unchanged: { label: tk('À jour'), color: 'green' },
+  new: { label: tk('New'), color: 'cyan' },
+  update: { label: tk('Update'), color: 'amber' },
+  unchanged: { label: tk('Up to date'), color: 'green' },
 };
-const KIND_LABELS: Record<string, string> = { music: tk('Musique'), ambient: tk('Ambiance'), sfx: tk('Bruitages') };
+const KIND_LABELS: Record<string, string> = { music: tk('Music'), ambient: tk('Ambience'), sfx: tk('Sound effects') };
 
 function StatusBadge({ status }: { status: ScanStatus }) {
   const s = STATUS[status] || STATUS.new;
@@ -26,10 +26,10 @@ function sizeText(bytes: number | undefined, fallback = ''): string {
   const v = Number(bytes);
   if (!Number.isFinite(v)) return fallback;
   const one = { minimumFractionDigits: 1, maximumFractionDigits: 1 };
-  if (v >= 1e9) return t('{v} Go', { v: fmtNumber(v / 1e9, one) });
-  if (v >= 1e6) return t('{v} Mo', { v: fmtNumber(v / 1e6, one) });
-  if (v >= 1e3) return t('{v} ko', { v: fmtNumber(Math.round(v / 1e3)) });
-  return t('{v} o', { v: fmtNumber(v) });
+  if (v >= 1e9) return t('{v} GB', { v: fmtNumber(v / 1e9, one) });
+  if (v >= 1e6) return t('{v} MB', { v: fmtNumber(v / 1e6, one) });
+  if (v >= 1e3) return t('{v} kB', { v: fmtNumber(Math.round(v / 1e3)) });
+  return t('{v} B', { v: fmtNumber(v) });
 }
 
 /** Diff line of a PC: translatable entry from the server ({ t, params }), or a plain (French) string from an older server. */
@@ -72,18 +72,18 @@ function SectionHead({ title, count, total, onAll, onNone, children }: SectionHe
   return (
     <div className="foundry-section-head">
       <h4>
-        {title} <span className="muted small">{tn(count, '{n}/{total} sélectionné', '{n}/{total} sélectionnés', { total })}</span>
+        {title} <span className="muted small">{tn(count, '{n}/{total} selected', 'pl::{n}/{total} selected', { total })}</span>
       </h4>
       <div className="row gap-s">
         {children}
         {onAll && (
           <Button small variant="ghost" onClick={onAll}>
-            {t('sélection::Tout')}
+            {t('selection::All')}
           </Button>
         )}
         {onNone && (
           <Button small variant="ghost" onClick={onNone}>
-            {t('sélection::Aucun')}
+            {t('selection::None')}
           </Button>
         )}
       </div>
@@ -105,13 +105,13 @@ interface Counts {
 /** Selected counts as a short list: '4 PJ · 2 PNJ · 3 cartes'. */
 function countsText(c: Counts) {
   const parts = [
-    c.pcs && tn(c.pcs, '{n} PJ', 'pluriel::{n} PJ'),
-    c.npcs && tn(c.npcs, '{n} PNJ', 'pluriel::{n} PNJ'),
-    c.scenes && tn(c.scenes, 'un::{n} cartes', '{n} cartes'),
-    c.journals && tn(c.journals, 'un::{n} journaux', '{n} journaux'),
-    c.playlists && tn(c.playlists, 'un::{n} pistes', '{n} pistes'),
+    c.pcs && tn(c.pcs, '{n} PC', 'plural::{n} PCs'),
+    c.npcs && tn(c.npcs, '{n} NPC', 'plural::{n} NPCs'),
+    c.scenes && tn(c.scenes, 'a::{n} map', '{n} maps'),
+    c.journals && tn(c.journals, 'a::{n} journal', '{n} journals'),
+    c.playlists && tn(c.playlists, 'a::{n} track', '{n} tracks'),
   ].filter(Boolean);
-  return parts.join(' · ') || t('Rien de sélectionné');
+  return parts.join(' · ') || t('Nothing selected');
 }
 
 export default function FoundryPanel({ game }: GameProps) {
@@ -139,7 +139,7 @@ export default function FoundryPanel({ game }: GameProps) {
     'foundry/audio',
     (p: AudioJob | null) => {
       setAudio(p);
-      if (p && !p.running && !p.error && p.total) toast(t('Fichiers audio Foundry copiés'), 'success');
+      if (p && !p.running && !p.error && p.total) toast(t('Foundry audio files copied'), 'success');
     },
     []
   );
@@ -180,12 +180,12 @@ export default function FoundryPanel({ game }: GameProps) {
   const doImport = async () => {
     if (!counts || !sel) return;
     const parts = [];
-    if (counts.pcs) parts.push(pcMode === 'merge' ? t('{n} personnage(s) joueur(s) en mode fusion', { n: counts.pcs }) : t('{n} personnage(s) joueur(s) en mode remplacement', { n: counts.pcs }));
-    if (counts.npcs) parts.push(tn(counts.npcs, '{n} PNJ', 'pluriel::{n} PNJ'));
-    if (counts.scenes) parts.push(t('{n} carte(s)', { n: counts.scenes }));
-    if (counts.journals) parts.push(tn(counts.journals, 'un::{n} journaux', '{n} journaux'));
-    if (counts.playlists) parts.push(tn(counts.playlists, 'un::{n} pistes audio', '{n} pistes audio'));
-    if (!(await confirmAction(t('Importer depuis Foundry : {parts} ?\n\nUne sauvegarde de la partie est conseillée avant (bouton « Créer une sauvegarde »).', { parts: parts.join(', ') })))) return;
+    if (counts.pcs) parts.push(pcMode === 'merge' ? t('{n} player character(s) in merge mode', { n: counts.pcs }) : t('{n} player character(s) in replace mode', { n: counts.pcs }));
+    if (counts.npcs) parts.push(tn(counts.npcs, '{n} NPC', 'plural::{n} NPCs'));
+    if (counts.scenes) parts.push(t('{n} map(s)', { n: counts.scenes }));
+    if (counts.journals) parts.push(tn(counts.journals, 'a::{n} journal', '{n} journals'));
+    if (counts.playlists) parts.push(tn(counts.playlists, 'a::{n} audio track', '{n} audio tracks'));
+    if (!(await confirmAction(t('Import from Foundry: {parts}?\n\nBacking up the game first is recommended (“Create a backup” button).', { parts: parts.join(', ') })))) return;
     setBusy('import');
     try {
       const r = await send<ImportResult>('foundry/import', {
@@ -195,7 +195,7 @@ export default function FoundryPanel({ game }: GameProps) {
         select: { pcs: [...sel.pcs], npcs: [...sel.npcs], scenes: [...sel.scenes], journals: sel.journals, playlists: sel.playlists },
       });
       setResult(r);
-      toast(r.textI18n?.key ? t(r.textI18n.key, r.textI18n.params) : r.text ? tIfKnown(r.text) : t('Import terminé'), 'success');
+      toast(r.textI18n?.key ? t(r.textI18n.key, r.textI18n.params) : r.text ? tIfKnown(r.text) : t('Import complete'), 'success');
       if (r.audio?.queued) setAudio({ total: r.audio.files, done: 0, bytes: r.audio.bytes, running: true });
       // Refresh statuses (fast: the world is cached server-side).
       const again = await send<ScanResult>('foundry/scan', { worldPath }, { silent: true }).catch(() => null);
@@ -212,20 +212,20 @@ export default function FoundryPanel({ game }: GameProps) {
 
   return (
     <Panel
-      title={t('Foundry VTT — synchronisation')}
+      title={t('Foundry VTT — sync')}
       className="foundry-panel"
-      actions={last && <span className="small muted">{t('Dernier import : {date} ({world})', { date: dateText(last.ts), world: last.worldTitle || last.worldId })}</span>}
+      actions={last && <span className="small muted">{t('Last import: {date} ({world})', { date: dateText(last.ts), world: last.worldTitle || last.worldId })}</span>}
     >
       <div className="col">
         <p className="muted small foundry-intro">
-          {t('Importe le monde Foundry du MJ : fiches des PJ, PNJ (vers le bestiaire), scènes (cartes avec leurs murs, portes et lumières), journaux (documents de campagne) et playlists.')}
-          <strong> {t("Foundry reste la source de vérité pour les fiches : relance l'import avant chaque séance si tes joueurs ont modifié leur fiche dans Foundry.")}</strong>
+          {t('Imports the GM’s Foundry world: PC sheets, NPCs (into the bestiary), scenes (maps with their walls, doors and lights), journals (campaign documents) and playlists.')}
+          <strong> {t("Foundry remains the source of truth for character sheets: run the import again before each session if your players changed their sheet in Foundry.")}</strong>
           {' '}
-          {t('Foundry peut rester ouvert : la base est lue depuis une copie.')}
+          {t('Foundry can stay open: the database is read from a copy.')}
         </p>
-        <Field label={t('Dossier du monde Foundry')} hint={t('Détecté automatiquement depuis la configuration de Foundry (options.json → dataPath).')}>
+        <Field label={t('Foundry world folder')} hint={t('Detected automatically from Foundry’s configuration (options.json → dataPath).')}>
           <div className="row">
-            <input className="input grow mono" list="foundry-worlds" value={worldPath} onChange={(e) => setWorldPath(e.target.value)} placeholder={t('C:/Users/…/Foundry/Data/worlds/mon-monde')} />
+            <input className="input grow mono" list="foundry-worlds" value={worldPath} onChange={(e) => setWorldPath(e.target.value)} placeholder={t('C:/Users/…/Foundry/Data/worlds/my-world')} />
             <datalist id="foundry-worlds">
               {worlds
                 .filter((w) => w.system === 'shadowrun5e')
@@ -236,7 +236,7 @@ export default function FoundryPanel({ game }: GameProps) {
                 ))}
             </datalist>
             <Button variant="primary" disabled={!!busy || !worldPath} onClick={doScan}>
-              {busy === 'scan' ? t('Analyse…') : scan ? t('Analyser à nouveau') : t('Analyser')}
+              {busy === 'scan' ? t('Scanning…') : scan ? t('Scan again') : t('Scan')}
             </Button>
           </div>
         </Field>
@@ -244,16 +244,16 @@ export default function FoundryPanel({ game }: GameProps) {
         {audio && (
           <div className="foundry-audio">
             {audio.error ? (
-              <Badge color="red">{t('Audio : {error}', { error: tIfKnown(audio.error) })}</Badge>
+              <Badge color="red">{t('Audio: {error}', { error: tIfKnown(audio.error) })}</Badge>
             ) : audio.running ? (
               <>
-                <span className="small">{t('Copie des fichiers audio… {done}/{total}', { done: audio.done || 0, total: audio.total || '?' })}</span>
+                <span className="small">{t('Copying audio files… {done}/{total}', { done: audio.done || 0, total: audio.total || '?' })}</span>
                 <div className="foundry-progress">
                   <div style={{ width: `${audio.total ? Math.round(((audio.done || 0) / audio.total) * 100) : 0}%` }}></div>
                 </div>
               </>
             ) : (
-              <span className="small foundry-ok">{tn(audio.total, 'Audio prêt ({n} fichier).', 'Audio prêt ({n} fichiers).')}</span>
+              <span className="small foundry-ok">{tn(audio.total, 'Audio ready ({n} file).', 'Audio ready ({n} files).')}</span>
             )}
           </div>
         )}
@@ -276,7 +276,7 @@ export default function FoundryPanel({ game }: GameProps) {
         {scan && (
           <div className="row wrap foundry-actions">
             <Button variant="accent" disabled={!!busy || nothing} onClick={doImport}>
-              {busy === 'import' ? t('Import en cours…') : t('Importer la sélection')}
+              {busy === 'import' ? t('Importing…') : t('Import selection')}
             </Button>
             {counts && <span className="small muted">{countsText(counts)}</span>}
           </div>
@@ -306,23 +306,23 @@ function ScanView({ scan, sel, setSel, toggleIn, setAll, setNone, pcMode, setPcM
     <div className="col foundry-scan">
       <div className="row wrap small muted">
         <Badge color="cyan">{w.title || w.id}</Badge>
-        <span>{t('Système {system} {version} · Foundry {core}', { system: w.system, version: w.systemVersion || '', core: w.coreVersion || '' })}</span>
-        {scan.missingAssets?.length ? <span title={scan.missingAssets.join('\n')}>· {t('{n} fichier(s) introuvable(s) dans Foundry', { n: scan.missingAssets.length })}</span> : null}
+        <span>{t('System {system} {version} · Foundry {core}', { system: w.system, version: w.systemVersion || '', core: w.coreVersion || '' })}</span>
+        {scan.missingAssets?.length ? <span title={scan.missingAssets.join('\n')}>· {t('{n} file(s) not found in Foundry', { n: scan.missingAssets.length })}</span> : null}
       </div>
 
       <section className="foundry-section">
-        <SectionHead title={t('Personnages joueurs')} count={sel.pcs.size} total={scan.pcs.length} onAll={() => setAll('pcs', scan.pcs)} onNone={() => setNone('pcs')} />
+        <SectionHead title={t('Player characters')} count={sel.pcs.size} total={scan.pcs.length} onAll={() => setAll('pcs', scan.pcs)} onNone={() => setNone('pcs')} />
         <div className="foundry-modes">
           <label className={pcMode === 'merge' ? 'on' : ''}>
             <input type="radio" name="foundry-pcmode" checked={pcMode === 'merge'} onChange={() => setPcMode('merge')} />
             <span>
-              <strong>{t('Fusionner')}</strong> — {t("ne reprend que ce qui a changé dans Foundry depuis le dernier import ; les achats et entraînements faits dans l'app sont conservés.")}
+              <strong>{t('Merge')}</strong> — {t("only takes what changed in Foundry since the last import; purchases and training done in the app are kept.")}
             </span>
           </label>
           <label className={pcMode === 'replace' ? 'on' : ''}>
             <input type="radio" name="foundry-pcmode" checked={pcMode === 'replace'} onChange={() => setPcMode('replace')} />
             <span>
-              <strong>{t('Remplacer')}</strong> — {t("la fiche Foundry fait foi (attributs, compétences, équipement, karma, nuyens). L'historique, les notes et l'attribution aux joueurs sont gardés.")}
+              <strong>{t('Replace')}</strong> — {t("the Foundry sheet wins (attributes, skills, gear, karma, nuyen). History, notes and player assignments are kept.")}
             </span>
           </label>
         </div>
@@ -338,10 +338,10 @@ function ScanView({ scan, sel, setSel, toggleIn, setAll, setNone, pcMode, setPcM
                     <div className="row wrap gap-s">
                       <strong>{p.name}</strong>
                       <StatusBadge status={p.status} />
-                      {p.retired && <Badge>{t('retraité')}</Badge>}
+                      {p.retired && <Badge>{t('retired')}</Badge>}
                     </div>
                     <div className="small muted">
-                      {p.player ? t('Joueur Foundry : {name}', { name: p.player }) : t('Aucun joueur propriétaire')} · {t('{n} karma', { n: p.karma })} · {fmtNuyen(p.nuyen)}
+                      {p.player ? t('Foundry player: {name}', { name: p.player }) : t('No owning player')} · {t('{n} karma', { n: p.karma })} · {fmtNuyen(p.nuyen)}
                       {p.vehicles.length ? ` · ${p.vehicles.join(', ')}` : ''}
                     </div>
                   </div>
@@ -353,27 +353,27 @@ function ScanView({ scan, sel, setSel, toggleIn, setAll, setNone, pcMode, setPcM
                     ))}
                   </ul>
                 ) : (
-                  p.status === 'unchanged' && <div className="small muted foundry-diff">{t('Aucun changement depuis le dernier import.')}</div>
+                  p.status === 'unchanged' && <div className="small muted foundry-diff">{t('No changes since the last import.')}</div>
                 )}
               </div>
             );
           })}
         </div>
-        <Toggle value={assignPlayers} onChange={setAssignPlayers} label={t("Attribuer chaque PJ au joueur Foundry du même nom (s'il n'est pas déjà attribué)")} />
+        <Toggle value={assignPlayers} onChange={setAssignPlayers} label={t("Assign each PC to the Foundry player with the same name (if not already assigned)")} />
       </section>
 
       <section className="foundry-section">
-        <SectionHead title={t('PNJ → bestiaire')} count={sel.npcs.size} total={scan.npcs.length} onAll={() => setAll('npcs', scan.npcs)} onNone={() => setNone('npcs')} />
-        <p className="small muted">{t('Les PNJ déjà présents dans le bestiaire (même nom) gardent leur description, leurs tactiques et leur dossier ; leurs statistiques sont reprises de Foundry.')}</p>
+        <SectionHead title={t('NPCs → bestiary')} count={sel.npcs.size} total={scan.npcs.length} onAll={() => setAll('npcs', scan.npcs)} onNone={() => setNone('npcs')} />
+        <p className="small muted">{t('NPCs already in the bestiary (same name) keep their description, tactics and folder; their stats are taken from Foundry.')}</p>
         <div className="scroll foundry-table-wrap">
           <table className="sr foundry-table">
             <thead>
               <tr>
                 <th></th>
                 <th>Foundry</th>
-                <th>{t('Bestiaire')}</th>
-                <th>{t('Dossier')}</th>
-                <th>{t('État')}</th>
+                <th>{t('Bestiary')}</th>
+                <th>{t('Folder')}</th>
+                <th>{t('Status')}</th>
               </tr>
             </thead>
             <tbody>
@@ -391,7 +391,7 @@ function ScanView({ scan, sel, setSel, toggleIn, setAll, setNone, pcMode, setPcM
                     {!n.hasStats && (
                       <>
                         {' '}
-                        <Badge title={t("Fiche vide dans Foundry : les statistiques de l'app sont conservées")}>{t('sans stats')}</Badge>
+                        <Badge title={t("Empty sheet in Foundry: the app’s stats are kept")}>{t('no stats')}</Badge>
                       </>
                     )}
                   </td>
@@ -407,12 +407,12 @@ function ScanView({ scan, sel, setSel, toggleIn, setAll, setNone, pcMode, setPcM
       </section>
 
       <section className="foundry-section">
-        <SectionHead title={t('Scènes → cartes')} count={sel.scenes.size} total={scan.scenes.length} onAll={() => setAll('scenes', scan.scenes)} onNone={() => setNone('scenes')} />
-        <p className="small muted">{t('Chaque scène devient une carte « image » : le décor Foundry sert de sol, les murs, portes et lumières sont convertis. Les jetons ne sont pas copiés (ils sont listés dans la description de la carte).')}</p>
+        <SectionHead title={t('Scenes → maps')} count={sel.scenes.size} total={scan.scenes.length} onAll={() => setAll('scenes', scan.scenes)} onNone={() => setNone('scenes')} />
+        <p className="small muted">{t('Each scene becomes an “image” map: the Foundry background is the floor, walls, doors and lights are converted. Tokens are not copied (they are listed in the map description).')}</p>
         <div className="foundry-scenes">
           {scan.scenes.map((s) => (
             <label key={s.fid} className={`card foundry-scene ${sel.scenes.has(s.fid) ? 'selected' : ''}`}>
-              <div className="foundry-thumb">{s.thumb ? <img src={s.thumb} alt="" loading="lazy" /> : <span className="faint small">{t("pas d'aperçu")}</span>}</div>
+              <div className="foundry-thumb">{s.thumb ? <img src={s.thumb} alt="" loading="lazy" /> : <span className="faint small">{t("no preview")}</span>}</div>
               <div className="row gap-s">
                 <Check checked={sel.scenes.has(s.fid)} onChange={(on) => toggleIn('scenes', s.fid, on)} label={s.name} />
                 <strong className="grow foundry-ellipsis" title={s.name}>
@@ -422,27 +422,27 @@ function ScanView({ scan, sel, setSel, toggleIn, setAll, setNone, pcMode, setPcM
               </div>
               <div className="small muted">
                 {s.doors
-                  ? t('{size} cases · {walls} murs · {doors} portes · {lights} lumières', { size: s.size, walls: s.walls, doors: s.doors, lights: s.lights })
-                  : t('{size} cases · {walls} murs · {lights} lumières', { size: s.size, walls: s.walls, lights: s.lights })}
+                  ? t('{size} squares · {walls} walls · {doors} doors · {lights} lights', { size: s.size, walls: s.walls, doors: s.doors, lights: s.lights })
+                  : t('{size} squares · {walls} walls · {lights} lights', { size: s.size, walls: s.walls, lights: s.lights })}
               </div>
               <div className="small faint foundry-ellipsis">
                 {s.folder}
-                {s.linkedTo ? ` · ${t('liée aux quêtes')}` : ''}
+                {s.linkedTo ? ` · ${t('linked to quests')}` : ''}
               </div>
             </label>
           ))}
         </div>
-        {scan.skippedScenes?.length ? <div className="small muted">{t('Ignorées : {list}', { list: scan.skippedScenes.map((s) => `${s.name} (${tIfKnown(s.reason)})`).join(', ') })}</div> : null}
+        {scan.skippedScenes?.length ? <div className="small muted">{t('Skipped: {list}', { list: scan.skippedScenes.map((s) => `${s.name} (${tIfKnown(s.reason)})`).join(', ') })}</div> : null}
       </section>
 
       <div className="grid-2">
         <section className="foundry-section">
-          <SectionHead title={t('Journaux')} count={sel.journals ? scan.journals.docs.length : 0} total={scan.journals.docs.length}>
-            <Toggle value={sel.journals} onChange={(v) => setSel((s) => ({ ...s!, journals: v }))} label={t('Importer')} />
+          <SectionHead title={t('Journals')} count={sel.journals ? scan.journals.docs.length : 0} total={scan.journals.docs.length}>
+            <Toggle value={sel.journals} onChange={(v) => setSel((s) => ({ ...s!, journals: v }))} label={t('Import')} />
           </SectionHead>
           <p className="small muted">
             {withCode('Convertis en documents Markdown dans {folder} (onglet Campagne → Documents).', {}, 'folder', 'docs/foundry/')}
-            {scan.journals.pdfs ? ` ${t("{n} livre(s) de règles PDF sont seulement listés dans l'index.", { n: scan.journals.pdfs })}` : ''}
+            {scan.journals.pdfs ? ` ${t("{n} PDF rulebook(s) are only listed in the index.", { n: scan.journals.pdfs })}` : ''}
           </p>
           <ul className="foundry-list">
             {scan.journals.docs.map((d) => (
@@ -458,17 +458,17 @@ function ScanView({ scan, sel, setSel, toggleIn, setAll, setNone, pcMode, setPcM
         </section>
         <section className="foundry-section">
           <SectionHead title={t('Playlists → audio')} count={sel.playlists ? 1 : 0} total={1}>
-            <Toggle value={sel.playlists} onChange={(v) => setSel((s) => ({ ...s!, playlists: v }))} label={t('Importer')} />
+            <Toggle value={sel.playlists} onChange={(v) => setSel((s) => ({ ...s!, playlists: v }))} label={t('Import')} />
           </SectionHead>
-          <p className="small muted">{t("Les fichiers sont copiés dans l'app ({size} au total) en arrière-plan ; les pistes apparaissent dans l'onglet Audio.", { size: scan.audio ? sizeText(scan.audio.bytes, scan.audio.size) : '0' })}</p>
+          <p className="small muted">{t("Files are copied into the app ({size} in total) in the background; the tracks appear in the Audio tab.", { size: scan.audio ? sizeText(scan.audio.bytes, scan.audio.size) : '0' })}</p>
           <ul className="foundry-list">
             {scan.playlists.map((p, i) => (
               <li key={`${i}:${p.name}`}>
                 <span className="grow">
                   {p.name} <span className="faint small">· {KIND_LABELS[p.kind] ? t(KIND_LABELS[p.kind]) : p.kind}</span>
                 </span>
-                <span className="small muted">{p.tracks ? tn(p.tracks, '{n} piste · {size}', '{n} pistes · {size}', { size: sizeText(p.bytes, p.size) }) : t('fichiers introuvables')}</span>
-                {p.tracks ? <Badge color={p.newTracks ? 'cyan' : 'green'}>{p.newTracks ? tn(p.newTracks, '{n} nouvelle', '{n} nouvelles') : t('À jour')}</Badge> : null}
+                <span className="small muted">{p.tracks ? tn(p.tracks, '{n} track · {size}', '{n} tracks · {size}', { size: sizeText(p.bytes, p.size) }) : t('files not found')}</span>
+                {p.tracks ? <Badge color={p.newTracks ? 'cyan' : 'green'}>{p.newTracks ? tn(p.newTracks, '{n} new', 'pl::{n} new') : t('Up to date')}</Badge> : null}
               </li>
             ))}
           </ul>
@@ -482,41 +482,41 @@ function ResultView({ result }: { result: ImportResult }) {
   const line = (label: string, list: Array<{ status: string }> | undefined) =>
     list?.length ? (
       <li>
-        <strong>{label}</strong> : {t('{created} nouveau(x), {updated} mis à jour', { created: list.filter((x) => x.status === 'new').length, updated: list.filter((x) => x.status !== 'new').length })}
+        <strong>{label}</strong> : {t('{created} new, {updated} updated', { created: list.filter((x) => x.status === 'new').length, updated: list.filter((x) => x.status !== 'new').length })}
       </li>
     ) : null;
   const audioSize = result.audio ? sizeText(result.audio.bytes, result.audio.size) : '';
   return (
     <div className="card foundry-result">
-      <h4>{t('Import terminé')}</h4>
+      <h4>{t('Import complete')}</h4>
       <ul className="small">
-        {line(t('Personnages joueurs'), result.pcs)}
-        {line(t('PNJ'), result.npcs)}
-        {line(t('Cartes'), result.maps)}
+        {line(t('Player characters'), result.pcs)}
+        {line(t('NPC'), result.npcs)}
+        {line(t('Maps'), result.maps)}
         {result.journals?.length ? (
           <li>
-            <strong>{t('Journaux')}</strong> : {withCode('{n} document(s) dans {dir}', { n: result.journals.length }, 'dir', result.docsDir)}
+            <strong>{t('Journals')}</strong> : {withCode('{n} document(s) dans {dir}', { n: result.journals.length }, 'dir', result.docsDir)}
           </li>
         ) : null}
         {result.tracks ? (
           <li>
-            <strong>{t('Audio')}</strong> : {result.audio?.queued ? t('{n} piste(s) — copie de {size} en cours', { n: result.tracks, size: audioSize }) : t('{n} piste(s)', { n: result.tracks })}
+            <strong>{t('Audio')}</strong> : {result.audio?.queued ? t('{n} track(s) — copying {size}', { n: result.tracks, size: audioSize }) : t('{n} track(s)', { n: result.tracks })}
           </li>
         ) : null}
         {result.questLinks ? (
           <li>
-            <strong>{t('Quêtes')}</strong> : {t('{n} lien(s) de carte ajouté(s)', { n: result.questLinks })}
+            <strong>{t('Quests')}</strong> : {t('{n} map link(s) added', { n: result.questLinks })}
           </li>
         ) : null}
         {result.users?.length ? (
           <li>
-            <strong>{t('Joueurs')}</strong> : {result.users.join(', ')}
+            <strong>{t('Players')}</strong> : {result.users.join(', ')}
           </li>
         ) : null}
-        <li className="muted">{t('Fichiers images : {copied} copié(s), {skipped} déjà à jour ({size})', { copied: result.assets.copied, skipped: result.assets.skipped, size: sizeText(result.assets.bytes, result.assets.size) })}</li>
+        <li className="muted">{t('Image files: {copied} copied, {skipped} already up to date ({size})', { copied: result.assets.copied, skipped: result.assets.skipped, size: sizeText(result.assets.bytes, result.assets.size) })}</li>
         {result.missing?.length ? (
           <li className="muted" title={result.missing.join('\n')}>
-            {t('{n} fichier(s) référencé(s) introuvable(s) dans Foundry', { n: result.missing.length })}
+            {t('{n} referenced file(s) not found in Foundry', { n: result.missing.length })}
           </li>
         ) : null}
       </ul>

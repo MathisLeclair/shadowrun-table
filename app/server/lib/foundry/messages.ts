@@ -1,7 +1,7 @@
 // Translatable messages of the Foundry import (see ARCHITECTURE.md « i18n »): errors thrown deep in the
 // converters/uploader carry their French key + params, so the action (ctx.fail) or route (errorBody) can
 // send them to the browser, which shows them in the user's language.
-import { formatFr, cleanParams } from '../../../client/i18n/format.ts';
+import { formatSource, cleanParams } from '../../../client/i18n/format.ts';
 import type { I18nMessage, I18nParams } from '../../../shared/types.ts';
 
 /** Error carrying its French i18n key (and params) for the client. */
@@ -22,7 +22,7 @@ export function i18nError<E extends Error = Error>(msg: I18nMessage | string, Cl
   const m = msg as Partial<I18nMessage> | string | null | undefined;
   const key = String((typeof m === 'object' ? m?.t : undefined) ?? m ?? '');
   const params = cleanParams(typeof m === 'object' ? m?.params : undefined) as I18nParams | undefined;
-  const err = new (Cls as new (message: string, ...rest: unknown[]) => E)(formatFr(key, params), ...rest) as E & I18nError;
+  const err = new (Cls as new (message: string, ...rest: unknown[]) => E)(formatSource(key, params), ...rest) as E & I18nError;
   err.i18nKey = key;
   if (params && Object.keys(params).length) err.i18nParams = params;
   return err;
@@ -48,8 +48,8 @@ export function plural(n: unknown, zero: I18nMessage, one: I18nMessage, other: I
 /** Size in French units ('12,3 Mo') as a translatable param ('12,3 MB' in English). */
 export function bytesParam(n: unknown): I18nMessage {
   const v = Number(n) || 0;
-  if (v >= 1e9) return { t: '{v} Go', params: { v: (v / 1e9).toFixed(1).replace('.', ',') } };
-  if (v >= 1e6) return { t: '{v} Mo', params: { v: (v / 1e6).toFixed(1).replace('.', ',') } };
-  if (v >= 1e3) return { t: '{v} ko', params: { v: Math.round(v / 1e3) } };
-  return { t: '{v} o', params: { v } };
+  if (v >= 1e9) return { t: '{v} GB', params: { v: (v / 1e9).toFixed(1).replace('.', ',') } };
+  if (v >= 1e6) return { t: '{v} MB', params: { v: (v / 1e6).toFixed(1).replace('.', ',') } };
+  if (v >= 1e3) return { t: '{v} kB', params: { v: Math.round(v / 1e3) } };
+  return { t: '{v} B', params: { v } };
 }

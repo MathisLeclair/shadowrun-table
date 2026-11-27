@@ -439,18 +439,18 @@ export function runTool(name: string, input: unknown, env: ToolEnv): { content: 
 /** Short, human label of a read tool call for the chat transcript. */
 export function toolLabel(name: string, input: ToolInput = {}): ToolLabel {
   switch (name) {
-    case 'read_doc': return { key: tk('Lu : {name}'), params: { name: input.name } };
-    case 'search_docs': return { key: tk('Recherche dans les documents : {q}'), params: { q: input.query } };
-    case 'list_docs': return { key: tk('Liste des documents') };
-    case 'get_campaign': return { key: tk('Suivi de campagne') };
-    case 'list_actors': return { key: tk('Liste des personnages') };
-    case 'get_actor': return { key: tk('Fiche : {name}'), params: { name: input.id } };
-    case 'list_maps': return { key: tk('Liste des cartes') };
-    case 'get_map': return { key: tk('Carte : {name}'), params: { name: input.id } };
-    case 'get_bestiary': return input.id ? { key: tk('Bestiaire : {name}'), params: { name: input.id } } : { key: tk('Bestiaire') };
-    case 'get_combat': return { key: tk('Combat en cours') };
-    case 'get_log': return { key: tk('Journal de la table') };
-    case 'search_catalog': return { key: tk('Catalogue : {q}'), params: { q: input.query } };
+    case 'read_doc': return { key: tk('Read: {name}'), params: { name: input.name } };
+    case 'search_docs': return { key: tk('Searched the documents: {q}'), params: { q: input.query } };
+    case 'list_docs': return { key: tk('Document list') };
+    case 'get_campaign': return { key: tk('Campaign tracker') };
+    case 'list_actors': return { key: tk('Character list') };
+    case 'get_actor': return { key: tk('Sheet: {name}'), params: { name: input.id } };
+    case 'list_maps': return { key: tk('Map list') };
+    case 'get_map': return { key: tk('Map: {name}'), params: { name: input.id } };
+    case 'get_bestiary': return input.id ? { key: tk('Bestiary: {name}'), params: { name: input.id } } : { key: tk('Bestiary') };
+    case 'get_combat': return { key: tk('Current combat') };
+    case 'get_log': return { key: tk('Table log') };
+    case 'search_catalog': return { key: tk('Catalog: {q}'), params: { q: input.query } };
     default: return { key: name };
   }
 }

@@ -13,10 +13,10 @@ import { BookRef, SkillRef } from '../books/BookRef.tsx';
 import { DiceFaces } from '../sheet/common.tsx';
 
 const FILE_OPS = [
-  { value: 'read', label: tk('Lire') },
-  { value: 'copy', label: tk('Copier dans mon deck') },
-  { value: 'edit', label: tk('Modifier') },
-  { value: 'delete', label: tk('fichier::Effacer') },
+  { value: 'read', label: tk('Read') },
+  { value: 'copy', label: tk('Copy to my deck') },
+  { value: 'edit', label: tk('Edit') },
+  { value: 'delete', label: tk('file::Delete') },
 ];
 
 /** Reply of matrix/action, matrix/agentAct, matrix/agentAssist (fields the dialog shows). */
@@ -37,11 +37,11 @@ function PoolLine({ pc, title }: { pc: PoolCalc | null; title?: string }) {
     <div className="mx-pool">
       <div className="mx-pool-main">
         <span className="mx-pool-n">{pc.pool}</span>
-        <span className="mx-pool-u">{t('dés')}</span>
-        {pc.limit !== null && pc.limit !== undefined ? <span className="mx-pool-lim">[{pc.limit}]</span> : <span className="mx-pool-lim faint">{t('sans limite')}</span>}
+        <span className="mx-pool-u">{t('dice')}</span>
+        {pc.limit !== null && pc.limit !== undefined ? <span className="mx-pool-lim">[{pc.limit}]</span> : <span className="mx-pool-lim faint">{t('no limit')}</span>}
       </div>
       <div className="mx-pool-parts">
-        {title && <b>{t('{title} : ', { title })}</b>}
+        {title && <b>{t('{title}: ', { title })}</b>}
         {pc.parts.map((p, i) => (
           <span key={i}>
             {partLabel(p)} <b className={p.value < 0 ? 'red' : ''}>{p.value >= 0 ? '+' : '−'}{Math.abs(p.value)}</b>
@@ -53,7 +53,7 @@ function PoolLine({ pc, title }: { pc: PoolCalc | null; title?: string }) {
             ) : null}
           </span>
         ))}
-        {pc.limitParts?.length ? <span className="faint">· {t('limite : {parts}', { parts: pc.limitParts.map((p) => `${partLabel(p)} ${p.value}`).join(' + ') })}</span> : null}
+        {pc.limitParts?.length ? <span className="faint">· {t('limit: {parts}', { parts: pc.limitParts.map((p) => `${partLabel(p)} ${p.value}`).join(' + ') })}</span> : null}
       </div>
     </div>
   );
@@ -69,24 +69,24 @@ function ResultView({ res, who }: { res: MatrixActionReply | null; who: string }
         {r && (
           <span className="mx-result-hits">
             {r.hits}
-            <small> {t('succès')}</small>
+            <small> {t('hits')}</small>
           </span>
         )}
         {res.defense && (
           <span className="mx-result-vs">
-            {t('contre')} <b>{res.defense.hits}</b> ({res.defense.labelMsg ? msgText(res.defense.labelMsg) : res.defense.label}
-            {res.defense.pool !== undefined ? `, ${t('{n} dés', { n: res.defense.pool })}` : ''})
+            {t('vs')} <b>{res.defense.hits}</b> ({res.defense.labelMsg ? msgText(res.defense.labelMsg) : res.defense.label}
+            {res.defense.pool !== undefined ? `, ${t('{n} dice', { n: res.defense.pool })}` : ''})
           </span>
         )}
-        {res.success === true && <Badge color="green">{t('Réussite')}</Badge>}
-        {res.success === false && <Badge color="red">{t('Échec')}</Badge>}
-        {res.pending && <Badge color="amber">{t('Défense au MJ')}</Badge>}
-        {res.osDelta ? <Badge color="magenta">{t('SO +{n}', { n: res.osDelta })}</Badge> : null}
+        {res.success === true && <Badge color="green">{t('Success')}</Badge>}
+        {res.success === false && <Badge color="red">{t('Failure')}</Badge>}
+        {res.pending && <Badge color="amber">{t('GM rolls defense')}</Badge>}
+        {res.osDelta ? <Badge color="magenta">{t('OS +{n}', { n: res.osDelta })}</Badge> : null}
       </div>
       {r && <DiceFaces roll={r} />}
       {res.defense?.dice && (
         <div className="mx-result-def">
-          <span className="faint small">{t('Défense')}</span>
+          <span className="faint small">{t('Defense')}</span>
           <DiceFaces roll={{ dice: res.defense.dice }} small />
         </div>
       )}
@@ -220,15 +220,15 @@ export default function ActionModal({ game, actor, persona, action, preset = {},
       <div className="mx-modal">
         <div className="row wrap gap-s mx-modal-tags">
           {getLang() === 'fr' ? <span className="faint">{action.en}</span> : null}
-          <Badge color={legal ? 'green' : 'magenta'}>{legal ? t('Légale') : t('Illégale')}</Badge>
+          <Badge color={legal ? 'green' : 'magenta'}>{legal ? t('fem::Legal') : t('fem::Illegal')}</Badge>
           <Badge>{t(ACTION_CATS[action.cat])}</Badge>
           <Badge>{ACTION_TYPES[action.type] ? t(ACTION_TYPES[action.type]) : action.type}</Badge>
-          {need ? <Badge color={marksOk ? 'cyan' : 'red'}>{tn(need, '{n} marque requise', '{n} marques requises')}</Badge> : null}
+          {need ? <Badge color={marksOk ? 'cyan' : 'red'}>{tn(need, '{n} mark required', '{n} marks required')}</Badge> : null}
           {action.page ? <BookRef source="SR5" page={action.page} /> : null}
           {action.skill ? <SkillRef id={action.skill} /> : null}
         </div>
         <p className="mx-desc">{t(action.desc)}</p>
-        {!legal && <p className="small magenta">{t('Action illégale : les succès du défenseur s’ajoutent à ton Score d’Overwatch.')}</p>}
+        {!legal && <p className="small magenta">{t('Illegal action: the defender’s hits are added to your Overwatch Score.')}</p>}
 
         {result ? (
           <>
@@ -241,10 +241,10 @@ export default function ActionModal({ game, actor, persona, action, preset = {},
                   setAssistRes(null);
                 }}
               >
-                {t('Nouvelle tentative')}
+                {t('Try again')}
               </Button>
               <Button variant="primary" onClick={onClose}>
-                {t('Fermer')}
+                {t('Close')}
               </Button>
             </div>
           </>
@@ -252,10 +252,10 @@ export default function ActionModal({ game, actor, persona, action, preset = {},
           <>
             {needsTarget || (action.targets || []).length > 1 ? (
               <div className="grid-2 mx-modal-grid">
-                <Field label={t('Cible')}>
+                <Field label={t('Target')}>
                   {flat.length ? (
                     <select className="input" value={targetId} onChange={(e) => setTargetId(e.target.value)}>
-                      {!needsTarget && <option value="">{t('— Sans cible —')}</option>}
+                      {!needsTarget && <option value="">{t('— No target —')}</option>}
                       {groups.map((g) => (
                         <optgroup key={g.group} label={g.group}>
                           {g.items.map((o) => (
@@ -268,26 +268,26 @@ export default function ActionModal({ game, actor, persona, action, preset = {},
                       ))}
                     </select>
                   ) : (
-                    <div className="muted small">{t('Aucune cible disponible pour l’instant.')}</div>
+                    <div className="muted small">{t('No target available yet.')}</div>
                   )}
                 </Field>
                 {targetId === 'manual' && (
-                  <Field label={t('Nom de la cible')}>
-                    <TextInput live value={targetName} placeholder={t('ex. commlink du garde')} onChange={setTargetName} />
+                  <Field label={t('Target name')}>
+                    <TextInput live value={targetName} placeholder={t('e.g. the guard’s commlink')} onChange={setTargetName} />
                   </Field>
                 )}
                 {targetId === 'manual' && gm && (
-                  <Field label={t('Défense (dés, MJ)')} hint={t('0 = la cible ne résiste pas')}>
+                  <Field label={t('Defense (dice, GM)')} hint={t('0 = the target does not resist')}>
                     <NumberInput value={defensePool} min={0} max={40} onChange={setDefensePool} />
                   </Field>
                 )}
               </div>
             ) : null}
-            {need > 0 && !marksOk && <p className="small red">{tn(need, 'Il te faut {n} marque sur cette cible (tu en as {have}).', 'Il te faut {n} marques sur cette cible (tu en as {have}).', { have })}</p>}
+            {need > 0 && !marksOk && <p className="small red">{tn(need, 'You need {n} mark on this target (you have {have}).', 'You need {n} marks on this target (you have {have}).', { have })}</p>}
 
             <div className="row wrap mx-modal-opts">
               {action.placesMarks && (
-                <Field label={t('Marques à placer')}>
+                <Field label={t('Marks to place')}>
                   <div className="mx-seg">
                     {[1, 2, 3].map((n) => (
                       <button type="button" key={n} className={marks === n ? 'on' : ''} onClick={() => setMarks(n)}>
@@ -299,7 +299,7 @@ export default function ActionModal({ game, actor, persona, action, preset = {},
                 </Field>
               )}
               {action.id === 'controlDevice' && (
-                <Field label={t('Marques exigées par l’ordre')}>
+                <Field label={t('Marks required by the command')}>
                   <div className="mx-seg">
                     {[1, 2, 3].map((n) => (
                       <button type="button" key={n} className={controlMarks === n ? 'on' : ''} onClick={() => setControlMarks(n)}>
@@ -310,21 +310,21 @@ export default function ActionModal({ game, actor, persona, action, preset = {},
                 </Field>
               )}
               {action.id === 'editFile' && (
-                <Field label={t('Opération')}>
+                <Field label={t('Operation')}>
                   <Select value={fileOp} options={FILE_OPS.map((o) => ({ ...o, label: t(o.label) }))} onChange={setFileOp} />
                 </Field>
               )}
               {['controlDevice', 'spoofCommand'].includes(action.id) || (action.id === 'editFile' && fileOp === 'edit') ? (
-                <Field label={action.id === 'editFile' ? t('Modification') : t('Commande')} className="grow">
-                  <TextInput live value={command} placeholder={action.id === 'editFile' ? t('ex. ajouter un nom') : t('ex. ouvrir la porte')} onChange={setCommand} />
+                <Field label={action.id === 'editFile' ? t('noun::Change') : t('Command')} className="grow">
+                  <TextInput live value={command} placeholder={action.id === 'editFile' ? t('e.g. add a name') : t('e.g. open the door')} onChange={setCommand} />
                 </Field>
               ) : null}
               {linkKind && (
-                <Field label={t('Sur la carte')} hint={t('Appliqué automatiquement si l’action réussit')}>
+                <Field label={t('On the map')} hint={t('Applied automatically if the action succeeds')}>
                   <Select
                     value={deviceCmd}
                     options={[
-                      { value: '', label: t('— rien —') },
+                      { value: '', label: t('— nothing —') },
                       ...DEVICE_LINK_KINDS[linkKind].cmds.map((c) => ({ value: c, label: `${DEVICE_LINK_KINDS[linkKind].icon} ${t(DEVICE_CMD_LABELS[linkKind][c])}` })),
                     ]}
                     onChange={setDeviceCmd}
@@ -332,29 +332,29 @@ export default function ActionModal({ game, actor, persona, action, preset = {},
                 </Field>
               )}
               {action.id === 'crashProgram' && (
-                <Field label={t('Programme visé (optionnel)')}>
+                <Field label={t('Target program (optional)')}>
                   <TextInput live value={program} onChange={setProgram} />
                 </Field>
               )}
               {(action.id === 'matrixSearch' || (!action.defense && !action.noTest && action.id !== 'jamSignals')) && (
-                <Field label={t('Seuil (optionnel)')}>
+                <Field label={t('Threshold (optional)')}>
                   <NumberInput value={threshold} min={0} max={20} onChange={setThreshold} />
                 </Field>
               )}
               {!action.noTest && (
-                <Field label={t('Modificateur')}>
+                <Field label={t('Edit')}>
                   <NumberInput value={modifier} min={-20} max={20} onChange={setModifier} />
                 </Field>
               )}
             </div>
             {!action.noTest && (
               <div className="row wrap mx-modal-opts">
-                {sk?.spec && <Toggle value={useSpec} onChange={setUseSpec} label={t('Spécialisation « {spec} » (+2)', { spec: sk.spec })} />}
+                {sk?.spec && <Toggle value={useSpec} onChange={setUseSpec} label={t('Specialization “{spec}” (+2)', { spec: sk.spec })} />}
                 <Toggle
                   value={edge}
                   onChange={(v) => setEdge(v && edgeLeft > 0)}
-                  label={t('Chance : repousser les limites ({n})', { n: edgeLeft })}
-                  title={t('+Chance en dés, règle des 6, sans limite — coûte 1 point')}
+                  label={t('Edge: Push the Limit ({n})', { n: edgeLeft })}
+                  title={t('+Edge dice, Rule of Six, no limit — costs 1 point')}
                 />
                 {Object.entries(switches).map(([k, ls]) => (
                   <Toggle
@@ -376,7 +376,7 @@ export default function ActionModal({ game, actor, persona, action, preset = {},
                   <div className="grow">
                     <b>{ag.name}</b>{' '}
                     <span className="faint small">
-                      {t('agent indice {n}', { n: ag.rating })} · {ag.loaded ? t('chargé') : t('non chargé')}
+                      {t('rating {n} agent', { n: ag.rating })} · {ag.loaded ? t('loaded') : t('not loaded')}
                       {ag.damage ? ` · ${ag.damage}/${matrixMonitor(ag.rating)}` : ''}
                     </span>
                   </div>
@@ -385,10 +385,10 @@ export default function ActionModal({ game, actor, persona, action, preset = {},
                   <div className="mx-agent-choices">
                     <div className="mx-agent-choice">
                       <Button variant="accent" disabled={busy || !persona.online} onClick={askAssist}>
-                        {t('Faire assister mon agent')}
+                        {t('Have my agent assist')}
                       </Button>
                       <span className="small muted">
-                        {t('Travail d’équipe : il lance {pool} dés{limit} ; chaque succès te donne +1 dé (max {max}), et +1 à ta limite s’il en a au moins un.', {
+                        {t('Teamwork: it rolls {pool} dice{limit}; each hit gives you +1 die (max {max}), and +1 to your limit if it scores at least one.', {
                           pool: agentPc ? agentPc.pool : '—',
                           limit: agentPc?.limit != null ? ` [${agentPc.limit}]` : '',
                           max: sk?.rating || 0,
@@ -398,16 +398,16 @@ export default function ActionModal({ game, actor, persona, action, preset = {},
                     {(assistRes || pending) && (
                       <div className="mx-assist">
                         {assistRes && assistRes.roll && <DiceFaces roll={assistRes.roll} small />}
-                        {assistRes ? <div className="small">{outcomeTexts(assistRes).join(' ')}</div> : <div className="small">{t('Assistance en attente : {bonus}.', { bonus: assistText(pending) })}</div>}
-                        {pending && <Toggle value={useAssist} onChange={setUseAssist} label={t('Utiliser l’assistance ({bonus})', { bonus: assistText(pending) })} />}
+                        {assistRes ? <div className="small">{outcomeTexts(assistRes).join(' ')}</div> : <div className="small">{t('Assist pending: {bonus}.', { bonus: assistText(pending) })}</div>}
+                        {pending && <Toggle value={useAssist} onChange={setUseAssist} label={t('Use the assist ({bonus})', { bonus: assistText(pending) })} />}
                       </div>
                     )}
                     <div className="mx-agent-choice">
                       <Button disabled={busy || !persona.online || missingTarget || !marksOk || (targetId === 'manual' && !targetName.trim())} onClick={agentDo}>
-                        {t('Laisser mon agent agir')}
+                        {t('Let my agent act')}
                       </Button>
                       <span className="small muted">
-                        {t('Il fait l’action à ta place avec {pool} dés{limit} (Indice × 2, limites du deck). Son SO s’ajoute au tien.', {
+                        {t('It takes the action for you with {pool} dice{limit} (Rating × 2, deck limits). Its OS adds to yours.', {
                           pool: agentPc ? agentPc.pool : '—',
                           limit: agentPc?.limit != null ? ` [${agentPc.limit}]` : '',
                         })}
@@ -415,20 +415,20 @@ export default function ActionModal({ game, actor, persona, action, preset = {},
                     </div>
                   </div>
                 ) : (
-                  <div className="small muted">{t('Charge ton agent (panneau Agent du cockpit) pour qu’il t’assiste ou agisse à ta place.')}</div>
+                  <div className="small muted">{t('Load your agent (Agent panel of the cockpit) so it can assist you or act for you.')}</div>
                 )}
               </div>
             )}
 
             <div className="row spread mx-modal-actions">
-              <span className="small faint">{offline ? t('Connecte-toi d’abord à la Matrice.') : linkLockedJackOut ? t('Aucun verrou de lien : déconnexion immédiate.') : ''}</span>
+              <span className="small faint">{offline ? t('Connect to the Matrix first.') : linkLockedJackOut ? t('No link-lock: you jack out immediately.') : ''}</span>
               <div className="row">
                 <Button variant="ghost" onClick={onClose}>
-                  {t('Annuler')}
+                  {t('Cancel')}
                 </Button>
                 <Button variant="primary" disabled={busy || offline || missingTarget || !marksOk || pc?.impossible || (targetId === 'manual' && !targetName.trim())} onClick={run}>
-                  {action.noTest ? t('Exécuter') : t('Lancer')}
-                  {pc && !pc.impossible ? ` ${t('({n} dés)', { n: pc.pool })}` : ''}
+                  {action.noTest ? t('Execute') : t('Roll')}
+                  {pc && !pc.impossible ? ` ${t('({n} dice)', { n: pc.pool })}` : ''}
                 </Button>
               </div>
             </div>

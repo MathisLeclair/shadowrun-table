@@ -51,7 +51,7 @@ const slugify = (s: string) =>
 const LANG_LABEL: Record<string, string> = { fr: 'Français', en: 'English' }; // endonyms: never translated
 // Content packs: the server sends French labels (server/lib/tables.js PACKS), translated when they are dictionary keys.
 const packLabel = (p: AdminPack): string => tIfKnown(p.label || p.id);
-const packShort = (id: string) => (id === 'project-lazarus' ? 'Project Lazarus' : id === 'vierge' ? t('Vierge') : id);
+const packShort = (id: string) => (id === 'project-lazarus' ? 'Project Lazarus' : id === 'vierge' ? t('Blank') : id);
 
 /** Start a browser download from a one-time server URL. */
 function download(url: string) {
@@ -92,20 +92,20 @@ function AdminLogin({ onDone, onLang }: { onDone: () => void; onLang?: (l: strin
           <div className="logo-mark"></div>
           <div>
             <h1>{t('Administration')}</h1>
-            <div className="muted">{t('Serveur Shadowrun')}</div>
+            <div className="muted">{t('Shadowrun server')}</div>
           </div>
         </div>
         <label className="field">
-          <span className="field-label">{t('Mot de passe administrateur')}</span>
+          <span className="field-label">{t('Administrator password')}</span>
           <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoFocus />
         </label>
         {err && <div className="error">{err}</div>}
         <Button variant="primary" type="submit" disabled={busy || !password}>
-          {t('Se connecter')}
+          {t('Log in')}
         </Button>
-        <span className="field-hint">{t('Défini par la variable SR_ADMIN_PASSWORD du serveur (ou affiché une fois dans sa console au premier démarrage).')}</span>
+        <span className="field-hint">{t('Set by the server\'s SR_ADMIN_PASSWORD variable (or printed once in its console on first start).')}</span>
         <a className="login-switch muted small" href="/?choisir">
-          {t('← Retour aux tables')}
+          {t('← Back to the tables')}
         </a>
       </form>
     </div>
@@ -131,7 +131,7 @@ function CreateTable({ packs, langs, onCreated, run }: { packs: AdminPack[]; lan
     e.preventDefault();
     run(async () => {
       const r = await adminApi<{ table: { name: string } }>('/api/admin/tables', { method: 'POST', body: { ...f, slug: f.slug || slugify(f.name) } });
-      toast(t('Table « {name} » créée', { name: r.table.name }), 'success');
+      toast(t('Table “{name}” created', { name: r.table.name }), 'success');
       setF(empty);
       setSlugTouched(false);
       onCreated();
@@ -139,16 +139,16 @@ function CreateTable({ packs, langs, onCreated, run }: { packs: AdminPack[]; lan
   };
   return (
     <form className="admin-form" onSubmit={submit}>
-      <Field label={t('Nom de la table')}>
+      <Field label={t('Table name')}>
         <input
           className="input"
           value={f.name}
           maxLength={80}
-          placeholder={t('ex. Les Ombres de Lyon')}
+          placeholder={t('e.g. Shadows of Lyon')}
           onChange={(e) => set({ name: e.target.value, ...(slugTouched ? {} : { slug: slugify(e.target.value) }) })}
         />
       </Field>
-      <Field label={t('Identifiant (adresse)')} hint={f.slug ? t('Adresse : {url}', { url: `${location.origin}/t/${f.slug}/` }) : t('Lettres minuscules, chiffres et tirets')}>
+      <Field label={t('Identifier (address)')} hint={f.slug ? t('Address: {url}', { url: `${location.origin}/t/${f.slug}/` }) : t('Lowercase letters, digits and dashes')}>
         <input
           className="input mono"
           value={f.slug}
@@ -159,21 +159,21 @@ function CreateTable({ packs, langs, onCreated, run }: { packs: AdminPack[]; lan
           }}
         />
       </Field>
-      <Field label={t('Contenu de départ')}>
+      <Field label={t('Starting content')}>
         <Select value={f.pack} options={packs.map((p) => ({ value: p.id, label: packLabel(p) }))} onChange={(v) => set({ pack: v })} />
       </Field>
-      <Field label={t('Langue de la table')}>
+      <Field label={t('Table language')}>
         <Select value={f.lang} options={langs.map((l) => ({ value: l, label: LANG_LABEL[l] || l }))} onChange={(v) => set({ lang: v })} />
       </Field>
-      <Field label={t('Mot de passe MJ')} hint={t('6 caractères minimum — à transmettre au MJ de la table.')}>
+      <Field label={t('GM password')} hint={t('6 characters minimum — give it to the table\'s GM.')}>
         <input className="input" type="text" autoComplete="off" value={f.gmPassword} onChange={(e) => set({ gmPassword: e.target.value })} />
       </Field>
-      <Field label={t('Visibilité')}>
-        <Toggle value={f.hidden} onChange={(v) => set({ hidden: v })} label={t('Masquer de l’accueil (accès par le lien seulement)')} />
+      <Field label={t('Visibility')}>
+        <Toggle value={f.hidden} onChange={(v) => set({ hidden: v })} label={t('Hide from the home page (access by link only)')} />
       </Field>
       <div className="admin-form-actions">
         <Button variant="primary" type="submit" disabled={!f.name.trim() || f.gmPassword.length < 6}>
-          {t('Créer la table')}
+          {t('Create the table')}
         </Button>
       </div>
     </form>
@@ -189,7 +189,7 @@ function RestoreTable({ maxBytes, onDone }: { maxBytes: number; onDone: () => vo
   const [progress, setProgress] = useState<UploadProgress | null>(null);
   const submit = async () => {
     if (!file) return;
-    if (replace && !(await confirmAction(t('Remplacer la table « {slug} » par cette sauvegarde ? L’actuelle est d’abord archivée en .zip sur le serveur.', { slug })))) return;
+    if (replace && !(await confirmAction(t('Replace table “{slug}” with this backup? The current one is first archived as a .zip on the server.', { slug })))) return;
     const q = new URLSearchParams();
     if (slug) q.set('slug', slug);
     if (name) q.set('name', name);
@@ -197,7 +197,7 @@ function RestoreTable({ maxBytes, onDone }: { maxBytes: number; onDone: () => vo
     setProgress(0);
     try {
       const r = await uploadWithProgress<{ table: { name: string } }>(`/api/admin/restore?${q}`, file, { token: adminToken, onProgress: (p) => setProgress(p >= 1 ? 'server' : p) });
-      toast(t('Table « {name} » restaurée', { name: r.table.name }), 'success');
+      toast(t('Table “{name}” restored', { name: r.table.name }), 'success');
       setFile(null);
       setSlug('');
       setName('');
@@ -212,11 +212,11 @@ function RestoreTable({ maxBytes, onDone }: { maxBytes: number; onDone: () => vo
   return (
     <div className="col">
       <p className="muted small">
-        {t('Envoie le .zip d’une table (bouton « Sauvegarde .zip » d’un serveur) ou l’export .json d’une partie (Réglages → Télécharger la partie). Taille max : {size}.', { size: fmtBytes(maxBytes) })}
+        {t('Upload a table\'s .zip (a server\'s “.zip backup” button) or a game\'s .json export (Settings → Download the game). Max size: {size}.', { size: fmtBytes(maxBytes) })}
       </p>
       <div className="admin-file">
         <label className="btn">
-          {t('Choisir un fichier')}
+          {t('Choose a file')}
           <input
             type="file"
             accept=".zip,.json"
@@ -232,24 +232,24 @@ function RestoreTable({ maxBytes, onDone }: { maxBytes: number; onDone: () => vo
             {file.name} ({fmtBytes(file.size)})
           </span>
         ) : (
-          <span className="muted small">{t('Aucun fichier choisi')}</span>
+          <span className="muted small">{t('No file chosen')}</span>
         )}
       </div>
       <div className="admin-form">
-        <Field label={t('Identifiant (optionnel)')} hint={t('Par défaut : celui de la sauvegarde.')}>
+        <Field label={t('Identifier (optional)')} hint={t('Default: the backup\'s own.')}>
           <input className="input mono" value={slug} maxLength={40} onChange={(e) => setSlug(e.target.value.toLowerCase())} />
         </Field>
-        <Field label={t('Nom (optionnel)')}>
+        <Field label={t('Name (optional)')}>
           <input className="input" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} />
         </Field>
-        <Field label={t('Si l’identifiant existe déjà')}>
-          <Toggle value={replace} onChange={setReplace} label={t('Remplacer la table existante')} />
+        <Field label={t('If the identifier already exists')}>
+          <Toggle value={replace} onChange={setReplace} label={t('Replace the existing table')} />
         </Field>
       </div>
-      {progress !== null && <Progress value={progress} serverLabel={t('Restauration sur le serveur…')} />}
+      {progress !== null && <Progress value={progress} serverLabel={t('Restoring on the server…')} />}
       <div className="row" style={{ justifyContent: 'flex-end' }}>
         <Button variant="primary" disabled={!file || progress !== null} onClick={submit}>
-          {t('Restaurer')}
+          {t('Restore')}
         </Button>
       </div>
     </div>
@@ -263,10 +263,10 @@ function AdminPassword({ run }: { run: RunFn }) {
   const [again, setAgain] = useState('');
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    if (next !== again) return toast(t('Les deux nouveaux mots de passe ne correspondent pas'), 'error');
+    if (next !== again) return toast(t('The two new passwords do not match'), 'error');
     run(async () => {
       await adminApi('/api/admin/password', { method: 'POST', body: { current: cur, next } });
-      toast(t('Mot de passe administrateur changé'), 'success');
+      toast(t('Administrator password changed'), 'success');
       setCur('');
       setNext('');
       setAgain('');
@@ -274,19 +274,19 @@ function AdminPassword({ run }: { run: RunFn }) {
   };
   return (
     <form className="admin-form" onSubmit={submit}>
-      <Field label={t('Mot de passe actuel')}>
+      <Field label={t('Current password')}>
         <input className="input" type="password" value={cur} onChange={(e) => setCur(e.target.value)} />
       </Field>
-      <Field label={t('Nouveau (8 caractères min.)')}>
+      <Field label={t('New (8 characters min.)')}>
         <input className="input" type="password" value={next} onChange={(e) => setNext(e.target.value)} />
       </Field>
       <Field label={t('Confirmation')}>
         <input className="input" type="password" value={again} onChange={(e) => setAgain(e.target.value)} />
       </Field>
       <div className="admin-form-actions">
-        <span className="field-hint">{t('Si SR_ADMIN_PASSWORD change dans la configuration du serveur, elle reprend la main au redémarrage.')}</span>
+        <span className="field-hint">{t('If SR_ADMIN_PASSWORD changes in the server configuration, it takes over again on restart.')}</span>
         <Button type="submit" disabled={!cur || next.length < 8}>
-          {t('Changer')}
+          {t('Change')}
         </Button>
       </div>
     </form>
@@ -302,21 +302,21 @@ function TableRow({ tb, run, reload }: { tb: AdminTable; run: RunFn; reload: () 
       reload();
     });
   const rename = async () => {
-    const name = await promptText(t('Nouveau nom de la table :'), tb.name);
-    if (name && name.trim() && name.trim() !== tb.name) patch({ name: name.trim() }, t('Table renommée'));
+    const name = await promptText(t('New table name:'), tb.name);
+    if (name && name.trim() && name.trim() !== tb.name) patch({ name: name.trim() }, t('Table renamed'));
   };
   const gmPassword = async () => {
-    const pw = await promptText(t('Nouveau mot de passe MJ pour « {name} » (6 caractères minimum). Les MJ connectés devront se reconnecter.', { name: tb.name }));
+    const pw = await promptText(t('New GM password for “{name}” (6 characters minimum). Logged-in GMs will have to log in again.', { name: tb.name }));
     if (!pw) return;
     run(async () => {
       await adminApi(`/api/admin/tables/${tb.id}/gm-password`, { method: 'POST', body: { password: pw } });
-      toast(t('Mot de passe MJ changé'), 'success');
+      toast(t('GM password changed'), 'success');
     });
   };
   const openAsGm = () =>
     run(async () => {
       const r = await adminApi<{ slug: string; token: string; url: string }>(`/api/admin/tables/${tb.id}/gm-session`, { method: 'POST' });
-      if (!setTableToken(r.slug, r.token)) return toast(t('Stockage du navigateur bloqué : connecte-toi avec le mot de passe MJ'), 'warn');
+      if (!setTableToken(r.slug, r.token)) return toast(t('Browser storage is blocked: log in with the GM password'), 'warn');
       window.open(r.url, '_blank');
     });
   const backup = () =>
@@ -325,18 +325,18 @@ function TableRow({ tb, run, reload }: { tb: AdminTable; run: RunFn; reload: () 
       download(r.url);
     });
   const archive = async () => {
-    if (!tb.archived && !(await confirmAction(t('Archiver « {name} » ? La table disparaît de l’accueil et les personnes connectées sont déconnectées. Rien n’est effacé.', { name: tb.name })))) return;
-    patch({ archived: !tb.archived }, tb.archived ? t('Table désarchivée') : t('Table archivée'));
+    if (!tb.archived && !(await confirmAction(t('Archive “{name}”? The table disappears from the home page and connected people are logged out. Nothing is deleted.', { name: tb.name })))) return;
+    patch({ archived: !tb.archived }, tb.archived ? t('Table unarchived') : t('Table archived'));
   };
   const remove = async () => {
     const typed = await promptText(
-      t('Supprimer définitivement « {name} » ? Une archive .zip est gardée sur le serveur (dossier deleted/). Tape l’identifiant « {id} » pour confirmer :', { name: tb.name, id: tb.id })
+      t('Permanently delete “{name}”? A .zip archive is kept on the server (deleted/ folder). Type the identifier “{id}” to confirm:', { name: tb.name, id: tb.id })
     );
     if (typed === null) return;
-    if (typed.trim() !== tb.id) return toast(t('Identifiant incorrect : rien n’a été supprimé'), 'warn');
+    if (typed.trim() !== tb.id) return toast(t('Wrong identifier: nothing was deleted'), 'warn');
     run(async () => {
       const r = await adminApi<{ backup: string }>(`/api/admin/tables/${tb.id}`, { method: 'DELETE', body: { confirm: tb.id } });
-      toast(t('Table supprimée (archive : {file})', { file: r.backup }), 'success');
+      toast(t('Table deleted (archive: {file})', { file: r.backup }), 'success');
       reload();
     });
   };
@@ -346,19 +346,19 @@ function TableRow({ tb, run, reload }: { tb: AdminTable; run: RunFn; reload: () 
       <td>
         <div className="admin-name">{tb.name}</div>
         <div className="admin-badges">
-          {tb.archived && <Badge color="amber">{t('archivée')}</Badge>}
+          {tb.archived && <Badge color="amber">{t('archived')}</Badge>}
           {tb.status === 'broken' && (
             <Badge color="red" title={tb.error}>
-              {t('indisponible')}
+              {t('unavailable')}
             </Badge>
           )}
-          {tb.hidden && <Badge>{t('masquée')}</Badge>}
+          {tb.hidden && <Badge>{t('fem::hidden')}</Badge>}
           {tb.legacy && (
-            <Badge color="cyan" title={t('Garde les adresses historiques /uploads et /assets/foundry')}>
-              {t('historique')}
+            <Badge color="cyan" title={t('Keeps the historical /uploads and /assets/foundry addresses')}>
+              {t('legacy')}
             </Badge>
           )}
-          {tb.online > 0 && <Badge color="green">{t('{n} en ligne', { n: tb.online })}</Badge>}
+          {tb.online > 0 && <Badge color="green">{t('{n} online', { n: tb.online })}</Badge>}
         </div>
       </td>
       <td>
@@ -373,34 +373,34 @@ function TableRow({ tb, run, reload }: { tb: AdminTable; run: RunFn; reload: () 
       <td className="small">
         {packShort(tb.pack)} · {LANG_LABEL[tb.lang] || tb.lang}
       </td>
-      <td className="small">{tb.players === null ? '—' : t('{players} · {pcs}', { players: tn(tb.players, '{n} joueur', '{n} joueurs'), pcs: tn(tb.pcs, '{n} PJ', 'pluriel::{n} PJ') })}</td>
+      <td className="small">{tb.players === null ? '—' : t('{players} · {pcs}', { players: tn(tb.players, '{n} player', '{n} players'), pcs: tn(tb.pcs, '{n} PC', 'plural::{n} PCs') })}</td>
       <td className="small">{fmtDate(tb.lastActivity)}</td>
       <td className="num-cell small">{fmtBytes(tb.sizeBytes)}</td>
       <td>
         <div className="admin-actions">
-          <Button small variant="primary" disabled={!usable} onClick={openAsGm} title={t('Ouvre la table en tant que MJ dans un nouvel onglet')}>
-            {t('Ouvrir en MJ')}
+          <Button small variant="primary" disabled={!usable} onClick={openAsGm} title={t('Opens the table as GM in a new tab')}>
+            {t('Open as GM')}
           </Button>
           <Button small disabled={!usable} onClick={rename}>
-            {t('Renommer')}
+            {t('Rename')}
           </Button>
           <Button small disabled={!usable} onClick={gmPassword}>
-            {t('Mot de passe MJ')}
+            {t('GM password')}
           </Button>
           <Button small variant="ghost" disabled={tb.archived} onClick={() => patch({ hidden: !tb.hidden })}>
-            {tb.hidden ? t('Afficher à l’accueil') : t('Masquer')}
+            {tb.hidden ? t('Show on the home page') : t('Hide')}
           </Button>
-          <Button small variant="ghost" onClick={() => patch({ lang: tb.lang === 'fr' ? 'en' : 'fr' }, t('Langue changée'))} disabled={!usable}>
-            {tb.lang === 'fr' ? t('Passer en anglais') : t('Passer en français')}
+          <Button small variant="ghost" onClick={() => patch({ lang: tb.lang === 'fr' ? 'en' : 'fr' }, t('Language changed'))} disabled={!usable}>
+            {tb.lang === 'fr' ? t('Switch to English') : t('Switch to French')}
           </Button>
-          <Button small onClick={backup} title={t('Télécharge un .zip : partie, fichiers téléversés, documents')}>
-            {t('Sauvegarde .zip')}
+          <Button small onClick={backup} title={t('Downloads a .zip: game, uploaded files, documents')}>
+            {t('.zip backup')}
           </Button>
           <Button small variant="ghost" onClick={archive}>
-            {tb.archived ? t('Désarchiver') : t('Archiver')}
+            {tb.archived ? t('Unarchive') : t('Archive')}
           </Button>
           <Button small variant="danger" onClick={remove}>
-            {t('Supprimer')}
+            {t('Delete')}
           </Button>
         </div>
       </td>
@@ -429,8 +429,8 @@ export default function AdminPage({ onLang }: { onLang?: (l: string) => void }) 
     } catch (err) {
       if (err instanceof AuthError) {
         logoutLocal();
-        toast(t('Session administrateur expirée, reconnecte-toi'), 'warn');
-      } else toast((err as Error).message || t('Erreur'), 'error');
+        toast(t('Administrator session expired, please log in again'), 'warn');
+      } else toast((err as Error).message || t('Error'), 'error');
     } finally {
       setBusy(false);
     }
@@ -459,18 +459,18 @@ export default function AdminPage({ onLang }: { onLang?: (l: string) => void }) 
       <header className="admin-top">
         <div className="brand">
           <div className="logo-mark small"></div>
-          <span>{t('Administration du serveur')}</span>
+          <span>{t('Server administration')}</span>
         </div>
         {busy && <span className="muted small">…</span>}
         {onLang && <LangSwitch value={lang} onChange={onLang} />}
         <a className="btn btn-ghost btn-sm" href="/?choisir">
-          {t('Accueil')}
+          {t('Home')}
         </a>
         <Button small variant="ghost" onClick={reload}>
-          {t('Actualiser')}
+          {t('Refresh')}
         </Button>
         <Button small onClick={logout}>
-          {t('Se déconnecter')}
+          {t('Log out')}
         </Button>
       </header>
       <div className="admin-body">
@@ -480,24 +480,24 @@ export default function AdminPage({ onLang }: { onLang?: (l: string) => void }) 
               <strong>
                 {tables.filter((x) => !x.archived).length} / {tables.length}
               </strong>
-              <span className="muted small">{t('tables actives / total')}</span>
+              <span className="muted small">{t('active tables / total')}</span>
             </div>
             <div className="admin-stat">
               <strong>{tables.reduce((s, x) => s + (x.online || 0), 0)}</strong>
-              <span className="muted small">{t('personnes connectées')}</span>
+              <span className="muted small">{t('people online')}</span>
             </div>
             <div className="admin-stat">
               <strong>{fmtBytes(totalBytes)}</strong>
-              <span className="muted small">{t('données des tables')}</span>
+              <span className="muted small">{t('table data')}</span>
             </div>
             <div className="admin-stat">
               <strong>{fmtBytes(data?.sharedAssetsBytes || 0)}</strong>
-              <span className="muted small">{t('fichiers Foundry partagés (historiques)')}</span>
+              <span className="muted small">{t('shared Foundry files (legacy)')}</span>
             </div>
             {disk && (
               <div className={'admin-stat' + (freeRatio < 0.05 ? ' bad' : freeRatio < 0.15 ? ' warn' : '')}>
                 <strong>{fmtBytes(disk.free)}</strong>
-                <span className="muted small">{t('libres sur {total}', { total: fmtBytes(disk.total) })}</span>
+                <span className="muted small">{t('free of {total}', { total: fmtBytes(disk.total) })}</span>
               </div>
             )}
           </div>
@@ -505,18 +505,18 @@ export default function AdminPage({ onLang }: { onLang?: (l: string) => void }) 
           <h3 className="section-title">{t('Tables')}</h3>
           <Panel pad={false}>
             {!data ? (
-              <Empty>{t('Chargement…')}</Empty>
+              <Empty>{t('Loading…')}</Empty>
             ) : tables.length ? (
               <div style={{ overflowX: 'auto' }}>
                 <table className="sr admin-tables">
                   <thead>
                     <tr>
                       <th>{t('Table')}</th>
-                      <th>{t('Adresse')}</th>
-                      <th>{t('Contenu')}</th>
-                      <th>{t('Joueurs')}</th>
-                      <th>{t('Dernière activité')}</th>
-                      <th className="right">{t('Taille')}</th>
+                      <th>{t('Address')}</th>
+                      <th>{t('Content')}</th>
+                      <th>{t('Players')}</th>
+                      <th>{t('Last activity')}</th>
+                      <th className="right">{t('Size')}</th>
                       <th></th>
                     </tr>
                   </thead>
@@ -528,27 +528,27 @@ export default function AdminPage({ onLang }: { onLang?: (l: string) => void }) 
                 </table>
               </div>
             ) : (
-              <Empty>{t('Aucune table : crée la première ci-dessous.')}</Empty>
+              <Empty>{t('No tables: create the first one below.')}</Empty>
             )}
           </Panel>
 
           <div className="grid-2" style={{ marginTop: 14 }}>
-            <Panel title={t('Nouvelle table')}>{data && <CreateTable packs={data.packs} langs={data.langs} onCreated={reload} run={run} />}</Panel>
-            <Panel title={t('Restaurer une table')}>{data && <RestoreTable maxBytes={data.maxUploadBytes} onDone={reload} />}</Panel>
+            <Panel title={t('New table')}>{data && <CreateTable packs={data.packs} langs={data.langs} onCreated={reload} run={run} />}</Panel>
+            <Panel title={t('Restore a table')}>{data && <RestoreTable maxBytes={data.maxUploadBytes} onDone={reload} />}</Panel>
           </div>
 
-          <Panel title={t('Livres de règles')} style={{ marginTop: 14 }}>
+          <Panel title={t('Rulebooks')} style={{ marginTop: 14 }}>
             <BooksAdmin adminApi={adminApi} token={adminToken} run={run} />
           </Panel>
-          <Panel title={t('Bibliothèque de cartes')} style={{ marginTop: 14 }}>
+          <Panel title={t('Map library')} style={{ marginTop: 14 }}>
             <MaplibAdmin adminApi={adminApi} token={adminToken} run={run} />
           </Panel>
-          <Panel title={t('Assistant IA')} style={{ marginTop: 14 }}>
+          <Panel title={t('AI assistant')} style={{ marginTop: 14 }}>
             <AssistantAdmin adminApi={adminApi} run={run} />
           </Panel>
 
           <div className="grid-2" style={{ marginTop: 14 }}>
-            <Panel title={t('Archives des tables supprimées ou remplacées')}>
+            <Panel title={t('Archives of deleted or replaced tables')}>
               {data?.deleted?.length ? (
                 <>
                   <div className="admin-worlds">
@@ -561,18 +561,18 @@ export default function AdminPage({ onLang }: { onLang?: (l: string) => void }) 
                           small
                           onClick={() => run(async () => download((await adminApi<{ url: string }>(`/api/admin/deleted/${encodeURIComponent(d.file)}/download`, { method: 'POST' })).url))}
                         >
-                          {t('Télécharger')}
+                          {t('Download')}
                         </Button>
                       </div>
                     ))}
                   </div>
-                  <p className="field-hint">{t('Pour récupérer une table, télécharge son archive puis utilise « Restaurer une table ».')}</p>
+                  <p className="field-hint">{t('To recover a table, download its archive then use “Restore a table”.')}</p>
                 </>
               ) : (
-                <Empty>{t('Aucune archive.')}</Empty>
+                <Empty>{t('No archives.')}</Empty>
               )}
             </Panel>
-            <Panel title={t('Mot de passe administrateur')}>
+            <Panel title={t('Administrator password')}>
               <AdminPassword run={run} />
             </Panel>
           </div>

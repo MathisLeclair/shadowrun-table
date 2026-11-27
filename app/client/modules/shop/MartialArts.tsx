@@ -32,7 +32,7 @@ export default function MartialArts({ game, actor, styles, wide }: MartialArtsPr
       .sort((a, b) => compare(itemName(a), itemName(b)));
   }, [styles, search]);
 
-  if (!styles) return <div className="shop-loading">{t('Connexion au catalogue de Cabana…')}</div>;
+  if (!styles) return <div className="shop-loading">{t('Connecting to Cabana’s catalog…')}</div>;
   const style = sel ? styles.find((s) => s.id === sel) : null;
   const known = style ? (actor?.martialArts || []).find((m) => m.catalogId === style.id) : undefined;
   const knownTech = new Set((known?.techniques || []).map((x) => x.catalogId));
@@ -51,8 +51,8 @@ export default function MartialArts({ game, actor, styles, wide }: MartialArtsPr
     setBusy(true);
     try {
       const r = await send<{ status?: string; karma?: number }>('shop/martialArt', { actorId: actor.id, styleId: style.id, techniqueIds: fresh, ...(isGM ? { free: !!free } : {}) });
-      if (r?.status === 'pending') toast(t('Demande envoyée au MJ ({karma} karma)', { karma: r.karma }), 'info');
-      else toast(t('{style} appris par {name}', { style: itemName(style), name: actor.name }), 'success');
+      if (r?.status === 'pending') toast(t('Request sent to the GM ({karma} karma)', { karma: r.karma }), 'info');
+      else toast(t('{name} learned {style}', { style: itemName(style), name: actor.name }), 'success');
       setPicked([]);
     } catch {}
     setBusy(false);
@@ -62,16 +62,16 @@ export default function MartialArts({ game, actor, styles, wide }: MartialArtsPr
     <div className={'shop-martial' + (wide ? ' wide' : '')}>
       <div className="shop-martial-list">
         <div className="row wrap">
-          <SearchBox value={search} onChange={setSearch} placeholder={t('Rechercher un style ou une technique…')} />
+          <SearchBox value={search} onChange={setSearch} placeholder={t('Search a style or a technique…')} />
           <span className="muted small grow right">{tn(list.length, '{n} style', '{n} styles')}</span>
         </div>
         <div className="muted small">
-          {t('Les arts martiaux s’achètent en karma : style {style} karma (première technique comprise), puis {tech} karma par technique. Le MJ valide.', {
+          {t('Martial arts cost karma: {style} karma for a style (first technique included), then {tech} karma per technique. The GM approves.', {
             style: MARTIAL_KARMA.style,
             tech: MARTIAL_KARMA.technique,
           })}
         </div>
-        {!list.length && <Empty>{t('Rien ne correspond à ta recherche.')}</Empty>}
+        {!list.length && <Empty>{t('Nothing matches your search.')}</Empty>}
         <div className="shop-martial-grid">
           {list.map((s) => {
             const mine = (actor?.martialArts || []).find((m) => m.catalogId === s.id);
@@ -79,7 +79,7 @@ export default function MartialArts({ game, actor, styles, wide }: MartialArtsPr
               <button key={s.id} className={'card clickable shop-martial-card' + (sel === s.id ? ' selected' : '')} onClick={() => choose(s.id)}>
                 <div className="spread row">
                   <strong>{itemName(s)}</strong>
-                  {mine ? <Badge color="green">{t('Connu')}</Badge> : null}
+                  {mine ? <Badge color="green">{t('Known')}</Badge> : null}
                 </div>
                 <div className="faint small">
                   {tn((s.stats?.techniques || []).length, '{n} technique', '{n} techniques')} · {s.source} p.{s.page}
@@ -91,7 +91,7 @@ export default function MartialArts({ game, actor, styles, wide }: MartialArtsPr
       </div>
       <div className="shop-martial-detail">
         {!style ? (
-          <Empty>{t('Sélectionne un style pour voir ses techniques.')}</Empty>
+          <Empty>{t('Select a style to see its techniques.')}</Empty>
         ) : (
           <Panel title={itemName(style)}>
             <div className="col">
@@ -100,8 +100,8 @@ export default function MartialArts({ game, actor, styles, wide }: MartialArtsPr
                 <BookRef source={style.source} page={style.page} />
                 <RuleRef rule="martialArts" />
               </div>
-              {known && actor ? <div className="small green">{t('{name} connaît ce style ({n} technique(s)).', { name: actor.name, n: known.techniques?.length || 0 })}</div> : null}
-              <div className="section-title">{t('Techniques')}</div>
+              {known && actor ? <div className="small green">{t('{name} knows this style ({n} technique(s)).', { name: actor.name, n: known.techniques?.length || 0 })}</div> : null}
+              <div className="section-title">{t('Technical')}</div>
               <div className="shop-martial-techs">
                 {(style.stats?.techniques || []).map((x, i) => {
                   const has = knownTech.has(x.id);
@@ -115,29 +115,29 @@ export default function MartialArts({ game, actor, styles, wide }: MartialArtsPr
                 })}
               </div>
               <div className="spread row">
-                <span>{t('Coût')}</span>
+                <span>{t('Cost')}</span>
                 <strong className={'mono ' + (actor && (Number(actor.karma) || 0) < karma ? 'red' : 'violet')}>{t('{n} karma', { n: karma })}</strong>
               </div>
-              {actor && <div className="small muted">{t('Karma disponible : {n}', { n: Number(actor.karma) || 0 })}</div>}
-              {pending && <div className="shop-approval small">{t('Une demande pour ce style attend déjà le MJ.')}</div>}
+              {actor && <div className="small muted">{t('Karma available: {n}', { n: Number(actor.karma) || 0 })}</div>}
+              {pending && <div className="shop-approval small">{t('A request for this style is already waiting for the GM.')}</div>}
               <div className="row wrap">
                 {!isGM && (
                   <Button variant="primary" disabled={busy || !actor || nothing || pending || (Number(actor?.karma) || 0) < karma} onClick={() => submit(false)}>
-                    {t('Demander au MJ')}
+                    {t('Ask the GM')}
                   </Button>
                 )}
                 {isGM && (
                   <>
-                    <Button variant="accent" disabled={busy || !actor || nothing || (Number(actor?.karma) || 0) < karma} onClick={() => submit(false)} title={t('Dépense le karma du PJ')}>
-                      {t('Accorder ({n} karma)', { n: karma })}
+                    <Button variant="accent" disabled={busy || !actor || nothing || (Number(actor?.karma) || 0) < karma} onClick={() => submit(false)} title={t('Spends the character’s karma')}>
+                      {t('Grant ({n} karma)', { n: karma })}
                     </Button>
                     <Button disabled={busy || !actor || nothing} onClick={() => submit(true)}>
-                      {t('Accorder gratuitement')}
+                      {t('Grant for free')}
                     </Button>
                   </>
                 )}
               </div>
-              {!actor && <div className="muted small">{t('Choisis un PJ en haut de la page pour vendre ou donner.')}</div>}
+              {!actor && <div className="muted small">{t('Pick a PC at the top of the page to sell or give.')}</div>}
             </div>
           </Panel>
         )}

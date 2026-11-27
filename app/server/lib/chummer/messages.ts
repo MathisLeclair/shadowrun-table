@@ -2,7 +2,7 @@
 //   i18nError({ t: 'Texte {x}', params }, ErrorClass?)  → error whose message is French, carrying i18nKey/i18nParams
 //   errorParam(err)                                      → an error as a translatable param of another message
 export { i18nError, errorParam } from '../foundry/messages.ts';
-import { formatFr } from '../../../client/i18n/format.ts';
+import { formatSource } from '../../../client/i18n/format.ts';
 import type { I18nMessage } from '../../../shared/types.ts';
 
 /** Warnings in both forms (see warningList()). */
@@ -24,7 +24,7 @@ export function warningList(): WarningList {
     i18n,
     add(m) {
       i18n.push(m.params ? { t: m.t, params: m.params } : { t: m.t });
-      list.push(formatFr(m.t, m.params));
+      list.push(formatSource(m.t, m.params));
     },
   };
 }

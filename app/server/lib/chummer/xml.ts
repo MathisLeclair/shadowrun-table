@@ -185,7 +185,7 @@ export function parseXml(input: unknown): XmlDocument {
   // fail('French key {x}', { x }) — the message stays French; the key travels to the client (see messages.js).
   const fail: (msg: string, params?: I18nParams) => never = (msg, params) => {
     const line = s.slice(0, i).split('\n').length;
-    throw i18nError({ t: 'XML invalide (ligne {line}) : {error}', params: { line, error: params ? { t: msg, params } : { t: msg } } }, XmlError);
+    throw i18nError({ t: 'Invalid XML (line {line}): {error}', params: { line, error: params ? { t: msg, params } : { t: msg } } }, XmlError);
   };
   let declaration: string | null = null;
   const prolog: XmlPrologNode[] = [];
@@ -195,7 +195,7 @@ export function parseXml(input: unknown): XmlDocument {
   const readName = (): string => {
     NAME_RE.lastIndex = i;
     const m = NAME_RE.exec(s);
-    if (!m) return fail('nom de balise attendu');
+    if (!m) return fail('tag name expected');
     i += m[0].length;
     return m[0];
   };
@@ -205,10 +205,10 @@ export function parseXml(input: unknown): XmlDocument {
   const pushNode = (node: XmlNode) => {
     if (stack.length) stack[stack.length - 1].children.push(node);
     else if (node.type === 'el') {
-      if (root) fail('plusieurs éléments racine');
+      if (root) fail('several root elements');
       root = node;
     } else if (node.type !== 'text' || node.value.trim()) {
-      if (node.type === 'text') fail('texte hors de l’élément racine');
+      if (node.type === 'text') fail('text outside the root element');
       prolog.push(node);
     }
   };
@@ -217,32 +217,32 @@ export function parseXml(input: unknown): XmlDocument {
     const lt = s.indexOf('<', i);
     if (lt < 0) {
       const rest = s.slice(i);
-      if (stack.length) fail('fin de fichier inattendue');
-      if (rest.trim()) fail('texte après l’élément racine');
+      if (stack.length) fail('unexpected end of file');
+      if (rest.trim()) fail('text after the root element');
       break;
     }
     if (lt > i) {
       const raw = s.slice(i, lt);
       if (stack.length) pushNode({ type: 'text', value: decodeEntities(raw) });
-      else if (raw.trim()) fail('texte hors de l’élément racine');
+      else if (raw.trim()) fail('text outside the root element');
       i = lt;
     }
     if (s.startsWith('<?', i)) {
       const end = s.indexOf('?>', i);
-      if (end < 0) fail('instruction de traitement non fermée');
+      if (end < 0) fail('unclosed processing instruction');
       const body = s.slice(i + 2, end);
       if (/^xml\s/i.test(body) && !root && !stack.length && !declaration) declaration = body;
       else pushNode({ type: 'pi', value: body });
       i = end + 2;
     } else if (s.startsWith('<!--', i)) {
       const end = s.indexOf('-->', i + 4);
-      if (end < 0) fail('commentaire non fermé');
+      if (end < 0) fail('unclosed comment');
       pushNode({ type: 'comment', value: s.slice(i + 4, end) });
       i = end + 3;
     } else if (s.startsWith('<![CDATA[', i)) {
       const end = s.indexOf(']]>', i + 9);
-      if (end < 0) fail('section CDATA non fermée');
-      if (!stack.length) fail('CDATA hors de l’élément racine');
+      if (end < 0) fail('unclosed CDATA section');
+      if (!stack.length) fail('CDATA outside the root element');
       pushNode({ type: 'cdata', value: s.slice(i + 9, end) });
       i = end + 3;
     } else if (s.startsWith('<!', i)) {
@@ -254,18 +254,18 @@ export function parseXml(input: unknown): XmlDocument {
         else if (s[j] === ']') depth--;
         else if (s[j] === '>' && depth <= 0) break;
       }
-      if (j >= n) fail('déclaration non fermée');
+      if (j >= n) fail('unclosed declaration');
       prolog.push({ type: 'doctype', value: s.slice(i, j + 1) });
       i = j + 1;
     } else if (s[i + 1] === '/') {
       i += 2;
       const name = readName();
       skipWs();
-      if (s[i] !== '>') fail('« > » attendu après </{tag}', { tag: name });
+      if (s[i] !== '>') fail('“>” expected after </{tag}', { tag: name });
       i++;
       const open = stack.pop();
-      if (!open) return fail('balise fermante </{tag}> sans ouverture', { tag: name });
-      if (open.name !== name) fail('</{tag}> ferme <{open}>', { tag: name, open: open.name });
+      if (!open) return fail('closing tag </{tag}> without an opening tag', { tag: name });
+      if (open.name !== name) fail('</{tag}> closes <{open}>', { tag: name, open: open.name });
       if (!stack.length) pushNode(open);
     } else {
       i++;
@@ -287,23 +287,23 @@ export function parseXml(input: unknown): XmlDocument {
           stack.push(e);
           break;
         }
-        if (i >= n) fail('balise <{tag}> non fermée', { tag: name });
+        if (i >= n) fail('unclosed tag <{tag}>', { tag: name });
         const key = readName();
         skipWs();
-        if (s[i] !== '=') fail('« = » attendu pour l’attribut {attr}', { attr: key });
+        if (s[i] !== '=') fail('“=” expected for attribute {attr}', { attr: key });
         i++;
         skipWs();
         const q = s[i];
-        if (q !== '"' && q !== "'") fail('valeur d’attribut {attr} sans guillemets', { attr: key });
+        if (q !== '"' && q !== "'") fail('unquoted value for attribute {attr}', { attr: key });
         const end = s.indexOf(q, i + 1);
-        if (end < 0) fail('attribut {attr} non fermé', { attr: key });
+        if (end < 0) fail('unclosed attribute {attr}', { attr: key });
         attrs.push([key, decodeEntities(s.slice(i + 1, end))]);
         i = end + 1;
       }
     }
   }
-  if (stack.length) fail('<{tag}> n’est jamais fermée', { tag: stack[stack.length - 1].name });
-  if (!root) return fail('aucun élément racine');
+  if (stack.length) fail('<{tag}> is never closed', { tag: stack[stack.length - 1].name });
+  if (!root) return fail('no root element');
   return { bom, declaration, prolog, root, newline };
 }
 

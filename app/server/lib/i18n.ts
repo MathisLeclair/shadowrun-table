@@ -1,20 +1,42 @@
 // Server-side i18n: the same dictionaries as the browser (client/i18n/<lang>/*.json), for the rare texts the
 // server must store pre-rendered in a given language, plus helpers that carry translation keys to the client:
-//   ctx.fail('Texte {x}', { x })        → reply { error: French text, errorKey, params }   (server/index.js)
-//   ctx.log({ i18n: { key, params } })  → entry.text filled with the French text            (normalizeLogEntry)
-//   res.status(400).json(errorBody('Texte {x}', { x }))  for HTTP routes
-// See ARCHITECTURE.md « i18n ».
+//   ctx.fail('Text {x}', { x })         → reply { error: English text, errorKey, params }   (server/index.ts)
+//   ctx.log({ i18n: { key, params } })  → entry.text filled with the English text           (normalizeLogEntry)
+//   res.status(400).json(errorBody('Text {x}', { x }))  for HTTP routes
+// Keys are English; old French keys found in saved data go through the legacy map. See docs/i18n.md.
 import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT } from '../store.ts';
-import { LANGS, DEFAULT_LANG, isLang, formatFr, cleanParams, lookup, interpolate, pluralKey, type PluralForms, type Translator } from '../../client/i18n/format.ts';
+import { LANGS, DEFAULT_LANG, SOURCE_LANG, isLang, formatSource as formatWith, cleanParams, lookup, interpolate, pluralKey, currentKey, type PluralForms, type Translator } from '../../client/i18n/format.ts';
 import type { I18nParams, Lang, LogEntry, NewLogEntry } from '../../shared/types.ts';
 
-export { LANGS, DEFAULT_LANG, isLang, formatFr, cleanParams };
+export { LANGS, DEFAULT_LANG, SOURCE_LANG, isLang, cleanParams };
 export type { PluralForms };
 
 export const I18N_DIR = path.join(ROOT, 'client', 'i18n');
 const cache = new Map<string, { dict: Record<string, string>; sig: string; checkedAt: number }>(); // lang -> { dict, sig, checkedAt }
+let legacyKeys: Record<string, string> | null = null; // old French key → English key, read once
+
+/** Old French keys (saved before the switch to English source text) → English keys. */
+export function legacy(): Record<string, string> {
+  if (!legacyKeys) {
+    try {
+      legacyKeys = Object.assign(Object.create(null), JSON.parse(fs.readFileSync(path.join(I18N_DIR, 'legacy-fr-keys.json'), 'utf8')));
+    } catch (err) {
+      console.warn(`[i18n] legacy-fr-keys.json unreadable: ${(err as Error).message}`);
+      legacyKeys = Object.create(null);
+    }
+  }
+  return legacyKeys!;
+}
+
+/** English (source) text of a key, interpolated — old French keys included. */
+export function formatSource(key: unknown, params?: object | null): string {
+  return formatWith(key, params, legacy());
+}
+
+/** A key as it is stored from now on: old French keys become English keys. */
+export const sourceKey = (key: unknown): string => currentKey(legacy(), key);
 
 /** Dictionary files of a language (sorted, glossary first) — also served as /i18n/<lang>/index.json. */
 export function dictionaryFiles(lang: unknown): string[] {
@@ -45,7 +67,7 @@ function signature(lang: Lang): string {
 
 /** Merged dictionary of a language (re-read when a file changes; checked at most every 3 s). */
 export function dictionary(lang: unknown): Record<string, string> {
-  if (!isLang(lang) || lang === 'fr') return {};
+  if (!isLang(lang) || lang === SOURCE_LANG) return {};
   const now = Date.now();
   let c = cache.get(lang);
   if (c && now - c.checkedAt < 3000) return c.dict;
@@ -60,7 +82,7 @@ export function dictionary(lang: unknown): Record<string, string> {
       const data = JSON.parse(fs.readFileSync(path.join(I18N_DIR, lang, f), 'utf8'));
       if (data && typeof data === 'object' && !Array.isArray(data)) for (const [k, v] of Object.entries(data)) if (typeof v === 'string') dict[k] = v;
     } catch (err) {
-      console.warn(`[i18n] ${lang}/${f} illisible : ${(err as Error).message}`);
+      console.warn(`[i18n] ${lang}/${f} unreadable: ${(err as Error).message}`);
     }
   }
   c = { dict, sig, checkedAt: now };
@@ -68,14 +90,15 @@ export function dictionary(lang: unknown): Record<string, string> {
   return dict;
 }
 
-/** Translate a French key into `lang` (falls back to French), interpolated. */
+/** Translate an English key (or an old French key) into `lang` (falls back to English), interpolated. */
 export function t(lang: unknown, key: string, params?: I18nParams | null): string {
   const d = dictionary(lang);
-  const tr: Translator = (k, p) => interpolate(lookup(d, lang as string, k).text, p, tr, lang as string);
+  const lk = legacy();
+  const tr: Translator = (k, p) => interpolate(lookup(d, lang as string, k, lk).text, p, tr, lang as string);
   return tr(key, params);
 }
 
-/** Plural, same forms as the client: tn(lang, n, '{n} objet', '{n} objets', params) or tn(lang, n, { zero?, one, other }, params). */
+/** Plural, same forms as the client: tn(lang, n, '{n} item', '{n} items', params) or tn(lang, n, { zero?, one, other }, params). */
 export function tn(lang: unknown, n: number, one: string, other: string, params?: I18nParams | null): string;
 export function tn(lang: unknown, n: number, forms: PluralForms, params?: I18nParams | null): string;
 export function tn(lang: unknown, n: number, one: string | PluralForms, other?: string | I18nParams | null, params?: I18nParams | null): string {
@@ -99,15 +122,15 @@ export interface ErrorBody {
   [extra: string]: unknown;
 }
 
-/** JSON body of an HTTP error the client can translate: { error: French, errorKey, params? }. */
+/** JSON body of an HTTP error the client can translate: { error: English text, errorKey, params? }. */
 export function errorBody(key: string, params?: I18nParams | null, extra?: Record<string, unknown> | null): ErrorBody {
   const p = cleanParams(params);
-  return { error: formatFr(key, p), errorKey: String(key), ...(p && Object.keys(p).length ? { params: p } : {}), ...(extra || {}) };
+  return { error: formatSource(key, p), errorKey: sourceKey(key), ...(p && Object.keys(p).length ? { params: p } : {}), ...(extra || {}) };
 }
 
 /**
  * Normalize a log entry before it is stored: `i18n: { key, params }` is validated and `text` is filled with
- * the French rendering when missing (old clients, exports and the server console keep a readable text).
+ * the English rendering when missing (old clients, exports and the server console keep a readable text).
  */
 export function normalizeLogEntry<E extends NewLogEntry | LogEntry>(entry: E): E {
   if (!entry || typeof entry !== 'object') return entry;
@@ -119,6 +142,6 @@ export function normalizeLogEntry<E extends NewLogEntry | LogEntry>(entry: E): E
   }
   const params = cleanParams(i.params);
   entry.i18n = params && Object.keys(params).length ? { key: i.key.slice(0, 1000), params } : { key: i.key.slice(0, 1000) };
-  if (typeof entry.text !== 'string' || !entry.text) entry.text = formatFr(entry.i18n.key, entry.i18n.params);
+  if (typeof entry.text !== 'string' || !entry.text) entry.text = formatSource(entry.i18n.key, entry.i18n.params);
   return entry;
 }

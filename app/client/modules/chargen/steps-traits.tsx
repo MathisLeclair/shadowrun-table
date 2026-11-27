@@ -47,21 +47,21 @@ export function StepQualities({ data, update, result, issues, rc }: StepProps) {
     <div className="cg-step">
       <p className="cg-lead">
         {t(
-          'Les qualités positives coûtent du karma, les négatives en rapportent : {max} karma maximum de chaque côté. Le karma restant sert ensuite aux attributs, compétences, sorts et contacts, et jusqu’à 10 karma peuvent devenir des nuyens (2 000¥ le point).',
+          'Positive qualities cost karma, negative ones give some back: {max} karma maximum each way. The remaining karma then goes to attributes, skills, spells and contacts, and up to 10 karma can become nuyen (2,000¥ per point).',
           { max: LIMITS.positiveQualities }
         )}
       </p>
       <div className="row wrap cg-budget-row">
-        <Budget label={t('Qualités positives')} used={positive} total={LIMITS.positiveQualities} unit=" K" />
-        <Budget label={t('Qualités négatives')} used={negative} total={LIMITS.negativeQualities} unit=" K" />
+        <Budget label={t('Positive Qualities')} used={positive} total={LIMITS.positiveQualities} unit=" K" />
+        <Budget label={t('Negative Qualities')} used={negative} total={LIMITS.negativeQualities} unit=" K" />
         <Budget
-          label={t('Karma dépensé')}
+          label={t('Karma spent')}
           used={r.karma.spent}
           total={r.karma.total}
-          title={r.karma.base !== 25 ? t('25 + karma des qualités négatives (bonus MJ inclus)') : t('25 + karma des qualités négatives')}
+          title={r.karma.base !== 25 ? t('25 + negative qualities karma (GM bonus included)') : t('25 + negative qualities karma')}
         />
       </div>
-      <Panel title={t('Qualités choisies')} pad={false}>
+      <Panel title={t('Chosen qualities')} pad={false}>
         <table className="sr cg-skill-table">
           <tbody>
             {qualities.map((q) => {
@@ -84,7 +84,7 @@ export function StepQualities({ data, update, result, issues, rc }: StepProps) {
                   <td>
                     {q.maxLevels > 1 ? (
                       <span className="row gap-s">
-                        <span className="small muted">{t('Niveau')}</span>
+                        <span className="small muted">{t('Level')}</span>
                         <NumberInput small value={row.level} min={1} max={q.maxLevels} onChange={(v) => setQ(row.id, 'level', v)} />
                       </span>
                     ) : (
@@ -93,20 +93,20 @@ export function StepQualities({ data, update, result, issues, rc }: StepProps) {
                   </td>
                   <td>
                     {kind === 'attr' ? (
-                      <Select value={row.choice} onChange={(v) => setQ(row.id, 'choice', v)} options={[{ value: '', label: t('— Attribut —') }, ...CHOICE_ATTRS.map((k) => ({ value: k, label: attrLabel(k) }))]} />
+                      <Select value={row.choice} onChange={(v) => setQ(row.id, 'choice', v)} options={[{ value: '', label: t('— Attribute —') }, ...CHOICE_ATTRS.map((k) => ({ value: k, label: attrLabel(k) }))]} />
                     ) : kind === 'skill' ? (
                       <Select
                         value={row.choice}
                         onChange={(v) => setQ(row.id, 'choice', v)}
-                        options={[{ value: '', label: t('— Compétence —') }, ...SKILLS.map((s: { id: string }) => ({ value: s.id, label: skillLabel(s) }))]}
+                        options={[{ value: '', label: t('— Skill —') }, ...SKILLS.map((s: { id: string }) => ({ value: s.id, label: skillLabel(s) }))]}
                       />
                     ) : (
-                      <TextInput live value={row.notes} placeholder={t('Précision (allergie à…, addiction à…)')} onChange={(v) => setQ(row.id, 'notes', v)} />
+                      <TextInput live value={row.notes} placeholder={t('Detail (allergy to…, addiction to…)')} onChange={(v) => setQ(row.id, 'notes', v)} />
                     )}
                   </td>
                   <td className={`num-cell ${q.positive ? 'magenta' : 'green'}`}>{q.positive ? `−${q.cost}` : `+${q.cost}`} K</td>
                   <td>
-                    <IconButton icon="✕" title={t('Retirer')} onClick={() => update((d) => (d.qualities = d.qualities.filter((x) => x.id !== row.id)))} />
+                    <IconButton icon="✕" title={t('Remove')} onClick={() => update((d) => (d.qualities = d.qualities.filter((x) => x.id !== row.id)))} />
                   </td>
                 </tr>
               );
@@ -114,33 +114,33 @@ export function StepQualities({ data, update, result, issues, rc }: StepProps) {
             {!qualities.length && (
               <tr>
                 <td colSpan={5} className="muted center">
-                  {t('Aucune qualité pour l’instant.')}
+                  {t('No qualities yet.')}
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </Panel>
-      <Panel title={t('Catalogue')} className="cg-mt">
+      <Panel title={t('Catalog')} className="cg-mt">
         <Tabs
           tabs={[
-            { id: 'positive', label: t('Positives') },
-            { id: 'negative', label: t('Négatives') },
+            { id: 'positive', label: t('pl::Positive') },
+            { id: 'negative', label: t('Negative') },
           ]}
           value={tab}
           onChange={setTab}
         />
         {!rc.qualities.length ? (
-          <div className="cg-loading">{t('Chargement du catalogue…')}</div>
+          <div className="cg-loading">{t('Loading the catalog…')}</div>
         ) : (
           <Picker
             items={items}
             name={itemName}
-            placeholder={t('Chercher une qualité…')}
+            placeholder={t('Search a quality…')}
             extraFilter={filter}
-            toolbar={<Toggle value={coreOnly} onChange={setCoreOnly} label={t('Livre de base')} title={t('Seulement les qualités du livre de base SR5')} />}
+            toolbar={<Toggle value={coreOnly} onChange={setCoreOnly} label={t('Core rulebook')} title={t('Only the SR5 core rulebook qualities')} />}
             meta={(it) =>
-              `${it.stats?.maxLevels ? t('{n} karma par niveau (max {max})', { n: Math.abs(it.stats?.karma || 0), max: it.stats.maxLevels }) : t('{n} karma', { n: Math.abs(it.stats?.karma || 0) })} · ${it.source} p.${it.page}${it.stats?.chargenOnly ? ` · ${t('création uniquement')}` : ''}`
+              `${it.stats?.maxLevels ? t('{n} karma per level (max {max})', { n: Math.abs(it.stats?.karma || 0), max: it.stats.maxLevels }) : t('{n} karma', { n: Math.abs(it.stats?.karma || 0) })} · ${it.source} p.${it.page}${it.stats?.chargenOnly ? ` · ${t('creation only')}` : ''}`
             }
             selected={selected}
             onAdd={(it) => update((d) => d.qualities.push({ id: rowId('q'), catalogId: it.id, name: it.nameFr || it.name, level: 1, choice: '', notes: '' }))}

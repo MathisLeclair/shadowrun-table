@@ -7,7 +7,7 @@
 // sync (no guid yet) are kept. Without a base (first import into an app-made actor) the file wins.
 import { ITEM_LISTS, SUB_LISTS } from '../../../client/modules/sheet/sheet-data.ts';
 import { ATTR_LABELS } from '../../../shared/sr5.ts';
-import { formatFr } from '../../../client/i18n/format.ts';
+import { formatSource } from '../../../client/i18n/format.ts';
 import { nuyen as fmtNuyen } from '../../../shared/util.ts';
 import type { Actor, I18nEntry, Skill } from '../../../shared/types.ts';
 import type { ParsedActor } from './parse.ts';
@@ -187,8 +187,8 @@ export function mergeActor(currentActor: Actor, theirsActor: ParsedActor, baseAc
   m.chummer = { ...theirs.chummer, importedAt: current.chummer?.importedAt || theirs.chummer.importedAt, syncedAt: hasBase ? current.chummer?.syncedAt || now : now, updatedAt: now };
   const dk = m.karma - (current.karma || 0);
   const dn = m.nuyen - (current.nuyen || 0);
-  const i18n: I18nEntry = fileName ? { key: tk('Mise à jour depuis Chummer ({file})'), params: { file: fileName } } : { key: tk('Mise à jour depuis Chummer') };
-  m.history = [...(current.history || []), { ts: now, chummer: true, text: formatFr(i18n.key, i18n.params), i18n, ...(dk ? { karma: dk } : {}), ...(dn ? { nuyen: dn } : {}) }];
+  const i18n: I18nEntry = fileName ? { key: tk('Updated from Chummer ({file})'), params: { file: fileName } } : { key: tk('Updated from Chummer') };
+  m.history = [...(current.history || []), { ts: now, chummer: true, text: formatSource(i18n.key, i18n.params), i18n, ...(dk ? { karma: dk } : {}), ...(dn ? { nuyen: dn } : {}) }];
   return m as Actor;
 }
 
@@ -197,9 +197,9 @@ export function mergeActor(currentActor: Actor, theirsActor: ParsedActor, baseAc
 // ---------------------------------------------------------------------------
 // Labels are French keys (stored with pending requests); the Chummer UI shows them with t().
 const LIST_LABELS: Record<string, string> = {
-  weapons: tk('Armes'), armor: tk('Armures'), augmentations: tk('Augmentations'), gear: tk('Équipement'), vehicles: tk('Véhicules'), contacts: tk('Contacts'), sins: tk('SIN'),
-  qualities: tk('Qualités'), powers: tk('Pouvoirs'), spells: tk('Sorts'), knowledge: tk('Connaissances'), complexForms: tk('Formes complexes'),
-  lifestyles: tk('Modes de vie'), martialArts: tk('Arts martiaux'),
+  weapons: tk('Weapons'), armor: tk('pl::Armor'), augmentations: tk('Augmentations'), gear: tk('Gear'), vehicles: tk('Vehicles'), contacts: tk('Contacts'), sins: tk('SIN'),
+  qualities: tk('Qualities'), powers: tk('Powers'), spells: tk('Spells'), knowledge: tk('pl::Knowledge'), complexForms: tk('Complex Forms'),
+  lifestyles: tk('Lifestyles'), martialArts: tk('Martial arts'),
 };
 const ITEM_FIELDS: Record<string, string[]> = {
   gear: ['qty', 'rating'], armor: ['rating', 'equipped'], augmentations: ['rating', 'grade', 'essence'], contacts: ['connection', 'loyalty'], powers: ['level'], knowledge: ['rating'], sins: ['rating'],
@@ -219,20 +219,20 @@ export function diffActors(beforeActor: Actor | ParsedActor, afterActor: Actor |
   const push = (lbl: string, a: unknown, b: unknown, fmt: (x: unknown) => unknown = (x) => x) => {
     if (!eq(a ?? '', b ?? '')) scalars.push({ label: lbl, from: isEmpty(a) ? '—' : fmt(a), to: isEmpty(b) ? '—' : fmt(b) });
   };
-  push(tk('Nom'), before.name, after.name);
-  push(tk('Métatype'), before.metatype, after.metatype);
+  push(tk('Name'), before.name, after.name);
+  push(tk('Metatype'), before.metatype, after.metatype);
   push(tk('Karma'), before.karma, after.karma);
-  push(tk('Karma de carrière'), before.karmaTotal, after.karmaTotal);
-  push(tk('Nuyens'), before.nuyen, after.nuyen, fmtNuyen);
+  push(tk('Career Karma'), before.karmaTotal, after.karmaTotal);
+  push(tk('Nuyen'), before.nuyen, after.nuyen, fmtNuyen);
   push(tk('Street Cred'), before.streetCred || 0, after.streetCred || 0);
-  push(tk('Notoriété'), before.notoriety || 0, after.notoriety || 0);
-  push(tk('Exposition'), before.publicAwareness || 0, after.publicAwareness || 0);
-  push(tk('Dés d’initiative'), before.initiative?.dice || 1, after.initiative?.dice || 1);
-  push(tk('Dommages physiques'), before.condition?.physical || 0, after.condition?.physical || 0);
-  push(tk('Dommages étourdissants'), before.condition?.stun || 0, after.condition?.stun || 0);
+  push(tk('Notoriety'), before.notoriety || 0, after.notoriety || 0);
+  push(tk('Public Awareness'), before.publicAwareness || 0, after.publicAwareness || 0);
+  push(tk('Initiative Dice'), before.initiative?.dice || 1, after.initiative?.dice || 1);
+  push(tk('Physical damage'), before.condition?.physical || 0, after.condition?.physical || 0);
+  push(tk('Stun damage'), before.condition?.stun || 0, after.condition?.stun || 0);
   push(tk('Concept'), before.concept, after.concept);
-  if (!eq(before.bio || '', after.bio || '')) scalars.push({ label: tk('Description'), from: '…', to: tk('modifiée') });
-  if (!eq(before.notes || '', after.notes || '')) scalars.push({ label: tk('Notes'), from: '…', to: tk('modifiées') });
+  if (!eq(before.bio || '', after.bio || '')) scalars.push({ label: tk('Description'), from: '…', to: tk('changed') });
+  if (!eq(before.notes || '', after.notes || '')) scalars.push({ label: tk('Notes'), from: '…', to: tk('pl::changed') });
 
   const attributes: ActorDiff['attributes'] = [];
   for (const k of ['BOD', 'AGI', 'REA', 'STR', 'WIL', 'LOG', 'INT', 'CHA', 'EDG', 'MAG', 'RES', 'ESS']) {

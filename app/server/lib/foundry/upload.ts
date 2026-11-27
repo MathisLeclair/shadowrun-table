@@ -73,9 +73,9 @@ function freeBytes(dir: string): number {
 
 function checkRoom(table: UploadTable, entries: ZipEntryInfo[]): number {
   const total = entries.reduce((s, e) => s + (e.isDir ? 0 : e.size), 0);
-  if (total > MAX_UNZIPPED) throw i18nError({ t: 'Archive trop volumineuse une fois décompressée ({mb} Mo)', params: { mb: Math.round(total / 1e6) } }, ZipError, 413);
+  if (total > MAX_UNZIPPED) throw i18nError({ t: 'Archive too large once unzipped ({mb} MB)', params: { mb: Math.round(total / 1e6) } }, ZipError, 413);
   const free = freeBytes(table.dir);
-  if (total + 200e6 > free) throw i18nError({ t: 'Pas assez de place sur le serveur ({need} Mo nécessaires, {free} Mo libres)', params: { need: Math.round(total / 1e6), free: Math.round(free / 1e6) } }, ZipError, 507);
+  if (total + 200e6 > free) throw i18nError({ t: 'Not enough space on the server ({need} MB needed, {free} MB free)', params: { need: Math.round(total / 1e6), free: Math.round(free / 1e6) } }, ZipError, 507);
   return total;
 }
 
@@ -90,11 +90,11 @@ export async function installWorldZip(table: UploadTable, zipFile: string): Prom
   const entries: ZipEntryInfo[] = listZip(zipFile);
   const paths = entries.map((e) => ({ e, rel: safeEntryPath(e.name) as string | null }));
   const bad = paths.find((p) => !p.rel);
-  if (bad) throw i18nError({ t: 'Chemin interdit dans l’archive : « {path} »', params: { path: String(bad.e.name).slice(0, 120) } }, ZipError);
+  if (bad) throw i18nError({ t: 'Forbidden path in the archive: “{path}”', params: { path: String(bad.e.name).slice(0, 120) } }, ZipError);
   const worldJson = paths
     .filter((p): p is { e: ZipEntryInfo; rel: string } => !p.e.isDir && (p.rel === 'world.json' || p.rel!.endsWith('/world.json')))
     .sort((a, b) => a.rel.split('/').length - b.rel.split('/').length)[0];
-  if (!worldJson) throw i18nError({ t: 'Aucun world.json dans cette archive : zippe le dossier du monde (Data/worlds/<monde>)' }, ZipError);
+  if (!worldJson) throw i18nError({ t: 'No world.json in this archive: zip the world folder (Data/worlds/<world>)' }, ZipError);
   checkRoom(table, entries);
   const prefix = worldJson.rel.slice(0, -'world.json'.length); // '' | 'mon-monde/' | 'Data/worlds/mon-monde/'
   const m = /(?:^|\/)worlds\/([^/]+)\/$/.exec(prefix);
@@ -108,10 +108,10 @@ export async function installWorldZip(table: UploadTable, zipFile: string): Prom
     try {
       meta = JSON.parse(fs.readFileSync(path.join(staging, 'world.json'), 'utf8'));
     } catch {
-      throw i18nError({ t: 'world.json illisible dans l’archive' }, ZipError);
+      throw i18nError({ t: 'Unreadable world.json in the archive' }, ZipError);
     }
-    if (!fs.existsSync(path.join(staging, 'data', 'actors'))) throw i18nError({ t: 'Le monde « {world} » n’a pas de base LevelDB (dossier data/actors) : Foundry v11 ou plus récent requis', params: { world: meta.title || '?' } }, ZipError);
-    if (meta.system && meta.system !== 'shadowrun5e') throw i18nError({ t: 'Ce monde utilise le système « {system} », pas shadowrun5e', params: { system: meta.system } }, ZipError);
+    if (!fs.existsSync(path.join(staging, 'data', 'actors'))) throw i18nError({ t: 'The world “{world}” has no LevelDB database (data/actors folder): Foundry v11 or later required', params: { world: meta.title || '?' } }, ZipError);
+    if (meta.system && meta.system !== 'shadowrun5e') throw i18nError({ t: 'This world uses the “{system}” system, not shadowrun5e', params: { system: meta.system } }, ZipError);
     // Asset paths inside the world reference "worlds/<folder name>/…": keep the folder name Foundry used.
     const id = cleanId(m ? m[1] : meta.id || (prefix ? prefix.split('/').filter(Boolean).pop() : '') || 'monde') || 'monde';
     const dest = path.join(dataDir, 'worlds', id);
@@ -137,7 +137,7 @@ export async function installDataZip(table: UploadTable, zipFile: string): Promi
   checkRoom(table, entries);
   const rels = entries.map((e) => safeEntryPath(e.name) as string | null);
   const bad = rels.findIndex((r) => !r);
-  if (bad >= 0) throw i18nError({ t: 'Chemin interdit dans l’archive : « {path} »', params: { path: String(entries[bad].name).slice(0, 120) } }, ZipError);
+  if (bad >= 0) throw i18nError({ t: 'Forbidden path in the archive: “{path}”', params: { path: String(entries[bad].name).slice(0, 120) } }, ZipError);
   // A zip of the "Data" folder itself: strip that top folder.
   const strip = rels.length && rels.every((r) => r === 'Data' || r!.startsWith('Data/')) ? 'Data/' : '';
   const r = await extractZip(zipFile, dataDirOf(table), { map: (rel: string) => (strip ? (rel.startsWith(strip) ? rel.slice(strip.length) || null : null) : rel), maxTotal: MAX_UNZIPPED });

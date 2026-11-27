@@ -42,8 +42,8 @@ export default function ShopPage({ game }: GameProps) {
     'shop:resolved',
     (d: { status?: string; note?: string } | undefined) => {
       if (isGM) return;
-      if (d?.status === 'approved') toast(d.note ? t('Cabana confirme : commande validée — « {note} »', { note: d.note }) : t('Cabana confirme : commande validée'), 'success', 5000);
-      else if (d?.status === 'denied') toast(d.note ? t('Commande refusée — « {note} »', { note: d.note }) : t('Commande refusée'), 'warn', 6000);
+      if (d?.status === 'approved') toast(d.note ? t('Cabana confirms: order approved — « {note} »', { note: d.note }) : t('Cabana confirms: order approved'), 'success', 5000);
+      else if (d?.status === 'denied') toast(d.note ? t('Order denied — « {note} »', { note: d.note }) : t('Order denied'), 'warn', 6000);
     },
     [isGM]
   );
@@ -54,27 +54,27 @@ export default function ShopPage({ game }: GameProps) {
   const orders = game.shop?.orders || [];
   const pending = orders.filter((o) => o.status === 'pending').length;
 
-  if (!game.shop) return <div className="page"><Empty>{t('Module boutique indisponible.')}</Empty></div>;
+  if (!game.shop) return <div className="page"><Empty>{t('Shop module unavailable.')}</Empty></div>;
   if (!isGM && !actors.length) {
     return (
       <div className="page">
-        <Empty>{t('Tu n’as pas encore de personnage : demande au MJ de t’en attribuer un pour faire tes achats.')}</Empty>
+        <Empty>{t('You don’t have a character yet: ask the GM to assign you one to go shopping.')}</Empty>
       </div>
     );
   }
 
   const tabs = isGM
     ? [
-        { id: 'store', label: t('Catalogue') },
-        { id: 'inventory', label: t('Inventaire du PJ') },
-        { id: 'orders', label: t('Commandes'), badge: pending || null },
-        { id: 'specials', label: t('Offres de Cabana'), badge: (game.shop.specials || []).length || null },
-        { id: 'settings', label: t('Réglages') },
+        { id: 'store', label: t('Catalog') },
+        { id: 'inventory', label: t('PC inventory') },
+        { id: 'orders', label: t('Orders'), badge: pending || null },
+        { id: 'specials', label: t('Cabana’s deals'), badge: (game.shop.specials || []).length || null },
+        { id: 'settings', label: t('Settings') },
       ]
     : [
-        { id: 'store', label: t('Catalogue') },
-        { id: 'inventory', label: t('Mon inventaire') },
-        { id: 'orders', label: t('Mes commandes'), badge: pending || null },
+        { id: 'store', label: t('Catalog') },
+        { id: 'inventory', label: t('My inventory') },
+        { id: 'orders', label: t('My orders'), badge: pending || null },
       ];
   const current = tabs.some((x) => x.id === tab) ? tab : 'store';
 
@@ -82,10 +82,10 @@ export default function ShopPage({ game }: GameProps) {
     <div className="page shop-page">
       <div className="page-title shop-title">
         <div className="row wrap">
-          <h2>{t('Boutique')}</h2>
-          <span className="muted small shop-fixer">{game.shop.open ? t('Perrine Cabana, fixeuse — « Dis-moi ce qu’il te faut, chéri. »') : t('Cabana est injoignable')}</span>
-          {!game.shop.open && <Badge color="red">{t('Fermée')}</Badge>}
-          {isGM && game.shop.markup ? <Badge color="amber">{t('Marge {pct} %', { pct: `${game.shop.markup > 0 ? '+' : ''}${game.shop.markup}` })}</Badge> : null}
+          <h2>{t('Shop')}</h2>
+          <span className="muted small shop-fixer">{game.shop.open ? t('Perrine Cabana, fixer — « Tell me what you need, sweetie. »') : t('Cabana can’t be reached')}</span>
+          {!game.shop.open && <Badge color="red">{t('Closed')}</Badge>}
+          {isGM && game.shop.markup ? <Badge color="amber">{t('Markup {pct}%', { pct: `${game.shop.markup > 0 ? '+' : ''}${game.shop.markup}` })}</Badge> : null}
         </div>
         <div className="row wrap shop-title-right">
           {(isGM || actors.length > 1) && (
@@ -93,7 +93,7 @@ export default function ShopPage({ game }: GameProps) {
               className="shop-actor-select"
               value={actorId || ''}
               onChange={setActor}
-              options={actors.length ? actors.map((a) => ({ value: a.id, label: `${a.name} — ${nuyen(a.nuyen)}` })) : [{ value: '', label: t('Aucun PJ') }]}
+              options={actors.length ? actors.map((a) => ({ value: a.id, label: `${a.name} — ${nuyen(a.nuyen)}` })) : [{ value: '', label: t('No PC') }]}
             />
           )}
           {actor && !(isGM || actors.length > 1) && (
@@ -103,7 +103,7 @@ export default function ShopPage({ game }: GameProps) {
           )}
           {actor && (isGM || actors.length > 1) && <span className="mono cyan shop-wallet-inline">{nuyen(actor.nuyen)}</span>}
           <Button variant={lines.length ? 'primary' : 'default'} disabled={!actor || !catalog} onClick={() => setCartOpen(true)}>
-            {t('Panier')}
+            {t('Cart')}
             {lines.length ? (
               <>
                 {' '}

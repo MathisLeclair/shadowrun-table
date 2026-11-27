@@ -1,8 +1,11 @@
 // Pure i18n core shared by the browser (client/lib/i18n.js), the server (server/lib/i18n.js) and the tools.
 // No imports (types only), no DOM/Node APIs. See ARCHITECTURE.md « i18n ».
 //
-// Keys are the French source strings. A key may carry a disambiguation context before '::'
-// ('magie::Force') — the French output drops it, the dictionary is looked up with the full key.
+// Keys are the English source strings (code is written in English). A key may carry a disambiguation context before
+// '::' ('fem::current', 'verb::Attack') — the English output drops it, the dictionary is looked up with the full key.
+// Translations live in client/i18n/fr/*.json, flat { "English key": "French" }.
+// Saved data written before the switch (log entries, statuses, folder names…) may still hold the old French keys:
+// LEGACY maps them to the English key (client/i18n/legacy-fr-keys.json), so they keep translating in both languages.
 
 import type { BiName, I18nMessage, I18nParams, I18nParamValue, Lang } from '../../shared/types.ts';
 
@@ -13,29 +16,32 @@ import type { BiName, I18nMessage, I18nParams, I18nParamValue, Lang } from '../.
 export type TParams = object;
 /** A translate function (t of client/lib/i18n.ts, tr of server/lib/i18n.js). */
 export type Translator = (key: string, params?: TParams | null) => string;
-/** Plural forms: French keys. `zero`, when given, wins for n === 0 in every language. */
+/** Plural forms: English keys. `zero`, when given, wins for n === 0 in every language. */
 export interface PluralForms {
   zero?: string;
   one: string;
   other: string;
 }
-/** Flat dictionary { French key: English text }. */
+/** Flat dictionary { English key: translated text }. */
 export type Dictionary = Record<string, string>;
 
 export const LANGS: Lang[] = ['fr', 'en'];
+/** Language of the source strings in the code. */
+export const SOURCE_LANG: Lang = 'en';
+/** Default language of a table / a user who never chose (the app's home table plays in French). */
 export const DEFAULT_LANG: Lang = 'fr';
 export const CONTEXT_SEP = '::';
 
 export const isLang = (l: unknown): l is Lang => LANGS.includes(l as Lang);
 
-/** 'magie::Force' → 'Force' (French text of a key). */
+/** 'verb::Attack' → 'Attack' (English text of a key). */
 export function stripContext(key: unknown): string {
   const s = String(key ?? '');
   const i = s.indexOf(CONTEXT_SEP);
   return i >= 0 ? s.slice(i + CONTEXT_SEP.length) : s;
 }
 
-/** Placeholder names used in a string: 'Salut {name}, {n} PJ' → ['name', 'n']. */
+/** Placeholder names used in a string: 'Hi {name}, {n} PCs' → ['name', 'n']. */
 export function placeholders(str: unknown): string[] {
   const out = new Set<string>();
   String(str ?? '').replace(/\{(\w+)\}/g, (_, n: string) => {
@@ -47,7 +53,7 @@ export function placeholders(str: unknown): string[] {
 
 /**
  * Replace {name} by params.name. Unknown names are left as-is. A param value may itself be translatable:
- * { t: 'key', params } (translated with `tr`, or formatted in French when no `tr` is given); { fr, en } (a name stored in both
+ * { t: 'key', params } (translated with `tr`, or formatted in English when no `tr` is given); { fr, en } (a name stored in both
  * languages — item names —: the one of `lang`, French when no `lang` is given, the other one when empty); arrays are joined with ', '.
  */
 export function interpolate(str: string, params?: TParams | null, tr?: Translator, lang?: string): string {
@@ -75,28 +81,36 @@ export function pluralCategory(lang: string, n: unknown): 'one' | 'other' {
 }
 
 /**
- * Pick the French form for n. `forms` = { zero?, one, other } (zero, when given, wins for n === 0 in every language).
- * Returns the French key to translate.
+ * Pick the form for n in `lang`. `forms` = { zero?, one, other } (zero, when given, wins for n === 0 in every language).
+ * Returns the English key to translate.
  */
 export function pluralKey(lang: string, n: unknown, forms: PluralForms): string {
   if (Number(n) === 0 && forms.zero) return forms.zero;
   return pluralCategory(lang, n) === 'one' ? forms.one : forms.other;
 }
 
-/**
- * Translate `key` with a flat dictionary { French: English } for `lang`.
- * Returns { text, missing } — missing = the dictionary has no (non-empty) entry for the key.
- */
-export function lookup(dict: Dictionary | null | undefined, lang: string, key: unknown): { text: string; missing: boolean } {
+/** Old French key (saved before the switch) → English key, or the key itself. */
+export function currentKey(legacy: Dictionary | null | undefined, key: unknown): string {
   const k = String(key ?? '');
-  const hit = dict ? dict[k] : undefined;
-  const has = typeof hit === 'string' && hit !== '';
-  return { text: lang !== 'fr' && has ? (hit as string) : stripContext(k), missing: !has };
+  return legacy && Object.prototype.hasOwnProperty.call(legacy, k) ? legacy[k] : k;
 }
 
-/** French text of a key, interpolated (what the server stores / sends as the readable `error`). */
-export function formatFr(key: unknown, params?: TParams | null): string {
-  return interpolate(stripContext(key), params);
+/**
+ * Translate `key` into `lang` with a flat dictionary { English key: translation } of that language. An old French key
+ * is first mapped through `legacy`. Returns { text, missing } — missing = a translation was needed and the dictionary
+ * has no (non-empty) entry for the key.
+ */
+export function lookup(dict: Dictionary | null | undefined, lang: string, key: unknown, legacy?: Dictionary | null): { text: string; missing: boolean } {
+  const k = currentKey(legacy, key);
+  if (lang === SOURCE_LANG) return { text: stripContext(k), missing: false };
+  const hit = dict ? dict[k] : undefined;
+  const has = typeof hit === 'string' && hit !== '';
+  return { text: has ? (hit as string) : stripContext(k), missing: !has };
+}
+
+/** Source (English) text of a key, interpolated: what the server sends as the readable `error` and stores in logs. */
+export function formatSource(key: unknown, params?: TParams | null, legacy?: Dictionary | null): string {
+  return interpolate(stripContext(currentKey(legacy, key)), params);
 }
 
 /** Keep only JSON-safe, small params (server → client: error params, log params). */

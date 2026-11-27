@@ -25,11 +25,11 @@ function players(game: GameView): PlayerRow[] {
 }
 
 function visibility(h: Handout, list: PlayerRow[]) {
-  if (h.revealedTo === 'all') return { label: t('Tous les joueurs'), color: 'green' };
+  if (h.revealedTo === 'all') return { label: t('All players'), color: 'green' };
   const ids = h.revealedTo || [];
   if (!ids.length) return { label: t('Secret'), color: 'dim' };
   const names = ids.map((id) => list.find((u) => u.id === id)?.name || '?');
-  return { label: names.length > 2 ? tn(names.length, '{n} joueur', '{n} joueurs') : names.join(', '), color: 'cyan' };
+  return { label: names.length > 2 ? tn(names.length, '{n} player', '{n} players') : names.join(', '), color: 'cyan' };
 }
 
 function ImageField({ handout }: { handout: Handout }) {
@@ -38,14 +38,14 @@ function ImageField({ handout }: { handout: Handout }) {
   const set = (image: string) => send('campaign/updateHandout', { handoutId: handout.id, patch: { image } });
   const pick = async (file: File | null | undefined) => {
     if (!file) return;
-    if (!/^image\//.test(file.type)) return toast(t('Choisis une image (png, jpg, webp, gif, svg)'), 'warn');
+    if (!/^image\//.test(file.type)) return toast(t('Choose an image (png, jpg, webp, gif, svg)'), 'warn');
     setBusy(true);
     try {
       const res = await upload(file);
       await set(res.url);
-      toast(t('Image ajoutée'), 'success');
+      toast(t('Image added'), 'success');
     } catch (err) {
-      toast(t('Envoi impossible : {error}', { error: (err as Error).message }), 'error');
+      toast(t('Upload failed: {error}', { error: (err as Error).message }), 'error');
     } finally {
       setBusy(false);
       if (input.current) input.current.value = '';
@@ -64,20 +64,20 @@ function ImageField({ handout }: { handout: Handout }) {
           pick(e.dataTransfer.files?.[0]);
         }}
       >
-        {handout.image ? <img src={handout.image} alt="" className="camp-img-thumb" /> : <div className="camp-img-empty faint small">{t('Glisse une image ici ou utilise le bouton.')}</div>}
+        {handout.image ? <img src={handout.image} alt="" className="camp-img-thumb" /> : <div className="camp-img-empty faint small">{t('Drop an image here or use the button.')}</div>}
         <div className="col gap-s">
           <input ref={input} type="file" accept="image/*" className="hidden" onChange={(e) => pick(e.target.files?.[0])} />
           <Button small disabled={busy} onClick={() => input.current?.click()}>
-            {busy ? t('Envoi…') : handout.image ? t('Remplacer') : t('Téléverser une image')}
+            {busy ? t('Uploading…') : handout.image ? t('Replace') : t('Upload an image')}
           </Button>
           {handout.image && (
             <Button small variant="ghost" onClick={() => set('')}>
-              {t("Retirer l'image")}
+              {t("Remove the image")}
             </Button>
           )}
         </div>
       </div>
-      <TextInput className="camp-mt" value={handout.image} placeholder={t('…ou colle une URL (/uploads/…, https://…)')} onChange={(v) => set(v.trim())} />
+      <TextInput className="camp-mt" value={handout.image} placeholder={t('…or paste a URL (/uploads/…, https://…)')} onChange={(v) => set(v.trim())} />
     </div>
   );
 }
@@ -91,22 +91,22 @@ function RevealPanel({ game, handout }: { game: GameView; handout: Handout }) {
   return (
     <div className="camp-sec camp-reveal">
       <div className="camp-sec-head">
-        <h4>{t('Visibilité')}</h4>
+        <h4>{t('Visibility')}</h4>
         <Badge color={vis.color}>{vis.label}</Badge>
       </div>
       <div className="row wrap gap-s">
         <Button small variant="accent" disabled={all} onClick={() => revealHandout(handout.id, 'all')}>
-          ✉ {t('Révéler à tous')}
+          ✉ {t('Reveal to all')}
         </Button>
         <Button
           small
           variant="ghost"
           disabled={!all && !ids.length}
           onClick={async () => {
-            if (await confirmAction(t('Masquer « {title} » à tous les joueurs ?', { title: handout.title }))) send('campaign/hideHandout', { handoutId: handout.id });
+            if (await confirmAction(t('Hide “{title}” from all players?', { title: handout.title }))) send('campaign/hideHandout', { handoutId: handout.id });
           }}
         >
-          {t('Tout masquer')}
+          {t('Hide from all')}
         </Button>
       </div>
       {list.length ? (
@@ -115,7 +115,7 @@ function RevealPanel({ game, handout }: { game: GameView; handout: Handout }) {
             <li key={u.id}>
               <label className="camp-check">
                 <input type="checkbox" checked={ids.includes(u.id)} onChange={(e) => togglePlayer(u, e.target.checked)} />
-                <span className={cx('camp-dot', u.online && 'on')} title={u.online ? t('En ligne') : t('Hors ligne')}></span>
+                <span className={cx('camp-dot', u.online && 'on')} title={u.online ? t('Online') : t('Offline')}></span>
                 <span>
                   <strong>{u.name}</strong>
                   {u.chars.length ? <span className="muted small"> · {u.chars.join(', ')}</span> : null}
@@ -125,9 +125,9 @@ function RevealPanel({ game, handout }: { game: GameView; handout: Handout }) {
           ))}
         </ul>
       ) : (
-        <div className="muted small camp-mt">{t("Aucun joueur connecté pour l'instant. « Révéler à tous » inclura aussi ceux qui arriveront plus tard.")}</div>
+        <div className="muted small camp-mt">{t("No player has joined yet. “Reveal to all” will also include those who join later.")}</div>
       )}
-      {handout.revealedAt && <div className="faint small camp-mt">{t('Dernière révélation : {date}', { date: fmtDate(handout.revealedAt) })}</div>}
+      {handout.revealedAt && <div className="faint small camp-mt">{t('Last revealed: {date}', { date: fmtDate(handout.revealedAt) })}</div>}
     </div>
   );
 }
@@ -138,41 +138,41 @@ function Editor({ game, handout, onPreview }: { game: GameView; handout: Handout
     <div className="camp-ho-editor">
       <div className="row gap-s camp-ho-titlebar">
         <label className="field grow">
-          <span className="field-label">{t('Titre')}</span>
+          <span className="field-label">{t('Title')}</span>
           <TextInput value={handout.title} onChange={(title) => title.trim() && patch({ title })} />
         </label>
         <Button small onClick={onPreview}>
-          ◉ {t('Aperçu joueur')}
+          ◉ {t('Player preview')}
         </Button>
       </div>
       <RevealPanel game={game} handout={handout} />
       <MdEditor
-        label={t('Contenu (vu par les joueurs)')}
+        label={t('Content (seen by players)')}
         value={handout.body}
         rows={14}
         initialMode={handout.body ? 'preview' : 'edit'}
-        placeholder={t('Texte du document, en markdown (tableaux, citations, gras…)')}
+        placeholder={t('Handout text, in markdown (tables, quotes, bold…)')}
         onSave={(body) => patch({ body })}
       />
       <ImageField handout={handout} />
       <MdEditor
-        label={t('Note MJ (jamais montrée)')}
+        label={t('GM note (never shown)')}
         value={handout.gmNotes}
         rows={3}
         initialMode={handout.gmNotes ? 'preview' : 'edit'}
-        placeholder={t('Quand le révéler, à qui…')}
+        placeholder={t('When to reveal it, to whom…')}
         onSave={(gmNotes) => patch({ gmNotes })}
       />
       <div className="row spread camp-mt">
-        <span className="faint small">{handout.ts && handout.ts < Date.now() + 864e5 ? t('Créé {date}', { date: fmtDate(handout.ts) }) : t('Document préparé')}</span>
+        <span className="faint small">{handout.ts && handout.ts < Date.now() + 864e5 ? t('Created {date}', { date: fmtDate(handout.ts) }) : t('Prepared handout')}</span>
         <Button
           small
           variant="danger"
           onClick={async () => {
-            if (await confirmAction(t('Supprimer définitivement « {title} » ? Les joueurs ne le verront plus.', { title: handout.title }))) send('campaign/deleteHandout', { handoutId: handout.id });
+            if (await confirmAction(t('Permanently delete “{title}”? Players will no longer see it.', { title: handout.title }))) send('campaign/deleteHandout', { handoutId: handout.id });
           }}
         >
-          {t('Supprimer')}
+          {t('Delete')}
         </Button>
       </div>
     </div>
@@ -194,7 +194,7 @@ export default function HandoutsView({ game, focus }: { game: GameView; focus: F
   const needle = q.trim().toLowerCase();
   const shown = c.handouts.filter((h) => !needle || (h.title + ' ' + h.body).toLowerCase().includes(needle));
   const add = async () => {
-    const id = await send<string>('campaign/addHandout', { title: t('Nouveau document') }).catch(() => null);
+    const id = await send<string>('campaign/addHandout', { title: t('New handout') }).catch(() => null);
     if (id) setSel(id);
   };
 
@@ -202,9 +202,9 @@ export default function HandoutsView({ game, focus }: { game: GameView; focus: F
     <div className={cx('camp-handouts', selected && 'has-sel')}>
       <aside className="camp-ho-list">
         <div className="row gap-s">
-          <SearchBox value={q} onChange={setQ} placeholder={t('Filtrer…')} />
+          <SearchBox value={q} onChange={setQ} placeholder={t('Filter…')} />
           <Button small variant="primary" onClick={add}>
-            + {t('Nouveau')}
+            + {t('New')}
           </Button>
         </div>
         {shown.length ? (
@@ -225,23 +225,23 @@ export default function HandoutsView({ game, focus }: { game: GameView; focus: F
             })}
           </ul>
         ) : (
-          <Empty>{c.handouts.length ? t('Aucun résultat.') : t('Aucun document. Crée le premier !')}</Empty>
+          <Empty>{c.handouts.length ? t('No results.') : t('No handouts. Create the first one!')}</Empty>
         )}
       </aside>
       <section className="camp-ho-main">
         {selected ? (
           <>
             <button className="btn btn-sm btn-ghost camp-ho-back" onClick={() => setSel(null)}>
-              ‹ {t('Retour à la liste')}
+              ‹ {t('Back to the list')}
             </button>
             <Editor key={selected.id} game={game} handout={selected} onPreview={() => setPreview(true)} />
           </>
         ) : (
-          <Empty>{t('Choisis un document à gauche, ou crée-en un nouveau.')}</Empty>
+          <Empty>{t('Pick a handout on the left, or create a new one.')}</Empty>
         )}
       </section>
       {preview && selected && (
-        <Modal title={t('Aperçu — vue joueur')} width={760} onClose={() => setPreview(false)}>
+        <Modal title={t('Preview — player view')} width={760} onClose={() => setPreview(false)}>
           <div className="dos-page dos-preview">
             <HandoutCard handout={{ ...selected, revealedAt: selected.revealedAt || Date.now() }} unread={true} />
           </div>

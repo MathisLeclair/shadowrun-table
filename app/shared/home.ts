@@ -144,7 +144,7 @@ const R = (name: string, floor = '.', out = false): HomeRoomSpec => ({ name, flo
 
 export const HOME_LAYOUTS: Record<string, HomeLayout> = Object.fromEntries([
   // ---- Squatter
-  L('squat-floor', ['Squatter'], 'industrial', tk('Étage abandonné'), tk('Une pièce squattée dans un immeuble condamné : matelas, caisses, gravats.'), [
+  L('squat-floor', ['Squatter'], 'industrial', tk('Abandoned floor'), tk('A squatted room in a condemned building: mattress, crates, rubble.'), [
     '###########',
     '#0........#',
     '#####E#####',
@@ -153,32 +153,32 @@ export const HOME_LAYOUTS: Record<string, HomeLayout> = Object.fromEntries([
     '#bb...T...#',
     '#bb..r..c.#',
     '#####W#####',
-  ], { 0: R(tk('Couloir'), '.', true), 1: R(tk('Squat')) }),
-  L('squat-container', ['Squatter'], 'industrial', tk('Conteneur aménagé'), tk('Un conteneur maritime posé sur un terrain vague, une fenêtre découpée au chalumeau.'), [
+  ], { 0: R(tk('Corridor'), '.', true), 1: R(tk('Squat')) }),
+  L('squat-container', ['Squatter'], 'industrial', tk('Converted container'), tk('A shipping container on a vacant lot, a window cut out with a torch.'), [
     '############',
     'E1....T..bb#',
     '#........bb#',
     '###W####W###',
-  ], { 1: R(tk('Conteneur')) }),
-  L('squat-shared', ['Squatter'], 'industrial', tk('Chambre en colocation'), tk('Une chambre dans un appartement surpeuplé, cuisine partagée avec les autres squatteurs.'), [
+  ], { 1: R(tk('Container')) }),
+  L('squat-shared', ['Squatter'], 'industrial', tk('Room in a shared flat'), tk('A room in an overcrowded flat, kitchen shared with the other squatters.'), [
     '###############',
     '#1...m#0..==m=#',
     '#.....d.......#',
     '#bb...#...TT..#',
     '#bb...#...TT..E',
     '###W###########',
-  ], { 0: R(tk('Cuisine commune'), '.', true), 1: R(tk('Chambre')) }),
+  ], { 0: R(tk('Shared kitchen'), '.', true), 1: R(tk('Bedroom')) }),
 
   // ---- Low
-  L('low-studio', ['Low'], 'residential', tk('Studio'), tk('Une pièce à vivre, un coin cuisine et une salle d’eau minuscule.'), [
+  L('low-studio', ['Low'], 'residential', tk('Studio'), tk('One living room, a kitchenette and a tiny shower room.'), [
     '###W###W###',
     '#1......#~#',
     '#bb.....#=#',
     '#bb..T..d2#',
     '#==m..__#.#',
     '######E####',
-  ], { 1: R(tk('Studio')), 2: R(tk('Salle d’eau')) }),
-  L('low-two-rooms', ['Low'], 'residential', tk('Deux-pièces étroit'), tk('Chambre séparée, cuisine ouverte sur le séjour, salle de bain sans fenêtre.'), [
+  ], { 1: R(tk('Studio')), 2: R(tk('Shower room')) }),
+  L('low-two-rooms', ['Low'], 'residential', tk('Narrow one-bedroom'), tk('Separate bedroom, kitchen open onto the living room, windowless bathroom.'), [
     '####W####W####',
     '#2...m#1....=#',
     '#bb...#.....=#',
@@ -186,17 +186,17 @@ export const HOME_LAYOUTS: Record<string, HomeLayout> = Object.fromEntries([
     '#######.TT...#',
     '#=~~3d.......E',
     '##############',
-  ], { 1: R(tk('Séjour et cuisine')), 2: R(tk('Chambre')), 3: R(tk('Salle de bain')) }),
-  L('low-trailer', ['Low'], 'residential', tk('Mobil-home'), tk('Un mobil-home dans un parc de caravanes : tout en longueur, mais une vraie porte.'), [
+  ], { 1: R(tk('Living room and kitchen')), 2: R(tk('Bedroom')), 3: R(tk('Bathroom')) }),
+  L('low-trailer', ['Low'], 'residential', tk('Mobile home'), tk('A mobile home in a trailer park: long and narrow, but a real door.'), [
     '###W#####W#####',
     '#2bb#1.T..=m#~#',
     '#.bb#.......d3#',
     '#...d...bb..###',
     '#######E#######',
-  ], { 1: R(tk('Pièce à vivre')), 2: R(tk('Chambre')), 3: R(tk('Douche')) }),
+  ], { 1: R(tk('Living area')), 2: R(tk('Bedroom')), 3: R(tk('Shower')) }),
 
   // ---- Medium
-  L('medium-classic', ['Medium'], 'residential', tk('Deux-pièces classique'), tk('Séjour avec cuisine américaine, une chambre, une salle de bain avec baignoire.'), [
+  L('medium-classic', ['Medium'], 'residential', tk('Classic one-bedroom'), tk('Living room with an open kitchen, one bedroom, a bathroom with a tub.'), [
     '###W####W####W###',
     '#2...m#1........#',
     '#bb...#..bbb....W',
@@ -206,8 +206,8 @@ export const HOME_LAYOUTS: Record<string, HomeLayout> = Object.fromEntries([
     '#~~.3.d.........#',
     '#~~.=.#..T...==m#',
     '########E########',
-  ], { 1: R(tk('Séjour et cuisine')), 2: R(tk('Chambre')), 3: R(tk('Salle de bain')) }),
-  L('medium-family', ['Medium'], 'residential', tk('Trois-pièces'), tk('Deux chambres sur l’arrière, une grande pièce à vivre et une salle de bain.'), [
+  ], { 1: R(tk('Living room and kitchen')), 2: R(tk('Bedroom')), 3: R(tk('Bathroom')) }),
+  L('medium-family', ['Medium'], 'residential', tk('Two-bedroom'), tk('Two bedrooms at the back, a large living area and a bathroom.'), [
     '###W#####W#####W##',
     '#2...m#3...m#4~~=#',
     '#bb...#...bb#....#',
@@ -218,8 +218,8 @@ export const HOME_LAYOUTS: Record<string, HomeLayout> = Object.fromEntries([
     '#......__.TT....m#',
     'W..........=====m#',
     '#####E############',
-  ], { 1: R(tk('Séjour')), 2: R(tk('Chambre')), 3: R(tk('Seconde chambre')), 4: R(tk('Salle de bain')) }),
-  L('medium-loft', ['Medium'], 'residential', tk('Loft'), tk('Un ancien atelier ouvert : piliers, grandes baies, la salle de bain est la seule pièce fermée.'), [
+  ], { 1: R(tk('Living room')), 2: R(tk('Bedroom')), 3: R(tk('Second bedroom')), 4: R(tk('Bathroom')) }),
+  L('medium-loft', ['Medium'], 'residential', tk('Loft'), tk('A former open-plan workshop: pillars, big windows, the bathroom is the only closed room.'), [
     '##WWW####WWW####',
     '#1.....o.......#',
     '#.bbb.......bb.#',
@@ -230,10 +230,10 @@ export const HOME_LAYOUTS: Record<string, HomeLayout> = Object.fromEntries([
     '#=....TT...#2.~#',
     '#=.........#=.~#',
     '######E#########',
-  ], { 1: R(tk('Loft')), 2: R(tk('Salle de bain')) }),
+  ], { 1: R(tk('Loft')), 2: R(tk('Bathroom')) }),
 
   // ---- High
-  L('high-condo', ['High'], 'residential', tk('Condo'), tk('Suite parentale avec salle de bain, chambre d’amis, bureau, cuisine séparée et grand séjour.'), [
+  L('high-condo', ['High'], 'residential', tk('Condo'), tk('Master suite with bathroom, guest room, study, separate kitchen and a large living room.'), [
     '####WW#####W####WW###',
     '#2......#~~=#3......#',
     '#.bbb...#..4#.bb..m.#',
@@ -249,8 +249,8 @@ export const HOME_LAYOUTS: Record<string, HomeLayout> = Object.fromEntries([
     '#####d###E###6......W',
     '    #7=~#   #.==..m.#',
     '    #####   #########',
-  ], { 1: R(tk('Séjour')), 2: R(tk('Suite parentale')), 3: R(tk('Chambre d’amis')), 4: R(tk('Salle de bain')), 5: R(tk('Cuisine')), 6: R(tk('Bureau')), 7: R(tk('Toilettes')) }),
-  L('high-corner', ['High'], 'residential', tk('Appartement d’angle'), tk('Baies vitrées sur deux façades et une terrasse privative.'), [
+  ], { 1: R(tk('Living room')), 2: R(tk('Master suite')), 3: R(tk('Guest room')), 4: R(tk('Bathroom')), 5: R(tk('Kitchen')), 6: R(tk('Study')), 7: R(tk('Toilet')) }),
+  L('high-corner', ['High'], 'residential', tk('Corner apartment'), tk('Glass walls on two sides and a private terrace.'), [
     '#WWWWW#WWWWW#======',
     'W1..........W8,,,,=',
     'W..bbb..__..d,g,,g=',
@@ -264,8 +264,8 @@ export const HOME_LAYOUTS: Record<string, HomeLayout> = Object.fromEntries([
     '#.bb.#..bb#=#',
     '#.bb.#..bb#~#',
     '##W###W######',
-  ], { 1: R(tk('Séjour')), 2: R(tk('Chambre')), 3: R(tk('Seconde chambre')), 4: R(tk('Salle de bain')), 5: R(tk('Entrée')), 8: R(tk('Terrasse'), ',') }),
-  L('high-townhouse', ['High'], 'residential', tk('Maison de ville'), tk('Une maison mitoyenne : séjour traversant, deux chambres, un bureau et un sas d’entrée.'), [
+  ], { 1: R(tk('Living room')), 2: R(tk('Bedroom')), 3: R(tk('Second bedroom')), 4: R(tk('Bathroom')), 5: R(tk('Hallway')), 8: R(tk('Terrace'), ',') }),
+  L('high-townhouse', ['High'], 'residential', tk('Townhouse'), tk('A terraced house: through living room, two bedrooms, a study and an entry airlock.'), [
     '###W####W####W###',
     '#2...m#3...#6..m#',
     '#bb...#..bb#.TT.#',
@@ -278,10 +278,10 @@ export const HOME_LAYOUTS: Record<string, HomeLayout> = Object.fromEntries([
     '#####d######=4~~#',
     '    #..E    #####',
     '    ####',
-  ], { 1: R(tk('Séjour et cuisine')), 2: R(tk('Chambre')), 3: R(tk('Seconde chambre')), 4: R(tk('Salle de bain')), 6: R(tk('Bureau')) }),
+  ], { 1: R(tk('Living room and kitchen')), 2: R(tk('Bedroom')), 3: R(tk('Second bedroom')), 4: R(tk('Bathroom')), 6: R(tk('Study')) }),
 
   // ---- Luxury
-  L('lux-penthouse', ['Luxury'], 'corp', tk('Penthouse'), tk('Le dernier étage d’une tour : suite parentale, salle de cinéma, bar, terrasse avec piscine.'), [
+  L('lux-penthouse', ['Luxury'], 'corp', tk('Penthouse'), tk('The top floor of a tower: master suite, home cinema, bar, terrace with a pool.'), [
     '#WWWWWW#WWWWWWWWW#WWWWW#',
     'W2.....#1...........#3.W',
     'W.bbb..#..bbbb....=.#..W',
@@ -299,8 +299,8 @@ export const HOME_LAYOUTS: Record<string, HomeLayout> = Object.fromEntries([
     '         =g,~~~~~,,,,g,=',
     '         =,,,,,,,,,,,,,=',
     '         ===============',
-  ], { 1: R(tk('Grand salon')), 2: R(tk('Suite parentale')), 3: R(tk('Chambre d’amis')), 4: R(tk('Salle de bain')), 5: R(tk('Cuisine')), 7: R(tk('Salle de cinéma')), 8: R(tk('Terrasse'), ',') }),
-  L('lux-villa', ['Luxury'], 'residential', tk('Villa'), tk('Une villa sécurisée dans une enclave corporatiste : patio, jardin, chambres en suite.'), [
+  ], { 1: R(tk('Grand lounge')), 2: R(tk('Master suite')), 3: R(tk('Guest room')), 4: R(tk('Bathroom')), 5: R(tk('Kitchen')), 7: R(tk('Home cinema')), 8: R(tk('Terrace'), ',') }),
+  L('lux-villa', ['Luxury'], 'residential', tk('Villa'), tk('A secured villa in a corporate enclave: patio, garden, en-suite bedrooms.'), [
     '#####WW#####WW#####WW####',
     '#2.....#4~=#3.....#9....#',
     '#.bbb..#...#..bb..#.TT..W',
@@ -318,10 +318,10 @@ export const HOME_LAYOUTS: Record<string, HomeLayout> = Object.fromEntries([
     ' gtggggg~~~~~ggggtg,,,,,',
     ' ggggggg~~~~~gggggg,,,,,',
     ' ggggggggggggggggggg,,,,',
-  ], { 1: R(tk('Séjour et cuisine')), 2: R(tk('Suite parentale')), 3: R(tk('Chambre d’amis')), 4: R(tk('Salle de bain')), 8: R(tk('Jardin'), 'g'), 9: R(tk('Bureau')) }),
+  ], { 1: R(tk('Living room and kitchen')), 2: R(tk('Master suite')), 3: R(tk('Guest room')), 4: R(tk('Bathroom')), 8: R(tk('Garden'), 'g'), 9: R(tk('Study')) }),
 
   // ---- Bolt Hole
-  L('bolt-backroom', ['Bolt Hole'], 'industrial', tk('Arrière-salle'), tk('Derrière une laverie automatique : une porte de service, un lit de camp, une sortie de secours.'), [
+  L('bolt-backroom', ['Bolt Hole'], 'industrial', tk('Back room'), tk('Behind a laundromat: a service door, a camp bed, an emergency exit.'), [
     '##############',
     '#0.mmmm.mmmm.#',
     '#............E',
@@ -331,8 +331,8 @@ export const HOME_LAYOUTS: Record<string, HomeLayout> = Object.fromEntries([
     '#..bb......=.#',
     '#.......T....E',
     '##############',
-  ], { 0: R(tk('Laverie'), '.', true), 1: R(tk('Planque')) }),
-  L('bolt-basement', ['Bolt Hole'], 'industrial', tk('Sous-sol'), tk('Une cave sous un immeuble : tuyaux, chaudière, un matelas et un générateur.'), [
+  ], { 0: R(tk('Laundromat'), '.', true), 1: R(tk('Bolt Hole')) }),
+  L('bolt-basement', ['Bolt Hole'], 'industrial', tk('Basement'), tk('A cellar under a building: pipes, boiler, a mattress and a generator.'), [
     '############',
     '#1..mm..ss.#',
     '#.......ss.#',
@@ -340,10 +340,10 @@ export const HOME_LAYOUTS: Record<string, HomeLayout> = Object.fromEntries([
     '#bb..cc..=.#',
     '#...T....=.#',
     '######L#####',
-  ], { 1: R(tk('Cave')) }),
+  ], { 1: R(tk('Cellar')) }),
 
   // ---- Traveler
-  L('travel-motel', ['Traveler'], 'residential', tk('Chambre de motel'), tk('Une chambre au mois en bord de route, avec la place de parking devant la porte.'), [
+  L('travel-motel', ['Traveler'], 'residential', tk('Motel room'), tk('A roadside room rented by the month, with the parking spot in front of the door.'), [
     '##########',
     '#1..m#~=2#',
     'W....d...#',
@@ -352,16 +352,16 @@ export const HOME_LAYOUTS: Record<string, HomeLayout> = Object.fromEntries([
     '###E##',
     ',,,,,,,',
     ',0,,,,,',
-  ], { 0: R(tk('Parking'), ',', true), 1: R(tk('Chambre')), 2: R(tk('Salle d’eau')) }),
-  L('travel-rv', ['Traveler'], 'residential', tk('Camping-car'), tk('La maison sur roues : couchette au fond, kitchenette, douche, et la route devant.'), [
+  ], { 0: R(tk('Parking lot'), ',', true), 1: R(tk('Bedroom')), 2: R(tk('Shower room')) }),
+  L('travel-rv', ['Traveler'], 'residential', tk('VR'), tk('A home on wheels: bunk at the back, kitchenette, shower, and the open road ahead.'), [
     '##W###W###W##',
     '#bb.=m.T.#2~#',
     '#bb.1....d..#',
     '#####E#######',
-  ], { 1: R(tk('Cellule')), 2: R(tk('Douche')) }),
+  ], { 1: R(tk('Cabin')), 2: R(tk('Shower')) }),
 
   // ---- Commercial
-  L('com-shop', ['Commercial'], 'street', tk('Boutique'), tk('Une vitrine sur rue, un comptoir, la réserve et un bureau à l’arrière.'), [
+  L('com-shop', ['Commercial'], 'street', tk('Shop'), tk('A shopfront on the street, a counter, the stockroom and an office at the back.'), [
     '#################',
     '#2.mm.mm#3..=m..#',
     '#.......d..TT...#',
@@ -374,8 +374,8 @@ export const HOME_LAYOUTS: Record<string, HomeLayout> = Object.fromEntries([
     'WWWWWWEEWWWWWWWWW',
     ',,,,,,,,,,,,,,,,,',
     ',0,,,,,,,,,,,,,,,',
-  ], { 0: R(tk('Rue'), ',', true), 1: R(tk('Boutique')), 2: R(tk('Réserve')), 3: R(tk('Bureau')) }),
-  L('com-office', ['Commercial'], 'corp', tk('Bureaux'), tk('Un plateau de bureaux : accueil, open space, salle de réunion et bureau fermé.'), [
+  ], { 0: R(tk('Street'), ',', true), 1: R(tk('Shop')), 2: R(tk('Pool')), 3: R(tk('Study')) }),
+  L('com-office', ['Commercial'], 'corp', tk('Offices'), tk('An office floor: reception, open space, meeting room and a private office.'), [
     '###WW###WW###WW###',
     '#1...=...#2..TT..#',
     '#....=...d...TT..#',
@@ -385,10 +385,10 @@ export const HOME_LAYOUTS: Record<string, HomeLayout> = Object.fromEntries([
     '#..TT..TT..TT.d.m#',
     '#.............#..#',
     '#######E##########',
-  ], { 1: R(tk('Accueil')), 2: R(tk('Salle de réunion')), 3: R(tk('Open space')), 4: R(tk('Bureau')) }),
+  ], { 1: R(tk('Home')), 2: R(tk('Meeting room')), 3: R(tk('Open space')), 4: R(tk('Study')) }),
 
   // ---- Hospitalized
-  L('hospital-room', ['Hospitalized'], 'lab', tk('Chambre d’hôpital'), tk('Une chambre individuelle : lit médicalisé, moniteurs, salle d’eau.'), [
+  L('hospital-room', ['Hospitalized'], 'lab', tk('Hospital room'), tk('A private room: hospital bed, monitors, shower room.'), [
     '###########',
     '#1.m.bb.mm#',
     '#....bb...W',
@@ -397,7 +397,7 @@ export const HOME_LAYOUTS: Record<string, HomeLayout> = Object.fromEntries([
     '#=2#0.....#',
     '#~.#......#',
     '###########',
-  ], { 0: R(tk('Couloir de l’hôpital'), '.', true), 1: R(tk('Chambre')), 2: R(tk('Salle d’eau')) }),
+  ], { 0: R(tk('Hospital corridor'), '.', true), 1: R(tk('Bedroom')), 2: R(tk('Shower room')) }),
 ].map((x) => [x.id, x]));
 
 /** Layouts available for a lifestyle level (Street: none — no home to draw). */
@@ -453,7 +453,7 @@ const MODULES: Record<string, HomeModule> = {
     '#=.vv#',
     '###GG#',
   ], ',', 'closed'),
-  garageLarge: M('garageLarge', tk('Grand garage'), [
+  garageLarge: M('garageLarge', tk('Large garage'), [
     '#########',
     '#1......#',
     '#.vvv..=#',
@@ -464,7 +464,7 @@ const MODULES: Record<string, HomeModule> = {
     '#.......#',
     '##GGG####',
   ], ',', 'closed'),
-  garageLargeCramped: M('garageLargeCramped', tk('Grand garage'), [
+  garageLargeCramped: M('garageLargeCramped', tk('Large garage'), [
     '#######',
     '#1vvv.#',
     '#.vvv.#',
@@ -473,7 +473,7 @@ const MODULES: Record<string, HomeModule> = {
     '#.....#',
     '##GGG##',
   ], ',', 'closed'),
-  stable: M('stable', tk('Écurie'), [
+  stable: M('stable', tk('Stable'), [
     '#########',
     '#1......#',
     '#.......#',
@@ -482,7 +482,7 @@ const MODULES: Record<string, HomeModule> = {
     '#g=g=g=g#',
     '###GG####',
   ], '.', 'closed'),
-  boat: M('boat', tk('Hangar à bateau'), [
+  boat: M('boat', tk('Boathouse'), [
     '#########',
     '#1......#',
     '#.~~~~~.#',
@@ -491,7 +491,7 @@ const MODULES: Record<string, HomeModule> = {
     '#.~~~~~.#',
     '##GGGGG##',
   ], '.', 'closed'),
-  heli: M('heli', tk('Héliport'), [
+  heli: M('heli', tk('Helipad'), [
     '==========',
     '=1,,,,,,,=',
     '=,,,,,,,,=',
@@ -501,7 +501,7 @@ const MODULES: Record<string, HomeModule> = {
     '=,,,,,,,,=',
     '==========',
   ], ',', 'closed'),
-  plane: M('plane', tk('Hangar à avion'), [
+  plane: M('plane', tk('Aircraft hangar'), [
     '#############',
     '#1..........#',
     '#...........#',
@@ -512,7 +512,7 @@ const MODULES: Record<string, HomeModule> = {
     '#..........c#',
     '##GGGGGGGGG##',
   ], ',', 'closed'),
-  workshop: M('workshop', tk('Atelier'), [
+  workshop: M('workshop', tk('Workshop'), [
     '#########',
     '#1......#',
     '#==...mm#',
@@ -522,7 +522,7 @@ const MODULES: Record<string, HomeModule> = {
     '#==..===#',
     '#########',
   ]),
-  workshopCramped: M('workshopCramped', tk('Atelier'), [
+  workshopCramped: M('workshopCramped', tk('Workshop'), [
     '#######',
     '#1....#',
     '#==.mm#',
@@ -530,7 +530,7 @@ const MODULES: Record<string, HomeModule> = {
     '#=..cc#',
     '#######',
   ]),
-  armory: M('armory', tk('Armurerie'), [
+  armory: M('armory', tk('Armorer'), [
     '#######',
     '#1....#',
     '#m...m#',
@@ -538,14 +538,14 @@ const MODULES: Record<string, HomeModule> = {
     '#m...m#',
     '#######',
   ], '.', 'locked'),
-  panic: M('panic', tk('Chambre forte'), [
+  panic: M('panic', tk('Panic room'), [
     '######',
     '#1..m#',
     '#b..m#',
     '#b...#',
     '######',
   ], '.', 'locked'),
-  gym: M('gym', tk('Salle de sport'), [
+  gym: M('gym', tk('Gym'), [
     '#########',
     '#1......#',
     '#._____.#',
@@ -554,7 +554,7 @@ const MODULES: Record<string, HomeModule> = {
     '#.......W',
     '#########',
   ]),
-  pool: M('pool', tk('Piscine'), [
+  pool: M('pool', tk('Swimming pool'), [
     '###########',
     '#1........#',
     '#.~~~~~~~.W',
@@ -573,7 +573,7 @@ const MODULES: Record<string, HomeModule> = {
     '#.tg.ggg#',
     '#WWWWWWW#',
   ], 'g'),
-  greenhouse: M('greenhouse', tk('Serre'), [
+  greenhouse: M('greenhouse', tk('Greenhouse'), [
     '#########',
     '#1......#',
     'W.==.==.W',
@@ -582,7 +582,7 @@ const MODULES: Record<string, HomeModule> = {
     'W.......W',
     '#WWWWWWW#',
   ]),
-  yard: M('yard', tk('Cour'), [
+  yard: M('yard', tk('Yard'), [
     '=========',
     '=1,,,,,,=',
     '=gggg,gg=',
@@ -590,14 +590,14 @@ const MODULES: Record<string, HomeModule> = {
     '=gggggg,=',
     '=========',
   ], ','),
-  range: M('range', tk('Stand de tir'), [
+  range: M('range', tk('Shooting range'), [
     '##############',
     '#1..=.......m#',
     '#...=.......m#',
     '#...........m#',
     '##############',
   ], '.', 'closed'),
-  court: M('court', tk('Terrain de sport'), [
+  court: M('court', tk('Sports court'), [
     '############',
     '#1.........#',
     '#.________.#',
@@ -608,7 +608,7 @@ const MODULES: Record<string, HomeModule> = {
     '#..........#',
     '############',
   ]),
-  privateRoom: M('privateRoom', tk('Chambre privée'), [
+  privateRoom: M('privateRoom', tk('Private room'), [
     '######',
     '#1..m#',
     '#....W',
@@ -616,7 +616,7 @@ const MODULES: Record<string, HomeModule> = {
     '#bb..#',
     '######',
   ], '.', 'closed'),
-  batcave: M('batcave', tk('Bat-cave'), [
+  batcave: M('batcave', tk('Bat cave'), [
     '########',
     '#1.....#',
     '#m....=#',
@@ -624,7 +624,7 @@ const MODULES: Record<string, HomeModule> = {
     '#..TT.c#',
     '########',
   ], '.', 'secret'),
-  zen: M('zen', tk('Antre de méditation'), [
+  zen: M('zen', tk('Zen den'), [
     '######',
     '#1.g.#',
     '#.__.#',
@@ -632,21 +632,21 @@ const MODULES: Record<string, HomeModule> = {
     '#g..g#',
     '######',
   ], '.', 'closed'),
-  freezer: M('freezer', tk('Chambre froide'), [
+  freezer: M('freezer', tk('Walk-in freezer'), [
     '#####',
     '#1mm#',
     '#...#',
     '#mmm#',
     '#####',
   ], '.', 'closed'),
-  tunnel: M('tunnel', tk('Tunnel d’évasion'), [
+  tunnel: M('tunnel', tk('Escape tunnel'), [
     '#####',
     '#1..#',
     '#.ss#',
     '#.ss#',
     '#####',
   ], '.', 'secret'),
-  hole: M('hole', tk('Cachette secrète'), [
+  hole: M('hole', tk('Secret hideout'), [
     '####',
     '#1c#',
     '#..#',

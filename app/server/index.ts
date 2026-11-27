@@ -17,7 +17,7 @@ import type { StoredMeta, TableApi, SocketEntry } from './lib/tables.ts';
 import { registerAdminRoutes, createRateLimiter } from './lib/admin.ts';
 import { uid, deepClone } from '../shared/util.ts';
 import { ActionError } from './errors.ts';
-import { errorBody, normalizeLogEntry, dictionaryFiles, isLang, formatFr, cleanParams, t as translate } from './lib/i18n.ts';
+import { errorBody, normalizeLogEntry, dictionaryFiles, isLang, formatSource, cleanParams, t as translate } from './lib/i18n.ts';
 import {
   isDemo, DEMO, demoHttpGuard, demoUploadError, demoActionError, demoLoginBlocked, resetDemoTable, startDemoScheduler, instrumentDemo, demoPresence,
 } from './lib/demo.ts';
@@ -373,7 +373,7 @@ function makeCtx(table: Table, user: SessionUser): ActionContext {
     /** Throw a readable error: ctx.fail('Texte {x}', { x }) — the client shows it translated (errorKey + params). */
     fail(msg, params) {
       const p = cleanParams(params);
-      const err = new ActionError(formatFr(msg, p));
+      const err = new ActionError(formatSource(msg, p));
       err.i18nKey = String(msg ?? '');
       err.i18nParams = p && Object.keys(p).length ? p : undefined;
       throw err;
@@ -406,8 +406,8 @@ function errorI18n(err: unknown): { errorKey?: string; params?: I18nParams } {
  */
 function runAction(t: Table, user: SessionUser, type: string, payload: ActionPayload | null | undefined): ActionResponse {
   const def = actions[type];
-  if (!def) return { ok: false, ...errorBody('Action inconnue : {type}', { type: String(type).slice(0, 80) }) };
-  if (def.role === 'gm' && user.role !== 'gm') return { ok: false, ...errorBody('Action réservée au MJ') };
+  if (!def) return { ok: false, ...errorBody('Unknown action: {type}', { type: String(type).slice(0, 80) }) };
+  if (def.role === 'gm' && user.role !== 'gm') return { ok: false, ...errorBody('GM-only action') };
   try {
     const result = tableScope.run(t, () => def.handler(makeCtx(t, user), payload || {}));
     t.store.saveSoon();
@@ -428,7 +428,7 @@ function simulateAction(
   t: Table, user: SessionUser, type: string, payload: ActionPayload | null | undefined, state: TableState = deepClone(t.state),
 ): ActionResponse & { state: TableState } {
   const def = actions[type];
-  if (!def) return { ok: false, ...errorBody('Action inconnue : {type}', { type: String(type).slice(0, 80) }), state };
+  if (!def) return { ok: false, ...errorBody('Unknown action: {type}', { type: String(type).slice(0, 80) }), state };
   const fake: Table = Object.create(t, { state: { value: state } }); // same table (id, info…), copied state
   const ctx: ActionContext = { ...makeCtx(fake, user), log: (e) => e as LogEntry, emitTo: () => {} };
   try {
@@ -473,13 +473,13 @@ function authUser(req: Request): SessionUser | null {
 }
 export function requireUser(req: Request, res: Response, next: NextFunction) {
   const u = authUser(req);
-  if (!u) return res.status(401).json(errorBody('Non connecté'));
+  if (!u) return res.status(401).json(errorBody('Not logged in'));
   req.user = u;
   tableScope.run(req.srTable!, next);
 }
 export function requireGM(req: Request, res: Response, next: NextFunction) {
   const u = authUser(req);
-  if (!u || u.role !== 'gm') return res.status(403).json(errorBody('Réservé au MJ'));
+  if (!u || u.role !== 'gm') return res.status(403).json(errorBody('GM only'));
   req.user = u;
   tableScope.run(req.srTable!, next);
 }
@@ -533,8 +533,8 @@ app.get('/api/tables', (req, res) => {
 
 const noTable = (req: Request, res: Response) => {
   const meta = req.srHint ? listMetas().find((m) => m.slug === req.srHint) : null;
-  if (meta?.archived) return res.status(410).json(errorBody('Cette table est archivée', null, { code: 'archived' }));
-  if (meta && tables.get(meta.id)?.error) return res.status(503).json(errorBody('Table momentanément indisponible (voir les journaux du serveur)', null, { code: 'broken' }));
+  if (meta?.archived) return res.status(410).json(errorBody('This table is archived', null, { code: 'archived' }));
+  if (meta && tables.get(meta.id)?.error) return res.status(503).json(errorBody('Table temporarily unavailable (see the server logs)', null, { code: 'broken' }));
   return res.status(404).json(errorBody(req.srHint ? 'Table introuvable' : 'Choisis une table', null, { code: 'no-table' }));
 };
 
@@ -566,47 +566,47 @@ app.post('/api/login', (req, res) => {
   const demo = isDemo(t);
   // Demo table: no PINs (a name cannot be locked), PCs can be shared, logins throttled per IP.
   const pin = demo ? '' : body.pin;
-  if (demo && demoLoginBlocked(t, req.ip)) return res.status(429).json(errorBody('Trop de tentatives : réessaie dans quelques minutes'));
+  if (demo && demoLoginBlocked(t, req.ip)) return res.status(429).json(errorBody('Too many attempts: try again in a few minutes'));
   if (role === 'gm' && demo) {
     if (isLang(body.lang)) setUserLang(state, 'gm', body.lang);
     return res.json({ token: issueToken(t, 'gm'), user: { ...GM_USER, lang: userLang(state, 'gm') }, table: t.info() });
   }
   if (role === 'gm') {
     const key = `gm|${t.id}|${req.ip}`;
-    if (loginLimiter.blocked(key)) return res.status(429).json(errorBody('Trop de tentatives : réessaie dans quelques minutes'));
+    if (loginLimiter.blocked(key)) return res.status(429).json(errorBody('Too many attempts: try again in a few minutes'));
     const a = Buffer.from(String(password || ''));
     const b = Buffer.from(String(state.config.gmPassword));
     if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
       loginLimiter.fail(key);
-      return res.status(403).json(errorBody('Mot de passe MJ incorrect'));
+      return res.status(403).json(errorBody('Wrong GM password'));
     }
     loginLimiter.reset(key);
     if (isLang(body.lang)) setUserLang(state, 'gm', body.lang); // language picked on the login screen
     return res.json({ token: issueToken(t, 'gm'), user: { ...GM_USER, lang: userLang(state, 'gm') }, table: t.info() });
   }
   const cleanName = String(name || '').trim().slice(0, 40);
-  if (!cleanName) return res.status(400).json(errorBody('Indique ton nom'));
+  if (!cleanName) return res.status(400).json(errorBody('Enter your name'));
   let user: User | undefined = Object.values(state.users).find((u) => u.name.toLowerCase() === cleanName.toLowerCase());
   if (user) {
     if (user.pin && !demo) {
       const key = `pin|${t.id}|${user.id}|${req.ip}`;
-      if (loginLimiter.blocked(key)) return res.status(429).json(errorBody('Trop de tentatives : réessaie dans quelques minutes'));
+      if (loginLimiter.blocked(key)) return res.status(429).json(errorBody('Too many attempts: try again in a few minutes'));
       if (user.pin !== hashPin(pin)) {
         loginLimiter.fail(key);
-        return res.status(403).json(errorBody('Code PIN incorrect pour ce joueur'));
+        return res.status(403).json(errorBody('Wrong PIN for this player'));
       }
     }
   } else {
-    if (demo && Object.keys(state.users).length >= DEMO.maxUsers) return res.status(429).json(errorBody('Table de démonstration pleine : réessaie plus tard'));
+    if (demo && Object.keys(state.users).length >= DEMO.maxUsers) return res.status(429).json(errorBody('The demo table is full: try again later'));
     user = { id: uid('usr'), name: cleanName, pin: pin ? hashPin(pin) : null, characterIds: [] };
     state.users[user.id] = user;
   }
   const player: User = user;
   if (characterId) {
     const actor = state.actors[characterId];
-    if (!actor || actor.type !== 'pc') return res.status(400).json(errorBody('Personnage introuvable'));
+    if (!actor || actor.type !== 'pc') return res.status(400).json(errorBody('Character not found'));
     const owner = Object.values(state.users).find((u) => u.id !== player.id && (u.characterIds || []).includes(characterId));
-    if (owner && !demo) return res.status(403).json(errorBody('Ce personnage est déjà pris par {name}', { name: owner.name }));
+    if (owner && !demo) return res.status(403).json(errorBody('This character is already taken by {name}', { name: owner.name }));
     if (!player.characterIds.includes(characterId)) player.characterIds.push(characterId);
   }
   if (isLang(body.lang)) player.lang = body.lang; // language picked on the login screen
@@ -626,8 +626,8 @@ app.post('/api/upload', requireUser, express.raw({ type: '*/*', limit: '80mb' })
   const original = String(req.headers['x-filename'] || 'fichier').replace(/[^\w.\-]+/g, '_').slice(-80);
   const ext = path.extname(original).toLowerCase();
   const allowed = ['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg', '.mp3', '.ogg', '.wav', '.m4a', '.webm', '.pdf', '.md', '.json', '.chum5', '.xml'];
-  if (!allowed.includes(ext)) return res.status(400).json(errorBody('Type de fichier non supporté ({ext})', { ext }));
-  if (!Buffer.isBuffer(req.body) || !req.body.length) return res.status(400).json(errorBody('Fichier vide'));
+  if (!allowed.includes(ext)) return res.status(400).json(errorBody('Unsupported file type ({ext})', { ext }));
+  if (!Buffer.isBuffer(req.body) || !req.body.length) return res.status(400).json(errorBody('Empty file'));
   if (isDemo(t)) {
     const bad = demoUploadError(t, ext, req.body.length);
     if (bad) return res.status(bad.params ? 413 : 400).json(errorBody(bad.key, bad.params, { code: 'demo' }));
@@ -639,7 +639,7 @@ app.post('/api/upload', requireUser, express.raw({ type: '*/*', limit: '80mb' })
   } catch (err) {
     console.error('[upload]', err);
     const e = err as NodeJS.ErrnoException;
-    return res.status(500).json(errorBody('Écriture impossible sur le serveur ({reason})', { reason: e.code || e.message }));
+    return res.status(500).json(errorBody('Could not write on the server ({reason})', { reason: e.code || e.message }));
   }
   res.json({ url: `${t.uploadUrl}/${file}`, name: original });
 });
@@ -675,14 +675,14 @@ app.get(['/api/docs/:name', '/api/docs/:folder/:name'], requireGM, (req, res) =>
   const params = req.params as { name: string; folder?: string };
   const name = params.folder ? `${params.folder}/${params.name}` : params.name;
   const file = docPath(authed(req).srTable.docsDir(), name);
-  if (!file) return res.status(404).json(errorBody('Document introuvable'));
+  if (!file) return res.status(404).json(errorBody('Document not found'));
   res.type('text/plain; charset=utf-8').send(fs.readFileSync(file, 'utf8'));
 });
 
 // Save / backup / reset of the GM's own table.
 app.post('/api/admin/backup', requireGM, (req, res) => {
   const file = authed(req).srTable.store.backup('manual');
-  if (!file) return res.status(500).json(errorBody('Sauvegarde impossible (voir la console du serveur)'));
+  if (!file) return res.status(500).json(errorBody('Backup failed (see the server console)'));
   res.json({ file });
 });
 app.get('/api/admin/export', requireGM, (req, res) => {
@@ -724,7 +724,7 @@ function importInto(t: Table, next: Record<string, any>, { keepSessions = true }
 }
 app.post('/api/admin/import', requireGM, (req, res) => {
   const next = req.body;
-  if (!isObj(next) || !isObj(next.actors)) return res.status(400).json(errorBody('Fichier de sauvegarde invalide'));
+  if (!isObj(next) || !isObj(next.actors)) return res.status(400).json(errorBody('Invalid save file'));
   importInto(authed(req).srTable, next);
   res.json({ ok: true });
 });
@@ -735,7 +735,7 @@ app.post('/api/admin/reset', requireGM, (req, res) => {
     resetDemoTable(t, { initModules, scheduleTableBroadcast }, { reason: 'gm' });
     return res.json({ ok: true, demo: true });
   }
-  if (!t.store.backup('before-reset')) return res.status(500).json(errorBody('Sauvegarde préalable impossible : réinitialisation annulée'));
+  if (!t.store.backup('before-reset')) return res.status(500).json(errorBody('Could not back up first: reset cancelled'));
   const fresh: Partial<TableState> = emptyState();
   fresh.config = t.state.config;
   fresh.sessions = t.state.sessions;
@@ -755,7 +755,7 @@ app.use('/shared', express.static(path.join(ROOT, 'shared')));
 // Translation dictionaries: client/i18n/<lang>/*.json are served by the client static handler below; the
 // index listing them is generated from the folder so adding a file needs no code change.
 app.get('/i18n/:lang/index.json', (req, res) => {
-  if (!isLang(req.params.lang)) return res.status(404).json(errorBody('Introuvable'));
+  if (!isLang(req.params.lang)) return res.status(404).json(errorBody('Not found'));
   res.setHeader('Cache-Control', 'no-cache');
   res.json({ lang: req.params.lang, files: dictionaryFiles(req.params.lang) });
 });
@@ -923,7 +923,7 @@ io.on('connection', (socket) => {
     const live = usableTable(tables.get(t.id)) === t ? t : null;
     const user = live ? userFromToken(t, socket.handshake.auth?.token) : null;
     if (!user) {
-      reply({ ok: false, ...errorBody('Session expirée'), code: 'unauthorized' });
+      reply({ ok: false, ...errorBody('Session expired'), code: 'unauthorized' });
       t.sockets.delete(socket.id);
       socket.emit('unauthorized');
       socket.disconnect(true);
@@ -971,13 +971,13 @@ for (const m of modules) {
 }
 
 // Last resort: JSON 404 (API) — and a JSON error instead of an HTML stack trace.
-app.use((req, res) => res.status(404).json(errorBody('Introuvable')));
+app.use((req, res) => res.status(404).json(errorBody('Not found')));
 // eslint-disable-next-line no-unused-vars
 app.use((err: any, req: Request, res: Response, next: NextFunction) => { // err: whatever a handler threw (body-parser errors carry type/status/expose)
-  if (err?.type === 'entity.too.large') return res.status(413).json(errorBody('Fichier trop volumineux'));
-  if (err?.type === 'entity.parse.failed') return res.status(400).json(errorBody('Requête invalide (JSON)'));
+  if (err?.type === 'entity.too.large') return res.status(413).json(errorBody('File too large'));
+  if (err?.type === 'entity.parse.failed') return res.status(400).json(errorBody('Invalid request (JSON)'));
   console.error('[http]', req.method, req.path, err);
-  if (!res.headersSent) res.status(err?.status || 500).json(err?.expose ? { error: err.message } : errorBody('Erreur du serveur'));
+  if (!res.headersSent) res.status(err?.status || 500).json(err?.expose ? { error: err.message } : errorBody('Server error'));
 });
 
 setInterval(() => {

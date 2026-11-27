@@ -50,7 +50,7 @@ function ThreadCard({ thread, open, onToggle, highlight }: ThreadCardProps) {
           <button
             key={s.id}
             className={cx('camp-ts-btn', `ts-${s.id}`, s.id === thread.state && 'active')}
-            title={t('Passer en « {state} »', { state: t(s.one) })}
+            title={t('Move to “{state}”', { state: t(s.one) })}
             onClick={() => s.id !== thread.state && patch({ state: s.id })}
           >
             {t(s.one)}
@@ -62,17 +62,17 @@ function ThreadCard({ thread, open, onToggle, highlight }: ThreadCardProps) {
           <MdEditor value={thread.notes} rows={6} initialMode={thread.notes ? 'preview' : 'edit'} onSave={(notes) => patch({ notes })} />
           <div className="row spread camp-mt">
             <div className="row gap-s">
-              <IconButton icon="↑" title={t('Monter')} onClick={() => send('campaign/moveThread', { threadId: thread.id, dir: -1 })} />
-              <IconButton icon="↓" title={t('Descendre')} onClick={() => send('campaign/moveThread', { threadId: thread.id, dir: 1 })} />
+              <IconButton icon="↑" title={t('Move up')} onClick={() => send('campaign/moveThread', { threadId: thread.id, dir: -1 })} />
+              <IconButton icon="↓" title={t('Move down')} onClick={() => send('campaign/moveThread', { threadId: thread.id, dir: 1 })} />
             </div>
             <Button
               small
               variant="danger"
               onClick={async () => {
-                if (await confirmAction(t('Supprimer le fil « {label} » ?', { label: thread.label }))) send('campaign/deleteThread', { threadId: thread.id });
+                if (await confirmAction(t('Delete the thread “{label}”?', { label: thread.label }))) send('campaign/deleteThread', { threadId: thread.id });
               }}
             >
-              {t('Supprimer')}
+              {t('Delete')}
             </Button>
           </div>
         </div>
@@ -110,8 +110,8 @@ export default function ThreadsView({ game, focus }: { game: GameView; focus: Fo
   return (
     <div className="camp-threads">
       <div className="camp-toolbar">
-        <SearchBox value={q} onChange={setQ} placeholder={t('Chercher un fil…')} />
-        <span className="muted small">{t("Glisse une carte d'une colonne à l'autre, ou utilise les boutons d'état.")}</span>
+        <SearchBox value={q} onChange={setQ} placeholder={t('Search threads…')} />
+        <span className="muted small">{t("Drag a card from one column to another, or use the state buttons.")}</span>
       </div>
       <div className="camp-board">
         {THREAD_STATES.map((s) => {
@@ -143,10 +143,10 @@ export default function ThreadsView({ game, focus }: { game: GameView; focus: Fo
                 {items.filter(match).map((th) => (
                   <ThreadCard key={th.id} thread={th} open={openId === th.id} highlight={flash === th.id} onToggle={() => setOpenId(openId === th.id ? null : th.id)} />
                 ))}
-                {!items.length && <div className="faint small camp-none">{t('Vide')}</div>}
+                {!items.length && <div className="faint small camp-none">{t('Empty')}</div>}
               </div>
               <div className="camp-col-add">
-                <TextInput key={s.id + k} value="" placeholder={t('+ Nouveau fil (Entrée)')} onChange={(v) => add(s.id, v)} />
+                <TextInput key={s.id + k} value="" placeholder={t('+ New thread (Enter)')} onChange={(v) => add(s.id, v)} />
               </div>
             </section>
           );

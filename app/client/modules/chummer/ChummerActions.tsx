@@ -42,11 +42,11 @@ function useFilePicker(onFile: (file: File, text: string) => void): [ReactNode, 
         const file = e.target.files?.[0];
         e.target.value = '';
         if (!file) return;
-        if (file.size > 20e6) return toast(t('Fichier trop gros (20 Mo max)'), 'error');
+        if (file.size > 20e6) return toast(t('File too large (20 MB max)'), 'error');
         try {
           onFile(file, await file.text());
         } catch (err) {
-          toast((err as Error).message || t('Lecture du fichier impossible'), 'error');
+          toast((err as Error).message || t('Could not read the file'), 'error');
         }
       }}
     />
@@ -126,12 +126,12 @@ function scalarValue(s: { label: string }, v: unknown): string {
 
 export function DiffView({ diff }: { diff: ChummerDiff | null | undefined }) {
   if (!diff) return null;
-  if (diff.empty) return <Empty>{t('Aucune différence avec la fiche actuelle.')}</Empty>;
+  if (diff.empty) return <Empty>{t('No difference from the current sheet.')}</Empty>;
   return (
     <div className="chm-diff">
       {diff.scalars.length > 0 && (
         <section>
-          <h4 className="chm-diff-h">{t('Général')}</h4>
+          <h4 className="chm-diff-h">{t('General')}</h4>
           <table className="sr chm-diff-table">
             <tbody>
               {diff.scalars.map((s) => (
@@ -148,7 +148,7 @@ export function DiffView({ diff }: { diff: ChummerDiff | null | undefined }) {
       )}
       {diff.attributes.length > 0 && (
         <section>
-          <h4 className="chm-diff-h">{t('Attributs')}</h4>
+          <h4 className="chm-diff-h">{t('Attributes')}</h4>
           <table className="sr chm-diff-table">
             <tbody>
               {diff.attributes.map((s) => (
@@ -165,7 +165,7 @@ export function DiffView({ diff }: { diff: ChummerDiff | null | undefined }) {
       )}
       {diff.skills.length > 0 && (
         <section>
-          <h4 className="chm-diff-h">{t('Compétences')}</h4>
+          <h4 className="chm-diff-h">{t('Skills')}</h4>
           <table className="sr chm-diff-table">
             <tbody>
               {diff.skills.map((s) => (
@@ -182,7 +182,7 @@ export function DiffView({ diff }: { diff: ChummerDiff | null | undefined }) {
       )}
       {diff.lists.length > 0 && (
         <section>
-          <h4 className="chm-diff-h">{t('Inventaire, qualités, contacts…')}</h4>
+          <h4 className="chm-diff-h">{t('Inventory, qualities, contacts…')}</h4>
           {diff.lists.map((l) => (
             <div className="chm-diff-list" key={l.list}>
               <div className="chm-diff-listname">{tIfKnown(l.label)}</div>
@@ -216,7 +216,7 @@ function Warnings({ list, i18n }: { list?: unknown[] | null; i18n?: I18nMessage[
   if (!items.length) return null;
   return (
     <div className="chm-warn">
-      <b>{t('Points d’attention')}</b>
+      <b>{t('Points to check')}</b>
       <ul>
         {items.map((w, i) => (
           <li key={i}>{w}</li>
@@ -239,30 +239,30 @@ interface UpdateDialogProps {
 function UpdateDialog({ actor, preview, busy, onConfirm, onClose, gm }: UpdateDialogProps) {
   const needsApproval = preview.needsApproval;
   return (
-    <Overlay title={t('Mettre à jour {name} depuis Chummer', { name: actor.name })} onClose={onClose} width={680} className="chm-modal">
+    <Overlay title={t('Update {name} from Chummer', { name: actor.name })} onClose={onClose} width={680} className="chm-modal">
       <div className="col">
         <div className="muted small">
-          {withBold(t('Fichier {file}', { file: MARK }), preview.fileName || t('(sans nom)'))}
+          {withBold(t('File {file}', { file: MARK }), preview.fileName || t('(no name)'))}
           {preview.created === false ? (
             <>
               {' · '}
-              <Badge color="amber">{t('mode création')}</Badge>
+              <Badge color="amber">{t('creation mode')}</Badge>
             </>
           ) : null}
           {preview.linked
-            ? ` — ${t('fusion avec la dernière version synchronisée : les changements faits dans l’app depuis (récompenses, achats, dégâts…) sont conservés quand Chummer ne les a pas modifiés.')}`
-            : ` — ${t('fiche non liée à Chummer jusqu’ici : les valeurs du fichier remplacent celles de la fiche (historique, notes MJ, portrait et entraînements sont conservés).')}`}
+            ? ` — ${t('merged with the last synced version: changes made in the app since then (rewards, purchases, damage…) are kept when Chummer did not change them.')}`
+            : ` — ${t('sheet not linked to Chummer so far: the file’s values replace the sheet’s (history, GM notes, portrait and training are kept).')}`}
         </div>
         <Warnings list={preview.warnings} i18n={preview.warningsI18n} />
         <DiffView diff={preview.diff} />
         <div className="row spread wrap">
-          <span className="muted small">{needsApproval ? t('Le MJ doit valider cette mise à jour.') : gm ? '' : t('Le MJ a autorisé les mises à jour depuis Chummer.')}</span>
+          <span className="muted small">{needsApproval ? t('The GM must approve this update.') : gm ? '' : t('The GM allows updates from Chummer.')}</span>
           <div className="row">
             <Button variant="ghost" onClick={onClose}>
-              {t('Annuler')}
+              {t('Cancel')}
             </Button>
             <Button variant="primary" disabled={busy || preview.diff?.empty} onClick={onConfirm}>
-              {needsApproval ? t('Envoyer au MJ') : t('Appliquer les changements')}
+              {needsApproval ? t('Send to the GM') : t('Apply changes')}
             </Button>
           </div>
         </div>
@@ -289,20 +289,20 @@ export function ChummerImportButton({ type = 'pc', label, variant = 'ghost', sma
     setBusy(true);
     try {
       const res = await postText<{ actorId: string; warnings?: string[]; warningsI18n?: I18nMessage[] }>(`/api/chummer/import?type=${type}&fileName=${encodeURIComponent(file.name)}`, text);
-      toast(t('Fiche importée : {name}', { name: file.name }), 'success');
+      toast(t('Sheet imported: {name}', { name: file.name }), 'success');
       const warnings = texts(res.warnings, res.warningsI18n);
       if (warnings.length) toast(warnings[0], 'warn', 7000);
       openSheet(res.actorId);
     } catch (err) {
-      toast((err as Error).message || t('Import impossible'), 'error');
+      toast((err as Error).message || t('Import failed'), 'error');
     } finally {
       setBusy(false);
     }
   });
   return (
     <>
-      <Button variant={variant} small={small} disabled={busy} onClick={pick} title={t('Fiche Chummer5a (.chum5) ou export JSON d’une fiche')}>
-        {busy ? t('Import…') : (label ?? t('Importer un .chum5'))}
+      <Button variant={variant} small={small} disabled={busy} onClick={pick} title={t('Chummer5a sheet (.chum5) or JSON sheet export')}>
+        {busy ? t('Importing…') : (label ?? t('Import a .chum5'))}
       </Button>
       {input}
     </>
@@ -317,30 +317,30 @@ export function ChummerExportButton({ actor, small = true }: { actor: { id: stri
     setBusy(true);
     try {
       const r = await downloadChum5(actor);
-      toast(t('{file} téléchargé', { file: r.name }), 'success');
+      toast(t('{file} downloaded', { file: r.name }), 'success');
       if (r.warnings.length || r.warningsI18n.length) setWarn(r);
     } catch (err) {
-      toast((err as Error).message || t('Export impossible'), 'error');
+      toast((err as Error).message || t('Export failed'), 'error');
     } finally {
       setBusy(false);
     }
   };
   return (
     <>
-      <Button small={small} variant="ghost" disabled={busy} onClick={go} title={t('Télécharger la fiche au format Chummer5a pour l’ouvrir et la modifier dans Chummer')}>
-        ⇩ {busy ? t('Export…') : t('Exporter vers Chummer (.chum5)')}
+      <Button small={small} variant="ghost" disabled={busy} onClick={go} title={t('Download the sheet in Chummer5a format to open and edit it in Chummer')}>
+        ⇩ {busy ? t('Exporting…') : t('Export to Chummer (.chum5)')}
       </Button>
       {warn && (
-        <Overlay title={t('Export Chummer : points d’attention')} onClose={() => setWarn(null)} width={560}>
+        <Overlay title={t('Chummer export: points to check')} onClose={() => setWarn(null)} width={560}>
           <div className="col">
             <div className="muted small">
               {warn.mode === 'generate'
-                ? t('{file} a été téléchargé. Le fichier a été généré à partir de la fiche de l’app (aucun fichier Chummer d’origine).', { file: warn.name })
-                : t('{file} a été téléchargé. Le fichier Chummer d’origine a été mis à jour.', { file: warn.name })}
+                ? t('{file} was downloaded. The file was generated from the app’s sheet (no original Chummer file).', { file: warn.name })
+                : t('{file} was downloaded. The original Chummer file was updated.', { file: warn.name })}
             </div>
             <Warnings list={warn.warnings} i18n={warn.warningsI18n} />
             <div className="muted small">
-              {withBold(t('Dans Chummer, utilise {menu} pour recalculer les bonus des objets ajoutés depuis l’app.', { menu: MARK }), t('Spécial › Réappliquer les améliorations'))}
+              {withBold(t('In Chummer, use {menu} to recalculate the bonuses of items added from the app.', { menu: MARK }), t('Special › Re-apply Improvements'))}
             </div>
             <div className="row" style={{ justifyContent: 'flex-end' }}>
               <Button variant="primary" onClick={() => setWarn(null)}>
@@ -365,7 +365,7 @@ export function ChummerUpdateButton({ game, actor, small = true }: { game: GameV
       const p = await postText<Omit<ChummerPreview, 'text' | 'fileName'>>(`/api/chummer/preview?actorId=${encodeURIComponent(actor.id)}&fileName=${encodeURIComponent(file.name)}`, text);
       setPreview({ ...p, text, fileName: file.name });
     } catch (err) {
-      toast((err as Error).message || t('Fichier illisible'), 'error');
+      toast((err as Error).message || t('Unreadable file'), 'error');
     } finally {
       setBusy(false);
     }
@@ -375,18 +375,18 @@ export function ChummerUpdateButton({ game, actor, small = true }: { game: GameV
     setBusy(true);
     try {
       const r = await postText<{ applied?: boolean }>(`/api/chummer/update?actorId=${encodeURIComponent(actor.id)}&fileName=${encodeURIComponent(preview.fileName)}`, preview.text);
-      toast(r.applied ? t('{name} mis à jour depuis Chummer', { name: actor.name }) : t('Demande envoyée au MJ'), r.applied ? 'success' : 'info');
+      toast(r.applied ? t('{name} updated from Chummer', { name: actor.name }) : t('Request sent to the GM'), r.applied ? 'success' : 'info');
       setPreview(null);
     } catch (err) {
-      toast((err as Error).message || t('Mise à jour impossible'), 'error');
+      toast((err as Error).message || t('Could not update'), 'error');
     } finally {
       setBusy(false);
     }
   };
   return (
     <>
-      <Button small={small} variant="ghost" disabled={busy} onClick={pick} title={t('Recharger la fiche depuis un fichier Chummer modifié (aperçu des changements avant validation)')}>
-        ⇧ {busy && !preview ? t('Lecture…') : t('Mettre à jour depuis un .chum5')}
+      <Button small={small} variant="ghost" disabled={busy} onClick={pick} title={t('Reload the sheet from an edited Chummer file (changes previewed before you confirm)')}>
+        ⇧ {busy && !preview ? t('Reading…') : t('Update from a .chum5')}
       </Button>
       {input}
       {preview && <UpdateDialog actor={actor} preview={preview} busy={busy} gm={gm} onConfirm={confirm} onClose={() => setPreview(null)} />}
@@ -404,9 +404,9 @@ export function ChummerSheetBar({ game, actor }: { game: GameView; actor: ViewAc
   const pending = requests.filter((r) => r.actorId === actor.id && r.status === 'pending');
   const lastDone = !gm && requests.filter((r) => r.actorId === actor.id && r.status !== 'pending').sort((a, b) => (b.resolvedAt || 0) - (a.resolvedAt || 0))[0];
   const unlink = async () => {
-    if (!(await confirmAction(t('Délier {name} de son fichier Chummer ? Le prochain export générera un nouveau fichier.', { name: actor.name })))) return;
+    if (!(await confirmAction(t('Unlink {name} from their Chummer file? The next export will generate a new file.', { name: actor.name })))) return;
     send('chummer/unlink', { actorId: actor.id })
-      .then(() => toast(t('Fiche déliée de Chummer'), 'success'))
+      .then(() => toast(t('Sheet unlinked from Chummer'), 'success'))
       .catch(() => {});
   };
   return (
@@ -417,32 +417,32 @@ export function ChummerSheetBar({ game, actor }: { game: GameView; actor: ViewAc
       <span className="chm-status small">
         {info ? (
           <>
-            {withBold(t('Liée à {file}', { file: MARK }), info.fileName || t('un fichier Chummer'))}
-            <span className="faint"> · {t('synchro {when}', { when: fmtWhen(info.syncedAt || info.exportedAt || info.importedAt) })}</span>
+            {withBold(t('Linked to {file}', { file: MARK }), info.fileName || t('a Chummer file'))}
+            <span className="faint"> · {t('synced {when}', { when: fmtWhen(info.syncedAt || info.exportedAt || info.importedAt) })}</span>
             {info.created === false ? (
               <>
                 {' '}
-                <Badge color="amber" title={t('Le personnage n’est pas finalisé dans Chummer')}>
-                  {t('création')}
+                <Badge color="amber" title={t('The character is not finalized in Chummer')}>
+                  {t('creation')}
                 </Badge>
               </>
             ) : null}
           </>
         ) : (
-          <span className="muted">{t('Pas encore lié à Chummer')}</span>
+          <span className="muted">{t('Not linked to Chummer yet')}</span>
         )}
-        {actor.realName && <span className="faint"> · {t('nom réel : {name}', { name: actor.realName })}</span>}
+        {actor.realName && <span className="faint"> · {t('real name: {name}', { name: actor.realName })}</span>}
         {pending.length > 0 && (
           <>
             {' '}
-            <Badge color="amber">{t('mise à jour en attente du MJ')}</Badge>
+            <Badge color="amber">{t('update awaiting GM approval')}</Badge>
           </>
         )}
         {lastDone && (
           <>
             {' '}
             <Badge color={lastDone.status === 'approved' ? 'green' : 'red'} title={lastDone.gmNote || ''}>
-              {lastDone.status === 'approved' ? t('dernière demande validée') : t('dernière demande refusée')}
+              {lastDone.status === 'approved' ? t('last request approved') : t('last request denied')}
             </Badge>
           </>
         )}
@@ -452,12 +452,12 @@ export function ChummerSheetBar({ game, actor }: { game: GameView; actor: ViewAc
         <ChummerUpdateButton game={game} actor={actor} />
         {!gm && pending.length > 0 && (
           <Button small variant="ghost" onClick={() => send('chummer/cancel', { requestId: pending[0].id }).catch(() => {})}>
-            {t('Annuler la demande')}
+            {t('Cancel request')}
           </Button>
         )}
         {gm && info && (
-          <Button small variant="ghost" onClick={unlink} title={t('Oublier le fichier Chummer associé')}>
-            {t('Délier')}
+          <Button small variant="ghost" onClick={unlink} title={t('Forget the linked Chummer file')}>
+            {t('Unlink')}
           </Button>
         )}
       </div>
@@ -477,7 +477,7 @@ function RequestRow({ game, r }: { game: GameView; r: ChummerRequestView }) {
     setBusy(true);
     try {
       await send('chummer/resolve', { requestId: r.id, approve });
-      toast(approve ? t('{name} mis à jour', { name }) : t('Demande refusée'), approve ? 'success' : 'info');
+      toast(approve ? t('{name} updated', { name }) : t('Request denied'), approve ? 'success' : 'info');
       setOpen(false);
     } catch {
     } finally {
@@ -491,35 +491,35 @@ function RequestRow({ game, r }: { game: GameView; r: ChummerRequestView }) {
         <button type="button" className="chm-req-name" onClick={() => actor && openSheet(actor.id)}>
           {name}
         </button>
-        <span className="muted small">{t('par {user} · {when} · {file}', { user: r.userName, when: fmtWhen(r.ts), file: r.fileName || t('fichier .chum5') })}</span>
+        <span className="muted small">{t('by {user} · {when} · {file}', { user: r.userName, when: fmtWhen(r.ts), file: r.fileName || t('.chum5 file') })}</span>
         <div className="small">{summary}</div>
       </div>
       <div className="row gap-s">
         <Button small variant="ghost" onClick={() => setOpen(true)}>
-          {t('Voir les changements')}
+          {t('View changes')}
         </Button>
         <Button small variant="danger" disabled={busy} onClick={() => resolve(false)}>
-          {t('Refuser')}
+          {t('Deny')}
         </Button>
         <Button small variant="primary" disabled={busy} onClick={() => resolve(true)}>
-          {t('Valider')}
+          {t('Approve')}
         </Button>
       </div>
       {open && (
-        <Overlay title={t('Demande de {user} — {name}', { user: r.userName, name })} onClose={() => setOpen(false)} width={680}>
+        <Overlay title={t('Request from {user} — {name}', { user: r.userName, name })} onClose={() => setOpen(false)} width={680}>
           <div className="col">
-            <div className="muted small">{t('Changements calculés à l’envoi de la demande ; ils seront recalculés sur la fiche actuelle au moment de la validation.')}</div>
+            <div className="muted small">{t('Changes computed when the request was sent; they will be recomputed against the current sheet when you approve.')}</div>
             <Warnings list={r.warnings} i18n={r.warningsI18n} />
             <DiffView diff={r.diff} />
             <div className="row" style={{ justifyContent: 'flex-end' }}>
               <Button variant="ghost" onClick={() => setOpen(false)}>
-                {t('Fermer')}
+                {t('Close')}
               </Button>
               <Button variant="danger" disabled={busy} onClick={() => resolve(false)}>
-                {t('Refuser')}
+                {t('Deny')}
               </Button>
               <Button variant="primary" disabled={busy} onClick={() => resolve(true)}>
-                {t('Valider')}
+                {t('Approve')}
               </Button>
             </div>
           </div>
@@ -537,14 +537,14 @@ export function ChummerGmPanel({ game }: { game: GameView }) {
     <section className="panel chm-panel">
       <header className="panel-head">
         <h3>
-          <span className="chm-logo">C5</span> Chummer {pending.length > 0 && <Badge color="amber">{t('{n} demande(s)', { n: pending.length })}</Badge>}
+          <span className="chm-logo">C5</span> Chummer {pending.length > 0 && <Badge color="amber">{t('{n} request(s)', { n: pending.length })}</Badge>}
         </h3>
         <div className="panel-actions">
           <Toggle
             value={s.allowPlayerImport !== false}
             onChange={(v) => send('chummer/settings', { allowPlayerImport: v }).catch(() => {})}
-            label={t('Autoriser les joueurs à importer depuis Chummer')}
-            title={t('Activé : les joueurs mettent à jour leur fiche eux-mêmes. Désactivé : chaque envoi crée une demande à valider ici.')}
+            label={t('Allow players to import from Chummer')}
+            title={t('On: players update their own sheet. Off: each upload creates a request to approve here.')}
           />
         </div>
       </header>
@@ -558,8 +558,8 @@ export function ChummerGmPanel({ game }: { game: GameView }) {
         ) : (
           <div className="muted small">
             {s.allowPlayerImport !== false
-              ? t('Les joueurs peuvent exporter leur fiche (.chum5), la modifier dans Chummer puis la recharger eux-mêmes depuis leur fiche.')
-              : t('Les mises à jour envoyées par les joueurs apparaîtront ici pour validation.')}
+              ? t('Players can export their sheet (.chum5), edit it in Chummer, then reload it themselves from their sheet.')
+              : t('Updates sent by players will appear here for approval.')}
           </div>
         )}
       </div>

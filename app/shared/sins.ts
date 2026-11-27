@@ -24,31 +24,31 @@ export const MAX_DEVICE_RATING = 6;
 
 /** Fake SIN Details table (p. 363), paraphrased: what an identity of each rating holds up to. */
 export const FAKE_SIN_DETAILS: Record<number, string> = {
-  1: tk('N’importe qui : âge, sexe ou nationalité peuvent ne pas coller, aucune donnée annexe'),
-  2: tk('Ressemblance grossière : le sexe colle, l’âge et la nationalité à peu près, aucune donnée annexe'),
-  3: tk('Bonne ressemblance : sexe, âge et nationalité corrects, données annexes visiblement fausses'),
-  4: tk('Plausible au premier coup d’œil : les données annexes passent un contrôle rapide'),
-  5: tk('Bon profil : tout colle, biométrie valide d’une autre personne, un peu d’historique'),
-  6: tk('Vie de rechange : biométrie avec échantillons, historique complet et crédible'),
+  1: tk('Anybody: age, sex or nationality may not match, no supporting data'),
+  2: tk('Rough match: sex matches, age and nationality roughly, no supporting data'),
+  3: tk('Good match: sex, age and nationality right, supporting data obviously fake'),
+  4: tk('Casually plausible: supporting data holds up to a cursory check'),
+  5: tk('Good fit: everything matches, valid biometrics of another person, some history'),
+  6: tk('Alternate life: biometrics with samples, complete and believable history'),
 };
 
 /** SIN Verification Details table (p. 364), paraphrased: what a system of each rating checks. */
 export const VERIFICATION_DETAILS: Record<number, string> = {
-  1: tk('As-tu un SIN ?'),
-  2: tk('Cohérence du numéro et de l’état civil'),
-  3: tk('Cohérence + recherche des données externes liées au SIN'),
-  4: tk('État civil vérifié, données externes recoupées, biométrie exigée'),
-  5: tk('Vérification complète, biométrie comparée à un échantillon'),
-  6: tk('Tout est vérifié : plusieurs échantillons biométriques, données annexes recoupées'),
+  1: tk('Do you have a SIN?'),
+  2: tk('Consistency of the number and vital statistics'),
+  3: tk('Consistency + query for external data attached to the SIN'),
+  4: tk('Vital statistics verified, external data cross-checked, biometrics required'),
+  5: tk('Full verification, biometrics tested against a sample'),
+  6: tk('Everything verified: multiple biometric samples, supporting data checked externally'),
 };
 
 /** Short tag of each outcome (log line, card stamp). */
 export const OUTCOME_LABELS: Record<SinOutcome, string> = {
-  pass: tk('Accepté'),
-  odd: tk('Anomalie'),
-  burned: tk('Grillé'),
-  auto: tk('Grillé'),
-  real: tk('Accepté'),
+  pass: tk('Accepted'),
+  odd: tk('Odd'),
+  burned: tk('Burned'),
+  auto: tk('Burned'),
+  real: tk('Accepted'),
 };
 
 const clamp = (n: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, n));

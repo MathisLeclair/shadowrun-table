@@ -15,9 +15,9 @@ export default function MySheet({ game }: GameProps) {
     return <div className="page">
       <div className="sh-nochar">
         <div className="logo-mark" />
-        <h2>{t('Aucun personnage')}</h2>
+        <h2>{t('No character')}</h2>
         <p className="muted">
-          {tRich(t('Le MJ ne t’a pas encore attribué de personnage. Demande-lui de t’en assigner un depuis l’onglet {tab} — ta fiche apparaîtra ici automatiquement.'), { tab: <b>{t('Personnages')}</b> })}
+          {tRich(t('The GM hasn\'t assigned you a character yet. Ask them to assign you one from the {tab} tab — your sheet will show up here automatically.'), { tab: <b>{t('Characters')}</b> })}
         </p>
       </div>
     </div>;
@@ -26,6 +26,6 @@ export default function MySheet({ game }: GameProps) {
   return <div className="page sh-mysheet">
     {ids.length > 1 &&
     <Tabs className="sh-mytabs" tabs={ids.map((id) => ({ id, label: <span className="row gap-s"><Avatar actor={game.actors[id]} size={18} />{game.actors[id].name}</span> }))} value={current} onChange={setSel} />}
-    {game.actors[current] ? <SheetView key={current} game={game} actorId={current} /> : <Empty>{t('Personnage introuvable.')}</Empty>}
+    {game.actors[current] ? <SheetView key={current} game={game} actorId={current} /> : <Empty>{t('Character not found.')}</Empty>}
   </div>;
 }

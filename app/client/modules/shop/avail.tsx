@@ -48,17 +48,17 @@ export function liveTests(game: GameView, actorId: ActorId): LiveAvailTest[] {
 }
 
 /** « 3 succès contre 1 (dispo 8R) » */
-const scoreText = (x: TestLike) => t('{hits} succès contre {opp} (dispo {avail})', { hits: x.hits, opp: x.availHits, avail: `${x.avail}${x.legality || ''}` });
+const scoreText = (x: TestLike) => t('{hits} hits vs {opp} (Availability {avail})', { hits: x.hits, opp: x.availHits, avail: `${x.avail}${x.legality || ''}` });
 
 /** « Trouvé — délai 12 h » / « Trouvé de justesse (égalité) — délai 2 jours », + « complication » on a glitch. */
 function foundText(o: TestLike) {
-  const s = o.tie ? t('Trouvé de justesse (égalité) — délai {delay}', { delay: durText(o.delayHours) }) : t('Trouvé — délai {delay}', { delay: durText(o.delayHours) });
-  return o.glitch ? `${s} · ${t('complication : le MJ décide')}` : s;
+  const s = o.tie ? t('Barely found (tie) — takes {delay}', { delay: durText(o.delayHours) }) : t('Found — takes {delay}', { delay: durText(o.delayHours) });
+  return o.glitch ? `${s} · ${t('glitch: GM’s call')}` : s;
 }
 /** « Introuvable (2 contre 3) — nouvel essai après 2 jours en jeu » / critical glitch: no chance to get it. */
 function failText(o: TestLike) {
-  if (o.critGlitch) return t('Échec critique : aucune chance d’obtenir cet objet (le MJ décide de la suite)');
-  return t('Introuvable ({hits} contre {opp}) — nouvel essai après {time} en jeu', { hits: o.hits, opp: o.availHits, time: durText(o.retryHours) });
+  if (o.critGlitch) return t('Critical glitch: no chance of getting this item (GM decides what happens)');
+  return t('Not found ({hits} vs {opp}) — try again after {time} in game', { hits: o.hits, opp: o.availHits, time: durText(o.retryHours) });
 }
 
 interface AvailCartRowProps {
@@ -120,7 +120,7 @@ export function AvailCartRow({ game, actor, p, match, last, required }: AvailCar
   let status;
   const by = (x: LiveAvailTest) =>
     (x.contactName ? ` · ${t('via {contact}', { contact: x.contactName })}` : '') +
-    (x.found && x.overpay ? ` · ${t('surenchère +{pct} % (+{cost})', { pct: x.overpay * 25, cost: nuyen(overpaySurcharge(unit, x.overpay) * (p.line.qty || 1)) })}` : '');
+    (x.found && x.overpay ? ` · ${t('overpay +{pct} % (+{cost})', { pct: x.overpay * 25, cost: nuyen(overpaySurcharge(unit, x.overpay) * (p.line.qty || 1)) })}` : '');
   if (match)
     status = (
       <span className={'shop-avt ' + (match.glitch ? 'todo' : 'ok')} title={scoreText(match)}>
@@ -138,7 +138,7 @@ export function AvailCartRow({ game, actor, p, match, last, required }: AvailCar
   else
     status = (
       <span className={'shop-avt ' + (required ? 'todo' : 'opt')}>
-        {required ? t('Test de disponibilité requis (dispo {avail})', { avail: `${avail}${legality}` }) : t('Test de disponibilité possible (dispo {avail})', { avail: `${avail}${legality}` })}
+        {required ? t('Availability test required (Availability {avail})', { avail: `${avail}${legality}` }) : t('Availability test available (Availability {avail})', { avail: `${avail}${legality}` })}
       </span>
     );
 
@@ -148,7 +148,7 @@ export function AvailCartRow({ game, actor, p, match, last, required }: AvailCar
         {status}
         {!match && (
           <Button small variant={open ? 'ghost' : 'default'} onClick={() => setOpen(!open)}>
-            {open ? t('Fermer') : last ? t('🎲 Relancer') : t('🎲 Chercher')}
+            {open ? t('Close') : last ? t('🎲 Try again') : t('🎲 Search')}
           </Button>
         )}
       </div>
@@ -156,12 +156,12 @@ export function AvailCartRow({ game, actor, p, match, last, required }: AvailCar
         <div className="shop-avt-panel small">
           {contacts.length > 0 && (
             <label className="row gap-s">
-              {t('Qui cherche ?')}
+              {t('Who searches?')}
               <select className="input grow" value={who} onChange={(e) => setWho(e.target.value)}>
-                <option value="">{t('{name} (Négociation + Charisme)', { name: actor.name })}</option>
+                <option value="">{t('{name} (Negotiation + Charisma)', { name: actor.name })}</option>
                 {contacts.map((c) => (
                   <option key={c.id} value={c.id} disabled={!c.known}>
-                    {c.known ? t('{name} — contact, {n} dés [lim. {limit}]', { name: c.name, n: c.pool, limit: c.limit }) : t('{name} — contact sans fiche', { name: c.name })}
+                    {c.known ? t('{name} — contact, {n} dice [limit {limit}]', { name: c.name, n: c.pool, limit: c.limit }) : t('{name} — contact without stats', { name: c.name })}
                   </option>
                 ))}
               </select>
@@ -169,48 +169,48 @@ export function AvailCartRow({ game, actor, p, match, last, required }: AvailCar
           )}
           {contact ? (
             <div>
-              {t('{name} fait le test : Charisme {cha} + Négociation {neg} [Social {social} + Connexion {conn}] contre {n} dés de disponibilité', {
+              {t('{name} makes the test: Charisma {cha} + Negotiation {neg} [Social {social} + Connection {conn}] vs {n} Availability dice', {
                 name: contact.name,
                 cha: contact.cha,
-                neg: contact.defaulting ? t('par défaut') : contact.negotiation,
+                neg: contact.defaulting ? t('defaulting') : contact.negotiation,
                 social: contact.social,
                 conn: contact.connection,
                 n: avail,
               })}
             </div>
           ) : (
-            <div>{t('Négociation + Charisme [Social] contre {n} dés de disponibilité', { n: avail })}</div>
+            <div>{t('Negotiation + Charisma [Social] vs {n} Availability dice', { n: avail })}</div>
           )}
           <div className="muted">
-            {t('Délai : {time} (selon le prix) ÷ succès nets. Égalité : trouvé, mais en {double}. Échec : nouvel essai après {double}.', { time: baseTime, double: doubleTime })}
+            {t('Delivery: {time} (by price) ÷ net hits. Tie: found, but takes {double}. Failure: try again after {double}.', { time: baseTime, double: doubleTime })}
           </div>
-          {contacts.some((c) => !c.known) && <div className="faint">{t('Un contact sans fiche peut chercher dès que le MJ crée un PNJ du même nom dans le Bestiaire.')}</div>}
+          {contacts.some((c) => !c.known) && <div className="faint">{t('A contact without stats can search once the GM creates an NPC with the same name in the Bestiary.')}</div>}
           <div className="row wrap gap-l">
-            {!contact && sk?.spec && <Toggle value={useSpec} onChange={setUseSpec} label={t('Spécialisation ({spec}) +2', { spec: sk.spec })} />}
-            {!contact && canEdge && <Toggle value={explode} onChange={setExplode} label={t('Repousser les limites (+{n}, Chance)', { n: attr(actor, 'EDG') })} />}
+            {!contact && sk?.spec && <Toggle value={useSpec} onChange={setUseSpec} label={t('Specialization ({spec}) +2', { spec: sk.spec })} />}
+            {!contact && canEdge && <Toggle value={explode} onChange={setExplode} label={t('Push the Limit (+{n}, Edge)', { n: attr(actor, 'EDG') })} />}
             <span className="row gap-s">
-              {t('Modificateur')} <NumberInput small value={modifier} min={-20} max={20} onChange={setModifier} />
+              {t('Edit')} <NumberInput small value={modifier} min={-20} max={20} onChange={setModifier} />
             </span>
-            <span className="row gap-s" title={t('SR5 p. 418 : +1 dé par tranche de 25 % du prix proposée en plus, 12 dés max (400 % du prix). Payé seulement à l’achat.')}>
-              {t('Surenchère (dés)')} <NumberInput small value={overpay} min={0} max={MAX_OVERPAY_DICE} onChange={setOverpay} />
-              {extra ? <span className="amber">{t('+{pct} % du prix = +{cost}', { pct: extra * 25, cost: nuyen(overpaySurcharge(unit, extra) * (p.line.qty || 1)) })}</span> : null}
+            <span className="row gap-s" title={t('SR5 p. 418: +1 die per extra 25 % of the price offered, 12 dice max (400 % of the price). Only paid when you buy.')}>
+              {t('Overpay (dice)')} <NumberInput small value={overpay} min={0} max={MAX_OVERPAY_DICE} onChange={setOverpay} />
+              {extra ? <span className="amber">{t('+{pct} % of the price = +{cost}', { pct: extra * 25, cost: nuyen(overpaySurcharge(unit, extra) * (p.line.qty || 1)) })}</span> : null}
             </span>
           </div>
           <div className="row spread gap-s">
             {contact ? (
               <span>
-                <strong className="mono">{t('{n} dés', { n: pool })}</strong> <span className="faint">{t('[lim. {n}]', { n: contact.limit })}</span>
+                <strong className="mono">{t('{n} dice', { n: pool })}</strong> <span className="faint">{t('[limit {n}]', { n: contact.limit })}</span>
               </span>
             ) : (
               <span>
-                <strong className="mono">{t('≈ {n} dés', { n: pool })}</strong>
-                {base.defaulting ? <span className="amber"> {t('(par défaut)')}</span> : null}
-                {wounds ? <span className="faint"> {t('(blessures {n})', { n: wounds })}</span> : null}
-                <span className="faint"> · {t('bonus d’équipement et limite calculés au lancer')}</span>
+                <strong className="mono">{t('≈ {n} dice', { n: pool })}</strong>
+                {base.defaulting ? <span className="amber"> {t('(defaulting)')}</span> : null}
+                {wounds ? <span className="faint"> {t('(wounds {n})', { n: wounds })}</span> : null}
+                <span className="faint"> · {t('gear bonuses and limit computed on the roll')}</span>
               </span>
             )}
             <Button small variant="primary" disabled={busy || pool <= 0} onClick={roll}>
-              {t('Lancer')}
+              {t('Roll')}
             </Button>
           </div>
         </div>
@@ -232,20 +232,20 @@ export function AvailRollLine({ roll, Dice }: AvailRollLineProps) {
   const out = availOutcome({ hits: roll.hits, availHits: a.hits, baseHours: a.baseHours, glitch: roll.glitch, critGlitch: roll.critGlitch }) as AvailOutcome;
   return (
     <div className="shop-avt-log small">
-      <span className="faint">{t('Disponibilité {avail} : {n} succès', { avail: `${a.value}${a.legality || ''}`, n: a.hits })}</span>
+      <span className="faint">{t('Availability {avail}: {n} hits', { avail: `${a.value}${a.legality || ''}`, n: a.hits })}</span>
       {Dice ? <Dice roll={{ dice: a.dice }} small /> : null}
       {out.found ? (
         <span className={'shop-avt ' + (out.glitch ? 'todo' : 'ok')}>
-          {out.tie ? t('égalité — trouvé en {delay}', { delay: durText(out.delayHours) }) : t('{net} succès net(s) — trouvé en {delay}', { net: out.net, delay: durText(out.delayHours) })}
-          {out.glitch ? ` · ${t('complication : le MJ décide')}` : ''}
+          {out.tie ? t('tie — found in {delay}', { delay: durText(out.delayHours) }) : t('{net} net hit(s) — found in {delay}', { net: out.net, delay: durText(out.delayHours) })}
+          {out.glitch ? ` · ${t('glitch: GM’s call')}` : ''}
         </span>
       ) : (
         <span className="shop-avt bad">
-          {out.critGlitch ? t('Échec critique : aucune chance d’obtenir cet objet (le MJ décide de la suite)') : t('Introuvable — nouvel essai après {time} en jeu', { time: durText(out.retryHours) })}
+          {out.critGlitch ? t('Critical glitch: no chance of getting this item (GM decides what happens)') : t('Not found — try again after {time} in game', { time: durText(out.retryHours) })}
         </span>
       )}
       {a.contact ? <span className="faint">{t('via {contact}', { contact: a.contact })}</span> : null}
-      {a.tries > 1 ? <span className="faint">{t('essai n° {n}', { n: a.tries })}</span> : null}
+      {a.tries > 1 ? <span className="faint">{t('attempt #{n}', { n: a.tries })}</span> : null}
     </div>
   );
 }

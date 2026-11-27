@@ -63,7 +63,7 @@ function loadWorld(worldPath: string): FoundryWorld {
   const key = `${path.resolve(worldPath).toLowerCase()}|${worldFingerprint(worldPath, COLLECTIONS)}`;
   if (cache?.key === key) return cache.world;
   const world = readWorldSync(worldPath);
-  if (world.meta?.system && world.meta.system !== 'shadowrun5e') throw i18nError({ t: 'Ce monde utilise le système « {system} », pas shadowrun5e', params: { system: world.meta.system } });
+  if (world.meta?.system && world.meta.system !== 'shadowrun5e') throw i18nError({ t: 'This world uses the “{system}” system, not shadowrun5e', params: { system: world.meta.system } });
   cache = { key, world };
   return world;
 }
@@ -78,11 +78,11 @@ function resolveWorldPath(state: TableState, payloadPath: unknown): string {
 /** Error message when this table may not read that folder (another table's upload, or any local path on a shared server). */
 function worldPathError(worldPath: string): string | null {
   const table = currentTable();
-  if (!worldPath) return tk('Aucun monde Foundry : téléverse le dossier du monde (.zip) ci-dessus');
+  if (!worldPath) return tk('No Foundry world: upload the world folder (.zip) above');
   if (table && isInsideUploads(table, worldPath)) return null;
-  if (!localPathsAllowed()) return tk('Sur ce serveur, seuls les mondes téléversés pour cette table sont lisibles');
+  if (!localPathsAllowed()) return tk('On this server, only worlds uploaded for this table can be read');
   const tablesRoot = path.resolve(table ? path.dirname(table.dir) : '.').toLowerCase();
-  if (path.resolve(worldPath).toLowerCase().startsWith(tablesRoot + path.sep)) return tk('Ce dossier appartient à une autre table');
+  if (path.resolve(worldPath).toLowerCase().startsWith(tablesRoot + path.sep)) return tk('This folder belongs to another table');
   return null;
 }
 
@@ -117,11 +117,11 @@ function startAudioCopy(ctx: ActionContext, bundle: FoundryBundle, urls: Set<str
       if (p.done === p.total || p.done % 3 === 0) emit('foundry/audio', { ...job(), running: p.done < p.total });
     })
     .then((r: { copied: number; skipped: number; bytes: number; errors: unknown[] }) => {
-      const copied = plural(r.copied, { t: 'zero::{n} fichier copié' }, { t: '{n} fichier copié' }, { t: '{n} fichiers copiés' });
+      const copied = plural(r.copied, { t: 'zero::{n} files copied' }, { t: '{n} file copied' }, { t: '{n} files copied' });
       const params = { copied, skipped: r.skipped, size: bytesParam(r.bytes), errors: r.errors.length };
       const i18n = r.errors.length
-        ? { key: tk('Import Foundry : audio prêt — {copied}, {skipped} déjà à jour ({size}), {errors} erreur(s)'), params }
-        : { key: tk('Import Foundry : audio prêt — {copied}, {skipped} déjà à jour ({size})'), params };
+        ? { key: tk('Foundry import: audio ready — {copied}, {skipped} already up to date ({size}), {errors} error(s)'), params }
+        : { key: tk('Foundry import: audio ready — {copied}, {skipped} already up to date ({size})'), params };
       ctx.log({ kind: 'system', gmOnly: true, author: 'Foundry', i18n });
       emit('foundry/audio', { ...job(), done: job().total, running: false, errors: r.errors.slice(0, 10) });
       helpers?.saveSoon?.();
@@ -197,7 +197,7 @@ const mod: ServerModule<HttpApp> = {
           res = applyImport(ctx.state, bundle, { select: sel, pcMode, now: ctx.now, docsDir: docsOut(), sanitizeTemplate, assignPlayers: !!assignPlayers });
         } catch (err) {
           console.error('[foundry] import', err);
-          ctx.fail('Import interrompu : {error}', { error: errorParam(err) });
+          ctx.fail('Import aborted: {error}', { error: errorParam(err) });
         }
         const copied = bundle.assets.copySync({ kinds: ['img', 'scene', 'thumb', 'journal'], urls: res.urls.sync });
         const audio = startAudioCopy(ctx, bundle, res.urls.audio);
@@ -245,14 +245,14 @@ const mod: ServerModule<HttpApp> = {
     app.post('/api/foundry/upload', h.requireGM, async (req: Req, res: Res) => {
       const table = currentTable()!;
       const kind = req.query.kind === 'data' ? 'data' : 'world';
-      if (uploadBusy.has(table.id)) return res.status(409).json(errorBody('Un envoi est déjà en cours pour cette table'));
+      if (uploadBusy.has(table.id)) return res.status(409).json(errorBody('An upload is already in progress for this table'));
       uploadBusy.add(table.id);
       const tmp = path.join(TMP_DIR, `foundry-${table.id}-${crypto.randomBytes(4).toString('hex')}.zip`);
       try {
         await receiveToFile(req, tmp, { maxBytes: MAX_UPLOAD });
         if (kind === 'data') {
           const r = await installDataZip(table, tmp);
-          h.addLog({ kind: 'system', gmOnly: true, author: 'Foundry', i18n: { key: 'Fichiers Foundry ajoutés sur le serveur : {n} fichier(s), {size}.', params: { n: r.files, size: bytesParam(r.bytes) } } });
+          h.addLog({ kind: 'system', gmOnly: true, author: 'Foundry', i18n: { key: 'Foundry files added on the server: {n} file(s), {size}.', params: { n: r.files, size: bytesParam(r.bytes) } } });
           h.saveSoon();
           h.scheduleBroadcast();
           return res.json({ kind, ...r, size: formatBytes(r.bytes) });
@@ -260,14 +260,14 @@ const mod: ServerModule<HttpApp> = {
         const world = await installWorldZip(table, tmp);
         cache = null;
         ensureSlice(table.state).worldPath = world.path;
-        h.addLog({ kind: 'system', gmOnly: true, author: 'Foundry', i18n: { key: 'Monde Foundry téléversé : {world}. Lance « Analyser » pour l’importer.', params: { world: world.title } } });
+        h.addLog({ kind: 'system', gmOnly: true, author: 'Foundry', i18n: { key: 'Foundry world uploaded: {world}. Click “Scan” to import it.', params: { world: world.title } } });
         h.saveSoon();
         h.scheduleBroadcast();
         res.json({ kind, world });
       } catch (e) {
         const err = e as FoundryError;
         if (!(err instanceof ZipError)) console.error('[foundry] upload', err);
-        if (!res.headersSent) res.status(err.status || 500).json(errBody(err, tk('Envoi impossible')));
+        if (!res.headersSent) res.status(err.status || 500).json(errBody(err, tk('Upload failed')));
       } finally {
         uploadBusy.delete(table.id);
         fs.rm(tmp, { force: true }, () => {});
@@ -277,11 +277,11 @@ const mod: ServerModule<HttpApp> = {
     // Remove every uploaded world / asset of this table (imported maps & portraits stay: they were copied).
     app.delete('/api/foundry/uploads', h.requireGM, (req: Req, res: Res) => {
       const table = currentTable()!;
-      if (uploadBusy.has(table.id)) return res.status(409).json(errorBody('Un envoi est en cours pour cette table'));
+      if (uploadBusy.has(table.id)) return res.status(409).json(errorBody('An upload is in progress for this table'));
       try {
         removeUploads(table);
       } catch (err) {
-        return res.status(500).json(errorBody('Suppression impossible : {error}', { error: errorParam(err) }));
+        return res.status(500).json(errorBody('Could not delete: {error}', { error: errorParam(err) }));
       }
       const f = ensureSlice(table.state);
       if (isInsideUploads(table, f.worldPath)) f.worldPath = '';

@@ -45,7 +45,7 @@ function SkillSelect({ value, onChange, only }: { value: string | null | undefin
   return (
     <select className="input" value={value || ''} onChange={(e) => onChange(e.target.value)}>
       <option value="">—</option>
-      {custom && <option value={value}>{t('{name} (perso)', { name: value })}</option>}
+      {custom && <option value={value}>{t('{name} (custom)', { name: value })}</option>}
       {cats.map((g) => (
         <optgroup key={g.cat} label={g.label}>
           {g.skills.map((s) => (
@@ -136,8 +136,8 @@ function ListEditor({ items, onChange, cols, newItem, addLabel, extra }: ListEdi
                     return <td key={c.key}>{ctl}</td>;
                   })}
                   <td className="row gap-s" style={{ flexWrap: 'nowrap' }}>
-                    <IconButton icon="↑" title={t('Monter')} onClick={() => move(i, -1)} />
-                    <IconButton icon="✕" title={t('Supprimer')} onClick={() => remove(i)} />
+                    <IconButton icon="↑" title={t('Move up')} onClick={() => move(i, -1)} />
+                    <IconButton icon="✕" title={t('Delete')} onClick={() => remove(i)} />
                   </td>
                 </tr>
               ))}
@@ -147,7 +147,7 @@ function ListEditor({ items, onChange, cols, newItem, addLabel, extra }: ListEdi
       )}
       <div className="row wrap">
         <Button small onClick={() => onChange([...list, { id: uid('it'), ...newItem() }])}>
-          + {addLabel || t('Ajouter')}
+          + {addLabel || t('Add')}
         </Button>
         {extra}
       </div>
@@ -169,19 +169,19 @@ function CatalogPicker({ name, onPick, onClose }: { name: PickerCatalog; onPick:
     return list.slice(0, 80);
   }, [items, q]);
   return (
-    <Panel title={name === 'weapons' ? t('Catalogue d’armes') : t('Catalogue d’armures')} actions={<IconButton icon="✕" title={t('Fermer le catalogue')} onClick={onClose} />}>
+    <Panel title={name === 'weapons' ? t('Weapons catalog') : t('Armor catalog')} actions={<IconButton icon="✕" title={t('Close the catalog')} onClick={onClose} />}>
       <div className="bed-cat">
-        <SearchBox value={q} onChange={setQ} placeholder={t('Nom, catégorie…')} />
+        <SearchBox value={q} onChange={setQ} placeholder={t('Name, category…')} />
         {!items.length ? (
-          <Empty>{t('Catalogue indisponible (pas encore généré). Ajoute l’objet à la main.')}</Empty>
+          <Empty>{t('Catalog unavailable (not generated yet). Add the item by hand.')}</Empty>
         ) : (
           <div className="bed-cat-list">
             {filtered.map((it) => {
               const s = it.stats || {};
               const info =
                 name === 'weapons'
-                  ? [s.damage, s.ap ? t('PA {n}', { n: s.ap }) : '', s.mode, s.accuracy ? t('Préc {n}', { n: s.accuracy }) : ''].filter(Boolean).join(' · ')
-                  : t('Armure {n}', { n: s.armor ?? '?' });
+                  ? [s.damage, s.ap ? t('AP {n}', { n: s.ap }) : '', s.mode, s.accuracy ? t('Acc {n}', { n: s.accuracy }) : ''].filter(Boolean).join(' · ')
+                  : t('Armor {n}', { n: s.armor ?? '?' });
               const category = getLang() === 'fr' ? it.categoryFr || it.category || '' : it.category || it.categoryFr || '';
               return (
                 <div key={it.id} className="bed-cat-item" onClick={() => onPick(it)}>
@@ -192,7 +192,7 @@ function CatalogPicker({ name, onPick, onClose }: { name: PickerCatalog; onPick:
                 </div>
               );
             })}
-            {!filtered.length && <Empty>{t('Aucun résultat.')}</Empty>}
+            {!filtered.length && <Empty>{t('No results.')}</Empty>}
           </div>
         )}
       </div>
@@ -226,16 +226,16 @@ function armorFromCatalog(it: LooseCatalogItem): Partial<Armor> {
 
 type TabId = 'id' | 'attr' | 'skills' | 'gear' | 'magic' | 'notes' | 'preview';
 const TABS: Array<{ id: TabId; label: string }> = [
-  { id: 'id', label: tk('Identité') },
-  { id: 'attr', label: tk('Attributs') },
-  { id: 'skills', label: tk('Compétences') },
-  { id: 'gear', label: tk('Armes & armure') },
-  { id: 'magic', label: tk('Pouvoirs & sorts') },
-  { id: 'notes', label: tk('Notes & tactique') },
-  { id: 'preview', label: tk('Aperçu') },
+  { id: 'id', label: tk('Identity') },
+  { id: 'attr', label: tk('Attributes') },
+  { id: 'skills', label: tk('Skills') },
+  { id: 'gear', label: tk('Weapons & armor') },
+  { id: 'magic', label: tk('Powers & spells') },
+  { id: 'notes', label: tk('Notes & tactics') },
+  { id: 'preview', label: tk('Preview') },
 ];
 /** Stored spell categories (French values) for the spell list editor. */
-const SPELL_CATS = [tk('Combat'), tk('Détection'), tk('Santé'), tk('Illusion'), tk('Manipulation')];
+const SPELL_CATS = [tk('Combat'), tk('Detection'), tk('Health'), tk('Illusion'), tk('Manipulation')];
 const DEFAULT_FOLDER = 'Divers';
 
 interface TemplateEditorProps {
@@ -262,11 +262,11 @@ export default function TemplateEditor({ template, folders, onSave, onClose }: T
   const hasMonitors = !!draft.monitors;
 
   const requestClose = () => {
-    if (JSON.stringify(draft) !== initialJson && !window.confirm(t('Abandonner les modifications de ce modèle ?'))) return;
+    if (JSON.stringify(draft) !== initialJson && !window.confirm(t('Discard the changes to this template?'))) return;
     onClose();
   };
   const save = async () => {
-    if (!String(draft.name || '').trim()) return toast(t('Donne un nom au modèle'), 'warn');
+    if (!String(draft.name || '').trim()) return toast(t('Give the template a name'), 'warn');
     setSaving(true);
     try {
       // Explicit nulls so that removed optional blocks are removed server-side too.
@@ -283,7 +283,7 @@ export default function TemplateEditor({ template, folders, onSave, onClose }: T
       const r = await upload(f);
       set(['portrait'], r.url);
     } catch (err) {
-      toast((err as Error).message || t('Échec du téléversement'), 'error');
+      toast((err as Error).message || t('Upload failed'), 'error');
     }
   };
 
@@ -294,7 +294,7 @@ export default function TemplateEditor({ template, folders, onSave, onClose }: T
       onPick={(it) => {
         if (picker === 'weapons') set(['weapons'], [...(draft.weapons || []), weaponFromCatalog(it)]);
         else set(['armor'], [...(draft.armor || []), armorFromCatalog(it)]);
-        toast(t('{name} ajouté', { name: itemName(it) }), 'success', 1800);
+        toast(t('{name} added', { name: itemName(it) }), 'success', 1800);
       }}
     />
   );
@@ -304,10 +304,10 @@ export default function TemplateEditor({ template, folders, onSave, onClose }: T
     body = (
       <div className="bed">
         <div className="bed-grid">
-          <F label={t('Nom')}>
+          <F label={t('Name')}>
             <TextInput live value={draft.name} onChange={(v) => set(['name'], v)} />
           </F>
-          <F label={t('Dossier')}>
+          <F label={t('Folder')}>
             <input className="input" list="bst-folders" value={draft.folder || ''} onChange={(e) => set(['folder'], e.target.value)} />
             <datalist id="bst-folders">
               {folders.map((f) => (
@@ -315,7 +315,7 @@ export default function TemplateEditor({ template, folders, onSave, onClose }: T
               ))}
             </datalist>
           </F>
-          <F label={t('Métatype / type')}>
+          <F label={t('Metatype / type')}>
             <input className="input" list="bst-metatypes" value={draft.metatype || ''} onChange={(e) => set(['metatype'], e.target.value)} />
             <datalist id="bst-metatypes">
               {METATYPE_OPTIONS.map((m) => (
@@ -329,18 +329,18 @@ export default function TemplateEditor({ template, folders, onSave, onClose }: T
           <F label={t('Nature')}>
             <Select value={draft.npc.kind || 'metahuman'} options={npcKindOptions()} onChange={(v) => set(['npc', 'kind'], v)} />
           </F>
-          <F label={t('Attitude par défaut')}>
+          <F label={t('Default attitude')}>
             <Select value={draft.disposition || 'hostile'} options={(['hostile', 'neutral', 'ally'] as const).map((k) => ({ value: k, label: dispoLabel(k) }))} onChange={(v) => set(['disposition'], v)} />
           </F>
-          <F label={t('Indice pro. (PR)')} hint={t('0 à 7')}>
+          <F label={t('Pro. rating (PR)')} hint={t('0 to 7')}>
             <NumberInput value={draft.npc.professionalRating || 0} min={0} max={7} onChange={(v) => set(['npc', 'professionalRating'], v)} />
           </F>
-          <F label={t('Sbire')} hint={t('à jouer en groupe')}>
-            <Toggle value={!!draft.npc.grunt} onChange={(v) => set(['npc', 'grunt'], v)} label={draft.npc.grunt ? t('Oui') : t('Non')} />
+          <F label={t('Grunt')} hint={t('play them as a group')}>
+            <Toggle value={!!draft.npc.grunt} onChange={(v) => set(['npc', 'grunt'], v)} label={draft.npc.grunt ? t('Yes') : t('No')} />
           </F>
         </div>
         <div className="bed-grid">
-          <F label={t('Couleur du token')}>
+          <F label={t('Token color')}>
             <div className="row">
               <input type="color" value={/^#[0-9a-f]{6}$/i.test(draft.color || '') ? draft.color : '#e05c5c'} onChange={(e) => set(['color'], e.target.value)} />
               <TextInput live value={draft.color} placeholder="#e05c5c" onChange={(v) => set(['color'], v)} />
@@ -350,20 +350,20 @@ export default function TemplateEditor({ template, folders, onSave, onClose }: T
             <div className="row">
               <TextInput live value={draft.portrait} placeholder="/uploads/…" onChange={(v) => set(['portrait'], v)} />
               <label className="btn btn-sm">
-                {t('Téléverser')}
+                {t('Upload')}
                 <input type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadPortrait} />
               </label>
             </div>
           </F>
-          <F label={t('Genre')}>
+          <F label={t('Gender')}>
             <TextInput live value={draft.gender} onChange={(v) => set(['gender'], v)} />
           </F>
         </div>
-        <div className="section-title">{t('Vision (carte)')}</div>
+        <div className="section-title">{t('Vision (map)')}</div>
         <div className="row wrap gap-l">
-          <Toggle value={!!draft.vision?.lowLight} onChange={(v) => set(['vision', 'lowLight'], v)} label={t('Vision nocturne')} />
-          <Toggle value={!!draft.vision?.thermo} onChange={(v) => set(['vision', 'thermo'], v)} label={t('Thermographique')} />
-          <F label={t('Vision dans le noir (cases)')}>
+          <Toggle value={!!draft.vision?.lowLight} onChange={(v) => set(['vision', 'lowLight'], v)} label={t('Low-Light Vision')} />
+          <Toggle value={!!draft.vision?.thermo} onChange={(v) => set(['vision', 'thermo'], v)} label={t('Thermographic')} />
+          <F label={t('Darkvision (squares)')}>
             <NumberInput small value={draft.vision?.darkRange || 0} min={0} max={60} onChange={(v) => set(['vision', 'darkRange'], v)} />
           </F>
         </div>
@@ -382,7 +382,7 @@ export default function TemplateEditor({ template, folders, onSave, onClose }: T
               </span>
               <NumberInput small value={draft.attributes[k] ?? 0} min={0} max={30} onChange={(v) => set(['attributes', k], v)} />
               <span className="field-hint row spread">
-                {t('Augm.')} <NumberInput small value={draft.augmented?.[k] || 0} min={-4} max={4} onChange={(v) => set(['augmented', k], v)} />
+                {t('Aug.')} <NumberInput small value={draft.augmented?.[k] || 0} min={-4} max={4} onChange={(v) => set(['augmented', k], v)} />
               </span>
             </div>
           ))}
@@ -394,33 +394,33 @@ export default function TemplateEditor({ template, folders, onSave, onClose }: T
             <NumberInput small value={draft.attributes.ESS ?? 6} min={0} max={6} step={0.1} onChange={(v) => set(['attributes', 'ESS'], Math.round(v * 100) / 100)} />
           </div>
         </div>
-        <div className="section-title">{t('Initiative & moniteurs')}</div>
+        <div className="section-title">{t('Initiative & monitors')}</div>
         <div className="bed-grid">
-          <F label={t('Dés d’initiative')} hint={t('réflexes câblés, etc.')}>
+          <F label={t('Initiative Dice')} hint={t('wired reflexes, etc.')}>
             <NumberInput value={draft.initiative.dice || 1} min={1} max={5} onChange={(v) => set(['initiative', 'dice'], v)} />
           </F>
-          <F label={t('Bonus d’initiative')}>
+          <F label={t('Initiative bonus')}>
             <NumberInput value={draft.initiative.bonus || 0} min={-20} max={30} onChange={(v) => set(['initiative', 'bonus'], v)} />
           </F>
-          <F label={t('Initiative au combat')}>
+          <F label={t('Combat initiative')}>
             <Select value={draft.npc.initMode || 'physical'} options={initModeOptions()} onChange={(v) => set(['npc', 'initMode'], v)} />
           </F>
           <F
-            label={t('Moniteurs personnalisés')}
-            hint={d ? t('auto : P {p} / É {s}', { p: 8 + Math.ceil((draft.attributes.BOD || 0) / 2), s: 8 + Math.ceil((draft.attributes.WIL || 0) / 2) }) : ''}
+            label={t('Custom monitors')}
+            hint={d ? t('auto: P {p} / S {s}', { p: 8 + Math.ceil((draft.attributes.BOD || 0) / 2), s: 8 + Math.ceil((draft.attributes.WIL || 0) / 2) }) : ''}
           >
             <Toggle
               value={hasMonitors}
               onChange={(v) => set(['monitors'], v ? { physical: d?.physicalMonitor ?? 10, stun: d?.stunMonitor ?? 10 } : undefined)}
-              label={hasMonitors ? t('Oui') : t('Auto')}
+              label={hasMonitors ? t('Yes') : t('Auto')}
             />
           </F>
           {hasMonitors && (
             <>
-              <F label={t('Physique')}>
+              <F label={t('Physical')}>
                 <NumberInput value={draft.monitors?.physical ?? 10} min={0} max={60} onChange={(v) => set(['monitors', 'physical'], v)} />
               </F>
-              <F label={t('Étourdissant')} hint={t('0 = aucun (IC, drone)')}>
+              <F label={t('Stun')} hint={t('0 = none (IC, drone)')}>
                 <NumberInput value={draft.monitors?.stun ?? 10} min={0} max={60} onChange={(v) => set(['monitors', 'stun'], v)} />
               </F>
             </>
@@ -428,21 +428,21 @@ export default function TemplateEditor({ template, folders, onSave, onClose }: T
         </div>
         {d && (
           <div className="small muted">
-            {t('Initiative {init} · Défense {def} · Limites {limits}', { init: d.initiative.text, def: d.defense, limits: `${d.limits.physical}/${d.limits.mental}/${d.limits.social}` })}
+            {t('Initiative {init} · Defense {def} · Limits {limits}', { init: d.initiative.text, def: d.defense, limits: `${d.limits.physical}/${d.limits.mental}/${d.limits.social}` })}
           </div>
         )}
-        <div className="section-title">{t('Matrice')}</div>
+        <div className="section-title">{t('Matrix')}</div>
         {matrix ? (
           <div className="bed-grid">
-            <F label={t('Appareil')}>
+            <F label={t('Device')}>
               <TextInput live value={matrix.device} onChange={(v) => set(['matrix', 'device'], v)} />
             </F>
             {(
               [
-                ['rating', tk('Indice')],
-                ['attack', tk('Attaque')],
-                ['sleaze', tk('Corruption')],
-                ['dataProcessing', tk('Traitement')],
+                ['rating', tk('Rating')],
+                ['attack', tk('Attack')],
+                ['sleaze', tk('Sleaze')],
+                ['dataProcessing', tk('Data Processing')],
                 ['firewall', tk('Firewall')],
               ] as const
             ).map(([k, label]) => (
@@ -450,7 +450,7 @@ export default function TemplateEditor({ template, folders, onSave, onClose }: T
                 <NumberInput small value={matrix[k] || 0} min={0} max={20} onChange={(v) => set(['matrix', k], v)} />
               </F>
             ))}
-            <F label={t('Programmes (séparés par des virgules)')} className="grow">
+            <F label={t('Programs (comma-separated)')} className="grow">
               <TextInput
                 live
                 value={(matrix.programs || []).join(', ')}
@@ -468,13 +468,13 @@ export default function TemplateEditor({ template, folders, onSave, onClose }: T
             <div className="field">
               <span className="field-label"> </span>
               <Button small variant="danger" onClick={() => set(['matrix'], undefined)}>
-                {t('Retirer')}
+                {t('Remove')}
               </Button>
             </div>
           </div>
         ) : (
           <Button small onClick={() => set(['matrix'], { device: '', rating: 0, attack: 0, sleaze: 0, dataProcessing: 0, firewall: 0, programs: [] })}>
-            {t('+ Ajouter un profil Matrice')}
+            {t('+ Add a Matrix profile')}
           </Button>
         )}
       </div>
@@ -485,12 +485,12 @@ export default function TemplateEditor({ template, folders, onSave, onClose }: T
         <ListEditor
           items={draft.skills}
           onChange={(v) => set(['skills'], v)}
-          addLabel={t('Compétence')}
+          addLabel={t('Skill')}
           newItem={() => ({ id: 'perception', name: 'Perception', attr: 'INT', rating: 3 })}
           cols={[
             {
               key: 'id',
-              label: t('Compétence'),
+              label: t('Skill'),
               type: 'custom',
               render: (it, patch) => (
                 <SkillSelect
@@ -502,36 +502,36 @@ export default function TemplateEditor({ template, folders, onSave, onClose }: T
                 />
               ),
             },
-            { key: 'name', label: t('Libellé'), type: 'text' },
+            { key: 'name', label: t('Label'), type: 'text' },
             { key: 'attr', label: t('Attr.'), type: 'select', options: attrOptions(), width: '78px' },
-            { key: 'rating', label: t('Indice'), type: 'num', min: 0, max: 20, width: '96px' },
-            { key: 'spec', label: t('Spécialisation'), type: 'text' },
-            { key: '_pool', label: t('Réserve'), type: 'custom', width: '60px', render: (it) => <span className="mono cyan">{poolFor(draft, it.id) ?? '—'}</span> },
+            { key: 'rating', label: t('Rating'), type: 'num', min: 0, max: 20, width: '96px' },
+            { key: 'spec', label: t('Specialization'), type: 'text' },
+            { key: '_pool', label: t('Pool'), type: 'custom', width: '60px', render: (it) => <span className="mono cyan">{poolFor(draft, it.id) ?? '—'}</span> },
           ]}
-          extra={<span className="bst-hint">{t('Pour une compétence maison (autosoft, attaque d’IC…), choisis « — » puis renseigne le libellé.')}</span>}
+          extra={<span className="bst-hint">{t('For a house skill (autosoft, IC attack…), pick « — » then fill in the label.')}</span>}
         />
-        <div className="section-title">{t('Connaissances & langues')}</div>
+        <div className="section-title">{t('Knowledge & languages')}</div>
         <ListEditor
           items={draft.knowledge}
           onChange={(v) => set(['knowledge'], v)}
-          addLabel={t('Connaissance')}
+          addLabel={t('Knowledge')}
           newItem={() => ({ name: '', rating: 3, type: 'street' })}
           cols={[
-            { key: 'name', label: t('Nom'), type: 'text' },
+            { key: 'name', label: t('Name'), type: 'text' },
             {
               key: 'type',
               label: t('Type'),
               type: 'select',
               width: '130px',
               options: [
-                { value: 'street', label: t('Rue') },
-                { value: 'academic', label: t('Académique') },
-                { value: 'professional', label: t('Professionnelle') },
-                { value: 'interest', label: t('Centre d’intérêt') },
-                { value: 'language', label: t('Langue') },
+                { value: 'street', label: t('Street') },
+                { value: 'academic', label: t('Academic') },
+                { value: 'professional', label: t('Professional') },
+                { value: 'interest', label: t('Interest') },
+                { value: 'language', label: t('Language') },
               ],
             },
-            { key: 'rating', label: t('Indice'), type: 'num', min: 0, max: 12, width: '96px' },
+            { key: 'rating', label: t('Rating'), type: 'num', min: 0, max: 12, width: '96px' },
           ]}
         />
       </div>
@@ -539,77 +539,77 @@ export default function TemplateEditor({ template, folders, onSave, onClose }: T
   } else if (tab === 'gear') {
     body = (
       <div className="bed">
-        <div className="section-title">{t('Armes')}</div>
+        <div className="section-title">{t('Weapons')}</div>
         <ListEditor
           items={draft.weapons}
           onChange={(v) => set(['weapons'], v)}
-          addLabel={t('Arme')}
-          newItem={() => ({ name: t('Nouvelle arme'), kind: 'ranged', skill: 'pistols', accuracy: 5, damage: '7P', ap: 0, mode: 'SA', rc: 0, ammo: '', reach: 0 })}
+          addLabel={t('Weapon')}
+          newItem={() => ({ name: t('New weapon'), kind: 'ranged', skill: 'pistols', accuracy: 5, damage: '7P', ap: 0, mode: 'SA', rc: 0, ammo: '', reach: 0 })}
           extra={
             <Button small variant="ghost" onClick={() => setPicker('weapons')}>
-              {t('Depuis le catalogue…')}
+              {t('From the catalog…')}
             </Button>
           }
           cols={[
-            { key: 'name', label: t('Nom'), type: 'text', width: '170px' },
+            { key: 'name', label: t('Name'), type: 'text', width: '170px' },
             {
               key: 'kind',
               label: t('Type'),
               type: 'select',
               width: '96px',
               options: [
-                { value: 'ranged', label: t('Distance') },
-                { value: 'melee', label: t('Mêlée') },
+                { value: 'ranged', label: t('Ranged') },
+                { value: 'melee', label: t('Melee') },
               ],
             },
             {
               key: 'skill',
-              label: t('Compétence'),
+              label: t('Skill'),
               type: 'custom',
               width: '150px',
               render: (it, patch) => <SkillSelect value={it.skill} only={COMBAT_SKILLS} onChange={(skill) => patch({ skill })} />,
             },
-            { key: '_pool', label: t('Rés.'), type: 'custom', render: (it) => <span className="mono cyan">{poolFor(draft, it.skill) ?? '—'}</span> },
+            { key: '_pool', label: t('abbr::Pool'), type: 'custom', render: (it) => <span className="mono cyan">{poolFor(draft, it.skill) ?? '—'}</span> },
             {
               key: 'accuracy',
-              label: t('Préc.'),
+              label: t('Acc.'),
               type: 'custom',
               width: '56px',
               render: (it, patch) => (
                 <input className="input" value={it.accuracy ?? ''} placeholder={t('phys.')} onChange={(e) => patch({ accuracy: e.target.value === '' ? null : Number(e.target.value) || 0 })} />
               ),
             },
-            { key: 'damage', label: t('VD'), type: 'text', width: '86px', placeholder: '(STR+2)P' },
-            { key: 'ap', label: t('PA'), type: 'num', min: -20, max: 10, width: '92px' },
+            { key: 'damage', label: t('DV'), type: 'text', width: '86px', placeholder: '(STR+2)P' },
+            { key: 'ap', label: t('AP'), type: 'num', min: -20, max: 10, width: '92px' },
             { key: 'mode', label: t('Mode'), type: 'text', width: '86px', placeholder: 'SA/TR' },
             { key: 'rc', label: t('RC'), type: 'num', min: 0, max: 20, width: '92px' },
-            { key: 'ammo', label: t('Mun.'), type: 'text', width: '70px' },
+            { key: 'ammo', label: t('abbr::Ammo'), type: 'text', width: '70px' },
             { key: 'notes', label: t('Notes'), type: 'text', width: '140px' },
           ]}
         />
         {picker === 'weapons' && pickerEl}
-        <div className="section-title">{t('Armure')}</div>
+        <div className="section-title">{t('Armor')}</div>
         <ListEditor
           items={draft.armor}
           onChange={(v) => set(['armor'], v)}
-          addLabel={t('Armure')}
-          newItem={() => ({ name: t('Veste pare-balles'), rating: 12, equipped: true, stack: false })}
+          addLabel={t('Armor')}
+          newItem={() => ({ name: t('Armor jacket'), rating: 12, equipped: true, stack: false })}
           extra={
             <Button small variant="ghost" onClick={() => setPicker('armor')}>
-              {t('Depuis le catalogue…')}
+              {t('From the catalog…')}
             </Button>
           }
           cols={[
-            { key: 'name', label: t('Nom'), type: 'text' },
-            { key: 'rating', label: t('Indice'), type: 'num', min: 0, max: 50, width: '96px' },
-            { key: 'stack', label: t('Cumulable'), type: 'bool', width: '80px' },
-            { key: 'equipped', label: t('armure::Portée'), type: 'bool', width: '70px' },
+            { key: 'name', label: t('Name'), type: 'text' },
+            { key: 'rating', label: t('Rating'), type: 'num', min: 0, max: 50, width: '96px' },
+            { key: 'stack', label: t('Stacks'), type: 'bool', width: '80px' },
+            { key: 'equipped', label: t('armor::Worn'), type: 'bool', width: '70px' },
           ]}
         />
         {picker === 'armor' && pickerEl}
         {d && (
           <div className="small muted">
-            {t('Armure totale :')} <strong className="cyan">{d.armor}</strong> · {t('Encaissement {n}', { n: d.soak })}
+            {t('Total armor:')} <strong className="cyan">{d.armor}</strong> · {t('Soak {n}', { n: d.soak })}
           </div>
         )}
         <div className="section-title">{t('Augmentations')}</div>
@@ -619,7 +619,7 @@ export default function TemplateEditor({ template, folders, onSave, onClose }: T
           addLabel={t('Augmentation')}
           newItem={() => ({ name: '', kind: 'cyberware', grade: 'standard', essence: 0.1 })}
           cols={[
-            { key: 'name', label: t('Nom'), type: 'text' },
+            { key: 'name', label: t('Name'), type: 'text' },
             {
               key: 'kind',
               label: t('Type'),
@@ -635,31 +635,31 @@ export default function TemplateEditor({ template, folders, onSave, onClose }: T
             { key: 'notes', label: t('Notes'), type: 'text' },
           ]}
         />
-        <div className="section-title">{t('Équipement')}</div>
+        <div className="section-title">{t('Gear')}</div>
         <ListEditor
           items={draft.gear}
           onChange={(v) => set(['gear'], v)}
-          addLabel={t('Objet')}
+          addLabel={t('Item')}
           newItem={() => ({ name: '', qty: 1 })}
           cols={[
-            { key: 'name', label: t('Nom'), type: 'text' },
-            { key: 'qty', label: t('Qté'), type: 'num', min: 0, max: 999, width: '96px' },
+            { key: 'name', label: t('Name'), type: 'text' },
+            { key: 'qty', label: t('Qty'), type: 'num', min: 0, max: 999, width: '96px' },
             { key: 'notes', label: t('Notes'), type: 'text' },
           ]}
         />
-        <div className="section-title">{t('Véhicules & drones')}</div>
+        <div className="section-title">{t('Vehicles & drones')}</div>
         <ListEditor
           items={draft.vehicles}
           onChange={(v) => set(['vehicles'], v)}
-          addLabel={t('Véhicule')}
+          addLabel={t('Vehicle')}
           newItem={() => ({ name: '', handling: '4', speed: 3, accel: 1, body: 4, armor: 4, pilot: 3, sensor: 3 })}
           cols={[
-            { key: 'name', label: t('Nom'), type: 'text', width: '170px' },
-            { key: 'handling', label: t('Mani.'), type: 'text', width: '56px' },
-            { key: 'speed', label: t('Vit.'), type: 'num', min: 0, max: 20, width: '92px' },
-            { key: 'body', label: t('Struct.'), type: 'num', min: 0, max: 40, width: '92px' },
-            { key: 'armor', label: t('Blind.'), type: 'num', min: 0, max: 40, width: '92px' },
-            { key: 'pilot', label: t('Pilote'), type: 'num', min: 0, max: 10, width: '92px' },
+            { key: 'name', label: t('Name'), type: 'text', width: '170px' },
+            { key: 'handling', label: t('Hand.'), type: 'text', width: '56px' },
+            { key: 'speed', label: t('Spd.'), type: 'num', min: 0, max: 20, width: '92px' },
+            { key: 'body', label: t('vehicle-abbr::Body'), type: 'num', min: 0, max: 40, width: '92px' },
+            { key: 'armor', label: t('vehicle-abbr::Armor'), type: 'num', min: 0, max: 40, width: '92px' },
+            { key: 'pilot', label: t('person::Pilot'), type: 'num', min: 0, max: 10, width: '92px' },
             { key: 'notes', label: t('Notes'), type: 'text' },
           ]}
         />
@@ -668,42 +668,42 @@ export default function TemplateEditor({ template, folders, onSave, onClose }: T
   } else if (tab === 'magic') {
     body = (
       <div className="bed">
-        <div className="section-title">{t('Pouvoirs (adepte, critter)')}</div>
+        <div className="section-title">{t('Powers (adept, critter)')}</div>
         <ListEditor
           items={draft.powers}
           onChange={(v) => set(['powers'], v)}
-          addLabel={t('Pouvoir')}
+          addLabel={t('Power')}
           newItem={() => ({ name: '', pp: 0 })}
           cols={[
-            { key: 'name', label: t('Nom'), type: 'text' },
-            { key: 'level', label: t('Niveau'), type: 'num', min: 0, max: 20, width: '96px' },
-            { key: 'notes', label: t('Effet / notes'), type: 'text' },
+            { key: 'name', label: t('Name'), type: 'text' },
+            { key: 'level', label: t('Level'), type: 'num', min: 0, max: 20, width: '96px' },
+            { key: 'notes', label: t('Effect / notes'), type: 'text' },
           ]}
         />
-        <div className="section-title">{t('Sorts')}</div>
+        <div className="section-title">{t('Spells')}</div>
         <ListEditor
           items={draft.spells}
           onChange={(v) => set(['spells'], v)}
-          addLabel={t('Sort')}
+          addLabel={t('Spell')}
           newItem={() => ({ name: '', category: 'Combat', type: 'M', range: 'LdV', duration: 'I', drain: 'P-3' })}
           cols={[
-            { key: 'name', label: t('Nom'), type: 'text', width: '160px' },
-            { key: 'category', label: t('Catégorie'), type: 'select', width: '120px', options: SPELL_CATS.map((c) => ({ value: c, label: t(c) })) },
+            { key: 'name', label: t('Name'), type: 'text', width: '160px' },
+            { key: 'category', label: t('Category'), type: 'select', width: '120px', options: SPELL_CATS.map((c) => ({ value: c, label: t(c) })) },
             { key: 'type', label: t('Type'), type: 'select', width: '64px', options: ['M', 'P'] },
-            { key: 'range', label: t('Portée'), type: 'text', width: '70px' },
-            { key: 'duration', label: t('Durée'), type: 'select', width: '64px', options: ['I', 'M', 'P'] },
+            { key: 'range', label: t('Range'), type: 'text', width: '70px' },
+            { key: 'duration', label: t('Duration'), type: 'select', width: '64px', options: ['I', 'M', 'P'] },
             { key: 'drain', label: t('Drain'), type: 'text', width: '64px' },
             { key: 'notes', label: t('Notes'), type: 'text' },
           ]}
         />
-        <div className="section-title">{t('Qualités')}</div>
+        <div className="section-title">{t('Qualities')}</div>
         <ListEditor
           items={draft.qualities}
           onChange={(v) => set(['qualities'], v)}
-          addLabel={t('Qualité')}
+          addLabel={t('Quality')}
           newItem={() => ({ name: '', karma: 0, positive: true })}
           cols={[
-            { key: 'name', label: t('Nom'), type: 'text' },
+            { key: 'name', label: t('Name'), type: 'text' },
             { key: 'positive', label: t('Positive'), type: 'bool', width: '70px' },
             { key: 'notes', label: t('Notes'), type: 'text' },
           ]}
@@ -713,13 +713,13 @@ export default function TemplateEditor({ template, folders, onSave, onClose }: T
   } else if (tab === 'notes') {
     body = (
       <div className="bed">
-        <F label={t('Description (markdown — MJ uniquement)')}>
+        <F label={t('Description (markdown — GM only)')}>
           <TextInput live multiline rows={8} value={draft.description} onChange={(v) => set(['description'], v)} />
         </F>
-        <F label={t('Tactique (markdown)')}>
+        <F label={t('Tactics (markdown)')}>
           <TextInput live multiline rows={6} value={draft.npc.tactics} onChange={(v) => set(['npc', 'tactics'], v)} />
         </F>
-        <F label={t('Butin (markdown)')}>
+        <F label={t('Loot (markdown)')}>
           <TextInput live multiline rows={3} value={draft.npc.loot} onChange={(v) => set(['npc', 'loot'], v)} />
         </F>
       </div>
@@ -731,20 +731,20 @@ export default function TemplateEditor({ template, folders, onSave, onClose }: T
   const folder = draft.folder || DEFAULT_FOLDER;
   return (
     <Modal
-      title={draft.name ? t('Modèle : {name}', { name: draft.name }) : t('Modèle : sans nom')}
+      title={draft.name ? t('Template: {name}', { name: draft.name }) : t('Template: unnamed')}
       width={1080}
       onClose={requestClose}
-      actions={<Badge color="dim">{folder === DEFAULT_FOLDER ? t('Divers') : folder}</Badge>}
+      actions={<Badge color="dim">{folder === DEFAULT_FOLDER ? t('Miscellaneous') : folder}</Badge>}
     >
       <div className="bed">
         <Tabs tabs={TABS.map((x) => ({ ...x, label: t(x.label) }))} value={tab} onChange={setTab} />
         {body}
         <div className="bed-foot">
           <Button variant="ghost" onClick={requestClose}>
-            {t('Annuler')}
+            {t('Cancel')}
           </Button>
           <Button variant="primary" disabled={saving} onClick={save}>
-            {saving ? t('Enregistrement…') : t('Enregistrer le modèle')}
+            {saving ? t('Saving…') : t('Save the template')}
           </Button>
         </div>
       </div>

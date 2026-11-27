@@ -33,7 +33,7 @@ function useAutoScene(game: GameView | null | undefined) {
     const scene = (audio.scenes || []).find((s) => s.mapId === mapId);
     if (!scene) return;
     send('audio/applyScene', { sceneId: scene.id }, { silent: true }).then(
-      () => toast(t('Ambiance : {name}', { name: scene.name }), 'info', 2500),
+      () => toast(t('Ambience: {name}', { name: scene.name }), 'info', 2500),
       () => {}
     );
   }, [mapId]);
@@ -53,8 +53,8 @@ function PlayerControl({ game, st }: { game: GameView; st: AudioUiState }) {
       <button
         className={'audio-float-btn' + ((amb || mus) && !silent ? ' playing' : '')}
         onClick={toggle}
-        title={open ? t('Masquer le réglage du son') : t('Réglage du son')}
-        aria-label={t('Réglage du son')}
+        title={open ? t('Hide sound settings') : t('Sound settings')}
+        aria-label={t('Sound settings')}
         aria-expanded={open}
       >
         {silent ? '🔇' : amb || mus ? '🔊' : '🔈'}
@@ -63,10 +63,10 @@ function PlayerControl({ game, st }: { game: GameView; st: AudioUiState }) {
         <div className="audio-float-panel">
           <div className="audio-float-now">
             <span>
-              {t('Ambiance :')} <b>{amb || '—'}</b>
+              {t('Ambience:')} <b>{amb || '—'}</b>
             </span>
             <span>
-              {t('Musique :')} <b>{mus || '—'}</b>
+              {t('Music:')} <b>{mus || '—'}</b>
             </span>
           </div>
           <LocalVolume label={t('Volume')} />
@@ -110,8 +110,8 @@ export default function AudioEngine({ game }: GameProps) {
   if (!st.supported || !game) return null;
   if (!st.unlocked) {
     return (
-      <button className="audio-unlock" onClick={unlock} title={t('Le navigateur bloque le son tant qu’on n’a pas interagi avec la page')}>
-        🔊 {t('Activer le son')}
+      <button className="audio-unlock" onClick={unlock} title={t('The browser blocks sound until you interact with the page')}>
+        🔊 {t('Enable sound')}
       </button>
     );
   }

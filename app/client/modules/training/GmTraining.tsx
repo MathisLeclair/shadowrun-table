@@ -29,10 +29,10 @@ export default function GmTraining({ game }: GameProps) {
   const [workshopId, setWorkshopId] = useState<ActorId | null>(null);
   const pending = requestsOf(game).filter((r) => r.status === 'pending');
   const tabs = [
-    { id: 'dash', label: t('Tableau de bord'), badge: pending.length || null },
-    { id: 'workshop', label: t('Atelier') },
-    { id: 'history', label: t('Historique') },
-    { id: 'settings', label: t('Réglages & règles') },
+    { id: 'dash', label: t('Dashboard'), badge: pending.length || null },
+    { id: 'workshop', label: t('Workshop') },
+    { id: 'history', label: t('History') },
+    { id: 'settings', label: t('Settings & rules') },
   ];
   const train = (id: ActorId) => {
     setWorkshopId(id);
@@ -41,7 +41,7 @@ export default function GmTraining({ game }: GameProps) {
   return (
     <div className="page training-page">
       <div className="page-title">
-        <h2>{t('Progression')}</h2>
+        <h2>{t('Advancement')}</h2>
         <Tabs tabs={tabs} value={tab} onChange={setTab} className="training-gm-tabs" />
       </div>
       {tab === 'dash' && <Dashboard game={game} pending={pending} onTrain={train} />}
@@ -57,7 +57,7 @@ function Dashboard({ game, pending, onTrain }: { game: GameView; pending: Traini
   return (
     <div className="training-dash">
       <div className="col gap-l">
-        <Panel title={pending.length ? t('Demandes en attente ({n})', { n: pending.length }) : t('Demandes en attente')}>
+        <Panel title={pending.length ? t('Pending requests ({n})', { n: pending.length }) : t('Pending requests')}>
           {pending.length ? (
             <div className="col">
               {[...pending]
@@ -67,7 +67,7 @@ function Dashboard({ game, pending, onTrain }: { game: GameView; pending: Traini
                 ))}
             </div>
           ) : (
-            <div className="muted small training-empty">{t('Aucune demande. Les runners peuvent dépenser leur karma depuis leur onglet Progression.')}</div>
+            <div className="muted small training-empty">{t('No requests. Runners can spend their karma from their Advancement tab.')}</div>
           )}
         </Panel>
         <Downtime game={game} />
@@ -90,7 +90,7 @@ function PendingCard({ game, r }: { game: GameView; r: TrainingRequest }) {
     try {
       const res = await send<{ status?: string }>('training/resolve', { requestId: r.id, approve, note });
       const label = labelOf(r);
-      toast(approve ? (res?.status === 'done' ? t('{label} : acquis', { label }) : t('{label} : entraînement lancé', { label })) : t('Demande refusée'), approve ? 'success' : 'warn');
+      toast(approve ? (res?.status === 'done' ? t('{label}: gained', { label }) : t('{label}: training started', { label })) : t('Request denied'), approve ? 'success' : 'warn');
     } catch {
       setBusy(false);
     }
@@ -100,7 +100,7 @@ function PendingCard({ game, r }: { game: GameView; r: TrainingRequest }) {
       <div className="row spread wrap gap-s">
         <span className="grow">
           <button className="training-link" onClick={() => actor && openSheet(actor.id)}>
-            {actor?.name || t('Personnage supprimé')}
+            {actor?.name || t('Deleted character')}
           </button>
           <span className="faint small">
             {' '}
@@ -108,30 +108,30 @@ function PendingCard({ game, r }: { game: GameView; r: TrainingRequest }) {
           </span>
         </span>
         {r.manual && (
-          <Badge color="magenta" title={t('Saisie manuelle : vérifie le coût')}>
-            {t('manuel')}
+          <Badge color="magenta" title={t('Manual entry: check the cost')}>
+            {t('manual')}
           </Badge>
         )}
       </div>
       <div className="training-pending-label">{labelOf(r)}</div>
       <div className="row wrap small gap-s">
         <span className="mono amber">{t('{n} karma', { n: r.karmaCost })}</span>
-        <span className="muted">{t('(dispo {n})', { n: Number(actor?.karma) || 0 })}</span>
+        <span className="muted">{t('({n} available)', { n: Number(actor?.karma) || 0 })}</span>
         {r.days > 0 && <span>· {fmtDays(r.days)}</span>}
-        {r.instructor && <span>· {t('instructeur {cost}', { cost: fmtNuyen(r.nuyenCost) })}</span>}
+        {r.instructor && <span>· {t('instructor {cost}', { cost: fmtNuyen(r.nuyenCost) })}</span>}
         {(r.ppCost || 0) > 0 && <span>· {t('{pp} PP', { pp: r.ppCost })}</span>}
       </div>
       {r.note && <div className="small training-note">« {r.note} »</div>}
       {recheck?.error && <div className="training-warn small">⚠ {errorOf(recheck)}</div>}
       <div className="row wrap gap-s training-pending-actions">
         <div className="grow">
-          <TextInput live value={note} placeholder={t('Note au joueur (optionnel)')} onChange={setNote} />
+          <TextInput live value={note} placeholder={t('Note to the player (optional)')} onChange={setNote} />
         </div>
         <Button small variant="danger" disabled={busy} onClick={() => resolve(false)}>
-          {t('Refuser')}
+          {t('Deny')}
         </Button>
         <Button small variant="primary" disabled={busy || !!recheck?.error} title={errorOf(recheck) || ''} onClick={() => resolve(true)}>
-          {t('Valider')}
+          {t('Approve')}
         </Button>
       </div>
     </div>
@@ -155,7 +155,7 @@ function Downtime({ game }: GameProps) {
       setLast(res);
       const time = fmtDays(days);
       toast(
-        res.completed.length ? t('Temps mort : {time} — {n} entraînement(s) terminé(s)', { time, n: res.completed.length }) : t('Temps mort : {time}', { time }),
+        res.completed.length ? t('Downtime: {time} — {n} training(s) completed', { time, n: res.completed.length }) : t('Downtime: {time}', { time }),
         res.completed.length ? 'success' : 'info'
       );
     } catch {}
@@ -163,43 +163,43 @@ function Downtime({ game }: GameProps) {
   };
   return (
     <Panel
-      title={t('Temps mort')}
+      title={t('Downtime')}
       actions={
-        <span className="small muted" title={t('Jours de temps mort écoulés depuis le début du suivi')}>
-          {t('Jour {n}', { n: elapsed })}
+        <span className="small muted" title={t('Downtime days elapsed since tracking started')}>
+          {t('Day {n}', { n: elapsed })}
         </span>
       }
     >
-      <div className="small muted">{t('Fait avancer le calendrier : tous les entraînements en cours progressent, ceux qui sont terminés s’appliquent aux fiches.')}</div>
+      <div className="small muted">{t('Moves the calendar forward: every training in progress advances, and finished ones are applied to the sheets.')}</div>
       <div className="row wrap training-downtime">
         <Button disabled={busy} onClick={() => advance(1)}>
-          {t('+1 jour')}
+          {t('+1 day')}
         </Button>
         <Button disabled={busy} onClick={() => advance(7)}>
-          {t('+1 semaine')}
+          {t('+1 week')}
         </Button>
         <Button disabled={busy} onClick={() => advance(30)}>
-          {t('+1 mois')}
+          {t('+1 month')}
         </Button>
         <span className="row gap-s">
           <NumberInput small value={custom} min={1} max={365} onChange={setCustom} />
           <Button variant="primary" disabled={busy} onClick={() => advance(custom)}>
-            {t('Avancer')}
+            {t('Advance')}
           </Button>
         </span>
       </div>
       {next ? (
         <div className="small">
-          {t('{n} entraînement(s) en cours · prochain :', { n: running.length })} <strong>{next.actor.name}</strong> — {labelOf(next.job)}{' '}
-          <span className="muted">{t('(dans {time})', { time: fmtDays(next.left) })}</span>
+          {t('{n} training(s) in progress · next:', { n: running.length })} <strong>{next.actor.name}</strong> — {labelOf(next.job)}{' '}
+          <span className="muted">{t('(in {time})', { time: fmtDays(next.left) })}</span>
         </div>
       ) : (
-        <div className="small muted">{t('Aucun entraînement en cours.')}</div>
+        <div className="small muted">{t('No training in progress.')}</div>
       )}
       {last && (
         <div className="training-last">
           <div className="small">
-            <strong>{fmtDays(last.days)}</strong> {last.completed.length ? t('écoulé(s) — {n} terminé(s) :', { n: last.completed.length }) : t('écoulé(s) — rien de terminé.')}
+            <strong>{fmtDays(last.days)}</strong> {last.completed.length ? t('elapsed — {n} completed:', { n: last.completed.length }) : t('elapsed — nothing completed.')}
           </div>
           {last.completed.length > 0 && (
             <ul className="small">
@@ -224,8 +224,8 @@ function Runners({ game, onTrain }: { game: GameView; onTrain: (id: ActorId) => 
     <Panel
       title={t('Runners')}
       actions={
-        <Button small variant="ghost" title={t('Fiches, karma et nuyens')} onClick={() => goTab('characters')}>
-          {t('Personnages →')}
+        <Button small variant="ghost" title={t('Sheets, karma and nuyen')} onClick={() => goTab('characters')}>
+          {t('Characters →')}
         </Button>
       }
     >
@@ -241,21 +241,21 @@ function Runners({ game, onTrain }: { game: GameView; onTrain: (id: ActorId) => 
                     <strong>{a.name}</strong>
                   </button>
                   <span className="row gap-s small">
-                    {pend > 0 && <Badge color="amber">{t('{n} en attente', { n: pend })}</Badge>}
-                    <span className="mono" title={t('Karma disponible / carrière')}>
+                    {pend > 0 && <Badge color="amber">{t('{n} pending', { n: pend })}</Badge>}
+                    <span className="mono" title={t('Available / career karma')}>
                       <span className="cyan">{Number(a.karma) || 0}</span>
                       <span className="faint"> / {t('{n} karma', { n: Number(a.karmaTotal) || 0 })}</span>
                     </span>
                     <span className="mono magenta">{fmtNuyen(a.nuyen)}</span>
                     <Button small onClick={() => onTrain(a.id)}>
-                      {t('Entraîner')}
+                      {t('Train')}
                     </Button>
                   </span>
                 </div>
                 {jobs.map((j) => (
                   <div key={j.id} className="training-runner-job">
                     <span className="small grow">{labelOf(j)}</span>
-                    <span className="small mono muted">{t('{done}/{total} j', { done: j.daysDone || 0, total: j.daysTotal })}</span>
+                    <span className="small mono muted">{t('{done}/{total} d', { done: j.daysDone || 0, total: j.daysTotal })}</span>
                     <ProgressBar value={j.daysDone || 0} max={j.daysTotal || 0} compact />
                   </div>
                 ))}
@@ -264,7 +264,7 @@ function Runners({ game, onTrain }: { game: GameView; onTrain: (id: ActorId) => 
           })}
         </div>
       ) : (
-        <Empty>{t('Aucun runner actif.')}</Empty>
+        <Empty>{t('No active runners.')}</Empty>
       )}
     </Panel>
   );
@@ -280,18 +280,18 @@ function KarmaReward({ game }: GameProps) {
   const targets = pcs.filter((a) => !excluded.includes(a.id));
   const give = async () => {
     if (!targets.length || !karma) return;
-    if (!(await confirmAction(t('Donner {n} karma à {names} ?', { n: karma, names: targets.map((a) => a.name).join(', ') })))) return;
+    if (!(await confirmAction(t('Give {n} karma to {names}?', { n: karma, names: targets.map((a) => a.name).join(', ') })))) return;
     setBusy(true);
     try {
-      await send('actor/adjust', { actorIds: targets.map((a) => a.id), karma, reason: reason.trim() || t('Récompense de run') });
-      toast(t('{n} karma distribués', { n: karma }), 'success');
+      await send('actor/adjust', { actorIds: targets.map((a) => a.id), karma, reason: reason.trim() || t('Run reward') });
+      toast(t('{n} karma awarded', { n: karma }), 'success');
       setReason('');
     } catch {}
     setBusy(false);
   };
   if (!pcs.length) return null;
   return (
-    <Panel title={t('Récompense de karma')}>
+    <Panel title={t('Karma reward')}>
       <div className="row wrap gap-s">
         {pcs.map((a) => (
           <Toggle key={a.id} label={a.name} value={!excluded.includes(a.id)} onChange={(v) => setExcluded((ex) => (v ? ex.filter((x) => x !== a.id) : [...ex, a.id]))} />
@@ -300,10 +300,10 @@ function KarmaReward({ game }: GameProps) {
       <div className="row wrap training-reward">
         <NumberInput value={karma} min={-50} max={100} onChange={setKarma} />
         <div className="grow">
-          <TextInput live value={reason} placeholder={t('Raison (ex. Run « Cleanup Crew »)')} onChange={setReason} />
+          <TextInput live value={reason} placeholder={t('Reason (e.g. Run « Cleanup Crew »)')} onChange={setReason} />
         </div>
         <Button variant="accent" disabled={busy || !targets.length || !karma} onClick={give}>
-          {t('Donner')}
+          {t('Give')}
         </Button>
       </div>
     </Panel>
@@ -318,35 +318,35 @@ function Workshop({ game, actorId, setActorId }: { game: GameView; actorId: Acto
   const id = actorId && game.actors?.[actorId] ? actorId : pcs.find((a) => !a.retired)?.id || pcs[0]?.id || npcs[0]?.id || '';
   const actor = id ? fullActor(game.actors[id]) : null;
   const options = [
-    ...pcs.map((a) => ({ value: a.id, label: a.retired ? t('{name} (retraité)', { name: a.name }) : a.name })),
-    ...npcs.map((a) => ({ value: a.id, label: t('PNJ · {name}', { name: a.name }) })),
+    ...pcs.map((a) => ({ value: a.id, label: a.retired ? t('{name} (retired)', { name: a.name }) : a.name })),
+    ...npcs.map((a) => ({ value: a.id, label: t('NPC · {name}', { name: a.name }) })),
   ];
-  if (!actor) return <Empty>{t('Aucun personnage. Crée ou importe des fiches dans l’onglet Personnages.')}</Empty>;
+  if (!actor) return <Empty>{t('No characters. Create or import sheets in the Characters tab.')}</Empty>;
   return (
     <div className="col gap-l">
       <div className="row wrap spread">
         <div className="row wrap">
-          <Field label={t('Personnage')}>
+          <Field label={t('Character')}>
             <Select value={id} onChange={setActorId} options={options} />
           </Field>
           <Button small variant="ghost" onClick={() => openSheet(actor.id)}>
-            {t('Ouvrir la fiche')}
+            {t('Open the sheet')}
           </Button>
         </div>
         <KarmaHeader game={game} actor={actor} />
       </div>
       <div className="small muted">
-        {t('Atelier MJ : tout ce que tu valides ici est appliqué directement (karma débité, entraînement lancé). Coche « Offert » dans la confirmation pour un gain sans coût.')}
+        {t('GM workshop: everything you approve here is applied directly (karma spent, training started). Tick « Granted » in the confirmation for a free gain.')}
       </div>
       <div className="training-layout">
-        <Panel title={t('Progression de {name}', { name: actor.name })}>
+        <Panel title={t('Advancement of {name}', { name: actor.name })}>
           <AdvancePanel game={game} actor={actor} isGM={true} />
         </Panel>
         <div className="col gap-l training-side">
-          <Panel title={t('En cours')}>
+          <Panel title={t('In progress')}>
             <JobList game={game} actor={actor} isGM={true} />
           </Panel>
-          <Panel title={t('Demandes')}>
+          <Panel title={t('Requests')}>
             <RequestList game={game} requests={requestsOf(game, actor.id)} isGM={true} limit={20} />
           </Panel>
         </div>
@@ -366,21 +366,21 @@ function History({ game }: GameProps) {
   const clear = async () => {
     const name = actorId ? game.actors?.[actorId]?.name : '';
     const msg = !actorId
-      ? t('Effacer les {n} demande(s) closes (acquises, refusées, annulées) de tous les personnages ?\nLes fiches ne sont pas modifiées.', { n: closed })
+      ? t('Delete the {n} closed request(s) (gained, denied, cancelled) of all characters?\nSheets are not changed.', { n: closed })
       : name
-        ? t('Effacer les {n} demande(s) closes (acquises, refusées, annulées) de {name} ?\nLes fiches ne sont pas modifiées.', { n: closed, name })
-        : t('Effacer les {n} demande(s) closes (acquises, refusées, annulées) de ce personnage ?\nLes fiches ne sont pas modifiées.', { n: closed });
+        ? t('Delete the {n} closed request(s) (gained, denied, cancelled) of {name}?\nSheets are not changed.', { n: closed, name })
+        : t('Delete the {n} closed request(s) (gained, denied, cancelled) of this character?\nSheets are not changed.', { n: closed });
     if (!(await confirmAction(msg))) return;
     send<{ removed: number }>('training/clearHistory', actorId ? { actorId } : {})
-      .then((r) => toast(t('{n} demande(s) effacée(s)', { n: r.removed })))
+      .then((r) => toast(t('{n} request(s) deleted', { n: r.removed })))
       .catch(() => {});
   };
   return (
     <Panel
-      title={t('Historique des demandes')}
+      title={t('Request history')}
       actions={
         <Button small variant="ghost" disabled={!closed} onClick={clear}>
-          {t('Purger les demandes closes')}
+          {t('Purge closed requests')}
         </Button>
       }
     >
@@ -388,18 +388,18 @@ function History({ game }: GameProps) {
         <Select
           value={actorId}
           onChange={setActorId}
-          options={[{ value: '', label: t('Tous les personnages') }, ...actorIds.map((id) => ({ value: id, label: game.actors?.[id]?.name || t('(supprimé)') }))]}
+          options={[{ value: '', label: t('All characters') }, ...actorIds.map((id) => ({ value: id, label: game.actors?.[id]?.name || t('(deleted)') }))]}
         />
         <Select
           value={status}
           onChange={setStatus}
           options={[
-            { value: '', label: t('Tous les statuts') },
-            { value: 'pending', label: t('En attente') },
-            { value: 'approved', label: t('En cours') },
-            { value: 'done', label: t('Acquises') },
-            { value: 'denied', label: t('Refusées') },
-            { value: 'cancelled', label: t('Annulées') },
+            { value: '', label: t('All statuses') },
+            { value: 'pending', label: t('Pending') },
+            { value: 'approved', label: t('In progress') },
+            { value: 'done', label: t('pl::Gained') },
+            { value: 'denied', label: t('pl::Denied') },
+            { value: 'cancelled', label: t('pl::Cancelled') },
           ]}
         />
       </div>
@@ -417,59 +417,59 @@ function Settings({ game }: GameProps) {
   const price = (k: keyof TrainingSettings['instructorCostPerWeek']) => (n: number) => update({ instructorCostPerWeek: { [k]: n } });
   return (
     <div className="grid-2">
-      <Panel title={t('Réglages')}>
+      <Panel title={t('Settings')}>
         <div className="col gap-l">
-          <Field label={t('Validation des demandes')} hint={t('En automatique, les saisies manuelles (hors catalogue) et « Autre » passent quand même par toi.')}>
+          <Field label={t('Request approval')} hint={t('In automatic mode, manual entries (not from the catalog) and « Other » still go through you.')}>
             <Select
               value={s.approval}
               onChange={(v) => update({ approval: v })}
               options={[
-                { value: 'always' as const, label: t('Le MJ valide chaque demande') },
-                { value: 'never' as const, label: t('Automatique') },
+                { value: 'always' as const, label: t('The GM approves every request') },
+                { value: 'never' as const, label: t('Automatic') },
               ]}
             />
           </Field>
           <div className="col gap-s">
-            <Toggle label={t('Temps d’entraînement (temps mort)')} value={s.useTime} onChange={(v) => update({ useTime: v })} />
-            <span className="field-hint">{s.useTime ? t('Les progressions validées prennent du temps : avance le calendrier dans « Temps mort ».') : t('Les progressions validées s’appliquent immédiatement.')}</span>
+            <Toggle label={t('Training time (downtime)')} value={s.useTime} onChange={(v) => update({ useTime: v })} />
+            <span className="field-hint">{s.useTime ? t('Approved advancements take time: move the calendar forward in « Downtime ».') : t('Approved advancements apply immediately.')}</span>
           </div>
-          <Field label={t('Instructeur : réduction du temps (%)')} hint={t('SR5 : chaque succès au test d’Enseignement réduit le temps. Ici une réduction fixe.')}>
+          <Field label={t('Instructor: time reduction (%)')} hint={t('SR5: each hit on the Instruction test reduces the time. Here, a fixed reduction.')}>
             <NumberInput value={s.instructorTimeReduction} min={0} max={90} step={5} onChange={(n) => update({ instructorTimeReduction: n })} />
           </Field>
           <div className="field">
-            <span className="field-label">{t('Instructeur : prix par semaine (¥)')}</span>
+            <span className="field-label">{t('Instructor: price per week (¥)')}</span>
             <div className="training-prices">
-              <span>{t('Attributs')}</span>
+              <span>{t('Attributes')}</span>
               <NumberInput value={s.instructorCostPerWeek.attribute} min={0} max={100000} step={100} onChange={price('attribute')} />
-              <span>{t('Compétences & groupes')}</span>
+              <span>{t('Skills & groups')}</span>
               <NumberInput value={s.instructorCostPerWeek.skill} min={0} max={100000} step={50} onChange={price('skill')} />
-              <span>{t('Connaissances & langues')}</span>
+              <span>{t('Knowledge & languages')}</span>
               <NumberInput value={s.instructorCostPerWeek.knowledge} min={0} max={100000} step={50} onChange={price('knowledge')} />
-              <span>{t('Autres (qualités, magie…)')}</span>
+              <span>{t('Other (qualities, magic…)')}</span>
               <NumberInput value={s.instructorCostPerWeek.other} min={0} max={100000} step={50} onChange={price('other')} />
             </div>
           </div>
         </div>
       </Panel>
-      <Panel title={t('Règles SR5 appliquées')}>
+      <Panel title={t('SR5 rules applied')}>
         <ul className="training-rules">
           {Object.keys(RULE_TEXT).map((k) => (
             <li key={k}>
-              <strong>{k === 'instructor' ? t('Instructeur') : kindLabel(k)}</strong>
+              <strong>{k === 'instructor' ? t('Instructor') : kindLabel(k)}</strong>
               <div className="small muted">{ruleText(k).replace(/^[^:]+ ?: /, '')}</div>
             </li>
           ))}
           <li>
-            <strong>{t('Limites')}</strong>
+            <strong>{t('Limits')}</strong>
             <div className="small muted">
               {t(
-                'Attributs : maximum du métatype (+1 Attribut exceptionnel, +1 Chance pour Chanceux). Magie/Résonance : 6 + grade − essence perdue (arrondie au supérieur). Compétences : 12 (13 avec Aptitude). Un seul attribut à la fois ; pas deux entraînements sur la même chose.'
+                'Attributes: metatype maximum (+1 with Exceptional Attribute, +1 Edge with Lucky). Magic/Resonance: 6 + grade − Essence lost (rounded up). Skills: 12 (13 with Aptitude). One attribute at a time; no two trainings on the same thing.'
               )}
             </div>
           </li>
           <li>
             <strong>{t('Karma')}</strong>
-            <div className="small muted">{t('Débité à la validation ; une demande en attente réserve son karma. Interrompre un entraînement (MJ) rembourse karma et instructeur.')}</div>
+            <div className="small muted">{t('Spent on approval; a pending request reserves its karma. Interrupting a training (GM) refunds karma and instructor.')}</div>
           </li>
         </ul>
       </Panel>

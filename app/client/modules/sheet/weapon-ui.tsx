@@ -26,17 +26,17 @@ interface ReloadReply {
   dropped?: number;
 }
 
-const ACTION_LABELS: Record<string, string> = { simple: tk('action simple'), complex: tk('action complexe') };
+const ACTION_LABELS: Record<string, string> = { simple: tk('Simple Action'), complex: tk('Complex Action') };
 export const actionLabel = (a: string): string => t(ACTION_LABELS[a] || a);
 
 /** Short label of a fire option in the UI language: « TR (3) », « TA complexe (10) »… */
 const FIRE_SHORT: Record<string, string> = {
-  SS: tk('Coup par coup'), SA: tk('Semi-automatique'), SB: tk('Rafale semi-automatique'), BF: tk('Tir en rafale'), LB: tk('Rafale longue'),
-  FA: tk('Tir automatique (action simple)'), FAC: tk('Tir automatique (action complexe)'), SUP: tk('Tir de barrage'),
+  SS: tk('Single shot'), SA: tk('Semi-automatic'), SB: tk('Semi-automatic burst'), BF: tk('Burst fire'), LB: tk('Long burst'),
+  FA: tk('Full auto (Simple Action)'), FAC: tk('Full auto (Complex Action)'), SUP: tk('Suppressive fire'),
 };
 export function fireLabel(o: FireOption): string {
   const code = getLang() === 'fr' ? (MODE_SHORT_FR as Record<string, string>)[o.mode] : o.mode;
-  return t('{code} — {name} ({n})', { code, name: t(FIRE_SHORT[o.id] || o.label), n: tn(o.rounds, '{n} balle', '{n} balles') });
+  return t('{code} — {name} ({n})', { code, name: t(FIRE_SHORT[o.id] || o.label), n: tn(o.rounds, '{n} round', '{n} rounds') });
 }
 
 /** Name of the loaded ammunition (« Balles ADPS »). */
@@ -57,9 +57,9 @@ async function doReload(actor: Actor, w: Weapon, sourceItemId?: string | null, f
   try {
     const r = await send<ReloadReply>('weapon/reload', { actorId: actor.id, weaponId: w.id, ...(sourceItemId ? { sourceItemId } : {}), ...(free ? { free: true } : {}) });
     toast(r.swap
-      ? t('Chargeur changé : {loaded}/{max} — {action}', { loaded: r.ammoLoaded, max: r.max, action: actionLabel(r.action) })
+      ? t('Clip changed: {loaded}/{max} — {action}', { loaded: r.ammoLoaded, max: r.max, action: actionLabel(r.action) })
       : t('+{n} → {loaded}/{max} — {action}', { n: r.loaded, loaded: r.ammoLoaded, max: r.max, action: actionLabel(r.action) }), 'success');
-    if (r.dropped) toast(tn(r.dropped, '{n} balle de l’ancien type perdue (aucune boîte où la ranger)', '{n} balles de l’ancien type perdues (aucune boîte où les ranger)'), 'warn');
+    if (r.dropped) toast(tn(r.dropped, '{n} round of the old type lost (no box to put it in)', '{n} rounds of the old type lost (no box to put them in)'), 'warn');
     return r;
   } catch {
     return null;
@@ -72,21 +72,21 @@ export function ReloadDialog({ actor, w, gm, onClose }: { actor: Actor; w: Weapo
   const clip = spareClip(actor, w, 'clip');
   const loader = w.ammoType === 'cy' ? spareClip(actor, w, 'loader') : null;
   const plan = reloadPlan(w, { agi: attr(actor, 'AGI'), clip: !!clip, loader: !!loader });
-  const where = (g: Gear) => (g.location && g.location !== ON_BODY ? containerOf(actor, g.location)?.name || '' : t('sur soi'));
+  const where = (g: Gear) => (g.location && g.location !== ON_BODY ? containerOf(actor, g.location)?.name || '' : t('carried'));
   const go = async (id: string | null, free?: boolean) => {
     if (await doReload(actor, w, id, free)) onClose();
   };
-  const per = Number.isFinite(plan.perAction) ? tn(plan.perAction, '{n} balle par action', '{n} balles par action') : t('chargement complet');
-  return <Overlay title={t('Recharger — {weapon}', { weapon: itemLabel(w) })} onClose={onClose} width={460}>
+  const per = Number.isFinite(plan.perAction) ? tn(plan.perAction, '{n} round per action', '{n} rounds per action') : t('full reload');
+  return <Overlay title={t('Reload — {weapon}', { weapon: itemLabel(w) })} onClose={onClose} width={460}>
     <div className="col gap-s">
       <div className="row wrap gap-s">
         <span className="badge badge-cyan mono">{w.ammoLoaded ?? 0}/{w.ammoMax}</span>
-        {w.ammoType && (AMMO_TYPE_LABELS as Record<string, string>)[w.ammoType] ? <span className="badge">{t((AMMO_TYPE_LABELS as Record<string, string>)[w.ammoType])}</span> : null}{w.ammoKind ? <span className="muted small">{t('Chargée : {ammo}', { ammo: ammoKindLabel(w.ammoKind) })}</span> : null}
+        {w.ammoType && (AMMO_TYPE_LABELS as Record<string, string>)[w.ammoType] ? <span className="badge">{t((AMMO_TYPE_LABELS as Record<string, string>)[w.ammoType])}</span> : null}{w.ammoKind ? <span className="muted small">{t('Loaded: {ammo}', { ammo: ammoKindLabel(w.ammoKind) })}</span> : null}
       </div>
       <div className="muted small">
         {plan.swap
-        ? t('Changement de chargeur ({clip}) : {action}.', { clip: itemLabel(clip || loader), action: actionLabel(plan.action) })
-        : t('Balles une à une : {action}, {per}.', { action: actionLabel(plan.action), per })}
+        ? t('Clip change ({clip}): {action}.', { clip: itemLabel(clip || loader), action: actionLabel(plan.action) })
+        : t('Loose rounds: {action}, {per}.', { action: actionLabel(plan.action), per })}
       </div>
       {sources.length
         ? <div className="sh-list">
@@ -97,17 +97,17 @@ export function ReloadDialog({ actor, w, gm, onClose }: { actor: Actor; w: Weapo
               <span className="faint small">{where(g)}</span>
               {Number(w.ammoLoaded) > 0 && w.ammoKind && !sameAmmoKind(ammoKindOf(g), w.ammoKind)
                 ? <div className="amber small">
-                  {tn(Number(w.ammoLoaded), 'Autres munitions : la balle chargée est retirée.', 'Autres munitions : les {n} balles chargées sont retirées.')}
+                  {tn(Number(w.ammoLoaded), 'Other ammunition: the loaded round is taken out.', 'Other ammunition: the {n} loaded rounds are taken out.')}
                 </div> : null}
             </div>
             <span className="mono">×{g.qty ?? 1}</span>
-            <Button small variant="primary" onClick={() => go(g.id)}>{t('Recharger')}</Button>
+            <Button small variant="primary" onClick={() => go(g.id)}>{t('Reload')}</Button>
           </div>)}
         </div>
-        : <div className="amber small">{t('Aucune munition compatible sur soi ni dans un sac.')}</div>}
+        : <div className="amber small">{t('No compatible ammunition carried or in a bag.')}</div>}
       {gm && <div className="row">
-        <Button small variant="ghost" onClick={() => go(null, true)} title={t('Remplit l’arme sans toucher à l’inventaire')}>
-          {t('Recharger sans munitions (MJ)')}
+        <Button small variant="ghost" onClick={() => go(null, true)} title={t('Fills the weapon without touching the inventory')}>
+          {t('Reload without ammunition (GM)')}
         </Button>
       </div>}
     </div>
@@ -117,7 +117,7 @@ export function ReloadDialog({ actor, w, gm, onClose }: { actor: Actor; w: Weapo
 /** « 12/15 » + reload button for weapons with a magazine, « ×2 » for grenades, the ammo text otherwise. */
 export function AmmoCell({ s, w }: { s: SheetCtx; w: Weapon }) {
   const [open, setOpen] = useState(false);
-  if (isGrenade(w)) return <span className={'mono' + (Number(w.qty ?? 1) <= 0 ? ' red' : '')} title={t('Exemplaires (lancer en consomme un)')}>×{w.qty ?? 1}</span>;
+  if (isGrenade(w)) return <span className={'mono' + (Number(w.qty ?? 1) <= 0 ? ' red' : '')} title={t('Units (throwing uses one)')}>×{w.qty ?? 1}</span>;
   if (!usesAmmo(w)) return <span className="muted">{w.ammo || '—'}</span>;
   const left = Number(w.ammoLoaded ?? w.ammoMax) || 0;
   const cap = Number(w.ammoMax) || 0;
@@ -130,27 +130,27 @@ export function AmmoCell({ s, w }: { s: SheetCtx; w: Weapon }) {
     if (src.length === 1 && !s.gm && !swaps) doReload(s.actor, w, src[0].id);
     else setOpen(true);
   };
-  const title = [t('Chargeur : {ammo}', { ammo: w.ammo }), w.ammoKind ? t('Chargée : {ammo}', { ammo: ammoKindLabel(w.ammoKind) }) : ''].filter(Boolean).join('\n');
+  const title = [t('Clip: {ammo}', { ammo: w.ammo }), w.ammoKind ? t('Loaded: {ammo}', { ammo: ammoKindLabel(w.ammoKind) }) : ''].filter(Boolean).join('\n');
   return <span className="sh-ammo">
     <span className={'mono' + (left === 0 ? ' red' : left <= cap / 4 ? ' amber' : '')} title={title}>{left}/{cap}</span>
-    {s.own && <IconButton icon="↻" title={t('Recharger')} disabled={left >= cap && !s.gm} onClick={reload} />}{open && <ReloadDialog actor={s.actor} w={w} gm={s.gm} onClose={() => setOpen(false)} />}
+    {s.own && <IconButton icon="↻" title={t('Reload')} disabled={left >= cap && !s.gm} onClick={reload} />}{open && <ReloadDialog actor={s.actor} w={w} gm={s.gm} onClose={() => setOpen(false)} />}
   </span>;
 }
 
 /** Ready / stowed switch (owner) or badge. Readying a weapon stored in a bag takes it out (server). */
 export function ReadyToggle({ s, w }: { s: SheetCtx; w: Weapon }) {
   const ready = w.equipped !== false;
-  if (!s.own) return <span className={'badge ' + (ready ? 'badge-cyan' : '')}>{ready ? t('prête') : t('rangée')}</span>;
+  if (!s.own) return <span className={'badge ' + (ready ? 'badge-cyan' : '')}>{ready ? t('ready') : t('stowed')}</span>;
   const set = async (v: boolean) => {
     try {
       await send('actor/updateItem', { actorId: s.actor.id, list: 'weapons', itemId: w.id, patch: { equipped: v } });
       if (v) {
         const c = readyCount({ ...s.actor, weapons: s.actor.weapons.map((x) => (x.id === w.id ? { ...x, equipped: true } : x)) });
-        if (c.over) toast(t('Beaucoup d’armes prêtes ({ranged} à distance, {melee} de mêlée) : en principe 2 + 2 au plus.', c), 'warn');
+        if (c.over) toast(t('Many ready weapons ({ranged} ranged, {melee} melee): usually 2 + 2 at most.', c), 'warn');
       }
     } catch {}
   };
-  return <Toggle value={ready} onChange={set} title={ready ? t('Prête — cliquer pour la ranger') : t('Rangée — cliquer pour la préparer')} />;
+  return <Toggle value={ready} onChange={set} title={ready ? t('Ready — click to stow it') : t('Stowed — click to ready it')} />;
 }
 
 /** Fire options of a weapon as Select options (value = option id). */

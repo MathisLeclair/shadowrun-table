@@ -15,7 +15,7 @@ import { syncPowerBonus, itemBonusSpec, bakeItemBonus, removeBonus } from '../li
 import {
   DEFAULT_SETTINGS, quote, applyAdvance, normalizeRequest, catalogName, qualityInfo, powerInfo, spellInfo, formatDaysI18n, type AdvanceQuote,
 } from '../../shared/advancement.ts';
-import { formatFr } from '../lib/i18n.ts';
+import { formatSource } from '../lib/i18n.ts';
 import { fillActorRefs } from '../lib/bookrefs.ts';
 import type {
   ActionContext, Actor, ActorId, AdeptPower, AdvancementRequest, CatalogBonus, CatalogItem, HistoryEntry, I18nEntry, I18nParams, I18nParamValue, Quality, ServerModule,
@@ -163,7 +163,7 @@ function trimRequests(tr: TrainingState): void {
 /** History entry: { text (French), i18n: { key, params } } + karma/nuyen deltas. */
 function pushHistory(actor: Actor, key: string, params: I18nParams, extra: Partial<HistoryEntry>): void {
   actor.history = Array.isArray(actor.history) ? actor.history : [];
-  actor.history.push({ ts: Date.now(), text: formatFr(key, params), i18n: { key, params }, ...extra } as HistoryEntry);
+  actor.history.push({ ts: Date.now(), text: formatSource(key, params), i18n: { key, params }, ...extra } as HistoryEntry);
 }
 
 function charge(actor: Actor, request: TrainingRequest): void {
@@ -175,8 +175,8 @@ function charge(actor: Actor, request: TrainingRequest): void {
     const extra: { karma?: number; nuyen?: number } = {};
     if (k) extra.karma = -k;
     if (n) extra.nuyen = -n;
-    if (n) pushHistory(actor, tk('Progression : {label} (instructeur)'), { label: labelParam(request) }, extra);
-    else pushHistory(actor, tk('Progression : {label}'), { label: labelParam(request) }, extra);
+    if (n) pushHistory(actor, tk('Advancement: {label} (instructor)'), { label: labelParam(request) }, extra);
+    else pushHistory(actor, tk('Advancement: {label}'), { label: labelParam(request) }, extra);
   }
 }
 
@@ -216,8 +216,8 @@ function completeJob(ctx: ActionContext, actor: Actor, job: TrainingJob, { force
     req.doneTs = Date.now();
   }
   const p = { actor: actor.name, label: labelParam(job) };
-  if (forced) publicLog(ctx, tk('▲ {actor} a terminé : {label} (validé par le MJ)'), p);
-  else publicLog(ctx, tk('▲ {actor} a terminé : {label}'), p);
+  if (forced) publicLog(ctx, tk('▲ {actor} finished: {label} (approved by the GM)'), p);
+  else publicLog(ctx, tk('▲ {actor} finished: {label}'), p);
   ctx.emitTo([...ownersOf(ctx.state, actor.id), 'gm'], 'sfx', { id: 'level-up' });
   return { actorId: actor.id, actorName: actor.name, label: job.label, labelI18n: job.labelI18n, summary };
 }
@@ -226,7 +226,7 @@ function completeJob(ctx: ActionContext, actor: Actor, job: TrainingJob, { force
 function approve(ctx: ActionContext, request: TrainingRequest, gmNote?: string): TrainingRequest {
   const tr = slice(ctx.state);
   const actor = ctx.state.actors[request.actorId];
-  if (!actor) return ctx.fail('Personnage introuvable');
+  if (!actor) return ctx.fail('Character not found');
   const q: AdvanceQuote = quote(actor, request.request, tr.settings, contextFor(tr, actor, request.id));
   if (q.error) failQuote(ctx, q);
   Object.assign(request, {
@@ -240,7 +240,7 @@ function approve(ctx: ActionContext, request: TrainingRequest, gmNote?: string):
     fillActorRefs(actor);
     request.status = 'done';
     request.doneTs = Date.now();
-    publicLog(ctx, tk('▲ {actor} progresse : {label}'), { actor: actor.name, label: labelParam(q) });
+    publicLog(ctx, tk('▲ {actor} advances: {label}'), { actor: actor.name, label: labelParam(q) });
     ctx.emitTo([...ownersOf(ctx.state, actor.id), 'gm'], 'sfx', { id: 'level-up' });
     return request;
   }
@@ -248,14 +248,14 @@ function approve(ctx: ActionContext, request: TrainingRequest, gmNote?: string):
   actor.training = [...jobsOf(actor), job];
   request.jobId = job.id;
   const p = { actor: actor.name, label: labelParam(q), days: formatDaysI18n(q.days) };
-  if (q.instructor) privateLog(ctx, actor.id, tk('{actor} commence l’entraînement : {label} — {days} avec instructeur'), p);
-  else privateLog(ctx, actor.id, tk('{actor} commence l’entraînement : {label} — {days}'), p);
+  if (q.instructor) privateLog(ctx, actor.id, tk('{actor} starts training: {label} — {days} with an instructor'), p);
+  else privateLog(ctx, actor.id, tk('{actor} starts training: {label} — {days}'), p);
   return request;
 }
 
 function findRequest(ctx: ActionContext, id: unknown): TrainingRequest {
   const r = slice(ctx.state).requests.find((x) => x.id === id);
-  if (!r) return ctx.fail('Demande introuvable');
+  if (!r) return ctx.fail('Request not found');
   return r;
 }
 
@@ -323,9 +323,9 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, payload: RequestPayload = {}) {
         const tr = slice(ctx.state);
         const actor = ctx.state.actors?.[payload.actorId as ActorId];
-        if (!actor) return ctx.fail('Personnage introuvable');
-        if (!ctx.owns(actor.id)) ctx.fail('Ce personnage ne t’appartient pas');
-        if (!ctx.isGM && actor.retired) ctx.fail('Ce personnage est à la retraite');
+        if (!actor) return ctx.fail('Character not found');
+        if (!ctx.owns(actor.id)) ctx.fail('This character is not yours');
+        if (!ctx.isGM && actor.retired) ctx.fail('This character is retired');
         const req: AdvancementRequest = normalizeRequest(payload);
         if (!ctx.isGM) req.free = false;
         const verified = enrichFromCatalog(req);
@@ -350,10 +350,10 @@ const mod: ServerModule = {
           }
         } else {
           const p = { actor: actor.name, label: labelParam(q), karma: q.karmaCost, nuyen: q.nuyenCost };
-          if (q.nuyenCost && manual) privateLog(ctx, actor.id, tk('{actor} demande : {label} — {karma} karma, {nuyen}¥ (saisie manuelle)'), p);
-          else if (q.nuyenCost) privateLog(ctx, actor.id, tk('{actor} demande : {label} — {karma} karma, {nuyen}¥'), p);
-          else if (manual) privateLog(ctx, actor.id, tk('{actor} demande : {label} — {karma} karma (saisie manuelle)'), p);
-          else privateLog(ctx, actor.id, tk('{actor} demande : {label} — {karma} karma'), p);
+          if (q.nuyenCost && manual) privateLog(ctx, actor.id, tk('{actor} requests: {label} — {karma} karma, {nuyen}¥ (manual entry)'), p);
+          else if (q.nuyenCost) privateLog(ctx, actor.id, tk('{actor} requests: {label} — {karma} karma, {nuyen}¥'), p);
+          else if (manual) privateLog(ctx, actor.id, tk('{actor} requests: {label} — {karma} karma (manual entry)'), p);
+          else privateLog(ctx, actor.id, tk('{actor} requests: {label} — {karma} karma'), p);
           ctx.emitTo('gm', 'sfx', { id: 'notify' });
         }
         return { requestId: request.id, status: request.status };
@@ -365,7 +365,7 @@ const mod: ServerModule = {
       role: 'gm',
       handler(ctx: ActionContext, { requestId, approve: ok, note }: ResolvePayload = {}) {
         const request = findRequest(ctx, requestId);
-        if (request.status !== 'pending') ctx.fail('Cette demande a déjà été traitée');
+        if (request.status !== 'pending') ctx.fail('This request has already been handled');
         const gmNote = String(note || '').trim().slice(0, 300);
         if (ok) {
           approve(ctx, request, gmNote);
@@ -375,8 +375,8 @@ const mod: ServerModule = {
           if (gmNote) request.gmNote = gmNote;
           const actor = ctx.state.actors[request.actorId];
           const p = { actor: actor?.name || '?', label: labelParam(request), note: gmNote };
-          if (gmNote) privateLog(ctx, request.actorId, tk('Demande refusée pour {actor} : {label} — « {note} »'), p);
-          else privateLog(ctx, request.actorId, tk('Demande refusée pour {actor} : {label}'), p);
+          if (gmNote) privateLog(ctx, request.actorId, tk('Request denied for {actor}: {label} — « {note} »'), p);
+          else privateLog(ctx, request.actorId, tk('Request denied for {actor}: {label}'), p);
         }
         return { status: request.status };
       },
@@ -389,15 +389,15 @@ const mod: ServerModule = {
       role: 'any',
       handler(ctx: ActionContext, { requestId, refund = true }: CancelPayload = {}) {
         const request = findRequest(ctx, requestId);
-        if (!ctx.owns(request.actorId)) ctx.fail('Cette demande ne t’appartient pas');
+        if (!ctx.owns(request.actorId)) ctx.fail('This request is not yours');
         const actor = ctx.state.actors[request.actorId];
         if (request.status === 'pending') {
           request.status = 'cancelled';
           request.resolvedTs = Date.now();
           return { status: request.status };
         }
-        if (request.status !== 'approved') ctx.fail('Cette demande est déjà close');
-        if (!ctx.isGM) ctx.fail('Entraînement en cours : seul le MJ peut l’interrompre');
+        if (request.status !== 'approved') ctx.fail('This request is already closed');
+        if (!ctx.isGM) ctx.fail('Training in progress: only the GM can interrupt it');
         if (actor) {
           actor.training = jobsOf(actor).filter((j) => j.requestId !== request.id);
           if (refund) {
@@ -409,12 +409,12 @@ const mod: ServerModule = {
               const extra: { karma?: number; nuyen?: number } = {};
               if (k) extra.karma = k;
               if (n) extra.nuyen = n;
-              pushHistory(actor, tk('Remboursement : {label} (entraînement interrompu)'), { label: labelParam(request) }, extra);
+              pushHistory(actor, tk('Refund: {label} (training interrupted)'), { label: labelParam(request) }, extra);
             }
           }
           const p = { actor: actor.name, label: labelParam(request) };
-          if (refund) privateLog(ctx, request.actorId, tk('Entraînement interrompu pour {actor} : {label} (remboursé)'), p);
-          else privateLog(ctx, request.actorId, tk('Entraînement interrompu pour {actor} : {label}'), p);
+          if (refund) privateLog(ctx, request.actorId, tk('Training interrupted for {actor}: {label} (refunded)'), p);
+          else privateLog(ctx, request.actorId, tk('Training interrupted for {actor}: {label}'), p);
         }
         request.status = 'cancelled';
         request.resolvedTs = Date.now();
@@ -428,7 +428,7 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, { days, actorIds }: AdvanceDaysPayload = {}) {
         const tr = slice(ctx.state);
         const d = clampInt(days, 1, 3650, 0);
-        if (!d) ctx.fail('Nombre de jours invalide');
+        if (!d) ctx.fail('Invalid number of days');
         const only = Array.isArray(actorIds) && actorIds.length ? new Set(actorIds) : null;
         const completed: Array<ReturnType<typeof completeJob>> = [];
         let progressed = 0;
@@ -442,9 +442,9 @@ const mod: ServerModule = {
         }
         if (!only) tr.daysElapsed += d;
         const p = { days: formatDaysI18n(d), n: completed.length };
-        if (!completed.length) publicLog(ctx, tk('⏱ Temps mort : {days}.'), p);
-        else if (completed.length === 1) publicLog(ctx, tk('un::⏱ Temps mort : {days}. {n} entraînement(s) terminé(s).'), p);
-        else publicLog(ctx, tk('⏱ Temps mort : {days}. {n} entraînement(s) terminé(s).'), p);
+        if (!completed.length) publicLog(ctx, tk('⏱ Downtime: {days}.'), p);
+        else if (completed.length === 1) publicLog(ctx, tk('a::⏱ Downtime: {days}. {n} training completed.'), p);
+        else publicLog(ctx, tk('⏱ Downtime: {days}. {n} trainings completed.'), p);
         return { days: d, completed, progressed };
       },
     },
@@ -454,9 +454,9 @@ const mod: ServerModule = {
       role: 'gm',
       handler(ctx: ActionContext, { actorId, jobId }: CompletePayload = {}) {
         const actor = ctx.state.actors?.[actorId as ActorId];
-        if (!actor) return ctx.fail('Personnage introuvable');
+        if (!actor) return ctx.fail('Character not found');
         const job = jobsOf(actor).find((j) => j.id === jobId);
-        if (!job) return ctx.fail('Entraînement introuvable');
+        if (!job) return ctx.fail('Training not found');
         return completeJob(ctx, actor, job, { forced: true });
       },
     },

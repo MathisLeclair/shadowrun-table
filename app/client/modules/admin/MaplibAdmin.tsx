@@ -63,8 +63,8 @@ interface MaplibReply {
   maxBytes: number;
 }
 
-const ORIGINS: Record<string, string> = { git: tk('git'), seed: tk('Foundry'), edited: tk('maplib::modifiée'), upload: tk('téléversée') };
-const SOURCES: Record<string, string> = { fragmap: tk('Fragmaps (Patreon)'), 'fragmaps-free': tk('Fragmaps (gratuites)') };
+const ORIGINS: Record<string, string> = { git: tk('git'), seed: tk('Foundry'), edited: tk('maplib::edited'), upload: tk('uploaded') };
+const SOURCES: Record<string, string> = { fragmap: tk('Fragmaps (Patreon)'), 'fragmaps-free': tk('Fragmaps (free)') };
 const nameOf = (e: LibEntry): string => (getLang() === 'en' ? e.name || e.nameFr : e.nameFr || e.name) || e.slug;
 const slugOf = (s: string) =>
   String(s || '')
@@ -79,10 +79,10 @@ const byLabel = (b: VersionBy | undefined) =>
   !b
     ? ''
     : b.kind === 'gm'
-      ? t('MJ de {table}', { table: b.table || b.tableId })
+      ? t('GM of {table}', { table: b.table || b.tableId })
       : b.kind === 'admin'
         ? b.table
-          ? t('admin (depuis {table})', { table: b.table })
+          ? t('admin (from {table})', { table: b.table })
           : t('admin')
         : b.kind === 'git'
           ? 'git'
@@ -116,7 +116,7 @@ function EditModal({ entry, adminApi, onClose, onSaved }: { entry: LibEntry; adm
             .filter(Boolean),
         },
       });
-      toast(t('Carte {name} enregistrée', { name: f.nameFr || f.name }), 'success');
+      toast(t('Map {name} saved', { name: f.nameFr || f.name }), 'success');
       onSaved();
       onClose();
     } catch (err) {
@@ -127,37 +127,37 @@ function EditModal({ entry, adminApi, onClose, onSaved }: { entry: LibEntry; adm
   };
   return (
     <Modal
-      title={t('Modifier « {name} »', { name: nameOf(entry) })}
+      title={t('Edit “{name}”', { name: nameOf(entry) })}
       width={560}
       onClose={onClose}
       actions={
         <Button variant="primary" disabled={busy} onClick={save}>
-          {t('Enregistrer')}
+          {t('Save')}
         </Button>
       }
     >
       <div className="col gap-s">
         <div className="grid-2">
-          <Field label={t('Nom français')}>
+          <Field label={t('French name')}>
             <input className="input" value={f.nameFr} onChange={(e) => set('nameFr')(e.target.value)} />
           </Field>
-          <Field label={t('Nom anglais')}>
+          <Field label={t('English name')}>
             <input className="input" value={f.name} onChange={(e) => set('name')(e.target.value)} />
           </Field>
-          <Field label={t('Ambiance')}>
+          <Field label={t('Ambience')}>
             <Select value={f.theme} options={themeOptions()} onChange={set('theme')} />
           </Field>
-          <Field label={t('Éclairage')}>
+          <Field label={t('Lighting')}>
             <Select value={f.lighting} options={lightingOptions()} onChange={set('lighting')} />
           </Field>
         </div>
-        <Field label={t('Mots-clés')} hint={t('Séparés par des virgules (français et anglais)')}>
+        <Field label={t('Keywords')} hint={t('Comma-separated (French and English)')}>
           <input className="input" value={f.tags} onChange={(e) => set('tags')(e.target.value)} />
         </Field>
         <Field label={t('Description')}>
           <textarea className="input" rows={4} value={f.description} onChange={(e) => set('description')(e.target.value)}></textarea>
         </Field>
-        <span className="small muted">{t('Ces champs restent prioritaires sur les mises à jour venant de git.')}</span>
+        <span className="small muted">{t('These fields take precedence over updates coming from git.')}</span>
       </div>
     </Modal>
   );
@@ -170,7 +170,7 @@ function HistoryModal({ entry, adminApi, onClose, onSaved }: { entry: LibEntry; 
     setBusy(true);
     try {
       const r = await fn();
-      toast(t('Version {v} créée', { v: r?.version }), 'success');
+      toast(t('Version {v} created', { v: r?.version }), 'success');
       onSaved();
       onClose();
     } catch (err) {
@@ -180,13 +180,13 @@ function HistoryModal({ entry, adminApi, onClose, onSaved }: { entry: LibEntry; 
     }
   };
   const rollback = async (v: number) => {
-    if (!(await confirmAction(t('Rétablir la version {v} de « {name} » ? Elle devient une nouvelle version (l’actuelle reste dans l’historique).', { v, name: nameOf(entry) })))) return;
+    if (!(await confirmAction(t('Restore version {v} of “{name}”? It becomes a new version (the current one stays in the history).', { v, name: nameOf(entry) })))) return;
     run(() => adminApi(`/api/admin/maplib/${entry.slug}/rollback`, { method: 'POST', body: { version: v } }));
   };
   const revert = async () => {
     if (
       !(await confirmAction(
-        t('Revenir à la version d’origine de « {name} » (git ou Foundry) ? Les corrections publiées restent dans l’historique, et les mises à jour git s’appliqueront de nouveau.', { name: nameOf(entry) })
+        t('Go back to the original version of “{name}” (git or Foundry)? Published fixes stay in the history, and git updates will apply again.', { name: nameOf(entry) })
       ))
     )
       return;
@@ -196,15 +196,15 @@ function HistoryModal({ entry, adminApi, onClose, onSaved }: { entry: LibEntry; 
   const publish = async (force = false): Promise<void> => {
     const [tableId, mapId] = pick.split('|');
     if (!tableId) return;
-    if (!force && !(await confirmAction(t('Publier les murs de cette carte de table comme nouvelle version de « {name} » ?', { name: nameOf(entry) })))) return;
+    if (!force && !(await confirmAction(t('Publish the walls of this table map as a new version of “{name}”?', { name: nameOf(entry) })))) return;
     setBusy(true);
     try {
       const r = await adminApi<{ version: number }>(`/api/admin/maplib/${entry.slug}/publish`, { method: 'POST', body: { tableId, mapId, force } });
-      toast(t('Version {v} créée', { v: r.version }), 'success');
+      toast(t('Version {v} created', { v: r.version }), 'success');
       onSaved();
       onClose();
     } catch (err) {
-      if ((err as ServerError).code === 'stale' && !force && (await confirmAction(t('Cette carte de table part d’une version plus ancienne. Publier quand même ?')))) {
+      if ((err as ServerError).code === 'stale' && !force && (await confirmAction(t('This table map is based on an older version. Publish anyway?')))) {
         setBusy(false);
         return publish(true);
       }
@@ -215,15 +215,15 @@ function HistoryModal({ entry, adminApi, onClose, onSaved }: { entry: LibEntry; 
   };
   const cur: HistoryRow = { version: entry.version, at: entry.versionInfo?.at || entry.updatedAt, by: entry.versionInfo?.by, origin: entry.origin, counts: entry.counts, current: true };
   return (
-    <Modal title={t('Historique de « {name} »', { name: nameOf(entry) })} width={640} onClose={onClose}>
+    <Modal title={t('History of “{name}”', { name: nameOf(entry) })} width={640} onClose={onClose}>
       <div className="col gap-s">
         <table className="sr">
           <thead>
             <tr>
               <th>{t('Version')}</th>
               <th>{t('Date')}</th>
-              <th>{t('Par')}</th>
-              <th>{t('Contenu')}</th>
+              <th>{t('By')}</th>
+              <th>{t('Content')}</th>
               <th></th>
             </tr>
           </thead>
@@ -235,17 +235,17 @@ function HistoryModal({ entry, adminApi, onClose, onSaved }: { entry: LibEntry; 
                   {h.current ? (
                     <>
                       {' '}
-                      <Badge color="green">{t('actuelle')}</Badge>
+                      <Badge color="green">{t('fem::current')}</Badge>
                     </>
                   ) : null}
                 </td>
                 <td className="small">{h.at ? fmtDate(h.at) : ''}</td>
                 <td className="small">{byLabel(h.by)}</td>
-                <td className="small muted">{h.counts ? t('{walls} murs, {doors} portes, {lights} lumières', h.counts) : ''}</td>
+                <td className="small muted">{h.counts ? t('{walls} walls, {doors} doors, {lights} lights', h.counts) : ''}</td>
                 <td>
                   {h.current ? null : (
                     <Button small disabled={busy} onClick={() => rollback(h.version)}>
-                      {t('Rétablir')}
+                      {t('Restore')}
                     </Button>
                   )}
                 </td>
@@ -256,26 +256,26 @@ function HistoryModal({ entry, adminApi, onClose, onSaved }: { entry: LibEntry; 
         {entry.canRevert ? (
           <div>
             <Button small disabled={busy} onClick={revert}>
-              {t('Revenir à la version d’origine')}
+              {t('Back to the original version')}
             </Button>
             {entry.gitNewer ? (
               <>
                 {' '}
-                <span className="small amber">{t('Une version plus récente existe dans git.')}</span>
+                <span className="small amber">{t('A newer version exists in git.')}</span>
               </>
             ) : null}
           </div>
         ) : null}
-        <div className="section-title">{t('Publier depuis une table')}</div>
+        <div className="section-title">{t('Publish from a table')}</div>
         {candidates.length ? (
           <div className="row wrap gap-s">
-            <Select value={pick} onChange={setPick} options={[{ value: '', label: t('Choisir une carte de table…') }, ...candidates]} />
+            <Select value={pick} onChange={setPick} options={[{ value: '', label: t('Pick a table map…') }, ...candidates]} />
             <Button small variant="accent" disabled={busy || !pick} onClick={() => publish(false)}>
-              {t('Publier')}
+              {t('Publish')}
             </Button>
           </div>
         ) : (
-          <span className="small muted">{t('Aucune table n’utilise cette carte.')}</span>
+          <span className="small muted">{t('No table uses this map.')}</span>
         )}
       </div>
     </Modal>
@@ -306,7 +306,7 @@ function UploadForm({ token, maxBytes, onDone }: { token: string; maxBytes: numb
   };
   const send = async () => {
     if (!file) return;
-    if (maxBytes && file.size > maxBytes) return toast(t('Fichier trop volumineux ({size} max)', { size: fmtBytes(maxBytes) }), 'error');
+    if (maxBytes && file.size > maxBytes) return toast(t('File too large ({size} max)', { size: fmtBytes(maxBytes) }), 'error');
     try {
       const q = new URLSearchParams({ slug: f.slug, name: f.name, nameFr: f.nameFr, gridPx: f.gridPx, source: f.source });
       if (f.replace) q.set('replace', '1');
@@ -315,7 +315,7 @@ function UploadForm({ token, maxBytes, onDone }: { token: string; maxBytes: numb
         headers: { 'X-Filename': encodeURIComponent(file.name).slice(0, 200) },
         onProgress: (p) => setProgress(p >= 1 ? 'server' : p),
       });
-      toast(r?.thumb ? t('Carte {slug} ajoutée', { slug: f.slug }) : t('Carte {slug} ajoutée (sans miniature : lance tools/maplib-build.ts)', { slug: f.slug }), 'success');
+      toast(r?.thumb ? t('Map {slug} added', { slug: f.slug }) : t('Map {slug} added (no thumbnail: run tools/maplib-build.ts)', { slug: f.slug }), 'success');
       setFile(null);
       setF((o) => ({ ...o, slug: '', name: '', nameFr: '', replace: false }));
       onDone();
@@ -329,33 +329,33 @@ function UploadForm({ token, maxBytes, onDone }: { token: string; maxBytes: numb
     <div className="col gap-s">
       <input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onChange={choose} />
       <div className="grid-2">
-        <Field label={t('Identifiant')} hint={t('minuscules, chiffres, tirets')}>
+        <Field label={t('Id')} hint={t('lowercase, digits, dashes')}>
           <input className="input" value={f.slug} onChange={(e) => set('slug')(e.target.value)} />
         </Field>
-        <Field label={t('Pixels par case')}>
+        <Field label={t('Pixels per cell')}>
           <input className="input" type="number" min="4" step="any" value={f.gridPx} onChange={(e) => set('gridPx')(e.target.value)} />
         </Field>
-        <Field label={t('Nom français')}>
+        <Field label={t('French name')}>
           <input className="input" value={f.nameFr} onChange={(e) => set('nameFr')(e.target.value)} />
         </Field>
-        <Field label={t('Nom anglais')}>
+        <Field label={t('English name')}>
           <input className="input" value={f.name} onChange={(e) => set('name')(e.target.value)} />
         </Field>
         <Field label={t('Source')}>
           <Select value={f.source} onChange={set('source')} options={Object.entries(SOURCES).map(([value, label]) => ({ value, label: t(label) }))} />
         </Field>
       </div>
-      <Toggle value={f.replace} onChange={set('replace')} label={t('Remplacer l’image d’une carte existante')} />
+      <Toggle value={f.replace} onChange={set('replace')} label={t('Replace the image of an existing map')} />
       {progress != null ? (
-        <Progress value={progress} serverLabel={t('Miniature en cours…')} />
+        <Progress value={progress} serverLabel={t('Making the thumbnail…')} />
       ) : (
         <div>
           <Button variant="primary" disabled={!file || !f.slug} onClick={send}>
-            {t('Téléverser')}
+            {t('Upload')}
           </Button>
         </div>
       )}
-      <span className="small muted">{t('La carte arrive sans murs : ajoute-la à une table, trace les murs dans l’éditeur, puis « Publier mes corrections dans la bibliothèque ».')}</span>
+      <span className="small muted">{t('The map comes without walls: add it to a table, trace the walls in the editor, then “Publish my fixes to the library”.')}</span>
     </div>
   );
 }
@@ -372,17 +372,17 @@ export default function MaplibAdmin({ adminApi, token, run }: AdminPanelProps) {
   useEffect(() => {
     reload();
   }, []);
-  if (!data) return <Empty>{t('Chargement…')}</Empty>;
+  if (!data) return <Empty>{t('Loading…')}</Empty>;
   const list = data.maps.filter((e) => matchesQuery(e, q)).sort((a, b) => nameOf(a).localeCompare(nameOf(b), getLang()));
   const del = async (e: LibEntry) => {
     const n = (e.usedBy || []).reduce((s, u) => s + u.maps.length, 0);
     const msg =
-      t('Retirer « {name} » de la bibliothèque ?', { name: nameOf(e) }) +
-      (n ? '\n' + tn(n, '{n} carte de table en est une copie : elle garde son image et ses murs.', '{n} cartes de table en sont des copies : elles gardent leur image et leurs murs.') : '');
+      t('Remove “{name}” from the library?', { name: nameOf(e) }) +
+      (n ? '\n' + tn(n, '{n} table map is a copy of it: it keeps its image and walls.', '{n} table maps are copies of it: they keep their image and walls.') : '');
     if (!(await confirmAction(msg))) return;
     run(async () => {
       await adminApi(`/api/admin/maplib/${e.slug}`, { method: 'DELETE', body: { confirm: e.slug } });
-      toast(t('Carte retirée de la bibliothèque'));
+      toast(t('Map removed from the library'));
       setData(await adminApi<MaplibReply>('/api/admin/maplib'));
     });
   };
@@ -392,8 +392,8 @@ export default function MaplibAdmin({ adminApi, token, run }: AdminPanelProps) {
       <div className="row wrap gap-s">
         <Toggle
           value={!!data.settings?.publishAdminOnly}
-          label={t('Publication réservée à l’administrateur')}
-          title={t('Sinon, tout MJ peut publier ses corrections de murs (l’historique garde les 5 versions précédentes)')}
+          label={t('Publishing reserved to the admin')}
+          title={t('Otherwise any GM may publish wall fixes (the history keeps the 5 previous versions)')}
           onChange={(v) =>
             run(async () => {
               await adminApi('/api/admin/maplib/settings', { method: 'PATCH', body: { publishAdminOnly: v } });
@@ -402,17 +402,17 @@ export default function MaplibAdmin({ adminApi, token, run }: AdminPanelProps) {
           }
         />
         <span className="grow"></span>
-        <SearchBox value={q} onChange={setQ} placeholder={t('Rechercher une carte…')} />
+        <SearchBox value={q} onChange={setQ} placeholder={t('Search for a map…')} />
         <Button small onClick={() => setShowUpload(!showUpload)}>
-          {showUpload ? t('Fermer') : t('+ Téléverser une image')}
+          {showUpload ? t('Close') : t('+ Upload an image')}
         </Button>
       </div>
       <div className="small muted">
-        {tn(data.maps.length, '{n} carte dans la bibliothèque', '{n} cartes dans la bibliothèque')}
+        {tn(data.maps.length, '{n} map in the library', '{n} maps in the library')}
         {missing ? (
           <>
             {' · '}
-            <span className="amber">{tn(missing, '{n} image manquante sur le serveur', '{n} images manquantes sur le serveur')}</span>
+            <span className="amber">{tn(missing, '{n} image missing on the server', '{n} images missing on the server')}</span>
           </>
         ) : null}
       </div>
@@ -422,16 +422,16 @@ export default function MaplibAdmin({ adminApi, token, run }: AdminPanelProps) {
         </div>
       )}
       {!list.length ? (
-        <Empty>{t('Aucune carte.')}</Empty>
+        <Empty>{t('No maps.')}</Empty>
       ) : (
         <div className="admin-maplib-list">
           <table className="sr">
             <thead>
               <tr>
                 <th></th>
-                <th>{t('Carte')}</th>
+                <th>{t('Map')}</th>
                 <th>{t('Version')}</th>
-                <th>{t('Utilisée par')}</th>
+                <th>{t('Used by')}</th>
                 <th></th>
               </tr>
             </thead>
@@ -445,12 +445,12 @@ export default function MaplibAdmin({ adminApi, token, run }: AdminPanelProps) {
                       <strong>{nameOf(e)}</strong> <span className="muted small mono">{e.slug}</span>
                       <br />
                       <span className="small muted">
-                        {t(SOURCES[e.source] || e.source)} · {e.width} × {e.height} · {e.quality === 'good' ? t('murs soignés') : t('murs approximatifs')}
+                        {t(SOURCES[e.source] || e.source)} · {e.width} × {e.height} · {e.quality === 'good' ? t('clean walls') : t('rough walls')}
                       </span>
                       {!e.hasImage ? (
                         <>
                           {' '}
-                          <Badge color="red">{t('image manquante')}</Badge>
+                          <Badge color="red">{t('image missing')}</Badge>
                         </>
                       ) : null}
                     </td>
@@ -459,7 +459,7 @@ export default function MaplibAdmin({ adminApi, token, run }: AdminPanelProps) {
                       {e.gitNewer ? (
                         <>
                           <br />
-                          <span className="amber">{t('git plus récent')}</span>
+                          <span className="amber">{t('newer in git')}</span>
                         </>
                       ) : null}
                     </td>
@@ -476,13 +476,13 @@ export default function MaplibAdmin({ adminApi, token, run }: AdminPanelProps) {
                     </td>
                     <td className="row wrap gap-s">
                       <Button small onClick={() => setEdit(e)}>
-                        {t('Modifier')}
+                        {t('Edit')}
                       </Button>
                       <Button small onClick={() => setHist(e)}>
-                        {t('Historique')}
+                        {t('History')}
                       </Button>
                       <Button small variant="danger" onClick={() => del(e)}>
-                        {t('Retirer')}
+                        {t('Remove')}
                       </Button>
                     </td>
                   </tr>

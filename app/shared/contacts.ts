@@ -31,38 +31,38 @@ export const MAX_LOYALTY = 6;
 
 /** Connection Rating Table (p. 387), paraphrased. */
 export const CONNECTION_DETAILS: Record<number, string> = {
-  1: tk('Aucune influence : on l’appelle pour ce qu’il sait'),
-  2: tk('Un ou deux amis qui savent des choses, une influence minime'),
-  3: tk('Quelques amis, mais peu d’influence'),
-  4: tk('Connu dans tout un quartier : chef de gang, maire d’arrondissement'),
-  5: tk('Influence modérée : conseiller municipal, petit cadre d’une corpo moyenne'),
-  6: tk('Connu dans tout l’État : maire, fixer réputé, cadre moyen d’une corpo moyenne'),
-  7: tk('Connu sur une large zone : dirigeant dans une corpo nationale'),
-  8: tk('Bien placé sur plusieurs États : cadre d’un gouvernement d’État ou d’une corpo nationale'),
-  9: tk('Bien placé sur tout le continent : cadre moyen d’une corpo AA'),
-  10: tk('Réseau mondial : cadre supérieur d’une corpo AA ou d’un petit État'),
-  11: tk('Réseau mondial très dense : cadre d’une corpo AAA ou d’une grande nation'),
-  12: tk('Puissance mondiale : poste clé dans une corpo AAA ou une grande nation'),
+  1: tk('No influence: you call them for what they know'),
+  2: tk('One or two friends who know things, minor influence'),
+  3: tk('A few friends, but little influence'),
+  4: tk('Known across a neighborhood: gang leader, borough mayor'),
+  5: tk('Moderate influence: city councilman, low-level executive in a mid-size corp'),
+  6: tk('Known across the state: mayor, notable fixer, mid-level executive in a mid-size corp'),
+  7: tk('Known over a large area: leadership position in a national corp'),
+  8: tk('Well connected across several states: executive in a state government or national corp'),
+  9: tk('Well connected on the continent: mid-level executive in an AA megacorp'),
+  10: tk('Worldwide network: senior executive in an AA megacorp or small nation'),
+  11: tk('Extremely well connected worldwide: executive in a AAA megacorp or major nation'),
+  12: tk('Global power player: key position in a AAA megacorp or major nation'),
 };
 
 /** Loyalty Rating Table (p. 387), paraphrased: level name + what the contact will do. */
 export const LOYALTY_LEVELS: Record<number, RatingLevel> = {
-  1: { name: tk('Business'), text: tk('Purement mercenaire, aucun traitement de faveur') },
-  2: { name: tk('Habitué'), text: tk('Toujours du business, mais avec un minimum de respect') },
-  3: { name: tk('loyauté::Connaissance'), text: tk('Amical, rend de petits services, ne plongera pas pour toi') },
-  4: { name: tk('Pote'), text: tk('Une vraie amitié : fera un détour pour t’aider') },
-  5: { name: tk('Couvre tes arrières'), text: tk('Confiance de longue date : te soutient même quand c’est risqué') },
-  6: { name: tk('Ami pour la vie'), text: tk('Ira jusqu’au bout pour toi, et toi pour lui') },
+  1: { name: tk('Just Biz'), text: tk('Purely mercenary, no preferential treatment') },
+  2: { name: tk('Regular'), text: tk('Still business, but with some mutual respect') },
+  3: { name: tk('loyalty::Acquaintance'), text: tk('Friendly, does small favors, won’t take a fall for you') },
+  4: { name: tk('Buddy'), text: tk('Real friendship: will go out of their way for you') },
+  5: { name: tk('Got Your Back'), text: tk('Long-standing trust: backs you even when it’s risky') },
+  6: { name: tk('Friend for Life'), text: tk('Will go to the wall for you, and you for them') },
 };
 
 /** Favor Rating Table (p. 389), paraphrased examples. A contact agrees to a favor rated ≤ their Loyalty. */
 export const FAVOR_RATINGS: Record<number, RatingLevel> = {
-  1: { name: tk('Mineur'), text: tk('Passer un message, accès à une zone peu sécurisée') },
-  2: { name: tk('Risque faible'), text: tk('Prêt de matériel (≤ 5 000 ¥), signature d’un chef d’équipe') },
-  3: { name: tk('Moyen'), text: tk('Accès à une zone moyennement sécurisée (labo corpo standard)') },
-  4: { name: tk('Risque modéré'), text: tk('Prêt de matériel (≤ 50 000 ¥), signature d’un cadre moyen') },
-  5: { name: tk('Sérieux'), text: tk('Accès à une zone de haute sécurité (siège AA, bureaux fédéraux)') },
-  6: { name: tk('Risque majeur'), text: tk('Prêt de matériel (≤ 500 000 ¥), signature d’un cadre supérieur') },
+  1: { name: tk('Minor'), text: tk('Deliver a message, access to a low-security area') },
+  2: { name: tk('Low Risk'), text: tk('Equipment loan (≤ 5,000¥), a supervisor’s signature') },
+  3: { name: tk('Medium'), text: tk('Access to a mid-level security area (standard corp lab)') },
+  4: { name: tk('Moderate Risk'), text: tk('Equipment loan (≤ 50,000¥), a middle manager’s signature') },
+  5: { name: tk('Serious'), text: tk('Access to a high-security area (AA HQ, federal offices)') },
+  6: { name: tk('Major Risk'), text: tk('Equipment loan (≤ 500,000¥), a senior manager’s signature') },
 };
 
 export const ROLL_KINDS: ContactRollKind[] = ['reach', 'negotiate', 'legwork', 'network'];

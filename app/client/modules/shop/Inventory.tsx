@@ -25,27 +25,27 @@ interface ListDef {
 
 // `label` = French key (render t(label)); `detail` runs at render time.
 const LISTS: ListDef[] = [
-  { id: 'weapons', label: tk('Armes'), sub: 'accessories', detail: (w) => [w.damage, w.ap ? t('PA {n}', { n: w.ap }) : '', w.mode].filter(Boolean).join(' · ') },
+  { id: 'weapons', label: tk('Weapons'), sub: 'accessories', detail: (w) => [w.damage, w.ap ? t('AP {n}', { n: w.ap }) : '', w.mode].filter(Boolean).join(' · ') },
   {
     id: 'armor',
-    label: tk('Armures'),
+    label: tk('pl::Armor'),
     sub: 'mods',
-    detail: (a) => (a.equipped ? t('{n} armure · portée', { n: `${a.stack ? '+' : ''}${a.rating ?? 0}` }) : t('{n} armure', { n: `${a.stack ? '+' : ''}${a.rating ?? 0}` })),
+    detail: (a) => (a.equipped ? t('{n} armor · worn', { n: `${a.stack ? '+' : ''}${a.rating ?? 0}` }) : t('{n} armor', { n: `${a.stack ? '+' : ''}${a.rating ?? 0}` })),
   },
   {
     id: 'augmentations',
     label: tk('Augmentations'),
     detail: (a) =>
-      [a.kind === 'bioware' ? t('Bioware') : t('Cyberware'), a.rating ? t('ind. {n}', { n: a.rating }) : '', a.grade && a.grade !== 'standard' ? gradeLabel(a.grade) : '', t('Ess {n}', { n: a.essence ?? 0 })]
+      [a.kind === 'bioware' ? t('Bioware') : t('Cyberware'), a.rating ? t('rtg {n}', { n: a.rating }) : '', a.grade && a.grade !== 'standard' ? gradeLabel(a.grade) : '', t('Ess {n}', { n: a.essence ?? 0 })]
         .filter(Boolean)
         .join(' · '),
   },
-  { id: 'gear', label: tk('Équipement'), detail: (g) => [g.category, g.rating ? t('ind. {n}', { n: g.rating }) : ''].filter(Boolean).join(' · ') },
+  { id: 'gear', label: tk('Gear'), detail: (g) => [g.category, g.rating ? t('rtg {n}', { n: g.rating }) : ''].filter(Boolean).join(' · ') },
   {
     id: 'vehicles',
-    label: tk('Véhicules & drones'),
+    label: tk('Vehicles & drones'),
     sub: 'mods',
-    detail: (v) => t('Man {handling} · Vit {speed} · Str {body} · Bli {armor}', { handling: v.handling ?? '—', speed: v.speed ?? '—', body: v.body ?? '—', armor: v.armor ?? '—' }),
+    detail: (v) => t('Hand {handling} · Spd {speed} · Body {body} · Arm {armor}', { handling: v.handling ?? '—', speed: v.speed ?? '—', body: v.body ?? '—', armor: v.armor ?? '—' }),
   },
 ];
 /** Ledger line text: translatable entry when the server stored an i18n key. */
@@ -53,10 +53,10 @@ const historyText = (h: HistoryEntry) => (h.i18n?.key ? t(h.i18n.key, h.i18n.par
 /** Sub-item detail: mount / capacity / slots / rating. */
 const subDetail = (sub: string | undefined, s: OwnedItem) =>
   [
-    sub === 'accessories' ? (s.included ? t('d’origine') : t(MOUNTS[s.mount || ''] || s.mount)) : '',
-    s.rating ? t('ind. {n}', { n: s.rating }) : '',
+    sub === 'accessories' ? (s.included ? t('built-in') : t(MOUNTS[s.mount || ''] || s.mount)) : '',
+    s.rating ? t('rtg {n}', { n: s.rating }) : '',
     s.capacity ? t('cap. {n}', { n: s.capacity }) : '',
-    s.slots ? tn(s.slots, '{n} emplacement', '{n} emplacements') : '',
+    s.slots ? tn(s.slots, '{n} slot', '{n} slots') : '',
   ]
     .filter(Boolean)
     .join(' · ');
@@ -72,7 +72,7 @@ export default function Inventory({ game, actor, catalog }: InventoryProps) {
   const isGM = game.me.role === 'gm';
   const [months, setMonths] = useState<Record<string, number>>({});
   const [qtys, setQtys] = useState<Record<string, number>>({});
-  if (!actor) return <Empty>{t('Aucun personnage sélectionné.')}</Empty>;
+  if (!actor) return <Empty>{t('No character selected.')}</Empty>;
   const rate = Number(shop.sellRate) || 0;
   const pendingSales = new Set(
     (shop.orders || []).filter((o) => o.status === 'pending' && o.kind === 'sell').map((o) => o.items[0]?.subId || o.items[0]?.itemId)
@@ -87,7 +87,7 @@ export default function Inventory({ game, actor, catalog }: InventoryProps) {
     const name = sub ? itemName(sub) : it.name;
     let price: number | undefined;
     if (isGM) {
-      const ans = await promptText(n > 1 ? t('Prix de revente de {item} ×{n} (¥)', { item: name, n }) : t('Prix de revente de {item} (¥)', { item: name }), offer === null ? '' : String(offer));
+      const ans = await promptText(n > 1 ? t('Resale price of {item} ×{n} (¥)', { item: name, n }) : t('Resale price of {item} (¥)', { item: name }), offer === null ? '' : String(offer));
       if (ans === null) return;
       price = Math.max(0, Math.round(Number(String(ans).replace(/[^\d.-]/g, '')) || 0));
     } else {
@@ -95,34 +95,34 @@ export default function Inventory({ game, actor, catalog }: InventoryProps) {
       const p = { item, cost: nuyen(offer), rate };
       const msg =
         offer === null
-          ? t('Revendre {item} ? Cabana fixera le prix (validation du MJ).', { item: name })
+          ? t('Sell {item}? Cabana will set the price (GM approval).', { item: name })
           : list === 'augmentations'
-            ? t('Revendre {item} à Cabana pour {cost} ({rate} % de sa valeur) ?\nL’Essence perdue ne revient pas.', p)
-            : t('Revendre {item} à Cabana pour {cost} ({rate} % de sa valeur) ?', p);
+            ? t('Sell {item} to Cabana for {cost} ({rate}% of its value)?\nLost Essence does not come back.', p)
+            : t('Sell {item} to Cabana for {cost} ({rate}% of its value)?', p);
       if (!(await confirmAction(msg))) return;
     }
     try {
       const res = await send<{ status?: string; total?: number }>('shop/sell', { actorId: actor.id, list, itemId: it.id, ...(sub ? { subId: sub.id } : { qty: n }), ...(isGM ? { price } : {}) });
-      if (res?.status === 'pending') toast(t('Proposition de revente envoyée au MJ'), 'info');
-      else toast(t('Vendu : +{cost}', { cost: nuyen(res?.total) }), 'success');
+      if (res?.status === 'pending') toast(t('Resale offer sent to the GM'), 'info');
+      else toast(t('Sold: +{cost}', { cost: nuyen(res?.total) }), 'success');
     } catch {}
   };
 
   const removeUpgrade = async (list: string, it: OwnedItem, sub: OwnedItem) => {
-    if (!(await confirmAction(t('Retirer {item} de {target} ? (sans remboursement)', { item: itemName(sub), target: it.name })))) return;
+    if (!(await confirmAction(t('Remove {item} from {target}? (no refund)', { item: itemName(sub), target: it.name })))) return;
     try {
       await send('shop/removeUpgrade', { actorId: actor.id, list, itemId: it.id, subId: sub.id });
-      toast(t('Option retirée'), 'info');
+      toast(t('Option removed'), 'info');
     } catch {}
   };
 
   const payRent = async (lf: Lifestyle) => {
     const m = months[lf.id] || 1;
     const cost = (Number(lf.monthlyCost) || 0) * m;
-    if (!(await confirmAction(t('Payer {n} mois de {name} pour {cost} ?', { n: m, name: lf.name, cost: nuyen(cost) })))) return;
+    if (!(await confirmAction(t('Pay {n} month(s) of {name} for {cost}?', { n: m, name: lf.name, cost: nuyen(cost) })))) return;
     try {
       await send('shop/payLifestyle', { actorId: actor.id, lifestyleId: lf.id, months: m });
-      toast(t('Loyer payé'), 'success');
+      toast(t('Rent paid'), 'success');
     } catch {}
   };
 
@@ -148,7 +148,7 @@ export default function Inventory({ game, actor, catalog }: InventoryProps) {
               {s.included ? (
                 <>
                   {' '}
-                  <Badge>{t('d’origine')}</Badge>
+                  <Badge>{t('built-in')}</Badge>
                 </>
               ) : null}
             </div>
@@ -157,15 +157,15 @@ export default function Inventory({ game, actor, catalog }: InventoryProps) {
           <td className="num-cell small">{resale === null ? <span className="faint">—</span> : nuyen(resale)}</td>
           <td className="right shop-inv-actions">
             {pending ? (
-              <Badge color="amber">{t('Revente en attente')}</Badge>
+              <Badge color="amber">{t('Resale pending')}</Badge>
             ) : (
               <>
                 {resale !== null && (
                   <Button small variant="ghost" disabled={!canSell} onClick={() => sell(L.id, it, s)}>
-                    {t('Revendre')}
+                    {t('Sell')}
                   </Button>
                 )}
-                {canRemove(L.id, s) && <IconButton icon="✕" title={t('Retirer (sans remboursement)')} onClick={() => removeUpgrade(L.id, it, s)} />}
+                {canRemove(L.id, s) && <IconButton icon="✕" title={t('Remove (no refund)')} onClick={() => removeUpgrade(L.id, it, s)} />}
               </>
             )}
           </td>
@@ -176,7 +176,7 @@ export default function Inventory({ game, actor, catalog }: InventoryProps) {
   return (
     <div className="shop-inv">
       <div className="shop-inv-main">
-        {empty && <Empty>{t('Inventaire vide.')}</Empty>}
+        {empty && <Empty>{t('Empty inventory.')}</Empty>}
         {LISTS.map((L) => {
           const items = itemsOf(L);
           if (!items.length) return null;
@@ -201,13 +201,13 @@ export default function Inventory({ game, actor, catalog }: InventoryProps) {
                             </div>
                             <div className="faint small">{L.detail(it)}</div>
                           </td>
-                          <td className="num-cell small" title={t('Valeur de revente estimée')}>
+                          <td className="num-cell small" title={t('Estimated resale value')}>
                             {builtin ? (
-                              <span className="faint">{t('intégrée (implant)')}</span>
+                              <span className="faint">{t('built in (implant)')}</span>
                             ) : have < 1 ? (
-                              <span className="faint">{t('épuisé')}</span>
+                              <span className="faint">{t('sold out')}</span>
                             ) : resale === null ? (
-                              <span className="faint">{t('prix à fixer')}</span>
+                              <span className="faint">{t('price to be set')}</span>
                             ) : (
                               nuyen(resale)
                             )}
@@ -215,10 +215,10 @@ export default function Inventory({ game, actor, catalog }: InventoryProps) {
                           <td className="right shop-inv-actions">
                             {L.id === 'gear' && have > 1 && <NumberInput small value={n} min={1} max={have} onChange={(v) => setQtys({ ...qtys, [it.id]: v })} />}
                             {builtin || have < 1 ? null : pending ? (
-                              <Badge color="amber">{t('Revente en attente')}</Badge>
+                              <Badge color="amber">{t('Resale pending')}</Badge>
                             ) : (
-                              <Button small variant="ghost" disabled={!canSell} title={canSell ? t('Revendre à Cabana') : t('Cabana est injoignable')} onClick={() => sell(L.id, it)}>
-                                {t('Revendre')}
+                              <Button small variant="ghost" disabled={!canSell} title={canSell ? t('Sell to Cabana') : t('Cabana can’t be reached')} onClick={() => sell(L.id, it)}>
+                                {t('Sell')}
                               </Button>
                             )}
                           </td>
@@ -233,7 +233,7 @@ export default function Inventory({ game, actor, catalog }: InventoryProps) {
           );
         })}
         {arts.length > 0 && (
-          <Panel title={t('Arts martiaux ({n})', { n: arts.length })}>
+          <Panel title={t('Martial arts ({n})', { n: arts.length })}>
             {arts.map((m) => (
               <div key={m.id} className="shop-inv-art">
                 <strong>{m.name}</strong> <ItemRef item={m} /> <span className="faint small">{(m.techniques || []).map((x) => itemName(x)).join(', ') || '—'}</span>
@@ -246,20 +246,20 @@ export default function Inventory({ game, actor, catalog }: InventoryProps) {
         <Panel title={t('Finances')}>
           <div className="row wrap">
             <div className="shop-wallet">
-              <span className="stat-label">{t('Nuyens')}</span>
+              <span className="stat-label">{t('Nuyen')}</span>
               <strong>{nuyen(actor.nuyen)}</strong>
             </div>
             <div className="shop-wallet">
-              <span className="stat-label">{t('Revente')}</span>
-              <strong>{t('{n} %', { n: rate })}</strong>
+              <span className="stat-label">{t('Resale')}</span>
+              <strong>{t('{n}%', { n: rate })}</strong>
             </div>
           </div>
           <Button small variant="ghost" onClick={() => openSheet(actor.id)}>
-            {t('Ouvrir la fiche')}
+            {t('Open the sheet')}
           </Button>
         </Panel>
-        <Panel title={t('Train de vie')}>
-          {!lifestyles.length && <div className="muted small">{t('Aucun train de vie. Choisis-en un dans le rayon « Train de vie » du catalogue.')}</div>}
+        <Panel title={t('Lifestyle')}>
+          {!lifestyles.length && <div className="muted small">{t('No lifestyle. Pick one in the « Lifestyle » section of the catalog.')}</div>}
           {lifestyles.map((lf) => {
             const b = costBreakdown(lf);
             const m = months[lf.id] || 1;
@@ -271,16 +271,16 @@ export default function Inventory({ game, actor, catalog }: InventoryProps) {
                     {lf.primary && lifestyles.length > 1 ? (
                       <>
                         {' '}
-                        <Badge color="cyan">{t('principal')}</Badge>
+                        <Badge color="cyan">{t('primary')}</Badge>
                       </>
                     ) : null}{' '}
                     <ItemRef item={lf} />
                   </strong>
-                  <span className="mono">{t('{cost}/mois', { cost: nuyen(lf.monthlyCost) })}</span>
+                  <span className="mono">{t('{cost}/month', { cost: nuyen(lf.monthlyCost) })}</span>
                 </div>
                 <div className="faint small">
                   {t('Base {cost}', { cost: nuyen(b.base) })}
-                  {b.multiplier ? ` · ${t('{n} % du coût de base', { n: `${b.multiplier > 0 ? '+' : ''}${b.multiplier}` })}` : ''}
+                  {b.multiplier ? ` · ${t('{n}% of the base cost', { n: `${b.multiplier > 0 ? '+' : ''}${b.multiplier}` })}` : ''}
                   {b.flat ? ` · ${t('options {cost}', { cost: nuyen(b.flat) })}` : ''}
                 </div>
                 {(lf.qualities || []).map((q) => (
@@ -293,17 +293,17 @@ export default function Inventory({ game, actor, catalog }: InventoryProps) {
                       {q.multiplier && q.cost ? ' · ' : ''}
                       {q.cost ? nuyen(q.cost) : ''}
                     </span>
-                    {canRemove('lifestyles', q) && <IconButton icon="✕" title={t('Retirer (sans remboursement)')} onClick={() => removeUpgrade('lifestyles', lf, q)} />}
+                    {canRemove('lifestyles', q) && <IconButton icon="✕" title={t('Remove (no refund)')} onClick={() => removeUpgrade('lifestyles', lf, q)} />}
                   </div>
                 ))}
                 <div className="small muted">
-                  {t('Mois payés d’avance :')} <strong className={(Number(lf.monthsPaid) || 0) > 0 ? 'green' : 'red'}>{Number(lf.monthsPaid) || 0}</strong>
+                  {t('Months paid in advance:')} <strong className={(Number(lf.monthsPaid) || 0) > 0 ? 'green' : 'red'}>{Number(lf.monthsPaid) || 0}</strong>
                 </div>
                 {Number(lf.monthlyCost) > 0 && (
                   <div className="row wrap">
                     <NumberInput small value={m} min={1} max={24} onChange={(v) => setMonths({ ...months, [lf.id]: v })} />
                     <Button small variant="primary" disabled={(Number(actor.nuyen) || 0) < lf.monthlyCost * m} onClick={() => payRent(lf)}>
-                      {t('Payer {cost}', { cost: nuyen(lf.monthlyCost * m) })}
+                      {t('Pay {cost}', { cost: nuyen(lf.monthlyCost * m) })}
                     </Button>
                   </div>
                 )}
@@ -311,9 +311,9 @@ export default function Inventory({ game, actor, catalog }: InventoryProps) {
             );
           })}
         </Panel>
-        <Panel title={t('Historique des transactions')} pad={false}>
+        <Panel title={t('Transaction history')} pad={false}>
           {!ledger.length ? (
-            <Empty>{t('Aucune transaction.')}</Empty>
+            <Empty>{t('No transactions.')}</Empty>
           ) : (
             <ul className="shop-ledger">
               {ledger.map((h, i) => (

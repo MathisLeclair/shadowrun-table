@@ -74,7 +74,7 @@ export const norm = (s: unknown): string =>
 const CLIP_CODES: Record<string, string> = { c: 'c', m: 'm', b: 'b', d: 'd', cy: 'cy', belt: 'belt', ceinture: 'belt', tambour: 'd', drum: 'd', ml: 'ml', cb: 'cb', lourd: 'belt', heavy: 'belt' };
 /** Display keys of the reload types. */
 export const AMMO_TYPE_LABELS: Record<string, string> = {
-  c: tk('chargeur amovible'), m: tk('magasin interne'), b: tk('à bascule'), d: tk('tambour'), cy: tk('barillet'), belt: tk('bande'), ml: tk('chargement par la bouche'), cb: tk('chargeur amovible'),
+  c: tk('removable clip'), m: tk('internal magazine'), b: tk('break action'), d: tk('drum'), cy: tk('cylinder'), belt: tk('belt'), ml: tk('muzzle loader'), cb: tk('removable clip'),
 };
 
 /** '15(c)' → { max: 15, type: 'c' }; '42(c) or 21(c)' → first value; '14' → { max: 14, type: '' }; '' / 'Energy' → { max: 0, type: '' }. */
@@ -97,14 +97,14 @@ export const MODE_SHORT_FR: Record<string, string> = { SS: 'CC', SA: 'SA', BF: '
  * Suppressive fire: 20 rounds, no defense modifier (the target area is « suppressed »).
  */
 export const FIRE_OPTIONS: FireOption[] = [
-  { id: 'SS', mode: 'SS', rounds: 1, action: 'simple', defense: 0, label: tk('Coup par coup') },
-  { id: 'SA', mode: 'SA', rounds: 1, action: 'simple', defense: 0, label: tk('Semi-automatique') },
-  { id: 'SB', mode: 'SA', rounds: 3, action: 'complex', defense: -2, label: tk('Rafale semi-automatique') },
-  { id: 'BF', mode: 'BF', rounds: 3, action: 'simple', defense: -2, label: tk('Tir en rafale') },
-  { id: 'LB', mode: 'BF', rounds: 6, action: 'complex', defense: -5, label: tk('Rafale longue') },
-  { id: 'FA', mode: 'FA', rounds: 6, action: 'simple', defense: -5, label: tk('Tir automatique (action simple)') },
-  { id: 'FAC', mode: 'FA', rounds: 10, action: 'complex', defense: -9, label: tk('Tir automatique (action complexe)') },
-  { id: 'SUP', mode: 'FA', rounds: 20, action: 'complex', defense: null, label: tk('Tir de barrage') },
+  { id: 'SS', mode: 'SS', rounds: 1, action: 'simple', defense: 0, label: tk('Single shot') },
+  { id: 'SA', mode: 'SA', rounds: 1, action: 'simple', defense: 0, label: tk('Semi-automatic') },
+  { id: 'SB', mode: 'SA', rounds: 3, action: 'complex', defense: -2, label: tk('Semi-automatic burst') },
+  { id: 'BF', mode: 'BF', rounds: 3, action: 'simple', defense: -2, label: tk('Burst fire') },
+  { id: 'LB', mode: 'BF', rounds: 6, action: 'complex', defense: -5, label: tk('Long burst') },
+  { id: 'FA', mode: 'FA', rounds: 6, action: 'simple', defense: -5, label: tk('Full auto (Simple Action)') },
+  { id: 'FAC', mode: 'FA', rounds: 10, action: 'complex', defense: -9, label: tk('Full auto (Complex Action)') },
+  { id: 'SUP', mode: 'FA', rounds: 20, action: 'complex', defense: null, label: tk('Suppressive fire') },
 ];
 export const FIRE_BY_ID: Record<string, FireOption> = Object.fromEntries(FIRE_OPTIONS.map((o) => [o.id, o]));
 
@@ -353,7 +353,7 @@ export function reloadPlan(w: WeaponLike | null | undefined, { agi = 3, clip = f
 export const LOCATED_LISTS: ('weapons' | 'armor' | 'gear')[] = ['weapons', 'armor', 'gear'];
 /** Implicit location: carried (« Sur soi »). */
 export const ON_BODY = 'on';
-export const CONTAINER_KINDS: Record<ContainerKind, string> = { body: tk('porté sur soi'), bag: tk('sac'), vehicle: tk('véhicule'), safehouse: tk('planque'), other: tk('autre') };
+export const CONTAINER_KINDS: Record<ContainerKind, string> = { body: tk('worn'), bag: tk('bag'), vehicle: tk('vehicle'), safehouse: tk('safehouse'), other: tk('other') };
 
 /** Container kind guessed from its name (Foundry inventories, Chummer locations). */
 export function guessContainerKind(name: unknown): ContainerKind {

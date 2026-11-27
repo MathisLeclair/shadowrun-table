@@ -340,12 +340,12 @@ export function refreshFog(state: TableState, map: GameMap | null | undefined): 
 // ---------------------------------------------------------------------------
 function getMap(ctx: ActionContext, mapId: MapId): GameMap {
   const m = ctx.state.maps?.[mapId];
-  if (!m) ctx.fail('Carte introuvable');
+  if (!m) ctx.fail('Map not found');
   return m;
 }
 function getToken(ctx: ActionContext, map: GameMap, tokenId: string): Token {
   const t = map.tokens.find((x) => x.id === tokenId);
-  if (!t) ctx.fail('Pion introuvable');
+  if (!t) ctx.fail('Token not found');
   return t;
 }
 /** `notFound` = translatable error key ('Lumière introuvable'…). */
@@ -356,7 +356,7 @@ function findById<T extends { id: string }>(ctx: ActionContext, list: T[], id: u
 }
 function cellArg(ctx: ActionContext, map: GameMap, x: unknown, y: unknown): Point {
   const cx = Math.round(Number(x)), cy = Math.round(Number(y));
-  if (!Number.isFinite(cx) || !Number.isFinite(cy) || cx < 0 || cy < 0 || cx >= map.width || cy >= map.height) ctx.fail('Case hors de la carte');
+  if (!Number.isFinite(cx) || !Number.isFinite(cy) || cx < 0 || cy < 0 || cx >= map.width || cy >= map.height) ctx.fail('Cell outside the map');
   return { x: cx, y: cy };
 }
 const chebyshev = (a: Point, b: Point): number => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
@@ -434,9 +434,9 @@ function doMove(ctx: ActionContext, map: GameMap, token: Token, x: unknown, y: u
   const from = { x: token.x, y: token.y };
   let pathCells: Point[] | null;
   if (!ctx.isGM) {
-    if (!userOwnsToken(ctx.user, token)) ctx.fail('Ce pion ne t’appartient pas');
-    if (ctx.state.scene?.activeMapId !== map.id) ctx.fail('Cette carte n’est pas affichée par le MJ');
-    if (map.movementLocked) ctx.fail('Le MJ a verrouillé les déplacements');
+    if (!userOwnsToken(ctx.user, token)) ctx.fail('This token isn\'t yours');
+    if (ctx.state.scene?.activeMapId !== map.id) ctx.fail('The GM isn\'t showing this map');
+    if (map.movementLocked) ctx.fail('The GM has locked movement');
     // Players may only walk through cells they know (explored or currently visible), around visible non-allied tokens.
     const n = map.width * map.height;
     const { visible } = visibilityForUser(map, ctx.user, ctx.state.actors, visionContext(map));
@@ -451,7 +451,7 @@ function doMove(ctx: ActionContext, map: GameMap, token: Token, x: unknown, y: u
       (ally ? occupied : blockers).push({ x: t.x, y: t.y });
     }
     pathCells = findPath(map, from, to, { blockers, occupied, allowed: known });
-    if (!pathCells) ctx.fail('Destination inaccessible');
+    if (!pathCells) ctx.fail('Destination unreachable');
   } else if (ignoreWalls) {
     pathCells = [from, to];
   } else {
@@ -469,7 +469,7 @@ function doMove(ctx: ActionContext, map: GameMap, token: Token, x: unknown, y: u
         run = derive(actor).movement.run;
       } catch {}
       if (run != null && used + meters > run) {
-        ctx.fail('Trop loin pour ce tour : {step} m demandés, il reste {left} m (course max {run} m)', { step: meters, left: Math.max(0, Math.round((run - used) * 10) / 10), run });
+        ctx.fail('Too far for this turn: {step} m requested, {left} m left (max run {run} m)', { step: meters, left: Math.max(0, Math.round((run - used) * 10) / 10), run });
       }
     }
     token.moveBudget = { key, meters: Math.round((used + meters) * 100) / 100 };
@@ -493,7 +493,7 @@ function setWeather(map: { weather?: GameMap['weather'] }, w: Loose | null | und
 }
 
 function patchMapFields(ctx: ActionContext, map: GameMap, patch: Loose | null | undefined): void {
-  if (!patch || typeof patch !== 'object') ctx.fail('Modification invalide');
+  if (!patch || typeof patch !== 'object') ctx.fail('Invalid change');
   if ('name' in patch) map.name = str(patch.name || 'Carte sans nom', 80);
   if ('folder' in patch) map.folder = str(patch.folder, 60);
   if ('description' in patch) map.description = str(patch.description, 20000);
@@ -588,9 +588,9 @@ function crudList(
     },
   };
 }
-const lightsCrud = crudList('lights', cleanLight, tk('Lumière introuvable'), { refresh: true });
-const regionsCrud = crudList('regions', cleanRegion, tk('Zone introuvable'));
-const notesCrud = crudList('notes', cleanNote, tk('Note introuvable'));
+const lightsCrud = crudList('lights', cleanLight, tk('Light not found'), { refresh: true });
+const regionsCrud = crudList('regions', cleanRegion, tk('Area not found'));
+const notesCrud = crudList('notes', cleanNote, tk('Note not found'));
 
 // ---------------------------------------------------------------------------
 // Action payloads (validated by the handlers)
@@ -693,7 +693,7 @@ const mod: ServerModule = {
       role: 'gm',
       handler(ctx: ActionContext, { mapId, cells }: PaintPayload) {
         const map = getMap(ctx, mapId);
-        if (!Array.isArray(cells)) ctx.fail('Cellules invalides');
+        if (!Array.isArray(cells)) ctx.fail('Invalid cells');
         for (const c of cells.slice(0, MAX_DIM * MAX_DIM)) {
           if (!c || !isTileChar(c.ch)) continue;
           setTile(map, c.x | 0, c.y | 0, c.ch);
@@ -707,7 +707,7 @@ const mod: ServerModule = {
       role: 'gm',
       handler(ctx: ActionContext, { mapId, tiles }: SetTilesPayload) {
         const map = getMap(ctx, mapId);
-        if (!Array.isArray(tiles)) ctx.fail('Tuiles invalides');
+        if (!Array.isArray(tiles)) ctx.fail('Invalid tiles');
         map.tiles = Array.from({ length: map.height }, (_, y: number) => cleanRow(tiles[y], map.width));
         dropOrphanDoors(map);
         refreshFog(ctx.state, map);
@@ -788,7 +788,7 @@ const mod: ServerModule = {
     'maps/import': {
       role: 'gm',
       handler(ctx: ActionContext, { map }: ImportMapPayload) {
-        if (!map || typeof map !== 'object' || !Array.isArray(map.tiles)) ctx.fail('Fichier de carte invalide');
+        if (!map || typeof map !== 'object' || !Array.isArray(map.tiles)) ctx.fail('Invalid map file');
         const m: Loose = deepClone(map);
         if (!m.id || ctx.state.maps[m.id]) m.id = uid('map');
         m.explored = {};
@@ -824,9 +824,9 @@ const mod: ServerModule = {
       role: 'gm',
       handler(ctx: ActionContext, { mapId, token }: AddTokenPayload) {
         const map = getMap(ctx, mapId);
-        if (!token || typeof token !== 'object') ctx.fail('Pion invalide');
+        if (!token || typeof token !== 'object') ctx.fail('Invalid token');
         const actor = token.actorId ? ctx.state.actors?.[token.actorId] : null;
-        if (token.actorId && !actor) ctx.fail('Personnage introuvable');
+        if (token.actorId && !actor) ctx.fail('Character not found');
         const base = actor ? tokenFromActor(actor) : {};
         const t = cleanToken({ ...base, ...token, id: undefined }, map);
         map.tokens.push(t);
@@ -840,12 +840,12 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, { mapId, tokenId, patch }: UpdateTokenPayload) {
         const map = getMap(ctx, mapId);
         const tok = getToken(ctx, map, tokenId);
-        if (!patch || typeof patch !== 'object') ctx.fail('Modification invalide');
+        if (!patch || typeof patch !== 'object') ctx.fail('Invalid change');
         let p = patch;
         if (!ctx.isGM) {
-          if (!userOwnsToken(ctx.user, tok)) ctx.fail('Ce pion ne t’appartient pas');
+          if (!userOwnsToken(ctx.user, tok)) ctx.fail('This token isn\'t yours');
           p = Object.fromEntries(Object.entries(patch).filter(([k]) => PLAYER_TOKEN_FIELDS.includes(k)));
-          if (!Object.keys(p).length) ctx.fail('Tu ne peux modifier que l’apparence de ton pion');
+          if (!Object.keys(p).length) ctx.fail('You can only change your token\'s appearance');
           if ('light' in p) {
             const l = p.light && typeof p.light === 'object' ? p.light : null;
             p.light = l && Number(l.radius) > 0 ? { ...PLAYER_TORCH, color: color(l.color, PLAYER_TORCH.color) } : null;
@@ -865,7 +865,7 @@ const mod: ServerModule = {
             for (const e of c.entries) {
               if (e.tokenId === tok.id && e.hidden) {
                 e.hidden = false;
-                ctx.log({ kind: 'combat', author: 'Initiative', userId: ctx.user.id, i18n: { key: '{name} entre dans le combat !', params: { name: e.name } } });
+                ctx.log({ kind: 'combat', author: 'Initiative', userId: ctx.user.id, i18n: { key: '{name} enters the combat!', params: { name: e.name } } });
               }
             }
           }
@@ -880,7 +880,7 @@ const mod: ServerModule = {
         const ids = new Set(Array.isArray(tokenIds) ? tokenIds : [tokenId]);
         const before = map.tokens.length;
         map.tokens = map.tokens.filter((t) => !ids.has(t.id));
-        if (map.tokens.length === before) ctx.fail('Pion introuvable');
+        if (map.tokens.length === before) ctx.fail('Token not found');
         refreshFog(ctx.state, map);
         return before - map.tokens.length;
       },
@@ -901,7 +901,7 @@ const mod: ServerModule = {
       role: 'gm',
       handler(ctx: ActionContext, { mapId, moves, ignoreWalls }: MoveTokensPayload) {
         const map = getMap(ctx, mapId);
-        if (!Array.isArray(moves)) ctx.fail('Déplacements invalides');
+        if (!Array.isArray(moves)) ctx.fail('Invalid moves');
         const out: Record<string, ReturnType<typeof doMove>> = {};
         for (const mv of moves.slice(0, 200)) {
           const tok = map.tokens.find((t) => t.id === mv?.tokenId);
@@ -920,7 +920,7 @@ const mod: ServerModule = {
         const map = getMap(ctx, mapId);
         const only = Array.isArray(actorIds) ? new Set<string>(actorIds.map(String).slice(0, 50)) : null;
         const chosen = Object.values(ctx.state.actors || {}).filter((a) => a && a.type === 'pc' && !a.retired && (!only || only.has(a.id)));
-        if (only && !chosen.length) ctx.fail('Personnage introuvable');
+        if (only && !chosen.length) ctx.fail('Character not found');
         const at = x != null && y != null && Number.isFinite(Number(x)) && Number.isFinite(Number(y)) ? { x: Number(x), y: Number(y) } : entryPoint(map);
         if (move && only) {
           // Move the chosen PCs' existing tokens first, then place the missing ones.
@@ -932,7 +932,7 @@ const mod: ServerModule = {
             map.tokens = others; // free cells are searched ignoring the tokens being moved
             const spots = freeCellsNear(map, at.x, at.y, tokens.length);
             map.tokens = saved;
-            if (!spots.length) ctx.fail('Aucune case libre pour placer les personnages');
+            if (!spots.length) ctx.fail('No free cell to place the characters');
             tokens.forEach((t, i) => Object.assign(t, spots[i] || spots[spots.length - 1]));
           }
         }
@@ -942,7 +942,7 @@ const mod: ServerModule = {
           return [];
         }
         const cells = freeCellsNear(map, at.x, at.y, pcs.length);
-        if (!cells.length) ctx.fail('Aucune case libre pour placer les personnages');
+        if (!cells.length) ctx.fail('No free cell to place the characters');
         const ids: string[] = [];
         pcs.forEach((a, i) => {
           const c = cells[i] || cells[cells.length - 1];
@@ -963,22 +963,22 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, { mapId, doorId }: DoorPayload) {
         const map = getMap(ctx, mapId);
         const found = findAnyDoor(map, doorId);
-        if (!found) ctx.fail('Porte introuvable');
+        if (!found) ctx.fail('Door not found');
         const { door } = found;
         if (!ctx.isGM) {
-          if (ctx.state.scene?.activeMapId !== map.id) ctx.fail('Cette carte n’est pas affichée par le MJ');
-          if (door.kind === 'secret' && door.state !== 'open') ctx.fail('Porte introuvable');
+          if (ctx.state.scene?.activeMapId !== map.id) ctx.fail('The GM isn\'t showing this map');
+          if (door.kind === 'secret' && door.state !== 'open') ctx.fail('Door not found');
           const mine = map.tokens.filter((t) => userOwnsToken(ctx.user, t));
-          if (!mine.length) ctx.fail('Tu n’as pas de pion sur cette carte');
+          if (!mine.length) ctx.fail('You have no token on this map');
           const near = found.type === 'wall' ? (t: Token) => tokenNearWallDoor(t, found.wall) : (t: Token) => chebyshev(t, door as MapDoor) <= 1;
-          if (!mine.some(near)) ctx.fail('Approche-toi de la porte pour l’ouvrir');
+          if (!mine.some(near)) ctx.fail('Get closer to the door to open it');
           if (door.state === 'locked') {
             sfx(ctx, 'door-locked');
-            ctx.fail('C’est verrouillé.');
+            ctx.fail('It\'s locked.');
           }
         }
         if (door.state === 'open') {
-          if (found.type === 'tile' && map.tokens.some((t) => t.x === (door as MapDoor).x && t.y === (door as MapDoor).y)) ctx.fail('Quelque chose bloque la porte');
+          if (found.type === 'tile' && map.tokens.some((t) => t.x === (door as MapDoor).x && t.y === (door as MapDoor).y)) ctx.fail('Something is blocking the door');
           door.state = 'closed';
           sfx(ctx, 'door-close');
         } else {
@@ -995,7 +995,7 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, { mapId, doorId, state, kind, name }: SetDoorPayload) {
         const map = getMap(ctx, mapId);
         const found = findAnyDoor(map, doorId);
-        if (!found) ctx.fail('Porte introuvable');
+        if (!found) ctx.fail('Door not found');
         const { door } = found;
         if (state !== undefined) {
           const next = oneOf(state, DOOR_STATES, door.state);
@@ -1017,7 +1017,7 @@ const mod: ServerModule = {
       role: 'gm',
       handler(ctx: ActionContext, { mapId, door }: AddDoorPayload) {
         const map = getMap(ctx, mapId);
-        if (!door) ctx.fail('Porte invalide');
+        if (!door) ctx.fail('Invalid door');
         const c = cellArg(ctx, map, door.x, door.y);
         map.doors = map.doors.filter((d) => !(d.x === c.x && d.y === c.y));
         const d = cleanDoor({ ...door, ...c, id: undefined }, map);
@@ -1044,9 +1044,9 @@ const mod: ServerModule = {
       role: 'gm',
       handler(ctx: ActionContext, { mapId, wall }: AddWallPayload) {
         const map = getMap(ctx, mapId);
-        if (map.walls.length >= MAX_WALLS) ctx.fail('Trop de murs sur cette carte');
+        if (map.walls.length >= MAX_WALLS) ctx.fail('Too many walls on this map');
         const w = cleanWall({ ...(wall || {}), id: wall?.id && !map.walls.some((x) => x.id === wall.id) ? wall.id : undefined });
-        if (!w) ctx.fail('Mur invalide');
+        if (!w) ctx.fail('Invalid wall');
         map.walls.push(w);
         refreshFog(ctx.state, map);
         return w.id;
@@ -1058,11 +1058,11 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, { mapId, wallId, patch }: UpdateWallPayload) {
         const map = getMap(ctx, mapId);
         const cur = findById(ctx, map.walls, wallId, 'Mur');
-        if (!patch || typeof patch !== 'object') ctx.fail('Modification invalide');
+        if (!patch || typeof patch !== 'object') ctx.fail('Invalid change');
         const p: Loose = { ...patch };
         if (p.door && typeof p.door === 'object' && cur.door) p.door = { ...cur.door, ...p.door };
         const next = cleanWall({ ...cur, ...p, id: cur.id });
-        if (!next) ctx.fail('Mur invalide');
+        if (!next) ctx.fail('Invalid wall');
         const before = cur.door?.state;
         Object.keys(cur).forEach((k) => delete (cur as Loose)[k]);
         Object.assign(cur, next);
@@ -1079,7 +1079,7 @@ const mod: ServerModule = {
         const ids = new Set(Array.isArray(wallIds) ? wallIds : [wallId]);
         const before = map.walls.length;
         map.walls = map.walls.filter((w) => !ids.has(w.id));
-        if (map.walls.length === before) ctx.fail('Mur introuvable');
+        if (map.walls.length === before) ctx.fail('Wall not found');
         refreshFog(ctx.state, map);
         return before - map.walls.length;
       },
@@ -1089,7 +1089,7 @@ const mod: ServerModule = {
       role: 'gm',
       handler(ctx: ActionContext, { mapId, walls }: SetWallsPayload) {
         const map = getMap(ctx, mapId);
-        if (!Array.isArray(walls)) ctx.fail('Murs invalides');
+        if (!Array.isArray(walls)) ctx.fail('Invalid walls');
         map.walls = cleanWalls(walls);
         refreshFog(ctx.state, map);
         return map.walls.length;

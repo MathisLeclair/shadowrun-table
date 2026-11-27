@@ -59,10 +59,10 @@ const skillPref = (section: string): SkillPref => {
 };
 
 const SORTS = [
-  { value: 'name', label: tk('Nom') },
-  { value: 'price', label: tk('Prix croissant') },
-  { value: '-price', label: tk('Prix décroissant') },
-  { value: 'avail', label: tk('Disponibilité') },
+  { value: 'name', label: tk('Name') },
+  { value: 'price', label: tk('Price: low to high') },
+  { value: '-price', label: tk('Price: high to low') },
+  { value: 'avail', label: tk('Availability') },
 ];
 
 /** A sidebar section (rules.js STORE_SECTIONS, plus « Offres de Cabana » and « Tout le catalogue »). */
@@ -101,12 +101,12 @@ export default function Storefront({ game, actor, catalog }: StorefrontProps) {
 
   const sections = useMemo(() => {
     const list: Section[] = [];
-    if (specials.length || isGM) list.push({ id: 'specials', label: tk('Offres de Cabana'), icon: '★', files: [] });
+    if (specials.length || isGM) list.push({ id: 'specials', label: tk('Cabana’s deals'), icon: '★', files: [] });
     for (const s of STORE_SECTIONS as Section[]) {
       if (!isGM && s.files.length && s.files.every((f) => shop.categories?.[f as keyof ShopState['categories']] === false)) continue;
       list.push(s);
     }
-    list.push({ id: 'all', label: tk('Tout le catalogue'), icon: '⌕', files: [] });
+    list.push({ id: 'all', label: tk('Whole catalog'), icon: '⌕', files: [] });
     return list;
   }, [specials.length, isGM, shop.categories]);
 
@@ -239,7 +239,7 @@ export default function Storefront({ game, actor, catalog }: StorefrontProps) {
 
   const quickAdd = (ev: MouseEvent, r: Result) => {
     ev.stopPropagation();
-    if (!actor) return toast(t('Choisis d’abord un personnage'), 'warn');
+    if (!actor) return toast(t('Pick a character first'), 'warn');
     // Upgrades need a target (weapon, armor, vehicle, lifestyle): open the detail panel instead.
     if (!r.e.special && UPGRADE_FILES[r.e.file as keyof typeof UPGRADE_FILES]) return setSelected(r.e.ref);
     const l: CartLine = { ref: r.e.ref, qty: 1, name: r.e.name };
@@ -247,7 +247,7 @@ export default function Storefront({ game, actor, catalog }: StorefrontProps) {
     if (!r.e.special && r.q.grade) l.grade = r.q.grade;
     if (!r.e.special && r.e.item?.costRange) l.price = r.e.item.costRange[0];
     addToCart(actor.id, l);
-    toast(t('{name} ajouté au panier', { name: r.e.name }), 'success', 1800);
+    toast(t('{name} added to the cart', { name: r.e.name }), 'success', 1800);
   };
 
   const counts = useMemo(() => {
@@ -257,7 +257,7 @@ export default function Storefront({ game, actor, catalog }: StorefrontProps) {
   }, [catalog, isGM, shop.categories]);
   const sectionCount = (s: Section) => (s.id === 'specials' ? specials.length : s.id === 'martialarts' ? (martial ? martial.length : null) : s.id === 'all' ? null : counts[s.id] || 0);
 
-  if (!catalog) return <div className="shop-loading">{t('Connexion au catalogue de Cabana…')}</div>;
+  if (!catalog) return <div className="shop-loading">{t('Connecting to Cabana’s catalog…')}</div>;
 
   const sidebar = (
     <nav className={'shop-sidebar' + (narrow ? ' narrow' : '')}>
@@ -271,7 +271,7 @@ export default function Storefront({ game, actor, catalog }: StorefrontProps) {
           {!narrow && s.id === section && categories.length > 1 && (
             <div className="shop-cats">
               <button className={'shop-cat' + (!category ? ' active' : '')} onClick={() => setCategory('')}>
-                {t('Toutes')} <span className="faint">{base.length}</span>
+                {t('fem::All')} <span className="faint">{base.length}</span>
               </button>
               {categories.map((c) => (
                 <button key={c.name} className={'shop-cat' + (category === c.name ? ' active' : '')} onClick={() => setCategory(c.name)} title={c.name}>
@@ -288,13 +288,13 @@ export default function Storefront({ game, actor, catalog }: StorefrontProps) {
   const toolbar = (
     <div className="shop-toolbar">
       <div className="row wrap">
-        <SearchBox value={search} onChange={setSearch} placeholder={t('Rechercher (FR ou EN)…')} />
+        <SearchBox value={search} onChange={setSearch} placeholder={t('Search (FR or EN)…')} />
         {narrow && categories.length > 1 && (
           <Select
             className="shop-cat-select"
             value={category}
             onChange={setCategory}
-            options={[{ value: '', label: t('Toutes catégories ({n})', { n: base.length }) }, ...categories.map((c) => ({ value: c.name, label: `${c.name} (${c.count})` }))]}
+            options={[{ value: '', label: t('All categories ({n})', { n: base.length }) }, ...categories.map((c) => ({ value: c.name, label: `${c.name} (${c.count})` }))]}
           />
         )}
         {hasSkillFilter && (
@@ -303,12 +303,12 @@ export default function Storefront({ game, actor, catalog }: StorefrontProps) {
               className={'shop-skill-select' + (skill ? ' active' : '')}
               value={skill}
               onChange={(v) => setSkillPref({ skill: v })}
-              title={section === 'accessories' ? t('Compétence des armes compatibles') : t('Compétence liée')}
-              aria-label={section === 'accessories' ? t('Compétence des armes compatibles') : t('Compétence liée')}
+              title={section === 'accessories' ? t('Skill of the compatible weapons') : t('Linked skill')}
+              aria-label={section === 'accessories' ? t('Skill of the compatible weapons') : t('Linked skill')}
               options={[
-                { value: '', label: section === 'accessories' ? t('Toutes armes') : t('Toutes compétences') },
+                { value: '', label: section === 'accessories' ? t('All weapons') : t('All skills') },
                 ...visibleSkillOpts.map((o) => ({ value: o.id, label: o.rating > 0 ? `${o.label} (${o.rating})` : o.label })),
-                ...(showNoSkill ? [{ value: NO_SKILL, label: t('Sans compétence liée') }] : []),
+                ...(showNoSkill ? [{ value: NO_SKILL, label: t('No linked skill') }] : []),
               ]}
             />
             <Button
@@ -316,28 +316,28 @@ export default function Storefront({ game, actor, catalog }: StorefrontProps) {
               variant={mine ? 'primary' : 'ghost'}
               disabled={!actor}
               aria-pressed={mine ? 'true' : 'false'}
-              title={actor ? t('Seulement les articles liés aux compétences de {name}', { name: actor.name }) : t('Choisis d’abord un personnage')}
+              title={actor ? t('Only items linked to {name}’s skills', { name: actor.name }) : t('Pick a character first')}
               onClick={() => setSkillPref({ mine: !skillPrefRaw.mine })}
             >
-              {t('Mes compétences')}
+              {t('My skills')}
             </Button>
           </span>
         )}
         <Select className="shop-sort" value={sort} onChange={setSort} options={SORTS.map((s) => ({ value: s.value, label: t(s.label) }))} />
         <Button small variant={showFilters ? 'primary' : 'ghost'} onClick={() => setShowFilters(!showFilters)}>
-          {t('Filtres')}
+          {t('Filters')}
         </Button>
-        <span className="muted small grow right">{tn(results.length, '{n} article', '{n} articles')}</span>
+        <span className="muted small grow right">{tn(results.length, '{n} item', '{n} items')}</span>
       </div>
       {showFilters && (
         <div className="shop-filters row wrap">
           {!isGM && (
-            <Toggle value={filters.hideUnavailable} onChange={(v) => setFilter('hideUnavailable', v)} label={t('Masquer l’inaccessible (dispo > {max})', { max: shop.maxAvail })} />
+            <Toggle value={filters.hideUnavailable} onChange={(v) => setFilter('hideUnavailable', v)} label={t('Hide what’s out of reach (avail > {max})', { max: shop.maxAvail })} />
           )}
-          <Toggle value={filters.showR} onChange={(v) => setFilter('showR', v)} label={t('Restreint (R)')} />
-          <Toggle value={filters.showF} onChange={(v) => setFilter('showF', v)} label={t('Interdit (F)')} />
+          <Toggle value={filters.showR} onChange={(v) => setFilter('showR', v)} label={t('Restricted (R)')} />
+          <Toggle value={filters.showF} onChange={(v) => setFilter('showF', v)} label={t('Forbidden (F)')} />
           <label className="row gap-s small">
-            {t('Prix')}
+            {t('Price')}
             <input className="input shop-price-input" type="number" min="0" placeholder="min" value={filters.minPrice} onChange={(e) => setFilter('minPrice', e.target.value)} />
             –
             <input className="input shop-price-input" type="number" min="0" placeholder="max" value={filters.maxPrice} onChange={(e) => setFilter('maxPrice', e.target.value)} />
@@ -351,7 +351,7 @@ export default function Storefront({ game, actor, catalog }: StorefrontProps) {
     section === 'specials' ? (
       <div className="shop-specials">
         {!shown.length && (
-          <Empty>{isGM ? t('Aucune offre. Crée-en depuis un article (« + Offre Cabana ») ou dans l’onglet « Offres de Cabana ».') : t('Cabana n’a rien de spécial pour toi en ce moment.')}</Empty>
+          <Empty>{isGM ? t('No deals. Create one from an item (« + Cabana deal ») or in the « Cabana’s deals » tab.') : t('Cabana has nothing special for you right now.')}</Empty>
         )}
         {shown.map((r) => {
           const sp = r.e.special!;
@@ -359,15 +359,15 @@ export default function Storefront({ game, actor, catalog }: StorefrontProps) {
             <div key={r.e.ref} className={'card clickable shop-special' + (selected === r.e.ref ? ' selected' : '') + (sp.hidden ? ' draft' : '')} onClick={() => setSelected(r.e.ref)}>
               <div className="spread row">
                 <h4>{r.e.name}</h4>
-                {sp.hidden && <Badge color="amber">{t('Caché')}</Badge>}
+                {sp.hidden && <Badge color="amber">{t('Hidden')}</Badge>}
               </div>
               <div className="row wrap gap-s small">
                 <Badge>{r.e.category}</Badge>
                 <AvailBadge avail={r.q.avail} value={r.q.availValue} legality={r.q.legality} />
                 {sp.stock === null || sp.stock === undefined ? null : sp.stock > 0 ? (
-                  <span className="muted">{t('{n} en stock', { n: sp.stock })}</span>
+                  <span className="muted">{t('{n} in stock', { n: sp.stock })}</span>
                 ) : (
-                  <Badge color="red">{t('Épuisé')}</Badge>
+                  <Badge color="red">{t('Sold out')}</Badge>
                 )}
               </div>
               {sp.notes && <p className="shop-special-notes">{sp.notes}</p>}
@@ -377,7 +377,7 @@ export default function Storefront({ game, actor, catalog }: StorefrontProps) {
                   <span className="shop-price">{nuyen(r.q.unitCost)}</span>
                 </div>
                 <Button small variant="primary" disabled={!r.st.ok || !actor} onClick={(ev) => quickAdd(ev, r)}>
-                  {t('+ Panier')}
+                  {t('+ Cart')}
                 </Button>
               </div>
             </div>
@@ -389,19 +389,19 @@ export default function Storefront({ game, actor, catalog }: StorefrontProps) {
         {!shown.length ? (
           <Empty>
             {catalog.error && !catalog.entries.length
-              ? t('Catalogue introuvable — le MJ doit lancer « npm run build:catalog ».')
+              ? t('Catalog not found — the GM must run « npm run build:catalog ».')
               : mine && !visibleSkillOpts.length && actor
-                ? t('{name} n’a aucune compétence liée à ces articles.', { name: actor.name })
-                : t('Rien ne correspond à ta recherche.')}
+                ? t('{name} has no skill linked to these items.', { name: actor.name })
+                : t('Nothing matches your search.')}
           </Empty>
         ) : (
           <table className="sr shop-table">
             <thead>
               <tr>
-                <th>{t('Article')}</th>
-                {!narrow && <th>{t('Catégorie')}</th>}
-                <th>{t('Dispo')}</th>
-                <th className="right">{t('Prix')}</th>
+                <th>{t('Item')}</th>
+                {!narrow && <th>{t('Category')}</th>}
+                <th>{t('Avail.')}</th>
+                <th className="right">{t('Price')}</th>
                 <th></th>
               </tr>
             </thead>
@@ -420,11 +420,11 @@ export default function Storefront({ game, actor, catalog }: StorefrontProps) {
                     <AvailBadge avail={r.q.avail} value={r.q.availValue} legality={r.q.legality} max={isGM ? undefined : shop.maxAvail} />
                   </td>
                   <td className="num-cell">
-                    {(r.e.item?.rating && r.e.item.rating.max > r.e.item.rating.min) || r.e.item?.costRange ? <span className="faint small">{t('dès')} </span> : null}
+                    {(r.e.item?.rating && r.e.item.rating.max > r.e.item.rating.min) || r.e.item?.costRange ? <span className="faint small">{t('from')} </span> : null}
                     {nuyen(r.q.unitCost)}
                   </td>
                   <td className="right">
-                    <IconButton icon="+" title={r.st.ok ? t('Ajouter au panier') : r.st.reason} disabled={!r.st.ok || !actor} onClick={(ev) => quickAdd(ev, r)} />
+                    <IconButton icon="+" title={r.st.ok ? t('Add to cart') : r.st.reason} disabled={!r.st.ok || !actor} onClick={(ev) => quickAdd(ev, r)} />
                   </td>
                 </tr>
               ))}
@@ -437,11 +437,11 @@ export default function Storefront({ game, actor, catalog }: StorefrontProps) {
   const pager = pages > 1 && (
     <div className="shop-pager row">
       <Button small variant="ghost" disabled={curPage === 0} onClick={() => setPage(curPage - 1)}>
-        ‹ {t('Précédent')}
+        ‹ {t('Previous')}
       </Button>
       <span className="muted small">{t('Page {n} / {total}', { n: curPage + 1, total: pages })}</span>
       <Button small variant="ghost" disabled={curPage >= pages - 1} onClick={() => setPage(curPage + 1)}>
-        {t('Suivant')} ›
+        {t('Next')} ›
       </Button>
     </div>
   );
@@ -462,13 +462,13 @@ export default function Storefront({ game, actor, catalog }: StorefrontProps) {
       {sidebar}
       <div className="shop-main">
         {toolbar}
-        {!shop.open && !isGM && <div className="shop-closed">{t('Cabana n’est pas joignable pour l’instant. Tu peux parcourir le catalogue, mais pas commander.')}</div>}
+        {!shop.open && !isGM && <div className="shop-closed">{t('Cabana can’t be reached right now. You can browse the catalog, but not order.')}</div>}
         {list}
         {pager}
       </div>
       {wide && (
         <aside className="shop-side">
-          {selEntry ? <ItemDetail key={selEntry.ref} entry={selEntry} game={game} actor={actor} catalog={catalog} /> : <Empty>{t('Sélectionne un article pour voir ses caractéristiques.')}</Empty>}
+          {selEntry ? <ItemDetail key={selEntry.ref} entry={selEntry} game={game} actor={actor} catalog={catalog} /> : <Empty>{t('Select an item to see its stats.')}</Empty>}
         </aside>
       )}
       {!wide && selEntry && (

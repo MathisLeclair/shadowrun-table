@@ -98,9 +98,9 @@ function PageText({ code, pdfPage }: { code: string; pdfPage: number }) {
       alive = false;
     };
   }, [code, pdfPage]);
-  if (state.loading) return <div className="muted small">{t('Chargement…')}</div>;
+  if (state.loading) return <div className="muted small">{t('Loading…')}</div>;
   if (state.error) return <div className="error">{state.error}</div>;
-  return <div className="books-pagetext">{state.text || <span className="muted">{t('Pas de texte sur cette page (image).')}</span>}</div>;
+  return <div className="books-pagetext">{state.text || <span className="muted">{t('No text on this page (image).')}</span>}</div>;
 }
 
 function ViewerSearch({ code, onClose }: { code: string | null; onClose: () => void }) {
@@ -136,19 +136,19 @@ function ViewerSearch({ code, onClose }: { code: string | null; onClose: () => v
   return (
     <div className="books-search">
       <div className="row gap-s">
-        <input ref={inputRef} className="input grow" type="search" value={q} placeholder={t('Rechercher dans les règles… ("phrase exacte")')} onChange={(e) => setQ(e.target.value)} />
-        <select className="input books-scope" value={scope} onChange={(e) => setScope(e.target.value as 'book' | 'all')} aria-label={t('Où chercher')}>
-          <option value="book">{t('Ce livre')}</option>
-          <option value="all">{t('Tous les livres')}</option>
+        <input ref={inputRef} className="input grow" type="search" value={q} placeholder={t('Search the rules… ("exact phrase")')} onChange={(e) => setQ(e.target.value)} />
+        <select className="input books-scope" value={scope} onChange={(e) => setScope(e.target.value as 'book' | 'all')} aria-label={t('Where to search')}>
+          <option value="book">{t('This book')}</option>
+          <option value="all">{t('All books')}</option>
         </select>
-        <IconButton icon="✕" title={t('Fermer la recherche')} onClick={onClose} />
+        <IconButton icon="✕" title={t('Close the search')} onClick={onClose} />
       </div>
-      {busy && <div className="muted small">{t('Recherche…')}</div>}
+      {busy && <div className="muted small">{t('Searching…')}</div>}
       {res?.error && <div className="error small">{res.error}</div>}
       {res && !res.error && (
         <div className="muted small">
-          {res.total ? tn(res.total, '{n} résultat', '{n} résultats') : t('Aucun résultat')}
-          {res.total > res.hits.length ? ` · ${t('{n} premiers affichés', { n: res.hits.length })}` : ''}
+          {res.total ? tn(res.total, '{n} result', '{n} results') : t('No results')}
+          {res.total > res.hits.length ? ` · ${t('first {n} shown', { n: res.hits.length })}` : ''}
         </div>
       )}
       {res && res.hits?.length > 0 && <HitList hits={res.hits} showBook={scope === 'all'} onPick={(h) => openBookPdf(h.code, h.pdfPage, { q: q.trim() })} />}
@@ -171,9 +171,9 @@ function ViewerSettings({ book, list, zoom, setZoom, mode, setMode }: ViewerSett
   const cached = cachedByCode(cache.entries, list || []);
   const mine = book ? cached.get(book.code) : null;
   const clear = async () => {
-    if (!(await confirmAction(t('Supprimer les livres gardés par ce navigateur ? Ils seront retéléchargés à la prochaine ouverture.')))) return;
+    if (!(await confirmAction(t('Delete the books kept by this browser? They will be downloaded again the next time they are opened.')))) return;
     await clearBookCache();
-    toast(t('Cache des livres vidé'));
+    toast(t('Book cache cleared'));
   };
   const opt = (active: boolean, label: string, onClick: () => void) => (
     <button type="button" className={'books-mode' + (active ? ' active' : '')} onClick={onClick}>
@@ -181,37 +181,37 @@ function ViewerSettings({ book, list, zoom, setZoom, mode, setMode }: ViewerSett
     </button>
   );
   return (
-    <div className="books-settings" role="group" aria-label={t('Réglages du lecteur')}>
+    <div className="books-settings" role="group" aria-label={t('Reader settings')}>
       <div className="books-settings-row">
         <span className="muted small books-settings-label">{t('Zoom')}</span>
-        {opt(zoom === 'width', t('Largeur de page'), () => setZoom('width'))}
-        {opt(zoom === 'page', t('Page entière'), () => setZoom('page'))}
+        {opt(zoom === 'width', t('Page width'), () => setZoom('width'))}
+        {opt(zoom === 'page', t('Whole page'), () => setZoom('page'))}
         {opt(zoom === 1, '100 %', () => setZoom(1))}
       </div>
       <div className="books-settings-row">
-        <span className="muted small books-settings-label">{t('Affichage')}</span>
+        <span className="muted small books-settings-label">{t('Display')}</span>
         {opt(mode === 'pdf', t('PDF'), () => setMode('pdf'))}
-        {opt(mode === 'text', t('Texte'), () => setMode('text'))}
+        {opt(mode === 'text', t('Text'), () => setMode('text'))}
       </div>
       <div className="books-settings-row books-settings-cache">
         <span className="muted small books-settings-label">{t('Cache')}</span>
         <div className="grow col">
           {!cache.ready ? (
-            <span className="muted small">{t('Chargement…')}</span>
+            <span className="muted small">{t('Loading…')}</span>
           ) : cache.backend === 'none' ? (
-            <span className="muted small">{t('Ce navigateur ne garde pas les livres (navigation privée ?) : chaque ouverture les retélécharge.')}</span>
+            <span className="muted small">{t('This browser does not keep the books (private browsing?): each opening downloads them again.')}</span>
           ) : (
             <>
-              <span className="small">{tn(cache.entries.length, '{n} livre gardé par ce navigateur ({size})', '{n} livres gardés par ce navigateur ({size})', { size: fmtMB(cache.bytes) })}</span>
+              <span className="small">{tn(cache.entries.length, '{n} book kept by this browser ({size})', '{n} books kept by this browser ({size})', { size: fmtMB(cache.bytes) })}</span>
               <span className="muted small">
-                {t('Au plus {n} livres / {size}, les moins lus sont retirés d’abord', { n: MAX_BOOKS, size: fmtMB(MAX_BYTES) })} · <span className="mono">{BACKENDS[cache.backend || ''] || cache.backend}</span>
+                {t('At most {n} books / {size}, the least read ones are removed first', { n: MAX_BOOKS, size: fmtMB(MAX_BYTES) })} · <span className="mono">{BACKENDS[cache.backend || ''] || cache.backend}</span>
               </span>
-              {book && <span className="muted small">{mine ? t('{code} : en cache ({size})', { code: book.code, size: fmtMB(mine.size) }) : t('{code} : pas encore en cache', { code: book.code })}</span>}
+              {book && <span className="muted small">{mine ? t('{code}: cached ({size})', { code: book.code, size: fmtMB(mine.size) }) : t('{code}: not cached yet', { code: book.code })}</span>}
             </>
           )}
         </div>
         <Button small variant="danger" disabled={!cache.entries.length} onClick={clear}>
-          {t('Vider le cache des livres')}
+          {t('Clear the book cache')}
         </Button>
       </div>
     </div>
@@ -312,45 +312,45 @@ export default function BookViewer() {
     const p = printedToPdf(book, n);
     if (p) gotoPdfPage(p);
     else {
-      toast(t('Page {page} introuvable dans ce livre', { page: n }), 'error');
+      toast(t('Page {page} not found in this book', { page: n }), 'error');
       setPageInput(printed ? String(printed) : '');
     }
   };
   const pdfUrl = book ? `${book.url}#page=${v.pdfPage || 1}` : undefined;
 
   let body: ReactNode;
-  if (!list) body = <div className="books-empty muted">{t('Chargement…')}</div>;
+  if (!list) body = <div className="books-empty muted">{t('Loading…')}</div>;
   else if (!book)
     body = (
       <div className="books-empty">
-        <p>{v.printed ? t('Livre non disponible sur ce serveur ({code} p. {page})', { code: v.code, page: v.printed }) : t('Livre non disponible sur ce serveur ({code})', { code: v.code })}</p>
-        <p className="muted small">{t('L’administrateur du serveur peut ajouter ses PDF depuis la page Administration (Livres de règles).')}</p>
+        <p>{v.printed ? t('Book not available on this server ({code} p. {page})', { code: v.code, page: v.printed }) : t('Book not available on this server ({code})', { code: v.code })}</p>
+        <p className="muted small">{t('The server administrator can add their PDFs from the Administration page (Rulebooks).')}</p>
       </div>
     );
   else if (v.badPage)
     body = (
       <div className="books-empty">
-        <p>{t('Page {page} introuvable dans ce livre', { page: v.printed })}</p>
-        <p className="muted small">{t('La référence ne correspond à aucune page de ce PDF : vérifie le décalage du livre (page Administration).')}</p>
+        <p>{t('Page {page} not found in this book', { page: v.printed })}</p>
+        <p className="muted small">{t('The reference matches no page of this PDF: check the book’s offset (Administration page).')}</p>
       </div>
     );
-  else if (!v.pdfPage) body = <div className="books-empty muted">{t('Chargement…')}</div>;
+  else if (!v.pdfPage) body = <div className="books-empty muted">{t('Loading…')}</div>;
   else if (mode === 'pdf') body = <PdfReader key={book.code} book={book} v={v} zoom={zoom} onScale={setScale} onTextMode={() => setMode('text')} />;
   else
     body = (
       <div className="books-textmode">
         <a className="btn btn-primary" href={pdfUrl} target="_blank" rel="noopener">
-          {t('Ouvrir le PDF')}
+          {t('Open the PDF')}
         </a>
         <PageText code={book.code} pdfPage={v.pdfPage || 1} />
       </div>
     );
 
   return (
-    <aside className={'books-drawer' + (dragging ? ' dragging' : '') + (behind ? ' behind' : '')} style={{ width: `${width}px` }} role="dialog" aria-label={t('Livre de règles')}>
-      <div className="books-resize" onPointerDown={startDrag} title={t('Glisser pour redimensionner')}></div>
+    <aside className={'books-drawer' + (dragging ? ' dragging' : '') + (behind ? ' behind' : '')} style={{ width: `${width}px` }} role="dialog" aria-label={t('Rulebook')}>
+      <div className="books-resize" onPointerDown={startDrag} title={t('Drag to resize')}></div>
       <header className="books-head">
-        <select className="input books-switch" value={v.code || ''} aria-label={t('Livre')} onChange={(e) => openBookPdf(e.target.value, 1)}>
+        <select className="input books-switch" value={v.code || ''} aria-label={t('Book')} onChange={(e) => openBookPdf(e.target.value, 1)}>
           {!book && v.code && <option value={v.code}>{v.code}</option>}
           {(list || []).map((b) => (
             <option key={b.code} value={b.code}>
@@ -360,8 +360,8 @@ export default function BookViewer() {
         </select>
         {book && (
           <div className="books-nav">
-            <IconButton icon="◀" title={t('Page précédente')} disabled={(v.pdfPage || 1) <= 1} onClick={() => gotoPdfPage((v.pdfPage || 1) - 1)} />
-            <label className="books-pageinput" title={t('Page imprimée (PDF {pdf} / {pages})', { pdf: v.pdfPage || 1, pages: book.pages })}>
+            <IconButton icon="◀" title={t('Previous page')} disabled={(v.pdfPage || 1) <= 1} onClick={() => gotoPdfPage((v.pdfPage || 1) - 1)} />
+            <label className="books-pageinput" title={t('Printed page (PDF {pdf} / {pages})', { pdf: v.pdfPage || 1, pages: book.pages })}>
               <span className="muted small">{t('p.')}</span>
               <input
                 className="input"
@@ -372,21 +372,21 @@ export default function BookViewer() {
                 onBlur={goPrinted}
               />
             </label>
-            <IconButton icon="▶" title={t('Page suivante')} disabled={(v.pdfPage || 1) >= book.pages} onClick={() => gotoPdfPage((v.pdfPage || 1) + 1)} />
+            <IconButton icon="▶" title={t('Next page')} disabled={(v.pdfPage || 1) >= book.pages} onClick={() => gotoPdfPage((v.pdfPage || 1) + 1)} />
           </div>
         )}
         {book && mode === 'pdf' && (
           <div className="books-zoom">
-            <IconButton icon="−" title={t('Zoom arrière')} onClick={() => setZoom(zoomStep(scale || 1, -1))} />
+            <IconButton icon="−" title={t('Zoom out')} onClick={() => setZoom(zoomStep(scale || 1, -1))} />
             <button
               type="button"
               className="books-zoom-label"
               onClick={() => setZoom(zoom === 'width' ? 'page' : 'width')}
-              title={zoom === 'width' ? t('Largeur de page (cliquer : page entière)') : t('Cliquer : largeur de page')}
+              title={zoom === 'width' ? t('Page width (click: whole page)') : t('Click: page width')}
             >
               {scale ? `${fmtNumber(Math.round(scale * 100))} %` : '…'}
             </button>
-            <IconButton icon="+" title={t('Zoom avant')} onClick={() => setZoom(zoomStep(scale || 1, 1))} />
+            <IconButton icon="+" title={t('Zoom in')} onClick={() => setZoom(zoomStep(scale || 1, 1))} />
           </div>
         )}
         <div className="books-tools">
@@ -394,20 +394,20 @@ export default function BookViewer() {
             <button
               type="button"
               className={'books-mode' + (mode === 'text' ? ' active' : '')}
-              title={mode === 'pdf' ? t('Afficher le texte de la page') : t('Afficher le PDF')}
+              title={mode === 'pdf' ? t('Show the page text') : t('Show the PDF')}
               onClick={() => setMode(mode === 'pdf' ? 'text' : 'pdf')}
             >
-              {mode === 'pdf' ? t('Texte') : t('PDF')}
+              {mode === 'pdf' ? t('Text') : t('PDF')}
             </button>
           )}
           {book && (
-            <a className="icon-btn" href={pdfUrl} target="_blank" rel="noopener" title={t('Ouvrir dans un nouvel onglet')}>
+            <a className="icon-btn" href={pdfUrl} target="_blank" rel="noopener" title={t('Open in a new tab')}>
               ↗
             </a>
           )}
-          <IconButton icon="⌕" title={t('Rechercher dans les règles')} onClick={() => setSearchOpen(!searchOpen)} />
-          <IconButton icon="⚙" className={settingsOpen ? 'books-on' : ''} title={t('Réglages du lecteur')} aria-expanded={settingsOpen} onClick={() => setSettingsOpen(!settingsOpen)} />
-          <IconButton icon="✕" title={t('Fermer (Échap)')} onClick={closeBook} />
+          <IconButton icon="⌕" title={t('Search the rules')} onClick={() => setSearchOpen(!searchOpen)} />
+          <IconButton icon="⚙" className={settingsOpen ? 'books-on' : ''} title={t('Reader settings')} aria-expanded={settingsOpen} onClick={() => setSettingsOpen(!settingsOpen)} />
+          <IconButton icon="✕" title={t('Close (Esc)')} onClick={closeBook} />
         </div>
       </header>
       {settingsOpen && <ViewerSettings book={book} list={list} zoom={zoom} setZoom={setZoom} mode={mode} setMode={setMode} />}

@@ -44,28 +44,28 @@ const pending = (list: Array<{ status: string }> | null | undefined) => (list ||
 
 /** Main tabs (top bar). roles: who sees it. badge(game) -> number|null. label: French key marked with tk(), rendered with t(label). */
 export const mainTabs: TabEntry[] = [
-  { id: 'map', label: tk('Carte'), icon: '⌖', roles: ['gm', 'player'], component: MapView },
-  { id: 'sheet', label: tk('Ma fiche'), icon: '☰', roles: ['player'], component: MySheet },
-  { id: 'characters', label: tk('Personnages'), icon: '☰', roles: ['gm'], component: CharactersPage },
-  { id: 'bestiary', label: tk('Bestiaire'), icon: '☠', roles: ['gm'], component: BestiaryPage },
-  { id: 'maps', label: tk('Cartes'), icon: '▦', roles: ['gm'], component: MapsPage },
-  { id: 'matrix', label: tk('Matrice'), icon: '⌬', roles: ['gm', 'player'], component: MatrixPage },
-  { id: 'chargen', label: tk('Création'), icon: '✚', roles: ['gm', 'player'], component: ChargenPage, badge: (g) => (g.me.role === 'gm' ? pending(g.chargen?.drafts) : null) },
-  { id: 'shop', label: tk('Boutique'), icon: '¥', roles: ['gm', 'player'], component: ShopPage, badge: (g) => (g.me.role === 'gm' ? pending(g.shop?.orders) : null) },
-  { id: 'training', label: tk('Progression'), icon: '▲', roles: ['gm', 'player'], component: TrainingPage, badge: (g) => (g.me.role === 'gm' ? pending(g.training?.requests) : null) },
+  { id: 'map', label: tk('Map'), icon: '⌖', roles: ['gm', 'player'], component: MapView },
+  { id: 'sheet', label: tk('My sheet'), icon: '☰', roles: ['player'], component: MySheet },
+  { id: 'characters', label: tk('Characters'), icon: '☰', roles: ['gm'], component: CharactersPage },
+  { id: 'bestiary', label: tk('Bestiary'), icon: '☠', roles: ['gm'], component: BestiaryPage },
+  { id: 'maps', label: tk('Maps'), icon: '▦', roles: ['gm'], component: MapsPage },
+  { id: 'matrix', label: tk('Matrix'), icon: '⌬', roles: ['gm', 'player'], component: MatrixPage },
+  { id: 'chargen', label: tk('Creation'), icon: '✚', roles: ['gm', 'player'], component: ChargenPage, badge: (g) => (g.me.role === 'gm' ? pending(g.chargen?.drafts) : null) },
+  { id: 'shop', label: tk('Shop'), icon: '¥', roles: ['gm', 'player'], component: ShopPage, badge: (g) => (g.me.role === 'gm' ? pending(g.shop?.orders) : null) },
+  { id: 'training', label: tk('Advancement'), icon: '▲', roles: ['gm', 'player'], component: TrainingPage, badge: (g) => (g.me.role === 'gm' ? pending(g.training?.requests) : null) },
   { id: 'notes', label: tk('Notes'), icon: '✎', roles: ['gm', 'player'], component: NotesPage },
-  { id: 'books', label: tk('Règles'), icon: '§', roles: ['gm', 'player'], component: BooksPage },
-  { id: 'audio', label: tk('Ambiance'), icon: '♫', roles: ['gm'], component: AudioPage },
-  { id: 'campaign', label: tk('Campagne'), icon: '✦', roles: ['gm'], component: CampaignPage },
-  { id: 'dossiers', label: tk('Dossiers'), icon: '✉', roles: ['player'], component: DossiersPage, badge: (g) => unreadHandouts(g) || null },
-  { id: 'settings', label: tk('Réglages'), icon: '⚙', roles: ['gm'], component: SettingsPage },
+  { id: 'books', label: tk('Rules'), icon: '§', roles: ['gm', 'player'], component: BooksPage },
+  { id: 'audio', label: tk('Ambience'), icon: '♫', roles: ['gm'], component: AudioPage },
+  { id: 'campaign', label: tk('Campaign'), icon: '✦', roles: ['gm'], component: CampaignPage },
+  { id: 'dossiers', label: tk('handouts::Files'), icon: '✉', roles: ['player'], component: DossiersPage, badge: (g) => unreadHandouts(g) || null },
+  { id: 'settings', label: tk('Settings'), icon: '⚙', roles: ['gm'], component: SettingsPage },
 ];
 
 /** Right dock tabs. */
 export const dockTabs: TabEntry[] = [
-  { id: 'log', label: tk('Journal & dés'), roles: ['gm', 'player'], component: LogDock },
+  { id: 'log', label: tk('Log & dice'), roles: ['gm', 'player'], component: LogDock },
   { id: 'combat', label: tk('Initiative'), roles: ['gm', 'player'], component: CombatDock, badge: (g) => (g.combat?.active ? '●' : null) },
-  { id: 'sounds', label: tk('Sons'), roles: ['gm'], component: SoundDock },
+  { id: 'sounds', label: tk('Sounds'), roles: ['gm'], component: SoundDock },
   { id: 'assistant', label: tk('Assistant'), roles: ['gm'], component: AssistantDock },
 ];
 

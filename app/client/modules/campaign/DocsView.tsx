@@ -89,7 +89,7 @@ export default function DocsView({ target, setTarget }: DocsViewProps) {
       .catch((err) => {
         if (!alive) return;
         setText(null);
-        setError(err.message || t('Document introuvable'));
+        setError(err.message || t('Document not found'));
       })
       .finally(() => {
         if (alive) setLoading(false);
@@ -162,16 +162,16 @@ export default function DocsView({ target, setTarget }: DocsViewProps) {
       <aside className="camp-docs-side">
         <div className="camp-docs-sidehead">
           <span className="camp-docs-label">{t('Documents')}</span>
-          <IconButton icon="⟳" title={t('Rafraîchir la liste et le document')} onClick={refresh} />
+          <IconButton icon="⟳" title={t('Refresh the list and the document')} onClick={refresh} />
         </div>
         {docs.error && <div className="error small">{docs.error}</div>}
-        {!docs.loading && !docs.list.length && !docs.error && <div className="muted small">{t('Aucun fichier .md dans le dossier Shadowrun.')}</div>}
+        {!docs.loading && !docs.list.length && !docs.error && <div className="muted small">{t('No .md file in the documents folder.')}</div>}
         <ul className="camp-docs-list">
           {docs.list.map((d) => (
             <li key={d.name}>
               <button className={cx('camp-docs-item', d.name === name && 'active')} title={d.name} onClick={() => select(d.name)}>
                 <span>{docTitle(d.name)}</span>
-                <span className="faint small">{t('{kb} Ko · {date}', { kb: Math.max(1, Math.round(d.size / 1024)), date: fmtDate(d.mtime) })}</span>
+                <span className="faint small">{t('{kb} KB · {date}', { kb: Math.max(1, Math.round(d.size / 1024)), date: fmtDate(d.mtime) })}</span>
               </button>
             </li>
           ))}
@@ -179,7 +179,7 @@ export default function DocsView({ target, setTarget }: DocsViewProps) {
         {toc.length > 0 && (
           <>
             <div className="camp-docs-sidehead camp-mt">
-              <span className="camp-docs-label">{t('Sommaire')}</span>
+              <span className="camp-docs-label">{t('Contents')}</span>
             </div>
             <nav className="camp-toc">
               {toc.map((x) => (
@@ -194,10 +194,10 @@ export default function DocsView({ target, setTarget }: DocsViewProps) {
       <section className="camp-docs-main">
         <div className="camp-docs-bar">
           <button className="btn btn-sm btn-ghost camp-docs-toggle" onClick={() => setListOpen(!listOpen)}>
-            ☰ {t('Documents & sommaire')}
+            ☰ {t('Documents & contents')}
           </button>
           <div className="camp-docs-title">
-            <strong>{name ? docTitle(name) : t('Aucun document')}</strong>
+            <strong>{name ? docTitle(name) : t('No document')}</strong>
             {meta && <span className="faint small mono">{name}</span>}
           </div>
           <div className="camp-docs-search">
@@ -205,7 +205,7 @@ export default function DocsView({ target, setTarget }: DocsViewProps) {
               ref={searchRef}
               className="input search"
               type="search"
-              placeholder={t('Chercher dans le document…')}
+              placeholder={t('Search in the document…')}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => {
@@ -217,17 +217,17 @@ export default function DocsView({ target, setTarget }: DocsViewProps) {
               }}
             />
             <span className="mono small muted camp-hitcount">{query.trim().length >= 2 ? (count ? `${(((cur % count) + count) % count) + 1}/${count}` : '0') : ''}</span>
-            <IconButton icon="↑" title={t('Résultat précédent (Maj+Entrée)')} disabled={!count} onClick={() => setCur((c) => c - 1)} />
-            <IconButton icon="↓" title={t('Résultat suivant (Entrée)')} disabled={!count} onClick={() => setCur((c) => c + 1)} />
+            <IconButton icon="↑" title={t('Previous match (Shift+Enter)')} disabled={!count} onClick={() => setCur((c) => c - 1)} />
+            <IconButton icon="↓" title={t('Next match (Enter)')} disabled={!count} onClick={() => setCur((c) => c + 1)} />
           </div>
-          <Button small variant="ghost" title={t('Recharger le fichier depuis le disque')} onClick={refresh}>
-            ⟳ {t('Rafraîchir')}
+          <Button small variant="ghost" title={t('Reload the file from disk')} onClick={refresh}>
+            ⟳ {t('Refresh')}
           </Button>
         </div>
         <div className="camp-docs-scroll">
-          {loading && text == null && <div className="muted">{t('Chargement…')}</div>}
+          {loading && text == null && <div className="muted">{t('Loading…')}</div>}
           {error && <div className="error">{error}</div>}
-          {!name && !docs.loading && <Empty>{t('Choisis un document dans la liste.')}</Empty>}
+          {!name && !docs.loading && <Empty>{t('Pick a document from the list.')}</Empty>}
           <div ref={contentRef} className="md camp-doc-md"></div>
         </div>
       </section>

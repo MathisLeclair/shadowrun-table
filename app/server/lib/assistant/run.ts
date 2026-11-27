@@ -97,12 +97,12 @@ export async function runTurn({ table, conversation, text, lang, simulate, emit 
 
   const client = getClient();
   if (!client) {
-    notice(tk('L’assistant n’est pas connecté à l’API Claude (voir /admin).'), null, 'error');
+    notice(tk('The assistant is not connected to the Claude API (see /admin).'), null, 'error');
     save(table);
     return emit('assistant:done', { conversationId: convId });
   }
   if (!budgetStatus().allowed) {
-    notice(tk('Budget mensuel de l’assistant atteint ({cap} $).'), { cap: settings.monthlyCapUsd }, 'error');
+    notice(tk('The assistant\'s monthly budget is used up (${cap}).'), { cap: settings.monthlyCapUsd }, 'error');
     save(table);
     return emit('assistant:done', { conversationId: convId });
   }
@@ -120,7 +120,7 @@ export async function runTurn({ table, conversation, text, lang, simulate, emit 
     let retries = 0;
     for (let step = 0; step < MAX_STEPS; step++) {
       if (step > 0 && !budgetStatus().allowed) {
-        notice(tk('Budget mensuel de l’assistant atteint ({cap} $).'), { cap: settings.monthlyCapUsd }, 'error');
+        notice(tk('The assistant\'s monthly budget is used up (${cap}).'), { cap: settings.monthlyCapUsd }, 'error');
         break;
       }
       // Request fields of the beta API (refusal fallbacks are added below for the models that support them).
@@ -162,13 +162,13 @@ export async function runTurn({ table, conversation, text, lang, simulate, emit 
       emit('assistant:step', { conversationId: convId, phase: 'message' });
 
       if (message.stop_reason === 'refusal') {
-        notice(tk('Claude a refusé de répondre à cette demande.'), null, 'error');
+        notice(tk('Claude declined to answer this request.'), null, 'error');
         break;
       }
       if (message.stop_reason === 'pause_turn') continue;
       const toolUses = message.content.filter((b): b is BetaToolUseBlock => b.type === 'tool_use');
       if (!toolUses.length) {
-        if (message.stop_reason === 'max_tokens') notice(tk('Réponse coupée (longueur maximale atteinte).'), null, 'warn');
+        if (message.stop_reason === 'max_tokens') notice(tk('Answer cut off (maximum length reached).'), null, 'warn');
         break;
       }
       const truncated = message.stop_reason === 'max_tokens';
@@ -193,20 +193,20 @@ export async function runTurn({ table, conversation, text, lang, simulate, emit 
       conversation.messages.push({ role: 'user', content: results });
       save(table);
       emit('assistant:step', { conversationId: convId, phase: 'tools' });
-      if (step === MAX_STEPS - 1) notice(tk('Limite d’étapes atteinte pour cette question : relance-la si besoin.'), null, 'warn');
+      if (step === MAX_STEPS - 1) notice(tk('Step limit reached for this question: ask again if needed.'), null, 'warn');
     }
   } catch (err) {
-    if (err instanceof Anthropic.APIUserAbortError || ac.signal.aborted) notice(tk('Arrêté par le MJ.'), null, 'warn');
+    if (err instanceof Anthropic.APIUserAbortError || ac.signal.aborted) notice(tk('Stopped by the GM.'), null, 'warn');
     else if (err instanceof Anthropic.AuthenticationError || err instanceof Anthropic.PermissionDeniedError) {
       console.error('[assistant] auth error', err.status, err.message);
-      notice(tk('Accès à l’API Claude refusé ({status}) : vérifier la configuration dans /admin.'), { status: err.status }, 'error');
-    } else if (err instanceof Anthropic.RateLimitError) notice(tk('Limite de débit de l’API atteinte : réessaie dans un moment.'), null, 'error');
+      notice(tk('Claude API access denied ({status}): check the setup in /admin.'), { status: err.status }, 'error');
+    } else if (err instanceof Anthropic.RateLimitError) notice(tk('API rate limit reached: try again in a moment.'), null, 'error');
     else if (err instanceof Anthropic.APIError) {
       console.error('[assistant] API error', err.status, err.message);
-      notice(tk('Erreur de l’API Claude ({status}) : {message}'), { status: err.status ?? '?', message: String(err.message || '').slice(0, 300) }, 'error');
+      notice(tk('Claude API error ({status}): {message}'), { status: err.status ?? '?', message: String(err.message || '').slice(0, 300) }, 'error');
     } else {
       console.error('[assistant] run failed', err);
-      notice(tk('Erreur de l’assistant : {message}'), { message: String((err as Error)?.message || err).slice(0, 300) }, 'error');
+      notice(tk('Assistant error: {message}'), { message: String((err as Error)?.message || err).slice(0, 300) }, 'error');
     }
   } finally {
     running.delete(table.id);
@@ -252,7 +252,7 @@ export function viewConversation(c: Conversation, state: TableState): Conversati
           if (n && label.params) label.params.name = n;
           items.push({ type: 'tool', name: b.name, ...label });
         }
-      } else if (b.type === 'fallback') items.push({ type: 'notice', kind: 'info', key: tk('Réponse fournie par un autre modèle ({model}).'), params: { model: b.to?.model || '?' } });
+      } else if (b.type === 'fallback') items.push({ type: 'notice', kind: 'info', key: tk('Answer provided by another model ({model}).'), params: { model: b.to?.model || '?' } });
     }
   });
   for (const n of notices) items.push({ type: 'notice', ...n });

@@ -27,20 +27,20 @@ function SkillRow({ s, sk, def, ghost }: SkillRowProps) {
   const name = skillName(sk, def?.id);
   const up = (patch: Partial<Skill>) => send('actor/updateItem', { actorId: actor.id, list: 'skills', itemId: sk?.id, patch }).catch(() => {});
   const remove = async () => {
-    if (await confirmAction(t('Retirer la compétence {name} ?', { name }))) send('actor/removeItem', { actorId: actor.id, list: 'skills', itemId: sk?.id }).catch(() => {});
+    if (await confirmAction(t('Remove the skill {name}?', { name }))) send('actor/removeItem', { actorId: actor.id, list: 'skills', itemId: sk?.id }).catch(() => {});
   };
   if (edit && sk) {
     return <tr>
       <td><b>{name}</b>{sk.notes ? <>{' '}<span className="badge badge-amber" title={sk.notes}>!</span></> : null}</td>
       <td><Select value={at} options={attrOptions()} onChange={(v) => up({ attr: v as AttrKey })} /></td>
       <td><NumberInput small value={sk.rating || 0} min={0} max={13} onChange={(v) => up({ rating: v })} /></td>
-      <td><TextInput value={sk.spec || ''} placeholder={t('Spécialisation')} onChange={(v) => up({ spec: v })} /></td>
+      <td><TextInput value={sk.spec || ''} placeholder={t('Specialization')} onChange={(v) => up({ spec: v })} /></td>
       <td className="num-cell">{res.pool}</td>
-      <td><IconButton icon="✕" title={t('Retirer')} onClick={remove} /></td>
+      <td><IconButton icon="✕" title={t('Remove')} onClick={remove} /></td>
     </tr>;
   }
   const disabled = res.impossible;
-  return <tr className={'sh-skill' + (ghost ? ' ghost' : '') + (disabled ? ' disabled' : '')} onClick={disabled ? undefined : () => s.roll({ skillId })} title={disabled ? t('Ne peut pas être utilisée sans formation') : t('Lancer {name}', { name })}>
+  return <tr className={'sh-skill' + (ghost ? ' ghost' : '') + (disabled ? ' disabled' : '')} onClick={disabled ? undefined : () => s.roll({ skillId })} title={disabled ? t('Cannot be used untrained') : t('Roll {name}', { name })}>
     <td>
       <span className="sh-skill-name">{name}</span>
       {' '}
@@ -49,7 +49,7 @@ function SkillRow({ s, sk, def, ghost }: SkillRowProps) {
     </td>
     <td className="muted small">{attrShort(at)}{' '}{attr(actor, at)}</td>
     <td className="num-cell">{ghost ? '—' : sk?.rating}</td>
-    <td className="small">{sk?.spec ? <span className="badge badge-cyan" title={t('+2 dés avec la spécialisation')}>{sk.spec}</span> : null}</td>
+    <td className="small">{sk?.spec ? <span className="badge badge-cyan" title={t('+2 dice with the specialization')}>{sk.spec}</span> : null}</td>
     <td className="num-cell sh-pool">{disabled ? '—' : res.pool}{sk?.spec && !ghost ? <span className="faint"> ({res.pool + 2})</span> : null}</td>
     <td className="sh-roll-cell">{disabled ? null : <span className="sh-die-btn" aria-hidden="true">⚄</span>}</td>
   </tr>;
@@ -64,16 +64,16 @@ function AddSkill({ s }: { s: SheetCtx }) {
   const have = new Set((actor.skills || []).map((x) => x.id));
   const choices = SKILLS.filter((x) => !have.has(x.id)).map((x) => ({ value: x.id, label: `${skillLabel(x.id)} (${attrShort(x.attr)})` }));
   if (getLang() !== 'fr') choices.sort((a, b) => compare(a.label, b.label)); // French list keeps its curated order
-  const options = [{ value: '', label: t('Choisir une compétence…') }, ...choices];
+  const options = [{ value: '', label: t('Choose a skill…') }, ...choices];
   const add = (item: Partial<Skill>) => send('actor/addItem', { actorId: actor.id, list: 'skills', item }).then(() => { setId(''); setCustom(''); }).catch(() => {});
   return <div className="sh-add-skill row wrap">
     <Select value={id} options={options} onChange={setId} style={{ maxWidth: '260px' }} />
     <NumberInput small value={rating} min={0} max={13} onChange={setRating} />
-    <Button small variant="primary" disabled={!id} onClick={() => add({ id, rating })}>{t('Ajouter')}</Button>
-    <span className="faint">{t('ou')}</span>
-    <TextInput live value={custom} placeholder={t('Compétence personnalisée')} onChange={setCustom} style={{ maxWidth: '200px' }} />
+    <Button small variant="primary" disabled={!id} onClick={() => add({ id, rating })}>{t('Add')}</Button>
+    <span className="faint">{t('or')}</span>
+    <TextInput live value={custom} placeholder={t('Custom skill')} onChange={setCustom} style={{ maxWidth: '200px' }} />
     <Select value={customAttr} options={attrOptions()} onChange={setCustomAttr} style={{ width: 'auto' }} />
-    <Button small disabled={!custom.trim()} onClick={() => add({ name: custom.trim(), attr: customAttr as AttrKey, rating })}>{t('Créer')}</Button>
+    <Button small disabled={!custom.trim()} onClick={() => add({ name: custom.trim(), attr: customAttr as AttrKey, rating })}>{t('Create')}</Button>
   </div>;
 }
 
@@ -96,24 +96,24 @@ export function SkillsTab({ s }: { s: SheetCtx }) {
   return <div className="sh-skills">
     <div className="row spread wrap">
       <div className="muted small">
-        {edit ? t('Modifie les indices et spécialisations directement.') : t('Clique une compétence pour lancer les dés (indice + attribut).')}
+        {edit ? t('Edit ratings and specializations directly.') : t('Click a skill to roll the dice (rating + attribute).')}
       </div>
-      {!edit && <Toggle value={showAll} onChange={setShowAll} label={t('Afficher les jets par défaut')} />}
+      {!edit && <Toggle value={showAll} onChange={setShowAll} label={t('Show defaulting rolls')} />}
     </div>
-    {edit && <AddSkill s={s} />}{!cats.length && <div className="empty">{t('Aucune compétence.')}</div>}
+    {edit && <AddSkill s={s} />}{!cats.length && <div className="empty">{t('No skills.')}</div>}
     <div className="sh-skill-cols">
       {cats.map(
         (c) => <section className="sh-skill-cat" key={c}>
-          <h4 className="section-title">{(SKILL_CATEGORIES as Record<string, string>)[c] ? skillCategoryLabel(c) : t('Autres')}</h4>
+          <h4 className="section-title">{(SKILL_CATEGORIES as Record<string, string>)[c] ? skillCategoryLabel(c) : t('Others')}</h4>
           <div className="sh-table-wrap">
             <table className="sr sh-skill-table">
               <thead>
                 <tr>
-                  <th>{t('Compétence')}</th>
+                  <th>{t('Skill')}</th>
                   <th>{t('Attr.')}</th>
-                  <th className="right">{t('Ind.')}</th>
-                  <th>{t('Spé.')}</th>
-                  <th className="right">{t('Réserve')}</th>
+                  <th className="right">{t('Rtg.')}</th>
+                  <th>{t('Spec.')}</th>
+                  <th className="right">{t('Pool')}</th>
                   <th />
                 </tr>
               </thead>
@@ -123,14 +123,14 @@ export function SkillsTab({ s }: { s: SheetCtx }) {
         </section>
       )}
     </div>
-    <h4 className="section-title">{t('Connaissances & langues')}{' '}<RuleRef rule="knowledgeSkills" /></h4>
+    <h4 className="section-title">{t('Knowledge & languages')}{' '}<RuleRef rule="knowledgeSkills" /></h4>
     {edit
       ? <ListEditor actor={actor} list="knowledge" />
       : knowledge.length
         ? <div className="sh-table-wrap">
           <table className="sr">
             <thead>
-              <tr><th>{t('Connaissance')}</th><th>{t('Type')}</th><th className="right">{t('Ind.')}</th><th className="right">{t('Réserve')}</th></tr>
+              <tr><th>{t('Knowledge')}</th><th>{t('Type')}</th><th className="right">{t('Rtg.')}</th><th className="right">{t('Pool')}</th></tr>
             </thead>
             <tbody>
               {[...knowledge]
@@ -141,7 +141,7 @@ export function SkillsTab({ s }: { s: SheetCtx }) {
                 return <tr key={k.id} className={k.native ? '' : 'sh-skill'} onClick={k.native ? undefined : () => s.roll({ skillId: k.id })}>
                   <td>{k.name}{k.notes ? <>{' '}<span className="badge badge-amber" title={k.notes}>{k.notes}</span></> : null}</td>
                   <td className="muted small">{KNOWLEDGE_TYPES[k.type] ? t(KNOWLEDGE_TYPES[k.type]) : k.type}</td>
-                  <td className="num-cell">{k.native ? <span className="badge badge-cyan">{t('Maternelle')}</span> : k.rating}</td>
+                  <td className="num-cell">{k.native ? <span className="badge badge-cyan">{t('Native')}</span> : k.rating}</td>
                   <td className="num-cell sh-pool">
                     {k.native ? '—' : `${pool}`}
                     <span className="faint small">{' '}{k.native ? '' : attrShort(at)}</span>
@@ -151,6 +151,6 @@ export function SkillsTab({ s }: { s: SheetCtx }) {
             </tbody>
           </table>
         </div>
-        : <div className="muted small">{t('Aucune connaissance.')}</div>}
+        : <div className="muted small">{t('No knowledge skills.')}</div>}
   </div>;
 }

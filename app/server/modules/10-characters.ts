@@ -56,7 +56,7 @@ const BAD_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 
 function getActor(ctx: ActionContext, id: unknown): Actor {
   const a = ctx.state.actors[id as ActorId];
-  if (!a) ctx.fail('Personnage introuvable');
+  if (!a) ctx.fail('Character not found');
   // Actors created by other modules (bestiary spawn…) may lack item ids / arrays: fix them lazily.
   normalizeActor(a, uid);
   if (fillItemNames(a)) normalizeActor(a, uid); // a weapon `ammo` completed from the catalog: reload type re-parsed
@@ -64,7 +64,7 @@ function getActor(ctx: ActionContext, id: unknown): Actor {
 }
 
 function requireOwn(ctx: ActionContext, actorId: unknown): void {
-  if (!ctx.owns(actorId as ActorId)) ctx.fail('Ce personnage ne t’appartient pas');
+  if (!ctx.owns(actorId as ActorId)) ctx.fail('This character is not yours');
 }
 
 /** Keep condition boxes within the monitors (overflow may reach BOD + 1 = dead). */
@@ -120,22 +120,22 @@ function cleanUrl(v: unknown): string | null {
 function sanitizeTop(key: string, value: unknown, actor: Actor, ctx: ActionContext): unknown {
   switch (key) {
     case 'id':
-      ctx.fail('L’identifiant ne peut pas être modifié');
+      ctx.fail('The id cannot be changed');
       break;
     case 'name':
-      if (!String(value || '').trim()) ctx.fail('Le nom ne peut pas être vide');
+      if (!String(value || '').trim()) ctx.fail('The name cannot be empty');
       return String(value).trim().slice(0, 80);
     case 'type':
-      if (!['pc', 'npc'].includes(value as string)) ctx.fail('Type invalide (pc ou npc)');
+      if (!['pc', 'npc'].includes(value as string)) ctx.fail('Invalid type (pc or npc)');
       return value;
     case 'color': {
       const c = cleanColor(value);
-      if (!c) ctx.fail('Couleur invalide (format #rrggbb)');
+      if (!c) ctx.fail('Invalid color (format #rrggbb)');
       return c;
     }
     case 'portrait': {
       const u = cleanUrl(value);
-      if (u === null) ctx.fail('Adresse de portrait invalide');
+      if (u === null) ctx.fail('Invalid portrait URL');
       return u;
     }
     case 'notes':
@@ -160,25 +160,25 @@ function sanitizeTop(key: string, value: unknown, actor: Actor, ctx: ActionConte
 }
 
 function applyPatch(ctx: ActionContext, a: Actor, patch: unknown): void {
-  if (!isObj(patch)) ctx.fail('Modification invalide');
+  if (!isObj(patch)) ctx.fail('Invalid change');
   if (!ctx.isGM) {
     const bad = Object.keys(patch).filter((k) => !PLAYER_ACTOR_KEYS.includes(k));
-    if (bad.length) ctx.fail('Tu ne peux pas modifier ça toi-même ({fields}) — demande au MJ, à la boutique ou à l’entraînement.', { fields: bad.join(', ') });
+    if (bad.length) ctx.fail('You can\'t change that yourself ({fields}) — ask the GM, or use the shop or training.', { fields: bad.join(', ') });
   }
   for (const [k, v] of Object.entries(patch)) {
     if (BAD_KEYS.has(k)) continue;
     if (MERGE_KEYS.includes(k)) {
       if (v === null) {
-        if (['condition', 'edge', 'attributes'].includes(k)) ctx.fail('Champ obligatoire');
+        if (['condition', 'edge', 'attributes'].includes(k)) ctx.fail('Required field');
         delete loose(a)[k];
         continue;
       }
-      if (!isObj(v)) ctx.fail('Format invalide pour {field}', { field: k });
+      if (!isObj(v)) ctx.fail('Invalid format for {field}', { field: k });
       if (!ctx.isGM && k === 'condition') {
         const allowed = ['physical', 'stun', 'overflow'];
-        if (Object.keys(v).some((x) => !allowed.includes(x))) ctx.fail('Champ de condition inconnu');
+        if (Object.keys(v).some((x) => !allowed.includes(x))) ctx.fail('Unknown condition field');
       }
-      if (!ctx.isGM && k === 'edge' && Object.keys(v).some((x) => x !== 'current')) ctx.fail('Seule la Chance actuelle peut être modifiée');
+      if (!ctx.isGM && k === 'edge' && Object.keys(v).some((x) => x !== 'current')) ctx.fail('Only current Edge can be changed');
       loose(a)[k] = { ...(isObj(loose(a)[k]) ? loose(a)[k] : {}), ...v };
       if (k === 'condition') for (const x of ['physical', 'stun', 'overflow'] as const) a.condition[x] = clampInt(a.condition[x], 0, 99);
       if (k === 'attributes') for (const [ak, av] of Object.entries(a.attributes)) if (av !== null && av !== undefined) a.attributes[ak as AttrKey] = ak === 'ESS' ? Math.round(Math.max(0, Math.min(6, Number(av) || 0)) * 1000) / 1000 : clampInt(av, 0, 20);
@@ -215,12 +215,12 @@ function removeActor(state: TableState, id: ActorId): void {
 
 /** Index of an item by id; `index` is a fallback for items that had no id when the client rendered them. */
 function findItem(ctx: ActionContext, a: Actor, list: string, itemId: unknown, index?: unknown): number {
-  if (!listed(ITEM_LISTS, list)) ctx.fail('Liste inconnue : {list}', { list: String(list) });
+  if (!listed(ITEM_LISTS, list)) ctx.fail('Unknown list: {list}', { list: String(list) });
   const A = loose(a);
   if (!Array.isArray(A[list])) A[list] = [];
   let idx: number = itemId ? A[list].findIndex((i: Loose) => i.id === itemId) : -1;
   if (idx < 0 && !itemId && Number.isInteger(index) && A[list][index as number]) idx = index as number;
-  if (idx < 0) ctx.fail('Élément introuvable');
+  if (idx < 0) ctx.fail('Item not found');
   return idx;
 }
 
@@ -234,7 +234,7 @@ const ARMOR_MOD_BONUS = ['fire', 'cold', 'electricity', 'acid', 'falling', 'toxi
 
 /** Accessory / mod / lifestyle quality / technique (nested list `sub`). `partial` = patch (only the given keys). */
 function sanitizeSub(ctx: ActionContext, sub: string, x: unknown, partial = false): Loose {
-  if (!isObj(x)) ctx.fail('Élément invalide');
+  if (!isObj(x)) ctx.fail('Invalid item');
   const out: Loose = {};
   const has = (k: string) => x[k] !== undefined;
   if (!partial || has('name')) out.name = str(x.name, 120).trim() || (partial ? undefined : 'Option');
@@ -360,7 +360,7 @@ function sanitizeItem(list: string, item: unknown, ctx?: ActionContext): Loose {
 function findSubParent(ctx: ActionContext, actorId: unknown, list: string, itemId: unknown, sub: string): { a: Actor; it: Loose; arr: Loose[] } {
   const a = getActor(ctx, actorId);
   const subOf = (SUB_LISTS as Record<string, string | undefined>)[list];
-  if (!subOf || subOf !== sub) ctx.fail('Sous-liste inconnue : {sub}', { sub: `${String(list)}.${String(sub)}` });
+  if (!subOf || subOf !== sub) ctx.fail('Unknown sub-list: {sub}', { sub: `${String(list)}.${String(sub)}` });
   const idx = findItem(ctx, a, list, itemId);
   const it: Loose = loose(a)[list][idx];
   if (!Array.isArray(it[sub])) it[sub] = [];
@@ -384,7 +384,7 @@ function playerBonus(actor: Actor, label: string, { skillId, test, A1, A2 }: { s
 /** 'dice/roll' payload.matrixLimit: device attribute used as the limit of a Matrix test from the sheet (stored French label). */
 const MATRIX_LIMIT_LABEL: Record<string, string> = { attack: 'Attaque', sleaze: 'Corruption', dataProcessing: 'Traitement', firewall: 'Firewall' };
 /** Upper-case status shown in PC damage logs (French keys). */
-const STATUS_UPPER: Partial<Record<HealthStatus, string>> = { 'hors de combat': tk('HORS DE COMBAT'), mort: tk('MORT') };
+const STATUS_UPPER: Partial<Record<HealthStatus, string>> = { 'hors de combat': tk('OUT OF ACTION'), mort: tk('DEAD') };
 
 function sfx(ctx: ActionContext, id: SfxId, target: EmitTarget = 'all'): void {
   ctx.emitTo(target, 'sfx', { id });
@@ -393,7 +393,7 @@ function sfx(ctx: ActionContext, id: SfxId, target: EmitTarget = 'all'): void {
 /** 'A, B et C' as a translatable log param. */
 function names(list: string[]): I18nParamValue {
   if (list.length <= 1) return list.join('');
-  return { t: '{list} et {last}', params: { list: list.slice(0, -1).join(', '), last: list[list.length - 1] } };
+  return { t: '{list} and {last}', params: { list: list.slice(0, -1).join(', '), last: list[list.length - 1] } };
 }
 
 // ---------------------------------------------------------------------------
@@ -507,7 +507,7 @@ function fillItemNames(a: Actor): boolean {
 /** 'on' or an existing container id of the actor. */
 function cleanLocation(ctx: ActionContext, a: Actor, loc: unknown): string {
   const v = String(loc ?? '').trim().slice(0, 60) || ON_BODY;
-  if (v !== ON_BODY && !containerOf(a, v)) ctx.fail('Contenant introuvable');
+  if (v !== ON_BODY && !containerOf(a, v)) ctx.fail('Container not found');
   return v;
 }
 
@@ -542,7 +542,7 @@ const placeName = (a: Actor, loc: unknown): string => containerOf(a, loc)?.name 
 /** Players cannot use (fire, reload, ready) an item kept in a vehicle / safehouse / other place: within reach = carried or in a bag. */
 function requireReach(ctx: ActionContext, a: Actor, it: Loose): void {
   if (ctx.isGM || reachOf(a, it.location) < 2) return;
-  ctx.fail('{item} est hors de portée ({place})', { item: biName(it), place: placeName(a, it.location) });
+  ctx.fail('{item} is out of reach ({place})', { item: biName(it), place: placeName(a, it.location) });
 }
 
 /**
@@ -553,7 +553,7 @@ function noteRetrieval(ctx: ActionContext, a: Actor, it: Loose, from: unknown): 
   if (ctx.isGM || reachOf(a, from) < 2 || reachOf(a, it.location) >= 2) return;
   ctx.log({
     kind: 'system', userId: ctx.user.id, author: a.name,
-    i18n: { key: tk('{name} récupère {item} ({place})'), params: { name: a.name, item: biName(it), place: placeName(a, from) } },
+    i18n: { key: tk('{name} takes {item} ({place})'), params: { name: a.name, item: biName(it), place: placeName(a, from) } },
   });
 }
 
@@ -578,10 +578,10 @@ function planShot(ctx: ActionContext, a: Actor, w: Loose, { fireMode, ammoOverri
   if (usesAmmo(w)) {
     const opts = fireOptions(w);
     const asked = fireMode ? String(fireMode).slice(0, 8) : '';
-    if (asked && !opts.some((o) => o.id === asked)) ctx.fail('Mode de tir impossible avec cette arme : {mode}', { mode: asked });
+    if (asked && !opts.some((o) => o.id === asked)) ctx.fail('This weapon cannot fire in that mode: {mode}', { mode: asked });
     const opt = opts.find((o) => o.id === asked) || opts[0];
     const loaded = loadedOf(w);
-    if (loaded < 1 && !override) ctx.fail('Plus assez de munitions — recharge');
+    if (loaded < 1 && !override) ctx.fail('Not enough ammo — reload');
     const wanted: number = fewer && fewer > 0 ? Math.min(opt.rounds, Math.round(fewer)) : opt.rounds; // R&G Double Tap / Aimed Burst / Brain Blaster
     const rounds = Math.min(loaded, wanted);
     const shot: Shot = { kind: 'ammo', mode: opt.id, rounds, action: opt.action };
@@ -595,7 +595,7 @@ function planShot(ctx: ActionContext, a: Actor, w: Loose, { fireMode, ammoOverri
   }
   if (isGrenade(w)) {
     const qty = w.qty === undefined || w.qty === null ? 1 : Math.max(0, Math.round(Number(w.qty) || 0));
-    if (qty < 1 && !override) ctx.fail('Plus aucun exemplaire : {weapon}', { weapon: biName(w) });
+    if (qty < 1 && !override) ctx.fail('None left: {weapon}', { weapon: biName(w) });
     return { kind: 'item', rounds: qty ? 1 : 0 };
   }
   return null;
@@ -636,7 +636,7 @@ const qtyOf = (g: Loose | null | undefined): number => Math.max(0, Math.round(Nu
  * rounds still in the weapon go back to a matching box (or are dropped, noted). GM `free`: fill up without using the inventory.
  */
 function reloadWeapon(ctx: ActionContext, a: Actor, w: Loose, { sourceItemId, free }: { sourceItemId?: unknown; free?: unknown } = {}) {
-  if (!usesAmmo(w)) ctx.fail('Cette arme ne se recharge pas');
+  if (!usesAmmo(w)) ctx.fail('This weapon cannot be reloaded');
   requireReach(ctx, a, w);
   const max = Number(w.ammoMax) || 0;
   const loaded = loadedOf(w);
@@ -645,18 +645,18 @@ function reloadWeapon(ctx: ActionContext, a: Actor, w: Loose, { sourceItemId, fr
   let source: Loose | null = null;
   if (sourceItemId) {
     source = gear.find((g) => g.id === String(sourceItemId)) || null;
-    if (!source) ctx.fail('Élément introuvable');
-    if (!ammoFits(source, w)) ctx.fail('Munitions incompatibles avec {weapon}', { weapon: biName(w) });
-    if (!qtyOf(source)) ctx.fail('{item} est vide', { item: biName(source) });
-    if (reachOf(a, source.location) >= 2 && !ctx.isGM) ctx.fail('{item} est hors de portée ({place})', { item: biName(source), place: placeName(a, source.location) });
+    if (!source) ctx.fail('Item not found');
+    if (!ammoFits(source, w)) ctx.fail('Ammunition not compatible with {weapon}', { weapon: biName(w) });
+    if (!qtyOf(source)) ctx.fail('{item} is empty', { item: biName(source) });
+    if (reachOf(a, source.location) >= 2 && !ctx.isGM) ctx.fail('{item} is out of reach ({place})', { item: biName(source), place: placeName(a, source.location) });
   } else if (!(ctx.isGM && free)) {
     const cands = gear.filter((g) => usable(g) && ammoFits(g, w));
     const same = (g: Loose) => (w.ammoKind && sameAmmoKind(ammoKindOf(g), w.ammoKind) ? 0 : 1);
     cands.sort((x, y) => same(x) - same(y) || reachOf(a, x.location) - reachOf(a, y.location) || qtyOf(y) - qtyOf(x));
     source = cands[0] || null;
-    if (!source) ctx.fail('Aucune munition compatible dans l’inventaire de {name}', { name: a.name });
+    if (!source) ctx.fail('No compatible ammunition in {name}’s inventory', { name: a.name });
     // Rounds still loaded: an automatic pick never swaps them for another ammunition (that is chosen explicitly: sourceItemId).
-    if (loaded > 0 && w.ammoKind && same(source)) ctx.fail('Plus de {ammo} à portée : choisis d’autres munitions', { ammo: biAmmo(w.ammoKind) });
+    if (loaded > 0 && w.ammoKind && same(source)) ctx.fail('No more {ammo} within reach: choose other ammunition', { ammo: biAmmo(w.ammoKind) });
   }
   const newKind = source ? ammoKindOf(source) : w.ammoKind || null;
   let base = loaded;
@@ -680,7 +680,7 @@ function reloadWeapon(ctx: ActionContext, a: Actor, w: Loose, { sourceItemId, fr
     if (!dropped) returned = loaded;
     base = 0;
   }
-  if (base >= max) ctx.fail('{weapon} est déjà chargée', { weapon: biName(w) });
+  if (base >= max) ctx.fail('{weapon} is already loaded', { weapon: biName(w) });
   const clip = gear.find((g) => reachOf(a, g.location) < 2 && qtyOf(g) > 0 && clipFits(g, w, 'clip'));
   const loader = w.ammoType === 'cy' ? gear.find((g) => reachOf(a, g.location) < 2 && qtyOf(g) > 0 && clipFits(g, w, 'loader')) : null;
   const plan = reloadPlan(w, { agi: attr(a, 'AGI'), clip: !!clip, loader: !!loader });
@@ -689,8 +689,8 @@ function reloadWeapon(ctx: ActionContext, a: Actor, w: Loose, { sourceItemId, fr
   if (source) source.qty = avail - n;
   w.ammoLoaded = base + n;
   if (newKind) w.ammoKind = newKind;
-  const params = { name: a.name, weapon: biName(w), n, loaded: w.ammoLoaded, max, ammo: biAmmo(newKind), action: { t: plan.action === 'simple' ? tk('action simple') : tk('action complexe') } };
-  const key = plan.swap ? tk('{name} change le chargeur de {weapon} : {loaded}/{max} ({ammo}) — {action}') : tk('{name} recharge {weapon} : +{n} → {loaded}/{max} ({ammo}) — {action}');
+  const params = { name: a.name, weapon: biName(w), n, loaded: w.ammoLoaded, max, ammo: biAmmo(newKind), action: { t: plan.action === 'simple' ? tk('Simple Action') : tk('Complex Action') } };
+  const key = plan.swap ? tk('{name} changes the clip of {weapon}: {loaded}/{max} ({ammo}) — {action}') : tk('{name} reloads {weapon}: +{n} → {loaded}/{max} ({ammo}) — {action}');
   ctx.log({ kind: 'combat', userId: ctx.user.id, author: a.name, i18n: { key, params }, gmOnly: a.type === 'npc' ? true : undefined });
   return { loaded: n, ammoLoaded: w.ammoLoaded, max, action: plan.action, swap: plan.swap, sourceId: source?.id || null, clipId: plan.swap ? (clip || loader)?.id || null : null, returned, dropped };
 }
@@ -725,19 +725,19 @@ export function applyDamage(ctx: ActionContext, a: Actor, n: number, type: Damag
   // Translatable log line (status values are stored French words, translated as nested keys).
   let i18n: I18nEntry;
   if (a.type === 'npc') {
-    const damage = { t: type === 'S' ? tk('{n} case(s) de dommages étourdissants') : tk('{n} case(s) de dommages physiques'), params: { n } };
+    const damage = { t: type === 'S' ? tk('{n} box(es) of Stun damage') : tk('{n} box(es) of Physical damage'), params: { n } };
     i18n = status !== wasStatus
-      ? { key: tk('{name} encaisse {damage} — {status}.'), params: { name: a.name, damage, status: { t: status } } }
-      : { key: tk('{name} encaisse {damage}.'), params: { name: a.name, damage } };
+      ? { key: tk('{name} takes {damage} — {status}.'), params: { name: a.name, damage, status: { t: status } } }
+      : { key: tk('{name} takes {damage}.'), params: { name: a.name, damage } };
   } else {
     const damage = type === 'S'
-      ? { t: n > 1 ? tk('{n} dommages étourdissants') : tk('{n} dommage étourdissant'), params: { n } }
-      : { t: n > 1 ? tk('{n} dommages physiques') : tk('{n} dommage physique'), params: { n } };
+      ? { t: n > 1 ? tk('{n} Stun damage') : tk('one::{n} Stun damage'), params: { n } }
+      : { t: n > 1 ? tk('{n} Physical damage') : tk('one::{n} Physical damage'), params: { n } };
     const trackParams = { p: c.physical, pm: d.physicalMonitor, s: c.stun, sm: d.stunMonitor, o: c.overflow, om: d.overflowMax };
-    const track = { t: c.overflow ? tk('P {p}/{pm} · É {s}/{sm} · surplus {o}/{om}') : tk('P {p}/{pm} · É {s}/{sm}'), params: trackParams };
+    const track = { t: c.overflow ? tk('P {p}/{pm} · S {s}/{sm} · overflow {o}/{om}') : tk('P {p}/{pm} · S {s}/{sm}'), params: trackParams };
     i18n = status !== wasStatus && STATUS_UPPER[status]
-      ? { key: tk('{name} subit {damage} ({track}) — {status}'), params: { name: a.name, damage, track, status: { t: STATUS_UPPER[status] } } }
-      : { key: tk('{name} subit {damage} ({track})'), params: { name: a.name, damage, track } };
+      ? { key: tk('{name} takes {damage} ({track}) — {status}'), params: { name: a.name, damage, track, status: { t: STATUS_UPPER[status] } } }
+      : { key: tk('{name} takes {damage} ({track})'), params: { name: a.name, damage, track } };
   }
   ctx.log({ kind: 'combat', userId: ctx.user.id, author: a.name, i18n, gmOnly: a.type === 'npc' && !!a.hidden ? true : undefined });
   if (status === 'mort' && wasStatus !== 'mort') sfx(ctx, 'death');
@@ -792,9 +792,9 @@ export function performRoll(ctx: ActionContext, p: RollPayload | null | undefine
   let actor: Actor | null = null;
   if (payload.actorId) {
     actor = getActor(ctx, payload.actorId);
-    if (!ctx.owns(payload.actorId)) ctx.fail('Tu ne peux lancer que pour ton personnage');
+    if (!ctx.owns(payload.actorId)) ctx.fail('You can only roll for your own character');
   }
-  if (payload.secret && !ctx.isGM) ctx.fail('Seul le MJ peut faire un jet secret');
+  if (payload.secret && !ctx.isGM) ctx.fail('Only the GM can make a secret roll');
   const parts: string[] = [];
   let pool = 0;
   let label = str(payload.label, 120).trim();
@@ -802,9 +802,9 @@ export function performRoll(ctx: ActionContext, p: RollPayload | null | undefine
   // Weapon attack: skill and limit (Accuracy + accessories) come from the weapon, its accessories add their dice.
   let weapon: Weapon | null = null;
   if (payload.weaponId) {
-    if (!actor) ctx.fail('Choisis un personnage pour ce jet');
+    if (!actor) ctx.fail('Choose a character for this roll');
     weapon = (actor.weapons || []).find((w) => w && w.id === String(payload.weaponId)) || null;
-    if (!weapon) ctx.fail('Arme introuvable');
+    if (!weapon) ctx.fail('Weapon not found');
   }
   // A ranged attack fires rounds of the chosen fire mode (or throws a grenade): checked now, used after the checks below.
   const shot = weapon ? planShot(ctx, actor!, weapon, { fireMode: payload.fireMode, ammoOverride: payload.ammoOverride, rounds: internal.rounds }) : null;
@@ -816,7 +816,7 @@ export function performRoll(ctx: ActionContext, p: RollPayload | null | undefine
   // An attribute test's own modifiers (soak: + armor, composure, judge intentions…) only for an attribute-only roll on that
   // test's attributes (shared/modifiers.js TEST_ATTRS) — any other claim is ignored.
   const test = checkedTest(payload.test, { skillId, weaponId: weapon?.id, attr: A1, attr2: A2 });
-  if ((skillId || A1) && !actor) ctx.fail('Choisis un personnage pour ce jet');
+  if ((skillId || A1) && !actor) ctx.fail('Choose a character for this roll');
   if (skillId && actor) {
     const sk = actor.skills.find((s) => s.id === skillId || s.name === skillId);
     const kno = !sk && actor.knowledge.find((k) => k.id === skillId);
@@ -832,7 +832,7 @@ export function performRoll(ctx: ActionContext, p: RollPayload | null | undefine
     } else {
       const def = (SKILL_BY_ID as Record<string, Loose | undefined>)[skillId];
       const res = skillPool(actor, skillId, { useSpec: !!payload.useSpec, attrOverride: A1 || undefined } as { useSpec: boolean });
-      if (res.impossible) ctx.fail('{skill} ne peut pas être utilisée sans formation', { skill: def?.fr ? { t: def.fr } : sk?.name || skillId });
+      if (res.impossible) ctx.fail('{skill} cannot be used untrained', { skill: def?.fr ? { t: def.fr } : sk?.name || skillId });
       const at: AttrKey = A1 || sk?.attr || def?.attr || 'AGI';
       pool = res.pool;
       if (res.defaulting) parts.push(`${ATTR_SHORT[at]} ${attr(actor, at)}`, 'par défaut −1');
@@ -940,14 +940,14 @@ export function performRoll(ctx: ActionContext, p: RollPayload | null | undefine
   }
   const explode = !!payload.explode;
   if (explode) {
-    if (!actor) ctx.fail('Choisis un personnage pour utiliser la Chance');
-    if (actor.edge.current <= 0) ctx.fail('{name} n’a plus de point de Chance', { name: actor.name });
+    if (!actor) ctx.fail('Choose a character to use Edge');
+    if (actor.edge.current <= 0) ctx.fail('{name} has no Edge left', { name: actor.name });
     const e = attr(actor, 'EDG');
     pool += e;
     parts.push(`Chance +${e}`);
   }
   pool = Math.min(100, pool);
-  if (pool <= 0) ctx.fail('Réserve de dés nulle : échec automatique');
+  if (pool <= 0) ctx.fail('Dice pool of zero: automatic failure');
   let limit = null;
   let limitLabel = null;
   let limitBreakdown = null;
@@ -995,7 +995,7 @@ export function performRoll(ctx: ActionContext, p: RollPayload | null | undefine
   const r = rollDice(pool, { limit, explode });
   if (!label) label = `Jet de ${pool} dés`;
   // Weapon attack (« Attaque — <arme> »): the weapon's name in both languages, each viewer reads their own (common.js rollLabel).
-  const labelI18n = weapon && /^Attaque — /.test(label) ? { key: tk('Attaque — {weapon}'), params: { weapon: biName(weapon) } } : null;
+  const labelI18n = weapon && /^Attaque — /.test(label) ? { key: tk('Attack — {weapon}'), params: { weapon: biName(weapon) } } : null;
   const roll: RollRecord = {
     ...r, label, ...(labelI18n ? { labelI18n } : {}), explode, edge: explode, actorId: actor?.id || null, breakdown: parts.join(' + '), ...(fire ? { fire } : {}),
     ...(limitLabel ? { limitLabel } : {}), ...(limitBreakdown ? { limitBreakdown } : {}), ...(payload.secret ? { secret: true } : {}),
@@ -1083,7 +1083,7 @@ const mod: ServerModule<ExpressApp> = {
       handler(ctx: ActionContext, payload: ActorCreatePayload) {
         const { type = 'npc', name, ...rest } = payload || {};
         const cleanName = String(name || '').trim();
-        if (!cleanName) ctx.fail('Donne un nom au personnage');
+        if (!cleanName) ctx.fail('Give the character a name');
         const a = blankActor(type === 'pc' ? 'pc' : 'npc', cleanName.slice(0, 80)) as unknown as Actor;
         const id = ctx.uid(a.type);
         a.id = id;
@@ -1096,7 +1096,7 @@ const mod: ServerModule<ExpressApp> = {
         normalizeActor(a, uid);
         fillActorRefs(a);
         if (fields.edge === undefined) a.edge.current = a.attributes.EDG;
-        a.history.push({ ts: ctx.now, text: tk('Création du personnage') });
+        a.history.push({ ts: ctx.now, text: tk('Character created') });
         ctx.state.actors[id] = a;
         return id;
       },
@@ -1127,7 +1127,7 @@ const mod: ServerModule<ExpressApp> = {
             n++;
           }
         }
-        if (!n) ctx.fail('Personnage introuvable');
+        if (!n) ctx.fail('Character not found');
         return n;
       },
     },
@@ -1139,9 +1139,9 @@ const mod: ServerModule<ExpressApp> = {
         const src = getActor(ctx, actorId);
         const a: Actor = deepClone(src);
         a.id = ctx.uid(a.type);
-        a.name = String(name || ctx.t(tk('{name} (copie)'), { name: src.name })).slice(0, 80); // stored in the table language
+        a.name = String(name || ctx.t(tk('{name} (copy)'), { name: src.name })).slice(0, 80); // stored in the table language
         for (const k of ITEM_LISTS) if (Array.isArray(loose(a)[k]) && k !== 'skills') for (const it of loose(a)[k]) it.id = ctx.uid('itm');
-        a.history = [...(a.history || []), { ts: ctx.now, text: `Copie de ${src.name}`, i18n: { key: 'Copie de {name}', params: { name: src.name } } }];
+        a.history = [...(a.history || []), { ts: ctx.now, text: `Copie de ${src.name}`, i18n: { key: 'Copy of {name}', params: { name: src.name } } }];
         normalizeActor(a, uid);
         ctx.state.actors[a.id] = a;
         return a.id;
@@ -1153,14 +1153,14 @@ const mod: ServerModule<ExpressApp> = {
       role: 'gm',
       handler(ctx: ActionContext, { actorId, list, item, adjustEssence }: AddItemPayload) {
         const a = getActor(ctx, actorId);
-        if (!listed(ITEM_LISTS, list)) ctx.fail('Liste inconnue : {list}', { list: String(list) });
-        if (!isObj(item)) ctx.fail('Élément invalide');
+        if (!listed(ITEM_LISTS, list)) ctx.fail('Unknown list: {list}', { list: String(list) });
+        if (!isObj(item)) ctx.fail('Invalid item');
         const it = sanitizeItem(list, item, ctx);
         if (!Array.isArray(loose(a)[list])) loose(a)[list] = [];
         if (list === 'skills') {
           it.id = it.id || slugify(it.name || '');
-          if (!it.id || it.id === 'x') ctx.fail('Compétence sans nom');
-          if (a.skills.some((s) => s.id === it.id)) ctx.fail('Cette compétence est déjà sur la fiche');
+          if (!it.id || it.id === 'x') ctx.fail('Skill without a name');
+          if (a.skills.some((s) => s.id === it.id)) ctx.fail('This skill is already on the sheet');
           const def = (SKILL_BY_ID as Record<string, Loose | undefined>)[it.id];
           it.name = it.name || def?.fr || it.id;
           it.attr = it.attr || def?.attr || 'AGI';
@@ -1219,11 +1219,11 @@ const mod: ServerModule<ExpressApp> = {
         const a = getActor(ctx, actorId);
         requireOwn(ctx, actorId);
         const idx = findItem(ctx, a, list, itemId, index);
-        if (!isObj(patch)) ctx.fail('Modification invalide');
+        if (!isObj(patch)) ctx.fail('Invalid change');
         if (!ctx.isGM) {
           const allowed: string[] = (PLAYER_ITEM_FIELDS as Record<string, string[] | undefined>)[list] || [];
           const bad = Object.keys(patch).filter((k) => !allowed.includes(k));
-          if (bad.length) ctx.fail(allowed.length ? tk('Tu peux seulement modifier : {fields}') : tk('Seul le MJ peut modifier cet élément'), allowed.length ? { fields: allowed.join(', ') } : undefined);
+          if (bad.length) ctx.fail(allowed.length ? tk('You can only change: {fields}') : tk('Only the GM can change this item'), allowed.length ? { fields: allowed.join(', ') } : undefined);
         }
         const clean = sanitizeItem(list, patch, ctx);
         delete clean.id;
@@ -1232,7 +1232,7 @@ const mod: ServerModule<ExpressApp> = {
           clean.qty = clampInt(clean.qty, 0, 9999);
           // Players may record consumption, never create units (they could then sell them to the shop).
           const cur = Math.max(0, Number(loose(a)[list][idx].qty ?? 1) || 0);
-          if (!ctx.isGM && clean.qty > cur) ctx.fail('Seul le MJ peut augmenter une quantité');
+          if (!ctx.isGM && clean.qty > cur) ctx.fail('Only the GM can raise a quantity');
         }
         if (list === 'augmentations' || list === 'powers' || list === 'qualities') delete clean.bonus;
         if (list === 'weapons') delete clean.augId;
@@ -1243,7 +1243,7 @@ const mod: ServerModule<ExpressApp> = {
         }
         if (list === 'weapons' && clean.ammoLoaded !== undefined && !usesAmmo(loose(a)[list][idx]) && !String(patch.ammo ?? '').trim()) delete clean.ammoLoaded;
         if (list === 'weapons' && clean.ammoLoaded !== undefined && !ctx.isGM && clean.ammoLoaded > loadedOf(loose(a)[list][idx])) {
-          ctx.fail('Recharge avec le bouton « Recharger » : les balles viennent de l’inventaire');
+          ctx.fail('Use the “Reload” button: rounds come from the inventory');
         }
         if (listed(LOCATED_LISTS, list) && clean.location !== undefined) clean.location = cleanLocation(ctx, a, clean.location);
         if (listed(LOCATED_LISTS, list) && (clean.equipped === true || clean.active === true)) {
@@ -1277,7 +1277,7 @@ const mod: ServerModule<ExpressApp> = {
       role: 'gm',
       handler(ctx: ActionContext, { actorId, list, itemId, sub, item }: SubItemPayload) {
         const { a, arr } = findSubParent(ctx, actorId, list, itemId, sub);
-        if (arr.length >= 60) ctx.fail('Trop d’éléments');
+        if (arr.length >= 60) ctx.fail('Too many items');
         const x = sanitizeSub(ctx, sub, item);
         for (const [k, v] of Object.entries(x)) if (v === null) delete x[k];
         x.id = ctx.uid('sub');
@@ -1294,7 +1294,7 @@ const mod: ServerModule<ExpressApp> = {
       handler(ctx: ActionContext, { actorId, list, itemId, sub, subId, patch }: SubItemPayload) {
         const { a, arr } = findSubParent(ctx, actorId, list, itemId, sub);
         const i = arr.findIndex((x) => x.id === subId);
-        if (i < 0) ctx.fail('Élément introuvable');
+        if (i < 0) ctx.fail('Item not found');
         const clean = sanitizeSub(ctx, sub, patch, true);
         delete clean.id;
         arr[i] = { ...arr[i], ...clean };
@@ -1310,7 +1310,7 @@ const mod: ServerModule<ExpressApp> = {
       handler(ctx: ActionContext, { actorId, list, itemId, sub, subId }: SubItemPayload) {
         const { a, it, arr } = findSubParent(ctx, actorId, list, itemId, sub);
         const i = arr.findIndex((x) => x.id === subId);
-        if (i < 0) ctx.fail('Élément introuvable');
+        if (i < 0) ctx.fail('Item not found');
         arr.splice(i, 1);
         it[sub] = arr;
         if (list === 'lifestyles') settleLifestyles(a);
@@ -1343,9 +1343,9 @@ const mod: ServerModule<ExpressApp> = {
         const a = getActor(ctx, actorId);
         requireOwn(ctx, actorId);
         const n = str(name, 60).trim();
-        if (!n) ctx.fail('Donne un nom au contenant');
+        if (!n) ctx.fail('Give the container a name');
         const containers = a.containers!; // normalizeActor (getActor) creates the list
-        if (containers.length >= 30) ctx.fail('Trop de contenants');
+        if (containers.length >= 30) ctx.fail('Too many containers');
         const c: Container = { id: ctx.uid('ct'), name: n, kind: (CONTAINER_KINDS as Record<string, string>)[kind as string] ? (kind as ContainerKind) : guessContainerKind(n) };
         if (notes) c.notes = str(notes, 500);
         containers.push(c);
@@ -1360,17 +1360,17 @@ const mod: ServerModule<ExpressApp> = {
         const a = getActor(ctx, actorId);
         requireOwn(ctx, actorId);
         const c = containerOf(a, containerId);
-        if (!c) ctx.fail('Contenant introuvable');
-        if (!isObj(patch)) ctx.fail('Modification invalide');
+        if (!c) ctx.fail('Container not found');
+        if (!isObj(patch)) ctx.fail('Invalid change');
         if (patch.name !== undefined) {
           const n = str(patch.name, 60).trim();
-          if (!n) ctx.fail('Donne un nom au contenant');
+          if (!n) ctx.fail('Give the container a name');
           c.name = n;
         }
         if (patch.kind !== undefined) {
-          if (!(CONTAINER_KINDS as Record<string, string>)[patch.kind]) ctx.fail('Type de contenant inconnu');
+          if (!(CONTAINER_KINDS as Record<string, string>)[patch.kind]) ctx.fail('Unknown container type');
           // A vehicle / safehouse / other place does not become a bag or « worn » (its contents would come within reach): GM only.
-          if (patch.kind !== c.kind && !ctx.isGM && reachOf(a, c.id) >= 2) ctx.fail('Seul le MJ peut changer le type de {place}', { place: c.name });
+          if (patch.kind !== c.kind && !ctx.isGM && reachOf(a, c.id) >= 2) ctx.fail('Only the GM can change the type of {place}', { place: c.name });
           c.kind = patch.kind;
         }
         if (patch.notes !== undefined) {
@@ -1389,10 +1389,10 @@ const mod: ServerModule<ExpressApp> = {
         const a = getActor(ctx, actorId);
         requireOwn(ctx, actorId);
         const c = containerOf(a, containerId);
-        if (!c) ctx.fail('Contenant introuvable');
+        if (!c) ctx.fail('Container not found');
         // A vehicle / safehouse that still holds items: removing it would bring them all « Sur soi » at once (GM only).
         if (!ctx.isGM && reachOf(a, c.id) >= 2 && LOCATED_LISTS.some((l) => (loose(a)[l] || []).some((it: Loose) => it && it.location === c.id))) {
-          ctx.fail('{place} contient encore des objets : récupère-les d’abord', { place: c.name });
+          ctx.fail('{place} still holds items: take them out first', { place: c.name });
         }
         a.containers = a.containers!.filter((x) => x.id !== containerId);
         let moved = 0;
@@ -1415,7 +1415,7 @@ const mod: ServerModule<ExpressApp> = {
       handler(ctx: ActionContext, { actorId, list, itemId, location }: MovePayload) {
         const a = getActor(ctx, actorId);
         requireOwn(ctx, actorId);
-        if (!listed(LOCATED_LISTS, list)) ctx.fail('Liste inconnue : {list}', { list: String(list) });
+        if (!listed(LOCATED_LISTS, list)) ctx.fail('Unknown list: {list}', { list: String(list) });
         const it: Loose = loose(a)[list][findItem(ctx, a, list, itemId)];
         const from = it.location;
         it.location = cleanLocation(ctx, a, location);
@@ -1431,13 +1431,13 @@ const mod: ServerModule<ExpressApp> = {
         const a = getActor(ctx, actorId);
         requireOwn(ctx, actorId);
         const w = (a.weapons || []).find((x) => x && x.id === String(weaponId));
-        if (!w) ctx.fail('Arme introuvable');
+        if (!w) ctx.fail('Weapon not found');
         const shot = planShot(ctx, a, w, { fireMode: mode, ammoOverride: override });
-        if (!shot) ctx.fail('Cette arme n’utilise pas de munitions');
+        if (!shot) ctx.fail('This weapon does not use ammunition');
         const res = applyShot(a, w, shot);
         const i18n: I18nEntry = shot.kind === 'ammo'
-          ? { key: tk('{name} tire {n} balle(s) avec {weapon} — reste {left}/{max}'), params: { name: a.name, n: shot.rounds, weapon: biName(w), left: res.left, max: res.max as number } }
-          : { key: tk('{name} lance {weapon}'), params: { name: a.name, weapon: biName(w) } };
+          ? { key: tk('{name} fires {n} round(s) with {weapon} — {left}/{max} left'), params: { name: a.name, n: shot.rounds, weapon: biName(w), left: res.left, max: res.max as number } }
+          : { key: tk('{name} throws {weapon}'), params: { name: a.name, weapon: biName(w) } };
         ctx.log({ kind: 'combat', userId: ctx.user.id, author: a.name, i18n, gmOnly: a.type === 'npc' ? true : undefined });
         return res;
       },
@@ -1450,7 +1450,7 @@ const mod: ServerModule<ExpressApp> = {
         const a = getActor(ctx, actorId);
         requireOwn(ctx, actorId);
         const w = (a.weapons || []).find((x) => x && x.id === String(weaponId));
-        if (!w) ctx.fail('Arme introuvable');
+        if (!w) ctx.fail('Weapon not found');
         return reloadWeapon(ctx, a, w, { sourceItemId, free });
       },
     },
@@ -1462,8 +1462,8 @@ const mod: ServerModule<ExpressApp> = {
         const a = getActor(ctx, actorId);
         requireOwn(ctx, actorId);
         const n = clampInt(amount, 0, 100);
-        if (!n) ctx.fail('Indique un nombre de cases de dommages');
-        if (!['P', 'S'].includes(type as string)) ctx.fail('Type de dommages invalide (P ou S)');
+        if (!n) ctx.fail('Give a number of damage boxes');
+        if (!['P', 'S'].includes(type as string)) ctx.fail('Invalid damage type (P or S)');
         return applyDamage(ctx, a, n, type as DamageType);
       },
     },
@@ -1482,14 +1482,14 @@ const mod: ServerModule<ExpressApp> = {
           c.overflow = 0;
         } else {
           let n = clampInt(amount, 0, 999);
-          if (!n) ctx.fail('Indique un nombre de cases à soigner');
+          if (!n) ctx.fail('Give a number of boxes to heal');
           if (type === 'S') c.stun = Math.max(0, c.stun - n);
           else if (type === 'P') {
             const fromOverflow = Math.min(c.overflow, n);
             c.overflow -= fromOverflow;
             n -= fromOverflow;
             c.physical = Math.max(0, c.physical - n);
-          } else ctx.fail('Type de soin invalide');
+          } else ctx.fail('Invalid healing type');
         }
         sfx(ctx, 'heal', a.type === 'npc' ? 'gm' : 'all');
         return { condition: { ...c }, status: syncHealth(ctx.state, a, wasStatus) };
@@ -1501,16 +1501,16 @@ const mod: ServerModule<ExpressApp> = {
       role: 'gm',
       handler(ctx: ActionContext, { actorId, actorIds, karma, nuyen, reason }: AdjustPayload) {
         const ids: unknown[] = Array.isArray(actorIds) ? actorIds : actorId ? [actorId] : [];
-        if (!ids.length) ctx.fail('Choisis au moins un personnage');
+        if (!ids.length) ctx.fail('Choose at least one character');
         const dk = clampInt(karma, -10000, 10000);
         const dn = clampInt(nuyen, -1e8, 1e8);
-        if (!dk && !dn) ctx.fail('Rien à ajuster (karma et nuyens à 0)');
+        if (!dk && !dn) ctx.fail('Nothing to adjust (karma and nuyen at 0)');
         const typed = str(reason, 300).trim();
-        const why = typed || (dk > 0 || dn > 0 ? tk('Récompense') : tk('Ajustement MJ'));
+        const why = typed || (dk > 0 || dn > 0 ? tk('Reward') : tk('GM adjustment'));
         const actors = ids.map((id) => getActor(ctx, id));
         for (const a of actors) {
-          if (a.karma + dk < 0) ctx.fail('{name} n’a pas assez de karma ({karma})', { name: a.name, karma: a.karma });
-          if (a.nuyen + dn < 0) ctx.fail('{name} n’a pas assez de nuyens ({nuyen})', { name: a.name, nuyen: fmtNuyen(a.nuyen) });
+          if (a.karma + dk < 0) ctx.fail('{name} doesn\'t have enough karma ({karma})', { name: a.name, karma: a.karma });
+          if (a.nuyen + dn < 0) ctx.fail('{name} doesn\'t have enough nuyen ({nuyen})', { name: a.name, nuyen: fmtNuyen(a.nuyen) });
         }
         for (const a of actors) {
           a.karma += dk;
@@ -1524,7 +1524,7 @@ const mod: ServerModule<ExpressApp> = {
         const pcs = actors.filter((a) => !(a.type === 'npc' && a.hidden));
         ctx.log({
           kind: 'system', author: 'MJ', gmOnly: pcs.length ? undefined : true,
-          i18n: { key: '{reason} : {changes} pour {names}.', params: { reason: typed || { t: why }, changes: parts, names: names(actors.map((a) => a.name)) } },
+          i18n: { key: '{reason}: {changes} for {names}.', params: { reason: typed || { t: why }, changes: parts, names: names(actors.map((a) => a.name)) } },
         });
         if (dk > 0) sfx(ctx, 'level-up');
         else if (dn > 0) sfx(ctx, 'cash');
@@ -1538,12 +1538,12 @@ const mod: ServerModule<ExpressApp> = {
       handler(ctx: ActionContext, { actorId, reason }: EdgeSpendPayload) {
         const a = getActor(ctx, actorId);
         requireOwn(ctx, actorId);
-        if (a.edge.current <= 0) ctx.fail('{name} n’a plus de point de Chance', { name: a.name });
+        if (a.edge.current <= 0) ctx.fail('{name} has no Edge left', { name: a.name });
         a.edge.current -= 1;
         const edgeParams = { name: a.name, cur: a.edge.current, max: a.attributes.EDG };
         const i18n = reason
-          ? { key: tk('{name} dépense 1 point de Chance ({reason}) — reste {cur}/{max}.'), params: { ...edgeParams, reason: str(reason, 120) } }
-          : { key: tk('{name} dépense 1 point de Chance — reste {cur}/{max}.'), params: edgeParams };
+          ? { key: tk('{name} spends 1 Edge point ({reason}) — {cur}/{max} left.'), params: { ...edgeParams, reason: str(reason, 120) } }
+          : { key: tk('{name} spends 1 Edge point — {cur}/{max} left.'), params: edgeParams };
         ctx.log({ kind: 'system', userId: ctx.user.id, author: a.name, i18n, gmOnly: a.type === 'npc' ? true : undefined });
         return a.edge.current;
       },
@@ -1554,10 +1554,10 @@ const mod: ServerModule<ExpressApp> = {
       role: 'any',
       handler(ctx: ActionContext, { actorId, all }: EdgeRefreshPayload) {
         if (all || actorId === 'all') {
-          if (!ctx.isGM) ctx.fail('Réservé au MJ');
+          if (!ctx.isGM) ctx.fail('GM only');
           const pcs = Object.values(ctx.state.actors).filter((a) => a.type === 'pc' && !a.retired);
           for (const a of pcs) a.edge.current = attr(a, 'EDG');
-          ctx.log({ kind: 'system', author: 'MJ', i18n: { key: 'La Chance de tous les runners est rechargée.' } });
+          ctx.log({ kind: 'system', author: 'MJ', i18n: { key: 'Every runner\'s Edge has been refreshed.' } });
           return pcs.length;
         }
         const a = getActor(ctx, actorId);
@@ -1581,16 +1581,16 @@ const mod: ServerModule<ExpressApp> = {
       role: 'any',
       handler(ctx: ActionContext, { logId }: SecondChancePayload) {
         const e = ctx.state.log.find((x) => x.id === logId);
-        if (!e || e.kind !== 'roll' || !e.roll) ctx.fail('Jet introuvable');
+        if (!e || e.kind !== 'roll' || !e.roll) ctx.fail('Roll not found');
         const r = e.roll;
-        if (!r.actorId) ctx.fail('Ce jet n’est lié à aucun personnage');
+        if (!r.actorId) ctx.fail('This roll isn\'t linked to any character');
         const a = getActor(ctx, r.actorId);
         requireOwn(ctx, r.actorId);
-        if (r.explode) ctx.fail('Impossible : la Chance a déjà été utilisée pour ce jet (Repousser les limites)');
-        if (r.secondChance) ctx.fail('Seconde chance déjà utilisée pour ce jet');
-        if (typeof r.hits !== 'number') ctx.fail('Ce jet n’a pas de succès à relancer');
-        if (r.sinCheck) ctx.fail('La Chance ne s’applique pas au contrôle d’un SIN (c’est le jet du système)');
-        if (a.edge.current <= 0) ctx.fail('{name} n’a plus de point de Chance', { name: a.name });
+        if (r.explode) ctx.fail('Not possible: Edge was already used for this roll (Push the Limit)');
+        if (r.secondChance) ctx.fail('Second Chance already used for this roll');
+        if (typeof r.hits !== 'number') ctx.fail('This roll has no hits to reroll');
+        if (r.sinCheck) ctx.fail('Edge does not apply to a SIN check (it is the system\'s roll)');
+        if (a.edge.current <= 0) ctx.fail('{name} has no Edge left', { name: a.name });
         a.edge.current -= 1;
         const before = [...r.dice];
         const rerolled = before.map((d: number) => (d >= 5 ? d : 1 + Math.floor(Math.random() * 6)));
@@ -1613,15 +1613,15 @@ const mod: ServerModule<ExpressApp> = {
       handler(ctx: ActionContext, { actorId, sinId, license, device, secret }: SinCheckPayload) {
         const a = getActor(ctx, actorId);
         requireOwn(ctx, actorId);
-        if (secret && !ctx.isGM) ctx.fail('Seul le MJ peut faire un jet secret');
+        if (secret && !ctx.isGM) ctx.fail('Only the GM can make a secret roll');
         const sin = (a.sins || []).find((x) => x && x.id === String(sinId));
-        if (!sin) ctx.fail('SIN introuvable');
-        if (isRealSin(sin)) ctx.fail('Un vrai SIN passe toujours le contrôle');
+        if (!sin) ctx.fail('SIN not found');
+        if (isRealSin(sin)) ctx.fail('A real SIN always passes the check');
         const dev = Math.round(Number(device));
-        if (!(dev >= 1 && dev <= MAX_DEVICE_RATING)) ctx.fail('Indice du système de vérification invalide');
+        if (!(dev >= 1 && dev <= MAX_DEVICE_RATING)) ctx.fail('Invalid verification system rating');
         const lics = sinLicenses(sin);
         const li = license === undefined || license === null || license === '' ? null : clampInt(license, 0, 999, -1);
-        if (li !== null && !lics[li]) ctx.fail('Licence introuvable');
+        if (li !== null && !lics[li]) ctx.fail('License not found');
         const lic = li === null ? null : lics[li];
         const identity = sinIdentity(sin);
         const threshold = lic ? lic.rating : sinRating(sin);
@@ -1631,7 +1631,7 @@ const mod: ServerModule<ExpressApp> = {
           // « Any further use of the fake SIN automatically fails »: no roll.
           ctx.log({
             kind: 'system', userId: ctx.user.id, author: a.name, ...(hidden ? { gmOnly: true } : {}),
-            i18n: { key: tk('{actor} présente {sin} : SIN grillé, le contrôle échoue d’office'), params: { actor: a.name, sin: identity } },
+            i18n: { key: tk('{actor} presents {sin}: burned SIN, the check fails automatically'), params: { actor: a.name, sin: identity } },
           });
           return { ...base, outcome: 'auto' };
         }
@@ -1640,8 +1640,8 @@ const mod: ServerModule<ExpressApp> = {
         const outcome = sinCheckOutcome(r.hits, threshold);
         const label = lic ? `Contrôle de licence — ${lic.name} (${identity})` : `Contrôle de SIN — ${identity}`; // i18n-ignore (stored French label, labelI18n below)
         const labelI18n: I18nEntry = lic
-          ? { key: tk('Contrôle de licence — {license} ({sin})'), params: { license: lic.name, sin: identity } }
-          : { key: tk('Contrôle de SIN — {sin}'), params: { sin: identity } };
+          ? { key: tk('License check — {license} ({sin})'), params: { license: lic.name, sin: identity } }
+          : { key: tk('SIN check — {sin}'), params: { sin: identity } };
         const roll: RollRecord & { sinCheck: SinCheckInfo } = { ...r, pool, label, labelI18n, actorId: a.id, ...(secret ? { secret: true } : {}), sinCheck: { ...base, outcome: outcome as SinCheckInfo['outcome'] } };
         // A visible check that exceeds the threshold burns the SIN; a secret one leaves it to the GM (card « Griller »).
         if (outcome === 'burned' && !secret) {
@@ -1664,10 +1664,10 @@ const mod: ServerModule<ExpressApp> = {
         const { actorId, contactId, kind } = p || ({} as Partial<ContactRollPayload>);
         const a = getActor(ctx, actorId);
         requireOwn(ctx, actorId);
-        if (p.secret && !ctx.isGM) ctx.fail('Seul le MJ peut faire un jet secret');
-        if (!listed(CONTACT_ROLLS, kind)) ctx.fail('Jet de contact inconnu');
+        if (p.secret && !ctx.isGM) ctx.fail('Only the GM can make a secret roll');
+        if (!listed(CONTACT_ROLLS, kind)) ctx.fail('Unknown contact roll');
         const c = (a.contacts || []).find((x) => x && x.id === String(contactId));
-        if (!c) ctx.fail('Contact introuvable');
+        if (!c) ctx.fail('Contact not found');
         const name = str(c.name, 120) || '?';
         const cn = connectionOf(c);
         const loy = loyaltyOf(c);
@@ -1689,7 +1689,7 @@ const mod: ServerModule<ExpressApp> = {
           const bonus = [{ label: `Loyauté ${name}`, value: loy }, ...(bribe ? [{ label: 'dés achetés', value: bribe }] : [])]; // i18n-ignore (breakdown)
           const r = performRoll(ctx, { actorId: a.id, skillId: 'negotiation', useSpec: !!p.useSpec, explode: !!p.explode, modifier: mod, label, secret: !!p.secret }, {
             bonus,
-            logExtra: { labelI18n: { key: tk('Négociation avec {contact}'), params: { contact: name } }, contactRoll: { ...info, ...(bribe ? { bribe, bribeCost: bribeCost(c, bribe) } : {}) } },
+            logExtra: { labelI18n: { key: tk('Negotiation with {contact}'), params: { contact: name } }, contactRoll: { ...info, ...(bribe ? { bribe, bribeCost: bribeCost(c, bribe) } : {}) } },
           });
           const { entry, ...out } = r;
           return out;
@@ -1701,7 +1701,7 @@ const mod: ServerModule<ExpressApp> = {
           const total = dice[0] + dice[1] + mod;
           const label = `Joindre ${name}`; // i18n-ignore
           return finish({
-            dice, extra: [], pool: 2, total, label, labelI18n: { key: tk('Joindre {contact}'), params: { contact: name } }, actorId: a.id,
+            dice, extra: [], pool: 2, total, label, labelI18n: { key: tk('Reach {contact}'), params: { contact: name } }, actorId: a.id,
             breakdown: mod ? `2D6 ${mod > 0 ? '+' : '−'} ${Math.abs(mod)}` : '2D6', ...(p.secret ? { secret: true } : {}),
             contactRoll: { ...info, total, available: total >= cn },
           });
@@ -1709,7 +1709,7 @@ const mod: ServerModule<ExpressApp> = {
 
         // The contact's own tests: their sheet (NPC actor / bestiary template of the same name) is needed.
         const s: Loose = contactSheet(ctx.state, c); // shared/contacts.js (JS): { known, cha, etiquette, etiquetteDefaulting, social… }
-        if (!s.known) ctx.fail('{contact} n’a pas de fiche (Charisme, Étiquette) : le MJ peut créer un PNJ de ce nom dans le Bestiaire', { contact: name });
+        if (!s.known) ctx.fail('{contact} has no sheet (Charisma, Etiquette): the GM can create an NPC with that name in the Bestiary', { contact: name });
         let pool;
         let parts;
         let label;
@@ -1719,18 +1719,18 @@ const mod: ServerModule<ExpressApp> = {
           pool = s.cha + cn;
           parts = [`CHA ${s.cha}`, `Connexion ${cn}`];
           label = `Enquête — ${name}`; // i18n-ignore
-          labelI18n = { key: tk('Enquête — {contact}'), params: { contact: name } };
+          labelI18n = { key: tk('Legwork — {contact}'), params: { contact: name } };
         } else {
           threshold = clampInt(p.threshold, 1, MAX_CONNECTION, 0);
-          if (!threshold) ctx.fail('Indique la Connexion de la personne à rencontrer (seuil)');
+          if (!threshold) ctx.fail('Enter the Connection of the person to meet (threshold)');
           pool = s.etiquette + cn;
           parts = [s.etiquetteDefaulting ? `CHA ${s.cha} par défaut −1` : `Étiquette + CHA ${s.etiquette}`, `Connexion ${cn}`];
           label = `Réseau — ${name}`; // i18n-ignore
-          labelI18n = { key: tk('Réseau — {contact}'), params: { contact: name } };
+          labelI18n = { key: tk('Networking — {contact}'), params: { contact: name } };
         }
         if (mod) parts.push(`mod. ${mod > 0 ? '+' : '−'}${Math.abs(mod)}`);
         pool = Math.max(0, Math.min(100, pool + mod));
-        if (pool <= 0) ctx.fail('Réserve de dés nulle : échec automatique');
+        if (pool <= 0) ctx.fail('Dice pool of zero: automatic failure');
         const r = rollDice(pool, { limit: s.social });
         return finish({
           ...r, label, labelI18n, explode: false, edge: false, actorId: null, authorName: name, breakdown: parts.join(' + '),
@@ -1746,7 +1746,7 @@ const mod: ServerModule<ExpressApp> = {
       handler(ctx: ActionContext, { actorId, sinId, burned }: SinBurnPayload) {
         const a = getActor(ctx, actorId);
         const sin = (a.sins || []).find((x) => x && x.id === String(sinId));
-        if (!sin) ctx.fail('SIN introuvable');
+        if (!sin) ctx.fail('SIN not found');
         if (burned) {
           sin.burned = true;
           sin.burnedAt = Date.now();
@@ -1788,7 +1788,7 @@ const mod: ServerModule<ExpressApp> = {
     // Export one actor as JSON (GM).
     app.get('/api/actors/:id/export', requireGM, (req: Req, res: Res) => {
       const a = getState()!.actors[req.params.id];
-      if (!a) return res.status(404).json(errorBody('Personnage introuvable'));
+      if (!a) return res.status(404).json(errorBody('Character not found'));
       res.setHeader('Content-Disposition', `attachment; filename="${slugify(a.name)}.json"`);
       res.json(a);
     });

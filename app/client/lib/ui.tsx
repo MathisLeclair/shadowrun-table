@@ -82,7 +82,7 @@ export function Modal({ title, onClose, width = 720, children, actions }: ModalP
           <h2>{title}</h2>
           <div className="row gap-s">
             {actions}
-            <IconButton icon="✕" title={t('Fermer')} onClick={onClose} />
+            <IconButton icon="✕" title={t('Close')} onClick={onClose} />
           </div>
         </header>
         <div className="modal-body">{children}</div>
@@ -291,7 +291,7 @@ export function Empty({ children }: { children?: ReactNode }) {
 }
 
 export function SearchBox({ value, onChange, placeholder }: { value: string; onChange: (value: string) => void; placeholder?: string }) {
-  return <input className="input search" type="search" value={value} placeholder={placeholder ?? t('Rechercher…')} onChange={(e) => onChange(e.target.value)} />;
+  return <input className="input search" type="search" value={value} placeholder={placeholder ?? t('Search…')} onChange={(e) => onChange(e.target.value)} />;
 }
 
 const LANG_NAMES: Record<string, string> = { fr: 'Français', en: 'English' }; // endonyms: never translated
@@ -299,7 +299,7 @@ const LANG_NAMES: Record<string, string> = { fr: 'Français', en: 'English' }; /
 export function LangSwitch(props: { value: string; onChange: (lang: string) => void; className?: string }) {
   const { value, onChange } = props;
   return (
-    <span className={cx('lang-switch', props.className)} role="group" aria-label={t('Langue')}>
+    <span className={cx('lang-switch', props.className)} role="group" aria-label={t('Language')}>
       {(LANGS as string[]).map((l) => (
         <button
           key={l}

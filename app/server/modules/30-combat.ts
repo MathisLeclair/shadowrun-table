@@ -30,9 +30,9 @@ const NPC_KINDS: readonly unknown[] = ['metahuman', 'critter', 'drone', 'ic', 'h
 const INIT_MODES: readonly unknown[] = ['physical', 'astral', 'ar', 'cold', 'hot'];
 /** Marks a translatable key for tools/i18n-check.ts (English in client/i18n/en/combat.json). */
 const tk = (s: string): string => s;
-const INIT_MODE_LABELS: Record<string, string> = { physical: tk('physique'), astral: tk('astrale'), ar: tk('RA'), cold: tk('VR froide'), hot: tk('VR chaude') };
+const INIT_MODE_LABELS: Record<string, string> = { physical: tk('physical'), astral: tk('astral'), ar: tk('AR'), cold: tk('Cold-sim VR'), hot: tk('Hot-sim VR') };
 /** Interrupt-action labels sent by the combat dock (French keys, translated by the client in the log). */
-const ADJUST_LABELS = new Set([tk('Esquive / parade'), tk('Défense totale')]);
+const ADJUST_LABELS = new Set([tk('Dodge / parry'), tk('Full defense')]);
 // Tiles a token may stand on (see the tile legend). 'D' is handled separately (door state).
 const PASSABLE = new Set(['.', ',', 's', 'e', 'g', 'r', 'x', 't', '_']);
 const AUTHOR = 'Initiative';
@@ -317,20 +317,20 @@ function emptyCombat(): CombatState {
 
 function combatOf(ctx: ActionContext, { requireActive = true }: { requireActive?: boolean } = {}): CombatState {
   const c = ctx.state.combat;
-  if (requireActive && !c?.active) ctx.fail('Aucun combat en cours');
+  if (requireActive && !c?.active) ctx.fail('No combat in progress');
   return c;
 }
 
 function getEntry(ctx: ActionContext, c: CombatState, entryId: unknown): CombatEntry {
   const e = c.entries.find((x) => x.id === entryId);
-  if (!e) ctx.fail('Participant introuvable');
+  if (!e) ctx.fail('Participant not found');
   return e;
 }
 
 function requireOwner(ctx: ActionContext, e: CombatEntry): void {
   if (ctx.isGM) return;
   const id = ownerActorId(e);
-  if (e.hidden || !id || !ctx.owns(id)) ctx.fail('Ce n’est pas ton personnage');
+  if (e.hidden || !id || !ctx.owns(id)) ctx.fail('That is not your character');
 }
 
 function isPC(state: TableState, e: CombatEntry): boolean {
@@ -426,7 +426,7 @@ export function spendInitiative(ctx: ActionContext, actorId: ActorId, cost: unkn
   syncActors(ctx.state, c);
   e.score -= n;
   e.adjust = (e.adjust || 0) - n;
-  logCombat(ctx, tk('{name} : {label} ({delta} initiative → {score})'), { name: e.name, label: { t: label }, delta: `-${n}`, score: e.score }, { gmOnly: !!e.hidden });
+  logCombat(ctx, tk('{name}: {label} ({delta} initiative → {score})'), { name: e.name, label: { t: label }, delta: `-${n}`, score: e.score }, { gmOnly: !!e.hidden });
   sortEntries(ctx.state, c);
   return e.score;
 }
@@ -469,11 +469,11 @@ function doRoll(ctx: ActionContext, c: CombatState, e: CombatEntry, { blitz = fa
   let actor: Actor | null = null;
   if (isVirtual(e)) {
     const ini = virtualInit(ctx.state, e);
-    if (!ini) ctx.fail('Ce participant n’a pas de fiche');
+    if (!ini) ctx.fail('This participant has no sheet');
     ({ base, dice } = ini);
   } else {
     actor = ctx.state.actors[e.actorId as ActorId];
-    if (!actor) ctx.fail('Ce participant n’a pas de fiche');
+    if (!actor) ctx.fail('This participant has no sheet');
     const mode = INIT_MODES.includes(e.mode) ? e.mode : 'physical';
     ({ base, dice } = initFor(actor, mode, ctx.state));
     wm = derive(actor).woundModifier;
@@ -498,7 +498,7 @@ function rollText(e: CombatEntry): I18nMessage {
   // base / dice / total are set once the entry has rolled (rollText is only called then).
   let detail: I18nMessage = { t: tk('{base} + {dice}D6 ({rolls})'), params: { base: e.base as number, dice: e.dice as number, rolls: (e.rolls || []).join(', ') } };
   const add = (part: I18nParamValue) => (detail = { t: '{a} · {b}', params: { a: detail, b: part } });
-  if (e.wound) add({ t: '{n} blessures', params: { n: e.wound } });
+  if (e.wound) add({ t: '{n} wounds', params: { n: e.wound } });
   if (e.mode && e.mode !== 'physical') add({ t: INIT_MODE_LABELS[e.mode] });
   if (e.blitz) add('Blitz');
   return { t: '{total} — {detail}', params: { total: e.total as number, detail } };
@@ -514,7 +514,7 @@ function maybeAutoStart(ctx: ActionContext, c: CombatState): void {
   const first = firstActable(ctx.state, c);
   if (first) {
     setCurrent(ctx, c, first);
-    logCombat(ctx, tk('Tour {round} : {name} agit en premier.'), { round: c.round, name: first.name }, { gmOnly: !!first.hidden });
+    logCombat(ctx, tk('Turn {round}: {name} acts first.'), { round: c.round, name: first.name }, { gmOnly: !!first.hidden });
   }
 }
 
@@ -582,7 +582,7 @@ function addEntries(ctx: ActionContext, c: CombatState, { tokenIds, actorIds, ro
       npcRolls.push(e);
     }
   }
-  if (npcRolls.length) logCombat(ctx, tk('Initiative PNJ : {list}'), { list: scoreList(npcRolls) }, { gmOnly: true });
+  if (npcRolls.length) logCombat(ctx, tk('NPC initiative: {list}'), { list: scoreList(npcRolls) }, { gmOnly: true });
   sortEntries(state, c);
   return added;
 }
@@ -615,10 +615,10 @@ function newCombatTurn(ctx: ActionContext, c: CombatState): void {
       npcRolls.push(e);
     }
   }
-  logCombat(ctx, tk('— Tour de combat {round} — lancez l’initiative !'), { round: c.round });
+  logCombat(ctx, tk('— Combat turn {round} — roll initiative!'), { round: c.round });
   runHooks(ctx, c, 'newTurn'); // an alerted host launches one IC per Combat Turn (matrix module)
   pruneExpired(ctx.state, ctx.now); // explosion markers of the last turn, afflictions that ran out (shared/combat.js)
-  if (npcRolls.length) logCombat(ctx, tk('Initiative PNJ : {list}'), { list: scoreList(npcRolls) }, { gmOnly: true });
+  if (npcRolls.length) logCombat(ctx, tk('NPC initiative: {list}'), { list: scoreList(npcRolls) }, { gmOnly: true });
   sortEntries(ctx.state, c);
   const waiting = c.entries.filter((e) => e.toRoll && !e.out && !e.down);
   for (const e of waiting) {
@@ -645,7 +645,7 @@ function advance(ctx: ActionContext, c: CombatState, { markActed = true }: { mar
         e.acted = false;
         e.delayed = false;
       }
-      logCombat(ctx, tk('Passe d’initiative {n}'), { n: c.pass });
+      logCombat(ctx, tk('Initiative pass {n}'), { n: c.pass });
       next = firstActable(ctx.state, c);
     } else {
       newCombatTurn(ctx, c);
@@ -698,7 +698,7 @@ export function upsertVirtualEntry(ctx: ActionContext, spec: VirtualEntrySpec): 
   e.acted = false;
   e.delayed = false;
   doRoll(ctx, c, e);
-  logCombat(ctx, tk('{name} rejoint l’initiative ({roll}).'), { name: e.nameI18n || e.name, roll: rollText(e) });
+  logCombat(ctx, tk('{name} joins the initiative ({roll}).'), { name: e.nameI18n || e.name, roll: rollText(e) });
   sortEntries(ctx.state, c);
   maybeAutoStart(ctx, c);
   return e;
@@ -808,8 +808,8 @@ const mod: ServerModule = {
     'bestiary/update': {
       handler(ctx: ActionContext, { templateId, patch }: TemplateUpdatePayload = {}) {
         const t = ctx.state.bestiary[templateId as string];
-        if (!t) ctx.fail('Modèle introuvable');
-        if (!isObj(patch)) ctx.fail('Modification invalide');
+        if (!t) ctx.fail('Template not found');
+        if (!isObj(patch)) ctx.fail('Invalid change');
         const merged = { ...t, ...patch, npc: isObj(patch.npc) ? { ...t.npc, ...patch.npc } : t.npc };
         ctx.state.bestiary[templateId as string] = sanitizeTemplate(merged, { id: templateId });
         return { templateId };
@@ -817,7 +817,7 @@ const mod: ServerModule = {
     },
     'bestiary/delete': {
       handler(ctx: ActionContext, { templateId }: TemplateIdPayload = {}) {
-        if (!ctx.state.bestiary[templateId as string]) ctx.fail('Modèle introuvable');
+        if (!ctx.state.bestiary[templateId as string]) ctx.fail('Template not found');
         delete ctx.state.bestiary[templateId as string];
         if (!ctx.state.bestiaryRemoved.includes(templateId as string)) ctx.state.bestiaryRemoved.push(templateId as string);
         return { ok: true };
@@ -826,7 +826,7 @@ const mod: ServerModule = {
     'bestiary/duplicate': {
       handler(ctx: ActionContext, { templateId }: TemplateIdPayload = {}) {
         const t = ctx.state.bestiary[templateId as string];
-        if (!t) ctx.fail('Modèle introuvable');
+        if (!t) ctx.fail('Template not found');
         const id = ctx.uid('tpl');
         ctx.state.bestiary[id] = sanitizeTemplate({ ...deepClone(t), name: `${t.name} (copie)` }, { id });
         return { templateId: id };
@@ -836,7 +836,7 @@ const mod: ServerModule = {
     'bestiary/fromActor': {
       handler(ctx: ActionContext, { actorId, folder, name }: FromActorPayload = {}) {
         const a = ctx.state.actors[actorId as ActorId];
-        if (!a) ctx.fail('Personnage introuvable');
+        if (!a) ctx.fail('Character not found');
         const src = (a.templateId && ctx.state.bestiary[a.templateId]) || null;
         const id = ctx.uid('tpl');
         const t = templateFromActor(a);
@@ -851,7 +851,7 @@ const mod: ServerModule = {
     'bestiary/import': {
       handler(ctx: ActionContext, { templates, overwrite }: TemplateImportPayload = {}) {
         const list = Array.isArray(templates) ? templates : isObj(templates) ? [templates] : [];
-        if (!list.length) ctx.fail('Aucun modèle à importer');
+        if (!list.length) ctx.fail('No templates to import');
         const ids: string[] = [];
         for (const raw of list.slice(0, 500)) {
           if (!isObj(raw)) continue;
@@ -861,7 +861,7 @@ const mod: ServerModule = {
           ctx.state.bestiaryRemoved = ctx.state.bestiaryRemoved.filter((x) => x !== id);
           ids.push(id);
         }
-        if (!ids.length) ctx.fail('Fichier sans modèle valide');
+        if (!ids.length) ctx.fail('File without a valid template');
         return { count: ids.length, ids };
       },
     },
@@ -869,7 +869,7 @@ const mod: ServerModule = {
     'bestiary/renameFolder': {
       handler(ctx: ActionContext, { from, to }: RenameFolderPayload = {}) {
         const dest = str(to, 60).trim();
-        if (!dest) ctx.fail('Nom de dossier vide');
+        if (!dest) ctx.fail('Empty folder name');
         let count = 0;
         for (const t of Object.values(ctx.state.bestiary)) {
           if (t.folder === from) {
@@ -885,13 +885,13 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, { templateId, mapId, x, y, count = 1, hidden, name, disposition, addToCombat }: SpawnPayload = {}) {
         const state = ctx.state;
         const tpl = state.bestiary[templateId as string];
-        if (!tpl) ctx.fail('Modèle introuvable');
+        if (!tpl) ctx.fail('Template not found');
         const n = int(count, 1, 1, 30);
         let map: GameMap | null = null;
         if (mapId !== null) {
           const id = mapId || state.scene?.activeMapId;
           map = id ? state.maps?.[id] || null : null;
-          if (mapId && !map) ctx.fail('Carte introuvable');
+          if (mapId && !map) ctx.fail('Map not found');
         }
         // Names: « Nettoyeur AG Chemie », or numbered when several exist.
         const baseName = str(name, 120).trim() || tpl.name;
@@ -959,17 +959,17 @@ const mod: ServerModule = {
     'combat/start': {
       handler(ctx: ActionContext, { mapId, includeMapTokens = true, rollNpcs = true, force }: CombatStartPayload = {}) {
         const state = ctx.state;
-        if (state.combat?.active && !force) ctx.fail('Un combat est déjà en cours');
+        if (state.combat?.active && !force) ctx.fail('A combat is already in progress');
         const mid = mapId || state.scene?.activeMapId || null;
         const map = mid ? state.maps?.[mid] : null;
-        if (mapId && !map) ctx.fail('Carte introuvable');
+        if (mapId && !map) ctx.fail('Map not found');
         const c: CombatState = (state.combat = { ...emptyCombat(), active: true, mapId: map ? map.id : null, startedAt: ctx.now });
         undoStacks.delete(state);
         if (map && includeMapTokens !== false) {
           const tokenIds = (map.tokens || []).filter((t) => !t.hidden && t.actorId && state.actors[t.actorId]).map((t) => t.id);
           addEntries(ctx, c, { tokenIds, rollNpcs });
         }
-        logCombat(ctx, tk('⚔ Le combat commence ! Lancez l’initiative.'));
+        logCombat(ctx, tk('⚔ The combat begins! Roll initiative.'));
         ctx.emitTo('players', 'sfx', { id: 'notify' });
         runHooks(ctx, c, 'start');
         maybeAutoStart(ctx, c);
@@ -982,7 +982,7 @@ const mod: ServerModule = {
         const c = combatOf(ctx);
         syncActors(ctx.state, c);
         const added = addEntries(ctx, c, { tokenIds, actorIds });
-        if (!added.length) ctx.fail('Aucun nouveau participant (déjà dans le combat, ou sans fiche)');
+        if (!added.length) ctx.fail('No new participant (already in the combat, or without a sheet)');
         runHooks(ctx, c, 'add');
         maybeAutoStart(ctx, c);
         return { added: added.map((e) => e.id) };
@@ -1009,12 +1009,12 @@ const mod: ServerModule = {
         const c = combatOf(ctx);
         const e = getEntry(ctx, c, entryId);
         requireOwner(ctx, e);
-        if (!ctx.isGM && !e.toRoll) ctx.fail('Initiative déjà lancée pour ce tour');
+        if (!ctx.isGM && !e.toRoll) ctx.fail('Initiative already rolled this turn');
         const actor = ctx.state.actors[e.actorId as ActorId];
-        if (!actor && !isVirtual(e)) ctx.fail('Ce participant n’a pas de fiche');
+        if (!actor && !isVirtual(e)) ctx.fail('This participant has no sheet');
         if (blitz) {
-          if (!actor) ctx.fail('Ce participant n’a pas de fiche');
-          if ((actor.edge?.current ?? 0) < 1) ctx.fail('Plus de points de Chance');
+          if (!actor) ctx.fail('This participant has no sheet');
+          if ((actor.edge?.current ?? 0) < 1) ctx.fail('No Edge points left');
           actor.edge = { ...(actor.edge || {}), current: actor.edge.current - 1 };
         }
         syncActors(ctx.state, c);
@@ -1022,9 +1022,9 @@ const mod: ServerModule = {
         const pcLike = e.kind === 'pc';
         const rp = { name: e.name, roll: rollText(e) };
         const gmOnly = !!e.hidden || !pcLike;
-        if (blitz) logCombat(ctx, tk('{name} — initiative {roll} (1 point de Chance dépensé)'), rp, { gmOnly });
+        if (blitz) logCombat(ctx, tk('{name} — initiative {roll} (1 Edge point spent)'), rp, { gmOnly });
         else logCombat(ctx, tk('{name} — initiative {roll}'), rp, { gmOnly });
-        if (!e.hidden && !pcLike) logCombat(ctx, tk('{name} a lancé son initiative.'), { name: e.name });
+        if (!e.hidden && !pcLike) logCombat(ctx, tk('{name} rolled their initiative.'), { name: e.name });
         ctx.emitTo('all', 'sfx', { id: 'dice' });
         sortEntries(ctx.state, c);
         maybeAutoStart(ctx, c);
@@ -1045,13 +1045,13 @@ const mod: ServerModule = {
           rolled.push(e);
         }
         if (!rolled.length) {
-          if (npcOnly) ctx.fail('Aucun PNJ à lancer');
-          ctx.fail('Personne à lancer');
+          if (npcOnly) ctx.fail('No NPC to roll');
+          ctx.fail('Nobody to roll');
         }
         const pcs = rolled.filter((e) => e.kind === 'pc' && !e.hidden);
         const npcs = rolled.filter((e) => !(e.kind === 'pc' && !e.hidden));
-        if (pcs.length) logCombat(ctx, tk('Le MJ lance l’initiative : {list}'), { list: scoreList(pcs) });
-        if (npcs.length) logCombat(ctx, tk('Initiative PNJ : {list}'), { list: scoreList(npcs, true) }, { gmOnly: true });
+        if (pcs.length) logCombat(ctx, tk('The GM rolls initiative: {list}'), { list: scoreList(pcs) });
+        if (npcs.length) logCombat(ctx, tk('NPC initiative: {list}'), { list: scoreList(npcs, true) }, { gmOnly: true });
         ctx.emitTo('all', 'sfx', { id: 'dice' });
         sortEntries(ctx.state, c);
         maybeAutoStart(ctx, c);
@@ -1064,7 +1064,7 @@ const mod: ServerModule = {
         const c = combatOf(ctx);
         const e = getEntry(ctx, c, entryId);
         const s = int(score, NaN, -60, 99);
-        if (!Number.isFinite(s)) ctx.fail('Score invalide');
+        if (!Number.isFinite(s)) ctx.fail('Invalid score');
         if (e.toRoll) {
           e.toRoll = false;
           e.rolls = [];
@@ -1086,16 +1086,16 @@ const mod: ServerModule = {
         const c = combatOf(ctx);
         const e = getEntry(ctx, c, entryId);
         requireOwner(ctx, e);
-        if (e.toRoll) ctx.fail('Lance d’abord ton initiative');
+        if (e.toRoll) ctx.fail('Roll your initiative first');
         const d = ctx.isGM ? int(delta, 0, -40, 40) : int(delta, 0, -10, 0);
-        if (!d) ctx.fail('Ajustement invalide');
+        if (!d) ctx.fail('Invalid adjustment');
         syncActors(ctx.state, c);
         e.score += d;
         e.adjust = (e.adjust || 0) + d;
         const what = str(label, 40).trim();
         const ap = { name: e.name, delta: `${d > 0 ? '+' : ''}${d}`, score: e.score };
-        if (what) logCombat(ctx, tk('{name} : {label} ({delta} initiative → {score})'), { ...ap, label: ADJUST_LABELS.has(what) ? { t: what } : what }, { gmOnly: !!e.hidden });
-        else logCombat(ctx, tk('{name} : ({delta} initiative → {score})'), ap, { gmOnly: !!e.hidden });
+        if (what) logCombat(ctx, tk('{name}: {label} ({delta} initiative → {score})'), { ...ap, label: ADJUST_LABELS.has(what) ? { t: what } : what }, { gmOnly: !!e.hidden });
+        else logCombat(ctx, tk('{name}: ({delta} initiative → {score})'), ap, { gmOnly: !!e.hidden });
         sortEntries(ctx.state, c);
         return { score: e.score };
       },
@@ -1107,22 +1107,22 @@ const mod: ServerModule = {
         const c = combatOf(ctx);
         const cur = c.entries.find((e) => e.id === c.currentId);
         if (!ctx.isGM) {
-          if (!cur || !ownerActorId(cur) || !ctx.owns(ownerActorId(cur) as ActorId)) ctx.fail('Ce n’est pas ton tour');
+          if (!cur || !ownerActorId(cur) || !ctx.owns(ownerActorId(cur) as ActorId)) ctx.fail('It’s not your turn');
         }
-        if (entryId && entryId !== (c.currentId || null)) ctx.fail('Le tour a déjà changé');
-        if (!c.entries.length) ctx.fail('Aucun participant');
+        if (entryId && entryId !== (c.currentId || null)) ctx.fail('The turn has already changed');
+        if (!c.entries.length) ctx.fail('No participants');
         syncActors(ctx.state, c);
         if (!cur) {
           // Nobody is acting yet (waiting for rolls): the GM forces the start with whoever has rolled.
           const first = firstActable(ctx.state, c);
-          if (!first && c.entries.some((e) => e.toRoll && !e.out && !e.down)) ctx.fail('En attente des jets d’initiative');
+          if (!first && c.entries.some((e) => e.toRoll && !e.out && !e.down)) ctx.fail('Waiting for initiative rolls');
           pushUndo(ctx, c);
           if (!first) {
             newCombatTurn(ctx, c);
             return { currentId: c.currentId, round: c.round, pass: c.pass };
           }
           setCurrent(ctx, c, first);
-          logCombat(ctx, tk('Tour {round} : {name} agit en premier.'), { round: c.round, name: first.name }, { gmOnly: !!first.hidden });
+          logCombat(ctx, tk('Turn {round}: {name} acts first.'), { round: c.round, name: first.name }, { gmOnly: !!first.hidden });
           return { currentId: c.currentId, round: c.round, pass: c.pass };
         }
         pushUndo(ctx, c);
@@ -1135,7 +1135,7 @@ const mod: ServerModule = {
       handler(ctx: ActionContext) {
         combatOf(ctx);
         const snap = undoOf(ctx.state).pop();
-        if (!snap) ctx.fail('Rien à annuler');
+        if (!snap) ctx.fail('Nothing to undo');
         ctx.state.combat = snap;
         sortEntries(ctx.state, snap);
         return { currentId: snap.currentId };
@@ -1158,13 +1158,13 @@ const mod: ServerModule = {
         const c = combatOf(ctx);
         const e = getEntry(ctx, c, entryId);
         requireOwner(ctx, e);
-        if (c.currentId !== e.id) ctx.fail('Seul le personnage qui agit peut retarder son action');
+        if (c.currentId !== e.id) ctx.fail('Only the acting character can delay their action');
         syncActors(ctx.state, c);
         const others = c.entries.filter((x) => x.id !== e.id && canAct(x));
-        if (!others.length) ctx.fail('Personne d’autre n’agit dans cette passe');
+        if (!others.length) ctx.fail('Nobody else acts in this pass');
         pushUndo(ctx, c);
         e.delayed = true;
-        logCombat(ctx, tk('{name} retarde son action.'), { name: e.name }, { gmOnly: !!e.hidden });
+        logCombat(ctx, tk('{name} delays their action.'), { name: e.name }, { gmOnly: !!e.hidden });
         advance(ctx, c, { markActed: false });
         return { currentId: c.currentId };
       },
@@ -1176,7 +1176,7 @@ const mod: ServerModule = {
         const c = combatOf(ctx);
         const e = getEntry(ctx, c, entryId);
         requireOwner(ctx, e);
-        if (!e.delayed) ctx.fail('Cette action n’a pas été retardée');
+        if (!e.delayed) ctx.fail('This action was not delayed');
         pushUndo(ctx, c);
         const cur = c.entries.find((x) => x.id === c.currentId);
         e.delayed = false;
@@ -1184,7 +1184,7 @@ const mod: ServerModule = {
           e.total! -= e.score - cur.score;
           e.score = cur.score;
         }
-        logCombat(ctx, tk('{name} agit maintenant (action retardée).'), { name: e.name }, { gmOnly: !!e.hidden });
+        logCombat(ctx, tk('{name} acts now (delayed action).'), { name: e.name }, { gmOnly: !!e.hidden });
         setCurrent(ctx, c, e);
         return { currentId: e.id };
       },
@@ -1196,13 +1196,13 @@ const mod: ServerModule = {
         const c = combatOf(ctx);
         const e = getEntry(ctx, c, entryId);
         requireOwner(ctx, e);
-        if (e.seized) ctx.fail('Initiative déjà saisie ce tour');
+        if (e.seized) ctx.fail('Initiative already seized this turn');
         const actor = ctx.state.actors[e.actorId as ActorId];
-        if (!actor) ctx.fail('Ce participant n’a pas de fiche');
-        if ((actor.edge?.current ?? 0) < 1) ctx.fail('Plus de points de Chance');
+        if (!actor) ctx.fail('This participant has no sheet');
+        if ((actor.edge?.current ?? 0) < 1) ctx.fail('No Edge points left');
         actor.edge = { ...(actor.edge || {}), current: actor.edge.current - 1 };
         e.seized = true;
-        logCombat(ctx, tk('{name} saisit l’initiative (1 point de Chance) !'), { name: e.name }, { gmOnly: !!e.hidden });
+        logCombat(ctx, tk('{name} seizes the initiative (1 Edge point)!'), { name: e.name }, { gmOnly: !!e.hidden });
         sortEntries(ctx.state, c);
         return { ok: true };
       },
@@ -1214,7 +1214,7 @@ const mod: ServerModule = {
         const c = combatOf(ctx);
         const e = getEntry(ctx, c, entryId);
         requireOwner(ctx, e);
-        if (!INIT_MODES.includes(mode)) ctx.fail('Type d’initiative inconnu');
+        if (!INIT_MODES.includes(mode)) ctx.fail('Unknown initiative type');
         e.mode = mode;
         return { mode };
       },
@@ -1233,7 +1233,7 @@ const mod: ServerModule = {
         }
         const actor = ctx.state.actors[e.actorId as ActorId];
         if (actor && actor.type !== 'pc') actor.hidden = false;
-        logCombat(ctx, tk('{name} entre dans le combat !'), { name: e.name });
+        logCombat(ctx, tk('{name} enters the combat!'), { name: e.name });
         sortEntries(ctx.state, c);
         return { ok: true };
       },
@@ -1257,8 +1257,8 @@ const mod: ServerModule = {
         undoStacks.delete(ctx.state);
         pruneExpired(ctx.state, ctx.now); // the fight's clouds and afflictions end with it
         if (c?.active) {
-          if (rounds > 1) logCombat(ctx, tk('Fin du combat ({n} tours).'), { n: rounds });
-          else logCombat(ctx, tk('Fin du combat ({n} tour).'), { n: rounds });
+          if (rounds > 1) logCombat(ctx, tk('Combat over ({n} turns).'), { n: rounds });
+          else logCombat(ctx, tk('Combat over ({n} turn).'), { n: rounds });
         }
         return { ok: true };
       },

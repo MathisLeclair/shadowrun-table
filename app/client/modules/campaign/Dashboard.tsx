@@ -47,17 +47,17 @@ function ActiveQuest({ game, quest, nav }: { game: GameView; quest: Quest; nav: 
           ))}
         </ul>
       ) : (
-        <div className="muted small">{t('Toutes les phases sont cochées — penser à clore la quête.')}</div>
+        <div className="muted small">{t('All phases are checked — remember to close the quest.')}</div>
       )}
       <div className="camp-quick">
         {quest.npcs.map((id) => {
           const n = npcInfo(game, id);
           return (
-            <span key={'n:' + id} className={cx('camp-chip', n.kind === 'missing' && 'missing')} title={n.kind === 'missing' ? t('Fiche introuvable : {id}', { id }) : n.folder}>
+            <span key={'n:' + id} className={cx('camp-chip', n.kind === 'missing' && 'missing')} title={n.kind === 'missing' ? t('Sheet not found: {id}', { id }) : n.folder}>
               ☠ {n.name}
               {n.kind === 'template' && (
-                <button className="camp-chip-act" title={t('Placer sur la carte')} onClick={() => spawnNpc(game, id)}>
-                  + {t('Placer')}
+                <button className="camp-chip-act" title={t('Place on the map')} onClick={() => spawnNpc(game, id)}>
+                  + {t('Place')}
                 </button>
               )}
             </span>
@@ -66,18 +66,18 @@ function ActiveQuest({ game, quest, nav }: { game: GameView; quest: Quest; nav: 
         {quest.maps.map((id) => {
           const m = mapInfo(game, id);
           return (
-            <span key={'m:' + id} className={cx('camp-chip camp-chip-map', !m.exists && 'missing', activeMap === id && 'live')} title={m.exists ? '' : t('Carte introuvable : {id}', { id })}>
+            <span key={'m:' + id} className={cx('camp-chip camp-chip-map', !m.exists && 'missing', activeMap === id && 'live')} title={m.exists ? '' : t('Map not found: {id}', { id })}>
               ▦ {m.name}
               {m.exists && (
                 <>
-                  <button className="camp-chip-act" title={t('Ouvrir la carte')} onClick={() => openMap(id)}>
-                    {t('Ouvrir')}
+                  <button className="camp-chip-act" title={t('Open the map')} onClick={() => openMap(id)}>
+                    {t('Open')}
                   </button>
                   {activeMap === id ? (
-                    <span className="camp-live">● {t('En jeu')}</span>
+                    <span className="camp-live">● {t('Live')}</span>
                   ) : (
-                    <button className="camp-chip-act" title={t('Afficher aux joueurs')} onClick={() => showMapToPlayers(game, id)}>
-                      {t('Afficher')}
+                    <button className="camp-chip-act" title={t('Show to players')} onClick={() => showMapToPlayers(game, id)}>
+                      {t('Show')}
                     </button>
                   )}
                 </>
@@ -106,16 +106,16 @@ export default function Dashboard({ game, nav }: { game: GameView; nav: Campaign
     <div className="camp-dash">
       <div className="camp-dash-main">
         <Panel
-          title={t('Acte en cours')}
+          title={t('Current act')}
           className="camp-dash-act"
           actions={
             <select
               className="input camp-mini-select"
               value={c.currentActId || ''}
-              title={t("Choisir l'acte en cours")}
+              title={t("Choose the current act")}
               onChange={(e) => send('campaign/setCurrentAct', { actId: e.target.value || null })}
             >
-              <option value="">{t('Automatique')}</option>
+              <option value="">{t('Automatic')}</option>
               {c.acts.map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.title}
@@ -140,15 +140,15 @@ export default function Dashboard({ game, nav }: { game: GameView; nav: Campaign
               </div>
             </>
           ) : (
-            <Empty>{t('Aucun acte défini.')}</Empty>
+            <Empty>{t('No act defined.')}</Empty>
           )}
         </Panel>
 
         <Panel
-          title={t('Quêtes en cours ({n})', { n: active.length })}
+          title={t('Active quests ({n})', { n: active.length })}
           actions={
             <Button small variant="ghost" onClick={() => nav.go('quests')}>
-              {t('Toutes les quêtes')}
+              {t('All quests')}
             </Button>
           }
         >
@@ -156,13 +156,13 @@ export default function Dashboard({ game, nav }: { game: GameView; nav: Campaign
             active.map((q) => <ActiveQuest key={q.id} game={game} quest={q} nav={nav} />)
           ) : (
             <div className="muted">
-              {t('Aucune quête en cours.')}
+              {t('No active quest.')}
               {upcomingInAct.length ? (
                 <>
                   {' '}
-                  {t('Prochaine possible :')}{' '}
+                  {t('Next available:')}{' '}
                   <button className="camp-link" onClick={() => send('campaign/setQuestStatus', { questId: upcomingInAct[0].id, status: 'active' })}>
-                    {t('lancer « {title} »', { title: upcomingInAct[0].title })}
+                    {t('start “{title}”', { title: upcomingInAct[0].title })}
                   </button>
                 </>
               ) : null}
@@ -171,13 +171,13 @@ export default function Dashboard({ game, nav }: { game: GameView; nav: Campaign
         </Panel>
 
         <Panel
-          title={session ? t('Prochaine séance — n°{n}', { n: session.number }) : t('Prochaine séance')}
+          title={session ? t('Next session — #{n}', { n: session.number }) : t('Next session')}
           actions={
             <>
               {session?.doc && <DocButton docRef={session.doc} nav={nav} />}
               {session ? (
                 <Button small variant="ghost" onClick={() => nav.open('session', session.id)}>
-                  {t('Ouvrir')}
+                  {t('Open')}
                 </Button>
               ) : (
                 <Button
@@ -187,7 +187,7 @@ export default function Dashboard({ game, nav }: { game: GameView; nav: Campaign
                     nav.open('session', id);
                   }}
                 >
-                  + {t('Préparer la prochaine séance')}
+                  + {t('Prepare the next session')}
                 </Button>
               )}
             </>
@@ -196,25 +196,25 @@ export default function Dashboard({ game, nav }: { game: GameView; nav: Campaign
           {session ? (
             <>
               <div className="row spread wrap">
-                <h3 className="camp-sess-title">{session.title || t('Séance {n}', { n: session.number })}</h3>
+                <h3 className="camp-sess-title">{session.title || t('Session {n}', { n: session.number })}</h3>
                 {session.date && <span className="muted small">{fmtSessionDate(session.date)}</span>}
               </div>
-              {session.plan ? <Markdown className="camp-dash-plan" text={session.plan} /> : <div className="muted">{t('Plan encore vide.')}</div>}
+              {session.plan ? <Markdown className="camp-dash-plan" text={session.plan} /> : <div className="muted">{t('Plan still empty.')}</div>}
               <div className="row gap-s camp-mt">
                 <Button small onClick={() => send('campaign/updateSession', { sessionId: session.id, patch: { played: true } })}>
-                  ✓ {t('Marquer comme jouée')}
+                  ✓ {t('Mark as played')}
                 </Button>
               </div>
             </>
           ) : (
-            <div className="muted">{t('Toutes les séances prévues ont été jouées.')}</div>
+            <div className="muted">{t('All planned sessions have been played.')}</div>
           )}
           {lastPlayed && (
             <details className="camp-details">
               <summary>
-                {t('Dernière séance jouée — n°{n}', { n: lastPlayed.number })} {lastPlayed.title ? `· ${lastPlayed.title}` : ''}
+                {t('Last session played — #{n}', { n: lastPlayed.number })} {lastPlayed.title ? `· ${lastPlayed.title}` : ''}
               </summary>
-              {lastPlayed.recap ? <Markdown text={lastPlayed.recap} /> : <div className="muted small">{t('Pas encore de récap.')}</div>}
+              {lastPlayed.recap ? <Markdown text={lastPlayed.recap} /> : <div className="muted small">{t('No recap yet.')}</div>}
             </details>
           )}
         </Panel>
@@ -222,10 +222,10 @@ export default function Dashboard({ game, nav }: { game: GameView; nav: Campaign
 
       <div className="camp-dash-side">
         <Panel
-          title={t('Fils narratifs')}
+          title={t('Plot threads')}
           actions={
             <Button small variant="ghost" onClick={() => nav.go('threads')}>
-              {t('Tableau')}
+              {t('Board')}
             </Button>
           }
         >
@@ -251,10 +251,10 @@ export default function Dashboard({ game, nav }: { game: GameView; nav: Campaign
         </Panel>
 
         <Panel
-          title={t('Documents à révéler ({n})', { n: pending.length })}
+          title={t('Handouts to reveal ({n})', { n: pending.length })}
           actions={
             <Button small variant="ghost" onClick={() => nav.go('handouts')}>
-              {t('Gérer')}
+              {t('Manage')}
             </Button>
           }
         >
@@ -265,29 +265,29 @@ export default function Dashboard({ game, nav }: { game: GameView; nav: Campaign
                   <button className="camp-link grow" onClick={() => nav.open('handout', h.id)}>
                     {h.title}
                   </button>
-                  <Button small variant="accent" title={t('Révéler à tous les joueurs')} onClick={() => revealHandout(h.id, 'all')}>
-                    {t('Révéler')}
+                  <Button small variant="accent" title={t('Reveal to all players')} onClick={() => revealHandout(h.id, 'all')}>
+                    {t('Reveal')}
                   </Button>
                 </li>
               ))}
             </ul>
           ) : (
-            <div className="muted small">{t('Tous les documents préparés ont été montrés.')}</div>
+            <div className="muted small">{t('All prepared handouts have been shown.')}</div>
           )}
         </Panel>
 
         <Panel
-          title={t('Documents de campagne')}
+          title={t('Campaign documents')}
           actions={
             <Button small variant="ghost" onClick={() => nav.go('docs')}>
-              {t('Lecteur')}
+              {t('Reader')}
             </Button>
           }
         >
           {docs.error ? (
             <div className="error small">{docs.error}</div>
           ) : docs.loading ? (
-            <div className="muted small">{t('Chargement…')}</div>
+            <div className="muted small">{t('Loading…')}</div>
           ) : docs.list.length ? (
             <div className="camp-doc-links">
               {docs.list.map((d) => (
@@ -297,17 +297,17 @@ export default function Dashboard({ game, nav }: { game: GameView; nav: Campaign
               ))}
             </div>
           ) : (
-            <div className="muted small">{t('Aucun document .md trouvé.')}</div>
+            <div className="muted small">{t('No .md document found.')}</div>
           )}
         </Panel>
 
-        <Panel title={t('Raccourcis')}>
+        <Panel title={t('Shortcuts')}>
           <div className="col gap-s">
             <Button small onClick={() => nav.go('notes')}>
-              ✎ {t('Notes MJ')}
+              ✎ {t('GM notes')}
             </Button>
             <Button small onClick={() => nav.go('recap')}>
-              ✉ {t('Récap joueurs')}
+              ✉ {t('Player recap')}
             </Button>
           </div>
         </Panel>

@@ -134,7 +134,7 @@ export default function Wizard({ game, draft, onExit }: WizardProps) {
     try {
       await flush();
     } catch {
-      if (!(await confirmAction(t('Le brouillon n’a pas pu être enregistré. Quitter quand même ?')))) return;
+      if (!(await confirmAction(t('The draft could not be saved. Leave anyway?')))) return;
     }
     onExit();
   };
@@ -144,7 +144,7 @@ export default function Wizard({ game, draft, onExit }: WizardProps) {
     try {
       const id = await flush();
       await send('chargen/submit', { draftId: id || st.current.draftId });
-      toast(t('Personnage envoyé au MJ pour validation'), 'success');
+      toast(t('Character sent to the GM for approval'), 'success');
       onExit();
     } catch {
       /* toasted */
@@ -155,7 +155,7 @@ export default function Wizard({ game, draft, onExit }: WizardProps) {
   const Comp = COMPONENTS[step.id];
   const r = result;
   const stepState = (id: string) => (issues[id]?.errors.length ? 'err' : issues[id]?.warnings.length ? 'warn' : 'ok');
-  const name = (data.concept.alias || data.concept.name || '').trim() || t('Nouveau personnage');
+  const name = (data.concept.alias || data.concept.name || '').trim() || t('New character');
   const ref: { source: string; page: number } | undefined = (CHARGEN_STEP_REFS as Record<string, { source: string; page: number }>)[step.id];
 
   return (
@@ -182,23 +182,23 @@ export default function Wizard({ game, draft, onExit }: WizardProps) {
             <button key={s.id} className={'cg-stepbtn' + (i === stepIdx ? ' active' : '') + ' ' + stepState(s.id)} onClick={() => go(i)}>
               <span className="cg-stepnum">{i + 1}</span>
               <span className="grow">{t(s.label)}</span>
-              <span className="cg-stepdot" title={stepState(s.id) === 'err' ? t('Erreurs') : stepState(s.id) === 'warn' ? t('Remarques') : t('OK')}></span>
+              <span className="cg-stepdot" title={stepState(s.id) === 'err' ? t('Errors') : stepState(s.id) === 'warn' ? t('Remarks') : t('OK')}></span>
             </button>
           ))}
         </nav>
         <div className={'cg-save ' + save.state} title={save.error || ''}>
           {save.state === 'saving'
-            ? t('Enregistrement…')
+            ? t('Saving…')
             : save.state === 'dirty'
-              ? t('Modifications en cours…')
+              ? t('Unsaved changes…')
               : save.state === 'error'
-                ? t('Échec de l’enregistrement — nouvel essai à la prochaine modification')
+                ? t('Save failed — will retry on the next change')
                 : save.state === 'saved'
-                  ? t('Brouillon enregistré {when}', { when: timeAgo(save.at) })
-                  : t('Pas encore enregistré')}
+                  ? t('Draft saved {when}', { when: timeAgo(save.at) })
+                  : t('Not saved yet')}
         </div>
         <Button variant="ghost" onClick={exit}>
-          ← {t('Retour à la liste')}
+          ← {t('Back to the list')}
         </Button>
       </aside>
 
@@ -209,29 +209,29 @@ export default function Wizard({ game, draft, onExit }: WizardProps) {
               {stepIdx + 1}. {t(step.label)} {ref ? <BookRef source={ref.source} page={ref.page} /> : null}
             </h2>
             <div className="cg-head-pills">
-              <span className={'cg-pill ' + pillState(r.spent.attrPoints, r.budgets.attrPoints)} title={t('Points d’attributs')}>
+              <span className={'cg-pill ' + pillState(r.spent.attrPoints, r.budgets.attrPoints)} title={t('Attribute points')}>
                 {t('Attr {used}/{total}', { used: r.spent.attrPoints, total: r.budgets.attrPoints })}
               </span>
-              <span className={'cg-pill ' + pillState(r.spent.specialPoints, r.budgets.specialPoints)} title={t('Points d’attributs spéciaux')}>
-                {t('Spé {used}/{total}', { used: r.spent.specialPoints, total: r.budgets.specialPoints })}
+              <span className={'cg-pill ' + pillState(r.spent.specialPoints, r.budgets.specialPoints)} title={t('Special attribute points')}>
+                {t('Spec {used}/{total}', { used: r.spent.specialPoints, total: r.budgets.specialPoints })}
               </span>
-              <span className={'cg-pill ' + pillState(r.spent.skillPoints, r.budgets.skillPoints)} title={t('Points de compétences')}>
-                {t('Comp {used}/{total}', { used: r.spent.skillPoints, total: r.budgets.skillPoints })}
+              <span className={'cg-pill ' + pillState(r.spent.skillPoints, r.budgets.skillPoints)} title={t('Skill points')}>
+                {t('Skills {used}/{total}', { used: r.spent.skillPoints, total: r.budgets.skillPoints })}
               </span>
-              <span className={'cg-pill ' + pillState(r.spent.groupPoints, r.budgets.groupPoints)} title={t('Points de groupes')}>
+              <span className={'cg-pill ' + pillState(r.spent.groupPoints, r.budgets.groupPoints)} title={t('Skill group points')}>
                 {t('Grp {used}/{total}', { used: r.spent.groupPoints, total: r.budgets.groupPoints })}
               </span>
-              <span className={'cg-pill ' + (r.karma.left < 0 ? 'over' : 'left')} title={t('Karma restant')}>
+              <span className={'cg-pill ' + (r.karma.left < 0 ? 'over' : 'left')} title={t('Karma left')}>
                 {r.karma.left} K
               </span>
-              <span className={'cg-pill ' + (r.nuyen.left < 0 ? 'over' : 'left')} title={t('Nuyens restants')}>
+              <span className={'cg-pill ' + (r.nuyen.left < 0 ? 'over' : 'left')} title={t('Nuyen left')}>
                 {nuyen(r.nuyen.left)}
               </span>
               <span className={'cg-pill ' + (r.essence <= 0 ? 'over' : 'ok')} title={t('Essence')}>
                 {t('Ess {n}', { n: fmtNumber(r.essence) })}
               </span>
-              <span className={'cg-pill ' + (r.errors.length ? 'over' : 'ok')} title={t('Erreurs de validation')}>
-                {r.errors.length ? tn(r.errors.length, '{n} erreur', '{n} erreurs') : `✓ ${t('valide')}`}
+              <span className={'cg-pill ' + (r.errors.length ? 'over' : 'ok')} title={t('Validation errors')}>
+                {r.errors.length ? tn(r.errors.length, '{n} error', '{n} errors') : `✓ ${t('valid')}`}
               </span>
             </div>
           </div>
@@ -239,18 +239,18 @@ export default function Wizard({ game, draft, onExit }: WizardProps) {
         {locked && (
           <div className="cg-note warn">
             {closed
-              ? t('Le MJ a fermé la création de personnage : ce brouillon est en lecture seule pour l’instant.')
+              ? t('The GM has closed character creation: this draft is read-only for now.')
               : server?.status === 'pending'
-                ? t('Ce personnage attend la validation du MJ : retire la demande depuis la liste pour le modifier.')
-                : t('Ce personnage a été validé : il est en lecture seule.')}
+                ? t('This character is awaiting GM approval: withdraw the request from the list to edit it.')
+                : t('This character has been approved: it is read-only.')}
           </div>
         )}
         {server?.status === 'rejected' && server.gmNote && (
           <div className="cg-note err">
-            <strong>{t('Le MJ demande des changements :')}</strong> {server.gmNote}
+            <strong>{t('The GM asks for changes:')}</strong> {server.gmNote}
           </div>
         )}
-        {!rc.ready && step.id !== 'concept' && step.id !== 'priorities' && <div className="cg-loading small">{t('Chargement des catalogues…')}</div>}
+        {!rc.ready && step.id !== 'concept' && step.id !== 'priorities' && <div className="cg-loading small">{t('Loading catalogs…')}</div>}
 
         <div className={locked ? 'cg-locked' : ''}>
           {step.id === 'summary' ? (
@@ -275,7 +275,7 @@ export default function Wizard({ game, draft, onExit }: WizardProps) {
 
         <footer className="cg-foot">
           <Button variant="ghost" disabled={stepIdx === 0} onClick={() => go(stepIdx - 1)}>
-            ← {stepIdx > 0 ? t(STEP_LIST[stepIdx - 1].label) : t('Précédent')}
+            ← {stepIdx > 0 ? t(STEP_LIST[stepIdx - 1].label) : t('Previous')}
           </Button>
           <span className="grow"></span>
           {stepIdx < STEP_LIST.length - 1 && (
@@ -315,17 +315,17 @@ function SummaryStep({ game, data, result, rc, onJump, isGM, busy, submit, flush
       ) : (
         <div className="cg-submit">
           <div className="grow">
-            <strong>{t('Prêt ?')}</strong>
+            <strong>{t('Ready?')}</strong>
             <div className="small muted">
-              {result.ok ? t('Le MJ va relire ton personnage. Tu pourras encore le modifier s’il demande des changements.') : t('Corrige les erreurs signalées avant d’envoyer ton personnage.')}
+              {result.ok ? t('The GM will review your character. You can still edit it if they ask for changes.') : t('Fix the reported errors before sending your character.')}
             </div>
           </div>
           <Button variant="accent" disabled={busy || !result.ok || !rc.ready} onClick={submit}>
-            {t('Envoyer au MJ')} ✉
+            {t('Send to the GM')} ✉
           </Button>
         </div>
       )}
-      {!rc.ready ? <div className="cg-loading">{t('Chargement des catalogues…')}</div> : <DraftSummary data={data} result={result} rc={rc} onJump={onJump} />}
+      {!rc.ready ? <div className="cg-loading">{t('Loading catalogs…')}</div> : <DraftSummary data={data} result={result} rc={rc} onJump={onJump} />}
     </div>
   );
 }
@@ -348,7 +348,7 @@ function GmCreateBox({ game, result, flush, onExit, draftId, data, ownerId }: Gm
     if (
       !result.ok &&
       !(await confirmAction(
-        tn(result.errors.length, 'one::Ce personnage a {n} erreur(s) de création. Le créer quand même ?', 'Ce personnage a {n} erreur(s) de création. Le créer quand même ?')
+        tn(result.errors.length, 'one::This character has {n} creation error. Create it anyway?', 'This character has {n} creation errors. Create it anyway?')
       ))
     )
       return;
@@ -365,7 +365,7 @@ function GmCreateBox({ game, result, flush, onExit, draftId, data, ownerId }: Gm
         assignTo: type === 'pc' && assignTo ? assignTo : undefined,
         force: !result.ok,
       });
-      toast(type === 'pc' ? t('Personnage joueur créé') : t('PNJ créé'), 'success');
+      toast(type === 'pc' ? t('Player character created') : t('NPC created'), 'success');
       openSheet(res.actorId);
       onExit();
     } catch {
@@ -374,32 +374,32 @@ function GmCreateBox({ game, result, flush, onExit, draftId, data, ownerId }: Gm
     setBusy(false);
   };
   return (
-    <Panel title={t('Créer directement (MJ)')} className="cg-mb">
+    <Panel title={t('Create directly (GM)')} className="cg-mb">
       <div className="row wrap cg-gm-create">
         <Field label={t('Type')}>
           <Select
             value={type}
             onChange={setType}
             options={[
-              { value: 'pc', label: t('Personnage joueur') },
-              { value: 'npc', label: t('PNJ') },
+              { value: 'pc', label: t('Player character') },
+              { value: 'npc', label: t('NPC') },
             ]}
           />
         </Field>
         {type === 'pc' && (
-          <Field label={t('Attribuer à')}>
-            <Select value={assignTo} onChange={setAssignTo} options={[{ value: '', label: t('— Personne pour l’instant —') }, ...players.map((u) => ({ value: u.id, label: u.name }))]} />
+          <Field label={t('Assign to')}>
+            <Select value={assignTo} onChange={setAssignTo} options={[{ value: '', label: t('— Nobody for now —') }, ...players.map((u) => ({ value: u.id, label: u.name }))]} />
           </Field>
         )}
         <span className="grow"></span>
         <Button variant="primary" disabled={busy} onClick={create}>
-          {result.ok ? t('Créer le personnage') : t('Créer malgré les erreurs')}
+          {result.ok ? t('Create the character') : t('Create despite errors')}
         </Button>
       </div>
       <div className="small muted">
         {type === 'pc'
-          ? t('Pas de validation : la fiche est créée tout de suite et attribuée au joueur choisi. Les nuyens de départ sont lancés si l’option est cochée.')
-          : t('Pas de validation : la fiche est créée tout de suite. Les nuyens de départ sont lancés si l’option est cochée.')}
+          ? t('No approval step: the sheet is created right away and assigned to the chosen player. Starting nuyen is rolled if the option is checked.')
+          : t('No approval step: the sheet is created right away. Starting nuyen is rolled if the option is checked.')}
       </div>
     </Panel>
   );

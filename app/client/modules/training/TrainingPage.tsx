@@ -23,9 +23,9 @@ function PlayerTraining({ game }: GameProps) {
     return (
       <div className="page">
         <div className="page-title">
-          <h2>{t('Progression')}</h2>
+          <h2>{t('Advancement')}</h2>
         </div>
-        <Empty>{t('Aucun personnage associé à ton compte — demande au MJ de t’en attribuer un.')}</Empty>
+        <Empty>{t('No character linked to your account — ask the GM to assign you one.')}</Empty>
       </div>
     );
   }
@@ -36,16 +36,16 @@ function PlayerTraining({ game }: GameProps) {
   const mode =
     settings.approval === 'always'
       ? settings.useTime
-        ? t('Validation par le MJ · temps d’entraînement')
-        : t('Validation par le MJ · effet immédiat')
+        ? t('GM approval · training time')
+        : t('GM approval · immediate effect')
       : settings.useTime
-        ? t('Validation automatique · temps d’entraînement')
-        : t('Validation automatique · effet immédiat');
+        ? t('Automatic approval · training time')
+        : t('Automatic approval · immediate effect');
   return (
     <div className="page training-page">
       <div className="page-title">
         <div className="row wrap">
-          <h2>{t('Progression')}</h2>
+          <h2>{t('Advancement')}</h2>
           {ids.length > 1 ? (
             <span className="row gap-s">
               {ids.map((id) => (
@@ -55,23 +55,23 @@ function PlayerTraining({ game }: GameProps) {
               ))}
             </span>
           ) : (
-            <button className="training-link training-actor-name" title={t('Ouvrir la fiche')} onClick={() => openSheet(actor.id)}>
+            <button className="training-link training-actor-name" title={t('Open the sheet')} onClick={() => openSheet(actor.id)}>
               {actor.name}
             </button>
           )}
         </div>
         <KarmaHeader game={game} actor={actor} />
       </div>
-      {actor.retired && <div className="training-warn">{t('Ce personnage est à la retraite : plus de progression possible.')}</div>}
+      {actor.retired && <div className="training-warn">{t('This character is retired: no more advancement possible.')}</div>}
       <div className="training-layout">
-        <Panel title={t('Que veux-tu améliorer ?')} actions={<span className="small muted training-mode">{mode}</span>}>
-          {actor.retired ? <Empty>{t('Plus de progression pour un runner à la retraite.')}</Empty> : <AdvancePanel game={game} actor={actor} isGM={false} />}
+        <Panel title={t('What do you want to improve?')} actions={<span className="small muted training-mode">{mode}</span>}>
+          {actor.retired ? <Empty>{t('No more advancement for a retired runner.')}</Empty> : <AdvancePanel game={game} actor={actor} isGM={false} />}
         </Panel>
         <div className="col gap-l training-side">
-          <Panel title={jobs.length ? t('En cours ({n})', { n: jobs.length }) : t('En cours')} actions={<Rule kind="instructor" />}>
-            <JobList game={game} actor={actor} isGM={false} empty={t('Aucun entraînement en cours. Le temps passe pendant les temps morts, quand le MJ avance le calendrier.')} />
+          <Panel title={jobs.length ? t('In progress ({n})', { n: jobs.length }) : t('In progress')} actions={<Rule kind="instructor" />}>
+            <JobList game={game} actor={actor} isGM={false} empty={t('No training in progress. Time passes during downtime, when the GM moves the calendar forward.')} />
           </Panel>
-          <Panel title={t('Mes demandes')} actions={pendingCount ? <Badge color="amber">{t('{n} en attente', { n: pendingCount })}</Badge> : null}>
+          <Panel title={t('My requests')} actions={pendingCount ? <Badge color="amber">{t('{n} pending', { n: pendingCount })}</Badge> : null}>
             <RequestList game={game} requests={requests} isGM={false} limit={25} />
           </Panel>
         </div>

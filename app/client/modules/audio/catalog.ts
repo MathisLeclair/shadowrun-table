@@ -37,60 +37,60 @@ export interface TrackLike {
 
 /** Looping atmospheres. Track id = 'amb-' + id. */
 export const AMBIENT_PRESETS: LoopPreset[] = [
-  { id: 'rain', name: tk('Pluie urbaine'), icon: '🌧️', desc: tk('Averse sur le bitume, gouttières, chuintement de pneus.'), tags: [tk('extérieur'), tk('nuit')] },
-  { id: 'city-night', name: tk('Ville la nuit'), icon: '🌃', desc: tk('Rumeur du trafic, vent, sirènes au loin.'), tags: [tk('extérieur'), tk('nuit')] },
-  { id: 'bar', name: tk('Bar bondé'), icon: '🍺', desc: tk('Brouhaha de la foule, verres, juke-box étouffé.'), tags: [tk('intérieur'), tk('social')] },
-  { id: 'club', name: tk('Boîte de nuit'), icon: '🎛️', desc: tk('Synthwave 120 bpm à travers les murs, la porte s’ouvre parfois.'), tags: [tk('intérieur'), tk('social')] },
-  { id: 'corp-lobby', name: tk('Hall corpo'), icon: '🏢', desc: tk('Nappe feutrée, carillons discrets, ascenseurs.'), tags: [tk('intérieur'), tk('corpo')] },
-  { id: 'lab', name: tk('Laboratoire'), icon: '🧪', desc: tk('Néons 60 Hz, bips d’appareils, centrifugeuse.'), tags: [tk('intérieur'), tk('corpo')] },
-  { id: 'hospital', name: tk('Hôpital'), icon: '🏥', desc: tk('Moniteur cardiaque, respirateur, ventilation.'), tags: [tk('intérieur')] },
-  { id: 'server-room', name: tk('Salle serveurs'), icon: '🖥️', desc: tk('Ventilateurs, disques qui grattent, voyants.'), tags: [tk('intérieur'), tk('matrice')] },
-  { id: 'matrix', name: tk('Matrice'), icon: '🌐', desc: tk('Drone numérique, arpèges glitchés, flux de données.'), tags: [tk('matrice')] },
-  { id: 'industrial', name: tk('Zone industrielle'), icon: '🏭', desc: tk('Machines, chocs métalliques, jets de vapeur.'), tags: [tk('extérieur'), tk('industriel')] },
-  { id: 'underground', name: tk('Égouts / souterrain'), icon: '🕳️', desc: tk('Gouttes qui résonnent, grondement sourd, canalisations.'), tags: [tk('souterrain')] },
-  { id: 'storm', name: tk('Orage'), icon: '⛈️', desc: tk('Pluie battante, rafales et roulements de tonnerre.'), tags: [tk('extérieur'), tk('nuit')] },
-  { id: 'alley', name: tk('Ruelle'), icon: '🌫️', desc: tk('Gouttes, néon qui grésille, chiens et trafic au loin.'), tags: [tk('extérieur'), tk('nuit')] },
+  { id: 'rain', name: tk('City rain'), icon: '🌧️', desc: tk('Downpour on asphalt, gutters, hissing tires.'), tags: [tk('outdoors'), tk('night')] },
+  { id: 'city-night', name: tk('City at night'), icon: '🌃', desc: tk('Traffic hum, wind, distant sirens.'), tags: [tk('outdoors'), tk('night')] },
+  { id: 'bar', name: tk('Crowded bar'), icon: '🍺', desc: tk('Crowd chatter, glasses, muffled jukebox.'), tags: [tk('indoors'), tk('social')] },
+  { id: 'club', name: tk('Nightclub'), icon: '🎛️', desc: tk('120 bpm synthwave through the walls, the door opens now and then.'), tags: [tk('indoors'), tk('social')] },
+  { id: 'corp-lobby', name: tk('Corp lobby'), icon: '🏢', desc: tk('Hushed pad, discreet chimes, elevators.'), tags: [tk('indoors'), tk('corp')] },
+  { id: 'lab', name: tk('Laboratory'), icon: '🧪', desc: tk('60 Hz neon hum, beeping equipment, centrifuge.'), tags: [tk('indoors'), tk('corp')] },
+  { id: 'hospital', name: tk('Hospital'), icon: '🏥', desc: tk('Heart monitor, ventilator, air vents.'), tags: [tk('indoors')] },
+  { id: 'server-room', name: tk('Server room'), icon: '🖥️', desc: tk('Fans, grinding drives, blinking lights.'), tags: [tk('indoors'), tk('matrix')] },
+  { id: 'matrix', name: tk('Matrix'), icon: '🌐', desc: tk('Digital drone, glitchy arpeggios, data streams.'), tags: [tk('matrix')] },
+  { id: 'industrial', name: tk('Industrial zone'), icon: '🏭', desc: tk('Machinery, metal clangs, steam jets.'), tags: [tk('outdoors'), tk('industrial')] },
+  { id: 'underground', name: tk('Sewers / underground'), icon: '🕳️', desc: tk('Echoing drips, low rumble, pipes.'), tags: [tk('underground')] },
+  { id: 'storm', name: tk('Thunderstorm'), icon: '⛈️', desc: tk('Pouring rain, gusts and rolling thunder.'), tags: [tk('outdoors'), tk('night')] },
+  { id: 'alley', name: tk('Alley'), icon: '🌫️', desc: tk('Drips, buzzing neon, dogs and distant traffic.'), tags: [tk('outdoors'), tk('night')] },
 ];
 
 /** Looping music. Track id = 'mus-' + id. */
 export const MUSIC_PRESETS: LoopPreset[] = [
-  { id: 'tension', name: tk('Tension'), icon: '⚠️', desc: tk('Drone menaçant, pulsations graves.'), tags: [tk('infiltration')] },
-  { id: 'combat', name: tk('Combat'), icon: '⚔️', desc: tk('Percussions synthétiques 140 bpm, basse obstinée.'), tags: [tk('action')] },
-  { id: 'chase', name: tk('Course-poursuite'), icon: '🏍️', desc: tk('Arpèges rapides, rythmique pressante.'), tags: [tk('action')] },
-  { id: 'investigation', name: tk('Enquête (noir)'), icon: '🕵️', desc: tk('Accords mineurs de piano électrique, batterie aux balais.'), tags: [tk('calme')] },
-  { id: 'sad', name: tk('Mélancolie'), icon: '🥀', desc: tk('Nappes lentes et piano clairsemé.'), tags: [tk('calme'), tk('émotion')] },
-  { id: 'corp-gala', name: tk('Gala corpo'), icon: '🥂', desc: tk('Jazz feutré et élégant.'), tags: [tk('social'), tk('corpo')] },
-  { id: 'victory', name: tk('Victoire'), icon: '🏆', desc: tk('Boucle triomphante.'), tags: [tk('émotion')] },
-  { id: 'menu', name: tk('Synthwave calme'), icon: '🌆', desc: tk('Synthwave posée, pour l’accueil ou les temps morts.'), tags: [tk('calme')] },
+  { id: 'tension', name: tk('Tension'), icon: '⚠️', desc: tk('Menacing drone, deep pulses.'), tags: [tk('infiltration')] },
+  { id: 'combat', name: tk('Combat'), icon: '⚔️', desc: tk('140 bpm synth percussion, relentless bass.'), tags: [tk('action')] },
+  { id: 'chase', name: tk('Chase'), icon: '🏍️', desc: tk('Fast arpeggios, driving rhythm.'), tags: [tk('action')] },
+  { id: 'investigation', name: tk('Investigation (noir)'), icon: '🕵️', desc: tk('Minor electric piano chords, brushed drums.'), tags: [tk('calm')] },
+  { id: 'sad', name: tk('Melancholy'), icon: '🥀', desc: tk('Slow pads and sparse piano.'), tags: [tk('calm'), tk('emotion')] },
+  { id: 'corp-gala', name: tk('Corp gala'), icon: '🥂', desc: tk('Smooth, elegant jazz.'), tags: [tk('social'), tk('corp')] },
+  { id: 'victory', name: tk('Victory'), icon: '🏆', desc: tk('Triumphant loop.'), tags: [tk('emotion')] },
+  { id: 'menu', name: tk('Chill synthwave'), icon: '🌆', desc: tk('Laid-back synthwave, for the lobby or downtime.'), tags: [tk('calm')] },
 ];
 
 /** One-shot effects. Track id = sfx id (standard ids, see ARCHITECTURE.md). */
 export const SFX_PRESETS: AudioPreset[] = [
-  { id: 'dice', name: tk('Dés'), icon: '🎲' },
-  { id: 'door-open', name: tk('Porte s’ouvre'), icon: '🚪' },
-  { id: 'door-close', name: tk('Porte se ferme'), icon: '🚪' },
-  { id: 'door-locked', name: tk('Verrouillée'), icon: '🔒' },
-  { id: 'gunshot-pistol', name: tk('Pistolet'), icon: '🔫' },
-  { id: 'gunshot-rifle', name: tk('Fusil'), icon: '🎯' },
-  { id: 'gunshot-auto', name: tk('Rafale'), icon: '💥' },
+  { id: 'dice', name: tk('Dice'), icon: '🎲' },
+  { id: 'door-open', name: tk('Door opens'), icon: '🚪' },
+  { id: 'door-close', name: tk('Door closes'), icon: '🚪' },
+  { id: 'door-locked', name: tk('Locked'), icon: '🔒' },
+  { id: 'gunshot-pistol', name: tk('Pistol'), icon: '🔫' },
+  { id: 'gunshot-rifle', name: tk('Rifle'), icon: '🎯' },
+  { id: 'gunshot-auto', name: tk('Burst'), icon: '💥' },
   { id: 'explosion', name: tk('Explosion'), icon: '💣' },
-  { id: 'hit-melee', name: tk('Coup'), icon: '👊' },
-  { id: 'glass-break', name: tk('Verre brisé'), icon: '🥃' },
-  { id: 'alarm', name: tk('Alarme'), icon: '🚨' },
-  { id: 'footsteps', name: tk('Bruits de pas'), icon: '👣' },
+  { id: 'hit-melee', name: tk('Hit'), icon: '👊' },
+  { id: 'glass-break', name: tk('Breaking glass'), icon: '🥃' },
+  { id: 'alarm', name: tk('Alarm'), icon: '🚨' },
+  { id: 'footsteps', name: tk('Footsteps'), icon: '👣' },
   { id: 'notify', name: tk('Notification'), icon: '🔔' },
-  { id: 'matrix-glitch', name: tk('Glitch Matrice'), icon: '👾' },
-  { id: 'spell-cast', name: tk('Sort'), icon: '✨' },
-  { id: 'heal', name: tk('Soin'), icon: '💚' },
-  { id: 'death', name: tk('Mort'), label: tk('bruitage::Mort'), icon: '💀' },
-  { id: 'cash', name: tk('Nuyens'), icon: '💴' },
-  { id: 'level-up', name: tk('Progression'), icon: '⭐' },
+  { id: 'matrix-glitch', name: tk('Matrix glitch'), icon: '👾' },
+  { id: 'spell-cast', name: tk('Spell'), icon: '✨' },
+  { id: 'heal', name: tk('Healing'), icon: '💚' },
+  { id: 'death', name: tk('Dead'), label: tk('sfx::Death'), icon: '💀' },
+  { id: 'cash', name: tk('Nuyen'), icon: '💴' },
+  { id: 'level-up', name: tk('Advancement'), icon: '⭐' },
   { id: 'ping', name: tk('Ping'), icon: '📍' },
 ];
 
 export const SFX_IDS = SFX_PRESETS.map((s) => s.id);
 export const TRACK_KINDS: TrackKind[] = ['ambient', 'music', 'sfx'];
-export const KIND_LABELS: Record<TrackKind, string> = { ambient: tk('Ambiance'), music: tk('Musique'), sfx: tk('Bruitage') }; // render with t()
+export const KIND_LABELS: Record<TrackKind, string> = { ambient: tk('Ambience'), music: tk('Music'), sfx: tk('Sound effect') }; // render with t()
 
 /** Default state.audio tracks for every built-in preset (source 'synth'). */
 export function builtinTracks(): BuiltinTrack[] {

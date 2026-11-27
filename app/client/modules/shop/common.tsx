@@ -107,7 +107,7 @@ export function specialEntry(sp: ShopSpecial, catalog: ShopCatalog | null): Shop
     special: sp,
     section: 'specials',
     name: sp.name,
-    category: sp.category || base?.category || t('Offre'),
+    category: sp.category || base?.category || t('Deal'),
     search: fold(`${sp.name} ${sp.category || ''} ${base?.item?.name || ''}`),
   };
 }
@@ -152,15 +152,15 @@ function safeQuote(item: ShopItem, opts: PriceOpts & { markup?: number }): Price
  */
 export function buyStatus(shop: Partial<ShopState> | null | undefined, entry: ShopEntry, q: PriceQuote, isGM: boolean): BuyStatus {
   if (isGM) return { ok: true, approval: false };
-  if (!shop?.open) return { ok: false, reason: t('Boutique fermée'), approval: false, closed: true };
+  if (!shop?.open) return { ok: false, reason: t('Shop closed'), approval: false, closed: true };
   if (entry.special) {
-    if (entry.special.stock !== null && entry.special.stock !== undefined && entry.special.stock <= 0) return { ok: false, reason: t('Épuisé'), approval: false };
+    if (entry.special.stock !== null && entry.special.stock !== undefined && entry.special.stock <= 0) return { ok: false, reason: t('Sold out'), approval: false };
     return { ok: true, approval: shop.approval === 'always' };
   }
-  if (shop.categories?.[entry.file] === false) return { ok: false, reason: t('Rayon fermé'), approval: false };
-  if (q.availValue > (shop.maxAvail as number)) return { ok: false, reason: t('Dispo {avail} > {max}', { avail: q.availValue, max: shop.maxAvail }), approval: false };
-  if (q.legality === 'F' && !shop.allowForbidden) return { ok: false, reason: t('Interdit'), approval: false };
-  if (q.legality === 'R' && !shop.allowRestricted) return { ok: false, reason: t('Restreint'), approval: false };
+  if (shop.categories?.[entry.file] === false) return { ok: false, reason: t('Section closed'), approval: false };
+  if (q.availValue > (shop.maxAvail as number)) return { ok: false, reason: t('Avail {avail} > {max}', { avail: q.availValue, max: shop.maxAvail }), approval: false };
+  if (q.legality === 'F' && !shop.allowForbidden) return { ok: false, reason: t('Forbidden'), approval: false };
+  if (q.legality === 'R' && !shop.allowRestricted) return { ok: false, reason: t('Restricted'), approval: false };
   // Lifestyle options that lower the rent always wait for the GM (server: 40-shop needsApproval).
   const approval =
     shop.approval === 'always' || (entry.file === 'lifestylequalities' && lowersRent(entry.item)) || (shop.approval === 'restricted' && (!!q.legality || !!entry.item?.costRange));
@@ -250,8 +250,8 @@ interface AvailBadgeProps {
 export function AvailBadge({ avail, value, legality, max }: AvailBadgeProps) {
   const over = max !== undefined && value > max;
   const color = legality === 'F' ? 'red' : legality === 'R' ? 'amber' : 'green';
-  const legal = legality === 'F' ? t('Interdit') : legality === 'R' ? t('Restreint') : t('Légal');
-  const title = over ? t('{legal} — disponibilité {value} (au-dessus de la limite {max})', { legal, value, max }) : t('{legal} — disponibilité {value}', { legal, value });
+  const legal = legality === 'F' ? t('Forbidden') : legality === 'R' ? t('Restricted') : t('Legal');
+  const title = over ? t('{legal} — availability {value} (above the limit {max})', { legal, value, max }) : t('{legal} — availability {value}', { legal, value });
   return (
     <span className={'shop-avail' + (over ? ' over' : '')}>
       <Badge color={color} title={title}>
@@ -268,16 +268,16 @@ export function gradeLabel(g: string | null | undefined): string {
 }
 
 // Constant tables hold French keys (tk): render with t(STATUS_LABEL[s]) / t(FLAG_LABEL[f]).
-export const STATUS_LABEL: Record<string, string> = { pending: tk('En attente'), approved: tk('Validée'), denied: tk('Refusée'), done: tk('Effectuée'), cancelled: tk('Annulée') };
+export const STATUS_LABEL: Record<string, string> = { pending: tk('Pending'), approved: tk('fem::Approved'), denied: tk('Denied'), done: tk('status::Done'), cancelled: tk('Cancelled') };
 export const STATUS_COLOR: Record<string, BadgeColor> = { pending: 'amber', approved: 'green', denied: 'red', done: 'cyan', cancelled: 'dim' };
-export const FLAG_LABEL: Record<string, string> = { restricted: tk('Restreint'), forbidden: tk('Interdit'), avail: tk('Dispo > limite'), price: tk('Prix à fixer') };
+export const FLAG_LABEL: Record<string, string> = { restricted: tk('Restricted'), forbidden: tk('Forbidden'), avail: tk('Avail > limit'), price: tk('Price to be set') };
 export const FLAG_COLOR: Record<string, BadgeColor> = { restricted: 'amber', forbidden: 'red', avail: 'magenta', price: 'cyan' };
 
 export function timeAgo(ts: Timestamp): string {
   const d = Date.now() - ts;
-  if (d < 60e3) return t('à l’instant');
-  if (d < 3600e3) return t('il y a {n} min', { n: Math.floor(d / 60e3) });
-  if (d < 86400e3) return t('il y a {n} h', { n: Math.floor(d / 3600e3) });
+  if (d < 60e3) return t('just now');
+  if (d < 3600e3) return t('{n} min ago', { n: Math.floor(d / 60e3) });
+  if (d < 86400e3) return t('{n} h ago', { n: Math.floor(d / 3600e3) });
   return (fmtDate as (ts: number, opts?: Intl.DateTimeFormatOptions) => string)(ts, { day: 'numeric', month: 'short' });
 }
 

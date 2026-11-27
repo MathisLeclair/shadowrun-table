@@ -14,7 +14,7 @@ import type { ChargenIssue, ChargenResult, LooseCatalogItem, RulesCtx, ShopCatal
 /** 12500 → « 12 500¥ » (fr) / « 12,500¥ » (en). */
 export const nuyen: (n: number) => string = fmtNuyen;
 
-export const STATUS_LABEL: Record<DraftStatus, string> = { draft: tk('Brouillon'), pending: tk('En attente du MJ'), approved: tk('Validé'), rejected: tk('À revoir') };
+export const STATUS_LABEL: Record<DraftStatus, string> = { draft: tk('Draft'), pending: tk('Awaiting the GM'), approved: tk('Approved'), rejected: tk('Needs changes') };
 export const STATUS_COLOR: Record<DraftStatus, string> = { draft: 'dim', pending: 'amber', approved: 'green', rejected: 'red' };
 
 export function StatusBadge({ status }: { status: DraftStatus }) {
@@ -43,12 +43,12 @@ export function headlineText(h: DraftHeadline): { name: string; text: string } {
   const bits = [metatypeLabel(h.metatype)];
   if (h.magicType && h.magicType !== 'none' && MAGIC_TYPE_DEFS[h.magicType]) bits.push(t(MAGIC_TYPE_DEFS[h.magicType].label));
   if (h.concept) bits.push(h.concept);
-  return { name: h.unnamed ? t('Sans nom') : h.name, text: h.metatype ? bits.join(' · ') : h.text };
+  return { name: h.unnamed ? t('Unnamed') : h.name, text: h.metatype ? bits.join(' · ') : h.text };
 }
 
 /** Name of the user who owns a draft (the GM's stored « MJ » is translated). */
-export const ownerName = (game: GameView, d: ChargenDraft, fallback: string = tk('Joueur')): string =>
-  d.userId === 'gm' ? t('MJ') : game.users?.[d.userId]?.name || d.userName || t(fallback);
+export const ownerName = (game: GameView, d: ChargenDraft, fallback: string = tk('Player')): string =>
+  d.userId === 'gm' ? t('GM') : game.users?.[d.userId]?.name || d.userName || t(fallback);
 
 /**
  * Catalog context for compute()/buildActor(): shop catalog (gear, lifestyles…) + qualities, spells, powers.
@@ -98,11 +98,11 @@ export function produce(data: DraftData, fn: (d: DraftData) => unknown): DraftDa
 export function timeAgo(ts: number | null | undefined): string {
   if (!ts) return '';
   const s = Math.max(0, Math.round((Date.now() - ts) / 1000));
-  if (s < 45) return t('à l’instant');
+  if (s < 45) return t('just now');
   const m = Math.round(s / 60);
-  if (m < 60) return t('il y a {n} min', { n: m });
+  if (m < 60) return t('{n} min ago', { n: m });
   const h = Math.round(m / 60);
-  if (h < 24) return t('il y a {n} h', { n: h });
+  if (h < 24) return t('{n} h ago', { n: h });
   return fmtDate(ts, { day: 'numeric', month: 'short' });
 }
 
@@ -145,7 +145,7 @@ export function PointsKarma({ points, karma, onPoints, onKarma, maxPoints = 12, 
   return (
     <span className="cg-pk">
       <NumberInput small value={points} min={0} max={maxPoints} onChange={onPoints} disabled={disabled} />
-      <span className="cg-pk-k" title={t('Indices achetés en karma, après les points')}>
+      <span className="cg-pk-k" title={t('Ratings bought with karma, after the points')}>
         <span className="faint small">K</span>
         <NumberInput small value={karma} min={0} max={maxKarma} onChange={onKarma} disabled={disabled} />
       </span>

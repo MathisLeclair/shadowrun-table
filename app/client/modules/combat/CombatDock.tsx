@@ -38,8 +38,8 @@ function Idle({ game, isGM, selected }: { game: GameView; isGM: boolean; selecte
       <div className="cbt">
         <div className="cbt-start">
           <h3>{t('Initiative')}</h3>
-          <div className="muted">{t('Aucun combat en cours. Profite du calme, chummer.')}</div>
-          <div className="cbt-legend">{t('Quand le MJ lance un combat, ton initiative et ton tour s’afficheront ici.')}</div>
+          <div className="muted">{t('No combat in progress. Enjoy the calm, chummer.')}</div>
+          <div className="cbt-legend">{t('When the GM starts a combat, your initiative and your turn will show up here.')}</div>
         </div>
       </div>
     );
@@ -56,14 +56,14 @@ function Idle({ game, isGM, selected }: { game: GameView; isGM: boolean; selecte
   return (
     <div className="cbt">
       <div className="cbt-start">
-        <h3>{t('Nouveau combat')}</h3>
+        <h3>{t('New combat')}</h3>
         <div className="small muted">
           {map ? (
             <>
-              {t('Carte active :')} <strong className="cyan">{map.name}</strong> — {tn(visible.length, '{n} token avec fiche', '{n} tokens avec fiche')}
+              {t('Active map:')} <strong className="cyan">{map.name}</strong> — {tn(visible.length, '{n} token with a sheet', '{n} tokens with a sheet')}
               {hiddenCount ? (
                 <>
-                  , <span className="faint">{tn(hiddenCount, '{n} caché (ajoute-les plus tard)', '{n} cachés (ajoute-les plus tard)')}</span>
+                  , <span className="faint">{tn(hiddenCount, '{n} hidden (add them later)', 'pl::{n} hidden (add them later)')}</span>
                 </>
               ) : (
                 ''
@@ -71,23 +71,23 @@ function Idle({ game, isGM, selected }: { game: GameView; isGM: boolean; selecte
               .
             </>
           ) : (
-            t('Aucune carte active : le combat démarrera vide.')
+            t('No active map: the combat will start empty.')
           )}
         </div>
         <Button variant="primary" className="cbt-next" disabled={!visible.length} onClick={() => act('combat/start', {})}>
-          ⚔ {t('Lancer le combat ({n})', { n: visible.length })}
+          ⚔ {t('Start the combat ({n})', { n: visible.length })}
         </Button>
         <div className="cbt-tools">
           {selected.length > 0 && (
             <Button small onClick={startWithSelection}>
-              {t('Avec la sélection ({n})', { n: selected.length })}
+              {t('With the selection ({n})', { n: selected.length })}
             </Button>
           )}
           <Button small variant="ghost" onClick={() => act('combat/start', { includeMapTokens: false })}>
-            {t('Combat vide')}
+            {t('Empty combat')}
           </Button>
         </div>
-        <div className="cbt-legend">{t('Les PNJ lancent leur initiative automatiquement ; les runners lancent la leur.')}</div>
+        <div className="cbt-legend">{t('NPCs roll their initiative automatically; runners roll their own.')}</div>
       </div>
     </div>
   );
@@ -104,17 +104,17 @@ const entryName = (e: CombatEntry | null | undefined): string => (e?.nameI18n?.t
 function YourTurn({ e }: { e: CombatEntry }) {
   return (
     <div className="cbt-banner cbt-yourturn">
-      <div className="cbt-banner-title">{t('C’est ton tour !')}</div>
+      <div className="cbt-banner-title">{t('It’s your turn!')}</div>
       <div className="small">
         {entryName(e)} · {t('initiative')} <strong className="mono">{e.score}</strong>
       </div>
-      {e.kind === 'agent' && <div className="small muted">{t('Ton agent agit : choisis son action dans le cockpit (« Laisser mon agent agir »).')}</div>}
+      {e.kind === 'agent' && <div className="small muted">{t('Your agent acts: pick its action in the cockpit (“Let my agent act”).')}</div>}
       <div className="row wrap">
         <Button variant="accent" onClick={() => act('combat/next', { entryId: e.id })}>
-          {t('Terminer mon tour')} ✓
+          {t('End my turn')} ✓
         </Button>
-        <Button small variant="ghost" title={t('Retarder ton action : tu pourras agir plus tard dans la passe')} onClick={() => act('combat/delay', { entryId: e.id })}>
-          {t('Retarder')}
+        <Button small variant="ghost" title={t('Delay your action: you can act later in the pass')} onClick={() => act('combat/delay', { entryId: e.id })}>
+          {t('Delay')}
         </Button>
       </div>
     </div>
@@ -127,7 +127,7 @@ function RollBanner({ e, actor }: { e: CombatEntry; actor: ViewActor | undefined
   const edge = fullActor(actor)?.edge?.current ?? 0;
   return (
     <div className="cbt-banner cbt-toroll">
-      <div className="cbt-banner-title">{t('Lance ton initiative')}</div>
+      <div className="cbt-banner-title">{t('Roll your initiative')}</div>
       <div className="small">
         {e.name}
         {f ? (
@@ -143,13 +143,13 @@ function RollBanner({ e, actor }: { e: CombatEntry; actor: ViewActor | undefined
       </div>
       <div className="row wrap">
         <Button variant="primary" onClick={() => act('combat/roll', { entryId: e.id })}>
-          🎲 {t('Lancer')}
+          🎲 {t('Roll')}
           {f ? ` (${f.base} + ${f.dice}D6)` : ''}
         </Button>
-        <Button small disabled={edge < 1} title={t('Blitz : dépense 1 point de Chance pour lancer 5D6 ce tour')} onClick={() => act('combat/roll', { entryId: e.id, blitz: true })}>
-          {t('Blitz (1 Chance)')}
+        <Button small disabled={edge < 1} title={t('Blitz: spend 1 Edge point to roll 5D6 this turn')} onClick={() => act('combat/roll', { entryId: e.id, blitz: true })}>
+          {t('Blitz (1 Edge)')}
         </Button>
-        <Select className="grow" value={mode} options={initModeOptions()} title={t('Type d’initiative')} onChange={(m) => act('combat/setMode', { entryId: e.id, mode: m })} />
+        <Select className="grow" value={mode} options={initModeOptions()} title={t('Initiative type')} onChange={(m) => act('combat/setMode', { entryId: e.id, mode: m })} />
       </div>
     </div>
   );
@@ -197,15 +197,15 @@ function EntryRow({ e, game, c, isGM, own, open, onToggle }: EntryRowProps) {
     act('combat/setScore', { entryId: e.id, score: Math.round(n) });
   };
   const damage = async () => {
-    const txt = await promptText(t('Dommages pour {name} (ex. 5P, 3S ; négatif pour soigner : -2P)', { name: e.name }), '');
+    const txt = await promptText(t('Damage for {name} (e.g. 5P, 3S; negative to heal: -2P)', { name: e.name }), '');
     if (txt === null || txt === undefined || !String(txt).trim()) return;
     const p = parseDamageInput(txt);
-    if (!p) return toast(t('Format attendu : 5P, 3S ou -2P'), 'warn');
+    if (!p) return toast(t('Expected format: 5P, 3S or -2P'), 'warn');
     if (p.amount > 0) act('actor/damage', { actorId: e.actorId, amount: p.amount, type: p.type });
     else act('actor/heal', { actorId: e.actorId, amount: -p.amount, type: p.type });
   };
   const remove = async () => {
-    if (await confirmAction(t('Retirer {name} du combat ?', { name }))) act('combat/remove', { entryId: e.id });
+    if (await confirmAction(t('Remove {name} from the combat?', { name }))) act('combat/remove', { entryId: e.id });
   };
 
   let score;
@@ -229,7 +229,7 @@ function EntryRow({ e, game, c, isGM, own, open, onToggle }: EntryRowProps) {
     score = (
       <button
         className={scls}
-        title={rollTooltip(e, c.pass) + (isGM ? '\n' + t('(clic : modifier le score)') : '')}
+        title={rollTooltip(e, c.pass) + (isGM ? '\n' + t('(click: edit the score)') : '')}
         onClick={(ev) => {
           stop(ev);
           if (isGM) setEditing(true);
@@ -241,7 +241,7 @@ function EntryRow({ e, game, c, isGM, own, open, onToggle }: EntryRowProps) {
   }
 
   return (
-    <div className={cls + (matrixE ? ' cbt-matrix' : '')} onClick={focus} title={e.tokenId ? t('Centrer la carte sur ce token') : matrixE ? t('Ouvrir la Matrice') : ''}>
+    <div className={cls + (matrixE ? ' cbt-matrix' : '')} onClick={focus} title={e.tokenId ? t('Center the map on this token') : matrixE ? t('Open the Matrix') : ''}>
       <div className="cbt-main">
         <div className="cbt-avatar" style={matrixE ? undefined : avatarStyle(viewActor?.portrait, viewActor?.color)}>
           {matrixE ? (e.kind === 'ic' ? '⛨' : '◈') : viewActor?.portrait ? '' : initials(e.name)}
@@ -250,32 +250,32 @@ function EntryRow({ e, game, c, isGM, own, open, onToggle }: EntryRowProps) {
           <strong>{name}</strong>
           <div className="cbt-tags">
             {e.kind === 'ic' && (
-              <Badge color="magenta" title={t('IC d’un hôte (initiative : indice × 2 + 4D6)')}>
+              <Badge color="magenta" title={t('A host’s IC (initiative: rating × 2 + 4D6)')}>
                 {t('IC')}
               </Badge>
             )}
             {e.kind === 'agent' && (
-              <Badge color="cyan" title={t('Agent du decker (initiative : Traitement + indice + 4D6)')}>
+              <Badge color="cyan" title={t('The decker’s agent (initiative: Data Processing + rating + 4D6)')}>
                 {t('Agent')}
               </Badge>
             )}
-            {isCurrent && <Badge color="cyan">{t('Agit')}</Badge>}
-            {e.toRoll && <Badge color="amber">{t('À lancer')}</Badge>}
+            {isCurrent && <Badge color="cyan">{t('turn::Acting')}</Badge>}
+            {e.toRoll && <Badge color="amber">{t('To roll')}</Badge>}
             {e.delayed && (
-              <Badge color="amber" title={t('Action retardée')}>
-                {t('combat::En attente')}
+              <Badge color="amber" title={t('Delayed action')}>
+                {t('combat::Holding')}
               </Badge>
             )}
-            {e.acted && !isCurrent && <Badge>{t('A agi')}</Badge>}
+            {e.acted && !isCurrent && <Badge>{t('Acted')}</Badge>}
             {e.seized && (
-              <Badge color="magenta" title={t('A saisi l’initiative ce tour')}>
-                {t('Saisie')}
+              <Badge color="magenta" title={t('Seized the initiative this turn')}>
+                {t('Seized')}
               </Badge>
             )}
-            {spent && !e.out && <Badge title={t('Score ≤ 0 : plus d’action ce tour')}>{t('Hors passe')}</Badge>}
-            {e.down && <Badge color="red">{t('K.O.')}</Badge>}
-            {e.out && <Badge>{t('Sorti')}</Badge>}
-            {e.hidden && <Badge title={t('Invisible pour les joueurs')}>{t('Caché')}</Badge>}
+            {spent && !e.out && <Badge title={t('Score ≤ 0: no more actions this turn')}>{t('Out of pass')}</Badge>}
+            {e.down && <Badge color="red">{t('KO')}</Badge>}
+            {e.out && <Badge>{t('Out')}</Badge>}
+            {e.hidden && <Badge title={t('Invisible to players')}>{t('Hidden')}</Badge>}
             {e.mode && e.mode !== 'physical' && <Badge color="cyan">{initModeLabel(e.mode)}</Badge>}
             {isGM && e.disposition && e.disposition !== 'pc' && e.disposition !== 'hostile' && (
               <Badge color={e.disposition === 'ally' ? 'green' : 'amber'}>{dispoLabel(e.disposition)}</Badge>
@@ -298,36 +298,36 @@ function EntryRow({ e, game, c, isGM, own, open, onToggle }: EntryRowProps) {
 
       {isGM && isCurrent && e.kind === 'ic' && !e.out && (
         <div className="row" onClick={stop}>
-          <Button small variant="danger" title={t('L’IC attaque l’intrus le mieux repéré, puis le tour passe')} onClick={icAct}>
-            ⚡ {t('Agir et passer')}
+          <Button small variant="danger" title={t('The IC attacks the best-known intruder, then the turn passes')} onClick={icAct}>
+            ⚡ {t('Act and pass')}
           </Button>
         </div>
       )}
       {e.delayed && canControl && (
         <div className="row" onClick={stop}>
           <Button small variant="primary" onClick={() => act('combat/act', { entryId: e.id })}>
-            {t('Agir maintenant')}
+            {t('Act now')}
           </Button>
         </div>
       )}
 
       {d && actor && (
         <div className="cbt-mon" onClick={stop}>
-          <MonitorBar label={t('moniteur::P')} kind="p" value={actor.condition?.physical} max={d.physicalMonitor} />
-          <MonitorBar label={t('moniteur::É')} kind="s" value={actor.condition?.stun} max={d.stunMonitor} />
+          <MonitorBar label={t('monitor::P')} kind="p" value={actor.condition?.physical} max={d.physicalMonitor} />
+          <MonitorBar label={t('monitor::S')} kind="s" value={actor.condition?.stun} max={d.stunMonitor} />
           {isGM && (
             <div className="cbt-dmg">
-              <Button small title={t('1 case de dommages physiques')} onClick={() => act('actor/damage', { actorId: e.actorId, amount: 1, type: 'P' })}>
+              <Button small title={t('1 box of Physical damage')} onClick={() => act('actor/damage', { actorId: e.actorId, amount: 1, type: 'P' })}>
                 {t('+1P')}
               </Button>
-              <Button small title={t('1 case de dommages étourdissants')} onClick={() => act('actor/damage', { actorId: e.actorId, amount: 1, type: 'S' })}>
-                {t('+1É')}
+              <Button small title={t('1 box of Stun damage')} onClick={() => act('actor/damage', { actorId: e.actorId, amount: 1, type: 'S' })}>
+                {t('+1S')}
               </Button>
-              <Button small title={t('Dommages ou soins personnalisés')} onClick={damage}>
+              <Button small title={t('Custom damage or healing')} onClick={damage}>
                 ± …
               </Button>
-              <Button small variant="ghost" title={t('Ouvrir la fiche')} onClick={() => openSheet(e.actorId)}>
-                {t('Fiche')}
+              <Button small variant="ghost" title={t('Open the sheet')} onClick={() => openSheet(e.actorId)}>
+                {t('Sheet')}
               </Button>
             </div>
           )}
@@ -338,49 +338,49 @@ function EntryRow({ e, game, c, isGM, own, open, onToggle }: EntryRowProps) {
         <div className="cbt-actions" onClick={stop}>
           {e.toRoll && (own || isGM) && (
             <Button small variant="primary" onClick={() => act('combat/roll', { entryId: e.id })}>
-              {t('Lancer')}
+              {t('Roll')}
             </Button>
           )}
           {!e.toRoll && isGM && (
-            <Button small title={t('Relancer l’initiative')} onClick={() => act('combat/roll', { entryId: e.id })}>
-              {t('Relancer')}
+            <Button small title={t('Reroll the initiative')} onClick={() => act('combat/roll', { entryId: e.id })}>
+              {t('Relaunch')}
             </Button>
           )}
           {!e.toRoll && !matrixE && (
             <>
-              <Button small title={t('Esquive, parade, blocage, intercepter (−5)')} onClick={() => act('combat/adjust', { entryId: e.id, delta: -5, label: tk('Esquive / parade') })}>
-                {t('−5 Esquive')}
+              <Button small title={t('Dodge, parry, block, intercept (−5)')} onClick={() => act('combat/adjust', { entryId: e.id, delta: -5, label: tk('Dodge / parry') })}>
+                {t('−5 Dodge')}
               </Button>
-              <Button small title={t('Défense totale (−10)')} onClick={() => act('combat/adjust', { entryId: e.id, delta: -10, label: tk('Défense totale') })}>
-                {t('−10 Défense totale')}
+              <Button small title={t('Full defense (−10)')} onClick={() => act('combat/adjust', { entryId: e.id, delta: -10, label: tk('Full defense') })}>
+                {t('−10 Full defense')}
               </Button>
             </>
           )}
           {!e.seized && !matrixE && (
-            <Button small disabled={edge < 1} title={t('Saisir l’initiative : 1 point de Chance, agit en premier ce tour')} onClick={() => act('combat/seize', { entryId: e.id })}>
-              {t('Saisir l’initiative')}
+            <Button small disabled={edge < 1} title={t('Seize the initiative: 1 Edge point, acts first this turn')} onClick={() => act('combat/seize', { entryId: e.id })}>
+              {t('Seize the Initiative')}
             </Button>
           )}
           {isCurrent && (
             <Button small onClick={() => act('combat/delay', { entryId: e.id })}>
-              {t('Retarder')}
+              {t('Delay')}
             </Button>
           )}
           {!matrixE && (
-            <Select value={e.mode || 'physical'} options={initModeOptions()} title={t('Type d’initiative (prochain jet)')} onChange={(m) => act('combat/setMode', { entryId: e.id, mode: m })} />
+            <Select value={e.mode || 'physical'} options={initModeOptions()} title={t('Initiative type (next roll)')} onChange={(m) => act('combat/setMode', { entryId: e.id, mode: m })} />
           )}
           {isGM && (
             <>
               {e.hidden && (
                 <Button small variant="accent" onClick={() => act('combat/reveal', { entryId: e.id })}>
-                  {t('Révéler')}
+                  {t('Reveal')}
                 </Button>
               )}
               <Button small variant="ghost" onClick={() => act('combat/setOut', { entryId: e.id, out: !e.out })}>
-                {e.out ? t('Réintégrer') : t('Hors combat')}
+                {e.out ? t('Bring back') : t('Out of combat')}
               </Button>
               <Button small variant="danger" onClick={remove}>
-                {t('Retirer')}
+                {t('Remove')}
               </Button>
             </>
           )}
@@ -412,35 +412,35 @@ export default function CombatDock({ game }: GameProps) {
 
   const next = async () => {
     if (!current && pending.length) {
-      const ok = await confirmAction(t('{n} participant(s) n’ont pas lancé leur initiative ({names}). Commencer quand même ?', { n: pending.length, names: pending.map((e) => e.name).join(', ') }));
+      const ok = await confirmAction(t('{n} participant(s) haven’t rolled their initiative ({names}). Start anyway?', { n: pending.length, names: pending.map((e) => e.name).join(', ') }));
       if (!ok) return;
     }
     act('combat/next', { entryId: c.currentId || undefined });
   };
   const newTurn = async () => {
-    if (await confirmAction(t('Passer au tour de combat suivant ? Tout le monde relance son initiative.'))) act('combat/newTurn');
+    if (await confirmAction(t('Move to the next combat turn? Everyone rerolls their initiative.'))) act('combat/newTurn');
   };
   const end = async () => {
-    if (await confirmAction(t('Terminer le combat ?'))) act('combat/end');
+    if (await confirmAction(t('End the combat?'))) act('combat/end');
   };
 
   let waiting: string | null = null;
   if (!current) {
-    if (pending.length) waiting = t('En attente des jets d’initiative : {names}.', { names: pending.map((e) => e.name).join(', ') });
-    else if (entries.length) waiting = isGM ? t('Tout le monde a lancé : clique sur « Commencer ».') : t('Le MJ a la main…');
+    if (pending.length) waiting = t('Waiting for initiative rolls: {names}.', { names: pending.map((e) => e.name).join(', ') });
+    else if (entries.length) waiting = isGM ? t('Everyone has rolled: click « Start ».') : t('The GM has the hand…');
   }
 
   return (
     <div className="cbt">
       <div className="cbt-head">
         <div className="cbt-round">
-          <strong>{t('Tour {n}', { n: c.round })}</strong>
-          <span>{t('Passe {n}', { n: c.pass })}</span>
+          <strong>{t('Turn {n}', { n: c.round })}</strong>
+          <span>{t('Pass {n}', { n: c.pass })}</span>
         </div>
         {isGM && (
           <div className="cbt-tools">
-            <IconButton icon="↶" title={t('Annuler le dernier passage de tour')} onClick={() => act('combat/prev')} />
-            <IconButton icon="✕" title={t('Terminer le combat')} onClick={end} />
+            <IconButton icon="↶" title={t('Undo the last turn change')} onClick={() => act('combat/prev')} />
+            <IconButton icon="✕" title={t('End the combat')} onClick={end} />
           </div>
         )}
       </div>
@@ -448,25 +448,25 @@ export default function CombatDock({ game }: GameProps) {
       {isGM && (
         <div className="col gap-s">
           <Button variant="primary" className="cbt-next" disabled={!entries.length} onClick={next}>
-            {current ? t('Tour suivant') : t('Commencer')} ▶
+            {current ? t('Next turn') : t('Start')} ▶
           </Button>
           <div className="cbt-tools">
             {npcPending.length > 0 && (
               <Button small onClick={() => act('combat/rollAll', { npcOnly: true })}>
-                🎲 {t('Lancer les PNJ ({n})', { n: npcPending.length })}
+                🎲 {t('Roll the NPCs ({n})', { n: npcPending.length })}
               </Button>
             )}
             {pending.length > npcPending.length && (
-              <Button small title={t('Le MJ lance pour les joueurs qui n’ont pas encore lancé')} onClick={() => act('combat/rollAll', {})}>
-                🎲 {t('Tout lancer')}
+              <Button small title={t('The GM rolls for the players who haven’t rolled yet')} onClick={() => act('combat/rollAll', {})}>
+                🎲 {t('Roll all')}
               </Button>
             )}
-            <Button small onClick={newTurn} title={t('Nouveau tour de combat : tout le monde relance')}>
-              {t('Nouveau tour')}
+            <Button small onClick={newTurn} title={t('New combat turn: everyone rerolls')}>
+              {t('New turn')}
             </Button>
             {selected.length > 0 && (
               <Button small variant="accent" onClick={() => act('combat/add', { tokenIds: selected })}>
-                {t('+ Sélection ({n})', { n: selected.length })}
+                {t('+ Selection ({n})', { n: selected.length })}
               </Button>
             )}
           </div>
@@ -496,11 +496,11 @@ export default function CombatDock({ game }: GameProps) {
       {!entries.length && (
         <div className="cbt-empty">
           {isGM
-            ? t('Aucun participant : sélectionne des tokens sur la carte puis « + Sélection », ou fais apparaître des PNJ depuis le bestiaire.')
-            : t('Aucun participant visible pour l’instant.')}
+            ? t('No participants: select tokens on the map then « + Selection », or spawn NPCs from the bestiary.')
+            : t('No visible participant yet.')}
         </div>
       )}
-      <div className="cbt-legend">{t('Clic sur un participant : centrer la carte · survol du score : détail du jet')}</div>
+      <div className="cbt-legend">{t('Click a participant: center the map · hover the score: roll details')}</div>
     </div>
   );
 }

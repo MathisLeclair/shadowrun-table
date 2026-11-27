@@ -257,7 +257,7 @@ console.log('i18n');
     }
     return out;
   };
-  ok(JSON.stringify(pcDiffEntries(null, bundle.pcs[0])) === JSON.stringify([{ t: 'Nouveau personnage' }]), 'new PC diff entry');
+  ok(JSON.stringify(pcDiffEntries(null, bundle.pcs[0])) === JSON.stringify([{ t: 'New character' }]), 'new PC diff entry');
   const pc = bundle.pcs.find((p) => (p.sheet.skills || []).length) || bundle.pcs[0];
   // Partial app actor: only the fields the diff reads
   const app = { karma: -1, karmaTotal: 0, nuyen: 1, attributes: { BOD: 0 }, skills: [], streetCred: 99 } as unknown as Actor;
@@ -272,13 +272,13 @@ console.log('i18n');
   const missing = [...new Set(keysOf(entries))].filter((k) => !en[k]);
   ok(!missing.length, `diff keys translated (${missing.join(' | ')})`);
   // Errors carrying keys
-  const e = i18nError({ t: 'Aucun monde Foundry trouvé dans « {path} » (world.json manquant)', params: { path: 'X' } });
+  const e = i18nError({ t: 'No Foundry world found in “{path}” (world.json missing)', params: { path: 'X' } });
   ok(e.message === 'Aucun monde Foundry trouvé dans « X » (world.json manquant)' && e.i18nKey!.startsWith('Aucun monde') && e.i18nParams!.path === 'X', 'i18nError: French message + key + params');
   ok(tr('en', e.i18nKey!, e.i18nParams) === 'No Foundry world found in “X” (world.json missing)', 'i18nError key translated');
   // Server-side plural: French keeps the old text, English pluralizes 0
-  const p0 = plural(0, { t: 'zero::{n} fichier copié' }, { t: '{n} fichier copié' }, { t: '{n} fichiers copiés' });
+  const p0 = plural(0, { t: 'zero::{n} files copied' }, { t: '{n} file copied' }, { t: '{n} files copied' });
   ok(tr('fr', p0.t, p0.params) === '0 fichier copié' && tr('en', p0.t, p0.params) === '0 files copied', `plural(0) fr/en (${tr('en', p0.t, p0.params)})`);
-  const p2 = plural(2, { t: 'zero::{n} fichier copié' }, { t: '{n} fichier copié' }, { t: '{n} fichiers copiés' });
+  const p2 = plural(2, { t: 'zero::{n} files copied' }, { t: '{n} file copied' }, { t: '{n} files copied' });
   ok(tr('fr', p2.t, p2.params) === '2 fichiers copiés' && tr('en', p2.t, p2.params) === '2 files copied', 'plural(2) fr/en');
   const b = bytesParam(12.34e6);
   ok(tr('fr', b.t, b.params) === '12,3 Mo' && tr('en', b.t, b.params) === '12,3 MB', `bytesParam (${tr('en', b.t, b.params)})`);

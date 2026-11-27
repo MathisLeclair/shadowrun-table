@@ -258,7 +258,7 @@ const frI18n: ChargenI18n = { t: fill, fmtNumber: frNum };
 // ---------------------------------------------------------------------------
 export const LETTERS: Letter[] = ['A', 'B', 'C', 'D', 'E'];
 export const COLUMNS: PriorityColumn[] = ['metatype', 'attributes', 'magic', 'skills', 'resources'];
-export const COLUMN_LABELS: Record<PriorityColumn, string> = { metatype: tk('Métatype'), attributes: tk('Attributs'), magic: tk('Magie / Résonance'), skills: tk('Compétences'), resources: tk('Ressources') };
+export const COLUMN_LABELS: Record<PriorityColumn, string> = { metatype: tk('Metatype'), attributes: tk('Attributes'), magic: tk('Magic / Resonance'), skills: tk('Skills'), resources: tk('Resources') };
 
 export const PHYSICAL: AttrKey[] = ['BOD', 'AGI', 'REA', 'STR'];
 export const MENTAL: AttrKey[] = ['WIL', 'LOG', 'INT', 'CHA'];
@@ -287,10 +287,10 @@ export const METATYPE_MIN: Record<string, Record<MetaAttrKey, number>> = {
 /** Racial traits (shown in the wizard, written as 0-karma qualities on the actor). */
 export const METATYPE_TRAITS: Record<string, string[]> = {
   Humain: [],
-  Elfe: [tk('Vision nocturne')],
-  Nain: [tk('Vision thermographique'), tk('Résistance aux toxines et pathogènes (+2 dés)'), tk('Train de vie +20 %')],
-  Ork: [tk('Vision nocturne')],
-  Troll: [tk('Vision thermographique'), tk('Allonge +1'), tk('Armure dermique +1'), tk('Train de vie +100 %')],
+  Elfe: [tk('Low-Light Vision')],
+  Nain: [tk('Thermographic Vision'), tk('Toxin and pathogen resistance (+2 dice)'), tk('Lifestyle +20%')],
+  Ork: [tk('Low-Light Vision')],
+  Troll: [tk('Thermographic Vision'), tk('Reach +1'), tk('Dermal armor +1'), tk('Lifestyle +100%')],
 };
 const LIFESTYLE_MULT: Record<string, number> = { Nain: 1.2, Troll: 2 };
 
@@ -299,15 +299,15 @@ export const SKILL_POINTS: Record<string, [number, number]> = { A: [46, 10], B: 
 export const RESOURCES: Record<string, number> = { A: 450000, B: 275000, C: 140000, D: 50000, E: 6000 };
 
 export const MAGIC_TYPES: Record<MagicType, { label: string; short: string; quality: string | null }> = {
-  none: { label: tk('Profane'), short: tk('Profane'), quality: null },
-  magician: { label: tk('Magicien'), short: tk('Magicien'), quality: tk('Magicien') },
-  mystic: { label: tk('Adepte mystique'), short: tk('Adepte myst.'), quality: tk('Adepte mystique') },
-  adept: { label: tk('Adepte'), short: tk('Adepte'), quality: tk('Adepte') },
-  aspected: { label: tk('Magicien spécialisé'), short: tk('Spécialisé'), quality: tk('Magicien spécialisé') },
-  technomancer: { label: tk('Technomancien'), short: tk('Technomancien'), quality: tk('Technomancien') },
+  none: { label: tk('Mundane'), short: tk('Mundane'), quality: null },
+  magician: { label: tk('Magician'), short: tk('Magician'), quality: tk('Magician') },
+  mystic: { label: tk('Mystic Adept'), short: tk('Myst. adept'), quality: tk('Mystic Adept') },
+  adept: { label: tk('Adept'), short: tk('Adept'), quality: tk('Adept') },
+  aspected: { label: tk('Aspected Magician'), short: tk('Aspected'), quality: tk('Aspected Magician') },
+  technomancer: { label: tk('Technomancer'), short: tk('Technomancer'), quality: tk('Technomancer') },
 };
 /** Lower-case magic type for sentences (« inaccessible pour un adepte »). */
-const MAGIC_TYPE_LC: Record<MagicType, string> = { none: tk('profane'), magician: tk('magicien'), mystic: tk('adepte mystique'), adept: tk('adepte'), aspected: tk('magicien spécialisé'), technomancer: tk('technomancien') };
+const MAGIC_TYPE_LC: Record<MagicType, string> = { none: tk('mundane'), magician: tk('magician'), mystic: tk('mystic adept'), adept: tk('adept'), aspected: tk('aspected magician'), technomancer: tk('technomancer') };
 export const MAGIC_TYPE_IDS = Object.keys(MAGIC_TYPES) as MagicType[];
 
 /**
@@ -337,11 +337,11 @@ export const MAGIC_TABLE: Record<string, Partial<Record<MagicType, MagicRow>>> =
   D: { adept: { MAG: 2 }, aspected: { MAG: 2 } },
   E: {},
 };
-export const ASPECTS: Record<Aspect, string> = { sorcery: tk('Sorcellerie'), conjuring: tk('Conjuration'), enchanting: tk('Enchantement') };
+export const ASPECTS: Record<Aspect, string> = { sorcery: tk('Sorcery'), conjuring: tk('Conjuring'), enchanting: tk('Enchanting') };
 /** Stored as the French name (data), shown with t(). */
-export const TRADITIONS: string[] = [tk('Hermétique'), tk('Chamanique'), tk('Chaos'), tk('Druide'), tk('Bouddhiste'), tk('Shinto'), tk('Wicca'), tk('Vaudou'), tk('Autre')];
+export const TRADITIONS: string[] = [tk('Hermetic'), tk('Shamanic'), tk('Chaos'), tk('Druid'), tk('Buddhist'), tk('Shinto'), tk('Wicca'), tk('Voodoo'), tk('Other')];
 /** Complex form targets (COMPLEX_FORMS[].target) — French keys. */
-export const FORM_TARGETS: string[] = [tk('Persona'), tk('Appareil'), tk('Fichier'), tk('Soi'), tk('Sprite')];
+export const FORM_TARGETS: string[] = [tk('Persona'), tk('Device'), tk('File'), tk('Self'), tk('Sprite')];
 
 /** SR5 core complex forms (p.256). fading = Fading Value (L = level). */
 export const COMPLEX_FORMS: ComplexFormDef[] = [
@@ -362,7 +362,7 @@ export const COMPLEX_FORMS: ComplexFormDef[] = [
 ];
 export const COMPLEX_FORM_BY_ID: Record<string, ComplexFormDef> = Object.fromEntries(COMPLEX_FORMS.map((f) => [f.id, f]));
 
-export const KNOWLEDGE_TYPES: Record<KnowledgeType, string> = { street: tk('Rue'), academic: tk('Académique'), professional: tk('Professionnelle'), interest: tk('Centre d’intérêt'), language: tk('Langue') };
+export const KNOWLEDGE_TYPES: Record<KnowledgeType, string> = { street: tk('Street'), academic: tk('Academic'), professional: tk('Professional'), interest: tk('Interest'), language: tk('Language') };
 /** Qualities that come from the Magic priority (never bought separately at creation). */
 export const MAGIC_QUALITY_NAMES: Set<string> = new Set(['Magician', 'Adept', 'Mystic Adept', 'Aspected Magician', 'Technomancer']);
 export const CREATION_GRADES: WareGrade[] = ['standard', 'alpha', 'used'];
@@ -389,15 +389,15 @@ export const LIMITS = {
 
 export const STEPS: Array<{ id: string; label: string }> = [
   { id: 'concept', label: tk('Concept') },
-  { id: 'priorities', label: tk('Priorités') },
-  { id: 'metatype', label: tk('Métatype') },
-  { id: 'attributes', label: tk('Attributs') },
-  { id: 'magic', label: tk('Magie / Résonance') },
-  { id: 'skills', label: tk('Compétences') },
-  { id: 'qualities', label: tk('Qualités') },
-  { id: 'gear', label: tk('Équipement') },
-  { id: 'contacts', label: tk('Contacts & connaissances') },
-  { id: 'summary', label: tk('Récapitulatif') },
+  { id: 'priorities', label: tk('Priorities') },
+  { id: 'metatype', label: tk('Metatype') },
+  { id: 'attributes', label: tk('Attributes') },
+  { id: 'magic', label: tk('Magic / Resonance') },
+  { id: 'skills', label: tk('Skills') },
+  { id: 'qualities', label: tk('Qualities') },
+  { id: 'gear', label: tk('Gear') },
+  { id: 'contacts', label: tk('Contacts & knowledge') },
+  { id: 'summary', label: tk('Summary') },
 ];
 
 // ---------------------------------------------------------------------------
@@ -572,7 +572,7 @@ export function priorityText(column: string, l: string, i18n: ChargenI18n = frI1
   if (column === 'skills') return `${SKILL_POINTS[l][0]} / ${SKILL_POINTS[l][1]}`;
   if (column === 'resources') return `${i18n.fmtNumber(RESOURCES[l])}¥`;
   const opts = magicOptions(l).filter((o) => o.type !== 'none');
-  if (!opts.length) return tr(tk('Profane'));
+  if (!opts.length) return tr(tk('Mundane'));
   return opts.map((o) => magicOptionText(o, i18n)).join(' · ');
 }
 /** What a magic option gives, without the type name: « Magie 6, 2 compétences magiques à 5, 10 sorts ». */
@@ -580,22 +580,22 @@ export function magicOptionParts(o: MagicOption | null | undefined, i18n: Charge
   const tr = i18n.t;
   const parts: string[] = [];
   if (!o || o.type === 'none') return '';
-  if (o.MAG) parts.push(tr(tk('Magie {n}'), { n: o.MAG }));
-  if (o.RES) parts.push(tr(tk('Résonance {n}'), { n: o.RES }));
+  if (o.MAG) parts.push(tr(tk('Magic {n}'), { n: o.MAG }));
+  if (o.RES) parts.push(tr(tk('Resonance {n}'), { n: o.RES }));
   if (o.skills) {
     const p = { n: o.skills.n, r: o.skills.rating };
-    if (o.skills.cat === 'magic') parts.push(tr(tk('{n} compétences magiques à {r}'), p));
-    else if (o.skills.cat === 'resonance') parts.push(tr(tk('{n} compétences de résonance à {r}'), p));
-    else parts.push(tr(fr(o.skills.n, tk('{n} compétence active à {r}'), tk('{n} compétences actives à {r}')), p));
+    if (o.skills.cat === 'magic') parts.push(tr(tk('{n} magical skills at {r}'), p));
+    else if (o.skills.cat === 'resonance') parts.push(tr(tk('{n} resonance skills at {r}'), p));
+    else parts.push(tr(fr(o.skills.n, tk('{n} active skill at {r}'), tk('{n} active skills at {r}')), p));
   }
-  if (o.group) parts.push(tr(tk('1 groupe magique à {r}'), { r: o.group.rating }));
-  if (o.spells) parts.push(tr(tk('{n} sorts'), { n: o.spells }));
-  if (o.forms) parts.push(tr(fr(o.forms, tk('{n} forme complexe'), tk('{n} formes complexes')), { n: o.forms }));
+  if (o.group) parts.push(tr(tk('1 magical skill group at {r}'), { r: o.group.rating }));
+  if (o.spells) parts.push(tr(tk('{n} spells'), { n: o.spells }));
+  if (o.forms) parts.push(tr(fr(o.forms, tk('{n} complex form'), tk('{n} complex forms')), { n: o.forms }));
   return parts.join(', ');
 }
 export function magicOptionText(o: MagicOption | null | undefined, i18n: ChargenI18n = frI18n): string {
-  if (!o || o.type === 'none') return i18n.t(tk('Profane : aucune magie'));
-  return i18n.t(tk('{type} : {parts}'), { type: { t: MAGIC_TYPES[o.type].label }, parts: magicOptionParts(o, i18n) });
+  if (!o || o.type === 'none') return i18n.t(tk('Mundane: no magic'));
+  return i18n.t(tk('{type}: {parts}'), { type: { t: MAGIC_TYPES[o.type].label }, parts: magicOptionParts(o, i18n) });
 }
 
 /** Skill groups an aspected magician may take for a given aspect. */
@@ -686,18 +686,18 @@ export function compute(rawData: unknown, ctx: ChargenCtx = {}) {
   const settings = ctx.settings || {};
 
   // ---- Concept
-  if (!data.concept.name.trim() && !data.concept.alias.trim()) err('concept', tk('Donne un nom ou un nom de rue au personnage.'));
-  if (!data.concept.concept.trim()) warn('concept', tk('Décris le concept du personnage en une phrase (aide le MJ à valider).'));
+  if (!data.concept.name.trim() && !data.concept.alias.trim()) err('concept', tk('Give the character a name or a street name.'));
+  if (!data.concept.concept.trim()) warn('concept', tk('Describe the character concept in one sentence (helps the GM approve it).'));
 
   // ---- Priorities
   const used: Record<string, PriorityColumn[]> = {};
   for (const col of COLUMNS) {
     const l = P[col];
-    if (!l) err('priorities', tk('Priorité « {column} » non attribuée.'), { column: { t: COLUMN_LABELS[col] } });
+    if (!l) err('priorities', tk('Priority “{column}” not assigned.'), { column: { t: COLUMN_LABELS[col] } });
     else (used[l] = used[l] || []).push(col);
   }
   for (const [l, cols] of Object.entries(used)) {
-    if (cols.length > 1) err('priorities', tk('La priorité {letter} est utilisée plusieurs fois ({columns}).'), { letter: l, columns: cols.map((c) => ({ t: COLUMN_LABELS[c] })) });
+    if (cols.length > 1) err('priorities', tk('Priority {letter} is used more than once ({columns}).'), { letter: l, columns: cols.map((c) => ({ t: COLUMN_LABELS[c] })) });
   }
 
   // ---- Metatype
@@ -705,13 +705,13 @@ export function compute(rawData: unknown, ctx: ChargenCtx = {}) {
   // undefined when the metatype is not available at that priority (an error below; the point checks then pass)
   const specialPoints = (metaRow ? metaRow[data.metatype] : 0) as number;
   if (metaRow && metaRow[data.metatype] === undefined) {
-    err('metatype', tk('{meta} n’est pas disponible avec la priorité {letter} en métatype.'), { meta: { t: data.metatype }, letter: P.metatype });
+    err('metatype', tk('{meta} is not available at Metatype priority {letter}.'), { meta: { t: data.metatype }, letter: P.metatype });
   }
 
   // ---- Magic
   const mtype = data.magic.type;
   const mrow = magicRow(data);
-  if (mtype !== 'none' && !mrow) err('magic', tk('{type} n’est pas disponible avec la priorité {letter} en magie.'), { type: { t: MAGIC_TYPES[mtype].label }, letter: P.magic || '?' });
+  if (mtype !== 'none' && !mrow) err('magic', tk('{type} is not available at Magic priority {letter}.'), { type: { t: MAGIC_TYPES[mtype].label }, letter: P.magic || '?' });
   const awakened = ['magician', 'mystic', 'adept', 'aspected'].includes(mtype);
   const emerged = mtype === 'technomancer';
   const baseMAG = awakened ? mrow?.MAG || 0 : 0;
@@ -733,7 +733,7 @@ export function compute(rawData: unknown, ctx: ChargenCtx = {}) {
     if (k === 'EDG') specialSpent += points;
     else attrPointsSpent += points;
     attrKarma += karmaSteps(min + points, value, 5);
-    if (value > max) err('attributes', tk('{attr} {value} dépasse le maximum ({max}).'), { attr: A(k), value, max });
+    if (value > max) err('attributes', tk('{attr} {value} exceeds the maximum ({max}).'), { attr: A(k), value, max });
   }
   for (const k of ['MAG', 'RES'] as const) {
     const active = k === 'MAG' ? awakened : emerged;
@@ -741,7 +741,7 @@ export function compute(rawData: unknown, ctx: ChargenCtx = {}) {
     const points = data.attributes[k] || 0;
     const kk = data.attrKarma[k] || 0;
     if (!active) {
-      if (points || kk) err('attributes', k === 'MAG' ? tk('{attr} : réservé aux éveillés.') : tk('{attr} : réservé aux technomanciens.'), { attr: A(k) });
+      if (points || kk) err('attributes', k === 'MAG' ? tk('{attr}: Awakened characters only.') : tk('{attr}: technomancers only.'), { attr: A(k) });
       attrs[k] = { min: 0, max: 0, points: 0, karma: 0, value: 0, inactive: true };
       continue;
     }
@@ -751,20 +751,20 @@ export function compute(rawData: unknown, ctx: ChargenCtx = {}) {
     final[k] = value;
     specialSpent += points;
     attrKarma += karmaSteps(base + points, value, 5);
-    if (value > max) err('attributes', tk('{attr} {value} dépasse le maximum de création ({max}).'), { attr: A(k), value, max });
+    if (value > max) err('attributes', tk('{attr} {value} exceeds the creation maximum ({max}).'), { attr: A(k), value, max });
   }
   const attrPoints = ATTRIBUTE_POINTS[P.attributes] || 0;
-  if (attrPointsSpent > attrPoints) err('attributes', tk('Points d’attributs : {spent} dépensés pour {total} disponibles.'), { spent: attrPointsSpent, total: attrPoints });
-  if (specialSpent > specialPoints) err('attributes', tk('Points d’attributs spéciaux : {spent} dépensés pour {total} disponibles.'), { spent: specialSpent, total: specialPoints });
+  if (attrPointsSpent > attrPoints) err('attributes', tk('Attribute points: {spent} spent out of {total} available.'), { spent: attrPointsSpent, total: attrPoints });
+  if (specialSpent > specialPoints) err('attributes', tk('Special attribute points: {spent} spent out of {total} available.'), { spent: specialSpent, total: specialPoints });
   const atMax = CORE_ATTRS.filter((k) => attrs[k].value >= METATYPES[data.metatype].max[k as MetaAttrKey] && attrs[k].value >= attrs[k].max);
-  if (atMax.length > 1) err('attributes', tk('Un seul attribut physique ou mental peut être à son maximum naturel ({attrs}).'), { attrs: atMax.map(A) });
+  if (atMax.length > 1) err('attributes', tk('Only one physical or mental attribute may be at its natural maximum ({attrs}).'), { attrs: atMax.map(A) });
   if (P.attributes && attrPointsSpent < attrPoints) {
     const n = attrPoints - attrPointsSpent;
-    warn('attributes', fr(n, tk('{n} point d’attribut non dépensé (perdus à la validation).'), tk('{n} points d’attributs non dépensés (perdus à la validation).')), { n });
+    warn('attributes', fr(n, tk('{n} attribute point unspent (lost on approval).'), tk('{n} attribute points unspent (lost on approval).')), { n });
   }
   if (P.metatype && specialSpent < specialPoints) {
     const n = specialPoints - specialSpent;
-    warn('attributes', fr(n, tk('{n} point spécial non dépensé.'), tk('{n} points spéciaux non dépensés.')), { n });
+    warn('attributes', fr(n, tk('{n} special point unspent.'), tk('{n} special points unspent.')), { n });
   }
 
   // ---- Gear (needed early: essence affects Magic)
@@ -779,7 +779,7 @@ export function compute(rawData: unknown, ctx: ChargenCtx = {}) {
     const base = { row: g, item: e.item, file: e.file, name: nfr, upgrade: true };
     const tl = gearLines.find((l) => l.row.id === g.target && l.file === u.file && l.item && l.quote && (!rules.targetList || rules.targetList(l.file, l.item) === u.list)) as (PricedLine & { sim?: UpgradeSim }) | undefined;
     if (!tl) {
-      err('gear', u.file === 'weapons' ? tk('{name} : choisis l’arme sur laquelle l’installer.') : tk('{name} : choisis l’armure sur laquelle l’installer.'), { name: nfr }, { name: nen });
+      err('gear', u.file === 'weapons' ? tk('{name}: choose the weapon to install it on.') : tk('{name}: choose the armor to install it on.'), { name: nfr }, { name: nen });
       return base;
     }
     const tst = stats(tl.item);
@@ -832,12 +832,12 @@ export function compute(rawData: unknown, ctx: ChargenCtx = {}) {
     const e = lookup(g.ref);
     if (!e) {
       gearLines.push({ row: g, missing: true, name: g.name || g.ref });
-      if (ctx.lookup) err('gear', g.name ? tk('{name} : introuvable dans le catalogue.') : tk('Objet : introuvable dans le catalogue.'), g.name ? { name: g.name } : undefined);
+      if (ctx.lookup) err('gear', g.name ? tk('{name}: not found in the catalog.') : tk('Item: not found in the catalog.'), g.name ? { name: g.name } : undefined);
       continue;
     }
     if (!(GEAR_FILES as string[]).includes(e.file)) {
       const [nfr, nen] = itemNames(e.item);
-      err('gear', tk('{name} : ne s’achète pas ici.'), { name: nfr }, { name: nen });
+      err('gear', tk('{name}: cannot be bought here.'), { name: nfr }, { name: nen });
       continue;
     }
     if (CREATION_UPGRADES[e.file]) {
@@ -845,7 +845,7 @@ export function compute(rawData: unknown, ctx: ChargenCtx = {}) {
       gearLines.push(line);
       if (line.quote) {
         gearCost += line.total!;
-        if (line.quote.availValue > LIMITS.maxAvail) err('gear', tk('{name} : disponibilité {avail} au-dessus de {max} (création).'), { name: line.name, avail: line.quote.avail, max: LIMITS.maxAvail }, { name: e.item.name });
+        if (line.quote.availValue > LIMITS.maxAvail) err('gear', tk('{name}: availability {avail} above {max} (creation).'), { name: line.name, avail: line.quote.avail, max: LIMITS.maxAvail }, { name: e.item.name });
       }
       continue;
     }
@@ -866,21 +866,21 @@ export function compute(rawData: unknown, ctx: ChargenCtx = {}) {
     gearCost += line.total;
     essenceCost += line.essence;
     const en = { name: e.item.name };
-    if (q.availValue > LIMITS.maxAvail) err('gear', tk('{name} : disponibilité {avail} au-dessus de {max} (création).'), { name, avail: q.avail, max: LIMITS.maxAvail }, en);
-    if (ware && q.grade && !CREATION_GRADES.includes(q.grade)) err('gear', tk('{name} : le grade {grade} n’est pas autorisé à la création (standard, alpha ou d’occasion).'), { name, grade: q.grade }, en);
-    if (e.item.costRange) warn('gear', tk('{name} : prix variable, le MJ fixera le montant.'), { name }, en);
+    if (q.availValue > LIMITS.maxAvail) err('gear', tk('{name}: availability {avail} above {max} (creation).'), { name, avail: q.avail, max: LIMITS.maxAvail }, en);
+    if (ware && q.grade && !CREATION_GRADES.includes(q.grade)) err('gear', tk('{name}: grade {grade} is not allowed at creation (standard, alpha or used).'), { name, grade: q.grade }, en);
+    if (e.item.costRange) warn('gear', tk('{name}: variable price, the GM will set the amount.'), { name }, en);
   }
   essenceCost = round3(essenceCost);
   const essence = round3(6 - essenceCost);
-  if (essence <= 0) err('gear', tk('Essence {ess} : ce personnage ne survivrait pas à ses implants.'), { ess: essence });
+  if (essence <= 0) err('gear', tk('Essence {ess}: this character would not survive their implants.'), { ess: essence });
   const lossFromEss = Math.max(0, Math.ceil(6 - essence - 1e-9));
   final.ESS = essence;
   if (awakened || emerged) {
     const k = awakened ? 'MAG' : 'RES';
     if (lossFromEss > 0) {
       final[k] = Math.max(0, final[k] - lossFromEss);
-      if (final[k] <= 0) err('gear', tk('{attr} réduite à 0 par la perte d’Essence : le personnage perd ses capacités.'), { attr: A(k) });
-      else warn('gear', k === 'MAG' ? tk('La perte d’Essence réduit la Magie de {n} ({value} effectif).') : tk('La perte d’Essence réduit la Résonance de {n} ({value} effectif).'), { n: lossFromEss, value: final[k] });
+      if (final[k] <= 0) err('gear', tk('{attr} reduced to 0 by Essence loss: the character loses their abilities.'), { attr: A(k) });
+      else warn('gear', k === 'MAG' ? tk('Essence loss reduces Magic by {n} ({value} effective).') : tk('Essence loss reduces Resonance by {n} ({value} effective).'), { n: lossFromEss, value: final[k] });
     }
   }
 
@@ -891,17 +891,17 @@ export function compute(rawData: unknown, ctx: ChargenCtx = {}) {
   const freeSkillIds = freeCfg ? data.magic.freeSkills.slice(0, freeCfg.n) : [];
   const freeGroupId = freeGroupCfg ? data.magic.freeGroup || '' : '';
   if (freeCfg) {
-    if (freeSkillIds.length < freeCfg.n) warn('magic', fr(freeCfg.n, tk('Choisis ta compétence gratuite (indice {r}).'), tk('Choisis tes {n} compétences gratuites (indice {r}).')), { n: freeCfg.n, r: freeCfg.rating });
+    if (freeSkillIds.length < freeCfg.n) warn('magic', fr(freeCfg.n, tk('Pick your free skill (rating {r}).'), tk('Pick your {n} free skills (rating {r}).')), { n: freeCfg.n, r: freeCfg.rating });
     for (const id of freeSkillIds) {
       const def = SKILL_BY_ID[id];
       const okCat = freeCfg.cat === 'active' ? def.cat !== 'magic' && def.cat !== 'resonance' : def.cat === freeCfg.cat;
-      if (!okCat) err('magic', tk('{skill} ne peut pas être une compétence gratuite de ce type.'), { skill: SK(def) });
+      if (!okCat) err('magic', tk('{skill} cannot be a free skill of this type.'), { skill: SK(def) });
     }
-    if (new Set(freeSkillIds).size !== freeSkillIds.length) err('magic', tk('Les compétences gratuites doivent être différentes.'));
+    if (new Set(freeSkillIds).size !== freeSkillIds.length) err('magic', tk('Free skills must be different.'));
   }
   if (freeGroupCfg) {
-    if (!freeGroupId) warn('magic', tk('Choisis ton groupe de compétences magiques gratuit (indice {r}).'), { r: freeGroupCfg.rating });
-    else if (freeGroupId !== aspectGroup(data.magic.aspect)) err('magic', tk('Le groupe gratuit doit être celui de ton aspect ({aspect}).'), { aspect: { t: ASPECTS[aspectGroup(data.magic.aspect)] } });
+    if (!freeGroupId) warn('magic', tk('Pick your free magical skill group (rating {r}).'), { r: freeGroupCfg.rating });
+    else if (freeGroupId !== aspectGroup(data.magic.aspect)) err('magic', tk('The free group must be your aspect’s ({aspect}).'), { aspect: { t: ASPECTS[aspectGroup(data.magic.aspect)] } });
   }
 
   let skillSpent = 0;
@@ -916,9 +916,9 @@ export function compute(rawData: unknown, ctx: ChargenCtx = {}) {
     groupSpent += g.points;
     groupKarma += karmaSteps(free + g.points, rating, 5);
     groupRating[g.id] = rating;
-    if (rating > LIMITS.groupMax) err('skills', tk('Groupe {group} {rating} : maximum {max} à la création.'), { group: GRP(g.id), rating, max: LIMITS.groupMax });
+    if (rating > LIMITS.groupMax) err('skills', tk('{group} group {rating}: maximum {max} at creation.'), { group: GRP(g.id), rating, max: LIMITS.groupMax });
     const members = SKILLS.filter((s) => s.group === g.id);
-    if (members.some((s) => !skillAllowed(data, s.id))) err('skills', tk('Groupe {group} : inaccessible pour un {type}.'), { group: GRP(g.id), type: MT(mtype) });
+    if (members.some((s) => !skillAllowed(data, s.id))) err('skills', tk('{group} group: not available to {type} characters.'), { group: GRP(g.id), type: MT(mtype) });
   }
   if (freeGroupId && !groupRating[freeGroupId]) groupRating[freeGroupId] = freeGroupCfg!.rating;
   const aptitude = qualityChoice(data, ctx, /^Aptitude$/);
@@ -941,10 +941,10 @@ export function compute(rawData: unknown, ctx: ChargenCtx = {}) {
       else skillSpent += 1;
     }
     const max = aptitude === id ? 7 : LIMITS.skillMax;
-    if (rating > max) err('skills', aptitude === id ? tk('{skill} {rating} : maximum {max} à la création.') : tk('{skill} {rating} : maximum {max} à la création (7 avec la qualité Aptitude).'), { skill: SK(def), rating, max });
-    if (grp && (s.points || s.karma || s.spec)) err('skills', tk('{skill} fait partie du groupe {group} : on ne peut pas l’augmenter ni la spécialiser séparément à la création.'), { skill: SK(def), group: GRP(def.group as string) });
-    if (!skillAllowed(data, id)) err('skills', tk('{skill} : inaccessible pour un {type}.'), { skill: SK(def), type: MT(mtype) });
-    if (s.spec && rating < 1) err('skills', tk('{skill} : une spécialisation demande au moins 1 point dans la compétence.'), { skill: SK(def) });
+    if (rating > max) err('skills', aptitude === id ? tk('{skill} {rating}: maximum {max} at creation.') : tk('{skill} {rating}: maximum {max} at creation (7 with the Aptitude quality).'), { skill: SK(def), rating, max });
+    if (grp && (s.points || s.karma || s.spec)) err('skills', tk('{skill} belongs to the {group} group: it cannot be raised or specialized separately at creation.'), { skill: SK(def), group: GRP(def.group as string) });
+    if (!skillAllowed(data, id)) err('skills', tk('{skill}: not available to {type} characters.'), { skill: SK(def), type: MT(mtype) });
+    if (s.spec && rating < 1) err('skills', tk('{skill}: a specialization needs at least 1 point in the skill.'), { skill: SK(def) });
     if (rating > 0) skillRows.push({ id, name: def.fr, attr: def.attr, group: def.group || '', rating, spec: s.spec, free, fromGroup: grp });
   }
   // Group-only skills (bought through the group)
@@ -955,19 +955,19 @@ export function compute(rawData: unknown, ctx: ChargenCtx = {}) {
       skillRows.push({ id: def.id, name: def.fr, attr: def.attr, group: gid, rating: r, spec: '', free: 0, fromGroup: r });
     }
   }
-  if (skillSpent > skillPoints) err('skills', tk('Points de compétences : {spent} dépensés pour {total} disponibles.'), { spent: skillSpent, total: skillPoints });
-  if (groupSpent > groupPoints) err('skills', tk('Points de groupes : {spent} dépensés pour {total} disponibles.'), { spent: groupSpent, total: groupPoints });
+  if (skillSpent > skillPoints) err('skills', tk('Skill points: {spent} spent out of {total} available.'), { spent: skillSpent, total: skillPoints });
+  if (groupSpent > groupPoints) err('skills', tk('Skill group points: {spent} spent out of {total} available.'), { spent: groupSpent, total: groupPoints });
   if (P.skills && skillSpent < skillPoints) {
     const n = skillPoints - skillSpent;
-    warn('skills', fr(n, tk('{n} point de compétence non dépensé.'), tk('{n} points de compétences non dépensés.')), { n });
+    warn('skills', fr(n, tk('{n} skill point unspent.'), tk('{n} skill points unspent.')), { n });
   }
   if (P.skills && groupSpent < groupPoints) {
     const n = groupPoints - groupSpent;
-    warn('skills', fr(n, tk('{n} point de groupe non dépensé.'), tk('{n} points de groupes non dépensés.')), { n });
+    warn('skills', fr(n, tk('{n} skill group point unspent.'), tk('{n} skill group points unspent.')), { n });
   }
-  if (aptitude && !SKILL_BY_ID[aptitude]) warn('qualities', tk('Aptitude : choisis la compétence concernée.'));
+  if (aptitude && !SKILL_BY_ID[aptitude]) warn('qualities', tk('Aptitude: pick the skill it applies to.'));
   const topSkills = skillRows.filter((s) => s.rating >= 7);
-  if (topSkills.length > 1) err('skills', tk('Une seule compétence peut atteindre 7 (Aptitude).'));
+  if (topSkills.length > 1) err('skills', tk('Only one skill can reach 7 (Aptitude).'));
 
   // ---- Knowledge (free points = (INT + LOG) × 2, natural values)
   const knowledgePoints = (final.INT + final.LOG) * 2;
@@ -975,7 +975,7 @@ export function compute(rawData: unknown, ctx: ChargenCtx = {}) {
   let knowledgeKarma = 0;
   let natives = 0;
   for (const k of data.knowledge) {
-    if (!k.name.trim()) warn('contacts', tk('Une connaissance n’a pas de nom.'));
+    if (!k.name.trim()) warn('contacts', tk('A knowledge skill has no name.'));
     if (k.native) {
       natives++;
       continue;
@@ -983,14 +983,14 @@ export function compute(rawData: unknown, ctx: ChargenCtx = {}) {
     const r = k.points + k.karma;
     knowledgeSpent += k.points + (k.spec ? 1 : 0);
     knowledgeKarma += karmaSteps(k.points, r, 1);
-    const kname = k.name || { t: tk('Connaissance') };
-    if (r > LIMITS.knowledgeMax) err('contacts', tk('{name} {rating} : maximum {max} à la création.'), { name: kname, rating: r, max: LIMITS.knowledgeMax });
-    if (r < 1) warn('contacts', tk('{name} : indice 0, elle sera ignorée.'), { name: kname });
+    const kname = k.name || { t: tk('Knowledge') };
+    if (r > LIMITS.knowledgeMax) err('contacts', tk('{name} {rating}: maximum {max} at creation.'), { name: kname, rating: r, max: LIMITS.knowledgeMax });
+    if (r < 1) warn('contacts', tk('{name}: rating 0, it will be ignored.'), { name: kname });
   }
   const maxNatives = hasQualityEn(data, ctx, /^Bilingual$/) ? 2 : 1;
-  if (!natives) warn('contacts', tk('Indique la langue maternelle du personnage (gratuite).'));
-  if (natives > maxNatives) err('contacts', maxNatives === 2 ? tk('{n} langues maternelles : deux maximum avec Bilingue.') : tk('{n} langues maternelles : une seule (deux avec la qualité Bilingue).'), { n: natives });
-  if (knowledgeSpent > knowledgePoints) err('contacts', tk('Points de connaissances : {spent} dépensés pour {total} disponibles (INT + LOG) × 2.'), { spent: knowledgeSpent, total: knowledgePoints });
+  if (!natives) warn('contacts', tk('Set the character’s native language (free).'));
+  if (natives > maxNatives) err('contacts', maxNatives === 2 ? tk('{n} native languages: two maximum with Bilingual.') : tk('{n} native languages: only one (two with the Bilingual quality).'), { n: natives });
+  if (knowledgeSpent > knowledgePoints) err('contacts', tk('Knowledge points: {spent} spent out of {total} available (INT + LOG) × 2.'), { spent: knowledgeSpent, total: knowledgePoints });
 
   // ---- Qualities
   let positive = 0;
@@ -1000,26 +1000,26 @@ export function compute(rawData: unknown, ctx: ChargenCtx = {}) {
   for (const q of data.qualities) {
     const info = qualityData(ctx, q);
     if (!info) {
-      if (ctx.lookup) err('qualities', tk('{name} : introuvable dans le catalogue.'), { name: q.name || { t: tk('Qualité') } });
+      if (ctx.lookup) err('qualities', tk('{name}: not found in the catalog.'), { name: q.name || { t: tk('Quality') } });
       continue;
     }
     const qen = { name: info.en };
     if (MAGIC_QUALITY_NAMES.has(info.en)) {
-      err('qualities', tk('{name} vient de la priorité Magie : ne l’achète pas comme qualité.'), { name: info.name }, qen);
+      err('qualities', tk('{name} comes from the Magic priority: do not buy it as a quality.'), { name: info.name }, qen);
       continue;
     }
-    if (seenQ.has(q.catalogId)) err('qualities', tk('{name} est prise deux fois.'), { name: info.name }, qen);
+    if (seenQ.has(q.catalogId)) err('qualities', tk('{name} is taken twice.'), { name: info.name }, qen);
     seenQ.add(q.catalogId);
     const level = Math.min(q.level, info.maxLevels);
-    if (q.level > info.maxLevels) warn('qualities', tk('{name} : niveau ramené à {max}.'), { name: info.name, max: info.maxLevels }, qen);
+    if (q.level > info.maxLevels) warn('qualities', tk('{name}: level lowered to {max}.'), { name: info.name, max: info.maxLevels }, qen);
     const cost = info.karma * level;
     if (info.positive) positive += cost;
     else negative += cost;
     qualityRows.push({ ...info, level, cost, choice: q.choice, notes: q.notes, catalogId: q.catalogId });
   }
-  if (positive > LIMITS.positiveQualities) err('qualities', tk('Qualités positives : {n} karma (maximum {max}).'), { n: positive, max: LIMITS.positiveQualities });
-  if (negative > LIMITS.negativeQualities) err('qualities', tk('Qualités négatives : {n} karma (maximum {max}).'), { n: negative, max: LIMITS.negativeQualities });
-  if (qualityRows.some((q) => q.en === 'Exceptional Attribute' && !(CORE_ATTRS as string[]).concat(['MAG', 'RES']).includes(q.choice))) warn('qualities', tk('Attribut exceptionnel : choisis l’attribut concerné.'));
+  if (positive > LIMITS.positiveQualities) err('qualities', tk('Positive qualities: {n} karma (maximum {max}).'), { n: positive, max: LIMITS.positiveQualities });
+  if (negative > LIMITS.negativeQualities) err('qualities', tk('Negative qualities: {n} karma (maximum {max}).'), { n: negative, max: LIMITS.negativeQualities });
+  if (qualityRows.some((q) => q.en === 'Exceptional Attribute' && !(CORE_ATTRS as string[]).concat(['MAG', 'RES']).includes(q.choice))) warn('qualities', tk('Exceptional Attribute: pick the attribute it applies to.'));
 
   // ---- Spells / powers / complex forms
   const effMAG = awakened ? final.MAG : 0;
@@ -1029,57 +1029,57 @@ export function compute(rawData: unknown, ctx: ChargenCtx = {}) {
   for (const s of data.spells) {
     const e = lookup(s.catalogId);
     if (!e || e.file !== 'spells') {
-      if (ctx.lookup) err('magic', tk('Sort « {name} » introuvable dans le catalogue.'), { name: s.name || '?' });
+      if (ctx.lookup) err('magic', tk('Spell “{name}” not found in the catalog.'), { name: s.name || '?' });
       continue;
     }
     spellRows.push({ catalogId: s.catalogId, item: e.item, name: e.item.nameFr || e.item.name, ...spellInfo(e.item) });
   }
-  if (spellRows.length && !canCast) err('magic', tk('Un {type} ne peut pas lancer de sorts.'), { type: MT(mtype) });
-  if (new Set(spellRows.map((s) => s.catalogId)).size !== spellRows.length) err('magic', tk('Un même sort est pris deux fois.'));
+  if (spellRows.length && !canCast) err('magic', tk('Spells are not available to {type} characters.'), { type: MT(mtype) });
+  if (new Set(spellRows.map((s) => s.catalogId)).size !== spellRows.length) err('magic', tk('The same spell is taken twice.'));
   const extraSpells = Math.max(0, spellRows.length - freeSpells);
-  if (canCast && spellRows.length > effMAG * 2) err('magic', tk('{n} sorts : maximum Magie × 2 = {max} à la création.'), { n: spellRows.length, max: effMAG * 2 });
+  if (canCast && spellRows.length > effMAG * 2) err('magic', tk('{n} spells: maximum Magic × 2 = {max} at creation.'), { n: spellRows.length, max: effMAG * 2 });
   if (canCast && spellRows.length < freeSpells) {
     const n = freeSpells - spellRows.length;
-    warn('magic', fr(n, tk('{n} sort gratuit non choisi.'), tk('{n} sorts gratuits non choisis.')), { n });
+    warn('magic', fr(n, tk('{n} free spell not chosen.'), tk('{n} free spells not chosen.')), { n });
   }
 
   const hasPowers = mtype === 'adept' || mtype === 'mystic';
   const ppTotal = mtype === 'adept' ? effMAG : mtype === 'mystic' ? data.magic.ppKarma : 0;
-  if (mtype === 'mystic' && data.magic.ppKarma > effMAG) err('magic', tk('Points de pouvoir achetés ({n}) : maximum Magie ({max}).'), { n: data.magic.ppKarma, max: effMAG });
-  if (mtype !== 'mystic' && data.magic.ppKarma) warn('magic', tk('Seuls les adeptes mystiques achètent des points de pouvoir.'));
+  if (mtype === 'mystic' && data.magic.ppKarma > effMAG) err('magic', tk('Power points bought ({n}): Magic maximum ({max}).'), { n: data.magic.ppKarma, max: effMAG });
+  if (mtype !== 'mystic' && data.magic.ppKarma) warn('magic', tk('Only mystic adepts buy power points.'));
   let ppSpent = 0;
   const powerRows: Array<{ catalogId: string; item: CatalogItem; name: string; level: number | undefined; pp: number; choice: string }> = [];
   for (const p of data.powers) {
     const e = lookup(p.catalogId);
     if (!e || e.file !== 'powers') {
-      if (ctx.lookup) err('magic', tk('Pouvoir « {name} » introuvable dans le catalogue.'), { name: p.name || '?' });
+      if (ctx.lookup) err('magic', tk('Power “{name}” not found in the catalog.'), { name: p.name || '?' });
       continue;
     }
     const info = powerInfo(e.item);
     const maxLevel = info.levels ? Math.min(info.maxLevel || 99, Math.max(1, effMAG)) : 1;
     const level = info.levels ? Math.max(1, p.level) : 1;
-    if (info.levels && level > maxLevel) err('magic', tk('{name} niveau {level} : maximum {max}.'), { name: e.item.nameFr || e.item.name, level, max: maxLevel }, { name: e.item.name });
+    if (info.levels && level > maxLevel) err('magic', tk('{name} level {level}: maximum {max}.'), { name: e.item.nameFr || e.item.name, level, max: maxLevel }, { name: e.item.name });
     const pp = round2(info.pp * level + info.extraPP);
     ppSpent += pp;
     powerRows.push({ catalogId: p.catalogId, item: e.item, name: e.item.nameFr || e.item.name, level: info.levels ? level : undefined, pp, choice: p.choice });
   }
   ppSpent = round2(ppSpent);
-  if (powerRows.length && !hasPowers) err('magic', tk('Un {type} n’a pas de pouvoirs d’adepte.'), { type: MT(mtype) });
-  if (hasPowers && ppSpent > ppTotal) err('magic', tk('Pouvoirs : {spent} PP dépensés pour {total} disponibles.'), { spent: ppSpent, total: ppTotal });
+  if (powerRows.length && !hasPowers) err('magic', tk('Adept powers are not available to {type} characters.'), { type: MT(mtype) });
+  if (hasPowers && ppSpent > ppTotal) err('magic', tk('Powers: {spent} PP spent out of {total} available.'), { spent: ppSpent, total: ppTotal });
 
   const freeForms = mrow?.forms || 0;
   const formRows = data.complexForms.map((f) => COMPLEX_FORM_BY_ID[f.formId]).filter(Boolean);
-  if (formRows.length && !emerged) err('magic', tk('Seuls les technomanciens connaissent des formes complexes.'));
-  if (new Set(formRows.map((f) => f.id)).size !== formRows.length) err('magic', tk('Une même forme complexe est prise deux fois.'));
+  if (formRows.length && !emerged) err('magic', tk('Only technomancers know complex forms.'));
+  if (new Set(formRows.map((f) => f.id)).size !== formRows.length) err('magic', tk('The same complex form is taken twice.'));
   const extraForms = emerged ? Math.max(0, formRows.length - freeForms) : 0;
-  if (emerged && formRows.length > final.LOG) err('magic', tk('{n} formes complexes : maximum Logique ({max}).'), { n: formRows.length, max: final.LOG });
-  if (awakened && !data.magic.tradition && mtype !== 'adept') warn('magic', tk('Choisis une tradition magique.'));
+  if (emerged && formRows.length > final.LOG) err('magic', tk('{n} complex forms: Logic maximum ({max}).'), { n: formRows.length, max: final.LOG });
+  if (awakened && !data.magic.tradition && mtype !== 'adept') warn('magic', tk('Pick a magical tradition.'));
 
   // ---- Contacts
   const contactKarmaFree = final.CHA * 3;
   const contactKarmaUsed = data.contacts.reduce((s, c) => s + c.connection + c.loyalty, 0);
   const contactOverflow = Math.max(0, contactKarmaUsed - contactKarmaFree);
-  for (const c of data.contacts) if (!c.name.trim()) warn('contacts', tk('Un contact n’a pas de nom.'));
+  for (const c of data.contacts) if (!c.name.trim()) warn('contacts', tk('A contact has no name.'));
 
   // ---- Nuyen
   const resources = RESOURCES[P.resources] || 0;
@@ -1089,7 +1089,7 @@ export function compute(rawData: unknown, ctx: ChargenCtx = {}) {
   if (data.lifestyle) {
     const e = lookup(data.lifestyle.catalogId);
     if (!e || e.file !== 'lifestyles') {
-      if (ctx.lookup) err('gear', tk('Train de vie introuvable dans le catalogue.'));
+      if (ctx.lookup) err('gear', tk('Lifestyle not found in the catalog.'));
     } else {
       const mult = LIFESTYLE_MULT[data.metatype] || 1;
       const monthly = Math.round((Number(e.item.cost) || 0) * mult);
@@ -1097,13 +1097,13 @@ export function compute(rawData: unknown, ctx: ChargenCtx = {}) {
       const st = stats(e.item);
       lifestyle = { item: e.item, name: e.item.nameFr || e.item.name, monthly, months: data.lifestyle.months, dice: Number(st.startingDice) || 0, multiplier: Number(st.startingMultiplier) || 0 };
     }
-  } else warn('gear', tk('Choisis un train de vie (au moins un mois payé).'));
+  } else warn('gear', tk('Pick a lifestyle (at least one month paid).'));
   const nuyenTotal = resources + fromKarma;
   const nuyenSpent = gearCost + lifestyleCost;
   const nuyenLeft = nuyenTotal - nuyenSpent;
-  if (nuyenLeft < 0) err('gear', tk('Budget dépassé de {nuyen}¥.'), { nuyen: Math.abs(nuyenLeft) });
+  if (nuyenLeft < 0) err('gear', tk('Budget exceeded by {nuyen}¥.'), { nuyen: Math.abs(nuyenLeft) });
   const nuyenKept = Math.max(0, Math.min(LIMITS.keptNuyen, nuyenLeft));
-  if (nuyenLeft > LIMITS.keptNuyen) warn('gear', tk('{nuyen}¥ seront perdus (5 000¥ maximum conservés).'), { nuyen: nuyenLeft - LIMITS.keptNuyen });
+  if (nuyenLeft > LIMITS.keptNuyen) warn('gear', tk('{nuyen}¥ will be lost (5,000¥ kept at most).'), { nuyen: nuyenLeft - LIMITS.keptNuyen });
 
   // ---- Karma
   const karmaBase = LIMITS.karma + int(settings.startingKarmaBonus, 0, -100, 1000);
@@ -1123,9 +1123,9 @@ export function compute(rawData: unknown, ctx: ChargenCtx = {}) {
   };
   const karmaSpent = Object.values(karmaParts).reduce((a, b) => a + b, 0);
   const karmaLeft = karmaTotal - karmaSpent;
-  if (karmaLeft < 0) err('qualities', tk('Karma dépassé : {spent} dépensés pour {total} disponibles.'), { spent: karmaSpent, total: karmaTotal });
-  if (karmaLeft > LIMITS.keptKarma) warn('summary', tk('{n} karma restants : seuls {kept} seront conservés.'), { n: karmaLeft, kept: LIMITS.keptKarma });
-  if (data.karmaToNuyen > LIMITS.karmaToNuyenMax) err('gear', tk('Conversion karma → nuyen : {max} karma maximum.'), { max: LIMITS.karmaToNuyenMax });
+  if (karmaLeft < 0) err('qualities', tk('Karma exceeded: {spent} spent out of {total} available.'), { spent: karmaSpent, total: karmaTotal });
+  if (karmaLeft > LIMITS.keptKarma) warn('summary', tk('{n} karma left: only {kept} will be kept.'), { n: karmaLeft, kept: LIMITS.keptKarma });
+  if (data.karmaToNuyen > LIMITS.karmaToNuyenMax) err('gear', tk('Karma → nuyen conversion: {max} karma maximum.'), { max: LIMITS.karmaToNuyenMax });
 
   return {
     data,
@@ -1272,7 +1272,7 @@ export function buildActor(rawData: unknown, ctx: ChargenCtx = {}, opts: BuildAc
   const makeId = opts.makeId || ((p: string) => `${p}_${Date.now().toString(36)}${(n++).toString(36)}`);
   const type = opts.type === 'npc' ? 'npc' : 'pc';
   const c = data.concept;
-  const name = (c.alias || c.name || tk('Nouveau runner')).trim().slice(0, 80);
+  const name = (c.alias || c.name || tk('New runner')).trim().slice(0, 80);
   const f = result.final;
   const actor: ChargenActor = {
     type,
@@ -1352,9 +1352,9 @@ export function buildActor(rawData: unknown, ctx: ChargenCtx = {}, opts: BuildAc
     if (data.magic.tradition && m.type !== 'adept') bits.push(`Tradition : ${data.magic.tradition}`);
     if (m.type === 'aspected') bits.push(`Aspect : ${ASPECTS[aspectGroup(data.magic.aspect)]}`);
     if (data.magic.mentor) bits.push(`Mentor : ${data.magic.mentor}`);
-    actor.qualities.push({ id: makeId('q'), name: mq, karma: 0, positive: true, notes: [tk('Priorité Magie/Résonance'), ...bits].join(' — ') });
+    actor.qualities.push({ id: makeId('q'), name: mq, karma: 0, positive: true, notes: [tk('Magic/Resonance priority'), ...bits].join(' — ') });
   }
-  for (const t of METATYPE_TRAITS[data.metatype] || []) actor.qualities.push({ id: makeId('q'), name: t, karma: 0, positive: true, notes: fill(tk('Trait racial ({meta})'), { meta: data.metatype }) });
+  for (const t of METATYPE_TRAITS[data.metatype] || []) actor.qualities.push({ id: makeId('q'), name: t, karma: 0, positive: true, notes: fill(tk('Racial trait ({meta})'), { meta: data.metatype }) });
   for (const q of result.qualities) {
     const notes: string[] = [];
     if (q.choice) {
@@ -1369,7 +1369,7 @@ export function buildActor(rawData: unknown, ctx: ChargenCtx = {}, opts: BuildAc
     if (qb) row.bonus = qb;
     actor.qualities.push(row);
   }
-  if (data.metatype === 'Troll') actor.armor.push({ id: makeId('arm'), name: tk('Armure dermique (troll)'), rating: 1, equipped: true, stack: true, notes: tk('Trait racial') });
+  if (data.metatype === 'Troll') actor.armor.push({ id: makeId('arm'), name: tk('Dermal armor (troll)'), rating: 1, equipped: true, stack: true, notes: tk('Racial trait') });
 
   for (const s of result.spells) {
     const { item, catalogId, name: sname, ...rest } = s;
@@ -1539,7 +1539,7 @@ export function draftHeadline(data: unknown) {
   if (d.concept.concept) bits.push(d.concept.concept);
   const own = (d.concept.alias || d.concept.name || '').trim();
   return {
-    name: own || tk('Sans nom'), unnamed: !own, letters, text: bits.join(' · '),
+    name: own || tk('Unnamed'), unnamed: !own, letters, text: bits.join(' · '),
     metatype: d.metatype, magicType: d.magic.type, concept: d.concept.concept,
   };
 }

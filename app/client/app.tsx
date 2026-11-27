@@ -86,8 +86,8 @@ function Login({ onDone }: { onDone: () => void }) {
 
   useEffect(() => {
     takeLobby().then((r) => {
-      if (!r) return setErr(t('Serveur injoignable'));
-      if (!r.ok) return setClosed(errorText(r.data, 'Table introuvable'));
+      if (!r) return setErr(t('Server unreachable'));
+      if (!r.ok) return setClosed(errorText(r.data, 'Table not found'));
       setLobby(r.data);
       if (r.data.campaignName) document.title = t('{name} — Shadowrun', { name: r.data.campaignName });
     });
@@ -103,7 +103,7 @@ function Login({ onDone }: { onDone: () => void }) {
       if (chosen) body.lang = chosen;
       const res = await api<{ token: string }>('/api/login', { method: 'POST', body });
       if (mode === 'player') lsSet('sr.lastName', name);
-      if (!setToken(res.token)) toast(t('Stockage du navigateur bloqué : la session ne survivra pas à un rechargement'), 'warn');
+      if (!setToken(res.token)) toast(t('Browser storage is blocked: your session will not survive a reload'), 'warn');
       onDone();
     } catch (e2) {
       setErr((e2 as Error).message);
@@ -121,12 +121,12 @@ function Login({ onDone }: { onDone: () => void }) {
             <div className="logo-mark"></div>
             <div>
               <h1>Shadowrun</h1>
-              <div className="muted">{t('Table « {slug} »', { slug: TABLE })}</div>
+              <div className="muted">{t('Table “{slug}”', { slug: TABLE })}</div>
             </div>
           </div>
           <div className="error">{closed}</div>
           <a className="btn btn-primary" href="/?choisir">
-            {t('Voir les tables disponibles')}
+            {t('See available tables')}
           </a>
         </div>
       </div>
@@ -146,46 +146,46 @@ function Login({ onDone }: { onDone: () => void }) {
         </div>
         {demo && (
           <div className="demo-banner">
-            <strong>{t('Table de démonstration publique')}</strong>
+            <strong>{t('Public demo table')}</strong>
             <span>
               {t(
-                'Entre comme MJ ou comme joueur, sans mot de passe. Tout ce qui se passe ici est visible par les autres visiteurs et effacé à la remise à zéro (chaque nuit, et après 30 minutes sans personne).'
+                'Join as GM or as a player, no password needed. Everything here is visible to other visitors and wiped at the next reset (every night, and after 30 minutes with nobody connected).'
               )}
             </span>
-            <span className="muted small">{t('Astuce : ouvre la table dans une fenêtre de navigation privée pour jouer en même temps côté joueur.')}</span>
+            <span className="muted small">{t('Tip: open the table in a private window to play the players’ side at the same time.')}</span>
           </div>
         )}
         <Tabs
           tabs={[
-            { id: 'player', label: t('Joueur') },
-            { id: 'gm', label: t('Maître de jeu') },
+            { id: 'player', label: t('Player') },
+            { id: 'gm', label: t('Gamemaster') },
           ]}
           value={mode}
           onChange={setMode}
         />
         {mode === 'gm' ? (
           demo ? (
-            <div className="muted">{t('Pas de mot de passe sur la démo : entre directement comme MJ.')}</div>
+            <div className="muted">{t('No password on the demo: enter straight away as GM.')}</div>
           ) : (
             <label className="field">
-              <span className="field-label">{t('Mot de passe MJ')}</span>
+              <span className="field-label">{t('GM password')}</span>
               <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoFocus />
             </label>
           )
         ) : (
           <>
             <label className="field">
-              <span className="field-label">{t('Ton nom')}</span>
-              <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('ex. Baptiste')} autoFocus />
+              <span className="field-label">{t('Your name')}</span>
+              <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('e.g. Baptiste')} autoFocus />
             </label>
             {!demo && (
               <label className="field">
-                <span className="field-label">{t('Code PIN (optionnel, protège ton accès)')}</span>
+                <span className="field-label">{t('PIN code (optional, protects your access)')}</span>
                 <input className="input" type="password" inputMode="numeric" value={pin} onChange={(e) => setPin(e.target.value)} />
               </label>
             )}
             <div className="field">
-              <span className="field-label">{t('Ton personnage')}</span>
+              <span className="field-label">{t('Your character')}</span>
               <div className="pc-pick">
                 {(lobby?.pcs || []).map((pc) => (
                   <button
@@ -196,20 +196,20 @@ function Login({ onDone }: { onDone: () => void }) {
                     onClick={() => setCharacterId(characterId === pc.id ? '' : pc.id)}
                   >
                     <strong>{pc.name}</strong>
-                    <span className="muted">{pc.claimedBy ? t('joué par {name}', { name: pc.claimedBy }) : pc.player || t('libre')}</span>
+                    <span className="muted">{pc.claimedBy ? t('played by {name}', { name: pc.claimedBy }) : pc.player || t('available')}</span>
                   </button>
                 ))}
-                {lobby && !lobby.pcs.length && <div className="muted">{t('Aucun personnage pour l’instant — le MJ pourra t’en attribuer un.')}</div>}
+                {lobby && !lobby.pcs.length && <div className="muted">{t('No characters yet — the GM can assign you one.')}</div>}
               </div>
             </div>
           </>
         )}
         {err && <div className="error">{err}</div>}
         <Button variant="primary" type="submit">
-          {t('Entrer dans la partie')}
+          {t('Join the game')}
         </Button>
         <a className="login-switch muted small" href="/?choisir">
-          {t('← Changer de table')}
+          {t('← Change table')}
         </a>
       </form>
     </div>
@@ -234,7 +234,7 @@ function Shell() {
     const chosen = storedLang();
     if (game && !hasOwnLang && chosen && chosen !== game.config?.lang) send('users/setLang', { lang: chosen }, { silent: true }).catch(() => {});
   }, [!!game, hasOwnLang]);
-  if (!game) return <div className="loading">{t('Connexion à la Matrice…')}</div>;
+  if (!game) return <div className="loading">{t('Connecting to the Matrix…')}</div>;
   const role = game.me.role;
   const tabs = mainTabs.filter((tb) => tb.roles.includes(role));
   const docks = dockTabs.filter((tb) => tb.roles.includes(role));
@@ -249,7 +249,7 @@ function Shell() {
   return (
     <div className={'shell' + (ui.dockOpen ? '' : ' dock-closed')}>
       <header className="topbar">
-        <div className="brand" title={t('Table : {slug}', { slug: game.config.table?.slug || TABLE || '' })}>
+        <div className="brand" title={t('Table: {slug}', { slug: game.config.table?.slug || TABLE || '' })}>
           <div className="logo-mark small"></div>
           <span>{game.config.campaignName}</span>
         </div>
@@ -267,12 +267,12 @@ function Shell() {
         </nav>
         <div className="topbar-right">
           <LangSwitch value={lang} onChange={pickLangLoggedIn} />
-          <span className={'conn ' + (online ? 'on' : 'off')} title={online ? t('Connecté') : t('Déconnecté — reconnexion…')}></span>
-          <Badge color={role === 'gm' ? 'magenta' : 'cyan'}>{role === 'gm' ? t('MJ') : game.me.name}</Badge>
-          <button className="icon-btn" title={ui.dockOpen ? t('Masquer le panneau') : t('Afficher le panneau')} onClick={() => setUI({ dockOpen: !ui.dockOpen })}>
+          <span className={'conn ' + (online ? 'on' : 'off')} title={online ? t('Connected') : t('Disconnected — reconnecting…')}></span>
+          <Badge color={role === 'gm' ? 'magenta' : 'cyan'}>{role === 'gm' ? t('GM') : game.me.name}</Badge>
+          <button className="icon-btn" title={ui.dockOpen ? t('Hide the panel') : t('Show the panel')} onClick={() => setUI({ dockOpen: !ui.dockOpen })}>
             {ui.dockOpen ? '⇥' : '⇤'}
           </button>
-          <button className="icon-btn" title={t('Se déconnecter')} onClick={logout}>
+          <button className="icon-btn" title={t('Log out')} onClick={logout}>
             ⏻
           </button>
         </div>
@@ -330,8 +330,8 @@ function App() {
       done = true;
       setToken(null);
       setAuthed(false);
-      if (info?.reason === 'demo-reset') toast(t('La table de démonstration vient d’être remise à zéro : reconnecte-toi'), 'warn');
-      else toast(t('Session expirée, reconnecte-toi'), 'warn');
+      if (info?.reason === 'demo-reset') toast(t('The demo table has just been reset: please log in again'), 'warn');
+      else toast(t('Session expired, please log in again'), 'warn');
     });
     return () => {
       s.disconnect();
@@ -363,10 +363,10 @@ function TablePicker() {
     fetch('/api/tables')
       .then((r) => r.json())
       .then((j) => setList(j.tables || []))
-      .catch(() => setErr(t('Serveur injoignable')));
+      .catch(() => setErr(t('Server unreachable')));
   }, []);
   useEffect(() => {
-    document.title = t('Shadowrun — Choisis ta table');
+    document.title = t('Shadowrun — Choose your table');
   }, [lang]);
   return (
     <div className="login">
@@ -376,12 +376,12 @@ function TablePicker() {
           <div className="logo-mark"></div>
           <div>
             <h1>Shadowrun</h1>
-            <div className="muted">{t('Choisis ta table')}</div>
+            <div className="muted">{t('Choose your table')}</div>
           </div>
         </div>
         {err && <div className="error">{err}</div>}
-        {!list && !err && <div className="muted">{t('Chargement…')}</div>}
-        {list && !list.length && <div className="muted">{t('Aucune table ouverte pour l’instant.')}</div>}
+        {!list && !err && <div className="muted">{t('Loading…')}</div>}
+        {list && !list.length && <div className="muted">{t('No open tables yet.')}</div>}
         {list && list.length > 0 && (
           <div className="picker-list">
             {list.map((tb) => (
@@ -391,21 +391,21 @@ function TablePicker() {
                   {tb.demo ? (
                     <>
                       {' '}
-                      <span className="demo-pill">{t('démo')}</span>
+                      <span className="demo-pill">{t('demo')}</span>
                     </>
                   ) : null}
                 </span>
                 <span className="muted small">
-                  {tb.online ? tn(tb.online, '{n} connecté', '{n} connectés') : t('personne en ligne')}
+                  {tb.online ? tn(tb.online, 'connected::{n} online', 'connected.pl::{n} online') : t('nobody online')}
                   {isLang(tb.lang) ? ` · ${tb.lang!.toUpperCase()}` : ''}
                 </span>
-                <span className="btn btn-primary btn-sm">{t('Rejoindre')}</span>
+                <span className="btn btn-primary btn-sm">{t('Join')}</span>
               </a>
             ))}
           </div>
         )}
         <a className="login-switch muted small" href="/admin">
-          {t('Administration du serveur')}
+          {t('Server administration')}
         </a>
       </div>
     </div>
@@ -422,7 +422,7 @@ function AdminRoot() {
   useEffect(() => {
     import('./modules/admin/AdminPage.tsx')
       .then((m) => setPage(() => m.default))
-      .catch((e: Error) => setErr(t('Chargement impossible : {reason}', { reason: e.message })));
+      .catch((e: Error) => setErr(t('Could not load: {reason}', { reason: e.message })));
   }, []);
   if (err)
     return (
@@ -432,7 +432,7 @@ function AdminRoot() {
     );
   return (
     <>
-      {Page ? <Page onLang={pickLangLoggedOut} /> : <div className="loading">{t('Chargement…')}</div>}
+      {Page ? <Page onLang={pickLangLoggedOut} /> : <div className="loading">{t('Loading…')}</div>}
       <Toasts />
     </>
   );

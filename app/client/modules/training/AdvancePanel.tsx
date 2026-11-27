@@ -23,7 +23,7 @@ const norm = (s: unknown) => slug(String(s || '')).replace(/-/g, ' ');
 const matches = (q: string, ...fields: unknown[]) => !q || fields.some((f) => norm(f).includes(norm(q)));
 const ATTR_ORDER = ['physical', 'mental', 'special'];
 const ATTR_KIND: Record<string, string> = { BOD: 'physical', AGI: 'physical', REA: 'physical', STR: 'physical', WIL: 'mental', LOG: 'mental', INT: 'mental', CHA: 'mental', EDG: 'special', MAG: 'special', RES: 'special' };
-const ATTR_KIND_LABEL: Record<string, string> = { physical: tk('attributs::Physiques'), mental: tk('Mentaux'), special: tk('Spéciaux') };
+const ATTR_KIND_LABEL: Record<string, string> = { physical: tk('attributes::Physical'), mental: tk('Mental'), special: tk('pl::Special') };
 /** Spell category in the UI language (the French name comes from spellInfo()). */
 const spellCategory = (item: CatalogItem<SpellStats> | null | undefined, info: { category?: string }) => (getLang() === 'en' ? String(item?.category || info.category || '') : info.category);
 
@@ -50,13 +50,13 @@ export default function AdvancePanel({ game, actor, isGM }: AdvancePanelProps) {
   const prof = magicProfile(actor);
   const awakened = prof.MAG > 0 || prof.RES > 0;
   const tabs = [
-    { id: 'attributes', label: t('Attributs') },
-    { id: 'skills', label: t('Compétences') },
-    { id: 'groups', label: t('Groupes') },
-    { id: 'knowledge', label: t('Connaissances') },
-    { id: 'qualities', label: t('Qualités') },
-    ...(awakened ? [{ id: 'magic', label: prof.RES > 0 && prof.MAG <= 0 ? t('Résonance') : t('Magie') }] : []),
-    { id: 'other', label: t('Autre') },
+    { id: 'attributes', label: t('Attributes') },
+    { id: 'skills', label: t('Skills') },
+    { id: 'groups', label: t('Groups') },
+    { id: 'knowledge', label: t('pl::Knowledge') },
+    { id: 'qualities', label: t('Qualities') },
+    ...(awakened ? [{ id: 'magic', label: prof.RES > 0 && prof.MAG <= 0 ? t('Resonance') : t('Magic') }] : []),
+    { id: 'other', label: t('Other') },
   ];
   const current = tabs.find((x) => x.id === tab) ? tab : 'attributes';
   const props: TabProps = { game, actor, q, open: setDraft, prof, isGM };
@@ -84,7 +84,7 @@ export default function AdvancePanel({ game, actor, isGM }: AdvancePanelProps) {
 /** "+1" button that opens the confirmation (disabled with the reason when impossible). `label` = already translated. */
 function PlusButton({ qt, onClick, label = '+1' }: { qt: TrainingQuote | null | undefined; onClick: () => void; label?: string }) {
   return (
-    <Button small variant="primary" disabled={!!qt?.error} title={errorOf(qt) || t('Voir le coût et confirmer')} onClick={onClick}>
+    <Button small variant="primary" disabled={!!qt?.error} title={errorOf(qt) || t('See the cost and confirm')} onClick={onClick}>
       {label}
     </Button>
   );
@@ -98,18 +98,18 @@ function AttributesTab({ actor, q, open }: TabProps) {
     <>
       <div className="training-hint small muted">
         {keys.includes('MAG')
-          ? t('Un seul attribut à la fois. Le maximum dépend du métatype ({meta}), et pour la Magie de l’essence et du grade d’initiation.', { meta })
-          : t('Un seul attribut à la fois. Le maximum dépend du métatype ({meta}).', { meta })}{' '}
+          ? t('One attribute at a time. The maximum depends on the metatype ({meta}), and for Magic on Essence and initiate grade.', { meta })
+          : t('One attribute at a time. The maximum depends on the metatype ({meta}).', { meta })}{' '}
         <Rule kind="attribute" />
       </div>
       <div className="training-table-wrap">
         <table className="sr training-table">
           <thead>
             <tr>
-              <th>{t('Attribut')}</th>
-              <th className="center">{t('Actuel')}</th>
+              <th>{t('Attribute')}</th>
+              <th className="center">{t('Current')}</th>
               <th className="center">{t('Max')}</th>
-              <th>{t('Rang suivant')}</th>
+              <th>{t('Next rating')}</th>
               <th></th>
             </tr>
           </thead>
@@ -175,9 +175,9 @@ function SkillsTab({ actor, q, open, prof }: TabProps) {
   return (
     <>
       <div className="row spread wrap training-toolbar">
-        <SearchBox value={search} onChange={setSearch} placeholder={t('Filtrer mes compétences…')} />
+        <SearchBox value={search} onChange={setSearch} placeholder={t('Filter my skills…')} />
         <span className="small muted">
-          {t('Rangs 1–4 : quelques jours · 5–8 : semaines · 9+ : longues semaines')} <Rule kind="skill" />
+          {t('Ratings 1–4: a few days · 5–8: weeks · 9+: many weeks')} <Rule kind="skill" />
         </span>
       </div>
       {owned.length ? (
@@ -185,9 +185,9 @@ function SkillsTab({ actor, q, open, prof }: TabProps) {
           <table className="sr training-table">
             <thead>
               <tr>
-                <th>{t('Compétence')}</th>
-                <th className="center">{t('Rang')}</th>
-                <th>{t('Rang suivant')}</th>
+                <th>{t('Skill')}</th>
+                <th className="center">{t('rank::Rating')}</th>
+                <th>{t('Next rating')}</th>
                 <th></th>
               </tr>
             </thead>
@@ -210,8 +210,8 @@ function SkillsTab({ actor, q, open, prof }: TabProps) {
                       {!qt.error && warnings.length ? <div className="small amber">⚠ {warnings.join(', ')}</div> : ''}
                     </td>
                     <td className="right nowrap">
-                      <Button small variant="ghost" title={t('Spécialisation : 7 karma · 1 mois')} onClick={() => open({ kind: 'specialization', target: s.id })}>
-                        {t('Spé.')}
+                      <Button small variant="ghost" title={t('Specialization: 7 karma · 1 month')} onClick={() => open({ kind: 'specialization', target: s.id })}>
+                        {t('Spec.')}
                       </Button>
                       <PlusButton qt={qt} onClick={() => open({ kind: 'skill', target: s.id })} />
                     </td>
@@ -222,14 +222,14 @@ function SkillsTab({ actor, q, open, prof }: TabProps) {
           </table>
         </div>
       ) : (
-        <Empty>{search ? t('Aucune compétence ne correspond.') : t('Aucune compétence active.')}</Empty>
+        <Empty>{search ? t('No skill matches.') : t('No active skills.')}</Empty>
       )}
 
-      <div className="section-title">{t('Apprendre une nouvelle compétence')}</div>
+      <div className="section-title">{t('Learn a new skill')}</div>
       <div className="training-learn">
-        <Field label={t('Compétence')}>
+        <Field label={t('Skill')}>
           <select className="input" value={newId} onChange={(e) => setNewId(e.target.value)}>
-            <option value="">{t('— Choisir —')}</option>
+            <option value="">{t('— Choose —')}</option>
             {byCat.map((g) => (
               <optgroup key={g.cat} label={g.label}>
                 {g.list.map((s) => (
@@ -239,15 +239,15 @@ function SkillsTab({ actor, q, open, prof }: TabProps) {
                 ))}
               </optgroup>
             ))}
-            <option value="__custom">{t('Autre (arme exotique, pilotage particulier…)')}</option>
+            <option value="__custom">{t('Other (exotic weapon, specific vehicle…)')}</option>
           </select>
         </Field>
         {newId === '__custom' && (
           <>
-            <Field label={t('Nom')}>
-              <TextInput live value={customName} placeholder={t('ex. Arme exotique (fouet monofilament)')} onChange={setCustomName} />
+            <Field label={t('Name')}>
+              <TextInput live value={customName} placeholder={t('e.g. Exotic Weapon (monofilament whip)')} onChange={setCustomName} />
             </Field>
-            <Field label={t('Attribut lié')}>
+            <Field label={t('Linked attribute')}>
               <Select value={customAttr} onChange={setCustomAttr} options={['AGI', 'BOD', 'REA', 'STR', 'WIL', 'LOG', 'INT', 'CHA'].map((k) => ({ value: k, label: attrLabel(k) }))} />
             </Field>
           </>
@@ -255,7 +255,7 @@ function SkillsTab({ actor, q, open, prof }: TabProps) {
         <div className="training-learn-cta">
           {learnQt && <CostCell qt={learnQt} />}
           <Button variant="primary" disabled={!learnReq || !!learnQt?.error} onClick={() => learnReq && open(learnReq)}>
-            {t('Apprendre…')}
+            {t('Learn…')}
           </Button>
         </div>
       </div>
@@ -274,16 +274,16 @@ function GroupsTab({ actor, q, open, prof }: TabProps) {
   return (
     <>
       <div className="training-hint small muted">
-        {t('Un groupe se rompt dès qu’une de ses compétences est augmentée seule ou spécialisée. Pour le reconstituer, remonte toutes ses compétences au même indice.')}{' '}
+        {t('A group breaks as soon as one of its skills is raised on its own or specialized. To restore it, raise all its skills to the same rating.')}{' '}
         <Rule kind="skillGroup" />
       </div>
       <div className="training-table-wrap">
         <table className="sr training-table">
           <thead>
             <tr>
-              <th>{t('Groupe')}</th>
-              <th className="center">{t('Rang')}</th>
-              <th>{t('Rang suivant')}</th>
+              <th>{t('Group')}</th>
+              <th className="center">{t('rank::Rating')}</th>
+              <th>{t('Next rating')}</th>
               <th></th>
             </tr>
           </thead>
@@ -300,7 +300,7 @@ function GroupsTab({ actor, q, open, prof }: TabProps) {
                       <>
                         {' '}
                         <Badge color="red" title={msgText(g.reasonI18n, g.reason)}>
-                          {t('rompu')}
+                          {t('broken')}
                         </Badge>
                       </>
                     ) : g.owned ? (
@@ -341,16 +341,16 @@ function KnowledgeTab({ actor, q, open }: TabProps) {
   return (
     <>
       <div className="training-hint small muted">
-        {t('Connaissances de la rue, académiques, professionnelles, centres d’intérêt et langues.')} <Rule kind="knowledge" />
+        {t('Street, academic, professional and interest knowledge, and languages.')} <Rule kind="knowledge" />
       </div>
       {list.length ? (
         <div className="training-table-wrap">
           <table className="sr training-table">
             <thead>
               <tr>
-                <th>{t('Connaissance')}</th>
-                <th className="center">{t('Rang')}</th>
-                <th>{t('Rang suivant')}</th>
+                <th>{t('Knowledge')}</th>
+                <th className="center">{t('rank::Rating')}</th>
+                <th>{t('Next rating')}</th>
                 <th></th>
               </tr>
             </thead>
@@ -363,12 +363,12 @@ function KnowledgeTab({ actor, q, open }: TabProps) {
                       <strong>{k.name}</strong> <span className="faint small">{ktypes[k.type] ? t(ktypes[k.type]) : ''}</span>
                       {k.spec && <div className="small cyan">↳ {k.spec}</div>}
                     </td>
-                    <td className="center mono">{k.native ? t('langue maternelle::N') : k.rating || 0}</td>
-                    <td>{k.native ? <span className="muted small">{t('Langue maternelle')}</span> : <CostCell qt={qt} />}</td>
+                    <td className="center mono">{k.native ? t('native-language::N') : k.rating || 0}</td>
+                    <td>{k.native ? <span className="muted small">{t('Native language')}</span> : <CostCell qt={qt} />}</td>
                     <td className="right nowrap">
                       {!k.native && (Number(k.rating) || 0) > 0 && (
-                        <Button small variant="ghost" title={t('Spécialisation : 7 karma · 1 mois')} onClick={() => open({ kind: 'specialization', target: k.id })}>
-                          {t('Spé.')}
+                        <Button small variant="ghost" title={t('Specialization: 7 karma · 1 month')} onClick={() => open({ kind: 'specialization', target: k.id })}>
+                          {t('Spec.')}
                         </Button>
                       )}
                       {qt && <PlusButton qt={qt} onClick={() => open({ kind: 'knowledge', target: k.id })} />}
@@ -380,12 +380,12 @@ function KnowledgeTab({ actor, q, open }: TabProps) {
           </table>
         </div>
       ) : (
-        <Empty>{t('Aucune connaissance pour l’instant.')}</Empty>
+        <Empty>{t('No knowledge skills yet.')}</Empty>
       )}
-      <div className="section-title">{t('Nouvelle connaissance ou langue')}</div>
+      <div className="section-title">{t('New knowledge skill or language')}</div>
       <div className="training-learn">
-        <Field label={t('Nom')}>
-          <TextInput live value={name} placeholder={t('ex. Gangs de Redmond, Japonais, Politique corpo…')} onChange={setName} />
+        <Field label={t('Name')}>
+          <TextInput live value={name} placeholder={t('e.g. Redmond Gangs, Japanese, Corporate Politics…')} onChange={setName} />
         </Field>
         <Field label={t('Type')}>
           <Select value={ktype} onChange={setKtype} options={Object.entries(ktypes).map(([value, label]) => ({ value, label: t(label) }))} />
@@ -393,7 +393,7 @@ function KnowledgeTab({ actor, q, open }: TabProps) {
         <div className="training-learn-cta">
           {newQt && <CostCell qt={newQt} />}
           <Button variant="primary" disabled={!newReq || !!newQt?.error} onClick={() => newReq && open(newReq)}>
-            {t('Apprendre…')}
+            {t('Learn…')}
           </Button>
         </div>
       </div>
@@ -420,7 +420,7 @@ function QualitiesTab({ actor, q, open }: TabProps) {
 
   return (
     <>
-      <div className="section-title">{t('Qualités actuelles')}</div>
+      <div className="section-title">{t('Current qualities')}</div>
       {owned.length ? (
         <ul className="training-qualities">
           {owned.map((o) => {
@@ -435,7 +435,7 @@ function QualitiesTab({ actor, q, open }: TabProps) {
                 {negative && (
                   <span className="row gap-s">
                     <CostCell qt={qt} />
-                    <PlusButton qt={qt} label={t('Racheter')} onClick={() => open({ kind: 'removeQuality', target: o.id })} />
+                    <PlusButton qt={qt} label={t('Buy off')} onClick={() => open({ kind: 'removeQuality', target: o.id })} />
                   </span>
                 )}
               </li>
@@ -443,15 +443,15 @@ function QualitiesTab({ actor, q, open }: TabProps) {
           })}
         </ul>
       ) : (
-        <div className="muted small">{t('Aucune qualité.')}</div>
+        <div className="muted small">{t('No qualities.')}</div>
       )}
 
       <div className="section-title">
-        {t('Acquérir une qualité positive')} <Rule kind="quality" />
+        {t('Gain a positive quality')} <Rule kind="quality" />
       </div>
       {catalog.length ? (
         <>
-          <SearchBox value={search} onChange={setSearch} placeholder={t('Chercher une qualité (Ambidextre, Sang-froid…)')} />
+          <SearchBox value={search} onChange={setSearch} placeholder={t('Search a quality (Ambidextrous, Composure…)')} />
           <ul className="training-catalog">
             {shown.map((x) => {
               const owns = has(x);
@@ -464,40 +464,40 @@ function QualitiesTab({ actor, q, open }: TabProps) {
                     <strong>{x.label}</strong>
                     {x.item.nameFr && x.item.name !== x.item.nameFr && alt ? <span className="faint small"> {alt}</span> : ''}
                     <div className="small muted">
-                      {t('{karma} karma de qualité', { karma: x.info.karma })} <ItemRef item={x.item} />
+                      {t('{karma} quality karma', { karma: x.info.karma })} <ItemRef item={x.item} />
                     </div>
                   </div>
                   {owns ? (
-                    <Badge color="green">{t('possédée')}</Badge>
+                    <Badge color="green">{t('owned')}</Badge>
                   ) : (
                     <>
                       <CostCell qt={qt} />
-                      <PlusButton qt={qt} label={t('Choisir')} onClick={() => open(req)} />
+                      <PlusButton qt={qt} label={t('Choose')} onClick={() => open(req)} />
                     </>
                   )}
                 </li>
               );
             })}
-            {!shown.length && <li className="muted small">{t('Aucune qualité ne correspond.')}</li>}
+            {!shown.length && <li className="muted small">{t('No quality matches.')}</li>}
           </ul>
-          {positives.length > shown.length && <div className="small faint">{t('{n} autres résultats — affine la recherche.', { n: positives.length - shown.length })}</div>}
+          {positives.length > shown.length && <div className="small faint">{t('{n} more results — refine your search.', { n: positives.length - shown.length })}</div>}
         </>
       ) : (
-        <div className="muted small">{t('Catalogue des qualités indisponible : utilise la saisie manuelle.')}</div>
+        <div className="muted small">{t('Qualities catalog unavailable: use manual entry.')}</div>
       )}
 
-      <div className="section-title">{t('Saisie manuelle')}</div>
+      <div className="section-title">{t('Manual entry')}</div>
       <div className="training-learn">
-        <Field label={t('Qualité')}>
-          <TextInput live value={manualName} placeholder={t('Nom de la qualité')} onChange={setManualName} />
+        <Field label={t('Quality')}>
+          <TextInput live value={manualName} placeholder={t('Quality name')} onChange={setManualName} />
         </Field>
-        <Field label={t('Karma de la qualité')}>
+        <Field label={t('Quality karma')}>
           <NumberInput value={manualKarma} min={1} max={50} onChange={setManualKarma} />
         </Field>
         <div className="training-learn-cta">
           {manualQt && <CostCell qt={manualQt} />}
           <Button disabled={!manualReq || !!manualQt?.error} onClick={() => manualReq && open(manualReq)}>
-            {t('Proposer au MJ…')}
+            {t('Propose to the GM…')}
           </Button>
         </div>
       </div>
@@ -516,19 +516,19 @@ function MagicTab({ actor, q, open, prof }: TabProps) {
   return (
     <>
       <div className="row wrap training-magic-head">
-        <Badge color="magenta">{prof.type && MAGIC_TYPES[prof.type] ? t(MAGIC_TYPES[prof.type]) : t('Éveillé')}</Badge>
+        <Badge color="magenta">{prof.type && MAGIC_TYPES[prof.type] ? t(MAGIC_TYPES[prof.type]) : t('Awakened')}</Badge>
         {prof.MAG > 0 && (
           <span className="small">
-            {t('Magie')} <strong className="mono">{prof.MAG}</strong>
+            {t('Magic')} <strong className="mono">{prof.MAG}</strong>
           </span>
         )}
         {prof.RES > 0 && (
           <span className="small">
-            {t('Résonance')} <strong className="mono">{prof.RES}</strong>
+            {t('Resonance')} <strong className="mono">{prof.RES}</strong>
           </span>
         )}
         <span className="small">
-          {sub ? t('Submersion : grade') : t('Initiation : grade')} <strong className="mono">{grade}</strong>
+          {sub ? t('Submersion: grade') : t('Initiation: grade')} <strong className="mono">{grade}</strong>
         </span>
       </div>
 
@@ -538,11 +538,11 @@ function MagicTab({ actor, q, open, prof }: TabProps) {
       <div className="training-row-card">
         <div className="grow">
           <strong>{t('Grade {n}', { n: grade + 1 })}</strong>
-          <div className="small muted">{sub ? t('Augmente le maximum de Résonance de 1 et donne accès à un écho.') : t('Augmente le maximum de Magie de 1 et donne accès à une métamagie.')}</div>
-          {Array.isArray(metas) && metas.length ? <div className="small cyan">{t('Acquis : {list}', { list: metas.join(', ') })}</div> : ''}
+          <div className="small muted">{sub ? t('Raises the Resonance maximum by 1 and grants an echo.') : t('Raises the Magic maximum by 1 and grants a metamagic.')}</div>
+          {Array.isArray(metas) && metas.length ? <div className="small cyan">{t('Learned: {list}', { list: metas.join(', ') })}</div> : ''}
         </div>
         <CostCell qt={initQt} />
-        <PlusButton qt={initQt} label={t('S’initier…')} onClick={() => open({ kind: 'initiation', options: {} })} />
+        <PlusButton qt={initQt} label={t('Initiate…')} onClick={() => open({ kind: 'initiation', options: {} })} />
       </div>
 
       {prof.hasPowers && <PowersSection actor={actor} q={q} open={open} prof={prof} />}
@@ -585,12 +585,12 @@ function SpellsSection({ actor, q, open }: SectionProps) {
   return (
     <>
       <div className="section-title">
-        {t('Sorts ({n} connus)', { n: known.length })} <Rule kind="spell" />
+        {t('Spells ({n} known)', { n: known.length })} <Rule kind="spell" />
       </div>
       {known.length ? <KnownList items={known} /> : ''}
       {catalog.length ? (
         <>
-          <SearchBox value={search} onChange={setSearch} placeholder={t('Chercher un sort (Boule de feu, Soins…)')} />
+          <SearchBox value={search} onChange={setSearch} placeholder={t('Search a spell (Fireball, Heal…)')} />
           <ul className="training-catalog">
             {shown.map((s) => {
               const info = spellInfo(s);
@@ -604,30 +604,30 @@ function SpellsSection({ actor, q, open }: SectionProps) {
                     <div className="small muted">{[spellCategory(s, info), info.type, info.range, info.duration, info.drain && t('Drain {dv}', { dv: info.drain })].filter(Boolean).join(' · ')}</div>
                   </div>
                   {k ? (
-                    <Badge color="green">{t('connu')}</Badge>
+                    <Badge color="green">{t('known')}</Badge>
                   ) : (
                     <>
                       <CostCell qt={qt} />
-                      <PlusButton qt={qt} label={t('Apprendre')} onClick={() => open(req)} />
+                      <PlusButton qt={qt} label={t('Learn')} onClick={() => open(req)} />
                     </>
                   )}
                 </li>
               );
             })}
-            {!shown.length && <li className="muted small">{t('Aucun sort ne correspond.')}</li>}
+            {!shown.length && <li className="muted small">{t('No spell matches.')}</li>}
           </ul>
-          {list.length > shown.length && <div className="small faint">{t('{n} autres résultats — affine la recherche.', { n: list.length - shown.length })}</div>}
+          {list.length > shown.length && <div className="small faint">{t('{n} more results — refine your search.', { n: list.length - shown.length })}</div>}
         </>
       ) : (
         ''
       )}
       <div className="training-learn">
-        <Field label={t('Sort, rituel ou préparation (saisie manuelle)')}>
-          <TextInput live value={manual} placeholder={t('Nom')} onChange={setManual} />
+        <Field label={t('Spell, ritual or preparation (manual entry)')}>
+          <TextInput live value={manual} placeholder={t('Name')} onChange={setManual} />
         </Field>
         <div className="training-learn-cta">
           <Button disabled={!manualReq || !!manualQt?.error} title={manualQt ? errorOf(manualQt) || '' : ''} onClick={() => manualReq && open(manualReq)}>
-            {t('Proposer au MJ…')}
+            {t('Propose to the GM…')}
           </Button>
         </div>
       </div>
@@ -649,15 +649,15 @@ function PowersSection({ actor, q, open, prof }: SectionProps & { prof: Profile 
   return (
     <>
       <div className="section-title">
-        {t('Pouvoirs d’adepte')} <Rule kind="power" />
+        {t('Adept Powers')} <Rule kind="power" />
       </div>
       <div className="row wrap training-pp">
         <span>
-          {t('Points de pouvoir :')} <strong className="mono cyan">{pp.free}</strong> {t('libres sur')} <span className="mono">{pp.total}</span>
+          {t('Power Points:')} <strong className="mono cyan">{pp.free}</strong> {t('free out of')} <span className="mono">{pp.total}</span>
         </span>
         {prof.type === 'adept' && (
           <span className="small muted">
-            {pp.extra ? t('(PP = Magie + {n} gagné(s) par l’initiation. Augmenter la Magie donne 1 PP.)', { n: pp.extra }) : t('(PP = Magie. Augmenter la Magie donne 1 PP.)')}
+            {pp.extra ? t('(PP = Magic + {n} gained through initiation. Raising Magic grants 1 PP.)', { n: pp.extra }) : t('(PP = Magic. Raising Magic grants 1 PP.)')}
           </span>
         )}
         {ppQt && (
@@ -680,27 +680,27 @@ function PowersSection({ actor, q, open, prof }: SectionProps & { prof: Profile 
               <li key={p.id || p.name}>
                 <div className="grow">
                   <strong>{p.name}</strong>
-                  {p.level ? <span className="mono"> {t('niv. {n}', { n: p.level })}</span> : ''} <span className="faint small mono">{t('{pp} PP', { pp: p.pp })}</span>{' '}
+                  {p.level ? <span className="mono"> {t('lvl {n}', { n: p.level })}</span> : ''} <span className="faint small mono">{t('{pp} PP', { pp: p.pp })}</span>{' '}
                   <ItemRef item={p.source ? p : item} />
                 </div>
-                {leveled ? <PlusButton qt={info ? qt : null} label={t('+1 niveau')} onClick={() => open(req)} /> : ''}
+                {leveled ? <PlusButton qt={info ? qt : null} label={t('+1 level')} onClick={() => open(req)} /> : ''}
               </li>
             );
           })}
         </ul>
       ) : (
-        <div className="muted small">{t('Aucun pouvoir.')}</div>
+        <div className="muted small">{t('No powers.')}</div>
       )}
       {items.length ? (
         <>
-          <SearchBox value={search} onChange={setSearch} placeholder={t('Chercher un pouvoir (Réflexes améliorés, Coup critique…)')} />
+          <SearchBox value={search} onChange={setSearch} placeholder={t('Search a power (Improved Reflexes, Critical Strike…)')} />
           <ul className="training-catalog">
             {shown.map((i) => {
               const info = powerInfo(i);
               const has = owned.some((p) => p.catalogId === i.id || norm(p.name) === norm(catalogName(i)) || norm(p.name) === norm(i.name));
               const req: TrainingDraft = { kind: 'power', catalogId: i.id, name: catalogName(i), pp: info.pp, levels: info.levels, maxLevel: info.maxLevel, to: 1 };
               const qt = has ? null : q(req);
-              const cost = info.levels ? t('{pp} PP par niveau', { pp: info.pp }) : t('{pp} PP', { pp: info.pp });
+              const cost = info.levels ? t('{pp} PP per level', { pp: info.pp }) : t('{pp} PP', { pp: info.pp });
               return (
                 <li key={i.id} className={has ? 'owned' : ''}>
                   <div className="grow">
@@ -710,15 +710,15 @@ function PowersSection({ actor, q, open, prof }: SectionProps & { prof: Profile 
                       {info.maxLevel ? ` · ${t('max {n}', { n: info.maxLevel })}` : ''}
                     </div>
                   </div>
-                  {has ? <Badge color="green">{t('acquis')}</Badge> : <PlusButton qt={qt} label={t('Choisir')} onClick={() => open(req)} />}
+                  {has ? <Badge color="green">{t('learned')}</Badge> : <PlusButton qt={qt} label={t('Choose')} onClick={() => open(req)} />}
                 </li>
               );
             })}
-            {!shown.length && <li className="muted small">{t('Aucun pouvoir ne correspond.')}</li>}
+            {!shown.length && <li className="muted small">{t('No power matches.')}</li>}
           </ul>
         </>
       ) : (
-        <div className="muted small">{t('Catalogue des pouvoirs indisponible.')}</div>
+        <div className="muted small">{t('Adept powers catalog unavailable.')}</div>
       )}
     </>
   );
@@ -732,17 +732,17 @@ function ComplexFormsSection({ actor, q, open }: SectionProps) {
   return (
     <>
       <div className="section-title">
-        {t('Formes complexes ({n})', { n: known.length })} <Rule kind="complexForm" />
+        {t('Complex Forms ({n})', { n: known.length })} <Rule kind="complexForm" />
       </div>
       {known.length ? <KnownList items={known} /> : ''}
       <div className="training-learn">
-        <Field label={t('Forme complexe')}>
-          <TextInput live value={name} placeholder={t('ex. Nettoyeur, Pointeur…')} onChange={setName} />
+        <Field label={t('Complex Form')}>
+          <TextInput live value={name} placeholder={t('e.g. Cleaner, Tattletale…')} onChange={setName} />
         </Field>
         <div className="training-learn-cta">
           {qt && <CostCell qt={qt} />}
           <Button variant="primary" disabled={!req || !!qt?.error} onClick={() => req && open(req)}>
-            {t('Apprendre…')}
+            {t('Learn…')}
           </Button>
         </div>
       </div>
@@ -761,24 +761,24 @@ function OtherTab({ q, open, isGM }: TabProps) {
     <>
       <div className="training-hint small muted">
         {isGM
-          ? t('Tout ce qui sort des cases : rituel spécial, cyber-entraînement, apprentissage d’un style d’arts martiaux, ajustement exceptionnel… Appliqué tel quel (pense à modifier la fiche).')
-          : t('Tout ce qui sort des cases : rituel spécial, cyber-entraînement, apprentissage d’un style d’arts martiaux, ajustement exceptionnel… Le MJ valide toujours ces demandes et met la fiche à jour.')}{' '}
+          ? t('Anything outside the boxes: special ritual, cyber-training, learning a martial arts style, exceptional adjustment… Applied as is (remember to update the sheet).')
+          : t('Anything outside the boxes: special ritual, cyber-training, learning a martial arts style, exceptional adjustment… The GM always approves these requests and updates the sheet.')}{' '}
         <Rule kind="other" />
       </div>
       <div className="training-learn">
         <Field label={t('Description')}>
-          <TextInput live value={name} placeholder={t('ex. Style d’arts martiaux : Krav Maga')} onChange={setName} />
+          <TextInput live value={name} placeholder={t('e.g. Martial arts style: Krav Maga')} onChange={setName} />
         </Field>
         <Field label={t('Karma')}>
           <NumberInput value={karma} min={0} max={500} onChange={setKarma} />
         </Field>
-        <Field label={t('Durée (jours)')}>
+        <Field label={t('Duration (days)')}>
           <NumberInput value={days} min={0} max={3650} onChange={setDays} />
         </Field>
         <div className="training-learn-cta">
           {qt && <CostCell qt={qt} />}
           <Button variant="primary" disabled={!req || !!qt?.error} onClick={() => req && open(req)}>
-            {isGM ? t('Préparer…') : t('Proposer au MJ…')}
+            {isGM ? t('Prepare…') : t('Propose to the GM…')}
           </Button>
         </div>
       </div>

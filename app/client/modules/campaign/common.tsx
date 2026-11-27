@@ -10,18 +10,18 @@ import './campaign.css';
 
 // Labels are French keys (tk): render them with t(s.label) / t(s.one).
 export const QUEST_STATUS: Array<{ id: QuestStatus; label: string; color: string }> = [
-  { id: 'active', label: tk('quête::En cours'), color: 'cyan' },
-  { id: 'upcoming', label: tk('quête::À venir'), color: 'amber' },
-  { id: 'done', label: tk('quête::Terminée'), color: 'green' },
-  { id: 'skipped', label: tk('quête::Ignorée'), color: 'dim' },
+  { id: 'active', label: tk('quest::Active'), color: 'cyan' },
+  { id: 'upcoming', label: tk('quest::Upcoming'), color: 'amber' },
+  { id: 'done', label: tk('quest::Done'), color: 'green' },
+  { id: 'skipped', label: tk('quest::Skipped'), color: 'dim' },
 ];
 export const QUEST_STATUS_BY_ID: Record<string, (typeof QUEST_STATUS)[number]> = Object.fromEntries(QUEST_STATUS.map((s) => [s.id, s]));
 
 export const THREAD_STATES: Array<{ id: ThreadState; label: string; one: string; color: string }> = [
-  { id: 'open', label: tk('fils::Ouverts'), one: tk('fil::Ouvert'), color: 'cyan' },
-  { id: 'dormant', label: tk('fils::En sommeil'), one: tk('fil::En sommeil'), color: 'amber' },
-  { id: 'resolved', label: tk('fils::Résolus'), one: tk('fil::Résolu'), color: 'green' },
-  { id: 'dead', label: tk('fils::Abandonnés'), one: tk('fil::Abandonné'), color: 'dim' },
+  { id: 'open', label: tk('threads::Open'), one: tk('thread::Open'), color: 'cyan' },
+  { id: 'dormant', label: tk('threads::Dormant'), one: tk('thread::Dormant'), color: 'amber' },
+  { id: 'resolved', label: tk('threads::Resolved'), one: tk('thread::Resolved'), color: 'green' },
+  { id: 'dead', label: tk('threads::Abandoned'), one: tk('thread::Abandoned'), color: 'dim' },
 ];
 export const THREAD_STATE_BY_ID: Record<string, (typeof THREAD_STATES)[number]> = Object.fromEntries(THREAD_STATES.map((s) => [s.id, s]));
 
@@ -134,7 +134,7 @@ export function npcInfo(game: GameView, id: string): NpcLink {
   const tpl = tid ? game.bestiary?.[tid] : undefined;
   if (tid && tpl) return { id: tid, name: tpl.name || tid, kind: 'template', folder: tpl.folder || '' };
   const a = game.actors?.[id];
-  if (a) return { id, name: a.name || id, kind: 'actor', folder: a.type === 'pc' ? t('PJ') : t('PNJ en jeu') };
+  if (a) return { id, name: a.name || id, kind: 'actor', folder: a.type === 'pc' ? t('PC') : t('NPCs in play') };
   return { id, name: prettyId(id), kind: 'missing', folder: '' };
 }
 
@@ -150,7 +150,7 @@ export interface LinkOption {
 }
 export function templateOptions(game: GameView): LinkOption[] {
   return Object.entries(game.bestiary || {})
-    .map(([id, tpl]) => ({ id, name: tpl?.name || id, folder: tpl?.folder || t('Divers') }))
+    .map(([id, tpl]) => ({ id, name: tpl?.name || id, folder: tpl?.folder || t('Miscellaneous') }))
     .sort((a, b) => compare(a.folder, b.folder) || compare(a.name, b.name));
 }
 
@@ -164,7 +164,7 @@ export function mapOptions(game: GameView): LinkOption[] {
 export function groupedOptions(list: LinkOption[]) {
   const groups = new Map<string, LinkOption[]>();
   for (const o of list) {
-    const g = o.folder || t('Divers');
+    const g = o.folder || t('Miscellaneous');
     if (!groups.has(g)) groups.set(g, []);
     groups.get(g)!.push(o);
   }
@@ -193,17 +193,17 @@ export async function spawnNpc(game: GameView, linkedId: string, { hidden = fals
     if (placed) {
       const map = mapId ? mapInfo(game, mapId).name : '';
       let msg;
-      if (map) msg = hidden ? tn(placed, '{name} placé sur la carte « {map} » (caché)', '{name} placés sur la carte « {map} » (caché)', { name, map }) : tn(placed, '{name} placé sur la carte « {map} »', '{name} placés sur la carte « {map} »', { name, map });
-      else msg = hidden ? tn(placed, '{name} placé sur la carte (caché)', '{name} placés sur la carte (caché)', { name }) : tn(placed, '{name} placé sur la carte', '{name} placés sur la carte', { name });
+      if (map) msg = hidden ? tn(placed, '{name} placed on the map “{map}” (hidden)', 'pl::{name} placed on the map “{map}” (hidden)', { name, map }) : tn(placed, '{name} placed on the map “{map}”', 'pl::{name} placed on the map “{map}”', { name, map });
+      else msg = hidden ? tn(placed, '{name} placed on the map (hidden)', 'pl::{name} placed on the map (hidden)', { name }) : tn(placed, '{name} placed on the map', 'pl::{name} placed on the map', { name });
       toast(msg, 'success');
-    } else toast(t("{name} créé, mais aucune carte n'est affichée (ou plus de place libre)", { name }), 'warn');
+    } else toast(t("{name} created, but no map is displayed (or no free space left)", { name }), 'warn');
   } catch {}
 }
 
 export async function showMapToPlayers(game: GameView, mapId: string) {
   try {
     await send('maps/setActive', { mapId });
-    toast(t('Carte affichée aux joueurs : {map}', { map: mapInfo(game, mapId).name }), 'success');
+    toast(t('Map shown to players: {map}', { map: mapInfo(game, mapId).name }), 'success');
   } catch {}
 }
 
@@ -212,7 +212,7 @@ export async function revealHandout(handoutId: string, to: 'all' | string[]) {
   try {
     const res = await send<{ notified?: string[] }>('campaign/revealHandout', { handoutId, to });
     const n = Array.isArray(res?.notified) ? res.notified.length : 0;
-    toast(to === 'all' ? t('Document révélé à tous les joueurs') : n ? t('Document envoyé') : t('Ce joueur l’avait déjà'), n || to === 'all' ? 'success' : 'info');
+    toast(to === 'all' ? t('Handout revealed to all players') : n ? t('Handout sent') : t('That player already had it'), n || to === 'all' ? 'success' : 'info');
   } catch {}
 }
 
@@ -234,7 +234,7 @@ export function reloadDocs(): Promise<DocMeta[]> {
       throw err;
     });
   const p = docsCache;
-  p.then((list) => docsListeners.forEach((l) => l({ list, error: null }))).catch((err) => docsListeners.forEach((l) => l({ list: [], error: err.message || t('Erreur') })));
+  p.then((list) => docsListeners.forEach((l) => l({ list, error: null }))).catch((err) => docsListeners.forEach((l) => l({ list: [], error: err.message || t('Error') })));
   return p;
 }
 export function useDocs(): DocsState {
@@ -245,7 +245,7 @@ export function useDocs(): DocsState {
       if (alive) setS({ ...v, loading: false });
     };
     docsListeners.add(l);
-    (docsCache || reloadDocs()).then((list) => l({ list, error: null })).catch((err) => l({ list: [], error: err.message || t('Erreur') }));
+    (docsCache || reloadDocs()).then((list) => l({ list, error: null })).catch((err) => l({ list: [], error: err.message || t('Error') }));
     return () => {
       alive = false;
       docsListeners.delete(l);
@@ -273,8 +273,8 @@ export function DocSelect({ value, onChange, docs }: { value: string | null | un
   const known = docs.some((d) => d.name === name);
   return (
     <select className="input camp-doc-select" value={name} onChange={(e) => onChange(e.target.value)}>
-      <option value="">{t('— Aucun document —')}</option>
-      {name && !known && <option value={name}>{t('{name} (introuvable)', { name })}</option>}
+      <option value="">{t('— No document —')}</option>
+      {name && !known && <option value={name}>{t('{name} (not found)', { name })}</option>}
       {docs.map((d) => (
         <option key={d.name} value={d.name}>
           {docTitle(d.name)}
@@ -291,7 +291,7 @@ export function DocButton({ docRef, nav, small = true, label }: { docRef: string
   return (
     <button
       className={cx('btn btn-ghost camp-doc-btn', small && 'btn-sm')}
-      title={t('Ouvrir {doc}', { doc: docRef })}
+      title={t('Open {doc}', { doc: docRef })}
       onClick={(e) => {
         e.stopPropagation();
         nav.openDoc(docRef);
@@ -382,14 +382,14 @@ export function MdEditor({ value, onSave, rows = 8, placeholder = '', initialMod
     <Markdown key="pv" className="camp-md-preview" text={draft} />
   ) : (
     <div key="pv" className="camp-md-preview camp-md-empty" onDoubleClick={() => setMode('edit')}>
-      {emptyText ?? t('Vide — clique sur « Écrire » pour rédiger.')}
+      {emptyText ?? t('Empty — click “Write” to start writing.')}
     </div>
   );
 
   const modes: Array<{ id: MdMode; label: string }> = [
-    { id: 'preview', label: t('Aperçu') },
-    { id: 'edit', label: t('Écrire') },
-    { id: 'split', label: t('Côte à côte') },
+    { id: 'preview', label: t('Preview') },
+    { id: 'edit', label: t('Write') },
+    { id: 'split', label: t('Side by side') },
   ];
   return (
     <div className={cx('camp-md', `camp-md-${mode}`, tall && 'camp-md-tall', className)}>
@@ -397,8 +397,8 @@ export function MdEditor({ value, onSave, rows = 8, placeholder = '', initialMod
         {label && <span className="camp-md-label">{label}</span>}
         <span className="grow"></span>
         {dirty ? (
-          <button className="camp-md-save" title={t('Enregistrer (Ctrl+S)')} onMouseDown={(e) => e.preventDefault()} onClick={commit}>
-            ● {t('Enregistrer')}
+          <button className="camp-md-save" title={t('Save (Ctrl+S)')} onMouseDown={(e) => e.preventDefault()} onClick={commit}>
+            ● {t('Save')}
           </button>
         ) : null}
         <div className="camp-seg">
@@ -459,9 +459,9 @@ export function HandoutCard({ handout, unread, open = true, onToggle, stamp }: H
         <span className="dos-tab"></span>
         <div className="grow">
           <div className="dos-card-meta">
-            <span className="dos-stamp">{stamp ?? t('Confidentiel')}</span>
-            {h.revealedAt && <span className="faint small">{t('reçu {date}', { date: fmtDate(h.revealedAt) })}</span>}
-            {unread && <Badge color="magenta">{t('Nouveau')}</Badge>}
+            <span className="dos-stamp">{stamp ?? t('Confidential')}</span>
+            {h.revealedAt && <span className="faint small">{t('received {date}', { date: fmtDate(h.revealedAt) })}</span>}
+            {unread && <Badge color="magenta">{t('New')}</Badge>}
           </div>
           <h3 className="dos-card-title">{h.title}</h3>
         </div>
@@ -470,11 +470,11 @@ export function HandoutCard({ handout, unread, open = true, onToggle, stamp }: H
       {open && (
         <div className="dos-card-body">
           {h.image && (
-            <button className="dos-img" title={t('Agrandir')} onClick={() => setZoom(true)}>
+            <button className="dos-img" title={t('Enlarge')} onClick={() => setZoom(true)}>
               <img src={h.image} alt={h.title} loading="lazy" />
             </button>
           )}
-          {h.body ? <Markdown className="dos-md" text={h.body} /> : !h.image && <div className="faint small">{t('Document vide.')}</div>}
+          {h.body ? <Markdown className="dos-md" text={h.body} /> : !h.image && <div className="faint small">{t('Empty document.')}</div>}
         </div>
       )}
       {zoom && (
@@ -492,7 +492,7 @@ export function ChipX({ onClick, title }: { onClick: () => void; title?: string 
     <IconButton
       icon="✕"
       className="camp-chip-x"
-      title={title || t('Retirer')}
+      title={title || t('Remove')}
       onClick={(e) => {
         e.stopPropagation();
         onClick();

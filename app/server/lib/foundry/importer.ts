@@ -11,7 +11,7 @@ import { normalizeActor } from '../../../client/modules/sheet/sheet-data.ts';
 import { fillActorRefs } from '../bookrefs.ts';
 import { uid, deepClone, nuyen as fmtNuyen } from '../../../shared/util.ts';
 import { ATTR_SHORT, SKILL_BY_ID } from '../../../shared/sr5.ts';
-import { formatFr } from '../../../client/i18n/format.ts';
+import { formatSource } from '../../../client/i18n/format.ts';
 import { plural } from './messages.ts';
 import type { FoundryDoc, FoundryWorld, WorldMeta } from './world.ts';
 import type { Assets } from './assets.ts';
@@ -261,7 +261,7 @@ export function buildBundle(world: FoundryWorld, { now = Date.now(), assets }: {
   for (const s of allScenes) {
     const map = convertScene(s, { folderPath, asset: A.asset, actorNames: links.actors, templateFor, worldId, journalNames: links.journals, allScenes, now });
     if (!map) {
-      skippedScenes.push({ fid: s._id, name: s.name, reason: tk('pas d’image de fond') }); // shown translated by the panel
+      skippedScenes.push({ fid: s._id, name: s.name, reason: tk('no background image') }); // shown translated by the panel
       continue;
     }
     const label = SCENE_LABEL[norm(s.name)];
@@ -523,12 +523,12 @@ export function buildPc(
     const dn = (a.nuyen || 0) - (existing.nuyen || 0);
     if (dk || dn) {
       a.history = Array.isArray(a.history) ? a.history : [];
-      const i18n: I18nEntry = { key: tk('Synchronisation Foundry ({world}) : {karma} karma, {nuyen}'), params: { world: worldId, karma: a.karma, nuyen: fmtNuyen(a.nuyen) } };
-      a.history.push({ ts: now, text: formatFr(i18n.key, i18n.params), i18n, ...(dk ? { karma: dk } : {}), ...(dn ? { nuyen: dn } : {}) });
+      const i18n: I18nEntry = { key: tk('Foundry sync ({world}): {karma} karma, {nuyen}'), params: { world: worldId, karma: a.karma, nuyen: fmtNuyen(a.nuyen) } };
+      a.history.push({ ts: now, text: formatSource(i18n.key, i18n.params), i18n, ...(dk ? { karma: dk } : {}), ...(dn ? { nuyen: dn } : {}) });
     }
   } else if (a.karma || a.nuyen) {
-    const i18n: I18nEntry = { key: tk('Valeurs importées de Foundry ({world}) : {karma} karma, {nuyen}'), params: { world: worldId, karma: a.karma, nuyen: fmtNuyen(a.nuyen) } };
-    a.history = [{ ts: now, text: formatFr(i18n.key, i18n.params), i18n, karma: a.karma, nuyen: a.nuyen }];
+    const i18n: I18nEntry = { key: tk('Values imported from Foundry ({world}): {karma} karma, {nuyen}'), params: { world: worldId, karma: a.karma, nuyen: fmtNuyen(a.nuyen) } };
+    a.history = [{ ts: now, text: formatSource(i18n.key, i18n.params), i18n, karma: a.karma, nuyen: a.nuyen }];
   }
   a.foundry = { id: pc.fid, world: worldId, importedAt: now, hash, snapshot: snap, snapshotVersion: SNAPSHOT_VERSION, ...(pc.owner ? { user: pc.owner.name } : {}) };
   normalizeActor(a, uid);
@@ -538,18 +538,18 @@ export function buildPc(
 
 /**
  * Differences app actor → Foundry, as translatable entries [{ t: key, params }] (the panel renders them with t();
- * formatFr() gives the French text). Names (skills, items) are data and stay as typed, except official skill names.
+ * formatSource() gives the French text). Names (skills, items) are data and stay as typed, except official skill names.
  */
 export function pcDiffEntries(appActor: Actor | null | undefined, pc: BundlePc): I18nMessage[] {
   // Compared field by field with the fresh Foundry values: handled as a record below.
   const app = appActor as FieldRec | null | undefined;
-  if (!app) return [{ t: 'Nouveau personnage' }];
+  if (!app) return [{ t: 'New character' }];
   const fresh = freshPcFields(pc);
   const out: I18nMessage[] = [];
   if ((app.karma || 0) !== fresh.karma) out.push({ t: 'Karma {from} → {to}', params: { from: app.karma || 0, to: fresh.karma } });
-  if ((app.karmaTotal || 0) !== fresh.karmaTotal) out.push({ t: 'Karma de carrière {from} → {to}', params: { from: app.karmaTotal || 0, to: fresh.karmaTotal } });
-  if ((app.nuyen || 0) !== fresh.nuyen) out.push({ t: 'Nuyens {from} → {to}', params: { from: fmtNuyen(app.nuyen), to: fmtNuyen(fresh.nuyen) } });
-  const repKey: Record<string, I18nMessage> = { streetCred: { t: 'Street Cred {from} → {to}' }, notoriety: { t: 'Notoriété {from} → {to}' }, publicAwareness: { t: 'Rumeur publique {from} → {to}' } };
+  if ((app.karmaTotal || 0) !== fresh.karmaTotal) out.push({ t: 'Career karma {from} → {to}', params: { from: app.karmaTotal || 0, to: fresh.karmaTotal } });
+  if ((app.nuyen || 0) !== fresh.nuyen) out.push({ t: 'Nuyen {from} → {to}', params: { from: fmtNuyen(app.nuyen), to: fmtNuyen(fresh.nuyen) } });
+  const repKey: Record<string, I18nMessage> = { streetCred: { t: 'Street Cred {from} → {to}' }, notoriety: { t: 'Notoriety {from} → {to}' }, publicAwareness: { t: 'Public Awareness {from} → {to}' } };
   for (const k of ['streetCred', 'notoriety', 'publicAwareness']) if ((app[k] || 0) !== fresh[k]) out.push({ t: repKey[k].t, params: { from: app[k] || 0, to: fresh[k] } });
   const at: I18nMessage[] = [];
   for (const [k, v] of Object.entries(fresh.attributes || {})) {
@@ -557,7 +557,7 @@ export function pcDiffEntries(appActor: Actor | null | undefined, pc: BundlePc):
     const short = (ATTR_SHORT as Record<string, string>)[k] || k;
     at.push({ t: '{attr} {from} → {to}', params: { attr: short === k ? short : { t: short }, from: app.attributes?.[k] ?? '—', to: v as number } });
   }
-  if (at.length) out.push({ t: 'Attributs : {list}', params: { list: at } });
+  if (at.length) out.push({ t: 'Attributes: {list}', params: { list: at } });
   const sk: I18nMessage[] = [];
   const appSk = new Map<string, FieldRec>((app.skills || []).map((s: FieldRec) => [s.id, s]));
   const skillName = (s: FieldRec): I18nMessage | string => (SKILL_BY_ID[s.id]?.fr === s.name ? { t: s.name } : s.name);
@@ -568,7 +568,7 @@ export function pcDiffEntries(appActor: Actor | null | undefined, pc: BundlePc):
   }
   const freshSk = new Set((fresh.skills || []).map((s: FieldRec) => s.id));
   for (const s of app.skills || []) if (!freshSk.has(s.id) && s.rating > 0) sk.push({ t: '−{skill}', params: { skill: skillName(s) } });
-  if (sk.length) out.push(sk.length > SHORT ? { t: 'Compétences : {list}…', params: { list: sk.slice(0, SHORT) } } : { t: 'Compétences : {list}', params: { list: sk } });
+  if (sk.length) out.push(sk.length > SHORT ? { t: 'Skills: {list}…', params: { list: sk.slice(0, SHORT) } } : { t: 'Skills: {list}', params: { list: sk } });
   const added: string[] = [];
   const removed: string[] = [];
   for (const l of ITEM_LISTS) {
@@ -579,14 +579,14 @@ export function pcDiffEntries(appActor: Actor | null | undefined, pc: BundlePc):
     for (const it of fresh[l] || []) if (!appIds.has(it.id) && !appNames.has(norm(it.name))) added.push(it.name);
     for (const it of app[l] || []) if (!freshIds.has(it.id) && !freshNames.has(norm(it.name))) removed.push(it.name);
   }
-  if (added.length) out.push(added.length > SHORT ? { t: 'Ajouts ({n}) : {list}…', params: { n: added.length, list: added.slice(0, SHORT) } } : { t: 'Ajouts ({n}) : {list}', params: { n: added.length, list: added } });
-  if (removed.length) out.push(removed.length > SHORT ? { t: 'Retraits ({n}) : {list}…', params: { n: removed.length, list: removed.slice(0, SHORT) } } : { t: 'Retraits ({n}) : {list}', params: { n: removed.length, list: removed } });
+  if (added.length) out.push(added.length > SHORT ? { t: 'Added ({n}): {list}…', params: { n: added.length, list: added.slice(0, SHORT) } } : { t: 'Added ({n}): {list}', params: { n: added.length, list: added } });
+  if (removed.length) out.push(removed.length > SHORT ? { t: 'Removed ({n}): {list}…', params: { n: removed.length, list: removed.slice(0, SHORT) } } : { t: 'Removed ({n}): {list}', params: { n: removed.length, list: removed } });
   return out;
 }
 
 /** Human-readable differences app actor → Foundry (French strings, e.g. for tools/foundry-import.ts). */
 export function pcDiff(app: Actor | null | undefined, pc: BundlePc): string[] {
-  return pcDiffEntries(app, pc).map((e) => formatFr(e.t, e.params));
+  return pcDiffEntries(app, pc).map((e) => formatSource(e.t, e.params));
 }
 
 const SHORT = 8; // diff lists longer than this are cut with '…'
@@ -741,7 +741,7 @@ function docStatus(dir: string, d: { file: string; content: string }): 'unchange
 }
 
 /** PC diff for the scan reply: French strings (`diff`, older clients/tools) + translatable entries (`diffI18n`). */
-const diffFields = (entries: I18nMessage[]) => ({ diff: entries.map((e) => formatFr(e.t, e.params)), diffI18n: entries });
+const diffFields = (entries: I18nMessage[]) => ({ diff: entries.map((e) => formatSource(e.t, e.params)), diffI18n: entries });
 
 /** Summary of what can be imported, with match status and PC diffs. */
 export function scanBundle(state: Partial<TableState>, bundle: Bundle, { docsDir }: { docsDir?: string } = {}) {
@@ -886,14 +886,14 @@ export function applyImport(state: Partial<TableState>, bundle: Bundle, opts: Ap
   // Log line, translatable: { key, params } (parts = list of nested { t, params }), and its French text.
   const parts: I18nMessage[] = [];
   const nPcs = summary.pcs.length;
-  if (nPcs) parts.push(mode === 'merge' ? { t: '{n} PJ (fusion)', params: { n: nPcs } } : { t: '{n} PJ (remplacement)', params: { n: nPcs } });
-  if (summary.npcs.length) parts.push(plural(summary.npcs.length, { t: '{n} PNJ' }, { t: '{n} PNJ' }, { t: 'pluriel::{n} PNJ' }));
-  if (summary.maps.length) parts.push(plural(summary.maps.length, { t: '{n} carte' }, { t: '{n} carte' }, { t: '{n} cartes' }));
-  if (summary.journals.length) parts.push(plural(summary.journals.length, { t: '{n} journaux' }, { t: 'un::{n} journaux' }, { t: '{n} journaux' }));
-  if (summary.tracks) parts.push(plural(summary.tracks, { t: '{n} pistes audio' }, { t: 'un::{n} pistes audio' }, { t: '{n} pistes audio' }));
+  if (nPcs) parts.push(mode === 'merge' ? { t: '{n} PC(s) (merge)', params: { n: nPcs } } : { t: '{n} PC(s) (replace)', params: { n: nPcs } });
+  if (summary.npcs.length) parts.push(plural(summary.npcs.length, { t: '{n} NPC' }, { t: '{n} NPC' }, { t: 'plural::{n} NPCs' }));
+  if (summary.maps.length) parts.push(plural(summary.maps.length, { t: '{n} map' }, { t: '{n} map' }, { t: '{n} maps' }));
+  if (summary.journals.length) parts.push(plural(summary.journals.length, { t: '{n} journals' }, { t: 'a::{n} journal' }, { t: '{n} journals' }));
+  if (summary.tracks) parts.push(plural(summary.tracks, { t: '{n} audio tracks' }, { t: 'a::{n} audio track' }, { t: '{n} audio tracks' }));
   const logI18n: I18nEntry = parts.length
-    ? { key: tk('Import Foundry : {parts} — monde « {world} »'), params: { parts, world: bundle.worldTitle } }
-    : { key: tk('Import Foundry : rien de sélectionné — monde « {world} »'), params: { world: bundle.worldTitle } };
-  const logText = formatFr(logI18n.key, logI18n.params);
+    ? { key: tk('Foundry import: {parts} — world “{world}”'), params: { parts, world: bundle.worldTitle } }
+    : { key: tk('Foundry import: nothing selected — world “{world}”'), params: { world: bundle.worldTitle } };
+  const logText = formatSource(logI18n.key, logI18n.params);
   return { summary, logText, logI18n, urls: { sync: syncUrls, audio: audioUrls } };
 }

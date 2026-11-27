@@ -72,9 +72,9 @@ export function trackLabel(game: GameView | null | undefined, id: string | null 
 
 /** Human label of a scene channel value ('keep' | null | trackId). */
 export function sceneValueLabel(game: GameView, v: string | null | undefined): string {
-  if (v === 'keep' || v === undefined) return t('inchangée');
+  if (v === 'keep' || v === undefined) return t('unchanged');
   if (!v) return t('silence');
-  return trackLabel(game, v) || t('piste supprimée');
+  return trackLabel(game, v) || t('track deleted');
 }
 
 /** True if the scene's channels match what is playing now. */
@@ -210,8 +210,8 @@ export function LocalVolume({ label }: { label?: ReactNode }) {
   const silent = st.muted || st.local === 0;
   return (
     <div className="audio-local">
-      <IconButton icon={silent ? '🔇' : '🔊'} title={st.muted ? t('Réactiver le son sur cet appareil') : t('Couper le son sur cet appareil')} onClick={() => setMuted(!st.muted)} />
-      <VolumeSlider value={st.muted ? 0 : st.local} onChange={setLocalVolume} label={label ?? t('Cet appareil')} title={t('Volume de cet appareil uniquement')} />
+      <IconButton icon={silent ? '🔇' : '🔊'} title={st.muted ? t('Unmute this device') : t('Mute this device')} onClick={() => setMuted(!st.muted)} />
+      <VolumeSlider value={st.muted ? 0 : st.local} onChange={setLocalVolume} label={label ?? t('This device')} title={t('Volume of this device only')} />
     </div>
   );
 }
@@ -219,11 +219,11 @@ export function LocalVolume({ label }: { label?: ReactNode }) {
 /** Warning strip shown in GM screens while the browser still blocks audio. */
 export function UnlockNotice() {
   const st = useAudioState();
-  if (!st.supported) return <div className="audio-notice">{t('Ce navigateur ne gère pas le son (Web Audio indisponible).')}</div>;
+  if (!st.supported) return <div className="audio-notice">{t('This browser does not support sound (Web Audio unavailable).')}</div>;
   if (st.unlocked) return null;
   return (
     <button className="audio-notice clickable" onClick={unlock}>
-      🔇 {t('Le navigateur bloque le son sur ce poste — cliquer pour l’activer')}
+      🔇 {t('The browser is blocking sound on this device — click to enable it')}
     </button>
   );
 }
@@ -252,9 +252,9 @@ export function ChannelControl({ game, channel, label, compact }: ChannelControl
       </div>
       <div className="audio-channel-row">
         <Select className="audio-channel-select" value={current} options={channelOptions(game, channel)} onChange={(v) => setChannelTrack(channel, v)} />
-        <IconButton icon="■" title={t('Arrêter')} disabled={!current} onClick={() => setChannelTrack(channel, null)} />
+        <IconButton icon="■" title={t('Stop')} disabled={!current} onClick={() => setChannelTrack(channel, null)} />
       </div>
-      <VolumeSlider value={ch.volume ?? 0.5} onChange={(v) => sendVolume(channel, v)} title={channel === 'music' ? t('Volume musique (pour tout le monde)') : t('Volume ambiance (pour tout le monde)')} />
+      <VolumeSlider value={ch.volume ?? 0.5} onChange={(v) => sendVolume(channel, v)} title={channel === 'music' ? t('Music volume (for everyone)') : t('Ambience volume (for everyone)')} />
     </div>
   );
 }

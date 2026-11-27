@@ -114,18 +114,18 @@ const tk = (s: string): string => s;
 // Tables
 // ---------------------------------------------------------------------------
 export const TIERS = [
-  { pr: 0, label: tk('Civil'), text: tk('Aucun entraînement au combat : fuit, se cache ou se rend au premier coup de feu.') },
-  { pr: 1, label: tk('Racaille'), text: tk('Petites frappes et gangers de bas étage : courageux en groupe, dispersés dès que ça tourne mal.') },
-  { pr: 2, label: tk('Voyou organisé'), text: tk('Gang structuré, gros bras de la pègre : tiennent tant qu’un chef les motive et que le rapport de force leur plaît.') },
-  { pr: 3, label: tk('Pro de la rue / sécu corpo'), text: tk('Vigiles corpo, flics de patrouille, gangers aguerris : tactiques de base, se mettent à couvert et appellent des renforts.') },
-  { pr: 4, label: tk('Professionnel aguerri'), text: tk('Knight Errant, mercenaires, sécurité d’élite : coordonnés, bien équipés, se replient avec méthode.') },
-  { pr: 5, label: tk('Élite'), text: tk('Équipes d’intervention, tueurs de la Mafia : augmentés, couvrent leurs angles, ne paniquent pas.') },
-  { pr: 6, label: tk('Forces spéciales / prime runner'), text: tk('Red Samurai, Tir Ghosts, runners légendaires : ne cèdent jamais, chaque erreur des runners se paie.') },
+  { pr: 0, label: tk('Civilian'), text: tk('No combat training: flees, hides or surrenders at the first gunshot.') },
+  { pr: 1, label: tk('Riffraff'), text: tk('Small-time thugs and low-level gangers: brave in a group, scattered as soon as things go wrong.') },
+  { pr: 2, label: tk('Organized thug'), text: tk('Organized gang, mob muscle: they hold as long as a leader drives them and the odds favor them.') },
+  { pr: 3, label: tk('Street pro / corp security'), text: tk('Corp guards, patrol cops, seasoned gangers: basic tactics, take cover and call for backup.') },
+  { pr: 4, label: tk('Seasoned professional'), text: tk('Knight Errant, mercenaries, elite security: coordinated, well equipped, fall back methodically.') },
+  { pr: 5, label: tk('Elite'), text: tk('Response teams, Mafia hitters: augmented, cover their angles, never panic.') },
+  { pr: 6, label: tk('Special forces / prime runner'), text: tk('Red Samurai, Tir Ghosts, legendary runners: they never give in, every runner mistake costs dearly.') },
 ];
 export const GENERATED_FOLDER = 'Générés';
 export const METATYPE_CHOICES: string[] = ['random', 'Humain', 'Elfe', 'Nain', 'Ork', 'Troll'];
 export const GRUNT_RULES = tk(
-  'Sbires (règles SR5 p.381) : un seul moniteur de condition par sbire (les dommages étourdissants s’y ajoutent), pas de Chance. Le lieutenant (indice de professionnalisme +1) a ses deux moniteurs et sa Chance. Moral : le groupe se disperse ou se rend quand il a perdu la moitié de ses membres ou son lieutenant (le MJ peut demander un test de Sang-froid de seuil 7 − PR).'
+  'Grunts (SR5 rules p.381): a single condition monitor per grunt (Stun damage goes on it too), no Edge. The lieutenant (Professional Rating +1) has both monitors and Edge. Morale: the group scatters or surrenders once it has lost half its members or its lieutenant (the GM may call for a Composure test, threshold 7 − PR).'
 );
 
 // SR5 metatype adjustments applied to a human baseline (then clamped to the metatype limits).
@@ -180,8 +180,8 @@ const samuraiWare = (t: number): KitWare[] => {
 
 export const ARCHETYPES: Archetype[] = [
   {
-    id: 'ganger', label: tk('Ganger / voyou'), icon: '✊', kind: 'metahuman', concept: 'Ganger', color: '#e0a63f', grunt: true,
-    blurb: tk('Gangers des Barrens, petites frappes, gros bras de quartier.'),
+    id: 'ganger', label: tk('Ganger / thug'), icon: '✊', kind: 'metahuman', concept: 'Ganger', color: '#e0a63f', grunt: true,
+    blurb: tk('Barrens gangers, small-time thugs, neighborhood muscle.'),
     attrs: { BOD: 1, STR: 1, LOG: -1 },
     skills: [['clubs', 'unarmed_combat'], ['pistols', 'blades', 'intimidation'], ['running', 'sneaking', 'perception']],
     kit: (t, pick) => ({
@@ -194,8 +194,8 @@ export const ARCHETYPES: Archetype[] = [
     tactics: 'Encerclent, insultent, frappent à plusieurs sur le plus faible. Fuient si le chef tombe ou si la riposte est trop forte.',
   },
   {
-    id: 'corpsec', label: tk('Sécurité corporatiste'), icon: '⛨', kind: 'metahuman', concept: 'Garde de sécurité', color: '#5c9be0', grunt: true,
-    blurb: tk('Vigiles et patrouilles d’une corpo, en uniforme et en binôme.'),
+    id: 'corpsec', label: tk('Corporate security'), icon: '⛨', kind: 'metahuman', concept: 'Garde de sécurité', color: '#5c9be0', grunt: true,
+    blurb: tk('Corp guards and patrols, uniformed and in pairs.'),
     attrs: { BOD: 1, REA: 1 },
     skills: [['pistols', 'automatics'], ['clubs', 'perception', 'unarmed_combat'], ['etiquette', 'first_aid', 'running']],
     kit: (t, pick) => ({
@@ -209,7 +209,7 @@ export const ARCHETYPES: Archetype[] = [
   },
   {
     id: 'police', label: tk('Police / Knight Errant'), icon: '★', kind: 'metahuman', concept: 'Officier de police', color: '#3fd6d0', grunt: true,
-    blurb: tk('Patrouilles Knight Errant, unités d’intervention (HTR à haut indice).'),
+    blurb: tk('Knight Errant patrols, response units (HTR at high ratings).'),
     attrs: { BOD: 1, REA: 1, WIL: 1 },
     skills: [['pistols', 'automatics'], ['clubs', 'perception', 'unarmed_combat'], ['intimidation', 'first_aid', 'pilot_ground_craft']],
     kit: (t, pick) => ({
@@ -222,8 +222,8 @@ export const ARCHETYPES: Archetype[] = [
     tactics: 'Sommations d’abord, puis tir pour neutraliser (balles gel/électriques à bas indice). Bouclent la zone ; drone d’appui et renforts HTR à haut indice.',
   },
   {
-    id: 'merc', label: tk('Mercenaire / samouraï des rues'), icon: '⚔', kind: 'metahuman', concept: 'Samouraï des rues', color: '#e05c5c', grunt: false,
-    blurb: tk('Muscle augmenté, armes lourdes, du chrome partout.'),
+    id: 'merc', label: tk('Mercenary / street samurai'), icon: '⚔', kind: 'metahuman', concept: 'Samouraï des rues', color: '#e05c5c', grunt: false,
+    blurb: tk('Augmented muscle, heavy weapons, chrome everywhere.'),
     attrs: { BOD: 1, AGI: 1, REA: 1, STR: 1, LOG: -1 },
     skills: [['automatics', 'pistols'], ['blades', 'unarmed_combat', 'perception'], ['sneaking', 'longarms', 'throwing_weapons']],
     kit: (t, pick) => ({
@@ -236,8 +236,8 @@ export const ARCHETYPES: Archetype[] = [
     tactics: 'Feu de suppression, tir en rafales, flanquement. Visent d’abord le mage et le decker. Négocient s’ils sont payés pour ça, pas pour mourir.',
   },
   {
-    id: 'mage', label: tk('Mage de combat'), icon: '✶', kind: 'metahuman', concept: 'Mage de combat', color: '#9d7ce0', grunt: false, magic: 'magician',
-    blurb: tk('Sorts de combat et de protection, appui magique d’une équipe.'),
+    id: 'mage', label: tk('Combat mage'), icon: '✶', kind: 'metahuman', concept: 'Mage de combat', color: '#9d7ce0', grunt: false, magic: 'magician',
+    blurb: tk('Combat and protection spells, a team’s magical support.'),
     attrs: { WIL: 1, LOG: 1, CHA: 1, STR: -1 },
     skills: [['spellcasting'], ['counterspelling', 'assensing', 'perception'], ['summoning', 'pistols', 'arcana']],
     spells: ['Stunbolt', 'Manabolt', 'Armor', 'Powerbolt', 'Fireball', 'Physical Barrier', 'Stunball', 'Increase Reflexes', 'Heal', 'Manaball', 'Improved Invisibility', 'Lightning Bolt', 'Mana Barrier'],
@@ -246,8 +246,8 @@ export const ARCHETYPES: Archetype[] = [
     tactics: 'Reste à couvert, Éclair étourdissant sur la cible la plus dangereuse, Armure ou Barrière sur l’équipe. Contresort pour protéger ses alliés. Fuit si le Drain le met à genoux.',
   },
   {
-    id: 'shaman', label: tk('Chaman / invocateur'), icon: '☾', kind: 'metahuman', concept: 'Chaman', color: '#4fd17a', grunt: false, magic: 'magician',
-    blurb: tk('Invoque des esprits de la nature et de l’homme, soigne et confond.'),
+    id: 'shaman', label: tk('Shaman / summoner'), icon: '☾', kind: 'metahuman', concept: 'Chaman', color: '#4fd17a', grunt: false, magic: 'magician',
+    blurb: tk('Summons spirits of nature and man, heals and confounds.'),
     attrs: { WIL: 1, CHA: 2, INT: 1 },
     skills: [['summoning'], ['spellcasting', 'binding', 'assensing'], ['banishing', 'counterspelling', 'perception']],
     spells: ['Heal', 'Stunbolt', 'Detect Enemies', 'Physical Barrier', 'Confusion', 'Armor', 'Stunball', 'Mob Mind', 'Increase Reflexes', 'Manaball'],
@@ -258,7 +258,7 @@ export const ARCHETYPES: Archetype[] = [
   },
   {
     id: 'decker', label: tk('Decker'), icon: '⌨', kind: 'metahuman', concept: 'Decker', color: '#3fd6d0', grunt: false, matrix: 'deck',
-    blurb: tk('Hacker de combat ou spider de site, avec cyberdeck et programmes.'),
+    blurb: tk('Combat hacker or site spider, with cyberdeck and programs.'),
     attrs: { LOG: 2, INT: 1, STR: -1, BOD: -1 },
     skills: [['hacking', 'cybercombat'], ['electronic_warfare', 'computer'], ['software', 'pistols', 'perception']],
     kit: (t, pick) => ({ weapons: [holdout(t, pick)], armor: t >= 2 ? ['Armor Clothing'] : [], ware: t >= 2 ? [['cyberware', 'Datajack', null]] : [], gear: [] }),
@@ -267,7 +267,7 @@ export const ARCHETYPES: Archetype[] = [
   },
   {
     id: 'rigger', label: tk('Rigger'), icon: '⛟', kind: 'metahuman', concept: 'Rigger', color: '#5c9be0', grunt: false, matrix: 'rcc',
-    blurb: tk('Pilote de drones, appui feu et surveillance.'),
+    blurb: tk('Drone pilot, fire support and surveillance.'),
     attrs: { REA: 2, LOG: 1, INT: 1 },
     skills: [['pilot_ground_craft', 'gunnery'], ['pilot_aircraft', 'perception'], ['automotive_mechanic', 'pistols', 'electronic_warfare']],
     kit: (t, pick) => ({
@@ -281,8 +281,8 @@ export const ARCHETYPES: Archetype[] = [
     tactics: 'Reste en retrait dans un véhicule ou derrière un mur, les drones engagent (réserve d’attaque = Artillerie + Logique s’il est connecté, sinon Autopilote + autosoft). Le cramer = couper ses drones.',
   },
   {
-    id: 'sniper', label: tk('Tireur d’élite'), icon: '⌖', kind: 'metahuman', concept: 'Tireur d’élite', color: '#e0468f', grunt: false,
-    blurb: tk('Fusil de précision, patience et camouflage.'),
+    id: 'sniper', label: tk('Sniper'), icon: '⌖', kind: 'metahuman', concept: 'Tireur d’élite', color: '#e0468f', grunt: false,
+    blurb: tk('Sniper rifle, patience and camouflage.'),
     attrs: { AGI: 2, INT: 1, WIL: 1 },
     skills: [['longarms'], ['perception', 'sneaking'], ['pistols', 'survival', 'gymnastics']],
     kit: (t, pick) => ({
@@ -295,8 +295,8 @@ export const ARCHETYPES: Archetype[] = [
     tactics: 'Position en hauteur à 200-500 m, vise d’abord le leader et le mage. Change de position après deux tirs. Se retire si on le repère.',
   },
   {
-    id: 'face', label: tk('Face / négociateur'), icon: '☺', kind: 'metahuman', concept: 'Négociateur', color: '#e0468f', grunt: false,
-    blurb: tk('Johnson, fixer, négociateur ou manipulateur.'),
+    id: 'face', label: tk('Face / negotiator'), icon: '☺', kind: 'metahuman', concept: 'Négociateur', color: '#e0468f', grunt: false,
+    blurb: tk('Johnson, fixer, negotiator or manipulator.'),
     attrs: { CHA: 2, INT: 1, WIL: 1, BOD: -1 },
     skills: [['negotiation', 'con'], ['etiquette', 'intimidation', 'perception'], ['leadership', 'pistols', 'impersonation']],
     kit: (t, pick) => ({
@@ -309,8 +309,8 @@ export const ARCHETYPES: Archetype[] = [
     tactics: 'Ne se bat pas : parle, menace, achète. Toujours un garde du corps à portée et une sortie prévue.',
   },
   {
-    id: 'bodyguard', label: tk('Garde du corps'), icon: '⛉', kind: 'metahuman', concept: 'Garde du corps', color: '#7c8b96', grunt: false,
-    blurb: tk('Protection rapprochée, colle à son principal.'),
+    id: 'bodyguard', label: tk('Bodyguard'), icon: '⛉', kind: 'metahuman', concept: 'Garde du corps', color: '#7c8b96', grunt: false,
+    blurb: tk('Close protection, sticks to their principal.'),
     attrs: { BOD: 2, REA: 1, STR: 1, INT: 1 },
     skills: [['pistols', 'unarmed_combat'], ['perception', 'clubs'], ['pilot_ground_craft', 'first_aid', 'etiquette']],
     kit: (t, pick) => ({
@@ -323,8 +323,8 @@ export const ARCHETYPES: Archetype[] = [
     tactics: 'S’interpose, couvre le principal et l’évacue. Ne poursuit jamais : sa priorité est la survie du client.',
   },
   {
-    id: 'cultist', label: tk('Cultiste toxique'), icon: '☣', kind: 'metahuman', concept: 'Cultiste toxique', color: '#7cc04a', grunt: true, magic: 'magician',
-    blurb: tk('Fanatique d’un mentor toxique, sorts corrosifs et esprits pollués.'),
+    id: 'cultist', label: tk('Toxic cultist'), icon: '☣', kind: 'metahuman', concept: 'Cultiste toxique', color: '#7cc04a', grunt: true, magic: 'magician',
+    blurb: tk('Fanatic of a toxic mentor spirit, corrosive spells and polluted spirits.'),
     attrs: { WIL: 2, CHA: 1, LOG: -1 },
     skills: [['spellcasting', 'summoning'], ['clubs', 'intimidation'], ['assensing', 'sneaking', 'perception']],
     spells: ['Acid Stream', 'Stunbolt', 'Agony', 'Toxic Wave', 'Confusion', 'Manabolt', 'Physical Barrier'],
@@ -335,8 +335,8 @@ export const ARCHETYPES: Archetype[] = [
     tactics: 'Fanatiques : ne se rendent pas. Flot acide et Vague toxique sans souci des innocents, esprit toxique en appui.',
   },
   {
-    id: 'civilian', label: tk('PNJ civil'), icon: '☻', kind: 'metahuman', concept: 'Civil', color: '#a0aab4', grunt: true, disposition: 'neutral',
-    blurb: tk('Passants, employés, témoins : pour peupler une scène.'),
+    id: 'civilian', label: tk('Civilian NPC'), icon: '☻', kind: 'metahuman', concept: 'Civil', color: '#a0aab4', grunt: true, disposition: 'neutral',
+    blurb: tk('Passers-by, employees, witnesses: to populate a scene.'),
     attrs: { BOD: -1, AGI: -1, REA: -1 },
     skills: [['perception', 'etiquette'], ['computer', 'negotiation'], ['running', 'first_aid']],
     kit: (t, pick) => ({ weapons: [t >= 3 ? 'Colt America L36' : t >= 1 ? 'Yamaha Pulsar' : null], armor: t >= 2 ? ['Armor Clothing'] : [], ware: [], gear: [[commlink(Math.min(t + 1, 3)), null, 1]] }),
@@ -345,8 +345,8 @@ export const ARCHETYPES: Archetype[] = [
   },
   // ---- Critters (SR5 core p.400-410 baselines; the tier makes juveniles (−) or pack alphas (+)).
   {
-    id: 'hellhound', label: tk('Molosse infernal'), icon: '♨', kind: 'critter', concept: 'Créature éveillée (chien de l’enfer)', color: '#e05c5c', grunt: false,
-    blurb: tk('Chien éveillé cracheur de feu, chasse en meute.'),
+    id: 'hellhound', label: tk('Hell hound'), icon: '♨', kind: 'critter', concept: 'Créature éveillée (chien de l’enfer)', color: '#e05c5c', grunt: false,
+    blurb: tk('Fire-breathing awakened dog, hunts in packs.'),
     critter: {
       attributes: { BOD: 6, AGI: 4, REA: 5, STR: 5, WIL: 3, LOG: 2, INT: 4, CHA: 3, EDG: 3, MAG: 5, ESS: 6 },
       initDice: 2,
@@ -361,8 +361,8 @@ export const ARCHETYPES: Archetype[] = [
     tactics: 'Chassent en meute : deux fixent la proie avec Peur, les autres crachent le feu. Fuient l’eau et les esprits de l’eau.',
   },
   {
-    id: 'devilrat', label: tk('Rat du diable'), icon: '🐀', kind: 'critter', concept: 'Créature éveillée (rat du diable)', color: '#8a6d4a', grunt: true,
-    blurb: tk('Rats éveillés des égouts, en essaim, porteurs de maladies.'),
+    id: 'devilrat', label: tk('Devil rat'), icon: '🐀', kind: 'critter', concept: 'Créature éveillée (rat du diable)', color: '#8a6d4a', grunt: true,
+    blurb: tk('Awakened sewer rats, swarming, disease carriers.'),
     critter: {
       attributes: { BOD: 1, AGI: 4, REA: 4, STR: 0, WIL: 2, LOG: 1, INT: 4, CHA: 2, EDG: 2, MAG: 2, ESS: 6 },
       initDice: 1,
@@ -377,8 +377,8 @@ export const ARCHETYPES: Archetype[] = [
     tactics: 'Surgissent de partout en essaim, harcèlent et mordent, appellent les rats ordinaires. Se dispersent à la lumière vive.',
   },
   {
-    id: 'ghoul', label: tk('Goule'), icon: '☠', kind: 'critter', concept: 'Métahumain infecté (goule)', color: '#6b8e7a', grunt: true, metaFrom: true,
-    blurb: tk('Métahumains infectés par le VIHMH, aveugles mais redoutables.'),
+    id: 'ghoul', label: tk('Ghoul'), icon: '☠', kind: 'critter', concept: 'Métahumain infecté (goule)', color: '#6b8e7a', grunt: true, metaFrom: true,
+    blurb: tk('Metahumans infected with HMHVV, blind but fearsome.'),
     critter: {
       attributes: { BOD: 7, AGI: 4, REA: 4, STR: 6, WIL: 3, LOG: 2, INT: 4, CHA: 1, EDG: 2, MAG: 2, ESS: 5 },
       initDice: 1,

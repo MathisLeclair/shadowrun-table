@@ -24,21 +24,21 @@ const tk = (s: string): string => s;
 export const ITEM_LISTS: ItemListName[] = ['weapons', 'armor', 'augmentations', 'gear', 'vehicles', 'contacts', 'sins', 'qualities', 'powers', 'spells', 'knowledge', 'skills', 'complexForms', 'skillGroups', 'lifestyles', 'martialArts'];
 
 export const LIST_LABELS: Record<ItemListName, string> = {
-  weapons: tk('Armes'), armor: tk('Armures'), augmentations: tk('Augmentations'), gear: tk('Équipement'), vehicles: tk('Véhicules'), contacts: tk('Contacts'),
-  sins: tk('SIN'), qualities: tk('Qualités'), powers: tk('Pouvoirs d’adepte'), spells: tk('Sorts'), knowledge: tk('Connaissances'), skills: tk('Compétences'),
-  complexForms: tk('Formes complexes'), skillGroups: tk('Groupes de compétences'), lifestyles: tk('Modes de vie'), martialArts: tk('Arts martiaux'),
+  weapons: tk('Weapons'), armor: tk('pl::Armor'), augmentations: tk('Augmentations'), gear: tk('Gear'), vehicles: tk('Vehicles'), contacts: tk('Contacts'),
+  sins: tk('SIN'), qualities: tk('Qualities'), powers: tk('Adept Powers'), spells: tk('Spells'), knowledge: tk('pl::Knowledge'), skills: tk('Skills'),
+  complexForms: tk('Complex Forms'), skillGroups: tk('Skill Groups'), lifestyles: tk('Lifestyles'), martialArts: tk('Martial arts'),
 };
 
 /** Nested item list of each list item (actor/addSubItem, updateSubItem, removeSubItem): weapon accessories, armor/vehicle mods… */
 export const SUB_LISTS: Partial<Record<ItemListName, SubListName>> = { weapons: 'accessories', armor: 'mods', vehicles: 'mods', lifestyles: 'qualities', martialArts: 'techniques' };
-export const SUB_LABELS: Record<SubListName, string> = { accessories: tk('Accessoires'), mods: tk('Modifications'), qualities: tk('Options de mode de vie'), techniques: tk('martial::Techniques') };
+export const SUB_LABELS: Record<SubListName, string> = { accessories: tk('Accessories'), mods: tk('Modifications'), qualities: tk('Lifestyle options'), techniques: tk('martial::Techniques') };
 
 /** Chummer base lifestyles (stored in English) → French display keys and SR5/RF base cost per month. */
 export const LIFESTYLE_BASES: Record<string, { label: string; cost: number }> = {
-  Street: { label: tk('Rue'), cost: 0 }, Squatter: { label: tk('Squatteur'), cost: 500 }, Low: { label: tk('Bas'), cost: 2000 },
-  Medium: { label: tk('Moyen'), cost: 5000 }, High: { label: tk('Élevé'), cost: 10000 }, Luxury: { label: tk('Luxe'), cost: 100000 },
-  'Bolt Hole': { label: tk('Planque'), cost: 1000 }, Traveler: { label: tk('Nomade'), cost: 3000 }, Commercial: { label: tk('Commercial'), cost: 8000 },
-  Hospitalized: { label: tk('Hospitalisé'), cost: 500 },
+  Street: { label: tk('Street'), cost: 0 }, Squatter: { label: tk('Squatter'), cost: 500 }, Low: { label: tk('Low'), cost: 2000 },
+  Medium: { label: tk('Medium'), cost: 5000 }, High: { label: tk('High'), cost: 10000 }, Luxury: { label: tk('Luxury'), cost: 100000 },
+  'Bolt Hole': { label: tk('Bolt Hole'), cost: 1000 }, Traveler: { label: tk('Traveler'), cost: 3000 }, Commercial: { label: tk('Commercial'), cost: 8000 },
+  Hospitalized: { label: tk('Hospitalized'), cost: 500 },
 };
 const LIFESTYLE_WORDS: [RegExp, string][] = [
   [/luxe|luxu|luxury/i, 'Luxury'], [/haut|élevé|eleve|high/i, 'High'], [/moyen|middle|medium/i, 'Medium'], [/bas\b|low/i, 'Low'], [/squat/i, 'Squatter'],
@@ -94,7 +94,7 @@ export function vehicleSlots(v: Partial<Vehicle> | null | undefined): number {
 
 /** R5 mod categories with their own slot pool on vehicles (drones: one pool) → French display keys. */
 export const VEHICLE_MOD_CATEGORIES: Record<string, string> = {
-  Powertrain: tk('Motorisation'), Protection: tk('Protection'), Weapons: tk('Armement'), Body: tk('Carrosserie'), Electromagnetic: tk('Électromagnétique'), Cosmetic: tk('Esthétique'),
+  Powertrain: tk('Powertrain'), Protection: tk('Protection'), Weapons: tk('Weapons'), Body: tk('vehicle::Body'), Electromagnetic: tk('Electromagnetic'), Cosmetic: tk('Cosmetic'),
 };
 /** Slots used per R5 category pool (non built-in mods of those categories): { Protection: 6, Body: 3 }. */
 export function vehicleSlotsByCategory(v: Partial<Vehicle> | null | undefined): Record<string, number> {
@@ -134,7 +134,7 @@ export const MERGE_KEYS: string[] = ['attributes', 'augmented', 'initiative', 'm
 
 export const METATYPE_FR: Record<string, string> = { Human: 'Humain', Elf: 'Elfe', Dwarf: 'Nain', Ork: 'Ork', Troll: 'Troll', Humain: 'Humain', Elfe: 'Elfe', Nain: 'Nain', Orc: 'Ork', Orque: 'Ork' };
 
-export const KNOWLEDGE_TYPES: Record<string, string> = { street: tk('Rue'), academic: tk('Académique'), professional: tk('Professionnelle'), interest: tk('Centre d’intérêt'), language: tk('Langue') };
+export const KNOWLEDGE_TYPES: Record<string, string> = { street: tk('Street'), academic: tk('Academic'), professional: tk('Professional'), interest: tk('Interest'), language: tk('Language') };
 
 /** Linked attribute of a knowledge skill (SR5: street/interest → INT, academic/professional → LOG, language → INT). */
 export function knowledgeAttr(type: unknown): 'LOG' | 'INT' {
@@ -334,7 +334,7 @@ export function healthStatus(
 
 export const STATUS_COLORS: Record<HealthStatus, string> = { indemne: 'green', 'blessé': 'amber', 'grièvement blessé': 'red', 'hors de combat': 'magenta', mort: 'dim' };
 /** Display keys of the statuses above (the stored value stays French). */
-export const STATUS_LABELS: Record<HealthStatus, string> = { indemne: tk('indemne'), 'blessé': tk('blessé'), 'grièvement blessé': tk('grièvement blessé'), 'hors de combat': tk('hors de combat'), mort: tk('mort') };
+export const STATUS_LABELS: Record<HealthStatus, string> = { indemne: tk('unharmed'), 'blessé': tk('wounded'), 'grièvement blessé': tk('badly wounded'), 'hors de combat': tk('KO'), mort: tk('dead') };
 
 /** A blank actor (all SR5 attributes at 3). */
 export function blankActor(type: ActorType = 'npc', name = 'Nouveau personnage') {

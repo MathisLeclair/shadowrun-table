@@ -106,14 +106,14 @@ export default function Cart({ game, actor, catalog, lines, onClose }: CartProps
 
   const checkout = async (mode: 'buy' | 'give') => {
     if (!actor || !lines.length) return;
-    if (mode === 'give' && !(await confirmAction(t('Donner gratuitement ces {n} article(s) à {name} ?', { n: lines.length, name: actor.name })))) return;
-    if (mode === 'buy' && isGM && !(await confirmAction(t('Débiter {cost} à {name} ?', { cost: nuyen(total), name: actor.name })))) return;
+    if (mode === 'give' && !(await confirmAction(t('Give these {n} item(s) to {name} for free?', { n: lines.length, name: actor.name })))) return;
+    if (mode === 'buy' && isGM && !(await confirmAction(t('Charge {cost} to {name}?', { cost: nuyen(total), name: actor.name })))) return;
     setBusy(true);
     try {
       const res = await send<CheckoutResult>(mode === 'give' ? 'shop/give' : 'shop/buy', { actorId: actor.id, items: payload() });
       setCart(actor.id, []);
-      if (res?.status === 'pending') toast(t('Commande transmise à Cabana — en attente de validation du MJ'), 'info', 4500);
-      else toast(mode === 'give' ? t('Livré à {name}', { name: actor.name }) : t('Achat effectué : {cost}', { cost: nuyen(res?.total ?? total) }), 'success');
+      if (res?.status === 'pending') toast(t('Order sent to Cabana — awaiting GM approval'), 'info', 4500);
+      else toast(mode === 'give' ? t('Delivered to {name}', { name: actor.name }) : t('Purchase done: {cost}', { cost: nuyen(res?.total ?? total) }), 'success');
       const notes = res?.notesI18n?.length ? res.notesI18n.map((n) => t(n.key, n.params)) : res?.notes || [];
       if (notes.length) toast(notes.join(' · '), 'warn', 5000);
       onClose();
@@ -126,51 +126,51 @@ export default function Cart({ game, actor, catalog, lines, onClose }: CartProps
       <aside className="shop-drawer">
         <header className="shop-drawer-head">
           <h3>
-            {t('Panier')}
+            {t('Cart')}
             {actor ? <span className="muted"> — {actor.name}</span> : null}
           </h3>
-          <IconButton icon="✕" title={t('Fermer')} onClick={onClose} />
+          <IconButton icon="✕" title={t('Close')} onClick={onClose} />
         </header>
         <div className="shop-drawer-body">
-          {!lines.length && <Empty>{t('Panier vide. Ajoute des articles depuis le catalogue.')}</Empty>}
+          {!lines.length && <Empty>{t('Empty cart. Add items from the catalog.')}</Empty>}
           {priced.map((p, i) => (
             <div className="shop-cart-item" key={lineKey(p.line)}>
               <div className={'shop-cart-line' + (p.missing || !p.st?.ok || p.stockOut ? ' bad' : '')}>
                 <div className="grow">
                   <div className="shop-cart-name">{p.entry?.name || p.line.name || p.line.ref}</div>
                   <div className="row wrap gap-s small muted">
-                    {p.line.rating ? <span>{t('Indice {n}', { n: p.line.rating })}</span> : null}
+                    {p.line.rating ? <span>{t('Rating {n}', { n: p.line.rating })}</span> : null}
                     {p.line.grade && p.line.grade !== 'standard' ? <span>{gradeLabel(p.line.grade)}</span> : null}
                     {p.q?.essence ? <span>{t('Ess {n}', { n: Math.round(p.q.essence * p.line.qty * 1000) / 1000 })}</span> : null}
-                    {p.line.setMatrix ? <Badge color="cyan">{t('Appareil Matriciel')}</Badge> : null}
+                    {p.line.setMatrix ? <Badge color="cyan">{t('Matrix device')}</Badge> : null}
                     {p.pv?.target ? (
                       <span className="cyan">
                         → {p.pv.target.name}
                         {p.pv.mount ? ` [${t(MOUNTS[p.pv.mount] || p.pv.mount)}]` : ''}
                       </span>
                     ) : null}
-                    {p.pv?.monthlyDelta ? <span>{t('{delta}/mois', { delta: `${p.pv.monthlyDelta > 0 ? '+' : '−'}${nuyen(Math.abs(p.pv.monthlyDelta))}` })}</span> : null}
+                    {p.pv?.monthlyDelta ? <span>{t('{delta}/month', { delta: `${p.pv.monthlyDelta > 0 ? '+' : '−'}${nuyen(Math.abs(p.pv.monthlyDelta))}` })}</span> : null}
                     {p.line.lifestyleName ? <span>« {p.line.lifestyleName} »</span> : null}
-                    {p.missing && <span className="red">{t('Article retiré du catalogue')}</span>}
+                    {p.missing && <span className="red">{t('Item removed from the catalog')}</span>}
                     {p.st && !p.st.ok && <span className="red">{p.st.reason}</span>}
-                    {p.stockOut && <span className="red">{t('Stock insuffisant')}</span>}
-                    {p.st?.ok && p.st.approval && <span className="amber">{t('Validation MJ')}</span>}
+                    {p.stockOut && <span className="red">{t('Not enough stock')}</span>}
+                    {p.st?.ok && p.st.approval && <span className="amber">{t('GM approval')}</span>}
                   </div>
                 </div>
                 {p.pv ? null : p.entry?.file !== 'lifestyles' ? (
                   <NumberInput small value={p.line.qty} min={1} max={999} onChange={(v) => update(i, { qty: v })} />
                 ) : (
-                  <span className="small muted">{t('{n} mois', { n: p.line.qty })}</span>
+                  <span className="small muted">{t('{n} months', { n: p.line.qty })}</span>
                 )}
                 <div className="shop-cart-price mono">
                   {nuyen(p.total + surcharge[i])}
                   {surcharge[i] ? (
-                    <div className="faint small" title={t('Surenchère pour trouver l’objet (+25 % du prix par dé)')}>
-                      {t('dont +{cost}', { cost: nuyen(surcharge[i]) })}
+                    <div className="faint small" title={t('Overpay to find the item (+25 % of the price per die)')}>
+                      {t('incl. +{cost}', { cost: nuyen(surcharge[i]) })}
                     </div>
                   ) : null}
                 </div>
-                <IconButton icon="✕" title={t('Retirer')} onClick={() => remove(i)} />
+                <IconButton icon="✕" title={t('Remove')} onClick={() => remove(i)} />
               </div>
               {availNeed[i].needsTest && p.st?.ok && (
                 <AvailCartRow game={game} actor={actor} p={p} match={availMatch[i]} last={availMatch[i] ? null : lastFail(i)} required={availRequired} />
@@ -187,7 +187,7 @@ export default function Cart({ game, actor, catalog, lines, onClose }: CartProps
               </div>
               {actor && (
                 <div className="spread row small">
-                  <span className="muted">{t('Nuyens')}</span>
+                  <span className="muted">{t('Nuyen')}</span>
                   <span className="mono">
                     {nuyen(have)} → <span className={after < 0 ? 'red' : 'green'}>{nuyen(after)}</span>
                   </span>
@@ -201,12 +201,12 @@ export default function Cart({ game, actor, catalog, lines, onClose }: CartProps
                   </span>
                 </div>
               )}
-              {loss > 0 && awakened === 'MAG' && <div className="shop-ess warn small">⚠ {t('Magie −{n} après l’implantation.', { n: loss })}</div>}
-              {loss > 0 && awakened === 'RES' && <div className="shop-ess warn small">⚠ {t('Résonance −{n} après l’implantation.', { n: loss })}</div>}
-              {essAfter <= 0 && ess > 0 && <div className="shop-blocked small">{t('Essence à zéro : implantation impossible.')}</div>}
-              {after < 0 && <div className="shop-blocked small">{t('Fonds insuffisants.')}</div>}
-              {approval && <div className="shop-approval small">{t('Certains articles demandent l’accord du MJ : rien n’est débité avant sa validation.')}</div>}
-              {availMissing > 0 && <div className="shop-approval small">{t('Trouve d’abord ces articles : test de disponibilité (Négociation + Charisme) sur chaque ligne marquée.')}</div>}
+              {loss > 0 && awakened === 'MAG' && <div className="shop-ess warn small">⚠ {t('Magic −{n} after implantation.', { n: loss })}</div>}
+              {loss > 0 && awakened === 'RES' && <div className="shop-ess warn small">⚠ {t('Resonance −{n} after implantation.', { n: loss })}</div>}
+              {essAfter <= 0 && ess > 0 && <div className="shop-blocked small">{t('Essence at zero: implantation impossible.')}</div>}
+              {after < 0 && <div className="shop-blocked small">{t('Insufficient funds.')}</div>}
+              {approval && <div className="shop-approval small">{t('Some items need the GM’s approval: nothing is charged until it is given.')}</div>}
+              {availMissing > 0 && <div className="shop-approval small">{t('Find these items first: availability test (Negotiation + Charisma) on each marked line.')}</div>}
             </div>
             <div className="row wrap">
               {!isGM && (
@@ -216,21 +216,21 @@ export default function Cart({ game, actor, catalog, lines, onClose }: CartProps
                   disabled={busy || blocked.length > 0 || availMissing > 0 || after < 0 || !game.shop?.open || (ess > 0 && essAfter <= 0)}
                   onClick={() => checkout('buy')}
                 >
-                  {approval ? t('Envoyer la commande') : t('Acheter')} — {nuyen(total)}
+                  {approval ? t('Send the order') : t('Buy')} — {nuyen(total)}
                 </Button>
               )}
               {isGM && (
                 <>
                   <Button variant="accent" className="grow" disabled={busy || after < 0 || priced.some((p) => p.missing || p.stockOut)} onClick={() => checkout('buy')}>
-                    {t('Vendre au PJ — {cost}', { cost: nuyen(total) })}
+                    {t('Sell to the PC — {cost}', { cost: nuyen(total) })}
                   </Button>
                   <Button className="grow" disabled={busy || priced.some((p) => p.missing || p.stockOut)} onClick={() => checkout('give')}>
-                    {t('Donner (gratuit)')}
+                    {t('Give (free)')}
                   </Button>
                 </>
               )}
               <Button variant="ghost" small onClick={() => setCart(actor.id, [])}>
-                {t('Vider')}
+                {t('verb::Empty')}
               </Button>
             </div>
           </footer>

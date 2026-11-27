@@ -51,11 +51,11 @@ export function registerMaplibAdminRoutes(app: Express, { requireAdmin, fail, li
   const libFail = (res: Response, err: any) => {
     if (err?.libKey) return fail(res, err.code === 'stale' ? 409 : 400, err.libKey, err.code ? { code: err.code } : {}, err.libParams);
     console.error('[maplib admin]', err);
-    return fail(res, 500, 'Erreur du serveur');
+    return fail(res, 500, 'Server error');
   };
   const entryOr404 = (req: Request, res: Response) => {
     const m = L.getMeta(req.params.slug);
-    if (!m) fail(res, 404, 'Carte de bibliothèque introuvable');
+    if (!m) fail(res, 404, 'Library map not found');
     return m;
   };
   /** slug → [{ tableId, tableName, maps: [{ id, name, version }] }] over the open tables. */
@@ -107,21 +107,21 @@ export function registerMaplibAdminRoutes(app: Express, { requireAdmin, fail, li
     const ext = String(req.headers['x-filename'] ? decodeURIComponent(String(req.headers['x-filename'])) : '').toLowerCase().match(/\.(jpe?g|png|webp)$/)?.[0];
     if (!slug) {
       req.resume();
-      return fail(res, 400, 'Identifiant invalide (lettres minuscules, chiffres et tirets)');
+      return fail(res, 400, 'Invalid id (lowercase letters, digits and dashes)');
     }
     if (!ext) {
       req.resume();
-      return fail(res, 400, 'Image attendue (JPEG, PNG ou WebP)');
+      return fail(res, 400, 'Image expected (JPEG, PNG or WebP)');
     }
     const exists = !!L.getMeta(slug);
     if (exists && q.replace !== '1') {
       req.resume();
-      return fail(res, 409, 'La carte {slug} existe déjà : coche « Remplacer l’image »', { code: 'exists' }, { slug });
+      return fail(res, 409, 'Map {slug} already exists: tick “Replace the image”', { code: 'exists' }, { slug });
     }
     const gridPx = Number(q.gridPx);
     if (!(gridPx >= 4 && gridPx <= 2000) && !exists) {
       req.resume();
-      return fail(res, 400, 'Taille de case invalide (pixels par case, ex. 70)');
+      return fail(res, 400, 'Invalid cell size (pixels per cell, e.g. 70)');
     }
     fs.mkdirSync(L.IMAGES_DIR, { recursive: true });
     const tmp = path.join(L.IMAGES_DIR, `.upload-${crypto.randomBytes(6).toString('hex')}.part`);
@@ -131,12 +131,12 @@ export function registerMaplibAdminRoutes(app: Express, { requireAdmin, fail, li
       const want = ext === '.png' ? 'png' : ext === '.webp' ? 'webp' : 'jpeg';
       if (!size || size.type !== want || !size.width || !size.height) {
         fs.rmSync(tmp, { force: true });
-        return fail(res, 400, 'Image attendue (JPEG, PNG ou WebP)');
+        return fail(res, 400, 'Image expected (JPEG, PNG or WebP)');
       }
       const g = libGeometry({ gridPx: gridPx || L.getMeta(slug)?.gridPx, imageW: size.width, imageH: size.height, offsetX: Number(q.offsetX) || 0, offsetY: Number(q.offsetY) || 0 });
       if (g.width > 160 || g.height > 160) {
         fs.rmSync(tmp, { force: true });
-        return fail(res, 400, 'Carte trop grande ({w} × {h} cases, {max} max)', {}, { w: g.width, h: g.height, max: 160 });
+        return fail(res, 400, 'Map too large ({w} × {h} cells, {max} max)', {}, { w: g.width, h: g.height, max: 160 });
       }
       const image = `${slug}${ext === '.jpeg' ? '.jpg' : ext}`;
       const dest = path.join(L.IMAGES_DIR, image);
@@ -171,7 +171,7 @@ export function registerMaplibAdminRoutes(app: Express, { requireAdmin, fail, li
   app.delete('/api/admin/maplib/:slug', requireAdmin, (req, res) => {
     const m = entryOr404(req, res);
     if (!m) return;
-    if (req.body?.confirm !== m.slug) return fail(res, 400, 'Confirmation manquante');
+    if (req.body?.confirm !== m.slug) return fail(res, 400, 'Confirmation missing');
     L.deleteEntry(m.slug);
     res.json({ ok: true });
   });
@@ -204,8 +204,8 @@ export function registerMaplibAdminRoutes(app: Express, { requireAdmin, fail, li
     if (!m) return;
     const t = tables.get(String(req.body?.tableId || ''));
     const map = t && !t.error ? t.state?.maps?.[String(req.body?.mapId || '')] : null;
-    if (!map) return fail(res, 404, 'Carte introuvable');
-    if (map.library?.slug !== m.slug) return fail(res, 400, 'Seules les cartes venant de la bibliothèque peuvent y être publiées');
+    if (!map) return fail(res, 404, 'Map not found');
+    if (map.library?.slug !== m.slug) return fail(res, 400, 'Only maps that come from the library can be published to it');
     try {
       const cur = L.getVersion(m.slug);
       const g = libGeometry({ ...L.effective(m), ...(cur?.geometry || {}) });

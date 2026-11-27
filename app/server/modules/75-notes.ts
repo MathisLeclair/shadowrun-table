@@ -215,16 +215,16 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, payload: CreatePayload) {
         const notes = start(ctx);
         const scope = payload?.scope;
-        if (scope !== 'private' && scope !== 'party') ctx.fail('Type de note inconnu');
+        if (scope !== 'private' && scope !== 'party') ctx.fail('Unknown note type');
         const pages = Object.values(notes.pages);
         if (scope === 'private' && pages.filter((p) => p.scope === 'private' && p.ownerId === ctx.user.id).length >= MAX_PRIVATE_PAGES)
-          ctx.fail('Trop de notes personnelles ({max} maximum)', { max: MAX_PRIVATE_PAGES });
-        if (scope === 'party' && pages.filter((p) => p.scope === 'party').length >= MAX_PARTY_PAGES) ctx.fail('Trop de notes de groupe ({max} maximum)', { max: MAX_PARTY_PAGES });
-        if (scope === 'party' && ctx.isGM && !notes.settings.gmCanEditParty) ctx.fail('Le MJ ne peut pas modifier les notes de groupe');
+          ctx.fail('Too many personal notes ({max} maximum)', { max: MAX_PRIVATE_PAGES });
+        if (scope === 'party' && pages.filter((p) => p.scope === 'party').length >= MAX_PARTY_PAGES) ctx.fail('Too many party notes ({max} maximum)', { max: MAX_PARTY_PAGES });
+        if (scope === 'party' && ctx.isGM && !notes.settings.gmCanEditParty) ctx.fail('The GM cannot edit party notes');
         const body = checkBody(ctx, payload?.body ?? '');
         if (scope === 'private' && ownerSize(notes, ctx.user.id) + body.length > MAX_OWNER_TOTAL) ctx.fail(OWNER_FULL, { max: MAX_OWNER_TOTAL });
         if (totalSize(notes) + body.length > MAX_TOTAL) ctx.fail(FULL);
-        const title = oneLine(payload?.title, MAX_TITLE) || ctx.t('Nouvelle note');
+        const title = oneLine(payload?.title, MAX_TITLE) || ctx.t('New note');
         const id = ctx.uid('note');
         const page: NotePage = {
           id, scope: scope as NotePage['scope'], title, body, folder: oneLine(payload?.folder, MAX_FOLDER), pinned: false,
@@ -232,7 +232,7 @@ const mod: ServerModule = {
         };
         if (scope === 'private') Object.assign(page, { ownerId: ctx.user.id, shareWithGM: false });
         notes.pages[id] = page;
-        if (scope === 'party') ctx.log({ kind: 'system', userId: ctx.user.id, author: ctx.displayName(), i18n: { key: 'Nouvelle note de groupe : {title}', params: { title } } });
+        if (scope === 'party') ctx.log({ kind: 'system', userId: ctx.user.id, author: ctx.displayName(), i18n: { key: 'New party note: {title}', params: { title } } });
         return { id };
       },
     },
@@ -247,7 +247,7 @@ const mod: ServerModule = {
         const title = payload?.title === undefined ? page.title : oneLine(payload.title, MAX_TITLE) || page.title;
         let changed = false;
         if (body !== page.body) {
-          if (!Number.isInteger(payload?.baseVersion)) ctx.fail('Version de base manquante');
+          if (!Number.isInteger(payload?.baseVersion)) ctx.fail('Missing base version');
           if (payload.baseVersion !== page.version) {
             return { conflict: true, server: { title: page.title, body: page.body, version: page.version, updatedBy: page.updatedBy, updatedAt: page.updatedAt } };
           }
@@ -279,7 +279,7 @@ const mod: ServerModule = {
         const page = writable(ctx, notes, payload?.id);
         if (payload?.title !== undefined) {
           const title = oneLine(payload.title, MAX_TITLE);
-          if (!title) ctx.fail('Le titre ne peut pas être vide');
+          if (!title) ctx.fail('The title cannot be empty');
           page.title = title;
         }
         if (payload?.folder !== undefined) page.folder = oneLine(payload.folder, MAX_FOLDER);
@@ -296,9 +296,9 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, payload: PagePayload) {
         const notes = start(ctx);
         const page = readable(ctx, notes, payload?.id);
-        if (!canDelete(page, ctx.user)) ctx.fail('Tu ne peux pas supprimer cette note');
+        if (!canDelete(page, ctx.user)) ctx.fail('You cannot delete this note');
         const lk = page.lock;
-        if (lk && lk.userId !== ctx.user.id && lk.until > ctx.now && !payload.force) ctx.fail('{name} est en train d’écrire dans cette note', { name: String(lk.name || '') });
+        if (lk && lk.userId !== ctx.user.id && lk.until > ctx.now && !payload.force) ctx.fail('{name} is typing in this note', { name: String(lk.name || '') });
         if (!page.deleted) page.deleted = { at: ctx.now, by: ctx.user.id };
         delete page.lock;
         return { ok: true };
@@ -311,7 +311,7 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, payload: PagePayload) {
         const notes = start(ctx);
         const page = readable(ctx, notes, payload?.id, { trash: true });
-        if (!canDelete(page, ctx.user)) ctx.fail('Tu ne peux pas restaurer cette note');
+        if (!canDelete(page, ctx.user)) ctx.fail('You cannot restore this note');
         delete page.deleted;
         page.updatedAt = ctx.now;
         return { ok: true };
@@ -324,9 +324,9 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, payload: PagePayload) {
         const notes = start(ctx);
         const page = readable(ctx, notes, payload?.id, { trash: true });
-        if (!page.deleted) ctx.fail('Mets d’abord la note à la corbeille');
+        if (!page.deleted) ctx.fail('Move the note to the trash first');
         const ok = page.scope === 'private' ? page.ownerId === ctx.user.id : ctx.isGM || page.createdBy === ctx.user.id;
-        if (!ok) ctx.fail('Seul l’auteur de la note ou le MJ peut la supprimer définitivement');
+        if (!ok) ctx.fail('Only the note’s author or the GM can delete it permanently');
         delete notes.pages[page.id];
         delete notes.comments[page.id];
         return { ok: true };
@@ -339,7 +339,7 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, payload: SharePayload) {
         const notes = start(ctx);
         const page = readable(ctx, notes, payload?.id, { trash: true });
-        if (page.scope !== 'private' || page.ownerId !== ctx.user.id) ctx.fail('Seul l’auteur d’une note personnelle peut la partager');
+        if (page.scope !== 'private' || page.ownerId !== ctx.user.id) ctx.fail('Only the author of a personal note can share it');
         page.shareWithGM = !!payload.shareWithGM;
         return { shareWithGM: page.shareWithGM };
       },
@@ -376,14 +376,14 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, payload: CommentPayload) {
         const notes = start(ctx);
         const page = readable(ctx, notes, payload?.id);
-        if (!canComment(page, ctx.user)) ctx.fail('Impossible de commenter cette note');
+        if (!canComment(page, ctx.user)) ctx.fail('You cannot comment on this note');
         const text = clean(payload?.text).trim().slice(0, MAX_COMMENT);
-        if (!text) ctx.fail('Commentaire vide');
+        if (!text) ctx.fail('Empty comment');
         const list = Array.isArray(notes.comments[page.id]) ? notes.comments[page.id] : [];
-        if (list.length >= MAX_COMMENTS) ctx.fail('Trop de commentaires sur cette note ({max} maximum)', { max: MAX_COMMENTS });
+        if (list.length >= MAX_COMMENTS) ctx.fail('Too many comments on this note ({max} maximum)', { max: MAX_COMMENTS });
         let mineCount = 0;
         for (const l of Object.values(notes.comments)) if (Array.isArray(l)) for (const x of l) if (x?.userId === ctx.user.id) mineCount++;
-        if (mineCount >= MAX_USER_COMMENTS) ctx.fail('Tu as trop de commentaires ({max} maximum) : supprimes-en avant d’en écrire d’autres', { max: MAX_USER_COMMENTS });
+        if (mineCount >= MAX_USER_COMMENTS) ctx.fail('You have too many comments ({max} maximum): delete some before writing more', { max: MAX_USER_COMMENTS });
         if (totalSize(notes) + text.length > MAX_TOTAL) ctx.fail(FULL);
         notes.comments[page.id] = list;
         const c: NoteComment = { id: ctx.uid('ncom'), userId: ctx.user.id, author: ctx.displayName(), text, ts: ctx.now };
@@ -403,9 +403,9 @@ const mod: ServerModule = {
         const page = readable(ctx, notes, payload?.id, { trash: true });
         const list = Array.isArray(notes.comments[page.id]) ? notes.comments[page.id] : [];
         const i = typeof payload?.commentId === 'string' ? list.findIndex((c) => c.id === payload.commentId) : -1;
-        if (i < 0) ctx.fail('Commentaire introuvable');
+        if (i < 0) ctx.fail('Comment not found');
         const c = list[i];
-        if (!(c.userId === ctx.user.id || ctx.isGM || (page.scope === 'private' && page.ownerId === ctx.user.id))) ctx.fail('Tu ne peux pas supprimer ce commentaire');
+        if (!(c.userId === ctx.user.id || ctx.isGM || (page.scope === 'private' && page.ownerId === ctx.user.id))) ctx.fail('You cannot delete this comment');
         list.splice(i, 1);
         if (!list.length) delete notes.comments[page.id];
         return { ok: true };
@@ -442,25 +442,25 @@ function start(ctx: ActionContext): NotesState {
 }
 
 function checkBody(ctx: ActionContext, body: unknown): string {
-  if (typeof body !== 'string') return ctx.fail('Contenu de note invalide');
-  if (body.length > MAX_BODY) ctx.fail('Note trop longue ({max} caractères maximum)', { max: MAX_BODY });
+  if (typeof body !== 'string') return ctx.fail('Invalid note content');
+  if (body.length > MAX_BODY) ctx.fail('Note too long ({max} characters maximum)', { max: MAX_BODY });
   return clean(body);
 }
 
 /** The page if this user may read it (not in the trash unless opts.trash), else « Note introuvable » (never reveals existence). */
 function readable(ctx: ActionContext, notes: NotesState, id: unknown, { trash = false }: { trash?: boolean } = {}): NotePage {
-  if (!validId(id) || !has(notes.pages, id)) return ctx.fail('Note introuvable');
+  if (!validId(id) || !has(notes.pages, id)) return ctx.fail('Note not found');
   const page = notes.pages[id];
-  if (!canRead(page, ctx.user)) ctx.fail('Note introuvable');
-  if (page.deleted && !trash) ctx.fail('Cette note est dans la corbeille');
+  if (!canRead(page, ctx.user)) ctx.fail('Note not found');
+  if (page.deleted && !trash) ctx.fail('This note is in the trash');
   return page;
 }
 
 function writable(ctx: ActionContext, notes: NotesState, id: unknown): NotePage {
   const page = readable(ctx, notes, id);
   if (!canWrite(page, ctx.user, notes)) {
-    if (page.scope === 'party') ctx.fail('Le MJ ne peut pas modifier les notes de groupe');
-    ctx.fail('Cette note est en lecture seule');
+    if (page.scope === 'party') ctx.fail('The GM cannot edit party notes');
+    ctx.fail('This note is read-only');
   }
   return page;
 }

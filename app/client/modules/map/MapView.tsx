@@ -22,7 +22,7 @@ void rangeFor; // imported by the original module (kept for parity), unused
 
 // Stored status values (French, shown with statusText()).
 const STATUSES = ['à terre', 'inconscient', 'mort', 'étourdi', 'en feu', 'à couvert', 'caché', 'saignement'];
-const DOOR_LABEL: Record<string, string> = { open: tk('Ouverte'), closed: tk('Fermée'), locked: tk('Verrouillée') };
+const DOOR_LABEL: Record<string, string> = { open: tk('fem::Open'), closed: tk('Closed'), locked: tk('Locked') };
 const doorLabel = (s: string | undefined) => (s && DOOR_LABEL[s] ? t(DOOR_LABEL[s]) : '');
 const NEXT_DOOR_STATE: Record<string, DoorState> = { open: 'closed', closed: 'locked', locked: 'open' };
 const TORCH = { radius: 6, color: '#fff1cc' };
@@ -91,9 +91,9 @@ function defaultWeapon(actor: ViewActor | undefined | null, meters: number | nul
 
 /** Label under a blast marker: the cloud kind (smoke, gas + toxin, flash-pak) and the scatter. */
 function blastLabel(b: Pick<Blast, 'effect' | 'toxinId' | 'scattered' | 'meters'>): string | null {
-  const kind = b.effect === 'smoke' ? t('fumée') : b.effect === 'thermalSmoke' ? t('fumée thermique') : b.effect === 'flashpak' ? t('flash-pak')
-    : b.effect === 'gas' ? t('gaz : {toxin}', { toxin: t(TOXIN_BY_ID[b.toxinId as string]?.name || 'Gaz lacrymogène (CS)') }) : null;
-  const drift = b.scattered ? t('dévie de {m} m', { m: b.meters }) : null;
+  const kind = b.effect === 'smoke' ? t('smoke') : b.effect === 'thermalSmoke' ? t('thermal smoke') : b.effect === 'flashpak' ? t('flash-pak')
+    : b.effect === 'gas' ? t('gas: {toxin}', { toxin: t(TOXIN_BY_ID[b.toxinId as string]?.name || 'Gaz lacrymogène (CS)') }) : null;
+  const drift = b.scattered ? t('scatters {m} m', { m: b.meters }) : null;
   return [kind, drift].filter(Boolean).join(' · ') || null;
 }
 
@@ -127,16 +127,16 @@ export default function MapView({ game }: GameProps) {
           <div className="map-empty-glyph">⌖</div>
           {isGM ? (
             <>
-              <h3>{t('Aucune carte')}</h3>
-              <p className="muted">{t('Crée ou importe une carte pour commencer.')}</p>
+              <h3>{t('No map')}</h3>
+              <p className="muted">{t('Create or import a map to get started.')}</p>
               <Button variant="primary" onClick={() => setUI({ mainTab: 'maps' })}>
-                {t('Ouvrir les cartes')}
+                {t('Open maps')}
               </Button>
             </>
           ) : (
             <>
-              <h3>{t("Le MJ n'a pas encore affiché de carte")}</h3>
-              <p className="muted">{t("Reste branché, chummer : la carte apparaîtra ici dès que le MJ l'affichera.")}</p>
+              <h3>{t("The GM hasn't shown a map yet")}</h3>
+              <p className="muted">{t("Stay jacked in, chummer: the map will show up here as soon as the GM displays it.")}</p>
             </>
           )}
         </div>
@@ -223,7 +223,7 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
     setDetailedTiles(v);
   };
   const tileStyleToggle = !isImageMap(map) && (
-    <Toggle label={t('Décor détaillé')} title={t('Sols texturés et mobilier dessiné (voitures, lits, canapés…) — réglage de ce navigateur')} value={detailedTiles} onChange={toggleTileStyle} />
+    <Toggle label={t('Detailed scenery')} title={t('Textured floors and drawn furniture (cars, beds, sofas…) — this browser only')} value={detailedTiles} onChange={toggleTileStyle} />
   );
   const hoverWallRef = useRef<string | null>(null);
   const selected = useMemo(() => new Set<string>(ui.selectedTokenIds || []), [ui.selectedTokenIds]);
@@ -408,7 +408,7 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
   const removeTokens = async (ids: string[]) => {
     const n = ids.length;
     const names = ids.map((id) => map.tokens.find((tt) => tt.id === id)?.name).filter(Boolean);
-    if (!(await confirmAction(n === 1 ? t('Retirer « {name} » de la carte ?', { name: names[0] || t('ce pion') }) : t('Retirer {n} pions de la carte ?', { n })))) return;
+    if (!(await confirmAction(n === 1 ? t('Remove “{name}” from the map?', { name: names[0] || t('this token') }) : t('Remove {n} tokens from the map?', { n })))) return;
     send('maps/removeToken', { mapId, tokenIds: ids }).then(() => setUI({ selectedTokenIds: [] }), quiet);
   };
   const ping = (info: { fx: number; fy: number }) => send('ui/ping', { mapId, x: info.fx, y: info.fy }, { silent: true }).catch(quiet);
@@ -417,7 +417,7 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
       (res) => {
         const placed = Array.isArray(res) ? res.length : res?.tokenIds?.length ?? spawnOpts.count;
         const unplaced = Array.isArray(res) ? 0 : res?.unplaced;
-        toast(t('{n} PNJ placé(s)', { n: placed }) + (unplaced ? ' · ' + t('{n} sans place libre', { n: unplaced }) : ''), placed ? 'success' : 'warn');
+        toast(t('{n} NPC(s) placed', { n: placed }) + (unplaced ? ' · ' + t('{n} without a free cell', { n: unplaced }) : ''), placed ? 'success' : 'warn');
       },
       quiet
     );
@@ -441,13 +441,13 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
         run = mv.run;
       } catch {}
     }
-    const spent = used ? ' ' + t('(dont {m} m déjà parcourus)', { m: Math.round(used * 10) / 10 }) : '';
+    const spent = used ? ' ' + t('(incl. {m} m already moved)', { m: Math.round(used * 10) / 10 }) : '';
     if (walk == null || run == null) return { meters, step, used, color: '#3fd6d0', label: `${step} m` };
     const left = Math.round((run - meters) * 10) / 10;
-    const rest = moveKey ? ' · ' + t('reste {m} m', { m: left }) : '';
-    if (meters <= walk) return { meters, step, used, walk, run, color: '#3fd6d0', label: `${meters} m · ${t('marche')}${rest}${spent}` };
-    if (meters <= run) return { meters, step, used, walk, run, color: '#e0a63f', label: `${meters} m · ${t('course')}${rest}${spent}` };
-    return { meters, step, used, walk, run, color: '#e05c5c', label: `${meters} m · ${t('trop loin')}${spent}`, tooFar: true };
+    const rest = moveKey ? ' · ' + t('{m} m left', { m: left }) : '';
+    if (meters <= walk) return { meters, step, used, walk, run, color: '#3fd6d0', label: `${meters} m · ${t('walk')}${rest}${spent}` };
+    if (meters <= run) return { meters, step, used, walk, run, color: '#e0a63f', label: `${meters} m · ${t('run')}${rest}${spent}` };
+    return { meters, step, used, walk, run, color: '#e05c5c', label: `${meters} m · ${t('too far')}${spent}`, tooFar: true };
   };
 
   const playerPath = (tok: Token, to: Cell): Cell[] | null => {
@@ -515,12 +515,12 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
       const ghosts = d.group.map((tt) => ({ token: tt, x: tt.x + dx, y: tt.y + dy }));
       if (!path) {
         d.mv = null;
-        r.setOverlay({ ghosts, pathLabel: isGM ? t('Pas de chemin — Alt pour ignorer les murs') : t('Inaccessible'), pathColor: '#e05c5c', labelAt: { x: tx + 0.5, y: ty - 0.45 } });
+        r.setOverlay({ ghosts, pathLabel: isGM ? t('No path — hold Alt to ignore walls') : t('Unreachable'), pathColor: '#e05c5c', labelAt: { x: tx + 0.5, y: ty - 0.45 } });
         return;
       }
       const mv = movementInfo(lead, path);
       d.mv = mv;
-      r.setOverlay({ ghosts, path: dx || dy ? path : null, pathColor: mv.color, pathLabel: dx || dy ? mv.label + (isGM && info.alt ? ' · ' + t('murs ignorés') : '') : null, labelAt: { x: tx + 0.5, y: ty - 0.45 } });
+      r.setOverlay({ ghosts, path: dx || dy ? path : null, pathColor: mv.color, pathLabel: dx || dy ? mv.label + (isGM && info.alt ? ' · ' + t('walls ignored') : '') : null, labelAt: { x: tx + 0.5, y: ty - 0.45 } });
     },
     onUp(info, moved) {
       const d = dragRef.current;
@@ -540,11 +540,11 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
       const tt = d.target;
       if (!tt || (tt.x === d.lead.x && tt.y === d.lead.y)) return;
       if (!isGM) {
-        if (map.movementLocked) return toast(t('Le MJ a verrouillé les déplacements'), 'warn');
-        if (!d.path) return toast(t('Destination inaccessible'), 'warn');
+        if (map.movementLocked) return toast(t('The GM has locked movement'), 'warn');
+        if (!d.path) return toast(t('Destination unreachable'), 'warn');
         if (inCombat && d.mv?.tooFar)
           return toast(
-            t('Trop loin pour ce tour : {step} m demandés, il reste {left} m (course max {run} m)', { step: d.mv.step, left: Math.max(0, Math.round((d.mv.run! - d.mv.used) * 10) / 10), run: d.mv.run }),
+            t('Too far for this turn: {step} m requested, {left} m left (max run {run} m)', { step: d.mv.step, left: Math.max(0, Math.round((d.mv.run! - d.mv.used) * 10) / 10), run: d.mv.run }),
             'warn'
           );
         send('maps/moveToken', { mapId, tokenId: d.lead.id, x: tt.x, y: tt.y }).catch(quiet);
@@ -586,12 +586,12 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
           if (info.shift) {
             const secret = target.kind !== 'secret';
             send('maps/setDoor', { mapId, doorId: target.id, kind: secret ? 'secret' : 'door' }).then(
-              () => toast(secret ? t('Porte secrète (invisible des joueurs fermée)') : t('Porte normale')),
+              () => toast(secret ? t('Secret door (hidden from players while closed)') : t('Regular door')),
               quiet
             );
           } else {
             const next = NEXT_DOOR_STATE[target.state] || 'closed';
-            send('maps/setDoor', { mapId, doorId: target.id, state: next }).then(() => toast(t('Porte : {state}', { state: doorLabel(next).toLowerCase() })), quiet);
+            send('maps/setDoor', { mapId, doorId: target.id, state: next }).then(() => toast(t('Door: {state}', { state: doorLabel(next).toLowerCase() })), quiet);
           }
         } else if (!isGM) {
           send('maps/toggleDoor', { mapId, doorId: target.id }).catch(quiet);
@@ -643,9 +643,9 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
         const note = (map.notes || []).find((n) => n.x === info.cx && n.y === info.cy);
         const doorState = doorLabel(door?.state).toLowerCase();
         const doorTip = door
-          ? `${door.name ? door.name + ' — ' : ''}${door.kind === 'secret' ? t('porte secrète, {state}', { state: doorState }) : doorState} · ${t('clic : changer · Maj+clic : secrète')}`
+          ? `${door.name ? door.name + ' — ' : ''}${door.kind === 'secret' ? t('secret door, {state}', { state: doorState }) : doorState} · ${t('click: change · Shift+click: secret')}`
           : null;
-        const text = note?.text || doorTip || (tok?.hidden ? t('{name} (caché aux joueurs)', { name: tok.name }) : null);
+        const text = note?.text || doorTip || (tok?.hidden ? t('{name} (hidden from players)', { name: tok.name }) : null);
         const key = text ? text + info.cx + ',' + info.cy : null;
         if (key !== tipRef.current) {
           tipRef.current = key;
@@ -663,91 +663,91 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
 
   // ---------------- toolbars ----------------
   const shownToPlayers = game.scene?.activeMapId === map.id;
-  const activeName = (game.scene?.activeMapId && game.maps?.[game.scene.activeMapId]?.name) || t('aucune carte');
+  const activeName = (game.scene?.activeMapId && game.maps?.[game.scene.activeMapId]?.name) || t('no map');
   const mapOptions = Object.values(game.maps || {})
     .sort((a, b) => compare(a.folder || '', b.folder || '') || compare(a.name, b.name))
     .map((m) => ({ value: m.id, label: `${m.id === game.scene?.activeMapId ? '● ' : ''}${m.folder ? m.folder + ' › ' : ''}${m.name}` }));
   const previewOptions = [
-    { value: '', label: t('Vue MJ') },
-    { value: 'party', label: t('Vue du groupe') },
+    { value: '', label: t('GM view') },
+    { value: 'party', label: t('Party view') },
     ...Object.values(game.users || {})
       .filter((u) => (u.characterIds || []).length)
-      .map((u) => ({ value: u.id, label: t('Vue de {name}', { name: u.name }) })),
+      .map((u) => ({ value: u.id, label: t('{name}\'s view', { name: u.name }) })),
   ];
   const myTokens = (map.tokens || []).filter(ownsToken);
   const turnEntry = combat?.active ? (combat.entries || []).find((e) => e.id === combat.currentId) || null : null;
 
   const gmToolbar = (
     <div className={'map-toolbar' + (toolsOpen ? '' : ' collapsed')}>
-      <IconButton icon={toolsOpen ? '◂' : '☰'} title={toolsOpen ? t('Replier la barre') : t('Outils de la carte')} onClick={() => setToolsOpen(!toolsOpen)} />
+      <IconButton icon={toolsOpen ? '◂' : '☰'} title={toolsOpen ? t('Collapse the toolbar') : t('Map tools')} onClick={() => setToolsOpen(!toolsOpen)} />
       {toolsOpen && (
         <>
-          <Select className="map-tb-select" value={map.id} options={mapOptions} onChange={(id) => setUI({ viewMapId: id })} title={t('Carte affichée sur ton écran')} />
+          <Select className="map-tb-select" value={map.id} options={mapOptions} onChange={(id) => setUI({ viewMapId: id })} title={t('Map shown on your screen')} />
           {shownToPlayers ? (
-            <Badge color="green" title={t('Les joueurs voient cette carte')}>
-              ● {t('Affichée aux joueurs')}
+            <Badge color="green" title={t('Players see this map')}>
+              ● {t('Shown to players')}
             </Badge>
           ) : (
             <Button
               small
               variant="accent"
-              onClick={() => send('maps/setActive', { mapId }).then(() => toast(t('Carte affichée aux joueurs'), 'success'), quiet)}
-              title={t('Les joueurs voient : {name}', { name: activeName })}
+              onClick={() => send('maps/setActive', { mapId }).then(() => toast(t('Map shown to players'), 'success'), quiet)}
+              title={t('Players see: {name}', { name: activeName })}
             >
-              {t('Montrer aux joueurs')}
+              {t('Show to players')}
             </Button>
           )}
           <span className="map-tb-sep"></span>
-          <Toggle label={t('Verrou')} title={t('Bloquer les déplacements des joueurs')} value={map.movementLocked} onChange={(v) => send('maps/update', { mapId, patch: { movementLocked: v } }).catch(quiet)} />
-          <Toggle label={t('Brouillard')} title={t('Brouillard de guerre pour les joueurs')} value={map.fog !== false} onChange={(v) => send('maps/update', { mapId, patch: { fog: v } }).catch(quiet)} />
+          <Toggle label={t('Lock')} title={t('Block player movement')} value={map.movementLocked} onChange={(v) => send('maps/update', { mapId, patch: { movementLocked: v } }).catch(quiet)} />
+          <Toggle label={t('Fog')} title={t('Fog of war for players')} value={map.fog !== false} onChange={(v) => send('maps/update', { mapId, patch: { fog: v } }).catch(quiet)} />
           <Select
             className="map-tb-select small"
             value={map.lighting || 'bright'}
             options={lightingOptions()}
             onChange={(v) => send('maps/update', { mapId, patch: { lighting: v } }).catch(quiet)}
-            title={t('Éclairage ambiant')}
+            title={t('Ambient lighting')}
           />
           <Select
             className="map-tb-select small"
             value={String(map.weather?.visibility || 0)}
-            options={[t('Temps clair'), t('Pluie / brouillard légers'), t('Pluie / brouillard modérés'), t('Pluie / brouillard denses')].map((label, i) => ({ value: String(i), label }))}
+            options={[t('Clear weather'), t('Light rain / fog'), t('Moderate rain / fog'), t('Heavy rain / fog')].map((label, i) => ({ value: String(i), label }))}
             onChange={(v) => send('maps/update', { mapId, patch: { weather: { visibility: Number(v) } } }).catch(quiet)}
-            title={t('Visibilité (modificateur d’environnement des attaques à distance)')}
+            title={t('Visibility (environmental modifier of ranged attacks)')}
           />
           <Select
             className="map-tb-select small"
             value={String(map.weather?.wind || 0)}
-            options={[t('Pas de vent'), t('Vent léger'), t('Vent modéré'), t('Vent fort')].map((label, i) => ({ value: String(i), label }))}
+            options={[t('No wind'), t('Light wind'), t('Moderate wind'), t('Strong wind')].map((label, i) => ({ value: String(i), label }))}
             onChange={(v) => send('maps/update', { mapId, patch: { weather: { wind: Number(v) } } }).catch(quiet)}
-            title={t('Vent (modificateur d’environnement des attaques à distance)')}
+            title={t('Wind (environmental modifier of ranged attacks)')}
           />
           {(map.walls || []).length > 0 && (
-            <Toggle label={t('Afficher les murs')} title={t('Tracer les murs (segments) par-dessus la carte — visible par toi seul')} value={showWalls} onChange={setShowWalls} />
+            <Toggle label={t('Show walls')} title={t('Draw the (segment) walls over the map — only you can see them')} value={showWalls} onChange={setShowWalls} />
           )}
-          {isImageMap(map) && <Toggle label={t('Grille')} title={t("Quadrillage discret par-dessus l'image")} value={showGrid} onChange={setShowGrid} />}
+          {isImageMap(map) && <Toggle label={t('Grid')} title={t("Subtle grid over the image")} value={showGrid} onChange={setShowGrid} />}
           {tileStyleToggle}
           <span className="map-tb-sep"></span>
           <Button
             small
             onClick={() =>
-              send<string[]>('maps/placePCs', { mapId }).then((ids) => toast(ids?.length ? t('{n} PJ placé(s)', { n: ids.length }) : t('Tous les PJ sont déjà sur la carte')), quiet)
+              send<string[]>('maps/placePCs', { mapId }).then((ids) => toast(ids?.length ? t('{n} PC(s) placed', { n: ids.length }) : t('All PCs are already on the map')), quiet)
             }
-            title={t('Poser un pion pour chaque PJ absent de la carte')}
+            title={t('Place a token for every PC missing from the map')}
           >
-            {t('Placer les PJ')}
+            {t('Place PCs')}
           </Button>
-          <Select className="map-tb-select small" value={preview} options={previewOptions} onChange={setPreview} title={t('Prévisualiser ce que voient les joueurs')} />
-          <Toggle label={t('Zones non vues')} title={t("Teinter les cases qu'aucun PJ ne voit")} value={tintUnseen} onChange={setTintUnseen} />
+          <Select className="map-tb-select small" value={preview} options={previewOptions} onChange={setPreview} title={t('Preview what players see')} />
+          <Toggle label={t('Unseen areas')} title={t("Tint cells no PC can see")} value={tintUnseen} onChange={setTintUnseen} />
           <span className="map-tb-sep"></span>
-          <Button small variant={drawer ? 'primary' : 'default'} onClick={() => setDrawer(!drawer)} title={t('Glisser des PNJ du bestiaire sur la carte')}>
-            ☠ {t('Bestiaire')}
+          <Button small variant={drawer ? 'primary' : 'default'} onClick={() => setDrawer(!drawer)} title={t('Drag NPCs from the bestiary onto the map')}>
+            ☠ {t('Bestiary')}
           </Button>
-          <Button small variant="ghost" onClick={() => setUI({ mapsEditId: map.id, mainTab: 'maps' })} title={t("Ouvrir l'éditeur de carte")}>
-            ✎ {t('Éditer')}
+          <Button small variant="ghost" onClick={() => setUI({ mapsEditId: map.id, mainTab: 'maps' })} title={t("Open the map editor")}>
+            ✎ {t('Edit')}
           </Button>
         </>
       )}
-      <IconButton icon="⌖" title={t('Recentrer la carte')} onClick={() => rRef.current?.fit()} />
+      <IconButton icon="⌖" title={t('Re-center the map')} onClick={() => rRef.current?.fit()} />
     </div>
   );
 
@@ -755,13 +755,13 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
     <div className="map-toolbar">
       <span className="map-title">{map.name}</span>
       {myTokens.map((tt) => (
-        <Button key={tt.id} small variant="ghost" onClick={() => rRef.current?.centerOn(tt.x, tt.y, 32)} title={t('Centrer sur {name}', { name: tt.name })}>
+        <Button key={tt.id} small variant="ghost" onClick={() => rRef.current?.centerOn(tt.x, tt.y, 32)} title={t('Center on {name}', { name: tt.name })}>
           ◎ {tt.name}
         </Button>
       ))}
-      {isImageMap(map) && <Toggle label={t('Grille')} title={t("Quadrillage discret par-dessus l'image")} value={showGrid} onChange={setShowGrid} />}
+      {isImageMap(map) && <Toggle label={t('Grid')} title={t("Subtle grid over the image")} value={showGrid} onChange={setShowGrid} />}
       {tileStyleToggle}
-      <IconButton icon="⌖" title={t('Recentrer la carte')} onClick={() => rRef.current?.fit()} />
+      <IconButton icon="⌖" title={t('Re-center the map')} onClick={() => rRef.current?.fit()} />
     </div>
   );
 
@@ -778,37 +778,37 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
       <MapCanvas rendererRef={rRef} scene={scene} handlers={handlers} className={placing ? 'placing' : ''} />
       {isGM ? gmToolbar : playerToolbar}
       <div className="map-banners">
-        {map.movementLocked && <div className="map-banner warn">⊘ {t('Déplacements verrouillés par le MJ')}</div>}
+        {map.movementLocked && <div className="map-banner warn">⊘ {t('Movement locked by the GM')}</div>}
         {view.preview && (
           <div className="map-banner info">
-            {t('Aperçu : {view}', { view: previewOptions.find((o) => o.value === preview)?.label || '' })}{' '}
+            {t('Preview: {view}', { view: previewOptions.find((o) => o.value === preview)?.label || '' })}{' '}
             <button className="map-banner-x" onClick={() => setPreview('')}>
               ✕
             </button>
           </div>
         )}
-        {isGM && !shownToPlayers && <div className="map-banner dim">{t('Les joueurs voient : {name}', { name: activeName })}</div>}
+        {isGM && !shownToPlayers && <div className="map-banner dim">{t('Players see: {name}', { name: activeName })}</div>}
         {turnEntry && inCombat && (
           <div className="map-banner combat">
-            {tRich(t('Round {round} · Tour de {name}'), { round: combat.round, name: <strong key="name">{turnEntry.hidden && !isGM ? '???' : turnEntry.name}</strong> })}
+            {tRich(t('Round {round} · {name}\'s turn'), { round: combat.round, name: <strong key="name">{turnEntry.hidden && !isGM ? '???' : turnEntry.name}</strong> })}
           </div>
         )}
         {placing && (
           <div className="map-banner info">
-            {t('Clique une case pour placer « {name} » ×{n} · Maj+clic : en placer plusieurs · Échap : annuler', { name: placing.name, n: spawnOpts.count })}
+            {t('Click a cell to place “{name}” ×{n} · Shift+click: place several · Esc: cancel', { name: placing.name, n: spawnOpts.count })}
           </div>
         )}
         {(targetTok || aimHere) && (
           <div className="map-banner target">
             {targetTok ? (
               <>
-                🎯 {tRich(t('Cible : {name}'), { name: <strong key="name">{targetTok.name}</strong> })}
+                🎯 {tRich(t('Target: {name}'), { name: <strong key="name">{targetTok.name}</strong> })}
                 {targetMeters !== null ? ` · ${targetMeters} m` : ''}
               </>
             ) : null}
             {aimHere ? (
               <>
-                {targetTok ? ' · ' : ''}💣 {t('Point visé ({x}, {y})', { x: aimHere.x, y: aimHere.y })}
+                {targetTok ? ' · ' : ''}💣 {t('Aimed point ({x}, {y})', { x: aimHere.x, y: aimHere.y })}
               </>
             ) : null}
             {attackerTok && (
@@ -817,19 +817,19 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
                 onClick={() =>
                   setAttacking({ actorId: attackerTok.actorId!, weaponId: defaultWeapon(actors[attackerTok.actorId!], targetMeters, !!aimHere && !targetTok)?.id || null })
                 }
-                title={t('Jet d’attaque de {name}', { name: attackerTok.name })}
+                title={t('Attack roll for {name}', { name: attackerTok.name })}
               >
-                ⚔ {isGM ? t('Attaquer avec {name}', { name: attackerTok.name }) : t('Attaquer')}
+                ⚔ {isGM ? t('Attack with {name}', { name: attackerTok.name }) : t('verb::Attack')}
               </button>
             )}
-            {isGM && !attackerTok && targetTok && <span className="faint small">{t('sélectionne l’attaquant')}</span>}
+            {isGM && !attackerTok && targetTok && <span className="faint small">{t('select the attacker')}</span>}
             <button
               className="map-banner-x"
               onClick={() => {
                 setTarget(null);
                 setAimPoint(null);
               }}
-              title={t('Effacer la cible')}
+              title={t('Clear the target')}
             >
               ✕
             </button>
@@ -841,7 +841,7 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
       )}
       {!isGM && (
         <div className="map-hint">
-          {t('Glisse ton pion pour te déplacer · clic sur un autre pion : le cibler · clic sur une porte proche : ouvrir/fermer · double-clic : fiche · Alt+clic ou appui long : ping')}
+          {t('Drag your token to move · click another token: target it · click a nearby door: open/close · double-click: sheet · Alt+click or long press: ping')}
         </div>
       )}
       {isGM && drawer && <BestiaryDrawer game={game} opts={spawnOpts} setOpts={setSpawnOpts} placing={placing} setPlacing={setPlacing} onClose={() => setDrawer(false)} />}
@@ -880,19 +880,19 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
               <div className="map-menu-head">{tok.name}</div>
               {tok.actorId && (
                 <button className="map-menu-item" onClick={act(() => setTarget(tok.id))}>
-                  {ui.targetTokenId === tok.id ? t('Ne plus cibler') : '🎯 ' + t('Cibler')}
+                  {ui.targetTokenId === tok.id ? t('Stop targeting') : '🎯 ' + t('verb::Target')}
                 </button>
               )}
               {tok.actorId && actors[tok.actorId] && (
                 <button className="map-menu-item" onClick={act(() => openSheet(tok.actorId))}>
-                  {t('Ouvrir la fiche')}
+                  {t('Open the sheet')}
                 </button>
               )}
               <button className="map-menu-item" onClick={act(() => setAimPoint(mapId, tok.x, tok.y))}>
-                💣 {t('Viser ce point (grenade)')}
+                💣 {t('Aim at this point (grenade)')}
               </button>
               <button className="map-menu-item" onClick={act(() => ping({ fx: menu.fx, fy: menu.fy }))}>
-                {t('Pinger ici')}
+                {t('Ping here')}
               </button>
             </>
           );
@@ -901,10 +901,10 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
           <>
             <div className="map-menu-head">{tok.name}</div>
             <button className="map-menu-item" onClick={act(() => openSheet(tok.actorId))}>
-              {t('Ouvrir la fiche')}
+              {t('Open the sheet')}
             </button>
             <button className="map-menu-item" onClick={act(() => send('maps/updateToken', { mapId, tokenId: tok.id, patch: { light: hasTorch ? null : TORCH } }).catch(quiet))}>
-              {hasTorch ? t('Éteindre la lampe') : t('Allumer une lampe torche')}
+              {hasTorch ? t('Turn off the light') : t('Turn on a flashlight')}
             </button>
             <div className="map-menu-row">
               {['à terre', 'à couvert'].map((s) => (
@@ -918,7 +918,7 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
               ))}
             </div>
             <button className="map-menu-item" onClick={act(() => ping({ fx: menu.fx, fy: menu.fy }))}>
-              {t('Pinger ici')}
+              {t('Ping here')}
             </button>
           </>
         );
@@ -928,21 +928,21 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
       return (
         <>
           <div className="map-menu-head">
-            {multi ? t('{n} pions sélectionnés', { n: targets.length }) : tok.name}
+            {multi ? t('{n} tokens selected', { n: targets.length }) : tok.name}
             {!multi && <Badge color={dispoColors[tok.disposition] || 'dim'}>{dispoLabel(tok.disposition)}</Badge>}
           </div>
           {!multi && tok.actorId && actors[tok.actorId] && (
             <button className="map-menu-item" onClick={act(() => openSheet(tok.actorId))}>
-              {t('Ouvrir la fiche')}
+              {t('Open the sheet')}
             </button>
           )}
           {!multi && tok.actorId && (
-            <button className="map-menu-item" onClick={act(() => setTarget(tok.id))} title={t('Cible des attaques du pion sélectionné')}>
-              {ui.targetTokenId === tok.id ? t('Ne plus cibler') : '🎯 ' + t('Cibler')}
+            <button className="map-menu-item" onClick={act(() => setTarget(tok.id))} title={t('Target of the selected token\'s attacks')}>
+              {ui.targetTokenId === tok.id ? t('Stop targeting') : '🎯 ' + t('verb::Target')}
             </button>
           )}
           <button className="map-menu-item" onClick={act(() => updateTokens(ids, { hidden: !allHidden }))}>
-            {allHidden ? t('Montrer aux joueurs') : t('Cacher aux joueurs')}
+            {allHidden ? t('Show to players') : t('Hide from players')}
           </button>
           <div className="map-menu-label">{t('Disposition')}</div>
           <div className="map-menu-row">
@@ -957,7 +957,7 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
               </button>
             ))}
           </div>
-          <div className="map-menu-label">{t('Statut')}</div>
+          <div className="map-menu-label">{t('Status')}</div>
           <div className="map-menu-row">
             {STATUSES.map((s) => {
               const on = targets.every((tt) => (tt.status || []).includes(s));
@@ -979,24 +979,24 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
             })}
           </div>
           <button className="map-menu-item" onClick={act(() => updateTokens(ids, { light: hasTorch ? null : TORCH }))}>
-            {hasTorch ? t('Éteindre la lampe torche') : t('Lampe torche (6 m)')}
+            {hasTorch ? t('Turn off the flashlight') : t('Flashlight (6 m)')}
           </button>
-          <button className="map-menu-item" onClick={act(() => send('combat/add', { tokenIds: ids }).then(() => toast(t('Ajouté au combat'), 'success'), quiet))}>
-            {t('Ajouter au combat')}
+          <button className="map-menu-item" onClick={act(() => send('combat/add', { tokenIds: ids }).then(() => toast(t('Added to combat'), 'success'), quiet))}>
+            {t('Add to combat')}
           </button>
           {!multi && (
             <button
               className="map-menu-item"
               onClick={act(async () => {
-                const name = await promptText(t('Nom du pion'), tok.name);
+                const name = await promptText(t('Token name'), tok.name);
                 if (name && name.trim()) send('maps/updateToken', { mapId, tokenId: tok.id, patch: { name: name.trim() } }).catch(quiet);
               })}
             >
-              {t('Renommer…')}
+              {t('Rename…')}
             </button>
           )}
           <button className="map-menu-item danger" onClick={act(() => removeTokens(ids))}>
-            {t('Retirer de la carte')}
+            {t('Remove from the map')}
           </button>
         </>
       );
@@ -1008,16 +1008,16 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
     const aimItems = inside && (
       <>
         <button className="map-menu-item" onClick={act(() => setAimPoint(mapId, x, y))}>
-          💣 {t('Viser ce point (grenade)')}
+          💣 {t('Aim at this point (grenade)')}
         </button>
         {aimHere && (
           <button className="map-menu-item" onClick={act(() => setAimPoint(null))}>
-            {t('Effacer le point visé')}
+            {t('Clear the aimed point')}
           </button>
         )}
         {blastsHere.map((b) => (
           <button className="map-menu-item" key={b.id} onClick={act(() => send('attack/removeBlast', { blastId: b.id }).catch(quiet))}>
-            ✕ {t('Retirer : {what}', { what: blastLabel({ ...b, scattered: false }) || (typeof b.weaponName === 'string' ? b.weaponName : b.weaponName?.fr) || t('souffle') })}
+            ✕ {t('Remove: {what}', { what: blastLabel({ ...b, scattered: false }) || (typeof b.weaponName === 'string' ? b.weaponName : b.weaponName?.fr) || t('blast') })}
           </button>
         ))}
       </>
@@ -1026,7 +1026,7 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
       return (
         <>
           <button className="map-menu-item" onClick={act(() => ping({ fx: menu.fx, fy: menu.fy }))}>
-            {t('Pinger ici')}
+            {t('Ping here')}
           </button>
           {aimItems}
         </>
@@ -1041,9 +1041,9 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
     const notesHere = (map.notes || []).filter((n) => n.x === x && n.y === y);
     return (
       <>
-        <div className="map-menu-head">{t('Case {x}, {y}', { x, y })}</div>
+        <div className="map-menu-head">{t('Cell {x}, {y}', { x, y })}</div>
         <button className="map-menu-item" onClick={act(() => ping({ fx: menu.fx, fy: menu.fy }))}>
-          {t('Pinger ici')}
+          {t('Ping here')}
         </button>
         {aimItems}
         {inside && (
@@ -1051,14 +1051,14 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
             <button
               className="map-menu-item"
               onClick={act(() =>
-                send<string[]>('maps/placePCs', { mapId, x, y }).then((ids) => toast(ids?.length ? t('{n} PJ placé(s)', { n: ids.length }) : t('Tous les PJ sont déjà sur la carte')), quiet)
+                send<string[]>('maps/placePCs', { mapId, x, y }).then((ids) => toast(ids?.length ? t('{n} PC(s) placed', { n: ids.length }) : t('All PCs are already on the map')), quiet)
               )}
             >
-              {t('Placer les PJ ici')}
+              {t('Place PCs here')}
             </button>
             {pcList.length > 0 && (
               <>
-                <div className="map-menu-label">{t('Placer un PJ ici')}</div>
+                <div className="map-menu-label">{t('Place a PC here')}</div>
                 <div className="map-menu-row">
                   {pcList.map((a) => {
                     const onMap = (map.tokens || []).some((tk) => tk.actorId === a.id);
@@ -1067,7 +1067,7 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
                         key={a.id}
                         className="chip"
                         style={a.color ? ({ '--chip': a.color } as CSSProperties) : undefined}
-                        title={onMap ? t('Déplacer {name} ici', { name: a.name }) : t('Placer {name} ici', { name: a.name })}
+                        title={onMap ? t('Move {name} here', { name: a.name }) : t('Place {name} here', { name: a.name })}
                         onClick={act(() => send('maps/placePCs', { mapId, x, y, actorIds: [a.id], move: true }).catch(quiet))}
                       >
                         {onMap ? '↦ ' : '＋ '}
@@ -1079,25 +1079,25 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
               </>
             )}
             <button className="map-menu-item" onClick={act(() => send('maps/addLight', { mapId, light: { x, y, radius: 6, color: '#ffcc88', on: true } }).catch(quiet))}>
-              {t('Ajouter une lumière ici')}
+              {t('Add a light here')}
             </button>
             <button
               className="map-menu-item"
               onClick={act(async () => {
-                const text = await promptText(t('Note MJ (visible par toi seul)'));
+                const text = await promptText(t('GM note (only you can see it)'));
                 if (text && text.trim()) send('maps/addNote', { mapId, note: { x, y, text: text.trim() } }).catch(quiet);
               })}
             >
-              {t('Ajouter une note ici')}
+              {t('Add a note here')}
             </button>
             <button className="map-menu-item" onClick={act(() => setDrawer(true))}>
-              {t('Placer un PNJ…')}
+              {t('Place an NPC…')}
             </button>
           </>
         )}
         {door && (
           <>
-            <div className="map-menu-label">{door.name ? t('Porte — {name}', { name: door.name }) : t('Porte')}</div>
+            <div className="map-menu-label">{door.name ? t('Door — {name}', { name: door.name }) : t('Door')}</div>
             <div className="map-menu-row">
               {(['open', 'closed', 'locked'] as const).map((s) => (
                 <button key={s} className={'chip' + (door.state === s ? ' on' : '')} onClick={() => send('maps/setDoor', { mapId, doorId: door.id, state: s }).catch(quiet)}>
@@ -1109,20 +1109,20 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
                 style={{ '--chip': '#e0468f' } as CSSProperties}
                 onClick={() => send('maps/setDoor', { mapId, doorId: door.id, kind: door.kind === 'secret' ? 'door' : 'secret' }).catch(quiet)}
               >
-                {t('Secrète')}
+                {t('fem::Secret')}
               </button>
             </div>
           </>
         )}
         {lightsHere.map((l) => (
           <Fragment key={l.id}>
-            <div className="map-menu-label">{t('Lumière')}</div>
+            <div className="map-menu-label">{t('Light')}</div>
             <div className="map-menu-row">
               <button className={'chip' + (l.on !== false ? ' on' : '')} onClick={() => send('maps/toggleLight', { mapId, lightId: l.id }).catch(quiet)}>
-                {l.on !== false ? t('Allumée') : t('Éteinte')}
+                {l.on !== false ? t('On') : t('light::Off')}
               </button>
               <button className="chip" onClick={act(() => send('maps/removeLight', { mapId, lightId: l.id }).catch(quiet))}>
-                {t('Supprimer')}
+                {t('Delete')}
               </button>
             </div>
           </Fragment>
@@ -1135,14 +1135,14 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
               <button
                 className="chip"
                 onClick={act(async () => {
-                  const text = await promptText(t('Note MJ'), n.text);
+                  const text = await promptText(t('GM note'), n.text);
                   if (text != null) send('maps/updateNote', { mapId, noteId: n.id, patch: { text } }).catch(quiet);
                 })}
               >
-                {t('Modifier')}
+                {t('Edit')}
               </button>
               <button className="chip" onClick={act(() => send('maps/removeNote', { mapId, noteId: n.id }).catch(quiet))}>
-                {t('Supprimer')}
+                {t('Delete')}
               </button>
             </div>
           </Fragment>
@@ -1212,28 +1212,28 @@ function BestiaryDrawer({ game, opts, setOpts, placing, setPlacing, onClose }: B
   return (
     <aside className="map-drawer">
       <header className="map-drawer-head">
-        <strong>{t('Bestiaire')}</strong>
-        <IconButton icon="✕" title={t('Fermer')} onClick={onClose} />
+        <strong>{t('Bestiary')}</strong>
+        <IconButton icon="✕" title={t('Close')} onClick={onClose} />
       </header>
       <div className="map-drawer-opts">
-        <SearchBox value={q} onChange={setQ} placeholder={t('Rechercher un PNJ…')} />
+        <SearchBox value={q} onChange={setQ} placeholder={t('Search for an NPC…')} />
         <div className="row spread">
-          <span className="small muted">{t('Nombre')}</span>
+          <span className="small muted">{t('Count')}</span>
           <NumberInput small value={opts.count} min={1} max={12} onChange={(v) => setOpts({ ...opts, count: v })} />
         </div>
-        <Toggle label={t('Placer caché')} value={opts.hidden} onChange={(v) => setOpts({ ...opts, hidden: v })} />
+        <Toggle label={t('Place hidden')} value={opts.hidden} onChange={(v) => setOpts({ ...opts, hidden: v })} />
       </div>
       <div className="map-drawer-list">
-        {!list.length && <div className="empty small">{Object.keys(game.bestiary || {}).length ? t('Aucun résultat') : t('Bestiaire vide')}</div>}
+        {!list.length && <div className="empty small">{Object.keys(game.bestiary || {}).length ? t('No results') : t('Bestiary is empty')}</div>}
         {groups.map((g, gi) => (
           <Fragment key={gi + ':' + g.folder}>
-            <div className="map-drawer-group">{g.folder || t('Divers')}</div>
+            <div className="map-drawer-group">{g.folder || t('Miscellaneous')}</div>
             {g.items.map((tt) => (
               <div
                 key={tt.id}
                 className={'map-drawer-item' + (placing?.templateId === tt.id ? ' active' : '')}
                 draggable="true"
-                title={t('Glisse sur la carte, ou clique puis clique une case')}
+                title={t('Drag onto the map, or click it then click a cell')}
                 onDragStart={(e) => {
                   e.dataTransfer.setData('text/sr-template', tt.id);
                   e.dataTransfer.setData('text/plain', tt.name);

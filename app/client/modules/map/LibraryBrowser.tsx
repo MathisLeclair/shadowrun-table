@@ -16,8 +16,8 @@ import type { GameMap, GameView } from '../../../shared/types.ts';
 import type { LibDiff, LibEntry, LibFull, LibLinkInfo } from './types.ts';
 
 const quiet = () => {};
-const SOURCES: Record<string, string> = { fragmap: tk('Fragmaps (Patreon)'), 'fragmaps-free': tk('Fragmaps (gratuites)') };
-const QUALITY: Record<string, string> = { good: tk('Murs soignés'), rough: tk('Murs approximatifs') };
+const SOURCES: Record<string, string> = { fragmap: tk('Fragmaps (Patreon)'), 'fragmaps-free': tk('Fragmaps (free)') };
+const QUALITY: Record<string, string> = { good: tk('Clean walls'), rough: tk('Rough walls') };
 /** Display name in the UI language (English file name / natural French name). */
 export const libName = (e: { name?: string; nameFr?: string; slug: string }): string =>
   (getLang() === 'en' ? e.name || e.nameFr : e.nameFr || e.name) || e.slug;
@@ -44,13 +44,13 @@ interface AddFormProps {
 function AddForm({ entry, game, onAdded }: AddFormProps) {
   const folders = [...new Set(Object.values(game.maps || {}).map((m) => m.folder).filter(Boolean) as string[])].sort();
   const [name, setName] = useState(libName(entry));
-  const [folder, setFolder] = useState(t('Bibliothèque'));
+  const [folder, setFolder] = useState(t('Library'));
   const [busy, setBusy] = useState(false);
   const add = async () => {
     setBusy(true);
     try {
       const id = await send<string>('maps/fromLibrary', { slug: entry.slug, name: name.trim(), folder: folder.trim() });
-      toast(t('Carte ajoutée à la table : {name}', { name: name.trim() || libName(entry) }), 'success');
+      toast(t('Map added to the table: {name}', { name: name.trim() || libName(entry) }), 'success');
       onAdded?.(id);
     } catch {
       setBusy(false);
@@ -58,10 +58,10 @@ function AddForm({ entry, game, onAdded }: AddFormProps) {
   };
   return (
     <div className="col gap-s">
-      <Field label={t('Nom dans la table')}>
+      <Field label={t('Name in this table')}>
         <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
       </Field>
-      <Field label={t('Dossier')}>
+      <Field label={t('Folder')}>
         <input className="input" list="maplib-folders" value={folder} onChange={(e) => setFolder(e.target.value)} />
         <datalist id="maplib-folders">
           {folders.map((f) => (
@@ -70,9 +70,9 @@ function AddForm({ entry, game, onAdded }: AddFormProps) {
         </datalist>
       </Field>
       <Button variant="primary" disabled={busy} onClick={add}>
-        {t('Ajouter à cette table')}
+        {t('Add to this table')}
       </Button>
-      <span className="small muted">{t('La table reçoit sa propre copie : pions, brouillard, portes et retouches restent dans cette table.')}</span>
+      <span className="small muted">{t('The table gets its own copy: tokens, fog, doors and edits stay in this table.')}</span>
     </div>
   );
 }
@@ -104,22 +104,22 @@ function PreviewModal({ entry, game, onClose, onAdded }: PreviewModalProps) {
     <Modal title={libName(entry)} width={1100} onClose={onClose}>
       <div className="maplib-preview">
         <div className="maplib-preview-canvas">
-          {err ? <Empty>{err.message}</Empty> : scene ? <MapCanvas scene={scene} handlers={{}} /> : <Empty>{t('Chargement…')}</Empty>}
+          {err ? <Empty>{err.message}</Empty> : scene ? <MapCanvas scene={scene} handlers={{}} /> : <Empty>{t('Loading…')}</Empty>}
         </div>
         <aside className="maplib-preview-side col gap-s">
           <div className="row wrap gap-s">
             <Badge color="cyan">{t(SOURCES[entry.source] || entry.source)}</Badge>
             <Badge color={entry.quality === 'good' ? 'green' : 'amber'}>{t(QUALITY[entry.quality] || QUALITY.rough)}</Badge>
-            {!entry.hasImage && <Badge color="red">{t('Image manquante sur le serveur')}</Badge>}
+            {!entry.hasImage && <Badge color="red">{t('Image missing on the server')}</Badge>}
           </div>
           {getLang() === 'en' ? null : <div className="small muted">{entry.name}</div>}
-          <p className="small">{entry.description || t('Pas de description.')}</p>
+          <p className="small">{entry.description || t('No description.')}</p>
           <div className="small muted">
-            {t('{w} × {h} cases · {m} m par case', { w: entry.width, h: entry.height, m: entry.metersPerCell })}
+            {t('{w} × {h} cells · {m} m per cell', { w: entry.width, h: entry.height, m: entry.metersPerCell })}
             <br />
             {themeLabel(entry.theme)} · {lightingLabel(entry.lighting)}
             <br />
-            {entry.counts ? t('{walls} murs, {doors} portes, {lights} lumières, {regions} zones', entry.counts) : null}
+            {entry.counts ? t('{walls} walls, {doors} doors, {lights} lights, {regions} zones', entry.counts) : null}
             <br />
             {t('Version {v}', { v: entry.version })}
             {entry.updatedAt ? ` · ${fmtDate(entry.updatedAt)}` : ''}
@@ -134,7 +134,7 @@ function PreviewModal({ entry, game, onClose, onAdded }: PreviewModalProps) {
             </div>
           ) : null}
           <label className="row gap-s small">
-            <input type="checkbox" checked={showWalls} onChange={(e) => setShowWalls(e.target.checked)} /> {t('Afficher les murs')}
+            <input type="checkbox" checked={showWalls} onChange={(e) => setShowWalls(e.target.checked)} /> {t('Show walls')}
           </label>
           <hr />
           <AddForm
@@ -165,9 +165,9 @@ function LibCard({ entry, k, uses, onPreview, onAdded }: LibCardProps) {
   const [adding, setAdding] = useState(false);
   return (
     <div className="maps-card maplib-card">
-      <div className="maps-thumb" onClick={onPreview} title={t('Aperçu')}>
+      <div className="maps-thumb" onClick={onPreview} title={t('Preview')}>
         {src ? <img src={src} alt="" loading="lazy" /> : <span className="muted small">{libName(entry)}</span>}
-        {uses ? <Badge color="green">{tn(uses, '{n} copie sur la table', '{n} copies sur la table')}</Badge> : null}
+        {uses ? <Badge color="green">{tn(uses, '{n} copy in this table', '{n} copies in this table')}</Badge> : null}
       </div>
       <div className="maps-card-body">
         <h4>{libName(entry)}</h4>
@@ -179,7 +179,7 @@ function LibCard({ entry, k, uses, onPreview, onAdded }: LibCardProps) {
           <span className={entry.quality === 'good' ? 'green' : 'amber'}>{t(QUALITY[entry.quality] || QUALITY.rough)}</span>
           {entry.source === 'fragmaps-free' ? (
             <>
-              ·<span className="magenta">{t('gratuite')}</span>
+              ·<span className="magenta">{t('free')}</span>
             </>
           ) : null}
         </div>
@@ -193,16 +193,16 @@ function LibCard({ entry, k, uses, onPreview, onAdded }: LibCardProps) {
             setAdding(true);
             try {
               const id = await send<string>('maps/fromLibrary', { slug: entry.slug });
-              toast(t('Carte ajoutée à la table : {name}', { name: libName(entry) }), 'success');
+              toast(t('Map added to the table: {name}', { name: libName(entry) }), 'success');
               onAdded?.(id);
             } catch {}
             setAdding(false);
           }}
         >
-          {t('Ajouter à cette table')}
+          {t('Add to this table')}
         </Button>
         <Button small variant="ghost" onClick={onPreview}>
-          {t('Aperçu')}
+          {t('Preview')}
         </Button>
       </div>
     </div>
@@ -236,31 +236,31 @@ export function LibraryBrowser({ game, onAdded }: LibraryBrowserProps) {
     [data, q, theme, source, quality]
   );
   if (error) return <Empty>{error.message}</Empty>;
-  if (!data) return <Empty>{t('Chargement…')}</Empty>;
+  if (!data) return <Empty>{t('Loading…')}</Empty>;
   return (
     <div className="col gap-s">
       <div className="row wrap gap-s maplib-filters">
-        <SearchBox value={q} onChange={setQ} placeholder={t('Rechercher : nom, lieu, ambiance…')} />
-        <Select value={theme} onChange={setTheme} options={[{ value: '', label: t('Toutes les ambiances') }, ...themeOptions()]} />
+        <SearchBox value={q} onChange={setQ} placeholder={t('Search: name, place, mood…')} />
+        <Select value={theme} onChange={setTheme} options={[{ value: '', label: t('All moods') }, ...themeOptions()]} />
         <Select
           value={source}
           onChange={setSource}
-          options={[{ value: '', label: t('Toutes les sources') }, ...Object.entries(SOURCES).map(([value, label]) => ({ value, label: t(label) }))]}
+          options={[{ value: '', label: t('All sources') }, ...Object.entries(SOURCES).map(([value, label]) => ({ value, label: t(label) }))]}
         />
         <Select
           value={quality}
           onChange={setQuality}
-          options={[{ value: '', label: t('Tous les tracés') }, ...Object.entries(QUALITY).map(([value, label]) => ({ value, label: t(label) }))]}
+          options={[{ value: '', label: t('All tracings') }, ...Object.entries(QUALITY).map(([value, label]) => ({ value, label: t(label) }))]}
         />
-        <span className="small muted">{tn(list.length, '{n} carte', '{n} cartes')}</span>
-        <Button small variant="ghost" onClick={() => loadLibrary(true).catch(quiet)} title={t('Recharger la bibliothèque')}>
+        <span className="small muted">{tn(list.length, '{n} map', '{n} maps')}</span>
+        <Button small variant="ghost" onClick={() => loadLibrary(true).catch(quiet)} title={t('Reload the library')}>
           ⟳
         </Button>
       </div>
       <div className="small muted">
-        {t('Cartes brutes partagées par toutes les tables du serveur. Ajoute une carte pour en faire une copie modifiable dans cette table.')}
+        {t('Raw maps shared by every table on this server. Add a map to get an editable copy in this table.')}
       </div>
-      {!list.length && <Empty>{data.maps.length ? t('Aucune carte ne correspond à ces filtres.') : t('La bibliothèque est vide.')}</Empty>}
+      {!list.length && <Empty>{data.maps.length ? t('No map matches these filters.') : t('The library is empty.')}</Empty>}
       <div className="maps-grid">
         {list.map((e) => (
           <LibCard key={e.slug} entry={e} k={k} uses={uses[e.slug] || 0} game={game} onAdded={onAdded} onPreview={() => setPreview(e)} />
@@ -275,8 +275,8 @@ const STALE_KEY = 'La bibliothèque a changé depuis ta dernière synchronisatio
 
 function diffLines(d: LibDiff): string[] {
   const line = (label: string, x: { add: number; remove: number }) =>
-    x.add || x.remove ? t('{what} : +{add} / −{remove}', { what: label, add: x.add, remove: x.remove }) : null;
-  return [line(t('Murs'), d.walls), line(t('Portes'), d.doors), line(t('Lumières'), d.lights), line(t('Zones'), d.regions)].filter(Boolean) as string[];
+    x.add || x.remove ? t('{what}: +{add} / −{remove}', { what: label, add: x.add, remove: x.remove }) : null;
+  return [line(t('Walls'), d.walls), line(t('Doors'), d.doors), line(t('Lights'), d.lights), line(t('Areas'), d.regions)].filter(Boolean) as string[];
 }
 
 interface LibraryLinkModalProps {
@@ -307,21 +307,21 @@ export function LibraryLinkModal({ map, onClose, beforeAction }: LibraryLinkModa
     run(async () => {
       if (
         !(await confirmAction(
-          t('Remplacer les murs, portes, lumières et zones de « {name} » par ceux de la bibliothèque ? Les pions, notes, brouillard, zones MJ et l’état des portes restent.', {
+          t('Replace the walls, doors, lights and zones of “{name}” with the library’s? Tokens, notes, fog, GM zones and door states are kept.', {
             name: map.name,
           })
         ))
       )
         return;
       const r = await send<{ version: number }>('maps/libraryUpdate', { mapId: map.id });
-      toast(t('Carte mise à jour (version {v})', { v: r.version }), 'success');
+      toast(t('Map updated (version {v})', { v: r.version }), 'success');
     });
   const publish = () =>
     run(async () => {
       if (
         !(await confirmAction(
           t(
-            'Publier les murs, portes, lumières et zones de « {name} » dans la bibliothèque du serveur ? Toutes les tables en profiteront. Les pions, notes, brouillard et zones MJ ne sont jamais publiés, les portes repartent fermées.',
+            'Publish the walls, doors, lights and zones of “{name}” to the server library? Every table will benefit. Tokens, notes, fog and GM zones are never published; doors are reset to closed.',
             { name: map.name }
           )
         ))
@@ -336,64 +336,64 @@ export function LibraryLinkModal({ map, onClose, beforeAction }: LibraryLinkModa
           toast(err.message, 'error');
           throw err;
         }
-        if (!(await confirmAction(t('Quelqu’un a publié une version plus récente. Publier quand même (l’ancienne reste dans l’historique) ?')))) return;
+        if (!(await confirmAction(t('Someone published a newer version. Publish anyway (the old one stays in the history)?')))) return;
         r = await send<{ version: number }>('maps/publishToLibrary', { mapId: map.id, force: true });
       }
-      toast(t('Publiée dans la bibliothèque (version {v})', { v: r.version }), 'success');
+      toast(t('Published to the library (version {v})', { v: r.version }), 'success');
     });
   const unlink = () =>
     run(async () => {
       if (
         !(await confirmAction(
-          t('Détacher « {name} » de la bibliothèque ? Elle devient une carte ordinaire de la table (plus de mise à jour ni de publication).', { name: map.name })
+          t('Detach “{name}” from the library? It becomes an ordinary table map (no more updates or publishing).', { name: map.name })
         ))
       )
         return;
       await send('maps/libraryUnlink', { mapId: map.id });
-      toast(t('Carte détachée de la bibliothèque'));
+      toast(t('Map detached from the library'));
       onClose();
     });
   const d = info?.diff;
   const lines = d ? diffLines(d) : [];
   return (
-    <Modal title={t('Bibliothèque : {name}', { name: map.name })} width={560} onClose={onClose}>
+    <Modal title={t('Library: {name}', { name: map.name })} width={560} onClose={onClose}>
       {!info || !d ? (
-        <Empty>{t('Chargement…')}</Empty>
+        <Empty>{t('Loading…')}</Empty>
       ) : (
         <div className="col gap-s">
-          <div>{t('Copie de « {name} » (bibliothèque du serveur).', { name: getLang() === 'en' ? info.name : info.nameFr || info.name })}</div>
-          <div className="small muted">{t('Version de cette carte : {mine} · version de la bibliothèque : {lib}', { mine: info.current, lib: info.latest })}</div>
-          {info.latest > info.current ? <Badge color="amber">{t('Nouvelle version disponible')}</Badge> : null}
-          <div className="section-title">{t('Différences avec la bibliothèque')}</div>
+          <div>{t('Copy of “{name}” (server library).', { name: getLang() === 'en' ? info.name : info.nameFr || info.name })}</div>
+          <div className="small muted">{t('This map’s version: {mine} · library version: {lib}', { mine: info.current, lib: info.latest })}</div>
+          {info.latest > info.current ? <Badge color="amber">{t('New version available')}</Badge> : null}
+          <div className="section-title">{t('Differences with the library')}</div>
           {d.same ? (
-            <div className="small green">{t('Identique à la bibliothèque.')}</div>
+            <div className="small green">{t('Same as the library.')}</div>
           ) : (
             <>
               <ul className="small">
                 {lines.map((l) => (
                   <li key={l}>{l}</li>
                 ))}
-                {d.resized ? <li>{t('Taille : {w} × {h} cases', { w: d.width, h: d.height })}</li> : null}
+                {d.resized ? <li>{t('Size: {w} × {h} cells', { w: d.width, h: d.height })}</li> : null}
               </ul>
-              <div className="small muted">{t('« + » = présent dans la bibliothèque seulement, « − » = présent dans ta carte seulement.')}</div>
+              <div className="small muted">{t('“+” = only in the library, “−” = only in your map.')}</div>
             </>
           )}
           {d.keptDoorStates ? (
-            <div className="small muted">{tn(d.keptDoorStates, 'Une mise à jour garde l’état de {n} porte.', 'Une mise à jour garde l’état de {n} portes.')}</div>
+            <div className="small muted">{tn(d.keptDoorStates, 'An update keeps the state of {n} door.', 'An update keeps the state of {n} doors.')}</div>
           ) : null}
           <div className="row wrap gap-s" style={{ marginTop: '8px' }}>
             <Button variant="primary" disabled={busy || (d.same && info.latest <= info.current)} onClick={update}>
-              {t('Mettre à jour depuis la bibliothèque')}
+              {t('Update from the library')}
             </Button>
             {info.publishAllowed ? (
               <Button variant="accent" disabled={busy || d.same} onClick={publish}>
-                {t('Publier mes corrections dans la bibliothèque')}
+                {t('Publish my fixes to the library')}
               </Button>
             ) : (
-              <span className="small muted">{t('Publication réservée à l’administrateur du serveur.')}</span>
+              <span className="small muted">{t('Publishing is reserved to the server admin.')}</span>
             )}
             <Button variant="ghost" disabled={busy} onClick={unlink}>
-              {t('Détacher')}
+              {t('Detach')}
             </Button>
           </div>
         </div>

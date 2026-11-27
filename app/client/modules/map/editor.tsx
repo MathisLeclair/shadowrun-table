@@ -19,10 +19,10 @@ type Opt = { value: string; label: string };
 const tr = (list: Opt[]): Opt[] => list.map((o) => ({ value: o.value, label: t(o.label) }));
 /** Tile names (same French text as TILE_INFO[ch].fr in shared/vision.js). */
 const TILE_LABELS: Record<string, string> = {
-  ' ': tk('Vide (hors carte)'), '.': tk('Sol intérieur'), ',': tk('Sol extérieur / rue'), '#': tk('Mur'), D: tk('Porte / passage'), W: tk('Fenêtre'),
-  '=': tk('Comptoir / muret / rambarde'), T: tk('Table / mobilier'), c: tk('Caisses / couvert'), o: tk('Pilier / colonne'), m: tk('Machines / serveurs / étagères'),
-  v: tk('Véhicule'), b: tk('Lit / canapé'), s: tk('Escalier / rampe'), e: tk('Ascenseur'), '~': tk('Eau'), g: tk('Herbe / végétation'), r: tk('Gravats (terrain difficile)'),
-  x: tk('Danger (feu, chimie, électricité)'), t: tk('Arbres / buissons denses'), _: tk('Tapis / scène / piste de danse'),
+  ' ': tk('Void (outside the map)'), '.': tk('Interior floor'), ',': tk('Exterior ground / street'), '#': tk('Wall'), D: tk('Door / doorway'), W: tk('Window'),
+  '=': tk('Counter / low wall / railing'), T: tk('Table / furniture'), c: tk('Crates / cover'), o: tk('Pillar / column'), m: tk('Machinery / servers / shelves'),
+  v: tk('Vehicle'), b: tk('Bed / couch'), s: tk('Stairs / ramp'), e: tk('Elevator'), '~': tk('Water'), g: tk('Grass / vegetation'), r: tk('Rubble (difficult terrain)'),
+  x: tk('Hazard (fire, chemicals, electricity)'), t: tk('Trees / dense bushes'), _: tk('Carpet / stage / dance floor'),
 };
 type TileInfo = { fr: string; blockMove: boolean; blockSight: boolean };
 const TILES = TILE_INFO as Record<string, TileInfo>;
@@ -31,21 +31,21 @@ const tileLabel = (ch: string): string => (TILE_LABELS[ch] ? t(TILE_LABELS[ch]) 
 type WallType = 'wall' | 'window' | 'curtain' | 'ethereal' | 'door' | 'secret';
 const WALL_TOOLS = new Set(['wall', 'wdoor']);
 const WALL_TYPES: Opt[] = [
-  { value: 'wall', label: tk('Mur (bloque tout)') },
-  { value: 'window', label: tk('Fenêtre (bloque le passage)') },
-  { value: 'curtain', label: tk('Rideau (bloque la vue)') },
-  { value: 'ethereal', label: tk('Repère (ne bloque rien)') },
-  { value: 'door', label: tk('Porte') },
-  { value: 'secret', label: tk('Porte secrète') },
+  { value: 'wall', label: tk('Wall (blocks everything)') },
+  { value: 'window', label: tk('Window (blocks movement)') },
+  { value: 'curtain', label: tk('Curtain (blocks sight)') },
+  { value: 'ethereal', label: tk('Marker (blocks nothing)') },
+  { value: 'door', label: tk('Door') },
+  { value: 'secret', label: tk('Secret door') },
 ];
 const WDOOR_KINDS: Opt[] = [
-  { value: 'door', label: tk('Porte') },
-  { value: 'secret', label: tk('Porte secrète') },
-  { value: 'window', label: tk('Fenêtre') },
+  { value: 'door', label: tk('Door') },
+  { value: 'secret', label: tk('Secret door') },
+  { value: 'window', label: tk('Window') },
 ];
 const BG_MODES: Opt[] = [
-  { value: 'image', label: tk('Image = sol (carte illustrée)') },
-  { value: 'underlay', label: tk('Calque sous les tuiles') },
+  { value: 'image', label: tk('Image = floor (illustrated map)') },
+  { value: 'underlay', label: tk('Layer under the tiles') },
 ];
 const newWallId = () => 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 /** Wall type of a segment, including doors. */
@@ -67,50 +67,50 @@ type ToolId =
   | 'brush' | 'line' | 'rect' | 'outline' | 'room' | 'fill' | 'eraser' | 'pan'
   | 'wall' | 'wdoor' | 'door' | 'light' | 'region' | 'note' | 'token' | 'select';
 const TOOLS: Array<{ id: ToolId; icon: string; label: string; key: string }> = [
-  { id: 'brush', icon: '✎', label: tk('Pinceau'), key: 'b' },
-  { id: 'line', icon: '╱', label: tk('Ligne'), key: 'l' },
+  { id: 'brush', icon: '✎', label: tk('Brush'), key: 'b' },
+  { id: 'line', icon: '╱', label: tk('Line'), key: 'l' },
   { id: 'rect', icon: '■', label: tk('Rect.'), key: 'r' },
-  { id: 'outline', icon: '□', label: tk('Contour'), key: 'o' },
-  { id: 'room', icon: '⌂', label: tk('Pièce'), key: 'p' },
-  { id: 'fill', icon: '◍', label: tk('Remplir'), key: 'f' },
-  { id: 'eraser', icon: '⌫', label: tk('Gomme'), key: 'e' },
-  { id: 'pan', icon: '✥', label: tk('Main'), key: 'h' },
-  { id: 'wall', icon: '┃', label: tk('Mur'), key: 'w' },
-  { id: 'wdoor', icon: '⊓', label: tk('Porte-mur'), key: 'k' },
-  { id: 'door', icon: '▯', label: tk('Porte'), key: 'd' },
-  { id: 'light', icon: '✺', label: tk('Lumière'), key: 'i' },
-  { id: 'region', icon: '⬚', label: tk('Zone'), key: 'z' },
+  { id: 'outline', icon: '□', label: tk('Outline'), key: 'o' },
+  { id: 'room', icon: '⌂', label: tk('Room'), key: 'p' },
+  { id: 'fill', icon: '◍', label: tk('Fill'), key: 'f' },
+  { id: 'eraser', icon: '⌫', label: tk('Eraser'), key: 'e' },
+  { id: 'pan', icon: '✥', label: tk('Hand'), key: 'h' },
+  { id: 'wall', icon: '┃', label: tk('Wall'), key: 'w' },
+  { id: 'wdoor', icon: '⊓', label: tk('Wall door'), key: 'k' },
+  { id: 'door', icon: '▯', label: tk('Door'), key: 'd' },
+  { id: 'light', icon: '✺', label: tk('Light'), key: 'i' },
+  { id: 'region', icon: '⬚', label: tk('Area'), key: 'z' },
   { id: 'note', icon: '!', label: tk('Note'), key: 'n' },
-  { id: 'token', icon: '●', label: tk('Pion'), key: 't' },
-  { id: 'select', icon: '➚', label: tk('outil::Choisir'), key: 's' },
+  { id: 'token', icon: '●', label: tk('Token'), key: 't' },
+  { id: 'select', icon: '➚', label: tk('tool::Select'), key: 's' },
 ];
 const PAINT = new Set<ToolId>(['brush', 'line', 'rect', 'outline', 'room', 'fill', 'eraser']);
 const PALETTE = ['.', ',', '#', 'D', 'W', '=', 'T', 'c', 'o', 'm', 'v', 'b', 's', 'e', '~', 'g', 'r', 'x', 't', '_', ' '];
 const TOOL_HELP: Partial<Record<ToolId, string>> = {
-  brush: tk('Clic-glisser pour peindre. Alt+clic ou clic droit : pipette.'),
-  line: tk('Glisse du point de départ au point d’arrivée.'),
-  rect: tk('Glisse pour remplir un rectangle avec la tuile choisie.'),
-  outline: tk('Glisse pour tracer le contour d’un rectangle.'),
-  room: tk('Glisse pour créer une pièce : murs autour, sol (tuile choisie) dedans.'),
-  fill: tk('Clic : remplit la zone contiguë de même tuile.'),
-  eraser: tk('Efface (vide) sous le pinceau.'),
-  pan: tk('Glisse pour déplacer la vue. Astuce : Espace + glisser, clic molette ou clic droit glissé marchent avec tous les outils.'),
-  wall: tk('Glisse pour tracer un mur (aimanté aux coins / demi-cases et aux extrémités des murs ; Alt : placement libre ; Maj : repartir du dernier point). Clic : sélectionner (Maj+clic : ajouter). Ctrl+glisser : sélection par cadre. Suppr : effacer.'),
-  wdoor: tk('Glisse pour tracer une porte sur un mur. Clic sur un mur existant : le convertir selon le type choisi (porte, secrète, fenêtre).'),
-  door: tk('Clic sur une case : pose une porte. Clic sur une porte : la sélectionner.'),
-  light: tk('Clic : ajoute une lumière. Glisse une lumière pour la déplacer.'),
-  region: tk('Glisse pour délimiter une zone nommée (pièce, secteur…).'),
-  note: tk('Clic : épingle une note MJ (jamais visible des joueurs).'),
-  token: tk('Clic : pose un pion. Glisse un pion pour le déplacer.'),
-  select: tk('Clic sur un objet (pion, lumière, porte, mur, note, zone) pour le modifier.'),
+  brush: tk('Click and drag to paint. Alt+click or right-click: eyedropper.'),
+  line: tk('Drag from the start point to the end point.'),
+  rect: tk('Drag to fill a rectangle with the chosen tile.'),
+  outline: tk('Drag to draw the outline of a rectangle.'),
+  room: tk('Drag to create a room: walls around, floor (chosen tile) inside.'),
+  fill: tk('Click: fills the connected area of the same tile.'),
+  eraser: tk('Erases (void) under the brush.'),
+  pan: tk('Drag to move the view. Tip: Space + drag, middle-click or right-drag work with every tool.'),
+  wall: tk('Drag to draw a wall (snaps to corners / half cells and to wall ends; Alt: free placement; Shift: continue from the last point). Click: select (Shift+click: add). Ctrl+drag: box selection. Del: delete.'),
+  wdoor: tk('Drag to draw a door on a wall. Click an existing wall: convert it to the chosen type (door, secret, window).'),
+  door: tk('Click a cell: place a door. Click a door: select it.'),
+  light: tk('Click: add a light. Drag a light to move it.'),
+  region: tk('Drag to mark out a named area (room, sector…).'),
+  note: tk('Click: pin a GM note (never visible to players).'),
+  token: tk('Click: place a token. Drag a token to move it.'),
+  select: tk('Click an object (token, light, door, wall, note, area) to edit it.'),
 };
 const ANCHORS: Opt[] = [
-  { value: 'nw', label: tk('↖ Haut-gauche') }, { value: 'n', label: tk('↑ Haut') }, { value: 'ne', label: tk('↗ Haut-droite') },
-  { value: 'w', label: tk('← Gauche') }, { value: 'c', label: tk('• Centre') }, { value: 'e', label: tk('→ Droite') },
-  { value: 'sw', label: tk('↙ Bas-gauche') }, { value: 's', label: tk('↓ Bas') }, { value: 'se', label: tk('↘ Bas-droite') },
+  { value: 'nw', label: tk('↖ Top left') }, { value: 'n', label: tk('↑ Top') }, { value: 'ne', label: tk('↗ Top right') },
+  { value: 'w', label: tk('← Left') }, { value: 'c', label: tk('• Center') }, { value: 'e', label: tk('→ Right') },
+  { value: 'sw', label: tk('↙ Bottom left') }, { value: 's', label: tk('↓ Bottom') }, { value: 'se', label: tk('↘ Bottom right') },
 ];
-const DOOR_STATES: Opt[] = [{ value: 'closed', label: tk('Fermée') }, { value: 'open', label: tk('Ouverte') }, { value: 'locked', label: tk('Verrouillée') }];
-const DOOR_KINDS: Opt[] = [{ value: 'door', label: tk('Porte') }, { value: 'gate', label: tk('porte::Grille') }, { value: 'shutter', label: tk('Rideau métallique') }, { value: 'secret', label: tk('Secrète') }];
+const DOOR_STATES: Opt[] = [{ value: 'closed', label: tk('Closed') }, { value: 'open', label: tk('fem::Open') }, { value: 'locked', label: tk('Locked') }];
+const DOOR_KINDS: Opt[] = [{ value: 'door', label: tk('Door') }, { value: 'gate', label: tk('door::Gate') }, { value: 'shutter', label: tk('Shutter') }, { value: 'secret', label: tk('fem::Secret') }];
 const DISPO_OPTIONS: Opt[] = Object.entries(DISPO).map(([value, d]) => ({ value, label: d.label })); // d.label: French key
 const quiet = () => {};
 /** Like Field but a <div>: a <label> would forward clicks on its text to the stepper buttons. */
@@ -256,7 +256,7 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
   const [doorOpts, setDoorOpts] = useState({ state: 'closed', kind: 'door' });
   const [lightOpts, setLightOpts] = useState({ radius: 6, color: '#ffcc88', on: true });
   const [regionOpts, setRegionOpts] = useState({ color: '#e0468f', gmOnly: false });
-  const [tokenOpts, setTokenOpts] = useState<TokenOpts>(() => ({ actorId: '', name: t('PNJ'), disposition: 'hostile', hidden: false }));
+  const [tokenOpts, setTokenOpts] = useState<TokenOpts>(() => ({ actorId: '', name: t('NPC'), disposition: 'hostile', hidden: false }));
   const [sel, setSel] = useState<Sel | null>(null); // { type: 'door'|'light'|'region'|'note'|'token', id }
   const [panel, setPanel] = useState({ tools: false, props: false });
   const [libOpen, setLibOpen] = useState(false); // « Bibliothèque » dialog (library-linked maps)
@@ -320,7 +320,7 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
     } catch (e) {
       dirtyRef.current = true;
       setSaveState('error');
-      toast(t('Sauvegarde de la carte impossible : {error}', { error: (e as Error).message }), 'error');
+      toast(t('Could not save the map: {error}', { error: (e as Error).message }), 'error');
     } finally {
       savingRef.current = false;
       if (dirtyRef.current) timerRef.current = setTimeout(flush, 1500);
@@ -444,7 +444,7 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
     if (!n) return;
     editWalls((walls) => walls.filter((w) => !set.has(w.id)));
     setWallSel([]);
-    toast(n > 1 ? t('{n} murs supprimés (Ctrl+Z pour annuler)', { n }) : t('Mur supprimé (Ctrl+Z pour annuler)'));
+    toast(n > 1 ? t('{n} walls deleted (Ctrl+Z to undo)', { n }) : t('Wall deleted (Ctrl+Z to undo)'));
   };
 
   const floodFill = (start: Cell, ch: string) => {
@@ -569,7 +569,7 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
       return next.door ? { ...next, door: { ...next.door, state: w.door ? w.door.state : (wdoorOpts.state as DoorState) } } : next;
     });
     pick({ type: 'wall', id });
-    toast(t('Mur converti : {kind}', { kind: t(WDOOR_KINDS.find((k) => k.value === wdoorOpts.kind)?.label || '').toLowerCase() }));
+    toast(t('Wall converted: {kind}', { kind: t(WDOOR_KINDS.find((k) => k.value === wdoorOpts.kind)?.label || '').toLowerCase() }));
   };
 
   const addDoorAt = (x: number, y: number) => {
@@ -581,7 +581,7 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
   };
   const addToken = (x: number, y: number) => {
     const a = tokenOpts.actorId ? game.actors?.[tokenOpts.actorId] : null;
-    const token: Record<string, unknown> = a ? { actorId: a.id, x, y, hidden: tokenOpts.hidden } : { name: tokenOpts.name || t('Pion'), disposition: tokenOpts.disposition, hidden: tokenOpts.hidden, x, y };
+    const token: Record<string, unknown> = a ? { actorId: a.id, x, y, hidden: tokenOpts.hidden } : { name: tokenOpts.name || t('Token'), disposition: tokenOpts.disposition, hidden: tokenOpts.hidden, x, y };
     if (a && tokenOpts.disposition && a.type !== 'pc') token.disposition = tokenOpts.disposition;
     send<string>('maps/addToken', { mapId, token }).then((id) => setSel({ type: 'token', id }), quiet);
   };
@@ -654,7 +654,7 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
         const hit = objectAt(info.fx, info.fy, ['note']);
         if (hit) setSel(hit as Sel);
         else
-          promptText(t('Note MJ (jamais visible des joueurs)')).then((text) => {
+          promptText(t('GM note (never visible to players)')).then((text) => {
             if (text && text.trim()) send<string>('maps/addNote', { mapId, note: { x: c.x, y: c.y, text: text.trim() } }).then((id) => setSel({ type: 'note', id }), quiet);
           });
         return true;
@@ -731,7 +731,7 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
         setSel(null);
         setWallSel(next);
         r.setOverlay(overlayFor({ selectedWallIds: new Set(next) }));
-        if (hits.length) toast(t('{n} mur(s) sélectionné(s)', { n: hits.length }));
+        if (hits.length) toast(t('{n} wall(s) selected', { n: hits.length }));
         return;
       }
       if (s.seg) {
@@ -774,7 +774,7 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
           if (hit) setSel(hit as Sel);
           return;
         }
-        promptText(t('Nom de la zone'), t('Zone')).then((name) => {
+        promptText(t('Area name'), t('Area')).then((name) => {
           if (name && name.trim()) send<string>('maps/addRegion', { mapId, region: { ...r, name: name.trim(), ...regionOpts } }).then((id) => setSel({ type: 'region', id }), quiet);
         });
         return;
@@ -805,7 +805,7 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
         if (ch != null) {
           setTile(ch);
           if (tool === 'eraser') setTool('brush');
-          toast(t('Pipette : {tile}', { tile: tileLabel(ch) }));
+          toast(t('Eyedropper: {tile}', { tile: tileLabel(ch) }));
         }
         return;
       }
@@ -900,11 +900,11 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
     if (!sel || !selected) return;
     const name = 'name' in selected ? selected.name : '';
     const question = {
-      door: () => t('Supprimer cette porte ?'),
-      light: () => t('Supprimer cette lumière ?'),
-      region: () => t('Supprimer la zone « {name} » ?', { name }),
-      note: () => t('Supprimer cette note ?'),
-      token: () => t('Supprimer le pion « {name} » ?', { name }),
+      door: () => t('Delete this door?'),
+      light: () => t('Delete this light?'),
+      region: () => t('Delete the area “{name}”?', { name }),
+      note: () => t('Delete this note?'),
+      token: () => t('Delete the token “{name}”?', { name }),
     }[sel.type];
     if (!question || !(await confirmAction(question()))) return;
     const action = { door: 'maps/removeDoor', light: 'maps/removeLight', region: 'maps/removeRegion', note: 'maps/removeNote', token: 'maps/removeToken' }[sel.type];
@@ -951,25 +951,25 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
     try {
       const res = await upload(f);
       await send('maps/update', { mapId, patch: { background: { ...(bg || bgDefaults()), url: res.url } } });
-      toast(t('Image de fond ajoutée'), 'success');
+      toast(t('Background image added'), 'success');
     } catch (err) {
-      toast(t('Envoi impossible : {error}', { error: (err as Error).message }), 'error');
+      toast(t('Upload failed: {error}', { error: (err as Error).message }), 'error');
     }
   };
   const fitBg = () => setBg({ x: 0, y: 0, w: map.width, h: map.height });
   const bgAspect = () => {
     const img = bg?.url ? getImage(bg.url) : null;
-    if (!bg || !img || !img.naturalWidth) return toast(t('Image pas encore chargée — réessaie dans un instant'), 'warn');
+    if (!bg || !img || !img.naturalWidth) return toast(t('Image not loaded yet — try again in a moment'), 'warn');
     setBg({ h: Math.round(((bg.w || map.width) * img.naturalHeight * 100) / img.naturalWidth) / 100 });
   };
   const fillInterior = async () => {
-    if (!(await confirmAction(t('Remplacer toutes les tuiles par du sol intérieur « . » ? Les murs/portes en tuiles disparaissent (les murs en segments restent). Annulable avec Ctrl+Z.')))) return;
+    if (!(await confirmAction(t('Replace every tile with interior floor “.”? Tile walls/doors disappear (segment walls stay). Can be undone with Ctrl+Z.')))) return;
     beginStroke();
     const cells: Cell[] = [];
     for (let y = 0; y < map.height; y++) for (let x = 0; x < map.width; x++) cells.push({ x, y });
     applyCells(cells, '.');
     endStroke();
-    toast(t('Toute la carte est maintenant du sol'), 'success');
+    toast(t('The whole map is now floor'), 'success');
   };
   const wallStats = useMemo(() => {
     const s: Record<WallType, number> = { wall: 0, window: 0, curtain: 0, ethereal: 0, door: 0, secret: 0 };
@@ -979,25 +979,25 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
   const doResize = async () => {
     const { width, height, anchor } = resize;
     if (width === map.width && height === map.height) return;
-    if ((width < map.width || height < map.height) && !(await confirmAction(t('Réduire la carte supprime ce qui dépasse. Continuer ?')))) return;
+    if ((width < map.width || height < map.height) && !(await confirmAction(t('Shrinking the map deletes whatever sticks out. Continue?')))) return;
     await flush();
-    send('maps/resize', { mapId, width, height, anchor }).then(() => toast(t('Carte redimensionnée'), 'success'), quiet);
+    send('maps/resize', { mapId, width, height, anchor }).then(() => toast(t('Map resized'), 'success'), quiet);
   };
   const actorOptions = useMemo(() => {
     const list = Object.values(game.actors || {}).filter((a) => !('retired' in a && a.retired));
     return [
-      { value: '', label: t('Pion libre (sans fiche)') },
-      ...list.filter((a) => a.type === 'pc').map((a) => ({ value: a.id, label: t('PJ — {name}', { name: a.name }) })),
+      { value: '', label: t('Free token (no sheet)') },
+      ...list.filter((a) => a.type === 'pc').map((a) => ({ value: a.id, label: t('PC — {name}', { name: a.name }) })),
       ...list
         .filter((a) => a.type !== 'pc')
         .sort((a, b) => compare(a.name, b.name))
-        .map((a) => ({ value: a.id, label: t('PNJ — {name}', { name: a.name }) })),
+        .map((a) => ({ value: a.id, label: t('NPC — {name}', { name: a.name }) })),
     ];
   }, [game.actors]);
   const centerOn = (o: { x: number; y: number; w?: number; h?: number }) => rRef.current?.centerOn(o.x + (o.w ? o.w / 2 - 0.5 : 0), o.y + (o.h ? o.h / 2 - 0.5 : 0), 28);
   const shown = game.scene?.activeMapId === mapId;
   const saveLabel =
-    { saved: () => '✓ ' + t('Enregistré'), dirty: () => '● ' + t('Modifié'), saving: () => '… ' + t('Enregistrement'), error: () => '⚠ ' + t('Erreur — nouvel essai') }[saveState]?.() || '';
+    { saved: () => '✓ ' + t('Saved'), dirty: () => '● ' + t('Modified'), saving: () => '… ' + t('Saving'), error: () => '⚠ ' + t('Error — retrying') }[saveState]?.() || '';
 
   const toolOptions = () => {
     if (PAINT.has(tool) && tool !== 'eraser') {
@@ -1009,12 +1009,12 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
           </div>
           {tool === 'brush' && (
             <div className="row spread">
-              <span className="small muted">{t('Taille')}</span>
+              <span className="small muted">{t('Size')}</span>
               <NumberInput small value={size} min={1} max={3} onChange={setSize} />
             </div>
           )}
           {tool === 'room' && (
-            <span className="small muted">{t('Murs « # » autour, {floor} dedans.', { floor: tile === '#' || tile === ' ' ? t('sol intérieur') : tileLabel(tile).toLowerCase() })}</span>
+            <span className="small muted">{t('Walls “#” around, {floor} inside.', { floor: tile === '#' || tile === ' ' ? t('interior floor') : tileLabel(tile).toLowerCase() })}</span>
           )}
         </div>
       );
@@ -1023,7 +1023,7 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
       return (
         <div className="mapedit-opts">
           <div className="row spread">
-            <span className="small muted">{t('Taille')}</span>
+            <span className="small muted">{t('Size')}</span>
             <NumberInput small value={size} min={1} max={3} onChange={setSize} />
           </div>
         </div>
@@ -1031,11 +1031,11 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
     if (tool === 'wall')
       return (
         <div className="mapedit-opts">
-          <Field label={t('Type de mur')}>
+          <Field label={t('Wall type')}>
             <Select value={wallOpts.type} options={tr(WALL_TYPES)} onChange={(v) => setWallOpts({ ...wallOpts, type: v })} />
           </Field>
           <span className="small muted">
-            {t('{walls} mur(s) · {doors} porte(s)', { walls: wallStats.wall + wallStats.window + wallStats.curtain + wallStats.ethereal, doors: wallStats.door + wallStats.secret })}
+            {t('{walls} wall(s) · {doors} door(s)', { walls: wallStats.wall + wallStats.window + wallStats.curtain + wallStats.ethereal, doors: wallStats.door + wallStats.secret })}
           </span>
         </div>
       );
@@ -1046,7 +1046,7 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
             <Select value={wdoorOpts.kind} options={tr(WDOOR_KINDS)} onChange={(v) => setWdoorOpts({ ...wdoorOpts, kind: v })} />
           </Field>
           {wdoorOpts.kind !== 'window' && (
-            <Field label={t('État')}>
+            <Field label={t('Status')}>
               <Select value={wdoorOpts.state} options={tr(DOOR_STATES)} onChange={(v) => setWdoorOpts({ ...wdoorOpts, state: v })} />
             </Field>
           )}
@@ -1058,7 +1058,7 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
           <Field label={t('Type')}>
             <Select value={doorOpts.kind} options={tr(DOOR_KINDS)} onChange={(v) => setDoorOpts({ ...doorOpts, kind: v })} />
           </Field>
-          <Field label={t('État')}>
+          <Field label={t('Status')}>
             <Select value={doorOpts.state} options={tr(DOOR_STATES)} onChange={(v) => setDoorOpts({ ...doorOpts, state: v })} />
           </Field>
         </div>
@@ -1067,11 +1067,11 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
       return (
         <div className="mapedit-opts">
           <div className="row spread">
-            <span className="small muted">{t('Rayon (cases)')}</span>
+            <span className="small muted">{t('Radius (cells)')}</span>
             <NumberInput small value={lightOpts.radius} min={1} max={40} onChange={(v) => setLightOpts({ ...lightOpts, radius: v })} />
           </div>
           <div className="row spread">
-            <span className="small muted">{t('Couleur')}</span>
+            <span className="small muted">{t('Color')}</span>
             <input type="color" className="mapedit-color" value={lightOpts.color} onChange={(e) => setLightOpts({ ...lightOpts, color: e.target.value })} />
           </div>
           <div className="row wrap gap-s">
@@ -1091,34 +1091,34 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
       return (
         <div className="mapedit-opts">
           <div className="row spread">
-            <span className="small muted">{t('Couleur')}</span>
+            <span className="small muted">{t('Color')}</span>
             <input type="color" className="mapedit-color" value={regionOpts.color} onChange={(e) => setRegionOpts({ ...regionOpts, color: e.target.value })} />
           </div>
-          <Toggle label={t('Réservée au MJ')} value={regionOpts.gmOnly} onChange={(v) => setRegionOpts({ ...regionOpts, gmOnly: v })} />
+          <Toggle label={t('fem::GM only')} value={regionOpts.gmOnly} onChange={(v) => setRegionOpts({ ...regionOpts, gmOnly: v })} />
         </div>
       );
     if (tool === 'token')
       return (
         <div className="mapedit-opts">
-          <Field label={t('Fiche liée')}>
+          <Field label={t('Linked sheet')}>
             <Select value={tokenOpts.actorId} options={actorOptions} onChange={(v) => setTokenOpts({ ...tokenOpts, actorId: v })} />
           </Field>
           {!tokenOpts.actorId && (
-            <Field label={t('Nom')}>
+            <Field label={t('Name')}>
               <input className="input" value={tokenOpts.name} onChange={(e) => setTokenOpts({ ...tokenOpts, name: e.target.value })} />
             </Field>
           )}
           <Field label={t('Disposition')}>
             <Select value={tokenOpts.disposition} options={tr(DISPO_OPTIONS)} onChange={(v) => setTokenOpts({ ...tokenOpts, disposition: v })} />
           </Field>
-          <Toggle label={t('Caché aux joueurs')} value={tokenOpts.hidden} onChange={(v) => setTokenOpts({ ...tokenOpts, hidden: v })} />
+          <Toggle label={t('Hidden from players')} value={tokenOpts.hidden} onChange={(v) => setTokenOpts({ ...tokenOpts, hidden: v })} />
           <Button
             small
             onClick={() =>
-              send<string[]>('maps/placePCs', { mapId }).then((ids) => toast(ids?.length ? t('{n} PJ placé(s)', { n: ids.length }) : t('Tous les PJ sont déjà sur la carte')), quiet)
+              send<string[]>('maps/placePCs', { mapId }).then((ids) => toast(ids?.length ? t('{n} PC(s) placed', { n: ids.length }) : t('All PCs are already on the map')), quiet)
             }
           >
-            {t('Placer tous les PJ')}
+            {t('Place all PCs')}
           </Button>
         </div>
       );
@@ -1131,7 +1131,7 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
     const head = (title: string) => (
       <div className="row spread">
         <h5>{title}</h5>
-        <IconButton icon="✕" title={t('Désélectionner')} onClick={() => setWallSel([])} />
+        <IconButton icon="✕" title={t('Deselect')} onClick={() => setWallSel([])} />
       </div>
     );
     const types = new Set(selWalls.map(wallType));
@@ -1140,22 +1140,22 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
       <Field label={t('Type')}>
         <Select
           value={typeValue}
-          options={typeValue ? tr(WALL_TYPES) : [{ value: '', label: t('(plusieurs types)') }, ...tr(WALL_TYPES)]}
+          options={typeValue ? tr(WALL_TYPES) : [{ value: '', label: t('(several types)') }, ...tr(WALL_TYPES)]}
           onChange={(v) => v && patchWalls(ids, (w) => withType(w, v))}
         />
       </Field>
     );
     const del = (
       <Button small variant="danger" onClick={() => deleteWalls(ids)}>
-        {ids.length > 1 ? t('Supprimer ({n})', { n: ids.length }) : t('Supprimer')}
+        {ids.length > 1 ? t('Delete ({n})', { n: ids.length }) : t('Delete')}
       </Button>
     );
     if (selWalls.length > 1) {
       return (
         <div className="mapedit-inspector">
-          {head(t('{n} murs', { n: selWalls.length }))}
+          {head(t('{n} walls', { n: selWalls.length }))}
           {typeSelect}
-          <span className="small muted">{t('Suppr : effacer · Ctrl+Z : annuler')}</span>
+          <span className="small muted">{t('Del: delete · Ctrl+Z: undo')}</span>
           {del}
         </div>
       );
@@ -1165,17 +1165,17 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
     const setCoord = (k: 'x1' | 'y1' | 'x2' | 'y2') => (v: number) => patchWalls(ids, (x) => ({ ...x, [k]: v }));
     return (
       <div className="mapedit-inspector">
-        {head(w.door ? (w.door.kind === 'secret' ? t('Porte secrète (mur)') : t('Porte (mur)')) : t('Mur'))}
+        {head(w.door ? (w.door.kind === 'secret' ? t('Secret door (wall)') : t('Door (wall)')) : t('Wall'))}
         {typeSelect}
         {w.door && (
           <>
-            <Field label={t('État')}>
+            <Field label={t('Status')}>
               <Select value={w.door.state} options={tr(DOOR_STATES)} onChange={(v) => patchWalls(ids, (x) => ({ ...x, door: { ...x.door!, state: v as DoorState } }))} />
             </Field>
-            <Field label={t('Nom (optionnel)')}>
+            <Field label={t('Name (optional)')}>
               <TextInput
                 value={w.door.name || ''}
-                placeholder={t('ex. Porte du labo')}
+                placeholder={t('e.g. Lab door')}
                 onChange={(v) =>
                   patchWalls(ids, (x) => {
                     const door = { ...x.door! };
@@ -1196,8 +1196,8 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
           ))}
         </div>
         <span className="small muted">
-          {t('Longueur {m} m', { m: Math.round(len * (map.metersPerCell || 1) * 10) / 10 })}
-          {w.foundry ? ' · ' + t('importé de Foundry') : ''}
+          {t('Length {m} m', { m: Math.round(len * (map.metersPerCell || 1) * 10) / 10 })}
+          {w.foundry ? ' · ' + t('imported from Foundry') : ''}
         </span>
         {del}
       </div>
@@ -1209,27 +1209,27 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
     if (!sel || !selected) return null;
     const del = (
       <Button small variant="danger" onClick={deleteSelected}>
-        {t('Supprimer')}
+        {t('Delete')}
       </Button>
     );
     const head = (title: string) => (
       <div className="row spread">
         <h5>{title}</h5>
-        <IconButton icon="✕" title={t('Désélectionner')} onClick={() => setSel(null)} />
+        <IconButton icon="✕" title={t('Deselect')} onClick={() => setSel(null)} />
       </div>
     );
     if (sel.type === 'door') {
       const o = selected as MapDoor;
       return (
         <div className="mapedit-inspector">
-          {head(t('Porte ({x}, {y})', { x: o.x, y: o.y }))}
-          <Field label={t('Nom (optionnel)')}>
-            <TextInput value={o.name || ''} placeholder={t('ex. Porte du labo')} onChange={(v) => send('maps/setDoor', { mapId, doorId: o.id, name: v }).catch(quiet)} />
+          {head(t('Door ({x}, {y})', { x: o.x, y: o.y }))}
+          <Field label={t('Name (optional)')}>
+            <TextInput value={o.name || ''} placeholder={t('e.g. Lab door')} onChange={(v) => send('maps/setDoor', { mapId, doorId: o.id, name: v }).catch(quiet)} />
           </Field>
           <Field label={t('Type')}>
             <Select value={o.kind} options={tr(DOOR_KINDS)} onChange={(v) => send('maps/setDoor', { mapId, doorId: o.id, kind: v }).catch(quiet)} />
           </Field>
-          <Field label={t('État')}>
+          <Field label={t('Status')}>
             <Select value={o.state} options={tr(DOOR_STATES)} onChange={(v) => send('maps/setDoor', { mapId, doorId: o.id, state: v }).catch(quiet)} />
           </Field>
           {del}
@@ -1240,14 +1240,14 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
       const o = selected as MapLight;
       return (
         <div className="mapedit-inspector">
-          {head(t('Lumière ({x}, {y})', { x: o.x, y: o.y }))}
-          <Toggle label={o.on !== false ? t('Allumée') : t('Éteinte')} value={o.on !== false} onChange={() => send('maps/toggleLight', { mapId, lightId: o.id }).catch(quiet)} />
+          {head(t('Light ({x}, {y})', { x: o.x, y: o.y }))}
+          <Toggle label={o.on !== false ? t('On') : t('light::Off')} value={o.on !== false} onChange={() => send('maps/toggleLight', { mapId, lightId: o.id }).catch(quiet)} />
           <div className="row spread">
-            <span className="small muted">{t('Rayon (cases)')}</span>
+            <span className="small muted">{t('Radius (cells)')}</span>
             <NumberInput small value={o.radius} min={1} max={40} onChange={(v) => send('maps/updateLight', { mapId, lightId: o.id, patch: { radius: v } }).catch(quiet)} />
           </div>
           <div className="row spread">
-            <span className="small muted">{t('Couleur')}</span>
+            <span className="small muted">{t('Color')}</span>
             <CommitInput
               type="color"
               className="mapedit-color"
@@ -1261,15 +1261,15 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
     }
     if (sel.type === 'region') {
       const o = selected as MapRegion;
-      const labels: Record<string, string> = { x: 'X', y: 'Y', w: t('Largeur'), h: t('Hauteur') };
+      const labels: Record<string, string> = { x: 'X', y: 'Y', w: t('Width'), h: t('Height') };
       return (
         <div className="mapedit-inspector">
-          {head(t('Zone'))}
-          <Field label={t('Nom')}>
+          {head(t('Area'))}
+          <Field label={t('Name')}>
             <TextInput value={o.name} onChange={(v) => send('maps/updateRegion', { mapId, regionId: o.id, patch: { name: v } }).catch(quiet)} />
           </Field>
           <div className="row spread">
-            <span className="small muted">{t('Couleur')}</span>
+            <span className="small muted">{t('Color')}</span>
             <CommitInput
               type="color"
               className="mapedit-color"
@@ -1277,7 +1277,7 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
               onCommit={(v) => send('maps/updateRegion', { mapId, regionId: o.id, patch: { color: v } }).catch(quiet)}
             />
           </div>
-          <Toggle label={t('Réservée au MJ')} value={o.gmOnly} onChange={(v) => send('maps/updateRegion', { mapId, regionId: o.id, patch: { gmOnly: v } }).catch(quiet)} />
+          <Toggle label={t('fem::GM only')} value={o.gmOnly} onChange={(v) => send('maps/updateRegion', { mapId, regionId: o.id, patch: { gmOnly: v } }).catch(quiet)} />
           <div className="grid-2">
             {(['x', 'y', 'w', 'h'] as const).map((k) => (
               <NumField key={k} label={labels[k]}>
@@ -1299,7 +1299,7 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
       const o = selected as MapNote;
       return (
         <div className="mapedit-inspector">
-          {head(t('Note MJ ({x}, {y})', { x: o.x, y: o.y }))}
+          {head(t('GM note ({x}, {y})', { x: o.x, y: o.y }))}
           <TextInput multiline rows={5} value={o.text} onChange={(v) => send('maps/updateNote', { mapId, noteId: o.id, patch: { text: v } }).catch(quiet)} />
           {del}
         </div>
@@ -1311,40 +1311,40 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
       const tp = (patch: Record<string, unknown>) => send('maps/updateToken', { mapId, tokenId: o.id, patch }).catch(quiet);
       return (
         <div className="mapedit-inspector">
-          {head(t('Pion'))}
-          <Field label={t('Nom')}>
+          {head(t('Token'))}
+          <Field label={t('Name')}>
             <TextInput value={o.name} onChange={(v) => tp({ name: v })} />
           </Field>
           {actor && (
             <div className="row spread">
-              <span className="small muted">{t('Fiche : {name}', { name: actor.name })}</span>
+              <span className="small muted">{t('Sheet: {name}', { name: actor.name })}</span>
               <Button small variant="ghost" onClick={() => openSheet(actor.id)}>
-                {t('Ouvrir')}
+                {t('Open')}
               </Button>
             </div>
           )}
           <Field label={t('Disposition')}>
             <Select value={o.disposition} options={tr(DISPO_OPTIONS)} onChange={(v) => tp({ disposition: v })} />
           </Field>
-          <Toggle label={t('Caché aux joueurs')} value={o.hidden} onChange={(v) => tp({ hidden: v })} />
+          <Toggle label={t('Hidden from players')} value={o.hidden} onChange={(v) => tp({ hidden: v })} />
           <div className="row spread">
-            <span className="small muted">{t('Couleur')}</span>
+            <span className="small muted">{t('Color')}</span>
             <CommitInput type="color" className="mapedit-color" value={o.color || actor?.color || '#2a3340'} onCommit={(v) => tp({ color: v })} />
           </div>
           <div className="row spread">
-            <span className="small muted">{t('Taille (cases)')}</span>
+            <span className="small muted">{t('Size (cells)')}</span>
             <NumberInput small value={o.size || 1} min={1} max={4} onChange={(v) => tp({ size: v })} />
           </div>
           <div className="row spread">
-            <span className="small muted">{t('Lampe (rayon)')}</span>
+            <span className="small muted">{t('Light (radius)')}</span>
             <NumberInput small value={o.light?.radius || 0} min={0} max={30} onChange={(v) => tp({ light: v ? { radius: v, color: o.light?.color || '#fff1cc' } : null })} />
           </div>
           <div className="row spread">
-            <span className="small muted">{t('Vision dans le noir')}</span>
+            <span className="small muted">{t('Darkvision range')}</span>
             <NumberInput small value={o.vision?.darkRange ?? 0} min={0} max={40} onChange={(v) => tp({ vision: { ...(o.vision || {}), darkRange: v } })} />
           </div>
           <div className="row wrap">
-            <Toggle label={t('Vision nocturne')} value={!!o.vision?.lowLight} onChange={(v) => tp({ vision: { ...(o.vision || {}), lowLight: v } })} />
+            <Toggle label={t('Low-Light Vision')} value={!!o.vision?.lowLight} onChange={(v) => tp({ vision: { ...(o.vision || {}), lowLight: v } })} />
             <Toggle label={t('Thermo')} value={!!o.vision?.thermo} onChange={(v) => tp({ vision: { ...(o.vision || {}), thermo: v } })} />
           </div>
           {del}
@@ -1386,25 +1386,25 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
             onBack();
           }}
         >
-          ← {t('Cartes')}
+          ← {t('Maps')}
         </Button>
         <h2 title={map.name}>{map.name}</h2>
-        <span className={'mapedit-save ' + saveState} title={t('Les tuiles et les murs sont enregistrés automatiquement (Ctrl+S pour forcer)')}>
+        <span className={'mapedit-save ' + saveState} title={t('Tiles and walls are saved automatically (Ctrl+S to force)')}>
           {saveLabel}
         </span>
-        <IconButton icon="↶" title={t('Annuler (Ctrl+Z)')} disabled={!undoRef.current.length} onClick={undo} />
-        <IconButton icon="↷" title={t('Rétablir (Ctrl+Y)')} disabled={!redoRef.current.length} onClick={redo} />
+        <IconButton icon="↶" title={t('Undo (Ctrl+Z)')} disabled={!undoRef.current.length} onClick={undo} />
+        <IconButton icon="↷" title={t('Redo (Ctrl+Y)')} disabled={!redoRef.current.length} onClick={redo} />
         <span className="grow"></span>
         {map.library && (
-          <Button small variant="ghost" title={t('Mettre à jour depuis la bibliothèque ou y publier tes corrections')} onClick={() => setLibOpen(true)}>
-            {t('Bibliothèque…')}
+          <Button small variant="ghost" title={t('Update from the library or publish your fixes to it')} onClick={() => setLibOpen(true)}>
+            {t('Library…')}
           </Button>
         )}
         {shown ? (
-          <Badge color="green">● {t('Affichée aux joueurs')}</Badge>
+          <Badge color="green">● {t('Shown to players')}</Badge>
         ) : (
-          <Button small variant="accent" onClick={() => send('maps/setActive', { mapId }).then(() => toast(t('Carte affichée aux joueurs'), 'success'), quiet)}>
-            {t('Montrer aux joueurs')}
+          <Button small variant="accent" onClick={() => send('maps/setActive', { mapId }).then(() => toast(t('Map shown to players'), 'success'), quiet)}>
+            {t('Show to players')}
           </Button>
         )}
         <Button
@@ -1414,21 +1414,21 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
             setUI({ viewMapId: mapId, mainTab: 'map' });
           }}
         >
-          {t('Voir en jeu')}
+          {t('View in play')}
         </Button>
-        <IconButton icon="⌖" title={t('Recentrer')} onClick={() => rRef.current?.fit()} />
+        <IconButton icon="⌖" title={t('Re-center')} onClick={() => rRef.current?.fit()} />
         <Button small className="mapedit-mobile-tabs" onClick={() => setPanel({ tools: !panel.tools, props: false })}>
-          {t('Outils')}
+          {t('Tools')}
         </Button>
         <Button small className="mapedit-mobile-tabs" onClick={() => setPanel({ props: !panel.props, tools: false })}>
-          {t('Propriétés')}
+          {t('Properties')}
         </Button>
       </header>
       {libOpen && map.library && <LibraryLinkModal map={map} beforeAction={flush} onClose={() => setLibOpen(false)} />}
 
       <aside className="mapedit-tools">
         <div className="mapedit-section">
-          <h5>{t('Outils')}</h5>
+          <h5>{t('Tools')}</h5>
           <div className="mapedit-toolgrid">
             {TOOLS.map((tt) => (
               <button key={tt.id} className={'mapedit-tool' + (tool === tt.id ? ' active' : '')} title={`${t(tt.label)} (${tt.key.toUpperCase()})`} onClick={() => setTool(tt.id)}>
@@ -1441,13 +1441,13 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
         </div>
         {toolOptions()}
         <div className="mapedit-section">
-          <h5>{t('Tuiles')}</h5>
+          <h5>{t('Tiles')}</h5>
           <div className="mapedit-palette">
             {PALETTE.map((ch) => (
               <button
                 key={ch}
                 className={'mapedit-tile' + (tile === ch && PAINT.has(tool) && tool !== 'eraser' ? ' active' : '')}
-                title={`${tileLabel(ch)}${TILES[ch].blockMove ? ' · ' + t('bloque le passage') : ''}${TILES[ch].blockSight ? ' · ' + t('bloque la vue') : ''}`}
+                title={`${tileLabel(ch)}${TILES[ch].blockMove ? ' · ' + t('blocks movement') : ''}${TILES[ch].blockSight ? ' · ' + t('blocks sight') : ''}`}
                 onClick={() => {
                   setTile(ch);
                   if (!PAINT.has(tool) || tool === 'eraser') setTool('brush');
@@ -1468,44 +1468,44 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
       <aside className="mapedit-props">
         {inspector()}
         <div className="mapedit-section">
-          <h5>{t('Carte')}</h5>
-          <Field label={t('Nom')}>
+          <h5>{t('Map')}</h5>
+          <Field label={t('Name')}>
             <TextInput value={map.name} onChange={(v) => upd({ name: v })} />
           </Field>
-          <Field label={t('Dossier')}>
-            <TextInput value={map.folder || ''} placeholder={t('ex. Acte 2')} onChange={(v) => upd({ folder: v })} />
+          <Field label={t('Folder')}>
+            <TextInput value={map.folder || ''} placeholder={t('e.g. Act 2')} onChange={(v) => upd({ folder: v })} />
           </Field>
           <div className="grid-2">
-            <Field label={t('carte::Ambiance')}>
+            <Field label={t('map::Theme')}>
               <Select value={map.theme || 'street'} options={themeOptions()} onChange={(v) => upd({ theme: v })} />
             </Field>
-            <Field label={t('Éclairage')}>
+            <Field label={t('Lighting')}>
               <Select value={map.lighting || 'bright'} options={lightingOptions()} onChange={(v) => upd({ lighting: v })} />
             </Field>
           </div>
-          <Toggle label={t('Brouillard de guerre')} value={map.fog !== false} onChange={(v) => upd({ fog: v })} />
-          <Toggle label={t('Vision partagée du groupe')} value={map.sharedVision !== false} onChange={(v) => upd({ sharedVision: v })} />
+          <Toggle label={t('Fog of war')} value={map.fog !== false} onChange={(v) => upd({ fog: v })} />
+          <Toggle label={t('Shared party vision')} value={map.sharedVision !== false} onChange={(v) => upd({ sharedVision: v })} />
           <div className="row spread">
-            <span className="small muted">{t('Mètres par case')}</span>
+            <span className="small muted">{t('Meters per cell')}</span>
             <NumberInput small value={map.metersPerCell || 1} min={0.5} max={20} step={0.5} onChange={(v) => upd({ metersPerCell: v })} />
           </div>
-          <Field label={t('Description (MJ)')}>
-            <TextInput multiline rows={3} value={map.description || ''} placeholder={t('Notes de scène, PNJ présents, pièges…')} onChange={(v) => upd({ description: v })} />
+          <Field label={t('Description (GM)')}>
+            <TextInput multiline rows={3} value={map.description || ''} placeholder={t('Scene notes, NPCs present, traps…')} onChange={(v) => upd({ description: v })} />
           </Field>
         </div>
         <div className="mapedit-section">
-          <h5>{t('Image de fond')}</h5>
-          <Field label={t("Adresse de l'image")}>
-            <TextInput value={bg?.url || ''} placeholder={t('/assets/… ou https://…')} onChange={(v) => (v.trim() ? setBg({ url: v.trim() }) : upd({ background: null }))} />
+          <h5>{t('Background image')}</h5>
+          <Field label={t("Image URL")}>
+            <TextInput value={bg?.url || ''} placeholder={t('/assets/… or https://…')} onChange={(v) => (v.trim() ? setBg({ url: v.trim() }) : upd({ background: null }))} />
           </Field>
           <div className="row wrap">
             <label className="btn btn-sm">
-              {bg?.url ? t('Remplacer…') : t('Importer une image…')}
+              {bg?.url ? t('Replace…') : t('Import an image…')}
               <input type="file" accept="image/*" hidden onChange={onBg} />
             </label>
             {bg?.url && (
               <Button small variant="danger" onClick={() => upd({ background: null })}>
-                {t('Retirer')}
+                {t('Remove')}
               </Button>
             )}
           </div>
@@ -1520,18 +1520,18 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
               </Field>
               <span className="small muted">
                 {bg.mode === 'image'
-                  ? t('L’image est le sol : les tuiles ne sont plus dessinées (elles servent encore aux déplacements et à la vision). Trace les murs en segments.')
-                  : t('Les tuiles sont dessinées et l’image se superpose selon l’opacité.')}
+                  ? t('The image is the floor: tiles are no longer drawn (they still drive movement and vision). Draw the walls as segments.')
+                  : t('Tiles are drawn and the image is blended according to its opacity.')}
               </span>
-              <span className="small muted">{t('Opacité {n} %', { n: Math.round((bg.opacity ?? 0.6) * 100) })}</span>
+              <span className="small muted">{t('Opacity {n}%', { n: Math.round((bg.opacity ?? 0.6) * 100) })}</span>
               <CommitInput type="range" className="mapedit-range" min="0" max="1" step="0.05" value={bg.opacity ?? 0.6} onCommit={(v) => setBg({ opacity: Number(v) })} />
               <div className="grid-2">
                 {(
                   [
-                    ['x', tk('X (cases)')],
-                    ['y', tk('Y (cases)')],
-                    ['w', tk('Largeur')],
-                    ['h', tk('Hauteur')],
+                    ['x', tk('X (cells)')],
+                    ['y', tk('Y (cells)')],
+                    ['w', tk('Width')],
+                    ['h', tk('Height')],
                   ] as const
                 ).map(([k, label]) => (
                   <NumField key={k} label={t(label)}>
@@ -1547,25 +1547,25 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
                 ))}
               </div>
               <div className="row wrap">
-                <Button small onClick={fitBg} title={t("Étirer l'image sur toute la carte")}>
-                  {t('Ajuster à la carte')}
+                <Button small onClick={fitBg} title={t("Stretch the image over the whole map")}>
+                  {t('Fit to map')}
                 </Button>
-                <Button small variant="ghost" onClick={bgAspect} title={t("Recalculer la hauteur pour garder les proportions de l'image")}>
-                  {t("Proportions de l'image")}
+                <Button small variant="ghost" onClick={bgAspect} title={t("Recompute the height to keep the image's proportions")}>
+                  {t("Image proportions")}
                 </Button>
               </div>
               {bg.mode === 'image' && (
-                <Button small variant="ghost" onClick={fillInterior} title={t("Toutes les cases deviennent du sol « . » (les cartes illustrées n'ont que des murs en segments)")}>
-                  {t("Remplir l'intérieur")}
+                <Button small variant="ghost" onClick={fillInterior} title={t("Every cell becomes floor “.” (illustrated maps only use segment walls)")}>
+                  {t("Fill the interior")}
                 </Button>
               )}
             </div>
           )}
         </div>
         <div className="mapedit-section">
-          <h5>{t('Murs en segments ({n})', { n: wallsRef.current.length })}</h5>
+          <h5>{t('Segment walls ({n})', { n: wallsRef.current.length })}</h5>
           <span className="small muted">
-            {t('{walls} mur(s) · {windows} fenêtre(s) · {curtains} rideau(x) · {doors} porte(s) · {secrets} secrète(s)', {
+            {t('{walls} wall(s) · {windows} window(s) · {curtains} curtain(s) · {doors} door(s) · {secrets} secret', {
               walls: wallStats.wall,
               windows: wallStats.window,
               curtains: wallStats.curtain,
@@ -1575,11 +1575,11 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
           </span>
           <div className="row wrap">
             <Button small onClick={() => setTool('wall')}>
-              {t('Tracer des murs')}
+              {t('Draw walls')}
             </Button>
             {wallsRef.current.length > 0 && (
               <Button small variant="ghost" onClick={() => setWallSel(wallsRef.current.filter((w) => w.door).map((w) => w.id))}>
-                {t('Sélectionner les portes')}
+                {t('Select the doors')}
               </Button>
             )}
             {wallsRef.current.length > 0 && (
@@ -1587,71 +1587,71 @@ export function MapEditor({ game, map, onBack }: MapEditorProps) {
                 small
                 variant="ghost"
                 onClick={async () => {
-                  if (await confirmAction(t('Supprimer les {n} murs en segments ? (Ctrl+Z pour annuler)', { n: wallsRef.current.length }))) deleteWalls(wallsRef.current.map((w) => w.id));
+                  if (await confirmAction(t('Delete the {n} segment walls? (Ctrl+Z to undo)', { n: wallsRef.current.length }))) deleteWalls(wallsRef.current.map((w) => w.id));
                 }}
               >
-                {t('Tout supprimer')}
+                {t('Delete all')}
               </Button>
             )}
           </div>
         </div>
         <div className="mapedit-section">
-          <h5>{t('Taille ({w} × {h})', { w: map.width, h: map.height })}</h5>
+          <h5>{t('Size ({w} × {h})', { w: map.width, h: map.height })}</h5>
           <div className="grid-2">
-            <NumField label={t('Largeur')}>
+            <NumField label={t('Width')}>
               <NumberInput small value={resize.width} min={4} max={160} onChange={(v) => setResize({ ...resize, width: v })} />
             </NumField>
-            <NumField label={t('Hauteur')}>
+            <NumField label={t('Height')}>
               <NumberInput small value={resize.height} min={4} max={160} onChange={(v) => setResize({ ...resize, height: v })} />
             </NumField>
           </div>
-          <Field label={t('Ancrage du contenu')}>
+          <Field label={t('Content anchor')}>
             <Select value={resize.anchor} options={tr(ANCHORS)} onChange={(v) => setResize({ ...resize, anchor: v })} />
           </Field>
           <Button small disabled={resize.width === map.width && resize.height === map.height} onClick={doResize}>
-            {t('Redimensionner')}
+            {t('Resize')}
           </Button>
         </div>
-        {objectList(t('Pions'), map.tokens || [], 'token', (o) => (
+        {objectList(t('Tokens'), map.tokens || [], 'token', (o) => (
           <>
             <span className="mapedit-swatch" style={{ background: DISPO[o.disposition]?.color }}></span>
-            {o.hidden ? t('{name} (caché)', { name: o.name }) : o.name}
+            {o.hidden ? t('{name} (hidden)', { name: o.name }) : o.name}
           </>
         ))}
-        {objectList(t('Portes'), map.doors || [], 'door', (o) => (
+        {objectList(t('Doors'), map.doors || [], 'door', (o) => (
           <>
             <span className="mapedit-swatch" style={{ background: o.kind === 'secret' ? '#e0468f' : o.state === 'open' ? '#4fd17a' : '#e0a63f' }}></span>
             {o.name || t(DOOR_KINDS.find((k) => k.value === o.kind)?.label || '')} · {t(DOOR_STATES.find((s) => s.value === o.state)?.label || '').toLowerCase()}
           </>
         ))}
-        {objectList(t('Lumières'), map.lights || [], 'light', (o) => (
+        {objectList(t('Lights'), map.lights || [], 'light', (o) => (
           <>
             <span className="mapedit-swatch" style={{ background: o.on !== false ? o.color : 'transparent' }}></span>
-            {t('Rayon {r} · ({x}, {y})', { r: o.radius, x: o.x, y: o.y })}
+            {t('Radius {r} · ({x}, {y})', { r: o.radius, x: o.x, y: o.y })}
           </>
         ))}
-        {objectList(t('Zones'), map.regions || [], 'region', (o) => (
+        {objectList(t('Areas'), map.regions || [], 'region', (o) => (
           <>
             <span className="mapedit-swatch" style={{ background: o.gmOnly ? '#e0468f' : o.color || '#e0468f' }}></span>
-            {o.gmOnly ? t('{name} (MJ)', { name: o.name }) : o.name}
+            {o.gmOnly ? t('{name} (GM)', { name: o.name }) : o.name}
           </>
         ))}
-        {objectList(t('Notes MJ'), map.notes || [], 'note', (o) => (
+        {objectList(t('GM notes'), map.notes || [], 'note', (o) => (
           <>
             <span className="mapedit-swatch" style={{ background: '#e0a63f' }}></span>
             {o.text.slice(0, 40)}
           </>
         ))}
         <div className="mapedit-section">
-          <h5>{t('Brouillard')}</h5>
+          <h5>{t('Fog')}</h5>
           <Button
             small
             variant="ghost"
             onClick={async () => {
-              if (await confirmAction(t('Effacer la mémoire du brouillard pour tous les joueurs ?'))) send('maps/resetFog', { mapId }).then(() => toast(t('Brouillard réinitialisé')), quiet);
+              if (await confirmAction(t('Clear the fog memory for every player?'))) send('maps/resetFog', { mapId }).then(() => toast(t('Fog reset')), quiet);
             }}
           >
-            {t('Réinitialiser le brouillard')}
+            {t('Reset the fog')}
           </Button>
         </div>
       </aside>

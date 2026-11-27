@@ -71,7 +71,7 @@ export function programLabel(name: string): string {
   return def.id === 'agent' && m ? `${def.en} (${m[1] || m[2]})` : def.en;
 }
 /** Author of a matrix log entry (agents and IC carry authorI18n). */
-export const logAuthor = (e: LogEntry | null | undefined): string => (e?.authorI18n?.key ? t(e.authorI18n.key, e.authorI18n.params) : e?.author === 'MJ' ? t('MJ') : e?.author || '');
+export const logAuthor = (e: LogEntry | null | undefined): string => (e?.authorI18n?.key ? t(e.authorI18n.key, e.authorI18n.params) : e?.author === 'MJ' ? t('GM') : e?.author || '');
 /** Roll label of a matrix log entry. */
 export const logRollLabel = (r: { label?: string; labelI18n?: { key?: string; params?: Record<string, unknown> } } | null | undefined): string =>
   r?.labelI18n?.key ? t(r.labelI18n.key, r.labelI18n.params) : tIfKnown(r?.label || '');
@@ -83,12 +83,12 @@ export const asdfLabel = (k: string | null | undefined): string => (k && ASDF_LA
 export const modeLabel = (m: string | null | undefined): string => (m && MODE_LABELS[m] ? t(MODE_LABELS[m]) : String(m || ''));
 /** Pending agent assist bonus: « +2 dés, limite +1 ». */
 export const assistText = (pa: PendingAssistLike | null | undefined): string =>
-  pa?.limitBonus ? tn(pa.dice, '+{n} dé, limite +1', '+{n} dés, limite +1') : tn(pa?.dice || 0, '+{n} dé', '+{n} dés');
+  pa?.limitBonus ? tn(pa.dice, '+{n} die, limit +1', '+{n} dice, limit +1') : tn(pa?.dice || 0, '+{n} die', '+{n} dice');
 /** An agent the actor owns (detectAgents): gear labels are rebuilt in the UI language. */
 export const agentLabel = (o: OwnedAgent | null | undefined): string =>
-  o?.source === 'gear' && o.gearRating ? t('{name} (indice {n})', { name: o.name, n: o.gearRating }) : o?.source === 'gear' ? o.label : programLabel(o?.label || '');
+  o?.source === 'gear' && o.gearRating ? t('{name} (rating {n})', { name: o.name, n: o.gearRating }) : o?.source === 'gear' ? o.label : programLabel(o?.label || '');
 /** « 2 marques ». */
-export const marksText = (n: number): string => tn(n, '{n} marque', '{n} marques');
+export const marksText = (n: number): string => tn(n, '{n} mark', '{n} marks');
 export const ownsActor = (game: GameView | null | undefined, id: string) => isGM(game) || (game?.me?.characterIds || []).includes(id);
 
 /** Send an action, swallowing the rejection (the net layer already shows an error toast). */
@@ -125,13 +125,13 @@ export function OsMeter({ value, hidden, knownAt, compact }: { value: number | n
     return (
       <div className="mx-os mx-os-unknown">
         <div className="mx-os-head">
-          <span>{t('Score d’Overwatch')}</span>
+          <span>{t('Overwatch Score')}</span>
           <b className="mono">??</b>
         </div>
         <div className="mx-os-bar">
           <div className="mx-os-fog"></div>
         </div>
-        <div className="small muted">{t('Inconnu : utilise « Vérifier le Score d’Overwatch » ou le programme Surveillance.')}</div>
+        <div className="small muted">{t('Unknown: use “Check Overwatch Score” or the Baby Monitor program.')}</div>
       </div>
     );
   }
@@ -146,11 +146,11 @@ export function OsMeter({ value, hidden, knownAt, compact }: { value: number | n
     <div className={`mx-os lvl-${lvl.id}${compact ? ' compact' : ''}`}>
       <div className="mx-os-head">
         <span>
-          {t('Score d’Overwatch')}
+          {t('Overwatch Score')}
           {hidden ? (
             <>
               {' '}
-              <span className="faint small">{knownAt ? t('(dernière vérification {time})', { time: fmtTime(knownAt) }) : t('(dernière vérification)')}</span>
+              <span className="faint small">{knownAt ? t('(last checked {time})', { time: fmtTime(knownAt) }) : t('(last check)')}</span>
             </>
           ) : (
             ''
@@ -165,11 +165,11 @@ export function OsMeter({ value, hidden, knownAt, compact }: { value: number | n
       {!compact && (
         <div className="mx-os-foot">
           <Badge color={lvl.color}>{t(lvl.label)}</Badge>
-          <span className="faint small">{t('Convergence à {n}', { n: OS_MAX })}</span>
+          <span className="faint small">{t('Convergence at {n}', { n: OS_MAX })}</span>
         </div>
       )}
-      {!compact && v >= 35 && <div className="mx-os-alarm">{t('CONVERGENCE IMMINENTE — déconnecte-toi ou redémarre ton deck !')}</div>}
-      {!compact && v >= 30 && v < 35 && <div className="mx-os-warn">{t('Le GOD se rapproche : chaque action illégale peut déclencher la convergence.')}</div>}
+      {!compact && v >= 35 && <div className="mx-os-alarm">{t('CONVERGENCE IMMINENT — jack out or reboot your deck!')}</div>}
+      {!compact && v >= 30 && v < 35 && <div className="mx-os-warn">{t('GOD is closing in: any illegal action may trigger convergence.')}</div>}
     </div>
   );
 }
@@ -188,7 +188,7 @@ export function MatrixMonitor({ value, deviceRating, onSet, label, max }: Matrix
   return (
     <div className="mx-monitor">
       <div className="mx-monitor-head">
-        <span>{label || t('Moniteur matriciel')}</span>
+        <span>{label || t('Matrix Condition Monitor')}</span>
         <span className="mono">
           {v}/{mon}
         </span>
@@ -200,7 +200,7 @@ export function MatrixMonitor({ value, deviceRating, onSet, label, max }: Matrix
             key={i}
             className={'mx-box' + (i < v ? ' on' : '')}
             disabled={!onSet}
-            title={onSet ? t('Mettre à {n}', { n: i + 1 === v ? i : i + 1 }) : ''}
+            title={onSet ? t('Set to {n}', { n: i + 1 === v ? i : i + 1 }) : ''}
             onClick={() => onSet?.(i + 1 === v ? i : i + 1)}
           ></button>
         ))}
@@ -230,13 +230,13 @@ export function MatrixLog({ game, actorId, limit = 14, title }: { game: GameView
     .reverse();
   return (
     <div className="mx-log">
-      <div className="mx-panel-title">{title || t('Journal matriciel')}</div>
-      {entries.length === 0 && <div className="muted small">{t('Rien pour l’instant.')}</div>}
+      <div className="mx-panel-title">{title || t('Matrix log')}</div>
+      {entries.length === 0 && <div className="muted small">{t('Nothing yet.')}</div>}
       {entries.map((e) => (
         <div className={'mx-log-entry' + (e.gmOnly ? ' gm' : '') + (e.matrix?.event === 'convergence' ? ' conv' : '')} key={e.id}>
           <div className="mx-log-meta">
             <b>{logAuthor(e)}</b>
-            {e.gmOnly ? <span className="ld-tag">{t('MJ')}</span> : null}
+            {e.gmOnly ? <span className="ld-tag">{t('GM')}</span> : null}
             <span className="mono faint">{fmtTime(e.ts)}</span>
           </div>
           {e.roll && (
@@ -275,7 +275,7 @@ export function targetOptions(game: GameView, actor: Actor, persona: PersonaView
   const groups: Array<{ group: string; items: TargetOption[] }> = [];
   if (allow.has('host')) {
     const items = hosts.filter((h) => gm || h.visible || h.inside || markOn(`host:${h.id}`)).map((h) => ({ id: `host:${h.id}`, label: h.name, kind: 'host', marks: markOn(`host:${h.id}`) }));
-    if (items.length) groups.push({ group: t('Hôtes'), items });
+    if (items.length) groups.push({ group: t('Hosts'), items });
   }
   const cur = persona.hostId ? hosts.find((h) => h.id === persona.hostId) : null;
   if (allow.has('ic') && cur) {
@@ -285,7 +285,7 @@ export function targetOptions(game: GameView, actor: Actor, persona: PersonaView
         id: `ic:${cur.id}:${ic.id}`,
         kind: 'ic',
         marks: markOn(`ic:${cur.id}:${ic.id}`, cur.id),
-        label: `${icName(ic.type)}${ic.rating ? ` ${t('(indice {n})', { n: ic.rating })}` : ''}${ic.damage ? ` — ${ic.damage}/${matrixMonitor(ic.rating)}` : ''}`,
+        label: `${icName(ic.type)}${ic.rating ? ` ${t('(rating {n})', { n: ic.rating })}` : ''}${ic.damage ? ` — ${ic.damage}/${matrixMonitor(ic.rating)}` : ''}`,
       }));
     if (items.length) groups.push({ group: t('IC — {host}', { host: cur.name }), items });
   }
@@ -294,9 +294,9 @@ export function targetOptions(game: GameView, actor: Actor, persona: PersonaView
       id: `file:${cur.id}:${f.id}`,
       kind: 'file',
       marks: markOn(`file:${cur.id}:${f.id}`, cur.id),
-      label: `${f.name}${f.protected ? ` ${t('[protégé]')}` : ''}${f.bomb ? ` ${t('[bombe {n}]', { n: f.bomb })}` : ''}`,
+      label: `${f.name}${f.protected ? ` ${t('[protected]')}` : ''}${f.bomb ? ` ${t('[bomb {n}]', { n: f.bomb })}` : ''}`,
     }));
-    if (items.length) groups.push({ group: t('Fichiers — {host}', { host: cur.name }), items });
+    if (items.length) groups.push({ group: t('Files — {host}', { host: cur.name }), items });
   }
   if (allow.has('device')) {
     for (const h of hosts) {
@@ -306,25 +306,25 @@ export function targetOptions(game: GameView, actor: Actor, persona: PersonaView
         kind: 'device',
         marks: markOn(`device:${h.id}:${d.id}`, h.id),
         linkKind: d.link?.kind || null,
-        label: `${d.link?.kind && DEVICE_LINK_KINDS[d.link.kind] ? `${DEVICE_LINK_KINDS[d.link.kind].icon} ` : ''}${d.name}${d.offline ? ` ${t('(hors ligne)')}` : ''}`,
+        label: `${d.link?.kind && DEVICE_LINK_KINDS[d.link.kind] ? `${DEVICE_LINK_KINDS[d.link.kind].icon} ` : ''}${d.name}${d.offline ? ` ${t('(offline)')}` : ''}`,
       }));
-      if (items.length) groups.push({ group: t('Appareils — {host}', { host: h.name }), items });
+      if (items.length) groups.push({ group: t('Devices — {host}', { host: h.name }), items });
     }
   }
   if (allow.has('persona')) {
     const items = Object.values(game.actors || {})
       .filter((a) => a && a.id !== actor.id && !(a as Actor).retired && ((a as Actor).matrix || a.type === 'npc'))
       .sort((a, b) => (a.type === b.type ? compare(a.name, b.name) : a.type === 'pc' ? -1 : 1))
-      .map((a) => ({ id: `persona:${a.id}`, kind: 'persona', marks: markOn(`persona:${a.id}`), label: `${a.name}${a.type === 'npc' ? ` ${t('(PNJ)')}` : ''}` }));
+      .map((a) => ({ id: `persona:${a.id}`, kind: 'persona', marks: markOn(`persona:${a.id}`), label: `${a.name}${a.type === 'npc' ? ` ${t('(NPC)')}` : ''}` }));
     if (items.length) groups.push({ group: t('Personas'), items });
   }
   if (allow.has('markOnMe')) {
     const items = (persona.marksOnMe || [])
       .filter((m) => m.count > 0)
       .map((m: MatrixMarkOnMe) => ({ id: `mark:${m.sourceId}`, kind: 'markOnMe', marks: 0, label: `${markName(m)} (${marksText(m.count)})` }));
-    if (items.length) groups.push({ group: t('Marques sur moi'), items });
+    if (items.length) groups.push({ group: t('Marks on me'), items });
   }
-  if (allow.has('manual')) groups.push({ group: t('Autre'), items: [{ id: 'manual', kind: 'manual', marks: 0, label: t('Autre cible…') }] });
+  if (allow.has('manual')) groups.push({ group: t('Other'), items: [{ id: 'manual', kind: 'manual', marks: 0, label: t('Other target…') }] });
   return groups;
 }
 
@@ -349,11 +349,11 @@ export function deviceLinkState(game: GameView, device: { link?: { kind: string;
   const r = (map.regions || []).find((x) => x.id === l.targetId);
   return r ? r.cams || 'on' : null;
 }
-const LINK_STATE_LABELS: Record<string, string> = { open: tk('ouverte'), closed: tk('fermée'), locked: tk('verrouillée'), on: tk('allumé'), off: tk('coupé') };
+const LINK_STATE_LABELS: Record<string, string> = { open: tk('open'), closed: tk('closed'), locked: tk('locked'), on: tk('on'), off: tk('off') };
 /** « 🚪 verrouillée » — the link's icon and current state. */
 export function linkStateText(kind: string, state: string | null | undefined): string {
   const icon = DEVICE_LINK_KINDS[kind]?.icon || '';
-  if (kind === 'camera' && state === 'on') return `${icon} ${t('filme')}`;
+  if (kind === 'camera' && state === 'on') return `${icon} ${t('filming')}`;
   return state && LINK_STATE_LABELS[state] ? `${icon} ${t(LINK_STATE_LABELS[state])}` : icon;
 }
 

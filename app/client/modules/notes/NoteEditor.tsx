@@ -31,13 +31,13 @@ const TOOLS: Array<{ kind: FormatKind; icon: string; cls?: string }> = [
 ];
 const toolTitle = (k: FormatKind): string =>
   ({
-    bold: t('Gras (Ctrl+B)'),
-    italic: t('Italique (Ctrl+I)'),
-    heading: t('Titre de section'),
-    list: t('Liste à puces'),
-    check: t('Case à cocher'),
-    quote: t('Citation'),
-    link: t('Lien vers une note : [[Titre de la note]]'),
+    bold: t('Bold (Ctrl+B)'),
+    italic: t('Italic (Ctrl+I)'),
+    heading: t('Heading'),
+    list: t('Bulleted list'),
+    check: t('Checkbox'),
+    quote: t('Quote'),
+    link: t('Link to a note: [[Note title]]'),
   })[k];
 
 interface NoteEditorProps {
@@ -151,7 +151,7 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
     }
     const sent = { body: bodyRef.current, title: titleRef.current };
     if (sent.body.length > MAX_BODY) {
-      saveFailed(t('Note trop longue ({max} caractères maximum)', { max: MAX_BODY }));
+      saveFailed(t('Note too long ({max} characters maximum)', { max: MAX_BODY }));
       return;
     }
     saving.current = true;
@@ -233,7 +233,7 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
       document.removeEventListener('visibilitychange', vis);
       // Edits that can no longer be saved (page trashed/purged by someone else, write right lost, open conflict): say so.
       if (dirty() && (conflictRef.current || !canWrite(gameRef.current, pageRef.current)))
-        toast(t('Tes dernières modifications de « {title} » n’ont pas été enregistrées.', { title: titleRef.current || pageRef.current.title }), 'error', 8000);
+        toast(t('Your latest changes to “{title}” were not saved.', { title: titleRef.current || pageRef.current.title }), 'error', 8000);
       flush();
       if (lock.current.held) send('notes/unlock', { id: pageRef.current.id }, { silent: true }).catch(() => {});
     };
@@ -279,7 +279,7 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
   }
 
   async function forceEdit() {
-    if (!(await confirmAction(t('{name} est en train d’écrire dans cette note. Modifier quand même ? Vos modifications pourraient entrer en conflit.', { name: lockName })))) return;
+    if (!(await confirmAction(t('{name} is writing in this note. Edit anyway? Your changes may conflict.', { name: lockName })))) return;
     setForced(true);
     lock.current.forced = true;
     lock.current.lastInput = Date.now();
@@ -310,7 +310,7 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
     setStatus('saved');
   }
   async function copyMine() {
-    toast((await copyText(bodyRef.current)) ? t('Ta version est copiée dans le presse-papiers') : t('Copie impossible : sélectionne le texte à la main'), 'info');
+    toast((await copyText(bodyRef.current)) ? t('Your version was copied to the clipboard') : t('Copy failed: select the text by hand'), 'info');
   }
 
   // ---------------------------------------------------------------- preview
@@ -358,12 +358,12 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
   async function remove() {
     // Someone is typing in it: the server refuses unless forced, so ask with that in mind (their unsaved text is at stake).
     const confirmForce = (name: string) =>
-      confirmAction(t('{name} est en train d’écrire dans cette note. La mettre à la corbeille quand même ? Ses dernières modifications pourraient être perdues.', { name }));
+      confirmAction(t('{name} is typing in this note. Move it to the trash anyway? Their latest changes could be lost.', { name }));
     let force = false;
     if (foreign) {
       if (!(await confirmForce(lockName))) return;
       force = true;
-    } else if (!(await confirmAction(t('Mettre « {title} » à la corbeille ? Elle restera restaurable pendant 7 jours.', { title: page.title })))) return;
+    } else if (!(await confirmAction(t('Move “{title}” to the trash? It can be restored for 7 days.', { title: page.title })))) return;
     clearTimeout(timer.current);
     if (dirty()) await saveNow();
     try {
@@ -398,17 +398,17 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
   const canRestore = page.scope === 'party' || page.ownerId === game.me.id;
   const unsavedInTrash = !!page.deleted && dirty();
   const statusText = {
-    saved: t('Enregistré'),
-    dirty: t('Modifié…'),
-    saving: t('Enregistrement…'),
-    conflict: t('Conflit'),
-    error: t('Erreur d’enregistrement'),
+    saved: t('Saved'),
+    dirty: t('Edited…'),
+    saving: t('Saving…'),
+    conflict: t('Conflict'),
+    error: t('Save failed'),
   }[status];
 
   return (
     <div className={cx('notes-editor', `mode-${mode}`)}>
       <header className="notes-ed-head">
-        <button className="icon-btn notes-back" title={t('Retour à la liste')} onClick={onBack}>
+        <button className="icon-btn notes-back" title={t('Back to the list')} onClick={onBack}>
           ←
         </button>
         <input
@@ -417,14 +417,14 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
           value={title}
           maxLength={120}
           readOnly={readOnly}
-          placeholder={t('Titre de la note')}
-          aria-label={t('Titre de la note')}
+          placeholder={t('Note title')}
+          aria-label={t('Note title')}
           onChange={(e) => changeTitle(e.target.value)}
           onBlur={() => saveNow()}
           onKeyDown={(e) => e.key === 'Enter' && taRef.current?.focus()}
         />
         {writable && (
-          <span className={cx('notes-status', `st-${status}`)} title={status === 'error' && errors.last ? errors.last : t('Enregistrement automatique')}>
+          <span className={cx('notes-status', `st-${status}`)} title={status === 'error' && errors.last ? errors.last : t('Autosave')}>
             {statusText}
           </span>
         )}
@@ -432,20 +432,20 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
           <IconButton
             icon={page.pinned ? '★' : '☆'}
             className={cx(page.pinned && 'notes-pinned')}
-            title={page.pinned ? t('Désépingler') : t('Épingler en haut de la liste')}
+            title={page.pinned ? t('Unpin') : t('Pin to the top of the list')}
             onClick={() => send('notes/rename', { id: page.id, pinned: !page.pinned })}
           />
         )}
-        {!page.deleted && (mine || party) && <IconButton icon="🗑" title={t('Mettre à la corbeille')} onClick={remove} />}
+        {!page.deleted && (mine || party) && <IconButton icon="🗑" title={t('Move to trash')} onClick={remove} />}
       </header>
 
       <div className="notes-ed-meta small muted">
         {party ? (
-          <Badge color="cyan">{t('notes::Groupe')}</Badge>
+          <Badge color="cyan">{t('notes::Party')}</Badge>
         ) : mine ? (
-          <Badge color="dim">{t('Personnelle')}</Badge>
+          <Badge color="dim">{t('fem::Personal')}</Badge>
         ) : (
-          <Badge color="magenta">{t('Partagée par {name}', { name: ownerName })}</Badge>
+          <Badge color="magenta">{t('Shared by {name}', { name: ownerName })}</Badge>
         )}
         {writable ? (
           <>
@@ -455,8 +455,8 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
               list="notes-folders"
               value={page.folder || ''}
               maxLength={60}
-              placeholder={t('Dossier')}
-              aria-label={t('Dossier')}
+              placeholder={t('Folder')}
+              aria-label={t('Folder')}
               onChange={(v) => send('notes/rename', { id: page.id, folder: v })}
             />
             <datalist id="notes-folders">
@@ -469,7 +469,7 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
           page.folder && <span>📁 {page.folder}</span>
         )}
         <span className="grow"></span>
-        <span title={fmtDate(page.createdAt)}>{t('Modifié par {name} · {date}', { name: userLabel(game, page.updatedBy), date: fmtDate(page.updatedAt) })}</span>
+        <span title={fmtDate(page.createdAt)}>{t('Edited by {name} · {date}', { name: userLabel(game, page.updatedBy), date: fmtDate(page.updatedAt) })}</span>
       </div>
 
       {mine && !page.deleted && (
@@ -477,32 +477,32 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
           <Toggle
             value={!!page.shareWithGM}
             onChange={(v) => send('notes/setShare', { id: page.id, shareWithGM: v })}
-            title={t('Les sauvegardes du serveur contiennent toutes les notes. Si le MJ efface ton code PIN, tu en es averti dans le journal.')}
-            label={page.shareWithGM ? t('Partagée avec le MJ (lecture seule pour lui)') : t('Privée : cachée aux joueurs et au MJ dans l’onglet Notes')}
+            title={t('Server backups contain every note. If the GM clears your PIN, you are told in the log.')}
+            label={page.shareWithGM ? t('Shared with the GM (read-only for them)') : t('Private: hidden from players and the GM in the Notes tab')}
           />
         </div>
       )}
-      {!mine && page.scope === 'private' && <div className="notes-banner">{t('Note personnelle de {name}, partagée avec toi en lecture seule.', { name: ownerName })}</div>}
-      {party && gm && !writable && !page.deleted && <div className="notes-banner">{t('Lecture seule : les notes du groupe appartiennent aux joueurs (option dans la liste des notes).')}</div>}
+      {!mine && page.scope === 'private' && <div className="notes-banner">{t('Personal note of {name}, shared with you read-only.', { name: ownerName })}</div>}
+      {party && gm && !writable && !page.deleted && <div className="notes-banner">{t('Read-only: party notes belong to the players (option in the note list).')}</div>}
       {page.deleted &&
         (unsavedInTrash ? (
           <div className="notes-banner warn">
-            <span className="grow">{t('Cette note a été mise à la corbeille pendant que tu écrivais : tes dernières modifications ne sont pas enregistrées.')}</span>
+            <span className="grow">{t('This note was moved to the trash while you were typing: your latest changes are not saved.')}</span>
             {canRestore && (
               <Button small variant="primary" onClick={restoreAndSave}>
-                {t('Restaurer et enregistrer')}
+                {t('Restore and save')}
               </Button>
             )}
             <Button small variant="ghost" onClick={copyMine}>
-              {t('Copier ma version')}
+              {t('Copy my version')}
             </Button>
           </div>
         ) : (
           <div className="notes-banner warn">
-            <span className="grow">{t('Cette note est dans la corbeille.')}</span>
+            <span className="grow">{t('This note is in the trash.')}</span>
             {canRestore && (
               <Button small onClick={() => send('notes/restore', { id: page.id })}>
-                {t('Restaurer')}
+                {t('Restore')}
               </Button>
             )}
           </div>
@@ -514,10 +514,10 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
             <i></i>
             <i></i>
           </span>
-          <span className="grow">{t('{name} est en train d’écrire…', { name: lockName })}</span>
+          <span className="grow">{t('{name} is typing…', { name: lockName })}</span>
           {lockedOut && (
             <Button small variant="ghost" onClick={forceEdit}>
-              {t('Modifier quand même')}
+              {t('Edit anyway')}
             </Button>
           )}
         </div>
@@ -539,19 +539,19 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
             </button>
           ))}
         <span className="grow"></span>
-        <div className="notes-modes" role="group" aria-label={t('Affichage')}>
+        <div className="notes-modes" role="group" aria-label={t('Display')}>
           {!readOnly && (
             <button className={cx(mode === 'edit' && 'active')} onClick={() => pickMode('edit')}>
-              {t('Écrire')}
+              {t('Write')}
             </button>
           )}
           {!readOnly && (
             <button className={cx('notes-split-btn', mode === 'split' && 'active')} onClick={() => pickMode('split')}>
-              {t('Côte à côte')}
+              {t('Side by side')}
             </button>
           )}
           <button className={cx(mode === 'preview' && 'active')} onClick={() => pickMode('preview')}>
-            {t('Aperçu')}
+            {t('Preview')}
           </button>
         </div>
       </div>
@@ -563,7 +563,7 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
             className="notes-text"
             value={body}
             spellCheck={true}
-            placeholder={t('Écris ici… Markdown accepté : **gras**, *italique*, - liste, - [ ] tâche, [[Autre note]], @Jane')}
+            placeholder={t('Write here… Markdown works: **bold**, *italic*, - list, - [ ] task, [[Other note]], @Jane')}
             onChange={(e) => changeBody(e.target.value)}
             onBlur={() => saveNow()}
             onKeyDown={onKeyDown}
@@ -571,32 +571,32 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
           ></textarea>
         )}
         {showPreview && (
-          <div className="md notes-preview" onClick={onPreviewClick} dangerouslySetInnerHTML={{ __html: rendered?.html || `<p class="muted">${t('Note vide.')}</p>` }}></div>
+          <div className="md notes-preview" onClick={onPreviewClick} dangerouslySetInnerHTML={{ __html: rendered?.html || `<p class="muted">${t('Empty note.')}</p>` }}></div>
         )}
       </div>
 
       {(canComment(game, page) || (game.notes?.comments?.[page.id] || []).length > 0) && <NoteComments game={game} page={page} />}
 
       {conflict && (
-        <Modal title={t('Conflit de modification')} width={640} onClose={() => {}}>
-          <p>{t('{name} a modifié cette note pendant que tu écrivais ({date}). Que veux-tu garder ?', { name: userLabel(game, conflict.updatedBy), date: fmtDate(conflict.updatedAt) })}</p>
+        <Modal title={t('Edit conflict')} width={640} onClose={() => {}}>
+          <p>{t('{name} changed this note while you were writing ({date}). Which version do you want to keep?', { name: userLabel(game, conflict.updatedBy), date: fmtDate(conflict.updatedAt) })}</p>
           <div className="notes-conflict">
             <div>
-              <div className="small muted">{t('Ta version')}</div>
+              <div className="small muted">{t('Your version')}</div>
               <pre>{bodyRef.current}</pre>
             </div>
             <div>
-              <div className="small muted">{t('Version enregistrée')}</div>
+              <div className="small muted">{t('Saved version')}</div>
               <pre>{conflict.body}</pre>
             </div>
           </div>
           <div className="row wrap" style={{ marginTop: '12px', justifyContent: 'flex-end' }}>
             <Button variant="ghost" onClick={copyMine}>
-              {t('Copier ma version')}
+              {t('Copy my version')}
             </Button>
-            <Button onClick={takeTheirs}>{t('Prendre la leur')}</Button>
+            <Button onClick={takeTheirs}>{t('Take theirs')}</Button>
             <Button variant="primary" onClick={keepMine}>
-              {t('Garder la mienne')}
+              {t('Keep mine')}
             </Button>
           </div>
         </Modal>

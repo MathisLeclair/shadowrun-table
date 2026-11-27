@@ -180,11 +180,11 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
   try {
     doc = parseXml(xml);
   } catch (err) {
-    if (err instanceof XmlError) throw i18nError({ t: 'Fichier .chum5 illisible — {error}', params: { error: errorParam(err) } }, ChummerError);
+    if (err instanceof XmlError) throw i18nError({ t: 'Unreadable .chum5 file — {error}', params: { error: errorParam(err) } }, ChummerError);
     throw err;
   }
   const c = doc.root;
-  if (c.name !== 'character') throw i18nError({ t: 'Ce fichier n’est pas une fiche Chummer5 (.chum5)' }, ChummerError);
+  if (c.name !== 'character') throw i18nError({ t: 'This file is not a Chummer5 character (.chum5)' }, ChummerError);
   const warn = warningList();
   const warnings = warn.list;
   const v = (n: string): string => c.val(n).trim();
@@ -198,7 +198,7 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
   if (alias && realName && realName !== alias) a.realName = realName.slice(0, 120);
   const metaEn = v('metatype') || 'Human';
   a.metatype = METATYPE_FROM_EN[metaEn] || metaEn;
-  if (!METATYPE_FROM_EN[metaEn]) warn.add({ t: 'Métatype « {metatype} » inconnu de l’app (gardé tel quel).', params: { metatype: metaEn } });
+  if (!METATYPE_FROM_EN[metaEn]) warn.add({ t: 'Metatype “{metatype}” unknown to the app (kept as is).', params: { metatype: metaEn } });
   const gender = v('gender') || v('sex');
   a.gender = { Male: 'Homme', Female: 'Femme' }[gender] || gender;
   const age = v('age');
@@ -243,7 +243,7 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
   a.streetCred = Math.max(0, streetBase + impSum('StreetCred') + Math.round(num(v('streetcred'))) - Math.round(num(v('burntstreetcred'))));
   a.notoriety = Math.max(0, Math.round(num(v('notoriety')) + impSum('Notoriety') + num(v('burntstreetcred'))));
   a.publicAwareness = Math.max(0, Math.round(num(v('publicawareness')) + impSum('PublicAwareness')));
-  if (!created) warn.add({ t: 'Personnage encore en mode création dans Chummer : karma et nuyens restants peuvent différer de ce qu’affiche Chummer.' });
+  if (!created) warn.add({ t: 'Character still in creation mode in Chummer: remaining karma and nuyen may differ from what Chummer shows.' });
 
   // Attributes: value = metatype min + base + karma; totalvalue (when present) includes augmentations.
   const magEnabled = bool(v('magenabled'));
@@ -590,7 +590,7 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
 
   a.history = [{ ts: now, chummer: true, text: `Import Chummer5${fileName ? ` (${fileName})` : ''}`, karma: a.karma, nuyen: a.nuyen }];
   const meta = metatypeData(metaEn);
-  if (!meta && METATYPE_FROM_EN[metaEn]) warn.add({ t: 'Données de métatype Chummer introuvables.' });
+  if (!meta && METATYPE_FROM_EN[metaEn]) warn.add({ t: 'Chummer metatype data not found.' });
   if (keepXml) {
     a.chummer = {
       xml: String(xml).replace(/^﻿/, ''), fileName: String(fileName || '').slice(0, 200), importedAt: now, syncedAt: now, sourceHash: sha1(xml),

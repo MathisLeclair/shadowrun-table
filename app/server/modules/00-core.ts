@@ -55,7 +55,7 @@ const mod: ServerModule = {
       role: 'any',
       handler(ctx: ActionContext, { text, to, as }: ChatSendPayload) {
         const clean = String(text || '').trim().slice(0, 2000);
-        if (!clean) ctx.fail('Message vide');
+        if (!clean) ctx.fail('Empty message');
         let author = ctx.displayName();
         if (as && ctx.state.actors[as] && ctx.owns(as)) author = ctx.state.actors[as].name;
         const whisper = Array.isArray(to) && to.length ? [...new Set<UserId>([...(to as UserId[]), 'gm'])] : undefined;
@@ -80,15 +80,15 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, { campaignName, gmPassword, lang }: ConfigUpdatePayload) {
         if (campaignName !== undefined) {
           const name = String(campaignName).trim().slice(0, 80);
-          if (!name) ctx.fail('Le nom de la campagne ne peut pas être vide');
+          if (!name) ctx.fail('The campaign name cannot be empty');
           ctx.state.config.campaignName = name;
         }
         if (gmPassword) {
-          if (String(gmPassword).length < 4) ctx.fail('Mot de passe MJ trop court (4 caractères minimum)');
+          if (String(gmPassword).length < 4) ctx.fail('GM password too short (4 characters minimum)');
           ctx.state.config.gmPassword = String(gmPassword).slice(0, 80);
         }
         if (lang !== undefined) {
-          if (!isLang(lang)) ctx.fail('Langue inconnue');
+          if (!isLang(lang)) ctx.fail('Unknown language');
           ctx.state.config.lang = lang;
         }
       },
@@ -98,12 +98,12 @@ const mod: ServerModule = {
     'users/setLang': {
       role: 'any',
       handler(ctx: ActionContext, { lang }: SetLangPayload) {
-        if (lang !== null && lang !== undefined && !isLang(lang)) ctx.fail('Langue inconnue');
+        if (lang !== null && lang !== undefined && !isLang(lang)) ctx.fail('Unknown language');
         const value = isLang(lang) ? lang : null;
         if (ctx.isGM) ctx.state.config.gmLang = value;
         else {
           const u = ctx.state.users[ctx.user.id];
-          if (!u) ctx.fail('Joueur introuvable');
+          if (!u) ctx.fail('Player not found');
           u.lang = value;
         }
         return { lang: value };
@@ -114,7 +114,7 @@ const mod: ServerModule = {
       role: 'gm',
       handler(ctx: ActionContext, { userId, characterId, assign }: AssignPayload) {
         const u = ctx.state.users[userId];
-        if (!u) ctx.fail('Joueur introuvable');
+        if (!u) ctx.fail('Player not found');
         u.characterIds = (u.characterIds || []).filter((id) => id !== characterId);
         if (assign) {
           for (const other of Object.values(ctx.state.users)) other.characterIds = (other.characterIds || []).filter((id) => id !== characterId);
@@ -136,7 +136,7 @@ const mod: ServerModule = {
         if (!u) return;
         u.pin = null;
         // The player is told: without a PIN anyone could log in under their name (and read their private notes).
-        ctx.log({ kind: 'system', author: 'MJ', text: `Le MJ a effacé le code PIN de ${u.name}.`, i18n: { key: 'Le MJ a effacé le code PIN de {name}.', params: { name: u.name } }, to: [u.id, 'gm'] });
+        ctx.log({ kind: 'system', author: 'MJ', text: `Le MJ a effacé le code PIN de ${u.name}.`, i18n: { key: 'The GM cleared {name}’s PIN.', params: { name: u.name } }, to: [u.id, 'gm'] });
       },
     },
     // Banner text shown on every screen (null to clear).

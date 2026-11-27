@@ -30,55 +30,55 @@ function SessionCard({ session, open, onToggle, nav, docs, isNext, highlight }: 
       <header className="camp-session-head" onClick={onToggle}>
         <div className="camp-session-num">{session.number}</div>
         <div className="grow camp-quest-headtext">
-          <div className="camp-quest-title">{session.title || t('Séance {n}', { n: session.number })}</div>
-          <div className="small muted">{session.date ? fmtSessionDate(session.date) : t('Date non fixée')}</div>
+          <div className="camp-quest-title">{session.title || t('Session {n}', { n: session.number })}</div>
+          <div className="small muted">{session.date ? fmtSessionDate(session.date) : t('No date set')}</div>
         </div>
         {recapTodo && (
-          <Badge color="amber" title={t('Le récap de cette séance reste à écrire')}>
-            {t('Récap à faire')}
+          <Badge color="amber" title={t('This session\'s recap has yet to be written')}>
+            {t('Recap to do')}
           </Badge>
         )}
-        {session.played ? <Badge color="green">{t('séance::Jouée')}</Badge> : isNext ? <Badge color="cyan">{t('séance::Prochaine')}</Badge> : <Badge>{t('séance::Prévue')}</Badge>}
+        {session.played ? <Badge color="green">{t('session::Played')}</Badge> : isNext ? <Badge color="cyan">{t('session::Next')}</Badge> : <Badge>{t('session::Planned')}</Badge>}
         <span className={cx('camp-chev', open && 'open')}>›</span>
       </header>
       {open && (
         <div className="camp-quest-body">
           <div className="camp-quest-meta">
             <label className="field camp-num-field">
-              <span className="field-label">{t('N°')}</span>
+              <span className="field-label">{t('#')}</span>
               <TextInput type="number" min="1" value={String(session.number)} onChange={(v) => Number(v) > 0 && patch({ number: Number(v) })} />
             </label>
             <label className="field grow">
-              <span className="field-label">{t('Titre')}</span>
-              <TextInput value={session.title} placeholder={t('Séance {n}', { n: session.number })} onChange={(title) => patch({ title })} />
+              <span className="field-label">{t('Title')}</span>
+              <TextInput value={session.title} placeholder={t('Session {n}', { n: session.number })} onChange={(title) => patch({ title })} />
             </label>
             <label className="field">
               <span className="field-label">{t('Date')}</span>
               <TextInput type="date" value={session.date} onChange={(date) => patch({ date })} />
             </label>
             <div className="field">
-              <span className="field-label">{t('séance::Jouée')}</span>
+              <span className="field-label">{t('session::Played')}</span>
               <Toggle
                 value={session.played}
                 onChange={(played) => {
                   patch({ played });
                   if (played) setPart('recap');
                 }}
-                label={session.played ? t('Oui') : t('Non')}
+                label={session.played ? t('Yes') : t('No')}
               />
             </div>
             <label className="field">
               <span className="field-label">{t('Document')}</span>
               <div className="row gap-s">
                 <DocSelect value={session.doc} docs={docs.list} onChange={(doc) => patch({ doc })} />
-                {session.doc && <DocButton docRef={session.doc} nav={nav} label={t('Ouvrir')} />}
+                {session.doc && <DocButton docRef={session.doc} nav={nav} label={t('Open')} />}
               </div>
             </label>
           </div>
           <Tabs
             tabs={[
               { id: 'plan', label: t('Plan') },
-              { id: 'recap', label: t('Récap'), badge: recapTodo ? '!' : null },
+              { id: 'recap', label: t('Recap'), badge: recapTodo ? '!' : null },
             ]}
             value={part}
             onChange={setPart}
@@ -89,7 +89,7 @@ function SessionCard({ session, open, onToggle, nav, docs, isNext, highlight }: 
               value={session.plan}
               rows={14}
               initialMode={session.plan ? 'preview' : 'edit'}
-              placeholder={t('Scènes prévues, PNJ, cartes, points à ne pas oublier…')}
+              placeholder={t('Planned scenes, NPCs, maps, things not to forget…')}
               onSave={(plan) => patch({ plan })}
             />
           ) : (
@@ -98,20 +98,20 @@ function SessionCard({ session, open, onToggle, nav, docs, isNext, highlight }: 
               value={session.recap}
               rows={14}
               initialMode={session.recap ? 'preview' : 'edit'}
-              placeholder={t("Ce qui s'est réellement passé à la table…")}
+              placeholder={t("What actually happened at the table…")}
               onSave={(recap) => patch({ recap })}
             />
           )}
           <footer className="camp-quest-foot">
-            <span className="faint small">{t("Astuce : pense à reporter l'essentiel (sans secrets) dans le « Récap joueurs ».")}</span>
+            <span className="faint small">{t("Tip: copy the essentials (no secrets) into the “Player recap”.")}</span>
             <Button
               small
               variant="danger"
               onClick={async () => {
-                if (await confirmAction(t('Supprimer la séance n°{n} ?', { n: session.number }))) send('campaign/deleteSession', { sessionId: session.id });
+                if (await confirmAction(t('Delete session #{n}?', { n: session.number }))) send('campaign/deleteSession', { sessionId: session.id });
               }}
             >
-              {t('Supprimer')}
+              {t('Delete')}
             </Button>
           </footer>
         </div>
@@ -151,14 +151,14 @@ export default function SessionsView({ game, nav, focus }: { game: GameView; nav
     <div className="camp-sessions">
       <div className="camp-toolbar">
         <span className="muted small">
-          {t('{played} jouée(s) · {planned} prévue(s)', { played: sessions.filter((s) => s.played).length, planned: sessions.filter((s) => !s.played).length })}
+          {t('{played} played · {planned} planned', { played: sessions.filter((s) => s.played).length, planned: sessions.filter((s) => !s.played).length })}
         </span>
         <span className="grow"></span>
         <Button small variant="ghost" onClick={() => setNewestFirst(!newestFirst)}>
-          {newestFirst ? '↓ ' + t("Plus récentes d'abord") : '↑ ' + t("Plus anciennes d'abord")}
+          {newestFirst ? '↓ ' + t("Newest first") : '↑ ' + t("Oldest first")}
         </Button>
         <Button small variant="primary" onClick={add}>
-          + {t('Nouvelle séance')}
+          + {t('New session')}
         </Button>
       </div>
       {list.length ? (
@@ -175,7 +175,7 @@ export default function SessionsView({ game, nav, focus }: { game: GameView; nav
           />
         ))
       ) : (
-        <Empty>{t('Aucune séance. Crée la première !')}</Empty>
+        <Empty>{t('No sessions. Create the first one!')}</Empty>
       )}
     </div>
   );

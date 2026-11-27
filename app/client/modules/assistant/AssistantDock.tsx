@@ -32,20 +32,20 @@ const usd = (n: unknown) => {
 };
 
 const KIND_LABEL: Record<string, string> = {
-  map: tk('Nouvelle carte'),
-  map_edits: tk('Modification de carte'),
-  npc: tk('PNJ (bestiaire)'),
-  handout: tk('Document joueur (non révélé)'),
-  quest: tk('Quête'),
-  thread: tk('Fil d’intrigue'),
-  session_plan: tk('Plan de séance'),
-  gm_notes: tk('Notes MJ'),
+  map: tk('New map'),
+  map_edits: tk('Map changes'),
+  npc: tk('NPC (bestiary)'),
+  handout: tk('Player handout (not revealed)'),
+  quest: tk('Quest'),
+  thread: tk('Plot thread'),
+  session_plan: tk('Session plan'),
+  gm_notes: tk('GM notes'),
 };
 const STATUS: Record<string, { color: string; label: string }> = {
-  applied: { color: 'green', label: tk('Appliquée') },
-  dismissed: { color: 'dim', label: tk('Ignorée') },
-  failed: { color: 'red', label: tk('proposition::Échec') },
-  partial: { color: 'amber', label: tk('Appliquée en partie') },
+  applied: { color: 'green', label: tk('Applied') },
+  dismissed: { color: 'dim', label: tk('Dismissed') },
+  failed: { color: 'red', label: tk('proposal::Failed') },
+  partial: { color: 'amber', label: tk('Partly applied') },
 };
 
 function MapThumb({ map, size = 230, onClick }: { map: GameMap; size?: number; onClick?: () => void }) {
@@ -53,7 +53,7 @@ function MapThumb({ map, size = 230, onClick }: { map: GameMap; size?: number; o
   useEffect(() => {
     if (ref.current && map) renderThumbnail(ref.current, map, size);
   }, [map, size]);
-  return <canvas ref={ref} className="assistant-thumb" onClick={onClick} title={onClick ? t('Agrandir') : ''}></canvas>;
+  return <canvas ref={ref} className="assistant-thumb" onClick={onClick} title={onClick ? t('Enlarge') : ''}></canvas>;
 }
 
 function NpcPreview({ tpl }: { tpl: ProposalTemplate }) {
@@ -61,7 +61,7 @@ function NpcPreview({ tpl }: { tpl: ProposalTemplate }) {
   const attrs = ['BOD', 'AGI', 'REA', 'STR', 'WIL', 'LOG', 'INT', 'CHA', 'EDG'].map((k) => `${k} ${a[k] ?? '–'}`).join(' · ');
   return (
     <div className="assistant-npc small">
-      <div className="muted">{[tpl.metatype, tpl.concept, tpl.npc?.professionalRating != null ? t('Indice pro {n}', { n: tpl.npc.professionalRating }) : ''].filter(Boolean).join(' — ')}</div>
+      <div className="muted">{[tpl.metatype, tpl.concept, tpl.npc?.professionalRating != null ? t('Professional rating {n}', { n: tpl.npc.professionalRating }) : ''].filter(Boolean).join(' — ')}</div>
       <div className="mono">{attrs}</div>
       {tpl.skills?.length ? <div>{tpl.skills.slice(0, 10).map((s) => `${s.name || s.id} ${s.rating}`).join(', ')}</div> : null}
       {tpl.weapons?.length ? <div>{tpl.weapons.map((w) => `${w.name} (${w.damage || '?'}${w.ap ? `, PA ${w.ap}` : ''})`).join(' · ')}</div> : null}
@@ -78,7 +78,7 @@ function ProposalCard({ p, onChanged }: { p: Proposal; onChanged: () => void }) 
     setBusy(true);
     try {
       await api(`/api/assistant/proposals/${p.id}/apply`, { method: 'POST' });
-      toast(t('Proposition appliquée'), 'success');
+      toast(t('Proposal applied'), 'success');
     } catch (err) {
       toast((err as Error).message, 'error');
     } finally {
@@ -114,20 +114,20 @@ function ProposalCard({ p, onChanged }: { p: Proposal; onChanged: () => void }) 
         <div className="assistant-mapprev">
           <MapThumb map={map} onClick={() => setBig(true)} />
           <div className="small muted">
-            {t('{w} × {h} cases', { w: map.width, h: map.height })} · {tn2(map.regions?.length || 0)} · {t('{n} porte(s)', { n: map.doors?.length || 0 })}
+            {t('{w} × {h} cells', { w: map.width, h: map.height })} · {tn2(map.regions?.length || 0)} · {t('{n} door(s)', { n: map.doors?.length || 0 })}
           </div>
         </div>
       ) : null}
       {p.preview?.template ? <NpcPreview tpl={p.preview.template} /> : null}
       {p.preview?.body ? (
         <details className="assistant-details">
-          <summary>{t('Aperçu')}</summary>
+          <summary>{t('Preview')}</summary>
           <Markdown text={p.preview.body} />
         </details>
       ) : null}
       {p.preview?.text ? (
         <details className="assistant-details">
-          <summary>{t('Aperçu')}</summary>
+          <summary>{t('Preview')}</summary>
           <Markdown text={p.preview.text} />
         </details>
       ) : null}
@@ -143,21 +143,21 @@ function ProposalCard({ p, onChanged }: { p: Proposal; onChanged: () => void }) 
         {p.status === 'pending' ? (
           <>
             <Button variant="primary" small disabled={busy} onClick={apply}>
-              {busy ? t('Application…') : t('Appliquer')}
+              {busy ? t('Applying…') : t('Apply')}
             </Button>
             <Button variant="ghost" small disabled={busy} onClick={dismiss}>
-              {t('Ignorer')}
+              {t('Dismiss')}
             </Button>
           </>
         ) : null}
         {p.status === 'applied' || p.status === 'partial' ? (
           <Button variant="ghost" small onClick={open}>
-            {p.result?.mapId ? t('Ouvrir dans Cartes') : p.kind === 'npc' ? t('Ouvrir le bestiaire') : t('Ouvrir la campagne')}
+            {p.result?.mapId ? t('Open in Maps') : p.kind === 'npc' ? t('Open the bestiary') : t('Open the campaign')}
           </Button>
         ) : null}
         {p.status === 'failed' ? (
           <Button variant="ghost" small disabled={busy} onClick={apply}>
-            {t('Réessayer')}
+            {t('Retry')}
           </Button>
         ) : null}
       </div>
@@ -171,7 +171,7 @@ function ProposalCard({ p, onChanged }: { p: Proposal; onChanged: () => void }) 
     </div>
   );
 }
-const tn2 = (n: number) => t('{n} zone(s)', { n });
+const tn2 = (n: number) => t('{n} region(s)', { n });
 
 function Item({ it, onChanged }: { it: ConversationItem; onChanged: () => void }) {
   switch (it.type) {
@@ -278,14 +278,14 @@ export default function AssistantDock({ game }: GameProps) {
     if (d.conversationId === convRef.current) loadConv(d.conversationId);
   });
 
-  if (!status) return <div className="assistant-empty muted">{t('Chargement…')}</div>;
+  if (!status) return <div className="assistant-empty muted">{t('Loading…')}</div>;
   if (status.error) return <div className="assistant-empty">{status.error}</div>;
   if (!status.enabled) {
     return (
       <div className="assistant-empty">
-        <div className="assistant-title">{t('Assistant MJ')}</div>
-        <p>{t('L’assistant n’est pas activé pour cette table.')}</p>
-        <p className="muted small">{game?.config?.table?.demo ? t('Il n’est pas disponible sur la table de démonstration publique.') : t('L’administrateur du serveur peut l’activer dans /admin → Assistant IA.')}</p>
+        <div className="assistant-title">{t('GM assistant')}</div>
+        <p>{t('The assistant is not enabled for this table.')}</p>
+        <p className="muted small">{game?.config?.table?.demo ? t('It is not available on the public demo table.') : t('The server admin can enable it in /admin → AI assistant.')}</p>
       </div>
     );
   }
@@ -315,7 +315,7 @@ export default function AssistantDock({ game }: GameProps) {
     setLive('');
   };
   const delConv = async () => {
-    if (!convId || !(await confirmAction(t('Supprimer cette conversation ?')))) return;
+    if (!convId || !(await confirmAction(t('Delete this conversation?')))) return;
     try {
       await api(`/api/assistant/conversations/${convId}`, { method: 'DELETE' });
       newConv();
@@ -334,39 +334,39 @@ export default function AssistantDock({ game }: GameProps) {
   const b = status.budget || {};
   const pct = Math.round((b.ratio || 0) * 100);
   const budgetClass = pct >= 95 ? 'red' : pct >= 80 ? 'amber' : pct >= 50 ? 'warn' : '';
-  const options = [{ value: '', label: t('Nouvelle conversation') }, ...convs.map((c) => ({ value: c.id, label: c.pending ? `${c.title} (${c.pending})` : c.title }))];
+  const options = [{ value: '', label: t('New conversation') }, ...convs.map((c) => ({ value: c.id, label: c.pending ? `${c.title} (${c.pending})` : c.title }))];
 
   return (
     <div className="assistant">
       <div className="assistant-head">
         <div className="row">
           <Select className="grow" value={convId || ''} options={options} onChange={(v) => setConvId(v || null)} />
-          <IconButton icon="+" title={t('Nouvelle conversation')} onClick={newConv} />
-          {convId ? <IconButton icon="🗑" title={t('Supprimer la conversation')} onClick={delConv} /> : null}
+          <IconButton icon="+" title={t('New conversation')} onClick={newConv} />
+          {convId ? <IconButton icon="🗑" title={t('Delete the conversation')} onClick={delConv} /> : null}
         </div>
-        <div className={`assistant-budget ${budgetClass}`} title={t('Dépenses de l’assistant ce mois-ci (toutes tables), plafond fixé dans /admin')}>
+        <div className={`assistant-budget ${budgetClass}`} title={t('Assistant spend this month (all tables), cap set in /admin')}>
           <div className="assistant-budget-bar">
             <span style={{ width: `${pct}%` }}></span>
           </div>
           <span className="small">
-            {t('{spent} / {cap} ce mois-ci', { spent: usd(b.spent), cap: usd(b.cap) })}
-            {conv?.usd ? ` · ${t('conversation : {usd}', { usd: usd(conv.usd) })}` : ''} · {status.modelLabel}
+            {t('{spent} / {cap} this month', { spent: usd(b.spent), cap: usd(b.cap) })}
+            {conv?.usd ? ` · ${t('conversation: {usd}', { usd: usd(conv.usd) })}` : ''} · {status.modelLabel}
           </span>
         </div>
-        {!status.connected ? <div className="assistant-notice error">{t('L’assistant n’est pas connecté à l’API Claude (voir /admin).')}</div> : null}
-        {b.allowed === false ? <div className="assistant-notice error">{t('Budget mensuel de l’assistant atteint ({cap} $).', { cap: b.cap })}</div> : null}
+        {!status.connected ? <div className="assistant-notice error">{t('The assistant is not connected to the Claude API (see /admin).')}</div> : null}
+        {b.allowed === false ? <div className="assistant-notice error">{t('The assistant\'s monthly budget is used up (${cap}).', { cap: b.cap })}</div> : null}
       </div>
 
       <div className="assistant-list" ref={listRef}>
         {!conv || !conv.items.length ? (
           <div className="assistant-intro muted small">
-            <p>{t('Pose une question sur la campagne, les règles ou la partie en cours. L’assistant lit les documents de campagne, les fiches, les cartes et le journal.')}</p>
-            <p>{t('Il peut proposer des cartes, des PNJ, des documents et des entrées de campagne : rien ne change tant que tu ne cliques pas sur « Appliquer ». Il ne montre jamais rien aux joueurs.')}</p>
+            <p>{t('Ask about the campaign, the rules or the current game. The assistant reads the campaign documents, character sheets, maps and the log.')}</p>
+            <p>{t('It can propose maps, NPCs, handouts and campaign entries: nothing changes until you click « Apply ». It never shows anything to the players.')}</p>
             <p className="assistant-examples">
               {[
-                t('Résume ce qui s’est passé à la dernière séance.'),
-                t('Fais-moi un entrepôt sombre à Redmond, deux accès, un bureau à l’étage.'),
-                t('Crée un lieutenant de gang ork, indice pro 3.'),
+                t('Summarize what happened in the last session.'),
+                t('Make me a dark warehouse in Redmond, two entrances, an office upstairs.'),
+                t('Create an ork gang lieutenant, professional rating 3.'),
               ].map((ex) => (
                 <button key={ex} className="assistant-example" onClick={() => setText(ex)}>
                   {ex}
@@ -382,7 +382,7 @@ export default function AssistantDock({ game }: GameProps) {
             <Markdown text={live} className="assistant-md" />
           </div>
         ) : null}
-        {busy ? <div className="assistant-typing muted small">{phase === 'tools' ? t('Consulte la partie…') : t('Réfléchit…')}</div> : null}
+        {busy ? <div className="assistant-typing muted small">{phase === 'tools' ? t('Looking at the game…') : t('Thinking…')}</div> : null}
       </div>
 
       <div className="assistant-compose">
@@ -390,7 +390,7 @@ export default function AssistantDock({ game }: GameProps) {
           className="input"
           rows={3}
           value={text}
-          placeholder={t('Demande à l’assistant… (Entrée pour envoyer, Maj+Entrée pour aller à la ligne)')}
+          placeholder={t('Ask the assistant… (Enter to send, Shift+Enter for a new line)')}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={onKey}
           disabled={!status.connected}
@@ -398,11 +398,11 @@ export default function AssistantDock({ game }: GameProps) {
         <div className="row">
           {busy ? (
             <Button variant="danger" small onClick={stopRun}>
-              {t('Arrêter')}
+              {t('Stop')}
             </Button>
           ) : (
             <Button variant="primary" small disabled={!text.trim() || !status.connected || b.allowed === false} onClick={ask}>
-              {t('Envoyer')}
+              {t('Send')}
             </Button>
           )}
         </div>

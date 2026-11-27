@@ -804,14 +804,14 @@ export function exportChum5(actor: Actor, { now = Date.now(), mugshots = null }:
     if (want === undefined || want === null) continue;
     const node = attrNodes.find((n) => n.val('name').toUpperCase() === k);
     if (!node) {
-      warnings.add({ t: 'Attribut {attr} absent du fichier : non exporté.', params: { attr: k } });
+      warnings.add({ t: 'Attribute {attr} missing from the file: not exported.', params: { attr: k } });
       continue;
     }
     const have = base.attributes?.[k] ?? num(node.val('metatypemin')) + num(node.val('base')) + num(node.val('karma'));
     const delta = Math.round(Number(want) - have);
     if (delta) shiftAttribute(node, delta);
     const max = num(node.val('metatypemax'));
-    if (max && num(node.val('metatypemin')) + num(node.val('base')) + num(node.val('karma')) > max) warnings.add({ t: '{attr} {value} dépasse le maximum du métatype dans Chummer ({max}) : Chummer le plafonnera (qualité Attribut exceptionnel ?).', params: { attr: k, value: want, max } });
+    if (max && num(node.val('metatypemin')) + num(node.val('base')) + num(node.val('karma')) > max) warnings.add({ t: '{attr} {value} exceeds the metatype maximum in Chummer ({max}): Chummer will cap it (Exceptional Attribute quality?).', params: { attr: k, value: want, max } });
   }
 
   // --- active skills
@@ -825,7 +825,7 @@ export function exportChum5(actor: Actor, { now = Date.now(), mugshots = null }:
     const was = baseSkill.get(id);
     const def = chummerSkillFor(id, want?.name);
     if (!def) {
-      if (want?.rating) warnings.add({ t: 'Compétence « {skill} » inconnue de Chummer : non exportée.', params: { skill: want.name } });
+      if (want?.rating) warnings.add({ t: 'Skill “{skill}” unknown to Chummer: not exported.', params: { skill: want.name } });
       continue;
     }
     let node = nodeFor(def);
@@ -907,7 +907,7 @@ export function exportChum5(actor: Actor, { now = Date.now(), mugshots = null }:
   c.set('nuyen', String(Math.round(actor.nuyen || 0)));
   if (created) addExpenses(c, actor, base, mode, now, warnings);
   else if ((actor.karma || 0) !== (base.karma || 0) || (actor.nuyen || 0) !== (base.nuyen || 0)) {
-    warnings.add({ t: 'Fichier en mode création : karma et nuyens écrits tels quels, sans journal de dépenses (Chummer recalcule les points de création).' });
+    warnings.add({ t: 'File in creation mode: karma and nuyen written as is, without an expense log (Chummer recalculates creation points).' });
   }
   const careerAfter = careerKarmaOf(c);
   const streetDrift = created ? Math.floor(Math.max(careerAfter, 0) / 10) - Math.floor(Math.max(careerBefore, 0) / 10) : 0;
@@ -934,7 +934,7 @@ export function exportChum5(actor: Actor, { now = Date.now(), mugshots = null }:
   }
   const missing = warnings.missing;
   delete (warnings as { missing?: string[] }).missing;
-  if (missing.length) warnings.add({ t: '{n} élément(s) absent(s) des données Chummer, exporté(s) comme objets personnalisés : {items}.', params: { n: missing.length, items: missing.join(', ') } });
+  if (missing.length) warnings.add({ t: '{n} item(s) missing from Chummer’s data, exported as custom items: {items}.', params: { n: missing.length, items: missing.join(', ') } });
   delete (warnings as { add?: unknown }).add;
   return { xml: serializeXml(doc), mode, warnings, warningsI18n: warn.i18n, assigned };
 }
@@ -1067,7 +1067,7 @@ function addMatrixDevice(c: Element, actor: Actor, warnings: ExportWarnings): vo
     node.set('category', 'Commlinks');
     node.set('devicerating', String(m.rating || 0));
     node.set('attributearray', `${m.attack || 0},${m.sleaze || 0},${m.dataProcessing || 0},${m.firewall || 0}`);
-    warnings.add({ t: 'Appareil matriciel « {device} » introuvable dans Chummer : exporté comme « Custom Item ».', params: { device: m.device } });
+    warnings.add({ t: 'Matrix device “{device}” not found in Chummer: exported as “Custom Item”.', params: { device: m.device } });
   }
   const kids: Element[] = [];
   for (const p of m.programs || []) {
@@ -1106,7 +1106,7 @@ function addExpenses(c: Element, actor: Actor, base: ParsedActor, mode: string, 
     const d = career - posK;
     add(now, d, 'Karma de carrière (Shadowrun Table)', 'Karma');
     add(now, -d, 'Karma dépensé (Shadowrun Table)', 'Karma');
-  } else if (career < posK) warnings.add({ t: 'Le karma de carrière dans Chummer sera supérieur à celui de l’app (journal des gains).' });
+  } else if (career < posK) warnings.add({ t: 'Career karma in Chummer will be higher than in the app (earnings log).' });
   const netN = Math.round((actor.nuyen || 0) - (base.nuyen || 0));
   if (netN !== sumN) add(now, netN - sumN, 'Ajustement de nuyens (Shadowrun Table)', 'Nuyen');
 }

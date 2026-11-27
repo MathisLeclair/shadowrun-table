@@ -34,7 +34,7 @@ const mod: ServerModule<HttpApp> = {
     // A public demo table never reaches the (paid) API, whatever the admin settings say.
     const allowed = (t: SrTable) => !t.meta?.demo && isTableEnabled(t.id);
     const enabled = (req: Req, res: Res, next: () => void) => {
-      if (!allowed(req.srTable)) return res.status(403).json(errorBody('L’assistant n’est pas activé pour cette table (voir /admin).', null, { code: 'assistant-off' }));
+      if (!allowed(req.srTable)) return res.status(403).json(errorBody('The assistant is not enabled for this table (see /admin).', null, { code: 'assistant-off' }));
       next();
     };
 
@@ -61,13 +61,13 @@ const mod: ServerModule<HttpApp> = {
 
     app.get('/api/assistant/conversations/:id', requireGM, enabled, (req: Req, res: Res) => {
       const c = getConversation(req.srTable, req.params.id);
-      if (!c) return res.status(404).json(errorBody('Conversation introuvable'));
+      if (!c) return res.status(404).json(errorBody('Conversation not found'));
       res.json(viewConversation(c, req.srTable.state));
     });
 
     app.delete('/api/assistant/conversations/:id', requireGM, enabled, (req: Req, res: Res) => {
-      if (isBusy(req.srTable.id)) return res.status(409).json(errorBody('L’assistant est en train de répondre'));
-      if (!deleteConversation(req.srTable, req.params.id)) return res.status(404).json(errorBody('Conversation introuvable'));
+      if (isBusy(req.srTable.id)) return res.status(409).json(errorBody('The assistant is still answering'));
+      if (!deleteConversation(req.srTable, req.params.id)) return res.status(404).json(errorBody('Conversation not found'));
       res.json({ ok: true });
     });
 
@@ -76,14 +76,14 @@ const mod: ServerModule<HttpApp> = {
     app.post('/api/assistant/ask', requireGM, enabled, (req: Req, res: Res) => {
       const t = req.srTable;
       const text = String(req.body?.text || '').trim();
-      if (!text) return res.status(400).json(errorBody('Question vide'));
-      if (text.length > MAX_QUESTION) return res.status(400).json(errorBody('Question trop longue ({max} caractères max)', { max: MAX_QUESTION }));
-      if (isBusy(t.id)) return res.status(409).json(errorBody('L’assistant est en train de répondre'));
-      if (!authMode()) return res.status(503).json(errorBody('L’assistant n’est pas connecté à l’API Claude (voir /admin).'));
+      if (!text) return res.status(400).json(errorBody('Empty question'));
+      if (text.length > MAX_QUESTION) return res.status(400).json(errorBody('Question too long ({max} characters max)', { max: MAX_QUESTION }));
+      if (isBusy(t.id)) return res.status(409).json(errorBody('The assistant is still answering'));
+      if (!authMode()) return res.status(503).json(errorBody('The assistant is not connected to the Claude API (see /admin).'));
       const b = budgetStatus();
-      if (!b.allowed) return res.status(402).json(errorBody('Budget mensuel de l’assistant atteint ({cap} $).', { cap: b.cap }));
+      if (!b.allowed) return res.status(402).json(errorBody('The assistant\'s monthly budget is used up (${cap}).', { cap: b.cap }));
       let c = req.body?.conversationId ? getConversation(t, String(req.body.conversationId)) : null;
-      if (req.body?.conversationId && !c) return res.status(404).json(errorBody('Conversation introuvable'));
+      if (req.body?.conversationId && !c) return res.status(404).json(errorBody('Conversation not found'));
       if (!c) c = createConversation(t, text.slice(0, 60));
       const lang = req.body?.lang === 'en' ? 'en' : req.body?.lang === 'fr' ? 'fr' : t.state.config?.gmLang || t.state.config?.lang || 'fr';
       const user = req.user;
@@ -107,15 +107,15 @@ const mod: ServerModule<HttpApp> = {
     app.post('/api/assistant/proposals/:id/apply', requireGM, enabled, (req: Req, res: Res) => {
       const t = req.srTable;
       const found = findProposal(t, req.params.id);
-      if (!found) return res.status(404).json(errorBody('Proposition introuvable'));
+      if (!found) return res.status(404).json(errorBody('Proposal not found'));
       const { proposal: p } = found;
-      if (p.status === 'applied') return res.status(409).json(errorBody('Proposition déjà appliquée'));
+      if (p.status === 'applied') return res.status(409).json(errorBody('Proposal already applied'));
       const built = buildOps(p.kind, p.input, t.state);
       if (built.error) {
         p.status = 'failed';
         p.error = built.error;
         save(t);
-        return res.status(400).json(errorBody('Proposition impossible à appliquer : {reason}', { reason: built.error }));
+        return res.status(400).json(errorBody('The proposal cannot be applied: {reason}', { reason: built.error }));
       }
       const results: unknown[] = [];
       for (const op of built.ops!) {
@@ -124,7 +124,7 @@ const mod: ServerModule<HttpApp> = {
           p.status = results.length ? 'partial' : 'failed';
           p.error = r.error;
           save(t);
-          return res.status(400).json({ ...errorBody('Proposition impossible à appliquer : {reason}', { reason: r.error }), applied: results.length });
+          return res.status(400).json({ ...errorBody('The proposal cannot be applied: {reason}', { reason: r.error }), applied: results.length });
         }
         results.push(r.result);
       }
@@ -139,7 +139,7 @@ const mod: ServerModule<HttpApp> = {
 
     app.post('/api/assistant/proposals/:id/dismiss', requireGM, enabled, (req: Req, res: Res) => {
       const found = findProposal(req.srTable, req.params.id);
-      if (!found) return res.status(404).json(errorBody('Proposition introuvable'));
+      if (!found) return res.status(404).json(errorBody('Proposal not found'));
       if (found.proposal.status === 'pending') found.proposal.status = 'dismissed';
       save(req.srTable);
       res.json({ proposal: publicProposal(found.proposal) });
