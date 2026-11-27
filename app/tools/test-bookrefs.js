@@ -102,7 +102,7 @@ if (fs.existsSync(SR5_INDEX) && fs.existsSync(path.join(ROOT, 'data', 'books', '
     woundModifiers: 'WOUND MODIFIERS', armor: 'ARMOR', defense: 'DEFENDING IN COMBAT', soak: 'COMBAT SEQUENCE', attributeTests: 'COMPOSURE', movement: 'MOVEMENT',
     edge: 'EDGE', drain: 'DRAIN', powerPoints: 'POWER POINTS', adeptPowers: 'ADEPT POWERS', spellcasting: 'SPELLCASTING', complexForms: 'complex form',
     matrixDamage: 'MATRIX DAMAGE', biofeedback: 'BIOFEEDBACK', matrixActions: 'MATRIX ACTIONS', programs: 'PROGRAMS', ic: 'IC', overwatch: 'OVERWATCH', hosts: 'HOST',
-    knowledgeSkills: 'KNOWLEDGE SKILLS', skillGroups: 'SKILL GROUPS', specializations: 'SPECIALIZATIONS', qualities: 'QUALITIES', lifestyles: 'LIFESTYLES', fakeSin: 'CHECKING A FAKE SIN',
+    knowledgeSkills: 'KNOWLEDGE SKILLS', skillGroups: 'SKILL GROUPS', specializations: 'SPECIALIZATIONS', qualities: 'QUALITIES', lifestyles: 'LIFESTYLES', fakeSin: 'CHECKING A FAKE SIN', contacts: 'USING CONTACTS',
     martialArts: 'MARTIAL ARTS', priorityTable: 'PRIORITY TABLE', metatypes: 'METATYPE ATTRIBUTE TABLE', karmaAdvancement: 'CHARACTER ADVANCEMENT',
     initiation: 'INITIATION', submersion: 'SUBMERSION',
   };

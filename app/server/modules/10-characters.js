@@ -10,6 +10,7 @@ import {
   evalFormula, slugify, METATYPE_FR, MELEE_SKILLS, SUB_LISTS,
 } from '../../client/modules/sheet/sheet-data.js';
 import { normalizeLifestyle } from '../../shared/lifestyle.js';
+import { contactSheet, connectionOf, loyaltyOf, bribeCost, MAX_CONNECTION, ROLL_KINDS as CONTACT_ROLLS } from '../../shared/contacts.js';
 import { isRealSin, sinRating, sinIdentity, sinLicenses, sinCheckOutcome, verificationPool, MAX_DEVICE_RATING } from '../../shared/sins.js';
 import { removeBonus, weaponFromStats, wareCatalogItem, detachAugmentation, bakeItemBonus, itemBonusSpec } from '../lib/augment.js';
 import { errorBody } from '../lib/i18n.js';
@@ -1487,6 +1488,7 @@ export default {
         requireOwn(ctx, r.actorId);
         if (r.explode) ctx.fail('Impossible : la Chance a déjà été utilisée pour ce jet (Repousser les limites)');
         if (r.secondChance) ctx.fail('Seconde chance déjà utilisée pour ce jet');
+        if (typeof r.hits !== 'number') ctx.fail('Ce jet n’a pas de succès à relancer');
         if (r.sinCheck) ctx.fail('La Chance ne s’applique pas au contrôle d’un SIN (c’est le jet du système)');
         if (a.edge.current <= 0) ctx.fail('{name} n’a plus de point de Chance', { name: a.name });
         a.edge.current -= 1;
@@ -1550,6 +1552,90 @@ export default {
         const entry = ctx.log({ kind: 'roll', userId: ctx.user.id, author: a.name, text: label, roll, ...(hidden ? { gmOnly: true } : {}) });
         sfx(ctx, 'dice', hidden ? 'gm' : 'all');
         return { ...roll, logId: entry.id };
+      },
+    },
+
+    // Rolls with a contact (SR5 p. 387-389, shared/contacts.js). Owner or GM.
+    // { actorId, contactId, kind: 'reach'|'negotiate'|'legwork'|'network', modifier?, secret? (GM),
+    //   negotiate: useSpec?, explode? (Edge), bribe? (bought dice, 0-6); network: threshold (target's Connection 1-12) }
+    'actor/contactRoll': {
+      role: 'any',
+      handler(ctx, p) {
+        const { actorId, contactId, kind } = p || {};
+        const a = getActor(ctx, actorId);
+        requireOwn(ctx, actorId);
+        if (p.secret && !ctx.isGM) ctx.fail('Seul le MJ peut faire un jet secret');
+        if (!CONTACT_ROLLS.includes(kind)) ctx.fail('Jet de contact inconnu');
+        const c = (a.contacts || []).find((x) => x && x.id === String(contactId));
+        if (!c) ctx.fail('Contact introuvable');
+        const name = str(c.name, 120) || '?';
+        const cn = connectionOf(c);
+        const loy = loyaltyOf(c);
+        const mod = clampInt(p.modifier, -20, 20, 0);
+        const hidden = !!p.secret || (a.type === 'npc' && !!a.hidden);
+        const info = { kind, contactId: c.id, contact: name, connection: cn, loyalty: loy };
+        const finish = (roll) => {
+          const entry = ctx.log({ kind: 'roll', userId: ctx.user.id, author: roll.authorName || a.name, text: roll.label, roll, ...(hidden ? { gmOnly: true } : {}) });
+          delete roll.authorName;
+          sfx(ctx, 'dice', hidden ? 'gm' : 'all');
+          return { ...roll, logId: entry.id };
+        };
+
+        if (kind === 'negotiate') {
+          // The runner's own test (modifiers, wounds, Social limit, Edge) with the contact's Loyalty as extra dice.
+          const bribe = clampInt(p.bribe, 0, 6, 0);
+          const label = `Négociation avec ${name}`; // i18n-ignore (stored French label, labelI18n below)
+          const bonus = [{ label: `Loyauté ${name}`, value: loy }, ...(bribe ? [{ label: 'dés achetés', value: bribe }] : [])]; // i18n-ignore (breakdown)
+          const r = performRoll(ctx, { actorId: a.id, skillId: 'negotiation', useSpec: !!p.useSpec, explode: !!p.explode, modifier: mod, label, secret: !!p.secret }, {
+            bonus,
+            logExtra: { labelI18n: { key: tk('Négociation avec {contact}'), params: { contact: name } }, contactRoll: { ...info, ...(bribe ? { bribe, bribeCost: bribeCost(c, bribe) } : {}) } },
+          });
+          const { entry, ...out } = r;
+          return out;
+        }
+
+        if (kind === 'reach') {
+          // 2D6 ≥ Connection: the contact picks up (a plain total, not hits).
+          const dice = [1 + Math.floor(Math.random() * 6), 1 + Math.floor(Math.random() * 6)];
+          const total = dice[0] + dice[1] + mod;
+          const label = `Joindre ${name}`; // i18n-ignore
+          return finish({
+            dice, extra: [], pool: 2, total, label, labelI18n: { key: tk('Joindre {contact}'), params: { contact: name } }, actorId: a.id,
+            breakdown: mod ? `2D6 ${mod > 0 ? '+' : '−'} ${Math.abs(mod)}` : '2D6', ...(p.secret ? { secret: true } : {}),
+            contactRoll: { ...info, total, available: total >= cn },
+          });
+        }
+
+        // The contact's own tests: their sheet (NPC actor / bestiary template of the same name) is needed.
+        const s = contactSheet(ctx.state, c);
+        if (!s.known) ctx.fail('{contact} n’a pas de fiche (Charisme, Étiquette) : le MJ peut créer un PNJ de ce nom dans le Bestiaire', { contact: name });
+        let pool;
+        let parts;
+        let label;
+        let labelI18n;
+        let threshold = null;
+        if (kind === 'legwork') {
+          pool = s.cha + cn;
+          parts = [`CHA ${s.cha}`, `Connexion ${cn}`];
+          label = `Enquête — ${name}`; // i18n-ignore
+          labelI18n = { key: tk('Enquête — {contact}'), params: { contact: name } };
+        } else {
+          threshold = clampInt(p.threshold, 1, MAX_CONNECTION, 0);
+          if (!threshold) ctx.fail('Indique la Connexion de la personne à rencontrer (seuil)');
+          pool = s.etiquette + cn;
+          parts = [s.etiquetteDefaulting ? `CHA ${s.cha} par défaut −1` : `Étiquette + CHA ${s.etiquette}`, `Connexion ${cn}`];
+          label = `Réseau — ${name}`; // i18n-ignore
+          labelI18n = { key: tk('Réseau — {contact}'), params: { contact: name } };
+        }
+        if (mod) parts.push(`mod. ${mod > 0 ? '+' : '−'}${Math.abs(mod)}`);
+        pool = Math.max(0, Math.min(100, pool + mod));
+        if (pool <= 0) ctx.fail('Réserve de dés nulle : échec automatique');
+        const r = rollDice(pool, { limit: s.social });
+        return finish({
+          ...r, label, labelI18n, explode: false, edge: false, actorId: null, authorName: name, breakdown: parts.join(' + '),
+          limitLabel: 'sociale', limitBreakdown: `sociale ${s.social}`, ...(p.secret ? { secret: true } : {}),
+          contactRoll: { ...info, ...(threshold ? { threshold, success: r.hits >= threshold } : {}), via: a.name },
+        });
       },
     },
 

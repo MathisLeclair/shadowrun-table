@@ -1,0 +1,69 @@
+/* Contact dossiers (contacts.js) */
+.ct-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 10px; }
+
+.ct-card {
+  --ct: var(--cyan);
+  position: relative; min-width: 0; display: flex; flex-direction: column; gap: 7px; padding: 10px 12px 10px 14px;
+  border-radius: 10px; border: 1px solid var(--line2); border-left: 3px solid var(--ct);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--ct) 10%, transparent) 0%, transparent 45%),
+    repeating-linear-gradient(0deg, transparent 0 3px, rgba(255, 255, 255, .015) 3px 4px),
+    var(--panel2);
+}
+/* folder tab */
+.ct-card::before {
+  content: ''; position: absolute; top: -1px; right: 18px; width: 56px; height: 4px; border-radius: 0 0 4px 4px;
+  background: color-mix(in srgb, var(--ct) 70%, transparent);
+}
+.ct-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ct-file { font-size: 9px; font-weight: 600; letter-spacing: 2px; color: color-mix(in srgb, var(--ct) 65%, var(--dim)); }
+.ct-body { display: flex; gap: 11px; align-items: center; min-width: 0; }
+.ct-photo { flex: none; padding: 2px; border-radius: 50%; border: 1px dashed color-mix(in srgb, var(--ct) 55%, var(--line)); }
+.ct-photo .sh-avatar { border-radius: 50%; display: block; }
+.ct-id { min-width: 0; }
+.ct-name { font-weight: 650; font-size: 15px; overflow-wrap: anywhere; }
+
+.ct-stat { display: grid; grid-template-columns: 68px 1fr auto; align-items: center; gap: 2px 8px; }
+.ct-k { font: 600 9px var(--mono); letter-spacing: 1px; text-transform: uppercase; color: var(--dim); }
+.ct-stat b { font-size: 12px; min-width: 1.5em; text-align: right; }
+.ct-desc { grid-column: 1 / -1; line-height: 1.3; }
+.ct-desc b { color: var(--text); font-weight: 600; }
+.ct-gauge { display: flex; gap: 2px; min-width: 0; }
+.ct-gauge i { flex: 1; height: 7px; max-width: 18px; border-radius: 2px; background: var(--panel3); border: 1px solid var(--line2); }
+.ct-gauge.cn i.on { background: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 6px color-mix(in srgb, var(--cyan) 45%, transparent); }
+.ct-gauge.loy i.on { background: var(--magenta); border-color: var(--magenta); box-shadow: 0 0 6px color-mix(in srgb, var(--magenta) 45%, transparent); }
+
+/* « Contacter » view */
+.ct-modal { display: flex; flex-direction: column; gap: 12px; }
+.ct-card.big { padding: 14px 16px 14px 18px; gap: 10px; }
+.ct-card.big .ct-name { font-size: 20px; }
+.ct-card.big .ct-gauge i { height: 9px; }
+.ct-notes { white-space: pre-wrap; color: var(--dim); border-top: 1px dashed var(--line2); padding-top: 6px; }
+
+.ct-terms { display: flex; flex-direction: column; gap: 6px; }
+.ct-favors { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.ct-favor { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 5px 2px; border-radius: 6px; border: 1px solid var(--line2); background: var(--panel3); text-align: center; min-width: 0; }
+.ct-favor .mono { font-weight: 700; }
+.ct-favor .small { line-height: 1.2; }
+.ct-favor.ok { border-color: #245a36; background: #10261a; }
+.ct-favor.ok .faint { color: var(--green); }
+
+.ct-rolls { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel2); }
+.ct-kinds { display: flex; gap: 4px; }
+.ct-kind { flex: 1; min-width: 0; padding: 6px 4px; border-radius: 6px; border: 1px solid var(--line2); background: var(--panel3); color: var(--text); cursor: pointer; font-size: 13px; }
+.ct-kind:hover:not(:disabled) { border-color: var(--cyan); }
+.ct-kind.on { background: var(--cyan-d); border-color: var(--cyan); color: #e9fffe; }
+.ct-kind:disabled { opacity: .45; cursor: not-allowed; }
+.ct-result { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line2); background: var(--panel3); }
+
+/* log line under a contact roll */
+.ct-logline { display: flex; align-items: baseline; gap: 6px; margin-top: 4px; }
+.ct-logtag { flex: none; font: 700 10px var(--mono); letter-spacing: 1px; text-transform: uppercase; padding: 1px 6px; border-radius: 4px; border: 1px solid currentColor; }
+.ct-logline.ok .ct-logtag { color: var(--green); }
+.ct-logline.bad .ct-logtag { color: var(--red); }
+.ct-logline.info .ct-logtag { color: var(--cyan); }
+
+@media (max-width: 520px) {
+  .ct-cards { grid-template-columns: 1fr; }
+  .ct-favors { grid-template-columns: repeat(3, 1fr); }
+}

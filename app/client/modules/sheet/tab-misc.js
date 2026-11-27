@@ -16,6 +16,7 @@ import { openMatrix, ProgramRef } from '../matrix/common.js';
 import { ItemRef, RuleRef } from '../books/BookRef.js';
 import { ruleRef, skillRef } from '/shared/bookrefs.js';
 import { SinCards } from './sins.js';
+import { ContactCards } from './contacts.js';
 
 // Roll labels are stored in French in the log; rollLabel() (common.js) translates them for each viewer.
 const drainRollLabel = (k) => `Résistance au drain (VOL + ${k})`; // i18n-ignore
@@ -275,8 +276,6 @@ function LifestylesView({ actor, showPaid }) {
 // ---------------------------------------------------------------------------
 export function ContactsTab({ s }) {
   const { actor, edit, own, gm } = s;
-  const contacts = actor.contacts || [];
-  const upItem = (id, patch) => send('actor/updateItem', { actorId: actor.id, list: 'contacts', itemId: id, patch }).catch(() => {});
   if (edit) {
     return html`<div>
       <h4 class="section-title">${t('Contacts')}</h4><${ListEditor} actor=${actor} list="contacts" />
@@ -285,21 +284,8 @@ export function ContactsTab({ s }) {
     </div>`;
   }
   return html`<div>
-    <h4 class="section-title">${t('Contacts')}</h4>
-    ${contacts.length
-      ? html`<div class="sh-cards">${contacts.map(
-          (c) => html`<div class="sh-card sh-contact" key=${c.id}>
-            <div class="row spread"><b>${c.name}</b>
-              <span class="row gap-s"><span class="badge badge-cyan" title=${t('contact::Connexion')}>C${c.connection ?? 0}</span><span class="badge badge-magenta" title=${t('Loyauté')}>L${c.loyalty ?? 0}</span></span></div>
-            ${c.role && html`<div class="muted small">${c.role}</div>`}
-            ${own
-              ? html`<${TextInput} multiline rows=${2} class="sh-inline-note" value=${c.notes || ''} placeholder=${t('Notes…')} onChange=${(v) => upItem(c.id, { notes: v })} />`
-              : c.notes
-                ? html`<div class="faint small">${c.notes}</div>`
-                : null}
-          </div>`
-        )}</div>`
-      : html`<div class="muted small">${t('Aucun contact.')}</div>`}
+    <h4 class="section-title">${t('Contacts')} <${RuleRef} rule="contacts" /></h4>
+    <${ContactCards} game=${s.game} actor=${actor} gm=${gm} own=${own} />
 
     <h4 class="section-title">${t('SIN & licences')} <${RuleRef} rule="fakeSin" /></h4>
     <${SinCards} actor=${actor} gm=${gm} own=${own} />

@@ -13,7 +13,8 @@ import {
   vehicleModFit, vehicleModEffects, vehicleModMaxRating, martialKarma, lowersRent, upgradeAvail,
   AVAIL_TEST_MODES, availTestable, needsAvailTest, availBaseHours, availOutcome, durationText, matchAvailTests, clampOverpay, overpaySurcharge,
 } from '../../client/modules/shop/rules.js';
-import { rollDice, skillPool, derive, attr } from '../../shared/sr5.js';
+import { rollDice } from '../../shared/sr5.js';
+import { contactSheet } from '../../shared/contacts.js';
 import { performRoll } from './10-characters.js';
 import { monthlyCost, settleLifestyles, primaryLifestyle, lifestyleFromCatalog, qualityFromCatalog, qualityProblem, baseOf } from '../../shared/lifestyle.js';
 import { removeBonus, weaponFromStats, bakeItemBonus } from '../lib/augment.js';
@@ -418,20 +419,7 @@ function claimAvailTests(ctx, actor, lines) {
  * Connection added to their Social limit). Stats come from an NPC actor, else a bestiary template, with the contact's name.
  * → { id, name, connection, known: false } or { …, known: true, source, cha, negotiation, pool, defaulting, social, limit }
  */
-function contactInfo(state, contact) {
-  const connection = clampInt(contact.connection, 0, 12, 0);
-  const base = { id: contact.id, name: contact.name, connection, known: false };
-  const key = fold(contact.name);
-  if (!key) return base;
-  const src =
-    Object.values(state.actors || {}).find((a) => a && a.type === 'npc' && fold(a.name) === key) ||
-    Object.values(state.bestiary || {}).find((tp) => tp && fold(tp.name) === key);
-  if (!src?.attributes) return base;
-  const sk = (src.skills || []).find((s) => s && (s.id === 'negotiation' || fold(s.name) === 'negociation'));
-  const neg = skillPool(src, 'negotiation');
-  const social = derive(src).limits.social;
-  return { ...base, known: true, source: src.name, cha: attr(src, 'CHA'), negotiation: Number(sk?.rating) || 0, pool: neg.pool, defaulting: !!neg.defaulting, social, limit: social + connection };
-}
+const contactInfo = contactSheet; // shared/contacts.js (also used by the sheet and 'actor/contactRoll')
 
 /** The contact's Availability roll, logged like a dice roll (no runner modifiers, no Edge: it is not the runner's test). */
 function contactRoll(ctx, actor, contact, line, avail, modifier, overpay) {

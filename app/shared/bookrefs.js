@@ -68,6 +68,7 @@ export const RULE_REFS = {
   specializations: ref('SR5', 129),
   qualities: ref('SR5', 71), // QUALITIES (character creation)
   lifestyles: ref('SR5', 369), // LIFESTYLES
+  contacts: ref('SR5', 387), // USING CONTACTS (Connection / Loyalty tables; legwork p. 388, favors p. 389)
   fakeSin: ref('SR5', 364), // CHECKING A FAKE SIN (Fake SIN Details p. 363, SIN Verification Details p. 364)
   martialArts: ref('RG', 128), // MARTIAL ARTS (Run & Gun)
   priorityTable: ref('SR5', 65), // PRIORITY TABLE

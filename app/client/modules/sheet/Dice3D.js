@@ -398,7 +398,7 @@ export default function Dice3D({ game }) {
     html`<button type="button" class="d3-banner" onClick=${next} title=${t('Fermer')}>
       <span class="d3-who" style=${{ color: cur.color }}>${author}</span>
       <span class="d3-label">${rollLabel(r) || logText(live)}</span>
-      <span class=${'d3-hits' + (r.critGlitch ? ' crit' : r.glitch ? ' glitch' : r.hits === 0 ? ' zero' : '')}>${r.hits}<small> ${t('succès')}</small></span>
+      ${typeof r.hits === 'number' ? html`<span class=${'d3-hits' + (r.critGlitch ? ' crit' : r.glitch ? ' glitch' : r.hits === 0 ? ' zero' : '')}>${r.hits}<small> ${t('succès')}</small></span>` : r.total !== undefined ? html`<span class="d3-hits">${r.total}</span>` : null}
       ${cur.hidden > 0 && html`<span class="muted small">${tn(cur.hidden, '+{n} dé non affiché', '+{n} dés non affichés')}</span>`}
       <${RollBadges} roll=${r} />
     </button>`}
