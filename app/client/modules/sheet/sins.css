@@ -1,0 +1,91 @@
+/* SIN ID cards (sins.js) */
+.sin-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 10px; }
+
+.sin-card {
+  --pc: var(--cyan);
+  position: relative; overflow: hidden; isolation: isolate; min-width: 0;
+  display: flex; flex-direction: column; gap: 7px; padding: 10px 12px 9px;
+  border-radius: 12px; border: 1px solid color-mix(in srgb, var(--pc) 45%, var(--line));
+  background:
+    radial-gradient(120% 80% at 100% 0%, color-mix(in srgb, var(--pc) 16%, transparent) 0%, transparent 60%),
+    repeating-linear-gradient(135deg, transparent 0 7px, color-mix(in srgb, var(--pc) 4%, transparent) 7px 8px),
+    linear-gradient(160deg, var(--panel3) 0%, var(--panel2) 55%, var(--bg2) 100%);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--pc) 25%, transparent) inset, 0 6px 18px rgba(0, 0, 0, .35);
+}
+.sin-card.is-real { --pc: var(--green); }
+.sin-card.is-burned { filter: saturate(.35); }
+.sin-card.is-burned > :not(.sin-stamp):not(.sin-actions) { opacity: .7; }
+
+/* holographic sheen sweeping across the card */
+.sin-holo {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: .5; mix-blend-mode: screen;
+  background: linear-gradient(115deg, transparent 30%, rgba(63, 214, 208, .18) 42%, rgba(224, 70, 143, .16) 50%, rgba(224, 166, 63, .14) 58%, transparent 70%);
+  background-size: 250% 100%; background-position: 100% 0; transition: background-position .9s ease;
+}
+.sin-card:hover .sin-holo { background-position: 0 0; }
+.sin-card.big .sin-holo { animation: sin-sheen 6s ease-in-out infinite; }
+@keyframes sin-sheen { 0%, 100% { background-position: 100% 0; } 50% { background-position: 0 0; } }
+@media (prefers-reduced-motion: reduce) { .sin-card.big .sin-holo { animation: none; } .sin-holo { transition: none; } }
+
+.sin-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sin-issuer { font: 600 9px var(--mono); letter-spacing: 2px; text-transform: uppercase; color: color-mix(in srgb, var(--pc) 70%, var(--dim)); }
+
+.sin-body { display: flex; gap: 11px; align-items: center; min-width: 0; }
+.sin-photo { flex: none; padding: 2px; border-radius: 9px; border: 1px solid color-mix(in srgb, var(--pc) 40%, var(--line)); background: var(--bg2); }
+.sin-photo .sh-avatar { border-radius: 7px; display: block; }
+.sin-id { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.sin-name { font-weight: 650; font-size: 15px; letter-spacing: .3px; text-transform: uppercase; overflow-wrap: anywhere; }
+.sin-number { font-size: 11px; color: var(--dim); letter-spacing: 1px; }
+.sin-quality { line-height: 1.3; }
+
+.sin-lics { display: flex; flex-wrap: wrap; gap: 4px; }
+.sin-lic { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; padding: 1px 2px 1px 7px; border-radius: 999px; border: 1px solid var(--line2); background: color-mix(in srgb, var(--bg) 60%, transparent); }
+.sin-lic b { font: 600 10px var(--mono); padding: 0 5px; border-radius: 999px; background: color-mix(in srgb, var(--amber) 22%, transparent); color: var(--amber); }
+
+.sin-barcode {
+  height: 14px; opacity: .35; border-radius: 2px;
+  background: repeating-linear-gradient(90deg, var(--text) 0 1px, transparent 1px 3px, var(--text) 3px 5px, transparent 5px 6px, var(--text) 6px 7px, transparent 7px 10px);
+}
+.sin-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.sin-stamp {
+  position: absolute; top: 38%; left: 50%; transform: translate(-50%, -50%) rotate(-14deg); z-index: 2; pointer-events: auto;
+  font: 800 22px var(--mono); letter-spacing: 4px; text-transform: uppercase; padding: 2px 12px;
+  color: var(--red); border: 3px double var(--red); border-radius: 6px; background: rgba(40, 10, 10, .55);
+}
+
+/* « Présenter » view */
+.sin-modal { display: flex; flex-direction: column; gap: 12px; }
+.sin-card.big { padding: 16px 18px 14px; gap: 10px; }
+.sin-card.big .sin-name { font-size: 22px; }
+.sin-card.big .sin-number { font-size: 13px; }
+.sin-card.big .sin-barcode { height: 20px; }
+.sin-card.big .sin-stamp { font-size: 34px; }
+
+.sin-check { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel2); }
+.sin-devices { display: flex; gap: 4px; }
+.sin-dev { flex: 1; min-width: 0; padding: 6px 0; border-radius: 6px; border: 1px solid var(--line2); background: var(--panel3); color: var(--text); font: 600 13px var(--mono); cursor: pointer; }
+.sin-dev:hover { border-color: var(--cyan); }
+.sin-dev.on { background: var(--cyan-d); border-color: var(--cyan); color: #e9fffe; }
+.sin-check select.input { flex: 1; min-width: 0; }
+.sin-odds { display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--dim); }
+.sin-odds .ok { color: var(--green); }
+.sin-odds .odd { color: var(--amber); }
+.sin-odds .bad { color: var(--red); }
+
+.sin-result { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line2); }
+.sin-result.pass { border-color: #245a36; background: #10261a; }
+.sin-result.odd { border-color: #6a5124; background: #2a2010; }
+.sin-result.burned { border-color: #6a2c2c; background: #2a1414; }
+
+/* log line under a check */
+.sin-logline { display: flex; align-items: baseline; gap: 6px; margin-top: 4px; }
+.sin-logtag { flex: none; font: 700 10px var(--mono); letter-spacing: 1px; text-transform: uppercase; padding: 1px 6px; border-radius: 4px; border: 1px solid currentColor; }
+.sin-logline.pass .sin-logtag { color: var(--green); }
+.sin-logline.odd .sin-logtag { color: var(--amber); }
+.sin-logline.burned .sin-logtag { color: var(--red); }
+
+@media (max-width: 520px) {
+  .sin-cards { grid-template-columns: 1fr; }
+  .sin-card.big .sin-name { font-size: 18px; }
+}

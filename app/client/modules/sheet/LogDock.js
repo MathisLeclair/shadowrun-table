@@ -10,6 +10,7 @@ import { isGM, ownsActor, DiceFaces, RollBadges, fmtTime, rollLabel, rollBreakdo
 import { RollDialog, fireText } from './RollDialog.js';
 import { BookRef } from '../books/BookRef.js';
 import { AvailRollLine } from '../shop/avail.js';
+import { SinCheckLine } from './sins.js';
 import { Dice3dPicker } from './Dice3D.js';
 
 loadCss('/modules/sheet/sheet.css');
@@ -63,7 +64,7 @@ function LogEntry({ e, game, gm }) {
   const color = authorColor(game, e);
   const r = e.roll;
   const actor = r?.actorId ? game.actors?.[r.actorId] : null;
-  const canSecond = r && actor && actor.attributes && ownsActor(game, actor.id) && !r.explode && !r.secondChance && (actor.edge?.current || 0) > 0 && Array.isArray(r.dice) && r.dice.some((d) => d < 5) && Date.now() - e.ts < 15 * 60 * 1000;
+  const canSecond = r && actor && actor.attributes && ownsActor(game, actor.id) && !r.explode && !r.secondChance && !r.sinCheck && (actor.edge?.current || 0) > 0 && Array.isArray(r.dice) && r.dice.some((d) => d < 5) && Date.now() - e.ts < 15 * 60 * 1000;
   const del = () => send('log/delete', { id: e.id }).catch(() => {});
   const recipients = e.kind === 'whisper' ? (e.to || []).filter((id) => id !== e.userId).map((id) => userLabel(game, id)) : [];
   return html`<div class=${`ld-entry ld-${e.kind}${e.gmOnly ? ' ld-gmonly' : ''}`}>
@@ -94,6 +95,7 @@ function LogEntry({ e, game, gm }) {
               onClick=${() => send('dice/secondChance', { logId: e.id }).catch(() => {})}>${t('2ᵉ chance')}</button>`}
           </div>
           ${r.avail ? html`<${AvailRollLine} roll=${r} Dice=${DiceFaces} />` : null}
+          ${r.sinCheck ? html`<${SinCheckLine} roll=${r} />` : null}
           ${Array.isArray(r.mods) && r.mods.some((m) => m.state === 'applied') && html`<div class="ld-roll-mods">${r.mods.filter((m) => m.state === 'applied').map((m) => html`<span class="faint small" key=${m.kind + m.id}>${m.name} ${m.value >= 0 ? '+' : '−'}${Math.abs(m.value)}${m.kind === 'limit' ? ` (${t('limite')})` : ''}${m.book ? html` <${BookRef} source=${m.book} page=${m.page} />` : null}</span>`)}</div>`}
         </div>`
       : html`<div class="ld-text">${logText(e)}</div>`}

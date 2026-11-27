@@ -15,6 +15,7 @@ import { armorMods } from './sheet-data.js';
 import { openMatrix, ProgramRef } from '../matrix/common.js';
 import { ItemRef, RuleRef } from '../books/BookRef.js';
 import { ruleRef, skillRef } from '/shared/bookrefs.js';
+import { SinCards } from './sins.js';
 
 // Roll labels are stored in French in the log; rollLabel() (common.js) translates them for each viewer.
 const drainRollLabel = (k) => `Résistance au drain (VOL + ${k})`; // i18n-ignore
@@ -275,7 +276,6 @@ function LifestylesView({ actor, showPaid }) {
 export function ContactsTab({ s }) {
   const { actor, edit, own, gm } = s;
   const contacts = actor.contacts || [];
-  const sins = actor.sins || [];
   const upItem = (id, patch) => send('actor/updateItem', { actorId: actor.id, list: 'contacts', itemId: id, patch }).catch(() => {});
   if (edit) {
     return html`<div>
@@ -301,16 +301,8 @@ export function ContactsTab({ s }) {
         )}</div>`
       : html`<div class="muted small">${t('Aucun contact.')}</div>`}
 
-    <h4 class="section-title">${t('SIN & licences')}</h4>
-    ${sins.length
-      ? html`<div class="sh-cards">${sins.map(
-          (x) => html`<div class="sh-card" key=${x.id}>
-            <div class="row spread"><b>${x.name}</b><span class="badge badge-amber">${t('Indice {n}', { n: x.rating ?? '?' })}</span></div>
-            ${(x.licenses || []).length ? html`<div class="row wrap gap-s">${x.licenses.map((l) => html`<span class="badge" key=${l}>${l}</span>`)}</div>` : html`<div class="faint small">${t('Aucune licence')}</div>`}
-            ${x.notes && html`<div class="faint small">${x.notes}</div>`}
-          </div>`
-        )}</div>`
-      : html`<div class="muted small">${t('Aucun SIN.')}</div>`}
+    <h4 class="section-title">${t('SIN & licences')} <${RuleRef} rule="fakeSin" /></h4>
+    <${SinCards} actor=${actor} gm=${gm} own=${own} />
 
     ${(actor.lifestyles || []).length > 0 && html`<h4 class="section-title">${t('Modes de vie')} <${RuleRef} rule="lifestyles" /></h4><${LifestylesView} actor=${actor} showPaid=${gm || own} />`}
   </div>`;

@@ -44,7 +44,7 @@ export const LIST_FIELDS = {
     { k: 'seats', label: tk('Places'), type: 'num' }, { k: 'notes', label: tk('Notes'), w: 180 },
   ],
   contacts: [{ k: 'name', label: tk('Nom'), w: 180 }, { k: 'role', label: tk('Rôle'), w: 140 }, { k: 'connection', label: tk('contact::Connexion'), type: 'num' }, { k: 'loyalty', label: tk('Loyauté'), type: 'num' }, { k: 'notes', label: tk('Notes'), w: 220 }],
-  sins: [{ k: 'name', label: tk('Identité'), w: 200 }, { k: 'rating', label: tk('Indice'), type: 'num' }, { k: 'licenses', label: tk('Licences (séparées par des virgules)'), type: 'tags', w: 240 }, { k: 'notes', label: tk('Notes'), w: 160 }],
+  sins: [{ k: 'name', label: tk('Identité'), w: 200 }, { k: 'rating', label: tk('Indice'), type: 'num' }, { k: 'licenses', label: tk('Licences (séparées par des virgules)'), type: 'tags', w: 240 }, { k: 'real', label: tk('Vrai SIN'), type: 'bool' }, { k: 'burned', label: tk('Grillé'), type: 'bool' }, { k: 'notes', label: tk('Notes'), w: 160 }],
   qualities: [
     { k: 'name', label: tk('Nom'), w: 200 }, { k: 'karma', label: tk('Karma'), type: 'num' }, { k: 'positive', label: tk('Positive'), type: 'bool' },
     { k: 'choice', label: tk('Choix (effet)'), w: 110 }, { k: 'notes', label: tk('Notes'), w: 260 },

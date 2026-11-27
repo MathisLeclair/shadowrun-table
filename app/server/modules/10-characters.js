@@ -10,6 +10,7 @@ import {
   evalFormula, slugify, METATYPE_FR, MELEE_SKILLS, SUB_LISTS,
 } from '../../client/modules/sheet/sheet-data.js';
 import { normalizeLifestyle } from '../../shared/lifestyle.js';
+import { isRealSin, sinRating, sinIdentity, sinLicenses, sinCheckOutcome, verificationPool, MAX_DEVICE_RATING } from '../../shared/sins.js';
 import { removeBonus, weaponFromStats, wareCatalogItem, detachAugmentation, bakeItemBonus, itemBonusSpec } from '../lib/augment.js';
 import { errorBody } from '../lib/i18n.js';
 import { actorModifiers, deriveFull } from '../lib/modifiers.js';
@@ -1486,6 +1487,7 @@ export default {
         requireOwn(ctx, r.actorId);
         if (r.explode) ctx.fail('Impossible : la Chance a déjà été utilisée pour ce jet (Repousser les limites)');
         if (r.secondChance) ctx.fail('Seconde chance déjà utilisée pour ce jet');
+        if (r.sinCheck) ctx.fail('La Chance ne s’applique pas au contrôle d’un SIN (c’est le jet du système)');
         if (a.edge.current <= 0) ctx.fail('{name} n’a plus de point de Chance', { name: a.name });
         a.edge.current -= 1;
         const before = [...r.dice];
@@ -1499,6 +1501,73 @@ export default {
         r.edge = true;
         sfx(ctx, 'dice', e.gmOnly ? 'gm' : 'all');
         return { ...r };
+      },
+    },
+
+    // SIN verification (SR5 p. 364): the system rolls Device Rating × 2, threshold = the fake SIN's (or license's) rating.
+    // { actorId, sinId, license?: index in sin.licenses, device: 1-6, secret?: GM only (gmOnly log, nothing burned automatically) }
+    'actor/sinCheck': {
+      role: 'any',
+      handler(ctx, { actorId, sinId, license, device, secret }) {
+        const a = getActor(ctx, actorId);
+        requireOwn(ctx, actorId);
+        if (secret && !ctx.isGM) ctx.fail('Seul le MJ peut faire un jet secret');
+        const sin = (a.sins || []).find((x) => x && x.id === String(sinId));
+        if (!sin) ctx.fail('SIN introuvable');
+        if (isRealSin(sin)) ctx.fail('Un vrai SIN passe toujours le contrôle');
+        const dev = Math.round(Number(device));
+        if (!(dev >= 1 && dev <= MAX_DEVICE_RATING)) ctx.fail('Indice du système de vérification invalide');
+        const lics = sinLicenses(sin);
+        const li = license === undefined || license === null || license === '' ? null : clampInt(license, 0, 999, -1);
+        if (li !== null && !lics[li]) ctx.fail('Licence introuvable');
+        const lic = li === null ? null : lics[li];
+        const identity = sinIdentity(sin);
+        const threshold = lic ? lic.rating : sinRating(sin);
+        const base = { sinId: sin.id, sin: identity, device: dev, threshold, ...(lic ? { license: lic.name, licenseIndex: li } : {}) };
+        const hidden = !!secret || (a.type === 'npc' && !!a.hidden);
+        if (sin.burned) {
+          // « Any further use of the fake SIN automatically fails »: no roll.
+          ctx.log({
+            kind: 'system', userId: ctx.user.id, author: a.name, ...(hidden ? { gmOnly: true } : {}),
+            i18n: { key: tk('{actor} présente {sin} : SIN grillé, le contrôle échoue d’office'), params: { actor: a.name, sin: identity } },
+          });
+          return { ...base, outcome: 'auto' };
+        }
+        const pool = verificationPool(dev);
+        const r = rollDice(pool);
+        const outcome = sinCheckOutcome(r.hits, threshold);
+        const label = lic ? `Contrôle de licence — ${lic.name} (${identity})` : `Contrôle de SIN — ${identity}`; // i18n-ignore (stored French label, labelI18n below)
+        const labelI18n = lic
+          ? { key: tk('Contrôle de licence — {license} ({sin})'), params: { license: lic.name, sin: identity } }
+          : { key: tk('Contrôle de SIN — {sin}'), params: { sin: identity } };
+        const roll = { ...r, pool, label, labelI18n, actorId: a.id, ...(secret ? { secret: true } : {}), sinCheck: { ...base, outcome } };
+        // A visible check that exceeds the threshold burns the SIN; a secret one leaves it to the GM (card « Griller »).
+        if (outcome === 'burned' && !secret) {
+          sin.burned = true;
+          sin.burnedAt = Date.now();
+          roll.sinCheck.burnedNow = true;
+        }
+        const entry = ctx.log({ kind: 'roll', userId: ctx.user.id, author: a.name, text: label, roll, ...(hidden ? { gmOnly: true } : {}) });
+        sfx(ctx, 'dice', hidden ? 'gm' : 'all');
+        return { ...roll, logId: entry.id };
+      },
+    },
+
+    // GM: burn / restore a SIN by hand (a secret check, a burned SIN still valid in another country — p. 364). { actorId, sinId, burned }
+    'actor/sinBurn': {
+      role: 'gm',
+      handler(ctx, { actorId, sinId, burned }) {
+        const a = getActor(ctx, actorId);
+        const sin = (a.sins || []).find((x) => x && x.id === String(sinId));
+        if (!sin) ctx.fail('SIN introuvable');
+        if (burned) {
+          sin.burned = true;
+          sin.burnedAt = Date.now();
+        } else {
+          delete sin.burned;
+          delete sin.burnedAt;
+        }
+        return true;
       },
     },
   },
