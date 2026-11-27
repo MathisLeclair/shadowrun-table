@@ -315,5 +315,5 @@ const byName = (f: string, n: string) => catalog(f).find((e) => e.name === n)!;
   }
 }
 
-console.log(failures ? `\n${failures} échec(s), ${passes} réussite(s)` : `\nOK — ${passes} vérifications`);
+console.log(failures ? `\n${failures} failed, ${passes} passed` : `\nOK — ${passes} checks`);
 process.exit(failures ? 1 : 0);

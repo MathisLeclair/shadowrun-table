@@ -25,7 +25,7 @@ async function rejects(p: Promise<unknown>, re: RegExp | null, msg: string) {
     await p;
     ok(false, msg + ' (should have failed)');
   } catch (e) {
-    ok(!re || re.test((e as Error).message), `${msg} — got « ${(e as Error).message} »`);
+    ok(!re || re.test((e as Error).message), `${msg} — got “${(e as Error).message}”`);
   }
 }
 const section = (s: string) => console.log('• ' + s);
@@ -191,9 +191,9 @@ try {
   ok(instA.width === 10 && instA.height === 7 && instA.metersPerCell === 1.5 && instA.lighting === 'dim' && instA.theme === 'bar', 'geometry + ambience copied');
   ok(instA.background?.url === '/api/maplib/image/test-dive-bar' && instA.background.mode === 'image' && instA.background.w === 10, 'image background with the library URL scheme');
   ok(instA.walls.length === 4 && !instA.walls.some((w) => ['w1', 'w2', 'w3', 'd1'].includes(w.id)), 'walls copied with fresh ids');
-  ok(instA.lights.length === 1 && instA.regions.some((x) => x.name === 'Comptoir') && instA.regions.some((x) => x.gmOnly && x.name === 'Entrée'), 'lights + regions + entry region');
+  ok(instA.lights.length === 1 && instA.regions.some((x) => x.name === 'Comptoir') && instA.regions.some((x) => x.gmOnly && x.name === 'Entrance'), 'lights + regions + entry region');
   ok(!Object.values(B.state.maps || {}).some((m) => m.library?.slug === 'test-dive-bar'), 'table B has no instance');
-  await rejects(A.send('maps/fromLibrary', { slug: 'nope' }), /introuvable/, 'unknown library map');
+  await rejects(A.send('maps/fromLibrary', { slug: 'nope' }), /Library map not found/, 'unknown library map');
   // Player view: no library data.
   await A.send('maps/setActive', { mapId: mapA });
   const P = await client(srv.url, plA, { table: 'alpha' });
@@ -247,7 +247,7 @@ try {
   ok(after.tokens.length === 1 && after.tokens[0].name === 'Videur', 'tokens kept');
   ok(after.notes.length === 1 && after.notes[0].text === 'Le barman est un indic', 'GM notes kept');
   ok(after.regions.some((x) => x.name === 'Planque secrète' && x.gmOnly), 'GM-only regions kept');
-  ok(after.regions.filter((x) => x.name === 'Entrée').length === 1, 'entry region not duplicated');
+  ok(after.regions.filter((x) => x.name === 'Entrance').length === 1, 'entry region not duplicated');
   ok(after.walls.find((w) => w.door)?.door!.state === 'open', 'door state kept at the same position');
   ok(after.fog === true && after.background!.url === '/api/maplib/image/test-dive-bar', 'fog + background kept');
   ok((await A.send('maps/libraryDiff', { mapId: mapA })).diff.same, 'in sync after the update');
@@ -257,17 +257,17 @@ try {
   await B.send('maps/addLight', { mapId: mapB, light: { x: 8, y: 5, radius: 2 } });
   ok((await B.send('maps/publishToLibrary', { mapId: mapB })).version === 3, 'B publishes v3');
   await A.send('maps/removeWall', { mapId: mapA, wallId: A.state.maps[mapA].walls[0].id });
-  await rejects(A.send('maps/publishToLibrary', { mapId: mapA }), /a changé/, 'A (at v2) cannot overwrite v3 without force');
+  await rejects(A.send('maps/publishToLibrary', { mapId: mapA }), /library changed since your last sync/, 'A (at v2) cannot overwrite v3 without force');
   ok((await A.send('maps/publishToLibrary', { mapId: mapA, force: true })).version === 4, 'force → v4');
   adm = await adminCall('/api/admin/maplib');
   E = adm.body.maps.find((m: { slug: string }) => m.slug === 'test-dive-bar');
   ok(E.history.map((h: { version: number }) => h.version).join() === '3,2,1', `history keeps the previous versions (${E.history.map((h: { version: number }) => h.version)})`);
   const custom = await A.send('maps/create', { name: 'Ma carte perso', width: 8, height: 8 });
-  await rejects(A.send('maps/publishToLibrary', { mapId: custom }), /Seules les cartes/, 'custom maps cannot publish');
-  await rejects(A.send('maps/libraryUpdate', { mapId: custom }), /ne vient pas/, 'custom maps cannot update');
+  await rejects(A.send('maps/publishToLibrary', { mapId: custom }), /Only maps that come from the library/, 'custom maps cannot publish');
+  await rejects(A.send('maps/libraryUpdate', { mapId: custom }), /does not come from the library/, 'custom maps cannot update');
   let set = await adminCall('/api/admin/maplib/settings', 'PATCH', { publishAdminOnly: true });
   ok(set.body.settings.publishAdminOnly === true, 'admin-only publishing on');
-  await rejects(B.send('maps/publishToLibrary', { mapId: mapB, force: true }), /réservée à l’administrateur/, 'GM refused when admin-only');
+  await rejects(B.send('maps/publishToLibrary', { mapId: mapB, force: true }), /reserved to the admin/, 'GM refused when admin-only');
   ok((await B.send('maps/libraryDiff', { mapId: mapB })).publishAllowed === false, 'diff tells the UI');
   const pubAdm = await adminCall('/api/admin/maplib/test-dive-bar/publish', 'POST', { tableId: 'beta', mapId: mapB, force: true });
   ok(pubAdm.status === 200 && pubAdm.body.version === 5, 'admin publishes from table B (v5)');
@@ -357,5 +357,5 @@ try {
   } catch {}
 }
 
-console.log(`\n${passes} ok, ${failures} échec(s)`);
+console.log(`\n${passes} ok, ${failures} failed`);
 process.exit(failures ? 1 : 0);

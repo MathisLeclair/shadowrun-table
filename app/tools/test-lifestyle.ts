@@ -91,19 +91,19 @@ const cleaning = find('lifestylequalities', 'Discreet Deliveryman');
 const withMaid = lifestyleFromCatalog(medium, { id: 'l6' });
 withMaid.qualities.push(qualityFromCatalog(maid, { id: 'qm' }));
 const lookupQ = (id: string) => cat('lifestylequalities').find((x) => x.id === id);
-ok(/incompatible/.test((qualityProblem(withMaid, cleaning, lookupQ) as I18nEntry | null)?.key || ''), 'Discreet Deliveryman refused on an Obscure/Difficult to Find lifestyle (forbidden by the latter)');
+ok(/cannot be combined/.test((qualityProblem(withMaid, cleaning, lookupQ) as I18nEntry | null)?.key || ''), 'Discreet Deliveryman refused on an Obscure/Difficult to Find lifestyle (forbidden by the latter)');
 const withCleaning = lifestyleFromCatalog(medium, { id: 'l7' });
 withCleaning.qualities.push(qualityFromCatalog(cleaning, { id: 'qc' }));
-ok(/incompatible/.test((qualityProblem(withCleaning, maid) as I18nEntry | null)?.key || ''), 'Obscure/Difficult to Find refused next to Discreet Deliveryman');
-ok(/demande/.test((qualityProblem(lifestyleFromCatalog(medium, { id: 'l8' }), find('lifestylequalities', 'Safety Third')) as I18nEntry | null)?.key || ''), 'Safety Third needs a garage or workshop first');
-ok(/réservé/.test((qualityProblem(lifestyleFromCatalog(medium, { id: 'l9' }), find('lifestylequalities', 'Thrifty')) as I18nEntry | null)?.key || ''), 'Thrifty: Traveler lifestyles only');
+ok(/cannot be combined/.test((qualityProblem(withCleaning, maid) as I18nEntry | null)?.key || ''), 'Obscure/Difficult to Find refused next to Discreet Deliveryman');
+ok(/first requires/.test((qualityProblem(lifestyleFromCatalog(medium, { id: 'l8' }), find('lifestylequalities', 'Safety Third')) as I18nEntry | null)?.key || ''), 'Safety Third needs a garage or workshop first');
+ok(/only for/.test((qualityProblem(lifestyleFromCatalog(medium, { id: 'l9' }), find('lifestylequalities', 'Thrifty')) as I18nEntry | null)?.key || ''), 'Thrifty: Traveler lifestyles only');
 
 console.log('• allowed lifestyles & duplicates (pure)');
 const lowL = lifestyleFromCatalog(low, { id: 'l3' });
 const p1 = qualityProblem(lowL, garage) as I18nEntry | null;
-ok(p1 && p1.key && /réservé/.test(p1.key) && (p1.params!.allowed as string).includes('Medium'), 'garage refused on a Low lifestyle');
+ok(p1 && p1.key && /only for/.test(p1.key) && (p1.params!.allowed as string).includes('Medium'), 'garage refused on a Low lifestyle');
 ok(qualityProblem(jane, garage) === null, 'garage OK on Medium');
-ok(/déjà/.test((qualityProblem(jane, docGold) as I18nEntry | null)?.key || ''), 'same contract twice refused');
+ok(/already on this lifestyle/.test((qualityProblem(jane, docGold) as I18nEntry | null)?.key || ''), 'same contract twice refused');
 const twoGarages = lifestyleFromCatalog(medium, { id: 'l4' });
 twoGarages.qualities.push(qualityFromCatalog(garage, { id: 'g1' }));
 ok(qualityProblem(twoGarages, garage) === null, 'allowmultiple qualities can be stacked');
@@ -170,11 +170,11 @@ try {
   ok(best.baseCost === 5000 && best.monthlyCost === 8583, `restored monthly cost 8583 (got ${best.monthlyCost})`);
   const her = j.armor.find((a) => a.id === 'arm1')!;
   ok(her.mods?.length! >= 5 && her.capacity === 6 && her.mods!.every((m) => !m.effects?.armor), 'armor mods restored, armor bonus not counted twice');
-  ok(j.history.some((h) => h.i18n?.key === 'Options restaurées depuis Chummer : {n}'), 'restore noted in the history');
+  ok(j.history.some((h) => h.i18n?.key === 'Options restored from Chummer: {n}'), 'restore noted in the history');
   ok(A(gm, 'pc_low').lifestyles[0].baseCost === 2000 && !A(gm, 'pc_low').lifestyles[0].qualities.length, 'other actors migrated without upgrades');
   ok(!('restored' in pj.state.shop), 'restore bookkeeping hidden from players');
   const an = A(gm, 'pc_anthony');
-  ok(!an.lifestyles[0].qualities.length && an.lifestyles[0].monthlyCost === 5000 && !an.history.some((h) => /restaurées/.test(h.text || '')) && !gm.state.shop.restored!.includes('pc_anthony'), 'inferred restore spec (Anthony) not applied at boot');
+  ok(!an.lifestyles[0].qualities.length && an.lifestyles[0].monthlyCost === 5000 && !an.history.some((h) => /restored/.test(h.text || '')) && !gm.state.shop.restored!.includes('pc_anthony'), 'inferred restore spec (Anthony) not applied at boot');
 
   console.log('• buy a new lifestyle');
   let r = await pl.send('shop/buy', { actorId: 'pc_low', items: [{ ref: medium.id, qty: 2, lifestyleName: 'Appart du centre' }] });
@@ -187,20 +187,20 @@ try {
   const trou = lo.lifestyles[0].id;
 
   console.log('• upgrades on a lifestyle');
-  await rejects(pl.send('shop/buy', { actorId: 'pc_low', items: [{ ref: garage.id, target: { itemId: trou } }] }), /réservé/, 'garage refused on Low');
-  await rejects(pl.send('shop/buy', { actorId: 'pc_low', items: [{ ref: garage.id }] }), /installer/, 'target required');
-  await rejects(pl.send('shop/buy', { actorId: 'pc_low', items: [{ ref: garage.id, target: { itemId: 'nope' } }] }), /introuvable/, 'unknown target');
+  await rejects(pl.send('shop/buy', { actorId: 'pc_low', items: [{ ref: garage.id, target: { itemId: trou } }] }), /only for/, 'garage refused on Low');
+  await rejects(pl.send('shop/buy', { actorId: 'pc_low', items: [{ ref: garage.id }] }), /install this item on/, 'target required');
+  await rejects(pl.send('shop/buy', { actorId: 'pc_low', items: [{ ref: garage.id, target: { itemId: 'nope' } }] }), /not found/, 'unknown target');
   r = await pl.send('shop/buy', { actorId: 'pc_low', items: [{ ref: garage.id, target: { itemId: appart } }, { ref: docGold.id, target: { itemId: appart } }] });
   await settle();
   let ap = A(pl, 'pc_low').lifestyles.find((l) => l.id === appart)!;
   ok(ap.qualities.length === 2 && ap.monthlyCost === 5000 + 100 + 2083, `upgrades change the monthly cost (got ${ap.monthlyCost})`);
   ok(r.total === (100 + 2083) * 2, `already-paid months topped up: (100 + 2083) × 2 (got ${r.total})`);
   ok(A(pl, 'pc_low').nuyen === 30000 - r.total, 'nuyen charged');
-  await rejects(pl.send('shop/buy', { actorId: 'pc_low', items: [{ ref: docGold.id, target: { itemId: appart } }] }), /déjà/, 'same contract twice refused');
+  await rejects(pl.send('shop/buy', { actorId: 'pc_low', items: [{ ref: docGold.id, target: { itemId: appart } }] }), /already on this lifestyle/, 'same contract twice refused');
   r = await pl.send('shop/buy', { actorId: 'pc_low', items: [{ ref: extraSecure.id, target: { itemId: trou } }] });
   await settle();
   ok(r.total === 0 && A(pl, 'pc_low').lifestyles.find((l) => l.id === trou)!.monthlyCost === 2400, 'unpaid lifestyle: nothing now, +20 % on the rent');
-  await rejects(pb.send('shop/buy', { actorId: 'pc_low', items: [{ ref: garage.id, target: { itemId: appart } }] }), /pas ton personnage/, 'other player cannot upgrade');
+  await rejects(pb.send('shop/buy', { actorId: 'pc_low', items: [{ ref: garage.id, target: { itemId: appart } }] }), /not your character/, 'other player cannot upgrade');
   // A player cannot cut their own rent with negative options: the order waits for the GM (even in « never » mode).
   await gm.send('shop/updateSettings', { approval: 'never' });
   const rentBefore = A(pl, 'pc_low').lifestyles.find((l) => l.id === appart)!.monthlyCost;
@@ -217,14 +217,14 @@ try {
   ap = A(pl, 'pc_low').lifestyles.find((l) => l.id === appart)!;
   ok(ap.monthlyCost === Math.round((5000 + 100) * 0.8) + 2083, `GM adds a negative quality (−20 % of base + Garage; the contract is not reduced) (got ${ap.monthlyCost})`);
   const dq = ap.qualities.find((q) => q.catalogId === dangerous.id)!;
-  await rejects(pl.send('shop/removeUpgrade', { actorId: 'pc_low', list: 'lifestyles', itemId: appart, subId: dq.id }), /MJ/, 'player cannot remove a negative quality');
+  await rejects(pl.send('shop/removeUpgrade', { actorId: 'pc_low', list: 'lifestyles', itemId: appart, subId: dq.id }), /GM/, 'player cannot remove a negative quality');
   const gq = ap.qualities.find((q) => q.catalogId === garage.id)!;
   await pl.send('shop/removeUpgrade', { actorId: 'pc_low', list: 'lifestyles', itemId: appart, subId: gq.id });
   await gm.send('shop/removeUpgrade', { actorId: 'pc_low', list: 'lifestyles', itemId: appart, subId: dq.id });
   await settle();
   ap = A(pl, 'pc_low').lifestyles.find((l) => l.id === appart)!;
   ok(ap.qualities.length === 1 && ap.monthlyCost === 5000 + 2083, 'removals recompute the cost');
-  await rejects(pl.send('shop/removeUpgrade', { actorId: 'pc_low', list: 'lifestyles', itemId: appart, subId: 'zz' }), /introuvable/, 'unknown option');
+  await rejects(pl.send('shop/removeUpgrade', { actorId: 'pc_low', list: 'lifestyles', itemId: appart, subId: 'zz' }), /not found/, 'unknown option');
 
   console.log('• rent per lifestyle');
   let n0 = A(pl, 'pc_low').nuyen;
@@ -235,25 +235,25 @@ try {
   r = await pl.send('shop/payLifestyle', { actorId: 'pc_low', months: 1 });
   await settle();
   ok(r.lifestyleId === trou && r.total === 2400 && A(pl, 'pc_low').nuyen === n0 - 2400, 'no id → primary lifestyle');
-  await rejects(pl.send('shop/payLifestyle', { actorId: 'pc_low', lifestyleId: 'nope', months: 1 }), /introuvable/, 'unknown lifestyle');
-  await rejects(pb.send('shop/payLifestyle', { actorId: 'pc_bricks', months: 1 }), /train de vie/, 'no lifestyle → error');
-  await rejects(pb.send('shop/payLifestyle', { actorId: 'pc_low', months: 1 }), /pas ton personnage/, 'cannot pay for someone else');
-  await rejects(pj.send('shop/payLifestyle', { actorId: 'pc_jane', months: 99 }), /mois/, 'months bounded');
+  await rejects(pl.send('shop/payLifestyle', { actorId: 'pc_low', lifestyleId: 'nope', months: 1 }), /not found/, 'unknown lifestyle');
+  await rejects(pb.send('shop/payLifestyle', { actorId: 'pc_bricks', months: 1 }), /No lifestyle/, 'no lifestyle → error');
+  await rejects(pb.send('shop/payLifestyle', { actorId: 'pc_low', months: 1 }), /not your character/, 'cannot pay for someone else');
+  await rejects(pj.send('shop/payLifestyle', { actorId: 'pc_jane', months: 99 }), /months/, 'months bounded');
   n0 = A(pj, 'pc_jane').nuyen;
   r = await pj.send('shop/payLifestyle', { actorId: 'pc_jane', months: 1 });
   await settle();
   ok(r.total === 8583 && A(pj, 'pc_jane').nuyen === n0 - 8583, 'Jane pays her restored rent');
 
-  console.log('• homes (shared/home.js)');
+  console.log('• homes (shared/home.ts)');
   n0 = A(pl, 'pc_low').nuyen;
   r = await pl.send('shop/chooseHome', { actorId: 'pc_low', lifestyleId: appart, layout: 'medium-loft' });
   await settle();
   ap = A(pl, 'pc_low').lifestyles.find((l) => l.id === appart)!;
   ok(r.fee === 0 && ap.home?.layout === 'medium-loft' && ap.home.moves === 0 && A(pl, 'pc_low').nuyen === n0, 'first home pick is free');
-  await rejects(pl.send('shop/chooseHome', { actorId: 'pc_low', lifestyleId: appart, layout: 'medium-loft' }), /déjà/, 'same home refused');
-  await rejects(pl.send('shop/chooseHome', { actorId: 'pc_low', lifestyleId: appart, layout: 'low-studio' }), /correspond/, 'layout of another level refused');
-  await rejects(pl.send('shop/chooseHome', { actorId: 'pc_low', lifestyleId: appart, layout: 'nope' }), /correspond/, 'unknown layout refused');
-  await rejects(pb.send('shop/chooseHome', { actorId: 'pc_low', lifestyleId: appart, layout: 'medium-classic' }), /pas ton personnage/, 'cannot move someone else');
+  await rejects(pl.send('shop/chooseHome', { actorId: 'pc_low', lifestyleId: appart, layout: 'medium-loft' }), /already live here/, 'same home refused');
+  await rejects(pl.send('shop/chooseHome', { actorId: 'pc_low', lifestyleId: appart, layout: 'low-studio' }), /does not match/, 'layout of another level refused');
+  await rejects(pl.send('shop/chooseHome', { actorId: 'pc_low', lifestyleId: appart, layout: 'nope' }), /does not match/, 'unknown layout refused');
+  await rejects(pb.send('shop/chooseHome', { actorId: 'pc_low', lifestyleId: appart, layout: 'medium-classic' }), /not your character/, 'cannot move someone else');
   r = await pl.send('shop/chooseHome', { actorId: 'pc_low', lifestyleId: appart, layout: 'medium-classic' });
   await settle();
   ap = A(pl, 'pc_low').lifestyles.find((l) => l.id === appart)!;
@@ -294,5 +294,5 @@ try {
 } finally {
   await srv.stopAndWait();
 }
-console.log(`\n${passes} ok, ${failures} échec(s)`);
+console.log(`\n${passes} ok, ${failures} failure(s)`);
 process.exit(failures ? 1 : 0);

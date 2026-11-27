@@ -65,4 +65,4 @@ const tracks = (audioSeed.tracks || []).filter((t) => String(t.url || '').starts
 write('audio.json', { tracks, scenes });
 write('shop.json', { specials: [] });
 write('campaign.json', { acts: [], quests: [], sessions: [], threads: [], handouts: [], playerRecap: '', notes: '' });
-console.log(`pack vierge : ${templates.length} modèles (${[...new Set(templates.map((t) => t.folder))].join(', ')}), ${scenes.length} scènes audio → ${path.relative(ROOT, OUT)}`);
+console.log(`pack vierge: ${templates.length} templates (${[...new Set(templates.map((t) => t.folder))].join(', ')}), ${scenes.length} audio scenes → ${path.relative(ROOT, OUT)}`);

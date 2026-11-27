@@ -53,7 +53,7 @@ function unitTests() {
     ok(!!list, `catalog item exists: ${r.file}/${r.name}`);
     ok(!list || list.length === 1, `catalog name is unique: ${r.file}/${r.name}`);
   }
-  ok(TIERS.length === 7 && TIERS[0].label === 'Civil' && TIERS[6].label.startsWith('Forces spéciales'), 'PR 0-6 labels');
+  ok(TIERS.length === 7 && TIERS[0].label === 'Civilian' && TIERS[6].label.startsWith('Special forces'), 'PR 0-6 labels');
 
   console.log('• every archetype × tier');
   const seeds = [1, 77, 4242];
@@ -147,8 +147,8 @@ async function serverTests() {
     const gm = await client(srv.url, await login(srv.url, { role: 'gm', password: 'lazarus' }));
     const pl = await client(srv.url, await login(srv.url, { role: 'player', name: 'Joueuse' }));
     await settle();
-    await rejects(pl.send('npcgen/preview', { archetype: 'ganger', tier: 1, seed: 1 }), /réservée au MJ/, 'players cannot generate');
-    await rejects(gm.send('npcgen/preview', { archetype: 'dragon', tier: 1, seed: 1 }), /Archétype inconnu/, 'unknown archetype');
+    await rejects(pl.send('npcgen/preview', { archetype: 'ganger', tier: 1, seed: 1 }), /GM-only/, 'players cannot generate');
+    await rejects(gm.send('npcgen/preview', { archetype: 'dragon', tier: 1, seed: 1 }), /Unknown archetype/, 'unknown archetype');
     const pv = await gm.send('npcgen/preview', { archetype: 'corpsec', tier: 3, seed: 99, lieutenant: true });
     const pv2 = await gm.send('npcgen/preview', { archetype: 'corpsec', tier: 3, seed: 99, lieutenant: true });
     ok(pv.main && pv.lieutenant && JSON.stringify(pv) === JSON.stringify(pv2), 'preview deterministic, with lieutenant');
@@ -160,7 +160,7 @@ async function serverTests() {
     // Save to bestiary only
     const r1 = await gm.send<NpcCreateResult>('npcgen/create', { archetype: 'merc', tier: 4, seed: 7, saveToBestiary: true, name: 'Mercenaire MET2000' });
     await settle();
-    ok(r1.templateIds.length === 1 && gm.state.bestiary![r1.templateIds[0]]?.folder === GENERATED_FOLDER, 'template saved in « Générés »');
+    ok(r1.templateIds.length === 1 && gm.state.bestiary![r1.templateIds[0]]?.folder === GENERATED_FOLDER, 'template saved in “Générés”');
     ok(gm.state.bestiary![r1.templateIds[0]].name === 'Mercenaire MET2000', 'custom name kept');
 
     // Spawn a grunt group + lieutenant on the active map, without saving
@@ -181,7 +181,7 @@ async function serverTests() {
     await settle();
     ok(r3.templateIds.length === 1 && r3.actorIds.length === 2 && r3.tokenIds.length === 0, 'saved + 2 actors without tokens');
     ok(r3.actorIds.every((id) => gm.state.actors[id]?.templateId === r3.templateIds[0]), 'spawned actors linked to the saved template');
-    await rejects(gm.send('npcgen/create', { archetype: 'ganger', tier: 1, seed: 1 }), /Rien à faire/, 'needs save or spawn');
+    await rejects(gm.send('npcgen/create', { archetype: 'ganger', tier: 1, seed: 1 }), /Nothing to do/, 'needs save or spawn');
     gm.close();
     pl.close();
   } finally {
@@ -191,5 +191,5 @@ async function serverTests() {
 
 unitTests();
 await serverTests();
-console.log(failures ? `\n${failures} échec(s), ${passes} réussite(s)` : `\nOK — ${passes} vérifications`);
+console.log(failures ? `\n${failures} failure(s), ${passes} passed` : `\nOK — ${passes} checks`);
 process.exit(failures ? 1 : 0);

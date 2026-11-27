@@ -182,7 +182,7 @@ export function normalizeBonus(node: XmlNode, { wireless = false }: { wireless?:
       } else if (tag === 'smartlink') {
         push({ type: 'flag', target: 'smartlink', value: effValue(v) ?? 1 }, tag);
       } else if (tag === 'spellcategory') {
-        // Spellcasting focus: + Rating dice to Spellcasting for spells of that category (toggle « Sort de type … »).
+        // Spellcasting focus: + Rating dice to Spellcasting for spells of that category (roll-dialog toggle « combat spell », « health spell »…).
         const cat = txt(v.name);
         if (!cat) { unsupported(tag); continue; }
         push({ type: 'skill', target: 'spellcasting', value: effValue(v.val), condition: `spell-${cat.toLowerCase().replace(/[^a-z]+/g, '-')}` }, tag);

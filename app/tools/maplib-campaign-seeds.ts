@@ -2,7 +2,7 @@
 // Project Lazarus: table maps (instances) made from the map library for the campaign's locations — the
 // « Fragmaps first » choice of Shadowrun/cartes-campagne.md. Writes data/seed/maps/lib-<slug>.json (one Map per file,
 // map.library = { slug, version }), built exactly like the GM action maps/fromLibrary (server/modules/22-maplib.ts):
-// same geometry, walls / doors / lights / regions with ids, « Entrée » GM region — plus the campaign name, folder,
+// same geometry, walls / doors / lights / regions with ids, « Entrance » GM region — plus the campaign name, folder,
 // GM description and GM notes below. Ids are deterministic, so re-running only rewrites what changed.
 //   node tools/maplib-campaign-seeds.ts [--dry]
 // The library is loaded into a throw-away folder (os tmpdir): data/maplib/*.json + the Foundry fragmaps-free seeds.
@@ -294,5 +294,5 @@ for (const loc of LOCATIONS) {
   written.push({ id: map.id, slug: m.slug, size: `${map.width}×${map.height}`, walls: map.walls.length, notes: notes.length, name: map.name });
 }
 fs.rmSync(TMP, { recursive: true, force: true });
-for (const w of written) console.log(`${DRY ? '(dry) ' : ''}${w.id.padEnd(38)} ${w.size.padEnd(7)} murs ${String(w.walls).padStart(4)}  notes ${w.notes}  ${w.name}`);
-console.log(`${written.length} carte(s)${DRY ? ' (rien écrit)' : ` → ${path.relative(APP, OUT)}`}`);
+for (const w of written) console.log(`${DRY ? '(dry) ' : ''}${w.id.padEnd(38)} ${w.size.padEnd(7)} walls ${String(w.walls).padStart(4)}  notes ${w.notes}  ${w.name}`);
+console.log(`${written.length} map(s)${DRY ? ' (nothing written)' : ` → ${path.relative(APP, OUT)}`}`);

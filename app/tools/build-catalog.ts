@@ -14,6 +14,7 @@ import { XMLParser } from 'fast-xml-parser';
 import { evalFormula } from '../client/modules/shop/rules.ts';
 import { entryEffects, conditionKey } from './lib/bonus-effects.ts';
 import { CONDITIONS, conditionToggle } from '../shared/modifiers.ts';
+import { stripContext } from '../client/i18n/format.ts';
 import type { CatalogItem, Effect, Formula } from '../shared/types.ts';
 
 /** A fast-xml-parser node of Chummer data: dynamic shape (attributes '@x', text '#text'). */
@@ -1106,7 +1107,7 @@ eLines.push('', '## Effect types', '', '| type | count |', '|---|---:|');
 for (const [ty, n] of Object.entries(typeCov).sort((a, b) => b[1] - a[1])) eLines.push(`| ${ty} | ${n} |`);
 
 // Conditions: every condition key the effects use, with Chummer's own strings (lang/fr-fr.xml, lang/en-us.xml: LimitCondition_*)
-// and the app label (shared/modifiers.ts CONDITIONS, English in client/i18n/en/sheet.json). « switch » = roll-dialog toggle key.
+// and the app label (shared/modifiers.ts CONDITIONS: English key, French in client/i18n/fr/*.json). « switch » = roll-dialog toggle key.
 const langStrings = (file: string) => {
   const out: Record<string, { code: string; text: string }> = {};
   try {
@@ -1122,11 +1123,12 @@ const langStrings = (file: string) => {
 };
 const condFr = langStrings('fr-fr.xml');
 const condEn = langStrings('en-us.xml');
-let enDict: Record<string, string> = {};
+const frDict: Record<string, string> = {};
 try {
-  enDict = JSON.parse(fs.readFileSync(path.join(ROOT, 'client', 'i18n', 'en', 'sheet.json'), 'utf8'));
+  const dir = path.join(ROOT, 'client', 'i18n', 'fr');
+  for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.json')).sort((a, b) => (a === 'glossary.json' ? -1 : b === 'glossary.json' ? 1 : a.localeCompare(b)))) Object.assign(frDict, JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')));
 } catch {
-  /* dictionary missing */
+  /* dictionaries missing */
 }
 const condCount: Record<string, number> = {};
 for (const [, it] of allEff) for (const e of it.effects) if (e.condition) condCount[e.condition] = (condCount[e.condition] || 0) + 1;
@@ -1136,7 +1138,7 @@ eLines.push('', '## Conditions', '', 'Condition keys of the effects (`effects[].
 for (const [k, n] of Object.entries(condCount).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))) {
   const label = CONDITIONS[k]?.label || '';
   const tg = conditionToggle(k);
-  eLines.push(`| ${k} | ${n} | ${condFr[k]?.code || condEn[k]?.code || '(free text)'} | ${cell(condFr[k]?.text)} | ${cell(condEn[k]?.text)} | ${cell(label || '⚠ none')} | ${cell(label ? enDict[label] || '⚠ missing' : '')} | ${tg === null ? 'automatic' : tg} |`);
+  eLines.push(`| ${k} | ${n} | ${condFr[k]?.code || condEn[k]?.code || '(free text)'} | ${cell(condFr[k]?.text)} | ${cell(condEn[k]?.text)} | ${cell(label ? frDict[label] || '⚠ missing' : '⚠ none')} | ${cell(label ? stripContext(label) : '')} | ${tg === null ? 'automatic' : tg} |`);
 }
 eLines.push('');
 fs.writeFileSync(path.join(OUT, 'effects-coverage.md'), eLines.join('\n'));

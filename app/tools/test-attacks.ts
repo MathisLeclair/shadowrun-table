@@ -148,12 +148,12 @@ try {
   await test('player attacks the NPC token: range modifier in the pool, attack waits for defense', async () => {
     let r: any; // attack/roll result
     for (let i = 0; i < 12; i++) {
-      r = await p1.send('attack/roll', { actorId: 'pc_anthony', weaponId: COLT, skillId: 'pistols', targetTokenId: npcToken.id, label: 'Attaque — Colt Government 2066' });
+      r = await p1.send('attack/roll', { actorId: 'pc_anthony', weaponId: COLT, skillId: 'pistols', targetTokenId: npcToken.id, label: 'Attack — Colt Government 2066' });
       await gm.send('weapon/reload', { actorId: 'pc_anthony', weaponId: COLT, free: true });
       if (r.attackId && r.hits > 0) break;
     }
     assert.ok(r.attackId, 'attack created');
-    if (distance > 5) assert.match(r.breakdown, /portée moyenne \(\d+ m\) −1/);
+    if (distance > 5) assert.match(r.breakdown, /medium range \(\d+ m\) −1/);
     await settle();
     const a = gm.state.attacks.list.find((x) => x.id === r.attackId)!;
     assert.equal(a.status, 'defense');
@@ -163,7 +163,7 @@ try {
     atkId = a.id;
   });
   await test('the player cannot defend for the NPC; the player sees the attack', async () => {
-    await rejects(p1.send('attack/defend', { attackId: atkId }), /Seul le joueur de la cible/);
+    await rejects(p1.send('attack/defend', { attackId: atkId }), /Only the target/);
     await settle();
     assert.ok(p1.state.attacks.list.some((a) => a.id === atkId));
     assert.equal(p1.state.attacks.turn, undefined);
@@ -176,7 +176,7 @@ try {
       assert.equal(d.attack.modifiedDv, 7 + d.attack.net);
       const s = await gm.send('attack/soak', { attackId: atkId });
       assert.equal(s.attack.status, 'done');
-      assert.match(s.roll.breakdown, /armure \d+ PA −5|armure 0/);
+      assert.match(s.roll.breakdown, /armor \d+ AP −5|armor 0/);
       await settle();
       const after = gm.state.actors[npcId].condition.physical + gm.state.actors[npcId].condition.stun + gm.state.actors[npcId].condition.overflow;
       assert.equal(after - before, s.attack.damage);
@@ -185,20 +185,20 @@ try {
 
   console.log('Special actions');
   await test('Flying Kick is locked for Anthony (player); the GM may use any action', async () => {
-    await rejects(p1.send('attack/roll', { actorId: 'pc_anthony', weaponId: NODACHI, targetTokenId: npcToken.id, actionId: 'flying-kick' }), /débloqué/);
-    await rejects(p1.send('attack/roll', { actorId: 'pc_anthony', weaponId: COLT, actionId: 'finishing-move' }), /mêlée/);
+    await rejects(p1.send('attack/roll', { actorId: 'pc_anthony', weaponId: NODACHI, targetTokenId: npcToken.id, actionId: 'flying-kick' }), /unlocked/);
+    await rejects(p1.send('attack/roll', { actorId: 'pc_anthony', weaponId: COLT, actionId: 'finishing-move' }), /melee/);
   });
   await test('Finishing Move: +2 dice, costs 1 Edge, once per Combat Turn in combat', async () => {
     const edge = gm.state.actors.pc_anthony.edge.current;
     const r = await p1.send('attack/roll', { actorId: 'pc_anthony', weaponId: NODACHI, targetTokenId: npcToken.id, actionId: 'finishing-move' });
-    assert.match(r.breakdown, /Prise de finition \+2/);
+    assert.match(r.breakdown, /Finishing Move \+2/);
     await settle();
     assert.equal(gm.state.actors.pc_anthony.edge.current, edge - 1);
     await gm.send('combat/start', {});
     await gm.send('combat/rollAll', {});
     await settle();
     await p1.send('attack/roll', { actorId: 'pc_anthony', weaponId: NODACHI, targetTokenId: npcToken.id, actionId: 'finishing-move' });
-    await rejects(p1.send('attack/roll', { actorId: 'pc_anthony', weaponId: NODACHI, targetTokenId: npcToken.id, actionId: 'finishing-move' }), /une seule fois/);
+    await rejects(p1.send('attack/roll', { actorId: 'pc_anthony', weaponId: NODACHI, targetTokenId: npcToken.id, actionId: 'finishing-move' }), /once per Combat Turn/);
     await settle();
     const entry = gm.state.combat.entries.find((e) => e.actorId === 'pc_anthony')!;
     assert.ok(entry.adjust! <= -10, 'initiative paid');
@@ -207,7 +207,7 @@ try {
 
   console.log('Grenades');
   await test('frag grenade at a point: scatter, blast marker, a soak for each token caught', async () => {
-    const r = await p1.send('attack/roll', { actorId: 'pc_anthony', weaponId: FRAG, point: { x: npcToken.x, y: npcToken.y + 1 }, label: 'Attaque — Grenade: Fragmentation' });
+    const r = await p1.send('attack/roll', { actorId: 'pc_anthony', weaponId: FRAG, point: { x: npcToken.x, y: npcToken.y + 1 }, label: 'Attack — Grenade: Fragmentation' });
     assert.ok(r.blastId, 'blast created');
     await settle();
     const b = gm.state.attacks.blasts.find((x) => x.id === r.blastId)!;
@@ -262,7 +262,7 @@ try {
     await gm.send('weapon/reload', { actorId: 'pc_anthony', weaponId: COLT, free: true }).catch(() => {});
     try {
       const r = await gm.send('attack/roll', { actorId: 'pc_anthony', weaponId: colt.id, skillId: 'pistols', targetTokenId: npcToken.id });
-      assert.match(r.breakdown, /env\. \(portée, visibilité\) −6/);
+      assert.match(r.breakdown, /env\. \(range, visibility\) −6/);
     } finally {
       await gm.send('maps/update', { mapId, patch: { weather: { visibility: 0 } } });
     }
@@ -328,5 +328,5 @@ try {
 } finally {
   await srv.stop();
 }
-console.log(failures ? `\n${failures} échec(s)` : '\nOK');
+console.log(failures ? `\n${failures} failure(s)` : '\nOK');
 process.exit(failures ? 1 : 0);

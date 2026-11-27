@@ -78,7 +78,7 @@ const runtime = fs.mkdtempSync(path.join(os.tmpdir(), 'sr-maplib-campaign-'));
 const haveArt = fs.existsSync(path.resolve(APP, '..', 'fragmap'));
 if (haveArt) {
   const only = libSeeds.map((m) => m.library!.slug).filter((s) => gitLib[s]).join(',');
-  const r = spawnSync(process.execPath, [...(process.features.typescript ? [] : ['--experimental-strip-types']), 'tools/maplib-build.ts', '--only', only], { cwd: APP, env: { ...process.env, SR_RUNTIME_DIR: runtime }, encoding: 'utf8' });
+  const r = spawnSync(process.execPath, [...process.execArgv.filter((a) => a === '--experimental-strip-types' || a === '--no-warnings'), 'tools/maplib-build.ts', '--only', only], { cwd: APP, env: { ...process.env, SR_RUNTIME_DIR: runtime }, encoding: 'utf8' });
   ok(r.status === 0, `maplib-build into the test runtime (${r.stderr || ''})`);
 }
 const srv = await startServer({ port: 3940, runtime });

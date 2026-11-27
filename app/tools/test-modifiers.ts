@@ -413,8 +413,8 @@ await test('chargen offers accessories / armor mods, installed on a weapon / arm
   assert.equal(line('g2').mount, 'Top');
   assert.equal(line('g4').capacity, 2);
   const gearErr = r.errors.filter((e) => e.step === 'gear').map((e) => e.key);
-  assert.ok(gearErr.includes('{item} est déjà installé sur {weapon}'), 'second Laser Sight refused');
-  assert.ok(gearErr.includes('{name} : choisis l’armure sur laquelle l’installer.'), 'mod without target refused');
+  assert.ok(gearErr.includes('{item} is already installed on {weapon}'), 'second Laser Sight refused');
+  assert.ok(gearErr.includes('{name}: choose the armor to install it on.'), 'mod without target refused');
   const { actor } = buildActor(d, ctx, {});
   const pistol = actor.weapons.find((x) => x.catalogId === w.item.id)!;
   assert.deepEqual(pistol.mounts, (w.item.stats as WeaponStats).mounts);
@@ -489,7 +489,7 @@ try {
     await gm.send('actor/addSubItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, sub: 'accessories', item: { name: 'Test grip', mount: 'Under', effects: { dicePool: 1 } } });
     const r2 = await jane.send<Roll>('dice/roll', { actorId: 'pc_jane', weaponId: w.id, skillId: w.skill });
     assert.equal(r2.pool, r.pool + 1);
-    await rejects(jane.send<Roll>('dice/roll', { actorId: 'pc_jane', weaponId: 'nope' }), /Arme introuvable/);
+    await rejects(jane.send<Roll>('dice/roll', { actorId: 'pc_jane', weaponId: 'nope' }), /Weapon not found/);
   });
   await test('soak test: Body + armor computed by the server (client figure ignored); Matrix tests use the device attribute as limit', async () => {
     const st = gm.state.actors.pc_jane;
@@ -617,10 +617,18 @@ try {
     const g = await gm.send<Roll>('dice/roll', { actorId: 'pc_bricks', skillId: 'sneaking', conditions: ['in-host'] });
     assert.ok(g.mods.some((m) => m.name === 'Sloppy Code' && m.state === 'applied'), 'GM, no persona: the switch is kept');
   });
-  await test('i18n: the limit breakdown terms of the server (sociale, mentale…) have an English entry', () => {
-    const dir = path.join(ROOT, 'client', 'i18n', 'en');
-    const all = Object.assign({}, ...fs.readdirSync(dir).filter((f) => f.endsWith('.json')).map((f) => JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'))));
-    for (const k of ['physique', 'mentale', 'sociale', 'astrale']) assert.ok(all[k], k);
+  await test('i18n: the stored limit labels of the server (sociale, mentale…) map to English keys that have a French entry', () => {
+    // Rolls store the French limit label (limitLabel); the client renders it through the legacy key map.
+    const legacy = JSON.parse(fs.readFileSync(path.join(ROOT, 'client', 'i18n', 'legacy-fr-keys.json'), 'utf8')) as Record<string, string>;
+    const dir = path.join(ROOT, 'client', 'i18n', 'fr');
+    const fr = Object.assign({}, ...fs.readdirSync(dir).filter((f) => f.endsWith('.json')).map((f) => JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')))) as Record<string, string>;
+    const expected: Record<string, string> = { physique: 'physical', mentale: 'mental', sociale: 'social', astrale: 'astral' };
+    for (const [k, en] of Object.entries(expected)) {
+      const key = legacy[k];
+      assert.ok(key, `legacy key for ${k}`);
+      assert.equal(key.replace(/^.*::/, ''), en, `English text of ${k}`);
+      assert.equal(fr[key], k, `French entry of ${key}`);
+    }
   });
 } finally {
   srv.stop();
@@ -631,5 +639,5 @@ function on11(r: Roll) {
   return r.mods.find((m) => m.name === 'Zoé : Heritage 12')!.id;
 }
 
-console.log(failures ? `\n${failures} échec(s)` : '\nTout est vert.');
+console.log(failures ? `\n${failures} failed` : '\nAll green.');
 process.exit(failures ? 1 : 0);

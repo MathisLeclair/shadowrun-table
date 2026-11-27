@@ -37,7 +37,7 @@ function ok(cond: unknown, msg: string) {
     console.error('  ✗', msg);
   }
 }
-const eq = (a: unknown, b: unknown, msg: string) => ok(JSON.stringify(a) === JSON.stringify(b), `${msg} — attendu ${JSON.stringify(b)}, obtenu ${JSON.stringify(a)}`);
+const eq = (a: unknown, b: unknown, msg: string) => ok(JSON.stringify(a) === JSON.stringify(b), `${msg} — expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`);
 
 // ---------------------------------------------------------------------------
 // Minimal PDF writer (Helvetica, WinAnsi): pages = [[{ x, y, size, text }]]
@@ -99,44 +99,44 @@ function fixtureBook() {
 }
 
 // ---------------------------------------------------------------------------
-console.log('Fonctions pures…');
+console.log('Pure functions…');
 {
   // cover, printed 1-4, unnumbered insert, printed 5-7; « 3 » in every footer (noise, but also the real folio of p. 3)
   const edges = [[], [1, 3], [2, 3], [3], [4, 3], [3], [5, 3], [6, 3], [7, 3]];
   const d = detectOffsets(edges);
-  eq(d.offset, 1, 'offset de base');
-  eq(d.offsets, [{ fromPrinted: 5, offset: 2 }], 'plage après l’encart');
-  ok(d.confidence > 0.95, `confiance ${d.confidence}`);
+  eq(d.offset, 1, 'base offset');
+  eq(d.offsets, [{ fromPrinted: 5, offset: 2 }], 'range after the insert');
+  ok(d.confidence > 0.95, `confidence ${d.confidence}`);
   const book = { offset: 1, offsets: d.offsets, pages: 9 };
-  eq([1, 2, 3, 4, 5, 6, 7].map((n) => printedToPdf(book, n)), [2, 3, 4, 5, 7, 8, 9], 'imprimé → PDF');
-  eq([2, 3, 4, 5, 7, 8, 9].map((p) => pdfToPrinted(book, p)), [1, 2, 3, 4, 5, 6, 7], 'PDF → imprimé');
-  eq(pdfToPrinted(book, 1), null, 'couverture sans numéro');
+  eq([1, 2, 3, 4, 5, 6, 7].map((n) => printedToPdf(book, n)), [2, 3, 4, 5, 7, 8, 9], 'printed → PDF');
+  eq([2, 3, 4, 5, 7, 8, 9].map((p) => pdfToPrinted(book, p)), [1, 2, 3, 4, 5, 6, 7], 'PDF → printed');
+  eq(pdfToPrinted(book, 1), null, 'unnumbered cover');
   // The client's PagedBook has no `offsets: null`, which the server sends for books without an insert
-  eq([1, 5, 7].map((n) => clientPrintedToPdf(book as PagedBook, n)), [2, 7, 9], 'client : imprimé → PDF');
-  eq(clientPdfToPrinted(book as PagedBook, 8), 6, 'client : PDF → imprimé');
+  eq([1, 5, 7].map((n) => clientPrintedToPdf(book as PagedBook, n)), [2, 7, 9], 'client: printed → PDF');
+  eq(clientPdfToPrinted(book as PagedBook, 8), 6, 'client: PDF → printed');
   const flat = detectOffsets(Array.from({ length: 40 }, (_, i) => (i < 2 ? [] : [i - 1])));
-  eq([flat.offset, flat.offsets], [2, null], 'décalage constant');
-  eq(detectOffsets([[], []]).confidence, 0, 'pas de folio');
+  eq([flat.offset, flat.offsets], [2, null], 'constant offset');
+  eq(detectOffsets([[], []]).confidence, 0, 'no folio');
   eq(cleanOffsets([{ fromPrinted: 'x' }, { fromPrinted: 10, offset: 3 }]), [{ fromPrinted: 10, offset: 3 }], 'cleanOffsets');
   eq(parseQuery('Zoé "Hack on the fly" a').map((t) => t.text), ['hack on the fly', 'zoe'], 'parseQuery');
-  eq(fold('Élan-Vital').length, 'Élan-Vital'.length, 'fold garde les positions');
+  eq(fold('Élan-Vital').length, 'Élan-Vital'.length, 'fold keeps positions');
   const doc = { texts: ['Something about HERITAGE armor', 'The Heritage line by Zoé', 'heritages? no: inheritance'], folded: [] as string[] };
   doc.folded = doc.texts.map(fold);
   const hits = searchPages(doc, parseQuery('heritage'));
-  eq(hits.map((h) => h.pdfPage).sort(), [1, 2, 3], 'début de mot (heritages compte, inheritance non)');
-  ok(hits.find((h) => h.pdfPage === 1)!.score > hits.find((h) => h.pdfPage === 2)!.score, 'titre en capitales classé devant');
-  eq(searchPages(doc, parseQuery('inheritance')).length, 1, 'mot entier');
+  eq(hits.map((h) => h.pdfPage).sort(), [1, 2, 3], 'word start (heritages counts, inheritance does not)');
+  ok(hits.find((h) => h.pdfPage === 1)!.score > hits.find((h) => h.pdfPage === 2)!.score, 'all-caps title ranked first');
+  eq(searchPages(doc, parseQuery('inheritance')).length, 1, 'whole word');
   eq(parseSourceRef('RG 62'), { code: 'RG', page: 62 }, 'parseSourceRef RG 62');
   eq(parseSourceRef('SR5 p. 240'), { code: 'SR5', page: 240 }, 'parseSourceRef SR5 p. 240');
   eq(parseSourceRef('sr5 p.240'), { code: 'SR5', page: 240 }, 'parseSourceRef sr5 p.240');
-  eq(parseSourceRef({ source: 'RG', page: '62' }), { code: 'RG', page: 62 }, 'parseSourceRef objet');
-  eq(parseSourceRef('RF 221, SR5 12'), { code: 'RF', page: 221 }, 'parseSourceRef liste');
-  eq(parseSourceRef('GH3'), { code: 'GH3', page: null }, 'parseSourceRef code seul');
-  eq(parseSourceRef(''), null, 'parseSourceRef vide');
+  eq(parseSourceRef({ source: 'RG', page: '62' }), { code: 'RG', page: 62 }, 'parseSourceRef object');
+  eq(parseSourceRef('RF 221, SR5 12'), { code: 'RF', page: 221 }, 'parseSourceRef list');
+  eq(parseSourceRef('GH3'), { code: 'GH3', page: null }, 'parseSourceRef code only');
+  eq(parseSourceRef(''), null, 'parseSourceRef empty');
 
   // A printed page outside the book is unknown (null), never clamped to the last page.
-  eq([printedToPdf(book, 7), printedToPdf(book, 8), printedToPdf(book, 999)], [9, null, null], 'page imprimée hors du livre → null');
-  eq([clientPrintedToPdf(book as PagedBook, 8), clientPrintedToPdf({ offset: -5, pages: 9 }, 3)], [null, null], 'client : page hors du livre → null');
+  eq([printedToPdf(book, 7), printedToPdf(book, 8), printedToPdf(book, 999)], [9, null, null], 'printed page outside the book → null');
+  eq([clientPrintedToPdf(book as PagedBook, 8), clientPrintedToPdf({ offset: -5, pages: 9 }, 3)], [null, null], 'client: page outside the book → null');
 
   // fold(): same output as the per-char reference, without retaining a rope of one-char strings (≈ 300 MB for a library).
   const refCache = new Map<string, string>();
@@ -151,17 +151,17 @@ console.log('Fonctions pures…');
   };
   const refFold = (str: string | null) => String(str || '').split('').map(refChar).join('');
   for (const sample of ['Élan-Vital — Zoé’s « HACK » on_the`fly', 'ÆØ ß İ ﬁ 😀 ½ ２ Ⅻ', 'plain ascii 123', '', null])
-    eq(fold(sample), refFold(sample), `fold identique (${sample})`);
+    eq(fold(sample), refFold(sample), `fold identical (${sample})`);
   const bigPages = Array.from({ length: 1000 }, (_, i) => `PAGE ${i} Les règles d’Édge — ${'Zoé hack on the fly, réflexes améliorés. '.repeat(100)}`);
   const heap0 = process.memoryUsage().heapUsed;
   const foldedPages = bigPages.map(fold);
   const grown = (process.memoryUsage().heapUsed - heap0) / 1e6;
-  ok(grown < 70 && foldedPages[999].length === bigPages[999].length, `fold : ${grown.toFixed(1)} Mo retenus pour 4 M caractères (avant : ≈ 140 Mo)`);
+  ok(grown < 70 && foldedPages[999].length === bigPages[999].length, `fold: ${grown.toFixed(1)} MB retained for 4 M characters (before: ≈ 140 MB)`);
 
   // Memory guard of indexing jobs: 6 × the PDF must fit in the container limit minus the server's RSS.
-  eq(memoryVerdict(40e6, { limit: 512e6, rss: 150e6 }).ok, true, 'mémoire : SR5 (40 Mo) tient');
-  eq(memoryVerdict(100e6, { limit: 512e6, rss: 150e6 }), { ok: false, need: 600, free: 362 }, 'mémoire : PDF de 100 Mo refusé');
-  eq(memoryVerdict(1e9, { limit: null, rss: 1 }).ok, true, 'mémoire : limite inconnue → accepté');
+  eq(memoryVerdict(40e6, { limit: 512e6, rss: 150e6 }).ok, true, 'memory: SR5 (40 MB) fits');
+  eq(memoryVerdict(100e6, { limit: 512e6, rss: 150e6 }), { ok: false, need: 600, free: 362 }, 'memory: 100 MB PDF refused');
+  eq(memoryVerdict(1e9, { limit: null, rss: 1 }).ok, true, 'memory: unknown limit → accepted');
 
   // readBytes(): the file's bytes (view over the Buffer, no second copy), small pooled files too.
   const bytesFile = path.join(os.tmpdir(), `sr-books-bytes-${process.pid}.bin`);
@@ -169,68 +169,68 @@ console.log('Fonctions pures…');
     const data = crypto.randomBytes(size);
     fs.writeFileSync(bytesFile, data);
     const u = readBytes(bytesFile);
-    ok(u instanceof Uint8Array && Buffer.compare(Buffer.from(u.buffer, u.byteOffset, u.byteLength), data) === 0, `readBytes ${size} octets`);
+    ok(u instanceof Uint8Array && Buffer.compare(Buffer.from(u.buffer, u.byteOffset, u.byteLength), data) === 0, `readBytes ${size} bytes`);
   }
   fs.rmSync(bytesFile, { force: true });
 }
 
 // ---------------------------------------------------------------------------
-console.log('Lecteur : cache et mise en page (fonctions pures)…');
+console.log('Reader: cache and layout (pure functions)…');
 {
   // Cache key = code + version, never the signed URL.
-  eq(cacheKey({ code: 'rg', version: 'abc-12', url: '/api/books/RG/file?k=x' } as CacheBook), 'RG@abc-12', 'clé de cache = code@version');
-  eq([cacheKey({ code: 'RG' }), cacheKey({ code: 'RG', version: 'a/b' }), cacheKey({ code: '../x', version: 'a' })], [null, null, null], 'clé de cache invalide → null');
+  eq(cacheKey({ code: 'rg', version: 'abc-12', url: '/api/books/RG/file?k=x' } as CacheBook), 'RG@abc-12', 'cache key = code@version');
+  eq([cacheKey({ code: 'RG' }), cacheKey({ code: 'RG', version: 'a/b' }), cacheKey({ code: '../x', version: 'a' })], [null, null, null], 'invalid cache key → null');
   eq(parseCacheKey('SR5@1a-2b'), { code: 'SR5', version: '1a-2b' }, 'parseCacheKey');
-  eq(parseCacheKey('bad'), null, 'parseCacheKey invalide');
+  eq(parseCacheKey('bad'), null, 'parseCacheKey invalid');
   const MB = 1024 * 1024;
   const e = (key: string, size: number, usedAt: number) => ({ key, size: size * MB, usedAt });
   // Another version of the book being stored goes first; then the least recently used, until the budget fits.
   let plan = planEviction([e('RG@old', 30, 900), e('SR5@v', 40, 100), e('SG@v', 20, 50)], { key: 'RG@new', size: 30 * MB }, { maxBytes: 100 * MB });
-  eq(plan, { evict: ['RG@old'], store: true }, 'ancienne version du livre retirée');
+  eq(plan, { evict: ['RG@old'], store: true }, 'old version of the book evicted');
   plan = planEviction([e('SR5@v', 40, 100), e('SG@v', 20, 50), e('CF@v', 30, 300)], { key: 'RG@new', size: 30 * MB }, { maxBytes: 100 * MB });
-  eq(plan, { evict: ['SG@v'], store: true }, 'moins récemment lu retiré (budget en octets)');
+  eq(plan, { evict: ['SG@v'], store: true }, 'least recently read evicted (byte budget)');
   plan = planEviction([e('A@1', 1, 3), e('B@1', 1, 1), e('C@1', 1, 2)], { key: 'D@1', size: MB }, { maxBooks: 2, maxBytes: 100 * MB });
-  eq(plan, { evict: ['B@1', 'C@1'], store: true }, 'nombre de livres plafonné (LRU)');
+  eq(plan, { evict: ['B@1', 'C@1'], store: true }, 'number of books capped (LRU)');
   plan = planEviction([e('A@1', 1, 3)], { key: 'D@1', size: 700 * MB });
-  eq(plan, { evict: [], store: false }, 'livre plus gros que le budget : lu sans être gardé');
+  eq(plan, { evict: [], store: false }, 'book bigger than the budget: read without being kept');
   plan = planEviction([e('A@1', 50, 1), e('B@1', 50, 2)], { key: 'C@1', size: 60 * MB }, { maxBytes: 100 * MB, keep: ['A@1'] });
-  eq(plan, { evict: ['B@1'], store: false }, 'clé protégée jamais retirée');
-  eq(planEviction([e('RG@v', 30, 1)], { key: 'RG@v', size: 30 * MB }).evict, [], 'même clé : rien à retirer');
-  eq([MAX_BOOKS, MAX_BYTES / MB], [12, 600], 'plafonds par défaut (12 livres / 600 Mo)');
+  eq(plan, { evict: ['B@1'], store: false }, 'protected key never evicted');
+  eq(planEviction([e('RG@v', 30, 1)], { key: 'RG@v', size: 30 * MB }).evict, [], 'same key: nothing to evict');
+  eq([MAX_BOOKS, MAX_BYTES / MB], [12, 600], 'default caps (12 books / 600 MB)');
   const books = [{ code: 'RG', version: 'new' }, { code: 'SR5', version: 'v' }];
-  eq(staleEntries([e('RG@old', 1, 1), e('SR5@v', 1, 1), e('XX@1', 1, 1), { key: 'junk' }], books), ['RG@old', 'junk'], 'versions remplacées retirées, livres inconnus gardés');
-  eq([...cachedByCode([e('RG@old', 1, 1), e('SR5@v', 2, 1)], books).keys()], ['SR5'], '« en cache » seulement pour la version actuelle');
+  eq(staleEntries([e('RG@old', 1, 1), e('SR5@v', 1, 1), e('XX@1', 1, 1), { key: 'junk' }], books), ['RG@old', 'junk'], 'replaced versions evicted, unknown books kept');
+  eq([...cachedByCode([e('RG@old', 1, 1), e('SR5@v', 2, 1)], books).keys()], ['SR5'], '« cached » only for the current version');
   eq(
     [pickBackendName({ secure: true, hasCaches: true, hasIdb: true }), pickBackendName({ secure: false, hasCaches: true, hasIdb: true }), pickBackendName({ secure: false, hasCaches: false, hasIdb: false })],
     ['cache', 'idb', 'none'],
-    'Cache Storage en contexte sécurisé, IndexedDB sur http://<ip> (production), sinon rien'
+    'Cache Storage in a secure context, IndexedDB on http://<ip> (production), else nothing'
   );
   // Regression: with a persistent cache the HTTP cache must not keep a second copy of the PDF; the download is abortable.
   const sig = { aborted: false };
   // Stand-in signal: only its identity is checked
-  eq(downloadOptions({ persistent: true, signal: sig as unknown as AbortSignal }), { credentials: 'same-origin', signal: sig, cache: 'no-store' }, 'cache persistant : téléchargement en no-store, annulable');
-  eq(downloadOptions({ persistent: false }), { credentials: 'same-origin' }, 'sans cache persistant : cache HTTP du navigateur');
+  eq(downloadOptions({ persistent: true, signal: sig as unknown as AbortSignal }), { credentials: 'same-origin', signal: sig, cache: 'no-store' }, 'persistent cache: no-store download, abortable');
+  eq(downloadOptions({ persistent: false }), { credentials: 'same-origin' }, 'no persistent cache: browser HTTP cache');
 
   // Highlight of the search terms in a page's text layer.
-  eq(queryTerms('"Hack on the fly" Zoé a'), ['hack', 'the', 'fly', 'zoe', 'on'], 'termes à surligner');
-  eq(findMatches('Zoé: Heritage line, HERITAGES and inheritance', ['heritage', 'zoe']), [[0, 3], [5, 13], [20, 28]], 'surlignage en début de mot, sans accents ni casse');
-  eq(splitByRanges('Edge rules', [[0, 4]]), [{ text: 'Edge', hit: true }, { text: ' rules', hit: false }], 'découpage du texte');
-  eq(findMatches('hacking', ['hack', 'hacking']), [[0, 7]], 'plages fusionnées');
+  eq(queryTerms('"Hack on the fly" Zoé a'), ['hack', 'the', 'fly', 'zoe', 'on'], 'terms to highlight');
+  eq(findMatches('Zoé: Heritage line, HERITAGES and inheritance', ['heritage', 'zoe']), [[0, 3], [5, 13], [20, 28]], 'highlight at word start, ignoring accents and case');
+  eq(splitByRanges('Edge rules', [[0, 4]]), [{ text: 'Edge', hit: true }, { text: ' rules', hit: false }], 'text split');
+  eq(findMatches('hacking', ['hack', 'hacking']), [[0, 7]], 'merged ranges');
 
   // Continuous-scroll layout.
   const { tops, total } = computeTops([100, 200, 100], 10);
-  eq([tops, total], [[10, 120, 330], 440], 'hauts des pages');
-  eq([pageAt(tops, 0), pageAt(tops, 119), pageAt(tops, 120), pageAt(tops, 5000)], [1, 1, 2, 3], 'page sous une position');
-  eq(scaleFor('width', { width: 612, height: 792 }, { width: 612, height: 400 }), 1, 'largeur de page');
-  ok(Math.abs(scaleFor('page', { width: 612, height: 792 }, { width: 612, height: 396 }) - 0.5) < 1e-9, 'page entière');
-  eq([scaleFor(9, { width: 1, height: 1 }, { width: 1, height: 1 }), clampScale(0.01)], [5, 0.25], 'zoom borné');
-  eq([zoomStep(1, 1), zoomStep(1, -1), zoomStep(1.05, 1), zoomStep(5, 1), zoomStep(0.25, -1)], [1.1, 0.9, 1.1, 5, 0.25], 'paliers de zoom');
-  eq([outputScale(800, 1000, 2), outputScale(800, 1000, 3), outputScale(800, 1000, 1)], [2, 2, 1], 'canvas HiDPI (densité max 2)');
-  ok(outputScale(4000, 5000, 2) ** 2 * 4000 * 5000 <= 16e6 + 1, 'canvas plafonné à 16 Mpx');
+  eq([tops, total], [[10, 120, 330], 440], 'page tops');
+  eq([pageAt(tops, 0), pageAt(tops, 119), pageAt(tops, 120), pageAt(tops, 5000)], [1, 1, 2, 3], 'page under a position');
+  eq(scaleFor('width', { width: 612, height: 792 }, { width: 612, height: 400 }), 1, 'page width');
+  ok(Math.abs(scaleFor('page', { width: 612, height: 792 }, { width: 612, height: 396 }) - 0.5) < 1e-9, 'whole page');
+  eq([scaleFor(9, { width: 1, height: 1 }, { width: 1, height: 1 }), clampScale(0.01)], [5, 0.25], 'zoom clamped');
+  eq([zoomStep(1, 1), zoomStep(1, -1), zoomStep(1.05, 1), zoomStep(5, 1), zoomStep(0.25, -1)], [1.1, 0.9, 1.1, 5, 0.25], 'zoom steps');
+  eq([outputScale(800, 1000, 2), outputScale(800, 1000, 3), outputScale(800, 1000, 1)], [2, 2, 1], 'HiDPI canvas (max density 2)');
+  ok(outputScale(4000, 5000, 2) ** 2 * 4000 * 5000 <= 16e6 + 1, 'canvas capped at 16 Mpx');
 }
 
 // ---------------------------------------------------------------------------
-console.log('Installation (tools/books-setup.ts)…');
+console.log('Setup (tools/books-setup.ts)…');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sr-books-test-'));
 const src = path.join(tmp, 'pdfs');
 const runtime = path.join(tmp, 'runtime');
@@ -239,20 +239,20 @@ const pdf = fixtureBook();
 fs.writeFileSync(path.join(src, 'Shadowrun_5E_Run___Gun.pdf'), pdf);
 fs.writeFileSync(path.join(src, 'House rules cheat sheet.pdf'), makePdf([[{ x: 72, y: 700, size: 12, text: 'Matrix cheat sheet house rules' }]]));
 const srcBefore = fs.readFileSync(path.join(src, 'Shadowrun_5E_Run___Gun.pdf'));
-const setup = spawnSync(process.execPath, [...(process.features.typescript ? [] : ['--experimental-strip-types']), 'tools/books-setup.ts', '--from', src, '--runtime', runtime], { cwd: ROOT, encoding: 'utf8' });
+const setup = spawnSync(process.execPath, [...process.execArgv.filter((a) => a === '--experimental-strip-types' || a === '--no-warnings'), 'tools/books-setup.ts', '--from', src, '--runtime', runtime], { cwd: ROOT, encoding: 'utf8' });
 ok(setup.status === 0, `books-setup exit ${setup.status}: ${setup.stderr}`);
 const libPath = path.join(runtime, 'books', 'library.json');
 const lib = JSON.parse(fs.readFileSync(libPath, 'utf8')) as Library;
 const rg = lib.books.find((b) => b.code === 'RG');
-ok(!!rg, 'Run & Gun reconnu par son nom de fichier (code RG)');
-eq([rg?.pages, rg?.offset, rg?.offsets], [9, 1, [{ fromPrinted: 5, offset: 2 }]], 'pages + décalages détectés');
-eq(rg?.name, 'Run and Gun', 'nom Chummer');
-eq(rg?.nameFr, 'Run & Gun', 'nom français');
+ok(!!rg, 'Run & Gun recognized by its file name (code RG)');
+eq([rg?.pages, rg?.offset, rg?.offsets], [9, 1, [{ fromPrinted: 5, offset: 2 }]], 'pages + offsets detected');
+eq(rg?.name, 'Run and Gun', 'Chummer name');
+eq(rg?.nameFr, 'Run & Gun', 'French name');
 const extra = lib.books.find((b) => b.extra);
-ok(extra && extra.code === 'HRCS', `PDF hors Chummer : code par initiales (${extra?.code})`);
-ok(fs.existsSync(path.join(runtime, 'books', 'RG.pdf')) && fs.existsSync(path.join(runtime, 'books', 'index', 'RG.json')), 'PDF copié + index');
-ok(Buffer.compare(srcBefore, fs.readFileSync(path.join(src, 'Shadowrun_5E_Run___Gun.pdf'))) === 0, 'PDF source intact');
-ok(/RG\s+9\s+\+1 p\.5→\+2/.test(setup.stdout), 'tableau récapitulatif');
+ok(extra && extra.code === 'HRCS', `PDF outside Chummer: code from initials (${extra?.code})`);
+ok(fs.existsSync(path.join(runtime, 'books', 'RG.pdf')) && fs.existsSync(path.join(runtime, 'books', 'index', 'RG.json')), 'PDF copied + index');
+ok(Buffer.compare(srcBefore, fs.readFileSync(path.join(src, 'Shadowrun_5E_Run___Gun.pdf'))) === 0, 'source PDF untouched');
+ok(/RG\s+9\s+\+1 p\.5→\+2/.test(setup.stdout), 'summary table');
 // Copy of the installed library for the memory-guard server (startServer's stop removes the runtime).
 const runtime2 = path.join(tmp, 'runtime2');
 fs.cpSync(path.join(runtime, 'books'), path.join(runtime2, 'books'), { recursive: true });
@@ -265,7 +265,7 @@ const signWith = (key: Buffer, data: unknown) => {
 };
 
 // ---------------------------------------------------------------------------
-console.log('Serveur…');
+console.log('Server…');
 const srv = await startServer({
   port: PORT,
   runtime,
@@ -284,21 +284,21 @@ try {
     fetch(U + p, { method, headers: { Authorization: `Bearer ${token}`, ...(body && !(body instanceof Buffer) ? { 'Content-Type': 'application/json' } : { 'Content-Type': 'application/octet-stream' }), ...headers }, body: body instanceof Buffer ? body : body ? JSON.stringify(body) : undefined });
 
   // ----- list -----
-  eq((await get('/api/books')).status, 401, 'liste sans session → 401');
+  eq((await get('/api/books')).status, 401, 'list without session → 401');
   let r = await json(await get('/api/books', { token: pA, table: 'alpha' }));
-  eq(r.status, 200, 'liste joueur');
+  eq(r.status, 200, 'player list');
   const rgA = r.body.books.find((b: LibBook) => b.code === 'RG');
-  ok(rgA && /^\/api\/books\/RG\/file\?k=/.test(rgA.url) && rgA.offset === 1 && rgA.offsets.length === 1, 'livre RG listé avec lien signé');
-  ok(!('tables' in rgA) && !('source' in rgA), 'pas de détails serveur dans la liste');
-  ok(Math.abs(r.body.now - Date.now()) < 60000, 'horloge du serveur dans la liste (now)');
-  ok(!fs.existsSync(path.join(runtime, 'books', '.sign-key')), 'ancienne clé du dossier des livres supprimée');
-  ok(/^[0-9a-f]{64}$/.test(fs.readFileSync(path.join(runtime, 'books-sign.key'), 'utf8')), 'clé de signature hors du dossier des livres');
+  ok(rgA && /^\/api\/books\/RG\/file\?k=/.test(rgA.url) && rgA.offset === 1 && rgA.offsets.length === 1, 'book RG listed with a signed link');
+  ok(!('tables' in rgA) && !('source' in rgA), 'no server details in the list');
+  ok(Math.abs(r.body.now - Date.now()) < 60000, 'server clock in the list (now)');
+  ok(!fs.existsSync(path.join(runtime, 'books', '.sign-key')), 'old key in the books folder removed');
+  ok(/^[0-9a-f]{64}$/.test(fs.readFileSync(path.join(runtime, 'books-sign.key'), 'utf8')), 'signing key outside the books folder');
 
   // ----- reader cache: version, stable links, pdf.js -----
-  ok(/^[0-9a-z]+-[0-9a-z]+$/.test(rgA.version || '') && rgA.size === pdf.length, `version + taille dans la liste (${rgA.version} / ${rgA.size})`);
-  ok(rgA.exp - Date.now() / 1000 >= 86400 - 5, 'lien valable au moins 24 h');
+  ok(/^[0-9a-z]+-[0-9a-z]+$/.test(rgA.version || '') && rgA.size === pdf.length, `version + size in the list (${rgA.version} / ${rgA.size})`);
+  ok(rgA.exp - Date.now() / 1000 >= 86400 - 5, 'link valid for at least 24 h');
   const again = await json(await get('/api/books', { token: pA, table: 'alpha' }));
-  eq(again.body.books.find((b: LibBook) => b.code === 'RG').url, rgA.url, 'même lien d’une requête à l’autre (cache navigateur)');
+  eq(again.body.books.find((b: LibBook) => b.code === 'RG').url, rgA.url, 'same link from one request to the next (browser cache)');
   {
     process.env.SR_RUNTIME_DIR = runtime;
     const { signLink } = await import('../server/lib/books/access.ts');
@@ -306,82 +306,82 @@ try {
     const args = [path.join(runtime, 'books'), { tableId: 'alpha', userId: 'gm', session: 'x', code: 'RG' }] as const;
     const a = signLink(...args, { now: day + 1000 });
     const b = signLink(...args, { now: day + 23 * 3600 * 1000 });
-    ok(a.k === b.k && a.exp * 1000 >= day + 23 * 3600 * 1000 + 86400 * 1000, 'signature stable sur toute la journée, valable 24 h après');
-    ok(signLink(...args, { now: day + 86400 * 1000 + 1000 }).k !== a.k, 'nouveau lien le lendemain');
+    ok(a.k === b.k && a.exp * 1000 >= day + 23 * 3600 * 1000 + 86400 * 1000, 'signature stable for the whole day, valid 24 h after');
+    ok(signLink(...args, { now: day + 86400 * 1000 + 1000 }).k !== a.k, 'new link the next day');
   }
   const base = r.body.pdfjs;
-  ok(/^\/vendor\/pdfjs\/\d+\.\d+\.\d+$/.test(base || ''), `pdf.js servi par l’application (${base})`);
+  ok(/^\/vendor\/pdfjs\/\d+\.\d+\.\d+$/.test(base || ''), `pdf.js served by the app (${base})`);
   for (const p of ['/build/pdf.min.mjs', '/build/pdf.worker.min.mjs', '/legacy/build/pdf.min.mjs', '/legacy/build/pdf.worker.min.mjs']) {
     const v = await fetch(U + base + p, { method: 'HEAD' });
     ok(v.status === 200 && /javascript/.test(v.headers.get('content-type') || '') && /immutable/.test(v.headers.get('cache-control') || ''), `${p} : ${v.status} ${v.headers.get('content-type')} ${v.headers.get('cache-control')}`);
   }
   for (const p of ['/cmaps/Adobe-Japan1-UCS2.bcmap', '/standard_fonts/FoxitSerif.pfb']) eq((await fetch(U + base + p, { method: 'HEAD' })).status, 200, `pdf.js ${p}`);
   for (const p of ['/package.json', '/build/pdf.mjs.map', '/web/pdf_viewer.mjs', '/build/../package.json', '/%2e%2e/package.json'])
-    eq((await fetch(U + base + p)).status, 404, `pdf.js : ${p} non servi`);
+    eq((await fetch(U + base + p)).status, 404, `pdf.js: ${p} not served`);
   {
     const miss = await fetch(U + base + '/cmaps/Absent-Map.bcmap');
-    ok(miss.status === 404 && /json/.test(miss.headers.get('content-type') || ''), 'pdf.js : fichier absent → 404 JSON (pas de pile ENOENT)');
+    ok(miss.status === 404 && /json/.test(miss.headers.get('content-type') || ''), 'pdf.js: missing file → 404 JSON (no ENOENT stack)');
   }
 
   // ----- file -----
-  eq((await get('/api/books/RG/file')).status, 401, 'PDF sans clé → 401');
+  eq((await get('/api/books/RG/file')).status, 401, 'PDF without key → 401');
   let f = await get(rgA.url);
-  eq(f.status, 200, 'PDF avec clé → 200');
-  eq(f.headers.get('content-type'), 'application/pdf', 'type PDF');
+  eq(f.status, 200, 'PDF with key → 200');
+  eq(f.headers.get('content-type'), 'application/pdf', 'PDF type');
   ok(/^inline/.test(f.headers.get('content-disposition') || ''), 'Content-Disposition inline');
   eq(f.headers.get('cache-control'), 'private, max-age=86400', 'Cache-Control private, 24 h');
-  eq(f.headers.get('etag'), `"${rgA.version}"`, 'ETag = version du livre');
+  eq(f.headers.get('etag'), `"${rgA.version}"`, 'ETag = book version');
   const lastMod = f.headers.get('last-modified');
   ok(!!lastMod, 'Last-Modified');
   await f.arrayBuffer();
   f = await get(rgA.url, { headers: { 'Cache-Control': 'max-age=0', 'If-None-Match': `"${rgA.version}"` } });
-  eq([f.status, (await f.arrayBuffer()).byteLength], [304, 0], 'If-None-Match → 304 sans corps');
-  eq(f.headers.get('cache-control'), 'private, max-age=86400', '304 garde Cache-Control');
+  eq([f.status, (await f.arrayBuffer()).byteLength], [304, 0], 'If-None-Match → 304 without body');
+  eq(f.headers.get('cache-control'), 'private, max-age=86400', '304 keeps Cache-Control');
   f = await get(rgA.url, { headers: { 'Cache-Control': 'max-age=0', 'If-Modified-Since': lastMod! } });
   eq(f.status, 304, 'If-Modified-Since → 304');
   await f.arrayBuffer();
-  f = await get(rgA.url, { headers: { 'Cache-Control': 'max-age=0', 'If-None-Match': '"autre"' } });
-  eq([f.status, (await f.arrayBuffer()).byteLength], [200, pdf.length], 'autre ETag → 200 complet');
+  f = await get(rgA.url, { headers: { 'Cache-Control': 'max-age=0', 'If-None-Match': '"other"' } });
+  eq([f.status, (await f.arrayBuffer()).byteLength], [200, pdf.length], 'other ETag → full 200');
   f = await get(rgA.url.slice(0, -3) + 'abc', { headers: { 'Cache-Control': 'max-age=0', 'If-None-Match': `"${rgA.version}"` } });
-  eq(f.status, 403, 'If-None-Match ne contourne pas la signature');
+  eq(f.status, 403, 'If-None-Match does not bypass the signature');
   await f.arrayBuffer();
   f = await get(rgA.url, { headers: { Range: 'bytes=0-9', 'If-Range': `"${rgA.version}"` } });
-  eq([f.status, (await f.arrayBuffer()).byteLength], [206, 10], 'If-Range avec l’ETag → 206');
-  f = await get(rgA.url, { headers: { Range: 'bytes=0-9', 'If-Range': '"perime"' } });
-  eq([f.status, (await f.arrayBuffer()).byteLength], [200, pdf.length], 'If-Range périmé → 200 complet');
+  eq([f.status, (await f.arrayBuffer()).byteLength], [206, 10], 'If-Range with the ETag → 206');
+  f = await get(rgA.url, { headers: { Range: 'bytes=0-9', 'If-Range': '"stale"' } });
+  eq([f.status, (await f.arrayBuffer()).byteLength], [200, pdf.length], 'stale If-Range → full 200');
   // Replacing the PDF changes its version (the reader drops its cached copy) and its ETag.
   {
     const pdfPath = path.join(runtime, 'books', 'RG.pdf');
     const st = fs.statSync(pdfPath);
     fs.utimesSync(pdfPath, st.atime, new Date(st.mtimeMs + 5000));
     const rgNew = (await json(await get('/api/books', { token: pA, table: 'alpha' }))).body.books.find((b: LibBook) => b.code === 'RG');
-    ok(rgNew.version && rgNew.version !== rgA.version, `nouvelle version après remplacement (${rgA.version} → ${rgNew.version})`);
+    ok(rgNew.version && rgNew.version !== rgA.version, `new version after replacement (${rgA.version} → ${rgNew.version})`);
     f = await get(rgNew.url, { headers: { 'Cache-Control': 'max-age=0', 'If-None-Match': `"${rgA.version}"` } });
-    ok(f.status === 200 && f.headers.get('etag') === `"${rgNew.version}"`, 'ancien ETag → 200 avec le nouvel ETag');
+    ok(f.status === 200 && f.headers.get('etag') === `"${rgNew.version}"`, 'old ETag → 200 with the new ETag');
     await f.arrayBuffer();
     fs.utimesSync(pdfPath, st.atime, st.mtime);
   }
   f = await get(rgA.url);
   eq(f.headers.get('accept-ranges'), 'bytes', 'Accept-Ranges');
-  eq(Buffer.from(await f.arrayBuffer()).length, pdf.length, 'PDF complet');
+  eq(Buffer.from(await f.arrayBuffer()).length, pdf.length, 'full PDF');
   f = await get(rgA.url, { headers: { Range: 'bytes=0-99' } });
   eq(f.status, 206, 'Range → 206');
   eq(f.headers.get('content-range'), `bytes 0-99/${pdf.length}`, 'Content-Range');
-  eq((await f.arrayBuffer()).byteLength, 100, '100 octets');
+  eq((await f.arrayBuffer()).byteLength, 100, '100 bytes');
   // Errors never carry the PDF headers (no cacheable « application/pdf » JSON); a malformed Range is ignored.
   f = await get(rgA.url, { headers: { Range: `bytes=${pdf.length + 10}-` } });
-  eq(f.status, 416, 'Range hors du fichier → 416');
+  eq(f.status, 416, 'Range outside the file → 416');
   ok(!f.headers.get('content-disposition') && !/pdf/.test(f.headers.get('content-type') || '') && f.headers.get('cache-control') === 'no-store',
-    `416 sans en-têtes PDF (${f.headers.get('content-type')} / ${f.headers.get('cache-control')} / ${f.headers.get('content-disposition')})`);
-  eq(f.headers.get('content-range'), `bytes */${pdf.length}`, 'Content-Range du 416');
+    `416 without PDF headers (${f.headers.get('content-type')} / ${f.headers.get('cache-control')} / ${f.headers.get('content-disposition')})`);
+  eq(f.headers.get('content-range'), `bytes */${pdf.length}`, 'Content-Range of the 416');
   await f.arrayBuffer();
   f = await get(rgA.url, { headers: { Range: 'bytes=abc' } });
-  eq([f.status, (await f.arrayBuffer()).byteLength], [200, pdf.length], 'Range mal formé ignoré → 200');
+  eq([f.status, (await f.arrayBuffer()).byteLength], [200, pdf.length], 'malformed Range ignored → 200');
   f = await get(rgA.url.slice(0, -3) + 'abc');
-  ok(f.status === 403 && !f.headers.get('content-disposition') && /json/.test(f.headers.get('content-type') || '') && f.headers.get('cache-control') === 'no-store', 'erreur : JSON jamais mis en cache');
+  ok(f.status === 403 && !f.headers.get('content-disposition') && /json/.test(f.headers.get('content-type') || '') && f.headers.get('cache-control') === 'no-store', 'error: JSON never cached');
   await f.arrayBuffer();
-  eq((await get(rgA.url.replace('/RG/', '/HRCS/'))).status, 403, 'clé d’un autre livre → 403');
-  eq((await get(rgA.url.slice(0, -3) + 'abc')).status, 403, 'clé falsifiée → 403');
+  eq((await get(rgA.url.replace('/RG/', '/HRCS/'))).status, 403, 'key of another book → 403');
+  eq((await get(rgA.url.slice(0, -3) + 'abc')).status, 403, 'forged key → 403');
 
   // Forged keys signed with the server key: expired, wrong table (book restricted), unknown user.
   process.env.SR_RUNTIME_DIR = runtime;
@@ -389,130 +389,130 @@ try {
   const kdir = path.join(runtime, 'books');
   const now = Math.floor(Date.now() / 1000);
   const fileUrl = (code: string, data: Record<string, unknown>) => `/api/books/${code}/file?k=${encodeURIComponent(signRaw(kdir, { c: code, e: now + 600, s: sessionTag(gmA), ...data }))}`;
-  eq((await get(fileUrl('RG', { t: 'alpha', u: 'gm' }))).status, 200, 'clé forgée valide (contrôle)');
-  eq((await get(fileUrl('RG', { t: 'alpha', u: 'gm', s: undefined }))).status, 403, 'clé sans session → 403');
-  eq((await get(fileUrl('RG', { t: 'alpha', u: 'gm', s: sessionTag(pA) }))).status, 403, 'session d’un autre utilisateur → 403');
-  eq((await get(`/api/books/RG/file?k=${encodeURIComponent(signWith(legacyKey, { t: 'alpha', u: 'gm', s: sessionTag(gmA), c: 'RG', e: now + 600 }))}`)).status, 403, 'lien signé avec l’ancienne clé copiée → 403');
-  eq((await get(fileUrl('RG', { t: 'alpha', u: 'gm', e: now - 5 }))).status, 403, 'clé expirée → 403');
-  eq((await get(fileUrl('RG', { t: 'alpha', u: 'u_inconnu' }))).status, 403, 'utilisateur inconnu → 403');
-  eq((await get(fileUrl('RG', { t: 'nope', u: 'gm' }))).status, 403, 'table inconnue → 403');
+  eq((await get(fileUrl('RG', { t: 'alpha', u: 'gm' }))).status, 200, 'valid forged key (control)');
+  eq((await get(fileUrl('RG', { t: 'alpha', u: 'gm', s: undefined }))).status, 403, 'key without session → 403');
+  eq((await get(fileUrl('RG', { t: 'alpha', u: 'gm', s: sessionTag(pA) }))).status, 403, 'another user’s session → 403');
+  eq((await get(`/api/books/RG/file?k=${encodeURIComponent(signWith(legacyKey, { t: 'alpha', u: 'gm', s: sessionTag(gmA), c: 'RG', e: now + 600 }))}`)).status, 403, 'link signed with the old copied key → 403');
+  eq((await get(fileUrl('RG', { t: 'alpha', u: 'gm', e: now - 5 }))).status, 403, 'expired key → 403');
+  eq((await get(fileUrl('RG', { t: 'alpha', u: 'u_unknown' }))).status, 403, 'unknown user → 403');
+  eq((await get(fileUrl('RG', { t: 'nope', u: 'gm' }))).status, 403, 'unknown table → 403');
 
   // ----- admin: permissions -----
-  eq((await adminReq('/api/admin/books', { token: '' })).status, 401, 'admin livres sans jeton → 401');
-  eq((await adminReq('/api/admin/books', { token: gmA })).status, 401, 'admin livres avec un jeton MJ → 401');
+  eq((await adminReq('/api/admin/books', { token: '' })).status, 401, 'admin books without token → 401');
+  eq((await adminReq('/api/admin/books', { token: gmA })).status, 401, 'admin books with a GM token → 401');
   r = await json(await adminReq('/api/admin/books'));
-  eq(r.status, 200, 'admin : liste');
-  ok(r.body.books.length === 2 && r.body.tables.some((t: { id: string }) => t.id === 'beta') && r.body.known.some((k: { code: string }) => k.code === 'SR5'), 'admin : livres, tables, codes connus');
+  eq(r.status, 200, 'admin: list');
+  ok(r.body.books.length === 2 && r.body.tables.some((t: { id: string }) => t.id === 'beta') && r.body.known.some((k: { code: string }) => k.code === 'SR5'), 'admin: books, tables, known codes');
 
   // Restrict the extra book to table alpha.
   r = await json(await adminReq('/api/admin/books/HRCS', { method: 'PATCH', body: { tables: ['alpha', 'zzz'] } }));
-  eq(r.body?.book?.tables, ['alpha'], 'tables autorisées (inconnues ignorées)');
+  eq(r.body?.book?.tables, ['alpha'], 'allowed tables (unknown ones ignored)');
   r = await json(await get('/api/books', { token: gmB, table: 'beta' }));
-  ok(r.body.books.some((b: LibBook) => b.code === 'RG') && !r.body.books.some((b: LibBook) => b.code === 'HRCS'), 'table beta : livre restreint absent');
-  eq((await get(fileUrl('HRCS', { t: 'beta', u: 'gm', s: sessionTag(gmB) }))).status, 403, 'mauvaise table → 403');
+  ok(r.body.books.some((b: LibBook) => b.code === 'RG') && !r.body.books.some((b: LibBook) => b.code === 'HRCS'), 'table beta: restricted book missing');
+  eq((await get(fileUrl('HRCS', { t: 'beta', u: 'gm', s: sessionTag(gmB) }))).status, 403, 'wrong table → 403');
   // A restricted book answers exactly like an unknown one (no list of the server's books for other tables).
   for (const p of ['link', 'page/1?pdf=1']) {
     const restricted = await json(await get(`/api/books/HRCS/${p}`, { token: gmB, table: 'beta' }));
     const unknown = await json(await get(`/api/books/ZZZ/${p}`, { token: gmB, table: 'beta' }));
-    eq([restricted.status, restricted.body], [404, unknown.body], `livre interdit = livre inconnu (${p})`);
+    eq([restricted.status, restricted.body], [404, unknown.body], `forbidden book = unknown book (${p})`);
   }
-  eq((await get('/api/books/search?q=cheat&code=HRCS', { token: gmB, table: 'beta' })).status, 403, 'recherche dans un livre interdit → 403');
+  eq((await get('/api/books/search?q=cheat&code=HRCS', { token: gmB, table: 'beta' })).status, 403, 'search in a forbidden book → 403');
   r = await json(await get('/api/books/search?q=cheat', { token: gmB, table: 'beta' }));
-  eq(r.body.hits.length, 0, 'recherche globale : rien du livre interdit');
+  eq(r.body.hits.length, 0, 'global search: nothing from the forbidden book');
   r = await json(await get('/api/books/HRCS/link', { token: gmA, table: 'alpha' }));
-  ok(r.status === 200 && /^\/api\/books\/HRCS\/file\?k=/.test(r.body.url), 'table alpha : lien du livre restreint');
-  eq((await get(r.body.url)).status, 200, 'table alpha : PDF du livre restreint');
+  ok(r.status === 200 && /^\/api\/books\/HRCS\/file\?k=/.test(r.body.url), 'table alpha: link of the restricted book');
+  eq((await get(r.body.url)).status, 200, 'table alpha: PDF of the restricted book');
 
   // ----- search -----
   r = await json(await get('/api/books/search?q=heritage', { token: pA, table: 'alpha' }));
-  eq(r.body.hits.map((h: SearchHit) => [h.code, h.page, h.pdfPage]), [['RG', 2, 3]], 'recherche « heritage » → RG p. 2 (PDF 3)');
-  ok(r.body.hits[0].marks.length >= 1 && /HERITAGE/.test(r.body.hits[0].snippet), 'extrait + surlignage');
+  eq(r.body.hits.map((h: SearchHit) => [h.code, h.page, h.pdfPage]), [['RG', 2, 3]], 'search « heritage » → RG p. 2 (PDF 3)');
+  ok(r.body.hits[0].marks.length >= 1 && /HERITAGE/.test(r.body.hits[0].snippet), 'snippet + highlight');
   r = await json(await get('/api/books/search?q=ZOE', { token: pA, table: 'alpha' }));
-  eq(r.body.hits.map((h: SearchHit) => h.page), [2], 'sans accents ni casse (Zoé)');
+  eq(r.body.hits.map((h: SearchHit) => h.page), [2], 'ignoring accents and case (Zoé)');
   r = await json(await get(`/api/books/search?q=${encodeURIComponent('"adept power"')}`, { token: pA, table: 'alpha' }));
-  eq(r.body.hits.map((h: SearchHit) => [h.page, h.pdfPage]), [[6, 8]], 'expression exacte → p. 6 après l’encart (PDF 8)');
+  eq(r.body.hits.map((h: SearchHit) => [h.page, h.pdfPage]), [[6, 8]], 'exact phrase → p. 6 after the insert (PDF 8)');
   r = await json(await get(`/api/books/search?q=${encodeURIComponent('"power adept"')}`, { token: pA, table: 'alpha' }));
-  eq(r.body.hits.length, 0, 'expression dans le désordre : rien');
+  eq(r.body.hits.length, 0, 'phrase out of order: nothing');
   r = await json(await get('/api/books/search?q=garage+reflexes', { token: pA, table: 'alpha' }));
-  eq(r.body.hits.map((h: SearchHit) => h.page), [6], 'tous les mots requis');
+  eq(r.body.hits.map((h: SearchHit) => h.page), [6], 'all words required');
   r = await json(await get('/api/books/search?q=x', { token: pA, table: 'alpha' }));
-  eq(r.body.hits.length, 0, 'requête trop courte');
-  eq((await get('/api/books/search?q=heritage')).status, 401, 'recherche sans session → 401');
+  eq(r.body.hits.length, 0, 'query too short');
+  eq((await get('/api/books/search?q=heritage')).status, 401, 'search without session → 401');
 
   // ----- page text -----
   r = await json(await get('/api/books/RG/page/6', { token: pA, table: 'alpha' }));
-  ok(r.status === 200 && r.body.pdfPage === 8 && r.body.page === 6 && /IMPROVED REFLEXES/.test(r.body.text), 'texte de la p. 6 imprimée');
+  ok(r.status === 200 && r.body.pdfPage === 8 && r.body.page === 6 && /IMPROVED REFLEXES/.test(r.body.text), 'text of printed p. 6');
   r = await json(await get('/api/books/RG/page/6?pdf=1', { token: pA, table: 'alpha' }));
-  ok(r.body.pdfPage === 6 && /COLOR INSERT/.test(r.body.text), 'texte de la page PDF 6 (encart)');
-  eq((await get('/api/books/XX/page/1', { token: pA, table: 'alpha' })).status, 404, 'livre absent → 404');
-  eq((await get('/api/books/RG/page/99', { token: pA, table: 'alpha' })).status, 404, 'page imprimée hors du livre → 404 (pas la dernière page)');
-  eq((await get('/api/books/RG/page/99?pdf=1', { token: pA, table: 'alpha' })).status, 404, 'page PDF hors du livre → 404');
+  ok(r.body.pdfPage === 6 && /COLOR INSERT/.test(r.body.text), 'text of PDF page 6 (insert)');
+  eq((await get('/api/books/XX/page/1', { token: pA, table: 'alpha' })).status, 404, 'missing book → 404');
+  eq((await get('/api/books/RG/page/99', { token: pA, table: 'alpha' })).status, 404, 'printed page outside the book → 404 (not the last page)');
+  eq((await get('/api/books/RG/page/99?pdf=1', { token: pA, table: 'alpha' })).status, 404, 'PDF page outside the book → 404');
 
   // ----- admin: upload, offsets, re-index, delete -----
-  eq((await adminReq('/api/admin/books/upload?code=UP', { method: 'POST', body: pdf, token: gmA })).status, 401, 'envoi par un MJ → 401');
-  eq((await adminReq('/api/admin/books/upload?code=UP', { method: 'POST', body: Buffer.from('hello, not a pdf') })).status, 400, 'pas un PDF → 400');
-  eq((await adminReq('/api/admin/books/upload?code=b@d', { method: 'POST', body: pdf })).status, 400, 'code invalide → 400');
-  eq((await adminReq('/api/admin/books/upload?code=RG', { method: 'POST', body: pdf })).status, 409, 'code existant sans « remplacer » → 409');
+  eq((await adminReq('/api/admin/books/upload?code=UP', { method: 'POST', body: pdf, token: gmA })).status, 401, 'upload by a GM → 401');
+  eq((await adminReq('/api/admin/books/upload?code=UP', { method: 'POST', body: Buffer.from('hello, not a pdf') })).status, 400, 'not a PDF → 400');
+  eq((await adminReq('/api/admin/books/upload?code=b@d', { method: 'POST', body: pdf })).status, 400, 'invalid code → 400');
+  eq((await adminReq('/api/admin/books/upload?code=RG', { method: 'POST', body: pdf })).status, 409, 'existing code without « replace » → 409');
   r = await json(await adminReq('/api/admin/books/upload?code=up', { method: 'POST', body: pdf, headers: { 'X-Filename': encodeURIComponent('Mon livré.pdf') } }));
-  eq(r.status, 200, 'envoi admin');
+  eq(r.status, 200, 'admin upload');
   let up = null;
   for (let i = 0; i < 100 && !up?.indexed; i++) {
     await new Promise((res) => setTimeout(res, 150));
     up = (await json(await adminReq('/api/admin/books'))).body.books.find((b: LibraryBook) => b.code === 'UP');
   }
-  ok(up?.indexed && up.pages === 9 && up.offset === 1 && up.offsets?.[0]?.fromPrinted === 5, `indexation en arrière-plan (${JSON.stringify(up)})`);
-  eq(up?.source, 'Mon livré.pdf', 'nom du fichier d’origine');
+  ok(up?.indexed && up.pages === 9 && up.offset === 1 && up.offsets?.[0]?.fromPrinted === 5, `background indexing (${JSON.stringify(up)})`);
+  eq(up?.source, 'Mon livré.pdf', 'original file name');
   r = await json(await adminReq('/api/admin/books/UP', { method: 'PATCH', body: { offset: 5, offsets: [] } }));
-  ok(r.body.book.offset === 5 && r.body.book.manual && !r.body.book.offsets, 'décalage manuel');
+  ok(r.body.book.offset === 5 && r.body.book.manual && !r.body.book.offsets, 'manual offset');
   r = await json(await get('/api/books', { token: pA, table: 'alpha' }));
-  eq(r.body.books.find((b: LibBook) => b.code === 'UP')?.offset, 5, 'nouveau décalage visible des joueurs');
+  eq(r.body.books.find((b: LibBook) => b.code === 'UP')?.offset, 5, 'new offset visible to players');
   r = await json(await adminReq('/api/admin/books/UP/detect?apply=0', { method: 'POST' }));
-  ok(r.body.book.offset === 1 && r.body.book.offsets?.length === 1 && r.body.applied === false, '« Détecter » en aperçu (apply=0)');
+  ok(r.body.book.offset === 1 && r.body.book.offsets?.length === 1 && r.body.applied === false, '« Detect » as a preview (apply=0)');
   const afterPreview = (await json(await adminReq('/api/admin/books'))).body.books.find((b: LibraryBook) => b.code === 'UP');
-  ok(afterPreview.offset === 5 && afterPreview.manual, 'l’aperçu ne change pas le livre (Annuler possible)');
+  ok(afterPreview.offset === 5 && afterPreview.manual, 'the preview does not change the book (Cancel possible)');
   r = await json(await adminReq('/api/admin/books/UP/detect', { method: 'POST' }));
-  ok(r.body.book.offset === 1 && !r.body.book.manual && r.body.book.offsets?.length === 1, '« Détecter » rétablit le décalage');
-  eq((await adminReq('/api/admin/books/UP/reindex', { method: 'POST', body: {} })).status, 200, 'réindexation');
-  eq((await adminReq('/api/admin/books/UP', { method: 'PATCH', body: { offset: 'abc' } })).status, 400, 'décalage invalide → 400');
+  ok(r.body.book.offset === 1 && !r.body.book.manual && r.body.book.offsets?.length === 1, '« Detect » restores the offset');
+  eq((await adminReq('/api/admin/books/UP/reindex', { method: 'POST', body: {} })).status, 200, 're-index');
+  eq((await adminReq('/api/admin/books/UP', { method: 'PATCH', body: { offset: 'abc' } })).status, 400, 'invalid offset → 400');
   for (let i = 0; i < 100; i++) {
     const j = (await json(await adminReq('/api/admin/books'))).body.jobs.find((x: JobInfo) => x.code === 'UP');
     if (!j || j.state === 'done' || j.state === 'error') break;
     await new Promise((res) => setTimeout(res, 150));
   }
-  eq((await adminReq('/api/admin/books/UP', { method: 'DELETE', body: {} })).status, 400, 'suppression sans confirmation → 400');
-  eq((await adminReq('/api/admin/books/UP', { method: 'DELETE', body: { confirm: 'UP' }, token: gmA })).status, 401, 'suppression par un MJ → 401');
-  eq((await adminReq('/api/admin/books/UP', { method: 'DELETE', body: { confirm: 'UP' } })).status, 200, 'suppression');
-  ok(!fs.existsSync(path.join(runtime, 'books', 'UP.pdf')) && !fs.existsSync(path.join(runtime, 'books', 'index', 'UP.json')), 'fichiers effacés');
-  eq((await get('/api/books/UP/link', { token: pA, table: 'alpha' })).status, 404, 'livre supprimé → 404');
+  eq((await adminReq('/api/admin/books/UP', { method: 'DELETE', body: {} })).status, 400, 'delete without confirmation → 400');
+  eq((await adminReq('/api/admin/books/UP', { method: 'DELETE', body: { confirm: 'UP' }, token: gmA })).status, 401, 'delete by a GM → 401');
+  eq((await adminReq('/api/admin/books/UP', { method: 'DELETE', body: { confirm: 'UP' } })).status, 200, 'delete');
+  ok(!fs.existsSync(path.join(runtime, 'books', 'UP.pdf')) && !fs.existsSync(path.join(runtime, 'books', 'index', 'UP.json')), 'files removed');
+  eq((await get('/api/books/UP/link', { token: pA, table: 'alpha' })).status, 404, 'deleted book → 404');
 
   // ----- links die with their session -----
   r = await json(await get('/api/books', { token: gmA, table: 'alpha' }));
   const gmLink = r.body.books.find((b: LibBook) => b.code === 'RG').url;
-  eq((await get(gmLink)).status, 200, 'lien du MJ valide');
-  eq((await adminReq('/api/admin/tables/alpha/gm-password', { method: 'POST', body: { password: 'nouveau-secret' } })).status, 200, 'mot de passe MJ changé (sessions MJ supprimées)');
-  eq((await get(gmLink)).status, 403, 'lien du MJ mort avec sa session');
-  eq((await get(rgA.url)).status, 200, 'lien du joueur toujours valide');
+  eq((await get(gmLink)).status, 200, 'GM link valid');
+  eq((await adminReq('/api/admin/tables/alpha/gm-password', { method: 'POST', body: { password: 'new-secret' } })).status, 200, 'GM password changed (GM sessions removed)');
+  eq((await get(gmLink)).status, 403, 'GM link died with its session');
+  eq((await get(rgA.url)).status, 200, 'player link still valid');
 } finally {
   await srv.stopAndWait();
 }
 
 // ---------------------------------------------------------------------------
-console.log('Garde mémoire de l’indexation…');
+console.log('Indexing memory guard…');
 const srv2 = await startServer({ port: PORT2, runtime: runtime2, tables: [{ id: 'alpha', pack: 'vierge', gmPassword: 'secret-a' }], env: { SR_MEMORY_LIMIT_BYTES: '1000000' } });
 try {
   const admin2 = await srv2.admin();
   const req2 = (p: string, { method = 'GET', body }: { method?: string; body?: unknown } = {}) =>
     fetch(srv2.url + p, { method, headers: { Authorization: `Bearer ${admin2}`, 'Content-Type': body instanceof Buffer ? 'application/octet-stream' : 'application/json' }, body: body instanceof Buffer ? body : body ? JSON.stringify(body) : undefined });
   let r = await json(await req2('/api/admin/books/upload?code=UP2', { method: 'POST', body: pdf }));
-  ok(r.status === 507 && r.body.errorKey?.startsWith('Mémoire insuffisante') && r.body.params?.free === 0, `envoi refusé faute de mémoire (${r.status} ${r.body?.error})`);
-  ok(!fs.existsSync(path.join(runtime2, 'books', 'UP2.pdf')), 'rien d’écrit');
-  eq((await req2('/api/admin/books/RG/reindex', { method: 'POST', body: {} })).status, 200, 'réindexation demandée');
+  ok(r.status === 507 && r.body.errorKey?.startsWith('Not enough memory') && r.body.error?.startsWith('Not enough memory to index this book (1 MB needed') && r.body.params?.free === 0, `upload refused for lack of memory (${r.status} ${r.body?.error})`);
+  ok(!fs.existsSync(path.join(runtime2, 'books', 'UP2.pdf')), 'nothing written');
+  eq((await req2('/api/admin/books/RG/reindex', { method: 'POST', body: {} })).status, 200, 're-index requested');
   let job = null;
   for (let i = 0; i < 50 && !(job && ['error', 'done'].includes(job.state)); i++) {
     await new Promise((res) => setTimeout(res, 100));
     job = (await json(await req2('/api/admin/books'))).body.jobs.find((j: JobInfo) => j.code === 'RG');
   }
-  ok(job?.state === 'error' && job.error.startsWith('Mémoire insuffisante') && job.errorParams?.need >= 0, `tâche refusée faute de mémoire (${JSON.stringify(job)})`);
+  ok(job?.state === 'error' && job.error.startsWith('Not enough memory') && job.errorParams?.need >= 0, `job refused for lack of memory (${JSON.stringify(job)})`);
 } finally {
   await srv2.stopAndWait();
   try {
@@ -520,5 +520,5 @@ try {
   } catch {}
 }
 
-console.log(`${passed} OK, ${failed} échec(s)`);
+console.log(`${passed} OK, ${failed} failed`);
 process.exit(failed ? 1 : 0);

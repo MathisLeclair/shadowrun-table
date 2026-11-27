@@ -1,29 +1,40 @@
 #!/usr/bin/env node
-// i18n checker for translators (see ARCHITECTURE.md « i18n »).
+// i18n checker for translators (see docs/i18n.md « Checker »). The code is written in English; the French lives in
+// client/i18n/fr/<area>.json as { "English key": "French" }.
 //
-//   node tools/i18n-check.ts                    whole app: missing English entries + suspicious French literals
+//   node tools/i18n-check.ts                    whole app: missing French entries + user-facing text not wrapped in t()
 //   node tools/i18n-check.ts --area sheet       one area (client/modules/sheet, its server module and shared files)
 //   node tools/i18n-check.ts client/app.tsx …   only these files / folders
 // Options:
-//   --add-missing=<file>.json   append the missing keys (value "") to client/i18n/en/<file>.json, ready to translate
-//   --no-literals               skip the untranslated-French heuristic
+//   --add-missing=<file>.json   append the missing keys (value "") to client/i18n/fr/<file>.json, ready to translate
+//   --no-literals               skip the « text not wrapped in t() » heuristic
 //   --unused                    also list dictionary keys found nowhere in the code (whole-app scan only)
 //   --json                      machine-readable output
+//   --dict-dir <folder>         French dictionaries to check instead of client/i18n/fr (tests)
 //   --strict                    exit code 1 when keys are missing or a dictionary is invalid (default: only invalid dictionaries)
 //
 // What it reads:
 //   keys      t('…'), tn(n, '…', '…') / tn(n, { zero, one, other }), tk('…'), { t: '…' } params,
 //             server ctx.fail('…') / fail('…'), errorBody('…'), i18n: { key: '…' }
-//   literals  French-looking text in html`` templates (text nodes, title= placeholder= label= hint= alt= aria-label=),
-//             and string literals given to toast( confirmAction( promptText( setErr( Error( or to label:/title:/hint:/placeholder: props.
+//   literals  user-facing text not wrapped in t(), in any language: alphabetic JSX text nodes and
+//             title= placeholder= aria-label= label= alt= hint= string props in .tsx files, and string literals given to
+//             toast( confirmAction( promptText( setErr(. Proper names, symbols and single all-caps tokens ('SR5', 'PIN')
+//             are not flagged.
 //   A line containing « i18n-ignore » is skipped.
+//   dictionaries  invalid JSON, non-string values, placeholders differing between the key and the French, the same key
+//             translated two ways (same file or two files: use a context key 'ctx::text'), and an invalid
+//             client/i18n/legacy-fr-keys.json (old French keys → English keys).
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { placeholders } from '../client/i18n/format.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const DICT_DIR = path.join(ROOT, 'client', 'i18n', 'en');
+// --dict-dir <folder> (relative to app/) reads other French dictionaries: the tests use it with scratch files.
+const dictArg = process.argv.find((a, i, all) => all[i - 1] === '--dict-dir') || process.argv.find((a) => a.startsWith('--dict-dir='))?.slice(11);
+const DICT_REL = (dictArg || 'client/i18n/fr').split(path.sep).join('/');
+const DICT_DIR = path.resolve(ROOT, DICT_REL);
+const LEGACY_REL = 'client/i18n/legacy-fr-keys.json';
 
 // Area → files (relative to app/). Every area also gets its client folder client/modules/<area>/.
 const AREA_EXTRA: Record<string, string[]> = {
@@ -61,12 +72,12 @@ const optVal = (name: string): string | null => {
 };
 const area = optVal('area');
 const addMissing = optVal('add-missing');
-const positional = args.filter((a, i) => !a.startsWith('--') && !(i > 0 && ['--area', '--add-missing'].includes(args[i - 1])));
+const positional = args.filter((a, i) => !a.startsWith('--') && !(i > 0 && ['--area', '--add-missing', '--dict-dir'].includes(args[i - 1])));
 
 function listSources(p: string): string[] {
   const abs = path.resolve(ROOT, p);
   if (!fs.existsSync(abs)) {
-    console.error(`Introuvable : ${p}`);
+    console.error(`Not found: ${p}`);
     return [];
   }
   const st = fs.statSync(abs);
@@ -85,7 +96,7 @@ let targets: string[];
 if (positional.length) targets = positional;
 else if (area) {
   if (!AREA_EXTRA[area] && !fs.existsSync(path.join(ROOT, 'client', 'modules', area))) {
-    console.error(`Zone inconnue : ${area} (zones : ${Object.keys(AREA_EXTRA).join(', ')})`);
+    console.error(`Unknown area: ${area} (areas: ${Object.keys(AREA_EXTRA).join(', ')})`);
     process.exit(2);
   }
   targets = [...(area === 'core' ? [] : [`client/modules/${area}`]), ...(AREA_EXTRA[area] || [])];
@@ -98,36 +109,86 @@ const fullScan = !positional.length && !area;
 // ---------------------------------------------------------------------------
 interface Problem { file: string; msg: string; fatal?: boolean }
 const problems: Problem[] = [];
-const dict = new Map<string, { value: string; file: string }>(); // key -> English value and its dictionary
+const dict = new Map<string, { value: string; file: string }>(); // English key -> French value and its dictionary
 const dictFiles = fs.existsSync(DICT_DIR) ? fs.readdirSync(DICT_DIR).filter((f) => f.endsWith('.json') && f !== 'index.json').sort() : [];
+
+/** Keys written more than once in a dictionary file (JSON.parse keeps the last one silently): key → values in order. */
+function duplicateKeys(text: string): Map<string, string[]> {
+  const seen = new Map<string, string[]>();
+  for (const m of text.matchAll(/^\s*("(?:[^"\\\n]|\\.)*")\s*:\s*("(?:[^"\\\n]|\\.)*")/gm)) {
+    let k: string;
+    let v: string;
+    try {
+      k = JSON.parse(m[1]);
+      v = JSON.parse(m[2]);
+    } catch {
+      continue;
+    }
+    const list = seen.get(k);
+    if (list) list.push(v);
+    else seen.set(k, [v]);
+  }
+  return new Map([...seen].filter(([, vals]) => vals.length > 1));
+}
+
 for (const f of dictFiles) {
+  const rel = `${DICT_REL}/${f}`;
+  const text = fs.readFileSync(path.join(DICT_DIR, f), 'utf8');
   let data: unknown; // a translator-edited file: validated below
   try {
-    data = JSON.parse(fs.readFileSync(path.join(DICT_DIR, f), 'utf8'));
+    data = JSON.parse(text);
   } catch (err) {
-    problems.push({ file: `client/i18n/en/${f}`, msg: `JSON invalide : ${(err as Error).message}`, fatal: true });
+    problems.push({ file: rel, msg: `invalid JSON: ${(err as Error).message}`, fatal: true });
     continue;
   }
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
-    problems.push({ file: `client/i18n/en/${f}`, msg: 'doit être un objet plat { "français": "english" }', fatal: true });
+    problems.push({ file: rel, msg: 'must be a flat object { "English": "French" }', fatal: true });
     continue;
+  }
+  for (const [k, vals] of duplicateKeys(text)) {
+    const distinct = [...new Set(vals)];
+    problems.push({ file: rel, msg: distinct.length > 1 ? `“${k}” is written ${vals.length} times, translated two ways (${distinct.map((v) => `“${v}”`).join(' / ')}): only the last one counts` : `“${k}” is written ${vals.length} times` });
   }
   for (const [k, v] of Object.entries(data)) {
     if (typeof v !== 'string') {
-      problems.push({ file: `client/i18n/en/${f}`, msg: `valeur non textuelle pour « ${k} »`, fatal: true });
+      problems.push({ file: rel, msg: `non-string value for “${k}”`, fatal: true });
       continue;
     }
     if (v) {
       const a = placeholders(k).sort().join(',');
       const b = placeholders(v).sort().join(',');
-      if (a !== b) problems.push({ file: `client/i18n/en/${f}`, msg: `placeholders différents : « ${k} » {${a}} → « ${v} » {${b}}` });
+      if (a !== b) problems.push({ file: rel, msg: `placeholders differ: “${k}” {${a}} → “${v}” {${b}}` });
     }
     const prev = dict.get(k);
-    if (prev && prev.value && v && prev.value !== v) problems.push({ file: `client/i18n/en/${f}`, msg: `« ${k} » déjà traduit autrement dans ${prev.file} (« ${prev.value} » / « ${v} ») — utilise une clé à contexte 'ctx::texte'` });
+    if (prev && prev.value && v && prev.value !== v) problems.push({ file: rel, msg: `“${k}” already translated differently in ${prev.file} (“${prev.value}” / “${v}”): use a context key 'ctx::text'` });
     if (!prev || (v && !prev.value)) dict.set(k, { value: v, file: f });
   }
 }
-const hasEnglish = (k: string): boolean => !!dict.get(k)?.value;
+const hasFrench = (k: string): boolean => !!dict.get(k)?.value;
+
+// Legacy map: old French keys (still in saved data) → English keys.
+let legacyCount = 0;
+{
+  const file = path.join(ROOT, ...LEGACY_REL.split('/'));
+  if (fs.existsSync(file)) {
+    try {
+      const data: unknown = JSON.parse(fs.readFileSync(file, 'utf8'));
+      if (!data || typeof data !== 'object' || Array.isArray(data)) problems.push({ file: LEGACY_REL, msg: 'must be a flat object { "old French key": "English key" }', fatal: true });
+      else
+        for (const [k, v] of Object.entries(data)) {
+          if (typeof v !== 'string' || !v) problems.push({ file: LEGACY_REL, msg: `“${k}” must map to a non-empty English key`, fatal: true });
+          else {
+            legacyCount++;
+            if (placeholders(k).sort().join(',') !== placeholders(v).sort().join(',')) problems.push({ file: LEGACY_REL, msg: `placeholders differ: “${k}” → “${v}”` });
+            // t() maps legacy keys first: an old French key that is also an English key hijacks it.
+            if (k !== v && dict.has(k)) problems.push({ file: LEGACY_REL, msg: `“${k}” is also an English key (${dict.get(k)!.file}): t('${k}') is read as the old French key and renders the text of “${v}” instead` });
+          }
+        }
+    } catch (err) {
+      problems.push({ file: LEGACY_REL, msg: `invalid JSON: ${(err as Error).message}`, fatal: true });
+    }
+  }
+}
 
 // ---------------------------------------------------------------------------
 // JS scanning helpers
@@ -308,23 +369,46 @@ function lineIndex(src: string): (pos: number) => number {
   };
 }
 
-// French-looking text: accented letters / guillemets, or common French words.
-const FR_CHARS = /[àâäéèêëîïôöùûüçœæÀÂÄÉÈÊËÎÏÔÖÙÛÜÇŒÆ«»’]/;
-const FR_WORDS = new Set(
-  ('le la les un une des du de et ou pour avec sans dans sur est sont pas aucun aucune tous toutes tout nouveau nouvelle ajouter supprimer fermer annuler ' +
-    'enregistrer valider joueur joueurs personnage personnages carte cartes mj oui non choisir choisis effacer modifier retirer afficher masquer envoyer ' +
-    'ton ta tes votre vos ce cette ces au aux jet dés lancer rien encore déjà ici chargement erreur introuvable impossible actif active inactif ' +
-    'niveau objet objets arme armes armure sort sorts nom notes acheter vendre prix quantité dégâts blessure blessures combat initiative tour round')
+// ---------------------------------------------------------------------------
+// « Text not wrapped in t() » heuristic
+// ---------------------------------------------------------------------------
+// Single words that are proper names, brands or language-neutral abbreviations: not text to translate.
+const PROPER_NAMES = new Set(
+  ('Shadowrun Chummer Chummer5 Chummer5a Foundry FoundryVTT Fragmaps Markdown Discord GitHub Docker Lazarus Seattle ' +
+    'Ares Renraku Saeder Krupp Aztechnology Horizon Mitsuhama Evo Wuxing Lone Star Knight Errant ' +
+    'Socket Express React Vite Node OpenAI Anthropic Claude Ollama YouTube Spotify ' +
+    // abbreviations written the same way in French and English
+    'min max ok etc')
     .split(/\s+/)
 );
-function looksFrench(text: string): boolean {
-  const s = String(text || '').trim();
-  if (!s || !/\p{L}{2,}/u.test(s)) return false;
-  if (/^[\w.-]+$/.test(s) && !FR_CHARS.test(s) && !/\s/.test(s) && /[-_.]/.test(s)) return false; // css class / id
-  if (/^(https?:|\/|#|\.)/.test(s)) return false;
-  if (FR_CHARS.test(s)) return true;
-  const words = s.toLowerCase().split(/[^\p{L}]+/u).filter(Boolean);
-  return words.some((w) => FR_WORDS.has(w));
+/**
+ * Does this static text look like something a user reads (so it should go through t())? Any language. Not flagged:
+ * symbols / numbers only, URLs and paths, single all-caps tokens or codes ('SR5', 'PIN', 'GM'), identifiers
+ * (camelCase, snake_case, kebab-case), proper names.
+ */
+function looksLikeUserText(text: string): boolean {
+  const s = String(text || '')
+    .replace(/\$\{…\}/g, ' ')
+    .replace(/&[a-z]+;|&#\d+;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!s || /^(https?:|mailto:|data:|\/|#|\.\.?\/)/.test(s)) return false;
+  const words = s.match(/[\p{L}][\p{L}’'-]*/gu) || [];
+  // at least one real word: 2+ letters with a lowercase letter
+  const real = words.filter((w) => /\p{Ll}/u.test(w) && w.replace(/[^\p{L}]/gu, '').length >= 2);
+  if (!real.length) return false;
+  const tokens = s.split(' ');
+  if (tokens.length === 1) {
+    const w = s.replace(/[.,:;!?…)(\]["“”«»]+/g, '');
+    if (!/^\p{Lu}?\p{Ll}+(?:[-’']\p{L}+)*$/u.test(w)) return false; // code, identifier, mixed case, digits
+    if (w.length < 3 || PROPER_NAMES.has(w)) return false;
+    if (/^[a-z]+(?:-[a-z]+)+$/.test(w)) return false; // css class / id (kebab-case)
+    return true;
+  }
+  // several tokens: skip lists of identifiers / classes ('btn small', 'a.b c_d')
+  if (tokens.every((tk) => /^[a-z0-9_.-]+$/.test(tk)) && tokens.some((tk) => /[_.-]/.test(tk))) return false;
+  if (tokens.every((tk) => PROPER_NAMES.has(tk.replace(/[^\p{L}\d]/gu, '')) || !/\p{Ll}/u.test(tk))) return false;
+  return true;
 }
 
 // ---------------------------------------------------------------------------
@@ -334,7 +418,7 @@ interface FoundKey { file: string; line: number; key: string; kind: string }
 interface FoundText { file: string; line: number; text: string; kind: string }
 const found: FoundKey[] = [];
 const dynamicKeys: FoundText[] = []; // keys built with ${…}
-const literals: FoundText[] = []; // French-looking untranslated text
+const literals: FoundText[] = []; // user-facing text not wrapped in t()
 const usedKeys = new Set<string>();
 
 for (const abs of files) {
@@ -394,7 +478,7 @@ for (const abs of files) {
     if (s) addKey(s, m.index, 'param');
   }
   if (isServer || rel.startsWith('shared/')) {
-    // ctx.fail('…', params) / fail('…') — admin.js style fail(res, status, '…') too
+    // ctx.fail('…', params) / fail('…') — admin.ts style fail(res, status, '…') too
     for (const m of src.matchAll(/(?<![\w$])(?:ctx\.)?fail\(\s*/g)) {
       let j = m.index + m[0].length;
       let s = readString(src, j);
@@ -419,99 +503,43 @@ for (const abs of files) {
   }
 
   if (!isClient || opt('no-literals')) continue;
-  // ----- untranslated French literals (heuristic) -----
+  // ----- user-facing text not wrapped in t() (heuristic) -----
   const flag = (text: string, pos: number, kind: string) => {
     const v = String(text).replace(/\s+/g, ' ').trim();
-    if (!ignored(pos) && looksFrench(v)) literals.push({ file: rel, line: lineOf(pos), text: v.length > 90 ? v.slice(0, 87) + '…' : v, kind });
+    if (!ignored(pos) && looksLikeUserText(v)) literals.push({ file: rel, line: lineOf(pos), text: v.length > 90 ? v.slice(0, 87) + '…' : v, kind });
   };
-  // html`…` static parts: text nodes and display attributes
-  for (const m of src.matchAll(/(?<![\w$])html`/g)) {
-    let j = m.index + m[0].length;
-    let inTag = false;
-    let quote: string | null = null;
-    let text = '';
-    let textStart = j;
-    let tag = '';
-    let tagStart = j;
-    const flushText = () => {
-      if (text.trim()) flag(text, textStart, 'texte');
-      text = '';
-    };
-    const flushTag = () => {
-      for (const am of tag.matchAll(/(?:^|\s)(title|placeholder|label|hint|alt|aria-label|serverLabel)\s*=\s*"([^"]*)"/g)) flag(am[2], tagStart, am[1] + '=');
-      tag = '';
-    };
-    while (j < src.length) {
-      const c = src[j];
-      if (c === '\\') {
-        (inTag ? (tag += src.slice(j, j + 2)) : (text += src[j + 1]));
-        j += 2;
-        continue;
-      }
-      if (c === '`') break;
-      if (c === '$' && src[j + 1] === '{') {
-        if (!inTag) {
-          flushText();
-          textStart = skipBalanced(src, j + 1);
-        } else tag += '${}';
-        j = skipBalanced(src, j + 1);
-        continue;
-      }
-      if (inTag) {
-        if (quote) {
-          if (c === quote) quote = null;
-        } else if (c === '"' || c === "'") quote = c;
-        else if (c === '>') {
-          inTag = false;
-          flushTag();
-          j++;
-          textStart = j;
-          continue;
-        }
-        tag += c;
-      } else if (c === '<') {
-        flushText();
-        inTag = true;
-        tagStart = j;
-      } else text += c;
-      j++;
-    }
-    flushText();
-  }
   if (rel.endsWith('.tsx')) {
-    // JSX string attributes: <input placeholder="…">  (expressions like title={t('…')} are keys, read above)
-    for (const m of src.matchAll(/(?<=[\s<])(title|placeholder|label|hint|alt|aria-label|serverLabel)="([^"]*)"/g)) flag(m[2], m.index, m[1] + '=');
+    // JSX string props: <input placeholder="…">  (expressions like title={t('…')} are keys, read above)
+    for (const m of src.matchAll(/(?<=[\s<])(title|placeholder|label|hint|alt|aria-label)="([^"]*)"/g)) flag(m[2], m.index, m[1] + '=');
     // JSX text nodes: the static text between a tag's closing '>' and the next '<' or '{'. The '>' must end a tag
     // (follows a name, a quote, '}' or '/'; not '=>' nor a spaced comparison) and the text must not look like code.
     for (const m of src.matchAll(/(?<=[\w"'}/])>([^<>{}]+)(?=[<{])/g)) {
       const text = m[1];
       if (!text.trim() || /[;=]|&&|\|\||\?\./.test(text)) continue;
       if (/^\s*[(),:?.\]]/.test(text)) continue; // `send<T>(…`, `</b> : other ? …`: code between elements, not text
-      flag(text, m.index + 1, 'texte');
+      if (/^\s*(?:\||&(?![a-z]+;|#\d+;))/i.test(text)) continue; // `Foo<Bar> | null`, `Pick<…> & …`: TypeScript types
+      if (/<(code|kbd|pre|samp)\b[^<>]*$/.test(src.slice(Math.max(0, m.index - 80), m.index))) continue; // <code>npm run x</code>
+      flag(text, m.index + 1, 'text');
     }
   }
-  // JS literals given to user-facing calls / props
-  for (const m of src.matchAll(/(?<![\w$.])(toast|confirmAction|promptText|setErr|Error|alert)\(\s*/g)) {
+  // JS literals given to user-facing calls
+  for (const m of src.matchAll(/(?<![\w$.])(toast|confirmAction|promptText|setErr)\(\s*/g)) {
     const s = readString(src, m.index + m[0].length);
     if (s) flag(s.value, m.index, m[1] + '(');
-  }
-  for (const m of src.matchAll(/(?<![\w$])(label|title|hint|placeholder|empty|description)\s*:\s*/g)) {
-    const s = readString(src, m.index + m[0].length);
-    if (s) flag(s.value, m.index, m[1] + ':');
   }
 }
 
 // ---------------------------------------------------------------------------
 // Report
 // ---------------------------------------------------------------------------
-const missing = found.filter((f) => !hasEnglish(f.key));
+const missing = found.filter((f) => !hasFrench(f.key));
 const missingUnique = [...new Set(missing.map((m) => m.key))];
 const unused = opt('unused') && fullScan ? [...dict.keys()].filter((k) => !usedKeys.has(k)) : null;
 
 if (addMissing) {
   const name = addMissing.endsWith('.json') ? addMissing : `${addMissing}.json`;
   if (!/^[\w-]+\.json$/.test(name)) {
-    console.error(`Nom de dictionnaire invalide : ${name}`);
+    console.error(`Invalid dictionary name: ${name}`);
     process.exit(2);
   }
   const file = path.join(DICT_DIR, name);
@@ -520,7 +548,7 @@ if (addMissing) {
     try {
       data = JSON.parse(fs.readFileSync(file, 'utf8'));
     } catch (err) {
-      console.error(`${name} illisible, rien n'est écrit : ${(err as Error).message}`);
+      console.error(`${name} unreadable, nothing written: ${(err as Error).message}`);
       process.exit(2);
     }
   }
@@ -528,20 +556,20 @@ if (addMissing) {
   for (const k of missingUnique) if (!(k in data) && !dict.has(k)) (data[k] = ''), added++;
   fs.mkdirSync(DICT_DIR, { recursive: true });
   fs.writeFileSync(file, JSON.stringify(data, null, 2) + '\n');
-  if (!opt('json')) console.log(`${added} clé(s) ajoutée(s) à client/i18n/en/${name} (valeurs vides à traduire).`);
+  if (!opt('json')) console.log(`${added} key(s) added to ${DICT_REL}/${name} (empty values, to translate).`);
 }
 
 const fatal = problems.some((p) => p.fatal);
 if (opt('json')) {
-  console.log(JSON.stringify({ files: files.length, dictionaries: dictFiles, entries: dict.size, keys: usedKeys.size, missing, dynamic: dynamicKeys, literals, problems, unused }, null, 2));
+  console.log(JSON.stringify({ files: files.length, dictionaries: dictFiles, entries: dict.size, legacy: legacyCount, keys: usedKeys.size, missing, dynamic: dynamicKeys, literals, problems, unused }, null, 2));
 } else {
   const where = (x: { file: string; line: number }) => `${x.file}:${x.line}`;
-  console.log(`i18n-check — ${files.length} fichier(s), ${dictFiles.length} dictionnaire(s), ${dict.size} entrée(s), ${usedKeys.size} clé(s) utilisée(s)`);
+  console.log(`i18n-check — ${files.length} file(s), ${dictFiles.length} French dictionar${dictFiles.length === 1 ? 'y' : 'ies'}, ${dict.size} entr${dict.size === 1 ? 'y' : 'ies'}, ${legacyCount} legacy key(s), ${usedKeys.size} key(s) used`);
   if (problems.length) {
-    console.log(`\nDictionnaires (${problems.length}) :`);
-    for (const p of problems) console.log(`  ${p.fatal ? 'ERREUR' : 'attention'}  ${p.file}  ${p.msg}`);
+    console.log(`\nDictionaries (${problems.length}):`);
+    for (const p of problems) console.log(`  ${p.fatal ? 'ERROR' : 'warning'}  ${p.file}  ${p.msg}`);
   }
-  console.log(`\nTraductions anglaises manquantes : ${missingUnique.length}`);
+  console.log(`\nMissing French translations: ${missingUnique.length}`);
   const seen = new Set<string>();
   for (const m of missing) {
     if (seen.has(m.key)) continue;
@@ -549,15 +577,15 @@ if (opt('json')) {
     console.log(`  ${where(m)}  ${JSON.stringify(m.key)}`);
   }
   if (dynamicKeys.length) {
-    console.log(`\nClés dynamiques (\${…} dans la clé : passer par des paramètres nommés) : ${dynamicKeys.length}`);
+    console.log(`\nDynamic keys (\${…} in the key: use named params): ${dynamicKeys.length}`);
     for (const d of dynamicKeys) console.log(`  ${where(d)}  ${d.kind}  ${JSON.stringify(d.text)}`);
   }
   if (!opt('no-literals')) {
-    console.log(`\nTextes français probablement non traduits : ${literals.length}`);
+    console.log(`\nUser-facing text not wrapped in t(): ${literals.length}`);
     for (const l of literals) console.log(`  ${where(l)}  [${l.kind}]  ${JSON.stringify(l.text)}`);
   }
   if (unused) {
-    console.log(`\nEntrées de dictionnaire jamais utilisées dans le code : ${unused.length} (normal pour le glossaire et les textes venant des données)`);
+    console.log(`\nDictionary entries never used in the code: ${unused.length} (expected for the glossary and texts coming from data)`);
     for (const k of unused) console.log(`  ${dict.get(k)!.file}  ${JSON.stringify(k)}`);
   }
 }

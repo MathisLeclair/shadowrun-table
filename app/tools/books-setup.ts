@@ -182,15 +182,15 @@ async function foundryHints(worldDir: string): Promise<FoundryHints> {
 // ---------------------------------------------------------------------------
 /** Known references (printed pages) that must contain a word. */
 export const REFERENCES = [
-  { code: 'RG', page: 62, text: 'Heritage', what: 'Zoé: Heritage (armure)' },
-  { code: 'SR5', page: 240, text: 'Hack on the Fly', what: 'Hack on the Fly (action Matricielle)' },
-  { code: 'SR5', page: 309, text: 'Improved Reflexes', what: 'Improved Reflexes (pouvoir d’adepte, p. 309-310)', alt: [310] },
-  { code: 'SR5', page: 310, text: 'Kinesics', what: 'Kinesics (pouvoir d’adepte, powers.xml : SR5 310)' },
-  { code: 'RF', page: 221, text: 'Garage', what: 'Garage (qualité de style de vie, lifestyles.xml : RF 221)' },
+  { code: 'RG', page: 62, text: 'Heritage', what: 'Zoé: Heritage (armor)' },
+  { code: 'SR5', page: 240, text: 'Hack on the Fly', what: 'Hack on the Fly (Matrix action)' },
+  { code: 'SR5', page: 309, text: 'Improved Reflexes', what: 'Improved Reflexes (adept power, p. 309-310)', alt: [310] },
+  { code: 'SR5', page: 310, text: 'Kinesics', what: 'Kinesics (adept power, powers.xml: SR5 310)' },
+  { code: 'RF', page: 221, text: 'Garage', what: 'Garage (lifestyle quality, lifestyles.xml: RF 221)' },
   { code: 'SR5', page: 56, text: 'Edge', what: 'Edge' },
   { code: 'SR5', page: 158, text: 'Combat', what: 'Combat' },
-  { code: 'SR5', page: 237, text: 'Matrix Actions', what: 'Actions Matricielles' },
-  { code: 'SR5', page: 281, text: 'Spellcasting', what: 'Lancement de sorts' },
+  { code: 'SR5', page: 237, text: 'Matrix Actions', what: 'Matrix Actions' },
+  { code: 'SR5', page: 281, text: 'Spellcasting', what: 'Spellcasting' },
 ];
 
 function pageHas(dir: string, book: LibraryBook, printed: number, text: string) {
@@ -238,23 +238,23 @@ function runChecks(dir: string) {
   const lib = readLibrary(dir);
   const byCode = Object.fromEntries(lib.books.map((b) => [b.code, b]));
   let failures = 0;
-  console.log('\nRéférences connues :');
+  console.log('\nKnown references:');
   for (const r of REFERENCES) {
     const b = byCode[r.code];
     if (!b) {
-      console.log(`  -    ${r.code} p.${r.page} « ${r.text} » : livre absent`);
+      console.log(`  -    ${r.code} p.${r.page} « ${r.text} »: book missing`);
       continue;
     }
     const pages = [r.page, ...(r.alt || [])];
     const okAt = pages.find((p) => pageHas(dir, b, p, r.text));
     if (okAt === undefined) failures++;
-    console.log(`  ${okAt !== undefined ? 'OK  ' : 'FAIL'} ${r.code} p.${r.page}${okAt !== undefined && okAt !== r.page ? ` (trouvé p.${okAt})` : ''} → PDF ${printedToPdf(b, r.page)} « ${r.text} » — ${r.what}`);
+    console.log(`  ${okAt !== undefined ? 'OK  ' : 'FAIL'} ${r.code} p.${r.page}${okAt !== undefined && okAt !== r.page ? ` (found p.${okAt})` : ''} → PDF ${printedToPdf(b, r.page)} « ${r.text} » — ${r.what}`);
   }
-  console.log('\nLiens rapides de l’onglet Règles (titre présent sur la page) :');
+  console.log('\nQuick links of the Rules tab (heading present on the page):');
   for (const q of QUICK_LINKS.flatMap((g) => g.items)) {
     const b = byCode[q.code];
     if (!b) {
-      console.log(`  -    ${q.code} p.${q.page} ${q.heading} : livre absent`);
+      console.log(`  -    ${q.code} p.${q.page} ${q.heading}: book missing`);
       continue;
     }
     const idx = loadIndex(dir, b.code);
@@ -262,26 +262,26 @@ function runChecks(dir: string) {
     if (!ok) failures++;
     console.log(`  ${ok ? 'OK  ' : 'FAIL'} ${q.code} p.${q.page} « ${q.heading} »`);
   }
-  console.log('\nPages des catalogues (nom de l’objet présent sur la page imprimée annoncée) :');
+  console.log('\nCatalog pages (item name present on the announced printed page):');
   for (const b of lib.books) {
     const ev = catalogEvidence(dir, b);
     if (!ev) continue;
     const warn = ev.best.shift !== 0;
     if (warn) failures++;
-    console.log(`  ${warn ? 'WARN' : 'OK  '} ${b.code.padEnd(5)} ${String(Math.round(ev.current * 100)).padStart(3)} % de ${ev.items} objets${warn ? ` — décalage ${ev.best.shift > 0 ? '+' : ''}${ev.best.shift} donnerait ${Math.round(ev.best.rate * 100)} %` : ''}`);
+    console.log(`  ${warn ? 'WARN' : 'OK  '} ${b.code.padEnd(5)} ${String(Math.round(ev.current * 100)).padStart(3)} % of ${ev.items} items${warn ? ` — a shift of ${ev.best.shift > 0 ? '+' : ''}${ev.best.shift} would give ${Math.round(ev.best.rate * 100)} %` : ''}`);
   }
   return failures;
 }
 
 // ---------------------------------------------------------------------------
 function printTable(rows: TableRow[], hints: FoundryHints = {}) {
-  const head = ['code', 'pages', 'offset(s)', 'confiance', 'Chummer', 'Foundry', 'nom'];
+  const head = ['code', 'pages', 'offset(s)', 'confidence', 'Chummer', 'Foundry', 'name'];
   const lines = rows.map((b) => [
     b.code,
     String(b.pages),
     [`${b.offset >= 0 ? '+' : ''}${b.offset}`, ...(b.offsets || []).map((r) => `p.${r.fromPrinted}→${r.offset >= 0 ? '+' : ''}${r.offset}`)].join(' '),
     b.confidence === undefined ? '-' : `${Math.round(b.confidence * 100)} %${b.numbered !== undefined ? ` (${b.numbered} folios)` : ''}`,
-    b.verified === true ? 'ok' : b.verified === false ? (b.matchPdfPage ? `écart (phrase en PDF ${b.matchPdfPage})` : 'phrase absente') : '-',
+    b.verified === true ? 'ok' : b.verified === false ? (b.matchPdfPage ? `mismatch (sentence on PDF page ${b.matchPdfPage})` : 'sentence missing') : '-',
     hints[b.code] === undefined ? '-' : hints[b.code] === null ? 'null' : `+${hints[b.code]}`,
     b.name + (b.extra ? ' (extra)' : ''),
   ]);
@@ -306,7 +306,7 @@ async function indexOne(code: string, meta: Partial<LibraryBook>) {
     },
   });
   if (!quiet && process.stdout.isTTY) process.stdout.write('\r' + ' '.repeat(40) + '\r');
-  log(`  ${code} indexé en ${((Date.now() - t0) / 1000).toFixed(1)} s`);
+  log(`  ${code} indexed in ${((Date.now() - t0) / 1000).toFixed(1)} s`);
   return r;
 }
 
@@ -316,11 +316,11 @@ async function main() {
     const names = buildNames(dir);
     const out = path.join(ROOT, 'server', 'lib', 'books', 'book-names.json');
     fs.writeFileSync(out, JSON.stringify(names, null, 1) + '\n');
-    console.log(`${Object.keys(names).length} livres → ${path.relative(ROOT, out)}`);
+    console.log(`${Object.keys(names).length} books → ${path.relative(ROOT, out)}`);
     return;
   }
   fs.mkdirSync(BOOKS, { recursive: true });
-  log(`Bibliothèque : ${BOOKS}`);
+  log(`Library: ${BOOKS}`);
   const hints = val('foundry') ? await foundryHints(path.resolve(val('foundry')!)) : {};
   const rows: Array<Awaited<ReturnType<typeof indexOne>>> = [];
 
@@ -328,14 +328,14 @@ async function main() {
     const from = path.resolve(val('from')!);
     const overrides = Object.fromEntries(vals('map').map((m) => m.split('=')).filter((p) => p.length === 2).map(([f, c]) => [f.toLowerCase(), cleanCode(c)]));
     const files = fs.readdirSync(from).filter((f) => f.toLowerCase().endsWith('.pdf')).sort();
-    if (!files.length) throw new Error(`Aucun PDF dans ${from}`);
+    if (!files.length) throw new Error(`No PDF in ${from}`);
     const used = new Set<string>();
     for (const f of files) {
       const override = overrides[f.toLowerCase()];
       const hinted = hints[`file:${f}`] as string | null | undefined;
       const g: GuessedCode = override ? { code: override, extra: !knownBooks()[override] } : hinted ? { code: hinted, extra: !knownBooks()[hinted] } : guessCode(f);
       if (!g.code || used.has(g.code)) {
-        console.warn(`  ! ${f} : code ${g.code || '?'} déjà pris ou inconnu — utilise --map "${f}=CODE"`);
+        console.warn(`  ! ${f}: code ${g.code || '?'} already taken or unknown — use --map "${f}=CODE"`);
         continue;
       }
       used.add(g.code);
@@ -345,7 +345,7 @@ async function main() {
       const st = fs.statSync(src);
       const same = fs.existsSync(dest) && fs.statSync(dest).size === st.size;
       if (!same) fs.copyFileSync(src, dest); // copy only: the source PDF is never touched
-      log(`${g.code.padEnd(5)} ← ${f}${same ? ' (déjà copié)' : ''}`);
+      log(`${g.code.padEnd(5)} ← ${f}${same ? ' (already copied)' : ''}`);
       const known = knownBooks()[g.code];
       const meta = { source: f, ...(g.extra ? { extra: true, name: g.name || f.replace(/\.pdf$/i, '').replace(/_/g, ' '), nameFr: g.name || f.replace(/\.pdf$/i, '').replace(/_/g, ' ') } : { name: known?.name, nameFr: known?.nameFr }) };
       rows.push(await indexOne(g.code, meta));
@@ -366,7 +366,7 @@ async function main() {
   printTable(printed.map((r) => ({ ...lib.books.find((b) => b.code === r.code), numbered: r.numbered, matchPdfPage: r.matchPdfPage })) as TableRow[], hints);
   if (has('list')) return;
   const failures = runChecks(BOOKS);
-  if (failures) console.log(`\n${failures} vérification(s) à revoir.`);
+  if (failures) console.log(`\n${failures} check(s) to review.`);
   process.exitCode = failures && has('strict') ? 1 : 0;
 }
 

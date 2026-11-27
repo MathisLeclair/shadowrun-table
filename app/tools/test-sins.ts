@@ -36,7 +36,7 @@ try {
   ok(r.pool === 6 && r.dice.length === 6 && r.sinCheck.threshold === 6 && r.sinCheck.outcome === sinCheckOutcome(r.hits, 6), 'player checks own SIN: 6 dice vs 6');
   await settle();
   const e = gm.state.log.find((x) => x.id === r.logId);
-  ok(e && e.kind === 'roll' && e.roll!.sinCheck && e.roll!.labelI18n?.key === 'Contrôle de SIN — {sin}' && !e.gmOnly, 'logged as a visible roll with labelI18n');
+  ok(e && e.kind === 'roll' && e.roll!.sinCheck && e.roll!.labelI18n?.key === 'SIN check — {sin}' && !e.gmOnly, 'logged as a visible roll with labelI18n');
 
   const lr = await p1.send('actor/sinCheck', { actorId: 'pc_jane', sinId: sin.id, license: 0, device: 1 });
   ok(lr.sinCheck.license && lr.sinCheck.threshold === 6 && lr.pool === 2, 'license check uses the license rating');

@@ -532,7 +532,7 @@ await test('every catalog preset has a generator', () => {
 
 const stats: string[] = [];
 async function runLoop(kind: string, id: string, start: TrackGenerator) {
-  await test(`${kind} « ${id} »: 4 min without error, clean stop`, () => {
+  await test(`${kind} “${id}”: 4 min without error, clean stop`, () => {
     useFakeTimers();
     const ctx = new MockCtx();
     ctx.state = 'running';
@@ -844,7 +844,7 @@ try {
       ['audio/deleteScene', { sceneId: 'scn-combat' }],
       ['audio/setOptions', { autoScenes: false }],
     ] as Array<[string, ActionPayload]>)
-      await fails(p1.send(type, payload), /MJ/);
+      await fails(p1.send(type, payload), /GM-only/);
   });
 
   await test('setAmbient / setMusic (ids, preset ids, errors)', async () => {
@@ -857,8 +857,8 @@ try {
     assert.equal(await gm.send('audio/setAmbient', { trackId: 'rain' }), 'amb-rain', 'preset id alias');
     await sync();
     assert.equal(gm.state.audio.ambient.startedAt, started, 're-selecting the same track must not restart it');
-    await fails(gm.send('audio/setAmbient', { trackId: 'dice' }), /boucle/);
-    await fails(gm.send('audio/setAmbient', { trackId: 'nope' }), /introuvable/);
+    await fails(gm.send('audio/setAmbient', { trackId: 'dice' }), /cannot loop/);
+    await fails(gm.send('audio/setAmbient', { trackId: 'nope' }), /Track not found/);
     assert.equal(await gm.send('audio/setMusic', { trackId: 'combat' }), 'mus-combat');
     await gm.send('audio/setMusic', { trackId: null });
     await gm.send('audio/setMusic', {});
@@ -870,8 +870,8 @@ try {
     await gm.send('audio/setVolume', { channel: 'master', volume: 0.5 });
     await gm.send('audio/setVolume', { channel: 'music', volume: 5 });
     await gm.send('audio/setVolume', { channel: 'ambient', volume: -1 });
-    await fails(gm.send('audio/setVolume', { channel: 'bass', volume: 0.5 }), /Canal/);
-    await fails(gm.send('audio/setVolume', { channel: 'master', volume: 'fort' }), /invalide/);
+    await fails(gm.send('audio/setVolume', { channel: 'bass', volume: 0.5 }), /Unknown channel/);
+    await fails(gm.send('audio/setVolume', { channel: 'master', volume: 'fort' }), /Invalid volume/);
     await sync();
     assert.equal(gm.state.audio.master, 0.5);
     assert.equal(gm.state.audio.music.volume, 1);
@@ -884,8 +884,8 @@ try {
     gm.events.length = 0;
     await gm.send('audio/sfx', { id: 'dice' });
     await gm.send('audio/sfx', { id: 'explosion', volume: 0.4 });
-    await fails(gm.send('audio/sfx', { id: 'pouet' }), /inconnu/);
-    await fails(gm.send('audio/sfx', { id: 'amb-rain' }), /inconnu/);
+    await fails(gm.send('audio/sfx', { id: 'pouet' }), /Unknown sound effect/);
+    await fails(gm.send('audio/sfx', { id: 'amb-rain' }), /Unknown sound effect/);
     await sync();
     const got = p1.events.filter((e) => e.ev === 'sfx').map((e) => e.data);
     assert.deepEqual(got, [{ id: 'dice', volume: 1 }, { id: 'explosion', volume: 0.4 }]);
@@ -894,8 +894,8 @@ try {
 
   let upId: string;
   await test('uploaded tracks: add, play as sfx, update, remove', async () => {
-    await fails(gm.send('audio/addTrack', { name: 'x', kind: 'sfx', url: 'javascript:alert(1)' }), /invalide/);
-    await fails(gm.send('audio/addTrack', { name: 'x', kind: 'boom', url: '/uploads/x.mp3' }), /invalide/);
+    await fails(gm.send('audio/addTrack', { name: 'x', kind: 'sfx', url: 'javascript:alert(1)' }), /Invalid file address/);
+    await fails(gm.send('audio/addTrack', { name: 'x', kind: 'boom', url: '/uploads/x.mp3' }), /Invalid track type/);
     upId = await gm.send('audio/addTrack', { name: '  Cri du Wendigo  ', kind: 'sfx', url: '/uploads/abc-cri.mp3', tags: ['monstre', 'monstre', ''] });
     await sync();
     const t = gm.state.audio.tracks.find((x) => x.id === upId)!;
@@ -913,10 +913,10 @@ try {
     assert.equal(t2.kind, 'ambient');
     assert.equal(t2.volume, 2);
     assert.equal(gm.state.audio.ambient.trackId, upId);
-    await fails(gm.send('audio/updateTrack', { id: 'amb-rain', kind: 'music' }), /intégrée/);
+    await fails(gm.send('audio/updateTrack', { id: 'amb-rain', kind: 'music' }), /built-in track/i);
     await gm.send('audio/updateTrack', { id: 'amb-rain', name: 'Crachin' });
-    await fails(gm.send('audio/updateTrack', { id: 'nope', name: 'x' }), /introuvable/);
-    await fails(gm.send('audio/removeTrack', { id: 'amb-rain' }), /intégrées/);
+    await fails(gm.send('audio/updateTrack', { id: 'nope', name: 'x' }), /Track not found/);
+    await fails(gm.send('audio/removeTrack', { id: 'amb-rain' }), /Built-in tracks cannot be deleted/);
     await gm.send('audio/removeTrack', { id: upId });
     await sync();
     assert.ok(!gm.state.audio.tracks.some((x) => x.id === upId));
@@ -931,8 +931,8 @@ try {
     await sync();
     let s = gm.state.audio.scenes!.find((x) => x.id === id)!;
     assert.deepEqual({ name: s.name, ambient: s.ambient, music: s.music, mapId: s.mapId, av: s.ambientVolume }, { name: 'Labo test', ambient: 'amb-lab', music: 'mus-tension', mapId: 'map_x', av: 0.7 });
-    await fails(gm.send('audio/saveScene', { name: 'x', ambient: 'dice' }), /boucle/);
-    await fails(gm.send('audio/saveScene', { id: 'nope', name: 'x' }), /introuvable/);
+    await fails(gm.send('audio/saveScene', { name: 'x', ambient: 'dice' }), /cannot loop/);
+    await fails(gm.send('audio/saveScene', { id: 'nope', name: 'x' }), /Scene not found/);
     await gm.send('audio/saveScene', { id, name: 'Labo Lazarus bis', music: 'keep', mapId: null, ambientVolume: null });
     await sync();
     s = gm.state.audio.scenes!.find((x) => x.id === id)!;
@@ -958,8 +958,8 @@ try {
     assert.equal(gm.state.audio.ambient.volume, 0.25);
     assert.equal(gm.state.audio.music.trackId, null, "music 'keep' left silence untouched");
     await gm.send('audio/deleteScene', { sceneId: id });
-    await fails(gm.send('audio/applyScene', { sceneId: id }), /introuvable/);
-    await fails(gm.send('audio/deleteScene', { sceneId: id }), /introuvable/);
+    await fails(gm.send('audio/applyScene', { sceneId: id }), /Scene not found/);
+    await fails(gm.send('audio/deleteScene', { sceneId: id }), /Scene not found/);
     await sync();
     assert.ok(!gm.state.audio.scenes!.some((x) => x.id === id));
     assert.equal(p1.state.audio.scenes, undefined);

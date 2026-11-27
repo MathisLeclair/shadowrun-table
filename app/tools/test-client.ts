@@ -123,7 +123,7 @@ export async function startServer({
   const childEnv: NodeJS.ProcessEnv = { ...process.env, PORT: String(port), SR_RUNTIME_DIR: runtime, SR_ADMIN_PASSWORD: adminPassword, ...env };
   if (tables && !bootstrap) childEnv.SR_BOOTSTRAP_TABLE = 'none';
   // Node runs the TypeScript server directly; before 22.18 type stripping needs a flag (no-op when NODE_OPTIONS already has it).
-  const stripTypes = process.features.typescript ? [] : ['--experimental-strip-types'];
+  const stripTypes = process.execArgv.filter((a) => a === '--experimental-strip-types' || a === '--no-warnings');
   const proc = spawn(process.execPath, [...stripTypes, 'server/index.ts'], { cwd: ROOT, env: childEnv, stdio: ['ignore', 'pipe', 'pipe'] });
   let out = '';
   proc.stdout.on('data', (d: Buffer) => { out += d; if (!quiet) process.stdout.write(d); });

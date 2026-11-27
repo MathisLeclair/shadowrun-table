@@ -62,8 +62,8 @@ try {
   ok(r.ok && j.table?.id === 'tableb', 'table B created ' + JSON.stringify(j).slice(0, 200));
   r = await fetch(srv.url + '/api/admin/tables', { method: 'POST', headers: H, body: JSON.stringify({ name: 'Table B2', slug: 'tableb', pack: 'vierge', lang: 'en', gmPassword: 'secret-b' }) });
   j = await r.json();
-  ok(r.status === 409 && j.errorKey === 'L’identifiant « {id} » est déjà utilisé' && j.params?.id === 'tableb', 'duplicate slug → keyed error ' + JSON.stringify(j));
-  ok(srvT('en', j.errorKey, j.params) === 'The identifier “tableb” is already in use', 'admin error translated to English');
+  ok(r.status === 409 && j.errorKey === 'The identifier “{id}” is already in use' && j.params?.id === 'tableb' && j.error === 'The identifier “tableb” is already in use', 'duplicate slug → keyed error ' + JSON.stringify(j));
+  ok(srvT('fr', j.errorKey, j.params) === 'L’identifiant « tableb » est déjà utilisé', 'admin error translated to French');
   const tables: Array<{ slug: string; lang: string }> = (await (await fetch(srv.url + '/api/tables')).json()).tables;
   ok(tables.some((t) => t.slug === 'tableb' && t.lang === 'en') && tables.some((t) => t.slug === 'lazarus'), 'both tables listed ' + JSON.stringify(tables.map((t) => [t.slug, t.lang])));
 
@@ -93,12 +93,12 @@ try {
   ok(!(gmA.state.chargen?.drafts || []).some((d) => d.id === sd.draftId), 'GM A does not see table B drafts');
   // English error for a failing action
   const rep = await raw(plB, 'chargen/submit', { draftId: sd.draftId });
-  ok(rep && !rep.ok && rep.errorKey === 'Déjà envoyé au MJ', 'resubmit fails with a key ' + JSON.stringify(rep));
-  const en = srvT('en', rep.errorKey!, rep.params);
-  ok(en && en !== rep.error && /[a-z]/i.test(en), `English text for the error: "${en}"`);
+  ok(rep && !rep.ok && rep.errorKey === 'Already sent to the GM' && rep.error === 'Already sent to the GM', 'resubmit fails with a key ' + JSON.stringify(rep));
+  const fr = srvT('fr', rep.errorKey!, rep.params);
+  ok(fr === 'Déjà envoyé au MJ' && srvT('en', rep.errorKey!, rep.params) === rep.error, `French text for the error: "${fr}", English = source`);
   ok(plB.state.me.lang === 'en' || (plB.state.me.lang == null && plB.state.config.lang === 'en'), 'player B UI language resolves to English');
   const rep2 = await raw(plB, 'matrix/connect', { actorId: 'pc_bricks', mode: 'hot' });
-  ok(rep2 && !rep2.ok && rep2.errorKey && srvT('en', rep2.errorKey, rep2.params) !== rep2.error, 'pc_bricks unknown on table B, English error: ' + JSON.stringify(rep2) + ' → ' + srvT('en', rep2.errorKey!, rep2.params));
+  ok(rep2 && !rep2.ok && rep2.errorKey && srvT('en', rep2.errorKey, rep2.params) === rep2.error && srvT('fr', rep2.errorKey, rep2.params) !== rep2.error, 'pc_bricks unknown on table B, English error: ' + JSON.stringify(rep2) + ' → ' + srvT('fr', rep2.errorKey!, rep2.params));
   const res = await gmB.send('chargen/resolve', { draftId: sd.draftId, approve: true, note: 'Welcome' });
   await settle();
   ok(res.status === 'approved' && res.actorId, 'approved');
@@ -141,7 +141,7 @@ try {
   ok(!JSON.stringify(gmB.state.matrix || {}).includes('hollow_pine'), 'no Lazarus host on table B');
   ok(!gmB.state.log.some((e) => e.kind === 'matrix') && !plB.events.some((e) => e.ev === 'sfx' && e.data.id === 'matrix-glitch'), 'no matrix log/sfx leaked to table B');
   const frRep = await raw(plA, 'matrix/agentAct', { actorId: 'pc_bricks', actionId: 'nope' });
-  ok(frRep && !frRep.ok && frRep.error === 'Action matricielle inconnue' && srvT('en', frRep.errorKey!) === srvT('en', 'Action matricielle inconnue') && srvT('en', frRep.errorKey!) !== frRep.error, 'French session: French error text + English available: ' + srvT('en', frRep.errorKey!));
+  ok(frRep && !frRep.ok && frRep.error === 'Unknown Matrix action' && frRep.errorKey === 'Unknown Matrix action' && srvT('fr', frRep.errorKey!) === 'Action matricielle inconnue', 'French session: English error text + key, French available: ' + srvT('fr', frRep.errorKey!));
   ok(!plA.state.actors[newId] && !Object.values(plA.state.users || {}).some((u) => u.name === 'Alice'), 'player A sees nothing of table B');
   const stB = JSON.stringify(plB.state);
   ok(!/Bricks|Hollow Pine|Sploadie/.test(stB), 'player B view free of Lazarus names');
@@ -162,5 +162,5 @@ try {
   for (const c of closers) c.close();
   srv.stop();
 }
-console.log(`\n${passes} ok, ${fails} échec(s)`);
+console.log(`\n${passes} ok, ${fails} failed`);
 process.exit(fails ? 1 : 0);

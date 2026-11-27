@@ -240,7 +240,7 @@ try {
     barId = await gm.send<string>('maps/fromLibrary', { slug: 'dive-bar', name: 'Le Néon rouillé (bar des dockers)', folder: 'Démo' });
     ids[barId] = 'map_demo_bar';
   } catch (err) {
-    console.warn('  (carte de bibliothèque ignorée :', (err as Error).message + ')');
+    console.warn('  (library map skipped:', (err as Error).message + ')');
   }
   await settle();
 
@@ -295,7 +295,7 @@ try {
   fs.writeFileSync(path.join(OUT, 'README.md'),
     '# Demo pack\n\nContent of the public demo table (`SR_DEMO_TABLE`), layered on the `vierge` pack. **Generated** by `node tools/build-demo.ts`:\n' +
     'edit the script, not these files. No Project Lazarus content.\n');
-  console.log(`Pack démo écrit dans ${path.relative(ROOT, OUT)} : ${pcs.length} PJ, ${npcs.length} PNJ, ${Object.keys(maps).length} carte(s), 1 host.`);
+  console.log(`Demo pack written to ${path.relative(ROOT, OUT)}: ${pcs.length} PCs, ${npcs.length} NPCs, ${Object.keys(maps).length} map(s), 1 host.`);
 } finally {
   await srv.stopAndWait();
 }

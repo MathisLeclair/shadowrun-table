@@ -168,7 +168,7 @@ try {
       ['campaign/revealHandout', { handoutId: 'h_klee_message', to: 'all' }],
       ['campaign/addQuest', { title: 'x' }],
       ['campaign/togglePhase', { questId: 'q_open_book', phaseId: 'p3' }],
-    ] as Array<[string, ActionPayload]>) await assert.rejects(p1.send(type, payload), /réservée au MJ/);
+    ] as Array<[string, ActionPayload]>) await assert.rejects(p1.send(type, payload), /GM-only action/);
   });
 
   let hid: string | undefined;
@@ -186,8 +186,8 @@ try {
     assert.equal(p2.state.campaign.handouts.length, 0);
     assert.ok(p1.events.some((e) => e.ev === 'sfx' && e.data.id === 'notify'));
     assert.ok(!p2.events.some((e) => e.ev === 'sfx' && e.data.id === 'notify'));
-    assert.ok(p1.state.log.some((e) => e.text === 'Nouveau document : Plan du bâtiment'));
-    assert.ok(!p2.state.log.some((e) => e.text === 'Nouveau document : Plan du bâtiment'));
+    assert.ok(p1.state.log.some((e) => e.text === 'New handout: Plan du bâtiment'));
+    assert.ok(!p2.state.log.some((e) => e.text === 'New handout: Plan du bâtiment'));
     // Revealing again to the same player: no new notification.
     const again = await gm.send('campaign/revealHandout', { handoutId: hid, to: [p1Id] });
     assert.deepEqual(again.notified, []);
@@ -208,8 +208,8 @@ try {
     await gm.send('campaign/hideHandout', { handoutId: hid });
     await settle(200);
     assert.equal(p2.state.campaign.handouts.length, 0);
-    await assert.rejects(gm.send('campaign/revealHandout', { handoutId: hid, to: ['nobody'] }), /au moins un joueur/);
-    await assert.rejects(gm.send('campaign/revealHandout', { handoutId: 'nope', to: 'all' }), /introuvable/);
+    await assert.rejects(gm.send('campaign/revealHandout', { handoutId: hid, to: ['nobody'] }), /Choose at least one player/);
+    await assert.rejects(gm.send('campaign/revealHandout', { handoutId: 'nope', to: 'all' }), /Document not found/);
   });
 
   await test('handout edits are sanitized; gmNotes never reach players', async () => {
@@ -239,15 +239,15 @@ try {
     assert.equal(q.doc, 'session-3-plan.md#Scène 2');
     assert.deepEqual(q.phases.map((p) => p.title), ['Étape 2', 'Étape 1']);
     assert.equal(q.phases[1].text, 'détails');
-    await assert.rejects(gm.send('campaign/setQuestStatus', { questId: qid, status: 'nope' }), /Statut invalide/);
+    await assert.rejects(gm.send('campaign/setQuestStatus', { questId: qid, status: 'nope' }), /Invalid status/);
     await gm.send('campaign/setQuestStatus', { questId: qid, status: 'done' });
-    await assert.rejects(gm.send('campaign/togglePhase', { questId: qid, phaseId: 'zz' }), /Phase introuvable/);
+    await assert.rejects(gm.send('campaign/togglePhase', { questId: qid, phaseId: 'zz' }), /Phase not found/);
     await gm.send('campaign/deletePhase', { questId: qid, phaseId: ph });
     await settle();
     q = (gm.state.campaign as Campaign).quests.find((x) => x.id === qid)!;
     assert.equal(q.status, 'done');
     assert.equal(q.phases.length, 1);
-    await assert.rejects(gm.send('campaign/deleteAct', { actId: 'act_2' }), /contient encore/);
+    await assert.rejects(gm.send('campaign/deleteAct', { actId: 'act_2' }), /still contains quests/);
     await gm.send('campaign/deleteQuest', { questId: qid });
     await settle();
     assert.ok(!(gm.state.campaign as Campaign).quests.some((x) => x.id === qid));
@@ -270,7 +270,7 @@ try {
     await gm.send('campaign/updateThread', { threadId: tid, patch: { state: 'resolved', notes: 'ok' } });
     await gm.send('campaign/updateAct', { actId: 'act_1', patch: { summary: 'Résumé MJ' } });
     await gm.send('campaign/setCurrentAct', { actId: 'act_2' });
-    await assert.rejects(gm.send('campaign/setCurrentAct', { actId: 'nope' }), /introuvable/);
+    await assert.rejects(gm.send('campaign/setCurrentAct', { actId: 'nope' }), /Act not found/);
     await gm.send('campaign/updateNotes', { text: 'Notes secrètes' });
     await gm.send('campaign/updatePlayerRecap', { text: 'Récap pour tous' });
     await settle(200);

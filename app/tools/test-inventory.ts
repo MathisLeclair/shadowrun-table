@@ -229,9 +229,9 @@ try {
     await jane.send('dice/roll', { actorId: 'pc_jane', weaponId: w.id, skillId: w.skill, fireMode: 'LB' }); // 6 → 0
     await settle();
     assert.equal(weapon(/Enfield/).ammoLoaded, 0);
-    await rejects(jane.send('dice/roll', { actorId: 'pc_jane', weaponId: w.id, skillId: w.skill, fireMode: 'SA' }), /Plus assez de munitions — recharge/);
-    await rejects(jane.send('dice/roll', { actorId: 'pc_jane', weaponId: w.id, skillId: w.skill, fireMode: 'FA' }), /Mode de tir impossible/);
-    await rejects(jane.send('dice/roll', { actorId: 'pc_jane', weaponId: w.id, skillId: w.skill, ammoOverride: true }), /Plus assez/, 'players cannot override');
+    await rejects(jane.send('dice/roll', { actorId: 'pc_jane', weaponId: w.id, skillId: w.skill, fireMode: 'SA' }), /Not enough ammo — reload/);
+    await rejects(jane.send('dice/roll', { actorId: 'pc_jane', weaponId: w.id, skillId: w.skill, fireMode: 'FA' }), /cannot fire in that mode/);
+    await rejects(jane.send('dice/roll', { actorId: 'pc_jane', weaponId: w.id, skillId: w.skill, ammoOverride: true }), /Not enough ammo/, 'players cannot override');
     r = await gm.send('dice/roll', { actorId: 'pc_jane', weaponId: w.id, skillId: w.skill, fireMode: 'BF', ammoOverride: true });
     assert.equal(r.fire.rounds, 0, 'GM override fires what is left');
     await settle();
@@ -250,7 +250,7 @@ try {
     await settle();
     let r = await bricks.send('dice/roll', { actorId: 'pc_bricks', weaponId: id, skillId: 'automatics', fireMode: 'BF' });
     assert.deepEqual([r.fire.rounds, r.fire.left, r.fire.short, r.fire.defense], [1, 0, 2, 0], 'BF with 1 round: −2 + 2 = 0');
-    await rejects(bricks.send('dice/roll', { actorId: 'pc_bricks', weaponId: id, skillId: 'automatics', fireMode: 'BF' }), /Plus assez de munitions — recharge/, 'empty: refused');
+    await rejects(bricks.send('dice/roll', { actorId: 'pc_bricks', weaponId: id, skillId: 'automatics', fireMode: 'BF' }), /Not enough ammo — reload/, 'empty: refused');
     await gm.send('actor/updateItem', { actorId: 'pc_bricks', list: 'weapons', itemId: id, patch: { ammoLoaded: 7 } });
     r = await bricks.send('weapon/fire', { actorId: 'pc_bricks', weaponId: id, mode: 'FAC' });
     assert.deepEqual([r.rounds, r.short, r.defense], [7, 3, -6], 'FA complex with 7 rounds: −9 + 3');
@@ -265,9 +265,9 @@ try {
     const w = weapon(/Enfield/);
     const box = () => J().gear.find((g) => /Stick-n-Shock \(Shotguns\)/.test(g.notes || ''))!;
     const before = box().qty;
-    await rejects(bricks.send('weapon/reload', { actorId: 'pc_jane', weaponId: w.id }), /appartient/);
+    await rejects(bricks.send('weapon/reload', { actorId: 'pc_jane', weaponId: w.id }), /not yours/);
     const apds = J().gear.find((g) => /APDS \(Sniper Rifles\)/.test(g.notes || ''))!;
-    await rejects(jane.send('weapon/reload', { actorId: 'pc_jane', weaponId: w.id, sourceItemId: apds.id }), /incompatibles/);
+    await rejects(jane.send('weapon/reload', { actorId: 'pc_jane', weaponId: w.id, sourceItemId: apds.id }), /not compatible/);
     // Automatic pick: carried boxes before bags (the loose Stick-n-Shock round on Jane before the box in her Backpack).
     const carried = J().gear.find((g) => /Stick-n-Shock/.test(g.notes || '') && g.id !== box().id && g.location === 'on');
     if (carried && box().location !== 'on') {
@@ -294,10 +294,10 @@ try {
     assert.equal(box().qty, before - need);
     assert.equal(weapon(/Enfield/).ammoLoaded, 10);
     assert.match(weapon(/Enfield/).ammoKind!.name, /Stick-n-Shock/);
-    await rejects(jane.send('weapon/reload', { actorId: 'pc_jane', weaponId: w.id }), /déjà chargée/);
-    assert.ok(gm.state.log.some((e) => e.i18n?.key?.includes('recharge {weapon}')), 'reload logged');
+    await rejects(jane.send('weapon/reload', { actorId: 'pc_jane', weaponId: w.id }), /already loaded/);
+    assert.ok(gm.state.log.some((e) => e.i18n?.key?.includes('reloads {weapon}')), 'reload logged');
     // Players cannot raise the rounds by hand
-    await rejects(jane.send('actor/updateItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, patch: { ammoLoaded: 99 } }), /Recharger/);
+    await rejects(jane.send('actor/updateItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, patch: { ammoLoaded: 99 } }), /Reload/);
   });
 
   await test('clip swap with the spare clip of the weapon (Simple Action), clip kept; other ammunition: old rounds go back to a box', async () => {
@@ -359,8 +359,8 @@ try {
     const ct = await jane.send('inventory/addContainer', { actorId: 'pc_jane', name: 'Sac à dos tactique' });
     await settle();
     assert.equal(J().containers!.find((c) => c.id === ct)!.kind, 'bag');
-    await rejects(jane.send('inventory/addContainer', { actorId: 'pc_jane', name: '  ' }), /nom/);
-    await rejects(bricks.send('inventory/addContainer', { actorId: 'pc_jane', name: 'x' }), /appartient/);
+    await rejects(jane.send('inventory/addContainer', { actorId: 'pc_jane', name: '  ' }), /name/);
+    await rejects(bricks.send('inventory/addContainer', { actorId: 'pc_jane', name: 'x' }), /not yours/);
     const armor = J().armor.find((a) => a.equipped)!;
     let r = await jane.send('inventory/move', { actorId: 'pc_jane', list: 'armor', itemId: armor.id, location: ct });
     assert.equal(r.stowed, true);
@@ -374,9 +374,9 @@ try {
     await jane.send('actor/updateItem', { actorId: 'pc_jane', list: 'gear', itemId: gid, patch: { location: ct } });
     await settle();
     assert.equal(J().gear.find((g) => g.id === gid)!.active, false, 'active switched off in a bag');
-    await rejects(jane.send('inventory/move', { actorId: 'pc_jane', list: 'gear', itemId: gid, location: 'nowhere' }), /Contenant introuvable/);
-    await rejects(bricks.send('inventory/move', { actorId: 'pc_jane', list: 'gear', itemId: gid, location: 'on' }), /appartient/);
-    await rejects(jane.send('inventory/move', { actorId: 'pc_jane', list: 'skills', itemId: 'x', location: 'on' }), /Liste inconnue/);
+    await rejects(jane.send('inventory/move', { actorId: 'pc_jane', list: 'gear', itemId: gid, location: 'nowhere' }), /Container not found/);
+    await rejects(bricks.send('inventory/move', { actorId: 'pc_jane', list: 'gear', itemId: gid, location: 'on' }), /not yours/);
+    await rejects(jane.send('inventory/move', { actorId: 'pc_jane', list: 'skills', itemId: 'x', location: 'on' }), /Unknown list/);
     // Weapons: players toggle ready.
     const w = weapon(/Defiance/);
     await jane.send('actor/updateItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, patch: { equipped: true } });
@@ -387,16 +387,16 @@ try {
     await settle();
     assert.equal(weapon(/Defiance/).equipped, false);
     await jane.send('inventory/updateContainer', { actorId: 'pc_jane', containerId: ct, patch: { name: 'Planque de Tacoma', kind: 'safehouse' } });
-    await rejects(jane.send('inventory/updateContainer', { actorId: 'pc_jane', containerId: ct, patch: { kind: 'castle' } }), /inconnu/);
+    await rejects(jane.send('inventory/updateContainer', { actorId: 'pc_jane', containerId: ct, patch: { kind: 'castle' } }), /Unknown container type/);
     // Ammunition in a safehouse is out of reach.
     const darts = J().gear.find((g) => /Taser Dart/.test(g.notes || ''))!;
     await jane.send('inventory/move', { actorId: 'pc_jane', list: 'gear', itemId: darts.id, location: ct });
     await jane.send('inventory/move', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, location: 'on' });
     await jane.send('dice/roll', { actorId: 'pc_jane', weaponId: w.id, skillId: w.skill });
-    await rejects(jane.send('weapon/reload', { actorId: 'pc_jane', weaponId: w.id }), /Aucune munition compatible/);
-    await rejects(jane.send('weapon/reload', { actorId: 'pc_jane', weaponId: w.id, sourceItemId: darts.id }), /hors de portée/);
+    await rejects(jane.send('weapon/reload', { actorId: 'pc_jane', weaponId: w.id }), /No compatible ammunition/);
+    await rejects(jane.send('weapon/reload', { actorId: 'pc_jane', weaponId: w.id, sourceItemId: darts.id }), /out of reach/);
     // A safehouse holding items: players cannot empty it by removing it; the GM can (everything back « Sur soi »).
-    await rejects(jane.send('inventory/removeContainer', { actorId: 'pc_jane', containerId: ct }), /contient encore des objets/);
+    await rejects(jane.send('inventory/removeContainer', { actorId: 'pc_jane', containerId: ct }), /still holds items/);
     const moved = await gm.send('inventory/removeContainer', { actorId: 'pc_jane', containerId: ct });
     assert.ok(moved >= 2);
     await settle();
@@ -413,30 +413,30 @@ try {
     await settle();
     const left = ds().ammoLoaded;
     // Regression: a weapon kept at the safehouse fired and reloaded.
-    await rejects(jane.send('dice/roll', { actorId: 'pc_jane', weaponId: ds().id, skillId: ds().skill }), /hors de portée/);
-    await rejects(jane.send('weapon/fire', { actorId: 'pc_jane', weaponId: ds().id }), /hors de portée/);
-    await rejects(jane.send('weapon/reload', { actorId: 'pc_jane', weaponId: ds().id }), /hors de portée/);
+    await rejects(jane.send('dice/roll', { actorId: 'pc_jane', weaponId: ds().id, skillId: ds().skill }), /out of reach/);
+    await rejects(jane.send('weapon/fire', { actorId: 'pc_jane', weaponId: ds().id }), /out of reach/);
+    await rejects(jane.send('weapon/reload', { actorId: 'pc_jane', weaponId: ds().id }), /out of reach/);
     await settle();
     assert.equal(ds().ammoLoaded, left, 'no round used');
     const gr = await gm.send('dice/roll', { actorId: 'pc_jane', weaponId: ds().id, skillId: ds().skill, ammoOverride: true });
     assert.ok(gr.fire, 'the GM can');
     // Regression: readying it took it back « Sur soi ».
-    await rejects(jane.send('actor/updateItem', { actorId: 'pc_jane', list: 'weapons', itemId: ds().id, patch: { equipped: true } }), /hors de portée/);
+    await rejects(jane.send('actor/updateItem', { actorId: 'pc_jane', list: 'weapons', itemId: ds().id, patch: { equipped: true } }), /out of reach/);
     await settle();
     assert.equal(ds().location, HOUSE);
     // Regression: switching the safehouse to « worn » brought its contents within reach.
-    await rejects(jane.send('inventory/updateContainer', { actorId: 'pc_jane', containerId: HOUSE, patch: { kind: 'body' } }), /Seul le MJ/);
-    await rejects(jane.send('inventory/updateContainer', { actorId: 'pc_jane', containerId: HOUSE, patch: { kind: 'bag' } }), /Seul le MJ/);
+    await rejects(jane.send('inventory/updateContainer', { actorId: 'pc_jane', containerId: HOUSE, patch: { kind: 'body' } }), /Only the GM/);
+    await rejects(jane.send('inventory/updateContainer', { actorId: 'pc_jane', containerId: HOUSE, patch: { kind: 'bag' } }), /Only the GM/);
     await jane.send('inventory/updateContainer', { actorId: 'pc_jane', containerId: HOUSE, patch: { name: 'House' } });
-    await rejects(jane.send('inventory/removeContainer', { actorId: 'pc_jane', containerId: HOUSE }), /contient encore des objets/);
+    await rejects(jane.send('inventory/removeContainer', { actorId: 'pc_jane', containerId: HOUSE }), /still holds items/);
     // Taking it out is allowed, and written to the log for the GM.
     const logBefore = gm.state.log.length;
     await jane.send('inventory/move', { actorId: 'pc_jane', list: 'weapons', itemId: ds().id, location: 'on' });
     await settle();
-    const note = gm.state.log.slice(logBefore).find((e) => e.i18n?.key === '{name} récupère {item} ({place})');
+    const note = gm.state.log.slice(logBefore).find((e) => e.i18n?.key === '{name} takes {item} ({place})');
     assert.ok(note, 'retrieval logged');
     assert.equal(note.i18n!.params!.place, 'House');
-    assert.ok(!gm.state.log.slice(logBefore).some((e) => e.i18n?.key === '{name} récupère {item} ({place})' && e !== note), 'logged once');
+    assert.ok(!gm.state.log.slice(logBefore).some((e) => e.i18n?.key === '{name} takes {item} ({place})' && e !== note), 'logged once');
     await jane.send('actor/updateItem', { actorId: 'pc_jane', list: 'weapons', itemId: ds().id, patch: { equipped: true } });
     await settle();
     assert.equal(ds().equipped, true, 'carried: can be readied');
@@ -456,19 +456,19 @@ try {
     const loaded = ds().ammoLoaded;
     assert.ok(loaded! > 0);
     // Regression: one click emptied a partly loaded magazine into a 1-round box of another type.
-    await rejects(jane.send('weapon/reload', { actorId: 'pc_jane', weaponId: ds().id }), /choisis d’autres munitions/);
+    await rejects(jane.send('weapon/reload', { actorId: 'pc_jane', weaponId: ds().id }), /choose other ammunition/);
     await settle();
     assert.equal(ds().ammoLoaded, loaded, 'magazine untouched');
     const r = await jane.send('weapon/reload', { actorId: 'pc_jane', weaponId: ds().id, sourceItemId: other });
     assert.equal(r.swap, true, 'an explicit choice still swaps');
     await settle();
     // Log params: both languages (each viewer reads theirs).
-    const log = gm.state.log.filter((e) => e.i18n?.key?.includes('change le chargeur de {weapon}')).pop()!;
+    const log = gm.state.log.filter((e) => e.i18n?.key?.includes('changes the clip of {weapon}')).pop()!;
     assert.deepEqual(log.i18n!.params!.ammo, { fr: 'Mun. : Balles normales', en: 'Ammo: Regular Ammo' });
-    // Attack label: « Attaque — {weapon} » with the weapon in both languages.
+    // Attack label: « Attack — {weapon} » with the weapon in both languages.
     const flash = J().weapons.find((x) => /Flash-Bang/.test(x.nameEn || x.name))!;
     assert.ok(flash.nameEn && flash.nameFr && flash.nameEn !== flash.nameFr, `${flash.nameEn} / ${flash.nameFr}`);
-    const roll = await gm.send('dice/roll', { actorId: 'pc_jane', weaponId: flash.id, skillId: flash.skill, label: `Attaque — ${flash.nameFr}` });
+    const roll = await gm.send('dice/roll', { actorId: 'pc_jane', weaponId: flash.id, skillId: flash.skill, label: `Attaque — ${flash.nameFr}` /* the label the client sends */ });
     assert.deepEqual(roll.labelI18n, { key: 'Attack — {weapon}', params: { weapon: { fr: flash.nameFr, en: flash.nameEn } } });
     const { interpolate } = await import('../client/i18n/format.ts');
     assert.equal(interpolate('Attack — {weapon}', roll.labelI18n.params, null as unknown as undefined, 'en'), `Attack — ${flash.nameEn}`);
@@ -521,7 +521,7 @@ console.log('Foundry inventories (copy of the GM’s world)');
   const { convertSheet } = await import('../server/lib/foundry/convert-actor.ts');
   const { buildBundle, buildPc } = await import('../server/lib/foundry/importer.ts');
   const WORLD = detectWorldPath();
-  if (!fs.existsSync(path.join(WORLD, 'world.json'))) console.log('  (monde Foundry absent — ignoré)');
+  if (!fs.existsSync(path.join(WORLD, 'world.json'))) console.log('  (Foundry world missing — skipped)');
   else {
     const world = await readWorld(WORLD, { collections: ['actors', 'folders', 'users'] });
     const fa = (name: string) => world.actors!.find((a) => a.name === name)!;
@@ -648,7 +648,7 @@ console.log('Chummer locations, clips, grenades, ready weapons');
 }
 
 if (failures) {
-  console.log(`\n${failures} test(s) en échec`);
+  console.log(`\n${failures} test(s) failed`);
   process.exit(1);
 }
-console.log('\nOK — tous les tests passent');
+console.log('\nOK — all tests pass');

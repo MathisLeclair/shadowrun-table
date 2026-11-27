@@ -99,14 +99,20 @@ const adept = {
 };
 
 // ---------------------------------------------------------------------------
-// i18n: English dictionaries (glossary first, like the browser) and a strict English t() that marks missing keys
+// i18n: French dictionaries (glossary first, like the browser) + the legacy key map, and a strict French t() that marks
+// missing keys. English is the source text: enT renders a key without any dictionary.
 // ---------------------------------------------------------------------------
-const DICT_DIR = path.join(ROOT, 'client', 'i18n', 'en');
-const EN: Record<string, string> = {};
+const DICT_DIR = path.join(ROOT, 'client', 'i18n', 'fr');
+const FR: Record<string, string> = {};
 for (const f of fs.readdirSync(DICT_DIR).filter((x) => x.endsWith('.json')).sort((a, b) => (a === 'glossary.json' ? -1 : b === 'glossary.json' ? 1 : a.localeCompare(b)))) {
-  Object.assign(EN, JSON.parse(fs.readFileSync(path.join(DICT_DIR, f), 'utf8')));
+  Object.assign(FR, JSON.parse(fs.readFileSync(path.join(DICT_DIR, f), 'utf8')));
 }
-const enT = (key: string, params?: TParams | null): string => (EN[key] ? interpolate(EN[key], params, enT) : `⟦${stripContext(key)}⟧`);
+const LEGACY: Record<string, string> = JSON.parse(fs.readFileSync(path.join(ROOT, 'client', 'i18n', 'legacy-fr-keys.json'), 'utf8'));
+/** Has a French entry (an old French key counts through the legacy map). */
+const hasFr = (key: string): boolean => !!FR[LEGACY[key] || key];
+const frT = (key: string, params?: TParams | null): string => (hasFr(key) ? interpolate(FR[LEGACY[key] || key], params, frT) : `⟦${stripContext(key)}⟧`);
+const enT = (key: string, params?: TParams | null): string => interpolate(stripContext(LEGACY[key] || key), params, enT);
+const frI18n = { t: frT, lang: 'fr', fmtNumber: (n: number) => Number(n).toLocaleString('fr-FR').replace(/[\u202f\u00a0]/g, ' ') };
 const enI18n = { t: enT, lang: 'en', fmtNumber: (n: number) => Number(n).toLocaleString('en-US') };
 /** Every key of a message, nested params included. */
 // Any message shape (issue, log / history i18n, raw action response), walked loosely.
@@ -125,10 +131,10 @@ function i18nTests() {
     ...Object.values(KNOWLEDGE_TYPES), ...TRADITIONS, ...Object.values(ASPECTS), ...Object.values(METATYPE_TRAITS).flat(), ...FORM_TARGETS,
     ...TIERS.flatMap((x) => [x.label, x.text]), ...ARCHETYPES.flatMap((a) => [a.label, a.blurb]), GRUNT_RULES,
   ];
-  const missVocab = [...new Set(vocab.filter((k) => !EN[k as string]))];
-  ok(!missVocab.length, `creation / generator vocabulary translated (missing: ${missVocab.join(' | ')})`);
+  const missVocab = [...new Set(vocab.filter((k) => !hasFr(k as string)))];
+  ok(!missVocab.length, `creation / generator vocabulary has French (missing: ${missVocab.join(' | ')})`);
 
-  // Validation issues of many broken drafts: every key (and nested key) has an English entry.
+  // Validation issues of many broken drafts: every key (and nested key) has a French entry.
   const broken: unknown[] = [];
   const b1 = clone(legal);
   b1.concept = {};
@@ -161,34 +167,39 @@ function i18nTests() {
   broken.push(b3, clone(legal), clone(adept), emptyDraft());
   const keys: string[] = [];
   let count = 0;
-  let rendered: string[] = [];
+  const rendered: string[] = [];
+  const renderedFr: string[] = [];
   for (const d of broken) {
     const r = compute(d, ctx);
     for (const i of [...r.errors, ...r.warnings]) {
       count++;
-      ok(typeof i.key === 'string' && i.text === issueText(i), `issue has a key and its French text: ${i.text}`);
+      ok(typeof i.key === 'string' && i.text === issueText(i), `issue has a key and its source text: ${i.text}`);
       keys.push(...msgKeys(i));
       rendered.push(issueText(i, enI18n));
+      renderedFr.push(issueText(i, frI18n));
     }
   }
-  const miss = [...new Set(keys.filter((k) => !EN[k]))];
+  const miss = [...new Set(keys.filter((k) => !hasFr(k)))];
   ok(count > 40 && !miss.length, `validation messages translated (${count} issues, missing: ${miss.join(' | ')})`);
-  const leftovers = rendered.filter((s) => /⟦/.test(s));
-  ok(!leftovers.length, `English issues fully rendered (${leftovers.slice(0, 3).join(' / ')})`);
-  ok(rendered.includes('Priority “Magic / Resonance” not assigned.'), 'nested column label translated');
-  const budget = compute({ ...clone(legal), priorities: { ...legal.priorities, resources: 'E' } }, ctx).errors.find((e) => e.key === 'Budget dépassé de {nuyen}¥.');
-  ok(budget && /^Budget dépassé de \d{1,3}( \d{3})*¥\.$/.test(budget.text) && /^Budget exceeded by \d{1,3}(,\d{3})*¥\.$/.test(issueText(budget, enI18n)), `nuyen amounts formatted per language (${budget?.text} / ${budget && issueText(budget, enI18n)})`);
+  const leftovers = renderedFr.filter((s) => /⟦/.test(s));
+  ok(!leftovers.length, `French issues fully rendered (${leftovers.slice(0, 3).join(' / ')})`);
+  ok(rendered.includes('Priority “Magic / Resonance” not assigned.'), 'nested column label in English');
+  ok(renderedFr.includes('Priorité « Magie / Résonance » non attribuée.'), `nested column label translated (${renderedFr.filter((x) => /Magie/.test(x)).slice(0, 2).join(' / ')})`);
+  const budget = compute({ ...clone(legal), priorities: { ...legal.priorities, resources: 'E' } }, ctx).errors.find((e) => e.key === 'Budget exceeded by {nuyen}¥.');
+  ok(budget && /^Budget exceeded by \d{1,3}(,\d{3})*¥\.$/.test(issueText(budget, enI18n)) && /^Budget dépassé de \d{1,3}( \d{3})*¥\.$/.test(issueText(budget, frI18n)), `nuyen amounts formatted per language (${budget && issueText(budget, enI18n)} / ${budget && issueText(budget, frI18n)})`);
   const skillIssue = compute({ ...clone(legal), skills: [{ id: 'pistols', points: 9 }] }, ctx).errors.find((e) => e.params?.skill);
-  ok(skillIssue && issueText(skillIssue, enI18n).startsWith('Pistols 9'), `skill names translated in issues (${skillIssue && issueText(skillIssue, enI18n)})`);
+  ok(skillIssue && issueText(skillIssue, enI18n).startsWith('Pistols 9') && issueText(skillIssue, frI18n).startsWith('Pistolets 9'), `skill names translated in issues (${skillIssue && issueText(skillIssue, enI18n)} / ${skillIssue && issueText(skillIssue, frI18n)})`);
 
   // Display helpers
   const texts: string[] = [];
-  for (const c of COLUMNS) for (const l of LETTERS) texts.push(priorityText(c, l, enI18n));
-  for (const l of LETTERS) for (const o of magicOptions(l)) texts.push(magicOptionText(o, enI18n));
-  ok(texts.every((s) => !/⟦/.test(s)) && texts.includes('450,000¥') && texts.some((s) => s.startsWith('Magician: Magic 6, 2 magical skills at 5, 10 spells')), `priority table in English (${texts.filter((s) => /⟦/.test(s)).slice(0, 2).join(' / ')})`);
-  ok(priorityText('resources', 'A') === '450 000¥' && priorityText('magic', 'E') === 'Profane', 'priority table still French by default');
+  const textsFr: string[] = [];
+  for (const c of COLUMNS) for (const l of LETTERS) texts.push(priorityText(c, l, enI18n)), textsFr.push(priorityText(c, l, frI18n));
+  for (const l of LETTERS) for (const o of magicOptions(l)) texts.push(magicOptionText(o, enI18n)), textsFr.push(magicOptionText(o, frI18n));
+  ok(texts.includes('450,000¥') && texts.some((s) => s.startsWith('Magician: Magic 6, 2 magical skills at 5, 10 spells')), `priority table in English (${texts.slice(0, 2).join(' / ')})`);
+  ok(textsFr.every((s) => !/⟦/.test(s)) && textsFr.includes('450 000¥') && textsFr.some((s) => s.startsWith('Magicien')), `priority table in French (${textsFr.filter((s) => /⟦/.test(s)).slice(0, 2).join(' / ')})`);
+  ok(priorityText('magic', 'E') === 'Mundane', `priority table renders the source text by default (${priorityText('magic', 'E')})`);
   const h = draftHeadline({});
-  ok(h.unnamed && h.name === 'Sans nom' && EN[h.name], 'unnamed draft headline is a translatable key');
+  ok(h.unnamed && h.name === 'Unnamed' && hasFr(h.name), 'unnamed draft headline is a translatable key');
   let dupOk = true;
   try {
     const r = compute({ ...clone(legal), skills: [{ id: 'pistols', points: 2 }, { id: 'pistols', points: 3 }], groups: [{ id: 'firearms', points: 1 }, { id: 'firearms', points: 2 }] }, ctx);
@@ -222,7 +233,7 @@ function unitTests() {
   ok(r.final.BOD === 7 && r.final.AGI === 6, 'final attributes from metatype minimum + points');
   ok(r.essence === 4, `essence after Wired Reflexes 1: ${r.essence}`);
   ok(r.karma.total === 30 && r.karma.parts.qualities === 9 && r.karma.parts.contacts === 1, `karma: 25 + 5 negative, 9 positive, 1 over the free contact karma (${JSON.stringify(r.karma.parts)})`);
-  ok(r.karma.kept === 7 && r.warnings.some((w) => /seuls 7/.test(w.text)), 'only 7 karma kept (warning)');
+  ok(r.karma.kept === 7 && r.warnings.some((w) => /only 7/.test(w.text)), 'only 7 karma kept (warning)');
   ok(r.nuyen.total === 50000 && r.nuyen.left === 50000 - r.nuyen.spent && r.nuyen.kept === 5000, 'nuyen budget and 5 000¥ carry-over');
   const ra = compute(adept, ctx);
   ok(ra.ok, `legal magician has no error: ${ra.errors.map((e) => e.text).join(' | ')}`);
@@ -232,72 +243,72 @@ function unitTests() {
   console.log('• illegal builds');
   let d = clone(legal);
   d.priorities.skills = 'A';
-  ok(hasError(d, /priorité A est utilisée plusieurs fois/), 'duplicate priority letter');
+  ok(hasError(d, /Priority A is used more than once/), 'duplicate priority letter');
   d = clone(legal);
   d.metatype = 'Troll';
-  ok(hasError(d, /Troll n’est pas disponible/), 'troll at metatype priority C');
+  ok(hasError(d, /Troll is not available/), 'troll at metatype priority C');
   d = clone(legal);
   d.attributes.STR = 7;
-  ok(hasError(d, /Force .* dépasse le maximum/) && hasError(d, /Points d’attributs : 29/), 'attribute over max and over budget');
+  ok(hasError(d, /Strength .* exceeds the maximum/) && hasError(d, /Attribute points: 29/), 'attribute over max and over budget');
   d = clone(legal);
   d.attributes.BOD = 5;
   d.attributes.AGI = 5;
   d.attributes.REA = 2;
   d.attributes.WIL = 2;
-  ok(hasError(d, /Un seul attribut/), 'two attributes at natural maximum');
+  ok(hasError(d, /Only one physical or mental attribute/), 'two attributes at natural maximum');
   d = clone(legal);
   d.skills[0].points = 7;
-  ok(hasError(d, /maximum 6 à la création/), 'skill above 6 without Aptitude');
+  ok(hasError(d, /maximum 6 at creation/), 'skill above 6 without Aptitude');
   d.qualities.push({ catalogId: id('qualities', 'Aptitude'), choice: 'automatics' });
-  ok(!hasError(d, /Armes automatiques 7 : maximum/), 'Aptitude allows 7 in the chosen skill');
+  ok(!hasError(d, /(Automatics|Armes automatiques) 7: maximum/), 'Aptitude allows 7 in the chosen skill');
   d = clone(legal);
   d.skills.push({ id: 'longarms', points: 4 });
-  ok(hasError(d, /Points de compétences : 40 dépensés pour 36/), 'skill points over budget');
+  ok(hasError(d, /Skill points: 40 spent out of 36/), 'skill points over budget');
   d = clone(legal);
   d.skills.push({ id: 'computer', points: 1 });
-  ok(hasError(d, /fait partie du groupe Électronique/), 'raising a grouped skill separately');
+  ok(hasError(d, /belongs to the Electronics group/), 'raising a grouped skill separately');
   d = clone(legal);
   d.qualities.push({ catalogId: id('qualities', 'Exceptional Attribute'), choice: 'AGI' }, { catalogId: id('qualities', 'Lucky') });
-  ok(hasError(d, /Qualités positives : 35 karma \(maximum 25\)/), 'positive qualities above 25');
+  ok(hasError(d, /Positive qualities: 35 karma \(maximum 25\)/), 'positive qualities above 25');
   d = clone(legal);
   d.qualities.push({ catalogId: id('qualities', 'Magician') });
-  ok(hasError(d, /vient de la priorité Magie/), 'magic quality bought as a quality');
+  ok(hasError(d, /comes from the Magic priority/), 'magic quality bought as a quality');
   d = clone(legal);
   d.gear.push({ ref: id('weapons', 'Ares Alpha'), file: 'weapons', qty: 1 });
-  ok(hasError(d, /Ares Alpha : disponibilité 11F/) === false, 'avail 11 accepted');
+  ok(hasError(d, /Ares Alpha: availability 11F/) === false, 'avail 11 accepted');
   d.gear.push({ ref: id('weapons', 'Yamaha Raiden'), file: 'weapons', qty: 1 });
-  ok(hasError(d, /Yamaha Raiden : disponibilité 14F au-dessus de 12/), 'avail 14 refused');
+  ok(hasError(d, /Yamaha Raiden: availability 14F above 12/), 'avail 14 refused');
   d = clone(legal);
   d.gear[2].grade = 'delta';
-  ok(hasError(d, /grade delta n’est pas autorisé/), 'deltaware refused at creation');
+  ok(hasError(d, /grade delta is not allowed/), 'deltaware refused at creation');
   d = clone(legal);
   d.gear[2].rating = 3;
-  ok(hasError(d, /disponibilité 20R/) && hasError(d, /Budget dépassé/), 'Wired Reflexes 3: avail 20 and over budget');
+  ok(hasError(d, /availability 20R/) && hasError(d, /Budget exceeded/), 'Wired Reflexes 3: avail 20 and over budget');
   d = clone(legal);
   d.priorities.resources = 'A';
   d.priorities.attributes = 'D';
   d.attributes = { BOD: 2, AGI: 3, REA: 3, STR: 1, WIL: 1, LOG: 1, INT: 2, CHA: 1, EDG: 0 };
   d.gear.push({ ref: id('cyberware', 'Muscle Replacement'), file: 'cyberware', qty: 1, rating: 4 }, { ref: id('cyberware', 'Wired Reflexes'), file: 'cyberware', qty: 1, rating: 2 });
-  ok(hasError(d, /Essence .* ne survivrait pas/), 'essence ≤ 0 refused');
+  ok(hasError(d, /Essence .* would not survive/), 'essence ≤ 0 refused');
   d = clone(legal);
   d.spells = [{ catalogId: id('spells', 'Stunbolt') }];
-  ok(hasError(d, /ne peut pas lancer de sorts/), 'mundane with spells');
+  ok(hasError(d, /Spells are not available/), 'mundane with spells');
   d = clone(adept);
   d.magic.type = 'adept';
-  ok(hasError(d, /Adepte n’est pas disponible avec la priorité A/), 'adept not offered at magic A');
+  ok(hasError(d, /Adept is not available at Magic priority A/), 'adept not offered at magic A');
   d = clone(legal);
   d.qualities.push({ catalogId: id('qualities', 'Lucky') }, { catalogId: id('qualities', 'Ambidextrous') });
   d.attrKarma = { AGI: 0, CHA: 2 };
-  ok(hasError(d, /Karma dépassé/), 'karma overspent');
+  ok(hasError(d, /Karma exceeded/), 'karma overspent');
   d = clone(legal);
   d.skills.push({ id: 'spellcasting', points: 0 });
-  ok(hasError(d, /Lancement de sorts : inaccessible/), 'mundane with a magical skill');
+  ok(hasError(d, /(Spellcasting|Lancement de sorts): not available/), 'mundane with a magical skill');
   d = clone(legal);
   d.knowledge.push({ name: 'Japonais', native: true });
-  ok(hasError(d, /2 langues maternelles/), 'two native languages without Bilingual');
+  ok(hasError(d, /2 native languages/), 'two native languages without Bilingual');
   d = clone(legal);
   d.concept = { name: '', alias: '' };
-  ok(hasError(d, /Donne un nom/), 'name required');
+  ok(hasError(d, /Give the character a name/), 'name required');
 
   console.log('• normalization');
   const n = normalizeDraft({ priorities: { metatype: 'Z' }, metatype: 'Dragon', skills: [{ id: 'nope' }, { id: 'pistols', points: 99 }], gear: [{ ref: '' }], concept: { portrait: 'javascript:alert(1)' } });
@@ -318,7 +329,7 @@ function unitTests() {
   ok(actor.skillGroups?.some((g) => g.id === 'electronics' && g.rating === 3), 'intact groups listed');
   ok(skillPool(actor, 'pistols', { useSpec: true }).pool === 5 + 6 + 2, 'pistols pool with spec');
   ok(actor.knowledge.some((k) => k.native && k.name === 'Français'), 'native language');
-  ok(actor.qualities.some((q) => q.name === 'Vision nocturne') && actor.vision!.lowLight, 'racial trait + vision');
+  ok(actor.qualities.some((q) => q.name === 'Low-Light Vision') && actor.vision!.lowLight, 'racial trait + vision');
   ok(actor.qualities.some((q) => q.karma === -5 && q.positive === false), 'negative quality karma');
   ok(actor.contacts.length === 2 && actor.lifestyles?.length === 1 && actor.lifestyles[0].monthsPaid === 1 && actor.lifestyles[0].primary && actor.lifestyles[0].base === 'Low' && !(actor as ChargenActor & { lifestyle?: unknown }).lifestyle, 'contacts and lifestyle (lifestyles[0])');
   ok(actor.nuyen === 5000 && actor.karma === 7, 'carried nuyen / karma');
@@ -326,7 +337,7 @@ function unitTests() {
   ok(dv.initiative.dice === 2 && dv.armor === 12, 'derive() works on the built actor');
   const { actor: mage } = buildActor(adept, ctx, {});
   ok(mage.attributes.MAG === 6 && mage.spells.length === 10 && mage.spells.every((s) => s.drain), 'magician: MAG and spells with drain');
-  ok(mage.qualities.some((q) => q.name === 'Magicien' && /Hermétique/.test(q.notes!)), 'magic type quality with tradition');
+  ok(mage.qualities.some((q) => q.name === 'Magician' && /Hermétique/.test(q.notes!)), 'magic type quality with tradition');
   // Adept with Improved Reflexes
   const adeptB = clone(adept);
   adeptB.priorities = { metatype: 'D', attributes: 'A', magic: 'B', skills: 'C', resources: 'E' };
@@ -359,26 +370,27 @@ async function serverTests() {
     ok(p1.state.chargen.drafts.length === 1 && p1.state.chargen.drafts[0].status === 'draft', 'player sees own draft');
     ok(p2.state.chargen.drafts.length === 0, 'other player does not see it');
     ok(gm.state.chargen.drafts.some((d) => d.id === draftId && d.check?.errors === 0), 'GM sees it with its check');
-    await rejects(p2.send('chargen/saveDraft', { draftId, data: legal }), /ne t’appartient pas/, 'cannot edit someone else’s draft');
+    await rejects(p2.send('chargen/saveDraft', { draftId, data: legal }), /not yours/, 'cannot edit someone else’s draft');
 
     // Illegal submit
     const bad = clone(legal);
     bad.priorities.skills = 'A';
     const { draftId: badId } = await p1.send('chargen/saveDraft', { data: bad });
-    await rejects(p1.send('chargen/submit', { draftId: badId }), /incomplet ou illégal/, 'illegal build cannot be submitted');
+    await rejects(p1.send('chargen/submit', { draftId: badId }), /Incomplete or illegal/, 'illegal build cannot be submitted');
     const raw = await new Promise<Extract<ActionResponse, { ok: false }>>((res) => p1.socket.emit('action', { type: 'chargen/submit', payload: { draftId: badId } }, res));
     const errKeys = msgKeys(raw);
-    ok(raw.errorKey === 'Personnage incomplet ou illégal : {errors}' && errKeys.length > 1 && errKeys.every((k) => EN[k]), `submit error is translatable (${errKeys.filter((k) => !EN[k]).join(' | ')})`);
-    ok(!/⟦/.test(enT(raw.errorKey!, raw.params)), `submit error renders in English: ${enT(raw.errorKey!, raw.params)}`);
+    ok(raw.errorKey === 'Incomplete or illegal character: {errors}' && errKeys.length > 1 && errKeys.every((k) => hasFr(k)), `submit error is translatable (${errKeys.filter((k) => !hasFr(k)).join(' | ')})`);
+    ok(!/⟦/.test(frT(raw.errorKey!, raw.params)), `submit error renders in French: ${frT(raw.errorKey!, raw.params)}`);
+    ok(raw.error === enT(raw.errorKey!, raw.params), `submit error text = English source: ${raw.error}`);
 
     // Submit / withdraw / submit
     await p1.send('chargen/submit', { draftId });
-    await rejects(p1.send('chargen/saveDraft', { draftId, data: legal }), /retire la demande/, 'pending draft locked');
+    await rejects(p1.send('chargen/saveDraft', { draftId, data: legal }), /withdraw the request/, 'pending draft locked');
     await p1.send('chargen/withdraw', { draftId });
     await p1.send('chargen/submit', { draftId });
     await settle();
     ok(gm.state.chargen.drafts.find((d) => d.id === draftId)?.status === 'pending', 'GM queue shows pending');
-    await rejects(p1.send('chargen/resolve', { draftId, approve: true }), /réservée au MJ/, 'player cannot approve');
+    await rejects(p1.send('chargen/resolve', { draftId, approve: true }), /GM-only/, 'player cannot approve');
 
     // Approve → actor + assignment
     const before = Object.keys(gm.state.actors).length;
@@ -387,11 +399,13 @@ async function serverTests() {
     await settle();
     const a = gm.state.actors[res.actorId];
     ok(Object.keys(gm.state.actors).length === before + 1 && a?.type === 'pc', 'PC actor created');
-    ok(a?.history?.[0]?.text?.startsWith('Création'), 'history « Création »');
-    ok(a?.history?.every((h) => h.i18n?.key && msgKeys(h.i18n).every((k) => EN[k])), 'history entries translatable');
+    ok(a?.history?.[0]?.text?.startsWith('Creation'), `history « Creation » (${a?.history?.[0]?.text})`);
+    ok(a?.history?.every((h) => h.i18n?.key && msgKeys(h.i18n).every((k) => hasFr(k))), 'history entries translatable');
     const cgLogs = gm.state.log.filter((e) => e.author === 'Création');
-    ok(cgLogs.length >= 2 && cgLogs.every((e) => e.i18n?.key && msgKeys(e.i18n).every((k) => EN[k])), `creation log entries translatable (${cgLogs.map((e) => e.text).join(' | ')})`);
-    ok(cgLogs.some((e) => /^Personnage validé : Rouille \(nuyen de départ : \d+¥\) — « Bienvenue à Seattle »$/.test(e.text)), 'approval log keeps its French text');
+    ok(cgLogs.length >= 2 && cgLogs.every((e) => e.i18n?.key && msgKeys(e.i18n).every((k) => hasFr(k))), `creation log entries translatable (${cgLogs.map((e) => e.text).join(' | ')})`);
+    const approved = cgLogs.find((e) => /^Character approved: Rouille/.test(e.text));
+    ok(approved && /^Character approved: Rouille \(starting nuyen: \d+¥\) — “Bienvenue à Seattle”$/.test(approved.text), `approval log stored in English (${approved?.text})`);
+    ok(approved && /^Personnage validé : Rouille \(nuyen de départ : \d+¥\) — « Bienvenue à Seattle »$/.test(frT(approved.i18n!.key, approved.i18n!.params)), 'approval log renders in French');
     ok(a?.player === 'Créatrice', 'player name on the actor');
     ok(a?.nuyen >= 5000 + 60 * 3 && a?.nuyen <= 5000 + 60 * 18, `starting nuyen rolled (Low: 3D6×60): ${a?.nuyen}`);
     const u1 = Object.values(gm.state.users).find((u) => u.name === 'Créatrice');
@@ -399,7 +413,7 @@ async function serverTests() {
     ok(p1.state.me.characterIds.includes(res.actorId), 'player view knows the new character');
     ok(p1.state.actors[res.actorId]?.name === 'Rouille', 'player receives the actor');
     ok(p1.events.some((e) => e.ev === 'chargen:resolved' && e.data.status === 'approved'), 'player notified');
-    await rejects(p1.send('chargen/saveDraft', { draftId, data: legal }), /déjà été validé/, 'approved draft read-only');
+    await rejects(p1.send('chargen/saveDraft', { draftId, data: legal }), /already been approved/, 'approved draft read-only');
 
     // Reject flow
     const { draftId: d2 } = await p1.send('chargen/saveDraft', { data: adept });
@@ -421,14 +435,14 @@ async function serverTests() {
     const npc = await gm.send('chargen/create', { data: adept, type: 'npc' });
     await settle();
     ok(gm.state.actors[npc.actorId]?.type === 'npc' && gm.state.actors[npc.actorId].attributes.MAG === 6, 'GM creates an NPC directly');
-    await rejects(gm.send('chargen/create', { data: bad, type: 'pc' }), /ne respecte pas les règles/, 'GM create refuses illegal build without force');
+    await rejects(gm.send('chargen/create', { data: bad, type: 'pc' }), /breaks the rules/, 'GM create refuses illegal build without force');
     const forced = await gm.send('chargen/create', { data: bad, type: 'pc', assignTo: Object.values(gm.state.users).find((u) => u.name === 'Voisin')!.id, force: true });
     await settle();
     ok(p2.state.me.characterIds.includes(forced.actorId), 'forced PC assigned to the chosen player');
 
     // Settings
     await gm.send('chargen/settings', { allowPlayers: false, startingKarmaBonus: 5 });
-    await rejects(p2.send('chargen/saveDraft', { data: legal }), /fermée/, 'players blocked when creation is closed');
+    await rejects(p2.send('chargen/saveDraft', { data: legal }), /creation is closed/, 'players blocked when creation is closed');
     await settle();
     ok(p2.state.chargen.settings.startingKarmaBonus === 5, 'settings visible to players');
     gm.close();
@@ -442,5 +456,5 @@ async function serverTests() {
 unitTests();
 i18nTests();
 await serverTests();
-console.log(failures ? `\n${failures} échec(s), ${passes} réussite(s)` : `\nOK — ${passes} vérifications`);
+console.log(failures ? `\n${failures} failed, ${passes} passed` : `\nOK — ${passes} checks`);
 process.exit(failures ? 1 : 0);

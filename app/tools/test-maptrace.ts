@@ -232,7 +232,7 @@ section('maplib-build');
   fs.writeFileSync(path.join(git, 'deck.json'), formatMaplib({ ...good(), id: 'lib_deck', slug: 'deck', image: 'sub/deck 1.jpg' }));
   const env = { ...process.env, SR_MAPLIB_SOURCE: git, SR_MAPLIB_DIR: lib, SR_FRAGMAP_DIRS: imgDir };
   // Node runs the .ts script directly; before 22.18 type stripping needs a flag.
-  const stripTypes = process.features.typescript ? [] : ['--experimental-strip-types'];
+  const stripTypes = process.execArgv.filter((a) => a === '--experimental-strip-types' || a === '--no-warnings');
   const run = () => spawnSync(process.execPath, [...stripTypes, path.join(APP, 'tools', 'maplib-build.ts')], { env, encoding: 'utf8' });
   const a = run();
   ok(a.status === 1 && /MISSING: ghost/.test(a.stdout), `missing image reported, exit 1 (${a.status})`);

@@ -36,7 +36,7 @@ function legacyActors(): Record<ActorId, object> {
 const tableState = (actors: Record<ActorId, object>, shop?: Partial<ShopState>) => ({ version: 1, config: { gmPassword: 'pw-restore', campaignName: 'Restore', lang: 'fr' }, users: {}, log: [], actors, ...(shop ? { shop } : {}) });
 
 // Before Node 22.18, running a .ts file needs the type-stripping flag.
-const stripTypes = process.features.typescript ? [] : ['--experimental-strip-types'];
+const stripTypes = process.execArgv.filter((a) => a === '--experimental-strip-types' || a === '--no-warnings');
 function run(args: string[]): Promise<{ code: number | null; out: string }> {
   return new Promise((resolve) => {
     const p = spawn(process.execPath, [...stripTypes, 'tools/restore-lifestyles.ts', ...args], { cwd: ROOT });

@@ -16,7 +16,7 @@ import type { BundlePc } from '../server/lib/foundry/importer.ts';
 import { convertSheet } from '../server/lib/foundry/convert-actor.ts';
 import type { ConvertedSheet } from '../server/lib/foundry/convert-actor.ts';
 import { i18nError, plural, bytesParam } from '../server/lib/foundry/messages.ts';
-import { t as tr, dictionary } from '../server/lib/i18n.ts';
+import { t as tr, dictionary, sourceKey } from '../server/lib/i18n.ts';
 import { htmlToMarkdown } from '../server/lib/foundry/html2md.ts';
 import { SKILL_BY_ID, parseDamage } from '../shared/sr5.ts';
 
@@ -34,7 +34,7 @@ function ok(cond: unknown, msg: string) {
 const DUMP = path.join(os.tmpdir(), 'claude', '475e7aca9aa207a1', '3c07fd5a-6eb8-4c24-a36b-98077d5ccf6d', 'scratchpad', 'foundry');
 const WORLD = detectWorldPath();
 if (!fs.existsSync(path.join(WORLD, 'world.json')) && !fs.existsSync(path.join(DUMP, 'actors.json'))) {
-  console.log('Aucun monde Foundry ni dump disponible — tests ignorés.');
+  console.log('No Foundry world or dump available — tests skipped.');
   process.exit(0);
 }
 
@@ -241,12 +241,12 @@ const docsOut = path.join(tmp, 'docs');
 process.env.SR_FOUNDRY_ASSET_DIR = assetsOut;
 process.env.SR_FOUNDRY_DOCS_DIR = docsOut;
 // ---------------------------------------------------------------------------
-// 3. i18n: translatable diffs / messages (French unchanged, English from client/i18n/en/foundry.json)
+// 3. i18n: translatable diffs / messages (English source text, French from client/i18n/fr/*.json)
 // ---------------------------------------------------------------------------
 console.log('i18n');
 {
-  const en = dictionary('en');
-  // Every key (also nested { t } params) must have an English entry.
+  const frDict = dictionary('fr');
+  // Every key (also nested { t } params, old French keys through the legacy map) must have a French entry.
   // Any message shape (arrays, { t, params } entries, nested params)
   const keysOf = (e: any, out: string[] = []): string[] => {
     if (Array.isArray(e)) e.forEach((x) => keysOf(x, out));
@@ -262,19 +262,21 @@ console.log('i18n');
   // Partial app actor: only the fields the diff reads
   const app = { karma: -1, karmaTotal: 0, nuyen: 1, attributes: { BOD: 0 }, skills: [], streetCred: 99 } as unknown as Actor;
   const entries = pcDiffEntries(app, pc);
-  const fr = pcDiff(app, pc);
-  ok(entries.length >= 3 && entries.length === fr.length, `diff entries (${entries.length}) match French lines (${fr.length})`);
-  ok(fr[0] === `Karma -1 → ${pc.sheet.karma ?? 0}` || fr.some((l) => l.startsWith('Karma -1 → ')), `French diff line unchanged (${fr[0]})`);
-  ok(fr.some((l) => /^Attributs : .*CON 0 → /.test(l)), `French attribute diff keeps CON (${fr.find((l) => l.startsWith('Attributs'))})`);
+  const src = pcDiff(app, pc);
+  ok(entries.length >= 3 && entries.length === src.length, `diff entries (${entries.length}) match source lines (${src.length})`);
+  ok(src.some((l) => l.startsWith('Karma -1 → ')), `English source diff line (${src[0]})`);
+  const fr = entries.map((e) => tr('fr', e.t, e.params));
+  ok(fr.some((l) => l.startsWith('Karma -1 → ')), `French diff line (${fr[0]})`);
+  ok(fr.some((l) => /^Attributs : .*CON 0 → /.test(l)), `French attribute diff uses CON (${fr.find((l) => l.startsWith('Attributs'))})`);
   const enLines = entries.map((e) => tr('en', e.t, e.params));
   ok(enLines.some((l) => /^Attributes: .*BOD 0 → /.test(l)), `English attribute diff uses BOD (${enLines.find((l) => l.startsWith('Attrib'))})`);
   ok(enLines.some((l) => l.startsWith('Street Cred 99 → ')), 'English street cred line');
-  const missing = [...new Set(keysOf(entries))].filter((k) => !en[k]);
+  const missing = [...new Set(keysOf(entries))].filter((k) => !frDict[sourceKey(k)]);
   ok(!missing.length, `diff keys translated (${missing.join(' | ')})`);
   // Errors carrying keys
   const e = i18nError({ t: 'No Foundry world found in “{path}” (world.json missing)', params: { path: 'X' } });
-  ok(e.message === 'Aucun monde Foundry trouvé dans « X » (world.json manquant)' && e.i18nKey!.startsWith('Aucun monde') && e.i18nParams!.path === 'X', 'i18nError: French message + key + params');
-  ok(tr('en', e.i18nKey!, e.i18nParams) === 'No Foundry world found in “X” (world.json missing)', 'i18nError key translated');
+  ok(e.message === 'No Foundry world found in “X” (world.json missing)' && e.i18nKey === 'No Foundry world found in “{path}” (world.json missing)' && e.i18nParams!.path === 'X', 'i18nError: English message + key + params');
+  ok(tr('fr', e.i18nKey!, e.i18nParams) === 'Aucun monde Foundry trouvé dans « X » (world.json manquant)', 'i18nError key translated to French');
   // Server-side plural: French keeps the old text, English pluralizes 0
   const p0 = plural(0, { t: 'zero::{n} files copied' }, { t: '{n} file copied' }, { t: '{n} files copied' });
   ok(tr('fr', p0.t, p0.params) === '0 fichier copié' && tr('en', p0.t, p0.params) === '0 files copied', `plural(0) fr/en (${tr('en', p0.t, p0.params)})`);
@@ -359,11 +361,11 @@ try {
   ok(j1.notes === 'note joueur', 'notes kept');
   ok(fs.existsSync(path.join(docsOut, '_index.md')) && fs.readdirSync(docsOut).length >= 10, 'journals written');
   ok(fs.existsSync(path.join(assetsOut, 'img', 'jane_pic.png')), 'portrait copied');
-  ok(st().log.some((e) => /Import Foundry/.test(e.text)), 'system log entry');
-  const logE = [...st().log].reverse().find((e) => e.author === 'Foundry' && e.i18n?.key === 'Import Foundry : {parts} — monde « {world} »');
-  ok(logE && logE.text === r1.text, `log entry translatable, French text unchanged (${logE?.text})`);
-  ok(/^Import Foundry : \d+ PJ \(fusion\), /.test(r1.text), `French import summary unchanged (${r1.text})`);
-  ok(r1.textI18n?.key === logE?.i18n?.key && /^Foundry import: \d+ PC\(s\) \(merge\), /.test(tr('en', r1.textI18n.key, r1.textI18n.params)), `English import summary (${tr('en', r1.textI18n?.key, r1.textI18n?.params)})`);
+  ok(st().log.some((e) => /Foundry import/.test(e.text)), 'system log entry');
+  const logE = [...st().log].reverse().find((e) => e.author === 'Foundry' && e.i18n?.key === 'Foundry import: {parts} — world “{world}”');
+  ok(logE && logE.text === r1.text, `log entry translatable, English text (${logE?.text})`);
+  ok(/^Foundry import: \d+ PC\(s\) \(merge\), /.test(r1.text), `English import summary (${r1.text})`);
+  ok(r1.textI18n?.key === logE?.i18n?.key && /^Import Foundry : \d+ PJ \(fusion\), /.test(tr('fr', r1.textI18n.key, r1.textI18n.params)), `French import summary (${tr('fr', r1.textI18n?.key, r1.textI18n?.params)})`);
   ok(typeof r1.assets.bytes === 'number', 'import result has asset bytes');
   ok(st().foundry?.lastImport?.counts?.pcs === bundle.pcs.length, 'lastImport recorded');
 
@@ -383,7 +385,7 @@ try {
   const j2 = st().actors.pc_jane;
   ok(j2.nuyen === 98188, `replace: Foundry nuyen (${j2.nuyen})`);
   ok(!j2.gear.some((g) => g.id === itemId), 'replace drops app-only items');
-  ok(j2.history.some((h) => /Synchronisation Foundry/.test(h.text)), 'history entry for the nuyen change');
+  ok(j2.history.some((h) => /^Foundry sync /.test(h.text) && h.i18n?.key === 'Foundry sync ({world}): {karma} karma, {nuyen}'), 'history entry for the nuyen change');
   ok(Object.keys(st().actors).length === before.actors, 'still no duplicate actor');
 
   // Bad world path
@@ -391,11 +393,11 @@ try {
   try {
     await gm.send('foundry/scan', { worldPath: path.join(tmp, 'nope') });
   } catch (e) {
-    rejected = /monde Foundry/i.test((e as Error).message);
+    rejected = /Foundry world/i.test((e as Error).message);
   }
-  ok(rejected, 'invalid world path → French error');
+  ok(rejected, 'invalid world path → readable error');
   const bad = (await rawSend(gm, 'foundry/scan', { worldPath: path.join(tmp, 'nope') })) as Extract<ActionResponse, { ok: false }>;
-  ok(bad.errorKey === 'Aucun monde Foundry trouvé dans « {path} » (world.json manquant)' && bad.params?.path && bad.error.includes('nope'), `world path error carries its key (${bad.errorKey})`);
+  ok(bad.errorKey === 'No Foundry world found in “{path}” (world.json missing)' && bad.params?.path && bad.error.includes('nope'), `world path error carries its key (${bad.errorKey})`);
   // Upload route errors are translatable too (409 while busy is hard to provoke: check a bad zip instead)
   const tok = await login(srv.url, { role: 'gm', password: 'lazarus' });
   const up = await fetch(srv.url + '/api/foundry/upload?kind=world', { method: 'POST', headers: { Authorization: `Bearer ${tok}`, 'content-type': 'application/zip' }, body: Buffer.from('not a zip') });
@@ -411,5 +413,5 @@ try {
   fs.rmSync(tmp, { recursive: true, force: true });
 }
 
-console.log(`\n${passes} ok, ${failures} échec(s)`);
+console.log(`\n${passes} ok, ${failures} failed`);
 process.exit(failures ? 1 : 0);

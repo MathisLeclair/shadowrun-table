@@ -80,14 +80,19 @@ ok(programSlots({ programSlots: 3, loadedPrograms: ['Virtual Machine', 'Stealth'
 ok(Object.values(IC_TYPES).every((t) => t.fr && t.defense && t.effect), 'IC types complete');
 
 // ---------------------------------------------------------------------------
-// i18n: English dictionary covers the rules vocabulary and every server message
+// i18n: the French dictionary covers the rules vocabulary and every server message (English is the source text)
 // ---------------------------------------------------------------------------
-const DICT_DIR = path.join(ROOT, 'client', 'i18n', 'en');
-const EN: Dictionary = {};
+const DICT_DIR = path.join(ROOT, 'client', 'i18n', 'fr');
+const FR: Dictionary = {};
 for (const f of fs.readdirSync(DICT_DIR).filter((x) => x.endsWith('.json')).sort((a, b) => (a === 'glossary.json' ? -1 : b === 'glossary.json' ? 1 : a.localeCompare(b)))) {
-  Object.assign(EN, JSON.parse(fs.readFileSync(path.join(DICT_DIR, f), 'utf8')));
+  Object.assign(FR, JSON.parse(fs.readFileSync(path.join(DICT_DIR, f), 'utf8')));
 }
-const enT = (key: string, params?: TParams | null): string => (EN[key] ? interpolate(EN[key], params, enT) : `⟦${stripContext(key)}⟧`);
+const LEGACY: Dictionary = JSON.parse(fs.readFileSync(path.join(ROOT, 'client', 'i18n', 'legacy-fr-keys.json'), 'utf8'));
+const cur = (key: string): string => LEGACY[key] || key;
+/** Strict French t(): a key without a French entry renders as ⟦key⟧. */
+const frT = (key: string, params?: TParams | null): string => (FR[cur(key)] ? interpolate(FR[cur(key)], params, frT) : `⟦${stripContext(key)}⟧`);
+/** English = the source text. */
+const enT = (key: string, params?: TParams | null): string => interpolate(stripContext(cur(key)), params, enT);
 /** Every translatable key inside a message / { key, params } (nested params included). */
 type MsgLike = { t?: unknown; key?: unknown; params?: object };
 function msgKeys(m: unknown, out: string[] = []): string[] {
@@ -100,23 +105,24 @@ function msgKeys(m: unknown, out: string[] = []): string[] {
   }
   return out;
 }
-const missingEn = (keys: string[]) => keys.filter((k) => !EN[k]);
+const missingFr = (keys: string[]) => keys.filter((k) => !FR[cur(k)]);
 {
   const vocab = [
     ...ACTIONS.flatMap((a) => [a.fr, a.desc]), ...Object.values(IC_TYPES).flatMap((t) => [t.fr, t.desc]), ...PROGRAMS.map((p) => p.effect),
     ...Object.values(ACTION_CATS), ...Object.values(ACTION_TYPES), ...Object.values(TARGET_KIND_LABELS), ...Object.values(HOST_PRESETS).map((p) => p.label),
     ...Object.values(MODE_LABELS), ...Object.values(ASDF_LABELS), ...[0, 10, 20, 30, 36].map((n) => osLevel(n).label),
   ];
-  ok(missingEn(vocab).length === 0, `rules vocabulary translated (missing: ${missingEn(vocab).join(' | ')})`);
-  ok(ACTIONS.every((a) => EN[a.fr] === a.en || a.id === 'rebootSelf'), `action names match their official English name (${ACTIONS.filter((a) => EN[a.fr] !== a.en).map((a) => a.id).join(', ')})`);
-  ok(Object.values(IC_TYPES).every((t) => EN[t.fr] === t.en), 'IC names match their official English name');
+  ok(missingFr(vocab).length === 0, `rules vocabulary translated (missing: ${missingFr(vocab).join(' | ')})`);
+  ok(ACTIONS.every((a) => enT(a.fr) === a.en || a.id === 'rebootSelf'), `action names match their official English name (${ACTIONS.filter((a) => enT(a.fr) !== a.en).map((a) => a.id).join(', ')})`);
+  ok(Object.values(IC_TYPES).every((t) => enT(t.fr) === t.en), 'IC names match their official English name');
+  ok(frT(ACTION_BY_ID.hackOnTheFly.fr) === 'Piratage à la volée' || !/⟦/.test(frT(ACTION_BY_ID.hackOnTheFly.fr)), `action names render in French (${frT(ACTION_BY_ID.hackOnTheFly.fr)})`);
   const parts = actionPool(bricks, { mode: 'hot', noise: 2, asdf: null, loadedPrograms: ['Exploit'] } as unknown as PersonaLike, ACTION_BY_ID.hackOnTheFly, { marks: 2, modifier: 1, useSpec: true, edge: true });
-  ok(missingEn(parts.parts.concat(parts.limitParts).filter((p) => p.key).map((p) => p.key!)).length === 0, 'pool part keys translated');
+  ok(missingFr(parts.parts.concat(parts.limitParts).filter((p) => p.key).map((p) => p.key!)).length === 0, 'pool part keys translated');
   // Next-step hints (cockpit « Conseils »)
   const hosts = { h1: { id: 'h1', name: 'H', visible: true } };
   const base: PersonaLike = { online: true, mode: 'hot', marks: [], overwatch: 0, files: [] };
   let hs = nextStepHints({ actor: bricks, persona: { online: false }, hosts });
-  ok(/^Connecte-toi/.test(hs[0]?.key), 'hint: offline → connect');
+  ok(/^Connect/.test(hs[0]?.key), `hint: offline → connect (${hs[0]?.key})`);
   hs = nextStepHints({ actor: bricks, persona: base, hosts });
   ok(hs.some((h) => h.actionId === 'hackOnTheFly' && h.targetId === 'host:h1'), 'hint: visible host without mark → Hack on the Fly');
   hs = nextStepHints({ actor: bricks, persona: { ...base, marks: [{ targetId: 'host:h1', count: 1 }] as MatrixMark[] }, hosts });
@@ -126,9 +132,10 @@ const missingEn = (keys: string[]) => keys.filter((k) => !EN[k]);
   const files = [{ id: 'a', name: 'A', protected: true }, { id: 'b', name: 'B', bomb: 3 }, { id: 'c', name: 'C' }] as HintHost['files'];
   hs = nextStepHints({ actor: bricks, persona: { ...base, hostId: 'h1', overwatch: 32 }, hosts: { h1: { ...hosts.h1, perceived: true, files, devices: [{ id: 'd', name: 'Porte', link: { kind: 'door' } }] } } });
   ok(hs[0].tone === 'danger' && ['crackFile', 'disarmDataBomb', 'editFile', 'controlDevice'].every((id) => hs.some((h) => h.actionId === id)), 'hint: OS 32 warning first, then crack / disarm / copy / control');
-  ok(missingEn(hs.map((h) => h.key)).length === 0 && Object.values(DEVICE_CMD_LABELS).every((m) => missingEn(Object.values(m)).length === 0), 'hints and device commands translated');
+  ok(missingFr(hs.map((h) => h.key)).length === 0 && Object.values(DEVICE_CMD_LABELS).every((m) => missingFr(Object.values(m)).length === 0), 'hints and device commands translated');
   const imp = actionPool(jane, { mode: 'cold' }, ACTION_BY_ID.snoop);
-  ok(imp.reasonKey && EN[imp.reasonKey] && enT(imp.reasonKey, imp.reasonParams) === 'Electronic Warfare cannot be used untrained', `impossible reason translated (${enT(imp.reasonKey!, imp.reasonParams)})`);
+  ok(imp.reasonKey && enT(imp.reasonKey, imp.reasonParams) === 'Electronic Warfare cannot be used untrained', `impossible reason in English (${imp.reasonKey && enT(imp.reasonKey, imp.reasonParams)})`);
+  ok(imp.reasonKey && frT(imp.reasonKey, imp.reasonParams) === 'Guerre électronique ne peut pas être utilisée sans formation', `impossible reason translated (${imp.reasonKey && frT(imp.reasonKey, imp.reasonParams)})`);
 }
 
 // ---------------------------------------------------------------------------
@@ -156,10 +163,10 @@ try {
   // Persona creation without connecting
   res = await pl.send('matrix/ensure', { actorId: 'pc_bricks' });
   ok(res.programSlots === 3 && res.agent?.rating === 6, 'matrix/ensure: deck slots from the catalog + agent detection before connecting');
-  await expectFail(pj.send('matrix/ensure', { actorId: 'pc_bricks' }), /appartient/, 'ensure is owner-only');
+  await expectFail(pj.send('matrix/ensure', { actorId: 'pc_bricks' }), /not yours/, 'ensure is owner-only');
 
   // Connection
-  await expectFail(pl.send('matrix/connect', { actorId: 'pc_jane', mode: 'hot' }), /appartient/, 'player cannot connect someone else');
+  await expectFail(pl.send('matrix/connect', { actorId: 'pc_jane', mode: 'hot' }), /not yours/, 'player cannot connect someone else');
   res = await pl.send('matrix/connect', { actorId: 'pc_bricks', mode: 'hot' });
   ok(res.initiative.text === '7 + 4D6', 'connect hot → initiative DP + INT + 4D6');
   await settle();
@@ -171,10 +178,10 @@ try {
   await pl.send('matrix/loadProgram', { actorId: 'pc_bricks', name: 'Stealth' });
   await pl.send('matrix/loadProgram', { actorId: 'pc_bricks', name: 'Toolbox' });
   await pl.send('matrix/loadProgram', { actorId: 'pc_bricks', name: 'Encryption' });
-  await expectFail(pl.send('matrix/loadProgram', { actorId: 'pc_bricks', name: 'Armor' }), /emplacement/, 'slot limit enforced');
-  await expectFail(pl.send('matrix/loadProgram', { actorId: 'pc_bricks', name: 'Exploit' }), /absent/, 'cannot load a program she does not own');
+  await expectFail(pl.send('matrix/loadProgram', { actorId: 'pc_bricks', name: 'Armor' }), /No free slot/, 'slot limit enforced');
+  await expectFail(pl.send('matrix/loadProgram', { actorId: 'pc_bricks', name: 'Exploit' }), /not on your deck/, 'cannot load a program she does not own');
   await pl.send('matrix/unloadProgram', { actorId: 'pc_bricks', name: 'Encryption' });
-  await expectFail(pl.send('matrix/agentAssist', { actorId: 'pc_bricks', actionId: 'hackOnTheFly' }), /pas chargé/, 'assist needs a loaded agent');
+  await expectFail(pl.send('matrix/agentAssist', { actorId: 'pc_bricks', actionId: 'hackOnTheFly' }), /not loaded/, 'assist needs a loaded agent');
   await pl.send('matrix/agentLoad', { actorId: 'pc_bricks', loaded: true });
   await settle();
   ok(P().agent!.loaded && P().loadedPrograms.length === 2, 'agent loaded in the third slot');
@@ -186,17 +193,17 @@ try {
   await expectFail(pj.send('matrix/setASDF', { actorId: 'pc_jane', swap: ['attack', 'sleaze'] }), /cyberdeck/, 'commlinks cannot swap');
 
   // Agent configuration
-  await expectFail(pj.send('matrix/configureAgent', { actorId: 'pc_jane', rating: 3 }), /boutique/, 'no agent owned → shop hint');
+  await expectFail(pj.send('matrix/configureAgent', { actorId: 'pc_jane', rating: 3 }), /shop/, 'no agent owned → shop hint');
   await expectFail(pl.send('matrix/configureAgent', { actorId: 'pc_bricks', rating: 6, name: 'Ghost' }).then(() => { throw new Error('ok-pass'); }), /ok-pass/, 'player configures her agent within owned rating');
   await gm.send('matrix/configureAgent', { actorId: 'pc_jane', rating: 2, name: 'Assistant' });
 
   // Targets and visibility
-  await expectFail(pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'hackOnTheFly', targetId: 'host:host_hollow_pine' }), /introuvable/, 'hidden host cannot be targeted');
+  await expectFail(pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'hackOnTheFly', targetId: 'host:host_hollow_pine' }), /not found/, 'hidden host cannot be targeted');
   await gm.send('matrix/hostUpdate', { hostId: 'host_hollow_pine', patch: { visible: true } });
   await settle();
   ok(pl.state.matrix.hosts.host_hollow_pine && pl.state.matrix.hosts.host_hollow_pine.rating === undefined, 'visible host: name only, no rating before perception');
   ok((pl.state.matrix.hosts.host_hollow_pine as Host).notes === undefined && (pl.state.matrix.hosts.host_hollow_pine as Host).spider === undefined, 'GM notes and spider stripped');
-  await expectFail(pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'enterHost', targetId: 'host:host_hollow_pine' }), /marque/, 'Enter Host needs a mark');
+  await expectFail(pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'enterHost', targetId: 'host:host_hollow_pine' }), /mark/, 'Enter Host needs a mark');
 
   // Hack on the Fly — success (loaded dice)
   await gm.send('matrix/testDice', { mode: 'actor' });
@@ -223,7 +230,7 @@ try {
   ph = pl.state.matrix.hosts.host_hollow_pine as PlayerHostView;
   ok(res.success && ph.perceived && ph.rating === 5 && ph.files.length === 3 && ph.ic[0].rating === 5, 'perception reveals rating, IC ratings and files');
   ok(ph.files.every((f) => (f as Partial<HostFile>).content === undefined), 'file contents never listed');
-  await expectFail(pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'editFile', targetId: 'file:host_hollow_pine:file_hp_relay' }), /protégé/, 'protected file must be cracked first');
+  await expectFail(pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'editFile', targetId: 'file:host_hollow_pine:file_hp_relay' }), /Protected file/, 'protected file must be cracked first');
   res = await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'crackFile', targetId: 'file:host_hollow_pine:file_hp_relay' });
   await settle();
   ok(res.success && !M().hosts.host_hollow_pine.files.find((f) => f.id === 'file_hp_relay')!.protected, 'Crack File removes protection');
@@ -242,7 +249,7 @@ try {
   res = await pl.send('matrix/agentAssist', { actorId: 'pc_bricks', actionId: 'dataSpike' });
   ok(res.pendingAssist && res.pendingAssist.dice === Math.min(res.roll.hits, 6) && res.pendingAssist.limitBonus === 1, `agent assist stores bonus dice/limit (${JSON.stringify(res.pendingAssist)})`);
   ok(res.roll.pool === 12 && res.roll.limit === 5, `assist pool = 2 × 6, limit = deck Attack 5 (got ${res.roll.pool} [${res.roll.limit}])`);
-  await expectFail(pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'hackOnTheFly', targetId: 'host:host_hollow_pine', assistFromAgent: true }), /autre compétence/, 'assist is skill-specific');
+  await expectFail(pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'hackOnTheFly', targetId: 'host:host_hollow_pine', assistFromAgent: true }), /another skill/, 'assist is skill-specific');
   const icId = 'ic_hp_patrol';
   res = await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'dataSpike', targetId: `ic:host_hollow_pine:${icId}`, assistFromAgent: true });
   ok(res.success && res.roll.parts.some((p: PoolPart) => /agent/i.test(p.label)) && res.roll.limit === 6, `assisted Data Spike: bonus dice and limit 5 + 1 (got ${res.roll.limit})`);
@@ -257,7 +264,7 @@ try {
   await settle();
   ok(res.agent && res.success === false && res.roll.pool === 12 && P().overwatch === osBefore + res.defense.hits, `agent action: Rating × 2 pool, its OS goes to the deck (+${res.defense.hits})`);
   ok(P().marksOnMe.some((m) => m.sourceId === 'host:host_hollow_pine'), 'failed sleaze → host marks the decker');
-  ok(gm.state.log.some((e) => e.kind === 'matrix' && /agent de Bricks/.test(e.author)), 'agent action logged under the agent name');
+  ok(gm.state.log.some((e) => e.kind === 'matrix' && /Bricks’s agent/.test(e.author)), 'agent action logged under the agent name');
 
   // IC attacks
   await gm.send('matrix/icLaunch', { hostId: 'host_hollow_pine', type: 'black' });
@@ -268,9 +275,9 @@ try {
   res = await gm.send('matrix/icAct', { hostId: 'host_hollow_pine', icId: black.id, actorId: 'pc_bricks' });
   await settle();
   ok(res.success && P().matrixDamage > 0 && gm.state.actors.pc_bricks.condition.physical > physBefore, 'Black IC: matrix damage + physical biofeedback in hot sim');
-  ok(P().linkLocked && /Noire/.test(P().linkLocked!.name), 'Black IC link-locks');
-  await expectFail(pl.send('matrix/disconnect', { actorId: 'pc_bricks' }), /Verrou/, 'link-locked: no graceful disconnect');
-  await expectFail(pl.send('matrix/icAct', { hostId: 'host_hollow_pine', icId: black.id, actorId: 'pc_bricks' }), /MJ/, 'players cannot run IC');
+  ok(P().linkLocked && /Black/.test(P().linkLocked!.name), 'Black IC link-locks');
+  await expectFail(pl.send('matrix/disconnect', { actorId: 'pc_bricks' }), /Link-lock/, 'link-locked: no graceful disconnect');
+  await expectFail(pl.send('matrix/icAct', { hostId: 'host_hollow_pine', icId: black.id, actorId: 'pc_bricks' }), /GM-only/, 'players cannot run IC');
   await gm.send('matrix/setPersona', { actorId: 'pc_bricks', patch: { linkLocked: null, matrixDamage: 0 } });
   await gm.send('matrix/hostUpdate', { hostId: 'host_hollow_pine', patch: { rating: 5 } });
 
@@ -291,7 +298,7 @@ try {
   ok(P().bricked, 'deck bricked after convergence damage on a DR 3 deck');
   const evs = pl.events.filter((e) => e.ev === 'sfx').map((e) => e.data.id);
   ok(evs.includes('alarm') && evs.includes('matrix-glitch'), `convergence sfx (${evs.join(',')})`);
-  await expectFail(pl.send('matrix/connect', { actorId: 'pc_bricks', mode: 'cold' }), /briqué/, 'bricked deck cannot connect');
+  await expectFail(pl.send('matrix/connect', { actorId: 'pc_bricks', mode: 'cold' }), /bricked/, 'bricked deck cannot connect');
   await gm.send('matrix/setPersona', { actorId: 'pc_bricks', patch: { matrixDamage: 0 } });
   await settle();
   ok(!P().bricked, 'GM repair unbricks');
@@ -301,7 +308,7 @@ try {
   const stunBefore = gm.state.actors.pc_bricks.condition.stun;
   res = await gm.send('matrix/disconnect', { actorId: 'pc_bricks', dump: true });
   await settle();
-  ok(res.outcomes.some((s: string) => /Choc/.test(s)) && gm.state.actors.pc_bricks.condition.stun > stunBefore, 'GM dump in cold sim → stun dumpshock');
+  ok(res.outcomes.some((s: string) => /Dumpshock/.test(s)) && gm.state.actors.pc_bricks.condition.stun > stunBefore, 'GM dump in cold sim → stun dumpshock');
 
   // Glitch: critical glitch on assist crashes the agent
   await pl.send('matrix/connect', { actorId: 'pc_bricks', mode: 'cold' });
@@ -327,7 +334,7 @@ try {
   await gm.send('matrix/hostDelete', { hostId: res.id });
   await settle();
   ok(!M().hosts[res.id] && !P().marks.some((m) => m.targetId === `host:${res.id}`), 'host delete clears marks');
-  await expectFail(pl.send('matrix/hostCreate', { name: 'x', rating: 3 }), /MJ/, 'players cannot create hosts');
+  await expectFail(pl.send('matrix/hostCreate', { name: 'x', rating: 3 }), /GM-only/, 'players cannot create hosts');
   await gm.send('matrix/resetPersona', { actorId: 'pc_bricks' });
   await settle();
   ok(P() && !P().online && P().overwatch === 0, 'reset persona');
@@ -347,7 +354,7 @@ try {
   await settle();
   const hpIc = () => M().hosts.host_hollow_pine.ic;
   ok(hpIc().filter((i) => i.active).length === 2 && res.msgs.length === 1, 'alerted host turn: the next IC of the suite is launched');
-  ok(res.results.some((r: { skipped?: string }) => r.skipped && /surveille/.test(r.skipped)), 'patrol skips when everyone is already spotted');
+  ok(res.results.some((r: { skipped?: string }) => r.skipped && /keeps watch/.test(r.skipped)), 'patrol skips when everyone is already spotted');
   ok(res.results.some((r: { result?: unknown; actorId?: string }) => r.result && r.actorId === 'pc_bricks'), 'the launched IC attacks Bricks');
   // Overwatch: manual 15-minute tick, then the automatic timer
   await gm.send('matrix/setOverwatch', { actorId: 'pc_bricks', value: 5 });
@@ -389,7 +396,7 @@ try {
   res = await gm.send('matrix/icTurn', { hostId: firstIc.hostId, icId: firstIc.icId, entryId: firstIc.id });
   await settle();
   ok(res.advanced && gm.state.combat.currentId !== firstIc.id, 'IC acts and passes its turn');
-  await expectFail(pl.send('matrix/icTurn', { hostId: firstIc.hostId, icId: firstIc.icId }), /MJ/, 'players cannot run IC turns');
+  await expectFail(pl.send('matrix/icTurn', { hostId: firstIc.hostId, icId: firstIc.icId }), /GM-only/, 'players cannot run IC turns');
   // New Combat Turn: the alerted host launches one more IC, which joins the order
   const activeBefore = hpIc().filter((i) => i.active).length;
   await gm.send('combat/newTurn', {});
@@ -442,7 +449,7 @@ try {
   const note = Object.values(pl.state.notes?.pages || {}).find((n) => n.id === res.id);
   ok(note && note.scope === 'party' && note.title === P().files[0].name && /L-07|Récupéré/.test(note.body), 'shared file → party note');
   ok(P().files[0].shared, 'file flagged as shared');
-  await expectFail(pj.send('matrix/shareFile', { actorId: 'pc_bricks', fileId }), /appartient/, 'only the owner shares');
+  await expectFail(pj.send('matrix/shareFile', { actorId: 'pc_bricks', fileId }), /not yours/, 'only the owner shares');
   res = await gm.send('matrix/shareFile', { actorId: 'pc_bricks', fileId });
   await settle();
   ok(res.handoutId && pl.state.campaign.handouts.some((h) => h.id === res.handoutId), 'GM share → handout revealed to the players');
@@ -455,16 +462,18 @@ try {
       ok(!!e.i18n?.key || !e.text, `matrix log entry has an i18n key: ${e.text}`);
       keys.push(...msgKeys(e.i18n), ...msgKeys(e.authorI18n), ...msgKeys(e.roll?.labelI18n));
     }
-    const miss = [...new Set(missingEn(keys))];
+    const miss = [...new Set(missingFr(keys))];
     ok(entries.length > 10 && miss.length === 0, `matrix log keys translated (${entries.length} entries, missing: ${miss.join(' | ')})`);
-    const sample = entries.map((e) => enT(e.i18n!.key, e.i18n!.params)).filter((s) => /⟦/.test(s));
-    ok(sample.length === 0, `English rendering complete (${sample.slice(0, 3).join(' / ')})`);
+    const sample = entries.map((e) => frT(e.i18n!.key, e.i18n!.params)).filter((s) => /⟦/.test(s));
+    ok(sample.length === 0, `French rendering complete (${sample.slice(0, 3).join(' / ')})`);
+    const textDiff = entries.filter((e) => e.text !== enT(e.i18n!.key, e.i18n!.params)).map((e) => `${e.text} ≠ ${enT(e.i18n!.key, e.i18n!.params)}`);
+    ok(textDiff.length === 0, `stored text = English rendering (${textDiff.slice(0, 3).join(' / ')})`);
     try {
       await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'nope' });
       ok(false, 'unknown action should fail');
     } catch (e) {
       const ke = e as Error & { key?: string }; // an optional i18n key on the error (the harness sets none: message fallback)
-      ok(ke.key ? !!EN[ke.key] : /inconnue/.test(ke.message), `error reply carries a translated key (${ke.key || ke.message})`);
+      ok(ke.key ? !!FR[cur(ke.key)] : /Unknown Matrix action/.test(ke.message), `error reply carries a translated key (${ke.key || ke.message})`);
     }
   }
 
@@ -477,5 +486,5 @@ try {
 } finally {
   srv.stop();
 }
-console.log(`matrix: ${passes} ok, ${failures} échec(s)`);
+console.log(`matrix: ${passes} ok, ${failures} failed`);
 process.exit(failures ? 1 : 0);

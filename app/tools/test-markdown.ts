@@ -75,5 +75,5 @@ t('link text may contain a code span', () => {
   assert(h.includes('<a href="/x" target="_blank" rel="noopener noreferrer"><code>cmd</code></a>'), h);
 });
 
-console.log(`\n${ok} ok, ${ko} échec(s)`);
+console.log(`\n${ok} ok, ${ko} failed`);
 process.exit(ko ? 1 : 0);

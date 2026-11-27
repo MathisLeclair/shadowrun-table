@@ -27,26 +27,31 @@ async function expectFail(p: Promise<unknown>, msg: string) {
 }
 const H = (token: string) => ({ Authorization: `Bearer ${token}`, 'content-type': 'application/json' });
 
-/** i18n check: entries render to their stored French text, and every key has an English entry. Returns English texts. */
+/**
+ * i18n check: entries render in English to their stored (English) text, and every key has a French entry in
+ * client/i18n/fr (old French keys go through legacy-fr-keys.json). Returns the English and French texts.
+ */
 async function renderI18n(entries: LogEntry[], label: string) {
   const I = await import('../client/lib/i18n.ts');
-  const dir = new URL('../client/i18n/en/', import.meta.url);
+  const dir = new URL('../client/i18n/fr/', import.meta.url);
   const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json')).sort((a, b) => (a === 'glossary.json' ? -1 : b === 'glossary.json' ? 1 : a.localeCompare(b)));
   const dict: Record<string, string> = {};
   for (const f of files) Object.assign(dict, JSON.parse(fs.readFileSync(new URL(f, dir), 'utf8')));
-  I.setDictionary(dict);
+  const legacyKeys = JSON.parse(fs.readFileSync(new URL('../client/i18n/legacy-fr-keys.json', import.meta.url), 'utf8'));
+  I.setDictionary(dict, { legacyKeys });
   I.clearMissing();
   const text = (e: LogEntry) => (e.i18n?.key ? I.t(e.i18n.key, e.i18n.params) : e.text);
   ok(entries.length > 0 && entries.every((e) => e.i18n?.key), `${label}: entries carry i18n keys`);
-  I.setLang('fr');
-  const bad = entries.filter((e) => text(e) !== e.text);
-  ok(!bad.length, `${label}: French rendering = stored text (${bad.map((e) => `${text(e)} ≠ ${e.text}`).join(' | ')})`);
   I.setLang('en');
   const en = entries.map(text);
+  const bad = entries.filter((e) => text(e) !== e.text);
+  ok(!bad.length, `${label}: English rendering = stored text (${bad.map((e) => `${text(e)} ≠ ${e.text}`).join(' | ')})`);
   I.setLang('fr');
+  const fr = entries.map(text);
   const missing = Object.keys(I.missingKeys());
-  ok(!missing.length, `${label}: every key has English (${missing.join(' | ')})`);
-  return en;
+  ok(!missing.length, `${label}: every key has French (${missing.join(' | ')})`);
+  ok(fr.some((x, i) => x !== en[i]), `${label}: French rendering differs from English`);
+  return { en, fr };
 }
 
 try {
@@ -250,7 +255,7 @@ try {
   await settle();
   c = gm.state.combat;
   ok(c.round === 2 && c.pass === 1 && c.currentId === null, `new combat turn (round ${c.round})`);
-  ok(c.entries.find((e) => e.id === pcE.id)!.toRoll && c.entries.filter((e) => e.kind === 'npc').every((e) => !e.toRoll), 'PCs à lancer, NPCs rerolled');
+  ok(c.entries.find((e) => e.id === pcE.id)!.toRoll && c.entries.filter((e) => e.kind === 'npc').every((e) => !e.toRoll), 'PCs to roll, NPCs rerolled');
 
   // Seize the initiative + Blitz
   await p1.send('combat/seize', { entryId: pcE.id });
@@ -263,7 +268,7 @@ try {
   ok(pcNow.dice === 5 && pcNow.rolls!.length === 5, 'blitz rolls 5D6');
   ok(c.entries[0].id === pcE.id && c.currentId === pcE.id, 'seized entry goes first');
 
-  // Initiative mode (VR chaude)
+  // Initiative mode (hot-sim VR)
   await p1.send('combat/setMode', { entryId: pcE.id, mode: 'hot' });
   await expectFail(p1.send('combat/setMode', { entryId: pcE.id, mode: 'warp' }), 'unknown mode rejected');
 
@@ -302,9 +307,10 @@ try {
   await gm.send('combat/end', {});
   await settle();
   ok(gm.state.combat.active === false && gm.state.combat.entries.length === 0, 'combat ended');
-  ok(gm.state.log.some((l) => l.kind === 'combat' && l.text.includes('Fin du combat')), 'combat log entries');
-  const combatEn = await renderI18n(gm.state.log.filter((l) => l.kind === 'combat'), 'combat log');
+  ok(gm.state.log.some((l) => l.kind === 'combat' && l.text.includes('Combat over')), 'combat log entries');
+  const { en: combatEn, fr: combatFr } = await renderI18n(gm.state.log.filter((l) => l.kind === 'combat'), 'combat log');
   ok(combatEn.some((x) => /^Combat over \(\d+ turns?\)\.$/.test(x)), 'English combat log (combat over)');
+  ok(combatFr.some((x) => /^Fin du combat \(\d+ tours?\)\.$/.test(x)), 'French combat log (combat over)');
   ok(combatEn.some((x) => /— initiative \d+ — \d+ \+ \d+D6 \(/.test(x)), 'English roll detail (nested params)');
   await expectFail(gm.send('combat/next', {}), 'next without combat fails');
 
@@ -313,7 +319,7 @@ try {
   const sp5 = await gm.send<SpawnResult>('bestiary/spawn', { templateId: 'tpl_ic_killer', mapId: null, count: 2, addToCombat: true });
   await settle();
   c = gm.state.combat;
-  ok(c.entries.length === 2 && c.entries.every((e) => e.mode === 'hot' && e.dice === 4 && e.base === 10), 'IC spawned into combat with VR chaude initiative (10 + 4D6)');
+  ok(c.entries.length === 2 && c.entries.every((e) => e.mode === 'hot' && e.dice === 4 && e.base === 10), 'IC spawned into combat with hot-sim VR initiative (10 + 4D6)');
   ok(c.currentId === c.entries[0].id, 'auto start when everyone has rolled');
   ok(sp5.actorIds.length === 2, 'spawn result');
 
@@ -325,5 +331,5 @@ try {
 } finally {
   srv.stop();
 }
-console.log(`${passes} ok, ${failures} échec(s)`);
+console.log(`${passes} ok, ${failures} failure(s)`);
 process.exit(failures ? 1 : 0);

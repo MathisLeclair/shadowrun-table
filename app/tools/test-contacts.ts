@@ -1,5 +1,5 @@
 // Contact rolls test: node tools/test-contacts.ts  (isolated server on port 3962, exit code != 0 on failure)
-// Rules: SR5 « Using Contacts » p. 387-389 (shared/contacts.js, 'actor/contactRoll').
+// Rules: SR5 « Using Contacts » p. 387-389 (shared/contacts.ts, 'actor/contactRoll').
 import { startServer, login, client, settle } from './test-client.ts';
 import type { ContactSheetSource } from '../shared/contacts.ts';
 import { contactFees, bribeCost, reachable, contactSheet, CONNECTION_DETAILS, LOYALTY_LEVELS, FAVOR_RATINGS } from '../shared/contacts.ts';
@@ -40,7 +40,7 @@ try {
   ok(/Loyauté Sophie Winters \+4/.test(n.breakdown) && /dés achetés \+2/.test(n.breakdown) && n.contactRoll.bribeCost === 600 && n.limit > 0, 'negotiate: runner’s Negotiation + Loyalty 4 + 2 bought dice (600 ¥), Social limit');
   await settle();
   const e = gm.state.log.find((x) => x.id === n.logId);
-  ok(e?.roll?.labelI18n?.key === 'Négociation avec {contact}' && e.author === jane().name, 'negotiate logged under the runner with labelI18n');
+  ok(e?.roll?.labelI18n?.key === 'Negotiation with {contact}' && e.author === jane().name, 'negotiate logged under the runner with labelI18n');
 
   const sarah = jane().contacts.find((c) => c.name === 'Sarah Bones')!; // no sheet
   await rejects(p1.send('actor/contactRoll', { actorId: 'pc_jane', contactId: sarah.id, kind: 'legwork' }), 'legwork without a sheet refused');

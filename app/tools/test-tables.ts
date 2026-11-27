@@ -113,7 +113,7 @@ try {
     const evil = path.join(tmpRoot, 'evil.zip');
     await writeZipFile(evil, [{ name: 'fine.txt', data: 'ok' }, { name: '../../evil-outside.txt', data: 'pwned' }]);
     const out2 = path.join(tmpRoot, 'out2', 'inner');
-    await rejects(extractZip(evil, out2), /Chemin interdit/, 'zip-slip archive rejected');
+    await rejects(extractZip(evil, out2), /Forbidden path/, 'zip-slip archive rejected');
     ok(!fs.existsSync(path.join(tmpRoot, 'evil-outside.txt')) && !fs.existsSync(path.join(out2, 'fine.txt')), 'nothing written when an entry is dangerous');
     // Tampered size: an entry inflating to more than announced is refused.
     const bomb = path.join(tmpRoot, 'bomb.zip');
@@ -122,7 +122,7 @@ try {
     const cen = buf.lastIndexOf(Buffer.from([0x50, 0x4b, 0x01, 0x02]));
     buf.writeUInt32LE(10, cen + 24); // claim 10 bytes uncompressed
     fs.writeFileSync(bomb, buf);
-    await rejects(extractZip(bomb, path.join(tmpRoot, 'out3')), /plus gros|CRC|corrompu/, 'entry larger than declared rejected');
+    await rejects(extractZip(bomb, path.join(tmpRoot, 'out3')), /larger than the archive says|CRC|corrupt/i, 'entry larger than declared rejected');
     ok(ZipError && true, 'ZipError exported');
   }
 
@@ -156,7 +156,7 @@ try {
   const gmATok = tokenOf(gmA);
   const gmB = track(await client(srv.url, await login(srv.url, { role: 'gm', password: 'secret-beta', table: 'beta' }), { table: 'beta' }));
   const gmBTok = tokenOf(gmB);
-  await rejects(login(srv.url, { role: 'gm', password: 'secret-alpha', table: 'beta' }), /incorrect/, 'alpha password refused on beta');
+  await rejects(login(srv.url, { role: 'gm', password: 'secret-alpha', table: 'beta' }), /Wrong GM password/, 'alpha password refused on beta');
   const pA = track(await client(srv.url, await login(srv.url, { role: 'player', name: 'Ana', characterId: 'pc1', table: 'alpha' }), { table: 'alpha' }));
   const pB = track(await client(srv.url, await login(srv.url, { role: 'player', name: 'Bob', characterId: 'pc1', table: 'beta' }), { table: 'beta' }));
   await settle();
@@ -201,7 +201,7 @@ try {
   await gmA.send('combat/start', { mapId: 'map_same' });
   await gmB.send('combat/start', { mapId: 'map_same' });
   await gmA.send('combat/newTurn', {});
-  await rejects(gmB.send('combat/prev', {}), /Rien à annuler/, 'beta has no undo from alpha');
+  await rejects(gmB.send('combat/prev', {}), /Nothing to undo/, 'beta has no undo from alpha');
   ok((await gmA.send('combat/prev', {})) !== undefined, 'alpha can undo its own turn');
 
   // Cross-table auth
@@ -252,12 +252,12 @@ try {
   ok(worldsA.worlds.some((w) => w.id === 'mon-monde') && worldsA.localPaths === false && worldsA.detected === upWj.world.path, 'foundry/worlds lists the uploaded world (no local paths)');
   const worldsB = await gmB.send<FoundryWorlds>('foundry/worlds', {});
   ok(!worldsB.worlds.length, 'beta sees no world of alpha');
-  await rejects(gmB.send('foundry/scan', { worldPath: upWj.world.path }), /seuls les mondes téléversés|autre table/, 'beta cannot scan alpha’s uploaded world');
-  await rejects(gmB.send('foundry/scan', { worldPath: 'C:/Users' }), /seuls les mondes téléversés/, 'local paths refused on a shared server');
+  await rejects(gmB.send('foundry/scan', { worldPath: upWj.world.path }), /only worlds uploaded for this table|another table/, 'beta cannot scan alpha’s uploaded world');
+  await rejects(gmB.send('foundry/scan', { worldPath: 'C:/Users' }), /only worlds uploaded for this table/, 'local paths refused on a shared server');
   const evilWorld = path.join(tmpRoot, 'evil-world.zip');
   await writeZipFile(evilWorld, [{ name: 'world.json', file: path.join(worldDir, 'world.json') }, { name: '../../../pwned.txt', data: 'x' }]);
   const upE = await fetch(srv.url + '/api/foundry/upload?kind=world', { method: 'POST', headers: H(gmATok, { 'Content-Type': 'application/zip' }), body: fs.readFileSync(evilWorld) });
-  ok(upE.status === 400 && /Chemin interdit/.test((await json(upE)).error), 'zip-slip world upload rejected (400)');
+  ok(upE.status === 400 && /Forbidden path/.test((await json(upE)).error), 'zip-slip world upload rejected (400)');
   ok(!fs.existsSync(path.join(srv.runtime, 'pwned.txt')) && !fs.existsSync(path.join(srv.runtime, 'tables', 'pwned.txt')), 'no file escaped the table folder');
   const evilData = path.join(tmpRoot, 'evil-data.zip');
   await writeZipFile(evilData, [{ name: 'Music/a.mp3', data: 'x' }, { name: 'Music/../../../../escape.txt', data: 'x' }]);
@@ -308,7 +308,7 @@ try {
   ok((await fetch(srv.url + `/api/lobby?table=${G}`)).status === 200, 'hidden table still reachable by its link');
   // GM password reset
   await A(`/api/admin/tables/${G}/gm-password`, { method: 'POST', body: JSON.stringify({ password: 'nouveau-pass' }) });
-  await rejects(login(srv.url, { role: 'gm', password: 'gamma-pass', table: G }), /incorrect/, 'old GM password refused after reset');
+  await rejects(login(srv.url, { role: 'gm', password: 'gamma-pass', table: G }), /Wrong GM password/, 'old GM password refused after reset');
   const gTok = await login(srv.url, { role: 'gm', password: 'nouveau-pass', table: G });
   ok(!!gTok, 'new GM password works');
   // admin opens a table as GM
@@ -320,7 +320,7 @@ try {
   await settle();
   ok(gmG2.events.some((e) => e.ev === 'unauthorized'), 'archiving disconnects the table’s users');
   ok((await fetch(srv.url + `/api/lobby?table=${G}`)).status === 410, 'archived table: lobby 410');
-  await rejects(login(srv.url, { role: 'gm', password: 'nouveau-pass', table: G }), /archivée/, 'archived table: no login');
+  await rejects(login(srv.url, { role: 'gm', password: 'nouveau-pass', table: G }), /archived/, 'archived table: no login');
   await A(`/api/admin/tables/${G}`, { method: 'PATCH', body: JSON.stringify({ name: 'Lyon 2081' }) }); // renamed while archived
   await A(`/api/admin/tables/${G}`, { method: 'PATCH', body: JSON.stringify({ archived: false }) });
   const gmG3 = track(await client(srv.url, await login(srv.url, { role: 'gm', password: 'nouveau-pass', table: G }), { table: G }));
@@ -442,5 +442,5 @@ try {
   } catch {}
 }
 
-console.log(`\n${passed} ok, ${failed} échec(s)`);
+console.log(`\n${passed} ok, ${failed} failed`);
 process.exit(failed ? 1 : 0);

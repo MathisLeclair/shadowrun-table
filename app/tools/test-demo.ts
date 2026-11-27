@@ -119,7 +119,7 @@ try {
   ok(alice.state.users && Object.values(gm.state.users || {}).every((u) => !(u as { pin?: unknown }).pin), 'no PIN stored');
   await login(url, { role: 'player', name: 'Chloé', table: 'demo' });
   await login(url, { role: 'player', name: 'Dan', table: 'demo' });
-  await rejects(login(url, { role: 'player', name: 'Eve', table: 'demo' }), /pleine/, 'user cap (SR_DEMO_MAX_USERS=4)');
+  await rejects(login(url, { role: 'player', name: 'Eve', table: 'demo' }), /is full/, 'user cap (SR_DEMO_MAX_USERS=4)');
   ok(!!(await login(url, { role: 'player', name: 'Dan', table: 'demo' })), 'existing users still log in when full');
 
   // -------------------------------------------------------------------------
@@ -145,9 +145,9 @@ try {
   ok(imp.status === 403, 'state import refused: ' + imp.status);
   ok((await fetch(url + '/api/books', { headers: H(alphaTok, 'alpha') })).status === 200, 'rulebooks route still open on a real table');
   ok((await fetch(url + '/api/admin/export', { headers: H(gmTok, 'demo') })).status === 200, 'export still works on the demo');
-  await rejects(gm.send('foundry/worlds', {}), /Désactivé/, 'Foundry actions refused');
-  await rejects(gm.send('maps/fromLibrary', { slug: 'gas-station' }), /Désactivé/, 'library copies refused');
-  await rejects(gm.send('maps/publishToLibrary', { mapId: 'map_demo_bar' }), /Désactivé/, 'library publishing refused');
+  await rejects(gm.send('foundry/worlds', {}), /Disabled on the demo/, 'Foundry actions refused');
+  await rejects(gm.send('maps/fromLibrary', { slug: 'gas-station' }), /Disabled on the demo/, 'library copies refused');
+  await rejects(gm.send('maps/publishToLibrary', { mapId: 'map_demo_bar' }), /Disabled on the demo/, 'library publishing refused');
   // Library images: only those of the demo's own maps.
   const key = await json(await fetch(url + '/api/maplib/key', { headers: H(gmTok, 'demo') }));
   const own = await fetch(`${url}/api/maplib/image/dive-bar?k=${encodeURIComponent(key.k)}`);
@@ -166,7 +166,7 @@ try {
   ok(big.status === 413, 'image over SR_DEMO_UPLOAD_KB refused: ' + big.status);
   ok((await up(p1, 'demo', 'b.png', png(400 * 1024))).status === 200, 'player upload within the quota');
   const full = await up(gmTok, 'demo', 'c.png', png(300 * 1024));
-  ok(full.status === 400 && /plein/.test((await json(full)).error || ''), 'upload quota enforced: ' + full.status);
+  ok(full.status === 400 && /is full/.test((await json(full)).error || ''), 'upload quota enforced: ' + full.status);
   // Chunked body without Content-Length: refused before reading.
   const chunked = await new Promise<number>((resolve) => {
     const req = http.request(url + '/api/upload', { method: 'POST', headers: { ...H(gmTok, 'demo'), 'X-Filename': 'd.png', 'Transfer-Encoding': 'chunked' } }, (res) => {
@@ -184,11 +184,11 @@ try {
 
   // -------------------------------------------------------------------------
   section('socket action caps');
-  await rejects(gm.send('chat/send', { text: 'x'.repeat(600) }), /trop long/, 'chat over 500 characters refused');
+  await rejects(gm.send('chat/send', { text: 'x'.repeat(600) }), /too long/, 'chat over 500 characters refused');
   await gm.send('chat/send', { text: 'Salut la démo' });
-  await rejects(gm.send('notes/create', { title: 'x', body: 'y'.repeat(140 * 1024) }), /volumineuse/, 'action payload over 128 KB refused');
+  await rejects(gm.send('notes/create', { title: 'x', body: 'y'.repeat(140 * 1024) }), /too large/, 'action payload over 128 KB refused');
   const burst = await Promise.allSettled(Array.from({ length: 130 }, () => gm.send('maps/setActive', { mapId: 'map_demo_entrepot' })));
-  ok(burst.some((r) => r.status === 'rejected' && /ralentis/.test(r.reason.message)), 'per-socket action rate limit');
+  ok(burst.some((r) => r.status === 'rejected' && /slow down/.test(r.reason.message)), 'per-socket action rate limit');
   const alphaGm = track(await client(url, alphaTok, { table: 'alpha' }));
   await alphaGm.send('chat/send', { text: 'x'.repeat(1500) });
   ok(true, 'a real table keeps the normal chat length');
@@ -221,7 +221,7 @@ try {
   ok(alphaState.log.some((e: { text?: string }) => (e.text || '').length === 1500), 'the real table is untouched by the demo reset');
 
   // -------------------------------------------------------------------------
-  section('GM reset (Réglages) on the demo');
+  section('GM reset (Settings) on the demo');
   const gm2Tok = await login(url, { role: 'gm', table: 'demo' });
   const gm2 = track(await client(url, gm2Tok, { table: 'demo' }));
   const extra = await gm2.send<string>('actor/create', { type: 'npc', name: 'Encore un' });
@@ -240,7 +240,7 @@ try {
     try {
       await login(url, { role: 'gm', table: 'demo' });
     } catch (err) {
-      throttled = /Trop de tentatives/.test((err as Error).message);
+      throttled = /Too many attempts/.test((err as Error).message);
     }
   }
   ok(throttled, 'demo logins are throttled per IP');
@@ -257,8 +257,8 @@ try {
     fs.writeFileSync(file, JSON.stringify(s));
     srv = await startServer({ port: 3961, runtime, keepRuntime: true, env: { ...ENV, SR_DEMO_TABLE: 'alpha', SR_DEMO_IDLE_MINUTES: '60' }, tables: [] });
     const out = srv.output();
-    ok(/n’est pas une table de démo/.test(out), 'SR_DEMO_TABLE naming an existing real table is refused');
-    await rejects(login(srv.url, { role: 'gm', password: 'nope', table: 'alpha' }), /incorrect/, 'alpha still needs its GM password');
+    ok(/is not a demo table/.test(out), 'SR_DEMO_TABLE naming an existing real table is refused');
+    await rejects(login(srv.url, { role: 'gm', password: 'nope', table: 'alpha' }), /Wrong GM password/, 'alpha still needs its GM password');
     const s3 = JSON.parse(fs.readFileSync(file, 'utf8'));
     ok(!s3.actors.npc_left_over && !!s3.actors.pc_demo_samurai, 'a demo table (still flagged in server.json) is rebuilt at boot');
   }
@@ -299,5 +299,5 @@ try {
     fs.rmSync(runtime, { recursive: true, force: true });
   } catch {}
 }
-console.log(`\n${passed} ok, ${failed} échec(s)`);
+console.log(`\n${passed} ok, ${failed} failure(s)`);
 process.exit(failed ? 1 : 0);

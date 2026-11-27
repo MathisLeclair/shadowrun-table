@@ -408,7 +408,7 @@ try {
     await waitFor(() => gm.events.some((e) => e.ev === 'assistant:done'));
     assert.equal(requests.length - before, 8);
     const view = (await api(`/api/assistant/conversations/${r.body.conversationId}`, gmTok)).body;
-    assert.ok(view.items.some((i: ConvItem) => i.type === 'notice' && /Limite d’étapes/.test(i.key || '')));
+    assert.ok(view.items.some((i: ConvItem) => i.type === 'notice' && /Step limit reached/.test(i.key || '')));
     script.length = 0;
   });
 

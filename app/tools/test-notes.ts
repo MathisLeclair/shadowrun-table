@@ -34,7 +34,7 @@ async function rejects(p: Promise<unknown>, re: RegExp, what = '') {
   try {
     await p;
   } catch (err) {
-    assert.match((err as Error).message, re, `${what}: unexpected error « ${(err as Error).message} »`);
+    assert.match((err as Error).message, re, `${what}: unexpected error “${(err as Error).message}”`);
     return;
   }
   assert.fail(`${what}: should have been refused`);
@@ -189,14 +189,14 @@ await test('[2] one player cannot fill the table; a removed player frees their s
       refused = e as FailError;
     }
   }
-  assert.ok(refused && /Tes notes personnelles sont pleines/.test(refused.key), `per-owner budget enforced (got ${refused?.key})`);
+  assert.ok(refused && /Your personal notes are full/.test(refused.key), `per-owner budget enforced (got ${refused?.key})`);
   assert.equal(made, Math.floor(MAX_OWNER_TOTAL / MAX_BODY));
   assert.ok(ownerSize(state.notes, 'bob') <= MAX_OWNER_TOTAL && MAX_OWNER_TOTAL < MAX_TOTAL);
   // growing an existing page past the budget is refused too, shrinking is always allowed
   const bobPage = Object.values(state.notes.pages).find((p) => p.ownerId === 'bob')!;
   bobPage.body = bobPage.body.slice(10); // 10 characters of room left
   run(state, bob, 'notes/create', { scope: 'private', title: 'petite', body: 'abcde' }); // 5 left
-  throwsKey(() => run(state, bob, 'notes/save', { id: bobPage.id, body: big, baseVersion: bobPage.version }), /Tes notes personnelles sont pleines/, 'growth past the budget');
+  throwsKey(() => run(state, bob, 'notes/save', { id: bobPage.id, body: big, baseVersion: bobPage.version }), /Your personal notes are full/, 'growth past the budget');
   run(state, bob, 'notes/save', { id: bobPage.id, body: 'court', baseVersion: bobPage.version });
   // Alice still has room
   const a = run(state, alice, 'notes/create', { scope: 'private', title: 'A', body: 'y'.repeat(1000) });
@@ -241,7 +241,7 @@ await test('[2] comments per author are capped across the table', () => {
       }
     }
   assert.equal(n, MAX_USER_COMMENTS);
-  assert.match(refused!.key, /Tu as trop de commentaires/);
+  assert.match(refused!.key, /You have too many comments/);
 });
 
 await test('[3] filter builds view.notes from the full state when the core did not clone it', () => {
@@ -270,12 +270,14 @@ await test('[3] filter builds view.notes from the full state when the core did n
   assert.deepEqual(Object.keys(gv.notes.pages), ['party'], 'unshared private pages never reach the GM');
 });
 
-await test('[4] the privacy copy no longer promises « toi seul »', () => {
+await test('[4] the privacy copy no longer promises “only you” (« toi seul » in French)', () => {
   const dir = new URL('../client/modules/notes/', import.meta.url);
   for (const f of fs.readdirSync(dir)) {
     if (!/\.(js|jsx|ts|tsx)$/.test(f)) continue;
-    assert.ok(!/toi seul/.test(fs.readFileSync(new URL(f, dir), 'utf8')), `${f} still says « toi seul »`);
+    assert.ok(!/only you\b|toi seul/i.test(fs.readFileSync(new URL(f, dir), 'utf8')), `${f} still says “only you”`);
   }
+  const fr = fs.readFileSync(new URL('../client/i18n/fr/notes.json', import.meta.url), 'utf8');
+  assert.ok(!/toi seul/.test(fr), 'fr/notes.json still says « toi seul »');
 });
 
 await test('[6] a repeated save error is toasted once, a new one again, and again after a success', () => {
@@ -293,8 +295,8 @@ await test('[7] a removed player keeps the name stored on their comment / lock',
   const game = { users: { u1: { id: 'u1', name: 'Baptiste', characterIds: [] } }, actors: {} } as unknown as GameView; // minimal view
   assert.equal(storedName(game, 'u9', 'Ancien Joueur'), 'Ancien Joueur', 'stored author shown for an unknown id');
   assert.equal(storedName(game, 'u1', 'old'), 'Baptiste', 'live label for a known user');
-  assert.equal(storedName(game, 'gm', 'x'), 'MJ');
-  assert.equal(storedName(game, 'u9', ''), 'Joueur parti', 'no stored name: generic label');
+  assert.equal(storedName(game, 'gm', 'x'), 'GM');
+  assert.equal(storedName(game, 'u9', ''), 'Former player', 'no stored name: generic label');
 });
 
 await test('[7] checkboxes map to their own source line (quoted / indented fences)', () => {
@@ -358,26 +360,26 @@ try {
     assert.ok(!p1.state.log.some((e) => JSON.stringify(e).includes('ZQX')), 'private actions never log');
   });
 
-  await test('another player and the GM cannot touch a private note (answer « introuvable »)', async () => {
-    await rejects(p2.send('notes/save', { id: privId, body: 'pwned', baseVersion: 1 }), /Note introuvable/, 'p2 save');
-    await rejects(p2.send('notes/rename', { id: privId, title: 'x' }), /Note introuvable/, 'p2 rename');
-    await rejects(p2.send('notes/setShare', { id: privId, shareWithGM: true }), /Note introuvable/, 'p2 share');
-    await rejects(p2.send('notes/delete', { id: privId }), /Note introuvable/, 'p2 delete');
-    await rejects(p2.send('notes/comment', { id: privId, text: 'coucou' }), /Note introuvable/, 'p2 comment');
-    await rejects(p2.send('notes/lock', { id: privId }), /Note introuvable/, 'p2 lock');
-    await rejects(gm.send('notes/save', { id: privId, body: 'gm', baseVersion: 1 }), /Note introuvable/, 'gm save unshared');
-    await rejects(pB.send('notes/save', { id: privId, body: 'x', baseVersion: 1 }), /Note introuvable/, 'other table');
-    await rejects(p1.send('notes/comment', { id: privId, text: 'moi' }), /Impossible de commenter/, 'no comments while not shared');
+  await test('another player and the GM cannot touch a private note (answer “Note not found”)', async () => {
+    await rejects(p2.send('notes/save', { id: privId, body: 'pwned', baseVersion: 1 }), /Note not found/, 'p2 save');
+    await rejects(p2.send('notes/rename', { id: privId, title: 'x' }), /Note not found/, 'p2 rename');
+    await rejects(p2.send('notes/setShare', { id: privId, shareWithGM: true }), /Note not found/, 'p2 share');
+    await rejects(p2.send('notes/delete', { id: privId }), /Note not found/, 'p2 delete');
+    await rejects(p2.send('notes/comment', { id: privId, text: 'coucou' }), /Note not found/, 'p2 comment');
+    await rejects(p2.send('notes/lock', { id: privId }), /Note not found/, 'p2 lock');
+    await rejects(gm.send('notes/save', { id: privId, body: 'gm', baseVersion: 1 }), /Note not found/, 'gm save unshared');
+    await rejects(pB.send('notes/save', { id: privId, body: 'x', baseVersion: 1 }), /Note not found/, 'other table');
+    await rejects(p1.send('notes/comment', { id: privId, text: 'moi' }), /You cannot comment on this note/, 'no comments while not shared');
   });
 
   await test('shareWithGM: the GM sees it read-only and may comment; unshare hides it again', async () => {
-    await rejects(gm.send('notes/setShare', { id: privId, shareWithGM: true }), /Note introuvable/, 'gm cannot share');
+    await rejects(gm.send('notes/setShare', { id: privId, shareWithGM: true }), /Note not found/, 'gm cannot share');
     await p1.send('notes/setShare', { id: privId, shareWithGM: true });
     await settle();
     assert.equal(gm.state.notes.pages[privId]?.body, 'SECRET-BODY-ZQX');
     assert.ok(!leaks(p2, 'ZQX'), 'still hidden from p2');
-    await rejects(gm.send('notes/save', { id: privId, body: 'gm edit', baseVersion: 1 }), /lecture seule/, 'gm read-only');
-    await rejects(gm.send('notes/setShare', { id: privId, shareWithGM: false }), /Seul l’auteur/, 'gm cannot unshare');
+    await rejects(gm.send('notes/save', { id: privId, body: 'gm edit', baseVersion: 1 }), /read-only/, 'gm read-only');
+    await rejects(gm.send('notes/setShare', { id: privId, shareWithGM: false }), /Only the author/, 'gm cannot unshare');
     await gm.send('notes/comment', { id: privId, text: 'Commentaire MJ KWP' });
     await settle();
     assert.equal(p1.state.notes.comments[privId].length, 1);
@@ -397,7 +399,7 @@ try {
     await settle();
     for (const c of [p1, p2, gm]) assert.equal(c.state.notes.pages[partyId]?.title, 'Pistes du groupe PLM');
     for (const c of [gmB, pB]) assert.ok(!leaks(c, 'PLM') && pagesOf(c).length === 0, 'cross-table leak');
-    const log = p2.state.log.find((e) => e.i18n?.key === 'Nouvelle note de groupe : {title}');
+    const log = p2.state.log.find((e) => e.i18n?.key === 'New party note: {title}');
     assert.ok(log && log.i18n!.params!.title === 'Pistes du groupe PLM' && log.kind === 'system');
     assert.equal(p2.state.notes.pages[partyId].folder, 'Enquête');
     // and the other way round
@@ -407,9 +409,9 @@ try {
   });
 
   await test('GM is a reader of party notes unless the setting allows editing', async () => {
-    await rejects(gm.send('notes/save', { id: partyId, body: 'MJ', baseVersion: 1 }), /Le MJ ne peut pas modifier/, 'gm save');
-    await rejects(gm.send('notes/create', { scope: 'party', title: 'x' }), /Le MJ ne peut pas modifier/, 'gm create party');
-    await rejects(p1.send('notes/settings', { gmCanEditParty: true }), /réservée au MJ/, 'player settings');
+    await rejects(gm.send('notes/save', { id: partyId, body: 'MJ', baseVersion: 1 }), /The GM cannot edit party notes/, 'gm save');
+    await rejects(gm.send('notes/create', { scope: 'party', title: 'x' }), /The GM cannot edit party notes/, 'gm create party');
+    await rejects(p1.send('notes/settings', { gmCanEditParty: true }), /GM-only action/, 'player settings');
     await gm.send('notes/settings', { gmCanEditParty: true });
     const r = await gm.send('notes/save', { id: partyId, body: 'Le MJ ajoute une piste', baseVersion: 1 });
     assert.equal(r.version, 2);
@@ -431,7 +433,7 @@ try {
     assert.ok(!t.conflict && t.version === 3, 'title-only save with an old base is not a conflict');
     const c = await p2.send('notes/save', { id: partyId, body: 'version de p2', baseVersion: 3 });
     assert.equal(c.version, 4);
-    await rejects(p2.send('notes/save', { id: partyId, body: 'sans base' }), /Version de base manquante/, 'baseVersion required');
+    await rejects(p2.send('notes/save', { id: partyId, body: 'sans base' }), /Missing base version/, 'baseVersion required');
     await settle();
     assert.equal(p1.state.notes.pages[partyId].title, 'Pistes (titre p2)');
   });
@@ -454,27 +456,27 @@ try {
     await settle();
     assert.ok(!p1.state.notes.pages[partyId].lock);
     assert.deepEqual(await p1.send('notes/lock', { id: privId }), { locked: false, until: null }, 'no lock on private notes');
-    await rejects(gm.send('notes/lock', { id: partyId }), /Le MJ ne peut pas modifier/, 'GM reader cannot lock');
+    await rejects(gm.send('notes/lock', { id: partyId }), /The GM cannot edit party notes/, 'GM reader cannot lock');
   });
 
   await test('delete goes to the trash, restore, purge permissions', async () => {
     await p2.send('notes/delete', { id: partyId });
     await settle();
     assert.ok(p1.state.notes.pages[partyId].deleted?.by === p2.state.me.id);
-    await rejects(p1.send('notes/save', { id: partyId, body: 'x', baseVersion: 4 }), /corbeille/, 'no edit in trash');
-    await rejects(p1.send('notes/comment', { id: partyId, text: 'x' }), /corbeille/, 'no comment in trash');
+    await rejects(p1.send('notes/save', { id: partyId, body: 'x', baseVersion: 4 }), /in the trash/, 'no edit in trash');
+    await rejects(p1.send('notes/comment', { id: partyId, text: 'x' }), /in the trash/, 'no comment in trash');
     await p1.send('notes/restore', { id: partyId });
     await settle();
     assert.ok(!p2.state.notes.pages[partyId].deleted);
-    await rejects(gm.send('notes/purge', { id: partyId }), /Mets d’abord/, 'purge needs the trash');
+    await rejects(gm.send('notes/purge', { id: partyId }), /Move the note to the trash first/, 'purge needs the trash');
     await p2.send('notes/delete', { id: partyId });
-    await rejects(p2.send('notes/purge', { id: partyId }), /Seul l’auteur/, 'purge by a non-creator player');
+    await rejects(p2.send('notes/purge', { id: partyId }), /Only the note’s author or the GM/, 'purge by a non-creator player');
     await gm.send('notes/restore', { id: partyId });
     // private: only the owner
     await p1.send('notes/delete', { id: privId });
     await settle();
     assert.ok(!leaks(p2, 'ZQX') && !leaks(gm, 'ZQX'), 'private trash stays private');
-    await rejects(p2.send('notes/restore', { id: privId }), /Note introuvable/, 'p2 restore private');
+    await rejects(p2.send('notes/restore', { id: privId }), /Note not found/, 'p2 restore private');
     await p1.send('notes/restore', { id: privId });
     // creator purge
     const tmp = await p2.send('notes/create', { scope: 'party', title: 'Brouillon' });
@@ -494,9 +496,9 @@ try {
     assert.equal(list[0].author, 'Jane');
     assert.ok(p1.events.slice(before).some((e) => e.ev === 'notes:comment'), 'other reader notified');
     assert.ok(!pB.events.some((e) => e.ev === 'notes:comment') && !gmB.events.some((e) => e.ev === 'notes:comment'), 'no event to the other table');
-    await rejects(p1.send('notes/comment', { id: partyId, text: '   ' }), /Commentaire vide/, 'empty comment');
-    await rejects(p1.send('notes/deleteComment', { id: partyId, commentId: c.commentId }), /Tu ne peux pas supprimer ce commentaire/, 'not the author');
-    await rejects(p1.send('notes/deleteComment', { id: partyId, commentId: 'nope' }), /Commentaire introuvable/, 'unknown comment');
+    await rejects(p1.send('notes/comment', { id: partyId, text: '   ' }), /Empty comment/, 'empty comment');
+    await rejects(p1.send('notes/deleteComment', { id: partyId, commentId: c.commentId }), /You cannot delete this comment/, 'not the author');
+    await rejects(p1.send('notes/deleteComment', { id: partyId, commentId: 'nope' }), /Comment not found/, 'unknown comment');
     const long = await p1.send('notes/comment', { id: partyId, text: 'y'.repeat(5000) });
     await settle();
     assert.equal(p1.state.notes.comments[partyId].find((x) => x.id === long.commentId)!.text.length, 2000);
@@ -507,16 +509,16 @@ try {
   });
 
   await test('payload validation', async () => {
-    await rejects(p1.send('notes/save', { id: partyId, body: 'x'.repeat(MAX_BODY + 1), baseVersion: 4 }), /Note trop longue/, 'huge body');
-    await rejects(p1.send('notes/create', { scope: 'private', title: 'x', body: 'x'.repeat(MAX_BODY + 1) }), /Note trop longue/, 'huge body on create');
-    await rejects(p1.send('notes/save', { id: partyId, body: { evil: true }, baseVersion: 4 }), /Contenu de note invalide/, 'object body');
-    await rejects(p1.send('notes/create', { scope: 'public', title: 'x' }), /Type de note inconnu/, 'bad scope');
-    await rejects(p1.send('notes/create', {}), /Type de note inconnu/, 'no scope');
+    await rejects(p1.send('notes/save', { id: partyId, body: 'x'.repeat(MAX_BODY + 1), baseVersion: 4 }), /Note too long/, 'huge body');
+    await rejects(p1.send('notes/create', { scope: 'private', title: 'x', body: 'x'.repeat(MAX_BODY + 1) }), /Note too long/, 'huge body on create');
+    await rejects(p1.send('notes/save', { id: partyId, body: { evil: true }, baseVersion: 4 }), /Invalid note content/, 'object body');
+    await rejects(p1.send('notes/create', { scope: 'public', title: 'x' }), /Unknown note type/, 'bad scope');
+    await rejects(p1.send('notes/create', {}), /Unknown note type/, 'no scope');
     for (const id of ['__proto__', 'constructor', 'toString', 123, null, '../x', 'x'.repeat(200), { a: 1 }, ['note']]) {
-      await rejects(p1.send('notes/save', { id, body: 'x', baseVersion: 1 }), /Note introuvable/, `bad id ${JSON.stringify(id)}`);
-      await rejects(p1.send('notes/delete', { id }), /Note introuvable/, `bad id ${JSON.stringify(id)} (delete)`);
+      await rejects(p1.send('notes/save', { id, body: 'x', baseVersion: 1 }), /Note not found/, `bad id ${JSON.stringify(id)}`);
+      await rejects(p1.send('notes/delete', { id }), /Note not found/, `bad id ${JSON.stringify(id)} (delete)`);
     }
-    await rejects(p1.send('notes/rename', { id: partyId, title: '   ' }), /titre ne peut pas être vide/, 'empty title');
+    await rejects(p1.send('notes/rename', { id: partyId, title: '   ' }), /title cannot be empty/, 'empty title');
     const r = await p1.send('notes/create', { scope: 'private', title: 'T'.repeat(500), folder: 'F'.repeat(500), body: 'a\u0000b\u0007c\nd' });
     await settle();
     const page = p1.state.notes.pages[r.id];
@@ -525,7 +527,7 @@ try {
     assert.equal(page.body, 'abc\nd', 'control characters stripped');
     const blank = await p1.send('notes/create', { scope: 'private', title: '' });
     await settle();
-    assert.equal(p1.state.notes.pages[blank.id].title, 'Nouvelle note');
+    assert.equal(p1.state.notes.pages[blank.id].title, 'Nouvelle note', 'default title stored in the table language (French table)');
     await p1.send('notes/rename', { id: r.id, pinned: true, folder: 'Contacts' });
     await settle();
     assert.ok(p1.state.notes.pages[r.id].pinned && p1.state.notes.pages[r.id].folder === 'Contacts');
@@ -535,8 +537,8 @@ try {
     const r = await p1.send('notes/create', { scope: 'party', title: 'En cours de frappe' });
     await settle();
     await p1.send('notes/lock', { id: r.id });
-    await rejects(p2.send('notes/delete', { id: r.id }), /Anthony Von Schloss est en train d’écrire dans cette note/, 'delete under a live foreign lock');
-    await rejects(gm.send('notes/delete', { id: r.id }), /est en train d’écrire/, 'GM moderation too');
+    await rejects(p2.send('notes/delete', { id: r.id }), /Anthony Von Schloss is typing in this note/, 'delete under a live foreign lock');
+    await rejects(gm.send('notes/delete', { id: r.id }), /is typing in this note/, 'GM moderation too');
     await settle();
     assert.ok(!p1.state.notes.pages[r.id].deleted, 'still live');
     await p1.send('notes/delete', { id: r.id }); // my own lock never blocks me

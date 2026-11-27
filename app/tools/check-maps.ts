@@ -46,27 +46,27 @@ export interface SeedMapStats {
 // ---------------------------------------------------------------- legend
 // char -> [blocksMove, blocksSight, label]
 export const LEGEND: Record<string, [blocksMove: boolean, blocksSight: boolean, label: string]> = {
-  ' ': [true, true, 'vide'],
-  '.': [false, false, 'sol intérieur'],
-  ',': [false, false, 'sol extérieur'],
-  '#': [true, true, 'mur'],
-  D: [false, false, 'porte'], // dynamic: closed/locked doors block (treated as passable for reachability)
-  W: [true, false, 'fenêtre'],
-  '=': [true, false, 'comptoir / muret / rambarde'],
-  T: [true, false, 'table / mobilier'],
-  c: [true, false, 'caisses / couvert'],
-  o: [true, true, 'pilier'],
-  m: [true, true, 'machines / racks / étagères'],
-  v: [true, false, 'véhicule'],
-  b: [true, false, 'lit / canapé'],
-  s: [false, false, 'escalier'],
-  e: [false, false, 'ascenseur'],
-  '~': [true, false, 'eau'],
-  g: [false, false, 'herbe / végétation'],
-  r: [false, false, 'gravats (terrain difficile)'],
-  x: [false, false, 'danger'],
-  t: [false, true, 'arbres / buissons denses'],
-  _: [false, false, 'tapis / sol spécial'],
+  ' ': [true, true, 'void'],
+  '.': [false, false, 'indoor floor'],
+  ',': [false, false, 'outdoor floor'],
+  '#': [true, true, 'wall'],
+  D: [false, false, 'door'], // dynamic: closed/locked doors block (treated as passable for reachability)
+  W: [true, false, 'window'],
+  '=': [true, false, 'counter / low wall / railing'],
+  T: [true, false, 'table / furniture'],
+  c: [true, false, 'crates / cover'],
+  o: [true, true, 'pillar'],
+  m: [true, true, 'machines / racks / shelves'],
+  v: [true, false, 'vehicle'],
+  b: [true, false, 'bed / couch'],
+  s: [false, false, 'stairs'],
+  e: [false, false, 'elevator'],
+  '~': [true, false, 'water'],
+  g: [false, false, 'grass / vegetation'],
+  r: [false, false, 'rubble (difficult terrain)'],
+  x: [false, false, 'hazard'],
+  t: [false, true, 'trees / dense bushes'],
+  _: [false, false, 'carpet / special floor'],
 };
 const DOOR_STATES = ['open', 'closed', 'locked'];
 const DOOR_KINDS = ['door', 'gate', 'shutter', 'secret'];
@@ -94,34 +94,34 @@ export function validateMap(map: RawMapInput | null | undefined): { errors: stri
   const stats: Partial<SeedMapStats> = {};
 
   if (!map || typeof map !== 'object' || Array.isArray(map)) {
-    err('le fichier ne contient pas un objet Map');
+    err('the file does not hold a Map object');
     return { errors, warnings, stats };
   }
 
   // --- scalar fields
-  if (!isStr(map.id) || !map.id.trim()) err('id manquant');
-  else if (!/^[a-z0-9_-]+$/i.test(map.id)) warn(`id « ${map.id} » : préférez [a-z0-9_-]`);
-  if (!isStr(map.name) || !map.name.trim()) err('name manquant');
-  else if (map.name.length > 80) warn('name > 80 caractères (tronqué par le serveur)');
-  if (map.folder !== undefined && !isStr(map.folder)) err('folder doit être une chaîne');
-  if (map.description !== undefined && !isStr(map.description)) err('description doit être une chaîne (markdown)');
-  if (map.description === undefined || !String(map.description).trim()) warn('pas de description MJ');
-  if (!isInt(map.width) || map.width < 1 || map.width > 400) err(`width invalide (${map.width})`);
-  if (!isInt(map.height) || map.height < 1 || map.height > 400) err(`height invalide (${map.height})`);
+  if (!isStr(map.id) || !map.id.trim()) err('missing id');
+  else if (!/^[a-z0-9_-]+$/i.test(map.id)) warn(`id « ${map.id} »: prefer [a-z0-9_-]`);
+  if (!isStr(map.name) || !map.name.trim()) err('missing name');
+  else if (map.name.length > 80) warn('name > 80 characters (truncated by the server)');
+  if (map.folder !== undefined && !isStr(map.folder)) err('folder must be a string');
+  if (map.description !== undefined && !isStr(map.description)) err('description must be a string (markdown)');
+  if (map.description === undefined || !String(map.description).trim()) warn('no GM description');
+  if (!isInt(map.width) || map.width < 1 || map.width > 400) err(`invalid width (${map.width})`);
+  if (!isInt(map.height) || map.height < 1 || map.height > 400) err(`invalid height (${map.height})`);
   if (map.metersPerCell !== undefined && !(typeof map.metersPerCell === 'number' && map.metersPerCell > 0))
-    err('metersPerCell doit être un nombre > 0');
-  if (map.metersPerCell === undefined) warn('metersPerCell absent (1 par défaut)');
-  if (!LIGHTING.includes(map.lighting)) err(`lighting invalide (${map.lighting}) — attendu ${LIGHTING.join('|')}`);
-  if (map.theme !== undefined && !THEMES.includes(map.theme)) err(`theme invalide (${map.theme}) — attendu ${THEMES.join('|')}`);
-  for (const k of ['fog', 'sharedVision']) if (!isBool(map[k])) err(`${k} doit être un booléen`);
-  if (map.movementLocked !== undefined && !isBool(map.movementLocked)) err('movementLocked doit être un booléen');
+    err('metersPerCell must be a number > 0');
+  if (map.metersPerCell === undefined) warn('metersPerCell missing (1 by default)');
+  if (!LIGHTING.includes(map.lighting)) err(`invalid lighting (${map.lighting}) — expected ${LIGHTING.join('|')}`);
+  if (map.theme !== undefined && !THEMES.includes(map.theme)) err(`invalid theme (${map.theme}) — expected ${THEMES.join('|')}`);
+  for (const k of ['fog', 'sharedVision']) if (!isBool(map[k])) err(`${k} must be a boolean`);
+  if (map.movementLocked !== undefined && !isBool(map.movementLocked)) err('movementLocked must be a boolean');
   if (map.explored !== undefined && (typeof map.explored !== 'object' || map.explored === null || Array.isArray(map.explored)))
-    err('explored doit être un objet { userId: string }');
+    err('explored must be an object { userId: string }');
   if (map.background !== undefined && map.background !== null) {
-    if (typeof map.background !== 'object' || !isStr(map.background.url)) err('background doit être { url, opacity }');
+    if (typeof map.background !== 'object' || !isStr(map.background.url)) err('background must be { url, opacity }');
   }
   for (const k of ['tiles', 'doors', 'lights', 'regions', 'notes', 'tokens'])
-    if (!Array.isArray(map[k])) err(`${k} doit être un tableau`);
+    if (!Array.isArray(map[k])) err(`${k} must be an array`);
   // Without a usable size and arrays nothing else can be checked; other scalar errors don't stop the rest.
   if (!isInt(map.width) || !isInt(map.height) || ['tiles', 'doors', 'lights', 'regions', 'notes', 'tokens'].some((k) => !Array.isArray(map[k])))
     return { errors, warnings, stats };
@@ -132,18 +132,18 @@ export function validateMap(map: RawMapInput | null | undefined): { errors: stri
 
   // --- tiles
   const errorsBeforeTiles = errors.length;
-  if (map.tiles.length !== H) err(`tiles : ${map.tiles.length} lignes au lieu de ${H}`);
+  if (map.tiles.length !== H) err(`tiles: ${map.tiles.length} rows instead of ${H}`);
   const bad = new Map<string, string>();
   map.tiles.forEach((row, y) => {
-    if (!isStr(row)) return err(`tiles[${y}] n'est pas une chaîne`);
-    if (row.length !== W) err(`tiles[${y}] : ${row.length} caractères au lieu de ${W}`);
+    if (!isStr(row)) return err(`tiles[${y}] is not a string`);
+    if (row.length !== W) err(`tiles[${y}]: ${row.length} characters instead of ${W}`);
     [...row].forEach((ch, x) => {
       if (!(ch in LEGEND)) {
         if (!bad.has(ch)) bad.set(ch, `${x},${y}`);
       }
     });
   });
-  for (const [ch, at] of bad) err(`caractère hors légende ${JSON.stringify(ch)} (premier en ${at})`);
+  for (const [ch, at] of bad) err(`character not in the legend ${JSON.stringify(ch)} (first at ${at})`);
   const gridOk = errors.length === errorsBeforeTiles;
   // Safe accessor even on a malformed grid (short rows / non-strings read as void).
   const tile = (x: number, y: number): string => (inside(x, y) && isStr(map.tiles[y]) && x < map.tiles[y].length ? map.tiles[y][x] : ' ');
@@ -151,8 +151,8 @@ export function validateMap(map: RawMapInput | null | undefined): { errors: stri
   // --- sub-entity ids unique across the whole map
   const ids = new Map<string, string>();
   const seeId = (kind: string, i: number, id: unknown) => {
-    if (!isStr(id) || !id) return err(`${kind}[${i}] : id manquant`);
-    if (ids.has(id)) err(`id dupliqué « ${id} » (${ids.get(id)} et ${kind}[${i}])`);
+    if (!isStr(id) || !id) return err(`${kind}[${i}]: missing id`);
+    if (ids.has(id)) err(`duplicate id « ${id} » (${ids.get(id)} and ${kind}[${i}])`);
     else ids.set(id, `${kind}[${i}]`);
   };
 
@@ -161,21 +161,21 @@ export function validateMap(map: RawMapInput | null | undefined): { errors: stri
   map.doors.forEach((d, i) => {
     const tag = `doors[${i}]${d && d.id ? ` (${d.id})` : ''}`;
     seeId('doors', i, d && d.id);
-    if (!d || !inside(d.x, d.y)) return err(`${tag} : position hors carte (${d && d.x},${d && d.y})`);
-    if (tile(d.x, d.y) !== 'D') err(`${tag} : la case ${d.x},${d.y} n'est pas un « D » (${JSON.stringify(tile(d.x, d.y))})`);
-    if (!DOOR_STATES.includes(d.state)) err(`${tag} : state invalide (${d.state})`);
-    if (!DOOR_KINDS.includes(d.kind)) err(`${tag} : kind invalide (${d.kind})`);
-    if (d.name !== undefined && !isStr(d.name)) err(`${tag} : name doit être une chaîne`);
-    if (isStr(d.name) && d.name.length > 60) warn(`${tag} : name > 60 caractères (tronqué par le serveur)`);
+    if (!d || !inside(d.x, d.y)) return err(`${tag}: position outside the map (${d && d.x},${d && d.y})`);
+    if (tile(d.x, d.y) !== 'D') err(`${tag}: cell ${d.x},${d.y} is not a « D » (${JSON.stringify(tile(d.x, d.y))})`);
+    if (!DOOR_STATES.includes(d.state)) err(`${tag}: invalid state (${d.state})`);
+    if (!DOOR_KINDS.includes(d.kind)) err(`${tag}: invalid kind (${d.kind})`);
+    if (d.name !== undefined && !isStr(d.name)) err(`${tag}: name must be a string`);
+    if (isStr(d.name) && d.name.length > 60) warn(`${tag}: name > 60 characters (truncated by the server)`);
     const k = `${d.x},${d.y}`;
-    if (doorAt.has(k)) err(`${tag} : deux portes sur la même case ${k}`);
+    if (doorAt.has(k)) err(`${tag}: two doors on the same cell ${k}`);
     doorAt.set(k, d);
     // A door should sit in a wall line: blocked on both sides along one axis.
     const wallish = (x: number, y: number) => blocksMove(tile(x, y)) || tile(x, y) === 'D';
     const horiz = wallish(d.x - 1, d.y) && wallish(d.x + 1, d.y);
     const vert = wallish(d.x, d.y - 1) && wallish(d.x, d.y + 1);
-    if (!horiz && !vert) warn(`${tag} en ${k} n'est encadrée par aucun mur (porte « en plein champ »)`);
-    if (d.kind === 'secret' && d.state === 'open') warn(`${tag} : porte secrète déjà ouverte (visible des joueurs)`);
+    if (!horiz && !vert) warn(`${tag} at ${k} has no wall on either side (door « in the open »)`);
+    if (d.kind === 'secret' && d.state === 'open') warn(`${tag}: secret door already open (visible to players)`);
   });
   let looseD = 0;
   map.tiles.forEach((row, y) => [...row].forEach((ch, x) => ch === 'D' && !doorAt.has(`${x},${y}`) && looseD++));
@@ -184,44 +184,44 @@ export function validateMap(map: RawMapInput | null | undefined): { errors: stri
   map.lights.forEach((l, i) => {
     const tag = `lights[${i}]${l && l.id ? ` (${l.id})` : ''}`;
     seeId('lights', i, l && l.id);
-    if (!l || !inside(l.x, l.y)) return err(`${tag} : position hors carte`);
-    if (!(typeof l.radius === 'number' && l.radius > 0 && l.radius <= 60)) err(`${tag} : radius invalide (${l.radius})`);
-    if (!isStr(l.color) || !HEX.test(l.color)) err(`${tag} : color doit être #rrggbb (${l.color})`);
-    if (!isBool(l.on)) err(`${tag} : on doit être un booléen`);
-    if (l.name !== undefined && !isStr(l.name)) err(`${tag} : name doit être une chaîne`);
-    if (isStr(l.name) && l.name.length > 60) warn(`${tag} : name > 60 caractères (tronqué par le serveur)`);
-    if (blocksSight(tile(l.x, l.y))) warn(`${tag} posée sur une case opaque ${JSON.stringify(tile(l.x, l.y))} en ${l.x},${l.y} (n'éclairera rien)`);
+    if (!l || !inside(l.x, l.y)) return err(`${tag}: position outside the map`);
+    if (!(typeof l.radius === 'number' && l.radius > 0 && l.radius <= 60)) err(`${tag}: invalid radius (${l.radius})`);
+    if (!isStr(l.color) || !HEX.test(l.color)) err(`${tag}: color must be #rrggbb (${l.color})`);
+    if (!isBool(l.on)) err(`${tag}: on must be a boolean`);
+    if (l.name !== undefined && !isStr(l.name)) err(`${tag}: name must be a string`);
+    if (isStr(l.name) && l.name.length > 60) warn(`${tag}: name > 60 characters (truncated by the server)`);
+    if (blocksSight(tile(l.x, l.y))) warn(`${tag} placed on an opaque cell ${JSON.stringify(tile(l.x, l.y))} at ${l.x},${l.y} (will light nothing)`);
   });
 
   // --- regions
   map.regions.forEach((r, i) => {
     const tag = `regions[${i}]${r && r.name ? ` « ${r.name} »` : ''}`;
     seeId('regions', i, r && r.id);
-    if (!r) return err(`${tag} : vide`);
-    if (!isStr(r.name) || !r.name.trim()) err(`${tag} : name manquant`);
-    else if (r.name.length > 80) warn(`${tag} : name > 80 caractères (tronqué par le serveur)`);
-    if (![r.x, r.y, r.w, r.h].every(isInt) || r.w < 1 || r.h < 1) return err(`${tag} : x/y/w/h invalides`);
-    if (!inside(r.x, r.y) || !inside(r.x + r.w - 1, r.y + r.h - 1)) err(`${tag} : dépasse de la carte`);
-    if (r.color !== undefined && (!isStr(r.color) || !HEX.test(r.color))) err(`${tag} : color doit être #rrggbb`);
-    if (r.gmOnly !== undefined && !isBool(r.gmOnly)) err(`${tag} : gmOnly doit être un booléen`);
+    if (!r) return err(`${tag}: empty`);
+    if (!isStr(r.name) || !r.name.trim()) err(`${tag}: missing name`);
+    else if (r.name.length > 80) warn(`${tag}: name > 80 characters (truncated by the server)`);
+    if (![r.x, r.y, r.w, r.h].every(isInt) || r.w < 1 || r.h < 1) return err(`${tag}: invalid x/y/w/h`);
+    if (!inside(r.x, r.y) || !inside(r.x + r.w - 1, r.y + r.h - 1)) err(`${tag}: extends past the map`);
+    if (r.color !== undefined && (!isStr(r.color) || !HEX.test(r.color))) err(`${tag}: color must be #rrggbb`);
+    if (r.gmOnly !== undefined && !isBool(r.gmOnly)) err(`${tag}: gmOnly must be a boolean`);
   });
 
   // --- notes
   map.notes.forEach((n, i) => {
     const tag = `notes[${i}]${n && n.id ? ` (${n.id})` : ''}`;
     seeId('notes', i, n && n.id);
-    if (!n || !inside(n.x, n.y)) return err(`${tag} : position hors carte`);
-    if (!isStr(n.text) || !n.text.trim()) err(`${tag} : text manquant`);
-    if (n.gmOnly !== true) warn(`${tag} : gmOnly n'est pas true (les notes sont réservées au MJ)`);
+    if (!n || !inside(n.x, n.y)) return err(`${tag}: position outside the map`);
+    if (!isStr(n.text) || !n.text.trim()) err(`${tag}: missing text`);
+    if (n.gmOnly !== true) warn(`${tag}: gmOnly is not true (notes are GM-only)`);
   });
 
   // --- tokens (seeds usually have none, but validate if present)
   map.tokens.forEach((t, i) => {
     const tag = `tokens[${i}]${t && t.id ? ` (${t.id})` : ''}`;
     seeId('tokens', i, t && t.id);
-    if (!t || !inside(t.x, t.y)) return err(`${tag} : position hors carte`);
-    if (!DISPOSITIONS.includes(t.disposition)) err(`${tag} : disposition invalide (${t.disposition})`);
-    if (blocksMove(tile(t.x, t.y)) && tile(t.x, t.y) !== 'D') warn(`${tag} sur une case bloquante`);
+    if (!t || !inside(t.x, t.y)) return err(`${tag}: position outside the map`);
+    if (!DISPOSITIONS.includes(t.disposition)) err(`${tag}: invalid disposition (${t.disposition})`);
+    if (blocksMove(tile(t.x, t.y)) && tile(t.x, t.y) !== 'D') warn(`${tag} on a blocking cell`);
   });
 
   // --- reachability: flood from every entry point, doors (even locked/secret) count as passable
@@ -252,7 +252,7 @@ export function validateMap(map: RawMapInput | null | undefined): { errors: stri
       }
     }
   }
-  if (!entries && walkable) warn('aucun point d\'entrée (bord de carte, escalier, ascenseur ou porte extérieure)');
+  if (!entries && walkable) warn('no entry point (map edge, stairs, elevator or outer door)');
   for (let i = 0; i < queue.length; i++) {
     const k = queue[i];
     const x = k % W;
@@ -287,7 +287,7 @@ export function validateMap(map: RawMapInput | null | undefined): { errors: stri
       pockets.push({ x, y, size: cells.length });
     }
   }
-  for (const p of pockets) warn(`poche isolée de ${p.size} case(s) praticable(s) en ${p.x},${p.y} (inaccessible depuis les entrées)`);
+  for (const p of pockets) warn(`isolated pocket of ${p.size} walkable cell(s) at ${p.x},${p.y} (unreachable from the entries)`);
 
   Object.assign(stats, {
     size: `${W}×${H}`,
@@ -353,10 +353,10 @@ export function renderPreview(map: RawMapInput, { color = false, overlay = true 
 
 function describe(map: RawMapInput): string {
   const out: string[] = [];
-  out.push(`  Portes : / ouverte  + fermée  L verrouillée  S secrète  (D sans entrée = passage libre)   * lumière   ! note MJ`);
-  for (const r of map.regions || []) out.push(`  [zone] ${r.name}${r.gmOnly ? ' (MJ)' : ''} — ${r.x},${r.y} ${r.w}×${r.h}`);
-  for (const d of map.doors || []) out.push(`  [porte] ${d.id} ${d.x},${d.y} ${d.kind}/${d.state}${d.name ? ` « ${d.name} »` : ''}`);
-  for (const l of map.lights || []) out.push(`  [lumière] ${l.id} ${l.x},${l.y} r${l.radius} ${l.color}${l.on ? '' : ' (éteinte)'}`);
+  out.push(`  Doors: / open  + closed  L locked  S secret  (D without an entry = open doorway)   * light   ! GM note`);
+  for (const r of map.regions || []) out.push(`  [area] ${r.name}${r.gmOnly ? ' (GM)' : ''} — ${r.x},${r.y} ${r.w}×${r.h}`);
+  for (const d of map.doors || []) out.push(`  [door] ${d.id} ${d.x},${d.y} ${d.kind}/${d.state}${d.name ? ` « ${d.name} »` : ''}`);
+  for (const l of map.lights || []) out.push(`  [light] ${l.id} ${l.x},${l.y} r${l.radius} ${l.color}${l.on ? '' : ' (off)'}`);
   for (const n of map.notes || []) out.push(`  [note] ${n.x},${n.y} ${n.text}`);
   return out.join('\n');
 }
@@ -376,23 +376,23 @@ function main(argv: string[]): number {
     else if (a === '--no-color') color = false;
     else if (a === '--color') color = true;
     else if (a === '-h' || a === '--help') {
-      console.log('Usage : node tools/check-maps.ts [--preview <id|fichier|all>] [--strict] [--dir <dossier>] [--no-color]');
+      console.log('Usage: node tools/check-maps.ts [--preview <id|file|all>] [--strict] [--dir <folder>] [--no-color]');
       return 0;
     } else {
-      console.error(`Argument inconnu : ${a}`);
+      console.error(`Unknown argument: ${a}`);
       return 2;
     }
   }
   if (args.includes('--preview') && !preview) {
-    console.error('--preview attend un id de carte (ou « all »)');
+    console.error('--preview expects a map id (or « all »)');
     return 2;
   }
   if (!fs.existsSync(dir)) {
-    console.error(`Dossier introuvable : ${dir}`);
+    console.error(`Folder not found: ${dir}`);
     return 1;
   }
   const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json')).sort();
-  if (!files.length) console.log(`Aucune carte dans ${dir}`);
+  if (!files.length) console.log(`No map in ${dir}`);
 
   let nErr = 0;
   let nWarn = 0;
@@ -405,24 +405,24 @@ function main(argv: string[]): number {
     try {
       map = JSON.parse(fs.readFileSync(full, 'utf8'));
     } catch (e) {
-      console.log(`✗ ${f}\n    ERREUR JSON illisible : ${(e as Error).message}`);
+      console.log(`✗ ${f}\n    ERROR unreadable JSON: ${(e as Error).message}`);
       nErr++;
       continue;
     }
     const { errors, warnings, stats } = validateMap(map);
     if (map && isStr(map.id)) {
-      if (byId.has(map.id)) errors.push(`id de carte « ${map.id} » déjà utilisé par ${byId.get(map.id)}`);
+      if (byId.has(map.id)) errors.push(`map id « ${map.id} » already used by ${byId.get(map.id)}`);
       else byId.set(map.id, f);
     }
     nErr += errors.length;
     nWarn += warnings.length;
     const mark = errors.length ? '✗' : warnings.length ? '!' : '✓';
     const s = stats.size
-      ? `${stats.size}  portes ${stats.doors} (${stats.locked} verr., ${stats.secret} secr.)  lumières ${stats.lights}  zones ${stats.regions}  notes ${stats.notes}  entrées ${stats.entries}`
+      ? `${stats.size}  doors ${stats.doors} (${stats.locked} locked, ${stats.secret} secret)  lights ${stats.lights}  areas ${stats.regions}  notes ${stats.notes}  entries ${stats.entries}`
       : '';
     console.log(`${mark} ${f}  ${map && map.id ? `[${map.id}]` : ''}  ${s}`);
-    for (const e of errors) console.log(`    ERREUR  ${e}`);
-    for (const w of warnings) console.log(`    alerte  ${w}`);
+    for (const e of errors) console.log(`    ERROR    ${e}`);
+    for (const w of warnings) console.log(`    warning  ${w}`);
     loaded.push({ file: f, map, ok: !errors.length });
   }
 
@@ -431,13 +431,13 @@ function main(argv: string[]): number {
       ? loaded
       : loaded.filter((l) => l.map && (l.map.id === preview || l.file === preview || l.file === `${preview}.json`));
     if (!targets.length) {
-      console.error(`\nCarte introuvable pour --preview ${preview}`);
+      console.error(`\nNo map found for --preview ${preview}`);
       return 1;
     }
     for (const t of targets) {
-      console.log(`\n=== ${t.map.name} [${t.map.id}] — ${t.map.width}×${t.map.height}, ${t.map.lighting}, thème ${t.map.theme || '—'} ===`);
+      console.log(`\n=== ${t.map.name} [${t.map.id}] — ${t.map.width}×${t.map.height}, ${t.map.lighting}, theme ${t.map.theme || '—'} ===`);
       if (!t.ok) {
-        console.log('  (aperçu impossible : la carte a des erreurs)');
+        console.log('  (no preview: the map has errors)');
         continue;
       }
       console.log(renderPreview(t.map, { color }));
@@ -445,7 +445,7 @@ function main(argv: string[]): number {
     }
   }
 
-  console.log(`\n${files.length} carte(s), ${nErr} erreur(s), ${nWarn} alerte(s)`);
+  console.log(`\n${files.length} map(s), ${nErr} error(s), ${nWarn} warning(s)`);
   return nErr || (strict && nWarn) ? 1 : 0;
 }
 

@@ -42,7 +42,7 @@ async function rejects(p: Promise<unknown>, re: RegExp | null, msg: string) {
     await p;
     ok(false, msg + ' (should have failed)');
   } catch (e) {
-    ok(!re || re.test((e as Error).message), `${msg} — got « ${(e as Error).message} »`);
+    ok(!re || re.test((e as Error).message), `${msg} — got “${(e as Error).message}”`);
   }
 }
 const vis = (v: Uint8Array, map: { width: number }, x: number, y: number) => !!v[y * map.width + x];
@@ -276,7 +276,7 @@ async function startSeeded(port: number, initialState: object) {
   const runtime = fs.mkdtempSync(path.join(os.tmpdir(), 'sr-test-maps-'));
   fs.writeFileSync(path.join(runtime, 'state.json'), JSON.stringify(initialState));
   // Node runs the TypeScript server directly; before 22.18 type stripping needs a flag.
-  const stripTypes = process.features.typescript ? [] : ['--experimental-strip-types'];
+  const stripTypes = process.execArgv.filter((a) => a === '--experimental-strip-types' || a === '--no-warnings');
   const proc = spawn(process.execPath, [...stripTypes, 'server/index.ts'], { cwd: ROOT, env: { ...process.env, PORT: String(port), SR_RUNTIME_DIR: runtime }, stdio: ['ignore', 'pipe', 'pipe'] });
   let out = '';
   proc.stdout.on('data', (d) => (out += d));
@@ -380,18 +380,18 @@ try {
   ok(gm.state.maps[A].explored[p1Id], 'server stored explored for player');
 
   // Movement permissions
-  await rejects(p1.send('maps/moveToken', { mapId: A, tokenId: t2, x: 4, y: 4 }), /appartient/, 'player cannot move another PC');
-  await rejects(p1.send('maps/moveToken', { mapId: A, tokenId: tNeutral, x: 4, y: 4 }), /appartient/, 'player cannot move NPC');
-  await rejects(p1.send('maps/moveToken', { mapId: A, tokenId: t1, x: 15, y: 2 }), /inaccessible/, 'player cannot move through closed door / walls');
-  await rejects(p1.send('maps/moveToken', { mapId: A, tokenId: t1, x: 0, y: 0 }), /inaccessible/, 'player cannot move into a wall');
-  await rejects(p1.send('maps/moveToken', { mapId: A, tokenId: t1, x: 99, y: 0 }), /hors/, 'out of map');
-  await rejects(p1.send('maps/moveToken', { mapId: A, tokenId: t1, x: 3, y: 3 }), /inaccessible/, 'cannot stop on an ally');
+  await rejects(p1.send('maps/moveToken', { mapId: A, tokenId: t2, x: 4, y: 4 }), /isn't yours/, 'player cannot move another PC');
+  await rejects(p1.send('maps/moveToken', { mapId: A, tokenId: tNeutral, x: 4, y: 4 }), /isn't yours/, 'player cannot move NPC');
+  await rejects(p1.send('maps/moveToken', { mapId: A, tokenId: t1, x: 15, y: 2 }), /unreachable/, 'player cannot move through closed door / walls');
+  await rejects(p1.send('maps/moveToken', { mapId: A, tokenId: t1, x: 0, y: 0 }), /unreachable/, 'player cannot move into a wall');
+  await rejects(p1.send('maps/moveToken', { mapId: A, tokenId: t1, x: 99, y: 0 }), /outside the map/, 'out of map');
+  await rejects(p1.send('maps/moveToken', { mapId: A, tokenId: t1, x: 3, y: 3 }), /unreachable/, 'cannot stop on an ally');
   const exploredBefore = V.decodeBits(pm.explored[p1Id], 22 * 9).reduce((a, b) => a + b, 0);
   const mv = await p1.send('maps/moveToken', { mapId: A, tokenId: t1, x: 8, y: 3 });
   ok(mv && mv.path.length >= 2 && mv.path.at(-1).x === 8 && mv.meters > 0, 'player move returns path');
 
   // Doors
-  await rejects(p2.send('maps/toggleDoor', { mapId: A, doorId: doorA }), /Approche/, 'door too far');
+  await rejects(p2.send('maps/toggleDoor', { mapId: A, doorId: doorA }), /Get closer/, 'door too far');
   p1.events.length = 0;
   const st = await p1.send('maps/toggleDoor', { mapId: A, doorId: doorA });
   await settle();
@@ -402,11 +402,11 @@ try {
   ok(exploredAfter > exploredBefore, `explored grows (${exploredBefore} → ${exploredAfter})`);
   ok(pm.tiles[2][15] === '.', 'newly seen cells unmasked');
   ok(pm.tiles[5][14] === '#', 'closed secret door rendered as wall once seen');
-  await rejects(p1.send('maps/toggleDoor', { mapId: A, doorId: secret }), /introuvable/, 'player cannot use hidden secret door');
+  await rejects(p1.send('maps/toggleDoor', { mapId: A, doorId: secret }), /Door not found/, 'player cannot use hidden secret door');
   await p1.send('maps/moveToken', { mapId: A, tokenId: t1, x: 8, y: 6 });
   p1.events.length = 0;
   p2.events.length = 0;
-  await rejects(p1.send('maps/toggleDoor', { mapId: A, doorId: locked }), /verrouill/, 'locked door refuses player');
+  await rejects(p1.send('maps/toggleDoor', { mapId: A, doorId: locked }), /locked/, 'locked door refuses player');
   await settle(60);
   ok(p1.events.some((e) => e.ev === 'sfx' && e.data.id === 'door-locked') && p2.events.some((e) => (e.data as { id?: string })?.id === 'door-locked'), 'door-locked sfx to everyone');
   ok(p1.state.maps[A].doors.find((d) => d.id === locked)!.state === 'closed', 'locked shown as closed to players');
@@ -417,13 +417,13 @@ try {
 
   // Move lock
   await gm.send('maps/update', { mapId: A, patch: { movementLocked: true } });
-  await rejects(p1.send('maps/moveToken', { mapId: A, tokenId: t1, x: 7, y: 6 }), /verrouill/, 'movement locked');
+  await rejects(p1.send('maps/moveToken', { mapId: A, tokenId: t1, x: 7, y: 6 }), /locked movement/, 'movement locked');
   await gm.send('maps/update', { mapId: A, patch: { movementLocked: false } });
   await p1.send('maps/moveToken', { mapId: A, tokenId: t1, x: 7, y: 6 });
 
   // Closed door blocks path even into explored cells
   await gm.send('maps/setDoor', { mapId: A, doorId: doorA, state: 'closed' });
-  await rejects(p1.send('maps/moveToken', { mapId: A, tokenId: t1, x: 12, y: 3 }), /inaccessible/, 'closed door blocks player path to explored cells');
+  await rejects(p1.send('maps/moveToken', { mapId: A, tokenId: t1, x: 12, y: 3 }), /unreachable/, 'closed door blocks player path to explored cells');
 
   // GM moves anything, ignoring walls
   const gmv = await gm.send('maps/moveToken', { mapId: A, tokenId: tBehind, x: 1, y: 7, ignoreWalls: true });
@@ -460,8 +460,8 @@ try {
 
   // Token updates
   await p1.send('maps/updateToken', { mapId: A, tokenId: t1, patch: { color: '#ff0000', status: ['à terre'] } });
-  await rejects(p1.send('maps/updateToken', { mapId: A, tokenId: t1, patch: { name: 'Hack', hidden: true } }), /apparence/, 'player cannot change name/hidden');
-  await rejects(p1.send('maps/updateToken', { mapId: A, tokenId: t2, patch: { color: '#000000' } }), /appartient/, 'player cannot restyle others');
+  await rejects(p1.send('maps/updateToken', { mapId: A, tokenId: t1, patch: { name: 'Hack', hidden: true } }), /appearance/, 'player cannot change name/hidden');
+  await rejects(p1.send('maps/updateToken', { mapId: A, tokenId: t2, patch: { color: '#000000' } }), /isn't yours/, 'player cannot restyle others');
   await settle();
   const tok1 = gm.state.maps[A].tokens.find((t) => t.id === t1)!;
   ok(tok1.color === '#ff0000' && tok1.status![0] === 'à terre' && tok1.name === 'Testeur Un', 'player cosmetic update');
@@ -480,10 +480,10 @@ try {
   ok(gm.state.maps[A].explored[p1Id] && V.decodeBits(gm.state.maps[A].explored[p1Id], 22 * 9).reduce((a, b) => a + b, 0) < exploredAfter + 40, 'reset fog then current view re-explored');
 
   // Player restrictions on GM actions + non-active map
-  await rejects(p1.send('maps/create', { name: 'x' }), /MJ/, 'player cannot create map');
-  await rejects(p1.send('maps/addToken', { mapId: A, token: { x: 1, y: 1 } }), /MJ/, 'player cannot add token');
+  await rejects(p1.send('maps/create', { name: 'x' }), /GM-only/, 'player cannot create map');
+  await rejects(p1.send('maps/addToken', { mapId: A, token: { x: 1, y: 1 } }), /GM-only/, 'player cannot add token');
   const tB = await gm.send('maps/addToken', { mapId: B, token: { actorId: 'tpc1', x: 3, y: 3 } });
-  await rejects(p1.send('maps/moveToken', { mapId: B, tokenId: tB, x: 4, y: 4 }), /affichée/, 'player cannot move on a non-shown map');
+  await rejects(p1.send('maps/moveToken', { mapId: B, tokenId: tB, x: 4, y: 4 }), /isn't showing/, 'player cannot move on a non-shown map');
   await gm.send('maps/removeToken', { mapId: B, tokenId: tB });
 
   // placePCs
@@ -512,7 +512,7 @@ try {
   const D = await gm.send('maps/import', { map: exported });
   await settle();
   ok(D !== C && gm.state.maps[D].tiles[0].length === 30 && !gm.state.maps[D].tiles[0].includes('Z'), 'import (new id, sanitized rows)');
-  await rejects(gm.send('maps/import', { map: { nope: 1 } }), /invalide/, 'import validates');
+  await rejects(gm.send('maps/import', { map: { nope: 1 } }), /Invalid map/, 'import validates');
   await gm.send('maps/delete', { mapId: D });
   await gm.send('maps/delete', { mapId: C });
   const rid = gm.state.maps[A].regions[0].id;
@@ -584,14 +584,14 @@ try {
 
   // movement (fog off so that only the walls matter, not unexplored cells)
   await gm.send('maps/update', { mapId: F, patch: { fog: false } });
-  await rejects(p1.send('maps/moveToken', { mapId: F, tokenId: fa, x: 10, y: 4 }), /inaccessible/, 'player cannot walk through a closed door segment');
-  await rejects(p1.send('maps/moveToken', { mapId: F, tokenId: fa, x: 4, y: 1 }), /inaccessible/, 'player cannot walk through a wall segment');
+  await rejects(p1.send('maps/moveToken', { mapId: F, tokenId: fa, x: 10, y: 4 }), /unreachable/, 'player cannot walk through a closed door segment');
+  await rejects(p1.send('maps/moveToken', { mapId: F, tokenId: fa, x: 4, y: 1 }), /unreachable/, 'player cannot walk through a wall segment');
   await gm.send('maps/update', { mapId: F, patch: { fog: true } });
   await p1.send('maps/moveToken', { mapId: F, tokenId: fa, x: 7, y: 3 });
 
   // door segment permissions
-  await rejects(p2.send('maps/toggleDoor', { mapId: F, doorId: 'dA' }), /Approche/, 'door segment too far for p2');
-  await rejects(p1.send('maps/toggleDoor', { mapId: F, doorId: 'dS' }), /introuvable/, 'player cannot use a closed secret door segment');
+  await rejects(p2.send('maps/toggleDoor', { mapId: F, doorId: 'dA' }), /Get closer/, 'door segment too far for p2');
+  await rejects(p1.send('maps/toggleDoor', { mapId: F, doorId: 'dS' }), /Door not found/, 'player cannot use a closed secret door segment');
   p1.events.length = 0;
   const fst = await p1.send('maps/toggleDoor', { mapId: F, doorId: 'dA' });
   await settle();
@@ -607,11 +607,11 @@ try {
   ok(gm.state.maps[F].walls.find((w) => w.id === 'dA')!.door!.state === 'closed' && p1.events.some((e) => (e.data as { id?: string })?.id === 'door-close'), 'player closes it again (+ sfx)');
   await p1.send('maps/moveToken', { mapId: F, tokenId: fa, x: 9, y: 6 });
   p1.events.length = 0;
-  await rejects(p1.send('maps/toggleDoor', { mapId: F, doorId: 'dL' }), /verrouill/, 'locked door segment refuses player');
+  await rejects(p1.send('maps/toggleDoor', { mapId: F, doorId: 'dL' }), /locked/, 'locked door segment refuses player');
   await settle(60);
   ok(p1.events.some((e) => (e.data as { id?: string })?.id === 'door-locked'), 'door-locked sfx for a locked segment');
   ok(p1.state.maps[F].walls.find((w) => w.id === 'dL')?.door!.state === 'closed', 'locked segment shown as closed to players');
-  await rejects(p1.send('maps/setDoor', { mapId: F, doorId: 'dL', state: 'open' }), /MJ/, 'players cannot setDoor');
+  await rejects(p1.send('maps/setDoor', { mapId: F, doorId: 'dL', state: 'open' }), /GM-only/, 'players cannot setDoor');
   await gm.send('maps/toggleDoor', { mapId: F, doorId: 'dL' });
   await settle();
   ok(gm.state.maps[F].walls.find((w) => w.id === 'dL')!.door!.state === 'open', 'GM toggles a locked segment door open');
@@ -628,8 +628,8 @@ try {
   ok(p1.state.maps[F].tokens.some((t) => t.id === fCloset), 'closet token seen through the opened secret door (shared vision)');
 
   // GM wall CRUD
-  await rejects(p1.send('maps/addWall', { mapId: F, wall: { x1: 0, y1: 0, x2: 1, y2: 0 } }), /MJ/, 'players cannot add walls');
-  await rejects(gm.send('maps/addWall', { mapId: F, wall: { x1: 1, y1: 1, x2: 1, y2: 1 } }), /invalide/, 'addWall validates');
+  await rejects(p1.send('maps/addWall', { mapId: F, wall: { x1: 0, y1: 0, x2: 1, y2: 0 } }), /GM-only/, 'players cannot add walls');
+  await rejects(gm.send('maps/addWall', { mapId: F, wall: { x1: 1, y1: 1, x2: 1, y2: 1 } }), /Invalid wall/, 'addWall validates');
   const nw = await gm.send('maps/addWall', { mapId: F, wall: { x1: 9, y1: 5, x2: 15, y2: 5, door: null } });
   await settle();
   ok(typeof nw === 'string' && gm.state.maps[F].walls.some((w) => w.id === nw && w.move && w.sight), 'addWall');
@@ -647,7 +647,7 @@ try {
   const removed = await gm.send('maps/removeWall', { mapId: F, wallIds: [nw, 'win'] });
   await settle();
   ok(removed === 2 && !gm.state.maps[F].walls.some((w) => w.id === nw || w.id === 'win'), 'removeWall (several)');
-  await rejects(gm.send('maps/removeWall', { mapId: F, wallId: 'nope' }), /introuvable/, 'removeWall unknown id');
+  await rejects(gm.send('maps/removeWall', { mapId: F, wallId: 'nope' }), /Wall not found/, 'removeWall unknown id');
   const before = gm.state.maps[F].walls;
   const cnt = await gm.send('maps/setWalls', { mapId: F, walls: [...before, { x1: 0, y1: 7, x2: 3, y2: 7 }, { x1: 'a' }] });
   await settle();
@@ -686,5 +686,5 @@ try {
 
 const errs = srv.output().split('\n').filter((l) => /\[action|filter failed|init failed/.test(l));
 ok(errs.length === 0, 'no server-side errors: ' + errs.join(' | '));
-console.log(`${passes} ok, ${failures} échec(s)`);
+console.log(`${passes} ok, ${failures} failed`);
 process.exit(failures ? 1 : 0);

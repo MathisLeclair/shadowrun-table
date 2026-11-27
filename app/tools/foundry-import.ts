@@ -39,7 +39,7 @@ const writeJson = (f: string, v: unknown, indent = 2) => {
 
 const worldPath = opt('--world') || detectWorldPath();
 const dump = opt('--dump');
-console.log(`Monde Foundry : ${worldPath}${dump ? ` (dump ${dump})` : ''}`);
+console.log(`Foundry world: ${worldPath}${dump ? ` (dump ${dump})` : ''}`);
 const world = dump ? readDump(dump, worldPath) : await readWorld(worldPath);
 const now = Date.now();
 const assets = createAssets({ dataRoot: world.dataRoot });
@@ -64,16 +64,16 @@ const pseudo = {
   audio: readJson(path.join(SEED, 'audio.json'), { tracks: [] as AudioTrack[] }) as AudioState,
 };
 const scan = scanBundle(pseudo, bundle, { docsDir: DOCS_OUT });
-console.log(`\nPJ : ${scan.pcs.map((p) => `${p.name} [${p.status}]`).join(', ')}`);
-for (const p of scan.pcs) if (p.diff.length) console.log(`  ${p.name} :\n    - ${p.diff.join('\n    - ')}`);
-console.log(`PNJ : ${scan.npcs.length} (${scan.npcs.filter((n) => n.matched).length} liés au bestiaire existant)`);
-console.log(`Scènes : ${scan.scenes.length}${scan.skippedScenes.length ? ` (+${scan.skippedScenes.length} ignorées)` : ''}`);
-console.log(`Journaux : ${scan.journals.docs.length} (+${scan.journals.pdfs} PDF listés)`);
-console.log(`Playlists : ${scan.playlists.map((p) => `${p.name} ${p.tracks} pistes ${p.size}`).join(', ')} — audio total ${scan.audio.size}`);
-if (scan.missingAssets.length) console.log(`Fichiers introuvables : ${scan.missingAssets.length} (ex. ${scan.missingAssets.slice(0, 3).join(', ')})`);
+console.log(`\nPCs: ${scan.pcs.map((p) => `${p.name} [${p.status}]`).join(', ')}`);
+for (const p of scan.pcs) if (p.diff.length) console.log(`  ${p.name}:\n    - ${p.diff.join('\n    - ')}`);
+console.log(`NPCs: ${scan.npcs.length} (${scan.npcs.filter((n) => n.matched).length} linked to the existing bestiary)`);
+console.log(`Scenes: ${scan.scenes.length}${scan.skippedScenes.length ? ` (+${scan.skippedScenes.length} skipped)` : ''}`);
+console.log(`Journals: ${scan.journals.docs.length} (+${scan.journals.pdfs} PDFs listed)`);
+console.log(`Playlists: ${scan.playlists.map((p) => `${p.name} ${p.tracks} tracks ${p.size}`).join(', ')} — audio total ${scan.audio.size}`);
+if (scan.missingAssets.length) console.log(`Missing files: ${scan.missingAssets.length} (e.g. ${scan.missingAssets.slice(0, 3).join(', ')})`);
 
 if (!flag('--write-seeds')) {
-  console.log('\n(analyse seulement — ajoute --write-seeds pour régénérer les seeds)');
+  console.log('\n(analysis only — add --write-seeds to regenerate the seeds)');
   process.exit(0);
 }
 
@@ -90,7 +90,7 @@ bundle.pcs.forEach((pc, i) => {
 for (const a of seedPcs) if (!outPcs.some((x) => x.id === a.id)) outPcs.push(a);
 outPcs.sort((a, b) => (order.indexOf(a.id) + 1 || 99) - (order.indexOf(b.id) + 1 || 99));
 writeJson(path.join(SEED, 'actors', 'pcs.json'), outPcs);
-console.log(`\n✔ data/seed/actors/pcs.json : ${outPcs.map((a) => `${a.id}${a.retired ? ' (retraité)' : ''}`).join(', ')}`);
+console.log(`\n✔ data/seed/actors/pcs.json: ${outPcs.map((a) => `${a.id}${a.retired ? ' (retired)' : ''}`).join(', ')}`);
 
 // --- Bestiary
 const newTpl: Template[] = [];
@@ -107,7 +107,7 @@ for (const npc of bundle.npcs) {
 }
 writeJson(corePath, core, 1);
 writeJson(foundryTplPath, newTpl, 1);
-console.log(`✔ bestiaire : ${updated} modèles mis à jour (core.json), ${newTpl.length} nouveaux (foundry.json)`);
+console.log(`✔ bestiary: ${updated} templates updated (core.json), ${newTpl.length} new (foundry.json)`);
 
 // --- Maps
 const written = new Set<string>();
@@ -118,7 +118,7 @@ for (const sc of bundle.scenes) {
   written.add(file);
 }
 for (const f of fs.readdirSync(mapsDir)) if (f.startsWith('foundry-') && !written.has(f)) fs.rmSync(path.join(mapsDir, f));
-console.log(`✔ cartes : ${written.size} fichiers data/seed/maps/foundry-*.json`);
+console.log(`✔ maps: ${written.size} files data/seed/maps/foundry-*.json`);
 
 // --- Audio tracks
 const audioPath = path.join(SEED, 'audio.json');
@@ -127,7 +127,7 @@ const fvttTracks = bundle.playlists.flatMap((p) => p.tracks);
 audio.tracks = [...(audio.tracks || []).filter((t) => !String(t.id).startsWith('trk_fvtt_')), ...fvttTracks];
 const line = (o: unknown) => `    ${JSON.stringify(o)}`;
 fs.writeFileSync(audioPath, `{\n  "tracks": [\n${audio.tracks.map(line).join(',\n')}\n  ],\n  "scenes": [\n${(audio.scenes || []).map(line).join(',\n')}\n  ]\n}\n`, 'utf8');
-console.log(`✔ audio.json : ${fvttTracks.length} pistes Foundry`);
+console.log(`✔ audio.json: ${fvttTracks.length} Foundry tracks`);
 
 // --- Quest map links (campaign.json)
 const campPath = path.join(SEED, 'campaign.json');
@@ -145,22 +145,22 @@ if (camp?.quests) {
   }
   writeJson(campPath, camp);
 }
-console.log(`✔ campaign.json : ${links} liens de cartes ajoutés aux quêtes`);
+console.log(`✔ campaign.json: ${links} map links added to quests`);
 
 // --- Journals
 if (!flag('--no-journals')) {
   fs.mkdirSync(DOCS_OUT, { recursive: true });
   for (const d of bundle.journals.docs) fs.writeFileSync(path.join(DOCS_OUT, d.file), d.content, 'utf8');
   fs.writeFileSync(path.join(DOCS_OUT, '_index.md'), bundle.journals.index, 'utf8');
-  console.log(`✔ journaux : ${bundle.journals.docs.length} fichiers dans ${DOCS_OUT}`);
+  console.log(`✔ journals: ${bundle.journals.docs.length} files in ${DOCS_OUT}`);
 }
 
 // --- Assets
 const kinds = ['img', 'scene', 'thumb', 'journal', ...(flag('--no-audio') ? [] : ['audio'])];
 const t0 = Date.now();
 const res = assets.copySync(kinds);
-console.log(`✔ fichiers : ${res.copied} copiés, ${res.skipped} déjà à jour — ${formatBytes(res.bytes)} dans data/assets/foundry (${Math.round((Date.now() - t0) / 100) / 10} s)`);
+console.log(`✔ files: ${res.copied} copied, ${res.skipped} already up to date — ${formatBytes(res.bytes)} in data/assets/foundry (${Math.round((Date.now() - t0) / 100) / 10} s)`);
 const byKind: Record<string, number> = {};
 for (const [, e] of assets.entries()) byKind[e.kind] = (byKind[e.kind] || 0) + e.size;
-console.log(`  détail : ${Object.entries(byKind).map(([k, v]) => `${k} ${formatBytes(v)}`).join(', ')}`);
-if (res.errors.length) console.log(`  erreurs : ${res.errors.slice(0, 5).join(' ; ')}`);
+console.log(`  breakdown: ${Object.entries(byKind).map(([k, v]) => `${k} ${formatBytes(v)}`).join(', ')}`);
+if (res.errors.length) console.log(`  errors: ${res.errors.slice(0, 5).join('; ')}`);

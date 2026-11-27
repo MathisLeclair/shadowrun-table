@@ -52,10 +52,10 @@ await test('fixture round-trips byte for byte through the DOM', () => {
   assert.equal(doc.bom, true);
   assert.equal(serializeXml(doc, { bom: true }), src);
 });
-await test('malformed XML is rejected with a French message', () => {
-  assert.throws(() => parseXml('<character><a></b></character>'), /XML invalide/);
-  assert.throws(() => parseChum5('<root/>'), /pas une fiche Chummer/);
-  assert.throws(() => parseChum5('<character><name>x</character>'), /illisible/);
+await test('malformed XML is rejected with a readable message', () => {
+  assert.throws(() => parseXml('<character><a></b></character>'), /Invalid XML/);
+  assert.throws(() => parseChum5('<root/>'), /not a Chummer5 character/);
+  assert.throws(() => parseChum5('<character><name>x</character>'), /Unreadable/);
 });
 
 console.log('Import (.chum5 → actor)');
@@ -265,7 +265,7 @@ await test('after a merge, app rewards not in the uploaded file still become Chu
   assert.equal(m.nuyen, ours.nuyen - 300);
   const out = exportChum5(m, { now: 4000 });
   assert.ok(out.xml.includes('<reason>Récompense</reason>'));
-  assert.ok(!out.xml.includes('Mise à jour depuis Chummer'), 'the merge entry is not re-exported');
+  assert.ok(!out.xml.includes('Updated from Chummer'), 'the merge entry is not re-exported');
   const b = parseChum5(out.xml).actor;
   assert.equal(b.karma, m.karma);
   assert.equal(b.karmaTotal, m.karmaTotal);
@@ -282,47 +282,49 @@ await test('first import into an app-made actor: the file wins, app-only data ke
   assert.ok(m.bio, 'empty Chummer text never erases app text');
 });
 
-console.log('i18n (French unchanged, English from client/i18n/en/chummer.json)');
-const en = dictionary('en');
-await test('XML / file errors carry a translatable key, French message unchanged', () => {
+console.log('i18n (English source text, French from client/i18n/fr/*.json)');
+const fr = dictionary('fr');
+await test('XML / file errors carry a translatable key, English message', () => {
   let e1: KeyedError | undefined;
   try {
     parseXml('<character><a></b></character>');
   } catch (err) {
     e1 = err as KeyedError;
   }
-  assert.equal(e1!.message, 'XML invalide (ligne 1) : </b> ferme <a>');
-  assert.equal(e1!.i18nKey, 'XML invalide (ligne {line}) : {error}');
-  assert.equal(tr('en', e1!.i18nKey, e1!.i18nParams), 'Invalid XML (line 1): </b> closes <a>');
+  assert.equal(e1!.message, 'Invalid XML (line 1): </b> closes <a>');
+  assert.equal(e1!.i18nKey, 'Invalid XML (line {line}): {error}');
+  assert.equal(tr('en', e1!.i18nKey, e1!.i18nParams), e1!.message, 'English = source');
+  assert.equal(tr('fr', e1!.i18nKey, e1!.i18nParams), 'XML invalide (ligne 1) : </b> ferme <a>');
   let e2: KeyedError | undefined;
   try {
     parseChum5('<character><name>x</character>');
   } catch (err) {
     e2 = err as KeyedError;
   }
-  assert.match(e2!.message, /^Fichier \.chum5 illisible — XML invalide \(ligne 1\) : /);
+  assert.match(e2!.message, /^Unreadable \.chum5 file — Invalid XML \(line 1\): /);
   assert.match(tr('en', e2!.i18nKey, e2!.i18nParams), /^Unreadable \.chum5 file — Invalid XML \(line 1\): /);
+  assert.match(tr('fr', e2!.i18nKey, e2!.i18nParams), /^Fichier \.chum5 illisible — XML invalide \(ligne 1\) : /);
   let e3: KeyedError | undefined;
   try {
     parseChum5('<root/>');
   } catch (err) {
     e3 = err as KeyedError;
   }
-  assert.equal(e3!.i18nKey, 'Ce fichier n’est pas une fiche Chummer5 (.chum5)');
-  assert.ok(en[e3!.i18nKey]);
+  assert.equal(e3!.i18nKey, 'This file is not a Chummer5 character (.chum5)');
+  assert.ok(fr[e3!.i18nKey]);
 });
-await test('warnings: French strings kept, translatable copy alongside', () => {
+await test('warnings: English strings, translatable copy alongside', () => {
   const p = parseChum5(src.replace(/<created>True<\/created>/, '<created>False</created>'), { fileName: 'x.chum5' });
   assert.equal(p.warnings.length, p.warningsI18n.length);
-  assert.ok(p.warnings.some((w) => /mode création/.test(w)), JSON.stringify(p.warnings));
-  for (const w of p.warningsI18n) assert.ok(en[w.t], `English for « ${w.t} »`);
+  assert.ok(p.warnings.some((w) => /creation mode/.test(w)), JSON.stringify(p.warnings));
+  for (const w of p.warningsI18n) assert.ok(fr[w.t], `French for “${w.t}”`);
   const jane = clone(seeds.find((a) => a.id === 'pc_jane')!);
   const r = exportChum5(jane, { now: 1 });
   assert.equal(r.warnings.length, r.warningsI18n.length);
   assert.equal((r.warnings as string[] & { add?: unknown }).add, undefined, 'no helper left on the returned array');
   r.warningsI18n.forEach((w, i) => {
-    assert.ok(en[w.t], `English for « ${w.t} »`);
-    assert.equal(tr('fr', w.t, w.params), r.warnings[i]);
+    assert.ok(fr[w.t], `French for “${w.t}”`);
+    assert.equal(tr('en', w.t, w.params), r.warnings[i]);
   });
 });
 await test('diff labels are dictionary keys', () => {
@@ -330,14 +332,17 @@ await test('diff labels are dictionary keys', () => {
   const b = clone(fx);
   b.karma += 3;
   b.nuyen += 10;
-  b.notes = 'autre';
+  b.notes = 'other';
   // Partial items: only what the diff reads
   b.lifestyles = [...(b.lifestyles || []), { id: 'ls_new', name: 'Luxe', base: 'Luxury', baseCost: 100000, monthsPaid: 0, qualities: [], monthlyCost: 100000 } as unknown as Lifestyle];
   b.gear = [...(b.gear || []), { id: 'g_new', name: 'Truc' } as Gear];
   const d = diffActors(a, b);
-  for (const sc of d.scalars) assert.ok(en[sc.label], `English for « ${sc.label} »`);
-  for (const l of d.lists) assert.ok(en[l.label], `English for « ${l.label} »`);
-  assert.ok(d.scalars.some((x) => x.label === 'Notes' && x.to === 'modifiées'));
+  for (const sc of d.scalars) assert.ok(fr[sc.label], `French for “${sc.label}”`);
+  for (const l of d.lists) assert.ok(fr[l.label], `French for “${l.label}”`);
+  const notes = d.scalars.find((x) => x.label === 'Notes');
+  assert.ok(notes && notes.to === 'pl::changed');
+  assert.equal(tr('en', notes!.to), 'changed');
+  assert.equal(tr('fr', notes!.to), 'modifiées');
 });
 
 console.log('Lifestyles, accessories, armor/vehicle mods, martial arts (Shadowrun_chum5_files, historic)');
@@ -360,12 +365,12 @@ function findSmartgunExt() {
     return null;
   }
 }
-if (!hasChumFiles) console.log('  (dossier Shadowrun_chum5_files absent — tests ignorés)');
+if (!hasChumFiles) console.log('  (Shadowrun_chum5_files folder missing — tests skipped)');
 else {
   const jane = parseChum5(chum('Jane_Active.chum5'), { fileName: 'Jane_Active.chum5' }).actor;
   const chris = parseChum5(chum('Christopher_Armingstar_Active.chum5')).actor;
   const ank = parseChum5(chum('Ank_Lay_Active.chum5')).actor;
-  await test('Jane: lifestyle « Best Home » (Medium) with DocWagon Gold, Extra Secure, Pheromone + Vocal Tension detection', () => {
+  await test('Jane: lifestyle “Best Home” (Medium) with DocWagon Gold, Extra Secure, Pheromone + Vocal Tension detection', () => {
     assert.equal((jane as ParsedActor & { lifestyle?: unknown }).lifestyle, undefined);
     assert.equal(jane.lifestyles.length, 1);
     const ls = jane.lifestyles[0];
@@ -517,7 +522,7 @@ else {
     const d = diffActors(ours, m);
     const l = d.lists.find((x) => x.list === 'lifestyles');
     assert.ok(l && l.changed.some((c) => /−Pheromone Detection/.test(c)), JSON.stringify(d.lists));
-    assert.ok(en[l.label], 'English list label');
+    assert.ok(fr[l.label], 'French list label');
   });
   await test('an app-side accessory / lifestyle option survives an unrelated Chummer upload; nested ids kept', () => {
     // Same file parsed three times like 85-chummer prepareUpdate: theirs with fresh ids, base with ids 'base'.
@@ -590,12 +595,13 @@ try {
     const badXml = await post('/api/chummer/import', gmToken, '<character><name>x</character>');
     assert.equal(badXml.status, 400);
     const badJ = await badXml.json();
-    assert.match(badJ.error, /illisible/);
-    assert.equal(badJ.errorKey, 'Fichier .chum5 illisible — {error}', 'route error carries its key');
+    assert.match(badJ.error, /Unreadable/);
+    assert.equal(badJ.errorKey, 'Unreadable .chum5 file — {error}', 'route error carries its key');
     const notChar = await (await post('/api/chummer/import', gmToken, 'hello')).json();
-    assert.equal(notChar.errorKey, 'Fichier non reconnu : envoie un .chum5 (Chummer5) ou un export JSON de fiche');
-    const logE = gm.state.log.find((e) => e.i18n?.key === 'Fiche importée : {actor} (Chummer).');
-    assert.ok(logE && logE.text === 'Fiche importée : Test Chummer (Chummer).', 'import log translatable, French text unchanged');
+    assert.equal(notChar.errorKey, 'Unrecognized file: send a .chum5 (Chummer5) or a JSON sheet export');
+    const logE = gm.state.log.find((e) => e.i18n?.key === 'Sheet imported: {actor} (Chummer).');
+    assert.ok(logE && logE.text === 'Sheet imported: Test Chummer (Chummer).', 'import log translatable, English text');
+    assert.equal(tr('fr', logE!.i18n!.key, logE!.i18n!.params), 'Fiche importée : Test Chummer (Chummer).');
   });
 
   await test('players never receive the stored XML; only their own pending requests', async () => {
@@ -631,7 +637,7 @@ try {
     assert.ok(gm.state.actors.pc_jane.weapons.every((w) => w.chummerGuid), 'items got their Chummer guid');
   });
 
-  await test('player round trip: export → edit in « Chummer » → preview → update, app rewards kept', async () => {
+  await test('player round trip: export → edit in “Chummer” → preview → update, app rewards kept', async () => {
     const xml = Buffer.from(await (await fetch(srv.url + `/api/chummer/export/${actorId}`, { headers: H(p1Token) })).arrayBuffer()).toString('utf8');
     await gm.send('actor/adjust', { actorId, karma: 5, reason: 'Récompense' }); // happens in the app while the player edits
     await settle(300);
@@ -652,7 +658,7 @@ try {
     assert.equal(pj.linked, true);
     // pj: JSON reply of /api/chummer/preview (diff = diffActors())
     assert.ok(pj.diff.skills.some((s: ActorDiff['skills'][number]) => s.id === 'disguise' && s.to === '7'));
-    assert.ok(pj.diff.scalars.some((s: DiffScalar) => s.label === 'Nuyens'));
+    assert.ok(pj.diff.scalars.some((s: DiffScalar) => s.label === 'Nuyen'));
     await settle(100);
     assert.equal(gm.state.actors[actorId].skills.find((s) => s.id === 'disguise')!.rating, 6, 'preview changes nothing');
     const up = await post(`/api/chummer/update?actorId=${actorId}&fileName=edit.chum5`, p1Token, edited);
@@ -667,17 +673,17 @@ try {
     assert.equal(a.weapons.filter((w) => /Colt/.test(w.name)).length, 1, 'Colt replaced, not duplicated');
     assert.equal(a.weapons.filter((w) => w.name === 'Mains nues').length, 1);
     assert.equal(a.chummer!.fileName, 'edit.chum5');
-    assert.match(a.history[a.history.length - 1].text, /Mise à jour depuis Chummer/);
-    assert.ok(gm.state.log.some((e) => /mis à jour depuis Chummer/.test(e.text)));
-    const logE = [...gm.state.log].reverse().find((e) => e.i18n?.key === '{actor} mis à jour depuis Chummer ({file}) par {user} : {summary}.');
+    assert.match(a.history[a.history.length - 1].text, /Updated from Chummer/);
+    assert.ok(gm.state.log.some((e) => /updated from Chummer/.test(e.text)));
+    const logE = [...gm.state.log].reverse().find((e) => e.i18n?.key === '{actor} updated from Chummer ({file}) by {user}: {summary}.');
     assert.ok(logE, 'update log entry has a key');
-    assert.match(logE.text, /^Test Chummer mis à jour depuis Chummer \(edit\.chum5\) par Testeur Chummer : Nuyens .+ → .+\.$/);
-    assert.match(tr('en', logE.i18n!.key, logE.i18n!.params), /^Test Chummer updated from Chummer \(edit\.chum5\) by Testeur Chummer: Nuyen .+ → .+\.$/);
+    assert.match(logE.text, /^Test Chummer updated from Chummer \(edit\.chum5\) by Testeur Chummer: Nuyen .+ → .+\.$/);
+    assert.match(tr('fr', logE.i18n!.key, logE.i18n!.params), /^Test Chummer mis à jour depuis Chummer \(edit\.chum5\) par Testeur Chummer : Nuyens .+ → .+\.$/);
     assert.ok(Array.isArray(uj.warningsI18n), 'update reply carries translatable warnings');
   });
 
   await test('GM approval mode: player upload → pending request → GM validates', async () => {
-    await assert.rejects(p1!.send('chummer/settings', { allowPlayerImport: false }), /MJ/);
+    await assert.rejects(p1!.send('chummer/settings', { allowPlayerImport: false }), /GM-only/);
     await gm.send('chummer/settings', { allowPlayerImport: false });
     const xml = Buffer.from(await (await fetch(srv.url + `/api/chummer/export/${actorId}`, { headers: H(p1Token) })).arrayBuffer()).toString('utf8');
     const edited = xml.replace(/<nuyen>(\d+)<\/nuyen>/, (m, n) => `<nuyen>${Number(n) + 1000}</nuyen>`);
@@ -692,7 +698,7 @@ try {
     const req = p1!.state.chummer.pending.find((r) => r.id === up.requestId);
     assert.ok(req, 'player sees own request');
     assert.ok(Array.isArray(req.summaryI18n) && req.summaryI18n.length, 'pending request carries a translatable summary');
-    assert.equal(req.summary, req.summaryI18n.map((p) => tr('fr', p.t, p.params)).join(', '), 'French summary unchanged');
+    assert.equal(req.summary, req.summaryI18n.map((p) => tr('en', p.t, p.params)).join(', '), 'English summary = source');
     assert.match(req.summaryI18n.map((p) => tr('en', p.t, p.params)).join(', '), /^Nuyen /);
     assert.equal(req.xml, undefined, 'without the XML');
     const p2 = await client(srv.url, p2Token);
@@ -703,7 +709,7 @@ try {
     await settle(300);
     assert.equal(gm.state.actors[actorId].nuyen, nuyenBefore + 1000);
     assert.equal(gm.state.chummer.pending.find((r) => r.id === up.requestId)!.status, 'approved');
-    await assert.rejects(gm.send('chummer/resolve', { requestId: up.requestId, approve: true }), /déjà traitée/);
+    await assert.rejects(gm.send('chummer/resolve', { requestId: up.requestId, approve: true }), /already handled/);
     // denied + cancelled requests
     const up2 = await (await post(`/api/chummer/update?actorId=${actorId}`, p1Token, edited)).json();
     await p1!.send('chummer/cancel', { requestId: up2.requestId });
@@ -790,8 +796,8 @@ try {
 }
 
 if (failures) {
-  console.log(`\n${failures} test(s) en échec`);
+  console.log(`\n${failures} test(s) failed`);
   process.exit(1);
 }
-console.log('\nOK — tous les tests passent');
-console.log(`Fichiers à ouvrir dans Chummer : ${path.relative(ROOT, OUT_JANE)}, ${path.relative(ROOT, OUT_RT)}`);
+console.log('\nOK — all tests pass');
+console.log(`Files to open in Chummer: ${path.relative(ROOT, OUT_JANE)}, ${path.relative(ROOT, OUT_RT)}`);

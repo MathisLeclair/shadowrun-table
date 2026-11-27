@@ -1,4 +1,4 @@
-// Tests for server/modules/10-characters.js — run: node tools/test-characters.ts
+// Tests for server/modules/10-characters.ts — run: node tools/test-characters.ts
 import assert from 'node:assert/strict';
 import { startServer, login, client, settle } from './test-client.ts';
 import { readFileSync as readSeedFile } from 'node:fs';
@@ -63,8 +63,8 @@ try {
     npcId = await gm.send('actor/create', { type: 'npc', name: 'Nettoyeur AG Chemie 1', templateId: 'tpl_cleaner', attributes: { BOD: 4, WIL: 3 }, npc: { professionalRating: 4, tactics: 'Flanquer', loot: '200¥' }, gmNotes: 'secret' });
     hiddenId = await gm.send('actor/create', { type: 'npc', name: 'Sniper caché', hidden: true });
     assert.ok(npcId.startsWith('npc_'));
-    await rejects(p1.send('actor/create', { type: 'npc', name: 'x' }), /MJ/);
-    await rejects(gm.send('actor/create', { type: 'npc', name: '  ' }), /nom/);
+    await rejects(p1.send('actor/create', { type: 'npc', name: 'x' }), /GM/);
+    await rejects(gm.send('actor/create', { type: 'npc', name: '  ' }), /name/);
     await settle();
     const a = gm.state.actors[npcId];
     assert.equal(a.attributes.BOD, 4);
@@ -89,10 +89,10 @@ try {
   });
   await test('player updates allowed keys on own actor only', async () => {
     await p1.send('actor/update', { actorId: 'pc_jane', patch: { notes: 'Mes notes', color: '#ff00aa', condition: { stun: 2 } } });
-    await rejects(p1.send('actor/update', { actorId: 'pc_jane', patch: { karma: 999 } }), /MJ/);
-    await rejects(p1.send('actor/update', { actorId: 'pc_jane', patch: { attributes: { CHA: 12 } } }), /modifier/);
-    await rejects(p1.send('actor/update', { actorId: 'pc_bricks', patch: { notes: 'hack' } }), /appartient/);
-    await rejects(p1.send('actor/update', { actorId: 'pc_jane', patch: { color: 'red;}' } }), /Couleur/);
+    await rejects(p1.send('actor/update', { actorId: 'pc_jane', patch: { karma: 999 } }), /GM/);
+    await rejects(p1.send('actor/update', { actorId: 'pc_jane', patch: { attributes: { CHA: 12 } } }), /change/);
+    await rejects(p1.send('actor/update', { actorId: 'pc_bricks', patch: { notes: 'hack' } }), /not yours/);
+    await rejects(p1.send('actor/update', { actorId: 'pc_jane', patch: { color: 'red;}' } }), /color/);
     await rejects(p1.send('actor/update', { actorId: 'pc_jane', patch: { portrait: 'javascript:alert(1)' } }), /portrait/);
     await settle();
     const a = gm.state.actors.pc_jane;
@@ -118,8 +118,8 @@ try {
     assert.equal(gm.state.actors.pc_jane.attributes.ESS, 6);
     const sk = await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'skills', item: { id: 'navigation', rating: 3 } });
     assert.equal(sk, 'navigation');
-    await rejects(gm.send('actor/addItem', { actorId: 'pc_jane', list: 'skills', item: { id: 'navigation', rating: 3 } }), /déjà/);
-    await rejects(gm.send('actor/addItem', { actorId: 'pc_jane', list: 'bogus', item: {} }), /inconnue/);
+    await rejects(gm.send('actor/addItem', { actorId: 'pc_jane', list: 'skills', item: { id: 'navigation', rating: 3 } }), /already/);
+    await rejects(gm.send('actor/addItem', { actorId: 'pc_jane', list: 'bogus', item: {} }), /Unknown list/);
     await settle();
     const s = gm.state.actors.pc_jane.skills.find((x) => x.id === 'navigation')!;
     assert.equal(s.name, 'Navigation');
@@ -133,15 +133,15 @@ try {
     // Players may lower a quantity (consumption) but never raise it (it could then be sold to the shop).
     await gm.send('actor/updateItem', { actorId: 'pc_jane', list: 'gear', itemId: gear.id, patch: { qty: 5 } });
     await p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'gear', itemId: gear.id, patch: { qty: 4, notes: 'ok' } });
-    await rejects(p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'gear', itemId: gear.id, patch: { qty: 9999 } }), /MJ/);
+    await rejects(p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'gear', itemId: gear.id, patch: { qty: 9999 } }), /GM/);
     const w = jane.weapons.find((x) => x.ammoMax! > 7)!;
     await p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, patch: { ammoLeft: 7, notes: '3 tirs' } }); // legacy field = ammoLoaded
-    await rejects(p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, patch: { ammoLoaded: 9 } }), /Recharger/);
-    await rejects(p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, patch: { damage: '20P' } }), /seulement/);
-    await rejects(p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'armor', itemId: armor.id, patch: { rating: 20 } }), /seulement/);
-    await rejects(p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'qualities', itemId: jane.qualities[0].id, patch: { karma: 0 } }), /MJ/);
-    await rejects(p1.send('actor/addItem', { actorId: 'pc_jane', list: 'gear', item: { name: 'x' } }), /MJ/);
-    await rejects(p2.send('actor/updateItem', { actorId: 'pc_jane', list: 'gear', itemId: gear.id, patch: { qty: 1 } }), /appartient/);
+    await rejects(p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, patch: { ammoLoaded: 9 } }), /Reload/);
+    await rejects(p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, patch: { damage: '20P' } }), /only change/);
+    await rejects(p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'armor', itemId: armor.id, patch: { rating: 20 } }), /only change/);
+    await rejects(p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'qualities', itemId: jane.qualities[0].id, patch: { karma: 0 } }), /GM/);
+    await rejects(p1.send('actor/addItem', { actorId: 'pc_jane', list: 'gear', item: { name: 'x' } }), /GM/);
+    await rejects(p2.send('actor/updateItem', { actorId: 'pc_jane', list: 'gear', itemId: gear.id, patch: { qty: 1 } }), /not yours/);
     await settle();
     const j = gm.state.actors.pc_jane;
     assert.equal(j.armor[0].equipped, false);
@@ -191,8 +191,8 @@ try {
     await gm.send('maps/delete', { mapId });
   });
   await test('damage permissions + NPC status for players', async () => {
-    await rejects(p1.send('actor/damage', { actorId: 'pc_bricks', amount: 2, type: 'P' }), /appartient/);
-    await rejects(p1.send('actor/damage', { actorId: 'pc_jane', amount: 2, type: 'X' }), /Type/);
+    await rejects(p1.send('actor/damage', { actorId: 'pc_bricks', amount: 2, type: 'P' }), /not yours/);
+    await rejects(p1.send('actor/damage', { actorId: 'pc_jane', amount: 2, type: 'X' }), /type/);
     await p1.send('actor/damage', { actorId: 'pc_jane', amount: 2, type: 'P' });
     await gm.send('actor/damage', { actorId: npcId, amount: 6, type: 'P' }); // BOD 4 → monitor 10
     await settle();
@@ -201,9 +201,9 @@ try {
   });
   await test('edge spend / refresh', async () => {
     assert.equal(await p1.send('edge/spend', { actorId: 'pc_jane' }), 2);
-    await rejects(p2.send('edge/spend', { actorId: 'pc_jane' }), /appartient/);
+    await rejects(p2.send('edge/spend', { actorId: 'pc_jane' }), /not yours/);
     assert.equal(await p1.send('edge/refresh', { actorId: 'pc_jane' }), 3);
-    await rejects(p1.send('edge/refresh', { actorId: 'all' }), /MJ/);
+    await rejects(p1.send('edge/refresh', { actorId: 'all' }), /GM/);
     await gm.send('edge/spend', { actorId: 'pc_bricks' });
     assert.equal(await gm.send('edge/refresh', { actorId: 'all' }), 3);
     await settle();
@@ -222,8 +222,8 @@ try {
     assert.deepEqual(j.history.at(-1)!.karma, 5);
     assert.ok(gm.events.some((e) => e.ev === 'sfx' && e.data.id === 'level-up'));
     assert.ok(p1.state.log.some((e) => e.kind === 'system' && e.text.includes('Fin de séance 3')));
-    await rejects(gm.send('actor/adjust', { actorId: 'pc_bricks', nuyen: -1e7, reason: 'x' }), /assez/);
-    await rejects(p1.send('actor/adjust', { actorId: 'pc_jane', karma: 50 }), /MJ/);
+    await rejects(gm.send('actor/adjust', { actorId: 'pc_bricks', nuyen: -1e7, reason: 'x' }), /enough/);
+    await rejects(p1.send('actor/adjust', { actorId: 'pc_jane', karma: 50 }), /GM/);
   });
 
   console.log('Dice');
@@ -252,7 +252,7 @@ try {
     assert.equal(r3.pool, 12);
     assert.equal(r3.limit, null);
     // defaulting forbidden
-    await rejects(p1.send('dice/roll', { actorId: 'pc_jane', skillId: 'spellcasting' }), /formation/);
+    await rejects(p1.send('dice/roll', { actorId: 'pc_jane', skillId: 'spellcasting' }), /untrained/);
     // knowledge skill
     const kno = gm.state.actors.pc_jane.knowledge.find((k) => k.type === 'academic')!;
     const r4 = await p1.send('dice/roll', { actorId: 'pc_jane', skillId: kno.id });
@@ -274,13 +274,13 @@ try {
     assert.equal(gm.state.actors.pc_jane.edge.current, 2);
     await p1.send('edge/spend', { actorId: 'pc_jane' });
     await p1.send('edge/spend', { actorId: 'pc_jane' });
-    await rejects(p1.send('dice/roll', { actorId: 'pc_jane', skillId: 'con', explode: true }), /Chance/);
+    await rejects(p1.send('dice/roll', { actorId: 'pc_jane', skillId: 'con', explode: true }), /Edge/);
     await p1.send('edge/refresh', { actorId: 'pc_jane' });
   });
   await test('roll permissions and secret rolls', async () => {
-    await rejects(p1.send('dice/roll', { actorId: 'pc_bricks', skillId: 'hacking' }), /ton personnage/);
-    await rejects(p1.send('dice/roll', { pool: 5, secret: true }), /MJ/);
-    await rejects(p1.send('dice/roll', { pool: 0 }), /nulle/);
+    await rejects(p1.send('dice/roll', { actorId: 'pc_bricks', skillId: 'hacking' }), /your own character/);
+    await rejects(p1.send('dice/roll', { pool: 5, secret: true }), /GM/);
+    await rejects(p1.send('dice/roll', { pool: 0 }), /zero/);
     const r = await gm.send('dice/roll', { actorId: npcId, attr: 'AGI', secret: true, label: 'Furtivité secrète' });
     await settle();
     assert.ok(gm.state.log.find((e) => e.id === r.logId));
@@ -292,8 +292,8 @@ try {
     assert.equal(sc.dice.length, r.dice.length);
     assert.ok(sc.rawHits >= r.rawHits);
     assert.deepEqual(sc.secondChance.before, r.dice);
-    await rejects(p2.send('dice/secondChance', { logId: r.logId }), /déjà/);
-    await rejects(p1.send('dice/secondChance', { logId: r.logId }), /appartient/);
+    await rejects(p2.send('dice/secondChance', { logId: r.logId }), /already/);
+    await rejects(p1.send('dice/secondChance', { logId: r.logId }), /not yours/);
     await settle();
     assert.equal(gm.state.actors.pc_bricks.edge.current, 4);
   });
@@ -343,7 +343,7 @@ try {
     // Players see their lifestyles but cannot touch them.
     assert.ok(p2.state.actors.pc_bricks.lifestyles.some((l) => l.id === lsId));
     await rejects(p2.send('actor/addSubItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: lsId, sub: 'qualities', item: { name: 'X' } }));
-    await rejects(p2.send('actor/updateItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: lsId, patch: { monthsPaid: 12 } }), /MJ|modifier/);
+    await rejects(p2.send('actor/updateItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: lsId, patch: { monthsPaid: 12 } }), /GM|change/);
     await gm.send('actor/removeItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: lsId });
     await settle();
     assert.equal(gm.state.actors.pc_bricks.lifestyles.length, before);
@@ -362,10 +362,10 @@ try {
     assert.deepEqual(acc.effects, { rc: 2 });
     assert.ok(p1.state.actors.pc_jane.weapons.find((x) => x.id === w.id)!.accessories!.some((x) => x.id === accId), 'owner sees it');
     await rejects(p1.send('actor/removeSubItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, sub: 'accessories', subId: accId }));
-    await rejects(p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, patch: { accessories: [] } }), /modifier/);
-    await rejects(gm.send('actor/addSubItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, sub: 'qualities', item: { name: 'x' } }), /Sous-liste inconnue/);
-    await rejects(gm.send('actor/addSubItem', { actorId: 'pc_jane', list: 'gear', itemId: w.id, sub: 'mods', item: { name: 'x' } }), /Sous-liste inconnue/);
-    await rejects(gm.send('actor/updateSubItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, sub: 'accessories', subId: 'nope', patch: {} }), /introuvable/);
+    await rejects(p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, patch: { accessories: [] } }), /change/);
+    await rejects(gm.send('actor/addSubItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, sub: 'qualities', item: { name: 'x' } }), /Unknown sub-list/);
+    await rejects(gm.send('actor/addSubItem', { actorId: 'pc_jane', list: 'gear', itemId: w.id, sub: 'mods', item: { name: 'x' } }), /Unknown sub-list/);
+    await rejects(gm.send('actor/updateSubItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, sub: 'accessories', subId: 'nope', patch: {} }), /not found/);
     await gm.send('actor/removeSubItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, sub: 'accessories', subId: accId });
     await settle();
     assert.ok(!gm.state.actors.pc_jane.weapons.find((x) => x.id === w.id)!.accessories!.some((x) => x.id === accId));
@@ -407,7 +407,7 @@ try {
     await settle();
     assert.ok(!gm.state.users[bap.id].characterIds.includes(pcCopy));
     assert.equal(gm.state.actors[pcCopy], undefined);
-    await rejects(p1.send('actor/delete', { actorId: npcId }), /MJ/);
+    await rejects(p1.send('actor/delete', { actorId: npcId }), /GM/);
   });
   await test('import .chum5 (XML) and Actor JSON over HTTP', async () => {
     const xml = `<?xml version="1.0" encoding="utf-8"?>
@@ -493,7 +493,7 @@ try {
   srv.stop();
 }
 if (failures) {
-  console.log(`\n${failures} test(s) en échec`);
+  console.log(`\n${failures} test(s) failed`);
   process.exit(1);
 }
-console.log('\nOK — tous les tests passent');
+console.log('\nOK — all tests pass');
