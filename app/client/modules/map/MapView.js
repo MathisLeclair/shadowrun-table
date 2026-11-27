@@ -8,7 +8,7 @@ import {
   buildGrid, findPath, pathLength, computeVisibility, createVisionContext, viewersForUser, decodeBits, orBits, isPcToken,
 } from '/shared/vision.js';
 import { MapCanvas } from './MapCanvas.js';
-import { DISPO, STATUS_GLYPHS, isImageMap, lightingOptions, dispoLabel, statusText } from './renderer.js';
+import { DISPO, STATUS_GLYPHS, isImageMap, lightingOptions, dispoLabel, statusText, getTileStyle, setTileStyle } from './renderer.js';
 import { t, tk, compare } from '../../lib/i18n.js';
 import { tRich } from '../sheet/common.js';
 import { RollDialog } from '../sheet/RollDialog.js';
@@ -146,6 +146,12 @@ function LiveMap({ game, map, ui, isGM }) {
   const [attacking, setAttacking] = useState(null); // { actorId, weaponId } roll dialog opened from the target banner
   const [showWalls, setShowWalls] = usePref('sr.map.showWalls', true);
   const [showGrid, setShowGrid] = usePref('sr.map.showGrid', true);
+  const [detailedTiles, setDetailedTiles] = useState(() => getTileStyle() === 'detailed');
+  const toggleTileStyle = (v) => {
+    setTileStyle(v ? 'detailed' : 'classic');
+    setDetailedTiles(v);
+  };
+  const tileStyleToggle = !isImageMap(map) && html`<${Toggle} label=${t('Décor détaillé')} title=${t('Sols texturés et mobilier dessiné (voitures, lits, canapés…) — réglage de ce navigateur')} value=${detailedTiles} onChange=${toggleTileStyle} />`;
   const hoverWallRef = useRef(null);
   const selected = useMemo(() => new Set(ui.selectedTokenIds || []), [ui.selectedTokenIds]);
   const own = useMemo(() => new Set(me.characterIds || []), [me.characterIds]);
@@ -598,6 +604,7 @@ function LiveMap({ game, map, ui, isGM }) {
       <${Select} class="map-tb-select small" value=${String(map.weather?.wind || 0)} options=${[t('Pas de vent'), t('Vent léger'), t('Vent modéré'), t('Vent fort')].map((label, i) => ({ value: String(i), label }))} onChange=${(v) => send('maps/update', { mapId, patch: { weather: { wind: Number(v) } } }).catch(quiet)} title=${t('Vent (modificateur d’environnement des attaques à distance)')} />
       ${(map.walls || []).length > 0 && html`<${Toggle} label=${t('Afficher les murs')} title=${t('Tracer les murs (segments) par-dessus la carte — visible par toi seul')} value=${showWalls} onChange=${setShowWalls} />`}
       ${isImageMap(map) && html`<${Toggle} label=${t('Grille')} title=${t("Quadrillage discret par-dessus l'image")} value=${showGrid} onChange=${setShowGrid} />`}
+      ${tileStyleToggle}
       <span class="map-tb-sep"></span>
       <${Button} small onClick=${() => send('maps/placePCs', { mapId }).then((ids) => toast(ids?.length ? t('{n} PJ placé(s)', { n: ids.length }) : t('Tous les PJ sont déjà sur la carte')), quiet)} title=${t('Poser un pion pour chaque PJ absent de la carte')}>${t('Placer les PJ')}</${Button}>
       <${Select} class="map-tb-select small" value=${preview} options=${previewOptions} onChange=${setPreview} title=${t('Prévisualiser ce que voient les joueurs')} />
@@ -613,6 +620,7 @@ function LiveMap({ game, map, ui, isGM }) {
     <span class="map-title">${map.name}</span>
     ${myTokens.map((tt) => html`<${Button} small variant="ghost" onClick=${() => rRef.current?.centerOn(tt.x, tt.y, 32)} title=${t('Centrer sur {name}', { name: tt.name })}>◎ ${tt.name}</${Button}>`)}
     ${isImageMap(map) && html`<${Toggle} label=${t('Grille')} title=${t("Quadrillage discret par-dessus l'image")} value=${showGrid} onChange=${setShowGrid} />`}
+    ${tileStyleToggle}
     <${IconButton} icon="⌖" title=${t('Recentrer la carte')} onClick=${() => rRef.current?.fit()} />
   </div>`;
 

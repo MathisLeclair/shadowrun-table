@@ -440,5 +440,7 @@
   "Pas de version d’origine pour cette carte": "No original version for this map",
   "Identifiant invalide (lettres minuscules, chiffres et tirets)": "Invalid id (lowercase letters, digits and dashes)",
   "📷✕ {name}": "📷✕ {name}",
-  "📷 {name}": "📷 {name}"
+  "📷 {name}": "📷 {name}",
+  "Décor détaillé": "Detailed scenery",
+  "Sols texturés et mobilier dessiné (voitures, lits, canapés…) — réglage de ce navigateur": "Textured floors and drawn furniture (cars, beds, sofas…) — this browser only"
 }

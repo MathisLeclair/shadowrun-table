@@ -8,6 +8,7 @@ import { buildGrid, lineOfSightMask, mapLights, wallIsDoor, wallMidpoint, pointS
 import { derive } from '/shared/sr5.js';
 import { t, tk, tIfKnown } from '../../lib/i18n.js';
 import { isLibUrl, ensureLibKey, signedUrl } from './maplib-client.js';
+import { drawDetailedMap } from './tileart.js';
 
 // ---------------------------------------------------------------------------
 // Shared image cache (backgrounds, portraits): each url loads once for every renderer / thumbnail.
@@ -173,12 +174,34 @@ function doorHorizontal(T, x, y) {
   return lr >= ud;
 }
 
+// Tile art style, per browser: 'detailed' (textured floors, furniture as objects — tileart.js) or 'classic'.
+const TILE_STYLE_KEY = 'sr.map.tileStyle';
+export function getTileStyle() {
+  try {
+    return localStorage.getItem(TILE_STYLE_KEY) === 'classic' ? 'classic' : 'detailed';
+  } catch {
+    return 'detailed';
+  }
+}
+export function setTileStyle(style) {
+  try {
+    localStorage.setItem(TILE_STYLE_KEY, style === 'classic' ? 'classic' : 'detailed');
+  } catch {}
+  tileSwatchCache.clear();
+  for (const r of LIVE_RENDERERS) {
+    r.keys.static = null;
+    r.keys.ver = null;
+    r.dirty = true;
+  }
+}
+
 /**
  * Draw every tile of the map into ctx (current transform = pixels; S = pixels per cell).
  * Returns the list of machinery cells (for animated LEDs).
  */
-export function drawStaticMap(ctx, map, S) {
+export function drawStaticMap(ctx, map, S, style = getTileStyle()) {
   const th = THEMES[map.theme] || THEMES.street;
+  if (style !== 'classic') return drawDetailedMap(ctx, map, S, th, THEMES[map.theme] ? map.theme : 'street');
   const w = map.width, h = map.height;
   const T = (x, y) => (x < 0 || y < 0 || x >= w || y >= h ? ' ' : (map.tiles[y] || '')[x] ?? ' ');
   const machinery = [];
@@ -597,7 +620,7 @@ export function renderThumbnail(canvas, map, maxPx = 220) {
 const tileSwatchCache = new Map();
 /** Data URL preview of a single tile (editor palette). */
 export function tileSwatch(ch, theme = 'street', size = 30) {
-  const key = ch + theme + size;
+  const key = ch + theme + size + getTileStyle();
   if (tileSwatchCache.has(key)) return tileSwatchCache.get(key);
   let url = '';
   try {
@@ -614,8 +637,13 @@ export function tileSwatch(ch, theme = 'street', size = 30) {
       tiles: ch === 'D' || ch === 'W' ? [around.repeat(3), '#' + ch + '#', around.repeat(3)] : [around.repeat(3), around + ch + around, around.repeat(3)],
     };
     ctx.save();
-    ctx.translate(-S, -S);
-    drawStaticMap(ctx, mini, S);
+    if (ch === 'v' && getTileStyle() === 'detailed') {
+      // a lone vehicle cell draws a motorbike: show a whole car, scaled down
+      drawStaticMap(ctx, { width: 4, height: 4, theme, tiles: [',,,,', 'vvvv', 'vvvv', ',,,,'] }, S / 4);
+    } else {
+      ctx.translate(-S, -S);
+      drawStaticMap(ctx, mini, S);
+    }
     ctx.restore();
     if (ch === 'D') {
       ctx.fillStyle = th.glow;
@@ -917,7 +945,7 @@ export class MapRenderer {
     const sc = this.scene;
     const map = sc.map;
     const imageMode = isImageMap(map);
-    const staticKey = imageMode ? `image|${map.width}x${map.height}` : `${map.width}x${map.height}|${map.theme}|${map.tiles.join('\n')}`;
+    const staticKey = imageMode ? `image|${map.width}x${map.height}` : `${getTileStyle()}|${map.width}x${map.height}|${map.theme}|${map.tiles.join('\n')}`;
     if (staticKey !== this.keys.static) {
       this.keys.static = staticKey;
       if (imageMode) {
