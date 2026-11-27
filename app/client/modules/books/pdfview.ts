@@ -1,17 +1,79 @@
-// Imperative pdf.js page view (no Preact: hundreds of page boxes must not re-render on every scroll):
+// Imperative pdf.js page view (no React: hundreds of page boxes must not re-render on every scroll):
 // continuous vertical scroll, one box per page sized from the PDF, and only the pages in or near the view are drawn
 // (canvas, HiDPI) with a pdf.js TextLayer on top (selection, search highlights). Pages far from the view are released
 // (canvas freed, text layer removed, page.cleanup()). Zoom: 'width' | 'page' | number (CSS px per PDF unit), Ctrl+wheel
 // and two-finger pinch. Page jumps scroll inside the same document: nothing is reloaded.
 //   const v = new PdfView(scrollEl, { lib, onPage(n), onScale(scale) }); await v.setDocument(doc); v.goto(12, hl); v.setZoom('page'); v.destroy();
+import type { PDFDocumentProxy, PDFPageProxy, RenderTask, TextLayer, PageViewport } from 'pdfjs-dist';
 import { computeTops, pageAt, scaleFor, clampScale, outputScale, findMatches, splitByRanges } from './readerlib.js';
+import type { PdfjsLib } from './pdfdoc.ts';
+import type { Zoom } from './types.ts';
+
+/** Search highlight: folded words to mark on a PDF page; scroll = bring the first match into view once. */
+export interface Highlight {
+  terms: string[];
+  pdfPage?: number;
+  scroll?: boolean;
+}
+interface PageBox {
+  n: number;
+  w: number;
+  h: number;
+  div: HTMLDivElement;
+  page: PDFPageProxy | null;
+  canvas: HTMLCanvasElement | null;
+  textDiv: HTMLDivElement | null;
+  textLayer: TextLayer | null;
+  textReady: boolean;
+  renderedScale: number;
+  task: RenderTask | null;
+}
+interface Anchor {
+  n: number;
+  frac: number;
+  y: number;
+}
+interface PdfViewOptions {
+  lib: PdfjsLib;
+  onPage?: (n: number) => void;
+  onScale?: (scale: number) => void;
+}
 
 const GAP = 12; // px around and between pages (matches .books-pages padding / gap)
 const KEEP = 1.5; // screens above and below the view whose pages stay drawn
 const MAX_LIVE = 10; // at most this many drawn pages
 
 export class PdfView {
-  constructor(el, { lib, onPage, onScale }) {
+  el: HTMLElement;
+  lib: PdfjsLib;
+  onPage: (n: number) => void;
+  onScale: (scale: number) => void;
+  inner: HTMLDivElement;
+  doc: PDFDocumentProxy | null;
+  pages: PageBox[];
+  tops: number[];
+  heights: number[];
+  zoom: Zoom;
+  scale: number;
+  current: number;
+  pending: { n: number; hl: Highlight | null } | null;
+  hl: (Highlight & { pdfPage: number }) | null;
+  live: Set<number>;
+  rendering: boolean;
+  again: boolean;
+  renderTimer: ReturnType<typeof setTimeout> | undefined;
+  raf: number;
+  programmaticTop: number | null;
+  destroyed: boolean;
+  pinch: { d0: number; s0: number; ratio: number; x: number; y: number } | null;
+  ro: ResizeObserver | null;
+  handleScroll: () => void;
+  handleWheel: (e: WheelEvent) => void;
+  handleTouchStart: (e: TouchEvent) => void;
+  handleTouchMove: (e: TouchEvent) => void;
+  handleTouchEnd: (e: TouchEvent) => void;
+
+  constructor(el: HTMLElement, { lib, onPage, onScale }: PdfViewOptions) {
     this.el = el;
     this.lib = lib;
     this.onPage = onPage || (() => {});
@@ -31,7 +93,7 @@ export class PdfView {
     this.live = new Set();
     this.rendering = false;
     this.again = false;
-    this.renderTimer = 0;
+    this.renderTimer = undefined;
     this.raf = 0;
     this.programmaticTop = null;
     this.destroyed = false;
@@ -102,13 +164,13 @@ export class PdfView {
   }
 
   // ----- document & layout -----
-  async setDocument(doc, startPage = 1) {
+  async setDocument(doc: PDFDocumentProxy, startPage = 1) {
     this.doc = doc;
     const first = await doc.getPage(1);
     if (this.destroyed) return;
     const vp = first.getViewport({ scale: 1 });
     const frag = document.createDocumentFragment();
-    this.pages = Array.from({ length: doc.numPages }, (_, i) => {
+    this.pages = Array.from({ length: doc.numPages }, (_, i): PageBox => {
       const div = document.createElement('div');
       div.className = 'books-page';
       div.dataset.n = String(i + 1);
@@ -125,7 +187,7 @@ export class PdfView {
   }
 
   /** Scale for the current zoom setting (fit modes use the current page's size). */
-  computeScale() {
+  computeScale(): number {
     const p = this.pages[this.current - 1] || this.pages[0];
     if (!p) return 1;
     return scaleFor(this.zoom, { width: p.w, height: p.h }, { width: this.el.clientWidth - 2 * GAP, height: this.el.clientHeight - 2 * GAP });
@@ -145,16 +207,16 @@ export class PdfView {
   }
 
   /** Where the view is: { n, frac } of the page at viewport y (px from the top of the scroll box). */
-  anchorAt(y = 0) {
+  anchorAt(y = 0): Anchor {
     const top = this.el.scrollTop + y;
     const n = pageAt(this.tops, top);
     return { n, frac: (top - this.tops[n - 1]) / Math.max(1, this.heights[n - 1]), y };
   }
-  restoreAnchor(a) {
+  restoreAnchor(a: Anchor | null) {
     if (!a || !this.tops.length) return;
     this.setScrollTop(this.tops[a.n - 1] + a.frac * this.heights[a.n - 1] - a.y);
   }
-  setScrollTop(top) {
+  setScrollTop(top: number) {
     const max = Math.max(0, this.el.scrollHeight - this.el.clientHeight);
     const target = Math.round(Math.max(0, Math.min(max, top)));
     if (Math.abs(this.el.scrollTop - target) < 1) {
@@ -167,7 +229,7 @@ export class PdfView {
 
   // ----- navigation -----
   /** Scroll to PDF page n (1-based); hl = { terms, scroll } highlights those words on that page. */
-  goto(n, hl = null) {
+  goto(n: number, hl: Highlight | null = null) {
     if (!this.pages.length) {
       this.pending = { n, hl };
       return;
@@ -201,12 +263,12 @@ export class PdfView {
   }
 
   // ----- zoom -----
-  setZoom(zoom) {
+  setZoom(zoom: Zoom) {
     this.zoom = typeof zoom === 'number' ? clampScale(zoom) : zoom === 'page' ? 'page' : 'width';
     if (this.doc && this.pages.length) this.applyScale(this.computeScale());
   }
   /** Zoom to a numeric scale keeping the point (x, y) of the view still (wheel / pinch). */
-  zoomAt(scale, x, y) {
+  zoomAt(scale: number, x: number, y: number) {
     const s = clampScale(scale);
     if (Math.abs(s - this.scale) < 0.001) return;
     const ratio = s / this.scale;
@@ -215,7 +277,7 @@ export class PdfView {
     this.applyScale(s, this.anchorAt(y));
     this.el.scrollLeft = Math.max(0, (left + x) * ratio - x);
   }
-  applyScale(s, anchor = this.anchorAt(0)) {
+  applyScale(s: number, anchor: Anchor = this.anchorAt(0)) {
     if (!this.pages.length || Math.abs(s - this.scale) < 0.0005) return;
     for (const p of this.pages) if (p.task) p.task.cancel();
     this.scale = s;
@@ -269,10 +331,10 @@ export class PdfView {
     }
   }
 
-  async renderPage(p) {
+  async renderPage(p: PageBox | undefined) {
     if (!p || this.destroyed || (p.renderedScale === this.scale && p.canvas)) return;
     if (!p.page) {
-      p.page = await this.doc.getPage(p.n);
+      p.page = await this.doc!.getPage(p.n);
       if (this.destroyed) return;
       const vp1 = p.page.getViewport({ scale: 1 });
       if (Math.abs(vp1.width - p.w) > 0.5 || Math.abs(vp1.height - p.h) > 0.5) {
@@ -291,13 +353,13 @@ export class PdfView {
     canvas.className = 'books-canvas';
     canvas.width = Math.max(1, Math.floor(vp.width * out));
     canvas.height = Math.max(1, Math.floor(vp.height * out));
-    const task = p.page.render({ canvasContext: canvas.getContext('2d', { alpha: false }), viewport: vp, transform: out !== 1 ? [out, 0, 0, out, 0, 0] : undefined });
+    const task = p.page.render({ canvasContext: canvas.getContext('2d', { alpha: false })!, viewport: vp, transform: out !== 1 ? [out, 0, 0, out, 0, 0] : undefined });
     p.task = task;
     try {
       await task.promise;
     } catch (err) {
       canvas.width = canvas.height = 0;
-      if (err?.name !== 'RenderingCancelledException') console.warn('[books] page', p.n, err);
+      if ((err as Error)?.name !== 'RenderingCancelledException') console.warn('[books] page', p.n, err);
       return;
     } finally {
       if (p.task === task) p.task = null;
@@ -316,7 +378,7 @@ export class PdfView {
     await this.renderText(p, vp);
   }
 
-  async renderText(p, vp) {
+  async renderText(p: PageBox, vp: PageViewport) {
     if (p.textLayer) {
       if (p.textReady) p.textLayer.update({ viewport: vp });
       return;
@@ -324,7 +386,7 @@ export class PdfView {
     const div = document.createElement('div');
     div.className = 'textLayer';
     p.div.appendChild(div);
-    const tl = new this.lib.TextLayer({ textContentSource: p.page.streamTextContent({ includeMarkedContent: true, disableNormalization: true }), container: div, viewport: vp });
+    const tl = new this.lib.TextLayer({ textContentSource: p.page!.streamTextContent({ includeMarkedContent: true, disableNormalization: true }), container: div, viewport: vp });
     p.textDiv = div;
     p.textLayer = tl;
     try {
@@ -337,7 +399,7 @@ export class PdfView {
     this.applyHighlight(p);
   }
 
-  release(p) {
+  release(p: PageBox | undefined) {
     if (!p) return;
     p.task?.cancel();
     p.task = null;
@@ -360,26 +422,27 @@ export class PdfView {
 
   // ----- search highlight -----
   /** hl = { terms: [folded words], pdfPage, scroll? } or null (clears). */
-  setHighlight(hl) {
+  setHighlight(hl: (Highlight & { pdfPage: number }) | null) {
     const old = this.hl;
     this.hl = hl && hl.terms?.length ? { ...hl } : null;
     if (old) this.clearHighlight(this.pages[old.pdfPage - 1]);
     if (this.hl) this.applyHighlight(this.pages[this.hl.pdfPage - 1]);
   }
-  clearHighlight(p) {
+  clearHighlight(p: PageBox | undefined) {
     if (!p?.textLayer || !p.textReady) return;
     const { textDivs, textContentItemsStr } = p.textLayer;
     textDivs.forEach((div, i) => {
       if (div.firstElementChild) div.textContent = textContentItemsStr[i];
     });
   }
-  applyHighlight(p) {
-    if (!p || !this.hl || this.hl.pdfPage !== p.n || !p.textLayer || !p.textReady) return;
+  applyHighlight(p: PageBox | undefined) {
+    const hl = this.hl;
+    if (!p || !hl || hl.pdfPage !== p.n || !p.textLayer || !p.textReady) return;
     const { textDivs, textContentItemsStr } = p.textLayer;
-    let first = null;
+    let first: HTMLElement | null = null;
     textDivs.forEach((div, i) => {
       const s = textContentItemsStr[i] || '';
-      const ranges = findMatches(s, this.hl.terms);
+      const ranges = findMatches(s, hl.terms);
       if (!ranges.length) return;
       div.replaceChildren(
         ...splitByRanges(s, ranges).map((part) => {
@@ -392,9 +455,9 @@ export class PdfView {
       );
       first = first || div;
     });
-    if (first && this.hl.scroll) {
-      this.hl.scroll = false;
-      const r = first.getBoundingClientRect();
+    if (first && hl.scroll) {
+      hl.scroll = false;
+      const r = (first as HTMLElement).getBoundingClientRect();
       const box = this.el.getBoundingClientRect();
       if (r.top < box.top + 40 || r.bottom > box.bottom - 40) this.setScrollTop(this.el.scrollTop + r.top - box.top - this.el.clientHeight / 3);
     }
