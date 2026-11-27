@@ -3,18 +3,18 @@ import { Fragment, useEffect, useMemo, useRef, useState, type CSSProperties, typ
 import { Button, IconButton, Select, Toggle, Badge, SearchBox, NumberInput, confirmAction, promptText } from '../../lib/ui.tsx';
 import { send, useServerEvent, type GameProps } from '../../lib/net.ts';
 import { useUI, setUI, openSheet, toast, type UIState } from '../../lib/ui-store.ts';
-import { derive } from '/shared/sr5.js';
+import { derive } from '/shared/sr5.ts';
 import {
   buildGrid, findPath, pathLength, computeVisibility, createVisionContext, viewersForUser, decodeBits, orBits, isPcToken,
-} from '/shared/vision.js';
+} from '/shared/vision.ts';
 import { MapCanvas, type MapHandlers, type MapPointerInfo } from './MapCanvas.tsx';
 import { DISPO, STATUS_GLYPHS, isImageMap, lightingOptions, dispoLabel, statusText, getTileStyle, setTileStyle, type MapRenderer, type MapScene, type FogMasks, type CombatMarks, type CombatLineMark, type Point } from './renderer.ts';
-import { t, tk, compare } from '../../lib/i18n.js';
-import { tRich } from '../sheet/common.js';
-import { RollDialog } from '../sheet/RollDialog.js';
-import { setTarget, setAimPoint, PENDING } from '../combat/attack-common.js';
-import { cellDistance, rangeFor, rangeClass, isAreaWeapon, blastOf, blastReach, activeBlasts, TOXIN_BY_ID } from '/shared/combat.js';
-import { isUnarmed, isLauncherProfile, launcherRounds } from '../sheet/inventory.js';
+import { t, tk, compare } from '../../lib/i18n.ts';
+import { tRich } from '../sheet/common.tsx';
+import { RollDialog } from '../sheet/RollDialog.tsx';
+import { setTarget, setAimPoint, PENDING } from '../combat/attack-common.ts';
+import { cellDistance, rangeFor, rangeClass, isAreaWeapon, blastOf, blastReach, activeBlasts, TOXIN_BY_ID } from '/shared/combat.ts';
+import { isUnarmed, isLauncherProfile, launcherRounds } from '../sheet/inventory.ts';
 import type { Actor, Blast, GameMap, GameView, MapDoor, Template, Token, ViewActor, Weapon, WallDoor, DoorState } from '../../../shared/types.ts';
 import './map.css';
 

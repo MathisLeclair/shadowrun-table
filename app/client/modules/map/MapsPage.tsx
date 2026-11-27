@@ -5,7 +5,7 @@ import { Button, Badge, Empty, Modal, Field, Select, SearchBox, NumberInput, Tab
 import { send, type GameProps } from '../../lib/net.ts';
 import { useUI, setUI, getUI, toast } from '../../lib/ui-store.ts';
 import { themeOptions, lightingOptions, themeLabel, lightingLabel, renderThumbnail, isImageMap, wallsKey } from './renderer.ts';
-import { t, compare, getLang } from '../../lib/i18n.js';
+import { t, compare, getLang } from '../../lib/i18n.ts';
 import type { GameMap, GameView } from '../../../shared/types.ts';
 
 const byName = (a: unknown, b: unknown) => String(a).localeCompare(String(b), getLang(), { numeric: true });

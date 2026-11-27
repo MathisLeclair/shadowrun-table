@@ -2,15 +2,15 @@
 // grenades / launchers (aimed point, scatter, blast on the map) and the special combat actions (SR5 + Run & Gun, shared/combat.js).
 // Rolls go through the characters module's performRoll (same modifiers, log entries and Edge as « dice/roll »).
 // State: attacks: { list: [Attack] (newest first, max 60), blasts: [Blast] (max 12), turn: { [actorId]: { key, defended, boosts, once } } }.
-import { parseDamage } from '../../shared/sr5.js';
+import { parseDamage } from '../../shared/sr5.ts';
 import {
   ACTION_BY_ID, isUnlocked, rangeFor, rangeClass, RANGE_BANDS, environmentFor as environmentForJs, attackSenses as attackSensesJs, activeBlasts, pruneExpired, areaEffectOf,
   LASTING_EFFECTS, TOXIN_BY_ID, toxinFromText as toxinFromTextJs, toxinOutcome as toxinOutcomeJs, toxinProtection, untilFor, AFFLICTIONS as AFFLICTIONS_JS,
   cellDistance as cellDistanceJs, isAreaWeapon, scatterDice, rollScatter as rollScatterJs, blastOf as blastOfJs, blastDvAt as blastDvAtJs, blastReach, defenseLines,
   finalDamageType as finalDamageTypeJs, DEFENSE_BY_ID, SITUATION_BY_ID,
-} from '../../shared/combat.js';
-import { FIRE_BY_ID, isLauncherProfile, launcherRounds, fireOptions, usesAmmo } from '../../client/modules/sheet/inventory.js';
-import { createVisionContext, tokenVision } from '../../shared/vision.js';
+} from '../../shared/combat.ts';
+import { FIRE_BY_ID, isLauncherProfile, launcherRounds, fireOptions, usesAmmo } from '../../client/modules/sheet/inventory.ts';
+import { createVisionContext, tokenVision } from '../../shared/vision.ts';
 import { performRoll, applyDamage } from './10-characters.ts';
 import { spendInitiative, combatTurnKey } from './30-combat.ts';
 import type { PerformedRoll, RollBonusLine, RollInternal, RollPayload } from './10-characters.ts';

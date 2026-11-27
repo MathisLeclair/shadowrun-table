@@ -3,7 +3,7 @@ import { useState, useMemo, useRef, type ChangeEvent, type CSSProperties } from 
 import { Button, Badge, Empty, Panel, NumberInput, Toggle, SearchBox, confirmAction, promptText } from '../../lib/ui.tsx';
 import { send, type GameProps } from '../../lib/net.ts';
 import { useUI, openSheet, toast, goTab, type UIState } from '../../lib/ui-store.ts';
-import { t, tn, metatypeLabel, compare } from '../../lib/i18n.js';
+import { t, tn, metatypeLabel, compare } from '../../lib/i18n.ts';
 import { initials, avatarStyle, safeDerive, downloadJson, npcKindLabel } from './combat-common.tsx';
 import StatBlock from './StatBlock.tsx';
 import TemplateEditor from './TemplateEditor.tsx';

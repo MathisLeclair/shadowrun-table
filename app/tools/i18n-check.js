@@ -20,7 +20,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { placeholders } from '../client/i18n/format.js';
+import { placeholders } from '../client/i18n/format.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DICT_DIR = path.join(ROOT, 'client', 'i18n', 'en');

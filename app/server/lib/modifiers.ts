@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { collectModifiers, lookupFromIndex, derivedWithModifiers } from '../../shared/modifiers.js';
+import { collectModifiers, lookupFromIndex, derivedWithModifiers } from '../../shared/modifiers.ts';
 import type { Actor, Modifier } from '../../shared/types.ts';
 
 /** An effects index entry as returned by lookup(): the catalog item's effects (data/catalog/effects.json). */

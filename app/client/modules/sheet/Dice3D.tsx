@@ -3,7 +3,7 @@
 // whether they see none, their own rolls or every roll they can see (`Dice3dPicker`, Journal & dés bar).
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 
-import { t, tn, tk, logText } from '../../lib/i18n.js';
+import { t, tn, tk, logText } from '../../lib/i18n.ts';
 import { RollBadges, rollLabel, cssVars } from './common.tsx';
 
 import type { GameProps } from '../../lib/net.ts';

@@ -5,9 +5,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { send, useServerEvent, type GameProps } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
-import { syncAudio, playSfx, stopAllSfx, unlock, useAudioState, tryEarlyUnlock } from './audio-core.js';
+import { syncAudio, playSfx, stopAllSfx, unlock, useAudioState, tryEarlyUnlock } from './audio-core.ts';
 import { LocalVolume, trackLabel, lsGet, lsSet } from './widgets.tsx';
-import { t } from '../../lib/i18n.js';
+import { t } from '../../lib/i18n.ts';
 import type { GameView } from '../../../shared/types.ts';
 import './audio.css';
 

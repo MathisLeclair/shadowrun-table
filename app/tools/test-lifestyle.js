@@ -5,9 +5,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { startServer, login, client, settle } from './test-client.js';
-import { monthlyCost, costBreakdown, settleLifestyles, normalizeLifestyle, levelCost, primaryLifestyle, qualityProblem, lifestyleFromCatalog, qualityFromCatalog } from '../shared/lifestyle.js';
-import { normalizeActor } from '../client/modules/sheet/sheet-data.js';
-import { uid } from '../shared/util.js';
+import { monthlyCost, costBreakdown, settleLifestyles, normalizeLifestyle, levelCost, primaryLifestyle, qualityProblem, lifestyleFromCatalog, qualityFromCatalog } from '../shared/lifestyle.ts';
+import { normalizeActor } from '../client/modules/sheet/sheet-data.ts';
+import { uid } from '../shared/util.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const cat = (name) => JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'catalog', `${name}.json`), 'utf8'));

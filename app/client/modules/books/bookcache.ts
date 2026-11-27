@@ -7,8 +7,8 @@
 // API: getBookData(book, { onProgress, signal }) → { data: ArrayBuffer, fromCache }, pruneStale(books), clearBookCache(),
 // useBookCache() → { backend, entries, bytes, ready }.
 import { useEffect, useState } from 'react';
-import { errorText } from '../../lib/i18n.js';
-import { cacheKey, parseCacheKey, planEviction, staleEntries, pickBackendName, downloadOptions } from './cachepolicy.js';
+import { errorText } from '../../lib/i18n.ts';
+import { cacheKey, parseCacheKey, planEviction, staleEntries, pickBackendName, downloadOptions } from './cachepolicy.ts';
 import type { CacheEntry, CacheSnapshot, LibBook } from './types.ts';
 
 const CACHE_NAME = 'sr-books';

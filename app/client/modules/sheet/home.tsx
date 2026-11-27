@@ -4,10 +4,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Modal, confirmAction } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
 import { setUI, goTab, toast } from '../../lib/ui-store.ts';
-import { t, fmtNuyen } from '../../lib/i18n.js';
-import { homeLayoutsFor, homeLayout, homeMoveCost, buildHome, homeArea } from '/shared/home.js';
+import { t, fmtNuyen } from '../../lib/i18n.ts';
+import { homeLayoutsFor, homeLayout, homeMoveCost, buildHome, homeArea } from '/shared/home.ts';
 import { MapCanvas } from './ext.ts';
-import { drawStaticMap } from '../map/renderer.js';
+import { drawStaticMap } from '../map/renderer.ts';
 import { lifestyleBaseLabel } from './sublists.tsx';
 import { fmtDate } from './common.tsx';
 

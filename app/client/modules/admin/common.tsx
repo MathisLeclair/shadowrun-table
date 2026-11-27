@@ -1,5 +1,5 @@
 // Small helpers shared by the admin page and the Foundry upload panel.
-import { t, getLang } from '../../lib/i18n.js';
+import { t, getLang } from '../../lib/i18n.ts';
 
 /** 1234567 → '1,2 Mo' (fr) / '1.2 MB' (en). */
 export function fmtBytes(n: unknown): string {

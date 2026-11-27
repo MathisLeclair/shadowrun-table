@@ -2,7 +2,7 @@
 import { useState, type ReactNode } from 'react';
 import { Tabs, Empty, Badge, type TabDef } from '../../lib/ui.tsx';
 import { send, type GameProps } from '../../lib/net.ts';
-import { t } from '../../lib/i18n.js';
+import { t } from '../../lib/i18n.ts';
 import { campaignOf, currentAct, usePersistent, parseDocRef, MdEditor } from './common.tsx';
 import Dashboard from './Dashboard.tsx';
 import QuestsView from './QuestsView.tsx';

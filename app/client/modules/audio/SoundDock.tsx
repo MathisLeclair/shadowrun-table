@@ -3,9 +3,9 @@ import { useState } from 'react';
 import { Button } from '../../lib/ui.tsx';
 import { send, type GameProps } from '../../lib/net.ts';
 import { goTab } from '../../lib/ui-store.ts';
-import { trackIcon } from './catalog.js';
+import { trackIcon } from './catalog.ts';
 import { ChannelControl, UnlockNotice, LocalVolume, VolumeSlider, tracksOf, sceneIsActive, broadcastSfx, sendVolume, trackName } from './widgets.tsx';
-import { t } from '../../lib/i18n.js';
+import { t } from '../../lib/i18n.ts';
 import type { AudioTrack } from '../../../shared/types.ts';
 import './audio.css';
 

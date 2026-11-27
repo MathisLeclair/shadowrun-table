@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button, IconButton, TextInput, SearchBox, confirmAction } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
-import { t } from '../../lib/i18n.js';
+import { t } from '../../lib/i18n.ts';
 import { campaignOf, THREAD_STATES, MdEditor, cx } from './common.tsx';
 import type { CampaignThread, GameView, ThreadState } from '../../../shared/types.ts';
 import type { Focus } from './types.ts';

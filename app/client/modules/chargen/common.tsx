@@ -2,10 +2,10 @@
 import { useMemo, type ReactNode } from 'react';
 import { Badge, NumberInput } from '../../lib/ui.tsx';
 import { useCatalog } from '../../lib/net.ts';
-import { t, tk, getLang, fmtNumber, fmtNuyen, fmtDate, metatypeLabel } from '../../lib/i18n.js';
-import { compute, normalizeDraft, issuesByStep, issueText as sharedIssueText, MAGIC_TYPES } from '/shared/chargen.js';
-import * as rules from '../shop/rules.js';
-import { useShopCatalog } from '../shop/common.js';
+import { t, tk, getLang, fmtNumber, fmtNuyen, fmtDate, metatypeLabel } from '../../lib/i18n.ts';
+import { compute, normalizeDraft, issuesByStep, issueText as sharedIssueText, MAGIC_TYPES } from '/shared/chargen.ts';
+import * as rules from '../shop/rules.ts';
+import { useShopCatalog } from '../shop/common.tsx';
 import type { ChargenDraft, DraftData, DraftStatus, GameView } from '../../../shared/types.ts';
 /** MAGIC_TYPES of shared/chargen.js, indexed by any magic type id. */
 const MAGIC_TYPE_DEFS = MAGIC_TYPES as Record<string, { label: string }>;

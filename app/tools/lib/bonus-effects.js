@@ -7,7 +7,7 @@
 //   condition: stable key of shared/modifiers.js CONDITIONS (LimitCondition_Visible → 'visible', free text → 't-urban'…)
 //   choice: { kind: 'skill'|'text'|'matrixAction'|'attribute'|'limit', limitTo?, categories? } — the effect targets item.choice ('$choice')
 //   tag: the Chummer tag it comes from (coverage report). Unknown tags → { type: 'unsupported', tag }.
-import { SKILL_BY_ID, SKILL_GROUPS } from '../../shared/sr5.js';
+import { SKILL_BY_ID, SKILL_GROUPS } from '../../shared/sr5.ts';
 
 const arr = (v) => (v === undefined || v === null ? [] : Array.isArray(v) ? v : [v]);
 const txt = (v) => (v === undefined || v === null ? '' : typeof v === 'object' ? String(v['#text'] ?? '') : String(v)).trim();

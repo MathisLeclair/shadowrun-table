@@ -1,20 +1,20 @@
 // Sheet tab « Combat »: initiative, defense/soak, weapons (ready / stowed, loaded rounds, reload) with attack rolls.
 import { useState } from 'react';
 import { Button } from '../../lib/ui.tsx';
-import { SKILL_BY_ID, attr, skillPool, parseDamage } from '/shared/sr5.js';
-import { t, tn, tk, attrShort, skillLabel } from '../../lib/i18n.js';
+import { SKILL_BY_ID, attr, skillPool, parseDamage } from '/shared/sr5.ts';
+import { t, tn, tk, attrShort, skillLabel } from '../../lib/i18n.ts';
 import { accuracyLimit, signed, itemLabel, itemTitle, categoryLabel, modeLabel, damageLabel } from './common.tsx';
 import { RollStat } from './tab-summary.tsx';
 import { ListEditor } from './editors.tsx';
 import { SubChips, weaponWithMods } from './sublists.tsx';
-import { rollContext } from '/shared/modifiers.js';
+import { rollContext } from '/shared/modifiers.ts';
 import { LimitStat } from './tab-summary.tsx';
 import { sourcesTitle, sourceName, effectText, poolModsOf, accuracyOf } from './modifiers-ui.tsx';
 import { ItemRef, SkillRef, RuleRef, BookRef } from './ext.ts';
-import { ruleRef } from '/shared/bookrefs.js';
+import { ruleRef } from '/shared/bookrefs.ts';
 import { AmmoCell, ReadyToggle } from './weapon-ui.tsx';
-import { readyCount, isUnarmed, isGrenade, usesAmmo, fireOptions } from './inventory.js';
-import { COMBAT_ACTIONS, unlockedActions, isUnlocked, AFFLICTIONS, stillActive } from '/shared/combat.js';
+import { readyCount, isUnarmed, isGrenade, usesAmmo, fireOptions } from './inventory.ts';
+import { COMBAT_ACTIONS, unlockedActions, isUnlocked, AFFLICTIONS, stillActive } from '/shared/combat.ts';
 import { send } from '../../lib/net.ts';
 import type { ReactNode } from 'react';
 import type { Actor, Weapon } from '../../../shared/types.ts';

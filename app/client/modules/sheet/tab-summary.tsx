@@ -2,12 +2,12 @@
 import { useState } from 'react';
 import { Button, NumberInput, Toggle, Badge } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
-import { attr } from '/shared/sr5.js';
-import { t, tk, attrLabel, attrShort } from '../../lib/i18n.js';
+import { attr } from '/shared/sr5.ts';
+import { t, tk, attrLabel, attrShort } from '../../lib/i18n.ts';
 import { ConditionTrack, EdgePips, actorStatus, statusColor, statusLabel, fmtNum, tRich } from './common.tsx';
 import { limitValueText, limitTitle, sourcesTitle } from './modifiers-ui.tsx';
 import { BookRef, RuleRef } from './ext.ts';
-import { ruleRef } from '/shared/bookrefs.js';
+import { ruleRef } from '/shared/bookrefs.ts';
 import type { ReactNode } from 'react';
 import type { SheetCtx } from './types.ts';
 import type { SourceLine } from './modifiers-ui.tsx';

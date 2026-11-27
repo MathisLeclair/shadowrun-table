@@ -299,7 +299,7 @@ try {
 
   console.log('Lifestyles, nested items (accessories, mods, options, techniques), martial arts');
   await test('legacy single lifestyle is migrated to lifestyles[] (seed / old state)', async () => {
-    const { normalizeActor } = await import('../client/modules/sheet/sheet-data.js');
+    const { normalizeActor } = await import('../client/modules/sheet/sheet-data.ts');
     const a = normalizeActor({ name: 'Old', lifestyle: { name: 'Planque (Moyen)', monthlyCost: 5500, monthsPaid: 2, chummerGuid: 'g1' } }, (p) => `${p}_x`);
     assert.equal(a.lifestyle, undefined);
     assert.equal(a.lifestyles.length, 1);

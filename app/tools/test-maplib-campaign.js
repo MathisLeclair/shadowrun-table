@@ -14,7 +14,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { startServer, login, client, settle } from './test-client.js';
-import { readCampaignSeeds, mergeSeeds, applySeed } from '../server/modules/70-campaign.js';
+import { readCampaignSeeds, mergeSeeds, applySeed } from '../server/modules/70-campaign.ts';
 
 const APP = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SEED = path.join(APP, 'data', 'seed');

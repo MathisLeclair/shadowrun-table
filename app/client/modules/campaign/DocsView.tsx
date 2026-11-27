@@ -2,8 +2,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, IconButton, Empty } from '../../lib/ui.tsx';
 import { api } from '../../lib/net.ts';
-import { t } from '../../lib/i18n.js';
-import { renderMarkdown } from '../../lib/markdown.js';
+import { t } from '../../lib/i18n.ts';
+import { renderMarkdown } from '../../lib/markdown.ts';
 import { useDocs, reloadDocs, docTitle, cx, fmtDate, type SetPersistent } from './common.tsx';
 import type { DocTarget } from './types.ts';
 

@@ -2,9 +2,9 @@
 import { Fragment, useEffect, type CSSProperties, type ReactNode } from 'react';
 import { IconButton } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
-import { derive, attr, SKILL_BY_ID } from '/shared/sr5.js';
-import { healthStatus, STATUS_COLORS, STATUS_LABELS } from './sheet-data.js';
-import { t, tn, tk, tIfKnown, getLang, skillLabel, attrShort, fmtDate as fmtLocaleDate } from '../../lib/i18n.js';
+import { derive, attr, SKILL_BY_ID } from '/shared/sr5.ts';
+import { healthStatus, STATUS_COLORS, STATUS_LABELS } from './sheet-data.ts';
+import { t, tn, tk, tIfKnown, getLang, skillLabel, attrShort, fmtDate as fmtLocaleDate } from '../../lib/i18n.ts';
 import type { Actor, GameView, Skill, ViewActor, ViewUser } from '../../../shared/types.ts';
 import type { ShownRoll } from './types.ts';
 

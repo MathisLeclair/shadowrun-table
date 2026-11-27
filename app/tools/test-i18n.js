@@ -7,10 +7,10 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { startServer, login, client, settle } from './test-client.js';
-import * as F from '../client/i18n/format.js';
-import * as I from '../client/lib/i18n.js';
-import * as S from '../server/lib/i18n.js';
-import { ATTR_LABELS, SKILLS, SKILL_GROUPS } from '../shared/sr5.js';
+import * as F from '../client/i18n/format.ts';
+import * as I from '../client/lib/i18n.ts';
+import * as S from '../server/lib/i18n.ts';
+import { ATTR_LABELS, SKILLS, SKILL_GROUPS } from '../shared/sr5.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DICT_DIR = path.join(ROOT, 'client', 'i18n', 'en');

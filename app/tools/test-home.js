@@ -1,8 +1,8 @@
 // Homes (shared/home.js): every layout is well formed and every add-on finds a wall.
 //   node tools/test-home.js [--print]
 import assert from 'node:assert/strict';
-import { HOME_LAYOUTS, homeLayoutsFor, homeLayout, buildHome, homeModuleKey, homeMoveCost, sanitizeHome, homeArea, layoutIssues } from '../shared/home.js';
-import { blocksMove, findPath } from '../shared/vision.js';
+import { HOME_LAYOUTS, homeLayoutsFor, homeLayout, buildHome, homeModuleKey, homeMoveCost, sanitizeHome, homeArea, layoutIssues } from '../shared/home.ts';
+import { blocksMove, findPath } from '../shared/vision.ts';
 
 const PRINT = process.argv.includes('--print');
 let fails = 0;

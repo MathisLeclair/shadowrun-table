@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { Button, Field, Select, Toggle, Badge, confirmAction } from '../../lib/ui.tsx';
 import { toast } from '../../lib/ui-store.ts';
-import { t, tk, fmtNumber, fmtDate, getLang } from '../../lib/i18n.js';
+import { t, tk, fmtNumber, fmtDate, getLang } from '../../lib/i18n.ts';
 import type { AdminApi, RunFn } from './types.ts';
 
 const usd = (n: unknown) => {

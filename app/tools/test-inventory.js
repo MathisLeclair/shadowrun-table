@@ -12,9 +12,9 @@ import { startServer, login, client, settle } from './test-client.js';
 import {
   parseAmmo, fireOptions, roundsFor, weaponModes, ammoInfo, ammoFits, clipFits, reloadPlan, guessContainerKind, normalizeInventory, readyCount, isGrenade,
   weaponAmmoClass, restrictionFits, usesAmmo, isLauncherProfile,
-} from '../client/modules/sheet/inventory.js';
-import { attr } from '../shared/sr5.js';
-import { normalizeActor } from '../client/modules/sheet/sheet-data.js';
+} from '../client/modules/sheet/inventory.ts';
+import { attr } from '../shared/sr5.ts';
+import { normalizeActor } from '../client/modules/sheet/sheet-data.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BASE_PORT = Number(process.env.SR_TEST_PORT) || 3443;
@@ -464,7 +464,7 @@ try {
     assert.ok(flash.nameEn && flash.nameFr && flash.nameEn !== flash.nameFr, `${flash.nameEn} / ${flash.nameFr}`);
     const roll = await gm.send('dice/roll', { actorId: 'pc_jane', weaponId: flash.id, skillId: flash.skill, label: `Attaque — ${flash.nameFr}` });
     assert.deepEqual(roll.labelI18n, { key: 'Attaque — {weapon}', params: { weapon: { fr: flash.nameFr, en: flash.nameEn } } });
-    const { interpolate } = await import('../client/i18n/format.js');
+    const { interpolate } = await import('../client/i18n/format.ts');
     assert.equal(interpolate('Attack — {weapon}', roll.labelI18n.params, null, 'en'), `Attack — ${flash.nameEn}`);
   });
 
@@ -510,9 +510,9 @@ await test('live table migration: idempotent at every boot (legacy ammoLeft, no 
 // ---------------------------------------------------------------------------
 console.log('Foundry inventories (copy of the GM’s world)');
 {
-  const { readWorld, detectWorldPath } = await import('../server/lib/foundry/world.js');
-  const { convertSheet } = await import('../server/lib/foundry/convert-actor.js');
-  const { buildBundle, buildPc } = await import('../server/lib/foundry/importer.js');
+  const { readWorld, detectWorldPath } = await import('../server/lib/foundry/world.ts');
+  const { convertSheet } = await import('../server/lib/foundry/convert-actor.ts');
+  const { buildBundle, buildPc } = await import('../server/lib/foundry/importer.ts');
   const WORLD = detectWorldPath();
   if (!fs.existsSync(path.join(WORLD, 'world.json'))) console.log('  (monde Foundry absent — ignoré)');
   else {
@@ -563,8 +563,8 @@ console.log('Foundry inventories (copy of the GM’s world)');
 // ---------------------------------------------------------------------------
 console.log('Chummer locations, clips, grenades, ready weapons');
 {
-  const { parseChum5 } = await import('../server/lib/chummer/parse.js');
-  const { exportChum5 } = await import('../server/lib/chummer/export.js');
+  const { parseChum5 } = await import('../server/lib/chummer/parse.ts');
+  const { exportChum5 } = await import('../server/lib/chummer/export.ts');
   const xml0 = fs.readFileSync(path.join(ROOT, 'tools', 'fixtures', 'chummer-test.chum5'), 'utf8');
   const GUID = '11111111-2222-4333-8444-555555555555';
   const xml = xml0

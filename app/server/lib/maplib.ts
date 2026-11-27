@@ -15,8 +15,8 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { RUNTIME_DIR, DATA_DIR, SEED_DIR, GLOBAL_ASSETS_DIR, readJson, writeJsonAtomic } from '../store.ts';
 import { sessionTag, sessionAlive } from './books/access.ts';
-import { slug as slugify } from '../../shared/util.js';
-import { LIB_THEMES, LIB_LIGHTINGS, LIB_SOURCES, libGeometry, libThumbUrl, versionCounts, publicRegions } from '../../shared/maplib.js';
+import { slug as slugify } from '../../shared/util.ts';
+import { LIB_THEMES, LIB_LIGHTINGS, LIB_SOURCES, libGeometry, libThumbUrl, versionCounts, publicRegions } from '../../shared/maplib.ts';
 import type { GameMap, Lighting, MapLight, MapRegion, MapTheme, MapWall, Point } from '../../shared/types.ts';
 
 // ---------------------------------------------------------------------------

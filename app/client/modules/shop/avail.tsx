@@ -6,9 +6,9 @@ import './shop.css'; // the log dock shows availability rolls outside the shop p
 import { Button, NumberInput, Toggle } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
-import { t } from '../../lib/i18n.js';
-import { skillPool, attr, derive } from '/shared/sr5.js';
-import { availOutcome, availBaseHours, durationText, MAX_OVERPAY_DICE, clampOverpay, overpaySurcharge } from './rules.js';
+import { t } from '../../lib/i18n.ts';
+import { skillPool, attr, derive } from '/shared/sr5.ts';
+import { availOutcome, availBaseHours, durationText, MAX_OVERPAY_DICE, clampOverpay, overpaySurcharge } from './rules.ts';
 import { nuyen } from './common.tsx';
 import type { Actor, ActorId, AvailTest, GameView, RollRecord } from '../../../shared/types.ts';
 import type { PricedLine } from './types.ts';

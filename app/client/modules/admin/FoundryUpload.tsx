@@ -4,7 +4,7 @@ import { useEffect, useState, type ChangeEvent } from 'react';
 import { Button, Panel, Empty, confirmAction } from '../../lib/ui.tsx';
 import { api, uploadWithProgress } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
-import { t } from '../../lib/i18n.js';
+import { t } from '../../lib/i18n.ts';
 import { fmtBytes, Progress, type UploadProgress } from './common.tsx';
 
 /** GET /api/foundry/uploads */

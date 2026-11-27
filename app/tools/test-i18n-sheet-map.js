@@ -4,8 +4,8 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { startServer, login, client, settle } from './test-client.js';
-import * as S from '../server/lib/i18n.js';
-import { placeholders } from '../client/i18n/format.js';
+import * as S from '../server/lib/i18n.ts';
+import { placeholders } from '../client/i18n/format.ts';
 
 let failures = 0;
 async function test(name, fn) {

@@ -5,7 +5,7 @@
 // and two-finger pinch. Page jumps scroll inside the same document: nothing is reloaded.
 //   const v = new PdfView(scrollEl, { lib, onPage(n), onScale(scale) }); await v.setDocument(doc); v.goto(12, hl); v.setZoom('page'); v.destroy();
 import type { PDFDocumentProxy, PDFPageProxy, RenderTask, TextLayer, PageViewport } from 'pdfjs-dist';
-import { computeTops, pageAt, scaleFor, clampScale, outputScale, findMatches, splitByRanges } from './readerlib.js';
+import { computeTops, pageAt, scaleFor, clampScale, outputScale, findMatches, splitByRanges } from './readerlib.ts';
 import type { PdfjsLib } from './pdfdoc.ts';
 import type { Zoom } from './types.ts';
 

@@ -1,7 +1,7 @@
 // Foundry scene → app Map with segment walls and an image background (ARCHITECTURE.md "Segment walls & image backgrounds").
 // Canvas coordinates: the scene rectangle starts at (ceil(width*padding/size)*size, ceil(height*padding/size)*size);
 // the background image is drawn at that origin minus (shiftX, shiftY). Map cell (0,0) = that origin.
-import { slug } from '../../../shared/util.js';
+import { slug } from '../../../shared/util.ts';
 import type { FoundryDoc } from './world.ts';
 import type { AssetFn } from './assets.ts';
 import type { GameMap, Lighting, MapLight, MapNote, MapTheme, MapWall } from '../../../shared/types.ts';

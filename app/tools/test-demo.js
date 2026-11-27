@@ -259,7 +259,7 @@ try {
   section('reset rules (unit)');
   {
     process.env.SR_RUNTIME_DIR = runtime;
-    const demo = await import('../server/lib/demo.js');
+    const demo = await import('../server/lib/demo.ts');
     const tmp = path.join(runtime, 'fake-state.json');
     fs.writeFileSync(tmp, '{}');
     const fake = { id: 'fake', meta: { demo: true }, store: { stateFile: tmp } };

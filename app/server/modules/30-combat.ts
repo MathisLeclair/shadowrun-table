@@ -2,13 +2,13 @@
 // Slices owned: state.bestiary, state.bestiaryRemoved, state.combat (see ARCHITECTURE.md).
 import fs from 'node:fs';
 import path from 'node:path';
-import { rollInitiative, attr, ATTRS } from '../../shared/sr5.js';
+import { rollInitiative, attr, ATTRS } from '../../shared/sr5.ts';
 // deriveFull = derive() + modifiers of gear / qualities / implants (monitors, pain tolerance, matrix initiative dice — shared/modifiers.js).
-import { deriveFull as derive, actorModifiers } from '../lib/modifiers.js';
-import { icInitiative, agentInitiative, matrixInitiative as matrixInitiativeJs } from '../../shared/matrix.js';
-import { fillActorRefs } from '../lib/bookrefs.js';
-import { uid, clamp, deepClone } from '../../shared/util.js';
-import { pruneExpired } from '../../shared/combat.js';
+import { deriveFull as derive, actorModifiers } from '../lib/modifiers.ts';
+import { icInitiative, agentInitiative, matrixInitiative as matrixInitiativeJs } from '../../shared/matrix.ts';
+import { fillActorRefs } from '../lib/bookrefs.ts';
+import { uid, clamp, deepClone } from '../../shared/util.ts';
+import { pruneExpired } from '../../shared/combat.ts';
 import { thrownGearToWeapons } from './10-characters.ts';
 import type {
   ActionContext, Actor, ActorId, CombatEntry, CombatState, Disposition, GameMap, GameView, I18nMessage, I18nParams, I18nParamValue,

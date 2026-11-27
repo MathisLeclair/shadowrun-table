@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import {
   costFor, timeFor, formatDays, withInstructor, validate, quote, applyAdvance, attrMax, groupState, powerPoints,
-} from '../shared/advancement.js';
+} from '../shared/advancement.ts';
 
 let failures = 0;
 let passes = 0;
@@ -314,7 +314,7 @@ try {
 
   // i18n: log entries, history entries and request labels render to the stored French text, and have English.
   {
-    const I = await import('../client/lib/i18n.js');
+    const I = await import('../client/lib/i18n.ts');
     const dir = new URL('../client/i18n/en/', import.meta.url);
     const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json')).sort((a, b) => (a === 'glossary.json' ? -1 : b === 'glossary.json' ? 1 : a.localeCompare(b)));
     const dict = {};

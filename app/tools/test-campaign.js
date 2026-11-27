@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import campaignModule, { mergeSeeds, applySeed, readCampaignSeeds } from '../server/modules/70-campaign.js';
+import campaignModule, { mergeSeeds, applySeed, readCampaignSeeds } from '../server/modules/70-campaign.ts';
 import { startServer, login, client, settle } from './test-client.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');

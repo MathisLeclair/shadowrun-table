@@ -5,13 +5,13 @@ import { useState, type ReactNode } from 'react';
 import { Button, Modal, Toggle, NumberInput, TextInput } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
-import { t, tn, tk, fmtNuyen } from '../../lib/i18n.js';
-import { skillPool, derive } from '/shared/sr5.js';
+import { t, tn, tk, fmtNuyen } from '../../lib/i18n.ts';
+import { skillPool, derive } from '/shared/sr5.ts';
 import { Avatar, DiceFaces, cssVars } from './common.tsx';
 import { RuleRef } from './ext.ts';
 import {
   CONNECTION_DETAILS, LOYALTY_LEVELS, FAVOR_RATINGS, MAX_CONNECTION, MAX_LOYALTY, connectionOf, loyaltyOf, contactFees, bribeCost, contactSheet,
-} from '/shared/contacts.js';
+} from '/shared/contacts.ts';
 
 /** contactSheet() of shared/contacts.js, or the player's view of it (shop.contactSearch). */
 interface ContactSheetView {

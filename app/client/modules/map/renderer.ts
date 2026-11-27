@@ -4,9 +4,9 @@
 // upscaled with smoothing (soft edges for free). Tokens, doors, overlays are drawn every frame.
 // Image maps (background.mode === 'image', e.g. Foundry imports): the artwork is the floor, no tile art;
 // segment walls are drawn for the GM only (toggle), segment doors for everyone as clickable icons.
-import { buildGrid, lineOfSightMask, mapLights, wallIsDoor, wallMidpoint, pointSegmentDistance } from '/shared/vision.js';
-import { derive } from '/shared/sr5.js';
-import { t, tk, tIfKnown } from '../../lib/i18n.js';
+import { buildGrid, lineOfSightMask, mapLights, wallIsDoor, wallMidpoint, pointSegmentDistance } from '/shared/vision.ts';
+import { derive } from '/shared/sr5.ts';
+import { t, tk, tIfKnown } from '../../lib/i18n.ts';
 import { isLibUrl, ensureLibKey, signedUrl } from './maplib-client.ts';
 import { drawDetailedMap } from './tileart.ts';
 import type { GameMap, Token, MapWall, MapDoor, MapBackground, Lighting, ViewActor, ViewMe, Role } from '../../../shared/types.ts';

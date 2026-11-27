@@ -1,7 +1,7 @@
 // Audio: synced ambience + music channels, sound effects broadcast, GM scenes (one-click presets).
 // Built-in tracks are procedurally synthesized in the browser (client/modules/audio/*); the GM can add
 // uploaded files (source 'url'). See ARCHITECTURE.md > Audio.
-import { builtinTracks, SFX_IDS, TRACK_KINDS } from '../../client/modules/audio/catalog.js';
+import { builtinTracks, SFX_IDS, TRACK_KINDS } from '../../client/modules/audio/catalog.ts';
 import type { ActionContext, AudioChannel, AudioScene, AudioState, AudioTrack, ServerEvents, ServerModule, TableState, TrackKind } from '../../shared/types.ts';
 
 type ChannelName = 'ambient' | 'music';

@@ -1,7 +1,7 @@
 // Contact rolls test: node tools/test-contacts.js  (isolated server on port 3962, exit code != 0 on failure)
 // Rules: SR5 « Using Contacts » p. 387-389 (shared/contacts.js, 'actor/contactRoll').
 import { startServer, login, client, settle } from './test-client.js';
-import { contactFees, bribeCost, reachable, contactSheet, CONNECTION_DETAILS, LOYALTY_LEVELS, FAVOR_RATINGS } from '../shared/contacts.js';
+import { contactFees, bribeCost, reachable, contactSheet, CONNECTION_DETAILS, LOYALTY_LEVELS, FAVOR_RATINGS } from '../shared/contacts.ts';
 
 let failed = 0;
 const ok = (cond, msg) => {

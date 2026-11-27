@@ -12,13 +12,13 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { startServer, login } from './test-client.js';
-import { detectOffsets, printedToPdf, pdfToPrinted, cleanOffsets } from '../server/lib/books/offsets.js';
-import { parseQuery, fold, searchPages } from '../server/lib/books/search.js';
-import { parseSourceRef, printedToPdf as clientPrintedToPdf, pdfToPrinted as clientPdfToPrinted } from '../client/modules/books/refs.js';
-import { memoryVerdict } from '../server/lib/books/jobs.js';
-import { readBytes } from '../server/lib/books/pdftext.js';
-import { cacheKey, parseCacheKey, planEviction, staleEntries, cachedByCode, pickBackendName, downloadOptions, MAX_BOOKS, MAX_BYTES } from '../client/modules/books/cachepolicy.js';
-import { queryTerms, findMatches, splitByRanges, computeTops, pageAt, scaleFor, zoomStep, outputScale, clampScale } from '../client/modules/books/readerlib.js';
+import { detectOffsets, printedToPdf, pdfToPrinted, cleanOffsets } from '../server/lib/books/offsets.ts';
+import { parseQuery, fold, searchPages } from '../server/lib/books/search.ts';
+import { parseSourceRef, printedToPdf as clientPrintedToPdf, pdfToPrinted as clientPdfToPrinted } from '../client/modules/books/refs.ts';
+import { memoryVerdict } from '../server/lib/books/jobs.ts';
+import { readBytes } from '../server/lib/books/pdftext.ts';
+import { cacheKey, parseCacheKey, planEviction, staleEntries, cachedByCode, pickBackendName, downloadOptions, MAX_BOOKS, MAX_BYTES } from '../client/modules/books/cachepolicy.ts';
+import { queryTerms, findMatches, splitByRanges, computeTops, pageAt, scaleFor, zoomStep, outputScale, clampScale } from '../client/modules/books/readerlib.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = 3420 + (process.pid % 10);
@@ -291,7 +291,7 @@ try {
   eq(again.body.books.find((b) => b.code === 'RG').url, rgA.url, 'même lien d’une requête à l’autre (cache navigateur)');
   {
     process.env.SR_RUNTIME_DIR = runtime;
-    const { signLink } = await import('../server/lib/books/access.js');
+    const { signLink } = await import('../server/lib/books/access.ts');
     const day = Math.floor(Date.now() / 86400000) * 86400000;
     const args = [path.join(runtime, 'books'), { tableId: 'alpha', userId: 'gm', session: 'x', code: 'RG' }];
     const a = signLink(...args, { now: day + 1000 });
@@ -375,7 +375,7 @@ try {
 
   // Forged keys signed with the server key: expired, wrong table (book restricted), unknown user.
   process.env.SR_RUNTIME_DIR = runtime;
-  const { signRaw, sessionTag } = await import('../server/lib/books/access.js');
+  const { signRaw, sessionTag } = await import('../server/lib/books/access.ts');
   const kdir = path.join(runtime, 'books');
   const now = Math.floor(Date.now() / 1000);
   const fileUrl = (code, data) => `/api/books/${code}/file?k=${encodeURIComponent(signRaw(kdir, { c: code, e: now + 600, s: sessionTag(gmA), ...data }))}`;

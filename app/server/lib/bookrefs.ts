@@ -5,8 +5,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ITEM_CATALOGS, SUB_CATALOGS, REF_LISTS, itemRef, normRef, refFromNotes, parseRefText, complexFormRef, skillRef } from '../../shared/bookrefs.js';
-import { SUB_LISTS } from '../../client/modules/sheet/sheet-data.js';
+import { ITEM_CATALOGS, SUB_CATALOGS, REF_LISTS, itemRef, normRef, refFromNotes, parseRefText, complexFormRef, skillRef } from '../../shared/bookrefs.ts';
+import { SUB_LISTS } from '../../client/modules/sheet/sheet-data.ts';
 
 /** A rulebook reference: book code (« SR5 ») and printed page. */
 export interface BookRef {

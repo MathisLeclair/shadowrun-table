@@ -3,8 +3,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { evalFormula } from '../../client/modules/shop/rules.js';
-import { bonusFromEffects, importedItem } from '../../shared/modifiers.js';
+import { evalFormula } from '../../client/modules/shop/rules.ts';
+import { bonusFromEffects, importedItem } from '../../shared/modifiers.ts';
 import { effectsLookup } from './modifiers.ts';
 import type { ActionContext, Actor, AttrKey, CatalogBonus, CatalogItem, CatalogWeaponProfile, ItemBase, ItemBonus, Weapon, WareStats } from '../../shared/types.ts';
 

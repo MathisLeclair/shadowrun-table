@@ -7,7 +7,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import jpeg from 'jpeg-js';
 import { startServer, login, client, settle } from './test-client.js';
-import * as S from '../shared/maplib.js';
+import * as S from '../shared/maplib.ts';
 
 let failures = 0, passes = 0;
 function ok(cond, msg) {

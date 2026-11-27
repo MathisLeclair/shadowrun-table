@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button, Badge, Toggle, TextInput, Empty, Tabs, confirmAction } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
-import { t } from '../../lib/i18n.js';
+import { t } from '../../lib/i18n.ts';
 import { campaignOf, MdEditor, useDocs, DocSelect, DocButton, cx, fmtSessionDate, nextSession, usePersistent } from './common.tsx';
 import type { CampaignSession, GameView } from '../../../shared/types.ts';
 import type { CampaignNav, DocsState, Focus } from './types.ts';

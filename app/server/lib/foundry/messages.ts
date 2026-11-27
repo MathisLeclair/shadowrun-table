@@ -1,7 +1,7 @@
 // Translatable messages of the Foundry import (see ARCHITECTURE.md « i18n »): errors thrown deep in the
 // converters/uploader carry their French key + params, so the action (ctx.fail) or route (errorBody) can
 // send them to the browser, which shows them in the user's language.
-import { formatFr, cleanParams } from '../../../client/i18n/format.js';
+import { formatFr, cleanParams } from '../../../client/i18n/format.ts';
 import type { I18nMessage, I18nParams } from '../../../shared/types.ts';
 
 /** Error carrying its French i18n key (and params) for the client. */

@@ -1,6 +1,6 @@
 // Client-only UI state shared across modules (no server round-trip).
 import { useEffect, useState } from 'react';
-import { getLang, onLangChange } from './i18n.js';
+import { getLang, onLangChange } from './i18n.ts';
 
 export type ToastKind = 'info' | 'success' | 'error' | 'warn';
 export interface Toast {

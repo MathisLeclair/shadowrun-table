@@ -5,10 +5,10 @@
 // nuyens merge as deltas (ours + theirs − base) so rewards given in the app while the player edited the
 // file in Chummer are not lost. Items are matched by `chummerGuid`; items added in the app since the last
 // sync (no guid yet) are kept. Without a base (first import into an app-made actor) the file wins.
-import { ITEM_LISTS, SUB_LISTS } from '../../../client/modules/sheet/sheet-data.js';
-import { ATTR_LABELS } from '../../../shared/sr5.js';
-import { formatFr } from '../../../client/i18n/format.js';
-import { nuyen as fmtNuyen } from '../../../shared/util.js';
+import { ITEM_LISTS, SUB_LISTS } from '../../../client/modules/sheet/sheet-data.ts';
+import { ATTR_LABELS } from '../../../shared/sr5.ts';
+import { formatFr } from '../../../client/i18n/format.ts';
+import { nuyen as fmtNuyen } from '../../../shared/util.ts';
 import type { Actor, I18nEntry, Skill } from '../../../shared/types.ts';
 import type { ParsedActor } from './parse.ts';
 

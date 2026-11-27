@@ -25,7 +25,7 @@ const H = (token) => ({ Authorization: `Bearer ${token}`, 'content-type': 'appli
 
 /** i18n check: entries render to their stored French text, and every key has an English entry. Returns English texts. */
 async function renderI18n(entries, label) {
-  const I = await import('../client/lib/i18n.js');
+  const I = await import('../client/lib/i18n.ts');
   const dir = new URL('../client/i18n/en/', import.meta.url);
   const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json')).sort((a, b) => (a === 'glossary.json' ? -1 : b === 'glossary.json' ? 1 : a.localeCompare(b)));
   const dict = {};

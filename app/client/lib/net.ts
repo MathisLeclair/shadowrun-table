@@ -2,11 +2,11 @@
 import { io, type Socket } from 'socket.io-client';
 import { useEffect, useState } from 'react';
 import { toast } from './ui-store.ts';
-import { t, tk, errorText, setLang, langFromGame } from './i18n.js';
+import { t, tk, errorText, setLang, langFromGame } from './i18n.ts';
 import type { GameView } from '../../shared/types.ts';
 
 export type { GameView };
-/** Props of every tab, dock and global component (see modules/registry.js). */
+/** Props of every tab, dock and global component (see modules/registry.ts). */
 export interface GameProps {
   game: GameView;
 }

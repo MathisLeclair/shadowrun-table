@@ -2,10 +2,10 @@
 import { useState } from 'react';
 import { Button, NumberInput, TextInput, Select, Toggle, IconButton, confirmAction } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
-import { SKILLS, SKILL_BY_ID, SKILL_CATEGORIES, attr, skillPool } from '/shared/sr5.js';
-import { t, attrShort, skillLabel, skillGroupLabel, skillCategoryLabel, getLang, compare } from '../../lib/i18n.js';
+import { SKILLS, SKILL_BY_ID, SKILL_CATEGORIES, attr, skillPool } from '/shared/sr5.ts';
+import { t, attrShort, skillLabel, skillGroupLabel, skillCategoryLabel, getLang, compare } from '../../lib/i18n.ts';
 import { ListEditor } from './editors.tsx';
-import { KNOWLEDGE_TYPES, knowledgeAttr } from './sheet-data.js';
+import { KNOWLEDGE_TYPES, knowledgeAttr } from './sheet-data.ts';
 import { skillName } from './common.tsx';
 import { SkillRef, RuleRef } from './ext.ts';
 import type { AttrKey } from '../../../shared/types.ts';

@@ -5,11 +5,11 @@ import crypto from 'node:crypto';
 import { parseXml, XmlError, type Element, type XmlDocument } from './xml.ts';
 import { i18nError, errorParam, warningList } from './messages.ts';
 import { skillsData, appSkillId, metatypeData, METATYPE_FROM_EN, frenchName, frenchCategory, gradeTable, norm, appCatalog, findDataItem, type DataKind } from './data.ts';
-import { SKILL_BY_ID } from '../../../shared/sr5.js';
-import { blankActor, categoryToSkill, evalFormula, MELEE_SKILLS, LIFESTYLE_BASES } from '../../../client/modules/sheet/sheet-data.js';
-import { monthlyCost } from '../../../shared/lifestyle.js';
-import { uid } from '../../../shared/util.js';
-import { guessContainerKind, ammoKindOf, isThrownExplosive, parseAmmo } from '../../../client/modules/sheet/inventory.js';
+import { SKILL_BY_ID } from '../../../shared/sr5.ts';
+import { blankActor, categoryToSkill, evalFormula, MELEE_SKILLS, LIFESTYLE_BASES } from '../../../client/modules/sheet/sheet-data.ts';
+import { monthlyCost } from '../../../shared/lifestyle.ts';
+import { uid } from '../../../shared/util.ts';
+import { guessContainerKind, ammoKindOf, isThrownExplosive, parseAmmo } from '../../../client/modules/sheet/inventory.ts';
 import type {
   Accessory, Actor, AmmoKind, ArmorMod, Augmentation, AttrKey, Container, ContainerKind, I18nMessage, ItemBase, KnowledgeSkill, KnowledgeType, Lifestyle,
   LifestyleQuality, MountPoint, VehicleMod, Weapon,

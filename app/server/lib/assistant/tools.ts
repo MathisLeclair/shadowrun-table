@@ -5,7 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { uid } from '../../../shared/util.js';
+import { uid } from '../../../shared/util.ts';
 import { listDocs, docPath } from './context.ts';
 import type { BetaTool } from '@anthropic-ai/sdk/resources/beta/messages/messages';
 import type { ActionPayload, ActionResponse, Actor, Campaign, GameMap, I18nParams, TableState } from '../../../shared/types.ts';

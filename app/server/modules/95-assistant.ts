@@ -1,13 +1,13 @@
 // GM assistant (« Assistant MJ ») — Claude in the GM's dock. GM-only HTTP routes; no game state slice.
 // Conversations live in tables/<id>/assistant.json (lib/assistant/conversations.js), settings and spend in
 // runtime/assistant/ (server-wide, managed in /admin). See ARCHITECTURE.md « Assistant MJ ».
-import { errorBody } from '../lib/i18n.js';
-import { getSettings, isTableEnabled, MODELS } from '../lib/assistant/config.js';
-import { budgetStatus } from '../lib/assistant/budget.js';
-import { authMode } from '../lib/assistant/auth.js';
-import { buildOps } from '../lib/assistant/tools.js';
-import { runTurn, isBusy, stop, viewConversation, publicProposal } from '../lib/assistant/run.js';
-import { listConversations, getConversation, createConversation, deleteConversation, findProposal, save } from '../lib/assistant/conversations.js';
+import { errorBody } from '../lib/i18n.ts';
+import { getSettings, isTableEnabled, MODELS } from '../lib/assistant/config.ts';
+import { budgetStatus } from '../lib/assistant/budget.ts';
+import { authMode } from '../lib/assistant/auth.ts';
+import { buildOps } from '../lib/assistant/tools.ts';
+import { runTurn, isBusy, stop, viewConversation, publicProposal } from '../lib/assistant/run.ts';
+import { listConversations, getConversation, createConversation, deleteConversation, findProposal, save } from '../lib/assistant/conversations.ts';
 import type { ServerEvents, ServerModule, TableMeta, TableState } from '../../shared/types.ts';
 
 // No Express types in the app yet (@types/express arrives with the server-core conversion): loose local aliases.

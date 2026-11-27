@@ -4,8 +4,8 @@
 // <SkillRef id="pistols" /> (shared/bookrefs.js tables). Nothing is rendered without a reference.
 // Other modules: import { BookRef, ItemRef, RuleRef, SkillRef, openBook, parseSourceRef } from '../books/BookRef.tsx';
 import type { MouseEvent } from 'react';
-import { t, getLang } from '../../lib/i18n.js';
-import { itemRef, ruleRef, skillRef } from '/shared/bookrefs.js';
+import { t, getLang } from '../../lib/i18n.ts';
+import { itemRef, ruleRef, skillRef } from '/shared/bookrefs.ts';
 import { useBooks, findBook, openBook, parseSourceRef, openBookPdf, closeBook } from './store.ts';
 import type { LibBook } from './types.ts';
 import './books.css';

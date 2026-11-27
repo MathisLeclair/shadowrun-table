@@ -2,8 +2,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Badge, type BadgeColor } from '../../lib/ui.tsx';
 import { loadCatalog } from '../../lib/net.ts';
-import { t, tk, fmtNuyen, fmtDate, itemName, getLang, compare } from '../../lib/i18n.js';
-import { SHOP_FILES, STORE_SECTIONS, quote, parseAvailString, fold, GRADES, lowersRent } from './rules.js';
+import { t, tk, fmtNuyen, fmtDate, itemName, getLang, compare } from '../../lib/i18n.ts';
+import { SHOP_FILES, STORE_SECTIONS, quote, parseAvailString, fold, GRADES, lowersRent } from './rules.ts';
 import type { Actor, CatalogFile, CatalogItem, GameView, ShopSpecial, ShopState, Timestamp } from '../../../shared/types.ts';
 import type { BuyStatus, CartLine, OwnedItem, PriceQuote, ShopCatalog, ShopEntry, ShopItem } from './types.ts';
 

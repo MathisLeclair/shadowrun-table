@@ -10,14 +10,14 @@ import { normalizeBonus, entryEffects, effValue, conditionKey, skillIdOf } from 
 import {
   collectModifiers, lookupFromIndex, poolModifiers, limitFor, rollContext, derivedWithModifiers, effectValue, cleanConditions,
   weaponAccuracy, conditionState, CONDITIONS, gearHasEffects, bonusFromEffects, checkedTest, woundsApply,
-} from '../shared/modifiers.js';
-import { healthStatus } from '../client/modules/sheet/sheet-data.js';
-import { parseChum5 } from '../server/lib/chummer/parse.js';
-import { convertSheet } from '../server/lib/foundry/convert-actor.js';
-import { derive, attr, skillPool } from '../shared/sr5.js';
-import { actionPool, ACTION_BY_ID } from '../shared/matrix.js';
-import { compute, buildActor, emptyDraft } from '../shared/chargen.js';
-import * as rules from '../client/modules/shop/rules.js';
+} from '../shared/modifiers.ts';
+import { healthStatus } from '../client/modules/sheet/sheet-data.ts';
+import { parseChum5 } from '../server/lib/chummer/parse.ts';
+import { convertSheet } from '../server/lib/foundry/convert-actor.ts';
+import { derive, attr, skillPool } from '../shared/sr5.ts';
+import { actionPool, ACTION_BY_ID } from '../shared/matrix.ts';
+import { compute, buildActor, emptyDraft } from '../shared/chargen.ts';
+import * as rules from '../client/modules/shop/rules.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CHUMMER = path.join(ROOT, '..', 'Chummer5.226.0', 'data');

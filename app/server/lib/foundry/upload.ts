@@ -4,7 +4,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { ZipError, listZip, safeEntryPath, extractZip, dirSize } from '../zip.js';
+import { ZipError, listZip, safeEntryPath, extractZip, dirSize } from '../zip.ts';
 import { i18nError } from './messages.ts';
 import type { WorldMeta } from './world.ts';
 

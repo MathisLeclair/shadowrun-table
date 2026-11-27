@@ -3,7 +3,7 @@ import { useState } from 'react';
 import './training.css';
 import { Panel, Empty, Badge } from '../../lib/ui.tsx';
 import { openSheet } from '../../lib/ui-store.ts';
-import { t } from '../../lib/i18n.js';
+import { t } from '../../lib/i18n.ts';
 import type { GameProps } from '../../lib/net.ts';
 import AdvancePanel from './AdvancePanel.tsx';
 import GmTraining from './GmTraining.tsx';

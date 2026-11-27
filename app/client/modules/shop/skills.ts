@@ -1,6 +1,6 @@
 // Storefront « Compétence » filter: the SR5 active skill(s) linked to a catalog item, and the character's ratings.
 // Pure ES module (no DOM, no i18n): unit-tested in Node by tools/test-shop.js. Labels are rendered by Storefront (skillLabel).
-import { SKILLS, SKILL_BY_ID } from '../../../shared/sr5.js';
+import { SKILLS, SKILL_BY_ID } from '../../../shared/sr5.ts';
 import { accessoryFit } from './rules.ts';
 import type { Loose } from './rules.ts';
 

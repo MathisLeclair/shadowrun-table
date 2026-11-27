@@ -16,7 +16,7 @@ import { warningList } from './messages.ts';
 import {
   skillsData, chummerSkillFor, metatypeData, METATYPE_EN, findDataItem, findCatalogEntry, norm, type ChummerSkillDef, type DataKind,
 } from './data.ts';
-import { KNOWLEDGE_TYPES } from '../../../client/modules/sheet/sheet-data.js';
+import { KNOWLEDGE_TYPES } from '../../../client/modules/sheet/sheet-data.ts';
 import type {
   Accessory, Actor, AdeptPower, Armor, ArmorMod, Augmentation, ComplexForm, Contact, I18nMessage, ItemBase, Lifestyle, LifestyleQuality, MartialArt,
   MartialArtTechnique, Quality, Sin, Spell, Vehicle, VehicleMod, Weapon,

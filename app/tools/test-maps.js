@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { login, client, settle as baseSettle } from './test-client.js';
-import * as V from '../shared/vision.js';
+import * as V from '../shared/vision.ts';
 
 // Broadcasts carry every map to the GM (Foundry imports make the state ~1 MB): leave them time to arrive.
 // settle(): wait at least ms + 150, then until no client received a state for 150 ms (max ~3 s).

@@ -3,7 +3,7 @@ import { useState, type MouseEvent, type SyntheticEvent } from 'react';
 import { Button, IconButton, Badge, Select, confirmAction, promptText } from '../../lib/ui.tsx';
 import { send, type GameProps } from '../../lib/net.ts';
 import { useUI, setUI, openSheet, toast } from '../../lib/ui-store.ts';
-import { t, tn, tk } from '../../lib/i18n.js';
+import { t, tn, tk } from '../../lib/i18n.ts';
 import { initModeOptions, initModeLabel, dispoLabel, initials, avatarStyle, safeDerive, MonitorBar, rollTooltip, parseDamageInput } from './combat-common.tsx';
 import type { ActorLike } from './types.ts';
 import type { CombatEntry, CombatState, GameView, InitMode, ViewActor } from '../../../shared/types.ts';

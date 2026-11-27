@@ -1,7 +1,7 @@
 // TRANSITIONAL: books/BookRef.js is not converted yet, and TypeScript infers every prop it destructures as required.
 // Typed views of its chips; import them from the books folder directly once it is converted (then delete this file).
 import type { ComponentType } from 'react';
-import * as Refs from '../books/BookRef.js';
+import * as Refs from '../books/BookRef.tsx';
 
 /** 📖 chip of a book page: source 'RG' + page, or 'SR5 p. 240'. */
 export const BookRef = Refs.BookRef as unknown as ComponentType<{ source?: string | null; page?: number | string | null; label?: string; title?: string; class?: string }>;

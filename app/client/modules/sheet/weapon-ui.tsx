@@ -4,13 +4,13 @@ import { useState, type MouseEvent } from 'react';
 import { Button, IconButton, Toggle } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
-import { attr } from '/shared/sr5.js';
-import { t, tk, tn, getLang } from '../../lib/i18n.js';
+import { attr } from '/shared/sr5.ts';
+import { t, tk, tn, getLang } from '../../lib/i18n.ts';
 import { Overlay, itemLabel, itemTitle, modeLabel } from './common.tsx';
 import {
   usesAmmo, isGrenade, ammoFits, clipFits, reloadPlan, isCarried, containerOf, fireOptions, AMMO_TYPE_LABELS, MODE_SHORT_FR, readyCount, ON_BODY,
   ammoKindOf, sameAmmoKind,
-} from './inventory.js';
+} from './inventory.ts';
 import type { Actor, AmmoKind, Gear, Weapon } from '../../../shared/types.ts';
 import type { SheetCtx } from './types.ts';
 

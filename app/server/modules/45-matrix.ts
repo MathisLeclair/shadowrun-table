@@ -4,20 +4,20 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { attr, derive, rollDice } from '../../shared/sr5.js';
+import { attr, derive, rollDice } from '../../shared/sr5.ts';
 import {
   ACTION_BY_ID, ASDF, ASDF_LABELS, MODE_LABELS, MODES, IC_TYPES, MAX_MARKS, OS_MAX, CONVERGENCE_DV, HOST_PRESETS,
   PROGRAM_BY_ID, isIllegal, isCyberdeck, isPermutation, identityAsdf, deckStats as rawDeckStats, actionPool, hostDefensePool,
   personaDefensePool, programId, programSlots, programSum, availablePrograms, detectAgents, matrixMonitor,
   matrixInitiative, dumpshock, hostAttributes, defaultIcFor, icAttackPool, skillRating, loadedProgramIds,
   OS_TICK_MS, DEVICE_LINK_KINDS, DEVICE_CMD_LABELS, deviceWorks,
-} from '../../shared/matrix.js';
-import { uid, deepClone, slug } from '../../shared/util.js';
-import { cleanConditions } from '../../shared/modifiers.js';
-import { actorModifiers, deriveFull } from '../lib/modifiers.js';
-import { formatFr } from '../lib/i18n.js';
-import combatModule, { combatHooks, upsertVirtualEntry, setVirtualOut, endTurnOf, isVirtual } from './30-combat.js';
-import { refreshFog, findAnyDoor } from './20-maps.js';
+} from '../../shared/matrix.ts';
+import { uid, deepClone, slug } from '../../shared/util.ts';
+import { cleanConditions } from '../../shared/modifiers.ts';
+import { actorModifiers, deriveFull } from '../lib/modifiers.ts';
+import { formatFr } from '../lib/i18n.ts';
+import combatModule, { combatHooks, upsertVirtualEntry, setVirtualOut, endTurnOf, isVirtual } from './30-combat.ts';
+import { refreshFog, findAnyDoor } from './20-maps.ts';
 import notesModule from './75-notes.ts';
 import campaignModule from './70-campaign.ts';
 import type {

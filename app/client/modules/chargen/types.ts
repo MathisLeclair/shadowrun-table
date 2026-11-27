@@ -1,5 +1,5 @@
 // Local types of the chargen folder (gaps of shared/types.ts are listed in the migration report).
-import type { compute } from '/shared/chargen.js';
+import type { compute } from '/shared/chargen.ts';
 import type { CatalogItem, DraftData, GameView } from '../../../shared/types.ts';
 
 /** shared/chargen.js compute() result (inferred from the JS module). */

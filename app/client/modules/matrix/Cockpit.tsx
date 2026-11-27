@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 import { Button, Badge, Select, TextInput, confirmAction } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
 import { goTab, toast } from '../../lib/ui-store.ts';
-import { t, getLang } from '../../lib/i18n.js';
-import { attr } from '/shared/sr5.js';
+import { t, getLang } from '../../lib/i18n.ts';
+import { attr } from '/shared/sr5.ts';
 import {
   ASDF, MODES, ACTIONS, ACTION_CATS, ACTION_TYPES, IC_TYPES, PROGRAM_BY_ID,
   deckStats, actionPool, matrixInitiative, agentInitiative, programSlots, availablePrograms, detectAgents, isIllegal,

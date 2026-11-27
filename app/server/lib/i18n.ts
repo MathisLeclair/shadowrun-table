@@ -7,7 +7,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT } from '../store.ts';
-import * as fmt from '../../client/i18n/format.js';
+import * as fmt from '../../client/i18n/format.ts';
 import type { I18nParams, Lang, LogEntry, NewLogEntry } from '../../shared/types.ts';
 
 // client/i18n/format.js is plain JS (shared with the browser): typed here for the server.

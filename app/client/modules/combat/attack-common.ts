@@ -1,7 +1,7 @@
 // Client helpers of the attack flow (server: server/modules/33-attacks.js, rules: shared/combat.js):
 // the user's target (ui.targetTokenId) and aimed point (ui.aimPoint), target candidates with their distance, attacks waiting for me.
 import { setUI, getUI, type UIState } from '../../lib/ui-store.ts';
-import { cellDistance, rangeFor } from '/shared/combat.js';
+import { cellDistance, rangeFor } from '/shared/combat.ts';
 import type { ActorId, AttackStatus, AttackTurnRecord, GameMap, GameView, MapId, Token, ViewActor, Weapon } from '../../../shared/types.ts';
 
 /** Map the user is looking at: players the shown map, the GM their viewed map (falls back to the active one). */

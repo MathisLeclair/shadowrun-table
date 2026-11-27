@@ -12,7 +12,7 @@ import { LANGS, DEFAULT_LANG, isLang, stripContext, interpolate, lookup, pluralK
 import type { Dictionary, PluralForms, TParams } from '../i18n/format.ts';
 import type { Lang } from '../../shared/types.ts';
 // Relative path on purpose: resolves to /shared/sr5.js in the browser (same module instance) and works in Node.
-import { ATTR_LABELS, ATTR_SHORT, SKILL_BY_ID, SKILL_GROUPS, SKILL_CATEGORIES } from '../../shared/sr5.js';
+import { ATTR_LABELS, ATTR_SHORT, SKILL_BY_ID, SKILL_GROUPS, SKILL_CATEGORIES } from '../../shared/sr5.ts';
 
 export { LANGS, isLang };
 export type { Dictionary, PluralForms, TParams };

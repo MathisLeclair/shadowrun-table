@@ -4,9 +4,9 @@ import { Fragment, useEffect, useMemo, useRef, useState, type CSSProperties } fr
 import { Modal, Button, Select, NumberInput, Toggle, TextInput, Field, Tabs, IconButton } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
 import { useUI, toast } from '../../lib/ui-store.ts';
-import { ARCHETYPES, ARCHETYPE_BY_ID, TIERS, METATYPE_CHOICES, GRUNT_RULES, randomSeed, makeName } from '/shared/npcgen.js';
+import { ARCHETYPES, ARCHETYPE_BY_ID, TIERS, METATYPE_CHOICES, GRUNT_RULES, randomSeed, makeName } from '/shared/npcgen.ts';
 import StatBlock from '../combat/StatBlock.tsx';
-import { t, tn, compare, metatypeLabel } from '../../lib/i18n.js';
+import { t, tn, compare, metatypeLabel } from '../../lib/i18n.ts';
 import type { GameMap, GameView, Template, Token } from '../../../shared/types.ts';
 import './chargen.css';
 import '../combat/combat.css';

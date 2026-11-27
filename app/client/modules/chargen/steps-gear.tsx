@@ -1,11 +1,11 @@
 // Wizard step: Équipement & cyberware (shop catalog, resources budget, availability ≤ 12, Essence, lifestyle).
 import { useMemo, useState } from 'react';
 import { Button, Select, NumberInput, Panel, IconButton, Toggle, SearchBox, Empty, Field, Stat, Badge } from '../../lib/ui.tsx';
-import { STORE_SECTIONS, quote, allowedGrades, GRADES, clampRating, fold, targetList, upgradeAvail, MOUNT_LABELS, armorCapacity } from '../shop/rules.js';
+import { STORE_SECTIONS, quote, allowedGrades, GRADES, clampRating, fold, targetList, upgradeAvail, MOUNT_LABELS, armorCapacity } from '../shop/rules.ts';
 import { AvailBadge } from '../combat/legacy-components.ts';
-import { statRows } from '../shop/ItemDetail.js';
-import { CREATION_GRADES, CREATION_UPGRADES, LIMITS, rowId } from '/shared/chargen.js';
-import { t, itemName, compare, fmtNumber } from '../../lib/i18n.js';
+import { statRows } from '../shop/ItemDetail.tsx';
+import { CREATION_GRADES, CREATION_UPGRADES, LIMITS, rowId } from '/shared/chargen.ts';
+import { t, itemName, compare, fmtNumber } from '../../lib/i18n.ts';
 import { Budget, StepIssues, nuyen } from './common.tsx';
 import { ItemRef } from '../combat/legacy-components.ts';
 import type { DraftData } from '../../../shared/types.ts';

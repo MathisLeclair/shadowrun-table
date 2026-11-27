@@ -5,13 +5,13 @@ import { useState, type ReactNode } from 'react';
 import { Button, Modal, Toggle } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
-import { t, tk, fmtDate } from '../../lib/i18n.js';
+import { t, tk, fmtDate } from '../../lib/i18n.ts';
 import { Avatar, DiceFaces, cssVars } from './common.tsx';
 import { RuleRef } from './ext.ts';
 import {
   FAKE_SIN_DETAILS, VERIFICATION_DETAILS, OUTCOME_LABELS, MAX_DEVICE_RATING, isRealSin, sinRating, sinIdentity, sinLicenses, sinNumber,
   verificationPool, checkOdds,
-} from '/shared/sins.js';
+} from '/shared/sins.ts';
 
 import type { Actor, Sin, SinCheckInfo } from '../../../shared/types.ts';
 import type { ShownRoll } from './types.ts';

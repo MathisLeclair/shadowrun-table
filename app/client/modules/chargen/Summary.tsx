@@ -2,10 +2,10 @@
 // Used by the wizard's last step and by the GM review panel.
 import { useMemo } from 'react';
 import { Panel, Stat, Markdown } from '../../lib/ui.tsx';
-import { derive } from '/shared/sr5.js';
-import { buildActor, STEPS, COLUMNS, COLUMN_LABELS, MAGIC_TYPES } from '/shared/chargen.js';
+import { derive } from '/shared/sr5.ts';
+import { buildActor, STEPS, COLUMNS, COLUMN_LABELS, MAGIC_TYPES } from '/shared/chargen.ts';
 import StatBlock from '../combat/StatBlock.tsx';
-import { t, tn, tk, fmtNumber, metatypeLabel, itemName } from '../../lib/i18n.js';
+import { t, tn, tk, fmtNumber, metatypeLabel, itemName } from '../../lib/i18n.ts';
 import { nuyen, issueText } from './common.tsx';
 import type { Actor, DraftData, PriorityColumn } from '../../../shared/types.ts';
 import type { ChargenIssue, ChargenResult, RulesCtx } from './types.ts';

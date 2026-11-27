@@ -8,7 +8,7 @@ import type { Express, Request, Response, RequestHandler } from 'express';
 import { receiveToFile } from './zip.ts';
 import * as L from './maplib.ts';
 import { makeThumb } from './maplib-thumb.ts';
-import { versionFromMap, libGeometry } from '../../shared/maplib.js';
+import { versionFromMap, libGeometry } from '../../shared/maplib.ts';
 import type { I18nParams } from '../../shared/types.ts';
 import type { StoredMeta, Table } from './tables.ts';
 

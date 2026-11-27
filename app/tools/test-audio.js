@@ -20,8 +20,8 @@ async function test(name, fn) {
 // ===========================================================================
 // 1. Pure helpers
 // ===========================================================================
-const T = await import('../client/modules/audio/theory.js');
-const catalog = await import('../client/modules/audio/catalog.js');
+const T = await import('../client/modules/audio/theory.ts');
+const catalog = await import('../client/modules/audio/catalog.ts');
 console.log('\n[theory / catalog]');
 
 await test('noteToMidi / mtof', () => {
@@ -460,9 +460,9 @@ console.warn = (...a) => {
 // ===========================================================================
 // 3. Generators
 // ===========================================================================
-const { AMBIENCES } = await import('../client/modules/audio/ambiences.js');
-const { MUSIC } = await import('../client/modules/audio/music.js');
-const { SFX } = await import('../client/modules/audio/sfx.js');
+const { AMBIENCES } = await import('../client/modules/audio/ambiences.ts');
+const { MUSIC } = await import('../client/modules/audio/music.ts');
+const { SFX } = await import('../client/modules/audio/sfx.ts');
 
 console.log('\n[generators on the Web Audio mock]');
 await test('every catalog preset has a generator', () => {
@@ -570,7 +570,7 @@ const realFetch = globalThis.fetch;
 globalThis.fetch = async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(8) });
 
 useFakeTimers();
-const core = await import('../client/modules/audio/audio-core.js');
+const core = await import('../client/modules/audio/audio-core.ts');
 const flush = async () => {
   for (let i = 0; i < 5; i++) await Promise.resolve();
 };
@@ -673,7 +673,7 @@ for (const s of stats) console.log('     ', s);
 // 5. Server module: init merge (direct) + actions over a real isolated server
 // ===========================================================================
 console.log('\n[server]');
-const audioMod = (await import('../server/modules/60-audio.js')).default;
+const audioMod = (await import('../server/modules/60-audio.ts')).default;
 
 await test('init: defaults, built-ins merged by id, seeds, stale references cleared', () => {
   const state = { audio: { master: 'x', ambient: { trackId: 'trk_gone', volume: 9 }, tracks: [{ id: 'amb-rain', name: 'Ma pluie', kind: 'music', source: 'synth', preset: 'zzz' }, { id: 'amb-old', kind: 'ambient', source: 'synth', preset: 'old' }], scenes: [{ id: 'scn-bar-porfla', name: 'Perso' }] } };

@@ -3,7 +3,7 @@
 // The /admin page plugs its own key source (admin session) with setLibKeySource().
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/net.ts';
-import { isLibUrl } from '/shared/maplib.js';
+import { isLibUrl } from '/shared/maplib.ts';
 import type { LibEntry, LibKeyReply, LibList } from './types.ts';
 
 export { isLibUrl };

@@ -5,7 +5,7 @@ import './shop.css';
 import { Button, Tabs, Select, Badge, Empty } from '../../lib/ui.tsx';
 import { useServerEvent, type GameProps } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
-import { t } from '../../lib/i18n.js';
+import { t } from '../../lib/i18n.ts';
 import { useShopCatalog, useCart, useShopActors, nuyen } from './common.tsx';
 import { pricedCart } from './Cart.tsx';
 import Storefront from './Storefront.tsx';

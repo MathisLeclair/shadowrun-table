@@ -2,12 +2,12 @@
 // Vision / path rules live in shared/vision.js (same code runs in the browser).
 import fs from 'node:fs';
 import path from 'node:path';
-import { uid, deepClone } from '../../shared/util.js';
-import { derive } from '../../shared/sr5.js';
+import { uid, deepClone } from '../../shared/util.ts';
+import { derive } from '../../shared/sr5.ts';
 import {
   isTileChar, buildGrid, findPath, pathLength, createVisionContext, visibilityForUser as visibilityForUserJs, viewersForUser,
   tokenInMask, encodeBits, decodeBits, orBits, remapBits, isPcToken, stepBlocked, wallMidpoint, pointSegmentDistance,
-} from '../../shared/vision.js';
+} from '../../shared/vision.ts';
 import type {
   ActionContext, ActionDef, Actor, Disposition, DoorKind, DoorState, GameMap, GameView, InitOptions, Lighting, MapBackground, MapDoor,
   MapId, MapLight, MapNote, MapRegion, MapTheme, MapWall, Point, ServerModule, SessionUser, SfxId, TableState, Token, TokenVision,

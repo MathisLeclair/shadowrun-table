@@ -5,10 +5,10 @@ import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { Button, Field, Toggle, Badge, Empty, Modal, Select, SearchBox, confirmAction } from '../../lib/ui.tsx';
 import { uploadWithProgress, type ServerError } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
-import { t, tn, tk, fmtDate, getLang } from '../../lib/i18n.js';
-import { matchesQuery } from '/shared/maplib.js';
-import { setLibKeySource, useLibKey, signedUrl } from '../map/maplib-client.js';
-import { themeOptions, lightingOptions } from '../map/renderer.js';
+import { t, tn, tk, fmtDate, getLang } from '../../lib/i18n.ts';
+import { matchesQuery } from '/shared/maplib.ts';
+import { setLibKeySource, useLibKey, signedUrl } from '../map/maplib-client.ts';
+import { themeOptions, lightingOptions } from '../map/renderer.ts';
 import { fmtBytes, Progress, type UploadProgress } from './common.tsx';
 import type { AdminApi, AdminPanelProps } from './types.ts';
 

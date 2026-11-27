@@ -5,7 +5,7 @@
 //          fromCache, doc, error } — useDocState() re-renders on every change.
 import { useEffect, useState } from 'react';
 import type { PDFDocumentProxy, PDFDocumentLoadingTask } from 'pdfjs-dist';
-import { cacheKey } from './cachepolicy.js';
+import { cacheKey } from './cachepolicy.ts';
 import { getBookData, type HttpError } from './bookcache.ts';
 import { loadBooks, findBook, pdfjsBase } from './store.ts';
 import type { LibBook } from './types.ts';

@@ -2,13 +2,13 @@
 import { Fragment, useState, type ComponentType } from 'react';
 import { Button, Tabs, SearchBox, Select, TextInput, NumberInput, Badge, Empty, Field } from '../../lib/ui.tsx';
 import { useCatalog } from '../../lib/net.ts';
-import { t, tk, attrLabel, skillLabel, skillGroupLabel, skillCategoryLabel, metatypeLabel, itemName, compare, getLang } from '../../lib/i18n.js';
-import { SKILLS, SKILL_BY_ID, SKILL_GROUPS, SKILL_CATEGORIES } from '/shared/sr5.js';
+import { t, tk, attrLabel, skillLabel, skillGroupLabel, skillCategoryLabel, metatypeLabel, itemName, compare, getLang } from '../../lib/i18n.ts';
+import { SKILLS, SKILL_BY_ID, SKILL_GROUPS, SKILL_CATEGORIES } from '/shared/sr5.ts';
 import {
   TRAINABLE_ATTRS, KNOWLEDGE_TYPES, attrMax, skillRating, groupState, groupMembers, magicProfile, powerPoints, catalogName,
   qualityInfo, powerInfo, spellInfo, initiationGrade, submersionGrade,
-} from '/shared/advancement.js';
-import { slug } from '/shared/util.js';
+} from '/shared/advancement.ts';
+import { slug } from '/shared/util.ts';
 import { makeQuoter, Rule, CostCell, MAGIC_TYPES, errorOf, warningsOf, msgText } from './common.tsx';
 import ConfirmModal from './ConfirmModal.tsx';
 import { ItemRef, SkillRef } from './bookrefs.ts';

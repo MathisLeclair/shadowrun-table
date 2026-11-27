@@ -4,9 +4,9 @@ import { Fragment, useEffect, useState, type ChangeEvent } from 'react';
 import { Button, Panel, Field, TextInput, Badge, Select, Empty, confirmAction } from '../../lib/ui.tsx';
 import { send, api, getToken, type GameProps } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
-import { t, missingKeys, missingCount, clearMissing } from '../../lib/i18n.js';
+import { t, missingKeys, missingCount, clearMissing } from '../../lib/i18n.ts';
 import FoundryPanel from '../foundry/FoundryPanel.tsx';
-import FoundryUpload from '../admin/FoundryUpload.js';
+import FoundryUpload from '../admin/FoundryUpload.tsx';
 
 const LANG_OPTIONS = [
   { value: 'fr', label: 'Français' }, // i18n-ignore

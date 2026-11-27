@@ -1,7 +1,7 @@
 // Matrix module — client-side types, plus a typed view of the shared rules (shared/matrix.js is still plain JS,
 // so its inferred types are loose: string-indexed lookups, union-of-literals arrays). TRANSITIONAL: drop the casts
 // below once shared/matrix.js is converted to TypeScript.
-import * as M from '/shared/matrix.js';
+import * as M from '/shared/matrix.ts';
 import type { Actor, AsdfKey, DeviceLinkKind, Host, I18nParams, IcType, MatrixMode, Persona, PlayerHostView } from '../../../shared/types.ts';
 
 // ---------------------------------------------------------------------------

@@ -2,12 +2,12 @@
 import { useState } from 'react';
 import { Modal, Button, Field, NumberInput, Select, TextInput, Toggle, Badge } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
-import { t, tn, tk, getLang } from '../../lib/i18n.js';
-import { slug } from '/shared/util.js';
+import { t, tn, tk, getLang } from '../../lib/i18n.ts';
+import { slug } from '/shared/util.ts';
 import { actionPool, isIllegal, ACTION_TYPES, ACTION_CATS, MARK_PENALTY, matrixMonitor, DEVICE_LINK_KINDS, DEVICE_CMD_LABELS } from './types.ts';
 import type { MatrixAction, PendingAssistLike, PersonaView, PoolCalc, PoolModLine } from './types.ts';
 import { isGM, targetOptions, marksRequired, msgText, outcomeTexts, partLabel, actionName, marksText, assistText, type ActionResult, type MsgLike } from './common.tsx';
-import { useModifiers, toggleText, effectText, loadRollToggles, saveRollToggles } from '../sheet/modifiers-ui.js';
+import { useModifiers, toggleText, effectText, loadRollToggles, saveRollToggles } from '../sheet/modifiers-ui.tsx';
 import { BookRef, SkillRef, DiceFaces } from './legacy.ts';
 import type { Actor, GameView, RollResult } from '../../../shared/types.ts';
 

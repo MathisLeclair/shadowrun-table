@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { readJson, writeJsonAtomic } from '../../store.ts';
-import { uid } from '../../../shared/util.js';
+import { uid } from '../../../shared/util.ts';
 import type { BetaMessageParam } from '@anthropic-ai/sdk/resources/beta/messages/messages';
 import type { I18nParams } from '../../../shared/types.ts';
 import type { Table } from '../tables.ts';

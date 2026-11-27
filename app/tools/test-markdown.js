@@ -1,5 +1,5 @@
 // Regression tests for client/lib/markdown.js (pure module, importable in Node): node tools/test-markdown.js
-import { renderMarkdown } from '../client/lib/markdown.js';
+import { renderMarkdown } from '../client/lib/markdown.ts';
 
 let ok = 0;
 let ko = 0;

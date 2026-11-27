@@ -6,10 +6,10 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode 
 import { Button, IconButton, Select, Toggle, Badge, Field, TextInput, NumberInput, confirmAction, promptText } from '../../lib/ui.tsx';
 import { send, upload } from '../../lib/net.ts';
 import { setUI, toast, openSheet } from '../../lib/ui-store.ts';
-import { TILE_INFO } from '/shared/vision.js';
+import { TILE_INFO } from '/shared/vision.ts';
 import { MapCanvas, type MapHandlers, type MapPointerInfo } from './MapCanvas.tsx';
 import { themeOptions, lightingOptions, DISPO, tileSwatch, getImage, wallKind, type MapRenderer, type MapOverlay, type MapScene, type Point, type Rect } from './renderer.ts';
-import { t, tk, compare } from '../../lib/i18n.js';
+import { t, tk, compare } from '../../lib/i18n.ts';
 import { LibraryLinkModal } from './LibraryBrowser.tsx';
 import type { GameMap, GameView, MapBackground, MapDoor, MapLight, MapNote, MapRegion, MapWall, Token, DoorState, WallDoor } from '../../../shared/types.ts';
 

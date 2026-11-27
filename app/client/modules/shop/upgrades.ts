@@ -1,8 +1,8 @@
 // Upgrade previews (client mirror of the server checks in server/modules/40-shop.js — the server stays the authority):
 // weapon accessories (mounts), armor modifications (capacity), vehicle modifications (slots), lifestyle options (monthly cost).
-import { UPGRADE_FILES, quote, accessoryFit, armorCapacity, armorCapacityUsed, armorModFit, vehicleVars, vehicleModFit, vehicleModMaxRating, vehicleSlots, vehicleSlotsUsed, freeMounts, fold, upgradeAvail } from './rules.js';
-import { monthlyCost, qualityFromCatalog, qualityProblem } from '/shared/lifestyle.js';
-import { t, tk } from '../../lib/i18n.js';
+import { UPGRADE_FILES, quote, accessoryFit, armorCapacity, armorCapacityUsed, armorModFit, vehicleVars, vehicleModFit, vehicleModMaxRating, vehicleSlots, vehicleSlotsUsed, freeMounts, fold, upgradeAvail } from './rules.ts';
+import { monthlyCost, qualityFromCatalog, qualityProblem } from '/shared/lifestyle.ts';
+import { t, tk } from '../../lib/i18n.ts';
 import type { Actor, ShopState } from '../../../shared/types.ts';
 import type { OwnedItem, PriceQuote, RulesMessage, ShopCatalog, ShopEntry, ShopItem, UpgradePreview } from './types.ts';
 

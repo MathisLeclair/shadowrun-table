@@ -3,7 +3,7 @@ import { Badge } from '../../lib/ui.tsx';
 import { send, useCatalog } from '../../lib/net.ts';
 import { BookRef, DiceFaces, fmtTime } from './legacy.ts';
 import { setUI } from '../../lib/ui-store.ts';
-import { t, tn, tk, tIfKnown, getLang, skillLabel, compare, logText } from '../../lib/i18n.js';
+import { t, tn, tk, tIfKnown, getLang, skillLabel, compare, logText } from '../../lib/i18n.ts';
 import {
   OS_MAX, osLevel, IC_TYPES, matrixMonitor, identityAsdf, isCyberdeck, ACTION_BY_ID, MAX_MARKS, PROGRAM_BY_ID, programId,
   ASDF_LABELS, ASDF_SHORT, ASDF_SHORT_EN, MODE_LABELS, DEVICE_LINK_KINDS,

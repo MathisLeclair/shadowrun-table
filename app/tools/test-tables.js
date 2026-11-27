@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { startServer, login, client, settle } from './test-client.js';
-import { writeZipFile, listZip, extractZip, safeEntryPath, ZipError } from '../server/lib/zip.js';
+import { writeZipFile, listZip, extractZip, safeEntryPath, ZipError } from '../server/lib/zip.ts';
 
 let passed = 0;
 let failed = 0;

@@ -27,11 +27,11 @@ async function test(name, fn) {
 // ---------------------------------------------------------------------------
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sr-assistant-'));
 process.env.SR_ASSISTANT_DIR = tmp;
-const auth = await import('../server/lib/assistant/auth.js');
-const budget = await import('../server/lib/assistant/budget.js');
-const config = await import('../server/lib/assistant/config.js');
-const context = await import('../server/lib/assistant/context.js');
-const tools = await import('../server/lib/assistant/tools.js');
+const auth = await import('../server/lib/assistant/auth.ts');
+const budget = await import('../server/lib/assistant/budget.ts');
+const config = await import('../server/lib/assistant/config.ts');
+const context = await import('../server/lib/assistant/context.ts');
+const tools = await import('../server/lib/assistant/tools.ts');
 
 console.log('Identity token, pricing, ledger');
 await test('signing key is created 0600 and the minted JWT verifies with the published JWK', () => {

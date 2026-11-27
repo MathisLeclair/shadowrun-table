@@ -1,9 +1,9 @@
 // Wizard step: Qualités (catalog qualities.json, karma costs, positive / negative caps).
 import { useMemo, useState } from 'react';
 import { Select, TextInput, NumberInput, Panel, IconButton, Toggle, Tabs } from '../../lib/ui.tsx';
-import { SKILLS } from '/shared/sr5.js';
-import { t, getLang, attrLabel, skillLabel, itemName } from '../../lib/i18n.js';
-import { MAGIC_QUALITY_NAMES, LIMITS, rowId } from '/shared/chargen.js';
+import { SKILLS } from '/shared/sr5.ts';
+import { t, getLang, attrLabel, skillLabel, itemName } from '../../lib/i18n.ts';
+import { MAGIC_QUALITY_NAMES, LIMITS, rowId } from '/shared/chargen.ts';
 import { Budget, StepIssues } from './common.tsx';
 import Picker from './Picker.tsx';
 import { ItemRef } from '../combat/legacy-components.ts';

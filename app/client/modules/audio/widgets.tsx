@@ -2,10 +2,10 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { IconButton, Select, cx } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
-import { throttle } from './theory.js';
-import { AMBIENT_PRESETS, MUSIC_PRESETS, SFX_PRESETS, trackIcon, presetMeta } from './catalog.js';
-import { useAudioState, setLocalVolume, setMuted, unlock } from './audio-core.js';
-import { t, tIfKnown, compare } from '../../lib/i18n.js';
+import { throttle } from './theory.ts';
+import { AMBIENT_PRESETS, MUSIC_PRESETS, SFX_PRESETS, trackIcon, presetMeta } from './catalog.ts';
+import { useAudioState, setLocalVolume, setMuted, unlock } from './audio-core.ts';
+import { t, tIfKnown, compare } from '../../lib/i18n.ts';
 import type { AudioChannel, AudioScene, AudioState, AudioTrack, GameView, TrackKind } from '../../../shared/types.ts';
 
 /** A channel of game.audio that plays loops. */

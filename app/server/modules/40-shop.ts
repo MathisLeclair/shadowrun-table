@@ -6,22 +6,22 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { nuyen, deepClone } from '../../shared/util.js';
+import { nuyen, deepClone } from '../../shared/util.ts';
 import {
   SHOP_FILES, FILE_LABELS, GRADES, DEVICE_GEAR, UPGRADE_FILES, quote, targetList, parseAvailString, itemName,
   evalFormula, magicLoss, allowedGrades, fold, accessoryFit, accessoryEffects, armorCapacity, armorModFit, vehicleVars,
   vehicleModFit, vehicleModEffects, vehicleModMaxRating, martialKarma, lowersRent, upgradeAvail,
   AVAIL_TEST_MODES, availTestable, needsAvailTest, availBaseHours, availOutcome, durationText, matchAvailTests, clampOverpay, overpaySurcharge,
-} from '../../client/modules/shop/rules.js';
-import { rollDice } from '../../shared/sr5.js';
-import { contactSheet } from '../../shared/contacts.js';
-import { performRoll } from './10-characters.js';
-import { HOME_LAYOUTS, homeLayout, homeMoveCost } from '../../shared/home.js';
-import { monthlyCost, settleLifestyles, primaryLifestyle, lifestyleFromCatalog, qualityFromCatalog, qualityProblem, baseOf } from '../../shared/lifestyle.js';
-import { removeBonus, weaponFromStats, bakeItemBonus } from '../lib/augment.js';
-import { formatFr } from '../lib/i18n.js';
-import { fillActorRefs } from '../lib/bookrefs.js';
-import { thrownGearToWeapons } from './10-characters.js';
+} from '../../client/modules/shop/rules.ts';
+import { rollDice } from '../../shared/sr5.ts';
+import { contactSheet } from '../../shared/contacts.ts';
+import { performRoll } from './10-characters.ts';
+import { HOME_LAYOUTS, homeLayout, homeMoveCost } from '../../shared/home.ts';
+import { monthlyCost, settleLifestyles, primaryLifestyle, lifestyleFromCatalog, qualityFromCatalog, qualityProblem, baseOf } from '../../shared/lifestyle.ts';
+import { removeBonus, weaponFromStats, bakeItemBonus } from '../lib/augment.ts';
+import { formatFr } from '../lib/i18n.ts';
+import { fillActorRefs } from '../lib/bookrefs.ts';
+import { thrownGearToWeapons } from './10-characters.ts';
 import type {
   ActionContext, Actor, ActorId, AvailRollInfo, AvailTest, ContactSheet, Legality, RollRecord, BiName, CatalogFile, CatalogItem, Contact, HistoryEntry, I18nEntry, I18nMessage, I18nParams, I18nParamValue, OrderLine, ServerEvents, ServerModule,
   ShopOrder, ShopSpecial, ShopState, TableState, UserId,

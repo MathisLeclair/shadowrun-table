@@ -2,8 +2,8 @@
 import { useState } from 'react';
 import { Button, IconButton, confirmAction } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
-import { t, tn, fmtDate } from '../../lib/i18n.js';
-import { cx, canComment, storedName, isGM } from './common.js';
+import { t, tn, fmtDate } from '../../lib/i18n.ts';
+import { cx, canComment, storedName, isGM } from './common.ts';
 import type { GameView, NoteComment, NotePage } from '../../../shared/types.ts';
 
 export function NoteComments({ game, page }: { game: GameView; page: NotePage }) {

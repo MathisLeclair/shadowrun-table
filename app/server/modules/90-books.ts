@@ -10,11 +10,11 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 // @ts-ignore -- no @types/express in the app yet (the server-core conversion adds it)
 import express from 'express';
-import { errorBody } from '../lib/i18n.js';
-import { BOOKS_DIR, signLink, verifyLink, sessionTag, sessionAlive, LINK_TTL } from '../lib/books/access.js';
-import { readLibrary, loadIndex, allowedFor, cleanCode, pdfFile } from '../lib/books/library.js';
-import { parseQuery, searchPages, queryHeadline } from '../lib/books/search.js';
-import { pdfToPrinted, printedToPdf } from '../lib/books/offsets.js';
+import { errorBody } from '../lib/i18n.ts';
+import { BOOKS_DIR, signLink, verifyLink, sessionTag, sessionAlive, LINK_TTL } from '../lib/books/access.ts';
+import { readLibrary, loadIndex, allowedFor, cleanCode, pdfFile } from '../lib/books/library.ts';
+import { parseQuery, searchPages, queryHeadline } from '../lib/books/search.ts';
+import { pdfToPrinted, printedToPdf } from '../lib/books/offsets.ts';
 import type { BookOffset, ServerModule, TableMeta, TableState } from '../../shared/types.ts';
 
 // No Express types in the app yet (@types/express arrives with the server-core conversion): loose local aliases.

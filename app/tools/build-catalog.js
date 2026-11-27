@@ -11,9 +11,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { XMLParser } from 'fast-xml-parser';
-import { evalFormula } from '../client/modules/shop/rules.js';
+import { evalFormula } from '../client/modules/shop/rules.ts';
 import { entryEffects, conditionKey } from './lib/bonus-effects.js';
-import { CONDITIONS, conditionToggle } from '../shared/modifiers.js';
+import { CONDITIONS, conditionToggle } from '../shared/modifiers.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CHUMMER = path.resolve(process.argv[2] || path.join(ROOT, '..', 'Chummer5.226.0', 'data'));

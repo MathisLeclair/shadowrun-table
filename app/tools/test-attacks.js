@@ -2,10 +2,10 @@
 // grenade scatter / blast, player permissions and view filter. Run: node tools/test-attacks.js
 import assert from 'node:assert/strict';
 import { startServer, login, client, settle } from './test-client.js';
-import { launcherRounds } from '../client/modules/sheet/inventory.js';
-import { combineEnv, environmentFor, toxinOutcome, TOXIN_BY_ID, stillActive, untilFor, areaEffectOf, pruneExpired } from '../shared/combat.js';
-import { collectModifiers, poolModifiers, rollContext, derivedWithModifiers } from '../shared/modifiers.js';
-import { rollScatter, blastOf, blastDvAt, blastReach, rangeFor, defenseLines, actionsForWeapon, unlockedActions, finalDamageType } from '../shared/combat.js';
+import { launcherRounds } from '../client/modules/sheet/inventory.ts';
+import { combineEnv, environmentFor, toxinOutcome, TOXIN_BY_ID, stillActive, untilFor, areaEffectOf, pruneExpired } from '../shared/combat.ts';
+import { collectModifiers, poolModifiers, rollContext, derivedWithModifiers } from '../shared/modifiers.ts';
+import { rollScatter, blastOf, blastDvAt, blastReach, rangeFor, defenseLines, actionsForWeapon, unlockedActions, finalDamageType } from '../shared/combat.ts';
 
 const srv = await startServer({ port: Number(process.env.SR_TEST_PORT) || 3291 });
 let failures = 0;

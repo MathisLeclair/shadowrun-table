@@ -11,12 +11,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { syncPowerBonus, itemBonusSpec, bakeItemBonus, removeBonus } from '../lib/augment.js';
+import { syncPowerBonus, itemBonusSpec, bakeItemBonus, removeBonus } from '../lib/augment.ts';
 import {
   DEFAULT_SETTINGS, quote, applyAdvance, normalizeRequest, catalogName, qualityInfo, powerInfo, spellInfo, formatDaysI18n,
-} from '../../shared/advancement.js';
-import { formatFr } from '../lib/i18n.js';
-import { fillActorRefs } from '../lib/bookrefs.js';
+} from '../../shared/advancement.ts';
+import { formatFr } from '../lib/i18n.ts';
+import { fillActorRefs } from '../lib/bookrefs.ts';
 import type {
   ActionContext, Actor, ActorId, AdeptPower, AdvancementRequest, CatalogItem, HistoryEntry, I18nEntry, I18nParams, I18nParamValue, Quality, ServerModule,
   TableState, TrainingJob, TrainingRequest, TrainingSettings, TrainingState, UserId,

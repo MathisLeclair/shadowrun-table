@@ -2,11 +2,11 @@
 // one download with a progress bar), then scrolls / zooms / highlights inside the same document for every page jump.
 import { useEffect, useRef } from 'react';
 import { Button } from '../../lib/ui.tsx';
-import { t, fmtNumber } from '../../lib/i18n.js';
+import { t, fmtNumber } from '../../lib/i18n.ts';
 import { ensureDoc, useDocState, loadPdfjs, type DocState } from './pdfdoc.ts';
 import { PdfView, type Highlight } from './pdfview.ts';
-import { queryTerms } from './readerlib.js';
-import { cacheKey } from './cachepolicy.js';
+import { queryTerms } from './readerlib.ts';
+import { cacheKey } from './cachepolicy.ts';
 import { getViewer, reportPdfPage } from './store.ts';
 import type { LibBook, ViewerState, Zoom } from './types.ts';
 

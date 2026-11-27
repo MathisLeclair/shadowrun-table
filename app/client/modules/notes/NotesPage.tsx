@@ -4,9 +4,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, IconButton, Badge, Empty, SearchBox, Toggle, confirmAction } from '../../lib/ui.tsx';
 import { send, useServerEvent, type GameProps } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
-import { t, tn, tIfKnown, fmtDate, compare } from '../../lib/i18n.js';
+import { t, tn, tIfKnown, fmtDate, compare } from '../../lib/i18n.ts';
 import { NoteEditor } from './NoteEditor.tsx';
-import { cx, isGM, userLabel, storedName, foreignLock, sortPages, excerpt, missingSelection, TRASH_MS } from './common.js';
+import { cx, isGM, userLabel, storedName, foreignLock, sortPages, excerpt, missingSelection, TRASH_MS } from './common.ts';
 import type { GameView, NotePage, NotesView } from '../../../shared/types.ts';
 import './notes.css';
 

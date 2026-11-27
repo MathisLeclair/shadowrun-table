@@ -3,9 +3,9 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEve
 import { Button, IconButton, Badge, Toggle, Modal, TextInput, confirmAction } from '../../lib/ui.tsx';
 import { send, type ServerError } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
-import { t, fmtDate } from '../../lib/i18n.js';
-import { renderNote as renderNoteJs, toggleCheckboxAt, applyFormat, decodeRef } from './notes-md.js';
-import { cx, canWrite, canComment, userLabel, storedName, mentionNames, foreignLock, findByTitle, copyText, errorGate, MAX_BODY, isGM } from './common.js';
+import { t, fmtDate } from '../../lib/i18n.ts';
+import { renderNote as renderNoteJs, toggleCheckboxAt, applyFormat, decodeRef } from './notes-md.ts';
+import { cx, canWrite, canComment, userLabel, storedName, mentionNames, foreignLock, findByTitle, copyText, errorGate, MAX_BODY, isGM } from './common.ts';
 import { NoteComments } from './NoteComments.tsx';
 import type { GameView, NotePage } from '../../../shared/types.ts';
 

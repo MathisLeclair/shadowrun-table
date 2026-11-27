@@ -10,8 +10,8 @@
 // in the canonical layout (one wall / light / region per line).
 import fs from 'node:fs';
 import path from 'node:path';
-import { buildGrid, canStep, findPath, pointSegmentDistance } from '../../shared/vision.js';
-import { LIB_THEMES, LIB_LIGHTINGS, LIB_SOURCES, wallGeoKey } from '../../shared/maplib.js';
+import { buildGrid, canStep, findPath, pointSegmentDistance } from '../../shared/vision.ts';
+import { LIB_THEMES, LIB_LIGHTINGS, LIB_SOURCES, wallGeoKey } from '../../shared/maplib.ts';
 import { args, isMain, findImage, jpegSize, readJpeg, MAPLIB_SRC } from './lib.js';
 
 const JOIN = 0.01; // endpoints closer than this are joined

@@ -2,11 +2,11 @@
 // versions, images) lives in server/lib/maplib.js; this module makes table copies (instances) of library maps,
 // re-syncs them, publishes a table's corrections back, serves the library to GMs and the signed images to users.
 // Instances are ordinary table maps (20-maps.js) carrying map.library = { slug, version, linkedAt, syncedAt?, migrated? }.
-import { uid } from '../../shared/util.js';
-import { decodeBits, encodeBits, remapBits } from '../../shared/vision.js';
-import { libImageUrl, libGeometry, instanceContent as instanceContentJs, libraryDiff, versionFromMap, ENTRY_REGION_PREFIX } from '../../shared/maplib.js';
-import * as L from '../lib/maplib.js';
-import { errorBody } from '../lib/i18n.js';
+import { uid } from '../../shared/util.ts';
+import { decodeBits, encodeBits, remapBits } from '../../shared/vision.ts';
+import { libImageUrl, libGeometry, instanceContent as instanceContentJs, libraryDiff, versionFromMap, ENTRY_REGION_PREFIX } from '../../shared/maplib.ts';
+import * as L from '../lib/maplib.ts';
+import { errorBody } from '../lib/i18n.ts';
 import { normalizeMap, refreshFog } from './20-maps.ts';
 import type { ActionContext, GameMap, GameView, I18nParams, InitOptions, MapId, ServerModule, TableState } from '../../shared/types.ts';
 

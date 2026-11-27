@@ -1,8 +1,8 @@
 // SR5-style stat block for a bestiary template (or any actor-shaped object).
 import type { CSSProperties, ReactNode } from 'react';
 import { Badge, Stat, Markdown } from '../../lib/ui.tsx';
-import { t, attrShort, skillLabel, metatypeLabel, fmtNumber, getLang } from '../../lib/i18n.js';
-import { attr, SKILL_BY_ID } from '/shared/sr5.js';
+import { t, attrShort, skillLabel, metatypeLabel, fmtNumber, getLang } from '../../lib/i18n.ts';
+import { attr, SKILL_BY_ID } from '/shared/sr5.ts';
 import { ItemRef, SkillRef } from './legacy-components.ts';
 import { safeDerive, poolFor, damageText, initials, avatarStyle, signed, npcKindLabel, dispoLabel, DISPO_BADGE, initModeLabel, type Derived } from './combat-common.tsx';
 import type { ActorLike } from './types.ts';

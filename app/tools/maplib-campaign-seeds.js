@@ -20,9 +20,9 @@ process.env.SR_RUNTIME_DIR = TMP;
 process.env.SR_MAPLIB_DIR = path.join(TMP, 'maplib');
 process.env.SR_MAPLIB_KEY_FILE = path.join(TMP, 'maplib-sign.key');
 
-const L = await import('../server/lib/maplib.js');
-const { libImageUrl, libGeometry, instanceContent } = await import('../shared/maplib.js');
-const { normalizeMap } = await import('../server/modules/20-maps.js');
+const L = await import('../server/lib/maplib.ts');
+const { libImageUrl, libGeometry, instanceContent } = await import('../shared/maplib.ts');
+const { normalizeMap } = await import('../server/modules/20-maps.ts');
 
 const LINKED_AT = Date.UTC(2026, 10, 26);
 const A1 = 'Acte 1', A2 = 'Acte 2', A3 = 'Acte 3';

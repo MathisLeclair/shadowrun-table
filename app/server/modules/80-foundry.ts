@@ -5,14 +5,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { currentTable, currentTableId, currentDocsDir, TMP_DIR } from '../store.js';
-import { readWorldSync, detectWorldPath, listWorlds, worldFingerprint, checkWorld, COLLECTIONS, dataRootOf } from '../lib/foundry/world.js';
-import { buildBundle, scanBundle, applyImport } from '../lib/foundry/importer.js';
-import { createAssets, formatBytes } from '../lib/foundry/assets.js';
-import { uploadedWorlds, isInsideUploads, installWorldZip, installDataZip, uploadsSize, removeUploads } from '../lib/foundry/upload.js';
-import { ZipError, receiveToFile } from '../lib/zip.js';
-import { errorBody } from '../lib/i18n.js';
-import { i18nError, errorParam, plural, bytesParam } from '../lib/foundry/messages.js';
+import { currentTable, currentTableId, currentDocsDir, TMP_DIR } from '../store.ts';
+import { readWorldSync, detectWorldPath, listWorlds, worldFingerprint, checkWorld, COLLECTIONS, dataRootOf } from '../lib/foundry/world.ts';
+import { buildBundle, scanBundle, applyImport } from '../lib/foundry/importer.ts';
+import { createAssets, formatBytes } from '../lib/foundry/assets.ts';
+import { uploadedWorlds, isInsideUploads, installWorldZip, installDataZip, uploadsSize, removeUploads } from '../lib/foundry/upload.ts';
+import { ZipError, receiveToFile } from '../lib/zip.ts';
+import { errorBody } from '../lib/i18n.ts';
+import { i18nError, errorParam, plural, bytesParam } from '../lib/foundry/messages.ts';
 import type { ActionContext, FoundryState, GameView, I18nParams, RouteHelpers, ServerModule, TableState, Template } from '../../shared/types.ts';
 
 // No Express types in the app yet (@types/express arrives with the server-core conversion): loose local aliases.
@@ -44,7 +44,7 @@ const tk = (s: string): string => s; // marks French keys returned as values (to
 /** HTTP error body for an error that may carry an i18n key (Foundry/zip errors). */
 const errBody = (err: FoundryError | undefined, fallback: string) => (err?.i18nKey ? errorBody(err.i18nKey, err.i18nParams) : err?.message ? { error: err.message } : errorBody(fallback));
 
-const combat = await import('./30-combat.js').catch(() => null);
+const combat = await import('./30-combat.ts').catch(() => null);
 const sanitizeTemplate = typeof combat?.sanitizeTemplate === 'function' ? (t: Template) => combat.sanitizeTemplate(t, { id: t.id }) : null;
 
 // Journals go to the table's docs folder (…/foundry), unless SR_FOUNDRY_DOCS_DIR overrides it (tests, offline tool).

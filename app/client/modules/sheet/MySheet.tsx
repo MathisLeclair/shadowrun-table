@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Tabs, Empty } from '../../lib/ui.tsx';
 import SheetView from './SheetView.tsx';
-import { t } from '../../lib/i18n.js';
+import { t } from '../../lib/i18n.ts';
 import { Avatar, tRich } from './common.tsx';
 
 import type { GameProps } from '../../lib/net.ts';

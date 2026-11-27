@@ -2,14 +2,14 @@
 // links to the most used rules. Every result opens the global viewer drawer (BookViewer) at the right page.
 import { useEffect, useState } from 'react';
 import { Panel, Empty, Badge, Button, confirmAction } from '../../lib/ui.tsx';
-import { t, tn } from '../../lib/i18n.js';
+import { t, tn } from '../../lib/i18n.ts';
 import type { GameProps } from '../../lib/net.ts';
 import { useBooks, booksError, findBook, openBookPdf, openBook, searchBooks } from './store.ts';
 import { bookName } from './BookRef.tsx';
 import { HitList } from './BookViewer.tsx';
-import { QUICK_LINKS } from './quicklinks.js';
+import { QUICK_LINKS } from './quicklinks.ts';
 import { useBookCache, clearBookCache } from './bookcache.ts';
-import { cachedByCode } from './cachepolicy.js';
+import { cachedByCode } from './cachepolicy.ts';
 import { fmtMB } from './PdfReader.tsx';
 import { toast } from '../../lib/ui-store.ts';
 import type { CacheSnapshot, LibBook, SearchResult } from './types.ts';

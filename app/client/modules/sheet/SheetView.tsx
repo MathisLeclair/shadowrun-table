@@ -4,9 +4,9 @@ import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'r
 import { Button, Tabs, Toggle, Badge, TextInput, NumberInput, Select, Empty, confirmAction } from '../../lib/ui.tsx';
 import { send, upload, api } from '../../lib/net.ts';
 import { setUI, toast } from '../../lib/ui-store.ts';
-import { derive, METATYPES } from '/shared/sr5.js';
-import { derivedWithModifiers } from '/shared/modifiers.js';
-import { t, fmtNuyen, metatypeLabel } from '../../lib/i18n.js';
+import { derive, METATYPES } from '/shared/sr5.ts';
+import { derivedWithModifiers } from '/shared/modifiers.ts';
+import { t, fmtNuyen, metatypeLabel } from '../../lib/i18n.ts';
 import { isGM, ownsActor, isRestricted, ownerOf, actorStatus, statusColor, statusLabel, Avatar, fmtNum, cssVars } from './common.tsx';
 import { RollDialog } from './RollDialog.tsx';
 import { SummaryTab } from './tab-summary.tsx';
@@ -14,8 +14,8 @@ import { SkillsTab } from './tab-skills.tsx';
 import { CombatTab } from './tab-combat.tsx';
 import { MagicTab, MatrixTab, GearTab, ContactsTab, QualitiesTab, NotesTab, HistoryTab, NpcTab } from './tab-misc.tsx';
 import { InventoryTab } from './tab-inventory.tsx';
-import { slugify } from './sheet-data.js';
-import { ChummerSheetBar } from '../chummer/ChummerActions.js';
+import { slugify } from './sheet-data.ts';
+import { ChummerSheetBar } from '../chummer/ChummerActions.tsx';
 import { useDerivedModifiers, useEffectsLookup } from './modifiers-ui.tsx';
 
 import type { GameView } from '../../lib/net.ts';

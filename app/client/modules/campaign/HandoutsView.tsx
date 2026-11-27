@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Button, Badge, TextInput, Modal, Empty, SearchBox, confirmAction } from '../../lib/ui.tsx';
 import { send, upload } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
-import { t, tn, compare } from '../../lib/i18n.js';
+import { t, tn, compare } from '../../lib/i18n.ts';
 import { campaignOf, MdEditor, HandoutCard, cx, fmtDate, usePersistent, revealHandout } from './common.tsx';
 import type { GameView, Handout, ViewUser } from '../../../shared/types.ts';
 import type { Focus } from './types.ts';

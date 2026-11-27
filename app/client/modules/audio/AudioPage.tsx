@@ -3,9 +3,9 @@ import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 're
 import { Button, IconButton, Modal, Tabs, Field, Select, Toggle, Badge, Empty, SearchBox, confirmAction } from '../../lib/ui.tsx';
 import { send, upload, type GameProps } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
-import { t, tk, compare } from '../../lib/i18n.js';
-import { presetMeta, trackIcon, KIND_LABELS } from './catalog.js';
-import { togglePreview, stopPreview, useAudioState } from './audio-core.js';
+import { t, tk, compare } from '../../lib/i18n.ts';
+import { presetMeta, trackIcon, KIND_LABELS } from './catalog.ts';
+import { togglePreview, stopPreview, useAudioState } from './audio-core.ts';
 import {
   ChannelControl, UnlockNotice, LocalVolume, VolumeSlider, tracksOf, findTrack, sceneIsActive, sceneValueLabel,
   setChannelTrack, broadcastSfx, useSfxVolume, sendVolume, lsGet, lsSet, trackName, presetDesc, tagLabel, type Channel,

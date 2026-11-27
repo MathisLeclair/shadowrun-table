@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Button, Field, Toggle, Badge, Empty, Modal, promptText } from '../../lib/ui.tsx';
 import { uploadWithProgress } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
-import { t, tn, tIfKnown, fmtDate } from '../../lib/i18n.js';
+import { t, tn, tIfKnown, fmtDate } from '../../lib/i18n.ts';
 import { fmtBytes, Progress, type UploadProgress } from './common.tsx';
 import type { AdminApi, AdminPanelProps } from './types.ts';
 import type { OffsetRange } from '../books/types.ts';

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button, Badge, Empty, Panel, TextInput, confirmAction } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
 import { toast, openSheet } from '../../lib/ui-store.ts';
-import { t, tk } from '../../lib/i18n.js';
+import { t, tk } from '../../lib/i18n.ts';
 import { nuyen, gradeLabel, timeAgo, STATUS_LABEL, STATUS_COLOR, FLAG_LABEL, FLAG_COLOR } from './common.tsx';
 import { durText } from './avail.tsx';
 import type { Actor, GameView, OrderLine, ShopOrder } from '../../../shared/types.ts';

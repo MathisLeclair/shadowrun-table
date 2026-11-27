@@ -16,11 +16,11 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { XMLParser } from 'fast-xml-parser';
-import { cleanCode, knownBooks, readLibrary, pdfFile, loadIndex, writeLibrary } from '../server/lib/books/library.js';
-import { QUICK_LINKS } from '../client/modules/books/quicklinks.js';
-import { indexBook } from '../server/lib/books/indexer.js';
-import { printedToPdf } from '../server/lib/books/offsets.js';
-import { fold } from '../server/lib/books/search.js';
+import { cleanCode, knownBooks, readLibrary, pdfFile, loadIndex, writeLibrary } from '../server/lib/books/library.ts';
+import { QUICK_LINKS } from '../client/modules/books/quicklinks.ts';
+import { indexBook } from '../server/lib/books/indexer.ts';
+import { printedToPdf } from '../server/lib/books/offsets.ts';
+import { fold } from '../server/lib/books/search.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);

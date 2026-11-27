@@ -1,11 +1,11 @@
 // Foundry shadowrun5e actors → app Actor / bestiary Template / vehicle items (see ARCHITECTURE.md "Actors").
 // Pure functions: assets are not copied here, ctx.asset(src, kind) only returns the future URL and records the copy.
-import { SKILL_BY_ID, METATYPES } from '../../../shared/sr5.js';
+import { SKILL_BY_ID, METATYPES } from '../../../shared/sr5.ts';
 import { findCatalog, norm } from './catalog.ts';
 import { htmlToMarkdown } from './html2md.ts';
-import { monthlyCost } from '../../../shared/lifestyle.js';
+import { monthlyCost } from '../../../shared/lifestyle.ts';
 import { chummerEval } from '../chummer/parse.ts';
-import { guessContainerKind } from '../../../client/modules/sheet/inventory.js';
+import { guessContainerKind } from '../../../client/modules/sheet/inventory.ts';
 import type { FoundryDoc, FoundryData } from './world.ts';
 import type { AssetFn } from './assets.ts';
 import type { HtmlLinks } from './html2md.ts';

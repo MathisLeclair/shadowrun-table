@@ -7,7 +7,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { io } from 'socket.io-client';
 import { startServer, login, client, settle } from './test-client.js';
-import { t as srvT } from '../server/lib/i18n.js';
+import { t as srvT } from '../server/lib/i18n.ts';
 
 const APP = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.SR_TEST_PORT) || 3971;

@@ -4,9 +4,9 @@ import fs from 'node:fs';
 import notesModule, {
   ensureNotes, housekeep, canRead, canWrite, canComment, totalSize, ownerSize,
   MAX_BODY, TRASH_MS, MAX_OWNER_TOTAL, MAX_TOTAL, MAX_USER_COMMENTS,
-} from '../server/modules/75-notes.js';
-import { renderNote, toggleCheckbox, toggleCheckboxAt, countCheckboxes, applyFormat, wikiTitles, encodeRef, decodeRef } from '../client/modules/notes/notes-md.js';
-import { missingSelection, errorGate, storedName } from '../client/modules/notes/common.js';
+} from '../server/modules/75-notes.ts';
+import { renderNote, toggleCheckbox, toggleCheckboxAt, countCheckboxes, applyFormat, wikiTitles, encodeRef, decodeRef } from '../client/modules/notes/notes-md.ts';
+import { missingSelection, errorGate, storedName } from '../client/modules/notes/common.ts';
 import { startServer, login, client, settle } from './test-client.js';
 
 let failures = 0;

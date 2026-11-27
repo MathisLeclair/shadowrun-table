@@ -1,6 +1,6 @@
 // Types local to the sheet module (gaps of shared/types.ts are listed in the migration report).
-import type { derive, SKILLS } from '/shared/sr5.js';
-import type { derivedWithModifiers } from '/shared/modifiers.js';
+import type { derive, SKILLS } from '/shared/sr5.ts';
+import type { derivedWithModifiers } from '/shared/modifiers.ts';
 import type { Actor, GameView, KnowledgeSkill, Modifier, RollRecord, Skill } from '../../../shared/types.ts';
 
 /** derive(actor) of shared/sr5.js. */

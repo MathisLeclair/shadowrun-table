@@ -3,7 +3,7 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { Button, Markdown, Empty, Badge } from '../../lib/ui.tsx';
 import { useServerEvent, type GameProps } from '../../lib/net.ts';
 import { toast, openSheet, setUI } from '../../lib/ui-store.ts';
-import { t, tn, metatypeLabel } from '../../lib/i18n.js';
+import { t, tn, metatypeLabel } from '../../lib/i18n.ts';
 import { HandoutCard, cx, usePersistent, handoutReadKey } from './common.tsx';
 import type { Actor, PlayerHandout } from '../../../shared/types.ts';
 

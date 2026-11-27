@@ -1,13 +1,13 @@
 // Wizard step: Magie / Résonance (type, tradition, free skills, spells, adept powers, complex forms).
 import { Field, Select, TextInput, NumberInput, Badge, Panel, IconButton } from '../../lib/ui.tsx';
-import { SKILLS } from '/shared/sr5.js';
-import { t, tk, getLang, skillLabel, skillGroupLabel, itemName } from '../../lib/i18n.js';
-import { powerInfo, SPELL_CATEGORIES } from '/shared/advancement.js';
-import { MAGIC_TYPES, ASPECTS, TRADITIONS, COMPLEX_FORMS, magicOptions, magicOptionParts, aspectGroup, rowId } from '/shared/chargen.js';
+import { SKILLS } from '/shared/sr5.ts';
+import { t, tk, getLang, skillLabel, skillGroupLabel, itemName } from '../../lib/i18n.ts';
+import { powerInfo, SPELL_CATEGORIES } from '/shared/advancement.ts';
+import { MAGIC_TYPES, ASPECTS, TRADITIONS, COMPLEX_FORMS, magicOptions, magicOptionParts, aspectGroup, rowId } from '/shared/chargen.ts';
 import { Budget, StepIssues, i18n } from './common.tsx';
 import Picker from './Picker.tsx';
 import { ItemRef, BookRef } from '../combat/legacy-components.ts';
-import { complexFormRef } from '/shared/bookrefs.js';
+import { complexFormRef } from '/shared/bookrefs.ts';
 import type { DraftData, MagicType } from '../../../shared/types.ts';
 import type { ChargenResult, DraftUpdate, LooseCatalogItem, RulesCtx, StepProps } from './types.ts';
 

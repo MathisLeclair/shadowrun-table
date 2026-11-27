@@ -15,7 +15,7 @@ import { ROOT, DATA_DIR, GLOBAL_ASSETS_DIR, readJson, emptyState, tableScope, cu
 import { Table, bootRegistry, listMetas, getMeta, updateMeta, setupAdminPassword, ensureDemoTable } from './lib/tables.ts';
 import type { StoredMeta, TableApi, SocketEntry } from './lib/tables.ts';
 import { registerAdminRoutes, createRateLimiter } from './lib/admin.ts';
-import { uid, deepClone } from '../shared/util.js';
+import { uid, deepClone } from '../shared/util.ts';
 import { ActionError } from './errors.ts';
 import { errorBody, normalizeLogEntry, dictionaryFiles, isLang, formatFr, cleanParams, t as translate } from './lib/i18n.ts';
 import {
@@ -761,8 +761,6 @@ app.post('/api/admin/reset', requireGM, (req, res) => {
 // Static files
 // ---------------------------------------------------------------------------
 const nm = path.join(ROOT, 'node_modules');
-app.use('/vendor/preact', express.static(path.join(nm, 'preact')));
-app.use('/vendor/htm', express.static(path.join(nm, 'htm')));
 app.use('/shared', express.static(path.join(ROOT, 'shared')));
 // Translation dictionaries: client/i18n/<lang>/*.json are served by the client static handler below; the
 // index listing them is generated from the folder so adding a file needs no code change.

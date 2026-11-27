@@ -6,11 +6,11 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { XMLValidator, XMLParser } from 'fast-xml-parser';
 import { startServer, login, client, settle } from './test-client.js';
-import { parseXml, serializeXml, el } from '../server/lib/chummer/xml.js';
-import { parseChum5 } from '../server/lib/chummer/parse.js';
-import { exportChum5 } from '../server/lib/chummer/export.js';
-import { mergeActor, diffActors } from '../server/lib/chummer/merge.js';
-import { t as tr, dictionary } from '../server/lib/i18n.js';
+import { parseXml, serializeXml, el } from '../server/lib/chummer/xml.ts';
+import { parseChum5 } from '../server/lib/chummer/parse.ts';
+import { exportChum5 } from '../server/lib/chummer/export.ts';
+import { mergeActor, diffActors } from '../server/lib/chummer/merge.ts';
+import { t as tr, dictionary } from '../server/lib/i18n.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const FIXTURE = path.join(ROOT, 'tools', 'fixtures', 'chummer-test.chum5');
@@ -535,7 +535,7 @@ else {
     const xs = jane.lifestyles[0].qualities.find((q) => q.name === 'Extra Secure');
     assert.equal(xs.baseOnly, true);
     assert.ok(!jane.lifestyles[0].qualities.find((q) => q.name === 'DocWagon Contract, Gold').baseOnly);
-    const { armorTotal, armorValue } = await import('../shared/sr5.js');
+    const { armorTotal, armorValue } = await import('../shared/sr5.ts');
     const actioneer = jane.armor.find((a) => /Actioneer/.test(a.name) && (a.mods || []).some((m) => m.name === 'Gel Packs'));
     if (actioneer) assert.equal(armorValue(actioneer), Number(actioneer.rating) + 2, 'Actioneer + Gel Packs');
     const heritage = jane.armor.find((a) => (a.mods || []).some((m) => m.name === 'Gel Packs'));

@@ -2,10 +2,10 @@
 import { useEffect, useMemo, useState, type MouseEvent } from 'react';
 import { Button, IconButton, Badge, Empty, SearchBox, Select, Toggle, Modal } from '../../lib/ui.tsx';
 import { toast } from '../../lib/ui-store.ts';
-import { t, tn, tk, compare, skillLabel, getLang } from '../../lib/i18n.js';
-import { STORE_SECTIONS, UPGRADE_FILES, fold } from './rules.js';
+import { t, tn, tk, compare, skillLabel, getLang } from '../../lib/i18n.ts';
+import { STORE_SECTIONS, UPGRADE_FILES, fold } from './rules.ts';
 import { specialEntry, priceEntry, buyStatus, addToCart, nuyen, AvailBadge, useMedia, useMartialCatalog } from './common.tsx';
-import { skillIndex, entrySkills, actorSkillRatings, skillOptions, matchSkill, NO_SKILL } from './skills.js';
+import { skillIndex, entrySkills, actorSkillRatings, skillOptions, matchSkill, NO_SKILL } from './skills.ts';
 import ItemDetail from './ItemDetail.tsx';
 import MartialArts from './MartialArts.tsx';
 import { ItemRef } from './bookrefs.ts';

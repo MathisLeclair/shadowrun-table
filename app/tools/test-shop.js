@@ -5,15 +5,15 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { login, client, settle } from './test-client.js';
-import { accessoryFit, weaponMounts, vehicleModFit, vehicleVars, vehicleSlots, upgradeAvail, upgradeFields, martialKarma, quote, lowersRent, availBaseHours, availOutcome, durationText, matchAvailTests, needsAvailTest } from '../client/modules/shop/rules.js';
-import { armorTotal } from '../shared/sr5.js';
+import { accessoryFit, weaponMounts, vehicleModFit, vehicleVars, vehicleSlots, upgradeAvail, upgradeFields, martialKarma, quote, lowersRent, availBaseHours, availOutcome, durationText, matchAvailTests, needsAvailTest } from '../client/modules/shop/rules.ts';
+import { armorTotal } from '../shared/sr5.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.SHOP_TEST_PORT) || 3250;
 
 /** i18n check: entries render to their stored French text, and every key has an English entry. Returns English texts. */
 async function renderI18n(entries, label) {
-  const I = await import('../client/lib/i18n.js');
+  const I = await import('../client/lib/i18n.ts');
   const dir = new URL('../client/i18n/en/', import.meta.url);
   const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json')).sort((a, b) => (a === 'glossary.json' ? -1 : b === 'glossary.json' ? 1 : a.localeCompare(b)));
   const dict = {};
@@ -162,7 +162,7 @@ const state = {
 // « Compétence » storefront filter (pure helpers, client/modules/shop/skills.js).
 {
   console.log('• skill filter (pure)');
-  const S = await import('../client/modules/shop/skills.js');
+  const S = await import('../client/modules/shop/skills.ts');
   const files = ['weapons', 'gear', 'vehicles', 'programs', 'accessories', 'cyberware'];
   const entries = files.flatMap((file) => cat(file).map((item) => ({ ref: item.id, file, item })));
   const catalog = { entries };

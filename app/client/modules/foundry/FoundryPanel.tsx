@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState, type Dispatch, type ReactNode, type SetSt
 import { Button, Panel, Field, Badge, Toggle, confirmAction } from '../../lib/ui.tsx';
 import { send, useServerEvent, type GameProps } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
-import { t, tn, tk, tIfKnown, fmtDate, fmtNumber, fmtNuyen } from '../../lib/i18n.js';
+import { t, tn, tk, tIfKnown, fmtDate, fmtNumber, fmtNuyen } from '../../lib/i18n.ts';
 import type { AudioJob, I18nText, ImportResult, ScanResult, ScanStatus, Selection, SetKey, WorldsReply } from './types.ts';
 import './foundry.css';
 

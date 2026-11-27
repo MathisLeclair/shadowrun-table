@@ -1,7 +1,7 @@
 // Shared helpers for the combat dock and the bestiary (pure functions + tiny components).
 import type { CSSProperties } from 'react';
-import { t, tk } from '../../lib/i18n.js';
-import { derive, attr, skillPool, SKILL_BY_ID } from '/shared/sr5.js';
+import { t, tk } from '../../lib/i18n.ts';
+import { derive, attr, skillPool, SKILL_BY_ID } from '/shared/sr5.ts';
 import type { CombatEntry, Disposition, InitMode, NpcKind, Weapon } from '../../../shared/types.ts';
 import type { ActorLike } from './types.ts';
 

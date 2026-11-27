@@ -1,8 +1,8 @@
 // Wizard steps: Compétences (active skills, groups, specializations) and Contacts & connaissances.
 import { Button, Select, TextInput, NumberInput, Badge, Panel, IconButton, Field } from '../../lib/ui.tsx';
-import { SKILLS, SKILL_BY_ID, SKILL_GROUPS, SKILL_CATEGORIES } from '/shared/sr5.js';
-import { t, attrShort, skillLabel, skillGroupLabel, skillCategoryLabel } from '../../lib/i18n.js';
-import { KNOWLEDGE_TYPES, skillAllowed, rowId, LIMITS } from '/shared/chargen.js';
+import { SKILLS, SKILL_BY_ID, SKILL_GROUPS, SKILL_CATEGORIES } from '/shared/sr5.ts';
+import { t, attrShort, skillLabel, skillGroupLabel, skillCategoryLabel } from '../../lib/i18n.ts';
+import { KNOWLEDGE_TYPES, skillAllowed, rowId, LIMITS } from '/shared/chargen.ts';
 import { Budget, PointsKarma, StepIssues } from './common.tsx';
 import { SkillRef } from '../combat/legacy-components.ts';
 import type { DraftData, KnowledgeType } from '../../../shared/types.ts';

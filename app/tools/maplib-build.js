@@ -9,7 +9,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { thumbSync, THUMB_MAX } from '../server/lib/maplib-thumb.js';
+import { thumbSync, THUMB_MAX } from '../server/lib/maplib-thumb.ts';
 import { findImage, sourceDirs, args } from './maptrace/lib.js';
 
 const APP = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');

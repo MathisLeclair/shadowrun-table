@@ -1,11 +1,9 @@
 // Shared UI kit. Every module builds its screens from these so the app looks consistent.
 // Usage: import { Button, Panel, ... } from '../../lib/ui.tsx';
 import { useEffect, useRef, useState, type ReactNode, type ButtonHTMLAttributes, type HTMLAttributes, type CSSProperties } from 'react';
-import { renderMarkdown } from './markdown.js';
-import { t, LANGS } from './i18n.js';
+import { renderMarkdown } from './markdown.ts';
+import { t, LANGS } from './i18n.ts';
 
-// TRANSITIONAL: unconverted modules still build their screens with html`` templates (see legacy-html.ts).
-export { html } from './legacy-html.ts';
 
 /** Joins class names, skipping falsy values. */
 export const cx = (...c: unknown[]): string => c.filter(Boolean).join(' ');
@@ -346,18 +344,4 @@ export function confirmAction(message: string): Promise<boolean> {
 
 export function promptText(message: string, initial = ''): Promise<string | null> {
   return Promise.resolve(window.prompt(message, initial));
-}
-
-const loadedCss = new Set<string>();
-/**
- * TRANSITIONAL: load a module stylesheet at run time. Converted modules import their CSS instead
- * (`import './map.css';`), which Vite bundles.
- */
-export function loadCss(href: string) {
-  if (loadedCss.has(href)) return;
-  loadedCss.add(href);
-  const l = document.createElement('link');
-  l.rel = 'stylesheet';
-  l.href = href;
-  document.head.appendChild(l);
 }

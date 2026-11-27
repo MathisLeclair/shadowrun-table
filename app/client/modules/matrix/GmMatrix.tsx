@@ -2,8 +2,8 @@
 import { useEffect, useState } from 'react';
 import { Button, Badge, Field, NumberInput, Select, TextInput, Toggle, Empty, IconButton, confirmAction } from '../../lib/ui.tsx';
 import { openSheet, toast } from '../../lib/ui-store.ts';
-import { t, tn, compare } from '../../lib/i18n.js';
-import { uid } from '/shared/util.js';
+import { t, tn, compare } from '../../lib/i18n.ts';
+import { uid } from '/shared/util.ts';
 import { ASDF, IC_TYPES, IC_ORDER, HOST_PRESETS, OS_MAX, OS_TICK_MS, hostAttributes, matrixMonitor, icInitiative, icAttackPool, deckStats, isCyberdeck } from './types.ts';
 import {
   act, personaOf, OsMeter, MatrixMonitor, marksDots, icName, markName, linkLockName, asdfShort, asdfLabel, modeLabel, msgText, outcomeTexts,

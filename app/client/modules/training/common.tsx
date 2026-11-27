@@ -2,8 +2,8 @@
 import { Badge, Button, Stat, confirmAction, type BadgeColor } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
 import { toast, openSheet } from '../../lib/ui-store.ts';
-import { t, tn, tk, fmtNuyen, locale } from '../../lib/i18n.js';
-import { DEFAULT_SETTINGS, RULE_TEXT, KIND_LABELS, quote, formatDaysI18n } from '/shared/advancement.js';
+import { t, tn, tk, fmtNuyen, locale } from '../../lib/i18n.ts';
+import { DEFAULT_SETTINGS, RULE_TEXT, KIND_LABELS, quote, formatDaysI18n } from '/shared/advancement.ts';
 import { RuleRef } from './bookrefs.ts';
 import type { Actor, ActorId, GameView, I18nEntry, OrderStatus, TrainingJob, TrainingRequest, TrainingSettings, ViewActor } from '../../../shared/types.ts';
 import type { TrainingDraft, TrainingQuote } from './types.ts';

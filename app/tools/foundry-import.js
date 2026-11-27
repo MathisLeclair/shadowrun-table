@@ -10,9 +10,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readWorld, readDump, detectWorldPath } from '../server/lib/foundry/world.js';
-import { buildBundle, buildPc, buildTemplate, buildMap, scanBundle } from '../server/lib/foundry/importer.js';
-import { createAssets, formatBytes } from '../server/lib/foundry/assets.js';
+import { readWorld, readDump, detectWorldPath } from '../server/lib/foundry/world.ts';
+import { buildBundle, buildPc, buildTemplate, buildMap, scanBundle } from '../server/lib/foundry/importer.ts';
+import { createAssets, formatBytes } from '../server/lib/foundry/assets.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SEED = path.join(ROOT, 'data', 'seed');

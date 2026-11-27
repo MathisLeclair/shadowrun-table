@@ -2,9 +2,9 @@
 // still JavaScript (books, sheet, shop). TypeScript infers every destructured prop of a .js component as required; these
 // casts declare the real optional props. Delete this file (and import the components directly) once those folders are .tsx.
 import type { ComponentType, ReactNode } from 'react';
-import * as bookRef from '../books/BookRef.js';
-import * as sheetCommon from '../sheet/common.js';
-import * as shopCommon from '../shop/common.js';
+import * as bookRef from '../books/BookRef.tsx';
+import * as sheetCommon from '../sheet/common.tsx';
+import * as shopCommon from '../shop/common.tsx';
 import type { RollRecord } from '../../../shared/types.ts';
 
 type RefProps = { className?: string; class?: string };

@@ -3,17 +3,17 @@
 // flash in an English session); a language switch re-renders the whole tree (see ARCHITECTURE.md « i18n »).
 import { useEffect, useState, type ComponentType, type FormEvent } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Button, Badge, Modal, Tabs, LangSwitch, loadCss } from './lib/ui.tsx';
+import { Button, Badge, Modal, Tabs, LangSwitch } from './lib/ui.tsx';
 import { connect, getToken, setToken, useGame, useConnected, logout, api, send, TABLE, type GameProps } from './lib/net.ts';
 import { useUI, setUI, toast, useLang } from './lib/ui-store.ts';
-import { t, tn, errorText, getLang, setLang, isLang, storedLang, storeLang, browserLang, expectUserLang, loadDictionaries } from './lib/i18n.js';
-import { mainTabs, dockTabs, SheetView, globalComponents } from './modules/registry.js';
+import { t, tn, errorText, getLang, setLang, isLang, storedLang, storeLang, browserLang, expectUserLang, loadDictionaries } from './lib/i18n.ts';
+import { mainTabs, dockTabs, SheetView, globalComponents } from './modules/registry.ts';
 import type { GameView } from '../shared/types.ts';
 
-loadCss('/modules/admin/admin.css'); // table picker + admin page + login extras
-loadCss('/modules/core/core.css'); // language switch, translation tools
+import './modules/admin/admin.css'; // table picker + admin page + login extras
+import './modules/core/core.css'; // language switch, translation tools
 
-/** Entry of the main or dock tab lists (modules/registry.js). */
+/** Entry of the main or dock tab lists (modules/registry.ts). */
 interface TabEntry {
   id: string;
   label: string;
@@ -430,7 +430,7 @@ function AdminRoot() {
   const [Page, setPage] = useState<ComponentType<{ onLang: (l: string) => void }> | null>(null);
   const [err, setErr] = useState('');
   useEffect(() => {
-    import('./modules/admin/AdminPage.js')
+    import('./modules/admin/AdminPage.tsx')
       .then((m) => setPage(() => m.default))
       .catch((e: Error) => setErr(t('Chargement impossible : {reason}', { reason: e.message })));
   }, []);

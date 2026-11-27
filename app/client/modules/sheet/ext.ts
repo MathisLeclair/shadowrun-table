@@ -2,8 +2,8 @@
 // TypeScript infers the props of a .js component from its destructuring, all required (class, label…). Once those
 // folders are converted, the final integration imports them directly and deletes this file.
 import type { ComponentType, RefObject } from 'react';
-import { BookRef as BookRefJs, ItemRef as ItemRefJs, RuleRef as RuleRefJs, SkillRef as SkillRefJs } from '../books/BookRef.js';
-import { MapCanvas as MapCanvasJs } from '../map/MapCanvas.js';
+import { BookRef as BookRefJs, ItemRef as ItemRefJs, RuleRef as RuleRefJs, SkillRef as SkillRefJs } from '../books/BookRef.tsx';
+import { MapCanvas as MapCanvasJs } from '../map/MapCanvas.tsx';
 
 /** Unconverted components read `class` (not className). */
 interface Legacy {

@@ -3,29 +3,29 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { derive, attr, skillPool, rollDice, SKILL_BY_ID, ATTR_LABELS, ATTR_SHORT, ATTRS, skillDefaultLimit } from '../../shared/sr5.js';
-import { uid, deepClone, nuyen as fmtNuyen } from '../../shared/util.js';
+import { derive, attr, skillPool, rollDice, SKILL_BY_ID, ATTR_LABELS, ATTR_SHORT, ATTRS, skillDefaultLimit } from '../../shared/sr5.ts';
+import { uid, deepClone, nuyen as fmtNuyen } from '../../shared/util.ts';
 import {
   ITEM_LISTS, PLAYER_ITEM_FIELDS, PLAYER_ACTOR_KEYS, MERGE_KEYS, normalizeActor, blankActor, healthStatus, categoryToSkill,
   evalFormula, slugify, METATYPE_FR, MELEE_SKILLS, SUB_LISTS,
-} from '../../client/modules/sheet/sheet-data.js';
-import { normalizeLifestyle } from '../../shared/lifestyle.js';
-import { sanitizeHome } from '../../shared/home.js';
-import { contactSheet, connectionOf, loyaltyOf, bribeCost, MAX_CONNECTION, ROLL_KINDS as CONTACT_ROLLS } from '../../shared/contacts.js';
-import { isRealSin, sinRating, sinIdentity, sinLicenses, sinCheckOutcome, verificationPool, MAX_DEVICE_RATING } from '../../shared/sins.js';
-import { removeBonus, weaponFromStats, wareCatalogItem, detachAugmentation, bakeItemBonus, itemBonusSpec } from '../lib/augment.js';
-import { errorBody } from '../lib/i18n.js';
-import { actorModifiers, deriveFull } from '../lib/modifiers.js';
-import { fillActorRefs } from '../lib/bookrefs.js';
-import { appCatalog, norm as catNorm } from '../lib/chummer/data.js';
+} from '../../client/modules/sheet/sheet-data.ts';
+import { normalizeLifestyle } from '../../shared/lifestyle.ts';
+import { sanitizeHome } from '../../shared/home.ts';
+import { contactSheet, connectionOf, loyaltyOf, bribeCost, MAX_CONNECTION, ROLL_KINDS as CONTACT_ROLLS } from '../../shared/contacts.ts';
+import { isRealSin, sinRating, sinIdentity, sinLicenses, sinCheckOutcome, verificationPool, MAX_DEVICE_RATING } from '../../shared/sins.ts';
+import { removeBonus, weaponFromStats, wareCatalogItem, detachAugmentation, bakeItemBonus, itemBonusSpec } from '../lib/augment.ts';
+import { errorBody } from '../lib/i18n.ts';
+import { actorModifiers, deriveFull } from '../lib/modifiers.ts';
+import { fillActorRefs } from '../lib/bookrefs.ts';
+import { appCatalog, norm as catNorm } from '../lib/chummer/data.ts';
 import {
   ON_BODY, CONTAINER_KINDS, LOCATED_LISTS, isCarried, containerOf, guessContainerKind, usesAmmo, isGrenade, fireOptions,
   ammoFits, clipFits, reloadPlan, ammoKindOf, sameAmmoKind, parseAmmo,
-} from '../../client/modules/sheet/inventory.js';
+} from '../../client/modules/sheet/inventory.ts';
 import {
   poolModifiers, limitFor, rollContext, cleanConditions, derivedWithModifiers, weaponAccuracy, checkedTest, woundsApply, importedItem,
   MATRIX_LIMITS, MATRIX_LIMIT_SKILLS,
-} from '../../shared/modifiers.js';
+} from '../../shared/modifiers.ts';
 import type {
   ActionContext, Actor, ActorId, AttrKey, Container, ContainerKind, DamageType, FireInfo, HealthStatus, I18nEntry, I18nMessage,
   I18nParams, I18nParamValue, ItemListName, LogEntry, RollModLine, RollRecord, ServerModule, SessionUser, SfxId, EmitTarget,

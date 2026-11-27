@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 
 import { Badge, Markdown, Modal, IconButton } from '../../lib/ui.tsx';
 import { api, send } from '../../lib/net.ts';
 import { toast, setUI, getUI } from '../../lib/ui-store.ts';
-import { t, tn, tk, locale, compare } from '../../lib/i18n.js';
+import { t, tn, tk, locale, compare } from '../../lib/i18n.ts';
 import type { Campaign, GameView, QuestStatus, ThreadState } from '../../../shared/types.ts';
 import type { CampaignNav, DocMeta, DocsState, HandoutLike } from './types.ts';
 import './campaign.css';

@@ -5,7 +5,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Button, Panel, Field, Select, Toggle, Badge, Empty, LangSwitch, confirmAction, promptText } from '../../lib/ui.tsx';
 import { api, setTableToken, uploadWithProgress, type ServerError } from '../../lib/net.ts';
 import { toast, useLang } from '../../lib/ui-store.ts';
-import { t, tn, tIfKnown, fmtDate } from '../../lib/i18n.js';
+import { t, tn, tIfKnown, fmtDate } from '../../lib/i18n.ts';
 import { fmtBytes, Progress, type UploadProgress } from './common.tsx';
 import BooksAdmin from './BooksAdmin.tsx';
 import AssistantAdmin from './AssistantAdmin.tsx';

@@ -2,11 +2,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import * as rules from '../client/modules/shop/rules.js';
-import { generate, generateEncounter, ARCHETYPES, TIERS, catalogRefs, makeName, GENERATED_FOLDER } from '../shared/npcgen.js';
-import { METATYPE_MIN } from '../shared/chargen.js';
-import { METATYPES, derive, attr, skillPool, SKILL_BY_ID } from '../shared/sr5.js';
-import { sanitizeTemplate } from '../server/modules/30-combat.js';
+import * as rules from '../client/modules/shop/rules.ts';
+import { generate, generateEncounter, ARCHETYPES, TIERS, catalogRefs, makeName, GENERATED_FOLDER } from '../shared/npcgen.ts';
+import { METATYPE_MIN } from '../shared/chargen.ts';
+import { METATYPES, derive, attr, skillPool, SKILL_BY_ID } from '../shared/sr5.ts';
+import { sanitizeTemplate } from '../server/modules/30-combat.ts';
 import { startServer, login, client, settle } from './test-client.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');

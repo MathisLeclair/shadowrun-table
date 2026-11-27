@@ -2,10 +2,10 @@
 // rulebook reference (📖 BookRef) and tooltips listing the sources of a derived value. See ARCHITECTURE.md « Modifiers ».
 import { useMemo } from 'react';
 import { useCatalog } from '../../lib/net.ts';
-import { lookupFromIndex, collectModifiers, derivedWithModifiers, CONDITIONS, toggleLabel, conditionLabel, signedValue, poolModifiers, limitFor, weaponAccuracy } from '/shared/modifiers.js';
-import { t, tk, limitLabel, skillLabel, skillGroupLabel, skillCategoryLabel, attrLabel } from '../../lib/i18n.js';
+import { lookupFromIndex, collectModifiers, derivedWithModifiers, CONDITIONS, toggleLabel, conditionLabel, signedValue, poolModifiers, limitFor, weaponAccuracy } from '/shared/modifiers.ts';
+import { t, tk, limitLabel, skillLabel, skillGroupLabel, skillCategoryLabel, attrLabel } from '../../lib/i18n.ts';
 import { BookRef } from './ext.ts';
-import { KNOWLEDGE_TYPES } from './sheet-data.js';
+import { KNOWLEDGE_TYPES } from './sheet-data.ts';
 import type { Actor, ConditionState, Weapon } from '../../../shared/types.ts';
 import type { Derived, DerivedMods, EffectsLookup, SheetModifier, SourceLine } from './types.ts';
 

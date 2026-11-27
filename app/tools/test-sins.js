@@ -1,7 +1,7 @@
 // SIN checks test: node tools/test-sins.js  (isolated server on port 3960, exit code != 0 on failure)
 // Rules: SR5 « Checking a Fake SIN » (p. 364) — Device Rating × 2 dice, threshold = fake SIN / license rating.
 import { startServer, login, client, settle } from './test-client.js';
-import { sinCheckOutcome, parseLicense, sinIdentity, checkOdds, verificationPool, sinNumber } from '../shared/sins.js';
+import { sinCheckOutcome, parseLicense, sinIdentity, checkOdds, verificationPool, sinNumber } from '../shared/sins.ts';
 
 let failed = 0;
 const ok = (cond, msg) => {

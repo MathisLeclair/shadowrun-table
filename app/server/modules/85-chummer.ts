@@ -6,15 +6,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 // @ts-ignore -- no @types/express in the app yet (the server-core conversion adds it)
 import express from 'express';
-import { currentUploadDir, currentUploadUrl, localFileForUrl } from '../store.js';
-import { uid, deepClone } from '../../shared/util.js';
-import { normalizeActor, slugify, SUB_LISTS } from '../../client/modules/sheet/sheet-data.js';
-import { parseChum5, sha1, ChummerError } from '../lib/chummer/parse.js';
-import { exportChum5, detachMugshots } from '../lib/chummer/export.js';
-import { mergeActor, diffActors } from '../lib/chummer/merge.js';
-import { errorBody, formatFr } from '../lib/i18n.js';
-import { errorParam } from '../lib/chummer/messages.js';
-import { fillActorRefs } from '../lib/bookrefs.js';
+import { currentUploadDir, currentUploadUrl, localFileForUrl } from '../store.ts';
+import { uid, deepClone } from '../../shared/util.ts';
+import { normalizeActor, slugify, SUB_LISTS } from '../../client/modules/sheet/sheet-data.ts';
+import { parseChum5, sha1, ChummerError } from '../lib/chummer/parse.ts';
+import { exportChum5, detachMugshots } from '../lib/chummer/export.ts';
+import { mergeActor, diffActors } from '../lib/chummer/merge.ts';
+import { errorBody, formatFr } from '../lib/i18n.ts';
+import { errorParam } from '../lib/chummer/messages.ts';
+import { fillActorRefs } from '../lib/bookrefs.ts';
 import type {
   ActionContext, Actor, ActorId, ChummerLink, ChummerRequest, ChummerState, GameView, I18nMessage, I18nParams, NewLogEntry, ServerModule, SessionUser,
   TableState,

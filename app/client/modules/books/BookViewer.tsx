@@ -7,15 +7,15 @@
 import { useEffect, useRef, useState, type ReactNode, type PointerEvent as ReactPointerEvent } from 'react';
 import { IconButton, Button, confirmAction } from '../../lib/ui.tsx';
 import { api } from '../../lib/net.ts';
-import { t, tn, fmtNumber } from '../../lib/i18n.js';
+import { t, tn, fmtNumber } from '../../lib/i18n.ts';
 import { toast } from '../../lib/ui-store.ts';
 import { useViewer, useBooks, findBook, closeBook, gotoPdfPage, openBookPdf, printedToPdf, pdfToPrinted, searchBooks, setViewerSearch, loadBooks } from './store.ts';
 import { bookName } from './BookRef.tsx';
 import { PdfReader, fmtMB } from './PdfReader.tsx';
 import { useBookCache, clearBookCache } from './bookcache.ts';
-import { cachedByCode, MAX_BOOKS, MAX_BYTES } from './cachepolicy.js';
+import { cachedByCode, MAX_BOOKS, MAX_BYTES } from './cachepolicy.ts';
 import { releaseDocSoon } from './pdfdoc.ts';
-import { zoomStep } from './readerlib.js';
+import { zoomStep } from './readerlib.ts';
 import type { LibBook, SearchHit, SearchResult, Zoom } from './types.ts';
 import './books.css';
 

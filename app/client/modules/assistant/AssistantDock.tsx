@@ -5,8 +5,8 @@ import { useEffect, useRef, useState, useCallback, type KeyboardEvent } from 're
 import { Button, IconButton, Markdown, Badge, Modal, Select, confirmAction } from '../../lib/ui.tsx';
 import { api, useServerEvent, type GameProps, type ServerError } from '../../lib/net.ts';
 import { toast, goTab, setUI } from '../../lib/ui-store.ts';
-import { t, tk, fmtNumber, getLang } from '../../lib/i18n.js';
-import { renderThumbnail } from '../map/renderer.js';
+import { t, tk, fmtNumber, getLang } from '../../lib/i18n.ts';
+import { renderThumbnail } from '../map/renderer.ts';
 import type { GameMap, ServerEvents } from '../../../shared/types.ts';
 import type { AskReply, AssistantStatus, Conversation, ConversationItem, ConversationSummary, Proposal, ProposalTemplate } from './types.ts';
 import './assistant.css';

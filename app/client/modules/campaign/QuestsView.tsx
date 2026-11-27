@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Button, IconButton, TextInput, SearchBox, Empty, Badge, confirmAction } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
 import { openSheet } from '../../lib/ui-store.ts';
-import { t, tk } from '../../lib/i18n.js';
+import { t, tk } from '../../lib/i18n.ts';
 import {
   campaignOf, QUEST_STATUS, MdEditor, npcInfo, mapInfo, templateOptions, mapOptions, groupedOptions,
   spawnNpc, showMapToPlayers, openMap, useDocs, DocSelect, DocButton, cx, usePersistent, parseDocRef,

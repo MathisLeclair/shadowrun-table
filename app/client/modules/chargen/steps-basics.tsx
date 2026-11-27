@@ -3,8 +3,8 @@ import { useState, type ChangeEvent } from 'react';
 import { Button, Field, TextInput, Badge, Panel } from '../../lib/ui.tsx';
 import { upload } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
-import { METATYPES } from '/shared/sr5.js';
-import { t, tk, attrLabel, attrShort, metatypeLabel } from '../../lib/i18n.js';
+import { METATYPES } from '/shared/sr5.ts';
+import { t, tk, attrLabel, attrShort, metatypeLabel } from '../../lib/i18n.ts';
 import {
   LETTERS,
   COLUMNS,
@@ -22,7 +22,7 @@ import {
   karmaSteps,
   SKILL_POINTS,
   RESOURCES,
-} from '/shared/chargen.js';
+} from '/shared/chargen.ts';
 import { Budget, PointsKarma, StepIssues, nuyen, i18n } from './common.tsx';
 import { RuleRef } from '../combat/legacy-components.ts';
 import type { AttrKey, DraftData, PriorityColumn, PriorityLetter } from '../../../shared/types.ts';

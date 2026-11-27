@@ -4,8 +4,8 @@ import { useMemo, useState } from 'react';
 import { Button, Badge, Empty, SearchBox, Panel } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
-import { t, tn, itemName, compare } from '../../lib/i18n.js';
-import { MARTIAL_KARMA, fold, martialKarma } from './rules.js';
+import { t, tn, itemName, compare } from '../../lib/i18n.ts';
+import { MARTIAL_KARMA, fold, martialKarma } from './rules.ts';
 import { BookRef, RuleRef } from './bookrefs.ts';
 import type { Actor, CatalogEntry, GameView } from '../../../shared/types.ts';
 

@@ -5,7 +5,7 @@ import { api } from '../../lib/net.ts';
 import { pruneStale } from './bookcache.ts';
 import type { LibBook, ViewerState, SearchResult } from './types.ts';
 
-import { offsetFor, printedToPdf, pdfToPrinted, parseSourceRef } from './refs.js';
+import { offsetFor, printedToPdf, pdfToPrinted, parseSourceRef } from './refs.ts';
 
 export { offsetFor, printedToPdf, pdfToPrinted, parseSourceRef };
 

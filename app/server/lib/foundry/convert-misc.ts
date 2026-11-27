@@ -1,6 +1,6 @@
 // Foundry journals → markdown documents, playlists → audio tracks.
 import { htmlToMarkdown } from './html2md.ts';
-import { slug } from '../../../shared/util.js';
+import { slug } from '../../../shared/util.ts';
 import type { FoundryDoc } from './world.ts';
 import type { AssetFn } from './assets.ts';
 import type { HtmlLinks } from './html2md.ts';

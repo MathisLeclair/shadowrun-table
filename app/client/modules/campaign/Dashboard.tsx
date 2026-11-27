@@ -1,7 +1,7 @@
 // GM campaign dashboard: everything needed at the table in one screen.
 import { Panel, Button, Markdown, Empty } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
-import { t } from '../../lib/i18n.js';
+import { t } from '../../lib/i18n.ts';
 import {
   campaignOf, currentAct, nextSession, QUEST_STATUS_BY_ID, THREAD_STATES, npcInfo, mapInfo, spawnNpc,
   showMapToPlayers, openMap, revealHandout, useDocs, docTitle, DocButton, cx, fmtSessionDate,

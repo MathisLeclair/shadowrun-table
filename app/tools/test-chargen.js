@@ -2,16 +2,16 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import * as rules from '../client/modules/shop/rules.js';
+import * as rules from '../client/modules/shop/rules.ts';
 import {
   compute, buildActor, normalizeDraft, emptyDraft, magicOptions, karmaSteps, attrLimits,
   METATYPE_PRIORITY, ATTRIBUTE_POINTS, SKILL_POINTS, RESOURCES, MAGIC_TABLE,
   issueText, priorityText, magicOptionText, draftHeadline, COLUMNS, LETTERS, STEPS, MAGIC_TYPES, COLUMN_LABELS,
   KNOWLEDGE_TYPES, TRADITIONS, ASPECTS, METATYPE_TRAITS, FORM_TARGETS,
-} from '../shared/chargen.js';
-import { TIERS, ARCHETYPES, GRUNT_RULES } from '../shared/npcgen.js';
-import { interpolate, stripContext } from '../client/i18n/format.js';
-import { derive, skillPool } from '../shared/sr5.js';
+} from '../shared/chargen.ts';
+import { TIERS, ARCHETYPES, GRUNT_RULES } from '../shared/npcgen.ts';
+import { interpolate, stripContext } from '../client/i18n/format.ts';
+import { derive, skillPool } from '../shared/sr5.ts';
 import { startServer, login, client, settle } from './test-client.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');

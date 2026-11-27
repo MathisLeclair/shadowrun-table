@@ -3,10 +3,10 @@ import { useRef, useState, type ChangeEvent } from 'react';
 import { Button, Badge, Select, NumberInput, TextInput, Empty, IconButton, confirmAction, promptText } from '../../lib/ui.tsx';
 import { send, api } from '../../lib/net.ts';
 import { openSheet, toast } from '../../lib/ui-store.ts';
-import { derive } from '/shared/sr5.js';
-import { t, tIfKnown, metatypeLabel, fmtNuyen, compare, getLang } from '../../lib/i18n.js';
+import { derive } from '/shared/sr5.ts';
+import { t, tIfKnown, metatypeLabel, fmtNuyen, compare, getLang } from '../../lib/i18n.ts';
 import { Avatar, MiniBar, Overlay, ownerOf, actorStatus, statusColor, statusLabel, EdgePips, cssVars } from './common.tsx';
-import { ChummerGmPanel } from '../chummer/ChummerActions.js';
+import { ChummerGmPanel } from '../chummer/ChummerActions.tsx';
 
 import type { GameProps } from '../../lib/net.ts';
 import type { Actor, GameView } from '../../../shared/types.ts';
