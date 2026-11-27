@@ -30,8 +30,6 @@ services:
       - ./data/assets/foundry:/app/data/assets/foundry
       # Shared music library, every table (~330 MB, copied with deploy.ps1 -Action music; credits in CREDITS.md there).
       - ./data/assets/music:/app/data/assets/music
-      # Campaign docs of the « Project Lazarus » table (Campagne → Documents), straight from the git checkout.
-      - ../Shadowrun:/Shadowrun
     mem_limit: 512m
     logging:
       driver: json-file

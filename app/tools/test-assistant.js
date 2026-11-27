@@ -98,7 +98,13 @@ await test('settings are normalized (unknown model/effort ignored, cap clamped)'
 await test('core docs: bible, recap, outline and the latest session plan; the system prompt is deterministic and cached', () => {
   const names = ['act2.md', 'bible-mj-project-lazarus.md', 'campaign-outline.md', 'campaign-recap.md', 'recap-joueurs.md', 'session-2-plan.md', 'session-10-plan.md', 'foundry/x.md'];
   assert.deepEqual(context.pickCoreDocs(names).sort(), ['bible-mj-project-lazarus.md', 'campaign-outline.md', 'campaign-recap.md', 'session-10-plan.md'].sort());
-  const docs = path.resolve('..', 'Shadowrun');
+  // Fixture docs folder: the real campaign docs are not in the repo (they live in the table's own docs folder).
+  const docs = path.join(tmp, 'docs');
+  fs.mkdirSync(docs, { recursive: true });
+  for (const n of ['bible-mj-project-lazarus.md', 'campaign-outline.md', 'campaign-recap.md', 'session-3-plan.md']) fs.writeFileSync(path.join(docs, n), `# ${n}
+
+Contenu de test.
+`);
   const a = context.buildSystem({ docsDir: docs, campaignName: 'Project Lazarus' });
   const b = context.buildSystem({ docsDir: docs, campaignName: 'Project Lazarus' });
   assert.equal(JSON.stringify(a.system), JSON.stringify(b.system));
@@ -106,7 +112,7 @@ await test('core docs: bible, recap, outline and the latest session plan; the sy
   assert.ok(a.coreDocs.length >= 3);
 });
 await test('doc paths cannot escape the docs folder', () => {
-  const docs = path.resolve('..', 'Shadowrun');
+  const docs = path.join(tmp, 'docs');
   assert.equal(context.docPath(docs, '../app/package.json'), null);
   assert.equal(context.docPath(docs, '..\\x.md'), null);
   assert.equal(context.docPath(docs, 'a/b/c.md'), null);

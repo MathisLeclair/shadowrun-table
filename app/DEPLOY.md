@@ -17,7 +17,7 @@ uploads and backups). The owner is the **admin** (`/admin`) and creates the tabl
 ## Layout on the VPS
 
 ```
-~/shadowrun/                      git clone of github.com/MathisLeclair/shadowrun-table (private)
+~/shadowrun/                      git clone of github.com/MathisLeclair/shadowrun-table
 ~/shadowrun/app/docker-compose.yml
 ~/shadowrun/app/.env              SR_ADMIN_PASSWORD=…, assistant federation ids   (chmod 600, never committed)
 ~/shadowrun/app/runtime/          ← all game data (bind mount → /app/runtime in the container)
@@ -27,6 +27,12 @@ uploads and backups). The owner is the **admin** (`/admin`) and creates the tabl
 ~/shadowrun/app/data/assets/foundry/   ← Foundry images & music of Project Lazarus (~490 MB, bind mount)
 ~/shadowrun-backups/              data snapshots taken before each update/migration (10 newest kept)
 ```
+
+A table's campaign docs (Campagne → Documents, also read by the GM assistant) are plain markdown files in
+`runtime/tables/<id>/docs/` (one sub-folder level, e.g. `foundry/`). They are not in git: to update Project Lazarus's
+docs from the PC, copy them over, e.g.
+`scp -i $HOME\.ssh\gachabackend_deploy ..\Shadowrun\session-5-plan.md ubuntu@152.228.134.90:~/shadowrun/app/runtime/tables/lazarus/docs/`
+(the **↻** button in Documents reloads the list; no restart needed).
 
 The image contains only code and static content; rebuilding it never touches `runtime/` or `data/assets/foundry/`.
 The container runs as uid 1000 (`node`), which is also the `ubuntu` user on the VPS, so both folders belong to it.

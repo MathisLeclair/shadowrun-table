@@ -286,7 +286,7 @@ function ScanView({ scan, sel, setSel, toggleIn, setAll, setNone, pcMode, setPcM
         <${SectionHead} title=${t('Journaux')} count=${sel.journals ? scan.journals.docs.length : 0} total=${scan.journals.docs.length}>
           <${Toggle} value=${sel.journals} onChange=${(v) => setSel((s) => ({ ...s, journals: v }))} label=${t('Importer')} />
         </${SectionHead}>
-        <p class="small muted">${withCode('Convertis en documents Markdown dans {folder} (onglet Campagne → Documents).', {}, 'folder', 'Shadowrun/foundry/')}${scan.journals.pdfs ? ` ${t('{n} livre(s) de règles PDF sont seulement listés dans l\'index.', { n: scan.journals.pdfs })}` : ''}</p>
+        <p class="small muted">${withCode('Convertis en documents Markdown dans {folder} (onglet Campagne → Documents).', {}, 'folder', 'docs/foundry/')}${scan.journals.pdfs ? ` ${t('{n} livre(s) de règles PDF sont seulement listés dans l\'index.', { n: scan.journals.pdfs })}` : ''}</p>
         <ul class="foundry-list">
           ${scan.journals.docs.map((d) => html`<li><span class="grow foundry-ellipsis" title=${d.file}>${d.folder ? html`<span class="faint">${d.folder} › </span>` : null}${d.title}</span><${StatusBadge} status=${d.status} /></li>`)}
         </ul>

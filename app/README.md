@@ -55,8 +55,7 @@ On any sheet (GM or the owning player): **Exporter vers Chummer (.chum5)** and *
 
 ## Story documents
 
-The campaign docs live in `../Shadowrun/` and are readable in **Campagne → Documents**:
-`session-4-plan.md` (next session), `act2-creuser-plus-profond.md`, `act3-confrontation.md`, `bible-mj-project-lazarus.md` (hidden truth, clocks, three-clue map, payouts), plus the earlier docs and `foundry/` (your Foundry journals).
+Each table's markdown docs live in its own folder, `data/tables/<table>/docs/` (`runtime/tables/<table>/docs/` on the VPS), and are readable by the GM in **Campagne → Documents** (Foundry journals go to `docs/foundry/`). The original « Project Lazarus » table on the GM's PC reads `../Shadowrun/` instead when that folder exists; it is not in git.
 
 ## For developers
 

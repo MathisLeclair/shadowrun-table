@@ -1,4 +1,4 @@
-// GM campaign documents reader: list of ../Shadowrun/*.md, table of contents, in-doc search, refresh.
+// GM campaign documents reader: list of the table's docs/*.md, table of contents, in-doc search, refresh.
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { html, Button, IconButton, Empty } from '../../lib/ui.js';
 import { api } from '../../lib/net.js';
