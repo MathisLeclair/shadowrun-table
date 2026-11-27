@@ -7,7 +7,7 @@ dist
 runtime
 deploy
 *.md
-Lancer la table.bat
+start.bat
 data/state.json
 data/state.json.*
 data/server.json

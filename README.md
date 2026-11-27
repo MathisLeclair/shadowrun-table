@@ -107,7 +107,7 @@ Then open:
 | Players | `http://<your-LAN-IP>:3000` → type a name, pick a character |
 | Admin | `http://localhost:3000/admin` → password printed once in the console at first start |
 
-On Windows you can just double-click **`app/Lancer la table.bat`**. Playing remotely? Put the server behind a tunnel
+On Windows you can just double-click **`app/start.bat`**. Playing remotely? Put the server behind a tunnel
 (Tailscale, ZeroTier, `cloudflared tunnel --url http://localhost:3000`) or deploy it.
 
 ## Deploying

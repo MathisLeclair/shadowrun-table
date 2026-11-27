@@ -4,7 +4,7 @@ Real-time web app to run Shadowrun 5E campaigns: the GM runs it on their PC (or 
 
 ## Start a session
 
-1. Double-click **`Lancer la table.bat`** (or run `npm start` in this folder). Node.js 22.18+ is required (24 LTS recommended); each launch installs dependencies and builds the interface.
+1. Double-click **`start.bat`** (or run `npm start` in this folder). Node.js 22.18+ is required (24 LTS recommended); each launch installs dependencies and builds the interface.
 2. The console prints the addresses:
    - GM: `http://localhost:3000` → tab **Maître de jeu**, password **`lazarus`** (change it in **Réglages**).
    - Players: `http://<your-LAN-IP>:3000` (e.g. `http://192.168.1.110:3000`) → they type their name, optionally a PIN, and pick their character.

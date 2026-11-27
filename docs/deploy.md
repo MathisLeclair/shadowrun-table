@@ -343,7 +343,7 @@ add the PC's own JWKS (/admin on localhost) to the same issuer in the Console; t
 
 ## Local PC (unchanged usage)
 
-`Lancer la table.bat` / `npm start` still works. At the first start of this version, the old `data/state.json`,
+`start.bat` / `npm start` still works. At the first start of this version, the old `data/state.json`,
 `data/backups/` and `data/uploads/` are moved into `data/tables/lazarus/` (the original state file is kept as
 `data/tables/lazarus/backups/legacy-state-<date>.json`); `http://localhost:3000/` redirects to `/t/lazarus/`, old
 sessions stay valid. To undo: stop the server, copy `data/tables/lazarus/state.json` back to `data/state.json`, move
