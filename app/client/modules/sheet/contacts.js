@@ -55,7 +55,7 @@ export function ContactCard({ game, actor, c, big, children }) {
   return html`<div class=${'ct-card' + (big ? ' big' : '')} style=${{ '--ct': color }}>
     <div class="ct-head">
       <span class="ct-file mono">${t('CONTACT · DOSSIER {n}', { n: fileNo(c) })}</span>
-      ${sh.known ? html`<span class="badge badge-cyan" title=${t('Fiche : {name}', { name: sh.source })}>${t('fiche')}</span>` : null}
+      ${sh.known ? html`<span class="badge badge-cyan" title=${t('Stats trouvées (PNJ ou Bestiaire : {name}) : le contact peut faire Enquête et Réseau lui-même', { name: sh.source })}>${t('fiche PNJ')}</span>` : null}
     </div>
     <div class="ct-body">
       <div class="ct-photo"><${Avatar} actor=${{ name: c.name, portrait: sh.portrait, color }} size=${big ? 84 : 52} /></div>

@@ -18,8 +18,8 @@
 .ct-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .ct-file { font-size: 9px; font-weight: 600; letter-spacing: 2px; color: color-mix(in srgb, var(--ct) 65%, var(--dim)); }
 .ct-body { display: flex; gap: 11px; align-items: center; min-width: 0; }
-.ct-photo { flex: none; padding: 2px; border-radius: 50%; border: 1px dashed color-mix(in srgb, var(--ct) 55%, var(--line)); }
-.ct-photo .sh-avatar { border-radius: 50%; display: block; }
+.ct-photo { flex: none; display: flex; padding: 2px; border-radius: 50%; border: 1px dashed color-mix(in srgb, var(--ct) 55%, var(--line)); }
+.ct-photo .sh-avatar { border-radius: 50%; }
 .ct-id { min-width: 0; }
 .ct-name { font-weight: 650; font-size: 15px; overflow-wrap: anywhere; }
 

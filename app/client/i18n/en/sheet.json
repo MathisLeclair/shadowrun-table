@@ -935,7 +935,6 @@
   "Accepté": "Accepted",
   "Anomalie": "Odd",
   "CONTACT · DOSSIER {n}": "CONTACT · FILE {n}",
-  "fiche": "sheet",
   "Décroche : {total} ≥ {cn}": "Picks up: {total} ≥ {cn}",
   "Injoignable pour l’instant : {total} < {cn}": "Can’t be reached right now: {total} < {cn}",
   "Disponible": "Available",
@@ -1011,5 +1010,7 @@
   "Accès à une zone de haute sécurité (siège AA, bureaux fédéraux)": "Access to a high-security area (AA HQ, federal offices)",
   "Risque majeur": "Major Risk",
   "Prêt de matériel (≤ 500 000 ¥), signature d’un cadre supérieur": "Equipment loan (≤ 500,000¥), a senior manager’s signature",
-  "loyauté::Connaissance": "Acquaintance"
+  "loyauté::Connaissance": "Acquaintance",
+  "fiche PNJ": "NPC sheet",
+  "Stats trouvées (PNJ ou Bestiaire : {name}) : le contact peut faire Enquête et Réseau lui-même": "Stats found (NPC or Bestiary: {name}): the contact can roll Legwork and Networking themselves"
 }
