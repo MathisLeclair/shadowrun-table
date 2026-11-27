@@ -9,7 +9,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { Button, NumberInput, Toggle } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
-import { attr, skillPool, SKILL_BY_ID, ATTR_LABELS, skillDefaultLimit } from '/shared/sr5.ts';
+import { attr, skillPool, SKILL_BY_ID, ATTR_LABELS, skillDefaultLimit, skillEn } from '/shared/sr5.ts';
 import { rollContext, derivedWithModifiers, checkedTest, woundsApply, TEST_BY_LABEL, ROLL_TESTS, MATRIX_LIMIT_SKILLS } from '/shared/modifiers.ts';
 import { t, tk, tn, tIfKnown, attrShort, attrLabel, limitLabel } from '../../lib/i18n.ts';
 import { Overlay, DiceFaces, RollBadges, isGM, ownsActor, skillName, rollLabel } from './common.tsx';
@@ -109,7 +109,8 @@ export function presetLabel(actor: Actor | null | undefined, preset: RollPreset)
   if (preset.skillId) {
     const sk = (actor?.skills || []).find((s) => s.id === preset.skillId);
     const kno = (actor?.knowledge || []).find((k) => k.id === preset.skillId);
-    return sk?.name || kno?.name || SKILL_BY_ID[preset.skillId]?.fr || preset.skillId;
+    // SR5 skills: their English name (a dictionary key); custom and knowledge skills: as named.
+    return SKILL_BY_ID[preset.skillId] ? skillEn(preset.skillId) : sk?.name || kno?.name || preset.skillId;
   }
   const labels = ATTR_LABELS as Record<string, string>;
   if (preset.attr) return preset.attr2 ? `${labels[preset.attr]} + ${labels[preset.attr2]}` : labels[preset.attr];
@@ -118,7 +119,7 @@ export function presetLabel(actor: Actor | null | undefined, preset: RollPreset)
 
 /** The same label in the UI language (a weapon attack names the weapon in the UI language too). */
 export function presetDisplayLabel(actor: Actor | null | undefined, preset: RollPreset): string {
-  const w = preset.weaponId && /^Attaque — /.test(preset.label || '') ? (actor?.weapons || []).find((x) => x && x.id === preset.weaponId) : null;
+  const w = preset.weaponId && /^(Attack|Attaque) — /.test(preset.label || '') ? (actor?.weapons || []).find((x) => x && x.id === preset.weaponId) : null;
   if (w) return t('Attack — {weapon}', { weapon: itemLabel(w) });
   if (preset.label) return rollLabel(preset.label);
   if (preset.skillId) {
@@ -168,7 +169,7 @@ export function RollDialog({ game, actor: viewActor, preset: initialPreset = {},
   const [allWeapons, setAllWeapons] = useState(false);
   const weapon = weaponId && sheet ? (sheet.weapons || []).find((w) => w && w.id === weaponId) || null : null;
   const preset: RollPreset = weapon && weaponId !== initialPreset.weaponId
-    ? { ...initialPreset, weaponId: weapon.id, skillId: weapon.skill || 'exotic_weapon', label: `Attaque — ${weapon.nameFr || weapon.name}` } // i18n-ignore: stored French label (rollLabel)
+    ? { ...initialPreset, weaponId: weapon.id, skillId: weapon.skill || 'exotic_weapon', label: `Attack — ${weapon.nameFr || weapon.name}` } // i18n-ignore: stored label (rollLabel, labelI18n from the server)
     : initialPreset;
   const [fireMode, setFireMode] = useState<string | null>(null);
   const [ammoOverride, setAmmoOverride] = useState(false);

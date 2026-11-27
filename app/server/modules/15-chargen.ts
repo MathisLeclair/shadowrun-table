@@ -98,7 +98,7 @@ function getDraft(ctx: ActionContext, draftId: unknown): ChargenDraft {
 
 function userName(state: TableState, userId: UserId): string {
   if (userId === 'gm') return 'MJ';
-  return state.users?.[userId]?.name || 'Joueur inconnu';
+  return state.users?.[userId]?.name || 'Unknown player';
 }
 
 function checkSummary(result: Loose): { errors: number; warnings: number } {
@@ -144,7 +144,8 @@ function rollStartingNuyen(lifestyle: Loose | null | undefined): { dice: number;
 function createActor(ctx: ActionContext, data: DraftData, { type = 'pc', assignTo = null, source = '' }: { type?: 'pc' | 'npc'; assignTo?: UserId | null; source?: string } = {}) {
   const state = ctx.state;
   const owner = assignTo && state.users?.[assignTo] ? state.users[assignTo] : null;
-  const built = buildActor(data, rulesCtx(state), { makeId: (p: string) => ctx.uid(p), type, player: owner?.name });
+  // t: texts written into the new actor (default name, quality notes) land in the table language.
+  const built = buildActor(data, rulesCtx(state), { makeId: (p: string) => ctx.uid(p), type, player: owner?.name, t: (key: string, params?: I18nParams | null) => ctx.t(key, params ?? undefined) });
   const actor = built.actor as Actor; // gets its id just below
   const result = built.result;
   const id = ctx.uid(type === 'pc' ? 'pc' : 'npc');
@@ -306,7 +307,7 @@ const mod: ServerModule = {
         d.submittedTs = ctx.now;
         d.ts = ctx.now;
         ctx.log({
-          kind: 'system', userId: ctx.user.id, author: 'Création', authorI18n: { key: 'Creation' },
+          kind: 'system', userId: ctx.user.id, author: 'Creation', authorI18n: { key: 'Creation' },
           i18n: { key: '{user} submits a character to the GM: {name}', params: { user: d.userId === 'gm' ? { t: 'GM' } : d.userName, name: nameParam(d.data) } },
           to: [...new Set([ctx.user.id, 'gm'])],
         });
@@ -340,7 +341,7 @@ const mod: ServerModule = {
           d.status = 'rejected';
           d.ts = ctx.now;
           ctx.log({
-            kind: 'system', userId: ctx.user.id, author: 'Création', authorI18n: { key: 'Creation' },
+            kind: 'system', userId: ctx.user.id, author: 'Creation', authorI18n: { key: 'Creation' },
             i18n: d.gmNote ? { key: 'Character needs changes: {name} — “{note}”', params: { name, note: d.gmNote } } : { key: 'Character needs changes: {name}', params: { name } },
             to: [...new Set([d.userId, 'gm'])],
           });
@@ -358,7 +359,7 @@ const mod: ServerModule = {
         const key = roll
           ? d.gmNote ? tk('Character approved: {name} (starting nuyen: {nuyen}¥) — “{note}”') : tk('Character approved: {name} (starting nuyen: {nuyen}¥)')
           : d.gmNote ? tk('Character approved: {name} — “{note}”') : tk('Character approved: {name}');
-        ctx.log({ kind: 'system', userId: ctx.user.id, author: 'Création', authorI18n: { key: 'Creation' }, i18n: { key, params }, to: [...new Set([d.userId, 'gm'])] });
+        ctx.log({ kind: 'system', userId: ctx.user.id, author: 'Creation', authorI18n: { key: 'Creation' }, i18n: { key, params }, to: [...new Set([d.userId, 'gm'])] });
         notifyOwner(ctx, d, 'chargen:resolved', { draftId: d.id, status: 'approved', note: d.gmNote, actorId });
         if (assignTo) ctx.emitTo(assignTo, 'sfx', { id: 'level-up' });
         return { status: 'approved', actorId };

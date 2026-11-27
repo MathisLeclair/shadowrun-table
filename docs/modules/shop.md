@@ -32,11 +32,11 @@ Pure rules `AVAIL_TEST_MODES / availTestable / needsAvailTest / availBaseHours /
 matchAvailTests` in `client/modules/shop/rules.ts`, UI `client/modules/shop/avail.tsx`.
 - `'shop/availTest' { actorId, item: cart line, useSpec?, explode?, modifier? }` (owner or GM) rolls through
   `performRoll` (log entry `roll.avail = { testId, value, legality, dice, hits, baseHours, tries }`, `roll.labelI18n`
-  « Disponibilité — {item} ») and stores the test. The outcome is always recomputed from the log entry's live `hits` /
+  « Availability — {item} ») and stores the test. The outcome is always recomputed from the log entry's live `hits` /
   `glitch` / `critGlitch` (Edge « Seconde chance »); a glitch is kept on the test / order line (`glitch`).
-- **Overpay** (`overpay`): breakdown « surenchère +n », runner or contact roll; paid only when the item is bought: the
+- **Overpay** (`overpay`): breakdown « overpay +n », runner or contact roll; paid only when the item is bought: the
   claimed line gets `surcharge` per unit, included in the order total (unitCost / `paid` stay the item price, so resale
-  ignores it), note « {item} : trouvé en {delay} (surenchère {cost}) »; the cart and the orders show « dont +{cost} ».
+  ignores it), note « {item}: found in {delay} (overpay {cost}) »; the cart and the orders show « dont +{cost} ».
   `matchAvailTests` uses the cheapest search first.
 - Players cannot search what `checkRules` forbids. Failures are not time-locked: the cart shows « nouvel essai après {2
   × base} en jeu » and `tries` counts attempts.
@@ -49,7 +49,7 @@ matchAvailTests` in `client/modules/shop/rules.ts`, UI `client/modules/shop/avai
 `contactId` on `'shop/availTest'`: one of the runner's contacts makes the test instead. Stats come from an NPC actor,
 else a bestiary template, whose name matches the contact's (accent/case-insensitive); a contact without one cannot
 search (« contact sans fiche », the GM creates the NPC). The log entry (author = the runner, `actorId: null`,
-`labelI18n` « Disponibilité — {item} (via {contact}) », `avail.contact`) and the test (`contactId`, `contactName`;
+`labelI18n` « Availability — {item} (via {contact}) », `avail.contact`) and the test (`contactId`, `contactName`;
 order line `availTest.contact`) name the contact. Players get `view.shop.contactSearch = { [ownActorId]: [{ id, name,
 connection, known, source?, cha?, negotiation?, pool?, defaulting?, social?, limit? }] }` (the bestiary stays hidden).
 No fee or Availability cap: the GM adds a price by hand if wanted. Contact dossiers: [contacts-sins.md](contacts-sins.md).

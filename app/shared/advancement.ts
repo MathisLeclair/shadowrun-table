@@ -16,7 +16,7 @@
 //   actor.powers[].pp is the TOTAL power-point cost of that power (all levels included).
 //   Skills of a skill group are always materialized in actor.skills (so skillPool() works);
 //   actor.skillGroups keeps the intact groups only (a group is removed when it gets broken).
-import { METATYPES, SKILLS, SKILL_BY_ID, SKILL_GROUPS, ATTR_LABELS, type AttrKeyish, type SkillDef } from './sr5.ts';
+import { METATYPES, SKILLS, SKILL_BY_ID, SKILL_GROUPS, ATTR_LABELS, skillEn, skillKey, type AttrKeyish, type SkillDef } from './sr5.ts';
 import { slug, uid } from './util.ts';
 import type {
   ActorLike, ActorMagic, AdeptPower, AdvancementRequest, Attributes, AttrKey, ComplexForm, I18nEntry, I18nMessage, I18nParams,
@@ -128,14 +128,14 @@ type LegacyGrades = ActorLike & {
 function tk(s: string): string {
   return s;
 }
-/** French rendering of a key with {placeholders} (nested { t, params } values allowed) — same output as formatSource(). */
-function fr(key: string, params?: I18nParams): string {
+/** English rendering of a key with {placeholders} (nested { t, params } values allowed) — same output as formatSource(). */
+function render(key: string, params?: I18nParams): string {
   const val = (v: I18nParamValue | undefined): string => {
     if (v === null || v === undefined) return '';
     if (Array.isArray(v)) return v.map(val).join(', ');
     if (typeof v === 'object') {
       const msg = v as Partial<I18nMessage>;
-      return typeof msg.t === 'string' ? fr(msg.t.includes('::') ? msg.t.slice(msg.t.indexOf('::') + 2) : msg.t, msg.params) : '';
+      return typeof msg.t === 'string' ? render(msg.t.includes('::') ? msg.t.slice(msg.t.indexOf('::') + 2) : msg.t, msg.params) : '';
     }
     return String(v);
   };
@@ -144,8 +144,8 @@ function fr(key: string, params?: I18nParams): string {
 /** { key, params } → nested translatable param value { t, params }. */
 const nested = (m: I18nEntry | null | undefined): I18nMessage | string =>
   m && typeof m === 'object' && m.key ? { t: m.key, ...(m.params ? { params: m.params } : {}) } : ((m ?? '') as I18nMessage | string);
-/** Translatable param for a skill name: SR5 skills (French name) are dictionary keys, custom names stay as typed. */
-const skillParam = (name: string, def: SkillDef | null | undefined): I18nMessage | string => (def && (!name || name === def.fr) ? { t: def.fr } : name || '');
+/** Translatable param for a skill name: SR5 skills (stored French name or English name) become their English key, custom names stay as typed. */
+const skillParam = (name: string, def: SkillDef | null | undefined): I18nMessage | string => (def && (!name || name === def.fr || name === skillEn(def)) ? { t: skillKey(def) } : name || '');
 
 export const KINDS: TrainingKind[] = ['attribute', 'skill', 'skillGroup', 'specialization', 'knowledge', 'quality', 'removeQuality', 'spell', 'complexForm', 'power', 'powerPoint', 'initiation', 'other'];
 
@@ -213,7 +213,7 @@ class RuleError extends Error {
   key: string;
   params: I18nParams | undefined;
   constructor(key: string, params?: I18nParams) {
-    super(fr(key, params));
+    super(render(key, params));
     this.key = key;
     this.params = params;
   }
@@ -249,16 +249,10 @@ const sumSteps = (from: number, to: number, f: (r: number) => number): number =>
 // Formatting
 // ---------------------------------------------------------------------------
 
-/** Plain French text (legacy, tests): 1 -> "1 jour", 14 -> "2 semaines", 30 -> "1 mois", 10 -> "1 semaine et 3 jours", 0 -> "immédiat". The UI uses formatDaysI18n(). */
+/** Plain English text (tests, logs): 1 -> "1 day", 14 -> "2 weeks", 30 -> "1 month", 10 -> "1 week and 3 days", 0 -> "immediate". The UI uses formatDaysI18n(). */
 export function formatDays(days: unknown): string {
-  const d = Math.max(0, Math.round(Number(days) || 0));
-  if (d === 0) return 'immédiat';
-  const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
-  if (d % 30 === 0) return plural(d / 30, 'mois', 'mois');
-  if (d < 7) return plural(d, 'jour', 'jours');
-  const w = Math.floor(d / 7);
-  const r = d % 7;
-  return r ? `${plural(w, 'semaine', 'semaines')} et ${plural(r, 'jour', 'jours')}` : plural(w, 'semaine', 'semaines');
+  const m = formatDaysI18n(days);
+  return render(m.t.replace(/^[^:]*::/, ''), m.params);
 }
 
 /** formatDays() as a translatable value { t, params } (render: t(v.t, v.params)). */
@@ -411,7 +405,7 @@ function hasAptitude(actor: ActorLike | null | undefined, skillId: string, skill
   const qs = (actor?.qualities || []).filter((q) => /aptitude/i.test(q?.name || ''));
   if (!qs.length) return false;
   const def = SKILL_BY_ID[skillId];
-  const words = [skillId.replace(/_/g, ' '), skillName, def?.fr].filter(Boolean);
+  const words = [skillId.replace(/_/g, ' '), skillName, def?.fr, def && skillEn(def)].filter(Boolean);
   for (const q of qs) {
     const text = norm(`${q.name} ${q.notes || ''}`).replace(/^aptitude ?/, '').trim();
     if (!text) return true; // unspecified: let the GM judge
@@ -507,8 +501,8 @@ export function groupState(actor: ActorLike | null | undefined, groupId: string)
   const same = ratings.every((r) => r === ratings[0]);
   let reasonI18n: I18nEntry | null = null;
   if (!same) reasonI18n = { key: tk('the group\'s skills don\'t all have the same rating') };
-  else if (withSpec.length) reasonI18n = { key: tk('specialization in {skills}'), params: { skills: withSpec.map((id) => (SKILL_BY_ID[id] ? { t: SKILL_BY_ID[id].fr } : id)) } };
-  const reason = reasonI18n ? fr(reasonI18n.key, reasonI18n.params) : '';
+  else if (withSpec.length) reasonI18n = { key: tk('specialization in {skills}'), params: { skills: withSpec.map((id) => (SKILL_BY_ID[id] ? { t: skillKey(id) } : id)) } };
+  const reason = reasonI18n ? render(reasonI18n.key, reasonI18n.params) : '';
   return { intact: same && !withSpec.length, rating: same ? ratings[0] || 0 : 0, owned: !!grp, reason, reasonI18n, members, ratings };
 }
 
@@ -647,14 +641,14 @@ export function describeI18n(actor: ActorLike | null | undefined, raw: unknown):
 
 function setLabel(out: AdvanceQuote, key: string, params?: I18nParams): void {
   out.labelI18n = params ? { key, params } : { key };
-  out.label = fr(key, params);
+  out.label = render(key, params);
 }
 /** Append to the current label: key must contain {label}. */
 function addToLabel(out: AdvanceQuote, key: string, params?: I18nParams): void {
   setLabel(out, key, { label: nested(out.labelI18n), ...(params || {}) });
 }
 function warn(out: AdvanceQuote, key: string, params?: I18nParams): void {
-  out.warnings.push(fr(key, params));
+  out.warnings.push(render(key, params));
   out.warningsI18n.push(params ? { key, params } : { key });
 }
 

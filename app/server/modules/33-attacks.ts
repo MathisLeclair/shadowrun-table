@@ -307,8 +307,8 @@ const mod: ServerModule = {
           else if (targetToken) point = { x: targetToken.x, y: targetToken.y };
         }
         // Environmental modifier (SR5 p. 175) from the token distance (range column), the target cell's light, the map weather,
-        // smoke clouds on the line of fire and flash-paks, after the attacker's vision: « portée longue (34 m) −3 » when the range
-        // is the only condition, else « environnement (portée longue 34 m, obscurité totale) −10 ».
+        // smoke clouds on the line of fire and flash-paks, after the attacker's vision: « long range (34 m) −3 » when the range
+        // is the only condition, else « env. (range, light) −6 ». Labels are dictionary keys (sheet/common.tsx rollBreakdown).
         const bonus: RollBonusLine[] = [];
         let range: Loose | null = null;
         let env: Loose | null = null;
@@ -325,8 +325,8 @@ const mod: ServerModule = {
           if (env.rangeOnly) {
             if (range?.mod) bonus.push({ label: `${range.label} (${range.meters} m)`, value: range.mod });
           } else if (env.value) {
-            // Short label (roll lines are cut at 40 characters): the columns that count, « env. (portée, lumière) −6 ».
-            const cols = [['range', 'portée'], ['visibility', 'visibilité'], ['light', 'lumière'], ['wind', 'vent']].filter(([k]) => env!.levels[k] > 0).map(([, l]) => l);
+            // Short label (roll lines are cut at 40 characters): the columns that count, « env. (range, light) −6 ».
+            const cols = ['range', 'visibility', 'light', 'wind'].filter((k) => env!.levels[k] > 0);
             bonus.push({ label: `env. (${cols.join(', ')})`, value: env.value });
           }
         }

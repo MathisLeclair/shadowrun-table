@@ -770,7 +770,7 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
     if (!attacking.weaponId) return { label: 'Attack', targetTokenId: targetTok?.id };
     const a = actors[attacking.actorId];
     const w = (hasSheet(a) ? a.weapons : []).find((x) => x.id === attacking.weaponId);
-    return { skillId: w?.skill || 'exotic_weapon', weaponId: attacking.weaponId, label: `Attaque — ${w?.nameFr || w?.name || ''}`, targetTokenId: targetTok?.id };
+    return { skillId: w?.skill || 'exotic_weapon', weaponId: attacking.weaponId, label: `Attack — ${w?.nameFr || w?.name || ''}`, targetTokenId: targetTok?.id };
   };
 
   return (

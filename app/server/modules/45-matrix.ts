@@ -730,7 +730,7 @@ function defenseFor(ctx: ActionContext, action: MatrixActionDef, target: Target,
   if (target.kind === 'manual') {
     if (ctx.isGM && p.defensePool !== undefined && p.defensePool !== null && p.defensePool !== '') {
       const n = clampInt(p.defensePool, 0, 60, 0);
-      return { pool: n, parts: [{ label: 'Défense (MJ)', key: tk('Defense (GM)'), value: n }], labelMsg: target.nameMsg as MsgLike };
+      return { pool: n, parts: [{ label: 'Defense (GM)', key: tk('Defense (GM)'), value: n }], labelMsg: target.nameMsg as MsgLike };
     }
     return { pending: true };
   }
@@ -1328,7 +1328,7 @@ function cleanDevice(x: unknown): HostDevice | null {
 }
 function normalizeHost(h: Loose, id: string): Host {
   h.id = id;
-  h.name = str(h.name, 80) || 'Hôte';
+  h.name = str(h.name, 80) || 'Host';
   h.rating = clampInt(h.rating, 1, 12, 3);
   const attrs = hostAttributes(h.rating);
   for (const k of ASDF) h[k] = clampInt(h[k] ?? attrs[k], 0, 20, attrs[k]);

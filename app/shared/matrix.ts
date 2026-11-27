@@ -9,7 +9,7 @@
 // - Marks on a host also count on the IC, devices and files of that host (simplification of slaving).
 // - The decker's agent shares the deck: same ASDF, same loaded programs, same marks and the same Overwatch Score.
 //   It uses its Rating for every skill and attribute (pool = 2 × Rating) and the deck's attributes as limits.
-import { attr, derive, SKILL_BY_ID } from './sr5.ts';
+import { attr, derive, SKILL_BY_ID, skillEn, skillKey } from './sr5.ts';
 import { poolModifiers, rollContext, derivedWithModifiers } from './modifiers.ts';
 import type { CollectedModifier, ModifierLine } from './modifiers.ts';
 import type { ActorLike, AsdfKey, AttrKey, DamageType, DeviceLinkKind, I18nMessage, I18nParams, IcType, MatrixMode, Persona, Skill } from './types.ts';
@@ -505,13 +505,13 @@ export function actionPool(
     if (!sk || !sk.rating) {
       if (def && !def.def) {
         const reasonKey = tk('{skill} cannot be used untrained');
-        const reasonParams: I18nParams = { skill: { t: def.fr } };
+        const reasonParams: I18nParams = { skill: { t: skillKey(def) } };
         return { pool: 0, parts, limit: null, limitParts, impossible: true, reason: fill(reasonKey, reasonParams), reasonKey, reasonParams };
       }
       parts.push(part(tk('{attr} (defaulting −1)'), Math.max(0, a - 1), { attr: action.attr as AttrKey }));
     } else {
       // skillId: the UI shows the official skill name; attr: the attribute code (the same in both languages).
-      parts.push({ label: sk.name || def?.fr || (action.skill as string), skillId: action.skill, value: Number(sk.rating) }, { label: action.attr as AttrKey, attr: action.attr, value: a });
+      parts.push({ label: def ? skillEn(def) : sk.name || (action.skill as string), skillId: action.skill, value: Number(sk.rating) }, { label: action.attr as AttrKey, attr: action.attr, value: a });
       if (opts.useSpec && sk.spec) parts.push(part(tk('Spec. {spec}'), 2, { spec: sk.spec }));
     }
     if (opts.mods) {

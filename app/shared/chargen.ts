@@ -21,7 +21,7 @@
 //     gear: [{ id, ref, file, name, qty, rating, grade }],
 //     lifestyle: { catalogId, months }, rollStartingNuyen, karmaToNuyen,
 //     contacts: [{ id, name, connection, loyalty, notes }], notes }
-import { METATYPES, SKILLS, SKILL_BY_ID, SKILL_GROUPS, ATTR_LABELS } from './sr5.ts';
+import { METATYPES, SKILLS, SKILL_BY_ID, SKILL_GROUPS, ATTR_LABELS, skillKey } from './sr5.ts';
 import { spellInfo, powerInfo } from './advancement.ts';
 import { bonusFromEffects } from './modifiers.ts';
 import type { AttrKeyish, MetatypeDef, SkillDef } from './sr5.ts';
@@ -681,7 +681,7 @@ export function compute(rawData: unknown, ctx: ChargenCtx = {}) {
   const err = (step: string, key: string, params?: I18nParams, en?: I18nParams) => errors.push(issue(step, key, params, en));
   const warn = (step: string, key: string, params?: I18nParams, en?: I18nParams) => warnings.push(issue(step, key, params, en));
   const A = (k: AttrKey): I18nMessage => ({ t: ATTR_LABELS[k] || k });
-  const SK = (def: SkillDef): I18nMessage => ({ t: def.fr });
+  const SK = (def: SkillDef): I18nMessage => ({ t: skillKey(def) });
   const GRP = (id: string): I18nMessage => ({ t: SKILL_GROUPS[id] || id });
   const MT = (type: MagicType): I18nMessage => ({ t: MAGIC_TYPE_LC[type] || type });
   /** Catalog item name: French in params, English in `en`. */
@@ -1365,7 +1365,7 @@ export function buildActor(rawData: unknown, ctx: ChargenCtx = {}, opts: BuildAc
   for (const q of result.qualities) {
     const notes: string[] = [];
     if (q.choice) {
-      const label = ATTR_LABELS[q.choice as AttrKey] ? tr(ATTR_LABELS[q.choice as AttrKey]) : SKILL_BY_ID[q.choice]?.fr || q.choice;
+      const label = ATTR_LABELS[q.choice as AttrKey] ? tr(ATTR_LABELS[q.choice as AttrKey]) : SKILL_BY_ID[q.choice] ? tr(skillKey(q.choice)) : q.choice;
       notes.push(label);
     }
     if (q.notes) notes.push(q.notes);

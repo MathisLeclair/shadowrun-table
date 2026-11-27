@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { derive, attr, skillPool, rollDice, SKILL_BY_ID, ATTR_LABELS, ATTR_SHORT, ATTRS, skillDefaultLimit } from '../../shared/sr5.ts';
+import { derive, attr, skillPool, rollDice, SKILL_BY_ID, ATTR_LABELS, ATTRS, skillDefaultLimit, skillEn, skillKey } from '../../shared/sr5.ts';
 import { uid, deepClone, nuyen as fmtNuyen } from '../../shared/util.ts';
 import {
   ITEM_LISTS, PLAYER_ITEM_FIELDS, PLAYER_ACTOR_KEYS, MERGE_KEYS, normalizeActor, blankActor, healthStatus, categoryToSkill,
@@ -367,22 +367,23 @@ function findSubParent(ctx: ActionContext, actorId: unknown, list: string, itemI
   return { a, it, arr: it[sub] };
 }
 
-const LIMIT_LABEL: Record<string, string> = { physical: 'physique', mental: 'mentale', social: 'sociale', astral: 'astrale' };
+/** roll.limitLabel / first term of roll.limitBreakdown: the limit's English key (older entries: French 'physique', 'sociale'…). */
+const LIMIT_LABEL: Record<string, string> = { physical: 'physical', mental: 'mental', social: 'social', astral: 'astral' };
 /** Lists whose items carry attribute / initiative bonuses stored on the actor (item.bonus, server/lib/augment.js). */
 const BONUS_LISTS = ['augmentations', 'powers', 'qualities'];
 const BONUS_FIELDS = ['rating', 'level', 'choice', 'catalogId', 'name'];
 
 /**
  * Value of a named pool line a player's sheet sends ('dice/roll' bonus), recomputed from the actor; null = not one of them.
- * « VOL »: total defense (REA + INT + WIL); « Firewall »: Matrix defense (INT + Firewall) / biofeedback (WIL + Firewall).
+ * « WIL »: total defense (REA + INT + WIL); « Firewall »: Matrix defense (INT + Firewall) / biofeedback (WIL + Firewall).
  */
 function playerBonus(actor: Actor, label: string, { skillId, test, A1, A2 }: { skillId: string | null; test: string | null; A1: string | null; A2: string | null }): number | null {
-  if (label === 'VOL' && test === 'defense') return attr(actor, 'WIL');
+  if ((label === 'WIL' || label === 'VOL') && test === 'defense') return attr(actor, 'WIL'); // « VOL »: older clients
   if (label === 'Firewall' && !skillId && !A2 && (test === 'biofeedback' || A1 === 'INT') && actor.matrix) return clampInt(actor.matrix.firewall, 0, 20);
   return null;
 }
-/** 'dice/roll' payload.matrixLimit: device attribute used as the limit of a Matrix test from the sheet (stored French label). */
-const MATRIX_LIMIT_LABEL: Record<string, string> = { attack: 'Attaque', sleaze: 'Corruption', dataProcessing: 'Traitement', firewall: 'Firewall' };
+/** 'dice/roll' payload.matrixLimit: device attribute used as the limit of a Matrix test from the sheet (English key; older entries: French). */
+const MATRIX_LIMIT_LABEL: Record<string, string> = { attack: 'Attack', sleaze: 'Sleaze', dataProcessing: 'Data Processing', firewall: 'Firewall' };
 /** Upper-case status shown in PC damage logs (French keys). */
 const STATUS_UPPER: Partial<Record<HealthStatus, string>> = { 'hors de combat': tk('OUT OF ACTION'), mort: tk('DEAD') };
 
@@ -799,6 +800,7 @@ export function performRoll(ctx: ActionContext, p: RollPayload | null | undefine
   let pool = 0;
   let label = str(payload.label, 120).trim();
   let defaultLimit: string | null = null;
+  let defaultLabelI18n: I18nEntry | null = null;
   // Weapon attack: skill and limit (Accuracy + accessories) come from the weapon, its accessories add their dice.
   let weapon: Weapon | null = null;
   if (payload.weaponId) {
@@ -825,35 +827,39 @@ export function performRoll(ctx: ActionContext, p: RollPayload | null | undefine
       const r = Number(kno.rating) || 0;
       const spec = payload.useSpec && String(kno.spec || '').trim() ? 2 : 0;
       pool = r + attr(actor, at) + spec;
-      parts.push(`${kno.name} ${r}`, `${ATTR_SHORT[at]} ${attr(actor, at)}`);
-      if (spec) parts.push('spé. +2');
+      parts.push(`${kno.name} ${r}`, `${at} ${attr(actor, at)}`);
+      if (spec) parts.push('spec. +2');
       if (!label) label = kno.name;
       defaultLimit = 'mental';
     } else {
       const def = (SKILL_BY_ID as Record<string, Loose | undefined>)[skillId];
       const res = skillPool(actor, skillId, { useSpec: !!payload.useSpec, attrOverride: A1 || undefined } as { useSpec: boolean });
-      if (res.impossible) ctx.fail('{skill} cannot be used untrained', { skill: def?.fr ? { t: def.fr } : sk?.name || skillId });
+      if (res.impossible) ctx.fail('{skill} cannot be used untrained', { skill: def ? { t: skillKey(skillId) } : sk?.name || skillId });
       const at: AttrKey = A1 || sk?.attr || def?.attr || 'AGI';
       pool = res.pool;
-      if (res.defaulting) parts.push(`${ATTR_SHORT[at]} ${attr(actor, at)}`, 'par défaut −1');
+      // SR5 skills in English (dictionary keys: each viewer reads their language), custom skills as named.
+      if (res.defaulting) parts.push(`${at} ${attr(actor, at)}`, 'defaulting −1');
       else {
-        parts.push(`${sk?.name || def?.fr || skillId} ${sk!.rating}`, `${ATTR_SHORT[at]} ${attr(actor, at)}`);
-        if (payload.useSpec && sk!.spec) parts.push(`spé. +2`);
+        parts.push(`${def ? skillEn(skillId) : sk?.name || skillId} ${sk!.rating}`, `${at} ${attr(actor, at)}`);
+        if (payload.useSpec && sk!.spec) parts.push('spec. +2');
       }
-      if (!label) label = sk?.name || def?.fr || skillId;
+      if (!label) {
+        label = def ? skillEn(skillId) : sk?.name || skillId;
+        if (def) defaultLabelI18n = { key: skillKey(skillId) };
+      }
       defaultLimit = skillDefaultLimit(def, at);
     }
   } else if (A1 && actor) {
     pool = attr(actor, A1);
-    parts.push(`${ATTR_SHORT[A1]} ${pool}`);
+    parts.push(`${A1} ${pool}`);
     if (A2) {
       pool += attr(actor, A2);
-      parts.push(`${ATTR_SHORT[A2]} ${attr(actor, A2)}`);
+      parts.push(`${A2} ${attr(actor, A2)}`);
     }
     if (!label) label = A2 ? `${ATTR_LABELS[A1]} + ${ATTR_LABELS[A2]}` : ATTR_LABELS[A1];
   } else {
     pool = clampInt(payload.pool, 0, 100);
-    parts.push(`${pool} dés`);
+    parts.push(`${pool} dice`);
   }
   // Modifiers of the actor's gear, qualities, powers, implants (shared/modifiers.js) — computed here, never taken from the
   // client: the client only says which situational switches are on (`conditions`, checked against the actor's modifiers)
@@ -883,7 +889,7 @@ export function performRoll(ctx: ActionContext, p: RollPayload | null | undefine
     const ap = Math.round(Number(internal.ap) || 0);
     const armor = Math.max(0, full.armor + ap);
     pool += armor;
-    parts.push(ap ? `armure ${full.armor} PA ${ap > 0 ? '+' : '−'}${Math.abs(ap)}` : `armure ${full.armor}`);
+    parts.push(`armor ${full.armor}`, ...(ap ? [`AP ${ap > 0 ? '+' : '−'}${Math.abs(ap)}`] : []));
     internal.armorUsed = armor;
   }
   if (actor) {
@@ -896,7 +902,7 @@ export function performRoll(ctx: ActionContext, p: RollPayload | null | undefine
       parts.push(`${l.mod.source.name} ${v >= 0 ? '+' : '−'}${Math.abs(v)}`);
     }
   }
-  // Extra named lines: the GM's are kept as typed; a player's are only the sheet's own (total defense « VOL », Matrix defense /
+  // Extra named lines: the GM's are kept as typed; a player's are only the sheet's own (total defense « WIL », Matrix defense /
   // biofeedback « Firewall »), recomputed from the actor — anything else a player adds is counted under « mod. ».
   for (const b of Array.isArray(internal.bonus) ? internal.bonus : []) {
     const v = clampInt(b?.value, -50, 50);
@@ -935,7 +941,7 @@ export function performRoll(ctx: ActionContext, p: RollPayload | null | undefine
     const w = derivedWithModifiers(actor, mods).woundModifier;
     if (w) {
       pool += w;
-      parts.push(`blessures −${Math.abs(w)}`);
+      parts.push(`wounds −${Math.abs(w)}`);
     }
   }
   const explode = !!payload.explode;
@@ -944,7 +950,7 @@ export function performRoll(ctx: ActionContext, p: RollPayload | null | undefine
     if (actor.edge.current <= 0) ctx.fail('{name} has no Edge left', { name: actor.name });
     const e = attr(actor, 'EDG');
     pool += e;
-    parts.push(`Chance +${e}`);
+    parts.push(`Edge +${e}`);
   }
   pool = Math.min(100, pool);
   if (pool <= 0) ctx.fail('Dice pool of zero: automatic failure');
@@ -958,7 +964,7 @@ export function performRoll(ctx: ActionContext, p: RollPayload | null | undefine
       const acc = weaponAccuracy(actor, weapon, mods, rctx, modOpts);
       if (acc.total !== null) {
         auto = Math.max(1, acc.total); // a limit lowered to 0 stays a limit (never « none »)
-        limitLabel = 'précision';
+        limitLabel = 'accuracy';
         for (const l of acc.lines) pushLine(l, 'limit');
         if (acc.parts.length > 1) limitBreakdown = acc.parts.map(([n, v], i) => (i ? `${n} ${v >= 0 ? '+' : '−'}${Math.abs(v)}` : `${n} ${v}`)).join(' + ');
       }
@@ -993,9 +999,13 @@ export function performRoll(ctx: ActionContext, p: RollPayload | null | undefine
   if (explode) actor!.edge.current -= 1;
   const fire = shot ? applyShot(actor!, weapon!, shot) : null;
   const r = rollDice(pool, { limit, explode });
-  if (!label) label = `Jet de ${pool} dés`;
-  // Weapon attack (« Attaque — <arme> »): the weapon's name in both languages, each viewer reads their own (common.js rollLabel).
-  const labelI18n = weapon && /^Attaque — /.test(label) ? { key: tk('Attack — {weapon}'), params: { weapon: biName(weapon) } } : null;
+  if (!label) {
+    label = `Roll of ${pool} dice`;
+    defaultLabelI18n = { key: tk('Roll of {n} dice'), params: { n: pool } };
+  }
+  // Weapon attack (« Attack — <weapon> », « Attaque — » from older clients): the weapon's name in both languages, each viewer
+  // reads their own (sheet/common.tsx rollLabel).
+  const labelI18n = weapon && /^(Attack|Attaque) — /.test(label) ? { key: tk('Attack — {weapon}'), params: { weapon: biName(weapon) } } : defaultLabelI18n;
   const roll: RollRecord = {
     ...r, label, ...(labelI18n ? { labelI18n } : {}), explode, edge: explode, actorId: actor?.id || null, breakdown: parts.join(' + '), ...(fire ? { fire } : {}),
     ...(limitLabel ? { limitLabel } : {}), ...(limitBreakdown ? { limitBreakdown } : {}), ...(payload.secret ? { secret: true } : {}),
@@ -1141,7 +1151,7 @@ const mod: ServerModule<ExpressApp> = {
         a.id = ctx.uid(a.type);
         a.name = String(name || ctx.t(tk('{name} (copy)'), { name: src.name })).slice(0, 80); // stored in the table language
         for (const k of ITEM_LISTS) if (Array.isArray(loose(a)[k]) && k !== 'skills') for (const it of loose(a)[k]) it.id = ctx.uid('itm');
-        a.history = [...(a.history || []), { ts: ctx.now, text: `Copie de ${src.name}`, i18n: { key: 'Copy of {name}', params: { name: src.name } } }];
+        a.history = [...(a.history || []), { ts: ctx.now, text: `Copy of ${src.name}`, i18n: { key: 'Copy of {name}', params: { name: src.name } } }];
         normalizeActor(a, uid);
         ctx.state.actors[a.id] = a;
         return a.id;
@@ -1638,7 +1648,7 @@ const mod: ServerModule<ExpressApp> = {
         const pool = verificationPool(dev);
         const r = rollDice(pool);
         const outcome = sinCheckOutcome(r.hits, threshold);
-        const label = lic ? `Contrôle de licence — ${lic.name} (${identity})` : `Contrôle de SIN — ${identity}`; // i18n-ignore (stored French label, labelI18n below)
+        const label = lic ? `License check — ${lic.name} (${identity})` : `SIN check — ${identity}`; // English rendering of labelI18n
         const labelI18n: I18nEntry = lic
           ? { key: tk('License check — {license} ({sin})'), params: { license: lic.name, sin: identity } }
           : { key: tk('SIN check — {sin}'), params: { sin: identity } };
@@ -1685,8 +1695,9 @@ const mod: ServerModule<ExpressApp> = {
         if (kind === 'negotiate') {
           // The runner's own test (modifiers, wounds, Social limit, Edge) with the contact's Loyalty as extra dice.
           const bribe = clampInt(p.bribe, 0, 6, 0);
-          const label = `Négociation avec ${name}`; // i18n-ignore (stored French label, labelI18n below)
-          const bonus = [{ label: `Loyauté ${name}`, value: loy }, ...(bribe ? [{ label: 'dés achetés', value: bribe }] : [])]; // i18n-ignore (breakdown)
+          const label = `Negotiation with ${name}`; // English rendering of labelI18n
+          // Breakdown terms are dictionary keys (the contact's name is in the label).
+          const bonus = [{ label: 'Loyalty', value: loy }, ...(bribe ? [{ label: 'bought dice', value: bribe }] : [])];
           const r = performRoll(ctx, { actorId: a.id, skillId: 'negotiation', useSpec: !!p.useSpec, explode: !!p.explode, modifier: mod, label, secret: !!p.secret }, {
             bonus,
             logExtra: { labelI18n: { key: tk('Negotiation with {contact}'), params: { contact: name } }, contactRoll: { ...info, ...(bribe ? { bribe, bribeCost: bribeCost(c, bribe) } : {}) } },
@@ -1699,7 +1710,7 @@ const mod: ServerModule<ExpressApp> = {
           // 2D6 ≥ Connection: the contact picks up (a plain total, not hits).
           const dice = [1 + Math.floor(Math.random() * 6), 1 + Math.floor(Math.random() * 6)];
           const total = dice[0] + dice[1] + mod;
-          const label = `Joindre ${name}`; // i18n-ignore
+          const label = `Reach ${name}`; // English rendering of labelI18n
           return finish({
             dice, extra: [], pool: 2, total, label, labelI18n: { key: tk('Reach {contact}'), params: { contact: name } }, actorId: a.id,
             breakdown: mod ? `2D6 ${mod > 0 ? '+' : '−'} ${Math.abs(mod)}` : '2D6', ...(p.secret ? { secret: true } : {}),
@@ -1717,15 +1728,15 @@ const mod: ServerModule<ExpressApp> = {
         let threshold = null;
         if (kind === 'legwork') {
           pool = s.cha + cn;
-          parts = [`CHA ${s.cha}`, `Connexion ${cn}`];
-          label = `Enquête — ${name}`; // i18n-ignore
+          parts = [`CHA ${s.cha}`, `Connection ${cn}`];
+          label = `Legwork — ${name}`; // English rendering of labelI18n
           labelI18n = { key: tk('Legwork — {contact}'), params: { contact: name } };
         } else {
           threshold = clampInt(p.threshold, 1, MAX_CONNECTION, 0);
           if (!threshold) ctx.fail('Enter the Connection of the person to meet (threshold)');
           pool = s.etiquette + cn;
-          parts = [s.etiquetteDefaulting ? `CHA ${s.cha} par défaut −1` : `Étiquette + CHA ${s.etiquette}`, `Connexion ${cn}`];
-          label = `Réseau — ${name}`; // i18n-ignore
+          parts = [...(s.etiquetteDefaulting ? [`CHA ${s.cha}`, 'defaulting −1'] : [`Etiquette + CHA ${s.etiquette}`]), `Connection ${cn}`];
+          label = `Networking — ${name}`; // English rendering of labelI18n
           labelI18n = { key: tk('Networking — {contact}'), params: { contact: name } };
         }
         if (mod) parts.push(`mod. ${mod > 0 ? '+' : '−'}${Math.abs(mod)}`);
@@ -1734,7 +1745,7 @@ const mod: ServerModule<ExpressApp> = {
         const r = rollDice(pool, { limit: s.social });
         return finish({
           ...r, label, labelI18n, explode: false, edge: false, actorId: null, authorName: name, breakdown: parts.join(' + '),
-          limitLabel: 'sociale', limitBreakdown: `sociale ${s.social}`, ...(p.secret ? { secret: true } : {}),
+          limitLabel: 'social', limitBreakdown: `social ${s.social}`, ...(p.secret ? { secret: true } : {}),
           contactRoll: { ...info, ...(threshold ? { threshold, success: r.hits >= threshold } : {}), via: a.name },
         });
       },

@@ -458,7 +458,7 @@ const mod: ServerModule<HttpApp> = {
       // Nested items (weapon accessories, armor/vehicle mods, lifestyle qualities, techniques)
       const subMap: Record<string, string> = (result.assigned as { sub?: Record<string, string> }).sub || {};
       for (const [list, sub] of Object.entries(SUB_LISTS as Record<string, string>)) for (const it of (actor[list] || []) as Loose[]) for (const x of Array.isArray(it[sub]) ? it[sub] : []) if (subMap[x.id]) x.chummerGuid = subMap[x.id];
-      const fileBase = (actor.name || 'personnage').replace(/[<>:"/\\|?*\u0000-\u001f]+/g, '_').trim() || 'personnage';
+      const fileBase = (actor.name || 'character').replace(/[<>:"/\\|?*\u0000-\u001f]+/g, '_').trim() || 'character';
       actor.chummer = {
         ...(actor.chummer || {}), xml: stored.xml, ...(stored.urls.length ? { mugshots: stored.urls } : {}), fileName: actor.chummer?.fileName || `${fileBase}.chum5`, exportedAt: now, syncedAt: now,
         sourceHash: sha1(result.xml), created: /<created>True<\/created>/.test(result.xml), appVersion: actor.chummer?.appVersion || '5.226.0',

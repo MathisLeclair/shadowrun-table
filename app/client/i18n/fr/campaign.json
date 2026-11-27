@@ -245,5 +245,8 @@
   "When to reveal it, to whom…": "Quand le révéler, à qui…",
   "Write": "Écrire",
   "Yes": "Oui",
-  "Your GM notepad — never visible to players. Markdown accepted; saved when you leave the field or press Ctrl+S.": "Ton bloc-notes de MJ — jamais visible par les joueurs. Markdown accepté ; enregistrement en quittant le champ ou avec Ctrl+S."
+  "Your GM notepad — never visible to players. Markdown accepted; saved when you leave the field or press Ctrl+S.": "Ton bloc-notes de MJ — jamais visible par les joueurs. Markdown accepté ; enregistrement en quittant le champ ou avec Ctrl+S.",
+  "New act": "Nouvel acte",
+  "New phase": "Nouvelle phase",
+  "New thread": "Nouveau fil"
 }

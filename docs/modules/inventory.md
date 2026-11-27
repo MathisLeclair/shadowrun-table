@@ -16,7 +16,7 @@ other name in the tooltip), `categoryLabel`, `modeLabel` (FR CC/SA/TR/TA, EN SS/
 Stun). The stored `name` is never changed. A weapon ammo without reload type (Foundry « 14 ») takes the catalog's
 (« 14(c) ») when the capacity matches (`fillItemNames` returns true then and the caller runs `normalizeActor` again, so
 `ammoType` follows at once). Log / error params name items with `biName(item)` = `{ fr, en }` (format.ts picks the
-viewer's language); a weapon attack roll carries `labelI18n { key: 'Attaque — {weapon}', params: { weapon: { fr, en } } }`
+viewer's language); a weapon attack roll carries `labelI18n { key: 'Attack — {weapon}', params: { weapon: { fr, en } } }`
 (`sheet/common.tsx` `rollLabel`).
 
 ## Ammunition

@@ -1028,5 +1028,11 @@
   "You can only change: {fields}": "Tu peux seulement modifier : {fields}",
   "You can only roll for your own character": "Tu ne peux lancer que pour ton personnage",
   "You can't change that yourself ({fields}) — ask the GM, or use the shop or training.": "Tu ne peux pas modifier ça toi-même ({fields}) — demande au MJ, à la boutique ou à l’entraînement.",
-  "Zen den": "Antre de méditation"
+  "Zen den": "Antre de méditation",
+  "bought dice": "dés achetés",
+  "env.": "env.",
+  "range": "portée",
+  "visibility": "visibilité",
+  "light": "lumière",
+  "wind": "vent"
 }

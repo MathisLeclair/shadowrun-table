@@ -242,7 +242,8 @@ try {
     const r = await p1.send('dice/roll', { actorId: 'pc_jane', skillId: 'etiquette' });
     assert.equal(r.pool, 14);
     assert.equal(r.limit, 9);
-    assert.equal(r.label, 'Étiquette');
+    assert.equal(r.label, 'Etiquette'); // English skill name (dictionary key), labelI18n for every viewer
+    assert.equal(r.labelI18n?.key, 'Etiquette');
     // longarms + spec + wounds (2 physical boxes → no modifier) + modifier
     const r2 = await p1.send('dice/roll', { actorId: 'pc_jane', skillId: 'longarms', useSpec: true, modifier: -2, limit: 4 });
     assert.equal(r2.pool, 6 + 6 + 2 - 2);

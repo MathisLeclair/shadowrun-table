@@ -553,5 +553,6 @@
   "Your character has been approved by the GM!": "Ton personnage a été validé par le MJ !",
   "Tradition: {name}": "Tradition : {name}",
   "Aspect: {name}": "Aspect : {name}",
-  "Mentor: {name}": "Mentor : {name}"
+  "Mentor: {name}": "Mentor : {name}",
+  "Unknown player": "Joueur inconnu"
 }

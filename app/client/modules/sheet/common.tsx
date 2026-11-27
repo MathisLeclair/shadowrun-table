@@ -126,20 +126,31 @@ export function Overlay({ title, onClose, width = 560, children, actions, classN
   </div>;
 }
 
-// Roll labels and breakdowns are stored as text ('Defense', 'Agility + Logic', older French entries 'Défense', '6 dés',
-// 'Pistolets 4 + AGI 5 + spé. +2'): every viewer sees them in their own language through these helpers.
+// Roll labels and breakdowns are stored as text ('Defense', 'Agility + Logic', 'Pistols 4 + AGI 5 + spec. +2', older French
+// entries 'Défense', '6 dés', 'Pistolets 4 + AGI 5 + spé. +2'): every viewer sees them in their own language through these helpers.
 // Terms the server/dialogs put in breakdowns (UI keys, translated when shown).
 export const ROLL_TERMS = [tk('spec.'), tk('mod.'), tk('wounds'), tk('defaulting'), tk('bonus'), tk('recoil'), tk('armor'), tk('accessories'),
-  // first term of roll.limitBreakdown (« sociale 9 + Zoé : Heritage 12 +2 »): the server's limit adjectives
-  tk('physical'), tk('mental'), tk('fem::social'), tk('astral')];
+  tk('AP'), tk('bought dice'), tk('overpay'), tk('Loyalty'), tk('Connection'), tk('Etiquette'), tk('Negotiation'),
+  // environment modifier of an attack: « env. (range, light) −6 »
+  tk('env.'), tk('range'), tk('visibility'), tk('light'), tk('wind')];
+/** First term of roll.limitBreakdown (« social 9 + Zoé: Heritage +2 »): the server's limit adjective (older entries: French 'sociale'…). */
+const LIMIT_TERMS: Record<string, string> = { physical: tk('physical'), mental: tk('mental'), social: tk('fem::social'), astral: tk('astral') };
+
+/** One term of a breakdown: « name value », where the name may end with a parenthesized list (« env. (range, light) »). */
+function rollTermName(name: string): string {
+  if (LIMIT_TERMS[name]) return t(LIMIT_TERMS[name]);
+  const whole = tIfKnown(name);
+  const m = whole === name && name.match(/^(.*\S)\s+\(([^()]*)\)$/);
+  return m ? `${tIfKnown(m[1])} (${m[2].split(', ').map((x) => tIfKnown(x)).join(', ')})` : whole;
+}
 
 function rollTermText(part: string): string {
   const p = String(part).trim();
-  let m = p.match(/^(\d+) dés?$/);
+  let m = p.match(/^(\d+) (?:dés?|dice|die)$/);
   if (m) return tn(Number(m[1]), '{n} die', '{n} dice');
   m = p.match(/^(.*\S)\s+([+−-]?\d+(?:[.,]\d+)?)$/);
-  if (m) return `${tIfKnown(m[1])} ${m[2]}`;
-  return tIfKnown(p);
+  if (m) return `${rollTermName(m[1])} ${m[2]}`;
+  return rollTermName(p);
 }
 
 /** Roll label (stored text — UI key, older French text — or typed by a user) in the UI language. Accepts a roll or a label. */
@@ -152,7 +163,7 @@ export function rollLabel(rollOrLabel: ShownRoll | string | null | undefined): s
   if (m) return tn(Number(m[1]), '{n} die', '{n} dice');
   m = label.match(/^Jet de (\d+) dés$/);
   if (m) return t('Roll of {n} dice', { n: Number(m[1]) });
-  m = label.match(/^Attaque — (.+)$/);
+  m = label.match(/^(?:Attaque|Attack) — (.+)$/);
   if (m) return t('Attack — {weapon}', { weapon: m[1] });
   m = label.match(/^Sort — (.+)$/);
   if (m) return t('Spell — {spell}', { spell: m[1] });
@@ -162,7 +173,7 @@ export function rollLabel(rollOrLabel: ShownRoll | string | null | undefined): s
   return tIfKnown(label);
 }
 
-/** Pool breakdown ('Pistolets 4 + AGI 5 + spé. +2') in the UI language (terms stored in either language). */
+/** Pool breakdown ('Pistols 4 + AGI 5 + spec. +2') in the UI language (terms stored in either language). */
 export function rollBreakdown(text: string | null | undefined): string {
   if (!text) return '';
   return String(text).split(' + ').map(rollTermText).join(' + ');
@@ -183,11 +194,12 @@ export function DiceFaces({ roll, small }: { roll: ShownRoll | null | undefined;
   </div>;
 }
 
-// roll.limitLabel is stored by the server as an adjective (French 'physique'… in older entries) — or any text.
+// roll.limitLabel is stored by the server as an English key ('physical', 'accuracy', 'Sleaze'; French 'physique'… in older entries) — or any text.
 const LIMIT_TITLES: Record<string, string> = {
   physique: tk('Physical Limit'), mentale: tk('Mental Limit'), sociale: tk('Social Limit'), astrale: tk('Astral Limit'), précision: tk('Accuracy'),
   physical: tk('Physical Limit'), mental: tk('Mental Limit'), social: tk('Social Limit'), astral: tk('Astral Limit'), accuracy: tk('Accuracy'),
   Attaque: tk('Attack'), Corruption: tk('Sleaze'), Traitement: tk('Data Processing'), Firewall: tk('Firewall'),
+  Attack: tk('Attack'), Sleaze: tk('Sleaze'), 'Data Processing': tk('Data Processing'),
 };
 const limitTitle = (l: string): string => (LIMIT_TITLES[l] ? t(LIMIT_TITLES[l]) : t('{kind} limit', { kind: l }));
 

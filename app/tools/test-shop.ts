@@ -593,7 +593,7 @@ try {
   ok(at.tries === tries, `attempt counter (${at.tries} / ${tries})`);
   const rollE = gm.state.log.find((e) => e.id === at.logId);
   ok(rollE?.kind === 'roll' && rollE.roll!.avail?.value === 2 && rollE.roll!.avail.dice.length === 2 && rollE.roll!.labelI18n?.key === 'Availability — {item}', `roll logged with the Availability dice (${rollE?.roll?.breakdown})`);
-  ok(rollE!.roll!.pool === 7 && rollE!.roll!.limitLabel === 'sociale', `Negotiation default pool 7, Social limit (${rollE!.roll!.pool}, ${rollE!.roll!.limitLabel})`);
+  ok(rollE!.roll!.pool === 7 && rollE!.roll!.limitLabel === 'social', `Negotiation default pool 7, Social limit (${rollE!.roll!.pool}, ${rollE!.roll!.limitLabel})`);
   ok(jane.state.shop.availTests.some((x) => x.id === at.testId) && !bricks.state.shop.availTests.some((x) => x.id === at.testId), 'tests visible to their owner only');
   r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: jacket.id }] });
   await settle();
@@ -651,7 +651,7 @@ try {
   while (!at.found && ++tries < 30);
   await settle();
   const oRoll = gm.state.log.find((e) => e.id === at.logId)?.roll!;
-  ok(at.overpay === 4 && oRoll.pool === 7 + 4 && /surenchère \+4/.test(oRoll.breakdown!), `bought dice in the pool (${oRoll?.breakdown})`);
+  ok(at.overpay === 4 && oRoll.pool === 7 + 4 && /overpay \+4/.test(oRoll.breakdown!), `bought dice in the pool (${oRoll?.breakdown})`);
   const nuyenBefore = A(gm, 'pc_jane').nuyen;
   r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: jacket.id }] });
   await settle();

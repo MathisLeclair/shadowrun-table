@@ -13,7 +13,7 @@ import { LANGS, DEFAULT_LANG, SOURCE_LANG, isLang, interpolate, lookup, pluralKe
 import type { Dictionary, PluralForms, TParams } from '../i18n/format.ts';
 import type { Lang } from '../../shared/types.ts';
 // Relative path on purpose: resolves to /shared/sr5.js in the browser (same module instance) and works in Node.
-import { ATTR_LABELS, ATTR_SHORT, SKILL_BY_ID, SKILL_GROUPS, SKILL_CATEGORIES } from '../../shared/sr5.ts';
+import { ATTR_LABELS, ATTR_SHORT, SKILL_BY_ID, SKILL_GROUPS, SKILL_CATEGORIES, skillEn } from '../../shared/sr5.ts';
 
 export { LANGS, isLang };
 export type { Dictionary, PluralForms, TParams };
@@ -299,9 +299,6 @@ export const attrLabel = (key: string | null | undefined): string => (key && ATT
 /** 'AGI' → 'AGI', 'BOD' → 'CON' (fr) / 'BOD' (en). */
 export const attrShort = (key: string | null | undefined): string => (lang === 'en' ? String(key ?? '') : (key && ATTR_SHORT_MAP[key]) || String(key ?? ''));
 
-const titleCase = (id: string): string => String(id).split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-const SKILL_EN_EXCEPTIONS: Record<string, string> = { free_fall: 'Free-Fall', exotic_weapon: 'Exotic Weapon' };
-
 /**
  * Label of an active skill: accepts a SKILLS id, a SKILLS entry or an actor skill { id, name }.
  * Known SR5 skills use the official English name (from their id); custom skills keep their name (translated when it is a known key).
@@ -309,7 +306,7 @@ const SKILL_EN_EXCEPTIONS: Record<string, string> = { free_fall: 'Free-Fall', ex
 export function skillLabel(skill: SkillRef): string {
   const id = typeof skill === 'string' ? skill : skill?.id;
   const def = id ? SKILL_BY_ID[id] : undefined;
-  if (def && id) return lang === 'en' ? SKILL_EN_EXCEPTIONS[id] || titleCase(id) : def.fr;
+  if (def && id) return lang === 'en' ? skillEn(def) : def.fr;
   const name = typeof skill === 'string' ? skill : skill?.name || skill?.fr || id || '';
   return tIfKnown(name);
 }

@@ -17,7 +17,7 @@ Payload `{ pool, label, actorId?, skillId?, attr?, attr2?, useSpec?, … }` plus
   [rules](../rules/dice-and-tests.md#limits-sr5-p-46)).
 - `applyWounds?` (GM only; for players the wound modifier is forced:
   [rules](../rules/dice-and-tests.md#wound-modifiers-sr5-p-169)).
-- `bonus?: [{label, value}]` (players: only « VOL » of total defense and « Firewall » of Matrix defense /
+- `bonus?: [{label, value}]` (players: only « WIL » (older clients « VOL ») of total defense and « Firewall » of Matrix defense /
   biofeedback, recomputed; any other line counts as « mod. »).
 - `explode?` (Edge: Push the Limit), `secret?` (GM only: gmOnly log), `modifier?`.
 - `fireMode?`, `ammoOverride?` (GM): firing a weapon with a magazine, see [inventory.md](inventory.md#firing).
@@ -26,6 +26,12 @@ Payload `{ pool, label, actorId?, skillId?, attr?, attr2?, useSpec?, … }` plus
 emits `sfx { id: 'dice' }` to all. Types: `RollRecord`, `RollModLine`. Other roll records hang extra blocks on
 `roll`: `fire` ([inventory](inventory.md)), `avail` ([shop](shop.md)), `sinCheck` / `contactRoll`
 ([contacts-sins](contacts-sins.md)), `labelI18n` (translatable label).
+
+Stored texts are English: `label` (SR5 skill → its English name with `labelI18n`, free pool → « Roll of {n} dice »),
+`breakdown` terms joined by « + » (« Pistols 4 + AGI 5 + spec. +2 + wounds −1 », « armor 9 + AP −5 », « env. (range, light) −6 »),
+`limitLabel` (`physical` / `mental` / `social` / `astral` / `accuracy` / Matrix `Attack` / `Sleaze` / `Data Processing` /
+`Firewall`) and `limitBreakdown` (« social 9 + … »). `sheet/common.tsx` (`rollLabel`, `rollBreakdown`, `RollBadges`) shows
+them in the viewer's language, older French entries (« Pistolets 4 + spé. +2 », `limitLabel: 'sociale'`) included.
 
 The characters module exports the body of `dice/roll` as `performRoll(ctx, payload, internal)` (same modifiers, log
 entry, Edge — `internal` = trusted named dice lines, fewer rounds, AP on soak, extra log fields), used by

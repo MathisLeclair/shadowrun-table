@@ -442,7 +442,7 @@ try {
     const r1 = await jane.send<Roll>('dice/roll', { actorId: 'pc_jane', skillId: 'con' });
     assert.equal(r1.pool, 14);
     assert.equal(r1.limit, 9);
-    assert.equal(r1.limitLabel, 'sociale');
+    assert.equal(r1.limitLabel, 'social');
     const off = r1.mods.find((m) => m.name === 'Zoé : Heritage 12')!;
     assert.equal(off.state, 'off');
     const r2 = await jane.send<Roll>('dice/roll', { actorId: 'pc_jane', skillId: 'con', useSpec: true, conditions: ['visible'] });
@@ -485,7 +485,7 @@ try {
     const w = gm.state.actors.pc_jane.weapons.find((x) => x.name === 'Enfield AS-7')!;
     const r = await jane.send<Roll>('dice/roll', { actorId: 'pc_jane', weaponId: w.id, skillId: w.skill });
     assert.equal(r.limit, 5);
-    assert.equal(r.limitLabel, 'précision');
+    assert.equal(r.limitLabel, 'accuracy');
     await gm.send('actor/addSubItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, sub: 'accessories', item: { name: 'Test grip', mount: 'Under', effects: { dicePool: 1 } } });
     const r2 = await jane.send<Roll>('dice/roll', { actorId: 'pc_jane', weaponId: w.id, skillId: w.skill });
     assert.equal(r2.pool, r.pool + 1);
@@ -498,7 +498,7 @@ try {
     const m = gm.state.actors.pc_bricks.matrix!;
     const rm = await bricks.send<Roll>('dice/roll', { actorId: 'pc_bricks', skillId: 'hacking', matrixLimit: 'sleaze' });
     assert.equal(rm.limit, m.sleaze);
-    assert.equal(rm.limitLabel, 'Corruption');
+    assert.equal(rm.limitLabel, 'Sleaze');
   });
   await test('gear « active » switch: players may toggle it on their own gear; effects then reach the roll', async () => {
     await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'gear', item: { name: 'Spellcasting Focus, Combat', catalogId: '2f485376-54c1-41be-8678-79cc98e04ebc', rating: 2, qty: 1 } });
@@ -561,7 +561,7 @@ try {
     await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { stun: 6 } } });
     const r = await jane.send<Roll>('dice/roll', { actorId: 'pc_jane', skillId: 'con', applyWounds: false });
     assert.equal(r.pool, 14 - 2);
-    assert.match(r.breakdown, /blessures −2/);
+    assert.match(r.breakdown, /wounds −2/);
     const g = await gm.send<Roll>('dice/roll', { actorId: 'pc_jane', skillId: 'con', applyWounds: false });
     assert.equal(g.pool, 14);
     const st = gm.state.actors.pc_jane;
@@ -585,7 +585,7 @@ try {
     assert.ok(!/Furtivité|Sneaking/.test(r.breakdown), r.breakdown);
     await gm.send('actor/update', { actorId: 'pc_bricks', patch: { matrix: { attack: 9 } } });
     const con = await bricks.send<Roll>('dice/roll', { actorId: 'pc_bricks', skillId: 'con', matrixLimit: 'attack' });
-    assert.equal(con.limitLabel, 'sociale');
+    assert.equal(con.limitLabel, 'social');
     const pair = await bricks.send<Roll>('dice/roll', { actorId: 'pc_bricks', attr: 'CHA', attr2: 'INT', matrixLimit: 'attack' });
     assert.equal(pair.limit, null);
     const hack = await bricks.send<Roll>('dice/roll', { actorId: 'pc_bricks', skillId: 'cybercombat', matrixLimit: 'attack' });

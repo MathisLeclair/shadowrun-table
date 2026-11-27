@@ -120,10 +120,10 @@ function ownersOf(state: TableState, actorId: ActorId): UserId[] {
 }
 /** Log entry visible to the actor's owners and the GM only. */
 function privateLog(ctx: ActionContext, actorId: ActorId, key: string, params: I18nParams) {
-  return ctx.log({ kind: 'training', userId: ctx.user.id, author: 'Progression', authorI18n: { key: 'Advancement' }, i18n: { key, params }, to: [...new Set([...ownersOf(ctx.state, actorId), 'gm'])] });
+  return ctx.log({ kind: 'training', userId: ctx.user.id, author: 'Advancement', authorI18n: { key: 'Advancement' }, i18n: { key, params }, to: [...new Set([...ownersOf(ctx.state, actorId), 'gm'])] });
 }
 function publicLog(ctx: ActionContext, key: string, params: I18nParams) {
-  return ctx.log({ kind: 'training', userId: ctx.user.id, author: 'Progression', authorI18n: { key: 'Advancement' }, i18n: { key, params } });
+  return ctx.log({ kind: 'training', userId: ctx.user.id, author: 'Advancement', authorI18n: { key: 'Advancement' }, i18n: { key, params } });
 }
 /** Label of a request/job as a log/error param: translatable when the i18n form is known. */
 const labelParam = (x: Labelled): I18nParamValue => (x?.labelI18n?.key ? { t: x.labelI18n.key, ...(x.labelI18n.params ? { params: x.labelI18n.params } : {}) } : x?.label || '');

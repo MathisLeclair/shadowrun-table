@@ -176,7 +176,7 @@ try {
       assert.equal(d.attack.modifiedDv, 7 + d.attack.net);
       const s = await gm.send('attack/soak', { attackId: atkId });
       assert.equal(s.attack.status, 'done');
-      assert.match(s.roll.breakdown, /armor \d+ AP −5|armor 0/);
+      assert.match(s.roll.breakdown, /armor \d+ \+ AP −5|armor 0/);
       await settle();
       const after = gm.state.actors[npcId].condition.physical + gm.state.actors[npcId].condition.stun + gm.state.actors[npcId].condition.overflow;
       assert.equal(after - before, s.attack.damage);

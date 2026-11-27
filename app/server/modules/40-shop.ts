@@ -175,9 +175,9 @@ function notifyOwners<E extends keyof ServerEvents>(ctx: ActionContext, actorId:
   ctx.emitTo(targets, event, data);
 }
 
-/** Shop log entry (visible to the actor's owners and the GM): key = French text with {placeholders}, translated by the client. */
+/** Shop log entry (visible to the actor's owners and the GM): key = English text with {placeholders}, translated by the client. */
 function shopLog(ctx: ActionContext, actorId: ActorId, key: string, params: I18nParams): void {
-  ctx.log({ kind: 'shop', userId: ctx.user.id, author: 'Boutique', authorI18n: { key: 'Shop' }, i18n: { key, params }, to: [...new Set([...ownersOf(ctx.state, actorId), 'gm'])] });
+  ctx.log({ kind: 'shop', userId: ctx.user.id, author: 'Shop', authorI18n: { key: 'Shop' }, i18n: { key, params }, to: [...new Set([...ownersOf(ctx.state, actorId), 'gm'])] });
 }
 
 /** Actor history entry: { text (French), i18n: { key, params } } + nuyen / karma delta. */
@@ -474,15 +474,16 @@ function contactRoll(ctx: ActionContext, actor: ShopActor, contact: Contact, lin
   const mod = clampInt(modifier, -20, 20, 0);
   const pool = Math.min(100, c.pool! + mod + overpay);
   if (pool <= 0) ctx.fail('Dice pool of zero: automatic failure');
-  const parts = c.defaulting ? [`CHA ${c.cha}`, 'par défaut −1'] : [`CHA ${c.cha}`, `Négociation ${c.negotiation}`];
-  if (overpay) parts.push(`surenchère +${overpay}`);
+  // Breakdown terms are dictionary keys (rollBreakdown() translates them).
+  const parts = c.defaulting ? [`CHA ${c.cha}`, 'defaulting −1'] : [`CHA ${c.cha}`, `Negotiation ${c.negotiation}`];
+  if (overpay) parts.push(`overpay +${overpay}`);
   if (mod) parts.push(`mod. ${mod > 0 ? '+' : '−'}${Math.abs(mod)}`);
   const r = rollDice(pool, { limit: c.limit });
-  const label = `Disponibilité — ${line.name} (via ${contact.name})`;
+  const label = `Availability — ${line.name} (via ${contact.name})`; // English rendering of labelI18n
   const roll: RollRecord = {
     ...r, label, labelI18n: { key: tk('Availability — {item} (via {contact})'), params: { item: line.name, contact: contact.name } },
-    explode: false, edge: false, actorId: null, breakdown: parts.join(' + '), limitLabel: 'sociale',
-    limitBreakdown: `sociale ${c.social} + Connexion ${c.connection}`, avail: { ...avail, contact: contact.name } as AvailRollInfo,
+    explode: false, edge: false, actorId: null, breakdown: parts.join(' + '), limitLabel: 'social',
+    limitBreakdown: `social ${c.social} + Connection ${c.connection}`, avail: { ...avail, contact: contact.name } as AvailRollInfo,
   };
   const entry = ctx.log({ kind: 'roll', userId: ctx.user.id, author: actor.name, text: label, roll });
   ctx.emitTo('all', 'sfx', { id: 'dice' });
@@ -873,7 +874,7 @@ function applyMartial(ctx: ActionContext, actor: ShopActor, plan: ReturnType<typ
 function sanitizeSpecial(ctx: ActionContext, src: Loose, prev: Partial<ShopSpecial> = {}): ShopSpecial {
   const out: Loose = { ...prev };
   const fileOk = (f: unknown) => SHOP_FILES.includes(f as CatalogFile) && !isUpgradeFile(f as string);
-  if (src.name !== undefined) out.name = str(src.name, 120) || prev.name || 'Offre sans nom';
+  if (src.name !== undefined) out.name = str(src.name, 120) || prev.name || ctx.t('Unnamed deal'); // stored in the table language
   if (src.category !== undefined) out.category = str(src.category, 60);
   if (src.file !== undefined) out.file = fileOk(src.file) ? src.file : 'gear';
   if (src.cost !== undefined) out.cost = Math.max(0, int(src.cost));
@@ -1099,7 +1100,7 @@ const mod: ServerModule = {
     for (const a of Object.values(state.actors || {}) as ShopActor[]) {
       if (a && typeof a === 'object' && a.lifestyle && typeof a.lifestyle === 'object' && !Array.isArray(a.lifestyles)) {
         // Safety net when the characters module did not run its migration (e.g. module order changed).
-        a.lifestyles = [{ id: `ls_${a.id}`, name: String(a.lifestyle.name || 'Train de vie').slice(0, 120), base: '', baseCost: Math.max(0, Number(a.lifestyle.monthlyCost) || 0), monthsPaid: Math.max(0, Math.round(Number(a.lifestyle.monthsPaid) || 0)), primary: true, qualities: [], notes: '' }];
+        a.lifestyles = [{ id: `ls_${a.id}`, name: String(a.lifestyle.name || 'Lifestyle').slice(0, 120), base: '', baseCost: Math.max(0, Number(a.lifestyle.monthlyCost) || 0), monthsPaid: Math.max(0, Math.round(Number(a.lifestyle.monthsPaid) || 0)), primary: true, qualities: [], notes: '' }];
         delete a.lifestyle;
       }
       if (a && Array.isArray(a.lifestyles)) {
@@ -1204,8 +1205,8 @@ const mod: ServerModule = {
         } else {
           r = performRoll(
             ctx,
-            { actorId: actor.id, skillId: 'negotiation', useSpec: !!useSpec, explode: !!explode, modifier, label: `Disponibilité — ${line.name}` },
-            { bonus: overpay ? [{ label: 'surenchère', value: overpay }] : [], logExtra: { labelI18n: { key: tk('Availability — {item}'), params: { item: line.name } }, avail } },
+            { actorId: actor.id, skillId: 'negotiation', useSpec: !!useSpec, explode: !!explode, modifier, label: `Availability — ${line.name}` },
+            { bonus: overpay ? [{ label: 'overpay', value: overpay }] : [], logExtra: { labelI18n: { key: tk('Availability — {item}'), params: { item: line.name } }, avail } },
           );
         }
         const test: AvailTest = {

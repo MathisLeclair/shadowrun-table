@@ -66,13 +66,13 @@ export function CombatTab({ s }: { s: SheetCtx }) {
   const ready = readyCount(actor);
   // Attack: the server computes the limit (Accuracy + accessories + Accuracy modifiers), adds the accessories' dice and uses the rounds
   // of the fire mode chosen in the roll dialog (weaponId).
-  const attack = (w: Weapon) => s.roll({ skillId: w.skill || 'exotic_weapon', weaponId: w.id, label: `Attaque — ${w.nameFr || w.name}` }); // i18n-ignore: stored French label, shown with rollLabel()
+  const attack = (w: Weapon) => s.roll({ skillId: w.skill || 'exotic_weapon', weaponId: w.id, label: `Attack — ${w.nameFr || w.name}` }); // i18n-ignore: stored label, shown with rollLabel()
   const arts = actor.martialArts || [];
   return <div className="sh-combat">
     <div className="sh-derived">
       <RollStat label={t('Initiative')} value={d.initiative.text} accent="cyan" book={ruleRef('initiative')} title={sourcesTitle(dm.sources.initiative)} />
       <RollStat label={t('Defense')} value={dm.defense} sub={`${attrShort('REA')} + ${attrShort('INT')}`} accent="amber" book={ruleRef('defense')} title={sourcesTitle(dm.sources.defense)} onClick={() => s.roll({ attr: 'REA', attr2: 'INT', label: tk('Defense'), test: 'defense' })} />
-      <RollStat label={t('Full defense')} value={dm.defense + attr(actor, 'WIL')} book={ruleRef('defense')} sub={`+ ${attrShort('WIL')}`} onClick={() => s.roll({ attr: 'REA', attr2: 'INT', label: tk('Full defense'), test: 'defense', bonus: [{ label: 'VOL', value: attr(actor, 'WIL') }] /* 'VOL': label the server recognizes (playerBonus), shown translated */ })} />
+      <RollStat label={t('Full defense')} value={dm.defense + attr(actor, 'WIL')} book={ruleRef('defense')} sub={`+ ${attrShort('WIL')}`} onClick={() => s.roll({ attr: 'REA', attr2: 'INT', label: tk('Full defense'), test: 'defense', bonus: [{ label: 'WIL', value: attr(actor, 'WIL') }] /* 'WIL': label the server recognizes (playerBonus), shown translated */ })} />
       <RollStat label={t('Soak')} value={dm.soak} sub={t('{attr} + armor', { attr: attrShort('BOD') })} accent="amber" book={ruleRef('soak')} title={sourcesTitle([...(dm.sources.armor || []), ...(dm.sources.soak || [])])} onClick={() => s.roll({ attr: 'BOD', label: tk('Soak'), applyWounds: false, limit: null, test: 'soak' })} />
       <RollStat label={t('Armor')} value={dm.armor} book={ruleRef('armor')} title={sourcesTitle(dm.sources.armor)} />
       <LimitStat s={s} name="physical" label={t('Physical Limit')} />
@@ -217,7 +217,7 @@ function SpecialActions({ s }: { s: SheetCtx }) {
     const w = a.kind === 'test' && !a.weaponSkill ? null : weaponFor(actor, a);
     if (a.kind === 'test') return s.roll({ attr: a.attr, skillId: a.weaponSkill ? w?.skill || 'unarmed_combat' : a.skillId, label: a.name, actionId: a.id });
     if (!w) return;
-    s.roll({ skillId: w.skill || 'exotic_weapon', weaponId: w.id, label: `Attaque — ${w.nameFr || w.name}`, actionId: a.id }); // i18n-ignore: stored French label
+    s.roll({ skillId: w.skill || 'exotic_weapon', weaponId: w.id, label: `Attack — ${w.nameFr || w.name}`, actionId: a.id }); // i18n-ignore: stored label, shown with rollLabel()
   };
   const row = (a: CombatAction, extra: ReactNode = null) => {
     const w = a.kind === 'test' && !a.weaponSkill ? null : weaponFor(actor, a);

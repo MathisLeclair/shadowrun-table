@@ -60,10 +60,10 @@ function imageUrl(v: unknown): string {
 }
 
 function normAct(a: Raw = {}, uid: Uid): CampaignAct {
-  return { id: cleanId(a.id) || uid('act'), title: str(a.title) || 'Nouvel acte', summary: md(a.summary) };
+  return { id: cleanId(a.id) || uid('act'), title: str(a.title) || 'New act', summary: md(a.summary) };
 }
 function normPhase(p: Raw = {}, uid: Uid): QuestPhase {
-  return { id: cleanId(p.id) || uid('ph'), title: str(p.title) || 'Nouvelle phase', text: md(p.text), done: !!p.done };
+  return { id: cleanId(p.id) || uid('ph'), title: str(p.title) || 'New phase', text: md(p.text), done: !!p.done };
 }
 function normQuest(q: Raw = {}, uid: Uid): Quest {
   // Phases without id get a deterministic one (p1, p2…) so seeds hash identically at every boot.
@@ -79,7 +79,7 @@ function normQuest(q: Raw = {}, uid: Uid): Quest {
   return {
     id: cleanId(q.id) || uid('q'),
     actId: cleanId(q.actId),
-    title: str(q.title) || 'Nouvelle quête',
+    title: str(q.title) || 'New quest',
     status: oneOf(QUEST_STATUS, q.status) ? q.status : 'upcoming',
     summary: md(q.summary),
     phases,
@@ -106,7 +106,7 @@ function normSession(s: Raw = {}, uid: Uid): CampaignSession {
 function normThread(t: Raw = {}, uid: Uid): CampaignThread {
   return {
     id: cleanId(t.id) || uid('th'),
-    label: str(t.label) || 'Nouveau fil',
+    label: str(t.label) || 'New thread',
     state: oneOf(THREAD_STATES, t.state) ? t.state : 'open',
     notes: md(t.notes),
   };
@@ -118,7 +118,7 @@ function revealList(v: unknown): 'all' | UserId[] {
 function normHandout(h: Raw = {}, uid: Uid, now = Date.now()): Handout {
   const out: Handout = {
     id: cleanId(h.id) || uid('ho'),
-    title: str(h.title) || 'Nouveau document',
+    title: str(h.title) || 'New handout',
     body: md(h.body),
     image: imageUrl(h.image),
     revealedTo: revealList(h.revealedTo),
@@ -377,7 +377,7 @@ const mod: ServerModule = {
     // ----- acts -----
     'campaign/addAct': {
       handler(ctx: ActionContext, { title, summary }: ActPayload = {}) {
-        const act = normAct({ title, summary }, ctx.uid);
+        const act = normAct({ title: str(title) || ctx.t('New act'), summary }, ctx.uid); // default title in the table language
         act.id = ctx.uid('act');
         camp(ctx).acts.push(act);
         return act.id;
@@ -408,7 +408,7 @@ const mod: ServerModule = {
     'campaign/addQuest': {
       handler(ctx: ActionContext, payload: Raw = {}) {
         const c = camp(ctx);
-        const q = normQuest({ ...payload, id: undefined }, ctx.uid);
+        const q = normQuest({ ...payload, title: str(payload.title) || ctx.t('New quest'), id: undefined }, ctx.uid);
         q.id = ctx.uid('q');
         if (!q.actId || !c.acts.some((a) => a.id === q.actId)) q.actId = c.acts[0]?.id || '';
         c.quests.push(q);
@@ -459,7 +459,7 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, { questId, title, text }: QuestPayload = {}) {
         const q = find(ctx, 'quests', questId);
         if (q.phases.length >= 50) ctx.fail('Too many phases');
-        const p = normPhase({ title, text }, ctx.uid);
+        const p = normPhase({ title: str(title) || ctx.t('New phase'), text }, ctx.uid);
         p.id = ctx.uid('ph');
         q.phases.push(p);
         return p.id;
@@ -522,7 +522,7 @@ const mod: ServerModule = {
     // ----- threads -----
     'campaign/addThread': {
       handler(ctx: ActionContext, payload: Raw = {}) {
-        const t = normThread({ ...payload, id: undefined }, ctx.uid);
+        const t = normThread({ ...payload, label: str(payload.label) || ctx.t('New thread'), id: undefined }, ctx.uid);
         t.id = ctx.uid('th');
         camp(ctx).threads.push(t);
         return t.id;
@@ -547,7 +547,7 @@ const mod: ServerModule = {
     // ----- handouts -----
     'campaign/addHandout': {
       handler(ctx: ActionContext, payload: Raw = {}) {
-        const h = normHandout({ ...payload, id: undefined, revealedTo: [], revealedAt: undefined }, ctx.uid, ctx.now);
+        const h = normHandout({ ...payload, title: str(payload.title) || ctx.t('New handout'), id: undefined, revealedTo: [], revealedAt: undefined }, ctx.uid, ctx.now);
         h.id = ctx.uid('ho');
         camp(ctx).handouts.push(h);
         return h.id;

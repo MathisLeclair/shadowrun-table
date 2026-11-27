@@ -401,7 +401,7 @@ async function serverTests() {
     ok(Object.keys(gm.state.actors).length === before + 1 && a?.type === 'pc', 'PC actor created');
     ok(a?.history?.[0]?.text?.startsWith('Creation'), `history « Creation » (${a?.history?.[0]?.text})`);
     ok(a?.history?.every((h) => h.i18n?.key && msgKeys(h.i18n).every((k) => hasFr(k))), 'history entries translatable');
-    const cgLogs = gm.state.log.filter((e) => e.author === 'Création');
+    const cgLogs = gm.state.log.filter((e) => e.authorI18n?.key === 'Creation');
     ok(cgLogs.length >= 2 && cgLogs.every((e) => e.i18n?.key && msgKeys(e.i18n).every((k) => hasFr(k))), `creation log entries translatable (${cgLogs.map((e) => e.text).join(' | ')})`);
     const approved = cgLogs.find((e) => /^Character approved: Rouille/.test(e.text));
     ok(approved && /^Character approved: Rouille \(starting nuyen: \d+¥\) — “Bienvenue à Seattle”$/.test(approved.text), `approval log stored in English (${approved?.text})`);

@@ -94,7 +94,7 @@ function cleanToken(t: Loose, map: MapSize): Token {
   const tok: Token = {
     id: str(t.id, 60) || uid('tok'),
     actorId: t.actorId ? str(t.actorId, 80) : null,
-    name: str(t.name || 'Pion', 60),
+    name: str(t.name || 'Token', 60),
     x: int(t.x, 0, Math.max(0, map.width - 1), 0),
     y: int(t.y, 0, Math.max(0, map.height - 1), 0),
     size: int(t.size, 1, 4, 1),
@@ -140,7 +140,7 @@ function cleanRegion(r: Loose, map: MapSize): MapRegion {
   const y = int(r.y, 0, map.height - 1, 0);
   return {
     id: str(r.id, 60) || uid('reg'),
-    name: str(r.name || 'Zone', 80),
+    name: str(r.name || 'Area', 80),
     x, y,
     w: int(r.w, 1, map.width - x, 1),
     h: int(r.h, 1, map.height - y, 1),
@@ -217,7 +217,7 @@ function cleanNote(n: Loose, map: MapSize): MapNote {
 /** Bring any map-like object to the canonical shape (in place). Doors force their cell to 'D'. */
 export function normalizeMap(m: Loose): GameMap {
   m.id = str(m.id, 80) || uid('map');
-  m.name = str(m.name || 'Carte sans nom', 80);
+  m.name = str(m.name || 'Unnamed map', 80);
   if (m.folder != null) m.folder = str(m.folder, 60);
   if (m.description != null) m.description = str(m.description, 20000);
   const rows = Array.isArray(m.tiles) ? m.tiles : [];
@@ -494,7 +494,7 @@ function setWeather(map: { weather?: GameMap['weather'] }, w: Loose | null | und
 
 function patchMapFields(ctx: ActionContext, map: GameMap, patch: Loose | null | undefined): void {
   if (!patch || typeof patch !== 'object') ctx.fail('Invalid change');
-  if ('name' in patch) map.name = str(patch.name || 'Carte sans nom', 80);
+  if ('name' in patch) map.name = str(patch.name || ctx.t('Unnamed map'), 80); // stored in the table language
   if ('folder' in patch) map.folder = str(patch.folder, 60);
   if ('description' in patch) map.description = str(patch.description, 20000);
   if ('lighting' in patch) map.lighting = oneOf(patch.lighting, LIGHTINGS, map.lighting);
@@ -759,7 +759,7 @@ const mod: ServerModule = {
         const src = getMap(ctx, mapId);
         const copy: Loose = deepClone(src);
         copy.id = uid('map');
-        copy.name = name ? str(name, 80) : `${src.name} (copie)`;
+        copy.name = name ? str(name, 80) : str(ctx.t('{name} (copy)', { name: src.name }), 80); // stored in the table language
         copy.explored = {};
         for (const t of copy.tokens) { t.id = uid('tok'); delete t.lastMove; }
         for (const k of ['doors', 'lights', 'regions', 'notes']) for (const o of copy[k]) o.id = uid(k.slice(0, 3));

@@ -101,7 +101,7 @@ export function sanitizeTemplate(raw: unknown, { id }: { id?: string } = {}): Te
   }
   out.id = id || (typeof t.id === 'string' && t.id ? t.id.slice(0, 80) : uid('tpl'));
   out.type = 'npc';
-  out.name = str(t.name, 120).trim() || 'PNJ sans nom';
+  out.name = str(t.name, 120).trim() || 'Unnamed NPC';
   out.folder = str(t.folder, 60).trim() || 'Divers';
   out.metatype = str(t.metatype, 40) || 'Humain';
   for (const k of ['concept', 'gender', 'portrait', 'color']) out[k] = str(t[k], k === 'portrait' ? 500 : 120);
@@ -799,7 +799,7 @@ const mod: ServerModule = {
     'bestiary/create': {
       handler(ctx: ActionContext, { template, folder }: TemplateCreatePayload = {}) {
         const id = ctx.uid('tpl');
-        const t = sanitizeTemplate({ name: 'Nouveau PNJ', folder: folder || 'Divers', ...(isObj(template) ? template : {}) }, { id });
+        const t = sanitizeTemplate({ name: ctx.t('New NPC'), folder: folder || 'Divers', ...(isObj(template) ? template : {}) }, { id });
         ctx.state.bestiary[id] = t;
         return { templateId: id };
       },
@@ -828,7 +828,7 @@ const mod: ServerModule = {
         const t = ctx.state.bestiary[templateId as string];
         if (!t) ctx.fail('Template not found');
         const id = ctx.uid('tpl');
-        ctx.state.bestiary[id] = sanitizeTemplate({ ...deepClone(t), name: `${t.name} (copie)` }, { id });
+        ctx.state.bestiary[id] = sanitizeTemplate({ ...deepClone(t), name: ctx.t('{name} (copy)', { name: t.name }) }, { id }); // stored in the table language
         return { templateId: id };
       },
     },

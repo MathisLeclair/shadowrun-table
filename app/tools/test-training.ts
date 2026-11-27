@@ -87,11 +87,11 @@ const timeTable: Array<[TrainingKind, number, number, CostOptions, number]> = [
 ];
 for (const [k, f, t, o, exp] of timeTable) eq(timeFor(k, f, t, o), exp, `timeFor ${k} ${f}→${t}`);
 
-eq(formatDays(0), 'immédiat', 'formatDays 0');
-eq(formatDays(1), '1 jour', 'formatDays 1');
-eq(formatDays(21), '3 semaines', 'formatDays 21');
-eq(formatDays(10), '1 semaine et 3 jours', 'formatDays 10');
-eq(formatDays(60), '2 mois', 'formatDays 60');
+eq(formatDays(0), 'immediate', 'formatDays 0');
+eq(formatDays(1), '1 day', 'formatDays 1');
+eq(formatDays(21), '3 weeks', 'formatDays 21');
+eq(formatDays(10), '1 week and 3 days', 'formatDays 10');
+eq(formatDays(60), '2 months', 'formatDays 60');
 eq(withInstructor(35, 'attribute', { instructorTimeReduction: 25, instructorCostPerWeek: { attribute: 1000 } } as Partial<TrainingSettings>), { days: 27, weeks: 4, nuyen: 4000, rate: 1000 }, 'withInstructor');
 
 // Limits
@@ -210,7 +210,7 @@ try {
   // Downtime
   p1.events.length = 0;
   const adv1 = await gm.send('training/advanceDays', { days: 3 });
-  eq(adv1.completed.map((c: { label: string }) => c.label), ['Pistolets 3 → 4'], 'downtime 3 days: Pistols finished');
+  eq(adv1.completed.map((c: { label: string }) => c.label), ['Pistols 3 → 4'], 'downtime 3 days: Pistols finished');
   await settle();
   a = gm.state.actors.pc_t_sam;
   eq(a.skills.find((s) => s.id === 'pistols')!.rating, 4, 'Pistols 4 applied');

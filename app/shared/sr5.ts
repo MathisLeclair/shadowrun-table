@@ -133,6 +133,20 @@ export const SKILLS: SkillDef[] = [
   { id: 'pilot_watercraft', fr: 'Pilotage (bateaux)', attr: 'REA', cat: 'vehicle', limit: null, def: true },
 ];
 export const SKILL_BY_ID: Record<string, SkillDef> = Object.fromEntries(SKILLS.map((s) => [s.id, s]));
+/** Official English names that are not the title-cased id. */
+const SKILL_EN_EXCEPTIONS: Record<string, string> = { free_fall: 'Free-Fall', exotic_weapon: 'Exotic Weapon' };
+/** Dictionary keys of skills whose plain English name translates differently elsewhere (context key, docs/i18n.md). */
+const SKILL_KEY_EXCEPTIONS: Record<string, string> = { spellcasting: 'pl::Spellcasting' };
+/** Official English name of an SR5 active skill ('pistols' → 'Pistols'; a SKILLS entry or its id). */
+export function skillEn(skill: SkillDef | string): string {
+  const id = typeof skill === 'string' ? skill : skill.id;
+  return SKILL_EN_EXCEPTIONS[id] || String(id).split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+/** Dictionary key of an SR5 active skill name, for stored texts and nested translatable params ({ t: skillKey(def) }). */
+export function skillKey(skill: SkillDef | string): string {
+  const id = typeof skill === 'string' ? skill : skill.id;
+  return SKILL_KEY_EXCEPTIONS[id] || skillEn(id);
+}
 /** Skill group names: UI keys (English), shown with skillGroupLabel() / t(). */
 export const SKILL_GROUPS: Record<string, string> = {
   acting: 'Acting', athletics: 'Athletics', biotech: 'Biotech', close_combat: 'Close Combat', conjuring: 'Conjuring',
