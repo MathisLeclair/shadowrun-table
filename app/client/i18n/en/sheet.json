@@ -869,5 +869,14 @@
   "{name} récupère {item} ({place})": "{name} takes {item} ({place})",
   "Plus de {ammo} à portée : choisis d’autres munitions": "No more {ammo} within reach: choose other ammunition",
   "Seul le MJ peut changer le type de {place}": "Only the GM can change the type of {place}",
-  "{place} contient encore des objets : récupère-les d’abord": "{place} still holds items: take them out first"
+  "{place} contient encore des objets : récupère-les d’abord": "{place} still holds items: take them out first",
+  "Dés 3D : non": "3D dice: off",
+  "Dés 3D : mes jets": "3D dice: my rolls",
+  "Dés 3D : tous les jets": "3D dice: all rolls",
+  "cliquer pour changer": "click to change",
+  "3D": "3D",
+  "3D : moi": "3D: me",
+  "3D : tous": "3D: all",
+  "+{n} dé non affiché": "+{n} die not shown",
+  "+{n} dés non affichés": "+{n} dice not shown"
 }

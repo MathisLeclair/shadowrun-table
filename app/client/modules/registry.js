@@ -23,6 +23,7 @@ import BooksPage from './books/BooksPage.js';
 import BookViewer from './books/BookViewer.js';
 import AssistantDock from './assistant/AssistantDock.js';
 import AttackTray from './combat/AttackTray.js';
+import Dice3D from './sheet/Dice3D.js';
 import { unreadHandouts } from './campaign/common.js';
 import { tk } from '../lib/i18n.js';
 
@@ -59,4 +60,4 @@ export const dockTabs = [
 export const SheetView = SheetViewImpl;
 
 /** Mounted once for every user, outside the tabs (audio playback, overlays…). */
-export const globalComponents = [AudioEngine, BookViewer, AttackTray]; // BookViewer: rulebook drawer (openBook() from anywhere); AttackTray: defend / soak prompts
+export const globalComponents = [AudioEngine, BookViewer, AttackTray, Dice3D]; // BookViewer: rulebook drawer (openBook() from anywhere); AttackTray: defend / soak prompts; Dice3D: 3D dice overlay

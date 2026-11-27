@@ -9,6 +9,7 @@ import { t, tn, tk, logText, attrShort, attrLabel, getLang } from '../../lib/i18
 import { isGM, ownsActor, DiceFaces, RollBadges, fmtTime, rollLabel, rollBreakdown, skillName } from './common.js';
 import { RollDialog, fireText } from './RollDialog.js';
 import { BookRef } from '../books/BookRef.js';
+import { Dice3dPicker } from './Dice3D.js';
 
 loadCss('/modules/sheet/sheet.css');
 
@@ -287,6 +288,7 @@ export default function LogDock({ game }) {
     <div class="ld-bar">
       ${[['all', tk('Tout')], ['rolls', tk('Jets')], ['chat', tk('Messages')]].map(([id, l]) => html`<button type="button" class=${'ld-filter' + (filter === id ? ' on' : '')} onClick=${() => setF(id)}>${t(l)}</button>`)}
       <span class="grow"></span>
+      <${Dice3dPicker} />
       ${gm && html`<${IconButton} icon="⌫" title=${t('Vider le journal')} onClick=${clearAll} />`}
     </div>
     <div class="ld-listwrap">

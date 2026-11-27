@@ -113,6 +113,7 @@ Registry (fixed — implement these default exports):
 | audio/SoundDock.js | `({game})` GM quick soundboard | dock `sounds` |
 | assistant/AssistantDock.js | `({game})` GM assistant chat (Claude), see « Assistant MJ » | dock `assistant` (GM) |
 | audio/AudioEngine.js | `({game})` global, renders nothing/tiny; plays audio for everyone | global |
+| sheet/Dice3D.js | `({game})` global 3D dice overlay (see « Dice ») | global |
 | campaign/CampaignPage.js | `({game})` GM campaign: acts, quests, sessions, handouts, docs, notes | main tab `campaign` |
 | campaign/DossiersPage.js | `({game})` player handouts + recap | main tab `dossiers` |
 | matrix/MatrixPage.js | `({game})` decker cockpit (players) / Matrix overview, hosts & IC (GM) | main tab `matrix` |
@@ -302,6 +303,7 @@ VehicleMod = { id, catalogId?, name, nameFr?, rating?, slots, category, cost, av
   every boot — idempotent (`tools/test-inventory.js` boots twice). Tests: `node tools/test-inventory.js` (ports 3443-3445).
 
 Dice: `'dice/roll'` (characters module) `{ pool, label, actorId?, skillId?, attr?, attr2?, useSpec?, test? ('composure'|'judgeIntentions'|'memory'|'liftCarry'|'defense'|'soak'|'drainResist'|'biofeedback'|'toxinResist': kept only on an attribute-only roll of that test's attributes, `shared/modifiers.js TEST_ATTRS` / `checkedTest`), weaponId? (the weapon's skill is used; only the GM may roll it with another `skillId`), matrixLimit? ('attack'|'sleaze'|'dataProcessing'|'firewall'; Matrix skills only: `MATRIX_LIMIT_SKILLS`), conditions?: [switch keys], ignore?: [modifier ids], limit? (number = that limit; null/0 = none; absent = computed — players can neither raise nor remove a computed limit; a computed limit is ≥ 1), applyWounds? (GM only: the wound modifier always applies to a player's skill / attribute roll except damage resistance tests `RESIST_TESTS`), bonus?: [{label, value}] (players: only « VOL » of total defense and « Firewall » of Matrix defense / biofeedback, recomputed; any other line counts as « mod. »), explode? (Edge: Push the Limit — adds EDG to the pool, rule of six, ignores limit and spends 1 Edge), secret? (GM only: gmOnly log), modifier?, fireMode?, ammoOverride? (GM; see « Inventaire ») }` → logs `{ kind: 'roll', roll: {..., breakdown, limitLabel?, limitBreakdown?, mods?: [ModLine], conditions?} }` and emits `sfx { id: 'dice' }` to all. Server rolls (Math.random). Pool and limit modifiers are computed by the server (« Modifiers »).
+- **3D dice** (`client/modules/sheet/Dice3D.js` + `dice3d.css`, client only): every new log entry with `roll.dice` is thrown as CSS 3D cubes that land on the server's values (`roll.extra` = a second wave; max 40 dice shown), then a banner shows hits / glitch badges (click = next). Per-browser choice `localStorage['sr.dice3d']` = `'off'` (default) | `'mine'` (own rolls + rolls on own characters) | `'all'` (every roll the user can see), set with `Dice3dPicker` (🎲 button in the Journal & dés bar). Entries present at load are never replayed; a burst keeps the last 3, the queue at most 4.
 
 ### Bestiary & combat (owner: combat module `30-combat.js`)
 ```js
