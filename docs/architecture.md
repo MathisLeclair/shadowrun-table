@@ -6,7 +6,7 @@ details are in [`modules/`](README.md#features); the data model is in [data-mode
 
 Real-time web app for running Shadowrun 5E campaigns (« Project Lazarus » first). One Node server (the GM's PC or a
 VPS) hosts one or more **tables** (independent campaigns, see [multi-table hosting](modules/multi-table.md)); the GM
-and players connect from a browser. **The UI is bilingual: French is the source text, English comes from
+and players connect from a browser. **The UI is bilingual: English is the source text, French comes from
 dictionaries** — every user-facing string goes through `t()` (see [i18n.md](i18n.md)). Code comments/identifiers in
 English.
 
@@ -36,7 +36,7 @@ app/
   client/lib/ui-store.ts useUI(), setUI(), openSheet(actorId), goTab(id), toast(text, kind), useLang() (core-owned)
   client/lib/i18n.ts     t(), tn(), tk(), tIfKnown(), logText(), errorText(), SR5 label helpers, formatting   (core-owned)
   client/i18n/format.ts  pure i18n core (interpolation, plurals) shared by client, server and tools   (core-owned)
-  client/i18n/en/*.json  English dictionaries, one per area { "français": "english" }   (each translator owns their area file)
+  client/i18n/fr/*.json  French dictionaries, one per area { "english": "français" }    (legacy-fr-keys.json: old saved French keys)
   server/lib/i18n.ts     server t()/tn() for the table language, errorBody(), normalizeLogEntry()   (core-owned)
   client/lib/markdown.ts renderMarkdown()                                                (core-owned)
   client/modules/registry.ts  which component is which tab                              (core-owned — DO NOT EDIT)

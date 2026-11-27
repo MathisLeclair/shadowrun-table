@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | server | `server/modules/75-notes.ts` (owner of `state.notes`) |
-| client | `client/modules/notes/` (NotesPage, NoteEditor, `notes-md.ts`); English `client/i18n/en/notes.json` |
+| client | `client/modules/notes/` (NotesPage, NoteEditor, `notes-md.ts`); French `client/i18n/fr/notes.json` |
 | tests | `node tools/test-notes.ts` (ports 3150-3199) |
 
 Main tab `notes` (GM + players): each user has a **private** note space, the party has a **collaborative** one the GM

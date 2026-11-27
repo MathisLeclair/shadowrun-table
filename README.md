@@ -126,7 +126,7 @@ app/
 ├── shared/            pure SR5 rules used by both server and browser (dice, derive, matrix, chargen…)
 ├── client/            React + TypeScript UI, bundled by Vite
 │   ├── modules/       one folder per tab
-│   └── i18n/en/       English dictionaries (French is the source text)
+│   └── i18n/fr/       French dictionaries (English is the source text)
 ├── data/              rules catalogue, seed content, content packs
 └── tools/             catalogue builders, importers, test suites
 ```

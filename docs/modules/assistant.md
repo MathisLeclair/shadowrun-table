@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | server | `server/modules/95-assistant.ts`, `server/lib/assistant/` (`auth.ts`, `config.ts`, `budget.ts`, `run.ts`, `context.ts`, `tools.ts`, `conversations.ts`, `admin-routes.ts`) |
-| client | `client/modules/assistant/` (AssistantDock) + `client/modules/admin/AssistantAdmin.tsx`; English `client/i18n/en/assistant.json` |
+| client | `client/modules/assistant/` (AssistantDock) + `client/modules/admin/AssistantAdmin.tsx`; French `client/i18n/fr/assistant.json` |
 | tests | `node tools/test-assistant.ts` (ports 3990-3999) |
 
 GM dock tab « Assistant » (GM only): a chat with Claude about the campaign, the SR5 rules and the live game. **No state

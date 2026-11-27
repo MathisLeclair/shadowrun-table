@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | server | `server/modules/90-books.ts`, `server/lib/books/` (`offsets.ts`, `access.ts`, `jobs.ts`, `index-worker.ts`, `admin-routes.ts`) |
-| client | `client/modules/books/` (BooksPage, BookViewer, BookRef, PdfReader, `pdfdoc.ts`, `pdfview.ts`, `bookcache.ts`, `store.ts`), `client/modules/admin/BooksAdmin.tsx`; English `client/i18n/en/books.json` |
+| client | `client/modules/books/` (BooksPage, BookViewer, BookRef, PdfReader, `pdfdoc.ts`, `pdfview.ts`, `bookcache.ts`, `store.ts`), `client/modules/admin/BooksAdmin.tsx`; French `client/i18n/fr/books.json` |
 | tools | `node tools/books-setup.ts` |
 | tests | `node tools/test-books.ts` (ports 3420-3439) |
 

@@ -29,7 +29,7 @@ is in **`app/shared/types.ts`**: start there.
 | `client/app.tsx` | browser shell: login, tabs, dock, sheet modal |
 | `client/lib/` | `net.ts` (state/actions), `ui.tsx` (UI kit), `ui-store.ts`, `i18n.ts`, `markdown.ts` |
 | `client/modules/<feature>/` | one folder per tab; `client/modules/registry.ts` maps tabs to components |
-| `client/i18n/en/*.json` | English dictionaries (French is the source text in code) |
+| `client/i18n/fr/*.json` | French dictionaries (English is the source text in code); `legacy-fr-keys.json` maps old saved French keys |
 | `data/catalog/` | gear catalogue generated from Chummer data |
 | `data/seed/`, `data/packs/<pack>/` | content packs (seed = Project Lazarus, `vierge` = empty, `demo` = public demo) |
 | `tools/` | tests (`test-*.ts`), builders, importers (TypeScript, run by Node) |
@@ -60,8 +60,8 @@ Runtime data (`data/tables/`, `runtime/`, uploads, rulebook PDFs, map images) is
   anything sent to the server (it commits on blur). Module CSS sits next to the component and is imported (`import './x.css';`),
   with classes prefixed by the module name. React: every `.map()` list gets a stable `key`; a text field that sends to
   the server commits on blur/Enter, never per keystroke.
-- **i18n:** UI text is written in French in the code and wrapped in `t()`/`tn()`/`tk()`. Add the English to
-  `client/i18n/en/<area>.json`, then check with `node tools/i18n-check.ts --area <area>`. The server throws
+- **i18n:** UI text is written in English in the code and wrapped in `t()`/`tn()`/`tk()`. Add the French to
+  `client/i18n/fr/<area>.json`, then check with `node tools/i18n-check.ts --area <area>`. The server throws
   `ctx.fail('Texte {x}', { x })`. Code comments and identifiers are in English.
 - **SR5 rules:** when a rule is ambiguous or stacking is unclear, do what **Chummer5a** does. Cite book and page
   (`source`, `page` fields) the way the existing data does.

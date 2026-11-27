@@ -45,7 +45,7 @@ names; techniques under `techniques`).
 
 `shared/modifiers.ts CONDITIONS`: Chummer `LimitCondition_Visible` → `visible`, `LimitCondition_IntimidationVisible` →
 `intimidation-visible`, free-text conditions → `t-<slug>` (`t-urban`), spellcasting foci → `spell-<category>`. Each has
-a French label (« si visible », English in `client/i18n/en/sheet.json`), optional restrictions that make it apply to
+a French label (English source text, French in `client/i18n/fr/sheet.json`), optional restrictions that make it apply to
 some tests only (`skills`, `groups`, `exclude`, `attrs`, `knowledge`, `matrixActions`, `mode`) and a **switch**
 (`toggle`): `null` = automatic; several conditions share one switch (every « must be visible » outfit → `visible`);
 unknown keys become their own switch (never applied silently). Wireless bonuses also need the `wireless` switch. Switch
