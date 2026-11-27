@@ -202,7 +202,7 @@ export function resetDemoTable(t: Table, api: DemoResetApi, { reason = 'manual' 
       try {
         fs.rmSync(path.join(t.dir, sub), { recursive: true, force: true });
       } catch (err) {
-        console.error(`[demo] ${t.id}: ${sub} non vidé`, (err as Error).message);
+        console.error(`[demo] ${t.id}: ${sub} not emptied`, (err as Error).message);
       }
     }
     try {
@@ -221,7 +221,7 @@ export function resetDemoTable(t: Table, api: DemoResetApi, { reason = 'manual' 
   s.lastReset = Date.now();
   s.lastActivity = s.lastReset;
   s.dirty = false;
-  console.log(`[demo] table « ${t.id} » remise à zéro (${reason})`);
+  console.log(`[demo] table "${t.id}" reset (${reason})`);
   return true;
 }
 
@@ -263,7 +263,7 @@ export function startDemoScheduler(api: DemoSchedulerApi): NodeJS.Timeout {
         try {
           resetDemoTable(t, api, { reason: why });
         } catch (err) {
-          console.error(`[demo] remise à zéro de « ${t.id} » impossible`, err);
+          console.error(`[demo] could not reset "${t.id}"`, err);
         }
       }
     }

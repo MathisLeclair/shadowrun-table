@@ -109,7 +109,7 @@ const mod: ServerModule<ExpressApp> = {
         const map = normalizeMap({
           id: uid('map'),
           name: str(name, 80).trim() || (ctx.lang === 'en' ? e.name : e.nameFr) || e.name,
-          folder: folder == null ? 'Bibliothèque' : str(folder, 60),
+          folder: folder == null ? ctx.t(tk('Library')) : str(folder, 60), // default folder, in the table language
           description: e.description || '',
           width: g.width, height: g.height, metersPerCell: e.metersPerCell, theme: e.theme, lighting: e.lighting,
           tiles: floorRows(g.width, g.height),
@@ -266,7 +266,7 @@ const mod: ServerModule<ExpressApp> = {
         if (!err || res.headersSent) return;
         for (const h of ['Content-Type', 'Content-Disposition', 'ETag', 'Last-Modified']) res.removeHeader(h);
         res.setHeader('Cache-Control', 'no-store');
-        res.status(err.status === 404 ? 404 : 500).json(errorBody(err.status === 404 ? NOT_FOUND : 'Erreur du serveur'));
+        res.status(err.status === 404 ? 404 : 500).json(errorBody(err.status === 404 ? NOT_FOUND : 'Server error'));
       });
     };
     app.get('/api/maplib/image/:slug', serve('image'));

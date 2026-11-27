@@ -1053,7 +1053,7 @@ const mod: ServerModule<ExpressApp> = {
         try {
           list = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
         } catch (err) {
-          console.error(`[characters] seed ${f} invalide :`, (err as Error).message);
+          console.error(`[characters] seed ${f} invalid:`, (err as Error).message);
           continue;
         }
         // Seed files: actors as stored (foreign JSON).
@@ -1168,7 +1168,7 @@ const mod: ServerModule<ExpressApp> = {
           if (def?.group && !it.group) it.group = def.group;
         } else {
           it.id = ctx.uid('itm');
-          if (!it.name && list !== 'skillGroups') it.name = 'Nouvel élément';
+          if (!it.name && list !== 'skillGroups') it.name = ctx.t('New item'); // stored in the table language
         }
         if (list === 'gear' && it.qty === undefined) it.qty = 1;
         if (list === 'augmentations') {

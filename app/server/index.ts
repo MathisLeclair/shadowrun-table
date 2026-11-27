@@ -121,7 +121,7 @@ function openTable(meta: StoredMeta): Table {
     syncMetaFromState(t);
   } catch (err) {
     t.error = (err as Error).message || String(err);
-    console.error(`[tables] table « ${meta.id} » indisponible :`, t.error);
+    console.error(`[tables] table "${meta.id}" unavailable:`, t.error);
   }
   tables.set(meta.id, t);
   return t;
@@ -171,6 +171,7 @@ function defaultTable(): Table | null {
 // ---------------------------------------------------------------------------
 // Auth (sessions live in each table's state: state.sessions[token] = userId)
 // ---------------------------------------------------------------------------
+// 'MJ' is a stored value (log authors, order.by…): the client shows it as t('GM'). Keep it.
 const GM_USER: SessionUser = { id: 'gm', role: 'gm', name: 'MJ', characterIds: [] };
 
 /** Language chosen by a user (null = follow the table's language). The GM's choice lives in config.gmLang. */
@@ -333,7 +334,7 @@ function addLogTo(table: Table, entry: NewLogEntry): LogEntry {
 // or on req's table when a request is passed (getState(req), scheduleBroadcast(req)).
 const scopeOf = (req?: unknown): Table | null => ((req as Request | undefined)?.srTable) || currentTable();
 function noScope(what: string): void {
-  console.error(`[tables] ${what} appelé hors de toute table`, new Error().stack?.split('\n').slice(2, 4).join(' | '));
+  console.error(`[tables] ${what} called outside any table`, new Error().stack?.split('\n').slice(2, 4).join(' | '));
 }
 const getState = (req?: unknown): TableState | null => scopeOf(req)?.state || null;
 const scheduleBroadcast = (req?: unknown): void => {
@@ -387,7 +388,7 @@ function makeCtx(table: Table, user: SessionUser): ActionContext {
     now: Date.now(),
     /** Name of the user's main character (or their own name). */
     displayName() {
-      if (user.role === 'gm') return 'MJ';
+      if (user.role === 'gm') return 'MJ'; // stored as log author: the client shows it as t('GM')
       const a = state.actors[user.characterIds?.[0]];
       return a ? a.name : user.name;
     },
@@ -535,7 +536,7 @@ const noTable = (req: Request, res: Response) => {
   const meta = req.srHint ? listMetas().find((m) => m.slug === req.srHint) : null;
   if (meta?.archived) return res.status(410).json(errorBody('This table is archived', null, { code: 'archived' }));
   if (meta && tables.get(meta.id)?.error) return res.status(503).json(errorBody('Table temporarily unavailable (see the server logs)', null, { code: 'broken' }));
-  return res.status(404).json(errorBody(req.srHint ? 'Table introuvable' : 'Choisis une table', null, { code: 'no-table' }));
+  return res.status(404).json(errorBody(req.srHint ? 'Table not found' : 'Choose a table', null, { code: 'no-table' }));
 };
 
 app.get('/api/lobby', (req, res) => {
@@ -846,7 +847,7 @@ function sendPage(req: Request, res: Response, next: NextFunction) {
     .then((html) => res.type('html').send(html))
     .catch(next);
 }
-if (!VITE_DEV && !BUILT) console.log('[client] dist/client/ not found: run « npm run build » (or « npm run dev ») to serve the app page.');
+if (!VITE_DEV && !BUILT) console.log('[client] dist/client/ not found: run "npm run build" (or "npm run dev") to serve the app page.');
 // The same page serves the table picker (/), the admin page (/admin) and every table (/t/<slug>/).
 app.get('/', (req, res, next) => {
   const listed = listMetas().filter((m) => !m.archived && !m.hidden && usableTable(tables.get(m.id)));
@@ -1027,9 +1028,9 @@ server.listen(PORT, '0.0.0.0', () => {
     .flat()
     .filter((i) => i && i.family === 'IPv4' && !i.internal)
     .map((i) => i!.address);
-  console.log(`\n  Shadowrun — ${tables.size} table(s) : ${[...tables.values()].map((t) => `${t.name} (/t/${t.slug}/)`).join(', ') || 'aucune'}`);
-  console.log(`  Accueil  : http://localhost:${PORT}/        Administration : http://localhost:${PORT}/admin`);
-  for (const ip of ips) console.log(`  Joueurs  : http://${ip}:${PORT}/`);
+  console.log(`\n  Shadowrun — ${tables.size} table(s): ${[...tables.values()].map((t) => `${t.name} (/t/${t.slug}/)`).join(', ') || 'none'}`);
+  console.log(`  Home     : http://localhost:${PORT}/        Admin: http://localhost:${PORT}/admin`);
+  for (const ip of ips) console.log(`  Players  : http://${ip}:${PORT}/`);
   console.log('');
 });
 

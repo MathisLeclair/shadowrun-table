@@ -32,8 +32,8 @@ interface BookVersion {
 }
 
 const MAX_HITS = 50;
-const NOT_HERE = 'Livre non disponible sur ce serveur';
-const BAD_LINK = 'Lien expiré ou invalide : rouvre le livre';
+const NOT_HERE = 'Book not available on this server';
+const BAD_LINK = 'Expired or invalid link: open the book again';
 
 /** Session token of the request (same rules as the core's bearer()). */
 const tokenOf = (req: Req): string => {
@@ -196,7 +196,7 @@ const mod: ServerModule<HttpApp> = {
         for (const h of ['Content-Disposition', 'Content-Type', 'ETag', 'Last-Modified', 'Accept-Ranges']) res.removeHeader(h);
         res.setHeader('Cache-Control', 'no-store');
         if (err.status === 416) return res.status(416).end(); // Content-Range: bytes */<size> is kept
-        res.status(err.status || 500).json(errorBody(err.status === 404 ? NOT_HERE : 'Erreur du serveur'));
+        res.status(err.status || 500).json(errorBody(err.status === 404 ? NOT_HERE : 'Server error'));
       });
     });
   },

@@ -177,7 +177,7 @@ function notifyOwners<E extends keyof ServerEvents>(ctx: ActionContext, actorId:
 
 /** Shop log entry (visible to the actor's owners and the GM): key = French text with {placeholders}, translated by the client. */
 function shopLog(ctx: ActionContext, actorId: ActorId, key: string, params: I18nParams): void {
-  ctx.log({ kind: 'shop', userId: ctx.user.id, author: 'Boutique', i18n: { key, params }, to: [...new Set([...ownersOf(ctx.state, actorId), 'gm'])] });
+  ctx.log({ kind: 'shop', userId: ctx.user.id, author: 'Boutique', authorI18n: { key: 'Shop' }, i18n: { key, params }, to: [...new Set([...ownersOf(ctx.state, actorId), 'gm'])] });
 }
 
 /** Actor history entry: { text (French), i18n: { key, params } } + nuyen / karma delta. */
@@ -1456,7 +1456,7 @@ const mod: ServerModule = {
           };
           delete src.fromRef;
         }
-        if (!src.name) src.name = 'Nouvelle offre';
+        if (!src.name) src.name = ctx.t(tk('New deal')); // stored in the table language
         const sp = sanitizeSpecial(ctx, src, { id: ctx.uid('spc') });
         ctx.state.shop.specials.push(sp);
         return { id: sp.id };

@@ -221,7 +221,7 @@ export function registerAdminRoutes(app: Express, api: TableApi): void {
     }
     const t = openTable(meta);
     if (t.error) return fail(res, 500, 'Table created but unreadable: {error}', {}, { error: t.error });
-    console.log(`[admin] table créée : ${id} (${pack}, ${lang})`);
+    console.log(`[admin] table created: ${id} (${pack}, ${lang})`);
     res.json({ table: { ...meta, url: `/t/${id}/` } });
   });
 
@@ -365,7 +365,7 @@ export function registerAdminRoutes(app: Express, api: TableApi): void {
       console.error('[admin] rm failed', err);
     }
     removeMeta(m.id);
-    console.log(`[admin] table supprimée : ${m.id} (archive : deleted/${backup})`);
+    console.log(`[admin] table deleted: ${m.id} (archive: deleted/${backup})`);
     res.json({ ok: true, backup });
   });
 
@@ -434,13 +434,13 @@ export function registerAdminRoutes(app: Express, api: TableApi): void {
       const t = openTable(meta);
       cleanup();
       if (t.error) return fail(res, 500, 'Table restored but unreadable: {error}', {}, { error: t.error });
-      console.log(`[admin] table restaurée : ${id}${replaced ? ` (ancienne version : deleted/${replaced})` : ''}`);
+      console.log(`[admin] table restored: ${id}${replaced ? ` (previous version: deleted/${replaced})` : ''}`);
       res.json({ table: { ...meta, url: `/t/${id}/` }, replaced });
     } catch (err) {
       cleanup();
       if (!(err instanceof ZipError)) console.error('[admin] restore failed', err);
       const e = err as Error & { status?: number };
-      if (!res.headersSent) fail(res, e.status || 500, e.message || 'Restauration impossible');
+      if (!res.headersSent) fail(res, e.status || 500, e.message || 'Restore failed');
     }
   });
 

@@ -71,7 +71,7 @@ export function signingKey(): SigningKey {
     try {
       fs.chmodSync(file, 0o600);
     } catch {}
-    console.log('[assistant] nouvelle clé de signature créée :', file);
+    console.log('[assistant] new signing key created:', file);
   }
   const privateKey = crypto.createPrivateKey(pem);
   const pub = crypto.createPublicKey(privateKey).export({ format: 'jwk' });

@@ -158,8 +158,8 @@ function filterView(view: GameView, user: NoteUser, fullState?: TableState | nul
   view.notes = { pages, comments, settings: { gmCanEditParty: !!src.settings?.gmCanEditParty }, now } satisfies NotesView;
 }
 
-const FULL = 'Espace de notes plein : supprime des notes avant d’en créer';
-const OWNER_FULL = 'Tes notes personnelles sont pleines ({max} caractères) : supprimes-en avant d’en écrire d’autres';
+const FULL = 'Note storage full: delete some notes before creating more';
+const OWNER_FULL = 'Your personal notes are full ({max} characters): delete some before writing more';
 
 // Action payloads (players send them: every field is checked by the handlers).
 interface CreatePayload {

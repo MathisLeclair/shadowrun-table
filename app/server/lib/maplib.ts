@@ -298,7 +298,7 @@ function saveIndex(): void {
     fs.mkdirSync(MAPLIB_DIR, { recursive: true });
     writeJsonAtomic(INDEX_FILE, index);
   } catch (err) {
-    console.error('[maplib] library.json non enregistré :', (err as Error).message);
+    console.error('[maplib] library.json not saved:', (err as Error).message);
   }
 }
 const entriesFile = (slug: string): string => path.join(ENTRIES_DIR, `${slug}.json`);
@@ -328,7 +328,7 @@ export function ensureLibrary(): LibIndex {
     try {
       if (syncSources()) saveIndex();
     } catch (err) {
-      console.error('[maplib] synchronisation des sources impossible :', err);
+      console.error('[maplib] could not sync the sources:', err);
     }
   }
   return idx;
@@ -425,13 +425,13 @@ export function gitFiles(dir: string = GIT_DIR): GitFile[] {
     try {
       raw = JSON.parse(text);
     } catch (err) {
-      console.warn(`[maplib] ${f} : JSON invalide (${(err as Error).message}), ignoré`);
+      console.warn(`[maplib] ${f}: invalid JSON (${(err as Error).message}), skipped`);
       continue;
     }
     if (!raw || typeof raw !== 'object' || !Array.isArray(raw.walls)) continue;
     const slug = cleanSlug(raw.slug) || cleanSlug(f.slice(0, -5));
     if (!slug) {
-      console.warn(`[maplib] ${f} : slug invalide, ignoré`);
+      console.warn(`[maplib] ${f}: invalid slug, skipped`);
       continue;
     }
     out.push({ file: f, slug, raw, hash: sha(text) });
@@ -556,7 +556,7 @@ export function syncSources(): boolean {
     try {
       if (applyGit(g)) changed = true;
     } catch (err) {
-      console.error(`[maplib] ${g.file} :`, (err as Error).message);
+      console.error(`[maplib] ${g.file}:`, (err as Error).message);
     }
   }
   if (fs.existsSync(SEED_MAPS_DIR)) {
@@ -565,7 +565,7 @@ export function syncSources(): boolean {
         const text = fs.readFileSync(path.join(SEED_MAPS_DIR, f), 'utf8');
         if (applySeedMap(f, JSON.parse(text), sha(text))) changed = true;
       } catch (err) {
-        console.warn(`[maplib] seed ${f} :`, (err as Error).message);
+        console.warn(`[maplib] seed ${f}:`, (err as Error).message);
       }
     }
   }
@@ -578,8 +578,8 @@ export function syncSources(): boolean {
 /** New version from a table (« Publier mes corrections »). Throws { key, params } errors. */
 export function publish(slug: unknown, content: unknown, by: LibBy, { baseVersion = null, force = false }: { baseVersion?: number | null; force?: boolean } = {}): number {
   const m = getMeta(slug);
-  if (!m) throw libError('Carte de bibliothèque introuvable');
-  if (!force && baseVersion != null && Number(baseVersion) < m.version) throw libError('La bibliothèque a changé depuis ta dernière synchronisation (v{lib}, ta carte : v{mine})', { lib: m.version, mine: Number(baseVersion) }, 'stale');
+  if (!m) throw libError('Library map not found');
+  if (!force && baseVersion != null && Number(baseVersion) < m.version) throw libError('The library changed since your last sync (v{lib}, your map: v{mine})', { lib: m.version, mine: Number(baseVersion) }, 'stale');
   m.origin = 'edited';
   const n = pushVersion(m, content, { by, origin: 'edited' });
   saveIndex();
@@ -588,9 +588,9 @@ export function publish(slug: unknown, content: unknown, by: LibBy, { baseVersio
 /** Make an old version current again (as a new version: the history keeps the replaced one). */
 export function rollback(slug: unknown, version: number, by: LibBy): number {
   const m = getMeta(slug);
-  if (!m) throw libError('Carte de bibliothèque introuvable');
+  if (!m) throw libError('Library map not found');
   const v = getVersion(slug, version);
-  if (!v || Number(version) === m.version) throw libError('Version introuvable');
+  if (!v || Number(version) === m.version) throw libError('Version not found');
   m.origin = 'edited';
   const n = pushVersion(m, v, { by, origin: 'edited', geometry: v.geometry || pickGeometry(m), note: `rollback v${version}` });
   saveIndex();
@@ -599,7 +599,7 @@ export function rollback(slug: unknown, version: number, by: LibBy): number {
 /** « Revenir à la version d'origine »: re-apply the git file (or the Foundry seed scene) and follow it again. */
 export function revertToOrigin(slug: unknown, by: LibBy): number {
   const m = getMeta(slug);
-  if (!m) throw libError('Carte de bibliothèque introuvable');
+  if (!m) throw libError('Library map not found');
   const g = gitFiles().find((x) => x.slug === m.slug);
   if (g) {
     m.origin = 'git';
@@ -622,13 +622,13 @@ export function revertToOrigin(slug: unknown, by: LibBy): number {
       return n;
     }
   }
-  throw libError('Pas de version d’origine pour cette carte');
+  throw libError('No original version for this map');
 }
 const PATCH_FIELDS = ['name', 'nameFr', 'tags', 'description', 'theme', 'lighting'] as const;
 /** Admin edit of the descriptive fields (kept over later git updates). */
 export function patchEntry(slug: unknown, patch: Record<string, unknown> = {}): LibMeta {
   const m = getMeta(slug);
-  if (!m) throw libError('Carte de bibliothèque introuvable');
+  if (!m) throw libError('Library map not found');
   const o: LibOverrides = { ...(m.overrides || {}) };
   for (const k of PATCH_FIELDS) {
     if (!(k in patch)) continue;
@@ -647,7 +647,7 @@ export function patchEntry(slug: unknown, patch: Record<string, unknown> = {}): 
 /** Hide an entry (tombstone: git does not bring it back; table maps already made from it keep their image). */
 export function deleteEntry(slug: unknown): void {
   const m = getMeta(slug);
-  if (!m) throw libError('Carte de bibliothèque introuvable');
+  if (!m) throw libError('Library map not found');
   m.deleted = { at: new Date().toISOString() };
   saveIndex();
 }
@@ -655,7 +655,7 @@ export function deleteEntry(slug: unknown): void {
 export function createUploaded({ slug, name, nameFr, source, gridPx, offsetX, offsetY, image, imageW, imageH, metersPerCell, theme, lighting, tags, description }: UploadedEntry): LibMeta {
   const index = ensureLibrary();
   const s = cleanSlug(slug);
-  if (!s) throw libError('Identifiant invalide (lettres minuscules, chiffres et tirets)');
+  if (!s) throw libError('Invalid id (lowercase letters, digits and dashes)');
   const prev = index.maps[s];
   if (prev && !prev.deleted) {
     // Same slug: new image for an existing entry — a new version with the new grid geometry, same walls.
@@ -846,7 +846,7 @@ function signingKey(): Buffer {
       fs.mkdirSync(path.dirname(file), { recursive: true });
       fs.writeFileSync(file, k.toString('hex'), { mode: 0o600 });
     } catch (err) {
-      console.error('[maplib] clé de signature non enregistrée (liens valables jusqu’au redémarrage)', (err as Error).message);
+      console.error('[maplib] signing key not saved (links valid until restart)', (err as Error).message);
     }
   }
   keys.set(file, k);

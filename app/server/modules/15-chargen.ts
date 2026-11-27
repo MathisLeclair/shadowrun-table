@@ -50,7 +50,7 @@ function loadCatalogs() {
     try {
       list = JSON.parse(fs.readFileSync(path.join(CATALOG_DIR, `${file}.json`), 'utf8'));
     } catch {
-      console.warn(`[chargen] catalogue ${file}.json absent ou invalide`);
+      console.warn(`[chargen] catalog ${file}.json missing or invalid`);
       continue;
     }
     for (const item of list) {
@@ -306,7 +306,7 @@ const mod: ServerModule = {
         d.submittedTs = ctx.now;
         d.ts = ctx.now;
         ctx.log({
-          kind: 'system', userId: ctx.user.id, author: 'Création',
+          kind: 'system', userId: ctx.user.id, author: 'Création', authorI18n: { key: 'Creation' },
           i18n: { key: '{user} submits a character to the GM: {name}', params: { user: d.userId === 'gm' ? { t: 'GM' } : d.userName, name: nameParam(d.data) } },
           to: [...new Set([ctx.user.id, 'gm'])],
         });
@@ -340,7 +340,7 @@ const mod: ServerModule = {
           d.status = 'rejected';
           d.ts = ctx.now;
           ctx.log({
-            kind: 'system', userId: ctx.user.id, author: 'Création',
+            kind: 'system', userId: ctx.user.id, author: 'Création', authorI18n: { key: 'Creation' },
             i18n: d.gmNote ? { key: 'Character needs changes: {name} — “{note}”', params: { name, note: d.gmNote } } : { key: 'Character needs changes: {name}', params: { name } },
             to: [...new Set([d.userId, 'gm'])],
           });
@@ -358,7 +358,7 @@ const mod: ServerModule = {
         const key = roll
           ? d.gmNote ? tk('Character approved: {name} (starting nuyen: {nuyen}¥) — “{note}”') : tk('Character approved: {name} (starting nuyen: {nuyen}¥)')
           : d.gmNote ? tk('Character approved: {name} — “{note}”') : tk('Character approved: {name}');
-        ctx.log({ kind: 'system', userId: ctx.user.id, author: 'Création', i18n: { key, params }, to: [...new Set([d.userId, 'gm'])] });
+        ctx.log({ kind: 'system', userId: ctx.user.id, author: 'Création', authorI18n: { key: 'Creation' }, i18n: { key, params }, to: [...new Set([d.userId, 'gm'])] });
         notifyOwner(ctx, d, 'chargen:resolved', { draftId: d.id, status: 'approved', note: d.gmNote, actorId });
         if (assignTo) ctx.emitTo(assignTo, 'sfx', { id: 'level-up' });
         return { status: 'approved', actorId };

@@ -23,7 +23,7 @@ services:
       ANTHROPIC_WORKSPACE_ID: ${ANTHROPIC_WORKSPACE_ID:-}
       ANTHROPIC_SERVICE_ACCOUNT_ID: ${ANTHROPIC_SERVICE_ACCOUNT_ID:-}
       SR_ASSISTANT_HOST: ovh-vps   # stable JWT subject (the container hostname changes on every recreate)
-      # Public demo table (DEPLOY.md « 4b »): its id, e.g. demo (empty = none) and the nightly reset hour (UTC here).
+      # Public demo table (DEPLOY.md "4b"): its id, e.g. demo (empty = none) and the nightly reset hour (UTC here).
       SR_DEMO_TABLE: ${SR_DEMO_TABLE:-}
       SR_DEMO_NAME: ${SR_DEMO_NAME:-}
       SR_DEMO_LANG: ${SR_DEMO_LANG:-}
@@ -33,7 +33,7 @@ services:
     volumes:
       # Registry (server.json) + every table (state, backups, uploads, docs, uploaded Foundry worlds).
       - ./runtime:/app/runtime
-      # Foundry assets of the historical « Project Lazarus » table (~490 MB, copied with deploy.ps1 -Action assets).
+      # Foundry assets of the historical "Project Lazarus" table (~490 MB, copied with deploy.ps1 -Action assets).
       - ./data/assets/foundry:/app/data/assets/foundry
       # Shared music library, every table (~330 MB, copied with deploy.ps1 -Action music; credits in CREDITS.md there).
       - ./data/assets/music:/app/data/assets/music

@@ -234,7 +234,7 @@ const mod: ServerModule = {
         const a = ensureSlice(ctx.state);
         if (!kind || !TRACK_KINDS.includes(kind)) ctx.fail('Invalid track type');
         if (a.tracks.length >= MAX_TRACKS) ctx.fail('Too many tracks');
-        const track: AudioTrack = { id: ctx.uid('trk'), name: str(name) || 'Sans titre', kind: kind as TrackKind, source: 'url', url: cleanUrl(ctx, url), tags: cleanTags(tags) };
+        const track: AudioTrack = { id: ctx.uid('trk'), name: str(name) || ctx.t('Untitled'), kind: kind as TrackKind, source: 'url', url: cleanUrl(ctx, url), tags: cleanTags(tags) };
         a.tracks.push(track);
         return track.id;
       },
@@ -284,9 +284,9 @@ const mod: ServerModule = {
           if (a.scenes.length >= MAX_SCENES) ctx.fail('Too many scenes');
           scene = { id: ctx.uid('scn'), name: '', ambient: a.ambient.trackId, music: a.music.trackId };
           a.scenes.push(scene);
-          if (!str(p.name)) p = { ...p, name: 'Nouvelle scène' };
+          if (!str(p.name)) p = { ...p, name: ctx.t('New scene') }; // stored in the table language
         }
-        if (p.name !== undefined) scene.name = str(p.name) || scene.name || 'Scène';
+        if (p.name !== undefined) scene.name = str(p.name) || scene.name || ctx.t('Scene');
         for (const ch of CHANNELS) if (p[ch] !== undefined) scene[ch] = sceneValue(ctx, a, p[ch], ch);
         if (p.mapId !== undefined) {
           if (p.mapId) scene.mapId = str(p.mapId, 120);

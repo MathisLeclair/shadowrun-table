@@ -155,7 +155,7 @@ export function registerMaplibAdminRoutes(app: Express, { requireAdmin, fail, li
       const err = e as { libKey?: string; status?: number };
       fs.rmSync(tmp, { force: true });
       if (err?.libKey) return libFail(res, err);
-      return fail(res, err.status || 500, err.status === 413 ? 'Fichier trop volumineux' : 'Envoi interrompu');
+      return fail(res, err.status || 500, err.status === 413 ? 'File too large' : 'Upload interrupted');
     }
   });
 

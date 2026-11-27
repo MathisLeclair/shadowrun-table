@@ -771,7 +771,7 @@ const mod: ServerModule = {
         try {
           data = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
         } catch (err) {
-          console.warn(`[combat] seed ${f} illisible : ${(err as Error).message}`);
+          console.warn(`[combat] seed ${f} unreadable: ${(err as Error).message}`);
           continue;
         }
         const list = Array.isArray(data) ? data : Array.isArray(data?.templates) ? data.templates : isObj(data) ? [data] : [];

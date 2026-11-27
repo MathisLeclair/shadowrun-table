@@ -38,10 +38,10 @@ interface PackDef {
 }
 
 export const PACKS: Record<PackId, PackDef> = {
-  'project-lazarus': { label: 'Project Lazarus (campagne complète)', dir: SEED_DIR },
-  vierge: { label: 'Campagne vierge (bestiaire générique)', dir: path.join(PACKS_DIR, 'vierge') },
+  'project-lazarus': { label: 'Project Lazarus (full campaign)', dir: SEED_DIR },
+  vierge: { label: 'Blank campaign (generic bestiary)', dir: path.join(PACKS_DIR, 'vierge') },
   // Public demo table content (tools/build-demo.ts): the vierge pack plus pre-made PCs, maps, a Matrix host.
-  demo: { label: 'Démo (vierge + prétirés, cartes, host)', dir: path.join(PACKS_DIR, 'demo'), base: 'vierge' },
+  demo: { label: 'Demo (blank + pregens, maps, host)', dir: path.join(PACKS_DIR, 'demo'), base: 'vierge' },
 };
 /** Seed folders of a pack, base pack first (module inits only add what is missing, so layering is safe). */
 export function packDirs(pack: string): string[] {
@@ -66,11 +66,11 @@ export function slugify(name: unknown): string {
     .replace(/-+$/g, '');
 }
 
-/** French error message for an invalid slug, or null. */
+/** Error message (i18n key) for an invalid slug, or null. */
 export function slugError(slug: unknown): string | null {
-  if (!SLUG_RE.test(String(slug || ''))) return 'Identifiant invalide : lettres minuscules, chiffres et tirets (2 à 40 caractères)';
-  if (String(slug).length < 2) return 'Identifiant trop court (2 caractères minimum)';
-  if (RESERVED.has(String(slug))) return `Identifiant réservé : « ${slug} »`;
+  if (!SLUG_RE.test(String(slug || ''))) return 'Invalid identifier: lowercase letters, digits and dashes (2 to 40 characters)';
+  if (String(slug).length < 2) return 'Identifier too short (2 characters minimum)';
+  if (RESERVED.has(String(slug))) return 'This identifier is reserved';
   return null;
 }
 
@@ -276,7 +276,7 @@ function migrateLegacy(): StoredMeta | null {
   const id = 'lazarus';
   const dir = path.join(TABLES_DIR, id);
   if (getMeta(id) || fs.existsSync(path.join(dir, 'state.json'))) {
-    console.warn(`[tables] ${LEGACY_STATE_FILE} existe encore mais la table « ${id} » aussi : fichier laissé tel quel (ignoré).`);
+    console.warn(`[tables] ${LEGACY_STATE_FILE} still exists but so does table "${id}": file left as is (ignored).`);
     return null;
   }
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -295,7 +295,7 @@ function migrateLegacy(): StoredMeta | null {
     try {
       fs.rmSync(LEGACY_STATE_FILE);
     } catch {
-      console.warn(`[tables] impossible de retirer ${LEGACY_STATE_FILE} (verrouillé ?) — supprime-le à la main.`);
+      console.warn(`[tables] could not remove ${LEGACY_STATE_FILE} (locked?) — delete it by hand.`);
     }
   }
   try {
@@ -305,7 +305,7 @@ function migrateLegacy(): StoredMeta | null {
     id, name: legacy?.config?.campaignName || 'Project Lazarus', createdAt: Date.now(), pack: 'project-lazarus',
     lang: isLangValue(legacy?.config?.lang) ? legacy.config.lang : 'fr', legacy: true, docsDir: '../Shadowrun', migratedAt: Date.now(),
   });
-  console.log(`[tables] partie existante migrée dans la table « ${id} » (${backups} sauvegarde(s), ${uploads} fichier(s) téléversé(s) déplacés ; original gardé : ${keep})`);
+  console.log(`[tables] existing game migrated into table "${id}" (${backups} backup(s), ${uploads} uploaded file(s) moved; original kept: ${keep})`);
   return meta;
 }
 
@@ -322,7 +322,7 @@ function adoptOrphans(): void {
     const tj = readJson(path.join(dir, 'table.json'), {}) || {};
     const st = readJson(path.join(dir, 'state.json'), {}) || {};
     const meta = addMeta({ ...tj, id: d.name, name: tj.name || st.config?.campaignName || d.name, pack: tj.pack || 'vierge', archived: false });
-    console.log(`[tables] dossier « ${d.name} » adopté comme table${meta.legacy ? ' (URL historiques)' : ''}`);
+    console.log(`[tables] folder "${d.name}" adopted as a table${meta.legacy ? ' (legacy URLs)' : ''}`);
   }
 }
 
@@ -331,7 +331,7 @@ function bootstrap(): StoredMeta | null {
   const id = process.env.SR_BOOTSTRAP_TABLE === undefined ? 'lazarus' : String(process.env.SR_BOOTSTRAP_TABLE).trim();
   if (!id || id === 'none' || slugError(id)) return null;
   const meta = addMeta({ id, name: 'Project Lazarus', pack: 'project-lazarus', lang: 'fr', legacy: true, docsDir: '../Shadowrun' });
-  console.log(`[tables] première installation : table « ${id} » créée (mot de passe MJ par défaut « lazarus » — change-le dans Réglages)`);
+  console.log(`[tables] first install: table "${id}" created (default GM password "lazarus" — change it in Settings)`);
   return meta;
 }
 
@@ -352,7 +352,7 @@ export function bootRegistry(): Registry {
     try {
       fs.copyFileSync(SERVER_FILE, keep);
     } catch {}
-    console.error(`[tables] server.json illisible : copie gardée (${keep}), registre reconstruit depuis les dossiers de tables.`);
+    console.error(`[tables] server.json unreadable: copy kept (${keep}), registry rebuilt from the table folders.`);
   }
   migrateLegacy();
   adoptOrphans();
@@ -366,7 +366,7 @@ export function createTableFiles({ id, name, pack, lang, gmPassword, hidden = fa
   id: string; name: string; pack: PackId; lang: Lang; gmPassword: string; hidden?: boolean; demo?: boolean;
 }): StoredMeta {
   const dir = path.join(TABLES_DIR, id);
-  if (fs.existsSync(path.join(dir, 'state.json'))) throw new Error('Ce dossier de table existe déjà sur le disque');
+  if (fs.existsSync(path.join(dir, 'state.json'))) throw new Error('This table folder already exists on disk');
   fs.mkdirSync(path.join(dir, 'uploads'), { recursive: true });
   fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
   const state = emptyState();
@@ -385,24 +385,24 @@ export function ensureDemoTable(): StoredMeta | null {
   if (!id || id === 'none') return null;
   const bad = slugError(id);
   if (bad) {
-    console.error(`[demo] SR_DEMO_TABLE=« ${id} » ignoré : ${bad}`);
+    console.error(`[demo] SR_DEMO_TABLE="${id}" ignored: ${bad}`);
     return null;
   }
   const m = getMeta(id);
   if (m && !m.demo) {
-    console.error(`[demo] la table « ${id} » existe déjà et n’est pas une table de démo : laissée telle quelle (choisis un autre SR_DEMO_TABLE).`);
+    console.error(`[demo] table "${id}" already exists and is not a demo table: left as is (pick another SR_DEMO_TABLE).`);
     return null;
   }
   if (m) return m.archived ? updateMeta(id, { archived: false }) : m;
   const dir = path.join(TABLES_DIR, id);
   if (fs.existsSync(path.join(dir, 'state.json'))) {
-    console.error(`[demo] un dossier tables/${id} non enregistré existe déjà : table de démo non créée.`);
+    console.error(`[demo] an unregistered tables/${id} folder already exists: demo table not created.`);
     return null;
   }
   const lang = isLangValue(process.env.SR_DEMO_LANG) ? process.env.SR_DEMO_LANG : 'fr';
   const name = String(process.env.SR_DEMO_NAME || '').trim().slice(0, 80) || (lang === 'en' ? 'Demo table' : 'Table de démonstration');
   const meta = createTableFiles({ id, name, pack: 'demo', lang, gmPassword: crypto.randomBytes(12).toString('hex'), demo: true });
-  console.log(`[demo] table publique de démonstration créée : /t/${id}/`);
+  console.log(`[demo] public demo table created: /t/${id}/`);
   return meta;
 }
 
@@ -433,7 +433,7 @@ export function setupAdminPassword(): void {
       registry.adminPasswordHash = hashPassword(env);
       registry.adminPasswordEnv = hashPassword(env); // fingerprint: detects a later change of the variable
       saveRegistry();
-      console.log('[admin] mot de passe administrateur défini depuis SR_ADMIN_PASSWORD');
+      console.log('[admin] administrator password set from SR_ADMIN_PASSWORD');
     }
     return;
   }
@@ -442,9 +442,9 @@ export function setupAdminPassword(): void {
   registry.adminPasswordHash = hashPassword(pw);
   saveRegistry();
   console.log('\n  ┌────────────────────────────────────────────────────────────┐');
-  console.log(`  │ Mot de passe ADMINISTRATEUR généré : ${pw.padEnd(22)}│`);
-  console.log('  │ (affiché une seule fois — page /admin ; ou fixe-le avec    │');
-  console.log('  │  la variable SR_ADMIN_PASSWORD puis redémarre)             │');
+  console.log(`  │ Generated ADMINISTRATOR password: ${pw.padEnd(25)}│`);
+  console.log('  │ (shown only once — /admin page; or set it with the         │');
+  console.log('  │  SR_ADMIN_PASSWORD variable, then restart)                 │');
   console.log('  └────────────────────────────────────────────────────────────┘\n');
 }
 

@@ -1,7 +1,7 @@
 {
   "name": "shadowrun-table",
   "version": "1.0.0",
-  "description": "Table de jeu Shadowrun 5E — Project Lazarus (MJ + joueurs en temps réel)",
+  "description": "Shadowrun 5E virtual tabletop — Project Lazarus (real-time GM + players)",
   "type": "module",
   "main": "server/index.ts",
   "scripts": {

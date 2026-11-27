@@ -348,7 +348,7 @@ function getToken(ctx: ActionContext, map: GameMap, tokenId: string): Token {
   if (!t) ctx.fail('Token not found');
   return t;
 }
-/** `notFound` = translatable error key ('Lumière introuvable'…). */
+/** `notFound` = translatable error key ('Light not found'…). */
 function findById<T extends { id: string }>(ctx: ActionContext, list: T[], id: unknown, notFound: string): T {
   const o = list.find((x) => x.id === id);
   if (!o) ctx.fail(notFound);
@@ -672,7 +672,7 @@ const mod: ServerModule = {
           Array.from({ length: width }, (_, x: number) => (fill === ' ' ? ' ' : fill === 'image' ? '.' : x === 0 || y === 0 || x === width - 1 || y === height - 1 ? '#' : fill)).join('')
         );
         const map = normalizeMap({
-          id: uid('map'), name: p.name || 'Nouvelle carte', folder: p.folder || '', theme: p.theme, lighting: p.lighting,
+          id: uid('map'), name: p.name || ctx.t('New map'), folder: p.folder || '', theme: p.theme, lighting: p.lighting,
           width, height, tiles, metersPerCell: 1,
         });
         ctx.state.maps[map.id] = map;
@@ -1032,7 +1032,7 @@ const mod: ServerModule = {
       role: 'gm',
       handler(ctx: ActionContext, { mapId, doorId }: DoorPayload) {
         const map = getMap(ctx, mapId);
-        findById(ctx, map.doors, doorId, 'Porte');
+        findById(ctx, map.doors, doorId, tk('Door not found'));
         map.doors = map.doors.filter((d) => d.id !== doorId);
         refreshFog(ctx.state, map);
       },
@@ -1057,7 +1057,7 @@ const mod: ServerModule = {
       role: 'gm',
       handler(ctx: ActionContext, { mapId, wallId, patch }: UpdateWallPayload) {
         const map = getMap(ctx, mapId);
-        const cur = findById(ctx, map.walls, wallId, 'Mur');
+        const cur = findById(ctx, map.walls, wallId, tk('Wall not found'));
         if (!patch || typeof patch !== 'object') ctx.fail('Invalid change');
         const p: Loose = { ...patch };
         if (p.door && typeof p.door === 'object' && cur.door) p.door = { ...cur.door, ...p.door };
@@ -1104,7 +1104,7 @@ const mod: ServerModule = {
       role: 'gm',
       handler(ctx: ActionContext, { mapId, lightId, on }: ToggleLightPayload) {
         const map = getMap(ctx, mapId);
-        const l = findById(ctx, map.lights, lightId, 'Lumière');
+        const l = findById(ctx, map.lights, lightId, tk('Light not found'));
         l.on = typeof on === 'boolean' ? on : !l.on;
         refreshFog(ctx.state, map);
         return l.on;

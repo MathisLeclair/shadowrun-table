@@ -143,12 +143,12 @@ export function createStateStore(dir: string, { label = path.basename(dir) }: { 
             break;
           }
         }
-        console.error(`\n  !!! [${label}] state.json est illisible (JSON invalide). Copie gardée : ${corrupt}`);
+        console.error(`\n  !!! [${label}] state.json is unreadable (invalid JSON). Copy kept: ${corrupt}`);
         if (!from) {
           state = null;
           throw new Error(`[${label}] state.json illisible et aucune sauvegarde lisible dans ${BACKUP_DIR}`);
         }
-        console.error(`  !!! [${label}] État restauré depuis : ${from}\n`);
+        console.error(`  !!! [${label}] State restored from: ${from}\n`);
       }
     }
     const base: Record<string, unknown> = emptyState();

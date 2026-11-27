@@ -194,5 +194,7 @@
   "Volume of this device only": "Volume de cet appareil uniquement",
   "volume::Master": "Général",
   "When the active map changes, play the sound scene linked to that map": "Quand la carte active change, lancer la scène sonore liée à cette carte",
-  "When this map becomes the active map, the scene starts (if the “auto scene” option is on).": "Quand cette carte devient la carte active, la scène se lance (si l’option « scène auto » est activée)."
+  "When this map becomes the active map, the scene starts (if the “auto scene” option is on).": "Quand cette carte devient la carte active, la scène se lance (si l’option « scène auto » est activée).",
+  "New scene": "Nouvelle scène",
+  "Scene": "Scène"
 }

@@ -101,14 +101,14 @@ export function registerBookAdminRoutes(app: Express, { requireAdmin, fail, list
         indexedAt: null,
       });
       startIndexJob(dir, code, { detect: true });
-      console.log(`[books] ${code} téléversé (${book?.size} octets), indexation lancée`);
+      console.log(`[books] ${code} uploaded (${book?.size} bytes), indexing started`);
       res.json({ book, jobs: jobList() });
     } catch (err) {
       try {
         fs.rmSync(tmp, { force: true });
       } catch {}
       const e = err as Error & { status?: number };
-      if (!res.headersSent) fail(res, e.status || 500, e.message || 'Envoi impossible');
+      if (!res.headersSent) fail(res, e.status || 500, e.message || 'Upload failed');
     }
   });
 
@@ -164,7 +164,7 @@ export function registerBookAdminRoutes(app: Express, { requireAdmin, fail, list
     if (String(req.body?.confirm || '') !== b.code) return fail(res, 400, 'Confirmation missing: type the code “{code}”', {}, { code: b.code });
     if (isBusy(b.code)) return fail(res, 409, 'This book is being indexed');
     removeBook(dir, b.code);
-    console.log(`[books] ${b.code} supprimé`);
+    console.log(`[books] ${b.code} deleted`);
     res.json({ ok: true });
   });
 }

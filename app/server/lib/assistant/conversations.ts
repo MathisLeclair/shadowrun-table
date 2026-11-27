@@ -108,7 +108,7 @@ export function getConversation(table: TableRef, id: string): Conversation | nul
 export function createConversation(table: TableRef, title?: unknown): Conversation {
   const data = load(table);
   const now = Date.now();
-  const c: Conversation = { id: uid('conv'), title: String(title || 'Nouvelle conversation').slice(0, 80), createdAt: now, updatedAt: now, usd: 0, messages: [], proposals: {}, notices: [] };
+  const c: Conversation = { id: uid('conv'), title: String(title || 'New conversation').slice(0, 80), createdAt: now, updatedAt: now, usd: 0, messages: [], proposals: {}, notices: [] };
   data.conversations[c.id] = c;
   // Drop the oldest conversations beyond the limit.
   const all = Object.values(data.conversations).sort((a, b) => b.updatedAt - a.updatedAt);

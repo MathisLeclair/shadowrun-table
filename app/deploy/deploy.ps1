@@ -45,14 +45,14 @@ $SshOpts = @('-i', $KeyFile, '-o', 'StrictHostKeyChecking=accept-new', '-o', 'Se
 function Write-Step([string]$Text) { Write-Host "`n==> $Text" -ForegroundColor Cyan }
 function Confirm-Step([string]$Question) {
   if ($Yes) { return $true }
-  $a = Read-Host "$Question [o/N]"
+  $a = Read-Host "$Question [y/N]"
   return $a -match '^(o|oui|y|yes)$'
 }
 
 foreach ($exe in @($Ssh, $Scp, $Tar)) {
-  if (-not (Test-Path $exe)) { throw "Introuvable : $exe (installe le client OpenSSH de Windows)" }
+  if (-not (Test-Path $exe)) { throw "Not found: $exe (install the Windows OpenSSH client)" }
 }
-if (-not (Test-Path $KeyFile)) { throw "Cle SSH introuvable : $KeyFile" }
+if (-not (Test-Path $KeyFile)) { throw "SSH key not found: $KeyFile" }
 
 # Common bash prelude run before every remote script (ASCII only).
 $Prelude = @'
@@ -95,29 +95,29 @@ function Invoke-Remote([string]$Script, [hashtable]$Vars = @{}, [switch]$AllowFa
   # Remote output is shown as it comes (Write-Host), never returned: callers get nothing on the pipeline.
   & $Ssh @SshOpts $Target "echo $b64 | base64 -d | bash" | ForEach-Object { Write-Host $_ }
   $code = $LASTEXITCODE
-  if ($code -ne 0 -and -not $AllowFail) { throw "La commande distante a echoue (code $code)" }
+  if ($code -ne 0 -and -not $AllowFail) { throw "The remote command failed (code $code)" }
 }
 
 function Test-Remote([string]$Command) {
   $out = (& $Ssh @SshOpts $Target "$Command && echo __YES__ || echo __NO__") -join "`n"
-  if ($LASTEXITCODE -ne 0) { throw "Connexion SSH impossible a $Target" }
+  if ($LASTEXITCODE -ne 0) { throw "Could not connect over SSH to $Target" }
   return $out -match '__YES__'
 }
 
 function Send-File([string]$Local, [string]$Remote) {
   & $Scp @SshOpts $Local "${Target}:$Remote"
-  if ($LASTEXITCODE -ne 0) { throw "Copie scp echouee : $Local" }
+  if ($LASTEXITCODE -ne 0) { throw "scp copy failed: $Local" }
 }
 
 function Read-AdminPassword {
   while ($true) {
-    $p1 = Read-Host 'Mot de passe ADMINISTRATEUR de la table (12 caracteres min., ASCII)' -AsSecureString
-    $p2 = Read-Host 'Confirme le mot de passe' -AsSecureString
+    $p1 = Read-Host 'Table ADMINISTRATOR password (12 characters min., ASCII)' -AsSecureString
+    $p2 = Read-Host 'Confirm the password' -AsSecureString
     $a = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($p1))
     $b = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($p2))
-    if ($a -ne $b) { Write-Warning 'Les deux saisies different.'; continue }
-    if ($a.Length -lt 12) { Write-Warning 'Trop court (12 caracteres minimum).'; continue }
-    if ($a -notmatch '^[\x21-\x7E]+$' -or $a -match "['`"\\$]") { Write-Warning 'Utilise des caracteres ASCII visibles, sans espace, guillemet, $ ni antislash.'; continue }
+    if ($a -ne $b) { Write-Warning 'The two entries differ.'; continue }
+    if ($a.Length -lt 12) { Write-Warning 'Too short (12 characters minimum).'; continue }
+    if ($a -notmatch '^[\x21-\x7E]+$' -or $a -match "['`"\\$]") { Write-Warning 'Use visible ASCII characters, with no space, quote, $ or backslash.'; continue }
     return $a
   }
 }
@@ -125,7 +125,7 @@ function Read-AdminPassword {
 # ---------------------------------------------------------------------------
 switch ($Action) {
   'setup' {
-    Write-Step "Verification du VPS ($Target)"
+    Write-Step "Checking the VPS ($Target)"
     Invoke-Remote @'
 command -v docker >/dev/null || { echo "Docker is not installed." >&2; exit 1; }
 docker compose version >/dev/null || { echo "docker compose (v2 plugin) is missing." >&2; exit 1; }
@@ -136,7 +136,7 @@ fi
 echo "Docker: $(docker --version)"; echo "Compose: $(docker compose version --short)"
 '@
 
-    Write-Step 'Cle de deploiement GitHub (lecture seule) sur le VPS'
+    Write-Step 'GitHub deploy key (read-only) on the VPS'
     Invoke-Remote @'
 KEY="$HOME/.ssh/shadowrun_deploy"
 mkdir -p "$HOME/.ssh"; chmod 700 "$HOME/.ssh"
@@ -151,29 +151,29 @@ if [ -d "$R/.git" ]; then echo "ALREADY_CLONED"; else echo "PUBKEY: $(cat "$KEY.
 
     $cloned = Test-Remote 'test -d ~/shadowrun/.git'
     if (-not $cloned) {
-      Write-Host "`nAjoute la cle publique ci-dessus dans GitHub :" -ForegroundColor Yellow
-      Write-Host "  https://github.com/$RepoPath/settings/keys  ->  Add deploy key  (titre: VPS OVH, NE PAS cocher 'Allow write access')"
-      Read-Host 'Appuie sur Entree une fois la cle ajoutee'
-      Write-Step 'Clonage du depot dans ~/shadowrun'
+      Write-Host "`nAdd the public key above in GitHub:" -ForegroundColor Yellow
+      Write-Host "  https://github.com/$RepoPath/settings/keys  ->  Add deploy key  (title: VPS OVH, do NOT tick 'Allow write access')"
+      Read-Host 'Press Enter once the key is added'
+      Write-Step 'Cloning the repository into ~/shadowrun'
       Invoke-Remote @'
 git clone --branch "__BRANCH__" "git@github-shadowrun:__REPO__.git" "$R"
 '@ -Vars @{ BRANCH = $Branch; REPO = $RepoPath }
     } else {
-      Write-Host 'Depot deja clone.'
+      Write-Host 'Repository already cloned.'
     }
 
     if (-not (Test-Remote 'test -f ~/shadowrun/app/.env')) {
-      Write-Step 'Fichier .env (mot de passe administrateur)'
+      Write-Step '.env file (administrator password)'
       $pw = Read-AdminPassword
       # Sent through stdin (never on a command line); \r stripped on the VPS.
       "SR_ADMIN_PASSWORD=$pw" | & $Ssh @SshOpts $Target "umask 077; tr -d '\r' > ~/shadowrun/app/.env"
-      if ($LASTEXITCODE -ne 0) { throw 'Ecriture du .env impossible' }
+      if ($LASTEXITCODE -ne 0) { throw 'Could not write the .env file' }
       $pw = $null
     } else {
-      Write-Host '.env deja present (mot de passe admin inchange).'
+      Write-Host '.env already present (admin password unchanged).'
     }
 
-    Write-Step 'Dossiers de donnees, pare-feu, premier demarrage'
+    Write-Step 'Data folders, firewall, first start'
     Invoke-Remote @'
 mkdir -p "$APP/runtime" "$APP/data/assets/foundry" "$APP/data/assets/music"
 fix_owner "$APP/runtime"; fix_owner "$APP/data/assets/foundry"; fix_owner "$APP/data/assets/music"
@@ -185,8 +185,8 @@ fi
 dc up -d --build
 wait_healthy
 '@
-    Write-Host "`nPret : http://${VpsHost}:8095/   (administration : http://${VpsHost}:8095/admin)" -ForegroundColor Green
-    Write-Host 'Etapes suivantes : -Action assets (images/musiques Foundry), puis -Action migrate (ta partie Project Lazarus).'
+    Write-Host "`nReady: http://${VpsHost}:8095/   (admin: http://${VpsHost}:8095/admin)" -ForegroundColor Green
+    Write-Host 'Next steps: -Action assets (Foundry images/music), then -Action migrate (your Project Lazarus game).'
   }
 
   'update' {
@@ -194,11 +194,11 @@ wait_healthy
     try {
       $st = (git status -sb 2>$null | Select-Object -First 1)
       if ($st -match 'ahead') {
-        Write-Warning "Des commits locaux ne sont pas pousses sur GitHub ($st) : le VPS ne les verra pas."
-        if (-not (Confirm-Step 'Continuer quand meme ?')) { return }
+        Write-Warning "Local commits are not pushed to GitHub ($st): the VPS will not see them."
+        if (-not (Confirm-Step 'Continue anyway?')) { return }
       }
     } finally { Pop-Location }
-    Write-Step "Mise a jour sur $VpsHost (branche $Branch)"
+    Write-Step "Updating $VpsHost (branch $Branch)"
     Invoke-Remote @'
 snapshot before-update
 git -C "$R" rev-parse HEAD > "$BK/previous-commit"
@@ -211,20 +211,20 @@ dc up -d --build
 wait_healthy
 docker image prune -f --filter label=app=shadowrun-table >/dev/null
 '@ -Vars @{ BRANCH = $Branch }
-    Write-Host "`nA jour : http://${VpsHost}:8095/" -ForegroundColor Green
+    Write-Host "`nUp to date: http://${VpsHost}:8095/" -ForegroundColor Green
   }
 
   { $_ -in 'assets', 'music' } {
     # assets = Foundry images/music of Project Lazarus; music = shared music library (every table).
     $folder = if ($Action -eq 'music') { 'music' } else { 'foundry' }
     $src = Join-Path $AppDir "data\assets\$folder"
-    if (-not (Test-Path $src)) { throw "Rien a envoyer : $src n'existe pas" }
+    if (-not (Test-Path $src)) { throw "Nothing to send: $src does not exist" }
     $size = (Get-ChildItem $src -Recurse -File | Measure-Object Length -Sum).Sum
-    Write-Step ("Envoi de data/assets/$folder ({0:N0} Mo)" -f ($size / 1MB))
+    Write-Step ("Sending data/assets/$folder ({0:N0} MB)" -f ($size / 1MB))
     $tmp = Join-Path $env:TEMP "sr-$folder-assets.tar"
     if (Test-Path $tmp) { Remove-Item $tmp -Force }
     & $Tar -cf $tmp -C (Join-Path $AppDir 'data\assets') $folder
-    if ($LASTEXITCODE -ne 0) { throw 'Archive tar impossible' }
+    if ($LASTEXITCODE -ne 0) { throw 'Could not create the tar archive' }
     try {
       Send-File $tmp "sr-$folder-assets.tar"
       Invoke-Remote @'
@@ -235,7 +235,7 @@ fix_owner "$APP/data/assets/__FOLDER__"
 echo "data/assets/__FOLDER__: $(du -sh "$APP/data/assets/__FOLDER__" | cut -f1)"
 '@ -Vars @{ FOLDER = $folder }
     } finally { Remove-Item $tmp -Force -ErrorAction SilentlyContinue }
-    Write-Host "Fichiers en place (servis sous /assets/$folder, pas besoin de redemarrer)." -ForegroundColor Green
+    Write-Host "Files in place (served under /assets/$folder, no restart needed)." -ForegroundColor Green
   }
 
   'migrate' {
@@ -243,14 +243,14 @@ echo "data/assets/__FOLDER__: $(du -sh "$APP/data/assets/__FOLDER__" | cut -f1)"
     $legacyState = Join-Path $AppDir 'data\state.json'
     if (Test-Path (Join-Path $tableDir 'state.json')) { $mode = 'table' }
     elseif (Test-Path $legacyState) { $mode = 'legacy' }
-    else { throw 'Aucune partie locale trouvee (ni data\tables\lazarus\state.json ni data\state.json).' }
+    else { throw 'No local game found (neither data\tables\lazarus\state.json nor data\state.json).' }
     if (Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue) {
-      Write-Warning 'Le serveur local semble tourner (port 3000) : ferme-le d''abord pour que la derniere version de la partie soit sur le disque.'
-      if (-not (Confirm-Step 'Continuer quand meme ?')) { return }
+      Write-Warning 'The local server seems to be running (port 3000): stop it first so the latest version of the game is on disk.'
+      if (-not (Confirm-Step 'Continue anyway?')) { return }
     }
-    if ((Test-Remote 'test -f ~/shadowrun/app/runtime/tables/lazarus/state.json') -and -not (Confirm-Step 'Une table "lazarus" existe deja sur le VPS : la remplacer (elle sera sauvegardee avant) ?')) { return }
+    if ((Test-Remote 'test -f ~/shadowrun/app/runtime/tables/lazarus/state.json') -and -not (Confirm-Step 'A "lazarus" table already exists on the VPS: replace it (it is backed up first)?')) { return }
 
-    Write-Step "Preparation de la table Project Lazarus (source : $mode)"
+    Write-Step "Preparing the Project Lazarus table (source: $mode)"
     $stage = Join-Path $env:TEMP 'sr-migrate'
     if (Test-Path $stage) { Remove-Item $stage -Recurse -Force }
     $dst = Join-Path $stage 'lazarus'
@@ -280,9 +280,9 @@ echo "data/assets/__FOLDER__: $(du -sh "$APP/data/assets/__FOLDER__" | cut -f1)"
     $tarFile = Join-Path $env:TEMP 'sr-lazarus.tar'
     if (Test-Path $tarFile) { Remove-Item $tarFile -Force }
     & $Tar -cf $tarFile -C $stage lazarus
-    if ($LASTEXITCODE -ne 0) { throw 'Archive tar impossible' }
+    if ($LASTEXITCODE -ne 0) { throw 'Could not create the tar archive' }
     try {
-      Write-Step 'Envoi et installation sur le VPS (le conteneur est arrete pendant l''operation)'
+      Write-Step 'Sending and installing on the VPS (the container is stopped meanwhile)'
       Send-File $tarFile 'sr-lazarus.tar'
       Invoke-Remote @'
 snapshot before-migrate
@@ -301,20 +301,20 @@ wait_healthy
       Remove-Item $tarFile -Force -ErrorAction SilentlyContinue
       Remove-Item $stage -Recurse -Force -ErrorAction SilentlyContinue
     }
-    Write-Host "`nProject Lazarus est en ligne : http://${VpsHost}:8095/t/lazarus/  (meme mot de passe MJ qu'en local)" -ForegroundColor Green
+    Write-Host "`nProject Lazarus is online: http://${VpsHost}:8095/t/lazarus/  (same GM password as locally)" -ForegroundColor Green
   }
 
   'ai-setup' {
     # GM assistant: Workload Identity Federation ids (not secrets) written to ~/shadowrun/app/.env, container recreated.
-    Write-Host 'Identifiants de la Console Claude (Workload identity). Aucun secret : la cle privee reste sur le VPS.' -ForegroundColor Yellow
-    $org = (Read-Host 'ID de l''organisation (UUID)').Trim()
-    $rule = (Read-Host 'ID de la regle de federation (fdrl_...)').Trim()
-    $ws = (Read-Host 'ID de l''espace de travail (wrkspc_..., Entree si la regle ne couvre qu''un espace)').Trim()
-    $sa = (Read-Host 'ID du compte de service (svac_..., Entree pour laisser la regle choisir)').Trim()
+    Write-Host 'Claude Console ids (Workload identity). No secret: the private key stays on the VPS.' -ForegroundColor Yellow
+    $org = (Read-Host 'Organization ID (UUID)').Trim()
+    $rule = (Read-Host 'Federation rule ID (fdrl_...)').Trim()
+    $ws = (Read-Host 'Workspace ID (wrkspc_..., Enter if the rule covers a single workspace)').Trim()
+    $sa = (Read-Host 'Service account ID (svac_..., Enter to let the rule choose)').Trim()
     foreach ($v in @($org, $rule, $ws, $sa)) {
-      if ($v -and $v -notmatch '^[A-Za-z0-9_-]{4,100}$') { throw "Identifiant invalide : $v" }
+      if ($v -and $v -notmatch '^[A-Za-z0-9_-]{4,100}$') { throw "Invalid id: $v" }
     }
-    if (-not $org -or -not $rule) { throw 'L''organisation et la regle sont obligatoires.' }
+    if (-not $org -or -not $rule) { throw 'The organization and the rule are required.' }
     Invoke-Remote @'
 ENV="$APP/.env"
 touch "$ENV"; chmod 600 "$ENV"
@@ -330,14 +330,14 @@ grep -vE '^(ANTHROPIC_ORGANIZATION_ID|ANTHROPIC_FEDERATION_RULE_ID|ANTHROPIC_WOR
 mv "$ENV.tmp" "$ENV"; chmod 600 "$ENV"
 dc up -d --no-build
 wait_healthy
-echo "Assistant settings applied. Check /admin -> Assistant IA -> Tester la connexion."
+echo "Assistant settings applied. Check /admin -> AI assistant -> Test the connection."
 '@ -Vars @{ ORG = $org; RULE = $rule; WS = $ws; SA = $sa }
-    Write-Host "`nOuvre http://${VpsHost}:8095/admin -> Assistant IA -> « Tester la connexion », puis active la table." -ForegroundColor Green
+    Write-Host "`nOpen http://${VpsHost}:8095/admin -> AI assistant -> 'Test the connection', then enable the table." -ForegroundColor Green
   }
 
   'backup' {
     New-Item -ItemType Directory -Force $BackupDir | Out-Null
-    Write-Step 'Sauvegarde des tables sur le VPS'
+    Write-Step 'Backing up the tables on the VPS'
     $name = 'shadowrun-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.tar.gz'
     Invoke-Remote @'
 tar -czf "$HOME/__NAME__" -C "$APP" --exclude='runtime/tables/*/foundry' --exclude='runtime/tmp' --exclude='runtime/assistant/signing-key.pem' runtime
@@ -346,12 +346,12 @@ echo "Archive: $(du -h "$HOME/__NAME__" | cut -f1)"
     & $Scp @SshOpts "${Target}:$name" (Join-Path $BackupDir $name)
     $ok = $LASTEXITCODE -eq 0
     & $Ssh @SshOpts $Target "rm -f ~/$name" | Out-Null
-    if (-not $ok) { throw 'Telechargement de la sauvegarde echoue' }
-    Write-Host "Sauvegarde : $(Join-Path $BackupDir $name)" -ForegroundColor Green
+    if (-not $ok) { throw 'Backup download failed' }
+    Write-Host "Backup: $(Join-Path $BackupDir $name)" -ForegroundColor Green
   }
 
   'rollback' {
-    if (-not (Confirm-Step 'Revenir a la version precedente de l''application (les donnees ne changent pas) ?')) { return }
+    if (-not (Confirm-Step 'Go back to the previous version of the app (data is not changed)?')) { return }
     Invoke-Remote @'
 docker image inspect shadowrun-app:previous >/dev/null 2>&1 || { echo "No previous image: nothing to roll back to." >&2; exit 1; }
 docker tag shadowrun-app:previous shadowrun-app:latest

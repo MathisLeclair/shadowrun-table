@@ -1,7 +1,7 @@
 // GM assistant (« Assistant MJ ») — Claude in the GM's dock. GM-only HTTP routes; no game state slice.
 // Conversations live in tables/<id>/assistant.json (lib/assistant/conversations.js), settings and spend in
 // runtime/assistant/ (server-wide, managed in /admin). See ARCHITECTURE.md « Assistant MJ ».
-import { errorBody } from '../lib/i18n.ts';
+import { errorBody, t as translate } from '../lib/i18n.ts';
 import { getSettings, isTableEnabled, MODELS } from '../lib/assistant/config.ts';
 import { budgetStatus } from '../lib/assistant/budget.ts';
 import { authMode } from '../lib/assistant/auth.ts';
@@ -55,7 +55,8 @@ const mod: ServerModule<HttpApp> = {
     });
 
     app.post('/api/assistant/conversations', requireGM, enabled, (req: Req, res: Res) => {
-      const c = createConversation(req.srTable, req.body?.title);
+      const cfg = req.srTable.state.config;
+      const c = createConversation(req.srTable, req.body?.title || translate(cfg?.gmLang || cfg?.lang || 'fr', 'New conversation')); // default title in the GM's language
       res.json(viewConversation(c, req.srTable.state));
     });
 

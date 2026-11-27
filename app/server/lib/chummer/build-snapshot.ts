@@ -9,7 +9,7 @@ import { skillsData, metatypeData, gradeTable, chummerDataDir } from './data.ts'
 const out = path.join(path.dirname(fileURLToPath(import.meta.url)), 'snapshot.json');
 const sd = skillsData();
 if (!sd.active.length) {
-  console.error(`Données Chummer introuvables (${chummerDataDir()})`);
+  console.error(`Chummer data not found (${chummerDataDir()})`);
   process.exit(1);
 }
 const snap = {
@@ -20,4 +20,4 @@ const snap = {
   grades: gradeTable('cyberware'),
 };
 fs.writeFileSync(out, JSON.stringify(snap));
-console.log(`snapshot.json : ${snap.skills.active.length} compétences, ${snap.metatypes.length} métatypes`);
+console.log(`snapshot.json: ${snap.skills.active.length} skills, ${snap.metatypes.length} metatypes`);

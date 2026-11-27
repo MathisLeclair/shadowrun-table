@@ -14,7 +14,7 @@ interface Job {
   state: JobState;
   done: number;
   total: number;
-  /** Error text, or a French key (NO_MEMORY) with errorParams. */
+  /** Error text, or an i18n key (NO_MEMORY) with errorParams. */
   error?: string;
   errorParams?: I18nParams;
   startedAt: number;
@@ -44,7 +44,7 @@ const MAX_RUNNING = Math.max(1, Number(process.env.SR_BOOKS_JOBS) || 1);
 const KEEP_MS = 10 * 60 * 1000; // finished jobs stay visible on the admin page for 10 min
 /** Memory an indexing job needs, per byte of PDF (measured: SR5 ≈ 40 MB → ≈ 230 MB of RSS above the server). */
 export const BYTES_PER_PDF_BYTE = 6;
-export const NO_MEMORY = 'Mémoire insuffisante pour indexer ce livre ({need} Mo nécessaires, {free} Mo libres)';
+export const NO_MEMORY = 'Not enough memory to index this book ({need} MB needed, {free} MB free)';
 
 /** Memory limit of the container (cgroup v2, else v1) in bytes, or null when unlimited / unknown. SR_MEMORY_LIMIT_BYTES overrides. */
 export function memoryLimit(): number | null {
@@ -104,7 +104,7 @@ function pump(): void {
     // Another job holds the memory: wait for it (pump runs again when it finishes). Nothing running: refuse.
     if (running > 0) return void queue.unshift(code);
     Object.assign(job, { state: 'error', error: NO_MEMORY, errorParams: { need: mem.need, free: mem.free }, finishedAt: Date.now() });
-    console.error(`[books] ${code} : mémoire insuffisante pour l’indexer (${mem.need} Mo nécessaires, ${mem.free} Mo libres)`);
+    console.error(`[books] ${code}: not enough memory to index it (${mem.need} MB needed, ${mem.free} MB free)`);
     return void setImmediate(pump);
   }
   job.state = 'running';

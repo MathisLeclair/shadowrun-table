@@ -192,5 +192,10 @@
   "World “{title}” ready on the server: run “Scan”": "Monde « {title} » prêt sur le serveur : lance « Analyser »",
   "Wrong administrator password": "Mot de passe administrateur incorrect",
   "Wrong current password": "Mot de passe actuel incorrect",
-  "Wrong identifier: nothing was deleted": "Identifiant incorrect : rien n’a été supprimé"
+  "Wrong identifier: nothing was deleted": "Identifiant incorrect : rien n’a été supprimé",
+  "Restore failed": "Restauration impossible",
+  "Demo (blank + pregens, maps, host)": "Démo (vierge + prétirés, cartes, host)",
+  "Invalid identifier: lowercase letters, digits and dashes (2 to 40 characters)": "Identifiant invalide : lettres minuscules, chiffres et tirets (2 à 40 caractères)",
+  "Identifier too short (2 characters minimum)": "Identifiant trop court (2 caractères minimum)",
+  "This identifier is reserved": "Cet identifiant est réservé"
 }

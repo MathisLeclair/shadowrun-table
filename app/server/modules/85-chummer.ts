@@ -152,7 +152,7 @@ function prepareUpdate(actor: Actor, rawXml: string | undefined, fileName: strin
 /** Short summary of a diff as translatable parts [{ t, params }] (a list param: joined with ', '). */
 function summaryParts(diff: ActorDiff): I18nMessage[] {
   const parts: I18nMessage[] = [];
-  for (const s of diff.scalars) if (['Karma', 'Nuyens'].includes(s.label)) parts.push({ t: '{label} {from} → {to}', params: { label: { t: s.label }, from: s.from as string | number, to: s.to as string | number } });
+  for (const s of diff.scalars) if (['Karma', 'Nuyen'].includes(s.label)) parts.push({ t: '{label} {from} → {to}', params: { label: { t: s.label }, from: s.from as string | number, to: s.to as string | number } });
   if (diff.attributes.length) parts.push({ t: '{n} attribute(s)', params: { n: diff.attributes.length } });
   if (diff.skills.length) parts.push({ t: '{n} skill(s)', params: { n: diff.skills.length } });
   const items = diff.lists.reduce((n, l) => n + l.added.length + l.removed.length + l.changed.length, 0);

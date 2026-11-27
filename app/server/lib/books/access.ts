@@ -57,7 +57,7 @@ function signKey(dir: string | null | undefined): Buffer {
       fs.mkdirSync(path.dirname(file), { recursive: true });
       fs.writeFileSync(file, k.toString('hex'), { mode: 0o600 });
     } catch (err) {
-      console.error('[books] clé de signature non enregistrée (liens valables jusqu’au redémarrage)', (err as Error).message);
+      console.error('[books] signing key not saved (links valid until restart)', (err as Error).message);
     }
   }
   keys.set(file, k);

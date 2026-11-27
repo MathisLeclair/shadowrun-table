@@ -499,7 +499,7 @@ const mod: ServerModule = {
       handler(ctx: ActionContext, payload: Raw = {}) {
         const c = camp(ctx);
         const next = c.sessions.reduce((m, s) => Math.max(m, s.number || 0), 0) + 1;
-        const s = normSession({ number: next, title: `Séance ${next}`, ...payload, id: undefined, played: false }, ctx.uid);
+        const s = normSession({ number: next, title: ctx.t('Session {n}', { n: next }), ...payload, id: undefined, played: false }, ctx.uid);
         s.id = ctx.uid('ses');
         c.sessions.push(s);
         c.sessions.sort((a, b) => a.number - b.number);

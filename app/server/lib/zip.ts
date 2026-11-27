@@ -485,7 +485,7 @@ export function receiveToFile(req: IncomingMessage, dest: string, { maxBytes = 1
         try {
           fs.rmSync(dest, { force: true });
         } catch {}
-        return reject(new ZipError('Fichier vide'));
+        return reject(new ZipError('Empty file'));
       }
       resolve({ bytes });
     });

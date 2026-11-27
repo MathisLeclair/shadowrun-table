@@ -151,5 +151,6 @@
   "Wrong GM password": "Mot de passe MJ incorrect",
   "Wrong PIN for this player": "Code PIN incorrect pour ce joueur",
   "Your character": "Ton personnage",
-  "Your name": "Ton nom"
+  "Your name": "Ton nom",
+  "Upload interrupted": "Envoi interrompu"
 }

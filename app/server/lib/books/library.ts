@@ -136,7 +136,7 @@ export function readLibrary(dir: string): Library {
     const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
     lib = { books: (raw.books || []).map(cleanBook).filter(Boolean) as LibraryBook[] };
   } catch (err) {
-    console.error('[books] library.json illisible', (err as Error).message);
+    console.error('[books] library.json unreadable', (err as Error).message);
   }
   libCache.set(dir, { mtimeMs: st.mtimeMs, size: st.size, lib });
   return lib;
@@ -196,7 +196,7 @@ export function loadIndex(dir: string, code: string): BookIndex | null {
     indexCache.set(key, { mtimeMs: st.mtimeMs, doc });
     return doc;
   } catch (err) {
-    console.error(`[books] index ${code} illisible`, (err as Error).message);
+    console.error(`[books] index ${code} unreadable`, (err as Error).message);
     return null;
   }
 }
