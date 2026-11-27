@@ -4,7 +4,7 @@ Real-time web app to run Shadowrun 5E campaigns: the GM runs it on their PC (or 
 
 ## Start a session
 
-1. Double-click **`Lancer la table.bat`** (or run `npm start` in this folder). Node.js 20+ is required; the first launch installs dependencies automatically.
+1. Double-click **`Lancer la table.bat`** (or run `npm start` in this folder). Node.js 22.18+ is required (24 LTS recommended); each launch installs dependencies and builds the interface.
 2. The console prints the addresses:
    - GM: `http://localhost:3000` → tab **Maître de jeu**, password **`lazarus`** (change it in **Réglages**).
    - Players: `http://<your-LAN-IP>:3000` (e.g. `http://192.168.1.110:3000`) → they type their name, optionally a PIN, and pick their character.
@@ -59,7 +59,7 @@ Each table's markdown docs live in its own folder, `data/tables/<table>/docs/` (
 
 ## For developers
 
-See `AGENTS.md` (repo root) and `ARCHITECTURE.md`. `npm run dev` = server with hot reload (Vite); `npm run build` = production client bundle, served by `npm start`. Tests: `node tools/test-<module>.js` (each starts an isolated server), `node tools/smoke.ts`, translations `node tools/i18n-check.ts`. Regenerate the gear catalogue: `npm run build:catalog`. Re-generate seeds from Foundry: `node tools/foundry-import.ts --write-seeds`.
+See `AGENTS.md` (repo root) and `ARCHITECTURE.md`. `npm run dev` = server with hot reload (Vite); `npm run build` = production client bundle, served by `npm start`. Tests: `node tools/test-<module>.ts` (each starts an isolated server), `node tools/smoke.ts`, translations `node tools/i18n-check.ts`. Regenerate the gear catalogue: `npm run build:catalog`. Re-generate seeds from Foundry: `node tools/foundry-import.ts --write-seeds`.
 
 ## Live server
 

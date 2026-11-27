@@ -9,28 +9,31 @@ reading all of it.
 A real-time, self-hosted virtual tabletop for **Shadowrun 5th Edition**. One Node server hosts one or more **tables**
 (independent campaigns); the GM and players connect from a browser. Everything lives in `app/`.
 
-**Migration in progress (2026-11):** Preact + htm (no build) → **React + Vite + TypeScript**, step by step.
-- Done: Vite builds the client, `tsconfig.json` is in place (`.js` allowed, not type-checked yet).
-- Next: shared data-model types (`app/shared/types.ts`) → Preact swapped for React → modules converted to `.tsx` one
-  folder at a time → server converted to `.ts` (Node runs it directly, no server build).
-- New files go in TypeScript (`.ts`, or `.tsx` for components) once the step for that area is done. Until then, follow
-  the style of the files around you.
+**Stack:** TypeScript everywhere (strict). The browser UI is **React 19** in `.tsx`, bundled by **Vite**. The server
+(Express + Socket.IO) and the shared rules are `.ts` files that **Node runs directly** (type stripping: no server
+build). The data model — table state, the per-user view, actors, maps, catalog items, the server module contract —
+is in **`app/shared/types.ts`**: start there.
+- New code is TypeScript: `.tsx` for components, `.ts` for everything else. Imports name the real file
+  (`./Foo.tsx`, `../../lib/net.ts`, `/shared/sr5.ts` in the client).
+- Type stripping only erases types: no `enum`, `namespace` or constructor parameter properties, and type-only imports
+  must be `import type` (`verbatimModuleSyntax`).
+- Pure logic that Node tests import goes in `.ts` files without JSX; components can't be loaded by Node.
 
 ## Layout (`app/`)
 
 | Path | What |
 |---|---|
-| `server/index.js` | core: HTTP, auth, Socket.IO, action dispatch, per-user state views, client serving |
-| `server/modules/NN-name.js` | feature modules (actions, filters, routes), auto-loaded in filename order |
+| `server/index.ts` | core: HTTP, auth, Socket.IO, action dispatch, per-user state views, client serving |
+| `server/modules/NN-name.ts` | feature modules (actions, filters, routes), auto-loaded in filename order |
 | `server/lib/` | tables registry, admin, Chummer, Foundry, rulebooks, GM assistant, map library, demo table |
-| `shared/*.js` | pure SR5 rules used by **both** server and browser (no Node or DOM APIs): `sr5.js`, `combat.js`, `matrix.js`, `chargen.js`… |
-| `client/app.js` | browser shell: login, tabs, dock, sheet modal |
-| `client/lib/` | `net.js` (state/actions), `ui.js` (UI kit), `ui-store.js`, `i18n.js`, `markdown.js` |
-| `client/modules/<feature>/` | one folder per tab; `client/modules/registry.js` maps tabs to components |
+| `shared/*.ts` | pure SR5 rules used by **both** server and browser (no Node or DOM APIs): `sr5.ts`, `combat.ts`, `matrix.ts`, `chargen.ts`… |
+| `client/app.tsx` | browser shell: login, tabs, dock, sheet modal |
+| `client/lib/` | `net.ts` (state/actions), `ui.tsx` (UI kit), `ui-store.ts`, `i18n.ts`, `markdown.ts` |
+| `client/modules/<feature>/` | one folder per tab; `client/modules/registry.ts` maps tabs to components |
 | `client/i18n/en/*.json` | English dictionaries (French is the source text in code) |
 | `data/catalog/` | gear catalogue generated from Chummer data |
 | `data/seed/`, `data/packs/<pack>/` | content packs (seed = Project Lazarus, `vierge` = empty, `demo` = public demo) |
-| `tools/` | tests (`test-*.js`), builders, importers |
+| `tools/` | tests (`test-*.ts`), builders, importers (TypeScript, run by Node) |
 
 Runtime data (`data/tables/`, `runtime/`, uploads, rulebook PDFs, map images) is never committed.
 
@@ -38,12 +41,12 @@ Runtime data (`data/tables/`, `runtime/`, uploads, rulebook PDFs, map images) is
 
 | Command | What |
 |---|---|
-| `npm install` | dependencies (Node 20+; the Docker image uses Node 22) |
+| `npm install` | dependencies (Node 22.18+, 24 LTS recommended; the Docker image uses Node 24) |
 | `npm run dev` | server + Vite middleware on one port (3000): hot reload, no build |
 | `npm run build` | production bundle in `dist/client/` (well under 1 s); Express serves it when present |
-| `npm start` | server only: serves `dist/client/` if built, else the raw `client/` files |
-| `npm run typecheck` | `tsc` over `.ts`/`.tsx` files |
-| `node tools/test-<area>.js` | tests for one area; each starts its own isolated server |
+| `npm start` | server only (`node server/index.ts`): serves `dist/client/`; build first |
+| `npm run typecheck` | `tsc` (strict) over the whole app: must stay at 0 errors |
+| `node tools/test-<area>.ts` | tests for one area; each starts its own isolated server. On Node < 22.18 set `NODE_OPTIONS=--experimental-strip-types` |
 
 ## Rules that matter
 
@@ -51,12 +54,13 @@ Runtime data (`data/tables/`, `runtime/`, uploads, rulebook PDFs, map images) is
   port 3000 or without `SR_RUNTIME_DIR`: other sessions may be running. Use `tools/test-client.ts`
   (`startServer({ port })`), which gives each test its own port and temp folder. Port ranges per test are listed in
   ARCHITECTURE.md « Testing ».
-- **Server actions:** `server/modules/NN-x.js` exports `{ name, init, actions, filter, gmFilter, routes }`. Action
+- **Server actions:** `server/modules/NN-x.ts` exports `{ name, init, actions, filter, gmFilter, routes }`. Action
   names are `<module>/<verb>`. Handlers are synchronous and mutate `ctx.state`; the core saves and broadcasts. Validate
   every player payload. No per-table data in module-level variables. See ARCHITECTURE.md « Server module contract ».
 - **Client:** components get `{ game }` (the user's view). Call `send(type, payload)` for actions. Use `TextInput` for
-  anything sent to the server (it commits on blur). Module CSS sits next to the JS, loaded with `loadCss('/modules/x/x.css')`,
-  with classes prefixed by the module name.
+  anything sent to the server (it commits on blur). Module CSS sits next to the component and is imported (`import './x.css';`),
+  with classes prefixed by the module name. React: every `.map()` list gets a stable `key`; a text field that sends to
+  the server commits on blur/Enter, never per keystroke.
 - **i18n:** UI text is written in French in the code and wrapped in `t()`/`tn()`/`tk()`. Add the English to
   `client/i18n/en/<area>.json`, then check with `node tools/i18n-check.ts --area <area>`. The server throws
   `ctx.fail('Texte {x}', { x })`. Code comments and identifiers are in English.
@@ -70,6 +74,7 @@ Runtime data (`data/tables/`, `runtime/`, uploads, rulebook PDFs, map images) is
 
 | Topic | ARCHITECTURE.md section |
 |---|---|
+| data model types (state, view, actors, maps, catalog, server contract) | `app/shared/types.ts` (the code is the reference) |
 | state shape (actors, maps, combat, shop, campaign…) | « State shape » |
 | client tabs and components | « Client contract » (registry table) |
 | translations | « i18n » |

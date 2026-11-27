@@ -9,8 +9,8 @@ the repo, never commit them. All commands run from `app/`. Write crops into **yo
 the LARGEST of 200 / 140 / 120 / 100 / 80 / 70 px that divides both sides (±2 px).** Measured on the 4 « grid » twins
 (tailor shop 200, kingpins 200, rooftop garden 140, jungle landing pad 80); the fragmaps-free scenes use 100/120.
 The 69 distinct maps (71 root images − 4 grid twins − `tailor shop (1).jpg`, an exact duplicate, + 3 yacht decks):
-40 → 200, 23 → 140 (incl. the yacht), 2 → 120, 2 → 100, 2 → 80. `new.js` and `tiles.js`
-apply it automatically; `scale.js <image>` prints it with a sanity line — check one object: door leaf ≈ 0.6 cell,
+40 → 200, 23 → 140 (incl. the yacht), 2 → 120, 2 → 100, 2 → 80. `new.ts` and `tiles.ts`
+apply it automatically; `scale.ts <image>` prints it with a sanity line — check one object: door leaf ≈ 0.6 cell,
 pool table ≈ 0.85 × 1.7, car ≈ 1.3 × 3, 3-seat sofa ≈ 1.4. Ambiguous sizes (dead end market slums, food truck alley,
 waste treatment plant, rooftop parking, desert checkpoint): check an object before trusting the rule.
 
@@ -29,8 +29,8 @@ waste treatment plant, rooftop parking, desert checkpoint): check an object befo
 `x + (px − 34)/P , y + (py − 56)/P` (34 px margin, 22 px title). Tiles print their px/cell when written.
 
 ## Method (≈ 20–40 min per map)
-1. `new.js` → `tiles.js --out` → look at `overview.jpg`: building outline, rooms, doors, exits. Decide indoor/outdoor.
-2. **Long walls first, from the overview + `probe.js`**: probe one row/column per room (`--row` through the middle of
+1. `new.ts` → `tiles.ts --out` → look at `overview.jpg`: building outline, rooms, doors, exits. Decide indoor/outdoor.
+2. **Long walls first, from the overview + `probe.ts`**: probe one row/column per room (`--row` through the middle of
    rooms) — read `bg→floor` edges and `DARK` band centres; write the outline and big partitions.
 3. **Refine tile by tile** (zoom crops at 200–300 px/cell on corners, doors, diagonals). Fragmaps walls are thick dark
    bands: put the segment on the band's **centre line**. Thin-edged maps (no band, e.g. dive bar): put it on the floor edge.
@@ -49,11 +49,11 @@ waste treatment plant, rooftop parking, desert checkpoint): check an object befo
 9. Fill `nameFr` (natural French), `theme`, `tags` (6–15, FR + EN: place, mood, use — e.g. `planque`, `safehouse`,
    `Johnson`, `fusillade`), `description` (French, 1–3 sentences: what + Seattle 2080 uses), `traced.quality`
    (`good` when checked with overlays) and `traced.notes` (choices a GM should know: assumed doors, skipped items).
-10. `check.js <slug>` until **0 errors / 0 warnings**, then a final full `overlay.js` + 2–3 zoomed overlays.
+10. `check.ts <slug>` until **0 errors / 0 warnings**, then a final full `overlay.ts` + 2–3 zoomed overlays.
 
-Write the file with a small Node script or by hand, then `check.js --fix` for the canonical layout. Ids `w1…`, `l1…`, `r1…`.
+Write the file with a small Node script or by hand, then `check.ts --fix` for the canonical layout. Ids `w1…`, `l1…`, `r1…`.
 
-## What check.js enforces
+## What check.ts enforces
 Schema (id `lib_<slug>` = file name, enums, `width = ceil(imageW/gridPx)`, real image size), bounds, zero-length,
 duplicate and overlapping walls, door length ≥ 0.6 (< 0.3 error, > 3 warn), **leaks** (a free wall end 0.01–0.4 cell
 from another wall — light/sight pass through), **openings** (info: free ends 0.4–1.6 apart → archway or missing door?),
@@ -64,7 +64,7 @@ the entry with every door closed = a hole in the outline). Stats: walls, doors, 
 - **Tokens move centre to centre**: a step is blocked if the segment crosses the line between the two cell centres.
   A door must contain a crossing point: on a horizontal wall its x-range must include some `k + 0.5`, on a vertical
   wall its y-range some `k + 0.5`. A painted 0.55-cell door at x 3.85–4.40 is impassable → stretch it to 3.85–4.55.
-  `check.js` reports the resulting `unreachable` region.
+  `check.ts` reports the resulting `unreachable` region.
 - Walls closer than 0.5 cell to the map edge separate no cell centres — harmless, but keep them for sight/light.
 - The outer band of many maps is nearly the background colour: `probe` shows `bg` until the band's inner edge, so the
   centre is ~half a band (0.05–0.15) outside the first `floor`/`DARK` value. Compare with a zoom crop.
@@ -79,8 +79,8 @@ the entry with every door closed = a hole in the outline). Stats: walls, doors, 
 ## Time savers
 - Probe several lines in one shell loop: `for y in 2 5.5 9; do node tools/maptrace/probe.ts <slug> --row $y; done`.
 - Trace the outline in one pass from probes + overview; use zoom crops only where the probe is ambiguous.
-- `overlay.js --region … --ids` shows wall ids to fix exact walls; red circles show check issues in place.
-- Big maps (≥ 40 cells): `tiles.js --tile 16`, and probe every 5 cells along both axes first.
+- `overlay.ts --region … --ids` shows wall ids to fix exact walls; red circles show check issues in place.
+- Big maps (≥ 40 cells): `tiles.ts --tile 16`, and probe every 5 cells along both axes first.
 
 ## Calibration results
 - `1-bdrm.json` (6×6 @ 200 px): 12 walls, 3 doors (entrance keypad door, bathroom, en-suite bedroom), 7 lights, 4 regions; joined ends 30/30.

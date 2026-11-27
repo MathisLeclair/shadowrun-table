@@ -7,9 +7,10 @@
 The GM runs one small Node server. Players join from any browser — laptop, tablet or phone.
 Maps, sheets, dice, the Matrix, the shop and the soundtrack stay in sync for everyone.
 
-![Node](https://img.shields.io/badge/node-%E2%89%A520-3c873a?style=flat-square&logo=node.js&logoColor=white)
+![Node](https://img.shields.io/badge/node-%E2%89%A522.18-3c873a?style=flat-square&logo=node.js&logoColor=white)
+![React](https://img.shields.io/badge/react-19-61dafb?style=flat-square&logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/vite-8-646cff?style=flat-square&logo=vite&logoColor=white)
-![TypeScript](https://img.shields.io/badge/typescript-migrating-3178c6?style=flat-square&logo=typescript&logoColor=white)
+![TypeScript](https://img.shields.io/badge/typescript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white)
 ![Socket.IO](https://img.shields.io/badge/socket.io-realtime-010101?style=flat-square&logo=socket.io&logoColor=white)
 ![Docker](https://img.shields.io/badge/docker-ready-2496ed?style=flat-square&logo=docker&logoColor=white)
 ![FR / EN](https://img.shields.io/badge/UI-FR%20%7C%20EN-05d9e8?style=flat-square)
@@ -87,7 +88,7 @@ assistant, rulebooks and Foundry import are off there. Run your own with `SR_DEM
 
 ## Quick start
 
-> Requires **Node.js 20+**.
+> Requires **Node.js 22.18+** (24 LTS recommended): Node runs the TypeScript server directly.
 
 ```bash
 cd app
@@ -123,14 +124,16 @@ app/
 │   ├── modules/       feature modules (maps, combat, shop, matrix, …), auto-loaded in order
 │   └── lib/           tables, Chummer, Foundry, rulebooks, assistant
 ├── shared/            pure SR5 rules used by both server and browser (dice, derive, matrix, chargen…)
-├── client/            browser UI, bundled by Vite (moving from Preact + htm to React + TypeScript)
+├── client/            React + TypeScript UI, bundled by Vite
 │   ├── modules/       one folder per tab
 │   └── i18n/en/       English dictionaries (French is the source text)
 ├── data/              rules catalogue, seed content, content packs
 └── tools/             catalogue builders, importers, test suites
 ```
 
-- **Fast loop.** `npm run dev` hot-reloads the client; the production build takes under a second.
+- **TypeScript end to end.** One data model (`shared/types.ts`) types the server, the rules and the React UI. Node runs
+  the server's `.ts` files directly (no server build); Vite bundles the client in under a second.
+- **Fast loop.** `npm run dev` runs the server and Vite on one port with hot reload.
 - **Rules live in `shared/`**, so the server validates every action with the same code the UI uses to preview it.
 - **Ambiguous rules follow Chummer**, so imported characters compute the same numbers in both tools.
 - **State is a JSON file per table**, written atomically, with rolling backups every 15 minutes.
