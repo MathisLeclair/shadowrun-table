@@ -3,16 +3,16 @@
   "version": "1.0.0",
   "description": "Table de jeu Shadowrun 5E — Project Lazarus (MJ + joueurs en temps réel)",
   "type": "module",
-  "main": "server/index.js",
+  "main": "server/index.ts",
   "scripts": {
-    "start": "node server/index.js",
-    "dev": "node --watch-path=server --watch-path=shared server/index.js --vite",
+    "start": "node server/index.ts",
+    "dev": "node --watch-path=server --watch-path=shared server/index.ts --vite",
     "build": "vite build",
     "typecheck": "tsc -p tsconfig.json",
     "build:catalog": "node tools/build-catalog.js"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.18"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.14.0",
@@ -29,6 +29,7 @@
     "socket.io": "^4.8.4"
   },
   "devDependencies": {
+    "@types/express": "^4.17.25",
     "@types/node": "^24.19.4",
     "@types/react": "^19.3.3",
     "@types/react-dom": "^19.3.0",

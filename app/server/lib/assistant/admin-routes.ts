@@ -1,18 +1,30 @@
 // GM assistant — server administration (/admin « Assistant IA »): connection status, public key to register in
 // the Claude Console, which tables may use it, model, effort, monthly cap and this month's spend.
-import { getSettings, updateSettings, MODELS, EFFORTS, MAX_CAP } from './config.js';
-import { budgetStatus, monthUsage, resetMonth, record } from './budget.js';
-import { authStatus, publicJwks, getClient, authMode, markCallOk } from './auth.js';
+import type { Express, RequestHandler, Response } from 'express';
+import type { I18nParams } from '../../../shared/types.ts';
+import type { StoredMeta } from '../tables.ts';
+import { getSettings, updateSettings, MODELS, EFFORTS, MAX_CAP } from './config.ts';
+import type { AssistantSettings, Effort } from './config.ts';
+import { budgetStatus, monthUsage, resetMonth, record } from './budget.ts';
+import { authStatus, publicJwks, getClient, authMode, markCallOk } from './auth.ts';
 
-export function registerAssistantAdminRoutes(app, { requireAdmin, fail, listMetas }) {
+/** What server/lib/admin.ts passes to the admin route registrations. */
+export interface AssistantAdminOptions {
+  requireAdmin: RequestHandler;
+  /** Error reply: `key` = French message with {placeholders}. */
+  fail: (res: Response, status: number, key: string, extra?: Record<string, unknown>, params?: I18nParams) => unknown;
+  listMetas: () => StoredMeta[];
+}
+
+export function registerAssistantAdminRoutes(app: Express, { requireAdmin, fail, listMetas }: AssistantAdminOptions): void {
   const payload = () => {
     const settings = getSettings();
-    let jwks = null;
-    let keyError = null;
+    let jwks: ReturnType<typeof publicJwks> | null = null;
+    let keyError: string | null = null;
     try {
       jwks = publicJwks();
     } catch (err) {
-      keyError = String(err?.message || err);
+      keyError = String((err as Error)?.message || err);
     }
     return {
       settings,
@@ -33,17 +45,17 @@ export function registerAssistantAdminRoutes(app, { requireAdmin, fail, listMeta
 
   app.patch('/api/admin/assistant', requireAdmin, (req, res) => {
     const b = req.body || {};
-    const patch = {};
+    const patch: Partial<AssistantSettings> = {};
     if (Array.isArray(b.enabledTables)) {
       const known = new Set(listMetas().filter((m) => !m.demo).map((m) => m.id));
-      patch.enabledTables = b.enabledTables.filter((id) => known.has(id));
+      patch.enabledTables = b.enabledTables.filter((id: unknown): id is string => known.has(id as string));
     }
     if (b.model !== undefined) {
       if (!MODELS[b.model]) return fail(res, 400, 'Modèle d’IA inconnu');
       patch.model = b.model;
     }
     if (b.effort !== undefined) {
-      if (!EFFORTS.includes(b.effort)) return fail(res, 400, 'Niveau d’effort inconnu');
+      if (!EFFORTS.includes(b.effort as Effort)) return fail(res, 400, 'Niveau d’effort inconnu');
       patch.effort = b.effort;
     }
     if (b.monthlyCapUsd !== undefined) {
@@ -75,11 +87,12 @@ export function registerAssistantAdminRoutes(app, { requireAdmin, fail, listMeta
       });
       markCallOk();
       const usd = record({ usage: msg.usage, model: msg.model || model, tableId: 'admin-test' });
-      const text = msg.content.filter((c) => c.type === 'text').map((c) => c.text).join(' ').slice(0, 80);
+      const text = msg.content.flatMap((c) => (c.type === 'text' ? [c.text] : [])).join(' ').slice(0, 80);
       res.json({ ok: true, mode: authMode(), model: msg.model, reply: text, usd, ...payload() });
     } catch (err) {
-      const status = err?.status;
-      const message = String(err?.message || err).slice(0, 400);
+      const e = err as { status?: number; message?: string };
+      const status = e?.status;
+      const message = String(e?.message || err).slice(0, 400);
       console.error('[assistant] admin test failed', status, message);
       return fail(res, 502, 'Échec du test de connexion ({status}) : {message}', {}, { status: status ?? '?', message });
     }

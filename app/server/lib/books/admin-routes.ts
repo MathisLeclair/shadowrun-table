@@ -3,16 +3,27 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { receiveToFile } from '../zip.js';
-import { BOOKS_DIR } from './access.js';
-import { cleanCode, knownBooks, readLibrary, upsertBook, removeBook, pdfFile, loadIndex } from './library.js';
-import { computeOffsets } from './indexer.js';
-import { cleanOffsets } from './offsets.js';
-import { jobList, isBusy, startIndexJob, memoryVerdict, NO_MEMORY } from './jobs.js';
+import type { Express, Request, Response, RequestHandler } from 'express';
+import { receiveToFile } from '../zip.ts';
+import { BOOKS_DIR } from './access.ts';
+import { cleanCode, knownBooks, readLibrary, upsertBook, removeBook, pdfFile, loadIndex } from './library.ts';
+import type { LibraryBook } from './library.ts';
+import { computeOffsets } from './indexer.ts';
+import { cleanOffsets } from './offsets.ts';
+import { jobList, isBusy, startIndexJob, memoryVerdict, NO_MEMORY } from './jobs.ts';
+import type { I18nParams, TableMeta } from '../../../shared/types.ts';
+
+/** Helpers registerAdminRoutes (server/lib/admin.ts) passes to the admin route groups. */
+export interface AdminRouteOptions {
+  requireAdmin: RequestHandler;
+  /** Error reply: `key` = French message with {placeholders}, `extra` extra body fields (code…). */
+  fail: (res: Response, status: number, key: string, extra?: Record<string, unknown>, params?: I18nParams | null) => unknown;
+  listMetas: () => TableMeta[];
+}
 
 // Indexing needs ≈ 6× the PDF in RAM inside the server's process (512 MB container on the VPS): 120 MB by default.
 const MAX_PDF = Number(process.env.SR_MAX_BOOK_BYTES) || 120e6;
-const safeDecode = (s) => {
+const safeDecode = (s: string): string => {
   try {
     return decodeURIComponent(s);
   } catch {
@@ -21,14 +32,14 @@ const safeDecode = (s) => {
 };
 
 /**
- * Called by registerAdminRoutes (server/lib/admin.js) with its helpers:
+ * Called by registerAdminRoutes (server/lib/admin.ts) with its helpers:
  * { requireAdmin, fail(res, status, key, extra, params), listMetas() }.
  */
-export function registerBookAdminRoutes(app, { requireAdmin, fail, listMetas }) {
+export function registerBookAdminRoutes(app: Express, { requireAdmin, fail, listMetas }: AdminRouteOptions): void {
   const dir = BOOKS_DIR;
-  const bookOr404 = (req, res) => {
+  const bookOr404 = (req: Request, res: Response): LibraryBook | null | undefined => {
     const code = cleanCode(req.params.code);
-    const b = code && readLibrary(dir).books.find((x) => x.code === code);
+    const b = code ? readLibrary(dir).books.find((x) => x.code === code) : null;
     if (!b) fail(res, 404, 'Livre introuvable');
     return b;
   };
@@ -62,10 +73,10 @@ export function registerBookAdminRoutes(app, { requireAdmin, fail, listMetas }) 
     }
     // Refuse before streaming a file the server could not index anyway (the job checks again when it starts).
     const declared = Number(req.headers['content-length']) || 0;
-    const mem = declared && declared <= MAX_PDF ? memoryVerdict(declared) : { ok: true };
+    const mem: { ok: boolean; need?: number; free?: number | null } = declared && declared <= MAX_PDF ? memoryVerdict(declared) : { ok: true };
     if (!mem.ok) {
       req.resume();
-      return fail(res, 507, NO_MEMORY, { code: 'memory' }, { need: mem.need, free: mem.free });
+      return fail(res, 507, NO_MEMORY, { code: 'memory' }, { need: mem.need ?? null, free: mem.free ?? null });
     }
     const tmp = path.join(dir, `.upload-${crypto.randomBytes(6).toString('hex')}.part`);
     try {
@@ -90,13 +101,14 @@ export function registerBookAdminRoutes(app, { requireAdmin, fail, listMetas }) 
         indexedAt: null,
       });
       startIndexJob(dir, code, { detect: true });
-      console.log(`[books] ${code} téléversé (${book.size} octets), indexation lancée`);
+      console.log(`[books] ${code} téléversé (${book?.size} octets), indexation lancée`);
       res.json({ book, jobs: jobList() });
     } catch (err) {
       try {
         fs.rmSync(tmp, { force: true });
       } catch {}
-      if (!res.headersSent) fail(res, err.status || 500, err.message || 'Envoi impossible');
+      const e = err as Error & { status?: number };
+      if (!res.headersSent) fail(res, e.status || 500, e.message || 'Envoi impossible');
     }
   });
 
@@ -104,7 +116,7 @@ export function registerBookAdminRoutes(app, { requireAdmin, fail, listMetas }) 
     const b = bookOr404(req, res);
     if (!b) return;
     const body = req.body || {};
-    const patch = {};
+    const patch: Partial<LibraryBook> = {};
     if (body.name !== undefined) patch.name = String(body.name).trim().slice(0, 120) || b.name;
     if (body.nameFr !== undefined) patch.nameFr = String(body.nameFr).trim().slice(0, 120) || b.nameFr;
     if (body.offset !== undefined || body.offsets !== undefined) {
@@ -118,7 +130,7 @@ export function registerBookAdminRoutes(app, { requireAdmin, fail, listMetas }) 
       if (body.tables === 'all') patch.tables = 'all';
       else if (Array.isArray(body.tables)) {
         const ids = new Set(listMetas().map((m) => m.id));
-        patch.tables = body.tables.map(String).filter((id) => ids.has(id));
+        patch.tables = body.tables.map(String).filter((id: string) => ids.has(id));
       } else return fail(res, 400, 'Liste de tables invalide');
     }
     res.json({ book: upsertBook(dir, b.code, patch) });
@@ -132,7 +144,7 @@ export function registerBookAdminRoutes(app, { requireAdmin, fail, listMetas }) 
     const idx = loadIndex(dir, b.code);
     if (!idx) return fail(res, 409, 'Livre pas encore indexé');
     const off = computeOffsets(b.code, { pages: idx.pages, texts: idx.texts, edges: idx.edges });
-    const patch = { offset: off.offset, offsets: off.offsets, confidence: off.confidence, verified: off.verified, matchPdfPage: off.matchPdfPage, manual: false };
+    const patch: Partial<LibraryBook> = { offset: off.offset, offsets: off.offsets, confidence: off.confidence, verified: off.verified, matchPdfPage: off.matchPdfPage, manual: false };
     if (req.query.apply === '0') return res.json({ book: { ...b, ...patch, offsets: cleanOffsets(off.offsets) || undefined }, numbered: off.numbered, applied: false });
     const book = upsertBook(dir, b.code, patch);
     res.json({ book, numbered: off.numbered, applied: true });
