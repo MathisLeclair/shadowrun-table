@@ -122,6 +122,9 @@ try {
     const state = { combat: { ...combat, round: 3 }, attacks: { blasts: [{ id: 'b', until: untilFor(combat, 0, { turns: 1 }) }, { id: 'c', until: untilFor(combat, 0, { long: true }) }] }, actors: {} };
     pruneExpired(state, 0);
     assert.deepEqual(state.attacks.blasts.map((b) => b.id), ['c'], 'explosion gone at the next Combat Turn, cloud stays');
+    const old = { combat: { active: false }, attacks: { blasts: [{ id: 'legacy', ts: 1000 }] }, actors: {} };
+    pruneExpired(old, 1000 + 61 * 1000);
+    assert.equal(old.attacks.blasts.length, 0, 'a marker from before expiry existed is gone after a minute');
   });
 
   const gm = await client(srv.url, await login(srv.url, { role: 'gm', password: 'lazarus' }));
@@ -264,6 +267,28 @@ try {
     await settle();
     assert.equal(gm.state.maps[mapId].weather, undefined);
     await gm.send('attack/clear', { all: true });
+  });
+  await test('a Molotov added as gear becomes a throwable weapon (qty), thrown like a grenade', async () => {
+    await gm.send('actor/addItem', { actorId: npcId, list: 'gear', item: { name: 'Cocktails Molotov', catalogId: '3b0f2e22-827d-448e-95df-be872963bc23', qty: 2 } });
+    await settle();
+    const npc = gm.state.actors[npcId];
+    assert.ok(!(npc.gear || []).some((g) => /molotov/i.test(g.name)), 'no longer in gear');
+    const molo = npc.weapons.find((w) => /molotov/i.test(w.name));
+    assert.ok(molo, 'in weapons');
+    assert.equal(molo.qty, 2);
+    assert.equal(molo.skill, 'throwing_weapons');
+    await gm.send('actor/addItem', { actorId: npcId, list: 'gear', item: { name: 'Grenade: Molotov Cocktail', qty: 1 } });
+    await settle();
+    assert.equal(gm.state.actors[npcId].weapons.find((w) => w.id === molo.id).qty, 3, 'same weapon: quantity grows');
+    const r = await gm.send('attack/roll', { actorId: npcId, weaponId: molo.id, skillId: 'throwing_weapons', modifier: 8, point: { x: npcToken.x - 3, y: npcToken.y } });
+    assert.ok(r.blastId);
+    await settle();
+    const b = gm.state.attacks.blasts.find((x) => x.id === r.blastId);
+    assert.equal(b.dv, 8);
+    assert.equal(b.falloff, 4);
+    assert.equal(gm.state.actors[npcId].weapons.find((w) => w.id === molo.id).qty, 2, 'one thrown');
+    await gm.send('attack/clear', { all: true });
+    await settle();
   });
   await test('grenade launcher without a minigrenade profile: the catalog round chosen gives the blast, a round is used', async () => {
     const alpha = gm.state.actors.pc_anthony.weapons.find((w) => /Alpha Grenade Launcher/.test(w.name));

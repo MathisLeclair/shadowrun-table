@@ -5,6 +5,7 @@ import { send } from '../../lib/net.js';
 import { toast, openSheet } from '../../lib/ui-store.js';
 import { t, tk } from '../../lib/i18n.js';
 import { nuyen, gradeLabel, timeAgo, STATUS_LABEL, STATUS_COLOR, FLAG_LABEL, FLAG_COLOR } from './common.js';
+import { durText } from './avail.js';
 
 const KIND_LABEL = { buy: tk('Achat'), sell: tk('Revente'), give: tk('Don du MJ'), karma: tk('Art martial (karma)') };
 const kindLabel = (k) => (KIND_LABEL[k] ? t(KIND_LABEL[k]) : k);
@@ -19,7 +20,8 @@ function Lines({ order }) {
         ${l.legality === 'F' ? html`<${Badge} color="red">F</${Badge}>` : l.legality === 'R' ? html`<${Badge} color="amber">R</${Badge}>` : null}
         ${l.availValue !== undefined && order.kind !== 'sell' ? html`<span class="faint small mono" title=${t('Disponibilité')}>${t('D{n}', { n: l.availValue })}</span>` : null}
         ${l.essence ? html`<span class="faint small mono">${t('Ess {n}', { n: Math.round(l.essence * l.qty * 1000) / 1000 })}</span>` : null}
-        <span class="mono small">${l.karma ? t('{n} karma', { n: l.karma }) : l.unitCost === null || l.unitCost === undefined ? '?' : nuyen(l.unitCost * l.qty)}</span>
+        ${l.availTest ? html`<span class="shop-avt ok small" title=${t('{hits} succès contre {opp} (dispo {avail})', { hits: l.availTest.hits, opp: l.availTest.availHits, avail: l.availTest.avail })}>${l.availTest.contact ? t('trouvé par {contact} en {delay}', { contact: l.availTest.contact, delay: durText(l.availTest.delayHours) }) : t('trouvé en {delay}', { delay: durText(l.availTest.delayHours) })}${l.availTest.tie ? ` · ${t('égalité')}` : ''}${l.availTest.tries > 1 ? ` · ${t('essai n° {n}', { n: l.availTest.tries })}` : ''}</span>${l.availTest.glitch ? html`<span class="shop-avt todo small" title=${t('Complication sur le test de disponibilité : attention indésirable (flics, yakuza, rivaux…), le MJ décide')}>⚠ ${t('complication')}</span>` : null}` : null}
+        <span class="mono small">${l.karma ? t('{n} karma', { n: l.karma }) : l.unitCost === null || l.unitCost === undefined ? '?' : nuyen((l.unitCost + (l.surcharge || 0)) * l.qty)}${l.surcharge ? html` <span class="faint" title=${t('Surenchère pour trouver l’objet (+25 % du prix par dé)')}>${t('dont +{cost}', { cost: nuyen(l.surcharge * l.qty) })}</span>` : null}</span>
       </li>`
     )}
   </ul>`;

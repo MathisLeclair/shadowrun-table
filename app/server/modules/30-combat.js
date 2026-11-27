@@ -8,6 +8,7 @@ import { deriveFull as derive } from '../lib/modifiers.js';
 import { fillActorRefs } from '../lib/bookrefs.js';
 import { uid, clamp, deepClone } from '../../shared/util.js';
 import { pruneExpired } from '../../shared/combat.js';
+import { thrownGearToWeapons } from './10-characters.js';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -183,6 +184,7 @@ function actorFromTemplate(tpl, { id, name, hidden }) {
   a.notoriety = 0;
   a.publicAwareness = 0;
   a.hidden = !!hidden;
+  thrownGearToWeapons(a, uid); // grenades / Molotovs listed as gear in the template: throwable weapons
   return a;
 }
 

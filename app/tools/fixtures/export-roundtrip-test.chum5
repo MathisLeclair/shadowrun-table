@@ -1040,7 +1040,7 @@
         <buywithkarma>False</buywithkarma>
         <specs>
           <spec>
-            <guid>9a289b80-4c5e-4223-9e6a-95925cb886a6</guid>
+            <guid>04229d78-66a8-48a0-a200-0ab986801506</guid>
             <name>Revolvers</name>
             <free>False</free>
             <expertise>False</expertise>
@@ -1170,7 +1170,7 @@
     </skills>
     <knoskills>
       <skill>
-        <guid>9ada5548-f825-450d-a4f8-87497327393c</guid>
+        <guid>04258905-bb37-4017-98bb-0629d7ba9dea</guid>
         <suid>00000000-0000-0000-0000-000000000000</suid>
         <isknowledge>True</isknowledge>
         <skillcategory>Street</skillcategory>
@@ -1187,7 +1187,7 @@
         <isnativelanguage>False</isnativelanguage>
       </skill>
       <skill>
-        <guid>82b16f63-bb96-40f0-a3a7-0546c0862421</guid>
+        <guid>32ae7065-0e13-4747-965e-a398fb59617e</guid>
         <suid>907a3a8f-2c40-4543-a5a9-891bcde41f6b</suid>
         <isknowledge>True</isknowledge>
         <skillcategory>Language</skillcategory>
@@ -1311,7 +1311,7 @@
       <blackmail>False</blackmail>
       <free>False</free>
       <readonly>False</readonly>
-      <guid>59663385-6206-4765-883a-9c8459feeb16</guid>
+      <guid>b8098546-8b1c-4628-b079-f2756c3f238d</guid>
       <mainmugshotindex>-1</mainmugshotindex>
       <mugshots />
     </contact>
@@ -1322,7 +1322,7 @@
   <powers>
     <power>
       <sourceid>fea9e769-5f2c-4bae-9610-56c0825e145a</sourceid>
-      <guid>a82ce1fd-b4cb-4ed2-966e-1dbbc0ebe8ef</guid>
+      <guid>3e243ecb-1996-41ad-adc8-38be9e047c2a</guid>
       <name>Improved Reflexes</name>
       <points>1</points>
       <levels>True</levels>
@@ -1359,7 +1359,7 @@
   <armors>
     <armor>
       <sourceid>36a4cd30-c32c-44d0-847a-0c15fb51072a</sourceid>
-      <guid>79340a46-0708-4c86-a068-d77a94b7327e</guid>
+      <guid>c3f35b97-95c2-4677-9ddb-29c26c69286a</guid>
       <name>Armor Jacket</name>
       <category>Armor</category>
       <armor>12</armor>
@@ -1465,7 +1465,7 @@
     </weapon>
     <weapon>
       <sourceid>971c711b-db32-4339-9203-865ef38f350e</sourceid>
-      <guid>d79ab0cd-195c-43c1-ace9-e93a9a00b6b4</guid>
+      <guid>2c8e6be7-42f0-4cfd-a86d-22ddca439cc2</guid>
       <name>Ares Predator V</name>
       <category>Heavy Pistols</category>
       <type>Ranged</type>
@@ -1518,6 +1518,7 @@
       <mount />
       <stolen>False</stolen>
       <extramount />
+      <accessories />
       <location />
       <notes>Accessoires d’origine à rajouter dans Chummer : Smartgun System, Internal</notes>
       <notesColor>Chocolate</notesColor>
@@ -1551,7 +1552,7 @@
   <cyberwares>
     <cyberware>
       <sourceid>47c48542-48c3-417e-91f0-b5a456183f05</sourceid>
-      <guid>6c8e2b5e-b1cc-4955-9ea7-75a60f6de461</guid>
+      <guid>7ce0a3cf-c6da-44fc-83a6-c7d0003839ef</guid>
       <name>Datajack</name>
       <limit>False</limit>
       <category>Headware</category>
@@ -1616,7 +1617,7 @@
     </quality>
     <quality>
       <sourceid>68cfe94a-fa7e-4129-a9b9-b5d73e3ced99</sourceid>
-      <guid>082adc10-9d7c-49eb-a5ba-628e6125923a</guid>
+      <guid>d8eb93cc-1121-4441-bfe6-0d2a577b962b</guid>
       <name>Ambidextrous</name>
       <extra />
       <bp>4</bp>
@@ -1647,7 +1648,7 @@
   <gears>
     <gear>
       <sourceid>ae9c37df-6d82-44c1-aa21-6c87e45e2dc1</sourceid>
-      <guid>282b112e-d3dc-44cd-b157-5cf8a209a20e</guid>
+      <guid>09bb6068-1b27-4f2e-97ed-f5ebf57cd7d6</guid>
       <name>Medkit</name>
       <category>Biotech</category>
       <maxrating>6</maxrating>
@@ -1678,7 +1679,7 @@
     </gear>
     <gear>
       <sourceid>0025f1c7-45a4-4ec5-a692-e18aab2f97a9</sourceid>
-      <guid>58e6905a-58b0-4149-8be3-b8f59ad40882</guid>
+      <guid>be1c24d7-a552-402f-9b8f-f87b37833a8f</guid>
       <name>Custom Item</name>
       <category>Custom</category>
       <maxrating>0</maxrating>

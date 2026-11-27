@@ -36,6 +36,16 @@ export function SettingsPanel({ game }) {
             { value: 'always', label: t('Toujours — chaque achat et revente') },
           ]} />
         </${Field}>
+        <div class="row wrap gap-l">
+          <${Field} label=${t('Test de disponibilité')} hint=${t('Négociation + Charisme [Social] contre la dispo (SR5 p. 418)')}>
+            <${Select} value=${s.availTest || 'required'} onChange=${(v) => settings({ availTest: v })} options=${[
+              { value: 'required', label: t('Obligatoire — trouver l’objet avant de l’acheter') },
+              { value: 'helper', label: t('Facultatif — proposé dans le panier') },
+              { value: 'off', label: t('Désactivé') },
+            ]} />
+          </${Field}>
+          <${Field} label=${t('Sans test jusqu’à dispo')} hint=${t('0 = tout objet avec une dispo')}><${NumberInput} value=${s.availFree || 0} min=${0} max=${40} onChange=${(v) => settings({ availFree: v })} /></${Field}>
+        </div>
       </div>
     </${Panel}>
     <${Panel} title=${t('Rayons ouverts')}>

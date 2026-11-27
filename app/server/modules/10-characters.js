@@ -404,8 +404,43 @@ const BILINGUAL = ['nameFr', 'nameEn', 'categoryFr', 'categoryEn'];
  * Returns true when a weapon's `ammo` was completed (« 14 » → « 14(c) »): the caller runs normalizeActor again so that
  * ammoType / ammoMax follow (the inventory migration must give the same state at every boot).
  */
+/**
+ * Thrown weapons bought / added as gear (grenades, Molotov cocktails, throwing knives: catalog gear with throwing-weapon stats — Chummer
+ * keeps them as gear with a weapon bonus) become weapon items with a quantity, so the Combat tab and the map offer to throw them.
+ * Same weapon already listed (catalog id or name): its quantity grows. Returns true when something moved.
+ */
+export function thrownGearToWeapons(a, makeId = uid) {
+  if (!Array.isArray(a?.gear) || !a.gear.length) return false;
+  let moved = false;
+  const gearCat = appCatalog('gear');
+  const keep = [];
+  for (const g of a.gear) {
+    const e = isObj(g) ? (g.catalogId ? gearCat.byId.get(String(g.catalogId).toLowerCase()) : gearCat.byName.get(catNorm(g.name)) || weaponGearByName().get(catNorm(g.name))) : null;
+    const st = e?.stats?.weapon;
+    if (!st || st.skill !== 'throwing_weapons') {
+      keep.push(g);
+      continue;
+    }
+    if (!Array.isArray(a.weapons)) a.weapons = [];
+    const names = new Set([g.name, g.nameEn, g.nameFr, e.name, e.nameFr].filter(Boolean).map(catNorm));
+    const qty = Math.max(1, Math.round(Number(g.qty) || 1));
+    const same = a.weapons.find((w) => isObj(w) && ((w.catalogId && w.catalogId === e.id) || [w.name, w.nameEn, w.nameFr].filter(Boolean).some((n) => names.has(catNorm(n)))));
+    if (same) same.qty = Math.max(0, Math.round(Number(same.qty ?? 1))) + qty;
+    else {
+      a.weapons.push({
+        id: makeId('wpn'), name: g.name || e.name, ...(e.nameFr ? { nameFr: e.nameFr } : {}), nameEn: e.name, category: e.categoryFr || e.category || '', kind: 'ranged', skill: 'throwing_weapons',
+        accuracy: st.accuracy ?? '', damage: st.damage || '', ap: st.ap ?? 0, mode: '', rc: 0, ammo: '', reach: 0,
+        catalogId: e.id, qty, equipped: true, ...(g.location !== undefined ? { location: g.location } : {}), ...(g.notes ? { notes: g.notes } : {}),
+      });
+    }
+    moved = true;
+  }
+  if (moved) a.gear = keep;
+  return moved;
+}
+
 function fillItemNames(a) {
-  let ammoChanged = false;
+  let ammoChanged = thrownGearToWeapons(a);
   for (const [list, files] of Object.entries(NAME_CATALOGS)) {
     for (const it of Array.isArray(a[list]) ? a[list] : []) {
       if (!isObj(it) || !it.name) continue;

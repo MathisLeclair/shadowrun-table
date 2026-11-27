@@ -7,6 +7,8 @@ import { t } from '../../lib/i18n.js';
 import { magicLoss, UPGRADE_FILES, MOUNT_LABELS } from './rules.js';
 import { upgradePreview, msgText } from './upgrades.js';
 import { setCart, specialEntry, priceEntry, buyStatus, nuyen, gradeLabel, lineKey } from './common.js';
+import { needsAvailTest, matchAvailTests, overpaySurcharge } from './rules.js';
+import { liveTests, AvailCartRow } from './avail.js';
 
 /**
  * Resolve cart lines against the catalog/specials. Unknown refs are flagged so they can be removed.
@@ -47,9 +49,6 @@ export default function Cart({ game, actor, catalog, lines, onClose }) {
   }, [onClose]);
 
   const priced = pricedCart(lines, catalog, game, actor);
-  const total = priced.reduce((s, p) => s + p.total, 0);
-  const have = Number(actor?.nuyen) || 0;
-  const after = have - total;
   const blocked = priced.filter((p) => p.missing || !p.st?.ok || p.stockOut);
   const approval = !isGM && priced.some((p) => p.st?.approval);
   const ess = priced.reduce((s, p) => s + (p.q?.essence ? p.q.essence * p.line.qty : 0), 0);
@@ -57,6 +56,22 @@ export default function Cart({ game, actor, catalog, lines, onClose }) {
   const essAfter = Math.round((essBefore - ess) * 1000) / 1000;
   const loss = ess > 0 ? magicLoss(essBefore, essAfter) : 0;
   const awakened = Number(actor?.attributes?.MAG) > 0 ? 'MAG' : Number(actor?.attributes?.RES) > 0 ? 'RES' : null;
+  // Availability tests (players): which lines need one, the successful test covering each (same matching as the server).
+  const shop = game.shop || {};
+  const tests = !isGM && actor ? liveTests(game, actor.id) : [];
+  const availNeed = priced.map((p) => ({
+    ref: p.line.ref, targetId: p.line.target?.itemId || '', availValue: p.q?.availValue,
+    needsTest: !isGM && !!p.entry && needsAvailTest(shop, { file: p.entry.file, special: !!p.entry.special, availValue: p.q?.availValue }),
+  }));
+  const availMatch = matchAvailTests(availNeed, tests);
+  const lastFail = (i) => tests.filter((x) => !x.found && x.ref === availNeed[i].ref && (x.targetId || '') === availNeed[i].targetId).sort((a, b) => b.ts - a.ts)[0] || null;
+  const availRequired = shop.availTest === 'required';
+  const availMissing = availRequired ? availNeed.filter((n, i) => n.needsTest && !availMatch[i]).length : 0;
+  // Dice bought on a successful search (« surenchère », SR5 p. 418): +25 % of the unit price per die, charged with the purchase.
+  const surcharge = priced.map((p, i) => (availMatch[i]?.overpay ? overpaySurcharge(p.q?.unitCost, availMatch[i].overpay) * p.line.qty : 0));
+  const total = priced.reduce((s, p, i) => s + p.total + surcharge[i], 0);
+  const have = Number(actor?.nuyen) || 0;
+  const after = have - total;
 
   const update = (i, patch) => {
     const next = lines.slice();
@@ -92,7 +107,7 @@ export default function Cart({ game, actor, catalog, lines, onClose }) {
       <div class="shop-drawer-body">
         ${!lines.length && html`<${Empty}>${t('Panier vide. Ajoute des articles depuis le catalogue.')}</${Empty}>`}
         ${priced.map(
-          (p, i) => html`<div class=${'shop-cart-line' + (p.missing || !p.st?.ok || p.stockOut ? ' bad' : '')} key=${lineKey(p.line)}>
+          (p, i) => html`<div class="shop-cart-item" key=${lineKey(p.line)}><div class=${'shop-cart-line' + (p.missing || !p.st?.ok || p.stockOut ? ' bad' : '')}>
             <div class="grow">
               <div class="shop-cart-name">${p.entry?.name || p.line.name || p.line.ref}</div>
               <div class="row wrap gap-s small muted">
@@ -114,8 +129,10 @@ export default function Cart({ game, actor, catalog, lines, onClose }) {
               : p.entry?.file !== 'lifestyles'
               ? html`<${NumberInput} small value=${p.line.qty} min=${1} max=${999} onChange=${(v) => update(i, { qty: v })} />`
               : html`<span class="small muted">${t('{n} mois', { n: p.line.qty })}</span>`}
-            <div class="shop-cart-price mono">${nuyen(p.total)}</div>
+            <div class="shop-cart-price mono">${nuyen(p.total + surcharge[i])}${surcharge[i] ? html`<div class="faint small" title=${t('Surenchère pour trouver l’objet (+25 % du prix par dé)')}>${t('dont +{cost}', { cost: nuyen(surcharge[i]) })}</div>` : null}</div>
             <${IconButton} icon="✕" title=${t('Retirer')} onClick=${() => remove(i)} />
+          </div>
+          ${availNeed[i].needsTest && p.st?.ok && html`<${AvailCartRow} game=${game} actor=${actor} p=${p} match=${availMatch[i]} last=${availMatch[i] ? null : lastFail(i)} required=${availRequired} />`}
           </div>`
         )}
       </div>
@@ -134,10 +151,11 @@ export default function Cart({ game, actor, catalog, lines, onClose }) {
           ${essAfter <= 0 && ess > 0 && html`<div class="shop-blocked small">${t('Essence à zéro : implantation impossible.')}</div>`}
           ${after < 0 && html`<div class="shop-blocked small">${t('Fonds insuffisants.')}</div>`}
           ${approval && html`<div class="shop-approval small">${t('Certains articles demandent l’accord du MJ : rien n’est débité avant sa validation.')}</div>`}
+          ${availMissing > 0 && html`<div class="shop-approval small">${t('Trouve d’abord ces articles : test de disponibilité (Négociation + Charisme) sur chaque ligne marquée.')}</div>`}
         </div>
         <div class="row wrap">
           ${!isGM &&
-          html`<${Button} variant="primary" class="grow" disabled=${busy || blocked.length > 0 || after < 0 || !game.shop?.open || (ess > 0 && essAfter <= 0)} onClick=${() => checkout('buy')}>
+          html`<${Button} variant="primary" class="grow" disabled=${busy || blocked.length > 0 || availMissing > 0 || after < 0 || !game.shop?.open || (ess > 0 && essAfter <= 0)} onClick=${() => checkout('buy')}>
             ${approval ? t('Envoyer la commande') : t('Acheter')} — ${nuyen(total)}
           </${Button}>`}
           ${isGM &&

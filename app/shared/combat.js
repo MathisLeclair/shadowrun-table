@@ -306,7 +306,8 @@ export function stillActive(until, combat, now) {
 
 /** Blast markers still shown: explosions until the end of their Combat Turn (1 min outside combat), clouds until the end of the fight. */
 export function activeBlasts(blasts, combat, now) {
-  return (blasts || []).filter((b) => (b.until ? stillActive(b.until, combat, now) : true));
+  // Markers made before expiry existed (no `until`) last one minute from their throw.
+  return (blasts || []).filter((b) => (b.until ? stillActive(b.until, combat, now) : now - (Number(b.ts) || 0) <= 60 * 1000));
 }
 
 /** Drop the blast markers and afflictions that ran out (state.attacks.blasts, actor.afflictions). Returns true when something changed. */

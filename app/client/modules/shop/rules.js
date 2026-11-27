@@ -548,3 +548,84 @@ export function upgradeFields(file, entry, parent, { rating, parentCat = null, p
   } else if (file === 'accessories') price({ WeaponCost: parentValue ?? 0 });
   return out;
 }
+
+// ---------------------------------------------------------------------------
+// Availability test (SR5 p. 418 « Black Market Goods »): Negotiation + Charisma [Social] opposed by dice equal to the Availability.
+// Win: delivered in the Delivery Times table time (by price) ÷ net hits; tie: found, twice the table time; loss: retry after twice the
+// table time. Glitch: unwanted attention (GM); critical glitch: no chance of acquiring the item. A contact can test instead (their
+// Negotiation + Charisma, Connection added to their Social limit). shop.availTest: 'off' | 'helper' (optional, recorded on the order) |
+// 'required' (players cannot buy without a success); items at or under shop.availFree need none.
+// ---------------------------------------------------------------------------
+export const AVAIL_TEST_MODES = ['off', 'helper', 'required'];
+const NO_AVAIL_TEST_FILES = new Set(['lifestyles', 'lifestylequalities']);
+
+/** Can this line be searched for at all? (fixer specials are already found; lifestyles have no Availability) */
+export const availTestable = ({ file, special, availValue }) => !special && !NO_AVAIL_TEST_FILES.has(file) && Number(availValue) > 0;
+
+/** Does a player need an availability test for this line under the shop settings? */
+export function needsAvailTest(shop, line) {
+  if (!shop || shop.availTest === 'off' || !AVAIL_TEST_MODES.includes(shop.availTest)) return false;
+  return availTestable(line) && Number(line.availValue) > Math.max(0, Number(shop.availFree) || 0);
+}
+
+/** SR5 p. 418: +1 die on the Availability Test per extra 25 % of the item's value offered, up to 12 dice (400 % of the value). */
+export const MAX_OVERPAY_DICE = 12;
+export const clampOverpay = (n) => Math.max(0, Math.min(MAX_OVERPAY_DICE, Math.round(Number(n) || 0)));
+/** Extra price per unit for `dice` bought dice (25 % of the unit price each). */
+export const overpaySurcharge = (unitCost, dice) => Math.round((Number(unitCost) || 0) * 0.25 * clampOverpay(dice));
+
+/** Delivery Times table (SR5 p. 418), in hours: ≤ 100 ¥ 6 h, ≤ 1 000 ¥ 1 day, ≤ 10 000 ¥ 2 days, ≤ 100 000 ¥ 1 week, more: 1 month. */
+export function availBaseHours(cost) {
+  const c = Number(cost) || 0;
+  return c <= 100 ? 6 : c <= 1000 ? 24 : c <= 10000 ? 48 : c <= 100000 ? 168 : 720;
+}
+
+/**
+ * Outcome of a test { hits, availHits, baseHours, glitch?, critGlitch? }: net hits, found, delivery time (base ÷ net; tie = base × 2),
+ * retry time after a failure (base × 2). A critical glitch never finds the item.
+ */
+export function availOutcome(test) {
+  const net = (Number(test?.hits) || 0) - (Number(test?.availHits) || 0);
+  const base = Number(test?.baseHours) || 0;
+  const critGlitch = !!test?.critGlitch;
+  const found = !critGlitch && net >= 0;
+  const delayHours = !found ? null : net > 0 ? Math.round((base / net) * 100) / 100 : base * 2;
+  return { net, found, tie: found && net === 0, delayHours, retryHours: found ? null : base * 2, glitch: !!test?.glitch, critGlitch };
+}
+
+/** A duration in hours as a translatable value { t, params } (French source text; render with t(v.t, v.params)). */
+export function durationText(hours) {
+  const h = Math.max(0, Number(hours) || 0);
+  if (h === 168) return { t: tk('1 semaine') };
+  if (h === 720) return { t: tk('1 mois') };
+  if (h < 1) return { t: tk('{n} min'), params: { n: Math.max(1, Math.round(h * 60)) } };
+  if (h < 24) {
+    let H = Math.floor(h);
+    let M = Math.round((h - H) * 60);
+    if (M === 60) (H += 1), (M = 0);
+    return M ? { t: tk('{h} h {m}'), params: { h: H, m: String(M).padStart(2, '0') } } : { t: tk('{n} h'), params: { n: H } };
+  }
+  let D = Math.floor(h / 24);
+  let H = Math.round(h - D * 24);
+  if (H === 24) (D += 1), (H = 0);
+  if (H) return { t: tk('{d} j {h} h'), params: { d: D, h: H } };
+  return D === 1 ? { t: tk('{n} jour'), params: { n: D } } : { t: tk('{n} jours'), params: { n: D } };
+}
+
+/**
+ * Successful availability tests matched to the lines that need one: same item and target, tested Availability ≥ the line's
+ * (a higher rating / grade needs a new search), each test covers one line; the cheapest first (fewest bought dice). lines = [{ ref, targetId?, availValue, needsTest }],
+ * tests = the actor's unused tests with their outcome ({ id, ref, targetId?, avail, net, ts }). → test (or null) per line.
+ */
+export function matchAvailTests(lines, tests) {
+  const used = new Set();
+  return lines.map((l) => {
+    if (!l.needsTest) return null;
+    const m = (tests || [])
+      .filter((x) => x.found && !used.has(x.id) && x.ref === l.ref && (x.targetId || '') === (l.targetId || '') && Number(x.avail) >= Number(l.availValue))
+      .sort((a, b) => (a.overpay || 0) - (b.overpay || 0) || a.avail - b.avail || b.ts - a.ts)[0];
+    if (!m) return null;
+    used.add(m.id);
+    return m;
+  });
+}

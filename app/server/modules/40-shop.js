@@ -11,11 +11,15 @@ import {
   SHOP_FILES, FILE_LABELS, GRADES, DEVICE_GEAR, UPGRADE_FILES, quote, targetList, parseAvailString, itemName,
   evalFormula, magicLoss, allowedGrades, fold, accessoryFit, accessoryEffects, armorCapacity, armorModFit, vehicleVars,
   vehicleModFit, vehicleModEffects, vehicleModMaxRating, martialKarma, lowersRent, upgradeAvail,
+  AVAIL_TEST_MODES, availTestable, needsAvailTest, availBaseHours, availOutcome, durationText, matchAvailTests, clampOverpay, overpaySurcharge,
 } from '../../client/modules/shop/rules.js';
+import { rollDice, skillPool, derive, attr } from '../../shared/sr5.js';
+import { performRoll } from './10-characters.js';
 import { monthlyCost, settleLifestyles, primaryLifestyle, lifestyleFromCatalog, qualityFromCatalog, qualityProblem, baseOf } from '../../shared/lifestyle.js';
 import { removeBonus, weaponFromStats, bakeItemBonus } from '../lib/augment.js';
 import { formatFr } from '../lib/i18n.js';
 import { fillActorRefs } from '../lib/bookrefs.js';
+import { thrownGearToWeapons } from './10-characters.js';
 
 /** Marks a translatable key for tools/i18n-check.js (English in client/i18n/en/shop.json). */
 const tk = (s) => s;
@@ -83,9 +87,12 @@ function defaults() {
     allowRestricted: true,
     allowForbidden: false,
     approval: 'restricted',
+    availTest: 'required',
+    availFree: 0,
     categories: Object.fromEntries(SHOP_FILES.map((f) => [f, true])),
     specials: [],
     orders: [],
+    availTests: [],
   };
 }
 
@@ -364,6 +371,102 @@ function checkStock(ctx, lines) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Availability tests (SR5 p. 418, rules in client/modules/shop/rules.js)
+// ---------------------------------------------------------------------------
+const MAX_AVAIL_TESTS = 300;
+
+/** A test with its live outcome: the roll's hits are read from the log (Edge « Seconde chance » rerolls the entry in place). */
+function liveTest(state, test) {
+  const e = test.logId ? (state.log || []).find((x) => x.id === test.logId) : null;
+  if (typeof e?.roll?.hits === 'number') {
+    test.hits = e.roll.hits;
+    test.glitch = !!e.roll.glitch;
+    test.critGlitch = !!e.roll.critGlitch;
+  }
+  return { ...test, ...availOutcome(test) };
+}
+
+/**
+ * Player purchase: the successful tests the lines need, written on the lines (`availTest`). Mode « required » refuses a line
+ * without one; « helper » only records the tests that exist. Returns the ids of the tests to mark as used.
+ */
+function claimAvailTests(ctx, actor, lines) {
+  const shop = ctx.state.shop;
+  const need = lines.map((l) => ({ ref: l.ref, targetId: l.target?.itemId || '', availValue: l.availValue, needsTest: needsAvailTest(shop, { file: l.file, special: !!l.specialId, availValue: l.availValue }) }));
+  if (!need.some((n) => n.needsTest)) return [];
+  const tests = shop.availTests.filter((x) => x.actorId === actor.id && x.status === 'open').map((x) => liveTest(ctx.state, x));
+  const matched = matchAvailTests(need, tests);
+  if (shop.availTest === 'required') {
+    const i = matched.findIndex((m, j) => need[j].needsTest && !m);
+    if (i >= 0) ctx.fail('{item} : réussis d’abord un test de disponibilité (dispo {avail})', { item: lines[i].name, avail: lines[i].availValue });
+  }
+  const ids = [];
+  matched.forEach((m, i) => {
+    if (!m) return;
+    lines[i].availTest = { id: m.id, hits: m.hits, availHits: m.availHits, net: m.net, avail: m.avail, baseHours: m.baseHours, delayHours: m.delayHours, tries: m.tries, ...(m.tie ? { tie: true } : {}), ...(m.glitch ? { glitch: true } : {}), ...(m.contactName ? { contact: m.contactName } : {}), ...(m.overpay ? { overpay: m.overpay } : {}) };
+    // Money thrown at the search (SR5 p. 418): +25 % of the item's value per bought die, paid on purchase (unitCost stays the
+    // item's price — resale value).
+    if (m.overpay) lines[i].surcharge = overpaySurcharge(lines[i].unitCost, m.overpay);
+    ids.push(m.id);
+  });
+  return ids;
+}
+
+/**
+ * A runner's contact searching for gear (SR5: the contact makes the Availability test with their own Charisma + Negotiation,
+ * Connection added to their Social limit). Stats come from an NPC actor, else a bestiary template, with the contact's name.
+ * → { id, name, connection, known: false } or { …, known: true, source, cha, negotiation, pool, defaulting, social, limit }
+ */
+function contactInfo(state, contact) {
+  const connection = clampInt(contact.connection, 0, 12, 0);
+  const base = { id: contact.id, name: contact.name, connection, known: false };
+  const key = fold(contact.name);
+  if (!key) return base;
+  const src =
+    Object.values(state.actors || {}).find((a) => a && a.type === 'npc' && fold(a.name) === key) ||
+    Object.values(state.bestiary || {}).find((tp) => tp && fold(tp.name) === key);
+  if (!src?.attributes) return base;
+  const sk = (src.skills || []).find((s) => s && (s.id === 'negotiation' || fold(s.name) === 'negociation'));
+  const neg = skillPool(src, 'negotiation');
+  const social = derive(src).limits.social;
+  return { ...base, known: true, source: src.name, cha: attr(src, 'CHA'), negotiation: Number(sk?.rating) || 0, pool: neg.pool, defaulting: !!neg.defaulting, social, limit: social + connection };
+}
+
+/** The contact's Availability roll, logged like a dice roll (no runner modifiers, no Edge: it is not the runner's test). */
+function contactRoll(ctx, actor, contact, line, avail, modifier, overpay) {
+  const c = contactInfo(ctx.state, contact);
+  if (!c.known) ctx.fail('{contact} n’a pas de fiche (Charisme, Négociation) : le MJ peut créer un PNJ de ce nom dans le Bestiaire', { contact: contact.name });
+  const mod = clampInt(modifier, -20, 20, 0);
+  const pool = Math.min(100, c.pool + mod + overpay);
+  if (pool <= 0) ctx.fail('Réserve de dés nulle : échec automatique');
+  const parts = c.defaulting ? [`CHA ${c.cha}`, 'par défaut −1'] : [`CHA ${c.cha}`, `Négociation ${c.negotiation}`];
+  if (overpay) parts.push(`surenchère +${overpay}`);
+  if (mod) parts.push(`mod. ${mod > 0 ? '+' : '−'}${Math.abs(mod)}`);
+  const r = rollDice(pool, { limit: c.limit });
+  const label = `Disponibilité — ${line.name} (via ${contact.name})`;
+  const roll = {
+    ...r, label, labelI18n: { key: tk('Disponibilité — {item} (via {contact})'), params: { item: line.name, contact: contact.name } },
+    explode: false, edge: false, actorId: null, breakdown: parts.join(' + '), limitLabel: 'sociale',
+    limitBreakdown: `sociale ${c.social} + Connexion ${c.connection}`, avail: { ...avail, contact: contact.name },
+  };
+  const entry = ctx.log({ kind: 'roll', userId: ctx.user.id, author: actor.name, text: label, roll });
+  ctx.emitTo('all', 'sfx', { id: 'dice' });
+  return { ...roll, logId: entry.id };
+}
+
+/** Tests used by an order (status 'used'), or given back when the order is denied / cancelled. */
+function useTests(shop, ids, orderId) {
+  for (const x of shop.availTests) if (ids.includes(x.id)) Object.assign(x, { status: 'used', orderId });
+}
+function releaseTests(shop, orderId) {
+  for (const x of shop.availTests) {
+    if (x.orderId !== orderId) continue;
+    x.status = 'open';
+    delete x.orderId;
+  }
+}
+
 const essenceCost = (lines) => round3(lines.reduce((s, l) => s + (l.essence ? l.essence * l.qty : 0), 0));
 
 function checkEssence(ctx, actor, lines) {
@@ -575,12 +678,18 @@ function applyOrder(ctx, actor, order, { free = false } = {}) {
   const notes = [];
   for (const line of order.items) {
     notes.push(...addLine(ctx, actor, line, { paid: free ? undefined : line.unitCost }));
+    if (line.availTest?.delayHours) {
+      const p = { item: line.name, delay: durationText(line.availTest.delayHours) };
+      if (line.surcharge) notes.push({ key: tk('{item} : trouvé en {delay} (surenchère {cost})'), params: { ...p, cost: nuyen(line.surcharge * line.qty) } });
+      else notes.push({ key: tk('{item} : trouvé en {delay}'), params: p });
+    }
     if (line.specialId) {
       const sp = ctx.state.shop.specials.find((s) => s.id === line.specialId);
       if (sp && sp.stock !== null && sp.stock !== undefined) sp.stock = Math.max(0, Number(sp.stock) - line.qty);
     }
   }
   fillActorRefs(actor); // 📖 source / page of the new items (catalog)
+  thrownGearToWeapons(actor, (p) => ctx.uid(p)); // grenades / Molotovs bought as gear: throwable weapons
   if (!free) actor.nuyen = (Number(actor.nuyen) || 0) - order.total;
   const items = summary(order.items);
   const np = notesParam(notes);
@@ -852,6 +961,8 @@ export default {
     shop.categories = { ...d.categories, ...(shop.categories || {}) };
     if (!Array.isArray(shop.specials)) shop.specials = [];
     if (!Array.isArray(shop.orders)) shop.orders = [];
+    if (!Array.isArray(shop.availTests)) shop.availTests = [];
+    if (!AVAIL_TEST_MODES.includes(shop.availTest)) shop.availTest = d.availTest;
     if (!Array.isArray(shop.removedSeedIds)) shop.removedSeedIds = [];
     const seed = readSeed('shop.json', { specials: [] }) || {};
     for (const sp of seed.specials || []) {
@@ -911,7 +1022,8 @@ export default {
         if (!ctx.isGM) checkRules(ctx, lines);
         checkStock(ctx, lines);
         checkEssence(ctx, actor, lines);
-        const total = lines.reduce((s, l) => s + l.unitCost * l.qty, 0);
+        const testIds = ctx.isGM ? [] : claimAvailTests(ctx, actor, lines);
+        const total = lines.reduce((s, l) => s + (l.unitCost + (l.surcharge || 0)) * l.qty, 0);
         checkFunds(ctx, actor, total);
         const flags = [...new Set(lines.flatMap((l) => lineFlags(shop, l)))];
         // Lifestyle options that lower the rent (negative qualities: Thrifty, Dangerous Area…) always wait for the GM.
@@ -922,6 +1034,7 @@ export default {
           id: ctx.uid('ord'), ts: ctx.now, actorId, userId: ctx.user.id, by: ctx.isGM ? 'MJ' : ctx.user.name, kind: 'buy',
           items: lines, total, status: needsApproval ? 'pending' : 'done', flags,
         };
+        useTests(shop, testIds, order.id);
         if (needsApproval) {
           pushOrder(shop, order);
           shopLog(ctx, actorId, tk('{actor} passe commande : {items} — {cost} (en attente du MJ)'), { actor: actor.name, items: summary(lines), cost: nuyen(total) });
@@ -931,6 +1044,58 @@ export default {
         const notes = applyOrder(ctx, actor, order);
         pushOrder(shop, order);
         return { status: 'done', orderId: order.id, total, notes: notes.map((n) => formatFr(n.key, n.params)), notesI18n: notes };
+      },
+    },
+
+    // Availability test (SR5 p. 418): { actorId, item: cart line { ref, rating?, grade?, target?, mount?, price? }, useSpec?,
+    // explode? (Edge: Push the Limit), modifier?, contactId? }. Negotiation + Charisma [Social] (performRoll: gear, wounds, limit) opposed by
+    // Availability dice; the test is stored in shop.availTests and unlocks the purchase of that item (see claimAvailTests).
+    // contactId: one of the runner's contacts searches instead (contactStats: their own Charisma + Negotiation, Social limit + Connection).
+    'shop/availTest': {
+      role: 'any',
+      handler(ctx, { actorId, item, useSpec, explode, modifier, contactId, overpay: rawOverpay }) {
+        const actor = getActor(ctx, actorId);
+        const shop = ctx.state.shop;
+        if (!ctx.isGM && shop.availTest === 'off') ctx.fail('Pas de test de disponibilité à cette table');
+        if (!ctx.isGM && !shop.open) ctx.fail('Cabana n’est pas joignable pour l’instant');
+        if (!item || typeof item !== 'object' || Array.isArray(item)) ctx.fail('Article manquant');
+        const [line] = resolveLines(ctx, actor, [item]);
+        if (!availTestable({ file: line.file, special: !!line.specialId, availValue: line.availValue })) ctx.fail('{item} : aucun test de disponibilité nécessaire', { item: line.name });
+        if (!ctx.isGM) checkRules(ctx, [line]);
+        const targetId = line.target?.itemId || '';
+        const tries = shop.availTests.filter((x) => x.actorId === actor.id && x.ref === line.ref && (x.targetId || '') === targetId && x.status !== 'used').length + 1;
+        const opp = rollDice(line.availValue);
+        const baseHours = availBaseHours(line.unitCost);
+        const testId = ctx.uid('av');
+        const overpay = clampOverpay(rawOverpay);
+        const avail = { testId, value: line.availValue, legality: line.legality, dice: opp.dice, hits: opp.hits, baseHours, tries, ...(overpay ? { overpay } : {}) };
+        let r;
+        let contact = null;
+        if (contactId) {
+          contact = (Array.isArray(actor.contacts) ? actor.contacts : []).find((c) => c && c.id === String(contactId));
+          if (!contact) ctx.fail('Contact introuvable');
+          r = contactRoll(ctx, actor, contact, line, avail, modifier, overpay);
+        } else {
+          r = performRoll(
+            ctx,
+            { actorId: actor.id, skillId: 'negotiation', useSpec: !!useSpec, explode: !!explode, modifier, label: `Disponibilité — ${line.name}` },
+            { bonus: overpay ? [{ label: 'surenchère', value: overpay }] : [], logExtra: { labelI18n: { key: tk('Disponibilité — {item}'), params: { item: line.name } }, avail } },
+          );
+        }
+        const test = {
+          id: testId, ts: ctx.now, actorId: actor.id, userId: ctx.user.id, ref: line.ref, ...(targetId ? { targetId } : {}), name: line.name,
+          avail: line.availValue, legality: line.legality, availHits: opp.hits, hits: r.hits, glitch: !!r.glitch, critGlitch: !!r.critGlitch, logId: r.logId, baseHours, tries, status: 'open',
+          ...(contact ? { contactId: contact.id, contactName: contact.name } : {}), ...(overpay ? { overpay } : {}),
+        };
+        shop.availTests.push(test);
+        if (shop.availTests.length > MAX_AVAIL_TESTS) {
+          // Drop the oldest used tests first, then the oldest ones.
+          let excess = shop.availTests.length - MAX_AVAIL_TESTS;
+          shop.availTests = shop.availTests.filter((x) => !(excess > 0 && x.status === 'used' && excess--));
+          if (shop.availTests.length > MAX_AVAIL_TESTS) shop.availTests.splice(0, shop.availTests.length - MAX_AVAIL_TESTS);
+        }
+        const out = availOutcome(test);
+        return { testId, hits: r.hits, availHits: opp.hits, ...out, baseHours, tries, overpay, logId: r.logId };
       },
     },
 
@@ -1038,6 +1203,7 @@ export default {
         if (!approve) {
           order.status = 'denied';
           order.resolvedTs = ctx.now;
+          releaseTests(shop, order.id); // the item was found: the runner keeps the search for another try
           if (actor) {
             const p = { actor: actor.name, items: summary(order.items), note: order.gmNote || '' };
             if (order.kind === 'sell') {
@@ -1080,6 +1246,7 @@ export default {
         if (order.status !== 'pending') ctx.fail('Cette commande n’est plus en attente');
         order.status = 'cancelled';
         order.resolvedTs = ctx.now;
+        releaseTests(ctx.state.shop, order.id);
         return { status: 'cancelled' };
       },
     },
@@ -1107,7 +1274,7 @@ export default {
       },
     },
 
-    // GM: { open?, markup?, sellRate?, maxAvail?, allowRestricted?, allowForbidden?, approval?, categories?: { file: bool } }
+    // GM: { open?, markup?, sellRate?, maxAvail?, allowRestricted?, allowForbidden?, approval?, availTest?, availFree?, categories?: { file: bool } }
     'shop/updateSettings': {
       role: 'gm',
       handler(ctx, p) {
@@ -1122,6 +1289,11 @@ export default {
           if (!APPROVAL_MODES.includes(p.approval)) ctx.fail('Mode de validation inconnu');
           shop.approval = p.approval;
         }
+        if (p.availTest !== undefined) {
+          if (!AVAIL_TEST_MODES.includes(p.availTest)) ctx.fail('Mode de test de disponibilité inconnu');
+          shop.availTest = p.availTest;
+        }
+        if (p.availFree !== undefined) shop.availFree = clampInt(p.availFree, 0, 40, 0);
         if (p.categories && typeof p.categories === 'object') {
           for (const [k, v] of Object.entries(p.categories)) if (SHOP_FILES.includes(k)) shop.categories[k] = !!v;
         }
@@ -1223,10 +1395,17 @@ export default {
     },
   },
 
-  filter(view, user) {
+  filter(view, user, fullState) {
     if (!view.shop) return;
     const mine = new Set(user.characterIds || []);
     view.shop.orders = (view.shop.orders || []).filter((o) => o.userId === user.id || mine.has(o.actorId));
+    view.shop.availTests = (view.shop.availTests || []).filter((x) => mine.has(x.actorId));
+    // Who can search for each of the player's runners (bestiary / NPC stats are not in a player's view).
+    view.shop.contactSearch = {};
+    for (const id of mine) {
+      const a = fullState.actors?.[id];
+      if (a) view.shop.contactSearch[id] = (Array.isArray(a.contacts) ? a.contacts : []).filter((c) => c?.id && c.name).map((c) => contactInfo(fullState, c));
+    }
     view.shop.specials = (view.shop.specials || [])
       .filter((s) => !s.hidden && (!s.forActorIds?.length || s.forActorIds.some((id) => mine.has(id))))
       .map(({ gmNotes, ...s }) => s);

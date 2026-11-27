@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { login, client, settle } from './test-client.js';
-import { accessoryFit, weaponMounts, vehicleModFit, vehicleVars, vehicleSlots, upgradeAvail, upgradeFields, martialKarma, quote, lowersRent } from '../client/modules/shop/rules.js';
+import { accessoryFit, weaponMounts, vehicleModFit, vehicleVars, vehicleSlots, upgradeAvail, upgradeFields, martialKarma, quote, lowersRent, availBaseHours, availOutcome, durationText, matchAvailTests, needsAvailTest } from '../client/modules/shop/rules.js';
 import { armorTotal } from '../shared/sr5.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -204,6 +204,37 @@ const state = {
   ok(o.options.reduce((n, x) => n + x.count, 0) === weapons.length, 'option counts');
 }
 
+// Availability test rules (pure): SR5 p. 418 time table, outcome, matching.
+{
+  console.log('• availability test rules (pure)');
+  ok([[100, 6], [101, 24], [1000, 24], [1001, 48], [10000, 48], [10001, 168], [100000, 168], [100001, 720]].every(([c, h]) => availBaseHours(c) === h), 'time table by price');
+  const o = availOutcome({ hits: 4, availHits: 1, baseHours: 48 });
+  ok(o.net === 3 && o.found && o.delayHours === 16, `48 h / 3 net hits = 16 h (${JSON.stringify(o)})`);
+  const tie = availOutcome({ hits: 2, availHits: 2, baseHours: 6 });
+  ok(tie.found && tie.tie && tie.delayHours === 12, `a tie finds the item in twice the table time (${JSON.stringify(tie)})`);
+  const miss = availOutcome({ hits: 1, availHits: 3, baseHours: 24 });
+  ok(!miss.found && miss.retryHours === 48, 'failure: retry after twice the table time');
+  ok(!availOutcome({ hits: 0, availHits: 0, baseHours: 6, glitch: true, critGlitch: true }).found, 'critical glitch: never found');
+  ok(availOutcome({ hits: 3, availHits: 1, baseHours: 6, glitch: true }).glitch, 'glitch kept on a success (GM consequences)');
+  const d = (h) => {
+    const v = durationText(h);
+    return v.t.replace(/\{(\w+)\}/g, (_, k) => v.params[k]);
+  };
+  const hs = [16, 1.5, 0.5, 24, 56, 168, 720, 240];
+  ok(hs.map(d).join('|') === '16 h|1 h 30|30 min|1 jour|2 j 8 h|1 semaine|1 mois|10 jours', `durations (${hs.map(d).join(' | ')})`);
+  const shopS = { availTest: 'required', availFree: 2 };
+  ok(needsAvailTest(shopS, { file: 'weapons', availValue: 4 }) && !needsAvailTest(shopS, { file: 'weapons', availValue: 2 }), 'free threshold');
+  ok(!needsAvailTest(shopS, { file: 'gear', special: true, availValue: 8 }) && !needsAvailTest(shopS, { file: 'lifestyles', availValue: 8 }), 'specials / lifestyles: no test');
+  ok(!needsAvailTest({ availTest: 'off' }, { file: 'gear', availValue: 8 }) && needsAvailTest({ availTest: 'helper' }, { file: 'gear', availValue: 8 }), 'modes');
+  const tests = [{ id: 'a', ref: 'x', avail: 6, found: true, ts: 1 }, { id: 'b', ref: 'x', avail: 4, found: true, ts: 2 }, { id: 'c', ref: 'x', avail: 9, found: false, ts: 3 }, { id: 'd', ref: 'y', targetId: 'w1', avail: 3, found: true, ts: 1 }];
+  const m = matchAvailTests([
+    { ref: 'x', availValue: 4, needsTest: true }, { ref: 'x', availValue: 5, needsTest: true }, { ref: 'x', availValue: 4, needsTest: true },
+    { ref: 'y', availValue: 3, needsTest: true }, { ref: 'y', targetId: 'w1', availValue: 3, needsTest: true }, { ref: 'z', availValue: 3, needsTest: false },
+  ], tests);
+  const ids = m.map((x) => x?.id || '-').join('');
+  ok(ids === 'ba--d-', `matching: one test per line, tested avail ≥ the line's, same target, failures ignored (${ids})`);
+}
+
 const srv = await startWithState(state);
 try {
   const gm = await client(srv.url, await login(srv.url, { role: 'gm', password: 'lazarus' }));
@@ -216,6 +247,10 @@ try {
   const shop = gm.state.shop;
   ok(shop && shop.open === true && shop.markup === 0 && shop.sellRate === 50 && shop.maxAvail === 12, 'default settings');
   ok(shop.approval === 'restricted' && shop.allowRestricted === true && shop.allowForbidden === false, 'default legality/approval');
+  ok(shop.availTest === 'required' && shop.availFree === 0 && Array.isArray(shop.availTests), 'default availability test: required');
+  // The purchase sections below test the shop without availability tests (their own section is « availability test »).
+  await gm.send('shop/updateSettings', { availTest: 'off' });
+  await settle();
   ok(shop.categories.weapons === true && shop.categories.gear === true, 'categories enabled');
   ok(shop.specials.length >= 8, 'seed specials merged');
   ok(shop.specials.some((s) => s.hidden), 'GM sees hidden special');
@@ -530,6 +565,114 @@ try {
   await gm.send('shop/clearOrders');
   await settle();
   ok(gm.state.shop.orders.every((o) => o.status === 'pending'), 'clearOrders keeps pending only');
+
+  console.log('• availability test');
+  await gm.send('shop/updateSettings', { markup: 0, availTest: 'required', approval: 'restricted' });
+  await settle();
+  await rejects(jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: jacket.id }] }), /test de disponibilité/, 'required: no purchase without a successful test');
+  await rejects(jane.send('shop/availTest', { actorId: 'pc_bricks', item: { ref: jacket.id } }), /ton personnage/, 'cannot search for another runner');
+  const sp0 = jane.state.shop.specials.find((x) => x.stock === null || x.stock === undefined || x.stock > 0);
+  await rejects(jane.send('shop/availTest', { actorId: 'pc_jane', item: { ref: `special:${sp0.id}` } }), /aucun test/, 'fixer specials need no test');
+  // Jane: Negotiation defaults to CHA 8 − 1 = 7 dice vs Availability 2 — retry until found (bounded).
+  let at;
+  let tries = 0;
+  do {
+    at = await jane.send('shop/availTest', { actorId: 'pc_jane', item: { ref: jacket.id } });
+    tries++;
+  } while (!at.found && tries < 30);
+  await settle();
+  ok(at.found && at.net === at.hits - at.availHits && at.baseHours === 24 && at.delayHours === (at.net > 0 ? Math.round((24 / at.net) * 100) / 100 : 48), `test outcome (${JSON.stringify(at)})`);
+  ok(at.tries === tries, `attempt counter (${at.tries} / ${tries})`);
+  const rollE = gm.state.log.find((e) => e.id === at.logId);
+  ok(rollE?.kind === 'roll' && rollE.roll.avail?.value === 2 && rollE.roll.avail.dice.length === 2 && rollE.roll.labelI18n?.key === 'Disponibilité — {item}', `roll logged with the Availability dice (${rollE?.roll?.breakdown})`);
+  ok(rollE.roll.pool === 7 && rollE.roll.limitLabel === 'sociale', `Negotiation default pool 7, Social limit (${rollE.roll.pool}, ${rollE.roll.limitLabel})`);
+  ok(jane.state.shop.availTests.some((x) => x.id === at.testId) && !bricks.state.shop.availTests.some((x) => x.id === at.testId), 'tests visible to their owner only');
+  r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: jacket.id }] });
+  await settle();
+  const ord = gm.state.shop.orders.find((o) => o.id === r.orderId);
+  ok(r.status === 'done' && ord.items[0].availTest?.id === at.testId && ord.items[0].availTest.delayHours === at.delayHours, 'purchase with the test: delay on the order line');
+  ok(r.notes.some((n) => /trouvé en/.test(n)), `delay note (${r.notes.join(' | ')})`);
+  ok(gm.state.shop.availTests.find((x) => x.id === at.testId).status === 'used', 'test used by the purchase');
+  await rejects(jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: jacket.id }] }), /test de disponibilité/, 'one test = one purchase');
+  // Pending order (restricted): cancelling or denying gives the search back.
+  tries = 0;
+  do at = await jane.send('shop/availTest', { actorId: 'pc_jane', item: { ref: katana.id } });
+  while (!at.found && ++tries < 30);
+  r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: katana.id }] });
+  await settle();
+  ok(r.status === 'pending' && gm.state.shop.availTests.find((x) => x.id === at.testId).status === 'used', 'pending order holds the test');
+  await jane.send('shop/cancel', { orderId: r.orderId });
+  await settle();
+  ok(gm.state.shop.availTests.find((x) => x.id === at.testId).status === 'open', 'cancelled order releases the test');
+  r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: katana.id }] });
+  await gm.send('shop/resolve', { orderId: r.orderId, approve: false });
+  await settle();
+  ok(gm.state.shop.availTests.find((x) => x.id === at.testId).status === 'open', 'denied order releases the test');
+  // A contact searches instead (SR5: the contact's Charisma + Negotiation, Social limit + Connection). Stats: bestiary template of the same name.
+  const tpl = Object.values(gm.state.bestiary || {}).find((x) => x?.name === 'Perrine Cabana');
+  ok(!!tpl, 'bestiary has Perrine Cabana (Foundry seed)');
+  await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'contacts', item: { name: 'Perrine Cabana', connection: 2, loyalty: 4 } });
+  await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'contacts', item: { name: 'Contact Sans Fiche', connection: 3, loyalty: 1 } });
+  await settle();
+  const cs = jane.state.shop.contactSearch?.pc_jane || [];
+  const cab = cs.find((c) => c.name === 'Perrine Cabana');
+  const nobody = cs.find((c) => c.name === 'Contact Sans Fiche');
+  const tplNeg = (tpl.skills || []).find((s) => s.id === 'negotiation')?.rating || 0;
+  const tplSocial = Math.ceil((tpl.attributes.CHA * 2 + tpl.attributes.WIL + Math.ceil(tpl.attributes.ESS ?? 6)) / 3);
+  ok(cab?.known && cab.pool === tpl.attributes.CHA + tplNeg && cab.limit === tplSocial + 2, `contact stats from the bestiary (${JSON.stringify(cab)})`);
+  ok(nobody && !nobody.known && !('pool' in nobody), 'contact without stats listed as unknown');
+  ok(!bricks.state.shop.contactSearch?.pc_jane, 'contact search info private to the runner’s player');
+  ok(!('contactSearch' in (jane.state.bestiary || {})) && !jane.state.bestiary, 'bestiary still hidden from players');
+  await rejects(jane.send('shop/availTest', { actorId: 'pc_jane', item: { ref: jacket.id }, contactId: nobody.id }), /pas de fiche/, 'contact without stats cannot search');
+  await rejects(jane.send('shop/availTest', { actorId: 'pc_jane', item: { ref: jacket.id }, contactId: 'nope' }), /Contact introuvable/, 'unknown contact');
+  const edgeBefore = A(jane, 'pc_jane').edge.current;
+  tries = 0;
+  do at = await jane.send('shop/availTest', { actorId: 'pc_jane', item: { ref: jacket.id }, contactId: cab.id, explode: true });
+  while (!at.found && ++tries < 30);
+  await settle();
+  const cRoll = gm.state.log.find((e) => e.id === at.logId)?.roll;
+  ok(at.found && cRoll.pool === cab.pool && cRoll.limit === cab.limit && !cRoll.explode && cRoll.avail.contact === 'Perrine Cabana' && cRoll.labelI18n.key === 'Disponibilité — {item} (via {contact})', `contact roll: their pool and limit, no runner Edge (${cRoll?.breakdown} [${cRoll?.limitBreakdown}])`);
+  ok(A(jane, 'pc_jane').edge.current === edgeBefore && gm.state.shop.availTests.find((x) => x.id === at.testId)?.contactName === 'Perrine Cabana', 'test records the contact');
+  r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: jacket.id }] });
+  await settle();
+  ok(r.status === 'done' && gm.state.shop.orders.find((o) => o.id === r.orderId).items[0].availTest.contact === 'Perrine Cabana', 'order line says who found it');
+
+  // Throwing money at it (SR5 p. 418): +1 die per extra 25 % of the price (max 12), paid on purchase only.
+  tries = 0;
+  do at = await jane.send('shop/availTest', { actorId: 'pc_jane', item: { ref: jacket.id }, overpay: 4 });
+  while (!at.found && ++tries < 30);
+  await settle();
+  const oRoll = gm.state.log.find((e) => e.id === at.logId)?.roll;
+  ok(at.overpay === 4 && oRoll.pool === 7 + 4 && /surenchère \+4/.test(oRoll.breakdown), `bought dice in the pool (${oRoll?.breakdown})`);
+  const nuyenBefore = A(gm, 'pc_jane').nuyen;
+  r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: jacket.id }] });
+  await settle();
+  const oOrd = gm.state.shop.orders.find((o) => o.id === r.orderId);
+  ok(r.status === 'done' && r.total === 2000 && oOrd.items[0].surcharge === 1000 && oOrd.items[0].unitCost === 1000, `+100 % surcharge charged (${r.total})`);
+  ok(A(gm, 'pc_jane').nuyen === nuyenBefore - 2000, 'nuyen debited with the surcharge');
+  ok(r.notes.some((n) => /surenchère/.test(n)), `surcharge note (${r.notes.join(' | ')})`);
+  const boughtJacket = A(gm, 'pc_jane').armor.filter((x) => x.catalogId === jacket.id).pop();
+  ok(boughtJacket.paid === 1000, 'resale value stays the item price');
+  const capped = await jane.send('shop/availTest', { actorId: 'pc_jane', item: { ref: jacket.id }, overpay: 99, contactId: cab.id });
+  await settle();
+  ok(capped.overpay === 12 && gm.state.log.find((e) => e.id === capped.logId).roll.pool === cab.pool + 12, 'overpay capped at 12 dice (contact roll too)');
+
+  // Threshold, helper mode, GM, off.
+  await gm.send('shop/updateSettings', { availFree: 2 });
+  r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: jacket.id }] });
+  ok(r.status === 'done', 'Availability at or under the threshold: no test');
+  await gm.send('shop/updateSettings', { availFree: 0, availTest: 'helper' });
+  r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: jacket.id }] });
+  ok(r.status === 'done', 'helper mode: buying without a test');
+  await gm.send('shop/updateSettings', { availTest: 'required' });
+  r = await gm.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: jacket.id }] });
+  ok(r.status === 'done', 'GM sale: no test');
+  await rejects(gm.send('shop/updateSettings', { availTest: 'bogus' }), /inconnu/, 'unknown mode refused');
+  await gm.send('shop/updateSettings', { availTest: 'off' });
+  await rejects(jane.send('shop/availTest', { actorId: 'pc_jane', item: { ref: jacket.id } }), /Pas de test/, 'off: no test for players');
+  await settle();
+  const availEn = await renderI18n(gm.state.log.filter((e) => e.roll?.labelI18n).map((e) => ({ i18n: e.roll.labelI18n, text: e.roll.label })), 'availability roll label');
+  ok(availEn.every((x) => /^Availability — /.test(x)), 'English availability label');
 
   console.log('• i18n');
   const shopEn = await renderI18n(gm.state.log.filter((e) => e.kind === 'shop'), 'shop log');

@@ -235,13 +235,6 @@
         "positive": true,
         "notes": "Bilingual · SR5 72",
         "catalogId": "c734e46a-d391-45a6-b022-6f18db5019f1"
-      },
-      {
-        "id": "fvtt_rgJ2rY0vDTJ1MXIU",
-        "name": "Finishing Move",
-        "karma": 0,
-        "positive": true,
-        "notes": "Finishing Move · RG 124"
       }
     ],
     "powers": [],
@@ -707,6 +700,26 @@
         "monthlyCost": 7083,
         "notes": "",
         "catalogId": "9cb0222c-14c1-4bea-bf83-055513a1f33e"
+      }
+    ],
+    "martialArts": [
+      {
+        "id": "ma_anthony01",
+        "catalogId": "922b9b42-6e88-4ab6-a255-00fe2b025f2a",
+        "name": "Kenjutsu",
+        "rating": 1,
+        "source": "RG",
+        "page": 131,
+        "techniques": [
+          {
+            "id": "mat_anthony01",
+            "catalogId": "3aba0ece-6ced-48ab-a873-3787c58df995",
+            "name": "Finishing Move",
+            "nameFr": "Prise de finition",
+            "source": "RG",
+            "page": 120
+          }
+        ]
       }
     ],
     "karma": 27,

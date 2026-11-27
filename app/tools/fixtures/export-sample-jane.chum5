@@ -247,7 +247,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     <skillgrpsmax>0</skillgrpsmax>
     <skills>
       <skill>
-        <guid>1551f484-da7a-4c1b-8908-df4dc40294b3</guid>
+        <guid>07198022-c1b1-4ec9-9934-dace833ae4ed</guid>
         <suid>b52f7575-eebf-41c4-938d-df3397b5ee68</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Technical Active</skillcategory>
@@ -262,7 +262,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>faff01f2-9d05-438c-8d29-4396a971de95</guid>
+        <guid>35d7c8cc-a756-4ee5-92c1-e13c39e4999c</guid>
         <suid>e09e5aa7-e496-41a2-97ce-17f577361888</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Technical Active</skillcategory>
@@ -277,7 +277,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>f8f3053f-0dd5-43e3-b69d-d7c27f2f52bd</guid>
+        <guid>b489d31b-270b-4bea-b446-e6d9812fd393</guid>
         <suid>74a68a9e-8c5b-4998-8dbb-08c1e768afc3</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Pseudo-Magical Active</skillcategory>
@@ -292,7 +292,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>ff76fc6c-b0bf-4c05-af44-24f124b37271</guid>
+        <guid>08d89d19-6b02-4cb3-805b-108d8745a91a</guid>
         <suid>1537ca5c-fa93-4c05-b073-a2a0eed91b8e</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Combat Active</skillcategory>
@@ -307,7 +307,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>73f3cf16-1708-4012-8725-e3762a02cbf1</guid>
+        <guid>128fab35-867b-4f1b-9d30-280a80474395</guid>
         <suid>ada6d9b2-e451-4289-be45-7085fa34a51a</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Technical Active</skillcategory>
@@ -322,7 +322,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>15fa8b5b-97a5-4390-80a1-0290277df781</guid>
+        <guid>54273fd8-fb51-443b-9ab1-505f8eb371db</guid>
         <suid>2f4c706f-5ac5-4774-8a45-3b4667989a20</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Technical Active</skillcategory>
@@ -337,7 +337,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
         <specs>
           <spec>
-            <guid>70e6222e-f36e-4fb7-8da3-e29c75271cd7</guid>
+            <guid>00d905e8-6edc-4357-9396-ed07312ab52c</guid>
             <name>Drawing</name>
             <free>False</free>
             <expertise>False</expertise>
@@ -345,7 +345,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         </specs>
       </skill>
       <skill>
-        <guid>ee68723e-afdd-4965-8b6c-d9c2ff6c0e25</guid>
+        <guid>72416e07-95b7-4ae1-98b4-26a33b353cec</guid>
         <suid>59318078-e071-411b-9194-7222560e9f4a</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Magical Active</skillcategory>
@@ -360,7 +360,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>d0510fc1-6a5b-4b59-a457-c1fe955e04ec</guid>
+        <guid>d3fcab55-b820-404b-99d0-8282193e7e13</guid>
         <suid>b7599a42-ceed-4558-b357-865aa3e317f5</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Magical Active</skillcategory>
@@ -375,7 +375,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>7f2c9ad9-51b1-45c3-ab07-9d1b20e53ac1</guid>
+        <guid>2a1e93b7-39af-487a-a485-d40504c939ee</guid>
         <suid>788b387b-ee41-4e6a-bf22-481a8cc4cf9f</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Combat Active</skillcategory>
@@ -390,7 +390,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>75e2aafc-a175-46b2-b862-8ec6ba8b1067</guid>
+        <guid>443ec6e2-2e10-4e26-af1f-99b7397d18c7</guid>
         <suid>5e5f2f7f-f63b-4f65-a65d-91b3d4523c6f</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Technical Active</skillcategory>
@@ -405,7 +405,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>7f075c16-7b77-47f6-8c77-c55132cae464</guid>
+        <guid>c90efa3c-d907-4c92-b719-1a44a32b48ba</guid>
         <suid>ba624682-a5c0-4cf5-b47b-1021e6a1800d</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Technical Active</skillcategory>
@@ -420,7 +420,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>8dfa6688-2236-47c3-8fca-51ecd4740934</guid>
+        <guid>81062263-4d9f-497a-b21b-9675b909c07c</guid>
         <suid>48763fa5-4b89-48c7-80ff-d0a2761de4c0</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Combat Active</skillcategory>
@@ -435,7 +435,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>734e4b54-bca9-4f27-8226-9ebbc3936f68</guid>
+        <guid>07daee23-ca6f-4bcf-af56-82daf99ecc39</guid>
         <suid>bd4d977a-cbd4-4289-99bb-896caed6786a</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Technical Active</skillcategory>
@@ -450,7 +450,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>0fd1fac4-e5e1-481d-a57c-62a7a05cdc21</guid>
+        <guid>e3c8cff4-b816-4a5c-b440-89521b0af8a5</guid>
         <suid>cd9f6bf7-fa48-464b-9a8f-c7ce26713a72</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Combat Active</skillcategory>
@@ -465,7 +465,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>a3294a4f-f7c1-49bb-82b2-dd95fe32d846</guid>
+        <guid>7fc8aeed-56ef-455d-9a61-dd40d1ff97f1</guid>
         <suid>1c14bf0d-cc69-4126-9a95-1f2429c11aa5</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Technical Active</skillcategory>
@@ -480,7 +480,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>a63e3e89-8b51-442c-b78a-cc9469dead5e</guid>
+        <guid>03fa2729-9ab7-4ac4-8e83-e5e3d3a6ae19</guid>
         <suid>6d7f48d3-84a1-4fce-90d3-58d566f70fa6</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Social Active</skillcategory>
@@ -495,7 +495,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
         <specs>
           <spec>
-            <guid>68043f29-2ff0-44af-a080-0e852bd0c4ee</guid>
+            <guid>c49ca4e4-15a0-49a1-b397-cec2bbdf7c45</guid>
             <name>Seduction</name>
             <free>False</free>
             <expertise>False</expertise>
@@ -503,7 +503,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         </specs>
       </skill>
       <skill>
-        <guid>882bfb14-b10e-4cc1-822a-76973530b726</guid>
+        <guid>b52d3add-b3f8-4825-8a8f-b7705b615920</guid>
         <suid>7143f979-aa48-4cc8-a29c-e010400e6e11</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Technical Active</skillcategory>
@@ -518,7 +518,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>a9ab8ce8-5350-4b47-80c1-095586251930</guid>
+        <guid>a22ae983-1cd4-4074-99a2-35f1a8b14690</guid>
         <suid>9b386fe5-83b3-436f-9035-efd1c0f7a680</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Technical Active</skillcategory>
@@ -533,7 +533,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>3afc3dbc-aef8-4599-ba14-fcf9747c3c80</guid>
+        <guid>f4b8dd20-a7fa-46d7-8a2f-2aa4ef776566</guid>
         <suid>276877e1-5cdf-4e95-befd-13c1abb5ae02</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Technical Active</skillcategory>
@@ -548,7 +548,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>2a9d7839-1425-4b64-94f2-ebdcbfe3b87e</guid>
+        <guid>2dd1dd07-81f2-4a58-922b-f249e6d552be</guid>
         <suid>9b2416b2-3e2b-4dd6-ab9d-530f493c1c22</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Physical Active</skillcategory>
@@ -563,7 +563,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>b88d931f-3885-4fb8-bb0c-93ba0f7f97ef</guid>
+        <guid>34520578-bd8e-499e-bad4-c4019e9593f0</guid>
         <suid>23c3320c-5010-4b2e-ac46-76f0a86af0b9</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Physical Active</skillcategory>
@@ -578,7 +578,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>b3c54c79-bea3-4036-bce1-9d190fc07540</guid>
+        <guid>5cc25df1-6409-49f2-9483-a7b79ea86807</guid>
         <suid>2c8e5f20-e52d-4844-89e9-51b92dba47df</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Technical Active</skillcategory>
@@ -593,7 +593,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>f22645dc-3661-47d8-93bc-6a888f63e7f7</guid>
+        <guid>e31acca4-76a5-4082-887c-3afc160eb1b8</guid>
         <suid>3f93335c-49d6-4904-a97e-4c942ab05b59</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Physical Active</skillcategory>
@@ -608,7 +608,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>1f2403c7-330a-4364-a00b-13ad565513b2</guid>
+        <guid>1da11638-bce9-4b02-a305-cc754f207865</guid>
         <suid>b20acd11-f102-40f3-a641-e3c420fbdb91</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Social Active</skillcategory>
@@ -623,7 +623,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
         <specs>
           <spec>
-            <guid>729370f7-ca17-4eb1-98eb-58a457a5bd9e</guid>
+            <guid>2bcc3d38-cc92-4da1-a91d-23016e27da40</guid>
             <name>High Society</name>
             <free>False</free>
             <expertise>False</expertise>
@@ -631,7 +631,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         </specs>
       </skill>
       <skill>
-        <guid>b0087521-07ab-4985-98a1-99861eb3b7f8</guid>
+        <guid>caa76c52-648b-42ac-b427-6ca80c3ee7b0</guid>
         <suid>47cb1e8b-c285-4c54-9aaa-75305ad6dd4f</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Technical Active</skillcategory>
@@ -646,7 +646,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>a500be55-e944-4cc8-8832-5cef9a362525</guid>
+        <guid>3733f979-7dd7-4407-a23a-919f59d90981</guid>
         <suid>27db6e2a-a49f-4232-b150-e676b8dacb52</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Physical Active</skillcategory>
@@ -661,7 +661,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>674ac71e-fb57-48b5-8b87-e99758df6fb2</guid>
+        <guid>66019d42-c3fd-4d29-b3e6-de792773cb44</guid>
         <suid>c9f52f97-a284-44a7-8af6-802dd3ed554f</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Technical Active</skillcategory>
@@ -676,7 +676,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
         <specs>
           <spec>
-            <guid>e9f276a4-b601-4d86-bb6f-bf2cbd4eae4f</guid>
+            <guid>01b57414-a6d2-4788-8566-1744b95362a6</guid>
             <name>Counterfeiting</name>
             <free>False</free>
             <expertise>False</expertise>
@@ -684,7 +684,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         </specs>
       </skill>
       <skill>
-        <guid>81f83faf-3b71-4f6c-af2f-c617aaf66335</guid>
+        <guid>54f4ff89-41e8-46c6-86e4-73d7fd1819a7</guid>
         <suid>f510ccc3-cf95-4461-b2f7-e966daaa5a91</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Physical Active</skillcategory>
@@ -699,7 +699,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>06bda0af-999f-4bc6-8f83-a3781b10fef6</guid>
+        <guid>968eaec6-21b0-4ede-aff7-839ceeec1cda</guid>
         <suid>58452cff-44ea-41c6-a554-28a869149b27</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Vehicle Active</skillcategory>
@@ -714,7 +714,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>b719336d-1a74-4ec8-8620-1fced39a7358</guid>
+        <guid>311a6e16-c861-4315-8d48-efad6b3a291e</guid>
         <suid>a9fa961d-07e5-46da-8edc-403ae3e6cc75</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Physical Active</skillcategory>
@@ -729,7 +729,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
         <specs>
           <spec>
-            <guid>e9d2417d-dd8a-4ea7-8b99-93fed0291513</guid>
+            <guid>f7b958ae-6d1b-4eec-ad9c-b969fef99ba1</guid>
             <name>Climbing</name>
             <free>False</free>
             <expertise>False</expertise>
@@ -737,7 +737,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         </specs>
       </skill>
       <skill>
-        <guid>ef8eff71-7d99-41ef-aa41-e481e301706d</guid>
+        <guid>ffce86d8-b5d0-49c6-b105-295e10b27de9</guid>
         <suid>c2bb65f5-4a6b-49bf-9925-ef6434cb6929</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Technical Active</skillcategory>
@@ -752,7 +752,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>08bae136-2375-40e3-9374-f84406a0e594</guid>
+        <guid>53a24ee0-34c7-4483-ba88-252157ccbf9e</guid>
         <suid>41e184e0-7273-403a-9300-fa29a1707bf0</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Technical Active</skillcategory>
@@ -767,7 +767,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>ddaf569a-04b9-4cc0-b249-e8cd3327f50e</guid>
+        <guid>44c6b357-8157-4a7f-a32d-d041e2b91c76</guid>
         <suid>64841e6e-9487-4b63-80a1-dcad6eb78179</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Combat Active</skillcategory>
@@ -782,7 +782,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>4112b6bf-d869-4a56-8af8-b81c8b41e937</guid>
+        <guid>f0b6c30b-db63-4661-a176-96368d9d6d87</guid>
         <suid>e7e5a43f-9762-4863-86dc-3fd7799e53a2</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Social Active</skillcategory>
@@ -797,7 +797,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>e2ade547-62a3-44e8-98fd-e452b85e8371</guid>
+        <guid>88187cf4-1f88-45b2-9e11-a11088e73eff</guid>
         <suid>935621c5-d384-42f2-a740-1fa349fa85a1</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Technical Active</skillcategory>
@@ -812,7 +812,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>64f7af8a-4e8a-47de-988d-3dc80a512222</guid>
+        <guid>a75d3de8-5b17-4f98-9bc7-da9fd833213b</guid>
         <suid>3b34b209-00be-42b8-b4ac-cc7dea08af8a</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Social Active</skillcategory>
@@ -827,7 +827,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>5d69cbcd-fdb7-47db-826f-242d37db574b</guid>
+        <guid>28ef6e8c-76cd-4f85-95f4-0174332f08b2</guid>
         <suid>9de43fad-b365-4e73-bc06-91dd571b858a</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Social Active</skillcategory>
@@ -842,7 +842,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
         <specs>
           <spec>
-            <guid>4168047d-91b2-4a9e-9d91-4d8c0efec96f</guid>
+            <guid>cf59d781-fb26-4245-b0d2-735188c4ac0b</guid>
             <name>Mental</name>
             <free>False</free>
             <expertise>False</expertise>
@@ -850,7 +850,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         </specs>
       </skill>
       <skill>
-        <guid>e41c3e5d-88d5-471a-97e5-949f31a4dff4</guid>
+        <guid>f1f60cad-07f0-480b-8d29-59f93bff67a2</guid>
         <suid>963a548d-c629-4a13-a3e3-31b085a42e20</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Social Active</skillcategory>
@@ -865,7 +865,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
         <specs>
           <spec>
-            <guid>621ee0ad-6a61-4e0c-ac1e-568b6f34eb13</guid>
+            <guid>a2c8e34c-dfa1-483a-9b19-41cdee60e36e</guid>
             <name>Command</name>
             <free>False</free>
             <expertise>False</expertise>
@@ -873,7 +873,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         </specs>
       </skill>
       <skill>
-        <guid>c8ecaea8-7914-422b-8b93-33b1f42e2036</guid>
+        <guid>b688dd51-a472-4deb-a6a8-dfb65c7df21c</guid>
         <suid>09fbc992-9fad-4f2d-ab56-725bac943dc6</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Technical Active</skillcategory>
@@ -888,7 +888,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>b003dad9-2b92-46bc-a20e-99aeb444c947</guid>
+        <guid>ec4dafb9-0180-458d-9629-92847866fbe0</guid>
         <suid>64088b25-de37-4d71-8800-4a430fde08af</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Combat Active</skillcategory>
@@ -903,7 +903,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
         <specs>
           <spec>
-            <guid>7f99d7b7-6bf1-4006-84db-b667cfef5f9a</guid>
+            <guid>f8507b59-223f-4f19-8b5e-2b2cb8c68740</guid>
             <name>Sniper Rifles</name>
             <free>False</free>
             <expertise>False</expertise>
@@ -911,7 +911,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         </specs>
       </skill>
       <skill>
-        <guid>e122fce3-4a74-460a-981d-c68e60b8e118</guid>
+        <guid>7affb9a9-9318-40f7-8caf-f9b6406a64ac</guid>
         <suid>938be691-4b3d-49a2-a673-bbf9924ce8f0</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Technical Active</skillcategory>
@@ -926,7 +926,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>a8bec089-adbf-4873-b7f6-a39f0521c74a</guid>
+        <guid>d80145b0-d252-4c33-bfa3-0a870d79f5cd</guid>
         <suid>48cc79be-f75e-4fe6-8721-7864c9f231f6</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Technical Active</skillcategory>
@@ -941,7 +941,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>0fb0dc90-a10a-49e7-adc7-c7cba9fb4cf5</guid>
+        <guid>6c21073b-5e16-4342-a23d-ba6053315d85</guid>
         <suid>f8037e7f-d48b-452b-8f66-2e0c36677fea</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Technical Active</skillcategory>
@@ -956,7 +956,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>253986f8-1662-485b-92ec-4b595b76b8b4</guid>
+        <guid>5e1889f1-280c-4bad-b9ce-80795e9dfdfa</guid>
         <suid>729c9cee-ef8f-492d-aa7f-17ec1bc3816e</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Social Active</skillcategory>
@@ -971,7 +971,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
         <specs>
           <spec>
-            <guid>748a169b-f268-408d-b87b-0214a348a44f</guid>
+            <guid>d92cd036-8035-454e-b04b-be2d2af577c1</guid>
             <name>Diplomacy</name>
             <free>False</free>
             <expertise>False</expertise>
@@ -979,7 +979,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         </specs>
       </skill>
       <skill>
-        <guid>6445b0a2-6746-4754-961b-eb5626d95bc4</guid>
+        <guid>cec6f3af-662c-49a6-a5e0-467cea100c7b</guid>
         <suid>17fbaafa-8dbb-4f29-9244-5ae1cd4ac42f</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Physical Active</skillcategory>
@@ -994,7 +994,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>f29e526b-6e41-4866-9dfb-d8f13e31eac2</guid>
+        <guid>6327d5a8-3be2-4df5-a88f-64ec781aca91</guid>
         <suid>04e1eb3e-e82d-485b-a7fd-1e677df2a070</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Physical Active</skillcategory>
@@ -1009,7 +1009,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
         <specs>
           <spec>
-            <guid>84aef6bb-fc59-4900-b4fe-d3823d9fbed7</guid>
+            <guid>69a5f344-e635-4d72-94eb-c6b35b132d28</guid>
             <name>Hearing</name>
             <free>False</free>
             <expertise>False</expertise>
@@ -1017,7 +1017,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         </specs>
       </skill>
       <skill>
-        <guid>d5bea733-3f6d-45c0-9d78-e762740b7b2d</guid>
+        <guid>c5ad22a2-0eb5-45f8-a0b0-81f3eaca9cac</guid>
         <suid>53f96d6a-363b-4c14-be1d-68e74930c67b</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Social Active</skillcategory>
@@ -1032,7 +1032,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>96d22a5e-b943-4ee2-8ca8-74ce0f830650</guid>
+        <guid>24ff1b67-3e04-413c-8b64-c53cfba4c4dc</guid>
         <suid>3ba9397e-f790-44ca-ae40-15a2356e348d</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Vehicle Active</skillcategory>
@@ -1047,7 +1047,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>12e16563-ed1c-400a-9590-23b01039c487</guid>
+        <guid>8b716a6e-920c-440d-b4c2-4a412336c46b</guid>
         <suid>10d5c887-a1e5-4cca-8613-3a28f1aab810</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Vehicle Active</skillcategory>
@@ -1062,7 +1062,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>4d493610-a1fa-4521-8fcf-70e4f429de22</guid>
+        <guid>1b83bdda-3a7e-4c74-89ce-99c3096d553b</guid>
         <suid>ae91a8a6-80e7-4f52-b9eb-21725a5528a4</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Vehicle Active</skillcategory>
@@ -1077,7 +1077,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>1c792c60-67e6-4de0-b93f-41b0c231789d</guid>
+        <guid>e3e4e606-7231-4c0b-958e-890f743d1ed3</guid>
         <suid>b8a24d87-465a-4365-9948-038fe1ac62c4</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Vehicle Active</skillcategory>
@@ -1092,7 +1092,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>70571d7e-24da-405c-a9d8-9417abad87b1</guid>
+        <guid>a783c971-a66b-4acc-b333-989d9522d1cd</guid>
         <suid>1579818e-af85-47cd-8c9f-2e86e9dc19da</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Vehicle Active</skillcategory>
@@ -1107,7 +1107,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>c597a1de-24f2-4c5b-aa00-fcf405f252d8</guid>
+        <guid>cf74cdc6-cb3a-4cab-b365-fbbf5baa206f</guid>
         <suid>adf31a50-b228-4e09-a09c-46ab9f5e59a1</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Combat Active</skillcategory>
@@ -1122,7 +1122,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
         <specs>
           <spec>
-            <guid>10cc140b-7f01-461f-9f1f-4efa2073c807</guid>
+            <guid>1ebfff92-6851-47ca-9c5c-233710892e87</guid>
             <name>Tasers</name>
             <free>False</free>
             <expertise>False</expertise>
@@ -1130,7 +1130,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         </specs>
       </skill>
       <skill>
-        <guid>db736323-95f7-4a69-b1ba-0e15eac02440</guid>
+        <guid>59a15698-ec4e-4a41-801d-e2c45770c56b</guid>
         <suid>1531b2d8-6116-4be4-87b0-232dba1fc447</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Physical Active</skillcategory>
@@ -1145,7 +1145,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>dd705e62-c1b4-434e-856e-dc20a6012dd6</guid>
+        <guid>3dba9b0d-5c3c-49f1-b3b8-e0485279ca44</guid>
         <suid>9cff9aa7-d092-4f89-8b7b-3ab835818874</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Physical Active</skillcategory>
@@ -1160,7 +1160,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>6f621064-c0f3-41a0-b68c-7fad0f9974fc</guid>
+        <guid>26df2e94-0fe1-4786-befb-9f8e65513d0f</guid>
         <suid>b693f3bf-48dc-4570-9743-d94d14ee698b</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Technical Active</skillcategory>
@@ -1175,7 +1175,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>997bbaa4-4433-4055-bf7f-dffa0b5ad3b6</guid>
+        <guid>aa8a766b-4d4a-4c68-9b64-0bcbb20c1c9d</guid>
         <suid>89ee1730-053a-400f-a13a-4fbadae015f0</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Physical Active</skillcategory>
@@ -1190,7 +1190,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>40d8415d-6daa-4cc4-8534-c297d73f95f1</guid>
+        <guid>d707409b-6ffd-48ed-91e8-eb23951c4b7b</guid>
         <suid>0dbcb9cd-f824-4b5d-a387-90d33318b04c</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Physical Active</skillcategory>
@@ -1205,7 +1205,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>cac72dae-c784-4bb5-b66d-bc2168328143</guid>
+        <guid>76cd139e-d62a-41fe-968a-7087c80ebf21</guid>
         <suid>867a6fa0-7d98-4cde-83a4-b33dd39de08e</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Combat Active</skillcategory>
@@ -1220,7 +1220,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>680f9c65-9971-46be-8e38-cd9c0e26b518</guid>
+        <guid>e01991c8-c9a4-4aa8-b9bb-55c4bf548bc5</guid>
         <suid>7ed2f3e0-a791-4cb7-ba3e-ac785fdc3d7e</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Physical Active</skillcategory>
@@ -1235,7 +1235,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
       </skill>
       <skill>
-        <guid>2d8148c1-2206-4d40-a396-9f96815ea959</guid>
+        <guid>ea4c3e35-ad38-416a-823e-bc5eeb083a9c</guid>
         <suid>4fcd40cb-4b02-4b7e-afcb-f44d46cd5706</suid>
         <isknowledge>False</isknowledge>
         <skillcategory>Combat Active</skillcategory>
@@ -1252,7 +1252,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </skills>
     <knoskills>
       <skill>
-        <guid>f2caeca9-1b9f-4a3c-b345-2905fe6cb6ce</guid>
+        <guid>616ffa23-defa-41f7-a1fc-5c2a2ead8af8</guid>
         <suid>05eb2251-81aa-4dfb-8619-75102fc7b895</suid>
         <isknowledge>True</isknowledge>
         <skillcategory>Language</skillcategory>
@@ -1267,7 +1267,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
         <specs>
           <spec>
-            <guid>fb68c8fd-763b-48a3-b463-b81b16eb131d</guid>
+            <guid>d8b657ea-0afc-408d-8847-72799b91580e</guid>
             <name>Speak</name>
             <free>False</free>
             <expertise>False</expertise>
@@ -1277,7 +1277,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <isnativelanguage>False</isnativelanguage>
       </skill>
       <skill>
-        <guid>2f53af14-6a97-45b1-8d14-d0a7b8568a6e</guid>
+        <guid>c98a4a3e-63f4-4a1a-abbc-5c2b4138feab</guid>
         <suid>a72084f6-3a4c-4c23-82aa-4697e543ee0b</suid>
         <isknowledge>True</isknowledge>
         <skillcategory>Language</skillcategory>
@@ -1294,7 +1294,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <isnativelanguage>False</isnativelanguage>
       </skill>
       <skill>
-        <guid>ccbbd779-be52-4061-af0b-401c250aa27f</guid>
+        <guid>1a524d0b-62d0-4b7e-8f11-dd95b51b9585</guid>
         <suid>87627536-a185-427a-bb14-54a4ff89901c</suid>
         <isknowledge>True</isknowledge>
         <skillcategory>Language</skillcategory>
@@ -1309,7 +1309,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
         <specs>
           <spec>
-            <guid>7d0bc673-b953-4950-ba44-eb8094daef5e</guid>
+            <guid>de3a3fa4-71af-4013-a615-032f66aa188e</guid>
             <name>Speak</name>
             <free>False</free>
             <expertise>False</expertise>
@@ -1319,7 +1319,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <isnativelanguage>False</isnativelanguage>
       </skill>
       <skill>
-        <guid>a000e882-a8a4-40f4-837e-224ab4883b9c</guid>
+        <guid>4345f7a0-5a11-4d70-92e5-ddaaf1539ac0</guid>
         <suid>f876953e-a14e-4ca5-b454-b0090907da28</suid>
         <isknowledge>True</isknowledge>
         <skillcategory>Language</skillcategory>
@@ -1336,7 +1336,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <isnativelanguage>False</isnativelanguage>
       </skill>
       <skill>
-        <guid>d6fc6fc1-fc7c-48a2-a153-741f107d4073</guid>
+        <guid>725f2f76-0e60-4601-9999-4689ce10b01e</guid>
         <suid>0ecbddff-4e99-485b-b54a-6c087c03f07b</suid>
         <isknowledge>True</isknowledge>
         <skillcategory>Language</skillcategory>
@@ -1353,7 +1353,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <isnativelanguage>False</isnativelanguage>
       </skill>
       <skill>
-        <guid>5da99f14-26fc-4ee1-8494-445e2b81061e</guid>
+        <guid>79254c0a-efaa-4b4b-942a-a0c829e3ac1e</guid>
         <suid>7f7fea00-e656-4c7c-afd3-03f34aafa9f4</suid>
         <isknowledge>True</isknowledge>
         <skillcategory>Language</skillcategory>
@@ -1368,7 +1368,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <buywithkarma>False</buywithkarma>
         <specs>
           <spec>
-            <guid>6fc25536-603a-4f30-a600-e8971c24935d</guid>
+            <guid>64291530-07a0-46bb-8790-132764beb484</guid>
             <name>Speak</name>
             <free>False</free>
             <expertise>False</expertise>
@@ -1378,7 +1378,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <isnativelanguage>False</isnativelanguage>
       </skill>
       <skill>
-        <guid>f8cda925-b3e9-40be-9dc0-0901ce8462b6</guid>
+        <guid>20e17e82-c8d5-4278-a16f-cfe3d485bd95</guid>
         <suid>907a3a8f-2c40-4543-a5a9-891bcde41f6b</suid>
         <isknowledge>True</isknowledge>
         <skillcategory>Language</skillcategory>
@@ -1395,7 +1395,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <isnativelanguage>True</isnativelanguage>
       </skill>
       <skill>
-        <guid>bca8bd52-2c8c-48ca-a42b-9cdc0c27a672</guid>
+        <guid>bc6516a9-4655-4589-892d-4296f0662b3a</guid>
         <suid>3f7935ef-dc5d-4b53-88ef-cb7db7cbe1a9</suid>
         <isknowledge>True</isknowledge>
         <skillcategory>Academic</skillcategory>
@@ -1412,7 +1412,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <isnativelanguage>False</isnativelanguage>
       </skill>
       <skill>
-        <guid>f402ad76-3d52-4331-99ad-41be49d74dc2</guid>
+        <guid>2b21d131-eab6-4631-b5d9-e1565d0bbb8c</guid>
         <suid>b1d33738-a93a-46f3-a64a-0fc329ab1740</suid>
         <isknowledge>True</isknowledge>
         <skillcategory>Academic</skillcategory>
@@ -1429,7 +1429,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <isnativelanguage>False</isnativelanguage>
       </skill>
       <skill>
-        <guid>5cc2b79a-09f1-400f-9837-6c4445d37513</guid>
+        <guid>87c5bfc3-136c-44ad-8253-509cf75e619b</guid>
         <suid>cca8e4dc-4c67-45d2-bee6-57366d277206</suid>
         <isknowledge>True</isknowledge>
         <skillcategory>Academic</skillcategory>
@@ -1446,7 +1446,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <isnativelanguage>False</isnativelanguage>
       </skill>
       <skill>
-        <guid>f237509f-004b-4784-a7e7-eccc85320059</guid>
+        <guid>7b813fc3-6816-416c-be90-8d092d61fa0e</guid>
         <suid>0a1dfc0e-dcb9-448d-a2d3-718670d79df1</suid>
         <isknowledge>True</isknowledge>
         <skillcategory>Professional</skillcategory>
@@ -1463,7 +1463,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <isnativelanguage>False</isnativelanguage>
       </skill>
       <skill>
-        <guid>f41b61dd-f897-405d-b2c1-7cab6aa0d23e</guid>
+        <guid>b05cb3ee-441a-4ef5-8352-a53617962ae0</guid>
         <suid>227bcaa5-0cc0-4f85-99e6-345a5d7e696d</suid>
         <isknowledge>True</isknowledge>
         <skillcategory>Professional</skillcategory>
@@ -1480,7 +1480,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <isnativelanguage>False</isnativelanguage>
       </skill>
       <skill>
-        <guid>e316c9be-e9eb-48f8-95ef-650a637556d2</guid>
+        <guid>62e78bf0-88bc-4343-92aa-6d91c15fe9db</guid>
         <suid>a7d0c675-ca0d-4df0-9023-b03674d79d0e</suid>
         <isknowledge>True</isknowledge>
         <skillcategory>Interest</skillcategory>
@@ -1497,7 +1497,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <isnativelanguage>False</isnativelanguage>
       </skill>
       <skill>
-        <guid>d1fe84b3-f998-4b81-9783-9716434b0f5c</guid>
+        <guid>4d1b3ebe-664d-4f58-8e24-722d71bbfb96</guid>
         <suid>b21c9f0f-9db0-4de1-b901-2a911d9abd62</suid>
         <isknowledge>True</isknowledge>
         <skillcategory>Interest</skillcategory>
@@ -1514,7 +1514,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <isnativelanguage>False</isnativelanguage>
       </skill>
       <skill>
-        <guid>d132c8d3-16c3-42a8-af58-74e0a45874f8</guid>
+        <guid>6f4e8ec3-badf-4d76-8ebe-1acb1045827b</guid>
         <suid>026062e0-9bdd-4a06-9cca-c3640c634cfd</suid>
         <isknowledge>True</isknowledge>
         <skillcategory>Language</skillcategory>
@@ -1537,77 +1537,77 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         <karma>0</karma>
         <base>0</base>
         <isbroken>False</isbroken>
-        <id>06b8a950-2367-43fa-8db9-4f4d59322063</id>
+        <id>e6a3b1d3-3172-4d6d-bf24-5e9a96a29f71</id>
         <name>Acting</name>
       </group>
       <group>
         <karma>0</karma>
         <base>0</base>
         <isbroken>False</isbroken>
-        <id>9cf5855a-7bd5-4a4e-addc-04ad4a73aef3</id>
+        <id>074d2e42-a4ed-49a1-a6ab-a8eba6a51911</id>
         <name>Athletics</name>
       </group>
       <group>
         <karma>0</karma>
         <base>0</base>
         <isbroken>False</isbroken>
-        <id>0b58edd4-6fdd-44d3-9822-00f22f9a4650</id>
+        <id>8bcca8a3-e29e-4c24-b148-869381322bd2</id>
         <name>Biotech</name>
       </group>
       <group>
         <karma>0</karma>
         <base>0</base>
         <isbroken>False</isbroken>
-        <id>4d60a134-8cd6-4a97-b8cb-7769acdfef61</id>
+        <id>41b2f30e-7e4b-4308-901f-627c3ba08d38</id>
         <name>Close Combat</name>
       </group>
       <group>
         <karma>0</karma>
         <base>0</base>
         <isbroken>False</isbroken>
-        <id>fa9d5ed1-5413-4ac1-a4cc-b19eb67e7b8d</id>
+        <id>30542d94-557c-45de-9bb4-439b951f26b8</id>
         <name>Cracking</name>
       </group>
       <group>
         <karma>0</karma>
         <base>0</base>
         <isbroken>False</isbroken>
-        <id>1fbb7108-adf2-4733-bad4-d1eb40d93111</id>
+        <id>c896855b-5f3a-40ce-99db-1b6c08a5cf7f</id>
         <name>Electronics</name>
       </group>
       <group>
         <karma>0</karma>
         <base>0</base>
         <isbroken>False</isbroken>
-        <id>40c44e72-5f3a-4127-b855-94a70f4a8972</id>
+        <id>b865662b-3999-40ec-91eb-db07366d9e73</id>
         <name>Engineering</name>
       </group>
       <group>
         <karma>0</karma>
         <base>0</base>
         <isbroken>False</isbroken>
-        <id>0d96a770-029c-4046-8a21-c425d5753b12</id>
+        <id>36065798-e8d5-41f5-9426-18fe552a18f4</id>
         <name>Firearms</name>
       </group>
       <group>
         <karma>0</karma>
         <base>0</base>
         <isbroken>False</isbroken>
-        <id>96958295-c743-48cb-9357-bb6fd1f22977</id>
+        <id>bfd85aaa-aa21-4dea-adbb-486db198e7e5</id>
         <name>Influence</name>
       </group>
       <group>
         <karma>0</karma>
         <base>0</base>
         <isbroken>False</isbroken>
-        <id>8b6af35a-189d-48c8-aea8-161a969c84fd</id>
+        <id>d0c61df1-ce5e-42db-977a-1bbe39677de4</id>
         <name>Outdoors</name>
       </group>
       <group>
         <karma>0</karma>
         <base>0</base>
         <isbroken>False</isbroken>
-        <id>8647d09b-52e2-4a04-9d15-b5fe22a728ce</id>
+        <id>f1ed9a26-5962-4867-9da8-359bcd45b1f1</id>
         <name>Stealth</name>
       </group>
     </groups>
@@ -1638,7 +1638,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <blackmail>False</blackmail>
       <free>False</free>
       <readonly>False</readonly>
-      <guid>c73fb291-37fd-4db8-8ef1-34ce05aff14d</guid>
+      <guid>34260393-3714-4c68-9b7a-09e54a32ca68</guid>
       <mainmugshotindex>-1</mainmugshotindex>
       <mugshots />
     </contact>
@@ -1667,7 +1667,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <blackmail>False</blackmail>
       <free>False</free>
       <readonly>False</readonly>
-      <guid>bdc762aa-8949-427b-8566-6c2ec4c990b8</guid>
+      <guid>d44a1294-5487-4ece-8404-8a0a346af591</guid>
       <mainmugshotindex>-1</mainmugshotindex>
       <mugshots />
     </contact>
@@ -1696,7 +1696,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <blackmail>False</blackmail>
       <free>False</free>
       <readonly>False</readonly>
-      <guid>1be421cd-57fd-4803-8fbc-b0d2db462f49</guid>
+      <guid>fc6d03bc-299a-4758-a638-b9857698ba93</guid>
       <mainmugshotindex>-1</mainmugshotindex>
       <mugshots />
     </contact>
@@ -1725,7 +1725,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <blackmail>False</blackmail>
       <free>False</free>
       <readonly>False</readonly>
-      <guid>44b00f13-85bb-4cc4-bf72-1583b8cd9546</guid>
+      <guid>9756fb1e-6c8d-4be4-b5e3-b4efed378d7e</guid>
       <mainmugshotindex>-1</mainmugshotindex>
       <mugshots />
     </contact>
@@ -1754,7 +1754,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <blackmail>False</blackmail>
       <free>False</free>
       <readonly>False</readonly>
-      <guid>ac9f307b-d525-4074-9902-75233faa8e69</guid>
+      <guid>d6c9db3f-54e6-4dbf-ace5-d1ceeed37826</guid>
       <mainmugshotindex>-1</mainmugshotindex>
       <mugshots />
     </contact>
@@ -1783,7 +1783,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <blackmail>False</blackmail>
       <free>False</free>
       <readonly>False</readonly>
-      <guid>70f3f5b1-ec8b-47ac-9002-499dd2dd607b</guid>
+      <guid>511b40f1-5574-48b5-bd29-d6c8cbf7b72f</guid>
       <mainmugshotindex>-1</mainmugshotindex>
       <mugshots />
     </contact>
@@ -1794,7 +1794,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
   <powers>
     <power>
       <sourceid>5f1ebcd8-9571-4716-b7fd-ec674306b833</sourceid>
-      <guid>b179a8aa-4bab-46ce-b7a2-b57a6821adfa</guid>
+      <guid>4cd6ee14-d66d-462b-b019-aa9beb006194</guid>
       <name>Authoritative Tone</name>
       <points>0.5</points>
       <levels>True</levels>
@@ -1815,7 +1815,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </power>
     <power>
       <sourceid>57e7de72-6155-486b-9269-caebedfb34fe</sourceid>
-      <guid>09b1d2c0-ab56-4523-bf57-a6765f72ea73</guid>
+      <guid>18bea101-b27e-4fd0-be20-480e9624bee0</guid>
       <name>Eidetic Sense Memory</name>
       <points>0.5</points>
       <levels>False</levels>
@@ -1836,7 +1836,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </power>
     <power>
       <sourceid>fea9e769-5f2c-4bae-9610-56c0825e145a</sourceid>
-      <guid>2db13a0b-8f34-4947-bb7e-1702d98f4b59</guid>
+      <guid>eee1482a-5edc-4187-a8a0-709992dcd910</guid>
       <name>Improved Reflexes</name>
       <points>1</points>
       <levels>True</levels>
@@ -1866,7 +1866,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </power>
     <power>
       <sourceid>f1e8a618-ba12-4972-91f0-974500387893</sourceid>
-      <guid>1b2d5c4b-6d6b-4a8b-882c-489711bb9596</guid>
+      <guid>986be534-9ec6-44a2-8935-e98c24fe47bc</guid>
       <name>Kinesics</name>
       <points>0.25</points>
       <levels>True</levels>
@@ -1890,7 +1890,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </power>
     <power>
       <sourceid>7a5084df-b4d2-4f2a-84aa-43627f43c240</sourceid>
-      <guid>660f6e5f-15a2-4368-b6ad-cb8ffae22a06</guid>
+      <guid>3af02919-ad1a-45f0-a00d-940e2b573217</guid>
       <name>Lie Detector</name>
       <points>0.25</points>
       <levels>True</levels>
@@ -1914,7 +1914,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </power>
     <power>
       <sourceid>44f0bbba-184a-4e76-93de-19862ac6607b</sourceid>
-      <guid>61a06ae4-7528-41ea-8d47-04c275da5ce2</guid>
+      <guid>4f73d3b7-c083-4099-a75c-19f29f1d1c15</guid>
       <name>Linguistics</name>
       <points>0.25</points>
       <levels>False</levels>
@@ -1943,7 +1943,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
   <armors>
     <armor>
       <sourceid>5a650844-8f24-48e7-829f-0443d9ff5cf7</sourceid>
-      <guid>0782251d-9276-4a51-a56c-9e291d950a71</guid>
+      <guid>eebc9f2f-a305-47e0-ac90-743dfd2a9856</guid>
       <name>Actioneer Business Clothes</name>
       <category>Armor</category>
       <armor>8</armor>
@@ -1958,12 +1958,65 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <extra />
       <notes>Actioneer Business Clothes</notes>
       <location />
-      <armormods />
+      <armormods>
+        <armormod>
+          <sourceid>9ee8e6ad-2472-485d-ae42-d1978749b456</sourceid>
+          <guid>34afeea0-c3cc-4687-a312-3e0d17c3c14c</guid>
+          <name>Electrochromic Clothing</name>
+          <category>General</category>
+          <armor>0</armor>
+          <armorcapacity>[0]</armorcapacity>
+          <gearcapacity />
+          <maxrating>1</maxrating>
+          <rating>0</rating>
+          <ratinglabel>String_Rating</ratinglabel>
+          <avail>+2</avail>
+          <cost>500</cost>
+          <bonus />
+          <wirelessbonus />
+          <wirelesson>False</wirelesson>
+          <source>SR5</source>
+          <page>437</page>
+          <included>False</included>
+          <equipped>True</equipped>
+          <extra />
+          <stolen>False</stolen>
+          <notes>Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier</notes>
+          <discountedcost>False</discountedcost>
+          <sortorder>0</sortorder>
+        </armormod>
+        <armormod>
+          <sourceid>ed43ded4-1b2f-410a-9322-166c39306d03</sourceid>
+          <guid>f176c1f1-5089-43c1-a242-cac07dd628a0</guid>
+          <name>Gel Packs</name>
+          <category>General</category>
+          <armor>+2</armor>
+          <armorcapacity>[0]</armorcapacity>
+          <gearcapacity />
+          <maxrating>1</maxrating>
+          <rating>0</rating>
+          <ratinglabel>String_Rating</ratinglabel>
+          <avail>6</avail>
+          <cost>1500</cost>
+          <bonus />
+          <wirelessbonus />
+          <wirelesson>False</wirelesson>
+          <source>RG</source>
+          <page>85</page>
+          <included>False</included>
+          <equipped>True</equipped>
+          <extra />
+          <stolen>False</stolen>
+          <notes>Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier</notes>
+          <discountedcost>False</discountedcost>
+          <sortorder>0</sortorder>
+        </armormod>
+      </armormods>
       <gears />
     </armor>
     <armor>
       <sourceid>d4804f1b-4443-4e97-a7d2-9c1659732c6b</sourceid>
-      <guid>d64345a1-a543-49e9-a3dd-63ea1ea5b35d</guid>
+      <guid>e6950121-1fec-4f2a-b04d-d176af1d72f9</guid>
       <name>Zoé: Heritage 12</name>
       <category>High-Fashion Armor Clothing</category>
       <armor>12</armor>
@@ -1985,12 +2038,174 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <extra />
       <notes>Zoé: Heritage 12</notes>
       <location />
-      <armormods />
+      <armormods>
+        <armormod>
+          <sourceid>480b7c5d-758b-4833-8bfd-9487e2455f7d</sourceid>
+          <guid>a6d7934e-487a-48aa-83de-5bc84c6d94b1</guid>
+          <name>Chemical Protection</name>
+          <category>General</category>
+          <armor>0</armor>
+          <armorcapacity>FixedValues([1],[2],[3],[4],[5],[6])</armorcapacity>
+          <gearcapacity />
+          <maxrating>6</maxrating>
+          <rating>6</rating>
+          <ratinglabel>String_Rating</ratinglabel>
+          <avail>6</avail>
+          <cost>Rating * 250</cost>
+          <bonus unique="chemicalprotection">
+            <toxincontactresist>Rating</toxincontactresist>
+            <pathogencontactresist>Rating</pathogencontactresist>
+          </bonus>
+          <wirelessbonus />
+          <wirelesson>False</wirelesson>
+          <source>SR5</source>
+          <page>437</page>
+          <included>False</included>
+          <equipped>True</equipped>
+          <extra />
+          <stolen>False</stolen>
+          <notes>Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier</notes>
+          <discountedcost>False</discountedcost>
+          <sortorder>0</sortorder>
+        </armormod>
+        <armormod>
+          <sourceid>cf8accf5-4117-4419-ab73-957489038ab9</sourceid>
+          <guid>8743a9e5-56ad-4130-8fe2-53638c1394a6</guid>
+          <name>YNT Softweave Armor</name>
+          <category>General</category>
+          <armor>0</armor>
+          <armorcapacity>[-(Capacity * 0.5 + 0.5*(Capacity mod 2))]</armorcapacity>
+          <gearcapacity />
+          <maxrating>1</maxrating>
+          <rating>0</rating>
+          <ratinglabel>String_Rating</ratinglabel>
+          <avail>+4</avail>
+          <cost>Armor Cost</cost>
+          <bonus />
+          <wirelessbonus />
+          <wirelesson>False</wirelesson>
+          <source>RG</source>
+          <page>84</page>
+          <included>False</included>
+          <equipped>True</equipped>
+          <extra />
+          <stolen>False</stolen>
+          <notes>Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier</notes>
+          <discountedcost>False</discountedcost>
+          <sortorder>0</sortorder>
+        </armormod>
+        <armormod>
+          <sourceid>851f226f-2116-4001-8937-408d4570396e</sourceid>
+          <guid>e7199b92-2d16-411e-8ef6-b995ede44746</guid>
+          <name>AR Fashion</name>
+          <category>General</category>
+          <armor>0</armor>
+          <armorcapacity>[0]</armorcapacity>
+          <gearcapacity />
+          <maxrating>1</maxrating>
+          <rating>0</rating>
+          <ratinglabel>String_Rating</ratinglabel>
+          <avail>0</avail>
+          <cost>50</cost>
+          <bonus />
+          <wirelessbonus />
+          <wirelesson>False</wirelesson>
+          <source>CA</source>
+          <page>138</page>
+          <included>False</included>
+          <equipped>True</equipped>
+          <extra />
+          <stolen>False</stolen>
+          <notes>Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier</notes>
+          <discountedcost>False</discountedcost>
+          <sortorder>0</sortorder>
+        </armormod>
+        <armormod>
+          <sourceid>ed43ded4-1b2f-410a-9322-166c39306d03</sourceid>
+          <guid>c8bd7e21-8e75-4436-8600-b0d610e46bc9</guid>
+          <name>Gel Packs</name>
+          <category>General</category>
+          <armor>+2</armor>
+          <armorcapacity>[0]</armorcapacity>
+          <gearcapacity />
+          <maxrating>1</maxrating>
+          <rating>0</rating>
+          <ratinglabel>String_Rating</ratinglabel>
+          <avail>6</avail>
+          <cost>1500</cost>
+          <bonus />
+          <wirelessbonus />
+          <wirelesson>False</wirelesson>
+          <source>RG</source>
+          <page>85</page>
+          <included>False</included>
+          <equipped>True</equipped>
+          <extra />
+          <stolen>False</stolen>
+          <notes>Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier</notes>
+          <discountedcost>False</discountedcost>
+          <sortorder>0</sortorder>
+        </armormod>
+        <armormod>
+          <sourceid>0cfb049a-a1bd-4daa-96be-9468c37d9c3c</sourceid>
+          <guid>d96e4fe4-c522-454b-a31e-d701716b361f</guid>
+          <name>Nonconductivity</name>
+          <category>General</category>
+          <armor>0</armor>
+          <armorcapacity>FixedValues([1],[2],[3],[4],[5],[6])</armorcapacity>
+          <gearcapacity />
+          <maxrating>6</maxrating>
+          <rating>3</rating>
+          <ratinglabel>String_Rating</ratinglabel>
+          <avail>6</avail>
+          <cost>Rating * 250</cost>
+          <bonus unique="nonconductivity">
+            <electricityarmor>Rating</electricityarmor>
+          </bonus>
+          <wirelessbonus />
+          <wirelesson>False</wirelesson>
+          <source>SR5</source>
+          <page>438</page>
+          <included>False</included>
+          <equipped>True</equipped>
+          <extra />
+          <stolen>False</stolen>
+          <notes>Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier</notes>
+          <discountedcost>False</discountedcost>
+          <sortorder>0</sortorder>
+        </armormod>
+        <armormod>
+          <sourceid>9ee8e6ad-2472-485d-ae42-d1978749b456</sourceid>
+          <guid>e1d540ed-dbc1-4ddc-8995-89666e99902b</guid>
+          <name>Electrochromic Clothing</name>
+          <category>General</category>
+          <armor>0</armor>
+          <armorcapacity>[0]</armorcapacity>
+          <gearcapacity />
+          <maxrating>1</maxrating>
+          <rating>0</rating>
+          <ratinglabel>String_Rating</ratinglabel>
+          <avail>+2</avail>
+          <cost>500</cost>
+          <bonus />
+          <wirelessbonus />
+          <wirelesson>False</wirelesson>
+          <source>SR5</source>
+          <page>437</page>
+          <included>False</included>
+          <equipped>True</equipped>
+          <extra />
+          <stolen>False</stolen>
+          <notes>Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier</notes>
+          <discountedcost>False</discountedcost>
+          <sortorder>0</sortorder>
+        </armormod>
+      </armormods>
       <gears />
     </armor>
     <armor>
       <sourceid>739b029d-b2a0-48cb-ac2e-51636fc495c2</sourceid>
-      <guid>22b0a03a-f730-4341-806a-98866d3edc0c</guid>
+      <guid>6e875582-038a-4f12-90b5-2a48777cc782</guid>
       <name>Zoé: Second Skin</name>
       <category>High-Fashion Armor Clothing</category>
       <armor>6</armor>
@@ -2006,14 +2221,43 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <extra />
       <notes>Zoé: Second Skin</notes>
       <location />
-      <armormods />
+      <armormods>
+        <armormod>
+          <sourceid>b5283cb0-3676-44d3-a7e9-dee099416295</sourceid>
+          <guid>857334a9-ff2f-4413-be8a-84ba6f8a71dd</guid>
+          <name>Radiation Shielding</name>
+          <category>General</category>
+          <armor>0</armor>
+          <armorcapacity>FixedValues([1],[2],[3],[4],[5],[6])</armorcapacity>
+          <gearcapacity />
+          <maxrating>6</maxrating>
+          <rating>2</rating>
+          <ratinglabel>String_Rating</ratinglabel>
+          <avail>Rating * 2</avail>
+          <cost>Rating * 200</cost>
+          <bonus>
+            <radiationresist>Rating</radiationresist>
+          </bonus>
+          <wirelessbonus />
+          <wirelesson>False</wirelesson>
+          <source>RG</source>
+          <page>84</page>
+          <included>False</included>
+          <equipped>True</equipped>
+          <extra />
+          <stolen>False</stolen>
+          <notes>Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier</notes>
+          <discountedcost>False</discountedcost>
+          <sortorder>0</sortorder>
+        </armormod>
+      </armormods>
       <gears />
     </armor>
   </armors>
   <weapons>
     <weapon>
       <sourceid>63dcfdb6-bbd9-4a58-bbf4-cd35f7614fdc</sourceid>
-      <guid>4f0823fd-2c55-4ee4-853b-7010112cb628</guid>
+      <guid>aecf61f0-dee4-4133-8a9c-60c1e88a2e4e</guid>
       <name>Unarmed Attack</name>
       <category>Unarmed</category>
       <type>Melee</type>
@@ -2097,7 +2341,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </weapon>
     <weapon>
       <sourceid>7d5bcc0b-9ec2-4c87-aaa7-a4d531d7974e</sourceid>
-      <guid>9a5ac7dc-0791-41ea-9c7d-dd0e8d82531e</guid>
+      <guid>38773d61-05a1-466e-b9b6-06f156b03f47</guid>
       <name>Defiance EX Shocker</name>
       <category>Tasers</category>
       <type>Ranged</type>
@@ -2150,6 +2394,56 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <mount />
       <stolen>False</stolen>
       <extramount />
+      <accessories>
+        <accessory>
+          <sourceid>ea64527d-0e1e-4248-957b-7c02d79dad30</sourceid>
+          <guid>e08109dc-0aff-47e0-9745-5dcf847bccb3</guid>
+          <name>Concealed Quick-Draw Holster</name>
+          <mount>None</mount>
+          <extramount>None</extramount>
+          <rc />
+          <maxrating>0</maxrating>
+          <rating>0</rating>
+          <ratinglabel>String_Rating</ratinglabel>
+          <rcgroup>0</rcgroup>
+          <rcdeployable>False</rcdeployable>
+          <specialmodification>False</specialmodification>
+          <conceal>-1</conceal>
+          <avail>6</avail>
+          <cost>275</cost>
+          <included>False</included>
+          <equipped>True</equipped>
+          <source>RG</source>
+          <page>51</page>
+          <accuracy>0</accuracy>
+          <ammoreplace />
+          <ammoslots>0</ammoslots>
+          <modifyammocapacity />
+          <damagetype />
+          <damage />
+          <damagereplace />
+          <firemode />
+          <firemodereplace />
+          <ap />
+          <apreplace />
+          <notes>Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier</notes>
+          <discountedcost>False</discountedcost>
+          <addmode />
+          <singleshot>0</singleshot>
+          <shortburst>0</shortburst>
+          <longburst>0</longburst>
+          <fullburst>0</fullburst>
+          <suppressive>0</suppressive>
+          <rangebonus>0</rangebonus>
+          <rangemodifier>0</rangemodifier>
+          <extra />
+          <ammobonus>0</ammobonus>
+          <wirelesson>False</wirelesson>
+          <wirelessbonus />
+          <stolen>False</stolen>
+          <sortorder>0</sortorder>
+        </accessory>
+      </accessories>
       <location />
       <notes>Defiance EX Shocker (SR5 424)</notes>
       <notesColor>Chocolate</notesColor>
@@ -2181,7 +2475,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </weapon>
     <weapon>
       <sourceid>622bd915-0e0c-431b-9da5-e0c0c31e2122</sourceid>
-      <guid>35a5c0d7-e10f-4229-b043-0fd99db5eb2e</guid>
+      <guid>5716ef34-e683-4149-9869-2e989609b08a</guid>
       <name>Enfield AS-7</name>
       <category>Shotguns</category>
       <type>Ranged</type>
@@ -2234,8 +2528,58 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <mount />
       <stolen>False</stolen>
       <extramount />
+      <accessories>
+        <accessory>
+          <sourceid>521f9c2e-dfb2-42a6-b707-9808ae4885de</sourceid>
+          <guid>22b57cfd-82a2-4880-8f55-37b83b168f28</guid>
+          <name>Laser Sight</name>
+          <mount>Internal</mount>
+          <extramount>None</extramount>
+          <rc />
+          <maxrating>0</maxrating>
+          <rating>0</rating>
+          <ratinglabel>String_Rating</ratinglabel>
+          <rcgroup>0</rcgroup>
+          <rcdeployable>False</rcdeployable>
+          <specialmodification>False</specialmodification>
+          <conceal>0</conceal>
+          <avail>2</avail>
+          <cost>125</cost>
+          <included>True</included>
+          <equipped>True</equipped>
+          <source>SR5</source>
+          <page>432</page>
+          <accuracy>1</accuracy>
+          <ammoreplace />
+          <ammoslots>0</ammoslots>
+          <modifyammocapacity />
+          <damagetype />
+          <damage />
+          <damagereplace />
+          <firemode />
+          <firemodereplace />
+          <ap />
+          <apreplace />
+          <notes>Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier</notes>
+          <discountedcost>False</discountedcost>
+          <addmode />
+          <singleshot>0</singleshot>
+          <shortburst>0</shortburst>
+          <longburst>0</longburst>
+          <fullburst>0</fullburst>
+          <suppressive>0</suppressive>
+          <rangebonus>0</rangebonus>
+          <rangemodifier>0</rangemodifier>
+          <extra />
+          <ammobonus>0</ammobonus>
+          <wirelesson>False</wirelesson>
+          <wirelessbonus />
+          <stolen>False</stolen>
+          <sortorder>0</sortorder>
+        </accessory>
+      </accessories>
       <location />
-      <notes>Enfield AS-7 (SR5 429) — Accessoires d’origine à rajouter dans Chummer : Laser Sight</notes>
+      <notes>Enfield AS-7 (SR5 429)</notes>
       <notesColor>Chocolate</notesColor>
       <discountedcost>False</discountedcost>
       <weaponslots>Stock/Side/Barrel/Top/Under</weaponslots>
@@ -2265,7 +2609,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </weapon>
     <weapon>
       <sourceid>aecfccf7-d22e-4ead-abf9-e29f6dbf8550</sourceid>
-      <guid>9024adb2-4b8c-4e18-aa8f-6a9ec4f6a893</guid>
+      <guid>f1259415-e0ad-4917-ab63-971d6772ee03</guid>
       <name>Grenade: Gas</name>
       <category>Gear</category>
       <type>Ranged</type>
@@ -2318,6 +2662,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <mount />
       <stolen>False</stolen>
       <extramount />
+      <accessories />
       <location />
       <notes>Grenade: Gas (SR5 435)</notes>
       <notesColor>Chocolate</notesColor>
@@ -2349,7 +2694,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </weapon>
     <weapon>
       <sourceid>691ba610-d99a-4a86-a010-e21fa17e924c</sourceid>
-      <guid>742823eb-e14f-4748-ac42-1a047b583650</guid>
+      <guid>114b5703-93a2-41e7-bf3c-3abaf430e4af</guid>
       <name>Grenade: Thermal Smoke</name>
       <category>Gear</category>
       <type>Ranged</type>
@@ -2402,7 +2747,8 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <mount />
       <stolen>False</stolen>
       <extramount />
-      <location />
+      <accessories />
+      <location>7c6012bd-6695-4526-9214-7d2c805abba4</location>
       <notes>Grenade: Thermal Smoke (SR5 435)</notes>
       <notesColor>Chocolate</notesColor>
       <discountedcost>False</discountedcost>
@@ -2433,7 +2779,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </weapon>
     <weapon>
       <sourceid>9629810f-8db3-44a4-afc4-97eb5b391fb5</sourceid>
-      <guid>9ea4b038-cce9-4e36-a83f-b85209e1dbc5</guid>
+      <guid>52a4008a-523c-418f-aba7-e42dda1e3787</guid>
       <name>Grenade: Flash-Bang</name>
       <category>Gear</category>
       <type>Ranged</type>
@@ -2486,7 +2832,8 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <mount />
       <stolen>False</stolen>
       <extramount />
-      <location />
+      <accessories />
+      <location>7c6012bd-6695-4526-9214-7d2c805abba4</location>
       <notes>Grenade: Flash-Bang (SR5 435)</notes>
       <notesColor>Chocolate</notesColor>
       <discountedcost>False</discountedcost>
@@ -2517,7 +2864,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </weapon>
     <weapon>
       <sourceid>a3fd9a2b-fc58-488b-be61-260bff2cfdca</sourceid>
-      <guid>f77d8b64-63ce-4354-b777-48d5f910591d</guid>
+      <guid>cd126112-634c-4076-9444-c99b57a1d4a9</guid>
       <name>Grenade: Gas, Aerodynamic</name>
       <category>Gear</category>
       <type>Ranged</type>
@@ -2570,7 +2917,8 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <mount />
       <stolen>False</stolen>
       <extramount />
-      <location />
+      <accessories />
+      <location>7c6012bd-6695-4526-9214-7d2c805abba4</location>
       <notes>Grenade: Gas, Aerodynamic (SR5 435)</notes>
       <notesColor>Chocolate</notesColor>
       <discountedcost>False</discountedcost>
@@ -2601,7 +2949,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </weapon>
     <weapon>
       <sourceid>c674a254-d47b-4215-a12d-e6dd3f0910af</sourceid>
-      <guid>ed03b8d2-19b8-4a71-b67e-d0aedb3d0272</guid>
+      <guid>240d0007-5054-46d7-9acc-a0ab2ef2a670</guid>
       <name>Grenade: Fragmentation</name>
       <category>Gear</category>
       <type>Ranged</type>
@@ -2654,7 +3002,8 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <mount />
       <stolen>False</stolen>
       <extramount />
-      <location />
+      <accessories />
+      <location>7c6012bd-6695-4526-9214-7d2c805abba4</location>
       <notes>Grenade: Fragmentation (SR5 435)</notes>
       <notesColor>Chocolate</notesColor>
       <discountedcost>False</discountedcost>
@@ -2685,7 +3034,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </weapon>
     <weapon>
       <sourceid>fdee91ef-c382-49c4-87f6-b9166b9bd9fa</sourceid>
-      <guid>3d0daf57-abb2-483c-8340-e2ce2c20a34e</guid>
+      <guid>6dc168d1-5b47-4265-aa20-c09162d8b531</guid>
       <name>Grenade: Flash-Pak</name>
       <category>Gear</category>
       <type>Ranged</type>
@@ -2738,7 +3087,8 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <mount />
       <stolen>False</stolen>
       <extramount />
-      <location />
+      <accessories />
+      <location>7c6012bd-6695-4526-9214-7d2c805abba4</location>
       <notes>Grenade: Flash-Pak (SR5 435)</notes>
       <notesColor>Chocolate</notesColor>
       <discountedcost>False</discountedcost>
@@ -2769,7 +3119,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </weapon>
     <weapon>
       <sourceid>50cec60d-a421-4edd-9baa-d10bfbc08e70</sourceid>
-      <guid>02644a22-3b72-4615-82d1-b464e738a35a</guid>
+      <guid>336cfec7-e745-41d6-83d7-aa14bfc18413</guid>
       <name>Ares Desert Strike</name>
       <category>Sniper Rifles</category>
       <type>Ranged</type>
@@ -2822,8 +3172,106 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <mount />
       <stolen>False</stolen>
       <extramount />
-      <location />
-      <notes>Ares Desert Strike (SR5 428) — Accessoires d’origine à rajouter dans Chummer : Shock Pad, Imaging Scope</notes>
+      <accessories>
+        <accessory>
+          <sourceid>46596db4-6f25-4990-80cc-c4102eaf80f7</sourceid>
+          <guid>80f34df6-135d-4be8-8558-e673b4a8a91c</guid>
+          <name>Shock Pad</name>
+          <mount>Internal</mount>
+          <extramount>None</extramount>
+          <rc>1</rc>
+          <maxrating>0</maxrating>
+          <rating>0</rating>
+          <ratinglabel>String_Rating</ratinglabel>
+          <rcgroup>2</rcgroup>
+          <rcdeployable>True</rcdeployable>
+          <specialmodification>False</specialmodification>
+          <conceal>0</conceal>
+          <avail>2</avail>
+          <cost>50</cost>
+          <included>True</included>
+          <equipped>True</equipped>
+          <source>SR5</source>
+          <page>432</page>
+          <accuracy>0</accuracy>
+          <ammoreplace />
+          <ammoslots>0</ammoslots>
+          <modifyammocapacity />
+          <damagetype />
+          <damage />
+          <damagereplace />
+          <firemode />
+          <firemodereplace />
+          <ap />
+          <apreplace />
+          <notes>Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier</notes>
+          <discountedcost>False</discountedcost>
+          <addmode />
+          <singleshot>0</singleshot>
+          <shortburst>0</shortburst>
+          <longburst>0</longburst>
+          <fullburst>0</fullburst>
+          <suppressive>0</suppressive>
+          <rangebonus>0</rangebonus>
+          <rangemodifier>0</rangemodifier>
+          <extra />
+          <ammobonus>0</ammobonus>
+          <wirelesson>False</wirelesson>
+          <wirelessbonus />
+          <stolen>False</stolen>
+          <sortorder>0</sortorder>
+        </accessory>
+        <accessory>
+          <sourceid>2905095e-937e-4dbc-aa56-3b66676e1559</sourceid>
+          <guid>e20960ee-58a7-474b-9577-bac038da0c9f</guid>
+          <name>Imaging Scope</name>
+          <mount>Internal</mount>
+          <extramount>None</extramount>
+          <rc />
+          <maxrating>0</maxrating>
+          <rating>0</rating>
+          <ratinglabel>String_Rating</ratinglabel>
+          <rcgroup>0</rcgroup>
+          <rcdeployable>False</rcdeployable>
+          <specialmodification>False</specialmodification>
+          <conceal>0</conceal>
+          <avail>2</avail>
+          <cost>300</cost>
+          <included>True</included>
+          <equipped>True</equipped>
+          <source>SR5</source>
+          <page>432</page>
+          <accuracy>0</accuracy>
+          <ammoreplace />
+          <ammoslots>0</ammoslots>
+          <modifyammocapacity />
+          <damagetype />
+          <damage />
+          <damagereplace />
+          <firemode />
+          <firemodereplace />
+          <ap />
+          <apreplace />
+          <notes>Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier</notes>
+          <discountedcost>False</discountedcost>
+          <addmode />
+          <singleshot>0</singleshot>
+          <shortburst>0</shortburst>
+          <longburst>0</longburst>
+          <fullburst>0</fullburst>
+          <suppressive>0</suppressive>
+          <rangebonus>0</rangebonus>
+          <rangemodifier>0</rangemodifier>
+          <extra />
+          <ammobonus>0</ammobonus>
+          <wirelesson>False</wirelesson>
+          <wirelessbonus />
+          <stolen>False</stolen>
+          <sortorder>0</sortorder>
+        </accessory>
+      </accessories>
+      <location>7c6012bd-6695-4526-9214-7d2c805abba4</location>
+      <notes>Ares Desert Strike (SR5 428)</notes>
       <notesColor>Chocolate</notesColor>
       <discountedcost>False</discountedcost>
       <weaponslots>Stock/Side/Barrel/Top/Under</weaponslots>
@@ -2856,7 +3304,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
   <qualities>
     <quality>
       <sourceid>2f080d13-92d7-4b16-9ee6-93b5a89206e4</sourceid>
-      <guid>bce27090-d445-4f71-994c-0139439b9a96</guid>
+      <guid>101bd8ef-cb7a-4009-8684-ddd6e8a586d8</guid>
       <name>Low-Light Vision (Changeling)</name>
       <extra />
       <bp>4</bp>
@@ -2882,7 +3330,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </quality>
     <quality>
       <sourceid>55247bdc-c313-4614-ae15-5012308096ff</sourceid>
-      <guid>c3bb9c94-402a-4f61-92c4-2f29997ba78a</guid>
+      <guid>441d6b36-0200-4027-87af-6072f71893de</guid>
       <name>Adept</name>
       <extra />
       <bp>20</bp>
@@ -2918,7 +3366,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </quality>
     <quality>
       <sourceid>0c23861e-36d1-4454-b327-0d8118d02d60</sourceid>
-      <guid>ec34ac7b-992d-4363-bc58-c0f811a625f9</guid>
+      <guid>760cec50-9116-4794-8724-e73e11c4a8b7</guid>
       <name>Too Pretty To Hit</name>
       <extra />
       <bp>3</bp>
@@ -2944,7 +3392,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </quality>
     <quality>
       <sourceid>ba27345f-0e68-4660-9b76-2b999c3a4161</sourceid>
-      <guid>7518c281-e592-4649-8c9f-e0dae06b987f</guid>
+      <guid>18e752fe-ae0b-4d07-8271-d95de0dabe7c</guid>
       <name>Accident Prone</name>
       <extra />
       <bp>4</bp>
@@ -2970,7 +3418,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </quality>
     <quality>
       <sourceid>8bca877e-42e5-4ff7-92ec-4c83f4cadb86</sourceid>
-      <guid>8bb6cffc-6cf7-46a4-afa0-da4939940c3b</guid>
+      <guid>afaf4b51-e4c2-4ec9-b74a-5be85706528a</guid>
       <name>Did You Just Call Me Dumb?</name>
       <extra />
       <bp>3</bp>
@@ -2996,7 +3444,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </quality>
     <quality>
       <sourceid>8e176d15-e646-4aed-824c-171c6bd9e4bc</sourceid>
-      <guid>b96af77c-602b-4cac-973d-d549d8c2ecd9</guid>
+      <guid>6996f8a5-59a3-4aae-bd6d-7102864d5e15</guid>
       <name>Lightweight</name>
       <extra />
       <bp>6</bp>
@@ -3024,7 +3472,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
   <lifestyles>
     <lifestyle>
       <sourceid>9cb0222c-14c1-4bea-bf83-055513a1f33e</sourceid>
-      <guid>a09c2f12-1b7f-4aac-9f6d-0b7835af2c33</guid>
+      <guid>eccc45b5-5db5-477e-9cb0-d3e756095a62</guid>
       <name>Best Home (Moyen)</name>
       <cost>5000</cost>
       <dice>4</dice>
@@ -3051,11 +3499,117 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <allowbonuslp>False</allowbonuslp>
       <bonuslp>0</bonuslp>
       <trustfund>0</trustfund>
+      <primarytenant>True</primarytenant>
       <type>Standard</type>
       <increment>Month</increment>
       <source>SR5</source>
       <page>369</page>
-      <lifestylequalities />
+      <lifestylequalities>
+        <lifestylequality>
+          <sourceid>4f2d39cd-fbc7-4d02-a3eb-f8decdb9a415</sourceid>
+          <guid>6f1a9777-2948-408e-ba73-e73bf20d2a23</guid>
+          <name>DocWagon Contract, Gold</name>
+          <category>Contracts</category>
+          <extra />
+          <cost>25000 div 12</cost>
+          <multiplier>0</multiplier>
+          <basemultiplier>0</basemultiplier>
+          <lp>0</lp>
+          <areamaximum>0</areamaximum>
+          <comfortsmaximum>0</comfortsmaximum>
+          <securitymaximum>0</securitymaximum>
+          <area>0</area>
+          <comforts>0</comforts>
+          <security>0</security>
+          <contributetolimit>True</contributetolimit>
+          <print>True</print>
+          <lifestylequalitytype>Contracts</lifestylequalitytype>
+          <lifestylequalitysource>Selected</lifestylequalitysource>
+          <source>SR5</source>
+          <page>450</page>
+          <allowed />
+          <bonus />
+          <notes>Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier</notes>
+        </lifestylequality>
+        <lifestylequality>
+          <sourceid>4fb84713-6171-409d-ad7c-ccbc44b891ad</sourceid>
+          <guid>7098daae-36ab-41b0-bc86-a1c5e54bbd98</guid>
+          <name>Extra Secure</name>
+          <category>Positive</category>
+          <extra />
+          <cost />
+          <multiplier>0</multiplier>
+          <basemultiplier>20</basemultiplier>
+          <lp>1</lp>
+          <areamaximum>0</areamaximum>
+          <comfortsmaximum>0</comfortsmaximum>
+          <securitymaximum>0</securitymaximum>
+          <area>0</area>
+          <comforts>0</comforts>
+          <security>0</security>
+          <contributetolimit>True</contributetolimit>
+          <print>True</print>
+          <lifestylequalitytype>Positive</lifestylequalitytype>
+          <lifestylequalitysource>Selected</lifestylequalitysource>
+          <source>SR5</source>
+          <page>370</page>
+          <allowed />
+          <bonus />
+          <notes>Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier</notes>
+        </lifestylequality>
+        <lifestylequality>
+          <sourceid>eeb6f3b7-70b3-478b-88c6-af47bb233b44</sourceid>
+          <guid>b2c4af4e-926d-4072-b0b6-cb633516cc43</guid>
+          <name>Pheromone Detection</name>
+          <category>Contracts</category>
+          <extra />
+          <cost>250</cost>
+          <multiplier>0</multiplier>
+          <basemultiplier>0</basemultiplier>
+          <lp>0</lp>
+          <areamaximum>0</areamaximum>
+          <comfortsmaximum>0</comfortsmaximum>
+          <securitymaximum>0</securitymaximum>
+          <area>0</area>
+          <comforts>0</comforts>
+          <security>0</security>
+          <contributetolimit>True</contributetolimit>
+          <print>True</print>
+          <lifestylequalitytype>Contracts</lifestylequalitytype>
+          <lifestylequalitysource>Selected</lifestylequalitysource>
+          <source>CA</source>
+          <page>144</page>
+          <allowed />
+          <bonus />
+          <notes>Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier</notes>
+        </lifestylequality>
+        <lifestylequality>
+          <sourceid>c5eef5c6-288a-47c0-8d2a-42353a896077</sourceid>
+          <guid>1831eba1-3725-4d25-8951-0673b012d5d6</guid>
+          <name>Vocal Tension Lie Detection</name>
+          <category>Contracts</category>
+          <extra />
+          <cost>250</cost>
+          <multiplier>0</multiplier>
+          <basemultiplier>0</basemultiplier>
+          <lp>0</lp>
+          <areamaximum>0</areamaximum>
+          <comfortsmaximum>0</comfortsmaximum>
+          <securitymaximum>0</securitymaximum>
+          <area>0</area>
+          <comforts>0</comforts>
+          <security>0</security>
+          <contributetolimit>True</contributetolimit>
+          <print>True</print>
+          <lifestylequalitytype>Contracts</lifestylequalitytype>
+          <lifestylequalitysource>Selected</lifestylequalitysource>
+          <source>CA</source>
+          <page>144</page>
+          <allowed />
+          <bonus />
+          <notes>Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier</notes>
+        </lifestylequality>
+      </lifestylequalities>
       <freegrids />
       <notes />
       <city />
@@ -3066,7 +3620,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
   <gears>
     <gear>
       <sourceid>0025f1c7-45a4-4ec5-a692-e18aab2f97a9</sourceid>
-      <guid>6b0957c0-72b1-42f2-b0a8-9b0570c34553</guid>
+      <guid>5f6fc421-4868-4085-916f-da2e038e2b45</guid>
       <name>Custom Item</name>
       <category>Custom</category>
       <maxrating>0</maxrating>
@@ -3090,7 +3644,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>0025f1c7-45a4-4ec5-a692-e18aab2f97a9</sourceid>
-      <guid>aedc44c9-49ff-4e48-bea1-2bd854164b53</guid>
+      <guid>d789f3b5-4493-4b64-b836-20946e00d6b3</guid>
       <name>Custom Item</name>
       <category>Custom</category>
       <maxrating>0</maxrating>
@@ -3114,7 +3668,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>0025f1c7-45a4-4ec5-a692-e18aab2f97a9</sourceid>
-      <guid>7ca5a3b2-163e-4aa9-aded-b70831d7245a</guid>
+      <guid>570ec486-c4c0-4c4d-84b1-551c86e2fa45</guid>
       <name>Custom Item</name>
       <category>Custom</category>
       <maxrating>0</maxrating>
@@ -3138,7 +3692,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>0025f1c7-45a4-4ec5-a692-e18aab2f97a9</sourceid>
-      <guid>ee973d66-7616-4da0-8fd7-5c5cc5711f69</guid>
+      <guid>de06cb3d-9eb9-45c5-91db-ac19dedb6d1c</guid>
       <name>Custom Item</name>
       <category>Custom</category>
       <maxrating>0</maxrating>
@@ -3162,7 +3716,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>0025f1c7-45a4-4ec5-a692-e18aab2f97a9</sourceid>
-      <guid>a30bc10e-ad80-43d0-b22e-f8e0d97dcece</guid>
+      <guid>00055228-3fbc-462f-8a87-6ef2271aefce</guid>
       <name>Custom Item</name>
       <category>Custom</category>
       <maxrating>0</maxrating>
@@ -3186,7 +3740,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>0025f1c7-45a4-4ec5-a692-e18aab2f97a9</sourceid>
-      <guid>f3daa7f8-7c15-413a-a14c-46d157f976de</guid>
+      <guid>49ab8ce2-3d6a-444b-b717-ba9e88eb124d</guid>
       <name>Custom Item</name>
       <category>Custom</category>
       <maxrating>0</maxrating>
@@ -3210,7 +3764,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>0025f1c7-45a4-4ec5-a692-e18aab2f97a9</sourceid>
-      <guid>2625a989-288b-4c2e-844c-95caceeb9ee2</guid>
+      <guid>478e1d61-abae-428c-bd36-80c1be5c4b87</guid>
       <name>Custom Item</name>
       <category>Custom</category>
       <maxrating>0</maxrating>
@@ -3234,7 +3788,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>d63eb841-7b15-4539-9026-b90a4924aeeb</sourceid>
-      <guid>67fb1c1f-2f3a-44cf-a483-f4f6afc5088e</guid>
+      <guid>67fbc244-c53a-4076-9d75-c4ef030c0c72</guid>
       <name>Custom Commlink</name>
       <category>Commlinks</category>
       <maxrating>7</maxrating>
@@ -3266,7 +3820,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>a19055f0-02ab-4bc2-ab43-0ef82e1b9100</sourceid>
-      <guid>1059e8b0-f87b-43f0-acc6-a8ab70e5abda</guid>
+      <guid>42b9b161-170b-4a6b-97f9-bbd3128ed187</guid>
       <name>Certified Credstick, Platinum</name>
       <category>ID/Credsticks</category>
       <maxrating>0</maxrating>
@@ -3293,7 +3847,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>0fdeb240-743c-4a9d-9cf1-fef0990575bb</sourceid>
-      <guid>fd559616-0242-4b6c-9d70-55067413b80d</guid>
+      <guid>892d3b16-99f0-4d95-9878-3d706407f961</guid>
       <name>Lockpick Set</name>
       <category>Breaking and Entering Gear</category>
       <maxrating>0</maxrating>
@@ -3317,7 +3871,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>8459fade-af0f-48a6-b283-b4969d1fe6b7</sourceid>
-      <guid>5b690987-a817-4ca0-a27a-140d866c8594</guid>
+      <guid>28044286-ba78-4dee-929a-513bde8102c4</guid>
       <name>Backpack (Nice)</name>
       <category>Tools</category>
       <maxrating>0</maxrating>
@@ -3332,7 +3886,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <bonded>False</bonded>
       <homenode>False</homenode>
       <extra />
-      <location />
+      <location>d8c9dbe0-f67d-4367-b0d3-953f3ec806ca</location>
       <notes>Backpack (Nice)</notes>
       <includedinparent>False</includedinparent>
       <matrixcmfilled>0</matrixcmfilled>
@@ -3340,7 +3894,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>fa6fa434-107b-4f36-a138-f98b044dae76</sourceid>
-      <guid>6609dd19-7a43-42e2-b067-4ba3f15b83af</guid>
+      <guid>6868e820-addf-49ad-90cd-3fe4b0ffa9e7</guid>
       <name>Camera, Micro</name>
       <category>Vision Devices</category>
       <maxrating>0</maxrating>
@@ -3361,7 +3915,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <bonded>False</bonded>
       <homenode>False</homenode>
       <extra />
-      <location />
+      <location>dc66f68a-b18f-465f-ab67-a9cb0f49b9a0</location>
       <notes>Camera, Micro</notes>
       <includedinparent>False</includedinparent>
       <matrixcmfilled>0</matrixcmfilled>
@@ -3369,7 +3923,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>5d69d002-c33d-4d0f-9c4d-d78db4d78e5d</sourceid>
-      <guid>d790928f-1e38-403a-a0b5-7693a196d692</guid>
+      <guid>617f8e94-485a-42a4-92b8-240e47a36274</guid>
       <name>Earbuds</name>
       <category>Audio Devices</category>
       <maxrating>3</maxrating>
@@ -3396,7 +3950,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>c03e4428-f3fe-434c-881a-68d638408715</sourceid>
-      <guid>5667e725-4136-491e-88fd-9d011a043344</guid>
+      <guid>fdf00e44-fc9e-4c4a-a741-a8c19ee99055</guid>
       <name>Concealable Surveillance Gear</name>
       <category>Electronics Accessories</category>
       <maxrating>2</maxrating>
@@ -3415,7 +3969,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <bonded>False</bonded>
       <homenode>False</homenode>
       <extra />
-      <location />
+      <location>dc66f68a-b18f-465f-ab67-a9cb0f49b9a0</location>
       <notes>Concealable Surveillance Gear</notes>
       <includedinparent>False</includedinparent>
       <matrixcmfilled>0</matrixcmfilled>
@@ -3423,7 +3977,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>76890101-9f90-41db-a6f0-6f5fd4802896</sourceid>
-      <guid>31245771-5a3f-4373-9c95-0b150168055a</guid>
+      <guid>71c9f1be-3124-4851-8d9f-6465b522ab2b</guid>
       <name>Stealth Rope (100m)</name>
       <category>Grapple Gun</category>
       <maxrating>0</maxrating>
@@ -3438,7 +3992,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <bonded>False</bonded>
       <homenode>False</homenode>
       <extra />
-      <location />
+      <location>4b2fcccc-7c25-495a-937b-dd7ad0ce173e</location>
       <notes>Stealth Rope (100m)</notes>
       <includedinparent>False</includedinparent>
       <matrixcmfilled>0</matrixcmfilled>
@@ -3446,7 +4000,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>4b844ac3-20e8-4982-8711-20579b5295a8</sourceid>
-      <guid>74e3f82b-bfb3-4984-b644-abc69bc55fc6</guid>
+      <guid>a382d8f6-0338-4c87-ab6b-f495d9a903ad</guid>
       <name>Ammo: Tracker Rounds, Stealth Tag</name>
       <category>Ammunition</category>
       <maxrating>0</maxrating>
@@ -3461,7 +4015,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <bonded>False</bonded>
       <homenode>False</homenode>
       <extra />
-      <location />
+      <location>4b2fcccc-7c25-495a-937b-dd7ad0ce173e</location>
       <notes>Ammo: Tracker Rounds, Stealth Tag (Sniper Rifles)</notes>
       <includedinparent>False</includedinparent>
       <matrixcmfilled>0</matrixcmfilled>
@@ -3469,7 +4023,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>ef9c8aae-26df-4fe6-88b3-79fbb5eb77c5</sourceid>
-      <guid>0b1e4d7b-889e-49ca-9fee-04cf2d703d45</guid>
+      <guid>59c19294-40d6-48f1-b936-7be9e8f2490b</guid>
       <name>Ammo: APDS</name>
       <category>Ammunition</category>
       <maxrating>0</maxrating>
@@ -3487,7 +4041,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <bonded>False</bonded>
       <homenode>False</homenode>
       <extra />
-      <location />
+      <location>4b2fcccc-7c25-495a-937b-dd7ad0ce173e</location>
       <notes>Ammo: APDS (Sniper Rifles)</notes>
       <includedinparent>False</includedinparent>
       <matrixcmfilled>0</matrixcmfilled>
@@ -3495,7 +4049,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>8afe5065-5815-4a98-b047-2a7fed85db55</sourceid>
-      <guid>55a19c58-eb86-4573-afed-9d180d54abc8</guid>
+      <guid>730df492-785e-4a52-aef2-235f5881505f</guid>
       <name>Ammo: Taser Dart</name>
       <category>Ammunition</category>
       <maxrating>0</maxrating>
@@ -3510,7 +4064,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <bonded>False</bonded>
       <homenode>False</homenode>
       <extra />
-      <location />
+      <location>dc66f68a-b18f-465f-ab67-a9cb0f49b9a0</location>
       <notes>Ammo: Taser Dart (Tasers)</notes>
       <includedinparent>False</includedinparent>
       <matrixcmfilled>0</matrixcmfilled>
@@ -3518,7 +4072,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>75ccb148-e774-429c-b854-a27816439626</sourceid>
-      <guid>0a8b9885-cf68-407c-bb28-fe1f6679cd14</guid>
+      <guid>857d18d6-b474-4cb4-9b92-792da421acb1</guid>
       <name>Spare Clip</name>
       <category>Ammunition</category>
       <maxrating>0</maxrating>
@@ -3536,7 +4090,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <bonded>False</bonded>
       <homenode>False</homenode>
       <extra />
-      <location />
+      <location>4b2fcccc-7c25-495a-937b-dd7ad0ce173e</location>
       <notes>Spare Clip (Ares Desert Strike)</notes>
       <includedinparent>False</includedinparent>
       <matrixcmfilled>0</matrixcmfilled>
@@ -3544,7 +4098,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>0025f1c7-45a4-4ec5-a692-e18aab2f97a9</sourceid>
-      <guid>af54b191-791c-4171-b63c-85668bd0d26e</guid>
+      <guid>17a82677-768d-451b-9028-52c9e1293806</guid>
       <name>Custom Item</name>
       <category>Custom</category>
       <maxrating>0</maxrating>
@@ -3560,7 +4114,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <bonded>False</bonded>
       <homenode>False</homenode>
       <extra />
-      <location />
+      <location>4b2fcccc-7c25-495a-937b-dd7ad0ce173e</location>
       <notes />
       <includedinparent>False</includedinparent>
       <matrixcmfilled>0</matrixcmfilled>
@@ -3568,7 +4122,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>64fa5212-1d58-4e94-9cc1-9e3eb10773ed</sourceid>
-      <guid>10355881-7f80-44df-aae6-6ba83cb028c7</guid>
+      <guid>e797cbb0-0df8-4b3b-b695-33e7eb056bc3</guid>
       <name>Tool Kit</name>
       <category>Tools</category>
       <maxrating>0</maxrating>
@@ -3587,7 +4141,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <bonded>False</bonded>
       <homenode>False</homenode>
       <extra />
-      <location />
+      <location>4b2fcccc-7c25-495a-937b-dd7ad0ce173e</location>
       <notes>Tool Kit (Disguise)</notes>
       <includedinparent>False</includedinparent>
       <matrixcmfilled>0</matrixcmfilled>
@@ -3595,7 +4149,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>314566c7-4ea1-4f8d-94cd-f213af1e0535</sourceid>
-      <guid>cb87fae5-8818-4f14-83c1-99c808c8b40f</guid>
+      <guid>bf390d23-a458-4263-b546-4af4c511b513</guid>
       <name>Fashion Respirator</name>
       <category>Survival Gear</category>
       <maxrating>6</maxrating>
@@ -3615,7 +4169,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <bonded>False</bonded>
       <homenode>False</homenode>
       <extra />
-      <location />
+      <location>dc66f68a-b18f-465f-ab67-a9cb0f49b9a0</location>
       <notes>Fashion Respirator</notes>
       <includedinparent>False</includedinparent>
       <matrixcmfilled>0</matrixcmfilled>
@@ -3623,7 +4177,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>c22784cf-6ff2-4f65-9120-0be4d8eec1e3</sourceid>
-      <guid>8bf81236-a5df-42e7-9e8a-2110f9f2f9bd</guid>
+      <guid>63189d8a-9d5c-4575-b79b-2379ad119e1e</guid>
       <name>Duffel Bag (Nice)</name>
       <category>Tools</category>
       <maxrating>0</maxrating>
@@ -3638,7 +4192,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <bonded>False</bonded>
       <homenode>False</homenode>
       <extra />
-      <location />
+      <location>d8c9dbe0-f67d-4367-b0d3-953f3ec806ca</location>
       <notes>Duffel Bag (Nice)</notes>
       <includedinparent>False</includedinparent>
       <matrixcmfilled>0</matrixcmfilled>
@@ -3646,7 +4200,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>d1fca845-ae01-4b39-a176-1506da699e0e</sourceid>
-      <guid>a3b7d51a-f005-461e-9a96-e72d6d5feb7d</guid>
+      <guid>6deb1dcb-cc9d-4399-a27d-ffa6a9bdbe31</guid>
       <name>Micro-Transceiver</name>
       <category>Communications and Countermeasures</category>
       <maxrating>0</maxrating>
@@ -3662,7 +4216,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <bonded>False</bonded>
       <homenode>False</homenode>
       <extra />
-      <location />
+      <location>dc66f68a-b18f-465f-ab67-a9cb0f49b9a0</location>
       <notes>Micro-Transceiver</notes>
       <includedinparent>False</includedinparent>
       <matrixcmfilled>0</matrixcmfilled>
@@ -3670,7 +4224,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>dff54f55-846d-4017-84e2-dd1f1c29861f</sourceid>
-      <guid>9502ceea-8475-453f-a775-d5ad326e1602</guid>
+      <guid>2ed9a669-7b07-4891-9589-03304ecadaec</guid>
       <name>Catalyst Stick</name>
       <category>Grapple Gun</category>
       <maxrating>0</maxrating>
@@ -3685,7 +4239,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <bonded>False</bonded>
       <homenode>False</homenode>
       <extra />
-      <location />
+      <location>4b2fcccc-7c25-495a-937b-dd7ad0ce173e</location>
       <notes>Catalyst Stick</notes>
       <includedinparent>False</includedinparent>
       <matrixcmfilled>0</matrixcmfilled>
@@ -3693,7 +4247,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>a17cae86-4d6f-4e00-acb6-03f0ccfb2807</sourceid>
-      <guid>d4f41312-0081-4819-8c2c-96e02684c035</guid>
+      <guid>90a11879-674f-468d-b020-97ef2aeac6e4</guid>
       <name>Climbing Gear</name>
       <category>Survival Gear</category>
       <maxrating>0</maxrating>
@@ -3709,7 +4263,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <bonded>False</bonded>
       <homenode>False</homenode>
       <extra />
-      <location />
+      <location>4b2fcccc-7c25-495a-937b-dd7ad0ce173e</location>
       <notes>Climbing Gear</notes>
       <includedinparent>False</includedinparent>
       <matrixcmfilled>0</matrixcmfilled>
@@ -3717,7 +4271,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>44acc4c0-5795-47a4-84fb-bd2374276360</sourceid>
-      <guid>fb2aaa59-b86b-408b-8691-a41ae17301f9</guid>
+      <guid>142e215c-ebee-40f4-9d5f-67fc60fd1e99</guid>
       <name>Flashlight, Low-light</name>
       <category>Survival Gear</category>
       <maxrating>0</maxrating>
@@ -3733,7 +4287,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <bonded>False</bonded>
       <homenode>False</homenode>
       <extra />
-      <location />
+      <location>dc66f68a-b18f-465f-ab67-a9cb0f49b9a0</location>
       <notes>Flashlight, Low-light</notes>
       <includedinparent>False</includedinparent>
       <matrixcmfilled>0</matrixcmfilled>
@@ -3741,7 +4295,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>d9f69780-93eb-41ff-9a9c-893f8c52794e</sourceid>
-      <guid>cabf446d-47e3-411e-a4b1-65fb50b9c3f0</guid>
+      <guid>5b130f7f-cc06-4d3e-8e8d-950f9cc81a83</guid>
       <name>Ammo: Stick-n-Shock</name>
       <category>Ammunition</category>
       <maxrating>0</maxrating>
@@ -3761,7 +4315,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <bonded>False</bonded>
       <homenode>False</homenode>
       <extra />
-      <location />
+      <location>dc66f68a-b18f-465f-ab67-a9cb0f49b9a0</location>
       <notes>Ammo: Stick-n-Shock (Shotguns)</notes>
       <includedinparent>False</includedinparent>
       <matrixcmfilled>0</matrixcmfilled>
@@ -3769,7 +4323,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>026f00c9-376e-4b4a-b615-9242db87afb3</sourceid>
-      <guid>d1c1b40b-681f-4bf7-be41-53e5f9047ab1</guid>
+      <guid>7cb000a7-fbf3-4225-9e38-ba55a5e6f545</guid>
       <name>Microphone, Laser</name>
       <category>Audio Devices</category>
       <maxrating>6</maxrating>
@@ -3789,7 +4343,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <bonded>False</bonded>
       <homenode>False</homenode>
       <extra />
-      <location />
+      <location>dc66f68a-b18f-465f-ab67-a9cb0f49b9a0</location>
       <notes>Microphone, Laser</notes>
       <includedinparent>False</includedinparent>
       <matrixcmfilled>0</matrixcmfilled>
@@ -3797,7 +4351,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>c03e4428-f3fe-434c-881a-68d638408715</sourceid>
-      <guid>69741979-88ef-4e7c-86c1-8a2d7bfd4d27</guid>
+      <guid>a7d5cb3a-34a1-4ddf-b189-10a41a437b1e</guid>
       <name>Concealable Surveillance Gear</name>
       <category>Electronics Accessories</category>
       <maxrating>2</maxrating>
@@ -3816,7 +4370,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <bonded>False</bonded>
       <homenode>False</homenode>
       <extra />
-      <location />
+      <location>dc66f68a-b18f-465f-ab67-a9cb0f49b9a0</location>
       <notes>Concealable Surveillance Gear</notes>
       <includedinparent>False</includedinparent>
       <matrixcmfilled>0</matrixcmfilled>
@@ -3824,7 +4378,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>6576cfa9-f2f5-4624-bbde-60a8f3f13785</sourceid>
-      <guid>8628cebc-d4cf-4628-84e1-2dc2f78635ee</guid>
+      <guid>b6a7d015-25aa-43be-b308-0776f5c60fec</guid>
       <name>Jammer, Area</name>
       <category>Communications and Countermeasures</category>
       <maxrating>6</maxrating>
@@ -3841,7 +4395,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <bonded>False</bonded>
       <homenode>False</homenode>
       <extra />
-      <location />
+      <location>4b2fcccc-7c25-495a-937b-dd7ad0ce173e</location>
       <notes>Jammer, Area</notes>
       <includedinparent>False</includedinparent>
       <matrixcmfilled>0</matrixcmfilled>
@@ -3849,7 +4403,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>b218dbd1-5706-4d9e-a6a7-ab9b658c3acd</sourceid>
-      <guid>d7298376-e6f7-4952-942b-f5df68c28ff3</guid>
+      <guid>4377e9e0-02b2-4902-994a-6b44e521da59</guid>
       <name>Glasses</name>
       <category>Vision Devices</category>
       <maxrating>4</maxrating>
@@ -3876,7 +4430,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>d9f69780-93eb-41ff-9a9c-893f8c52794e</sourceid>
-      <guid>c56ca5b6-9e7e-4f64-9436-f286ba3e427a</guid>
+      <guid>dbfc4baf-69a8-46bc-8c7f-ece85e690fa9</guid>
       <name>Ammo: Stick-n-Shock</name>
       <category>Ammunition</category>
       <maxrating>0</maxrating>
@@ -3904,7 +4458,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>0c800bca-e6ff-475b-a014-c2069f5e364c</sourceid>
-      <guid>b9932533-78df-4443-aa3b-e0a46933982e</guid>
+      <guid>e30b044f-c8e6-49d6-be16-4f686eef4c0e</guid>
       <name>Fake SIN</name>
       <category>ID/Credsticks</category>
       <maxrating>6</maxrating>
@@ -3932,7 +4486,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <children>
         <gear>
           <sourceid>8a16bbb2-8028-4c74-b22b-7aad9d001073</sourceid>
-          <guid>ad7b131e-6578-4df0-89e7-da9560e7ebe6</guid>
+          <guid>a1f61645-63ae-4695-855c-f4b00ded83cc</guid>
           <name>Fake License</name>
           <category>ID/Credsticks</category>
           <maxrating>6</maxrating>
@@ -3961,7 +4515,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>0c800bca-e6ff-475b-a014-c2069f5e364c</sourceid>
-      <guid>92d1c24d-36f8-498e-83e3-a485061aa9ec</guid>
+      <guid>3d2e81dc-f4f8-474e-8c2c-d20a159eb52c</guid>
       <name>Fake SIN</name>
       <category>ID/Credsticks</category>
       <maxrating>6</maxrating>
@@ -3989,7 +4543,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <children>
         <gear>
           <sourceid>8a16bbb2-8028-4c74-b22b-7aad9d001073</sourceid>
-          <guid>aa189a51-adbd-41d4-9ae9-ada5d803782d</guid>
+          <guid>111ad992-c5a2-4e47-9ea4-8e06e85e45ae</guid>
           <name>Fake License</name>
           <category>ID/Credsticks</category>
           <maxrating>6</maxrating>
@@ -4016,7 +4570,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         </gear>
         <gear>
           <sourceid>8a16bbb2-8028-4c74-b22b-7aad9d001073</sourceid>
-          <guid>82513264-5073-4820-9c39-3ee93bdc23ec</guid>
+          <guid>cd6690cd-5a62-4f84-a9a0-3b9f93c01d84</guid>
           <name>Fake License</name>
           <category>ID/Credsticks</category>
           <maxrating>6</maxrating>
@@ -4043,7 +4597,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         </gear>
         <gear>
           <sourceid>8a16bbb2-8028-4c74-b22b-7aad9d001073</sourceid>
-          <guid>b51f69bc-6ac1-4870-9ad2-d75c96607e7d</guid>
+          <guid>e12c9507-ee0a-4797-8852-86559a88ccf6</guid>
           <name>Fake License</name>
           <category>ID/Credsticks</category>
           <maxrating>6</maxrating>
@@ -4070,7 +4624,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         </gear>
         <gear>
           <sourceid>8a16bbb2-8028-4c74-b22b-7aad9d001073</sourceid>
-          <guid>ecb1d8a1-ce27-4c26-a4f4-643137d410fe</guid>
+          <guid>13f347a5-8144-4478-915d-74d7e824bc1a</guid>
           <name>Fake License</name>
           <category>ID/Credsticks</category>
           <maxrating>6</maxrating>
@@ -4097,7 +4651,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         </gear>
         <gear>
           <sourceid>8a16bbb2-8028-4c74-b22b-7aad9d001073</sourceid>
-          <guid>3963cf75-e0bb-418a-82cd-6c0af876aaa6</guid>
+          <guid>ecd42349-9311-486a-9790-96e2bb448ae4</guid>
           <name>Fake License</name>
           <category>ID/Credsticks</category>
           <maxrating>6</maxrating>
@@ -4126,7 +4680,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>0c800bca-e6ff-475b-a014-c2069f5e364c</sourceid>
-      <guid>2a17db85-75ee-4a71-9b69-6376d0c3e298</guid>
+      <guid>263fa7f6-cf68-49ec-b3df-8e5ceb931961</guid>
       <name>Fake SIN</name>
       <category>ID/Credsticks</category>
       <maxrating>6</maxrating>
@@ -4154,7 +4708,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <children>
         <gear>
           <sourceid>8a16bbb2-8028-4c74-b22b-7aad9d001073</sourceid>
-          <guid>3d277803-651d-4d54-8338-ab57d3ce6470</guid>
+          <guid>ee65a575-0c84-4ce6-a51f-7753c468ec1c</guid>
           <name>Fake License</name>
           <category>ID/Credsticks</category>
           <maxrating>6</maxrating>
@@ -4181,7 +4735,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         </gear>
         <gear>
           <sourceid>8a16bbb2-8028-4c74-b22b-7aad9d001073</sourceid>
-          <guid>08171bba-19c5-4bc7-a0e5-c0ff7132f281</guid>
+          <guid>f8e727cf-ea16-4ff3-9b95-b1607b884d9a</guid>
           <name>Fake License</name>
           <category>ID/Credsticks</category>
           <maxrating>6</maxrating>
@@ -4208,7 +4762,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         </gear>
         <gear>
           <sourceid>8a16bbb2-8028-4c74-b22b-7aad9d001073</sourceid>
-          <guid>7f711029-a3a0-473d-8b89-da839e6f9747</guid>
+          <guid>af466d32-dd3c-4d3b-b95e-a2f9d204bb20</guid>
           <name>Fake License</name>
           <category>ID/Credsticks</category>
           <maxrating>6</maxrating>
@@ -4235,7 +4789,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
         </gear>
         <gear>
           <sourceid>8a16bbb2-8028-4c74-b22b-7aad9d001073</sourceid>
-          <guid>86951457-88b5-4568-b9c2-76353412207d</guid>
+          <guid>97add492-0416-46ae-aa93-cc240b0296e8</guid>
           <name>Fake License</name>
           <category>ID/Credsticks</category>
           <maxrating>6</maxrating>
@@ -4264,7 +4818,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </gear>
     <gear>
       <sourceid>6de5a1b0-30e2-4c74-8646-971f698cb231</sourceid>
-      <guid>f001172c-7579-465a-9f08-b23d1ff8e544</guid>
+      <guid>62d0960a-8c15-4a42-ae93-da33ad11e506</guid>
       <name>Hermes Ikon</name>
       <category>Commlinks</category>
       <maxrating>0</maxrating>
@@ -4295,7 +4849,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
   <vehicles>
     <vehicle>
       <sourceid>04b31d4c-55f1-43c8-a2ea-ce3002c6f577</sourceid>
-      <guid>14ec8f54-5787-4450-9c48-9cb31b8b993b</guid>
+      <guid>c856c671-df61-4f51-8e0a-8588bd6dd3e7</guid>
       <name>SAAB Dynamit</name>
       <page>50</page>
       <source>R5</source>
@@ -4323,7 +4877,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
     </vehicle>
     <vehicle>
       <sourceid>00000000-0000-0000-0000-000000000000</sourceid>
-      <guid>809aaad8-5cad-4ce8-bf10-d2bb34e30e9d</guid>
+      <guid>b648b3bb-c924-41e3-9844-a7603f90830d</guid>
       <name>Artemis Inustries Nightwing</name>
       <category>Cars</category>
       <avail>0</avail>
@@ -4361,7 +4915,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
   <mentorspirits />
   <expenses>
     <expense>
-      <guid>cfa715be-0ac7-4d6a-bd17-481899ec8cb9</guid>
+      <guid>14b2ecb4-f5f9-4df4-be19-2ae59e37b43c</guid>
       <date>2026-11-20T19:00:00</date>
       <amount>20</amount>
       <reason>Valeurs de départ (récap de campagne, fin du job « Kidnapping ») : 20 karma, 97 135¥, Street Cred 8, Notoriété 2.</reason>
@@ -4370,7 +4924,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <forcecareervisible>False</forcecareervisible>
     </expense>
     <expense>
-      <guid>0af4232b-917d-4221-a39a-ba23b51fa92f</guid>
+      <guid>13b27bfc-ff11-4731-a072-c8e8eef18e2d</guid>
       <date>2026-11-20T19:00:00</date>
       <amount>97135</amount>
       <reason>Valeurs de départ (récap de campagne, fin du job « Kidnapping ») : 20 karma, 97 135¥, Street Cred 8, Notoriété 2.</reason>
@@ -4379,7 +4933,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <forcecareervisible>False</forcecareervisible>
     </expense>
     <expense>
-      <guid>4a81edf1-add1-4444-8b3b-6765f5d27755</guid>
+      <guid>3ab2a191-eb30-4427-b7e4-5935aea537c3</guid>
       <date>2026-11-25T18:42:44</date>
       <amount>2</amount>
       <reason>Synchronisation Foundry (test-world) : 22 karma, 98 188¥</reason>
@@ -4388,7 +4942,7 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <forcecareervisible>False</forcecareervisible>
     </expense>
     <expense>
-      <guid>166c3b55-b490-4206-9d73-69614c933271</guid>
+      <guid>52cf3e2b-3ff7-418b-bd07-5926d3287591</guid>
       <date>2026-11-25T18:42:44</date>
       <amount>1053</amount>
       <reason>Synchronisation Foundry (test-world) : 22 karma, 98 188¥</reason>
@@ -4397,8 +4951,8 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <forcecareervisible>False</forcecareervisible>
     </expense>
     <expense>
-      <guid>c1ddf396-50fe-40e5-b088-ecdf57122578</guid>
-      <date>2026-11-26T10:39:45</date>
+      <guid>340d43c5-86bd-4dff-a421-5954d6d5185b</guid>
+      <date>2026-11-26T22:44:40</date>
       <amount>61</amount>
       <reason>Karma de carrière (Shadowrun Table)</reason>
       <type>Karma</type>
@@ -4406,8 +4960,8 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <forcecareervisible>False</forcecareervisible>
     </expense>
     <expense>
-      <guid>074000e7-07c4-481b-8f74-10b3238d2b36</guid>
-      <date>2026-11-26T10:39:45</date>
+      <guid>dc194603-0c1b-4974-8448-5b58919ed2eb</guid>
+      <date>2026-11-26T22:44:40</date>
       <amount>-61</amount>
       <reason>Karma dépensé (Shadowrun Table)</reason>
       <type>Karma</type>
@@ -4415,10 +4969,40 @@ C’est elle qui a amené le job « Kidnapping » via son contact Sophie Winters
       <forcecareervisible>False</forcecareervisible>
     </expense>
   </expenses>
-  <gearlocations />
+  <gearlocations>
+    <location>
+      <guid>d8c9dbe0-f67d-4367-b0d3-953f3ec806ca</guid>
+      <name>House</name>
+      <notes />
+      <notesColor />
+      <sortorder>0</sortorder>
+    </location>
+    <location>
+      <guid>dc66f68a-b18f-465f-ab67-a9cb0f49b9a0</guid>
+      <name>Backpack</name>
+      <notes />
+      <notesColor />
+      <sortorder>1</sortorder>
+    </location>
+    <location>
+      <guid>4b2fcccc-7c25-495a-937b-dd7ad0ce173e</guid>
+      <name>Duffel Bag</name>
+      <notes />
+      <notesColor />
+      <sortorder>2</sortorder>
+    </location>
+  </gearlocations>
   <armorlocations />
   <vehiclelocations />
-  <weaponlocations />
+  <weaponlocations>
+    <location>
+      <guid>7c6012bd-6695-4526-9214-7d2c805abba4</guid>
+      <name>Duffel Bag</name>
+      <notes />
+      <notesColor />
+      <sortorder>0</sortorder>
+    </location>
+  </weaponlocations>
   <improvementgroups />
   <calendar />
   <calculatedvalues />
