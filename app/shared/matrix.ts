@@ -14,7 +14,7 @@ import { poolModifiers, rollContext, derivedWithModifiers } from './modifiers.ts
 import type { CollectedModifier, ModifierLine } from './modifiers.ts';
 import type { ActorLike, AsdfKey, AttrKey, DamageType, DeviceLinkKind, I18nMessage, I18nParams, IcType, MatrixMode, Persona, Skill } from './types.ts';
 
-// i18n: French labels are dictionary keys (client/i18n/en/matrix.json). tk() marks them for tools/i18n-check.js;
+// i18n: French labels are dictionary keys (client/i18n/en/matrix.json). tk() marks them for tools/i18n-check.ts;
 // the UI renders t(label). Dynamic texts (pool parts, reasons) carry { key, params } next to their French `label`.
 const tk = (s: string): string => s;
 const fill = (s: string, p?: I18nParams): string =>

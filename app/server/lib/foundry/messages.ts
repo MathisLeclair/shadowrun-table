@@ -16,7 +16,7 @@ export type ErrorClass<E extends Error = Error> = new (message: string, ...rest:
 /**
  * Error carrying an i18n key: i18nError({ t: 'Texte {x}', params: { x } }, ErrorClass?, ...extra ctor args).
  * `err.message` is the French text (logs, old clients); `err.i18nKey` / `err.i18nParams` travel to the client.
- * The `{ t: '…' }` literal form lets tools/i18n-check.js find the key.
+ * The `{ t: '…' }` literal form lets tools/i18n-check.ts find the key.
  */
 export function i18nError<E extends Error = Error>(msg: I18nMessage | string, Cls: ErrorClass<E> = Error as unknown as ErrorClass<E>, ...rest: unknown[]): E & I18nError {
   const m = msg as Partial<I18nMessage> | string | null | undefined;

@@ -59,7 +59,7 @@ Each table's markdown docs live in its own folder, `data/tables/<table>/docs/` (
 
 ## For developers
 
-See `AGENTS.md` (repo root) and `ARCHITECTURE.md`. `npm run dev` = server with hot reload (Vite); `npm run build` = production client bundle, served by `npm start`. Tests: `node tools/test-<module>.js` (each starts an isolated server), `node tools/smoke.js`, translations `node tools/i18n-check.js`. Regenerate the gear catalogue: `npm run build:catalog`. Re-generate seeds from Foundry: `node tools/foundry-import.js --write-seeds`.
+See `AGENTS.md` (repo root) and `ARCHITECTURE.md`. `npm run dev` = server with hot reload (Vite); `npm run build` = production client bundle, served by `npm start`. Tests: `node tools/test-<module>.js` (each starts an isolated server), `node tools/smoke.ts`, translations `node tools/i18n-check.ts`. Regenerate the gear catalogue: `npm run build:catalog`. Re-generate seeds from Foundry: `node tools/foundry-import.ts --write-seeds`.
 
 ## Live server
 

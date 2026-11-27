@@ -98,7 +98,7 @@ The SR5 PDFs are **not** in git or in the image: they live in `runtime/books/` o
 `index/<CODE>.json` extracted text + `library.json`), shared by every table the admin allows. Two ways to fill it:
 
 - **Copy the library built on your PC** (fastest, offsets already checked): on the PC run
-  `node tools/books-setup.js --from "C:\Users\mathi\Documents\Foundry\Data\PDFs"` (fills `app\data\books\`), then copy
+  `node tools/books-setup.ts --from "C:\Users\mathi\Documents\Foundry\Data\PDFs"` (fills `app\data\books\`), then copy
   the whole folder to `~/shadowrun/app/runtime/books/` (e.g. `scp -r app\data\books ubuntu@152.228.134.90:~/shadowrun/app/runtime/`).
   The server reads `library.json` on the fly: no restart. Keep the folder owned by uid 1000 (`ubuntu`).
 - **Upload from `/admin` → « Livres de règles »** (one PDF at a time, streamed, 120 MB max): the server extracts the
@@ -116,7 +116,7 @@ An older version kept the key as `books/.sign-key`: the server deletes that file
 The wall data of the library is in git (`app/data/maplib/<slug>.json`) and arrives with every deploy; the server builds its own
 `runtime/maplib/library.json` from it at start-up. The **images are not in git** (paid Fragmaps content) and must be copied by hand:
 
-1. On the PC: `node tools/maplib-build.js` — copies the images used by `data/maplib/*.json` from `..\fragmap` into `data/maplib/images/` and makes
+1. On the PC: `node tools/maplib-build.ts` — copies the images used by `data/maplib/*.json` from `..\fragmap` into `data/maplib/images/` and makes
    the thumbnails in `data/maplib/thumbs/`.
 2. Copy **only** those two folders to the VPS (never `library.json` nor `entries/`: they hold the VPS's own versions, GM publications and history):
    ```powershell

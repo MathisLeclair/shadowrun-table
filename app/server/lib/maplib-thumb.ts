@@ -1,5 +1,5 @@
 // Thumbnail of a JPEG library image (pure JS: jpeg-js), made in a worker thread so decoding a big map never blocks
-// the game server. Used for images uploaded from /admin; tools/maplib-build.js makes the others offline.
+// the game server. Used for images uploaded from /admin; tools/maplib-build.ts makes the others offline.
 import fs from 'node:fs';
 import path from 'node:path';
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';

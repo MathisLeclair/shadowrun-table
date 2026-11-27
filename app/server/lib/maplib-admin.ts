@@ -13,7 +13,7 @@ import type { I18nParams } from '../../shared/types.ts';
 import type { StoredMeta, Table } from './tables.ts';
 
 const MAX_IMAGE = Number(process.env.SR_MAX_MAPLIB_IMAGE_BYTES) || 60e6;
-const MAX_THUMB_MP = 40; // bigger JPEGs get no automatic thumbnail (make it with tools/maplib-build.js)
+const MAX_THUMB_MP = 40; // bigger JPEGs get no automatic thumbnail (make it with tools/maplib-build.ts)
 const bearer = (req: Request): string => {
   const h = req.headers.authorization || '';
   return h.startsWith('Bearer ') ? h.slice(7) : '';

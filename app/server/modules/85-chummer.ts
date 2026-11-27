@@ -43,7 +43,7 @@ interface ActorDiff {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Loose = Record<string, any>;
 
-const tk = (s: string): string => s; // marks French keys used as values (tools/i18n-check.js)
+const tk = (s: string): string => s; // marks French keys used as values (tools/i18n-check.ts)
 /** HTTP error body for an error that may carry an i18n key (Chummer/XML errors). */
 const errBody = (err: ChummerFailure | undefined, fallback: string) => (err?.i18nKey ? errorBody(err.i18nKey, err.i18nParams) : err?.message ? { error: err.message } : errorBody(fallback));
 

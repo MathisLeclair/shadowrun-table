@@ -40,7 +40,7 @@ interface AudioJob {
 /** Transient GM events of this module (not listed in ServerEvents, shared/types.ts). */
 type FoundryEmit = (target: 'gm', event: 'foundry/audio', data: Record<string, unknown>) => void;
 
-const tk = (s: string): string => s; // marks French keys returned as values (tools/i18n-check.js)
+const tk = (s: string): string => s; // marks French keys returned as values (tools/i18n-check.ts)
 /** HTTP error body for an error that may carry an i18n key (Foundry/zip errors). */
 const errBody = (err: FoundryError | undefined, fallback: string) => (err?.i18nKey ? errorBody(err.i18nKey, err.i18nParams) : err?.message ? { error: err.message } : errorBody(fallback));
 

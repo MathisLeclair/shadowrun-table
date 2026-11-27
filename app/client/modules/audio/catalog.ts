@@ -3,7 +3,7 @@
 import type { TrackKind } from '../../../shared/types.ts';
 
 // Names, descriptions and tags are French source strings (stored as-is in state.audio.tracks); the client shows
-// them translated (widgets.js trackName/presetDesc/tagLabel). tk() only marks them for tools/i18n-check.js.
+// them translated (widgets.js trackName/presetDesc/tagLabel). tk() only marks them for tools/i18n-check.ts.
 const tk = (s: string): string => s;
 
 /** A built-in preset (ambient / music: desc + tags; sfx: `label` = display key when the name is ambiguous). */

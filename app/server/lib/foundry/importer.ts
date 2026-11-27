@@ -117,7 +117,7 @@ export interface ImportSummary {
   users: string[];
 }
 
-const tk = (s: string): string => s; // marks French keys stored as values (tools/i18n-check.js)
+const tk = (s: string): string => s; // marks French keys stored as values (tools/i18n-check.ts)
 
 // Fixed app ids for the campaign PCs (keeps references in campaign docs, quests, users…).
 export const PC_IDS: Record<string, string> = { 'anthony von schloss': 'pc_anthony', jane: 'pc_jane', bricks: 'pc_bricks', 'ank lay': 'pc_anklay', 'christopher armingstar': 'pc_christopher' };
@@ -586,7 +586,7 @@ export function pcDiffEntries(appActor: Actor | null | undefined, pc: BundlePc):
   return out;
 }
 
-/** Human-readable differences app actor → Foundry (French strings, e.g. for tools/foundry-import.js). */
+/** Human-readable differences app actor → Foundry (French strings, e.g. for tools/foundry-import.ts). */
 export function pcDiff(app: Actor | null | undefined, pc: BundlePc): string[] {
   return pcDiffEntries(app, pc).map((e) => formatFr(e.t, e.params));
 }

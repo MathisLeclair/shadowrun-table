@@ -34,7 +34,7 @@ export interface ToolLabel {
   params?: I18nParams;
 }
 
-/** Marks a French key for tools/i18n-check.js (translated by the client). */
+/** Marks a French key for tools/i18n-check.ts (translated by the client). */
 const tk = (s: string): string => s;
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const CATALOG_DIR = path.resolve(HERE, '../../../data/catalog');

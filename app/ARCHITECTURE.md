@@ -29,8 +29,8 @@ app/
   client/modules/registry.js  which component is which tab                              (core-owned — DO NOT EDIT)
   client/modules/<feature>/…  feature UI
   data/seed/…            initial content merged into state at boot (by id, never overwrites)
-  data/catalog/*.json    gear catalog generated from Chummer data (tools/build-catalog.js)
-  data/packs/<pack>/     other content packs (same layout as data/seed; « vierge » built by tools/build-packs.js)
+  data/catalog/*.json    gear catalog generated from Chummer data (tools/build-catalog.ts)
+  data/packs/<pack>/     other content packs (same layout as data/seed; « vierge » built by tools/build-packs.ts)
   data/server.json       table registry (runtime, do not commit)
   data/tables/<id>/      one table: state.json, backups/, uploads/, docs/, assets/, foundry/ (runtime, do not commit)
   tools/                 offline scripts (catalog build, checks)
@@ -87,7 +87,7 @@ export default {
 - Open a sheet anywhere: `openSheet(actorId)`. Switch tab: `goTab('shop')`.
 - Use `TextInput` (commits on blur) for anything that sends to the server, so we don't spam actions per keystroke.
 - Wrap a `NumberInput` with `<Field label>` (a div), never a bare `<label>` (a label forwards clicks on its text to its first labelable descendant).
-- Markdown is rendered with `renderMarkdown()` (client/lib/markdown.js, regression tests in tools/test-markdown.js): raw HTML is escaped, links/images only allow `http(s):`, `/` and `#` URLs. The page is served with a Content-Security-Policy (no inline scripts/handlers, import map allowed by hash) and `/uploads/*` is served with a sandbox CSP + `nosniff` (non-media files as attachments).
+- Markdown is rendered with `renderMarkdown()` (client/lib/markdown.js, regression tests in tools/test-markdown.ts): raw HTML is escaped, links/images only allow `http(s):`, `/` and `#` URLs. The page is served with a Content-Security-Policy (no inline scripts/handlers, import map allowed by hash) and `/uploads/*` is served with a sandbox CSP + `nosniff` (non-media files as attachments).
 - The page URL names the table (`/t/<slug>/`, `TABLE` in net.js). Session token in localStorage `sr.token.<slug>` (old `sr.token` adopted once; memory fallback when storage is blocked); `api()`/`upload()` send `X-SR-Table`, the socket handshake `{ token, table }`. Upload URLs are returned by the server (`/t/<slug>/uploads/…`, `/uploads/…` for the legacy table) — never build them. The server emits `unauthorized` and disconnects a socket whose session no longer exists (user removed, import); the client then shows the login screen.
 
 UI store (`client/lib/ui-store.js`, client-only, shared by modules): `mainTab`, `dockTab`, `dockOpen`, `sheetActorId`, `toasts`,
@@ -232,8 +232,8 @@ VehicleMod = { id, catalogId?, name, nameFr?, rating?, slots, category, cost, av
   catalog; techniques from the martial art's `stats.techniques`). A catalog pick gets the values that depend on the parent item from
   `rules.js upgradeFields()` (the parent's catalog entry is loaded): capacity with its Capacity (YNT Softweave), slots with its Body (Gecko Tips),
   price with its value (« Weapon Cost »…; left at the catalog price when the parent's value is unknown).
-- **Homes** (`shared/home.js`, UI `client/modules/sheet/home.js` + `home.css`, tests `tools/test-home.js` + the « homes » part of
-  `tools/test-lifestyle.js`): each lifestyle level has 1–3 hand-drawn layouts (`HOME_LAYOUTS`: ASCII rows in the map tile legend + `E` entrance,
+- **Homes** (`shared/home.js`, UI `client/modules/sheet/home.js` + `home.css`, tests `tools/test-home.ts` + the « homes » part of
+  `tools/test-lifestyle.ts`): each lifestyle level has 1–3 hand-drawn layouts (`HOME_LAYOUTS`: ASCII rows in the map tile legend + `E` entrance,
   `d` open door, `L` locked, `%` secret, `G` shutter, digits = room markers flood-filled into labelled regions; `out` rooms = corridor / street /
   shared kitchen, never glued onto). Street has none. Lifestyle options that are places (`homeModuleKey`: garages, workshop, yard, pool, gym,
   armory, panic room, bat cave, escape tunnel…) become modules glued onto a free wall (`buildHome`: 4 rotations, every offset, the module's top
@@ -316,12 +316,12 @@ VehicleMod = { id, catalogId?, name, nameFr?, rating?, slots, category, cost, av
   nearly every weapon equipped: the app's ready defaults apply) and never written from it; export writes `<location>` (creating the Chummer location of an
   app container, matched by guid then name), the active clip's count when the file has clips; re-import (merge.js) adds new containers.
 - **Live table migration**: `init` runs `normalizeActor` (containers [], locations 'on', ammo fields, ready defaults) and `fillItemNames` on every actor at
-  every boot — idempotent (`tools/test-inventory.js` boots twice). Tests: `node tools/test-inventory.js` (ports 3443-3445).
+  every boot — idempotent (`tools/test-inventory.ts` boots twice). Tests: `node tools/test-inventory.ts` (ports 3443-3445).
 
 Dice: `'dice/roll'` (characters module) `{ pool, label, actorId?, skillId?, attr?, attr2?, useSpec?, test? ('composure'|'judgeIntentions'|'memory'|'liftCarry'|'defense'|'soak'|'drainResist'|'biofeedback'|'toxinResist': kept only on an attribute-only roll of that test's attributes, `shared/modifiers.js TEST_ATTRS` / `checkedTest`), weaponId? (the weapon's skill is used; only the GM may roll it with another `skillId`), matrixLimit? ('attack'|'sleaze'|'dataProcessing'|'firewall'; Matrix skills only: `MATRIX_LIMIT_SKILLS`), conditions?: [switch keys], ignore?: [modifier ids], limit? (number = that limit; null/0 = none; absent = computed — players can neither raise nor remove a computed limit; a computed limit is ≥ 1), applyWounds? (GM only: the wound modifier always applies to a player's skill / attribute roll except damage resistance tests `RESIST_TESTS`), bonus?: [{label, value}] (players: only « VOL » of total defense and « Firewall » of Matrix defense / biofeedback, recomputed; any other line counts as « mod. »), explode? (Edge: Push the Limit — adds EDG to the pool, rule of six, ignores limit and spends 1 Edge), secret? (GM only: gmOnly log), modifier?, fireMode?, ammoOverride? (GM; see « Inventaire ») }` → logs `{ kind: 'roll', roll: {..., breakdown, limitLabel?, limitBreakdown?, mods?: [ModLine], conditions?} }` and emits `sfx { id: 'dice' }` to all. Server rolls (Math.random). Pool and limit modifiers are computed by the server (« Modifiers »).
 - **3D dice** (`client/modules/sheet/Dice3D.js` + `dice3d.css`, client only): every new log entry with `roll.dice` is thrown as CSS 3D cubes (`roll.extra` = a second wave; max 40 dice shown), then a banner shows hits / glitch badges (click = next). Each die is simulated up front (`simulateDie`, exported for checks: fall, bounces, rolling without slipping until it stops, lifted onto its lowest corner so it rocks over its edges; frames played with requestAnimationFrame, top-down camera). The spin is computed forward and the orientation backward from the resting pose (the server's value facing up, random yaw), so the die rolls straight into it — no snap at the end. Per-browser choice `localStorage['sr.dice3d']` = `'off'` | `'mine'` (own rolls + rolls on own characters) | `'all'` (default: every roll the user can see), set with `Dice3dPicker` (🎲 button in the Journal & dés bar). Entries present at load are never replayed; a burst keeps the last 3, the queue at most 4.
-- **SINs** (rules `shared/sins.js`, UI `client/modules/sheet/sins.js` + `sins.css`, test `tools/test-sins.js`): `sins[]` items `{ id, name, rating, licenses: string[] (« Driver's License (4) »: a « (n) » is that license's rating, else the SIN's), notes?, real? (legal SIN: never checked), burned?, burnedAt? }`. The Contacts & SIN tab shows each one as an ID card (identity without « Faux SIN — », decorative `sinNumber(id)`, Fake SIN Details text of its rating, licenses, « Grillé » stamp); « Présenter / contrôler » opens the big card + verification panel (system rating 1-6 with the SIN Verification Details text, SIN or one license, odds `checkOdds`). `'actor/sinCheck' { actorId, sinId, license?: index, device: 1-6, secret? (GM) }` (owner or GM; SR5 p. 364): Device Rating × 2 dice, threshold = SIN / license rating; hits < threshold `pass`, = `odd`, > `burned` → the SIN gets `burned` (not on a secret roll: the GM decides). Log entry `kind: 'roll'`, `labelI18n` « Contrôle de SIN — {sin} » / « Contrôle de licence — {license} ({sin}) », `roll.sinCheck = { sinId, sin, device, threshold, license?, licenseIndex?, outcome, burnedNow? }` (LogDock `SinCheckLine`; no Edge: `dice/secondChance` refuses it). A burned SIN fails automatically without a roll (system log). `'actor/sinBurn' { actorId, sinId, burned }` (GM: « Griller » / « Restaurer » on the card); the GM's list editor also has « Vrai SIN » / « Grillé ».
-- **Contacts** (rules + tables `shared/contacts.js`, UI `client/modules/sheet/contacts.js` + `contacts.css`, test `tools/test-contacts.js`; SR5 p. 387-389): each contact is a dossier card (portrait / color of its sheet, Connection 1-12 and Loyalty 1-6 gauges with the Connection / Loyalty table texts, the owner's inline notes). « Contacter » = the dossier full size + usual fee (`contactFees`: Connection × 100 ¥ info, × 1 000 ¥ goods, Loyalty × 10 % off) + Favor Rating table (≤ Loyalty « accepte ») + rolls. `contactSheet(state, contact)` = the contact's stats from an NPC actor, else a bestiary template, of the same name (also the shop's contact search; players read it from `view.shop.contactSearch[actorId]`, the GM computes it). `'actor/contactRoll' { actorId, contactId, kind, modifier?, secret? (GM) }` (owner or GM): `reach` 2D6 (plain `total`, no hits) ≥ Connection → `available`; `negotiate` = the runner's Negotiation + CHA [Social] through `performRoll` (modifiers, Edge) + Loyalty dice + `bribe` bought dice (`bribeCost` 100 × (7 − Loyalty) ¥ each, shown, not charged); `legwork` (contact's Connection + CHA [Social], one hour of the extended test, the GM adds hits) and `network` (contact's Etiquette + CHA + Connection [Social] vs `threshold` = target's Connection, `success`) need the contact's sheet, are logged under the contact's name with `actorId: null` (no Edge). `roll.contactRoll = { kind, contactId, contact, connection, loyalty, total?, available?, bribe?, bribeCost?, threshold?, success?, via? }` → LogDock `ContactRollLine`. `dice/secondChance` refuses rolls without hits; the 3D dice banner shows `total` when there are no hits.
+- **SINs** (rules `shared/sins.js`, UI `client/modules/sheet/sins.js` + `sins.css`, test `tools/test-sins.ts`): `sins[]` items `{ id, name, rating, licenses: string[] (« Driver's License (4) »: a « (n) » is that license's rating, else the SIN's), notes?, real? (legal SIN: never checked), burned?, burnedAt? }`. The Contacts & SIN tab shows each one as an ID card (identity without « Faux SIN — », decorative `sinNumber(id)`, Fake SIN Details text of its rating, licenses, « Grillé » stamp); « Présenter / contrôler » opens the big card + verification panel (system rating 1-6 with the SIN Verification Details text, SIN or one license, odds `checkOdds`). `'actor/sinCheck' { actorId, sinId, license?: index, device: 1-6, secret? (GM) }` (owner or GM; SR5 p. 364): Device Rating × 2 dice, threshold = SIN / license rating; hits < threshold `pass`, = `odd`, > `burned` → the SIN gets `burned` (not on a secret roll: the GM decides). Log entry `kind: 'roll'`, `labelI18n` « Contrôle de SIN — {sin} » / « Contrôle de licence — {license} ({sin}) », `roll.sinCheck = { sinId, sin, device, threshold, license?, licenseIndex?, outcome, burnedNow? }` (LogDock `SinCheckLine`; no Edge: `dice/secondChance` refuses it). A burned SIN fails automatically without a roll (system log). `'actor/sinBurn' { actorId, sinId, burned }` (GM: « Griller » / « Restaurer » on the card); the GM's list editor also has « Vrai SIN » / « Grillé ».
+- **Contacts** (rules + tables `shared/contacts.js`, UI `client/modules/sheet/contacts.js` + `contacts.css`, test `tools/test-contacts.ts`; SR5 p. 387-389): each contact is a dossier card (portrait / color of its sheet, Connection 1-12 and Loyalty 1-6 gauges with the Connection / Loyalty table texts, the owner's inline notes). « Contacter » = the dossier full size + usual fee (`contactFees`: Connection × 100 ¥ info, × 1 000 ¥ goods, Loyalty × 10 % off) + Favor Rating table (≤ Loyalty « accepte ») + rolls. `contactSheet(state, contact)` = the contact's stats from an NPC actor, else a bestiary template, of the same name (also the shop's contact search; players read it from `view.shop.contactSearch[actorId]`, the GM computes it). `'actor/contactRoll' { actorId, contactId, kind, modifier?, secret? (GM) }` (owner or GM): `reach` 2D6 (plain `total`, no hits) ≥ Connection → `available`; `negotiate` = the runner's Negotiation + CHA [Social] through `performRoll` (modifiers, Edge) + Loyalty dice + `bribe` bought dice (`bribeCost` 100 × (7 − Loyalty) ¥ each, shown, not charged); `legwork` (contact's Connection + CHA [Social], one hour of the extended test, the GM adds hits) and `network` (contact's Etiquette + CHA + Connection [Social] vs `threshold` = target's Connection, `success`) need the contact's sheet, are logged under the contact's name with `actorId: null` (no Edge). `roll.contactRoll = { kind, contactId, contact, connection, loyalty, total?, available?, bribe?, bribeCost?, threshold?, success?, via? }` → LogDock `ContactRollLine`. `dice/secondChance` refuses rolls without hits; the 3D dice banner shows `total` when there are no hits.
 
 ### Bestiary & combat (owner: combat module `30-combat.js`)
 ```js
@@ -481,7 +481,7 @@ Schema of the nested lists: « Lifestyles, accessories, mods, martial arts » ab
 `paid`, else `cost`; included parts are worth 0 and never sold alone), accessories `extraMount` (mount points they add, e.g. slide mount), armor mods
 `bonus` (`{ fire|cold|electricity|acid|falling|toxin|pathogen|radiation: n }` evaluated at the rating), vehicle mods `effects` (`{ handling, speed, accel,
 armor, body, sensor, pilot, seats }` evaluated at the rating; never applied to the stored vehicle stats).
-- **Catalogs** (tools/build-catalog.js; id = Chummer GUID, `nameFr` from `lang/fr-fr_data.xml`, same price/avail fields as the other catalogs).
+- **Catalogs** (tools/build-catalog.ts; id = Chummer GUID, `nameFr` from `lang/fr-fr_data.xml`, same price/avail fields as the other catalogs).
   Formulas may use the TARGET's values (`rules.js quote(item, { vars })`, `evalFormula` accepts extra variables, `div`, `mod`): `WeaponCost`,
   `ArmorCost` + `Capacity`, `VehicleCost` + `Body Speed Handling Acceleration Pilot Sensor Seats Armor`; `stats.targetCost: true` flags them.
   - `accessories` (weapons.xml `<accessories>`): `stats { mount: ['Top','Under'] ([] = no mount needed), extraMount?, accuracy?, rc?, rcGroup?, conceal?,
@@ -540,15 +540,15 @@ armor, body, sensor, pilot, seats }` evaluated at the rating; never applied to t
   actors (`data/seed/actors/pcs.json`) already contain it. Per actor: `actorName`, `chummerFile`, `chummerDate`, `note` (notes of every restored
   sub-item, « Restauré depuis Chummer (fichier du …) — à vérifier »), `lifestyleNote` (appended once to the primary lifestyle's notes: historic
   lifestyle NOT restored, Christopher), `inferred: true` (not from a Chummer file: Anthony's DocWagon deduced from his 7083 ¥ rent — never applied by
-  the boot restore, only by `tools/restore-lifestyles.js --include-inferred`; the Lazarus seed already has it).
+  the boot restore, only by `tools/restore-lifestyles.ts --include-inferred`; the Lazarus seed already has it).
   GM-facing comparison: `../Shadowrun/historique-chummer.md`.
-- **Restore on a running table**: `node tools/restore-lifestyles.js --url <server> [--table <slug>] --password <gm pw> [--dry-run] [--include-inferred]`
+- **Restore on a running table**: `node tools/restore-lifestyles.ts --url <server> [--table <slug>] --password <gm pw> [--dry-run] [--include-inferred]`
   applies the LIFESTYLE part of that spec through GM actions (`actor/updateItem` catalogId/base/baseCost, `actor/addSubItem` qualities,
   `lifestyleNote`): matches the actor by id then PC name, the lifestyle by name then the only/primary one; skips options already present (catalog id
   or name), never removes anything, never touches karma/nuyen/items, refuses a server without `actor.lifestyles`; inferred specs only with
-  `--include-inferred`. After the boot restore it reports « Nothing to do ». Test: `node tools/test-restore-lifestyles.js` (ports 3290-3291).
-- Tests: `node tools/test-shop.js` (port 3250: mounts, capacity, slots, target-based prices, resale of parts, martial arts, availability tests) and
-  `node tools/test-lifestyle.js` (ports 3251-3252: cost math, migration idempotence, restore, lifestyle options, rent per lifestyle, permissions).
+  `--include-inferred`. After the boot restore it reports « Nothing to do ». Test: `node tools/test-restore-lifestyles.ts` (ports 3290-3291).
+- Tests: `node tools/test-shop.ts` (port 3250: mounts, capacity, slots, target-based prices, resale of parts, martial arts, availability tests) and
+  `node tools/test-lifestyle.ts` (ports 3251-3252: cost math, migration idempotence, restore, lifestyle options, rent per lifestyle, permissions).
 
 ### Training (owner: `50-training.js`)
 ```js
@@ -594,13 +594,13 @@ campaign: {
 Players receive only `handouts` revealed to them and `playerRecap`. Campaign markdown docs (the table's docs folder: `data/tables/<id>/docs/`; the legacy table reads `../Shadowrun/` instead when that folder exists, which is only on the GM's PC: it is not in git) are served GM-only at `GET /api/docs` and `GET /api/docs/:name` (use `api()`).
 
 ## Seeds
-Each table has a content pack: `project-lazarus` = `data/seed/`, `vierge` = `data/packs/vierge/` (generic bestiary, generic audio scenes, nothing else — regenerate with `node tools/build-packs.js`), `demo` = `vierge` + `data/packs/demo/` (generated by `node tools/build-demo.js`, see « Demo table »).
+Each table has a content pack: `project-lazarus` = `data/seed/`, `vierge` = `data/packs/vierge/` (generic bestiary, generic audio scenes, nothing else — regenerate with `node tools/build-packs.ts`), `demo` = `vierge` + `data/packs/demo/` (generated by `node tools/build-demo.ts`, see « Demo table »).
 The pack is merged at boot, by id, adding only what's missing (so GM edits survive restarts):
 - `actors/*.json` — array of PC actors (characters module)
 - `bestiary/*.json` — array of templates (combat module)
 - `maps/*.json` — one Map per file (maps module). `maps/lib-<slug>.json` (Lazarus) = library instances for the campaign's locations
-  (`map_lib_<slug>`, `map.library = { slug, version }`, GM notes), written by `node tools/maplib-campaign-seeds.js` (same build as
-  `maps/fromLibrary`; choices in `../Shadowrun/cartes-campagne.md`, one fragmap per location); test `tools/test-maplib-campaign.js` (ports 3940-3941)
+  (`map_lib_<slug>`, `map.library = { slug, version }`, GM notes), written by `node tools/maplib-campaign-seeds.ts` (same build as
+  `maps/fromLibrary`; choices in `../Shadowrun/cartes-campagne.md`, one fragmap per location); test `tools/test-maplib-campaign.ts` (ports 3940-3941)
 - `campaign.json` — campaign slice (campaign module; merge acts/quests/sessions/threads by id)
 - `audio.json` — tracks & scenes (audio module)
 - `shop.json` — specials (shop module)
@@ -610,7 +610,7 @@ The pack is merged at boot, by id, adding only what's missing (so GM edits survi
 Seattle 2080, SR5. PCs: **Anthony Von Schloss** (street samurai / blades, player Anthony H.), **Jane** (face / social adept / sniper, player Baptiste), **Bricks** (decker, ex-Knight Errant spider, player Sploadie). Ank'Lay (ork brawler) retired. Full sheets in `../Shadowrun/campaign-recap.md`; plot in `campaign-outline.md`, `act1-loose-ends.md`, session plans. Antagonist: AG Chemie via shell company Hollow Pine Holdings (Dorian Ashe), Project Lazarus. Fixer: Perrine Cabana.
 
 ## Testing (agents and humans)
-- **Never** run the server on port 3000 or without `SR_RUNTIME_DIR` while developing in parallel — use `tools/test-client.js`, which starts an isolated server (own port, temp state dir, seeds applied):
+- **Never** run the server on port 3000 or without `SR_RUNTIME_DIR` while developing in parallel — use `tools/test-client.ts`, which starts an isolated server (own port, temp state dir, seeds applied):
   ```js
   import { startServer, login, client, settle } from './test-client.js';
   const srv = await startServer({ port: 31xx });
@@ -619,12 +619,12 @@ Seattle 2080, SR5. PCs: **Anthony Von Schloss** (street samurai / blades, player
   await gm.send('maps/…', {...}); await settle(); console.log(p1.state.maps);
   srv.stop();
   ```
-  Multi-table: `startServer({ port, tables: [{ id, name, pack, gmPassword, state? }] })` (no default table then), `login(url, { …, table: 'id' })`, `client(url, token, { table: 'id' })`, `await srv.admin()` → admin token, `startServer({ legacyState })` writes an old single-table `state.json`. Tests of this part: `tools/test-tables.js` (ports 3500-3599; `tools/test-modifiers.js` uses 3500 and `tools/test-bookrefs.js` 3530-3531 — don't run them at the same time).
-- Demo table: `tools/test-demo.js` (ports 3960-3969; short reset timers through the `SR_DEMO_*` variables).
+  Multi-table: `startServer({ port, tables: [{ id, name, pack, gmPassword, state? }] })` (no default table then), `login(url, { …, table: 'id' })`, `client(url, token, { table: 'id' })`, `await srv.admin()` → admin token, `startServer({ legacyState })` writes an old single-table `state.json`. Tests of this part: `tools/test-tables.ts` (ports 3500-3599; `tools/test-modifiers.ts` uses 3500 and `tools/test-bookrefs.ts` 3530-3531 — don't run them at the same time).
+- Demo table: `tools/test-demo.ts` (ports 3960-3969; short reset timers through the `SR_DEMO_*` variables).
 - Put module tests in `tools/test-<module>.js` (run with `node tools/test-<module>.js`, exit code ≠ 0 on failure).
 - Check client files parse: `node --check client/modules/x/y.js` works for syntax (imports are browser paths, so don't execute them in Node). Shared modules (`shared/*.js`) can be imported and unit-tested in Node directly.
-- `node tools/smoke.js` = quick global smoke test.
-- i18n: `node tools/test-i18n.js` (ports 3800-3849), `node tools/i18n-check.js --area <area>` (see « i18n »).
+- `node tools/smoke.ts` = quick global smoke test.
+- i18n: `node tools/test-i18n.ts` (ports 3800-3849), `node tools/i18n-check.ts --area <area>` (see « i18n »).
 
 ## i18n (French source, English dictionaries)
 
@@ -670,10 +670,10 @@ The app runs in French or English, **per user**. French stays the source text in
 - Transient events carrying text to show (`emitTo(…, { note })`): send keys + params too and translate client-side.
 
 ### Checker
-`node tools/i18n-check.js [--area <area>] [files…] [--add-missing=<area>] [--strict] [--json] [--unused] [--no-literals]`
+`node tools/i18n-check.ts [--area <area>] [files…] [--add-missing=<area>] [--strict] [--json] [--unused] [--no-literals]`
 - Lists `t()/tn()/tk()` keys and server `ctx.fail()/errorBody()/i18n.key` keys that have no English entry, keys built with `${…}` (must become params), dictionary problems (invalid JSON, non-string values, placeholder mismatch, one key translated two ways), and **suspicious untranslated French literals** (heuristic: accented letters / common French words in html`` text nodes, `title= placeholder= label= hint= alt= aria-label=`, and literals passed to `toast( confirmAction( promptText( setErr( Error(` or `label:/title:/hint:/placeholder:` props). A line containing `i18n-ignore` is skipped.
 - `--add-missing=sheet` appends the missing keys of the scanned files to `client/i18n/en/sheet.json` with `""` values (empty = still missing), ready to translate.
-- Done = `node tools/i18n-check.js --area <area> --strict` exits 0, with no dynamic key and no literal left in your files (or only justified `i18n-ignore`), and the module's tests still pass (`test-client.js` `send()` still rejects with the French `error` text, so existing assertions keep working). Then switch to EN in the app (top bar) and check the Réglages counter while visiting your screens.
+- Done = `node tools/i18n-check.ts --area <area> --strict` exits 0, with no dynamic key and no literal left in your files (or only justified `i18n-ignore`), and the module's tests still pass (`test-client.js` `send()` still rejects with the French `error` text, so existing assertions keep working). Then switch to EN in the app (top bar) and check the Réglages counter while visiting your screens.
 
 ## Persistence & robustness (core)
 - `saveNow()` writes `state.json` atomically (tmp + fsync + rename) and never throws: on an fs error (EPERM lock by an antivirus/viewer, disk full) it logs and retries. `saveSoon()` debounces 400 ms but never postpones more than 2 s. Logins and admin import/reset save at once.
@@ -698,10 +698,10 @@ One server hosts several **tables** = independent campaigns (own GM password, pl
 - **Module-level state audited for table isolation**: maps vision cache = `WeakMap` keyed by the map object (OK); combat undo stack → `WeakMap` keyed by the table state (was one global array); foundry `audioJob` → `Map` by table id, world cache keyed by path + fingerprint (OK), journals/assets per table; chummer mugshots → current table's uploads; shop/training catalog indexes, chummer data caches, augment ware index: global read-only catalog data (OK).
 - `GET /api/health` → `{ ok, tables, broken: [ids], uptime }` (Docker healthcheck).
 
-## Demo table (core, `server/lib/demo.js`, pack `data/packs/demo/`, test `tools/test-demo.js`)
+## Demo table (core, `server/lib/demo.js`, pack `data/packs/demo/`, test `tools/test-demo.ts`)
 A **public** table anyone can try without a password. `TableMeta.demo = true` (never on the legacy table) switches it on.
 - **Creation**: `SR_DEMO_TABLE=<id>` → `ensureDemoTable()` (tables.js) creates that table at boot with pack `demo`, flag `demo`, a random GM password (`SR_DEMO_NAME`, `SR_DEMO_LANG` on creation). It only ever creates: an existing table that is not already a demo is left alone (a reset would wipe it). Without the variable, a table already flagged in `server.json` stays a demo.
-- **Content**: pack `demo` = `vierge` + `data/packs/demo/` (`PACKS.demo.base`; `table.packDirs` → `initModules` runs every module init once per folder, base first — inits only add what is missing). The pack is **generated** by `node tools/build-demo.js` (hand-written warehouse tile map, Matrix host with map-linked devices, scenario/handout in the script; PCs from the enemy generator turned into PCs, bestiary NPCs, a `maps/fromLibrary` copy of `dive-bar` — through a throwaway server). Edit the script, rerun it, commit the pack. No Project Lazarus content.
+- **Content**: pack `demo` = `vierge` + `data/packs/demo/` (`PACKS.demo.base`; `table.packDirs` → `initModules` runs every module init once per folder, base first — inits only add what is missing). The pack is **generated** by `node tools/build-demo.ts` (hand-written warehouse tile map, Matrix host with map-linked devices, scenario/handout in the script; PCs from the enemy generator turned into PCs, bestiary NPCs, a `maps/fromLibrary` copy of `dive-bar` — through a throwaway server). Edit the script, rerun it, commit the pack. No Project Lazarus content.
 - **Logins**: GM without password; players without PIN (a PIN sent is ignored, so a name can't be locked); pre-made PCs may be shared by several players; at most `SR_DEMO_MAX_USERS` (40) player accounts; every login counts against `SR_DEMO_LOGIN_MAX` (30) per IP / 10 min. The client reads `table.demo` (lobby, view config, `/api/tables`): banner on the login screen, no password/PIN fields, « démo » pill in the picker, its own message after a reset (`unauthorized { reason: 'demo-reset' }`), its own text in the assistant dock.
 - **Refused** (403 `code: 'demo'`, `demoHttpGuard`, mounted before the body parsers): `/api/assistant/*` except `status` (also `allowed()` in 95-assistant, and never offered in `/admin → Assistant IA`), `/api/books/*` (`GET /api/books` answers an empty library), `/api/foundry/*`, `/api/admin/import|backup`, map-library browsing `/api/maplib[/<slug>]` (library images: only those of the demo's own maps, checked in 22-maplib). Socket actions `foundry/*`, `maps/fromLibrary`, `maps/publishToLibrary`. `/api/admin/reset` on a demo = demo reset. No backups are written (`store.backup` is a no-op), the registry name never follows a GM rename.
 - **Caps**: HTTP bodies need a Content-Length and ≤ 2 MB (uploads ≤ `SR_DEMO_UPLOAD_KB`, 1024); uploads = PNG/JPEG/WebP/GIF only, ≤ 200 files and `SR_DEMO_UPLOAD_QUOTA_MB` (20) per table; socket action payload ≤ 128 KB serialized, ≤ 120 actions / 10 s per socket, chat lines ≤ 500 characters.
@@ -730,7 +730,7 @@ map.background = { url, opacity: 1, mode: 'image' | 'underlay', x: 0, y: 0, w: w
 - In combat, `maps/moveToken` enforces the run rate (AGI×4 m) per combat turn for players (`token.moveBudget`).
 
 ### Foundry import (module `80-foundry.js`)
-Slice `state.foundry = { worldPath, lastScan?, lastImport? }` (GM only). Actions (GM): `foundry/worlds` (list detected worlds), `foundry/scan` `{ worldPath? }` → importable summary, `foundry/import` `{ worldPath?, select: { pcs, npcs, scenes, journals, playlists }, pcMode: 'replace'|'merge', assignPlayers? }`. Route `GET /api/foundry/status` (GM). Worlds uploaded as zips (VPS): `GET /api/foundry/uploads`, `POST /api/foundry/upload?kind=world|data` (body = zip, streamed; world → `tables/<id>/foundry/Data/worlds/<world>/` and becomes `state.foundry.worldPath`; data = extra Data folders such as `Music/`), `DELETE /api/foundry/uploads` — UI in Réglages (`client/modules/admin/FoundryUpload.js`). With `SR_FOUNDRY_LOCAL_PATHS=0` (Docker) a GM can only read worlds uploaded to their own table; otherwise local paths work but never another table's folder. Offline: `node tools/foundry-import.js [--write-seeds] [--world <path>] [--dump <dir>] [--no-audio] [--no-journals]` regenerates the seeds. Env vars: `SR_FOUNDRY_ASSET_DIR` (where the legacy table's assets are copied, default data/assets/foundry; other tables: tables/<id>/assets/foundry), `SR_FOUNDRY_DOCS_DIR` (journal markdown output, default <table docs folder>/foundry).
+Slice `state.foundry = { worldPath, lastScan?, lastImport? }` (GM only). Actions (GM): `foundry/worlds` (list detected worlds), `foundry/scan` `{ worldPath? }` → importable summary, `foundry/import` `{ worldPath?, select: { pcs, npcs, scenes, journals, playlists }, pcMode: 'replace'|'merge', assignPlayers? }`. Route `GET /api/foundry/status` (GM). Worlds uploaded as zips (VPS): `GET /api/foundry/uploads`, `POST /api/foundry/upload?kind=world|data` (body = zip, streamed; world → `tables/<id>/foundry/Data/worlds/<world>/` and becomes `state.foundry.worldPath`; data = extra Data folders such as `Music/`), `DELETE /api/foundry/uploads` — UI in Réglages (`client/modules/admin/FoundryUpload.js`). With `SR_FOUNDRY_LOCAL_PATHS=0` (Docker) a GM can only read worlds uploaded to their own table; otherwise local paths work but never another table's folder. Offline: `node tools/foundry-import.ts [--write-seeds] [--world <path>] [--dump <dir>] [--no-audio] [--no-journals]` regenerates the seeds. Env vars: `SR_FOUNDRY_ASSET_DIR` (where the legacy table's assets are copied, default data/assets/foundry; other tables: tables/<id>/assets/foundry), `SR_FOUNDRY_DOCS_DIR` (journal markdown output, default <table docs folder>/foundry).
 Reads a Foundry VTT v11+ world (LevelDB) from a COPY in a temp dir. Default world: auto-detected from `%LOCALAPPDATA%/FoundryVTT/Config/options.json` → `dataPath`/Data/worlds/* with `"system": "shadowrun5e"` (here: `C:/Users/mathi/Documents/Foundry/Data/worlds/test-world`). Assets it references (portraits, scene backgrounds, playlist audio) are copied into `data/assets/foundry/…` and served at `/assets/foundry/…`. Every imported record keeps `foundry: { id, world, importedAt }` so a later re-sync updates the same record. Journals are written as markdown to the table's docs folder, `foundry/*.md` (listed by the docs API under folder `foundry`).
 
 ### Chummer5a (module `85-chummer.js`)
@@ -799,7 +799,7 @@ chargen: { settings: { method: 'priority', allowPlayers: true, startingKarmaBonu
 - GM actions: `npcgen/preview {…}` → `{ main, lieutenant, unitName }` (nothing stored); `npcgen/create {…, saveToBestiary, spawn?: { mapId (null = actors only), count, x?, y?, hidden?, addToCombat? } }` → `{ templateIds, actorIds, tokenIds, mapId, unplaced }`. Spawning goes through `bestiary/spawn`; saved templates land in folder « Générés ». Generated names/descriptions are stored French data.
 
 ### Integration checks
-- `tools/i18n-check.js` must report 0 missing; every `tools/test-*.js` and `tools/smoke.js` pass. `tools/test-integration.js` (port 3971) runs the cross-module flow (two tables at once, EN + FR: admin creates a vierge/en table, player creator → GM approval, enemy generator + spawn + combat, Bricks + agent in the Matrix on Lazarus, no cross-table leak, keyed errors translated).
+- `tools/i18n-check.ts` must report 0 missing; every `tools/test-*.js` and `tools/smoke.ts` pass. `tools/test-integration.ts` (port 3971) runs the cross-module flow (two tables at once, EN + FR: admin creates a vierge/en table, player creator → GM approval, enemy generator + spawn + combat, Bricks + agent in the Matrix on Lazarus, no cross-table leak, keyed errors translated).
 - Admin HTTP errors use `errorBody()` too (`fail(res, status, key, extra, params)` in `server/lib/admin.js`), so `/admin` shows them in English.
 
 ## Notes (owner: `75-notes.js`, UI `client/modules/notes/`, English `client/i18n/en/notes.json`)
@@ -820,7 +820,7 @@ notes: {
 - Transient event `notes:comment { pageId, title, author }` → the page's other readers only.
 - **Client**: two panes (« Mes notes », « Notes du groupe », GM: « Notes partagées par les joueurs » grouped by player; search in titles/bodies/folders; folders; pinned first; « Corbeille ») | editor (title, folder, pin, share toggle, Écrire / Côte à côte / Aperçu, toolbar bold/italic/heading/list/checkbox/quote/[[link]], Ctrl+B/I/S, comments). Single pane with a back button under 800 px. Autosave 1.5 s after typing stops, on blur, on leave/hidden tab; status Enregistré / Modifié… / Enregistrement… / Conflit; conflict dialog: keep mine (re-save on the server version) / take theirs / copy mine. Soft lock: taken on focus/typing of a party page, renewed every 20 s while typing (released after 45 s idle or on leave); others see « X est en train d’écrire… » and may « Modifier quand même » after a confirm (`force`).
 - Markdown (`client/modules/notes/notes-md.js`, pure, tested in Node): the shared `renderMarkdown()` + `[[Titre]]` links (`#note:<id>`, or `#new:<title>` to create the missing page), `@Nom` mention badges (PC names, first names, player names), clickable `- [ ]` task checkboxes (toggling edits the source line).
-- Tests: `node tools/test-notes.js` (ports 3150-3199): pure helpers, private isolation (other player, GM before/after share, other table), party visibility across one table only (second table created through the admin API), permissions, version conflict, lock lifecycle, trash/restore/purge, comments + events, payload validation. i18n: `node tools/i18n-check.js --area notes --strict` (client) and `node tools/i18n-check.js server/modules/75-notes.js --strict` (server keys; the checker's `--area` table has no `notes` entry for the server file).
+- Tests: `node tools/test-notes.ts` (ports 3150-3199): pure helpers, private isolation (other player, GM before/after share, other table), party visibility across one table only (second table created through the admin API), permissions, version conflict, lock lifecycle, trash/restore/purge, comments + events, payload validation. i18n: `node tools/i18n-check.ts --area notes --strict` (client) and `node tools/i18n-check.ts server/modules/75-notes.js --strict` (server keys; the checker's `--area` table has no `notes` entry for the server file).
 
 ### Notes — limits & privacy (after review)
 - Limits: 100 000 chars per note, 1 M private chars per owner (trash included), 5 M per table (comments included), 1000 comments per author. Private pages of removed users are dropped.
@@ -849,8 +849,8 @@ rules, library) and a global viewer drawer opened from anywhere. **Server-wide**
 - **Detection** (`detectOffsets`): bare numbers in the top/bottom 8.5 % of each page vote for `pdfPage − n`; numbers printed on > 20 % of the
   pages are noise (kept as weak candidates that may only continue a run); each change of offset kept for ≥ 3 pages becomes a range, starting right
   after the last printed page of the previous range. Cross-checked with Chummer's reference sentence (`books.xml` `<match>`, names in
-  `server/lib/books/book-names.json`, regenerate with `node tools/books-setup.js --names`).
-- **CLI** `node tools/books-setup.js --from "<folder>" [--runtime <dir>|--books <dir>] [--only SR5,RG] [--map "file.pdf=CODE"] [--foundry <world>]`
+  `server/lib/books/book-names.json`, regenerate with `node tools/books-setup.ts --names`).
+- **CLI** `node tools/books-setup.ts --from "<folder>" [--runtime <dir>|--books <dir>] [--only SR5,RG] [--map "file.pdf=CODE"] [--foundry <world>]`
   copies the PDFs (code guessed from the file name, never modifies the source), extracts with pdfjs-dist (legacy build, ≈ 20 s for 10 books),
   writes the index and library, prints a table (offsets, confidence, Chummer check, Foundry pdfoundry/pdf-pager hints) and runs the checks:
   known references (RG 62 Heritage, SR5 240 Hack on the Fly, SR5 310 Improved Reflexes/Kinesics, RF 221 Garage…), the « Règles » quick links
@@ -913,7 +913,7 @@ rules, library) and a global viewer drawer opened from anywhere. **Server-wide**
   « en cache » per book, current version only). Measured (SR5, 41 MB, 502 pages, headless Edge, local server): first open ≈ 0.6-0.7 s to the first
   drawn page over loopback (on the VPS: the time to download 41 MB once), reopen from cache ≈ 0.45 s (Cache Storage and IndexedDB alike), page jump
   ≈ 0.05-0.15 s, 0 PDF requests after the first download, also after a full page reload.
-- **Tests**: `node tools/test-books.js` (ports 3420-3439): hand-made 9-page PDF (cover, printed 1-4, unnumbered insert, printed 5-7, a constant
+- **Tests**: `node tools/test-books.ts` (ports 3420-3439): hand-made 9-page PDF (cover, printed 1-4, unnumbered insert, printed 5-7, a constant
   « 3 » in every footer) → CLI install, offset ranges, auth 401/403 (forged expired / other table / unknown user keys / dead session after a GM
   password change), signing key outside the books folder, Range 206 / 416 / malformed, error headers, search, page text (out of range → 404),
   same 404 for restricted books, admin permissions, upload + background index, memory guard, manual offset / detect (preview `apply=0`), table
@@ -956,7 +956,7 @@ client/modules/books/BookRef.js   <BookRef>, <ItemRef item />, <RuleRef rule="li
   priority table, catalog pickers, gear, spells, powers, qualities, skills, complex forms); Matrix (action list + dialog page, skill, pool parts with a
   source, programs, IC); bestiary / enemy generator stat blocks (weapons, spells, skills, armor, implants, powers, qualities, gear, vehicles).
   Chip title « Ouvrir Run & Gun p. 62 » (« Livre non disponible sur ce serveur (RG p. 62) » + dashed chip when the book is absent).
-- **Tests**: `node tools/test-bookrefs.js` (ports 3530-3531): every catalog entry / technique has a parseable reference of a known Chummer book
+- **Tests**: `node tools/test-bookrefs.ts` (ports 3530-3531): every catalog entry / technique has a parseable reference of a known Chummer book
   (client parser agrees), SR5 skill / rule / creator-step pages checked against the SR5 text index when present, parsers, seed PCs fully resolved
   (fill idempotent), bestiary items with a catalog id resolved, Chummer and Foundry imports (snapshot items without source), boot backfill of an
   old table, GM catalog add / nested add / GM override, shop gift, martial art, training, bestiary template.
@@ -965,8 +965,8 @@ client/modules/books/BookRef.js   <BookRef>, <ItemRef item />, <RuleRef rule="li
 Chummer `<bonus>` / `<wirelessbonus>` data makes items count like in a real VTT: Jane wears « Zoé : Heritage 12 » (RG 62: +2 social limit while
 visible) → her Con test shows « Limite sociale 9 + Zoé : Heritage 12 +2 = 11 » when « Tenue visible » is on, and the sheet shows « 9 (11 si visible) ».
 ```
-tools/lib/bonus-effects.js   Chummer XML <bonus> node → normalized effects (pure; build time)
-tools/build-catalog.js       catalog entries get `effects`; writes data/catalog/effects.json (runtime index) + effects-coverage.md
+tools/lib/bonus-effects.ts   Chummer XML <bonus> node → normalized effects (pure; build time)
+tools/build-catalog.ts       catalog entries get `effects`; writes data/catalog/effects.json (runtime index) + effects-coverage.md
 shared/modifiers.js          collectModifiers / poolModifiers / limitFor / weaponAccuracy / derivedWithModifiers (pure, server + browser)
 server/lib/modifiers.js      effects index (global read-only catalog data), actorModifiers(actor, { weaponId }), deriveFull(actor)
 client/modules/sheet/modifiers-ui.js   useEffectsLookup / useModifiers / useDerivedModifiers, effect texts, chips with 📖 BookRef, tooltips
@@ -1040,7 +1040,7 @@ client/modules/sheet/modifiers-ui.js   useEffectsLookup / useModifiers / useDeri
 - **Not automated** (shown, or left to the GM): resistances / immunities, reach / unarmed DV, attribute maximums, karma / chargen tags (unsupported),
   « Too Pretty To Hit » (empty `<bonus>` in Chummer: no data). Situational conditions without restriction (« avec la corpo concernée, si visible »)
   are their own switch.
-- **Tests**: `node tools/test-modifiers.js` (port 3500): the normalizer on real Chummer entries (Heritage 12, Chameleon Suit, Improved Reflexes,
+- **Tests**: `node tools/test-modifiers.ts` (port 3500): the normalizer on real Chummer entries (Heritage 12, Chameleon Suit, Improved Reflexes,
   Kinesics, Muscle Replacement, Synaptic Booster, Tailored Pheromones, Codeslinger, Dimmer Bulb, Toughness / Will to Live / Catlike, Fire Resistance,
   Spellcasting Focus), the Lazarus PCs (Jane's Con: pool 14 / 16 with Seduction, social limit 9 → 11 « visible »; Improved Reflexes baked; Ank'Lay's
   ware baked; Bricks' Codeslinger), monitors / pain tolerance, chargen accessories / armor mods, and the server authority (no injected modifier, maluses
@@ -1057,7 +1057,7 @@ GM dock tab « Assistant » (GM only): a chat with Claude about the campaign, th
 - **Tools** (`tools.js`): read — `list_docs`, `read_doc` (pages of 40 K chars), `search_docs`, `get_campaign`, `list_actors`, `get_actor` (minus Chummer XML), `list_maps`, `get_map`, `get_bestiary`, `get_combat`, `get_log`, `search_catalog`. Propose — `propose_map` (full tile map + doors/regions/GM notes/lights → `maps/import`), `propose_map_edits` (`maps/paint|addDoor|addRegion|addNote|addLight`), `propose_npc` (`bestiary/create`), `propose_handout` (`campaign/addHandout`, unrevealed), `propose_campaign_entry` (`campaign/addQuest|addThread|updateSession` plan append|`updateNotes` append). A proposal is validated by running its actions on a deep copy of the state (`simulateAction`, core) and stored with a preview; nothing changes until `POST /api/assistant/proposals/:id/apply`, which rebuilds the ops from the current state and runs them with `runAction` (core: the same path as socket actions — save, broadcast). No tool reveals anything to players, touches PCs, deletes, rolls or posts in the chat.
 - **Routes** (GM, table must be enabled): `GET /api/assistant/status`, `GET|POST /api/assistant/conversations`, `GET|DELETE /api/assistant/conversations/:id` (view = items `user | assistant | tool | proposal | notice`; raw API messages stay server-side), `POST /api/assistant/ask { conversationId?, text, lang }` → `{ conversationId }` (the answer streams over the socket), `POST /api/assistant/stop`, `POST /api/assistant/proposals/:id/apply|dismiss`.
 - Core additions: `runAction(table, user, type, payload)` and `simulateAction(table, user, type, payload, state?)` in server/index.js, passed to module routes as helpers (with `actions`).
-- Tests: `node tools/test-assistant.js` (ports 3990-3999) — a local fake Claude API (`ANTHROPIC_BASE_URL`) replays scripted streamed responses: JWT signature/claims, pricing and ledger, gating (admin/GM/player/disabled table), tool loop and step limit, proposals (map, invalid map → tool error, NPC, unrevealed handout, quest) applied through the normal actions, nothing leaks to players, cap → 402. i18n: `node tools/i18n-check.js --area assistant --strict`.
+- Tests: `node tools/test-assistant.ts` (ports 3990-3999) — a local fake Claude API (`ANTHROPIC_BASE_URL`) replays scripted streamed responses: JWT signature/claims, pricing and ledger, gating (admin/GM/player/disabled table), tool loop and step limit, proposals (map, invalid map → tool error, NPC, unrevealed handout, quest) applied through the normal actions, nothing leaks to players, cap → 402. i18n: `node tools/i18n-check.ts --area assistant --strict`.
 
 ## Map library (owner: `server/lib/maplib.js`, `server/lib/maplib-admin.js`, `server/lib/maplib-thumb.js`, `server/modules/22-maplib.js`, `shared/maplib.js`, UI `client/modules/map/LibraryBrowser.js` + `maplib-client.js`, `client/modules/admin/MaplibAdmin.js`; English in `map.json` / `admin.json`)
 Raw fragmaps (image + walls/doors/lights/regions, no tokens, no fog) are **server-wide**: every table can use them. A table works on its own
@@ -1075,8 +1075,8 @@ data/maplib/<slug>.json      IN GIT — one library map: { id: 'lib_<slug>', slu
                              (current revision), origin: 'git'|'seed'|'edited'|'upload', originRef { kind, file, hash }, overrides (admin names/tags…),
                              gitNewer?, deleted? (tombstone), counts, versionInfo { at, by }, history: [{ version, at, by, origin, counts }] (5 kept)
   entries/<slug>.json        { slug, versions: { [n]: { walls, lights, regions, entry?, geometry } } } — current + the 5 previous versions
-  images/<file>              artwork (tools/maplib-build.js copies it from ../fragmap, or an /admin upload) — the owner's paid content
-  thumbs/<slug>.jpg          ≤ 480 px JPEG (tools/maplib-build.js, or an /admin JPEG upload). Also accepted: thumbs/<slug>.webp|.png and
+  images/<file>              artwork (tools/maplib-build.ts copies it from ../fragmap, or an /admin upload) — the owner's paid content
+  thumbs/<slug>.jpg          ≤ 480 px JPEG (tools/maplib-build.ts, or an /admin JPEG upload). Also accepted: thumbs/<slug>.webp|.png and
                              thumbs/<image file name>[.jpg]; migrated Foundry scenes fall back to their Foundry thumbnail (thumbPath).
 <runtime>/maplib-sign.key    HMAC key of the image links (SR_MAPLIB_KEY_FILE) — outside <maplib>, which is copied PC → VPS
 ```
@@ -1122,7 +1122,7 @@ data/maplib/<slug>.json      IN GIT — one library map: { id: 'lib_<slug>', slu
   (diff, update, publish, detach). `renderer.js getImage()` loads `/api/maplib/…` URLs with the signed key of `maplib-client.js` (`ensureLibKey()`,
   renewed 10 min before expiry; the image cache stays keyed by the bare URL, so a renewed key never reloads an image). Players see nothing new
   (only the image of the shown map).
-- **Tests**: `node tools/test-maplib.js` (ports 3910-3912): shared helpers, boot seeding from a fixture git folder + the Foundry seeds, image auth
+- **Tests**: `node tools/test-maplib.ts` (ports 3910-3912): shared helpers, boot seeding from a fixture git folder + the Foundry seeds, image auth
   (401 / 403, forged / expired / dead-session keys, admin key, no listing, placeholder), instances in one table only, player view without `library`,
   publish (version + history, nothing private published), update keeping tokens / notes / fog / door states, stale publish + force, admin-only
   setting, custom maps refused, rollback, revert, rename, delete, upload + thumbnail, map_fvtt_* migration idempotent across restarts, git updates

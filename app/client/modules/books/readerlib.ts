@@ -1,4 +1,4 @@
-// Pure helpers of the in-app PDF reader (no imports, no DOM: unit-tested in Node by tools/test-books.js):
+// Pure helpers of the in-app PDF reader (no imports, no DOM: unit-tested in Node by tools/test-books.ts):
 // search-term highlighting in a page's text layer, and the continuous-scroll layout math (page tops, current page,
 // fit-width / fit-page scale, zoom steps).
 

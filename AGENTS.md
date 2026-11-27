@@ -48,7 +48,7 @@ Runtime data (`data/tables/`, `runtime/`, uploads, rulebook PDFs, map images) is
 ## Rules that matter
 
 - **Tests:** run only the test files for the areas you touched, once. Never the whole suite. Never start a server on
-  port 3000 or without `SR_RUNTIME_DIR`: other sessions may be running. Use `tools/test-client.js`
+  port 3000 or without `SR_RUNTIME_DIR`: other sessions may be running. Use `tools/test-client.ts`
   (`startServer({ port })`), which gives each test its own port and temp folder. Port ranges per test are listed in
   ARCHITECTURE.md « Testing ».
 - **Server actions:** `server/modules/NN-x.js` exports `{ name, init, actions, filter, gmFilter, routes }`. Action
@@ -58,7 +58,7 @@ Runtime data (`data/tables/`, `runtime/`, uploads, rulebook PDFs, map images) is
   anything sent to the server (it commits on blur). Module CSS sits next to the JS, loaded with `loadCss('/modules/x/x.css')`,
   with classes prefixed by the module name.
 - **i18n:** UI text is written in French in the code and wrapped in `t()`/`tn()`/`tk()`. Add the English to
-  `client/i18n/en/<area>.json`, then check with `node tools/i18n-check.js --area <area>`. The server throws
+  `client/i18n/en/<area>.json`, then check with `node tools/i18n-check.ts --area <area>`. The server throws
   `ctx.fail('Texte {x}', { x })`. Code comments and identifiers are in English.
 - **SR5 rules:** when a rule is ambiguous or stacking is unclear, do what **Chummer5a** does. Cite book and page
   (`source`, `page` fields) the way the existing data does.

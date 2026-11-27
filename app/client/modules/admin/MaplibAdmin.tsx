@@ -315,7 +315,7 @@ function UploadForm({ token, maxBytes, onDone }: { token: string; maxBytes: numb
         headers: { 'X-Filename': encodeURIComponent(file.name).slice(0, 200) },
         onProgress: (p) => setProgress(p >= 1 ? 'server' : p),
       });
-      toast(r?.thumb ? t('Carte {slug} ajoutée', { slug: f.slug }) : t('Carte {slug} ajoutée (sans miniature : lance tools/maplib-build.js)', { slug: f.slug }), 'success');
+      toast(r?.thumb ? t('Carte {slug} ajoutée', { slug: f.slug }) : t('Carte {slug} ajoutée (sans miniature : lance tools/maplib-build.ts)', { slug: f.slug }), 'success');
       setFile(null);
       setF((o) => ({ ...o, slug: '', name: '', nameFr: '', replace: false }));
       onDone();

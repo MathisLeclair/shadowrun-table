@@ -227,7 +227,7 @@ export interface BuildActorOptions {
 
 // ---------------------------------------------------------------------------
 // i18n (see ARCHITECTURE.md « i18n »). French labels are dictionary keys (client/i18n/en/chargen.json): tk() marks
-// them for tools/i18n-check.js and the UI renders t(label). Validation issues carry { text (French), key, params,
+// them for tools/i18n-check.ts and the UI renders t(label). Validation issues carry { text (French), key, params,
 // en? (English values of item names) } so the wizard shows them translated.
 // ---------------------------------------------------------------------------
 const tk = (s: string): string => s;

@@ -144,8 +144,8 @@ Each area has its own script in `app/tools/` (they spin up a throwaway server):
 
 ```bash
 cd app
-node tools/test-combat.js
-node tools/test-matrix.js
+node tools/test-combat.ts
+node tools/test-matrix.ts
 ```
 
 ## Credits

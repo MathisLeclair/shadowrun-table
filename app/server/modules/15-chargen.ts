@@ -26,7 +26,7 @@ import type {
  */
 type Loose = Record<string, any>;
 
-/** Marks a translatable key for tools/i18n-check.js (English in client/i18n/en/chargen.json). */
+/** Marks a translatable key for tools/i18n-check.ts (English in client/i18n/en/chargen.json). */
 const tk = (s: string): string => s;
 
 const CATALOG_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'data', 'catalog');

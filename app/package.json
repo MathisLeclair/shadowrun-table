@@ -9,7 +9,7 @@
     "dev": "node --watch-path=server --watch-path=shared server/index.ts --vite",
     "build": "vite build",
     "typecheck": "tsc -p tsconfig.json",
-    "build:catalog": "node tools/build-catalog.js"
+    "build:catalog": "node tools/build-catalog.ts"
   },
   "engines": {
     "node": ">=22.18"

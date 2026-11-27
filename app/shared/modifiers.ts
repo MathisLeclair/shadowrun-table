@@ -1,5 +1,5 @@
 // Modifiers from gear, clothing, qualities, adept powers, implants, weapon accessories and martial art techniques
-// (Chummer <bonus> data normalized into catalog `effects` by tools/lib/bonus-effects.js — see ARCHITECTURE.md « Modifiers »).
+// (Chummer <bonus> data normalized into catalog `effects` by tools/lib/bonus-effects.ts — see ARCHITECTURE.md « Modifiers »).
 // Pure ES module shared by the server (authority: dice/roll, matrix, combat) and the browser (sheet, roll dialog preview).
 //
 //   const mods = collectModifiers(actor, lookupFromIndex(effectsJson));          // every modifier the actor carries
@@ -194,7 +194,7 @@ export const TOGGLE_LABELS: Record<string, string> = {
 
 const C = (label: string, o: Omit<ConditionDef, 'label'> = {}): ConditionDef => ({ label, ...o });
 /**
- * Conditions of effects (catalog `effects[].condition`, keys made by tools/lib/bonus-effects.js conditionKey()).
+ * Conditions of effects (catalog `effects[].condition`, keys made by tools/lib/bonus-effects.ts conditionKey()).
  * label = French text shown next to the value (« 11 si visible »). Restrictions make the effect apply automatically, only to:
  * skills / groups / knowledge types / linked attributes (attrs) / Matrix actions / Matrix mode; exclude = every skill but those.
  * toggle: key of the roll-dialog switch the player turns on (default: the condition key itself; null = automatic).

@@ -17,13 +17,13 @@ waste treatment plant, rooftop parking, desert checkpoint): check an object befo
 ## Tools
 | command | what |
 |---|---|
-| `node tools/maptrace/new.js "<image>" [--slug s --nameFr "…"]` | scaffold `data/maplib/<slug>.json` (geometry filled) |
-| `node tools/maptrace/tiles.js <slug\|image> --out D` | `overview.jpg` + 12×12-cell `tile_X_Y.jpg` crops (≤ 1100 px), cell numbers in the margins (yellow = multiple of 5), `x,y` tags at 5×5 crossings. `--tile 16` for big maps |
-| `node tools/maptrace/tiles.js <slug> --region x,y,w,h --ppc 250 --out D` | one zoomed crop (keep `w*ppc + 68 ≤ 1100`) |
-| `node tools/maptrace/probe.js <slug> --row 4.5 [--from 0 --to 11]` / `--col 3` | exact positions along a line: `bg` (outside), `floor`, `DARK` bands with their **centre** — use it for wall coordinates |
-| `node tools/maptrace/overlay.js <slug> --out f.jpg [--region x,y,w,h] [--ids]` | your trace over the image: walls cyan, doors green/amber/red, secret violet, windows blue dashed, lights yellow, regions, entry X, check issues in red circles |
-| `node tools/maptrace/check.js <slug> [--fix]` | validation (below). `--fix` snaps leaks + rewrites the file one wall per line |
-| `node tools/maplib-build.js` | (lead) copies images + thumbnails into `<runtime>/maplib/` |
+| `node tools/maptrace/new.ts "<image>" [--slug s --nameFr "…"]` | scaffold `data/maplib/<slug>.json` (geometry filled) |
+| `node tools/maptrace/tiles.ts <slug\|image> --out D` | `overview.jpg` + 12×12-cell `tile_X_Y.jpg` crops (≤ 1100 px), cell numbers in the margins (yellow = multiple of 5), `x,y` tags at 5×5 crossings. `--tile 16` for big maps |
+| `node tools/maptrace/tiles.ts <slug> --region x,y,w,h --ppc 250 --out D` | one zoomed crop (keep `w*ppc + 68 ≤ 1100`) |
+| `node tools/maptrace/probe.ts <slug> --row 4.5 [--from 0 --to 11]` / `--col 3` | exact positions along a line: `bg` (outside), `floor`, `DARK` bands with their **centre** — use it for wall coordinates |
+| `node tools/maptrace/overlay.ts <slug> --out f.jpg [--region x,y,w,h] [--ids]` | your trace over the image: walls cyan, doors green/amber/red, secret violet, windows blue dashed, lights yellow, regions, entry X, check issues in red circles |
+| `node tools/maptrace/check.ts <slug> [--fix]` | validation (below). `--fix` snaps leaks + rewrites the file one wall per line |
+| `node tools/maplib-build.ts` | (lead) copies images + thumbnails into `<runtime>/maplib/` |
 
 **Reading a crop**: a pixel (px, py) of a `--region x,y,w,h --ppc P` crop is the cell point
 `x + (px − 34)/P , y + (py − 56)/P` (34 px margin, 22 px title). Tiles print their px/cell when written.
@@ -77,7 +77,7 @@ the entry with every door closed = a hole in the outline). Stats: walls, doors, 
 - Don't trace furniture « because it blocks »: the GM handles cover; walls are for vision.
 
 ## Time savers
-- Probe several lines in one shell loop: `for y in 2 5.5 9; do node tools/maptrace/probe.js <slug> --row $y; done`.
+- Probe several lines in one shell loop: `for y in 2 5.5 9; do node tools/maptrace/probe.ts <slug> --row $y; done`.
 - Trace the outline in one pass from probes + overview; use zoom crops only where the probe is ambiguous.
 - `overlay.js --region … --ids` shows wall ids to fix exact walls; red circles show check issues in place.
 - Big maps (≥ 40 cells): `tiles.js --tile 16`, and probe every 5 cells along both axes first.

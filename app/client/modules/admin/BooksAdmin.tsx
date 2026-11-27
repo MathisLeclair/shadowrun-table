@@ -402,7 +402,7 @@ export default function BooksAdmin({ adminApi, token, run }: AdminPanelProps) {
           </table>
         </div>
       ) : (
-        <Empty>{t('Aucun livre. Envoie tes PDF ci-dessous ou lance tools/books-setup.js sur le serveur.')}</Empty>
+        <Empty>{t('Aucun livre. Envoie tes PDF ci-dessous ou lance tools/books-setup.ts sur le serveur.')}</Empty>
       )}
       <p className="field-hint">
         {tn(

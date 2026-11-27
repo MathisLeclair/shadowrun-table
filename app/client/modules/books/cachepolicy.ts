@@ -1,4 +1,4 @@
-// Pure rules of the rulebook download cache (no imports, no DOM: unit-tested in Node by tools/test-books.js).
+// Pure rules of the rulebook download cache (no imports, no DOM: unit-tested in Node by tools/test-books.ts).
 // A book is stored ONCE per browser under a stable key = code + content version (from GET /api/books `version`),
 // never under its signed URL (which changes every day and per session). Old versions of a book are dropped, and the
 // least recently used books are evicted to stay under MAX_BOOKS / MAX_BYTES.

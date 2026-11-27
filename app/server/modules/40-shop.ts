@@ -68,7 +68,7 @@ type RuleMessage = string | { key: string; params?: I18nParams };
 /** Simulated upgrade targets of one order (deep clones). */
 type Sim = Map<string, Loose>;
 
-/** Marks a translatable key for tools/i18n-check.js (English in client/i18n/en/shop.json). */
+/** Marks a translatable key for tools/i18n-check.ts (English in client/i18n/en/shop.json). */
 const tk = (s: string): string => s;
 
 const CATALOG_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'data', 'catalog');
@@ -1118,7 +1118,7 @@ const mod: ServerModule = {
       for (const [id, spec] of Object.entries(restore.actors)) {
         const a = state.actors?.[id];
         if (!a || shop.restored.includes(id)) continue;
-        // inferred = a guess, not a Chummer file (Anthony): never applied on boot, only by tools/restore-lifestyles.js --include-inferred.
+        // inferred = a guess, not a Chummer file (Anthony): never applied on boot, only by tools/restore-lifestyles.ts --include-inferred.
         if (spec?.inferred) continue;
         let k = 0;
         const make = (p: string) => `${p}_r${id.replace(/\W/g, '').slice(-6)}${(k++).toString(36)}${Date.now().toString(36).slice(-4)}`;

@@ -1,4 +1,4 @@
-// Pure rulebook reference helpers (no imports: also unit-tested in Node by tools/test-books.js).
+// Pure rulebook reference helpers (no imports: also unit-tested in Node by tools/test-books.ts).
 // Page mapping follows the same rules as server/lib/books/offsets.js.
 
 /** What the page mapping reads of a library book: offset, per-range offsets from a printed page, PDF page count. */

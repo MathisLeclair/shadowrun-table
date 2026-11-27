@@ -34,7 +34,7 @@ export interface ActorDiff {
   empty: boolean;
 }
 
-const tk = (s: string): string => s; // marks French keys stored as values (tools/i18n-check.js)
+const tk = (s: string): string => s; // marks French keys stored as values (tools/i18n-check.ts)
 
 const eq = (a: unknown, b: unknown): boolean => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 const isEmpty = (v: unknown): boolean => v === undefined || v === null || v === '';

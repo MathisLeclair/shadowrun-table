@@ -1,4 +1,4 @@
-// Curated « common rules » links of the Règles tab. Pure module (no imports): also read by tools/books-setup.js
+// Curated « common rules » links of the Règles tab. Pure module (no imports): also read by tools/books-setup.ts
 // --check, which verifies that each printed page really contains `heading` in the indexed text.
 const tk = (s: string): string => s; // marks French labels for the i18n checker; rendered with t()
 

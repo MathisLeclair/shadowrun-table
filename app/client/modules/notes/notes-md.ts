@@ -1,4 +1,4 @@
-// Pure helpers for the Notes editor (no DOM, no framework: unit-tested in Node by tools/test-notes.js).
+// Pure helpers for the Notes editor (no DOM, no framework: unit-tested in Node by tools/test-notes.ts).
 // - renderNote(): shared renderMarkdown() + [[Titre]] links, @mentions badges and task-list checkboxes.
 // - toggleCheckbox(): flip the n-th « - [ ] » of a body.
 // - applyFormat(): toolbar edits on a textarea value/selection.

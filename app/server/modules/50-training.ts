@@ -44,7 +44,7 @@ interface Quote {
 /** Anything with a label (request, job, quote). */
 type Labelled = { label?: string; labelI18n?: I18nEntry | null } | null | undefined;
 
-/** Marks a translatable log/history key for tools/i18n-check.js (English in client/i18n/en/training.json). */
+/** Marks a translatable log/history key for tools/i18n-check.ts (English in client/i18n/en/training.json). */
 const tk = (s: string): string => s;
 
 const CATALOG_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'data', 'catalog');
@@ -323,7 +323,7 @@ const mod: ServerModule = {
 
   init(state) {
     slice(state);
-    // Test fixtures only (tools/test-training.js): inject actors when the env var is set.
+    // Test fixtures only (tools/test-training.ts): inject actors when the env var is set.
     if (process.env.SR_TEST_TRAINING_ACTORS) {
       try {
         state.actors = state.actors || {};

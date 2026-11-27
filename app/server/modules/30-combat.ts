@@ -30,7 +30,7 @@ const matrixInitiative = matrixInitiativeJs as (actor: Actor, persona: unknown, 
 const DISPOSITIONS: readonly unknown[] = ['pc', 'ally', 'neutral', 'hostile'];
 const NPC_KINDS: readonly unknown[] = ['metahuman', 'critter', 'drone', 'ic', 'host', 'spirit', 'other'];
 const INIT_MODES: readonly unknown[] = ['physical', 'astral', 'ar', 'cold', 'hot'];
-/** Marks a translatable key for tools/i18n-check.js (English in client/i18n/en/combat.json). */
+/** Marks a translatable key for tools/i18n-check.ts (English in client/i18n/en/combat.json). */
 const tk = (s: string): string => s;
 const INIT_MODE_LABELS: Record<string, string> = { physical: tk('physique'), astral: tk('astrale'), ar: tk('RA'), cold: tk('VR froide'), hot: tk('VR chaude') };
 /** Interrupt-action labels sent by the combat dock (French keys, translated by the client in the log). */

@@ -255,7 +255,7 @@ function camp(ctx: ActionContext): Campaign {
   if (!ctx.state.campaign) ensureSlice(ctx.state, ctx.uid);
   return ctx.state.campaign;
 }
-// « Not found » error of each collection (whole sentences: translatable keys, tk marks them for tools/i18n-check.js).
+// « Not found » error of each collection (whole sentences: translatable keys, tk marks them for tools/i18n-check.ts).
 const tk = (s: string): string => s;
 const NOT_FOUND: Record<CollectionKey, string> = {
   acts: tk('Acte introuvable'),

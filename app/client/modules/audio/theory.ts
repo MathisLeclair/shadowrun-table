@@ -1,5 +1,5 @@
 // Pure helpers for the audio module: music theory, randomness, volume curves, lookahead scheduling.
-// No DOM / Web Audio here, so it can be unit-tested in Node (tools/test-audio.js).
+// No DOM / Web Audio here, so it can be unit-tested in Node (tools/test-audio.ts).
 
 export const clamp = (v: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, v));
 

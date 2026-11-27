@@ -154,7 +154,7 @@ const NICKS = ['Rouille', 'Chrome', 'Vipère', 'Le Grec', 'Fusible', 'Tox', 'Cro
 // ---------------------------------------------------------------------------
 // Archetypes. skills: [primary ids], [secondary], [tertiary]. attrs: offsets on the tier baseline.
 // kit(t, pick) -> { weapons: [name], armor: [name], ware: [[file, name, rating]], gear: [[name, rating, qty]], vehicles: [name] }
-// Every name is an exact data/catalog name (tools/test-npcgen.js checks it).
+// Every name is an exact data/catalog name (tools/test-npcgen.ts checks it).
 // ---------------------------------------------------------------------------
 const holdout = (t: number, pick: Picker): string => (t <= 1 ? pick(['Streetline Special', 'Yamaha Pulsar']) : t <= 2 ? pick(['Colt America L36', 'Ares Light Fire 70']) : pick(['Ares Predator V', 'Browning Ultra-Power']));
 const heavyPistol = (t: number, pick: Picker): string => (t <= 1 ? pick(['Streetline Special', 'Colt America L36']) : t <= 2 ? pick(['Browning Ultra-Power', 'Ruger Super Warhawk', 'Colt America L36']) : t <= 5 ? 'Ares Predator V' : pick(['Ares Predator V', 'HK Urban Fighter']));

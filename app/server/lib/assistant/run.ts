@@ -43,7 +43,7 @@ export interface ConversationView {
   items: ChatItem[];
 }
 
-/** Marks a stored French key for tools/i18n-check.js (translated by the client). */
+/** Marks a stored French key for tools/i18n-check.ts (translated by the client). */
 const tk = (s: string): string => s;
 
 export const MAX_STEPS = 8; // API calls per question

@@ -2160,7 +2160,7 @@ export interface ChummerState {
 }
 
 // =====================================================================================================================
-// Catalog (data/catalog/<file>.json, generated from Chummer data by tools/build-catalog.js)
+// Catalog (data/catalog/<file>.json, generated from Chummer data by tools/build-catalog.ts)
 // =====================================================================================================================
 
 export type CatalogFile =
@@ -2445,7 +2445,7 @@ export type EffectType =
   | 'matrixInitiativeDice' | 'armor' | 'monitor' | 'stat' | 'resist' | 'accuracy' | 'matrixAction' | 'flag' | 'choice' | 'info'
   | 'unsupported' | 'allTests';
 
-/** Normalized Chummer <bonus> effect of a catalog entry (data/catalog/effects.json, tools/lib/bonus-effects.js). */
+/** Normalized Chummer <bonus> effect of a catalog entry (data/catalog/effects.json, tools/lib/bonus-effects.ts). */
 export interface Effect {
   type: EffectType;
   target?: string;

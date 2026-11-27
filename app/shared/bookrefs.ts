@@ -1,7 +1,7 @@
 // Rulebook references (📖 chips) of game rules and actor items. Pure data + helpers, shared by server and browser.
 // Page numbers are PRINTED pages (ARCHITECTURE.md « Rulebooks »). Books are Chummer codes (SR5 = core rulebook).
 // - SKILL_PAGES: active skill id (shared/sr5.js SKILLS) → SR5 page, from Chummer data/skills.xml <source>/<page>.
-// - RULE_REFS: derived values and rules shown on the sheet / creator, checked against the SR5 text index (tools/books-setup.js).
+// - RULE_REFS: derived values and rules shown on the sheet / creator, checked against the SR5 text index (tools/books-setup.ts).
 // - ITEM_CATALOGS / SUB_CATALOGS: catalog files an actor list draws from (server/lib/bookrefs.js backfills item.source/page).
 // - itemRef(item): { source, page } stored on an item (catalog / Chummer / Foundry), or null.
 

@@ -40,7 +40,7 @@ interface PackDef {
 export const PACKS: Record<PackId, PackDef> = {
   'project-lazarus': { label: 'Project Lazarus (campagne complète)', dir: SEED_DIR },
   vierge: { label: 'Campagne vierge (bestiaire générique)', dir: path.join(PACKS_DIR, 'vierge') },
-  // Public demo table content (tools/build-demo.js): the vierge pack plus pre-made PCs, maps, a Matrix host.
+  // Public demo table content (tools/build-demo.ts): the vierge pack plus pre-made PCs, maps, a Matrix host.
   demo: { label: 'Démo (vierge + prétirés, cartes, host)', dir: path.join(PACKS_DIR, 'demo'), base: 'vierge' },
 };
 /** Seed folders of a pack, base pack first (module inits only add what is missing, so layering is safe). */

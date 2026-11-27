@@ -5,8 +5,8 @@
 // <maplib> = SR_MAPLIB_DIR, else <runtime>/maplib
 //   library.json          { version: 1, settings: { publishAdminOnly }, maps: { [slug]: Meta } }   (index, small)
 //   entries/<slug>.json   { slug, versions: { [n]: Version } }  current version + the 5 previous ones (rollback)
-//   images/<file>         the artwork (copied by tools/maplib-build.js or uploaded from /admin) — never in git
-//   thumbs/<slug>.jpg     small JPEG previews (tools/maplib-build.js, or made from an /admin upload)
+//   images/<file>         the artwork (copied by tools/maplib-build.ts or uploaded from /admin) — never in git
+//   thumbs/<slug>.jpg     small JPEG previews (tools/maplib-build.ts, or made from an /admin upload)
 // <runtime>/maplib-sign.key  HMAC key of the image links (SR_MAPLIB_KEY_FILE; outside <maplib>, which is copied PC → VPS)
 // Sources: git data/maplib/<slug>.json (SR_MAPLIB_SOURCE) and the Foundry fragmaps-free scenes of the Lazarus pack
 // (data/seed/maps/foundry-*.json, SR_MAPLIB_SEED_MAPS) — both applied at boot, see syncSources().

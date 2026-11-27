@@ -1,7 +1,7 @@
 // Shop rules shared by the server (price authority, server/modules/40-shop.js) and the browser (previews).
 // Pure ES module: no DOM, no Node APIs, no imports — keep it that way so both sides can load it.
 //
-// i18n: labels below are French dictionary keys (marked with tk() for tools/i18n-check.js, English in
+// i18n: labels below are French dictionary keys (marked with tk() for tools/i18n-check.ts, English in
 // client/i18n/en/shop.json). Render them with t(label) on the client; never translate at module level.
 const tk = (s: string): string => s;
 
