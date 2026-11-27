@@ -1,18 +1,28 @@
 // One note: title, markdown editor (toolbar, preview), autosave with version check, soft lock, sharing, comments.
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { html, Button, IconButton, Badge, Toggle, Modal, confirmAction } from '../../lib/ui.js';
-import { send } from '../../lib/net.js';
-import { toast } from '../../lib/ui-store.js';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react';
+import { Button, IconButton, Badge, Toggle, Modal, TextInput, confirmAction } from '../../lib/ui.tsx';
+import { send, type ServerError } from '../../lib/net.ts';
+import { toast } from '../../lib/ui-store.ts';
 import { t, fmtDate } from '../../lib/i18n.js';
-import { renderNote, toggleCheckboxAt, applyFormat, decodeRef } from './notes-md.js';
+import { renderNote as renderNoteJs, toggleCheckboxAt, applyFormat, decodeRef } from './notes-md.js';
 import { cx, canWrite, canComment, userLabel, storedName, mentionNames, foreignLock, findByTitle, copyText, errorGate, MAX_BODY, isGM } from './common.js';
-import { NoteComments } from './NoteComments.js';
+import { NoteComments } from './NoteComments.tsx';
+import type { GameView, NotePage } from '../../../shared/types.ts';
+
+// TRANSITIONAL: notes-md.js stays JS (Node tests import it); its options type is inferred from the defaults.
+const renderNote = renderNoteJs as (body: string, opts: { resolve?: (title: string) => string | null; mentions?: string[]; editable?: boolean }) => { html: string };
 
 const SAVE_DELAY = 1500;
 const RENEW_MS = 20_000;
 const IDLE_MS = 45_000;
 
-const TOOLS = [
+type FormatKind = 'bold' | 'italic' | 'heading' | 'list' | 'check' | 'quote' | 'link';
+type EditorMode = 'edit' | 'split' | 'preview';
+type SaveStatus = 'saved' | 'dirty' | 'saving' | 'conflict' | 'error';
+/** Server copy returned by notes/save on a version conflict. */
+type ServerCopy = Pick<NotePage, 'title' | 'body' | 'version' | 'updatedBy' | 'updatedAt'>;
+
+const TOOLS: Array<{ kind: FormatKind; icon: string; cls?: string }> = [
   { kind: 'bold', icon: 'B', cls: 'b' },
   { kind: 'italic', icon: 'I', cls: 'i' },
   { kind: 'heading', icon: 'H' },
@@ -21,7 +31,7 @@ const TOOLS = [
   { kind: 'quote', icon: '❝' },
   { kind: 'link', icon: '[[ ]]' },
 ];
-const toolTitle = (k) =>
+const toolTitle = (k: FormatKind): string =>
   ({
     bold: t('Gras (Ctrl+B)'),
     italic: t('Italique (Ctrl+I)'),
@@ -32,7 +42,19 @@ const toolTitle = (k) =>
     link: t('Lien vers une note : [[Titre de la note]]'),
   })[k];
 
-export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLinked, onBack, onDeleted }) {
+interface NoteEditorProps {
+  game: GameView;
+  page: NotePage;
+  pages: NotePage[];
+  skew: number;
+  fresh: boolean;
+  onOpen: (id: string) => void;
+  onCreateLinked: (title: string, scope: NotePage['scope']) => void;
+  onBack: () => void;
+  onDeleted?: () => void;
+}
+
+export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLinked, onBack, onDeleted }: NoteEditorProps) {
   const writable = canWrite(game, page);
   const gm = isGM(game);
   const party = page.scope === 'party';
@@ -40,9 +62,9 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
 
   const [title, setTitle] = useState(page.title);
   const [body, setBody] = useState(page.body);
-  const [status, setStatus] = useState('saved'); // saved | dirty | saving | conflict | error
-  const [conflict, setConflict] = useState(null); // server copy { title, body, version, updatedBy, updatedAt }
-  const [mode, setMode] = useState(() => (writable && (fresh || !page.body) ? 'edit' : writable ? readMode() : 'preview'));
+  const [status, setStatus] = useState<SaveStatus>('saved'); // saved | dirty | saving | conflict | error
+  const [conflict, setConflict] = useState<ServerCopy | null>(null); // server copy { title, body, version, updatedBy, updatedAt }
+  const [mode, setMode] = useState<EditorMode>(() => (writable && (fresh || !page.body) ? 'edit' : writable ? readMode() : 'preview'));
   const [forced, setForced] = useState(false);
   const [, tick] = useState(0);
 
@@ -55,13 +77,13 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
   gameRef.current = game;
   const saving = useRef(false);
   const again = useRef(false);
-  const timer = useRef(null);
-  const conflictRef = useRef(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const conflictRef = useRef<ServerCopy | null>(null);
   conflictRef.current = conflict;
   const lock = useRef({ held: false, pending: false, lastInput: 0, forced: false, refusedAt: 0 });
   lock.current.forced = forced;
-  const taRef = useRef(null);
-  const titleInput = useRef(null);
+  const taRef = useRef<HTMLTextAreaElement>(null);
+  const titleInput = useRef<HTMLInputElement>(null);
 
   const foreign = party && writable ? foreignLock(game, page, skew) : null;
   const lockedOut = !!foreign && !forced;
@@ -112,13 +134,13 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
 
   // A failing save is retried on every pause in typing: say why once per distinct error, not every 1.5 s.
   const errors = useMemo(errorGate, []);
-  function saveFailed(message) {
+  function saveFailed(message: string) {
     setStatus('error');
     if (errors.shouldToast(message)) toast(message, 'error');
   }
 
   // opts.restored: the page was just restored by us (the server agreed; our view of it may still say « trash »).
-  async function saveNow(opts) {
+  async function saveNow(opts?: { restored?: boolean }) {
     clearTimeout(timer.current);
     if (conflictRef.current || (!opts?.restored && !canWrite(gameRef.current, pageRef.current))) return;
     if (saving.current) {
@@ -137,7 +159,11 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
     saving.current = true;
     setStatus('saving');
     try {
-      const res = await send('notes/save', { id: pageRef.current.id, title: sent.title.trim() ? sent.title : undefined, body: sent.body, baseVersion: synced.current.version }, { silent: true });
+      const res = await send<{ conflict?: boolean; server: ServerCopy; version: number }>(
+        'notes/save',
+        { id: pageRef.current.id, title: sent.title.trim() ? sent.title : undefined, body: sent.body, baseVersion: synced.current.version },
+        { silent: true }
+      );
       if (res?.conflict) {
         setConflict(res.server);
         setStatus('conflict');
@@ -148,7 +174,7 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
       setStatus(dirty() ? 'dirty' : 'saved');
       if (dirty()) again.current = true;
     } catch (err) {
-      saveFailed(err.message);
+      saveFailed((err as Error).message);
     } finally {
       saving.current = false;
       if (again.current && !conflictRef.current) {
@@ -166,7 +192,7 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
     if (!force && !L.forced && L.refusedAt && Date.now() - L.refusedAt < 5000) return;
     L.pending = true;
     try {
-      const res = await send('notes/lock', { id: pageRef.current.id, force: force || L.forced }, { silent: true });
+      const res = await send<{ locked?: unknown }>('notes/lock', { id: pageRef.current.id, force: force || L.forced }, { silent: true });
       L.held = !res?.locked;
       L.refusedAt = res?.locked ? Date.now() : 0;
     } catch {
@@ -196,8 +222,12 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
 
   // Flush on leave (page switch, tab switch, language switch remount) and when the browser tab is hidden/closed.
   useEffect(() => {
-    const flush = () => dirty() && saveNow();
-    const vis = () => document.visibilityState === 'hidden' && flush();
+    const flush = () => {
+      if (dirty()) saveNow();
+    };
+    const vis = () => {
+      if (document.visibilityState === 'hidden') flush();
+    };
     addEventListener('beforeunload', flush);
     document.addEventListener('visibilitychange', vis);
     return () => {
@@ -212,14 +242,14 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
   }, []);
 
   // ---------------------------------------------------------------- editing
-  function changeBody(v) {
+  function changeBody(v: string) {
     bodyRef.current = v;
     setBody(v);
     setStatus('dirty');
     touched();
     schedule();
   }
-  function changeTitle(v) {
+  function changeTitle(v: string) {
     titleRef.current = v;
     setTitle(v);
     setStatus('dirty');
@@ -227,7 +257,7 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
     schedule();
   }
 
-  function format(kind) {
+  function format(kind: FormatKind) {
     const ta = taRef.current;
     if (!ta || readOnly) return;
     const r = applyFormat(bodyRef.current, ta.selectionStart, ta.selectionEnd, kind);
@@ -238,7 +268,7 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
     });
   }
 
-  function onKeyDown(e) {
+  function onKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
     if (!(e.ctrlKey || e.metaKey)) return;
     const k = e.key.toLowerCase();
     if (k === 'b' || k === 'i') {
@@ -262,7 +292,7 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
   // ---------------------------------------------------------------- conflict
   function keepMine() {
     const cur = pageRef.current;
-    const base = cur.version >= (conflict?.version || 0) ? cur : conflict;
+    const base = cur.version >= (conflict?.version || 0) ? cur : conflict!;
     synced.current = { version: base.version, body: base.body, title: base.title };
     setConflict(null);
     conflictRef.current = null;
@@ -271,7 +301,7 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
   }
   function takeTheirs() {
     const cur = pageRef.current;
-    const base = cur.version >= (conflict?.version || 0) ? cur : conflict;
+    const base = cur.version >= (conflict?.version || 0) ? cur : conflict!;
     bodyRef.current = base.body;
     titleRef.current = base.title;
     setBody(base.body);
@@ -288,14 +318,15 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
   // ---------------------------------------------------------------- preview
   const resolve = useMemo(() => {
     const live = pages.filter((p) => !p.deleted);
-    return (tt) => findByTitle(live, tt, page.scope)?.id || null;
+    return (tt: string) => findByTitle(live, tt, page.scope)?.id || null;
   }, [pages, page.scope]);
   const names = useMemo(() => mentionNames(game), [game.actors, game.users]);
   const showPreview = mode !== 'edit' || readOnly;
   const rendered = useMemo(() => (showPreview ? renderNote(body, { resolve, mentions: names, editable: !readOnly }) : null), [body, resolve, names, readOnly, showPreview]);
 
-  function onPreviewClick(e) {
-    const cb = e.target.closest?.('input.notes-cb');
+  function onPreviewClick(e: MouseEvent<HTMLDivElement>) {
+    const target = e.target as HTMLElement;
+    const cb = target.closest?.('input.notes-cb') as HTMLInputElement | null;
     if (cb) {
       e.preventDefault();
       // data-line = the checkbox's own source line (absent when it could not be traced: not clickable).
@@ -306,7 +337,7 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
       schedule(400);
       return;
     }
-    const a = e.target.closest?.('a');
+    const a = target.closest?.('a');
     const href = a?.getAttribute('href') || '';
     if (href.startsWith('#note:')) {
       e.preventDefault();
@@ -317,7 +348,7 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
     }
   }
 
-  function pickMode(m) {
+  function pickMode(m: EditorMode) {
     setMode(m);
     rememberReadMode(m);
   }
@@ -328,7 +359,7 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
   const LOCK_KEY = '{name} est en train d’écrire dans cette note';
   async function remove() {
     // Someone is typing in it: the server refuses unless forced, so ask with that in mind (their unsaved text is at stake).
-    const confirmForce = (name) =>
+    const confirmForce = (name: string) =>
       confirmAction(t('{name} est en train d’écrire dans cette note. La mettre à la corbeille quand même ? Ses dernières modifications pourraient être perdues.', { name }));
     let force = false;
     if (foreign) {
@@ -339,9 +370,10 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
     if (dirty()) await saveNow();
     try {
       await send('notes/delete', { id: page.id, force }, { silent: true });
-    } catch (err) {
+    } catch (e) {
+      const err = e as ServerError;
       // The lock was taken after this screen was drawn: same question, then force.
-      if (err.key !== LOCK_KEY || !(await confirmForce(err.params?.name || ''))) {
+      if (err.key !== LOCK_KEY || !(await confirmForce(String(err.params?.name || '')))) {
         if (err.key !== LOCK_KEY) toast(err.message, 'error');
         return;
       }
@@ -375,100 +407,208 @@ export function NoteEditor({ game, page, pages, skew, fresh, onOpen, onCreateLin
     error: t('Erreur d’enregistrement'),
   }[status];
 
-  return html`<div class=${cx('notes-editor', `mode-${mode}`)}>
-    <header class="notes-ed-head">
-      <button class="icon-btn notes-back" title=${t('Retour à la liste')} onClick=${onBack}>←</button>
-      <input ref=${titleInput} class="input notes-title" value=${title} maxlength="120" readonly=${readOnly}
-        placeholder=${t('Titre de la note')} aria-label=${t('Titre de la note')}
-        onInput=${(e) => changeTitle(e.target.value)} onBlur=${saveNow} onKeyDown=${(e) => e.key === 'Enter' && taRef.current?.focus()} />
-      ${writable && html`<span class=${cx('notes-status', `st-${status}`)} title=${status === 'error' && errors.last ? errors.last : t('Enregistrement automatique')}>${statusText}</span>`}
-      ${writable &&
-      html`<${IconButton} icon=${page.pinned ? '★' : '☆'} class=${cx(page.pinned && 'notes-pinned')} title=${page.pinned ? t('Désépingler') : t('Épingler en haut de la liste')}
-        onClick=${() => send('notes/rename', { id: page.id, pinned: !page.pinned })} />`}
-      ${!page.deleted && (mine || party) && html`<${IconButton} icon="🗑" title=${t('Mettre à la corbeille')} onClick=${remove} />`}
-    </header>
+  return (
+    <div className={cx('notes-editor', `mode-${mode}`)}>
+      <header className="notes-ed-head">
+        <button className="icon-btn notes-back" title={t('Retour à la liste')} onClick={onBack}>
+          ←
+        </button>
+        <input
+          ref={titleInput}
+          className="input notes-title"
+          value={title}
+          maxLength={120}
+          readOnly={readOnly}
+          placeholder={t('Titre de la note')}
+          aria-label={t('Titre de la note')}
+          onChange={(e) => changeTitle(e.target.value)}
+          onBlur={() => saveNow()}
+          onKeyDown={(e) => e.key === 'Enter' && taRef.current?.focus()}
+        />
+        {writable && (
+          <span className={cx('notes-status', `st-${status}`)} title={status === 'error' && errors.last ? errors.last : t('Enregistrement automatique')}>
+            {statusText}
+          </span>
+        )}
+        {writable && (
+          <IconButton
+            icon={page.pinned ? '★' : '☆'}
+            className={cx(page.pinned && 'notes-pinned')}
+            title={page.pinned ? t('Désépingler') : t('Épingler en haut de la liste')}
+            onClick={() => send('notes/rename', { id: page.id, pinned: !page.pinned })}
+          />
+        )}
+        {!page.deleted && (mine || party) && <IconButton icon="🗑" title={t('Mettre à la corbeille')} onClick={remove} />}
+      </header>
 
-    <div class="notes-ed-meta small muted">
-      ${party ? html`<${Badge} color="cyan">${t('notes::Groupe')}</${Badge}>` : mine ? html`<${Badge} color="dim">${t('Personnelle')}</${Badge}>` : html`<${Badge} color="magenta">${t('Partagée par {name}', { name: ownerName })}</${Badge}>`}
-      ${writable
-        ? html`<input class="input notes-folder" list="notes-folders" value=${page.folder || ''} maxlength="60" placeholder=${t('Dossier')} aria-label=${t('Dossier')}
-            onChange=${(e) => send('notes/rename', { id: page.id, folder: e.target.value })} />
-          <datalist id="notes-folders">${folders.map((f) => html`<option value=${f} />`)}</datalist>`
-        : page.folder && html`<span>📁 ${page.folder}</span>`}
-      <span class="grow"></span>
-      <span title=${fmtDate(page.createdAt)}>${t('Modifié par {name} · {date}', { name: userLabel(game, page.updatedBy), date: fmtDate(page.updatedAt) })}</span>
-    </div>
+      <div className="notes-ed-meta small muted">
+        {party ? (
+          <Badge color="cyan">{t('notes::Groupe')}</Badge>
+        ) : mine ? (
+          <Badge color="dim">{t('Personnelle')}</Badge>
+        ) : (
+          <Badge color="magenta">{t('Partagée par {name}', { name: ownerName })}</Badge>
+        )}
+        {writable ? (
+          <>
+            {/* Commits on blur / Enter (the native « change » event of the Preact version). */}
+            <TextInput
+              className="notes-folder"
+              list="notes-folders"
+              value={page.folder || ''}
+              maxLength={60}
+              placeholder={t('Dossier')}
+              aria-label={t('Dossier')}
+              onChange={(v) => send('notes/rename', { id: page.id, folder: v })}
+            />
+            <datalist id="notes-folders">
+              {folders.map((f) => (
+                <option key={f} value={f} />
+              ))}
+            </datalist>
+          </>
+        ) : (
+          page.folder && <span>📁 {page.folder}</span>
+        )}
+        <span className="grow"></span>
+        <span title={fmtDate(page.createdAt)}>{t('Modifié par {name} · {date}', { name: userLabel(game, page.updatedBy), date: fmtDate(page.updatedAt) })}</span>
+      </div>
 
-    ${mine &&
-    !page.deleted &&
-    html`<div class="notes-share">
-      <${Toggle} value=${!!page.shareWithGM} onChange=${(v) => send('notes/setShare', { id: page.id, shareWithGM: v })}
-        title=${t('Les sauvegardes du serveur contiennent toutes les notes. Si le MJ efface ton code PIN, tu en es averti dans le journal.')}
-        label=${page.shareWithGM ? t('Partagée avec le MJ (lecture seule pour lui)') : t('Privée : cachée aux joueurs et au MJ dans l’onglet Notes')} />
-    </div>`}
-    ${!mine && page.scope === 'private' && html`<div class="notes-banner">${t('Note personnelle de {name}, partagée avec toi en lecture seule.', { name: ownerName })}</div>`}
-    ${party && gm && !writable && !page.deleted && html`<div class="notes-banner">${t('Lecture seule : les notes du groupe appartiennent aux joueurs (option dans la liste des notes).')}</div>`}
-    ${page.deleted &&
-    (unsavedInTrash
-      ? html`<div class="notes-banner warn">
-          <span class="grow">${t('Cette note a été mise à la corbeille pendant que tu écrivais : tes dernières modifications ne sont pas enregistrées.')}</span>
-          ${canRestore && html`<${Button} small variant="primary" onClick=${restoreAndSave}>${t('Restaurer et enregistrer')}</${Button}>`}
-          <${Button} small variant="ghost" onClick=${copyMine}>${t('Copier ma version')}</${Button}>
-        </div>`
-      : html`<div class="notes-banner warn">
-          <span class="grow">${t('Cette note est dans la corbeille.')}</span>
-          ${canRestore && html`<${Button} small onClick=${() => send('notes/restore', { id: page.id })}>${t('Restaurer')}</${Button}>`}
-        </div>`)}
-    ${foreign &&
-    html`<div class=${cx('notes-banner', 'lock', forced && 'warn')}>
-      <span class="notes-typing"><i></i><i></i><i></i></span>
-      <span class="grow">${t('{name} est en train d’écrire…', { name: lockName })}</span>
-      ${lockedOut && html`<${Button} small variant="ghost" onClick=${forceEdit}>${t('Modifier quand même')}</${Button}>`}
-    </div>`}
-
-    <div class="notes-toolbar">
-      ${!readOnly &&
-      TOOLS.map(
-        (tool) => html`<button type="button" class=${cx('notes-tool', tool.cls)} title=${toolTitle(tool.kind)} disabled=${mode === 'preview'}
-          onMouseDown=${(e) => e.preventDefault()} onClick=${() => format(tool.kind)}>${tool.icon}</button>`
+      {mine && !page.deleted && (
+        <div className="notes-share">
+          <Toggle
+            value={!!page.shareWithGM}
+            onChange={(v) => send('notes/setShare', { id: page.id, shareWithGM: v })}
+            title={t('Les sauvegardes du serveur contiennent toutes les notes. Si le MJ efface ton code PIN, tu en es averti dans le journal.')}
+            label={page.shareWithGM ? t('Partagée avec le MJ (lecture seule pour lui)') : t('Privée : cachée aux joueurs et au MJ dans l’onglet Notes')}
+          />
+        </div>
       )}
-      <span class="grow"></span>
-      <div class="notes-modes" role="group" aria-label=${t('Affichage')}>
-        ${!readOnly && html`<button class=${cx(mode === 'edit' && 'active')} onClick=${() => pickMode('edit')}>${t('Écrire')}</button>`}
-        ${!readOnly && html`<button class=${cx('notes-split-btn', mode === 'split' && 'active')} onClick=${() => pickMode('split')}>${t('Côte à côte')}</button>`}
-        <button class=${cx(mode === 'preview' && 'active')} onClick=${() => pickMode('preview')}>${t('Aperçu')}</button>
+      {!mine && page.scope === 'private' && <div className="notes-banner">{t('Note personnelle de {name}, partagée avec toi en lecture seule.', { name: ownerName })}</div>}
+      {party && gm && !writable && !page.deleted && <div className="notes-banner">{t('Lecture seule : les notes du groupe appartiennent aux joueurs (option dans la liste des notes).')}</div>}
+      {page.deleted &&
+        (unsavedInTrash ? (
+          <div className="notes-banner warn">
+            <span className="grow">{t('Cette note a été mise à la corbeille pendant que tu écrivais : tes dernières modifications ne sont pas enregistrées.')}</span>
+            {canRestore && (
+              <Button small variant="primary" onClick={restoreAndSave}>
+                {t('Restaurer et enregistrer')}
+              </Button>
+            )}
+            <Button small variant="ghost" onClick={copyMine}>
+              {t('Copier ma version')}
+            </Button>
+          </div>
+        ) : (
+          <div className="notes-banner warn">
+            <span className="grow">{t('Cette note est dans la corbeille.')}</span>
+            {canRestore && (
+              <Button small onClick={() => send('notes/restore', { id: page.id })}>
+                {t('Restaurer')}
+              </Button>
+            )}
+          </div>
+        ))}
+      {foreign && (
+        <div className={cx('notes-banner', 'lock', forced && 'warn')}>
+          <span className="notes-typing">
+            <i></i>
+            <i></i>
+            <i></i>
+          </span>
+          <span className="grow">{t('{name} est en train d’écrire…', { name: lockName })}</span>
+          {lockedOut && (
+            <Button small variant="ghost" onClick={forceEdit}>
+              {t('Modifier quand même')}
+            </Button>
+          )}
+        </div>
+      )}
+
+      <div className="notes-toolbar">
+        {!readOnly &&
+          TOOLS.map((tool) => (
+            <button
+              key={tool.kind}
+              type="button"
+              className={cx('notes-tool', tool.cls)}
+              title={toolTitle(tool.kind)}
+              disabled={mode === 'preview'}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => format(tool.kind)}
+            >
+              {tool.icon}
+            </button>
+          ))}
+        <span className="grow"></span>
+        <div className="notes-modes" role="group" aria-label={t('Affichage')}>
+          {!readOnly && (
+            <button className={cx(mode === 'edit' && 'active')} onClick={() => pickMode('edit')}>
+              {t('Écrire')}
+            </button>
+          )}
+          {!readOnly && (
+            <button className={cx('notes-split-btn', mode === 'split' && 'active')} onClick={() => pickMode('split')}>
+              {t('Côte à côte')}
+            </button>
+          )}
+          <button className={cx(mode === 'preview' && 'active')} onClick={() => pickMode('preview')}>
+            {t('Aperçu')}
+          </button>
+        </div>
       </div>
+
+      <div className="notes-ed-body">
+        {mode !== 'preview' && !readOnly && (
+          <textarea
+            ref={taRef}
+            className="notes-text"
+            value={body}
+            spellCheck={true}
+            placeholder={t('Écris ici… Markdown accepté : **gras**, *italique*, - liste, - [ ] tâche, [[Autre note]], @Jane')}
+            onChange={(e) => changeBody(e.target.value)}
+            onBlur={() => saveNow()}
+            onKeyDown={onKeyDown}
+            onFocus={() => party && touched()}
+          ></textarea>
+        )}
+        {showPreview && (
+          <div className="md notes-preview" onClick={onPreviewClick} dangerouslySetInnerHTML={{ __html: rendered?.html || `<p class="muted">${t('Note vide.')}</p>` }}></div>
+        )}
+      </div>
+
+      {(canComment(game, page) || (game.notes?.comments?.[page.id] || []).length > 0) && <NoteComments game={game} page={page} />}
+
+      {conflict && (
+        <Modal title={t('Conflit de modification')} width={640} onClose={() => {}}>
+          <p>{t('{name} a modifié cette note pendant que tu écrivais ({date}). Que veux-tu garder ?', { name: userLabel(game, conflict.updatedBy), date: fmtDate(conflict.updatedAt) })}</p>
+          <div className="notes-conflict">
+            <div>
+              <div className="small muted">{t('Ta version')}</div>
+              <pre>{bodyRef.current}</pre>
+            </div>
+            <div>
+              <div className="small muted">{t('Version enregistrée')}</div>
+              <pre>{conflict.body}</pre>
+            </div>
+          </div>
+          <div className="row wrap" style={{ marginTop: '12px', justifyContent: 'flex-end' }}>
+            <Button variant="ghost" onClick={copyMine}>
+              {t('Copier ma version')}
+            </Button>
+            <Button onClick={takeTheirs}>{t('Prendre la leur')}</Button>
+            <Button variant="primary" onClick={keepMine}>
+              {t('Garder la mienne')}
+            </Button>
+          </div>
+        </Modal>
+      )}
     </div>
-
-    <div class="notes-ed-body">
-      ${mode !== 'preview' &&
-      !readOnly &&
-      html`<textarea ref=${taRef} class="notes-text" value=${body} spellcheck="true" placeholder=${t('Écris ici… Markdown accepté : **gras**, *italique*, - liste, - [ ] tâche, [[Autre note]], @Jane')}
-        onInput=${(e) => changeBody(e.target.value)} onBlur=${saveNow} onKeyDown=${onKeyDown} onFocus=${() => party && touched()}></textarea>`}
-      ${showPreview &&
-      html`<div class="md notes-preview" onClick=${onPreviewClick} dangerouslySetInnerHTML=${{ __html: rendered.html || `<p class="muted">${t('Note vide.')}</p>` }}></div>`}
-    </div>
-
-    ${(canComment(game, page) || (game.notes?.comments?.[page.id] || []).length > 0) && html`<${NoteComments} game=${game} page=${page} />`}
-
-    ${conflict &&
-    html`<${Modal} title=${t('Conflit de modification')} width=${640} onClose=${() => {}}>
-      <p>${t('{name} a modifié cette note pendant que tu écrivais ({date}). Que veux-tu garder ?', { name: userLabel(game, conflict.updatedBy), date: fmtDate(conflict.updatedAt) })}</p>
-      <div class="notes-conflict">
-        <div><div class="small muted">${t('Ta version')}</div><pre>${bodyRef.current}</pre></div>
-        <div><div class="small muted">${t('Version enregistrée')}</div><pre>${conflict.body}</pre></div>
-      </div>
-      <div class="row wrap" style=${{ marginTop: '12px', justifyContent: 'flex-end' }}>
-        <${Button} variant="ghost" onClick=${copyMine}>${t('Copier ma version')}</${Button}>
-        <${Button} onClick=${takeTheirs}>${t('Prendre la leur')}</${Button}>
-        <${Button} variant="primary" onClick=${keepMine}>${t('Garder la mienne')}</${Button}>
-      </div>
-    </${Modal}>`}
-  </div>`;
+  );
 }
 
 // Remember the display mode the user prefers (per browser).
-function readMode() {
+function readMode(): EditorMode {
   try {
     const m = localStorage.getItem('sr.notes.mode');
     return m === 'preview' || m === 'split' ? m : 'edit';
@@ -476,7 +616,7 @@ function readMode() {
     return 'edit';
   }
 }
-function rememberReadMode(m) {
+function rememberReadMode(m: EditorMode) {
   try {
     localStorage.setItem('sr.notes.mode', m);
   } catch {}
