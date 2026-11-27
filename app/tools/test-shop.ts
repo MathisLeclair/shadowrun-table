@@ -5,22 +5,28 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { login, client, settle } from './test-client.ts';
+import type { TestClient } from './test-client.ts';
 import { accessoryFit, weaponMounts, vehicleModFit, vehicleVars, vehicleSlots, upgradeAvail, upgradeFields, martialKarma, quote, lowersRent, availBaseHours, availOutcome, durationText, matchAvailTests, needsAvailTest } from '../client/modules/shop/rules.ts';
+import type { AvailOutcome } from '../client/modules/shop/rules.ts';
 import { armorTotal } from '../shared/sr5.ts';
+import type { Armor, ArmorMod, I18nEntry } from '../shared/types.ts';
+
+/** Result of the 'shop/availTest' action (server/modules/40-shop.ts). */
+type AvailTestResult = AvailOutcome & { testId: string; hits: number; availHits: number; baseHours: number; tries: number; overpay: number; logId: string };
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.SHOP_TEST_PORT) || 3250;
 
 /** i18n check: entries render to their stored French text, and every key has an English entry. Returns English texts. */
-async function renderI18n(entries, label) {
+async function renderI18n(entries: Array<{ i18n?: I18nEntry; text?: string }>, label: string) {
   const I = await import('../client/lib/i18n.ts');
   const dir = new URL('../client/i18n/en/', import.meta.url);
   const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json')).sort((a, b) => (a === 'glossary.json' ? -1 : b === 'glossary.json' ? 1 : a.localeCompare(b)));
-  const dict = {};
+  const dict: Record<string, string> = {};
   for (const f of files) Object.assign(dict, JSON.parse(fs.readFileSync(new URL(f, dir), 'utf8')));
   I.setDictionary(dict);
   I.clearMissing();
-  const text = (e) => (e.i18n?.key ? I.t(e.i18n.key, e.i18n.params) : e.text);
+  const text = (e: { i18n?: I18nEntry; text?: string }): string => (e.i18n?.key ? I.t(e.i18n.key, e.i18n.params) : e.text as string);
   ok(entries.length > 0 && entries.every((e) => e.i18n?.key), `${label}: entries carry i18n keys`);
   I.setLang('fr');
   const bad = entries.filter((e) => text(e) !== e.text);
@@ -32,16 +38,17 @@ async function renderI18n(entries, label) {
   ok(!missing.length, `${label}: every key has English (${missing.join(' | ')})`);
   return en;
 }
-const cat = (name) => JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'catalog', `${name}.json`), 'utf8'));
-const itemFr = (it) => it.nameFr || it.name;
-const find = (file, name) => {
+// Raw catalog JSON: entries are read field by field (stats differ per catalog), hence any.
+const cat = (name: string): any[] => JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'catalog', `${name}.json`), 'utf8'));
+const itemFr = (it: { nameFr?: string; name: string }) => it.nameFr || it.name;
+const find = (file: string, name: string) => {
   const it = cat(file).find((x) => x.name === name);
   if (!it) throw new Error(`catalog item not found: ${file}/${name}`);
   return it;
 };
 
 // Test actors (the state is pre-seeded so the test does not depend on the characters seeds).
-const baseActor = (id, name, extra) => ({
+const baseActor = (id: string, name: string, extra?: Record<string, unknown>) => ({
   id, type: 'pc', name, metatype: 'Humain',
   attributes: { BOD: 3, AGI: 5, REA: 5, STR: 3, WIL: 3, LOG: 4, INT: 5, CHA: 5, EDG: 3, ESS: 6 },
   condition: { physical: 0, stun: 0, overflow: 0 }, edge: { current: 3 },
@@ -50,13 +57,15 @@ const baseActor = (id, name, extra) => ({
   ...extra,
 });
 
-async function startWithState(state) {
+async function startWithState(state: object) {
   const runtime = fs.mkdtempSync(path.join(os.tmpdir(), 'sr-test-shop-'));
   fs.writeFileSync(path.join(runtime, 'state.json'), JSON.stringify(state));
-  const proc = spawn(process.execPath, ['server/index.js'], { cwd: ROOT, env: { ...process.env, PORT: String(PORT), SR_RUNTIME_DIR: runtime }, stdio: ['ignore', 'pipe', 'pipe'] });
+  // Node runs the TypeScript server directly; before 22.18 type stripping needs a flag.
+  const stripTypes = process.features.typescript ? [] : ['--experimental-strip-types'];
+  const proc = spawn(process.execPath, [...stripTypes, 'server/index.ts'], { cwd: ROOT, env: { ...process.env, PORT: String(PORT), SR_RUNTIME_DIR: runtime }, stdio: ['ignore', 'pipe', 'pipe'] });
   let out = '';
-  proc.stdout.on('data', (d) => (out += d));
-  proc.stderr.on('data', (d) => (out += d));
+  proc.stdout.on('data', (d: Buffer) => (out += d));
+  proc.stderr.on('data', (d: Buffer) => (out += d));
   const url = `http://localhost:${PORT}`;
   for (let i = 0; i < 100; i++) {
     try {
@@ -70,19 +79,19 @@ async function startWithState(state) {
 
 let failures = 0;
 let passes = 0;
-function ok(cond, msg) {
+function ok(cond: unknown, msg: string) {
   if (cond) passes++;
   else {
     failures++;
     console.error('  ✗', msg);
   }
 }
-async function rejects(promise, re, msg) {
+async function rejects(promise: Promise<unknown>, re: RegExp, msg: string) {
   try {
     await promise;
     ok(false, `${msg} (should have failed)`);
   } catch (e) {
-    ok(re.test(e.message), `${msg} — got: ${e.message}`);
+    ok(re.test((e as Error).message), `${msg} — got: ${(e as Error).message}`);
   }
 }
 
@@ -92,14 +101,14 @@ async function rejects(promise, re, msg) {
 {
   console.log('• upgrade rules (pure)');
   // Armor mods' armor bonus counts in the Armor value (Gel Packs +2; unequipped mods do not).
-  const gelMod = { id: 'm1', name: 'Gel Packs', capacity: 2, effects: { armor: 2 } };
-  ok(armorTotal({ armor: [{ id: 'a', rating: 8, equipped: true, mods: [gelMod] }] }) === 10, 'armorTotal: Actioneer 8 + Gel Packs 2 = 10');
-  ok(armorTotal({ armor: [{ id: 'a', rating: 8, equipped: true, mods: [{ ...gelMod, equipped: false }] }, { id: 'h', rating: 2, stack: true, equipped: true, mods: [{ id: 'm2', effects: { armor: 1 } }] }] }) === 11, 'armorTotal: unequipped mod ignored, stacking helmet mod counted');
+  const gelMod = { id: 'm1', name: 'Gel Packs', capacity: 2, effects: { armor: 2 } } as ArmorMod;
+  ok(armorTotal({ armor: [{ id: 'a', rating: 8, equipped: true, mods: [gelMod] } as Armor] }) === 10, 'armorTotal: Actioneer 8 + Gel Packs 2 = 10');
+  ok(armorTotal({ armor: [{ id: 'a', rating: 8, equipped: true, mods: [{ ...gelMod, equipped: false }] } as Armor, { id: 'h', rating: 2, stack: true, equipped: true, mods: [{ id: 'm2', effects: { armor: 1 } } as ArmorMod] } as Armor] }) === 11, 'armorTotal: unequipped mod ignored, stacking helmet mod counted');
   // operation="contains" requirements (drones, Shock Pad).
   const alpha = find('weapons', 'Ares Alpha');
   const desert = find('weapons', 'Ares Desert Strike');
   const shock = find('accessories', 'Shock Pad');
-  const asW = (c) => ({ id: 'w', name: c.name, catalogId: c.id, kind: 'ranged', accessories: [] });
+  const asW = (c: { name: string; id: string }) => ({ id: 'w', name: c.name, catalogId: c.id, kind: 'ranged', accessories: [] });
   ok(!accessoryFit(asW(alpha), alpha, shock).problem && !accessoryFit(asW(desert), desert, shock).problem, 'Shock Pad fits assault and sniper rifles (category contains « Rifles »)');
   const l36 = find('weapons', 'Colt America L36');
   ok(!!accessoryFit(asW(l36), l36, shock).problem, 'Shock Pad still refused on a light pistol');
@@ -170,13 +179,13 @@ const state = {
   const idx = S.skillIndex(catalog);
   ok(Date.now() - t0 < 2000, `skill index is fast (${Date.now() - t0} ms)`);
   ok(S.skillIndex(catalog) === idx, 'skill index cached per catalog');
-  const sk = (file, name) => idx.get(find(file, name).id);
-  ok(entries.filter((e) => e.file === 'weapons').every((e) => idx.get(e.ref).length === 1), 'every weapon has its skill');
+  const sk = (file: string, name: string) => idx.get(find(file, name).id)!;
+  ok(entries.filter((e) => e.file === 'weapons').every((e) => idx.get(e.ref)!.length === 1), 'every weapon has its skill');
   ok(sk('weapons', 'Ares Alpha').join() === 'automatics', 'Ares Alpha → automatics');
   ok(sk('weapons', 'Ares Predator V').join() === 'pistols', 'Predator → pistols');
   ok(sk('vehicles', 'Ares-Segway Terrier').join() === 'pilot_ground_craft', 'bike → Pilot Ground Craft');
-  ok(entries.filter((e) => e.file === 'vehicles' && /^Drones/.test(e.item.category)).every((e) => !idx.get(e.ref).length), 'drones: no skill (ambiguous)');
-  ok(entries.filter((e) => e.file === 'vehicles' && /hover/i.test(e.item.name)).every((e) => !idx.get(e.ref).length), 'hovercraft: no skill');
+  ok(entries.filter((e) => e.file === 'vehicles' && /^Drones/.test(e.item.category)).every((e) => !idx.get(e.ref)!.length), 'drones: no skill (ambiguous)');
+  ok(entries.filter((e) => e.file === 'vehicles' && /hover/i.test(e.item.name)).every((e) => !idx.get(e.ref)!.length), 'hovercraft: no skill');
   ok(sk('gear', 'Spellcasting Focus, Combat').includes('spellcasting'), 'spellcasting focus → spellcasting');
   ok(sk('gear', 'Summoning Focus').join() === 'summoning', 'summoning focus → summoning');
   ok(!sk('gear', 'Power Focus').length && !sk('gear', 'Weapon Focus').length, 'power / weapon focus: no skill');
@@ -186,8 +195,8 @@ const state = {
   ok(sk('gear', 'Plastic Explosive').join() === 'demolitions', 'explosive → demolitions');
   ok(sk('gear', 'Medkit').join() === 'first_aid', 'medkit → first aid');
   const deck = entries.find((e) => e.file === 'gear' && e.item.category === 'Cyberdecks');
-  ok(idx.get(deck.ref).join() === 'cybercombat,hacking', 'cyberdeck → hacking + cybercombat');
-  ok(!idx.get(entries.find((e) => e.file === 'gear' && e.item.category === 'Commlinks').ref).length, 'commlink: no skill');
+  ok(idx.get(deck!.ref)!.join() === 'cybercombat,hacking', 'cyberdeck → hacking + cybercombat');
+  ok(!idx.get(entries.find((e) => e.file === 'gear' && e.item.category === 'Commlinks')!.ref)!.length, 'commlink: no skill');
   ok(sk('accessories', 'Vindicator 200-Round Belt').join() === 'heavy_weapons', 'accessory requires a minigun → heavy weapons only');
   ok(sk('accessories', 'Collapsed Frame').join() === 'automatics', 'accessory requires a machine pistol → automatics only');
   ok(!sk('accessories', 'Long Barrel').includes('blades'), 'barrel accessory not for blades');
@@ -199,7 +208,7 @@ const state = {
   ok(S.matchSkill(['automatics'], '', true, ratings) && !S.matchSkill(['pistols'], '', true, ratings) && !S.matchSkill([], '', true, ratings), 'match « my skills »');
   ok(S.matchSkill([], S.NO_SKILL, false, ratings) && !S.matchSkill(['pistols'], S.NO_SKILL, false, ratings), 'match « no linked skill »');
   const weapons = entries.filter((e) => e.file === 'weapons');
-  const o = S.skillOptions(weapons, (e) => idx.get(e.ref), ratings);
+  const o = S.skillOptions(weapons, (e) => idx.get(e.ref)!, ratings);
   ok(o.options[0].id === 'automatics' && o.options[0].rating === 5 && o.options[1].id === 'heavy_weapons' && o.none === 0, `options: the character's skills first (${o.options.map((x) => x.id).join()})`);
   ok(o.options.reduce((n, x) => n + x.count, 0) === weapons.length, 'option counts');
 }
@@ -216,9 +225,9 @@ const state = {
   ok(!miss.found && miss.retryHours === 48, 'failure: retry after twice the table time');
   ok(!availOutcome({ hits: 0, availHits: 0, baseHours: 6, glitch: true, critGlitch: true }).found, 'critical glitch: never found');
   ok(availOutcome({ hits: 3, availHits: 1, baseHours: 6, glitch: true }).glitch, 'glitch kept on a success (GM consequences)');
-  const d = (h) => {
+  const d = (h: number) => {
     const v = durationText(h);
-    return v.t.replace(/\{(\w+)\}/g, (_, k) => v.params[k]);
+    return v.t.replace(/\{(\w+)\}/g, (_, k: string) => v.params![k] as string);
   };
   const hs = [16, 1.5, 0.5, 24, 56, 168, 720, 240];
   ok(hs.map(d).join('|') === '16 h|1 h 30|30 min|1 jour|2 j 8 h|1 semaine|1 mois|10 jours', `durations (${hs.map(d).join(' | ')})`);
@@ -241,7 +250,7 @@ try {
   const jane = await client(srv.url, await login(srv.url, { role: 'player', name: 'Baptiste', characterId: 'pc_jane' }));
   const bricks = await client(srv.url, await login(srv.url, { role: 'player', name: 'Sploadie', characterId: 'pc_bricks' }));
   await settle();
-  const A = (c, id) => c.state.actors[id];
+  const A = (c: TestClient, id: string) => c.state.actors[id];
 
   console.log('• defaults & seeds');
   const shop = gm.state.shop;
@@ -265,7 +274,7 @@ try {
   await settle();
   ok(r.status === 'done' && r.total === 1000, 'armor jacket bought immediately');
   ok(A(jane, 'pc_jane').nuyen === 99000, 'nuyen deducted');
-  const arm = A(jane, 'pc_jane').armor.find((a) => a.catalogId === jacket.id);
+  const arm = A(jane, 'pc_jane').armor.find((a) => a.catalogId === jacket.id)!;
   ok(arm && arm.rating === 12 && arm.paid === 1000 && arm.equipped === false, 'armor added with rating & paid price');
   ok(A(jane, 'pc_jane').history.some((h) => h.nuyen === -1000), 'history entry');
   ok(jane.state.log.some((e) => e.kind === 'shop' && /Jane achète/.test(e.text)), 'shop log entry visible to buyer');
@@ -279,7 +288,7 @@ try {
   ok(r.status === 'pending', 'restricted item creates a pending order');
   ok(A(jane, 'pc_jane').nuyen === 99000, 'nuyen not deducted while pending');
   const pend = gm.state.shop.orders.find((o) => o.id === r.orderId);
-  ok(pend && pend.status === 'pending' && pend.flags.includes('restricted'), 'GM sees pending order with flags');
+  ok(pend && pend.status === 'pending' && pend.flags!.includes('restricted'), 'GM sees pending order with flags');
   ok(jane.state.shop.orders.some((o) => o.id === r.orderId), 'buyer sees own order');
   ok(!bricks.state.shop.orders.some((o) => o.id === r.orderId), 'other player does not see the order');
   await rejects(jane.send('shop/resolve', { orderId: r.orderId, approve: true }), /MJ/, 'player cannot resolve');
@@ -288,21 +297,21 @@ try {
   const w = A(jane, 'pc_jane').weapons.find((x) => x.catalogId === katana.id);
   ok(w && w.skill === 'blades' && w.kind === 'melee' && w.damage === '(STR+3)P' && w.ap === -3, 'katana added with weapon stats');
   ok(A(jane, 'pc_jane').nuyen === 98000, 'nuyen deducted on approval');
-  ok(gm.state.shop.orders.find((o) => o.id === r.orderId).status === 'approved', 'order approved');
+  ok(gm.state.shop.orders.find((o) => o.id === r.orderId)!.status === 'approved', 'order approved');
   await rejects(gm.send('shop/resolve', { orderId: r.orderId, approve: true }), /déjà/, 'cannot resolve twice');
 
   console.log('• deny & cancel');
   r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: katana.id }] });
   await gm.send('shop/resolve', { orderId: r.orderId, approve: false, note: 'Rupture de stock' });
   await settle();
-  const denied = jane.state.shop.orders.find((o) => o.id === r.orderId);
+  const denied = jane.state.shop.orders.find((o) => o.id === r.orderId)!;
   ok(denied.status === 'denied' && denied.gmNote === 'Rupture de stock', 'denied with note');
   ok(A(jane, 'pc_jane').nuyen === 98000, 'no charge on deny');
   r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: katana.id }] });
   await rejects(bricks.send('shop/cancel', { orderId: r.orderId }), /ta commande/, 'other player cannot cancel');
   await jane.send('shop/cancel', { orderId: r.orderId });
   await settle();
-  ok(jane.state.shop.orders.find((o) => o.id === r.orderId).status === 'cancelled', 'owner cancels pending order');
+  ok(jane.state.shop.orders.find((o) => o.id === r.orderId)!.status === 'cancelled', 'owner cancels pending order');
 
   console.log('• legality, availability, funds, ownership');
   await rejects(jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: find('weapons', 'Ares Alpha').id }] }), /interdit/, 'forbidden item blocked');
@@ -334,7 +343,7 @@ try {
   await settle();
   ok(r.status === 'done', 'approval never → immediate even for restricted');
   const jn = A(jane, 'pc_jane');
-  const aug = jn.augmentations.find((a) => a.catalogId === wired.id);
+  const aug = jn.augmentations.find((a) => a.catalogId === wired.id)!;
   ok(aug && aug.grade === 'alpha' && Math.abs(aug.essence - 1.6) < 1e-6, 'alphaware essence 2 × 0.8 = 1.6');
   ok(Math.abs(jn.attributes.ESS - 4.4) < 1e-6, 'ESS reduced to 4.4');
   ok(jn.attributes.MAG === 3, 'MAG reduced by 2 (essence loss 1.6 → 2 points)');
@@ -353,17 +362,17 @@ try {
   ok(r.status === 'done' && r.total === 500, 'sold at 50% of paid price');
   ok(A(jane, 'pc_jane').nuyen === n0 + 500 && !A(jane, 'pc_jane').armor.some((a) => a.id === arm.id), 'armor removed & paid');
   const n1 = A(jane, 'pc_jane').nuyen;
-  const mk3 = A(jane, 'pc_jane').gear.find((g) => g.catalogId === medkit.id && g.rating === 3);
+  const mk3 = A(jane, 'pc_jane').gear.find((g) => g.catalogId === medkit.id && g.rating === 3)!;
   r = await jane.send('shop/sell', { actorId: 'pc_jane', list: 'gear', itemId: mk3.id, qty: 2 });
   await settle();
-  ok(r.total === 750 && A(jane, 'pc_jane').nuyen === n1 + 750 && A(jane, 'pc_jane').gear.find((g) => g.id === mk3.id).qty === 1, 'partial gear sale');
+  ok(r.total === 750 && A(jane, 'pc_jane').nuyen === n1 + 750 && A(jane, 'pc_jane').gear.find((g) => g.id === mk3.id)!.qty === 1, 'partial gear sale');
   r = await jane.send('shop/sell', { actorId: 'pc_jane', list: 'augmentations', itemId: aug.id });
   await settle();
   const ja = A(jane, 'pc_jane');
-  ok(!ja.augmentations.length && !ja.augmented?.REA && ja.initiative.dice === 1, 'augmentation sold, bonus removed');
+  ok(!ja.augmentations.length && !ja.augmented?.REA && ja.initiative!.dice === 1, 'augmentation sold, bonus removed');
   ok(Math.abs(ja.attributes.ESS - 4.4) < 1e-6, 'essence hole stays');
   await gm.send('shop/updateSettings', { approval: 'always' });
-  const katanaItem = ja.weapons.find((x) => x.catalogId === katana.id);
+  const katanaItem = ja.weapons.find((x) => x.catalogId === katana.id)!;
   r = await jane.send('shop/sell', { actorId: 'pc_jane', list: 'weapons', itemId: katanaItem.id });
   ok(r.status === 'pending', 'sale pending when approval = always');
   await rejects(jane.send('shop/sell', { actorId: 'pc_jane', list: 'weapons', itemId: katanaItem.id }), /attend déjà/, 'no duplicate pending sale');
@@ -374,11 +383,11 @@ try {
   await gm.send('shop/updateSettings', { approval: 'never' });
 
   console.log('• specials');
-  const fb = () => gm.state.shop.specials.find((s) => s.id === 'cabana-flashbang');
+  const fb = () => gm.state.shop.specials.find((s) => s.id === 'cabana-flashbang')!;
   const stock0 = fb().stock;
   r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: 'special:cabana-flashbang', qty: 2 }] });
   await settle();
-  ok(r.total === 180 && fb().stock === stock0 - 2, 'special bought, stock decremented');
+  ok(r.total === 180 && fb().stock === stock0! - 2, 'special bought, stock decremented');
   await rejects(jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: 'special:cabana-flashbang', qty: 50 }] }), /stock/, 'stock limit');
   await rejects(jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: 'special:cabana-badge-hollow-pine' }] }), /n’existe plus/, 'hidden special not purchasable by players');
   r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: 'special:cabana-apds' }] });
@@ -393,7 +402,7 @@ try {
   r = await bricks.send('shop/buy', { actorId: 'pc_bricks', items: [{ ref: `special:${newId}` }] });
   await settle();
   ok(r.total === 400 && A(bricks, 'pc_bricks').armor.some((a) => a.rating === 12 && a.paid === 400), 'special mapped to armor with catalog stats');
-  ok(gm.state.shop.specials.find((s) => s.id === newId).stock === 0, 'stock now 0');
+  ok(gm.state.shop.specials.find((s) => s.id === newId)!.stock === 0, 'stock now 0');
   await gm.send('shop/removeSpecial', { id: 'cabana-trauma-patch' });
   await settle();
   ok(!gm.state.shop.specials.some((s) => s.id === 'cabana-trauma-patch'), 'special removed');
@@ -405,11 +414,11 @@ try {
   await settle();
   const b = A(bricks, 'pc_bricks');
   ok(b.nuyen === 100 && b.gear.some((g) => g.catalogId === caliban.id && g.paid === undefined), 'gift is free');
-  ok(b.matrix.device === 'Fairlight Caliban' && b.matrix.rating === 7 && b.matrix.firewall === 7 && b.matrix.programs.includes('Browse'), 'matrix device set, programs kept');
+  ok(b.matrix!.device === 'Fairlight Caliban' && b.matrix!.rating === 7 && b.matrix!.firewall === 7 && b.matrix!.programs.includes('Browse'), 'matrix device set, programs kept');
   const exploit = cat('programs').find((p) => p.name === 'Exploit');
   await gm.send('shop/give', { actorId: 'pc_bricks', ref: exploit.id });
   await settle();
-  ok(A(bricks, 'pc_bricks').matrix.programs.includes(exploit.nameFr || exploit.name), 'program added to matrix programs');
+  ok(A(bricks, 'pc_bricks').matrix!.programs.includes(exploit.nameFr || exploit.name), 'program added to matrix programs');
   const low = cat('lifestyles').find((l) => l.name === 'Low');
   await gm.send('shop/give', { actorId: 'pc_jane', ref: low.id, qty: 1 });
   await settle();
@@ -432,15 +441,15 @@ try {
   const sgInternal = find('accessories', 'Smartgun System, Internal');
   await gm.send('shop/give', { actorId: 'pc_jane', items: [{ ref: predator.id }, { ref: find('weapons', 'Colt America L36').id }] });
   await settle();
-  const pred = A(jane, 'pc_jane').weapons.find((x) => x.catalogId === predator.id);
-  const colt = A(jane, 'pc_jane').weapons.find((x) => x.name === itemFr(find('weapons', 'Colt America L36')));
+  const pred = A(jane, 'pc_jane').weapons.find((x) => x.catalogId === predator.id)!;
+  const colt = A(jane, 'pc_jane').weapons.find((x) => x.name === itemFr(find('weapons', 'Colt America L36')))!;
   ok(pred && JSON.stringify(pred.mounts) === JSON.stringify(predator.stats.mounts), 'weapon.mounts copied from the catalog');
   ok(pred.accessories?.length === 1 && pred.accessories[0].catalogId === sgInternal.id && pred.accessories[0].included && pred.accessories[0].effects?.smartgun, 'included smartgun installed');
   let nw = A(jane, 'pc_jane').nuyen;
   r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: laser.id, target: { itemId: pred.id } }] });
   await settle();
-  let pw = A(jane, 'pc_jane').weapons.find((x) => x.id === pred.id);
-  const las = pw.accessories.find((x) => x.catalogId === laser.id);
+  let pw = A(jane, 'pc_jane').weapons.find((x) => x.id === pred.id)!;
+  const las = pw.accessories!.find((x) => x.catalogId === laser.id)!;
   ok(r.total === laser.cost && A(jane, 'pc_jane').nuyen === nw - laser.cost, 'accessory priced from the catalog');
   ok(las && las.mount === 'Top' && las.effects?.accuracy === 1 && las.paid === laser.cost, 'laser on the Top mount (Predator has no Under mount), accuracy +1');
   await rejects(jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: scope.id, target: { itemId: pred.id } }] }), /emplacement libre/, 'Top already taken → scope refused');
@@ -449,24 +458,24 @@ try {
   await rejects(jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: silencer.id, target: { itemId: colt.id } }, { ref: find('accessories', 'Gas-Vent 2 System').id, target: { itemId: colt.id } }] }), /emplacement libre/, 'two Barrel accessories in one cart refused');
   r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: scope.id, target: { itemId: colt.id } }, { ref: silencer.id, target: { itemId: colt.id } }] });
   await settle();
-  const cw = A(jane, 'pc_jane').weapons.find((x) => x.id === colt.id);
-  ok(r.total === scope.cost + silencer.cost && cw.accessories.map((x) => x.mount).sort().join() === 'Barrel,Top', 'two accessories on two mounts in one cart');
+  const cw = A(jane, 'pc_jane').weapons.find((x) => x.id === colt.id)!;
+  ok(r.total === scope.cost + silencer.cost && cw.accessories!.map((x) => x.mount).sort().join() === 'Barrel,Top', 'two accessories on two mounts in one cart');
   await gm.send('shop/give', { actorId: 'pc_jane', ref: find('weapons', 'Colt America L36').id });
   await settle();
-  const colt2 = A(jane, 'pc_jane').weapons.filter((x) => x.name === colt.name).find((x) => x.id !== colt.id);
+  const colt2 = A(jane, 'pc_jane').weapons.filter((x) => x.name === colt.name).find((x) => x.id !== colt.id)!;
   nw = A(jane, 'pc_jane').nuyen;
   r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: sgInternal.id, target: { itemId: colt2.id } }] });
   await settle();
   ok(r.total === find('weapons', 'Colt America L36').cost, '« Weapon Cost » formula: internal smartgun = the weapon price');
   await gm.send('shop/give', { actorId: 'pc_jane', ref: find('weapons', 'Combat Knife').id });
   await settle();
-  await rejects(jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: laser.id, target: { itemId: A(jane, 'pc_jane').weapons.find((x) => x.kind === 'melee').id } }] }), /emplacement|adapte/, 'no accessory on a melee weapon');
-  await rejects(jane.send('shop/sell', { actorId: 'pc_jane', list: 'weapons', itemId: pred.id, subId: pred.accessories[0].id }), /origine/, 'included accessory not sold separately');
+  await rejects(jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: laser.id, target: { itemId: A(jane, 'pc_jane').weapons.find((x) => x.kind === 'melee')!.id } }] }), /emplacement|adapte/, 'no accessory on a melee weapon');
+  await rejects(jane.send('shop/sell', { actorId: 'pc_jane', list: 'weapons', itemId: pred.id, subId: pred.accessories![0].id }), /origine/, 'included accessory not sold separately');
   nw = A(jane, 'pc_jane').nuyen;
   r = await jane.send('shop/sell', { actorId: 'pc_jane', list: 'weapons', itemId: pred.id, subId: las.id });
   await settle();
-  pw = A(jane, 'pc_jane').weapons.find((x) => x.id === pred.id);
-  ok(r.total === Math.round(laser.cost / 2) && A(jane, 'pc_jane').nuyen === nw + r.total && !pw.accessories.some((x) => x.id === las.id), 'accessory sold at the sell rate');
+  pw = A(jane, 'pc_jane').weapons.find((x) => x.id === pred.id)!;
+  ok(r.total === Math.round(laser.cost / 2) && A(jane, 'pc_jane').nuyen === nw + r.total && !pw.accessories!.some((x) => x.id === las.id), 'accessory sold at the sell rate');
   r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: scope.id, target: { itemId: pred.id } }] });
   ok(r.status === 'done', 'freed mount reusable');
 
@@ -477,19 +486,19 @@ try {
   const gel = find('armormods', 'Gel Packs');
   await gm.send('shop/give', { actorId: 'pc_jane', ref: jacket.id });
   await settle();
-  const jk = A(jane, 'pc_jane').armor.filter((x) => x.catalogId === jacket.id).pop();
+  const jk = A(jane, 'pc_jane').armor.filter((x) => x.catalogId === jacket.id).pop()!;
   ok(jk.capacity === 12, 'armor capacity copied from the catalog');
   nw = A(jane, 'pc_jane').nuyen;
   r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: chem.id, rating: 6, target: { itemId: jk.id } }, { ref: fire.id, rating: 5, target: { itemId: jk.id } }] });
   await settle();
-  let ja2 = A(jane, 'pc_jane').armor.find((x) => x.id === jk.id);
-  ok(r.total === 6 * 250 + 5 * 250 && ja2.mods.length === 2 && ja2.mods.reduce((s, m) => s + m.capacity, 0) === 11, 'rated mods priced by formula, capacity 6 + 5');
-  ok(ja2.mods.find((m) => m.catalogId === fire.id).bonus?.fire === 5, 'mod bonus evaluated at its rating');
+  let ja2 = A(jane, 'pc_jane').armor.find((x) => x.id === jk.id)!;
+  ok(r.total === 6 * 250 + 5 * 250 && ja2.mods!.length === 2 && ja2.mods!.reduce((s, m) => s + m.capacity, 0) === 11, 'rated mods priced by formula, capacity 6 + 5');
+  ok(ja2.mods!.find((m) => m.catalogId === fire.id)!.bonus?.fire === 5, 'mod bonus evaluated at its rating');
   await rejects(jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: insul.id, rating: 2, target: { itemId: jk.id } }] }), /Capacité insuffisante/, 'capacity exceeded');
   r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: insul.id, rating: 1, target: { itemId: jk.id } }, { ref: gel.id, target: { itemId: jk.id } }] });
   await settle();
-  ja2 = A(jane, 'pc_jane').armor.find((x) => x.id === jk.id);
-  ok(r.status === 'done' && ja2.mods.length === 4 && ja2.mods.find((m) => m.catalogId === gel.id).effects?.armor === 2 && ja2.rating === 12, 'last capacity point used; armor bonus stored as effects (rating unchanged)');
+  ja2 = A(jane, 'pc_jane').armor.find((x) => x.id === jk.id)!;
+  ok(r.status === 'done' && ja2.mods!.length === 4 && ja2.mods!.find((m) => m.catalogId === gel.id)!.effects?.armor === 2 && ja2.rating === 12, 'last capacity point used; armor bonus stored as effects (rating unchanged)');
   await jane.send('actor/updateItem', { actorId: 'pc_jane', list: 'armor', itemId: jk.id, patch: { equipped: true } });
   await settle();
   ok(armorTotal(A(jane, 'pc_jane')) === 14, `bought Gel Packs count in the Armor value: 12 + 2 (got ${armorTotal(A(jane, 'pc_jane'))})`);
@@ -504,13 +513,13 @@ try {
   const gecko = find('vehiclemods', 'Gecko Tips');
   await gm.send('shop/give', { actorId: 'pc_jane', ref: scoot.id });
   await settle();
-  const sc = A(jane, 'pc_jane').vehicles.find((x) => x.catalogId === scoot.id);
+  const sc = A(jane, 'pc_jane').vehicles.find((x) => x.catalogId === scoot.id)!;
   const rigger = find('vehiclemods', 'Rigger Interface');
   r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: offroad.id, target: { itemId: sc.id } }, { ref: rigger.id, target: { itemId: sc.id } }] });
   await settle();
-  let sv = A(jane, 'pc_jane').vehicles.find((x) => x.id === sc.id);
+  let sv = A(jane, 'pc_jane').vehicles.find((x) => x.id === sc.id)!;
   ok(r.total === scoot.cost * 0.25 + rigger.cost, `« Vehicle Cost » formula: off-road = 25 % of the vehicle (${r.total})`);
-  ok(sv.mods.length === 2 && sv.mods.reduce((s, m) => s + m.slots, 0) === 2 && sv.mods.find((m) => m.catalogId === offroad.id).effects?.handling === -1, 'slots and effects stored');
+  ok(sv.mods!.length === 2 && sv.mods!.reduce((s, m) => s + m.slots, 0) === 2 && sv.mods!.find((m) => m.catalogId === offroad.id)!.effects?.handling === -1, 'slots and effects stored');
   await rejects(jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: gecko.id, target: { itemId: sc.id } }] }), /Emplacements insuffisants.*4 requis, 2 libre/, 'Body formula: gecko tips need 4 slots on Body 4, 2 free');
   // R5: one pool per category (Body 4 each on the scooter): the Body and Protection pools are still empty.
   await gm.send('shop/give', { actorId: 'pc_jane', ref: smug.id, target: { itemId: sc.id } });
@@ -519,8 +528,8 @@ try {
   await rejects(gm.send('shop/give', { actorId: 'pc_jane', ref: armorStd.id, rating: 3, target: { itemId: sc.id } }), /Emplacements insuffisants.*6 requis, 4 libre/, 'GM gifts still respect slots (Protection pool 4)');
   await gm.send('shop/give', { actorId: 'pc_jane', ref: armorStd.id, rating: 1, target: { itemId: sc.id } });
   await settle();
-  sv = A(jane, 'pc_jane').vehicles.find((x) => x.id === sc.id);
-  const arStd = sv.mods.find((m) => m.catalogId === armorStd.id);
+  sv = A(jane, 'pc_jane').vehicles.find((x) => x.id === sc.id)!;
+  const arStd = sv.mods!.find((m) => m.catalogId === armorStd.id);
   ok(arStd && arStd.rating === 1 && arStd.slots === 2 && arStd.effects?.armor === 1, 'vehicle armor rating 1: 2 slots, +1 armor');
   r = await gm.send('shop/give', { actorId: 'pc_jane', items: [{ ref: offroad.id, target: { itemId: sc.id } }] }).catch((e) => e);
   ok(/déjà installé|Emplacements/.test(r?.message || ''), 'same mod twice refused');
@@ -543,7 +552,7 @@ try {
     r = await gm.send('shop/martialArt', { actorId: 'pc_jane', styleId: ma.id, techniqueIds: [ma.stats.techniques[2].id], free: true });
     await settle();
     jm = A(jane, 'pc_jane').martialArts.find((m) => m.catalogId === ma.id);
-    ok(jm.techniques.length === 3 && A(jane, 'pc_jane').karma === 8, 'GM free grant of a technique');
+    ok(jm!.techniques.length === 3 && A(jane, 'pc_jane').karma === 8, 'GM free grant of a technique');
   }
   await rejects(jane.send('shop/martialArt', { actorId: 'pc_jane', styleId: 'nope' }), /inconnu/, 'unknown style');
   const hapsumDo = cat('martialarts').find((m) => /Hapsum-Do/.test(m.name));
@@ -551,7 +560,7 @@ try {
   r = await jane.send('shop/martialArt', { actorId: 'pc_jane', styleId: hapsumDo.id, techniqueIds: [hapsumDo.stats.techniques[0].id] });
   ok(r.status === 'pending' && r.karma === 15, `catalog style cost: Hapsum-Do 15 karma (got ${r.karma})`);
   await gm.send('shop/cancel', { orderId: r.orderId });
-  const bare = cat('martialarts').find((m) => m.stats.karma === 7 && m.id !== ma.id && m.stats.techniques.length >= 2 && m.stats.techniques.every((x) => x.id));
+  const bare = cat('martialarts').find((m) => m.stats.karma === 7 && m.id !== ma.id && m.stats.techniques.length >= 2 && m.stats.techniques.every((x: { id?: string }) => x.id));
   await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'martialArts', item: { name: bare.name, catalogId: bare.id, rating: 1, techniques: [] } });
   await settle();
   r = await jane.send('shop/martialArt', { actorId: 'pc_jane', styleId: bare.id, techniqueIds: [bare.stats.techniques[0].id, bare.stats.techniques[1].id] });
@@ -572,9 +581,9 @@ try {
   await rejects(jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: jacket.id }] }), /test de disponibilité/, 'required: no purchase without a successful test');
   await rejects(jane.send('shop/availTest', { actorId: 'pc_bricks', item: { ref: jacket.id } }), /ton personnage/, 'cannot search for another runner');
   const sp0 = jane.state.shop.specials.find((x) => x.stock === null || x.stock === undefined || x.stock > 0);
-  await rejects(jane.send('shop/availTest', { actorId: 'pc_jane', item: { ref: `special:${sp0.id}` } }), /aucun test/, 'fixer specials need no test');
+  await rejects(jane.send('shop/availTest', { actorId: 'pc_jane', item: { ref: `special:${sp0!.id}` } }), /aucun test/, 'fixer specials need no test');
   // Jane: Negotiation defaults to CHA 8 − 1 = 7 dice vs Availability 2 — retry until found (bounded).
-  let at;
+  let at: AvailTestResult;
   let tries = 0;
   do {
     at = await jane.send('shop/availTest', { actorId: 'pc_jane', item: { ref: jacket.id } });
@@ -584,15 +593,15 @@ try {
   ok(at.found && at.net === at.hits - at.availHits && at.baseHours === 24 && at.delayHours === (at.net > 0 ? Math.round((24 / at.net) * 100) / 100 : 48), `test outcome (${JSON.stringify(at)})`);
   ok(at.tries === tries, `attempt counter (${at.tries} / ${tries})`);
   const rollE = gm.state.log.find((e) => e.id === at.logId);
-  ok(rollE?.kind === 'roll' && rollE.roll.avail?.value === 2 && rollE.roll.avail.dice.length === 2 && rollE.roll.labelI18n?.key === 'Disponibilité — {item}', `roll logged with the Availability dice (${rollE?.roll?.breakdown})`);
-  ok(rollE.roll.pool === 7 && rollE.roll.limitLabel === 'sociale', `Negotiation default pool 7, Social limit (${rollE.roll.pool}, ${rollE.roll.limitLabel})`);
+  ok(rollE?.kind === 'roll' && rollE.roll!.avail?.value === 2 && rollE.roll!.avail.dice.length === 2 && rollE.roll!.labelI18n?.key === 'Disponibilité — {item}', `roll logged with the Availability dice (${rollE?.roll?.breakdown})`);
+  ok(rollE!.roll!.pool === 7 && rollE!.roll!.limitLabel === 'sociale', `Negotiation default pool 7, Social limit (${rollE!.roll!.pool}, ${rollE!.roll!.limitLabel})`);
   ok(jane.state.shop.availTests.some((x) => x.id === at.testId) && !bricks.state.shop.availTests.some((x) => x.id === at.testId), 'tests visible to their owner only');
   r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: jacket.id }] });
   await settle();
-  const ord = gm.state.shop.orders.find((o) => o.id === r.orderId);
+  const ord = gm.state.shop.orders.find((o) => o.id === r.orderId)!;
   ok(r.status === 'done' && ord.items[0].availTest?.id === at.testId && ord.items[0].availTest.delayHours === at.delayHours, 'purchase with the test: delay on the order line');
-  ok(r.notes.some((n) => /trouvé en/.test(n)), `delay note (${r.notes.join(' | ')})`);
-  ok(gm.state.shop.availTests.find((x) => x.id === at.testId).status === 'used', 'test used by the purchase');
+  ok(r.notes.some((n: string) => /trouvé en/.test(n)), `delay note (${r.notes.join(' | ')})`);
+  ok(gm.state.shop.availTests.find((x) => x.id === at.testId)!.status === 'used', 'test used by the purchase');
   await rejects(jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: jacket.id }] }), /test de disponibilité/, 'one test = one purchase');
   // Pending order (restricted): cancelling or denying gives the search back.
   tries = 0;
@@ -600,16 +609,16 @@ try {
   while (!at.found && ++tries < 30);
   r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: katana.id }] });
   await settle();
-  ok(r.status === 'pending' && gm.state.shop.availTests.find((x) => x.id === at.testId).status === 'used', 'pending order holds the test');
+  ok(r.status === 'pending' && gm.state.shop.availTests.find((x) => x.id === at.testId)!.status === 'used', 'pending order holds the test');
   await jane.send('shop/cancel', { orderId: r.orderId });
   await settle();
-  ok(gm.state.shop.availTests.find((x) => x.id === at.testId).status === 'open', 'cancelled order releases the test');
+  ok(gm.state.shop.availTests.find((x) => x.id === at.testId)!.status === 'open', 'cancelled order releases the test');
   r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: katana.id }] });
   await gm.send('shop/resolve', { orderId: r.orderId, approve: false });
   await settle();
-  ok(gm.state.shop.availTests.find((x) => x.id === at.testId).status === 'open', 'denied order releases the test');
+  ok(gm.state.shop.availTests.find((x) => x.id === at.testId)!.status === 'open', 'denied order releases the test');
   // A contact searches instead (SR5: the contact's Charisma + Negotiation, Social limit + Connection). Stats: bestiary template of the same name.
-  const tpl = Object.values(gm.state.bestiary || {}).find((x) => x?.name === 'Perrine Cabana');
+  const tpl = Object.values(gm.state.bestiary || {}).find((x) => x?.name === 'Perrine Cabana')!;
   ok(!!tpl, 'bestiary has Perrine Cabana (Foundry seed)');
   await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'contacts', item: { name: 'Perrine Cabana', connection: 2, loyalty: 4 } });
   await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'contacts', item: { name: 'Contact Sans Fiche', connection: 3, loyalty: 1 } });
@@ -623,39 +632,39 @@ try {
   ok(nobody && !nobody.known && !('pool' in nobody), 'contact without stats listed as unknown');
   ok(!bricks.state.shop.contactSearch?.pc_jane, 'contact search info private to the runner’s player');
   ok(!('contactSearch' in (jane.state.bestiary || {})) && !jane.state.bestiary, 'bestiary still hidden from players');
-  await rejects(jane.send('shop/availTest', { actorId: 'pc_jane', item: { ref: jacket.id }, contactId: nobody.id }), /pas de fiche/, 'contact without stats cannot search');
+  await rejects(jane.send('shop/availTest', { actorId: 'pc_jane', item: { ref: jacket.id }, contactId: nobody!.id }), /pas de fiche/, 'contact without stats cannot search');
   await rejects(jane.send('shop/availTest', { actorId: 'pc_jane', item: { ref: jacket.id }, contactId: 'nope' }), /Contact introuvable/, 'unknown contact');
   const edgeBefore = A(jane, 'pc_jane').edge.current;
   tries = 0;
-  do at = await jane.send('shop/availTest', { actorId: 'pc_jane', item: { ref: jacket.id }, contactId: cab.id, explode: true });
+  do at = await jane.send('shop/availTest', { actorId: 'pc_jane', item: { ref: jacket.id }, contactId: cab!.id, explode: true });
   while (!at.found && ++tries < 30);
   await settle();
-  const cRoll = gm.state.log.find((e) => e.id === at.logId)?.roll;
-  ok(at.found && cRoll.pool === cab.pool && cRoll.limit === cab.limit && !cRoll.explode && cRoll.avail.contact === 'Perrine Cabana' && cRoll.labelI18n.key === 'Disponibilité — {item} (via {contact})', `contact roll: their pool and limit, no runner Edge (${cRoll?.breakdown} [${cRoll?.limitBreakdown}])`);
+  const cRoll = gm.state.log.find((e) => e.id === at.logId)?.roll!;
+  ok(at.found && cRoll.pool === cab!.pool && cRoll.limit === cab!.limit && !cRoll.explode && cRoll.avail!.contact === 'Perrine Cabana' && cRoll.labelI18n!.key === 'Disponibilité — {item} (via {contact})', `contact roll: their pool and limit, no runner Edge (${cRoll?.breakdown} [${cRoll?.limitBreakdown}])`);
   ok(A(jane, 'pc_jane').edge.current === edgeBefore && gm.state.shop.availTests.find((x) => x.id === at.testId)?.contactName === 'Perrine Cabana', 'test records the contact');
   r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: jacket.id }] });
   await settle();
-  ok(r.status === 'done' && gm.state.shop.orders.find((o) => o.id === r.orderId).items[0].availTest.contact === 'Perrine Cabana', 'order line says who found it');
+  ok(r.status === 'done' && gm.state.shop.orders.find((o) => o.id === r.orderId)!.items[0].availTest!.contact === 'Perrine Cabana', 'order line says who found it');
 
   // Throwing money at it (SR5 p. 418): +1 die per extra 25 % of the price (max 12), paid on purchase only.
   tries = 0;
   do at = await jane.send('shop/availTest', { actorId: 'pc_jane', item: { ref: jacket.id }, overpay: 4 });
   while (!at.found && ++tries < 30);
   await settle();
-  const oRoll = gm.state.log.find((e) => e.id === at.logId)?.roll;
-  ok(at.overpay === 4 && oRoll.pool === 7 + 4 && /surenchère \+4/.test(oRoll.breakdown), `bought dice in the pool (${oRoll?.breakdown})`);
+  const oRoll = gm.state.log.find((e) => e.id === at.logId)?.roll!;
+  ok(at.overpay === 4 && oRoll.pool === 7 + 4 && /surenchère \+4/.test(oRoll.breakdown!), `bought dice in the pool (${oRoll?.breakdown})`);
   const nuyenBefore = A(gm, 'pc_jane').nuyen;
   r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: jacket.id }] });
   await settle();
-  const oOrd = gm.state.shop.orders.find((o) => o.id === r.orderId);
+  const oOrd = gm.state.shop.orders.find((o) => o.id === r.orderId)!;
   ok(r.status === 'done' && r.total === 2000 && oOrd.items[0].surcharge === 1000 && oOrd.items[0].unitCost === 1000, `+100 % surcharge charged (${r.total})`);
   ok(A(gm, 'pc_jane').nuyen === nuyenBefore - 2000, 'nuyen debited with the surcharge');
-  ok(r.notes.some((n) => /surenchère/.test(n)), `surcharge note (${r.notes.join(' | ')})`);
-  const boughtJacket = A(gm, 'pc_jane').armor.filter((x) => x.catalogId === jacket.id).pop();
+  ok(r.notes.some((n: string) => /surenchère/.test(n)), `surcharge note (${r.notes.join(' | ')})`);
+  const boughtJacket = A(gm, 'pc_jane').armor.filter((x) => x.catalogId === jacket.id).pop()!;
   ok(boughtJacket.paid === 1000, 'resale value stays the item price');
-  const capped = await jane.send('shop/availTest', { actorId: 'pc_jane', item: { ref: jacket.id }, overpay: 99, contactId: cab.id });
+  const capped = await jane.send('shop/availTest', { actorId: 'pc_jane', item: { ref: jacket.id }, overpay: 99, contactId: cab!.id });
   await settle();
-  ok(capped.overpay === 12 && gm.state.log.find((e) => e.id === capped.logId).roll.pool === cab.pool + 12, 'overpay capped at 12 dice (contact roll too)');
+  ok(capped.overpay === 12 && gm.state.log.find((e) => e.id === capped.logId)!.roll!.pool === cab!.pool! + 12, 'overpay capped at 12 dice (contact roll too)');
 
   // Threshold, helper mode, GM, off.
   await gm.send('shop/updateSettings', { availFree: 2 });
@@ -671,7 +680,7 @@ try {
   await gm.send('shop/updateSettings', { availTest: 'off' });
   await rejects(jane.send('shop/availTest', { actorId: 'pc_jane', item: { ref: jacket.id } }), /Pas de test/, 'off: no test for players');
   await settle();
-  const availEn = await renderI18n(gm.state.log.filter((e) => e.roll?.labelI18n).map((e) => ({ i18n: e.roll.labelI18n, text: e.roll.label })), 'availability roll label');
+  const availEn = await renderI18n(gm.state.log.filter((e) => e.roll?.labelI18n).map((e) => ({ i18n: e.roll!.labelI18n, text: e.roll!.label })), 'availability roll label');
   ok(availEn.every((x) => /^Availability — /.test(x)), 'English availability label');
 
   console.log('• i18n');

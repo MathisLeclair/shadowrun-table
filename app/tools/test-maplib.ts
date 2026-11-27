@@ -8,25 +8,28 @@ import crypto from 'node:crypto';
 import jpeg from 'jpeg-js';
 import { startServer, login, client, settle } from './test-client.ts';
 import * as S from '../shared/maplib.ts';
+import type { TestTableSpec } from './test-client.ts';
+import type { LibMapLike, LibVersion, LibWall } from '../shared/maplib.ts';
+import type { GameMap } from '../shared/types.ts';
 
 let failures = 0, passes = 0;
-function ok(cond, msg) {
+function ok(cond: unknown, msg: string) {
   if (cond) passes++;
   else {
     failures++;
     console.error('  ✗ ' + msg);
   }
 }
-async function rejects(p, re, msg) {
+async function rejects(p: Promise<unknown>, re: RegExp | null, msg: string) {
   try {
     await p;
     ok(false, msg + ' (should have failed)');
   } catch (e) {
-    ok(!re || re.test(e.message), `${msg} — got « ${e.message} »`);
+    ok(!re || re.test((e as Error).message), `${msg} — got « ${(e as Error).message} »`);
   }
 }
-const section = (s) => console.log('• ' + s);
-async function until(fn, ms = 6000) {
+const section = (s: string) => console.log('• ' + s);
+async function until<T>(fn: () => T, ms = 6000): Promise<T> {
   const t0 = Date.now();
   while (Date.now() - t0 < ms) {
     try {
@@ -39,31 +42,31 @@ async function until(fn, ms = 6000) {
 }
 
 // ---------------------------------------------------------------------------
-section('shared/maplib.js');
+section('shared/maplib.ts');
 {
   const g = S.libGeometry({ gridPx: 50, imageW: 525, imageH: 300, offsetX: 25, offsetY: 0 });
   ok(g.width === 10 && g.height === 6, `geometry width/height ${g.width}×${g.height}`);
   ok(g.bgX === -0.5 && g.bgW === 10.5, `background placement ${g.bgX} ${g.bgW}`);
   ok(S.wallGeoKey({ x1: 1, y1: 2, x2: 3, y2: 4 }) === S.wallGeoKey({ x1: 3, y1: 4, x2: 1, y2: 2 }), 'wall key ignores direction');
   let n = 0;
-  const uid = (p) => `${p}_${++n}`;
-  const version = {
+  const uid = (p: string) => `${p}_${++n}`;
+  const version: LibVersion = {
     walls: [{ x1: 0, y1: 0, x2: 5, y2: 0 }, { x1: 5, y1: 0, x2: 5, y2: 2, door: { state: 'closed', kind: 'door' } }],
     lights: [{ x: 2, y: 2, radius: 4, color: '#fff', on: true }],
     regions: [{ name: 'Bar', x: 1, y: 1, w: 2, h: 2 }],
     entry: { x: 3.5, y: 1.2 },
   };
   const prev = { walls: [{ id: 'old', x1: 5, y1: 2, x2: 5, y2: 0, door: { state: 'open', kind: 'door', name: 'Porte du fond' } }], lights: [{ x: 2, y: 2, radius: 4, on: false }] };
-  const c = S.instanceContent(version, uid, { previous: prev });
+  const c = S.instanceContent(version, uid, { previous: prev as LibMapLike });
   ok(c.walls.length === 2 && c.walls.every((w) => /^wall_/.test(w.id)), 'fresh wall ids');
-  ok(c.walls[1].door.state === 'open' && c.walls[1].door.name === 'Porte du fond', 'door state + name kept at the same place');
+  ok(c.walls[1].door!.state === 'open' && c.walls[1].door!.name === 'Porte du fond', 'door state + name kept at the same place');
   ok(c.lights[0].on === false, 'light switch kept');
   ok(c.regions.some((r) => r.gmOnly && r.id.startsWith(S.ENTRY_REGION_PREFIX) && r.x === 3 && r.y === 1), 'entry → GM-only region');
   const map = { width: 10, height: 6, walls: c.walls, lights: c.lights, regions: [...c.regions, { id: 'r_secret', name: 'Planque', x: 0, y: 0, w: 1, h: 1, gmOnly: true }] };
   ok(S.libraryDiff(map, version, { gridPx: 50, imageW: 500, imageH: 300 }).same, 'diff of an untouched instance is empty');
   const pub = S.versionFromMap({ ...map, walls: [...map.walls, { x1: 1, y1: 1, x2: 2, y2: 1 }] }, { shift: { x: 1, y: 0 } });
   ok(pub.walls.length === 3 && pub.walls[2].x1 === 0, 'publish shifts walls back to the image origin');
-  ok(pub.walls[1].door.state === 'closed' && !('name' in pub.walls[1].door), 'publish closes doors and drops their names');
+  ok(pub.walls[1].door!.state === 'closed' && !('name' in pub.walls[1].door!), 'publish closes doors and drops their names');
   ok(pub.regions.length === 1 && pub.regions[0].name === 'Bar', 'publish leaves GM-only and entry regions out');
   const d = S.libraryDiff({ ...map, walls: map.walls.slice(1) }, version, { gridPx: 50, imageW: 500, imageH: 300 });
   ok(d.walls.add === 1 && d.walls.remove === 0 && !d.same, 'diff counts a missing wall');
@@ -79,7 +82,7 @@ const runtime = path.join(tmp, 'runtime');
 fs.mkdirSync(gitDir, { recursive: true });
 fs.mkdirSync(path.join(runtime, 'maplib', 'images'), { recursive: true });
 fs.mkdirSync(path.join(runtime, 'maplib', 'thumbs'), { recursive: true });
-function makeJpeg(w, h, rgb) {
+function makeJpeg(w: number, h: number, rgb: number[]) {
   const data = Buffer.alloc(w * h * 4);
   for (let i = 0; i < w * h; i++) data.set([rgb[0], rgb[1], (i % w) & 255, 255], i * 4);
   return jpeg.encode({ data, width: w, height: h }, 80).data;
@@ -105,27 +108,28 @@ fs.writeFileSync(path.join(gitDir, 'test-dive-bar.json'), JSON.stringify(fixture
 fs.writeFileSync(path.join(gitDir, 'test-no-image.json'), JSON.stringify(fixtureB, null, 2));
 fs.writeFileSync(path.join(gitDir, 'library.json'), JSON.stringify({ not: 'an entry' })); // ignored (runtime file name)
 
-const tables = [
+const tables: TestTableSpec[] = [
   { id: 'alpha', name: 'Alpha', pack: 'project-lazarus', gmPassword: 'alpha-pw' },
   { id: 'beta', name: 'Beta', pack: 'vierge', gmPassword: 'beta-pw' },
 ];
 const env = { SR_MAPLIB_SOURCE: gitDir };
 let srv = await startServer({ port: 3910, tables, runtime, keepRuntime: true, env });
-const H = (tok) => ({ Authorization: `Bearer ${tok}` });
-const json = async (r) => ({ status: r.status, body: await r.json().catch(() => null), headers: r.headers });
+const H = (tok: string) => ({ Authorization: `Bearer ${tok}` });
+// Response bodies are parsed JSON of many shapes: `body` stays `any`.
+const json = async (r: Response) => ({ status: r.status, body: await r.json().catch(() => null), headers: r.headers });
 try {
   const gmA = await login(srv.url, { role: 'gm', password: 'alpha-pw', table: 'alpha' });
   const gmB = await login(srv.url, { role: 'gm', password: 'beta-pw', table: 'beta' });
   const plA = await login(srv.url, { role: 'player', name: 'Testeuse', table: 'alpha' });
   const admin = await srv.admin();
-  const get = (p, tok, table) => fetch(srv.url + p, { headers: { ...(tok ? H(tok) : {}), ...(table ? { 'X-SR-Table': table } : {}) } }).then(json);
-  const adminCall = (p, method = 'GET', body) => fetch(srv.url + p, { method, headers: { ...H(admin), ...(body ? { 'content-type': 'application/json' } : {}) }, body: body ? JSON.stringify(body) : undefined }).then(json);
+  const get = (p: string, tok: string | null, table?: string) => fetch(srv.url + p, { headers: { ...(tok ? H(tok) : {}), ...(table ? { 'X-SR-Table': table } : {}) } }).then(json);
+  const adminCall = (p: string, method = 'GET', body?: object) => fetch(srv.url + p, { method, headers: { ...H(admin), ...(body ? { 'content-type': 'application/json' } : {}) }, body: body ? JSON.stringify(body) : undefined }).then(json);
 
   // -------------------------------------------------------------------------
   section('boot seeding from git + Foundry fragmaps-free scenes');
   let lib = await get('/api/maplib', gmA, 'alpha');
   ok(lib.status === 200, 'GM lists the library');
-  const bySlug = (l) => Object.fromEntries(l.body.maps.map((m) => [m.slug, m]));
+  const bySlug = (l: { body: any }) => Object.fromEntries(l.body.maps.map((m: { slug: string }) => [m.slug, m]));
   let L1 = bySlug(lib);
   ok(L1['test-dive-bar']?.version === 1 && L1['test-dive-bar'].origin === 'git', 'git entry seeded at version 1');
   ok(L1['test-dive-bar'].nameFr === 'Bar miteux' && L1['test-dive-bar'].quality === 'good' && L1['test-dive-bar'].hasImage && L1['test-dive-bar'].hasThumb, 'git entry fields + files');
@@ -141,24 +145,24 @@ try {
 
   // -------------------------------------------------------------------------
   section('image auth');
-  const img = (slug, k, kind = 'image') => fetch(`${srv.url}/api/maplib/${kind}/${slug}${k != null ? `?k=${encodeURIComponent(k)}` : ''}`);
+  const img = (slug: string, k?: string | null, kind = 'image') => fetch(`${srv.url}/api/maplib/${kind}/${slug}${k != null ? `?k=${encodeURIComponent(k)}` : ''}`);
   ok((await img('test-dive-bar')).status === 401, 'no key → 401');
   ok((await img('test-dive-bar', 'garbage.sig')).status === 403, 'bad key → 403');
   const keyP = await get('/api/maplib/key', plA, 'alpha');
   ok(keyP.status === 200 && keyP.body.k, 'player gets a key');
   ok((await get('/api/maplib/key', null)).status === 401, 'anonymous gets no key');
   let r = await img('test-dive-bar', keyP.body.k);
-  ok(r.status === 200 && r.headers.get('content-type') === 'image/jpeg' && /private/.test(r.headers.get('cache-control')), 'player key → image');
+  ok(r.status === 200 && r.headers.get('content-type') === 'image/jpeg' && /private/.test(r.headers.get('cache-control')!), 'player key → image');
   const bytes = Buffer.from(await r.arrayBuffer());
   ok(bytes[0] === 0xff && bytes[1] === 0xd8, 'JPEG bytes');
   r = await img('test-dive-bar', keyP.body.k, 'thumb');
   ok(r.status === 200 && r.headers.get('content-type') === 'image/jpeg', 'thumbnail');
   r = await img('test-no-image', keyP.body.k);
-  ok(r.status === 200 && r.headers.get('x-maplib-missing') === '1' && /svg/.test(r.headers.get('content-type')) && /no-store/.test(r.headers.get('cache-control')), 'missing image → placeholder, not cached');
+  ok(r.status === 200 && r.headers.get('x-maplib-missing') === '1' && /svg/.test(r.headers.get('content-type')!) && /no-store/.test(r.headers.get('cache-control')!), 'missing image → placeholder, not cached');
   ok((await img('nope', keyP.body.k)).status === 404, 'unknown slug → 404');
   // Forged keys signed with the real key file: other session / unknown user / expired.
   const keyHex = fs.readFileSync(path.join(runtime, 'maplib-sign.key'), 'utf8').trim();
-  const sign = (data) => {
+  const sign = (data: object) => {
     const payload = Buffer.from(JSON.stringify(data)).toString('base64url');
     return `${payload}.${crypto.createHmac('sha256', Buffer.from(keyHex, 'hex')).update('maplib:' + payload).digest('base64url')}`;
   };
@@ -202,7 +206,7 @@ try {
   await A.send('maps/addToken', { mapId: mapA, token: { name: 'Videur', x: 2, y: 3, disposition: 'hostile' } });
   await A.send('maps/addNote', { mapId: mapA, note: { x: 1, y: 1, text: 'Le barman est un indic' } });
   await A.send('maps/addRegion', { mapId: mapA, region: { name: 'Planque secrète', x: 7, y: 1, w: 2, h: 2, gmOnly: true } });
-  await A.send('maps/setDoor', { mapId: mapA, doorId: door.id, state: 'open' });
+  await A.send('maps/setDoor', { mapId: mapA, doorId: door!.id, state: 'open' });
   await settle(300);
 
   // -------------------------------------------------------------------------
@@ -222,12 +226,12 @@ try {
   const v2 = await get('/api/maplib/test-dive-bar', gmA, 'alpha');
   ok(v2.body.version === 2 && v2.body.walls.length === 5, 'library has the new wall');
   ok(!JSON.stringify(v2.body).includes('Espion') && !JSON.stringify(v2.body).includes('secret de Beta') && !JSON.stringify(v2.body).includes('Spoiler MJ'), 'tokens, notes, GM-only regions never published');
-  ok(v2.body.walls.filter((w) => w.door).every((w) => w.door.state === 'closed'), 'doors published closed');
+  ok(v2.body.walls.filter((w: LibWall) => w.door).every((w: LibWall) => w.door!.state === 'closed'), 'doors published closed');
   ok(v2.body.entry?.x === 8, 'entry point kept');
   let adm = await adminCall('/api/admin/maplib');
-  let E = adm.body.maps.find((m) => m.slug === 'test-dive-bar');
+  let E = adm.body.maps.find((m: { slug: string }) => m.slug === 'test-dive-bar');
   ok(E.history.length === 1 && E.history[0].version === 1 && E.origin === 'edited' && E.versionInfo.by.tableId === 'beta', 'history + origin edited + author');
-  ok(E.usedBy.length === 2 && E.usedBy.some((u) => u.tableId === 'alpha') && E.usedBy.some((u) => u.tableId === 'beta'), 'usedBy lists both tables');
+  ok(E.usedBy.length === 2 && E.usedBy.some((u: { tableId: string }) => u.tableId === 'alpha') && E.usedBy.some((u: { tableId: string }) => u.tableId === 'beta'), 'usedBy lists both tables');
 
   // -------------------------------------------------------------------------
   section('libraryUpdate keeps tokens / notes / fog / door states');
@@ -238,14 +242,14 @@ try {
   ok(dA.current === 1 && dA.latest === 2 && dA.diff.walls.add === 1 && dA.diff.keptDoorStates === 1, 'A sees the update (+1 wall, 1 door state kept)');
   const up = await A.send('maps/libraryUpdate', { mapId: mapA });
   ok(up.version === 2, 'update → version 2');
-  const after = await until(() => A.state.maps[mapA]?.library?.version === 2 && A.state.maps[mapA]);
+  const after = (await until(() => A.state.maps[mapA]?.library?.version === 2 && A.state.maps[mapA])) as GameMap;
   ok(after.walls.length === 5, 'walls re-synced');
   ok(after.tokens.length === 1 && after.tokens[0].name === 'Videur', 'tokens kept');
   ok(after.notes.length === 1 && after.notes[0].text === 'Le barman est un indic', 'GM notes kept');
   ok(after.regions.some((x) => x.name === 'Planque secrète' && x.gmOnly), 'GM-only regions kept');
   ok(after.regions.filter((x) => x.name === 'Entrée').length === 1, 'entry region not duplicated');
-  ok(after.walls.find((w) => w.door)?.door.state === 'open', 'door state kept at the same position');
-  ok(after.fog === true && after.background.url === '/api/maplib/image/test-dive-bar', 'fog + background kept');
+  ok(after.walls.find((w) => w.door)?.door!.state === 'open', 'door state kept at the same position');
+  ok(after.fog === true && after.background!.url === '/api/maplib/image/test-dive-bar', 'fog + background kept');
   ok((await A.send('maps/libraryDiff', { mapId: mapA })).diff.same, 'in sync after the update');
 
   // -------------------------------------------------------------------------
@@ -256,8 +260,8 @@ try {
   await rejects(A.send('maps/publishToLibrary', { mapId: mapA }), /a changé/, 'A (at v2) cannot overwrite v3 without force');
   ok((await A.send('maps/publishToLibrary', { mapId: mapA, force: true })).version === 4, 'force → v4');
   adm = await adminCall('/api/admin/maplib');
-  E = adm.body.maps.find((m) => m.slug === 'test-dive-bar');
-  ok(E.history.map((h) => h.version).join() === '3,2,1', `history keeps the previous versions (${E.history.map((h) => h.version)})`);
+  E = adm.body.maps.find((m: { slug: string }) => m.slug === 'test-dive-bar');
+  ok(E.history.map((h: { version: number }) => h.version).join() === '3,2,1', `history keeps the previous versions (${E.history.map((h: { version: number }) => h.version)})`);
   const custom = await A.send('maps/create', { name: 'Ma carte perso', width: 8, height: 8 });
   await rejects(A.send('maps/publishToLibrary', { mapId: custom }), /Seules les cartes/, 'custom maps cannot publish');
   await rejects(A.send('maps/libraryUpdate', { mapId: custom }), /ne vient pas/, 'custom maps cannot update');
@@ -286,18 +290,18 @@ try {
   ok((await adminCall('/api/admin/maplib/test-no-image', 'DELETE', { confirm: 'wrong' })).status === 400, 'delete needs confirmation');
   ok((await adminCall('/api/admin/maplib/test-no-image', 'DELETE', { confirm: 'test-no-image' })).status === 200, 'delete');
   lib = await get('/api/maplib', gmA, 'alpha');
-  ok(!lib.body.maps.some((m) => m.slug === 'test-no-image'), 'deleted entry hidden');
+  ok(!lib.body.maps.some((m: { slug: string }) => m.slug === 'test-no-image'), 'deleted entry hidden');
   ok((await img('test-no-image', keyP.body.k)).status === 200, 'deleted entry still serves its image (existing instances)');
   ok((await adminCall('/api/admin/maplib', 'GET')).status === 200 && (await fetch(srv.url + '/api/admin/maplib')).status === 401, 'admin routes need the admin token');
 
   // -------------------------------------------------------------------------
   section('admin upload → new entry');
   const up1 = await fetch(`${srv.url}/api/admin/maplib/upload?slug=test-upload&name=Upload&nameFr=T%C3%A9l%C3%A9vers%C3%A9e&gridPx=25`, {
-    method: 'POST', headers: { ...H(admin), 'content-type': 'application/octet-stream', 'x-filename': 'upload.jpg' }, body: makeJpeg(250, 150, [10, 10]),
+    method: 'POST', headers: { ...H(admin), 'content-type': 'application/octet-stream', 'x-filename': 'upload.jpg' }, body: makeJpeg(250, 150, [10, 10]) as BodyInit,
   }).then(json);
   ok(up1.status === 200 && up1.body.entry.width === 10 && up1.body.entry.height === 6 && up1.body.entry.hasImage, 'upload creates the entry (10 × 6 cells)');
   ok(up1.body.thumb === true && fs.existsSync(path.join(runtime, 'maplib', 'thumbs', 'test-upload.jpg')), 'thumbnail made in a worker');
-  const up2 = await fetch(`${srv.url}/api/admin/maplib/upload?slug=test-upload&gridPx=25`, { method: 'POST', headers: { ...H(admin), 'x-filename': 'u.jpg' }, body: makeJpeg(10, 10, [0, 0]) }).then(json);
+  const up2 = await fetch(`${srv.url}/api/admin/maplib/upload?slug=test-upload&gridPx=25`, { method: 'POST', headers: { ...H(admin), 'x-filename': 'u.jpg' }, body: makeJpeg(10, 10, [0, 0]) as BodyInit }).then(json);
   ok(up2.status === 409, 'existing slug needs replace=1');
   const up3 = await fetch(`${srv.url}/api/admin/maplib/upload?slug=test-bad&gridPx=25`, { method: 'POST', headers: { ...H(admin), 'x-filename': 'u.jpg' }, body: Buffer.from('not an image') }).then(json);
   ok(up3.status === 400, 'non-image refused');
@@ -309,10 +313,10 @@ try {
   section('migration of map_fvtt_* table maps');
   const fv = A.state.maps['map_fvtt_back-alley'];
   ok(fv?.library?.slug === 'back-alley' && fv.library.migrated, 'map_fvtt_back-alley linked to the library');
-  ok(fv.background.url === '/assets/foundry/scenes/backalley.jpg' && fv.walls.length === 49, 'table data untouched (background URL, walls)');
+  ok(fv.background!.url === '/assets/foundry/scenes/backalley.jpg' && fv.walls.length === 49, 'table data untouched (background URL, walls)');
   ok(!A.state.maps['map_fvtt_club-house']?.library, 'custom Foundry map not linked');
   ok(!Object.values(B.state.maps).some((m) => m.library?.migrated), 'vierge table has nothing to migrate');
-  const linkedAt = fv.library.linkedAt;
+  const linkedAt = fv.library!.linkedAt;
   const libFile = path.join(runtime, 'maplib', 'library.json');
   const before = JSON.parse(fs.readFileSync(libFile, 'utf8'));
   A.close();
@@ -328,7 +332,7 @@ try {
   const fv2 = A2.state.maps['map_fvtt_back-alley'];
   ok(fv2?.library?.slug === 'back-alley' && fv2.library.linkedAt === linkedAt, 'migration idempotent (link unchanged)');
   const after2 = JSON.parse(fs.readFileSync(libFile, 'utf8'));
-  const fvttSlugs = (x) => Object.values(x.maps).filter((m) => m.source === 'fragmaps-free').map((m) => `${m.slug}@${m.version}`).sort().join();
+  const fvttSlugs = (x: { maps: Record<string, { source?: string; slug: string; version: number }> }) => Object.values(x.maps).filter((m) => m.source === 'fragmaps-free').map((m) => `${m.slug}@${m.version}`).sort().join();
   ok(fvttSlugs(after2) === fvttSlugs(before) && fvttSlugs(after2).split(',').length === 19, `no duplicate fragmaps-free entries (${fvttSlugs(after2).split(',').length})`);
   ok(after2.maps['test-dive-bar'].version === 8 && after2.maps['test-dive-bar'].counts.walls === 3, 'git change applied to an origin-git entry (v8)');
   ok(after2.maps['test-dive-bar'].overrides?.nameFr === 'Bar des docks', 'admin rename survives the git update');

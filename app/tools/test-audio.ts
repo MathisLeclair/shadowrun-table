@@ -2,10 +2,16 @@
 // the client engine core, then server actions / permissions / filters over a real isolated server.
 //   node tools/test-audio.ts            (exit code 1 on failure)
 import assert from 'node:assert/strict';
+import type { ScheduleItem } from '../client/modules/audio/theory.ts';
+import type { TrackGenerator } from '../client/modules/audio/synth.ts';
+import type { SfxBus } from '../client/modules/audio/sfx.ts';
+import type { AudioSync } from '../client/modules/audio/audio-core.ts';
+import type { ActionPayload, AudioTrack, InitOptions, TableState } from '../shared/types.ts';
+import type { TestClient } from './test-client.ts';
 
 let failures = 0;
 let passed = 0;
-async function test(name, fn) {
+async function test(name: string, fn: () => unknown) {
   try {
     await fn();
     passed++;
@@ -13,7 +19,7 @@ async function test(name, fn) {
   } catch (err) {
     failures++;
     console.log('  ✗', name);
-    console.log('    ', err && err.stack ? err.stack.split('\n').slice(0, 4).join('\n     ') : err);
+    console.log('    ', err && (err as Error).stack ? (err as Error).stack!.split('\n').slice(0, 4).join('\n     ') : err);
   }
 }
 
@@ -79,8 +85,8 @@ await test('syncOffset (late joiners on uploaded loops)', () => {
 });
 
 await test('runSchedule: lookahead, stop, lag resync, error isolation', () => {
-  const hits = [];
-  let items = [{ next: 0, fn: (t) => (hits.push(t), 0.1) }];
+  const hits: number[] = [];
+  let items: ScheduleItem[] = [{ next: 0, fn: (t) => (hits.push(t), 0.1) }];
   items = T.runSchedule(items, 0, 0.35);
   assert.deepEqual(hits.map((x) => +x.toFixed(2)), [0, 0.1, 0.2, 0.3]);
   // fell 10 s behind -> resync instead of firing ~100 overdue events
@@ -94,7 +100,7 @@ await test('runSchedule: lookahead, stop, lag resync, error isolation', () => {
   assert.equal(items.length, 0);
   assert.equal(n, 3);
   // a throwing callback is dropped, others continue
-  const errs = [];
+  const errs: unknown[] = [];
   let ok = 0;
   items = T.runSchedule([{ next: 0, fn: () => { throw new Error('boom'); } }, { next: 0, fn: () => (ok++, 1) }], 0, 0.5, 0.6, (e) => errs.push(e));
   assert.equal(errs.length, 1);
@@ -108,8 +114,8 @@ await test('runSchedule: lookahead, stop, lag resync, error isolation', () => {
 });
 
 await test('throttle: leading call, trailing call, flush', async () => {
-  const calls = [];
-  const th = T.throttle((v) => calls.push(v), 40);
+  const calls: number[] = [];
+  const th = T.throttle((v: number) => calls.push(v), 40);
   th(1);
   th(2);
   th(3);
@@ -139,13 +145,26 @@ await test('catalog: ids, unique track ids, metadata', () => {
 // ===========================================================================
 // 2. Strict Web Audio mock + fake timers
 // ===========================================================================
-const fin = (v, what) => {
+const fin = (v: unknown, what: string) => {
   if (typeof v !== 'number' || !Number.isFinite(v)) throw new TypeError(`${what}: non-finite value ${v}`);
 };
 let mockCtxCount = 0;
 
+// Mocked Web Audio: fields are `declare`d (types only, no class-field emit) and set in the constructors / factories.
+interface MockBuffer {
+  numberOfChannels: number;
+  length: number;
+  sampleRate: number;
+  duration: number;
+  getChannelData: (i: number) => Float32Array;
+}
+
 class MockParam {
-  constructor(ctx, value, name) {
+  declare ctx: MockCtx;
+  declare _v: number;
+  declare _last: number | null;
+  declare name: string;
+  constructor(ctx: MockCtx, value: number, name: string) {
     this.ctx = ctx;
     this._v = value;
     this._last = value;
@@ -154,28 +173,28 @@ class MockParam {
   get value() {
     return this._v;
   }
-  set value(v) {
+  set value(v: number) {
     fin(v, this.name + '.value');
     this._v = v;
     this._last = v;
   }
-  _time(t, op) {
+  _time(t: number, op: string) {
     fin(t, `${this.name}.${op} time`);
     if (t < 0) throw new RangeError(`${this.name}.${op}: negative time`);
   }
-  setValueAtTime(v, t) {
+  setValueAtTime(v: number, t: number) {
     fin(v, this.name + '.setValueAtTime');
     this._time(t, 'setValueAtTime');
     this._last = v;
     return this;
   }
-  linearRampToValueAtTime(v, t) {
+  linearRampToValueAtTime(v: number, t: number) {
     fin(v, this.name + '.linearRamp');
     this._time(t, 'linearRamp');
     this._last = v;
     return this;
   }
-  exponentialRampToValueAtTime(v, t) {
+  exponentialRampToValueAtTime(v: number, t: number) {
     fin(v, this.name + '.expRamp');
     this._time(t, 'expRamp');
     if (v === 0) throw new RangeError(`${this.name}: exponentialRamp to 0`);
@@ -184,7 +203,7 @@ class MockParam {
     this._last = v;
     return this;
   }
-  setTargetAtTime(v, t, tc) {
+  setTargetAtTime(v: number, t: number, tc: number) {
     fin(v, this.name + '.setTarget');
     this._time(t, 'setTarget');
     fin(tc, this.name + '.timeConstant');
@@ -192,19 +211,27 @@ class MockParam {
     this._last = null; // unknown
     return this;
   }
-  cancelScheduledValues(t) {
+  cancelScheduledValues(t: number) {
     this._time(t, 'cancel');
     return this;
   }
 }
 
 class MockNode {
-  constructor(ctx) {
+  declare context: MockCtx;
+  declare _outs: Set<MockNode | MockParam>;
+  // Set by the subclasses / ctx factories on the nodes that have them.
+  declare gain: MockParam;
+  declare delayTime: MockParam;
+  declare pan: MockParam;
+  declare buffer: MockBuffer | null;
+  declare curve: Float32Array | null;
+  constructor(ctx: MockCtx) {
     this.context = ctx;
     this._outs = new Set();
     ctx._nodeCount++;
   }
-  connect(dest) {
+  connect(dest: unknown) {
     if (!(dest instanceof MockNode) && !(dest instanceof MockParam)) throw new TypeError('connect(): invalid destination ' + dest);
     const dctx = dest instanceof MockNode ? dest.context : dest.ctx;
     if (dctx !== this.context) throw new Error('connect(): node from another context');
@@ -214,17 +241,22 @@ class MockNode {
   disconnect() {
     this._outs.clear();
   }
-  _param(value, name) {
+  _param(value: number, name: string) {
     return new MockParam(this.context, value, this.constructor.name + '.' + name);
   }
 }
 
 class MockSource extends MockNode {
-  constructor(ctx) {
+  declare onended: ((e: { target: MockSource }) => void) | null;
+  declare _started?: boolean;
+  declare _startAt: number;
+  declare _offset: number;
+  declare _stopAt?: number;
+  constructor(ctx: MockCtx) {
     super(ctx);
     this.onended = null;
   }
-  start(when = 0, offset) {
+  start(when = 0, offset?: number) {
     if (this._started) throw new Error('InvalidStateError: start() called twice');
     fin(when, 'start(when)');
     if (when < 0) throw new RangeError('start(): negative when');
@@ -244,13 +276,16 @@ class MockSource extends MockNode {
     if (when < 0) throw new RangeError('stop(): negative when');
     this._stopAt = Math.max(when, this.context.currentTime);
   }
-  _naturalEnd() {
+  _naturalEnd(): number | null {
     return null;
   }
 }
 
 class MockOsc extends MockSource {
-  constructor(ctx) {
+  declare _type: string;
+  declare frequency: MockParam;
+  declare detune: MockParam;
+  constructor(ctx: MockCtx) {
     super(ctx);
     this._type = 'sine';
     this.frequency = this._param(440, 'frequency');
@@ -259,33 +294,40 @@ class MockOsc extends MockSource {
   get type() {
     return this._type;
   }
-  set type(v) {
+  set type(v: string) {
     if (!['sine', 'square', 'sawtooth', 'triangle'].includes(v)) throw new TypeError('bad oscillator type ' + v);
     this._type = v;
   }
 }
 
 class MockBufferSource extends MockSource {
-  constructor(ctx) {
+  declare loop: boolean;
+  declare playbackRate: MockParam;
+  declare detune: MockParam;
+  constructor(ctx: MockCtx) {
     super(ctx);
     this.buffer = null;
     this.loop = false;
     this.playbackRate = this._param(1, 'playbackRate');
     this.detune = this._param(0, 'detune');
   }
-  start(when, offset) {
+  start(when?: number, offset?: number) {
     if (!this.buffer) throw new Error('AudioBufferSourceNode started without buffer');
     if (offset !== undefined && offset > this.buffer.duration) throw new RangeError('offset beyond buffer');
     super.start(when, offset);
   }
-  _naturalEnd() {
+  _naturalEnd(): number | null {
     if (this.loop || !this.buffer) return null;
     return this._startAt + (this.buffer.duration - this._offset) / Math.max(0.01, this.playbackRate.value);
   }
 }
 
 class MockFilter extends MockNode {
-  constructor(ctx) {
+  declare _type: string;
+  declare frequency: MockParam;
+  declare Q: MockParam;
+  declare detune: MockParam;
+  constructor(ctx: MockCtx) {
     super(ctx);
     this._type = 'lowpass';
     this.frequency = this._param(350, 'frequency');
@@ -296,13 +338,22 @@ class MockFilter extends MockNode {
   get type() {
     return this._type;
   }
-  set type(v) {
+  set type(v: string) {
     if (!['lowpass', 'highpass', 'bandpass', 'lowshelf', 'highshelf', 'peaking', 'notch', 'allpass'].includes(v)) throw new TypeError('bad filter type ' + v);
     this._type = v;
   }
 }
 
 class MockCtx {
+  declare static last: MockCtx;
+  declare sampleRate: number;
+  declare currentTime: number;
+  declare state: string;
+  declare _live: Set<MockSource>;
+  declare _maxLive: number;
+  declare _nodeCount: number;
+  declare destination: MockNode;
+  declare onstatechange: (() => void) | null;
   constructor() {
     mockCtxCount++;
     MockCtx.last = this;
@@ -315,7 +366,7 @@ class MockCtx {
     this.destination = new MockNode(this);
     this.onstatechange = null;
   }
-  _setTime(t) {
+  _setTime(t: number) {
     this.currentTime = t;
     for (const s of [...this._live]) {
       const end = s._stopAt ?? s._naturalEnd();
@@ -350,7 +401,7 @@ class MockCtx {
     const p = n.delayTime;
     Object.defineProperty(p, 'value', {
       get: () => p._v,
-      set: (v) => {
+      set: (v: number) => {
         fin(v, 'delayTime');
         if (v > max) throw new RangeError('delayTime > maxDelayTime');
         p._v = v;
@@ -365,10 +416,10 @@ class MockCtx {
   }
   createWaveShaper() {
     const n = new MockNode(this);
-    let curve = null;
+    let curve: Float32Array | null = null;
     Object.defineProperty(n, 'curve', {
       get: () => curve,
-      set: (c) => {
+      set: (c: unknown) => {
         if (!(c instanceof Float32Array)) throw new TypeError('curve must be a Float32Array');
         curve = c;
       },
@@ -381,7 +432,7 @@ class MockCtx {
     const p = n.pan;
     Object.defineProperty(p, 'value', {
       get: () => p._v,
-      set: (v) => {
+      set: (v: number) => {
         fin(v, 'pan');
         if (v < -1 || v > 1) throw new RangeError('pan out of range');
         p._v = v;
@@ -391,17 +442,17 @@ class MockCtx {
   }
   createDynamicsCompressor() {
     const n = new MockNode(this);
-    for (const k of ['threshold', 'knee', 'ratio', 'attack', 'release']) n[k] = n._param(0, k);
+    for (const k of ['threshold', 'knee', 'ratio', 'attack', 'release']) (n as unknown as Record<string, MockParam>)[k] = n._param(0, k);
     return n;
   }
-  createMediaElementSource(el) {
+  createMediaElementSource(el: unknown) {
     if (!el) throw new TypeError('no element');
     return new MockNode(this);
   }
-  createBuffer(channels, length, sampleRate) {
+  createBuffer(channels: number, length: number, sampleRate: number): MockBuffer {
     if (!(length > 0) || !(channels > 0)) throw new RangeError('createBuffer: bad size');
     const data = Array.from({ length: channels }, () => new Float32Array(length));
-    return { numberOfChannels: channels, length, sampleRate, duration: length / sampleRate, getChannelData: (i) => data[i] };
+    return { numberOfChannels: channels, length, sampleRate, duration: length / sampleRate, getChannelData: (i: number) => data[i] };
   }
   decodeAudioData() {
     return Promise.resolve(this.createBuffer(2, 48000, 48000));
@@ -412,30 +463,38 @@ class MockCtx {
 const realTimers = { setTimeout, clearTimeout, setInterval, clearInterval };
 let fakeNow = 0;
 let timerSeq = 0;
-let timers = [];
-let activeCtx = null;
+interface FakeTimer {
+  id: number;
+  at: number;
+  fn: (...args: unknown[]) => void;
+  args: unknown[];
+  every?: number;
+}
+let timers: FakeTimer[] = [];
+let activeCtx: MockCtx | null = null;
 function useFakeTimers() {
   fakeNow = 0;
   timers = [];
-  globalThis.setTimeout = (fn, ms = 0, ...args) => {
+  // Mocked timer globals (numeric ids instead of Node's Timeout objects).
+  globalThis.setTimeout = ((fn: FakeTimer['fn'], ms = 0, ...args: unknown[]) => {
     const id = ++timerSeq;
     timers.push({ id, at: fakeNow + Math.max(0, Number(ms) || 0), fn, args });
     return id;
-  };
-  globalThis.setInterval = (fn, ms = 0) => {
+  }) as unknown as typeof setTimeout;
+  globalThis.setInterval = ((fn: FakeTimer['fn'], ms = 0) => {
     const id = ++timerSeq;
     const every = Math.max(1, Number(ms) || 0);
     timers.push({ id, at: fakeNow + every, fn, args: [], every });
     return id;
-  };
-  globalThis.clearTimeout = globalThis.clearInterval = (id) => {
+  }) as unknown as typeof setInterval;
+  globalThis.clearTimeout = globalThis.clearInterval = ((id: number) => {
     timers = timers.filter((t) => t.id !== id);
-  };
+  }) as unknown as typeof clearTimeout & typeof clearInterval;
 }
 function useRealTimers() {
   Object.assign(globalThis, realTimers);
 }
-function advance(ms) {
+function advance(ms: number) {
   const end = fakeNow + ms;
   for (;;) {
     timers.sort((a, b) => a.at - b.at || a.id - b.id);
@@ -451,9 +510,9 @@ function advance(ms) {
   activeCtx?._setTime(fakeNow / 1000);
 }
 
-const warnings = [];
+const warnings: string[] = [];
 const realWarn = console.warn;
-console.warn = (...a) => {
+console.warn = (...a: unknown[]) => {
   warnings.push(a.map(String).join(' '));
 };
 
@@ -471,8 +530,8 @@ await test('every catalog preset has a generator', () => {
   for (const p of catalog.SFX_PRESETS) assert.equal(typeof SFX[p.id], 'function', 'sfx ' + p.id);
 });
 
-const stats = [];
-async function runLoop(kind, id, start) {
+const stats: string[] = [];
+async function runLoop(kind: string, id: string, start: TrackGenerator) {
   await test(`${kind} « ${id} »: 4 min without error, clean stop`, () => {
     useFakeTimers();
     const ctx = new MockCtx();
@@ -481,7 +540,7 @@ async function runLoop(kind, id, start) {
     warnings.length = 0;
     const out = ctx.createGain();
     out.connect(ctx.destination);
-    const h = start(ctx, out, { fadeIn: 1 });
+    const h = start(ctx as unknown as BaseAudioContext, out as unknown as AudioNode, { fadeIn: 1 }); // the mock stands in for Web Audio
     assert.equal(typeof h?.stop, 'function');
     advance(240_000);
     assert.deepEqual(warnings, [], 'warnings during playback');
@@ -506,7 +565,7 @@ await test('generator started on a suspended context does not pile up events', (
   useFakeTimers();
   const ctx = new MockCtx(); // suspended: currentTime frozen at 0
   activeCtx = null;
-  const h = AMBIENCES.rain(ctx, ctx.destination);
+  const h = AMBIENCES.rain(ctx as unknown as BaseAudioContext, ctx.destination as unknown as AudioNode);
   advance(60_000);
   const before = ctx._nodeCount;
   advance(60_000);
@@ -528,7 +587,7 @@ await test('every sfx plays and ends cleanly', () => {
     out.connect(ctx.destination);
     verb.connect(ctx.destination);
     const t = ctx.currentTime + 0.02;
-    const end = fn(ctx, { out, verb }, t);
+    const end = fn(ctx as unknown as BaseAudioContext, { out, verb } as unknown as SfxBus, t);
     assert.ok(Number.isFinite(end) && end > t && end < t + 8, `${id}: bad end time ${end}`);
     advance((end - ctx.currentTime) * 1000 + 3500);
     assert.equal(ctx._live.size, 0, `${id}: sources still alive`);
@@ -543,20 +602,22 @@ await test('every sfx plays and ends cleanly', () => {
 // 4. Engine core (audio-core.js) with mocked browser globals
 // ===========================================================================
 console.log('\n[engine core]');
-const store = {};
-globalThis.window = { AudioContext: MockCtx };
+// Mocked browser globals.
+const store: Record<string, string> = {};
+globalThis.window = { AudioContext: MockCtx } as unknown as Window & typeof globalThis;
 globalThis.localStorage = {
-  getItem: (k) => (k in store ? store[k] : null),
-  setItem: (k, v) => (store[k] = String(v)),
-  removeItem: (k) => delete store[k],
-};
+  getItem: (k: string) => (k in store ? store[k] : null),
+  setItem: (k: string, v: unknown) => (store[k] = String(v)),
+  removeItem: (k: string) => delete store[k],
+} as unknown as Storage;
 let audioEls = 0;
 globalThis.Audio = class {
+  declare listeners: Record<string, unknown>;
   constructor() {
     audioEls++;
     this.listeners = {};
   }
-  addEventListener(ev, fn) {
+  addEventListener(ev: string, fn: unknown) {
     this.listeners[ev] = fn;
   }
   play() {
@@ -565,20 +626,20 @@ globalThis.Audio = class {
   pause() {}
   removeAttribute() {}
   load() {}
-};
+} as unknown as typeof Audio;
 const realFetch = globalThis.fetch;
-globalThis.fetch = async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(8) });
+globalThis.fetch = (async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(8) })) as unknown as typeof fetch;
 
 useFakeTimers();
 const core = await import('../client/modules/audio/audio-core.ts');
 const flush = async () => {
   for (let i = 0; i < 5; i++) await Promise.resolve();
 };
-const tracks = catalog.builtinTracks().concat([
+const tracks = (catalog.builtinTracks() as AudioTrack[]).concat([
   { id: 'trk_file', name: 'Fichier', kind: 'ambient', source: 'url', url: '/uploads/a.mp3' },
   { id: 'trk_sfx', name: 'Bip', kind: 'sfx', source: 'url', url: '/uploads/b.ogg', volume: 1.5 },
 ]);
-const audioState = (amb, mus, extra = {}) => ({ master: 0.8, ambient: { trackId: amb, volume: 0.5, startedAt: Date.now() - 5000 }, music: { trackId: mus, volume: 0.4 }, tracks, ...extra });
+const audioState = (amb: string | null, mus: string | null, extra = {}) => ({ master: 0.8, ambient: { trackId: amb, volume: 0.5, startedAt: Date.now() - 5000 }, music: { trackId: mus, volume: 0.4 }, tracks, ...extra });
 
 await test('nothing plays before a user gesture, then the scene starts', async () => {
   warnings.length = 0;
@@ -592,11 +653,11 @@ await test('nothing plays before a user gesture, then the scene starts', async (
   activeCtx = MockCtx.last;
   assert.equal(core.getAudioState().unlocked, true);
   advance(3000);
-  assert.ok(activeCtx._live.size > 0, 'ambient not started');
+  assert.ok(activeCtx!._live.size > 0, 'ambient not started');
 });
 
 await test('crossfade, volume changes, stop: no leaks', async () => {
-  const ctx = activeCtx;
+  const ctx = activeCtx!;
   core.syncAudio(audioState('amb-storm', 'mus-combat'));
   advance(10_000);
   core.syncAudio(audioState('amb-storm', 'mus-combat', { master: 0.3 })); // same tracks: no restart
@@ -618,17 +679,17 @@ await test('uploaded loop uses a media element; unknown ids are ignored', async 
   core.syncAudio(audioState(null, null));
   advance(4000);
   core.syncAudio(null); // tolerated
-  core.syncAudio({ ambient: 'garbage', tracks: 'nope' });
+  core.syncAudio({ ambient: 'garbage', tracks: 'nope' } as unknown as AudioSync); // deliberately malformed
 });
 
 await test('sfx: built-in, uploaded, dedupe, unknown, stopAll', async () => {
-  const ctx = activeCtx;
+  const ctx = activeCtx!;
   assert.equal(core.playSfx('dice', 1), true);
   assert.equal(core.playSfx('dice', 1), false, 'duplicate within 60 ms should be ignored');
   assert.equal(core.playSfx('explosion', 0.5), true);
   assert.equal(core.playSfx('alarm', 'loud'), true);
   assert.equal(core.playSfx('nope'), false);
-  assert.equal(core.playSfx(42), false);
+  assert.equal(core.playSfx(42 as unknown as string), false); // deliberately not a string
   core.syncAudio(audioState(null, null));
   assert.equal(core.playSfx('trk_sfx', 1), true);
   await flush();
@@ -638,7 +699,7 @@ await test('sfx: built-in, uploaded, dedupe, unknown, stopAll', async () => {
 });
 
 await test('private preview toggles and stops', async () => {
-  const ctx = activeCtx;
+  const ctx = activeCtx!;
   const rain = tracks.find((t) => t.id === 'amb-matrix');
   core.togglePreview(rain);
   await flush();
@@ -676,34 +737,36 @@ console.log('\n[server]');
 const audioMod = (await import('../server/modules/60-audio.ts')).default;
 
 await test('init: defaults, built-ins merged by id, seeds, stale references cleared', () => {
-  const state = { audio: { master: 'x', ambient: { trackId: 'trk_gone', volume: 9 }, tracks: [{ id: 'amb-rain', name: 'Ma pluie', kind: 'music', source: 'synth', preset: 'zzz' }, { id: 'amb-old', kind: 'ambient', source: 'synth', preset: 'old' }], scenes: [{ id: 'scn-bar-porfla', name: 'Perso' }] } };
+  // partial raw state (init normalizes it); InitOptions: only readSeed is read
+  const state = { audio: { master: 'x', ambient: { trackId: 'trk_gone', volume: 9 }, tracks: [{ id: 'amb-rain', name: 'Ma pluie', kind: 'music', source: 'synth', preset: 'zzz' }, { id: 'amb-old', kind: 'ambient', source: 'synth', preset: 'old' }], scenes: [{ id: 'scn-bar-porfla', name: 'Perso' }] } } as unknown as TableState;
   const seed = { tracks: [{ id: 'seed_t', name: 'S', kind: 'music', source: 'url', url: '/uploads/s.mp3' }, { id: 'bad', kind: 'x', source: 'url', url: '/u' }], scenes: [{ id: 'scn-bar-porfla', name: 'Seed' }, { id: 'scn-new', name: 'Nouvelle', ambient: 'amb-bar', music: null }] };
-  audioMod.init(state, { readSeed: () => seed });
+  audioMod.init!(state, { readSeed: () => seed } as unknown as InitOptions);
   const a = state.audio;
   assert.equal(a.master, 0.8);
   assert.equal(a.ambient.volume, 1);
   assert.equal(a.ambient.trackId, null);
   assert.equal(a.music.volume, 0.4);
   assert.equal(a.autoScenes, true);
-  const rain = a.tracks.find((t) => t.id === 'amb-rain');
+  const rain = a.tracks.find((t) => t.id === 'amb-rain')!;
   assert.equal(rain.name, 'Ma pluie', 'GM rename kept');
   assert.equal(rain.kind, 'ambient');
   assert.equal(rain.preset, 'rain');
   assert.ok(!a.tracks.some((t) => t.id === 'amb-old'), 'stale synth track kept');
   assert.ok(a.tracks.some((t) => t.id === 'seed_t'));
   assert.ok(!a.tracks.some((t) => t.id === 'bad'));
-  assert.equal(a.scenes.find((s) => s.id === 'scn-bar-porfla').name, 'Perso', 'seed overwrote GM scene');
-  assert.ok(a.scenes.some((s) => s.id === 'scn-new'));
-  audioMod.init(state, { readSeed: () => seed }); // idempotent
+  assert.equal(a.scenes!.find((s) => s.id === 'scn-bar-porfla')!.name, 'Perso', 'seed overwrote GM scene');
+  assert.ok(a.scenes!.some((s) => s.id === 'scn-new'));
+  audioMod.init!(state, { readSeed: () => seed } as unknown as InitOptions); // idempotent
   assert.equal(a.tracks.length, new Set(a.tracks.map((t) => t.id)).size);
-  audioMod.init({}, { readSeed: () => null }); // empty state + missing seed file
+  audioMod.init!({} as TableState, { readSeed: () => null } as unknown as InitOptions); // empty state + missing seed file
 });
 
 await test('init: seed scene `replaces` upgrades only untouched channels, keeps credit', () => {
+  // partial raw state (init normalizes it)
   const state = { audio: { scenes: [
     { id: 'scn-a', name: 'A', ambient: 'keep', music: 'mus-combat' },
     { id: 'scn-b', name: 'B', ambient: 'keep', music: 'mus-chase' },
-  ] } };
+  ] } } as unknown as TableState;
   const seed = {
     tracks: [{ id: 'trk_lib_x', name: 'X', kind: 'music', source: 'url', url: '/assets/music/x.mp3', credit: 'Music by Someone' }],
     scenes: [
@@ -712,38 +775,38 @@ await test('init: seed scene `replaces` upgrades only untouched channels, keeps 
       { id: 'scn-c', name: 'C', ambient: null, music: 'trk_lib_x', replaces: { music: 'mus-menu' } },
     ],
   };
-  audioMod.init(state, { readSeed: () => seed });
+  audioMod.init!(state, { readSeed: () => seed } as unknown as InitOptions);
   const a = state.audio;
-  assert.equal(a.scenes.find((s) => s.id === 'scn-a').music, 'trk_lib_x');
-  assert.equal(a.scenes.find((s) => s.id === 'scn-b').music, 'mus-chase', 'GM-changed channel overwritten');
-  const c = a.scenes.find((s) => s.id === 'scn-c');
+  assert.equal(a.scenes!.find((s) => s.id === 'scn-a')!.music, 'trk_lib_x');
+  assert.equal(a.scenes!.find((s) => s.id === 'scn-b')!.music, 'mus-chase', 'GM-changed channel overwritten');
+  const c = a.scenes!.find((s) => s.id === 'scn-c')!;
   assert.equal(c.music, 'trk_lib_x');
   assert.equal('replaces' in c, false);
-  assert.equal(a.tracks.find((t) => t.id === 'trk_lib_x').credit, 'Music by Someone');
+  assert.equal(a.tracks.find((t) => t.id === 'trk_lib_x')!.credit, 'Music by Someone');
 });
 
 await test('seed file: scenes reference existing tracks and known maps', async () => {
   const fs = await import('node:fs');
-  const seed = JSON.parse(fs.readFileSync(new URL('../data/seed/audio.json', import.meta.url), 'utf8'));
+  const seed: any = JSON.parse(fs.readFileSync(new URL('../data/seed/audio.json', import.meta.url), 'utf8')); // raw seed JSON
   const ids = new Set([...catalog.builtinTracks(), ...seed.tracks].map((t) => t.id));
   for (const s of seed.scenes) {
     for (const [ch, old] of Object.entries(s.replaces || {})) assert.ok(ids.has(old), `${s.id}.replaces.${ch} = ${old}`);
     for (const ch of ['ambient', 'music']) if (s[ch] && s[ch] !== 'keep') assert.ok(ids.has(s[ch]), `${s.id}.${ch} = ${s[ch]}`);
   }
-  assert.equal(new Set(seed.scenes.map((s) => s.id)).size, seed.scenes.length);
+  assert.equal(new Set(seed.scenes.map((s: { id: string }) => s.id)).size, seed.scenes.length);
 });
 
 const { startServer, login, client, settle } = await import('./test-client.ts');
 const srv = await startServer({ port: 3912 });
-let gm, p1;
+let gm!: TestClient, p1!: TestClient;
 try {
   gm = await client(srv.url, await login(srv.url, { role: 'gm', password: 'lazarus' }));
   p1 = await client(srv.url, await login(srv.url, { role: 'player', name: 'Testeur audio' }));
-  const fails = async (p, re) => {
+  const fails = async (p: Promise<unknown>, re?: RegExp) => {
     try {
       await p;
     } catch (err) {
-      if (re) assert.match(err.message, re);
+      if (re) assert.match((err as Error).message, re);
       return;
     }
     assert.fail('expected a failure');
@@ -759,7 +822,7 @@ try {
     assert.deepEqual(a.ambient, { trackId: null, volume: 0.5, startedAt: 0 });
     assert.equal(a.music.volume, 0.4);
     assert.ok(a.tracks.some((t) => t.id === 'amb-rain') && a.tracks.some((t) => t.id === 'mus-combat') && a.tracks.some((t) => t.id === 'dice'));
-    const porfla = a.scenes.find((s) => s.id === 'scn-bar-porfla');
+    const porfla = a.scenes!.find((s) => s.id === 'scn-bar-porfla')!;
     assert.equal(porfla.ambient, 'amb-bar');
     assert.equal(porfla.mapId, 'map_fvtt_bar');
     const pa = p1.state.audio;
@@ -780,7 +843,7 @@ try {
       ['audio/applyScene', { sceneId: 'scn-combat' }],
       ['audio/deleteScene', { sceneId: 'scn-combat' }],
       ['audio/setOptions', { autoScenes: false }],
-    ])
+    ] as Array<[string, ActionPayload]>)
       await fails(p1.send(type, payload), /MJ/);
   });
 
@@ -829,13 +892,13 @@ try {
     assert.ok(gm.events.some((e) => e.ev === 'sfx'), 'GM hears it too');
   });
 
-  let upId;
+  let upId: string;
   await test('uploaded tracks: add, play as sfx, update, remove', async () => {
     await fails(gm.send('audio/addTrack', { name: 'x', kind: 'sfx', url: 'javascript:alert(1)' }), /invalide/);
     await fails(gm.send('audio/addTrack', { name: 'x', kind: 'boom', url: '/uploads/x.mp3' }), /invalide/);
     upId = await gm.send('audio/addTrack', { name: '  Cri du Wendigo  ', kind: 'sfx', url: '/uploads/abc-cri.mp3', tags: ['monstre', 'monstre', ''] });
     await sync();
-    const t = gm.state.audio.tracks.find((x) => x.id === upId);
+    const t = gm.state.audio.tracks.find((x) => x.id === upId)!;
     assert.deepEqual({ name: t.name, kind: t.kind, source: t.source, tags: t.tags }, { name: 'Cri du Wendigo', kind: 'sfx', source: 'url', tags: ['monstre'] });
     assert.ok(p1.state.audio.tracks.some((x) => x.id === upId && x.url === '/uploads/abc-cri.mp3'), 'player needs uploaded sfx urls');
     p1.events.length = 0;
@@ -845,7 +908,7 @@ try {
     await gm.send('audio/updateTrack', { id: upId, name: 'Hurlement', kind: 'ambient', volume: 3 });
     await gm.send('audio/setAmbient', { trackId: upId });
     await sync();
-    const t2 = gm.state.audio.tracks.find((x) => x.id === upId);
+    const t2 = gm.state.audio.tracks.find((x) => x.id === upId)!;
     assert.equal(t2.name, 'Hurlement');
     assert.equal(t2.kind, 'ambient');
     assert.equal(t2.volume, 2);
@@ -858,7 +921,7 @@ try {
     await sync();
     assert.ok(!gm.state.audio.tracks.some((x) => x.id === upId));
     assert.equal(gm.state.audio.ambient.trackId, null, 'removing the playing track silences the channel');
-    assert.equal(gm.state.audio.tracks.find((x) => x.id === 'amb-rain').name, 'Crachin');
+    assert.equal(gm.state.audio.tracks.find((x) => x.id === 'amb-rain')!.name, 'Crachin');
   });
 
   await test('scenes: create from current, keep, apply, update, delete', async () => {
@@ -866,13 +929,13 @@ try {
     await gm.send('audio/setMusic', { trackId: 'mus-tension' });
     const id = await gm.send('audio/saveScene', { name: 'Labo test', mapId: 'map_x', ambientVolume: 0.7 });
     await sync();
-    let s = gm.state.audio.scenes.find((x) => x.id === id);
+    let s = gm.state.audio.scenes!.find((x) => x.id === id)!;
     assert.deepEqual({ name: s.name, ambient: s.ambient, music: s.music, mapId: s.mapId, av: s.ambientVolume }, { name: 'Labo test', ambient: 'amb-lab', music: 'mus-tension', mapId: 'map_x', av: 0.7 });
     await fails(gm.send('audio/saveScene', { name: 'x', ambient: 'dice' }), /boucle/);
     await fails(gm.send('audio/saveScene', { id: 'nope', name: 'x' }), /introuvable/);
     await gm.send('audio/saveScene', { id, name: 'Labo Lazarus bis', music: 'keep', mapId: null, ambientVolume: null });
     await sync();
-    s = gm.state.audio.scenes.find((x) => x.id === id);
+    s = gm.state.audio.scenes!.find((x) => x.id === id)!;
     assert.equal(s.name, 'Labo Lazarus bis');
     assert.equal(s.music, 'keep');
     assert.equal(s.mapId, undefined);
@@ -898,7 +961,7 @@ try {
     await fails(gm.send('audio/applyScene', { sceneId: id }), /introuvable/);
     await fails(gm.send('audio/deleteScene', { sceneId: id }), /introuvable/);
     await sync();
-    assert.ok(!gm.state.audio.scenes.some((x) => x.id === id));
+    assert.ok(!gm.state.audio.scenes!.some((x) => x.id === id));
     assert.equal(p1.state.audio.scenes, undefined);
   });
 
@@ -923,7 +986,7 @@ try {
       ['audio/saveScene', { name: '', ambient: 12 }],
       ['audio/applyScene', {}],
       ['audio/updateTrack', { id: 'dice', volume: 'x' }],
-    ]) {
+    ] as Array<[string, ActionPayload]>) { // deliberately bad payloads (null included)
       try {
         await gm.send(type, payload);
       } catch {}

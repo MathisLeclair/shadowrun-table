@@ -6,10 +6,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { XMLValidator, XMLParser } from 'fast-xml-parser';
 import { startServer, login, client, settle } from './test-client.ts';
+import type { TestClient } from './test-client.ts';
+import type { Accessory, Actor, Gear, I18nParams, Lifestyle, Weapon } from '../shared/types.ts';
 import { parseXml, serializeXml, el } from '../server/lib/chummer/xml.ts';
 import { parseChum5 } from '../server/lib/chummer/parse.ts';
+import type { ParsedActor } from '../server/lib/chummer/parse.ts';
 import { exportChum5 } from '../server/lib/chummer/export.ts';
 import { mergeActor, diffActors } from '../server/lib/chummer/merge.ts';
+import type { ActorDiff, DiffScalar } from '../server/lib/chummer/merge.ts';
 import { t as tr, dictionary } from '../server/lib/i18n.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -17,27 +21,30 @@ const FIXTURE = path.join(ROOT, 'tools', 'fixtures', 'chummer-test.chum5');
 const OUT_JANE = path.join(ROOT, 'tools', 'fixtures', 'export-sample-jane.chum5');
 const OUT_RT = path.join(ROOT, 'tools', 'fixtures', 'export-roundtrip-test.chum5');
 const src = fs.readFileSync(FIXTURE, 'utf8');
-const seeds = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'seed', 'actors', 'pcs.json'), 'utf8'));
+const seeds = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'seed', 'actors', 'pcs.json'), 'utf8')) as Actor[];
 const COLT = '6366691e-c1e0-4d5e-b7a6-1c0371708714';
 
+/** Error thrown with a translatable key (XmlError / ChummerError). */
+type KeyedError = Error & { i18nKey: string; i18nParams?: I18nParams };
+
 let failures = 0;
-async function test(name, fn) {
+async function test(name: string, fn: () => unknown) {
   try {
     await fn();
     console.log('  ✓', name);
   } catch (err) {
     failures++;
-    console.log('  ✗', name, '\n     ', err.stack?.split('\n').slice(0, 3).join('\n      ') || err.message);
+    console.log('  ✗', name, '\n     ', (err as Error).stack?.split('\n').slice(0, 3).join('\n      ') || (err as Error).message);
   }
 }
-const wellFormed = (xml) => {
+const wellFormed = (xml: string) => {
   const v = XMLValidator.validate(xml.replace(/^﻿/, ''), { allowBooleanAttributes: false });
   assert.equal(v, true, JSON.stringify(v));
   new XMLParser({ ignoreAttributes: false }).parse(xml);
 };
-const topNames = (xml) => parseXml(xml).root.elements.map((e) => e.name);
-const clone = (x) => JSON.parse(JSON.stringify(x));
-const count = (xml, tag) => (xml.match(new RegExp(`<${tag}>`, 'g')) || []).length;
+const topNames = (xml: string) => parseXml(xml).root.elements.map((e) => e.name);
+const clone = <T>(x: T): T => JSON.parse(JSON.stringify(x));
+const count = (xml: string, tag: string) => (xml.match(new RegExp(`<${tag}>`, 'g')) || []).length;
 
 console.log('XML layer');
 await test('fixture round-trips byte for byte through the DOM', () => {
@@ -61,8 +68,8 @@ await test('fixture: identity, attributes, skills, weapon', () => {
   assert.equal(fx.attributes.MAG, 4);
   assert.equal(fx.attributes.EDG, 2);
   assert.equal(fx.attributes.ESS, 6);
-  assert.equal(fx.skills.find((s) => s.id === 'disguise').rating, 6); // Stealth group 6
-  assert.equal(fx.skills.find((s) => s.id === 'aeronautics_mechanic').rating, 2); // free priority rating (SkillBase improvement)
+  assert.equal(fx.skills.find((s) => s.id === 'disguise')!.rating, 6); // Stealth group 6
+  assert.equal(fx.skills.find((s) => s.id === 'aeronautics_mechanic')!.rating, 2); // free priority rating (SkillBase improvement)
   const colt = fx.weapons.find((w) => w.name === 'Colt Government 2066');
   assert.ok(colt);
   assert.equal(colt.catalogId, COLT);
@@ -77,13 +84,14 @@ await test('fixture: identity, attributes, skills, weapon', () => {
   assert.equal(fx.qualities[0].karma, 20);
   assert.equal(fx.nuyen, 6000);
   assert.equal(imported.info.created, false);
-  assert.equal(fx.chummer.fileName, 'chummer-test.chum5');
-  assert.ok(fx.chummer.xml.startsWith('<?xml'));
+  assert.equal(fx.chummer!.fileName, 'chummer-test.chum5');
+  assert.ok(fx.chummer!.xml!.startsWith('<?xml'));
 });
 
 console.log('Export: patch mode (original file kept)');
 await test('unchanged actor exports the original file unchanged', () => {
-  const r = exportChum5(clone(fx));
+  // fx is a ParsedActor (optional id), exported as is here and below
+  const r = exportChum5(clone(fx) as Actor);
   assert.equal(r.mode, 'patch');
   assert.equal(r.xml, src.replace(/^﻿/, ''));
 });
@@ -94,11 +102,11 @@ await test('round trip: karma, nuyen, skills, attributes, items added/removed, u
   a.nuyen = 5000;
   a.attributes.AGI = 6;
   a.attributes.BOD = 3;
-  a.skills.find((s) => s.id === 'disguise').rating = 7;
-  a.skills.find((s) => s.id === 'sneaking').rating = 4; // below its group: the group is dissolved
+  a.skills.find((s) => s.id === 'disguise')!.rating = 7;
+  a.skills.find((s) => s.id === 'sneaking')!.rating = 4; // below its group: the group is dissolved
   a.skills.push({ id: 'pistols', name: 'Pistolets', attr: 'AGI', rating: 3, spec: 'Revolvers' });
   a.weapons = a.weapons.filter((w) => w.catalogId !== COLT);
-  a.weapons.push({ id: 'w_new', name: 'Ares Predator V', kind: 'ranged', skill: 'pistols', damage: '8P', catalogId: null });
+  a.weapons.push({ id: 'w_new', name: 'Ares Predator V', kind: 'ranged', skill: 'pistols', damage: '8P', catalogId: null } as unknown as Weapon);
   a.armor.push({ id: 'a_new', name: 'Veste pare-balles', rating: 12, equipped: true });
   a.gear.push({ id: 'g_new', name: 'Medkit', rating: 3, qty: 2, category: 'Biotech' });
   a.gear.push({ id: 'g_cust', name: 'Bidule maison', qty: 1, category: 'Divers' });
@@ -111,7 +119,7 @@ await test('round trip: karma, nuyen, skills, attributes, items added/removed, u
   a.condition.physical = 3;
   a.condition.stun = 2;
   a.edge.current = 1;
-  const r = exportChum5(a);
+  const r = exportChum5(a as Actor);
   wellFormed(r.xml);
   assert.equal(r.mode, 'patch');
   for (const id of ['w_new', 'a_new', 'g_new', 'c_new', 'ct_new', 'q_new', 'p_new']) assert.ok(Object.values(r.assigned).some((m) => m[id]), `guid assigned for ${id}`);
@@ -138,14 +146,14 @@ await test('round trip: karma, nuyen, skills, attributes, items added/removed, u
   assert.equal(b.armor[0].rating, 12);
   assert.equal(b.armor[0].equipped, true);
   assert.ok(b.armor[0].catalogId, 'armor jacket found by French name');
-  assert.equal(b.gear.find((g) => /Medkit|Médikit/.test(g.name)).qty, 2);
+  assert.equal(b.gear.find((g) => /Medkit|Médikit/.test(g.name))!.qty, 2);
   assert.ok(b.gear.find((g) => g.name === 'Bidule maison'), 'unknown gear exported as a renamed Custom Item');
   const dj = b.augmentations.find((x) => /Datajack/i.test(x.name));
   assert.ok(dj && dj.grade === 'alpha' && Math.abs(dj.essence - 0.08) < 1e-6, 'datajack alpha 0.08');
   assert.equal(b.contacts[0].loyalty, 4);
   assert.ok(b.qualities.some((q) => q.karma === 4 && q.positive));
-  assert.equal(b.knowledge.find((k) => k.name === 'Gangs de Seattle').rating, 3);
-  assert.equal(b.knowledge.find((k) => k.name === 'English').native, true);
+  assert.equal(b.knowledge.find((k) => k.name === 'Gangs de Seattle')!.rating, 3);
+  assert.equal(b.knowledge.find((k) => k.name === 'English')!.native, true);
   const ir = b.powers[0];
   assert.equal(ir.level, 2);
   assert.equal(ir.pp, 2.5);
@@ -164,7 +172,7 @@ console.log('Export: generate mode (no Chummer file)');
 for (const seed of seeds) {
   await test(`${seed.name}: well-formed career file, same values after re-import`, () => {
     // The sample written for Chummer carries the portrait (like the HTTP export does).
-    const img = seed.id === 'pc_jane' && String(seed.portrait || '').startsWith('/assets/') ? path.join(ROOT, 'data', ...seed.portrait.split('/').filter(Boolean)) : null;
+    const img = seed.id === 'pc_jane' && String(seed.portrait || '').startsWith('/assets/') ? path.join(ROOT, 'data', ...seed.portrait!.split('/').filter(Boolean)) : null;
     const mugshots = img && fs.existsSync(img) ? [fs.readFileSync(img).toString('base64')] : null;
     const r = exportChum5(clone(seed), { mugshots });
     assert.equal(r.mode, 'generate');
@@ -173,7 +181,7 @@ for (const seed of seeds) {
     assert.ok(r.xml.includes('<appversion>5.226.0</appversion>'));
     assert.ok(r.xml.includes('<settings>223a11ff-80e0-428b-89a9-6ef1c243b8b6</settings>'));
     const b = parseChum5(r.xml).actor;
-    for (const k of ['BOD', 'AGI', 'REA', 'STR', 'WIL', 'LOG', 'INT', 'CHA', 'EDG', 'MAG', 'RES']) assert.equal(b.attributes[k], seed.attributes[k], k);
+    for (const k of ['BOD', 'AGI', 'REA', 'STR', 'WIL', 'LOG', 'INT', 'CHA', 'EDG', 'MAG', 'RES'] as const) assert.equal(b.attributes[k], seed.attributes[k], k);
     assert.equal(b.attributes.ESS, seed.attributes.ESS);
     for (const s of seed.skills) {
       const t = b.skills.find((x) => x.id === s.id);
@@ -188,12 +196,12 @@ for (const seed of seeds) {
     assert.equal(b.notoriety, seed.notoriety || 0);
     assert.equal(b.name, seed.name);
     assert.equal(b.metatype, seed.metatype);
-    for (const l of ['weapons', 'armor', 'augmentations', 'contacts', 'qualities', 'powers', 'spells', 'sins', 'knowledge', 'vehicles']) assert.equal((b[l] || []).length, (seed[l] || []).length, l);
+    for (const l of ['weapons', 'armor', 'augmentations', 'contacts', 'qualities', 'powers', 'spells', 'sins', 'knowledge', 'vehicles'] as const) assert.equal((b[l] || []).length, (seed[l] || []).length, l);
     if (seed.id === 'pc_jane') fs.writeFileSync(OUT_JANE, '﻿' + r.xml.replace(/\r?\n/g, '\r\n'));
   });
 }
 await test('career mode: app karma/nuyen history becomes Chummer expenses; street cred stays stable', () => {
-  const jane = clone(seeds.find((a) => a.id === 'pc_jane'));
+  const jane = clone(seeds.find((a) => a.id === 'pc_jane')!);
   const first = exportChum5(jane);
   const a = parseChum5(first.xml, { now: 1000 }).actor; // the file as the player would import it
   const expBefore = count(first.xml, 'expense');
@@ -202,7 +210,8 @@ await test('career mode: app karma/nuyen history becomes Chummer expenses; stree
   a.karmaTotal += 5;
   a.history.push({ ts: 3000, text: 'Achat : Medkit', nuyen: -1500 });
   a.nuyen -= 1500;
-  const r = exportChum5(a, { now: 4000 });
+  // ParsedActor (optional id) exported as is
+  const r = exportChum5(a as Actor, { now: 4000 });
   wellFormed(r.xml);
   assert.equal(count(r.xml, 'expense'), expBefore + 2);
   assert.ok(r.xml.includes('<reason>Fin de séance</reason>'));
@@ -222,28 +231,28 @@ await test('3-way merge keeps app changes, applies Chummer changes, merges karma
   ours.armor = [{ id: 'app_only', name: 'Casque', rating: 2, equipped: true, stack: true }]; // bought in the app, not yet exported
   ours.condition.stun = 4;
   ours.portrait = '/uploads/me.png';
-  ours.training = [{ id: 't1' }];
+  ours.training = [{ id: 't1' }] as ParsedActor['training'];
   const theirs = clone(fx); // edited in Chummer
   theirs.karma -= 2; // spent in Chummer
-  theirs.skills.find((s) => s.id === 'disguise').rating = 7;
+  theirs.skills.find((s) => s.id === 'disguise')!.rating = 7;
   theirs.weapons = [];
   theirs.chummer = { ...theirs.chummer, fileName: 'v2.chum5' };
-  const m = mergeActor(ours, theirs, base, { now: 99, fileName: 'v2.chum5' });
+  const m = mergeActor(ours as Actor, theirs, base, { now: 99, fileName: 'v2.chum5' });
   assert.equal(m.karma, fx.karma + 5 - 2);
-  assert.equal(m.skills.find((s) => s.id === 'disguise').rating, 7);
+  assert.equal(m.skills.find((s) => s.id === 'disguise')!.rating, 7);
   assert.equal(m.weapons.length, 0, 'weapons removed in Chummer');
   assert.equal(m.armor[0].id, 'app_only', 'app-only item kept');
   assert.equal(m.condition.stun, 4);
   assert.equal(m.portrait, '/uploads/me.png');
   assert.deepEqual(m.training, [{ id: 't1' }]);
-  assert.equal(m.chummer.fileName, 'v2.chum5');
+  assert.equal(m.chummer!.fileName, 'v2.chum5');
   const d = diffActors(ours, m);
   assert.ok(d.skills.some((s) => s.id === 'disguise'));
   assert.ok(d.lists.some((l) => l.list === 'weapons' && l.removed.length === 2));
   assert.ok(d.scalars.some((s) => s.label === 'Karma'));
 });
 await test('after a merge, app rewards not in the uploaded file still become Chummer expenses', () => {
-  const file = exportChum5(clone(seeds.find((a) => a.id === 'pc_jane'))).xml;
+  const file = exportChum5(clone(seeds.find((a) => a.id === 'pc_jane')!)).xml;
   const ours = parseChum5(file, { now: 1000 }).actor;
   ours.karma += 5;
   ours.karmaTotal += 5;
@@ -251,7 +260,7 @@ await test('after a merge, app rewards not in the uploaded file still become Chu
   const edited = parseXml(file);
   edited.root.set('nuyen', String(Number(edited.root.val('nuyen')) - 300)); // spent in Chummer
   const theirs = parseChum5(serializeXml(edited), { now: 3000 }).actor;
-  const m = mergeActor(ours, theirs, parseChum5(file, { keepXml: false }).actor, { now: 3000 });
+  const m = mergeActor(ours as Actor, theirs, parseChum5(file, { keepXml: false }).actor, { now: 3000 });
   assert.equal(m.karma, ours.karma);
   assert.equal(m.nuyen, ours.nuyen - 300);
   const out = exportChum5(m, { now: 4000 });
@@ -263,7 +272,7 @@ await test('after a merge, app rewards not in the uploaded file still become Chu
   assert.equal(b.nuyen, m.nuyen);
 });
 await test('first import into an app-made actor: the file wins, app-only data kept', () => {
-  const ours = clone(seeds.find((a) => a.id === 'pc_bricks'));
+  const ours = clone(seeds.find((a) => a.id === 'pc_bricks')!);
   const m = mergeActor(ours, clone(fx), null, { now: 1 });
   assert.equal(m.id, 'pc_bricks');
   assert.equal(m.attributes.AGI, 5);
@@ -276,41 +285,41 @@ await test('first import into an app-made actor: the file wins, app-only data ke
 console.log('i18n (French unchanged, English from client/i18n/en/chummer.json)');
 const en = dictionary('en');
 await test('XML / file errors carry a translatable key, French message unchanged', () => {
-  let e1;
+  let e1: KeyedError | undefined;
   try {
     parseXml('<character><a></b></character>');
   } catch (err) {
-    e1 = err;
+    e1 = err as KeyedError;
   }
-  assert.equal(e1.message, 'XML invalide (ligne 1) : </b> ferme <a>');
-  assert.equal(e1.i18nKey, 'XML invalide (ligne {line}) : {error}');
-  assert.equal(tr('en', e1.i18nKey, e1.i18nParams), 'Invalid XML (line 1): </b> closes <a>');
-  let e2;
+  assert.equal(e1!.message, 'XML invalide (ligne 1) : </b> ferme <a>');
+  assert.equal(e1!.i18nKey, 'XML invalide (ligne {line}) : {error}');
+  assert.equal(tr('en', e1!.i18nKey, e1!.i18nParams), 'Invalid XML (line 1): </b> closes <a>');
+  let e2: KeyedError | undefined;
   try {
     parseChum5('<character><name>x</character>');
   } catch (err) {
-    e2 = err;
+    e2 = err as KeyedError;
   }
-  assert.match(e2.message, /^Fichier \.chum5 illisible — XML invalide \(ligne 1\) : /);
-  assert.match(tr('en', e2.i18nKey, e2.i18nParams), /^Unreadable \.chum5 file — Invalid XML \(line 1\): /);
-  let e3;
+  assert.match(e2!.message, /^Fichier \.chum5 illisible — XML invalide \(ligne 1\) : /);
+  assert.match(tr('en', e2!.i18nKey, e2!.i18nParams), /^Unreadable \.chum5 file — Invalid XML \(line 1\): /);
+  let e3: KeyedError | undefined;
   try {
     parseChum5('<root/>');
   } catch (err) {
-    e3 = err;
+    e3 = err as KeyedError;
   }
-  assert.equal(e3.i18nKey, 'Ce fichier n’est pas une fiche Chummer5 (.chum5)');
-  assert.ok(en[e3.i18nKey]);
+  assert.equal(e3!.i18nKey, 'Ce fichier n’est pas une fiche Chummer5 (.chum5)');
+  assert.ok(en[e3!.i18nKey]);
 });
 await test('warnings: French strings kept, translatable copy alongside', () => {
   const p = parseChum5(src.replace(/<created>True<\/created>/, '<created>False</created>'), { fileName: 'x.chum5' });
   assert.equal(p.warnings.length, p.warningsI18n.length);
   assert.ok(p.warnings.some((w) => /mode création/.test(w)), JSON.stringify(p.warnings));
   for (const w of p.warningsI18n) assert.ok(en[w.t], `English for « ${w.t} »`);
-  const jane = clone(seeds.find((a) => a.id === 'pc_jane'));
+  const jane = clone(seeds.find((a) => a.id === 'pc_jane')!);
   const r = exportChum5(jane, { now: 1 });
   assert.equal(r.warnings.length, r.warningsI18n.length);
-  assert.equal(r.warnings.add, undefined, 'no helper left on the returned array');
+  assert.equal((r.warnings as string[] & { add?: unknown }).add, undefined, 'no helper left on the returned array');
   r.warningsI18n.forEach((w, i) => {
     assert.ok(en[w.t], `English for « ${w.t} »`);
     assert.equal(tr('fr', w.t, w.params), r.warnings[i]);
@@ -322,8 +331,9 @@ await test('diff labels are dictionary keys', () => {
   b.karma += 3;
   b.nuyen += 10;
   b.notes = 'autre';
-  b.lifestyles = [...(b.lifestyles || []), { id: 'ls_new', name: 'Luxe', base: 'Luxury', baseCost: 100000, monthsPaid: 0, qualities: [], monthlyCost: 100000 }];
-  b.gear = [...(b.gear || []), { id: 'g_new', name: 'Truc' }];
+  // Partial items: only what the diff reads
+  b.lifestyles = [...(b.lifestyles || []), { id: 'ls_new', name: 'Luxe', base: 'Luxury', baseCost: 100000, monthsPaid: 0, qualities: [], monthlyCost: 100000 } as unknown as Lifestyle];
+  b.gear = [...(b.gear || []), { id: 'g_new', name: 'Truc' } as Gear];
   const d = diffActors(a, b);
   for (const sc of d.scalars) assert.ok(en[sc.label], `English for « ${sc.label} »`);
   for (const l of d.lists) assert.ok(en[l.label], `English for « ${l.label} »`);
@@ -332,11 +342,11 @@ await test('diff labels are dictionary keys', () => {
 
 console.log('Lifestyles, accessories, armor/vehicle mods, martial arts (Shadowrun_chum5_files, historic)');
 const CHUM_DIR = path.resolve(ROOT, '..', 'Shadowrun_chum5_files');
-const chum = (f) => fs.readFileSync(path.join(CHUM_DIR, f), 'utf8');
+const chum = (f: string) => fs.readFileSync(path.join(CHUM_DIR, f), 'utf8');
 const hasChumFiles = fs.existsSync(path.join(CHUM_DIR, 'Jane_Active.chum5'));
-const noIds = (x) => JSON.parse(JSON.stringify(x ?? null, (k, v) => (k === 'id' ? undefined : v)));
-const noGuids = (x) => JSON.parse(JSON.stringify(x ?? null, (k, v) => (k === 'id' || k === 'chummerGuid' ? undefined : v)));
-const nested = (a) => ({
+const noIds = (x: unknown) => JSON.parse(JSON.stringify(x ?? null, (k, v) => (k === 'id' ? undefined : v)));
+const noGuids = (x: unknown) => JSON.parse(JSON.stringify(x ?? null, (k, v) => (k === 'id' || k === 'chummerGuid' ? undefined : v)));
+const nested = (a: ParsedActor) => ({
   lifestyles: a.lifestyles, accessories: a.weapons.map((w) => w.accessories || []), armorMods: a.armor.map((x) => x.mods || []),
   vehicleMods: a.vehicles.map((v) => v.mods || []), martialArts: a.martialArts,
 });
@@ -344,7 +354,8 @@ const GARAGE = '9e7cea76-8f2e-4d87-a5ce-60395a8d701f';
 const SMARTGUN_EXT = findSmartgunExt();
 function findSmartgunExt() {
   try {
-    return JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'catalog', 'accessories.json'), 'utf8')).find((e) => e.name === 'Smartgun System, External') || null;
+    // Raw catalog JSON
+    return JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'catalog', 'accessories.json'), 'utf8')).find((e: { name: string }) => e.name === 'Smartgun System, External') || null;
   } catch {
     return null;
   }
@@ -355,7 +366,7 @@ else {
   const chris = parseChum5(chum('Christopher_Armingstar_Active.chum5')).actor;
   const ank = parseChum5(chum('Ank_Lay_Active.chum5')).actor;
   await test('Jane: lifestyle « Best Home » (Medium) with DocWagon Gold, Extra Secure, Pheromone + Vocal Tension detection', () => {
-    assert.equal(jane.lifestyle, undefined);
+    assert.equal((jane as ParsedActor & { lifestyle?: unknown }).lifestyle, undefined);
     assert.equal(jane.lifestyles.length, 1);
     const ls = jane.lifestyles[0];
     assert.equal(ls.name, 'Best Home');
@@ -366,15 +377,15 @@ else {
     assert.ok(ls.chummerGuid);
     const names = ls.qualities.map((q) => q.name);
     for (const n of ['DocWagon Contract, Gold', 'Extra Secure', 'Pheromone Detection', 'Vocal Tension Lie Detection']) assert.ok(names.includes(n), n);
-    const xs = ls.qualities.find((q) => q.name === 'Extra Secure');
+    const xs = ls.qualities.find((q) => q.name === 'Extra Secure')!;
     assert.equal(xs.multiplier, 20); // <basemultiplier> of a standard lifestyle
     assert.equal(xs.lp, 1);
-    assert.equal(ls.qualities.find((q) => q.name === 'DocWagon Contract, Gold').cost, 2083.33); // "25000 div 12"
-    assert.equal(ls.qualities.find((q) => q.name === 'Pheromone Detection').category, 'Contracts');
+    assert.equal(ls.qualities.find((q) => q.name === 'DocWagon Contract, Gold')!.cost, 2083.33); // "25000 div 12"
+    assert.equal(ls.qualities.find((q) => q.name === 'Pheromone Detection')!.category, 'Contracts');
     assert.equal(ls.monthlyCost, Math.round(5000 * 1.2 + 2083.33 + 250 + 250));
   });
   await test('Christopher: Garage upgrade (Run Faster) on his advanced lifestyle', () => {
-    const ls = chris.lifestyles.find((l) => l.primary);
+    const ls = chris.lifestyles.find((l) => l.primary)!;
     const garage = ls.qualities.find((q) => /^Garage/.test(q.name));
     assert.ok(garage, 'Garage');
     assert.equal(garage.catalogId, GARAGE);
@@ -382,46 +393,46 @@ else {
     assert.equal(garage.cost, 100);
     assert.ok(ls.qualities.some((q) => q.name === 'Dangerous Area' && q.multiplier === -20));
     assert.ok(ls.qualities.some((q) => q.name === "Local Bar Patron (The Jeffrey's)"), 'extra kept in the name');
-    assert.ok(ls.points && ls.points.comforts >= 3, 'RF points of an advanced lifestyle');
+    assert.ok(ls.points && ls.points.comforts! >= 3, 'RF points of an advanced lifestyle');
   });
   await test('Jane / Ank’Lay: weapon accessories and armor mods are structured (no more notes)', () => {
-    const enfield = jane.weapons.find((w) => /Enfield/.test(w.name));
-    const laser = enfield.accessories.find((x) => x.name === 'Laser Sight');
+    const enfield = jane.weapons.find((w) => /Enfield/.test(w.name))!;
+    const laser = enfield.accessories!.find((x) => x.name === 'Laser Sight')!;
     assert.deepEqual(laser.effects, { accuracy: 1 });
     assert.equal(laser.included, true);
     assert.ok(!/Accessoires :/.test(enfield.notes || ''));
     assert.ok(Array.isArray(enfield.mounts) && enfield.mounts.includes('Top'));
-    const strike = jane.weapons.find((w) => /Desert Strike/.test(w.name));
-    assert.ok(strike.accessories.some((x) => x.name === 'Shock Pad' && x.effects.rc === 1));
-    const shocker = jane.weapons.find((w) => /Defiance/.test(w.name));
-    assert.equal(shocker.accessories[0].name, 'Concealed Quick-Draw Holster');
-    assert.equal(shocker.accessories[0].cost, 275);
-    const heritage = jane.armor.find((a) => (a.mods || []).some((m) => m.name === 'Chemical Protection'));
-    assert.ok(heritage.capacity > 0);
-    const chem = heritage.mods.find((m) => m.name === 'Chemical Protection');
+    const strike = jane.weapons.find((w) => /Desert Strike/.test(w.name))!;
+    assert.ok(strike.accessories!.some((x) => x.name === 'Shock Pad' && x.effects!.rc === 1));
+    const shocker = jane.weapons.find((w) => /Defiance/.test(w.name))!;
+    assert.equal(shocker.accessories![0].name, 'Concealed Quick-Draw Holster');
+    assert.equal(shocker.accessories![0].cost, 275);
+    const heritage = jane.armor.find((a) => (a.mods || []).some((m) => m.name === 'Chemical Protection'))!;
+    assert.ok(heritage.capacity! > 0);
+    const chem = heritage.mods!.find((m) => m.name === 'Chemical Protection')!;
     assert.equal(chem.rating, 6);
     assert.equal(chem.capacity, 6);
     assert.equal(chem.cost, 1500);
-    assert.ok(heritage.mods.some((m) => m.name === 'Gel Packs' && m.effects?.armor === 2));
+    assert.ok(heritage.mods!.some((m) => m.name === 'Gel Packs' && m.effects?.armor === 2));
     assert.ok(!/Modifications :/.test(heritage.notes || ''));
-    const yntCap = heritage.mods.find((m) => m.name === 'YNT Softweave Armor').capacity;
+    const yntCap = heritage.mods!.find((m) => m.name === 'YNT Softweave Armor')!.capacity;
     assert.ok(yntCap < 0, 'YNT Softweave adds capacity');
-    const knife = ank.weapons.find((w) => (w.accessories || []).length);
-    assert.ok(knife.accessories.some((x) => x.name === 'Survival Knife Bonuses' && x.included));
-    const coat = ank.armor.find((a) => (a.mods || []).some((m) => m.name === 'Fire Resistance'));
-    assert.equal(coat.mods.find((m) => m.name === 'Fire Resistance').rating, 6);
-    assert.ok(coat.mods.length >= 8);
+    const knife = ank.weapons.find((w) => (w.accessories || []).length)!;
+    assert.ok(knife.accessories!.some((x) => x.name === 'Survival Knife Bonuses' && x.included));
+    const coat = ank.armor.find((a) => (a.mods || []).some((m) => m.name === 'Fire Resistance'))!;
+    assert.equal(coat.mods!.find((m) => m.name === 'Fire Resistance')!.rating, 6);
+    assert.ok(coat.mods!.length >= 8);
     assert.equal(ank.lifestyles[0].base, 'Low');
     assert.equal(ank.lifestyles[0].monthsPaid, 2);
-    const roadmaster = chris.vehicles.find((v) => (v.mods || []).length);
-    const armorMod = roadmaster.mods.find((m) => m.name === 'Armor (Concealed)');
+    const roadmaster = chris.vehicles.find((v) => (v.mods || []).length)!;
+    const armorMod = roadmaster.mods!.find((m) => m.name === 'Armor (Concealed)')!;
     assert.equal(armorMod.rating, 4);
     assert.equal(armorMod.slots, 12); // Rating * 3
     assert.equal(armorMod.category, 'Protection');
   });
   await test('export (patch mode) keeps lifestyles, accessories and mods: re-parse equal', () => {
     for (const a of [jane, chris, ank]) {
-      const r = exportChum5(a);
+      const r = exportChum5(a as Actor);
       assert.equal(r.mode, 'patch');
       wellFormed(r.xml);
       assert.deepEqual(noIds(nested(parseChum5(r.xml).actor)), noIds(nested(a)), a.name);
@@ -430,7 +441,7 @@ else {
   await test('export (generate mode, no stored file) rebuilds them from the Chummer data', () => {
     const g = clone(jane);
     delete g.chummer;
-    const r = exportChum5(g);
+    const r = exportChum5(g as Actor);
     assert.equal(r.mode, 'generate');
     wellFormed(r.xml);
     const back = parseChum5(r.xml).actor;
@@ -446,13 +457,14 @@ else {
     ls.qualities = ls.qualities.filter((q) => q !== vocal);
     ls.qualities.push({ id: 'sub_garage', catalogId: GARAGE, name: 'Garage (Car (Body 5 or More))', category: 'Entertainment - Asset', cost: 100, multiplier: 0, lp: 2 });
     ls.monthsPaid = 3;
-    const strike = a.weapons.find((w) => /Desert Strike/.test(w.name));
-    strike.accessories.push({ id: 'sub_smart', name: 'Smartgun System, External', catalogId: SMARTGUN_EXT?.id, mount: 'Top', cost: 200, effects: { smartgun: true } });
-    const heritage = a.armor.find((x) => (x.mods || []).some((m) => m.name === 'Chemical Protection'));
-    heritage.mods = heritage.mods.filter((m) => m.name !== 'AR Fashion');
-    heritage.mods.find((m) => m.name === 'Chemical Protection').rating = 4;
+    const strike = a.weapons.find((w) => /Desert Strike/.test(w.name))!;
+    // App-side accessory as the test adds it (no avail)
+    strike.accessories!.push({ id: 'sub_smart', name: 'Smartgun System, External', catalogId: SMARTGUN_EXT?.id, mount: 'Top', cost: 200, effects: { smartgun: true } } as Accessory);
+    const heritage = a.armor.find((x) => (x.mods || []).some((m) => m.name === 'Chemical Protection'))!;
+    heritage.mods = heritage.mods!.filter((m) => m.name !== 'AR Fashion');
+    heritage.mods.find((m) => m.name === 'Chemical Protection')!.rating = 4;
     a.martialArts = [{ id: 'itm_ma', name: 'Aikido', catalogId: 'f0b55f24-a184-4d91-a4c2-71b480bace0b', rating: 1, techniques: [{ id: 'sub_tech', name: 'Counterstrike', catalogId: '11a90b83-af42-4972-a028-0ab4c60e1c33' }] }];
-    const r = exportChum5(a);
+    const r = exportChum5(a as Actor);
     wellFormed(r.xml);
     const back = parseChum5(r.xml).actor;
     const bls = back.lifestyles[0];
@@ -462,21 +474,22 @@ else {
     const g = bls.qualities.find((q) => /^Garage/.test(q.name));
     assert.ok(g && g.catalogId === GARAGE && g.cost === 100 && g.lp === 2, 'new Garage quality');
     assert.equal(r.assigned.sub.sub_garage, g.chummerGuid);
-    assert.equal(bls.qualities.find((q) => q.name === 'Extra Secure').chummerGuid, ls.qualities.find((q) => q.name === 'Extra Secure').chummerGuid, 'untouched qualities keep their guid');
-    const bstrike = back.weapons.find((w) => /Desert Strike/.test(w.name));
-    const smart = bstrike.accessories.find((x) => /Smartgun/.test(x.name));
-    assert.ok(smart?.effects.smartgun && smart.mount === 'Top', 'new accessory');
+    assert.equal(bls.qualities.find((q) => q.name === 'Extra Secure')!.chummerGuid, ls.qualities.find((q) => q.name === 'Extra Secure')!.chummerGuid, 'untouched qualities keep their guid');
+    const bstrike = back.weapons.find((w) => /Desert Strike/.test(w.name))!;
+    const smart = bstrike.accessories!.find((x) => /Smartgun/.test(x.name));
+    assert.ok(smart?.effects!.smartgun && smart.mount === 'Top', 'new accessory');
     assert.equal(r.assigned.sub.sub_smart, smart.chummerGuid);
-    const bher = back.armor.find((x) => x.chummerGuid === heritage.chummerGuid);
-    assert.ok(!bher.mods.some((m) => m.name === 'AR Fashion'));
-    assert.equal(bher.mods.find((m) => m.name === 'Chemical Protection').rating, 4);
+    const bher = back.armor.find((x) => x.chummerGuid === heritage.chummerGuid)!;
+    assert.ok(!bher.mods!.some((m) => m.name === 'AR Fashion'));
+    assert.equal(bher.mods!.find((m) => m.name === 'Chemical Protection')!.rating, 4);
     assert.equal(back.martialArts.length, 1);
     assert.equal(back.martialArts[0].catalogId, 'f0b55f24-a184-4d91-a4c2-71b480bace0b');
     assert.deepEqual(back.martialArts[0].techniques.map((x) => x.name), ['Counterstrike']);
     assert.equal(r.assigned.martialArts.itm_ma, back.martialArts[0].chummerGuid);
     assert.equal(r.assigned.sub.sub_tech, back.martialArts[0].techniques[0].chummerGuid);
     // Re-export of the edited actor once the guids are recorded: nothing duplicated.
-    const a2 = clone(a);
+    // Walked generically by list name below
+    const a2: any = clone(a);
     for (const [list, sub] of [['lifestyles', 'qualities'], ['weapons', 'accessories'], ['armor', 'mods'], ['martialArts', 'techniques']]) {
       for (const it of a2[list]) {
         if (r.assigned[list]?.[it.id]) it.chummerGuid = r.assigned[list][it.id];
@@ -496,11 +509,11 @@ else {
     theirs.lifestyles[0].monthlyCost -= 250;
     const ours = clone(jane);
     ours.lifestyles[0].monthsPaid = 4;
-    const m = mergeActor(ours, theirs, base);
+    const m = mergeActor(ours as Actor, theirs, base);
     assert.equal(m.lifestyles.length, 1);
     assert.equal(m.lifestyles[0].monthsPaid, 4, 'app change kept');
     assert.ok(!m.lifestyles[0].qualities.some((q) => q.name === 'Pheromone Detection'), 'Chummer change applied');
-    assert.equal(m.lifestyle, undefined);
+    assert.equal((m as Actor & { lifestyle?: unknown }).lifestyle, undefined);
     const d = diffActors(ours, m);
     const l = d.lists.find((x) => x.list === 'lifestyles');
     assert.ok(l && l.changed.some((c) => /−Pheromone Detection/.test(c)), JSON.stringify(d.lists));
@@ -512,35 +525,36 @@ else {
     const ours = parseChum5(raw).actor;
     const theirs = parseChum5(raw).actor;
     const base = parseChum5(raw, { keepXml: false, makeId: () => 'base' }).actor;
-    const defiance = ours.weapons.find((w) => /Defiance/.test(w.name));
-    defiance.accessories.push({ id: 'acc_app', name: 'Silencer/Suppressor', mount: 'Barrel', cost: 500 });
+    const defiance = ours.weapons.find((w) => /Defiance/.test(w.name))!;
+    // Shop accessory as the test adds it (no avail)
+    defiance.accessories!.push({ id: 'acc_app', name: 'Silencer/Suppressor', mount: 'Barrel', cost: 500 } as Accessory);
     ours.lifestyles[0].qualities.push({ id: 'lsq_app', name: 'Garage (Car (Body 5 or More))', catalogId: GARAGE, category: 'Entertainment - Asset', cost: 100, multiplier: 0 });
-    const m = mergeActor(ours, theirs, base);
-    const md = m.weapons.find((w) => w.id === defiance.id);
-    assert.ok(md.accessories.some((x) => x.id === 'acc_app'), 'shop accessory kept');
+    const m = mergeActor(ours as Actor, theirs, base);
+    const md = m.weapons.find((w) => w.id === defiance.id)!;
+    assert.ok(md.accessories!.some((x) => x.id === 'acc_app'), 'shop accessory kept');
     assert.ok(m.lifestyles[0].qualities.some((q) => q.id === 'lsq_app'), 'Garage kept');
-    const ids = (a) => a.weapons.flatMap((w) => (w.accessories || []).map((x) => x.id)).concat(a.lifestyles.flatMap((l) => l.qualities.map((q) => q.id))).sort();
+    const ids = (a: ParsedActor) => a.weapons.flatMap((w) => (w.accessories || []).map((x) => x.id)).concat(a.lifestyles.flatMap((l) => l.qualities.map((q) => q.id))).sort();
     assert.deepEqual(ids(m), ids(ours), 'nested ids unchanged');
     // A Chummer-side change to a nested item still applies.
     const theirs2 = parseChum5(raw).actor;
     theirs2.lifestyles[0].qualities = theirs2.lifestyles[0].qualities.filter((q) => q.name !== 'Vocal Tension Lie Detection');
-    const m2 = mergeActor(ours, theirs2, base);
+    const m2 = mergeActor(ours as Actor, theirs2, base);
     assert.ok(!m2.lifestyles[0].qualities.some((q) => q.name === 'Vocal Tension Lie Detection') && m2.lifestyles[0].qualities.some((q) => q.id === 'lsq_app'), 'Chummer removal applied, app option kept');
     // A weapon deleted in the app (with accessories) does not come back from an unchanged file.
     const ours3 = clone(ours);
     ours3.weapons = ours3.weapons.filter((w) => w.id !== defiance.id);
-    assert.ok(!mergeActor(ours3, theirs, base).weapons.some((w) => /Defiance/.test(w.name)), 'deleted weapon stays deleted');
+    assert.ok(!mergeActor(ours3 as Actor, theirs, base).weapons.some((w) => /Defiance/.test(w.name)), 'deleted weapon stays deleted');
   });
   await test('Extra Secure <basemultiplier> → baseOnly; Gel Packs counted in the armor value', async () => {
-    const xs = jane.lifestyles[0].qualities.find((q) => q.name === 'Extra Secure');
+    const xs = jane.lifestyles[0].qualities.find((q) => q.name === 'Extra Secure')!;
     assert.equal(xs.baseOnly, true);
-    assert.ok(!jane.lifestyles[0].qualities.find((q) => q.name === 'DocWagon Contract, Gold').baseOnly);
+    assert.ok(!jane.lifestyles[0].qualities.find((q) => q.name === 'DocWagon Contract, Gold')!.baseOnly);
     const { armorTotal, armorValue } = await import('../shared/sr5.ts');
     const actioneer = jane.armor.find((a) => /Actioneer/.test(a.name) && (a.mods || []).some((m) => m.name === 'Gel Packs'));
     if (actioneer) assert.equal(armorValue(actioneer), Number(actioneer.rating) + 2, 'Actioneer + Gel Packs');
-    const heritage = jane.armor.find((a) => (a.mods || []).some((m) => m.name === 'Gel Packs'));
-    assert.equal(armorTotal({ armor: [{ ...heritage, equipped: true, stack: false }] }), Number(heritage.rating) + heritage.mods.reduce((s, m) => s + (Number(m.effects?.armor) || 0), 0));
-    const re = parseChum5(exportChum5(jane).xml).actor.lifestyles[0].qualities.find((q) => q.name === 'Extra Secure');
+    const heritage = jane.armor.find((a) => (a.mods || []).some((m) => m.name === 'Gel Packs'))!;
+    assert.equal(armorTotal({ armor: [{ ...heritage, equipped: true, stack: false }] }), Number(heritage.rating) + heritage.mods!.reduce((s, m) => s + (Number(m.effects?.armor) || 0), 0));
+    const re = parseChum5(exportChum5(jane as Actor).xml).actor.lifestyles[0].qualities.find((q) => q.name === 'Extra Secure')!;
     assert.equal(re.baseOnly, true, 'baseOnly survives the export');
   });
 }
@@ -550,12 +564,12 @@ const srv = await startServer({ port: Number(process.env.SR_TEST_PORT) || 3271 }
 try {
   const gmToken = await login(srv.url, { role: 'gm', password: 'lazarus' });
   const gm = await client(srv.url, gmToken);
-  const H = (tok, extra = {}) => ({ Authorization: `Bearer ${tok}`, ...extra });
-  const post = (url, tok, body, ct = 'text/plain') => fetch(srv.url + url, { method: 'POST', headers: H(tok, { 'Content-Type': ct }), body });
-  let actorId;
-  let p1Token;
-  let p1;
-  let p2Token;
+  const H = (tok: string, extra: Record<string, string> = {}) => ({ Authorization: `Bearer ${tok}`, ...extra });
+  const post = (url: string, tok: string, body: string, ct = 'text/plain') => fetch(srv.url + url, { method: 'POST', headers: H(tok, { 'Content-Type': ct }), body });
+  let actorId: string;
+  let p1Token: string;
+  let p1: TestClient | undefined;
+  let p2Token: string;
 
   await test('GM imports a .chum5 as a new PC; legacy URL still works', async () => {
     const res = await post('/api/chummer/import?type=pc&fileName=chummer-test.chum5', gmToken, src);
@@ -566,7 +580,7 @@ try {
     const a = gm.state.actors[actorId];
     assert.equal(a.name, 'Test Chummer');
     assert.equal(a.type, 'pc');
-    assert.equal(a.chummer.fileName, 'chummer-test.chum5');
+    assert.equal(a.chummer!.fileName, 'chummer-test.chum5');
     const legacy = await post('/api/actors/import-chum5', gmToken, src);
     assert.equal(legacy.status, 200);
     const noAuth = await fetch(srv.url + '/api/actors/import-chum5', { method: 'POST', body: src });
@@ -590,16 +604,16 @@ try {
     p2Token = await login(srv.url, { role: 'player', name: 'Autre Joueur', characterId: 'pc_bricks' });
     await settle(300);
     const mine = p1.state.actors[actorId];
-    assert.equal(mine.chummer.xml, undefined);
-    assert.equal(mine.chummer.hasFile, true);
-    assert.equal(mine.chummer.fileName, 'chummer-test.chum5');
+    assert.equal(mine.chummer!.xml, undefined);
+    assert.equal(mine.chummer!.hasFile, true);
+    assert.equal(mine.chummer!.fileName, 'chummer-test.chum5');
     assert.deepEqual(p1.state.chummer, { allowPlayerImport: true, pending: [] });
   });
 
   await test('export: owner and GM get a .chum5 attachment; others are refused', async () => {
     const res = await fetch(srv.url + `/api/chummer/export/${actorId}`, { headers: H(p1Token) });
     assert.equal(res.status, 200);
-    assert.match(res.headers.get('content-disposition'), /attachment; filename=".*\.chum5"/);
+    assert.match(res.headers.get('content-disposition')!, /attachment; filename=".*\.chum5"/);
     const buf = Buffer.from(await res.arrayBuffer());
     assert.deepEqual([...buf.slice(0, 3)], [0xef, 0xbb, 0xbf], 'UTF-8 BOM like Chummer');
     const xml = buf.toString('utf8');
@@ -613,7 +627,7 @@ try {
     const missing = await fetch(srv.url + '/api/chummer/export/nope', { headers: H(gmToken) });
     assert.equal(missing.status, 404);
     await settle(300);
-    assert.ok(gm.state.actors.pc_jane.chummer.exportedAt, 'export remembers the sync point');
+    assert.ok(gm.state.actors.pc_jane.chummer!.exportedAt, 'export remembers the sync point');
     assert.ok(gm.state.actors.pc_jane.weapons.every((w) => w.chummerGuid), 'items got their Chummer guid');
   });
 
@@ -624,10 +638,10 @@ try {
     const karmaApp = gm.state.actors[actorId].karma;
     const doc = parseXml(xml);
     const c = doc.root;
-    const disguise = c.get('newskills/skills').all('skill').find((s) => s.val('name') === 'Disguise');
+    const disguise = c.get('newskills/skills')!.all('skill').find((s) => s.val('name') === 'Disguise')!;
     disguise.set('karma', String(Number(disguise.val('karma')) + 1)); // Disguise 6 → 7
     c.set('nuyen', String(Number(c.val('nuyen')) - 100));
-    const weapons = c.child('weapons');
+    const weapons = c.child('weapons')!;
     weapons.children = weapons.children.filter((w) => w.type !== 'el' || w.val('name') !== 'Colt Government 2066');
     weapons.children.push(el('weapon', [el('sourceid', COLT), el('guid', '11111111-2222-3333-4444-555555555555'), el('name', 'Colt Government 2066'), el('category', 'Heavy Pistols'), el('type', 'Ranged'), el('damage', '7P'), el('ap', '-1'), el('mode', 'SA'), el('ammo', '14(c)'), el('accuracy', '6')]));
     const edited = serializeXml(doc);
@@ -636,33 +650,34 @@ try {
     assert.equal(pre.status, 200, pj.error);
     assert.equal(pj.needsApproval, false);
     assert.equal(pj.linked, true);
-    assert.ok(pj.diff.skills.some((s) => s.id === 'disguise' && s.to === '7'));
-    assert.ok(pj.diff.scalars.some((s) => s.label === 'Nuyens'));
+    // pj: JSON reply of /api/chummer/preview (diff = diffActors())
+    assert.ok(pj.diff.skills.some((s: ActorDiff['skills'][number]) => s.id === 'disguise' && s.to === '7'));
+    assert.ok(pj.diff.scalars.some((s: DiffScalar) => s.label === 'Nuyens'));
     await settle(100);
-    assert.equal(gm.state.actors[actorId].skills.find((s) => s.id === 'disguise').rating, 6, 'preview changes nothing');
+    assert.equal(gm.state.actors[actorId].skills.find((s) => s.id === 'disguise')!.rating, 6, 'preview changes nothing');
     const up = await post(`/api/chummer/update?actorId=${actorId}&fileName=edit.chum5`, p1Token, edited);
     const uj = await up.json();
     assert.equal(up.status, 200, uj.error);
     assert.equal(uj.applied, true);
     await settle(300);
     const a = gm.state.actors[actorId];
-    assert.equal(a.skills.find((s) => s.id === 'disguise').rating, 7);
+    assert.equal(a.skills.find((s) => s.id === 'disguise')!.rating, 7);
     assert.equal(a.karma, karmaApp, 'reward given in the app is kept');
     assert.equal(a.nuyen, 6000 - 100);
     assert.equal(a.weapons.filter((w) => /Colt/.test(w.name)).length, 1, 'Colt replaced, not duplicated');
     assert.equal(a.weapons.filter((w) => w.name === 'Mains nues').length, 1);
-    assert.equal(a.chummer.fileName, 'edit.chum5');
+    assert.equal(a.chummer!.fileName, 'edit.chum5');
     assert.match(a.history[a.history.length - 1].text, /Mise à jour depuis Chummer/);
     assert.ok(gm.state.log.some((e) => /mis à jour depuis Chummer/.test(e.text)));
     const logE = [...gm.state.log].reverse().find((e) => e.i18n?.key === '{actor} mis à jour depuis Chummer ({file}) par {user} : {summary}.');
     assert.ok(logE, 'update log entry has a key');
     assert.match(logE.text, /^Test Chummer mis à jour depuis Chummer \(edit\.chum5\) par Testeur Chummer : Nuyens .+ → .+\.$/);
-    assert.match(tr('en', logE.i18n.key, logE.i18n.params), /^Test Chummer updated from Chummer \(edit\.chum5\) by Testeur Chummer: Nuyen .+ → .+\.$/);
+    assert.match(tr('en', logE.i18n!.key, logE.i18n!.params), /^Test Chummer updated from Chummer \(edit\.chum5\) by Testeur Chummer: Nuyen .+ → .+\.$/);
     assert.ok(Array.isArray(uj.warningsI18n), 'update reply carries translatable warnings');
   });
 
   await test('GM approval mode: player upload → pending request → GM validates', async () => {
-    await assert.rejects(p1.send('chummer/settings', { allowPlayerImport: false }), /MJ/);
+    await assert.rejects(p1!.send('chummer/settings', { allowPlayerImport: false }), /MJ/);
     await gm.send('chummer/settings', { allowPlayerImport: false });
     const xml = Buffer.from(await (await fetch(srv.url + `/api/chummer/export/${actorId}`, { headers: H(p1Token) })).arrayBuffer()).toString('utf8');
     const edited = xml.replace(/<nuyen>(\d+)<\/nuyen>/, (m, n) => `<nuyen>${Number(n) + 1000}</nuyen>`);
@@ -674,7 +689,7 @@ try {
     assert.equal(up.pending, true);
     await settle(300);
     assert.equal(gm.state.actors[actorId].nuyen, nuyenBefore, 'not applied yet');
-    const req = p1.state.chummer.pending.find((r) => r.id === up.requestId);
+    const req = p1!.state.chummer.pending.find((r) => r.id === up.requestId);
     assert.ok(req, 'player sees own request');
     assert.ok(Array.isArray(req.summaryI18n) && req.summaryI18n.length, 'pending request carries a translatable summary');
     assert.equal(req.summary, req.summaryI18n.map((p) => tr('fr', p.t, p.params)).join(', '), 'French summary unchanged');
@@ -687,11 +702,11 @@ try {
     await gm.send('chummer/resolve', { requestId: up.requestId, approve: true });
     await settle(300);
     assert.equal(gm.state.actors[actorId].nuyen, nuyenBefore + 1000);
-    assert.equal(gm.state.chummer.pending.find((r) => r.id === up.requestId).status, 'approved');
+    assert.equal(gm.state.chummer.pending.find((r) => r.id === up.requestId)!.status, 'approved');
     await assert.rejects(gm.send('chummer/resolve', { requestId: up.requestId, approve: true }), /déjà traitée/);
     // denied + cancelled requests
     const up2 = await (await post(`/api/chummer/update?actorId=${actorId}`, p1Token, edited)).json();
-    await p1.send('chummer/cancel', { requestId: up2.requestId });
+    await p1!.send('chummer/cancel', { requestId: up2.requestId });
     const up3 = await (await post(`/api/chummer/update?actorId=${actorId}`, p1Token, edited)).json();
     await gm.send('chummer/resolve', { requestId: up3.requestId, approve: false });
     await settle(300);
@@ -715,7 +730,7 @@ try {
     const j = await (await post('/api/chummer/import?fileName=mug.chum5', gmToken, withMug)).json();
     await settle(300);
     const a = gm.state.actors[j.actorId];
-    assert.match(a.portrait, /^\/uploads\/chummer-[0-9a-f]+\.png$/);
+    assert.match(a.portrait!, /^\/uploads\/chummer-[0-9a-f]+\.png$/);
     // The raw XML never reaches clients (gmFilter); it must not hold image data server-side either (checked via export below).
     assert.ok(!a.chummer?.xml, 'raw XML not sent to the GM view');
     assert.ok((await fetch(srv.url + a.portrait)).ok, 'portrait served');
@@ -735,7 +750,7 @@ try {
       assert.equal(ls.name, 'Best Home');
       assert.equal(ls.qualities.length, 4);
       const subId = await gm.send('actor/addSubItem', { actorId: a.id, list: 'lifestyles', itemId: ls.id, sub: 'qualities', item: { name: 'Garage (Car (Body 5 or More))', catalogId: GARAGE, category: 'Entertainment - Asset', cost: 100, multiplier: 0, lp: 2 } });
-      const enfield = a.weapons.find((w) => /Enfield/.test(w.name));
+      const enfield = a.weapons.find((w) => /Enfield/.test(w.name))!;
       const accId = await gm.send('actor/addSubItem', { actorId: a.id, list: 'weapons', itemId: enfield.id, sub: 'accessories', item: { name: 'Bipod', mount: 'Under', cost: 200, effects: { rc: 2 } } });
       await settle(200);
       assert.equal(gm.state.actors[a.id].lifestyles[0].monthlyCost, ls.monthlyCost + 100, 'monthly cost recomputed');
@@ -745,14 +760,14 @@ try {
       const garage = back.lifestyles[0].qualities.find((q) => /^Garage/.test(q.name));
       assert.ok(garage);
       const after = gm.state.actors[a.id];
-      assert.equal(after.lifestyles[0].qualities.find((q) => q.id === subId).chummerGuid, garage.chummerGuid, 'quality guid recorded');
-      const bipod = back.weapons.find((w) => /Enfield/.test(w.name)).accessories.find((x) => x.name === 'Bipod');
-      assert.ok(bipod && bipod.effects.rc === 2);
-      assert.equal(after.weapons.find((w) => w.id === enfield.id).accessories.find((x) => x.id === accId).chummerGuid, bipod.chummerGuid, 'accessory guid recorded');
+      assert.equal(after.lifestyles[0].qualities.find((q) => q.id === subId)!.chummerGuid, garage.chummerGuid, 'quality guid recorded');
+      const bipod = back.weapons.find((w) => /Enfield/.test(w.name))!.accessories!.find((x) => x.name === 'Bipod');
+      assert.ok(bipod && bipod.effects!.rc === 2);
+      assert.equal(after.weapons.find((w) => w.id === enfield.id)!.accessories!.find((x) => x.id === accId)!.chummerGuid, bipod.chummerGuid, 'accessory guid recorded');
       // Exporting again does not duplicate them.
       const xml2 = Buffer.from(await (await fetch(srv.url + `/api/chummer/export/${a.id}`, { headers: H(gmToken) })).arrayBuffer()).toString('utf8');
       assert.equal(count(xml2, 'lifestylequality'), 5);
-      assert.equal(parseChum5(xml2).actor.weapons.find((w) => /Enfield/.test(w.name)).accessories.filter((x) => x.name === 'Bipod').length, 1);
+      assert.equal(parseChum5(xml2).actor.weapons.find((w) => /Enfield/.test(w.name))!.accessories!.filter((x) => x.name === 'Bipod').length, 1);
     });
   }
 

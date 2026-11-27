@@ -4,7 +4,7 @@ import { startServer, login, client, settle } from './test-client.ts';
 import { sinCheckOutcome, parseLicense, sinIdentity, checkOdds, verificationPool, sinNumber } from '../shared/sins.ts';
 
 let failed = 0;
-const ok = (cond, msg) => {
+const ok = (cond: unknown, msg: string) => {
   if (cond) console.log('  ok', msg);
   else {
     failed++;
@@ -29,14 +29,14 @@ try {
   const p1 = await client(srv.url, await login(srv.url, { role: 'player', name: 'Testeur', characterId: 'pc_jane' }));
   await settle();
   const jane = () => gm.state.actors.pc_jane;
-  const sin = jane().sins.find((s) => /Jane Beauty/.test(s.name));
+  const sin = jane().sins.find((s) => /Jane Beauty/.test(s.name))!;
   ok(sin && sin.rating === 6, 'seed: Jane Beauty is a rating 6 fake SIN');
 
   const r = await p1.send('actor/sinCheck', { actorId: 'pc_jane', sinId: sin.id, device: 3 });
   ok(r.pool === 6 && r.dice.length === 6 && r.sinCheck.threshold === 6 && r.sinCheck.outcome === sinCheckOutcome(r.hits, 6), 'player checks own SIN: 6 dice vs 6');
   await settle();
   const e = gm.state.log.find((x) => x.id === r.logId);
-  ok(e && e.kind === 'roll' && e.roll.sinCheck && e.roll.labelI18n?.key === 'Contrôle de SIN — {sin}' && !e.gmOnly, 'logged as a visible roll with labelI18n');
+  ok(e && e.kind === 'roll' && e.roll!.sinCheck && e.roll!.labelI18n?.key === 'Contrôle de SIN — {sin}' && !e.gmOnly, 'logged as a visible roll with labelI18n');
 
   const lr = await p1.send('actor/sinCheck', { actorId: 'pc_jane', sinId: sin.id, license: 0, device: 1 });
   ok(lr.sinCheck.license && lr.sinCheck.threshold === 6 && lr.pool === 2, 'license check uses the license rating');
@@ -47,25 +47,25 @@ try {
   await p1.send('dice/secondChance', { logId: r.logId }).then(() => ok(false, 'no Edge on a SIN check'), () => ok(true, 'no Edge on a SIN check'));
 
   // Rating 1 SIN vs a rating 6 system: roll until it burns (12 dice vs threshold 1 burns ~98 % of the time).
-  const weak = jane().sins.find((s) => s.rating === 1);
+  const weak = jane().sins.find((s) => s.rating === 1)!;
   let burned = null;
   for (let i = 0; i < 10 && !burned; i++) {
     const x = await gm.send('actor/sinCheck', { actorId: 'pc_jane', sinId: weak.id, device: 6, secret: i < 1 });
     if (i < 1) {
       await settle();
-      ok(!jane().sins.find((s) => s.id === weak.id).burned, 'secret GM check never burns automatically');
+      ok(!jane().sins.find((s) => s.id === weak.id)!.burned, 'secret GM check never burns automatically');
       ok(gm.state.log.find((l) => l.id === x.logId)?.gmOnly && !p1.state.log.some((l) => l.id === x.logId), 'secret check hidden from players');
     } else if (x.sinCheck.outcome === 'burned') burned = x;
   }
   await settle();
-  ok(burned?.sinCheck.burnedNow && jane().sins.find((s) => s.id === weak.id).burned, 'exceeding the threshold burns the SIN');
+  ok(burned?.sinCheck.burnedNow && jane().sins.find((s) => s.id === weak.id)!.burned, 'exceeding the threshold burns the SIN');
   const auto = await p1.send('actor/sinCheck', { actorId: 'pc_jane', sinId: weak.id, device: 1 });
   ok(auto.outcome === 'auto' && !auto.dice, 'burned SIN fails automatically, no roll');
 
   await p1.send('actor/sinBurn', { actorId: 'pc_jane', sinId: weak.id, burned: false }).then(() => ok(false, 'player cannot restore'), () => ok(true, 'player cannot restore'));
   await gm.send('actor/sinBurn', { actorId: 'pc_jane', sinId: weak.id, burned: false });
   await settle();
-  ok(!jane().sins.find((s) => s.id === weak.id).burned, 'GM restores a burned SIN');
+  ok(!jane().sins.find((s) => s.id === weak.id)!.burned, 'GM restores a burned SIN');
 
   await gm.send('actor/updateItem', { actorId: 'pc_jane', list: 'sins', itemId: weak.id, patch: { real: true } });
   await gm.send('actor/sinCheck', { actorId: 'pc_jane', sinId: weak.id, device: 6 }).then(() => ok(false, 'real SIN: no check'), () => ok(true, 'real SIN: no check'));

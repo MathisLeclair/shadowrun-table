@@ -7,11 +7,17 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { login, client, settle as baseSettle } from './test-client.ts';
 import * as V from '../shared/vision.ts';
+import type { TestClient } from './test-client.ts';
+import type { VisionDoor, VisionLight, VisionMap, VisionToken, VisionWall } from '../shared/vision.ts';
+import type { ActorLike, MapDoor, Point } from '../shared/types.ts';
+
+type IdWall = VisionWall & { id: string };
+type Tracked = TestClient & { lastStateAt?: number };
 
 // Broadcasts carry every map to the GM (Foundry imports make the state ~1 MB): leave them time to arrive.
 // settle(): wait at least ms + 150, then until no client received a state for 150 ms (max ~3 s).
-const tracked = [];
-function track(c) {
+const tracked: Tracked[] = [];
+function track(c: Tracked) {
   c.lastStateAt = performance.now();
   c.socket.on('state', () => (c.lastStateAt = performance.now()));
   tracked.push(c);
@@ -19,34 +25,34 @@ function track(c) {
 }
 async function settle(ms = 120) {
   await baseSettle(ms + 150);
-  for (let i = 0; i < 60 && !tracked.every((c) => performance.now() - c.lastStateAt > 150); i++) await baseSettle(50);
+  for (let i = 0; i < 60 && !tracked.every((c) => performance.now() - c.lastStateAt! > 150); i++) await baseSettle(50);
 }
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let failures = 0, passes = 0;
-function ok(cond, msg) {
+function ok(cond: unknown, msg: string) {
   if (cond) passes++;
   else {
     failures++;
     console.error('  ✗ ' + msg);
   }
 }
-async function rejects(p, re, msg) {
+async function rejects(p: Promise<unknown>, re: RegExp | null, msg: string) {
   try {
     await p;
     ok(false, msg + ' (should have failed)');
   } catch (e) {
-    ok(!re || re.test(e.message), `${msg} — got « ${e.message} »`);
+    ok(!re || re.test((e as Error).message), `${msg} — got « ${(e as Error).message} »`);
   }
 }
-const vis = (v, map, x, y) => !!v[y * map.width + x];
+const vis = (v: Uint8Array, map: { width: number }, x: number, y: number) => !!v[y * map.width + x];
 
 // ---------------------------------------------------------------------------
 // 1. vision.js
 // ---------------------------------------------------------------------------
-console.log('vision.js');
+console.log('vision.ts');
 {
-  const m = {
+  const m: VisionMap & { doors: MapDoor[] } = {
     width: 12, height: 5, lighting: 'bright', tokens: [],
     tiles: [
       '############',
@@ -99,7 +105,7 @@ console.log('vision.js');
   ok(V.findPath(m, { x: 2, y: 2 }, { x: 8, y: 2 }, { allowed }) !== null, 'allowed mask: detour possible');
 
   // Lighting
-  const big = { width: 40, height: 5, lighting: 'dark', tokens: [], doors: [], lights: [], tiles: ['#'.repeat(40), '#' + '.'.repeat(38) + '#', '#' + '.'.repeat(38) + '#', '#' + '.'.repeat(38) + '#', '#'.repeat(40)] };
+  const big: VisionMap & { tiles: string[]; lights: VisionLight[]; tokens: VisionToken[] } = { width: 40, height: 5, lighting: 'dark', tokens: [], doors: [], lights: [], tiles: ['#'.repeat(40), '#' + '.'.repeat(38) + '#', '#' + '.'.repeat(38) + '#', '#' + '.'.repeat(38) + '#', '#'.repeat(40)] };
   const t0 = [{ x: 1, y: 2 }];
   v = V.computeVisibility(big, t0, {});
   ok(vis(v, big, 2, 2) && !vis(v, big, 5, 2) && !vis(v, big, 30, 2), 'dark: only adjacent cells without light');
@@ -115,7 +121,7 @@ console.log('vision.js');
   ok(vis(v, big, 7, 2) && !vis(v, big, 9, 2), 'darkRange sees in the dark');
   v = V.computeVisibility(big, [{ x: 1, y: 2, actorId: 'n' }], { n: { metatype: 'Nain' } });
   ok(vis(v, big, 11, 2) && !vis(v, big, 13, 2), 'thermographic (dwarf) = 10 cells in the dark');
-  big.tokens = [{ id: 'torch', x: 1, y: 2, light: { radius: 4 } }];
+  big.tokens = [{ id: 'torch', x: 1, y: 2, light: { radius: 4 } as VisionToken['light'] }]; // no color: mapLights defaults it
   v = V.computeVisibility(big, big.tokens, {});
   big.tokens = [];
   ok(vis(v, big, 5, 2) && !vis(v, big, 7, 2), 'token light (torch) illuminates');
@@ -134,12 +140,12 @@ console.log('vision.js');
   ok(vis(v, big, 38, 2), 'bright: whole room');
 
   // tokenVision
-  ok(V.tokenVision({}, { metatype: 'Humain', qualities: [{ name: 'Low-Light Vision' }] }).lowLight, 'quality Low-Light Vision');
-  ok(V.tokenVision({}, { metatype: 'Humain', augmentations: [{ name: 'Yeux cybernétiques (vision nocturne)' }] }).lowLight, 'augmentation vision nocturne');
+  ok(V.tokenVision({}, { metatype: 'Humain', qualities: [{ name: 'Low-Light Vision' }] } as ActorLike).lowLight, 'quality Low-Light Vision');
+  ok(V.tokenVision({}, { metatype: 'Humain', augmentations: [{ name: 'Yeux cybernétiques (vision nocturne)' }] } as ActorLike).lowLight, 'augmentation vision nocturne');
   ok(V.tokenVision({}, { metatype: 'Ork' }).lowLight && !V.tokenVision({}, { metatype: 'Humain' }).lowLight, 'ork low-light, human not');
   const troll = V.tokenVision({}, { metatype: 'Troll' });
   ok(troll.thermo && troll.darkRange === 10, 'troll thermo 10');
-  ok(V.tokenVision({}, { metatype: 'Humain', augmentations: [{ name: 'Thermographic Vision' }] }).thermo, 'thermographic augmentation');
+  ok(V.tokenVision({}, { metatype: 'Humain', augmentations: [{ name: 'Thermographic Vision' }] } as ActorLike).thermo, 'thermographic augmentation');
   ok(!V.tokenVision({ vision: { lowLight: false } }, { metatype: 'Elfe' }).lowLight, 'token override wins');
 
   // bitsets
@@ -156,7 +162,7 @@ console.log('vision.js');
   // perf: 80x60 map, 4 tokens, 10 lights
   const W = 80, H = 60;
   const tiles = Array.from({ length: H }, (_, y) => Array.from({ length: W }, (_, x) => (x === 0 || y === 0 || x === W - 1 || y === H - 1 || (x % 9 === 0 && y % 7 !== 3) ? '#' : '.')).join(''));
-  const pm = { width: W, height: H, tiles, doors: [], lighting: 'dark', tokens: [], lights: Array.from({ length: 10 }, (_, i) => ({ x: 5 + i * 7, y: 30, radius: 6, on: true })) };
+  const pm: VisionMap = { width: W, height: H, tiles, doors: [], lighting: 'dark', tokens: [], lights: Array.from({ length: 10 }, (_, i) => ({ x: 5 + i * 7, y: 30, radius: 6, on: true })) };
   const t1 = performance.now();
   for (let k = 0; k < 20; k++) V.computeVisibility(pm, [{ x: 4, y: 4 }, { x: 40, y: 30 }, { x: 70, y: 50 }, { x: 20, y: 50 }], {});
   const dt = (performance.now() - t1) / 20;
@@ -169,12 +175,12 @@ console.log('vision.js');
 // ---------------------------------------------------------------------------
 // 1b. Segment walls (Foundry-style maps)
 // ---------------------------------------------------------------------------
-console.log('vision.js — segment walls');
+console.log('vision.ts — segment walls');
 {
-  const floor = (w, h) => Array.from({ length: h }, () => '.'.repeat(w));
+  const floor = (w: number, h: number) => Array.from({ length: h }, () => '.'.repeat(w));
   // 12×5 all floor, a vertical wall on the grid line x = 6 with a door segment between y = 2 and 3
-  const door = { id: 'sd', x1: 6, y1: 2, x2: 6, y2: 3, move: true, sight: true, door: { state: 'closed', kind: 'door' } };
-  const m = {
+  const door: IdWall & { door: VisionDoor } = { id: 'sd', x1: 6, y1: 2, x2: 6, y2: 3, move: true, sight: true, door: { state: 'closed', kind: 'door' } };
+  const m: VisionMap & { walls: IdWall[] } = {
     width: 12, height: 5, lighting: 'bright', tokens: [], doors: [], tiles: floor(12, 5),
     walls: [{ id: 'a', x1: 6, y1: 0, x2: 6, y2: 2, move: true, sight: true, door: null }, door, { id: 'b', x1: 6, y1: 3, x2: 6, y2: 5, move: true, sight: true, door: null }],
   };
@@ -196,25 +202,25 @@ console.log('vision.js — segment walls');
   ok(!V.canStep(m, { x: 5, y: 1 }, { x: 6, y: 2 }) && !V.canStep(m, { x: 5, y: 3 }, { x: 6, y: 2 }), 'no diagonal squeeze past a door jamb');
   ok(V.canStep(m, { x: 7, y: 1 }, { x: 7, y: 2 }) && V.canStep(m, { x: 7, y: 0 }, { x: 8, y: 1 }), 'walls do not block moves parallel to them');
   // window: blocks movement, not sight
-  const win = { width: 8, height: 3, lighting: 'bright', tokens: [], doors: [], tiles: floor(8, 3), walls: [{ id: 'w', x1: 4, y1: 0, x2: 4, y2: 3, move: true, sight: false }] };
+  const win: VisionMap & { walls: IdWall[] } = { width: 8, height: 3, lighting: 'bright', tokens: [], doors: [], tiles: floor(8, 3), walls: [{ id: 'w', x1: 4, y1: 0, x2: 4, y2: 3, move: true, sight: false }] };
   v = V.computeVisibility(win, [{ x: 1, y: 1 }], {});
   ok(vis(v, win, 6, 1) && V.findPath(win, { x: 1, y: 1 }, { x: 6, y: 1 }) === null, 'window segment: see through, cannot pass');
   win.walls[0] = { id: 'c', x1: 4, y1: 0, x2: 4, y2: 3, move: false, sight: true };
   v = V.computeVisibility(win, [{ x: 1, y: 1 }], {});
   ok(!vis(v, win, 6, 1) && V.findPath(win, { x: 1, y: 1 }, { x: 6, y: 1 }) !== null, 'curtain segment: blocks sight, can pass');
   // partial wall: sample rays (corners) let a cell be seen around the end of a wall
-  const part = { width: 12, height: 8, lighting: 'bright', tokens: [], doors: [], tiles: floor(12, 8), walls: [{ id: 'p', x1: 6, y1: 0, x2: 6, y2: 4.5, move: true, sight: true }] };
+  const part: VisionMap & { walls: IdWall[] } = { width: 12, height: 8, lighting: 'bright', tokens: [], doors: [], tiles: floor(12, 8), walls: [{ id: 'p', x1: 6, y1: 0, x2: 6, y2: 4.5, move: true, sight: true }] };
   v = V.computeVisibility(part, [{ x: 2, y: 4 }], {});
   ok(vis(v, part, 9, 6) && vis(v, part, 7, 4) && !vis(v, part, 9, 1) && !vis(v, part, 7, 0), 'partial wall: visible around its end, hidden behind it');
   // corner squeeze: walls meeting at (5,3) enclose the top-right area
-  const corner = { width: 12, height: 8, lighting: 'bright', tokens: [], doors: [], tiles: floor(12, 8), walls: [{ id: 'A', x1: 5, y1: 0, x2: 5, y2: 3 }, { id: 'B', x1: 5, y1: 3, x2: 12, y2: 3 }] };
+  const corner: VisionMap & { walls: IdWall[] } = { width: 12, height: 8, lighting: 'bright', tokens: [], doors: [], tiles: floor(12, 8), walls: [{ id: 'A', x1: 5, y1: 0, x2: 5, y2: 3 }, { id: 'B', x1: 5, y1: 3, x2: 12, y2: 3 }] };
   ok(!V.canStep(corner, { x: 4, y: 3 }, { x: 5, y: 2 }) && !V.canStep(corner, { x: 5, y: 2 }, { x: 4, y: 3 }), 'diagonal squeeze between walls meeting at a corner is blocked (both ways)');
   ok(V.canStep(corner, { x: 4, y: 3 }, { x: 5, y: 3 }) && V.canStep(corner, { x: 4, y: 3 }, { x: 4, y: 2 }), 'orthogonal steps around the corner are free');
   ok(V.findPath(corner, { x: 4, y: 3 }, { x: 5, y: 2 }) === null && V.findPath(corner, { x: 2, y: 6 }, { x: 8, y: 1 }) === null, 'enclosed corner area unreachable');
   ok(V.findPath(corner, { x: 2, y: 6 }, { x: 2, y: 0 }) !== null && V.findPath(corner, { x: 2, y: 6 }, { x: 10, y: 6 }) !== null, 'rest of the map reachable');
   ok(V.findPath(corner, { x: 4, y: 3 }, { x: 5, y: 2 }, { ignoreWalls: true }) !== null, 'ignoreWalls ignores segments');
   // light occlusion by segments
-  const dark = { width: 12, height: 5, lighting: 'dark', tokens: [], doors: [], tiles: floor(12, 5), lights: [{ id: 'l', x: 8, y: 2, radius: 4, on: true }], walls: [{ id: 'x', x1: 6, y1: 0, x2: 6, y2: 5 }] };
+  const dark: VisionMap & { walls: IdWall[] } = { width: 12, height: 5, lighting: 'dark', tokens: [], doors: [], tiles: floor(12, 5), lights: [{ id: 'l', x: 8, y: 2, radius: 4, on: true }], walls: [{ id: 'x', x1: 6, y1: 0, x2: 6, y2: 5 }] };
   let ctx = V.createVisionContext(dark);
   ok(ctx.litRatio[2 * 12 + 7] <= 1 && ctx.litRatio[2 * 12 + 5] === Infinity, 'light does not pass a segment wall');
   v = V.computeVisibility(dark, [{ x: 2, y: 2 }], {}, ctx);
@@ -232,7 +238,7 @@ console.log('vision.js — segment walls');
 
   // perf: 70×50 Foundry-like map (all floor), ~220 segments, 4 viewers
   const W = 70, H = 50;
-  const walls = [];
+  const walls: IdWall[] = [];
   let id = 0;
   for (let rx = 0; rx <= W; rx += 10)
     for (let y = 0; y < H; y += 10) {
@@ -246,9 +252,9 @@ console.log('vision.js — segment walls');
       walls.push({ id: 'w' + id++, x1: x + 6, y1: ry, x2: x + 10, y2: ry });
     }
   for (let k = 0; k < 20; k++) walls.push({ id: 'd' + k, x1: 3 + k * 3, y1: 13 + (k % 5), x2: 5.3 + k * 3, y2: 16.7 + (k % 5) });
-  const big = { width: W, height: H, tiles: floor(W, H), walls, doors: [], lighting: 'bright', tokens: [], lights: [] };
+  const big: VisionMap = { width: W, height: H, tiles: floor(W, H), walls, doors: [], lighting: 'bright', tokens: [], lights: [] };
   const viewers = [{ x: 5, y: 5 }, { x: 35, y: 25 }, { x: 64, y: 44 }, { x: 15, y: 45 }];
-  for (const lighting of ['bright', 'dark']) {
+  for (const lighting of ['bright', 'dark'] as const) {
     big.lighting = lighting;
     big.lights = lighting === 'dark' ? Array.from({ length: 20 }, (_, i) => ({ x: 3 + ((i * 7) % 66), y: 3 + ((i * 11) % 44), radius: 6, on: true })) : [];
     const t0 = performance.now();
@@ -266,10 +272,12 @@ console.log('vision.js — segment walls');
 // ---------------------------------------------------------------------------
 // 2. Server
 // ---------------------------------------------------------------------------
-async function startSeeded(port, initialState) {
+async function startSeeded(port: number, initialState: object) {
   const runtime = fs.mkdtempSync(path.join(os.tmpdir(), 'sr-test-maps-'));
   fs.writeFileSync(path.join(runtime, 'state.json'), JSON.stringify(initialState));
-  const proc = spawn(process.execPath, ['server/index.js'], { cwd: ROOT, env: { ...process.env, PORT: String(port), SR_RUNTIME_DIR: runtime }, stdio: ['ignore', 'pipe', 'pipe'] });
+  // Node runs the TypeScript server directly; before 22.18 type stripping needs a flag.
+  const stripTypes = process.features.typescript ? [] : ['--experimental-strip-types'];
+  const proc = spawn(process.execPath, [...stripTypes, 'server/index.ts'], { cwd: ROOT, env: { ...process.env, PORT: String(port), SR_RUNTIME_DIR: runtime }, stdio: ['ignore', 'pipe', 'pipe'] });
   let out = '';
   proc.stdout.on('data', (d) => (out += d));
   proc.stderr.on('data', (d) => (out += d));
@@ -284,7 +292,7 @@ async function startSeeded(port, initialState) {
   return { url, output: () => out, stop: () => { proc.kill(); try { fs.rmSync(runtime, { recursive: true, force: true }); } catch {} } };
 }
 
-const actor = (id, name, extra = {}) => ({
+const actor = (id: string, name: string, extra: Record<string, unknown> = {}) => ({
   id, type: 'pc', name, metatype: 'Humain', color: '#3fd6d0',
   attributes: { BOD: 3, AGI: 4, REA: 3, STR: 3, WIL: 3, LOG: 3, INT: 3, CHA: 3, EDG: 3, ESS: 6 },
   condition: { physical: 0, stun: 0, overflow: 0 }, edge: { current: 3 },
@@ -305,7 +313,7 @@ const srv = await startSeeded(3201, {
   },
   log: [],
 });
-let gm, p1, p2;
+let gm: TestClient | undefined, p1: TestClient | undefined, p2: TestClient | undefined;
 try {
   gm = track(await client(srv.url, await login(srv.url, { role: 'gm', password: 'lazarus' })));
   p1 = track(await client(srv.url, await login(srv.url, { role: 'player', name: 'Joueur Un', characterId: 'tpc1' })));
@@ -353,7 +361,7 @@ try {
 
   ok(gm.state.scene.activeMapId === A, 'setActive');
   ok(Object.keys(gm.state.maps).includes(B) && gm.state.maps[A].notes.length === 1, 'GM sees everything');
-  ok(gm.state.maps[A].tokens.find((t) => t.id === t1).disposition === 'pc' && gm.state.maps[A].tokens.find((t) => t.id === t1).color === '#3fd6d0', 'PC token defaults from actor');
+  ok(gm.state.maps[A].tokens.find((t) => t.id === t1)!.disposition === 'pc' && gm.state.maps[A].tokens.find((t) => t.id === t1)!.color === '#3fd6d0', 'PC token defaults from actor');
 
   let pm = p1.state.maps[A];
   ok(Object.keys(p1.state.maps).length === 1 && pm, 'player only gets the active map');
@@ -400,11 +408,11 @@ try {
   p2.events.length = 0;
   await rejects(p1.send('maps/toggleDoor', { mapId: A, doorId: locked }), /verrouill/, 'locked door refuses player');
   await settle(60);
-  ok(p1.events.some((e) => e.ev === 'sfx' && e.data.id === 'door-locked') && p2.events.some((e) => e.data?.id === 'door-locked'), 'door-locked sfx to everyone');
-  ok(p1.state.maps[A].doors.find((d) => d.id === locked).state === 'closed', 'locked shown as closed to players');
+  ok(p1.events.some((e) => e.ev === 'sfx' && e.data.id === 'door-locked') && p2.events.some((e) => (e.data as { id?: string })?.id === 'door-locked'), 'door-locked sfx to everyone');
+  ok(p1.state.maps[A].doors.find((d) => d.id === locked)!.state === 'closed', 'locked shown as closed to players');
   await gm.send('maps/toggleDoor', { mapId: A, doorId: locked });
   await settle();
-  ok(gm.state.maps[A].doors.find((d) => d.id === locked).state === 'open', 'GM opens locked door');
+  ok(gm.state.maps[A].doors.find((d) => d.id === locked)!.state === 'open', 'GM opens locked door');
   await gm.send('maps/setDoor', { mapId: A, doorId: locked, state: 'locked' });
 
   // Move lock
@@ -422,7 +430,7 @@ try {
   ok(gmv.path.length === 2, 'GM teleport ignoring walls');
   await gm.send('maps/moveTokens', { mapId: A, moves: [{ tokenId: tBehind, x: 15, y: 2 }, { tokenId: tNeutral, x: 7, y: 2 }], ignoreWalls: true });
   await settle();
-  ok(gm.state.maps[A].tokens.find((t) => t.id === tNeutral).y === 2, 'GM multi move');
+  ok(gm.state.maps[A].tokens.find((t) => t.id === tNeutral)!.y === 2, 'GM multi move');
 
   // Shared vision
   await gm.send('maps/moveToken', { mapId: A, tokenId: t2, x: 12, y: 7, ignoreWalls: true });
@@ -455,8 +463,8 @@ try {
   await rejects(p1.send('maps/updateToken', { mapId: A, tokenId: t1, patch: { name: 'Hack', hidden: true } }), /apparence/, 'player cannot change name/hidden');
   await rejects(p1.send('maps/updateToken', { mapId: A, tokenId: t2, patch: { color: '#000000' } }), /appartient/, 'player cannot restyle others');
   await settle();
-  const tok1 = gm.state.maps[A].tokens.find((t) => t.id === t1);
-  ok(tok1.color === '#ff0000' && tok1.status[0] === 'à terre' && tok1.name === 'Testeur Un', 'player cosmetic update');
+  const tok1 = gm.state.maps[A].tokens.find((t) => t.id === t1)!;
+  ok(tok1.color === '#ff0000' && tok1.status![0] === 'à terre' && tok1.name === 'Testeur Un', 'player cosmetic update');
   await gm.send('maps/updateToken', { mapId: A, tokenId: tHidden, patch: { hidden: false, disposition: 'hostile', name: 'Sniper révélé' } });
   await settle();
   ok(p1.state.maps[A].tokens.some((t) => t.id === tHidden), 'unhidden token appears for players');
@@ -520,7 +528,7 @@ try {
   await settle();
   const nextActive = gm.state.scene.activeMapId;
   ok(nextActive && nextActive !== A && gm.state.maps[nextActive] && !gm.state.maps[A], 'deleting active map activates another');
-  ok(Object.keys(p1.state.maps).length === 1 && p1.state.maps[nextActive], 'players follow the new active map');
+  ok(Object.keys(p1.state.maps).length === 1 && p1.state.maps[nextActive!], 'players follow the new active map');
   await gm.send('maps/setActive', { mapId: null });
   await settle();
   ok(Object.keys(p1.state.maps).length === 0, 'no active map → players get no map');
@@ -557,17 +565,17 @@ try {
   const fCloset = await gm.send('maps/addToken', { mapId: F, token: { name: 'Planqué', x: 2, y: 1, disposition: 'hostile' } });
   await settle();
   let gf = gm.state.maps[F];
-  ok(gf.background.mode === 'image' && gf.background.x === 0 && gf.background.w === 16 && gf.background.opacity === 1, 'image background normalized (mode, numbers, opacity 1)');
+  ok(gf.background!.mode === 'image' && gf.background!.x === 0 && gf.background!.w === 16 && gf.background!.opacity === 1, 'image background normalized (mode, numbers, opacity 1)');
   ok(gf.walls.length === 10 && !gf.walls.some((w) => w.id === 'bad' || w.id === 'zero'), 'invalid / zero-length walls dropped');
   ok(gf.walls.every((w) => typeof w.x1 === 'number' && typeof w.move === 'boolean' && typeof w.sight === 'boolean' && 'door' in w), 'walls normalized (numbers, booleans, door)');
   ok(new Set(gf.walls.map((w) => w.id)).size === gf.walls.length, 'duplicate wall ids re-assigned');
-  ok(gf.walls.find((w) => w.id === 'dA').door.name === 'Porte du bureau' && gf.walls.find((w) => w.id === 'win').sight === false, 'door names / window flags kept');
+  ok(gf.walls.find((w) => w.id === 'dA')!.door!.name === 'Porte du bureau' && gf.walls.find((w) => w.id === 'win')!.sight === false, 'door names / window flags kept');
 
   let pf = p1.state.maps[F];
   ok(pf && pf.background?.mode === 'image' && pf.background.url === '/assets/foundry/test/map.webp', 'image background passes through the player filter');
   ok(!pf.walls.some((w) => w.id === 'dS' || w.door?.kind === 'secret'), 'closed secret wall-door stripped for players');
   ok(pf.walls.some((w) => w.x1 === 2 && w.y1 === 2 && w.x2 === 3 && !w.door), '… sent as an anonymous plain wall');
-  ok(pf.walls.some((w) => w.id === 'dA' && w.door.state === 'closed'), 'known door segment kept with its id');
+  ok(pf.walls.some((w) => w.id === 'dA' && w.door!.state === 'closed'), 'known door segment kept with its id');
   ok(pf.walls.filter((w) => !w.door).every((w) => !['wN', 'wM', 'wC', 'win'].includes(w.id)), 'plain walls have anonymous ids for players');
   ok(gm.state.maps[F].walls.some((w) => w.id === 'dS'), 'GM still has the secret door');
   let pids = new Set(pf.tokens.map((t) => t.id));
@@ -592,31 +600,31 @@ try {
   pids = new Set(pf.tokens.map((t) => t.id));
   ok(pids.has(fGuard) && pf.tiles[4][12] === '.', 'open door segment reveals the room and grows fog memory');
   const mvF = await p1.send('maps/moveToken', { mapId: F, tokenId: fa, x: 9, y: 3 });
-  ok(mvF.path.some((c) => c.x === 8 && c.y === 3), 'player walks through the open door segment');
+  ok(mvF.path.some((c: Point) => c.x === 8 && c.y === 3), 'player walks through the open door segment');
   p1.events.length = 0;
   await p1.send('maps/toggleDoor', { mapId: F, doorId: 'dA' });
   await settle();
-  ok(gm.state.maps[F].walls.find((w) => w.id === 'dA').door.state === 'closed' && p1.events.some((e) => e.data?.id === 'door-close'), 'player closes it again (+ sfx)');
+  ok(gm.state.maps[F].walls.find((w) => w.id === 'dA')!.door!.state === 'closed' && p1.events.some((e) => (e.data as { id?: string })?.id === 'door-close'), 'player closes it again (+ sfx)');
   await p1.send('maps/moveToken', { mapId: F, tokenId: fa, x: 9, y: 6 });
   p1.events.length = 0;
   await rejects(p1.send('maps/toggleDoor', { mapId: F, doorId: 'dL' }), /verrouill/, 'locked door segment refuses player');
   await settle(60);
-  ok(p1.events.some((e) => e.data?.id === 'door-locked'), 'door-locked sfx for a locked segment');
-  ok(p1.state.maps[F].walls.find((w) => w.id === 'dL')?.door.state === 'closed', 'locked segment shown as closed to players');
+  ok(p1.events.some((e) => (e.data as { id?: string })?.id === 'door-locked'), 'door-locked sfx for a locked segment');
+  ok(p1.state.maps[F].walls.find((w) => w.id === 'dL')?.door!.state === 'closed', 'locked segment shown as closed to players');
   await rejects(p1.send('maps/setDoor', { mapId: F, doorId: 'dL', state: 'open' }), /MJ/, 'players cannot setDoor');
   await gm.send('maps/toggleDoor', { mapId: F, doorId: 'dL' });
   await settle();
-  ok(gm.state.maps[F].walls.find((w) => w.id === 'dL').door.state === 'open', 'GM toggles a locked segment door open');
+  ok(gm.state.maps[F].walls.find((w) => w.id === 'dL')!.door!.state === 'open', 'GM toggles a locked segment door open');
   const sd = await gm.send('maps/setDoor', { mapId: F, doorId: 'dL', state: 'locked', kind: 'secret', name: 'Trappe' });
   await settle();
   gf = gm.state.maps[F];
-  ok(sd === 'dL' && gf.walls.find((w) => w.id === 'dL').door.kind === 'secret' && gf.walls.find((w) => w.id === 'dL').door.name === 'Trappe', 'setDoor on a segment (state, kind, name)');
+  ok(sd === 'dL' && gf.walls.find((w) => w.id === 'dL')!.door!.kind === 'secret' && gf.walls.find((w) => w.id === 'dL')!.door!.name === 'Trappe', 'setDoor on a segment (state, kind, name)');
   await gm.send('maps/setDoor', { mapId: F, doorId: 'dL', kind: 'gate' });
   await settle();
-  ok(gm.state.maps[F].walls.find((w) => w.id === 'dL').door.kind === 'secret', 'segment door kinds limited to door / secret');
+  ok(gm.state.maps[F].walls.find((w) => w.id === 'dL')!.door!.kind === 'secret', 'segment door kinds limited to door / secret');
   await gm.send('maps/setDoor', { mapId: F, doorId: 'dS', state: 'open' });
   await settle();
-  ok(p1.state.maps[F].walls.some((w) => w.id === 'dS' && w.door.kind === 'door' && w.door.state === 'open'), 'open secret door segment shown to players as a door');
+  ok(p1.state.maps[F].walls.some((w) => w.id === 'dS' && w.door!.kind === 'door' && w.door!.state === 'open'), 'open secret door segment shown to players as a door');
   ok(p1.state.maps[F].tokens.some((t) => t.id === fCloset), 'closet token seen through the opened secret door (shared vision)');
 
   // GM wall CRUD
@@ -627,15 +635,15 @@ try {
   ok(typeof nw === 'string' && gm.state.maps[F].walls.some((w) => w.id === nw && w.move && w.sight), 'addWall');
   await gm.send('maps/updateWall', { mapId: F, wallId: nw, patch: { sight: false, door: { state: 'open', kind: 'door' } } });
   await settle();
-  let nwW = gm.state.maps[F].walls.find((w) => w.id === nw);
+  let nwW = gm.state.maps[F].walls.find((w) => w.id === nw)!;
   ok(nwW.sight === false && nwW.door?.state === 'open', 'updateWall (flags + door)');
   await gm.send('maps/updateWall', { mapId: F, wallId: nw, patch: { door: { state: 'closed' } } });
   await settle();
-  nwW = gm.state.maps[F].walls.find((w) => w.id === nw);
-  ok(nwW.door.state === 'closed' && nwW.door.kind === 'door', 'updateWall merges a partial door patch');
+  nwW = gm.state.maps[F].walls.find((w) => w.id === nw)!;
+  ok(nwW.door!.state === 'closed' && nwW.door!.kind === 'door', 'updateWall merges a partial door patch');
   await gm.send('maps/updateWall', { mapId: F, wallId: nw, patch: { door: null } });
   await settle();
-  ok(gm.state.maps[F].walls.find((w) => w.id === nw).door === null, 'updateWall door: null removes the door');
+  ok(gm.state.maps[F].walls.find((w) => w.id === nw)!.door === null, 'updateWall door: null removes the door');
   const removed = await gm.send('maps/removeWall', { mapId: F, wallIds: [nw, 'win'] });
   await settle();
   ok(removed === 2 && !gm.state.maps[F].walls.some((w) => w.id === nw || w.id === 'win'), 'removeWall (several)');
@@ -649,18 +657,18 @@ try {
   await gm.send('maps/update', { mapId: F, patch: { background: { opacity: 0.5 } } });
   await settle();
   gf = gm.state.maps[F];
-  ok(gf.background.opacity === 0.5 && gf.background.mode === 'image' && gf.background.url, 'partial background patch merges');
+  ok(gf.background!.opacity === 0.5 && gf.background!.mode === 'image' && gf.background!.url, 'partial background patch merges');
   await gm.send('maps/update', { mapId: F, patch: { background: { mode: 'underlay' } } });
   await settle();
-  ok(gm.state.maps[F].background.mode === 'underlay', 'background mode switch');
+  ok(gm.state.maps[F].background!.mode === 'underlay', 'background mode switch');
   const Fd = await gm.send('maps/duplicate', { mapId: F });
   await settle();
   const fdW = gm.state.maps[Fd].walls;
-  ok(fdW.length === gm.state.maps[F].walls.length && !fdW.some((w) => gm.state.maps[F].walls.some((o) => o.id === w.id)), 'duplicate gives walls new ids');
+  ok(fdW.length === gm.state.maps[F].walls.length && !fdW.some((w) => gm!.state.maps[F].walls.some((o) => o.id === w.id)), 'duplicate gives walls new ids');
   await gm.send('maps/resize', { mapId: Fd, width: 20, height: 10, anchor: 'c' });
   await settle();
   const rz = gm.state.maps[Fd];
-  ok(rz.walls.some((w) => w.x1 === 10 && w.y1 === 1 && w.x2 === 10 && w.y2 === 4) && rz.background.x === 2 && rz.background.y === 1, 'resize shifts walls and background');
+  ok(rz.walls.some((w) => w.x1 === 10 && w.y1 === 1 && w.x2 === 10 && w.y2 === 4) && rz.background!.x === 2 && rz.background!.y === 1, 'resize shifts walls and background');
   await gm.send('maps/update', { mapId: F, patch: { background: null } });
   await settle();
   ok(!gm.state.maps[F].background, 'background removed');

@@ -6,23 +6,25 @@ import { launcherRounds } from '../client/modules/sheet/inventory.ts';
 import { combineEnv, environmentFor, toxinOutcome, TOXIN_BY_ID, stillActive, untilFor, areaEffectOf, pruneExpired } from '../shared/combat.ts';
 import { collectModifiers, poolModifiers, rollContext, derivedWithModifiers } from '../shared/modifiers.ts';
 import { rollScatter, blastOf, blastDvAt, blastReach, rangeFor, defenseLines, actionsForWeapon, unlockedActions, finalDamageType } from '../shared/combat.ts';
+import type { EnvironmentInput, WeaponLike } from '../shared/combat.ts';
+import type { ActorLike } from '../shared/types.ts';
 
 const srv = await startServer({ port: Number(process.env.SR_TEST_PORT) || 3291 });
 let failures = 0;
-async function test(name, fn) {
+async function test(name: string, fn: () => unknown) {
   try {
     await fn();
     console.log('  ✓', name);
   } catch (err) {
     failures++;
-    console.log('  ✗', name, '\n     ', err.stack?.split('\n').slice(0, 3).join('\n      '));
+    console.log('  ✗', name, '\n     ', (err as Error).stack?.split('\n').slice(0, 3).join('\n      '));
   }
 }
-const rejects = async (p, re) => {
+const rejects = async (p: Promise<unknown>, re?: RegExp) => {
   try {
     await p;
   } catch (err) {
-    if (re) assert.match(err.message, re);
+    if (re) assert.match((err as Error).message, re);
     return err;
   }
   throw new Error('expected rejection');
@@ -33,14 +35,14 @@ const NODACHI = 'fvtt_2cQIIYkKrRxiNUeR';
 const FRAG = 'fvtt_ejEwGCVoJcX2A23P';
 
 try {
-  console.log('Pure rules (shared/combat.js)');
+  console.log('Pure rules (shared/combat.ts)');
   await test('range bands: heavy pistol 10 m = medium −1, 70 m beyond', () => {
-    const w = { kind: 'ranged', skill: 'pistols', category: 'Pistolets lourds', name: 'Colt' };
-    assert.equal(rangeFor(w, null, 10).mod, -1);
-    assert.equal(rangeFor(w, null, 3).mod, 0);
-    assert.equal(rangeFor(w, null, 70).beyond, true);
-    const g = { kind: 'ranged', skill: 'throwing_weapons', name: 'Grenade: Fragmentation' };
-    assert.equal(rangeFor(g, { attributes: { STR: 5 } }, 15).id, 'medium'); // STR×2 = 10, ×4 = 20
+    const w: WeaponLike = { kind: 'ranged', skill: 'pistols', category: 'Pistolets lourds', name: 'Colt' };
+    assert.equal(rangeFor(w, null, 10)!.mod, -1);
+    assert.equal(rangeFor(w, null, 3)!.mod, 0);
+    assert.equal(rangeFor(w, null, 70)!.beyond, true);
+    const g: WeaponLike = { kind: 'ranged', skill: 'throwing_weapons', name: 'Grenade: Fragmentation' };
+    assert.equal(rangeFor(g, { attributes: { STR: 5 } } as ActorLike, 15)!.id, 'medium'); // STR×2 = 10, ×4 = 20
   });
   await test('scatter: 3 hits = no scatter; otherwise (N D6 − hits) m in a 2D6 direction', () => {
     assert.deepEqual(rollScatter({ from: { x: 0, y: 0 }, to: { x: 10, y: 0 }, hits: 3, threshold: 3 }).scattered, false);
@@ -51,19 +53,19 @@ try {
     assert.ok(s.x < 10, 'lands back toward the attacker');
   });
   await test('blast: frag 18P −1/m, flash-bang 10 m radius, smoke no damage', () => {
-    const frag = blastOf({ name: 'Grenade: Fragmentation', damage: '18P', ap: 5 });
+    const frag = blastOf({ name: 'Grenade: Fragmentation', damage: '18P', ap: 5 })!;
     assert.equal(frag.falloff, 1);
     assert.equal(blastDvAt(frag, 4), 14);
     assert.equal(blastReach(frag), 17);
-    const fb = blastOf({ name: 'Grenade: Flash-Bang', damage: '10S', ap: -4 });
+    const fb = blastOf({ name: 'Grenade: Flash-Bang', damage: '10S', ap: -4 })!;
     assert.equal(fb.radius, 10);
     assert.equal(blastDvAt(fb, 9), 10);
     assert.equal(blastDvAt(fb, 11), 0);
-    assert.equal(blastOf({ name: 'Grenade: Smoke', damage: '' }).damaging, false);
-    assert.equal(blastOf({ name: 'Molotov', damage: '9P (-3/m)' }).falloff, 3);
+    assert.equal(blastOf({ name: 'Grenade: Smoke', damage: '' })!.damaging, false);
+    assert.equal(blastOf({ name: 'Molotov', damage: '9P (-3/m)' })!.falloff, 3);
   });
   await test('Finishing Move / Agile Defender unlocked by Anthony’s qualities, Flying Kick not', () => {
-    const anthony = { qualities: [{ name: 'Défenseur agile', notes: 'Agile Defender · RG 127' }, { name: 'Finishing Move' }], weapons: [] };
+    const anthony = { qualities: [{ name: 'Défenseur agile', notes: 'Agile Defender · RG 127' }, { name: 'Finishing Move' }], weapons: [] } as unknown as ActorLike; // partial actor fixture
     const u = unlockedActions(anthony);
     assert.deepEqual(u.actions.map((a) => a.id), ['finishing-move']);
     assert.deepEqual(u.defenses.map((a) => a.id), ['agile']);
@@ -71,7 +73,7 @@ try {
     assert.ok(melee.includes('finishing-move') && !melee.includes('flying-kick') && melee.includes('charge'));
   });
   await test('defense lines: one active defense, full defense paid once per turn, reach, prior defenses', () => {
-    const actor = { attributes: { WIL: 3, AGI: 5 }, skills: [{ id: 'gymnastics', rating: 4 }, { id: 'unarmed_combat', rating: 2 }], weapons: [] };
+    const actor = { attributes: { WIL: 3, AGI: 5 }, skills: [{ id: 'gymnastics', rating: 4 }, { id: 'unarmed_combat', rating: 2 }], weapons: [] } as unknown as ActorLike; // partial actor fixture
     const r = defenseLines(actor, { kind: 'melee', reach: 1 }, { options: ['dodge', 'block', 'full'], prior: 1, turnBoosts: ['full'] });
     assert.deepEqual(r.lines.map((l) => [l.key, l.value]), [['dodge', 4], ['full', 3], ['reach', -1], ['prior', -1]]);
     assert.equal(r.ini, 5);
@@ -87,17 +89,17 @@ try {
     assert.equal(combineEnv({ light: 3, visibility: 3 }), -10);
   });
   await test('environment: dark map, low-light / thermographic vision, smoke on the line of fire', () => {
-    const map = { width: 20, height: 10, lighting: 'dark', metersPerCell: 1 };
+    const map = { width: 20, height: 10, lighting: 'dark' as const, metersPerCell: 1 };
     const base = { map, from: { x: 1, y: 5 }, to: { x: 10, y: 5 }, meters: 9, rangeIndex: 0, litRatio: null };
     assert.equal(environmentFor(base).value, -6, 'total darkness');
     assert.equal(environmentFor({ ...map && base, map: { ...map, lighting: 'dim' }, senses: { lowLight: true } }).value, 0, 'low-light: dim → full');
     assert.equal(environmentFor({ ...base, senses: { thermo: true } }).value, -3, 'thermo: one row up');
-    const smoke = [{ effect: 'smoke', x: 5, y: 5, radius: 3 }];
+    const smoke: NonNullable<EnvironmentInput['blasts']> = [{ effect: 'smoke', x: 5, y: 5, radius: 3 }];
     assert.equal(environmentFor({ ...base, map: { ...map, lighting: 'bright' }, blasts: smoke }).value, -6, 'heavy smoke on the line');
     assert.equal(environmentFor({ ...base, map: { ...map, lighting: 'bright' }, blasts: smoke, senses: { thermo: true } }).value, -3);
     assert.equal(environmentFor({ ...base, map: { ...map, lighting: 'bright' }, blasts: [{ ...smoke[0], effect: 'thermalSmoke' }], senses: { thermo: true } }).value, -6, 'thermal smoke blocks thermo');
     assert.equal(environmentFor({ ...base, blasts: smoke }).value, -10, 'darkness + smoke');
-    assert.equal(environmentFor({ ...base, map: { ...map, lighting: 'bright', weather: { wind: 2 } }, senses: { smartlink: true } }).value, -1, 'smartlink: wind one row up');
+    assert.equal(environmentFor({ ...base, map: { ...map, lighting: 'bright', weather: { wind: 2 } as { visibility: number; wind: number } }, senses: { smartlink: true } }).value, -1, 'smartlink: wind one row up');
   });
   await test('toxins: outcome, afflictions on the sheet (−2 dice, wounds ×2), expiry', () => {
     const cs = TOXIN_BY_ID.cs;
@@ -111,7 +113,7 @@ try {
     assert.equal(areaEffectOf({ name: 'Minigrenade: Thermal Smoke' }), 'thermalSmoke');
     assert.equal(areaEffectOf({ name: 'Grenade: Fragmentation' }), 'explosion');
     const a = { attributes: { BOD: 3, AGI: 3, REA: 3, STR: 3, WIL: 3, LOG: 3, INT: 3, CHA: 3, EDG: 2, ESS: 6 }, skills: [{ id: 'pistols', rating: 3 }], condition: { physical: 3, stun: 0 },
-      afflictions: [{ id: 'a1', kind: 'disoriented' }, { id: 'a2', kind: 'nauseous' }] };
+      afflictions: [{ id: 'a1', kind: 'disoriented' }, { id: 'a2', kind: 'nauseous' }] } as ActorLike; // partial actor fixture
     const mods = collectModifiers(a, () => null);
     assert.equal(poolModifiers(mods, rollContext(a, { skillId: 'pistols' })).total, -2);
     assert.equal(poolModifiers(mods, rollContext(a, { attr: 'BOD', attr2: 'WIL', test: 'toxinResist' })).total, 0, 'not on resistance tests');
@@ -142,9 +144,9 @@ try {
   const distance = Math.round(Math.hypot(npcToken.x - 5, npcToken.y - 5));
 
   console.log('Targeted attack');
-  let atkId = null;
+  let atkId: string | null = null;
   await test('player attacks the NPC token: range modifier in the pool, attack waits for defense', async () => {
-    let r;
+    let r: any; // attack/roll result
     for (let i = 0; i < 12; i++) {
       r = await p1.send('attack/roll', { actorId: 'pc_anthony', weaponId: COLT, skillId: 'pistols', targetTokenId: npcToken.id, label: 'Attaque — Colt Government 2066' });
       await gm.send('weapon/reload', { actorId: 'pc_anthony', weaponId: COLT, free: true });
@@ -153,7 +155,7 @@ try {
     assert.ok(r.attackId, 'attack created');
     if (distance > 5) assert.match(r.breakdown, /portée moyenne \(\d+ m\) −1/);
     await settle();
-    const a = gm.state.attacks.list.find((x) => x.id === r.attackId);
+    const a = gm.state.attacks.list.find((x) => x.id === r.attackId)!;
     assert.equal(a.status, 'defense');
     assert.equal(a.targetId, npcId);
     assert.equal(a.dv, 7);
@@ -198,8 +200,8 @@ try {
     await p1.send('attack/roll', { actorId: 'pc_anthony', weaponId: NODACHI, targetTokenId: npcToken.id, actionId: 'finishing-move' });
     await rejects(p1.send('attack/roll', { actorId: 'pc_anthony', weaponId: NODACHI, targetTokenId: npcToken.id, actionId: 'finishing-move' }), /une seule fois/);
     await settle();
-    const entry = gm.state.combat.entries.find((e) => e.actorId === 'pc_anthony');
-    assert.ok(entry.adjust <= -10, 'initiative paid');
+    const entry = gm.state.combat.entries.find((e) => e.actorId === 'pc_anthony')!;
+    assert.ok(entry.adjust! <= -10, 'initiative paid');
     await gm.send('combat/end', {});
   });
 
@@ -208,11 +210,11 @@ try {
     const r = await p1.send('attack/roll', { actorId: 'pc_anthony', weaponId: FRAG, point: { x: npcToken.x, y: npcToken.y + 1 }, label: 'Attaque — Grenade: Fragmentation' });
     assert.ok(r.blastId, 'blast created');
     await settle();
-    const b = gm.state.attacks.blasts.find((x) => x.id === r.blastId);
+    const b = gm.state.attacks.blasts.find((x) => x.id === r.blastId)!;
     assert.equal(b.falloff, 1);
     assert.equal(b.reach, 17);
     for (const h of b.hits) {
-      const a = gm.state.attacks.list.find((x) => x.id === h.attackId);
+      const a = gm.state.attacks.list.find((x) => x.id === h.attackId)!;
       assert.equal(a.status, 'soak');
       assert.equal(a.kind, 'blast');
       assert.equal(a.dv, h.dv);
@@ -225,18 +227,18 @@ try {
   });
   await test('gas grenade: a toxin resistance for each token caught, effects on the sheet, the cloud stays', async () => {
     const jane = gm.state.actors.pc_jane;
-    const gas = jane.weapons.find((w) => w.name === 'Grenade: Gas');
+    const gas = jane.weapons.find((w) => w.name === 'Grenade: Gas')!;
     await gm.send('maps/addToken', { mapId, token: { actorId: 'pc_jane', x: npcToken.x - 2, y: npcToken.y + 2 } });
     const r = await gm.send('attack/roll', { actorId: 'pc_jane', weaponId: gas.id, skillId: gas.skill, toxinId: 'neurostun8', point: { x: npcToken.x, y: npcToken.y } });
     await settle();
-    const b = gm.state.attacks.blasts.find((x) => x.id === r.blastId);
+    const b = gm.state.attacks.blasts.find((x) => x.id === r.blastId)!;
     assert.equal(b.effect, 'gas');
     assert.equal(b.toxinId, 'neurostun8');
     assert.equal(b.dv, null, 'no blast damage: the toxin replaces it');
     assert.ok(b.until, 'expiry set');
     assert.ok(b.hits.length > 0, 'Jane, 3 m away, is in the 10 m cloud');
     for (const h of b.hits) {
-      const a = gm.state.attacks.list.find((x) => x.id === h.attackId);
+      const a = gm.state.attacks.list.find((x) => x.id === h.attackId)!;
       assert.equal(a.kind, 'toxin');
       assert.equal(a.dv, 15);
       const res = await gm.send('attack/soak', { attackId: a.id });
@@ -256,7 +258,7 @@ try {
   });
   await test('weather: the environment line replaces the range line in the attack pool', async () => {
     await gm.send('maps/update', { mapId, patch: { weather: { visibility: 3 } } });
-    const colt = gm.state.actors.pc_anthony.weapons.find((w) => w.id === COLT);
+    const colt = gm.state.actors.pc_anthony.weapons.find((w) => w.id === COLT)!;
     await gm.send('weapon/reload', { actorId: 'pc_anthony', weaponId: COLT, free: true }).catch(() => {});
     try {
       const r = await gm.send('attack/roll', { actorId: 'pc_anthony', weaponId: colt.id, skillId: 'pistols', targetTokenId: npcToken.id });
@@ -279,35 +281,35 @@ try {
     assert.equal(molo.skill, 'throwing_weapons');
     await gm.send('actor/addItem', { actorId: npcId, list: 'gear', item: { name: 'Grenade: Molotov Cocktail', qty: 1 } });
     await settle();
-    assert.equal(gm.state.actors[npcId].weapons.find((w) => w.id === molo.id).qty, 3, 'same weapon: quantity grows');
+    assert.equal(gm.state.actors[npcId].weapons.find((w) => w.id === molo.id)!.qty, 3, 'same weapon: quantity grows');
     const r = await gm.send('attack/roll', { actorId: npcId, weaponId: molo.id, skillId: 'throwing_weapons', modifier: 8, point: { x: npcToken.x - 3, y: npcToken.y } });
     assert.ok(r.blastId);
     await settle();
-    const b = gm.state.attacks.blasts.find((x) => x.id === r.blastId);
+    const b = gm.state.attacks.blasts.find((x) => x.id === r.blastId)!;
     assert.equal(b.dv, 8);
     assert.equal(b.falloff, 4);
-    assert.equal(gm.state.actors[npcId].weapons.find((w) => w.id === molo.id).qty, 2, 'one thrown');
+    assert.equal(gm.state.actors[npcId].weapons.find((w) => w.id === molo.id)!.qty, 2, 'one thrown');
     await gm.send('attack/clear', { all: true });
     await settle();
   });
   await test('grenade launcher without a minigrenade profile: the catalog round chosen gives the blast, a round is used', async () => {
-    const alpha = gm.state.actors.pc_anthony.weapons.find((w) => /Alpha Grenade Launcher/.test(w.name));
+    const alpha = gm.state.actors.pc_anthony.weapons.find((w) => /Alpha Grenade Launcher/.test(w.name))!;
     const rounds = launcherRounds(gm.state.actors.pc_anthony, alpha);
     assert.ok(rounds.length && rounds.every((r) => !r.sheet), 'catalog rounds offered');
     await rejects(gm.send('attack/roll', { actorId: 'pc_anthony', weaponId: alpha.id, skillId: alpha.skill, point: { x: npcToken.x, y: npcToken.y } }), /minigrenade/);
-    const he = rounds.find((r) => /High Explosive/.test(r.w.name));
-    const before = gm.state.actors.pc_anthony.weapons.find((w) => w.id === alpha.id).ammoLoaded;
+    const he = rounds.find((r) => /High Explosive/.test(r.w.name!))!;
+    const before = gm.state.actors.pc_anthony.weapons.find((w) => w.id === alpha.id)!.ammoLoaded;
     const r = await gm.send('attack/roll', { actorId: 'pc_anthony', weaponId: alpha.id, skillId: alpha.skill, profileId: he.id, point: { x: npcToken.x, y: npcToken.y } });
     await settle();
-    const b = gm.state.attacks.blasts.find((x) => x.id === r.blastId);
+    const b = gm.state.attacks.blasts.find((x) => x.id === r.blastId)!;
     assert.equal(b.dv, 16);
     assert.equal(b.falloff, 2);
     assert.equal(b.reach, 7);
-    assert.equal(gm.state.actors.pc_anthony.weapons.find((w) => w.id === alpha.id).ammoLoaded, before - 1);
+    assert.equal(gm.state.actors.pc_anthony.weapons.find((w) => w.id === alpha.id)!.ammoLoaded, before! - 1);
   });
   await test('launcher rounds: the sheet profiles first, the loaded minigrenade before them; the sheet profile is the default', async () => {
     const chris = gm.state.actors.pc_christopher;
-    const mgl = chris.weapons.find((w) => /MGL/.test(w.name));
+    const mgl = chris.weapons.find((w) => /MGL/.test(w.name))!;
     const names = launcherRounds(chris, mgl).map((r) => r.w.name);
     assert.deepEqual(names.slice(0, 2), ['Minigrenade: High Explosive', 'Minigrenade: Gas']);
     assert.equal(names.filter((n) => n === 'Minigrenade: High Explosive').length, 1, 'catalog duplicate of a sheet profile dropped');

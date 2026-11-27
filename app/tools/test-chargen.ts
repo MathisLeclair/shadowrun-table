@@ -9,8 +9,11 @@ import {
   issueText, priorityText, magicOptionText, draftHeadline, COLUMNS, LETTERS, STEPS, MAGIC_TYPES, COLUMN_LABELS,
   KNOWLEDGE_TYPES, TRADITIONS, ASPECTS, METATYPE_TRAITS, FORM_TARGETS,
 } from '../shared/chargen.ts';
+import type { ChargenActor, ChargenCtx } from '../shared/chargen.ts';
 import { TIERS, ARCHETYPES, GRUNT_RULES } from '../shared/npcgen.ts';
 import { interpolate, stripContext } from '../client/i18n/format.ts';
+import type { TParams } from '../client/i18n/format.ts';
+import type { ActionResponse, CatalogFile, CatalogItem, DraftData } from '../shared/types.ts';
 import { derive, skillPool } from '../shared/sr5.ts';
 import { startServer, login, client, settle } from './test-client.ts';
 
@@ -19,37 +22,38 @@ const PORT = Number(process.env.SR_TEST_PORT) || 3711;
 
 let failures = 0;
 let passes = 0;
-function ok(cond, msg) {
+function ok(cond: unknown, msg: string) {
   if (cond) passes++;
   else {
     failures++;
     console.error('  ✗', msg);
   }
 }
-async function rejects(promise, re, msg) {
+async function rejects(promise: Promise<unknown>, re: RegExp, msg: string) {
   try {
     await promise;
     ok(false, `${msg} (should have failed)`);
   } catch (e) {
-    ok(re.test(e.message), `${msg} — got: ${e.message}`);
+    ok(re.test((e as Error).message), `${msg} — got: ${(e as Error).message}`);
   }
 }
-const clone = (v) => JSON.parse(JSON.stringify(v));
+// Deep copy as any: tests mutate the copies into broken / partial draft shapes.
+const clone = (v: unknown) => JSON.parse(JSON.stringify(v));
 
 // ---------------------------------------------------------------------------
 // Catalog context (same shape the server builds)
 // ---------------------------------------------------------------------------
-const INDEX = new Map();
-for (const f of ['weapons', 'armor', 'gear', 'cyberware', 'bioware', 'vehicles', 'programs', 'lifestyles', 'qualities', 'spells', 'powers']) {
+const INDEX = new Map<string, { item: CatalogItem; file: CatalogFile }>();
+for (const f of ['weapons', 'armor', 'gear', 'cyberware', 'bioware', 'vehicles', 'programs', 'lifestyles', 'qualities', 'spells', 'powers'] as const) {
   for (const it of JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'catalog', `${f}.json`), 'utf8'))) INDEX.set(it.id, { item: it, file: f });
 }
-const id = (file, name) => {
+const id = (file: string, name: string) => {
   for (const e of INDEX.values()) if (e.file === file && e.item.name === name) return e.item.id;
   throw new Error(`catalog item not found: ${file}/${name}`);
 };
-const ctx = { lookup: (x) => INDEX.get(x) || null, rules, settings: {} };
-const errorsOf = (d) => compute(d, ctx).errors.map((e) => e.text);
-const hasError = (d, re) => errorsOf(d).some((t) => re.test(t));
+const ctx: ChargenCtx = { lookup: (x: string) => INDEX.get(x) || null, rules, settings: {} };
+const errorsOf = (d: unknown) => compute(d, ctx).errors.map((e) => e.text);
+const hasError = (d: unknown, re: RegExp) => errorsOf(d).some((t) => re.test(t));
 
 // A legal street samurai: Ork, Metatype C / Attributes A / Magic E / Skills B / Resources D.
 const legal = {
@@ -98,14 +102,15 @@ const adept = {
 // i18n: English dictionaries (glossary first, like the browser) and a strict English t() that marks missing keys
 // ---------------------------------------------------------------------------
 const DICT_DIR = path.join(ROOT, 'client', 'i18n', 'en');
-const EN = {};
+const EN: Record<string, string> = {};
 for (const f of fs.readdirSync(DICT_DIR).filter((x) => x.endsWith('.json')).sort((a, b) => (a === 'glossary.json' ? -1 : b === 'glossary.json' ? 1 : a.localeCompare(b)))) {
   Object.assign(EN, JSON.parse(fs.readFileSync(path.join(DICT_DIR, f), 'utf8')));
 }
-const enT = (key, params) => (EN[key] ? interpolate(EN[key], params, enT) : `⟦${stripContext(key)}⟧`);
-const enI18n = { t: enT, lang: 'en', fmtNumber: (n) => Number(n).toLocaleString('en-US') };
+const enT = (key: string, params?: TParams): string => (EN[key] ? interpolate(EN[key], params, enT) : `⟦${stripContext(key)}⟧`);
+const enI18n = { t: enT, lang: 'en', fmtNumber: (n: number) => Number(n).toLocaleString('en-US') };
 /** Every key of a message, nested params included. */
-function msgKeys(m, out = []) {
+// Any message shape (issue, log / history i18n, raw action response), walked loosely.
+function msgKeys(m: any, out: string[] = []): string[] {
   if (!m || typeof m !== 'object') return out;
   const k = m.t || m.key || m.errorKey;
   if (typeof k === 'string') out.push(k);
@@ -120,11 +125,11 @@ function i18nTests() {
     ...Object.values(KNOWLEDGE_TYPES), ...TRADITIONS, ...Object.values(ASPECTS), ...Object.values(METATYPE_TRAITS).flat(), ...FORM_TARGETS,
     ...TIERS.flatMap((x) => [x.label, x.text]), ...ARCHETYPES.flatMap((a) => [a.label, a.blurb]), GRUNT_RULES,
   ];
-  const missVocab = [...new Set(vocab.filter((k) => !EN[k]))];
+  const missVocab = [...new Set(vocab.filter((k) => !EN[k as string]))];
   ok(!missVocab.length, `creation / generator vocabulary translated (missing: ${missVocab.join(' | ')})`);
 
   // Validation issues of many broken drafts: every key (and nested key) has an English entry.
-  const broken = [];
+  const broken: unknown[] = [];
   const b1 = clone(legal);
   b1.concept = {};
   b1.priorities = { metatype: 'A', attributes: 'A', magic: '', skills: 'B', resources: 'E' };
@@ -154,9 +159,9 @@ function i18nTests() {
   b3.complexForms = Array.from({ length: 9 }, (_, i) => ({ formId: ['cleaner', 'editor', 'puppeteer', 'stitches', 'tattletale', 'static_bomb', 'static_veil', 'pulse_storm', 'resonance_spike'][i] }));
   b3.attributes.RES = 2;
   broken.push(b3, clone(legal), clone(adept), emptyDraft());
-  const keys = [];
+  const keys: string[] = [];
   let count = 0;
-  let rendered = [];
+  let rendered: string[] = [];
   for (const d of broken) {
     const r = compute(d, ctx);
     for (const i of [...r.errors, ...r.warnings]) {
@@ -177,7 +182,7 @@ function i18nTests() {
   ok(skillIssue && issueText(skillIssue, enI18n).startsWith('Pistols 9'), `skill names translated in issues (${skillIssue && issueText(skillIssue, enI18n)})`);
 
   // Display helpers
-  const texts = [];
+  const texts: string[] = [];
   for (const c of COLUMNS) for (const l of LETTERS) texts.push(priorityText(c, l, enI18n));
   for (const l of LETTERS) for (const o of magicOptions(l)) texts.push(magicOptionText(o, enI18n));
   ok(texts.every((s) => !/⟦/.test(s)) && texts.includes('450,000¥') && texts.some((s) => s.startsWith('Magician: Magic 6, 2 magical skills at 5, 10 spells')), `priority table in English (${texts.filter((s) => /⟦/.test(s)).slice(0, 2).join(' / ')})`);
@@ -202,8 +207,8 @@ function unitTests() {
   ok([24, 20, 16, 14, 12].every((n, i) => ATTRIBUTE_POINTS['ABCDE'[i]] === n), 'attribute points 24/20/16/14/12');
   ok(SKILL_POINTS.A[0] === 46 && SKILL_POINTS.A[1] === 10 && SKILL_POINTS.C[1] === 2 && SKILL_POINTS.E[0] === 18, 'skill points 46/10 … 18/0');
   ok(RESOURCES.A === 450000 && RESOURCES.E === 6000, 'resources 450k … 6k');
-  ok(MAGIC_TABLE.A.magician.MAG === 6 && MAGIC_TABLE.A.magician.spells === 10 && MAGIC_TABLE.B.adept.MAG === 6 && MAGIC_TABLE.B.aspected.MAG === 5, 'magic column A/B');
-  ok(MAGIC_TABLE.A.technomancer.RES === 6 && MAGIC_TABLE.A.technomancer.forms === 5 && MAGIC_TABLE.C.technomancer.RES === 3, 'resonance column');
+  ok(MAGIC_TABLE.A.magician!.MAG === 6 && MAGIC_TABLE.A.magician!.spells === 10 && MAGIC_TABLE.B.adept!.MAG === 6 && MAGIC_TABLE.B.aspected!.MAG === 5, 'magic column A/B');
+  ok(MAGIC_TABLE.A.technomancer!.RES === 6 && MAGIC_TABLE.A.technomancer!.forms === 5 && MAGIC_TABLE.C.technomancer!.RES === 3, 'resonance column');
   ok(magicOptions('E').length === 1 && magicOptions('D').map((o) => o.type).join() === 'none,adept,aspected', 'magic options per letter');
   ok(karmaSteps(3, 5, 5) === 45 && karmaSteps(0, 2, 2) === 6, 'karma steps (attribute ×5, skill ×2)');
 
@@ -300,12 +305,12 @@ function unitTests() {
   ok(n.skills.length === 1 && n.skills[0].points === 12, 'unknown skills dropped, points clamped');
   ok(n.gear.length === 0 && n.concept.portrait === '', 'empty gear and unsafe portrait dropped');
   ok(emptyDraft().attributes.BOD === 0, 'empty draft');
-  ok(attrLimits({ metatype: 'Troll', qualities: [] }, ctx, 'BOD').max === 10, 'troll BOD max 10');
+  ok(attrLimits({ metatype: 'Troll', qualities: [] } as unknown as DraftData, ctx, 'BOD').max === 10, 'troll BOD max 10');
 
   console.log('• actor building');
   const { actor } = buildActor(legal, ctx, {});
   ok(actor.type === 'pc' && actor.name === 'Rouille' && actor.realName === 'Marc Delorme', 'name / real name');
-  ok(actor.attributes.ESS === 4 && actor.augmented?.REA === 1 && actor.initiative.dice === 2, 'wired reflexes: ESS, REA +1, +1D6');
+  ok(actor.attributes.ESS === 4 && actor.augmented?.REA === 1 && actor.initiative!.dice === 2, 'wired reflexes: ESS, REA +1, +1D6');
   ok(actor.weapons.some((w) => w.name === 'Ares Predator V' && w.skill === 'pistols' && w.catalogId), 'weapon mapped like the shop');
   ok(actor.armor.find((a) => a.rating === 12)?.equipped === true, 'armor jacket equipped');
   ok(actor.gear.find((g) => g.catalogId === id('gear', 'Ammo: Regular Ammo'))?.qty === 20, 'ammo packs → 20 rounds');
@@ -313,15 +318,15 @@ function unitTests() {
   ok(actor.skillGroups?.some((g) => g.id === 'electronics' && g.rating === 3), 'intact groups listed');
   ok(skillPool(actor, 'pistols', { useSpec: true }).pool === 5 + 6 + 2, 'pistols pool with spec');
   ok(actor.knowledge.some((k) => k.native && k.name === 'Français'), 'native language');
-  ok(actor.qualities.some((q) => q.name === 'Vision nocturne') && actor.vision.lowLight, 'racial trait + vision');
+  ok(actor.qualities.some((q) => q.name === 'Vision nocturne') && actor.vision!.lowLight, 'racial trait + vision');
   ok(actor.qualities.some((q) => q.karma === -5 && q.positive === false), 'negative quality karma');
-  ok(actor.contacts.length === 2 && actor.lifestyles?.length === 1 && actor.lifestyles[0].monthsPaid === 1 && actor.lifestyles[0].primary && actor.lifestyles[0].base === 'Low' && !actor.lifestyle, 'contacts and lifestyle (lifestyles[0])');
+  ok(actor.contacts.length === 2 && actor.lifestyles?.length === 1 && actor.lifestyles[0].monthsPaid === 1 && actor.lifestyles[0].primary && actor.lifestyles[0].base === 'Low' && !(actor as ChargenActor & { lifestyle?: unknown }).lifestyle, 'contacts and lifestyle (lifestyles[0])');
   ok(actor.nuyen === 5000 && actor.karma === 7, 'carried nuyen / karma');
   const dv = derive(actor);
   ok(dv.initiative.dice === 2 && dv.armor === 12, 'derive() works on the built actor');
   const { actor: mage } = buildActor(adept, ctx, {});
   ok(mage.attributes.MAG === 6 && mage.spells.length === 10 && mage.spells.every((s) => s.drain), 'magician: MAG and spells with drain');
-  ok(mage.qualities.some((q) => q.name === 'Magicien' && /Hermétique/.test(q.notes)), 'magic type quality with tradition');
+  ok(mage.qualities.some((q) => q.name === 'Magicien' && /Hermétique/.test(q.notes!)), 'magic type quality with tradition');
   // Adept with Improved Reflexes
   const adeptB = clone(adept);
   adeptB.priorities = { metatype: 'D', attributes: 'A', magic: 'B', skills: 'C', resources: 'E' };
@@ -334,7 +339,7 @@ function unitTests() {
   ok(rb.ok, `legal adept: ${rb.errors.map((e) => e.text).join(' | ')}`);
   ok(rb.spent.powerPoints === 3.5 && rb.budgets.powerPoints === 6, `adept PP: ${rb.spent.powerPoints}/${rb.budgets.powerPoints}`);
   const { actor: ad } = buildActor(adeptB, ctx, {});
-  ok(ad.initiative.dice === 3 && ad.augmented?.REA === 2 && ad.powers.find((p) => p.level === 2)?.bonus?.initiativeDice === 2, 'improved reflexes 2 applied and recorded');
+  ok(ad.initiative!.dice === 3 && ad.augmented?.REA === 2 && ad.powers.find((p) => p.level === 2)?.bonus?.initiativeDice === 2, 'improved reflexes 2 applied and recorded');
   ok(ad.skills.find((s) => s.id === 'blades')?.rating === 6, 'adept free skill at 4 + 2 points');
 }
 
@@ -361,10 +366,10 @@ async function serverTests() {
     bad.priorities.skills = 'A';
     const { draftId: badId } = await p1.send('chargen/saveDraft', { data: bad });
     await rejects(p1.send('chargen/submit', { draftId: badId }), /incomplet ou illégal/, 'illegal build cannot be submitted');
-    const raw = await new Promise((res) => p1.socket.emit('action', { type: 'chargen/submit', payload: { draftId: badId } }, res));
+    const raw = await new Promise<Extract<ActionResponse, { ok: false }>>((res) => p1.socket.emit('action', { type: 'chargen/submit', payload: { draftId: badId } }, res));
     const errKeys = msgKeys(raw);
     ok(raw.errorKey === 'Personnage incomplet ou illégal : {errors}' && errKeys.length > 1 && errKeys.every((k) => EN[k]), `submit error is translatable (${errKeys.filter((k) => !EN[k]).join(' | ')})`);
-    ok(!/⟦/.test(enT(raw.errorKey, raw.params)), `submit error renders in English: ${enT(raw.errorKey, raw.params)}`);
+    ok(!/⟦/.test(enT(raw.errorKey!, raw.params)), `submit error renders in English: ${enT(raw.errorKey!, raw.params)}`);
 
     // Submit / withdraw / submit
     await p1.send('chargen/submit', { draftId });
@@ -417,7 +422,7 @@ async function serverTests() {
     await settle();
     ok(gm.state.actors[npc.actorId]?.type === 'npc' && gm.state.actors[npc.actorId].attributes.MAG === 6, 'GM creates an NPC directly');
     await rejects(gm.send('chargen/create', { data: bad, type: 'pc' }), /ne respecte pas les règles/, 'GM create refuses illegal build without force');
-    const forced = await gm.send('chargen/create', { data: bad, type: 'pc', assignTo: Object.values(gm.state.users).find((u) => u.name === 'Voisin').id, force: true });
+    const forced = await gm.send('chargen/create', { data: bad, type: 'pc', assignTo: Object.values(gm.state.users).find((u) => u.name === 'Voisin')!.id, force: true });
     await settle();
     ok(p2.state.me.characterIds.includes(forced.actorId), 'forced PC assigned to the chosen player');
 

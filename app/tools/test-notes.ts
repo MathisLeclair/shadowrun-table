@@ -8,30 +8,39 @@ import notesModule, {
 import { renderNote, toggleCheckbox, toggleCheckboxAt, countCheckboxes, applyFormat, wikiTitles, encodeRef, decodeRef } from '../client/modules/notes/notes-md.ts';
 import { missingSelection, errorGate, storedName } from '../client/modules/notes/common.ts';
 import { startServer, login, client, settle } from './test-client.ts';
+import type { TestClient } from './test-client.ts';
+import type { ActionContext, ActionPayload, GameView, I18nParams, NotePage, NotesState, SessionUser, TableState } from '../shared/types.ts';
+
+type NoteUser = Pick<SessionUser, 'id' | 'role'>;
+type RunUser = NoteUser & { name: string };
+/** Error thrown by run()'s ctx.fail: the French key and its params. */
+type FailError = Error & { key: string; params?: I18nParams };
+// filter / gmFilter tolerate a missing fullState (filterView) although the ServerModule signature requires it.
+type ViewFilter = (view: GameView, user: NoteUser, fullState?: TableState) => void;
 
 let failures = 0;
 let passed = 0;
-async function test(name, fn) {
+async function test(name: string, fn: () => unknown) {
   try {
     await fn();
     passed++;
     console.log(`  ok  ${name}`);
   } catch (err) {
     failures++;
-    console.error(`  FAIL ${name}\n       ${err.stack || err}`);
+    console.error(`  FAIL ${name}\n       ${(err as Error).stack || err}`);
   }
 }
-async function rejects(p, re, what = '') {
+async function rejects(p: Promise<unknown>, re: RegExp, what = '') {
   try {
     await p;
   } catch (err) {
-    assert.match(err.message, re, `${what}: unexpected error « ${err.message} »`);
+    assert.match((err as Error).message, re, `${what}: unexpected error « ${(err as Error).message} »`);
     return;
   }
   assert.fail(`${what}: should have been refused`);
 }
-const pagesOf = (c) => Object.values(c.state.notes?.pages || {});
-const leaks = (c, marker) => JSON.stringify(c.state).includes(marker);
+const pagesOf = (c: TestClient) => Object.values(c.state.notes?.pages || {});
+const leaks = (c: TestClient, marker: string) => JSON.stringify(c.state).includes(marker);
 
 // ---------------------------------------------------------------------------
 console.log('Pure helpers');
@@ -49,7 +58,7 @@ await test('ensureNotes repairs a broken slice; housekeep purges old trash and e
       comments: { a: [{ id: 'c1', text: 'hi' }], zz: [{ id: 'c2' }], b: [] },
     },
   };
-  const n = ensureNotes(state);
+  const n = ensureNotes(state as unknown as TableState); // partial / broken fixture on purpose
   assert.deepEqual(Object.keys(n.pages).sort(), ['a', 'b', 'e']);
   assert.equal(n.settings.gmCanEditParty, false);
   assert.ok(!n.comments.zz, 'comments of unknown pages dropped');
@@ -59,21 +68,21 @@ await test('ensureNotes repairs a broken slice; housekeep purges old trash and e
   assert.ok(n.pages.e.lock, 'live lock kept');
   assert.equal(n.pages.a.version, 3);
   const evil = { notes: JSON.parse('{"pages":{"__proto__":{"scope":"party","title":"x"},"bad id!":{"scope":"party"}}}') };
-  ensureNotes(evil);
+  ensureNotes(evil as unknown as TableState);
   assert.deepEqual(Object.keys(evil.notes.pages), [], 'reserved / malformed ids dropped');
 });
 
 await test('permission helpers', () => {
-  const p1 = { id: 'u1', role: 'player' };
-  const p2 = { id: 'u2', role: 'player' };
-  const gm = { id: 'gm', role: 'gm' };
-  const priv = { scope: 'private', ownerId: 'u1', shareWithGM: false };
-  const party = { scope: 'party' };
-  const notes = { settings: { gmCanEditParty: false } };
+  const p1: NoteUser = { id: 'u1', role: 'player' };
+  const p2: NoteUser = { id: 'u2', role: 'player' };
+  const gm: NoteUser = { id: 'gm', role: 'gm' };
+  const priv = { scope: 'private', ownerId: 'u1', shareWithGM: false } as NotePage;
+  const party = { scope: 'party' } as NotePage;
+  const notes = { settings: { gmCanEditParty: false } } as NotesState;
   assert.ok(canRead(priv, p1) && !canRead(priv, p2) && !canRead(priv, gm));
   assert.ok(canRead({ ...priv, shareWithGM: true }, gm) && !canRead({ ...priv, shareWithGM: true }, p2));
   assert.ok(canWrite(priv, p1, notes) && !canWrite({ ...priv, shareWithGM: true }, gm, notes));
-  assert.ok(canWrite(party, p2, notes) && !canWrite(party, gm, notes) && canWrite(party, gm, { settings: { gmCanEditParty: true } }));
+  assert.ok(canWrite(party, p2, notes) && !canWrite(party, gm, notes) && canWrite(party, gm, { settings: { gmCanEditParty: true } } as NotesState));
   assert.ok(canComment(party, gm) && !canComment(priv, p1) && canComment({ ...priv, shareWithGM: true }, gm));
 });
 
@@ -89,14 +98,14 @@ await test('filter keeps only readable pages (player and GM)', () => {
       settings: { gmCanEditParty: true },
     },
   };
-  const pv = structuredClone(view);
-  notesModule.filter(pv, { id: 'u1', role: 'player' });
+  const pv = structuredClone(view) as unknown as GameView;
+  (notesModule.filter as ViewFilter)(pv, { id: 'u1', role: 'player' });
   assert.deepEqual(Object.keys(pv.notes.pages).sort(), ['mine', 'party']);
   assert.ok(!JSON.stringify(pv).includes('SECRET') && !JSON.stringify(pv).includes('gm says'));
   assert.ok(!pv.notes.pages.party.lock, 'expired lock not sent');
   assert.equal(typeof pv.notes.now, 'number');
-  const gv = structuredClone(view);
-  notesModule.gmFilter(gv, { id: 'gm', role: 'gm' });
+  const gv = structuredClone(view) as unknown as GameView;
+  (notesModule.gmFilter as ViewFilter)(gv, { id: 'gm', role: 'gm' });
   assert.deepEqual(Object.keys(gv.notes.pages).sort(), ['other', 'party']);
   assert.equal(gv.notes.comments.other.length, 1);
 });
@@ -136,21 +145,23 @@ console.log('Review regressions (pure)');
 
 // Run an action handler directly on a state (no sockets): big quota scenarios stay fast.
 let seq = 0;
-function run(state, user, type, payload) {
+// Action results have many shapes: `any`, like client.send().
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function run(state: TableState, user: RunUser, type: string, payload: ActionPayload): any {
   const ctx = {
     state, user, isGM: user.role === 'gm', now: Date.now(), tableId: 't', lang: 'fr',
-    fail: (key, params) => {
+    fail: (key: string, params?: I18nParams) => {
       throw Object.assign(new Error(key), { key, params });
     },
-    uid: (p) => `${p}_${++seq}`,
+    uid: (p: string) => `${p}_${++seq}`,
     log: () => {},
     emitTo: () => {},
     displayName: () => user.name,
-    t: (k) => k,
+    t: (k: string) => k,
   };
-  return notesModule.actions[type].handler(ctx, payload);
+  return notesModule.actions![type].handler(ctx as unknown as ActionContext, payload); // no table / owns: unused by notes
 }
-const throwsKey = (fn, re, what) => assert.throws(fn, (e) => re.test(e.key), what);
+const throwsKey = (fn: () => unknown, re: RegExp, what: string) => assert.throws(fn, (e) => re.test((e as FailError).key), what);
 
 await test('[1] a just-created page stays selected until the state broadcast brings it', () => {
   const now = 1000;
@@ -164,25 +175,25 @@ await test('[1] a just-created page stays selected until the state broadcast bri
 });
 
 await test('[2] one player cannot fill the table; a removed player frees their space; comments count', () => {
-  const state = { users: { bob: { id: 'bob' }, alice: { id: 'alice' } }, log: [] };
-  const bob = { id: 'bob', role: 'player', name: 'Bob' };
-  const alice = { id: 'alice', role: 'player', name: 'Alice' };
+  const state = { users: { bob: { id: 'bob' }, alice: { id: 'alice' } }, log: [] } as unknown as TableState; // minimal fixture
+  const bob: RunUser = { id: 'bob', role: 'player', name: 'Bob' };
+  const alice: RunUser = { id: 'alice', role: 'player', name: 'Alice' };
   const big = 'x'.repeat(MAX_BODY);
   let made = 0;
-  let refused = null;
+  let refused: FailError | null = null;
   for (let i = 0; i < 300 && !refused; i++) {
     try {
       run(state, bob, 'notes/create', { scope: 'private', title: `B${i}`, body: big });
       made++;
     } catch (e) {
-      refused = e;
+      refused = e as FailError;
     }
   }
   assert.ok(refused && /Tes notes personnelles sont pleines/.test(refused.key), `per-owner budget enforced (got ${refused?.key})`);
   assert.equal(made, Math.floor(MAX_OWNER_TOTAL / MAX_BODY));
   assert.ok(ownerSize(state.notes, 'bob') <= MAX_OWNER_TOTAL && MAX_OWNER_TOTAL < MAX_TOTAL);
   // growing an existing page past the budget is refused too, shrinking is always allowed
-  const bobPage = Object.values(state.notes.pages).find((p) => p.ownerId === 'bob');
+  const bobPage = Object.values(state.notes.pages).find((p) => p.ownerId === 'bob')!;
   bobPage.body = bobPage.body.slice(10); // 10 characters of room left
   run(state, bob, 'notes/create', { scope: 'private', title: 'petite', body: 'abcde' }); // 5 left
   throwsKey(() => run(state, bob, 'notes/save', { id: bobPage.id, body: big, baseVersion: bobPage.version }), /Tes notes personnelles sont pleines/, 'growth past the budget');
@@ -201,36 +212,36 @@ await test('[2] one player cannot fill the table; a removed player frees their s
   assert.equal(ownerSize(state.notes, 'bob'), 0, 'orphan private pages dropped');
   assert.ok(!Object.values(state.notes.pages).some((p) => p.ownerId === 'bob'));
   // GM private pages never count as orphans
-  const gmUser = { id: 'gm', role: 'gm', name: 'MJ' };
+  const gmUser: RunUser = { id: 'gm', role: 'gm', name: 'MJ' };
   const g = run(state, gmUser, 'notes/create', { scope: 'private', title: 'MJ' });
   run(state, alice, 'notes/rename', { id: a.id, pinned: false });
   assert.ok(state.notes.pages[g.id], 'GM page kept');
   // malformed users slice: nothing is dropped
   const keep = { notes: { pages: { p1: { scope: 'private', ownerId: 'zz', title: 't', body: '' } } } };
-  ensureNotes(keep);
+  ensureNotes(keep as unknown as TableState);
   assert.ok(keep.notes.pages.p1);
 });
 
 await test('[2] comments per author are capped across the table', () => {
-  const state = { users: { u: { id: 'u' } }, log: [] };
-  const u = { id: 'u', role: 'player', name: 'U' };
-  const pages = [];
+  const state = { users: { u: { id: 'u' } }, log: [] } as unknown as TableState; // minimal fixture
+  const u: RunUser = { id: 'u', role: 'player', name: 'U' };
+  const pages: string[] = [];
   for (let i = 0; i < Math.ceil(MAX_USER_COMMENTS / 300) + 1; i++) pages.push(run(state, u, 'notes/create', { scope: 'party', title: `P${i}` }).id);
   let n = 0;
-  let refused = null;
+  let refused: FailError | null = null;
   outer: for (const id of pages)
     for (let k = 0; k < 300; k++) {
       try {
         run(state, u, 'notes/comment', { id, text: 'ok' });
         n++;
       } catch (e) {
-        refused = e;
-        if (/Trop de commentaires sur cette note/.test(e.key)) continue outer;
+        refused = e as FailError;
+        if (/Trop de commentaires sur cette note/.test((e as FailError).key)) continue outer;
         break outer;
       }
     }
   assert.equal(n, MAX_USER_COMMENTS);
-  assert.match(refused.key, /Tu as trop de commentaires/);
+  assert.match(refused!.key, /Tu as trop de commentaires/);
 });
 
 await test('[3] filter builds view.notes from the full state when the core did not clone it', () => {
@@ -246,23 +257,23 @@ await test('[3] filter builds view.notes from the full state when the core did n
       settings: { gmCanEditParty: false },
     },
   };
-  const view = {}; // a core that left `notes` out of its per-user deep clone
-  notesModule.filter(view, { id: 'u1', role: 'player' }, full);
+  const view = {} as GameView; // a core that left `notes` out of its per-user deep clone
+  (notesModule.filter as ViewFilter)(view, { id: 'u1', role: 'player' }, full as unknown as TableState);
   assert.deepEqual(Object.keys(view.notes.pages).sort(), ['mine', 'party']);
   assert.ok(!JSON.stringify(view).includes('SECRET'));
   assert.ok(!view.notes.pages.party.lock, 'expired lock not sent');
   assert.ok(full.notes.pages.party.lock, 'the live state is never mutated by a view');
   view.notes.pages.mine.body = 'changed';
   assert.equal(full.notes.pages.mine.body, 'MINE', 'readable pages are copies');
-  const gv = {};
-  notesModule.gmFilter(gv, { id: 'gm', role: 'gm' }, full);
+  const gv = {} as GameView;
+  (notesModule.gmFilter as ViewFilter)(gv, { id: 'gm', role: 'gm' }, full as unknown as TableState);
   assert.deepEqual(Object.keys(gv.notes.pages), ['party'], 'unshared private pages never reach the GM');
 });
 
 await test('[4] the privacy copy no longer promises « toi seul »', () => {
   const dir = new URL('../client/modules/notes/', import.meta.url);
   for (const f of fs.readdirSync(dir)) {
-    if (!f.endsWith('.js')) continue;
+    if (!/\.(js|jsx|ts|tsx)$/.test(f)) continue;
     assert.ok(!/toi seul/.test(fs.readFileSync(new URL(f, dir), 'utf8')), `${f} still says « toi seul »`);
   }
 });
@@ -279,7 +290,7 @@ await test('[6] a repeated save error is toasted once, a new one again, and agai
 });
 
 await test('[7] a removed player keeps the name stored on their comment / lock', () => {
-  const game = { users: { u1: { id: 'u1', name: 'Baptiste', characterIds: [] } }, actors: {} };
+  const game = { users: { u1: { id: 'u1', name: 'Baptiste', characterIds: [] } }, actors: {} } as unknown as GameView; // minimal view
   assert.equal(storedName(game, 'u9', 'Ancien Joueur'), 'Ancien Joueur', 'stored author shown for an unknown id');
   assert.equal(storedName(game, 'u1', 'old'), 'Baptiste', 'live label for a known user');
   assert.equal(storedName(game, 'gm', 'x'), 'MJ');
@@ -294,7 +305,7 @@ await test('[7] checkboxes map to their own source line (quoted / indented fence
   assert.equal(r.checkboxes, 1);
   assert.equal(countCheckboxes(body), 1);
   assert.match(r.html, /<pre><code>- \[ \] hidden in quoted code<\/code><\/pre>/);
-  const line = Number(/data-line="(\d+)"/.exec(r.html)[1]);
+  const line = Number(/data-line="(\d+)"/.exec(r.html)![1]);
   assert.equal(line, 4);
   const toggled = toggleCheckboxAt(body, line);
   assert.equal(toggled, body.replace('- [ ] real', '- [x] real'));
@@ -316,8 +327,8 @@ await test('[7] checkboxes map to their own source line (quoted / indented fence
 // ---------------------------------------------------------------------------
 console.log('Server');
 const srv = await startServer({ port: 3150 + Math.floor(Math.random() * 50) });
-const clients = [];
-const track = (c) => (clients.push(c), c);
+const clients: TestClient[] = [];
+const track = (c: TestClient) => (clients.push(c), c);
 try {
   const gm = track(await client(srv.url, await login(srv.url, { role: 'gm', password: 'lazarus' })));
   const p1 = track(await client(srv.url, await login(srv.url, { role: 'player', name: 'Testeur Un', characterId: 'pc_anthony' })));
@@ -336,7 +347,7 @@ try {
   const pB = track(await client(srv.url, await login(srv.url, { role: 'player', name: 'Testeur Un', table: T2 }), { table: T2 }));
   await settle();
 
-  let privId;
+  let privId: string;
   await test('private note: only the owner sees it (not the other player, not the GM, not the log)', async () => {
     const r = await p1.send('notes/create', { scope: 'private', title: 'Plan secret ZQX', body: 'SECRET-BODY-ZQX' });
     privId = r.id;
@@ -379,7 +390,7 @@ try {
     await p1.send('notes/deleteComment', { id: privId, commentId: p1.state.notes.comments[privId][0].id });
   });
 
-  let partyId;
+  let partyId: string;
   await test('party note: every player and the GM of the table see it, the other table does not; creation is logged', async () => {
     const r = await p1.send('notes/create', { scope: 'party', title: 'Pistes du groupe PLM', folder: 'Enquête' });
     partyId = r.id;
@@ -387,7 +398,7 @@ try {
     for (const c of [p1, p2, gm]) assert.equal(c.state.notes.pages[partyId]?.title, 'Pistes du groupe PLM');
     for (const c of [gmB, pB]) assert.ok(!leaks(c, 'PLM') && pagesOf(c).length === 0, 'cross-table leak');
     const log = p2.state.log.find((e) => e.i18n?.key === 'Nouvelle note de groupe : {title}');
-    assert.ok(log && log.i18n.params.title === 'Pistes du groupe PLM' && log.kind === 'system');
+    assert.ok(log && log.i18n!.params!.title === 'Pistes du groupe PLM' && log.kind === 'system');
     assert.equal(p2.state.notes.pages[partyId].folder, 'Enquête');
     // and the other way round
     const rb = await pB.send('notes/create', { scope: 'party', title: 'Autre table VVB' });
@@ -438,7 +449,7 @@ try {
     assert.equal(l3.locked, false);
     await p1.send('notes/unlock', { id: partyId }); // not the holder any more: no effect
     await settle();
-    assert.equal(p1.state.notes.pages[partyId].lock.userId, p2.state.me.id);
+    assert.equal(p1.state.notes.pages[partyId].lock!.userId, p2.state.me.id);
     await p2.send('notes/unlock', { id: partyId });
     await settle();
     assert.ok(!p1.state.notes.pages[partyId].lock);
@@ -488,7 +499,7 @@ try {
     await rejects(p1.send('notes/deleteComment', { id: partyId, commentId: 'nope' }), /Commentaire introuvable/, 'unknown comment');
     const long = await p1.send('notes/comment', { id: partyId, text: 'y'.repeat(5000) });
     await settle();
-    assert.equal(p1.state.notes.comments[partyId].find((x) => x.id === long.commentId).text.length, 2000);
+    assert.equal(p1.state.notes.comments[partyId].find((x) => x.id === long.commentId)!.text.length, 2000);
     await gm.send('notes/deleteComment', { id: partyId, commentId: c.commentId });
     await p1.send('notes/deleteComment', { id: partyId, commentId: long.commentId });
     await settle();

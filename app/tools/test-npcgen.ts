@@ -4,6 +4,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as rules from '../client/modules/shop/rules.ts';
 import { generate, generateEncounter, ARCHETYPES, TIERS, catalogRefs, makeName, GENERATED_FOLDER } from '../shared/npcgen.ts';
+import type { MetahumanArchetype } from '../shared/npcgen.ts';
+import type { ActorId, MapId } from '../shared/types.ts';
 import { METATYPE_MIN } from '../shared/chargen.ts';
 import { METATYPES, derive, attr, skillPool, SKILL_BY_ID } from '../shared/sr5.ts';
 import { sanitizeTemplate } from '../server/modules/30-combat.ts';
@@ -14,24 +16,25 @@ const PORT = Number(process.env.SR_TEST_PORT) || 3712;
 
 let failures = 0;
 let passes = 0;
-function ok(cond, msg) {
+function ok(cond: unknown, msg: string) {
   if (cond) passes++;
   else {
     failures++;
     console.error('  ✗', msg);
   }
 }
-async function rejects(promise, re, msg) {
+async function rejects(promise: Promise<unknown>, re: RegExp, msg: string) {
   try {
     await promise;
     ok(false, `${msg} (should have failed)`);
   } catch (e) {
-    ok(re.test(e.message), `${msg} — got: ${e.message}`);
+    ok(re.test((e as Error).message), `${msg} — got: ${(e as Error).message}`);
   }
 }
 
-const BY_NAME = new Map();
-const BY_ID = new Map();
+// Raw catalog JSON entries (parsed from data/catalog/*.json)
+const BY_NAME = new Map<string, any[]>();
+const BY_ID = new Map<string | undefined, any>(); // looked up with optional catalogIds
 for (const f of ['weapons', 'armor', 'gear', 'cyberware', 'bioware', 'vehicles', 'spells']) {
   for (const it of JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'catalog', `${f}.json`), 'utf8'))) {
     const k = `${f}:${it.name}`;
@@ -39,7 +42,7 @@ for (const f of ['weapons', 'armor', 'gear', 'cyberware', 'bioware', 'vehicles',
     BY_ID.set(it.id, it);
   }
 }
-const ctx = { find: (file, name) => BY_NAME.get(`${file}:${name}`)?.[0] || null, rules };
+const ctx = { find: (file: string, name: string) => BY_NAME.get(`${file}:${name}`)?.[0] || null, rules };
 
 function unitTests() {
   console.log('• catalog references');
@@ -71,7 +74,7 @@ function unitTests() {
         if (METATYPES[tpl.metatype]) {
           const max = METATYPES[tpl.metatype].max;
           const min = METATYPE_MIN[tpl.metatype];
-          for (const k of ['BOD', 'AGI', 'REA', 'STR', 'WIL', 'LOG', 'INT', 'CHA', 'EDG']) {
+          for (const k of ['BOD', 'AGI', 'REA', 'STR', 'WIL', 'LOG', 'INT', 'CHA', 'EDG'] as const) {
             const v = tpl.attributes[k];
             ok(Number.isInteger(v) && v >= min[k] && v <= max[k], `${label}: ${tpl.metatype} ${k}=${v} within ${min[k]}-${max[k]}`);
           }
@@ -98,9 +101,10 @@ function unitTests() {
         for (const x of [...tpl.armor, ...tpl.augmentations, ...tpl.gear, ...tpl.spells, ...tpl.vehicles]) {
           if (x.catalogId) ok(!!BY_ID.get(x.catalogId), `${label}: ${x.name} exists in the catalog`);
         }
-        if (a.magic) ok(tpl.attributes.MAG >= 1 && tpl.spells.length >= 1, `${label}: awakened with spells`);
-        if (a.matrix === 'deck') ok(tpl.matrix && tpl.matrix.attack > 0 && tpl.matrix.firewall > 0, `${label}: decker matrix stats`);
-        if (a.matrix === 'rcc') ok(tpl.vehicles.length >= 1 && tpl.matrix?.dataProcessing > 0, `${label}: rigger drones + RCC`);
+        // magic / matrix exist only on metahuman archetypes (undefined on critters)
+        if ((a as MetahumanArchetype).magic) ok(tpl.attributes.MAG! >= 1 && tpl.spells.length >= 1, `${label}: awakened with spells`);
+        if ((a as MetahumanArchetype).matrix === 'deck') ok(tpl.matrix && tpl.matrix.attack > 0 && tpl.matrix.firewall > 0, `${label}: decker matrix stats`);
+        if ((a as MetahumanArchetype).matrix === 'rcc') ok(tpl.vehicles.length >= 1 && tpl.matrix?.dataProcessing! > 0, `${label}: rigger drones + RCC`);
         if (tpl.npc.grunt) ok(tpl.monitors?.stun === 0 && tpl.monitors.physical === 8 + Math.ceil(attr(tpl, 'BOD') / 2), `${label}: grunt single condition monitor`);
       }
     }
@@ -124,14 +128,17 @@ function unitTests() {
   ok(names.size >= 15, `name generator variety (${names.size}/30)`);
   const enc = generateEncounter({ archetype: 'ganger', tier: 3, seed: 11, lieutenant: true }, ctx);
   ok(enc.main.npc.grunt && enc.lieutenant && !enc.lieutenant.npc.grunt, 'grunt group + lieutenant');
-  ok(enc.lieutenant.npc.professionalRating === 4 && enc.lieutenant.attributes.EDG >= 3 && !enc.lieutenant.monitors, 'lieutenant: PR+1, Edge, full monitors');
+  ok(enc.lieutenant!.npc.professionalRating === 4 && enc.lieutenant!.attributes.EDG >= 3 && !enc.lieutenant!.monitors, 'lieutenant: PR+1, Edge, full monitors');
   const solo = generate({ archetype: 'ganger', tier: 3, seed: 11, grunt: false }, ctx);
   ok(!solo.npc.grunt && !solo.monitors, 'grunt option off → normal monitors');
   const hh = generate({ archetype: 'hellhound', tier: 3, seed: 1 }, ctx);
   ok(hh.metatype === 'Créature' && hh.powers.length >= 4 && hh.attributes.MAG === 5, 'hellhound critter stats/powers');
   const shaman = generate({ archetype: 'shaman', tier: 4, seed: 1 }, ctx);
-  ok(/esprit/i.test(shaman.description) && /Force \d/.test(shaman.description), 'shaman: spirit summoning note');
+  ok(/esprit/i.test(shaman.description!) && /Force \d/.test(shaman.description!), 'shaman: spirit summoning note');
 }
+
+/** npcgen/create result (server/modules/15-chargen.ts). */
+interface NpcCreateResult { templateIds: string[]; actorIds: ActorId[]; tokenIds: string[]; mapId: MapId | null; unplaced: number }
 
 async function serverTests() {
   console.log('• server actions (port ' + PORT + ')');
@@ -147,22 +154,22 @@ async function serverTests() {
     ok(pv.main && pv.lieutenant && JSON.stringify(pv) === JSON.stringify(pv2), 'preview deterministic, with lieutenant');
     ok(typeof pv.unitName === 'string' && pv.unitName.length > 2, 'preview carries a unit name');
     await settle();
-    const nTpl = Object.keys(gm.state.bestiary).length;
-    ok(!Object.values(gm.state.bestiary).some((t) => t.folder === GENERATED_FOLDER), 'preview stores nothing');
+    const nTpl = Object.keys(gm.state.bestiary!).length;
+    ok(!Object.values(gm.state.bestiary!).some((t) => t.folder === GENERATED_FOLDER), 'preview stores nothing');
 
     // Save to bestiary only
-    const r1 = await gm.send('npcgen/create', { archetype: 'merc', tier: 4, seed: 7, saveToBestiary: true, name: 'Mercenaire MET2000' });
+    const r1 = await gm.send<NpcCreateResult>('npcgen/create', { archetype: 'merc', tier: 4, seed: 7, saveToBestiary: true, name: 'Mercenaire MET2000' });
     await settle();
-    ok(r1.templateIds.length === 1 && gm.state.bestiary[r1.templateIds[0]]?.folder === GENERATED_FOLDER, 'template saved in « Générés »');
-    ok(gm.state.bestiary[r1.templateIds[0]].name === 'Mercenaire MET2000', 'custom name kept');
+    ok(r1.templateIds.length === 1 && gm.state.bestiary![r1.templateIds[0]]?.folder === GENERATED_FOLDER, 'template saved in « Générés »');
+    ok(gm.state.bestiary![r1.templateIds[0]].name === 'Mercenaire MET2000', 'custom name kept');
 
     // Spawn a grunt group + lieutenant on the active map, without saving
     const mapId = gm.state.scene?.activeMapId || Object.keys(gm.state.maps)[0];
     const tokensBefore = (gm.state.maps[mapId]?.tokens || []).length;
-    const r2 = await gm.send('npcgen/create', { archetype: 'ganger', tier: 2, seed: 3, lieutenant: true, name: 'Ganger des Spikes', saveToBestiary: false, spawn: { mapId, count: 4 } });
+    const r2 = await gm.send<NpcCreateResult>('npcgen/create', { archetype: 'ganger', tier: 2, seed: 3, lieutenant: true, name: 'Ganger des Spikes', saveToBestiary: false, spawn: { mapId, count: 4 } });
     await settle();
     ok(r2.templateIds.length === 0 && r2.actorIds.length === 5, `4 grunts + 1 lieutenant spawned (${r2.actorIds.length})`);
-    ok(Object.keys(gm.state.bestiary).length === nTpl + 1, 'no temporary template left behind');
+    ok(Object.keys(gm.state.bestiary!).length === nTpl + 1, 'no temporary template left behind');
     const spawned = r2.actorIds.map((id) => gm.state.actors[id]);
     ok(spawned.every((a) => a?.type === 'npc' && !a.templateId), 'NPC actors created (no dangling template id)');
     ok(spawned.filter((a) => a.npc?.grunt).length === 4 && spawned.some((a) => a.npc?.professionalRating === 3 && !a.npc.grunt), 'grunts and lieutenant');
@@ -170,7 +177,7 @@ async function serverTests() {
     if (gm.state.maps[mapId]) ok(gm.state.maps[mapId].tokens.length === tokensBefore + 5 - r2.unplaced, 'tokens placed on the map');
 
     // Save + spawn without map
-    const r3 = await gm.send('npcgen/create', { archetype: 'hellhound', tier: 5, seed: 2, saveToBestiary: true, spawn: { mapId: null, count: 2 } });
+    const r3 = await gm.send<NpcCreateResult>('npcgen/create', { archetype: 'hellhound', tier: 5, seed: 2, saveToBestiary: true, spawn: { mapId: null, count: 2 } });
     await settle();
     ok(r3.templateIds.length === 1 && r3.actorIds.length === 2 && r3.tokenIds.length === 0, 'saved + 2 actors without tokens');
     ok(r3.actorIds.every((id) => gm.state.actors[id]?.templateId === r3.templateIds[0]), 'spawned actors linked to the saved template');

@@ -13,33 +13,35 @@ import {
   parseAmmo, fireOptions, roundsFor, weaponModes, ammoInfo, ammoFits, clipFits, reloadPlan, guessContainerKind, normalizeInventory, readyCount, isGrenade,
   weaponAmmoClass, restrictionFits, usesAmmo, isLauncherProfile,
 } from '../client/modules/sheet/inventory.ts';
+import type { RawData, WeaponLike } from '../client/modules/sheet/inventory.ts';
 import { attr } from '../shared/sr5.ts';
 import { normalizeActor } from '../client/modules/sheet/sheet-data.ts';
+import type { Actor } from '../shared/types.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BASE_PORT = Number(process.env.SR_TEST_PORT) || 3443;
 let failures = 0;
-async function test(name, fn) {
+async function test(name: string, fn: () => unknown) {
   try {
     await fn();
     console.log('  ✓', name);
   } catch (err) {
     failures++;
-    console.log('  ✗', name, '\n     ', err.message);
+    console.log('  ✗', name, '\n     ', (err as Error).message);
   }
 }
-const rejects = async (p, re) => {
+const rejects = async (p: Promise<unknown>, re?: RegExp, _msg?: string) => {
   try {
     await p;
   } catch (err) {
-    if (re) assert.match(err.message, re);
+    if (re) assert.match((err as Error).message, re);
     return err;
   }
   throw new Error('expected rejection');
 };
 let n = 0;
-const mkId = (p) => `${p}_${++n}`;
-const clone = (x) => JSON.parse(JSON.stringify(x));
+const mkId = (p: string) => `${p}_${++n}`;
+const clone = <T>(x: T): T => JSON.parse(JSON.stringify(x));
 
 // ---------------------------------------------------------------------------
 console.log('Pure rules');
@@ -68,10 +70,10 @@ await test('fire modes: Chummer and Foundry codes, SR5 rounds', () => {
   assert.equal(roundsFor({ mode: 'SA/TR/TA' }, 'nope'), 1, 'unknown option → first mode');
 });
 await test('ammunition compatibility (Foundry names in notes, Chummer extra / ammoforweapontype)', () => {
-  const sniper = { name: 'Ares Desert Strike', category: 'Fusils de précision', categoryEn: 'Sniper Rifles', kind: 'ranged', ammo: '14' };
-  const shotgun = { name: 'Enfield AS-7', category: 'Fusils à pompe', categoryEn: 'Shotguns', kind: 'ranged', ammo: '10(c)' };
-  const taser = { name: 'Defiance EX Shocker', category: 'Pistolets à impulsion électrique', categoryEn: 'Tasers', kind: 'ranged', ammo: '4(m)' };
-  const bow = { name: 'Arc (Indice 10)', category: 'Arcs', kind: 'ranged', ammo: '1' };
+  const sniper: WeaponLike = { name: 'Ares Desert Strike', category: 'Fusils de précision', categoryEn: 'Sniper Rifles', kind: 'ranged', ammo: '14' };
+  const shotgun: WeaponLike = { name: 'Enfield AS-7', category: 'Fusils à pompe', categoryEn: 'Shotguns', kind: 'ranged', ammo: '10(c)' };
+  const taser: WeaponLike = { name: 'Defiance EX Shocker', category: 'Pistolets à impulsion électrique', categoryEn: 'Tasers', kind: 'ranged', ammo: '4(m)' };
+  const bow: WeaponLike = { name: 'Arc (Indice 10)', category: 'Arcs', kind: 'ranged', ammo: '1' };
   const apds = { name: 'Mun. : Balles ADPS', nameEn: 'Ammo: APDS', notes: 'Ammo: APDS (Sniper Rifles)', category: 'Munitions', qty: 23 };
   const darts = { name: 'Mun. : Dards taser', notes: 'Ammo: Taser Dart (Tasers)', qty: 68 };
   const arrows = { name: 'Mun. : Flèches standard', notes: 'Arrow: Standard (Bows)', qty: 100 };
@@ -108,12 +110,12 @@ await test('reload plans (SR5 p. 163 « Reloading Weapons »)', () => {
 });
 await test('grenades: launcher profiles are not single-use, hand grenades never track rounds', () => {
   // Regression: « Minigrenade: … » weapon entries (launcher ammo profiles) were deleted by one attack.
-  const profile = { name: 'Minigrenade: High Explosive', kind: 'ranged', skill: 'heavy_weapons', ammo: '' };
+  const profile: WeaponLike = { name: 'Minigrenade: High Explosive', kind: 'ranged', skill: 'heavy_weapons', ammo: '' };
   assert.ok(isLauncherProfile(profile) && !isGrenade(profile));
-  const launcher = { name: 'ArmTech MGL-12', category: 'Grenade Launchers', kind: 'ranged', skill: 'heavy_weapons', ammo: '12(c)', ammoMax: 12 };
+  const launcher: WeaponLike = { name: 'ArmTech MGL-12', category: 'Grenade Launchers', kind: 'ranged', skill: 'heavy_weapons', ammo: '12(c)', ammoMax: 12 };
   assert.ok(!isGrenade(launcher) && usesAmmo(launcher), 'a grenade launcher has a magazine');
   // Regression: Chummer hand grenades (« <ammo>1</ammo> ») became one-round guns.
-  const hand = { name: 'Grenade: Gas', kind: 'ranged', skill: 'throwing_weapons', ammo: '1' };
+  const hand: WeaponLike = { name: 'Grenade: Gas', kind: 'ranged', skill: 'throwing_weapons', ammo: '1' };
   assert.ok(isGrenade(hand) && !usesAmmo(hand));
   const a = { weapons: [{ ...hand, id: 'h', ammoMax: 1, ammoLoaded: 1, ammoType: '' }] };
   normalizeInventory(a, mkId);
@@ -128,7 +130,8 @@ await test('container kinds guessed from names', () => {
   assert.equal(guessContainerKind('Truc'), 'other');
 });
 await test('migration (normalizeInventory) is idempotent; legacy ammoLeft adopted; ready defaults; stored items switched off', () => {
-  const a = {
+  // Raw legacy data (bad ids, ammoLeft, missing fields): normalizeInventory works on untyped actors.
+  const a: RawData = {
     containers: [{ name: 'Sac', kind: 'bag' }, { id: 'on', name: 'bad id' }],
     weapons: [
       { id: 'u', name: 'Mains nues', kind: 'melee', skill: 'unarmed_combat' },
@@ -147,7 +150,7 @@ await test('migration (normalizeInventory) is idempotent; legacy ammoLeft adopte
   assert.deepEqual(a, once, 'idempotent');
   assert.equal(a.containers.length, 2);
   assert.notEqual(a.containers[1].id, 'on', '« on » is reserved');
-  const w = Object.fromEntries(a.weapons.map((x) => [x.id, x]));
+  const w = Object.fromEntries(a.weapons.map((x: RawData) => [x.id, x]));
   assert.equal(w.p.ammoMax, 15);
   assert.equal(w.p.ammoType, 'c');
   assert.equal(w.p.ammoLoaded, 7, 'legacy ammoLeft adopted');
@@ -180,35 +183,38 @@ await test('normalizeActor runs the migration on the seed PCs (idempotent)', () 
 // ---------------------------------------------------------------------------
 console.log('Server');
 const srv = await startServer({ port: BASE_PORT });
+// Phase-1 sockets: closed with the server, or their reconnect loop keeps the process alive.
+const phase1: { close(): void }[] = [];
 try {
   const gm = await client(srv.url, await login(srv.url, { role: 'gm', password: 'lazarus' }));
   const jane = await client(srv.url, await login(srv.url, { role: 'player', name: 'Baptiste', characterId: 'pc_jane' }));
   const bricks = await client(srv.url, await login(srv.url, { role: 'player', name: 'Sploadie', characterId: 'pc_bricks' }));
+  phase1.push(gm, jane, bricks);
   await settle();
   const J = () => gm.state.actors.pc_jane;
-  const weapon = (re) => J().weapons.find((w) => re.test(w.nameEn || w.name));
+  const weapon = (re: RegExp) => J().weapons.find((w) => re.test(w.nameEn || w.name))!;
 
   await test('catalog names in both languages, category backfill, catalogId by exact name', async () => {
     const enfield = weapon(/Enfield/);
     assert.equal(enfield.nameEn, 'Enfield AS-7');
     assert.equal(enfield.categoryEn, 'Shotguns');
     assert.equal(enfield.categoryFr, 'Fusils à pompe');
-    const apds = J().gear.find((g) => /ADPS/.test(g.name));
+    const apds = J().gear.find((g) => /ADPS/.test(g.name))!;
     assert.equal(apds.nameEn, 'Ammo: APDS');
     assert.equal(apds.nameFr, 'Mun. : Balles ADPS');
     const id = await gm.send('actor/addItem', { actorId: 'pc_bricks', list: 'weapons', item: { name: 'Ares Predator V', kind: 'ranged', skill: 'pistols', ammo: '15(c)', mode: 'SA' } });
     const custom = await gm.send('actor/addItem', { actorId: 'pc_bricks', list: 'weapons', item: { name: 'Bessie', catalogId: enfield.catalogId, kind: 'ranged', ammo: '10(c)' } });
     await settle();
     const b = gm.state.actors.pc_bricks;
-    const pred = b.weapons.find((w) => w.id === id);
+    const pred = b.weapons.find((w) => w.id === id)!;
     assert.ok(pred.catalogId, 'catalogId backfilled by exact English name');
     assert.equal(pred.nameFr, 'Ares Predator V');
-    const bessie = b.weapons.find((w) => w.id === custom);
+    const bessie = b.weapons.find((w) => w.id === custom)!;
     assert.equal(bessie.nameFr, undefined, 'a renamed item keeps its own name');
     assert.equal(bessie.categoryEn, 'Shotguns', 'no stored category: the catalog’s');
     await gm.send('actor/updateItem', { actorId: 'pc_bricks', list: 'weapons', itemId: custom, patch: { category: 'Fusil de famille' } });
     await settle();
-    assert.equal(gm.state.actors.pc_bricks.weapons.find((w) => w.id === custom).categoryEn, undefined, 'a custom category drops the catalog ones');
+    assert.equal(gm.state.actors.pc_bricks.weapons.find((w) => w.id === custom)!.categoryEn, undefined, 'a custom category drops the catalog ones');
   });
 
   await test('firing consumes rounds per fire mode; not enough → refused; GM override', async () => {
@@ -232,14 +238,14 @@ try {
     const log = gm.state.log.filter((e) => e.kind === 'roll' && e.roll?.fire).length;
     assert.ok(log >= 4, 'rolls record the shot');
     // Melee: nothing used
-    const knife = J().weapons.find((x) => x.kind === 'melee');
+    const knife = J().weapons.find((x) => x.kind === 'melee')!;
     r = await jane.send('dice/roll', { actorId: 'pc_jane', weaponId: knife.id, skillId: knife.skill });
     assert.equal(r.fire, undefined);
   });
 
   await test('fewer rounds than the mode: fires what is left, defense modifier reduced (SR5 p. 180); empty = refused', async () => {
     const id = await gm.send('actor/addItem', { actorId: 'pc_bricks', list: 'weapons', item: { name: 'Ares Alpha', kind: 'ranged', skill: 'automatics', ammo: '42(c)', mode: 'SA/BF/FA', equipped: true } });
-    const B = () => gm.state.actors.pc_bricks.weapons.find((x) => x.id === id);
+    const B = () => gm.state.actors.pc_bricks.weapons.find((x) => x.id === id)!;
     await gm.send('actor/updateItem', { actorId: 'pc_bricks', list: 'weapons', itemId: id, patch: { ammoLoaded: 1 } });
     await settle();
     let r = await bricks.send('dice/roll', { actorId: 'pc_bricks', weaponId: id, skillId: 'automatics', fireMode: 'BF' });
@@ -257,10 +263,10 @@ try {
 
   await test('reload from compatible ammunition gear: qty decremented, action type, ownership', async () => {
     const w = weapon(/Enfield/);
-    const box = () => J().gear.find((g) => /Stick-n-Shock \(Shotguns\)/.test(g.notes || ''));
+    const box = () => J().gear.find((g) => /Stick-n-Shock \(Shotguns\)/.test(g.notes || ''))!;
     const before = box().qty;
     await rejects(bricks.send('weapon/reload', { actorId: 'pc_jane', weaponId: w.id }), /appartient/);
-    const apds = J().gear.find((g) => /APDS \(Sniper Rifles\)/.test(g.notes || ''));
+    const apds = J().gear.find((g) => /APDS \(Sniper Rifles\)/.test(g.notes || ''))!;
     await rejects(jane.send('weapon/reload', { actorId: 'pc_jane', weaponId: w.id, sourceItemId: apds.id }), /incompatibles/);
     // Automatic pick: carried boxes before bags (the loose Stick-n-Shock round on Jane before the box in her Backpack).
     const carried = J().gear.find((g) => /Stick-n-Shock/.test(g.notes || '') && g.id !== box().id && g.location === 'on');
@@ -287,7 +293,7 @@ try {
     await settle();
     assert.equal(box().qty, before - need);
     assert.equal(weapon(/Enfield/).ammoLoaded, 10);
-    assert.match(weapon(/Enfield/).ammoKind.name, /Stick-n-Shock/);
+    assert.match(weapon(/Enfield/).ammoKind!.name, /Stick-n-Shock/);
     await rejects(jane.send('weapon/reload', { actorId: 'pc_jane', weaponId: w.id }), /déjà chargée/);
     assert.ok(gm.state.log.some((e) => e.i18n?.key?.includes('recharge {weapon}')), 'reload logged');
     // Players cannot raise the rounds by hand
@@ -301,8 +307,8 @@ try {
     await jane.send('dice/roll', { actorId: 'pc_jane', weaponId: w.id, skillId: w.skill });
     await settle();
     assert.equal(weapon(/Desert Strike/).ammoLoaded, 12);
-    const clip = J().gear.find((g) => /Spare Clip \(Ares Desert Strike\)/.test(g.notes || ''));
-    const apds = J().gear.find((g) => /APDS \(Sniper Rifles\)/.test(g.notes || ''));
+    const clip = J().gear.find((g) => /Spare Clip \(Ares Desert Strike\)/.test(g.notes || ''))!;
+    const apds = J().gear.find((g) => /APDS \(Sniper Rifles\)/.test(g.notes || ''))!;
     const apdsBefore = apds.qty;
     const r = await jane.send('weapon/reload', { actorId: 'pc_jane', weaponId: w.id, sourceItemId: apds.id });
     assert.equal(r.swap, true);
@@ -312,38 +318,38 @@ try {
     await settle();
     const after = weapon(/Desert Strike/);
     assert.equal(after.ammoLoaded, Math.min(14, apdsBefore));
-    assert.equal(after.ammoKind.catalogId, apds.catalogId);
-    assert.equal(J().gear.find((g) => g.id === clip.id).qty, clip.qty, 'clips are not consumed');
-    assert.equal(J().gear.find((g) => g.id === apds.id).qty, apdsBefore - after.ammoLoaded);
+    assert.equal(after.ammoKind!.catalogId, apds.catalogId);
+    assert.equal(J().gear.find((g) => g.id === clip.id)!.qty, clip.qty, 'clips are not consumed');
+    assert.equal(J().gear.find((g) => g.id === apds.id)!.qty, apdsBefore - after.ammoLoaded);
     const regular = J().gear.find((g) => g.nameEn === 'Ammo: Regular Ammo' && g.qty === 12);
     assert.ok(regular, 'a box of regular rounds holds the 12 rounds taken out');
     // « free » is GM-only: a player's reload still takes the rounds from the inventory.
     await jane.send('dice/roll', { actorId: 'pc_jane', weaponId: w.id, skillId: w.skill });
     await settle();
-    const left = J().gear.find((g) => g.id === apds.id).qty;
+    const left = J().gear.find((g) => g.id === apds.id)!.qty;
     await jane.send('weapon/reload', { actorId: 'pc_jane', weaponId: w.id, free: true });
     await settle();
-    assert.equal(J().gear.find((g) => g.id === apds.id).qty, left - 1);
+    assert.equal(J().gear.find((g) => g.id === apds.id)!.qty, left - 1);
     await jane.send('dice/roll', { actorId: 'pc_jane', weaponId: w.id, skillId: w.skill });
     await gm.send('weapon/reload', { actorId: 'pc_jane', weaponId: w.id, free: true });
     await settle();
-    assert.equal(J().gear.find((g) => g.id === apds.id).qty, left - 1, 'GM free reload: inventory untouched');
+    assert.equal(J().gear.find((g) => g.id === apds.id)!.qty, left - 1, 'GM free reload: inventory untouched');
     assert.equal(weapon(/Desert Strike/).ammoLoaded, 14);
   });
 
   await test('grenades: a throw uses one unit, the last one leaves the sheet', async () => {
-    const g = J().weapons.find((x) => isGrenade(x));
+    const g = J().weapons.find((x) => isGrenade(x))!;
     const before = g.qty ?? 1;
     const r = await jane.send('dice/roll', { actorId: 'pc_jane', weaponId: g.id, skillId: g.skill || 'throwing_weapons' });
     assert.equal(r.fire.item, true);
     await settle();
     const now = J().weapons.find((x) => x.id === g.id);
     if (before <= 1) assert.equal(now, undefined, 'last grenade removed');
-    else assert.equal(now.qty, before - 1);
+    else assert.equal(now!.qty, before - 1);
     const w2 = await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'weapons', item: { name: 'Grenade: Fragmentation', kind: 'ranged', skill: 'throwing_weapons', accuracy: 'Physical', damage: '18P(f)', qty: 2 } });
     await jane.send('weapon/fire', { actorId: 'pc_jane', weaponId: w2 });
     await settle();
-    assert.equal(J().weapons.find((x) => x.id === w2).qty, 1);
+    assert.equal(J().weapons.find((x) => x.id === w2)!.qty, 1);
     await jane.send('weapon/fire', { actorId: 'pc_jane', weaponId: w2 });
     await settle();
     assert.equal(J().weapons.find((x) => x.id === w2), undefined);
@@ -352,22 +358,22 @@ try {
   await test('containers & locations: owners move their items, stored = switched off, readying takes it out; others refused', async () => {
     const ct = await jane.send('inventory/addContainer', { actorId: 'pc_jane', name: 'Sac à dos tactique' });
     await settle();
-    assert.equal(J().containers.find((c) => c.id === ct).kind, 'bag');
+    assert.equal(J().containers!.find((c) => c.id === ct)!.kind, 'bag');
     await rejects(jane.send('inventory/addContainer', { actorId: 'pc_jane', name: '  ' }), /nom/);
     await rejects(bricks.send('inventory/addContainer', { actorId: 'pc_jane', name: 'x' }), /appartient/);
-    const armor = J().armor.find((a) => a.equipped);
+    const armor = J().armor.find((a) => a.equipped)!;
     let r = await jane.send('inventory/move', { actorId: 'pc_jane', list: 'armor', itemId: armor.id, location: ct });
     assert.equal(r.stowed, true);
     await settle();
-    assert.equal(J().armor.find((a) => a.id === armor.id).equipped, false, 'armor in a bag is not worn');
+    assert.equal(J().armor.find((a) => a.id === armor.id)!.equipped, false, 'armor in a bag is not worn');
     await jane.send('actor/updateItem', { actorId: 'pc_jane', list: 'armor', itemId: armor.id, patch: { equipped: true } });
     await settle();
-    assert.equal(J().armor.find((a) => a.id === armor.id).location, 'on', 'wearing it takes it out of the bag');
+    assert.equal(J().armor.find((a) => a.id === armor.id)!.location, 'on', 'wearing it takes it out of the bag');
     // Gear with effects: active off in a bag.
     const gid = await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'gear', item: { name: 'Lunettes', active: true } });
     await jane.send('actor/updateItem', { actorId: 'pc_jane', list: 'gear', itemId: gid, patch: { location: ct } });
     await settle();
-    assert.equal(J().gear.find((g) => g.id === gid).active, false, 'active switched off in a bag');
+    assert.equal(J().gear.find((g) => g.id === gid)!.active, false, 'active switched off in a bag');
     await rejects(jane.send('inventory/move', { actorId: 'pc_jane', list: 'gear', itemId: gid, location: 'nowhere' }), /Contenant introuvable/);
     await rejects(bricks.send('inventory/move', { actorId: 'pc_jane', list: 'gear', itemId: gid, location: 'on' }), /appartient/);
     await rejects(jane.send('inventory/move', { actorId: 'pc_jane', list: 'skills', itemId: 'x', location: 'on' }), /Liste inconnue/);
@@ -383,7 +389,7 @@ try {
     await jane.send('inventory/updateContainer', { actorId: 'pc_jane', containerId: ct, patch: { name: 'Planque de Tacoma', kind: 'safehouse' } });
     await rejects(jane.send('inventory/updateContainer', { actorId: 'pc_jane', containerId: ct, patch: { kind: 'castle' } }), /inconnu/);
     // Ammunition in a safehouse is out of reach.
-    const darts = J().gear.find((g) => /Taser Dart/.test(g.notes || ''));
+    const darts = J().gear.find((g) => /Taser Dart/.test(g.notes || ''))!;
     await jane.send('inventory/move', { actorId: 'pc_jane', list: 'gear', itemId: darts.id, location: ct });
     await jane.send('inventory/move', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, location: 'on' });
     await jane.send('dice/roll', { actorId: 'pc_jane', weaponId: w.id, skillId: w.skill });
@@ -394,8 +400,8 @@ try {
     const moved = await gm.send('inventory/removeContainer', { actorId: 'pc_jane', containerId: ct });
     assert.ok(moved >= 2);
     await settle();
-    assert.ok(!J().containers.some((c) => c.id === ct));
-    assert.equal(J().gear.find((g) => g.id === darts.id).location, 'on');
+    assert.ok(!J().containers!.some((c) => c.id === ct));
+    assert.equal(J().gear.find((g) => g.id === darts.id)!.location, 'on');
     const r2 = await jane.send('weapon/reload', { actorId: 'pc_jane', weaponId: w.id });
     assert.equal(r2.action, 'complex', 'internal magazine (m)');
   });
@@ -429,7 +435,7 @@ try {
     await settle();
     const note = gm.state.log.slice(logBefore).find((e) => e.i18n?.key === '{name} récupère {item} ({place})');
     assert.ok(note, 'retrieval logged');
-    assert.equal(note.i18n.params.place, 'House');
+    assert.equal(note.i18n!.params!.place, 'House');
     assert.ok(!gm.state.log.slice(logBefore).some((e) => e.i18n?.key === '{name} récupère {item} ({place})' && e !== note), 'logged once');
     await jane.send('actor/updateItem', { actorId: 'pc_jane', list: 'weapons', itemId: ds().id, patch: { equipped: true } });
     await settle();
@@ -439,7 +445,7 @@ try {
   await test('automatic reload never swaps loaded rounds for another ammunition; English names in logs and attack labels', async () => {
     const ds = () => weapon(/Desert Strike/);
     // Only rounds of another kind within reach: every box of the loaded ammunition goes to a safehouse.
-    const kind = ds().ammoKind;
+    const kind = ds().ammoKind!;
     await jane.send('dice/roll', { actorId: 'pc_jane', weaponId: ds().id, skillId: ds().skill });
     await settle();
     const vault = await gm.send('inventory/addContainer', { actorId: 'pc_jane', name: 'Coffre', kind: 'safehouse' });
@@ -448,7 +454,7 @@ try {
     const other = await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'gear', item: { name: 'Mun. : Balles normales', nameEn: 'Ammo: Regular Ammo', notes: 'Ammo: Regular Ammo', category: 'Munitions', qty: 1 } });
     await settle();
     const loaded = ds().ammoLoaded;
-    assert.ok(loaded > 0);
+    assert.ok(loaded! > 0);
     // Regression: one click emptied a partly loaded magazine into a 1-round box of another type.
     await rejects(jane.send('weapon/reload', { actorId: 'pc_jane', weaponId: ds().id }), /choisis d’autres munitions/);
     await settle();
@@ -457,15 +463,15 @@ try {
     assert.equal(r.swap, true, 'an explicit choice still swaps');
     await settle();
     // Log params: both languages (each viewer reads theirs).
-    const log = gm.state.log.filter((e) => e.i18n?.key?.includes('change le chargeur de {weapon}')).pop();
-    assert.deepEqual(log.i18n.params.ammo, { fr: 'Mun. : Balles normales', en: 'Ammo: Regular Ammo' });
+    const log = gm.state.log.filter((e) => e.i18n?.key?.includes('change le chargeur de {weapon}')).pop()!;
+    assert.deepEqual(log.i18n!.params!.ammo, { fr: 'Mun. : Balles normales', en: 'Ammo: Regular Ammo' });
     // Attack label: « Attaque — {weapon} » with the weapon in both languages.
-    const flash = J().weapons.find((x) => /Flash-Bang/.test(x.nameEn || x.name));
+    const flash = J().weapons.find((x) => /Flash-Bang/.test(x.nameEn || x.name))!;
     assert.ok(flash.nameEn && flash.nameFr && flash.nameEn !== flash.nameFr, `${flash.nameEn} / ${flash.nameFr}`);
     const roll = await gm.send('dice/roll', { actorId: 'pc_jane', weaponId: flash.id, skillId: flash.skill, label: `Attaque — ${flash.nameFr}` });
     assert.deepEqual(roll.labelI18n, { key: 'Attaque — {weapon}', params: { weapon: { fr: flash.nameFr, en: flash.nameEn } } });
     const { interpolate } = await import('../client/i18n/format.ts');
-    assert.equal(interpolate('Attack — {weapon}', roll.labelI18n.params, null, 'en'), `Attack — ${flash.nameEn}`);
+    assert.equal(interpolate('Attack — {weapon}', roll.labelI18n.params, null as unknown as undefined, 'en'), `Attack — ${flash.nameEn}`);
   });
 
   await test('launcher profiles (« Minigrenade: … ») are not consumed by an attack', async () => {
@@ -476,6 +482,7 @@ try {
     assert.ok(gm.state.actors.pc_bricks.weapons.some((w) => w.id === id), 'still on the sheet');
   });
 } finally {
+  for (const c of phase1) c.close();
   srv.stop();
 }
 
@@ -517,45 +524,45 @@ console.log('Foundry inventories (copy of the GM’s world)');
   if (!fs.existsSync(path.join(WORLD, 'world.json'))) console.log('  (monde Foundry absent — ignoré)');
   else {
     const world = await readWorld(WORLD, { collections: ['actors', 'folders', 'users'] });
-    const fa = (name) => world.actors.find((a) => a.name === name);
+    const fa = (name: string) => world.actors!.find((a) => a.name === name)!;
     await test('Jane: Duffel Bag / Backpack / House containers, items placed, equipped weapons stay « Sur soi »', () => {
       const s = convertSheet(fa('Jane'), {});
       const ids = Object.fromEntries(s.containers.map((c) => [c.name, c]));
       assert.deepEqual(Object.keys(ids).sort(), ['Backpack', 'Duffel Bag', 'House']);
       assert.equal(ids['Duffel Bag'].kind, 'bag');
       assert.equal(ids.House.kind, 'safehouse');
-      const loc = (list, re) => s[list].find((x) => re.test(x._en || x.notes || x.name))?.location;
+      const loc = (list: 'weapons' | 'gear', re: RegExp) => (s[list] as Array<{ _en?: string; notes?: string; name: string; location?: string }>).find((x) => re.test(x._en || x.notes || x.name))?.location;
       assert.equal(loc('weapons', /Desert Strike/), ids['Duffel Bag'].id);
       assert.equal(loc('gear', /APDS \(Sniper Rifles\)/), ids['Duffel Bag'].id);
       assert.equal(loc('gear', /Spare Clip/), ids['Duffel Bag'].id);
       assert.equal(loc('gear', /Taser Dart/), ids.Backpack.id);
       assert.equal(loc('weapons', /Enfield/), undefined, 'equipped in Foundry: ready, so carried');
-      assert.ok(s.weapons.find((w) => /Enfield/.test(w._en)).equipped);
-      assert.equal(s.weapons.find((w) => /Grenade: Thermal Smoke/.test(w._en)).qty, 4, 'grenade units');
-      assert.equal(s.weapons.find((w) => /Defiance/.test(w._en)).ammoLoaded, 4);
+      assert.ok(s.weapons.find((w) => /Enfield/.test(w._en!))!.equipped);
+      assert.equal(s.weapons.find((w) => /Grenade: Thermal Smoke/.test(w._en!))!.qty, 4, 'grenade units');
+      assert.equal(s.weapons.find((w) => /Defiance/.test(w._en!))!.ammoLoaded, 4);
     });
     await test('Bricks: Go Bag holds the Colt Cobra', () => {
       const s = convertSheet(fa('Bricks'), {});
       assert.deepEqual(s.containers.map((c) => [c.name, c.kind]), [['Go Bag', 'bag']]);
-      assert.equal(s.weapons.find((w) => /Cobra/.test(w._en)).location, s.containers[0].id);
+      assert.equal(s.weapons.find((w) => /Cobra/.test(w._en!))!.location, s.containers[0].id);
     });
     await test('merge re-import on a live actor without containers: Foundry bags adopted once, app moves kept', () => {
       const bundle = buildBundle(world, {});
-      const pc = bundle.pcs.find((p) => p.appId === 'pc_jane');
-      const seedJane = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'seed', 'actors', 'pcs.json'), 'utf8')).find((a) => a.id === 'pc_jane');
+      const pc = bundle.pcs.find((p) => p.appId === 'pc_jane')!;
+      const seedJane = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'seed', 'actors', 'pcs.json'), 'utf8')).find((a: { id: string }) => a.id === 'pc_jane');
       const live = clone(seedJane);
       delete live.containers;
       for (const l of ['weapons', 'armor', 'gear']) for (const it of live[l]) delete it.location;
       normalizeActor(live, mkId);
       const merged = buildPc(pc, live, { mode: 'merge' });
-      assert.ok(merged.containers.some((c) => c.name === 'Duffel Bag'), 'containers adopted');
-      const ds = merged.weapons.find((w) => w.id === 'fvtt_z0d0D3M9DQ8s5Mjc');
+      assert.ok(merged.containers!.some((c) => c.name === 'Duffel Bag'), 'containers adopted');
+      const ds = merged.weapons.find((w) => w.id === 'fvtt_z0d0D3M9DQ8s5Mjc')!;
       assert.equal(ds.location, 'fvtt_inv_duffel_bag', 'Desert Strike moved to the Duffel Bag');
       // The app moves it out; a second merge keeps the app's choice.
       ds.location = 'on';
       const again = buildPc(pc, merged, { mode: 'merge' });
-      assert.equal(again.weapons.find((w) => w.id === ds.id).location, 'on');
-      assert.equal(again.containers.length, merged.containers.length);
+      assert.equal(again.weapons.find((w) => w.id === ds.id)!.location, 'on');
+      assert.equal(again.containers!.length, merged.containers!.length);
     });
   }
 }
@@ -573,12 +580,12 @@ console.log('Chummer locations, clips, grenades, ready weapons');
   await test('parse: <weaponlocations> → containers, weapon <location> guid → item.location; <equipped> is not « ready »', () => {
     const { actor } = parseChum5(xml, { keepXml: true });
     assert.deepEqual(actor.containers, [{ id: `chum_${GUID}`, name: 'Duffel Bag', kind: 'bag' }]);
-    const colt = actor.weapons.find((w) => /Colt Government/.test(w.name));
+    const colt = actor.weapons.find((w) => /Colt Government/.test(w.name))!;
     assert.equal(colt.location, `chum_${GUID}`);
     assert.equal(colt.equipped, undefined, 'the app’s ready defaults apply (normalizeInventory)');
   });
   // A copy of the Colt with a clip of 9 rounds, a hand grenade (« <ammo>1</ammo> ») and a second pistol, all <equipped>True</equipped>.
-  const colt0 = /<weapon>\s*<sourceid>6366691e[\s\S]*?<\/weapon>/.exec(xml0)[0];
+  const colt0 = /<weapon>\s*<sourceid>6366691e[\s\S]*?<\/weapon>/.exec(xml0)![0];
   const grenade = colt0
     .replace(/<sourceid>[^<]*<\/sourceid>/, '<sourceid>aecfccf7-d22e-4ead-abf9-e29f6dbf8550</sourceid>')
     .replace(/<guid>[^<]*<\/guid>/, '<guid>687eb954-96ba-4d8b-aab3-c767af56926b</guid>')
@@ -595,19 +602,19 @@ console.log('Chummer locations, clips, grenades, ready weapons');
   await test('parse + export: rounds of the active clip (<clips><count>)', () => {
     // Regression: the clip regex had lost its backslashes, no clip was ever read (import) nor written (export).
     const { actor } = parseChum5(xml2, { keepXml: true });
-    const colt = actor.weapons.find((w) => w.name === 'Colt Government 2066');
+    const colt = actor.weapons.find((w) => w.name === 'Colt Government 2066')!;
     assert.equal(colt.ammoLoaded, 9);
     normalizeActor(actor, mkId);
     colt.ammoLoaded = 3;
-    const { xml: out } = exportChum5(actor);
-    const node = /<name>Colt Government 2066<\/name>[\s\S]*?<\/weapon>/.exec(out)[0];
+    const { xml: out } = exportChum5(actor as Actor);
+    const node = /<name>Colt Government 2066<\/name>[\s\S]*?<\/weapon>/.exec(out)![0];
     assert.match(node, /<count>3<\/count>/);
-    assert.equal(parseChum5(out, {}).actor.weapons.find((w) => w.name === 'Colt Government 2066').ammoLoaded, 3);
+    assert.equal(parseChum5(out, {}).actor.weapons.find((w) => w.name === 'Colt Government 2066')!.ammoLoaded, 3);
   });
   await test('parse: hand grenades are single-use items (qty), not one-round guns', () => {
     // Regression: « <ammo>1</ammo> » gave a 1-round magazine of minigrenades.
     const { actor } = parseChum5(xml2, { keepXml: true });
-    const g = actor.weapons.find((w) => w.name === 'Grenade: Gas');
+    const g = actor.weapons.find((w) => w.name === 'Grenade: Gas')!;
     assert.equal(g.skill, 'throwing_weapons');
     assert.equal(g.ammo, '');
     assert.equal(g.qty, 1);
@@ -619,24 +626,24 @@ console.log('Chummer locations, clips, grenades, ready weapons');
     const { actor } = parseChum5(xml2, { keepXml: true });
     normalizeActor(actor, mkId);
     assert.equal(readyCount(actor).ranged, 1, 'first carried ranged weapon only');
-    const colt = actor.weapons.find((w) => w.name === 'Colt Government 2066');
+    const colt = actor.weapons.find((w) => w.name === 'Colt Government 2066')!;
     colt.equipped = false;
-    const { xml: out } = exportChum5(actor);
-    const node = /<name>Colt Government 2066<\/name>[\s\S]*?<\/weapon>/.exec(out)[0];
+    const { xml: out } = exportChum5(actor as Actor);
+    const node = /<name>Colt Government 2066<\/name>[\s\S]*?<\/weapon>/.exec(out)![0];
     assert.match(node, /<equipped>True<\/equipped>/, 'the file keeps Chummer’s own meaning');
   });
   await test('export: a new app container becomes a Chummer location, the item points at it', () => {
     const { actor } = parseChum5(xml, { keepXml: true });
     normalizeActor(actor, mkId);
-    actor.containers.push({ id: 'ct_new', name: 'Coffre de la voiture', kind: 'vehicle' });
-    const colt = actor.weapons.find((w) => /Colt Government/.test(w.name));
+    actor.containers!.push({ id: 'ct_new', name: 'Coffre de la voiture', kind: 'vehicle' });
+    const colt = actor.weapons.find((w) => /Colt Government/.test(w.name))!;
     colt.location = 'ct_new';
-    const { xml: out } = exportChum5(actor);
+    const { xml: out } = exportChum5(actor as Actor);
     const back = parseChum5(out, { keepXml: false }).actor;
-    const c2 = back.weapons.find((w) => /Colt Government/.test(w.name));
-    const ct = back.containers.find((c) => c.id === c2.location);
+    const c2 = back.weapons.find((w) => /Colt Government/.test(w.name))!;
+    const ct = back.containers!.find((c) => c.id === c2.location);
     assert.equal(ct?.name, 'Coffre de la voiture');
-    assert.ok(back.containers.some((c) => c.name === 'Duffel Bag'), 'existing location kept');
+    assert.ok(back.containers!.some((c) => c.name === 'Duffel Bag'), 'existing location kept');
   });
 }
 

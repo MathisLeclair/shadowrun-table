@@ -2,25 +2,26 @@
 import assert from 'node:assert/strict';
 import { startServer, login, client, settle } from './test-client.ts';
 import { readFileSync as readSeedFile } from 'node:fs';
+import type { Actor, NpcStub } from '../shared/types.ts';
 // Expected values come from the seed (regenerated from Foundry), not hard-coded numbers.
-const SEED_JANE = JSON.parse(readSeedFile(new URL('../data/seed/actors/pcs.json', import.meta.url), 'utf8')).find((a) => a.id === 'pc_jane');
+const SEED_JANE = JSON.parse(readSeedFile(new URL('../data/seed/actors/pcs.json', import.meta.url), 'utf8')).find((a: Actor) => a.id === 'pc_jane'); // raw seed JSON
 
 const srv = await startServer({ port: Number(process.env.SR_TEST_PORT) || 3270 });
 let failures = 0;
-async function test(name, fn) {
+async function test(name: string, fn: () => unknown) {
   try {
     await fn();
     console.log('  ✓', name);
   } catch (err) {
     failures++;
-    console.log('  ✗', name, '\n     ', err.message);
+    console.log('  ✗', name, '\n     ', (err as Error).message);
   }
 }
-const rejects = async (p, re) => {
+const rejects = async (p: Promise<unknown>, re?: RegExp) => {
   try {
     await p;
   } catch (err) {
-    if (re) assert.match(err.message, re);
+    if (re) assert.match((err as Error).message, re);
     return err;
   }
   throw new Error('expected rejection');
@@ -43,7 +44,7 @@ try {
   });
   await test('lobby lists active PCs only', async () => {
     const lobby = await (await fetch(srv.url + '/api/lobby')).json();
-    assert.deepEqual(lobby.pcs.map((p) => p.id).sort(), ['pc_anthony', 'pc_bricks', 'pc_jane']);
+    assert.deepEqual(lobby.pcs.map((p: { id: string }) => p.id).sort(), ['pc_anthony', 'pc_bricks', 'pc_jane']);
   });
   await test('player sees own notes, not gmNotes; other PCs without notes', async () => {
     const own = p1.state.actors.pc_jane;
@@ -57,7 +58,7 @@ try {
   });
 
   console.log('Create / update / permissions');
-  let npcId, hiddenId;
+  let npcId: string, hiddenId: string;
   await test('GM creates NPCs; player cannot', async () => {
     npcId = await gm.send('actor/create', { type: 'npc', name: 'Nettoyeur AG Chemie 1', templateId: 'tpl_cleaner', attributes: { BOD: 4, WIL: 3 }, npc: { professionalRating: 4, tactics: 'Flanquer', loot: '200¥' }, gmNotes: 'secret' });
     hiddenId = await gm.send('actor/create', { type: 'npc', name: 'Sniper caché', hidden: true });
@@ -67,11 +68,11 @@ try {
     await settle();
     const a = gm.state.actors[npcId];
     assert.equal(a.attributes.BOD, 4);
-    assert.equal(a.npc.tactics, 'Flanquer');
+    assert.equal(a.npc!.tactics, 'Flanquer');
     assert.deepEqual(a.condition, { physical: 0, stun: 0, overflow: 0 });
   });
   await test('players get a reduced NPC view and no hidden NPCs', async () => {
-    const v = p1.state.actors[npcId];
+    const v = p1.state.actors[npcId] as unknown as NpcStub; // players get a stub for NPCs
     assert.deepEqual(Object.keys(v).sort(), ['color', 'id', 'metatype', 'name', 'portrait', 'status', 'templateId', 'type']);
     assert.equal(v.status, 'indemne');
     assert.equal(p1.state.actors[hiddenId], undefined);
@@ -83,8 +84,8 @@ try {
     const a = gm.state.actors[npcId];
     assert.equal(a.attributes.AGI, 5);
     assert.equal(a.attributes.BOD, 4);
-    assert.equal(a.npc.tactics, 'Flanquer');
-    assert.equal(a.npc.grunt, true);
+    assert.equal(a.npc!.tactics, 'Flanquer');
+    assert.equal(a.npc!.grunt, true);
   });
   await test('player updates allowed keys on own actor only', async () => {
     await p1.send('actor/update', { actorId: 'pc_jane', patch: { notes: 'Mes notes', color: '#ff00aa', condition: { stun: 2 } } });
@@ -120,7 +121,7 @@ try {
     await rejects(gm.send('actor/addItem', { actorId: 'pc_jane', list: 'skills', item: { id: 'navigation', rating: 3 } }), /déjà/);
     await rejects(gm.send('actor/addItem', { actorId: 'pc_jane', list: 'bogus', item: {} }), /inconnue/);
     await settle();
-    const s = gm.state.actors.pc_jane.skills.find((x) => x.id === 'navigation');
+    const s = gm.state.actors.pc_jane.skills.find((x) => x.id === 'navigation')!;
     assert.equal(s.name, 'Navigation');
     assert.equal(s.attr, 'INT');
   });
@@ -133,7 +134,7 @@ try {
     await gm.send('actor/updateItem', { actorId: 'pc_jane', list: 'gear', itemId: gear.id, patch: { qty: 5 } });
     await p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'gear', itemId: gear.id, patch: { qty: 4, notes: 'ok' } });
     await rejects(p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'gear', itemId: gear.id, patch: { qty: 9999 } }), /MJ/);
-    const w = jane.weapons.find((x) => x.ammoMax > 7);
+    const w = jane.weapons.find((x) => x.ammoMax! > 7)!;
     await p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, patch: { ammoLeft: 7, notes: '3 tirs' } }); // legacy field = ammoLoaded
     await rejects(p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, patch: { ammoLoaded: 9 } }), /Recharger/);
     await rejects(p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, patch: { damage: '20P' } }), /seulement/);
@@ -145,8 +146,8 @@ try {
     const j = gm.state.actors.pc_jane;
     assert.equal(j.armor[0].equipped, false);
     assert.equal(j.gear[0].qty, 4);
-    assert.equal(j.weapons.find((x) => x.id === w.id).ammoLoaded, 7);
-    assert.equal(j.weapons.find((x) => x.id === w.id).ammoLeft, undefined);
+    assert.equal(j.weapons.find((x) => x.id === w.id)!.ammoLoaded, 7);
+    assert.equal(j.weapons.find((x) => x.id === w.id)!.ammoLeft, undefined);
   });
 
   console.log('Damage, healing, Edge');
@@ -173,7 +174,7 @@ try {
     // Anthony: physical 11, BOD 5.
     const mapId = await gm.send('maps/create', { name: 'Markers', width: 8, height: 8, folder: 'Tests' });
     const tokId = await gm.send('maps/addToken', { mapId, token: { actorId: 'pc_anthony', x: 2, y: 2, status: ['à terre'] } });
-    const tok = () => gm.state.maps[mapId].tokens.find((t) => t.id === tokId);
+    const tok = () => gm.state.maps[mapId].tokens.find((t) => t.id === tokId)!;
     await gm.send('actor/damage', { actorId: 'pc_anthony', amount: 13, type: 'P' }); // full + 2 overflow
     await settle();
     assert.deepEqual(tok().status, ['à terre', 'inconscient']);
@@ -195,7 +196,7 @@ try {
     await p1.send('actor/damage', { actorId: 'pc_jane', amount: 2, type: 'P' });
     await gm.send('actor/damage', { actorId: npcId, amount: 6, type: 'P' }); // BOD 4 → monitor 10
     await settle();
-    assert.equal(p1.state.actors[npcId].status, 'grièvement blessé');
+    assert.equal((p1.state.actors[npcId] as unknown as NpcStub).status, 'grièvement blessé');
     await gm.send('actor/heal', { actorId: 'pc_jane', type: 'all' });
   });
   await test('edge spend / refresh', async () => {
@@ -218,7 +219,7 @@ try {
     assert.equal(j.karma, SEED_JANE.karma + 5);
     assert.equal(j.karmaTotal, SEED_JANE.karmaTotal + 5);
     assert.equal(j.nuyen, SEED_JANE.nuyen + 3000);
-    assert.deepEqual(j.history.at(-1).karma, 5);
+    assert.deepEqual(j.history.at(-1)!.karma, 5);
     assert.ok(gm.events.some((e) => e.ev === 'sfx' && e.data.id === 'level-up'));
     assert.ok(p1.state.log.some((e) => e.kind === 'system' && e.text.includes('Fin de séance 3')));
     await rejects(gm.send('actor/adjust', { actorId: 'pc_bricks', nuyen: -1e7, reason: 'x' }), /assez/);
@@ -232,9 +233,9 @@ try {
     assert.equal(r.label, 'Test');
     assert.ok(r.hits >= 0 && r.hits <= 12);
     await settle();
-    const e = p1.state.log.find((x) => x.id === r.logId);
+    const e = p1.state.log.find((x) => x.id === r.logId)!;
     assert.equal(e.kind, 'roll');
-    assert.equal(e.roll.pool, 12);
+    assert.equal(e.roll!.pool, 12);
   });
   await test('skill roll computes pool and default limit', async () => {
     // Jane etiquette 6 + CHA 8 = 14, social limit 9
@@ -253,7 +254,7 @@ try {
     // defaulting forbidden
     await rejects(p1.send('dice/roll', { actorId: 'pc_jane', skillId: 'spellcasting' }), /formation/);
     // knowledge skill
-    const kno = gm.state.actors.pc_jane.knowledge.find((k) => k.type === 'academic');
+    const kno = gm.state.actors.pc_jane.knowledge.find((k) => k.type === 'academic')!;
     const r4 = await p1.send('dice/roll', { actorId: 'pc_jane', skillId: kno.id });
     assert.equal(r4.pool, kno.rating + 4);
   });
@@ -304,9 +305,9 @@ try {
     assert.equal(a.lifestyle, undefined);
     assert.equal(a.lifestyles.length, 1);
     assert.deepEqual({ ...a.lifestyles[0], id: undefined }, { id: undefined, name: 'Planque (Moyen)', base: 'Medium', baseCost: 5000, monthsPaid: 2, primary: true, qualities: [], monthlyCost: 5000, notes: 'Ancien loyer : 5500 ¥', chummerGuid: 'g1' });
-    for (const pc of Object.values(gm.state.actors).filter((x) => x.type === 'pc')) assert.ok(Array.isArray(pc.lifestyles) && pc.lifestyle === undefined, pc.name);
+    for (const pc of Object.values(gm.state.actors).filter((x) => x.type === 'pc')) assert.ok(Array.isArray(pc.lifestyles) && (pc as Actor & { lifestyle?: unknown }).lifestyle === undefined, pc.name);
   });
-  let lsId;
+  let lsId: string;
   await test('GM adds a lifestyle and options: monthly cost derived, single primary', async () => {
     const before = (gm.state.actors.pc_bricks.lifestyles || []).length;
     lsId = await gm.send('actor/addItem', { actorId: 'pc_bricks', list: 'lifestyles', item: { name: 'Planque de Tacoma', base: 'Low', baseCost: 2000, monthsPaid: 1, primary: true, monthlyCost: 999999 } });
@@ -315,26 +316,26 @@ try {
     await settle();
     let ls = gm.state.actors.pc_bricks.lifestyles;
     assert.equal(ls.length, before + 1);
-    const mine = ls.find((l) => l.id === lsId);
+    const mine = ls.find((l) => l.id === lsId)!;
     assert.equal(mine.monthlyCost, 2000 * 1.2 + 100, 'client monthlyCost ignored, derived instead (Extra Secure: % of the base only)');
-    assert.equal(mine.qualities.find((q) => q.id === q1).baseOnly, true, 'baseOnly kept by the GM editor');
+    assert.equal(mine.qualities.find((q) => q.id === q1)!.baseOnly, true, 'baseOnly kept by the GM editor');
     assert.equal(ls.filter((l) => l.primary).length, 1);
     assert.ok(mine.primary);
     await gm.send('actor/updateSubItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: lsId, sub: 'qualities', subId: q1, patch: { multiplier: 10, notes: 'négocié' } });
     await settle();
-    assert.equal(gm.state.actors.pc_bricks.lifestyles.find((l) => l.id === lsId).monthlyCost, 2000 * 1.1 + 100);
+    assert.equal(gm.state.actors.pc_bricks.lifestyles.find((l) => l.id === lsId)!.monthlyCost, 2000 * 1.1 + 100);
     await gm.send('actor/updateSubItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: lsId, sub: 'qualities', subId: q1, patch: { baseOnly: false } });
     await settle();
-    assert.equal(gm.state.actors.pc_bricks.lifestyles.find((l) => l.id === lsId).monthlyCost, (2000 + 100) * 1.1, 'plain % applies to base + options');
+    assert.equal(gm.state.actors.pc_bricks.lifestyles.find((l) => l.id === lsId)!.monthlyCost, (2000 + 100) * 1.1, 'plain % applies to base + options');
     await gm.send('actor/updateItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: lsId, patch: { baseCost: 3000 } }); // ignored: the base cost is fixed by the level
     await gm.send('actor/updateItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: lsId, patch: { base: 'Medium' } });
     await gm.send('actor/removeSubItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: lsId, sub: 'qualities', subId: q1 });
     await settle();
     ls = gm.state.actors.pc_bricks.lifestyles;
-    assert.equal(ls.find((l) => l.id === lsId).monthlyCost, 5100, 'Medium 5000 (fixed) + Garage 100');
-    assert.equal(ls.find((l) => l.id === lsId).baseCost, 5000);
+    assert.equal(ls.find((l) => l.id === lsId)!.monthlyCost, 5100, 'Medium 5000 (fixed) + Garage 100');
+    assert.equal(ls.find((l) => l.id === lsId)!.baseCost, 5000);
     if (ls.length > 1) {
-      const other = ls.find((l) => l.id !== lsId);
+      const other = ls.find((l) => l.id !== lsId)!;
       await gm.send('actor/updateItem', { actorId: 'pc_bricks', list: 'lifestyles', itemId: other.id, patch: { primary: true } });
       await settle();
       assert.deepEqual(gm.state.actors.pc_bricks.lifestyles.filter((l) => l.primary).map((l) => l.id), [other.id], 'primary moved');
@@ -349,17 +350,17 @@ try {
     if (before) assert.equal(gm.state.actors.pc_bricks.lifestyles.filter((l) => l.primary).length, 1);
   });
   await test('weapon accessories, armor mods, vehicle mods: nested CRUD (GM only) with validation', async () => {
-    const w = gm.state.actors.pc_jane.weapons.find((x) => x.kind === 'ranged');
+    const w = gm.state.actors.pc_jane.weapons.find((x) => x.kind === 'ranged')!;
     const accId = await gm.send('actor/addSubItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, sub: 'accessories', item: { name: 'Laser Sight', mount: 'Top', cost: '125', avail: '2', effects: { accuracy: 1, junk: 'x' } } });
     await settle();
-    let acc = gm.state.actors.pc_jane.weapons.find((x) => x.id === w.id).accessories.find((x) => x.id === accId);
+    let acc = gm.state.actors.pc_jane.weapons.find((x) => x.id === w.id)!.accessories!.find((x) => x.id === accId)!;
     assert.deepEqual({ name: acc.name, mount: acc.mount, cost: acc.cost, effects: acc.effects }, { name: 'Laser Sight', mount: 'Top', cost: 125, effects: { accuracy: 1 } });
     await gm.send('actor/updateSubItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, sub: 'accessories', subId: accId, patch: { mount: 'Nowhere', effects: { rc: 2 } } });
     await settle();
-    acc = gm.state.actors.pc_jane.weapons.find((x) => x.id === w.id).accessories.find((x) => x.id === accId);
+    acc = gm.state.actors.pc_jane.weapons.find((x) => x.id === w.id)!.accessories!.find((x) => x.id === accId)!;
     assert.equal(acc.mount, '');
     assert.deepEqual(acc.effects, { rc: 2 });
-    assert.ok(p1.state.actors.pc_jane.weapons.find((x) => x.id === w.id).accessories.some((x) => x.id === accId), 'owner sees it');
+    assert.ok(p1.state.actors.pc_jane.weapons.find((x) => x.id === w.id)!.accessories!.some((x) => x.id === accId), 'owner sees it');
     await rejects(p1.send('actor/removeSubItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, sub: 'accessories', subId: accId }));
     await rejects(p1.send('actor/updateItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, patch: { accessories: [] } }), /modifier/);
     await rejects(gm.send('actor/addSubItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, sub: 'qualities', item: { name: 'x' } }), /Sous-liste inconnue/);
@@ -367,23 +368,23 @@ try {
     await rejects(gm.send('actor/updateSubItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, sub: 'accessories', subId: 'nope', patch: {} }), /introuvable/);
     await gm.send('actor/removeSubItem', { actorId: 'pc_jane', list: 'weapons', itemId: w.id, sub: 'accessories', subId: accId });
     await settle();
-    assert.ok(!gm.state.actors.pc_jane.weapons.find((x) => x.id === w.id).accessories.some((x) => x.id === accId));
+    assert.ok(!gm.state.actors.pc_jane.weapons.find((x) => x.id === w.id)!.accessories!.some((x) => x.id === accId));
     const ar = gm.state.actors.pc_jane.armor[0];
     const modId = await gm.send('actor/addSubItem', { actorId: 'pc_jane', list: 'armor', itemId: ar.id, sub: 'mods', item: { name: 'Gel Packs', capacity: 0, cost: 1500, effects: { armor: 2 } } });
     await settle();
-    assert.deepEqual(gm.state.actors.pc_jane.armor[0].mods.find((m) => m.id === modId).effects, { armor: 2 });
+    assert.deepEqual(gm.state.actors.pc_jane.armor[0].mods!.find((m) => m.id === modId)!.effects, { armor: 2 });
     await gm.send('actor/removeSubItem', { actorId: 'pc_jane', list: 'armor', itemId: ar.id, sub: 'mods', subId: modId });
     const vid = await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'vehicles', item: { name: 'Moto', mods: [{ name: 'Run-Flat Tires', slots: 0, rating: 1, category: 'All', cost: 250 }] } });
     await settle();
-    const v = gm.state.actors.pc_jane.vehicles.find((x) => x.id === vid);
-    assert.ok(v.mods[0].id && v.mods[0].name === 'Run-Flat Tires' && v.mods[0].rating === 1, 'mods sanitized and given ids by addItem');
+    const v = gm.state.actors.pc_jane.vehicles.find((x) => x.id === vid)!;
+    assert.ok(v.mods![0].id && v.mods![0].name === 'Run-Flat Tires' && v.mods![0].rating === 1, 'mods sanitized and given ids by addItem');
     await gm.send('actor/removeItem', { actorId: 'pc_jane', list: 'vehicles', itemId: vid });
   });
   await test('martial arts and techniques', async () => {
     const id = await gm.send('actor/addItem', { actorId: 'pc_anthony', list: 'martialArts', item: { name: 'Kenjutsu', catalogId: 'abc', rating: 0 } });
     const tq = await gm.send('actor/addSubItem', { actorId: 'pc_anthony', list: 'martialArts', itemId: id, sub: 'techniques', item: { name: 'Riposte', nameFr: 'Riposte' } });
     await settle();
-    const ma = gm.state.actors.pc_anthony.martialArts.find((m) => m.id === id);
+    const ma = gm.state.actors.pc_anthony.martialArts.find((m) => m.id === id)!;
     assert.equal(ma.rating, 1);
     assert.deepEqual(ma.techniques.map((x) => [x.id, x.name]), [[tq, 'Riposte']]);
     await gm.send('actor/removeItem', { actorId: 'pc_anthony', list: 'martialArts', itemId: id });
@@ -398,7 +399,7 @@ try {
     assert.equal(n, 2);
     const pcCopy = await gm.send('actor/duplicate', { actorId: 'pc_jane', name: 'Jane B' });
     const users = Object.values(gm.state.users);
-    const bap = users.find((u) => u.name === 'Baptiste');
+    const bap = users.find((u) => u.name === 'Baptiste')!;
     await gm.send('users/assign', { userId: bap.id, characterId: pcCopy, assign: true });
     await settle();
     assert.ok(gm.state.users[bap.id].characterIds.includes(pcCopy));
@@ -456,17 +457,17 @@ try {
     assert.equal(a.attributes.CHA, 5);
     assert.equal(a.attributes.MAG, undefined);
     assert.equal(a.attributes.ESS, 5.7);
-    assert.equal(a.skills.find((s) => s.id === 'pistols').rating, 5);
-    assert.equal(a.skills.find((s) => s.id === 'pistols').spec, 'Semi-Automatics');
-    assert.equal(a.skills.find((s) => s.id === 'sneaking').rating, 5);
+    assert.equal(a.skills.find((s) => s.id === 'pistols')!.rating, 5);
+    assert.equal(a.skills.find((s) => s.id === 'pistols')!.spec, 'Semi-Automatics');
+    assert.equal(a.skills.find((s) => s.id === 'sneaking')!.rating, 5);
     assert.ok(a.skills.find((s) => s.id === 'electronic_warfare'));
     assert.equal(a.knowledge.length, 2);
-    assert.equal(a.qualities.find((q) => q.name.startsWith('SINner')).karma, -5);
+    assert.equal(a.qualities.find((q) => q.name.startsWith('SINner'))!.karma, -5);
     assert.equal(a.weapons.length, 2);
     assert.equal(a.weapons[1].skill, 'blades');
     assert.equal(a.weapons[1].damage, '(STR+2)P');
     assert.equal(a.armor[1].stack, true);
-    assert.equal(a.matrix.device, 'Hermes Ikon');
+    assert.equal(a.matrix!.device, 'Hermes Ikon');
     assert.equal(a.sins[0].name, 'John Doe');
     assert.equal(a.contacts[0].connection, 4);
     assert.equal(a.nuyen, 1235);
