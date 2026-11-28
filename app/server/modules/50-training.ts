@@ -300,6 +300,11 @@ interface AdvanceDaysPayload {
   days?: number;
   actorIds?: ActorId[];
 }
+interface AddDaysPayload {
+  actorId?: ActorId;
+  jobId?: string;
+  days?: number;
+}
 interface CompletePayload {
   actorId?: ActorId;
   jobId?: string;
@@ -463,6 +468,26 @@ const mod: ServerModule = {
         else if (completed.length === 1) publicLog(ctx, tk('a::⏱ Downtime: {days}. {n} training completed.'), p);
         else publicLog(ctx, tk('⏱ Downtime: {days}. {n} trainings completed.'), p);
         return { days: d, completed, progressed };
+      },
+    },
+
+    // GM: give days to one training without moving the calendar (time owed, a gift).
+    // payload: { actorId, jobId, days } → { days, daysDone, daysTotal, completed }
+    'training/addDays': {
+      role: 'gm',
+      handler(ctx: ActionContext, { actorId, jobId, days }: AddDaysPayload = {}) {
+        const actor = ctx.state.actors?.[actorId as ActorId];
+        if (!actor) return ctx.fail('Character not found');
+        const job = jobsOf(actor).find((j) => j.id === jobId);
+        if (!job) return ctx.fail('Training not found');
+        const n = Math.floor(Number(days));
+        if (!(n >= 1)) return ctx.fail('Invalid number of days');
+        const d = Math.min(n, 3650);
+        job.daysDone = Math.min(job.daysTotal, (Number(job.daysDone) || 0) + d);
+        privateLog(ctx, actor.id, tk('{actor} is given {days} of training: {label}'), { actor: actor.name, days: formatDaysI18n(d), label: labelParam(job) });
+        const { daysDone, daysTotal } = job;
+        const completed = daysDone >= daysTotal ? completeJob(ctx, actor, job) : null;
+        return { days: d, daysDone, daysTotal, completed };
       },
     },
 

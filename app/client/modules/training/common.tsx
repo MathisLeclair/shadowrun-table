@@ -1,5 +1,5 @@
 // Shared bits of the training UI: settings/quote helpers, status badges, progress bars, job & request lists.
-import { Badge, Button, Stat, confirmAction, type BadgeColor } from '../../lib/ui.tsx';
+import { Badge, Button, Stat, confirmAction, promptText, type BadgeColor } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
 import { toast, openSheet } from '../../lib/ui-store.ts';
 import { t, tn, tk, fmtNuyen, locale } from '../../lib/i18n.ts';
@@ -167,6 +167,15 @@ export function JobList({ actor, isGM, empty }: JobListProps) {
     send('training/complete', { actorId: actor.id, jobId: job.id })
       .then(() => toast(t('{label}: finished', { label: labelOf(job) }), 'success'))
       .catch(() => {});
+  const give = async (job: TrainingJob) => {
+    const raw = await promptText(t('Days of training to give {name} for « {label} » (7 = 1 week):', { name: actor.name, label: labelOf(job) }), '7');
+    if (raw == null) return;
+    const days = Math.floor(Number(raw.trim()));
+    if (!Number.isFinite(days) || days < 1) return toast(t('Invalid number of days'), 'warn');
+    send<{ completed: unknown }>('training/addDays', { actorId: actor.id, jobId: job.id, days })
+      .then((res) => toast(res?.completed ? t('{label}: finished', { label: labelOf(job) }) : t('{time} of training given', { time: fmtDays(days) }), 'success'))
+      .catch(() => {});
+  };
   const stop = async (job: TrainingJob) => {
     if (!(await confirmAction(t('Interrupt « {label} » for {name}?\nThe karma (and the instructor, if any) will be refunded.', { label: labelOf(job), name: actor.name })))) return;
     send('training/cancel', { requestId: job.requestId, refund: true })
@@ -189,6 +198,9 @@ export function JobList({ actor, isGM, empty }: JobListProps) {
               <span className="muted">{t('{time} left', { time: fmtDays(Math.max(0, total - done)) })}</span>
               {isGM && (
                 <span className="row gap-s">
+                  <Button small variant="ghost" title={t('Give training days (does not move the calendar)')} onClick={() => give(job)}>
+                    {t('+ days')}
+                  </Button>
                   <Button small variant="ghost" title={t('Finish now')} onClick={() => finish(job)}>
                     ✓ {t('Done')}
                   </Button>

@@ -28,8 +28,9 @@ actor.magic = { initiation: grade, submersion: grade, metamagics: [string], echo
 
 ## Actions and behaviour
 
-- Actions: `training/request`, `training/resolve`, `training/cancel`, `training/advanceDays`, `training/complete`,
-  `training/updateSettings`, `training/clearHistory`. `'training/advanceDays'` (GM) moves downtime forward.
+- Actions: `training/request`, `training/resolve`, `training/cancel`, `training/advanceDays`, `training/addDays`, `training/complete`,
+  `training/updateSettings`, `training/clearHistory`. `'training/advanceDays'` (GM) moves downtime forward. `'training/addDays'` (GM, `{ actorId, jobId, days }`) gives days to one training
+  without moving the calendar (the « + days » button on a job).
 - `martialArt` requests: `{ catalogId: styleId, techniques: [{ id }] }`. The server replaces the style name, karma and
   technique names with `data/catalog/martialarts.json` (unknown style / technique → refused) and drops techniques the
   actor already knows. Completion adds the style to `actor.martialArts` (`{ id, catalogId, name, rating: 1, techniques:
