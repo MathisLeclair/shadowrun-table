@@ -5,6 +5,7 @@
 // Image maps (background.mode === 'image', e.g. Foundry imports): the artwork is the floor, no tile art;
 // segment walls are drawn for the GM only (toggle), segment doors for everyone as clickable icons.
 import { buildGrid, lineOfSightMask, mapLights, wallIsDoor, wallMidpoint, pointSegmentDistance } from '/shared/vision.ts';
+import { vehicleDamage, vehicleMonitor } from '/shared/vehicles.ts';
 import { derive } from '/shared/sr5.ts';
 import { t, tk, tIfKnown } from '../../lib/i18n.ts';
 import { isLibUrl, ensureLibKey, signedUrl } from './maplib-client.ts';
@@ -273,10 +274,10 @@ export const TILE_FLAT: Record<string, string> = {
   c: '#7a5f35', o: '#6a7482', m: '#2f3a48', v: '#4a5a70', b: '#5a4a72', s: '#4a5560', e: '#5a6778', '~': '#1d4f6a',
   g: '#24452c', r: '#4a4f57', x: '#b0702a', t: '#1f4a28', _: '#5a2a5a',
 };
-export const STATUS_GLYPHS: Record<string, string> = { 'empty body': '⌀', 'à terre': '↧', inconscient: 'z', mort: '✝', étourdi: '✶', 'en feu': '♨', aveuglé: '◌', 'à couvert': '▣', caché: '◐', paniqué: '!', saignement: '♦', entravé: '⛓' };
+export const STATUS_GLYPHS: Record<string, string> = { 'empty body': '⌀', 'à terre': '↧', inconscient: 'z', mort: '✝', étourdi: '✶', 'en feu': '♨', aveuglé: '◌', 'à couvert': '▣', caché: '◐', paniqué: '!', saignement: '♦', entravé: '⛓', détruit: '✖' };
 // Token statuses are stored in French (keys above, save compatibility); these markers give the checker the English keys
 // the legacy map translates them to.
-export const STATUS_KEYS = [tk('empty body'), tk('prone'), tk('unconscious'), tk('dead'), tk('stunned'), tk('on fire'), tk('blinded'), tk('in cover'), tk('hidden'), tk('panicked'), tk('bleeding'), tk('restrained')];
+export const STATUS_KEYS = [tk('empty body'), tk('prone'), tk('unconscious'), tk('dead'), tk('stunned'), tk('on fire'), tk('blinded'), tk('in cover'), tk('hidden'), tk('panicked'), tk('bleeding'), tk('restrained'), tk('destroyed')];
 /** Stored token status ('à terre'…) in the UI language (custom statuses unchanged). */
 export const statusText = (s: unknown): string => tIfKnown(String(s ?? ''));
 
@@ -2137,7 +2138,7 @@ export class MapRenderer {
     const actor = tok.actorId ? sc.actors?.[tok.actorId] : null;
     const dispo = DISPO[tok.disposition] || DISPO.neutral;
     const status = tok.status || [];
-    const dead = status.includes('mort'); // stored token status (French)
+    const dead = status.includes('mort') || status.includes('détruit'); // stored token status (French)
     const selected = !ghost && sc.selected?.has(tok.id);
     ctx.save();
     ctx.globalAlpha = alpha * (tok.hidden ? 0.5 : 1) * (dead ? 0.7 : 1) * (tok.astral ? 0.6 : 1);
@@ -2273,10 +2274,15 @@ export class MapRenderer {
           ctx.fillRect(bx, by, bw * k, bh);
           by += bh + 2;
         };
-        // NPC stubs (players' view) have no condition monitor: empty bars, as before.
-        const cond = 'condition' in actor ? actor.condition : undefined;
-        bar(cond?.physical || 0, dv.physicalMonitor, '#e05c5c');
-        bar(cond?.stun || 0, dv.stunMonitor, '#5c9be0');
+        // A vehicle token: the vehicle's own monitor (shared/vehicles.ts), no Stun track.
+        const veh = tok.vehicleId && 'vehicles' in actor ? (actor.vehicles || []).find((x) => x?.id === tok.vehicleId) : null;
+        if (veh) bar(vehicleDamage(veh), vehicleMonitor(veh), '#e0a63f');
+        else {
+          // NPC stubs (players' view) have no condition monitor: empty bars, as before.
+          const cond = 'condition' in actor ? actor.condition : undefined;
+          bar(cond?.physical || 0, dv.physicalMonitor, '#e05c5c');
+          bar(cond?.stun || 0, dv.stunMonitor, '#5c9be0');
+        }
       }
     }
 

@@ -238,7 +238,7 @@ export function catalogToItem(catalog: string, entry: CatalogEntryData, rating?:
         list: 'vehicles',
         item: {
           ...base, handling: s.handling ?? '', speed: s.speed ?? '', accel: s.accel ?? '', body: num(s.body), armor: num(s.armor),
-          pilot: num(s.pilot), sensor: num(s.sensor), seats: num(s.seats),
+          pilot: num(s.pilot), sensor: num(s.sensor), seats: num(s.seats), drone: !!s.drone || /^Drones/i.test(entry.category || ''),
         },
       };
     case 'qualities': {

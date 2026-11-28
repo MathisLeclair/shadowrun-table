@@ -28,6 +28,7 @@ Known places where the app departs from Chummer or from the book (on purpose):
 |---|---|
 | [dice-and-tests.md](dice-and-tests.md) | pools, limits, Edge, wound modifiers, attribute-only tests |
 | [combat.md](combat.md) | initiative, damage, fire modes & reloading, range & environment, area weapons, toxins, defense, soak |
+| [vehicles.md](vehicles.md) | Vehicle Tests, rigging limits and thresholds, gunnery, sensors, vehicle damage, ramming, drones, chase combat; Rigger 5.0 repair, EW, swarms, qualities; Run & Gun vehicle called shots |
 | [matrix.md](matrix.md) | Matrix initiative and limits, Overwatch, convergence, IC, agents |
 | [magic.md](magic.md) | adept powers, foci, drain, initiation |
 | [chargen.md](chargen.md) | Priority creation, NPC Professional Rating |

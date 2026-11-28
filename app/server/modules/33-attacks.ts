@@ -16,10 +16,13 @@ import { performRoll, applyDamage } from './10-characters.ts';
 import { ELEMENTS, elementLabel, hasEnergyAura, type CombatSpellProfile, type SpellElement } from '../../shared/magic.ts';
 import { spendInitiative, combatTurnKey } from './30-combat.ts';
 import { recordAction } from '../lib/combat-actions.ts';
+import { controllerInfo, driverOf, effectiveVehicle, mayControl, vehicleOf } from '../lib/vehicles.ts';
+import { CALLED_SHOT_BY_ID, controlLimit, controlOf, gunneryPlan, vehicleDefensePlan, vehicleDestroyed, vehicleMonitor, vehicleStats, withBreakdown, NO_CONTROLLER } from '../../shared/vehicles.ts';
+import type { PlanLine } from '../../shared/vehicles.ts';
 import type { PerformedRoll, RollBonusLine, RollInternal, RollPayload } from './10-characters.ts';
 import type {
   ActionContext, Actor, ActorId, AfflictionKind, AttrKey, Attack, AttacksState, AttackTurnRecord, Blast, BlastHit, BiName, DamageType, GameMap, GameView,
-  I18nEntry, I18nMessage, I18nParams, Point, ServerModule, SessionUser, TableState, Token,
+  I18nEntry, I18nMessage, I18nParams, Point, ServerModule, SessionUser, TableState, Token, Vehicle,
 } from '../../shared/types.ts';
 
 /** Weapons / launcher profiles / catalog entries / player payloads of several shapes: read field by field. */
@@ -83,7 +86,9 @@ function mapFor(ctx: ActionContext, mapId: unknown): GameMap | null {
   const id = ctx.isGM && mapId ? str(mapId, 60) : ctx.state.scene?.activeMapId;
   return id ? ctx.state.maps?.[id] || null : null;
 }
-const tokenOf = (map: GameMap | null, actorId: ActorId): Token | null => (map?.tokens || []).find((t) => t.actorId === actorId) || null;
+/** The actor's own token (not one of their vehicles'). */
+const tokenOf = (map: GameMap | null, actorId: ActorId): Token | null => (map?.tokens || []).find((t) => t.actorId === actorId && !t.vehicleId) || null;
+const vehicleToken = (map: GameMap | null, actorId: ActorId, vehicleId: string): Token | null => (map?.tokens || []).find((t) => t.actorId === actorId && t.vehicleId === vehicleId) || null;
 
 function push<T>(state: TableState, list: T[], item: NoInfer<T>, max: number): T {
   list.unshift(item);
@@ -104,6 +109,263 @@ const apOf = (w: { ap?: unknown } | null | undefined): number => {
   const n = Number(String(w?.ap ?? '0').replace(/[^-+\d]/g, ''));
   return Number.isFinite(n) ? n : 0;
 };
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Vehicles (SR5 p. 199-205, 266): vehicle targets, ramming, vehicle damage and the jumped-in rigger's biofeedback
+// ---------------------------------------------------------------------------------------------------------------------
+
+const bonusOf = (lines: PlanLine[]): RollBonusLine[] => lines.filter((l) => l.value).map((l) => ({ label: l.label, value: l.value }));
+const limitBreakdown = (lines: PlanLine[]): string => lines.map((l, i) => (i ? `${l.label} ${l.value >= 0 ? '+' : '−'}${Math.abs(l.value)}` : `${l.label} ${l.value}`)).join(' + ');
+
+/** Push an attack to the list (34-vehicles: ramming, crashes, chase rams). */
+export function pushAttack(ctx: ActionContext, atk: Omit<Attack, 'id' | 'ts'> & { id?: string }): Attack {
+  return push<Attack>(ctx.state, slice(ctx.state).list, { ...atk, id: atk.id || ctx.uid('atk'), ts: ctx.now } as Attack, MAX_ATTACKS);
+}
+export { logAttack };
+
+/**
+ * A soak attack against a vehicle (blast, crash, chase ram): Body + Armor, no defense. `ap` modifies the vehicle's armor.
+ */
+export function addVehicleSoak(ctx: ActionContext, o: { owner: Actor; vehicle: Vehicle; dv: number; ap?: number; attacker?: Actor | null; attackerName?: string; weaponName: BiName; mapId?: string | null; tokenId?: string | null; gmOnly?: boolean }): Attack {
+  return pushAttack(ctx, {
+    mapId: o.mapId ?? null, kind: 'blast', attackerId: o.attacker?.id || null, attackerName: o.attackerName || o.attacker?.name || '—', targetId: o.owner.id,
+    targetTokenId: o.tokenId ?? null, targetName: o.vehicle.name, weaponName: o.weaponName, hits: 0, dv: o.dv, modifiedDv: o.dv, type: 'P', ap: o.ap || 0,
+    vehicle: { vehicleId: o.vehicle.id, name: o.vehicle.name }, status: 'soak', ...(o.gmOnly || (o.owner.type === 'npc' && o.owner.hidden) ? { gmOnly: true } : {}),
+  });
+}
+
+/** Biofeedback soak attack against a jumped-in rigger (WIL + Firewall; hot sim Physical, cold sim Stun — SR5 p. 229, 266). */
+function addFeedback(ctx: ActionContext, rigger: Actor, dv: number, what: BiName, gmOnly?: boolean): Attack {
+  const persona = ctx.state.matrix?.personas?.[rigger.id];
+  const type: DamageType = persona?.online && persona.mode === 'hot' ? 'P' : 'S';
+  return pushAttack(ctx, {
+    mapId: null, kind: 'blast', attackerId: null, attackerName: '—', targetId: rigger.id, targetTokenId: null, targetName: rigger.name, weaponName: what,
+    hits: 0, dv, modifiedDv: dv, type, ap: 0, feedback: true, status: 'soak', ...(gmOnly ? { gmOnly: true } : {}),
+  });
+}
+
+/**
+ * Fill boxes of a vehicle's condition monitor (vehicles ignore Stun). A jumped-in rigger resists half of it as biofeedback,
+ * and dumpshock (6 DV) when the vehicle is destroyed under them (SR5 p. 266). The vehicle's tokens get the « détruit » marker.
+ */
+export function damageVehicle(ctx: ActionContext, owner: Actor, v: Vehicle, boxes: number, { gmOnly }: { gmOnly?: boolean } = {}): void {
+  const n = Math.max(0, Math.round(boxes));
+  if (!n) return;
+  const max = vehicleMonitor(v);
+  const was = vehicleDestroyed(v);
+  v.damage = Math.min(max, (Number(v.damage) || 0) + n);
+  const now = vehicleDestroyed(v);
+  const hidden = gmOnly || (owner.type === 'npc' && !!owner.hidden);
+  ctx.log({
+    kind: 'combat', userId: ctx.user.id, author: v.name, ...(hidden ? { gmOnly: true } : {}),
+    i18n: now && !was
+      ? { key: tk('{vehicle} takes {n} box(es) of damage — destroyed!'), params: { vehicle: v.name, n } }
+      : { key: tk('{vehicle} takes {n} box(es) of damage ({d}/{max}).'), params: { vehicle: v.name, n, d: v.damage, max } },
+  });
+  if (now !== was) {
+    for (const m of Object.values<GameMap>(ctx.state.maps || {})) {
+      for (const t of m?.tokens || []) {
+        if (t.actorId !== owner.id || t.vehicleId !== v.id) continue;
+        const kept = (t.status || []).filter((s) => s !== 'détruit');
+        t.status = now ? [...kept, 'détruit'] : kept;
+      }
+    }
+    for (const e of ctx.state.combat?.entries || []) if (e.kind === 'drone' && e.vehicleId === v.id) e.down = now;
+  }
+  const rigger = controlOf(v) === 'rigged' ? driverOf(ctx.state, owner, v) : null;
+  if (!rigger) return;
+  addFeedback(ctx, rigger, Math.ceil(n / 2), { fr: `Biofeedback (${v.name})`, en: `Biofeedback (${v.name})` }, hidden);
+  if (now && !was) addFeedback(ctx, rigger, 6, { fr: `Choc de déconnexion (${v.name})`, en: `Dumpshock (${v.name})` }, hidden);
+  logAttack(ctx, tk('{rigger} is jumped into {vehicle}: biofeedback to resist.'), { rigger: rigger.name, vehicle: v.name }, hidden);
+}
+
+/**
+ * A called shot at a vehicle component landed (Run & Gun p. 115): its breakdown is set; an antenna shot cuts a remote
+ * control (the autopilot takes over, SR5 p. 202).
+ */
+function applyCalledShot(ctx: ActionContext, owner: Actor, v: Vehicle, atk: Attack): void {
+  const shot = atk.calledShot ? CALLED_SHOT_BY_ID[atk.calledShot] : null;
+  if (!shot) return;
+  v.breakdowns = withBreakdown(v.breakdowns, shot);
+  const hidden = atk.gmOnly || (owner.type === 'npc' && !!owner.hidden);
+  logAttack(ctx, tk('{vehicle}: {part} hit — {effect}'), { vehicle: v.name, part: { t: shot.label }, effect: { t: shot.note } }, hidden);
+  if (shot.effect === 'antenna' && controlOf(v) === 'remote') {
+    v.control = vehicleStats(v).pilot > 0 ? 'auto' : 'manual';
+    if (v.control === 'manual') delete v.control;
+    logAttack(ctx, tk('{vehicle} loses its remote control link.'), { vehicle: v.name }, hidden);
+  }
+}
+
+/** The vehicle of a vehicle attack (fails when it was sold / removed meanwhile). */
+function attackVehicle(ctx: ActionContext, atk: Attack): { owner: Actor; vehicle: Vehicle } {
+  const owner = actorOf(ctx, atk.targetId);
+  const vehicle = vehicleOf(owner, atk.vehicle?.vehicleId);
+  if (!vehicle) ctx.fail('Vehicle not found');
+  return { owner, vehicle };
+}
+
+/**
+ * Defense of a vehicle (SR5 p. 205): the driver's REA + INT (evasive driving: + INT, −10 initiative; not against a ram),
+ * a drone on its own Pilot + Maneuvering [Handling]. A ram is opposed with REA + INT [Handling] (p. 203).
+ */
+function doVehicleDefend(ctx: ActionContext, atk: Attack, { options = [], modifier = 0, explode = false }: ResolveOpts): PerformedRoll {
+  const { owner, vehicle } = attackVehicle(ctx, atk);
+  if (!mayControl(ctx, owner, vehicle)) ctx.fail('Only the target\'s player (or the GM) can defend');
+  const driver = driverOf(ctx.state, owner, vehicle);
+  const c = controllerInfo(ctx.state, driver);
+  const plan = vehicleDefensePlan(vehicle, c, driver);
+  const bonus: RollBonusLine[] = bonusOf(plan.bonus);
+  if (atk.defenseMod) bonus.push({ label: atk.defenseLabel || tk('fire mode'), value: atk.defenseMod });
+  if (atk.actionDefense) bonus.push({ label: atk.actionName || tk('action'), value: atk.actionDefense });
+  const evasive = options.includes('evasive') && !atk.ram && plan.roller.kind === 'driver' && !!driver;
+  if (evasive) bonus.push({ label: tk('evasive driving'), value: attr(driver, 'INT') });
+  const vehicleInfo = { vehicleId: vehicle.id, name: vehicle.name, test: 'defense' };
+  let roll: PerformedRoll;
+  if (plan.roller.kind === 'driver' && driver) {
+    const lim = atk.ram ? controlLimit(vehicle, controlOf(vehicle), c) : null;
+    roll = performRoll(ctx, {
+      actorId: driver.id, attr: 'REA', attr2: 'INT', test: 'defense', label: tk('Vehicle defense'), modifier: int(modifier, -30, 30), explode: !!explode,
+    }, {
+      bonus, logExtra: { attackId: atk.id, defense: true, vehicle: vehicleInfo },
+      ...(lim ? { limitAdjust: { replace: lim.limit, label: lim.label, breakdown: limitBreakdown(lim.lines) } } : {}),
+    });
+    if (evasive) spendInitiative(ctx, driver.id, 10, tk('evasive driving'));
+  } else {
+    const r = plan.roller.kind === 'pilot' ? plan.roller : { pool: 0, lines: [] };
+    roll = performRoll(ctx, { label: tk('Vehicle defense'), modifier: int(modifier, -30, 30) }, {
+      bonus, basePool: { pool: r.pool, parts: r.lines.map((l) => `${l.label} ${l.value}`) }, author: vehicle.name,
+      limitAdjust: { replace: plan.limit, label: plan.limitLabel, breakdown: limitBreakdown(plan.limitLines) },
+      logExtra: { attackId: atk.id, defense: true, actorId: owner.id, vehicle: vehicleInfo },
+    });
+  }
+  atk.defenseHits = roll.hits;
+  atk.defenseLogId = roll.logId;
+  atk.net = atk.hits - roll.hits;
+  if (atk.net <= 0) {
+    atk.status = 'missed';
+    atk.resolvedTs = ctx.now;
+    logAttack(ctx, tk('{target} avoids {attacker}\'s attack.'), { target: atk.targetName, attacker: atk.attackerName }, atk.gmOnly);
+  } else if (atk.noDamage || atk.dv === null) {
+    atk.status = 'done';
+    atk.resolvedTs = ctx.now;
+    logAttack(ctx, tk('{attacker} succeeds against {target}: {n} net hit(s).'), { attacker: atk.attackerName, target: atk.targetName, n: atk.net }, atk.gmOnly);
+  } else if (atk.calledShot && CALLED_SHOT_BY_ID[atk.calledShot]?.dvLimit === 0) {
+    // Door lock / window motor: no damage, the effect alone (Run & Gun p. 115).
+    atk.status = 'done';
+    atk.resolvedTs = ctx.now;
+    atk.damage = 0;
+    applyCalledShot(ctx, owner, vehicle, atk);
+  } else {
+    atk.status = 'soak';
+    const cap = atk.calledShot ? CALLED_SHOT_BY_ID[atk.calledShot]?.dvLimit : null;
+    atk.modifiedDv = cap ? Math.min(cap, atk.dv + atk.net) : atk.dv + atk.net;
+    logAttack(ctx, tk('{attacker} hits {target}: DV {dv}{type}, AP {ap}.'), { attacker: atk.attackerName, target: atk.targetName, dv: atk.modifiedDv, type: atk.type, ap: atk.ap }, atk.gmOnly);
+  }
+  if (atk.ram && atk.net > 0) ramBacklash(ctx, atk);
+  return roll;
+}
+
+/**
+ * Damage resistance of a vehicle (SR5 p. 199, 205): Body + Armor (modified by AP). A modified DV below the modified Armor
+ * does nothing, and so does Stun damage unless it is electrical.
+ */
+function doVehicleSoak(ctx: ActionContext, atk: Attack, { modifier = 0 }: ResolveOpts): PerformedRoll | null {
+  const { owner, vehicle } = attackVehicle(ctx, atk);
+  if (!mayControl(ctx, owner, vehicle)) ctx.fail('Only the target\'s player (or the GM) can resist the damage');
+  const st = vehicleStats(vehicle);
+  const armor = Math.max(0, st.armor + (atk.ap || 0));
+  const dv = atk.modifiedDv ?? atk.dv ?? 0;
+  const done = (boxes: number, hits: number, logId?: string) => {
+    atk.soakHits = hits;
+    if (logId) atk.soakLogId = logId;
+    atk.damage = boxes;
+    atk.damageType = 'P';
+    atk.status = 'done';
+    atk.resolvedTs = ctx.now;
+  };
+  if ((atk.type === 'S' && !atk.electric) || dv < armor) {
+    done(0, 0);
+    logAttack(ctx, atk.type === 'S' && !atk.electric
+      ? tk('{target} ignores Stun damage (vehicle).')
+      : tk('{target}: DV {dv} under its armor ({armor}), no damage.'), { target: atk.targetName, dv, armor }, atk.gmOnly);
+    return null;
+  }
+  const roll = performRoll(ctx, { label: tk('Vehicle damage resistance'), modifier: int(modifier, -30, 30), limit: null }, {
+    basePool: { pool: st.body + armor, parts: [`Body ${st.body}`, `armor ${st.armor}`, ...(atk.ap ? [`AP ${atk.ap > 0 ? '+' : '−'}${Math.abs(atk.ap)}`] : [])] },
+    author: vehicle.name, logExtra: { attackId: atk.id, soak: true, actorId: owner.id, vehicle: { vehicleId: vehicle.id, name: vehicle.name, test: 'soak' } },
+  });
+  const boxes = Math.max(0, dv - roll.hits);
+  done(boxes, roll.hits, roll.logId);
+  if (boxes > 0) {
+    damageVehicle(ctx, owner, vehicle, boxes, { gmOnly: atk.gmOnly });
+    applyCalledShot(ctx, owner, vehicle, atk);
+  } else logAttack(ctx, tk('{target} resists it all ({dv}{type}).'), { target: atk.targetName, dv, type: 'P' }, atk.gmOnly);
+  return roll;
+}
+
+/** A ram that hit: the ramming vehicle resists half the base DV (SR5 p. 203); both drivers owe a Vehicle Test (2 / 3). */
+function ramBacklash(ctx: ActionContext, atk: Attack): void {
+  const rammer = atk.attackerId ? ctx.state.actors[atk.attackerId] : null;
+  const v = vehicleOf(rammer, atk.ram?.vehicleId);
+  if (!rammer || !v) return;
+  const map = atk.mapId ? ctx.state.maps?.[atk.mapId] || null : null;
+  addVehicleSoak(ctx, {
+    owner: rammer, vehicle: v, dv: Math.ceil((atk.dv || 0) / 2), attacker: rammer, weaponName: { fr: 'Éperonnage', en: 'Ramming' },
+    mapId: atk.mapId, tokenId: vehicleToken(map, rammer.id, v.id)?.id || null, gmOnly: atk.gmOnly,
+  });
+  logAttack(ctx, atk.vehicle
+    ? tk('Ram: {rammer} must pass a Vehicle Test (2) and {target} a Vehicle Test (3), or lose control.')
+    : tk('Ram: {rammer} must pass a Vehicle Test (2) or lose control.'), { rammer: v.name, target: atk.targetName }, atk.gmOnly);
+}
+
+/** Biofeedback soak: WIL + Firewall of the rigger's device, no armor (SR5 p. 229). */
+function doFeedbackSoak(ctx: ActionContext, atk: Attack, target: Actor, { modifier = 0, explode = false }: ResolveOpts): PerformedRoll {
+  const fw = Math.max(0, Number(target.matrix?.firewall) || 0);
+  const roll = performRoll(ctx, {
+    actorId: target.id, attr: 'WIL', test: 'biofeedback', label: tk('Biofeedback'), applyWounds: false, limit: null, modifier: int(modifier, -30, 30), explode: !!explode,
+  }, { bonus: fw ? [{ label: 'Firewall', value: fw }] : [], logExtra: { attackId: atk.id, soak: true } });
+  const dv = atk.modifiedDv ?? atk.dv ?? 0;
+  const boxes = Math.max(0, dv - roll.hits);
+  atk.soakHits = roll.hits;
+  atk.soakLogId = roll.logId;
+  atk.damage = boxes;
+  atk.damageType = atk.type;
+  atk.status = 'done';
+  atk.resolvedTs = ctx.now;
+  if (boxes > 0) applyDamage(ctx, target, boxes, atk.type);
+  else logAttack(ctx, tk('{target} resists it all ({dv}{type}).'), { target: atk.targetName, dv, type: atk.type }, atk.gmOnly);
+  return roll;
+}
+
+/**
+ * Vehicle-mounted weapon (SR5 p. 183-184, 238): the roll payload / internal options from the control mode — Gunnery + AGI
+ * (manual), + LOG (remote, jumped in: + control rig to the Accuracy, remote: max Data Processing), the drone's Pilot +
+ * Targeting (autopilot), passive targeting [Sensor]. Fails when the drone has no Targeting autosoft for the weapon.
+ */
+function gunneryOptions(ctx: ActionContext, owner: Actor, weapon: Loose, passive: boolean): { payload: Partial<RollPayload>; internal: RollInternal; vehicle: Vehicle } {
+  const vehicle = vehicleOf(owner, weapon.vehicleId);
+  if (!vehicle) ctx.fail('Vehicle not found');
+  if (vehicleDestroyed(vehicle)) ctx.fail('{vehicle} is destroyed', { vehicle: vehicle.name });
+  const driver = driverOf(ctx.state, owner, vehicle);
+  const c = driver ? controllerInfo(ctx.state, driver) : NO_CONTROLLER;
+  const plan = gunneryPlan(effectiveVehicle(ctx.state, owner, vehicle), weapon as { name: string }, c, driver, { passive });
+  if (plan.impossible) ctx.fail('{vehicle} has no Targeting autosoft for {weapon}', { vehicle: vehicle.name, weapon: weapon.name });
+  const internal: RollInternal = {
+    bonus: bonusOf(plan.bonus),
+    limitAdjust: { replace: plan.limitReplace, add: plan.limitAdd, max: plan.limitMax, ...(plan.limitLabel !== 'accuracy' ? { label: plan.limitLabel } : {}) },
+  };
+  const payload: Partial<RollPayload> = { skillId: null, attr: null };
+  if (plan.roller.kind === 'pilot') {
+    internal.basePool = { pool: plan.roller.pool, parts: plan.roller.lines.map((l) => `${l.label} ${l.value}`) };
+    internal.author = vehicle.name;
+    payload.explode = false; // a drone has no Edge
+  } else {
+    payload.attr = plan.roller.attr;
+    // Someone else remote-controls / rigs the vehicle: its weapons are theirs to fire (the owner may still man a mount aboard).
+    if (driver && driver.id !== owner.id && controlOf(vehicle) !== 'manual') ctx.fail('{driver} controls {vehicle}: only they can fire its weapons', { driver: driver.name, vehicle: vehicle.name });
+  }
+  return { payload, internal, vehicle };
+}
 
 /**
  * Direct combat spell (SR5 p. 283): the target resists with BOD (physical spell) or WIL (mana spell); the net hits are the
@@ -187,11 +449,14 @@ export function addAstralAttack(ctx: ActionContext, o: { attacker: Actor; target
 /** Defense test of the target (REA + INT + options), then the attack moves to soak / missed / done. Returns the roll. */
 function doDefend(ctx: ActionContext, atk: Attack, { options = [], situations = [], modifier = 0, explode = false }: ResolveOpts = {}): PerformedRoll {
   if (atk.status !== 'defense') ctx.fail('This attack is not waiting for a defense');
+  if (atk.vehicle) return doVehicleDefend(ctx, atk, { options, modifier, explode });
   const target = actorOf(ctx, atk.targetId);
   if (!ctx.owns(target.id)) ctx.fail('Only the target\'s player (or the GM) can defend');
   if (atk.kind === 'spell' && atk.spell?.mode === 'direct') return doResistSpell(ctx, atk, target, { modifier, explode });
   if (atk.astral) return doAstralDefense(ctx, atk, target, { modifier, explode });
   const turn = turnOf(ctx.state, target.id);
+  // A ram can be dodged, not blocked or parried (SR5 p. 203).
+  if (atk.ram) options = options.filter((id) => id !== 'parry' && id !== 'block');
   const plan = defenseLines(target, atk, {
     options: options.filter((id: string) => DEFENSE_BY_ID[id]), situations: situations.filter((id: string) => SITUATION_BY_ID[id]),
     prior: turn ? turn.defended : 0, turnBoosts: turn ? turn.boosts : [],
@@ -323,11 +588,13 @@ function doToxin(ctx: ActionContext, atk: Attack, target: Actor, { modifier = 0,
 }
 
 /** Damage resistance (BOD + armor modified by AP), damage applied. Returns the roll. */
-function doSoak(ctx: ActionContext, atk: Attack, { modifier = 0, explode = false }: ResolveOpts = {}): PerformedRoll {
+function doSoak(ctx: ActionContext, atk: Attack, { modifier = 0, explode = false }: ResolveOpts = {}): PerformedRoll | null {
   if (atk.status !== 'soak') ctx.fail('This attack is not waiting for damage resistance');
+  if (atk.vehicle) return doVehicleSoak(ctx, atk, { modifier });
   const target = actorOf(ctx, atk.targetId);
   if (!ctx.owns(target.id)) ctx.fail('Only the target\'s player (or the GM) can resist the damage');
   if (atk.kind === 'toxin') return doToxin(ctx, atk, target, { modifier, explode });
+  if (atk.feedback) return doFeedbackSoak(ctx, atk, target, { modifier, explode });
   if (atk.astral) {
     // Astral soak: the astral body (WIL) or the dual-natured body (BOD), no armor (SR5 p. 315).
     const roll = performRoll(ctx, {
@@ -388,6 +655,10 @@ type AttackRollPayload = RollPayload & {
   profileId?: unknown;
   toxinId?: unknown;
   mapId?: unknown;
+  /** Vehicle-mounted weapon: passive targeting, the vehicle's Sensor as the limit (SR5 p. 184). */
+  passive?: unknown;
+  /** Called shot at a vehicle component (Run & Gun p. 115): VEHICLE_CALLED_SHOTS id. */
+  calledShot?: unknown;
 };
 type AttackIdPayload = { attackId?: unknown };
 type DefendPayload = { attackId?: unknown; options?: unknown; situations?: unknown; modifier?: unknown; explode?: unknown };
@@ -425,8 +696,13 @@ const mod: ServerModule = {
         delete payload.actionId;
         delete payload.profileId;
         delete payload.toxinId;
+        delete payload.passive;
+        delete payload.calledShot;
         pruneExpired(ctx.state, ctx.now);
         delete payload.mapId;
+        // Vehicle-mounted weapon: Gunnery with the attribute / limit of the control mode, or the drone's Pilot + Targeting.
+        const gun = weapon?.vehicleId ? gunneryOptions(ctx, actor, weapon, !!p.passive) : null;
+        if (gun) Object.assign(payload, gun.payload);
         // Special action: unlocked (technique / quality), fits the weapon, once per turn, Edge.
         if (action) {
           if (!ctx.isGM && !isUnlocked(action, actor)) ctx.fail('{name} hasn\'t unlocked “{action}”', { name: actor.name, action: { t: action.name } });
@@ -459,8 +735,19 @@ const mod: ServerModule = {
           if (!ctx.isGM && target.type === 'npc' && target.hidden) ctx.fail('Target not found');
           targetToken = tokenOf(map, target.id);
         }
-        if (target && target.id === actor.id) ctx.fail('You can\'t target yourself');
-        const attackerToken = tokenOf(map, actor.id);
+        // A vehicle token: the attack targets the vehicle (its owner defends / soaks for it), not the passengers (SR5 p. 205).
+        const targetVehicle = targetToken?.vehicleId && target ? vehicleOf(target, targetToken.vehicleId) : null;
+        if (targetToken?.vehicleId && !targetVehicle) ctx.fail('Vehicle not found');
+        if (target && target.id === actor.id && !targetVehicle) ctx.fail('You can\'t target yourself');
+        // Called shot at a vehicle component (Run & Gun p. 115).
+        const calledShot = p.calledShot ? CALLED_SHOT_BY_ID[str(p.calledShot, 20)] || null : null;
+        if (p.calledShot && (!calledShot || !targetVehicle)) ctx.fail('Called shots at a component need a vehicle target');
+        // Target lock of the firing vehicle (SR5 p. 184) and Target Device of its rigger (Rigger 5.0 p. 30).
+        const lock = gun && targetToken ? (ctx.state.rigging?.locks || []).find((l) => l.actorId === actor.id && l.vehicleId === gun.vehicle.id && l.targetTokenId === targetToken!.id) || null : null;
+        const turnKey = combatTurnKey(ctx.state);
+        const designation = gun && targetToken ? (ctx.state.rigging?.designations || []).find((d) => d.riggerId === actor.id && d.targetTokenId === targetToken!.id && (d.turn === null || d.turn === turnKey)) || null : null;
+        // A mounted weapon fires from its vehicle's token when the vehicle is on the map.
+        const attackerToken = (gun ? vehicleToken(map, actor.id, gun.vehicle.id) : null) || tokenOf(map, actor.id);
         const mpc = Number(map?.metersPerCell) || 1;
         const area = weapon && isAreaWeapon(weapon);
         let point: Point | null = null;
@@ -493,6 +780,8 @@ const mod: ServerModule = {
           }
         }
         if (action?.dice) bonus.push({ label: action.name, value: action.dice });
+        if (calledShot) bonus.push({ label: calledShot.label, value: calledShot.mod });
+        if (designation?.net) bonus.push({ label: tk('Target Device'), value: designation.net });
         // Launcher ammunition: the minigrenade profile listed on the sheet gives DV / AP / blast.
         // Without one (Chummer did not list it): the loaded minigrenade, or the catalog minigrenade chosen in the dialog.
         let profile: Loose | null = null;
@@ -514,9 +803,10 @@ const mod: ServerModule = {
           delete payload.weaponId;
           payload.label = action.name;
         }
-        const targetName = target?.name || targetToken?.name || '';
+        const targetName = targetVehicle?.name || target?.name || targetToken?.name || '';
         const roll = performRoll(ctx, payload, {
-          bonus, rounds: action?.rounds,
+          ...(gun ? gun.internal : {}),
+          bonus: [...bonus, ...(gun?.internal.bonus || [])], rounds: action?.rounds,
           logExtra: { attackId: target || point ? atkId : undefined, ...(targetName ? { targetName } : {}), ...(action ? { actionName: action.name } : {}), ...(range ? { range: { band: range.id, meters: range.meters, ...(range.beyond ? { beyond: true } : {}) } } : {}) },
         });
         // Costs of the special action, once the roll went through.
@@ -530,11 +820,14 @@ const mod: ServerModule = {
         // Simple, SA burst/LB/FA 10/suppressive Complex), a melee attack Complex, a thrown weapon Simple.
         if (action || source) {
           const fireAction = FIRE_BY_ID[String(roll.fire?.mode || payload.fireMode || '')]?.action;
-          const type = action?.type || attackActionType({ fireAction, melee: weapon?.kind === 'melee' });
+          // A vehicle-mounted weapon takes a Complex Action in any fire mode (SR5 p. 183).
+          const type = action?.type || (gun ? 'complex' : attackActionType({ fireAction, melee: weapon?.kind === 'melee' }));
           const what: I18nMessage = action
             ? source ? { t: '{a} · {b}', params: { a: { t: action.name }, b: biName(source) } } : { t: action.name }
             : { t: tk('Attack — {weapon}'), params: { weapon: biName(source!) } };
-          recordAction(ctx, { actorId: actor.id }, { type, label: what, attack: action?.kind !== 'test', auto: true });
+          // A drone firing on its own records on its own tracker entry.
+          const droneEntry = gun?.internal.basePool ? ctx.state.combat?.entries.find((e) => e.kind === 'drone' && e.vehicleId === gun.vehicle.id && !e.out) : null;
+          recordAction(ctx, droneEntry ? { entryId: droneEntry.id } : { actorId: actor.id }, { type, label: what, attack: action?.kind !== 'test', auto: true });
         }
         const gmOnly = !!roll.secret || !!(actor.type === 'npc' && actor.hidden);
         const s = slice(ctx.state);
@@ -568,7 +861,7 @@ const mod: ServerModule = {
             // Gas: a Toxin Resistance Test (BOD + WIL) for every token caught (a chemical seal, or a gas mask against an
             // inhalation-only toxin, protects).
             for (const tok of map.tokens || []) {
-              if (!tok.actorId || !ctx.state.actors[tok.actorId]) continue;
+              if (!tok.actorId || !ctx.state.actors[tok.actorId] || tok.vehicleId) continue; // a sealed vehicle is not poisoned
               const m = cellDistance(tok, land, mpc);
               if (m > blast.radius!) continue;
               const victim = ctx.state.actors[tok.actorId];
@@ -591,6 +884,18 @@ const mod: ServerModule = {
               const dv = blastDvAt(blast, m);
               if (dv <= 0) continue;
               const victim = ctx.state.actors[tok.actorId];
+              const hitVehicle = tok.vehicleId ? vehicleOf(victim, tok.vehicleId) : null;
+              if (tok.vehicleId) {
+                // Area attacks damage the vehicle (and its passengers, who have their own tokens or are the GM's call — SR5 p. 205).
+                if (!hitVehicle) continue;
+                const atk = addVehicleSoak(ctx, {
+                  owner: victim, vehicle: hitVehicle, dv, ap: blast.ap + (action?.ap || 0), attacker: actor, weaponName: biName(source), mapId: map.id, tokenId: tok.id,
+                  gmOnly: gmOnly || (victim.type === 'npc' && !!victim.hidden),
+                });
+                if (blast.type === 'S') atk.type = 'S';
+                hits.push({ actorId: victim.id, tokenId: tok.id, name: hitVehicle.name, dv, meters: m, attackId: atk.id });
+                continue;
+              }
               const atk = push<Attack>(ctx.state, s.list, {
                 ...base, id: ctx.uid('atk'), kind: 'blast', targetId: victim.id, targetTokenId: tok.id, targetName: victim.name,
                 dv, type: blast.type, ap: blast.ap + (action?.ap || 0), meters: m, status: 'soak', modifiedDv: dv,
@@ -620,9 +925,11 @@ const mod: ServerModule = {
           ...base, id: atkId, kind: weapon?.kind === 'melee' || action?.kind === 'test' ? 'melee' : 'ranged', targetId: target.id, targetTokenId: targetToken?.id || null, targetName,
           dv: action?.noDamage ? null : dmg.dv === null ? null : dmg.dv + (action?.dv || 0), type: dmg.type, ap: apOf(source) + (action?.ap || 0),
           reach: weapon?.kind === 'melee' ? (Number(weapon.reach) || 0) + (action?.reach || 0) + (/troll/i.test(actor.metatype || '') ? 1 : 0) : 0,
-          defenseMod: fireDef || 0, ...(fireDef ? { defenseLabel: tk('fire mode') } : {}), actionDefense: action?.defense || 0,
+          defenseMod: (fireDef || 0) - (lock?.net || 0), ...(fireDef || lock ? { defenseLabel: lock ? (fireDef ? tk('fire mode, target lock') : tk('target lock')) : tk('fire mode') } : {}), actionDefense: action?.defense || 0,
+          ...(calledShot ? { calledShot: calledShot.id } : {}),
           ...(action?.noDamage ? { noDamage: true } : {}), ...(range ? { range: { band: range.id, meters: range.meters } } : {}),
           ...(weapon?.natural ? { natural: { power: weapon.natural.power, element: weapon.natural.element ?? null } } : {}),
+          ...(targetVehicle ? { vehicle: { vehicleId: targetVehicle.id, name: targetVehicle.name }, ...(/\(e\)|elec/i.test(String(source?.damage || '')) ? { electric: true } : {}) } : {}),
           status: roll.hits > 0 ? 'defense' : 'missed', ...(roll.hits > 0 ? {} : { resolvedTs: ctx.now }),
           ...(target.type === 'npc' && target.hidden ? { gmOnly: true } : {}),
         }, MAX_ATTACKS);
@@ -647,7 +954,9 @@ const mod: ServerModule = {
       role: 'any',
       handler(ctx: ActionContext, p: SoakPayload = {}) {
         const atk = getAttack(ctx, str(p.attackId, 60));
-        const { entry, ...roll } = doSoak(ctx, atk, { modifier: p.modifier, explode: p.explode });
+        const res = doSoak(ctx, atk, { modifier: p.modifier, explode: p.explode });
+        if (!res) return { roll: null, attack: atk };
+        const { entry, ...roll } = res;
         return { roll, attack: atk };
       },
     },
@@ -670,7 +979,11 @@ const mod: ServerModule = {
         if (p.outcome === 'damage') {
           const n = int(p.amount, 0, 100);
           const type = p.type === 'S' ? 'S' : 'P';
-          if (n > 0) applyDamage(ctx, actorOf(ctx, atk.targetId), n, type);
+          if (n > 0 && atk.vehicle) {
+            const { owner, vehicle } = attackVehicle(ctx, atk);
+            damageVehicle(ctx, owner, vehicle, n, { gmOnly: atk.gmOnly });
+            applyCalledShot(ctx, owner, vehicle, atk);
+          } else if (n > 0) applyDamage(ctx, actorOf(ctx, atk.targetId), n, type);
           atk.damage = n;
           atk.damageType = type;
           atk.status = 'done';

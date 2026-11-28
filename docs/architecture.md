@@ -26,7 +26,7 @@ app/
   shared/sr5.ts          SR5 rules: attributes, SKILLS, derive(), rollDice(), skillPool() (core-owned)
   shared/*.ts            other pure modules usable by server AND browser (no Node/DOM APIs):
                          vision.ts (maps), advancement.ts (training), matrix.ts (Matrix rules), magic.ts (magic rules), chargen.ts (priority creation),
-                         npcgen.ts (enemy generator), combat.ts (attacks), modifiers.ts, lifestyle.ts, home.ts, sins.ts,
+                         npcgen.ts (enemy generator), combat.ts (attacks), vehicles.ts (vehicles, chases), modifiers.ts, lifestyle.ts, home.ts, sins.ts,
                          contacts.ts, bookrefs.ts, maplib.ts
   client/index.html      page shell, loads app.tsx (Vite)                               (core-owned)
   client/app.tsx         shell: login, top tabs, right dock, sheet modal, toasts, pop-out window (?pane=)  (core-owned)
@@ -73,6 +73,7 @@ Run: `npm start` (port 3000, or `PORT=xxxx`). A fresh install has one table « l
 | `22-maplib.ts` | `map/`, `admin/MaplibAdmin.tsx` | [modules/map-library.md](modules/map-library.md) |
 | `30-combat.ts` | `combat/` | [modules/combat.md](modules/combat.md) |
 | `33-attacks.ts` | `combat/AttackTray.tsx` | [modules/attacks.md](modules/attacks.md) |
+| `34-vehicles.ts` | `sheet/vehicles.tsx`, `combat/ChasePanel.tsx` | [modules/vehicles.md](modules/vehicles.md) |
 | `40-shop.ts` | `shop/` | [shop](modules/shop.md), [shop upgrades](modules/shop-upgrades.md) |
 | `45-matrix.ts` | `matrix/` | [modules/matrix.md](modules/matrix.md) |
 | `47-magic.ts` | `magic/` | [modules/magic.md](modules/magic.md) |

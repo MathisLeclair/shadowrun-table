@@ -10,6 +10,8 @@ import { fillActorRefs } from '../lib/bookrefs.ts';
 import { uid, clamp, deepClone } from '../../shared/util.ts';
 import { pruneExpired, PHASE_ACTION_BY_ID, PHASE_ACTION_TYPES, phaseUsage, overPhase } from '../../shared/combat.ts';
 import { recordAction } from '../lib/combat-actions.ts';
+import { vehicleOf } from '../lib/vehicles.ts';
+import { controlOf, droneInitiative, vehicleDestroyed } from '../../shared/vehicles.ts';
 import { thrownGearToWeapons } from './10-characters.ts';
 import type {
   ActionContext, Actor, ActorId, CombatEntry, CombatState, Disposition, GameMap, GameView, I18nMessage, I18nParams, I18nParamValue,
@@ -286,10 +288,15 @@ export function findFreeCell(map: GameMap, x: unknown, y: unknown, occ: Set<stri
  * kind 'ic' { hostId, icId } (initiative Host Rating × 2 + 4D6) and kind 'agent' { ownerId = the decker's actor id }
  * (Data Processing + Rating + 4D6). They roll automatically like NPCs and are never wounded.
  */
-export const isVirtual = (e: { kind?: string } | null | undefined): boolean => e?.kind === 'ic' || e?.kind === 'agent';
+export const isVirtual = (e: { kind?: string } | null | undefined): boolean => e?.kind === 'ic' || e?.kind === 'agent' || e?.kind === 'drone';
 /** Actor controlling an entry (an agent belongs to its decker). */
 const ownerActorId = (e: CombatEntry | null | undefined): ActorId | null => e?.actorId || e?.ownerId || null;
 function virtualInit(state: TableState, e: CombatEntry): InitValue | null {
+  if (e.kind === 'drone') {
+    // A vehicle on autopilot (34-vehicles): Pilot × 2 + 4D6 (SR5 p. 270).
+    const v = vehicleOf(state.actors?.[e.ownerId as ActorId], e.vehicleId);
+    return v ? droneInitiative(v) : null;
+  }
   if (e.kind === 'ic') {
     const host = state.matrix?.hosts?.[e.hostId as string];
     return host && (host.ic || []).some((x) => x.id === e.icId) ? icInitiative(host) : null;
@@ -376,7 +383,7 @@ function isIncapacitated(actor: Actor | null | undefined): boolean {
 function syncActors(state: TableState, c: CombatState): void {
   for (const e of c.entries) {
     if (isVirtual(e)) {
-      e.down = false;
+      e.down = e.kind === 'drone' ? vehicleDestroyed(vehicleOf(state.actors?.[e.ownerId as ActorId], e.vehicleId)) : false;
       continue;
     }
     const actor = state.actors[e.actorId as ActorId];
@@ -491,7 +498,7 @@ function doRoll(ctx: ActionContext, c: CombatState, e: CombatEntry, { blitz = fa
   e.total = r.total + wm;
   e.score = e.total! - 10 * ((c.pass || 1) - 1);
   e.toRoll = false;
-  e.down = actor ? isIncapacitated(actor) : false;
+  e.down = actor ? isIncapacitated(actor) : e.kind === 'drone' ? !!e.down : false;
   return e;
 }
 
@@ -549,6 +556,17 @@ function makeEntry(state: TableState, actor: Actor, token: Token | null): Combat
   };
 }
 
+/** Initiative entry of a vehicle token on autopilot (kind 'drone', rolled like an NPC), null for a driven vehicle. */
+function droneEntry(state: TableState, owner: Actor, token: Token): CombatEntry | null {
+  const v = vehicleOf(owner, token.vehicleId);
+  if (!v || controlOf(v) !== 'auto') return null;
+  return {
+    id: uid('ini'), actorId: null, tokenId: token.id, kind: 'drone', ownerId: owner.id, vehicleId: v.id, name: token.name || v.name,
+    disposition: token.disposition || (owner.type === 'pc' ? 'ally' : 'hostile'), base: 0, dice: 0, rolls: [], total: 0, score: 0, wound: 0, adjust: 0,
+    spent: [], acted: false, delayed: false, hidden: !!token.hidden, out: false, down: vehicleDestroyed(v), toRoll: true, seized: false, blitz: false, mode: 'physical',
+  };
+}
+
 /** Add entries for tokens/actors. NPCs are rolled immediately; PCs are « à lancer ». */
 /** Add tokens / actors to a fight (used by 47-magic for spirits joining combat). */
 export function addEntries(ctx: ActionContext, c: CombatState, { tokenIds, actorIds, rollNpcs = true }: { tokenIds?: unknown; actorIds?: unknown; rollNpcs?: boolean }): CombatEntry[] {
@@ -568,6 +586,18 @@ export function addEntries(ctx: ActionContext, c: CombatState, { tokenIds, actor
   for (const tid of Array.isArray(tokenIds) ? tokenIds.slice(0, 200) : []) {
     const tok = findToken(tid);
     if (!tok || !tok.actorId || !state.actors[tok.actorId] || has(tok)) continue;
+    if (tok.vehicleId) {
+      // A vehicle token acts through its driver; only a vehicle on autopilot has its own initiative (SR5 p. 270), and a
+      // swarm acts as one drone (Rigger 5.0 p. 31): one entry for all its drones.
+      const sw = vehicleOf(state.actors[tok.actorId], tok.vehicleId)?.swarm;
+      if (sw && c.entries.some((x) => x.kind === 'drone' && !x.out && x.ownerId === tok.actorId && vehicleOf(state.actors[tok.actorId], x.vehicleId)?.swarm === sw)) continue;
+      const e = droneEntry(state, state.actors[tok.actorId], tok);
+      if (e) {
+        c.entries.push(e);
+        added.push(e);
+      }
+      continue;
+    }
     const e = makeEntry(state, state.actors[tok.actorId], tok);
     c.entries.push(e);
     added.push(e);

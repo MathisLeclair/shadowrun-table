@@ -6,6 +6,7 @@ import { useUI, setUI, openSheet, toast } from '../../lib/ui-store.ts';
 import { t, tn, tk } from '../../lib/i18n.ts';
 import { initModeOptions, initModeLabel, dispoLabel, initials, avatarStyle, safeDerive, MonitorBar, rollTooltip, parseDamageInput } from './combat-common.tsx';
 import ActionCounter from './ActionCounter.tsx';
+import ChasePanel from './ChasePanel.tsx';
 import { phaseUsage, phaseLeft } from '../../../shared/combat.ts';
 import type { ActorLike } from './types.ts';
 import type { CombatEntry, CombatState, GameView, InitMode, ViewActor } from '../../../shared/types.ts';
@@ -38,6 +39,7 @@ function Idle({ game, isGM, selected }: { game: GameView; isGM: boolean; selecte
   if (!isGM) {
     return (
       <div className="cbt">
+        <ChasePanel game={game} />
         <div className="cbt-start">
           <h3>{t('Initiative')}</h3>
           <div className="muted">{t('No combat in progress. Enjoy the calm, chummer.')}</div>
@@ -57,6 +59,7 @@ function Idle({ game, isGM, selected }: { game: GameView; isGM: boolean; selecte
   };
   return (
     <div className="cbt">
+      <ChasePanel game={game} />
       <div className="cbt-start">
         <h3>{t('New combat')}</h3>
         <div className="small muted">
@@ -482,6 +485,7 @@ export default function CombatDock({ game }: GameProps) {
         </div>
       )}
 
+      <ChasePanel game={game} />
       {myCurrent && <YourTurn e={myCurrent} />}
       {myToRoll.map((e) => (
         <RollBanner key={'roll-' + e.id} e={e} actor={e.actorId ? game.actors?.[e.actorId] : undefined} />

@@ -11,7 +11,7 @@ import { RollStat, LimitStat } from './tab-summary.tsx';
 import { AutomationMark, ItemEffects, sourcesTitle } from './modifiers-ui.tsx';
 import { collectModifiers, gearHasEffects } from '/shared/modifiers.ts';
 import { ListEditor, CatalogPicker } from './editors.tsx';
-import { SubChips, armorCapacityText, vehicleSlotsText, lifestyleBaseLabel, lifestyleBreakdown } from './sublists.tsx';
+import { SubChips, armorCapacityText, lifestyleBaseLabel, lifestyleBreakdown } from './sublists.tsx';
 import { armorMods } from './sheet-data.ts';
 import { openMatrix, ProgramRef } from '../matrix/common.tsx';
 import { openMagic, drainRollLabel, TraditionPicker } from '../magic/common.tsx';
@@ -19,6 +19,7 @@ import CastModal from '../magic/CastModal.tsx';
 import { drainAttr, usesTradition } from '/shared/magic.ts';
 import { ruleRef, skillRef } from '/shared/bookrefs.ts';
 import { SinCards } from './sins.tsx';
+import { VehicleCard } from './vehicles.tsx';
 import { ContactCards } from './contacts.tsx';
 import { HomeButton, CityPlaceButton } from './home.tsx';
 import type { Actor, ActorMatrix, ComplexForm, GameView, Quality } from '../../../shared/types.ts';
@@ -345,15 +346,7 @@ export function GearTab({ s }: { s: SheetCtx }) {
     {vehicles.length > 0 && <>
       <h4 className="section-title">{t('Vehicles & drones')}</h4>
       <div className="sh-cards">
-        {vehicles.map(
-        (v) => <div className="sh-card" key={v.id}>
-          <span><b title={itemTitle(v)}>{itemLabel(v)}</b>{' '}<ItemRef item={v} /></span>
-          <div className="sh-vstats">
-            {([[tk('Handl.'), v.handling], [tk('Speed'), v.speed], [tk('Accel.'), v.accel], [tk('vehicle-abbr::Body'), v.body], [tk('vehicle-abbr::Armor'), v.armor], [tk('Pilot'), v.pilot], [tk('Sensor'), v.sensor], [tk('Seats'), v.seats]] as const).map(([l, x]) => <span key={l}><span className="faint">{t(l)}</span>{' '}<b>{x ?? '—'}</b></span>)}
-          </div>
-          {(v.mods || []).length > 0 && <><div className="faint small">{vehicleSlotsText(v)}</div><SubChips sub="mods" items={v.mods} /></>}{v.notes && <div className="faint small">{v.notes}</div>}
-        </div>
-      )}
+        {vehicles.map((v) => <VehicleCard key={v.id} s={s} v={v} />)}
       </div>
     </>}
   </div>;

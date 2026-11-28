@@ -57,6 +57,12 @@ Types `AttacksState`, `Attack`, `Blast`, `AttackTurnRecord`, `AttacksView` in ty
 - `pruneExpired` (shared/combat.ts) drops ran-out blasts and afflictions at each attack, new Combat Turn and combat end;
   the sheet's Combat tab lists the afflictions (GM ✕).
 
+## Vehicles
+
+A target token with `vehicleId` makes a vehicle attack (`Attack.vehicle`): vehicle defense and soak, damage to the
+vehicle's monitor, a jumped-in rigger's biofeedback (`Attack.feedback`); blasts hit vehicle tokens; a mounted weapon
+(`weapon.vehicleId`) fires with Gunnery from its vehicle's token. Rules and actions: [vehicles](vehicles.md).
+
 ## Views and client
 
 - Player view: no attack on a hidden NPC, a hidden attacker's name is `?`, blasts of the shown map only, `myTurn` =

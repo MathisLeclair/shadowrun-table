@@ -23,6 +23,7 @@ import { ReloadDialog, fireSelectOptions, ammoKindLabel, actionLabel } from './w
 import { useUI, setUI } from '../../lib/ui-store.ts';
 import { COMBAT_ACTIONS, actionsForWeapon, ACTION_BY_ID, isAreaWeapon, rangeFor, rangeClass, blastOf, blastReach, cellDistance, isUnlocked, RANGE_BANDS, environmentFor, attackSenses, activeBlasts, areaEffectOf, TOXINS, toxinFromText } from '/shared/combat.ts';
 import { createVisionContext, tokenVision } from '/shared/vision.ts';
+import { CALLED_SHOT_BY_ID, VEHICLE_CALLED_SHOTS } from '/shared/vehicles.ts';
 import { targetCandidates, attackMap, tokenOfActor, turnInfo } from '../combat/attack-common.ts';
 import { isLauncherProfile, launcherRounds } from './inventory.ts';
 import type { Actor, FireInfo, GameView, ViewActor, Weapon } from '../../../shared/types.ts';
@@ -169,9 +170,11 @@ export function RollDialog({ game, actor: viewActor, preset: initialPreset = {},
   const [weaponId, setWeaponId] = useState<string | null>(initialPreset.weaponId || null);
   const [allWeapons, setAllWeapons] = useState(false);
   const weapon = weaponId && sheet ? (sheet.weapons || []).find((w) => w && w.id === weaponId) || null : null;
-  const preset: RollPreset = weapon && weaponId !== initialPreset.weaponId
+  const basePreset: RollPreset = weapon && weaponId !== initialPreset.weaponId
     ? { ...initialPreset, weaponId: weapon.id, skillId: weapon.skill || 'exotic_weapon', label: `Attack — ${weapon.nameFr || weapon.name}` } // i18n-ignore: stored label (rollLabel, labelI18n from the server)
     : initialPreset;
+  // A vehicle-mounted weapon is fired with Gunnery (the server picks the attribute from the vehicle's control mode).
+  const preset: RollPreset = weapon?.vehicleId ? { ...basePreset, skillId: 'gunnery' } : basePreset;
   const [fireMode, setFireMode] = useState<string | null>(null);
   const [ammoOverride, setAmmoOverride] = useState(false);
   // Target (map token), special action, launcher ammunition, aimed point — attacks module (attack/roll).
@@ -185,8 +188,12 @@ export function RollDialog({ game, actor: viewActor, preset: initialPreset = {},
     return want && candidates.some((c) => c.token.id === want) ? want : '';
   });
   const target = candidates.find((c) => c.token.id === targetId) || null;
+  // Called shot at a vehicle component (Run & Gun p. 115), when the target is a vehicle token.
+  const [calledShot, setCalledShot] = useState('');
+  const vShot = target?.token.vehicleId && weapon ? CALLED_SHOT_BY_ID[calledShot] || null : null;
   const amap = canTarget ? attackMap(game) : null;
-  const myToken = amap && sheet ? tokenOfActor(amap, sheet.id) : null;
+  // A mounted weapon fires from its vehicle's token when the vehicle is on the map.
+  const myToken = amap && sheet ? (weapon?.vehicleId ? (amap.tokens || []).find((x) => x.actorId === sheet.id && x.vehicleId === weapon.vehicleId) : null) || tokenOfActor(amap, sheet.id) : null;
   const area = !!weapon && isAreaWeapon(weapon);
   const aim = area && ui.aimPoint && amap && ui.aimPoint.mapId === amap.id ? ui.aimPoint : null;
   const [useAim, setUseAim] = useState(true);
@@ -281,6 +288,7 @@ export function RollDialog({ game, actor: viewActor, preset: initialPreset = {},
     if (env.value) extraParts.push([t('environment'), env.value]);
   } else if (range?.mod) extraParts.push([`${t(range.label)} (${range.meters} m)`, range.mod]);
   if (action?.dice) extraParts.push([t(action.name), action.dice]);
+  if (vShot) extraParts.push([t(vShot.label), vShot.mod]);
   const extra = extraParts.reduce((n, [, v]) => n + v, 0);
   const total = Math.max(0, prev.pool + pm.total + soakArmor + modifier + woundMod + extra + (explode ? edgeMax : 0));
   const label = presetLabel(actor, preset);
@@ -328,6 +336,7 @@ export function RollDialog({ game, actor: viewActor, preset: initialPreset = {},
         if (point && area && aim && useAim) payload.point = point;
         else if (targetId) payload.targetTokenId = targetId;
         if (actionId) payload.actionId = actionId;
+        if (vShot && targetId) payload.calledShot = vShot.id;
         if (round) payload.profileId = round.id;
         if (gas) payload.toxinId = toxinId;
         if (gm && amap) payload.mapId = amap.id;
@@ -407,6 +416,11 @@ export function RollDialog({ game, actor: viewActor, preset: initialPreset = {},
           <span className="field-label">{area ? t('Target / aimed point') : t('Target')}</span>
           <Select value={targetId} onChange={setTargetId} options={[{ value: '', label: candidates.length ? t('— none —') : t('— no token on the map —') }, ...candidates.map((c) => ({ value: c.token.id, label: c.name + (c.meters !== null ? ` · ${c.meters} m` : '') + (c.range ? ` · ${t(c.range.label)}${c.range.mod ? ` ${c.range.mod}` : ''}` : '') }))]} />
         </div>
+        {target?.token.vehicleId && weapon && <div className="row wrap gap-s">
+          <span className="field-label">{t('Called shot')}</span>
+          <Select value={calledShot} onChange={setCalledShot} options={[{ value: '', label: t('— none —') }, ...VEHICLE_CALLED_SHOTS.map((x) => ({ value: x.id, label: `${t(x.label)} (${x.mod})` }))]} />
+          {vShot && <span className="faint small">{t(vShot.note)} <BookRef source={vShot.source} page={vShot.page} /></span>}
+        </div>}
         {area && aim && <Toggle value={useAim} onChange={setUseAim} label={t('Aim at the point marked on the map ({x}, {y})', { x: aim.x, y: aim.y })} />}{area && !aim && <div className="faint small">{t('Tip: right-click the map → “Aim at this point” to throw at a cell.')}</div>}
         {area && blast && <div className="faint small">
           {gas

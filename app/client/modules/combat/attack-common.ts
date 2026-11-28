@@ -17,7 +17,7 @@ export function attackMap(game: GameView, ui: UIState = getUI()): GameMap | null
   return game.me?.role === 'gm' ? currentMap(game, ui) : (active && game.maps?.[active]) || null;
 }
 export const tokenOfActor = (map: GameMap | null | undefined, actorId: ActorId | null | undefined): Token | null =>
-  (map?.tokens || []).find((t) => t.actorId === actorId) || null;
+  (map?.tokens || []).find((t) => t.actorId === actorId && !t.vehicleId) || null;
 
 /** Toggle the user's target (null clears it). */
 export function setTarget(tokenId: string | null | undefined) {

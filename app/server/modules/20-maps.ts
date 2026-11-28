@@ -1,6 +1,7 @@
 // Maps module: battle maps, tokens, doors, lights, regions, GM notes, fog of war (see ARCHITECTURE.md › Maps).
 // Vision / path rules live in shared/vision.js (same code runs in the browser).
 import fs from 'node:fs';
+import { movementRate, vehicleStats } from '../../shared/vehicles.ts';
 import path from 'node:path';
 import { uid, deepClone } from '../../shared/util.ts';
 import { derive } from '../../shared/sr5.ts';
@@ -113,6 +114,7 @@ function cleanToken(t: Loose, map: MapSize): Token {
   if (Array.isArray(t.status)) tok.status = t.status.map((s: unknown) => str(s, 30)).filter(Boolean).slice(0, 12);
   if (t.lastMove && Array.isArray(t.lastMove.path)) tok.lastMove = t.lastMove;
   if (t.astral) tok.astral = true;
+  if (t.vehicleId) tok.vehicleId = str(t.vehicleId, 60); // a vehicle / drone of actorId (34-vehicles)
   return tok;
 }
 
@@ -477,7 +479,9 @@ function doMove(ctx: ActionContext, map: GameMap, token: Token, x: unknown, y: u
     if (!ctx.isGM && actor) {
       let run: number | null = null;
       try {
-        run = derive(actor).movement.run;
+        // A vehicle token: the running rate of its Speed (Movement Rates Table, SR5 p. 202).
+        const v = token.vehicleId ? (actor.vehicles || []).find((x) => x?.id === token.vehicleId) : null;
+        run = v ? movementRate(vehicleStats(v).speed)[1] : derive(actor).movement.run;
       } catch {}
       if (run != null && used + meters > run) {
         ctx.fail('Too far for this turn: {step} m requested, {left} m left (max run {run} m)', { step: meters, left: Math.max(0, Math.round((run - used) * 10) / 10), run });
@@ -935,9 +939,9 @@ const mod: ServerModule = {
         const at = x != null && y != null && Number.isFinite(Number(x)) && Number.isFinite(Number(y)) ? { x: Number(x), y: Number(y) } : entryPoint(map);
         if (move && only) {
           // Move the chosen PCs' existing tokens first, then place the missing ones.
-          const present = chosen.filter((a) => map.tokens.some((t) => t.actorId === a.id));
+          const present = chosen.filter((a) => map.tokens.some((t) => t.actorId === a.id && !t.vehicleId));
           if (present.length) {
-            const tokens = present.map((a) => map.tokens.find((t) => t.actorId === a.id) as Token);
+            const tokens = present.map((a) => map.tokens.find((t) => t.actorId === a.id && !t.vehicleId) as Token);
             const others = map.tokens.filter((t) => !tokens.includes(t));
             const saved = map.tokens;
             map.tokens = others; // free cells are searched ignoring the tokens being moved
@@ -947,7 +951,7 @@ const mod: ServerModule = {
             tokens.forEach((t, i) => Object.assign(t, spots[i] || spots[spots.length - 1]));
           }
         }
-        const pcs = chosen.filter((a) => !map.tokens.some((t) => t.actorId === a.id));
+        const pcs = chosen.filter((a) => !map.tokens.some((t) => t.actorId === a.id && !t.vehicleId));
         if (!pcs.length) {
           refreshFog(ctx.state, map);
           return [];

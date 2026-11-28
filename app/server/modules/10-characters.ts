@@ -99,7 +99,7 @@ function syncHealth(state: TableState, a: Actor, wasStatus: HealthStatus | null)
   const marker = HEALTH_MARKERS[status];
   for (const m of Object.values<GameMap>(state.maps || {})) {
     for (const t of m?.tokens || []) {
-      if (t.actorId !== a.id) continue;
+      if (t.actorId !== a.id || t.vehicleId) continue; // a vehicle token shows the vehicle's state, not its owner's
       const kept = (Array.isArray(t.status) ? t.status : []).filter((x) => x !== 'inconscient' && x !== 'mort');
       t.status = marker ? [...kept, marker] : kept;
     }
@@ -570,7 +570,8 @@ const placeName = (a: Actor, loc: unknown): string => containerOf(a, loc)?.name 
 
 /** Players cannot use (fire, reload, ready) an item kept in a vehicle / safehouse / other place: within reach = carried or in a bag. */
 function requireReach(ctx: ActionContext, a: Actor, it: Loose): void {
-  if (ctx.isGM || reachOf(a, it.location) < 2) return;
+  // A vehicle-mounted weapon is fired from the vehicle (or remotely), wherever it is stored.
+  if (ctx.isGM || it.vehicleId || reachOf(a, it.location) < 2) return;
   ctx.fail('{item} is out of reach ({place})', { item: biName(it), place: placeName(a, it.location) });
 }
 
@@ -810,6 +811,15 @@ export type RollInternal = {
   armorUsed?: number;
   /** Dice source (loaded dice from a test hook); Math.random when absent. */
   rng?: () => number;
+  /**
+   * A pool that is not the actor's (a drone's Pilot + autosoft, 34-vehicles): replaces the skill / attribute pool, and the
+   * actor's modifiers and wound modifier do not apply. The weapon (ammunition, Accuracy) still does.
+   */
+  basePool?: { pool: number; parts: string[] };
+  /** Computed limit changes (vehicles): replace it, add to it (control rig), cap it (Data Processing); `label` = the limit's key. */
+  limitAdjust?: { replace?: number | null; add?: number; max?: number | null; label?: string; breakdown?: string };
+  /** Log author instead of the actor's name (« Drone (Jane) »). */
+  author?: string;
 };
 /** performRoll result: the stored roll plus its log entry. */
 export type PerformedRoll = RollRecord & { logId: string; entry: LogEntry };
@@ -843,14 +853,19 @@ export function performRoll(ctx: ActionContext, p: RollPayload | null | undefine
   const shot = weapon ? planShot(ctx, actor!, weapon, { fireMode: payload.fireMode, ammoOverride: payload.ammoOverride, rounds: internal.rounds }) : null;
   // A weapon attack uses the weapon's skill (only the GM may roll it with another one).
   const asked = payload.skillId ? String(payload.skillId).slice(0, 80) : null;
-  const skillId = weapon ? (ctx.isGM && asked) || weapon.skill || 'exotic_weapon' : asked;
+  // A vehicle-mounted weapon is fired with Gunnery (SR5 p. 183).
+  const skillId = weapon ? (ctx.isGM && asked) || (weapon.vehicleId ? 'gunnery' : weapon.skill) || 'exotic_weapon' : asked;
   const A1 = payload.attr && listed(ATTRS, payload.attr) ? (payload.attr as AttrKey) : null;
   const A2 = payload.attr2 && listed(ATTRS, payload.attr2) ? (payload.attr2 as AttrKey) : null;
   // An attribute test's own modifiers (soak: + armor, composure, judge intentions…) only for an attribute-only roll on that
   // test's attributes (shared/modifiers.js TEST_ATTRS) — any other claim is ignored.
   const test = checkedTest(payload.test, { skillId, weaponId: weapon?.id, attr: A1, attr2: A2 });
-  if ((skillId || A1) && !actor) ctx.fail('Choose a character for this roll');
-  if (skillId && actor) {
+  if ((skillId || A1) && !actor && !internal.basePool) ctx.fail('Choose a character for this roll');
+  const base = internal.basePool;
+  if (base) {
+    pool = clampInt(base.pool, 0, 100);
+    parts.push(...base.parts.slice(0, 6).map((x) => str(x, 40)));
+  } else if (skillId && actor) {
     const sk = actor.skills.find((s) => s.id === skillId || s.name === skillId);
     const kno = !sk && actor.knowledge.find((k) => k.id === skillId);
     if (kno) {
@@ -895,7 +910,7 @@ export function performRoll(ctx: ActionContext, p: RollPayload | null | undefine
   // Modifiers of the actor's gear, qualities, powers, implants (shared/modifiers.js) — computed here, never taken from the
   // client: the client only says which situational switches are on (`conditions`, checked against the actor's modifiers)
   // and which bonuses to leave out (`ignore`: players may only drop bonuses, the GM any modifier).
-  const mods = actor ? actorModifiers(actor, { weaponId: weapon?.id }) : [];
+  const mods = actor && !base ? actorModifiers(actor, { weaponId: weapon?.id }) : [];
   let conditions = cleanConditions(mods, payload.conditions);
   const rctx: Loose = actor ? rollContext(actor, { skillId, attr: A1, attr2: A2, test, weaponId: weapon?.id }) : {};
   // Matrix situation (« en RV chaude », « dans un hôte ») comes from the actor's persona, not from a switch — except for the
@@ -966,7 +981,7 @@ export function performRoll(ctx: ActionContext, p: RollPayload | null | undefine
   }
   // Wound modifier: SR5 applies it to every test of the actor's skills / attributes but damage resistance (soak, drain,
   // biofeedback, toxins). Players cannot leave it out; the GM may (applyWounds: false) or force it (true).
-  const statRoll = !!(skillId || A1);
+  const statRoll = !!(skillId || A1) && !base;
   const gmWounds = ctx.isGM && payload.applyWounds !== undefined && payload.applyWounds !== null;
   if ((gmWounds ? !!payload.applyWounds : statRoll && woundsApply(test)) && actor) {
     const w = derivedWithModifiers(actor, mods).woundModifier;
@@ -1016,6 +1031,18 @@ export function performRoll(ctx: ActionContext, p: RollPayload | null | undefine
         if (applied.length) limitBreakdown = [`${LIMIT_LABEL[defaultLimit]} ${lim.base}`, ...applied.map((l: Loose) => `${l.mod.source.name} ${l.value >= 0 ? '+' : '−'}${Math.abs(l.value)}`)].join(' + ');
       }
     }
+    // Vehicle limits (34-vehicles, trusted): Handling / Speed / Sensor in place of the computed limit, + control rig, max Data Processing.
+    const adj = internal.limitAdjust;
+    if (adj) {
+      if (adj.replace !== undefined && adj.replace !== null) {
+        auto = Math.max(1, Math.round(adj.replace));
+        limitBreakdown = null;
+      }
+      if (auto !== null && adj.add) auto += Math.round(adj.add);
+      if (auto !== null && adj.max) auto = Math.max(1, Math.min(auto, Math.round(adj.max)));
+      if (adj.label) limitLabel = adj.label;
+      if (adj.breakdown) limitBreakdown = adj.breakdown;
+    }
     // limit: number → that limit; null/0/'' → explicitly no limit; absent → computed. Players can neither raise nor remove a
     // computed limit (null / 0 / a higher number → the computed one).
     if (payload.limit !== undefined) {
@@ -1042,7 +1069,7 @@ export function performRoll(ctx: ActionContext, p: RollPayload | null | undefine
     ...(limitLabel ? { limitLabel } : {}), ...(limitBreakdown ? { limitBreakdown } : {}), ...(payload.secret ? { secret: true } : {}),
     ...(modLines.length ? { mods: modLines } : {}), ...(conditions.length ? { conditions } : {}), ...(internal.logExtra || {}),
   };
-  const author = actor ? actor.name : ctx.displayName();
+  const author = internal.author ? str(internal.author, 80) : actor ? actor.name : ctx.displayName();
   const hidden = !!payload.secret || (actor && actor.type === 'npc' && ctx.isGM && actor.hidden);
   const entry = ctx.log({ kind: 'roll', userId: ctx.user.id, author, text: label, roll, ...(hidden ? { gmOnly: true } : {}) });
   sfx(ctx, 'dice', hidden ? 'gm' : 'all');

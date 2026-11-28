@@ -72,6 +72,7 @@ run at the same time.
 | `test-sins.ts` | 3960 — same as `test-demo.ts` | [contacts-sins](modules/contacts-sins.md) |
 | `test-tables.ts` | 3500-3599 (uses 3501-3505) | [multi-table](modules/multi-table.md) |
 | `test-training.ts` | 3105 | [training](modules/training.md) |
+| `test-vehicles.ts` | 3295 | [vehicles](modules/vehicles.md) |
 | `smoke.ts` | 3998 | — |
 
 ## Integration checks
