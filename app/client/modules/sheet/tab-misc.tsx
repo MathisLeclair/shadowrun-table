@@ -308,7 +308,7 @@ export function GearTab({ s }: { s: SheetCtx }) {
               <b title={itemTitle(a)}>{itemLabel(a)}</b>
               {a.rating ? ` (${t('rating {n}', { n: a.rating })})` : ''}{' '}
               <ItemRef item={a} />
-              {a.grade && a.grade !== 'standard' ? <>{' '}<span className="badge">{gradeLabel(a.grade)}</span></> : null}{a.choice ? <>{' '}<span className="faint small">{t('Choice: {choice}', { choice: a.choice })}</span></> : null}
+              {a.grade && a.grade !== 'standard' ? <>{' '}<span className="badge">{gradeLabel(a.grade)}</span></> : null}{a.kind === 'cyberware' && a.wirelessOff ? <>{' '}<span className="badge" title={t('Not on the Matrix: Matrix Perception cannot reveal it')}>{t('wireless off')}</span></> : null}{a.choice ? <>{' '}<span className="faint small">{t('Choice: {choice}', { choice: a.choice })}</span></> : null}
               <ItemEffects mods={s.mods} list="augmentations" itemId={a.id} />
               {a.notes ? <div className="faint small">{a.notes}</div> : null}
             </div>

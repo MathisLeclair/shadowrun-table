@@ -11,6 +11,8 @@ import { useModifiers, toggleText, effectText, loadRollToggles, saveRollToggles 
 import type { Actor, GameView, RollResult } from '../../../shared/types.ts';
 import { BookRef, SkillRef } from '../books/BookRef.tsx';
 import { DiceFaces } from '../sheet/common.tsx';
+import { SEARCH_LEVELS, SEARCH_MODS, searchMinutes, type SearchLevel } from '/shared/matrix.ts';
+import { fmtMinutes } from './RevealPrompt.tsx';
 
 const FILE_OPS = [
   { value: 'read', label: tk('Read') },
@@ -134,6 +136,13 @@ export default function ActionModal({ game, actor, persona, action, preset = {},
   const [program, setProgram] = useState('');
   const [threshold, setThreshold] = useState(0);
   const [modifier, setModifier] = useState(0);
+  // Matrix Search (SR5 p. 241): how available the information is, what is sought, the table's dice modifiers.
+  const isSearch = action.id === 'matrixSearch';
+  const [searchLevel, setSearchLevel] = useState<SearchLevel>('public');
+  const [topic, setTopic] = useState('');
+  const [searchMods, setSearchMods] = useState<string[]>([]);
+  const searchMod = isSearch ? SEARCH_MODS.filter((m) => searchMods.includes(m.id)).reduce((n, m) => n + m.value, 0) : 0;
+  const totalMod = modifier + searchMod;
   const [useSpec, setUseSpec] = useState(false);
   const [edge, setEdge] = useState(false);
   const [useAssist, setUseAssist] = useState(false);
@@ -154,10 +163,10 @@ export default function ActionModal({ game, actor, persona, action, preset = {},
   const assist = useAssist && pending ? { dice: pending.dice, limitBonus: pending.limitBonus } : null;
   const sk = (actor.skills || []).find((s) => s.id === action.skill);
   const edgeLeft = actor.edge?.current ?? 0;
-  const pc = action.noTest ? null : actionPool(actor, persona, action, { useSpec, marks, modifier, assist, edge, mods, conditions: conds });
+  const pc = action.noTest ? null : actionPool(actor, persona, action, { useSpec, marks, modifier: totalMod, assist, edge, mods, conditions: conds });
   const switches: Record<string, PoolModLine[]> = {};
   for (const l of pc?.modLines || []) if (!l.mod.baked && !l.mod.info && l.value !== null) for (const k of l.toggles || []) (switches[k] ||= []).push(l);
-  const agentPc = action.noTest || !ag ? null : actionPool(actor, persona, action, { agent: true, marks, modifier });
+  const agentPc = action.noTest || !ag ? null : actionPool(actor, persona, action, { agent: true, marks, modifier: totalMod });
   const target = flat.find((o) => o.id === targetId);
   // Device linked to the map (door, light, camera zone): the command also acts on the map.
   const linkKind = ['controlDevice', 'spoofCommand'].includes(action.id) && target?.linkKind && DEVICE_LINK_KINDS[target.linkKind] ? target.linkKind : null;
@@ -183,8 +192,9 @@ export default function ActionModal({ game, actor, persona, action, preset = {},
     command: command || undefined,
     program: program || undefined,
     deviceCmd: linkKind && deviceCmd ? deviceCmd : undefined,
-    threshold: threshold || undefined,
-    modifier,
+    threshold: !isSearch && threshold ? threshold : undefined,
+    ...(isSearch ? { searchLevel, topic: topic.trim() || undefined } : {}),
+    modifier: totalMod,
   });
 
   const run = async () => {
@@ -337,7 +347,34 @@ export default function ActionModal({ game, actor, persona, action, preset = {},
                   <TextInput live value={program} onChange={setProgram} />
                 </Field>
               )}
-              {(action.id === 'matrixSearch' || (!action.defense && !action.noTest && action.id !== 'jamSignals')) && (
+              {isSearch && (
+                <>
+                  <Field label={t('What are you looking for?')} className="grow">
+                    <TextInput live value={topic} placeholder={t('e.g. the address of Mr. Johnson')} onChange={setTopic} />
+                  </Field>
+                  <Field
+                    label={t('Information is')}
+                    hint={t('Threshold {th} · base time {time}', {
+                      th: SEARCH_LEVELS[searchLevel].threshold,
+                      time: fmtMinutes(persona.hostId ? 1 : SEARCH_LEVELS[searchLevel].minutes),
+                    })}
+                  >
+                    <Select value={searchLevel} options={(Object.keys(SEARCH_LEVELS) as SearchLevel[]).map((k) => ({ value: k, label: `${t(SEARCH_LEVELS[k].label)} (${SEARCH_LEVELS[k].threshold})` }))} onChange={setSearchLevel} />
+                  </Field>
+                  <div className="row wrap gap-s">
+                    {SEARCH_MODS.map((m) => (
+                      <Toggle key={m.id} value={searchMods.includes(m.id)} onChange={(on) => setSearchMods((l) => (on ? [...l, m.id] : l.filter((x) => x !== m.id)))} label={`${t(m.label)} (${m.value})`} />
+                    ))}
+                  </div>
+                  <div className="small faint">
+                    {t('Hits above the threshold divide the time (one extra hit: {a}, two: {b}). Protected or secret data: search inside its host.', {
+                      a: fmtMinutes(searchMinutes(searchLevel, SEARCH_LEVELS[searchLevel].threshold + 1, !!persona.hostId)),
+                      b: fmtMinutes(searchMinutes(searchLevel, SEARCH_LEVELS[searchLevel].threshold + 2, !!persona.hostId)),
+                    })}
+                  </div>
+                </>
+              )}
+              {!isSearch && !action.defense && !action.noTest && action.id !== 'jamSignals' && (
                 <Field label={t('Threshold (optional)')}>
                   <NumberInput value={threshold} min={0} max={20} onChange={setThreshold} />
                 </Field>

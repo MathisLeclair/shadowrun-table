@@ -146,6 +146,18 @@
 .mx-paydata { border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
 .mx-paydata-head { display: flex; gap: 8px; align-items: center; width: 100%; background: var(--panel2); border: none; color: var(--text); padding: 6px 9px; cursor: pointer; font: inherit; font-size: 13px; text-align: left; }
 .mx-paydata-body { padding: 8px 10px; font: 12.5px var(--mono); color: #c9fffb; white-space: pre-wrap; background: #000a; }
+.mx-pan { border-top: 1px solid var(--line); padding: 6px 0 4px; display: flex; flex-direction: column; gap: 4px; }
+.mx-pan:first-of-type { border-top: none; }
+.mx-pan-dev { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; padding-left: 8px; }
+.mx-pan-dev.master { color: var(--muted); }
+.mx-pan-dev.dead { opacity: 0.6; }
+.mx-pan-btns { display: flex; gap: 4px; flex-wrap: wrap; }
+.mx-pending { border-color: var(--amber, #e0a030); }
+.mx-reveal { display: flex; flex-direction: column; gap: 10px; }
+.mx-reveal-group { display: flex; flex-direction: column; gap: 2px; }
+.mx-reveal-opt { display: flex; align-items: center; gap: 8px; padding: 3px 6px; border-radius: 5px; cursor: pointer; font-size: 13px; }
+.mx-reveal-opt:hover { background: var(--panel2); }
+.mx-reveal-opt.off { opacity: 0.5; cursor: default; }
 
 /* actions */
 .mx-actions { gap: 4px; }

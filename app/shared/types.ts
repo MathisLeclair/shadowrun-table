@@ -309,7 +309,7 @@ export interface RollRecord extends RollResult {
 
 /** `entry.matrix` of a Matrix log entry. `gm` is stripped from players' views. */
 export interface MatrixLogInfo {
-  event?: 'alert' | 'connect' | 'convergence' | 'disconnect' | 'icIdle' | 'icLaunch' | 'osTick';
+  event?: 'alert' | 'connect' | 'convergence' | 'disconnect' | 'icIdle' | 'icLaunch' | 'osTick' | 'reveal';
   actorId?: ActorId;
   hostId?: string;
   icType?: IcType;
@@ -514,6 +514,8 @@ export interface AmmoKind {
 }
 
 export interface Weapon extends ItemBase {
+  /** Wireless switched off (GM): a firearm left out of its owner's PAN (SR5 p. 233). */
+  wirelessOff?: boolean;
   /** Category (French or English, as stored). */
   category: string;
   kind: 'melee' | 'ranged';
@@ -593,6 +595,8 @@ export interface Augmentation extends ItemBase {
   bonus?: ItemBonus;
   /** Not counted by the modifiers. */
   disabled?: boolean;
+  /** Wireless switched off (GM): the implant is not on the Matrix nor in its owner's PAN (SR5 p. 233-235). */
+  wirelessOff?: boolean;
   paid?: number;
 }
 
@@ -2156,6 +2160,41 @@ export interface Persona {
   osClock: Timestamp | null;
   /** Converged inside that host (leaving it brings the grid's convergence). */
   hostConverged: string | null;
+  /** What Matrix Perception revealed on other characters' icons, by target actor id. */
+  scans?: Record<ActorId, MatrixScan>;
+}
+
+/** Device of a character's PAN revealed by Matrix Perception (a copy of its names: the decker keeps what was seen). */
+export interface ScannedDevice {
+  /** Item id on the owner's sheet (augmentation or weapon). */
+  id: string;
+  kind: 'cyberware' | 'weapon';
+  name: string;
+  nameFr?: string;
+  nameEn?: string;
+  /** Item rating (cyberware rating), shown with the name. */
+  rating?: number;
+  deviceRating: number;
+  /** Player view: the device's Matrix state (damage / bricked…), from `matrix.pans`. */
+  state?: PanDeviceView;
+}
+
+/** Matrix state of a PAN device as players see it. */
+export interface PanDeviceView {
+  damage: number;
+  monitor: number;
+  bricked: boolean;
+  formatted: boolean;
+  offline: boolean;
+}
+
+/** Matrix Perception results on one character (Persona.scans). */
+export interface MatrixScan {
+  name: string;
+  devices: ScannedDevice[];
+  /** The owner's commlink, once revealed. */
+  master?: { name: string; deviceRating: number; dataProcessing: number; firewall: number };
+  at: Timestamp;
 }
 
 export interface HostIc {
@@ -2223,6 +2262,8 @@ export interface Host {
   devices: HostDevice[];
   /** User ids who perceived it (Matrix Perception). */
   perceivedBy: UserId[];
+  /** What each decker learned item by item (Matrix Perception, revealed by the GM). `perceivedBy` = all of it. */
+  known?: Record<ActorId, HostKnowledge>;
   /** Actor / persona ids the host spotted. */
   spotted: string[];
   /** Bestiary template id of the host's spider. */
@@ -2235,6 +2276,45 @@ export interface Host {
 }
 
 /** A host as a player sees it (rating / files / devices only after Matrix Perception). */
+/** What a decker knows of a host: its rating and attributes, and which IC / files / devices. */
+export interface HostKnowledge {
+  stats?: boolean;
+  ic?: string[];
+  files?: string[];
+  devices?: string[];
+}
+
+/** A Matrix Perception / Matrix Search with hits, waiting for the GM to pick what the decker learns (one item per hit). */
+export interface MatrixReveal {
+  id: string;
+  /** The decker. */
+  actorId: ActorId;
+  actionId: 'matrixPerception' | 'matrixSearch';
+  /** What was looked at (name or message), '' for a search / no target. */
+  target: string | I18nMessage;
+  hits: number;
+  /** Matrix Search: what the decker looks for, the threshold reached and the time it took (minutes). */
+  topic?: string;
+  threshold?: number;
+  minutes?: number;
+  /** What the app can reveal (GM only: players get none). */
+  options: RevealOption[];
+  at: Timestamp;
+}
+
+/**
+ * One thing the GM can reveal. Ids: host-stats:<host> · ic:<host>:<ic> · file:<host>:<file> · device:<host>:<device> ·
+ * host-visible:<host> · pan:<owner>:<item> · pan-master:<owner>.
+ */
+export interface RevealOption {
+  id: string;
+  /** Group heading (host / character name). */
+  group: string | I18nMessage;
+  label: string | I18nMessage | BiName;
+  /** What the GM sees about it (rating, protection…). */
+  detail?: string | I18nMessage;
+}
+
 export interface PlayerHostView {
   id: string;
   name: string;
@@ -2270,6 +2350,10 @@ export interface MatrixState {
   settings: MatrixSettings;
   personas: Record<ActorId, Persona>;
   hosts: Record<string, Host>;
+  /** Matrix state of characters' PAN devices that were hacked (owner actor id → item id → device). GM only. */
+  pans?: Record<ActorId, Record<string, HostDevice>>;
+  /** Matrix Perception / Search results waiting for the GM. Players get their own, without options. */
+  reveals?: Record<string, MatrixReveal>;
 }
 
 /** `view.matrix`: players get only their own personas and the hosts they may see. */
@@ -2277,6 +2361,9 @@ export interface MatrixView {
   settings: MatrixSettings;
   personas: Record<ActorId, Persona>;
   hosts: Record<string, Host | PlayerHostView>;
+  /** GM only (players see their scanned devices' state in `Persona.scans`). */
+  pans?: Record<ActorId, Record<string, HostDevice>>;
+  reveals?: Record<string, MatrixReveal>;
 }
 
 // =====================================================================================================================

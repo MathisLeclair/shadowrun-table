@@ -23,7 +23,7 @@ export const LIST_FIELDS: Record<string, FieldDef[]> = {
     { k: 'name', label: tk('Name'), w: 170 }, { k: 'kind', label: tk('Type'), type: 'select', options: [{ value: 'melee', label: tk('Melee') }, { value: 'ranged', label: tk('Ranged') }] },
     { k: 'skill', label: tk('Skill'), type: 'select', options: combatSkillOptions }, { k: 'accuracy', label: tk('Acc.'), w: 70 }, { k: 'damage', label: tk('DV'), w: 90 },
     { k: 'ap', label: tk('AP'), w: 50 }, { k: 'mode', label: tk('Mode'), w: 80 }, { k: 'rc', label: tk('RC'), type: 'num' }, { k: 'ammo', label: tk('Ammo'), w: 80 },
-    { k: 'reach', label: tk('Reach'), type: 'num' }, { k: 'qty', label: tk('Qty'), type: 'num' }, { k: 'category', label: tk('Category'), w: 110 }, { k: 'notes', label: tk('Notes'), w: 180 },
+    { k: 'reach', label: tk('Reach'), type: 'num' }, { k: 'qty', label: tk('Qty'), type: 'num' }, { k: 'wirelessOff', label: tk('Wireless off'), type: 'bool' }, { k: 'category', label: tk('Category'), w: 110 }, { k: 'notes', label: tk('Notes'), w: 180 },
   ],
   armor: [
     { k: 'name', label: tk('Name'), w: 200 }, { k: 'rating', label: tk('Rating'), type: 'num' }, { k: 'equipped', label: tk('armor::Worn'), type: 'bool' },
@@ -33,7 +33,7 @@ export const LIST_FIELDS: Record<string, FieldDef[]> = {
   augmentations: [
     { k: 'name', label: tk('Name'), w: 200 }, { k: 'kind', label: tk('Type'), type: 'select', options: [{ value: 'cyberware', label: tk('Cyberware') }, { value: 'bioware', label: tk('Bioware') }] },
     { k: 'grade', label: tk('Grade'), type: 'select', options: [{ value: 'standard', label: tk('Standard') }, { value: 'used', label: tk('Used') }, { value: 'alpha', label: tk('long::Alphaware') }, { value: 'beta', label: tk('long::Betaware') }, { value: 'delta', label: tk('long::Deltaware') }] },
-    { k: 'rating', label: tk('Rating'), type: 'num' }, { k: 'essence', label: tk('Essence'), type: 'num', step: 0.05 }, { k: 'choice', label: tk('Choice (effect)'), w: 110 },
+    { k: 'rating', label: tk('Rating'), type: 'num' }, { k: 'essence', label: tk('Essence'), type: 'num', step: 0.05 }, { k: 'wirelessOff', label: tk('Wireless off'), type: 'bool' }, { k: 'choice', label: tk('Choice (effect)'), w: 110 },
     { k: 'notes', label: tk('Notes'), w: 220 },
   ],
   gear: [

@@ -183,11 +183,45 @@ function DeckerCard({ game, actor, onCockpit }: { game: GameView; actor: Actor; 
 export function DeckersView({ game, onCockpit }: { game: GameView; onCockpit: (id: string) => void }) {
   const actors = Object.values(game.actors || {}).filter((a): a is Actor => isFullActor(a) && !!a.matrix && !a.retired && (isCyberdeck(a) || !!game.matrix?.personas?.[a.id]));
   actors.sort((a, b) => (a.type === b.type ? compare(a.name, b.name) : a.type === 'pc' ? -1 : 1));
-  if (!actors.length) return <Empty>{t('No decker: a character with a cyberdeck (Attack/Sleaze) shows up here, or as soon as a commlink connects.')}</Empty>;
+  if (!actors.length) return <><Empty>{t('No decker: a character with a cyberdeck (Attack/Sleaze) shows up here, or as soon as a commlink connects.')}</Empty><HackedPans game={game} /></>;
   return (
-    <div className="mx-gm-grid">
-      {actors.map((a) => (
-        <DeckerCard key={a.id} game={game} actor={a} onCockpit={onCockpit} />
+    <>
+      <div className="mx-gm-grid">
+        {actors.map((a) => (
+          <DeckerCard key={a.id} game={game} actor={a} onCockpit={onCockpit} />
+        ))}
+      </div>
+      <HackedPans game={game} />
+    </>
+  );
+}
+
+/** Characters' PAN devices that deckers hacked (damage, bricked, formatted, rebooted, controlled), with a repair button. */
+function HackedPans({ game }: { game: GameView }) {
+  const pans = Object.entries(game.matrix?.pans || {}).filter(([id, devs]) => game.actors?.[id] && Object.keys(devs).length);
+  if (!pans.length) return null;
+  return (
+    <div className="mx-panel mx-gm-pans">
+      <div className="mx-panel-title">{t('Hacked PAN devices')}</div>
+      {pans.map(([ownerId, devs]) => (
+        <div key={ownerId} className="mx-pan">
+          <b>{game.actors?.[ownerId]?.name}</b>
+          {Object.values(devs).map((d) => (
+            <div className="mx-pan-dev" key={d.id}>
+              <span className="grow">
+                {d.name} <span className="faint small">{t('DR {n}', { n: d.rating })}</span>{' '}
+                {d.bricked && <Badge color="red">{t('bricked')}</Badge>}
+                {!d.bricked && d.formatted && <Badge color="amber">{t('formatted')}</Badge>}
+                {!d.bricked && d.offline && <Badge color="amber">{t('offline')}</Badge>}
+                {d.controlledBy && <Badge color="cyan">{t('controlled by {name}', { name: game.actors?.[d.controlledBy]?.name || '?' })}</Badge>}
+                {d.damage > 0 && <span className="faint small mono"> {d.damage}/{matrixMonitor(d.rating)}</span>}
+              </span>
+              <Button small onClick={() => act('matrix/panReset', { actorId: ownerId, deviceId: d.id })} title={t('Clears damage, bricked, formatted, offline and control')}>
+                {t('Repair')}
+              </Button>
+            </div>
+          ))}
+        </div>
       ))}
     </div>
   );
