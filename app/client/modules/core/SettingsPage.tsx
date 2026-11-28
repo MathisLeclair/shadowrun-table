@@ -1,38 +1,18 @@
-// GM settings: campaign name, GM password, table language, players & character assignment, backups, Foundry,
+// GM settings: campaign name, GM password, table language, table displays, players & character assignment, backups, Foundry,
 // translation status (missing English entries).
 import { Fragment, useEffect, useState, type ChangeEvent } from 'react';
-import { Button, Panel, Field, TextInput, Badge, Select, Empty, confirmAction } from '../../lib/ui.tsx';
+import { Button, Panel, Field, TextInput, Badge, Select, Empty, confirmAction, copyText } from '../../lib/ui.tsx';
 import { send, api, getToken, type GameProps } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
 import { t, missingKeys, missingCount, clearMissing } from '../../lib/i18n.ts';
 import FoundryPanel from '../foundry/FoundryPanel.tsx';
 import FoundryUpload from '../admin/FoundryUpload.tsx';
+import DisplaysPanel from '../display/DisplaysPanel.tsx';
 
 const LANG_OPTIONS = [
   { value: 'fr', label: 'Français' }, // i18n-ignore
   { value: 'en', label: 'English' },
 ]; // endonyms: never translated
-
-/** Copy text to the clipboard (falls back to a hidden textarea on non-secure origins, e.g. http://192.168.x.x). */
-async function copyText(text: string): Promise<boolean> {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.select();
-    let ok = false;
-    try {
-      ok = document.execCommand('copy');
-    } catch {}
-    ta.remove();
-    return ok;
-  }
-}
 
 /** Live counter of the texts shown without an English translation (for translators / the GM). */
 function MissingTranslations() {
@@ -201,6 +181,8 @@ export default function SettingsPage({ game }: GameProps) {
           </div>
         </Panel>
       </div>
+
+      <DisplaysPanel game={game} />
 
       <FoundryUpload onChanged={() => setFoundryRev((n) => n + 1)} />
       <FoundryPanel key={foundryRev} game={game} />

@@ -72,6 +72,9 @@ effects index entry only. The server
 filter removes from players' views: tokens not visible to them (and all `hidden` tokens), GM notes, `gmOnly` regions,
 `description`, other maps (players only receive `maps[scene.activeMapId]`), and secret doors (rendered as walls while
 `kind:'secret'` and `state !== 'open'`).
+A table display ([display.md](display.md)) goes through the same filter as a player without characters; only its eyes
+differ: the whole party (every PC in play, every player's explored cells) or one chosen PC (`displayEyes` in
+`shared/display.ts`).
 
 ## Actions
 

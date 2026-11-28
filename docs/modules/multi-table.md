@@ -22,7 +22,8 @@ request finds its table: [architecture.md](../architecture.md#routing); table sc
   `SR_BOOTSTRAP_TABLE=none` (Docker image).
 - **Auth**: sessions stay in each table's `state.sessions`; socket handshake `{ token, table }`; tables never share
   sockets (one socket set + Socket.IO room `table:<id>` per table, per-table 30 ms broadcast). GM/PIN/admin logins are
-  rate-limited per IP.
+  rate-limited per IP. A table display link's token (`state.displays[id].token`) is accepted in the same handshake
+  and resolves to a read-only `display` user of that table ([display.md](display.md)); it never authenticates HTTP.
 - **Module-level state audited for table isolation**: maps vision cache = `WeakMap` keyed by the map object (OK);
   combat undo stack → `WeakMap` keyed by the table state (was one global array); foundry `audioJob` → `Map` by table
   id, world cache keyed by path + fingerprint (OK), journals/assets per table; chummer mugshots → current table's

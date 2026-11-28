@@ -335,6 +335,27 @@ export function Stat({ label, value, title, accent }: { label: ReactNode; value:
   );
 }
 
+/** Copy text to the clipboard (falls back to a hidden textarea on non-secure origins, e.g. http://192.168.x.x). */
+export async function copyText(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try {
+      ok = document.execCommand('copy');
+    } catch {}
+    ta.remove();
+    return ok;
+  }
+}
+
 /** Promise-based confirm (native dialog, keeps things simple). Pass an already translated message: confirmAction(t('…')). */
 export function confirmAction(message: string): Promise<boolean> {
   return Promise.resolve(window.confirm(message));

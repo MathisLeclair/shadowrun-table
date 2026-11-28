@@ -49,6 +49,7 @@ run at the same time.
 | `test-combat.ts` | 3103 | [combat](modules/combat.md) |
 | `test-contacts.ts` | 3962 (inside the `test-demo.ts` range) | [contacts-sins](modules/contacts-sins.md) |
 | `test-crop.ts` | no server | [characters](modules/characters.md#portrait) |
+| `test-display.ts` | 3975 | [display](modules/display.md) |
 | `test-demo.ts` | 3960-3969 (uses 3960-3961; short reset timers through the `SR_DEMO_*` variables) | [demo-table](modules/demo-table.md) |
 | `test-foundry.ts` | 3272 | [foundry](modules/foundry.md) |
 | `test-home.ts` | no server | [lifestyles](modules/lifestyles.md#homes) |

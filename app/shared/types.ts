@@ -19,8 +19,9 @@ import type { TableApi } from '../server/lib/tables.ts';
 /** Milliseconds since the epoch (Date.now()). */
 export type Timestamp = number;
 export type Lang = 'fr' | 'en';
-export type Role = 'gm' | 'player';
-/** A user id: 'gm' for the GM, `usr_…` for players. */
+/** 'display': a read-only table display link (shared screen / projector), see « Table displays » below. */
+export type Role = 'gm' | 'player' | 'display';
+/** A user id: 'gm' for the GM, `usr_…` for players, `display:<id>` for a table display. */
 export type UserId = string;
 export type ActorId = string;
 export type MapId = string;
@@ -83,6 +84,8 @@ export interface SessionUser {
   role: Role;
   name: string;
   characterIds: ActorId[];
+  /** Role 'display' only: id of the display link (`state.displays[id]`). */
+  display?: string;
 }
 
 /** `view.users[id]`: what every client knows about the players. */
@@ -3218,6 +3221,8 @@ export interface TableState {
   chase?: ChaseState;
   /** Target locks and designations (34-vehicles). */
   rigging?: RiggingState;
+  /** Table display links (96-display). */
+  displays?: Record<string, DisplayLink>;
 }
 
 /**
@@ -3265,6 +3270,69 @@ export interface GameView {
   chase?: ChaseState;
   /** Players: their own locks and designations only. */
   rigging?: RiggingState;
+  /** GM only: the table display links (with their tokens). */
+  displays?: Record<string, DisplayLink>;
+  /** GM only: ids of the display links connected right now. */
+  displaysOnline?: string[];
+  /** A table display only: its settings, as the GM set them (no token). */
+  display?: DisplayView;
+}
+
+// =====================================================================================================================
+// Table displays — owner: 96-display.ts (auth in server/index.ts), pure rules in shared/display.ts
+// =====================================================================================================================
+
+/** What a display pane can show: only player-safe content. */
+export type DisplayPane = 'map' | 'initiative' | 'handout' | 'rolls';
+export type DisplayRotation = 0 | 90 | 180 | 270;
+
+/** Panes of a display (the split view of the workspace, set by the GM: the display has no input). */
+export interface DisplayLayout {
+  main: DisplayPane;
+  split: DisplayPane | null;
+  splitDir: 'row' | 'col';
+  /** Share of the main pane, 0.15..0.85. */
+  splitRatio: number;
+}
+
+/** What the GM sets on a display link. */
+export interface DisplaySettings {
+  name: string;
+  /** 'party' = what the whole party sees (and explored), else a PC actor id: that character's point of view. */
+  vision: string;
+  /** Map rotation for a screen laid flat in the table. */
+  rotation: DisplayRotation;
+  /** Black screen (during a reveal). */
+  blank: boolean;
+  /** Initiative strip under the panes while a combat runs. */
+  initiative: boolean;
+  /** Plays the table's ambience and sound effects. */
+  audio: boolean;
+  /** Handout shown full screen over the panes (only one revealed to every player). */
+  handoutId: string | null;
+  layout: DisplayLayout;
+}
+
+/** `state.displays[id]`: a read-only link to the table for a shared screen; revoked by deleting it. */
+export interface DisplayLink extends DisplaySettings {
+  id: string;
+  /** Secret of the link (/t/<slug>/?display=<token>). */
+  token: string;
+  createdAt: Timestamp;
+}
+
+/** `view.display` of a display connection. */
+export interface DisplayView extends DisplaySettings {
+  id: string;
+}
+
+/** Transient 'display/focus' event: the GM's « look here » on the displays' map. */
+export interface DisplayFocus {
+  mapId: MapId;
+  x: number;
+  y: number;
+  /** Cell size in pixels to zoom to at least (0 = keep the zoom). */
+  zoom: number;
 }
 
 // =====================================================================================================================
@@ -3400,6 +3468,8 @@ export interface ServerEvents {
   'assistant:done': { conversationId: string };
   /** A handout was revealed to the player. */
   'campaign/handout': { id: string; title: string };
+  /** The GM asked the table displays to look at a spot of the map. */
+  'display/focus': DisplayFocus;
   /** Foundry import: audio copy progress (GM). */
   'foundry/audio': { total?: number; done?: number; bytes?: number; running: boolean; errors?: unknown[]; error?: string };
 }

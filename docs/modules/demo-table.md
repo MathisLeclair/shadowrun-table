@@ -26,6 +26,8 @@ on.
   `/api/maplib[/<slug>]` (library images: only those of the demo's own maps, checked in 22-maplib). Socket actions
   `foundry/*`, `maps/fromLibrary`, `maps/publishToLibrary`. `/api/admin/reset` on a demo = demo reset. No backups are
   written (`store.backup` is a no-op), the registry name never follows a GM rename.
+- **Allowed** like on any table: table display links ([display.md](display.md)). A demo reset wipes them with the rest
+  of the state (their screens show « link no longer valid »).
 - **Caps**: HTTP bodies need a Content-Length and ≤ 2 MB (uploads ≤ `SR_DEMO_UPLOAD_KB`, 1024); uploads =
   PNG/JPEG/WebP/GIF only, ≤ 200 files and `SR_DEMO_UPLOAD_QUOTA_MB` (20) per table; socket action payload ≤ 128 KB
   serialized, ≤ 120 actions / 10 s per socket, chat lines ≤ 500 characters.

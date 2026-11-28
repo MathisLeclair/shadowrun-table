@@ -31,6 +31,18 @@ type UnauthorizedInfo = { reason?: string } | undefined;
 
 // The table this page belongs to comes from its URL: /t/<slug>/ (null on the picker / admin pages).
 export const TABLE: string | null = (/^\/t\/([a-z0-9-]+)(?:\/|$)/.exec(location.pathname) || [])[1] || null;
+/**
+ * Table display link (/t/<slug>/?display=<token>, docs/modules/display.md): a read-only screen. Its token stays in the
+ * URL and is never stored, so opening a display in a browser where someone is logged in leaves their session alone.
+ */
+export const DISPLAY_TOKEN: string | null = (() => {
+  if (!TABLE) return null;
+  try {
+    return new URLSearchParams(location.search).get('display') || null;
+  } catch {
+    return null;
+  }
+})();
 const LEGACY_TOKEN_KEY = 'sr.token'; // single-table era: adopted by the first table that accepts it
 const TOKEN_KEY = TABLE ? `sr.token.${TABLE}` : LEGACY_TOKEN_KEY;
 let socket: Socket | null = null;
@@ -42,6 +54,7 @@ const stateListeners = new Set<(s: GameView | null) => void>();
 const connListeners = new Set<(v: boolean) => void>();
 
 export function getToken(): string | null {
+  if (DISPLAY_TOKEN) return DISPLAY_TOKEN;
   try {
     return localStorage.getItem(TOKEN_KEY) ?? memToken ?? localStorage.getItem(LEGACY_TOKEN_KEY);
   } catch {
@@ -60,6 +73,7 @@ export function setTableToken(slug: string, t: string): boolean {
 
 /** Store the token; returns false when it could only be kept in memory (blocked storage). */
 export function setToken(t: string | null | undefined): boolean {
+  if (DISPLAY_TOKEN) return false; // a display keeps its link token in the URL
   memToken = t || null;
   try {
     if (t) localStorage.setItem(TOKEN_KEY, t);
@@ -90,6 +104,7 @@ export function connect(onUnauthorized: (info?: UnauthorizedInfo) => void): Sock
   socket.on('connect', () => {
     setConn(true);
     // A legacy token accepted by this table now belongs to it.
+    if (DISPLAY_TOKEN) return;
     try {
       const legacy = localStorage.getItem(LEGACY_TOKEN_KEY);
       if (TOKEN_KEY !== LEGACY_TOKEN_KEY && !localStorage.getItem(TOKEN_KEY) && legacy) setToken(legacy);
