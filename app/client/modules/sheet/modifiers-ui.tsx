@@ -131,7 +131,7 @@ export function effectText(m: SheetModifier): string {
         ? t('Immunity: {what}', { what: RESIST_LABELS[tg] ? t(RESIST_LABELS[tg]) : tg })
         : t('{v} dice to resist: {what}', { v: v(m), what: RESIST_LABELS[tg] ? t(RESIST_LABELS[tg]) : tg });
     case 'flag':
-      return tg === 'smartlink' ? t('Smartlink') : tg === 'unarmedPhysical' ? t('Unarmed attacks deal Physical damage') : tg === 'ambidextrous' ? t('No off-hand penalty') : tg === 'controlRig' ? t('Works as a control rig') : tg === 'painEditor' ? t('Works as a pain editor') : String(tg);
+      return tg === 'smartlink' ? t('Smartlink') : tg === 'unarmedPhysical' ? t('Unarmed attacks deal Physical damage') : tg === 'ambidextrous' ? t('No off-hand penalty') : tg === 'controlRig' ? t('Works as a control rig') : tg === 'painEditor' ? t('Works as a pain editor') : tg === 'lowLightVision' ? t('Low-Light Vision') : tg === 'thermographicVision' ? t('Thermographic Vision') : String(tg);
     case 'allTests':
       return t('{v} dice: every test', { v: v(m) });
     case 'personaAttribute':

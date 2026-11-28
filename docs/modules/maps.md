@@ -63,7 +63,12 @@ types don't say:
 
 `shared/vision.ts`, maps module: line of sight from a token's cell; closed doors and opaque tiles block. Light:
 `bright` → everything in LOS visible; `dim` → visible within 12 cells (24 with lowLight); `dark` → only cells lit by
-`lights[]` or token lights (radius ×2 with lowLight), or within `vision.darkRange` (thermographic = 10 cells). The server
+`lights[]` or token lights (radius ×2 with lowLight), or within `vision.darkRange` (thermographic = 10 cells).
+A token's senses (`tokenVision`): the token's `vision` switches, then the actor's, else derived from the metatype (elf / ork
+low-light, dwarf / troll thermographic) and the catalog effects of its qualities, implants and powers (flags `lowLightVision` /
+`thermographicVision`, hand-written in `tools/lib/effect-overrides.ts`; Chummer has no data for senses). Items the catalog does
+not know fall back to their name (« … low-light … », « thermo… »). The metatype senses (SR5 p. 66), hidden in Chummer, get an
+effects index entry only. The server
 filter removes from players' views: tokens not visible to them (and all `hidden` tokens), GM notes, `gmOnly` regions,
 `description`, other maps (players only receive `maps[scene.activeMapId]`), and secret doors (rendered as walls while
 `kind:'secret'` and `state !== 'open'`).

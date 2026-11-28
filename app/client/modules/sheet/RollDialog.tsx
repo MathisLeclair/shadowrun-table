@@ -15,7 +15,7 @@ import { t, tk, tn, tIfKnown, attrShort, attrLabel, limitLabel } from '../../lib
 import { Overlay, DiceFaces, RollBadges, isGM, ownsActor, skillName, rollLabel } from './common.tsx';
 import { knowledgeAttr } from './sheet-data.ts';
 import { ruleRef } from '/shared/bookrefs.ts';
-import { useModifiers, ModChip, effectText, toggleText, sourceName, loadRollToggles as loadToggles, saveRollToggles as saveToggles, poolModsOf, limitOf, accuracyOf, type ModLine } from './modifiers-ui.tsx';
+import { useModifiers, useEffectsLookup, ModChip, effectText, toggleText, sourceName, loadRollToggles as loadToggles, saveRollToggles as saveToggles, poolModsOf, limitOf, accuracyOf, type ModLine } from './modifiers-ui.tsx';
 import { Select } from '../../lib/ui.tsx';
 import { itemLabel } from './common.tsx';
 import { usesAmmo, isGrenade, fireOptions, isUnarmed } from './inventory.ts';
@@ -164,6 +164,7 @@ export function RollDialog({ game, actor: viewActor, preset: initialPreset = {},
   const gm = isGM(game);
   const actor = viewActor && 'attributes' in viewActor ? viewActor : null; // full sheet (pool preview, label)
   const sheet = actor && !('status' in actor && actor.status) && actor.attributes ? actor : null;
+  const lookup = useEffectsLookup(); // vision senses of the attacker (light modifiers)
   // Weapon attack: the weapon can be switched in the dialog (ready weapons, « afficher tout » for the stowed ones); its skill and label follow.
   const [weaponId, setWeaponId] = useState<string | null>(initialPreset.weaponId || null);
   const [allWeapons, setAllWeapons] = useState(false);
@@ -205,7 +206,7 @@ export function RollDialog({ game, actor: viewActor, preset: initialPreset = {},
       map: amap, from: myToken, to: aimAt, meters: range?.meters ?? cellDistance(myToken, aimAt, Number(amap.metersPerCell) || 1),
       rangeIndex: range ? RANGE_BANDS.findIndex((b) => b.id === range.id) : null, litRatio,
       blasts: activeBlasts((game.attacks?.blasts || []).filter((b) => b.mapId === amap.id), game.combat, Date.now()),
-      senses: attackSenses(sheet, tokenVision(myToken, sheet), weapon),
+      senses: attackSenses(sheet, tokenVision(myToken, sheet, lookup), weapon),
     })
     : null;
   // Gas grenade: the toxin it holds (named in the grenade, else chosen here; CS by default).

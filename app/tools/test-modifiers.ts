@@ -12,6 +12,7 @@ import {
   weaponAccuracy, conditionState, CONDITIONS, gearHasEffects, bonusFromEffects, checkedTest, woundsApply, qualityAutomation,
 } from '../shared/modifiers.ts';
 import { healthStatus } from '../client/modules/sheet/sheet-data.ts';
+import { tokenVision } from '../shared/vision.ts';
 import { parseChum5 } from '../server/lib/chummer/parse.ts';
 import { convertSheet } from '../server/lib/foundry/convert-actor.ts';
 import { derive, attr, skillPool } from '../shared/sr5.ts';
@@ -20,7 +21,7 @@ import { compute, buildActor, emptyDraft } from '../shared/chargen.ts';
 import * as rules from '../client/modules/shop/rules.ts';
 import type { ConvertedSheet, FoundryWeapon } from '../server/lib/foundry/convert-actor.ts';
 import type { EffectsIndex, LineState } from '../shared/modifiers.ts';
-import type { Actor, Augmentation, CatalogFile, CatalogItem, CatalogStats, DraftData, Effect, Gear, Quality, RollModLine, RollRecord, WeaponStats } from '../shared/types.ts';
+import type { Actor, ActorLike, Augmentation, CatalogFile, CatalogItem, CatalogStats, DraftData, Effect, Gear, Quality, RollModLine, RollRecord, WeaponStats } from '../shared/types.ts';
 
 /**
  * 'dice/roll' result as these tests read it: mods and breakdowns are always present on a sheet roll. The line state is
@@ -447,6 +448,22 @@ await test('normalizer: creation-only tags → chargen, reputation / living pers
   assert.ok(!collectModifiers(actorWith([{ name: 'Magician', catalogId: qByName('Magician').id }]), lookup).length, 'chargen effects never become modifiers');
 });
 
+await test('vision senses come from catalog effects (flag lowLightVision / thermographicVision), names only for unknown items', () => {
+  const v = (a: Partial<ActorLike>, lk: typeof lookup | null = lookup) => tokenVision(null, { metatype: 'Humain', ...a } as ActorLike, lk);
+  assert.equal(v({ qualities: [{ name: 'Low-Light Vision' }] } as Partial<ActorLike>).lowLight, true, 'metatype quality (index-only entry)');
+  assert.equal(v({ qualities: [{ name: 'Night Vision' }] } as Partial<ActorLike>).lowLight, true, 'Night Vision (RF 148) grants low-light');
+  assert.equal(v({ qualities: [{ name: 'Nocturne' }] } as Partial<ActorLike>).lowLight, false, 'Nocturnal (French « Nocturne »): a sleep cycle, not a sense');
+  assert.equal(v({ qualities: [{ name: 'Nocturne' }] } as Partial<ActorLike>, null).lowLight, true, 'without the index: the old name guess');
+  assert.equal(v({ qualities: [{ name: 'Thermal Sensitivity' }] } as Partial<ActorLike>).thermo, false);
+  assert.equal(v({ qualities: [{ name: 'Thermographic Vision (SURGE)' }] } as Partial<ActorLike>).thermo, true);
+  assert.equal(v({ augmentations: [{ name: 'Thermographic Vision' }] } as Partial<ActorLike>).thermo, true, 'eye implant (SR5 p. 453)');
+  assert.equal(v({ augmentations: [{ name: 'Targeting Laser (Infrared)' }] } as Partial<ActorLike>).thermo, false, 'a laser, not a sense');
+  assert.equal(v({ augmentations: [{ name: 'Thermographic Vision', disabled: true }] } as Partial<ActorLike>).thermo, false, 'disabled implant');
+  assert.equal(v({ augmentations: [{ name: 'Yeux de chat (vision nocturne)' }] } as Partial<ActorLike>).lowLight, true, 'home-made item: name guess');
+  assert.equal(v({ qualities: [{ name: 'Low-Light Vision' }], vision: { lowLight: false } } as Partial<ActorLike>).lowLight, false, 'the sheet switch wins');
+  assert.equal(tokenVision(null, { metatype: 'Troll' } as ActorLike, lookup).thermo, true, 'metatype');
+});
+
 await test('automation status: index `manual` and qualityAutomation() (automated, partly, not automated, creation only, home-made)', () => {
   const st = (n: string) => qualityAutomation({ catalogId: qByName(n).id, name: n }, lookup);
   assert.equal(st('Toughness'), 'auto');
@@ -457,6 +474,13 @@ await test('automation status: index `manual` and qualityAutomation() (automated
   assert.equal(st('Addiction (Mild)'), 'all', 'notoriety alone does not make it automated');
   assert.equal(qualityAutomation({ name: 'Régénération Lazarus' }, lookup), 'custom');
   assert.equal(qualityAutomation({ name: 'Gremlins' }, lookup), 'all', 'matched by name (Foundry imports)');
+  // Metatype senses (SR5 p. 66): hidden in Chummer, index entry only, so not « home-made »
+  assert.equal(qualityAutomation({ name: 'Low-Light Vision' }, lookup), 'auto');
+  assert.equal(qualityAutomation({ name: 'Thermographic Vision' }, lookup), 'auto');
+  assert.equal(qualityAutomation({ name: 'Vision nocturne' }, lookup), 'auto', 'the app’s French name');
+  assert.equal(st('Night Vision'), 'some', 'sun glare left to the GM');
+  assert.equal(st('Low-Light Vision (Changeling)'), 'auto');
+  assert.equal(st('Thermal Sensitivity'), 'all', 'a heat sense, not thermographic vision');
   const cov = fs.readFileSync(path.join(ROOT, 'data', 'catalog', 'qualities-coverage.md'), 'utf8');
   assert.match(cov, /\| Gremlins \| SR5 81 \|/);
   assert.match(cov, /## Not automated \(\d+\)/);

@@ -15,6 +15,7 @@
 //   segment (endpoints included, so walls meeting at a cell corner also stop diagonal squeezing).
 
 import type { ActorLike, DoorState, Lighting, MapDoor, MapWall, Point, Token, TokenVision } from './types.ts';
+import type { ModifierLookup } from './modifiers.ts';
 
 /** One tile of the legend. */
 export interface TileInfo {
@@ -494,17 +495,51 @@ const THERMO_RE = /thermo|infra[\s-]?rouge|infra[\s-]?red/i;
 const LOWLIGHT_META: string[] = ['elfe', 'elf', 'ork', 'orc'];
 const THERMO_META: string[] = ['nain', 'dwarf', 'troll'];
 
-/** { lowLight, thermo, darkRange } for a token, from token.vision, actor.vision, metatype, qualities and 'ware names. */
-export function tokenVision(token: { vision?: TokenVision | null } | null | undefined, actor?: ActorLike | null): ResolvedVision {
+type VisionItem = { name?: string; nameFr?: string; catalogId?: string; disabled?: boolean } | null | undefined;
+/** Catalog files of the actor lists that can grant vision (same as shared/modifiers.ts SOURCE_FILES). */
+const VISION_SOURCES: Array<['qualities' | 'augmentations' | 'powers', string[]]> = [['qualities', ['qualities']], ['augmentations', ['cyberware', 'bioware']], ['powers', ['powers']]];
+
+/**
+ * Senses granted by the actor's metatype, qualities, 'ware and powers. A catalog item grants exactly what its effects say
+ * (flag lowLightVision / thermographicVision, tools/lib/effect-overrides.ts); an item the catalog does not know (home-made,
+ * imported under another name) or any item when no lookup is given falls back to its name (« … low-light … », « thermo… »).
+ */
+function derivedSenses(actor: ActorLike | null | undefined, lookup: ModifierLookup | null | undefined): { lowLight: boolean; thermo: boolean } {
+  const meta = String(actor?.metatype || '').trim().toLowerCase();
+  const out = { lowLight: LOWLIGHT_META.includes(meta), thermo: THERMO_META.includes(meta) };
+  for (const [list, files] of VISION_SOURCES) {
+    for (const it of ((actor as Record<string, unknown> | null | undefined)?.[list] || []) as VisionItem[]) {
+      if (!it || it.disabled) continue;
+      let entry = null;
+      if (lookup) for (const f of files) if ((entry = lookup(f, it.catalogId, it.name) || (it.nameFr ? lookup(f, null, it.nameFr) : null))) break;
+      if (entry) {
+        for (const e of entry.effects || []) {
+          if (e.type !== 'flag') continue;
+          if (e.target === 'lowLightVision') out.lowLight = true;
+          else if (e.target === 'thermographicVision') out.thermo = true;
+        }
+        continue;
+      }
+      const names = `${it.name || ''} | ${it.nameFr || ''}`;
+      if (LOWLIGHT_RE.test(names)) out.lowLight = true;
+      if (THERMO_RE.test(names)) out.thermo = true;
+    }
+  }
+  return out;
+}
+
+/**
+ * { lowLight, thermo, darkRange } for a token: token.vision, then actor.vision (explicit switches win), else the senses of
+ * its metatype and items (derivedSenses). lookup = the effects index (shared/modifiers.ts lookupFromIndex).
+ */
+export function tokenVision(token: { vision?: TokenVision | null } | null | undefined, actor?: ActorLike | null, lookup?: ModifierLookup | null): ResolvedVision {
   const tv: TokenVision = token?.vision || {};
   const av: TokenVision = actor?.vision || {};
-  const meta = String(actor?.metatype || '').trim().toLowerCase();
-  const names = [...(actor?.qualities || []), ...(actor?.augmentations || []), ...(actor?.powers || [])]
-    .map((q: { name?: string } | null) => (q && q.name) || '')
-    .join(' | ');
-  const pick = (a: unknown, b: unknown, derived: boolean): unknown => (typeof a === 'boolean' ? a : typeof b === 'boolean' ? b : derived);
-  const lowLight = pick(tv.lowLight, av.lowLight, LOWLIGHT_META.includes(meta) || LOWLIGHT_RE.test(names));
-  const thermo = pick(tv.thermo, av.thermo, THERMO_META.includes(meta) || THERMO_RE.test(names));
+  const pick = (a: unknown, b: unknown, derived: () => boolean): unknown => (typeof a === 'boolean' ? a : typeof b === 'boolean' ? b : derived());
+  let senses: { lowLight: boolean; thermo: boolean } | null = null;
+  const derived = () => (senses ||= derivedSenses(actor, lookup));
+  const lowLight = pick(tv.lowLight, av.lowLight, () => derived().lowLight);
+  const thermo = pick(tv.thermo, av.thermo, () => derived().thermo);
   const rawRange: unknown = tv.darkRange ?? av.darkRange; // may be '' in stored data
   const darkRange = rawRange != null && rawRange !== '' && !Number.isNaN(Number(rawRange)) ? Math.max(0, Number(rawRange)) : thermo ? THERMO_RANGE : 0;
   return { lowLight: !!lowLight, thermo: !!thermo, darkRange };
@@ -607,6 +642,7 @@ export function computeVisibility(
   viewerTokens: Array<VisionToken | null | undefined> | null | undefined,
   actorsById: VisionActors | null = {},
   vctx: VisionContext | null = null,
+  lookup: ModifierLookup | null = null,
 ): Uint8Array {
   const ctx = vctx || createVisionContext(map);
   const { grid, litRatio } = ctx;
@@ -617,7 +653,7 @@ export function computeVisibility(
     if (!tok) continue;
     const ox = tok.x | 0, oy = tok.y | 0;
     if (ox < 0 || oy < 0 || ox >= w || oy >= h) continue;
-    const tv = tokenVision(tok, actorsById?.[tok.actorId as string]);
+    const tv = tokenVision(tok, actorsById?.[tok.actorId as string], lookup);
     const e = viewerLos(ctx, ox, oy);
     if (lighting === 'bright') {
       for (let i = 0; i < n; i++) if (!out[i] && losAt(grid, e, ox, oy, i)) out[i] = 1;
@@ -647,12 +683,13 @@ export function visibilityForUser<M extends VisionMap>(
   user: { characterIds?: string[] | null } | null | undefined,
   actors: VisionActors | null | undefined,
   vctx: VisionContext | null = null,
+  lookup: ModifierLookup | null = null,
 ): { visible: Uint8Array; viewers: NonNullable<M['tokens']>[number][] } {
   const viewers = viewersForUser(map as { tokens?: NonNullable<M['tokens']>[number][] | null; sharedVision?: boolean }, user, actors);
   const n = (map.width | 0) * (map.height | 0);
   if (map.fog === false) return { visible: new Uint8Array(n).fill(1), viewers };
   if (!viewers.length) return { visible: new Uint8Array(n), viewers };
-  return { visible: computeVisibility(map, viewers, actors, vctx), viewers };
+  return { visible: computeVisibility(map, viewers, actors, vctx, lookup), viewers };
 }
 
 /** True if any cell covered by the token is set in the mask. */

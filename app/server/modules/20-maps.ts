@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { uid, deepClone } from '../../shared/util.ts';
 import { derive } from '../../shared/sr5.ts';
+import { effectsLookup } from '../lib/modifiers.ts';
 import {
   isTileChar, buildGrid, findPath, pathLength, createVisionContext, visibilityForUser, viewersForUser,
   tokenInMask, encodeBits, decodeBits, orBits, remapBits, isPcToken, stepBlocked, wallMidpoint, pointSegmentDistance,
@@ -330,7 +331,7 @@ export function refreshFog(state: TableState, map: GameMap | null | undefined): 
   for (const u of playerUsers(state)) {
     if (!viewersForUser(map, u, state.actors).length) continue;
     vctx ||= visionContext(map);
-    const { visible } = visibilityForUser(map, u, state.actors, vctx);
+    const { visible } = visibilityForUser(map, u, state.actors, vctx, effectsLookup());
     const explored = decodeBits(map.explored[u.id], n);
     if (orBits(explored, visible) || !map.explored[u.id]) map.explored[u.id] = encodeBits(explored);
   }
@@ -449,7 +450,7 @@ function doMove(ctx: ActionContext, map: GameMap, token: Token, x: unknown, y: u
     if (map.movementLocked) ctx.fail('The GM has locked movement');
     // Players may only walk through cells they know (explored or currently visible), around visible non-allied tokens.
     const n = map.width * map.height;
-    const { visible } = visibilityForUser(map, ctx.user, ctx.state.actors, visionContext(map));
+    const { visible } = visibilityForUser(map, ctx.user, ctx.state.actors, visionContext(map), effectsLookup());
     const known = map.fog === false ? null : decodeBits(map.explored[ctx.user.id], n);
     if (known) orBits(known, visible);
     const blockers: Point[] = [];
@@ -1141,7 +1142,7 @@ const mod: ServerModule = {
     const { width: w, height: h } = full;
     const n = w * h;
     const fogOn = full.fog !== false;
-    const { visible } = visibilityForUser(full, user, state.actors, visionContext(full));
+    const { visible } = visibilityForUser(full, user, state.actors, visionContext(full), effectsLookup());
     const known = fogOn ? decodeBits(full.explored?.[user.id], n) : new Uint8Array(n).fill(1);
     orBits(known, visible);
 
