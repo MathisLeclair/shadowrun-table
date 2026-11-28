@@ -673,6 +673,7 @@ try {
     ok(searchMinutes('limited', 3) === 30 && searchMinutes('limited', 5) === 15 && searchMinutes('hidden', 2) === 720 && searchMinutes('public', 4) === 1 / 3, 'search time: base ÷ hits above the threshold');
     ok(searchMinutes('hidden', 8, true) === 0.5, 'search inside a host: base time 1 minute');
     const inHost = !!P().hostId;
+    await gm.send('matrix/testDice', { mode: 'actor' }); // loaded dice: the search reaches its threshold of 3
     res = await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'matrixSearch', searchLevel: 'limited', topic: 'Adresse de M. Johnson' });
     await settle();
     const srv = Object.values(M().reveals || {}).find((r) => r.actionId === 'matrixSearch')!;
