@@ -30,7 +30,8 @@ xml, mugshots, diff, summary, warnings, status }] }` (`ChummerState`, `ChummerRe
 - Import `.chum5` → Actor (the original XML is kept in `actor.chummer = { xml, fileName, importedAt }`); `parse.ts`
   stores `<source>`/`<page>` on items and nested items ([book-refs.md](book-refs.md)) and the attribute / initiative
   bonuses from `<totalvalue>` and improvements ([rules/modifiers-stacking.md](../rules/modifiers-stacking.md#no-double-counting));
-  `select…` effects get `item.choice` from `<extra>`.
+  `select…` effects get `item.choice` from `<extra>`. A child implant (cybereye enhancement…) costs no essence unless
+  `<addtoparentess>` is true, as in Chummer's totals.
 - Export Actor → `.chum5`: patches the stored original when present (karma, nuyen, attributes, skill ratings,
   condition, new/removed gear by Chummer `sourceid` = catalog id), otherwise generates a new file from the skeleton
   `server/lib/chummer/skeleton.chum5` (a copy of `tools/fixtures/chummer-test.chum5`). After opening an exported file in
@@ -52,3 +53,21 @@ formulas: Rating, Capacity, Body…, `FixedValues`, `div`, `mod`, `number()`).
 - Re-import (merge.ts): nested lists are merged entry by entry by `chummerGuid` like the parent lists (app ids kept;
   entries added in the app since the last sync survive an upload that did not touch them); `sameItem` ignores nested
   ids. Quality `<basemultiplier>` ↔ `baseOnly`. `lifestyle.home` is app-only and kept ([lifestyles.md](lifestyles.md#homes)).
+
+## Migrating a Foundry PC onto its Chummer file
+
+The Lazarus PCs came into the app from Foundry, whose Chummer import had lost structure (ware grade and subsystems,
+nested gear, vehicles, languages, guids, portraits), while Foundry holds what changed in play after the old Chummer
+file. `node tools/migrate-chummer-foundry.ts --actor <id>` merges both (rules in `tools/lib/chummer-foundry-merge.ts`):
+- matched items (chummerGuid, catalogId — also across lists —, name, SIN choice, English name in the Foundry notes;
+  same-catalog items paired by quantity first) take the Chummer item but keep the app id and play state (`qty`,
+  `equipped`, contact ratings, burned SIN, gear rating…); nested entries merged by catalogId / name;
+- Chummer-only items are restored (top-level ones with the note « Restauré depuis Chummer (fichier du …) — à vérifier »,
+  children and subsystems without), app-only items stay, lifestyles stay the app's;
+- karma, nuyen, attributes, skill ratings and condition stay the app's; street cred = Chummer's with the app career
+  karma; a GM note and a history line « Migrated from Chummer ({file}, {date}) and Foundry » are added.
+- `--seed` rewrites `data/seed/actors/pcs.json` (Chummer link without XML or portraits: `*.chum5` stays out of git);
+  `--url <server> [--table] --password` replaces the actor on a running table through `actor/update` (XML stored,
+  mugshots uploaded); `--dry-run` prints the report only; an actor already linked to that file is skipped (`--force`).
+  The file and its date default to `chummerFile` / `chummerDate` of `data/seed/upgrades-restore.json`.
+- Done: Christopher Armingstar (2026-11-28).

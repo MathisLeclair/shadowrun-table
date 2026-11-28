@@ -431,7 +431,9 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
     const mult = grades[gradeName]?.ess ?? (/alpha/i.test(gradeName) ? 0.8 : /beta/i.test(gradeName) ? 0.7 : /delta/i.test(gradeName) ? 0.5 : /used/i.test(gradeName) ? 1.25 : 1);
     const rawEss = cw.val('ess');
     const base = /^[\d.,\s]+$/.test(rawEss) ? num(rawEss) : evalFormula(rawEss.replace(/\[|\]/g, ''), rating || 1);
-    const ess = Math.round((base || 0) * mult * 10000) / 10000;
+    // A child implant (cybereye enhancement, cyberlimb part…) costs no essence of its own unless Chummer adds it to the
+    // parent's (<addtoparentess>): it uses the parent's capacity, as in Chummer's totals.
+    const ess = parentName && !bool(cw.val('addtoparentess')) ? 0 : Math.round((base || 0) * mult * 10000) / 10000;
     essLoss += ess;
     const g = gradeName.toLowerCase();
     const side = cw.val('location');

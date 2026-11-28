@@ -115,7 +115,8 @@ function cleanColor(v: unknown): string | null {
 function cleanUrl(v: unknown): string | null {
   const s = String(v || '').trim();
   if (!s) return '';
-  if (/^(\/uploads\/|\/assets\/|https?:\/\/)/.test(s)) return s.slice(0, 500);
+  // Legacy / global (/uploads, /assets) or a table's own files (/t/<slug>/uploads, /t/<slug>/assets).
+  if (/^((\/t\/[a-z0-9-]+)?\/(uploads|assets)\/|https?:\/\/)/.test(s)) return s.slice(0, 500);
   return null;
 }
 
