@@ -956,6 +956,31 @@ for (const [name, list] of Object.entries(files)) {
   console.log(`${name.padEnd(18)} ${String(items.length).padStart(5)} items  ${(Buffer.byteLength(json) / 1024).toFixed(0).padStart(5)} KB`);
 }
 fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify(index, null, 1));
+
+// Magical traditions (not a shop catalog, so not in index.json): drain attribute and the spirit of each spell category.
+// Read by server/lib/traditions.ts and the client (/catalog/traditions.json). Shape: shared/magic.ts TraditionDef.
+{
+  const x = readXml(path.join(CHUMMER, 'traditions.xml'));
+  const out: Array<{ name: string } & Record<string, unknown>> = [];
+  for (const t of arr(x.traditions?.tradition)) {
+    if (hidden(t)) continue;
+    const name = clean(txt(t.name));
+    // '{WIL} + {LOG}' → 'LOG' (the second attribute; WIL is always the first). Custom / Toxic have none.
+    const drain = (txt(t.drain).match(/\{WIL\}\s*\+\s*\{([A-Z]{3})\}/) || [])[1];
+    const s = t.spirits || {};
+    const spirits = lean({
+      combat: txt(s.spiritcombat) || undefined, detection: txt(s.spiritdetection) || undefined, health: txt(s.spirithealth) || undefined,
+      illusion: txt(s.spiritillusion) || undefined, manipulation: txt(s.spiritmanipulation) || undefined,
+    });
+    out.push(lean({
+      id: txt(t.id), name, nameFr: french('traditions', txt(t.id), name), drain,
+      spirits: Object.keys(spirits).length ? spirits : undefined, source: txt(t.source), page: num(txt(t.page)),
+    }));
+  }
+  out.sort((a, b) => (a.name === 'Custom' ? -1 : b.name === 'Custom' ? 1 : a.name.localeCompare(b.name)));
+  fs.writeFileSync(path.join(OUT, 'traditions.json'), JSON.stringify(out));
+  console.log(`${'traditions'.padEnd(18)} ${String(out.length).padStart(5)} items`);
+}
 console.log('\nDropped:');
 for (const [k, v] of Object.entries(stats.dropped).sort()) console.log(`  ${k}: ${v}`);
 

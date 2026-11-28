@@ -17,6 +17,8 @@ import CampaignPage from './campaign/CampaignPage.tsx';
 import DossiersPage from './campaign/DossiersPage.tsx';
 import SettingsPage from './core/SettingsPage.tsx';
 import MatrixPage from './matrix/MatrixPage.tsx';
+import MagicPage from './magic/MagicPage.tsx';
+import { isAwakened } from '/shared/magic.ts';
 import CityPage from './city/CityPage.tsx';
 import ChargenPage from './chargen/ChargenPage.tsx';
 import NotesPage from './notes/NotesPage.tsx';
@@ -54,6 +56,7 @@ export const mainTabs: TabEntry[] = [
   { id: 'maps', label: tk('Maps'), icon: '▦', roles: ['gm'], component: MapsPage },
   { id: 'city', label: tk('Seattle'), icon: '⌂', roles: ['gm', 'player'], component: CityPage, visible: (g) => g.me.role === 'gm' || !!g.city?.map },
   { id: 'matrix', label: tk('Matrix'), icon: '⌬', roles: ['gm', 'player'], component: MatrixPage },
+  { id: 'magic', label: tk('Magic'), icon: '✦', roles: ['gm', 'player'], component: MagicPage, visible: (g) => g.me.role === 'gm' || (g.me.characterIds || []).some((id) => { const a = g.actors?.[id]; return !!a && 'attributes' in a && isAwakened(a); }) },
   { id: 'chargen', label: tk('Creation'), icon: '✚', roles: ['gm', 'player'], component: ChargenPage, badge: (g) => (g.me.role === 'gm' ? pending(g.chargen?.drafts) : null) },
   { id: 'shop', label: tk('Shop'), icon: '¥', roles: ['gm', 'player'], component: ShopPage, badge: (g) => (g.me.role === 'gm' ? pending(g.shop?.orders) : null) },
   { id: 'training', label: tk('Advancement'), icon: '▲', roles: ['gm', 'player'], component: TrainingPage, badge: (g) => (g.me.role === 'gm' ? pending(g.training?.requests) : null) },

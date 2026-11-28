@@ -60,6 +60,7 @@ run at the same time.
 | `test-maps.ts` | 3201 | [maps](modules/maps.md) |
 | `test-maptrace.ts` | no server (3900-3909 stay free) | `tools/maptrace/` |
 | `test-markdown.ts` | no server | [architecture](architecture.md#security-rules) |
+| `test-magic.ts` | 3650 | [magic](modules/magic.md) |
 | `test-matrix.ts` | 3600 | [matrix](modules/matrix.md) |
 | `test-modifiers.ts` | 3500 (inside the `test-tables.ts` range) | [modifiers](modules/modifiers.md) |
 | `test-notes.ts` | 3150-3199 | [notes](modules/notes.md) |

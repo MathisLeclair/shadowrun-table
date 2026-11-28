@@ -170,6 +170,9 @@ export function mergeActor(currentActor: Actor, theirsActor: ParsedActor, baseAc
   const edge = pick3(current.edge?.current, theirs.edge?.current, base?.edge?.current, hasBase);
   m.edge = { ...(current.edge || {}), current: Math.max(0, Math.min(m.attributes.EDG ?? 0, Number(edge) || 0)) };
 
+  // Tradition (actor.magic.tradition, 47-magic): Chummer's wins when it changed; never erased by a file without one.
+  const tradition = pick3(current.magic?.tradition, theirs.magic?.tradition, base?.magic?.tradition, hasBase) ?? current.magic?.tradition;
+  if (tradition) m.magic = { ...(current.magic || {}), tradition };
   m.skills = mergeSkills(current.skills, theirs.skills, base?.skills || null);
   const oursGuids = new Set<string>();
   for (const l of LISTS) for (const it of Array.isArray(current[l]) ? current[l] : []) if (it?.chummerGuid) oursGuids.add(it.chummerGuid);

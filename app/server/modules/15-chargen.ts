@@ -15,6 +15,7 @@ import { normalizeActor } from '../../client/modules/sheet/sheet-data.ts';
 import combat, { sanitizeTemplate } from './30-combat.ts';
 import { formatSource } from '../lib/i18n.ts';
 import { fillActorRefs } from '../lib/bookrefs.ts';
+import { actorTradition } from '../lib/traditions.ts';
 import type {
   ActionContext, Actor, ActorId, CatalogFile, CatalogItem, ChargenDraft, ChargenState, DraftData, GameView, I18nMessage, I18nParams, MapId, ServerEvents,
   ServerModule, SessionUser, TableState, Template, UserId,
@@ -168,6 +169,10 @@ function createActor(ctx: ActionContext, data: DraftData, { type = 'pc', assignT
   }
   normalizeActor(actor, (prefix: string) => ctx.uid(prefix));
   fillActorRefs(actor); // 📖 source / page of the bought gear, qualities, spells, powers, complex forms
+  // Tradition (magicians, mystic adepts, aspected): the Chummer tradition of data/catalog/traditions.json (47-magic).
+  const mtype = result.data.magic?.type;
+  const tradition = mtype && mtype !== 'none' && mtype !== 'adept' && mtype !== 'technomancer' ? actorTradition(result.data.magic.tradition) : null;
+  if (tradition) actor.magic = { ...(actor.magic || {}), tradition };
   actor.edge.current = actor.attributes.EDG;
   state.actors[id] = actor;
   if (owner) {

@@ -25,7 +25,7 @@ app/
   shared/util.ts         uid(), clamp(), deepClone(), nuyen(), slug()                   (core-owned)
   shared/sr5.ts          SR5 rules: attributes, SKILLS, derive(), rollDice(), skillPool() (core-owned)
   shared/*.ts            other pure modules usable by server AND browser (no Node/DOM APIs):
-                         vision.ts (maps), advancement.ts (training), matrix.ts (Matrix rules), chargen.ts (priority creation),
+                         vision.ts (maps), advancement.ts (training), matrix.ts (Matrix rules), magic.ts (magic rules), chargen.ts (priority creation),
                          npcgen.ts (enemy generator), combat.ts (attacks), modifiers.ts, lifestyle.ts, home.ts, sins.ts,
                          contacts.ts, bookrefs.ts, maplib.ts
   client/index.html      page shell, loads app.tsx (Vite)                               (core-owned)
@@ -73,6 +73,7 @@ Run: `npm start` (port 3000, or `PORT=xxxx`). A fresh install has one table « l
 | `33-attacks.ts` | `combat/AttackTray.tsx` | [modules/attacks.md](modules/attacks.md) |
 | `40-shop.ts` | `shop/` | [shop](modules/shop.md), [shop upgrades](modules/shop-upgrades.md) |
 | `45-matrix.ts` | `matrix/` | [modules/matrix.md](modules/matrix.md) |
+| `47-magic.ts` | `magic/` | [modules/magic.md](modules/magic.md) |
 | `50-training.ts` | `training/` | [modules/training.md](modules/training.md) |
 | `60-audio.ts` | `audio/` | [modules/audio.md](modules/audio.md) |
 | `70-campaign.ts` | `campaign/` | [modules/campaign.md](modules/campaign.md) |
@@ -199,6 +200,7 @@ player opens a handout so the « Dossiers » badge refreshes), `targetTokenId` /
 | campaign/CampaignPage.tsx | `({game})` GM campaign: acts, quests, sessions, handouts, docs, notes | main tab `campaign` |
 | campaign/DossiersPage.tsx | `({game})` player handouts + recap | main tab `dossiers` |
 | matrix/MatrixPage.tsx | `({game})` decker cockpit (players) / Matrix overview, hosts & IC (GM) | main tab `matrix` |
+| magic/MagicPage.tsx | `({game})` cockpit of an awakened character (players) / overview + cockpit (GM) | main tab `magic` |
 | chargen/ChargenPage.tsx | `({game})` priority character creator (players) / approval queue (GM) | main tab `chargen` |
 | notes/NotesPage.tsx | `({game})` private notes + collaborative party notes (see [notes](modules/notes.md)) | main tab `notes` |
 | books/BooksPage.tsx | `({game})` rulebooks: search, common rules, library (see [books](modules/books.md)) | main tab `books` |
