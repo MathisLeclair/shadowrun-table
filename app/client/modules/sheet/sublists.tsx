@@ -106,8 +106,9 @@ export function SubChips({ sub, items, empty }: { sub: string; items: AnyItem[] 
     {list.map((x) => {
     const fx = subEffect(sub, x);
     const title = [x.rating ? t('Rating {n}', { n: x.rating }) : '', x.mount !== undefined && sub === 'accessories' ? mountLabel(x.mount) : '', x.included ? t('built-in') : '', x.notes || ''].filter(Boolean).join(' · ');
-    return <span className={'sh-subchip' + (x.included ? ' incl' : '') + (x.equipped === false ? ' off' : '')} key={x.id} title={title}>
-      {itemName(x)}{x.rating ? ` ${x.rating}` : ''}{fx ? <>{' '}<i>{fx}</i></> : null}
+    const mount = sub === 'accessories' && !x.included && x.mount ? <span className="sh-subchip-mount">{mountLabel(x.mount)}</span> : null;
+    return <span className={'sh-subchip' + (x.included ? ' incl' : '') + (x.equipped === false ? ' off' : '')} key={x.id} title={[title, x.equipped === false ? t('off') : ''].filter(Boolean).join(' · ')}>
+      {mount}{itemName(x)}{x.rating ? ` ${x.rating}` : ''}{fx ? <>{' '}<i>{fx}</i></> : null}
       <ItemRef item={x} />
     </span>;
   })}

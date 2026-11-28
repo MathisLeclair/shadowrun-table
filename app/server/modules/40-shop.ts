@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { nuyen, deepClone } from '../../shared/util.ts';
 import {
   SHOP_FILES, FILE_LABELS, GRADES, DEVICE_GEAR, UPGRADE_FILES, quote, targetList, parseAvailString, itemName,
-  evalFormula, magicLoss, allowedGrades, fold, accessoryFit, accessoryEffects, armorCapacity, armorModFit, vehicleVars,
+  evalFormula, magicLoss, allowedGrades, fold, accessoryFit, accessoryMoveProblem, MOUNT_LABELS, accessoryEffects, armorCapacity, armorModFit, vehicleVars,
   vehicleModFit, vehicleModEffects, vehicleModMaxRating, martialKarma, lowersRent, upgradeAvail,
   AVAIL_TEST_MODES, availTestable, needsAvailTest, availBaseHours, availOutcome, durationText, matchAvailTests, clampOverpay, overpaySurcharge,
 } from '../../client/modules/shop/rules.ts';
@@ -1025,6 +1025,13 @@ interface RemoveUpgradePayload {
   itemId?: string;
   subId?: string;
 }
+interface SetAccessoryPayload {
+  actorId?: ActorId;
+  weaponId?: string;
+  subId?: string;
+  equipped?: boolean;
+  mount?: string;
+}
 interface ResolvePayload {
   orderId?: string;
   approve?: boolean;
@@ -1374,6 +1381,45 @@ const mod: ServerModule = {
         history(actor, tk('Option removed: {item} ({target})'), params, 0);
         shopLog(ctx, actor.id, tk('{actor} removes {item} from {target}'), params);
         return { ok: true, monthlyCost: list === 'lifestyles' ? it.monthlyCost : undefined };
+      },
+    },
+
+    // Switch an installed weapon accessory on / off, or move it to another free mount point (owner or GM; built-in parts
+    // can be switched, never moved). { actorId, weaponId, subId, equipped?: bool, mount?: 'Top'|'Under'|'Barrel'|'Stock'|'Side' }
+    'shop/setAccessory': {
+      role: 'any',
+      handler(ctx: ActionContext, { actorId, weaponId, subId, equipped, mount }: SetAccessoryPayload) {
+        const actor = getActor(ctx, actorId);
+        const weapon: Loose | undefined = (Array.isArray(actor.weapons) ? actor.weapons : []).find((x: Loose) => x && x.id === weaponId);
+        if (!weapon) return ctx.fail('Item not found in the inventory');
+        const acc: Loose | undefined = (Array.isArray(weapon.accessories) ? weapon.accessories : []).find((x: Loose) => x && x.id === subId);
+        if (!acc) return ctx.fail('Option not found');
+        if (equipped === undefined && mount === undefined) ctx.fail('Nothing to change');
+        const params = { actor: actor.name, item: { fr: acc.nameFr || acc.name, en: acc.name }, target: weapon.name };
+        let moved: string | null = null;
+        if (mount !== undefined) {
+          const m = str(mount, 20);
+          if (m !== acc.mount) {
+            const cat = catalogOf(weapon)?.item || null;
+            const accEntry = acc.catalogId ? INDEX.get(acc.catalogId) : BY_NAME.get(fold(acc.name || ''));
+            const accCat = accEntry?.file === 'accessories' ? accEntry.item : null;
+            // Same as installUpgrade: a weapon bought before weapon.mounts existed takes its catalog mounts.
+            if (!Array.isArray(weapon.mounts) && Array.isArray(cat?.stats?.mounts)) weapon.mounts = [...cat.stats.mounts];
+            const problem = accessoryMoveProblem(weapon, cat, acc, accCat, m);
+            if (problem) failWith(ctx, problem);
+            acc.mount = m;
+            moved = m;
+          }
+        }
+        let switched: boolean | null = null;
+        if (equipped !== undefined && (acc.equipped !== false) !== !!equipped) {
+          if (equipped) delete acc.equipped;
+          else acc.equipped = false;
+          switched = !!equipped;
+        }
+        if (moved !== null) shopLog(ctx, actor.id, tk('{actor} moves {item} to the {mount} mount of {target}'), { ...params, mount: { t: MOUNT_LABELS[moved] || moved } });
+        if (switched !== null) shopLog(ctx, actor.id, switched ? tk('{actor} switches on {item} ({target})') : tk('{actor} switches off {item} ({target})'), params);
+        return { mount: acc.mount, equipped: acc.equipped !== false };
       },
     },
 

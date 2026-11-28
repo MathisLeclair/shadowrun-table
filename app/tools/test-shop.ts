@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { login, client, settle } from './test-client.ts';
 import type { TestClient } from './test-client.ts';
-import { accessoryFit, weaponMounts, vehicleModFit, vehicleVars, vehicleSlots, upgradeAvail, upgradeFields, martialKarma, quote, lowersRent, availBaseHours, availOutcome, durationText, matchAvailTests, needsAvailTest } from '../client/modules/shop/rules.ts';
+import { accessoryFit, accessoryMoves, weaponSlots, weaponMounts, vehicleModFit, vehicleVars, vehicleSlots, upgradeAvail, upgradeFields, martialKarma, quote, lowersRent, availBaseHours, availOutcome, durationText, matchAvailTests, needsAvailTest } from '../client/modules/shop/rules.ts';
 import type { AvailOutcome } from '../client/modules/shop/rules.ts';
 import { armorTotal } from '../shared/sr5.ts';
 import type { Armor, ArmorMod, I18nEntry } from '../shared/types.ts';
@@ -136,6 +136,26 @@ async function rejects(promise: Promise<unknown>, re: RegExp, msg: string) {
   ok(weaponMounts({ name: bow.name, kind: 'ranged' }, bow).length === 0, 'Bow: no mount point');
   ok(!!accessoryFit(asW(bow), bow, find('accessories', 'Silencer/Suppressor')).problem && !!accessoryFit(asW(bow), bow, find('accessories', 'Bipod')).problem, 'no silencer / bipod on a bow');
   ok(weaponMounts({ name: 'Arme maison', kind: 'ranged' }, null).length === 5, 'weapon without catalog entry: standard mounts');
+  // Moving installed accessories (players, issue #4) and the slot board (shop « Customize », issue #5).
+  {
+    const ak = find('weapons', 'AK-97');
+    const laserC = find('accessories', 'Laser Sight');
+    const las = { id: 'a1', catalogId: laserC.id, name: laserC.name, mount: 'Top' };
+    const sc = { id: 'a2', catalogId: find('accessories', 'Imaging Scope').id, name: 'Imaging Scope', mount: 'Barrel' };
+    const w = { id: 'w', name: ak.name, catalogId: ak.id, kind: 'ranged', mounts: ak.stats.mounts, accessories: [las, { id: 'a0', name: 'Smartgun', mount: 'Internal', included: true }] };
+    ok(accessoryMoves(w, ak, las, laserC).join() === 'Under', 'laser (Top / Under) on Top can move to Under only');
+    ok(accessoryMoves({ ...w, accessories: [las, { ...sc, mount: 'Under' }] }, ak, las, laserC).length === 0, 'Under taken → no move');
+    ok(accessoryMoves(w, ak, w.accessories[1], null).length === 0, 'built-in part never moves');
+    ok(accessoryMoves(w, ak, { ...las, equipped: false }, laserC).join() === 'Under', 'a switched-off accessory can still be moved');
+    ok(accessoryMoves({ ...w, accessories: [las, { ...sc, mount: 'Under', equipped: false }] }, ak, las, laserC).length === 0, 'a switched-off accessory still takes its mount');
+    ok(accessoryMoves({ id: 'h', name: 'Arme maison', kind: 'ranged', accessories: [{ id: 'x', name: 'Bricolage', mount: 'Top' }] }, null, { id: 'x', name: 'Bricolage', mount: 'Top' }, null).sort().join() === 'Barrel,Side,Stock,Under', 'hand-made accessory without catalog entry: any free standard mount');
+    const slots = weaponSlots(w, ak);
+    const st = Object.fromEntries(slots.map((r) => [r.mount, r.state]));
+    ok(st.Top === 'used' && st.Under === 'free' && st.Barrel === 'free' && st.Internal === 'used' && slots.find((r) => r.mount === 'Internal')!.items[0].included, `slot board: Top used, Under free, built-in on Internal (${JSON.stringify(st)})`);
+    const l36w = { id: 'c', name: l36.name, catalogId: l36.id, kind: 'ranged', accessories: [] };
+    const st2 = Object.fromEntries(weaponSlots(l36w, l36).map((r) => [r.mount, r.state]));
+    ok(st2.Under === 'none' && st2.Stock === 'none' && st2.Top === 'free' && st2.Internal === 'free', 'slot board: the L36 has no Under / Stock mount');
+  }
   // « +2R » availability relative to the target.
   const sgi = find('accessories', 'Smartgun System, Internal');
   const relQ = upgradeAvail(quote(sgi, { vars: { WeaponCost: l36.cost } }), sgi, quote(l36, {}));
@@ -477,6 +497,44 @@ try {
   ok(r.total === Math.round(laser.cost / 2) && A(jane, 'pc_jane').nuyen === nw + r.total && !pw.accessories!.some((x) => x.id === las.id), 'accessory sold at the sell rate');
   r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: scope.id, target: { itemId: pred.id } }] });
   ok(r.status === 'done', 'freed mount reusable');
+
+  console.log('• weapon accessories: switch on / off, move to another mount (players)');
+  await gm.send('shop/give', { actorId: 'pc_jane', ref: find('weapons', 'AK-97').id });
+  await settle();
+  const ak = A(jane, 'pc_jane').weapons.filter((x) => x.catalogId === find('weapons', 'AK-97').id).pop()!;
+  await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: laser.id, target: { itemId: ak.id }, mount: 'Top' }] });
+  await settle();
+  const accOf = (wid: string, cid: string) => A(jane, 'pc_jane').weapons.find((x) => x.id === wid)!.accessories!.find((x) => x.catalogId === cid)!;
+  const akLas = accOf(ak.id, laser.id);
+  ok(akLas.mount === 'Top', 'laser bought on the Top mount');
+  r = await jane.send('shop/setAccessory', { actorId: 'pc_jane', weaponId: ak.id, subId: akLas.id, mount: 'Under' });
+  await settle();
+  ok(r.mount === 'Under' && accOf(ak.id, laser.id).mount === 'Under', 'player moves the laser to Under');
+  await rejects(jane.send('shop/setAccessory', { actorId: 'pc_jane', weaponId: ak.id, subId: akLas.id, mount: 'Barrel' }), /cannot go on that mount/, 'laser refused on Barrel (not one of its mounts)');
+  await rejects(jane.send('shop/setAccessory', { actorId: 'pc_jane', weaponId: ak.id, subId: akLas.id, mount: 'Bogus' }), /cannot go on that mount/, 'unknown mount refused');
+  await rejects(jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: bipod.id, target: { itemId: ak.id } }] }), /No free mount/, 'bipod refused while the laser sits on Under');
+  r = await jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: scope.id, target: { itemId: ak.id } }] });
+  await settle();
+  await rejects(jane.send('shop/setAccessory', { actorId: 'pc_jane', weaponId: ak.id, subId: akLas.id, mount: 'Top' }), /cannot go on that mount/, 'Top taken by the scope → move refused');
+  r = await jane.send('shop/setAccessory', { actorId: 'pc_jane', weaponId: ak.id, subId: akLas.id, equipped: false });
+  await settle();
+  ok(r.equipped === false && accOf(ak.id, laser.id).equipped === false, 'player switches the laser off');
+  await rejects(jane.send('shop/buy', { actorId: 'pc_jane', items: [{ ref: bipod.id, target: { itemId: ak.id } }] }), /No free mount/, 'a switched-off laser still takes Under');
+  r = await jane.send('shop/setAccessory', { actorId: 'pc_jane', weaponId: ak.id, subId: akLas.id, equipped: true });
+  await settle();
+  ok(r.equipped === true && accOf(ak.id, laser.id).equipped === undefined, 'switched back on (flag cleared)');
+  const builtIn = A(jane, 'pc_jane').weapons.find((x) => x.id === pred.id)!.accessories!.find((x) => x.included)!;
+  await rejects(jane.send('shop/setAccessory', { actorId: 'pc_jane', weaponId: pred.id, subId: builtIn.id, mount: 'Top' }), /Built-in/, 'built-in smartgun cannot be moved');
+  r = await jane.send('shop/setAccessory', { actorId: 'pc_jane', weaponId: pred.id, subId: builtIn.id, equipped: false });
+  await settle();
+  ok(r.equipped === false, 'built-in smartgun can be switched off');
+  await jane.send('shop/setAccessory', { actorId: 'pc_jane', weaponId: pred.id, subId: builtIn.id, equipped: true });
+  await rejects(bricks.send('shop/setAccessory', { actorId: 'pc_jane', weaponId: ak.id, subId: akLas.id, equipped: false }), /your character/, 'another player cannot touch it');
+  await rejects(jane.send('shop/setAccessory', { actorId: 'pc_jane', weaponId: ak.id, subId: akLas.id }), /Nothing to change/, 'empty change refused');
+  r = await gm.send('shop/setAccessory', { actorId: 'pc_jane', weaponId: ak.id, subId: accOf(ak.id, scope.id).id, mount: 'Top' });
+  ok(r.mount === 'Top', 'moving to the current mount is a no-op');
+  await settle();
+  ok(gm.state.log.some((e) => e.kind === 'shop' && /moves Laser Sight to the Under mount/.test(e.text)) && gm.state.log.some((e) => e.kind === 'shop' && /switches off Laser Sight/.test(e.text)), 'moves and switches are logged');
 
   console.log('• armor modifications: capacity');
   const chem = find('armormods', 'Chemical Protection');

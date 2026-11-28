@@ -1,4 +1,4 @@
-// Shop tab (registry: shop/ShopPage.js). Players: storefront, cart, inventory/resale, orders.
+// Shop tab (registry: shop/ShopPage.js). Players: storefront, weapon customization, cart, inventory/resale, orders.
 // GM: same storefront for any PC (sell / give), approval queue, specials editor, settings.
 import { useEffect, useState } from 'react';
 import './shop.css';
@@ -11,6 +11,7 @@ import { pricedCart } from './Cart.tsx';
 import Storefront from './Storefront.tsx';
 import Cart from './Cart.tsx';
 import Inventory from './Inventory.tsx';
+import Customize from './Customize.tsx';
 import Orders from './Orders.tsx';
 import { SettingsPanel, SpecialsPanel } from './GmPanels.tsx';
 
@@ -66,6 +67,7 @@ export default function ShopPage({ game }: GameProps) {
   const tabs = isGM
     ? [
         { id: 'store', label: t('Catalog') },
+        { id: 'customize', label: t('Customize weapons') },
         { id: 'inventory', label: t('PC inventory') },
         { id: 'orders', label: t('Orders'), badge: pending || null },
         { id: 'specials', label: t('Cabana’s deals'), badge: (game.shop.specials || []).length || null },
@@ -73,6 +75,7 @@ export default function ShopPage({ game }: GameProps) {
       ]
     : [
         { id: 'store', label: t('Catalog') },
+        { id: 'customize', label: t('Customize weapons') },
         { id: 'inventory', label: t('My inventory') },
         { id: 'orders', label: t('My orders'), badge: pending || null },
       ];
@@ -120,6 +123,7 @@ export default function ShopPage({ game }: GameProps) {
 
       <div className="shop-body">
         {current === 'store' && <Storefront game={game} actor={actor} catalog={catalog} />}
+        {current === 'customize' && <Customize game={game} actor={actor} catalog={catalog} />}
         {current === 'inventory' && <Inventory game={game} actor={actor} catalog={catalog} />}
         {current === 'orders' && <Orders game={game} actor={actor} />}
         {current === 'specials' && isGM && <SpecialsPanel game={game} />}

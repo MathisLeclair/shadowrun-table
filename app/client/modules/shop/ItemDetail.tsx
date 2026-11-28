@@ -145,9 +145,13 @@ interface ItemDetailProps {
   catalog: ShopCatalog;
   /** In a modal (narrow screens). */
   compact?: boolean;
+  /** Upgrades: preset target item (shop « Customize »). */
+  targetId?: string;
+  /** Accessories: preset mount point. */
+  mount?: string;
 }
 
-export default function ItemDetail({ entry, game, actor, catalog, compact }: ItemDetailProps) {
+export default function ItemDetail({ entry, game, actor, catalog, compact, targetId: presetTarget, mount: presetMount }: ItemDetailProps) {
   const shop = game.shop || {};
   const isGM = game.me.role === 'gm';
   const item = entry.item;
@@ -165,8 +169,8 @@ export default function ItemDetail({ entry, game, actor, catalog, compact }: Ite
   const [price, setPrice] = useState<number | null>(item?.costRange ? item.costRange[0] : null);
   const [setMatrix, setSetMatrix] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [targetId, setTargetId] = useState<string>(targets[0]?.id || '');
-  const [mount, setMount] = useState<string | null>(null);
+  const [targetId, setTargetId] = useState<string>((presetTarget && targets.some((x) => x.id === presetTarget) ? presetTarget : targets[0]?.id) || '');
+  const [mount, setMount] = useState<string | null>(presetMount ?? null);
   const [lsName, setLsName] = useState('');
   const [primary, setPrimary] = useState(false);
 
@@ -176,7 +180,7 @@ export default function ItemDetail({ entry, game, actor, catalog, compact }: Ite
     setQty(1);
     setPrice(item?.costRange ? item.costRange[0] : null);
     setSetMatrix(isDevice && !!actor && !(actor.matrix && actor.matrix.device));
-    setMount(null);
+    setMount(presetMount ?? null);
     setLsName('');
     setPrimary(false);
   }, [entry.ref]);

@@ -47,7 +47,7 @@ Pilot Sensor Seats Armor`; `stats.targetCost: true` flags them.
 
 `UPGRADE_FILES` (file → `{ list, sub }`), `STORE_SECTIONS` (= `SECTIONS` + `UPGRADE_SECTIONS` « Accessoires d’armes »,
 « Modifications d’armure », « Modifications de véhicule », « Arts martiaux »; `SECTIONS`, used by the character
-creator, gains only the lifestyle options in « Train de vie »), `weaponMounts / freeMounts / accessoryFit` (mount
+creator, gains only the lifestyle options in « Train de vie »), `weaponMounts / freeMounts / accessoryFit / accessoryMoves / weaponSlots` (mount
 points of the weapon — own `mounts`, else the catalog's (none when the catalog entry has no `<accessorymounts>`: bows,
 holdouts…), else standard ones for ranged weapons without catalog entry — minus mounts taken by non-included
 accessories; requires/forbids; no duplicate), `upgradeAvail(q, item, targetQuote)` (relative availability,
@@ -83,3 +83,22 @@ Body + slotBonus[category]; « All », « Model-Specific » and drone-attribute 
   `martialKarma` ([rules](../rules/availability-and-shop.md#martial-arts-rg-p-128)), `free` = no karma (the storefront's
   « Grant for free »). Pending orders `kind: 'karma'` from older saves (players used to ask here) are still approved by
   `shop/resolve`.
+- `shop/setAccessory { actorId, weaponId, subId, equipped?, mount? }` (owner or GM): switches an installed accessory on /
+  off (`equipped: false` stored, `true` clears the flag; built-in parts too) and / or moves it to another mount point
+  (`accessoryMoveProblem`: one of the mounts its catalog entry accepts — standard ones for a hand-made accessory —, that
+  the weapon has and no other accessory uses; built-in parts, `''` and « Internal » accessories never move). A
+  switched-off accessory keeps its mount. Logged (« {actor} moves {item} to the {mount} mount of {target} », « switches
+  on / off »); returns `{ mount, equipped }`.
+
+## Weapon slots (players)
+
+`rules.ts weaponSlots(weapon, weaponCat)` → one row per standard mount + « Internal »: `state` 'used' / 'free' / 'none'
+(the weapon lacks it) and the accessories on it (Internal: built-in parts and internal accessories, never limited);
+`accessoryMoves(weapon, weaponCat, acc, accCat)` = where an accessory can move. `shop/WeaponSlots.tsx` draws that board
+with the on / off switch and the move select (owner / GM), used by:
+- the shop tab « Customize weapons » (`Customize.tsx`): pick a weapon, pick a free slot, the catalog accessories that
+  fit that mount (`accessoryFit` with that mount) are listed with price / availability; one opens the usual
+  `ItemDetail` with the target weapon and mount preset (`targetId` / `mount` props): cart, availability test, GM sell /
+  give. Cart lines already aimed at a mount of the weapon show « in the cart » on that slot.
+- the sheet (Combat tab): the « ⚙ » button after a weapon's accessory chips (`sheet/accessories-ui.tsx`). The chips
+  show the mount of each accessory (`SubChips`).

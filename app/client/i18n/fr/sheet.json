@@ -1074,5 +1074,9 @@
   "Open in Maps": "Ouvrir dans Cartes",
   "The options changed since the map was made: update it to see them.": "Les options ont changé depuis la création de la carte : mets-la à jour pour les voir.",
   "{name} (former)": "{name} (ancien)",
-  "Former homes": "Anciens logements"
+  "Former homes": "Anciens logements",
+  "Accessories — {weapon}": "Accessoires — {weapon}",
+  "A switched-off accessory stays on its mount. New accessories are bought in the shop (« Customize weapons »).": "Un accessoire désactivé reste sur son emplacement. Les nouveaux accessoires s’achètent à la boutique (« Personnaliser les armes »).",
+  "Mounts: switch or move accessories": "Emplacements : activer ou déplacer les accessoires",
+  "Mounts of the accessories": "Emplacements des accessoires"
 }

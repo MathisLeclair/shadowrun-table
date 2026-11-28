@@ -464,5 +464,21 @@
   "With an instructor (−{pct}% time)": "Avec un instructeur (−{pct} % de temps)",
   "Training time": "Temps d’entraînement",
   "Start training ({n} karma)": "Lancer l’entraînement ({n} karma)",
-  "Learned at once, no karma and no training time": "Appris immédiatement, sans karma ni temps d’entraînement"
+  "Learned at once, no karma and no training time": "Appris immédiatement, sans karma ni temps d’entraînement",
+  "Accessories for the {mount} mount": "Accessoires pour l’emplacement {mount}",
+  "No accessory of the catalog fits this mount.": "Aucun accessoire du catalogue ne va sur cet emplacement.",
+  "Pick a free slot to shop for it.": "Choisis un emplacement libre pour lui trouver un accessoire.",
+  "Customize weapons": "Personnaliser les armes",
+  "{item} moved to {mount}": "{item} déplacé sur {mount}",
+  "Not on this weapon": "Absent de cette arme",
+  "in the cart": "dans le panier",
+  "Nothing built in": "Rien d’intégré",
+  "Free": "Libre",
+  "Move to another mount": "Déplacer sur un autre emplacement",
+  "Find an accessory": "Trouver un accessoire",
+  "Built-in part of {weapon}: it cannot be moved": "Pièce intégrée de {weapon} : elle ne peut pas être déplacée",
+  "{item} cannot go on that mount of {weapon}": "{item} ne peut pas aller sur cet emplacement de {weapon}",
+  "{actor} moves {item} to the {mount} mount of {target}": "{actor} déplace {item} sur l’emplacement {mount} de {target}",
+  "{actor} switches on {item} ({target})": "{actor} active {item} ({target})",
+  "{actor} switches off {item} ({target})": "{actor} désactive {item} ({target})"
 }

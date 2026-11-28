@@ -4,7 +4,7 @@
 |---|---|
 | server | `server/modules/40-shop.ts` (owner of `state.shop`) |
 | rules | `client/modules/shop/rules.ts` (pure, shared with the server and the character creator) |
-| client | `client/modules/shop/` (ShopPage, `avail.tsx`, `upgrades.ts`) |
+| client | `client/modules/shop/` (ShopPage, `avail.tsx`, `upgrades.ts`, `Customize.tsx` + `WeaponSlots.tsx`: weapon slots) |
 | catalog | `data/catalog/*.json` built by `tools/build-catalog.ts` (`npm run build:catalog`) |
 | tests | `node tools/test-shop.ts` (port 3250: mounts, capacity, slots, target-based prices, resale of parts, martial arts, availability tests) |
 
@@ -63,7 +63,7 @@ No fee or Availability cap: the GM adds a price by hand if wanted. Contact dossi
   is sent to the actor's owners when the GM approves/denies.
 - Selling: gear can only be sold up to its current `qty` (≥ 1); implant weapons (`augId`) are not sellable (sell the
   augmentation).
-- Actions: `shop/buy|availTest|give|sell|removeUpgrade|resolve|cancel|martialArt|updateSettings|addSpecial|
+- Actions: `shop/buy|availTest|give|sell|removeUpgrade|setAccessory|resolve|cancel|martialArt|updateSettings|addSpecial|
   updateSpecial|removeSpecial|payLifestyle|chooseHome|clearOrders`.
 
 ## Catalog files
