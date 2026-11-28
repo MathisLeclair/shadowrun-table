@@ -36,6 +36,8 @@ COPY data/packs ./data/packs
 COPY data/catalog ./data/catalog
 # Map library wall files (data/maplib/<slug>.json); the images are never in the image (.dockerignore, runtime/maplib/images)
 COPY data/maplib ./data/maplib
+# City map district shapes (data/city/<id>.json, traced by tools/city-districts.ts; the map image itself is a mounted asset)
+COPY data/city ./data/city
 # The app writes only to the mounted folders; everything else stays root-owned (read-only for the app user).
 RUN mkdir -p /app/runtime /app/data/assets/foundry && chown -R node:node /app/runtime /app/data/assets
 USER node

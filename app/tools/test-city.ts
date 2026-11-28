@@ -32,6 +32,7 @@ async function rejects(promise: Promise<unknown>, re: RegExp, msg: string) {
 
 console.log('• shared/city.ts on data/city/seattle.json');
 ok(shapes.width === 132 && shapes.height === 124 && shapes.districts.length === 12, 'Seattle shapes: 132 × 124 cells, 12 districts');
+ok(/^COPY data\/city \.\/data\/city$/m.test(fs.readFileSync(path.join(ROOT, 'Dockerfile'), 'utf8')), 'Dockerfile ships data/city (else the deployed city has no districts)');
 // one point inside each district (full-res px of the image ÷ 25 px per cell)
 const SEEDS: Record<string, [number, number]> = {
   everett: [960, 450], snohomish: [990, 810], redmond: [1410, 1050], downtown: [900, 900], 'council-island': [1035, 1260], bellevue: [1170, 1260],
