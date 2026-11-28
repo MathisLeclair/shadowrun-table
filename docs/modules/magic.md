@@ -8,7 +8,7 @@
 | client | `client/modules/magic/` (MagicPage: cockpit for players, overview + cockpit for the GM; `common.tsx`: `TraditionPicker`, `openMagic`, roll labels shared with the sheet) |
 | tests | `node tools/test-magic.ts` (port 3650) |
 
-Rules: [rules/magic.md](../rules/magic.md). What is still to build (non-combat spell resistance, spirits, astral, foci,
+Rules: [rules/magic.md](../rules/magic.md). What is still to build (spirits, astral, foci,
 rituals, metamagic) and the sub-issues: [design/magic.md](../design/magic.md).
 
 ## State
@@ -62,6 +62,17 @@ name); a hand-made spell: mana → direct, physical → indirect when its name i
 - Mana spells cannot target an NPC of kind drone, IC or host (SR5 282).
 The tray shows « Resist the spell » (`SpellResistDialog`: attribute, modifier, Edge) for a direct spell.
 
+## Non-combat spells: resistance
+
+`spellResistance(spell, info)` (shared, from the catalog descriptor; SR5 285-292): active Detection → LOG + WIL (objects:
+Object Resistance); Health → none, but Decrease [Attribute] / Negative spells → that attribute + WIL; Illusion → mana
+LOG + WIL, physical INT + LOG (devices: Object Resistance), Obvious → none; Manipulation → Mental LOG + WIL, Physical
+BOD + STR (objects: Object Resistance), Environmental → none. After a cast with hits, each target other than the caster
+gets an `Attack` kind `'spell'` with `noDamage` and `spell.resist` / `resist2`: the target resists from the tray
+(`SpellResistDialog`, an ally's Counterspelling dice in the modifier) and the net hits are logged; the GM applies the
+effect. `object: 3 | 6 | 9 | 15` (Object Resistance table, SR5 295) rolls the object's dice at once: `result.object =
+{ pool, hits, net }`. The cast modal shows the rule and, when objects can be targeted, the Object Resistance choice.
+
 ## Sustained spells
 
 A cast of a Sustained (S) or Permanent (P) spell with at least one hit is sustained unless the caster unticks it
@@ -85,7 +96,7 @@ with #19 / #21.
 - `magic/cast { actorId, spellId, force, reckless?, explode?, modifier?, conditions?, ignore?, mapId?, targetIds?, area?, drainDv? }`
   (owner or GM) → `{ logId, rollLogId, hits, rawHits, glitch, critGlitch, force, dv, drainType, drain, targetIds, area, sustainedId, attackIds }`.
 - `magic/resistDrain { id }` (owner or GM): resist a pending drain.
-- `magic/cast … sustain?` (default: sustained when possible) → also `sustainedId`; `magic/drop { id }`.
+- `magic/cast … sustain?, object?` (default: sustained when possible) → also `sustainedId`, `attackIds`, `object`; `magic/drop { id }`.
 - `magic/settings { autoDrain?, showAstralToPlayers? }` (GM; « Resist Drain automatically » toggle of the GM page).
 
 ## Player view

@@ -1219,7 +1219,7 @@ export interface Attack {
   resolvedTs?: Timestamp;
   gmOnly?: boolean;
   /** Combat spell (kind 'spell', 47-magic): direct = resisted with `resist`, no soak; indirect = dodge then soak. */
-  spell?: { mode: 'direct' | 'indirect'; resist: 'BOD' | 'WIL'; force: number; element?: string | null; castLogId?: string };
+  spell?: { mode: 'direct' | 'indirect'; resist: AttrKey; resist2?: AttrKey | null; force: number; element?: string | null; castLogId?: string };
 }
 
 /** An actor caught in a blast. */

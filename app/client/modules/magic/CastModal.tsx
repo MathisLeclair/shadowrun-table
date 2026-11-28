@@ -2,13 +2,16 @@
 // Opened from the Magic cockpit and the sheet's spell list.
 import { useMemo, useState } from 'react';
 import { Modal, Button, NumberInput, Toggle, Select, Badge } from '../../lib/ui.tsx';
-import { send } from '../../lib/net.ts';
+import { send, useCatalog } from '../../lib/net.ts';
 import { useUI } from '../../lib/ui-store.ts';
 import { t, attrShort } from '../../lib/i18n.ts';
 import { attr } from '/shared/sr5.ts';
 import { cellDistance } from '/shared/combat.ts';
 import { hasLineOfSight } from '/shared/vision.ts';
-import { drainValue, drainOffset, drainAttr, maxForce, spellReach, isAreaSpell, isSustainable, RECKLESS_DV, SUSTAIN_PENALTY } from '/shared/magic.ts';
+import {
+  drainValue, drainOffset, drainAttr, maxForce, spellReach, isAreaSpell, isSustainable, spellCategory, spellResistance, combatSpellProfile,
+  RECKLESS_DV, SUSTAIN_PENALTY, OBJECT_RESISTANCE, type SpellCatalogInfo,
+} from '/shared/magic.ts';
 import { itemLabel, categoryLabel } from '../sheet/common.tsx';
 import { ItemRef, RuleRef } from '../books/BookRef.tsx';
 import { isGM } from './common.tsx';
@@ -26,6 +29,17 @@ interface CastResult {
   drain: { hits: number; damage: number } | { pendingId: string };
   targetIds: string[];
   sustainedId?: string | null;
+  attackIds?: string[];
+  object?: { pool: number; hits: number; net: number } | null;
+}
+
+type CatalogSpell = { id: string; name: string; nameFr?: string; stats?: { descriptor?: string; damage?: string } };
+/** Catalog descriptor / damage of an actor's spell (by catalog id, then name). */
+function catalogInfo(list: CatalogSpell[], spell: Spell | undefined): SpellCatalogInfo | null {
+  if (!spell) return null;
+  const names = [spell.nameEn, spell.name, spell.nameFr].filter(Boolean).map((n) => String(n).toLowerCase());
+  const e = list.find((x) => x.id === spell.catalogId) || list.find((x) => names.includes(x.name.toLowerCase()) || (!!x.nameFr && names.includes(x.nameFr.toLowerCase())));
+  return e ? { descriptor: e.stats?.descriptor || '', damage: e.stats?.damage || '' } : null;
 }
 
 /** The map the user is looking at (GM: the one open in the map tab). */
@@ -51,6 +65,8 @@ export default function CastModal({ game, actor, spellId, onClose }: { game: Gam
   const [modifier, setModifier] = useState(0);
   const [manualDv, setManualDv] = useState(2);
   const [sustain, setSustain] = useState(true);
+  const [objectPool, setObjectPool] = useState('');
+  const catalog = useCatalog<CatalogSpell>('spells');
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<CastResult | null>(null);
   const map = currentMap(game, ui.viewMapId);
@@ -75,6 +91,10 @@ export default function CastModal({ game, actor, spellId, onClose }: { game: Gam
   const dv = spell ? (offset === null ? manualDv + (reckless ? RECKLESS_DV : 0) : drainValue(spell.drain, force, { reckless })) : null;
   const second = drainAttr(actor);
   const sustainable = !!spell && isSustainable(spell.duration);
+  const info = catalogInfo(catalog, spell);
+  const combat = spellCategory(spell?.category) === 'combat';
+  const profile = combat && spell ? combatSpellProfile(spell, info) : null;
+  const resistance = !combat && spell ? spellResistance(spell, info) : null;
   const spellcasting = skillRating(actor, 'spellcasting');
   const toggle = (id: string) => setTargetIds((list) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]));
   const pickCenter = (id: string) => {
@@ -88,7 +108,7 @@ export default function CastModal({ game, actor, spellId, onClose }: { game: Gam
     setBusy(true);
     try {
       const r = await send<CastResult>('magic/cast', {
-        actorId: actor.id, spellId: spell.id, force, reckless, explode, modifier, mapId: map?.id, targetIds, sustain: sustainable && sustain,
+        actorId: actor.id, spellId: spell.id, force, reckless, explode, modifier, mapId: map?.id, targetIds, sustain: sustainable && sustain, ...(objectPool ? { object: Number(objectPool) } : {}),
         ...(area && center ? { area: { x: center.x, y: center.y } } : {}), ...(offset === null ? { drainDv: manualDv } : {}),
       });
       setResult(r);
@@ -119,6 +139,16 @@ export default function CastModal({ game, actor, spellId, onClose }: { game: Gam
                 ? t('{hits} hit(s) on the resistance: {n} box(es) of damage', { hits: d.hits, n: d.damage })
                 : t('{hits} hit(s) on the resistance: no damage', { hits: d.hits })}
           </div>
+          {(result.attackIds || []).length > 0 && (
+            <div className="mg-cast-drain">{t('{n} target(s) now roll their {what} in the attack tray.', { n: result.attackIds!.length, what: combat ? t('defense') : t('resistance') })}</div>
+          )}
+          {result.object && (
+            <div className="mg-cast-drain">
+              {result.object.net
+                ? t('Object Resistance {pool}: {hits} hit(s) — the spell gets {n} net hit(s).', { pool: result.object.pool, hits: result.object.hits, n: result.object.net })
+                : t('Object Resistance {pool}: {hits} hit(s) — the object resists.', { pool: result.object.pool, hits: result.object.hits })}
+            </div>
+          )}
           {result.sustainedId && <div className="mg-cast-drain">{t('Sustained: −{n} dice on all your tests until you drop it (Magic tab).', { n: SUSTAIN_PENALTY })}</div>}
           <p className="faint small">{t('Apply the spell’s effect: the log keeps the hits.')}</p>
         </div>
@@ -177,6 +207,24 @@ export default function CastModal({ game, actor, spellId, onClose }: { game: Gam
           <Toggle value={explode} onChange={setExplode} label={t('Push the Limit (Edge: no limit)')} />
           {sustainable && <Toggle value={sustain} onChange={setSustain} label={spell && /^P$/i.test(spell.duration) ? t('Sustain until permanent (Force Combat Turns, −2 dice)') : t('Sustain the spell (−2 dice on all your tests)')} />}
         </div>
+        {profile && (
+          <div className="mg-cast-rule small">
+            {profile.mode === 'direct'
+              ? t('Direct combat spell: the target resists with {attr}; each net hit is a box of {damage} damage, no soak (SR5 p. 283).', { attr: attrShort(profile.resist), damage: profile.damage === 'S' ? t('Stun') : t('Physical') })
+              : t('Indirect combat spell: the target dodges (Reaction + Intuition), then soaks DV {dv} + net hits, AP −{dv} (SR5 p. 283).', { dv: force })}
+          </div>
+        )}
+        {spell && !combat && (
+          <div className="mg-cast-rule small">
+            {resistance ? <>{t(resistance.rule)} <span className="faint">(SR5 p. {resistance.page})</span></> : t('No resistance test: the hits alone count.')}
+          </div>
+        )}
+        {resistance?.objects && (
+          <div className="mg-cast-row">
+            <label className="field-label">{t('Object target')}</label>
+            <Select value={objectPool} onChange={setObjectPool} options={[{ value: '', label: t('— not an object —') }, ...OBJECT_RESISTANCE.map((o) => ({ value: String(o.value), label: t(o.name) }))]} />
+          </div>
+        )}
         <div className="mg-cast-warn small">
           {t('Drain is resisted with {wil} + {attr}; it becomes Physical if you get more than {mag} hits.', { wil: attrShort('WIL'), attr: second ? attrShort(second) : '?', mag })}
         </div>

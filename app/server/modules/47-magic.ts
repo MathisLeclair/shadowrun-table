@@ -6,7 +6,7 @@ import { cellDistance } from '../../shared/combat.ts';
 import { hasLineOfSight } from '../../shared/vision.ts';
 import {
   isAwakened, DRAIN_ATTRS, drainAttr, drainValue, spellDrainType, spellReach, isAreaSpell, spellCategory, maxForce, RECKLESS_DV,
-  isSustainable, spellEffects, combatSpellProfile, NO_AURA_KINDS,
+  isSustainable, spellEffects, combatSpellProfile, spellResistance, NO_AURA_KINDS, OBJECT_RESISTANCE,
 } from '../../shared/magic.ts';
 import { spellCatalogInfo } from '../lib/spells.ts';
 import { addSpellAttack } from './33-attacks.ts';
@@ -131,6 +131,8 @@ const tokenOf = (map: GameMap | null, actorId: ActorId): Token | null => (map?.t
 type CastPayload = {
   actorId?: ActorId; spellId?: unknown; force?: unknown; reckless?: unknown; explode?: unknown; modifier?: unknown; conditions?: unknown;
   ignore?: unknown; mapId?: unknown; targetIds?: unknown; area?: unknown; drainDv?: unknown; sustain?: unknown;
+  /** The spell targets an object: its Object Resistance dice pool (3, 6, 9, 15: SR5 p. 295). */
+  object?: unknown;
 };
 type CastArea = { x: number; y: number; radius: number };
 
@@ -320,7 +322,31 @@ const actions: Record<string, ActionDef> = {
           attackIds.push(atk.id);
         }
       }
-      return { ...c.result, sustainedId, attackIds };
+      // Non-combat spell with an Opposed Test (SR5 pp. 285-292): each target resists from the attack tray (net hits, no damage).
+      let object: { pool: number; hits: number; net: number } | null = null;
+      const resistance = spellCategory(c.spell.category) !== 'combat' ? spellResistance(c.spell, spellCatalogInfo(c.spell)) : null;
+      if (resistance && c.hits > 0) {
+        for (const t of c.targets) {
+          if (t.id === c.actor.id) continue; // a caster does not resist their own spell
+          const atk = addSpellAttack(ctx, {
+            attacker: c.actor, target: t, mapId: str(p.mapId, 80) || null, hits: c.hits, spellName: biName(c.spell), force: c.force, noDamage: true,
+            profile: { mode: 'direct', resist: resistance.attrs[0], resist2: resistance.attrs[1] || null, damage: 'P', element: null },
+            castLogId: c.logId, rollLogId: c.roll.logId, gmOnly: hiddenCaster(c.actor),
+          });
+          attackIds.push(atk.id);
+        }
+      }
+      // An object resists with its Object Resistance (SR5 p. 295): rolled at once.
+      const objPool = Math.round(Number(isObj(p.object) ? p.object.resistance : p.object));
+      if (Number.isFinite(objPool) && objPool > 0) {
+        if (!OBJECT_RESISTANCE.some((o) => o.value === objPool) && !ctx.isGM) ctx.fail('Unknown Object Resistance');
+        const r = performRoll(ctx, { pool: Math.min(30, objPool), label: tk('Object Resistance'), limit: null, ...(hiddenCaster(c.actor) ? { secret: true } : {}) }, {
+          logExtra: { labelI18n: { key: tk('Object Resistance ({n}) against {spell}'), params: { n: objPool, spell: biName(c.spell) } } },
+        });
+        object = { pool: objPool, hits: r.hits, net: Math.max(0, c.hits - r.hits) };
+        logMagic(ctx, c.actor, object.net ? tk('{spell} overcomes the object: {n} net hit(s).') : tk('The object resists {spell}.'), { spell: biName(c.spell), n: object.net }, { event: 'cast', actorId: c.actor.id, spellId: c.spell.id }, hiddenCaster(c.actor));
+      }
+      return { ...c.result, sustainedId, attackIds, object };
     },
   },
 

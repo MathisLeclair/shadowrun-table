@@ -16,7 +16,7 @@ import { ELEMENTS, type CombatSpellProfile, type SpellElement } from '../../shar
 import { spendInitiative, combatTurnKey } from './30-combat.ts';
 import type { PerformedRoll, RollBonusLine, RollInternal, RollPayload } from './10-characters.ts';
 import type {
-  ActionContext, Actor, ActorId, AfflictionKind, Attack, AttacksState, AttackTurnRecord, Blast, BlastHit, BiName, DamageType, GameMap, GameView,
+  ActionContext, Actor, ActorId, AfflictionKind, AttrKey, Attack, AttacksState, AttackTurnRecord, Blast, BlastHit, BiName, DamageType, GameMap, GameView,
   I18nParams, Point, ServerModule, SessionUser, TableState, Token,
 } from '../../shared/types.ts';
 
@@ -105,13 +105,21 @@ const apOf = (w: { ap?: unknown } | null | undefined): number => {
 
 /**
  * Direct combat spell (SR5 p. 283): the target resists with BOD (physical spell) or WIL (mana spell); the net hits are the
- * damage, with no soak and no armor.
+ * damage, with no soak and no armor. A non-combat spell (noDamage, SR5 pp. 285-292) is resisted the same way with its
+ * attributes (LOG + WIL…): the net hits are the spell's success, the GM applies the effect.
  */
 function doResistSpell(ctx: ActionContext, atk: Attack, target: Actor, { modifier = 0, explode = false }: ResolveOpts = {}): PerformedRoll {
   const sp = atk.spell!;
   const roll = performRoll(ctx, {
-    actorId: target.id, attr: sp.resist, label: tk('Resist the spell'), limit: null, modifier: int(modifier, -30, 30), explode: !!explode,
-  }, { logExtra: { attackId: atk.id, defense: true, labelI18n: { key: tk('Resist {spell} ({attr})'), params: { spell: atk.weaponName || '', attr: { t: sp.resist } } } } });
+    actorId: target.id, attr: sp.resist, ...(sp.resist2 ? { attr2: sp.resist2 } : {}), label: tk('Resist the spell'), limit: null, modifier: int(modifier, -30, 30), explode: !!explode,
+  }, {
+    logExtra: {
+      attackId: atk.id, defense: true,
+      labelI18n: sp.resist2
+        ? { key: tk('Resist {spell} ({attr} + {attr2})'), params: { spell: atk.weaponName || '', attr: { t: sp.resist }, attr2: { t: sp.resist2 } } }
+        : { key: tk('Resist {spell} ({attr})'), params: { spell: atk.weaponName || '', attr: { t: sp.resist } } },
+    },
+  });
   atk.defenseHits = roll.hits;
   atk.defenseLogId = roll.logId;
   atk.net = atk.hits - roll.hits;
@@ -122,6 +130,10 @@ function doResistSpell(ctx: ActionContext, atk: Attack, target: Actor, { modifie
     return roll;
   }
   atk.status = 'done';
+  if (atk.noDamage) {
+    logAttack(ctx, tk('{attacker}’s {spell} affects {target}: {n} net hit(s).'), { attacker: atk.attackerName, spell: atk.weaponName || '', target: atk.targetName, n: atk.net }, atk.gmOnly);
+    return roll;
+  }
   atk.damage = atk.net;
   atk.damageType = atk.type;
   applyDamage(ctx, target, atk.net, atk.type);
@@ -177,7 +189,10 @@ function doDefend(ctx: ActionContext, atk: Attack, { options = [], situations = 
  * doResistSpell; indirect → like a ranged attack, DV = Force (+ net hits on the hit), AP = −Force (SR5 p. 283).
  */
 export function addSpellAttack(ctx: ActionContext, o: {
-  attacker: Actor; target: Actor; mapId: string | null; hits: number; spellName: BiName; profile: CombatSpellProfile; force: number;
+  attacker: Actor; target: Actor; mapId: string | null; hits: number; spellName: BiName; force: number;
+  profile: Pick<CombatSpellProfile, 'mode' | 'damage' | 'element'> & { resist: AttrKey; resist2?: AttrKey | null };
+  /** Non-combat spell: resisted for net hits, no damage. */
+  noDamage?: boolean;
   castLogId?: string; rollLogId?: string; gmOnly?: boolean;
 }): Attack {
   const s = slice(ctx.state);
@@ -188,7 +203,8 @@ export function addSpellAttack(ctx: ActionContext, o: {
     id: ctx.uid('atk'), ts: ctx.now, mapId: map?.id || null, kind: 'spell', attackerId: o.attacker.id, attackerName: o.attacker.name,
     ...(o.rollLogId ? { attackLogId: o.rollLogId } : {}), targetId: o.target.id, targetTokenId: tokenOf(map, o.target.id)?.id || null,
     targetName: o.target.name, weaponName: o.spellName, hits: o.hits, dv: direct ? null : o.force, type: o.profile.damage, ap: direct ? 0 : -o.force,
-    spell: { mode: o.profile.mode, resist: o.profile.resist, force: o.force, element: o.profile.element, ...(o.castLogId ? { castLogId: o.castLogId } : {}) },
+    spell: { mode: o.profile.mode, resist: o.profile.resist, ...(o.profile.resist2 ? { resist2: o.profile.resist2 } : {}), force: o.force, element: o.profile.element, ...(o.castLogId ? { castLogId: o.castLogId } : {}) },
+    ...(o.noDamage ? { noDamage: true } : {}),
     status: o.hits > 0 ? 'defense' : 'missed', ...(o.hits > 0 ? {} : { resolvedTs: ctx.now }), ...(gmOnly ? { gmOnly: true } : {}),
   }, MAX_ATTACKS);
   return atk;

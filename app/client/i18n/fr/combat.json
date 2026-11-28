@@ -582,5 +582,10 @@
   "Resist {spell} ({attr})": "Résister à {spell} ({attr})",
   "direct spell ({damage}), resisted with {attr}": "sort direct ({damage}), résisté avec {attr}",
   "resisted ({a} vs {d})": "résisté ({a} contre {d})",
-  "{target} resists {spell}.": "{target} résiste à {spell}."
+  "{target} resists {spell}.": "{target} résiste à {spell}.",
+  "An ally’s Counterspelling dice go in the modifier (SR5 p. 294).": "Les dés de Contresort d’un allié vont dans le modificateur (SR5 p. 294).",
+  "Resist {spell} ({attr} + {attr2})": "Résister à {spell} ({attr} + {attr2})",
+  "The caster’s net hits measure the spell’s effect; the GM applies it.": "Les succès nets du lanceur mesurent l’effet du sort ; le MJ l’applique.",
+  "spell, resisted with {attr}": "sort, résisté avec {attr}",
+  "{attacker}’s {spell} affects {target}: {n} net hit(s).": "{spell} de {attacker} affecte {target} : {n} succès net(s)."
 }
