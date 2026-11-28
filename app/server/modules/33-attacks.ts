@@ -11,6 +11,7 @@ import {
 } from '../../shared/combat.ts';
 import { FIRE_BY_ID, isLauncherProfile, launcherRounds, fireOptions, usesAmmo } from '../../client/modules/sheet/inventory.ts';
 import { createVisionContext, tokenVision } from '../../shared/vision.ts';
+import { effectsLookup } from '../lib/modifiers.ts';
 import { performRoll, applyDamage } from './10-characters.ts';
 import { ELEMENTS, elementLabel, hasEnergyAura, type CombatSpellProfile, type SpellElement } from '../../shared/magic.ts';
 import { spendInitiative, combatTurnKey } from './30-combat.ts';
@@ -481,7 +482,7 @@ const mod: ServerModule = {
             rangeIndex: range ? RANGE_BANDS.findIndex((b) => b.id === range!.id) : null,
             litRatio: (map!.lighting || 'bright') !== 'bright' ? createVisionContext(map!).litRatio : null,
             blasts: activeBlasts(slice(ctx.state).blasts.filter((b) => b.mapId === map!.id), ctx.state.combat, ctx.now),
-            senses: attackSenses(actor, tokenVision(attackerToken, actor), weapon),
+            senses: attackSenses(actor, tokenVision(attackerToken, actor, effectsLookup()), weapon),
           });
           if (env.rangeOnly) {
             if (range?.mod) bonus.push({ label: `${range.label} (${range.meters} m)`, value: range.mod });

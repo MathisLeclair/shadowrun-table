@@ -41,6 +41,9 @@ const prejudiced = (pen: number): EffectOverride => ({
   effects: [{ type: 'skillCategory', target: 'social', value: -pen, condition: 'q-target-group' }],
   partial: 'the target group gets the same bonus in negotiations',
 });
+/** Vision granted by the entry: read by shared/vision.ts tokenVision() (map fog, light modifiers of attacks). */
+const LOW_LIGHT: HandEffect = { type: 'flag', target: 'lowLightVision', value: 1 };
+const THERMO: HandEffect = { type: 'flag', target: 'thermographicVision', value: 1 };
 const WITHDRAWAL = 'withdrawal penalties on Mental or Physical tests (depends on the dependency)';
 
 export const EFFECT_OVERRIDES: Record<string, Record<string, EffectOverride>> = {
@@ -94,6 +97,9 @@ export const EFFECT_OVERRIDES: Record<string, Record<string, EffectOverride>> = 
     'Bad Rep': { gm: 'reputation (starting Notoriety 3)' },
     'Elf Poser': { gm: 'NPC attitudes' },
     'Ork Poser': { gm: 'NPC attitudes' },
+    // Metatype senses (p. 66), hidden in Chummer: index entry only (tools/build-catalog.ts METATYPE_SENSES)
+    'Low-Light Vision': { effects: [LOW_LIGHT] },
+    'Thermographic Vision': { effects: [THERMO] },
     // Run & Gun: full defense options of shared/combat.ts (Agility / Charisma instead of Willpower)
     'Agile Defender': { handled: 'full defense option « Agility » (shared/combat.ts)' },
     'Too Pretty To Hit': { handled: 'full defense option « Charisma » (shared/combat.ts)' },
@@ -105,6 +111,14 @@ export const EFFECT_OVERRIDES: Record<string, Record<string, EffectOverride>> = 
     // Run Faster
     'Did You Just Call Me Dumb?': { gm: 'glitches on Social tests become critical glitches' },
     'Striking Skin Pigmentation': { gm: 'helps others identify or locate the character' },
+    'Low-Light Vision (Changeling)': { effects: [LOW_LIGHT] },
+    'Low-Light Vision (Feline)': { effects: [LOW_LIGHT], partial: 'social modifiers of the reflective slit eyes (Freaks sidebar, p. 123)' },
+    'Thermographic Vision (SURGE)': { effects: [THERMO] },
+    'Night Vision': { effects: [LOW_LIGHT], partial: 'sun glare (Blinding on a clear day, Moderate when overcast) unless the character wears sunglasses' },
+    // Infected: Chummer grants the Enhanced Senses critter power (unread tag); the sense is its only play effect
+    'Infected Optional Power: Enhanced Sense (Low-Light Vision)': { effects: [LOW_LIGHT], replace: true },
+    'Infected Optional Power: Enhanced Sense (Thermographic Vision)': { effects: [THERMO], replace: true },
+    'Thermal Sensitivity': { gm: 'non-visual heat sense within 10 m (Perception tests); in combat it lowers Visibility and Light / Glare by one level' },
     // Chrome Flesh
     Lightweight: { gm: 'Addiction Ratings +2' },
     'Lack of Focus': { gm: 'Composure tests during long extended tests, cumulative penalty' },
@@ -150,6 +164,11 @@ export const EFFECT_OVERRIDES: Record<string, Record<string, EffectOverride>> = 
     'Real World Naiveté': { gm: 'GM-set penalties in the physical world' },
     Fragmentation: { partial: 'mental defects chosen by the GM' },
     'Inherent Program': { gm: 'one program always running (load it in the cockpit)' },
+  },
+  cyberware: {
+    // Core rulebook (SR5 p. 453): eye implants (stand-alone, or a cybereye enhancement)
+    'Low-Light Vision': { effects: [LOW_LIGHT] },
+    'Thermographic Vision': { effects: [THERMO] },
   },
 };
 

@@ -12,6 +12,7 @@ import { DISPO, STATUS_GLYPHS, isImageMap, lightingOptions, dispoLabel, statusTe
 import { t, tk, compare } from '../../lib/i18n.ts';
 import { tRich } from '../sheet/common.tsx';
 import { RollDialog } from '../sheet/RollDialog.tsx';
+import { useEffectsLookup } from '../sheet/modifiers-ui.tsx';
 import { setTarget, setAimPoint, PENDING } from '../combat/attack-common.ts';
 import { cellDistance, rangeFor, rangeClass, isAreaWeapon, blastOf, blastReach, activeBlasts, TOXIN_BY_ID } from '/shared/combat.ts';
 import { isUnarmed, isLauncherProfile, launcherRounds } from '../sheet/inventory.ts';
@@ -244,6 +245,7 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
   }, [map.id]);
 
   // ---------------- vision ----------------
+  const lookup = useEffectsLookup();
   const view = useMemo<MapViewState>(() => {
     const n = map.width * map.height;
     if (!isGM) {
@@ -255,7 +257,7 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
     let vctx: VisionContext | null = null;
     if (needParty) {
       vctx = createVisionContext(map);
-      party = computeVisibility(map, (map.tokens || []).filter((tt) => isPcToken(tt, actors)), actors, vctx);
+      party = computeVisibility(map, (map.tokens || []).filter((tt) => isPcToken(tt, actors)), actors, vctx, lookup);
     }
     if (preview) {
       const shown = playerSideMap(map);
@@ -267,14 +269,14 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
         for (const enc of Object.values(map.explored || {})) orBits(explored, decodeBits(enc, n));
       } else {
         const u = game.users?.[preview];
-        visible = computeVisibility(map, viewersForUser(map, { characterIds: u?.characterIds || [] }, actors), actors, vctx);
+        visible = computeVisibility(map, viewersForUser(map, { characterIds: u?.characterIds || [] }, actors), actors, vctx, lookup);
         explored = decodeBits(map.explored?.[preview], n);
       }
       orBits(explored, visible);
       return { map: shown, fog: { visible, explored }, known: explored, tokenMask: visible, unseen: null, preview: true };
     }
     return { map, fog: null, known: null, tokenMask: null, unseen: tintUnseen ? party : null };
-  }, [map, preview, tintUnseen, actors, isGM]);
+  }, [map, preview, tintUnseen, actors, isGM, lookup]);
 
   const grid = useMemo(() => buildGrid(map), [map]);
   const combat = game.combat;

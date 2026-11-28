@@ -7,7 +7,7 @@ no effect data, only unsupported Chummer tags, or a narrative effect), **creatio
 nothing to do at the table). The sheet shows a marker on « partly » and « not automated » qualities. ✍ = hand-written effect
 (`tools/lib/effect-overrides.ts`). Unsupported tags: see [effects-coverage.md](effects-coverage.md).
 
-Qualities: 795 — automated 189, partly 67, not automated 469, creation only 70; with hand-written data: 88.
+Qualities: 795 — automated 193, partly 69, not automated 463, creation only 70; with hand-written data: 95.
 
 ## By book
 
@@ -26,7 +26,7 @@ Qualities: 795 — automated 189, partly 67, not automated 469, creation only 70
 | KC | 13 | 2 | 41 | 3 |
 | NF | 0 | 0 | 1 | 3 |
 | R5 | 2 | 0 | 7 | 0 |
-| RF | 71 | 26 | 174 | 18 |
+| RF | 75 | 28 | 168 | 18 |
 | RG | 2 | 0 | 13 | 1 |
 | SAG | 0 | 0 | 3 | 0 |
 | SASS | 1 | 0 | 0 | 1 |
@@ -36,7 +36,7 @@ Qualities: 795 — automated 189, partly 67, not automated 469, creation only 70
 | TCT | 5 | 1 | 5 | 2 |
 | TSG | 0 | 0 | 0 | 1 |
 
-## Not automated (469)
+## Not automated (463)
 
 | quality | book | karma | applied | not handled |
 |---|---|---:|---|---|
@@ -333,10 +333,8 @@ Qualities: 795 — automated 189, partly 67, not automated 469, creation only 70
 | Infected Optional Power: Armor | RF 136 | 6 |  | `critterpowers` |
 | Infected Optional Power: Compulsion | RF 136 | 9 |  | `critterpowers` |
 | Infected Optional Power: Enhanced Sense (Hearing) | RF 136 | 3 |  | `critterpowers` |
-| Infected Optional Power: Enhanced Sense (Low-Light Vision) | RF 136 | 3 |  | `critterpowers` |
 | Infected Optional Power: Enhanced Sense (Smell) | RF 136 | 3 |  | `critterpowers` |
 | Infected Optional Power: Enhanced Sense (Taste) | RF 136 | 3 |  | `critterpowers` |
-| Infected Optional Power: Enhanced Sense (Thermographic Vision) | RF 136 | 3 |  | `critterpowers` |
 | Infected Optional Power: Enhanced Sense (Visual Acuity) | RF 136 | 3 |  | `critterpowers` |
 | Infected Optional Power: Fear | RF 136 | 9 |  | `critterpowers` |
 | Infected Optional Power: Immunity (Fire) | RF 136 | 6 |  | `critterpowers` |
@@ -351,8 +349,6 @@ Qualities: 795 — automated 189, partly 67, not automated 469, creation only 70
 | Keen-Eared | RF 116 | 3 |  | no effect data |
 | Larger Tusks | RF 116 | 5 |  | no effect data |
 | Legendary Rep | RF 149 | 4 |  |  |
-| Low-Light Vision (Changeling) | RF 116 | 4 |  | no effect data |
-| Low-Light Vision (Feline) | RF 116 | 2 |  | no effect data |
 | Made Man | RF 148 | 5 |  | `mademan` |
 | Magic Sense | RF 116 | 7 |  | no effect data |
 | Marsupial Pouch | RF 116 | 3 |  | no effect data |
@@ -374,7 +370,6 @@ Qualities: 795 — automated 189, partly 67, not automated 469, creation only 70
 | Natural Weapon: Bite (Naga) | RF 105 | 0 |  | no effect data |
 | Natural Weapon: Kick (Centaur) | RF 105 | 0 |  | no effect data |
 | Night Blindness | RF 156 | -6 |  | no effect data |
-| Night Vision | RF 148 | 2 |  | no effect data |
 | Nocturnal | RF 121 | -4 |  | no effect data |
 | Overclocker | RF 148 | 5 |  | `overclocker` |
 | Pacifist I | RF 157 | -10 |  | no effect data |
@@ -430,8 +425,7 @@ Qualities: 795 — automated 189, partly 67, not automated 469, creation only 70
 | Steely Eyed Wheelman | RF 150 | 2 |  | no effect data |
 | Striking Skin Pigmentation | RF 122 | -4 |  | GM: helps others identify or locate the character |
 | Symbiosis | RF 122 | -5 |  | no effect data |
-| Thermal Sensitivity | RF 118 | 4 |  | no effect data |
-| Thermographic Vision (SURGE) | RF 118 | 3 |  | no effect data |
+| Thermal Sensitivity | RF 118 | 4 |  | GM: non-visual heat sense within 10 m (Perception tests); in combat it lowers Visibility and Light / Glare by one level |
 | Third Eye | RF 122 | -3 |  | no effect data |
 | Underwater Vision | RF 118 | 3 |  | no effect data |
 | Unusual Hair | RF 122 | -3 |  | no effect data |
@@ -510,7 +504,7 @@ Qualities: 795 — automated 189, partly 67, not automated 469, creation only 70
 | Human Lifespan | TCT 188 | 10 |  | no effect data |
 | Trog Traitor | TCT 189 | -5 |  | no effect data |
 
-## Partly automated (67)
+## Partly automated (69)
 
 | quality | book | karma | applied | not handled |
 |---|---|---:|---|---|
@@ -556,6 +550,8 @@ Qualities: 795 — automated 189, partly 67, not automated 469, creation only 70
 | Infected: Vampire (Human) | RF 140 | 27 | initiativeDice +1 | `critterpowers`, `optionalpowers`, `runmultiplier`, `walkmultiplier` |
 | Infected: Vampire (Non-Human) | RF 140 | 37 | initiativeDice +1 | `critterpowers`, `optionalpowers`, `runmultiplier`, `walkmultiplier` |
 | Infected: Wendigo | RF 140 | 47 | initiativeDice +1 | `critterpowers`, `optionalpowers`, `runmultiplier`, `walkmultiplier` |
+| Low-Light Vision (Feline) | RF 116 | 2 | flag:lowLightVision +1 ✍ | GM: social modifiers of the reflective slit eyes (Freaks sidebar, p. 123) |
+| Night Vision | RF 148 | 2 | flag:lowLightVision +1 ✍ | GM: sun glare (Blinding on a clear day, Moderate when overcast) unless the character wears sunglasses |
 | Addiction (Burnout) | SR5 78 | -25 | stat:notoriety +1; skillCategory:social -3 | GM: withdrawal penalties on Mental or Physical tests (depends on the dependency) |
 | Addiction (Severe) | SR5 78 | -20 | stat:notoriety +1; skillCategory:social -2 ✍ | GM: withdrawal penalties on Mental or Physical tests (depends on the dependency) |
 | Allergy (Common, Extreme) | SR5 78 | -25 | allTests -6 (if q-allergen) ✍; stat:toxinResist -4 (if q-allergen) ✍ | GM: damage boxes while exposed; penalties on Physical attribute-only tests |
@@ -582,7 +578,7 @@ Qualities: 795 — automated 189, partly 67, not automated 469, creation only 70
 | Unsteady Hands | SR5 87 | -7 | skillAttribute:AGI -2 (if q-symptoms) ✍ | GM: AGI + BOD (4) test after each stressful encounter |
 | Elevated Stress | TCT 189 | -8 | resist:toxincontactresist -1; resist:toxiningestionresist -1; resist:toxininhalationresist -1; resist:toxininjectionresist -1 | `physiologicaladdictionalreadyaddicted`, `physiologicaladdictionfirsttime`, `psychologicaladdictionalreadyaddicted`, `psychologicaladdictionfirsttime` |
 
-## Automated (189)
+## Automated (193)
 
 | quality | book | karma | applied | not handled |
 |---|---|---:|---|---|
@@ -695,10 +691,13 @@ Qualities: 795 — automated 189, partly 67, not automated 469, creation only 70
 | Impaired Attribute (Reaction) | RF 120 | -8 | attributeMax:REA -2 |  |
 | Impaired Attribute (Strength) | RF 120 | -8 | attributeMax:STR -2 |  |
 | Impaired Attribute (Willpower) | RF 120 | -8 | attributeMax:WIL -2 |  |
+| Infected Optional Power: Enhanced Sense (Low-Light Vision) | RF 136 | 3 | flag:lowLightVision +1 ✍ |  |
+| Infected Optional Power: Enhanced Sense (Thermographic Vision) | RF 136 | 3 | flag:thermographicVision +1 ✍ |  |
 | Infirm | RF 156 | -5 | attributeMax:BOD -1; attributeMax:AGI -1; attributeMax:REA -1; attributeMax:STR -1 |  |
 | Liar | RF 156 | -7 | limit:social -1 |  |
 | Lightning Reflexes | RF 148 | 20 | stat:defense +1; initiative +1; initiativeDice +1 |  |
 | Linguist | RF 148 | 4 | skillCategory:knowledge:language +1 |  |
+| Low-Light Vision (Changeling) | RF 116 | 4 | flag:lowLightVision +1 ✍ |  |
 | Magnetoception | RF 116 | 4 | skill:navigation +1 |  |
 | Metagenic Improvement (Agility) | RF 116 | 15 | attributeMax:AGI +1 |  |
 | Metagenic Improvement (Body) | RF 116 | 15 | attributeMax:BOD +1 |  |
@@ -726,6 +725,7 @@ Qualities: 795 — automated 189, partly 67, not automated 469, creation only 70
 | Sense of Direction | RF 149 | 3 | skill:navigation +1 |  |
 | Slow Healer | RF 122 | -3 | stat:physicalRecovery -2; stat:stunRecovery -2 |  |
 | Stubby Arms | RF 122 | -10 | stat:reach -1 |  |
+| Thermographic Vision (SURGE) | RF 118 | 3 | flag:thermographicVision +1 ✍ |  |
 | Thorns | RF 118 | 2 | skillCategory:physical -1; stat:unarmedDV +1 |  |
 | Tough as Nails (Physical) | RF 150 | 5 | monitor:physical +1 |  |
 | Tough as Nails (Stun) | RF 150 | 5 | monitor:stun +1 |  |

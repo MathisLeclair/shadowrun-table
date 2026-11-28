@@ -34,7 +34,8 @@ formula with Rating: 'Rating', '-Rating', 'FixedValues(1,2,3)', 'Rating * 2'), c
   recovery, throw…), `resist` (toxin / pathogen / fire / cold… resistances and immunities: shown only), `accuracy`
   (weaponskillaccuracy, weaponaccuracy), `matrixAction` (Codeslinger), `flag` (smartlink, unarmed physical), `choice`
   (selecttext / selectskill without a value), `info` (addweapon), reputation and lifestyle cost (`stat` notoriety /
-  publicAwareness / streetCred / lifestyleCost: shown), `personaAttribute` (livingpersona: shown), flags `ambidextrous`.
+  publicAwareness / streetCred / lifestyleCost: shown), `personaAttribute` (livingpersona: shown), flags `ambidextrous`,
+  `lowLightVision` / `thermographicVision` (hand-written; read by `shared/vision.ts` `tokenVision`).
 - `chargen`: creation / structural tags (karma and point costs, unlocked tabs and attributes, free spells or contacts,
   forbidden 'ware grades…, `CHARGEN_TAGS`): nothing to do at the table, never a modifier.
 - Any other tag → `{ type: 'unsupported', tag }` (kept on the catalog entry, never silently dropped).

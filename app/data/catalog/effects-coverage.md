@@ -6,7 +6,7 @@ normalized by `tools/lib/bonus-effects.ts` into `effects` (see ARCHITECTURE.md �
 (applied to rolls / limits / derived values, or shown as information: resistances, attribute maximums, `baked` attribute / initiative bonuses);
 « unsupported » = kept as `{ type: 'unsupported', tag }` on the entry (chargen, karma costs, critter powers… — nothing is silently dropped).
 
-Entries with effects: 1137 (306 with at least one unsupported tag). Effects: 1776 supported, 428 unsupported.
+Entries with effects: 1145 (304 with at least one unsupported tag). Effects: 1786 supported, 426 unsupported.
 
 | tag | supported | unsupported | effect types | files |
 |---|---:|---:|---|---|
@@ -15,9 +15,9 @@ Entries with effects: 1137 (306 with at least one unsupported tag). Effects: 177
 | limitmodifier | 125 | 0 | limit | armor, armormods, gear, cyberware, bioware, qualities |
 | specificskill | 111 | 0 | skill | armor, gear, cyberware, bioware, qualities, powers |
 | specificattribute | 103 | 0 | attribute, attributeMax | cyberware, bioware, qualities, powers |
-| critterpowers | 0 | 70 |  | qualities |
+| hand | 71 | 0 | flag, skillCategory, allTests, stat, skillAttribute, skill, limit, matrixAction | cyberware, qualities |
 | conditionmonitor | 68 | 0 | monitor | cyberware, bioware, qualities, powers |
-| hand | 61 | 0 | skillCategory, allTests, stat, skillAttribute, skill, limit, matrixAction | qualities |
+| critterpowers | 0 | 68 |  | qualities |
 | enableattribute | 60 | 0 | chargen | qualities |
 | enabletab | 58 | 0 | chargen | qualities |
 | focusbindingkarmacost | 56 | 0 | chargen | qualities |
@@ -234,9 +234,9 @@ Entries with effects: 1137 (306 with at least one unsupported tag). Effects: 177
 | attributeMax | 51 |
 | armor | 29 |
 | skillAttribute | 28 |
+| flag | 21 |
 | initiativeDice | 20 |
 | skillGroup | 17 |
-| flag | 11 |
 | initiative | 9 |
 | personaAttribute | 8 |
 | allTests | 6 |

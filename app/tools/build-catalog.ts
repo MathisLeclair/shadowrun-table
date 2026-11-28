@@ -817,10 +817,23 @@ function buildMartialArts(): BuiltItem[] {
 // ---------------------------------------------------------------------------
 // Qualities, spells, adept powers (karma-based, used by the training module)
 // ---------------------------------------------------------------------------
+/**
+ * Metatype senses (SR5 p. 66): Chummer hides them from its quality list (the metatype grants them), so they are not in
+ * qualities.json, but actors carry them (Foundry / Chummer imports): they get an effects index entry only, with their vision
+ * flag (tools/lib/effect-overrides.ts). Extra names: the app's French for them (« Nyctalopie » is also Night Vision, RF 148).
+ */
+const METATYPE_SENSES: Record<string, string[]> = { 'Low-Light Vision': ['Vision nocturne'], 'Thermographic Vision': [] };
+const indexOnlyQualities: BuiltItem[] = [];
 function buildQualities(): BuiltItem[] {
   const x = readXml(path.join(CHUMMER, 'qualities.xml'));
   const out: BuiltItem[] = [];
   for (const q of arr(x.qualities?.quality)) {
+    if (hidden(q) && METATYPE_SENSES[clean(txt(q.name))]) {
+      const { hide: _hide, ...shown } = q;
+      const it = base('qualities', shown, { costRaw: null, availRaw: null, ratingRaw: '0' });
+      if (it) indexOnlyQualities.push(withEffects('qualities', it, q));
+      continue;
+    }
     const it = base('qualities', q, { costRaw: null, availRaw: null, ratingRaw: '0' });
     if (!it) continue;
     const karma = num(txt(q.karma)) ?? 0;
@@ -1151,6 +1164,10 @@ const addEff = (file: string, it: BuiltItem | Technique) => {
   for (const nm of [it.name, it.nameFr]) if (nm && !n[nm.toLowerCase()]) n[nm.toLowerCase()] = it.id;
 };
 for (const file of EFFECT_FILES) for (const it of written[file] || []) addEff(file, it);
+for (const it of indexOnlyQualities) {
+  addEff('qualities', it);
+  for (const nm of METATYPE_SENSES[it.name] || []) effIndex.names.qualities[nm.toLowerCase()] ||= it.id;
+}
 for (const style of written.martialarts || []) for (const tq of style.stats?.techniques || []) addEff('techniques', tq);
 fs.writeFileSync(path.join(OUT, 'effects.json'), JSON.stringify(effIndex));
 
