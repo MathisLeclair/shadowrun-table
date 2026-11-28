@@ -50,6 +50,7 @@
   "chummer::Background": "Passé",
   "Chummer5 import": "Import Chummer5",
   "Chummer5 import ({file})": "Import Chummer5 ({file})",
+  "Migrated from Chummer ({file}, {date}) and Foundry": "Migré depuis Chummer ({file}, {date}) et Foundry",
   "Chummer5a sheet (.chum5) or JSON sheet export": "Fiche Chummer5a (.chum5) ou export JSON d’une fiche",
   "closing tag </{tag}> without an opening tag": "balise fermante </{tag}> sans ouverture",
   "Concept": "Concept",

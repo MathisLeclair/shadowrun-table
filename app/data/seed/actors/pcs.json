@@ -4356,12 +4356,12 @@
     "id": "pc_christopher",
     "type": "pc",
     "name": "Christopher Armingstar",
-    "player": "",
+    "player": "Mathis",
     "concept": "PJ importé de Foundry",
     "color": "#3fa7d6",
     "bio": "Tall and of a pretty average build man, some grey hair can be seen and a 3 days beard can be seen on the face.  \nHe as a pretty face but if you are near him you can't shook the feeling of uneasyness like he's not the man he seems to be.  \nAddicted to alcohol and to smoking, he spend most of his free time in some bar trying to con some \"innocent\" bystander.  \nAs far as his memory goes he always lived with his father, who was working in some shaddy business; Due to his work his dad, and defacto Chris, had to move arround a lot, which led him to had to addapt quickly to new environement, faces, schools. This constant moving arround is what forge his character to be what he's know: quick to adapt, and please the person in front of him. his father being rarely there for him, he hung arround with some shaddy people when he was a teenager leading him rapidly to become quite fond of alchool and smoking, which took him away from the loneliness of comming back to a empty home. After a few years of sweet talking his way arround he quickly understood that having social skills can give you a lot of advantages in life; so much so that you can pretty much live off other people's cluelessness.\n\n### Historique (Foundry)\n\nTall and of a pretty average build man, some grey hair can be seen and a 3 days beard can be seen on the face.  \nHe as a pretty face but if you are near him you can't shook the feeling of uneasyness like he's not the man he seems to be.  \nAddicted to alcohol and to smoking, he spend most of his free time in some bar trying to con some \"innocent\" bystander.  \nAs far as his memory goes he always lived with his father, who was working in some shaddy business; Due to his work his dad, and defacto Chris, had to move arround a lot, which led him to had to addapt quickly to new environement, faces, schools. This constant moving arround is what forge his character to be what he's know: quick to adapt, and please the person in front of him. his father being rarely there for him, he hung arround with some shaddy people when he was a teenager leading him rapidly to become quite fond of alchool and smoking, which took him away from the loneliness of comming back to a empty home. After a few years of sweet talking his way arround he quickly understood that having social skills can give you a lot of advantages in life; so much so that you can pretty much live off other people's cluelessness.",
     "notes": "Fiche synchronisée depuis Foundry VTT (monde « Shadowrun »). Les changements faits dans Foundry arrivent ici quand le MJ relance l'import.",
-    "gmNotes": "Aucun joueur propriétaire dans Foundry : importé comme PJ retraité.",
+    "gmNotes": "Aucun joueur propriétaire dans Foundry : importé comme PJ retraité.\n\nMigré depuis Chummer (fichier du 01/08/2020) et Foundry : la structure vient de Chummer (grade et sous-systèmes des implants, équipement imbriqué, véhicules, langues), l'état en jeu de Foundry (karma, nuyens, indices, contacts et objets ajoutés, munitions). Les objets notés « Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier » étaient dans Chummer mais pas dans Foundry.",
     "metatype": "Humain",
     "attributes": {
       "BOD": 2,
@@ -4423,8 +4423,8 @@
         "name": "Leadership",
         "attr": "CHA",
         "rating": 6,
-        "spec": "Rally",
-        "group": "influence"
+        "group": "influence",
+        "spec": "Rally"
       },
       {
         "id": "negotiation",
@@ -4530,93 +4530,130 @@
     ],
     "knowledge": [
       {
-        "id": "fvtt_y0jIcXZJVIkH01cG",
-        "name": "Area Knowledge: Neo-Tokyo",
-        "rating": 1,
-        "type": "street"
+        "id": "kno_mx0m71zo01grz",
+        "name": "Japanese",
+        "rating": 0,
+        "type": "language",
+        "chummerGuid": "062902ae-f484-40c6-aa6a-c053692e7ec5"
+      },
+      {
+        "id": "kno_mx0m71zo02idg",
+        "name": "English",
+        "rating": 0,
+        "type": "language",
+        "chummerGuid": "105a9fe9-a30a-4f2d-8514-4bee960ef4ae"
       },
       {
         "id": "fvtt_WIjk3RpeFm5rbBx3",
         "name": "Area Knowledge: Seattle",
         "rating": 1,
-        "type": "street"
+        "type": "street",
+        "chummerGuid": "d74c8d57-ae4f-431e-8fe4-8418c49d20e7"
       },
       {
         "id": "fvtt_xCrXS9j0FQWKKaAf",
         "name": "Bars and Clubs",
         "rating": 1,
-        "type": "street"
+        "type": "street",
+        "chummerGuid": "390b49c7-1580-46eb-a3f4-e47a7bbf6637"
       },
       {
-        "id": "fvtt_CyZShvjmTEkzVlSL",
-        "name": "Gangs",
+        "id": "fvtt_rkVaxRaqoD6wdMyx",
+        "name": "Fashion",
         "rating": 1,
-        "type": "street"
+        "type": "interest",
+        "chummerGuid": "c2e5e84b-489b-45aa-8875-276129ffa916"
       },
       {
         "id": "fvtt_Si16B9XKHcz8irQl",
         "name": "Yakuza",
         "rating": 2,
         "type": "street",
-        "spec": "Organizations"
+        "spec": "Organizations",
+        "chummerGuid": "1279ace8-f6d6-4a06-b73f-84c99c8e9768"
       },
       {
-        "id": "fvtt_7lAvOjfy9Olvsznr",
-        "name": "Politics",
+        "id": "fvtt_y0jIcXZJVIkH01cG",
+        "name": "Area Knowledge: Neo-Tokyo",
         "rating": 1,
-        "type": "academic"
+        "type": "street",
+        "chummerGuid": "3a478fab-3bd5-46d2-b477-4d87c3509c4b"
       },
       {
         "id": "fvtt_M0GnGCdFfZm2Ddn5",
         "name": "Business",
         "rating": 1,
-        "type": "professional"
+        "type": "professional",
+        "chummerGuid": "0fe8e37c-1f4e-46d7-886b-0af1e108feef"
+      },
+      {
+        "id": "fvtt_7lAvOjfy9Olvsznr",
+        "name": "Politics",
+        "rating": 1,
+        "type": "academic",
+        "chummerGuid": "7e71ae93-8313-44d1-8105-a614aefcfd01"
+      },
+      {
+        "id": "fvtt_CyZShvjmTEkzVlSL",
+        "name": "Gangs",
+        "rating": 1,
+        "type": "street",
+        "chummerGuid": "3cd51a0a-4ba1-4c2b-859f-59ec62e8b353"
       },
       {
         "id": "fvtt_7sK4CEpu5bOy7zcq",
         "name": "Alcohol",
         "rating": 2,
-        "type": "interest"
-      },
-      {
-        "id": "fvtt_rkVaxRaqoD6wdMyx",
-        "name": "Fashion",
-        "rating": 1,
-        "type": "interest"
+        "type": "interest",
+        "chummerGuid": "5a4578ce-e221-4d5f-a8de-268a81f64e36"
       }
     ],
     "qualities": [
       {
         "id": "fvtt_pEYqHXEQjnZzYBlX",
-        "name": "Addiction (modérée)",
+        "name": "Addiction (modérée) (alcool)",
         "karma": -9,
         "positive": false,
-        "notes": "Addiction (Moderate) · SR5 78",
-        "catalogId": "9a52a300-4d90-4b1f-a113-d0e40a410063"
+        "notes": "SR5 p.78",
+        "catalogId": "9a52a300-4d90-4b1f-a113-d0e40a410063",
+        "chummerGuid": "eb6b3c29-1f6c-4f05-95d3-8bab15013a3b",
+        "source": "SR5",
+        "page": 78,
+        "choice": "alcool"
       },
       {
         "id": "fvtt_66jvy8rTAOy880mO",
-        "name": "Addiction (légère)",
+        "name": "Addiction (légère) (Tabac)",
         "karma": -4,
         "positive": false,
-        "notes": "Addiction (Mild) · SR5 77",
-        "catalogId": "ea7cced4-a201-44a2-9a1b-e10180b1df81"
+        "notes": "SR5 p.77",
+        "catalogId": "ea7cced4-a201-44a2-9a1b-e10180b1df81",
+        "chummerGuid": "88586995-baaa-4e8f-8ec8-ee457887453f",
+        "source": "SR5",
+        "page": 77,
+        "choice": "Tabac"
       },
       {
         "id": "fvtt_fKhY2XnJSeT98PTQ",
         "name": "Bilingue",
         "karma": 5,
         "positive": true,
-        "notes": "Bilingual · SR5 72",
-        "catalogId": "c734e46a-d391-45a6-b022-6f18db5019f1"
+        "notes": "SR5 p.72",
+        "catalogId": "c734e46a-d391-45a6-b022-6f18db5019f1",
+        "chummerGuid": "b63d81f6-de61-4bcc-8ba9-9fb66f4c1ee0",
+        "source": "SR5",
+        "page": 72
       },
       {
         "id": "fvtt_8Eae2RNLv69sfvaP",
         "name": "Mémoire photographique",
         "karma": 6,
         "positive": true,
-        "notes": "Photographic Memory · SR5 76",
-        "catalogId": "9d3be1d9-1309-45e7-8bd9-1f5a3ede3522"
+        "notes": "SR5 p.76",
+        "catalogId": "9d3be1d9-1309-45e7-8bd9-1f5a3ede3522",
+        "chummerGuid": "d54a771a-4dfd-484c-ab91-02dc486e1352",
+        "source": "SR5",
+        "page": 76
       }
     ],
     "powers": [],
@@ -4635,7 +4672,13 @@
         "rc": 0,
         "ammo": "",
         "reach": 0,
-        "notes": "Unarmed Attack (SR5 132)"
+        "notes": "Unarmed Attack (SR5 132)",
+        "catalogId": "63dcfdb6-bbd9-4a58-bbf4-cd35f7614fdc",
+        "chummerGuid": "3cae02fd-d139-49de-ab59-92a87b59c986",
+        "source": "SR5",
+        "page": 132,
+        "location": "on",
+        "equipped": true
       },
       {
         "id": "fvtt_fXWysWvXpgiZzFlH",
@@ -4643,46 +4686,63 @@
         "category": "Pistolets lourds",
         "kind": "ranged",
         "skill": "pistols",
-        "accuracy": 6,
+        "accuracy": "6",
         "damage": "7P",
-        "ap": -5,
+        "ap": -1,
         "mode": "SA",
-        "rc": 2,
+        "rc": 0,
         "ammo": "14(c)",
         "reach": 0,
-        "catalogId": "6366691e-c1e0-4d5e-b7a6-1c0371708714",
-        "notes": "Colt Government 2066 (SR5 426)",
+        "accessories": [
+          {
+            "id": "acc_christopher01",
+            "name": "Laser Sight",
+            "nameFr": "Visée laser",
+            "catalogId": "521f9c2e-dfb2-42a6-b707-9808ae4885de",
+            "chummerGuid": "d315ba9f-436b-44b4-b740-b101fa563088",
+            "source": "SR5",
+            "page": 432,
+            "mount": "Top",
+            "cost": 125,
+            "avail": "2",
+            "effects": {
+              "accuracy": 1
+            }
+          },
+          {
+            "id": "acc_christopher02",
+            "name": "Silencer/Suppressor",
+            "nameFr": "Silencieux",
+            "catalogId": "0da6149e-982f-4051-825b-52c1b79c7e52",
+            "chummerGuid": "c7eb9dbc-36f7-47a0-a3db-9656e95e72dd",
+            "source": "SR5",
+            "page": 432,
+            "mount": "Barrel",
+            "cost": 500,
+            "avail": "9F",
+            "effects": {}
+          }
+        ],
         "mounts": [
           "Barrel",
           "Top",
           "Stock",
           "Side"
         ],
-        "accessories": [
-          {
-            "id": "acc_christopher01",
-            "catalogId": "521f9c2e-dfb2-42a6-b707-9808ae4885de",
-            "name": "Laser Sight",
-            "mount": "Top",
-            "cost": 125,
-            "avail": "2",
-            "nameFr": "Visée laser",
-            "effects": {
-              "accuracy": 1
-            },
-            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier"
-          },
-          {
-            "id": "acc_christopher02",
-            "catalogId": "0da6149e-982f-4051-825b-52c1b79c7e52",
-            "name": "Silencer/Suppressor",
-            "mount": "Barrel",
-            "cost": 500,
-            "avail": "9F",
-            "nameFr": "Silencieux",
-            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier"
-          }
-        ]
+        "notes": "SR5 p.426",
+        "catalogId": "6366691e-c1e0-4d5e-b7a6-1c0371708714",
+        "chummerGuid": "ee78ac78-f02d-48ac-840d-37b631631770",
+        "source": "SR5",
+        "page": 426,
+        "ammoLoaded": 14,
+        "ammoKind": {
+          "name": "Mun. : Balles à pointe creuse",
+          "catalogId": "f486f414-ee2c-46db-92ea-c682861d8fe0"
+        },
+        "location": "on",
+        "ammoMax": 14,
+        "ammoType": "c",
+        "equipped": true
       },
       {
         "id": "fvtt_gVDyjqVk7I3OrwoU",
@@ -4690,45 +4750,76 @@
         "category": "Pistolets légers",
         "kind": "ranged",
         "skill": "pistols",
-        "accuracy": 6,
+        "accuracy": "6",
         "damage": "6P",
         "ap": 0,
         "mode": "SA",
-        "rc": 2,
+        "rc": 0,
         "ammo": "16(c)",
         "reach": 0,
-        "catalogId": "93722378-dcb6-4988-ba4e-54ce545644fe",
-        "notes": "Ares Light Fire 75 (SR5 425)",
+        "accessories": [
+          {
+            "id": "acc_christopher03",
+            "name": "Smartgun System, Internal",
+            "nameFr": "Système Smartgun, interne",
+            "catalogId": "d57d2c64-1f61-4f5f-a465-8ce0dfacec6a",
+            "chummerGuid": "976f057f-ead3-4433-8fe0-218a392e3911",
+            "source": "SR5",
+            "page": 433,
+            "mount": "Internal",
+            "cost": 0,
+            "avail": "+2R",
+            "effects": {
+              "smartgun": true
+            },
+            "included": true
+          },
+          {
+            "id": "sub_mx0m72000lk68",
+            "name": "Silencer, Ares Light Fire 70",
+            "nameFr": "Silencieux, Ares Light Fire 70",
+            "catalogId": "d34a93a8-b695-4c46-8e34-0948df68d44f",
+            "chummerGuid": "f97f773a-b73f-400c-8638-66251daadc1a",
+            "source": "SR5",
+            "page": 425,
+            "mount": "Internal",
+            "cost": 750,
+            "avail": "6F",
+            "effects": {},
+            "included": true
+          },
+          {
+            "id": "acc_christopher04",
+            "name": "Concealable Holster",
+            "nameFr": "Holster dissimulable",
+            "catalogId": "7f66a669-917a-4423-bd83-cf0e0a1fb2a8",
+            "chummerGuid": "ce219ecc-247c-4c70-a84a-4e3795035cee",
+            "source": "SR5",
+            "page": 431,
+            "mount": "",
+            "cost": 150,
+            "avail": "2",
+            "effects": {}
+          }
+        ],
         "mounts": [
           "Barrel",
           "Top"
         ],
-        "accessories": [
-          {
-            "id": "acc_christopher03",
-            "catalogId": "d57d2c64-1f61-4f5f-a465-8ce0dfacec6a",
-            "name": "Smartgun System, Internal",
-            "mount": "Internal",
-            "cost": 0,
-            "avail": "2R",
-            "nameFr": "Système Smartgun, interne",
-            "effects": {
-              "smartgun": true
-            },
-            "included": true,
-            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier"
-          },
-          {
-            "id": "acc_christopher04",
-            "catalogId": "7f66a669-917a-4423-bd83-cf0e0a1fb2a8",
-            "name": "Concealable Holster",
-            "mount": "",
-            "cost": 150,
-            "avail": "2",
-            "nameFr": "Holster dissimulable",
-            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier"
-          }
-        ]
+        "notes": "SR5 p.425",
+        "catalogId": "93722378-dcb6-4988-ba4e-54ce545644fe",
+        "chummerGuid": "0d531923-be3f-44cf-9305-f75f764a3ca8",
+        "source": "SR5",
+        "page": 425,
+        "ammoLoaded": 16,
+        "ammoKind": {
+          "name": "Mun. : Balles normales",
+          "catalogId": "b2a0b340-c793-4322-8422-8b03d18a6fae"
+        },
+        "location": "on",
+        "ammoMax": 16,
+        "ammoType": "c",
+        "equipped": false
       },
       {
         "id": "fvtt_qbPkuKQQucnBfYe2",
@@ -4736,27 +4827,35 @@
         "category": "Armes tranchantes",
         "kind": "melee",
         "skill": "blades",
-        "accuracy": 6,
-        "damage": "5P",
+        "accuracy": "6",
+        "damage": "(STR+2)P",
         "ap": -3,
         "mode": "",
         "rc": 0,
         "ammo": "",
         "reach": 0,
-        "catalogId": "656906d8-b6a4-47a2-9554-de365097eba0",
-        "notes": "Combat Knife (SR5 422)",
         "accessories": [
           {
             "id": "acc_christopher05",
-            "catalogId": "7f66a669-917a-4423-bd83-cf0e0a1fb2a8",
             "name": "Concealable Holster",
+            "nameFr": "Holster dissimulable",
+            "catalogId": "7f66a669-917a-4423-bd83-cf0e0a1fb2a8",
+            "chummerGuid": "ed7cd7bb-c1f2-4b2e-b35b-e2cf081866d0",
+            "source": "SR5",
+            "page": 431,
             "mount": "",
             "cost": 150,
             "avail": "2",
-            "nameFr": "Holster dissimulable",
-            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier"
+            "effects": {}
           }
-        ]
+        ],
+        "notes": "SR5 p.422",
+        "catalogId": "656906d8-b6a4-47a2-9554-de365097eba0",
+        "chummerGuid": "44fbd00f-45e5-412a-aeb0-747a6fc13db3",
+        "source": "SR5",
+        "page": 422,
+        "location": "on",
+        "equipped": false
       },
       {
         "id": "fvtt_oKJpENfQmDzziduU",
@@ -4764,61 +4863,96 @@
         "category": "Lance-grenades",
         "kind": "ranged",
         "skill": "heavy_weapons",
-        "accuracy": 4,
+        "accuracy": "4",
         "damage": "Grenade",
         "ap": 0,
         "mode": "SA",
-        "rc": 2,
+        "rc": 0,
         "ammo": "12(c)",
         "reach": 0,
+        "mounts": [
+          "Stock",
+          "Side",
+          "Top",
+          "Under"
+        ],
+        "notes": "SR5 p.431",
         "catalogId": "5b98b55d-c87c-453a-ad87-9b34c8cbf04b",
-        "notes": "ArmTech MGL-12 (SR5 431)"
+        "chummerGuid": "194998ea-7f38-4c32-8861-c695f7d8e07a",
+        "source": "SR5",
+        "page": 431,
+        "ammoLoaded": 5,
+        "ammoKind": {
+          "name": "Mini-Grenades à gaz",
+          "catalogId": "74284124-57a0-479b-9ab1-3433bdb9e3b7"
+        },
+        "location": "on",
+        "ammoMax": 12,
+        "ammoType": "c",
+        "equipped": false
       },
       {
         "id": "fvtt_BoL7YRWIJHvboXi7",
         "name": "Minigrenade: High Explosive",
-        "category": "Arme à distance",
+        "category": "Gear",
         "kind": "ranged",
         "skill": "heavy_weapons",
-        "accuracy": "",
-        "damage": "16P",
+        "accuracy": "0",
+        "damage": "16P (-2/m)",
         "ap": -2,
         "mode": "",
-        "rc": 2,
+        "rc": 0,
         "ammo": "",
         "reach": 0,
-        "notes": "Minigrenade: High Explosive (SR5 435)"
+        "notes": "SR5 p.435",
+        "catalogId": "d7c9b470-018c-4d49-b954-6fbe39e0499b",
+        "chummerGuid": "13f1bf3b-5ecd-4ba8-bf37-95ca883f5fcf",
+        "source": "SR5",
+        "page": 435,
+        "location": "on",
+        "equipped": false
       },
       {
         "id": "fvtt_OLGm04DlyQsTgLpR",
         "name": "Minigrenade: Gas",
-        "category": "Arme à distance",
+        "category": "Gear",
         "kind": "ranged",
         "skill": "heavy_weapons",
-        "accuracy": "",
-        "damage": "10S",
+        "accuracy": "0",
+        "damage": "Chemical (10m Radius)",
         "ap": 0,
         "mode": "",
-        "rc": 2,
+        "rc": 0,
         "ammo": "",
         "reach": 0,
-        "notes": "Minigrenade: Gas (SR5 435)"
+        "notes": "SR5 p.435",
+        "catalogId": "e5ce47b1-f829-4ecf-ab68-471ab782bf7c",
+        "chummerGuid": "d2e6cd1e-d7a2-4f0f-9e07-f8836b5bc820",
+        "source": "SR5",
+        "page": 435,
+        "location": "on",
+        "equipped": false
       },
       {
         "id": "fvtt_cvRDBKaMGhz0cWmv",
-        "name": "Couteau",
-        "category": "Armes tranchantes",
+        "name": "Knife (Survival Kit)",
+        "category": "Blades",
         "kind": "melee",
         "skill": "blades",
-        "accuracy": 5,
-        "damage": "4P",
+        "accuracy": "5",
+        "damage": "(STR+1)P",
         "ap": -1,
         "mode": "",
         "rc": 0,
         "ammo": "",
         "reach": 0,
-        "catalogId": "eb16de72-e646-4880-aa5b-21a5a0a2b342",
-        "notes": "Knife (Survival Kit) (SR5 422)"
+        "notes": "SR5 p.422",
+        "catalogId": "a92933cb-0c81-4b54-aeb1-ddc24836775d",
+        "chummerGuid": "af4ad683-f8de-4e86-892f-2afaac1df5be",
+        "source": "SR5",
+        "page": 422,
+        "location": "on",
+        "equipped": false
       },
       {
         "id": "fvtt_jD1JUdqbHfQ78DMB",
@@ -4826,30 +4960,41 @@
         "category": "Armes de mêlée exotiques",
         "kind": "melee",
         "skill": "exotic_weapon",
-        "accuracy": 3,
+        "accuracy": "3",
         "damage": "8P",
         "ap": -6,
         "mode": "",
         "rc": 0,
         "ammo": "",
         "reach": 1,
+        "notes": "SR5 p.448",
         "catalogId": "fb814f8e-7284-4ae8-b362-63958d6a1921",
-        "notes": "Monofilament Chainsaw (SR5 448)"
+        "chummerGuid": "0da4d6da-f150-467b-81e5-ba21a593b582",
+        "source": "SR5",
+        "page": 448,
+        "location": "on",
+        "equipped": false
       },
       {
         "id": "fvtt_6ahUiYvHws35fzq0",
         "name": "Ares Briefcase Shield",
-        "category": "Corps à corps",
+        "category": "Exotic Melee Weapons",
         "kind": "melee",
         "skill": "exotic_weapon",
-        "accuracy": 3,
-        "damage": "5P",
+        "accuracy": "3",
+        "damage": "(STR+2)P",
         "ap": 0,
         "mode": "",
         "rc": 0,
         "ammo": "",
         "reach": 0,
-        "notes": "Ares Briefcase Shield (CA 137)"
+        "notes": "CA p.137",
+        "catalogId": "b84e7ffe-acae-461c-a7ce-67056976a96e",
+        "chummerGuid": "f35a9749-a3b8-4fc6-8885-adfb48880ab8",
+        "source": "CA",
+        "page": 137,
+        "location": "on",
+        "equipped": false
       }
     ],
     "armor": [
@@ -4858,74 +5003,141 @@
         "name": "Costume « Actioneer »",
         "rating": 8,
         "equipped": false,
-        "stack": false,
-        "notes": "Actioneer Business Clothes",
-        "catalogId": "5a650844-8f24-48e7-829f-0443d9ff5cf7"
+        "capacity": 8,
+        "notes": "SR5 p.437",
+        "catalogId": "5a650844-8f24-48e7-829f-0443d9ff5cf7",
+        "chummerGuid": "76b24798-8712-4659-b36c-d8d133c30975",
+        "source": "SR5",
+        "page": 437,
+        "location": "chum_3f5a109b-bc32-4054-95ff-ad24c0fc0f33"
       },
       {
         "id": "fvtt_K2m8o9QSd2Vw67bE",
         "name": "Zoé : Heritage 12",
         "rating": 12,
         "equipped": true,
-        "stack": false,
-        "notes": "Zoé: Heritage 12",
-        "catalogId": "d4804f1b-4443-4e97-a7d2-9c1659732c6b",
         "capacity": 6,
         "mods": [
           {
+            "id": "sub_mx0m720d0yp8i",
+            "name": "Custom Fit",
+            "catalogId": "38168e21-833e-4ab3-8e5c-186468b70ef9",
+            "chummerGuid": "d73a4fce-68f4-4d4d-b864-460a74ad04a7",
+            "source": "RG",
+            "page": 59,
+            "capacity": 0,
+            "cost": 0,
+            "avail": "0",
+            "included": true
+          },
+          {
+            "id": "sub_mx0m720d0z30g",
+            "name": "Newest Model",
+            "catalogId": "13835ff2-7b9e-47c3-9d8b-7b9a2dbe499d",
+            "chummerGuid": "5f389245-93ab-419c-b181-c63d8387a7c3",
+            "source": "RG",
+            "page": 59,
+            "capacity": 0,
+            "cost": 0,
+            "avail": "0",
+            "included": true
+          },
+          {
             "id": "mod_christopher06",
-            "catalogId": "9ee8e6ad-2472-485d-ae42-d1978749b456",
             "name": "Electrochromic Clothing",
+            "nameFr": "Modification électrochrome",
+            "catalogId": "9ee8e6ad-2472-485d-ae42-d1978749b456",
+            "chummerGuid": "aa4d6baa-69e3-4112-9580-5602bdcbbe04",
+            "source": "SR5",
+            "page": 437,
             "capacity": 0,
             "cost": 500,
-            "avail": "2",
-            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier",
-            "nameFr": "Modification électrochrome"
+            "avail": "+2"
           },
           {
             "id": "mod_christopher07",
-            "catalogId": "dd246520-7306-40fb-88b4-c9cb031208fc",
             "name": "Fire Resistance",
+            "nameFr": "Protection ignifuge",
+            "catalogId": "dd246520-7306-40fb-88b4-c9cb031208fc",
+            "chummerGuid": "e4992dff-21fc-493f-a439-92e959e67031",
+            "source": "SR5",
+            "page": 437,
+            "rating": 2,
             "capacity": 2,
             "cost": 500,
-            "avail": "6",
-            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier",
-            "nameFr": "Protection ignifuge",
-            "rating": 2
+            "avail": "6"
           }
-        ]
+        ],
+        "notes": "RG p.62",
+        "catalogId": "d4804f1b-4443-4e97-a7d2-9c1659732c6b",
+        "chummerGuid": "8591d424-1a6c-4fc6-8f14-7a76a0901d15",
+        "source": "RG",
+        "page": 62,
+        "location": "on"
       },
       {
         "id": "fvtt_bgzKpPH9YxbTde8D",
         "name": "Mortimer of London : Manteau Greatcoat",
-        "rating": 10,
+        "rating": 3,
         "equipped": true,
         "stack": true,
-        "notes": "Mortimer of London: Greatcoat Coat",
-        "catalogId": "446ec9ad-9a52-46fe-8f27-873a51ef6291",
         "capacity": 10,
         "mods": [
           {
+            "id": "sub_mx0m720e13f5v",
+            "name": "Custom Fit (Stack) (Zoé: Heritage 12)",
+            "catalogId": "0d74f2f6-74bf-4c7e-afdf-d44f24c3ac12",
+            "chummerGuid": "27d07641-58cf-42c6-89b2-edfd7432d67a",
+            "source": "RG",
+            "page": 59,
+            "capacity": 0,
+            "cost": 0,
+            "avail": "0",
+            "included": true
+          },
+          {
+            "id": "sub_mx0m720e14zut",
+            "name": "Concealability",
+            "catalogId": "6226742c-d950-46af-af1a-fc483e14be5c",
+            "chummerGuid": "1c79cf54-3010-463e-8bfd-5f27a1990b27",
+            "source": "RG",
+            "page": 59,
+            "capacity": 0,
+            "cost": 0,
+            "avail": "0",
+            "included": true
+          },
+          {
             "id": "mod_christopher08",
-            "catalogId": "9ee8e6ad-2472-485d-ae42-d1978749b456",
             "name": "Electrochromic Clothing",
+            "nameFr": "Modification électrochrome",
+            "catalogId": "9ee8e6ad-2472-485d-ae42-d1978749b456",
+            "chummerGuid": "e5cdf7af-649d-4fa9-8d65-4e7e4ecdffbd",
+            "source": "SR5",
+            "page": 437,
             "capacity": 0,
             "cost": 500,
-            "avail": "2",
-            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier",
-            "nameFr": "Modification électrochrome"
+            "avail": "+2"
           },
           {
             "id": "mod_christopher09",
-            "catalogId": "dbdaf817-9bfa-4938-a195-b53c63b53e7c",
             "name": "Shock Frills",
+            "nameFr": "Vrilles électriques",
+            "catalogId": "dbdaf817-9bfa-4938-a195-b53c63b53e7c",
+            "chummerGuid": "a8739a05-139f-4a9d-b0b5-725e6e70a9f1",
+            "source": "SR5",
+            "page": 438,
             "capacity": 2,
             "cost": 250,
-            "avail": "6R",
-            "notes": "Restauré depuis Chummer (fichier du 01/08/2020) — à vérifier",
-            "nameFr": "Vrilles électriques"
+            "avail": "6R"
           }
-        ]
+        ],
+        "notes": "RG p.58",
+        "catalogId": "446ec9ad-9a52-46fe-8f27-873a51ef6291",
+        "chummerGuid": "90a9387c-6d2b-4385-9304-cf1c2df22062",
+        "source": "RG",
+        "page": 58,
+        "location": "on"
       },
       {
         "id": "fvtt_zzSimmXN96t0XE8R",
@@ -4933,8 +5145,64 @@
         "rating": 4,
         "equipped": false,
         "stack": true,
-        "notes": "Ares Briefcase Shield",
-        "catalogId": "b9554fe8-fc04-4746-8f5f-32d5ee9053be"
+        "notes": "CA p.136",
+        "catalogId": "b9554fe8-fc04-4746-8f5f-32d5ee9053be",
+        "chummerGuid": "4ca5f475-bf0f-4450-b3ea-f3cdec8ca0d8",
+        "source": "CA",
+        "page": 136,
+        "location": "on"
+      },
+      {
+        "id": "fvtt_bEL0eLzLyFjXaDnM",
+        "name": "Sous-vêtements haut de gamme",
+        "rating": 0,
+        "equipped": true,
+        "notes": "RF p.253",
+        "catalogId": "675b4735-227e-4395-8f62-bd9a62670474",
+        "chummerGuid": "56d5008a-649a-4d1e-9271-9f346715a6aa",
+        "source": "RF",
+        "page": 253,
+        "qty": 1,
+        "location": "on"
+      },
+      {
+        "id": "fvtt_PYtXJmoOOTpanQ9d",
+        "name": "Chaussettes haut de gamme",
+        "rating": 0,
+        "equipped": true,
+        "notes": "RF p.253",
+        "catalogId": "5293b8a8-32fd-4df4-ae86-6b909b952432",
+        "chummerGuid": "95016719-d9e6-4b62-a6ca-9de99e316cd1",
+        "source": "RF",
+        "page": 253,
+        "qty": 1,
+        "location": "on"
+      },
+      {
+        "id": "fvtt_p8Eii4QwTGtgLmFT",
+        "name": "Bijou haut de gamme",
+        "rating": 0,
+        "equipped": true,
+        "notes": "RF p.253",
+        "catalogId": "9fc5642a-1670-4907-82cb-179a441d11f0",
+        "chummerGuid": "9f566586-a587-48a1-b834-b7dd85da128f",
+        "source": "RF",
+        "page": 253,
+        "qty": 1,
+        "location": "on"
+      },
+      {
+        "id": "fvtt_2cB7LMiABdl5R5ha",
+        "name": "Gants haut de gamme",
+        "rating": 0,
+        "equipped": true,
+        "notes": "RF p.253",
+        "catalogId": "e98c2113-306a-4596-abcb-46607c432cfb",
+        "chummerGuid": "24efeaf9-8dce-468f-b18b-be1faabba555",
+        "source": "RF",
+        "page": 253,
+        "qty": 1,
+        "location": "on"
       }
     ],
     "augmentations": [
@@ -4942,135 +5210,224 @@
         "id": "fvtt_xBDMOEOgiUJsTMnB",
         "name": "Yeux cybernétiques, système de base",
         "kind": "cyberware",
-        "grade": "standard",
+        "grade": "delta",
         "rating": 2,
         "essence": 0.15,
-        "notes": "Cybereyes Basic System",
-        "catalogId": "8e414ade-2764-4dc7-bdc4-83bb4a086034"
+        "notes": "SR5 p.453",
+        "catalogId": "8e414ade-2764-4dc7-bdc4-83bb4a086034",
+        "chummerGuid": "4063addb-8c96-45d3-8261-316057714615",
+        "source": "SR5",
+        "page": 453
+      },
+      {
+        "id": "itm_mx0m720h1fz0b",
+        "name": "Interface visuelle",
+        "kind": "cyberware",
+        "grade": "delta",
+        "essence": 0,
+        "notes": "Sous-système de Cybereyes Basic System — SR5 p.453",
+        "catalogId": "e03d454f-4a15-43ce-9cd0-db80e8600eae",
+        "chummerGuid": "30850093-98e0-4e67-8171-bd6e957bf87c",
+        "source": "SR5",
+        "page": 453
+      },
+      {
+        "id": "itm_mx0m720h1gh0p",
+        "name": "Vision thermographique",
+        "kind": "cyberware",
+        "grade": "delta",
+        "essence": 0,
+        "notes": "Sous-système de Cybereyes Basic System — SR5 p.453",
+        "catalogId": "ba3204d8-3ec5-4da0-b980-44992a3a4a13",
+        "chummerGuid": "a9e6588b-a010-4ac0-89b8-1167d84191b2",
+        "source": "SR5",
+        "page": 453
+      },
+      {
+        "id": "itm_mx0m720h1h6jw",
+        "name": "Nyctalopie",
+        "kind": "cyberware",
+        "grade": "delta",
+        "essence": 0,
+        "notes": "Sous-système de Cybereyes Basic System — SR5 p.453",
+        "catalogId": "97910ef7-dc30-4a87-8314-d1e0021dc39c",
+        "chummerGuid": "33a74600-0746-4986-b720-6f5d468ce6ef",
+        "source": "SR5",
+        "page": 453
+      },
+      {
+        "id": "itm_mx0m720h1i5s9",
+        "name": "Compensation anti-flash",
+        "kind": "cyberware",
+        "grade": "delta",
+        "essence": 0,
+        "notes": "Sous-système de Cybereyes Basic System — SR5 p.453",
+        "catalogId": "5921a6ac-1e20-483b-b210-dc84a14d3045",
+        "chummerGuid": "7e62ab55-4042-4c37-98f8-5bed6f4dc9cc",
+        "source": "SR5",
+        "page": 453
       },
       {
         "id": "fvtt_rkHb0jc95kc5RvLm",
         "name": "Producteurs de plaquettes",
-        "kind": "cyberware",
+        "kind": "bioware",
         "grade": "standard",
         "essence": 0.2,
-        "notes": "Platelet Factories",
-        "catalogId": "8c75648c-19d2-4734-b107-c04bb0e1904a"
+        "notes": "SR5 p.459",
+        "catalogId": "8c75648c-19d2-4734-b107-c04bb0e1904a",
+        "chummerGuid": "da98b9c8-312a-4eed-a760-23e4769481ee",
+        "source": "SR5",
+        "page": 459
       }
     ],
     "gear": [
       {
-        "id": "fvtt_bEL0eLzLyFjXaDnM",
-        "name": "Sous-vêtements haut de gamme",
-        "category": "Vêtements",
+        "id": "itm_mx0m72030xz3v",
+        "name": "Holster",
+        "category": "Améliorations d'armure",
         "qty": 1,
-        "catalogId": "675b4735-227e-4395-8f62-bd9a62670474",
-        "notes": "Nice Undergarments"
+        "notes": "dans Actioneer Business Clothes — SR5 p.431",
+        "catalogId": "5977fb0b-b74e-4eb9-b433-9b7c9877b14f",
+        "chummerGuid": "922f130e-f747-458a-a211-8a85aa4393b7",
+        "source": "SR5",
+        "page": 431,
+        "location": "on"
       },
       {
-        "id": "fvtt_PYtXJmoOOTpanQ9d",
-        "name": "Chaussettes haut de gamme",
-        "category": "Vêtements",
+        "id": "itm_mx0m720e18wl6",
+        "name": "Holster rapide dissimulé",
+        "category": "Améliorations d'armure",
         "qty": 1,
-        "catalogId": "5293b8a8-32fd-4df4-ae86-6b909b952432",
-        "notes": "Nice Socks"
-      },
-      {
-        "id": "fvtt_p8Eii4QwTGtgLmFT",
-        "name": "Bijou haut de gamme",
-        "category": "Vêtements",
-        "qty": 1,
-        "catalogId": "9fc5642a-1670-4907-82cb-179a441d11f0",
-        "notes": "Nice Jewelry"
-      },
-      {
-        "id": "fvtt_2cB7LMiABdl5R5ha",
-        "name": "Gants haut de gamme",
-        "category": "Vêtements",
-        "qty": 1,
-        "catalogId": "e98c2113-306a-4596-abcb-46607c432cfb",
-        "notes": "Nice Gloves"
+        "notes": "dans Mortimer of London: Greatcoat Coat — RG p.51",
+        "catalogId": "82334694-a630-42c4-95d6-eb1345e4ed82",
+        "chummerGuid": "67f3e7aa-891d-46b8-affb-cea8b7b90fa7",
+        "source": "RG",
+        "page": 51,
+        "location": "on"
       },
       {
         "id": "fvtt_9XbXvL2FtlKbmQ9i",
         "name": "Mun. : Balles à pointe creuse",
         "category": "Munitions",
         "qty": 74,
+        "notes": "SR5 p.434",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
         "catalogId": "f486f414-ee2c-46db-92ea-c682861d8fe0",
-        "notes": "Ammo: Hollow Points"
+        "chummerGuid": "8abb07e3-e18a-4cb0-b7a0-649a9f591dfb",
+        "source": "SR5",
+        "page": 434
       },
       {
         "id": "fvtt_Pqs5IxKjKdJWKqfD",
         "name": "Mun. : Balles normales",
         "category": "Munitions",
         "qty": 82,
+        "notes": "SR5 p.434",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
         "catalogId": "b2a0b340-c793-4322-8422-8b03d18a6fae",
-        "notes": "Ammo: Regular Ammo"
+        "chummerGuid": "f7dd2e19-bde7-4b9d-b96c-166cf978541c",
+        "source": "SR5",
+        "page": 434
       },
       {
         "id": "fvtt_Se492hu0CFrTLTjW",
-        "name": "Mun. : Balles normales",
+        "name": "Mun. : Balles normales (Holdouts)",
         "category": "Munitions",
         "qty": 32,
+        "notes": "SR5 p.434",
         "catalogId": "b2a0b340-c793-4322-8422-8b03d18a6fae",
-        "notes": "Ammo: Regular Ammo (Holdouts)"
+        "chummerGuid": "2c1f8e1b-03ac-4c8c-b3fd-d8daedca30fe",
+        "source": "SR5",
+        "page": 434,
+        "choice": "Holdouts",
+        "location": "on"
       },
       {
         "id": "fvtt_rvx6JVOS2vaSl374",
         "name": "Créditube certifié (Or)",
         "category": "Identité et créditubes",
         "qty": 1,
+        "notes": "SR5 p.442",
         "catalogId": "697ef5f4-8cde-434d-aca6-1bddd4d526d3",
-        "notes": "Certified Credstick, Gold"
+        "chummerGuid": "e5221c47-5b91-4447-b230-4a1a1bcdd4c2",
+        "source": "SR5",
+        "page": 442,
+        "location": "on"
       },
       {
         "id": "fvtt_Y8liJpKoeFjsLFTF",
-        "name": "Chargeur supplémentaire",
+        "name": "Chargeur supplémentaire (Colt Government 2066)",
         "category": "Munitions",
         "qty": 3,
+        "notes": "SR5 p.433",
         "catalogId": "75ccb148-e774-429c-b854-a27816439626",
-        "notes": "Spare Clip (Colt Government 2066)"
+        "chummerGuid": "ea1997c3-d400-42f5-8be1-b5d332be0f51",
+        "source": "SR5",
+        "page": 433,
+        "choice": "Colt Government 2066",
+        "location": "on"
       },
       {
         "id": "fvtt_MBTJmrCsfJPgngpj",
         "name": "Kit de serrurerie",
         "category": "Matériel d'intrusion",
         "qty": 1,
+        "notes": "SR5 p.448",
         "catalogId": "0fdeb240-743c-4a9d-9cf1-fef0990575bb",
-        "notes": "Lockpick Set"
+        "chummerGuid": "01ed0b06-e566-4c40-a665-a503513665a0",
+        "source": "SR5",
+        "page": 448,
+        "location": "on"
       },
       {
         "id": "fvtt_sNitXG1fqpkwkncj",
-        "name": "Chargeur supplémentaire",
+        "name": "Chargeur supplémentaire (Ares Light Fire 75)",
         "category": "Munitions",
         "qty": 2,
+        "notes": "SR5 p.433",
         "catalogId": "75ccb148-e774-429c-b854-a27816439626",
-        "notes": "Spare Clip (Ares Light Fire 75)"
+        "chummerGuid": "f1857e85-3cfc-4d12-89b0-a7e65f0982b0",
+        "source": "SR5",
+        "page": 433,
+        "choice": "Ares Light Fire 75",
+        "location": "on"
       },
       {
         "id": "fvtt_2Y4PlmZ9dzHusUhr",
         "name": "Mun. : Balles normales",
         "category": "Munitions",
         "qty": 64,
+        "notes": "SR5 p.434",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
         "catalogId": "b2a0b340-c793-4322-8422-8b03d18a6fae",
-        "notes": "Ammo: Regular Ammo"
+        "chummerGuid": "4f72248c-23cd-4632-87a6-8676840ba0cd",
+        "source": "SR5",
+        "page": 434
       },
       {
         "id": "fvtt_5BjRZXOmuJXxuymH",
         "name": "Patch antidote",
-        "category": "Équipement",
+        "category": "Biotech",
         "rating": 6,
         "qty": 1,
+        "notes": "SR5 p.451",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
         "catalogId": "47e12d78-cb99-4e20-aff5-11cbed1e715e",
-        "notes": "Slap Patch, Antidote Patch"
+        "chummerGuid": "27516965-b4b4-448e-9aa4-a8423d12da83",
+        "source": "SR5",
+        "page": 451
       },
       {
         "id": "fvtt_mu4fpMEKLTZzj1bC",
         "name": "Mun. : Balles ADPS",
         "category": "Munitions",
         "qty": 65,
+        "notes": "SR5 p.434",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
         "catalogId": "ef9c8aae-26df-4fe6-88b3-79fbb5eb77c5",
-        "notes": "Ammo: APDS"
+        "chummerGuid": "9423033c-7be1-418e-82f2-bc0f39767f14",
+        "source": "SR5",
+        "page": 434
       },
       {
         "id": "fvtt_7JC7WhoLQR7DNbvq",
@@ -5078,49 +5435,217 @@
         "category": "Appareils optiques et d'imagerie",
         "rating": 3,
         "qty": 1,
+        "notes": "SR5 p.443",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
         "catalogId": "b218dbd1-5706-4d9e-a6a7-ab9b658c3acd",
-        "notes": "Glasses"
+        "chummerGuid": "a7ef4fc0-35dc-4d9f-9f5e-f8e73b9b5caa",
+        "source": "SR5",
+        "page": 443
+      },
+      {
+        "id": "itm_mx0m720k1vbeh",
+        "name": "Smartlink",
+        "category": "Vision Enhancements",
+        "qty": 1,
+        "notes": "dans Glasses — SR5 p.444",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
+        "catalogId": "b0eef1d1-31ad-4e5c-bd55-27b2ae492327",
+        "chummerGuid": "f7a3a27f-762d-4d6e-a01a-2e6e8c7ba945",
+        "source": "SR5",
+        "page": 444
+      },
+      {
+        "id": "itm_mx0m720k1wsst",
+        "name": "Image Link",
+        "category": "Vision Enhancements",
+        "qty": 1,
+        "notes": "dans Glasses — SR5 p.444",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
+        "catalogId": "2886d77a-1321-4a29-aec8-8040b9c5776f",
+        "chummerGuid": "95671136-90e3-44af-a553-286a90d8d7f1",
+        "source": "SR5",
+        "page": 444
       },
       {
         "id": "fvtt_fXtpSoscE7aSbnS8",
         "name": "Médikit",
-        "category": "Équipement",
+        "category": "Biotech",
         "rating": 6,
         "qty": 1,
+        "notes": "SR5 p.450",
         "catalogId": "ae9c37df-6d82-44c1-aa21-6c87e45e2dc1",
-        "notes": "Medkit"
+        "chummerGuid": "a067a690-ce10-46cf-9c5e-0c3db269fd1a",
+        "source": "SR5",
+        "page": 450,
+        "location": "on"
+      },
+      {
+        "id": "itm_mx0m720l1zp41",
+        "name": "Mini-Grenades hautement explosive",
+        "category": "Munitions",
+        "qty": 13,
+        "notes": "SR5 p.435\nRestauré depuis Chummer (fichier du 01/08/2020) — à vérifier",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
+        "catalogId": "daecdfc8-15d5-4864-9e20-13e4a0dca88e",
+        "chummerGuid": "d2c94279-bde0-41c8-85d4-2583f6100b8d",
+        "source": "SR5",
+        "page": 435
+      },
+      {
+        "id": "itm_mx0m720l20ojx",
+        "name": "Mini-Grenades à gaz",
+        "category": "Munitions",
+        "qty": 37,
+        "notes": "SR5 p.435\nRestauré depuis Chummer (fichier du 01/08/2020) — à vérifier",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
+        "catalogId": "74284124-57a0-479b-9ab1-3433bdb9e3b7",
+        "chummerGuid": "a99e9553-9a4e-48b8-9289-a82d4b01bbe0",
+        "source": "SR5",
+        "page": 435
+      },
+      {
+        "id": "itm_mx0m720l21jmi",
+        "name": "Neuro-Stun X",
+        "category": "Toxines",
+        "qty": 1,
+        "notes": "SR5 p.410\nRestauré depuis Chummer (fichier du 01/08/2020) — à vérifier",
+        "location": "chumgear_a99e9553-9a4e-48b8-9289-a82d4b01bbe0",
+        "catalogId": "4ad3f9ea-4ee0-45f8-a57b-ed40c660d0b0",
+        "chummerGuid": "e105fc9b-8e4d-4950-a35c-60852f2f2173",
+        "source": "SR5",
+        "page": 410
       },
       {
         "id": "fvtt_6XyxPYCMeouy0oV0",
         "name": "Recharge de médikit",
-        "category": "Équipement",
+        "category": "Biotech",
         "qty": 8,
+        "notes": "SR5 p.450",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
         "catalogId": "76aca45d-0d4f-45a3-a532-c47ac0b26b89",
-        "notes": "Medkit Supplies"
+        "chummerGuid": "4ac4af0a-0518-4851-9645-070a339f8176",
+        "source": "SR5",
+        "page": 450
       },
       {
         "id": "fvtt_7YgX02iP91R1DJu2",
         "name": "Masque à gaz",
         "category": "Matériel de Survie",
         "qty": 1,
+        "notes": "SR5 p.449",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
         "catalogId": "2633cf38-90a6-4843-b475-e3ee1132fb5f",
-        "notes": "Gas Mask"
+        "chummerGuid": "e9238d7e-68eb-4fc9-b3a7-46ca58d086e0",
+        "source": "SR5",
+        "page": 449
       },
       {
         "id": "fvtt_vObbqPdAqPUGuStH",
         "name": "Matériel de plongée",
         "category": "Matériel de Survie",
         "qty": 1,
+        "notes": "SR5 p.448",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
         "catalogId": "927c8a62-2c67-4121-abeb-235ebde7b90a",
-        "notes": "Diving Gear"
+        "chummerGuid": "cd68818e-f4f8-4dfd-a02f-d13496ec88c2",
+        "source": "SR5",
+        "page": 448
+      },
+      {
+        "id": "itm_mx0m720l2592y",
+        "name": "Masque à gaz",
+        "category": "Matériel de Survie",
+        "qty": 1,
+        "notes": "dans Diving Gear — SR5 p.449",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
+        "catalogId": "2633cf38-90a6-4843-b475-e3ee1132fb5f",
+        "chummerGuid": "00bfdfb1-e8ef-4161-9438-9b429c77aa3c",
+        "source": "SR5",
+        "page": 449
       },
       {
         "id": "fvtt_JOp8bntUoGpu9WJF",
         "name": "Kit de survie",
         "category": "Matériel de Survie",
         "qty": 1,
+        "notes": "SR5 p.449",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
         "catalogId": "27f9775d-cd14-4900-827f-ba00d26e0c67",
-        "notes": "Survival Kit"
+        "chummerGuid": "e79b08f2-56e1-4ba9-9a30-ecbf872788db",
+        "source": "SR5",
+        "page": 449
+      },
+      {
+        "id": "itm_mx0m720l27927",
+        "name": "Lighter",
+        "category": "Survival Gear",
+        "qty": 1,
+        "notes": "dans Survival Kit — SR5 p.449",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
+        "catalogId": "9f0d5d35-43f3-4877-b384-cf4188b5bca7",
+        "chummerGuid": "54b9be92-bad2-44cd-afd5-7a80959d01a4",
+        "source": "SR5",
+        "page": 449
+      },
+      {
+        "id": "itm_mx0m720l28qxv",
+        "name": "Compass",
+        "category": "Survival Gear",
+        "qty": 1,
+        "notes": "dans Survival Kit — SR5 p.449",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
+        "catalogId": "d61cb088-eeda-4251-bc5b-1f4b367b9001",
+        "chummerGuid": "94f8a1ec-60b7-4157-9d69-83f6a6b7915a",
+        "source": "SR5",
+        "page": 449
+      },
+      {
+        "id": "itm_mx0m720l29z44",
+        "name": "Matches",
+        "category": "Survival Gear",
+        "qty": 1,
+        "notes": "dans Survival Kit — SR5 p.449",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
+        "catalogId": "0a897bb2-6260-42d3-ad2f-27345230a133",
+        "chummerGuid": "7267194c-549a-49e4-9138-007c07b11bd5",
+        "source": "SR5",
+        "page": 449
+      },
+      {
+        "id": "itm_mx0m720l2axcg",
+        "name": "Lightweight Thermal Blanket",
+        "category": "Survival Gear",
+        "qty": 1,
+        "notes": "dans Survival Kit — SR5 p.449",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
+        "catalogId": "3975e539-010d-4ffa-b163-17b5e300d336",
+        "chummerGuid": "4724e789-e546-4fae-9170-c195f365e781",
+        "source": "SR5",
+        "page": 449
+      },
+      {
+        "id": "itm_mx0m720l2bbi1",
+        "name": "Several Days' Worth of Ration Bars",
+        "category": "Survival Gear",
+        "qty": 1,
+        "notes": "dans Survival Kit — SR5 p.449",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
+        "catalogId": "c0cf0e8f-386e-4b6d-8f7d-971a4cd0b56b",
+        "chummerGuid": "3a49b1ca-3186-4cba-8772-04553e118f37",
+        "source": "SR5",
+        "page": 449
+      },
+      {
+        "id": "itm_mx0m720l2chwf",
+        "name": "Water Purification Unit",
+        "category": "Survival Gear",
+        "qty": 1,
+        "notes": "dans Survival Kit — SR5 p.449",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
+        "catalogId": "1bec7c2a-2c90-43d2-99ac-610f02e38148",
+        "chummerGuid": "c4696228-9c48-4ebd-b836-21fbab3da019",
+        "source": "SR5",
+        "page": 449
       },
       {
         "id": "fvtt_fTVaOtxwacF0nN5P",
@@ -5128,32 +5653,73 @@
         "category": "Appareils optiques et d'imagerie",
         "rating": 3,
         "qty": 1,
+        "notes": "SR5 p.443",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
         "catalogId": "1c6db3ed-a360-40b4-8118-9aca9d96001c",
-        "notes": "Binoculars"
+        "chummerGuid": "052ae1ad-1032-4a1a-92a6-46010e164feb",
+        "source": "SR5",
+        "page": 443
+      },
+      {
+        "id": "itm_mx0m720l2ei8o",
+        "name": "Vision Magnification",
+        "category": "Vision Enhancements",
+        "qty": 1,
+        "notes": "dans Binoculars — SR5 p.444",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
+        "catalogId": "adf3533a-461c-46ae-9ee7-77dfd31c5d5a",
+        "chummerGuid": "31360aec-c95d-4cc7-950e-05e7688e795b",
+        "source": "SR5",
+        "page": 444
+      },
+      {
+        "id": "itm_mx0m720l2fwz2",
+        "name": "Vision Enhancement",
+        "category": "Vision Enhancements",
+        "rating": 1,
+        "qty": 1,
+        "notes": "dans Binoculars — SR5 p.444",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
+        "catalogId": "588c3193-4298-4a73-b45a-c5f8fd175133",
+        "chummerGuid": "4c324af2-19dd-4bea-bde8-41508c08f6c2",
+        "source": "SR5",
+        "page": 444
       },
       {
         "id": "fvtt_GEtU7SwYETOnYhCt",
         "name": "Paquet de cigarettes (35)",
         "category": "Divers",
         "qty": 2,
+        "notes": "RF p.254",
         "catalogId": "09425101-0700-49fb-a7e7-94a2b8c8f79a",
-        "notes": "Pack of Cigarettes"
+        "chummerGuid": "75950ef3-d7e4-41ac-8f7c-4fa2dc8e5cd7",
+        "source": "RF",
+        "page": 254,
+        "location": "on"
       },
       {
         "id": "fvtt_gD3vcRasfMiMYIQW",
         "name": "Briquet rechargeable",
         "category": "Outils",
         "qty": 1,
+        "notes": "RF p.254",
         "catalogId": "17ff01a6-e143-4d07-979d-d524671e1d34",
-        "notes": "Lighter (Good)"
+        "chummerGuid": "10d9ec95-71b8-44f5-a0c8-8bed671bb8e1",
+        "source": "RF",
+        "page": 254,
+        "location": "on"
       },
       {
         "id": "fvtt_BFN6QvG0W74eHz88",
         "name": "Allumettes (Boîte de 100)",
         "category": "Outils",
         "qty": 10,
+        "notes": "RF p.255",
         "catalogId": "a0110448-c617-4cef-930d-2e673425bb80",
-        "notes": "Matches"
+        "chummerGuid": "e85016db-e948-41eb-9b68-e93c62981191",
+        "source": "RF",
+        "page": 255,
+        "location": "on"
       },
       {
         "id": "fvtt_bA7aClZ18EoKqMHt",
@@ -5161,8 +5727,12 @@
         "category": "Matériel d'intrusion",
         "rating": 6,
         "qty": 1,
+        "notes": "SR5 p.447",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
         "catalogId": "af829cba-8d5e-40fd-b37b-e5266c29c55a",
-        "notes": "Autopicker"
+        "chummerGuid": "5f46cc6a-fd2a-44e8-8337-7378aae95884",
+        "source": "SR5",
+        "page": 447
       },
       {
         "id": "fvtt_eiVHPQqUshXjPdUI",
@@ -5170,39 +5740,60 @@
         "category": "Matériel d'intrusion",
         "rating": 6,
         "qty": 1,
+        "notes": "SR5 p.447",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
         "catalogId": "dcab11fa-b31a-49bd-ba43-3a9009072e4e",
-        "notes": "Keycard Copier"
+        "chummerGuid": "17994d64-f7ad-4e9f-af93-4f877230d914",
+        "source": "SR5",
+        "page": 447
       },
       {
         "id": "fvtt_3RLAlulDLFWOjvNO",
         "name": "Kit de serrurerie",
         "category": "Matériel d'intrusion",
         "qty": 1,
+        "notes": "SR5 p.448",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
         "catalogId": "0fdeb240-743c-4a9d-9cf1-fef0990575bb",
-        "notes": "Lockpick Set"
+        "chummerGuid": "48d2197c-fc2c-402d-a822-39959306c33f",
+        "source": "SR5",
+        "page": 448
       },
       {
         "id": "fvtt_vE8FrYsjiqSx8W7s",
         "name": "Mini-poste à soudure",
         "category": "Matériel d'intrusion",
         "qty": 1,
+        "notes": "SR5 p.448",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
         "catalogId": "a210be88-be16-4d66-afcb-7d58b8e1397f",
-        "notes": "Miniwelder"
+        "chummerGuid": "1604ba07-bd0e-421c-a140-6dbfdf91d303",
+        "source": "SR5",
+        "page": 448
       },
       {
         "id": "fvtt_8NepLHN2L9Xq4R6j",
         "name": "Tronçonneuse monofilament",
         "category": "Matériel d'intrusion",
         "qty": 1,
+        "notes": "SR5 p.448",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
         "catalogId": "17a4ed15-a9d3-40a6-b5d4-4a69f6c8b9d3",
-        "notes": "Monofilament Chainsaw"
+        "chummerGuid": "a7cab5aa-86fc-4561-b94d-095d43fa3d21",
+        "source": "SR5",
+        "page": 448
       },
       {
         "id": "fvtt_NufI1Loi6yzNlcc0",
         "name": "Black Panther",
         "category": "Parfums",
         "qty": 8,
-        "catalogId": "6393ca16-41d0-4714-b7a0-1be18a62815c"
+        "notes": "CA p.143",
+        "catalogId": "6393ca16-41d0-4714-b7a0-1be18a62815c",
+        "chummerGuid": "c7ca0f0a-51f3-4f3f-8150-b3f4c8c87d31",
+        "source": "CA",
+        "page": 143,
+        "location": "on"
       },
       {
         "id": "fvtt_nobgXN1hbloOCsFh",
@@ -5210,48 +5801,132 @@
         "category": "Matériel de Survie",
         "rating": 6,
         "qty": 1,
+        "notes": "CA p.141",
         "catalogId": "314566c7-4ea1-4f8d-94cd-f213af1e0535",
-        "notes": "Fashion Respirator"
+        "chummerGuid": "14cf5386-f2c5-43e1-91d9-7b7cd6cf6913",
+        "source": "CA",
+        "page": 141,
+        "location": "on"
       },
       {
-        "id": "fvtt_2aWkvfla2umyM7Ta",
-        "name": "Mun. : Balles normales",
-        "category": "Munitions",
-        "qty": 90,
-        "catalogId": "b2a0b340-c793-4322-8422-8b03d18a6fae",
-        "notes": "Ammo: Regular Ammo"
-      },
-      {
-        "id": "fvtt_OrDoCJImXsA0zNah",
-        "name": "Combinaison NBC",
-        "category": "Matériel de Survie",
-        "qty": 4,
-        "catalogId": "a39501ca-0df5-4fb7-8992-97b765383d17",
-        "notes": "Hazmat Suit"
-      },
-      {
-        "id": "fvtt_MPjMwxL20rpOHRYE",
-        "name": "Bâtonnet luminescent",
-        "category": "Matériel de Survie",
-        "qty": 10,
-        "catalogId": "c658ec7e-48c1-4ead-8083-f3ee0eab92e4",
-        "notes": "Light Stick"
-      },
-      {
-        "id": "fvtt_0yQfbrzvfPwkmYwq",
-        "name": "Corde standard (100m)",
-        "category": "Lance-Grappin",
+        "id": "itm_mx0m720l2q5t7",
+        "name": "Fairlight Caliban",
+        "category": "Commlinks",
         "qty": 1,
-        "catalogId": "8adaecd5-0c24-4982-8803-e4459e16589f",
-        "notes": "Standard Rope (100m)"
+        "notes": "SR5 p.438",
+        "catalogId": "1522dd91-99d9-42f9-ab19-b43e8e3c7322",
+        "chummerGuid": "72627e55-7dee-492d-83a1-d85393259561",
+        "source": "SR5",
+        "page": 438,
+        "location": "on"
       },
       {
-        "id": "fvtt_i4H34BJCpTJ3ilZk",
-        "name": "Menottes (Métal)",
-        "category": "Matériel de sécurité",
-        "qty": 2,
-        "catalogId": "b9812675-b4c3-43ce-b564-c47a5f66b0fc",
-        "notes": "Restraint, Metal"
+        "id": "itm_mx0m720l2r1by",
+        "name": "Commlink Functionality",
+        "category": "Electronics Accessories",
+        "qty": 1,
+        "notes": "dans Fairlight Caliban — SR5 p.438",
+        "catalogId": "b1f2dcee-7304-4e5e-b022-f3393009a78c",
+        "chummerGuid": "e61a2a13-13bc-4619-b83b-c87ffaabe9f1",
+        "source": "SR5",
+        "page": 438,
+        "location": "on"
+      },
+      {
+        "id": "itm_mx0m720l2stxd",
+        "name": "Music Player",
+        "category": "Electronics Accessories",
+        "qty": 1,
+        "notes": "dans Commlink Functionality — SR5 p.438",
+        "catalogId": "9cd0bf83-3cfa-4c61-bfb0-ae6c01ac8f8d",
+        "chummerGuid": "4eb4ee28-ee32-439e-9da4-bee486adc702",
+        "source": "SR5",
+        "page": 438,
+        "location": "on"
+      },
+      {
+        "id": "itm_mx0m720l2ttxq",
+        "name": "Micro Trid-Projector",
+        "category": "Electronics Accessories",
+        "qty": 1,
+        "notes": "dans Commlink Functionality — SR5 p.438",
+        "catalogId": "5db9c4b8-4d7a-4728-aff0-617102c57fc5",
+        "chummerGuid": "f3388ca7-cd58-4735-b8a1-c39c2cf976d4",
+        "source": "SR5",
+        "page": 438,
+        "location": "on"
+      },
+      {
+        "id": "itm_mx0m720l2ur6n",
+        "name": "Touchscreen Display",
+        "category": "Electronics Accessories",
+        "qty": 1,
+        "notes": "dans Commlink Functionality — SR5 p.438",
+        "catalogId": "b19f022c-c854-4a3f-8b7a-d2a2532a2680",
+        "chummerGuid": "5b61b926-99bc-4cf2-98d4-0e15a4eb81f7",
+        "source": "SR5",
+        "page": 438,
+        "location": "on"
+      },
+      {
+        "id": "itm_mx0m720l2v045",
+        "name": "Caméra (Micro)",
+        "category": "Appareils optiques et d'imagerie",
+        "qty": 1,
+        "notes": "dans Commlink Functionality — SR5 p.443",
+        "catalogId": "fa6fa434-107b-4f36-a138-f98b044dae76",
+        "chummerGuid": "038054bb-c99d-4511-9234-2eaadeb78f37",
+        "source": "SR5",
+        "page": 443,
+        "location": "on"
+      },
+      {
+        "id": "itm_mx0m720l2wiqj",
+        "name": "RFID Tag Scanner",
+        "category": "Electronics Accessories",
+        "qty": 1,
+        "notes": "dans Commlink Functionality — SR5 p.438",
+        "catalogId": "5146abd2-6ab2-4aee-b523-a63d5c5ab93b",
+        "chummerGuid": "49cf4e67-3176-490c-b8f2-b433c3b686b4",
+        "source": "SR5",
+        "page": 438,
+        "location": "on"
+      },
+      {
+        "id": "itm_mx0m720l2xd9p",
+        "name": "GPS Guidance System",
+        "category": "Electronics Accessories",
+        "qty": 1,
+        "notes": "dans Commlink Functionality — SR5 p.438",
+        "catalogId": "82946de2-876c-46d8-a6ec-744a38257668",
+        "chummerGuid": "97162872-04d4-43a3-8a70-6533940abdd3",
+        "source": "SR5",
+        "page": 438,
+        "location": "on"
+      },
+      {
+        "id": "itm_mx0m720l2ynfn",
+        "name": "Chip Player",
+        "category": "Electronics Accessories",
+        "qty": 1,
+        "notes": "dans Commlink Functionality — SR5 p.438",
+        "catalogId": "f9995732-7d00-496c-8407-a3dc0e1a82ff",
+        "chummerGuid": "e8304bf9-882e-41b9-8289-1a5f2a233174",
+        "source": "SR5",
+        "page": 438,
+        "location": "on"
+      },
+      {
+        "id": "itm_mx0m720l2zxp9",
+        "name": "Credstick Reader",
+        "category": "Electronics Accessories",
+        "qty": 1,
+        "notes": "dans Commlink Functionality — SR5 p.438",
+        "catalogId": "1d6f985e-5cf0-463d-a445-fafdd387f301",
+        "chummerGuid": "4de7f33b-5b74-4602-b1d2-0c8bab59fd5c",
+        "source": "SR5",
+        "page": 438,
+        "location": "on"
       },
       {
         "id": "fvtt_7WO9snWmOuyf7DRy",
@@ -5259,8 +5934,83 @@
         "category": "Appareils audio",
         "rating": 3,
         "qty": 1,
+        "notes": "dans Commlink Functionality — SR5 p.445",
         "catalogId": "5d69d002-c33d-4d0f-9c4d-d78db4d78e5d",
-        "notes": "Earbuds"
+        "chummerGuid": "9472d4df-f69b-4ed9-8ef8-6623f07b731d",
+        "source": "SR5",
+        "page": 445,
+        "location": "on"
+      },
+      {
+        "id": "itm_mx0m720l31k8h",
+        "name": "Shock- and Water-Resistant Case",
+        "category": "Commlink Accessories",
+        "qty": 1,
+        "notes": "dans Commlink Functionality — SR5 p.438",
+        "catalogId": "786682fb-cbd5-4ee8-969a-233484004df7",
+        "chummerGuid": "9efa82c1-9234-4ff0-b978-38a25a626200",
+        "source": "SR5",
+        "page": 438,
+        "location": "on"
+      },
+      {
+        "id": "fvtt_2aWkvfla2umyM7Ta",
+        "name": "Mun. : Balles normales (Heavy Pistols)",
+        "category": "Munitions",
+        "qty": 90,
+        "notes": "SR5 p.434",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
+        "catalogId": "b2a0b340-c793-4322-8422-8b03d18a6fae",
+        "chummerGuid": "0093c38a-e5ba-4697-81eb-98a136898a4d",
+        "source": "SR5",
+        "page": 434,
+        "choice": "Heavy Pistols"
+      },
+      {
+        "id": "fvtt_OrDoCJImXsA0zNah",
+        "name": "Combinaison NBC",
+        "category": "Matériel de Survie",
+        "qty": 4,
+        "notes": "SR5 p.449",
+        "location": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
+        "catalogId": "a39501ca-0df5-4fb7-8992-97b765383d17",
+        "chummerGuid": "ed54aa8d-20a1-4906-8259-5d2cb7c5bebb",
+        "source": "SR5",
+        "page": 449
+      },
+      {
+        "id": "fvtt_MPjMwxL20rpOHRYE",
+        "name": "Bâtonnet luminescent",
+        "category": "Matériel de Survie",
+        "qty": 10,
+        "notes": "SR5 p.449",
+        "catalogId": "c658ec7e-48c1-4ead-8083-f3ee0eab92e4",
+        "chummerGuid": "d3fa5765-6a81-4ef7-9bf0-7c33ad7ee062",
+        "source": "SR5",
+        "page": 449,
+        "location": "on"
+      },
+      {
+        "id": "fvtt_0yQfbrzvfPwkmYwq",
+        "name": "Corde standard (100m)",
+        "category": "Lance-Grappin",
+        "qty": 1,
+        "catalogId": "8adaecd5-0c24-4982-8803-e4459e16589f",
+        "notes": "Standard Rope (100m)",
+        "location": "on",
+        "source": "SR5",
+        "page": 449
+      },
+      {
+        "id": "fvtt_i4H34BJCpTJ3ilZk",
+        "name": "Menottes (Métal)",
+        "category": "Matériel de sécurité",
+        "qty": 2,
+        "catalogId": "b9812675-b4c3-43ce-b564-c47a5f66b0fc",
+        "notes": "Restraint, Metal",
+        "location": "on",
+        "source": "SR5",
+        "page": 447
       },
       {
         "id": "fvtt_fLfpDgVc8gPjuolV",
@@ -5268,12 +6018,274 @@
         "category": "Identité et créditubes",
         "qty": 1,
         "catalogId": "fd2c8afe-7c0f-4b98-ae93-a6108531b236",
-        "notes": "Certified Credstick, Ebony"
+        "notes": "Certified Credstick, Ebony",
+        "location": "on",
+        "source": "SR5",
+        "page": 442
       }
     ],
-    "vehicles": [],
+    "vehicles": [
+      {
+        "id": "itm_mx0m720o3nivs",
+        "name": "Ares Roadmaster (Transport blindé)",
+        "handling": "3",
+        "speed": "3",
+        "accel": "1",
+        "body": 18,
+        "armor": 18,
+        "pilot": 3,
+        "sensor": 3,
+        "seats": 8,
+        "mods": [
+          {
+            "id": "sub_mx0m720n35l9i",
+            "name": "Armor (Concealed)",
+            "nameFr": "Armure (Dissimulée)",
+            "catalogId": "85a85cfd-7703-48f6-9745-d0a2b64c8b9e",
+            "chummerGuid": "e8aee249-a9a5-45e4-8d0c-c39b0c9159ed",
+            "source": "R5",
+            "page": 159,
+            "rating": 4,
+            "slots": 12,
+            "category": "Protection",
+            "cost": 12000,
+            "avail": "12R"
+          },
+          {
+            "id": "sub_mx0m720o36iuw",
+            "name": "Personal Armor",
+            "nameFr": "Vitres blindées",
+            "catalogId": "7dbf54b3-6921-4fb6-b0e8-2a2e5e5e84fe",
+            "chummerGuid": "8f0b8f94-a2d6-4b5e-b7a8-f85eeef64ce1",
+            "source": "R5",
+            "page": 159,
+            "rating": 10,
+            "slots": 2,
+            "category": "Protection",
+            "cost": 5000,
+            "avail": "(Rating)R"
+          },
+          {
+            "id": "sub_mx0m720o37o2r",
+            "name": "Smoke Projector (Thermal)",
+            "nameFr": "Projecteur de fumée (Thermique)",
+            "catalogId": "2ab400a7-c55f-4fcd-a124-f44f1ffd8ea8",
+            "chummerGuid": "1e8c456f-2bc0-490f-9cd3-87e6d76878ff",
+            "source": "R5",
+            "page": 161,
+            "slots": 2,
+            "category": "Weapons",
+            "cost": 850,
+            "avail": "6R"
+          },
+          {
+            "id": "sub_mx0m720o38uao",
+            "name": "Amenities (High)",
+            "nameFr": "Aménagement - Haut",
+            "catalogId": "4c989588-40da-4969-8c96-66be76f7ad3e",
+            "chummerGuid": "a4b26519-c170-4fb6-89a3-a8b3537deb39",
+            "source": "R5",
+            "page": 169,
+            "slots": 0,
+            "category": "Cosmetic",
+            "cost": 1000,
+            "avail": "8"
+          },
+          {
+            "id": "sub_mx0m720o39ukr",
+            "name": "Searchlight",
+            "nameFr": "Projecteur pivotable",
+            "catalogId": "ea059f62-164c-403b-89d5-8603804a64b6",
+            "chummerGuid": "5824ed00-933b-45aa-9af5-624d689e6bbe",
+            "source": "R5",
+            "page": 171,
+            "slots": 0,
+            "category": "Cosmetic",
+            "cost": 800,
+            "avail": "4"
+          },
+          {
+            "id": "sub_mx0m720o3axym",
+            "name": "Valkyrie Module",
+            "nameFr": "Module médical Valkyrie",
+            "catalogId": "f6ad4db2-e318-41a3-93cf-3a28a2bae4d7",
+            "chummerGuid": "0f65e8ab-5f86-4c74-b801-e66cefbc7807",
+            "source": "R5",
+            "page": 166,
+            "slots": 4,
+            "category": "Body",
+            "cost": 2000,
+            "avail": "8"
+          },
+          {
+            "id": "sub_mx0m720o3bmjl",
+            "name": "Satellite Link",
+            "nameFr": "Lien satellite",
+            "catalogId": "6ca6085f-bdef-4af8-a88e-250a3f4a3e65",
+            "chummerGuid": "0684ee5b-cecc-4fda-8ec9-212ce71a3720",
+            "source": "R5",
+            "page": 168,
+            "slots": 1,
+            "category": "Electromagnetic",
+            "cost": 500,
+            "avail": "6"
+          },
+          {
+            "id": "sub_mx0m720o3ch4v",
+            "name": "Run-Flat Tires",
+            "nameFr": "Pneus de roulage à plat",
+            "catalogId": "aba3338c-0a54-4486-84a4-2e74524b63de",
+            "chummerGuid": "379056e4-b506-4740-a332-3bfeadf0e809",
+            "source": "R5",
+            "page": 152,
+            "rating": 1,
+            "slots": 0,
+            "category": "All",
+            "cost": 250,
+            "avail": "4"
+          },
+          {
+            "id": "sub_mx0m720o3dyrx",
+            "name": "Chameleon Coating",
+            "nameFr": "Peinture caméléon",
+            "catalogId": "90ef81fc-39d7-48b1-bf2a-de6e6b11ff90",
+            "chummerGuid": "cc9e1cd9-011c-40c5-a00e-61df406384fc",
+            "source": "R5",
+            "page": 163,
+            "slots": 2,
+            "category": "Body",
+            "cost": 18000,
+            "avail": "12F"
+          },
+          {
+            "id": "sub_mx0m720o3ep6r",
+            "name": "Life Support",
+            "nameFr": "Système de survie",
+            "catalogId": "25b01f7d-c553-4efc-83dc-c23c4c61b944",
+            "chummerGuid": "cd53dc0a-12c8-4f12-8da3-764a3803a120",
+            "source": "R5",
+            "page": 164,
+            "rating": 2,
+            "slots": 2,
+            "category": "Body",
+            "cost": 36000,
+            "avail": "8"
+          },
+          {
+            "id": "sub_mx0m720o3fyhs",
+            "name": "Passenger Protection System",
+            "nameFr": "Système de protection des passagers",
+            "catalogId": "f9353113-4f4b-4c71-b742-eb5a6f87fc61",
+            "chummerGuid": "c322d3b4-688e-4830-8749-e5140641a606",
+            "source": "R5",
+            "page": 159,
+            "rating": 6,
+            "slots": 2,
+            "category": "Protection",
+            "cost": 12000,
+            "avail": "6"
+          },
+          {
+            "id": "sub_mx0m720o3gvt0",
+            "name": "Acceleration Enhancement",
+            "nameFr": "Turbo",
+            "catalogId": "6ac249ee-84c0-498f-9377-149ccbc2f959",
+            "chummerGuid": "237da043-76be-478e-a766-9d7581fac96c",
+            "source": "R5",
+            "page": 154,
+            "rating": 2,
+            "slots": 8,
+            "category": "Powertrain",
+            "cost": 25000,
+            "avail": "6"
+          },
+          {
+            "id": "sub_mx0m720o3h0ou",
+            "name": "Ram Plate",
+            "nameFr": "Plaque de bélier",
+            "catalogId": "0f9a2625-5496-4a9f-9e2e-7deddf0a6920",
+            "chummerGuid": "04485c7e-512d-4727-8a7c-f7521a90566f",
+            "source": "R5",
+            "page": 161,
+            "slots": 0,
+            "category": "Weapons",
+            "cost": 0,
+            "avail": "0"
+          },
+          {
+            "id": "sub_mx0m720o3ijkm",
+            "name": "Morphing License Plate",
+            "catalogId": "b02bf28a-1012-452c-ac88-cb98181eded4",
+            "chummerGuid": "7f391dda-c7d1-4c25-8007-31d02ee37940",
+            "source": "R5",
+            "page": 152,
+            "slots": 0,
+            "category": "All",
+            "cost": 1000,
+            "avail": "8F"
+          },
+          {
+            "id": "sub_mx0m720o3jjb1",
+            "name": "Electromagnetic Shielding",
+            "nameFr": "Bouclier électromagnétique",
+            "catalogId": "da9d087f-b0c0-4e8a-9a2f-902d1c6fe2d6",
+            "chummerGuid": "e38254ce-c714-4f08-8101-1a3a4558f273",
+            "source": "R5",
+            "page": 166,
+            "slots": 2,
+            "category": "Electromagnetic",
+            "cost": 9000,
+            "avail": "6R"
+          },
+          {
+            "id": "sub_mx0m720o3k2j2",
+            "name": "Road Strip Ejector",
+            "nameFr": "Système anti-piège routier",
+            "catalogId": "1478ac87-a64b-4d5f-be3f-1ed4fb9e5cbd",
+            "chummerGuid": "a8768cde-bf03-4341-972f-39240c268912",
+            "source": "R5",
+            "page": 161,
+            "slots": 2,
+            "category": "Weapons",
+            "cost": 800,
+            "avail": "10F"
+          },
+          {
+            "id": "sub_mx0m720o3lipk",
+            "name": "Tracking Strip",
+            "nameFr": "Piège routier - Traceur matriciel",
+            "catalogId": "8cc0dcc0-e5d0-46a4-8b61-a9e0ee1fe3f6",
+            "chummerGuid": "1cfe8cdb-bc87-4338-9da3-bff0dd8d401a",
+            "source": "R5",
+            "page": 153,
+            "slots": 0,
+            "category": "All",
+            "cost": 600,
+            "avail": "8R"
+          },
+          {
+            "id": "sub_mx0m720o3mv4g",
+            "name": "Spike Strip",
+            "nameFr": "Piège routier - Herse",
+            "catalogId": "7eb3fa91-2774-490d-8ce2-8472daa4ae91",
+            "chummerGuid": "f2676bd1-bb7a-4d7a-9c6a-7ff8f540c12d",
+            "source": "R5",
+            "page": 152,
+            "slots": 0,
+            "category": "All",
+            "cost": 200,
+            "avail": "8R"
+          }
+        ],
+        "notes": "SR5 p.464 — Armes : Krime Wave\nRestauré depuis Chummer (fichier du 01/08/2020) — à vérifier",
+        "catalogId": "0ed17686-7ac3-48de-88d2-bc8738a00afa",
+        "chummerGuid": "14d98ecc-bdae-4a73-b555-a563dca61718",
+        "source": "SR5",
+        "page": 464
+      }
+    ],
     "matrix": {
-      "device": "Fairlight Caliban (commlink)",
+      "device": "Fairlight Caliban",
       "rating": 7,
       "attack": 0,
       "sleaze": 0,
@@ -5285,57 +6297,74 @@
       {
         "id": "fvtt_RdTQGK1ty0IeOWe7",
         "name": "Dan",
+        "role": "Police Chief",
         "connection": 4,
         "loyalty": 4,
-        "notes": "Police Chief"
+        "notes": "Lieu : Seattle — Has skin cancer - being treated",
+        "chummerGuid": "72578273-2a79-42ca-a348-f55516e0d569"
       },
       {
         "id": "fvtt_Qg56ein6pctT5HNa",
         "name": "Kazuyoshi Kudo",
+        "role": "Yakuza",
         "connection": 4,
         "loyalty": 3,
-        "notes": "Yakuza"
+        "notes": "Lieu : Seattle — I often frequent his bars and other places. I sometimes help him for little jobs, and stuff like that.\nOne time I was drinking at one of his bar when it got raided by the cops, fortunatly I knew the Police Chef and was able to arrange a \"deal\" with him, which gain me some recognition from Kazuyoshi Kudo",
+        "chummerGuid": "2e2af202-220f-4cf3-af74-4111ad74b6f6"
       },
       {
         "id": "fvtt_argN3hxMc1avXt5o",
         "name": "Arianne Mortia",
+        "role": "Armorer",
         "connection": 3,
         "loyalty": 5,
-        "notes": "Armorer"
+        "notes": "Lieu : Seattle",
+        "chummerGuid": "20f9883b-94eb-447c-b3bc-ca0e245ce55d"
       },
       {
         "id": "fvtt_lePUBxmGRYprM52g",
         "name": "Jean-Pierre",
+        "role": "",
         "connection": 1,
-        "loyalty": 1
+        "loyalty": 1,
+        "notes": "| CON 3 | AGI 5 | RÉA 4 | FOR 3 | VOL 3 | LOG 2 | INT 3 | CHA 3 | CHC 2 | ESS 6 |\n\nInitiative : 7 + 2D6\t\t\tDéplacement : x2 / x6 / +4\nMoniteur de condition : 10/10\t\tArmure : 0\nLimites : physique 5, mentale 3, sociale 5\nCompétences : Combat à mains nues 5, Course 5, Discrétion 7, Perception (Auditive) 5 (+2), Pistage 3, Gymnastique 2\nPouvoirs : Armes naturelles (Crocs / Griffes : VD (FOR+2)P, PA -1), Sens accrus (Ouïe, Vision nocturne)",
+        "chummerGuid": "30c48642-3653-4d65-8a95-c3999bff442f"
       },
       {
         "id": "fvtt_N1w9dIFz6gBdaA8N",
         "name": "Karen King",
+        "role": "Corporate Manager",
         "connection": 11,
         "loyalty": 2,
-        "notes": "Corporate Manager"
+        "notes": "Lieu : Seattle",
+        "chummerGuid": "20dfb113-786c-4a8c-9f56-b8fb479ab406"
       },
       {
         "id": "fvtt_CLUH7addEgh6Hdz7",
         "name": "Hiroshi Yamamoto",
+        "role": "Yakuza",
         "connection": 4,
         "loyalty": 2,
-        "notes": "Yakuza"
+        "notes": "ENNEMI — Lieu : Seattle",
+        "chummerGuid": "031c4894-d99c-467f-b3c2-9fda016a0c61"
       },
       {
         "id": "fvtt_zIpDO6bWOeMdJNE0",
         "name": "Kerry Taylor",
+        "role": "Infobroker",
         "connection": 5,
         "loyalty": 1,
-        "notes": "Infobroker"
+        "notes": "Lieu : Seattle",
+        "chummerGuid": "6e361469-e43d-4172-b6c2-74f8f84cd2d8"
       },
       {
         "id": "fvtt_LS6BVN1EVMd9xSSK",
         "name": "Vi Moneau",
+        "role": "Decker",
         "connection": 3,
         "loyalty": 5,
-        "notes": "Decker"
+        "notes": "Lieu : Seattle",
+        "chummerGuid": "616d37e4-3608-4d09-a41c-7939147ddd7a"
       },
       {
         "id": "fvtt_x0SmcGSPmuvYHHMr",
@@ -5355,14 +6384,19 @@
     "sins": [
       {
         "id": "fvtt_BNPICoNuMN09VIrp",
-        "name": "Faux SIN — Johnathan Doe",
+        "name": "Johnathan Doe",
         "rating": 6,
         "licenses": [
-          "Weapon License (4)",
-          "Driver's License (4)",
-          "Concealed Carry Permit (4)",
-          "Medical License (6)"
-        ]
+          "Weapon License",
+          "Driver's License",
+          "Concealed Carry Permit",
+          "Medical License"
+        ],
+        "catalogId": "0c800bca-e6ff-475b-a014-c2069f5e364c",
+        "chummerGuid": "c63f9962-7857-449e-80e2-056eff210c68",
+        "source": "SR5",
+        "page": 442,
+        "choice": "Johnathan Doe"
       }
     ],
     "lifestyles": [
@@ -5375,14 +6409,16 @@
         "primary": true,
         "qualities": [],
         "monthlyCost": 10000,
-        "notes": "Historique Chummer (fichier du 01/08/2020) : « The Hut », Moyen (points RF Confort 3 / Sécurité 4 / Voisinage 5) avec Endroit dangereux (−20 %), Contrat DocWagon (Or) 2 083 ¥, Garage (gros véhicule, Body 5+) 100 ¥ (pour l’Ares Roadmaster), Pilier de bar (The Jeffrey’s) 25 ¥ — 6 248 ¥/mois. Non restauré : la fiche actuelle (Foundry) a « The Lounge » (Haut), conservé."
+        "notes": "Historique Chummer (fichier du 01/08/2020) : « The Hut », Moyen (points RF Confort 3 / Sécurité 4 / Voisinage 5) avec Endroit dangereux (−20 %), Contrat DocWagon (Or) 2 083 ¥, Garage (gros véhicule, Body 5+) 100 ¥ (pour l’Ares Roadmaster), Pilier de bar (The Jeffrey’s) 25 ¥ — 6 248 ¥/mois. Non restauré : la fiche actuelle (Foundry) a « The Lounge » (Haut), conservé.",
+        "source": "SR5",
+        "page": 369
       }
     ],
     "karma": 5,
     "karmaTotal": 69,
     "nuyen": 207159,
-    "streetCred": 2,
-    "notoriety": 0,
+    "streetCred": 8,
+    "notoriety": 8,
     "publicAwareness": 0,
     "vision": {},
     "history": [
@@ -5391,6 +6427,18 @@
         "text": "Valeurs importées de Foundry (test-world) : 5 karma, 207 159¥",
         "karma": 5,
         "nuyen": 207159
+      },
+      {
+        "ts": 1795882707817,
+        "text": "Migrated from Chummer (Christopher_Armingstar_Active.chum5, 01/08/2020) and Foundry",
+        "i18n": {
+          "key": "Migrated from Chummer ({file}, {date}) and Foundry",
+          "params": {
+            "file": "Christopher_Armingstar_Active.chum5",
+            "date": "01/08/2020"
+          }
+        },
+        "chummer": true
       }
     ],
     "retired": true,
@@ -5560,6 +6608,37 @@
         "matrix": "a7057b31d572",
         "vision": "bf21a9e8fbc5"
       }
-    }
+    },
+    "gender": "Homme",
+    "age": 34,
+    "containers": [
+      {
+        "id": "chum_c7b8b5fa-1d08-4865-b69a-f9d833eed495",
+        "name": "Roadmaster",
+        "kind": "vehicle"
+      },
+      {
+        "id": "chum_3f5a109b-bc32-4054-95ff-ad24c0fc0f33",
+        "name": "Home",
+        "kind": "safehouse"
+      },
+      {
+        "id": "chumgear_a99e9553-9a4e-48b8-9289-a82d4b01bbe0",
+        "name": "Mini-Grenades à gaz",
+        "kind": "bag",
+        "itemId": "itm_mx0m720l20ojx"
+      }
+    ],
+    "chummer": {
+      "fileName": "Christopher_Armingstar_Active.chum5",
+      "importedAt": 1795882707817,
+      "syncedAt": 1795882707817,
+      "sourceHash": "bdf80a1e3a5fa50c9cdf4102a13dc1b24f5bf9dd",
+      "created": true,
+      "appVersion": "5.212.0.0",
+      "lang": "fr",
+      "bags": true
+    },
+    "martialArts": []
   }
 ]
