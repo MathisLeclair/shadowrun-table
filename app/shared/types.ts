@@ -601,6 +601,8 @@ export interface Container {
   name: string;
   kind: ContainerKind;
   notes?: string;
+  /** Gear item this container is (a Chummer bag with contents: the item keeps its cost, the container holds the contents). */
+  itemId?: string;
 }
 
 export interface Vehicle extends ItemBase {
@@ -895,6 +897,8 @@ export interface ChummerLink {
   appVersion?: string;
   /** Language of the texts the import wrote (notes, bio headings); absent = French (imports before 2026-11). */
   lang?: Lang;
+  /** Gear with contents is a bag container (imports since 2026-11-28; older ones are migrated once at boot). */
+  bags?: boolean;
   /** Upload URLs of the portraits. */
   mugshots?: string[];
 }

@@ -71,7 +71,8 @@ activating it moves it 'on' from a bag (`settleItem`); from a vehicle / safehous
 kind of a vehicle / safehouse / other container, nor remove one that still holds items; moving an item out of one
 (`inventory/move`, `location` patch) is allowed and logged (« {name} récupère {item} ({place}) ») so the GM sees it.
 
-Containers: `containers: [{ id, name, kind: 'body'|'bag'|'vehicle'|'safehouse'|'other', notes? }]` (« Sur soi » = 'on',
+Containers: `containers: [{ id, name, kind: 'body'|'bag'|'vehicle'|'safehouse'|'other', notes?, itemId? }]` (`itemId`:
+the gear item the container is — a Chummer bag, see Imports) (« Sur soi » = 'on',
 implicit). Actions (owner / GM): `inventory/addContainer { actorId, name, kind? }` → id (kind guessed from the name),
 `inventory/updateContainer { actorId, containerId, patch: { name?, kind?, notes? } }`, `inventory/removeContainer`
 (contents back 'on') → count, `inventory/move { actorId, list, itemId, location }` → `{ location, stowed }`;
@@ -91,6 +92,22 @@ Chummer: `<gearlocations>` / `<armorlocations>` / `<weaponlocations>` → contai
 equipped: the app's ready defaults apply) and never written from it; export writes `<location>` (creating the Chummer
 location of an app container, matched by guid then name), the active clip's count when the file has clips; re-import
 (merge.ts) adds new containers.
+
+Chummer bags (gear holding gear: a backpack and its contents, `parse.ts pushGear` / `isBagGear`): a gear node with
+children (not `includedinparent`) is a bag when its name (`gearname` or `name`) guesses kind 'bag' (backpack, case,
+sac…), or when none of its children is an accessory of it — an accessory has a capacity slot « [n] », a category the
+parent lists in `<addoncategory>` (file or data), or the parent's own category other than Custom (rope of a grapple gun, medkit refills);
+matrix devices never are. The bag stays a gear item (cost, notes, its own location) and gets a container
+`chumgear_<guid>` (kind 'bag', `itemId` = that item's id); its children are placed in it without the « in {bag} » note
+(bags in bags nest the same way). Accessories stay flat items noted « in {parent} », at their parent's location (rope
+of a grapple gun in a backpack → in the backpack). Export (`export.ts placeBagContents`): gear in a container linked
+to a gear item becomes a `<children>` entry of that item's node, gear taken out of it goes back to the top-level
+`<gears>`, never a Chummer `<gearlocation>`; gear deleted in the app leaves the children the app still has at the top
+level. Weapons / armor put in a bag are exported with a Chummer location of the bag's name (Chummer cannot put them
+in gear). Re-import: a new bag's `itemId` is pointed at the merged item (same `chummerGuid`). Characters imported
+before bags existed (2026-11-28): `85-chummer init` runs `lib/chummer/bags.ts adoptChummerBags` once per actor
+(flag `chummer.bags`, set by new imports and exports too): it re-reads the stored .chum5, adds the bag containers and
+moves the contents that are still « Sur soi », dropping the old « in {bag} » note when the rest is the imported note.
 
 ## Live table migration
 

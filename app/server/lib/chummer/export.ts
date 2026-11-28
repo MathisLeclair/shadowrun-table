@@ -18,7 +18,7 @@ import {
 } from './data.ts';
 import { KNOWLEDGE_TYPES } from '../../../client/modules/sheet/sheet-data.ts';
 import type {
-  Accessory, Actor, AdeptPower, Armor, ArmorMod, Augmentation, ComplexForm, Contact, I18nMessage, ItemBase, KnowledgeSkill, Lifestyle, LifestyleQuality, MartialArt,
+  Accessory, Actor, AdeptPower, Armor, ArmorMod, Augmentation, ComplexForm, Contact, Container, Gear, I18nMessage, ItemBase, KnowledgeSkill, Lifestyle, LifestyleQuality, MartialArt,
   MartialArtTechnique, Quality, Sin, Spell, Vehicle, VehicleMod, Weapon,
 } from '../../../shared/types.ts';
 
@@ -875,7 +875,14 @@ export function exportChum5(actor: Actor, { now = Date.now(), mugshots = null }:
     for (const [g] of baseItems) {
       if (keep.has(g)) continue;
       const hit = idx.get(g);
-      if (hit && !(list === 'weapons' && hit.node.val('name') === 'Unarmed Attack')) hit.parent.remove(hit.node); // Chummer's built-in stays
+      if (!hit || (list === 'weapons' && hit.node.val('name') === 'Unarmed Attack')) continue; // Chummer's built-in stays
+      // Gear deleted in the app: the children the app still has (a bag's contents, a kept accessory) stay in the file.
+      for (const ch of list === 'gear' ? hit.node.child('children')?.all('gear') || [] : []) {
+        if (!keep.has(ch.val('guid').trim().toLowerCase())) continue;
+        hit.node.child('children')!.remove(ch);
+        container(c, 'gears').children.push(ch);
+      }
+      hit.parent.remove(hit.node);
     }
     let unarmedUsed = false;
     for (const it of items) {
@@ -905,6 +912,9 @@ export function exportChum5(actor: Actor, { now = Date.now(), mugshots = null }:
       assign(list, it, guid);
     }
   }
+
+  // --- bags: gear in a container linked to a gear item is a child of that gear node (and leaves it when taken out)
+  placeBagContents(c, actor, assigned.gear || {});
 
   // --- matrix device (generate mode only: in patch mode the device already is a gear item)
   if (mode === 'generate' && actor.matrix?.device) addMatrixDevice(c, actor, warnings);
@@ -1019,7 +1029,8 @@ const LOCATION_LISTS: Record<string, string> = { weapons: 'weaponlocations', arm
  */
 function setItemLocation(c: Element, list: string, node: Element, it: AnyItem, actor: Actor): void {
   const ct = it.location && it.location !== 'on' ? (actor.containers || []).find((x) => x && x.id === it.location) : null;
-  if (!ct) {
+  if (!ct || (list === 'gear' && bagItem(actor, ct))) {
+    // « Sur soi », or gear in a bag: no Chummer location (placeBagContents nests it in the bag's gear node).
     node.set('location', '');
     return;
   }
@@ -1032,6 +1043,50 @@ function setItemLocation(c: Element, list: string, node: Element, it: AnyItem, a
     holder.children.push(loc);
   }
   node.set('location', loc.val('guid'));
+}
+
+/** Gear item a container is (a Chummer bag: Container.itemId), or null. */
+function bagItem(actor: Actor, ct: Container | null | undefined): Gear | null {
+  return (ct?.itemId && (actor.gear || []).find((g) => g && g.id === ct.itemId)) || null;
+}
+
+/**
+ * Bags (parse.ts pushGear): a gear item in a container linked to a gear item becomes a <children> entry of that item's node;
+ * a gear node inside a bag's <children> whose app item is no longer in that bag goes back to the top-level <gears>.
+ * Accessories nested under a non-bag gear (scope, rope) are left where they are. `guids` = guids given to new gear items.
+ */
+function placeBagContents(c: Element, actor: Actor, guids: Record<string, string>): void {
+  const gear = (actor.gear || []).filter(Boolean);
+  const guidOf = (g: Gear): string => String(g.chummerGuid || guids[g.id] || '').toLowerCase();
+  const idx = guidIndex(c);
+  const bagOf = new Map<string, Element>(); // container id → bag gear node
+  const bagKids = new Map<Element, string>(); // a bag's <children> element → container id
+  for (const ct of actor.containers || []) {
+    const bag = bagItem(actor, ct);
+    const node = bag && idx.get(guidOf(bag))?.node;
+    if (!node || node.name !== 'gear') continue;
+    bagOf.set(ct.id, node);
+    bagKids.set(node.child('children') || node.append(el('children')).child('children')!, ct.id);
+  }
+  if (!bagOf.size) return;
+  for (const it of gear) {
+    const hit = idx.get(guidOf(it));
+    if (!hit || hit.node.name !== 'gear') continue;
+    const bagNode = it.location ? bagOf.get(it.location) : undefined;
+    let target: Element | null = null;
+    if (bagNode && bagNode !== hit.node) {
+      let inside = false; // the bag sits inside this item: moving it there would cut both off the file
+      hit.node.walk((n) => {
+        if (n === bagNode) inside = true;
+      });
+      if (!inside) target = bagNode.child('children')!;
+    } else if (bagKids.has(hit.parent)) target = container(c, 'gears');
+    if (!target || target === hit.parent) continue;
+    hit.parent.remove(hit.node);
+    target.children.push(hit.node);
+    hit.node.set('location', '');
+    hit.parent = target;
+  }
 }
 
 /** Fields the app may change on an item that already exists in the file. */

@@ -17,7 +17,7 @@ xml, mugshots, diff, summary, warnings, status }] }` (`ChummerState`, `ChummerRe
   request unless allowed), `GET /api/chummer/export/:actorId` (owner/GM; the exported file becomes the merge base).
   `CHUMMER_DATA_DIR` overrides the Chummer data folder.
 - Actor fields: `actor.chummer = { xml, fileName, importedAt, syncedAt, exportedAt?, updatedAt?, sourceHash, created,
-  appVersion, mugshots? }` (xml stripped from the GM view by `gmFilter`), `item.chummerGuid`, `actor.realName`,
+  appVersion, lang?, bags?, mugshots? }` (xml stripped from the GM view by `gmFilter`), `item.chummerGuid`, `actor.realName`,
   `actor.metavariant`. Chummer mugshots go to the current table's uploads.
 
 ## Import, export, re-import
@@ -32,7 +32,7 @@ xml, mugshots, diff, summary, warnings, status }] }` (`ChummerState`, `ChummerRe
   Chummer, run *Réappliquer les améliorations* if bonuses look off.
 - Re-import never brings back items deleted in the app since the export, nor duplicates items the app keeps in another
   list (device in `actor.matrix`, shop SIN in gear).
-- Inventory locations, clips and ammo: [inventory.md](inventory.md#imports).
+- Inventory locations, bags (gear with contents → sub-inventory), clips and ammo: [inventory.md](inventory.md#imports).
 
 ## Nested lists
 

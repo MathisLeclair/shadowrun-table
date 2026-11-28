@@ -204,6 +204,8 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
   const imps = improvementsOf(c);
   // Chummer locations (<gearlocations>/<armorlocations>/<weaponlocations>) → actor.containers; items' <location> → item.location.
   const locs = locationsOf(c);
+  // Gear with contents (pushGear) → bag containers linked to their item.
+  const bags: Container[] = [];
 
   const alias = v('alias');
   const realName = v('name');
@@ -435,8 +437,12 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
   const totEss = v('totaless');
   a.attributes.ESS = totEss ? round2(num(totEss, 6)) : Math.max(0, round2(6 - essLoss));
 
-  // Gear (commlinks/decks feed the matrix block, SINs feed `sins`, programs feed matrix.programs)
-  function pushGear(g: Element, where: string): void {
+  // Gear (commlinks/decks feed the matrix block, SINs feed `sins`, programs feed matrix.programs).
+  // Gear holding loose gear (a backpack and its contents) becomes a bag: the item stays (cost, notes) and a container
+  // `chumgear_<guid>` linked to it (`itemId`) holds its children. Accessories (a scope on glasses, rope in a grapple gun)
+  // stay flat items with an « in {parent} » note, at their parent's location.
+  // `inherited` = location of the parent item (accessories) or the parent's bag container (contents).
+  function pushGear(g: Element, where: string, inherited?: string): void {
     const name = g.val('name');
     if (!name) return;
     if (bool(g.val('includedinparent'))) return;
@@ -462,16 +468,25 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
       };
     }
     const rating = num(g.val('rating'));
-    const loc = locs.resolve(g.val('location'));
-    const note = [where || '', g.val('location') && !loc ? tr(tk('location: {location}'), { location: g.val('location') }) : '', srcNote(g), longText(g.val('notes'))].filter(Boolean).join(' — ');
+    const loc = locs.resolve(g.val('location')) || inherited;
+    const note = [where || '', g.val('location') && !locs.resolve(g.val('location')) ? tr(tk('location: {location}'), { location: g.val('location') }) : '', srcNote(g), longText(g.val('notes'))].filter(Boolean).join(' — ');
     const custom = g.val('gearname');
     // Ammunition: Chummer <ammoforweapontype> (file, else data) tells which weapons it feeds (client/modules/sheet/inventory.js).
     const ammoFor = /^Ammunition$/i.test(category) ? g.val('ammoforweapontype') || findDataItem('gear', { id: sourceOf(g) })?.val('ammoforweapontype') || '' : '';
-    a.gear.push(withRef({
+    const item = withRef({
       id: makeId('itm'), name: custom || displayName('gear', g), category: frenchCategory('gear', sourceOf(g)) || category, ...(rating ? { rating } : {}), qty: num(g.val('qty'), 1) || 1, ...(note ? { notes: note } : {}),
       ...(loc ? { location: loc } : {}), ...(ammoFor ? { ammoFor: String(ammoFor).slice(0, 40) } : {}),
-    }, g));
-    for (const ch of g.get('children')?.all('gear') || []) pushGear(ch, tr(tk('in {name}'), { name: custom || name }));
+    }, g);
+    a.gear.push(item);
+    const kids = (g.get('children')?.all('gear') || []).filter((ch) => ch.val('name') && !bool(ch.val('includedinparent')));
+    const guid = g.val('guid').trim().toLowerCase();
+    if (guid && isBagGear(g, kids)) {
+      const bag: Container = { id: `chumgear_${guid}`, name: item.name.slice(0, 60), kind: 'bag', itemId: item.id };
+      bags.push(bag);
+      for (const ch of kids) pushGear(ch, '', bag.id);
+    } else {
+      for (const ch of kids) pushGear(ch, tr(tk('in {name}'), { name: custom || name }), loc);
+    }
   }
   for (const g of c.get('gears')?.all('gear') || []) pushGear(g, '');
   // Loaded ammunition of the weapons (the gear of their active clip).
@@ -479,7 +494,7 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
     const g = a.gear.find((x) => x.chummerGuid === guid);
     if (g) wi.ammoKind = ammoKindOf(g) as AmmoKind | null;
   }
-  if (locs.containers.length) a.containers = locs.containers;
+  if (locs.containers.length || bags.length) a.containers = [...locs.containers, ...bags];
 
   // Vehicles & drones
   for (const vh of c.get('vehicles')?.all('vehicle') || []) {
@@ -614,7 +629,7 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
   if (keepXml) {
     a.chummer = {
       xml: String(xml).replace(/^﻿/, ''), fileName: String(fileName || '').slice(0, 200), importedAt: now, syncedAt: now, sourceHash: sha1(xml),
-      created, appVersion: v('appversion'), lang,
+      created, appVersion: v('appversion'), lang, bags: true,
     };
   }
   return { actor: a, warnings, warningsI18n: warn.i18n, info: { created, appVersion: v('appversion'), buildMethod: v('buildmethod'), mugshot } };
@@ -737,6 +752,22 @@ function locationsOf(c: Element): Locations {
     return (byName.get(s.toLowerCase()) || add(s, null))?.id;
   };
   return { containers, resolve };
+}
+
+/**
+ * Gear node with children (`kids`: not included in it) that holds them like a bag: its name says so (backpack, case, sac…),
+ * or none of the children is an accessory of it (a capacity slot « [n] », a category the parent takes as add-on, the
+ * parent's own category other than Custom: rope of a grapple gun, refills of a medkit). Matrix devices never are.
+ */
+function isBagGear(g: Element, kids: Element[]): boolean {
+  if (!kids.length || MATRIX_CATS.test(g.val('category'))) return false;
+  if ([g.val('gearname'), g.val('name')].some((n) => guessContainerKind(n) === 'bag')) return true;
+  const own = g.val('category').trim().toLowerCase();
+  const addons = new Set([...g.all('addoncategory'), ...(findDataItem('gear', { id: sourceOf(g) })?.all('addoncategory') || [])].map((x) => x.text.trim().toLowerCase()));
+  return kids.every((k) => {
+    const cat = k.val('category').trim().toLowerCase();
+    return !k.val('capacity').includes('[') && (cat !== own || cat === 'custom') && !addons.has(cat);
+  });
 }
 
 /** item.location from the node's <location> (Chummer location guid or name); returns the item. */
