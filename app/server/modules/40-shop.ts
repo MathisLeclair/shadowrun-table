@@ -25,6 +25,7 @@ import { removeBonus, weaponFromStats, bakeItemBonus } from '../lib/augment.ts';
 import { formatSource } from '../lib/i18n.ts';
 import { fillActorRefs } from '../lib/bookrefs.ts';
 import { thrownGearToWeapons } from './10-characters.ts';
+import { normalizeMagazines } from '../../client/modules/sheet/inventory.ts';
 import type {
   ActionContext, Actor, ActorId, AvailRollInfo, AvailTest, ContactSheet, Legality, RollRecord, BiName, CatalogFile, CatalogItem, Contact, HistoryEntry, I18nEntry, I18nMessage, I18nParams, I18nParamValue, OrderLine, ServerEvents, ServerModule,
   ShopOrder, ShopSpecial, ShopState, TableState, UserId, Lifestyle,
@@ -564,6 +565,7 @@ function installUpgrade(ctx: ActionContext, actor: ShopActor, line: OrderLine, {
     const fit = accessoryFit(target, cat, item, { mount: line.mount });
     if (fit.problem) failWith(ctx, fit.problem);
     target.accessories.push(accessoryItem(ctx, item, { mount: fit.mount, cost: line.price ?? line.unitCost, ...(line.rating ? { rating: line.rating } : {}), ...extra }));
+    normalizeMagazines(target); // an Additional Clip/Magazine: a second magazine, full of the default ammunition
   } else if (file === 'armormods') {
     if ((target.capacity === undefined || target.capacity === null) && cat?.stats?.capacity !== undefined) target.capacity = Number(cat.stats.capacity) || 0;
     const fit = armorModFit(target, cat, item, line.rating);
