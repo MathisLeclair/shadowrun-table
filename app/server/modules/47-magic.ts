@@ -13,7 +13,7 @@ import {
   isAwakened, DRAIN_ATTRS, drainAttr, drainValue, spellDrainType, spellReach, isAreaSpell, spellCategory, maxForce, RECKLESS_DV,
   isSustainable, spellEffects, combatSpellProfile, MIN_DRAIN, spellResistance, NO_AURA_KINDS, OBJECT_RESISTANCE,
   spiritStats, traditionSpiritTypes, optionalPowerCount, BINDING_DRAMS, isReagent, reagentDrams, aidSpiritType,
-  canPerceiveAstral, canProjectAstral,
+  canPerceiveAstral, canProjectAstral, focusKind, focusForce, focusCategory, focusWorks,
 } from '../../shared/magic.ts';
 import { spellCatalogInfo } from '../lib/spells.ts';
 import { addSpellAttack, addAstralAttack } from './33-attacks.ts';
@@ -70,7 +70,9 @@ export function syncSustained(state: TableState): void {
       delete m.sustained[id];
       continue;
     }
-    if (!s.by || s.by.kind === 'caster') (sustaining[caster.id] ||= []).push({ id: s.id, name: s.name, force: s.force });
+    // A sustaining focus: mirrored on the caster with its id; the modifiers skip the −2 while the focus works (SR5 p. 320).
+    if (s.by?.kind === 'focus') (sustaining[caster.id] ||= []).push({ id: s.id, name: s.name, force: s.force, focusId: s.by.gearId });
+    else if (!s.by || s.by.kind === 'caster') (sustaining[caster.id] ||= []).push({ id: s.id, name: s.name, force: s.force });
     else if (s.by.kind === 'spirit' && state.actors?.[s.by.actorId]) (sustaining[s.by.actorId] ||= []).push({ id: s.id, name: s.name, force: s.force });
     const spell = (caster.spells || []).find((x) => x.id === s.spellId) || { name: s.name.en || s.name.fr, nameEn: s.name.en, nameFr: s.name.fr };
     const fx = spellEffects(spell, s.hits);
@@ -152,6 +154,8 @@ type CastPayload = {
   ignore?: unknown; mapId?: unknown; targetIds?: unknown; area?: unknown; drainDv?: unknown; sustain?: unknown;
   /** A bound spirit of the tradition's type for this category adds its Force in dice (SR5 p. 302, one service). */
   aidSpiritId?: unknown;
+  /** A sustaining focus (gear id) sustains the spell instead of the caster (SR5 p. 320). */
+  sustainFocusId?: unknown;
   /** The spell targets an object: its Object Resistance dice pool (3, 6, 9, 15: SR5 p. 295). */
   object?: unknown;
 };
@@ -601,6 +605,15 @@ const actions: Record<string, ActionDef> = {
           ...(/^P$/i.test(String(c.spell.duration).trim()) ? { turnsLeft: c.force } : {}),
           ...(c.area && str(p.mapId, 80) ? { area: { mapId: str(p.mapId, 80), ...c.area } } : {}),
         };
+        // A sustaining focus of the spell's category, Force ≥ the spell's, not already busy (SR5 p. 320).
+        if (p.sustainFocusId) {
+          const g = (c.actor.gear || []).find((x) => x.id === str(p.sustainFocusId, 80));
+          if (!g || focusKind(g) !== 'sustaining' || !focusWorks(g)) ctx.fail('Choose an active, bonded sustaining focus');
+          if (focusCategory(g) !== spellCategory(c.spell.category)) ctx.fail('This focus sustains another category of spells');
+          if (focusForce(g) < c.force) ctx.fail('The focus’s Force ({f}) is below the spell’s ({force})', { f: focusForce(g), force: c.force });
+          if (Object.values(slice(ctx.state).sustained).some((x) => x.by?.kind === 'focus' && x.by.gearId === g.id)) ctx.fail('This focus already sustains a spell');
+          s.by = { kind: 'focus', gearId: g.id };
+        }
         slice(ctx.state).sustained[s.id] = s;
         syncSustained(ctx.state);
         sustainedId = s.id;
@@ -846,6 +859,23 @@ const actions: Record<string, ActionDef> = {
         soak: astralForm ? 'WIL' : 'BOD', rollLogId: roll.logId, gmOnly: secret,
       });
       return { attackId: atk.id, hits: roll.hits, dv };
+    },
+  },
+
+  /** { actorId, gearId, weaponId | null } — the melee weapon a weapon focus is (SR5 p. 320): its Force adds to that weapon's attacks. */
+  'magic/focusWeapon': {
+    role: 'any',
+    handler(ctx: ActionContext, p: { actorId?: ActorId; gearId?: unknown; weaponId?: unknown } = {}) {
+      const a = actorOf(ctx, p.actorId);
+      const g = (a.gear || []).find((x) => x.id === str(p.gearId, 80));
+      if (!g || focusKind(g) !== 'weapon') ctx.fail('Choose a weapon focus');
+      const wid = str(p.weaponId, 80);
+      if (wid) {
+        const w = (a.weapons || []).find((x) => x.id === wid);
+        if (!w || w.kind !== 'melee') ctx.fail('A weapon focus is a melee weapon');
+        g.choice = wid;
+      } else g.choice = null;
+      return { weaponId: g.choice || null };
     },
   },
 

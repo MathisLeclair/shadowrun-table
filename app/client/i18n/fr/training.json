@@ -369,5 +369,14 @@
   "Martial art (Run & Gun p.128): new style 7 karma (some styles more), first technique included · Time: 1 month · Further technique: 5 karma, 2 weeks · Instructor: 2,500¥ per style, 1,500¥ per technique": "Art martial (Run & Gun p.128) : nouveau style 7 karma (plus pour certains styles), première technique comprise · Temps : 1 mois · Technique supplémentaire : 5 karma, 2 semaines · Instructeur : 2 500 ¥ par style, 1 500 ¥ par technique",
   "Choose a martial art style": "Choisis un style d’art martial",
   "Martial art: {style}": "Art martial : {style}",
-  "Martial art techniques: {style} ({techniques})": "Techniques d’art martial : {style} ({techniques})"
+  "Martial art techniques: {style} ({techniques})": "Techniques d’art martial : {style} ({techniques})",
+  "Bond focus: {name} (Force {force})": "Lier le focus : {name} (Puissance {force})",
+  "Choose a focus of the inventory": "Choisissez un focus de l’inventaire",
+  "Focus bonding": "Lien de focus",
+  "Focus bonding: Force × 2 karma (spell, spirit, qi foci), × 3 (weapon, enchanting, metamagic), × 6 (power) · at most Magic foci, total Force ≤ Magic × 5 · Time: Force hours (SR5 p. 318)": "Lien de focus : Puissance × 2 karma (focus de sort, d’esprit, de qi), × 3 (arme, enchantement, métamagie), × 6 (puissance) · au plus Magie focus, Puissance totale ≤ Magie × 5 · Temps : Puissance heures (SR5 p. 318)",
+  "Give the focus its Force (rating) first": "Indiquez d’abord la Puissance (indice) du focus",
+  "No more bonded foci than your Magic ({n})": "Pas plus de focus liés que votre Magie ({n})",
+  "Only the Awakened can bond foci": "Seuls les éveillés peuvent lier des focus",
+  "The total Force of your bonded foci cannot exceed Magic × 5 ({n})": "La Puissance totale de vos focus liés ne peut dépasser Magie × 5 ({n})",
+  "This focus is already bonded": "Ce focus est déjà lié"
 }

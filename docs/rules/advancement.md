@@ -3,6 +3,8 @@
 Code: `shared/advancement.ts` — sources SR5 core p. 103-107 (« Progression du personnage »), Run Faster and Run & Gun
 p. 128 (martial arts); house rules are flagged in that file. Feature (requests, approval, downtime): [modules/training.md](../modules/training.md).
 
+> **Focus bonding** (kind `focus`, SR5 318): Force × 2 / 3 / 6 karma by focus type, no training days; see [magic rules](magic.md).
+
 ## Karma costs (SR5 p. 103)
 
 Karma costs per SR5: attribute new×5, active skill new×2, group new×5, knowledge new×1, specialization 7, new skill 2,

@@ -588,6 +588,8 @@ export interface Gear extends ItemBase {
   qty: number;
   /** Worn / switched on: its catalog effects count (shared/modifiers.js). */
   active?: boolean;
+  /** Focus (category Foci): bonded to its owner (SR5 p. 318). false = bought, not bonded yet; absent = older sheets (counted as bonded). */
+  bonded?: boolean;
   location?: ItemLocation;
   /** Chummer <ammoforweapontype>. */
   ammoFor?: string;
@@ -853,6 +855,8 @@ export interface SustainingEntry {
   id: string;
   name: BiName;
   force: number;
+  /** Sustained by this sustaining focus (gear id): no −2 while the focus is bonded and active (SR5 p. 320). */
+  focusId?: string;
 }
 
 /** A sustained spell acting on the actor (mirror of state.magic.sustained written by 47-magic), with its numeric effects. */
@@ -1716,7 +1720,7 @@ export interface ShopState {
 
 export type TrainingKind =
   | 'attribute' | 'skill' | 'skillGroup' | 'specialization' | 'knowledge' | 'quality' | 'removeQuality'
-  | 'spell' | 'complexForm' | 'power' | 'powerPoint' | 'initiation' | 'martialArt' | 'other';
+  | 'spell' | 'complexForm' | 'power' | 'powerPoint' | 'initiation' | 'martialArt' | 'focus' | 'other';
 
 /** A martial art technique carried by a 'martialArt' request (catalog martialarts.json, Run & Gun). */
 export interface AdvancementTechnique {
@@ -2302,8 +2306,8 @@ export interface MagicLogInfo {
   targetIds?: ActorId[];
 }
 
-/** Who carries a sustained spell's −2: its caster, or a bound spirit for some Combat Turns (SR5 p. 302). */
-export type SustainCarrier = { kind: 'caster' } | { kind: 'spirit'; actorId: ActorId; turnsLeft: number };
+/** Who carries a sustained spell's −2: its caster, a bound spirit for some Combat Turns (SR5 p. 302), or a sustaining focus (p. 320). */
+export type SustainCarrier = { kind: 'caster' } | { kind: 'spirit'; actorId: ActorId; turnsLeft: number } | { kind: 'focus'; gearId: string };
 
 /** A spell being sustained (by its caster, a bound spirit or a sustaining focus). */
 export interface SustainedSpell {

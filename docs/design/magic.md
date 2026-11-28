@@ -224,7 +224,11 @@ Built 2026-11-28 (facts: [modules/magic.md](../modules/magic.md#astral)). Weapon
 - Astral combat (315) uses the attack pipeline with Astral Combat + WIL [Astral] / weapon foci.
 - GM view: list of astral presences (who, mode, since).
 
-## Foci — *#21 Foci*
+## Foci — *#21, done*
+
+Built 2026-11-28 (facts: [modules/magic.md](../modules/magic.md#foci)). Note: the addiction threshold is the active Force
+above MAG (SR5 319), and MAG × 5 is the cap on bonded Force (318) — the design text below mixed them up.
+
 
 - **Bonding** (318): karma cost per focus type × Force (focus table), through training like other karma spends;
   max bonded foci = MAG; total active Force > MAG × 5 (addiction threshold, 319) shown as a warning.
@@ -268,6 +272,6 @@ Filed on GitHub 2026-11-28, all « Part of #7 ». Order: #12 first; #13 → #14,
 | #18 | Summoning: spirit NPC actors, services, control by the summoner, combat (**done**) | #12, #17 |
 | #19 | Binding, bound spirits (aid sorcery, sustaining), banishing (**done**) | #18, #14 |
 | #20 | Astral perception and projection, astral tokens and initiative (**done**) | #12 |
-| #21 | Foci: bonding, active foci, non-spellcasting foci, sustaining focus | #12, #14 |
+| #21 | Foci: bonding, active foci, non-spellcasting foci, sustaining focus (**done**) | #12, #14 |
 | #22 | Ritual spellcasting | #13 |
 | #23 | Metamagic effects | #13, #20 |

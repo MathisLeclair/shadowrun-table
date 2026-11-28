@@ -18,6 +18,7 @@
 //   Skills of a skill group are always materialized in actor.skills (so skillPool() works);
 //   actor.skillGroups keeps the intact groups only (a group is removed when it gets broken).
 import { METATYPES, SKILLS, SKILL_BY_ID, SKILL_GROUPS, ATTR_LABELS, skillEn, skillKey, type AttrKeyish, type SkillDef } from './sr5.ts';
+import { focusKind, focusForce, focusBondMultiplier, fociLimits } from './magic.ts';
 import { slug, uid } from './util.ts';
 import type {
   ActorLike, ActorMagic, AdeptPower, AdvancementRequest, AdvancementTechnique, Attributes, AttrKey, ComplexForm, I18nEntry, I18nMessage, I18nParams,
@@ -150,7 +151,7 @@ const nested = (m: I18nEntry | null | undefined): I18nMessage | string =>
 /** Translatable param for a skill name: SR5 skills (stored French name or English name) become their English key, custom names stay as typed. */
 const skillParam = (name: string, def: SkillDef | null | undefined): I18nMessage | string => (def && (!name || name === def.fr || name === skillEn(def)) ? { t: skillKey(def) } : name || '');
 
-export const KINDS: TrainingKind[] = ['attribute', 'skill', 'skillGroup', 'specialization', 'knowledge', 'quality', 'removeQuality', 'spell', 'complexForm', 'power', 'powerPoint', 'initiation', 'martialArt', 'other'];
+export const KINDS: TrainingKind[] = ['attribute', 'skill', 'skillGroup', 'specialization', 'knowledge', 'quality', 'removeQuality', 'spell', 'complexForm', 'power', 'powerPoint', 'initiation', 'martialArt', 'focus', 'other'];
 
 export const KIND_LABELS: Record<TrainingKind, string> = {
   attribute: tk('Attribute'),
@@ -166,6 +167,7 @@ export const KIND_LABELS: Record<TrainingKind, string> = {
   powerPoint: tk('Power Point'),
   initiation: tk('Initiation'),
   martialArt: tk('Martial Art'),
+  focus: tk('Focus bonding'),
   other: tk('Other'),
 };
 
@@ -173,6 +175,7 @@ export const KIND_LABELS: Record<TrainingKind, string> = {
 export const RULE_TEXT: Record<TrainingKind | 'instructor', string> = {
   attribute: tk('Attribute: new rating × 5 karma (sum of each rating) · Time: new rating × 1 week'),
   skill: tk('Active skill: new rating × 2 karma (new skill: 2) · Time: ratings 1–4 = rating in days, 5–8 = rating in weeks, 9+ = rating × 2 weeks'),
+  focus: tk('Focus bonding: Force × 2 karma (spell, spirit, qi foci), × 3 (weapon, enchanting, metamagic), × 6 (power) · at most Magic foci, total Force ≤ Magic × 5 · Time: Force hours (SR5 p. 318)'),
   skillGroup: tk('Skill group: new rating × 5 karma (new group: 5) · Time: new rating × 2 weeks · Impossible if the group is broken'),
   specialization: tk('Specialization: 7 karma · Time: 1 month'),
   knowledge: tk('Knowledge / language: new rating × 1 karma (new: 1) · Time: ratings 1–4 = rating in days, 5+ = rating in weeks'),
@@ -326,6 +329,7 @@ export function costFor(kind: TrainingKind | null | undefined, fromRating: unkno
     }
     case 'martialArt':
       return (opts.style ? Math.round(num(opts.karma)) || MARTIAL_RULES.styleKarma : 0) + martialPaidTechniques(from, to, opts) * MARTIAL_RULES.techniqueKarma;
+    case 'focus':
     case 'other':
       return Math.max(0, Math.round(num(opts.karma)));
     default:
@@ -376,6 +380,8 @@ export function timeFor(kind: TrainingKind | null | undefined, fromRating: unkno
       return Math.max(1, to - from) * 30;
     case 'martialArt':
       return (opts.style ? MARTIAL_RULES.styleDays : 0) + martialPaidTechniques(from, to, opts) * MARTIAL_RULES.techniqueDays;
+    case 'focus':
+      return 0; // Force hours (SR5 p. 318): done at approval
     case 'other':
       return Math.max(0, int(opts.days));
     default:
@@ -677,6 +683,8 @@ export function conflictKeys(actor: ActorLike | null | undefined, raw: unknown):
       return ['initiation'];
     case 'martialArt':
       return [`martial:${req.catalogId || slug(req.name || t)}`];
+    case 'focus':
+      return [`focus:${t}`];
     default:
       return [];
   }
@@ -926,6 +934,26 @@ function resolveKind(actor: ActorLike, req: AdvancementRequest, out: AdvanceQuot
       setLabel(out, tk('Buy off: {name} ({karma})'), { name: q.name, karma: k });
       return;
     }
+    case 'focus': {
+      // Bond a focus the character carries (SR5 p. 318): Force × multiplier karma, at most MAG bonded foci, total Force ≤ MAG × 5.
+      if (prof.MAG <= 0) bad(tk('Only the Awakened can bond foci'));
+      const g = (actor.gear || []).find((x) => x && x.id === req.target);
+      if (!g || !focusKind(g)) bad(tk('Choose a focus of the inventory'));
+      if (g.bonded !== false) bad(tk('This focus is already bonded'));
+      const force = focusForce(g);
+      if (force <= 0) bad(tk('Give the focus its Force (rating) first'));
+      const lim = fociLimits(actor);
+      if (lim.bonded + 1 > lim.maxBonded) bad(tk('No more bonded foci than your Magic ({n})'), { n: lim.maxBonded });
+      if (lim.force + force > lim.maxForce) bad(tk('The total Force of your bonded foci cannot exceed Magic × 5 ({n})'), { n: lim.maxForce });
+      const k = force * focusBondMultiplier(focusKind(g));
+      req.karma = k;
+      req.name = g.nameFr || g.name;
+      costOpts.karma = k;
+      out.from = 0;
+      out.to = force;
+      setLabel(out, tk('Bond focus: {name} (Force {force})'), { name: g.name, force });
+      return;
+    }
     case 'spell': {
       if (!prof.canCast) bad(tk('Only magicians and mystic adepts learn spells'));
       const name = req.name || req.target;
@@ -1169,6 +1197,12 @@ export function applyAdvance(actor: ActorLike | null | undefined, raw: unknown):
       const q = (actor.qualities || []).find((x) => x.id === req.target);
       actor.qualities = (actor.qualities || []).filter((x) => x.id !== req.target);
       return q ? q.name : '';
+    }
+    case 'focus': {
+      const g = (actor.gear || []).find((x) => x && x.id === req.target);
+      if (!g) return '';
+      g.bonded = true;
+      return g.name;
     }
     case 'spell': {
       actor.spells = Array.isArray(actor.spells) ? actor.spells : [];

@@ -7,7 +7,10 @@ import { useUI, openSheet } from '../../lib/ui-store.ts';
 import type { GameProps } from '../../lib/net.ts';
 import { t, tk, attrShort, getLang } from '../../lib/i18n.ts';
 import { attr, derive } from '/shared/sr5.ts';
-import { drainAttr, drainPool, sustainedBy, usesTradition, magicHints, reagentDrams, canPerceiveAstral, canProjectAstral, SUSTAIN_PENALTY, BINDING_DRAMS, ASTRAL_ATTRIBUTES, type MagicHint } from '/shared/magic.ts';
+import {
+  drainAttr, drainPool, sustainedBy, usesTradition, magicHints, reagentDrams, canPerceiveAstral, canProjectAstral, focusKind, focusForce, focusBondMultiplier, fociLimits,
+  SUSTAIN_PENALTY, BINDING_DRAMS, ASTRAL_ATTRIBUTES, type MagicHint, type FocusKind,
+} from '/shared/magic.ts';
 import { RollDialog } from '../sheet/RollDialog.tsx';
 import { RuleRef, ItemRef, BookRef } from '../books/BookRef.tsx';
 import { categoryLabel, itemLabel } from '../sheet/common.tsx';
@@ -98,6 +101,7 @@ function SustainedList({ game, list, canDrop, showCaster, helpers }: { game: Gam
             <td className="small muted">
               {typeof s.turnsLeft === 'number' ? t('permanent in {n} Combat Turn(s)', { n: s.turnsLeft }) : ''}
               {s.by?.kind === 'spirit' ? ' ' + t('sustained by {spirit} ({n} turn(s))', { spirit: name(s.by.actorId), n: s.by.turnsLeft }) : ''}
+              {s.by?.kind === 'focus' ? ' ' + t('sustained by a focus') : ''}
             </td>
             <td>
               {!s.by && canDrop(s) && (helpers || []).map((sp) => (
@@ -248,6 +252,62 @@ function AstralAttackModal({ game, actor, onClose }: { game: GameView; actor: Ac
   );
 }
 
+const FOCUS_LABELS: Record<FocusKind, string> = {
+  spellcasting: tk('Spellcasting focus'), counterspelling: tk('Counterspelling focus'), ritual: tk('Ritual spellcasting focus'), sustaining: tk('Sustaining focus'),
+  summoning: tk('Summoning focus'), banishing: tk('Banishing focus'), binding: tk('Binding focus'), power: tk('Power focus'), weapon: tk('Weapon focus'), qi: tk('Qi focus'),
+  alchemical: tk('Alchemical focus'), disenchanting: tk('Disenchanting focus'), centering: tk('Centering focus'), masking: tk('Masking focus'),
+  flexibleSignature: tk('Flexible signature focus'), spellShaping: tk('Spell shaping focus'),
+};
+
+/** Foci (SR5 pp. 318-320): bonded or not, active switch, bonding request (karma), weapon focus link, limits and addiction. */
+function FociPanel({ game, actor, own }: { game: GameView; actor: Actor; own: boolean }) {
+  const foci = (actor.gear || []).filter((g) => focusKind(g));
+  if (!foci.length) return null;
+  const lim = fociLimits(actor);
+  const busy = new Set(Object.values(game.magic?.sustained || {}).map((s) => (s.by?.kind === 'focus' ? s.by.gearId : '')).filter(Boolean));
+  const melee = (actor.weapons || []).filter((w) => w.kind === 'melee');
+  const bond = async (gearId: string) => {
+    const r = await send<{ status?: string } | null>('training/request', { actorId: actor.id, kind: 'focus', target: gearId }).catch(() => null);
+    if (r) toast(r.status === 'pending' ? t('Bonding request sent to the GM.') : t('Focus bonded.'), 'success');
+  };
+  return (
+    <div className="mg-panel mg-foci">
+      <div className="mg-panel-title">
+        {t('Foci')} <BookRef source="SR5" page={318} />
+        <span className={'small' + (lim.bonded > lim.maxBonded || lim.force > lim.maxForce ? ' amber' : ' muted')}>
+          {t('bonded {n} / {max} · Force {f} / {maxF}', { n: lim.bonded, max: lim.maxBonded, f: lim.force, maxF: lim.maxForce })}
+        </span>
+      </div>
+      {lim.addiction && <div className="small amber">{t('Active foci Force {a} above your Magic ({m}): risk of focus addiction (SR5 p. 319).', { a: lim.activeForce, m: lim.mag })}</div>}
+      {foci.map((g) => {
+        const k = focusKind(g) as FocusKind;
+        const bonded = g.bonded !== false;
+        return (
+          <div className="mg-focus row spread" key={g.id}>
+            <span>
+              <b>{itemLabel(g)}</b> <Badge color="magenta">{t('Force {n}', { n: focusForce(g) })}</Badge> <span className="faint small">{t(FOCUS_LABELS[k])}</span>{' '}
+              {bonded ? <Badge color="cyan">{t('bonded')}</Badge> : <Badge>{t('not bonded')}</Badge>}
+              {busy.has(g.id) ? <> <Badge color="amber">{t('sustaining a spell')}</Badge></> : null}
+            </span>
+            <span className="row">
+              {k === 'weapon' && own && (
+                <Select value={g.choice || ''} onChange={(v) => void send('magic/focusWeapon', { actorId: actor.id, gearId: g.id, weaponId: v || null }).catch(() => null)}
+                  options={[{ value: '', label: t('— weapon —') }, ...melee.map((w) => ({ value: w.id, label: itemLabel(w) }))]} title={t('The melee weapon this focus is')} />
+              )}
+              {!bonded && own && (
+                <Button small variant="accent" onClick={() => void bond(g.id)} title={t('Force × {k} karma (SR5 p. 318)', { k: focusBondMultiplier(k) })}>
+                  {t('Bond ({n} karma)', { n: focusForce(g) * focusBondMultiplier(k) })}
+                </Button>
+              )}
+              {bonded && own && <Toggle value={!!g.active} onChange={(v) => void send('actor/updateItem', { actorId: actor.id, list: 'gear', itemId: g.id, patch: { active: v } }).catch(() => null)} label={t('active')} />}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 /** Astral perception / projection (SR5 pp. 312-314): switches, the astral form's attributes, astral attack. */
 function AstralPanel({ game, actor, own }: { game: GameView; actor: Actor; own: boolean }) {
   const gm = isGM(game);
@@ -388,6 +448,7 @@ export function Cockpit({ game, actor }: { game: GameView; actor: Actor }) {
         </div>
       )}
       <AstralPanel game={game} actor={actor} own={own} />
+      <FociPanel game={game} actor={actor} own={own} />
       <SpiritsPanel game={game} actor={actor} own={own} onSummon={own && skillRating(actor, 'summoning') > 0 ? () => setSummoning(true) : null} onBanish={own && skillRating(actor, 'banishing') > 0 ? () => setBanishing(true) : null} />
       <div className="mg-grid">
         {(spells.length > 0 || hasSpellcasting) && (

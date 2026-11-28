@@ -687,6 +687,7 @@ function addLine(ctx: ActionContext, actor: ShopActor, line: OrderLine, { paid }
       gearItem = { id: ctx.uid('gear'), name: line.name, category: line.category || '', qty: units, ...base };
       if (unitPaid !== undefined) gearItem.paid = unitPaid;
       if (line.rating) gearItem.rating = line.rating;
+      if (item.category === 'Foci') gearItem.bonded = false; // to bond with karma (47-magic / training, SR5 p. 318)
       actor.gear.push(gearItem);
     }
     if (line.file === 'programs' && actor.matrix) {

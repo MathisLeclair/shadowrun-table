@@ -8,7 +8,7 @@
 | client | `client/modules/magic/` (MagicPage: cockpit for players, overview + cockpit for the GM; `common.tsx`: `TraditionPicker`, `openMagic`, roll labels shared with the sheet) |
 | tests | `node tools/test-magic.ts` (port 3650) |
 
-Rules: [rules/magic.md](../rules/magic.md). What is still to build (foci,
+Rules: [rules/magic.md](../rules/magic.md). What is still to build (
 rituals, metamagic) and the sub-issues: [design/magic.md](../design/magic.md).
 
 ## State
@@ -124,6 +124,28 @@ cast modal, `BanishModal` (spirits in view: full sheets with `spirit`, or NPC st
 UI: cockpit « Astral plane » panel (Perceive, Project, Back, Astral attack, the astral form's attributes AGI→LOG, BOD→WIL,
 REA→INT, STR→CHA), hint while projecting.
 
+## Foci
+
+- A focus is gear of category Foci / Focus (or named « … Focus »): `focusKind` (spellcasting, counterspelling, ritual,
+  sustaining, summoning, banishing, binding, power, weapon, qi, alchemical, disenchanting, centering, masking, flexible
+  signature, spell shaping), Force = `rating`, `gear.bonded` (false when bought: shop and sheet catalog picker; absent on
+  older sheets = bonded), `gear.active` (the sheet / cockpit switch).
+- **Bonding** (SR5 318) is a training request `kind: 'focus'` (`shared/advancement.ts`): target = the gear id, karma =
+  Force × `focusBondMultiplier` (spell / spirit / qi × 2, weapon / enchanting / metamagic × 3, power × 6), refused beyond
+  MAG bonded foci or a total Force above MAG × 5 (`fociLimits`); no training days; the GM approves as for other
+  requests; applying sets `bonded: true`.
+- **Effects** (`collectModifiers`): only a bonded, active focus counts. Catalog effects (spellcasting +F on its category,
+  power +F to MAG, alchemical, disenchanting) as before; `focusEffects` adds the ones the catalog leaves empty:
+  counterspelling and ritual +F (condition `spell-<category>`, which now also covers Counterspelling), summoning /
+  binding +F (switch « the chosen spirit type »), weapon focus +F on its weapon (`choice` = weapon id, set by
+  `magic/focusWeapon`) and on Astral Combat. Banishing (+F limit), qi and metamagic foci stay with the GM.
+- **Sustaining focus** (SR5 320): `magic/cast … sustainFocusId`: active, bonded, the spell's category, Force ≥ the
+  spell's, one spell at a time → `sustained.by = { kind: 'focus', gearId }`; mirrored on the caster with `focusId`, the
+  modifiers skip the −2 while the focus works, so switching it off puts the −2 back at once.
+- Addiction (SR5 319): the cockpit warns when the active foci's Force exceeds MAG.
+UI: cockpit « Foci » panel (kind, Force, bonded, Bond (karma), active switch, weapon link, limits, addiction), sustaining
+focus choice in the cast modal.
+
 ## Combat spells (attacks)
 
 After the cast, a Combat spell with hits creates one `Attack` per target (`addSpellAttack` of 33-attacks, kind
@@ -175,7 +197,8 @@ with #19 / #21.
 - `magic/resistDrain { id }` (owner or GM): resist a pending drain.
 - `magic/cast … sustain?, object?` (default: sustained when possible) → also `sustainedId`, `attackIds`, `object`; `magic/drop { id }`.
 - `magic/summon`, `magic/spiritServices`, `magic/materialize`, `magic/spiritCombat`, `magic/release`, `magic/sunrise`,
-  `magic/bind`, `magic/callSpirit`, `magic/spiritSustain`, `magic/banish`, `magic/astral`, `magic/astralAttack`: above.
+  `magic/bind`, `magic/callSpirit`, `magic/spiritSustain`, `magic/banish`, `magic/astral`, `magic/astralAttack`,
+  `magic/focusWeapon`: above. Focus bonding: `training/request { kind: 'focus', target: gearId }`.
 - `magic/settings { autoDrain?, showAstralToPlayers? }` (GM; « Resist Drain automatically » toggle of the GM page).
 
 ## Player view
