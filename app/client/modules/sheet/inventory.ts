@@ -365,6 +365,42 @@ export function guessContainerKind(name: unknown): ContainerKind {
   return 'other';
 }
 
+/**
+ * Carry bags of the catalog (Run Faster p. 254: Backpack, Duffel Bag, Suitcase, Briefcase — Cheap / Good / Nice),
+ * by Chummer catalog id → English base name. Owning one opens a container for it (see linkCarryBags).
+ */
+export const CARRY_BAGS: Record<string, string> = {
+  '6d4d5284-ef86-4960-97a1-fe6883541c75': 'Backpack', 'd7c98f39-279e-4169-8818-0c3cad08205b': 'Backpack', '8459fade-af0f-48a6-b283-b4969d1fe6b7': 'Backpack',
+  'f1d60d11-b2e1-41ba-8cb5-34ce86ee584e': 'Duffel Bag', '429fbdba-2818-43db-948a-e138b6bf49f9': 'Duffel Bag', 'c22784cf-6ff2-4f65-9120-0be4d8eec1e3': 'Duffel Bag',
+  '91a60831-8144-44fa-8d28-c0fe4d9acb4e': 'Suitcase', 'c91e95a4-818f-4324-b571-08324ad1162b': 'Suitcase', '7ba6ed45-2088-4fc4-ba1b-6f4bc3eb8aad': 'Suitcase',
+  'fd5e0fcb-3d44-430e-a7a6-4f07b650adb6': 'Briefcase', '18b58439-6009-4865-8466-e09240c51af2': 'Briefcase', 'bf403263-ff8e-4f0b-a6d6-e180e7d05fcf': 'Briefcase',
+};
+
+/**
+ * A carry bag the actor owns gets a container linked to it (Container.itemId), once per item (`bagMade`: a container the
+ * owner deletes afterwards does not come back). An unlinked bag container of the same name (a Foundry inventory « Duffel
+ * Bag » next to the item « Duffel Bag (Nice) » / « Sac de sport (Luxe) ») is linked instead of adding a second one. Ids
+ * are stable: `chumgear_<guid>` for a Chummer item (the id a Chummer re-import would give that bag), else `bag_<item id>`.
+ */
+function linkCarryBags(a: RawData, containers: Container[], seen: Set<string>): void {
+  const base = (s: unknown) => norm(String(s || '').replace(/\s*\([^)]*\)\s*$/, ''));
+  for (const g of Array.isArray(a.gear) ? a.gear : []) {
+    if (!isObj(g) || g.bagMade || !g.id || !CARRY_BAGS[g.catalogId]) continue;
+    g.bagMade = true;
+    if (containers.some((c) => c.itemId === g.id)) continue;
+    const names = new Set([norm(CARRY_BAGS[g.catalogId]), base(g.name), base(g.nameFr), norm(g.name)].filter(Boolean));
+    const same = containers.find((c) => c.kind === 'bag' && !c.itemId && names.has(norm(c.name)));
+    if (same) {
+      same.itemId = String(g.id);
+      continue;
+    }
+    const id = (g.chummerGuid ? `chumgear_${String(g.chummerGuid).toLowerCase()}` : `bag_${g.id}`).slice(0, 60);
+    if (seen.has(id) || id === ON_BODY) continue;
+    seen.add(id);
+    containers.push({ id, name: String(g.name || CARRY_BAGS[g.catalogId]).slice(0, 60), kind: 'bag', itemId: String(g.id) });
+  }
+}
+
 export function containerOf(actor: InventoryActor | null | undefined, loc: unknown): Container | null {
   if (!loc || loc === ON_BODY) return null;
   return (Array.isArray(actor?.containers) ? actor.containers : []).find((c) => c && c.id === loc) || null;
@@ -389,7 +425,7 @@ export function readyCount(actor: InventoryActor | null | undefined): { ranged: 
 }
 
 /**
- * Idempotent inventory fix-up (called by normalizeActor): containers, item locations (unknown → « Sur soi »), items stored away
+ * Idempotent inventory fix-up (called by normalizeActor): containers (a carry bag owned opens one: linkCarryBags), item locations (unknown → « Sur soi »), items stored away
  * can be neither worn, ready nor active, weapon ammo (ammoMax / ammoType parsed from `ammo`, ammoLoaded defaults to full — the old
  * `ammoLeft` is adopted —, ammoKind defaults to regular rounds), weapon `equipped` defaults (unarmed always ready; weapons already
  * flagged keep their flag; the others: the first carried ranged weapon and the first carried melee weapon when none is ready).
@@ -408,6 +444,7 @@ export function normalizeInventory(a: RawData, makeId: MakeId): RawData {
       if (c.itemId) out.itemId = String(c.itemId).slice(0, 60);
       return out;
     });
+  linkCarryBags(a, a.containers, seen);
   for (const list of LOCATED_LISTS) {
     for (const it of Array.isArray(a[list]) ? a[list] : []) {
       if (!isObj(it)) continue;

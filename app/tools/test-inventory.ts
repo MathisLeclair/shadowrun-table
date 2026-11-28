@@ -16,7 +16,7 @@ import {
 import type { RawData, WeaponLike } from '../client/modules/sheet/inventory.ts';
 import { attr } from '../shared/sr5.ts';
 import { normalizeActor } from '../client/modules/sheet/sheet-data.ts';
-import type { Actor } from '../shared/types.ts';
+import type { Actor, Container } from '../shared/types.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BASE_PORT = Number(process.env.SR_TEST_PORT) || 3443;
@@ -128,6 +128,34 @@ await test('container kinds guessed from names', () => {
   assert.equal(guessContainerKind('Coffre de la voiture'), 'vehicle');
   assert.equal(guessContainerKind('Holster'), 'body');
   assert.equal(guessContainerKind('Truc'), 'other');
+});
+await test('carry bags of the catalog open a container once (Anthony’s Backpack), Foundry inventories of the same name are linked', () => {
+  const BACKPACK_GOOD = 'd7c98f39-279e-4169-8818-0c3cad08205b';
+  const DUFFEL_NICE = 'c22784cf-6ff2-4f65-9120-0be4d8eec1e3';
+  const CHIPS = '989796e7-445e-4fa7-87b5-3152612fa6ee'; // Bag of Chips (Large): food, not a bag
+  const anthony: RawData = { gear: [{ id: 'g_bp', name: 'Sac à dos (Bonne qualité)', catalogId: BACKPACK_GOOD, qty: 1 }, { id: 'g_chips', name: 'Bag of Chips (Large)', catalogId: CHIPS, qty: 1 }] };
+  normalizeInventory(anthony, mkId);
+  assert.deepEqual(anthony.containers, [{ id: 'bag_g_bp', name: 'Sac à dos (Bonne qualité)', kind: 'bag', itemId: 'g_bp' }]);
+  assert.equal(anthony.gear[0].location, 'on', 'the bag itself stays carried');
+  const once = clone(anthony);
+  normalizeInventory(anthony, mkId);
+  assert.deepEqual(anthony, once, 'idempotent');
+  anthony.containers = []; // the owner deletes the container
+  normalizeInventory(anthony, mkId);
+  assert.deepEqual(anthony.containers, [], 'a deleted container does not come back');
+  // Jane: Foundry inventory « Duffel Bag » + the item « Sac de sport (Luxe) » → one container, linked.
+  const jane: RawData = { containers: [{ id: 'fvtt_inv_duffel_bag', name: 'Duffel Bag', kind: 'bag' }, { id: 'fvtt_inv_house', name: 'House', kind: 'safehouse' }], gear: [{ id: 'g_db', name: 'Sac de sport (Luxe)', catalogId: DUFFEL_NICE, qty: 1, location: 'fvtt_inv_house' }] };
+  normalizeInventory(jane, mkId);
+  assert.deepEqual(jane.containers.map((c: Container) => [c.id, c.itemId]), [['fvtt_inv_duffel_bag', 'g_db'], ['fvtt_inv_house', undefined]]);
+  // A Chummer item: the id a Chummer re-import gives that bag, so both meet on one container.
+  const chum: RawData = { gear: [{ id: 'g_c', name: 'Backpack (Good)', catalogId: BACKPACK_GOOD, chummerGuid: 'ABCD-1', qty: 1 }] };
+  normalizeInventory(chum, mkId);
+  assert.equal(chum.containers[0].id, 'chumgear_abcd-1');
+  // Already linked (a Chummer bag with contents): nothing added.
+  const linked: RawData = { containers: [{ id: 'chumgear_x', name: 'Backpack', kind: 'bag', itemId: 'g_l' }], gear: [{ id: 'g_l', name: 'Backpack (Good)', catalogId: BACKPACK_GOOD, qty: 1 }] };
+  normalizeInventory(linked, mkId);
+  assert.equal(linked.containers.length, 1);
+  assert.equal(linked.gear[0].bagMade, true);
 });
 await test('migration (normalizeInventory) is idempotent; legacy ammoLeft adopted; ready defaults; stored items switched off', () => {
   // Raw legacy data (bad ids, ammoLeft, missing fields): normalizeInventory works on untyped actors.

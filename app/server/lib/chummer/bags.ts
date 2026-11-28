@@ -31,12 +31,14 @@ export function adoptChummerBags(actor: Actor): number {
     const bagGuid = parsedById.get(bag.itemId!)?.chummerGuid;
     const mine = bagGuid && byGuid.get(bagGuid);
     if (!mine) continue; // the bag was deleted in the app
-    if (!containers.some((c) => c.id === bag.id)) containers.push({ ...bag, itemId: mine.id });
+    // The item may already have its container (a carry bag opened by normalizeInventory linkCarryBags): fill that one.
+    const target = containers.find((c) => c.itemId === mine.id)?.id || bag.id;
+    if (!containers.some((c) => c.id === target)) containers.push({ ...bag, itemId: mine.id });
     for (const p of parsed.gear || []) {
       if (p.location !== bag.id || !p.chummerGuid) continue;
       const it = byGuid.get(p.chummerGuid);
       if (!it || (it.location && it.location !== 'on')) continue; // moved in the app since the import: keep it there
-      it.location = bag.id;
+      it.location = target;
       // Drop the old « in {bag} » prefix when the rest is still the imported note.
       if (it.notes && it.notes !== (p.notes || '') && OLD_NOTE.test(it.notes) && it.notes.replace(OLD_NOTE, '') === (p.notes || '')) {
         if (p.notes) it.notes = p.notes;

@@ -78,6 +78,14 @@ implicit). Actions (owner / GM): `inventory/addContainer { actorId, name, kind? 
 (contents back 'on') → count, `inventory/move { actorId, list, itemId, location }` → `{ location, stowed }`;
 `actor/updateItem` also accepts `location` / `equipped` from players.
 
+Carry bags: a gear item whose `catalogId` is one of the catalog's Backpack / Duffel Bag / Suitcase / Briefcase
+(Cheap / Good / Nice, RF p. 254; `inventory.ts CARRY_BAGS`) opens a container linked to it (kind 'bag', `itemId`) in
+`normalizeInventory` (`linkCarryBags`), so a bag bought, added or imported is a place right away. An unlinked bag
+container of the same name (Foundry inventory « Duffel Bag » next to the item « Sac de sport (Luxe) ») is linked
+instead of a second one. Ids: `chumgear_<guid>` for a Chummer item (the id a Chummer re-import or `adoptChummerBags`
+gives that bag: they meet on one container), else `bag_<item id>`. Once per item (`gear.bagMade`): a container the
+owner deletes does not come back. The bag item itself keeps its own location (in the safehouse, « Sur soi »…).
+
 ## Imports
 
 Foundry `system.inventories` (« All » skipped) → containers `fvtt_inv_<slug>` + item locations (a weapon / armor

@@ -17,7 +17,9 @@ main() {
   echo "[autodeploy] ${OLD:0:7} -> ${NEW:0:7}"
 
   mkdir -p "$BACKUPS"
-  tar -czf "$BACKUPS/runtime-$(date +%Y%m%d-%H%M%S)-${OLD:0:7}.tgz" -C "$REPO/app" runtime
+  # The live server keeps writing while it runs (rulebook index, autosaves): GNU tar exits 1 for « file changed as we
+  # read it », a warning (the archive is written); only a real error (2) stops the deploy.
+  tar -czf "$BACKUPS/runtime-$(date +%Y%m%d-%H%M%S)-${OLD:0:7}.tgz" --warning=no-file-changed -C "$REPO/app" runtime || [ $? -eq 1 ]
   ls -1t "$BACKUPS"/runtime-*.tgz | tail -n +11 | xargs -r rm -f
 
   docker image tag shadowrun-app:latest shadowrun-app:previous 2>/dev/null || true
