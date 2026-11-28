@@ -17,7 +17,7 @@ import { spendInitiative, combatTurnKey } from './30-combat.ts';
 import type { PerformedRoll, RollBonusLine, RollInternal, RollPayload } from './10-characters.ts';
 import type {
   ActionContext, Actor, ActorId, AfflictionKind, AttrKey, Attack, AttacksState, AttackTurnRecord, Blast, BlastHit, BiName, DamageType, GameMap, GameView,
-  I18nParams, Point, ServerModule, SessionUser, TableState, Token,
+  I18nEntry, I18nParams, Point, ServerModule, SessionUser, TableState, Token,
 } from '../../shared/types.ts';
 
 /** Weapons / launcher profiles / catalog entries / player payloads of several shapes: read field by field. */
@@ -110,16 +110,22 @@ const apOf = (w: { ap?: unknown } | null | undefined): number => {
  */
 function doResistSpell(ctx: ActionContext, atk: Attack, target: Actor, { modifier = 0, explode = false }: ResolveOpts = {}): PerformedRoll {
   const sp = atk.spell!;
-  const roll = performRoll(ctx, {
-    actorId: target.id, attr: sp.resist, ...(sp.resist2 ? { attr2: sp.resist2 } : {}), label: tk('Resist the spell'), limit: null, modifier: int(modifier, -30, 30), explode: !!explode,
-  }, {
-    logExtra: {
-      attackId: atk.id, defense: true,
-      labelI18n: sp.resist2
-        ? { key: tk('Resist {spell} ({attr} + {attr2})'), params: { spell: atk.weaponName || '', attr: { t: sp.resist }, attr2: { t: sp.resist2 } } }
-        : { key: tk('Resist {spell} ({attr})'), params: { spell: atk.weaponName || '', attr: { t: sp.resist } } },
-    },
-  });
+  const labelI18n: I18nEntry = sp.resist2
+    ? { key: tk('Resist {spell} ({attr} + {attr2})'), params: { spell: atk.weaponName || '', attr: { t: sp.resist }, attr2: { t: sp.resist2 } } }
+    : { key: tk('Resist {spell} ({attr})'), params: { spell: atk.weaponName || '', attr: { t: sp.resist } } };
+  let roll: PerformedRoll;
+  try {
+    roll = performRoll(ctx, {
+      actorId: target.id, attr: sp.resist, ...(sp.resist2 ? { attr2: sp.resist2 } : {}), label: tk('Resist the spell'), limit: null, modifier: int(modifier, -30, 30), explode: !!explode,
+    }, { logExtra: { attackId: atk.id, defense: true, labelI18n } });
+  } catch (err) {
+    // A wounded target can be left with no dice: no dice means no hit, not a blocked attack.
+    if ((err as { i18nKey?: string }).i18nKey !== 'Dice pool of zero: automatic failure') throw err;
+    const zero = { pool: 0, dice: [], extra: [], hits: 0, rawHits: 0, ones: 0, glitch: false, critGlitch: false, limit: null, limited: false };
+    const rec = { ...zero, label: 'Resist the spell', labelI18n, actorId: target.id, attackId: atk.id, defense: true };
+    const entry = ctx.log({ kind: 'roll', userId: ctx.user.id, author: target.name, text: rec.label, roll: rec, ...(atk.gmOnly ? { gmOnly: true } : {}) });
+    roll = { ...rec, logId: entry.id, entry };
+  }
   atk.defenseHits = roll.hits;
   atk.defenseLogId = roll.logId;
   atk.net = atk.hits - roll.hits;

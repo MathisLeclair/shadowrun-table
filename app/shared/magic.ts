@@ -92,7 +92,7 @@ export function isAwakened(actor: MagicActor | null | undefined): boolean {
 
 /** Casts, summons or enchants (needs a tradition): knows a spell or a sorcery / conjuring / enchanting skill. */
 export function usesTradition(actor: MagicActor | null | undefined): boolean {
-  if (!actor || !isAwakened(actor)) return false;
+  if (!actor || !isAwakened(actor) || actor.spirit) return false; // a spirit casts with its own powers
   if ((actor.spells || []).length) return true;
   return (actor.skills || []).some((s) => TRADITION_SKILLS.includes(s.id) && Number(s.rating) > 0);
 }
@@ -464,7 +464,7 @@ export interface MagicHint {
 const TONE_RANK: Record<string, number> = { danger: 0, warn: 1, info: 2 };
 
 /** Hints for one actor, most urgent first (pure: works on the player's filtered view). */
-export function magicHints({ actor, magic }: { actor: MagicActor | null | undefined; magic: Pick<MagicState, 'sustained'> | null | undefined }): MagicHint[] {
+export function magicHints({ actor, magic, spirits }: { actor: MagicActor | null | undefined; magic: Pick<MagicState, 'sustained'> | null | undefined; spirits?: MagicActor[] }): MagicHint[] {
   const out: MagicHint[] = [];
   if (!actor || !isAwakened(actor)) return out;
   const add = (key: string, extra: Partial<MagicHint> = {}) => out.push({ key, tone: 'info', ...extra });
@@ -478,6 +478,7 @@ export function magicHints({ actor, magic }: { actor: MagicActor | null | undefi
     }
   }
   const n = actor.id ? sustainedBy(magic, actor.id) : 0;
+  if (spirits?.some((s) => s.spirit && !s.spirit.bound)) add(tk('Your unbound spirit leaves at the next sunrise or sunset, with the services it still owes.'));
   if (n) add(tk('You are sustaining {n} spell(s): −{p} dice on every test. Drop the ones you no longer need.'), { tone: 'warn', params: { n, p: n * SUSTAIN_PENALTY } });
   return out.sort((a, b) => (TONE_RANK[a.tone] ?? 2) - (TONE_RANK[b.tone] ?? 2));
 }

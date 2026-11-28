@@ -63,6 +63,8 @@ export const RULE_REFS: Record<string, BookRef> = {
   powerPoints: ref('SR5', 278), // POWER POINTS
   adeptPowers: ref('SR5', 308), // ADEPT POWERS
   spellcasting: ref('SR5', 281), // SPELLCASTING
+  summoning: ref('SR5', 300), // SUMMONING
+  spiritServices: ref('SR5', 302), // SPIRIT SERVICES
   complexForms: ref('SR5', 252), // COMPLEX FORMS
   matrixDamage: ref('SR5', 228), // MATRIX DAMAGE
   biofeedback: ref('SR5', 229), // BIOFEEDBACK DAMAGE

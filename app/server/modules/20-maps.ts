@@ -372,6 +372,15 @@ function tokenFromActor(actor: Actor, extra: Loose = {}): Loose {
   return t;
 }
 
+/** Put an actor's token on the free cell nearest to (x, y) (47-magic: a materialized spirit next to its summoner). */
+export function placeActorToken(state: TableState, map: GameMap, actor: Actor, x: number, y: number, extra: Loose = {}): Token {
+  const [cell] = freeCellsNear(map, x, y, 1);
+  const t = cleanToken({ ...tokenFromActor(actor, extra), x: cell ? cell.x : x, y: cell ? cell.y : y, id: undefined }, map);
+  map.tokens.push(t);
+  refreshFog(state, map);
+  return t;
+}
+
 /** Free walkable cells near (x, y): nearest free floor (any distance), then a flood through walkable cells. */
 function freeCellsNear(map: GameMap, x: number, y: number, count: number, extraOccupied: number[] = []): Point[] {
   const grid = buildGrid(map);

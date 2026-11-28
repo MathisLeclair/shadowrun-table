@@ -948,6 +948,25 @@ export interface ChummerLink {
   mugshots?: string[];
 }
 
+/** A summoned spirit (`actor.spirit`, owner: 47-magic; SR5 pp. 300-302). */
+export interface ActorSpirit {
+  /** English spirit type of data/catalog/spirits.json ('Spirit of Fire'). */
+  type: string;
+  typeFr?: string;
+  force: number;
+  /** The magician who summoned it; their player controls it. */
+  summonerId: ActorId;
+  /** Services still owed (SR5 p. 302). */
+  services: number;
+  /** Bound spirit (SR5 p. 300): does not leave at sunrise / sunset. */
+  bound: boolean;
+  /** On the physical plane (token on the map), else astral. */
+  materialized: boolean;
+  /** Chosen optional powers (English names). */
+  optionalPowers: string[];
+  ts: Timestamp;
+}
+
 /** PC or spawned NPC (`state.actors[id]`). Derived numbers are never stored: use derive()/deriveFull(). */
 export interface Actor {
   id: ActorId;
@@ -1022,6 +1041,8 @@ export interface Actor {
   retired?: boolean;
   training?: TrainingJob[];
   magic?: ActorMagic;
+  /** Summoned spirit (47-magic). */
+  spirit?: ActorSpirit;
   afflictions?: Affliction[];
   history: HistoryEntry[];
   foundry?: FoundryLink;
@@ -2262,7 +2283,7 @@ export interface PendingDrain {
 
 /** `entry.magic` of a magic log entry. */
 export interface MagicLogInfo {
-  event: 'cast' | 'drain' | 'drop';
+  event: 'cast' | 'drain' | 'drop' | 'summon' | 'spirit';
   actorId: ActorId;
   spellId?: string;
   force?: number;

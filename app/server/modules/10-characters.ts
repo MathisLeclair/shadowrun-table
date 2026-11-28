@@ -193,8 +193,8 @@ function applyPatch(ctx: ActionContext, a: Actor, patch: unknown): void {
   clampCondition(a);
 }
 
-/** Remove an actor and everything pointing at it (tokens, combat entries, user assignments). */
-function removeActor(state: TableState, id: ActorId): void {
+/** Remove an actor and everything pointing at it (tokens, combat entries, user assignments). Also used by 47-magic (spirits). */
+export function removeActor(state: TableState, id: ActorId): void {
   delete state.actors[id];
   for (const m of Object.values<GameMap>(state.maps || {})) {
     if (Array.isArray(m?.tokens)) m.tokens = m.tokens.filter((t) => t.actorId !== id);

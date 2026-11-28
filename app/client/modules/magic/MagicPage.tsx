@@ -13,8 +13,10 @@ import { RuleRef, ItemRef } from '../books/BookRef.tsx';
 import { categoryLabel, itemLabel } from '../sheet/common.tsx';
 import { isGM, magicActors, drainRollLabel, TraditionPicker } from './common.tsx';
 import CastModal from './CastModal.tsx';
+import SummonModal from './SummonModal.tsx';
+import { confirmAction } from '../../lib/ui.tsx';
 import type { RollPreset } from '../sheet/types.ts';
-import type { Actor, GameView, SustainedSpell } from '../../../shared/types.ts';
+import type { Actor, ActorSpirit, GameView, SustainedSpell } from '../../../shared/types.ts';
 import './magic.css';
 
 function usePersistent<T>(key: string, initial: T): [T, (x: T) => void] {
@@ -106,12 +108,80 @@ function SustainedList({ game, list, canDrop, showCaster }: { game: GameView; li
   );
 }
 
+type SpiritActor = Actor & { spirit: ActorSpirit };
+/** Spirits summoned by an actor (full sheets of the view). */
+const spiritsOf = (game: GameView, summonerId: string): SpiritActor[] =>
+  Object.values(game.actors || {}).filter((a): a is SpiritActor => 'attributes' in a && !!(a as Actor).spirit && (a as Actor).spirit!.summonerId === summonerId);
+
+/** Spirit cards (SR5 pp. 300-302): services, materialization, joining a fight, release. */
+function SpiritsPanel({ game, actor, own, onSummon }: { game: GameView; actor: Actor; own: boolean; onSummon: (() => void) | null }) {
+  const list = spiritsOf(game, actor.id);
+  const fight = !!game.combat?.active;
+  const gm = isGM(game);
+  if (!list.length && !onSummon) return null;
+  const act = (type: string, payload: object) => void send(type, payload).catch(() => null);
+  return (
+    <div className="mg-panel mg-spirits">
+      <div className="mg-panel-title">
+        {t('Spirits')} <RuleRef rule="summoning" />
+        {onSummon && (
+          <Button small variant="accent" onClick={onSummon}>
+            ✦ {t('Summon')}
+          </Button>
+        )}
+      </div>
+      {!list.length && <div className="muted small">{t('No spirit at your service.')}</div>}
+      {list.map((sp) => {
+        const s = sp.spirit;
+        const inFight = (game.combat?.entries || []).some((e) => e.actorId === sp.id && !e.out);
+        const hurt = (sp.condition?.physical || 0) + (sp.condition?.stun || 0);
+        return (
+          <div className="mg-spirit" key={sp.id}>
+            <div className="row spread">
+              <span>
+                <b>{sp.name}</b> <Badge color="magenta">{t('Force {n}', { n: s.force })}</Badge>{' '}
+                {s.bound ? <Badge color="cyan">{t('bound')}</Badge> : <Badge>{t('unbound')}</Badge>}{' '}
+                <Badge color={s.materialized ? 'amber' : 'dim'}>{s.materialized ? t('materialized') : t('astral')}</Badge>
+                {hurt ? <span className="small amber"> {t('{n} box(es) of damage', { n: hurt })}</span> : null}
+              </span>
+              <span className="mg-spirit-services" title={t('Services owed (SR5 p. 302)')}>
+                {t('{n} service(s)', { n: s.services })}
+              </span>
+            </div>
+            {own && (
+              <div className="row wrap mg-spirit-btns">
+                <Button small onClick={() => act('magic/spiritServices', { spiritId: sp.id, delta: -1 })} title={t('A task, a power used for you, a physical task… (SR5 p. 302)')}>
+                  {t('Use a service')}
+                </Button>
+                {gm && <Button small variant="ghost" onClick={() => act('magic/spiritServices', { spiritId: sp.id, delta: 1 })}>{t('+1 service')}</Button>}
+                <Button small onClick={() => act('magic/materialize', { spiritId: sp.id, materialized: !s.materialized, mapId: game.scene?.activeMapId })}>
+                  {s.materialized ? t('Dematerialize') : t('Materialize')}
+                </Button>
+                {fight && !inFight && (
+                  <Button small variant="accent" onClick={() => act('magic/spiritCombat', { spiritId: sp.id })} title={t('The whole fight is one service (SR5 p. 302)')}>
+                    ⚔ {t('Join the fight')}
+                  </Button>
+                )}
+                <Button small variant="ghost" onClick={() => openSheet(sp.id)}>{t('Sheet')}</Button>
+                <Button small variant="ghost" onClick={async () => { if (await confirmAction(t('Release {name}? It returns to its metaplane.', { name: sp.name }))) act('magic/release', { spiritId: sp.id }); }}>
+                  {t('Release')}
+                </Button>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 /** Cockpit of one awakened character. */
 export function Cockpit({ game, actor }: { game: GameView; actor: Actor }) {
   const gm = isGM(game);
   const own = gm || (game.me?.characterIds || []).includes(actor.id);
   const [roll, setRoll] = useState<RollPreset | null>(null);
   const [casting, setCasting] = useState<string | null>(null);
+  const [summoning, setSummoning] = useState(false);
   const [hintsOn, setHintsOn] = useHintsToggle();
   const open = (preset: RollPreset) => setRoll({ ...preset, _k: Date.now() });
   const mag = attr(actor, 'MAG');
@@ -126,7 +196,7 @@ export function Cockpit({ game, actor }: { game: GameView; actor: Actor }) {
   const skills = MAGIC_SKILLS.filter((s) => skillRating(actor, s.id) > 0);
   const powers = actor.powers || [];
   const pp = powers.reduce((s, p) => s + (Number(p.pp) || 0), 0);
-  const hints = magicHints({ actor, magic: game.magic });
+  const hints = magicHints({ actor, magic: game.magic, spirits: spiritsOf(game, actor.id) });
   const pending = Object.values(game.magic?.pendingDrain || {}).filter((pd) => pd.actorId === actor.id);
   const mySustained = Object.values(game.magic?.sustained || {}).filter((s) => s.casterId === actor.id);
   const onMe = Object.values(game.magic?.sustained || {}).filter((s) => s.casterId !== actor.id && s.targetIds.includes(actor.id));
@@ -209,6 +279,7 @@ export function Cockpit({ game, actor }: { game: GameView; actor: Actor }) {
           )}
         </div>
       )}
+      <SpiritsPanel game={game} actor={actor} own={own} onSummon={own && skillRating(actor, 'summoning') > 0 ? () => setSummoning(true) : null} />
       <div className="mg-grid">
         {(spells.length > 0 || hasSpellcasting) && (
           <div className="mg-panel mg-spells">
@@ -283,6 +354,7 @@ export function Cockpit({ game, actor }: { game: GameView; actor: Actor }) {
       </div>
       {roll && <RollDialog game={game} actor={actor} preset={roll} onClose={() => setRoll(null)} />}
       {casting && <CastModal game={game} actor={actor} spellId={casting} onClose={() => setCasting(null)} />}
+      {summoning && <SummonModal game={game} actor={actor} onClose={() => setSummoning(false)} />}
     </div>
   );
 }
@@ -325,6 +397,7 @@ function Overview({ game, onCockpit }: { game: GameView; onCockpit: (id: string)
             <th>{t('Drain')}</th>
             <th>{t('Sustained')}</th>
             <th>{t('Astral')}</th>
+            <th>{t('Spirits')}</th>
             <th />
           </tr>
         </thead>
@@ -343,6 +416,7 @@ function Overview({ game, onCockpit }: { game: GameView; onCockpit: (id: string)
                 <td className="num-cell">{pool ? `${pool.base} (${attrShort('WIL')} + ${attrShort(pool.attrs[1])})` : '—'}</td>
                 <td className="num-cell">{n ? t('{n} (−{p} dice)', { n, p: n * SUSTAIN_PENALTY }) : '0'}</td>
                 <td>{astral === 'projecting' ? t('Projecting') : astral === 'perceiving' ? t('Perceiving') : <span className="muted">{t('Physical')}</span>}</td>
+                <td className="small">{spiritsOf(game, a.id).map((sp) => t('{name} ({n} serv.)', { name: sp.name, n: sp.spirit.services })).join(', ') || '—'}</td>
                 <td>
                   <Button small onClick={() => onCockpit(a.id)}>{t('Cockpit')}</Button>
                 </td>
@@ -386,6 +460,9 @@ function GmMagicPage({ game }: GameProps) {
             label={t('Resist Drain automatically')}
             title={t('On: Drain is rolled right after the cast. Off: the caster clicks « Resist Drain » (SR5 p. 282)')}
           />
+          <Button small onClick={async () => { if (await confirmAction(t('Sunrise or sunset: every unbound spirit leaves. Continue?'))) void send('magic/sunrise', {}).catch(() => null); }} title={t('Unbound spirits leave at sunrise and sunset (SR5 p. 300)')}>
+            ☀ {t('Sunrise / sunset')}
+          </Button>
         </div>
       </div>
       <Tabs tabs={tabs} value={current} onChange={setTab} className="mg-tabs" />
