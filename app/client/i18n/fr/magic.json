@@ -375,5 +375,16 @@
   "{name} does not know Spell Shaping": "{name} ne connaît pas le Façonnage de sort",
   "{name} quickens {spell} with {n} karma: the spell is permanent.": "{name} stabilise {spell} avec {n} karma : le sort est permanent.",
   "−1 die per metre added or removed, up to {n} (SR5 p. 326)": "−1 dé par mètre ajouté ou retiré, jusqu’à {n} (SR5 p. 326)",
-  "−1 die per metre added to or taken from an area spell’s radius, up to your Magic (cast modal).": "−1 dé par mètre ajouté au rayon d’un sort de zone ou retiré, jusqu’à votre Magie (fenêtre de lancement)."
+  "−1 die per metre added to or taken from an area spell’s radius, up to your Magic (cast modal).": "−1 dé par mètre ajouté au rayon d’un sort de zone ou retiré, jusqu’à votre Magie (fenêtre de lancement).",
+  "Its natural attacks: unarmed, Elemental Attack, Engulf… against a token (SR5 p. 396)": "Ses attaques naturelles : à mains nues, Attaque élémentaire, Engloutissement… contre un pion (SR5 p. 396)",
+  "On the astral plane: Astral Combat + Willpower [Astral], DV = Force (SR5 p. 315)": "Sur le plan astral : Combat astral + Volonté [Astral], VD = Puissance (SR5 p. 315)",
+  "Air": "Air",
+  "Earth": "Terre",
+  "Pollutant": "Polluant",
+  "Energy Aura: +Magic to the DV, AP −Magic, elemental damage. A melee attacker who hits the spirit resists Magic × 2 DV, AP −Magic (SR5 p. 396).": "Aura énergétique : +Magie à la VD, PA −Magie, dommages élémentaires. Un attaquant au corps à corps qui touche l’esprit résiste à une VD de Magie × 2, PA −Magie (SR5 p. 396).",
+  "Unarmed Combat + Agility [Physical], DV (STR)S (SR5 p. 187).": "Combat à mains nues + Agilité [Physique], VD (FOR)É (SR5 p. 187).",
+  "Exotic Ranged Weapon + Agility [Physical], DV Magic × 2 P, AP −Magic; range increments of Magic meters (SR5 p. 396).": "Arme exotique à distance + Agilité [Physique], VD Magie × 2 P, PA −Magie ; portées par paliers de Magie mètres (SR5 p. 396).",
+  "Melee attack, DV Magic × 2, AP −Magic. Air: resisted like an inhalation toxin, armor doesn’t protect (GM). The target is trapped: damage again on each of the spirit’s Action Phases; escape: Complex Action, STR + BOD vs MAG + BOD (SR5 p. 396).": "Attaque au corps à corps, VD Magie × 2, PA −Magie. Air : se résiste comme une toxine par inhalation, l’armure ne protège pas (MJ). La cible est prise au piège : de nouveaux dommages à chaque Phase d’action de l’esprit ; s’échapper : Action complexe, FOR + CON contre MAG + CON (SR5 p. 396).",
+  "Melee attack, DV Magic × 2, AP −Magic. The target is trapped: damage again on each of the spirit’s Action Phases; escape: Complex Action, STR + BOD vs MAG + BOD (SR5 p. 396).": "Attaque au corps à corps, VD Magie × 2, PA −Magie. La cible est prise au piège : de nouveaux dommages à chaque Phase d’action de l’esprit ; s’échapper : Action complexe, FOR + CON contre MAG + CON (SR5 p. 396).",
+  "Unarmed Combat + Agility [Physical] (SR5 p. 399).": "Combat à mains nues + Agilité [Physique] (SR5 p. 399)."
 }

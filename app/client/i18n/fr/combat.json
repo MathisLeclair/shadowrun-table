@@ -590,5 +590,8 @@
   "{attacker}’s {spell} affects {target}: {n} net hit(s).": "{spell} de {attacker} affecte {target} : {n} succès net(s).",
   "Astral defense — {name}": "Défense astrale — {name}",
   "Astral defense": "Défense astrale",
-  "Astral defense: Intuition + Logic, then the damage is soaked without armor (SR5 p. 315).": "Défense astrale : Intuition + Logique, puis les dommages s’encaissent sans armure (SR5 p. 315)."
+  "Astral defense: Intuition + Logic, then the damage is soaked without armor (SR5 p. 315).": "Défense astrale : Intuition + Logique, puis les dommages s’encaissent sans armure (SR5 p. 315).",
+  "{target} is engulfed by {attacker}: the damage comes again on each of its Action Phases; escape: Complex Action, STR + BOD vs MAG + BOD (SR5 p. 396).": "{target} est englouti par {attacker} : les dommages reviennent à chacune de ses Phases d’action ; s’échapper : Action complexe, FOR + CON contre MAG + CON (SR5 p. 396).",
+  "{attacker} touches {target}’s Energy Aura: resist DV {dv}P, AP {ap} (SR5 p. 396).": "{attacker} touche l’Aura énergétique de {target} : résister à VD {dv}P, PA {ap} (SR5 p. 396).",
+  "{name} is in astral form: materialize it, or make an astral attack": "{name} est sous forme astrale : matérialisez-le, ou faites une attaque astrale"
 }

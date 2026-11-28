@@ -376,12 +376,12 @@ export function isCarried(actor: InventoryActor | null | undefined, loc: unknown
   return !c || c.kind === 'body';
 }
 
-/** Ready weapons beyond the soft limit (2 ranged + 2 melee, unarmed and grenades not counted): { ranged, melee, over }. */
+/** Ready weapons beyond the soft limit (2 ranged + 2 melee, unarmed, grenades and natural attacks not counted): { ranged, melee, over }. */
 export function readyCount(actor: InventoryActor | null | undefined): { ranged: number; melee: number; over: boolean } {
   let ranged = 0;
   let melee = 0;
   for (const w of Array.isArray(actor?.weapons) ? actor.weapons : []) {
-    if (!w || w.equipped === false || isUnarmed(w) || isGrenade(w) || isLauncherProfile(w)) continue;
+    if (!w || w.equipped === false || w.natural || isUnarmed(w) || isGrenade(w) || isLauncherProfile(w)) continue;
     if (w.kind === 'melee') melee++;
     else if (isRangedArm(w)) ranged++;
   }

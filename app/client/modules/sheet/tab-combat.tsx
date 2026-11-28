@@ -20,6 +20,7 @@ import type { ReactNode } from 'react';
 import type { Actor, Weapon } from '../../../shared/types.ts';
 import type { SheetCtx } from './types.ts';
 import { ItemRef, SkillRef, RuleRef, BookRef } from '../books/BookRef.tsx';
+import { naturalAttackRule } from '/shared/magic.ts';
 
 type CombatAction = (typeof COMBAT_ACTIONS)[number];
 
@@ -127,7 +128,7 @@ export function CombatTab({ s }: { s: SheetCtx }) {
                 const cat = categoryLabel(w);
                 const empty = isGrenade(w) && Number(w.qty ?? 1) <= 0;
                 return <tr key={w.id} className={w.equipped === false ? 'sh-stowed' : ''}>
-                  <td className="sh-ready-cell">{isUnarmed(w) ? null : <ReadyToggle s={s} w={w} />}</td>
+                  <td className="sh-ready-cell">{isUnarmed(w) || w.natural ? null : <ReadyToggle s={s} w={w} />}</td>
                   <td>
                     <div className="sh-weapon-name">
                       <span title={itemTitle(w)}>{itemLabel(w)}</span>
@@ -145,6 +146,7 @@ export function CombatTab({ s }: { s: SheetCtx }) {
                       {cat ? `${cat} · ` : ''}{def ? skillLabel(def.id) : w.skill || '—'}{def ? <>{' '}<SkillRef id={def.id} /></> : null}{sk ? '' : ` ${t('(untrained)')}`}{w.notes ? <> · <span title={w.notes}>{w.notes.length > 60 ? w.notes.slice(0, 60) + '…' : w.notes}</span></> : null}
                     </div>
                     {(w.accessories || []).length > 0 && <div className="sh-acc-line"><SubChips sub="accessories" items={w.accessories} /><AccessoriesButton s={s} w={w} /></div>}
+                    {naturalAttackRule(w.natural) ? <div className="faint small sh-natural-rule">{t(naturalAttackRule(w.natural)!)}</div> : null}
                   </td>
                   <td className={'num-cell sh-pool' + (pm.total ? ' cyan' : '')} title={poolTitle}>
                     {pool.impossible ? '—' : pool.pool + wm.mods.dicePool + pm.total}

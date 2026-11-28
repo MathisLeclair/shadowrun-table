@@ -6,7 +6,7 @@
 // traditions.xml by tools/build-catalog.ts. An actor keeps a copy of its tradition in `actor.magic.tradition`
 // (ActorTradition), so hand-made traditions and Chummer imports keep their own drain attribute and spirits.
 import { attr, SKILL_BY_ID } from './sr5.ts';
-import type { ActorLike, ActorTradition, AttrKey, Attributes, I18nParams, MagicState, Skill, SpellCategoryKey } from './types.ts';
+import type { ActorLike, ActorTradition, AttrKey, Attributes, I18nParams, MagicState, NaturalAttack, NaturalAttackPower, Skill, SpellCategoryKey, Weapon } from './types.ts';
 
 // i18n: labels are English dictionary keys (French in client/i18n/fr/magic.json). tk() marks them for tools/i18n-check.ts.
 const tk = (s: string): string => s;
@@ -440,6 +440,128 @@ export function spiritStats(def: SpiritDef, force: number): {
     powers: def.powers || [],
     optionalPowers: optionalPowerCount(F),
   };
+}
+
+// ---------------------------------------------------------------------------
+// Natural attacks of spirits (SR5 pp. 187, 396-399): weapons derived from the powers, so the attack pipeline handles them
+// ---------------------------------------------------------------------------
+
+/** Elements of critter powers (Chummer strings.xml « elements », plus the four elemental spirits), with their French names. */
+const NATURAL_ELEMENTS: Record<string, string> = {
+  fire: 'Feu', air: 'Air', water: 'Eau', earth: 'Terre', acid: 'Acide', cold: 'Froid', electricity: 'Électricité', pollutant: 'Polluant', radiation: 'Radiation',
+};
+const elementIn = (text: unknown): string | null => {
+  const s = String(text ?? '').toLowerCase();
+  return Object.keys(NATURAL_ELEMENTS).find((k) => new RegExp(`\\b${k}\\b`).test(s)) || null;
+};
+const capitalize = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
+const ELEMENT_LABELS: Record<string, string> = {
+  fire: tk('Fire'), air: tk('Air'), water: tk('Water'), earth: tk('Earth'), acid: tk('Acid'), cold: tk('Cold'), electricity: tk('Electricity'), pollutant: tk('Pollutant'), radiation: tk('Radiation'),
+};
+/** Dictionary key of an element (« fire » → « Fire »), the element itself when unknown. */
+export const elementLabel = (el: string): string => ELEMENT_LABELS[el] || el;
+
+/** What spiritWeapons() reads: the actor id, its powers (English names, Chummer choice) and its spirit data. */
+export interface NaturalWeaponsInput {
+  id: string;
+  powers?: Array<{ name: string; choice?: string | null }> | null;
+  spirit?: { type: string; force: number } | null;
+}
+const powerOf = (a: NaturalWeaponsInput, name: string) => (a.powers || []).find((p) => String(p?.name || '').trim().toLowerCase() === name);
+
+/**
+ * Element of a spirit's powers: the choice of its Elemental Attack (« Fire »), else its type (Spirit of Fire → fire), else
+ * null (a spirit of man, a plant spirit… whose Engulf has no element).
+ */
+export function spiritElement(a: NaturalWeaponsInput): string | null {
+  return elementIn(powerOf(a, 'elemental attack')?.choice) || elementIn(powerOf(a, 'energy aura')?.choice) || elementIn(a.spirit?.type);
+}
+
+/** « DV (Force)P, AP 0 », « DV {STR}P, AP -1 » (Natural Weapon choices of the spirits data) → a damage code and AP, or null. */
+export function parseNaturalWeapon(choice: unknown, force: number): { damage: string; ap: number } | null {
+  const m = String(choice ?? '').match(/DV\s*\(?\s*\{?\s*(STR|Force|F|\d+)\s*\}?\s*([+-]\s*\d+)?\s*\)?\s*([PS])\s*,\s*AP\s*([+\-−–]?\s*\d+)/i);
+  if (!m) return null;
+  const add = Number((m[2] || '0').replace(/\s/g, ''));
+  const type = m[3].toUpperCase();
+  const ap = Number(m[4].replace(/[−–]/, '-').replace(/\s/g, ''));
+  if (/^str$/i.test(m[1])) return { damage: `(STR${add ? (add > 0 ? '+' : '') + add : ''})${type}`, ap };
+  const base = /^(force|f)$/i.test(m[1]) ? force : Number(m[1]);
+  return { damage: `${Math.max(0, base + add)}${type}`, ap };
+}
+
+/**
+ * The natural attacks of a spirit at its Force (Magic = Force), as sheet weapons with `natural`:
+ * - unarmed attack (SR5 p. 187: Unarmed Combat + AGI [Physical], DV (STR)S); with Energy Aura (p. 396) DV (STR + Magic)P,
+ *   AP −Magic, elemental;
+ * - Elemental Attack (p. 396): Exotic Ranged Weapon + AGI [Physical], DV (Magic × 2)P, AP −Magic, range increments of
+ *   Magic meters;
+ * - Engulf (p. 396): a melee attack (Unarmed Combat), DV Magic × 2, AP −Magic; Stun for air and water, else Physical;
+ * - Natural Weapon (p. 399): the DV and AP of its choice (« DV (Force)P, AP 0 »).
+ * Ids are stable per actor (`<actorId>-nat-…`) so rebuilding them keeps the sheet's references.
+ */
+export function spiritWeapons(a: NaturalWeaponsInput): Weapon[] {
+  if (!a.spirit) return [];
+  const F = Math.max(1, Math.round(Number(a.spirit.force) || 1));
+  const el = spiritElement(a);
+  const elEn = el ? capitalize(el) : '';
+  const elFr = el ? NATURAL_ELEMENTS[el] : '';
+  const withEl = (en: string, fr: string) => (el ? { en: `${en} (${elEn})`, fr: `${fr} (${elFr})` } : { en, fr });
+  const make = (key: string, names: { en: string; fr: string }, w: Pick<Weapon, 'kind' | 'skill' | 'damage' | 'ap' | 'page'> & { natural: NaturalAttack }): Weapon => ({
+    id: `${a.id}-nat-${key}`, name: names.en, nameEn: names.en, nameFr: names.fr,
+    category: 'Natural attack', categoryEn: 'Natural attack', categoryFr: 'Attaque naturelle',
+    accuracy: 'Physical', mode: '', rc: 0, ammo: '', reach: 0, equipped: true, source: 'SR5', ...w,
+  });
+  const out: Weapon[] = [];
+  const aura = !!powerOf(a, 'energy aura');
+  out.push(make('unarmed', { en: 'Unarmed Attack', fr: 'Attaque à mains nues' }, aura
+    ? { kind: 'melee', skill: 'unarmed_combat', damage: `(STR+${F})P`, ap: -F, page: 396, natural: { power: 'unarmed', element: el, aura: true } }
+    : { kind: 'melee', skill: 'unarmed_combat', damage: '(STR)S', ap: 0, page: 187, natural: { power: 'unarmed', element: null } }));
+  if (powerOf(a, 'elemental attack')) {
+    out.push(make('elemental', withEl('Elemental Attack', 'Attaque élémentaire'), {
+      kind: 'ranged', skill: 'exotic_weapon', damage: `${F * 2}P`, ap: -F, page: 396, natural: { power: 'elementalAttack', element: el, rangeStep: F },
+    }));
+  }
+  if (powerOf(a, 'engulf')) {
+    const stun = el === 'air' || el === 'water';
+    out.push(make('engulf', withEl('Engulf', 'Engloutissement'), {
+      kind: 'melee', skill: 'unarmed_combat', damage: `${F * 2}${stun ? 'S' : 'P'}`, ap: -F, page: 396, natural: { power: 'engulf', element: el },
+    }));
+  }
+  (a.powers || []).filter((p) => String(p?.name || '').trim().toLowerCase() === 'natural weapon').forEach((p, i) => {
+    const nw = parseNaturalWeapon(p.choice, F);
+    if (nw) {
+      out.push(make(`weapon${i ? i + 1 : ''}`, { en: 'Natural Weapon', fr: 'Arme naturelle' }, {
+        kind: 'melee', skill: 'unarmed_combat', damage: nw.damage, ap: nw.ap, page: 399, natural: { power: 'naturalWeapon', element: null },
+      }));
+    }
+  });
+  return out;
+}
+
+/** Rule text of a natural attack (English dictionary key, French in magic.json), shown under the weapon on the sheet. */
+export function naturalAttackRule(n: NaturalAttack | null | undefined): string | null {
+  if (!n) return null;
+  switch (n.power) {
+    case 'unarmed':
+      return n.aura
+        ? tk('Energy Aura: +Magic to the DV, AP −Magic, elemental damage. A melee attacker who hits the spirit resists Magic × 2 DV, AP −Magic (SR5 p. 396).')
+        : tk('Unarmed Combat + Agility [Physical], DV (STR)S (SR5 p. 187).');
+    case 'elementalAttack':
+      return tk('Exotic Ranged Weapon + Agility [Physical], DV Magic × 2 P, AP −Magic; range increments of Magic meters (SR5 p. 396).');
+    case 'engulf':
+      return n.element === 'air'
+        ? tk('Melee attack, DV Magic × 2, AP −Magic. Air: resisted like an inhalation toxin, armor doesn’t protect (GM). The target is trapped: damage again on each of the spirit’s Action Phases; escape: Complex Action, STR + BOD vs MAG + BOD (SR5 p. 396).')
+        : tk('Melee attack, DV Magic × 2, AP −Magic. The target is trapped: damage again on each of the spirit’s Action Phases; escape: Complex Action, STR + BOD vs MAG + BOD (SR5 p. 396).');
+    case 'naturalWeapon':
+      return tk('Unarmed Combat + Agility [Physical] (SR5 p. 399).');
+    default:
+      return null;
+  }
+}
+
+/** Energy Aura of a critter (SR5 p. 396): melee attackers that hit it take Magic × 2 DV, AP −Magic. */
+export function hasEnergyAura(a: { powers?: Array<{ name: string }> | null } | null | undefined): boolean {
+  return !!(a?.powers || []).some((p) => String(p?.name || '').trim().toLowerCase() === 'energy aura');
 }
 
 // ---------------------------------------------------------------------------
