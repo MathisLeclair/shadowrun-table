@@ -18,6 +18,7 @@ import { derive, attr, armorTotal, armorValue, SKILL_BY_ID, SKILLS } from './sr5
 import { AFFLICTIONS } from './combat.ts';
 import type { ActorLike, Actor, AttrKey, CatalogBonus, ConditionState, Effect, EffectType, Formula, Modifier, ModifierType, ItemBonus, KnowledgeType, MatrixMode, SpellEffectEntry, SustainingEntry, Weapon } from './types.ts';
 import type { AttrKeyish, LimitKey, Derived } from './sr5.ts';
+import { focusKind, focusEffects, focusWorks } from './magic.ts';
 
 /** Marker for the i18n checker: UI keys, rendered by the client with t(label). */
 const tk = (s: string): string => s;
@@ -323,11 +324,11 @@ export const CONDITIONS: Record<string, ConditionDef> = {
   'q-out-of-combat': C(tk('outside combat')),
   'q-nerdrage': C(tk('until you get your revenge')),
   // Spellcasting foci (spellcategory)
-  'spell-combat': C(tk('combat spell'), { skills: ['spellcasting', 'ritual_spellcasting'] }),
-  'spell-detection': C(tk('detection spell'), { skills: ['spellcasting', 'ritual_spellcasting'] }),
-  'spell-health': C(tk('health spell'), { skills: ['spellcasting', 'ritual_spellcasting'] }),
-  'spell-illusion': C(tk('illusion spell'), { skills: ['spellcasting', 'ritual_spellcasting'] }),
-  'spell-manipulation': C(tk('manipulation spell'), { skills: ['spellcasting', 'ritual_spellcasting'] }),
+  'spell-combat': C(tk('combat spell'), { skills: ['spellcasting', 'ritual_spellcasting', 'counterspelling'] }),
+  'spell-detection': C(tk('detection spell'), { skills: ['spellcasting', 'ritual_spellcasting', 'counterspelling'] }),
+  'spell-health': C(tk('health spell'), { skills: ['spellcasting', 'ritual_spellcasting', 'counterspelling'] }),
+  'spell-illusion': C(tk('illusion spell'), { skills: ['spellcasting', 'ritual_spellcasting', 'counterspelling'] }),
+  'spell-manipulation': C(tk('manipulation spell'), { skills: ['spellcasting', 'ritual_spellcasting', 'counterspelling'] }),
 };
 
 /** Toggle key a condition needs (null = automatic). Unknown conditions become their own toggle (never applied silently). */
@@ -571,7 +572,18 @@ export function collectModifiers(actor: ActorLike | null | undefined, lookup: Mo
   }
   for (const q of actor.qualities || []) if (q) add('qualities', q, find(SOURCE_FILES.qualities, q));
   for (const p of actor.powers || []) if (p) add('powers', p, find(SOURCE_FILES.powers, p));
-  for (const g of actor.gear || []) if (g && g.active) add('gear', g, find(SOURCE_FILES.gear, g));
+  for (const g of actor.gear || []) {
+    if (!g || !g.active) continue;
+    const fk = focusKind(g);
+    if (fk && g.bonded === false) continue; // an unbonded focus does nothing (SR5 p. 318)
+    const entry = find(SOURCE_FILES.gear, g);
+    if (entry?.effects?.length || !fk) add('gear', g, entry);
+    else {
+      // Foci the catalog leaves without effects (shared/magic.ts focusEffects): counterspelling, spirit, weapon foci.
+      const fx = focusEffects(g);
+      if (fx.length) add('gear', g, { name: g.name, ...(g.nameFr ? { nameFr: g.nameFr } : {}), source: 'SR5', page: 319, effects: fx as unknown as Effect[] });
+    }
+  }
   for (const ma of actor.martialArts || []) for (const tq of ma?.techniques || []) if (tq) add('martialArts', ma, find(SOURCE_FILES.techniques, tq), tq);
   // Echoes: one source per echo taken (Attack Upgrade twice = two +1).
   ((actor as { magic?: { echoes?: unknown[] } }).magic?.echoes || []).forEach((name, i) => {
@@ -604,6 +616,8 @@ export function collectModifiers(actor: ActorLike | null | undefined, lookup: Mo
   const magic = (actor as { magic?: { sustaining?: SustainingEntry[]; spellEffects?: SpellEffectEntry[] } | null }).magic;
   for (const s of magic?.sustaining || []) {
     if (!s?.id) continue;
+    // Sustained by a focus that still works (bonded, active, carried): no −2 (SR5 p. 320).
+    if (s.focusId && focusWorks((actor.gear || []).find((g) => g?.id === s.focusId))) continue;
     const source: ModifierSource = { list: 'sustained', itemId: s.id, name: `Sustaining ${s.name?.en || s.name?.fr || ''} (F${s.force})`, nameFr: `Sort maintenu : ${s.name?.fr || s.name?.en || ''} (P${s.force})`, book: 'SR5', page: 282 };
     out.push({ id: `sustained:${s.id}`, source, type: 'allTests', target: null, value: -2, condition: null });
   }

@@ -10,7 +10,7 @@ import { cellDistance } from '/shared/combat.ts';
 import { hasLineOfSight } from '/shared/vision.ts';
 import {
   drainValue, drainOffset, drainAttr, maxForce, spellReach, isAreaSpell, isSustainable, spellCategory, spellResistance, combatSpellProfile,
-  RECKLESS_DV, SUSTAIN_PENALTY, OBJECT_RESISTANCE, aidSpiritType, type SpellCatalogInfo,
+  RECKLESS_DV, SUSTAIN_PENALTY, OBJECT_RESISTANCE, aidSpiritType, focusKind, focusForce, focusCategory, focusWorks, type SpellCatalogInfo,
 } from '/shared/magic.ts';
 import { itemLabel, categoryLabel } from '../sheet/common.tsx';
 import { ItemRef, RuleRef } from '../books/BookRef.tsx';
@@ -67,6 +67,7 @@ export default function CastModal({ game, actor, spellId, onClose }: { game: Gam
   const [sustain, setSustain] = useState(true);
   const [objectPool, setObjectPool] = useState('');
   const [aidId, setAidId] = useState('');
+  const [focusId, setFocusId] = useState('');
   const catalog = useCatalog<CatalogSpell>('spells');
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<CastResult | null>(null);
@@ -101,6 +102,10 @@ export default function CastModal({ game, actor, spellId, onClose }: { game: Gam
   const aiders = Object.values(game.actors || {}).filter((a): a is Actor => 'attributes' in a && !!(a as Actor).spirit && (a as Actor).spirit!.summonerId === actor.id
     && (a as Actor).spirit!.bound && (a as Actor).spirit!.present !== false && (a as Actor).spirit!.services > 0 && (a as Actor).spirit!.type === aidType);
   const aid = aiders.find((a) => a.id === aidId) || null;
+  // Sustaining foci (SR5 p. 320): active, bonded, the spell's category, Force ≥ the spell's, not busy.
+  const busyFoci = new Set(Object.values(game.magic?.sustained || {}).map((s) => (s.by?.kind === 'focus' ? s.by.gearId : '')).filter(Boolean));
+  const sustainers = (actor.gear || []).filter((g) => focusKind(g) === 'sustaining' && focusWorks(g) && !busyFoci.has(g.id) && focusCategory(g) === spellCategory(spell?.category) && focusForce(g) >= force);
+  const sustainer = sustainers.find((g) => g.id === focusId) || null;
   const spellcasting = skillRating(actor, 'spellcasting');
   const toggle = (id: string) => setTargetIds((list) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]));
   const pickCenter = (id: string) => {
@@ -114,7 +119,7 @@ export default function CastModal({ game, actor, spellId, onClose }: { game: Gam
     setBusy(true);
     try {
       const r = await send<CastResult>('magic/cast', {
-        actorId: actor.id, spellId: spell.id, force, reckless, explode, modifier, mapId: map?.id, targetIds, sustain: sustainable && sustain, ...(objectPool ? { object: Number(objectPool) } : {}), ...(aid ? { aidSpiritId: aid.id } : {}),
+        actorId: actor.id, spellId: spell.id, force, reckless, explode, modifier, mapId: map?.id, targetIds, sustain: sustainable && sustain, ...(objectPool ? { object: Number(objectPool) } : {}), ...(aid ? { aidSpiritId: aid.id } : {}), ...(sustainable && sustain && sustainer ? { sustainFocusId: sustainer.id } : {}),
         ...(area && center ? { area: { x: center.x, y: center.y } } : {}), ...(offset === null ? { drainDv: manualDv } : {}),
       });
       setResult(r);
@@ -217,6 +222,9 @@ export default function CastModal({ game, actor, spellId, onClose }: { game: Gam
         <div className="row wrap">
           <Toggle value={reckless} onChange={setReckless} label={t('Reckless Spellcasting (Simple Action, +3 Drain)')} />
           <Toggle value={explode} onChange={setExplode} label={t('Push the Limit (Edge: no limit)')} />
+          {sustainable && sustain && sustainers.length > 0 && (
+            <Select value={sustainer?.id || ''} onChange={setFocusId} options={[{ value: '', label: t('sustained by me (−2)') }, ...sustainers.map((g) => ({ value: g.id, label: t('by {focus} (no penalty)', { focus: itemLabel(g) }) }))]} />
+          )}
           {sustainable && <Toggle value={sustain} onChange={setSustain} label={spell && /^P$/i.test(spell.duration) ? t('Sustain until permanent (Force Combat Turns, −2 dice)') : t('Sustain the spell (−2 dice on all your tests)')} />}
         </div>
         {profile && (

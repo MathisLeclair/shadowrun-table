@@ -443,6 +443,82 @@ export function spiritStats(def: SpiritDef, force: number): {
 }
 
 // ---------------------------------------------------------------------------
+// Foci (SR5 pp. 318-320)
+// ---------------------------------------------------------------------------
+
+export type FocusKind =
+  | 'spellcasting' | 'counterspelling' | 'ritual' | 'sustaining' | 'summoning' | 'banishing' | 'binding' | 'power' | 'weapon' | 'qi'
+  | 'alchemical' | 'disenchanting' | 'centering' | 'masking' | 'flexibleSignature' | 'spellShaping';
+type GearLike = { name?: string; nameEn?: string; nameFr?: string; category?: string; rating?: number | null; bonded?: boolean; active?: boolean; choice?: string | null; id?: string };
+const FOCUS_KINDS: Array<[FocusKind, RegExp]> = [
+  ['counterspelling', /counterspelling|contresort/i], ['ritual', /ritual|rituel/i], ['sustaining', /sustaining|maintien/i], ['spellcasting', /spellcasting|lancement de sorts/i],
+  ['summoning', /summoning|invocation/i], ['banishing', /banishing|bannissement/i], ['binding', /binding|\blien\b/i], ['power', /power focus|focus de puissance/i],
+  ['weapon', /weapon focus|focus d.arme/i], ['qi', /qi focus|focus de qi/i], ['alchemical', /alchemical|alchimi/i], ['disenchanting', /disenchanting|désenchant|desenchant/i],
+  ['centering', /centering|centrage/i], ['masking', /masking|masque/i], ['flexibleSignature', /flexible signature|signature flexible/i], ['spellShaping', /spell shaping|façonnage/i],
+];
+/** The kind of a focus item (gear of category Foci, or named « … Focus »), or null for any other gear. */
+export function focusKind(g: GearLike | null | undefined): FocusKind | null {
+  if (!g) return null;
+  const names = [g.nameEn, g.name, g.nameFr].filter(Boolean).join(' ');
+  if (g.category !== 'Foci' && g.category !== 'Focus' && !/\bfocus\b|\bfoci\b/i.test(names)) return null;
+  for (const [k, re] of FOCUS_KINDS) if (re.test(names)) return k;
+  return null;
+}
+/** Bonding cost multiplier (SR5 p. 318, Focus Table): Force × this in karma. */
+export function focusBondMultiplier(kind: FocusKind | null): number {
+  if (kind === 'power') return 6;
+  if (kind === 'weapon' || kind === 'alchemical' || kind === 'disenchanting' || kind === 'centering' || kind === 'masking' || kind === 'flexibleSignature' || kind === 'spellShaping') return 3;
+  return 2; // spell, spirit and qi foci
+}
+/** Spell category of a spell focus (« Sustaining Focus, Combat »), or null. */
+export const focusCategory = (g: GearLike | null | undefined): SpellCategoryKey | null => {
+  const m = [g?.nameEn, g?.name, g?.nameFr].filter(Boolean).join(' ').match(/combat|detection|détection|health|santé|illusion|manipulation/i);
+  return m ? spellCategory(m[0]) : null;
+};
+export const focusForce = (g: GearLike | null | undefined): number => Math.max(0, Math.round(Number(g?.rating) || 0));
+/** A focus counts when bonded (absent on older sheets = bonded) and active (SR5 p. 318). */
+export const focusWorks = (g: GearLike | null | undefined): boolean => !!g && g.bonded !== false && !!g.active;
+
+/**
+ * Bonding limits (SR5 p. 318): no more bonded foci than Magic, their total Force ≤ Magic × 5; addiction risk when the
+ * active foci's total Force exceeds Magic (p. 319).
+ */
+export function fociLimits(actor: MagicActor | null | undefined) {
+  const mag = attr(actor, 'MAG');
+  const foci = ((actor?.gear || []) as GearLike[]).filter((g) => focusKind(g));
+  const bonded = foci.filter((g) => g.bonded !== false);
+  const active = bonded.filter((g) => g.active);
+  const sum = (l: GearLike[]) => l.reduce((s, g) => s + focusForce(g), 0);
+  return { mag, bonded: bonded.length, maxBonded: mag, force: sum(bonded), maxForce: mag * 5, activeForce: sum(active), addiction: sum(active) > mag };
+}
+
+/**
+ * Modifiers of the foci the catalog leaves without effects (shared/modifiers collectModifiers adds them for a bonded, active
+ * focus): Counterspelling +Force (same category), Summoning / Binding +Force (the spirit type), Banishing +Force limit,
+ * weapon focus +Force on its weapon (`choice` = weapon id) and on Astral Combat (SR5 pp. 319-320).
+ */
+export function focusEffects(g: GearLike): Array<{ type: string; target: string | null; value: number; condition?: string }> {
+  const k = focusKind(g);
+  const F = focusForce(g);
+  if (!k || !F) return [];
+  const cat = focusCategory(g);
+  switch (k) {
+    case 'counterspelling':
+      return [{ type: 'skill', target: 'counterspelling', value: F, ...(cat ? { condition: `spell-${cat}` } : {}) }];
+    case 'ritual':
+      return [{ type: 'skill', target: 'ritual_spellcasting', value: F, ...(cat ? { condition: `spell-${cat}` } : {}) }];
+    case 'summoning':
+      return [{ type: 'skill', target: 'summoning', value: F, condition: 'q-spirit-type' }];
+    case 'binding':
+      return [{ type: 'skill', target: 'binding', value: F, condition: 'q-spirit-type' }];
+    case 'weapon':
+      return [...(g.choice ? [{ type: 'weaponPool', target: String(g.choice), value: F }] : []), { type: 'skill', target: 'astral_combat', value: F }];
+    default:
+      return [];
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Astral (SR5 pp. 312-315)
 // ---------------------------------------------------------------------------
 

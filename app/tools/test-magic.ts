@@ -6,12 +6,13 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   findTradition, traditionFromDef, parseDrainText, sortTraditions, drainValue, drainOffset, spellReach, isAreaSpell, spellCategory, spellDrainType, maxForce,
-  spellEffects, isSustainable, combatSpellProfile, spellResistance, attributeOfSpell, evalForce, spiritStats, optionalPowerCount, traditionSpiritTypes, reagentDrams, aidSpiritType, canPerceiveAstral, canProjectAstral, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
+  spellEffects, isSustainable, combatSpellProfile, spellResistance, attributeOfSpell, evalForce, spiritStats, optionalPowerCount, traditionSpiritTypes, reagentDrams, aidSpiritType, canPerceiveAstral, canProjectAstral, focusKind, focusBondMultiplier, focusCategory, fociLimits, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
   type TraditionDef,
 } from '../shared/magic.ts';
 import { derive } from '../shared/sr5.ts';
 import { checkedTest, collectModifiers, poolModifiers, rollContext, derivedWithModifiers } from '../shared/modifiers.ts';
 import { traditions, actorTradition, chummerTradition } from '../server/lib/traditions.ts';
+import { effectsLookup } from '../server/lib/modifiers.ts';
 import { parseChum5 } from '../server/lib/chummer/parse.ts';
 import { spellCatalogInfo } from '../server/lib/spells.ts';
 import { spiritDefs, spiritDef } from '../server/lib/spirits.ts';
@@ -182,6 +183,28 @@ ok(!canPerceiveAstral(adept) && !canProjectAstral(adept), 'an adept without the 
 ok(canPerceiveAstral({ ...adept, powers: [{ id: 'p2', name: 'Astral Perception', pp: 1 }] } as unknown as ActorLike) && !canProjectAstral({ ...adept, powers: [{ id: 'p2', name: 'Astral Perception', pp: 1 }] } as unknown as ActorLike), 'an adept with Astral Perception perceives, never projects');
 ok(!canPerceiveAstral(mundane), 'a mundane does not perceive');
 ok(derive(mage).astralInitiative.base === 8 && derive(mage).astralInitiative.dice === 3, 'astral initiative INT × 2 + 3D6 (SR5 p. 314)');
+
+// Foci (#21)
+ok(focusKind({ name: 'Spellcasting Focus, Combat', category: 'Foci' }) === 'spellcasting' && focusKind({ name: 'Ritual Spellcasting Focus', category: 'Foci' }) === 'ritual' && focusKind({ name: 'Counterspelling Focus, Health', category: 'Foci' }) === 'counterspelling', 'focusKind: spell foci (ritual and counterspelling before spellcasting)');
+ok(focusKind({ name: 'Focus de maintien', nameEn: 'Sustaining Focus, Combat', category: 'Focus' }) === 'sustaining' && focusKind({ name: 'Medkit', category: 'Biotech' }) === null, 'focusKind: French category, non-focus gear');
+ok(focusBondMultiplier('power') === 6 && focusBondMultiplier('weapon') === 3 && focusBondMultiplier('spellcasting') === 2 && focusBondMultiplier('summoning') === 2, 'bonding karma multipliers (SR5 p. 318)');
+ok(focusCategory({ name: 'Sustaining Focus, Illusion' }) === 'illusion', 'focusCategory');
+{
+  const withFoci = { ...mage, gear: [
+    { id: 'f1', name: 'Spellcasting Focus, Combat', category: 'Foci', rating: 4, qty: 1, active: true, bonded: true },
+    { id: 'f2', name: 'Power Focus', category: 'Foci', rating: 3, qty: 1, active: true },
+    { id: 'f3', name: 'Counterspelling Focus, Combat', category: 'Foci', rating: 2, qty: 1, active: true, bonded: false },
+  ] } as unknown as ActorLike;
+  const lim = fociLimits(withFoci);
+  ok(lim.bonded === 2 && lim.force === 7 && lim.maxBonded === 6 && lim.maxForce === 30 && lim.activeForce === 7 && lim.addiction, `fociLimits: unbonded excluded, addiction when active Force > MAG (${JSON.stringify(lim)})`);
+  const mods = collectModifiers(withFoci, effectsLookup());
+  const sc = poolModifiers(mods, rollContext(withFoci, { skillId: 'spellcasting' }), { conditions: ['spell-combat'] });
+  ok(sc.lines.some((l) => l.mod.source.itemId === 'f1' && l.state === 'applied' && l.value === 4), 'a bonded, active spellcasting focus adds its Force to a combat spell');
+  ok(!mods.some((m) => m.source.itemId === 'f3'), 'an unbonded focus does nothing');
+  const g2 = { ...withFoci, gear: [{ id: 'f4', name: 'Counterspelling Focus, Combat', category: 'Foci', rating: 3, qty: 1, active: true, bonded: true }] } as unknown as ActorLike;
+  const cs = poolModifiers(collectModifiers(g2, effectsLookup()), rollContext(g2, { skillId: 'counterspelling' }), { conditions: ['spell-combat'] });
+  ok(cs.total === 3, `counterspelling focus: +Force against its category (${cs.total})`);
+}
 
 // Binding helpers (#19)
 ok(reagentDrams({ gear: [{ name: 'Reagents, per dram', qty: 30 }, { name: 'Medkit', qty: 1 }, { name: 'x', nameFr: 'Réactifs (Par drachme)', qty: 5 }] }) === 35, 'reagentDrams: reagent items only');
@@ -626,6 +649,52 @@ try {
   await settle();
   ok(seen(pb, sm4.spiritId as string).length === 1 && !gm.state.maps[mapId].tokens.find((t) => t.actorId === sm4.spiritId)?.astral, 'materialized: everyone sees it');
   await pj.send('magic/release', { spiritId: sm4.spiritId });
+
+  // ---------- Foci (#21) ----------
+  await gm.send('magic/setTradition', { actorId: 'pc_jane', tradition: 'Hermetic' });
+  await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'gear', item: { name: 'Sustaining Focus, Manipulation', category: 'Foci', rating: 4, qty: 1, bonded: false } });
+  await settle();
+  const sf = gm.state.actors.pc_jane.gear.find((g) => g.name === 'Sustaining Focus, Manipulation')!;
+  ok(sf.bonded === false, 'a new focus is not bonded');
+  const rq = await pj.send('training/request', { actorId: 'pc_jane', kind: 'focus', target: sf.id });
+  await settle();
+  const req = gm.state.training.requests.find((r) => r.id === rq.requestId);
+  ok(rq.status === 'pending' && req?.karmaCost === 8, `bonding request: Force 4 × 2 = 8 karma, waits for the GM (${JSON.stringify({ st: rq.status, k: req?.karmaCost })})`);
+  const karmaBefore = gm.state.actors.pc_jane.karma;
+  await gm.send('actor/update', { actorId: 'pc_jane', patch: { karma: Math.max(karmaBefore, 20) } });
+  await gm.send('training/resolve', { requestId: rq.requestId, approve: true });
+  await settle();
+  if (gm.state.actors.pc_jane.gear.find((g) => g.id === sf.id)?.bonded !== true) await gm.send('training/advanceDays', { days: 1 });
+  await settle();
+  ok(gm.state.actors.pc_jane.gear.find((g) => g.id === sf.id)?.bonded === true, 'approved: the focus is bonded');
+  await expectFail(pj.send('training/request', { actorId: 'pc_jane', kind: 'focus', target: sf.id }), /bonded|lié/i, 'not twice');
+  await pj.send('actor/updateItem', { actorId: 'pc_jane', list: 'gear', itemId: sf.id, patch: { active: true } });
+  await restoreAll();
+  // A sustaining focus sustains a manipulation spell up to its Force: no −2 for the caster.
+  let fs1: { sustainedId?: string | null } = {};
+  for (let i = 0; i < 5 && !fs1.sustainedId; i++) fs1 = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: armorSpell, force: 3, mapId, targetIds: ['pc_jane'], sustainFocusId: sf.id });
+  await settle();
+  ok(gm.state.magic.sustained[fs1.sustainedId as string]?.by?.kind === 'focus', 'sustained by the focus');
+  const noPen = await pj.send('dice/roll', { actorId: 'pc_jane', skillId: 'spellcasting' });
+  ok(!(noPen.mods || []).some((m: { id: string; state: string }) => m.id === `sustained:${fs1.sustainedId}` && m.state === 'applied'), 'no −2 for the caster while the focus works');
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: armorSpell, force: 2, sustainFocusId: sf.id }), /already|déjà/i, 'one spell per sustaining focus');
+  // Switching the focus off: the caster carries the −2 at once.
+  await pj.send('actor/updateItem', { actorId: 'pc_jane', list: 'gear', itemId: sf.id, patch: { active: false } });
+  const pen = await pj.send('dice/roll', { actorId: 'pc_jane', skillId: 'spellcasting' });
+  ok((pen.mods || []).some((m: { id: string; state: string; value: number }) => m.id === `sustained:${fs1.sustainedId}` && m.state === 'applied' && m.value === -2), 'focus switched off: −2 for the caster at once');
+  await pj.send('magic/drop', { id: fs1.sustainedId });
+  // Weapon focus linked to a melee weapon.
+  await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'weapons', item: { name: 'Focus blade', kind: 'melee', skill: 'blades', damage: '(STR+3)P', accuracy: '6' } });
+  await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'gear', item: { name: 'Weapon Focus', category: 'Foci', rating: 2, qty: 1, active: true } });
+  await settle();
+  const wf = gm.state.actors.pc_jane.gear.find((g) => g.name === 'Weapon Focus')!;
+  const blade = gm.state.actors.pc_jane.weapons.find((w) => w.name === 'Focus blade')!;
+  await pj.send('magic/focusWeapon', { actorId: 'pc_jane', gearId: wf.id, weaponId: blade.id });
+  await settle();
+  const atkRoll = await pj.send('dice/roll', { actorId: 'pc_jane', weaponId: blade.id });
+  ok((atkRoll.mods || []).some((m: { id: string; value: number; state: string }) => m.id.startsWith(`gear:${wf.id}`) && m.value === 2 && m.state === 'applied'), 'weapon focus: +Force on its weapon’s attacks');
+  await restoreAll();
+  await gm.send('magic/setTradition', { actorId: 'pc_jane', tradition: 'Custom', drain: 'CHA' });
 
   // A target left with no dice (WIL 1, badly wounded) still resolves the spell: 0 hits, not a blocked attack.
   const weakId = await gm.send<string>('actor/create', { type: 'npc', name: 'Weak test', attributes: { BOD: 1, WIL: 1 } });

@@ -1,7 +1,7 @@
 # Magic rules
 
 Magic is being automated step by step (plan: [design/magic.md](../design/magic.md)); so far: karma costs, item effects,
-traditions, the drain pool, the cast flow, sustained spells, combat spells, the resistance to other spells, summoning, binding, banishing and the astral plane. Page references used by the 📖 chips: drain SR5
+traditions, the drain pool, the cast flow, sustained spells, combat spells, the resistance to other spells, summoning, binding, banishing, the astral plane and foci. Page references used by the 📖 chips: drain SR5
 282, power points 278, adept powers 308, spellcasting 281, initiation 324 (`RULE_REFS`, [book-refs](../modules/book-refs.md)).
 
 - **Adept powers**: powers with a catalog `stats.bonus` (Improved Reflexes: REA + initiative dice per level,
@@ -38,6 +38,11 @@ traditions, the drain pool, the cast flow, sustained spells, combat spells, the 
   the projected form uses LOG / WIL / INT / CHA for AGI / BOD / REA / STR; astral initiative INT × 2 + 3D6; unarmed
   astral combat Astral Combat + WIL [Astral] vs INT + LOG, DV astral STR + net hits, Stun or Physical, no armor.
   Mana barriers, astral tracking and assensing results stay with the GM.
+- **Foci** (SR5 318-320): bonding costs Force × 2 (spell, spirit, qi), × 3 (weapon, enchanting, metamagic), × 6 (power)
+  karma; at most MAG bonded foci, total bonded Force ≤ MAG × 5; a focus works only bonded and active; addiction risk
+  when the active Force exceeds MAG. Effects applied: spellcasting, counterspelling, ritual (same category), summoning /
+  binding (spirit type switch), power (+F Magic), weapon (+F on its weapon and Astral Combat), sustaining (no −2).
+  « Only one focus adds to a test » is not enforced.
 - **Sustaining** (SR5 282-283): −2 dice per spell the character sustains, cumulative, on every test but damage
   resistance (the app's convention for « all tests » penalties, as for afflictions). Permanent spells are sustained Force Combat Turns
   (counted on new Combat Turns), then end. Armor (+hits armor, 293) and Combat Sense (+hits defense dice, 288) apply to
