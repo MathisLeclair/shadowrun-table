@@ -258,7 +258,7 @@ export function castSpell(ctx: ActionContext, p: CastPayload) {
   const roll = performRoll(ctx, {
     actorId: a.id, skillId: 'spellcasting', label: spellRollLabel(spell.nameFr || spell.name), limit: force, explode: !!p.explode,
     modifier: p.modifier, conditions, ignore: p.ignore, ...(secret ? { secret: true } : {}),
-  }, { bonus: [...bonus, ...(shape ? [{ label: 'spell shaping', value: -Math.abs(shape) }] : [])], logExtra: { labelI18n: { key: tk('Spell — {spell} (Force {force})'), params: { spell: biName(spell), force } } } });
+  }, { rng: loadedRng('caster'), bonus: [...bonus, ...(shape ? [{ label: 'spell shaping', value: -Math.abs(shape) }] : [])], logExtra: { labelI18n: { key: tk('Spell — {spell} (Force {force})'), params: { spell: biName(spell), force } } } });
   if (aid?.spirit) {
     aid.spirit.services -= 1;
     logMagic(ctx, a, tk('{spirit} aids the spell: +{n} dice (one service).'), { spirit: aid.name, n: aid.spirit.force }, { event: 'spirit', actorId: aid.id }, secret);
@@ -436,9 +436,18 @@ function useReagents(a: Actor, drams: number): void {
   a.gear = (a.gear || []).filter((g) => !isReagent(g) || (Number(g.qty) || 0) > 0);
 }
 
+// Test hook: SR_MAGIC_TEST=1 enables 'magic/testDice' to load the dice. 'caster' = every die of a spellcasting or
+// binding roll rolls 5 (a hit) and every spirit die (spiritRoll: binding, banishing) rolls 2 (no hit); null = random.
+let testDice: 'caster' | null = null;
+const loadedRng = (side: 'caster' | 'spirit'): (() => number) | undefined => {
+  if (!testDice) return undefined;
+  const face = side === 'caster' ? 5 : 2;
+  return () => (face - 0.5) / 6;
+};
+
 /** Opposed test against a spirit (Force dice, + extra), rolled by the server and logged for the GM only. */
 function spiritRoll(ctx: ActionContext, sp: Actor, dice: number, key: string) {
-  const r = rollDice(dice);
+  const r = rollDice(dice, { rng: loadedRng('spirit') });
   ctx.log({ kind: 'roll', userId: ctx.user.id, author: sp.name, text: `${dice}`, gmOnly: true, roll: { ...r, label: `${dice}`, labelI18n: { key, params: { n: dice } }, actorId: null } });
   return r;
 }
@@ -461,7 +470,7 @@ function bind(ctx: ActionContext, p: { spiritId?: unknown; explode?: unknown; mo
   const secret = hiddenCaster(a);
   const roll = performRoll(ctx, {
     actorId: a.id, skillId: 'binding', label: `Lien — ${sp.name}`, limit: sp.spirit.force, explode: !!p.explode, modifier: p.modifier, ...(secret ? { secret: true } : {}), // i18n-ignore: stored label
-  }, { logExtra: { labelI18n: { key: tk('Binding — {spirit} (Force {force})'), params: { spirit: sp.name, force: sp.spirit.force } } } });
+  }, { rng: loadedRng('caster'), logExtra: { labelI18n: { key: tk('Binding — {spirit} (Force {force})'), params: { spirit: sp.name, force: sp.spirit.force } } } });
   const sr = spiritRoll(ctx, sp, sp.spirit.force * 2, tk('Spirit resists the binding ({n} dice)'));
   const net = roll.hits - sr.hits;
   const dv = Math.max(MIN_DRAIN, 2 * sr.hits);
@@ -1060,6 +1069,17 @@ const actions: Record<string, ActionDef> = {
     },
   },
 };
+
+if (process.env.SR_MAGIC_TEST === '1') {
+  /** Test hook only: { mode: 'caster' | null } loads the spellcasting and binding dice (see loadedRng). */
+  actions['magic/testDice'] = {
+    role: 'gm',
+    handler(_ctx: ActionContext, p: { mode?: unknown } = {}) {
+      testDice = p.mode === 'caster' ? 'caster' : null;
+      return { mode: testDice };
+    },
+  };
+}
 
 const mod: ServerModule = {
   name: 'magic',
