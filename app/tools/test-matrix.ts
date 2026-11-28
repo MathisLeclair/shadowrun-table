@@ -584,7 +584,15 @@ try {
     await settle();
     const vs = pl.state.matrix.personas.pc_bricks.scans?.[npcId];
     ok(vs?.master?.deviceRating === 4 && vs.devices.length === 1, `revealed from the vicinity: commlink DR ${vs?.master?.deviceRating} + 1 device`);
+    ok(!vicIds.some((id) => id.startsWith('host-visible:')), 'perception never reveals hidden hosts (that is a Matrix Search)');
     await gm.send('combat/end', {});
+    await gm.send('matrix/hostUpdate', { hostId: 'host_hollow_pine', patch: { visible: false } });
+    res = await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'matrixPerception', targetId: 'none' });
+    await settle();
+    const quiet = Object.values(M().reveals || {}).find((r) => r.actionId === 'matrixPerception' && r.target === '' && r.id !== vic.id)!;
+    ok(quiet && quiet.options.length === 0, `no target outside a fight: nothing for the app to reveal, the GM answers (${quiet?.options.map((o) => o.id).join(', ')})`);
+    await gm.send('matrix/dropReveal', { revealId: quiet.id });
+    await gm.send('matrix/hostUpdate', { hostId: 'host_hollow_pine', patch: { visible: true } });
 
     // Matrix Search (SR5 p. 241): threshold from the table, extra hits divide the base time, failure = full base time
     ok(searchMinutes('limited', 3) === 30 && searchMinutes('limited', 5) === 15 && searchMinutes('hidden', 2) === 720 && searchMinutes('public', 4) === 1 / 3, 'search time: base ÷ hits above the threshold');
@@ -596,7 +604,7 @@ try {
     const hits = res.roll.hits;
     ok(res.success && hits >= 3 && srv?.threshold === 3 && srv.topic === 'Adresse de M. Johnson' && srv.minutes === searchMinutes('limited', hits, inHost), `search succeeds against threshold 3 (${hits} hits, ${srv?.minutes} min)`);
     ok(gm.state.log.some((e) => /Search for “Adresse de M. Johnson”: found in .* \(threshold 3\)\. The GM answers\./.test(e.text || '')), 'search log: found, time, threshold');
-    ok(inHost ? srv.options.every((o) => o.id.startsWith('file:')) : srv.options.every((o) => o.id.startsWith('host-visible:')), `search options: ${inHost ? 'the host’s files' : 'hidden hosts'}`);
+    ok(inHost ? srv.options.length > 0 && srv.options.every((o) => o.id.startsWith('answer-file:')) : srv.options.every((o) => o.id.startsWith('host-visible:')), `search options: ${inHost ? 'the file holding the answer' : 'hidden hosts'} (${srv.options.map((o) => o.id).join(', ')})`);
     await gm.send('matrix/reveal', { revealId: srv.id, optionIds: [], answer: 'Il vit à Tacoma.' });
     await settle();
     ok(pl.state.log.some((e) => /GM’s answer to Bricks: Il vit à Tacoma\./.test(e.text || '')), 'GM answers the search freely');

@@ -31,8 +31,10 @@ Page references used by the 📖 chips: Matrix initiative SR5 231, Matrix damage
 
 ## Matrix Perception and Matrix Search (SR5 p. 241)
 
-- Matrix Perception: one fact per net hit, picked by the GM from what the decker does not know yet (or answered
-  freely). Each decker's knowledge of a host is kept item by item (`host.known`).
+- Matrix Perception sees icons (SR5 p. 235): one fact per net hit, picked by the GM from what the decker does not know
+  yet (or answered freely) — a host's rating, IC, files and devices, a character's commlink and PAN, the NPCs' PANs
+  around during a fight. Spotting a host needs no test (p. 235), so finding a hidden host is information: Matrix
+  Search. Each decker's knowledge of a host is kept item by item (`host.known`).
 - Matrix Search (`SEARCH_LEVELS`, `searchMinutes`): Simple Test against the Matrix Search Table — public 1 (1 min),
   limited interest 3 (30 min), hidden or erased 6 (12 h); protected / secret data only from inside its host, where the
   base time is 1 minute. Dice modifiers: intricate −1, obscure −2, another grid −2. Hits above the threshold divide the

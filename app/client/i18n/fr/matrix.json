@@ -264,7 +264,6 @@
   "e.g. Renraku Tacoma office": "ex. Bureau de Renraku Tacoma",
   "e.g. the guard’s commlink": "ex. commlink du garde",
   "Each hit adds 1 point of noise for everyone within 100 m (you included, except your own devices).": "Chaque succès ajoute 1 point de bruit pour tout le monde dans 100 m (vous compris, sauf vos appareils).",
-  "Each hit reveals one piece of information. On a host: rating, attributes, IC, files, devices and data bombs.": "Chaque succès révèle une information. Sur un hôte : indice, attributs, IC, fichiers, appareils et bombes de données.",
   "Each IC targets the best-known intruder. Crash, Track and Scramble need 1, 2 or 3 host marks: Probe places them.": "Chaque IC vise l’intrus le mieux repéré. Crash, Traqueuse et Brouillage exigent 1, 2 ou 3 marques de l’hôte : la Sonde les pose.",
   "Edge: Push the Limit ({n})": "Chance : repousser les limites ({n})",
   "Edit File": "Éditer un fichier",
@@ -706,7 +705,6 @@
   "GM’s answer to {who}: {answer}": "Réponse du MJ à {who} : {answer}",
   "{who} learns nothing more.": "{who} n’apprend rien de plus.",
   "This Matrix Perception was already answered": "Cette Perception matricielle a déjà reçu sa réponse",
-  "Hidden hosts": "Hôtes cachés",
   "Rating and attributes": "Indice et attributs",
   "rating {n} · A {a} S {s} D {d} F {f}": "indice {n} · A {a} C {s} T {d} F {f}",
   "protected {n} · data bomb {b}": "protégé {n} · bombe matricielle {b}",
@@ -752,5 +750,8 @@
   "found (threshold {th})": "trouvé (seuil {th})",
   "it took {time}": "en {time}",
   "Answer what they find; you may also reveal a host or a file.": "Dites ce qu’il trouve ; vous pouvez aussi révéler un hôte ou un fichier.",
-  "found: the GM answers": "trouvé : le MJ répond"
+  "found: the GM answers": "trouvé : le MJ répond",
+  "Looks at icons: each hit reveals one piece of information. On a host: rating, attributes, IC, files, devices and data bombs; on a character: their commlink and PAN devices; with no target during a fight: the PANs around.": "Observe les icônes : chaque succès révèle une information. Sur un hôte : indice, attributs, IC, fichiers, appareils et bombes matricielles ; sur un personnage : son commlink et les appareils de son PAN ; sans cible pendant un combat : les PAN alentour.",
+  "The answer is in file “{name}”": "La réponse est dans le fichier « {name} »",
+  "Where the data is: hidden hosts": "Où sont les données : hôtes cachés"
 }

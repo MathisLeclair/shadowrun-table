@@ -497,24 +497,28 @@ function durationMsg(minutes: number): I18nMessage {
 function revealOptions(state: TableState, actor: Actor, persona: Persona, actionId: string, target: Target): RevealOption[] {
   const out: RevealOption[] = [];
   const me = [actor.id];
-  const inHost = persona.hostId ? slice(state).hosts[persona.hostId] : null;
-  if (actionId === 'matrixSearch' && inHost) {
-    // Searching inside a host: its files (protected or secret data is only found there, SR5 p. 241).
-    for (const f of inHost.files || []) if (!knows(inHost, me, 'files', f.id)) out.push({ id: `file:${inHost.id}:${f.id}`, group: inHost.name, label: { t: 'file “{name}”', params: { name: f.name } } });
+  // Matrix Search = information on a topic (SR5 p. 241): where the data is — a hidden host, or inside a host the file
+  // that holds the answer. The answer itself is the GM's.
+  if (actionId === 'matrixSearch') {
+    const inHost = persona.hostId ? slice(state).hosts[persona.hostId] : null;
+    if (inHost) {
+      for (const f of inHost.files || []) out.push({ id: `answer-file:${inHost.id}:${f.id}`, group: inHost.name, label: { t: 'The answer is in file “{name}”', params: { name: f.name } } });
+      return out;
+    }
+    for (const h of Object.values(slice(state).hosts)) {
+      if (h.visible || (persona.marks || []).some((m) => m.count > 0 && String(m.targetId).split(':')[1] === h.id)) continue;
+      out.push({ id: `host-visible:${h.id}`, group: { t: 'Where the data is: hidden hosts' }, label: h.name, detail: ratingMsg(h.rating) });
+    }
     return out;
   }
-  if (actionId === 'matrixSearch' || target.kind === 'none') {
-    if (actionId === 'matrixPerception' && state.combat?.active) {
-      // Scanning the vicinity during a fight: the PANs of the NPCs in it (SR5 p. 235: icons within 100 m are spotted).
+  // Matrix Perception = icons (SR5 p. 235): with no target, the icons around — during a fight, the NPCs' PANs.
+  if (target.kind === 'none') {
+    if (state.combat?.active) {
       const ids = new Set((state.combat.entries || []).filter((e) => e.actorId && !e.out).map((e) => e.actorId as ActorId));
       for (const id of ids) {
         const npc = state.actors?.[id];
         if (npc && npc.type === 'npc' && !npc.hidden) out.push(...panOptions(persona, npc));
       }
-    }
-    for (const h of Object.values(slice(state).hosts)) {
-      if (h.visible || persona.hostId === h.id || (persona.marks || []).some((m) => m.count > 0 && String(m.targetId).split(':')[1] === h.id)) continue;
-      out.push({ id: `host-visible:${h.id}`, group: { t: 'Hidden hosts' }, label: h.name, detail: ratingMsg(h.rating) });
     }
     return out;
   }
@@ -578,7 +582,8 @@ function newReveal(ctx: ActionContext, actor: Actor, persona: Persona, actionId:
 
 /** Apply one revealed option to the decker's knowledge. false = it no longer exists. */
 function applyReveal(state: TableState, actor: Actor, persona: Persona, optionId: string): boolean {
-  const [kind, a, b] = optionId.split(':');
+  const [rawKind, a, b] = optionId.split(':');
+  const kind = rawKind === 'answer-file' ? 'file' : rawKind; // a search pointing at a file: the decker now knows that file
   const hosts = slice(state).hosts;
   if (kind === 'host-stats' || kind === 'ic' || kind === 'file' || kind === 'device' || kind === 'host-visible') {
     const h = hosts[a];

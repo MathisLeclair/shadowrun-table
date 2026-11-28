@@ -2303,8 +2303,9 @@ export interface MatrixReveal {
 }
 
 /**
- * One thing the GM can reveal. Ids: host-stats:<host> · ic:<host>:<ic> · file:<host>:<file> · device:<host>:<device> ·
- * host-visible:<host> · pan:<owner>:<item> · pan-master:<owner>.
+ * One thing the GM can reveal. Perception (icons): host-stats:<host> · ic:<host>:<ic> · file:<host>:<file> ·
+ * device:<host>:<device> · pan:<owner>:<item> · pan-master:<owner>. Search (information): host-visible:<host> ·
+ * answer-file:<host>:<file>.
  */
 export interface RevealOption {
   id: string;

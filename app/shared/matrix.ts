@@ -270,7 +270,7 @@ export const ACTIONS: MatrixActionDef[] = [
     desc: tk('Opposed by 6 dice (GOD). Success: you learn your current OS.') },
   // --- Legal: information
   { id: 'matrixPerception', fr: tk('Matrix Perception'), en: 'Matrix Perception', cat: 'info', type: 'complex', skill: 'computer', attr: 'INT', limit: 'dataProcessing', defense: null, marks: 0, targets: ['host', 'ic', 'device', 'pan', 'file', 'persona', 'manual', 'none'], page: 241,
-    desc: tk('Each hit reveals one piece of information. On a host: rating, attributes, IC, files, devices and data bombs.') },
+    desc: tk('Looks at icons: each hit reveals one piece of information. On a host: rating, attributes, IC, files, devices and data bombs; on a character: their commlink and PAN devices; with no target during a fight: the PANs around.') },
   { id: 'matrixSearch', fr: tk('Matrix Search'), en: 'Matrix Search', cat: 'info', type: 'special', skill: 'computer', attr: 'INT', limit: 'dataProcessing', defense: null, marks: 0, targets: ['none'], page: 241,
     desc: tk('Searches the Matrix for information on a topic: the threshold and the base time depend on how available it is; hits above the threshold divide the time. Protected or secret data: search inside its host.') },
   { id: 'traceIcon', fr: tk('Trace Icon'), en: 'Trace Icon', cat: 'info', type: 'complex', skill: 'computer', attr: 'INT', limit: 'dataProcessing', defense: ['WIL', 'sleaze'], marks: 2, targets: ['persona', 'device', 'pan', 'manual'], page: 243,
