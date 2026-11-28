@@ -9,6 +9,7 @@ import { t, tk, attrShort, getLang } from '../../lib/i18n.ts';
 import { attr, derive } from '/shared/sr5.ts';
 import {
   drainAttr, drainPool, sustainedBy, usesTradition, magicHints, reagentDrams, canPerceiveAstral, canProjectAstral, focusKind, focusForce, focusBondMultiplier, fociLimits,
+  metamagicDef, initiateGrade, hasMetamagic,
   SUSTAIN_PENALTY, BINDING_DRAMS, ASTRAL_ATTRIBUTES, type MagicHint, type FocusKind,
 } from '/shared/magic.ts';
 import { RollDialog } from '../sheet/RollDialog.tsx';
@@ -20,7 +21,7 @@ import SummonModal from './SummonModal.tsx';
 import BanishModal from './BanishModal.tsx';
 import RitualPanel from './RitualPanel.tsx';
 import { toast } from '../../lib/ui-store.ts';
-import { confirmAction } from '../../lib/ui.tsx';
+import { confirmAction, promptText } from '../../lib/ui.tsx';
 import type { RollPreset } from '../sheet/types.ts';
 import type { Actor, ActorSpirit, GameView, SustainedSpell } from '../../../shared/types.ts';
 import './magic.css';
@@ -86,7 +87,7 @@ function useHintsToggle(): [boolean, (v: boolean) => void] {
 const biText = (n: { fr?: string; en?: string } | null | undefined): string => (getLang() === 'en' ? n?.en || n?.fr : n?.fr || n?.en) || '';
 
 /** Sustained spells (SR5 p. 282): caster, Force, hits, targets, turns left for a Permanent one, « Drop ». */
-function SustainedList({ game, list, canDrop, showCaster, helpers }: { game: GameView; list: SustainedSpell[]; canDrop: (s: SustainedSpell) => boolean; showCaster?: boolean; helpers?: SpiritActor[] }) {
+function SustainedList({ game, list, canDrop, showCaster, helpers, quicken }: { game: GameView; list: SustainedSpell[]; canDrop: (s: SustainedSpell) => boolean; showCaster?: boolean; helpers?: SpiritActor[]; quicken?: boolean }) {
   const name = (id: string) => (game.actors?.[id] as { name?: string } | undefined)?.name || '?';
   return (
     <table className="sr mg-sustained">
@@ -103,8 +104,15 @@ function SustainedList({ game, list, canDrop, showCaster, helpers }: { game: Gam
               {typeof s.turnsLeft === 'number' ? t('permanent in {n} Combat Turn(s)', { n: s.turnsLeft }) : ''}
               {s.by?.kind === 'spirit' ? ' ' + t('sustained by {spirit} ({n} turn(s))', { spirit: name(s.by.actorId), n: s.by.turnsLeft }) : ''}
               {s.by?.kind === 'focus' ? ' ' + t('sustained by a focus') : ''}
+              {s.by?.kind === 'quickened' ? ' ' + t('quickened ({n} karma)', { n: s.by.karma }) : ''}
             </td>
             <td>
+              {canDrop(s) && s.by?.kind !== 'quickened' && quicken && (
+                <Button small variant="ghost" onClick={async () => {
+                  const v = await promptText(t('Karma to spend on quickening {spell} (1 – {n}):', { spell: biText(s.name), n: s.force }), '1');
+                  if (v !== null) void send('magic/quicken', { sustainedId: s.id, karma: Number(v) }).catch(() => null);
+                }} title={t('The spell becomes permanent, without the −2 (SR5 p. 326)')}>{t('Quicken')}</Button>
+              )}
               {!s.by && canDrop(s) && (helpers || []).map((sp) => (
                 <Button small variant="ghost" key={sp.id} onClick={() => void send('magic/spiritSustain', { sustainedId: s.id, spiritId: sp.id }).catch(() => null)} title={t('The spirit sustains it for its Force in Combat Turns, instead of you (one service, SR5 p. 302)')}>
                   {t('Give to {name}', { name: sp.name })}
@@ -309,6 +317,30 @@ function FociPanel({ game, actor, own }: { game: GameView; actor: Actor; own: bo
   );
 }
 
+/** Metamagics (SR5 pp. 325-326): the actor's, with what the app applies. */
+function MetamagicPanel({ actor }: { actor: Actor }) {
+  const list = actor.magic?.metamagics || [];
+  if (!list.length) return null;
+  const status: Record<string, string> = { auto: tk('applied'), some: tk('partly applied'), gm: tk('GM') };
+  return (
+    <div className="mg-panel mg-metamagic">
+      <div className="mg-panel-title">
+        {t('Metamagics')} <Badge color="magenta">{t('grade {n}', { n: initiateGrade(actor) })}</Badge> <RuleRef rule="initiation" />
+      </div>
+      {list.map((n, i) => {
+        const d = metamagicDef(n);
+        return (
+          <div className="mg-mm" key={`${n}-${i}`}>
+            <b>{d ? t(d.name) : n}</b> {d ? <Badge color={d.auto === 'gm' ? 'dim' : 'cyan'}>{t(status[d.auto])}</Badge> : <Badge>{t('GM')}</Badge>}{' '}
+            {d ? <BookRef source="SR5" page={d.page} /> : null}
+            {d ? <div className="faint small">{t(d.rule)}</div> : null}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 /** Astral perception / projection (SR5 pp. 312-314): switches, the astral form's attributes, astral attack. */
 function AstralPanel({ game, actor, own }: { game: GameView; actor: Actor; own: boolean }) {
   const gm = isGM(game);
@@ -437,7 +469,7 @@ export function Cockpit({ game, actor }: { game: GameView; actor: Actor }) {
               <div className="mg-panel-title">
                 {t('Sustained spells: −{n} dice on all tests', { n: mySustained.length * SUSTAIN_PENALTY })} <RuleRef rule="spellcasting" />
               </div>
-              <SustainedList game={game} list={mySustained} canDrop={() => own} helpers={spiritsOf(game, actor.id).filter((sp) => sp.spirit.bound && sp.spirit.present !== false && sp.spirit.services > 0)} />
+              <SustainedList game={game} list={mySustained} canDrop={() => own} quicken={gm || hasMetamagic(actor, 'quickening')} helpers={spiritsOf(game, actor.id).filter((sp) => sp.spirit.bound && sp.spirit.present !== false && sp.spirit.services > 0)} />
             </>
           )}
           {onMe.length > 0 && (
@@ -450,6 +482,7 @@ export function Cockpit({ game, actor }: { game: GameView; actor: Actor }) {
       )}
       <AstralPanel game={game} actor={actor} own={own} />
       <FociPanel game={game} actor={actor} own={own} />
+      <MetamagicPanel actor={actor} />
       <SpiritsPanel game={game} actor={actor} own={own} onSummon={own && skillRating(actor, 'summoning') > 0 ? () => setSummoning(true) : null} onBanish={own && skillRating(actor, 'banishing') > 0 ? () => setBanishing(true) : null} />
       <div className="mg-grid">
         {(spells.length > 0 || hasSpellcasting) && (

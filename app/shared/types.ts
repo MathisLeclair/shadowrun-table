@@ -2293,7 +2293,7 @@ export interface PendingDrain {
 
 /** `entry.magic` of a magic log entry. */
 export interface MagicLogInfo {
-  event: 'cast' | 'drain' | 'drop' | 'summon' | 'spirit' | 'bind' | 'banish' | 'astral' | 'ritual';
+  event: 'cast' | 'drain' | 'drop' | 'summon' | 'spirit' | 'bind' | 'banish' | 'astral' | 'ritual' | 'quicken';
   actorId: ActorId;
   spellId?: string;
   force?: number;
@@ -2307,7 +2307,9 @@ export interface MagicLogInfo {
 }
 
 /** Who carries a sustained spell's −2: its caster, a bound spirit for some Combat Turns (SR5 p. 302), or a sustaining focus (p. 320). */
-export type SustainCarrier = { kind: 'caster' } | { kind: 'spirit'; actorId: ActorId; turnsLeft: number } | { kind: 'focus'; gearId: string };
+export type SustainCarrier = { kind: 'caster' } | { kind: 'spirit'; actorId: ActorId; turnsLeft: number } | { kind: 'focus'; gearId: string }
+  /** Quickened (SR5 p. 326): permanent, karma spent = its bonus against dispelling; nobody sustains it. */
+  | { kind: 'quickened'; karma: number };
 
 /** A spell being sustained (by its caster, a bound spirit or a sustaining focus). */
 export interface SustainedSpell {

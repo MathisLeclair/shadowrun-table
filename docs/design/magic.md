@@ -1,6 +1,7 @@
 # Magic flow — design (issue #7)
 
-Status: **partly built** (#12 foundation done). Each section ends with the sub-issue that builds it (list at the end). When a part
+Status: **built** — every sub-issue (#12–#23) is done; this page keeps the plan and the decisions. Facts live in
+[modules/magic.md](../modules/magic.md) and [rules/magic.md](../rules/magic.md). Each section ends with the sub-issue that builds it (list at the end). When a part
 lands, its facts move to `docs/modules/magic.md` (feature) and `docs/rules/magic.md` (rules), as for the Matrix, and
 this page keeps only what is still to do.
 
@@ -247,7 +248,10 @@ SR5 295-296: leader + participants, lodge or foci, Ritual Spellcasting + MAG [Fo
 participant, time in hours. A GM-started « ritual » panel that collects participants, rolls teamwork and applies
 drain to all. Lowest priority.
 
-## Metamagic effects — *#23 Metamagic*
+## Metamagic effects — *#23, done*
+
+Built 2026-11-28 (facts: [modules/magic.md](../modules/magic.md#metamagic)).
+
 
 Data-driven like `ECHOES`: `METAMAGICS` in `shared/magic.ts` (SR5 325-326 + Street Grimoire), applied where
 mechanical — Centering (reduce penalties with a metamagic skill), Shielding (+initiate grade dice vs spells as
@@ -277,4 +281,4 @@ Filed on GitHub 2026-11-28, all « Part of #7 ». Order: #12 first; #13 → #14,
 | #20 | Astral perception and projection, astral tokens and initiative (**done**) | #12 |
 | #21 | Foci: bonding, active foci, non-spellcasting foci, sustaining focus (**done**) | #12, #14 |
 | #22 | Ritual spellcasting (**done**) | #13 |
-| #23 | Metamagic effects | #13, #20 |
+| #23 | Metamagic effects (**done**) | #13, #20 |

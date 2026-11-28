@@ -10,7 +10,7 @@ import { cellDistance } from '/shared/combat.ts';
 import { hasLineOfSight } from '/shared/vision.ts';
 import {
   drainValue, drainOffset, drainAttr, maxForce, spellReach, isAreaSpell, isSustainable, spellCategory, spellResistance, combatSpellProfile,
-  RECKLESS_DV, SUSTAIN_PENALTY, OBJECT_RESISTANCE, aidSpiritType, focusKind, focusForce, focusCategory, focusWorks, type SpellCatalogInfo,
+  RECKLESS_DV, SUSTAIN_PENALTY, OBJECT_RESISTANCE, aidSpiritType, focusKind, focusForce, focusCategory, focusWorks, hasMetamagic, spellShapingMax, type SpellCatalogInfo,
 } from '/shared/magic.ts';
 import { itemLabel, categoryLabel } from '../sheet/common.tsx';
 import { ItemRef, RuleRef } from '../books/BookRef.tsx';
@@ -65,6 +65,7 @@ export default function CastModal({ game, actor, spellId, onClose }: { game: Gam
   const [modifier, setModifier] = useState(0);
   const [manualDv, setManualDv] = useState(2);
   const [sustain, setSustain] = useState(true);
+  const [shape, setShape] = useState(0);
   const [objectPool, setObjectPool] = useState('');
   const [aidId, setAidId] = useState('');
   const [focusId, setFocusId] = useState('');
@@ -87,7 +88,7 @@ export default function CastModal({ game, actor, spellId, onClose }: { game: Gam
   const center = area ? tokens.find((x) => x.id === centerId) || me : null;
   const dist = (a: Token | null | undefined, b: Token | null | undefined) => (a && b ? cellDistance(a, b, mpc) : null);
   const sorted = [...tokens].sort((a, b) => (dist(me, a) ?? 999) - (dist(me, b) ?? 999));
-  const inArea = (x: Token) => !!center && (dist(center, x) ?? 999) <= force + mpc;
+  const inArea = (x: Token) => !!center && (dist(center, x) ?? 999) <= Math.max(0, force + shape) + mpc;
   const los = (x: Token) => !me || !map || x.actorId === actor.id || hasLineOfSight(map, me, x);
   const offset = drainOffset(spell?.drain);
   const dv = spell ? (offset === null ? manualDv + (reckless ? RECKLESS_DV : 0) : drainValue(spell.drain, force, { reckless })) : null;
@@ -119,7 +120,7 @@ export default function CastModal({ game, actor, spellId, onClose }: { game: Gam
     setBusy(true);
     try {
       const r = await send<CastResult>('magic/cast', {
-        actorId: actor.id, spellId: spell.id, force, reckless, explode, modifier, mapId: map?.id, targetIds, sustain: sustainable && sustain, ...(objectPool ? { object: Number(objectPool) } : {}), ...(aid ? { aidSpiritId: aid.id } : {}), ...(sustainable && sustain && sustainer ? { sustainFocusId: sustainer.id } : {}),
+        actorId: actor.id, spellId: spell.id, force, reckless, explode, modifier, mapId: map?.id, targetIds, sustain: sustainable && sustain, ...(objectPool ? { object: Number(objectPool) } : {}), ...(aid ? { aidSpiritId: aid.id } : {}), ...(area && shape ? { shape } : {}), ...(sustainable && sustain && sustainer ? { sustainFocusId: sustainer.id } : {}),
         ...(area && center ? { area: { x: center.x, y: center.y } } : {}), ...(offset === null ? { drainDv: manualDv } : {}),
       });
       setResult(r);
@@ -205,7 +206,7 @@ export default function CastModal({ game, actor, spellId, onClose }: { game: Gam
           </div>
           <div className="field">
             <span className="field-label">{t('Pool')}</span>
-            <b className="mg-cast-dv">{spellcasting + mag + modifier + (aid?.spirit?.force || 0)}</b>
+            <b className="mg-cast-dv">{spellcasting + mag + modifier + (aid?.spirit?.force || 0) - (area ? Math.abs(shape) : 0)}</b>
             <span className="faint small">{t('Spellcasting {s} + Magic {m} (+ modifiers on the roll)', { s: spellcasting, m: mag })}</span>
           </div>
           <div className="field">
@@ -249,7 +250,14 @@ export default function CastModal({ game, actor, spellId, onClose }: { game: Gam
           {t('Drain is resisted with {wil} + {attr}; it becomes Physical if you get more than {mag} hits.', { wil: attrShort('WIL'), attr: second ? attrShort(second) : '?', mag })}
         </div>
 
-        <div className="mg-panel-title">{area ? t('Area: radius {r} m (Force)', { r: force }) : reach === 'self' ? t('Target: the caster') : reach === 'touch' ? t('Target: touch') : t('Targets: line of sight')}</div>
+        {area && (gm || hasMetamagic(actor, 'spellShaping')) && (
+          <div className="mg-cast-row">
+            <label className="field-label">{t('Spell Shaping (m)')}</label>
+            <NumberInput value={shape} min={-spellShapingMax(actor)} max={spellShapingMax(actor)} onChange={setShape} />
+            <span className="faint small">{t('−1 die per metre added or removed, up to {n} (SR5 p. 326)', { n: spellShapingMax(actor) })}</span>
+          </div>
+        )}
+        <div className="mg-panel-title">{area ? t('Area: radius {r} m (Force)', { r: Math.max(0, force + shape) }) : reach === 'self' ? t('Target: the caster') : reach === 'touch' ? t('Target: touch') : t('Targets: line of sight')}</div>
         {!map ? (
           <div className="muted small">{t('No map shown: the spell is cast without a target on the map.')}</div>
         ) : (

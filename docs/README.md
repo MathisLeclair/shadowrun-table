@@ -57,11 +57,11 @@ read the one you need, not all of them. Repo rules and commands: [AGENTS.md](../
 | [modules/multi-table.md](modules/multi-table.md) | table registry, migration, auth, admin API, zips |
 | [modules/demo-table.md](modules/demo-table.md) | public demo table: logins, refusals, caps, resets |
 
-## Designs (not built yet)
+## Designs
 
 | page | answers |
 |---|---|
-| [design/magic.md](design/magic.md) | magic flow (issue #7): what is still to build (cast, sustain, summon, astral, foci…), sub-issues |
+| [design/magic.md](design/magic.md) | magic flow (issue #7, built in #12–#23): plan, decisions, sub-issues |
 
 ## SR5 rules
 

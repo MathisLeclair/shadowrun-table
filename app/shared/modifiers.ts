@@ -18,7 +18,7 @@ import { derive, attr, armorTotal, armorValue, SKILL_BY_ID, SKILLS } from './sr5
 import { AFFLICTIONS } from './combat.ts';
 import type { ActorLike, Actor, AttrKey, CatalogBonus, ConditionState, Effect, EffectType, Formula, Modifier, ModifierType, ItemBonus, KnowledgeType, MatrixMode, SpellEffectEntry, SustainingEntry, Weapon } from './types.ts';
 import type { AttrKeyish, LimitKey, Derived } from './sr5.ts';
-import { focusKind, focusEffects, focusWorks } from './magic.ts';
+import { focusKind, focusEffects, focusWorks, metamagicEffects } from './magic.ts';
 
 /** Marker for the i18n checker: UI keys, rendered by the client with t(label). */
 const tk = (s: string): string => s;
@@ -585,6 +585,8 @@ export function collectModifiers(actor: ActorLike | null | undefined, lookup: Mo
     }
   }
   for (const ma of actor.martialArts || []) for (const tq of ma?.techniques || []) if (tq) add('martialArts', ma, find(SOURCE_FILES.techniques, tq), tq);
+  // Metamagics (shared/magic.ts metamagicEffects): Centering on Drain Resistance, Shielding on Counterspelling.
+  for (const mm of metamagicEffects(actor)) add('metamagics', { id: `mm-${mm.id}`, name: mm.name }, { name: mm.name, source: 'SR5', page: mm.page, effects: mm.effects as unknown as Effect[] });
   // Echoes: one source per echo taken (Attack Upgrade twice = two +1).
   ((actor as { magic?: { echoes?: unknown[] } }).magic?.echoes || []).forEach((name, i) => {
     const def = echoDef(name);

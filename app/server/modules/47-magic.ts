@@ -13,7 +13,7 @@ import {
   isAwakened, DRAIN_ATTRS, drainAttr, drainValue, spellDrainType, spellReach, isAreaSpell, spellCategory, maxForce, RECKLESS_DV,
   isSustainable, spellEffects, combatSpellProfile, MIN_DRAIN, spellResistance, NO_AURA_KINDS, OBJECT_RESISTANCE,
   spiritStats, traditionSpiritTypes, optionalPowerCount, BINDING_DRAMS, isReagent, reagentDrams, aidSpiritType,
-  canPerceiveAstral, canProjectAstral, focusKind, focusForce, focusCategory, focusWorks, teamwork, ritualDrain,
+  canPerceiveAstral, canProjectAstral, focusKind, focusForce, focusCategory, focusWorks, teamwork, ritualDrain, hasMetamagic, spellShapingMax,
 } from '../../shared/magic.ts';
 import { spellCatalogInfo } from '../lib/spells.ts';
 import { addSpellAttack, addAstralAttack } from './33-attacks.ts';
@@ -72,6 +72,7 @@ export function syncSustained(state: TableState): void {
     }
     // A sustaining focus: mirrored on the caster with its id; the modifiers skip the −2 while the focus works (SR5 p. 320).
     if (s.by?.kind === 'focus') (sustaining[caster.id] ||= []).push({ id: s.id, name: s.name, force: s.force, focusId: s.by.gearId });
+    else if (s.by?.kind === 'quickened') { /* permanent: nobody carries a −2 */ }
     else if (!s.by || s.by.kind === 'caster') (sustaining[caster.id] ||= []).push({ id: s.id, name: s.name, force: s.force });
     else if (s.by.kind === 'spirit' && state.actors?.[s.by.actorId]) (sustaining[s.by.actorId] ||= []).push({ id: s.id, name: s.name, force: s.force });
     const spell = (caster.spells || []).find((x) => x.id === s.spellId) || { name: s.name.en || s.name.fr, nameEn: s.name.en, nameFr: s.name.fr };
@@ -156,6 +157,8 @@ type CastPayload = {
   aidSpiritId?: unknown;
   /** A sustaining focus (gear id) sustains the spell instead of the caster (SR5 p. 320). */
   sustainFocusId?: unknown;
+  /** Spell Shaping (SR5 p. 326): metres added to (or taken from) an area spell's radius, −1 die each. */
+  shape?: unknown;
   /** The spell targets an object: its Object Resistance dice pool (3, 6, 9, 15: SR5 p. 295). */
   object?: unknown;
 };
@@ -177,7 +180,7 @@ function castTargets(ctx: ActionContext, a: Actor, spell: Spell, force: number, 
     const pt = isObj(p.area) ? { x: Math.round(Number(p.area.x)), y: Math.round(Number(p.area.y)) } : null;
     const first = targets[0] ? tokenOf(map, targets[0].id) : null;
     const c = pt && Number.isFinite(pt.x) && Number.isFinite(pt.y) ? pt : first ? { x: first.x, y: first.y } : null;
-    if (c) area = { ...c, radius: force };
+    if (c) area = { ...c, radius: Math.max(0, force + (Math.round(Number(p.shape)) || 0)) };
   }
   if (ctx.isGM) return { targets, area };
   if (reach === 'self' && targets.some((t) => t.id !== a.id)) ctx.fail('{spell} can only target its caster', { spell: biName(spell) });
@@ -223,6 +226,13 @@ export function castSpell(ctx: ActionContext, p: CastPayload) {
     if (!(given >= 2 && given <= 40)) ctx.fail('Enter the Drain Value of {spell} (formula « {formula} »)', { spell: biName(spell), formula: spell.drain || '—' });
     dv = given + (reckless ? RECKLESS_DV : 0);
   }
+  // Spell Shaping (SR5 p. 326): an area spell, the metamagic, at most Magic (+ a spell shaping focus) metres; −1 die each.
+  const shape = Math.round(Number(p.shape)) || 0;
+  if (shape) {
+    if (!isAreaSpell(spell.range)) ctx.fail('Only an area spell can be shaped');
+    if (!ctx.isGM && !hasMetamagic(a, 'spellShaping')) ctx.fail('{name} does not know Spell Shaping', { name: a.name });
+    if (Math.abs(shape) > spellShapingMax(a)) ctx.fail('Spell Shaping: at most {n} metres', { n: spellShapingMax(a) });
+  }
   const { targets, area } = castTargets(ctx, a, spell, force, p);
   const cat = spellCategory(spell.category);
   // Mana spells only affect living beings and astral forms (SR5 p. 282): no drone, IC or host.
@@ -248,7 +258,7 @@ export function castSpell(ctx: ActionContext, p: CastPayload) {
   const roll = performRoll(ctx, {
     actorId: a.id, skillId: 'spellcasting', label: spellRollLabel(spell.nameFr || spell.name), limit: force, explode: !!p.explode,
     modifier: p.modifier, conditions, ignore: p.ignore, ...(secret ? { secret: true } : {}),
-  }, { bonus, logExtra: { labelI18n: { key: tk('Spell — {spell} (Force {force})'), params: { spell: biName(spell), force } } } });
+  }, { bonus: [...bonus, ...(shape ? [{ label: 'spell shaping', value: -Math.abs(shape) }] : [])], logExtra: { labelI18n: { key: tk('Spell — {spell} (Force {force})'), params: { spell: biName(spell), force } } } });
   if (aid?.spirit) {
     aid.spirit.services -= 1;
     logMagic(ctx, a, tk('{spirit} aids the spell: +{n} dice (one service).'), { spirit: aid.name, n: aid.spirit.force }, { event: 'spirit', actorId: aid.id }, secret);
@@ -976,6 +986,32 @@ const actions: Record<string, ActionDef> = {
         }
       }
       return { left: n };
+    },
+  },
+
+  /**
+   * { sustainedId, karma } (the caster's owner or GM) — Quickening (SR5 p. 326): 1 … Force karma spent, the spell becomes
+   * permanent (no −2; the karma is its bonus against dispelling).
+   */
+  'magic/quicken': {
+    role: 'any',
+    handler(ctx: ActionContext, p: { sustainedId?: unknown; karma?: unknown } = {}) {
+      const s = slice(ctx.state).sustained[str(p.sustainedId, 80)];
+      if (!s) ctx.fail('This spell is no longer sustained');
+      const a = actorOf(ctx, s.casterId);
+      if (!ctx.isGM && !hasMetamagic(a, 'quickening')) ctx.fail('{name} does not know Quickening', { name: a.name });
+      if (s.by?.kind === 'quickened') ctx.fail('This spell is already quickened');
+      const k = Math.round(Number(p.karma));
+      if (!Number.isFinite(k) || k < 1 || k > s.force) ctx.fail('Quickening costs 1 to {n} karma (the spell’s Force)', { n: s.force });
+      if ((a.karma || 0) < k) ctx.fail('{name} does not have {n} karma', { name: a.name, n: k });
+      a.karma -= k;
+      a.history = Array.isArray(a.history) ? a.history : [];
+      a.history.push({ ts: ctx.now, text: tk('Quickening: {spell} ({n} karma)'), i18n: { key: tk('Quickening: {spell} ({n} karma)'), params: { spell: s.name, n: k } }, karma: -k });
+      s.by = { kind: 'quickened', karma: k };
+      delete s.turnsLeft;
+      syncSustained(ctx.state);
+      logMagic(ctx, a, tk('{name} quickens {spell} with {n} karma: the spell is permanent.'), { name: a.name, spell: s.name, n: k }, { event: 'quicken', actorId: a.id, spellId: s.spellId, force: s.force }, hiddenCaster(a));
+      return { karma: k };
     },
   },
 
