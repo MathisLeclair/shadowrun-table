@@ -51,6 +51,13 @@ Page references used by the 📖 chips: Matrix initiative SR5 231, Matrix damage
   weapons, exotic ranged; not bows, thrown or implant weapons), unless the GM ticked **Wireless off** on the item.
   Device Rating (SR5 p. 234): weapons 2; cyberware by grade, standard / used 2, alpha 3, beta 4, delta 5, gamma / omega 6
   (Chummer grades).
+- PAN mode of an NPC (`npc.pan`, sheet « PNJ » tab, GM only; `panMode`): online by default (the PAN is visible, the
+  common case); **offline** = wireless off, nothing on the Matrix — players cannot target the persona or its devices
+  and nothing is offered around (only a direct connection would reach it); **running silent** (SR5 p. 235) = a
+  perception with no target can only reveal « an icon is running silent nearby » (`silent-icon:`), and finding it is a
+  Matrix Perception on the NPC opposed by Logic + Sleaze (a commlink has no Sleaze): the first net hit spots it
+  (`persona.silentSpotted`, lost when jacking out), the others go to the GM as usual. Until spotted, other actions on
+  it or its devices are refused.
 - Matrix Perception on a character (SR5 p. 235, one piece of information per hit): the GM picks, for each hit, one
   device not seen yet or the commlink's ratings (or answers freely). Only spotted devices can be targeted by players.
   Running silent (opposed test) is not modelled: the GM can apply it with the roll's modifier.

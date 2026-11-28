@@ -184,6 +184,7 @@ function applyPatch(ctx: ActionContext, a: Actor, patch: unknown): void {
       if (!ctx.isGM && k === 'edge' && Object.keys(v).some((x) => x !== 'current')) ctx.fail('Only current Edge can be changed');
       loose(a)[k] = { ...(isObj(loose(a)[k]) ? loose(a)[k] : {}), ...v };
       if (k === 'condition') for (const x of ['physical', 'stun', 'overflow'] as const) a.condition[x] = clampInt(a.condition[x], 0, 99);
+      if (k === 'npc' && a.npc && a.npc.pan !== 'silent' && a.npc.pan !== 'offline') delete a.npc.pan; // online = absent (45-matrix)
       if (k === 'attributes') for (const [ak, av] of Object.entries(a.attributes)) if (av !== null && av !== undefined) a.attributes[ak as AttrKey] = ak === 'ESS' ? Math.round(Math.max(0, Math.min(6, Number(av) || 0)) * 1000) / 1000 : clampInt(av, 0, 20);
     } else {
       const val = sanitizeTop(k, v, a, ctx);
@@ -1836,6 +1837,7 @@ const mod: ServerModule<ExpressApp> = {
       if (a.npc) {
         delete a.npc.tactics;
         delete a.npc.loot;
+        delete a.npc.pan;
       }
       if (own.has(id)) continue;
       if (a.type === 'npc') {
