@@ -167,7 +167,7 @@ tr.sh-skill:hover .sh-die-btn { color: var(--pc); }
 
 /* inventory (tab « Inventaire »): one card per place, drag & drop between cards */
 .sh-inventory { display: flex; flex-direction: column; gap: 10px; }
-.sh-inv-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 10px; align-items: start; }
+.sh-inv-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 10px; align-items: start; }
 .sh-inv-card { background: var(--panel2); border: 1px solid var(--line); border-left: 3px solid var(--pc); border-radius: 8px; padding: 8px 10px; min-width: 0; transition: border-color .12s, background .12s; }
 .sh-inv-card.sh-inv-bag { border-left-color: var(--amber); } .sh-inv-card.sh-inv-vehicle { border-left-color: var(--blue); }
 .sh-inv-card.sh-inv-safehouse { border-left-color: var(--violet); } .sh-inv-card.sh-inv-other { border-left-color: var(--line2); }
