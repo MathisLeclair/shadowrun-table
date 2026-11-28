@@ -757,7 +757,7 @@ function locationsOf(c: Element): Locations {
 /**
  * Gear node with children (`kids`: not included in it) that holds them like a bag: its name says so (backpack, case, sac…),
  * or none of the children is an accessory of it (a capacity slot « [n] », a category the parent takes as add-on, the
- * parent's own category: rope of a grapple gun, refills of a medkit). Matrix devices never are.
+ * parent's own category other than Custom: rope of a grapple gun, refills of a medkit). Matrix devices never are.
  */
 function isBagGear(g: Element, kids: Element[]): boolean {
   if (!kids.length || MATRIX_CATS.test(g.val('category'))) return false;
@@ -766,7 +766,7 @@ function isBagGear(g: Element, kids: Element[]): boolean {
   const addons = new Set([...g.all('addoncategory'), ...(findDataItem('gear', { id: sourceOf(g) })?.all('addoncategory') || [])].map((x) => x.text.trim().toLowerCase()));
   return kids.every((k) => {
     const cat = k.val('category').trim().toLowerCase();
-    return !k.val('capacity').includes('[') && cat !== own && !addons.has(cat);
+    return !k.val('capacity').includes('[') && (cat !== own || cat === 'custom') && !addons.has(cat);
   });
 }
 

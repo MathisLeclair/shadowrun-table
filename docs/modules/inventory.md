@@ -96,7 +96,7 @@ location of an app container, matched by guid then name), the active clip's coun
 Chummer bags (gear holding gear: a backpack and its contents, `parse.ts pushGear` / `isBagGear`): a gear node with
 children (not `includedinparent`) is a bag when its name (`gearname` or `name`) guesses kind 'bag' (backpack, case,
 sac…), or when none of its children is an accessory of it — an accessory has a capacity slot « [n] », a category the
-parent lists in `<addoncategory>` (file or data), or the parent's own category (rope of a grapple gun, medkit refills);
+parent lists in `<addoncategory>` (file or data), or the parent's own category other than Custom (rope of a grapple gun, medkit refills);
 matrix devices never are. The bag stays a gear item (cost, notes, its own location) and gets a container
 `chumgear_<guid>` (kind 'bag', `itemId` = that item's id); its children are placed in it without the « in {bag} » note
 (bags in bags nest the same way). Accessories stay flat items noted « in {parent} », at their parent's location (rope

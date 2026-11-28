@@ -709,7 +709,7 @@ console.log('Chummer bags (gear with contents → sub-inventory)');
     const top = doc.root.child('gears')!.all('gear').map((g) => g.val('guid'));
     assert.ok(top.includes(G(2)), 'lighter back at the top level');
     const packNode = doc.root.child('gears')!.all('gear').find((g) => g.val('guid') === G(1))!;
-    const inPack = packNode.child('children')!.all('gear').map((g) => g.val('name'));
+    const inPack = packNode.child('children')!.all('gear').map((g) => g.val('gearname') || g.val('name')); // Custom Item without Chummer's data
     assert.ok(inPack.includes('Ammo: APDS') && !inPack.includes('Lighter (Good)'), inPack.join(', '));
     assert.equal(doc.root.child('gearlocations')?.all('location').length || 0, 0, 'a bag is no Chummer location');
     const back = parseChum5(out.xml, { keepXml: false, lang: 'en' }).actor;
