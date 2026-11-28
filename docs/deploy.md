@@ -177,7 +177,7 @@ To enable it on the VPS:
 3. In `/admin`, tick **Masquer de l'accueil** on every real table (Project Lazarus, the friend's table). The picker then
    lists only the demo and `/` redirects to it; real tables stay reachable by their link and still need their password.
 4. Once HTTPS is set up through Caddy (a host name → `http://127.0.0.1:8095`), set `SR_TRUST_PROXY=1` in `.env` so the
-   per-IP login limits see the visitors' real address, and replace the placeholder link in the root `README.md`.
+   per-IP login limits see the visitors' real address, and switch the demo link in the root `README.md` from the raw IP to the HTTPS host.
 
 `SR_DEMO_TABLE` only ever creates a table: if the id already belongs to a real table, it is left untouched and the log
 says so. To remove the demo: delete `SR_DEMO_TABLE` from `.env` and delete the table in `/admin`. The map-library copy in
