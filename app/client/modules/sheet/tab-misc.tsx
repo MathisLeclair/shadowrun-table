@@ -345,7 +345,7 @@ export function GearTab({ s }: { s: SheetCtx }) {
       : <div className="muted small">{t('No gear.')}</div>}
     {vehicles.length > 0 && <>
       <h4 className="section-title">{t('Vehicles & drones')}</h4>
-      <div className="sh-cards">
+      <div className="sh-cards sh-cards-wide">
         {vehicles.map((v) => <VehicleCard key={v.id} s={s} v={v} />)}
       </div>
     </>}
@@ -358,12 +358,12 @@ export function GearTab({ s }: { s: SheetCtx }) {
 function LifestylesView({ game, actor, showPaid }: { game: GameView; actor: Actor; showPaid: boolean }) {
   const list = actor.lifestyles || [];
   if (!list.length) return <div className="muted small">{t('No lifestyle.')}</div>;
-  return <div className="sh-cards sh-lifestyles">
+  return <div className="sh-cards sh-cards-wide">
     {list.map((l) => {
       const buttons = showPaid && game;
       const side = !!(l.points || (l.qualities || []).length || l.notes || buttons);
-      return <div className={'sh-card sh-lifestyle' + (l.primary ? ' primary' : '')} key={l.id}>
-        <div className="sh-lifestyle-main">
+      return <div className={'sh-card sh-card-split sh-lifestyle' + (l.primary ? ' primary' : '')} key={l.id}>
+        <div className="sh-card-main">
           <div className="row spread wrap sh-lifestyle-head">
             <span className="sh-lifestyle-name"><b>{l.name || lifestyleBaseLabel(l.base)}</b>{' '}<ItemRef item={l} /></span>
             <span className="row gap-s">
@@ -377,7 +377,7 @@ function LifestylesView({ game, actor, showPaid }: { game: GameView; actor: Acto
           </div>
           {(l.qualities || []).length > 0 && <div className="faint small" title={t('Base cost, options as % of the base cost, flat-price options')}>{lifestyleBreakdown(l)}</div>}
         </div>
-        {side && <div className="sh-lifestyle-side">
+        {side && <div className="sh-card-side">
           {l.points && <div className="faint small">
             {t('Comforts {c} · Security {s} · Neighborhood {n}', { c: l.points.comforts ?? '—', s: l.points.security ?? '—', n: l.points.neighborhood ?? '—' })}
           </div>}
