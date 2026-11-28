@@ -12,7 +12,7 @@ import {
   matrixInitiative, dumpshock, hostAttributes, defaultIcFor, icAttackPool, skillRating, loadedProgramIds,
   OS_TICK_MS, DEVICE_LINK_KINDS, DEVICE_CMD_LABELS, deviceWorks, type MatrixActionDef, type MatrixTargetKind,
   panMaster, panDevices, panDefensePool, panDeviceRating, type PanDevice, type PanMaster,
-  SEARCH_LEVELS, searchLevel, searchMinutes,
+  SEARCH_LEVELS, searchLevel, searchMinutes, panMode,
 } from '../../shared/matrix.ts';
 import { uid, deepClone, slug } from '../../shared/util.ts';
 import { cleanConditions } from '../../shared/modifiers.ts';
@@ -47,6 +47,8 @@ interface Target {
   mark?: MatrixMarkOnMe;
   /** PAN device of a character (kind 'pan'): its definition and the owner's commlink. */
   pan?: { device: PanDevice; master: PanMaster | null };
+  /** An NPC running silent this decker has not spotted yet: Matrix Perception is opposed by Logic + Sleaze (SR5 p. 235). */
+  silent?: boolean;
 }
 /** A defense pool (null = no opposition, pending = the GM rolls). */
 type Defense = { pending?: false; pool: number; parts: Array<{ label: string; value: number; key?: string; params?: I18nParams }>; labelMsg: MsgLike } | { pending: true } | null;
@@ -336,6 +338,7 @@ function goOffline(ctx: ActionContext, actor: Actor, persona: Persona, { dumped 
   persona.linkLocked = null;
   persona.pendingAssist = null;
   persona.hostConverged = null;
+  persona.silentSpotted = []; // spotted silent icons are lost when you jack out (SR5 p. 235)
   if (dumped) {
     const s = applyDumpshock(ctx, actor, persona, mode);
     if (s) out.push(s);
@@ -517,7 +520,15 @@ function revealOptions(state: TableState, actor: Actor, persona: Persona, action
       const ids = new Set((state.combat.entries || []).filter((e) => e.actorId && !e.out).map((e) => e.actorId as ActorId));
       for (const id of ids) {
         const npc = state.actors?.[id];
-        if (npc && npc.type === 'npc' && !npc.hidden) out.push(...panOptions(persona, npc));
+        if (!npc || npc.type !== 'npc' || npc.hidden) continue;
+        const mode = panMode(npc);
+        if (mode === 'offline') continue; // wireless off: not on the Matrix
+        if (mode === 'silent' && !(persona.silentSpotted || []).includes(npc.id)) {
+          // Running silent: a hit only tells that a silent icon is around (SR5 p. 235); the GM sees whose.
+          out.push({ id: `silent-icon:${npc.id}`, group: { t: 'Icons running silent' }, label: { t: 'An icon is running silent nearby' }, detail: npc.name });
+          continue;
+        }
+        out.push(...panOptions(persona, npc));
       }
     }
     return out;
@@ -607,6 +618,7 @@ function applyReveal(state: TableState, actor: Actor, persona: Persona, optionId
   }
   const owner = state.actors?.[a];
   if (!owner) return false;
+  if (kind === 'silent-icon') return true; // information only: the decker must still find it (Perception on them, opposed)
   if (kind === 'pan-master') {
     const m = masterOf(owner);
     if (!m) return false;
@@ -827,6 +839,25 @@ function knows(host: Host, actorIds: string[], what: 'stats' | 'ic' | 'files' | 
 }
 
 /**
+ * An NPC's PAN mode for a decker's action on them (SR5 p. 235). Offline: nothing on the Matrix (players are refused).
+ * Silent, not spotted yet: only Matrix Perception on their persona (opposed) can find them → returns true.
+ */
+function panGate(ctx: ActionContext, persona: Persona, owner: Actor, action: MatrixActionDef, { device = false }: { device?: boolean } = {}): boolean {
+  const mode = panMode(owner);
+  if (mode === 'online') return false;
+  if (mode === 'offline') {
+    if (!ctx.isGM) ctx.fail('No icon of {name} on the Matrix: their PAN is offline.', { name: owner.name });
+    return false;
+  }
+  if ((persona.silentSpotted || []).includes(owner.id)) return false;
+  if (action.id !== 'matrixPerception' || device) {
+    if (!ctx.isGM) ctx.fail('You have not spotted {name}’s icon: it may be running silent (Matrix Perception on them first).', { name: owner.name });
+    return false;
+  }
+  return true;
+}
+
+/**
  * Resolve p.targetId into { kind, key, name, nameMsg, host?, ic?, device?, file?, actor?, persona?, source? }.
  * name = French display (stored on marks), nameMsg = the same as a message param (string or { t, params }).
  * Formats: host:<id> · ic:<host>:<id> · device:<host>:<id> · file:<host>:<id> · persona:<actorId> · manual · mark:<sourceId>
@@ -890,10 +921,12 @@ function resolveTarget(ctx: ActionContext, persona: Persona, action: MatrixActio
     t.persona = target.matrix ? ensurePersona(ctx.state, target) : null;
     t.key = `persona:${target.id}`;
     t.nameMsg = target.name;
+    t.silent = panGate(ctx, persona, target, action);
   } else if (kind === 'pan') {
     const owner = ctx.state.actors?.[a];
     if (!owner || (!ctx.isGM && owner.type === 'npc' && owner.hidden)) return ctx.fail('Persona not found');
     if (owner.id === persona.actorId) ctx.fail('You cannot target yourself');
+    panGate(ctx, persona, owner, action, { device: true });
     const device = panDevices(owner).find((d) => d.id === b);
     if (!device) return ctx.fail('Device not found');
     if (own && !persona.scans?.[owner.id]?.devices?.some((d) => d.id === device.id)) ctx.fail('Spot this device first (Matrix Perception on its owner)');
@@ -923,6 +956,11 @@ function withCommlink(actor: Actor): Actor {
 
 /** Defense pool for an action against a target, or null (no opposition) / { pending: true } (GM to roll). labelMsg = who defends. */
 function defenseFor(ctx: ActionContext, action: MatrixActionDef, target: Target, p: MatrixActionPayload): Defense {
+  if (target.silent && action.id === 'matrixPerception') {
+    // Finding an icon running silent: Opposed Computer + Intuition [Data Processing] v. Logic + Sleaze (SR5 p. 235).
+    if (!target.actor!.attributes) return { pending: true };
+    return { ...(personaDefensePool(withCommlink(target.actor!), target.persona, ['LOG', 'sleaze'], action.id) as Loose), labelMsg: target.actor!.name } as Defense;
+  }
   const d = action.defense;
   if (!d) return null;
   if ('fixed' in d && d.fixed) return { pool: d.fixed, parts: [{ label: 'GOD', value: d.fixed }], labelMsg: { t: 'GOD' } };
@@ -1255,9 +1293,18 @@ function performAction(ctx: ActionContext, actor: Actor, persona: Persona, actio
         break;
       case 'matrixPerception': {
         // One piece of information per net hit (SR5 p. 241): the GM picks what the decker learns.
-        newReveal(ctx, actor, persona, action.id, target, r.hits);
-        const params = { n: r.hits, who: actor.name };
-        outcomes.push(r.hits === 1 ? { t: '{n} hit: the GM picks what {who} learns.', params } : { t: '{n} hits: the GM picks what {who} learns.', params });
+        let hits = dr ? net : r.hits;
+        if (target.silent && target.actor) {
+          // The first net hit finds the icon running silent; the others are used as usual (SR5 p. 235).
+          persona.silentSpotted = [...new Set([...(persona.silentSpotted || []), target.actor.id])];
+          outcomes.push({ t: '{who} spots {target}, running silent.', params: { who: actor.name, target: tgt } });
+          hits -= 1;
+        }
+        if (hits > 0) {
+          newReveal(ctx, actor, persona, action.id, target, hits);
+          const params = { n: hits, who: actor.name };
+          outcomes.push(hits === 1 ? { t: '{n} hit: the GM picks what {who} learns.', params } : { t: '{n} hits: the GM picks what {who} learns.', params });
+        }
         break;
       }
       case 'matrixSearch': {

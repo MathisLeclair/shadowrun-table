@@ -835,6 +835,8 @@ export interface NpcInfo {
   tactics?: string;
   /** Markdown, GM only (stripped for players). */
   loot?: string;
+  /** Their PAN on the Matrix (GM only): absent / 'online' (not stored), 'silent' = running silent, 'offline' = wireless off. */
+  pan?: 'online' | 'silent' | 'offline';
 }
 
 /** Downtime training in progress (`actor.training`, owner: 50-training.js). */
@@ -2162,6 +2164,8 @@ export interface Persona {
   hostConverged: string | null;
   /** What Matrix Perception revealed on other characters' icons, by target actor id. */
   scans?: Record<ActorId, MatrixScan>;
+  /** Characters running silent this decker spotted (lost when jacking out). */
+  silentSpotted?: ActorId[];
 }
 
 /** Device of a character's PAN revealed by Matrix Perception (a copy of its names: the decker keeps what was seen). */
@@ -2304,7 +2308,7 @@ export interface MatrixReveal {
 
 /**
  * One thing the GM can reveal. Perception (icons): host-stats:<host> · ic:<host>:<ic> · file:<host>:<file> ·
- * device:<host>:<device> · pan:<owner>:<item> · pan-master:<owner>. Search (information): host-visible:<host> ·
+ * device:<host>:<device> · pan:<owner>:<item> · pan-master:<owner> · silent-icon:<owner>. Search (information): host-visible:<host> ·
  * answer-file:<host>:<file>.
  */
 export interface RevealOption {

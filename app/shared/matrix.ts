@@ -712,6 +712,13 @@ export function isMatrixDevice(g: { name?: string; category?: string }): boolean
   return /^(commlinks?|cyberdecks?)$/i.test(cat) || /\b(commlink|cyberdeck)\b/i.test(String(g.name || ''));
 }
 
+export type PanMode = 'online' | 'silent' | 'offline';
+/** An NPC's PAN on the Matrix (SR5 p. 235): online by default, running silent, or offline (wireless off: not on the Matrix). */
+export function panMode(actor: ActorLike | null | undefined): PanMode {
+  const p = (actor?.npc as { pan?: unknown } | null | undefined)?.pan;
+  return actor?.type === 'npc' && (p === 'silent' || p === 'offline') ? p : 'online';
+}
+
 /** The commlink / deck behind a character's persona: the sheet's Matrix device, else their best commlink or cyberdeck. */
 export function panMaster(actor: ActorLike | null | undefined, stats?: GearMatrixStats): PanMaster | null {
   const m = actor?.matrix as Record<string, unknown> | null | undefined;

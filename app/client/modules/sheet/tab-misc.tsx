@@ -596,6 +596,14 @@ export function NpcTab({ s, game }: { s: SheetCtx; game: GameView }) {
       </div>
       <Toggle value={!!npc.grunt} onChange={(v) => setN({ grunt: v })} label={t('Grunt (group monitor)')} />
       <Toggle value={!!actor.hidden} onChange={(v) => s.update({ hidden: v })} label={t('Hidden from players')} />
+      <label className="field" title={t('Online: deckers see their PAN. Running silent: a Matrix Perception must find it first (opposed by Logic + Sleaze). Offline: wireless off, nothing on the Matrix (SR5 p. 235).')}>
+        <span className="field-label">{t('PAN (Matrix)')}</span>
+        <Select
+          value={npc.pan || 'online'}
+          options={[{ value: 'online', label: t('Online') }, { value: 'silent', label: t('Running silent') }, { value: 'offline', label: t('pan::Offline') }]}
+          onChange={(v) => setN({ pan: v as 'online' | 'silent' | 'offline' })}
+        />
+      </label>
       <label className="field">
         <span className="field-label">{t('Type')}</span>
         <Select value={actor.type} options={[{ value: 'npc', label: t('NPC') }, { value: 'pc', label: t('PC') }]} onChange={(v) => s.update({ type: v })} />

@@ -4,7 +4,7 @@ import {
   programId, detectAgents, availablePrograms, deckStats, actionPool, matrixInitiative, matrixMonitor, ACTION_BY_ID,
   ACTIONS, PROGRAMS, IC_TYPES, hostAttributes, osLevel, dumpshock, programSlots, isPermutation, agentInitiative,
   ACTION_CATS, ACTION_TYPES, TARGET_KIND_LABELS, HOST_PRESETS, MODE_LABELS, ASDF_LABELS, nextStepHints, DEVICE_CMD_LABELS,
-  markPenalty, convergenceAt, hasMatrixQuality, personaDefensePool, biofeedbackDice, OS_MAX, panDevices, panMaster, panDefensePool, searchMinutes, isMatrixDevice,
+  markPenalty, convergenceAt, hasMatrixQuality, personaDefensePool, biofeedbackDice, OS_MAX, panDevices, panMaster, panDefensePool, searchMinutes, isMatrixDevice, panMode,
 } from '../shared/matrix.ts';
 import type { HintHost, PersonaLike, PoolPart } from '../shared/matrix.ts';
 import type { Host, HostDevice, HostFile, MatrixAgent, MatrixMark, MatrixState, PlayerHostView } from '../shared/types.ts';
@@ -619,6 +619,54 @@ try {
     ok(quiet && quiet.options.length === 0, `no target outside a fight: nothing for the app to reveal, the GM answers (${quiet?.options.map((o) => o.id).join(', ')})`);
     await gm.send('matrix/dropReveal', { revealId: quiet.id });
     await gm.send('matrix/hostUpdate', { hostId: 'host_hollow_pine', patch: { visible: true } });
+
+    // PAN modes (SR5 p. 235): online by default; offline = wireless off, not on the Matrix; silent = must be found first
+    ok(panMode(gm.state.actors[npcId]) === 'online', 'an NPC PAN is online by default');
+    const pending = () => Object.values(M().reveals || {});
+    const dropAll = async () => { for (const r of pending()) await gm.send('matrix/dropReveal', { revealId: r.id }); };
+    await dropAll();
+    await gm.send('actor/update', { actorId: npcId, patch: { npc: { pan: 'offline' } } });
+    await settle();
+    ok(gm.state.actors[npcId].npc?.pan === 'offline' && (pl.state.actors[npcId] as any)?.npc?.pan === undefined, 'the PAN mode is stored for the GM, never sent to players');
+    await expectFail(pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'matrixPerception', targetId: `persona:${npcId}` }), /PAN is offline/, 'offline PAN: no icon to look at');
+    await expectFail(pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'hackOnTheFly', targetId: `pan:${npcId}:${gun.id}` }), /PAN is offline/, 'offline PAN: its devices cannot be hacked');
+    await gm.send('combat/start', { includeMapTokens: false });
+    await gm.send('combat/add', { actorIds: ['pc_bricks', npcId] });
+    await gm.send('matrix/testDice', { mode: 'actor' });
+    await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'matrixPerception', targetId: 'none' });
+    await settle();
+    ok(!pending().some((r) => r.options.some((o) => o.id.includes(npcId))), 'offline PAN: nothing offered around');
+    await dropAll();
+
+    await gm.send('actor/update', { actorId: npcId, patch: { npc: { pan: 'silent' } } });
+    await pl.send('matrix/forgetScan', { actorId: 'pc_bricks', targetId: npcId });
+    await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'matrixPerception', targetId: 'none' });
+    await settle();
+    const around = pending().flatMap((r) => r.options.map((o) => o.id));
+    ok(around.includes(`silent-icon:${npcId}`) && !around.some((id) => id.startsWith(`pan:${npcId}`) || id === `pan-master:${npcId}`), `silent PAN: only « an icon is running silent nearby » (${around.join(', ')})`);
+    await dropAll();
+    await expectFail(pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'hackOnTheFly', targetId: `persona:${npcId}` }), /running silent/, 'silent PAN: not hackable before it is spotted');
+    res = await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'matrixPerception', targetId: `persona:${npcId}` });
+    await settle();
+    const sp = [...gm.state.log].reverse().find((e) => e.kind === 'matrix' && e.matrix?.gm)!;
+    ok(res.success && sp.matrix?.gm?.defensePool === 2 + 0, `finding a silent icon is opposed by LOG 2 + Sleaze 0 of a commlink (got ${sp.matrix?.gm?.defensePool})`);
+    ok(P().silentSpotted?.includes(npcId), 'the first net hit spots the silent icon');
+    const srv2 = pending().find((r) => r.target === 'Garde Lazarus');
+    ok(srv2 && srv2.hits === res.roll.hits - 1, `the other net hits go to the GM (${srv2?.hits} of ${res.roll.hits})`);
+    ok(gm.state.log.some((e) => /Bricks spots Garde Lazarus, running silent\./.test(e.text || '')), 'log: spotted running silent');
+    await gm.send('matrix/reveal', { revealId: srv2!.id, optionIds: [`pan:${npcId}:${gun.id}`] });
+    res = await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'hackOnTheFly', targetId: `pan:${npcId}:${gun.id}`, marks: 1 });
+    ok(res.success, 'once spotted, its devices can be hacked');
+    await pl.send('matrix/disconnect', { actorId: 'pc_bricks' });
+    await settle();
+    ok(!(P().silentSpotted || []).includes(npcId), 'jacking out loses the spotted silent icon');
+    await pl.send('matrix/connect', { actorId: 'pc_bricks', mode: 'cold' });
+    await gm.send('actor/update', { actorId: npcId, patch: { npc: { pan: 'online' } } });
+    await settle();
+    ok(gm.state.actors[npcId].npc?.pan === undefined, 'back online: nothing stored');
+    await gm.send('combat/end', {});
+    await gm.send('matrix/testDice', { mode: null });
+    await dropAll();
 
     // Matrix Search (SR5 p. 241): threshold from the table, extra hits divide the base time, failure = full base time
     ok(searchMinutes('limited', 3) === 30 && searchMinutes('limited', 5) === 15 && searchMinutes('hidden', 2) === 720 && searchMinutes('public', 4) === 1 / 3, 'search time: base ÷ hits above the threshold');
