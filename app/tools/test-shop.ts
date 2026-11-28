@@ -533,19 +533,16 @@ try {
   r = await gm.send('shop/give', { actorId: 'pc_jane', items: [{ ref: offroad.id, target: { itemId: sc.id } }] }).catch((e) => e);
   ok(/already installed|Not enough slots/.test(r?.message || ''), 'same mod twice refused');
 
-  console.log('• martial arts (karma)');
+  console.log('• martial arts (karma, GM gifts — players learn them through training: tools/test-training.ts)');
   const ma = cat('martialarts').find((m) => m.name === 'Krav Maga') || cat('martialarts')[0];
   const [t1, t2] = ma.stats.techniques;
-  await rejects(jane.send('shop/martialArt', { actorId: 'pc_jane', styleId: ma.id, techniqueIds: [t1.id] }), /Not enough karma/, 'karma checked for players');
+  await rejects(jane.send('shop/martialArt', { actorId: 'pc_jane', styleId: ma.id, techniqueIds: [t1.id] }), /GM/, 'players cannot get a martial art from the shop directly');
   await gm.send('actor/update', { actorId: 'pc_jane', patch: { karma: 20 } });
-  r = await jane.send('shop/martialArt', { actorId: 'pc_jane', styleId: ma.id, techniqueIds: [t1.id, t2.id] });
-  await settle();
-  ok(r.status === 'pending' && r.karma === 12 && A(jane, 'pc_jane').karma === 20, 'player request pending: style 7 (first technique included) + 5');
-  await rejects(jane.send('shop/martialArt', { actorId: 'pc_jane', styleId: ma.id, techniqueIds: [t1.id] }), /already waiting/, 'one pending request per style');
-  await gm.send('shop/resolve', { orderId: r.orderId, approve: true });
+  await rejects(gm.send('shop/martialArt', { actorId: 'pc_jane', styleId: 'nope' }), /Unknown martial art/, 'unknown style');
+  r = await gm.send('shop/martialArt', { actorId: 'pc_jane', styleId: ma.id, techniqueIds: [t1.id, t2.id] });
   await settle();
   let jm = A(jane, 'pc_jane').martialArts?.find((m) => m.catalogId === ma.id);
-  ok(jm && jm.techniques.length === 2 && A(jane, 'pc_jane').karma === 8 && A(jane, 'pc_jane').history.some((h) => h.karma === -12), 'GM approval grants the style and spends karma');
+  ok(r.status === 'done' && r.karma === 12 && jm && jm.techniques.length === 2 && A(jane, 'pc_jane').karma === 8 && A(jane, 'pc_jane').history.some((h) => h.karma === -12), 'GM grant: style 7 (first technique included) + 5, learned at once');
   await rejects(gm.send('shop/martialArt', { actorId: 'pc_jane', styleId: ma.id, techniqueIds: [t1.id] }), /Nothing new/, 'known techniques refused');
   if (ma.stats.techniques[2]) {
     r = await gm.send('shop/martialArt', { actorId: 'pc_jane', styleId: ma.id, techniqueIds: [ma.stats.techniques[2].id], free: true });
@@ -553,18 +550,16 @@ try {
     jm = A(jane, 'pc_jane').martialArts.find((m) => m.catalogId === ma.id);
     ok(jm!.techniques.length === 3 && A(jane, 'pc_jane').karma === 8, 'GM free grant of a technique');
   }
-  await rejects(jane.send('shop/martialArt', { actorId: 'pc_jane', styleId: 'nope' }), /Unknown martial art/, 'unknown style');
   const hapsumDo = cat('martialarts').find((m) => /Hapsum-Do/.test(m.name));
   await gm.send('actor/update', { actorId: 'pc_jane', patch: { karma: 30 } });
-  r = await jane.send('shop/martialArt', { actorId: 'pc_jane', styleId: hapsumDo.id, techniqueIds: [hapsumDo.stats.techniques[0].id] });
-  ok(r.status === 'pending' && r.karma === 15, `catalog style cost: Hapsum-Do 15 karma (got ${r.karma})`);
-  await gm.send('shop/cancel', { orderId: r.orderId });
+  r = await gm.send('shop/martialArt', { actorId: 'pc_jane', styleId: hapsumDo.id, techniqueIds: [hapsumDo.stats.techniques[0].id] });
+  await settle();
+  ok(r.karma === 15 && A(jane, 'pc_jane').karma === 15, `catalog style cost: Hapsum-Do 15 karma (got ${r.karma})`);
   const bare = cat('martialarts').find((m) => m.stats.karma === 7 && m.id !== ma.id && m.stats.techniques.length >= 2 && m.stats.techniques.every((x: { id?: string }) => x.id));
   await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'martialArts', item: { name: bare.name, catalogId: bare.id, rating: 1, techniques: [] } });
   await settle();
-  r = await jane.send('shop/martialArt', { actorId: 'pc_jane', styleId: bare.id, techniqueIds: [bare.stats.techniques[0].id, bare.stats.techniques[1].id] });
-  ok(r.status === 'pending' && r.karma === 5, `known style without technique (import): first technique included, 2 techniques = 5 karma (got ${r.karma})`);
-  await gm.send('shop/cancel', { orderId: r.orderId });
+  r = await gm.send('shop/martialArt', { actorId: 'pc_jane', styleId: bare.id, techniqueIds: [bare.stats.techniques[0].id, bare.stats.techniques[1].id] });
+  ok(r.karma === 5, `known style without technique (import): first technique included, 2 techniques = 5 karma (got ${r.karma})`);
 
   console.log('• markup');
   await gm.send('shop/updateSettings', { markup: 20 });

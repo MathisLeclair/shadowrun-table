@@ -13,12 +13,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { syncPowerBonus, itemBonusSpec, bakeItemBonus, removeBonus } from '../lib/augment.ts';
 import {
-  DEFAULT_SETTINGS, quote, applyAdvance, normalizeRequest, catalogName, qualityInfo, powerInfo, spellInfo, formatDaysI18n, type AdvanceQuote,
+  DEFAULT_SETTINGS, MARTIAL_RULES, quote, applyAdvance, normalizeRequest, catalogName, qualityInfo, powerInfo, spellInfo, formatDaysI18n, type AdvanceQuote,
 } from '../../shared/advancement.ts';
 import { formatSource } from '../lib/i18n.ts';
 import { fillActorRefs } from '../lib/bookrefs.ts';
 import type {
-  ActionContext, Actor, ActorId, AdeptPower, AdvancementRequest, CatalogBonus, CatalogItem, HistoryEntry, I18nEntry, I18nParams, I18nParamValue, Quality, ServerModule,
+  ActionContext, Actor, ActorId, AdeptPower, AdvancementRequest, CatalogBonus, CatalogEntry, CatalogItem, HistoryEntry, I18nEntry, I18nParams, I18nParamValue, Quality, ServerModule,
   TableState, TrainingJob, TrainingRequest, TrainingSettings, TrainingState, UserId,
 } from '../../shared/types.ts';
 
@@ -96,11 +96,27 @@ function enrichFromCatalog(req: AdvancementRequest): boolean {
       if (item) req.name = catalogName(item);
       return true; // fixed cost, nothing to cheat on
     }
+    case 'martialArt':
+      return enrichMartialArt(req);
     case 'other':
       return false;
     default:
       return true; // computed purely from rules
   }
+}
+
+/** Martial art style and techniques from martialarts.json (Run & Gun): names, style karma; false if unknown. */
+function enrichMartialArt(req: AdvancementRequest): boolean {
+  const style = findCatalog('martialarts', req.catalogId) as CatalogEntry<'martialarts'> | null;
+  if (!style) return false;
+  const all = style.stats?.techniques || [];
+  const techs = req.techniques.map((t) => all.find((x) => x.id === t.id));
+  if (techs.some((t) => !t)) return false;
+  req.name = style.nameFr || style.name;
+  req.altName = String(style.name || '').slice(0, 80);
+  req.karma = Math.max(0, Math.round(Number(style.stats?.karma) || MARTIAL_RULES.styleKarma));
+  req.techniques = techs.map((t) => ({ id: t!.id, name: t!.name, ...(t!.nameFr ? { nameFr: t!.nameFr } : {}) }));
+  return true;
 }
 
 // --- helpers -----------------------------------------------------------------------------------
@@ -317,7 +333,7 @@ const mod: ServerModule = {
 
   actions: {
     // payload: { actorId, kind, target, to, name?, spec?, attr?, ktype?, karma?, pp?, levels?, catalogId?, data?, options?,
-    //            instructor?, note?, days? (other), free? (GM) }
+    //            techniques? (martialArt: [{ id }], catalogId = style id), instructor?, note?, days? (other), free? (GM) }
     'training/request': {
       role: 'any',
       handler(ctx: ActionContext, payload: RequestPayload = {}) {
@@ -329,6 +345,7 @@ const mod: ServerModule = {
         const req: AdvancementRequest = normalizeRequest(payload);
         if (!ctx.isGM) req.free = false;
         const verified = enrichFromCatalog(req);
+        if (req.kind === 'martialArt' && !verified) ctx.fail('Unknown martial art or technique');
         const q: AdvanceQuote = quote(actor, req, tr.settings, contextFor(tr, actor));
         if (q.error) failQuote(ctx, q);
         const manual = !verified || q.manual;

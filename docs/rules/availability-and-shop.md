@@ -39,3 +39,7 @@ Area = 4 080.
 Karma (`martialKarma(style, known, n)`) = the style's `stats.karma` (7; Way of Unified Mana (Hapsum-Do) 15) for a new
 style (its first technique included) + 5 per further technique, 5 per technique of a known style — a known style
 without any technique (bought without, imported) still gets its first technique included.
+
+Learning time and instruction cost (RG p.128 « Learning martial arts » table): new style 1 month (first technique
+included), 2,500¥ of instruction; further technique 2 weeks, 1,500¥. Players learn martial arts as a `martialArt`
+training request, with the same karma: see [advancement.md](advancement.md#martial-arts-rg-p-128).

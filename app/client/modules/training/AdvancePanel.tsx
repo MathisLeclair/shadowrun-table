@@ -2,6 +2,7 @@
 import { Fragment, useState, type ComponentType } from 'react';
 import { Button, Tabs, SearchBox, Select, TextInput, NumberInput, Badge, Empty, Field } from '../../lib/ui.tsx';
 import { useCatalog } from '../../lib/net.ts';
+import { goTab } from '../../lib/ui-store.ts';
 import { t, tk, attrLabel, skillLabel, skillGroupLabel, skillCategoryLabel, metatypeLabel, itemName, compare, getLang } from '../../lib/i18n.ts';
 import { SKILLS, SKILL_BY_ID, SKILL_GROUPS, SKILL_CATEGORIES } from '/shared/sr5.ts';
 import {
@@ -761,13 +762,21 @@ function OtherTab({ q, open, isGM }: TabProps) {
     <>
       <div className="training-hint small muted">
         {isGM
-          ? t('Anything outside the boxes: special ritual, cyber-training, learning a martial arts style, exceptional adjustment… Applied as is (remember to update the sheet).')
-          : t('Anything outside the boxes: special ritual, cyber-training, learning a martial arts style, exceptional adjustment… The GM always approves these requests and updates the sheet.')}{' '}
+          ? t('Anything outside the boxes: special ritual, cyber-training, exceptional adjustment… Applied as is (remember to update the sheet).')
+          : t('Anything outside the boxes: special ritual, cyber-training, exceptional adjustment… The GM always approves these requests and updates the sheet.')}{' '}
         <Rule kind="other" />
+      </div>
+      <div className="training-hint small muted row wrap gap-s">
+        <span className="grow">
+          {t('Martial arts: pick a style and its techniques in the shop (« Martial arts » section). They train like any advance (time, instructor).')} <Rule kind="martialArt" />
+        </span>
+        <Button small variant="ghost" onClick={() => goTab('shop')}>
+          {t('Open the shop')}
+        </Button>
       </div>
       <div className="training-learn">
         <Field label={t('Description')}>
-          <TextInput live value={name} placeholder={t('e.g. Martial arts style: Krav Maga')} onChange={setName} />
+          <TextInput live value={name} placeholder={t('e.g. Special ritual: blood oath')} onChange={setName} />
         </Field>
         <Field label={t('Karma')}>
           <NumberInput value={karma} min={0} max={500} onChange={setKarma} />
