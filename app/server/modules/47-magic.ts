@@ -13,7 +13,7 @@ import {
   isAwakened, DRAIN_ATTRS, drainAttr, drainValue, spellDrainType, spellReach, isAreaSpell, spellCategory, maxForce, RECKLESS_DV,
   isSustainable, spellEffects, combatSpellProfile, MIN_DRAIN, spellResistance, NO_AURA_KINDS, OBJECT_RESISTANCE,
   spiritStats, traditionSpiritTypes, optionalPowerCount, BINDING_DRAMS, isReagent, reagentDrams, aidSpiritType,
-  canPerceiveAstral, canProjectAstral, focusKind, focusForce, focusCategory, focusWorks,
+  canPerceiveAstral, canProjectAstral, focusKind, focusForce, focusCategory, focusWorks, teamwork, ritualDrain,
 } from '../../shared/magic.ts';
 import { spellCatalogInfo } from '../lib/spells.ts';
 import { addSpellAttack, addAstralAttack } from './33-attacks.ts';
@@ -506,6 +506,75 @@ function banish(ctx: ActionContext, p: { actorId?: ActorId; spiritId?: unknown; 
   return { hits: roll.hits, spiritHits: sr.hits, net, dv, drainType: type, drain, gone, services: gone ? 0 : sp.spirit.services };
 }
 
+type RitualPayload = { leaderId?: unknown; ritualId?: unknown; force?: unknown; participantIds?: unknown; extraOfferings?: unknown; free?: unknown };
+
+/** Leader, ritual, Force and participants of a ritual payload, checked (GM action). */
+function ritualSetup(ctx: ActionContext, p: RitualPayload) {
+  const leader = actorOf(ctx, p.leaderId);
+  const ritual = (leader.spells || []).find((s) => s.id === str(p.ritualId, 80));
+  if (!ritual) ctx.fail('Unknown spell');
+  const force = Math.round(Number(p.force));
+  if (!Number.isFinite(force) || force < 1 || force > maxForce(leader)) ctx.fail('The Force must be between 1 and {max} (twice your Magic)', { max: maxForce(leader) });
+  const ids = [...new Set((Array.isArray(p.participantIds) ? p.participantIds : []).slice(0, 12).map((x) => str(x, 80)))].filter((id) => id && id !== leader.id);
+  const participants = ids.map((id) => ctx.state.actors[id] || ctx.fail('Unknown character'));
+  for (const a of [leader, ...participants]) {
+    if (attr(a, 'MAG') <= 0) ctx.fail('{name} is not awakened', { name: a.name });
+    if (!drainAttr(a)) ctx.fail('{name} has no tradition: it sets the attribute they resist Drain with', { name: a.name });
+  }
+  return { leader, ritual, force, participants };
+}
+
+/**
+ * Seal a ritual (SR5 pp. 295-296), GM: the leader spends Force drams of reagents (+ Force more per −1 Drain), each participant
+ * rolls Ritual Spellcasting + MAG (−2 for another tradition) as teamwork, the leader rolls Ritual Spellcasting + MAG
+ * [Force] vs Force × 2; every participant resists Drain 2 × the opposition's hits (min 2), Physical if the leader's hits
+ * exceed their Magic. The net hits are the ritual's effect (GM).
+ */
+function sealRitual(ctx: ActionContext, p: RitualPayload) {
+  const { leader, ritual, force, participants } = ritualSetup(ctx, p);
+  const extra = Math.max(0, Math.min(20, Math.round(Number(p.extraOfferings) || 0)));
+  const drams = force * (1 + extra);
+  if (!p.free) {
+    if (reagentDrams(leader) < drams) ctx.fail('The ritual needs {n} drams of reagents ({have} carried)', { n: drams, have: reagentDrams(leader) });
+    useReagents(leader, drams);
+  }
+  const trad = (a: Actor) => a.magic?.tradition?.id || a.magic?.tradition?.name || '';
+  const assists = participants.map((a) => {
+    const other = trad(a) !== trad(leader);
+    const r = performRoll(ctx, {
+      actorId: a.id, skillId: 'ritual_spellcasting', label: `Rituel — ${ritual.nameFr || ritual.name}`, limit: force, ...(other ? { modifier: -2 } : {}), // i18n-ignore: stored label
+    }, { logExtra: { labelI18n: { key: tk('Ritual teamwork — {ritual}'), params: { ritual: biName(ritual) } } } });
+    return { id: a.id, hits: r.hits, glitch: r.glitch, critGlitch: r.critGlitch };
+  });
+  const skill = (leader.skills || []).find((s) => s.id === 'ritual_spellcasting')?.rating || 0;
+  const tw = teamwork(assists, skill);
+  const roll = performRoll(ctx, {
+    actorId: leader.id, skillId: 'ritual_spellcasting', label: `Rituel — ${ritual.nameFr || ritual.name}`, limit: force + tw.limit, // i18n-ignore: stored label
+  }, { bonus: tw.dice ? [{ label: 'teamwork', value: tw.dice }] : [], logExtra: { labelI18n: { key: tk('Ritual — {ritual} (Force {force})'), params: { ritual: biName(ritual), force } } } });
+  const opp = rollDice(force * 2);
+  ctx.log({ kind: 'roll', userId: ctx.user.id, author: biName(ritual).fr, text: `${force * 2}`, gmOnly: true, roll: { ...opp, label: `${force * 2}`, labelI18n: { key: tk('The ritual resists ({n} dice)'), params: { n: force * 2 } }, actorId: null } });
+  const net = Math.max(0, roll.hits - opp.hits);
+  const dv = ritualDrain(opp.hits, extra);
+  const type: 'P' | 'S' = roll.hits > attr(leader, 'MAG') ? 'P' : 'S';
+  logMagic(ctx, leader, tk('Ritual {ritual} (Force {force}) led by {name} with {n} participant(s): {net} net hit(s). Drain {dv} for each.'), {
+    ritual: biName(ritual), force, name: leader.name, n: participants.length, net, dv,
+  }, { event: 'ritual', actorId: leader.id, force, hits: roll.hits, dv, drainType: type });
+  if (roll.critGlitch) logMagic(ctx, leader, tk('Critical glitch on the ritual: anything goes — the GM decides (SR5 p. 296).'), {}, { event: 'ritual', actorId: leader.id });
+  else if (roll.glitch) logMagic(ctx, leader, tk('Glitch on the ritual: usually +2 Drain, +2 to the ritual’s Force or the leader seals it alone (SR5 p. 296).'), {}, { event: 'ritual', actorId: leader.id });
+  const drains = [leader, ...participants].map((a) => ({ id: a.id, drain: drainNow(ctx, a, dv, type, biName(ritual)) }));
+  return { hits: roll.hits, opposition: opp.hits, net, dv, drainType: type, teamwork: tw, assists, drains, drams: p.free ? 0 : drams };
+}
+
+/** A ritual fails (SR5 p. 296): every participant takes Stun Drain 2 × the hits of a Force × 2 roll; reagents are lost. */
+function failRitual(ctx: ActionContext, p: RitualPayload) {
+  const { leader, ritual, force, participants } = ritualSetup(ctx, p);
+  const r = rollDice(force * 2);
+  const dv = Math.max(MIN_DRAIN, 2 * r.hits);
+  logMagic(ctx, leader, tk('The ritual {ritual} fails: Drain {dv} (Stun) for each participant.'), { ritual: biName(ritual), dv }, { event: 'ritual', actorId: leader.id, force, dv, drainType: 'S' });
+  const drains = [leader, ...participants].map((a) => ({ id: a.id, drain: drainNow(ctx, a, dv, 'S', biName(ritual)) }));
+  return { dv, drains };
+}
+
 /** Drain resisted now (settings.autoDrain) or left pending. */
 function drainNow(ctx: ActionContext, a: Actor, dv: number, type: 'P' | 'S', source: BiName): { hits: number; damage: number } | { pendingId: string } {
   const m = slice(ctx.state);
@@ -876,6 +945,22 @@ const actions: Record<string, ActionDef> = {
         g.choice = wid;
       } else g.choice = null;
       return { weaponId: g.choice || null };
+    },
+  },
+
+  /** GM: { leaderId, ritualId, force, participantIds?, extraOfferings?, free? } — seal a ritual (SR5 pp. 295-296). */
+  'magic/ritual': {
+    role: 'gm',
+    handler(ctx: ActionContext, p: RitualPayload = {}) {
+      return sealRitual(ctx, p);
+    },
+  },
+
+  /** GM: { leaderId, ritualId, force, participantIds? } — the ritual fails (a participant left, the lodge broke…). */
+  'magic/ritualFail': {
+    role: 'gm',
+    handler(ctx: ActionContext, p: RitualPayload = {}) {
+      return failRitual(ctx, p);
     },
   },
 

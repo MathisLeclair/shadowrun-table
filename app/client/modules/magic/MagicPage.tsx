@@ -18,6 +18,7 @@ import { isGM, magicActors, drainRollLabel, TraditionPicker } from './common.tsx
 import CastModal from './CastModal.tsx';
 import SummonModal from './SummonModal.tsx';
 import BanishModal from './BanishModal.tsx';
+import RitualPanel from './RitualPanel.tsx';
 import { toast } from '../../lib/ui-store.ts';
 import { confirmAction } from '../../lib/ui.tsx';
 import type { RollPreset } from '../sheet/types.ts';
@@ -617,6 +618,7 @@ function GmMagicPage({ game }: GameProps) {
   const tabs = [
     { id: 'overview', label: t('Overview') },
     { id: 'spells', label: t('Active spells'), badge: active.length || null },
+    { id: 'ritual', label: t('Ritual') },
     { id: 'cockpit', label: t('Cockpit') },
   ];
   const current = tabs.some((x) => x.id === tab) ? tab : 'overview';
@@ -638,6 +640,7 @@ function GmMagicPage({ game }: GameProps) {
       </div>
       <Tabs tabs={tabs} value={current} onChange={setTab} className="mg-tabs" />
       {current === 'overview' && <Overview game={game} onCockpit={openCockpit} />}
+      {current === 'ritual' && <RitualPanel game={game} />}
       {current === 'spells' &&
         (active.length ? (
           <div className="mg-panel">

@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   findTradition, traditionFromDef, parseDrainText, sortTraditions, drainValue, drainOffset, spellReach, isAreaSpell, spellCategory, spellDrainType, maxForce,
-  spellEffects, isSustainable, combatSpellProfile, spellResistance, attributeOfSpell, evalForce, spiritStats, optionalPowerCount, traditionSpiritTypes, reagentDrams, aidSpiritType, canPerceiveAstral, canProjectAstral, focusKind, focusBondMultiplier, focusCategory, fociLimits, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
+  spellEffects, isSustainable, combatSpellProfile, spellResistance, attributeOfSpell, evalForce, spiritStats, optionalPowerCount, traditionSpiritTypes, reagentDrams, aidSpiritType, canPerceiveAstral, canProjectAstral, focusKind, focusBondMultiplier, focusCategory, fociLimits, teamwork, ritualDrain, isRitual, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
   type TraditionDef,
 } from '../shared/magic.ts';
 import { derive } from '../shared/sr5.ts';
@@ -205,6 +205,12 @@ ok(focusCategory({ name: 'Sustaining Focus, Illusion' }) === 'illusion', 'focusC
   const cs = poolModifiers(collectModifiers(g2, effectsLookup()), rollContext(g2, { skillId: 'counterspelling' }), { conditions: ['spell-combat'] });
   ok(cs.total === 3, `counterspelling focus: +Force against its category (${cs.total})`);
 }
+
+// Ritual (#22)
+ok(JSON.stringify(teamwork([{ hits: 2 }, { hits: 0 }, { hits: 3, glitch: true }], 4)) === JSON.stringify({ dice: 4, limit: 1 }), 'teamwork: dice capped by the leader’s skill, +1 limit per assistant with hits and no glitch (SR5 p. 49)');
+ok(teamwork([{ hits: 2 }, { hits: 1, critGlitch: true }], 6).limit === 0, 'teamwork: a critical glitch cancels the limit bonus');
+ok(ritualDrain(3, 1) === 5 && ritualDrain(0, 0) === 2 && ritualDrain(1, 5) === 2, 'ritual Drain: 2 × opposition hits − extra offerings, min 2 (SR5 p. 296)');
+ok(isRitual({ category: 'Rituals' }) && !isRitual({ category: 'Combat' }), 'isRitual');
 
 // Binding helpers (#19)
 ok(reagentDrams({ gear: [{ name: 'Reagents, per dram', qty: 30 }, { name: 'Medkit', qty: 1 }, { name: 'x', nameFr: 'Réactifs (Par drachme)', qty: 5 }] }) === 35, 'reagentDrams: reagent items only');
@@ -695,6 +701,27 @@ try {
   ok((atkRoll.mods || []).some((m: { id: string; value: number; state: string }) => m.id.startsWith(`gear:${wf.id}`) && m.value === 2 && m.state === 'applied'), 'weapon focus: +Force on its weapon’s attacks');
   await restoreAll();
   await gm.send('magic/setTradition', { actorId: 'pc_jane', tradition: 'Custom', drain: 'CHA' });
+
+  // ---------- Ritual spellcasting (#22) ----------
+  await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'skills', item: { id: 'ritual_spellcasting', name: 'Ritual Spellcasting', attr: 'MAG', rating: 5 } });
+  const watcher = await addSpell({ name: 'Watchers', category: 'Rituals', type: 'M', range: 'Special', duration: 'Special', drain: 'Special' });
+  const helper = await gm.send<string>('actor/create', { type: 'npc', name: 'Ritual helper', attributes: { WIL: 4, LOG: 4, MAG: 4 } });
+  await gm.send('actor/addItem', { actorId: helper, list: 'skills', item: { id: 'ritual_spellcasting', name: 'Ritual Spellcasting', attr: 'MAG', rating: 4 } });
+  await gm.send('magic/setTradition', { actorId: helper, tradition: 'Hermetic' });
+  await restoreAll();
+  await settle();
+  const dramsBefore = reagentDrams(gm.state.actors.pc_jane);
+  await expectFail(pj.send('magic/ritual', { leaderId: 'pc_jane', ritualId: watcher, force: 2, participantIds: [helper] }), /GM|MJ/, 'a ritual is sealed by the GM');
+  const rit = await gm.send('magic/ritual', { leaderId: 'pc_jane', ritualId: watcher, force: 2, participantIds: [helper], extraOfferings: 1 });
+  await settle();
+  ok(rit.drams === 4 && reagentDrams(gm.state.actors.pc_jane) === dramsBefore - 4, `offering Force + one extra Force drams (${rit.drams}, left ${reagentDrams(gm.state.actors.pc_jane)})`);
+  ok(rit.dv === Math.max(2, 2 * rit.opposition - 1) && rit.net === Math.max(0, rit.hits - rit.opposition) && rit.drains.length === 2, `seal: Drain 2 × opposition − 1 for each of the 2 participants (${JSON.stringify({ dv: rit.dv, opp: rit.opposition })})`);
+  const helperRoll = [...gm.state.log].reverse().find((e) => e.roll?.labelI18n?.key === 'Ritual teamwork — {ritual}');
+  ok(/mod\. −2/.test(helperRoll?.roll?.breakdown || ''), `another tradition: −2 dice for the participant (${helperRoll?.roll?.breakdown})`);
+  ok(gm.state.log.some((e) => e.magic?.event === 'ritual' && e.i18n?.key?.startsWith('Ritual {ritual}')), 'ritual logged');
+  const rf = await gm.send('magic/ritualFail', { leaderId: 'pc_jane', ritualId: watcher, force: 2, participantIds: [helper] });
+  ok(rf.dv >= 2 && rf.drains.length === 2, 'a failed ritual: Stun Drain for every participant');
+  await restoreAll();
 
   // A target left with no dice (WIL 1, badly wounded) still resolves the spell: 0 hits, not a blocked attack.
   const weakId = await gm.send<string>('actor/create', { type: 'npc', name: 'Weak test', attributes: { BOD: 1, WIL: 1 } });

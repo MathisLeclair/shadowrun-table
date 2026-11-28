@@ -146,6 +146,20 @@ REA→INT, STR→CHA), hint while projecting.
 UI: cockpit « Foci » panel (kind, Force, bonded, Bond (karma), active switch, weapon link, limits, addiction), sustaining
 focus choice in the cast modal.
 
+## Ritual spellcasting
+
+GM « Ritual » tab (`RitualPanel`): leader (an awakened character with Ritual Spellcasting), the ritual (the leader's
+spells, « Rituals » category first; any spell for a Spell ritual), Force, participants, extra offerings, a « lodge Force ≥
+ritual Force » check (step 4, by hand).
+- `magic/ritual { leaderId, ritualId, force, participantIds?, extraOfferings?, free? }` (GM, SR5 295-296): the leader uses
+  Force × (1 + extra) drams of reagents (`free` when the leader has not enough); each participant rolls Ritual Spellcasting
+  + MAG [Force] (−2 for another tradition); `teamwork()` (SR5 49): their hits add dice up to the leader's skill, each
+  assistant with hits and no glitch +1 limit (none on a critical glitch); the leader rolls Ritual Spellcasting + MAG
+  [Force + teamwork] vs Force × 2 (GM-only roll); every participant resists Drain `ritualDrain` = 2 × the opposition's
+  hits − extra offerings (min 2), Physical if the leader's hits exceed their MAG; glitches logged for the GM. Net hits are
+  the ritual's effect (GM).
+- `magic/ritualFail` (GM): Stun Drain 2 × the hits of a Force × 2 roll for every participant.
+
 ## Combat spells (attacks)
 
 After the cast, a Combat spell with hits creates one `Attack` per target (`addSpellAttack` of 33-attacks, kind
@@ -198,7 +212,7 @@ with #19 / #21.
 - `magic/cast … sustain?, object?` (default: sustained when possible) → also `sustainedId`, `attackIds`, `object`; `magic/drop { id }`.
 - `magic/summon`, `magic/spiritServices`, `magic/materialize`, `magic/spiritCombat`, `magic/release`, `magic/sunrise`,
   `magic/bind`, `magic/callSpirit`, `magic/spiritSustain`, `magic/banish`, `magic/astral`, `magic/astralAttack`,
-  `magic/focusWeapon`: above. Focus bonding: `training/request { kind: 'focus', target: gearId }`.
+  `magic/focusWeapon`, `magic/ritual`, `magic/ritualFail`: above. Focus bonding: `training/request { kind: 'focus', target: gearId }`.
 - `magic/settings { autoDrain?, showAstralToPlayers? }` (GM; « Resist Drain automatically » toggle of the GM page).
 
 ## Player view
@@ -210,7 +224,7 @@ presence, every presence when `showAstralToPlayers`. Settings are sent as is.
 
 - Main tab `magic` (registry): GM, and players with an awakened character. Player: one cockpit per awakened character
   (tabs when several). GM: « Overview » (every awakened character: MAG, tradition picker, drain pool, sustained spells,
-  astral state, « Cockpit »), « Active spells » (every sustained spell, « Drop ») and « Cockpit » (pick a character).
+  astral state, « Cockpit »), « Active spells » (every sustained spell, « Drop »), « Ritual » and « Cockpit » (pick a character).
 - Cockpit: name, tradition picker, stats (Magic; Drain = WIL + attribute, click to roll the resistance with
   `test: 'drainResist'`; Sustained count and penalty; Astral state and astral initiative), « Drain to resist » (pending drains), « Sustained spells » (with « Drop ») and « Spells on <name> », spells with « Cast » (`CastModal`: spell, Force,
   live Drain Value and pool, reckless, push the limit, targets of the map in view with distance and line-of-sight /
