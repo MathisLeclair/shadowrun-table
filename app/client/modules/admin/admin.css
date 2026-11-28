@@ -35,6 +35,12 @@
 @keyframes admin-slide { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
 .admin-file { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .admin-file .mono { word-break: break-all; }
+.admin-missing { display: flex; flex-direction: column; gap: 4px; }
+.admin-missing-book { display: flex; align-items: center; gap: 10px; padding: 4px 8px; border: 1px dashed var(--line); border-radius: var(--radius); }
+.admin-missing-book > .mono { min-width: 64px; color: var(--dim); }
+.admin-missing-book > .col { min-width: 160px; }
+.admin-missing-book .btn.disabled { opacity: .5; pointer-events: none; }
+.admin-missing-de > summary { cursor: pointer; margin: 6px 0; }
 .admin-login { width: min(400px, 100%); }
 .admin-worlds { display: flex; flex-direction: column; gap: 6px; }
 .admin-world { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; padding: 6px 10px; background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; }

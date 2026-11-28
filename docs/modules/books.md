@@ -88,13 +88,12 @@ insuffisante… » (`jobs.ts memoryVerdict`, error key + `errorParams`) when 6 �
 Only the main thread writes `library.json`. Search folds texts with one regex replace (a char-by-char `+=` cost ≈ 300 MB
 of heap). UI: `client/modules/admin/BooksAdmin.tsx` (panel « Livres de règles » of `/admin`).
 
-**From the Règles tab:** the library lists the readable books, then « Absents de ce serveur (n) »: the `missing` books
-greyed out (German-only ones folded in a `<details>`). The GM, or anyone whose tab holds an admin session, gets an
-« Envoyer » button per missing book (`client/modules/books/UploadBook.tsx`): it asks for the server administrator
-password (`POST /api/admin/login`, token kept in `sessionStorage` `sr.adminToken`, shared with `/admin` through
-`client/lib/admin-token.ts`; an expired session asks again), then streams the PDF to `POST /api/admin/books/upload?code=`
-(readable from every table, the admin can restrict it on `/admin`). Players never upload: books are server-wide, and a
-public table must not change them. While a book is not indexed the page refreshes the list every 10 s (30 times at most).
+**Missing books:** the /admin panel lists « Absents de ce serveur (n) »: every `known` book without a library entry
+(German-only ones folded in a `<details>`), each with its own « Téléverser » button (a file input: picking the PDF
+uploads it under that code, `BooksAdmin.tsx MissingBooks`). That is the only place where a book is added from the UI:
+books are server-wide, and a table (the public one above all) must never change them. The Règles library shows the
+same books greyed out from `/api/books` `missing`, without any upload; while one of its books is not indexed yet it
+refreshes the list every 10 s (30 times at most).
 
 ## Client API
 

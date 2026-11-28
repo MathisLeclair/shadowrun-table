@@ -1,11 +1,12 @@
 // « Livres de règles » panel of the /admin page: the server-wide rulebook library (see ARCHITECTURE.md « Rulebooks »).
 // List (code, name, pages, offset, indexing state), upload a PDF (streamed), edit offset(s) / names / allowed tables,
-// detect the offset again, re-index, delete.
+// detect the offset again, re-index, delete. Every SR5 book Chummer knows that is not on the server yet is listed with
+// its own « Upload » button (the only place where a rulebook can be added from the UI: books are server-wide).
 import { useEffect, useRef, useState } from 'react';
 import { Button, Field, Toggle, Badge, Empty, Modal, promptText } from '../../lib/ui.tsx';
 import { uploadWithProgress } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
-import { t, tn, tIfKnown, fmtDate } from '../../lib/i18n.ts';
+import { t, tn, tIfKnown, fmtDate, getLang } from '../../lib/i18n.ts';
 import { fmtBytes, Progress, type UploadProgress } from './common.tsx';
 import type { AdminApi, AdminPanelProps } from './types.ts';
 import type { OffsetRange } from '../books/types.ts';
@@ -40,11 +41,17 @@ interface BookTable {
   name: string;
   archived?: boolean;
 }
+/** A book Chummer knows (server/lib/books/book-names.json). */
+interface KnownBook {
+  code: string;
+  name: string;
+  nameFr?: string;
+}
 interface BooksReply {
   books: AdminBook[];
   jobs: IndexJob[];
   tables: BookTable[];
-  known: { code: string; name: string }[];
+  known: KnownBook[];
   maxBytes: number;
 }
 
@@ -266,6 +273,75 @@ function UploadBook({ known, maxBytes, token, onDone }: { known: BooksReply['kno
   );
 }
 
+const knownName = (k: KnownBook) => (getLang() === 'fr' ? k.nameFr || k.name : k.name);
+const germanOnly = (k: KnownBook) => /German-Only/i.test(k.name);
+
+/** Every SR5 book Chummer knows that is not on the server: « Upload » picks the PDF and sends it under that code. */
+function MissingBooks({ known, books, maxBytes, token, onDone }: { known: KnownBook[]; books: AdminBook[]; maxBytes: number; token: string; onDone: () => void }) {
+  const [sending, setSending] = useState<{ code: string; progress: UploadProgress } | null>(null);
+  const have = new Set(books.map((b) => b.code));
+  // Core rules first, then by the name shown in the current language; German-only books folded apart.
+  const byName = (a: KnownBook, b: KnownBook) => Number(b.code === 'SR5') - Number(a.code === 'SR5') || knownName(a).localeCompare(knownName(b));
+  const missing = known.filter((k) => !have.has(k.code)).sort(byName);
+  if (!missing.length) return null;
+  const send = async (k: KnownBook, file: File) => {
+    if (file.size > maxBytes) return toast(t('File too large (max {size})', { size: fmtBytes(maxBytes) }), 'error');
+    setSending({ code: k.code, progress: 0 });
+    try {
+      await uploadWithProgress(`/api/admin/books/upload?${new URLSearchParams({ code: k.code })}`, file, {
+        token,
+        headers: { 'X-Filename': encodeURIComponent(file.name).slice(0, 200) },
+        onProgress: (p) => setSending({ code: k.code, progress: p >= 1 ? 'server' : p }),
+      });
+      toast(t('Book {code} received: indexing…', { code: k.code }), 'success');
+      onDone();
+    } catch (err) {
+      toast((err as Error).message, 'error');
+    } finally {
+      setSending(null);
+    }
+  };
+  const row = (k: KnownBook) => (
+    <div className="admin-missing-book" key={k.code}>
+      <span className="mono">{k.code}</span>
+      <span className="grow">{knownName(k)}</span>
+      {sending?.code === k.code ? (
+        <Progress value={sending.progress} serverLabel={t('Saving on the server…')} />
+      ) : (
+        <label className={'btn btn-sm' + (sending ? ' disabled' : '')}>
+          {t('Upload')}
+          <input
+            type="file"
+            accept=".pdf,application/pdf"
+            className="hidden"
+            disabled={!!sending}
+            onChange={(e) => {
+              const fl = e.target.files?.[0];
+              e.target.value = '';
+              if (fl) send(k, fl);
+            }}
+          />
+        </label>
+      )}
+    </div>
+  );
+  const main = missing.filter((k) => !germanOnly(k));
+  const de = missing.filter(germanOnly);
+  return (
+    <>
+      <h4 className="section-title">{t('Not on this server ({n})', { n: missing.length })}</h4>
+      <span className="field-hint">{t('Every Shadowrun 5 book Chummer knows. Upload the PDF of a book you own: it is readable from every table, then restrict it with “Edit” if needed.')}</span>
+      <div className="admin-missing">{main.map(row)}</div>
+      {de.length > 0 && (
+        <details className="admin-missing-de">
+          <summary className="muted small">{t('German-only books ({n})', { n: de.length })}</summary>
+          <div className="admin-missing">{de.map(row)}</div>
+        </details>
+      )}
+    </>
+  );
+}
+
 export default function BooksAdmin({ adminApi, token, run }: AdminPanelProps) {
   const [data, setData] = useState<BooksReply | null>(null);
   const [editing, setEditing] = useState<AdminBook | null>(null);
@@ -411,6 +487,7 @@ export default function BooksAdmin({ adminApi, token, run }: AdminPanelProps) {
           '{n} books shared by the allowed tables. Players read them from the “Rules” tab and the page references.'
         )}
       </p>
+      <MissingBooks known={data.known} books={data.books} maxBytes={data.maxBytes} token={token} onDone={reload} />
       <h4 className="section-title">{t('Add a book')}</h4>
       <UploadBook known={data.known} maxBytes={data.maxBytes} token={token} onDone={reload} />
       {editing && <EditBook book={editing} tables={data.tables} adminApi={adminApi} onClose={() => setEditing(null)} onSaved={reload} />}
