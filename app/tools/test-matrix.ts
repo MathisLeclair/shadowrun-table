@@ -538,7 +538,8 @@ try {
 
   // ---------------------------------------------------------------- NPC PAN: Matrix Perception reveals its devices, which can be hacked
   {
-    await gm.send('matrix/setPersona', { actorId: 'pc_bricks', patch: { bricked: false, matrixDamage: 0, linkLocked: null } });
+    // Earlier IC attacks roll real dice: Binder / Acid penalties would lower the Data Processing limit at random.
+    await gm.send('matrix/setPersona', { actorId: 'pc_bricks', patch: { bricked: false, matrixDamage: 0, linkLocked: null, penalties: {} } });
     await pl.send('matrix/connect', { actorId: 'pc_bricks', mode: 'cold' });
     const npcId: string = await gm.send('actor/create', { type: 'npc', name: 'Garde Lazarus', attributes: { WIL: 3, INT: 3, LOG: 2 } });
     await gm.send('actor/addItem', { actorId: npcId, list: 'gear', item: { name: 'Meta Link', category: 'Commlinks', rating: 1, qty: 1 } });
