@@ -352,29 +352,41 @@ export function GearTab({ s }: { s: SheetCtx }) {
   </div>;
 }
 
-/** Lifestyles (« Modes de vie »): base, monthly cost with its breakdown, options (garage, DocWagon contract, security…). */
+/** Lifestyles (« Modes de vie »): base, monthly cost with its breakdown, options (garage, DocWagon contract, security…).
+ *  Wide cards (full width alone, 2 per line at most): identity and cost on the left, points / options / notes and the
+ *  Home / City buttons on the right, wrapping below when the card is narrow. */
 function LifestylesView({ game, actor, showPaid }: { game: GameView; actor: Actor; showPaid: boolean }) {
   const list = actor.lifestyles || [];
   if (!list.length) return <div className="muted small">{t('No lifestyle.')}</div>;
-  return <div className="sh-cards">
-    {list.map((l) => <div className={'sh-card sh-lifestyle' + (l.primary ? ' primary' : '')} key={l.id}>
-      <div className="row spread wrap sh-lifestyle-head">
-        <span className="sh-lifestyle-name"><b>{l.name || lifestyleBaseLabel(l.base)}</b>{' '}<ItemRef item={l} /></span>
-        <span className="row gap-s">
-          {l.primary ? <span className="badge badge-amber">{t('primary')}</span> : null}
-          <span className="badge badge-cyan">{lifestyleBaseLabel(l.base)}</span>
-        </span>
-      </div>
-      <div className="row wrap gap-s">
-        <span className="mono">{t('{cost}/month', { cost: fmtNuyen(l.monthlyCost || 0) })}</span>
-        {(l.qualities || []).length > 0 && <span className="faint small" title={t('Base cost, options as % of the base cost, flat-price options')}>({lifestyleBreakdown(l)})</span>}{showPaid ? <span className="muted small">· {t('{n} month(s) paid', { n: l.monthsPaid || 0 })}</span> : null}
-      </div>
-      {l.points && <div className="faint small">
-      {t('Comforts {c} · Security {s} · Neighborhood {n}', { c: l.points.comforts ?? '—', s: l.points.security ?? '—', n: l.points.neighborhood ?? '—' })}
-    </div>}
-      <SubChips sub="qualities" items={l.qualities} />
-      {l.notes && <div className="faint small">{l.notes}</div>}{showPaid && game ? <div className="row wrap gap-s"><HomeButton game={game} actor={actor} lifestyle={l} canMove={showPaid} /><CityPlaceButton game={game} actor={actor} lifestyle={l} /></div> : null}
-    </div>)}
+  return <div className="sh-cards sh-lifestyles">
+    {list.map((l) => {
+      const buttons = showPaid && game;
+      const side = !!(l.points || (l.qualities || []).length || l.notes || buttons);
+      return <div className={'sh-card sh-lifestyle' + (l.primary ? ' primary' : '')} key={l.id}>
+        <div className="sh-lifestyle-main">
+          <div className="row spread wrap sh-lifestyle-head">
+            <span className="sh-lifestyle-name"><b>{l.name || lifestyleBaseLabel(l.base)}</b>{' '}<ItemRef item={l} /></span>
+            <span className="row gap-s">
+              {l.primary ? <span className="badge badge-amber">{t('primary')}</span> : null}
+              <span className="badge badge-cyan">{lifestyleBaseLabel(l.base)}</span>
+            </span>
+          </div>
+          <div className="row wrap gap-s">
+            <span className="mono">{t('{cost}/month', { cost: fmtNuyen(l.monthlyCost || 0) })}</span>
+            {showPaid ? <span className="muted small">· {t('{n} month(s) paid', { n: l.monthsPaid || 0 })}</span> : null}
+          </div>
+          {(l.qualities || []).length > 0 && <div className="faint small" title={t('Base cost, options as % of the base cost, flat-price options')}>{lifestyleBreakdown(l)}</div>}
+        </div>
+        {side && <div className="sh-lifestyle-side">
+          {l.points && <div className="faint small">
+            {t('Comforts {c} · Security {s} · Neighborhood {n}', { c: l.points.comforts ?? '—', s: l.points.security ?? '—', n: l.points.neighborhood ?? '—' })}
+          </div>}
+          <SubChips sub="qualities" items={l.qualities} />
+          {l.notes && <div className="faint small">{l.notes}</div>}
+          {buttons ? <div className="row wrap gap-s sh-lifestyle-actions"><HomeButton game={game} actor={actor} lifestyle={l} canMove={showPaid} /><CityPlaceButton game={game} actor={actor} lifestyle={l} /></div> : null}
+        </div>}
+      </div>;
+    })}
   </div>;
 }
 
