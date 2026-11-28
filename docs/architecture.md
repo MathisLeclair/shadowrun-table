@@ -29,7 +29,9 @@ app/
                          npcgen.ts (enemy generator), combat.ts (attacks), modifiers.ts, lifestyle.ts, home.ts, sins.ts,
                          contacts.ts, bookrefs.ts, maplib.ts
   client/index.html      page shell, loads app.tsx (Vite)                               (core-owned)
-  client/app.tsx         shell: login, top tabs, right dock, sheet modal, toasts         (core-owned)
+  client/app.tsx         shell: login, top tabs, right dock, sheet modal, toasts, pop-out window (?pane=)  (core-owned)
+  client/modules/core/Workspace.tsx  multi-view: split pane, floating panels, tab menu, dock grip — see modules/workspace.md (core-owned)
+  client/lib/layout.ts   pure layout moves (split, floats, dock width); layout-store.ts: stored layout, popOut()  (core-owned)
   client/styles.css      global theme + shared classes                                   (core-owned)
   client/lib/net.ts      useGame(), send(), on()/useServerEvent(), api(), upload(), useCatalog() (core-owned)
   client/lib/ui.tsx      UI kit, typed React components (Button, Panel, Modal, Tabs, Field, TextInput, NumberInput, Select, Toggle, Badge, Empty, SearchBox, Markdown, Stat, confirmAction, promptText, cx) (core-owned)
@@ -174,6 +176,8 @@ back to `scene.activeMapId`), `mapsEditId` (map open in the editor), `selectedTo
 `focusTokenId` (ask the map to centre on a token, e.g. from the initiative dock), `handoutsReadAt` (bumped when a
 player opens a handout so the « Dossiers » badge refreshes), `targetTokenId` / `aimPoint` (see
 [attacks.md](modules/attacks.md)).
+Several tabs can be on screen at once (split pane, floating panels, pop-out windows): see
+[workspace.md](modules/workspace.md) for what that means for a tab component.
 
 ### Registry
 `client/modules/registry.ts` is fixed — implement these default exports:
