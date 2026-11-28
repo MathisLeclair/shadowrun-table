@@ -1638,6 +1638,16 @@ interface MatrixActionPayload {
   /** GM only. */
   defensePool?: number | string | null;
 }
+interface HostFromMapPayload {
+  mapId?: string;
+  name?: string;
+  rating?: number;
+  preset?: string;
+  ic?: boolean;
+  folder?: string;
+  deviceRating?: number;
+  devices?: Array<{ link?: string; name?: string }>;
+}
 interface HostCreatePayload {
   name?: string;
   rating?: number;
@@ -1928,6 +1938,37 @@ const actions: Record<string, ActionDef> = {
     const host: Loose = { id, name: str(p.name, 80).trim() || (ctx.t ? ctx.t(tk('Host {n}'), { n: rating }) : formatSource('Host {n}', { n: rating })), rating, ...hostAttributes(rating, preset), alert: 'none', visible: false, folder: str(p.folder, 60) };
     host.ic = p.ic === false ? [] : defaultIcFor(rating).map((type, i) => ({ id: uid('ic'), type, rating, active: i === 0 && type === 'patrol', damage: 0 }));
     m.hosts[id] = normalizeHost(host, id);
+    return { id };
+  }),
+
+  // { mapId, name?, rating?, preset?, ic?, deviceRating?, devices: [{ link: 'door:<id>'|'light:<id>'|'camera:<regionId>', name }] }
+  // → { id }. The map's security host: one slaved device per picked door / light / camera zone, already linked to the map.
+  'matrix/hostFromMap': gm((ctx: ActionContext, p: HostFromMapPayload = {}) => {
+    const map = ctx.state.maps?.[str(p.mapId, 80)];
+    if (!map) return ctx.fail('Map not found');
+    const list = Array.isArray(p.devices) ? p.devices.slice(0, 200) : [];
+    const deviceRating = clampInt(p.deviceRating, 1, 6, 3);
+    const seen = new Set<string>();
+    const devices: Loose[] = [];
+    for (const x of list) {
+      if (!isObj(x)) continue;
+      const [kind, targetId] = str(x.link, 120).split(':');
+      if (!targetId || seen.has(`${kind}:${targetId}`)) continue;
+      const exists = kind === 'door' ? !!findAnyDoor(map, targetId) : kind === 'light' ? (map.lights || []).some((l) => l.id === targetId) : kind === 'camera' ? (map.regions || []).some((r) => r.id === targetId) : false;
+      if (!exists) ctx.fail('{what} is no longer on the map', { what: str(x.name, 80) || targetId });
+      seen.add(`${kind}:${targetId}`);
+      devices.push({ id: uid('dev'), name: str(x.name, 80).trim() || targetId, rating: deviceRating, link: { mapId: map.id, kind, targetId }, on: true });
+    }
+    const rating = clampInt(p.rating, 1, 12, 3);
+    const preset = (HOST_PRESETS as Loose)[p.preset as string] ? p.preset : 'fortress';
+    const id = uid('host');
+    const host: Loose = {
+      id, name: str(p.name, 80).trim() || map.name, rating, ...hostAttributes(rating, preset), alert: 'none', visible: false,
+      folder: str(p.folder, 60) || map.folder || '', devices,
+    };
+    host.ic = p.ic === false ? [] : defaultIcFor(rating).map((type, i) => ({ id: uid('ic'), type, rating, active: i === 0 && type === 'patrol', damage: 0 }));
+    const h = (slice(ctx.state).hosts[id] = normalizeHost(host, id));
+    for (const d of h.devices) syncDeviceLink(ctx, d); // camera zones show « 📷 », lights follow the device
     return { id };
   }),
 

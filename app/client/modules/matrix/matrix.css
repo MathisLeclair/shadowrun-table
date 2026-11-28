@@ -158,6 +158,7 @@
 .mx-reveal-opt { display: flex; align-items: center; gap: 8px; padding: 3px 6px; border-radius: 5px; cursor: pointer; font-size: 13px; }
 .mx-reveal-opt:hover { background: var(--panel2); }
 .mx-reveal-opt.off { opacity: 0.5; cursor: default; }
+.mx-maphost-list { display: flex; flex-direction: column; gap: 2px; max-height: 320px; overflow: auto; }
 
 /* actions */
 .mx-actions { gap: 4px; }

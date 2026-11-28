@@ -492,6 +492,32 @@ try {
   await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'rebootDevice', targetId: 'device:host_hollow_pine:dev_test_light' });
   await settle();
   ok(map().lights[0].on === false, 'rebooting the light device turns the light off');
+
+  // A map's security host in one go (matrix/hostFromMap): one device per picked door / light / camera zone
+  {
+    const m2 = await gm.send('maps/create', { name: 'Entrepôt Tacoma', width: 10, height: 8, folder: 'Acte 2' });
+    const door2 = await gm.send('maps/addDoor', { mapId: m2, door: { x: 3, y: 0, state: 'locked' } });
+    const zone2 = await gm.send('maps/addRegion', { mapId: m2, region: { name: 'Quai', x: 1, y: 1, w: 3, h: 3 } });
+    await gm.send('maps/addLight', { mapId: m2, light: { x: 5, y: 5, radius: 3, on: true } });
+    await expectFail(pl.send('matrix/hostFromMap', { mapId: m2, devices: [] }), /GM/, 'only the GM creates a map host');
+    await expectFail(gm.send('matrix/hostFromMap', { mapId: m2, devices: [{ link: 'door:nope', name: 'Fantôme' }] }), /no longer on the map/, 'unknown map object refused');
+    const r2 = await gm.send('matrix/hostFromMap', { mapId: m2, rating: 4, ic: false, deviceRating: 3, devices: [{ link: `door:${door2}`, name: 'Maglock du quai' }, { link: `camera:${zone2}`, name: 'Caméras : Quai' }, { link: `door:${door2}`, name: 'doublon' }] });
+    await settle();
+    const h2 = M().hosts[r2.id];
+    ok(h2 && h2.name === 'Entrepôt Tacoma' && h2.rating === 4 && h2.folder === 'Acte 2' && !h2.visible && h2.ic.length === 0, 'map host: named after the map, its folder, hidden, no IC when asked');
+    ok(h2.devices.length === 2 && h2.devices.every((d) => d.link?.mapId === m2 && d.rating === 3) && h2.devices[0].link?.kind === 'door' && h2.devices[1].link?.kind === 'camera', 'one linked device per object (duplicates dropped)');
+    ok(gm.state.maps[m2].regions[0].cams === 'on', 'the camera zone is marked as filmed');
+    // The decker reaches it like any host: perceive → GM reveals the maglock → Control Device opens the door on the map
+    await gm.send('matrix/setMarks', { actorId: 'pc_bricks', targetId: `host:${r2.id}`, name: 'Entrepôt Tacoma', count: 3 });
+    res = await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'matrixPerception', targetId: `host:${r2.id}` });
+    await settle();
+    const rv3 = Object.values(M().reveals || {}).find((r) => r.target === 'Entrepôt Tacoma')!;
+    ok(rv3?.options.some((o) => o.id === `device:${r2.id}:${h2.devices[0].id}`), 'perception on the map host offers its devices');
+    await gm.send('matrix/reveal', { revealId: rv3.id, optionIds: [`device:${r2.id}:${h2.devices[0].id}`] });
+    res = await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'controlDevice', targetId: `device:${r2.id}:${h2.devices[0].id}`, deviceCmd: 'open' });
+    await settle();
+    ok(res.success && gm.state.maps[m2].doors[0].state === 'open', 'Control Device on the revealed maglock opens the map door');
+  }
   await gm.send('matrix/hostUpdate', { hostId: 'host_hollow_pine', patch: { devices: M().hosts.host_hollow_pine.devices.map((d) => (d.id === 'dev_test_light' ? { ...d, offline: false } : d)) } });
   await settle();
   ok(map().lights[0].on === true, 'back online (GM) → the light comes back');

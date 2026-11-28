@@ -74,6 +74,14 @@ answer }` applies them (host `known`, IC `detected`, scans, `visible`) and logs 
 and the GM; `matrix/dropReveal` discards it; « Later » hides it for this session. The decker's cockpit shows a « ⏳ »
 line while it waits.
 
+### A map's security host
+The map card's « Matrix host… » button (`MapHostModal`, GM) creates a host for that map in one go:
+`matrix/hostFromMap { mapId, name?, rating, preset, ic, deviceRating, devices: [{ link: 'door:<id>'|'light:<id>'|'camera:<regionId>', name }] }`
+→ one slaved device per picked object, already linked (see « Devices ↔ map »), hidden from players, in the map's
+folder. Camera zones and lights are pre-ticked, doors left to the GM (the app cannot tell a maglock from a wooden
+door); objects already linked to a host are shown and cannot be picked twice. From there it is an ordinary host:
+Matrix Search finds it, Perception reveals its devices, Control Device / Spoof Command act on the map.
+
 ### Characters' PANs
 Rules: [rules/matrix.md](../rules/matrix.md#pans-characters-devices). Matrix Perception on an NPC persona reveals its
 PAN devices (one per hit, picked by the GM); the cockpit's « PAN spotted » panel lists them per NPC (persona = master, then the
@@ -95,7 +103,7 @@ takes them out of the PAN. The GM's Deckers view lists hacked PAN devices with a
   {actorId, actionId, targetId…}|action {actorId, actionId, targetId?, marks?, assistFromAgent?, fileOp?, edge?, …}|
   setFullDefense|forgetScan {actorId, targetId}`.
 - GM: `matrix/hostCreate|hostUpdate|hostDelete|icLaunch|icUpdate|icRemove|icAct|setOverwatch|converge|resetPersona|
-  setPersona|setMarks|setMarkOnMe|settings|panReset {actorId, deviceId}|reveal|dropReveal`, plus `osTick`, `hostTurn`, `icTurn`, `launchNextIc`, `spawnSpider` above;
+  setPersona|setMarks|setMarkOnMe|settings|panReset {actorId, deviceId}|reveal|dropReveal|hostFromMap`, plus `osTick`, `hostTurn`, `icTurn`, `launchNextIc`, `spawnSpider` above;
   `matrix/testDice {mode}` only exists with `SR_MATRIX_TEST=1` (tests; the loaded-dice flag is process-wide).
 - Agent: `agentAssist` = teamwork: its hits become `pendingAssist`, consumed by the next `matrix/action` of the same
   skill with `assistFromAgent: true`. `agentAct` = the agent performs the action itself.
