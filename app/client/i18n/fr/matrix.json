@@ -763,6 +763,11 @@
   "This map has no door, light or zone to link.": "Cette carte n’a ni porte, ni lumière, ni zone à lier.",
   "already in « {host} »": "déjà dans « {host} »",
   "{what} is no longer on the map": "{what} n’est plus sur la carte",
+  "{who} spots {target}, running silent.": "{who} repère {target}, en mode silencieux.",
+  "No icon of {name} on the Matrix: their PAN is offline.": "Aucune icône de {name} sur la Matrice : son PAN est hors ligne.",
+  "You have not spotted {name}’s icon: it may be running silent (Matrix Perception on them first).": "Vous n’avez pas repéré l’icône de {name} : elle est peut-être en mode silencieux (Perception matricielle sur {name} d’abord).",
+  "Icons running silent": "Icônes en mode silencieux",
+  "An icon is running silent nearby": "Une icône est en mode silencieux à proximité",
   "Switch two Matrix attributes": "Intervertir deux attributs matriciels",
   "Load program: {name}": "Charger le programme : {name}",
   "Unload program: {name}": "Décharger le programme : {name}"
