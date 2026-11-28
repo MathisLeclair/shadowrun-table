@@ -4,7 +4,7 @@
 |---|---|
 | server | `server/modules/47-magic.ts` (owner of `state.magic` and of `actor.magic.tradition`) |
 | shared | `shared/magic.ts` (traditions lookup, drain pool, `magicHints`) |
-| data | `data/catalog/spells.json` (descriptor, damage: `server/lib/spells.ts`), `data/catalog/traditions.json` (built by `tools/build-catalog.ts` from Chummer `traditions.xml`), read by `server/lib/traditions.ts` and the client (`/catalog/traditions.json`) |
+| data | `data/catalog/spells.json` (descriptor, damage: `server/lib/spells.ts`), `data/catalog/spirits.json` (`server/lib/spirits.ts`), `data/catalog/traditions.json` (built by `tools/build-catalog.ts` from Chummer `traditions.xml`), read by `server/lib/traditions.ts` and the client (`/catalog/traditions.json`) |
 | client | `client/modules/magic/` (MagicPage: cockpit for players, overview + cockpit for the GM; `common.tsx`: `TraditionPicker`, `openMagic`, roll labels shared with the sheet) |
 | tests | `node tools/test-magic.ts` (port 3650) |
 
@@ -46,6 +46,18 @@ casters roll in secret. Drain is Physical when the hits exceed MAG (`spellDrainT
 with `entry.magic` (`MagicLogInfo`: cast / drain); a glitch / critical glitch adds a reminder for the GM (SR5 282).
 Drain: `resistDrain()` = `dice/roll`-like WIL + tradition attribute, `test: 'drainResist'`, damage applied with
 `applyDamage`; or a `PendingDrain` when `autoDrain` is off. The effects of the spell are the next steps (design).
+
+## Spirit data
+
+`data/catalog/spirits.json`: Chummer `critters.xml` entries of category Spirits (29 types: the six SR5 spirits,
+guardian, guidance, plant, task, blood, toxic…), built by `tools/build-catalog.ts` (`SpiritDef`): attributes as Force
+formulas, `initiative` formula and `initiativeDice` (1 + Chummer's initiativepass), powers and optional powers with
+their French names and choice (`select`: Elemental Attack « Fire »), skills (rating « F »), movement, source / page.
+`spiritStats(def, force)` (shared): attributes (`evalForce`: F, F ± n, F / 2 rounded down, (F × 2) + 3; no eval),
+physical initiative as a bonus over REA + INT so the normal initiative rules give the book value, astral initiative
+F × 2 + 3D6, skills mapped to the app's ids (Exotic Ranged Weapon → `exotic_weapon`, Flight kept as a custom AGI
+skill), powers, `optionalPowerCount` = one per 3 full points of Force (SR5 300). `traditionSpiritTypes(tradition, all)`:
+the tradition's five spirits (every type without one). Summoning (#18) uses them.
 
 ## Combat spells (attacks)
 
