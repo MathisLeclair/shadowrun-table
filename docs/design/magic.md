@@ -238,7 +238,10 @@ above MAG (SR5 319), and MAG × 5 is the cap on bonded Force (318) — the desig
   astral combat, qi focus, spirit focus, metamagic focus).
 - Sustaining focus: sustains one spell of its category up to its Force without the −2 (#C).
 
-## Ritual spellcasting — *#22 Ritual*
+## Ritual spellcasting — *#22, done*
+
+Built 2026-11-28 (facts: [modules/magic.md](../modules/magic.md#ritual-spellcasting)).
+
 
 SR5 295-296: leader + participants, lodge or foci, Ritual Spellcasting + MAG [Force] vs Force × 2, drain per
 participant, time in hours. A GM-started « ritual » panel that collects participants, rolls teamwork and applies
@@ -273,5 +276,5 @@ Filed on GitHub 2026-11-28, all « Part of #7 ». Order: #12 first; #13 → #14,
 | #19 | Binding, bound spirits (aid sorcery, sustaining), banishing (**done**) | #18, #14 |
 | #20 | Astral perception and projection, astral tokens and initiative (**done**) | #12 |
 | #21 | Foci: bonding, active foci, non-spellcasting foci, sustaining focus (**done**) | #12, #14 |
-| #22 | Ritual spellcasting | #13 |
+| #22 | Ritual spellcasting (**done**) | #13 |
 | #23 | Metamagic effects | #13, #20 |

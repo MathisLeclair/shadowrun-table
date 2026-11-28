@@ -533,6 +533,24 @@ export const canProjectAstral = (actor: MagicActor | null | undefined): boolean 
 /** A projecting magician's astral form uses mental attributes in place of physical ones (SR5 p. 314, Astral Attributes table). */
 export const ASTRAL_ATTRIBUTES: Record<string, AttrKey> = { AGI: 'LOG', BOD: 'WIL', REA: 'INT', STR: 'CHA' };
 
+// ---------------------------------------------------------------------------
+// Ritual spellcasting (SR5 pp. 295-296) and teamwork (p. 49)
+// ---------------------------------------------------------------------------
+
+/**
+ * Teamwork (SR5 p. 49): each assistant hit adds a die to the leader (at most the leader's skill rating); each assistant with
+ * at least one hit and no glitch raises the leader's limit by 1, none at all if an assistant critically glitched.
+ */
+export function teamwork(assists: Array<{ hits: number; glitch?: boolean; critGlitch?: boolean }>, leaderSkill: number): { dice: number; limit: number } {
+  const dice = Math.min(Math.max(0, leaderSkill), assists.reduce((s, a) => s + Math.max(0, a.hits), 0));
+  const limit = assists.some((a) => a.critGlitch) ? 0 : assists.filter((a) => a.hits > 0 && !a.glitch).length;
+  return { dice, limit };
+}
+/** Ritual Drain (SR5 p. 296): 2 × the opposition's hits, −1 per extra (Force) drams of reagents, never below 2. */
+export const ritualDrain = (oppositionHits: number, extraOfferings = 0): number => Math.max(MIN_DRAIN, 2 * oppositionHits - Math.max(0, extraOfferings));
+/** A ritual is a spell of the « Rituals » category (Chummer); any spell can be woven into a Spell ritual. */
+export const isRitual = (s: { category?: string } | null | undefined): boolean => /ritu/i.test(String(s?.category || ''));
+
 /** Binding costs Force × 25 drams of reagents (SR5 p. 300). */
 export const BINDING_DRAMS = 25;
 /** Reagents of the gear (« Reagents », « Réactifs »…): their quantity counts as drams. */

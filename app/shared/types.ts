@@ -2293,7 +2293,7 @@ export interface PendingDrain {
 
 /** `entry.magic` of a magic log entry. */
 export interface MagicLogInfo {
-  event: 'cast' | 'drain' | 'drop' | 'summon' | 'spirit' | 'bind' | 'banish' | 'astral';
+  event: 'cast' | 'drain' | 'drop' | 'summon' | 'spirit' | 'bind' | 'banish' | 'astral' | 'ritual';
   actorId: ActorId;
   spellId?: string;
   force?: number;
