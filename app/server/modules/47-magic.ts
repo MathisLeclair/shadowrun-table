@@ -6,8 +6,10 @@ import { cellDistance } from '../../shared/combat.ts';
 import { hasLineOfSight } from '../../shared/vision.ts';
 import {
   isAwakened, DRAIN_ATTRS, drainAttr, drainValue, spellDrainType, spellReach, isAreaSpell, spellCategory, maxForce, RECKLESS_DV,
-  isSustainable, spellEffects,
+  isSustainable, spellEffects, combatSpellProfile, NO_AURA_KINDS,
 } from '../../shared/magic.ts';
+import { spellCatalogInfo } from '../lib/spells.ts';
+import { addSpellAttack } from './33-attacks.ts';
 import { combatHooks } from './30-combat.ts';
 import { actorTradition, traditionDef } from '../lib/traditions.ts';
 import { performRoll, applyDamage } from './10-characters.ts';
@@ -196,6 +198,11 @@ export function castSpell(ctx: ActionContext, p: CastPayload) {
   }
   const { targets, area } = castTargets(ctx, a, spell, force, p);
   const cat = spellCategory(spell.category);
+  // Mana spells only affect living beings and astral forms (SR5 p. 282): no drone, IC or host.
+  if (/^M/i.test(String(spell.type || '').trim())) {
+    const dead = targets.find((t) => NO_AURA_KINDS.includes(String(t.npc?.kind || '')));
+    if (dead) ctx.fail('{spell} is a mana spell: it cannot affect {name}', { spell: biName(spell), name: dead.name });
+  }
   // Spellcasting foci (condition spell-<category>) apply to a spell of their category without a switch.
   const conditions = [...(Array.isArray(p.conditions) ? p.conditions.slice(0, 40) : []), ...(cat ? [`spell-${cat}`] : [])];
   const secret = hiddenCaster(a);
@@ -301,7 +308,19 @@ const actions: Record<string, ActionDef> = {
         syncSustained(ctx.state);
         sustainedId = s.id;
       }
-      return { ...c.result, sustainedId };
+      // Combat spell (SR5 p. 283): one attack per target, resolved by the attacks module (resist / dodge, soak, damage).
+      const attackIds: string[] = [];
+      if (spellCategory(c.spell.category) === 'combat' && c.hits > 0) {
+        const profile = combatSpellProfile(c.spell, spellCatalogInfo(c.spell));
+        for (const t of c.targets) {
+          const atk = addSpellAttack(ctx, {
+            attacker: c.actor, target: t, mapId: str(p.mapId, 80) || null, hits: c.hits, spellName: biName(c.spell), profile, force: c.force,
+            castLogId: c.logId, rollLogId: c.roll.logId, gmOnly: hiddenCaster(c.actor),
+          });
+          attackIds.push(atk.id);
+        }
+      }
+      return { ...c.result, sustainedId, attackIds };
     },
   },
 

@@ -7,7 +7,7 @@ import { send, type GameProps } from '../../lib/net.ts';
 import { openSheet } from '../../lib/ui-store.ts';
 import { attr, derive } from '/shared/sr5.ts';
 import { derivedWithModifiers } from '/shared/modifiers.ts';
-import { t, tn, getLang } from '../../lib/i18n.ts';
+import { t, tn, getLang, attrShort } from '../../lib/i18n.ts';
 import { useModifiers } from '../sheet/modifiers-ui.tsx';
 import { DEFENSE_OPTIONS, DEFENSE_SITUATIONS, defenseLines, isUnlocked, unlockNames, finalDamageType, TOXIN_BY_ID, AFFLICTIONS } from '/shared/combat.ts';
 import { ownsActorId, turnInfo, PENDING } from './attack-common.ts';
@@ -41,6 +41,10 @@ function attackSummary(a: Attack): string {
   }
   if (a.kind === 'blast') bits.push(t('blast at {m} m', { m: a.meters }));
   else bits.push(tn(a.hits, 'one::{n} hit', 'other::{n} hits'));
+  if (a.kind === 'spell' && a.spell?.mode === 'direct') {
+    bits.push(t('direct spell ({damage}), resisted with {attr}', { damage: a.type === 'S' ? t('Stun') : t('Physical'), attr: attrShort(a.spell.resist) }));
+    return bits.join(' · ');
+  }
   if (a.dv !== null && a.dv !== undefined) bits.push(t('DV {dv}{type}', { dv: a.modifiedDv ?? a.dv, type: a.type }) + (a.ap ? ` · ${t('AP {ap}', { ap: signed(a.ap) })}` : ''));
   else if (a.noDamage) bits.push(t('no damage'));
   return bits.join(' · ');
@@ -48,6 +52,10 @@ function attackSummary(a: Attack): string {
 
 function outcomeText(a: Attack): string {
   if (a.status === 'cancelled') return t('cancelled');
+  if (a.kind === 'spell' && a.spell?.mode === 'direct') {
+    if (a.status === 'missed') return a.defenseHits !== undefined ? t('resisted ({a} vs {d})', { a: a.hits, d: a.defenseHits }) : t('missed');
+    if (a.status === 'done') return a.damageType === 'S' ? tn(a.damage || 0, '{n} stun box', '{n} stun boxes') : tn(a.damage || 0, '{n} physical box', '{n} physical boxes');
+  }
   if (a.status === 'missed') return a.defenseHits !== undefined ? t('dodged ({a} vs {d})', { a: a.hits, d: a.defenseHits }) : t('missed');
   if (a.status === 'done' && a.kind === 'toxin') {
     if (!a.left) return t('toxin fully resisted');
@@ -141,7 +149,7 @@ export default function AttackTray({ game }: GameProps) {
                   <div className="row wrap gap-s atk-card-actions">
                     {canAct && a.status === 'defense' && (
                       <Button small variant="primary" onClick={() => setDialog({ kind: 'defend', attackId: a.id })}>
-                        🛡 {t('Defend')}
+                        🛡 {a.kind === 'spell' && a.spell?.mode === 'direct' ? t('Resist the spell') : t('Defend')}
                       </Button>
                     )}
                     {canAct && a.status === 'soak' && (
@@ -186,7 +194,9 @@ export default function AttackTray({ game }: GameProps) {
           })}
         </div>
       )}
-      {open && dialog && dialog.kind === 'defend' && open.status === 'defense' && <DefenseDialog game={game} atk={open} onClose={() => setDialog(null)} />}
+      {open && dialog && dialog.kind === 'defend' && open.status === 'defense' && (open.kind === 'spell' && open.spell?.mode === 'direct'
+        ? <SpellResistDialog game={game} atk={open} onClose={() => setDialog(null)} />
+        : <DefenseDialog game={game} atk={open} onClose={() => setDialog(null)} />)}
       {open && dialog && (dialog.kind === 'soak' || (dialog.kind === 'defend' && open.status !== 'defense')) && (
         <ResultOrSoak game={game} atk={open} dialog={dialog} onClose={() => setDialog(null)} />
       )}
@@ -223,6 +233,83 @@ function ResultOrSoak({ game, atk, onClose }: DialogProps & { dialog: DialogStat
 function EdgeToggle({ actor, value, onChange, edgeMax }: { actor: Actor; value: boolean; onChange: (v: boolean) => void; edgeMax: number }) {
   if ((actor.edge?.current ?? 0) <= 0) return null;
   return <Toggle value={value} onChange={onChange} label={t('Push the Limit (+{n}) — Edge {left}', { n: edgeMax, left: actor.edge.current })} />;
+}
+
+/** Direct combat spell (SR5 p. 283): resist with BOD (physical) or WIL (mana); the net hits are the damage, no soak. */
+function SpellResistDialog({ game, atk, onClose }: DialogProps) {
+  const actor = sheetOf(game, atk.targetId);
+  const [modifier, setModifier] = useState(0);
+  const [explode, setExplode] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<RollReply | null>(null);
+  if (!actor || !atk.spell) {
+    return (
+      <Overlay title={t('Resist the spell')} onClose={onClose} width={420}>
+        <div className="muted">{t('Target sheet unavailable.')}</div>
+      </Overlay>
+    );
+  }
+  const k = atk.spell.resist;
+  const edgeMax: number = attr(actor, 'EDG');
+  const base: number = attr(actor, k);
+  const total = Math.max(0, base + modifier + (explode ? edgeMax : 0));
+  const go = async () => {
+    setBusy(true);
+    try {
+      setResult(await send<RollReply>('attack/defend', { attackId: atk.id, modifier, explode }));
+    } catch {
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Overlay title={t('Resist the spell — {name}', { name: actor.name })} onClose={onClose} width={460}>
+      <div className="col gap-s atk-dlg">
+        <div className="atk-dlg-attack">
+          <b>{atk.attackerName}</b> · {attackSummary(atk)} <BookRef source="SR5" page={283} />
+        </div>
+        {!result ? (
+          <>
+            <div className="faint small">{t('Each net hit of the caster is one box of damage; armor does not help.')}</div>
+            <div className="sh-rd-breakdown">
+              <span className="sh-rd-part">
+                <span>{attrShort(k)}</span>
+                <b>{base}</b>
+              </span>
+              {modifier ? (
+                <span className="sh-rd-part">
+                  <span>{t('mod.')}</span>
+                  <b>{signed(modifier)}</b>
+                </span>
+              ) : null}
+              {explode ? (
+                <span className="sh-rd-part edge">
+                  <span>{t('Edge')}</span>
+                  <b>+{edgeMax}</b>
+                </span>
+              ) : null}
+              <span className="sh-rd-total">{tn(total, '= {n} die', '= {n} dice')}</span>
+            </div>
+            <div className="row wrap gap-s">
+              <div className="field">
+                <span className="field-label">{t('Edit')}</span>
+                <NumberInput value={modifier} min={-20} max={20} onChange={setModifier} small />
+              </div>
+              <EdgeToggle actor={actor} value={explode} onChange={setExplode} edgeMax={edgeMax} />
+            </div>
+            <div className="row spread">
+              <Button variant="ghost" onClick={onClose}>{t('Later')}</Button>
+              <Button variant="primary" disabled={busy} onClick={go}>
+                ✦ {tn(total, 'Resist ({n} die)', 'Resist ({n} dice)')}
+              </Button>
+            </div>
+          </>
+        ) : (
+          <SoakResult result={result} a={result.attack} hit={result.attack.status === 'done'} onClose={onClose} />
+        )}
+      </div>
+    </Overlay>
+  );
 }
 
 /** Defense test: REA + INT, active defense (one), turn-long defenses, situation, previous defenses this turn, Edge. */

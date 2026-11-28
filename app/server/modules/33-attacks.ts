@@ -12,6 +12,7 @@ import {
 import { FIRE_BY_ID, isLauncherProfile, launcherRounds, fireOptions, usesAmmo } from '../../client/modules/sheet/inventory.ts';
 import { createVisionContext, tokenVision } from '../../shared/vision.ts';
 import { performRoll, applyDamage } from './10-characters.ts';
+import { ELEMENTS, type CombatSpellProfile, type SpellElement } from '../../shared/magic.ts';
 import { spendInitiative, combatTurnKey } from './30-combat.ts';
 import type { PerformedRoll, RollBonusLine, RollInternal, RollPayload } from './10-characters.ts';
 import type {
@@ -102,11 +103,37 @@ const apOf = (w: { ap?: unknown } | null | undefined): number => {
   return Number.isFinite(n) ? n : 0;
 };
 
+/**
+ * Direct combat spell (SR5 p. 283): the target resists with BOD (physical spell) or WIL (mana spell); the net hits are the
+ * damage, with no soak and no armor.
+ */
+function doResistSpell(ctx: ActionContext, atk: Attack, target: Actor, { modifier = 0, explode = false }: ResolveOpts = {}): PerformedRoll {
+  const sp = atk.spell!;
+  const roll = performRoll(ctx, {
+    actorId: target.id, attr: sp.resist, label: tk('Resist the spell'), limit: null, modifier: int(modifier, -30, 30), explode: !!explode,
+  }, { logExtra: { attackId: atk.id, defense: true, labelI18n: { key: tk('Resist {spell} ({attr})'), params: { spell: atk.weaponName || '', attr: { t: sp.resist } } } } });
+  atk.defenseHits = roll.hits;
+  atk.defenseLogId = roll.logId;
+  atk.net = atk.hits - roll.hits;
+  atk.resolvedTs = ctx.now;
+  if (atk.net <= 0) {
+    atk.status = 'missed';
+    logAttack(ctx, tk('{target} resists {spell}.'), { target: atk.targetName, spell: atk.weaponName || '' }, atk.gmOnly);
+    return roll;
+  }
+  atk.status = 'done';
+  atk.damage = atk.net;
+  atk.damageType = atk.type;
+  applyDamage(ctx, target, atk.net, atk.type);
+  return roll;
+}
+
 /** Defense test of the target (REA + INT + options), then the attack moves to soak / missed / done. Returns the roll. */
 function doDefend(ctx: ActionContext, atk: Attack, { options = [], situations = [], modifier = 0, explode = false }: ResolveOpts = {}): PerformedRoll {
   if (atk.status !== 'defense') ctx.fail('This attack is not waiting for a defense');
   const target = actorOf(ctx, atk.targetId);
   if (!ctx.owns(target.id)) ctx.fail('Only the target\'s player (or the GM) can defend');
+  if (atk.kind === 'spell' && atk.spell?.mode === 'direct') return doResistSpell(ctx, atk, target, { modifier, explode });
   const turn = turnOf(ctx.state, target.id);
   const plan = defenseLines(target, atk, {
     options: options.filter((id: string) => DEFENSE_BY_ID[id]), situations: situations.filter((id: string) => SITUATION_BY_ID[id]),
@@ -137,8 +164,34 @@ function doDefend(ctx: ActionContext, atk: Attack, { options = [], situations = 
     atk.status = 'soak';
     atk.modifiedDv = atk.dv + atk.net;
     logAttack(ctx, tk('{attacker} hits {target}: DV {dv}{type}, AP {ap}.'), { attacker: atk.attackerName, target: atk.targetName, dv: atk.modifiedDv, type: atk.type, ap: atk.ap }, gmOnly);
+    // Elemental indirect spell: the extra effect (catching fire, shorting out, brittle armor…) is the GM's (SR5 pp. 170-171).
+    if (atk.kind === 'spell' && atk.spell?.element) {
+      logAttack(ctx, tk('Elemental damage ({element}) on {target}: see its extra effects (SR5 pp. 170-171).'), { element: { t: ELEMENTS[atk.spell.element as SpellElement]?.name || atk.spell.element }, target: atk.targetName }, gmOnly);
+    }
   }
   return roll;
+}
+
+/**
+ * A combat spell aimed at a target (called by 47-magic after the Spellcasting roll): direct → status 'defense' resolved by
+ * doResistSpell; indirect → like a ranged attack, DV = Force (+ net hits on the hit), AP = −Force (SR5 p. 283).
+ */
+export function addSpellAttack(ctx: ActionContext, o: {
+  attacker: Actor; target: Actor; mapId: string | null; hits: number; spellName: BiName; profile: CombatSpellProfile; force: number;
+  castLogId?: string; rollLogId?: string; gmOnly?: boolean;
+}): Attack {
+  const s = slice(ctx.state);
+  const map = o.mapId ? ctx.state.maps?.[o.mapId] || null : null;
+  const direct = o.profile.mode === 'direct';
+  const gmOnly = !!o.gmOnly || (o.target.type === 'npc' && !!o.target.hidden);
+  const atk = push<Attack>(ctx.state, s.list, {
+    id: ctx.uid('atk'), ts: ctx.now, mapId: map?.id || null, kind: 'spell', attackerId: o.attacker.id, attackerName: o.attacker.name,
+    ...(o.rollLogId ? { attackLogId: o.rollLogId } : {}), targetId: o.target.id, targetTokenId: tokenOf(map, o.target.id)?.id || null,
+    targetName: o.target.name, weaponName: o.spellName, hits: o.hits, dv: direct ? null : o.force, type: o.profile.damage, ap: direct ? 0 : -o.force,
+    spell: { mode: o.profile.mode, resist: o.profile.resist, force: o.force, element: o.profile.element, ...(o.castLogId ? { castLogId: o.castLogId } : {}) },
+    status: o.hits > 0 ? 'defense' : 'missed', ...(o.hits > 0 ? {} : { resolvedTs: ctx.now }), ...(gmOnly ? { gmOnly: true } : {}),
+  }, MAX_ATTACKS);
+  return atk;
 }
 
 /**

@@ -121,5 +121,7 @@
   "on {list}": "sur {list}",
   "permanent in {n} Combat Turn(s)": "permanent dans {n} tour(s) de combat",
   "{name} stops sustaining {spell} (Force {force}).": "{name} cesse de maintenir {spell} (Puissance {force}).",
-  "{spell} (Force {force}) of {name} is now permanent: no longer sustained.": "{spell} (Puissance {force}) de {name} est désormais permanent : il n’est plus maintenu."
+  "{spell} (Force {force}) of {name} is now permanent: no longer sustained.": "{spell} (Puissance {force}) de {name} est désormais permanent : il n’est plus maintenu.",
+  "{spell} is a mana spell: it cannot affect {name}": "{spell} est un sort de mana : il ne peut pas affecter {name}",
+  "Elemental damage ({element}) on {target}: see its extra effects (SR5 pp. 170-171).": "Dommages élémentaires ({element}) sur {target} : voir leurs effets supplémentaires (SR5 p. 170-171)."
 }

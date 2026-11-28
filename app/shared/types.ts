@@ -1164,7 +1164,7 @@ export interface CombatState {
 // Attacks — owner: 33-attacks.js
 // =====================================================================================================================
 
-export type AttackKind = 'ranged' | 'melee' | 'blast' | 'toxin';
+export type AttackKind = 'ranged' | 'melee' | 'blast' | 'toxin' | 'spell';
 export type AttackStatus = 'defense' | 'soak' | 'missed' | 'done' | 'cancelled';
 export type DamageType = 'P' | 'S';
 export type BlastEffect = 'explosion' | 'smoke' | 'thermalSmoke' | 'gas' | 'flashpak';
@@ -1218,6 +1218,8 @@ export interface Attack {
   manual?: boolean;
   resolvedTs?: Timestamp;
   gmOnly?: boolean;
+  /** Combat spell (kind 'spell', 47-magic): direct = resisted with `resist`, no soak; indirect = dodge then soak. */
+  spell?: { mode: 'direct' | 'indirect'; resist: 'BOD' | 'WIL'; force: number; element?: string | null; castLogId?: string };
 }
 
 /** An actor caught in a blast. */

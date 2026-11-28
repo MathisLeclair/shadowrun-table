@@ -124,7 +124,11 @@ carriers other than the caster (#19, #21), more numeric spell effects.
 - GM view: all active spells, by caster, with « Drop ».
 - A spell sustained by a sustaining focus (#J) or a bound spirit (#H) does not cost the caster the −2.
 
-## Combat spells through the attack pipeline — *#15 Combat spells*
+## Combat spells through the attack pipeline — *#15, done*
+
+Built 2026-11-28 (facts: [modules/magic.md](../modules/magic.md#combat-spells-attacks)). Elemental effects are logged
+reminders, not afflictions yet.
+
 
 The cast creates `Attack`s (new `AttackKind: 'spell'`) so the existing tray, defense, soak and damage steps work:
 
@@ -239,7 +243,7 @@ Filed on GitHub 2026-11-28, all « Part of #7 ». Order: #12 first; #13 → #14,
 | #12 | Magic foundation: module, state, tab, tradition on the actor, hints panel (**done**) | — |
 | #13 | Cast flow: Force, Force as limit, reckless, drain computed and resisted (**done**) | #12 |
 | #14 | Sustained spells: −2 per spell as a modifier, list, GM view (**done**) | #13 |
-| #15 | Combat spells through the attack pipeline (direct, indirect, area) | #13 |
+| #15 | Combat spells through the attack pipeline (direct, indirect, area) (**done**) | #13 |
 | #16 | Non-combat spells: opposed resistance and net hits | #13 |
 | #17 | Spirit data from Chummer (spirits.json, traditions.json, `spiritStats`) | — |
 | #18 | Summoning: spirit NPC actors, services, control by the summoner, combat | #12, #17 |
