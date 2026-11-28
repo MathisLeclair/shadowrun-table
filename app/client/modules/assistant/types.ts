@@ -56,21 +56,41 @@ export interface ProposalTemplate {
   weapons?: Array<{ name?: string; damage?: string; ap?: number | string }>;
 }
 
+/** A line of a diff hunk: ' ' kept, '-' removed, '+' added (server/lib/assistant/diff.ts). */
+export interface DiffLine {
+  op: ' ' | '-' | '+';
+  s: string;
+}
+/** Before/after diff of one field or document. */
+export interface FieldDiff {
+  field: string;
+  hunks: Array<{ skip: number; lines: DiffLine[] }>;
+  added: number;
+  removed: number;
+  /** Lines left out (diff too long). */
+  cut?: number;
+}
+
 export interface Proposal {
   id: string;
-  /** 'map' | 'map_edits' | 'npc' | 'campaign' (then `sub` says which campaign entry). */
+  /** 'map' | 'map_edits' | 'npc' | 'handout' | 'campaign' | 'campaign_edit' | 'doc' (campaign kinds: `sub` says which entry). */
   kind: string;
   sub?: string;
   status: ProposalStatus;
   title: string;
   error?: string;
-  result?: { mapId?: string };
+  result?: { mapId?: string; doc?: string };
   preview?: {
     map?: GameMap;
     template?: ProposalTemplate;
     body?: string;
     text?: string;
     phases?: string[];
+    changes?: FieldDiff[];
+    /** The change is visible to players (player recap, revealed handout). */
+    playersSee?: boolean;
+    /** doc: a new document. */
+    created?: boolean;
   };
 }
 

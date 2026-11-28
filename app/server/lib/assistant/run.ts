@@ -26,7 +26,7 @@ export interface RunTurnOptions {
   emit: EmitFn;
 }
 /** A proposal as the client sees it (without the raw tool input). */
-export type PublicProposal = Omit<Proposal, 'input' | 'toolUseId'>;
+export type PublicProposal = Omit<Proposal, 'input' | 'toolUseId' | 'guard'>;
 /** One line of the GM's chat. */
 export type ChatItem =
   | ({ type: 'notice' } & Partial<Notice> & { kind: Notice['kind']; key: string })
@@ -260,7 +260,7 @@ export function viewConversation(c: Conversation, state: TableState): Conversati
 }
 
 export function publicProposal(p: Proposal): PublicProposal {
-  const { input, toolUseId, ...rest } = p;
+  const { input, toolUseId, guard, ...rest } = p;
   return rest;
 }
 

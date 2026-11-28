@@ -33,6 +33,7 @@ const budget = await import('../server/lib/assistant/budget.ts');
 const config = await import('../server/lib/assistant/config.ts');
 const context = await import('../server/lib/assistant/context.ts');
 const tools = await import('../server/lib/assistant/tools.ts');
+const diff = await import('../server/lib/assistant/diff.ts');
 
 console.log('Identity token, pricing, ledger');
 await test('signing key is created 0600 and the minted JWT verifies with the published JWK', () => {
@@ -121,8 +122,43 @@ await test('doc paths cannot escape the docs folder', () => {
 await test('tool definitions: unique names, propose tools present, no tool can reveal or delete', () => {
   const names = tools.TOOL_DEFS.map((t) => t.name);
   assert.equal(new Set(names).size, names.length);
-  for (const n of ['propose_map', 'propose_map_edits', 'propose_npc', 'propose_handout', 'propose_campaign_entry']) assert.ok(names.includes(n), n);
+  for (const n of ['propose_map', 'propose_map_edits', 'propose_npc', 'propose_handout', 'propose_campaign_entry', 'propose_campaign_edit', 'propose_doc_edit', 'get_campaign_entry']) assert.ok(names.includes(n), n);
   assert.ok(!names.some((n) => /reveal|delete|chat|roll|damage|karma|nuyen|setActive/i.test(n)));
+});
+
+await test('text edits: exact find/replace, missing or ambiguous text refused, all: true replaces every occurrence', () => {
+  assert.deepEqual(diff.applyEdits('a\r\nb\r\nc', [{ find: 'b', replace: 'B' }], 'x'), { text: 'a\nB\nc' });
+  assert.match((diff.applyEdits('abc', [{ find: 'zz', replace: '' }], 'x') as { error: string }).error, /introuvable/);
+  assert.match((diff.applyEdits('a a', [{ find: 'a', replace: 'b' }], 'x') as { error: string }).error, /2 fois/);
+  assert.deepEqual(diff.applyEdits('a a', [{ find: 'a', replace: 'b', all: true }], 'x'), { text: 'b b' });
+  assert.match((diff.applyEdits('a', [{ find: '', replace: 'b' }], 'x') as { error: string }).error, /vide/);
+  // $ patterns in the replacement are literal text.
+  assert.deepEqual(diff.applyEdits('prix X', [{ find: 'X', replace: '$& 5 000 ¥' }], 'x'), { text: 'prix $& 5 000 ¥' });
+});
+
+await test('line diff: hunks with context, unchanged lines skipped, counts', () => {
+  const before = Array.from({ length: 30 }, (_, i) => `ligne ${i}`).join('\n');
+  const after = before.replace('ligne 3', 'ligne trois').replace('ligne 25', 'ligne 25\nnouvelle');
+  const d = diff.diffLines(before, after, 'plan');
+  assert.equal(d.field, 'plan');
+  assert.equal(d.added, 2);
+  assert.equal(d.removed, 1);
+  assert.equal(d.hunks.length, 2);
+  assert.equal(d.hunks[0].skip, 1);
+  assert.ok(d.hunks[0].lines.some((l) => l.op === '-' && l.s === 'ligne 3'));
+  assert.ok(d.hunks[1].lines.some((l) => l.op === '+' && l.s === 'nouvelle'));
+  assert.ok(d.hunks[1].skip > 10);
+  const created = diff.diffLines('', 'a\nb', 'x');
+  assert.equal(created.added, 2);
+  assert.equal(created.removed, 0);
+});
+
+await test('document names: new names allowed one folder deep, nothing can leave the docs folder', () => {
+  const docs = path.join(tmp, 'docs');
+  assert.equal(context.docName('pnj/Mr Johnson.md'), 'pnj/Mr Johnson.md');
+  for (const bad of ['../x.md', 'a/b/c.md', '.hidden.md', 'x.txt', 'a:b.md', '', 'dir/../x.md']) assert.equal(context.docTarget(docs, bad), null, bad);
+  const w = tools.buildDocWrite({ name: 'new.md', edits: [{ find: 'a', replace: 'b' }] }, docs);
+  assert.match(String(w.error), /introuvable/);
 });
 
 // ---------------------------------------------------------------------------
@@ -362,6 +398,102 @@ try {
     assert.ok(Array.isArray(h.revealedTo) && h.revealedTo.length === 0);
     assert.ok(!JSON.stringify(player.state).includes('HANDOUT-SECRET-123'));
     assert.ok(campaign.quests.some((q) => q.title === 'Quête test'));
+  });
+
+  // Runs one scripted turn that calls the given tools, then returns the conversation view.
+  const turn = async (text: string, blocks: ScriptBlock[]) => {
+    script.push({ content: blocks, stop_reason: 'tool_use' });
+    script.push({ content: [{ type: 'text', text: 'Propositions faites.' }], stop_reason: 'end_turn' });
+    gm.events.length = 0;
+    const before = requests.length;
+    await api('/api/assistant/ask', gmTok, { method: 'POST', body: { conversationId: convId, text } });
+    await waitFor(() => gm.events.some((e) => e.ev === 'assistant:done'));
+    const view = (await api(`/api/assistant/conversations/${convId}`, gmTok)).body;
+    return { view, results: requests[before + 1].body.messages.at(-1).content as any[] };
+  };
+  const pendingOf = (view: any) => view.items.filter((i: ConvItem) => i.type === 'proposal' && i.proposal.status === 'pending').map((i: ConvItem) => i.proposal);
+
+  await test('campaign edits: exact edits re-applied at apply time (GM changes in between kept), diff preview, new phase', async () => {
+    const campaign = () => gm.state.campaign as Campaign;
+    const quest = campaign().quests.find((q) => q.title === 'Quête test')!;
+    const { view, results } = await turn('Mets la quête à jour', [
+      toolUse('get_campaign_entry', { target: 'quest', id: quest.id }),
+      toolUse('propose_campaign_edit', { target: 'quest', id: 'Quête test', summary: 'résumé précisé', set: { status: 'active' }, edits: [{ find: 'Résumé', replace: 'Résumé précisé : EDIT-OK' }] }),
+      toolUse('propose_campaign_entry', { kind: 'phase', questId: quest.id, title: 'Phase 2', text: 'Infiltration' }),
+      toolUse('propose_campaign_edit', { target: 'quest', id: quest.id, summary: 'introuvable', edits: [{ find: 'PAS-DANS-LE-TEXTE', replace: 'x' }] }),
+    ]);
+    assert.match(results[0].content, /"summary": "Résumé"/);
+    assert.equal(results[3].is_error, true);
+    assert.match(results[3].content, /introuvable/);
+    const [edit, phase] = pendingOf(view);
+    assert.equal(edit.kind, 'campaign_edit');
+    assert.equal(edit.sub, 'quest');
+    assert.match(edit.title, /Quête test — résumé précisé/);
+    const fields = edit.preview.changes.map((c: any) => c.field).sort();
+    assert.deepEqual(fields, ['status', 'summary']);
+    const sum = edit.preview.changes.find((c: any) => c.field === 'summary');
+    assert.ok(sum.hunks[0].lines.some((l: any) => l.op === '+' && l.s.includes('EDIT-OK')));
+    assert.ok(!('guard' in edit));
+    // The GM renames the quest before applying: the rename survives, the edit still lands.
+    await gm.send('campaign/updateQuest', { questId: quest.id, patch: { title: 'Quête renommée' } });
+    for (const p of [edit, phase]) {
+      const r = await api(`/api/assistant/proposals/${p.id}/apply`, gmTok, { method: 'POST' });
+      assert.equal(r.status, 200, JSON.stringify(r.body));
+    }
+    await settle();
+    const q = campaign().quests.find((x) => x.id === quest.id)!;
+    assert.equal(q.title, 'Quête renommée');
+    assert.equal(q.summary, 'Résumé précisé : EDIT-OK');
+    assert.equal(q.status, 'active');
+    assert.ok(q.phases.some((ph) => ph.title === 'Phase 2' && ph.text === 'Infiltration'));
+  });
+
+  await test('a whole text replaced by `set` is refused at apply time when the GM changed it since; player recap flagged', async () => {
+    await gm.send('campaign/updateNotes', { text: 'Notes v1' });
+    await settle();
+    const { view } = await turn('Réécris mes notes', [
+      toolUse('propose_campaign_edit', { target: 'gm_notes', summary: 'réécriture', set: { text: 'Notes réécrites' } }),
+      toolUse('propose_campaign_edit', { target: 'player_recap', summary: 'récap', set: { text: 'RECAP-JOUEURS-OK' } }),
+    ]);
+    const [notes, recap] = pendingOf(view);
+    assert.equal(recap.preview.playersSee, true);
+    assert.ok(!notes.preview.playersSee);
+    await gm.send('campaign/updateNotes', { text: 'Notes v2 (MJ)' });
+    const r = await api(`/api/assistant/proposals/${notes.id}/apply`, gmTok, { method: 'POST' });
+    assert.equal(r.status, 400);
+    await settle();
+    assert.equal((gm.state.campaign as Campaign).notes, 'Notes v2 (MJ)');
+    assert.equal((await api(`/api/assistant/proposals/${recap.id}/apply`, gmTok, { method: 'POST' })).status, 200);
+    await settle();
+    assert.equal(player.state.campaign.playerRecap, 'RECAP-JOUEURS-OK');
+  });
+
+  await test('documents: exact edits and new documents, previous version backed up, nothing written before « Appliquer »', async () => {
+    const outline = path.join(tableDocs, 'campaign-outline.md');
+    fs.writeFileSync(outline, '# Outline\r\n\r\nHollow Pine, contenu de test.\r\nFin.\r\n');
+    const { view, results } = await turn('Corrige le synopsis', [
+      toolUse('propose_doc_edit', { name: 'campaign-outline.md', summary: 'précision', edits: [{ find: 'contenu de test', replace: 'contenu corrigé' }] }),
+      toolUse('propose_doc_edit', { name: 'pnj/Mr Johnson.md', summary: 'nouveau PNJ', content: '# Mr Johnson\n\nFixer.' }),
+      toolUse('propose_doc_edit', { name: '../evil.md', summary: 'x', content: 'x' }),
+    ]);
+    assert.equal(results[2].is_error, true);
+    const [edit, created] = pendingOf(view);
+    assert.equal(edit.kind, 'doc');
+    assert.equal(created.preview.created, true);
+    assert.ok(edit.preview.changes[0].hunks[0].lines.some((l: any) => l.op === '+' && l.s.includes('contenu corrigé')));
+    assert.match(fs.readFileSync(outline, 'utf8'), /contenu de test/);
+    assert.ok(!fs.existsSync(path.join(tableDocs, 'pnj')));
+    for (const p of [edit, created]) {
+      const r = await api(`/api/assistant/proposals/${p.id}/apply`, gmTok, { method: 'POST' });
+      assert.equal(r.status, 200, JSON.stringify(r.body));
+    }
+    assert.equal(fs.readFileSync(outline, 'utf8'), '# Outline\r\n\r\nHollow Pine, contenu corrigé.\r\nFin.\r\n', 'line endings kept');
+    assert.equal(fs.readFileSync(path.join(tableDocs, 'pnj', 'Mr Johnson.md'), 'utf8'), '# Mr Johnson\n\nFixer.');
+    const backups = fs.readdirSync(path.join(srv.runtime, 'tables', tableId, 'doc-backups'));
+    assert.equal(backups.length, 1);
+    assert.match(backups[0], /campaign-outline\.md$/);
+    const docs = (await api('/api/docs', gmTok)).body.map((d: { name: string }) => d.name);
+    assert.ok(docs.includes('pnj/Mr Johnson.md'));
   });
 
   await test('the assistant file never reaches any view', async () => {

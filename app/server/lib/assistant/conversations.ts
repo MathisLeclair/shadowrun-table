@@ -6,11 +6,12 @@ import { readJson, writeJsonAtomic } from '../../store.ts';
 import { uid } from '../../../shared/util.ts';
 import type { BetaMessageParam } from '@anthropic-ai/sdk/resources/beta/messages/messages';
 import type { I18nParams } from '../../../shared/types.ts';
+import type { FieldDiff } from './diff.ts';
 import type { Table } from '../tables.ts';
 
 /** Input of a tool call, as written by the model (foreign data: validated by the tools and the actions). */
 export type ToolInput = Record<string, any>;
-export type ProposalKind = 'map' | 'map_edits' | 'npc' | 'handout' | 'campaign';
+export type ProposalKind = 'map' | 'map_edits' | 'npc' | 'handout' | 'campaign' | 'campaign_edit' | 'doc';
 export type ProposalStatus = 'pending' | 'applied' | 'partial' | 'failed' | 'dismissed';
 /** What a proposal card shows before it is applied (see runPropose in tools.ts). */
 export interface ProposalPreview {
@@ -20,12 +21,18 @@ export interface ProposalPreview {
   body?: string;
   text?: string;
   phases?: unknown[];
+  /** Before/after diff of each changed field or document (campaign_edit, doc). */
+  changes?: FieldDiff[];
+  /** The change is visible to players (player recap, revealed handout). */
+  playersSee?: boolean;
+  /** doc: a new document. */
+  created?: boolean;
 }
 /** A change the model proposed; the GM applies it with one click (95-assistant). */
 export interface Proposal {
   id: string;
   kind: ProposalKind;
-  /** Campaign entry kind (quest, thread, session_plan, gm_notes). */
+  /** campaign: entry kind (act, quest, phase, session, thread, session_plan, gm_notes); campaign_edit: target. */
   sub?: string;
   title: string;
   input: ToolInput;
@@ -36,6 +43,8 @@ export interface Proposal {
   appliedAt?: number;
   error?: string;
   result?: Record<string, unknown>;
+  /** Hash of the texts a whole-text change replaces: apply refuses when they changed since (server only). */
+  guard?: string;
 }
 /** A line the server adds to the chat (errors, warnings), shown before message `at`. */
 export interface Notice {
