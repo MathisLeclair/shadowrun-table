@@ -170,7 +170,8 @@ tr.sh-skill:hover .sh-die-btn { color: var(--pc); }
 
 /* inventory (tab « Inventaire »): one card per place, drag & drop between cards */
 .sh-inventory { display: flex; flex-direction: column; gap: 10px; }
-.sh-inv-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 10px; align-items: start; }
+/* At most 2 cards per line (the calc() floor), 1 below ~2 × 420px; 3 were too narrow for ItemRow. */
+.sh-inv-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(max(min(100%, 420px), calc((100% - 10px) / 2)), 1fr)); gap: 10px; align-items: start; }
 .sh-inv-card { background: var(--panel2); border: 1px solid var(--line); border-left: 3px solid var(--pc); border-radius: 8px; padding: 8px 10px; min-width: 0; transition: border-color .12s, background .12s; }
 .sh-inv-card.sh-inv-bag { border-left-color: var(--amber); } .sh-inv-card.sh-inv-vehicle { border-left-color: var(--blue); }
 .sh-inv-card.sh-inv-safehouse { border-left-color: var(--violet); } .sh-inv-card.sh-inv-other { border-left-color: var(--line2); }
@@ -184,7 +185,15 @@ tr.sh-skill:hover .sh-die-btn { color: var(--pc); }
 .sh-inv-row.draggable { cursor: grab; }
 .sh-inv-row.draggable:active { cursor: grabbing; }
 .sh-inv-icon { width: 16px; text-align: center; color: var(--dim); flex: none; }
-.sh-inv-name { min-width: 120px; overflow-wrap: anywhere; }
+/* The name takes the free space and truncates (full name in the tooltip); the buttons wrap only on very narrow rows. */
+.sh-inv-name { flex: 1 1 120px; min-width: 0; }
+.sh-inv-title { display: flex; align-items: baseline; gap: 4px; min-width: 0; }
+.sh-inv-label { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sh-inv-title > :not(.sh-inv-label) { flex: none; }
+.sh-inv-nowrap { white-space: nowrap; }
+.sh-inv-sub { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.sh-inv-sub > :not(.sh-inv-cat) { flex: none; }
+.sh-inv-cat { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sh-inv-move { width: auto; max-width: 150px; padding: 2px 6px; font-size: 12px; }
 .sh-inv-empty { padding: 8px 2px 2px; }
 .sh-inv-add .input { flex: 1; min-width: 160px; width: auto; }

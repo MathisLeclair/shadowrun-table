@@ -83,6 +83,10 @@ activating it moves it 'on' from a bag (`settleItem`); from a vehicle / safehous
 kind of a vehicle / safehouse / other container, nor remove one that still holds items; moving an item out of one
 (`inventory/move`, `location` patch) is allowed and logged (« {name} récupère {item} ({place}) ») so the GM sees it.
 
+Sheet « Inventaire » tab: one card per place (« Sur soi » first), at most 2 per line (1 below ~2 × 420 px,
+`.sh-inv-groups`); drag a row onto another card to move it. A row stays on one line: the name truncates (full name in
+the tooltip), category and 📖 chip sit on the line under it.
+
 Containers: `containers: [{ id, name, kind: 'body'|'bag'|'vehicle'|'safehouse'|'other', notes?, itemId? }]` (`itemId`:
 the gear item the container is — a Chummer bag, see Imports) (« Sur soi » = 'on',
 implicit). Actions (owner / GM): `inventory/addContainer { actorId, name, kind? }` → id (kind guessed from the name),
