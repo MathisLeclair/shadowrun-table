@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   findTradition, traditionFromDef, parseDrainText, sortTraditions, drainValue, drainOffset, spellReach, isAreaSpell, spellCategory, spellDrainType, maxForce,
-  spellEffects, isSustainable, combatSpellProfile, spellResistance, attributeOfSpell, evalForce, spiritStats, optionalPowerCount, traditionSpiritTypes, reagentDrams, aidSpiritType, canPerceiveAstral, canProjectAstral, focusKind, focusBondMultiplier, spiritWeapons, parseNaturalWeapon, naturalAttackRule, hasEnergyAura, focusCategory, fociLimits, teamwork, ritualDrain, isRitual, metamagicDef, metamagicEffects, spellShapingMax, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
+  spellEffects, isSustainable, combatSpellProfile, spellResistance, attributeOfSpell, evalForce, spiritStats, optionalPowerCount, traditionSpiritTypes, reagentDrams, aidSpiritType, canPerceiveAstral, canProjectAstral, focusKind, focusBondMultiplier, spiritWeapons, parseNaturalWeapon, syncSpiritControl, naturalAttackRule, hasEnergyAura, focusCategory, fociLimits, teamwork, ritualDrain, isRitual, metamagicDef, metamagicEffects, spellShapingMax, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
   type TraditionDef,
 } from '../shared/magic.ts';
 import { derive } from '../shared/sr5.ts';
@@ -191,6 +191,13 @@ ok(optionalPowerCount(2) === 0 && optionalPowerCount(3) === 1 && optionalPowerCo
   ok(natural('Spirit of Man', 3).map((w) => w.damage).join() === '(STR)S', 'spirit of man: only its unarmed attack');
   ok(JSON.stringify(parseNaturalWeapon('DV (Force)P, AP 0', 5)) === '{"damage":"5P","ap":0}' && JSON.stringify(parseNaturalWeapon('DV {STR}P, AP -1', 3)) === '{"damage":"(STR)P","ap":-1}' && parseNaturalWeapon('Any Machine Gun', 3) === null,
     'Natural Weapon choices: DV (Force)P / {STR}P and AP; vehicle weapons are not natural attacks');
+  // Spirits follow their summoner's player (login, GM assignment).
+  const ctl = {
+    actors: { s1: { spirit: { summonerId: 'mage' } }, s2: { spirit: { summonerId: 'npc' } }, s3: { spirit: { summonerId: 'free' } }, mage: { type: 'pc' }, npc: { type: 'npc' }, free: { type: 'pc' } },
+    users: { a: { characterIds: ['mage'] }, b: { characterIds: ['s1', 's2', 's3'] } },
+  };
+  ok(syncSpiritControl(ctl) && ctl.users.a.characterIds.join() === 'mage,s1' && ctl.users.b.characterIds.join() === 's2' && !syncSpiritControl(ctl),
+    `a spirit goes to its summoner's player; a free PC's spirit goes to nobody; an NPC's spirit keeps the GM's assignment (${JSON.stringify(ctl.users)})`);
   ok(!!naturalAttackRule(fw[2].natural) && naturalAttackRule(undefined) === null && hasEnergyAura({ powers: [{ name: 'Energy Aura' }] }) && !hasEnergyAura({ powers: [] }), 'rule text per attack; Energy Aura detection');
 }
 
@@ -507,6 +514,18 @@ try {
   ok(spirit.attributes.REA === 6 && spirit.attributes.AGI === 5 && spirit.spirit!.optionalPowers.join() === 'Fear' && spirit.powers.some((p) => p.name === 'Elemental Attack' && p.choice === 'Fire'), `fire spirit F3 stats; one optional power at F3 (${spirit.spirit?.optionalPowers})`);
   ok(!!(pj.state.actors[sid2] as Actor | undefined)?.attributes, 'the summoner’s player gets the full sheet (controls the spirit)');
   ok(!(pb.state.actors[sid2] as Actor | undefined)?.attributes, 'another player only sees a stub');
+  // A player who takes the summoner later (new login, GM assignment) gets its spirit; the former one loses it.
+  const baptiste = Object.values(gm.state.users).find((u) => u.characterIds?.includes('pc_jane'))!;
+  await gm.send('users/assign', { userId: baptiste.id, characterId: 'pc_jane', assign: false });
+  await settle();
+  ok(!gm.state.users[baptiste.id].characterIds.includes(sid2), 'unassigning the summoner takes its spirit away too');
+  const late = await client(srv.url, await login(srv.url, { role: 'player', name: 'Latecomer', characterId: 'pc_jane', table: 'lazarus' }), { table: 'lazarus' });
+  ok(late.state.me.characterIds.includes(sid2) && !!(late.state.actors[sid2] as Actor | undefined)?.attributes, 'a player logging in with the summoner after the summoning controls its spirit');
+  late.socket.close();
+  await gm.send('users/assign', { userId: baptiste.id, characterId: 'pc_jane', assign: true });
+  await settle();
+  const lateUser = Object.values(gm.state.users).find((u) => u.name === 'Latecomer')!;
+  ok(gm.state.users[baptiste.id].characterIds.includes(sid2) && !lateUser.characterIds.includes(sid2), 'the GM gives the summoner back: the spirit follows');
   await expectFail(pj.send('magic/summon', { actorId: 'pc_jane', type: 'Spirit of Fire', force: 2 }), /unbound|non lié/i, 'one unbound spirit at a time');
   // Services.
   const before = gm.state.actors[sid2].spirit!.services;

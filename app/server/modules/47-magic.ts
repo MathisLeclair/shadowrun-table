@@ -12,7 +12,7 @@ import { hasLineOfSight } from '../../shared/vision.ts';
 import {
   isAwakened, DRAIN_ATTRS, drainAttr, drainValue, spellDrainType, spellReach, isAreaSpell, spellCategory, maxForce, RECKLESS_DV,
   isSustainable, spellEffects, combatSpellProfile, MIN_DRAIN, spellResistance, NO_AURA_KINDS, OBJECT_RESISTANCE,
-  spiritStats, spiritWeapons, traditionSpiritTypes, optionalPowerCount, BINDING_DRAMS, isReagent, reagentDrams, aidSpiritType,
+  spiritStats, spiritWeapons, syncSpiritControl, traditionSpiritTypes, optionalPowerCount, BINDING_DRAMS, isReagent, reagentDrams, aidSpiritType,
   canPerceiveAstral, canProjectAstral, focusKind, focusForce, focusCategory, focusWorks, teamwork, ritualDrain, hasMetamagic, spellShapingMax,
 } from '../../shared/magic.ts';
 import { spellCatalogInfo } from '../lib/spells.ts';
@@ -627,9 +627,7 @@ function createSpirit(ctx: ActionContext, summoner: Actor, def: NonNullable<Retu
   sp.notes = [def.source && def.page ? `${def.source} p. ${def.page}` : '', def.movement?.walk ? `${def.movement.walk} / ${def.movement.run || ''} / ${def.movement.sprint || ''}` : ''].filter(Boolean).join(' · ');
   normalizeActor(sp, uid);
   ctx.state.actors[sp.id] = sp;
-  for (const u of Object.values(ctx.state.users || {})) {
-    if ((u.characterIds || []).includes(summoner.id) && !u.characterIds.includes(sp.id)) u.characterIds.push(sp.id);
-  }
+  syncSpiritControl(ctx.state); // the summoner's player(s) control it
   // It arrives on the astral plane next to its summoner (SR5 p. 300): an astral token on the shown map.
   const map = ctx.state.scene?.activeMapId ? ctx.state.maps?.[ctx.state.scene.activeMapId] : null;
   const near = map ? tokenOf(map, summoner.id) : null;
@@ -1074,6 +1072,7 @@ const mod: ServerModule = {
     for (const [id, d] of Object.entries(m.pendingDrain)) if (!isObj(d) || !state.actors?.[d.actorId]) delete m.pendingDrain[id];
     syncSustained(state);
     for (const a of Object.values(state.actors || {})) if (isObj(a) && a.spirit) syncSpiritWeapons(a);
+    syncSpiritControl(state); // spirits of a summoner whose player changed while the server was down
   },
 
   actions,

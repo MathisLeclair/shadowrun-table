@@ -1,5 +1,6 @@
 // Core actions: chat, whispers, settings, player management, language, pings.
 import { isLang } from '../lib/i18n.ts';
+import { syncSpiritControl } from '../../shared/magic.ts';
 import type { ActionContext, InitOptions, Lang, ServerModule, TableConfig, TableState, UserId, ActorId, MapId } from '../../shared/types.ts';
 
 type ChatSendPayload = {
@@ -120,6 +121,7 @@ const mod: ServerModule = {
           for (const other of Object.values(ctx.state.users)) other.characterIds = (other.characterIds || []).filter((id) => id !== characterId);
           u.characterIds.push(characterId);
         }
+        syncSpiritControl(ctx.state); // a summoner's spirits follow it
       },
     },
     'users/remove': {
