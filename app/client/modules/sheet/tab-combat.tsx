@@ -174,7 +174,7 @@ export function CombatTab({ s }: { s: SheetCtx }) {
       : arts.length > 0 && <div className="sh-cards">
         {arts.map((m) => <div className="sh-card" key={m.id}>
           <div className="row spread">
-            <span><b>{m.name}</b>{' '}<ItemRef item={m} /></span>
+            <span><b title={itemTitle(m)}>{itemLabel(m)}</b>{' '}<ItemRef item={m} /></span>
             {m.rating > 1 ? <span className="badge badge-magenta">{t('Rating {n}', { n: m.rating })}</span> : null}
           </div>
           <SubChips sub="techniques" items={m.techniques} empty={t('No technique.')} />

@@ -202,7 +202,11 @@ try {
     const apds = J().gear.find((g) => /ADPS/.test(g.name))!;
     assert.equal(apds.nameEn, 'Ammo: APDS');
     assert.equal(apds.nameFr, 'Mun. : Balles ADPS');
-    const id = await gm.send('actor/addItem', { actorId: 'pc_bricks', list: 'weapons', item: { name: 'Ares Predator V', kind: 'ranged', skill: 'pistols', ammo: '15(c)', mode: 'SA' } });
+    // Qualities / powers imported in French get their English catalog name too.
+    const pretty = J().qualities.find((q) => q.name === 'Époustouflant')!;
+    assert.equal(pretty.nameEn, 'Too Pretty To Hit');
+    assert.equal(J().powers.find((p) => p.name === 'Ton autoritaire')!.nameEn, 'Authoritative Tone');
+    const id =await gm.send('actor/addItem', { actorId: 'pc_bricks', list: 'weapons', item: { name: 'Ares Predator V', kind: 'ranged', skill: 'pistols', ammo: '15(c)', mode: 'SA' } });
     const custom = await gm.send('actor/addItem', { actorId: 'pc_bricks', list: 'weapons', item: { name: 'Bessie', catalogId: enfield.catalogId, kind: 'ranged', ammo: '10(c)' } });
     await settle();
     const b = gm.state.actors.pc_bricks;

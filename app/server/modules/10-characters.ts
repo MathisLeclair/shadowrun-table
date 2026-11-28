@@ -408,7 +408,10 @@ function names(list: string[]): I18nParamValue {
 // Item names in both languages (catalog)
 // ---------------------------------------------------------------------------
 /** Catalog files of each list: catalogId lookup and one-time backfill by exact name. */
-const NAME_CATALOGS: Record<string, string[]> = { weapons: ['weapons'], armor: ['armor'], gear: ['gear', 'programs', 'armor'], augmentations: ['cyberware', 'bioware'], vehicles: ['vehicles'] };
+const NAME_CATALOGS: Record<string, string[]> = {
+  weapons: ['weapons'], armor: ['armor'], gear: ['gear', 'programs', 'armor'], augmentations: ['cyberware', 'bioware'], vehicles: ['vehicles'],
+  qualities: ['qualities'], powers: ['powers'], spells: ['spells'], martialArts: ['martialarts'],
+};
 /** Gear entries that describe a weapon (grenades, throwing knives, grapple gun…): their names serve weapon items (no catalogId). */
 let weaponGear: Map<string, Loose> | null = null;
 function weaponGearByName(): Map<string, Loose> {
