@@ -169,9 +169,11 @@ export function RollDialog({ game, actor: viewActor, preset: initialPreset = {},
   const [weaponId, setWeaponId] = useState<string | null>(initialPreset.weaponId || null);
   const [allWeapons, setAllWeapons] = useState(false);
   const weapon = weaponId && sheet ? (sheet.weapons || []).find((w) => w && w.id === weaponId) || null : null;
-  const preset: RollPreset = weapon && weaponId !== initialPreset.weaponId
+  const basePreset: RollPreset = weapon && weaponId !== initialPreset.weaponId
     ? { ...initialPreset, weaponId: weapon.id, skillId: weapon.skill || 'exotic_weapon', label: `Attack — ${weapon.nameFr || weapon.name}` } // i18n-ignore: stored label (rollLabel, labelI18n from the server)
     : initialPreset;
+  // A vehicle-mounted weapon is fired with Gunnery (the server picks the attribute from the vehicle's control mode).
+  const preset: RollPreset = weapon?.vehicleId ? { ...basePreset, skillId: 'gunnery' } : basePreset;
   const [fireMode, setFireMode] = useState<string | null>(null);
   const [ammoOverride, setAmmoOverride] = useState(false);
   // Target (map token), special action, launcher ammunition, aimed point — attacks module (attack/roll).
@@ -186,7 +188,8 @@ export function RollDialog({ game, actor: viewActor, preset: initialPreset = {},
   });
   const target = candidates.find((c) => c.token.id === targetId) || null;
   const amap = canTarget ? attackMap(game) : null;
-  const myToken = amap && sheet ? tokenOfActor(amap, sheet.id) : null;
+  // A mounted weapon fires from its vehicle's token when the vehicle is on the map.
+  const myToken = amap && sheet ? (weapon?.vehicleId ? (amap.tokens || []).find((x) => x.actorId === sheet.id && x.vehicleId === weapon.vehicleId) : null) || tokenOfActor(amap, sheet.id) : null;
   const area = !!weapon && isAreaWeapon(weapon);
   const aim = area && ui.aimPoint && amap && ui.aimPoint.mapId === amap.id ? ui.aimPoint : null;
   const [useAim, setUseAim] = useState(true);

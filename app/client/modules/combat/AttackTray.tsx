@@ -12,6 +12,7 @@ import { useModifiers } from '../sheet/modifiers-ui.tsx';
 import { DEFENSE_OPTIONS, DEFENSE_SITUATIONS, defenseLines, isUnlocked, unlockNames, finalDamageType, TOXIN_BY_ID, AFFLICTIONS } from '/shared/combat.ts';
 import { ownsActorId, turnInfo, PENDING } from './attack-common.ts';
 import type { Actor, Attack, BiName, GameView, RollRecord } from '../../../shared/types.ts';
+import { VehicleAttackDialog, FeedbackDialog } from './VehicleAttack.tsx';
 import './combat.css';
 import { Overlay, DiceFaces, RollBadges } from '../sheet/common.tsx';
 import { BookRef } from '../books/BookRef.tsx';
@@ -196,10 +197,12 @@ export default function AttackTray({ game }: GameProps) {
           })}
         </div>
       )}
-      {open && dialog && dialog.kind === 'defend' && open.status === 'defense' && ((open.kind === 'spell' && open.spell?.mode === 'direct') || open.astral
+      {open && dialog && open.vehicle && <VehicleAttackDialog game={game} atk={open} onClose={() => setDialog(null)} />}
+      {open && dialog && !open.vehicle && open.feedback && open.status === 'soak' && <FeedbackDialog game={game} atk={open} onClose={() => setDialog(null)} />}
+      {open && dialog && !open.vehicle && !open.feedback && dialog.kind === 'defend' && open.status === 'defense' && ((open.kind === 'spell' && open.spell?.mode === 'direct') || open.astral
         ? <SpellResistDialog game={game} atk={open} onClose={() => setDialog(null)} />
         : <DefenseDialog game={game} atk={open} onClose={() => setDialog(null)} />)}
-      {open && dialog && (dialog.kind === 'soak' || (dialog.kind === 'defend' && open.status !== 'defense')) && (
+      {open && dialog && !open.vehicle && !(open.feedback && open.status === 'soak') && (dialog.kind === 'soak' || (dialog.kind === 'defend' && open.status !== 'defense')) && (
         <ResultOrSoak game={game} atk={open} dialog={dialog} onClose={() => setDialog(null)} />
       )}
     </div>

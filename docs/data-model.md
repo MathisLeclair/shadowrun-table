@@ -25,6 +25,7 @@ Only the owning module writes a slice (other modules go through its exported hel
 | `scene`, `maps` | `20-maps.ts` (library links: `22-maplib.ts`) | `SceneState`, `GameMap`, `Token`, `MapWall` | [maps](modules/maps.md) |
 | `bestiary`, `bestiaryRemoved`, `combat` | `30-combat.ts` | `Template`, `CombatState`, `CombatEntry` | [combat](modules/combat.md) |
 | `attacks` | `33-attacks.ts` | `AttacksState`, `Attack`, `Blast` | [attacks](modules/attacks.md) |
+| `chase` | `34-vehicles.ts` | `ChaseState`, `ChaseVehicle`, `ChasePending` | [vehicles](modules/vehicles.md) |
 | `shop` | `40-shop.ts` | `ShopState`, `ShopOrder`, `AvailTest` | [shop](modules/shop.md) |
 | `matrix` | `45-matrix.ts` | `MatrixState`, `Persona`, `Host` | [matrix](modules/matrix.md) |
 | `magic` | `47-magic.ts` | `MagicState`, `SustainedSpell`, `AstralPresence` (+ `Actor.magic.tradition`) | [magic](modules/magic.md) |
@@ -78,6 +79,7 @@ filters its own slice:
 | `maps` | only `maps[scene.activeMapId]`, masked by vision | [maps](modules/maps.md#vision) |
 | `bestiary` | nothing (GM only) | [combat](modules/combat.md) |
 | `combat`, `attacks` | hidden entries and attacks on hidden NPCs left out | [combat](modules/combat.md), [attacks](modules/attacks.md) |
+| `chase` | without hidden chase vehicles, their pending tests and GM-only events | [vehicles](modules/vehicles.md) |
 | `shop` | their actors' availability tests, `contactSearch` | [shop](modules/shop.md) |
 | `matrix` | their own personas, hosts they can see | [matrix](modules/matrix.md) |
 | `magic` | spells their characters sustain or are under, their own astral state (all when the GM shows them) | [magic](modules/magic.md) |

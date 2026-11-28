@@ -204,3 +204,20 @@ button.cbt-act:hover { border-color: var(--red); text-decoration: line-through; 
 /* Matrix entries (IC of a host, a decker's agent) */
 .cbt-entry.cbt-matrix .cbt-avatar { background: #0c1116; color: var(--cyan); font-size: 16px; display: flex; align-items: center; justify-content: center; }
 .cbt-entry.cbt-matrix.d-hostile .cbt-avatar { color: var(--magenta); }
+
+/* ===================================================================== chase (ChasePanel.tsx). Prefix: .chase- */
+.chase { display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 1px solid var(--amber); border-radius: var(--radius); background: var(--panel); }
+.chase-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: space-between; }
+.chase-head strong { color: var(--amber); letter-spacing: .5px; }
+.chase-row { display: flex; flex-direction: column; gap: 6px; padding: 6px 8px; border: 1px solid var(--line); border-left: 4px solid var(--red); border-radius: 6px; background: var(--panel2); }
+.chase-row.quarry { border-left-color: var(--amber); }
+.chase-row.out { opacity: .6; }
+.chase-ranges { display: flex; gap: 4px; flex-wrap: wrap; }
+.chase-range { flex: 1 1 0; min-width: 52px; padding: 3px 6px; font-size: 11.5px; border: 1px solid var(--line2); border-radius: 4px; background: transparent; color: var(--dim); cursor: pointer; }
+.chase-range.on { background: var(--amber); border-color: var(--amber); color: #111; font-weight: 700; }
+.chase-range:disabled { cursor: default; }
+.chase-act { align-items: center; }
+.chase-pending { display: flex; flex-direction: column; gap: 4px; padding: 6px 8px; border-left: 3px solid var(--magenta); background: var(--panel2); border-radius: 4px; }
+.chase-events { display: flex; flex-direction: column; gap: 2px; max-height: 110px; overflow: auto; }
+.chase-setup-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(110px, 46%); gap: 6px; align-items: center; }
+.chase-setup-row .small { overflow-wrap: anywhere; }

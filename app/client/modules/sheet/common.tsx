@@ -132,7 +132,10 @@ export function Overlay({ title, onClose, width = 560, children, actions, classN
 export const ROLL_TERMS = [tk('spec.'), tk('mod.'), tk('wounds'), tk('defaulting'), tk('bonus'), tk('recoil'), tk('armor'), tk('accessories'),
   tk('AP'), tk('bought dice'), tk('overpay'), tk('Loyalty'), tk('Connection'), tk('Etiquette'), tk('Negotiation'),
   // environment modifier of an attack: « env. (range, light) −6 »
-  tk('env.'), tk('range'), tk('visibility'), tk('light'), tk('wind')];
+  tk('env.'), tk('range'), tk('visibility'), tk('light'), tk('wind'),
+  // vehicle rolls (shared/vehicles.ts plan lines)
+  tk('Pilot'), tk('Maneuvering'), tk('Targeting'), tk('Clearsight'), tk('Stealth'), tk('Body'), tk('hot sim'), tk('uncontrolled'), tk('running rate'),
+  tk('evasive driving'), tk('vehicle skill cap'), tk('control rig'), tk('damage'), tk('threshold'), tk('terrain'), tk('Handling'), tk('Speed'), tk('Sensor'), tk('VR'), tk('AR')];
 /** First term of roll.limitBreakdown (« social 9 + Zoé: Heritage +2 »): the server's limit adjective (older entries: French 'sociale'…). */
 const LIMIT_TERMS: Record<string, string> = { physical: tk('physical'), mental: tk('mental'), social: tk('fem::social'), astral: tk('astral') };
 
@@ -200,6 +203,8 @@ const LIMIT_TITLES: Record<string, string> = {
   physical: tk('Physical Limit'), mental: tk('Mental Limit'), social: tk('Social Limit'), astral: tk('Astral Limit'), accuracy: tk('Accuracy'),
   Attaque: tk('Attack'), Corruption: tk('Sleaze'), Traitement: tk('Data Processing'), Firewall: tk('Firewall'),
   Attack: tk('Attack'), Sleaze: tk('Sleaze'), 'Data Processing': tk('Data Processing'),
+  // vehicle tests (34-vehicles)
+  handling: tk('Handling'), speed: tk('Speed'), sensor: tk('Sensor'),
 };
 const limitTitle = (l: string): string => (LIMIT_TITLES[l] ? t(LIMIT_TITLES[l]) : t('{kind} limit', { kind: l }));
 
@@ -211,6 +216,12 @@ export function RollBadges({ roll }: { roll: ShownRoll | null | undefined }) {
     {roll.limit ? <span className={'badge ' + (roll.limited ? 'badge-amber' : '')} title={(roll.limitLabel ? limitTitle(roll.limitLabel) : t('Limit')) + (roll.limitBreakdown ? `
 ${rollBreakdown(roll.limitBreakdown)}` : '')}>
       {t('lim. {n}', { n: roll.limit })}{roll.limited ? ` (${roll.rawHits} → ${roll.limit})` : ''}
+    </span> : null}
+    {roll.vehicle && roll.vehicle.threshold !== undefined ? <span className={'badge ' + (roll.vehicle.success ? 'badge-green' : 'badge-red')} title={roll.vehicle.name}>
+      {roll.vehicle.success ? t('threshold {n}: success', { n: roll.vehicle.threshold }) : t('threshold {n}: failure', { n: roll.vehicle.threshold })}
+    </span> : null}
+    {roll.vehicle && roll.vehicle.opposed !== undefined ? <span className={'badge ' + ((roll.vehicle.net ?? 0) > 0 ? 'badge-green' : 'badge-red')} title={roll.vehicle.name}>
+      {t('vs {n} hit(s): net {net}', { n: roll.vehicle.opposed, net: roll.vehicle.net ?? 0 })}
     </span> : null}
     {roll.explode ? <span className="badge badge-magenta" title={t('Push the Limit: +Edge, rule of six, no limit')}>{t('Edge')}</span> : null}{roll.secondChance ? <span className="badge badge-magenta" title={t('Second Chance: misses rerolled')}>{t('2nd Chance')}</span> : null}{roll.secret ? <span className="badge badge-dim">{t('secret')}</span> : null}
   </span>;

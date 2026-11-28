@@ -795,7 +795,7 @@ function syncMatrixCombat(ctx: ActionContext): void {
     const host = p.hostId ? m.hosts[p.hostId] : null;
     if (host) for (const ic of host.ic || []) if (ic.active && (IC_TYPES as Loose)[ic.type]) wantIc.set(icEntryKey(host.id, ic.id), { host, ic });
   }
-  const gone = c.entries.filter((e) => isVirtual(e) && !e.out && !wantIc.has(e.matrixKey as string) && !wantAgent.has(e.matrixKey as string)).map((e) => e.matrixKey);
+  const gone = c.entries.filter((e) => isVirtual(e) && !!e.matrixKey && !e.out && !wantIc.has(e.matrixKey as string) && !wantAgent.has(e.matrixKey as string)).map((e) => e.matrixKey);
   for (const key of gone) setVirtualOut(ctx, key as string);
   for (const [key, { host, ic }] of wantIc) {
     const nameI18n = icNameMsg(ic.type, host.name);

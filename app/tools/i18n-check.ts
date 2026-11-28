@@ -41,7 +41,7 @@ const AREA_EXTRA: Record<string, string[]> = {
   core: ['client/app.tsx', 'client/lib', 'client/modules/registry.ts', 'client/modules/core', 'client/modules/admin', 'server/index.ts', 'server/errors.ts', 'server/modules/00-core.ts', 'server/lib/admin.ts', 'server/lib/tables.ts', 'server/lib/zip.ts'],
   map: ['server/modules/20-maps.ts', 'server/modules/22-maplib.ts', 'server/lib/maplib.ts', 'shared/vision.ts', 'shared/maplib.ts'],
   sheet: ['server/modules/10-characters.ts', 'shared/sr5.ts', 'shared/modifiers.ts', 'server/lib/augment.ts', 'server/lib/modifiers.ts'],
-  combat: ['server/modules/30-combat.ts', 'server/modules/33-attacks.ts', 'shared/combat.ts'],
+  combat: ['server/modules/30-combat.ts', 'server/modules/33-attacks.ts', 'server/modules/34-vehicles.ts', 'server/lib/vehicles.ts', 'shared/combat.ts', 'shared/vehicles.ts'],
   shop: ['server/modules/40-shop.ts'],
   matrix: ['server/modules/45-matrix.ts', 'shared/matrix.ts'],
   magic: ['server/modules/47-magic.ts', 'shared/magic.ts', 'server/lib/traditions.ts'],

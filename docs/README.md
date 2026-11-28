@@ -41,6 +41,7 @@ read the one you need, not all of them. Repo rules and commands: [AGENTS.md](../
 | [modules/map-library.md](modules/map-library.md) | server-wide fragmaps, instances, publish/update, signed image links, admin |
 | [modules/combat.md](modules/combat.md) | bestiary templates, spawning, initiative tracker, Matrix entries |
 | [modules/attacks.md](modules/attacks.md) | targeted attacks, grenades and blasts, defense / soak flow, afflictions, map marks |
+| [modules/vehicles.md](modules/vehicles.md) | vehicles & drones: control modes, Vehicle Tests, mounted weapons, vehicle tokens, ramming, chase combat |
 | [modules/shop.md](modules/shop.md) | shop settings, availability tests, contact search, orders, catalog files |
 | [modules/shop-upgrades.md](modules/shop-upgrades.md) | upgrade catalogs, fitting rules (mounts, capacity, slots), upgrade / martial-art actions |
 | [modules/training.md](modules/training.md) | karma advancement requests, downtime |
@@ -66,6 +67,6 @@ read the one you need, not all of them. Repo rules and commands: [AGENTS.md](../
 ## SR5 rules
 
 [rules/README.md](rules/README.md) — what the app automates, with book and page, and the « follow Chummer when
-ambiguous » rule: [dice & tests](rules/dice-and-tests.md), [combat](rules/combat.md), [matrix](rules/matrix.md),
+ambiguous » rule: [dice & tests](rules/dice-and-tests.md), [combat](rules/combat.md), [vehicles](rules/vehicles.md), [matrix](rules/matrix.md),
 [magic](rules/magic.md), [chargen](rules/chargen.md), [availability & shop](rules/availability-and-shop.md),
 [advancement](rules/advancement.md), [modifiers stacking](rules/modifiers-stacking.md).

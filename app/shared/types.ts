@@ -305,6 +305,22 @@ export interface RollRecord extends RollResult {
   targetName?: string;
   actionName?: string;
   range?: { band: string; meters: number };
+  /** Vehicle tests (34-vehicles): the vehicle, the test, its threshold and outcome. */
+  vehicle?: VehicleRollInfo;
+}
+
+/** `roll.vehicle` of a vehicle test. */
+export interface VehicleRollInfo {
+  vehicleId: string;
+  name: string;
+  /** 'control' | 'perception' | 'stealth' | 'pilot' | 'catchUp' | 'breakAway' | 'cutOff' | 'ram' | 'stunt' | 'follow' … */
+  test: string;
+  threshold?: number;
+  success?: boolean;
+  /** Hits over the threshold (or net hits of an opposed test). */
+  net?: number;
+  /** Opposed test: the other side's hits. */
+  opposed?: number;
 }
 
 /** `entry.matrix` of a Matrix log entry. `gm` is stripped from players' views. */
@@ -570,6 +586,8 @@ export interface Weapon extends ItemBase {
   paid?: number;
   /** Natural attack of a critter power (spirits, 47-magic `syncSpiritWeapons`): derived from the powers and Force, rebuilt at boot. */
   natural?: NaturalAttack;
+  /** Mounted on that vehicle of the same actor (`actor.vehicles[].id`): fired with Gunnery (SR5 p. 183), see shared/vehicles.ts. */
+  vehicleId?: string;
 }
 
 /** Which critter power a natural attack comes from (SR5 pp. 187, 396-397). */
@@ -647,6 +665,19 @@ export interface Container {
   itemId?: string;
 }
 
+/** How a vehicle is controlled (SR5 p. 265): manual (physical / AR controls), remote (Control Device), rigged (jumped in), autopilot. */
+export type VehicleControl = 'manual' | 'remote' | 'rigged' | 'auto';
+/** Autosoft kinds (SR5 p. 269-270): a drone's skills. */
+export type AutosoftKind = 'maneuvering' | 'targeting' | 'clearsight' | 'evasion' | 'stealth' | 'electronicWarfare';
+/** An autosoft running on a vehicle / drone (`vehicles[].autosofts`). */
+export interface Autosoft {
+  id: string;
+  kind: AutosoftKind;
+  rating: number;
+  /** [Weapon] Targeting: the weapon it is for (free text; empty = any mounted weapon). [Model] autosofts: the model. */
+  target?: string;
+}
+
 export interface Vehicle extends ItemBase {
   /** '4' or on/off-road '4/3'. */
   handling: number | string;
@@ -662,6 +693,21 @@ export interface Vehicle extends ItemBase {
   img?: string;
   mods?: VehicleMod[];
   paid?: number;
+  /** Drone (condition monitor 6 + Body/2, SR5 p. 199). Filled from the catalog category when absent (34-vehicles init). */
+  drone?: boolean;
+  /** Vehicle skill id ('pilot_ground_craft'…); absent = guessed from the vehicle (shared/vehicles.ts vehicleSkillId). */
+  skill?: string;
+  /** Boxes of damage (vehicles ignore Stun, SR5 p. 199). */
+  damage?: number;
+  /** Current control mode (absent = manual). */
+  control?: VehicleControl;
+  /** Actor driving / rigging / remote-controlling it (absent = the owner). */
+  driverId?: ActorId | null;
+  /** Manual control through an AR interface: +1 to the limits (SR5 p. 201). */
+  ar?: boolean;
+  /** Rigger interface installed (drones always have one, SR5 p. 265). */
+  riggerInterface?: boolean;
+  autosofts?: Autosoft[];
 }
 
 /** The actor's Matrix device (`actor.matrix`). */
@@ -1172,7 +1218,7 @@ export interface Template
   foundryId?: string;
 }
 
-export type CombatEntryKind = 'pc' | 'npc' | 'ic' | 'agent';
+export type CombatEntryKind = 'pc' | 'npc' | 'ic' | 'agent' | 'drone';
 
 /** Action categories (SR5 p. 163): an Action Phase allows 1 Free + 2 Simple or 1 Complex; Interrupts cost initiative. */
 export type PhaseActionType = 'free' | 'simple' | 'complex' | 'interrupt';
@@ -1233,8 +1279,10 @@ export interface CombatEntry {
   matrixKey?: string;
   hostId?: string;
   icId?: string;
-  /** Agent entries: the decker's actor id. */
+  /** Agent entries: the decker's actor id. Drone entries: the vehicle's owner. */
   ownerId?: ActorId;
+  /** Drone entries (a vehicle on autopilot, Pilot × 2 + 4D6, SR5 p. 270): the owner's vehicle id. */
+  vehicleId?: string;
 }
 
 /** `state.combat`. */
@@ -1312,6 +1360,17 @@ export interface Attack {
   astral?: { soak: AttrKey };
   /** Natural attack of a critter (the weapon's `natural`): elemental effects, Engulf, Energy Aura backlash. */
   natural?: { power: NaturalAttackPower; element?: string | null };
+  /**
+   * The target is a vehicle of `targetId` (its owner): defense by the driver (REA + INT) or the drone (Pilot + Maneuvering
+   * [Handling]), soak Body + Armor, no damage under the Armor (SR5 p. 199, 205).
+   */
+  vehicle?: { vehicleId: string; name: string };
+  /** Electrical damage: a vehicle takes it as Physical (SR5 p. 199). */
+  electric?: boolean;
+  /** The attacker rams with this vehicle of `attackerId` (SR5 p. 203): melee, DV from the Ramming Damage Table, AP −6. */
+  ram?: { vehicleId: string; name: string; metersPerTurn: number };
+  /** Biofeedback of a jumped-in rigger (half the vehicle's boxes, dumpshock): resisted with WIL + Firewall, no armor (SR5 p. 229, 266). */
+  feedback?: boolean;
   /** Combat spell (kind 'spell', 47-magic): direct = resisted with `resist`, no soak; indirect = dodge then soak. */
   spell?: { mode: 'direct' | 'indirect'; resist: AttrKey; resist2?: AttrKey | null; force: number; element?: string | null; castLogId?: string };
 }
@@ -1529,6 +1588,8 @@ export interface Token {
   moveBudget?: { key: string; meters: number };
   /** Astral form (projecting magician, spirit on the astral plane): seen only by astral viewers (47-magic filter). */
   astral?: boolean;
+  /** A vehicle / drone of `actorId` (its owner): `actor.vehicles[].id` (34-vehicles). */
+  vehicleId?: string;
 }
 
 /**
@@ -3022,6 +3083,60 @@ export interface BooksResponse {
  * One table's full state (`ctx.state`, `state.json`). `emptyState()` only holds version/config/users/actors/log; every
  * other slice is created by its module's init() at boot, so after boot all of them exist.
  */
+// =====================================================================================================================
+// Chase combat — owner: 34-vehicles.ts (SR5 p. 203-205)
+// =====================================================================================================================
+
+export type ChaseEnvironment = 'speed' | 'handling';
+export type ChaseRange = 'short' | 'medium' | 'long' | 'extreme';
+export type ChaseRole = 'quarry' | 'pursuer';
+/** A vehicle in the chase. Ranges are measured from each pursuer to the quarry. */
+export interface ChaseVehicle {
+  id: string;
+  actorId: ActorId;
+  vehicleId: string;
+  name: string;
+  role: ChaseRole;
+  /** Pursuers: range to the quarry. */
+  range?: ChaseRange;
+  /** Pursuer that lost the quarry (it broke away beyond Extreme range). */
+  lost?: boolean;
+  /** Out of control (failed test, rammed): −2 to everyone aboard until a Vehicle Test regains control (SR5 p. 202). */
+  uncontrolled?: boolean;
+  /** Crashed: out of the chase until the GM puts it back. */
+  crashed?: boolean;
+  /** GM only (an NPC vehicle the players have not seen yet). */
+  hidden?: boolean;
+}
+/** A Vehicle Test a driver owes (a stunt to follow, a cut-off, a ram, regaining control). */
+export interface ChasePending {
+  id: string;
+  chaseVehicleId: string;
+  threshold: number;
+  /** What a failure does. */
+  onFail: 'fallBack' | 'crash' | 'uncontrolled';
+  reason: I18nMessage;
+}
+/** One line of the chase history (newest first, max 30). */
+export interface ChaseEvent {
+  id: string;
+  ts: Timestamp;
+  text: I18nMessage;
+  gmOnly?: boolean;
+}
+/** `state.chase`. */
+export interface ChaseState {
+  active: boolean;
+  environment: ChaseEnvironment;
+  /** Terrain threshold modifier (Terrain Modifiers Table, SR5 p. 201): 0 open, 1 light, 2 restricted, 4 tight. */
+  terrain: number;
+  round: number;
+  vehicles: ChaseVehicle[];
+  pending: ChasePending[];
+  events: ChaseEvent[];
+  startedAt?: Timestamp;
+}
+
 export interface TableState {
   version: number;
   config: TableConfig;
@@ -3050,6 +3165,8 @@ export interface TableState {
   foundry: FoundryState;
   chummer: ChummerState;
   city: CityState;
+  /** Chase combat (34-vehicles). */
+  chase?: ChaseState;
 }
 
 /**
@@ -3093,6 +3210,8 @@ export interface GameView {
   city: CityView;
   /** Players: maps of their runners' homes and of the homes they were invited to (GM: in `maps`). */
   homeMaps?: Record<MapId, GameMap>;
+  /** Chase combat (34-vehicles); players: without hidden vehicles. */
+  chase?: ChaseState;
 }
 
 // =====================================================================================================================

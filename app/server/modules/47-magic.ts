@@ -148,7 +148,7 @@ function resistDrain(ctx: ActionContext, a: Actor, dv: number, type: 'P' | 'S', 
   return { roll, damage };
 }
 
-const tokenOf = (map: GameMap | null, actorId: ActorId): Token | null => (map?.tokens || []).find((t) => t.actorId === actorId) || null;
+const tokenOf = (map: GameMap | null, actorId: ActorId): Token | null => (map?.tokens || []).find((t) => t.actorId === actorId && !t.vehicleId) || null;
 
 type CastPayload = {
   actorId?: ActorId; spellId?: unknown; force?: unknown; reckless?: unknown; explode?: unknown; modifier?: unknown; conditions?: unknown;
