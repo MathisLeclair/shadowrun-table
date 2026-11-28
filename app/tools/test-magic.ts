@@ -6,13 +6,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   findTradition, traditionFromDef, parseDrainText, sortTraditions, drainValue, drainOffset, spellReach, isAreaSpell, spellCategory, spellDrainType, maxForce,
-  spellEffects, isSustainable, combatSpellProfile, spellResistance, attributeOfSpell, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
+  spellEffects, isSustainable, combatSpellProfile, spellResistance, attributeOfSpell, evalForce, spiritStats, optionalPowerCount, traditionSpiritTypes, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
   type TraditionDef,
 } from '../shared/magic.ts';
 import { checkedTest, collectModifiers, poolModifiers, rollContext, derivedWithModifiers } from '../shared/modifiers.ts';
 import { traditions, actorTradition, chummerTradition } from '../server/lib/traditions.ts';
 import { parseChum5 } from '../server/lib/chummer/parse.ts';
 import { spellCatalogInfo } from '../server/lib/spells.ts';
+import { spiritDefs, spiritDef } from '../server/lib/spirits.ts';
 import { mergeActor } from '../server/lib/chummer/merge.ts';
 import type { Actor, ActorLike, MagicState, SustainedSpell } from '../shared/types.ts';
 
@@ -145,6 +146,31 @@ ok(isSustainable('S') && isSustainable('P') && !isSustainable('I'), 'isSustainab
   ok(r('Entertainment', 'Illusion', 'M') === null, 'obvious illusion: no resistance');
   ok(attrs(r('Control Thoughts', 'Manipulation', 'M')) === 'LOG+WIL' && attrs(r('Levitate', 'Manipulation', 'P')) === 'BOD+STR' && r('Light', 'Manipulation', 'P') === null, 'manipulation: mental, physical, environmental');
   ok(r('Manabolt', 'Combat', 'M') === null, 'combat spells are not handled here');
+}
+
+// Spirit data (#17): spirits.json from Chummer, stats at a Force (SR5 pp. 303-304)
+ok(evalForce('F', 4) === 4 && evalForce('F+1', 4) === 5 && evalForce('F-2', 4) === 2 && evalForce('F/2', 5) === 2 && evalForce('(F*2)+3', 4) === 11, 'evalForce: F, F±n, F/2 (rounded down), (F*2)+3');
+ok(evalForce('F-3', 1) === 0 && evalForce('alert(1)', 4) === 0 && evalForce('', 4) === 0 && evalForce('3', 9) === 3, 'evalForce: never negative, rejects anything else');
+ok(optionalPowerCount(2) === 0 && optionalPowerCount(3) === 1 && optionalPowerCount(5) === 1 && optionalPowerCount(6) === 2, 'optional powers: one per 3 full points of Force (SR5 p. 300)');
+{
+  const defs = spiritDefs();
+  ok(defs.length >= 20 && ['Spirit of Air', 'Spirit of Beasts', 'Spirit of Earth', 'Spirit of Fire', 'Spirit of Man', 'Spirit of Water'].every((n) => defs.some((d) => d.name === n)), `spirits.json: the six SR5 spirits (${defs.length} types)`);
+  const fire = spiritDef('Spirit of Fire')!;
+  ok(spiritDef('esprit du feu')?.id === fire.id && fire.page === 303 && fire.source === 'SR5', 'spiritDef by French name; book page');
+  const st = spiritStats(fire, 4);
+  const a = st.attributes;
+  ok(a.BOD === 5 && a.AGI === 6 && a.REA === 7 && a.STR === 2 && a.WIL === 4 && a.LOG === 4 && a.INT === 5 && a.CHA === 4 && a.EDG === 2 && a.MAG === 4 && a.ESS === 4,
+    `Fire spirit F4: BOD 5 AGI 6 REA 7 STR 2 WIL 4 LOG 4 INT 5 CHA 4 EDG 2 MAG 4 ESS 4 (${JSON.stringify(a)})`);
+  ok(st.initiativeBase === 11 && st.initiative.dice === 1 && a.REA + a.INT + st.initiative.bonus === 11, `Fire spirit F4: initiative (F × 2) + 3 = 11 + 2D6 (${JSON.stringify(st.initiative)})`);
+  ok(st.astralInitiative.base === 8 && st.astralInitiative.dice === 3, 'astral initiative F × 2 + 3D6');
+  ok(st.skills.length === 6 && st.skills.every((x) => x.rating === 4) && st.skills.some((x) => x.id === 'exotic_weapon' && x.spec === 'Elemental Attack') && st.skills.some((x) => x.id === 'flight' && x.attr === 'AGI'),
+    `skills at rating F, Exotic Ranged Weapon → exotic_weapon, Flight kept (${st.skills.map((x) => x.id).join(', ')})`);
+  ok(st.powers.some((p) => p.name === 'Elemental Attack' && p.select === 'Fire') && st.optionalPowers === 1, 'powers with their choice; 1 optional power at F4');
+  const man = spiritStats(spiritDef('Spirit of Man')!, 6).attributes;
+  ok(man.BOD === 7 && man.REA === 8 && man.STR === 4, `Spirit of Man F6: BOD F+1, REA F+2, STR F−2 (${JSON.stringify(man)})`);
+  const herm = traditionSpiritTypes({ name: 'Hermetic', drain: 'LOG', spirits: { combat: 'Spirit of Fire', detection: 'Spirit of Air', health: 'Spirit of Man', illusion: 'Spirit of Water', manipulation: 'Spirit of Earth' } }, defs);
+  ok(herm.length === 5 && herm[0].name === 'Spirit of Fire', 'a tradition summons its five spirits');
+  ok(traditionSpiritTypes(null, defs).length === defs.length, 'no tradition: every type (GM)');
 }
 
 // ---------------------------------------------------------------------------

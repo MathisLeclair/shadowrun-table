@@ -981,6 +981,36 @@ fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify(index, null, 1));
   fs.writeFileSync(path.join(OUT, 'traditions.json'), JSON.stringify(out));
   console.log(`${'traditions'.padEnd(18)} ${String(out.length).padStart(5)} items`);
 }
+
+// Spirits (critters.xml, category Spirits; not a shop catalog): attributes as Force formulas (« F+1 »), initiative, powers,
+// optional powers, skills (rating « F »), movement. Turned into an actor by shared/magic.ts spiritStats(). Shape: SpiritDef.
+{
+  const x = readXml(path.join(CHUMMER, 'critters.xml'));
+  const ATTRS: Record<string, string> = { bod: 'BOD', agi: 'AGI', rea: 'REA', str: 'STR', wil: 'WIL', log: 'LOG', int: 'INT', cha: 'CHA', edg: 'EDG', mag: 'MAG', ess: 'ESS' };
+  const out: Array<{ name: string } & Record<string, unknown>> = [];
+  for (const c of arr(x.metatypes?.metatype)) {
+    if (hidden(c) || txt(c.category) !== 'Spirits') continue;
+    const name = clean(txt(c.name));
+    const attrs: Record<string, string> = {};
+    for (const [k, key] of Object.entries(ATTRS)) attrs[key] = txt(c[`${k}aug`]) || txt(c[`${k}max`]) || '0';
+    const power = (p: XmlNode) => lean({ name: clean(txt(p)), nameFr: french('critterpowers', '', clean(txt(p))), select: (p && p['@select']) || undefined });
+    const opt = c.bonus?.optionalpowers;
+    out.push(lean({
+      id: txt(c.id), name, nameFr: french('critters', txt(c.id), name), attrs,
+      initiative: txt(c.iniaug) || txt(c.inimax) || undefined,
+      // Initiative dice: 1D6 + the « initiativepass » bonus (SR5 spirits: 2D6 physical).
+      initiativeDice: 1 + (num(txt(c.bonus?.initiativepass)) || 0),
+      powers: arr(c.powers?.power).map(power),
+      optionalPowers: arr(opt?.optionalpower).map(power),
+      skills: arr(c.skills?.skill).map((s: XmlNode) => lean({ name: clean(txt(s)), rating: (s && s['@rating']) || 'F', spec: (s && s['@spec']) || undefined })),
+      movement: lean({ walk: txt(c.walk) || undefined, run: txt(c.run) || undefined, sprint: txt(c.sprint) || undefined }),
+      source: txt(c.source), page: num(txt(c.page)),
+    }));
+  }
+  out.sort((a, b) => a.name.localeCompare(b.name));
+  fs.writeFileSync(path.join(OUT, 'spirits.json'), JSON.stringify(out));
+  console.log(`${'spirits'.padEnd(18)} ${String(out.length).padStart(5)} items`);
+}
 console.log('\nDropped:');
 for (const [k, v] of Object.entries(stats.dropped).sort()) console.log(`  ${k}: ${v}`);
 

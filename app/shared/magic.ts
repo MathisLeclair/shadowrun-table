@@ -5,8 +5,8 @@
 // Traditions (SR5 p. 279 and Street Grimoire / Forbidden Arcana): data/catalog/traditions.json, built from Chummer
 // traditions.xml by tools/build-catalog.ts. An actor keeps a copy of its tradition in `actor.magic.tradition`
 // (ActorTradition), so hand-made traditions and Chummer imports keep their own drain attribute and spirits.
-import { attr } from './sr5.ts';
-import type { ActorLike, ActorTradition, AttrKey, I18nParams, MagicState, SpellCategoryKey } from './types.ts';
+import { attr, SKILL_BY_ID } from './sr5.ts';
+import type { ActorLike, ActorTradition, AttrKey, Attributes, I18nParams, MagicState, Skill, SpellCategoryKey } from './types.ts';
 
 // i18n: labels are English dictionary keys (French in client/i18n/fr/magic.json). tk() marks them for tools/i18n-check.ts.
 const tk = (s: string): string => s;
@@ -309,6 +309,144 @@ export function spellCategory(category: unknown): SpellCategoryKey | null {
   if (c.startsWith('illusion')) return 'illusion';
   if (c.startsWith('manipulation')) return 'manipulation';
   return null;
+}
+
+// ---------------------------------------------------------------------------
+// Spirits (SR5 pp. 300-304): data/catalog/spirits.json, built from Chummer critters.xml (category Spirits)
+// ---------------------------------------------------------------------------
+
+/** A power of a spirit (Chummer name, French name, the choice « Fire » of Elemental Attack…). */
+export interface SpiritPower {
+  name: string;
+  nameFr?: string;
+  select?: string;
+}
+/** One entry of data/catalog/spirits.json: attributes and initiative are Force formulas (« F+1 », « (F*2)+3 », « F/2 »). */
+export interface SpiritDef {
+  id: string;
+  name: string;
+  nameFr?: string;
+  attrs: Record<string, string>;
+  initiative?: string;
+  /** Physical initiative dice (SR5 spirits: 2D6). */
+  initiativeDice?: number;
+  powers: SpiritPower[];
+  optionalPowers: SpiritPower[];
+  skills: Array<{ name: string; rating: string; spec?: string }>;
+  movement?: { walk?: string; run?: string; sprint?: string };
+  source?: string;
+  page?: number;
+}
+
+/**
+ * A Force formula of the spirits data at a Force: F, F+n, F-n, F/2, (F*2)+3, numbers. Only digits, F, + − × ÷ and
+ * parentheses are accepted (anything else → 0); results are rounded down, never below 0.
+ */
+export function evalForce(formula: unknown, force: number): number {
+  const src = String(formula ?? '').replace(/\s+/g, '').toUpperCase();
+  if (!src) return 0;
+  if (!/^[0-9F+\-*/().]+$/.test(src)) return 0;
+  // Recursive descent over + - * / and parentheses (no eval).
+  let i = 0;
+  const peek = () => src[i];
+  const num = (): number => {
+    if (peek() === '(') {
+      i++;
+      const v = expr();
+      if (peek() === ')') i++;
+      return v;
+    }
+    if (peek() === 'F') {
+      i++;
+      return force;
+    }
+    if (peek() === '-') {
+      i++;
+      return -num();
+    }
+    let j = i;
+    while (j < src.length && /[0-9.]/.test(src[j])) j++;
+    const v = Number(src.slice(i, j));
+    i = j;
+    return Number.isFinite(v) ? v : 0;
+  };
+  const term = (): number => {
+    let v = num();
+    while (peek() === '*' || peek() === '/') {
+      const op = src[i++];
+      const r = num();
+      v = op === '*' ? v * r : r ? v / r : 0;
+    }
+    return v;
+  };
+  function expr(): number {
+    let v = term();
+    while (peek() === '+' || peek() === '-') {
+      const op = src[i++];
+      const r = term();
+      v = op === '+' ? v + r : v - r;
+    }
+    return v;
+  }
+  const v = expr();
+  return Math.max(0, Math.floor(v));
+}
+
+/** Spirit skill names of the Chummer data that are not the app's id once lower-cased with underscores. */
+const SPIRIT_SKILL_ALIASES: Record<string, string> = { 'exotic ranged weapon': 'exotic_weapon', 'exotic melee weapon': 'exotic_weapon' };
+/** Critter skills the app does not list: kept as custom skills (Flight: SR5 p. 401, linked to Agility). */
+const CRITTER_SKILLS: Record<string, { name: string; attr: AttrKey }> = { flight: { name: 'Flight', attr: 'AGI' } };
+
+/** Optional powers a spirit may take: one per 3 full points of Force (SR5 p. 300). */
+export const optionalPowerCount = (force: number): number => Math.max(0, Math.floor(force / 3));
+
+/**
+ * A spirit of this Force as actor fields (SR5 pp. 303-304): attributes, physical initiative (the formula's base: the
+ * bonus over REA + INT, and its dice), astral initiative (F × 2 + 3D6), skills at their rating, powers.
+ */
+export function spiritStats(def: SpiritDef, force: number): {
+  attributes: Attributes;
+  initiative: { dice: number; bonus: number };
+  initiativeBase: number;
+  astralInitiative: { base: number; dice: number };
+  skills: Skill[];
+  powers: SpiritPower[];
+  optionalPowers: number;
+} {
+  const F = Math.max(1, Math.round(force));
+  const v = (k: string) => evalForce(def.attrs[k] ?? '0', F);
+  const attributes: Attributes = {
+    BOD: Math.max(1, v('BOD')), AGI: Math.max(1, v('AGI')), REA: Math.max(1, v('REA')), STR: Math.max(1, v('STR')),
+    WIL: Math.max(1, v('WIL')), LOG: Math.max(1, v('LOG')), INT: Math.max(1, v('INT')), CHA: Math.max(1, v('CHA')),
+    EDG: v('EDG'), MAG: v('MAG') || F, ESS: v('ESS') || F,
+  };
+  const base = def.initiative ? evalForce(def.initiative, F) : attributes.REA + attributes.INT;
+  const skills: Skill[] = [];
+  for (const s of def.skills || []) {
+    const key = s.name.trim().toLowerCase();
+    const id = SPIRIT_SKILL_ALIASES[key] || key.replace(/[^a-z]+/g, '_');
+    const sk = SKILL_BY_ID[id];
+    const custom = CRITTER_SKILLS[id];
+    if (!sk && !custom) continue;
+    if (skills.some((x) => x.id === id)) continue;
+    skills.push({ id, name: sk ? sk.fr : custom.name, attr: (sk ? sk.attr : custom.attr) as AttrKey, rating: evalForce(s.rating || 'F', F), ...(s.spec ? { spec: s.spec } : {}) });
+  }
+  return {
+    attributes,
+    initiative: { dice: Math.max(0, (def.initiativeDice || 1) - 1), bonus: base - attributes.REA - attributes.INT },
+    initiativeBase: base,
+    astralInitiative: { base: F * 2, dice: 3 },
+    skills,
+    powers: def.powers || [],
+    optionalPowers: optionalPowerCount(F),
+  };
+}
+
+/** Spirit types a tradition summons (its five spirits, without duplicates), or every type of the data. */
+export function traditionSpiritTypes(tradition: ActorTradition | null | undefined, all: readonly SpiritDef[]): SpiritDef[] {
+  const names = [...new Set(Object.values(tradition?.spirits || {}).filter(Boolean) as string[])];
+  if (!names.length) return [...all];
+  return names.map((n) => all.find((d) => d.name === n)).filter((d): d is SpiritDef => !!d);
 }
 
 // ---------------------------------------------------------------------------

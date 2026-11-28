@@ -161,7 +161,10 @@ Built as data: a `resistance` field derived from the catalog `descriptor` + cate
 `shared/magic.ts` for the spells whose text says otherwise (cite page). The result shows net hits and the spell's
 effect text; counterspelling dice from an ally can be added before the target rolls.
 
-## Spirits: data — *#17 Spirit data*
+## Spirits: data — *#17, done*
+
+Built 2026-11-28 (facts: [modules/magic.md](../modules/magic.md#spirit-data)).
+
 
 `tools/build-catalog.ts` reads Chummer `critters.xml` (category Spirits) → `data/catalog/spirits.json`: attributes as
 offsets from Force, initiative, skills (rating = Force), powers, optional powers, movement, source/page (`traditions.json` already exists since #12). `shared/magic.ts spiritStats(type, force)` turns a template into an actor
@@ -250,7 +253,7 @@ Filed on GitHub 2026-11-28, all « Part of #7 ». Order: #12 first; #13 → #14,
 | #14 | Sustained spells: −2 per spell as a modifier, list, GM view (**done**) | #13 |
 | #15 | Combat spells through the attack pipeline (direct, indirect, area) (**done**) | #13 |
 | #16 | Non-combat spells: opposed resistance and net hits (**done**) | #13 |
-| #17 | Spirit data from Chummer (spirits.json, traditions.json, `spiritStats`) | — |
+| #17 | Spirit data from Chummer (spirits.json, traditions.json, `spiritStats`) (**done**) | — |
 | #18 | Summoning: spirit NPC actors, services, control by the summoner, combat | #12, #17 |
 | #19 | Binding, bound spirits (aid sorcery, sustaining), banishing | #18, #14 |
 | #20 | Astral perception and projection, astral tokens and initiative | #12 |
