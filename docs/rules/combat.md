@@ -31,6 +31,9 @@ Stun overflow rolls into Physical; Physical overflow into `overflow`. An `actor.
   (simplification: SR5 counts remove + insert clip as a Simple Action each; drum / belt: Complex); without one (« Fill
   Clip / Belt / Drum ») = AGI rounds per Complex Action; internal magazine / cylinder AGI rounds, break action 2,
   muzzle loader 1 per Complex Action; cylinder + speed loader: Complex, full.
+- Several magazines (Additional Clip/Magazine, SL p. 45; Beretta Northstar « 6(m) × 2 », SL p. 39): one magazine per
+  accessory on top of the weapon's own (as Chummer's ammo slots), each with its own rounds and ammunition. Switching the
+  magazine fed to the weapon is a Free Action (table ruling); firing and reloading use the magazine in use.
 
 ## Range and environment
 

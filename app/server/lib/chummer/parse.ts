@@ -345,6 +345,7 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
   }
 
   const ammoRefs: Array<[Weapon, string]> = []; // [weapon, guid of the gear loaded in its active clip]
+  const slotRefs: Array<[Weapon, number, string]> = []; // [weapon, slot, guid of the gear loaded in that other clip]
   // Units of a gear item by guid (a hand grenade's weapon node points at its gear with <parentid>).
   let gearQtys: Map<string, number> | null = null;
   const gearQty = (guid: unknown): number => {
@@ -390,6 +391,16 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
     if (clip) {
       wi.ammoLoaded = clip.count;
       if (clip.gearGuid) ammoRefs.push([wi, clip.gearGuid]);
+      // Several ammo slots (Additional Clip/Magazine: Beretta Northstar…): every magazine, the active one mirrored in ammoLoaded
+      // (sheet/inventory.ts normalizeMagazines checks the count against the accessories).
+      const all = allClips(w);
+      if (all.length > 1) {
+        wi.ammoSlots = all.map((m) => ({ loaded: m.count, ammoKind: null }));
+        wi.activeSlot = clip.slot;
+        all.forEach((m, i) => {
+          if (m.gearGuid && i !== clip.slot) slotRefs.push([wi, i, m.gearGuid]);
+        });
+      }
     }
     a.weapons.push(wi);
   }
@@ -494,6 +505,10 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
   for (const [wi, guid] of ammoRefs) {
     const g = a.gear.find((x) => x.chummerGuid === guid);
     if (g) wi.ammoKind = ammoKindOf(g) as AmmoKind | null;
+  }
+  for (const [wi, i, guid] of slotRefs) {
+    const g = a.gear.find((x) => x.chummerGuid === guid);
+    if (g && wi.ammoSlots?.[i]) wi.ammoSlots[i].ammoKind = ammoKindOf(g) as AmmoKind | null;
   }
   if (locs.containers.length || bags.length) a.containers = [...locs.containers, ...bags];
 
@@ -786,13 +801,26 @@ function placeItem<T extends object>(item: T, node: Element, locs: Locations): T
 }
 
 /** Active clip of a weapon node (<clips><clip>, <activeammoslot> 1-based): { count, gearGuid } or null when the file has none. */
-function activeClip(w: Element): { count: number; gearGuid: string | null } | null {
+function activeClip(w: Element): { count: number; gearGuid: string | null; slot: number } | null {
   const clips = w.get('clips')?.all('clip') || [];
   if (!clips.length) return null;
-  const slot = clips[Math.max(0, num(w.val('activeammoslot'), 1) - 1)] || clips[0];
-  const raw = slot.has('count') ? slot.val('count') : slot.val('ammo');
+  const i = Math.max(0, num(w.val('activeammoslot'), 1) - 1);
+  const slot = clips[i] ? i : 0;
+  const c = clipOf(clips[slot]);
+  return c ? { ...c, slot } : null;
+}
+
+/** Every clip of a Chummer weapon (one per ammo slot), in slot order; [] when one is unreadable. */
+function allClips(w: Element): Array<{ count: number; gearGuid: string | null }> {
+  const out = (w.get('clips')?.all('clip') || []).map(clipOf);
+  return out.every(Boolean) ? (out as Array<{ count: number; gearGuid: string | null }>) : [];
+}
+
+/** Rounds and loaded gear of one <clip>, or null. */
+function clipOf(clip: Element): { count: number; gearGuid: string | null } | null {
+  const raw = clip.has('count') ? clip.val('count') : clip.val('ammo');
   if (!/^\s*\d+\s*$/.test(raw)) return null;
-  const id = (slot.val('id') || slot.val('guid')).trim().toLowerCase();
+  const id = (clip.val('id') || clip.val('guid')).trim().toLowerCase();
   return { count: Math.max(0, Math.round(num(raw))), gearGuid: id && !/^0{8}-/.test(id) ? id : null };
 }
 

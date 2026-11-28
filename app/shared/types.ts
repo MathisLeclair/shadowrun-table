@@ -513,6 +513,14 @@ export interface AmmoKind {
   catalogId?: string;
 }
 
+/** One magazine of a weapon with several (Additional Clip/Magazine, SL p. 45; Chummer « ammo slots »). */
+export interface AmmoSlot {
+  /** Rounds in this magazine (0..ammoMax). */
+  loaded: number;
+  /** Ammunition loaded in this magazine. */
+  ammoKind: AmmoKind | null;
+}
+
 export interface Weapon extends ItemBase {
   /** Wireless switched off (GM): a firearm left out of its owner's PAN (SR5 p. 233). */
   wirelessOff?: boolean;
@@ -547,6 +555,14 @@ export interface Weapon extends ItemBase {
   /** Legacy name of ammoLoaded (migrated). */
   ammoLeft?: number;
   ammoKind?: AmmoKind | null;
+  /**
+   * Weapons with an Additional Clip/Magazine (Beretta Northstar, PSG Enforcer…): one entry per magazine, derived count
+   * (1 + Additional Clip accessories, inventory.ts ammoSlotCount). The ACTIVE magazine lives in ammoLoaded / ammoKind (what fire
+   * and reload use); its entry here is only a copy refreshed by normalizeInventory and switchMagazine. Absent for one magazine.
+   */
+  ammoSlots?: AmmoSlot[];
+  /** Index (0-based) of the active magazine in ammoSlots. */
+  activeSlot?: number;
   /** Grenades / throwing weapons: how many. */
   qty?: number;
   /** Implant weapon of that augmentation (removed with it, never sold separately). */

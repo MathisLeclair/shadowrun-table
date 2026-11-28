@@ -2561,9 +2561,9 @@
         "accuracy": 4,
         "damage": "11P",
         "ap": -1,
-        "mode": "CC",
+        "mode": "SA",
         "rc": 2,
-        "ammo": "12(m)",
+        "ammo": "6(m)",
         "reach": 0,
         "catalogId": "f5ae45ef-f4f6-4d9a-873f-81e4ee973dc1",
         "notes": "Beretta Northstar (SL 39)",
@@ -2601,7 +2601,16 @@
             "notes": "Restauré depuis Chummer (fichier du 07/07/2026) — à vérifier"
           }
         ],
-        "ammoLoaded": 12
+        "ammoLoaded": 6,
+        "ammoSlots": [
+          {
+            "loaded": 6
+          },
+          {
+            "loaded": 6
+          }
+        ],
+        "activeSlot": 0
       },
       {
         "id": "fvtt_wGGgCkZyiirl5Hkc",

@@ -1,6 +1,6 @@
 // Inventory realism: node tools/test-inventory.ts  (ports 3443-3447 or SR_TEST_PORT…+4; exit code ≠ 0 on failure)
 // 1) Pure rules (client/modules/sheet/inventory.js): ammo parsing, fire modes, ammo / clip compatibility, reload plans, migration.
-// 2) Server (10-characters.js): firing consumption per mode, refusal + GM override, reload from ammo gear (qty decrement), clip swap,
+// 2) Server (10-characters.js): firing consumption per mode, several magazines (Beretta Northstar), refusal + GM override, reload from ammo gear (qty decrement), clip swap,
 //    ammunition change, grenades, equip / locations / containers permissions, active-off in a bag, names backfill, migration idempotence.
 // 3) Foundry inventories on a copy of the GM's world (Jane's Duffel Bag / Backpack / House, Bricks' Go Bag), merge adoption.
 // 4) Chummer locations: parse (<weaponlocations>) and export (new location node + item <location> guid).
@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { startServer, login, client, settle } from './test-client.ts';
 import {
   parseAmmo, fireOptions, roundsFor, weaponModes, ammoInfo, ammoFits, clipFits, reloadPlan, guessContainerKind, normalizeInventory, readyCount, isGrenade,
-  weaponAmmoClass, restrictionFits, usesAmmo, isLauncherProfile,
+  weaponAmmoClass, restrictionFits, usesAmmo, isLauncherProfile, ammoSlotCount, magazines, switchMagazine, isAdditionalClip, normalizeMagazines,
 } from '../client/modules/sheet/inventory.ts';
 import type { RawData, WeaponLike } from '../client/modules/sheet/inventory.ts';
 import { attr } from '../shared/sr5.ts';
@@ -206,6 +206,43 @@ await test('normalizeActor runs the migration on the seed PCs (idempotent)', () 
     assert.ok(Array.isArray(pc.containers));
     for (const l of ['weapons', 'armor', 'gear']) for (const it of pc[l]) assert.ok(it.location, `${pc.id} ${it.name} location`);
   }
+});
+
+
+const NORTHSTAR = 'f5ae45ef-f4f6-4d9a-873f-81e4ee973dc1';
+const ADD_CLIP = { name: 'Additional Clip/Magazine', catalogId: 'd2a1cc9b-72e3-49df-957c-8ed6fb47a813', mount: 'Internal', cost: 0, avail: '', included: true };
+const northstar = (extra: RawData = {}): RawData => ({
+  id: 'ns', name: 'Beretta Northstar', catalogId: NORTHSTAR, kind: 'ranged', skill: 'longarms', mode: 'SA', ammo: '6(m)',
+  accessories: [ADD_CLIP, { name: 'Smartgun System, Internal', mount: 'Internal', cost: 0, avail: '', included: true, effects: { smartgun: true } }], ...extra,
+});
+await test('Additional Clip/Magazine: two magazines (Beretta Northstar 6(m) × 2, SL p. 39)', () => {
+  assert.ok(isAdditionalClip(ADD_CLIP) && isAdditionalClip({ name: 'Chargeur supplémentaire' }) && !isAdditionalClip({ name: 'Spare Clip' }));
+  const a: RawData = { weapons: [northstar(), { id: 'p', name: 'Pistol', kind: 'ranged', ammo: '15(c)' }] };
+  normalizeInventory(a, mkId);
+  const w = a.weapons[0];
+  assert.equal(ammoSlotCount(w), 2);
+  assert.deepEqual([w.ammoMax, w.ammoLoaded, w.activeSlot, w.ammoSlots.length], [6, 6, 0, 2]);
+  assert.equal(w.ammoSlots[1].loaded, 6, 'a new magazine starts full');
+  assert.equal(w.ammoSlots[1].ammoKind.name, 'Ammo: Regular Ammo');
+  assert.equal(a.weapons[1].ammoSlots, undefined, 'one magazine: no slots');
+  assert.equal(magazines(a.weapons[1]), null);
+  // Fire 4 from magazine 1, load magazine 2 with APDS, switch: rounds and ammunition follow the magazine.
+  w.ammoLoaded = 2;
+  w.ammoSlots[1] = { loaded: 5, ammoKind: { name: 'Ammo: APDS' } };
+  assert.equal(switchMagazine(w), 1);
+  assert.deepEqual([w.activeSlot, w.ammoLoaded, w.ammoKind.name], [1, 5, 'Ammo: APDS']);
+  assert.deepEqual(w.ammoSlots[0], { loaded: 2, ammoKind: { name: 'Ammo: Regular Ammo', nameFr: 'Mun. : Balles normales', catalogId: 'b2a0b340-c793-4322-8422-8b03d18a6fae' } });
+  assert.equal(switchMagazine(w, 1), -1, 'already in use');
+  assert.equal(switchMagazine(w), 0, 'wraps around');
+  assert.deepEqual([w.ammoLoaded, w.ammoKind.name], [2, 'Ammo: Regular Ammo']);
+  const once = JSON.stringify(a);
+  normalizeInventory(a, mkId);
+  assert.equal(JSON.stringify(a), once, 'idempotent');
+  // Accessory removed while magazine 2 is in use: that one stays loaded.
+  switchMagazine(w);
+  w.accessories = w.accessories.filter((x: RawData) => !isAdditionalClip(x));
+  normalizeMagazines(w);
+  assert.deepEqual([w.ammoSlots, w.activeSlot, w.ammoLoaded], [undefined, undefined, 5]);
 });
 
 // ---------------------------------------------------------------------------
@@ -506,6 +543,39 @@ try {
     assert.equal(interpolate('Attack — {weapon}', roll.labelI18n.params, null as unknown as undefined, 'en'), `Attack — ${flash.nameEn}`);
   });
 
+  await test('Beretta Northstar: switch magazine (Free Action), fire uses the magazine in use', async () => {
+    const B = () => gm.state.actors.pc_bricks;
+    const ns = () => B().weapons.find((w) => w.catalogId === NORTHSTAR)!;
+    assert.deepEqual([ns().mode, ns().ammo, ns().ammoMax, ns().ammoSlots?.length, ns().activeSlot], ['SA', '6(m)', 6, 2, 0], 'seed: 6(m) × 2');
+    await rejects(jane.send('weapon/switchMagazine', { actorId: 'pc_bricks', weaponId: ns().id }), /not yours/);
+    await bricks.send('weapon/fire', { actorId: 'pc_bricks', weaponId: ns().id, mode: 'SA' });
+    await settle();
+    assert.equal(ns().ammoLoaded, 5);
+    const r = await bricks.send('weapon/switchMagazine', { actorId: 'pc_bricks', weaponId: ns().id });
+    assert.deepEqual([r.activeSlot, r.slots, r.ammoLoaded, r.max, r.action], [1, 2, 6, 6, 'free']);
+    await bricks.send('weapon/fire', { actorId: 'pc_bricks', weaponId: ns().id, mode: 'SA' });
+    await settle();
+    assert.deepEqual([ns().activeSlot, ns().ammoLoaded, ns().ammoSlots![0].loaded], [1, 5, 5]);
+    await rejects(bricks.send('weapon/switchMagazine', { actorId: 'pc_bricks', weaponId: ns().id, slot: 1 }), /already in use/);
+    await rejects(bricks.send('weapon/switchMagazine', { actorId: 'pc_bricks', weaponId: ns().id, slot: 5 }), /Unknown magazine/);
+    await bricks.send('weapon/switchMagazine', { actorId: 'pc_bricks', weaponId: ns().id, slot: 0 });
+    await settle();
+    assert.deepEqual([ns().activeSlot, ns().ammoLoaded], [0, 5]);
+    const log = gm.state.log.filter((e) => e.i18n?.key?.includes('switches {weapon} to magazine')).pop()!;
+    assert.deepEqual([log.i18n!.params!.slot, log.i18n!.params!.n], [1, 2]);
+    const pistol = B().weapons.find((w) => usesAmmo(w) && w.catalogId !== NORTHSTAR)!;
+    await rejects(bricks.send('weapon/switchMagazine', { actorId: 'pc_bricks', weaponId: pistol.id }), /only one magazine/);
+    // Players cannot write the magazines themselves.
+    await rejects(bricks.send('actor/updateItem', { actorId: 'pc_bricks', list: 'weapons', itemId: ns().id, patch: { ammoSlots: [{ loaded: 6 }, { loaded: 6 }] } }), /You can only change/);
+  });
+
+  await test('Foundry « 12(m) » Northstar (both magazines counted as one) → 6(m) × 2, rounds split', async () => {
+    const id = await gm.send('actor/addItem', { actorId: 'pc_bricks', list: 'weapons', item: northstar({ id: undefined, ammo: '12(m)', ammoLoaded: 9 }) });
+    await settle();
+    const w = gm.state.actors.pc_bricks.weapons.find((x) => x.id === id)!;
+    assert.deepEqual([w.ammo, w.ammoMax, w.ammoLoaded, w.ammoSlots!.map((m) => m.loaded), w.activeSlot], ['6(m)', 6, 6, [6, 3], 0]);
+  });
+
   await test('launcher profiles (« Minigrenade: … ») are not consumed by an attack', async () => {
     const id = await gm.send('actor/addItem', { actorId: 'pc_bricks', list: 'weapons', item: { name: 'Minigrenade: High Explosive', kind: 'ranged', skill: 'heavy_weapons', damage: '16P(f)', ammo: '' } });
     const r = await gm.send('dice/roll', { actorId: 'pc_bricks', weaponId: id, skillId: 'heavy_weapons' });
@@ -707,6 +777,21 @@ console.log('Chummer locations, clips, grenades, ready weapons');
     const node = /<name>Colt Government 2066<\/name>[\s\S]*?<\/weapon>/.exec(out)![0];
     assert.match(node, /<count>3<\/count>/);
     assert.equal(parseChum5(out, {}).actor.weapons.find((w) => w.name === 'Colt Government 2066')!.ammoLoaded, 3);
+  });
+  await test('parse + export: several clips (Additional Clip/Magazine), active slot and every clip’s rounds', () => {
+    const two = colt0.replace('<activeammoslot>1</activeammoslot>', '<activeammoslot>2</activeammoslot><clips><clip><name>Ammo: Regular Ammo</name><id>00000000-0000-0000-0000-000000000000</id><count>4</count></clip><clip><name>Ammo: Hollow Points</name><id>8abb07e3-e18a-4cb0-b7a0-649a9f591dfb</id><count>9</count></clip></clips>')
+      .replace('<ammoslots>1</ammoslots>', '<ammoslots>2</ammoslots>')
+      .replace('<weapontype>gun</weapontype>', '<weapontype>gun</weapontype><accessories><accessory><sourceid>d2a1cc9b-72e3-49df-957c-8ed6fb47a813</sourceid><guid>33333333-3333-4333-8333-333333333333</guid><name>Additional Clip/Magazine</name><mount>Internal</mount><cost>0</cost><avail>10R</avail><included>True</included><equipped>True</equipped></accessory></accessories>');
+    const { actor } = parseChum5(xml0.replace(colt0, two), { keepXml: true });
+    const colt = actor.weapons.find((w) => w.name === 'Colt Government 2066')!;
+    assert.deepEqual([colt.activeSlot, colt.ammoLoaded, colt.ammoSlots!.map((m) => m.loaded)], [1, 9, [4, 9]]);
+    normalizeActor(actor, mkId);
+    assert.equal(colt.ammoSlots!.length, 2, 'the accessory keeps the second magazine');
+    switchMagazine(colt);
+    colt.ammoLoaded = 1;
+    const { xml: out } = exportChum5(actor as Actor);
+    const back = parseChum5(out, {}).actor.weapons.find((w) => w.name === 'Colt Government 2066')!;
+    assert.deepEqual([back.activeSlot, back.ammoLoaded, back.ammoSlots!.map((m) => m.loaded)], [0, 1, [1, 9]]);
   });
   await test('parse: hand grenades are single-use items (qty), not one-round guns', () => {
     // Regression: « <ammo>1</ammo> » gave a 1-round magazine of minigrenades.
