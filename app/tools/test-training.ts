@@ -334,6 +334,16 @@ try {
   await settle();
   let m = gm.state.actors.npc_t_mage;
   eq([m.karma, m.training![0].daysTotal], [88, 30], 'initiation: 12 karma, 1 month');
+  // GM gift: days added to one training, calendar untouched
+  const elapsedBefore = gm.state.training.daysElapsed;
+  await rejects(p1.send('training/addDays', { actorId: 'npc_t_mage', jobId: m.training![0].id, days: 7 }), /GM/, 'addDays is GM-only');
+  await rejects(gm.send('training/addDays', { actorId: 'npc_t_mage', jobId: m.training![0].id, days: 0 }), /Invalid number of days/, 'addDays: invalid days');
+  await rejects(gm.send('training/addDays', { actorId: 'npc_t_mage', jobId: 'nope', days: 7 }), /Training not found/, 'addDays: unknown job');
+  const gift = await gm.send('training/addDays', { actorId: 'npc_t_mage', jobId: m.training![0].id, days: 7 });
+  eq([gift.daysDone, gift.daysTotal, gift.completed], [7, 30, null], 'addDays: 7/30, not finished');
+  await settle();
+  m = gm.state.actors.npc_t_mage;
+  eq([m.training![0].daysDone, gm.state.training.daysElapsed], [7, elapsedBefore], 'addDays: job progressed, calendar unchanged');
   const done = await gm.send('training/complete', { actorId: 'npc_t_mage', jobId: m.training![0].id });
   check(/Initiation/.test(done.label), 'forced completion');
   await settle();
@@ -342,6 +352,11 @@ try {
   const r11 = await gm.send('training/request', { actorId: 'npc_t_mage', kind: 'spell', name: 'Armure', free: true });
   await settle();
   eq([gm.state.actors.npc_t_mage.karma, r11.status], [88, 'approved'], 'learning given by the GM (free)');
+  const spellJob = gm.state.actors.npc_t_mage.training![0];
+  const gift2 = await gm.send('training/addDays', { actorId: 'npc_t_mage', jobId: spellJob.id, days: 3650 });
+  check(!!gift2.completed && gift2.daysDone === gift2.daysTotal, 'addDays: enough days finishes the training');
+  await settle();
+  eq(gm.state.actors.npc_t_mage.training!.length, 0, 'addDays: finished job removed');
   await rejects(p1.send('training/request', { actorId: 'pc_t_sam', kind: 'skill', target: 'blades', to: 8, free: true }), /Not enough karma/, 'free ignored for a player');
 
   // Martial arts (RG p.128): training requests checked against data/catalog/martialarts.json

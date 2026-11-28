@@ -378,5 +378,10 @@
   "No more bonded foci than your Magic ({n})": "Pas plus de focus liés que votre Magie ({n})",
   "Only the Awakened can bond foci": "Seuls les éveillés peuvent lier des focus",
   "The total Force of your bonded foci cannot exceed Magic × 5 ({n})": "La Puissance totale de vos focus liés ne peut dépasser Magie × 5 ({n})",
-  "This focus is already bonded": "Ce focus est déjà lié"
+  "This focus is already bonded": "Ce focus est déjà lié",
+  "{actor} is given {days} of training: {label}": "{actor} reçoit {days} d’entraînement : {label}",
+  "Days of training to give {name} for « {label} » (7 = 1 week):": "Jours d’entraînement à offrir à {name} pour « {label} » (7 = 1 semaine) :",
+  "{time} of training given": "{time} d’entraînement offert(s)",
+  "Give training days (does not move the calendar)": "Offrir des jours d’entraînement (n’avance pas le calendrier)",
+  "+ days": "+ jours"
 }
