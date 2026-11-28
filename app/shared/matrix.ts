@@ -25,8 +25,8 @@ const part = (key: string, value: number, params?: I18nParams): PoolPart => ({ l
 /** Defense of a Matrix action: [mental attribute, matrix attribute] (opposed), a fixed pool, rating × 2, or none. */
 export type MatrixDefense = [AttrKey, AsdfKey] | { fixed: number } | { x2: 'protection' | 'bomb' | 'device' } | null;
 export type MatrixActionCat = 'attack' | 'sleaze' | 'info' | 'control' | 'util';
-export type MatrixActionType = 'complex' | 'simple' | 'free' | 'interrupt' | 'variable' | 'extended';
-export type MatrixTargetKind = 'host' | 'ic' | 'device' | 'file' | 'persona' | 'manual' | 'markOnMe' | 'none';
+export type MatrixActionType = 'complex' | 'simple' | 'free' | 'interrupt' | 'variable' | 'extended' | 'special';
+export type MatrixTargetKind = 'host' | 'ic' | 'device' | 'file' | 'persona' | 'pan' | 'manual' | 'markOnMe' | 'none';
 /** A Matrix action of ACTIONS. */
 export interface MatrixActionDef {
   id: string;
@@ -241,9 +241,9 @@ const MENTAL_LABEL: Record<string, string> = { INT: tk('Intuition'), WIL: tk('Wi
  */
 export const ACTIONS: MatrixActionDef[] = [
   // --- Illegal: Attack actions
-  { id: 'bruteForce', fr: tk('Brute Force'), en: 'Brute Force', cat: 'attack', type: 'complex', skill: 'cybercombat', attr: 'LOG', limit: 'attack', defense: ['WIL', 'firewall'], marks: 0, placesMarks: true, targets: ['host', 'ic', 'device', 'file', 'persona', 'manual'], page: 238,
+  { id: 'bruteForce', fr: tk('Brute Force'), en: 'Brute Force', cat: 'attack', type: 'complex', skill: 'cybercombat', attr: 'LOG', limit: 'attack', defense: ['WIL', 'firewall'], marks: 0, placesMarks: true, targets: ['host', 'ic', 'device', 'pan', 'file', 'persona', 'manual'], page: 238,
     desc: tk('Places marks by force (1 mark, or 2 at −4, 3 at −10). Every 2 net hits also inflict 1 box of Matrix damage. Failure: you take 1 box per net hit of the defender.') },
-  { id: 'dataSpike', fr: tk('Data Spike'), en: 'Data Spike', cat: 'attack', type: 'complex', skill: 'cybercombat', attr: 'LOG', limit: 'attack', defense: ['INT', 'firewall'], marks: 0, targets: ['ic', 'device', 'persona', 'manual'], page: 240,
+  { id: 'dataSpike', fr: tk('Data Spike'), en: 'Data Spike', cat: 'attack', type: 'complex', skill: 'cybercombat', attr: 'LOG', limit: 'attack', defense: ['INT', 'firewall'], marks: 0, targets: ['ic', 'device', 'pan', 'persona', 'manual'], page: 240,
     desc: tk('Matrix attack: DV = Attack + net hits + 2 per mark on the target, resisted with Device Rating + Firewall.') },
   { id: 'crashProgram', fr: tk('Crash Program'), en: 'Crash Program', cat: 'attack', type: 'complex', skill: 'cybercombat', attr: 'LOG', limit: 'attack', defense: ['INT', 'firewall'], marks: 1, targets: ['persona', 'manual'], page: 239,
     desc: tk('Crashes a program running on the target (hacker’s choice).') },
@@ -254,35 +254,35 @@ export const ACTIONS: MatrixActionDef[] = [
   { id: 'jamSignals', fr: tk('Jam Signals'), en: 'Jam Signals', cat: 'attack', type: 'complex', skill: 'electronic_warfare', attr: 'LOG', limit: 'attack', defense: null, marks: 0, targets: ['none'], page: 241,
     desc: tk('Each hit adds 1 point of noise for everyone within 100 m (you included, except your own devices).') },
   // --- Illegal: Sleaze actions
-  { id: 'hackOnTheFly', fr: tk('Hack on the Fly'), en: 'Hack on the Fly', cat: 'sleaze', type: 'complex', skill: 'hacking', attr: 'LOG', limit: 'sleaze', defense: ['INT', 'firewall'], marks: 0, placesMarks: true, targets: ['host', 'ic', 'device', 'file', 'persona', 'manual'], page: 240,
+  { id: 'hackOnTheFly', fr: tk('Hack on the Fly'), en: 'Hack on the Fly', cat: 'sleaze', type: 'complex', skill: 'hacking', attr: 'LOG', limit: 'sleaze', defense: ['INT', 'firewall'], marks: 0, placesMarks: true, targets: ['host', 'ic', 'device', 'pan', 'file', 'persona', 'manual'], page: 240,
     desc: tk('Places marks by stealth (1 mark, or 2 at −4, 3 at −10). Failure: the target marks you and the host goes on alert.') },
-  { id: 'spoofCommand', fr: tk('Spoof Command'), en: 'Spoof Command', cat: 'sleaze', type: 'complex', skill: 'hacking', attr: 'INT', limit: 'sleaze', defense: ['LOG', 'firewall'], marks: 1, marksOnOwner: true, targets: ['device', 'manual'], page: 243,
+  { id: 'spoofCommand', fr: tk('Spoof Command'), en: 'Spoof Command', cat: 'sleaze', type: 'complex', skill: 'hacking', attr: 'INT', limit: 'sleaze', defense: ['LOG', 'firewall'], marks: 1, marksOnOwner: true, targets: ['device', 'pan', 'manual'], page: 243,
     desc: tk('Sends a device a command that seems to come from its owner (requires 1 mark on the spoofed owner).') },
-  { id: 'snoop', fr: tk('Snoop'), en: 'Snoop', cat: 'sleaze', type: 'complex', skill: 'electronic_warfare', attr: 'INT', limit: 'sleaze', defense: ['LOG', 'firewall'], marks: 1, targets: ['device', 'persona', 'manual'], page: 243,
+  { id: 'snoop', fr: tk('Snoop'), en: 'Snoop', cat: 'sleaze', type: 'complex', skill: 'electronic_warfare', attr: 'INT', limit: 'sleaze', defense: ['LOG', 'firewall'], marks: 1, targets: ['device', 'pan', 'persona', 'manual'], page: 243,
     desc: tk('Intercepts the target’s traffic (communications, data streams).') },
   { id: 'hide', fr: tk('self::Hide'), en: 'Hide', cat: 'sleaze', type: 'complex', skill: 'electronic_warfare', attr: 'INT', limit: 'sleaze', defense: ['INT', 'dataProcessing'], marks: 0, targets: ['host', 'ic', 'persona', 'manual'], page: 241,
     desc: tk('The target loses track of you (a Patrol IC no longer sees you).') },
-  { id: 'formatDevice', fr: tk('Format Device'), en: 'Format Device', cat: 'sleaze', type: 'complex', skill: 'computer', attr: 'LOG', limit: 'sleaze', defense: ['WIL', 'firewall'], marks: 3, targets: ['device', 'persona', 'manual'], page: 240,
+  { id: 'formatDevice', fr: tk('Format Device'), en: 'Format Device', cat: 'sleaze', type: 'complex', skill: 'computer', attr: 'LOG', limit: 'sleaze', defense: ['WIL', 'firewall'], marks: 3, targets: ['device', 'pan', 'persona', 'manual'], page: 240,
     desc: tk('Wipes the device’s OS: at its next reboot, it no longer works.') },
   { id: 'setDataBomb', fr: tk('Set Data Bomb'), en: 'Set Data Bomb', cat: 'sleaze', type: 'complex', skill: 'software', attr: 'LOG', limit: 'sleaze', defense: { x2: 'device' }, marks: 1, targets: ['file'], page: 243,
     desc: tk('Booby-traps a file: bomb rating = net hits.') },
   { id: 'checkOverwatch', fr: tk('Check Overwatch Score'), en: 'Check Overwatch Score', cat: 'sleaze', type: 'simple', skill: 'electronic_warfare', attr: 'LOG', limit: 'sleaze', defense: { fixed: 6 }, marks: 0, targets: ['none'], page: 238,
     desc: tk('Opposed by 6 dice (GOD). Success: you learn your current OS.') },
   // --- Legal: information
-  { id: 'matrixPerception', fr: tk('Matrix Perception'), en: 'Matrix Perception', cat: 'info', type: 'complex', skill: 'computer', attr: 'INT', limit: 'dataProcessing', defense: null, marks: 0, targets: ['host', 'ic', 'device', 'file', 'persona', 'manual', 'none'], page: 241,
+  { id: 'matrixPerception', fr: tk('Matrix Perception'), en: 'Matrix Perception', cat: 'info', type: 'complex', skill: 'computer', attr: 'INT', limit: 'dataProcessing', defense: null, marks: 0, targets: ['host', 'ic', 'device', 'pan', 'file', 'persona', 'manual', 'none'], page: 241,
     desc: tk('Each hit reveals one piece of information. On a host: rating, attributes, IC, files, devices and data bombs.') },
-  { id: 'matrixSearch', fr: tk('Matrix Search'), en: 'Matrix Search', cat: 'info', type: 'extended', skill: 'computer', attr: 'INT', limit: 'dataProcessing', defense: null, marks: 0, targets: ['none'], page: 241,
-    desc: tk('Searches for public or hidden information (threshold and time set by the GM).') },
-  { id: 'traceIcon', fr: tk('Trace Icon'), en: 'Trace Icon', cat: 'info', type: 'complex', skill: 'computer', attr: 'INT', limit: 'dataProcessing', defense: ['WIL', 'sleaze'], marks: 2, targets: ['persona', 'device', 'manual'], page: 243,
+  { id: 'matrixSearch', fr: tk('Matrix Search'), en: 'Matrix Search', cat: 'info', type: 'special', skill: 'computer', attr: 'INT', limit: 'dataProcessing', defense: null, marks: 0, targets: ['none'], page: 241,
+    desc: tk('Searches the Matrix for information on a topic: the threshold and the base time depend on how available it is; hits above the threshold divide the time. Protected or secret data: search inside its host.') },
+  { id: 'traceIcon', fr: tk('Trace Icon'), en: 'Trace Icon', cat: 'info', type: 'complex', skill: 'computer', attr: 'INT', limit: 'dataProcessing', defense: ['WIL', 'sleaze'], marks: 2, targets: ['persona', 'device', 'pan', 'manual'], page: 243,
     desc: tk('Finds the physical location of the device behind the icon.') },
   // --- Legal: control & files
-  { id: 'controlDevice', fr: tk('Control Device'), en: 'Control Device', cat: 'control', type: 'variable', skill: 'electronic_warfare', attr: 'LOG', limit: 'dataProcessing', defense: ['INT', 'firewall'], marks: 1, targets: ['device', 'manual'], page: 238,
+  { id: 'controlDevice', fr: tk('Control Device'), en: 'Control Device', cat: 'control', type: 'variable', skill: 'electronic_warfare', attr: 'LOG', limit: 'dataProcessing', defense: ['INT', 'firewall'], marks: 1, targets: ['device', 'pan', 'manual'], page: 238,
     desc: tk('Makes the device act (open a door, shut a camera off…). Marks needed: 1 to 3 depending on the command.') },
   { id: 'editFile', fr: tk('Edit File'), en: 'Edit File', cat: 'control', type: 'complex', skill: 'computer', attr: 'LOG', limit: 'dataProcessing', defense: ['INT', 'firewall'], marks: 1, targets: ['file'], page: 239,
     desc: tk('Read, copy, change or delete an (unprotected) file. A data bomb goes off unless disarmed.') },
   { id: 'disarmDataBomb', fr: tk('Disarm Data Bomb'), en: 'Disarm Data Bomb', cat: 'control', type: 'complex', skill: 'software', attr: 'LOG', limit: 'firewall', defense: { x2: 'bomb' }, marks: 0, targets: ['file'], page: 239,
     desc: tk('Success: the bomb is removed. Failure: it goes off (rating D6 Matrix damage, file destroyed).') },
-  { id: 'rebootDevice', fr: tk('Reboot Device'), en: 'Reboot Device', cat: 'control', type: 'complex', skill: 'computer', attr: 'LOG', limit: 'dataProcessing', defense: ['WIL', 'firewall'], marks: 3, targets: ['device', 'persona', 'manual'], page: 242,
+  { id: 'rebootDevice', fr: tk('Reboot Device'), en: 'Reboot Device', cat: 'control', type: 'complex', skill: 'computer', attr: 'LOG', limit: 'dataProcessing', defense: ['WIL', 'firewall'], marks: 3, targets: ['device', 'pan', 'persona', 'manual'], page: 242,
     desc: tk('The device shuts down and restarts at the end of the next turn (marks and connections lost).') },
   // --- Legal: utilities (no test)
   { id: 'enterHost', fr: tk('Enter Host'), en: 'Enter Host', cat: 'util', type: 'complex', noTest: true, marks: 1, targets: ['host'], page: 240,
@@ -299,8 +299,8 @@ export const ACTIONS: MatrixActionDef[] = [
 export const ACTION_BY_ID: Record<string, MatrixActionDef> = Object.fromEntries(ACTIONS.map((a) => [a.id, a]));
 export const isIllegal = (action: Partial<MatrixActionDef> | null | undefined) => action && (action.cat === 'attack' || action.cat === 'sleaze');
 export const ACTION_CATS: Record<MatrixActionCat, string> = { attack: tk('Attack'), sleaze: tk('Sleaze'), info: tk('Information'), control: tk('Control & files'), util: tk('Utilities') };
-export const ACTION_TYPES: Record<MatrixActionType, string> = { complex: tk('Complex'), simple: tk('Simple'), free: tk('Unassigned'), interrupt: tk('Interrupt'), variable: tk('Variable'), extended: tk('Extended') };
-export const TARGET_KIND_LABELS: Record<MatrixTargetKind, string> = { host: tk('Host'), ic: tk('IC'), device: tk('Device'), file: tk('File'), persona: tk('Persona'), manual: tk('Other target'), markOnMe: tk('Mark on me'), none: tk('No target') };
+export const ACTION_TYPES: Record<MatrixActionType, string> = { complex: tk('Complex'), simple: tk('Simple'), free: tk('Unassigned'), interrupt: tk('Interrupt'), variable: tk('Variable'), extended: tk('Extended'), special: tk('Special') };
+export const TARGET_KIND_LABELS: Record<MatrixTargetKind, string> = { host: tk('Host'), ic: tk('IC'), device: tk('Device'), file: tk('File'), persona: tk('Persona'), pan: tk('PAN device'), manual: tk('Other target'), markOnMe: tk('Mark on me'), none: tk('No target') };
 
 /**
  * Programs (SR5 core p. 245-246 + Data Trails). auto = the cockpit applies the effect by itself;
@@ -642,6 +642,116 @@ export function personaDefensePool(
 }
 
 // ---------------------------------------------------------------------------
+// Matrix Search (SR5 p. 241): a Simple Test against a threshold set by how available the information is. Hits above
+// the threshold divide the base time; a failure costs the full base time. Inside a host the base time is 1 minute.
+// Protected or secret information cannot be found from outside its host.
+// ---------------------------------------------------------------------------
+export type SearchLevel = 'public' | 'limited' | 'hidden';
+export const SEARCH_LEVELS: Record<SearchLevel, { label: string; threshold: number; minutes: number }> = {
+  public: { label: tk('General knowledge or public'), threshold: 1, minutes: 1 },
+  limited: { label: tk('Limited interest or not publicized'), threshold: 3, minutes: 30 },
+  hidden: { label: tk('Hidden or actively hunted and erased'), threshold: 6, minutes: 12 * 60 },
+};
+/** Dice pool modifiers of the Matrix Search Table. */
+export const SEARCH_MODS: Array<{ id: string; label: string; value: number }> = [
+  { id: 'intricate', label: tk('Intricate or specialized'), value: -1 },
+  { id: 'obscure', label: tk('Obscure'), value: -2 },
+  { id: 'otherGrid', label: tk('On another grid'), value: -2 },
+];
+export const searchLevel = (id: unknown): SearchLevel => (id === 'limited' || id === 'hidden' ? id : 'public');
+/** Minutes a Matrix Search takes: base time (1 minute in a host) divided by the hits above the threshold; failure = base time. */
+export function searchMinutes(level: SearchLevel, hits: number, inHost = false): number {
+  const L = SEARCH_LEVELS[level];
+  const base = inHost ? 1 : L.minutes;
+  const net = hits - L.threshold;
+  return hits >= L.threshold && net > 0 ? base / net : base;
+}
+
+// ---------------------------------------------------------------------------
+// PAN (SR5 p. 233-235): a character's commlink (or deck) is subsumed by their persona and is the master of the
+// wireless devices slaved to it — cyberware and firearms whose wireless is not switched off.
+// ---------------------------------------------------------------------------
+/** Cyberware Device Rating by grade (SR5 p. 234: basic cyberware 2, alphaware 3, betaware 4, deltaware 5; Chummer grades.xml). */
+export const WARE_DEVICE_RATING: Record<string, number> = { used: 2, standard: 2, alpha: 3, beta: 4, delta: 5, gamma: 6, omega: 6 };
+/** Device Rating of weapons and standard personal electronics (SR5 p. 234: « Average »). */
+export const AVERAGE_DEVICE_RATING = 2;
+/** Skills of the firearms that are devices (bows and thrown weapons are not). */
+const FIREARM_SKILLS = new Set(['pistols', 'automatics', 'longarms', 'heavy_weapons', 'exotic_weapon']);
+
+export type PanDeviceKind = 'cyberware' | 'weapon';
+/** A device slaved to a character's PAN. */
+export interface PanDevice {
+  id: string;
+  kind: PanDeviceKind;
+  name: string;
+  nameFr?: string;
+  nameEn?: string;
+  rating?: number;
+  deviceRating: number;
+}
+/** The PAN master: the commlink or deck behind the persona. */
+export interface PanMaster {
+  name: string;
+  deviceRating: number;
+  dataProcessing: number;
+  firewall: number;
+}
+/** Matrix stats of a catalog gear entry (commlinks, cyberdecks). */
+export type GearMatrixStats = (catalogId: string) => { deviceRating?: number; dataProcessing?: number; firewall?: number } | null | undefined;
+
+interface PanItem { id?: string; name?: string; nameFr?: string; nameEn?: string; rating?: number | string | null; catalogId?: string; category?: string; wirelessOff?: boolean }
+const names = (it: PanItem) => ({ name: String(it.name || ''), ...(it.nameFr ? { nameFr: it.nameFr } : {}), ...(it.nameEn ? { nameEn: it.nameEn } : {}) });
+
+/** The commlink / deck behind a character's persona: the sheet's Matrix device, else their best commlink or cyberdeck. */
+export function panMaster(actor: ActorLike | null | undefined, stats?: GearMatrixStats): PanMaster | null {
+  const m = actor?.matrix as Record<string, unknown> | null | undefined;
+  if (m && Number(m.rating) > 0) {
+    return { name: String(m.device || ''), deviceRating: Number(m.rating) || 0, dataProcessing: Number(m.dataProcessing) || 0, firewall: Number(m.firewall) || 0 };
+  }
+  let best: PanMaster | null = null;
+  for (const g of ((actor?.gear || []) as PanItem[])) {
+    if (!g || !/^(commlinks?|cyberdecks?)$/i.test(String(g.category || '').trim())) continue;
+    const st = (g.catalogId && stats?.(g.catalogId)) || null;
+    const dr = Number(st?.deviceRating) || Number(g.rating) || AVERAGE_DEVICE_RATING;
+    const cand = { name: String(g.name || ''), deviceRating: dr, dataProcessing: Number(st?.dataProcessing) || dr, firewall: Number(st?.firewall) || dr };
+    if (!best || cand.deviceRating > best.deviceRating) best = cand;
+  }
+  return best;
+}
+
+/** Devices of a character's PAN, in sheet order: cyberware (bioware has no wireless), then firearms (not implant weapons). */
+export function panDevices(actor: ActorLike | null | undefined): PanDevice[] {
+  const out: PanDevice[] = [];
+  for (const a of ((actor?.augmentations || []) as Array<PanItem & { kind?: string; grade?: string }>)) {
+    if (!a?.id || a.kind !== 'cyberware' || a.wirelessOff) continue;
+    out.push({ id: a.id, kind: 'cyberware', ...names(a), ...(Number(a.rating) > 0 ? { rating: Number(a.rating) } : {}), deviceRating: WARE_DEVICE_RATING[a.grade || 'standard'] || AVERAGE_DEVICE_RATING });
+  }
+  for (const w of ((actor?.weapons || []) as Array<PanItem & { kind?: string; skill?: string; augId?: string }>)) {
+    if (!w?.id || w.kind !== 'ranged' || w.augId || w.wirelessOff || !FIREARM_SKILLS.has(String(w.skill || ''))) continue;
+    out.push({ id: w.id, kind: 'weapon', ...names(w), deviceRating: AVERAGE_DEVICE_RATING });
+  }
+  return out;
+}
+
+/** A slaved device's rating for each part of a test: its own or its master's, whichever is higher (SR5 p. 233). Devices have no Attack / Sleaze. */
+export function panDeviceRating(device: { deviceRating: number }, master: PanMaster | null, k: AsdfKey | 'device'): number {
+  const own = k === 'attack' || k === 'sleaze' ? 0 : device.deviceRating;
+  const m = !master ? 0 : k === 'device' ? master.deviceRating : k === 'dataProcessing' ? master.dataProcessing : k === 'firewall' ? master.firewall : 0;
+  return Math.max(own, m);
+}
+
+/** Defense pool of a slaved device: the owner's attribute or the Device Rating, and the device's or the master's Matrix attribute (SR5 p. 233). */
+export function panDefensePool(owner: ActorLike, master: PanMaster | null, device: { deviceRating: number }, defense: MatrixDefense | undefined): DefensePool | null {
+  if (!Array.isArray(defense)) return null;
+  const [a, k] = defense;
+  const own = owner?.attributes ? attr(owner, a) : 0;
+  const first = own >= device.deviceRating
+    ? (MENTAL_LABEL[a] ? part(MENTAL_LABEL[a], own) : { label: a, attr: a, value: own })
+    : part(tk('Device Rating'), device.deviceRating);
+  return { pool: first.value + panDeviceRating(device, master, k), parts: [first, part(ASDF_LABELS[k], panDeviceRating(device, master, k))] };
+}
+
+// ---------------------------------------------------------------------------
 // Hosts & IC
 // ---------------------------------------------------------------------------
 /** Standard host attribute arrays: rating R → R, R+1, R+2, R+3 distributed by profile. */
@@ -782,7 +892,7 @@ export function nextStepHints({
   if (cur.alert === 'active' && ic.length) add(tk('The host is on alert and its IC attack: take them down (Data Spike), go to Full Matrix Defense, or finish fast and leave.'), { tone: 'warn', actionId: 'dataSpike', targetId: `ic:${hostId}:${ic[0].id}` });
   else if (cur.spotted) add(tk('The patrol spotted you: the host will launch IC. Hide or hurry up.'), { tone: 'warn', actionId: 'hide', targetId: `host:${hostId}` });
   if (!cur.perceived) {
-    add(tk('Run Matrix Perception on the host: it reveals its rating, IC, files and devices.'), { actionId: 'matrixPerception', targetId: `host:${hostId}` });
+    add(tk('Run Matrix Perception on the host: each hit lets the GM reveal its rating, an IC, a file or a device.'), { actionId: 'matrixPerception', targetId: `host:${hostId}` });
     return byUrgency(out);
   }
   const copied = new Set((persona.files || []).map((f) => f.sourceId));

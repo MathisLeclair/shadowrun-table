@@ -11,6 +11,7 @@ import {
 import type { Actor, GameView, LinkLock, LogEntry, MatrixMarkOnMe, ViewActor } from '../../../shared/types.ts';
 import { BookRef } from '../books/BookRef.tsx';
 import { DiceFaces, fmtTime } from '../sheet/common.tsx';
+import { itemLabel } from '../sheet/common.tsx';
 
 export const isGM = (game: GameView | null | undefined) => game?.me?.role === 'gm';
 
@@ -300,7 +301,7 @@ export function targetOptions(game: GameView, actor: Actor, persona: PersonaView
   }
   if (allow.has('device')) {
     for (const h of hosts) {
-      if (!gm && h.id !== persona.hostId && !h.perceived) continue;
+      if (!gm && !(h.devices || []).length) continue; // players get the devices revealed to them
       const items = (h.devices || []).map((d) => ({
         id: `device:${h.id}:${d.id}`,
         kind: 'device',
@@ -317,6 +318,19 @@ export function targetOptions(game: GameView, actor: Actor, persona: PersonaView
       .sort((a, b) => (a.type === b.type ? compare(a.name, b.name) : a.type === 'pc' ? -1 : 1))
       .map((a) => ({ id: `persona:${a.id}`, kind: 'persona', marks: markOn(`persona:${a.id}`), label: `${a.name}${a.type === 'npc' ? ` ${t('(NPC)')}` : ''}` }));
     if (items.length) groups.push({ group: t('Personas'), items });
+  }
+  if (allow.has('pan')) {
+    // Devices of the PANs the decker spotted with Matrix Perception.
+    for (const [ownerId, scan] of Object.entries(persona.scans || {})) {
+      if (!game.actors?.[ownerId]) continue;
+      const items = (scan.devices || []).map((d) => ({
+        id: `pan:${ownerId}:${d.id}`,
+        kind: 'pan',
+        marks: markOn(`pan:${ownerId}:${d.id}`),
+        label: `${itemLabel(d)}${d.state?.bricked ? ` ${t('(bricked)')}` : ''}`,
+      }));
+      if (items.length) groups.push({ group: t('PAN — {name}', { name: scan.name }), items });
+    }
   }
   if (allow.has('markOnMe')) {
     const items = (persona.marksOnMe || [])

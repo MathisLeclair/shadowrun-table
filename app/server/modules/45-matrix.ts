@@ -11,6 +11,8 @@ import {
   personaDefensePool, programId, convergenceAt, hasMatrixQuality, biofeedbackDice, programSlots, programSum, availablePrograms, detectAgents, matrixMonitor,
   matrixInitiative, dumpshock, hostAttributes, defaultIcFor, icAttackPool, skillRating, loadedProgramIds,
   OS_TICK_MS, DEVICE_LINK_KINDS, DEVICE_CMD_LABELS, deviceWorks, type MatrixActionDef, type MatrixTargetKind,
+  panMaster, panDevices, panDefensePool, panDeviceRating, type PanDevice, type PanMaster,
+  SEARCH_LEVELS, searchLevel, searchMinutes,
 } from '../../shared/matrix.ts';
 import { uid, deepClone, slug } from '../../shared/util.ts';
 import { cleanConditions } from '../../shared/modifiers.ts';
@@ -21,7 +23,7 @@ import { refreshFog, findAnyDoor } from './20-maps.ts';
 import notesModule from './75-notes.ts';
 import campaignModule from './70-campaign.ts';
 import type {
-  ActionContext, ActionDef, Actor, ActorId, AsdfKey, EmitTarget, GameView, Host, HostDevice, HostFile, HostIc, I18nMessage, I18nParams, IcType,
+  ActionContext, ActionDef, Actor, ActorId, AsdfKey, BiName, MatrixScan, MatrixReveal, RevealOption, HostKnowledge, EmitTarget, GameView, Host, HostDevice, HostFile, HostIc, I18nMessage, I18nParams, IcType,
   MatrixMark, MatrixMarkOnMe, MatrixMode, MatrixState, NewLogEntry, Persona, PersonaFile, PlayerHostView, ServerModule, SessionUser, SfxId, TableState, UserId,
 } from '../../shared/types.ts';
 
@@ -43,6 +45,8 @@ interface Target {
   actor?: Actor | null;
   persona?: Persona | null;
   mark?: MatrixMarkOnMe;
+  /** PAN device of a character (kind 'pan'): its definition and the owner's commlink. */
+  pan?: { device: PanDevice; master: PanMaster | null };
 }
 /** A defense pool (null = no opposition, pending = the GM rolls). */
 type Defense = { pending?: false; pool: number; parts: Array<{ label: string; value: number; key?: string; params?: I18nParams }>; labelMsg: MsgLike } | { pending: true } | null;
@@ -177,6 +181,7 @@ function normalizePersona(p: Persona, actor: Actor | null | undefined): Persona 
   p.matrixDamage = clampInt(p.matrixDamage, 0, 99, 0);
   p.noise = clampInt(p.noise, 0, 30, 0);
   p.programSlots = clampInt(p.programSlots, 1, 20, 4);
+  if (p.scans !== undefined && !isObj(p.scans)) delete p.scans;
   return p;
 }
 
@@ -440,6 +445,178 @@ function setAlert(ctx: ActionContext, host: Host, reason: MsgLike): I18nMessage 
   return s;
 }
 
+/** Name of an item in both languages, for message params ({ fr, en }: each viewer reads their language). */
+const biName = (it: { name?: string; nameFr?: string; nameEn?: string }): string | BiName => {
+  const fr = String(it.nameFr || it.name || '');
+  const en = String(it.nameEn || it.name || it.nameFr || '');
+  return fr === en ? fr : { fr, en };
+};
+
+let gearCatalog: Map<string, Loose> | null = null;
+/** Matrix stats of a catalog gear entry (commlinks, cyberdecks), loaded on first use. */
+function gearMatrixStats(catalogId: string): Loose | null {
+  if (!gearCatalog) {
+    gearCatalog = new Map();
+    try {
+      for (const g of JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'catalog', 'gear.json'), 'utf8'))) if (g?.stats?.deviceRating) gearCatalog.set(g.id, g.stats);
+    } catch {
+      // no catalog: sheet ratings only
+    }
+  }
+  return gearCatalog.get(catalogId) || null;
+}
+const masterOf = (actor: Actor): PanMaster | null => panMaster(actor, gearMatrixStats);
+
+const MAX_SCANS = 60;
+const MAX_REVEALS = 40;
+
+/** The decker's scan of a character (created on first use, moved last as the most recent). */
+function scanOf(persona: Persona, owner: Actor): MatrixScan {
+  const scans = (persona.scans ||= {});
+  const scan: MatrixScan = scans[owner.id] || { name: owner.name, devices: [], at: Date.now() };
+  if (!Array.isArray(scan.devices)) scan.devices = [];
+  scan.name = owner.name;
+  scan.at = Date.now();
+  delete scans[owner.id];
+  scans[owner.id] = scan;
+  const ids = Object.keys(scans);
+  for (const id of ids.slice(0, Math.max(0, ids.length - MAX_SCANS))) delete scans[id];
+  return scan;
+}
+
+const ratingMsg = (n: number): I18nMessage => ({ t: 'rating {n}', params: { n } });
+/** A duration in minutes as a message (« 45 s », « 7.5 min », « 12 h »). */
+function durationMsg(minutes: number): I18nMessage {
+  const r1 = (x: number) => Math.round(x * 10) / 10;
+  if (minutes < 1) return { t: '{n} s', params: { n: Math.max(1, Math.round(minutes * 60)) } };
+  if (minutes < 60) return { t: '{n} min', params: { n: r1(minutes) } };
+  return { t: '{n} h', params: { n: r1(minutes / 60) } };
+}
+
+/** What the GM can reveal after a Matrix Perception / Matrix Search of this decker (things they do not know yet). */
+function revealOptions(state: TableState, actor: Actor, persona: Persona, actionId: string, target: Target): RevealOption[] {
+  const out: RevealOption[] = [];
+  const me = [actor.id];
+  const inHost = persona.hostId ? slice(state).hosts[persona.hostId] : null;
+  if (actionId === 'matrixSearch' && inHost) {
+    // Searching inside a host: its files (protected or secret data is only found there, SR5 p. 241).
+    for (const f of inHost.files || []) if (!knows(inHost, me, 'files', f.id)) out.push({ id: `file:${inHost.id}:${f.id}`, group: inHost.name, label: { t: 'file “{name}”', params: { name: f.name } } });
+    return out;
+  }
+  if (actionId === 'matrixSearch' || target.kind === 'none') {
+    for (const h of Object.values(slice(state).hosts)) {
+      if (h.visible || persona.hostId === h.id || (persona.marks || []).some((m) => m.count > 0 && String(m.targetId).split(':')[1] === h.id)) continue;
+      out.push({ id: `host-visible:${h.id}`, group: { t: 'Hidden hosts' }, label: h.name, detail: ratingMsg(h.rating) });
+    }
+    return out;
+  }
+  const h = target.host;
+  if (h) {
+    const inside = persona.hostId === h.id;
+    const whole = target.kind === 'host';
+    if (whole && !knows(h, me, 'stats')) {
+      out.push({ id: `host-stats:${h.id}`, group: h.name, label: { t: 'Rating and attributes' }, detail: { t: 'rating {n} · A {a} S {s} D {d} F {f}', params: { n: h.rating, a: h.attack, s: h.sleaze, d: h.dataProcessing, f: h.firewall } } });
+    }
+    for (const ic of h.ic || []) {
+      if (!ic.active || knows(h, me, 'ic', ic.id) || (whole ? !inside : ic.id !== target.ic?.id)) continue;
+      out.push({ id: `ic:${h.id}:${ic.id}`, group: h.name, label: icNameMsg(ic.type, h.name), detail: ratingMsg(ic.rating) });
+    }
+    if (whole && inside) {
+      for (const f of h.files || []) {
+        if (knows(h, me, 'files', f.id)) continue;
+        const detail: I18nMessage | undefined = f.protected && f.bomb ? { t: 'protected {n} · data bomb {b}', params: { n: f.protection, b: f.bomb } } : f.protected ? { t: 'protected {n}', params: { n: f.protection } } : f.bomb ? { t: 'data bomb {b}', params: { b: f.bomb } } : undefined;
+        out.push({ id: `file:${h.id}:${f.id}`, group: h.name, label: { t: 'file “{name}”', params: { name: f.name } }, ...(detail ? { detail } : {}) });
+      }
+    }
+    if (whole) {
+      for (const d of h.devices || []) if (!knows(h, me, 'devices', d.id)) out.push({ id: `device:${h.id}:${d.id}`, group: h.name, label: d.name, detail: ratingMsg(d.rating) });
+    }
+    return out;
+  }
+  if (target.kind === 'persona' && target.actor && target.actor.type === 'npc') {
+    const owner = target.actor;
+    const scan = persona.scans?.[owner.id];
+    const group: I18nMessage = { t: 'PAN of {name}', params: { name: owner.name } };
+    const m = masterOf(owner);
+    if (m && !scan?.master) out.push({ id: `pan-master:${owner.id}`, group, label: { t: 'Commlink: {name}', params: { name: m.name } }, detail: { t: 'DR {dr} · DP {dp} · FW {fw}', params: { dr: m.deviceRating, dp: m.dataProcessing, fw: m.firewall } } });
+    const seen = new Set((scan?.devices || []).map((d) => d.id));
+    for (const d of panDevices(owner)) {
+      if (!seen.has(d.id)) out.push({ id: `pan:${owner.id}:${d.id}`, group, label: biName(d), detail: { t: 'DR {n}', params: { n: d.deviceRating } } });
+    }
+  }
+  return out;
+}
+
+/** A Matrix Perception / Matrix Search with hits: waits for the GM, who picks what the decker learns (GmRevealPrompt). */
+function newReveal(ctx: ActionContext, actor: Actor, persona: Persona, actionId: string, target: Target, hits: number, extra: Partial<MatrixReveal> = {}): MatrixReveal {
+  const m = slice(ctx.state);
+  const reveals = (m.reveals ||= {});
+  const id = uid('rv');
+  const rv: MatrixReveal = {
+    id, actorId: actor.id, actionId: actionId === 'matrixSearch' ? 'matrixSearch' : 'matrixPerception',
+    target: target.kind === 'none' ? '' : ((target.nameMsg as string | I18nMessage) ?? ''), hits,
+    options: revealOptions(ctx.state, actor, persona, actionId, target), at: Date.now(), ...extra,
+  };
+  reveals[id] = rv;
+  const ids = Object.keys(reveals);
+  for (const old of ids.slice(0, Math.max(0, ids.length - MAX_REVEALS))) delete reveals[old];
+  sfx(ctx, 'notify', 'gm');
+  return rv;
+}
+
+/** Apply one revealed option to the decker's knowledge. false = it no longer exists. */
+function applyReveal(state: TableState, actor: Actor, persona: Persona, optionId: string): boolean {
+  const [kind, a, b] = optionId.split(':');
+  const hosts = slice(state).hosts;
+  if (kind === 'host-stats' || kind === 'ic' || kind === 'file' || kind === 'device' || kind === 'host-visible') {
+    const h = hosts[a];
+    if (!h) return false;
+    if (kind === 'host-visible') {
+      h.visible = true;
+      return true;
+    }
+    const k: HostKnowledge = ((h.known ||= {})[actor.id] ||= {});
+    if (kind === 'host-stats') {
+      k.stats = true;
+      return true;
+    }
+    const key = kind === 'ic' ? 'ic' : kind === 'file' ? 'files' : 'devices';
+    const list: Array<{ id: string }> = kind === 'ic' ? h.ic : kind === 'file' ? h.files : h.devices;
+    const item = (list || []).find((x) => x.id === b);
+    if (!item) return false;
+    k[key] = [...new Set([...(k[key] || []), b])];
+    if (kind === 'ic') (item as HostIc).detected = true;
+    return true;
+  }
+  const owner = state.actors?.[a];
+  if (!owner) return false;
+  if (kind === 'pan-master') {
+    const m = masterOf(owner);
+    if (!m) return false;
+    scanOf(persona, owner).master = m;
+    return true;
+  }
+  if (kind === 'pan') {
+    const d = panDevices(owner).find((x) => x.id === b);
+    if (!d) return false;
+    const scan = scanOf(persona, owner);
+    if (!scan.devices.some((x) => x.id === d.id)) scan.devices.push(d);
+    return true;
+  }
+  return false;
+}
+
+/** Matrix state of a PAN device (created when first targeted), kept in sync with the sheet item. */
+function panState(state: TableState, ownerId: ActorId, d: PanDevice): HostDevice {
+  const m = slice(state);
+  const pans = (m.pans ||= {});
+  const own = (pans[ownerId] ||= {});
+  const cur: HostDevice = own[d.id] || { id: d.id, name: d.name, rating: d.deviceRating, damage: 0, offline: false, formatted: false, bricked: false, controlledBy: null, notes: '', link: null, on: true };
+  cur.name = d.name;
+  cur.rating = d.deviceRating;
+  return (own[d.id] = cur);
+}
+
 /** Personas online inside a host. */
 function intrudersOf(state: TableState, host: Host): Persona[] {
   return Object.values(slice(state).personas).filter((p) => p.online && p.hostId === host.id && state.actors?.[p.actorId]?.matrix);
@@ -622,6 +799,15 @@ function canSeeHost(state: TableState, user: SessionUser, host: Host): boolean {
   });
 }
 const perceivedBy = (host: Host, actorIds: string[]) => (host.perceivedBy || []).some((id) => actorIds.includes(id));
+/** Does one of these deckers know that part of the host (Matrix Perception revealed by the GM)? `perceivedBy` = all of it. */
+function knows(host: Host, actorIds: string[], what: 'stats' | 'ic' | 'files' | 'devices', id?: string): boolean {
+  if (perceivedBy(host, actorIds)) return true;
+  return actorIds.some((a) => {
+    const k = host.known?.[a];
+    if (!k) return false;
+    return what === 'stats' ? !!k.stats : !!k[what]?.includes(String(id));
+  });
+}
 
 /**
  * Resolve p.targetId into { kind, key, name, nameMsg, host?, ic?, device?, file?, actor?, persona?, source? }.
@@ -669,12 +855,12 @@ function resolveTarget(ctx: ActionContext, persona: Persona, action: MatrixActio
       } else if (kind === 'device') {
         t.device = (host.devices || []).find((x) => x.id === b);
         if (!t.device) return ctx.fail('Device not found');
-        if (own && !perceivedBy(host, own)) ctx.fail('Spot this device first (Matrix Perception on the host)');
+        if (own && !knows(host, own, 'devices', t.device.id)) ctx.fail('Spot this device first (Matrix Perception on the host)');
         t.nameMsg = `${t.device.name} (${host.name})`;
       } else {
         t.file = (host.files || []).find((x) => x.id === b);
         if (!t.file) return ctx.fail('File not found');
-        if (own && (!inside || !perceivedBy(host, own))) ctx.fail('This file is out of reach (enter the host and spot it with Matrix Perception)');
+        if (own && (!inside || !knows(host, own, 'files', t.file.id))) ctx.fail('This file is out of reach (enter the host and spot it with Matrix Perception)');
         t.nameMsg = { t: 'file “{name}”', params: { name: t.file.name } };
       }
       t.key = `${kind}:${host.id}:${b}`;
@@ -687,6 +873,19 @@ function resolveTarget(ctx: ActionContext, persona: Persona, action: MatrixActio
     t.persona = target.matrix ? ensurePersona(ctx.state, target) : null;
     t.key = `persona:${target.id}`;
     t.nameMsg = target.name;
+  } else if (kind === 'pan') {
+    const owner = ctx.state.actors?.[a];
+    if (!owner || (!ctx.isGM && owner.type === 'npc' && owner.hidden)) return ctx.fail('Persona not found');
+    if (owner.id === persona.actorId) ctx.fail('You cannot target yourself');
+    const device = panDevices(owner).find((d) => d.id === b);
+    if (!device) return ctx.fail('Device not found');
+    if (own && !persona.scans?.[owner.id]?.devices?.some((d) => d.id === device.id)) ctx.fail('Spot this device first (Matrix Perception on its owner)');
+    t.actor = owner;
+    t.persona = owner.matrix ? ensurePersona(ctx.state, owner) : null;
+    t.pan = { device, master: masterOf(owner) };
+    t.device = panState(ctx.state, owner.id, device);
+    t.key = `pan:${owner.id}:${device.id}`;
+    t.nameMsg = { t: '{device} ({owner})', params: { device: biName(device), owner: owner.name } };
   } else if (kind === 'manual') {
     const name = str(p.targetName, 60).trim();
     // The key keeps the French default so marks stay found whatever the UI language (the client uses the same slug).
@@ -696,6 +895,13 @@ function resolveTarget(ctx: ActionContext, persona: Persona, action: MatrixActio
   if (!allow.includes(t.kind as MatrixTargetKind)) ctx.fail('This action cannot target that kind of icon');
   t.name = fr(t.nameMsg);
   return t;
+}
+
+/** A character without a Matrix device on their sheet defends with their commlink from the gear (the PAN master). */
+function withCommlink(actor: Actor): Actor {
+  if (actor.matrix && Number(actor.matrix.rating) > 0) return actor;
+  const m = masterOf(actor);
+  return m ? ({ ...actor, matrix: { ...(actor.matrix || {}), device: m.name, rating: m.deviceRating, dataProcessing: m.dataProcessing, firewall: m.firewall } } as Actor) : actor;
 }
 
 /** Defense pool for an action against a target, or null (no opposition) / { pending: true } (GM to roll). labelMsg = who defends. */
@@ -725,9 +931,13 @@ function defenseFor(ctx: ActionContext, action: MatrixActionDef, target: Target,
     return { pending: true };
   }
   if (target.host) return { ...(hostDefensePool(target.host, action) as Loose), labelMsg: target.host.name } as Defense;
+  if (target.pan) {
+    if (!target.actor!.attributes) return { pending: true };
+    return { ...(panDefensePool(target.actor!, target.pan.master, target.pan.device, d) as Loose), labelMsg: target.nameMsg as MsgLike } as Defense;
+  }
   if (target.kind === 'persona') {
     if (!target.actor!.attributes) return { pending: true };
-    return { ...(personaDefensePool(target.actor, target.persona, d, action.id) as Loose), labelMsg: target.actor!.name } as Defense;
+    return { ...(personaDefensePool(withCommlink(target.actor!), target.persona, d, action.id) as Loose), labelMsg: target.actor!.name } as Defense;
   }
   if (target.kind === 'manual') {
     if (ctx.isGM && p.defensePool !== undefined && p.defensePool !== null && p.defensePool !== '') {
@@ -746,6 +956,10 @@ function damageTarget(ctx: ActionContext, target: Target, dv: number, attacker: 
   if (target.ic) {
     resistPool = (Number(target.host!.rating) || 0) + (Number(target.host!.firewall) || 0);
     mon = matrixMonitor(target.host!.rating);
+  } else if (target.pan) {
+    // Slaved device: its own or its master's Device Rating and Firewall, whichever is higher (SR5 p. 233).
+    resistPool = panDeviceRating(target.pan.device, target.pan.master, 'device') + panDeviceRating(target.pan.device, target.pan.master, 'firewall');
+    mon = matrixMonitor(target.pan.device.deviceRating);
   } else if (target.device) {
     const r = Math.max(Number(target.device.rating) || 0, Number(target.host?.rating) || 0);
     resistPool = r + Math.max(Number(target.device.rating) || 0, Number(target.host?.firewall) || 0);
@@ -772,7 +986,7 @@ function damageTarget(ctx: ActionContext, target: Target, dv: number, attacker: 
     if (target.device.damage >= mon && !target.device.bricked) {
       target.device.bricked = true;
       syncDeviceLink(ctx, target.device);
-      out.push({ t: '{device} is bricked!', params: { device: target.device.name } });
+      out.push({ t: '{device} is bricked!', params: { device: target.pan ? (target.nameMsg as MsgLike) : target.device.name } });
     }
   } else if (target.persona) {
     out.push(...damageDeck(ctx, target.actor!, target.persona, boxes));
@@ -913,7 +1127,9 @@ function performAction(ctx: ActionContext, actor: Actor, persona: Persona, actio
   if (def && !def.pending) dr = roll(def.pool, {}, 'opposition');
   const defHits = dr ? dr.hits : 0;
   const net = r.hits - defHits;
-  const threshold = clampInt(p.threshold, 0, 30, 0);
+  // Matrix Search: the threshold comes from the Matrix Search Table (SR5 p. 241).
+  const search = action.id === 'matrixSearch' ? { level: searchLevel(p.searchLevel), topic: str(p.topic, 160).trim() } : null;
+  const threshold = search ? SEARCH_LEVELS[search.level].threshold : clampInt(p.threshold, 0, 30, 0);
   const pending = !!def?.pending;
   const success = pending ? null : dr ? net > 0 : r.hits >= Math.max(1, threshold);
   const outcomes: I18nMessage[] = [];
@@ -942,6 +1158,11 @@ function performAction(ctx: ActionContext, actor: Actor, persona: Persona, actio
         const n = addMark(persona, target.key as string, target.name as string, marksWanted, target.nameMsg);
         const params = { n: marksWanted, target: tgt, total: n };
         outcomes.push(marksWanted === 1 ? { t: '{n} mark placed on {target} (total {total}).', params } : { t: '{n} marks placed on {target} (total {total}).', params });
+        if (target.pan) {
+          // A mark on a slave is also a mark on its master (SR5 p. 233).
+          const m = addMark(persona, `persona:${target.actor!.id}`, target.actor!.name, marksWanted, target.actor!.name);
+          outcomes.push({ t: 'The PAN master is marked too: {target} (total {total}).', params: { target: target.actor!.name, total: m } });
+        }
         if (action.id === 'bruteForce' && Math.floor(net / 2) > 0 && (target.ic || target.device || target.kind === 'persona' || target.kind === 'manual')) {
           outcomes.push(...damageTarget(ctx, target, Math.floor(net / 2), actor).sentences);
         }
@@ -1016,19 +1237,20 @@ function performAction(ctx: ActionContext, actor: Actor, persona: Persona, actio
         outcomes.push({ t: 'Current Overwatch Score: {os}.', params: { os: persona.overwatch } });
         break;
       case 'matrixPerception': {
-        if (target.host) {
-          const h = target.host;
-          h.perceivedBy = [...new Set([...(h.perceivedBy || []), actor.id])];
-          if (target.ic) target.ic.detected = true;
-          if (target.kind === 'host' && persona.hostId === h.id) for (const ic of h.ic || []) if (ic.active) ic.detected = true;
-          const params = { n: r.hits, target: tgt };
-          outcomes.push(r.hits === 1 ? { t: '{n} piece of information gained on {target}.', params } : { t: '{n} pieces of information gained on {target}.', params });
-        } else outcomes.push(r.hits === 1 ? { t: '{n} piece of information (the GM answers).', params: { n: r.hits } } : { t: '{n} pieces of information (the GM answers).', params: { n: r.hits } });
+        // One piece of information per net hit (SR5 p. 241): the GM picks what the decker learns.
+        newReveal(ctx, actor, persona, action.id, target, r.hits);
+        const params = { n: r.hits, who: actor.name };
+        outcomes.push(r.hits === 1 ? { t: '{n} hit: the GM picks what {who} learns.', params } : { t: '{n} hits: the GM picks what {who} learns.', params });
         break;
       }
-      case 'matrixSearch':
-        outcomes.push({ t: '{hits} on the search (the GM answers).', params: { hits: hitsM(r.hits) } });
+      case 'matrixSearch': {
+        // Threshold reached: the information is found; extra hits shorten the search (SR5 p. 241). The GM answers.
+        const minutes = searchMinutes(search!.level, r.hits, !!persona.hostId);
+        newReveal(ctx, actor, persona, action.id, target, r.hits, { topic: search!.topic, threshold, minutes });
+        const params = { topic: search!.topic, time: durationMsg(minutes), th: threshold };
+        outcomes.push(search!.topic ? { t: 'Search for “{topic}”: found in {time} (threshold {th}). The GM answers.', params } : { t: 'Search: found in {time} (threshold {th}). The GM answers.', params });
         break;
+      }
       case 'traceIcon':
         outcomes.push({ t: '{target}’s physical location traced.', params: { target: tgt } });
         break;
@@ -1074,11 +1296,17 @@ function performAction(ctx: ActionContext, actor: Actor, persona: Persona, actio
         break;
     }
   } else if (success === false) {
+    if (search) {
+      // A failed search still takes the full base time (SR5 p. 241).
+      const params = { topic: search.topic, time: durationMsg(searchMinutes(search.level, 0, !!persona.hostId)), th: threshold };
+      outcomes.push(search.topic ? { t: 'Search for “{topic}”: nothing found after {time} (threshold {th}).', params } : { t: 'Search: nothing found after {time} (threshold {th}).', params });
+    }
     if (action.id === 'disarmDataBomb' && target.file) outcomes.push(...explodeBomb(ctx, actor, persona, target.host!, target.file, { agent }));
     // Failed Sleaze action: the target marks you and raises the alarm
     if (action.cat === 'sleaze' && dr && target.kind !== 'none' && !(action.defense && 'fixed' in action.defense && action.defense.fixed)) {
-      const sourceId = target.host ? `host:${target.host.id}` : target.key;
-      const sourceMsg = (target.host ? target.host.name : target.nameMsg) as MsgLike;
+      // A PAN device: only its owner marks you, not its master (SR5 p. 233).
+      const sourceId = target.host ? `host:${target.host.id}` : target.pan ? `persona:${target.actor!.id}` : target.key;
+      const sourceMsg = (target.host ? target.host.name : target.pan ? target.actor!.name : target.nameMsg) as MsgLike;
       if (sourceId) {
         addMarkOnMe(persona, sourceId, fr(sourceMsg), 1, sourceMsg);
         outcomes.push({ t: '{source} places a mark on {name}.', params: { source: sourceMsg, name: actor.name } });
@@ -1340,6 +1568,15 @@ function normalizeHost(h: Loose, id: string): Host {
   h.files = (Array.isArray(h.files) ? h.files : []).map(cleanFile).filter(Boolean);
   h.devices = (Array.isArray(h.devices) ? h.devices : []).map(cleanDevice).filter(Boolean);
   h.perceivedBy = Array.isArray(h.perceivedBy) ? h.perceivedBy.map(String) : [];
+  if (isObj(h.known)) {
+    const ids = (v: unknown) => (Array.isArray(v) ? [...new Set(v.map((x) => str(x, 40)).filter(Boolean))] : undefined);
+    const known: Record<string, HostKnowledge> = {};
+    for (const [id, v] of Object.entries(h.known as Loose)) {
+      if (!isObj(v)) continue;
+      known[str(id, 80)] = { ...(v.stats ? { stats: true } : {}), ...(ids(v.ic) ? { ic: ids(v.ic) } : {}), ...(ids(v.files) ? { files: ids(v.files) } : {}), ...(ids(v.devices) ? { devices: ids(v.devices) } : {}) };
+    }
+    h.known = known;
+  } else delete h.known;
   h.spotted = Array.isArray(h.spotted) ? h.spotted.map(String) : [];
   h.spider = h.spider ? str(h.spider, 80) : null;
   h.spiderAlert = h.spiderAlert ? str(h.spiderAlert, 80) : null;
@@ -1377,6 +1614,9 @@ interface MatrixActionPayload {
   deviceCmd?: string;
   program?: string;
   threshold?: number;
+  /** Matrix Search: how available the information is ('public' | 'limited' | 'hidden') and what is sought. */
+  searchLevel?: string;
+  topic?: string;
   conditions?: unknown;
   /** GM only. */
   defensePool?: number | string | null;
@@ -1610,6 +1850,51 @@ const actions: Record<string, ActionDef> = {
   }),
 
   // Owner/GM: end full matrix defense. { actorId, on }
+  // { actorId, targetId } — forget what Matrix Perception revealed on that character.
+  'matrix/forgetScan': any((ctx: ActionContext, { actorId, targetId }: ActorPayload & { targetId?: string } = {}) => {
+    const { persona } = ownPersona(ctx, actorId);
+    const id = str(targetId, 80);
+    if (persona.scans?.[id]) delete persona.scans[id];
+    return true;
+  }),
+
+  // { revealId, optionIds, answer? } (GM) — what the decker learns from a Matrix Perception / Search (one item per hit).
+  'matrix/reveal': gm((ctx: ActionContext, { revealId, optionIds, answer }: { revealId?: string; optionIds?: unknown; answer?: string } = {}) => {
+    const m = slice(ctx.state);
+    const rv = m.reveals?.[str(revealId, 40)];
+    if (!rv) return ctx.fail('This Matrix Perception was already answered');
+    const actor = getActor(ctx, rv.actorId);
+    const persona = ensurePersona(ctx.state, actor);
+    const ids = new Set((Array.isArray(optionIds) ? optionIds : []).map((x) => str(x, 200)));
+    const learned = rv.options.filter((o) => ids.has(o.id) && applyReveal(ctx.state, actor, persona, o.id)).map((o) => o.label);
+    const text = str(answer, 2000).trim();
+    delete m.reveals![rv.id];
+    const msgs: MsgLike[] = [];
+    if (learned.length) msgs.push({ t: '{who} learns: {list}.', params: { who: actor.name, list: learned as I18nParams[string] } });
+    if (text) msgs.push({ t: 'GM’s answer to {who}: {answer}', params: { who: actor.name, answer: text } });
+    if (!msgs.length) msgs.push({ t: '{who} learns nothing more.', params: { who: actor.name } });
+    mlog(ctx, { author: 'MJ', msgs, to: ownersOf(ctx.state, actor.id), matrix: { event: 'reveal', actorId: actor.id } });
+    return { learned: learned.length };
+  }),
+
+  // { revealId } (GM) — drop a pending Matrix Perception / Search without answering it.
+  'matrix/dropReveal': gm((ctx: ActionContext, { revealId }: { revealId?: string } = {}) => {
+    const m = slice(ctx.state);
+    if (m.reveals) delete m.reveals[str(revealId, 40)];
+    return true;
+  }),
+
+  // { actorId, deviceId } (GM) — repair a hacked PAN device (damage, bricked, formatted, offline, control).
+  'matrix/panReset': gm((ctx: ActionContext, { actorId, deviceId }: ActorPayload & { deviceId?: string } = {}) => {
+    const pans = slice(ctx.state).pans;
+    const id = str(actorId, 80);
+    if (pans?.[id]) {
+      delete pans[id][str(deviceId, 80)];
+      if (!Object.keys(pans[id]).length) delete pans[id];
+    }
+    return true;
+  }),
+
   'matrix/setFullDefense': any((ctx: ActionContext, { actorId, on }: ActorPayload & { on?: boolean } = {}) => {
     const { persona } = ownPersona(ctx, actorId);
     persona.fullDefense = !!on;
@@ -1920,29 +2205,42 @@ const mod: ServerModule = {
       personas[id] = p;
     }
     m.personas = personas;
+    // PAN devices: players see the state of the ones they spotted, through their scans.
+    const pans = full.matrix?.pans || {};
+    for (const p of Object.values(personas)) {
+      if (!p.scans) continue;
+      p.scans = deepClone(p.scans);
+      for (const [ownerId, scan] of Object.entries(p.scans)) {
+        for (const d of scan.devices || []) {
+          const st = pans[ownerId]?.[d.id];
+          if (st) d.state = { damage: st.damage || 0, monitor: matrixMonitor(d.deviceRating), bricked: !!st.bricked, formatted: !!st.formatted, offline: !!st.offline };
+        }
+      }
+    }
+    delete m.pans;
+    // Pending Matrix Perception / Search of the player's deckers, without what the GM may reveal.
+    m.reveals = Object.fromEntries(Object.values(full.matrix?.reveals || {}).filter((r) => own.includes(r.actorId)).map((r) => [r.id, { ...r, options: [] }]));
     const evaluate = Object.values(personas).some((p) => loadedProgramIds(p).has('evaluate'));
     const hosts: Record<string, PlayerHostView> = {};
     for (const h of Object.values(full.matrix?.hosts || {})) {
       if (!canSeeHost(full, user, h)) continue;
       const inside = Object.values(personas).some((p) => p.online && p.hostId === h.id);
-      const perceived = perceivedBy(h, own);
+      const perceived = knows(h, own, 'stats');
       const out: Loose = { id: h.id, name: h.name, alert: h.alert, visible: !!h.visible, inside, perceived, description: h.description || '', spotted: (h.spotted || []).some((id) => own.includes(id)) };
       if (perceived) {
         out.rating = h.rating;
         for (const k of ASDF as AsdfKey[]) out[k] = h[k];
       }
-      if (inside || perceived) {
-        out.ic = (h.ic || []).filter((ic) => ic.active).map((ic) => (perceived || ic.detected ? { id: ic.id, type: ic.type, rating: ic.rating, damage: ic.damage, detected: true } : { id: ic.id, type: ic.type, detected: false }));
-      } else out.ic = [];
-      if (perceived) {
-        out.files = (h.files || []).map((f) => ({ id: f.id, name: f.name, protected: f.protected, bomb: f.bomb, mine: !!f.bombBy && own.includes(f.bombBy), ...(evaluate && f.value !== null ? { value: f.value } : {}) }));
-        out.devices = (h.devices || []).map((d) => ({
+      // IC: their type when inside, their rating once revealed (or detected); files / devices: the ones revealed.
+      out.ic = (h.ic || [])
+        .filter((ic) => ic.active && (inside || knows(h, own, 'ic', ic.id)))
+        .map((ic) => (knows(h, own, 'ic', ic.id) || ic.detected ? { id: ic.id, type: ic.type, rating: ic.rating, damage: ic.damage, detected: true } : { id: ic.id, type: ic.type, detected: false }));
+      {
+        out.files = (h.files || []).filter((f) => knows(h, own, 'files', f.id)).map((f) => ({ id: f.id, name: f.name, protected: f.protected, bomb: f.bomb, mine: !!f.bombBy && own.includes(f.bombBy), ...(evaluate && f.value !== null ? { value: f.value } : {}) }));
+        out.devices = (h.devices || []).filter((d) => knows(h, own, 'devices', d.id)).map((d) => ({
           id: d.id, name: d.name, rating: d.rating, offline: d.offline, formatted: d.formatted, bricked: d.bricked, damage: d.damage,
           ...(d.link && linkedObject(full, d) ? { link: { kind: d.link.kind, state: linkState(full, d) } } : {}),
         }));
-      } else {
-        out.files = [];
-        out.devices = [];
       }
       hosts[h.id] = out as PlayerHostView;
     }

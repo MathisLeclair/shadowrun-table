@@ -340,6 +340,7 @@ function sanitizeItem(list: string, item: unknown, ctx?: ActionContext): Loose {
   if (out.karma !== undefined) out.karma = Number(out.karma) || 0;
   if (list === 'qualities' && out.positive === undefined) out.positive = (out.karma || 0) >= 0;
   if (list === 'armor' && out.equipped !== undefined) out.equipped = !!out.equipped;
+  if ((list === 'augmentations' || list === 'weapons') && out.wirelessOff !== undefined) out.wirelessOff = !!out.wirelessOff; // out of the PAN (45-matrix)
   if (list === 'gear' && out.active !== undefined) out.active = !!out.active; // gear with catalog effects: worn / switched on (shared/modifiers.js)
   // Inventory (client/modules/sheet/inventory.js): location ('on' or a container id, checked by the handlers), ready weapons, ammo.
   if (listed(LOCATED_LISTS, list) && out.location !== undefined) out.location = str(out.location, 60).trim() || ON_BODY;

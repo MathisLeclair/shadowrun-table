@@ -26,6 +26,7 @@ import BooksPage from './books/BooksPage.tsx';
 import BookViewer from './books/BookViewer.tsx';
 import AssistantDock from './assistant/AssistantDock.tsx';
 import AttackTray from './combat/AttackTray.tsx';
+import RevealPrompt from './matrix/RevealPrompt.tsx';
 import Dice3D from './sheet/Dice3D.tsx';
 import { unreadHandouts } from './campaign/common.tsx';
 import { tk } from '../lib/i18n.ts';
@@ -80,7 +81,7 @@ export const dockTabs: TabEntry[] = [
 export const SheetView: ComponentType<GameProps & { actorId: string }> = SheetViewImpl;
 
 /** Mounted once for every user, outside the tabs (audio playback, overlays…). */
-export const globalComponents: ComponentType<GameProps>[] = [AudioEngine, BookViewer, AttackTray, Dice3D]; // BookViewer: rulebook drawer (openBook() from anywhere); AttackTray: defend / soak prompts; Dice3D: 3D dice overlay
+export const globalComponents: ComponentType<GameProps>[] = [AudioEngine, BookViewer, AttackTray, Dice3D, RevealPrompt]; // BookViewer: rulebook drawer (openBook() from anywhere); AttackTray: defend / soak prompts; Dice3D: 3D dice overlay; RevealPrompt: GM picks what a Matrix Perception reveals
 
 /** Mounted in pop-out windows (?pane=<tab>): the same minus the audio player (the main window plays the ambience). */
 export const popoutGlobalComponents: ComponentType<GameProps>[] = globalComponents.filter((C) => C !== AudioEngine);

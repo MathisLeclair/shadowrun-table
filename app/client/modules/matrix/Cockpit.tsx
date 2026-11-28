@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Button, Badge, Select, TextInput, confirmAction } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
 import { goTab, toast } from '../../lib/ui-store.ts';
-import { t, getLang } from '../../lib/i18n.ts';
+import { t, tn, getLang } from '../../lib/i18n.ts';
 import { attr } from '/shared/sr5.ts';
 import {
   ASDF, MODES, ACTIONS, ACTION_CATS, ACTION_TYPES, IC_TYPES, PROGRAM_BY_ID,
@@ -11,7 +11,7 @@ import {
   isCyberdeck, matrixMonitor, programId, DEVICE_LINK_KINDS, DEVICE_CMD_LABELS, nextStepHints, deviceWorks, ACTION_BY_ID, convergenceAt,
   type PersonaView, type StepHint,
 } from './types.ts';
-import type { AsdfKey } from '../../../shared/types.ts';
+import type { AsdfKey, ScannedDevice } from '../../../shared/types.ts';
 import {
   isGM, act, personaOf, OsMeter, MatrixMonitor, MatrixLog, marksDots, actionName, icName, markName, linkLockName, programLabel,
   asdfShort, asdfLabel, modeLabel, marksText, assistText, agentLabel, deviceLinkState, linkStateText, isFullActor, hostOf, hostsOf, hostMap,
@@ -20,6 +20,8 @@ import ActionModal, { type ActionPreset } from './ActionModal.tsx';
 import { ProgramRef } from './common.tsx';
 import type { Actor, GameView, MatrixMarkOnMe, MatrixMode } from '../../../shared/types.ts';
 import { BookRef, RuleRef } from '../books/BookRef.tsx';
+import { itemLabel, itemTitle } from '../sheet/common.tsx';
+import { labelText } from './RevealPrompt.tsx';
 
 const CAT_ORDER = ['attack', 'sleaze', 'info', 'control', 'util'];
 
@@ -468,10 +470,9 @@ function HostPanel({ game, actor, persona, open }: PanelProps & { game: GameView
           </Button>
         </div>
       ))}
-      {perceived && <div className="mx-panel-sub">{t('Files')}</div>}
-      {perceived && (cur.files || []).length === 0 && <div className="muted small">{t('No files.')}</div>}
-      {perceived &&
-        (cur.files || []).map((f) => (
+      {(gm || (cur.files || []).length > 0) && <div className="mx-panel-sub">{t('Files')}</div>}
+      {gm && (cur.files || []).length === 0 && <div className="muted small">{t('No files.')}</div>}
+      {(cur.files || []).map((f) => (
           <div className="mx-filerow" key={f.id}>
             <span className="grow">
               {f.protected ? '🔒 ' : ''}
@@ -508,9 +509,8 @@ function HostPanel({ game, actor, persona, open }: PanelProps & { game: GameView
             </Button>
           </div>
         ))}
-      {perceived && (cur.devices || []).length > 0 && <div className="mx-panel-sub">{t('Slaved devices')}</div>}
-      {perceived &&
-        (cur.devices || []).map((d) => {
+      {(cur.devices || []).length > 0 && <div className="mx-panel-sub">{t('Slaved devices')}</div>}
+      {(cur.devices || []).map((d) => {
           const kind = d.link?.kind && DEVICE_LINK_KINDS[d.link.kind] ? d.link.kind : null;
           const state = kind ? deviceLinkState(game, d) : null;
           // Quick map commands: only the ones that change something (no « Ouvrir » on an open door).
@@ -575,6 +575,109 @@ function HostPanel({ game, actor, persona, open }: PanelProps & { game: GameView
           {t('Exit Host')}
         </Button>
       </div>
+    </div>
+  );
+}
+
+/** The decker's Matrix Perception / Search waiting for the GM's answer. */
+function PendingReveals({ game, actor }: { game: GameView; actor: Actor }) {
+  const list = Object.values(game.matrix?.reveals || {}).filter((r) => r.actorId === actor.id);
+  if (!list.length) return null;
+  return (
+    <div className="mx-panel mx-pending">
+      {list.map((r) => (
+        <div className="small" key={r.id}>
+          ⏳ {r.actionId === 'matrixSearch' ? t('Matrix Search') : t('Matrix Perception')}
+          {r.topic ? ` — « ${r.topic} »` : r.target ? ` — ${labelText(r.target)}` : ''}
+          {r.actionId === 'matrixSearch' ? ` · ${t('found: the GM answers')}` : ` · ${tn(r.hits, '{n} hit', '{n} hits', { n: r.hits })} · ${t('the GM picks what you learn')}`}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** State badges of a hacked PAN device. */
+function PanState({ d }: { d: ScannedDevice }) {
+  const st = d.state;
+  if (!st) return null;
+  return (
+    <>
+      {st.bricked && <Badge color="red">{t('bricked')}</Badge>}
+      {!st.bricked && st.formatted && <Badge color="amber">{t('formatted')}</Badge>}
+      {!st.bricked && st.offline && <Badge color="amber">{t('offline')}</Badge>}
+      {!st.bricked && st.damage > 0 && (
+        <span className="faint small mono" title={t('Matrix damage')}>
+          {st.damage}/{st.monitor}
+        </span>
+      )}
+    </>
+  );
+}
+
+/**
+ * Characters' PANs (SR5 p. 233-235): their commlink is their persona (the master), Matrix Perception on them reveals the
+ * devices slaved to it, one per hit; every spotted device can be hacked.
+ */
+function PanPanel({ game, actor, persona, canEdit, open }: PanelProps & { game: GameView; canEdit: boolean; open: OpenAction }) {
+  const scans = Object.entries(persona.scans || {}).filter(([id]) => game.actors?.[id]).reverse();
+  if (!scans.length) return null;
+  const marksOn = (key: string) => (persona.marks || []).find((m) => m.targetId === key)?.count || 0;
+  const off = !persona.online;
+  const btn = (actionId: string, targetId: string, variant?: 'danger') => (
+    <Button small variant={variant} disabled={off} onClick={() => open(actionId, { targetId })}>
+      {actionName(ACTION_BY_ID[actionId])}
+    </Button>
+  );
+  return (
+    <div className="mx-panel">
+      <div className="mx-panel-title">{t('PANs spotted')}</div>
+      {scans.map(([id, s]) => (
+        <div className="mx-pan" key={id}>
+          <div className="row">
+            <b className="grow">{s.name}</b>
+            {canEdit && (
+              <button type="button" className="mx-link" onClick={() => act('matrix/forgetScan', { actorId: actor.id, targetId: id })}>
+                {t('Forget')}
+              </button>
+            )}
+          </div>
+          <div className="mx-pan-dev master">
+            <span className="grow">
+              {t('Persona (PAN master)')}
+              {s.master && (
+                <span className="faint small">
+                  {' '}
+                  {s.master.name} · {t('DR {dr} · DP {dp} · FW {fw}', { dr: s.master.deviceRating, dp: s.master.dataProcessing, fw: s.master.firewall })}
+                </span>
+              )}
+            </span>
+            {marksDots(marksOn(`persona:${id}`))}
+            {canEdit && btn('hackOnTheFly', `persona:${id}`)}
+          </div>
+          {(s.devices || []).map((d) => (
+            <div className={'mx-pan-dev' + (d.state?.bricked ? ' dead' : '')} key={d.id}>
+              <span className="grow" title={itemTitle(d)}>
+                {d.kind === 'weapon' ? '🔫 ' : '⚙ '}
+                {itemLabel(d)}
+                {d.rating ? ` ${d.rating}` : ''} <span className="faint small">{t('DR {n}', { n: d.deviceRating })}</span> <PanState d={d} />
+              </span>
+              {marksDots(marksOn(`pan:${id}:${d.id}`))}
+              {canEdit && !d.state?.bricked && (
+                <span className="mx-pan-btns">
+                  {btn('hackOnTheFly', `pan:${id}:${d.id}`)}
+                  {btn('controlDevice', `pan:${id}:${d.id}`)}
+                  {btn('dataSpike', `pan:${id}:${d.id}`, 'danger')}
+                </span>
+              )}
+            </div>
+          ))}
+          {canEdit && (
+            <button type="button" className="mx-link" disabled={off} onClick={() => open('matrixPerception', { targetId: `persona:${id}` })}>
+              {t('Look for more devices (Matrix Perception)')}
+            </button>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -807,7 +910,9 @@ export default function Cockpit({ game, actorId }: { game: GameView; actorId: st
         </div>
         <div className="mx-col">
           <StatusPanel game={game} actor={actor} persona={persona} />
+          <PendingReveals game={game} actor={actor} />
           <MarksPanel persona={persona} onErase={persona.online ? (m) => open('eraseMark', { targetId: `mark:${m.sourceId}` }) : null} />
+          <PanPanel game={game} actor={actor} persona={persona} canEdit={canEdit} open={open} />
           <PaydataPanel game={game} actor={actor} persona={persona} canEdit={canEdit} />
         </div>
         <div className="mx-col">

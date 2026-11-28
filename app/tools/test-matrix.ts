@@ -4,7 +4,7 @@ import {
   programId, detectAgents, availablePrograms, deckStats, actionPool, matrixInitiative, matrixMonitor, ACTION_BY_ID,
   ACTIONS, PROGRAMS, IC_TYPES, hostAttributes, osLevel, dumpshock, programSlots, isPermutation, agentInitiative,
   ACTION_CATS, ACTION_TYPES, TARGET_KIND_LABELS, HOST_PRESETS, MODE_LABELS, ASDF_LABELS, nextStepHints, DEVICE_CMD_LABELS,
-  markPenalty, convergenceAt, hasMatrixQuality, personaDefensePool, biofeedbackDice, OS_MAX,
+  markPenalty, convergenceAt, hasMatrixQuality, personaDefensePool, biofeedbackDice, OS_MAX, panDevices, panMaster, panDefensePool, searchMinutes,
 } from '../shared/matrix.ts';
 import type { HintHost, PersonaLike, PoolPart } from '../shared/matrix.ts';
 import type { Host, HostDevice, HostFile, MatrixAgent, MatrixMark, MatrixState, PlayerHostView } from '../shared/types.ts';
@@ -258,7 +258,33 @@ try {
   res = await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'matrixPerception', targetId: 'host:host_hollow_pine' });
   await settle();
   ph = pl.state.matrix.hosts.host_hollow_pine as PlayerHostView;
-  ok(res.success && ph.perceived && ph.rating === 5 && ph.files.length === 3 && ph.ic[0].rating === 5, 'perception reveals rating, IC ratings and files');
+  {
+    // The GM picks what the hits reveal (matrix/reveal); nothing is revealed before.
+    const rv = Object.values(M().reveals || {}).find((r) => r.actorId === 'pc_bricks' && r.actionId === 'matrixPerception');
+    const ids = (rv?.options || []).map((o) => o.id);
+    ok(res.success && !ph.perceived && ph.files.length === 0 && rv && rv.hits === res.roll.hits, `perception waits for the GM (${rv?.hits} hits)`);
+    ok(ids.includes('host-stats:host_hollow_pine') && ids.filter((id) => id.startsWith('file:')).length === 3 && ids.some((id) => id.startsWith('ic:')), `options: stats, IC, 3 files (${ids.join(', ')})`);
+    const mine = pl.state.matrix.reveals?.[rv!.id];
+    ok(mine && mine.options.length === 0, 'the player sees the pending reveal, not what it could reveal');
+    await expectFail(pl.send('matrix/reveal', { revealId: rv!.id, optionIds: ids }), /GM/, 'only the GM reveals');
+    await gm.send('matrix/reveal', { revealId: rv!.id, optionIds: ['host-stats:host_hollow_pine', 'file:host_hollow_pine:file_hp_registry'], answer: 'Une odeur de pin.' });
+    await settle();
+    ph = pl.state.matrix.hosts.host_hollow_pine as PlayerHostView;
+    ok(ph.perceived && ph.rating === 5 && ph.files.length === 1 && ph.ic[0].rating === undefined, 'GM picks: rating + one file, IC rating still hidden');
+    ok(!M().reveals?.[rv!.id], 'answered reveal removed');
+    const le = [...pl.state.log].reverse().find((e) => e.matrix?.event === 'reveal');
+    ok(le && /Bricks learns: Rating and attributes, file “Registre/.test(le.text) || /Bricks learns/.test(le?.text || ''), `reveal logged for the player (${le?.text})`);
+    ok(!pj.state.log.some((e) => e.matrix?.event === 'reveal'), 'other players do not see what was revealed');
+    await gm.send('matrix/reveal', { revealId: rv!.id, optionIds: [] }).then(() => ok(false, 'second answer should fail'), () => ok(true, 'a reveal is answered once'));
+    res = await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'matrixPerception', targetId: 'host:host_hollow_pine' });
+    await settle();
+    const rv2 = Object.values(M().reveals || {}).find((r) => r.actorId === 'pc_bricks' && r.id !== rv!.id)!;
+    ok(!rv2.options.some((o) => o.id === 'host-stats:host_hollow_pine' || o.id === 'file:host_hollow_pine:file_hp_registry'), 'known things are not offered again');
+    await gm.send('matrix/reveal', { revealId: rv2.id, optionIds: rv2.options.map((o) => o.id) });
+    await settle();
+    ph = pl.state.matrix.hosts.host_hollow_pine as PlayerHostView;
+  }
+  ok(ph.perceived && ph.rating === 5 && ph.files.length === 3 && ph.ic[0].rating === 5, 'revealed: rating, IC ratings and files');
   ok(ph.files.every((f) => (f as Partial<HostFile>).content === undefined), 'file contents never listed');
   await expectFail(pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'editFile', targetId: 'file:host_hollow_pine:file_hp_relay' }), /Protected file/, 'protected file must be cracked first');
   res = await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'crackFile', targetId: 'file:host_hollow_pine:file_hp_relay' });
@@ -448,7 +474,7 @@ try {
   devs.find((d) => d.id === 'dev_hp_maglock')!.link = { mapId, kind: 'door', targetId: doorId };
   devs.find((d) => d.id === 'dev_hp_cams')!.link = { mapId, kind: 'camera', targetId: regionId };
   devs.push({ id: 'dev_test_light', name: 'Néons', rating: 3, link: { mapId, kind: 'light', targetId: lightId } } as HostDevice); // partial device, the server normalizes it
-  await gm.send('matrix/hostUpdate', { hostId: 'host_hollow_pine', patch: { devices: devs } });
+  await gm.send('matrix/hostUpdate', { hostId: 'host_hollow_pine', patch: { devices: devs, perceivedBy: ['pc_bricks'] } }); // GM « knows the host »: every device
   await settle();
   const map = () => gm.state.maps[mapId];
   ok(map().regions[0].cams === 'on', 'linking a camera zone marks it as filmed');
@@ -483,6 +509,83 @@ try {
   res = await gm.send('matrix/shareFile', { actorId: 'pc_bricks', fileId });
   await settle();
   ok(res.handoutId && pl.state.campaign.handouts.some((h) => h.id === res.handoutId), 'GM share → handout revealed to the players');
+
+  // ---------------------------------------------------------------- NPC PAN: Matrix Perception reveals its devices, which can be hacked
+  {
+    await gm.send('matrix/setPersona', { actorId: 'pc_bricks', patch: { bricked: false, matrixDamage: 0, linkLocked: null } });
+    await pl.send('matrix/connect', { actorId: 'pc_bricks', mode: 'cold' });
+    const npcId: string = await gm.send('actor/create', { type: 'npc', name: 'Garde Lazarus', attributes: { WIL: 3, INT: 3, LOG: 2 } });
+    await gm.send('actor/addItem', { actorId: npcId, list: 'gear', item: { name: 'Meta Link', category: 'Commlinks', rating: 1, qty: 1 } });
+    await gm.send('actor/addItem', { actorId: npcId, list: 'augmentations', item: { name: 'Cybereyes', kind: 'cyberware', grade: 'alpha', rating: 2, essence: 0.2 } });
+    await gm.send('actor/addItem', { actorId: npcId, list: 'augmentations', item: { name: 'Muscle Toner', kind: 'bioware', grade: 'standard', rating: 1, essence: 0.2 } });
+    await gm.send('actor/addItem', { actorId: npcId, list: 'augmentations', item: { name: 'Wired Reflexes', kind: 'cyberware', grade: 'standard', rating: 1, essence: 2, wirelessOff: true } });
+    await gm.send('actor/addItem', { actorId: npcId, list: 'weapons', item: { name: 'Ares Predator V', kind: 'ranged', skill: 'pistols', accuracy: 5, damage: '8P', ap: -1, mode: 'SA', ammo: '15(c)' } });
+    await settle();
+    const npc = gm.state.actors[npcId] as any;
+    const eyes = npc.augmentations.find((a: any) => a.name === 'Cybereyes');
+    const gun = npc.weapons.find((w: any) => w.name === 'Ares Predator V');
+    const devs = panDevices(npc);
+    ok(devs.map((d) => `${d.kind}:${d.name}:${d.deviceRating}`).join('|') === 'cyberware:Cybereyes:3|weapon:Ares Predator V:2', `PAN: alpha cyberware DR 3 + pistol DR 2, no bioware, no wireless-off implant (${devs.map((d) => d.name).join(', ')})`);
+    const master = panMaster(npc);
+    ok(master?.name === 'Meta Link' && master.deviceRating === 1 && master.firewall === 1, 'PAN master: the commlink from the gear');
+    ok(panDefensePool(npc, master, devs[0], ['WIL', 'firewall'])!.pool === 3 + 3, 'slaved device defense: max(WIL 3, DR 3) + max(FW 3, master FW 1)');
+    ok(panDefensePool(npc, { name: 'x', deviceRating: 5, dataProcessing: 5, firewall: 5 }, devs[1], ['WIL', 'firewall'])!.pool === 3 + 5, 'slaved device uses the master’s Firewall when higher (SR5 p. 233)');
+
+    const gunKey = `pan:${npcId}:${gun.id}`;
+    await expectFail(pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'hackOnTheFly', targetId: gunKey }), /Spot this device/, 'PAN device out of reach before Matrix Perception');
+    await gm.send('matrix/testDice', { mode: 'actor' });
+    res = await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'matrixPerception', targetId: `persona:${npcId}` });
+    await settle();
+    const prv = Object.values(M().reveals || {}).find((r) => r.target === 'Garde Lazarus')!;
+    ok(prv?.options.map((o) => o.id).join('|') === `pan-master:${npcId}|pan:${npcId}:${eyes.id}|pan:${npcId}:${gun.id}`, `PAN options: commlink, then the devices in sheet order (${prv?.options.map((o) => o.id).join(', ')})`);
+    ok(!pl.state.matrix.personas.pc_bricks.scans?.[npcId], 'nothing spotted before the GM answers');
+    await gm.send('matrix/reveal', { revealId: prv.id, optionIds: prv.options.map((o) => o.id) });
+    await settle();
+    const scan = pl.state.matrix.personas.pc_bricks.scans?.[npcId];
+    ok(res.success && scan?.devices.map((d) => d.id).join('|') === `${eyes.id}|${gun.id}` && scan.master?.name === 'Meta Link', `GM reveals the PAN: devices + commlink (${JSON.stringify(scan?.devices.map((d) => d.name))})`);
+    ok(gm.state.log.some((e) => e.kind === 'matrix' && /Bricks learns: Commlink: Meta Link, Cybereyes, Ares Predator V/.test(e.text || '')), 'log lists what was revealed');
+    ok(pl.state.matrix.pans === undefined, 'players never get the PAN states table');
+
+    res = await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'hackOnTheFly', targetId: `pan:${npcId}:${eyes.id}`, marks: 1 });
+    await settle();
+    const gmEntry = [...gm.state.log].reverse().find((e) => e.kind === 'matrix' && e.matrix?.gm);
+    ok(res.success && gmEntry?.matrix?.gm?.defensePool === 6, `Hack on the Fly vs cybereyes: defense WIL 3 + FW 3 (got ${gmEntry?.matrix?.gm?.defensePool})`);
+    ok(P().marks.find((m) => m.targetId === `pan:${npcId}:${eyes.id}`)?.count === 1 && P().marks.find((m) => m.targetId === `persona:${npcId}`)?.count === 1, 'a mark on the slave also marks the master (SR5 p. 233)');
+
+    res = await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'dataSpike', targetId: gunKey });
+    await settle();
+    ok(res.success && M().pans?.[npcId]?.[gun.id]?.bricked, `Data Spike bricks the pistol (damage ${M().pans?.[npcId]?.[gun.id]?.damage})`);
+    const seen = pl.state.matrix.personas.pc_bricks.scans?.[npcId]?.devices.find((d) => d.id === gun.id);
+    ok(seen?.state?.bricked === true && seen.state.monitor === 9, 'the decker sees the bricked state of the device');
+    await expectFail(pl.send('matrix/panReset', { actorId: npcId, deviceId: gun.id }), /GM/, 'only the GM repairs a PAN device');
+    await gm.send('matrix/panReset', { actorId: npcId, deviceId: gun.id });
+    await settle();
+    ok(!M().pans?.[npcId]?.[gun.id], 'GM repair clears the device state');
+    await pl.send('matrix/forgetScan', { actorId: 'pc_bricks', targetId: npcId });
+    await settle();
+    ok(!pl.state.matrix.personas.pc_bricks.scans?.[npcId], 'forget a scan');
+
+    // Matrix Search (SR5 p. 241): threshold from the table, extra hits divide the base time, failure = full base time
+    ok(searchMinutes('limited', 3) === 30 && searchMinutes('limited', 5) === 15 && searchMinutes('hidden', 2) === 720 && searchMinutes('public', 4) === 1 / 3, 'search time: base ÷ hits above the threshold');
+    ok(searchMinutes('hidden', 8, true) === 0.5, 'search inside a host: base time 1 minute');
+    const inHost = !!P().hostId;
+    res = await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'matrixSearch', searchLevel: 'limited', topic: 'Adresse de M. Johnson' });
+    await settle();
+    const srv = Object.values(M().reveals || {}).find((r) => r.actionId === 'matrixSearch')!;
+    const hits = res.roll.hits;
+    ok(res.success && hits >= 3 && srv?.threshold === 3 && srv.topic === 'Adresse de M. Johnson' && srv.minutes === searchMinutes('limited', hits, inHost), `search succeeds against threshold 3 (${hits} hits, ${srv?.minutes} min)`);
+    ok(gm.state.log.some((e) => /Search for “Adresse de M. Johnson”: found in .* \(threshold 3\)\. The GM answers\./.test(e.text || '')), 'search log: found, time, threshold');
+    ok(inHost ? srv.options.every((o) => o.id.startsWith('file:')) : srv.options.every((o) => o.id.startsWith('host-visible:')), `search options: ${inHost ? 'the host’s files' : 'hidden hosts'}`);
+    await gm.send('matrix/reveal', { revealId: srv.id, optionIds: [], answer: 'Il vit à Tacoma.' });
+    await settle();
+    ok(pl.state.log.some((e) => /GM’s answer to Bricks: Il vit à Tacoma\./.test(e.text || '')), 'GM answers the search freely');
+    await gm.send('matrix/testDice', { mode: 'glitch' });
+    res = await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'matrixSearch', searchLevel: 'hidden' });
+    await settle();
+    ok(!res.success && !Object.values(M().reveals || {}).some((r) => r.actionId === 'matrixSearch'), 'failed search: nothing for the GM to answer');
+    ok(gm.state.log.some((e) => /Search: nothing found after (12 h|1 min) \(threshold 6\)\./.test(e.text || '')), 'failed search costs the full base time');
+    await gm.send('matrix/testDice', { mode: null });
+  }
 
   // i18n: every matrix log entry of this run is translatable (keys, nested params, authors, roll labels)
   {
