@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/net.ts';
 import { pruneStale } from './bookcache.ts';
-import type { LibBook, ViewerState, SearchResult } from './types.ts';
+import type { LibBook, MissingBook, ViewerState, SearchResult } from './types.ts';
 
 import { offsetFor, printedToPdf, pdfToPrinted, parseSourceRef } from './refs.ts';
 
@@ -13,6 +13,7 @@ export { offsetFor, printedToPdf, pdfToPrinted, parseSourceRef };
 // Library list
 // ---------------------------------------------------------------------------
 let books: LibBook[] | null = null; // null = not loaded
+let missing: MissingBook[] = []; // known SR5 books this table cannot read (greyed out in the library)
 let pdfjs: string | null = null; // base URL of the app's pdf.js copy (/vendor/pdfjs/<version>), from /api/books
 let loading: Promise<LibBook[]> | null = null;
 let loadError: Error | null = null;
@@ -47,6 +48,7 @@ function scheduleRenew() {
 
 interface BooksReply {
   books?: LibBook[];
+  missing?: MissingBook[];
   pdfjs?: string;
   now?: number;
 }
@@ -62,6 +64,7 @@ export function loadBooks(force = false): Promise<LibBook[]> {
       if (Number(r.now) > 0) skew = Number(r.now) - (t0 + t1) / 2;
       const list = r.books || [];
       books = list;
+      missing = r.missing || [];
       if (r.pdfjs) pdfjs = r.pdfjs;
       loadError = null;
       pruneStale(list); // cached copies of replaced PDFs are dropped
@@ -81,6 +84,8 @@ export function loadBooks(force = false): Promise<LibBook[]> {
   return loading;
 }
 export const getBooks = () => books;
+/** Known SR5 books not readable from this table (refreshed with the list: read it during a useBooks() render). */
+export const getMissingBooks = () => missing;
 export const pdfjsBase = () => pdfjs;
 export const booksError = () => loadError;
 export const findBook = (code: string | null | undefined): LibBook | null => (books || []).find((b) => b.code === String(code || '').toUpperCase()) || null;

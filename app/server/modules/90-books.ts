@@ -11,7 +11,7 @@ import { createRequire } from 'node:module';
 import express from 'express';
 import { errorBody } from '../lib/i18n.ts';
 import { BOOKS_DIR, signLink, verifyLink, sessionTag, sessionAlive, LINK_TTL } from '../lib/books/access.ts';
-import { readLibrary, loadIndex, allowedFor, cleanCode, pdfFile, type LibraryBook } from '../lib/books/library.ts';
+import { readLibrary, loadIndex, allowedFor, cleanCode, pdfFile, knownBooks, type LibraryBook } from '../lib/books/library.ts';
 import { parseQuery, searchPages, queryHeadline } from '../lib/books/search.ts';
 import { pdfToPrinted, printedToPdf } from '../lib/books/offsets.ts';
 import type { ServerModule } from '../../shared/types.ts';
@@ -96,6 +96,20 @@ function publicBook(b: LibraryBook, req: Req) {
   };
 }
 
+/**
+ * Every Shadowrun 5 book Chummer knows that this table cannot read yet, for the « Règles » library (greyed out, with an
+ * upload button for the server admin). A book on the server but restricted to other tables is listed as missing too:
+ * the list must not tell which books exist elsewhere. Core rules first, German-only books last, the rest by name.
+ */
+export function missingBooks(visible: Array<Pick<LibraryBook, 'code'>>) {
+  const have = new Set(visible.map((b) => b.code));
+  const rank = (code: string, name: string) => (code === 'SR5' ? 0 : /German-Only/i.test(name) ? 2 : 1);
+  return Object.entries(knownBooks())
+    .filter(([code]) => !have.has(code))
+    .map(([code, k]) => ({ code, name: k.name, nameFr: k.nameFr || k.name, ...(/German-Only/i.test(k.name) ? { de: true } : {}) }))
+    .sort((a, b) => rank(a.code, a.name) - rank(b.code, b.name) || a.name.localeCompare(b.name));
+}
+
 // A public demo table never sees the server owner's rulebooks (also refused by server/lib/demo.js before reaching here).
 const visibleBooks = (req: Req): LibraryBook[] => (req.srTable.meta?.demo ? [] : readLibrary(BOOKS_DIR).books.filter((b: LibraryBook) => allowedFor(b, req.srTable.id) && fs.existsSync(pdfFile(BOOKS_DIR, b.code))));
 /** A book readable from the request's table, or null. Unknown and not-allowed books look the same (another table must not learn which books exist). */
@@ -120,7 +134,10 @@ const mod: ServerModule<HttpApp> = {
     app.get('/api/books', requireUser, (req: Req, res: Res) => {
       res.setHeader('Cache-Control', 'no-store');
       // now = server clock (ms): clients judge link expiry with it, not with their own clock.
-      res.json({ books: visibleBooks(req).map((b) => publicBook(b, req)), ttl: LINK_TTL, now: Date.now(), pdfjs: PDFJS_BASE });
+      const visible = visibleBooks(req);
+      // missing = known SR5 books not readable here (none on a demo table: it never shows the rulebooks).
+      const missing = req.srTable.meta?.demo ? [] : missingBooks(visible);
+      res.json({ books: visible.map((b) => publicBook(b, req)), missing, ttl: LINK_TTL, now: Date.now(), pdfjs: PDFJS_BASE });
     });
 
     app.get('/api/books/search', requireUser, (req: Req, res: Res) => {

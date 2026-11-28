@@ -51,10 +51,12 @@ the Fly, SR5 310 Improved Reflexes/Kinesics, RF 221 Garage…), the « Règles �
 
 Any logged-in user of the table, `requireUser`:
 - `GET /api/books` → `{ books: [{ code, name, nameFr, pages, offset, offsets?, indexed, extra?, url, exp, version, size
-  }], ttl, now, pdfjs }` (books allowed for the requester's table whose PDF exists; `url` = signed PDF link; `now` =
-  server clock in ms, the client judges expiry with it; `version` = base36 `size-mtime` of the PDF = the reader's cache
-  key and the file's ETag; `size` = bytes, for the progress bar; `pdfjs` = `/vendor/pdfjs/<pdfjs-dist version>`). Types
-  `BooksResponse`, `BookListEntry`.
+  }], missing: [{ code, name, nameFr, de? }], ttl, now, pdfjs }` (books allowed for the requester's table whose PDF
+  exists; `url` = signed PDF link; `now` = server clock in ms, the client judges expiry with it; `version` = base36
+  `size-mtime` of the PDF = the reader's cache key and the file's ETag; `size` = bytes, for the progress bar; `pdfjs` =
+  `/vendor/pdfjs/<pdfjs-dist version>`; `missing` = every book of `book-names.json` the table cannot read, also those
+  on the server but restricted to other tables (no existence oracle), SR5 first, German-only (`de`) last, the rest by
+  name, `[]` on a demo table; `90-books.ts missingBooks`). Types `BooksResponse`, `BookListEntry`, `MissingBookEntry`.
 - `GET /api/books/search?q=&code=` → `{ hits: [{ code, page (printed|null), pdfPage, snippet, marks: [[start, end]] }],
   total }` (accent/case-insensitive, every term required at a word start, "quoted phrases", capitals headings first,
   max 50; `code` of a book not allowed → 403).
@@ -85,6 +87,13 @@ insuffisante… » (`jobs.ts memoryVerdict`, error key + `errorParams`) when 6 �
 (`memory.max`, `SR_MEMORY_LIMIT_BYTES`) minus the server's RSS. pdfjs reads the file through a view (no second copy).
 Only the main thread writes `library.json`. Search folds texts with one regex replace (a char-by-char `+=` cost ≈ 300 MB
 of heap). UI: `client/modules/admin/BooksAdmin.tsx` (panel « Livres de règles » of `/admin`).
+
+**Missing books:** the /admin panel lists « Absents de ce serveur (n) »: every `known` book without a library entry
+(German-only ones folded in a `<details>`), each with its own « Téléverser » button (a file input: picking the PDF
+uploads it under that code, `BooksAdmin.tsx MissingBooks`). That is the only place where a book is added from the UI:
+books are server-wide, and a table (the public one above all) must never change them. The Règles library shows the
+same books greyed out from `/api/books` `missing`, without any upload; while one of its books is not indexed yet it
+refreshes the list every 10 s (30 times at most).
 
 ## Client API
 

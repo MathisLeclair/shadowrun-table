@@ -2843,8 +2843,19 @@ export interface BookListEntry {
   size: number;
 }
 
+/** A Shadowrun 5 book Chummer knows that the table cannot read (not on the server, or restricted to other tables). */
+export interface MissingBookEntry {
+  code: string;
+  name: string;
+  nameFr: string;
+  /** German-only book. */
+  de?: boolean;
+}
+
 export interface BooksResponse {
   books: BookListEntry[];
+  /** Known SR5 books not readable here: core rules first, German-only last, the rest by name. Empty on a demo table. */
+  missing: MissingBookEntry[];
   ttl: number;
   /** Server clock (ms). */
   now: Timestamp;
