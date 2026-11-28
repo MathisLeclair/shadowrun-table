@@ -4,15 +4,27 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/net.ts';
 import { isLibUrl, matchesQuery, type LibSearchable } from '/shared/maplib.ts';
-import { tIfKnown } from '../../lib/i18n.ts';
+import { tIfKnown, getLang, sourceIfKnown } from '../../lib/i18n.ts';
 import type { LibEntry, LibKeyReply, LibList } from './types.ts';
 
 export { isLibUrl };
 
 /** Description of a library entry in the UI language: built-in descriptions are English keys (or old French text), admin texts stay as typed. */
 export const libDescription = (e: { description?: string }): string => tIfKnown(e.description || '');
-/** Search over the names, keywords and the description as stored and as shown. */
-export const libMatches = (e: LibSearchable, q: string): boolean => matchesQuery({ ...e, description: `${e.description || ''} ${libDescription(e)}` }, q);
+/**
+ * Display name of a library entry (library catalogue only, not table maps the GM may have renamed). French: `nameFr`.
+ * English: the translation of `nameFr` when the dictionary knows it (built-in maps, through legacy-fr-keys.json), else
+ * the English `name` (admin-typed names stay as typed).
+ */
+export function libName(e: LibSearchable): string {
+  const fr = e.nameFr || '';
+  if (getLang() !== 'en') return fr || tIfKnown(e.name || '') || e.slug || '';
+  const shown = fr ? tIfKnown(fr) : '';
+  return (shown && shown !== fr ? shown : e.name || fr) || e.slug || '';
+}
+/** Search over the names, keywords and the description, as stored, as shown and in English (built-in French texts): both languages match. */
+export const libMatches = (e: LibSearchable, q: string): boolean =>
+  matchesQuery({ ...e, name: `${e.name || ''} ${libName(e)} ${sourceIfKnown(e.nameFr)}`, description: `${e.description || ''} ${libDescription(e)} ${sourceIfKnown(e.description)}` }, q);
 
 let key: { k: string; exp: number } | null = null; // { k, exp (s, server clock) }
 let skew = 0; // server clock − browser clock (ms)

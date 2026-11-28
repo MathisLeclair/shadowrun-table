@@ -103,6 +103,13 @@ detach). `renderer.ts getImage()` loads `/api/maplib/…` URLs with the signed k
 (`ensureLibKey()`, renewed 10 min before expiry; the image cache stays keyed by the bare URL, so a renewed key never
 reloads an image). Players see nothing new (only the image of the shown map).
 
+Language: the files of `data/maplib/` keep their French `nameFr` / `description` (editing them would change their hash and
+flag every table copy). Their English text is in `client/i18n/fr/map.json` (English key → the original French) and
+`client/i18n/legacy-fr-keys.json` (French → English key). `maplib-client.ts`: `libName(e)` (French: `nameFr`; English:
+`tIfKnown(nameFr)` when known, else `name`) and `libDescription(e)` (`tIfKnown`) are used by the library browser, the link
+dialog and /admin; `libMatches()` searches the stored, shown and English (`sourceIfKnown()`) texts, so both languages
+match. Admin-typed texts stay as typed. Table maps keep the name they were given.
+
 Campaign seed instances (`maps/lib-<slug>.json` of the Lazarus pack): [data-model.md](../data-model.md#content-packs-seeds).
 
 ## Tests

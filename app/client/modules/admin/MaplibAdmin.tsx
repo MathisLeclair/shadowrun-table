@@ -6,7 +6,7 @@ import { Button, Field, Toggle, Badge, Empty, Modal, Select, SearchBox, confirmA
 import { uploadWithProgress, type ServerError } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
 import { t, tn, tk, fmtDate, getLang } from '../../lib/i18n.ts';
-import { setLibKeySource, useLibKey, signedUrl, libDescription, libMatches } from '../map/maplib-client.ts';
+import { setLibKeySource, useLibKey, signedUrl, libDescription, libMatches, libName } from '../map/maplib-client.ts';
 import { themeOptions, lightingOptions } from '../map/renderer.ts';
 import { fmtBytes, Progress, type UploadProgress } from './common.tsx';
 import type { AdminApi, AdminPanelProps } from './types.ts';
@@ -64,7 +64,7 @@ interface MaplibReply {
 
 const ORIGINS: Record<string, string> = { git: tk('git'), seed: tk('Foundry'), edited: tk('maplib::edited'), upload: tk('uploaded') };
 const SOURCES: Record<string, string> = { fragmap: tk('Fragmaps (Patreon)'), 'fragmaps-free': tk('Fragmaps (free)') };
-const nameOf = (e: LibEntry): string => (getLang() === 'en' ? e.name || e.nameFr : e.nameFr || e.name) || e.slug;
+const nameOf = (e: LibEntry): string => libName(e);
 const slugOf = (s: string) =>
   String(s || '')
     .replace(/\.[^.]+$/, '')

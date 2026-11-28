@@ -9,7 +9,7 @@
 //
 // Rule: never call t() at module top level (dictionaries are not loaded yet and the language can change):
 // translate at render time, and mark constant tables with tk('…') then render t(value).
-import { LANGS, DEFAULT_LANG, SOURCE_LANG, isLang, interpolate, lookup, pluralKey, currentKey } from '../i18n/format.ts';
+import { LANGS, DEFAULT_LANG, SOURCE_LANG, isLang, interpolate, lookup, pluralKey, currentKey, stripContext } from '../i18n/format.ts';
 import type { Dictionary, PluralForms, TParams } from '../i18n/format.ts';
 import type { Lang } from '../../shared/types.ts';
 // Relative path on purpose: resolves to /shared/sr5.js in the browser (same module instance) and works in Node.
@@ -245,6 +245,9 @@ export function tIfKnown(text: unknown, params?: TParams | null): unknown {
   if (k === text && !(text in dict)) return interpolate(text, params, t, lang);
   return t(k, params);
 }
+
+/** English source text of a stored text that may be an old French key (search over both languages), else the text itself. */
+export const sourceIfKnown = (text: string | null | undefined): string => (text ? stripContext(currentKey(legacy, text)) : '');
 
 /** Readable message of a server error reply / API error body: { error, errorKey?, params? }. */
 export function errorText(res: ErrorReply | null | undefined, fallback: string = tk('Error')): string {

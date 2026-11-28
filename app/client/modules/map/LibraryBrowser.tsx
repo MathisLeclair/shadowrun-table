@@ -11,17 +11,13 @@ import { uid } from '/shared/util.ts';
 import { libGeometry, instanceContent, libImageUrl } from '/shared/maplib.ts';
 import { MapCanvas } from './MapCanvas.tsx';
 import { themeOptions, themeLabel, lightingLabel, type MapScene } from './renderer.ts';
-import { useLibKey, signedUrl, useLibrary, loadLibrary, libDescription, libMatches } from './maplib-client.ts';
+import { useLibKey, signedUrl, useLibrary, loadLibrary, libDescription, libMatches, libName } from './maplib-client.ts';
 import type { GameMap, GameView } from '../../../shared/types.ts';
 import type { LibDiff, LibEntry, LibFull, LibLinkInfo } from './types.ts';
 
 const quiet = () => {};
 const SOURCES: Record<string, string> = { fragmap: tk('Fragmaps (Patreon)'), 'fragmaps-free': tk('Fragmaps (free)') };
 const QUALITY: Record<string, string> = { good: tk('Clean walls'), rough: tk('Rough walls') };
-/** Display name in the UI language (English file name / natural French name). */
-export const libName = (e: { name?: string; nameFr?: string; slug: string }): string =>
-  (getLang() === 'en' ? e.name || e.nameFr : e.nameFr || e.name) || e.slug;
-
 /** Table map (Map schema) built from a library map, for the preview only (nothing is sent). */
 function previewMap(full: LibFull): GameMap {
   const g = libGeometry({ ...full, ...(full.geometry || {}) });
@@ -361,7 +357,7 @@ export function LibraryLinkModal({ map, onClose, beforeAction }: LibraryLinkModa
         <Empty>{t('Loading…')}</Empty>
       ) : (
         <div className="col gap-s">
-          <div>{t('Copy of “{name}” (server library).', { name: getLang() === 'en' ? info.name : info.nameFr || info.name })}</div>
+          <div>{t('Copy of “{name}” (server library).', { name: libName(info) })}</div>
           <div className="small muted">{t('This map’s version: {mine} · library version: {lib}', { mine: info.current, lib: info.latest })}</div>
           {info.latest > info.current ? <Badge color="amber">{t('New version available')}</Badge> : null}
           <div className="section-title">{t('Differences with the library')}</div>
