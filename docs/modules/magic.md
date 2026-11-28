@@ -68,8 +68,11 @@ max(2, 2 × the spirit's hits), Physical if Force > MAG, resisted or left pendin
 `createSpirit`: an NPC actor (`npc.kind: 'spirit'`, `initMode: 'astral'`, `metatype` = the type, attributes / initiative
 / skills / powers of `spiritStats`, chosen optional powers ≤ one per 3 Force, the summoner's color, hidden like a hidden
 summoner) with `actor.spirit = { type, typeFr, force, summonerId, services, bound, materialized, optionalPowers, ts }`.
-**Control**: the spirit's id is added to the `characterIds` of the summoner's player(s), so the existing rights (full
-sheet, rolls, token moves, combat) apply unchanged; `removeActor` takes it out again.
+**Control**: the spirit's id is in the `characterIds` of the summoner's player(s), so the existing rights (full
+sheet, rolls, token moves, combat) apply unchanged; `removeActor` takes it out again. `syncSpiritControl(state)`
+(shared) keeps it so when the summoner changes hands — at summoning, at login (core `/api/login`), on `users/assign`
+and at boot: the players holding the summoner get the spirit, the others lose it (a player character nobody holds
+controls none); an NPC summoner's spirits keep the GM's assignments.
 - `magic/spiritServices { spiritId, delta }`: the player may use one (−1), the GM sets any; at 0 the spirit leaves.
 - `magic/materialize { spiritId, materialized, mapId? }`: a token next to the summoner (`placeActorToken` of 20-maps),
   initiative mode physical; dematerialized: tokens removed, astral mode (also on its combat entry).
