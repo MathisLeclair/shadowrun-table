@@ -7,6 +7,7 @@ import { safeDerive, poolFor, damageText, initials, avatarStyle, signed, npcKind
 import type { ActorLike } from './types.ts';
 import type { ActorMatrix, AttrKey, Spell } from '../../../shared/types.ts';
 import { ItemRef, SkillRef } from '../books/BookRef.tsx';
+import { itemLabel, categoryLabel } from '../sheet/common.tsx';
 
 const CORE_ATTRS: AttrKey[] = ['BOD', 'AGI', 'REA', 'STR', 'WIL', 'LOG', 'INT', 'CHA', 'EDG'];
 
@@ -199,10 +200,10 @@ function SpellsTable({ spells }: { spells: Spell[] | null | undefined }) {
             {spells.map((s, i) => (
               <tr key={s.id || i}>
                 <td className="wname">
-                  <strong>{s.name}</strong> <ItemRef item={s} />
+                  <strong>{itemLabel(s)}</strong> <ItemRef item={s} />
                   {s.notes && <span className="note">{s.notes}</span>}
                 </td>
-                <td>{s.category || ''}</td>
+                <td>{categoryLabel(s)}</td>
                 <td className="mono">{s.type || ''}</td>
                 <td className="mono">{s.range || ''}</td>
                 <td className="mono">{s.duration || ''}</td>
@@ -315,7 +316,7 @@ export default function StatBlock({ t: tpl }: StatBlockProps) {
           items={armorItems}
           render={(a, i) => (
             <span key={a.id || i} className="sb-chip" title={a.notes || ''}>
-              {a.name}
+              {itemLabel(a)}
               <b>
                 {a.stack ? '+' : ''}
                 {a.rating}
@@ -329,7 +330,7 @@ export default function StatBlock({ t: tpl }: StatBlockProps) {
           items={tpl.augmentations}
           render={(x, i) => (
             <span key={x.id || i} className="sb-chip" title={x.notes || ''}>
-              {x.name}
+              {itemLabel(x)}
               {x.grade && x.grade !== 'standard' ? (
                 <>
                   {' '}
@@ -348,7 +349,7 @@ export default function StatBlock({ t: tpl }: StatBlockProps) {
           items={tpl.powers}
           render={(p, i) => (
             <span key={p.id || i} className="sb-chip" title={p.notes || ''}>
-              {p.name}
+              {itemLabel(p)}
               {p.level ? ` ${p.level}` : ''}
               {p.notes ? (
                 <>
@@ -368,7 +369,7 @@ export default function StatBlock({ t: tpl }: StatBlockProps) {
           items={tpl.qualities}
           render={(q, i) => (
             <span key={q.id || i} className="sb-chip" title={q.notes || ''} style={{ borderColor: q.positive === false ? '#6a2c2c' : '' }}>
-              {q.name}
+              {itemLabel(q)}
               {q.notes ? (
                 <>
                   {' '}

@@ -68,7 +68,7 @@ export function MagicTab({ s }: { s: SheetCtx }) {
           {powers.map(
             (p) => <div className="sh-card" key={p.id}>
               <div className="row spread">
-                <span><b>{p.name}{p.level ? ` ${p.level}` : ''}</b>{' '}<ItemRef item={p} /></span>
+                <span><b title={itemTitle(p)}>{itemLabel(p)}{p.level ? ` ${p.level}` : ''}</b>{' '}<ItemRef item={p} /></span>
                 <span className="badge badge-magenta">{t('{v} PP', { v: fmtNum(p.pp) })}</span>
               </div>
               {p.choice ? <div className="faint small">{t('Choice: {choice}', { choice: p.choice })}</div> : null}
@@ -98,8 +98,8 @@ export function MagicTab({ s }: { s: SheetCtx }) {
             <tbody>
               {spells.map(
               (sp) => <tr key={sp.id}>
-                <td><b>{sp.name}</b>{' '}<ItemRef item={sp} />{sp.notes ? <div className="faint small">{sp.notes}</div> : null}</td>
-                <td className="small">{sp.category}</td>
+                <td><b title={itemTitle(sp)}>{itemLabel(sp)}</b>{' '}<ItemRef item={sp} />{sp.notes ? <div className="faint small">{sp.notes}</div> : null}</td>
+                <td className="small">{categoryLabel(sp)}</td>
                 <td>{sp.type}</td>
                 <td className="small">{sp.range}</td>
                 <td>{sp.duration}</td>
@@ -431,7 +431,7 @@ export function QualitiesTab({ s }: { s: SheetCtx }) {
         {list.map(
           (q) => <div className="sh-list-row" key={q.id}>
             <div className="grow">
-              <b>{q.name}</b>
+              <b title={itemTitle(q)}>{itemLabel(q)}</b>
               {' '}
               <ItemRef item={q} />
               {' '}
