@@ -18,6 +18,7 @@ import { removeBonus, weaponFromStats, wareCatalogItem, detachAugmentation, bake
 import { errorBody } from '../lib/i18n.ts';
 import { actorModifiers, deriveFull } from '../lib/modifiers.ts';
 import { fillActorRefs } from '../lib/bookrefs.ts';
+import { recordAction } from '../lib/combat-actions.ts';
 import { appCatalog, norm as catNorm } from '../lib/chummer/data.ts';
 import { adoptSeedContainers } from '../lib/foundry/containers.ts';
 import {
@@ -718,6 +719,7 @@ function reloadWeapon(ctx: ActionContext, a: Actor, w: Loose, { sourceItemId, fr
   const params = { name: a.name, weapon: biName(w), n, loaded: w.ammoLoaded, max, ammo: biAmmo(newKind), action: { t: plan.action === 'simple' ? tk('Simple Action') : tk('Complex Action') } };
   const key = plan.swap ? tk('{name} changes the clip of {weapon}: {loaded}/{max} ({ammo}) — {action}') : tk('{name} reloads {weapon}: +{n} → {loaded}/{max} ({ammo}) — {action}');
   ctx.log({ kind: 'combat', userId: ctx.user.id, author: a.name, i18n: { key, params }, gmOnly: a.type === 'npc' ? true : undefined });
+  recordAction(ctx, { actorId: a.id }, { type: plan.action === 'simple' ? 'simple' : 'complex', label: { t: tk('Reload — {weapon}'), params: { weapon: biName(w) } }, auto: true });
   return { loaded: n, ammoLoaded: w.ammoLoaded, max, action: plan.action, swap: plan.swap, sourceId: source?.id || null, clipId: plan.swap ? (clip || loader)?.id || null : null, returned, dropped };
 }
 

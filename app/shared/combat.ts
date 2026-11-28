@@ -7,7 +7,7 @@
 // Labels are English source keys (tk); the UI renders them with t(), the server stores them as i18n params.
 import { attr } from './sr5.ts';
 import type { LimitKey } from './sr5.ts';
-import type { ActorLike, AfflictionKind, AttrKey, Blast, BlastEffect, CombatState, DamageType, EffectUntil, GameMap, Point, Weapon } from './types.ts';
+import type { ActorLike, AfflictionKind, AttrKey, Blast, BlastEffect, CombatState, DamageType, EffectUntil, GameMap, PhaseActionType, Point, SpentAction, Weapon } from './types.ts';
 
 /** Weapon-shaped input: an actor weapon, an attack's weapon snapshot, a catalog profile mapped to the sheet fields. */
 export type WeaponLike = Partial<Weapon>;
@@ -729,6 +729,109 @@ export const COMBAT_ACTIONS: CombatActionDef[] = [
     source: 'RG', page: 123, note: tk('INT + weapon skill (3): +3 dice on the next melee attack against the target (−1 on a failure).') },
 ];
 export const ACTION_BY_ID: Record<string, CombatActionDef> = Object.fromEntries(COMBAT_ACTIONS.map((a) => [a.id, a]));
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Action economy (SR5 p. 163-167): in their Action Phase a character takes 2 Simple Actions or 1 Complex Action, and
+// one Free Action at any point of the Initiative Pass; only one attack action per Action Phase. Interrupt actions cost
+// initiative instead (spendInitiative). The tracker counts what each participant used this pass.
+// ---------------------------------------------------------------------------------------------------------------------
+/** A common action of the Combat Actions list, offered by the tracker's « + Action » menu. */
+export interface PhaseActionDef {
+  id: string;
+  name: string;
+  type: 'free' | 'simple' | 'complex';
+  attack?: boolean;
+  source: string;
+  page: number;
+}
+const pa = (id: string, name: string, type: PhaseActionDef['type'], page: number, attack = false): PhaseActionDef => ({ id, name, type, page, source: 'SR5', ...(attack ? { attack } : {}) });
+export const PHASE_ACTIONS: PhaseActionDef[] = [
+  pa('call-shot', tk('Call a shot'), 'free', 163),
+  pa('linked-mode', tk('Change linked device mode'), 'free', 163),
+  pa('drop-object', tk('Drop object'), 'free', 163),
+  pa('drop-prone', tk('Drop prone'), 'free', 164),
+  pa('eject-clip', tk('Eject smartgun clip'), 'free', 164),
+  pa('gesture', tk('Gesture'), 'free', 164),
+  pa('multiple-attacks', tk('Multiple attacks'), 'free', 164),
+  pa('run', tk('move::Run'), 'free', 164),
+  pa('speak', tk('Speak / text a phrase'), 'free', 164),
+  pa('activate-focus', tk('Activate focus'), 'simple', 164),
+  pa('call-spirit', tk('Call spirit'), 'simple', 164),
+  pa('device-mode', tk('Change device mode'), 'simple', 164),
+  pa('gun-mode', tk('Change gun mode'), 'simple', 165),
+  pa('command-spirit', tk('Command spirit'), 'simple', 165),
+  pa('dismiss-spirit', tk('Dismiss spirit'), 'simple', 165),
+  pa('fire-simple', tk('Fire weapon (SS, SA, BF, FA)'), 'simple', 165, true),
+  pa('insert-clip', tk('Insert clip'), 'simple', 165),
+  pa('observe', tk('Observe in detail'), 'simple', 165),
+  pa('pick-up', tk('Pick up / put down object'), 'simple', 165),
+  pa('quick-draw', tk('Quick draw'), 'simple', 165, true),
+  pa('ready-weapon', tk('Ready weapon'), 'simple', 165),
+  pa('reckless-spell', tk('Reckless spellcasting'), 'simple', 165, true),
+  pa('remove-clip', tk('Remove clip'), 'simple', 166),
+  pa('shift-perception', tk('Shift perception'), 'simple', 166),
+  pa('stand-up', tk('Stand up'), 'simple', 166),
+  pa('take-aim', tk('Take aim'), 'simple', 166),
+  pa('take-cover', tk('Take cover'), 'simple', 166),
+  pa('throw', tk('Throw weapon'), 'simple', 166, true),
+  pa('simple-device', tk('Use simple device'), 'simple', 166),
+  pa('astral-projection', tk('Astral projection'), 'complex', 167),
+  pa('banish', tk('Banish spirit'), 'complex', 167),
+  pa('cast-spell', tk('Cast spell'), 'complex', 167, true),
+  pa('fire-complex', tk('Fire weapon (LB, SA burst, FA)'), 'complex', 167, true),
+  pa('fire-mounted', tk('Fire mounted or vehicle weapon'), 'complex', 167, true),
+  pa('melee', tk('Melee attack'), 'complex', 167, true),
+  pa('matrix-action', tk('Matrix action'), 'complex', 167),
+  pa('reload', tk('Reload firearm'), 'complex', 167),
+  pa('jump-in', tk('Rigger jump in'), 'complex', 167),
+  pa('sprint', tk('Sprint'), 'complex', 167),
+  pa('summon', tk('Summon spirit'), 'complex', 167),
+  pa('use-skill', tk('Use skill'), 'complex', 167),
+];
+export const PHASE_ACTION_BY_ID: Record<string, PhaseActionDef> = Object.fromEntries(PHASE_ACTIONS.map((a) => [a.id, a]));
+/** Category labels (short, for the counter and the menu). */
+export const PHASE_ACTION_TYPES: Record<PhaseActionType, string> = { free: tk('action::Free'), simple: tk('action::Simple'), complex: tk('action::Complex'), interrupt: tk('action::Interrupt') };
+/** What an Action Phase allows: 1 Free, 2 « slots » (Simple = 1, Complex = 2), 1 attack. */
+export const PHASE_LIMITS = { free: 1, slots: 2, attacks: 1 } as const;
+
+export interface PhaseUsage {
+  free: number;
+  /** Simple = 1, Complex = 2 (out of PHASE_LIMITS.slots). */
+  slots: number;
+  attacks: number;
+}
+/** What the actions taken so far in this pass use. */
+export function phaseUsage(spent: ReadonlyArray<Pick<SpentAction, 'type' | 'attack'>> | null | undefined): PhaseUsage {
+  const u: PhaseUsage = { free: 0, slots: 0, attacks: 0 };
+  for (const a of spent || []) {
+    if (a.type === 'free') u.free += 1;
+    else if (a.type === 'simple') u.slots += 1;
+    else if (a.type === 'complex') u.slots += 2;
+    if (a.attack) u.attacks += 1;
+  }
+  return u;
+}
+/** Would one more action of this type go over the Action Phase? (`null` = it fits.) Returns the reason as a key. */
+export function overPhase(usage: PhaseUsage, type: PhaseActionType, attack = false): string | null {
+  if (type === 'free' && usage.free >= PHASE_LIMITS.free) return tk('only one Free Action per pass');
+  if (type === 'simple' && usage.slots + 1 > PHASE_LIMITS.slots) return tk('no Simple Action left this pass');
+  if (type === 'complex' && usage.slots + 2 > PHASE_LIMITS.slots) return tk('a Complex Action needs the whole Action Phase');
+  if (attack && usage.attacks >= PHASE_LIMITS.attacks) return tk('only one attack per Action Phase');
+  return null;
+}
+/** Simple / Complex actions still possible this pass, and whether the Free Action is left. */
+export function phaseLeft(usage: PhaseUsage): { simple: number; complex: number; free: number } {
+  const slots = Math.max(0, PHASE_LIMITS.slots - usage.slots);
+  return { simple: slots, complex: Math.floor(slots / 2), free: Math.max(0, PHASE_LIMITS.free - usage.free) };
+}
+/**
+ * Action category of a weapon attack: the fire option's own (SS/SA/BF/FA Simple, SA burst/LB/FA 10/suppressive Complex),
+ * a melee attack is Complex, anything else (thrown weapon, grenade, bow shot) Simple.
+ */
+export function attackActionType({ fireAction, melee }: { fireAction?: string | null; melee?: boolean }): 'simple' | 'complex' {
+  if (fireAction === 'simple' || fireAction === 'complex') return fireAction;
+  return melee ? 'complex' : 'simple';
+}
 
 /**
  * Defense options (interrupts and R&G « Defender » qualities), SR5 p. 190-191 / RG 127. `bonus(actor, ctx)` = dice added;

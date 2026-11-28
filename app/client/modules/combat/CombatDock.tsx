@@ -5,6 +5,8 @@ import { send, type GameProps } from '../../lib/net.ts';
 import { useUI, setUI, openSheet, toast } from '../../lib/ui-store.ts';
 import { t, tn, tk } from '../../lib/i18n.ts';
 import { initModeOptions, initModeLabel, dispoLabel, initials, avatarStyle, safeDerive, MonitorBar, rollTooltip, parseDamageInput } from './combat-common.tsx';
+import ActionCounter from './ActionCounter.tsx';
+import { phaseUsage, phaseLeft } from '../../../shared/combat.ts';
 import type { ActorLike } from './types.ts';
 import type { CombatEntry, CombatState, GameView, InitMode, ViewActor } from '../../../shared/types.ts';
 import './combat.css';
@@ -98,6 +100,8 @@ function Idle({ game, isGM, selected }: { game: GameView; isGM: boolean; selecte
 // ---------------------------------------------------------------------------
 /** Matrix entries (IC of a host, a decker's agent) have no sheet: kept in sync by the matrix module. */
 const isMatrixEntry = (e: CombatEntry | null | undefined) => e?.kind === 'ic' || e?.kind === 'agent';
+/** Every Simple / Complex Action of the pass is used (time to end the turn). */
+const phaseDone = (e: CombatEntry | null | undefined) => !!e && phaseLeft(phaseUsage(e.spent)).simple === 0;
 /** Display name: Matrix entries carry a translatable name. */
 const entryName = (e: CombatEntry | null | undefined): string => (e?.nameI18n?.t ? t(e.nameI18n.t, e.nameI18n.params) : e?.name || '');
 
@@ -109,8 +113,9 @@ function YourTurn({ e }: { e: CombatEntry }) {
         {entryName(e)} · {t('initiative')} <strong className="mono">{e.score}</strong>
       </div>
       {e.kind === 'agent' && <div className="small muted">{t('Your agent acts: pick its action in the cockpit (“Let my agent act”).')}</div>}
+      {phaseDone(e) && <div className="small cbt-done">{t('All your actions of this pass are used: end your turn.')}</div>}
       <div className="row wrap">
-        <Button variant="accent" onClick={() => act('combat/next', { entryId: e.id })}>
+        <Button variant="accent" className={phaseDone(e) ? 'cbt-ready' : undefined} onClick={() => act('combat/next', { entryId: e.id })}>
           {t('End my turn')} ✓
         </Button>
         <Button small variant="ghost" title={t('Delay your action: you can act later in the pass')} onClick={() => act('combat/delay', { entryId: e.id })}>
@@ -296,6 +301,10 @@ function EntryRow({ e, game, c, isGM, own, open, onToggle }: EntryRowProps) {
         )}
       </div>
 
+      {!e.toRoll && !e.out && (isCurrent || e.delayed || open || (e.spent?.length ?? 0) > 0) && (
+        <ActionCounter e={e} canControl={canControl} menu={isCurrent || e.delayed || open} />
+      )}
+
       {isGM && isCurrent && e.kind === 'ic' && !e.out && (
         <div className="row" onClick={stop}>
           <Button small variant="danger" title={t('The IC attacks the best-known intruder, then the turn passes')} onClick={icAct}>
@@ -447,7 +456,7 @@ export default function CombatDock({ game }: GameProps) {
 
       {isGM && (
         <div className="col gap-s">
-          <Button variant="primary" className="cbt-next" disabled={!entries.length} onClick={next}>
+          <Button variant="primary" className={'cbt-next' + (phaseDone(current) ? ' cbt-ready' : '')} disabled={!entries.length} onClick={next} title={phaseDone(current) ? t('{name} has used every action of this pass', { name: entryName(current) }) : undefined}>
             {current ? t('Next turn') : t('Start')} ▶
           </Button>
           <div className="cbt-tools">

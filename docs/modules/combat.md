@@ -31,6 +31,14 @@ Types `Template`, `CombatState`, `CombatEntry` in types.ts.
 - Initiative: `derive(actor).initiative`, passes of −10, Matrix initiative for personas in cold / hot sim
   ([rules](../rules/combat.md#initiative-sr5-p-159)); initiative dice, incapacitation and wounds use `deriveFull()`.
 - Initiative costs of actions: `spendInitiative(ctx, actorId, cost, label)` (used by [attacks](attacks.md)).
+- Action counter ([rules](../rules/combat.md#action-phase-sr5-p-163-167)): `entry.spent` lists the actions of the
+  current Initiative Pass (`{ id, type: free|simple|complex|interrupt, label, attack?, auto?, cost?, over? }`), emptied
+  at every pass and Combat Turn. `recordAction(ctx, { actorId | entryId | matrixKey }, spec)` of
+  `server/lib/combat-actions.ts` appends to it (no import cycle: the characters module records reloads, attacks the
+  weapon attacks, matrix the Matrix actions, `spendInitiative` / `combat/adjust` the interrupts). Over-budget actions
+  are kept with `over: true`, never refused. Visible to every player who sees the entry. Dock:
+  `client/modules/combat/ActionCounter.tsx` (pips, chips — click to take back — and the « + Action » menu on the
+  acting / holding / opened entry; « End my turn » glows once every Simple / Complex Action is used).
 - Damage: `actor/damage` of the characters module ([characters.md](characters.md#actions)).
 - Player view: hidden entries stay hidden until revealed; NPC entries whose token is on the shown map but not visible
   to that player are dropped.
@@ -39,3 +47,5 @@ Types `Template`, `CombatState`, `CombatEntry` in types.ts.
 
 Bestiary: `bestiary/create|update|delete|duplicate|fromActor|import|renameFolder|spawn`. Combat: `combat/start|add|
 remove|roll|rollAll|setScore|adjust|next|prev|newTurn|delay|act|seize|setMode|reveal|setOut|end`.
+Action counter (owner or GM): `combat/spend` `{ entryId, actionId }` (a `PHASE_ACTIONS` id) or `{ entryId, type, label? }`
+→ `{ spent, over }`, logged; `combat/unspend` `{ entryId, actionId }` (the counted action's id).
