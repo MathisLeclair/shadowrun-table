@@ -39,7 +39,7 @@ const LEGACY_REL = 'client/i18n/legacy-fr-keys.json';
 // Area → files (relative to app/). Every area also gets its client folder client/modules/<area>/.
 const AREA_EXTRA: Record<string, string[]> = {
   core: ['client/app.tsx', 'client/lib', 'client/modules/registry.ts', 'client/modules/core', 'client/modules/admin', 'server/index.ts', 'server/errors.ts', 'server/modules/00-core.ts', 'server/lib/admin.ts', 'server/lib/tables.ts', 'server/lib/zip.ts'],
-  map: ['server/modules/20-maps.ts', 'server/modules/22-maplib.ts', 'shared/vision.ts', 'shared/maplib.ts'],
+  map: ['server/modules/20-maps.ts', 'server/modules/22-maplib.ts', 'server/lib/maplib.ts', 'shared/vision.ts', 'shared/maplib.ts'],
   sheet: ['server/modules/10-characters.ts', 'shared/sr5.ts', 'shared/modifiers.ts', 'server/lib/augment.ts', 'server/lib/modifiers.ts'],
   combat: ['server/modules/30-combat.ts', 'server/modules/33-attacks.ts', 'shared/combat.ts'],
   shop: ['server/modules/40-shop.ts'],

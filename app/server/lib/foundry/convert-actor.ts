@@ -6,19 +6,31 @@ import { htmlToMarkdown } from './html2md.ts';
 import { monthlyCost } from '../../../shared/lifestyle.ts';
 import { chummerEval } from '../chummer/parse.ts';
 import { guessContainerKind } from '../../../client/modules/sheet/inventory.ts';
+import { t as translate, tn as translateN, SOURCE_LANG } from '../i18n.ts';
 import type { FoundryDoc, FoundryData } from './world.ts';
 import type { AssetFn } from './assets.ts';
 import type { HtmlLinks } from './html2md.ts';
 import type { CatalogHit } from './catalog.ts';
 import type {
-  Accessory, ActorMatrix, ActorVision, AdeptPower, ArmorMod, Armor, AttrKey, Attributes, Augmentation, Contact, Container, ContainerKind, Gear,
+  Accessory, ActorMatrix, ActorVision, AdeptPower, ArmorMod, Armor, AttrKey, Attributes, Augmentation, Contact, Container, ContainerKind, Gear, I18nParams, Lang,
   KnowledgeSkill, KnowledgeType, Lifestyle, LifestyleQuality, MountPoint, Quality, Sin, Skill, Spell, Vehicle, Weapon, WareGrade,
 } from '../../../shared/types.ts';
 
-/** Converter context: document names for the enrichers, asset(src, kind) → future URL. */
+/** Translator of the texts an import writes (notes, default names and categories). */
+export type ImportTranslator = (key: string, params?: I18nParams) => string;
+/** t / tn in the language of the texts an import writes (the table language; English by default). */
+export function importText(lang?: Lang | null): { tr: ImportTranslator; trn: (n: number, one: string, other: string, params?: I18nParams) => string } {
+  const l = lang || SOURCE_LANG;
+  return { tr: (key, params) => translate(l, key, params), trn: (n, one, other, params) => translateN(l, n, one, other, params) };
+}
+/** Marks an English key for tools/i18n-check.ts. */
+const tk = (s: string): string => s;
+
+/** Converter context: document names for the enrichers, asset(src, kind) → future URL, lang = language of the written texts. */
 export interface ActorContext {
   links?: HtmlLinks;
   asset?: AssetFn;
+  lang?: Lang;
 }
 /** Converted weapon / armor: `_en` (Foundry English name) is kept until the import strips it (importer.ts stripTemp). */
 export type FoundryWeapon = Weapon & { _en?: string };
@@ -156,7 +168,7 @@ function knownBoosts(items: FoundryDoc[]): { rea: number; dice: number } {
   return { rea, dice };
 }
 
-function weaponOf(it: FoundryDoc, physical: number | null = null): FoundryWeapon {
+function weaponOf(it: FoundryDoc, physical: number | null = null, tr: ImportTranslator = importText().tr): FoundryWeapon {
   const s = it.system || {};
   const a = s.action || {};
   const cat = String(s.category || '');
@@ -174,7 +186,7 @@ function weaponOf(it: FoundryDoc, physical: number | null = null): FoundryWeapon
   else if (dmg.attribute === 'strength') damage = `(STR${base ? (base > 0 ? '+' : '') + base : ''})${typeLetter}`;
   else if (base > 0) damage = `${base}${typeLetter}`;
   else if (cs.damage) damage = String(cs.damage);
-  else damage = melee ? `(STR)${typeLetter}` : 'Spécial'; // launchers, flash-paks: damage comes from the ammo
+  else damage = melee ? `(STR)${typeLetter}` : tr(tk('Special')); // launchers, flash-paks: damage comes from the ammo (shown translated either way, sheet/common.tsx)
   const elem = dmg.element?.base || dmg.element?.value;
   const modes = s.range?.modes || {};
   const mode = [modes.single_shot && 'CC', modes.semi_auto && 'SA', modes.burst_fire && 'TR', modes.full_auto && 'TA'].filter(Boolean).join('/');
@@ -182,15 +194,15 @@ function weaponOf(it: FoundryDoc, physical: number | null = null): FoundryWeapon
   const clip = CLIP[s.ammo?.clip_type] ?? '';
   const isUnarmed = /^unarmed attack$/i.test(it.name);
   const notes: string[] = [];
-  if (elem) notes.push(`Élément : ${elem}`);
+  if (elem) notes.push(tr(tk('Element: {element}'), { element: elem }));
   const blast = s.thrown?.blast || {};
-  if (num(blast.radius)) notes.push(`Zone : ${blast.radius} m${num(blast.dropoff) ? `, ${blast.dropoff}/m` : ''}`);
+  if (num(blast.radius)) notes.push(num(blast.dropoff) ? tr(tk('Blast: {radius} m, {dropoff}/m'), { radius: blast.radius, dropoff: blast.dropoff }) : tr(tk('Blast: {radius} m'), { radius: blast.radius }));
   if (src(it)) notes.push(`${it.name} (${src(it)})`);
   const out: FoundryWeapon = {
     id: fid(it),
     _en: it.name,
-    name: isUnarmed ? 'Mains nues' : hit?.entry?.nameFr || it.name,
-    category: s.subcategory ? hit?.entry?.categoryFr || s.subcategory : hit?.entry?.categoryFr || (melee ? 'Corps à corps' : cat === 'thrown' ? 'Arme de jet' : 'Arme à distance'),
+    name: isUnarmed ? tr(tk('weapon::Unarmed')) : hit?.entry?.nameFr || it.name,
+    category: s.subcategory ? hit?.entry?.categoryFr || s.subcategory : hit?.entry?.categoryFr || tr(melee ? tk('Melee') : cat === 'thrown' ? tk('Throwing weapon') : tk('Ranged weapon')),
     kind: melee ? 'melee' : 'ranged',
     skill: isUnarmed ? 'unarmed_combat' : skill,
     accuracy: '', // below
@@ -308,6 +320,7 @@ function deviceAtts(it: FoundryDoc): { attack: number; sleaze: number; dataProce
  * ctx: { links, asset(src, kind) → url|'' }
  */
 export function convertSheet(fa: FoundryDoc, ctx: ActorContext = {}): ConvertedSheet {
+  const { tr } = importText(ctx.lang);
   const s = fa.system || {};
   const at = s.attributes || {};
   const items: FoundryDoc[] = Array.isArray(fa.items) ? fa.items.filter((x: unknown) => x && typeof x === 'object') : [];
@@ -336,7 +349,7 @@ export function convertSheet(fa: FoundryDoc, ctx: ActorContext = {}): ConvertedS
     if (attributes.REA - boosts.rea >= 1 && attributes.REA > max) {
       attributes.REA -= boosts.rea;
       augmented.REA = boosts.rea;
-      notesGm.push(`Réaction Foundry ${attributes.REA + boosts.rea} = ${attributes.REA} naturelle + ${boosts.rea} (augmentation).`);
+      notesGm.push(tr(tk('Foundry Reaction {total} = {natural} natural + {bonus} (augmentation).'), { total: attributes.REA + boosts.rea, natural: attributes.REA, bonus: boosts.rea }));
     } else if (attributes.REA <= max) augmented.REA = boosts.rea;
   }
   // Essence: Foundry keeps the base at 6 and derives the value from 'ware.
@@ -417,7 +430,7 @@ export function convertSheet(fa: FoundryDoc, ctx: ActorContext = {}): ConvertedS
   // Physical limit (SR5 p. 46) with the augmented attributes (+4 max), for the thrown weapons' « Physical » accuracy.
   const effAttr = (k: AttrKey): number => (attributes[k] || 1) + Math.min(4, augmented[k] || 0);
   const physicalLimit = Math.ceil((effAttr('STR') * 2 + effAttr('BOD') + effAttr('REA')) / 3);
-  const weapons = items.filter((x) => x.type === 'weapon').map((x) => weaponOf(x, physicalLimit));
+  const weapons = items.filter((x) => x.type === 'weapon').map((x) => weaponOf(x, physicalLimit, tr));
   const armor: FoundryArmor[] = [];
   const gear: Gear[] = [];
   for (const it of items.filter((x) => x.type === 'armor')) {
@@ -426,7 +439,7 @@ export function convertSheet(fa: FoundryDoc, ctx: ActorContext = {}): ConvertedS
     const hit = findCatalog(it.name, 'armor');
     const name = hit?.entry?.nameFr || it.name;
     if (rating <= 0) {
-      gear.push({ id: fid(it), name, category: 'Vêtements', qty: Math.max(1, num(tech(it).quantity, 1)), ...(hit ? { catalogId: hit.entry.id } : {}), notes: it.name !== name ? it.name : undefined });
+      gear.push({ id: fid(it), name, category: tr(tk('Clothing')), qty: Math.max(1, num(tech(it).quantity, 1)), ...(hit ? { catalogId: hit.entry.id } : {}), notes: it.name !== name ? it.name : undefined });
       continue;
     }
     const capacity = num(hit?.entry?.stats?.capacity, 0);
@@ -456,7 +469,7 @@ export function convertSheet(fa: FoundryDoc, ctx: ActorContext = {}): ConvertedS
       grade: (['standard', 'alpha', 'beta', 'delta', 'used', 'gamma', 'omega'].includes(it.system?.grade) ? it.system.grade : 'standard') as WareGrade,
       ...(rating > 0 ? { rating } : {}),
       essence: r2(num(it.system?.essence, 0)),
-      ...(tech(it).equipped === false ? { notes: 'Non installé (Foundry)' } : it.name !== (hit?.entry?.nameFr || it.name) ? { notes: it.name } : {}),
+      ...(tech(it).equipped === false ? { notes: tr(tk('Not installed (Foundry)')) } : it.name !== (hit?.entry?.nameFr || it.name) ? { notes: it.name } : {}),
       ...(hit ? { catalogId: hit.entry.id } : {}),
     };
   });
@@ -491,7 +504,7 @@ export function convertSheet(fa: FoundryDoc, ctx: ActorContext = {}): ConvertedS
     const g: Gear = {
       id: fid(it),
       name: hit?.entry?.nameFr || it.name,
-      category: hit?.entry?.categoryFr || (it.type === 'ammo' ? 'Munitions' : 'Équipement'),
+      category: hit?.entry?.categoryFr || tr(it.type === 'ammo' ? tk('Ammo') : tk('Gear')),
       ...(rating > 0 ? { rating } : {}),
       qty: Math.max(0, Math.round(num(tech(it).quantity, 1))),
     };
@@ -554,8 +567,8 @@ export function convertSheet(fa: FoundryDoc, ctx: ActorContext = {}): ConvertedS
       id: fid(ls), name: ls.name, base, ...(hit ? { catalogId: hit.entry.id } : {}), baseCost: catalogBase || total,
       monthsPaid: Math.max(0, Math.round(num(sy.paid, 1))), primary: i === 0, ...(Object.keys(points).length ? { points } : {}), qualities,
       notes: [
-        sy.permanent ? 'Permanent' : '', num(sy.guests, 0) ? `Invités : ${sy.guests}` : '',
-        total && total !== catalogBase ? `Coût mensuel Foundry : ${total} ¥ (options recalculées)` : '',
+        sy.permanent ? tr(tk('lifestyle::Permanent')) : '', num(sy.guests, 0) ? tr(tk('Guests: {n}'), { n: sy.guests }) : '',
+        total && total !== catalogBase ? tr(tk('Foundry monthly cost: {cost}¥ (options recomputed)'), { cost: total }) : '',
       ].filter(Boolean).join(' · '),
     } as Lifestyle; // monthlyCost is set just below
     l.monthlyCost = Math.round(Number(monthlyCost(l)) || 0);
@@ -656,6 +669,7 @@ export function inventoriesOf(fa: FoundryDoc | null | undefined): { containers: 
 
 /** Foundry vehicle actor → actor.vehicles[] item. */
 export function convertVehicle(va: FoundryDoc, ctx: ActorContext = {}): Vehicle {
+  const { tr } = importText(ctx.lang);
   const s = va.system || {};
   const vs = s.vehicle_stats || {};
   const b = (k: string): number => Math.round(num(vs[k]?.base, 0));
@@ -676,7 +690,7 @@ export function convertVehicle(va: FoundryDoc, ctx: ActorContext = {}): Vehicle 
     pilot: b('pilot'),
     sensor: b('sensor'),
     ...(b('seats') ? { seats: b('seats') } : {}),
-    notes: [s.isDrone ? 'Drone' : '', s.vehicleType ? `Type : ${s.vehicleType}` : '', desc].filter(Boolean).join(' · '),
+    notes: [s.isDrone ? tr(tk('Drone')) : '', s.vehicleType ? tr(tk('Type: {type}'), { type: s.vehicleType }) : '', desc].filter(Boolean).join(' · '),
     ...(hit ? { catalogId: hit.entry.id } : {}),
   };
   if (img && !/^icons\//.test(img) && ctx.asset) out.img = ctx.asset(img, 'img');

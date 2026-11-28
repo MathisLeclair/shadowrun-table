@@ -249,7 +249,7 @@ export default function EnemyGenerator({ game, onClose, onCreated }: EnemyGenera
             <Field label={count > 1 || grunt ? t('Group name (numbered when spawned)') : t('Name')}>
               <div className="row gap-s">
                 <TextInput live value={name || autoName} onChange={setName} />
-                <IconButton icon="↻" title={t('Another name')} onClick={() => setName(makeName(archetype, randomSeed()))} />
+                <IconButton icon="↻" title={t('Another name')} onClick={() => setName(makeName(archetype, randomSeed(), { t }))} />
                 {name && <IconButton icon="↺" title={t('Automatic name')} onClick={() => setName('')} />}
               </div>
             </Field>
@@ -257,7 +257,7 @@ export default function EnemyGenerator({ game, onClose, onCreated }: EnemyGenera
               <Field label={t('Lieutenant’s name')}>
                 <div className="row gap-s">
                   <TextInput live value={ltName || preview?.lieutenant?.name || ''} onChange={setLtName} />
-                  <IconButton icon="↻" title={t('Another name')} onClick={() => setLtName(makeName(archetype, randomSeed(), { lieutenant: true }))} />
+                  <IconButton icon="↻" title={t('Another name')} onClick={() => setLtName(makeName(archetype, randomSeed(), { lieutenant: true, t }))} />
                 </div>
               </Field>
             )}

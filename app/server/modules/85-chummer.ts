@@ -11,11 +11,11 @@ import { normalizeActor, slugify, SUB_LISTS } from '../../client/modules/sheet/s
 import { parseChum5, sha1, ChummerError } from '../lib/chummer/parse.ts';
 import { exportChum5, detachMugshots } from '../lib/chummer/export.ts';
 import { mergeActor, diffActors } from '../lib/chummer/merge.ts';
-import { errorBody, formatSource } from '../lib/i18n.ts';
+import { errorBody, formatSource, isLang } from '../lib/i18n.ts';
 import { errorParam } from '../lib/chummer/messages.ts';
 import { fillActorRefs } from '../lib/bookrefs.ts';
 import type {
-  ActionContext, Actor, ActorId, ChummerLink, ChummerRequest, ChummerState, GameView, I18nMessage, I18nParams, NewLogEntry, ServerModule, SessionUser,
+  ActionContext, Actor, ActorId, ChummerLink, ChummerRequest, ChummerState, GameView, I18nMessage, I18nParams, Lang, NewLogEntry, ServerModule, SessionUser,
   TableState,
 } from '../../shared/types.ts';
 
@@ -126,15 +126,23 @@ function mugshotsFor(actor: Actor): string[] {
   return out;
 }
 
-/** Parse + merge an uploaded file against an existing actor (no state change). `mugshots`: already detached images. */
-function prepareUpdate(actor: Actor, rawXml: string | undefined, fileName: string, now: number, mugshots: string[] | null = null) {
+/** Table language (texts a new import writes into the actor). */
+const tableLang = (state: TableState | null | undefined): Lang => (isLang(state?.config?.lang) ? state!.config.lang : 'fr');
+
+/**
+ * Parse + merge an uploaded file against an existing actor (no state change). `mugshots`: already detached images.
+ * The file and the base are parsed in the language of the first import (chummer.lang, French for old imports), so the
+ * texts the parser writes are the same on the three sides of the merge; `lang` = table language for an actor never imported.
+ */
+function prepareUpdate(actor: Actor, rawXml: string | undefined, fileName: string, now: number, mugshots: string[] | null = null, lang: Lang = 'fr') {
+  const parseLang: Lang = actor.chummer ? actor.chummer.lang || 'fr' : lang;
   // A stored request always keeps its xml (stripped from the views only).
   const det = mugshots ? { xml: rawXml as string, urls: mugshots, mainIndex: 0 } : detachMugshots(String(rawXml).replace(/^﻿/, ''), saveMugshot);
-  const parsed = parseChum5(det.xml, { fileName, now });
+  const parsed = parseChum5(det.xml, { fileName, now, lang: parseLang });
   let base: Actor | null = null;
   if (actor.chummer?.xml) {
     try {
-      base = parseChum5(actor.chummer.xml, { keepXml: false, makeId: () => 'base' }).actor as unknown as Actor;
+      base = parseChum5(actor.chummer.xml, { keepXml: false, makeId: () => 'base', lang: parseLang }).actor as unknown as Actor;
     } catch {
       base = null;
     }
@@ -226,7 +234,7 @@ const mod: ServerModule<HttpApp> = {
         if (approve) {
           let prep: ReturnType<typeof prepareUpdate>;
           try {
-            prep = prepareUpdate(actor, r.xml, r.fileName, ctx.now, r.mugshots || []);
+            prep = prepareUpdate(actor, r.xml, r.fileName, ctx.now, r.mugshots || [], ctx.lang);
           } catch (e) {
             const err = e as ChummerFailure;
             return ctx.fail(err.i18nKey || err.message || tk('Unreadable file'), err.i18nParams);
@@ -326,7 +334,7 @@ const mod: ServerModule<HttpApp> = {
         delete actor.training;
       } else if (raw.includes('<character')) {
         const det = detachMugshots(raw.replace(/^﻿/, ''), saveMugshot);
-        const parsed = parseChum5(det.xml, { fileName, now: Date.now() });
+        const parsed = parseChum5(det.xml, { fileName, now: Date.now(), lang: tableLang(state) });
         actor = parsed.actor;
         warnings = parsed.warnings;
         warningsI18n = parsed.warningsI18n;
@@ -382,7 +390,7 @@ const mod: ServerModule<HttpApp> = {
       const raw = bodyText(req);
       if (!checkChum5(raw, res)) return;
       const fileName = cleanFileName(req.query.fileName || req.headers['x-filename'] || '');
-      const prep = prepareUpdate(actor, raw, fileName, Date.now());
+      const prep = prepareUpdate(actor, raw, fileName, Date.now(), null, tableLang(state));
       const gm = req.user.role === 'gm';
       if (gm || s.allowPlayerImport) {
         applyUpdate(state, actor.id, prep.merged, { by: gm ? null : req.user.name, fileName, diff: prep.diff, addLog });
@@ -429,7 +437,7 @@ const mod: ServerModule<HttpApp> = {
       const raw = bodyText(req);
       if (!checkChum5(raw, res)) return;
       const fileName = cleanFileName(req.query.fileName || req.headers['x-filename'] || '');
-      const prep = prepareUpdate(actor, raw, fileName, Date.now());
+      const prep = prepareUpdate(actor, raw, fileName, Date.now(), null, tableLang(getState()));
       const s = slice(getState()!);
       res.json({
         actorId: actor.id, fileName, diff: prep.diff, warnings: prep.warnings, warningsI18n: prep.warningsI18n, linked: prep.linked, created: prep.info.created,
@@ -462,6 +470,8 @@ const mod: ServerModule<HttpApp> = {
       actor.chummer = {
         ...(actor.chummer || {}), xml: stored.xml, ...(stored.urls.length ? { mugshots: stored.urls } : {}), fileName: actor.chummer?.fileName || `${fileBase}.chum5`, exportedAt: now, syncedAt: now,
         sourceHash: sha1(result.xml), created: /<created>True<\/created>/.test(result.xml), appVersion: actor.chummer?.appVersion || '5.226.0',
+        // A first link: later re-imports of this file write their texts in the table language.
+        ...(actor.chummer ? {} : { lang: tableLang(state) }),
       };
       done();
       res.setHeader('Content-Type', 'application/octet-stream');

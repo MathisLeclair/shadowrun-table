@@ -363,7 +363,7 @@ await test('test claims: a test key only on its own attributes (no skill, no wea
 await test('imports keep the physical limit as « Physical »: Chummer Unarmed Attack, Foundry thrown / unarmed weapons', () => {
   const xml = fs.readFileSync(path.join(ROOT, 'tools', 'fixtures', 'chummer-test.chum5'), 'utf8');
   const { actor } = parseChum5(xml, { keepXml: false });
-  const unarmed = actor.weapons.find((w) => w.name === 'Mains nues')!;
+  const unarmed = actor.weapons.find((w) => w.name === 'Unarmed')!; // texts in English by default (« Mains nues » on a French table)
   assert.equal(unarmed.accuracy, 'Physical');
   const fa = {
     _id: 'fa1', name: 'Test', type: 'character',

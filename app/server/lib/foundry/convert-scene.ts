@@ -4,7 +4,11 @@
 import { slug } from '../../../shared/util.ts';
 import type { FoundryDoc } from './world.ts';
 import type { AssetFn } from './assets.ts';
-import type { GameMap, Lighting, MapLight, MapNote, MapTheme, MapWall } from '../../../shared/types.ts';
+import type { GameMap, Lang, Lighting, MapLight, MapNote, MapTheme, MapWall } from '../../../shared/types.ts';
+import { importText } from './convert-actor.ts';
+
+/** Marks an English key for tools/i18n-check.ts. */
+const tk = (s: string): string => s;
 
 /** Context of convertScene() (see its doc). */
 export interface SceneContext {
@@ -16,6 +20,8 @@ export interface SceneContext {
   journalNames?: Record<string, string>;
   allScenes?: FoundryDoc[];
   now?: number;
+  /** Language of the texts the import writes (description, default names). */
+  lang?: Lang;
 }
 
 const MAX_DIM = 160;
@@ -89,6 +95,7 @@ function themeFor(name: string, folder: string): MapTheme {
  * Returns null when the scene has no background image.
  */
 export function convertScene(scene: FoundryDoc, ctx: SceneContext = {}): GameMap | null {
+  const { tr, trn } = importText(ctx.lang);
   const bg = sceneBackground(scene);
   if (!bg) return null;
   const g = scene.grid || {};
@@ -164,7 +171,7 @@ export function convertScene(scene: FoundryDoc, ctx: SceneContext = {}): GameMap
     const x = Math.floor(cx);
     const y = Math.floor(cy);
     if (x < 0 || y < 0 || x >= width || y >= height) continue;
-    const label = n.text || ctx.journalNames?.[n.entryId] || 'Note Foundry';
+    const label = n.text || ctx.journalNames?.[n.entryId] || tr(tk('Foundry note'));
     notes.push({ id: `n_${n._id}`, x, y, text: String(label).slice(0, 400), gmOnly: true });
   }
 
@@ -173,25 +180,32 @@ export function convertScene(scene: FoundryDoc, ctx: SceneContext = {}): GameMap
   for (const t of scene.tokens || []) {
     const actorName = ctx.actorNames?.[t.actorId] || t.name || '?';
     const tpl = ctx.templateFor ? ctx.templateFor(t.actorId) : null;
-    const key = `${t.name || actorName}${tpl ? ` (\`${tpl}\`)` : ''}${t.hidden ? ' [caché]' : ''}`;
+    const key = `${t.name || actorName}${tpl ? ` (\`${tpl}\`)` : ''}${t.hidden ? ` [${tr(tk('token::hidden'))}]` : ''}`;
     tokCount.set(key, (tokCount.get(key) || 0) + 1);
   }
   const tokenText = [...tokCount.entries()].map(([k, n]) => `${n}× ${k}`).join(', ');
 
   const bgUrl = ctx.asset ? ctx.asset(bg, 'scene') : bg;
+  const origin = { world: `\`${ctx.worldId || ''}\``, scene: scene.name, folder };
+  const grid = { w: W, h: H, size, distance: g.distance ?? 1, units: g.units || 'm' };
+  const doorText = doors ? trn(doors, tk('{n} door'), tk('{n} doors')) : '';
+  const secretText = secret ? trn(secret, tk('{n} secret'), tk('pl::{n} secret')) : '';
+  const wallParams = { n: walls.length, doors: doorText, secret: secretText };
+  const wallText = doors ? (secret ? tr(tk('Walls: {n} (including {doors}, {secret})'), wallParams) : tr(tk('Walls: {n} (including {doors})'), wallParams)) : tr(tk('Walls: {n}'), wallParams);
+  const clippedText = clipped ? ` — ${trn(clipped, tk('{n} off-map wall ignored'), tk('{n} off-map walls ignored'))}` : '';
   const desc = [
-    `Importée de **Foundry VTT** (monde \`${ctx.worldId || ''}\`, scène « ${scene.name} »${folder ? `, dossier ${folder}` : ''}).`,
-    `Image ${W}×${H} px, grille ${size} px = ${g.distance ?? 1} ${g.units || 'm'}${num(g.type) > 1 ? ' (grille hexagonale dans Foundry, ici carrée)' : ''}.`,
-    `Murs : ${walls.length}${doors ? ` (dont ${doors} porte${doors > 1 ? 's' : ''}${secret ? `, ${secret} secrète${secret > 1 ? 's' : ''}` : ''})` : ''}${clipped ? ` — ${clipped} hors cadre ignoré${clipped > 1 ? 's' : ''}` : ''}. Lumières : ${lights.length}.`,
-    tokenText ? `Jetons dans Foundry : ${tokenText}.` : '',
-    width * size < W || height * size < H ? `Attention : carte tronquée à ${MAX_DIM} cases.` : '',
+    folder ? tr(tk('Imported from **Foundry VTT** (world {world}, scene “{scene}”, folder {folder}).'), origin) : tr(tk('Imported from **Foundry VTT** (world {world}, scene “{scene}”).'), origin),
+    num(g.type) > 1 ? tr(tk('Image {w}×{h} px, grid {size} px = {distance} {units} (hex grid in Foundry, square here).'), grid) : tr(tk('Image {w}×{h} px, grid {size} px = {distance} {units}.'), grid),
+    `${wallText}${clippedText}. ${tr(tk('Lights: {n}.'), { n: lights.length })}`,
+    tokenText ? tr(tk('Tokens in Foundry: {list}.'), { list: tokenText }) : '',
+    width * size < W || height * size < H ? tr(tk('Warning: map truncated to {n} cells.'), { n: MAX_DIM }) : '',
   ]
     .filter(Boolean)
     .join('\n\n');
 
   return {
     id,
-    name: String(scene.navName || scene.name || 'Scène Foundry').slice(0, 80),
+    name: String(scene.navName || scene.name || tr(tk('Foundry scene'))).slice(0, 80),
     folder: (folder ? `Foundry / ${folder}` : 'Foundry').slice(0, 60),
     description: desc,
     width,

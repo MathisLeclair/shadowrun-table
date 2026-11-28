@@ -4,6 +4,7 @@
 import crypto from 'node:crypto';
 import { parseXml, XmlError, type Element, type XmlDocument } from './xml.ts';
 import { i18nError, errorParam, warningList } from './messages.ts';
+import { t as translate, tn as translateN, SOURCE_LANG } from '../i18n.ts';
 import { skillsData, appSkillId, metatypeData, METATYPE_FROM_EN, frenchName, frenchCategory, gradeTable, norm, appCatalog, findDataItem, type DataKind } from './data.ts';
 import { SKILL_BY_ID } from '../../../shared/sr5.ts';
 import { blankActor, categoryToSkill, evalFormula, MELEE_SKILLS, LIFESTYLE_BASES } from '../../../client/modules/sheet/sheet-data.ts';
@@ -11,7 +12,7 @@ import { monthlyCost } from '../../../shared/lifestyle.ts';
 import { uid } from '../../../shared/util.ts';
 import { guessContainerKind, ammoKindOf, isThrownExplosive, parseAmmo } from '../../../client/modules/sheet/inventory.ts';
 import type {
-  Accessory, Actor, AmmoKind, ArmorMod, Augmentation, AttrKey, Container, ContainerKind, I18nMessage, ItemBase, KnowledgeSkill, KnowledgeType, Lifestyle,
+  Accessory, Actor, AmmoKind, ArmorMod, Augmentation, AttrKey, Container, ContainerKind, I18nMessage, I18nParams, ItemBase, KnowledgeSkill, KnowledgeType, Lang, Lifestyle,
   LifestyleQuality, MountPoint, VehicleMod, Weapon,
 } from '../../../shared/types.ts';
 
@@ -25,6 +26,11 @@ export interface ParseOptions {
   now?: number;
   makeId?: MakeId;
   keepXml?: boolean;
+  /**
+   * Language of the texts the parser writes into the actor (default name, notes, bio headings): the table language for a
+   * new import, the actor's `chummer.lang` when re-parsing for a merge or an export (same texts on both sides). Default: English.
+   */
+  lang?: Lang;
 }
 /** parseChum5() result. */
 export interface ParseResult {
@@ -59,8 +65,13 @@ interface Locations {
 /** Lifestyle while parsing: `_tenant` (Chummer primary tenant) is removed before returning. */
 type TenantLifestyle = Lifestyle & { _tenant?: boolean };
 
-/** User-facing import error (French message, no stack needed). */
+/** User-facing import error (English message + i18n key, no stack needed). */
 export class ChummerError extends Error {}
+
+/** Marks an English key for tools/i18n-check.ts (rendered with the parse language). */
+const tk = (s: string): string => s;
+/** First part of an enemy contact's notes (export.ts strips it back: « ENEMY », « ENNEMI » on French tables). */
+export const ENEMY_NOTE = tk('ENEMY');
 
 export const APP_ATTRS: AttrKey[] = ['BOD', 'AGI', 'REA', 'STR', 'WIL', 'LOG', 'INT', 'CHA', 'EDG', 'MAG', 'RES'];
 const KNO_TYPES: Record<string, KnowledgeType> = { street: 'street', academic: 'academic', professional: 'professional', interest: 'interest', language: 'language' };
@@ -172,10 +183,12 @@ function improvementsOf(c: Element): Improvement[] {
 }
 
 /**
- * Parse a .chum5 file. Returns { actor, warnings (French), warningsI18n ([{ t, params }]), info: { created, appVersion, buildMethod, mugshot } }.
- * Throws ChummerError (French message + i18nKey/i18nParams) when the file is not a Chummer character.
+ * Parse a .chum5 file. Returns { actor, warnings (English), warningsI18n ([{ t, params }]), info: { created, appVersion, buildMethod, mugshot } }.
+ * Throws ChummerError (English message + i18nKey/i18nParams) when the file is not a Chummer character.
  */
-export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), makeId = uid, keepXml = true }: ParseOptions = {}): ParseResult {
+export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), makeId = uid, keepXml = true, lang = SOURCE_LANG }: ParseOptions = {}): ParseResult {
+  const tr = (key: string, params?: I18nParams): string => translate(lang, key, params);
+  const trn = (n: number, one: string, other: string): string => translateN(lang, n, one, other);
   let doc: XmlDocument;
   try {
     doc = parseXml(xml);
@@ -194,34 +207,34 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
 
   const alias = v('alias');
   const realName = v('name');
-  const a = blankActor('pc', (alias || realName || 'Runner importé').slice(0, 80)) as unknown as ParsedActor;
+  const a = blankActor('pc', (alias || realName || tr(tk('Imported runner'))).slice(0, 80)) as unknown as ParsedActor;
   if (alias && realName && realName !== alias) a.realName = realName.slice(0, 120);
   const metaEn = v('metatype') || 'Human';
   a.metatype = METATYPE_FROM_EN[metaEn] || metaEn;
   if (!METATYPE_FROM_EN[metaEn]) warn.add({ t: 'Metatype “{metatype}” unknown to the app (kept as is).', params: { metatype: metaEn } });
   const gender = v('gender') || v('sex');
-  a.gender = { Male: 'Homme', Female: 'Femme' }[gender] || gender;
+  a.gender = gender === 'Male' ? tr(tk('gender::Male')) : gender === 'Female' ? tr(tk('gender::Female')) : gender;
   const age = v('age');
   if (/^\d{1,3}$/.test(age)) a.age = Number(age);
   a.player = v('playername');
   a.concept = longText(v('concept')).split('\n')[0].slice(0, 200);
 
   // Free text
-  const look = [['Yeux', 'eyes'], ['Cheveux', 'hair'], ['Taille', 'height'], ['Poids', 'weight'], ['Peau', 'skin']]
-    .map(([fr, k]) => (v(k) ? `${fr} : ${v(k)}` : ''))
+  const look = [[tk('Eyes: {value}'), 'eyes'], [tk('Hair: {value}'), 'hair'], [tk('Height: {value}'), 'height'], [tk('Weight: {value}'), 'weight'], [tk('Skin: {value}'), 'skin']]
+    .map(([key, k]) => (v(k) ? tr(key, { value: v(k) }) : ''))
     .filter(Boolean)
     .join(' · ');
   const bio = [];
   const desc = longText(c.val('description'));
   if (desc) bio.push(desc);
-  if (look) bio.push(`**Apparence** — ${look}`);
-  if (age && !/^\d{1,3}$/.test(age)) bio.push(`**Âge** — ${age}`);
+  if (look) bio.push(tr(tk('**Appearance** — {look}'), { look }));
+  if (age && !/^\d{1,3}$/.test(age)) bio.push(tr(tk('**Age** — {age}'), { age }));
   const bg = longText(c.val('background'));
-  if (bg) bio.push(`### Passé\n\n${bg}`);
+  if (bg) bio.push(`### ${tr(tk('chummer::Background'))}\n\n${bg}`);
   const concept = longText(c.val('concept'));
-  if (concept.includes('\n')) bio.push(`### Concept\n\n${concept}`);
+  if (concept.includes('\n')) bio.push(`### ${tr(tk('Concept'))}\n\n${concept}`);
   a.bio = bio.join('\n\n');
-  const notes = [longText(c.val('notes')), longText(c.val('gamenotes')) ? `### Notes de partie\n\n${longText(c.val('gamenotes'))}` : ''].filter(Boolean);
+  const notes = [longText(c.val('notes')), longText(c.val('gamenotes')) ? `### ${tr(tk('Game notes'))}\n\n${longText(c.val('gamenotes'))}` : ''].filter(Boolean);
   a.notes = notes.join('\n\n');
   if (v('metavariant')) a.metavariant = v('metavariant');
 
@@ -324,7 +337,7 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
     const positive = q.val('qualitytype') !== 'Negative';
     const karma = Math.abs(num(q.val('bp'))) * (positive ? 1 : -1);
     const src = q.val('qualitysource');
-    const note = [srcNote(q), /^Metatype/.test(src) ? 'trait du métatype' : '', longText(q.val('notes'))].filter(Boolean).join(' — ');
+    const note = [srcNote(q), /^Metatype/.test(src) ? tr(tk('metatype trait')) : '', longText(q.val('notes'))].filter(Boolean).join(' — ');
     a.qualities.push(withRef({ id: makeId('itm'), name: displayName('qualities', q), karma, positive, ...(note ? { notes: note } : {}) }, q));
   }
 
@@ -344,7 +357,7 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
     }
     return gearQtys.get(String(guid || '').trim().toLowerCase()) || 0;
   };
-  // Weapons. Chummer's built-in Unarmed Attack becomes the app's « Mains nues » (accuracy « Physical »: the physical limit with its
+  // Weapons. Chummer's built-in Unarmed Attack becomes the app's « Unarmed » (« Mains nues » on a French table, isUnarmed()) (accuracy « Physical »: the physical limit with its
   // modifiers, recomputed when STR / BOD / REA change — shared/modifiers.js weaponAccuracy).
   let unarmedDone = false;
   for (const w of c.get('weapons')?.all('weapon') || []) {
@@ -354,7 +367,7 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
       if (unarmedDone) continue;
       unarmedDone = true;
       a.weapons.push(withRef<Weapon>({
-        id: makeId('itm'), name: 'Mains nues', category: 'Corps à corps', kind: 'melee', skill: 'unarmed_combat', accuracy: 'Physical',
+        id: makeId('itm'), name: tr(tk('weapon::Unarmed')), category: tr(tk('Melee')), kind: 'melee', skill: 'unarmed_combat', accuracy: 'Physical',
         damage: w.val('damage').replace(/\{STR\}/g, 'STR') || '(STR)S', ap: 0, mode: '', rc: 0, ammo: '', reach: num(w.val('reach')), notes: 'Unarmed Attack (SR5 132)',
       }, w));
       continue;
@@ -390,7 +403,7 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
       id: makeId('itm'), name: displayName('armor', ar), rating, equipped: bool(ar.val('equipped')), ...(raw.trim().startsWith('+') ? { stack: true } : {}),
       ...(capacity ? { capacity } : {}), ...(mods.length ? { mods } : {}), ...(note ? { notes: note } : {}),
     }, ar), ar, locs));
-    for (const g of ar.get('gears')?.all('gear') || []) pushGear(g, `dans ${ar.val('name')}`);
+    for (const g of ar.get('gears')?.all('gear') || []) pushGear(g, tr(tk('in {name}'), { name: ar.val('name') }));
   }
 
   // Cyberware / bioware (children flattened, flagged as included)
@@ -407,15 +420,16 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
     const ess = Math.round((base || 0) * mult * 10000) / 10000;
     essLoss += ess;
     const g = gradeName.toLowerCase();
-    const note = [parentName ? `Sous-système de ${parentName}` : '', cw.val('location') ? `côté ${cw.val('location') === 'Left' ? 'gauche' : cw.val('location') === 'Right' ? 'droit' : cw.val('location')}` : '', srcNote(cw), longText(cw.val('notes'))].filter(Boolean).join(' — ');
+    const side = cw.val('location');
+    const note = [parentName ? tr(tk('Subsystem of {name}'), { name: parentName }) : '', side ? (side === 'Left' ? tr(tk('left side')) : side === 'Right' ? tr(tk('right side')) : tr(tk('side: {side}'), { side })) : '', srcNote(cw), longText(cw.val('notes'))].filter(Boolean).join(' — ');
     a.augmentations.push(withRef<Augmentation>({
       id: makeId('itm'), name: displayName(kind, cw), kind,
       grade: g.includes('alpha') ? 'alpha' : g.includes('beta') ? 'beta' : g.includes('delta') ? 'delta' : g.includes('used') ? 'used' : 'standard',
       ...(rating ? { rating } : {}), essence: ess, ...(note ? { notes: note } : {}),
     }, cw));
     for (const ch of cw.get('children')?.all('cyberware') || []) pushWare(ch, cw.val('name'));
-    for (const gg of cw.get('gears')?.all('gear') || []) pushGear(gg, `dans ${cw.val('name')}`);
-    for (const ww of cw.get('weapons')?.all('weapon') || []) a.weapons.push(weaponFromNode(ww, makeId, `intégrée à ${cw.val('name')}`));
+    for (const gg of cw.get('gears')?.all('gear') || []) pushGear(gg, tr(tk('in {name}'), { name: cw.val('name') }));
+    for (const ww of cw.get('weapons')?.all('weapon') || []) a.weapons.push(weaponFromNode(ww, makeId, tr(tk('built into {name}'), { name: cw.val('name') })));
   };
   for (const cw of c.get('cyberwares')?.all('cyberware') || []) pushWare(cw, null);
   const totEss = v('totaless');
@@ -434,7 +448,7 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
     if (/^ID\/Credsticks$/i.test(category) && /\bSIN\b/i.test(name)) {
       const licenses = (g.get('children')?.all('gear') || []).filter((x) => /license/i.test(x.val('name'))).map((x) => x.val('extra') || x.val('name'));
       a.sins.push(withRef({ id: makeId('itm'), name: g.val('extra') || name, rating: num(g.val('rating')), licenses }, g));
-      for (const ch of g.get('children')?.all('gear') || []) if (!/license/i.test(ch.val('name'))) pushGear(ch, `avec ${g.val('extra') || name}`);
+      for (const ch of g.get('children')?.all('gear') || []) if (!/license/i.test(ch.val('name'))) pushGear(ch, tr(tk('with {name}'), { name: g.val('extra') || name }));
       return;
     }
     if (MATRIX_CATS.test(category) && !a.matrix) {
@@ -449,7 +463,7 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
     }
     const rating = num(g.val('rating'));
     const loc = locs.resolve(g.val('location'));
-    const note = [where || '', g.val('location') && !loc ? `emplacement : ${g.val('location')}` : '', srcNote(g), longText(g.val('notes'))].filter(Boolean).join(' — ');
+    const note = [where || '', g.val('location') && !loc ? tr(tk('location: {location}'), { location: g.val('location') }) : '', srcNote(g), longText(g.val('notes'))].filter(Boolean).join(' — ');
     const custom = g.val('gearname');
     // Ammunition: Chummer <ammoforweapontype> (file, else data) tells which weapons it feeds (client/modules/sheet/inventory.js).
     const ammoFor = /^Ammunition$/i.test(category) ? g.val('ammoforweapontype') || findDataItem('gear', { id: sourceOf(g) })?.val('ammoforweapontype') || '' : '';
@@ -457,7 +471,7 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
       id: makeId('itm'), name: custom || displayName('gear', g), category: frenchCategory('gear', sourceOf(g)) || category, ...(rating ? { rating } : {}), qty: num(g.val('qty'), 1) || 1, ...(note ? { notes: note } : {}),
       ...(loc ? { location: loc } : {}), ...(ammoFor ? { ammoFor: String(ammoFor).slice(0, 40) } : {}),
     }, g));
-    for (const ch of g.get('children')?.all('gear') || []) pushGear(ch, `dans ${custom || name}`);
+    for (const ch of g.get('children')?.all('gear') || []) pushGear(ch, tr(tk('in {name}'), { name: custom || name }));
   }
   for (const g of c.get('gears')?.all('gear') || []) pushGear(g, '');
   // Loaded ammunition of the weapons (the gear of their active clip).
@@ -475,7 +489,7 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
     vh.walk((n) => {
       if (n.name === 'weapon' && n.val('name')) weapons.push(n.val('name'));
     });
-    const note = [srcNote(vh), weapons.length ? `Armes : ${weapons.join(', ')}` : '', longText(vh.val('notes'))].filter(Boolean).join(' — ');
+    const note = [srcNote(vh), weapons.length ? tr(tk('Weapons: {list}'), { list: weapons.join(', ') }) : '', longText(vh.val('notes'))].filter(Boolean).join(' — ');
     a.vehicles.push(withRef({
       id: makeId('itm'), name: vh.val('vehiclename') || displayName('vehicles', vh), handling: vh.val('handling'), speed: vh.val('speed'), accel: vh.val('accel'),
       body: num(vh.val('body')), armor: num(vh.val('armor')), pilot: num(vh.val('pilot')), sensor: num(vh.val('sensor')), seats: num(vh.val('seats')),
@@ -487,7 +501,7 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
   for (const ct of c.get('contacts')?.all('contact') || []) {
     if (!ct.val('name')) continue;
     const enemy = ct.val('type') === 'Enemy';
-    const note = [enemy ? 'ENNEMI' : '', ct.val('location') ? `Lieu : ${ct.val('location')}` : '', longText(ct.val('notes'))].filter(Boolean).join(' — ');
+    const note = [enemy ? tr(ENEMY_NOTE) : '', ct.val('location') ? tr(tk('Place: {place}'), { place: ct.val('location') }) : '', longText(ct.val('notes'))].filter(Boolean).join(' — ');
     a.contacts.push(withRef({ id: makeId('itm'), name: ct.val('name'), role: ct.val('role'), connection: num(ct.val('connection'), 1), loyalty: num(ct.val('loyalty'), 1), ...(note ? { notes: note } : {}) }, ct));
   }
 
@@ -505,7 +519,7 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
   // Spells & complex forms
   for (const s of c.get('spells')?.all('spell') || []) {
     if (!s.val('name')) continue;
-    const flags = [bool(s.val('alchemical')) ? 'alchimique' : '', bool(s.val('extended')) ? 'étendu' : '', bool(s.val('limited')) ? 'limité' : ''].filter(Boolean);
+    const flags = [bool(s.val('alchemical')) ? tr(tk('spell::alchemical')) : '', bool(s.val('extended')) ? tr(tk('spell::extended')) : '', bool(s.val('limited')) ? tr(tk('spell::limited')) : ''].filter(Boolean);
     const note = [srcNote(s), flags.join(', ')].filter(Boolean).join(' — ');
     a.spells.push(withRef({ id: makeId('itm'), name: displayName('spells', s), category: s.val('category'), type: s.val('type'), range: s.val('range'), duration: s.val('duration'), drain: s.val('dv'), ...(note ? { notes: note } : {}) }, s));
   }
@@ -521,7 +535,7 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
     const points = advanced ? { comforts: num(ls.val('basecomforts')) + num(ls.val('comforts')), security: num(ls.val('basesecurity')) + num(ls.val('security')), neighborhood: num(ls.val('basearea')) + num(ls.val('area')) } : null;
     const roommates = num(ls.val('roommates'));
     const pct = num(ls.val('percentage'), 100);
-    const notes = [longText(ls.val('notes')), roommates ? `${roommates} colocataire(s)` : '', pct !== 100 ? `part payée : ${pct} %` : ''].filter(Boolean).join(' — ');
+    const notes = [longText(ls.val('notes')), roommates ? trn(roommates, tk('{n} roommate'), tk('{n} roommates')) : '', pct !== 100 ? tr(tk('share paid: {pct}%'), { pct }) : ''].filter(Boolean).join(' — ');
     // monthlyCost is set below (same key order as before).
     const item = {
       id: makeId('ls'), name: ls.val('name') || base, base, baseCost: Math.round(num(ls.val('cost'), (LIFESTYLE_BASES as Record<string, { cost: number } | undefined>)[base]?.cost || 0)), ...(extra > 0 ? { extraCost: Math.round(extra) } : {}), monthsPaid: num(ls.val('months')),
@@ -558,18 +572,23 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
   const extras: string[] = [];
   const grade = num(v('initiategrade'));
   const metamagics = (c.get('metamagics')?.all('metamagic') || []).map((m) => m.val('name')).filter(Boolean);
-  if (grade) extras.push(`Initié de grade ${grade}${metamagics.length ? ` — métamagies : ${metamagics.join(', ')}` : ''}`);
+  const list = metamagics.join(', ');
+  if (grade) extras.push(metamagics.length ? tr(tk('Initiate grade {grade} — metamagics: {list}'), { grade, list }) : tr(tk('Initiate grade {grade}'), { grade }));
   const sub = num(v('submersiongrade'));
-  if (sub) extras.push(`Submergé de grade ${sub}${metamagics.length ? ` — échos : ${metamagics.join(', ')}` : ''}`);
+  if (sub) extras.push(metamagics.length ? tr(tk('Submersion grade {grade} — echoes: {list}'), { grade: sub, list }) : tr(tk('Submersion grade {grade}'), { grade: sub }));
   const foci = (c.get('foci')?.all('focus') || []).map((f) => f.val('name')).filter(Boolean);
-  if (foci.length) extras.push(`Focus liés : ${foci.join(', ')}`);
-  const spirits = (c.get('spirits')?.all('spirit') || []).map((s) => `${s.val('name')}${s.val('force') ? ` (Puissance ${s.val('force')})` : ''}${s.val('services') ? `, ${s.val('services')} service(s)` : ''}`).filter((x) => x.trim());
-  if (spirits.length) extras.push(`Esprits / sprites : ${spirits.join(' ; ')}`);
+  if (foci.length) extras.push(tr(tk('Bonded foci: {list}'), { list: foci.join(', ') }));
+  const spirits = (c.get('spirits')?.all('spirit') || []).map((s) => {
+    const force = s.val('force') ? ` (${tr(tk('Force {force}'), { force: s.val('force') })})` : '';
+    const services = s.val('services') ? `, ${trn(num(s.val('services')), tk('{n} service'), tk('{n} services'))}` : '';
+    return `${s.val('name')}${force}${services}`;
+  }).filter((x) => x.trim());
+  if (spirits.length) extras.push(tr(tk('Spirits / sprites: {list}'), { list: spirits.join(' ; ') }));
   const mentor = (c.get('mentorspirits')?.all('mentorspirit') || []).map((m) => m.val('name')).filter(Boolean);
-  if (mentor.length) extras.push(`Mentor : ${mentor.join(', ')}`);
+  if (mentor.length) extras.push(tr(tk('Mentor: {list}'), { list: mentor.join(', ') }));
   const tradition = c.get('tradition');
-  if (tradition?.val('name')) extras.push(`Tradition : ${tradition.val('name')}`);
-  if (extras.length) a.bio = [a.bio, `### Données Chummer\n\n${extras.map((x) => `- ${x}`).join('\n')}`].filter(Boolean).join('\n\n');
+  if (tradition?.val('name')) extras.push(tr(tk('Tradition: {name}'), { name: tradition.val('name') }));
+  if (extras.length) a.bio = [a.bio, `### ${tr(tk('Chummer data'))}\n\n${extras.map((x) => `- ${x}`).join('\n')}`].filter(Boolean).join('\n\n');
 
   // Condition monitor (Chummer stores overflow inside physicalcmfilled)
   const bodTotal = (a.attributes.BOD || 1) + (a.augmented?.BOD || 0);
@@ -588,13 +607,14 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
   const mainIdx = Math.max(0, num(v('mainmugshotindex'), 0));
   const mugshot = (mugshots[mainIdx] || mugshots[0])?.text?.trim() || null;
 
-  a.history = [{ ts: now, chummer: true, text: `Import Chummer5${fileName ? ` (${fileName})` : ''}`, karma: a.karma, nuyen: a.nuyen }];
+  const imported = fileName ? { key: tk('Chummer5 import ({file})'), params: { file: fileName } } : { key: tk('Chummer5 import') };
+  a.history = [{ ts: now, chummer: true, text: translate(SOURCE_LANG, imported.key, imported.params), i18n: imported, karma: a.karma, nuyen: a.nuyen }];
   const meta = metatypeData(metaEn);
   if (!meta && METATYPE_FROM_EN[metaEn]) warn.add({ t: 'Chummer metatype data not found.' });
   if (keepXml) {
     a.chummer = {
       xml: String(xml).replace(/^﻿/, ''), fileName: String(fileName || '').slice(0, 200), importedAt: now, syncedAt: now, sourceHash: sha1(xml),
-      created, appVersion: v('appversion'),
+      created, appVersion: v('appversion'), lang,
     };
   }
   return { actor: a, warnings, warningsI18n: warn.i18n, info: { created, appVersion: v('appversion'), buildMethod: v('buildmethod'), mugshot } };

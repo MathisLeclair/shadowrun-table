@@ -5,12 +5,12 @@
 // Output = a bestiary Template (ARCHITECTURE.md: Actor schema minus runtime fields + folder/description),
 // accepted as-is by sanitizeTemplate() in server/modules/30-combat.js.
 import { METATYPES, SKILL_BY_ID, attr } from './sr5.ts';
-import { METATYPE_MIN } from './chargen.ts';
+import { METATYPE_MIN, fill } from './chargen.ts';
 import { bonusFromEffects } from './modifiers.ts';
 import type { ChargenRules } from './chargen.ts';
 import type {
   ActorVision, AdeptPower, Armor, AttrKey, Attributes, Augmentation, CatalogBonus, CatalogFile, CatalogItem, CatalogWeaponProfile, Disposition, Formula,
-  Gear, ItemBonus, Skill, SpellStats, Template, VehicleStats, Weapon, WareGrade, WareKind,
+  Gear, I18nParams, ItemBonus, Skill, SpellStats, Template, VehicleStats, Weapon, WareGrade, WareKind,
 } from './types.ts';
 
 // ---------------------------------------------------------------------------
@@ -18,6 +18,8 @@ import type {
 // ---------------------------------------------------------------------------
 /** Picks one element of an array with the generator's RNG. */
 export type Picker = <T>(arr: T[]) => T;
+/** Translator of the texts written into a template: the table language's t() on the server, the UI's t() in the browser. Default: English source text. */
+export type NpcTranslator = (key: string, params?: I18nParams | null) => string;
 /** Kit 'ware row: [catalog file, name, rating]. */
 export type KitWare = [file: 'cyberware' | 'bioware', name: string, rating: number | null];
 /** Kit gear row: [name, rating, qty]. */
@@ -34,6 +36,7 @@ interface ArchetypeBase {
   id: string;
   label: string;
   icon: string;
+  /** English key. */
   concept: string;
   color: string;
   grunt: boolean;
@@ -41,7 +44,9 @@ interface ArchetypeBase {
   disposition?: Exclude<Disposition, 'pc'>;
   spirit?: boolean;
   toxic?: boolean;
-  group: (pick: Picker) => string;
+  /** Unit name (English key rendered with the translator). */
+  group: (pick: Picker, tr: NpcTranslator) => string;
+  /** English key. */
   tactics: string;
 }
 export interface MetahumanArchetype extends ArchetypeBase {
@@ -91,6 +96,8 @@ export interface GenerateOptions {
 export interface NpcgenCtx {
   find?: (file: CatalogFile, name: string) => CatalogItem | null;
   rules?: Pick<ChargenRules, 'quote' | 'evalFormula'>;
+  /** Language of the generated texts (concept, description, tactics, notes…): the table language's t(). Default: English. */
+  t?: NpcTranslator;
 }
 /** A generated bestiary template (not stored: the server adds id / type and sanitizes it). */
 export interface GeneratedTemplate extends Omit<Template, 'id' | 'type' | 'description' | 'augmented' | 'concept'> {
@@ -107,7 +114,9 @@ type Finder = (file: CatalogFile, name: string) => CatalogItem | null;
 type CoreKey = 'BOD' | 'AGI' | 'REA' | 'STR' | 'WIL' | 'LOG' | 'INT' | 'CHA';
 
 // i18n: tier/archetype labels and texts are English dictionary keys (French in client/i18n/fr/chargen.json), shown with t().
-// Generated templates (names, descriptions, tactics, gear) are stored data and stay in French.
+// Generated templates are stored data: their texts (concept, description, tactics, notes, unit name…) are rendered once
+// with the translator given in ctx.t (the table language on the server). Catalog item and skill names follow
+// shared/chargen.ts (French name + catalogId); metatype values and the folder stay French for save compatibility.
 const tk = (s: string): string => s;
 
 // ---------------------------------------------------------------------------
@@ -145,9 +154,10 @@ const GRADE_BY_TIER = (t: number): WareGrade => (t >= 6 ? 'beta' : t >= 5 ? 'alp
 
 const GANGS = ['Halloweeners', 'Ancients', 'Cutters', 'Red Hot Nukes', 'Spikes', 'Crimson Crush', 'Rusted Stilettos', 'Desolation Angels', 'First Nation'];
 const CORPS = ['Ares', 'Renraku', 'Aztechnology', 'Saeder-Krupp', 'Shiawase', 'Mitsuhama', 'NeoNET', 'Horizon', 'Wuxing', 'Evo', 'AG Chemie'];
-const MERCS = ['MET2000', 'Tsunami', 'Combat Inc.', 'les Loups de Tacoma', 'Black Star'];
-const CULTS = ['Culte de la Rouille', 'Enfants du Smog', 'Fraternité de la Boue noire', 'Église de la Marée toxique'];
-const DISTRICTS = ['de Puyallup', 'de Redmond', 'des Barrens', 'de Tacoma', 'de Touristville', 'de Renton', 'de Snohomish', 'd’Everett', 'de Bellevue', 'de l’Underground', 'd’Auburn', 'de Fort Lewis'];
+// MERCS / CULTS / DISTRICTS hold English keys (except proper names), rendered with the translator.
+const MERCS = ['MET2000', 'Tsunami', 'Combat Inc.', tk('the Tacoma Wolves'), 'Black Star'];
+const CULTS = [tk('Cult of Rust'), tk('Children of the Smog'), tk('Brotherhood of the Black Mud'), tk('Church of the Toxic Tide')];
+const DISTRICTS = [tk('from Puyallup'), tk('from Redmond'), tk('from the Barrens'), tk('from Tacoma'), tk('from Touristville'), tk('from Renton'), tk('from Snohomish'), tk('from Everett'), tk('from Bellevue'), tk('from the Underground'), tk('from Auburn'), tk('from Fort Lewis')];
 const FIRST = ['Lucas', 'Inès', 'Mathis', 'Léa', 'Karim', 'Yasmine', 'Hugo', 'Chloé', 'Malik', 'Sofia', 'Théo', 'Nadia', 'Bastien', 'Amina', 'Jules', 'Clara', 'Jake', 'Maria', 'Kenji', 'Aiko', 'Dmitri', 'Olga', 'Carlos', 'Rosa', 'Sean', 'Mei', 'Tariq', 'Ingrid', 'Marcus', 'Keisha', 'Viktor', 'Anya', 'Diego', 'Hana', 'Ray', 'Lena'];
 const LAST = ['Martin', 'Kowalski', 'Nakamura', 'Okafor', 'Dubois', 'Rossi', 'García', 'Lefebvre', 'Chen', 'Ivanov', 'Sato', 'Moreau', 'Novak', 'Smith', 'Haddad', 'Kim', 'O’Brien', 'Fontaine', 'Reyes', 'Lindqvist', 'Tremblay', 'Whitehorse', 'Yazzie', 'Blackfeather'];
 const NICKS = ['Rouille', 'Chrome', 'Vipère', 'Le Grec', 'Fusible', 'Tox', 'Crocs', 'Mamba', 'Néon', 'Sulfure', 'Ratchet', 'Clou', 'Grinder', 'Ghost', 'Jinx', 'Nox', 'Scalpel', 'Diesel', 'Mouette', 'Tank', 'Spike', 'Brindille', 'Taupe', 'Lynx', 'Rasoir', 'Quartz', 'Hex', 'Pixel', 'Torque', 'Blitz', 'Sumo', 'Corbeau', 'Glitch', 'Patch', 'Mojo', 'Cendre', 'Bourbon', 'Vandale', 'Sushi', 'Kraken'];
@@ -181,7 +191,7 @@ const samuraiWare = (t: number): KitWare[] => {
 
 export const ARCHETYPES: Archetype[] = [
   {
-    id: 'ganger', label: tk('Ganger / thug'), icon: '✊', kind: 'metahuman', concept: 'Ganger', color: '#e0a63f', grunt: true,
+    id: 'ganger', label: tk('Ganger / thug'), icon: '✊', kind: 'metahuman', concept: tk('Ganger'), color: '#e0a63f', grunt: true,
     blurb: tk('Barrens gangers, small-time thugs, neighborhood muscle.'),
     attrs: { BOD: 1, STR: 1, LOG: -1 },
     skills: [['clubs', 'unarmed_combat'], ['pistols', 'blades', 'intimidation'], ['running', 'sneaking', 'perception']],
@@ -191,11 +201,11 @@ export const ARCHETYPES: Archetype[] = [
       ware: t >= 4 ? [['cyberware', 'Dermal Plating', 1]] : [],
       gear: [[commlink(Math.min(t, 2)), null, 1], t >= 2 ? ['Grenade: Molotov Cocktail', null, 1] : null],
     }),
-    group: (pick) => `Ganger des ${pick(GANGS)}`,
-    tactics: 'Encerclent, insultent, frappent à plusieurs sur le plus faible. Fuient si le chef tombe ou si la riposte est trop forte.',
+    group: (pick, tr) => tr(tk('{gang} ganger'), { gang: pick(GANGS) }),
+    tactics: tk('Surround, taunt and gang up on the weakest. Flee if the leader falls or the return fire is too strong.'),
   },
   {
-    id: 'corpsec', label: tk('Corporate security'), icon: '⛨', kind: 'metahuman', concept: 'Garde de sécurité', color: '#5c9be0', grunt: true,
+    id: 'corpsec', label: tk('Corporate security'), icon: '⛨', kind: 'metahuman', concept: tk('Security guard'), color: '#5c9be0', grunt: true,
     blurb: tk('Corp guards and patrols, uniformed and in pairs.'),
     attrs: { BOD: 1, REA: 1 },
     skills: [['pistols', 'automatics'], ['clubs', 'perception', 'unarmed_combat'], ['etiquette', 'first_aid', 'running']],
@@ -205,11 +215,11 @@ export const ARCHETYPES: Archetype[] = [
       ware: t >= 5 ? [['cyberware', 'Wired Reflexes', 1], ['cyberware', 'Smartlink', null], ['cyberware', 'Cybereyes Basic System', 1]] : t >= 3 ? [['cyberware', 'Cybereyes Basic System', 1], ['cyberware', 'Smartlink', null]] : [],
       gear: [[commlink(Math.max(2, t)), null, 1], ['Restraint, Plastic', null, 2], t >= 3 ? ['Grenade: Flash-Bang', null, 2] : null],
     }),
-    group: (pick) => `Garde ${pick(CORPS)}`,
-    tactics: 'Restent en binôme, donnent l’alerte (le spider du site arrive en 1D3 tours), tirent pour neutraliser, gagnent du temps jusqu’aux renforts.',
+    group: (pick, tr) => tr(tk('{corp} guard'), { corp: pick(CORPS) }),
+    tactics: tk('Stay in pairs, raise the alarm (the site spider arrives in 1D3 turns), shoot to neutralize, buy time until backup arrives.'),
   },
   {
-    id: 'police', label: tk('Police / Knight Errant'), icon: '★', kind: 'metahuman', concept: 'Officier de police', color: '#3fd6d0', grunt: true,
+    id: 'police', label: tk('Police / Knight Errant'), icon: '★', kind: 'metahuman', concept: tk('Police officer'), color: '#3fd6d0', grunt: true,
     blurb: tk('Knight Errant patrols, response units (HTR at high ratings).'),
     attrs: { BOD: 1, REA: 1, WIL: 1 },
     skills: [['pistols', 'automatics'], ['clubs', 'perception', 'unarmed_combat'], ['intimidation', 'first_aid', 'pilot_ground_craft']],
@@ -219,11 +229,11 @@ export const ARCHETYPES: Archetype[] = [
       ware: t >= 4 ? (t >= 6 ? samuraiWare(5) : [['cyberware', 'Smartlink', null], ['cyberware', 'Cybereyes Basic System', 1], ...(t >= 5 ? [['cyberware', 'Wired Reflexes', 1] as KitWare] : [])]) : [],
       gear: [[commlink(Math.max(3, t)), null, 1], ['Restraint, Metal', null, 2], ['Grenade: Flash-Bang', null, t >= 4 ? 3 : 1]],
     }),
-    group: (pick) => (pick([0, 1, 2]) ? 'Agent Knight Errant' : 'Agent Lone Star'),
-    tactics: 'Sommations d’abord, puis tir pour neutraliser (balles gel/électriques à bas indice). Bouclent la zone ; drone d’appui et renforts HTR à haut indice.',
+    group: (pick, tr) => (pick([0, 1, 2]) ? tr(tk('Knight Errant officer')) : tr(tk('Lone Star officer'))),
+    tactics: tk('Warnings first, then shoot to neutralize (gel or stick-n-shock rounds at low ratings). Seal off the area; support drone and HTR backup at high ratings.'),
   },
   {
-    id: 'merc', label: tk('Mercenary / street samurai'), icon: '⚔', kind: 'metahuman', concept: 'Samouraï des rues', color: '#e05c5c', grunt: false,
+    id: 'merc', label: tk('Mercenary / street samurai'), icon: '⚔', kind: 'metahuman', concept: tk('Street samurai'), color: '#e05c5c', grunt: false,
     blurb: tk('Augmented muscle, heavy weapons, chrome everywhere.'),
     attrs: { BOD: 1, AGI: 1, REA: 1, STR: 1, LOG: -1 },
     skills: [['automatics', 'pistols'], ['blades', 'unarmed_combat', 'perception'], ['sneaking', 'longarms', 'throwing_weapons']],
@@ -233,41 +243,41 @@ export const ARCHETYPES: Archetype[] = [
       ware: samuraiWare(t),
       gear: [[commlink(Math.max(2, t)), null, 1], t >= 2 ? ['Grenade: Fragmentation', null, t >= 4 ? 2 : 1] : null],
     }),
-    group: (pick) => `Mercenaire (${pick(MERCS)})`,
-    tactics: 'Feu de suppression, tir en rafales, flanquement. Visent d’abord le mage et le decker. Négocient s’ils sont payés pour ça, pas pour mourir.',
+    group: (pick, tr) => tr(tk('Mercenary ({company})'), { company: tr(pick(MERCS)) }),
+    tactics: tk('Suppressive fire, burst fire, flanking. Target the mage and the decker first. Negotiate if they are paid for that, not to die.'),
   },
   {
-    id: 'mage', label: tk('Combat mage'), icon: '✶', kind: 'metahuman', concept: 'Mage de combat', color: '#9d7ce0', grunt: false, magic: 'magician',
+    id: 'mage', label: tk('Combat mage'), icon: '✶', kind: 'metahuman', concept: tk('Combat mage'), color: '#9d7ce0', grunt: false, magic: 'magician',
     blurb: tk('Combat and protection spells, a team’s magical support.'),
     attrs: { WIL: 1, LOG: 1, CHA: 1, STR: -1 },
     skills: [['spellcasting'], ['counterspelling', 'assensing', 'perception'], ['summoning', 'pistols', 'arcana']],
     spells: ['Stunbolt', 'Manabolt', 'Armor', 'Powerbolt', 'Fireball', 'Physical Barrier', 'Stunball', 'Increase Reflexes', 'Heal', 'Manaball', 'Improved Invisibility', 'Lightning Bolt', 'Mana Barrier'],
     kit: (t, pick) => ({ weapons: [holdout(t, pick)], armor: t >= 2 ? ['Lined Coat'] : ['Armor Clothing'], ware: [], gear: [[commlink(Math.max(2, t)), null, 1], t >= 4 ? ['Power Focus', t >= 6 ? 3 : t >= 5 ? 2 : 1, 1] : null] }),
-    group: (pick) => `Mage de combat ${pick(CORPS)}`,
-    tactics: 'Reste à couvert, Éclair étourdissant sur la cible la plus dangereuse, Armure ou Barrière sur l’équipe. Contresort pour protéger ses alliés. Fuit si le Drain le met à genoux.',
+    group: (pick, tr) => tr(tk('{corp} combat mage'), { corp: pick(CORPS) }),
+    tactics: tk('Stays in cover, Stunbolt on the most dangerous target, Armor or Barrier on the team. Counterspelling to protect allies. Flees if Drain brings them to their knees.'),
   },
   {
-    id: 'shaman', label: tk('Shaman / summoner'), icon: '☾', kind: 'metahuman', concept: 'Chaman', color: '#4fd17a', grunt: false, magic: 'magician',
+    id: 'shaman', label: tk('Shaman / summoner'), icon: '☾', kind: 'metahuman', concept: tk('Shaman'), color: '#4fd17a', grunt: false, magic: 'magician',
     blurb: tk('Summons spirits of nature and man, heals and confounds.'),
     attrs: { WIL: 1, CHA: 2, INT: 1 },
     skills: [['summoning'], ['spellcasting', 'binding', 'assensing'], ['banishing', 'counterspelling', 'perception']],
     spells: ['Heal', 'Stunbolt', 'Detect Enemies', 'Physical Barrier', 'Confusion', 'Armor', 'Stunball', 'Mob Mind', 'Increase Reflexes', 'Manaball'],
     kit: (t, pick) => ({ weapons: [t >= 2 ? holdout(t, pick) : 'Knife'], armor: t >= 2 ? ['Lined Coat'] : ['Armor Clothing'], ware: [], gear: [[commlink(Math.max(1, t - 1)), null, 1], t >= 3 ? ['Summoning Focus', Math.min(4, t - 2), 1] : null] }),
-    group: () => 'Chaman',
+    group: (_pick, tr) => tr(tk('Shaman')),
     spirit: true,
-    tactics: 'Invoque un esprit dès le premier tour, puis l’envoie au contact (pouvoir Peur, Confusion, Accident). Garde ses distances et soigne ses alliés.',
+    tactics: tk('Summons a spirit on the first turn, then sends it into melee (Fear, Confusion, Accident powers). Keeps their distance and heals allies.'),
   },
   {
-    id: 'decker', label: tk('Decker'), icon: '⌨', kind: 'metahuman', concept: 'Decker', color: '#3fd6d0', grunt: false, matrix: 'deck',
+    id: 'decker', label: tk('Decker'), icon: '⌨', kind: 'metahuman', concept: tk('Decker'), color: '#3fd6d0', grunt: false, matrix: 'deck',
     blurb: tk('Combat hacker or site spider, with cyberdeck and programs.'),
     attrs: { LOG: 2, INT: 1, STR: -1, BOD: -1 },
     skills: [['hacking', 'cybercombat'], ['electronic_warfare', 'computer'], ['software', 'pistols', 'perception']],
     kit: (t, pick) => ({ weapons: [holdout(t, pick)], armor: t >= 2 ? ['Armor Clothing'] : [], ware: t >= 2 ? [['cyberware', 'Datajack', null]] : [], gear: [] }),
-    group: (pick) => `Spider ${pick(CORPS)}`,
-    tactics: 'Reste en VR (hot sim à haut indice) : Brute force sur les smartguns et les commlinks, Data spike sur le persona du decker adverse, verrouille les portes et les caméras.',
+    group: (pick, tr) => tr(tk('{corp} spider'), { corp: pick(CORPS) }),
+    tactics: tk('Stays in VR (hot sim at high ratings): Brute Force on smartguns and commlinks, Data Spike on the opposing decker’s persona, locks doors and cameras.'),
   },
   {
-    id: 'rigger', label: tk('Rigger'), icon: '⛟', kind: 'metahuman', concept: 'Rigger', color: '#5c9be0', grunt: false, matrix: 'rcc',
+    id: 'rigger', label: tk('Rigger'), icon: '⛟', kind: 'metahuman', concept: tk('Rigger'), color: '#5c9be0', grunt: false, matrix: 'rcc',
     blurb: tk('Drone pilot, fire support and surveillance.'),
     attrs: { REA: 2, LOG: 1, INT: 1 },
     skills: [['pilot_ground_craft', 'gunnery'], ['pilot_aircraft', 'perception'], ['automotive_mechanic', 'pistols', 'electronic_warfare']],
@@ -278,11 +288,11 @@ export const ARCHETYPES: Archetype[] = [
       gear: [],
       vehicles: t <= 1 ? ['MCT Fly-Spy (Minidrone)'] : t <= 2 ? ['MCT Fly-Spy (Minidrone)', 'Aztechnology Crawler (Small)'] : t <= 3 ? ['MCT Fly-Spy (Minidrone)', 'GM-Nissan Doberman (Medium)'] : t <= 4 ? ['GM-Nissan Doberman (Medium)', 'GM-Nissan Doberman (Medium)', 'Lockheed Optic-X2 (Small)'] : t <= 5 ? ['Steel Lynx Combat Drone (Large)', 'GM-Nissan Doberman (Medium)', 'Lockheed Optic-X2 (Small)'] : ['Steel Lynx Combat Drone (Large)', 'Steel Lynx Combat Drone (Large)', 'Cyberspace Designs Dalmatian (Large)'],
     }),
-    group: (pick) => `Rigger ${pick(CORPS)}`,
-    tactics: 'Reste en retrait dans un véhicule ou derrière un mur, les drones engagent (réserve d’attaque = Artillerie + Logique s’il est connecté, sinon Autopilote + autosoft). Le cramer = couper ses drones.',
+    group: (pick, tr) => tr(tk('{corp} rigger'), { corp: pick(CORPS) }),
+    tactics: tk('Stays back in a vehicle or behind a wall while the drones engage (attack pool = Gunnery + Logic when jumped in, else Pilot + autosoft). Taking them out = cutting off their drones.'),
   },
   {
-    id: 'sniper', label: tk('Sniper'), icon: '⌖', kind: 'metahuman', concept: 'Tireur d’élite', color: '#e0468f', grunt: false,
+    id: 'sniper', label: tk('Sniper'), icon: '⌖', kind: 'metahuman', concept: tk('Sniper'), color: '#e0468f', grunt: false,
     blurb: tk('Sniper rifle, patience and camouflage.'),
     attrs: { AGI: 2, INT: 1, WIL: 1 },
     skills: [['longarms'], ['perception', 'sneaking'], ['pistols', 'survival', 'gymnastics']],
@@ -292,11 +302,11 @@ export const ARCHETYPES: Archetype[] = [
       ware: t >= 3 ? [['cyberware', 'Cybereyes Basic System', Math.min(4, t - 1)], ['cyberware', 'Smartlink', null], ...(t >= 5 ? [['cyberware', 'Reaction Enhancers', t - 4] as KitWare] : [])] : [],
       gear: [[commlink(Math.max(2, t)), null, 1], ['Binoculars', 3, 1]],
     }),
-    group: () => 'Tireur d’élite',
-    tactics: 'Position en hauteur à 200-500 m, vise d’abord le leader et le mage. Change de position après deux tirs. Se retire si on le repère.',
+    group: (_pick, tr) => tr(tk('Sniper')),
+    tactics: tk('High position at 200-500 m, targets the leader and the mage first. Moves after two shots. Withdraws once spotted.'),
   },
   {
-    id: 'face', label: tk('Face / negotiator'), icon: '☺', kind: 'metahuman', concept: 'Négociateur', color: '#e0468f', grunt: false,
+    id: 'face', label: tk('Face / negotiator'), icon: '☺', kind: 'metahuman', concept: tk('Negotiator'), color: '#e0468f', grunt: false,
     blurb: tk('Johnson, fixer, negotiator or manipulator.'),
     attrs: { CHA: 2, INT: 1, WIL: 1, BOD: -1 },
     skills: [['negotiation', 'con'], ['etiquette', 'intimidation', 'perception'], ['leadership', 'pistols', 'impersonation']],
@@ -306,11 +316,11 @@ export const ARCHETYPES: Archetype[] = [
       ware: t >= 5 ? [['bioware', 'Tailored Pheromones', t - 4]] : [],
       gear: [[commlink(Math.max(3, t)), null, 1]],
     }),
-    group: () => 'Négociateur',
-    tactics: 'Ne se bat pas : parle, menace, achète. Toujours un garde du corps à portée et une sortie prévue.',
+    group: (_pick, tr) => tr(tk('Negotiator')),
+    tactics: tk('Does not fight: talks, threatens, buys. Always a bodyguard within reach and an exit planned.'),
   },
   {
-    id: 'bodyguard', label: tk('Bodyguard'), icon: '⛉', kind: 'metahuman', concept: 'Garde du corps', color: '#7c8b96', grunt: false,
+    id: 'bodyguard', label: tk('Bodyguard'), icon: '⛉', kind: 'metahuman', concept: tk('Bodyguard'), color: '#7c8b96', grunt: false,
     blurb: tk('Close protection, sticks to their principal.'),
     attrs: { BOD: 2, REA: 1, STR: 1, INT: 1 },
     skills: [['pistols', 'unarmed_combat'], ['perception', 'clubs'], ['pilot_ground_craft', 'first_aid', 'etiquette']],
@@ -320,78 +330,78 @@ export const ARCHETYPES: Archetype[] = [
       ware: t >= 5 ? [['bioware', 'Synaptic Booster', t - 4], ['cyberware', 'Dermal Plating', 2]] : t >= 3 ? [['cyberware', 'Smartlink', null], ['cyberware', 'Cybereyes Basic System', 1]] : [],
       gear: [[commlink(Math.max(2, t)), null, 1], ['Medkit', Math.min(6, Math.max(1, t)), 1]],
     }),
-    group: () => 'Garde du corps',
-    tactics: 'S’interpose, couvre le principal et l’évacue. Ne poursuit jamais : sa priorité est la survie du client.',
+    group: (_pick, tr) => tr(tk('Bodyguard')),
+    tactics: tk('Steps in, covers the principal and evacuates them. Never gives chase: the client’s survival comes first.'),
   },
   {
-    id: 'cultist', label: tk('Toxic cultist'), icon: '☣', kind: 'metahuman', concept: 'Cultiste toxique', color: '#7cc04a', grunt: true, magic: 'magician',
+    id: 'cultist', label: tk('Toxic cultist'), icon: '☣', kind: 'metahuman', concept: tk('Toxic cultist'), color: '#7cc04a', grunt: true, magic: 'magician',
     blurb: tk('Fanatic of a toxic mentor spirit, corrosive spells and polluted spirits.'),
     attrs: { WIL: 2, CHA: 1, LOG: -1 },
     skills: [['spellcasting', 'summoning'], ['clubs', 'intimidation'], ['assensing', 'sneaking', 'perception']],
     spells: ['Acid Stream', 'Stunbolt', 'Agony', 'Toxic Wave', 'Confusion', 'Manabolt', 'Physical Barrier'],
     kit: (t, pick) => ({ weapons: [melee(t, pick)], armor: t >= 2 ? ['Lined Coat'] : ['Armor Clothing'], ware: [], gear: [['Respirator', 2, 1]] }),
-    group: (pick) => `Cultiste (${pick(CULTS)})`,
+    group: (pick, tr) => tr(tk('Cultist ({cult})'), { cult: tr(pick(CULTS)) }),
     spirit: true,
     toxic: true,
-    tactics: 'Fanatiques : ne se rendent pas. Flot acide et Vague toxique sans souci des innocents, esprit toxique en appui.',
+    tactics: tk('Fanatics: they never surrender. Acid Stream and Toxic Wave with no regard for bystanders, a toxic spirit in support.'),
   },
   {
-    id: 'civilian', label: tk('Civilian NPC'), icon: '☻', kind: 'metahuman', concept: 'Civil', color: '#a0aab4', grunt: true, disposition: 'neutral',
+    id: 'civilian', label: tk('Civilian NPC'), icon: '☻', kind: 'metahuman', concept: tk('Civilian'), color: '#a0aab4', grunt: true, disposition: 'neutral',
     blurb: tk('Passers-by, employees, witnesses: to populate a scene.'),
     attrs: { BOD: -1, AGI: -1, REA: -1 },
     skills: [['perception', 'etiquette'], ['computer', 'negotiation'], ['running', 'first_aid']],
     kit: (t, pick) => ({ weapons: [t >= 3 ? 'Colt America L36' : t >= 1 ? 'Yamaha Pulsar' : null], armor: t >= 2 ? ['Armor Clothing'] : [], ware: [], gear: [[commlink(Math.min(t + 1, 3)), null, 1]] }),
-    group: (pick) => `Passant ${pick(DISTRICTS)}`,
-    tactics: 'Se jette au sol, fuit, appelle Knight Errant (DocWagon s’il est blessé et abonné).',
+    group: (pick, tr) => tr(tk('Passer-by {district}'), { district: tr(pick(DISTRICTS)) }),
+    tactics: tk('Hits the ground, flees, calls Knight Errant (DocWagon if wounded and subscribed).'),
   },
   // ---- Critters (SR5 core p.400-410 baselines; the tier makes juveniles (−) or pack alphas (+)).
   {
-    id: 'hellhound', label: tk('Hell hound'), icon: '♨', kind: 'critter', concept: 'Créature éveillée (chien de l’enfer)', color: '#e05c5c', grunt: false,
+    id: 'hellhound', label: tk('Hell hound'), icon: '♨', kind: 'critter', concept: tk('Awakened critter (hell hound)'), color: '#e05c5c', grunt: false,
     blurb: tk('Fire-breathing awakened dog, hunts in packs.'),
     critter: {
       attributes: { BOD: 6, AGI: 4, REA: 5, STR: 5, WIL: 3, LOG: 2, INT: 4, CHA: 3, EDG: 3, MAG: 5, ESS: 6 },
       initDice: 2,
-      skills: [['unarmed_combat', 4], ['perception', 4], ['intimidation', 4], ['running', 4], ['tracking', 4], ['exotic_weapon', 4, 'Arme exotique (Souffle)']],
-      weapons: [{ name: 'Morsure', kind: 'melee', skill: 'unarmed_combat', accuracy: 'Physical', damage: '(STR+2)P', ap: -1, reach: 0 }, { name: 'Souffle de feu', kind: 'ranged', skill: 'exotic_weapon', accuracy: 6, damage: '(MAG)P', ap: -1, notes: 'Attaque élémentaire (feu), portée MAG×5 m' }],
-      powers: ['Double nature', 'Sens améliorés (ouïe, odorat, vision nocturne)', 'Aura énergétique (feu)', 'Peur', 'Attaque élémentaire (feu)', 'Arme naturelle (morsure)', 'Immunité (feu)'],
-      weaknesses: ['Allergie (eau, légère)'],
+      skills: [['unarmed_combat', 4], ['perception', 4], ['intimidation', 4], ['running', 4], ['tracking', 4], ['exotic_weapon', 4, tk('Exotic Weapon (Breath)')]],
+      weapons: [{ name: tk('Bite'), kind: 'melee', skill: 'unarmed_combat', accuracy: 'Physical', damage: '(STR+2)P', ap: -1, reach: 0 }, { name: tk('Fire Breath'), kind: 'ranged', skill: 'exotic_weapon', accuracy: 6, damage: '(MAG)P', ap: -1, notes: tk('Elemental Attack (fire), range MAG×5 m') }],
+      powers: [tk('Dual Natured'), tk('Enhanced Senses (Hearing, Smell, Low-Light Vision)'), tk('Energy Aura (Fire)'), tk('Fear'), tk('Elemental Attack (Fire)'), tk('Natural Weapon (Bite)'), tk('Immunity (Fire)')],
+      weaknesses: [tk('Allergy (Water, Mild)')],
       armor: 0,
       vision: { lowLight: true },
     },
-    group: () => 'Molosse infernal',
-    tactics: 'Chassent en meute : deux fixent la proie avec Peur, les autres crachent le feu. Fuient l’eau et les esprits de l’eau.',
+    group: (_pick, tr) => tr(tk('Hell hound')),
+    tactics: tk('Hunt in packs: two pin the prey down with Fear, the others breathe fire. Avoid water and water spirits.'),
   },
   {
-    id: 'devilrat', label: tk('Devil rat'), icon: '🐀', kind: 'critter', concept: 'Créature éveillée (rat du diable)', color: '#8a6d4a', grunt: true,
+    id: 'devilrat', label: tk('Devil rat'), icon: '🐀', kind: 'critter', concept: tk('Awakened critter (devil rat)'), color: '#8a6d4a', grunt: true,
     blurb: tk('Awakened sewer rats, swarming, disease carriers.'),
     critter: {
       attributes: { BOD: 1, AGI: 4, REA: 4, STR: 0, WIL: 2, LOG: 1, INT: 4, CHA: 2, EDG: 2, MAG: 2, ESS: 6 },
       initDice: 1,
       skills: [['unarmed_combat', 3], ['perception', 4], ['sneaking', 5], ['gymnastics', 3]],
-      weapons: [{ name: 'Morsure', kind: 'melee', skill: 'unarmed_combat', accuracy: 'Physical', damage: '2P', ap: 0, reach: -1, notes: 'Risque de maladie (Résistance aux pathogènes)' }],
-      powers: ['Contrôle animal (rats)', 'Dissimulation (soi)', 'Sens améliorés (odorat, vision nocturne)', 'Immunité (pathogènes, toxines)', 'Arme naturelle (morsure)'],
-      weaknesses: ['Allergie (lumière du soleil, légère)'],
+      weapons: [{ name: tk('Bite'), kind: 'melee', skill: 'unarmed_combat', accuracy: 'Physical', damage: '2P', ap: 0, reach: -1, notes: tk('Disease risk (Pathogen Resistance)') }],
+      powers: [tk('Animal Control (Rats)'), tk('Concealment (Self)'), tk('Enhanced Senses (Smell, Low-Light Vision)'), tk('Immunity (Pathogens, Toxins)'), tk('Natural Weapon (Bite)')],
+      weaknesses: [tk('Allergy (Sunlight, Mild)')],
       armor: 0,
       vision: { lowLight: true },
     },
-    group: () => 'Rat du diable',
-    tactics: 'Surgissent de partout en essaim, harcèlent et mordent, appellent les rats ordinaires. Se dispersent à la lumière vive.',
+    group: (_pick, tr) => tr(tk('Devil rat')),
+    tactics: tk('Swarm out from everywhere, harass and bite, call ordinary rats. Scatter in bright light.'),
   },
   {
-    id: 'ghoul', label: tk('Ghoul'), icon: '☠', kind: 'critter', concept: 'Métahumain infecté (goule)', color: '#6b8e7a', grunt: true, metaFrom: true,
+    id: 'ghoul', label: tk('Ghoul'), icon: '☠', kind: 'critter', concept: tk('Infected metahuman (ghoul)'), color: '#6b8e7a', grunt: true, metaFrom: true,
     blurb: tk('Metahumans infected with HMHVV, blind but fearsome.'),
     critter: {
       attributes: { BOD: 7, AGI: 4, REA: 4, STR: 6, WIL: 3, LOG: 2, INT: 4, CHA: 1, EDG: 2, MAG: 2, ESS: 5 },
       initDice: 1,
       skills: [['unarmed_combat', 4], ['perception', 3], ['sneaking', 4], ['assensing', 3], ['clubs', 2]],
-      weapons: [{ name: 'Griffes', kind: 'melee', skill: 'unarmed_combat', accuracy: 'Physical', damage: '(STR+1)P', ap: -1, reach: 0 }],
-      powers: ['Double nature', 'Sens améliorés (ouïe, odorat)', 'Arme naturelle (griffes)', 'Sapience', 'Armure 1'],
-      weaknesses: ['Allergie (lumière du soleil, légère)', 'Besoin alimentaire (chair métahumaine)', 'Sens réduits (aveugle)'],
+      weapons: [{ name: tk('Claws'), kind: 'melee', skill: 'unarmed_combat', accuracy: 'Physical', damage: '(STR+1)P', ap: -1, reach: 0 }],
+      powers: [tk('Dual Natured'), tk('Enhanced Senses (Hearing, Smell)'), tk('Natural Weapon (Claws)'), tk('Sapience'), tk('Armor 1')],
+      weaknesses: [tk('Allergy (Sunlight, Mild)'), tk('Dietary Requirement (Metahuman Flesh)'), tk('Reduced Senses (Blind)')],
       armor: 1,
       vision: {},
     },
-    group: () => 'Goule',
-    tactics: 'Embuscades dans le noir, attaquent les blessés et les isolés. Certaines goules sapientes négocient (Ghoul Rights).',
+    group: (_pick, tr) => tr(tk('Ghoul')),
+    tactics: tk('Ambush in the dark, attack the wounded and the isolated. Some sapient ghouls negotiate (Ghoul Rights).'),
   },
 ];
 export const ARCHETYPE_BY_ID: Record<string, Archetype> = Object.fromEntries(ARCHETYPES.map((a) => [a.id, a]));
@@ -414,31 +424,36 @@ export function randomSeed(): number {
   return Math.floor(Math.random() * 2 ** 31);
 }
 
-/** Street name for an archetype (French / international, Seattle flavour). */
-export function makeName(archetypeId: string, seed: unknown, { lieutenant = false }: { lieutenant?: boolean } = {}): string {
+/**
+ * Street name for an archetype (French / international, Seattle flavour). Titles and districts go through `t` (the
+ * table language on the server, the UI language in the browser); the same seed picks the same name in every language.
+ */
+export function makeName(archetypeId: string, seed: unknown, { lieutenant = false, t: tr = fill }: { lieutenant?: boolean; t?: NpcTranslator } = {}): string {
   const r = rng((Number(seed) || 0) ^ 0x51ed);
   const pick = picker(r);
   const nick = pick(NICKS);
   const first = pick(FIRST);
   const last = pick(LAST);
-  const district = pick(DISTRICTS);
+  // A district is a whole phrase (« from Puyallup » → « de Puyallup »), appended to a name.
+  const district = tr(pick(DISTRICTS));
+  const nickname = () => tr(tk('{first} “{nick}” {last}'), { first, nick, last });
   switch (archetypeId) {
     case 'corpsec':
-      return `${lieutenant ? 'Chef d’équipe' : pick(['Agent', 'Garde'])} ${last}`;
+      return tr(lieutenant ? tk('Team leader {name}') : pick([tk('Agent {name}'), tk('Guard {name}')]), { name: last });
     case 'police':
-      return `${lieutenant ? 'Sergent' : pick(['Officier', 'Agent'])} ${last}`;
+      return tr(lieutenant ? tk('Sergeant {name}') : pick([tk('Officer {name}'), tk('Agent {name}')]), { name: last });
     case 'civilian':
       return `${first} ${last}`;
     case 'face':
-      return pick([`M. ${last}`, `Mme ${last}`, `${first} « ${nick} » ${last}`]);
+      return pick([tr(tk('Mr. {name}'), { name: last }), tr(tk('Ms. {name}'), { name: last }), nickname()]);
     case 'hellhound':
     case 'devilrat':
     case 'ghoul': {
-      const a = ARCHETYPE_BY_ID[archetypeId];
-      return lieutenant ? `${a.label} alpha` : `${a.label} ${district}`;
+      const label = tr(ARCHETYPE_BY_ID[archetypeId].label);
+      return lieutenant ? tr(tk('{critter} alpha'), { critter: label }) : `${label} ${district}`;
     }
     default:
-      return pick([nick, `${nick} ${district}`, `${first} « ${nick} » ${last}`]);
+      return pick([nick, `${nick} ${district}`, nickname()]);
   }
 }
 
@@ -494,6 +509,7 @@ export function generate(opts: GenerateOptions = {}, ctx: NpcgenCtx = {}): Gener
   const pick = picker(r);
   const find: Finder = ctx.find || (() => null);
   const rules = ctx.rules || {};
+  const tr: NpcTranslator = ctx.t || fill;
   const isGrunt = !!(opts.grunt ?? a.grunt) && !lieutenant;
   let n = 0;
   const id = (p: string) => `${p}${++n}`;
@@ -512,10 +528,10 @@ export function generate(opts: GenerateOptions = {}, ctx: NpcgenCtx = {}): Gener
     }
   }
   const tpl: GeneratedTemplate = {
-    name: opts.name ? String(opts.name).slice(0, 120) : makeName(a.id, seed, { lieutenant }),
+    name: opts.name ? String(opts.name).slice(0, 120) : makeName(a.id, seed, { lieutenant, t: tr }),
     folder: GENERATED_FOLDER,
     metatype,
-    concept: `${a.concept}${lieutenant ? ' (lieutenant)' : ''}`,
+    concept: lieutenant ? tr(tk('{concept} (lieutenant)'), { concept: tr(a.concept) }) : tr(a.concept),
     color: a.color,
     disposition: a.disposition || 'hostile',
     attributes: {} as Attributes, // filled by buildMetahuman / buildCritter
@@ -533,15 +549,15 @@ export function generate(opts: GenerateOptions = {}, ctx: NpcgenCtx = {}): Gener
     vehicles: [],
     vision: {},
     npc: { professionalRating: pr, grunt: isGrunt, kind: a.kind === 'critter' ? 'critter' : 'metahuman', initMode: 'physical', tactics: '', loot: '' },
-    tags: ['généré', a.id, `PR ${pr}`],
+    tags: [tr(tk('generated')), a.id, `PR ${pr}`],
     genArchetype: a.id,
     genTier: prTier,
     genSeed: seed,
     genLieutenant: lieutenant,
   };
 
-  if (a.kind === 'critter') buildCritter(tpl, a, t, metatype, id, r);
-  else buildMetahuman(tpl, a, t, metatype, id, pick, r, find, rules, lieutenant);
+  if (a.kind === 'critter') buildCritter(tpl, a, t, metatype, id, tr);
+  else buildMetahuman(tpl, a, t, metatype, id, pick, r, find, rules, lieutenant, tr);
 
   // Grunt single condition monitor / lieutenant Edge
   const bod = attr(tpl, 'BOD');
@@ -552,22 +568,24 @@ export function generate(opts: GenerateOptions = {}, ctx: NpcgenCtx = {}): Gener
 
   // Texts
   const desc: string[] = [];
-  desc.push(`**PR ${pr} — ${TIERS[Math.min(6, pr)].label}.** ${TIERS[Math.min(6, pr)].text}`);
-  if (a.blurb) desc.push(a.blurb);
-  if (isGrunt) desc.push(GRUNT_RULES);
-  if (lieutenant) desc.push(`Lieutenant d’un groupe de sbires PR ${prTier} : stats d’un PR ${t}, Chance ${tpl.attributes.EDG}, moniteurs complets.`);
+  const tier = TIERS[Math.min(6, pr)];
+  desc.push(`**${tr(tk('PR {pr} — {label}'), { pr, label: tr(tier.label) })}.** ${tr(tier.text)}`);
+  if (a.blurb) desc.push(tr(a.blurb));
+  if (isGrunt) desc.push(tr(GRUNT_RULES));
+  if (lieutenant) desc.push(tr(tk('Lieutenant of a PR {pr} grunt group: PR {statPr} stats, Edge {edge}, full condition monitors.'), { pr: prTier, statPr: t, edge: tpl.attributes.EDG }));
   if (a.spirit) {
-    const force = Math.max(1, tpl.attributes.MAG || 1);
+    const params = { force: Math.max(1, tpl.attributes.MAG || 1), rating: skillRating(tpl, 'summoning') };
     desc.push(a.toxic
-      ? `Peut invoquer un **esprit toxique** de Force ${force} (esprit des boues ou de la peste) : Invocation ${skillRating(tpl, 'summoning')} + Magie contre Force.`
-      : `Peut invoquer un **esprit** de Force ${force} (esprit de l’homme, de la bête ou des éléments selon la tradition) : Invocation ${skillRating(tpl, 'summoning')} + Magie contre Force ; services ≈ succès nets.`);
+      ? tr(tk('Can summon a **toxic spirit** of Force {force} (sludge or plague spirit): Summoning {rating} + Magic vs. Force.'), params)
+      : tr(tk('Can summon a **spirit** of Force {force} (spirit of man, beast or the elements depending on the tradition): Summoning {rating} + Magic vs. Force; services ≈ net hits.'), params));
   }
   tpl.description = desc.join('\n\n');
-  tpl.npc.tactics = a.tactics || '';
+  tpl.npc.tactics = a.tactics ? tr(a.tactics) : '';
+  const loot = { dice: Math.max(1, t), mult: [5, 10, 20, 50, 100, 200, 500][t] };
   tpl.npc.loot = a.kind === 'critter'
-    ? (a.id === 'hellhound' ? 'Peau et glandes ignifuges (réactifs, ~500¥ chez le bon alchimiste).' : '—')
-    : `Créditube : ${Math.max(1, t)}D6 × ${[5, 10, 20, 50, 100, 200, 500][t]}¥. ${tpl.gear.length ? 'Équipement porté.' : ''}`.trim();
-  tpl.unitName = a.group ? a.group(pick) : a.label;
+    ? (a.id === 'hellhound' ? tr(tk('Fireproof hide and glands (reagents, ~500¥ from the right alchemist).')) : '—')
+    : tr(tpl.gear.length ? tk('Credstick: {dice}D6 × {mult}¥. Gear carried.') : tk('Credstick: {dice}D6 × {mult}¥.'), loot);
+  tpl.unitName = a.group ? a.group(pick, tr) : tr(a.label);
   return tpl;
 }
 
@@ -600,6 +618,7 @@ function buildMetahuman(
   find: Finder,
   rules: NonNullable<NpcgenCtx['rules']>,
   lieutenant: boolean,
+  tr: NpcTranslator,
 ): void {
   const max = METATYPES[metatype].max;
   const min = METATYPE_MIN[metatype];
@@ -623,9 +642,9 @@ function buildMetahuman(
   for (const s of sec) addSkill(tpl, s, top - 1);
   for (const s of ter) addSkill(tpl, s, top - 2);
   if (t >= 4 && prim[0]) {
-    const spec = ({ pistols: 'Semi-automatiques', automatics: 'Fusils d’assaut', longarms: 'Fusils de précision', spellcasting: 'Combat', summoning: 'Esprits de l’homme', hacking: 'Appareils', negotiation: 'Marchandage', clubs: 'Matraques', pilot_ground_craft: 'Drones à roues', unarmed_combat: 'Arts martiaux' } as Record<string, string>)[prim[0]];
+    const spec = ({ pistols: tk('Semi-Automatics'), automatics: tk('Assault Rifles'), longarms: tk('Sniper Rifles'), spellcasting: tk('Combat'), summoning: tk('Spirits of Man'), hacking: tk('spec::Devices'), negotiation: tk('Bargaining'), clubs: tk('Batons'), pilot_ground_craft: tk('Wheeled drones'), unarmed_combat: tk('Martial Arts') } as Record<string, string>)[prim[0]];
     const sk = tpl.skills.find((s) => s.id === prim[0]);
-    if (sk && spec) sk.spec = spec;
+    if (sk && spec) sk.spec = tr(spec);
   }
 
   // Kit
@@ -685,11 +704,11 @@ function buildMetahuman(
         }
       }
       if (Object.keys(applied).length) aug.bonus = applied;
-      if (bonus.armor) aug.notes = `Armure +${bonus.armor}`;
+      if (bonus.armor) aug.notes = tr(tk('Armor +{n}'), { n: String(bonus.armor) });
     }
     if (st.weapon) tpl.weapons.push(catalogWeapon({ ...item, stats: { weapon: st.weapon } }, id('w'), { augId: aug.id }));
-    if (/Dermal Plating/.test(item.name) && q.rating) tpl.armor.push({ id: id('a'), name: `${item.nameFr || item.name} ${q.rating}`, rating: q.rating, equipped: true, stack: true, notes: 'Implant' });
-    if (/Smartlink/.test(item.name)) aug.notes = 'Précision +2 avec une arme smart';
+    if (/Dermal Plating/.test(item.name) && q.rating) tpl.armor.push({ id: id('a'), name: `${item.nameFr || item.name} ${q.rating}`, rating: q.rating, equipped: true, stack: true, notes: tr(tk('Implant')) });
+    if (/Smartlink/.test(item.name)) aug.notes = tr(tk('Accuracy +2 with a smart weapon'));
     tpl.augmentations.push(aug);
   }
   for (const k of Object.keys(tpl.augmented) as AttrKey[]) tpl.augmented[k] = Math.min(4, tpl.augmented[k] as number);
@@ -726,8 +745,8 @@ function buildMetahuman(
       const st = (item.stats || {}) as Partial<SpellStats>;
       tpl.spells.push({ id: id('s'), name: item.nameFr || item.name, category: item.categoryFr || item.category || '', type: st.type || '', range: st.range || '', duration: st.duration || '', drain: st.dv || '', catalogId: item.id });
     }
-    tpl.qualities.push({ id: id('q'), name: 'Magicien', karma: 0, positive: true, notes: a.toxic ? 'Tradition toxique' : a.id === 'shaman' ? 'Tradition chamanique' : 'Tradition hermétique' });
-    if (a.toxic) tpl.qualities.push({ id: id('q'), name: 'Mentor toxique', karma: 0, positive: false, notes: 'Fanatisme : ne se rend jamais' });
+    tpl.qualities.push({ id: id('q'), name: tr(tk('Magician')), karma: 0, positive: true, notes: tr(a.toxic ? tk('Toxic tradition') : a.id === 'shaman' ? tk('Shamanic tradition') : tk('Hermetic tradition')) });
+    if (a.toxic) tpl.qualities.push({ id: id('q'), name: tr(tk('Toxic mentor')), karma: 0, positive: false, notes: tr(tk('Fanaticism: never surrenders')) });
     tpl.npc.initMode = 'physical';
   }
 
@@ -737,7 +756,8 @@ function buildMetahuman(
     const item = find('gear', deck);
     const st = (item?.stats || {}) as { attributeArray?: number[]; deviceRating?: Formula };
     const arr = Array.isArray(st.attributeArray) ? [...st.attributeArray] : [4, 3, 2, 1];
-    const progs = ['Navigateur', 'Configurateur', 'Édition', 'Gommage de bruit', 'Boîte à outils', 'Armure', 'Filtre de biofeedback', 'Exploitation', 'Furtivité', 'Marteau', 'Verrouillage', 'Fork', 'Décryptage', 'Biofeedback'].slice(0, 2 + t * 2);
+    // English program names (shared/matrix.ts PROGRAMS): matched in both languages, shown translated by programLabel().
+    const progs = ['Browse', 'Configurator', 'Edit', 'Signal Scrub', 'Toolbox', 'Armor', 'Biofeedback Filter', 'Exploit', 'Stealth', 'Hammer', 'Lockdown', 'Fork', 'Decryption', 'Biofeedback'].slice(0, 2 + t * 2);
     tpl.matrix = { device: item ? item.nameFr || item.name : deck, rating: Number(st.deviceRating) || 1, attack: arr[0], sleaze: arr[1], dataProcessing: arr[2], firewall: arr[3], programs: progs };
     if (item) tpl.gear.push({ id: id('g'), name: item.nameFr || item.name, category: item.categoryFr || item.category || '', qty: 1, catalogId: item.id });
     tpl.npc.initMode = t >= 4 ? 'hot' : 'cold';
@@ -745,7 +765,7 @@ function buildMetahuman(
     const rcc = ['Scratch-Built Junk', 'Scratch-Built Junk', 'Radio Shack Remote Controller', 'Essy Motors DroneMaster', 'Maersk Spider', 'Vulcan Liegelord', 'Proteus Poseidon'][t];
     const item = find('gear', rcc);
     const st = (item?.stats || {}) as { deviceRating?: Formula; dataProcessing?: number; firewall?: number };
-    tpl.matrix = { device: item ? item.nameFr || item.name : rcc, rating: Number(st.deviceRating) || 1, attack: 0, sleaze: 0, dataProcessing: Number(st.dataProcessing) || 1, firewall: Number(st.firewall) || 1, programs: ['Autosoft Ciblage (arme)', 'Autosoft Manœuvre', 'Autosoft Évasion'].slice(0, 1 + Math.floor(t / 2)) };
+    tpl.matrix = { device: item ? item.nameFr || item.name : rcc, rating: Number(st.deviceRating) || 1, attack: 0, sleaze: 0, dataProcessing: Number(st.dataProcessing) || 1, firewall: Number(st.firewall) || 1, programs: [tk('Targeting autosoft (weapon)'), tk('Maneuvering autosoft'), tk('Evasion autosoft')].slice(0, 1 + Math.floor(t / 2)).map((p) => tr(p)) };
     if (item) tpl.gear.push({ id: id('g'), name: item.nameFr || item.name, category: item.categoryFr || item.category || '', qty: 1, catalogId: item.id });
   }
   for (const vname of kit.vehicles || []) {
@@ -756,13 +776,13 @@ function buildMetahuman(
   }
 
   // Knowledge
-  const k = ({ ganger: 'Territoire du gang', corpsec: 'Procédures de sécurité', police: 'Procédures policières', merc: 'Tactiques militaires', mage: 'Théorie magique', shaman: 'Esprits', decker: 'Sécurité matricielle', rigger: 'Modèles de drones', sniper: 'Balistique', face: 'Politique corporatiste', bodyguard: 'Protocoles de protection', cultist: 'Doctrine du culte', civilian: 'Métier' } as Record<string, string>)[a.id];
-  if (k) tpl.knowledge.push({ id: id('k'), name: k, rating: Math.max(1, top - 1), type: 'professional' });
-  tpl.knowledge.push({ id: id('k'), name: 'Seattle (rue)', rating: Math.max(1, Math.ceil(t / 2) + 1), type: 'street' });
-  tpl.knowledge.push({ id: id('k'), name: pick(['Anglais', 'Français', 'Espagnol', 'Japonais', 'Sperethiel', 'Or’zet', 'Salish']), rating: 0, type: 'language', native: true });
+  const k = ({ ganger: tk('Gang turf'), corpsec: tk('Security procedures'), police: tk('Police procedures'), merc: tk('Military tactics'), mage: tk('Magic theory'), shaman: tk('Spirits'), decker: tk('Matrix security'), rigger: tk('Drone models'), sniper: tk('Ballistics'), face: tk('Corporate politics'), bodyguard: tk('Protection protocols'), cultist: tk('Cult doctrine'), civilian: tk('Trade (profession)') } as Record<string, string>)[a.id];
+  if (k) tpl.knowledge.push({ id: id('k'), name: tr(k), rating: Math.max(1, top - 1), type: 'professional' });
+  tpl.knowledge.push({ id: id('k'), name: tr(tk('Seattle (street)')), rating: Math.max(1, Math.ceil(t / 2) + 1), type: 'street' });
+  tpl.knowledge.push({ id: id('k'), name: tr(pick([tk('lang::English'), tk('lang::French'), tk('lang::Spanish'), tk('lang::Japanese'), tk('lang::Sperethiel'), tk('lang::Or’zet'), tk('lang::Salish')])), rating: 0, type: 'language', native: true });
 }
 
-function buildCritter(tpl: GeneratedTemplate, a: CritterArchetype, t: number, metatype: string, id: (p: string) => string, r: () => number): void {
+function buildCritter(tpl: GeneratedTemplate, a: CritterArchetype, t: number, metatype: string, id: (p: string) => string, tr: NpcTranslator): void {
   const c = a.critter;
   const delta = t <= 1 ? -1 : t <= 3 ? 0 : t <= 5 ? 1 : 2;
   for (const [k, v] of Object.entries(c.attributes)) {
@@ -780,16 +800,15 @@ function buildCritter(tpl: GeneratedTemplate, a: CritterArchetype, t: number, me
     tpl.attributes.EDG = clampN(tpl.attributes.EDG || 1, min.EDG, max.EDG);
   }
   tpl.initiative.dice = c.initDice + (delta >= 2 ? 1 : 0);
-  for (const [sid, rating, name] of c.skills) addSkill(tpl, sid, Math.max(1, rating + delta), name ? { name } : {});
-  for (const w of c.weapons) tpl.weapons.push({ id: id('w'), category: 'Arme naturelle', mode: '', rc: 0, ammo: '', reach: 0, ...w });
+  for (const [sid, rating, name] of c.skills) addSkill(tpl, sid, Math.max(1, rating + delta), name ? { name: tr(name) } : {});
+  for (const w of c.weapons) tpl.weapons.push({ id: id('w'), category: tr(tk('Natural weapon')), mode: '', rc: 0, ammo: '', reach: 0, ...w, name: tr(w.name), ...(w.notes ? { notes: tr(w.notes) } : {}) });
   // Critter powers have no Power Point cost.
-  for (const p of c.powers) tpl.powers.push({ id: id('p'), name: p } as AdeptPower);
-  for (const w of c.weaknesses) tpl.qualities.push({ id: id('q'), name: w, karma: 0, positive: false, notes: 'Faiblesse' });
-  if (c.armor) tpl.armor.push({ id: id('a'), name: 'Armure naturelle', rating: c.armor, equipped: true, stack: true });
+  for (const p of c.powers) tpl.powers.push({ id: id('p'), name: tr(p) } as AdeptPower);
+  for (const w of c.weaknesses) tpl.qualities.push({ id: id('q'), name: tr(w), karma: 0, positive: false, notes: tr(tk('Weakness')) });
+  if (c.armor) tpl.armor.push({ id: id('a'), name: tr(tk('Natural armor')), rating: c.armor, equipped: true, stack: true });
   Object.assign(tpl.vision, c.vision || {});
-  if (t >= 5) tpl.concept += t >= 6 ? ' — alpha de meute' : ' — adulte robuste';
-  else if (t <= 1) tpl.concept += ' — jeune';
-  void r;
+  const stage = t >= 6 ? tk('{concept} — pack alpha') : t >= 5 ? tk('{concept} — hardy adult') : t <= 1 ? tk('{concept} — juvenile') : null;
+  if (stage) tpl.concept = tr(stage, { concept: tpl.concept });
 }
 
 /**

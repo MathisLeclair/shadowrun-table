@@ -43,7 +43,8 @@ console.log(`Foundry world: ${worldPath}${dump ? ` (dump ${dump})` : ''}`);
 const world = dump ? readDump(dump, worldPath) : await readWorld(worldPath);
 const now = Date.now();
 const assets = createAssets({ dataRoot: world.dataRoot });
-const bundle = buildBundle(world, { now, assets });
+// The seed is the French Project Lazarus campaign: texts written by the conversion in French.
+const bundle = buildBundle(world, { now, assets, lang: 'fr' });
 
 // Pseudo-state from the current seeds, for status/diffs.
 const seedPcs = readJson<Actor[]>(path.join(SEED, 'actors', 'pcs.json'), []);
@@ -82,7 +83,7 @@ const order = ['pc_anthony', 'pc_jane', 'pc_bricks', 'pc_anklay', 'pc_christophe
 const outPcs: Actor[] = [];
 bundle.pcs.forEach((pc, i) => {
   const existing = seedPcs.find((a) => a.id === pc.appId) || null;
-  const a = buildPc(pc, existing, { mode: 'replace', now, worldId: bundle.worldId, index: i });
+  const a = buildPc(pc, existing, { mode: 'replace', now, worldId: bundle.worldId, index: i, lang: bundle.lang });
   // Verification notes written from the old recap are obsolete now that Foundry is the source.
   if (/À vérifier/i.test(a.notes || '') || !a.notes) a.notes = `Fiche synchronisée depuis Foundry VTT (monde « ${bundle.worldTitle} »). Les changements faits dans Foundry arrivent ici quand le MJ relance l'import.`;
   outPcs.push(a);
@@ -98,11 +99,11 @@ let updated = 0;
 for (const npc of bundle.npcs) {
   const i = core.findIndex((t) => t.id === npc.templateId || (t.foundryId && t.foundryId === npc.fid));
   if (i >= 0) {
-    core[i] = buildTemplate(npc, core[i], { now, worldId: bundle.worldId });
+    core[i] = buildTemplate(npc, core[i], { now, worldId: bundle.worldId, lang: bundle.lang });
     updated++;
   } else {
     const prev = foundryTpl.find((t) => t.id === npc.templateId) || null;
-    newTpl.push(buildTemplate(npc, prev, { now, worldId: bundle.worldId }));
+    newTpl.push(buildTemplate(npc, prev, { now, worldId: bundle.worldId, lang: bundle.lang }));
   }
 }
 writeJson(corePath, core, 1);

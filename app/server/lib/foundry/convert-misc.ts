@@ -4,7 +4,11 @@ import { slug } from '../../../shared/util.ts';
 import type { FoundryDoc } from './world.ts';
 import type { AssetFn } from './assets.ts';
 import type { HtmlLinks } from './html2md.ts';
-import type { AudioTrack, TrackKind } from '../../../shared/types.ts';
+import type { AudioTrack, Lang, TrackKind } from '../../../shared/types.ts';
+import { importText } from './convert-actor.ts';
+
+/** Marks an English key for tools/i18n-check.ts. */
+const tk = (s: string): string => s;
 
 /** A journal converted to a markdown document. */
 export interface JournalDoc {
@@ -48,14 +52,16 @@ export function fileSafe(s: unknown): string {
 }
 
 /**
- * Convert journals. ctx: { folderPath(id), asset(src, kind), links }
+ * Convert journals. ctx: { folderPath(id), asset(src, kind), links, worldTitle, lang (language of the texts the import adds: footer, index) }
+ * The journal content itself is the world's text and stays as written.
  * Returns { docs: [{ file, title, folder, foundryId, content, pages }], pdfs: [{ title, folder, path }], index }.
  * PDF-only entries (rule books) are skipped and listed in the index.
  */
 export function convertJournals(
   journals: FoundryDoc[] | null | undefined,
-  ctx: { folderPath?: (id: string | null | undefined) => string; asset?: AssetFn; links?: HtmlLinks; worldTitle?: string } = {}
+  ctx: { folderPath?: (id: string | null | undefined) => string; asset?: AssetFn; links?: HtmlLinks; worldTitle?: string; lang?: Lang } = {}
 ): ConvertedJournals {
+  const { tr } = importText(ctx.lang);
   const docs: JournalDoc[] = [];
   const pdfs: JournalPdf[] = [];
   const used = new Set<string>();
@@ -78,16 +84,16 @@ export function convertJournals(
       } else if (p.type === 'image') {
         const url = ctx.asset ? ctx.asset(p.src, 'journal') : p.src;
         if (multi || p.name !== j.name) parts.push(`## ${p.name}`);
-        parts.push(url ? `![${p.name}](${url})` : `*(image introuvable : ${decodeSafe(p.src)})*`);
+        parts.push(url ? `![${p.name}](${url})` : `*(${tr(tk('image not found: {src}'), { src: decodeSafe(p.src) })})*`);
         if (p.image?.caption) parts.push(`*${p.image.caption}*`);
       } else if (p.type === 'video') {
-        parts.push(`## ${p.name}`, `Vidéo : ${decodeSafe(p.src)}`);
+        parts.push(`## ${p.name}`, tr(tk('Video: {src}'), { src: decodeSafe(p.src) }));
       }
     }
     const content = parts.join('\n\n').trim();
     const hasTitle = /^#\s/.test(content);
     const header = `${hasTitle ? '' : `# ${j.name}\n\n`}`;
-    const footer = `\n\n---\n*Importé de Foundry VTT${folder ? ` — dossier « ${folder} »` : ''}.*\n`;
+    const footer = `\n\n---\n*${folder ? tr(tk('Imported from Foundry VTT — folder “{folder}”.'), { folder }) : tr(tk('Imported from Foundry VTT.'))}*\n`;
     let file = `${fileSafe(folder ? `${folder.split('/').join(' - ')} - ${j.name}` : j.name)}.md`;
     if (used.has(file.toLowerCase())) {
       let i = 2;
@@ -97,17 +103,20 @@ export function convertJournals(
     used.add(file.toLowerCase());
     docs.push({ file, title: j.name, folder, foundryId: j._id, content: header + content + footer, pages: contentPages.length });
   }
-  const lines = ['# Journaux Foundry', '', `Importés du monde Foundry${ctx.worldTitle ? ` « ${ctx.worldTitle} »` : ''}. Relance l'import (Réglages → Foundry VTT) pour les mettre à jour.`, ''];
+  const intro = ctx.worldTitle
+    ? tr(tk('Imported from the Foundry world “{world}”. Run the import again (Settings → Foundry VTT) to update them.'), { world: ctx.worldTitle })
+    : tr(tk('Imported from the Foundry world. Run the import again (Settings → Foundry VTT) to update them.'));
+  const lines = [`# ${tr(tk('Foundry journals'))}`, '', intro, ''];
   let lastFolder: string | null = null;
   for (const d of docs) {
     if (d.folder !== lastFolder) {
-      lines.push('', `## ${d.folder || 'Sans dossier'}`, '');
+      lines.push('', `## ${d.folder || tr(tk('No folder'))}`, '');
       lastFolder = d.folder;
     }
     lines.push(`- **${d.title}** — \`foundry/${d.file}\``);
   }
   if (pdfs.length) {
-    lines.push('', '## Livres de règles (PDF, non importés)', '', 'Ces entrées pointent vers des PDF du dossier Foundry ; ouvre-les directement :', '');
+    lines.push('', `## ${tr(tk('Rulebooks (PDF, not imported)'))}`, '', tr(tk('These entries point to PDFs in the Foundry folder; open them directly:')), '');
     for (const p of pdfs) lines.push(`- **${p.title}**${p.page && p.page !== p.title && p.page !== 'PDF' ? ` (${p.page})` : ''} — \`${p.path}\``);
   }
   return { docs, pdfs, index: lines.join('\n') + '\n' };

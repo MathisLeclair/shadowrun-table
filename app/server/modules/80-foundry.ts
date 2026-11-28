@@ -98,7 +98,7 @@ function bundleFor(ctx: ActionContext, worldPath: string): FoundryBundle {
   }
   const table = currentTable();
   const assets = createAssets({ dataRoot: world.dataRoot || dataRootOf(worldPath), ...(table ? { outDir: table.assetsDir, urlBase: table.assetsUrl } : {}) });
-  return buildBundle(world, { now: ctx.now, assets });
+  return buildBundle(world, { now: ctx.now, assets, lang: ctx.lang });
 }
 
 function startAudioCopy(ctx: ActionContext, bundle: FoundryBundle, urls: Set<string | undefined>) {

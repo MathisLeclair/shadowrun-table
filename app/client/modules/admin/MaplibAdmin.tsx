@@ -6,8 +6,7 @@ import { Button, Field, Toggle, Badge, Empty, Modal, Select, SearchBox, confirmA
 import { uploadWithProgress, type ServerError } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
 import { t, tn, tk, fmtDate, getLang } from '../../lib/i18n.ts';
-import { matchesQuery } from '/shared/maplib.ts';
-import { setLibKeySource, useLibKey, signedUrl } from '../map/maplib-client.ts';
+import { setLibKeySource, useLibKey, signedUrl, libDescription, libMatches } from '../map/maplib-client.ts';
 import { themeOptions, lightingOptions } from '../map/renderer.ts';
 import { fmtBytes, Progress, type UploadProgress } from './common.tsx';
 import type { AdminApi, AdminPanelProps } from './types.ts';
@@ -157,6 +156,7 @@ function EditModal({ entry, adminApi, onClose, onSaved }: { entry: LibEntry; adm
         <Field label={t('Description')}>
           <textarea className="input" rows={4} value={f.description} onChange={(e) => set('description')(e.target.value)}></textarea>
         </Field>
+        {f.description && libDescription(f) !== f.description && <div className="small muted">{t('Shown as: {text}', { text: libDescription(f) })}</div>}
         <span className="small muted">{t('These fields take precedence over updates coming from git.')}</span>
       </div>
     </Modal>
@@ -373,7 +373,7 @@ export default function MaplibAdmin({ adminApi, token, run }: AdminPanelProps) {
     reload();
   }, []);
   if (!data) return <Empty>{t('Loading…')}</Empty>;
-  const list = data.maps.filter((e) => matchesQuery(e, q)).sort((a, b) => nameOf(a).localeCompare(nameOf(b), getLang()));
+  const list = data.maps.filter((e) => libMatches(e, q)).sort((a, b) => nameOf(a).localeCompare(nameOf(b), getLang()));
   const del = async (e: LibEntry) => {
     const n = (e.usedBy || []).reduce((s, u) => s + u.maps.length, 0);
     const msg =

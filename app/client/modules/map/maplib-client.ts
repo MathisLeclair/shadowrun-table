@@ -3,10 +3,16 @@
 // The /admin page plugs its own key source (admin session) with setLibKeySource().
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/net.ts';
-import { isLibUrl } from '/shared/maplib.ts';
+import { isLibUrl, matchesQuery, type LibSearchable } from '/shared/maplib.ts';
+import { tIfKnown } from '../../lib/i18n.ts';
 import type { LibEntry, LibKeyReply, LibList } from './types.ts';
 
 export { isLibUrl };
+
+/** Description of a library entry in the UI language: built-in descriptions are English keys (or old French text), admin texts stay as typed. */
+export const libDescription = (e: { description?: string }): string => tIfKnown(e.description || '');
+/** Search over the names, keywords and the description as stored and as shown. */
+export const libMatches = (e: LibSearchable, q: string): boolean => matchesQuery({ ...e, description: `${e.description || ''} ${libDescription(e)}` }, q);
 
 let key: { k: string; exp: number } | null = null; // { k, exp (s, server clock) }
 let skew = 0; // server clock − browser clock (ms)

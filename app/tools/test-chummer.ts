@@ -77,8 +77,8 @@ await test('fixture: identity, attributes, skills, weapon', () => {
   assert.equal(colt.ap, -1);
   assert.equal(colt.skill, 'pistols');
   assert.equal(colt.chummerGuid, '90db7564-dcb4-4391-854d-1ec77e7a3d28');
-  const unarmed = fx.weapons.find((w) => w.name === 'Mains nues');
-  assert.ok(unarmed && unarmed.skill === 'unarmed_combat' && unarmed.damage === '(STR)S', 'Unarmed Attack → Mains nues');
+  const unarmed = fx.weapons.find((w) => w.name === 'Unarmed');
+  assert.ok(unarmed && unarmed.skill === 'unarmed_combat' && unarmed.damage === '(STR)S', 'Unarmed Attack → Unarmed (texts in English by default)');
   assert.equal(unarmed.accuracy, 'Physical', 'accuracy = the physical limit, kept as « Physical » (follows STR / BOD / REA and its modifiers)');
   assert.equal(fx.weapons.length, 2);
   assert.equal(fx.qualities[0].karma, 20);
@@ -86,6 +86,12 @@ await test('fixture: identity, attributes, skills, weapon', () => {
   assert.equal(imported.info.created, false);
   assert.equal(fx.chummer!.fileName, 'chummer-test.chum5');
   assert.ok(fx.chummer!.xml!.startsWith('<?xml'));
+  assert.equal(fx.chummer!.lang, 'en');
+  assert.equal(fx.history[0].i18n?.key, 'Chummer5 import ({file})');
+  // A French table: the texts the parser writes are French (« Mains nues », headings, notes), the language is remembered.
+  const fr = parseChum5(src, { fileName: 'chummer-test.chum5', lang: 'fr' }).actor;
+  assert.ok(fr.weapons.some((w) => w.name === 'Mains nues'), 'Unarmed Attack → Mains nues on a French table');
+  assert.equal(fr.chummer!.lang, 'fr');
 });
 
 console.log('Export: patch mode (original file kept)');

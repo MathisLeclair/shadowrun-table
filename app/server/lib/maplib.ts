@@ -159,34 +159,40 @@ const MAX_DIM = 160; // same limit as table maps (20-maps.js)
 const MAX_WALLS = 6000;
 export const IMAGE_EXTS: Record<string, string> = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp' };
 
-/** Images of the free « Fragmaps » Foundry module (fragmaps-free): table maps showing one of them are library maps. */
+/** Marks an English key for tools/i18n-check.ts. */
+const tk = (s: string): string => s;
+/**
+ * Images of the free « Fragmaps » Foundry module (fragmaps-free): table maps showing one of them are library maps.
+ * description = English key (French in client/i18n/fr/map.json), stored as is and shown with tIfKnown() (LibraryBrowser.tsx);
+ * entries created before 2026-11 hold the old French text, translated through client/i18n/legacy-fr-keys.json.
+ */
 export const FRAGMAPS_FREE: Record<string, [nameFr: string, tags: string, description: string]> = {
-  'ammo-bunker.jpg': ['Bunker à munitions', 'bunker militaire armurerie munitions military armory', 'Petit bunker en béton rempli de caisses de munitions : planque d’armes, dépôt de contrebande ou dernier carré d’un gang.'],
-  'backalley.jpg': ['Ruelle', 'ruelle rue extérieur alley street outdoor', 'Ruelle étroite entre deux immeubles, bennes et escaliers de secours : rendez-vous discret, embuscade ou fuite à pied.'],
-  'bio-lab.jpg': ['Laboratoire biologique', 'laboratoire biotech corpo lab biotech corp', 'Laboratoire de biotechnologie aux paillasses et cuves de culture : extraction de chercheur ou vol de données sur un projet corpo.'],
-  'construction-site.jpg': ['Chantier de construction', 'chantier extérieur industriel construction site outdoor industrial', 'Chantier à ciel ouvert, échafaudages et engins : échange sous tension, poursuite ou combat avec beaucoup de couvert.'],
-  'corp-lobby.jpg': ['Hall corporatiste', 'hall accueil corpo sécurité lobby corp security', 'Hall d’accueil d’une tour corporatiste avec comptoir de sécurité : infiltration par la grande porte ou rencontre avec un M. Johnson.'],
-  'crash-site-day.jpg': ['Site du crash (jour)', 'crash épave extérieur crash site wreck outdoor', 'Épave fumante au milieu de nulle part : récupérer une cargaison avant les équipes de récupération corpo.'],
-  'cyber-mansion.jpg': ['Manoir cyberpunk', 'manoir villa luxe résidence mansion luxury residential', 'Villa de luxe sous haute sécurité : cambriolage, extraction d’un cadre ou soirée mondaine qui tourne mal.'],
-  'cyber-slums-night.jpg': ['Bidonville (nuit)', 'bidonville barrens nuit rue slums night street', 'Taudis et passerelles de fortune dans les Barrens, de nuit : planque, rencontre avec un contact de rue ou guerre de gangs.'],
-  'cyber-warehouse.jpg': ['Entrepôt', 'entrepôt docks industriel warehouse industrial', 'Grand entrepôt aux rayonnages et caisses empilées : échange de marchandise, planque de gang ou fusillade à couvert.'],
-  'cyberpunk-carpark-night.jpg': ['Parking (nuit)', 'parking voitures nuit extérieur car park night outdoor', 'Parking sous les néons, de nuit : rendez-vous avec un Johnson, échange de véhicule ou embuscade.'],
-  'cyberpunk-diner.jpg': ['Diner', 'diner restaurant bar soykaf', 'Petit diner ouvert toute la nuit : point de rencontre neutre avec un fixer, ou braquage qui dégénère.'],
-  'hackers-lair-day.jpg': ['Repaire de hacker', 'repaire decker hacker matrice planque lair matrix safehouse', 'Planque encombrée d’un decker, câbles et écrans partout : base des runners ou cible d’une descente.'],
-  'hangar.jpg': ['Hangar', 'hangar aéroport avion véhicules hangar airport aircraft', 'Hangar d’aviation avec appareils et ateliers : vol de véhicule, départ précipité ou fusillade entre les carlingues.'],
-  'horizon-shopping-mall.jpg': ['Centre commercial Horizon', 'centre commercial boutiques foule mall shops crowd', 'Galerie marchande corpo sur plusieurs boutiques : filature dans la foule, rencontre publique ou prise d’otages.'],
-  'mansionlibrary.jpg': ['Bibliothèque du manoir', 'bibliothèque manoir luxe library mansion luxury', 'Bibliothèque boisée d’une riche demeure : coffre caché, rencontre feutrée ou vol d’un objet rare.'],
-  'market-street-night.jpg': ['Rue marchande (nuit)', 'marché rue nuit étals market street night', 'Rue commerçante aux étals illuminés, de nuit : contact de rue, filature ou course-poursuite dans la foule.'],
-  'nomad-camp.jpg': ['Camp de nomades', 'camp nomades caravanes extérieur nomad camp outdoor', 'Campement de nomades et de caravanes en périphérie : contrebandiers, passeurs ou refuge temporaire.'],
-  'old-rooftop-night.jpg': ['Vieux toit (nuit)', 'toit immeuble nuit extérieur rooftop night outdoor', 'Toit d’un vieil immeuble, de nuit : poste de tireur, rendez-vous discret ou extraction par drone.'],
-  'penthouse-office.jpg': ['Bureau en penthouse', 'bureau penthouse corpo luxe office corp luxury', 'Bureau de dirigeant au sommet d’une tour : vol de données, chantage ou confrontation finale avec un cadre.'],
-  'prison-courtyard.jpg': ['Cour de prison', 'prison cour sécurité extérieur prison courtyard security', 'Cour d’un pénitencier sous miradors : évasion, extraction d’un détenu ou rencontre en parloir.'],
-  'secret-facility.jpg': ['Installation secrète', 'installation secrète laboratoire corpo secret facility lab corp', 'Site corporatiste caché aux accès contrôlés : infiltration de haut niveau et secrets dangereux.'],
-  'security-checkpoint.jpg': ['Poste de contrôle', 'poste de contrôle sécurité frontière checkpoint security border', 'Barrage de sécurité avec guérites et barrières : passage en force, faux SIN ou contrebande.'],
-  'server-room.jpg': ['Salle des serveurs', 'serveurs matrice données corpo server room matrix data', 'Salle de serveurs climatisée : accès physique à un nœud, vol de données ou sabotage.'],
-  'skytower-helipad-day.jpg': ['Héliport de la tour (jour)', 'héliport toit tour corpo helipad rooftop tower', 'Héliport au sommet d’une tour corpo : extraction par les airs, fuite ou rencontre à haut risque.'],
-  'terminus.jpg': ['Terminus', 'gare terminus transports station transit', 'Terminus de transports en commun : filature, échange dans la foule ou attente d’un contact.'],
-  'trauma-ward.jpg': ['Service des urgences', 'hôpital urgences clinique hospital trauma ward clinic', 'Service des urgences d’un hôpital : soigner un runner, récupérer un patient ou effacer des dossiers médicaux.'],
+  'ammo-bunker.jpg': ['Bunker à munitions', 'bunker militaire armurerie munitions military armory', tk('Small concrete bunker full of ammo crates: weapons cache, smuggling depot or a gang’s last stand.')],
+  'backalley.jpg': ['Ruelle', 'ruelle rue extérieur alley street outdoor', tk('Narrow alley between two buildings, dumpsters and fire escapes: discreet meet, ambush or escape on foot.')],
+  'bio-lab.jpg': ['Laboratoire biologique', 'laboratoire biotech corpo lab biotech corp', tk('Biotech lab with benches and culture tanks: researcher extraction or data theft on a corp project.')],
+  'construction-site.jpg': ['Chantier de construction', 'chantier extérieur industriel construction site outdoor industrial', tk('Open-air construction site, scaffolding and machinery: tense exchange, chase or a fight with plenty of cover.')],
+  'corp-lobby.jpg': ['Hall corporatiste', 'hall accueil corpo sécurité lobby corp security', tk('Lobby of a corp tower with a security desk: infiltration through the front door or a meet with a Mr. Johnson.')],
+  'crash-site-day.jpg': ['Site du crash (jour)', 'crash épave extérieur crash site wreck outdoor', tk('Smoking wreck in the middle of nowhere: recover a cargo before the corp recovery teams arrive.')],
+  'cyber-mansion.jpg': ['Manoir cyberpunk', 'manoir villa luxe résidence mansion luxury residential', tk('High-security luxury villa: burglary, executive extraction or a society party gone wrong.')],
+  'cyber-slums-night.jpg': ['Bidonville (nuit)', 'bidonville barrens nuit rue slums night street', tk('Shacks and makeshift walkways in the Barrens, at night: safehouse, meet with a street contact or gang war.')],
+  'cyber-warehouse.jpg': ['Entrepôt', 'entrepôt docks industriel warehouse industrial', tk('Large warehouse with shelving and stacked crates: goods exchange, gang hideout or a firefight behind cover.')],
+  'cyberpunk-carpark-night.jpg': ['Parking (nuit)', 'parking voitures nuit extérieur car park night outdoor', tk('Car park under the neon, at night: meet with a Johnson, vehicle swap or ambush.')],
+  'cyberpunk-diner.jpg': ['Diner', 'diner restaurant bar soykaf', tk('Small all-night diner: neutral meeting point with a fixer, or a holdup that goes south.')],
+  'hackers-lair-day.jpg': ['Repaire de hacker', 'repaire decker hacker matrice planque lair matrix safehouse', tk('A decker’s cluttered hideout, cables and screens everywhere: the runners’ base or the target of a raid.')],
+  'hangar.jpg': ['Hangar', 'hangar aéroport avion véhicules hangar airport aircraft', tk('Aircraft hangar with planes and workshops: vehicle theft, hasty departure or a firefight between the fuselages.')],
+  'horizon-shopping-mall.jpg': ['Centre commercial Horizon', 'centre commercial boutiques foule mall shops crowd', tk('Corp shopping arcade with several stores: tailing in the crowd, public meet or hostage-taking.')],
+  'mansionlibrary.jpg': ['Bibliothèque du manoir', 'bibliothèque manoir luxe library mansion luxury', tk('Wood-paneled library of a wealthy home: hidden safe, hushed meeting or theft of a rare item.')],
+  'market-street-night.jpg': ['Rue marchande (nuit)', 'marché rue nuit étals market street night', tk('Shopping street with lit-up stalls, at night: street contact, tailing or a chase through the crowd.')],
+  'nomad-camp.jpg': ['Camp de nomades', 'camp nomades caravanes extérieur nomad camp outdoor', tk('Camp of nomads and caravans on the outskirts: smugglers, coyotes or a temporary refuge.')],
+  'old-rooftop-night.jpg': ['Vieux toit (nuit)', 'toit immeuble nuit extérieur rooftop night outdoor', tk('Roof of an old building, at night: sniper nest, discreet meet or drone extraction.')],
+  'penthouse-office.jpg': ['Bureau en penthouse', 'bureau penthouse corpo luxe office corp luxury', tk('Executive office at the top of a tower: data theft, blackmail or a final showdown with an exec.')],
+  'prison-courtyard.jpg': ['Cour de prison', 'prison cour sécurité extérieur prison courtyard security', tk('Prison yard under watchtowers: breakout, inmate extraction or a visiting-room meet.')],
+  'secret-facility.jpg': ['Installation secrète', 'installation secrète laboratoire corpo secret facility lab corp', tk('Hidden corp site with controlled access: high-level infiltration and dangerous secrets.')],
+  'security-checkpoint.jpg': ['Poste de contrôle', 'poste de contrôle sécurité frontière checkpoint security border', tk('Security checkpoint with guard booths and barriers: forcing the way through, fake SIN or smuggling.')],
+  'server-room.jpg': ['Salle des serveurs', 'serveurs matrice données corpo server room matrix data', tk('Air-conditioned server room: physical access to a node, data theft or sabotage.')],
+  'skytower-helipad-day.jpg': ['Héliport de la tour (jour)', 'héliport toit tour corpo helipad rooftop tower', tk('Helipad on top of a corp tower: air extraction, escape or a high-risk meet.')],
+  'terminus.jpg': ['Terminus', 'gare terminus transports station transit', tk('Public transit terminal: tailing, exchange in the crowd or waiting for a contact.')],
+  'trauma-ward.jpg': ['Service des urgences', 'hôpital urgences clinique hospital trauma ward clinic', tk('Hospital emergency ward: patch up a runner, pick up a patient or erase medical records.')],
 };
 
 // ---------------------------------------------------------------------------
@@ -528,7 +534,7 @@ export function entryFromFoundryMap(map: GameMap, { origin = 'seed', originRef =
   const info = cleanInfo({
     name: map.name, nameFr, source: 'fragmaps-free', metersPerCell: map.metersPerCell, theme: map.theme, lighting: map.lighting,
     tags: [...tags.split(' '), 'fragmaps', 'foundry'], description,
-    traced: { by: 'foundry', at: '', quality: (map.walls || []).length ? 'good' : 'rough', notes: 'Murs du module Foundry « Fragmaps (free) » importés dans la table.' },
+    traced: { by: 'foundry', at: '', quality: (map.walls || []).length ? 'good' : 'rough', notes: 'Walls of the Foundry “Fragmaps (free)” module imported into the table.' },
   }, slug);
   return createEntry(slug, info, geometryFromTableMap(map, imgFile), contentFromTableMap(map), {
     origin, originRef, imagePath: rel, thumbPath: thumbRel || null, by: { kind: origin === 'seed' ? 'seed' : 'migration' },
@@ -667,7 +673,7 @@ export function createUploaded({ slug, name, nameFr, source, gridPx, offsetX, of
     return prev;
   }
   if (prev?.deleted) delete index.maps[s];
-  const info = cleanInfo({ name: name || s, nameFr, source: source || 'fragmap', metersPerCell, theme, lighting, tags, description, traced: { by: 'admin', at: new Date().toISOString(), quality: 'rough', notes: 'Image téléversée, murs à tracer.' } }, s);
+  const info = cleanInfo({ name: name || s, nameFr, source: source || 'fragmap', metersPerCell, theme, lighting, tags, description, traced: { by: 'admin', at: new Date().toISOString(), quality: 'rough', notes: 'Uploaded image, walls to trace.' } }, s);
   const m = createEntry(s, info, cleanGeometry({ gridPx, imageW, imageH, offsetX, offsetY }), { walls: [], lights: [], regions: [] }, { origin: 'upload', originRef: { kind: 'upload' }, image, by: { kind: 'admin' } });
   saveIndex();
   return m;

@@ -10,6 +10,7 @@ import { METATYPE_MIN } from '../shared/chargen.ts';
 import { METATYPES, derive, attr, skillPool, SKILL_BY_ID } from '../shared/sr5.ts';
 import { sanitizeTemplate } from '../server/modules/30-combat.ts';
 import { startServer, login, client, settle } from './test-client.ts';
+import { t as tr } from '../server/lib/i18n.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.SR_TEST_PORT) || 3712;
@@ -134,7 +135,14 @@ function unitTests() {
   const hh = generate({ archetype: 'hellhound', tier: 3, seed: 1 }, ctx);
   ok(hh.metatype === 'Créature' && hh.powers.length >= 4 && hh.attributes.MAG === 5, 'hellhound critter stats/powers');
   const shaman = generate({ archetype: 'shaman', tier: 4, seed: 1 }, ctx);
-  ok(/esprit/i.test(shaman.description!) && /Force \d/.test(shaman.description!), 'shaman: spirit summoning note');
+  ok(/spirit/i.test(shaman.description!) && /Force \d/.test(shaman.description!), 'shaman: spirit summoning note');
+  // Generated texts follow the translator (the table language on the server): English by default, French with the French t().
+  ok(shaman.concept === 'Shaman' && /^Summons a spirit/.test(shaman.npc.tactics || ''), 'default texts in English (source)');
+  const fr = generate({ archetype: 'shaman', tier: 4, seed: 1 }, { ...ctx, t: (key, params) => tr('fr', key, params) });
+  ok(fr.concept === 'Chaman' && /^Invoque un esprit/.test(fr.npc.tactics || '') && /esprit/.test(fr.description!), 'texts in French with the French translator');
+  ok(fr.name === makeName('shaman', 1, { t: (key, params) => tr('fr', key, params) }) && fr.attributes.MAG === shaman.attributes.MAG, 'same seed, same NPC in both languages');
+  const cop = (lang: string) => makeName('police', 5, { lieutenant: true, t: (key, params) => tr(lang, key, params) });
+  ok(/^Sergeant /.test(makeName('police', 5, { lieutenant: true })) && /^Sergent /.test(cop('fr')), 'name titles translated');
 }
 
 /** npcgen/create result (server/modules/15-chargen.ts). */
@@ -162,6 +170,7 @@ async function serverTests() {
     await settle();
     ok(r1.templateIds.length === 1 && gm.state.bestiary![r1.templateIds[0]]?.folder === GENERATED_FOLDER, 'template saved in “Générés”');
     ok(gm.state.bestiary![r1.templateIds[0]].name === 'Mercenaire MET2000', 'custom name kept');
+    ok(gm.state.bestiary![r1.templateIds[0]].concept === 'Samouraï des rues', 'generated texts stored in the table language (French table)');
 
     // Spawn a grunt group + lieutenant on the active map, without saving
     const mapId = gm.state.scene?.activeMapId || Object.keys(gm.state.maps)[0];

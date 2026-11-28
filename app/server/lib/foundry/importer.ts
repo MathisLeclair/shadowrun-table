@@ -2,7 +2,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { convertSheet, convertVehicle, guessRating } from './convert-actor.ts';
+import { convertSheet, convertVehicle, guessRating, importText } from './convert-actor.ts';
+import { SOURCE_LANG } from '../i18n.ts';
 import { convertScene } from './convert-scene.ts';
 import { convertJournals, convertPlaylists } from './convert-misc.ts';
 import { createAssets, formatBytes } from './assets.ts';
@@ -17,7 +18,7 @@ import type { FoundryDoc, FoundryWorld, WorldMeta } from './world.ts';
 import type { Assets } from './assets.ts';
 import type { ConvertedSheet } from './convert-actor.ts';
 import type { ConvertedJournals, ConvertedPlaylist } from './convert-misc.ts';
-import type { Actor, AudioState, GameMap, I18nEntry, I18nMessage, TableState, Template, User, Vehicle } from '../../../shared/types.ts';
+import type { Actor, AudioState, GameMap, I18nEntry, I18nMessage, Lang, TableState, Template, User, Vehicle } from '../../../shared/types.ts';
 
 /**
  * Actor / template / snapshot walked key by key (the field lists below name Actor keys; merge mode copies whatever
@@ -81,6 +82,8 @@ export interface Bundle {
   journals: ConvertedJournals;
   playlists: ConvertedPlaylist[];
   assets: Assets;
+  /** Language of the texts the conversion wrote (notes, descriptions, default names): the table language. */
+  lang: Lang;
 }
 /** Compact snapshot of the Foundry values at import time (snapshotOf()), stored in actor.foundry.snapshot. */
 export interface PcSnapshot {
@@ -195,8 +198,11 @@ function stripTemp<T>(list: T[] | null | undefined): T[] {
 // Bundle
 // ---------------------------------------------------------------------------
 
-/** Convert the whole world. opts: { now, assets } (assets = createAssets(...) instance; created if missing). */
-export function buildBundle(world: FoundryWorld, { now = Date.now(), assets }: { now?: number; assets?: Assets } = {}): Bundle {
+/**
+ * Convert the whole world. opts: { now, assets, lang } (assets = createAssets(...) instance; created if missing; lang = language of the
+ * texts the conversion writes, the table language — English by default).
+ */
+export function buildBundle(world: FoundryWorld, { now = Date.now(), assets, lang = SOURCE_LANG }: { now?: number; assets?: Assets; lang?: Lang } = {}): Bundle {
   const A = assets || createAssets({ dataRoot: world.dataRoot });
   const worldId = world.meta?.id || path.basename(world.path || 'world');
   const folders = new Map((world.folders || []).map((f) => [f._id, f]));
@@ -223,7 +229,7 @@ export function buildBundle(world: FoundryWorld, { now = Date.now(), assets }: {
     actors: Object.fromEntries((world.actors || []).map((a) => [a._id, a.name])),
     journals: Object.fromEntries((world.journal || []).map((j) => [j._id, j.name])),
   };
-  const ctx = { links, asset: A.asset };
+  const ctx = { links, asset: A.asset, lang };
 
   const pcs: BundlePc[] = [];
   const npcs: BundleNpc[] = [];
@@ -259,7 +265,7 @@ export function buildBundle(world: FoundryWorld, { now = Date.now(), assets }: {
   const scenes: BundleScene[] = [];
   const skippedScenes: Bundle['skippedScenes'] = [];
   for (const s of allScenes) {
-    const map = convertScene(s, { folderPath, asset: A.asset, actorNames: links.actors, templateFor, worldId, journalNames: links.journals, allScenes, now });
+    const map = convertScene(s, { folderPath, asset: A.asset, actorNames: links.actors, templateFor, worldId, journalNames: links.journals, allScenes, now, lang });
     if (!map) {
       skippedScenes.push({ fid: s._id, name: s.name, reason: tk('no background image') }); // shown translated by the panel
       continue;
@@ -270,9 +276,9 @@ export function buildBundle(world: FoundryWorld, { now = Date.now(), assets }: {
 ${map.description}` });
     scenes.push({ fid: s._id, name: s.name, folder: folderPath(s.folder), map, hash: stableHash({ ...map, foundry: undefined, explored: undefined }), appMapId: SCENE_TO_APP_MAP[norm(s.name)] || null });
   }
-  const journals = convertJournals(world.journal || [], { folderPath, asset: A.asset, links, worldTitle: world.meta?.title });
+  const journals = convertJournals(world.journal || [], { folderPath, asset: A.asset, links, worldTitle: world.meta?.title, lang });
   const playlists = convertPlaylists(world.playlists || [], { asset: A.asset });
-  return { worldId, worldTitle: world.meta?.title || worldId, path: world.path, dataRoot: world.dataRoot, fingerprint: world.fingerprint, meta: world.meta, now, pcs, npcs, vehicles, scenes, skippedScenes, journals, playlists, assets: A };
+  return { worldId, worldTitle: world.meta?.title || worldId, path: world.path, dataRoot: world.dataRoot, fingerprint: world.fingerprint, meta: world.meta, now, pcs, npcs, vehicles, scenes, skippedScenes, journals, playlists, assets: A, lang };
 }
 
 function appFolder(fp: unknown, name: string): string {
@@ -479,8 +485,9 @@ function mergeBio(bio: unknown, foundryDesc: unknown): string {
 export function buildPc(
   pc: BundlePc,
   existing: Actor | null | undefined,
-  { mode = 'replace', now = Date.now(), worldId = '', index = 0 }: { mode?: string; now?: number; worldId?: string; index?: number } = {}
+  { mode = 'replace', now = Date.now(), worldId = '', index = 0, lang }: { mode?: string; now?: number; worldId?: string; index?: number; lang?: Lang } = {}
 ): Actor {
+  const { tr } = importText(lang);
   const fresh = freshPcFields(pc);
   const snap = snapshotOf(fresh);
   const hash = stableHash(snap);
@@ -514,9 +521,9 @@ export function buildPc(
   if (sheet.portrait && !ownPortrait) a.portrait = sheet.portrait;
   else a.portrait = a.portrait || '';
   if (sheet.gmNotesExtra && !String(a.gmNotes || '').includes(sheet.gmNotesExtra)) a.gmNotes = [a.gmNotes, sheet.gmNotesExtra].filter(Boolean).join('\n\n');
-  const orphan = 'Aucun joueur propriétaire dans Foundry : importé comme PJ retraité.';
+  const orphan = tr(tk('No owning player in Foundry: imported as a retired PC.'));
   if (!pc.owner && !String(a.gmNotes || '').includes(orphan)) a.gmNotes = [a.gmNotes, orphan].filter(Boolean).join('\n\n');
-  if (!a.concept) a.concept = 'PJ importé de Foundry';
+  if (!a.concept) a.concept = tr(tk('PC imported from Foundry'));
   // Ledger entry when money/karma moved.
   if (existing) {
     const dk = (a.karma || 0) - (existing.karma || 0);
@@ -627,7 +634,8 @@ function templateStats(npc: BundleNpc): FieldRec {
 }
 
 /** Build the bestiary template for a bundle NPC (existing = current template or null). */
-export function buildTemplate(npc: BundleNpc, existing: Template | null | undefined, { now = Date.now(), worldId = '' }: { now?: number; worldId?: string } = {}): Template {
+export function buildTemplate(npc: BundleNpc, existing: Template | null | undefined, { now = Date.now(), worldId = '', lang }: { now?: number; worldId?: string; lang?: Lang } = {}): Template {
+  const { tr } = importText(lang);
   const s = npc.sheet as FieldRec;
   const hash = stableHash(templateStats(npc));
   let t: FieldRec;
@@ -685,7 +693,7 @@ export function buildTemplate(npc: BundleNpc, existing: Template | null | undefi
       vehicles: [],
       ...(s.matrix ? { matrix: deepClone(s.matrix) } : {}),
       vision: deepClone(s.vision),
-      description: s.description || (s.hasStats ? '' : '*Fiche vide dans Foundry : statistiques par défaut (attributs 3).*'),
+      description: s.description || (s.hasStats ? '' : `*${tr(tk('Empty sheet in Foundry: default stats (attributes 3).'))}*`),
       npc: { professionalRating: guessRating(npc.name), grunt: npc.isGrunt, kind: 'metahuman', tactics: '', loot: '' },
     };
   }
@@ -805,7 +813,7 @@ export function applyImport(state: Partial<TableState>, bundle: Bundle, opts: Ap
   const pcs = pick(bundle.pcs, sel.pcs);
   pcs.forEach((pc, i) => {
     const existing = findPc(state, pc);
-    const a = buildPc(pc, existing, { mode, now, worldId: bundle.worldId, index: i });
+    const a = buildPc(pc, existing, { mode, now, worldId: bundle.worldId, index: i, lang: bundle.lang });
     if (existing && existing.id !== a.id) a.id = existing.id;
     state.actors![a.id] = a;
     if (a.portrait) syncUrls.add(a.portrait);
@@ -829,7 +837,7 @@ export function applyImport(state: Partial<TableState>, bundle: Bundle, opts: Ap
   state.bestiary ||= {};
   for (const npc of pick(bundle.npcs, sel.npcs)) {
     const existing = findTemplate(state, npc);
-    let t = buildTemplate(npc, existing, { now, worldId: bundle.worldId });
+    let t = buildTemplate(npc, existing, { now, worldId: bundle.worldId, lang: bundle.lang });
     if (opts.sanitizeTemplate) t = opts.sanitizeTemplate(t);
     state.bestiary[t.id] = t;
     if (Array.isArray(state.bestiaryRemoved)) state.bestiaryRemoved = state.bestiaryRemoved.filter((x) => x !== t.id);

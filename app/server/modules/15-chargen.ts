@@ -207,7 +207,8 @@ function genOptions(ctx: ActionContext, p: NpcGenPayload) {
 
 function encounter(ctx: ActionContext, p: NpcGenPayload) {
   const o = genOptions(ctx, p);
-  const enc: Loose = generateEncounter(o, NPC_CTX);
+  // Generated texts (concept, description, tactics, notes) are stored in the table language.
+  const enc: Loose = generateEncounter(o, { ...NPC_CTX, t: (key: string, params?: I18nParams | null) => ctx.t(key, params ?? undefined) });
   if (enc.lieutenant && o.lieutenantName) enc.lieutenant.name = o.lieutenantName;
   return { o, enc };
 }

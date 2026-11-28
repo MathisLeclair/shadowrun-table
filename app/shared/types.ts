@@ -889,6 +889,8 @@ export interface ChummerLink {
   sourceHash?: string;
   created?: boolean;
   appVersion?: string;
+  /** Language of the texts the import wrote (notes, bio headings); absent = French (imports before 2026-11). */
+  lang?: Lang;
   /** Upload URLs of the portraits. */
   mugshots?: string[];
 }

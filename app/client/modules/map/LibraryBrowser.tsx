@@ -8,10 +8,10 @@ import { send, api, type ServerError } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
 import { t, tn, tk, getLang, fmtDate } from '../../lib/i18n.ts';
 import { uid } from '/shared/util.ts';
-import { libGeometry, instanceContent, libImageUrl, matchesQuery } from '/shared/maplib.ts';
+import { libGeometry, instanceContent, libImageUrl } from '/shared/maplib.ts';
 import { MapCanvas } from './MapCanvas.tsx';
 import { themeOptions, themeLabel, lightingLabel, type MapScene } from './renderer.ts';
-import { useLibKey, signedUrl, useLibrary, loadLibrary } from './maplib-client.ts';
+import { useLibKey, signedUrl, useLibrary, loadLibrary, libDescription, libMatches } from './maplib-client.ts';
 import type { GameMap, GameView } from '../../../shared/types.ts';
 import type { LibDiff, LibEntry, LibFull, LibLinkInfo } from './types.ts';
 
@@ -113,7 +113,7 @@ function PreviewModal({ entry, game, onClose, onAdded }: PreviewModalProps) {
             {!entry.hasImage && <Badge color="red">{t('Image missing on the server')}</Badge>}
           </div>
           {getLang() === 'en' ? null : <div className="small muted">{entry.name}</div>}
-          <p className="small">{entry.description || t('No description.')}</p>
+          <p className="small">{libDescription(entry) || t('No description.')}</p>
           <div className="small muted">
             {t('{w} × {h} cells · {m} m per cell', { w: entry.width, h: entry.height, m: entry.metersPerCell })}
             <br />
@@ -231,7 +231,7 @@ export function LibraryBrowser({ game, onAdded }: LibraryBrowserProps) {
   const list = useMemo(
     () =>
       (data?.maps || [])
-        .filter((e) => (!theme || e.theme === theme) && (!source || e.source === source) && (!quality || e.quality === quality) && matchesQuery(e, q))
+        .filter((e) => (!theme || e.theme === theme) && (!source || e.source === source) && (!quality || e.quality === quality) && libMatches(e, q))
         .sort((a, b) => libName(a).localeCompare(libName(b), getLang(), { numeric: true })),
     [data, q, theme, source, quality]
   );

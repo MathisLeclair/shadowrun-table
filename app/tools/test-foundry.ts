@@ -122,7 +122,7 @@ const bundle = buildBundle(world, {});
     ok(s.skills.every((x) => x.rating > 0 && x.name && x.attr), `${pc.name} skills complete`);
     ok(s.weapons.length > 0 && s.weapons.every((w) => w.damage), `${pc.name} weapons have damage`);
     const parsed = s.weapons.filter((w) => parseDamage(w.damage).value !== null || /STR/.test(w.damage)).length;
-    const special = s.weapons.filter((w) => /^(Spécial|Grenade|Missile|Rocket|As )/i.test(w.damage)).length;
+    const special = s.weapons.filter((w) => /^(Special|Spécial|Grenade|Missile|Rocket|As )/i.test(w.damage)).length;
     ok(parsed + special === s.weapons.length && parsed >= special, `${pc.name} weapon damage codes parse (${parsed}/${s.weapons.length})`);
     ok(s.weapons.every((w) => SKILL_BY_ID[w.skill]), `${pc.name} weapon skills valid (${s.weapons.map((w) => w.skill).join(',')})`);
     ok(s.initiative.dice >= 1 && s.initiative.dice <= 5, `${pc.name} initiative dice`);
@@ -191,8 +191,10 @@ const bundle = buildBundle(world, {});
   const alley = bundle.scenes.find((s) => s.name === 'Back Alley');
   if (alley) {
     ok(alley.map.width === 32 && alley.map.height === 18 && alley.map.metersPerCell === 2, 'Back Alley 32×18 cells, 2 m');
-    ok(/Jetons dans Foundry : .*thug/.test(alley.map.description!), 'tokens listed in description');
+    ok(/Tokens in Foundry: .*thug/.test(alley.map.description!), 'tokens listed in description (English by default)');
     ok(alley.appMapId === 'map_back_alley', 'Back Alley linked to app map');
+    const frAlley = buildBundle(world, { lang: 'fr' }).scenes.find((s) => s.name === 'Back Alley')!;
+    ok(/Jetons dans Foundry : .*thug/.test(frAlley.map.description!) && /^Image \d+×\d+ px/m.test(frAlley.map.description!), 'French table: description in French (image size still parsed by the library)');
   }
   const bar = bundle.scenes.find((s) => s.name === 'Bar');
   if (bar) ok(bar.map.walls.filter((w) => w.door).length === 11 && bar.map.walls.some((w) => w.door?.state === 'locked'), 'Bar: 11 doors incl. locked');

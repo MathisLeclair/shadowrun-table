@@ -193,7 +193,7 @@ export function resolveData(kind: DataKind | null, item: { catalogId?: string | 
 const GRADE_EN: Record<string, string> = { standard: 'Standard', alpha: 'Alphaware', beta: 'Betaware', delta: 'Deltaware', used: 'Used' };
 
 const UNARMED_ID = '63dcfdb6-bbd9-4a58-bbf4-cd35f7614fdc';
-const isUnarmed = (it: AnyItem): boolean => String(it.catalogId || '').toLowerCase() === UNARMED_ID || /^(mains nues|unarmed attack|attaque à mains nues)$/i.test(String(it.name || '').trim());
+const isUnarmed = (it: AnyItem): boolean => String(it.catalogId || '').toLowerCase() === UNARMED_ID || /^(mains nues|unarmed|unarmed attack|attaque à mains nues)$/i.test(String(it.name || '').trim());
 
 /** Chummer weapon category for a custom (unknown) weapon, from its app skill. */
 const SKILL_CATEGORY: Record<string, string> = {
@@ -209,7 +209,7 @@ function buildWeapon(item: Weapon, data: Element | null, guid: string, assignSub
   const damage = d('damage', String(item.damage || '').replace(/\bSTR\b/g, '{STR}'));
   const have = new Set((item.accessories || []).map((x) => norm(x.name)));
   const builtIn = (data?.get('accessories')?.all('accessory') || []).map((a) => a.val('name')).filter((nm) => nm && !have.has(norm(nm)));
-  const notes = [item.notes || '', builtIn.length ? `Accessoires d’origine à rajouter dans Chummer : ${builtIn.join(', ')}` : ''].filter(Boolean).join(' — ');
+  const notes = [item.notes || '', builtIn.length ? `Built-in accessories to add back in Chummer: ${builtIn.join(', ')}` : ''].filter(Boolean).join(' — ');
   setMany(n, {
     sourceid: data ? data.val('id') : '00000000-0000-0000-0000-000000000000', guid,
     name: data ? data.val('name') : item.name, category: d('category', SKILL_CATEGORY[item.skill] || (melee ? 'Blades' : 'Heavy Pistols')),
@@ -311,11 +311,12 @@ function buildVehicle(item: Vehicle, data: Element | null, guid: string, assignS
 }
 
 function buildContact(item: Contact, guid: string): Element {
-  const enemy = /ENNEMI/.test(item.notes || '');
+  // parse.ts ENEMY_NOTE in the import language (French « ENNEMI » before 2026-11).
+  const enemy = /^(ENEMY|ENNEMI)\b/.test(item.notes || '');
   return el('contact', [
     el('name', item.name), el('role', item.role || ''), el('location', ''), el('connection', String(item.connection ?? 1)), el('loyalty', String(item.loyalty ?? 1)),
     el('metatype', ''), el('gender', ''), el('age', ''), el('contacttype', ''), el('preferredpayment', ''), el('hobbiesvice', ''), el('personallife', ''),
-    el('type', enemy ? 'Enemy' : 'Contact'), el('file', ''), el('relative', 'False'), el('notes', String(item.notes || '').replace(/^ENNEMI( — )?/, '')),
+    el('type', enemy ? 'Enemy' : 'Contact'), el('file', ''), el('relative', 'False'), el('notes', String(item.notes || '').replace(/^(ENEMY|ENNEMI)( — )?/, '')),
     el('notesColor', 'Chocolate'), el('groupname', ''), el('colour', ''), el('group', 'False'), el('family', 'False'), el('blackmail', 'False'),
     el('free', 'False'), el('readonly', 'False'), el('guid', guid), el('mainmugshotindex', '-1'), el('mugshots', ''),
   ]);
@@ -687,10 +688,12 @@ function shiftSkill(c: Element, node: Element, def: ChummerSkillDef | null, delt
   }
 }
 
-export const STREET_ADJUST = 'Ajustement Street Cred (Shadowrun Table)';
+export const STREET_ADJUST = 'Street Cred adjustment (Shadowrun Table)';
+/** Name written by the exports before 2026-11 (still recognized, renamed when touched). */
+const STREET_ADJUST_OLD = 'Ajustement Street Cred (Shadowrun Table)';
 /** Custom Chummer improvement (Bonus Street Cred) holding a negative adjustment, or null. */
 function streetAdjustNode(c: Element): Element | null {
-  return c.get('improvements')?.all('improvement').find((i) => i.val('customname') === STREET_ADJUST) || null;
+  return c.get('improvements')?.all('improvement').find((i) => [STREET_ADJUST, STREET_ADJUST_OLD].includes(i.val('customname'))) || null;
 }
 
 /**
@@ -706,13 +709,16 @@ function setStreetValues(c: Element, dStreet: number, dNotoriety: number, dAware
     if (adj) c.get('improvements')!.remove(adj);
   } else {
     c.set('streetcred', '0');
-    if (adj) adj.set('val', String(total));
+    if (adj) {
+      adj.set('val', String(total));
+      adj.set('customname', STREET_ADJUST);
+    }
     else {
       container(c, 'improvements').children.push(el('improvement', [
         el('target', ''), el('improvedname', ''), el('sourcename', newGuid()), el('min', '0'), el('max', '0'), el('aug', '0'), el('augmax', '0'),
         el('val', String(total)), el('rating', '1'), el('exclude', ''), el('condition', ''), el('improvementttype', 'StreetCred'), el('improvementsource', 'Custom'),
         el('custom', 'True'), el('customname', STREET_ADJUST), el('customid', 'streetcred'), el('customgroup', ''), el('addtorating', '0'), el('enabled', '1'),
-        el('order', '0'), el('notes', 'Street Cred fixée par le MJ dans Shadowrun Table.'), el('notesColor', 'Chocolate'),
+        el('order', '0'), el('notes', 'Street Cred set by the GM in Shadowrun Table.'), el('notesColor', 'Chocolate'),
       ]));
     }
   }
@@ -753,17 +759,19 @@ export function exportChum5(actor: Actor, { now = Date.now(), mugshots = null }:
   warnings.add = warn.add;
   warnings.missing = [];
   const stored = actor.chummer?.xml;
+  // The base parse writes its texts (notes, headings) in the language of the import, so only real edits differ.
+  const importLang = actor.chummer?.lang || 'fr';
   let doc: XmlDocument;
   let base: ParsedActor;
   let mode: 'patch' | 'generate';
   if (stored) {
     mode = 'patch';
     doc = parseXml(stored);
-    base = parseChum5(stored, { keepXml: false, makeId: () => 'base' }).actor;
+    base = parseChum5(stored, { keepXml: false, makeId: () => 'base', lang: importLang }).actor;
   } else {
     mode = 'generate';
     doc = blankDocument(actor);
-    base = parseChum5(serializeXml(doc), { keepXml: false, makeId: () => 'base' }).actor;
+    base = parseChum5(serializeXml(doc), { keepXml: false, makeId: () => 'base', lang: importLang }).actor;
   }
   const c = doc.root;
   const created = c.val('created') === 'True';
@@ -1100,15 +1108,15 @@ function addExpenses(c: Element, actor: Actor, base: ParsedActor, mode: string, 
     if (Number(h.nuyen)) add(Number(h.ts), Math.round(Number(h.nuyen)), why, 'Nuyen');
   }
   const netK = Math.round((actor.karma || 0) - (base.karma || 0));
-  if (netK !== sumK) add(now, netK - sumK, 'Ajustement de karma (Shadowrun Table)', 'Karma');
+  if (netK !== sumK) add(now, netK - sumK, 'Karma adjustment (Shadowrun Table)', 'Karma');
   const career = Math.round((actor.karmaTotal || 0) - (base.karmaTotal || 0));
   if (career > posK) {
     const d = career - posK;
-    add(now, d, 'Karma de carrière (Shadowrun Table)', 'Karma');
-    add(now, -d, 'Karma dépensé (Shadowrun Table)', 'Karma');
+    add(now, d, 'Career karma (Shadowrun Table)', 'Karma');
+    add(now, -d, 'Karma spent (Shadowrun Table)', 'Karma');
   } else if (career < posK) warnings.add({ t: 'Career karma in Chummer will be higher than in the app (earnings log).' });
   const netN = Math.round((actor.nuyen || 0) - (base.nuyen || 0));
-  if (netN !== sumN) add(now, netN - sumN, 'Ajustement de nuyens (Shadowrun Table)', 'Nuyen');
+  if (netN !== sumN) add(now, netN - sumN, 'Nuyen adjustment (Shadowrun Table)', 'Nuyen');
 }
 
 /** Generated files: values bought « at creation » (base) rather than with karma, within Chummer's limits. */
