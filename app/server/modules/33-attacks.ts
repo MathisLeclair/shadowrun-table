@@ -146,12 +146,49 @@ function doResistSpell(ctx: ActionContext, atk: Attack, target: Actor, { modifie
   return roll;
 }
 
+/** Astral combat (SR5 p. 315): the target defends with Intuition + Logic (no active defense), then soaks. */
+function doAstralDefense(ctx: ActionContext, atk: Attack, target: Actor, { modifier = 0, explode = false }: ResolveOpts = {}): PerformedRoll {
+  const roll = performRoll(ctx, {
+    actorId: target.id, attr: 'INT', attr2: 'LOG', label: tk('Astral defense'), limit: null, modifier: int(modifier, -30, 30), explode: !!explode,
+  }, { logExtra: { attackId: atk.id, defense: true } });
+  atk.defenseHits = roll.hits;
+  atk.defenseLogId = roll.logId;
+  atk.net = atk.hits - roll.hits;
+  if (atk.net <= 0) {
+    atk.status = 'missed';
+    atk.resolvedTs = ctx.now;
+    logAttack(ctx, tk('{target} avoids {attacker}\'s attack.'), { target: atk.targetName, attacker: atk.attackerName }, atk.gmOnly);
+  } else {
+    atk.status = 'soak';
+    atk.modifiedDv = (atk.dv || 0) + atk.net;
+    logAttack(ctx, tk('{attacker} hits {target}: DV {dv}{type}, AP {ap}.'), { attacker: atk.attackerName, target: atk.targetName, dv: atk.modifiedDv, type: atk.type, ap: 0 }, atk.gmOnly);
+  }
+  return roll;
+}
+
+/**
+ * An astral attack (called by 47-magic after the Astral Combat roll): DV and type chosen by the attacker, defense INT + LOG,
+ * soak with `soak` (WIL for an astral form, BOD for a dual-natured body) and no armor (SR5 p. 315).
+ */
+export function addAstralAttack(ctx: ActionContext, o: { attacker: Actor; target: Actor; mapId: string | null; hits: number; dv: number; type: DamageType; soak: AttrKey; rollLogId?: string; gmOnly?: boolean }): Attack {
+  const s = slice(ctx.state);
+  const map = o.mapId ? ctx.state.maps?.[o.mapId] || null : null;
+  const gmOnly = !!o.gmOnly || (o.target.type === 'npc' && !!o.target.hidden);
+  return push<Attack>(ctx.state, s.list, {
+    id: ctx.uid('atk'), ts: ctx.now, mapId: map?.id || null, kind: 'melee', attackerId: o.attacker.id, attackerName: o.attacker.name,
+    ...(o.rollLogId ? { attackLogId: o.rollLogId } : {}), targetId: o.target.id, targetTokenId: tokenOf(map, o.target.id)?.id || null, targetName: o.target.name,
+    weaponName: { fr: 'Combat astral', en: 'Astral combat' }, hits: o.hits, dv: o.dv, type: o.type, ap: 0, astral: { soak: o.soak },
+    status: o.hits > 0 ? 'defense' : 'missed', ...(o.hits > 0 ? {} : { resolvedTs: ctx.now }), ...(gmOnly ? { gmOnly: true } : {}),
+  }, MAX_ATTACKS);
+}
+
 /** Defense test of the target (REA + INT + options), then the attack moves to soak / missed / done. Returns the roll. */
 function doDefend(ctx: ActionContext, atk: Attack, { options = [], situations = [], modifier = 0, explode = false }: ResolveOpts = {}): PerformedRoll {
   if (atk.status !== 'defense') ctx.fail('This attack is not waiting for a defense');
   const target = actorOf(ctx, atk.targetId);
   if (!ctx.owns(target.id)) ctx.fail('Only the target\'s player (or the GM) can defend');
   if (atk.kind === 'spell' && atk.spell?.mode === 'direct') return doResistSpell(ctx, atk, target, { modifier, explode });
+  if (atk.astral) return doAstralDefense(ctx, atk, target, { modifier, explode });
   const turn = turnOf(ctx.state, target.id);
   const plan = defenseLines(target, atk, {
     options: options.filter((id: string) => DEFENSE_BY_ID[id]), situations: situations.filter((id: string) => SITUATION_BY_ID[id]),
@@ -260,6 +297,23 @@ function doSoak(ctx: ActionContext, atk: Attack, { modifier = 0, explode = false
   const target = actorOf(ctx, atk.targetId);
   if (!ctx.owns(target.id)) ctx.fail('Only the target\'s player (or the GM) can resist the damage');
   if (atk.kind === 'toxin') return doToxin(ctx, atk, target, { modifier, explode });
+  if (atk.astral) {
+    // Astral soak: the astral body (WIL) or the dual-natured body (BOD), no armor (SR5 p. 315).
+    const roll = performRoll(ctx, {
+      actorId: target.id, attr: atk.astral.soak, label: tk('Soak'), applyWounds: false, limit: null, modifier: int(modifier, -30, 30), explode: !!explode,
+    }, { logExtra: { attackId: atk.id, soak: true } });
+    const dv = atk.modifiedDv ?? atk.dv ?? 0;
+    const boxes = Math.max(0, dv - roll.hits);
+    atk.soakHits = roll.hits;
+    atk.soakLogId = roll.logId;
+    atk.damage = boxes;
+    atk.damageType = atk.type;
+    atk.status = 'done';
+    atk.resolvedTs = ctx.now;
+    if (boxes > 0) applyDamage(ctx, target, boxes, atk.type);
+    else logAttack(ctx, tk('{target} resists it all ({dv}{type}).'), { target: atk.targetName, dv, type: atk.type }, atk.gmOnly);
+    return roll;
+  }
   const internal: RollInternal = { ap: atk.ap, logExtra: { attackId: atk.id, soak: true } };
   const roll = performRoll(ctx, {
     actorId: target.id, attr: 'BOD', test: 'soak', label: tk('Soak'), applyWounds: false, limit: null, modifier: int(modifier, -30, 30), explode: !!explode,

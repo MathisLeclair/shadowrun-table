@@ -442,6 +442,21 @@ export function spiritStats(def: SpiritDef, force: number): {
   };
 }
 
+// ---------------------------------------------------------------------------
+// Astral (SR5 pp. 312-315)
+// ---------------------------------------------------------------------------
+
+/** Astral perception: magicians, or adepts with the Astral Perception power (SR5 p. 312). */
+export function canPerceiveAstral(actor: MagicActor | null | undefined): boolean {
+  if (!actor || !isAwakened(actor) || actor.spirit) return false;
+  if (usesTradition(actor)) return true;
+  return (actor.powers || []).some((p) => /astral perception|perception astrale/i.test([p?.name, p?.nameEn, p?.nameFr].filter(Boolean).join(' ')));
+}
+/** Astral projection: full magicians only (SR5 p. 313). */
+export const canProjectAstral = (actor: MagicActor | null | undefined): boolean => !!actor && usesTradition(actor);
+/** A projecting magician's astral form uses mental attributes in place of physical ones (SR5 p. 314, Astral Attributes table). */
+export const ASTRAL_ATTRIBUTES: Record<string, AttrKey> = { AGI: 'LOG', BOD: 'WIL', REA: 'INT', STR: 'CHA' };
+
 /** Binding costs Force × 25 drams of reagents (SR5 p. 300). */
 export const BINDING_DRAMS = 25;
 /** Reagents of the gear (« Reagents », « Réactifs »…): their quantity counts as drams. */
@@ -495,6 +510,7 @@ export function magicHints({ actor, magic, spirits }: { actor: MagicActor | null
     }
   }
   const n = actor.id ? sustainedBy(magic, actor.id) : 0;
+  if (magic && (magic as { astral?: Record<string, { mode?: string }> }).astral?.[actor.id as string]?.mode === 'projecting') add(tk('You are projecting: your body is empty and helpless until you return.'), { tone: 'warn' });
   if (spirits?.some((s) => s.spirit && !s.spirit.bound)) add(tk('Your unbound spirit leaves at the next sunrise or sunset, with the services it still owes.'));
   if (n) add(tk('You are sustaining {n} spell(s): −{p} dice on every test. Drop the ones you no longer need.'), { tone: 'warn', params: { n, p: n * SUSTAIN_PENALTY } });
   return out.sort((a, b) => (TONE_RANK[a.tone] ?? 2) - (TONE_RANK[b.tone] ?? 2));

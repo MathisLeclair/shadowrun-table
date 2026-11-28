@@ -49,6 +49,8 @@
 
 .mg-overview td { vertical-align: middle; }
 .mg-spirits { display: flex; flex-direction: column; gap: 8px; }
+.mg-astral { display: flex; flex-direction: column; gap: 6px; }
+.mg-astral.on { border-color: color-mix(in srgb, var(--cyan) 55%, transparent); }
 .mg-spirit { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; background: var(--panel); display: flex; flex-direction: column; gap: 6px; }
 .mg-spirit-services { font: 700 13px var(--mono); color: var(--magenta); }
 .mg-spirit-btns { gap: 6px; }

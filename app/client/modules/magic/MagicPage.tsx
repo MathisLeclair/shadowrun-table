@@ -1,15 +1,15 @@
 // « Magic » tab: cockpit of an awakened character for players, overview + cockpit of every awakened character for the GM.
 // Design and the flows still to come (cast, sustain, summon, astral, foci): docs/design/magic.md.
 import { useEffect, useState } from 'react';
-import { Tabs, Empty, Button, Badge, Toggle } from '../../lib/ui.tsx';
+import { Tabs, Empty, Button, Badge, Toggle, Modal, Select } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
 import { useUI, openSheet } from '../../lib/ui-store.ts';
 import type { GameProps } from '../../lib/net.ts';
 import { t, tk, attrShort, getLang } from '../../lib/i18n.ts';
 import { attr, derive } from '/shared/sr5.ts';
-import { drainAttr, drainPool, sustainedBy, usesTradition, magicHints, reagentDrams, SUSTAIN_PENALTY, BINDING_DRAMS, type MagicHint } from '/shared/magic.ts';
+import { drainAttr, drainPool, sustainedBy, usesTradition, magicHints, reagentDrams, canPerceiveAstral, canProjectAstral, SUSTAIN_PENALTY, BINDING_DRAMS, ASTRAL_ATTRIBUTES, type MagicHint } from '/shared/magic.ts';
 import { RollDialog } from '../sheet/RollDialog.tsx';
-import { RuleRef, ItemRef } from '../books/BookRef.tsx';
+import { RuleRef, ItemRef, BookRef } from '../books/BookRef.tsx';
 import { categoryLabel, itemLabel } from '../sheet/common.tsx';
 import { isGM, magicActors, drainRollLabel, TraditionPicker } from './common.tsx';
 import CastModal from './CastModal.tsx';
@@ -208,6 +208,80 @@ function SpiritsPanel({ game, actor, own, onSummon, onBanish }: { game: GameView
   );
 }
 
+/** Unarmed astral attack (SR5 p. 315): a target of the shown map, Stun or Physical (magic/astralAttack). */
+function AstralAttackModal({ game, actor, onClose }: { game: GameView; actor: Actor; onClose: () => void }) {
+  const map = game.scene?.activeMapId ? game.maps?.[game.scene.activeMapId] : null;
+  const targets = (map?.tokens || []).filter((x) => x.actorId && x.actorId !== actor.id);
+  const [target, setTarget] = useState(targets[0]?.actorId || '');
+  const [damage, setDamage] = useState<'P' | 'S'>('S');
+  const [busy, setBusy] = useState(false);
+  const go = async () => {
+    setBusy(true);
+    const r = await send<{ hits: number; dv: number }>('magic/astralAttack', { actorId: actor.id, targetId: target, mapId: map?.id, damage }).catch(() => null);
+    setBusy(false);
+    if (r) {
+      toast(t('Astral attack: {hits} hit(s), DV {dv} — the target defends in the attack tray.', { hits: r.hits, dv: r.dv }), 'success');
+      onClose();
+    }
+  };
+  return (
+    <Modal title={t('Astral attack — {name}', { name: actor.name })} onClose={onClose} width={460}>
+      <div className="mg-cast">
+        <div className="faint small">{t('Astral Combat + Willpower [Astral] against Intuition + Logic; DV = astral Strength + net hits (SR5 p. 315).')}</div>
+        <div className="mg-cast-row">
+          <label className="field-label">{t('Target')}</label>
+          <Select value={target} onChange={setTarget} options={targets.map((x) => ({ value: x.actorId as string, label: x.astral ? t('{name} (astral)', { name: x.name }) : x.name }))} />
+        </div>
+        <div className="mg-cast-row">
+          <label className="field-label">{t('Damage')}</label>
+          <Select value={damage} onChange={(v) => setDamage(v === 'P' ? 'P' : 'S')} options={[{ value: 'S', label: t('Stun') }, { value: 'P', label: t('Physical') }]} />
+        </div>
+      </div>
+      <div className="row spread mg-cast-foot">
+        <span />
+        <div className="row">
+          <Button onClick={onClose}>{t('Cancel')}</Button>
+          <Button variant="primary" disabled={!target || busy} onClick={go}>⚔ {t('Attack')}</Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+/** Astral perception / projection (SR5 pp. 312-314): switches, the astral form's attributes, astral attack. */
+function AstralPanel({ game, actor, own }: { game: GameView; actor: Actor; own: boolean }) {
+  const gm = isGM(game);
+  const mode = game.magic?.astral?.[actor.id]?.mode || null;
+  const canPerceive = gm || canPerceiveAstral(actor);
+  const canProject = gm || canProjectAstral(actor);
+  const [attacking, setAttacking] = useState(false);
+  if (!canPerceive) return null;
+  const set = (m: string | null) => void send('magic/astral', { actorId: actor.id, mode: m, mapId: game.scene?.activeMapId }).catch(() => null);
+  return (
+    <div className={'mg-panel mg-astral' + (mode ? ' on' : '')}>
+      <div className="mg-panel-title">
+        {t('Astral plane')} <BookRef source="SR5" page={312} />
+      </div>
+      {own && (
+        <div className="row wrap">
+          {mode !== 'perceiving' && <Button small onClick={() => set('perceiving')} title={t('Simple Action: see auras and astral forms, become dual-natured (SR5 p. 312)')}>{t('Perceive')}</Button>}
+          {canProject && mode !== 'projecting' && <Button small onClick={() => set('projecting')} title={t('Leave your body: your astral form moves on the map, your body stays empty (SR5 p. 313)')}>{t('Project')}</Button>}
+          {mode && <Button small variant="accent" onClick={() => set(null)}>{t('Back to the physical plane')}</Button>}
+          {mode && <Button small onClick={() => setAttacking(true)}>⚔ {t('Astral attack')}</Button>}
+        </div>
+      )}
+      {mode === 'projecting' && (
+        <div className="small">
+          {t('Astral form: {list}', { list: Object.entries(ASTRAL_ATTRIBUTES).map(([p, m]) => `${attrShort(p)} → ${attrShort(m)} ${attr(actor, m)}`).join(' · ') })}
+          <div className="amber">{t('Your body is empty and helpless while you project.')}</div>
+        </div>
+      )}
+      {mode === 'perceiving' && <div className="small muted">{t('Dual-natured: you see astral forms and can be attacked on both planes.')}</div>}
+      {attacking && <AstralAttackModal game={game} actor={actor} onClose={() => setAttacking(false)} />}
+    </div>
+  );
+}
+
 /** Cockpit of one awakened character. */
 export function Cockpit({ game, actor }: { game: GameView; actor: Actor }) {
   const gm = isGM(game);
@@ -264,7 +338,7 @@ export function Cockpit({ game, actor }: { game: GameView; actor: Actor }) {
             <b>{sustained}</b>
             <small>{sustained ? t('−{n} dice', { n: sustained * SUSTAIN_PENALTY }) : t('no penalty')}</small>
           </div>
-          <div className="mg-stat" title={t('Astral initiative: Intuition × 2 + 2D6 (SR5 p. 159)')}>
+          <div className="mg-stat" title={t('Astral initiative: Intuition × 2 + 3D6 (SR5 p. 314)')}>
             <span className="mg-stat-l">{t('Astral')}</span>
             <b>{astral === 'projecting' ? t('Projecting') : astral === 'perceiving' ? t('Perceiving') : t('Physical')}</b>
             <small>{t('init. {base} + {dice}D6', { base: d.astralInitiative.base, dice: d.astralInitiative.dice })}</small>
@@ -313,6 +387,7 @@ export function Cockpit({ game, actor }: { game: GameView; actor: Actor }) {
           )}
         </div>
       )}
+      <AstralPanel game={game} actor={actor} own={own} />
       <SpiritsPanel game={game} actor={actor} own={own} onSummon={own && skillRating(actor, 'summoning') > 0 ? () => setSummoning(true) : null} onBanish={own && skillRating(actor, 'banishing') > 0 ? () => setBanishing(true) : null} />
       <div className="mg-grid">
         {(spells.length > 0 || hasSpellcasting) && (

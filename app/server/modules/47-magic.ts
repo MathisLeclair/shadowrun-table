@@ -13,9 +13,10 @@ import {
   isAwakened, DRAIN_ATTRS, drainAttr, drainValue, spellDrainType, spellReach, isAreaSpell, spellCategory, maxForce, RECKLESS_DV,
   isSustainable, spellEffects, combatSpellProfile, MIN_DRAIN, spellResistance, NO_AURA_KINDS, OBJECT_RESISTANCE,
   spiritStats, traditionSpiritTypes, optionalPowerCount, BINDING_DRAMS, isReagent, reagentDrams, aidSpiritType,
+  canPerceiveAstral, canProjectAstral,
 } from '../../shared/magic.ts';
 import { spellCatalogInfo } from '../lib/spells.ts';
-import { addSpellAttack } from './33-attacks.ts';
+import { addSpellAttack, addAstralAttack } from './33-attacks.ts';
 import { combatHooks, addEntries } from './30-combat.ts';
 import { actorTradition, traditionDef } from '../lib/traditions.ts';
 import { performRoll, applyDamage, removeActor } from './10-characters.ts';
@@ -287,6 +288,29 @@ function actorOf(ctx: ActionContext, id: unknown): Actor {
 type SetTraditionPayload = { actorId?: ActorId; tradition?: unknown; drain?: unknown };
 
 // ---------------------------------------------------------------------------
+// Astral (SR5 pp. 312-315): state.magic.astral = who perceives / projects; astral forms are map tokens with `astral: true`
+// (a projecting magician's form, a spirit on the astral plane) that only astral viewers see (filter below).
+// ---------------------------------------------------------------------------
+
+const STATUS_EMPTY_BODY = 'empty body'; // token status of a projecting magician's body (English key, statusText translates it)
+
+/** Leave the astral plane: the astral form's tokens go, the body is no longer empty. */
+function endProjection(state: TableState, actorId: ActorId): void {
+  for (const map of Object.values(state.maps || {})) {
+    map.tokens = (map.tokens || []).filter((t) => !(t.actorId === actorId && t.astral));
+    for (const t of map.tokens) if (t.actorId === actorId && t.status?.includes(STATUS_EMPTY_BODY)) t.status = t.status.filter((s) => s !== STATUS_EMPTY_BODY);
+  }
+  for (const e of state.combat?.entries || []) if (e.actorId === actorId && e.mode === 'astral') e.mode = 'physical';
+}
+
+/** Does this user see astral forms? Their own astrally active characters (or spirits), or the GM's setting. */
+function seesAstral(state: TableState, own: Set<string>): boolean {
+  const m = state.magic;
+  if (m?.settings?.showAstralToPlayers) return true;
+  return [...own].some((id) => !!m?.astral?.[id] || (state.actors?.[id]?.spirit && !state.actors[id].spirit!.materialized));
+}
+
+// ---------------------------------------------------------------------------
 // Spirits (SR5 pp. 300-304): a summoned spirit is an NPC actor (npc.kind 'spirit', actor.spirit) controlled by the player of
 // its summoner: its id is added to that player's characterIds, so the sheet, rolls, token and combat rights follow.
 // ---------------------------------------------------------------------------
@@ -513,6 +537,10 @@ function createSpirit(ctx: ActionContext, summoner: Actor, def: NonNullable<Retu
   for (const u of Object.values(ctx.state.users || {})) {
     if ((u.characterIds || []).includes(summoner.id) && !u.characterIds.includes(sp.id)) u.characterIds.push(sp.id);
   }
+  // It arrives on the astral plane next to its summoner (SR5 p. 300): an astral token on the shown map.
+  const map = ctx.state.scene?.activeMapId ? ctx.state.maps?.[ctx.state.scene.activeMapId] : null;
+  const near = map ? tokenOf(map, summoner.id) : null;
+  if (map && near) placeActorToken(ctx.state, map, sp, near.x, near.y, { disposition: sp.disposition || 'ally', hidden: !!sp.hidden, astral: true });
   return sp;
 }
 
@@ -652,16 +680,15 @@ const actions: Record<string, ActionDef> = {
       sp.spirit.materialized = on;
       sp.npc = { ...(sp.npc || {}), initMode: on ? 'physical' : 'astral' };
       for (const e of ctx.state.combat?.entries || []) if (e.actorId === sp.id) e.mode = on ? 'physical' : 'astral';
-      if (on) {
-        const mapId = str(p.mapId, 80) || ctx.state.scene?.activeMapId || '';
-        const map = mapId ? ctx.state.maps?.[mapId] : null;
-        if (map && !tokenOf(map, sp.id)) {
-          const near = tokenOf(map, sp.spirit.summonerId);
-          placeActorToken(ctx.state, map, sp, near ? near.x : Math.floor(map.width / 2), near ? near.y : Math.floor(map.height / 2), { disposition: sp.disposition || 'ally', hidden: !!sp.hidden });
-        }
-      } else {
-        for (const map of Object.values(ctx.state.maps || {})) map.tokens = (map.tokens || []).filter((t) => t.actorId !== sp.id);
+      // Its token stays: physical (materialized, dual-natured) or astral (seen by astral viewers only).
+      for (const map of Object.values(ctx.state.maps || {})) for (const t of map.tokens || []) if (t.actorId === sp.id) t.astral = !on || undefined;
+      const mapId = str(p.mapId, 80) || ctx.state.scene?.activeMapId || '';
+      const map = mapId ? ctx.state.maps?.[mapId] : null;
+      if (map && !tokenOf(map, sp.id)) {
+        const near = tokenOf(map, sp.spirit.summonerId);
+        placeActorToken(ctx.state, map, sp, near ? near.x : Math.floor(map.width / 2), near ? near.y : Math.floor(map.height / 2), { disposition: sp.disposition || 'ally', hidden: !!sp.hidden, ...(on ? {} : { astral: true }) });
       }
+      for (const m of Object.values(ctx.state.maps || {})) for (const t of m.tokens || []) if (t.actorId === sp.id && !t.astral) delete t.astral;
       logMagic(ctx, ctx.state.actors[sp.spirit.summonerId] || sp, on ? tk('{name} materializes.') : tk('{name} returns to the astral plane.'), { name: sp.name }, { event: 'spirit', actorId: sp.id }, !!sp.hidden);
       return { materialized: on };
     },
@@ -721,6 +748,11 @@ const actions: Record<string, ActionDef> = {
       if (!sp.spirit.bound) ctx.fail('Only a bound spirit rests on its metaplane');
       const on = !!p.present;
       sp.spirit.present = on;
+      if (on) {
+        const map = ctx.state.scene?.activeMapId ? ctx.state.maps?.[ctx.state.scene.activeMapId] : null;
+        const near = map ? tokenOf(map, sp.spirit.summonerId) : null;
+        if (map && near && !tokenOf(map, sp.id)) placeActorToken(ctx.state, map, sp, near.x, near.y, { disposition: sp.disposition || 'ally', hidden: !!sp.hidden, astral: true });
+      }
       if (!on) {
         sp.spirit.materialized = false;
         for (const map of Object.values(ctx.state.maps || {})) map.tokens = (map.tokens || []).filter((t) => t.actorId !== sp.id);
@@ -748,6 +780,72 @@ const actions: Record<string, ActionDef> = {
       const caster = ctx.state.actors[s.casterId];
       logMagic(ctx, caster || sp, tk('{spirit} sustains {spell} for {n} Combat Turn(s) (one service).'), { spirit: sp.name, spell: s.name, n: sp.spirit.force }, { event: 'spirit', actorId: sp.id }, !!sp.hidden);
       return { turns: sp.spirit.force, services: sp.spirit.services };
+    },
+  },
+
+  /**
+   * { actorId, mode: 'perceiving' | 'projecting' | null, mapId? } — astral perception (SR5 p. 312: magicians, adepts with the
+   * power) or projection (p. 313: magicians): the body stays (status « empty body »), an astral token appears next to it;
+   * astral initiative in a fight. null: back to the physical plane.
+   */
+  'magic/astral': {
+    role: 'any',
+    handler(ctx: ActionContext, p: { actorId?: ActorId; mode?: unknown; mapId?: unknown } = {}) {
+      const a = actorOf(ctx, p.actorId);
+      const m = slice(ctx.state);
+      const mode = p.mode === 'perceiving' || p.mode === 'projecting' ? p.mode : null;
+      if (mode === 'perceiving' && !ctx.isGM && !canPerceiveAstral(a)) ctx.fail('{name} cannot perceive the astral plane', { name: a.name });
+      if (mode === 'projecting' && !ctx.isGM && !canProjectAstral(a)) ctx.fail('Only magicians can project their astral form');
+      const was = m.astral[a.id]?.mode || null;
+      if (was === 'projecting' && mode !== 'projecting') endProjection(ctx.state, a.id);
+      if (!mode) {
+        delete m.astral[a.id];
+        logMagic(ctx, a, tk('{name} returns to the physical plane.'), { name: a.name }, { event: 'astral', actorId: a.id }, hiddenCaster(a));
+        return { mode: null };
+      }
+      const entry: TableState['magic']['astral'][string] = { mode, since: ctx.now };
+      if (mode === 'projecting' && was !== 'projecting') {
+        const mapId = str(p.mapId, 80) || ctx.state.scene?.activeMapId || '';
+        const map = mapId ? ctx.state.maps?.[mapId] : null;
+        const body = map ? tokenOf(map, a.id) : null;
+        if (map && body) {
+          body.status = [...new Set([...(body.status || []), STATUS_EMPTY_BODY])];
+          placeActorToken(ctx.state, map, a, body.x, body.y, { name: a.name, disposition: body.disposition, hidden: !!body.hidden, astral: true });
+          entry.mapId = map.id;
+        }
+        for (const e of ctx.state.combat?.entries || []) if (e.actorId === a.id) e.mode = 'astral';
+      }
+      m.astral[a.id] = entry;
+      logMagic(ctx, a, mode === 'projecting' ? tk('{name} projects their astral form: the body stays behind, empty.') : tk('{name} perceives the astral plane.'), { name: a.name }, { event: 'astral', actorId: a.id }, hiddenCaster(a));
+      return { mode };
+    },
+  },
+
+  /**
+   * { actorId, targetId, mapId?, damage: 'P' | 'S' } — unarmed astral attack (SR5 p. 315): Astral Combat + WIL [Astral] vs
+   * INT + LOG; DV = astral Strength (CHA when projecting, Force for a spirit, else STR) + net hits, Stun or Physical.
+   */
+  'magic/astralAttack': {
+    role: 'any',
+    handler(ctx: ActionContext, p: { actorId?: ActorId; targetId?: unknown; mapId?: unknown; damage?: unknown } = {}) {
+      const a = actorOf(ctx, p.actorId);
+      const m = slice(ctx.state);
+      const astralOf = (x: Actor) => !!m.astral[x.id] || (!!x.spirit && !x.spirit.materialized);
+      if (!astralOf(a) && !(a.spirit && a.spirit.materialized)) ctx.fail('{name} is not on the astral plane', { name: a.name });
+      const t = ctx.state.actors[str(p.targetId, 80)];
+      if (!t) ctx.fail('Unknown character');
+      if (t.id === a.id) ctx.fail('You can\'t target yourself');
+      const secret = hiddenCaster(a);
+      const roll = performRoll(ctx, { actorId: a.id, skillId: 'astral_combat', label: tk('Astral combat'), ...(secret ? { secret: true } : {}) });
+      const projecting = m.astral[a.id]?.mode === 'projecting';
+      const dv = a.spirit ? a.spirit.force : attr(a, projecting ? 'CHA' : 'STR');
+      // The target soaks with its astral body (WIL when projecting or an astral spirit) or its physical body (BOD).
+      const astralForm = m.astral[t.id]?.mode === 'projecting' || (!!t.spirit && !t.spirit.materialized);
+      const atk = addAstralAttack(ctx, {
+        attacker: a, target: t, mapId: str(p.mapId, 80) || ctx.state.scene?.activeMapId || null, hits: roll.hits, dv, type: p.damage === 'S' ? 'S' : 'P',
+        soak: astralForm ? 'WIL' : 'BOD', rollLogId: roll.logId, gmOnly: secret,
+      });
+      return { attackId: atk.id, hits: roll.hits, dv };
     },
   },
 
@@ -819,12 +917,17 @@ const mod: ServerModule = {
   actions,
 
   /** Players: the spells their characters sustain or are under, their own astral state (all of them when the GM shows them). */
-  filter(view, user) {
+  filter(view, user, full) {
     const m = view.magic;
     if (!m) return;
     const own = new Set(user.characterIds || []);
     m.sustained = Object.fromEntries(Object.entries(m.sustained || {}).filter(([, s]) => own.has(s.casterId) || (s.targetIds || []).some((id) => own.has(id))));
     m.pendingDrain = Object.fromEntries(Object.entries(m.pendingDrain || {}).filter(([, d]) => own.has(d.actorId)));
+    // Astral forms on the map: the token's controller, or a user with an astrally active character (SR5 p. 312).
+    const astralSight = seesAstral(full, own);
+    for (const map of Object.values(view.maps || {})) {
+      if (!astralSight) map.tokens = (map.tokens || []).filter((t) => !t.astral || (!!t.actorId && own.has(t.actorId)));
+    }
     if (!m.settings?.showAstralToPlayers) m.astral = Object.fromEntries(Object.entries(m.astral || {}).filter(([id]) => own.has(id)));
   },
 };

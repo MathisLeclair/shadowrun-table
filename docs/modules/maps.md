@@ -12,6 +12,8 @@ Tile maps, tokens, doors, lights, fog of war and line of sight; Foundry-style se
 Library maps shared by every table: [map-library.md](map-library.md). Combat marks on the map (targets, blasts):
 [attacks.md](attacks.md).
 
+> Tokens may carry `astral: true` (an astral form, 47-magic): players without astral sight do not get them — see [magic.md](magic.md#astral).
+
 ## State
 
 `scene: { activeMapId }` (the map players currently see) and `maps: { [id]: GameMap }` — types `SceneState`,

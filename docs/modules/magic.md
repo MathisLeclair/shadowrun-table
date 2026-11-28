@@ -8,15 +8,14 @@
 | client | `client/modules/magic/` (MagicPage: cockpit for players, overview + cockpit for the GM; `common.tsx`: `TraditionPicker`, `openMagic`, roll labels shared with the sheet) |
 | tests | `node tools/test-magic.ts` (port 3650) |
 
-Rules: [rules/magic.md](../rules/magic.md). What is still to build (astral, foci,
+Rules: [rules/magic.md](../rules/magic.md). What is still to build (foci,
 rituals, metamagic) and the sub-issues: [design/magic.md](../design/magic.md).
 
 ## State
 
 `MagicState`: `settings` (`autoDrain`, default on: drain resisted right after a cast; `showAstralToPlayers`, default
 off), `sustained: { [id]: SustainedSpell }`, `astral: { [actorId]: AstralPresence }`, `pendingDrain: { [id]: PendingDrain }`
-(drain to resist when `autoDrain` is off). `astral` is read by the cockpit but nothing writes it yet (#20). `init`
-drops entries whose actor is gone.
+(drain to resist when `autoDrain` is off). `init` drops entries whose actor is gone.
 
 ### Tradition (`actor.magic.tradition`)
 
@@ -104,6 +103,27 @@ the tradition's first —, Force, stats preview, optional powers, Edge, Drain ru
 UI: spirit cards « Bind » / « Call » / « Send to rest », « Give to <spirit> » on sustained spells, « Spirit aid » in the
 cast modal, `BanishModal` (spirits in view: full sheets with `spirit`, or NPC stubs whose metatype is a spirit type).
 
+## Astral
+
+- `magic/astral { actorId, mode: 'perceiving' | 'projecting' | null, mapId? }`: perception for magicians and adepts with
+  the Astral Perception power (`canPerceiveAstral`, SR5 312), projection for magicians (`canProjectAstral`, 313); the GM
+  is not checked. Projecting: the actor's token stays as the body (status `'empty body'`, an English key shown with
+  `statusText`), a second token `astral: true` is placed next to it (`placeActorToken`), the combat entry switches to
+  astral initiative; leaving removes the astral token and the status. `state.magic.astral[actorId] = { mode, since, mapId? }`.
+- Spirits: a new spirit gets an astral token next to its summoner; materializing turns its token physical, dematerializing
+  turns it astral again; a bound spirit called back reappears astral.
+- **Visibility**: the magic module's filter (after the maps one) strips `astral` tokens from a player's view unless the
+  token is one of their characters (spirits included) or one of their characters is astrally active (perceiving,
+  projecting, or an astral spirit), or `settings.showAstralToPlayers` is on. The renderer draws astral tokens at 60 %
+  with a dashed cyan halo; « empty body » has the ⌀ status glyph.
+- **Astral attack** `magic/astralAttack { actorId, targetId, mapId?, damage: 'P' | 'S' }` (SR5 315): from an astrally active
+  actor or a spirit; Astral Combat + WIL [Astral]; DV = astral Strength (CHA when projecting, Force for a spirit, else
+  STR) + net hits; `addAstralAttack` (33-attacks): defense INT + LOG (`doAstralDefense`, no active defense), soak with WIL
+  (astral form) or BOD (physical body), no armor. The tray uses the resist dialog for the defense.
+- Astral initiative: INT × 2 + 3D6 (SR5 314 table; it was 2D6), spirits F × 2 + 3D6.
+UI: cockpit « Astral plane » panel (Perceive, Project, Back, Astral attack, the astral form's attributes AGI→LOG, BOD→WIL,
+REA→INT, STR→CHA), hint while projecting.
+
 ## Combat spells (attacks)
 
 After the cast, a Combat spell with hits creates one `Attack` per target (`addSpellAttack` of 33-attacks, kind
@@ -155,12 +175,12 @@ with #19 / #21.
 - `magic/resistDrain { id }` (owner or GM): resist a pending drain.
 - `magic/cast … sustain?, object?` (default: sustained when possible) → also `sustainedId`, `attackIds`, `object`; `magic/drop { id }`.
 - `magic/summon`, `magic/spiritServices`, `magic/materialize`, `magic/spiritCombat`, `magic/release`, `magic/sunrise`,
-  `magic/bind`, `magic/callSpirit`, `magic/spiritSustain`, `magic/banish`: above.
+  `magic/bind`, `magic/callSpirit`, `magic/spiritSustain`, `magic/banish`, `magic/astral`, `magic/astralAttack`: above.
 - `magic/settings { autoDrain?, showAstralToPlayers? }` (GM; « Resist Drain automatically » toggle of the GM page).
 
 ## Player view
 
-`view.magic.sustained`: the spells their characters sustain or are under; `pendingDrain`: their characters' own; `view.magic.astral`: their own characters'
+Astral tokens of the shown map are filtered (see Astral). `view.magic.sustained`: the spells their characters sustain or are under; `pendingDrain`: their characters' own; `view.magic.astral`: their own characters'
 presence, every presence when `showAstralToPlayers`. Settings are sent as is.
 
 ## UI
