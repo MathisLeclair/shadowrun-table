@@ -12,7 +12,6 @@ import { parseXml, serializeXml, el } from '../server/lib/chummer/xml.ts';
 import { parseChum5 } from '../server/lib/chummer/parse.ts';
 import type { ParsedActor } from '../server/lib/chummer/parse.ts';
 import { exportChum5 } from '../server/lib/chummer/export.ts';
-import { chummerDataDir } from '../server/lib/chummer/data.ts';
 import { mergeActor, diffActors } from '../server/lib/chummer/merge.ts';
 import type { ActorDiff, DiffScalar } from '../server/lib/chummer/merge.ts';
 import { t as tr, dictionary } from '../server/lib/i18n.ts';
@@ -21,10 +20,6 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const FIXTURE = path.join(ROOT, 'tools', 'fixtures', 'chummer-test.chum5');
 const OUT_JANE = path.join(ROOT, 'tools', 'fixtures', 'export-sample-jane.chum5');
 const OUT_RT = path.join(ROOT, 'tools', 'fixtures', 'export-roundtrip-test.chum5');
-// Chummer's data folder (../Chummer5.226.0/data) is not in git (CI has none): without it the export writes new items as
-// Custom Item (no sourceid) and SINs as plain gear, so the assertions that need it are skipped.
-const hasChummerData = fs.existsSync(path.join(chummerDataDir(), 'gear.xml'));
-if (!hasChummerData) console.log(`  (Chummer data missing in ${chummerDataDir()} — sourceid and SIN round-trip checks skipped)`);
 const src = fs.readFileSync(FIXTURE, 'utf8');
 const seeds = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'seed', 'actors', 'pcs.json'), 'utf8')) as Actor[];
 const COLT = '6366691e-c1e0-4d5e-b7a6-1c0371708714';
@@ -152,15 +147,15 @@ await test('round trip: karma, nuyen, skills, attributes, items added/removed, u
   const pred = b.weapons.find((w) => /Predator V/.test(w.name));
   assert.ok(pred, 'Predator added');
   assert.equal(pred.damage, '8P');
-  if (hasChummerData) assert.ok(pred.catalogId, 'Predator resolved to a Chummer sourceid');
+  assert.ok(pred.catalogId, 'Predator resolved to a Chummer sourceid');
   assert.equal(pred.chummerGuid, r.assigned.weapons.w_new);
   assert.equal(b.armor[0].rating, 12);
   assert.equal(b.armor[0].equipped, true);
-  if (hasChummerData) assert.ok(b.armor[0].catalogId, 'armor jacket found by French name');
+  assert.ok(b.armor[0].catalogId, 'armor jacket found by French name');
   assert.equal(b.gear.find((g) => /Medkit|Médikit/.test(g.name))!.qty, 2);
   assert.ok(b.gear.find((g) => g.name === 'Bidule maison'), 'unknown gear exported as a renamed Custom Item');
   const dj = b.augmentations.find((x) => /Datajack/i.test(x.name));
-  if (hasChummerData) assert.ok(dj && dj.grade === 'alpha' && Math.abs(dj.essence - 0.08) < 1e-6, 'datajack alpha 0.08');
+  assert.ok(dj && dj.grade === 'alpha' && Math.abs(dj.essence - 0.08) < 1e-6, 'datajack alpha 0.08');
   assert.equal(b.contacts[0].loyalty, 4);
   assert.ok(b.qualities.some((q) => q.karma === 4 && q.positive));
   assert.equal(b.knowledge.find((k) => k.name === 'Gangs de Seattle')!.rating, 3);
@@ -207,7 +202,14 @@ for (const seed of seeds) {
     assert.equal(b.notoriety, seed.notoriety || 0);
     assert.equal(b.name, seed.name);
     assert.equal(b.metatype, seed.metatype);
-    for (const l of ['weapons', 'armor', 'augmentations', 'contacts', 'qualities', 'powers', 'spells', 'sins', 'knowledge', 'vehicles'] as const) if (hasChummerData || l !== 'sins') assert.equal((b[l] || []).length, (seed[l] || []).length, l);
+    for (const l of ['weapons', 'armor', 'augmentations', 'contacts', 'qualities', 'powers', 'spells', 'sins', 'knowledge', 'vehicles'] as const) assert.equal((b[l] || []).length, (seed[l] || []).length, l);
+    // SINs come back as SINs (Fake SIN node, even without Chummer's data folder: snapshot.json) with rating and licenses.
+    for (const s of seed.sins || []) {
+      const t = b.sins.find((x) => x.name === s.name);
+      assert.ok(t, `SIN ${s.name}`);
+      assert.equal(t.rating, s.rating, `${s.name} rating`);
+      assert.deepEqual([...(t.licenses || [])].sort(), [...(s.licenses || [])].sort(), `${s.name} licenses`);
+    }
     if (seed.id === 'pc_jane') fs.writeFileSync(OUT_JANE, '﻿' + r.xml.replace(/\r?\n/g, '\r\n'));
   });
 }
