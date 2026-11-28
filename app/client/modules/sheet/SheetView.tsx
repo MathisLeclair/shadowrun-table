@@ -2,7 +2,8 @@
 // <SheetView game actorId /> — GM can toggle « Modifier » to edit everything; owners edit their allowed fields.
 import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import { Button, Tabs, Toggle, Badge, TextInput, NumberInput, Select, Empty, confirmAction } from '../../lib/ui.tsx';
-import { send, upload, api } from '../../lib/net.ts';
+import { send, api } from '../../lib/net.ts';
+import { usePortraitCrop } from '../../lib/ImageCrop.tsx';
 import { setUI, toast } from '../../lib/ui-store.ts';
 import { derive, METATYPES } from '/shared/sr5.ts';
 import { derivedWithModifiers } from '/shared/modifiers.ts';
@@ -25,28 +26,29 @@ import './sheet.css';
 
 function Portrait({ actor, canEdit }: { actor: Actor; canEdit: boolean }) {
   const input = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState(false);
-  const pick = async (e: ChangeEvent<HTMLInputElement>) => {
+  const crop = usePortraitCrop(async (url) => {
+    await send('actor/update', { actorId: actor.id, patch: { portrait: url } });
+    toast(t('Portrait updated'), 'success');
+  });
+  const pick = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
-    if (!file) return;
-    if (!/^image\//.test(file.type)) return toast(t('Choose an image (png, jpg, webp…)'), 'warn');
-    setBusy(true);
-    try {
-      const { url } = await upload(file);
-      await send('actor/update', { actorId: actor.id, patch: { portrait: url } });
-      toast(t('Portrait updated'), 'success');
-    } catch (err) {
-      if ((err as Error)?.message) toast((err as Error).message, 'error');
-    } finally {
-      setBusy(false);
-    }
+    crop.pick(file);
   };
-  return <div className={'sh-portrait' + (canEdit ? ' editable' : '')} style={cssVars({ '--pc': actor.color || '#3fd6d0' })} onClick={canEdit ? () => input.current?.click() : undefined} title={canEdit ? t('Change the portrait') : ''}>
-    <Avatar actor={actor} size={96} />
-    {canEdit && <span className="sh-portrait-edit">{busy ? '…' : '⇪'}</span>}
-    <input ref={input} type="file" accept="image/*" hidden onChange={pick} />
-  </div>;
+  // The dialog sits outside the clickable portrait: React events bubble through portals to their React parents.
+  return <>
+    <div className={'sh-portrait' + (canEdit ? ' editable' : '')} style={cssVars({ '--pc': actor.color || '#3fd6d0' })} onClick={canEdit ? () => input.current?.click() : undefined} title={canEdit ? t('Change the portrait') : ''}>
+      <Avatar actor={actor} size={96} />
+      {canEdit && <span className="sh-portrait-edit">{crop.busy ? '…' : '⇪'}</span>}
+      {canEdit && actor.portrait && <button type="button" className="sh-portrait-crop" title={t('Recrop the portrait')} aria-label={t('Recrop the portrait')}
+        onClick={(e) => {
+          e.stopPropagation();
+          crop.recrop(actor.portrait);
+        }}>✂</button>}
+      <input ref={input} type="file" accept="image/*" hidden onChange={pick} />
+    </div>
+    {crop.dialog}
+  </>;
 }
 
 function HeaderBadge({ label, value, color = 'dim', title }: { label: ReactNode; value: ReactNode; color?: string; title?: string }) {

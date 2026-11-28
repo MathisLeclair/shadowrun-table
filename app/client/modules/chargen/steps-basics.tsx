@@ -1,8 +1,7 @@
 // Wizard steps: Concept, Priorités, Métatype, Attributs.
-import { useState, type ChangeEvent } from 'react';
+import type { ChangeEvent } from 'react';
 import { Button, Field, TextInput, Badge, Panel } from '../../lib/ui.tsx';
-import { upload } from '../../lib/net.ts';
-import { toast } from '../../lib/ui-store.ts';
+import { usePortraitCrop } from '../../lib/ImageCrop.tsx';
 import { METATYPES } from '/shared/sr5.ts';
 import { t, tk, attrLabel, attrShort, metatypeLabel } from '../../lib/i18n.ts';
 import {
@@ -34,21 +33,12 @@ import { RuleRef } from '../books/BookRef.tsx';
 type ConceptKey = keyof DraftData['concept'];
 export function StepConcept({ data, update, issues, game }: StepProps) {
   const c = data.concept;
-  const [busy, setBusy] = useState(false);
   const set = (k: ConceptKey) => (v: string) => update((d) => (d.concept[k] = v));
-  const pickPortrait = async (ev: ChangeEvent<HTMLInputElement>) => {
+  const crop = usePortraitCrop((url) => update((d) => (d.concept.portrait = url)));
+  const pickPortrait = (ev: ChangeEvent<HTMLInputElement>) => {
     const file = ev.target.files?.[0];
     ev.target.value = '';
-    if (!file) return;
-    if (!/^image\//.test(file.type)) return toast(t('Pick an image (png, jpg, webp)'), 'warn');
-    setBusy(true);
-    try {
-      const res = await upload(file);
-      update((d) => (d.concept.portrait = res.url));
-    } catch (e) {
-      toast((e as Error).message || t('Upload failed'), 'error');
-    }
-    setBusy(false);
+    crop.pick(file);
   };
   return (
     <div className="cg-step">
@@ -61,14 +51,20 @@ export function StepConcept({ data, update, issues, game }: StepProps) {
             {!c.portrait && <span>{(c.alias || c.name || '?').slice(0, 2).toUpperCase()}</span>}
           </div>
           <label className="btn btn-sm" title={t('png, jpg or webp image')}>
-            {busy ? t('Uploading…') : c.portrait ? t('Change the portrait') : t('Add a portrait')}
+            {crop.busy ? t('Uploading…') : c.portrait ? t('Change the portrait') : t('Add a portrait')}
             <input type="file" accept="image/*" style={{ display: 'none' }} onChange={pickPortrait} />
           </label>
           {c.portrait && (
-            <Button small variant="ghost" onClick={() => update((d) => (d.concept.portrait = ''))}>
-              {t('Remove')}
-            </Button>
+            <div className="row gap-s">
+              <Button small variant="ghost" onClick={() => crop.recrop(c.portrait)}>
+                {t('Recrop')}
+              </Button>
+              <Button small variant="ghost" onClick={() => update((d) => (d.concept.portrait = ''))}>
+                {t('Remove')}
+              </Button>
+            </div>
           )}
+          {crop.dialog}
           <Field label={t('Token color')}>
             <input type="color" className="cg-color" value={c.color} onChange={(e) => update((d) => (d.concept.color = e.target.value))} />
           </Field>
