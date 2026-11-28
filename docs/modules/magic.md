@@ -79,7 +79,17 @@ sheet, rolls, token moves, combat) apply unchanged; `removeActor` takes it out a
 - Disrupted (a full condition monitor, SR5 302): removed on the next magic action or Combat Turn (`sweepDisrupted`).
 - Spirits' astral initiative is F × 2 + 3D6 (`derive`, SR5 314). They never get the Magic cockpit (`magicActors`,
   `usesTradition` skip `actor.spirit`).
-UI: cockpit « Spirits » panel (Summon, services, materialize, join the fight, sheet, release), `SummonModal` (type —
+- **Natural attacks** (SR5 187, 396-399): `spiritWeapons(actor)` (shared) turns the powers into sheet weapons with
+  `natural: { power, element, rangeStep?, aura? }`, ids `<actorId>-nat-…`, category « Natural attack », limit Physical:
+  an unarmed attack (Unarmed Combat, (STR)S; with Energy Aura (STR + F)P, AP −F, elemental), Elemental Attack (Exotic
+  Ranged Weapon, (F × 2)P, AP −F, range bands F / 2F / 3F / 4F m), Engulf (melee, F × 2, AP −F, Stun for air and water),
+  Natural Weapon (the DV / AP of its choice, « DV (Force)P, AP 0 »; vehicle weapons skipped). The element is the
+  Elemental Attack's choice, else the type (Spirit of Fire → fire). `syncSpiritWeapons` rebuilds them at summoning and
+  at boot (spirits summoned before keep up), other weapons kept. They go through `attack/roll` like any weapon
+  ([attacks.md](attacks.md)); refused while the spirit is astral (it uses `magic/astralAttack` there).
+UI: cockpit « Spirits » panel (Summon, services, materialize, join the fight, ⚔ Attack — the sheet's `RollDialog` on
+its natural attacks, Elemental Attack first — or ⚔ Astral attack when not materialized, sheet, release), the sheet's
+Combat tab shows each natural attack's rule (`naturalAttackRule`), `SummonModal` (type —
 the tradition's first —, Force, stats preview, optional powers, Edge, Drain rule, result), GM overview column and
 « Sunrise / sunset » button.
 

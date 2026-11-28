@@ -14,7 +14,9 @@ export type WeaponLike = Partial<Weapon>;
 export type RangeClass =
   | 'taser' | 'holdout' | 'lightPistol' | 'heavyPistol' | 'machinePistol' | 'smg' | 'assaultRifle' | 'shotgunFlechette' | 'shotgun'
   | 'sniper' | 'lmg' | 'hmg' | 'assaultCannon' | 'grenadeLauncher' | 'missileLauncher' | 'bow' | 'lightCrossbow' | 'mediumCrossbow'
-  | 'heavyCrossbow' | 'thrownKnife' | 'shuriken' | 'grenade' | 'grenadeAero';
+  | 'heavyCrossbow' | 'thrownKnife' | 'shuriken' | 'grenade' | 'grenadeAero'
+  /** Critter power with range increments (Elemental Attack: Magic meters, SR5 p. 396): Weapon.natural.rangeStep. */
+  | 'natural';
 export type RangeBandId = 'short' | 'medium' | 'long' | 'extreme';
 export interface RangeBandDef {
   id: RangeBandId;
@@ -235,7 +237,7 @@ export const RANGE_BANDS: RangeBandDef[] = [
   { id: 'extreme', mod: -6, label: tk('extreme range') },
 ];
 /** Upper bound (meters) of each band; a function of STR for bows / thrown weapons. `min` = launcher minimum range. */
-const RANGE_TABLE: Record<RangeClass, number[] | { bands: number[]; min: number } | ((s: number) => number[])> = {
+const RANGE_TABLE: Record<Exclude<RangeClass, 'natural'>, number[] | { bands: number[]; min: number } | ((s: number) => number[])> = {
   taser: [5, 10, 15, 20],
   holdout: [5, 15, 30, 50],
   lightPistol: [5, 15, 30, 50],
@@ -264,6 +266,7 @@ const RANGE_TABLE: Record<RangeClass, number[] | { bands: number[]; min: number 
 /** Range class of a weapon (key of RANGE_TABLE) or null (melee, unknown). French and English names / categories. */
 export function rangeClass(w: WeaponLike | null | undefined): RangeClass | null {
   if (!w || w.kind === 'melee') return null;
+  if (Number(w.natural?.rangeStep) > 0) return 'natural';
   const s = textOf(w);
   const thrownGrenade = (!w.skill || w.skill === 'throwing_weapons') && /grenade|explosi/.test(s);
   if (thrownGrenade) return /aerodynami/.test(s) ? 'grenadeAero' : 'grenade';
@@ -294,6 +297,11 @@ export function rangeClass(w: WeaponLike | null | undefined): RangeClass | null 
 export function weaponRanges(w: WeaponLike | null | undefined, actor?: ActorLike | null): WeaponRanges | null {
   const cls = rangeClass(w);
   if (!cls) return null;
+  // Range increments of N meters (SR5 p. 396): short up to N, medium 2N, long 3N, extreme 4N.
+  if (cls === 'natural') {
+    const n = Number(w?.natural?.rangeStep) || 1;
+    return { cls, bands: [n, n * 2, n * 3, n * 4], min: 0 };
+  }
   const e = RANGE_TABLE[cls];
   const str = Math.max(1, actor && actor.attributes ? attr(actor, 'STR') : 3);
   if (typeof e === 'function') return { cls, bands: e(str), min: 0 };

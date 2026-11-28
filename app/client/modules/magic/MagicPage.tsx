@@ -136,13 +136,23 @@ type SpiritActor = Actor & { spirit: ActorSpirit };
 const spiritsOf = (game: GameView, summonerId: string): SpiritActor[] =>
   Object.values(game.actors || {}).filter((a): a is SpiritActor => 'attributes' in a && !!(a as Actor).spirit && (a as Actor).spirit!.summonerId === summonerId);
 
-/** Spirit cards (SR5 pp. 300-302): services, materialization, joining a fight, release. */
+/** Spirit cards (SR5 pp. 300-302): services, materialization, joining a fight, attacks, release. */
 function SpiritsPanel({ game, actor, own, onSummon, onBanish }: { game: GameView; actor: Actor; own: boolean; onSummon: (() => void) | null; onBanish: (() => void) | null }) {
   const list = spiritsOf(game, actor.id);
+  const [rolling, setRolling] = useState<{ spiritId: string; preset: RollPreset } | null>(null);
+  const [astralFor, setAstralFor] = useState<SpiritActor | null>(null);
   const fight = !!game.combat?.active;
   const gm = isGM(game);
   if (!list.length && !onSummon && !onBanish) return null;
   const act = (type: string, payload: object) => void send(type, payload).catch(() => null);
+  // Natural attacks (shared/magic.ts spiritWeapons) through the attack pipeline: Elemental Attack first, the dialog switches weapons.
+  const attack = (sp: SpiritActor) => {
+    const ws = (sp.weapons || []).filter((w) => w.natural);
+    const w = ws.find((x) => x.natural?.power === 'elementalAttack') || ws[0];
+    if (!w) return openSheet(sp.id);
+    setRolling({ spiritId: sp.id, preset: { skillId: w.skill, weaponId: w.id, label: `Attack — ${w.nameFr || w.name}`, _k: Date.now() } }); // i18n-ignore: stored label, shown with rollLabel()
+  };
+  const rollingSpirit = rolling ? list.find((x) => x.id === rolling.spiritId) || null : null;
   const bind = async (sp: SpiritActor) => {
     const need = sp.spirit.force * BINDING_DRAMS;
     const have = reagentDrams(actor);
@@ -208,6 +218,9 @@ function SpiritsPanel({ game, actor, own, onSummon, onBanish }: { game: GameView
                     ⚔ {t('Join the fight')}
                   </Button>
                 )}
+                {!resting && (s.materialized
+                  ? <Button small variant="accent" onClick={() => attack(sp)} title={t('Its natural attacks: unarmed, Elemental Attack, Engulf… against a token (SR5 p. 396)')}>⚔ {t('Attack')}</Button>
+                  : <Button small onClick={() => setAstralFor(sp)} title={t('On the astral plane: Astral Combat + Willpower [Astral], DV = Force (SR5 p. 315)')}>⚔ {t('Astral attack')}</Button>)}
                 <Button small variant="ghost" onClick={() => openSheet(sp.id)}>{t('Sheet')}</Button>
                 <Button small variant="ghost" onClick={async () => { if (await confirmAction(t('Release {name}? It returns to its metaplane.', { name: sp.name }))) act('magic/release', { spiritId: sp.id }); }}>
                   {t('Release')}
@@ -217,6 +230,8 @@ function SpiritsPanel({ game, actor, own, onSummon, onBanish }: { game: GameView
           </div>
         );
       })}
+      {rolling && rollingSpirit && <RollDialog game={game} actor={rollingSpirit} preset={rolling.preset} onClose={() => setRolling(null)} />}
+      {astralFor && <AstralAttackModal game={game} actor={astralFor} onClose={() => setAstralFor(null)} />}
     </div>
   );
 }

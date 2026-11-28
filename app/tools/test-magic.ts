@@ -6,10 +6,11 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   findTradition, traditionFromDef, parseDrainText, sortTraditions, drainValue, drainOffset, spellReach, isAreaSpell, spellCategory, spellDrainType, maxForce,
-  spellEffects, isSustainable, combatSpellProfile, spellResistance, attributeOfSpell, evalForce, spiritStats, optionalPowerCount, traditionSpiritTypes, reagentDrams, aidSpiritType, canPerceiveAstral, canProjectAstral, focusKind, focusBondMultiplier, focusCategory, fociLimits, teamwork, ritualDrain, isRitual, metamagicDef, metamagicEffects, spellShapingMax, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
+  spellEffects, isSustainable, combatSpellProfile, spellResistance, attributeOfSpell, evalForce, spiritStats, optionalPowerCount, traditionSpiritTypes, reagentDrams, aidSpiritType, canPerceiveAstral, canProjectAstral, focusKind, focusBondMultiplier, spiritWeapons, parseNaturalWeapon, naturalAttackRule, hasEnergyAura, focusCategory, fociLimits, teamwork, ritualDrain, isRitual, metamagicDef, metamagicEffects, spellShapingMax, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
   type TraditionDef,
 } from '../shared/magic.ts';
 import { derive } from '../shared/sr5.ts';
+import { rangeFor } from '../shared/combat.ts';
 import { checkedTest, collectModifiers, poolModifiers, rollContext, derivedWithModifiers } from '../shared/modifiers.ts';
 import { traditions, actorTradition, chummerTradition } from '../server/lib/traditions.ts';
 import { effectsLookup } from '../server/lib/modifiers.ts';
@@ -17,7 +18,7 @@ import { parseChum5 } from '../server/lib/chummer/parse.ts';
 import { spellCatalogInfo } from '../server/lib/spells.ts';
 import { spiritDefs, spiritDef } from '../server/lib/spirits.ts';
 import { mergeActor } from '../server/lib/chummer/merge.ts';
-import type { Actor, ActorLike, MagicState, SustainedSpell } from '../shared/types.ts';
+import type { Actor, ActorLike, Attack, MagicState, SustainedSpell } from '../shared/types.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let failures = 0;
@@ -175,6 +176,22 @@ ok(optionalPowerCount(2) === 0 && optionalPowerCount(3) === 1 && optionalPowerCo
   ok(traditionSpiritTypes(null, defs).length === defs.length, 'no tradition: every type (GM)');
   const sp = { attributes: st.attributes, spirit: { force: 4 } } as unknown as ActorLike;
   ok(derive(sp).astralInitiative.base === 8 && derive(sp).astralInitiative.dice === 3, 'a spirit actor: astral initiative F × 2 + 3D6 (SR5 p. 314)');
+  // Natural attacks (SR5 pp. 187, 396-399).
+  const natural = (type: string, force: number) => spiritWeapons({ id: 'x', powers: spiritStats(spiritDef(type)!, force).powers.map((p) => ({ name: p.name, choice: p.select })), spirit: { type, force } });
+  const fw = natural('Spirit of Fire', 4);
+  ok(fw.map((w) => w.natural?.power).join() === 'unarmed,elementalAttack,engulf' && fw[0].damage === '(STR+4)P' && fw[0].ap === -4 && fw[0].natural?.aura === true,
+    `fire spirit F4: unarmed with Energy Aura (STR + 4)P AP −4, then Elemental Attack and Engulf (${fw.map((w) => w.name + ' ' + w.damage).join(', ')})`);
+  ok(fw[1].damage === '8P' && fw[1].ap === -4 && fw[1].kind === 'ranged' && fw[1].skill === 'exotic_weapon' && fw[1].accuracy === 'Physical' && fw[1].nameFr === 'Attaque élémentaire (Feu)' && fw[1].natural?.element === 'fire' && fw[1].id === 'x-nat-elemental',
+    'Elemental Attack (Fire): Exotic Ranged Weapon, DV Magic × 2 P, AP −Magic, Physical limit');
+  ok(fw[2].damage === '8P' && fw[2].kind === 'melee' && fw[2].skill === 'unarmed_combat', 'fire Engulf: melee, DV Magic × 2 P');
+  ok(rangeFor(fw[1], null, 10)?.id === 'long' && rangeFor(fw[1], null, 4)?.id === 'short' && rangeFor(fw[1], null, 17)?.beyond === true, 'Elemental Attack: range increments of Magic meters (4 / 8 / 12 / 16 at Magic 4)');
+  const ww = natural('Spirit of Water', 2);
+  ok(ww.map((w) => w.natural?.power).join() === 'unarmed,engulf' && ww[0].damage === '(STR)S' && ww[1].damage === '4S' && ww[1].nameEn === 'Engulf (Water)',
+    `water spirit F2: unarmed (STR)S, Engulf 4S (Stun for water) (${ww.map((w) => w.name + ' ' + w.damage).join(', ')})`);
+  ok(natural('Spirit of Man', 3).map((w) => w.damage).join() === '(STR)S', 'spirit of man: only its unarmed attack');
+  ok(JSON.stringify(parseNaturalWeapon('DV (Force)P, AP 0', 5)) === '{"damage":"5P","ap":0}' && JSON.stringify(parseNaturalWeapon('DV {STR}P, AP -1', 3)) === '{"damage":"(STR)P","ap":-1}' && parseNaturalWeapon('Any Machine Gun', 3) === null,
+    'Natural Weapon choices: DV (Force)P / {STR}P and AP; vehicle weapons are not natural attacks');
+  ok(!!naturalAttackRule(fw[2].natural) && naturalAttackRule(undefined) === null && hasEnergyAura({ powers: [{ name: 'Energy Aura' }] }) && !hasEnergyAura({ powers: [] }), 'rule text per attack; Energy Aura detection');
 }
 
 // Astral (#20)
@@ -505,6 +522,37 @@ try {
   const tok = gm.state.maps[mapId].tokens.find((t) => t.actorId === sid2);
   const janeTok = gm.state.maps[mapId].tokens.find((t) => t.actorId === 'pc_jane')!;
   ok(!!tok && Math.max(Math.abs(tok.x - janeTok.x), Math.abs(tok.y - janeTok.y)) <= 2 && gm.state.actors[sid2].spirit!.materialized && gm.state.actors[sid2].npc?.initMode === 'physical', 'materialized: a token next to the summoner, physical initiative');
+  // Natural attacks through the attack pipeline (SR5 p. 396).
+  const sw = gm.state.actors[sid2].weapons || [];
+  const elem = sw.find((w) => w.natural?.power === 'elementalAttack')!;
+  ok(!!elem && elem.damage === '6P' && Number(elem.ap) === -3 && elem.natural?.rangeStep === 3 && sw.find((w) => w.natural?.power === 'unarmed')?.damage === '(STR+3)P' && sw.some((w) => w.natural?.power === 'engulf'),
+    `a summoned fire spirit F3 gets its natural attacks (${sw.map((w) => w.name + ' ' + w.damage).join(', ')})`);
+  let eaId = '';
+  for (let i = 0; i < 10 && !eaId; i++) {
+    const r = await pj.send<{ attackId?: string; hits: number }>('attack/roll', { actorId: sid2, weaponId: elem.id, skillId: elem.skill, targetActorId: 'pc_anthony' });
+    if (r.hits > 0 && r.attackId) eaId = r.attackId;
+  }
+  await settle();
+  const ea = gm.state.attacks.list.find((x) => x.id === eaId);
+  ok(!!ea && ea.kind === 'ranged' && ea.dv === 6 && ea.ap === -3 && ea.type === 'P' && ea.status === 'defense' && ea.natural?.power === 'elementalAttack' && ea.natural.element === 'fire',
+    `the summoner’s player attacks with the spirit: Elemental Attack 6P AP −3, the target defends (${JSON.stringify(ea && { dv: ea.dv, ap: ea.ap, status: ea.status, natural: ea.natural })})`);
+  await gm.send('attack/resolve', { attackId: eaId, outcome: 'missed' });
+  // Energy Aura: a melee attacker who hits the spirit resists Magic × 2 DV, AP −Magic.
+  await gm.send('actor/addItem', { actorId: 'pc_anthony', list: 'weapons', item: { name: 'Club', category: 'Clubs', kind: 'melee', skill: 'clubs', damage: '(STR+3)P', ap: 0, accuracy: 6, mode: '', rc: 0, ammo: '', reach: 1 } });
+  await settle();
+  const club = gm.state.actors.pc_anthony.weapons.find((w) => w.name === 'Club')!;
+  let back: Attack | undefined;
+  for (let i = 0; i < 10 && !back; i++) {
+    const r = await gm.send<{ attackId?: string; hits: number }>('attack/roll', { actorId: 'pc_anthony', weaponId: club.id, skillId: 'clubs', targetActorId: sid2, modifier: 20 });
+    if (!r.attackId || !r.hits) continue;
+    const d = await gm.send<{ attack: Attack }>('attack/defend', { attackId: r.attackId });
+    if (d.attack.status === 'soak') await gm.send('attack/resolve', { attackId: r.attackId, outcome: 'missed' });
+    await settle();
+    back = gm.state.attacks.list.find((x) => x.attackerId === sid2 && x.targetId === 'pc_anthony' && x.weaponName?.en === 'Energy Aura');
+  }
+  ok(!!back && back.dv === 6 && back.modifiedDv === 6 && back.ap === -3 && back.status === 'soak',
+    `hitting the fire spirit in melee: the attacker resists 6P AP −3 from its Energy Aura (${JSON.stringify(back && { dv: back.dv, ap: back.ap, status: back.status })})`);
+  if (back) await gm.send('attack/resolve', { attackId: back.id, outcome: 'missed' });
   // Join a fight: one service.
   await gm.send('combat/start', { mapId, includeMapTokens: false });
   const sv = gm.state.actors[sid2].spirit!.services;
@@ -515,6 +563,7 @@ try {
   await pj.send('magic/materialize', { spiritId: sid2, materialized: false });
   await settle();
   ok(gm.state.maps[mapId].tokens.find((t) => t.actorId === sid2)?.astral === true && gm.state.combat.entries.find((e) => e.actorId === sid2)?.mode === 'astral', 'dematerialized: its token turns astral, astral initiative in the fight');
+  await expectFail(pj.send('attack/roll', { actorId: sid2, weaponId: elem.id, skillId: elem.skill, targetActorId: 'pc_anthony' }), /astral/i, 'an astral spirit cannot use its physical attacks');
   await gm.send('combat/end');
   // Disrupted when a monitor is full (SR5 p. 302).
   await gm.send('actor/update', { actorId: sid2, patch: { condition: { physical: 0, stun: 20, overflow: 0 } } });

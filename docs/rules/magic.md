@@ -30,6 +30,13 @@ traditions, the drain pool, the cast flow, sustained spells, combat spells, the 
   one per 3 full points of Force; the whole fight is one service; leaving at sunrise / sunset is a GM button; a spirit
   with a full condition monitor is disrupted and its services are lost. Spirit stats: SR5 303-304 (Chummer data).
   Astral initiative of a spirit: F × 2 + 3D6 (314).
+- **Spirit attacks** (SR5 396-399, Magic = Force): unarmed (STR)S (187); Energy Aura: +Magic DV, AP −Magic, elemental,
+  and a melee attacker who hits it resists Magic × 2 DV, AP −Magic; Elemental Attack: Exotic Ranged Weapon + AGI
+  [Physical], (Magic × 2)P, AP −Magic, « range increments of Magic meters » read as short / medium / long / extreme up
+  to 1 / 2 / 3 / 4 × Magic m (no Chummer data: Chummer has no weapon for it); Engulf: melee, Magic × 2, AP −Magic,
+  Physical (earth, fire: fire damage) or Stun (water, air — air resisted like an inhalation toxin, GM), the trapped
+  target takes it again each Action Phase of the spirit and escapes with STR + BOD vs MAG + BOD (logged, GM). Elemental
+  side effects (170-171) are logged for the GM, as for indirect spells.
 - **Binding** (SR5 300-301): Force × 25 drams of reagents used up per attempt, Binding + MAG [Force] vs Force × 2, net
   hits beyond the first add services, up to CHA bound spirits, Drain as summoning. Bound services: aid sorcery (+Force
   dice when the spirit is the tradition's type for the category), spell sustaining (Force Combat Turns per service).

@@ -2,7 +2,7 @@
 // grenades / launchers (aimed point, scatter, blast on the map) and the special combat actions (SR5 + Run & Gun, shared/combat.js).
 // Rolls go through the characters module's performRoll (same modifiers, log entries and Edge as « dice/roll »).
 // State: attacks: { list: [Attack] (newest first, max 60), blasts: [Blast] (max 12), turn: { [actorId]: { key, defended, boosts, once } } }.
-import { parseDamage } from '../../shared/sr5.ts';
+import { parseDamage, attr } from '../../shared/sr5.ts';
 import {
   ACTION_BY_ID, isUnlocked, rangeFor, rangeClass, RANGE_BANDS, environmentFor, attackSenses, activeBlasts, pruneExpired, areaEffectOf,
   LASTING_EFFECTS, TOXIN_BY_ID, toxinFromText, toxinOutcome, toxinProtection, untilFor, AFFLICTIONS,
@@ -12,7 +12,7 @@ import {
 import { FIRE_BY_ID, isLauncherProfile, launcherRounds, fireOptions, usesAmmo } from '../../client/modules/sheet/inventory.ts';
 import { createVisionContext, tokenVision } from '../../shared/vision.ts';
 import { performRoll, applyDamage } from './10-characters.ts';
-import { ELEMENTS, type CombatSpellProfile, type SpellElement } from '../../shared/magic.ts';
+import { ELEMENTS, elementLabel, hasEnergyAura, type CombatSpellProfile, type SpellElement } from '../../shared/magic.ts';
 import { spendInitiative, combatTurnKey } from './30-combat.ts';
 import type { PerformedRoll, RollBonusLine, RollInternal, RollPayload } from './10-characters.ts';
 import type {
@@ -223,8 +223,37 @@ function doDefend(ctx: ActionContext, atk: Attack, { options = [], situations = 
     if (atk.kind === 'spell' && atk.spell?.element) {
       logAttack(ctx, tk('Elemental damage ({element}) on {target}: see its extra effects (SR5 pp. 170-171).'), { element: { t: ELEMENTS[atk.spell.element as SpellElement]?.name || atk.spell.element }, target: atk.targetName }, gmOnly);
     }
+    if (atk.natural?.element) {
+      logAttack(ctx, tk('Elemental damage ({element}) on {target}: see its extra effects (SR5 pp. 170-171).'), { element: { t: elementLabel(atk.natural.element) }, target: atk.targetName }, gmOnly);
+    }
+    if (atk.natural?.power === 'engulf') {
+      logAttack(ctx, tk('{target} is engulfed by {attacker}: the damage comes again on each of its Action Phases; escape: Complex Action, STR + BOD vs MAG + BOD (SR5 p. 396).'), { target: atk.targetName, attacker: atk.attackerName }, gmOnly);
+    }
   }
+  if (atk.net > 0) energyAuraBacklash(ctx, atk, target);
   return roll;
+}
+
+/**
+ * Energy Aura (SR5 p. 396): a melee attack that hits a critter with this power also damages the attacker, who resists
+ * DV Magic × 2, AP −Magic — a soak attack against the attacker, from the critter.
+ */
+function energyAuraBacklash(ctx: ActionContext, atk: Attack, target: Actor): void {
+  if (atk.kind !== 'melee' || atk.astral || !atk.attackerId || atk.attackerId === target.id || !hasEnergyAura(target)) return;
+  if (target.spirit && !target.spirit.materialized) return;
+  const attacker = ctx.state.actors[atk.attackerId];
+  const mag = attr(target, 'MAG');
+  if (!attacker || mag <= 0) return;
+  const map = atk.mapId ? ctx.state.maps?.[atk.mapId] || null : null;
+  const dv = mag * 2;
+  const gmOnly = !!atk.gmOnly || (target.type === 'npc' && !!target.hidden);
+  push<Attack>(ctx.state, slice(ctx.state).list, {
+    id: ctx.uid('atk'), ts: ctx.now, mapId: atk.mapId, kind: 'melee', attackerId: target.id, attackerName: target.name,
+    targetId: attacker.id, targetTokenId: tokenOf(map, attacker.id)?.id || null, targetName: attacker.name,
+    weaponName: { fr: 'Aura énergétique', en: 'Energy Aura' }, hits: 0, dv, modifiedDv: dv, type: 'P', ap: -mag, status: 'soak',
+    ...(gmOnly ? { gmOnly: true } : {}),
+  }, MAX_ATTACKS);
+  logAttack(ctx, tk('{attacker} touches {target}’s Energy Aura: resist DV {dv}P, AP {ap} (SR5 p. 396).'), { attacker: attacker.name, target: target.name, dv, ap: -mag }, gmOnly);
 }
 
 /**
@@ -383,6 +412,8 @@ const mod: ServerModule = {
         if (!ctx.owns(actor.id)) ctx.fail('You can only roll for your own character');
         const weapon = p.weaponId ? (actor.weapons || []).find((w) => w && w.id === str(p.weaponId, 60)) : null;
         if (p.weaponId && !weapon) ctx.fail('Weapon not found');
+        // A spirit's natural attacks hit the physical plane only when it is materialized (SR5 p. 398); astral: magic/astralAttack.
+        if (weapon?.natural && actor.spirit && !actor.spirit.materialized) ctx.fail('{name} is in astral form: materialize it, or make an astral attack', { name: actor.name });
         const action = p.actionId ? ACTION_BY_ID[str(p.actionId, 40)] : null;
         if (p.actionId && !action) ctx.fail('Unknown action');
         const payload: AttackRollPayload = { ...p };
@@ -579,6 +610,7 @@ const mod: ServerModule = {
           reach: weapon?.kind === 'melee' ? (Number(weapon.reach) || 0) + (action?.reach || 0) + (/troll/i.test(actor.metatype || '') ? 1 : 0) : 0,
           defenseMod: fireDef || 0, ...(fireDef ? { defenseLabel: tk('fire mode') } : {}), actionDefense: action?.defense || 0,
           ...(action?.noDamage ? { noDamage: true } : {}), ...(range ? { range: { band: range.id, meters: range.meters } } : {}),
+          ...(weapon?.natural ? { natural: { power: weapon.natural.power, element: weapon.natural.element ?? null } } : {}),
           status: roll.hits > 0 ? 'defense' : 'missed', ...(roll.hits > 0 ? {} : { resolvedTs: ctx.now }),
           ...(target.type === 'npc' && target.hidden ? { gmOnly: true } : {}),
         }, MAX_ATTACKS);

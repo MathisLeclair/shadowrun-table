@@ -550,6 +550,20 @@ export interface Weapon extends ItemBase {
   /** Implant weapon of that augmentation (removed with it, never sold separately). */
   augId?: string;
   paid?: number;
+  /** Natural attack of a critter power (spirits, 47-magic `syncSpiritWeapons`): derived from the powers and Force, rebuilt at boot. */
+  natural?: NaturalAttack;
+}
+
+/** Which critter power a natural attack comes from (SR5 pp. 187, 396-397). */
+export type NaturalAttackPower = 'unarmed' | 'elementalAttack' | 'engulf' | 'naturalWeapon';
+export interface NaturalAttack {
+  power: NaturalAttackPower;
+  /** Element of the power, lower-case English ('fire', 'water'…), null when it has none. */
+  element?: string | null;
+  /** Elemental Attack: range increments of (Magic) meters (SR5 p. 396). */
+  rangeStep?: number;
+  /** The unarmed attack carries the critter's Energy Aura (+Magic DV, AP −Magic, SR5 p. 396). */
+  aura?: boolean;
 }
 
 export interface Armor extends ItemBase {
@@ -1251,6 +1265,8 @@ export interface Attack {
   gmOnly?: boolean;
   /** Astral combat (47-magic, SR5 p. 315): defense INT + LOG, soak with `soak` and no armor. */
   astral?: { soak: AttrKey };
+  /** Natural attack of a critter (the weapon's `natural`): elemental effects, Engulf, Energy Aura backlash. */
+  natural?: { power: NaturalAttackPower; element?: string | null };
   /** Combat spell (kind 'spell', 47-magic): direct = resisted with `resist`, no soak; indirect = dodge then soak. */
   spell?: { mode: 'direct' | 'indirect'; resist: AttrKey; resist2?: AttrKey | null; force: number; element?: string | null; castLogId?: string };
 }

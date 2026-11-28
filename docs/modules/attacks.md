@@ -36,6 +36,9 @@ Types `AttacksState`, `Attack`, `Blast`, `AttackTurnRecord`, `AttacksView` in ty
     minigrenades the sheet does not list, the one matching `ammoKind` first); without `profileId` the loaded or first
     sheet round, none → refused (« Choisis la minigrenade tirée »).
   - Ranged weapon + attacker token on the map → range / environment modifier line.
+  - Natural attack (`weapon.natural`, a spirit's powers — [magic.md](magic.md)): `Attack.natural = { power, element }`;
+    refused while the spirit is not materialized. Elemental Attack range bands come from `natural.rangeStep` (range class
+    `natural` of `rangeFor`).
   - Special action (`COMBAT_ACTIONS`): unlocked by a quality / power / martial art technique of the same name (French,
     English, or the « English name · BOOK page » notes of Foundry imports — `unlockNames`; the GM may use any), dice /
     DV / AP / reach, fewer rounds (Double Tap…), Edge and initiative costs paid after the roll, `once` per Combat Turn.
@@ -44,7 +47,9 @@ Types `AttacksState`, `Attack`, `Blast`, `AttackTurnRecord`, `AttacksView` in ty
     `missed`). Returns the roll + `attackId` / `blast`.
 - `attack/defend` (owner of the target, GM for NPCs) `{ attackId, options: ['dodge'|'parry'|'block'|'full'|'agile'|
   'acrobatic'|'perceptive'|'pretty'], situations: ['cover-partial'|'cover-good'|'running'|'prone'|'in-melee'|'vehicle'],
-  modifier, explode }`: net ≤ 0 → `missed`; no damage code → `done`; else `soak` with DV + net hits.
+  modifier, explode }`: net ≤ 0 → `missed`; no damage code → `done`; else `soak` with DV + net hits. A hit by a
+  natural attack logs its element (SR5 170-171) and Engulf's follow-up rule; a melee hit on a materialized critter with
+  Energy Aura adds a `soak` attack against the attacker (DV MAG × 2, AP −MAG, « Energy Aura », SR5 396).
 - `attack/soak` `{ attackId, modifier, explode }`; a `toxin` attack's soak is the Toxin Resistance Test.
 - GM: `attack/auto` (defense then soak without options), `attack/resolve { outcome: 'missed'|'damage', amount, type }`,
   `attack/clear { all?, blasts? }`, `attack/removeBlast` (also in the GM's cell menu), `attack/removeAffliction {

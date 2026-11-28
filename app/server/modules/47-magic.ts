@@ -12,7 +12,7 @@ import { hasLineOfSight } from '../../shared/vision.ts';
 import {
   isAwakened, DRAIN_ATTRS, drainAttr, drainValue, spellDrainType, spellReach, isAreaSpell, spellCategory, maxForce, RECKLESS_DV,
   isSustainable, spellEffects, combatSpellProfile, MIN_DRAIN, spellResistance, NO_AURA_KINDS, OBJECT_RESISTANCE,
-  spiritStats, traditionSpiritTypes, optionalPowerCount, BINDING_DRAMS, isReagent, reagentDrams, aidSpiritType,
+  spiritStats, spiritWeapons, traditionSpiritTypes, optionalPowerCount, BINDING_DRAMS, isReagent, reagentDrams, aidSpiritType,
   canPerceiveAstral, canProjectAstral, focusKind, focusForce, focusCategory, focusWorks, teamwork, ritualDrain, hasMetamagic, spellShapingMax,
 } from '../../shared/magic.ts';
 import { spellCatalogInfo } from '../lib/spells.ts';
@@ -597,6 +597,15 @@ function drainNow(ctx: ActionContext, a: Actor, dv: number, type: 'P' | 'S', sou
   return { pendingId: pd.id };
 }
 
+/**
+ * A spirit's natural attacks (unarmed, Elemental Attack, Engulf, Natural Weapon: shared/magic.ts spiritWeapons) as sheet weapons,
+ * rebuilt from its powers and Force; its other weapons are kept. Called at summoning and at boot (spirits summoned before).
+ */
+function syncSpiritWeapons(a: Actor): void {
+  if (!a.spirit) return;
+  a.weapons = [...spiritWeapons(a), ...(a.weapons || []).filter((w) => w && !w.natural)];
+}
+
 /** The spirit's NPC actor (SR5 pp. 303-304 via spiritStats), assigned to the summoner's player(s). */
 function createSpirit(ctx: ActionContext, summoner: Actor, def: NonNullable<ReturnType<typeof spiritDef>>, force: number, services: number, optional: string[]): Actor {
   const st = spiritStats(def, force);
@@ -614,6 +623,7 @@ function createSpirit(ctx: ActionContext, summoner: Actor, def: NonNullable<Retu
   if (summoner.color) sp.color = summoner.color;
   if (summoner.hidden) sp.hidden = true;
   sp.spirit = { type: def.name, ...(def.nameFr ? { typeFr: def.nameFr } : {}), force, summonerId: summoner.id, services, bound: false, materialized: false, optionalPowers: optional, ts: ctx.now };
+  syncSpiritWeapons(sp);
   sp.notes = [def.source && def.page ? `${def.source} p. ${def.page}` : '', def.movement?.walk ? `${def.movement.walk} / ${def.movement.run || ''} / ${def.movement.sprint || ''}` : ''].filter(Boolean).join(' · ');
   normalizeActor(sp, uid);
   ctx.state.actors[sp.id] = sp;
@@ -1063,6 +1073,7 @@ const mod: ServerModule = {
     for (const id of Object.keys(m.astral)) if (!state.actors?.[id]) delete m.astral[id];
     for (const [id, d] of Object.entries(m.pendingDrain)) if (!isObj(d) || !state.actors?.[d.actorId]) delete m.pendingDrain[id];
     syncSustained(state);
+    for (const a of Object.values(state.actors || {})) if (isObj(a) && a.spirit) syncSpiritWeapons(a);
   },
 
   actions,
