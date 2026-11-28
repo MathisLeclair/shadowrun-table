@@ -1,9 +1,19 @@
 // Magic module: owner of state.magic (settings, sustained spells, astral presences) and of `actor.magic.tradition`.
 // Design and the features still to come (cast flow, sustaining, spirits, astral, foci…): docs/design/magic.md.
 // Feature page: docs/modules/magic.md. Rules data: shared/magic.ts; traditions: server/lib/traditions.ts.
-import { isAwakened, DRAIN_ATTRS } from '../../shared/magic.ts';
+import { attr } from '../../shared/sr5.ts';
+import { cellDistance } from '../../shared/combat.ts';
+import { hasLineOfSight } from '../../shared/vision.ts';
+import {
+  isAwakened, DRAIN_ATTRS, drainAttr, drainValue, spellDrainType, spellReach, isAreaSpell, spellCategory, maxForce, RECKLESS_DV,
+} from '../../shared/magic.ts';
 import { actorTradition, traditionDef } from '../lib/traditions.ts';
-import type { ActionContext, ActionDef, Actor, ActorId, AttrKey, MagicSettings, MagicState, ServerModule, TableState } from '../../shared/types.ts';
+import { performRoll, applyDamage } from './10-characters.ts';
+import type { PerformedRoll } from './10-characters.ts';
+import type {
+  ActionContext, ActionDef, Actor, ActorId, AttrKey, BiName, GameMap, I18nParams, MagicLogInfo, MagicSettings, MagicState, PendingDrain,
+  ServerModule, Spell, TableState, Token,
+} from '../../shared/types.ts';
 
 const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
 const str = (v: unknown, max = 200): string => (v === undefined || v === null ? '' : String(v).slice(0, max));
@@ -18,7 +28,148 @@ export function slice(state: TableState): MagicState {
   m.settings.showAstralToPlayers = !!m.settings.showAstralToPlayers;
   if (!isObj(m.sustained)) m.sustained = {};
   if (!isObj(m.astral)) m.astral = {};
+  if (!isObj(m.pendingDrain)) m.pendingDrain = {};
   return m;
+}
+
+const tk = (s: string): string => s;
+const biName = (w: { name?: string; nameFr?: string; nameEn?: string }): BiName => ({ fr: w.nameFr || w.name || '', en: w.nameEn || w.name || w.nameFr || '' });
+/** Roll labels are stored in French (formats sheet/common.tsx rollLabel() translates). */
+const drainRollLabel = (k: string): string => `Résistance au drain (VOL + ${k})`; // i18n-ignore
+const spellRollLabel = (name: string): string => `Sort — ${name}`; // i18n-ignore
+
+function logMagic(ctx: ActionContext, a: Actor, key: string, params: I18nParams, magic: MagicLogInfo, gmOnly = false) {
+  return ctx.log({ kind: 'magic', userId: ctx.user.id, author: a.name, i18n: { key, params }, magic, ...(gmOnly ? { gmOnly: true } : {}) });
+}
+
+/** NPC actors the GM keeps hidden roll in secret (as dice/roll does). */
+const hiddenCaster = (a: Actor): boolean => a.type === 'npc' && !!a.hidden;
+
+/**
+ * Resist Drain now (SR5 p. 282): WIL + the tradition's attribute with the drain modifiers (`test: 'drainResist'`), then the
+ * boxes left are applied as Stun or Physical damage.
+ */
+function resistDrain(ctx: ActionContext, a: Actor, dv: number, type: 'P' | 'S', source: BiName): { roll: PerformedRoll; damage: number } {
+  const second = drainAttr(a);
+  if (!second) ctx.fail('Choose a tradition first: it sets the attribute you resist Drain with');
+  const secret = hiddenCaster(a);
+  const roll = performRoll(ctx, { actorId: a.id, attr: 'WIL', attr2: second, test: 'drainResist', label: drainRollLabel(second), limit: null, ...(secret ? { secret: true } : {}) });
+  const damage = Math.max(0, dv - roll.hits);
+  if (damage) applyDamage(ctx, a, damage, type);
+  const key = !damage
+    ? tk('{name} resists Drain {dv} ({source}): {hits} hit(s), no damage.')
+    : type === 'P'
+      ? tk('{name} resists Drain {dv} ({source}): {hits} hit(s), {damage} box(es) of Physical damage.')
+      : tk('{name} resists Drain {dv} ({source}): {hits} hit(s), {damage} box(es) of Stun damage.');
+  logMagic(ctx, a, key, { name: a.name, dv, source, hits: roll.hits, damage }, { event: 'drain', actorId: a.id, dv, drainType: type, damage }, secret);
+  return { roll, damage };
+}
+
+const tokenOf = (map: GameMap | null, actorId: ActorId): Token | null => (map?.tokens || []).find((t) => t.actorId === actorId) || null;
+
+type CastPayload = {
+  actorId?: ActorId; spellId?: unknown; force?: unknown; reckless?: unknown; explode?: unknown; modifier?: unknown; conditions?: unknown;
+  ignore?: unknown; mapId?: unknown; targetIds?: unknown; area?: unknown; drainDv?: unknown;
+};
+type CastArea = { x: number; y: number; radius: number };
+
+/**
+ * Targets of a cast, checked against the spell's range (SR5 p. 281): Line of Sight from the caster's token, Touch = an
+ * adjacent token, Self = the caster only, Area = within Force metres of the centre. The GM's casts are not checked
+ * (NPCs often have no token, the GM knows the scene).
+ */
+function castTargets(ctx: ActionContext, a: Actor, spell: Spell, force: number, p: CastPayload): { targets: Actor[]; area: CastArea | null } {
+  const ids = [...new Set((Array.isArray(p.targetIds) ? p.targetIds : []).slice(0, 24).map((x) => str(x, 80)))].filter(Boolean);
+  const targets = ids.map((id) => ctx.state.actors[id] || ctx.fail('Unknown character'));
+  const mapId = str(p.mapId, 80);
+  const map = mapId ? ctx.state.maps?.[mapId] || null : null;
+  const reach = spellReach(spell.range);
+  let area: CastArea | null = null;
+  if (isAreaSpell(spell.range) && map) {
+    const pt = isObj(p.area) ? { x: Math.round(Number(p.area.x)), y: Math.round(Number(p.area.y)) } : null;
+    const first = targets[0] ? tokenOf(map, targets[0].id) : null;
+    const c = pt && Number.isFinite(pt.x) && Number.isFinite(pt.y) ? pt : first ? { x: first.x, y: first.y } : null;
+    if (c) area = { ...c, radius: force };
+  }
+  if (ctx.isGM) return { targets, area };
+  if (reach === 'self' && targets.some((t) => t.id !== a.id)) ctx.fail('{spell} can only target its caster', { spell: biName(spell) });
+  const others = targets.filter((t) => t.id !== a.id);
+  if (!others.length && !area) return { targets, area };
+  if (!map) ctx.fail('Pick the targets on the map');
+  const me = tokenOf(map, a.id);
+  if (!me) ctx.fail('{name} has no token on this map', { name: a.name });
+  const mpc = Number(map.metersPerCell) || 1;
+  if (area && reach === 'los' && !hasLineOfSight(map, me, area)) ctx.fail('No line of sight to the centre of the area');
+  // Area: every target (the caster included) must stand in it; otherwise the caster may always target themself.
+  for (const t of area ? targets : others) {
+    const tok = tokenOf(map, t.id);
+    if (!tok || tok.hidden) ctx.fail('{name} is not on the map', { name: t.name });
+    if (area) {
+      const d = cellDistance(tok, area, mpc);
+      if (d > area.radius + mpc) ctx.fail('{name} is outside the area ({d} m from the centre, radius {r} m)', { name: t.name, d, r: area.radius });
+    } else if (reach === 'los' && !hasLineOfSight(map, me, tok)) ctx.fail('No line of sight to {name}', { name: t.name });
+    else if (reach === 'touch' && Math.max(Math.abs(tok.x - me.x), Math.abs(tok.y - me.y)) > Math.max(1, me.size || 1, tok.size || 1)) {
+      ctx.fail('{name} is out of reach: {spell} needs a touch', { name: t.name, spell: biName(spell) });
+    }
+  }
+  return { targets, area };
+}
+
+/**
+ * Cast a spell (SR5 pp. 281-282): Spellcasting + Magic [Force], drain computed (formula, min 2, +3 reckless), Physical when
+ * the hits exceed Magic, resisted at once (settings.autoDrain) or left pending. Returns the cast for the effect steps.
+ */
+export function castSpell(ctx: ActionContext, p: CastPayload) {
+  const a = actorOf(ctx, p.actorId);
+  const spell = (a.spells || []).find((x) => x.id === str(p.spellId, 80));
+  if (!spell) ctx.fail('Unknown spell');
+  const mag = attr(a, 'MAG');
+  if (mag <= 0) ctx.fail('{name} is not awakened', { name: a.name });
+  const force = Math.round(Number(p.force));
+  if (!Number.isFinite(force) || force < 1 || force > maxForce(a)) ctx.fail('The Force must be between 1 and {max} (twice your Magic)', { max: maxForce(a) });
+  if (!drainAttr(a)) ctx.fail('Choose a tradition first: it sets the attribute you resist Drain with');
+  const reckless = !!p.reckless;
+  let dv = drainValue(spell.drain, force, { reckless });
+  if (dv === null) {
+    const given = Math.round(Number(p.drainDv));
+    if (!(given >= 2 && given <= 40)) ctx.fail('Enter the Drain Value of {spell} (formula « {formula} »)', { spell: biName(spell), formula: spell.drain || '—' });
+    dv = given + (reckless ? RECKLESS_DV : 0);
+  }
+  const { targets, area } = castTargets(ctx, a, spell, force, p);
+  const cat = spellCategory(spell.category);
+  // Spellcasting foci (condition spell-<category>) apply to a spell of their category without a switch.
+  const conditions = [...(Array.isArray(p.conditions) ? p.conditions.slice(0, 40) : []), ...(cat ? [`spell-${cat}`] : [])];
+  const secret = hiddenCaster(a);
+  const roll = performRoll(ctx, {
+    actorId: a.id, skillId: 'spellcasting', label: spellRollLabel(spell.nameFr || spell.name), limit: force, explode: !!p.explode,
+    modifier: p.modifier, conditions, ignore: p.ignore, ...(secret ? { secret: true } : {}),
+  }, { logExtra: { labelI18n: { key: tk('Spell — {spell} (Force {force})'), params: { spell: biName(spell), force } } } });
+  const hits = roll.hits;
+  const type = spellDrainType(hits, mag);
+  const params = { name: a.name, spell: biName(spell), force, hits, dv, targets: targets.map((t) => t.name).join(', ') };
+  let key: string;
+  if (targets.length) key = type === 'P' ? tk('{name} casts {spell} at Force {force} on {targets}: {hits} hit(s). Drain {dv}, Physical (hits above Magic).') : tk('{name} casts {spell} at Force {force} on {targets}: {hits} hit(s). Drain {dv}.');
+  else key = type === 'P' ? tk('{name} casts {spell} at Force {force}: {hits} hit(s). Drain {dv}, Physical (hits above Magic).') : tk('{name} casts {spell} at Force {force}: {hits} hit(s). Drain {dv}.');
+  const entry = logMagic(ctx, a, key, params, { event: 'cast', actorId: a.id, spellId: spell.id, force, hits, reckless, dv, drainType: type, targetIds: targets.map((t) => t.id) }, secret);
+  // Glitches (SR5 p. 282): the GM decides; the log reminds the usual effects.
+  const info: MagicLogInfo = { event: 'cast', actorId: a.id, spellId: spell.id };
+  if (roll.critGlitch) logMagic(ctx, a, tk('Critical glitch on {spell}: the spell may get away from its caster — the GM decides (SR5 p. 282).'), { spell: biName(spell) }, info, secret);
+  else if (roll.glitch) logMagic(ctx, a, tk('Glitch on {spell}: usually +2 Drain, a wrong target or another mishap — the GM decides (SR5 p. 282).'), { spell: biName(spell) }, info, secret);
+  const m = slice(ctx.state);
+  let drain: { hits: number; damage: number } | { pendingId: string };
+  if (m.settings.autoDrain) {
+    const r = resistDrain(ctx, a, dv, type, biName(spell));
+    drain = { hits: r.roll.hits, damage: r.damage };
+  } else {
+    const pd: PendingDrain = { id: ctx.uid('drain'), actorId: a.id, dv, type, source: biName(spell), ts: ctx.now };
+    m.pendingDrain[pd.id] = pd;
+    drain = { pendingId: pd.id };
+  }
+  const targetIds = targets.map((t) => t.id);
+  return {
+    actor: a, spell, force, reckless, hits, roll, dv, drainType: type, drain, targets, area, logId: entry.id,
+    result: { logId: entry.id, rollLogId: roll.logId, hits, rawHits: roll.rawHits, glitch: roll.glitch, critGlitch: roll.critGlitch, force, dv, drainType: type, drain, targetIds, area },
+  };
 }
 
 function actorOf(ctx: ActionContext, id: unknown): Actor {
@@ -70,6 +221,31 @@ const actions: Record<string, ActionDef> = {
     },
   },
 
+  /**
+   * { actorId, spellId, force, reckless?, explode?, modifier?, conditions?, ignore?, mapId?, targetIds?, area?: {x, y}, drainDv? }
+   * (owner or GM). drainDv: the Drain Value when the spell's formula is not « F ± n ».
+   */
+  'magic/cast': {
+    role: 'any',
+    handler(ctx: ActionContext, p: CastPayload = {}) {
+      return castSpell(ctx, p).result;
+    },
+  },
+
+  /** { id } (owner or GM): resist a pending Drain (settings.autoDrain off). */
+  'magic/resistDrain': {
+    role: 'any',
+    handler(ctx: ActionContext, p: { id?: unknown } = {}) {
+      const m = slice(ctx.state);
+      const pd = m.pendingDrain[str(p.id, 80)];
+      if (!pd) ctx.fail('No Drain to resist');
+      const a = actorOf(ctx, pd.actorId);
+      delete m.pendingDrain[pd.id];
+      const r = resistDrain(ctx, a, pd.dv, pd.type, pd.source);
+      return { hits: r.roll.hits, damage: r.damage };
+    },
+  },
+
   /** { autoDrain?, showAstralToPlayers? } (GM). */
   'magic/settings': {
     role: 'gm',
@@ -90,6 +266,7 @@ const mod: ServerModule = {
     // Entries of deleted actors go away.
     for (const [id, s] of Object.entries(m.sustained)) if (!isObj(s) || !state.actors?.[s.casterId]) delete m.sustained[id];
     for (const id of Object.keys(m.astral)) if (!state.actors?.[id]) delete m.astral[id];
+    for (const [id, d] of Object.entries(m.pendingDrain)) if (!isObj(d) || !state.actors?.[d.actorId]) delete m.pendingDrain[id];
   },
 
   actions,
@@ -100,6 +277,7 @@ const mod: ServerModule = {
     if (!m) return;
     const own = new Set(user.characterIds || []);
     m.sustained = Object.fromEntries(Object.entries(m.sustained || {}).filter(([, s]) => own.has(s.casterId) || (s.targetIds || []).some((id) => own.has(id))));
+    m.pendingDrain = Object.fromEntries(Object.entries(m.pendingDrain || {}).filter(([, d]) => own.has(d.actorId)));
     if (!m.settings?.showAstralToPlayers) m.astral = Object.fromEntries(Object.entries(m.astral || {}).filter(([id]) => own.has(id)));
   },
 };

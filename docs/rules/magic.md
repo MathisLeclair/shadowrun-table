@@ -1,7 +1,7 @@
 # Magic rules
 
 Magic is being automated step by step (plan: [design/magic.md](../design/magic.md)); so far: karma costs, item effects,
-traditions and the drain pool. Page references used by the 📖 chips: drain SR5
+traditions, the drain pool and the cast flow. Page references used by the 📖 chips: drain SR5
 282, power points 278, adept powers 308, spellcasting 281, initiation 324 (`RULE_REFS`, [book-refs](../modules/book-refs.md)).
 
 - **Adept powers**: powers with a catalog `stats.bonus` (Improved Reflexes: REA + initiative dice per level,
@@ -13,6 +13,10 @@ traditions and the drain pool. Page references used by the 📖 chips: drain SR5
   points not coming from MAG: bought by mystic adepts, or gained via initiation by adepts). Source: the header of
   `shared/advancement.ts`.
 - **Karma costs** of spells, powers, power points, complex forms, initiation: [advancement.md](advancement.md).
+- **Casting** (SR5 281-282): Force 1 … 2 × MAG and the Force is the limit; Drain Value = the spell's formula at that
+  Force, never below 2, +3 for Reckless Spellcasting (Simple Action); Drain is Physical when the hits (after the limit)
+  exceed Magic, else Stun; glitches are left to the GM (+2 Drain is the usual one). Line of Sight / Touch / Area (radius
+  = Force metres) are checked on the map for players. Multiple spells in one action (split pool) stay manual.
 - **Spellcasting** has no default limit (`skillDefaultLimit`: a skill's `limit` null = none). Spellcasting foci give
   dice under the condition `spell-<category>` ([modifiers](../modules/modifiers.md#conditions)).
 - **Traditions** (SR5 279, Street Grimoire 41-52, Forbidden Arcana…): `data/catalog/traditions.json` from Chummer
