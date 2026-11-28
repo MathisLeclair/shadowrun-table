@@ -5,7 +5,8 @@ import { errorBody, t as translate } from '../lib/i18n.ts';
 import { getSettings, isTableEnabled, MODELS } from '../lib/assistant/config.ts';
 import { budgetStatus } from '../lib/assistant/budget.ts';
 import { authMode } from '../lib/assistant/auth.ts';
-import { buildOps } from '../lib/assistant/tools.ts';
+import path from 'node:path';
+import { buildOps, buildDocWrite, writeDocFile } from '../lib/assistant/tools.ts';
 import { runTurn, isBusy, stop, viewConversation, publicProposal } from '../lib/assistant/run.ts';
 import { listConversations, getConversation, createConversation, deleteConversation, findProposal, save } from '../lib/assistant/conversations.ts';
 import type { ServerEvents, ServerModule, TableMeta, TableState } from '../../shared/types.ts';
@@ -21,8 +22,10 @@ type Res = any;
 /** The table a request runs on (`req.srTable`, server/tables.js). */
 interface SrTable {
   id: string;
+  dir: string;
   meta?: TableMeta;
   state: TableState;
+  docsDir(): string;
 }
 
 const MAX_QUESTION = 8000;
@@ -111,13 +114,35 @@ const mod: ServerModule<HttpApp> = {
       if (!found) return res.status(404).json(errorBody('Proposal not found'));
       const { proposal: p } = found;
       if (p.status === 'applied') return res.status(409).json(errorBody('Proposal already applied'));
-      const built = buildOps(p.kind, p.input, t.state);
-      if (built.error) {
+      const fail = (reason: string) => {
         p.status = 'failed';
-        p.error = built.error;
+        p.error = reason;
         save(t);
-        return res.status(400).json(errorBody('The proposal cannot be applied: {reason}', { reason: built.error }));
+        return res.status(400).json(errorBody('The proposal cannot be applied: {reason}', { reason }));
+      };
+      // A text replaced whole (not by exact edits) must not have changed since the proposal: the GM's edits would be lost.
+      const changedSince = (guard: string | undefined) => !!p.guard && guard !== p.guard;
+      const STALE = 'le texte a changé depuis la proposition ; demande à l’assistant de la refaire.';
+      if (p.kind === 'doc') {
+        const w = buildDocWrite(p.input, t.docsDir());
+        if (w.error !== undefined) return fail(w.error);
+        if (changedSince(w.guard)) return fail(STALE);
+        try {
+          writeDocFile(w, path.join(t.dir, 'doc-backups'));
+        } catch (err) {
+          console.error(`[assistant] doc write failed for ${t.id}`, err);
+          return fail((err as Error).message || String(err));
+        }
+        p.status = 'applied';
+        p.appliedAt = Date.now();
+        p.error = undefined;
+        p.result = { doc: w.name };
+        save(t);
+        return res.json({ proposal: publicProposal(p) });
       }
+      const built = buildOps(p.kind, p.input, t.state);
+      if (built.error) return fail(built.error);
+      if (changedSince(built.guard)) return fail(STALE);
       const results: unknown[] = [];
       for (const op of built.ops!) {
         const r = runAction(t, req.user, op.type, op.payload);

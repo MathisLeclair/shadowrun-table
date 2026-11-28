@@ -8,7 +8,7 @@ import { toast, goTab, setUI } from '../../lib/ui-store.ts';
 import { t, tk, fmtNumber, getLang } from '../../lib/i18n.ts';
 import { renderThumbnail } from '../map/renderer.ts';
 import type { GameMap, ServerEvents } from '../../../shared/types.ts';
-import type { AskReply, AssistantStatus, Conversation, ConversationItem, ConversationSummary, Proposal, ProposalTemplate } from './types.ts';
+import type { AskReply, AssistantStatus, Conversation, ConversationItem, ConversationSummary, FieldDiff, Proposal, ProposalTemplate } from './types.ts';
 import './assistant.css';
 
 const LS_KEY = 'sr.assistant.conv';
@@ -36,11 +36,84 @@ const KIND_LABEL: Record<string, string> = {
   map_edits: tk('Map changes'),
   npc: tk('NPC (bestiary)'),
   handout: tk('Player handout (not revealed)'),
+  act: tk('Act'),
   quest: tk('Quest'),
+  phase: tk('Quest phase'),
+  session: tk('Session'),
   thread: tk('Plot thread'),
   session_plan: tk('Session plan'),
   gm_notes: tk('GM notes'),
 };
+// Changes to an existing campaign entry (campaign_edit, by target) and to documents.
+const EDIT_LABEL: Record<string, string> = {
+  act: tk('Act change'),
+  quest: tk('Quest change'),
+  phase: tk('Quest phase change'),
+  session: tk('Session change'),
+  thread: tk('Plot thread change'),
+  handout: tk('Handout change'),
+  gm_notes: tk('GM notes change'),
+  player_recap: tk('Player recap change'),
+};
+// Field names shown above a diff (campaign entry fields; a document diff shows the file name).
+const FIELD_LABEL: Record<string, string> = {
+  title: tk('Title'),
+  label: tk('Label'),
+  summary: tk('Summary'),
+  status: tk('Status'),
+  state: tk('State'),
+  actId: tk('Act'),
+  rewards: tk('Rewards'),
+  gmNotes: tk('GM notes'),
+  doc: tk('Document'),
+  text: tk('Text'),
+  done: tk('Done'),
+  number: tk('Number'),
+  date: tk('Date'),
+  plan: tk('Plan'),
+  recap: tk('Recap'),
+  played: tk('Played'),
+  notes: tk('Notes'),
+  body: tk('Text'),
+};
+
+function kindLabel(p: Proposal): string {
+  if (p.kind === 'doc') return p.preview?.created ? t('New document') : t('Document change');
+  if (p.kind === 'campaign_edit') return t(EDIT_LABEL[p.sub || ''] || p.sub || '');
+  const key = (p.kind === 'campaign' ? p.sub : p.kind) || '';
+  return t(KIND_LABEL[key] || key);
+}
+
+/** Before/after diff of the changed fields (removed lines red, added green, a little context around). */
+function DiffView({ changes, doc }: { changes: FieldDiff[]; doc: boolean }) {
+  return (
+    <div className="assistant-diff">
+      {changes.map((c) => (
+        <div key={c.field} className="assistant-diff-field">
+          <div className="small muted assistant-diff-head">
+            <span>{doc ? c.field : t(FIELD_LABEL[c.field] || c.field)}</span>
+            <span className="mono">
+              <span className="assistant-diff-add">+{c.added}</span> <span className="assistant-diff-del">−{c.removed}</span>
+            </span>
+          </div>
+          <div className="assistant-diff-body">
+            {c.hunks.map((h, i) => (
+              <div key={i} className="assistant-diff-hunk">
+                {h.skip ? <div className="assistant-diff-skip">{t('… {n} unchanged line(s)', { n: h.skip })}</div> : null}
+                {h.lines.map((l, j) => (
+                  <div key={j} className={`assistant-diff-line ${l.op === '+' ? 'add' : l.op === '-' ? 'del' : ''}`}>
+                    {l.s || ' '}
+                  </div>
+                ))}
+              </div>
+            ))}
+            {c.cut ? <div className="assistant-diff-skip">{t('… {n} more line(s) not shown', { n: c.cut })}</div> : null}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 const STATUS: Record<string, { color: string; label: string }> = {
   applied: { color: 'green', label: tk('Applied') },
   dismissed: { color: 'dim', label: tk('Dismissed') },
@@ -72,7 +145,6 @@ function NpcPreview({ tpl }: { tpl: ProposalTemplate }) {
 function ProposalCard({ p, onChanged }: { p: Proposal; onChanged: () => void }) {
   const [busy, setBusy] = useState(false);
   const [big, setBig] = useState(false);
-  const kindKey = (p.kind === 'campaign' ? p.sub : p.kind) || '';
   const status = STATUS[p.status];
   const apply = async () => {
     setBusy(true);
@@ -106,7 +178,7 @@ function ProposalCard({ p, onChanged }: { p: Proposal; onChanged: () => void }) 
     <div className={`assistant-card ${p.status}`}>
       <div className="spread">
         <div>
-          <span className="assistant-kind">{t(KIND_LABEL[kindKey] || kindKey)}</span> <strong>{p.title}</strong>
+          <span className="assistant-kind">{kindLabel(p)}</span> <strong>{p.title}</strong>
         </div>
         {status ? <Badge color={status.color}>{t(status.label)}</Badge> : null}
       </div>
@@ -131,6 +203,8 @@ function ProposalCard({ p, onChanged }: { p: Proposal; onChanged: () => void }) 
           <Markdown text={p.preview.text} />
         </details>
       ) : null}
+      {p.preview?.changes?.length ? <DiffView changes={p.preview.changes} doc={p.kind === 'doc'} /> : null}
+      {p.preview?.playersSee ? <div className="small assistant-warn">{t('Players can see this text: applying changes what they read.')}</div> : null}
       {p.preview?.phases?.length ? (
         <ul className="small">
           {p.preview.phases.map((ph, i) => (
