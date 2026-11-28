@@ -6,27 +6,14 @@ import { Button, Panel, Field, Select, Toggle, Badge, Empty, LangSwitch, confirm
 import { api, setTableToken, uploadWithProgress, type ServerError } from '../../lib/net.ts';
 import { toast, useLang } from '../../lib/ui-store.ts';
 import { t, tn, tIfKnown, fmtDate } from '../../lib/i18n.ts';
+import { readAdminToken, writeAdminToken } from '../../lib/admin-token.ts';
 import { fmtBytes, Progress, type UploadProgress } from './common.tsx';
 import BooksAdmin from './BooksAdmin.tsx';
 import AssistantAdmin from './AssistantAdmin.tsx';
 import MaplibAdmin from './MaplibAdmin.tsx';
 import type { AdminApi, AdminPack, AdminTable, AdminTablesReply, RunFn } from './types.ts';
 
-const TOKEN_KEY = 'sr.adminToken';
-const readToken = () => {
-  try {
-    return sessionStorage.getItem(TOKEN_KEY) || '';
-  } catch {
-    return '';
-  }
-};
-const writeToken = (tok: string) => {
-  try {
-    if (tok) sessionStorage.setItem(TOKEN_KEY, tok);
-    else sessionStorage.removeItem(TOKEN_KEY);
-  } catch {}
-};
-let adminToken = readToken();
+let adminToken = readAdminToken();
 
 class AuthError extends Error {}
 const adminApi: AdminApi = async (path, opts = {}) => {
@@ -76,7 +63,7 @@ function AdminLogin({ onDone, onLang }: { onDone: () => void; onLang?: (l: strin
     try {
       const r = await api<{ token: string }>('/api/admin/login', { method: 'POST', body: { password } });
       adminToken = r.token;
-      writeToken(r.token);
+      writeAdminToken(r.token);
       onDone();
     } catch (e2) {
       setErr((e2 as Error).message);
@@ -417,7 +404,7 @@ export default function AdminPage({ onLang }: { onLang?: (l: string) => void }) 
 
   const logoutLocal = () => {
     adminToken = '';
-    writeToken('');
+    writeAdminToken('');
     setAuthed(false);
     setData(null);
   };

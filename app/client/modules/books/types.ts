@@ -26,6 +26,15 @@ export interface LibBook {
   extra?: boolean;
 }
 
+/** A Shadowrun 5 book Chummer knows that this table cannot read (GET /api/books `missing`). */
+export interface MissingBook {
+  code: string;
+  name: string;
+  nameFr: string;
+  /** German-only book (listed apart). */
+  de?: boolean;
+}
+
 /** Highlight request of a search hit: terms of `q` on that PDF page. */
 export interface ViewerHighlight {
   q: string;

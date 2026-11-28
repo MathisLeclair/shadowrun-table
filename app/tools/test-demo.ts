@@ -141,6 +141,7 @@ try {
   }
   const books = await json(await fetch(url + '/api/books', { headers: H(gmTok, 'demo') }));
   ok(Array.isArray(books.books) && books.books.length === 0, 'the book list answers an empty library on the demo');
+  ok(Array.isArray(books.missing) && books.missing.length === 0, 'no « missing books » to upload on the demo');
   const imp = await fetch(url + '/api/admin/import', { method: 'POST', headers: H(gmTok, 'demo', { 'content-type': 'application/json' }), body: JSON.stringify({ actors: {} }) });
   ok(imp.status === 403, 'state import refused: ' + imp.status);
   ok((await fetch(url + '/api/books', { headers: H(alphaTok, 'alpha') })).status === 200, 'rulebooks route still open on a real table');

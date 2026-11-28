@@ -16,7 +16,7 @@ import { detectOffsets, printedToPdf, pdfToPrinted, cleanOffsets } from '../serv
 import { parseQuery, fold, searchPages } from '../server/lib/books/search.ts';
 import { parseSourceRef, printedToPdf as clientPrintedToPdf, pdfToPrinted as clientPdfToPrinted } from '../client/modules/books/refs.ts';
 import type { PagedBook } from '../client/modules/books/refs.ts';
-import type { LibBook, SearchHit } from '../client/modules/books/types.ts';
+import type { LibBook, MissingBook, SearchHit } from '../client/modules/books/types.ts';
 import type { Library, LibraryBook } from '../server/lib/books/library.ts';
 import type { JobInfo } from '../server/lib/books/jobs.ts';
 import { memoryVerdict } from '../server/lib/books/jobs.ts';
@@ -293,6 +293,16 @@ try {
   ok(Math.abs(r.body.now - Date.now()) < 60000, 'server clock in the list (now)');
   ok(!fs.existsSync(path.join(runtime, 'books', '.sign-key')), 'old key in the books folder removed');
   ok(/^[0-9a-f]{64}$/.test(fs.readFileSync(path.join(runtime, 'books-sign.key'), 'utf8')), 'signing key outside the books folder');
+  // ----- missing books: every Chummer SR5 book this table cannot read (greyed out in the Règles library) -----
+  {
+    const miss = (r.body.missing || []) as MissingBook[];
+    ok(miss[0]?.code === 'SR5' && !miss.some((b) => b.code === 'RG' || b.code === 'HRCS'), `missing: core rules first, installed books absent (${miss.slice(0, 3).map((b) => b.code)})`);
+    ok(miss.some((b) => b.code === 'SG' && b.name === 'Street Grimoire' && b.nameFr === 'Grimoire des Ombres'), 'missing: English and French names');
+    const firstDe = miss.findIndex((b) => b.de);
+    ok(firstDe > 0 && miss.slice(firstDe).every((b) => b.de) && miss.some((b) => b.code === 'SHB' && b.de), 'missing: German-only books last, flagged');
+    const named = miss.slice(1, firstDe).map((b) => b.name);
+    eq(named, [...named].sort((a, b) => a.localeCompare(b)), 'missing: sorted by name');
+  }
 
   // ----- reader cache: version, stable links, pdf.js -----
   ok(/^[0-9a-z]+-[0-9a-z]+$/.test(rgA.version || '') && rgA.size === pdf.length, `version + size in the list (${rgA.version} / ${rgA.size})`);
@@ -410,6 +420,11 @@ try {
   r = await json(await get('/api/books', { token: gmB, table: 'beta' }));
   ok(r.body.books.some((b: LibBook) => b.code === 'RG') && !r.body.books.some((b: LibBook) => b.code === 'HRCS'), 'table beta: restricted book missing');
   eq((await get(fileUrl('HRCS', { t: 'beta', u: 'gm', s: sessionTag(gmB) }))).status, 403, 'wrong table → 403');
+  // A known book restricted to another table is listed as missing (no hint that it exists elsewhere).
+  await adminReq('/api/admin/books/RG', { method: 'PATCH', body: { tables: ['alpha'] } });
+  r = await json(await get('/api/books', { token: gmB, table: 'beta' }));
+  ok(!r.body.books.some((b: LibBook) => b.code === 'RG') && r.body.missing.some((b: MissingBook) => b.code === 'RG'), 'table beta: RG restricted to alpha → listed as missing');
+  await adminReq('/api/admin/books/RG', { method: 'PATCH', body: { tables: 'all' } });
   // A restricted book answers exactly like an unknown one (no list of the server's books for other tables).
   for (const p of ['link', 'page/1?pdf=1']) {
     const restricted = await json(await get(`/api/books/HRCS/${p}`, { token: gmB, table: 'beta' }));

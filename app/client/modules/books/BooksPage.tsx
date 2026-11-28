@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Panel, Empty, Badge, Button, confirmAction } from '../../lib/ui.tsx';
 import { t, tn } from '../../lib/i18n.ts';
 import type { GameProps } from '../../lib/net.ts';
-import { useBooks, booksError, findBook, openBookPdf, openBook, searchBooks } from './store.ts';
+import { useBooks, booksError, findBook, openBookPdf, openBook, searchBooks, getMissingBooks, loadBooks } from './store.ts';
 import { bookName } from './BookRef.tsx';
 import { HitList } from './BookViewer.tsx';
 import { QUICK_LINKS } from './quicklinks.ts';
@@ -12,7 +12,9 @@ import { useBookCache, clearBookCache } from './bookcache.ts';
 import { cachedByCode } from './cachepolicy.ts';
 import { fmtMB } from './PdfReader.tsx';
 import { toast } from '../../lib/ui-store.ts';
-import type { CacheSnapshot, LibBook, SearchResult } from './types.ts';
+import { readAdminToken } from '../../lib/admin-token.ts';
+import UploadBook from './UploadBook.tsx';
+import type { CacheSnapshot, LibBook, MissingBook, SearchResult } from './types.ts';
 import './books.css';
 
 function Search({ books }: { books: LibBook[] }) {
@@ -123,12 +125,118 @@ function CacheLine({ cache, books }: { cache: CacheSnapshot; books: LibBook[] })
   );
 }
 
+/** One greyed-out book of the library that this table cannot read yet; « Upload » for whoever may add it. */
+function MissingCard({ book, canUpload, onUpload }: { book: MissingBook; canUpload: boolean; onUpload: (b: MissingBook) => void }) {
+  return (
+    <div className="books-card missing">
+      <Badge color="dim">{book.code}</Badge>
+      <div className="grow books-card-name">{bookName(book)}</div>
+      {canUpload && (
+        <Button small onClick={() => onUpload(book)}>
+          {t('Upload')}
+        </Button>
+      )}
+    </div>
+  );
+}
+
+/** Every SR5 book Chummer knows that is not on this server (or not open to this table): German-only books folded apart. */
+function MissingBooks({ list, canUpload, onUpload }: { list: MissingBook[]; canUpload: boolean; onUpload: (b: MissingBook) => void }) {
+  if (!list.length) return null;
+  // Sorted by the name shown in the current language (the server sorts by the English one), core rules first.
+  const byName = (a: MissingBook, b: MissingBook) => Number(b.code === 'SR5') - Number(a.code === 'SR5') || bookName(a).localeCompare(bookName(b));
+  const main = list.filter((b) => !b.de).sort(byName);
+  const de = list.filter((b) => b.de).sort(byName);
+  return (
+    <div className="books-missing">
+      <div className="section-title">{t('Not on this server ({n})', { n: list.length })}</div>
+      <span className="field-hint">
+        {canUpload
+          ? t('Upload a PDF you own to make it readable from every table. The server administrator password is required.')
+          : t('The game master can ask the server administrator to add these books.')}
+      </span>
+      <div className="books-list">
+        {main.map((b) => (
+          <MissingCard key={b.code} book={b} canUpload={canUpload} onUpload={onUpload} />
+        ))}
+      </div>
+      {de.length > 0 && (
+        <details className="books-missing-de">
+          <summary className="muted small">{t('German-only books ({n})', { n: de.length })}</summary>
+          <div className="books-list">
+            {de.map((b) => (
+              <MissingCard key={b.code} book={b} canUpload={canUpload} onUpload={onUpload} />
+            ))}
+          </div>
+        </details>
+      )}
+    </div>
+  );
+}
+
+/** Books of this server readable from the table, then the known SR5 books it lacks (greyed out). */
+function Library({ books, missing, cache, isGM, onUpload }: { books: LibBook[]; missing: MissingBook[]; cache: CacheSnapshot; isGM: boolean; onUpload: (b: MissingBook) => void }) {
+  const cached = cachedByCode(cache.entries, books);
+  // Books are server-wide: the upload itself needs the admin password. The button shows for the GM, or for whoever
+  // already holds an admin session in this tab (opened /admin before).
+  const canUpload = isGM || !!readAdminToken();
+  return (
+    <>
+      {!books.length && <Empty>{t('No rulebook on this server.')}</Empty>}
+      <div className="books-list">
+        {books.map((b) => {
+          const hit = cached.get(b.code);
+          return (
+            <div className="books-card" key={b.code}>
+              <Badge color={b.extra ? 'dim' : 'cyan'}>{b.code}</Badge>
+              <div className="grow">
+                <div className="books-card-name">
+                  {bookName(b)}
+                  {hit && (
+                    <>
+                      {' '}
+                      <Badge color="green" title={t('Already downloaded: opens instantly ({size})', { size: fmtMB(hit.size) })}>
+                        {t('cached')}
+                      </Badge>
+                    </>
+                  )}
+                </div>
+                <div className="muted small">
+                  {b.indexed ? tn(b.pages, '{n} page', '{n} pages') : t('Indexing… (search and page numbers come once it is done)')}
+                </div>
+              </div>
+              <Button small onClick={() => openBookPdf(b.code, 1)}>
+                {t('Open')}
+              </Button>
+            </div>
+          );
+        })}
+      </div>
+      <CacheLine cache={cache} books={books} />
+      <MissingBooks list={missing} canUpload={canUpload} onUpload={onUpload} />
+    </>
+  );
+}
+
 export default function BooksPage({ game }: GameProps) {
   const books = useBooks();
   const cache = useBookCache();
-  const cached = cachedByCode(cache.entries, books || []);
   const isGM = game?.me?.role === 'gm';
   const err = booksError();
+  const missing = books ? getMissingBooks() : [];
+  const [upload, setUpload] = useState<MissingBook | null>(null);
+  // A freshly uploaded book is indexed in the background: refresh the list until it is done (30 tries at most).
+  const indexing = !!books?.some((b) => !b.indexed);
+  useEffect(() => {
+    if (!indexing) return undefined;
+    let n = 0;
+    const timer = setInterval(() => {
+      if (++n > 30) clearInterval(timer);
+      else loadBooks(true);
+    }, 10000);
+    return () => clearInterval(timer);
+  }, [indexing]);
+  const library = <Library books={books || []} missing={missing} cache={cache} isGM={isGM} onUpload={setUpload} />;
   return (
     <div className="page books-tab">
       <div className="page-title">
@@ -137,9 +245,8 @@ export default function BooksPage({ game }: GameProps) {
       {books === null ? (
         <Empty>{t('Loading…')}</Empty>
       ) : !books.length ? (
-        <Panel>
-          <Empty>{err ? err.message : t('No rulebook on this server.')}</Empty>
-          {isGM && <p className="muted small books-center">{t('The server administrator can add their PDFs from the Administration page (Rulebooks).')}</p>}
+        <Panel title={t('Library')}>
+          {err ? <Empty>{err.message}</Empty> : library}
         </Panel>
       ) : (
         <>
@@ -150,42 +257,11 @@ export default function BooksPage({ game }: GameProps) {
             <Panel title={t('Common rules')}>
               <QuickLinks />
             </Panel>
-            <Panel title={t('Library')}>
-              <div className="books-list">
-                {books.map((b) => {
-                  const hit = cached.get(b.code);
-                  return (
-                    <div className="books-card" key={b.code}>
-                      <Badge color={b.extra ? 'dim' : 'cyan'}>{b.code}</Badge>
-                      <div className="grow">
-                        <div className="books-card-name">
-                          {bookName(b)}
-                          {hit && (
-                            <>
-                              {' '}
-                              <Badge color="green" title={t('Already downloaded: opens instantly ({size})', { size: fmtMB(hit.size) })}>
-                                {t('cached')}
-                              </Badge>
-                            </>
-                          )}
-                        </div>
-                        <div className="muted small">
-                          {tn(b.pages, '{n} page', '{n} pages')}
-                          {b.indexed ? '' : ` · ${t('not indexed yet')}`}
-                        </div>
-                      </div>
-                      <Button small onClick={() => openBookPdf(b.code, 1)}>
-                        {t('Open')}
-                      </Button>
-                    </div>
-                  );
-                })}
-              </div>
-              <CacheLine cache={cache} books={books} />
-            </Panel>
+            <Panel title={t('Library')}>{library}</Panel>
           </div>
         </>
       )}
+      {upload && <UploadBook book={upload} onClose={() => setUpload(null)} />}
     </div>
   );
 }
