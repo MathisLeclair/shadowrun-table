@@ -1041,12 +1041,22 @@ function LiveMap({ game, map, ui, isGM }: LiveMapProps) {
       .filter((a): a is Actor => !!a && a.type === 'pc' && !('retired' in a && a.retired))
       .sort((a, b) => a.name.localeCompare(b.name));
     const notesHere = (map.notes || []).filter((n) => n.x === x && n.y === y);
+    const hasDisplays = Object.keys(game.displays || {}).length > 0;
     return (
       <>
         <div className="map-menu-head">{t('Cell {x}, {y}', { x, y })}</div>
         <button className="map-menu-item" onClick={act(() => ping({ fx: menu.fx, fy: menu.fy }))}>
           {t('Ping here')}
         </button>
+        {inside && hasDisplays && map.id === game.scene?.activeMapId && (
+          <button
+            className="map-menu-item"
+            title={t('Centre the table displays (shared screens) on this spot')}
+            onClick={act(() => send('display/focus', { mapId, x: menu.fx, y: menu.fy, zoom: 40 }).catch(quiet))}
+          >
+            {t('Show on the table displays')}
+          </button>
+        )}
         {aimItems}
         {inside && (
           <>

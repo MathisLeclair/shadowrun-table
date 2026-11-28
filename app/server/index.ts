@@ -17,6 +17,7 @@ import type { StoredMeta, TableApi, SocketEntry } from './lib/tables.ts';
 import { registerAdminRoutes, createRateLimiter } from './lib/admin.ts';
 import { uid, deepClone } from '../shared/util.ts';
 import { syncSpiritControl } from '../shared/magic.ts';
+import { displayByToken, displayUserId } from '../shared/display.ts';
 import { ActionError } from './errors.ts';
 import { errorBody, normalizeLogEntry, dictionaryFiles, isLang, formatSource, cleanParams, t as translate } from './lib/i18n.ts';
 import {
@@ -194,7 +195,11 @@ function userFromToken(table: Table | null | undefined, token: unknown): Session
   const state = table?.state;
   if (!state || !token) return null;
   const userId = state.sessions?.[token as string];
-  if (!userId) return null;
+  if (!userId) {
+    // A table display link (96-display): read-only, sees the table like a player without characters.
+    const d = displayByToken(state, token);
+    return d ? { id: displayUserId(d.id), role: 'display', name: d.name, characterIds: [], display: d.id } : null;
+  }
   if (userId === 'gm') return GM_USER;
   const u = state.users?.[userId];
   if (!u) return null;
@@ -205,7 +210,7 @@ function userFromToken(table: Table | null | undefined, token: unknown): Session
 function tableForToken(token: unknown, hint: Table | null): Table | null {
   if (!token || typeof token !== 'string') return null;
   if (hint) return userFromToken(hint, token) ? hint : null;
-  for (const t of tables.values()) if (usableTable(t) && t.state.sessions?.[token]) return t;
+  for (const t of tables.values()) if (usableTable(t) && (t.state.sessions?.[token] || displayByToken(t.state, token))) return t;
   return null;
 }
 
@@ -221,16 +226,24 @@ function issueToken(table: Table, userId: UserId): string {
 // ---------------------------------------------------------------------------
 // Views: what each connected user is allowed to see
 // ---------------------------------------------------------------------------
+/** Connected people (GM and players): table displays are not people, see onlineDisplays(). */
 function onlineUsers(table: Table): UserId[] {
   const ids = new Set<UserId>();
-  for (const { user } of table.sockets.values()) ids.add(user.id);
+  for (const { user } of table.sockets.values()) if (user.role !== 'display') ids.add(user.id);
+  return [...ids];
+}
+/** Display links with at least one screen connected. */
+function onlineDisplays(table: Table): string[] {
+  const ids = new Set<string>();
+  for (const { user } of table.sockets.values()) if (user.role === 'display' && user.display) ids.add(user.display);
   return [...ids];
 }
 
 function buildView(table: Table, user: SessionUser): GameView {
   const state = table.state;
   // notes: built per user by the notes module (filter/gmFilter) from the live state, never deep-cloned whole.
-  const { sessions, config, notes, ...rest } = state;
+  // displays: the links' tokens are secrets, only the GM gets them.
+  const { sessions, config, notes, displays, ...rest } = state;
   // The clone has the state's slices; config/me/users/online are set below, notes by the notes module.
   const view = deepClone(rest) as unknown as GameView;
   view.config = { campaignName: config?.campaignName || 'Shadowrun', lang: config?.lang || 'fr', table: table.info() };
@@ -238,6 +251,8 @@ function buildView(table: Table, user: SessionUser): GameView {
   view.users = Object.fromEntries(Object.values(state.users).map((u) => [u.id, { id: u.id, name: u.name, characterIds: u.characterIds }]));
   view.online = onlineUsers(table);
   if (user.role === 'gm') {
+    view.displays = deepClone(displays || {});
+    view.displaysOnline = onlineDisplays(table);
     // Modules may trim heavy or useless data from the GM view too (e.g. raw Chummer XML).
     for (const m of modules) {
       if (typeof m.gmFilter !== 'function') continue;
@@ -249,7 +264,8 @@ function buildView(table: Table, user: SessionUser): GameView {
     }
     return view;
   }
-  // Players: strip private data. Modules then filter their own slices.
+  // Players and table displays (a display is a player without characters): strip private data. Modules then filter
+  // their own slices (20-maps gives a display the party's eyes, 96-display adds its settings).
   view.log = (view.log || []).filter((e) => !e.gmOnly && (!e.to || e.to.includes(user.id) || e.userId === user.id));
   for (const m of modules) {
     if (typeof m.filter !== 'function') continue;
@@ -409,6 +425,7 @@ function errorI18n(err: unknown): { errorKey?: string; params?: I18nParams } {
 function runAction(t: Table, user: SessionUser, type: string, payload: ActionPayload | null | undefined): ActionResponse {
   const def = actions[type];
   if (!def) return { ok: false, ...errorBody('Unknown action: {type}', { type: String(type).slice(0, 80) }) };
+  if (user.role === 'display') return { ok: false, ...errorBody('A table display is read-only') };
   if (def.role === 'gm' && user.role !== 'gm') return { ok: false, ...errorBody('GM-only action') };
   try {
     const result = tableScope.run(t, () => def.handler(makeCtx(t, user), payload || {}));
@@ -470,8 +487,10 @@ app.use((req, res, next) => {
 app.use(demoHttpGuard);
 app.use(express.json({ limit: '20mb' }));
 
+/** The user of an HTTP request. Table displays have no HTTP access: everything they show comes with their view. */
 function authUser(req: Request): SessionUser | null {
-  return req.srTable ? userFromToken(req.srTable, bearer(req)) : null;
+  const u = req.srTable ? userFromToken(req.srTable, bearer(req)) : null;
+  return u && u.role !== 'display' ? u : null;
 }
 export function requireUser(req: Request, res: Response, next: NextFunction) {
   const u = authUser(req);
@@ -713,6 +732,7 @@ function importInto(t: Table, next: Record<string, any>, { keepSessions = true }
   if (keepSessions) {
     next.users = { ...cur.users, ...next.users };
     next.sessions = { ...(isObj(next.sessions) ? next.sessions : {}), ...(cur.sessions || {}) };
+    next.displays = { ...(isObj(next.displays) ? next.displays : {}), ...(cur.displays || {}) };
   }
   for (const u of Object.values(next.users)) {
     if (!isObj(u)) continue;
@@ -743,6 +763,7 @@ app.post('/api/admin/reset', requireGM, (req, res) => {
   fresh.config = t.state.config;
   fresh.sessions = t.state.sessions;
   fresh.users = t.state.users;
+  if (t.state.displays) fresh.displays = t.state.displays; // the screens around the table stay connected
   t.store.replace(fresh as TableState); // completed by the modules' init() just below
   initModules(t);
   t.store.saveNow();
@@ -933,6 +954,7 @@ io.on('connection', (socket) => {
       return;
     }
     entry.user = user;
+    if (user.role === 'display') return reply({ ok: false, ...errorBody('A table display is read-only'), code: 'read-only' });
     if (isDemo(t)) {
       const bad = demoActionError(entry, type, payload);
       if (bad) return reply({ ok: false, ...bad });

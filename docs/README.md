@@ -57,6 +57,7 @@ read the one you need, not all of them. Repo rules and commands: [AGENTS.md](../
 | [modules/assistant.md](modules/assistant.md) | GM assistant (Claude): auth, budget, tools, proposals |
 | [modules/multi-table.md](modules/multi-table.md) | table registry, migration, auth, admin API, zips |
 | [modules/demo-table.md](modules/demo-table.md) | public demo table: logins, refusals, caps, resets |
+| [modules/display.md](modules/display.md) | table displays: read-only links for a shared screen / projector, party vision, GM-driven panes |
 
 ## Designs
 

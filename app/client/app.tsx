@@ -1,16 +1,18 @@
 // App shell: table picker (/), admin page (/admin), and for a table (/t/<slug>/): login screen, header + main tabs,
 // main area (multi-view workspace: modules/core/Workspace.tsx), right dock, sheet modal, toasts, global components;
-// /t/<slug>/?pane=<tab> is a pop-out window showing one tab. Dictionaries are loaded before the first render (no French
+// /t/<slug>/?pane=<tab> is a pop-out window showing one tab; /t/<slug>/?display=<token> is a read-only table display
+// (modules/display/, docs/modules/display.md). Dictionaries are loaded before the first render (no French
 // flash in an English session); a language switch re-renders the whole tree (see docs/i18n.md).
 import { useEffect, useRef, useState, type ComponentType, type CSSProperties, type FormEvent } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Button, Badge, Modal, Tabs, LangSwitch } from './lib/ui.tsx';
-import { connect, getToken, setToken, useGame, useConnected, logout, api, send, TABLE, type GameProps } from './lib/net.ts';
+import { connect, getToken, setToken, useGame, useConnected, logout, api, send, TABLE, DISPLAY_TOKEN, type GameProps } from './lib/net.ts';
 import { useUI, setUI, toast, useLang } from './lib/ui-store.ts';
 import { t, tn, errorText, getLang, setLang, isLang, storedLang, storeLang, browserLang, expectUserLang, loadDictionaries } from './lib/i18n.ts';
 import { mainTabs, dockTabs, SheetView, globalComponents, popoutGlobalComponents } from './modules/registry.ts';
 import { TopTabs, SplitButton, Workspace, DockGrip, DockPopButton, useDockWidth } from './modules/core/Workspace.tsx';
 import { POPOUT_TAB, useLayout } from './lib/layout-store.ts';
+import DisplayApp from './modules/display/DisplayShell.tsx';
 import type { GameView } from '../shared/types.ts';
 
 import './modules/admin/admin.css'; // table picker + admin page + login extras
@@ -490,7 +492,7 @@ async function initialLang(): Promise<string> {
   return browserLang();
 }
 
-const Route = /^\/admin\/?$/.test(location.pathname) ? AdminRoot : TABLE ? App : TablePicker;
+const Route = /^\/admin\/?$/.test(location.pathname) ? AdminRoot : TABLE ? (DISPLAY_TOKEN ? DisplayApp : App) : TablePicker;
 const [first] = await Promise.all([initialLang(), loadDictionaries()]);
 setLang(first); // the socket is not open yet: a logged-in user's own language arrives with the first state
 try {

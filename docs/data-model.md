@@ -89,6 +89,10 @@ filters its own slice:
 | `notes` | own private pages + party pages (built per user) | [notes](modules/notes.md) |
 | `chargen` | their own drafts | [chargen](modules/chargen.md) |
 | `foundry` | nothing (GM only) | [foundry](modules/foundry.md) |
+| `displays` | nothing (GM only: the links and their tokens); a display gets its own `display` settings | [display](modules/display.md) |
+
+A table display (role `display`) receives the player view of a user without characters, with the party's eyes on the
+map and no party notes ([display.md](modules/display.md)).
 
 ## Normalisation at boot
 

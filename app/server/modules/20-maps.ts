@@ -6,6 +6,7 @@ import path from 'node:path';
 import { uid, deepClone } from '../../shared/util.ts';
 import { derive } from '../../shared/sr5.ts';
 import { effectsLookup } from '../lib/modifiers.ts';
+import { displayEyes } from '../../shared/display.ts';
 import {
   isTileChar, buildGrid, findPath, pathLength, createVisionContext, visibilityForUser, viewersForUser,
   tokenInMask, encodeBits, decodeBits, orBits, remapBits, isPcToken, stepBlocked, wallMidpoint, pointSegmentDistance,
@@ -1146,8 +1147,13 @@ const mod: ServerModule = {
     const { width: w, height: h } = full;
     const n = w * h;
     const fogOn = full.fog !== false;
-    const { visible } = visibilityForUser(full, user, state.actors, visionContext(full), effectsLookup());
-    const known = fogOn ? decodeBits(full.explored?.[user.id], n) : new Uint8Array(n).fill(1);
+    // Whose eyes: the user's own characters; a table display looks through the party or one chosen PC, with their
+    // explored cells (shared/display.ts). It owns no token, so everything below treats it as any other player.
+    const eyes = user.role === 'display' ? displayEyes(state, user.display) : { characterIds: user.characterIds, exploredBy: [user.id] };
+    const { visible } = visibilityForUser(full, eyes, state.actors, visionContext(full), effectsLookup());
+    const known = new Uint8Array(n);
+    if (fogOn) for (const uid of eyes.exploredBy) orBits(known, decodeBits(full.explored?.[uid], n));
+    else known.fill(1);
     orBits(known, visible);
 
     // Tiles: unknown cells become void; closed secret doors become walls.

@@ -27,7 +27,7 @@ app/
   shared/*.ts            other pure modules usable by server AND browser (no Node/DOM APIs):
                          vision.ts (maps), advancement.ts (training), matrix.ts (Matrix rules), magic.ts (magic rules), chargen.ts (priority creation),
                          npcgen.ts (enemy generator), combat.ts (attacks), vehicles.ts (vehicles, chases), modifiers.ts, lifestyle.ts, home.ts, sins.ts,
-                         contacts.ts, bookrefs.ts, maplib.ts
+                         contacts.ts, bookrefs.ts, maplib.ts, display.ts (table displays)
   client/index.html      page shell, loads app.tsx (Vite)                               (core-owned)
   client/app.tsx         shell: login, top tabs, right dock, sheet modal, toasts, pop-out window (?pane=)  (core-owned)
   client/modules/core/Workspace.tsx  multi-view: split pane, floating panels, tab menu, dock grip — see modules/workspace.md (core-owned)
@@ -88,6 +88,7 @@ Run: `npm start` (port 3000, or `PORT=xxxx`). A fresh install has one table « l
 | `90-books.ts` | `books/` | [books](modules/books.md), [book references](modules/book-refs.md) |
 | `95-assistant.ts` | `assistant/`, `admin/AssistantAdmin.tsx` | [modules/assistant.md](modules/assistant.md) |
 | (core) `server/lib/tables.ts`, `admin.ts` | `admin/` | [multi-table](modules/multi-table.md), [demo table](modules/demo-table.md) |
+| `96-display.ts` (auth in `index.ts`) | `display/` | [modules/display.md](modules/display.md) |
 | (cross-cutting) `shared/modifiers.ts`, `server/lib/modifiers.ts` | `sheet/modifiers-ui.tsx` | [modules/modifiers.md](modules/modifiers.md) |
 
 ## Server module contract
@@ -123,7 +124,9 @@ emitTo(target, event, data), uid(prefix), now, displayName(), lang, t(key, param
 - `fail('Texte {x}', { x })` throws; the client receives `{ error: 'Texte 42', errorKey: 'Texte {x}', params: { x: 42 } }`
   and toasts it translated. `log({ …, i18n: { key, params } })` stores a translatable entry. `ctx.lang` / `ctx.t()` =
   the table's language, only for texts that must be stored pre-rendered (rare). See [i18n.md](i18n.md).
-- `user` = `{ id, role: 'gm'|'player', name, characterIds: [] }` (GM id is `'gm'`).
+- `user` = `{ id, role: 'gm'|'player'|'display', name, characterIds: [] }` (GM id is `'gm'`). Role `'display'` = a
+  read-only table display link (`id: 'display:<link id>'`, `display: <link id>`): it never runs an action (the core
+  refuses them) and gets the player filters' view; see [display.md](modules/display.md).
 - `owns(actorId)` → GM, or the player controls that actor.
 - After every action the core saves to disk and broadcasts fresh views to everyone (debounced 30 ms). Never broadcast
   state yourself.
@@ -148,11 +151,12 @@ in promises/timers started there). `getState(req)` / `scheduleBroadcast(req)` ac
 
 Each user receives a **view** of their table's state (`GameView` in types.ts, `game` in components), rebuilt after
 every change (`buildView`, cached per user per broadcast):
-- The core deep-clones the state minus `sessions`, `config` and `notes` (`state.notes` is built per user by the notes
-  module), then sets `config` (campaign name, language, table info — never the password), `me`, `users` (no PINs) and
-  `online`.
-- GM: every module's `gmFilter` runs (trims only, e.g. Chummer XML, notes privacy). Players: the core drops `gmOnly`
-  log entries and whispers not addressed to them, then every module's `filter` runs in filename order.
+- The core deep-clones the state minus `sessions`, `config`, `notes` (`state.notes` is built per user by the notes
+  module) and `displays` (the display links' tokens: GM view only, with `displaysOnline`), then sets `config` (campaign
+  name, language, table info — never the password), `me`, `users` (no PINs) and `online` (people: displays left out).
+- GM: every module's `gmFilter` runs (trims only, e.g. Chummer XML, notes privacy). Players **and table displays**: the
+  core drops `gmOnly` log entries and whispers not addressed to them, then every module's `filter` runs in filename
+  order (a display is a player without characters; 20-maps gives it the party's eyes).
 - What each slice looks like for a player is listed in [data-model.md](data-model.md#gm-vs-player-views).
 
 ## Client contract

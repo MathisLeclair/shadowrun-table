@@ -21,6 +21,11 @@ The layout (main tab, split tab / side / ratio, floating panels, dock width) is 
 (`localStorage['sr.layout.<slug>']`). Narrow screens (≤ 900px) show the main pane only; the stored layout comes back on
 a wide screen.
 
+A **table display** ([display.md](display.md)) reuses the split view without the workspace UI: its panes (main + one
+split, side by side or stacked, ratio) are a `DisplayLayout` stored server-side on the display link, set by the GM in
+Settings → Table displays and pushed live (the display has no input). Only display-safe panes exist there: map,
+initiative, handout, public rolls.
+
 ## Pop-out windows
 
 Same login (the token is per browser), its own Socket.IO connection, so it is live on its own. It mounts the tab, the

@@ -55,6 +55,7 @@ const AREA_EXTRA: Record<string, string[]> = {
   books: ['server/modules/90-books.ts', 'server/lib/books', 'server/lib/bookrefs.ts', 'shared/bookrefs.ts', 'client/modules/admin/BooksAdmin.tsx'],
   city: ['server/modules/72-city.ts', 'server/lib/city.ts', 'shared/city.ts'],
   assistant: ['server/modules/95-assistant.ts', 'server/lib/assistant', 'client/modules/admin/AssistantAdmin.tsx'],
+  display: ['server/modules/96-display.ts', 'shared/display.ts'],
 };
 const DEFAULT_ROOTS = ['client', 'shared', 'server'];
 const SKIP = [/[\\/]node_modules[\\/]/, /[\\/]client[\\/]i18n[\\/]/, /[\\/]client[\\/]vendor[\\/]/, /[\\/]server[\\/]lib[\\/]foundry[\\/]dump-child\.ts$/];

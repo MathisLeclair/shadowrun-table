@@ -73,13 +73,11 @@ export function MapCanvas({ rendererRef, scene, handlers, className: klass = '' 
     const r = new MapRenderer(canvas);
     localRef.current = r;
     if (rendererRef) rendererRef.current = r;
-    const ro = new ResizeObserver(() => {
-      const b = wrap.getBoundingClientRect();
-      r.resize(b.width, b.height);
-    });
+    // Layout size, not the bounding box: a rotated parent (table display laid flat) swaps the box's width and height.
+    const fitWrap = () => r.resize(wrap.clientWidth, wrap.clientHeight);
+    const ro = new ResizeObserver(fitWrap);
     ro.observe(wrap);
-    const b0 = wrap.getBoundingClientRect();
-    r.resize(b0.width, b0.height);
+    fitWrap();
 
     const H = (): MapHandlers => hRef.current || {};
     const pointers = new Map<number, { x: number; y: number }>();
