@@ -9,7 +9,7 @@ import type { TrainingDraft, TrainingQuote } from './types.ts';
 import { RuleRef } from '../books/BookRef.tsx';
 
 /** Rulebook page of each advancement kind (shared/bookrefs.js RULE_REFS): karma costs and training times, SR5 p. 103. */
-const KIND_RULES: Record<string, string> = { initiation: 'initiation', submersion: 'submersion' };
+const KIND_RULES: Record<string, string> = { initiation: 'initiation', submersion: 'submersion', martialArt: 'martialArts' };
 
 export const STATUS: Record<OrderStatus, { label: string; color: BadgeColor }> = {
   pending: { label: tk('Pending'), color: 'amber' },

@@ -75,7 +75,11 @@ Body + slotBonus[category]; « All », « Model-Specific » and drone-attribute 
 - `shop/removeUpgrade { actorId, list: 'weapons'|'armor'|'vehicles'|'lifestyles', itemId, subId }` removes without
   refund (players: own actor, not rent-lowering lifestyle options — category 'Negative' / negative cost or multiplier —
   nor built-in parts: GM only).
-- `shop/martialArt { actorId, styleId, techniqueIds, free? }`: karma per `martialKarma`
-  ([rules](../rules/availability-and-shop.md#martial-arts-rg-p-128)). Players → pending order `kind: 'karma'` (one per
-  style; the GM approves in « Commandes », karma spent then, history `karma: -n`); GM → granted at once (`free` = no
-  karma). The training module does not handle martial arts.
+- Martial arts: the storefront section (`MartialArts.tsx`) sends a `martialArt` training request (`training/request`,
+  [training.md](training.md#actions-and-behaviour)): GM approval per the training settings, training time, instructor
+  option, downtime days (RG p.128, [rules](../rules/advancement.md#martial-arts-rg-p-128)). It shows the quote (karma,
+  instruction nuyen, time) and the style's pending / in-progress training.
+- `shop/martialArt { actorId, styleId, techniqueIds, free? }` (GM only): granted at once, no training time — karma per
+  `martialKarma` ([rules](../rules/availability-and-shop.md#martial-arts-rg-p-128)), `free` = no karma (the storefront's
+  « Grant for free »). Pending orders `kind: 'karma'` from older saves (players used to ask here) are still approved by
+  `shop/resolve`.

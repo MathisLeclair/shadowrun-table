@@ -1,12 +1,13 @@
 // SR5 character advancement: karma costs, training time, limits, and applying an advance to an actor.
 // Pure ES module shared by the server (50-training.js) and the browser (training UI). No Node or DOM APIs.
 //
-// Sources: SR5 core p.103-107 (« Progression du personnage ») and Run Faster. House rules are flagged below.
+// Sources: SR5 core p.103-107 (« Progression du personnage »), Run Faster, and Run & Gun p.128 (martial arts).
+// House rules are flagged below.
 //
 // Request (normalized by normalizeRequest):
 //   { kind, target, to, name?, spec?, attr?, ktype?, karma?, pp?, levels?, maxLevel?, extraPP?, days?,
 //     instructor?, note?, catalogId?, positive?, data?: {spell fields}, options?: { group, ordeal, schooling,
-//     metamagic, powerPoint }, free? (GM only: no karma/nuyen) }
+//     metamagic, powerPoint }, techniques?: [{ id, name, nameFr? }] (martialArt), free? (GM only: no karma/nuyen) }
 //
 // Actor fields written by applyAdvance (in addition to the ARCHITECTURE.md Actor schema):
 //   actor.magic = { initiation: grade, submersion: grade, metamagics: [string], echoes: [string], extraPP: n }
@@ -19,8 +20,8 @@
 import { METATYPES, SKILLS, SKILL_BY_ID, SKILL_GROUPS, ATTR_LABELS, skillEn, skillKey, type AttrKeyish, type SkillDef } from './sr5.ts';
 import { slug, uid } from './util.ts';
 import type {
-  ActorLike, ActorMagic, AdeptPower, AdvancementRequest, Attributes, AttrKey, ComplexForm, I18nEntry, I18nMessage, I18nParams,
-  I18nParamValue, KnowledgeSkill, KnowledgeType, Quality, Skill, Spell, TrainingKind, TrainingSettings,
+  ActorLike, ActorMagic, AdeptPower, AdvancementRequest, AdvancementTechnique, Attributes, AttrKey, ComplexForm, I18nEntry, I18nMessage, I18nParams,
+  I18nParamValue, KnowledgeSkill, KnowledgeType, MartialArt, Quality, Skill, Spell, TrainingKind, TrainingSettings,
 } from './types.ts';
 
 /** Awakened / emerged type of magicProfile(). */
@@ -37,6 +38,8 @@ export interface CostOptions {
   options?: InitiationOptions | null;
   /** Free progression: days typed by hand. */
   days?: number;
+  /** Martial art: the style itself is learned too (karma = style cost). */
+  style?: boolean;
 }
 /** withInstructor() result. */
 export interface InstructorTraining {
@@ -147,7 +150,7 @@ const nested = (m: I18nEntry | null | undefined): I18nMessage | string =>
 /** Translatable param for a skill name: SR5 skills (stored French name or English name) become their English key, custom names stay as typed. */
 const skillParam = (name: string, def: SkillDef | null | undefined): I18nMessage | string => (def && (!name || name === def.fr || name === skillEn(def)) ? { t: skillKey(def) } : name || '');
 
-export const KINDS: TrainingKind[] = ['attribute', 'skill', 'skillGroup', 'specialization', 'knowledge', 'quality', 'removeQuality', 'spell', 'complexForm', 'power', 'powerPoint', 'initiation', 'other'];
+export const KINDS: TrainingKind[] = ['attribute', 'skill', 'skillGroup', 'specialization', 'knowledge', 'quality', 'removeQuality', 'spell', 'complexForm', 'power', 'powerPoint', 'initiation', 'martialArt', 'other'];
 
 export const KIND_LABELS: Record<TrainingKind, string> = {
   attribute: tk('Attribute'),
@@ -162,6 +165,7 @@ export const KIND_LABELS: Record<TrainingKind, string> = {
   power: tk('Adept Power'),
   powerPoint: tk('Power Point'),
   initiation: tk('Initiation'),
+  martialArt: tk('Martial Art'),
   other: tk('Other'),
 };
 
@@ -179,6 +183,7 @@ export const RULE_TEXT: Record<TrainingKind | 'instructor', string> = {
   power: tk('Adept power: paid with free Power Points (no karma), immediate'),
   powerPoint: tk('Power Point (mystic adept): 5 karma, maximum = Magic'),
   initiation: tk('Initiation / submersion: 10 + (new grade × 3) karma, −10% per option (group, ordeal, schooling) · Time: 1 month'),
+  martialArt: tk('Martial art (Run & Gun p.128): new style 7 karma (some styles more), first technique included · Time: 1 month · Further technique: 5 karma, 2 weeks · Instructor: 2,500¥ per style, 1,500¥ per technique'),
   other: tk('Free advancement: cost and time set by hand (always approved by the GM)'),
   instructor: tk('Instructor: an Instruction test reduces the training time (reduction set by the GM) — cost in nuyen per week'),
 };
@@ -197,6 +202,13 @@ export const KNOWLEDGE_TYPES: Record<KnowledgeType, string> = {
   interest: tk('Interest'),
   language: tk('Language'),
 };
+
+/**
+ * Martial arts (Run & Gun p.128, « Learning martial arts » table): a new style costs its catalog karma (7; Way of Unified
+ * Mana 15) and takes 1 month, its first technique included; each further technique costs 5 karma and takes 2 weeks.
+ * Instruction costs 2,500¥ for a style and 1,500¥ per technique (the instructor also cuts the time like any training).
+ */
+export const MARTIAL_RULES = { styleKarma: 7, techniqueKarma: 5, styleDays: 30, techniqueDays: 14, styleNuyen: 2500, techniqueNuyen: 1500 };
 
 export const SKILL_MAX = 12; // in play (13 with Aptitude)
 export const KNOWLEDGE_MAX = 12;
@@ -312,11 +324,27 @@ export function costFor(kind: TrainingKind | null | undefined, fromRating: unkno
       const f = initiationFactor(opts.options);
       return sumSteps(from, to, (g) => Math.ceil((10 + g * 3) * f));
     }
+    case 'martialArt':
+      return (opts.style ? Math.round(num(opts.karma)) || MARTIAL_RULES.styleKarma : 0) + martialPaidTechniques(from, to, opts) * MARTIAL_RULES.techniqueKarma;
     case 'other':
       return Math.max(0, Math.round(num(opts.karma)));
     default:
       return 0;
   }
+}
+
+/**
+ * Martial art: techniques paid on their own (from = techniques already known in the style, to = after the training).
+ * RG p.128: the style includes its first technique — also a known style without any technique (bought without, imported).
+ */
+function martialPaidTechniques(from: number, to: number, opts: CostOptions): number {
+  const n = Math.max(0, to - from);
+  return opts.style || from === 0 ? Math.max(0, n - 1) : n;
+}
+
+/** Martial art instruction cost in nuyen (RG p.128): 2,500¥ for a new style (first technique included), 1,500¥ per further technique. */
+export function martialInstructionCost(fromTechniques: unknown, toTechniques: unknown, newStyle: boolean): number {
+  return (newStyle ? MARTIAL_RULES.styleNuyen : 0) + martialPaidTechniques(int(fromTechniques), int(toTechniques), { style: newStyle }) * MARTIAL_RULES.techniqueNuyen;
 }
 
 /** Training time in days (without instructor). opts: { spec, karma, days } */
@@ -346,6 +374,8 @@ export function timeFor(kind: TrainingKind | null | undefined, fromRating: unkno
       return 0;
     case 'initiation':
       return Math.max(1, to - from) * 30;
+    case 'martialArt':
+      return (opts.style ? MARTIAL_RULES.styleDays : 0) + martialPaidTechniques(from, to, opts) * MARTIAL_RULES.techniqueDays;
     case 'other':
       return Math.max(0, int(opts.days));
     default:
@@ -578,8 +608,31 @@ export function normalizeRequest(raw: unknown): AdvancementRequest {
     positive: r.positive === false ? false : true,
     data: { category: str(d.category, 40), type: str(d.type, 40), range: str(d.range, 40), duration: str(d.duration, 40), drain: str(d.drain, 40) },
     options: { group: !!o.group, ordeal: !!o.ordeal, schooling: !!o.schooling, metamagic: str(o.metamagic, 80), powerPoint: !!o.powerPoint },
+    techniques: normalizeTechniques(r.techniques),
     free: !!r.free,
   };
+}
+
+/** Techniques of a 'martialArt' request: [{ id, name, nameFr? }] (ids alone accepted), unique ids, at most 20. */
+function normalizeTechniques(raw: unknown): AdvancementTechnique[] {
+  if (!Array.isArray(raw)) return [];
+  const str = (v: unknown, n: number) => String(v ?? '').trim().slice(0, n);
+  const out: AdvancementTechnique[] = [];
+  for (const x of raw.slice(0, 20)) {
+    const o = (x && typeof x === 'object' ? x : { id: x }) as Record<string, unknown>;
+    const id = str(o.id, 80);
+    if (!id || out.some((t) => t.id === id)) continue;
+    const t: AdvancementTechnique = { id, name: str(o.name, 80) || id };
+    if (o.nameFr) t.nameFr = str(o.nameFr, 80);
+    out.push(t);
+  }
+  return out;
+}
+
+/** The actor's entry for a martial art style (by catalog id, else by name for entries without one). */
+export function findMartialArt(actor: ActorLike | null | undefined, catalogId: string, name?: string, altName?: string): MartialArt | null {
+  const list = Array.isArray(actor?.martialArts) ? actor.martialArts : [];
+  return list.find((m) => catalogId && m.catalogId === catalogId) || (name ? list.find((m) => !m.catalogId && sameName(m.name, name, altName)) : null) || null;
 }
 
 /** Keys used to detect conflicting trainings (same thing twice, or two attributes at once). */
@@ -622,6 +675,8 @@ export function conflictKeys(actor: ActorLike | null | undefined, raw: unknown):
       return ['pp'];
     case 'initiation':
       return ['initiation'];
+    case 'martialArt':
+      return [`martial:${req.catalogId || slug(req.name || t)}`];
     default:
       return [];
   }
@@ -686,7 +741,8 @@ export function quote(
       const ins = withInstructor(out.daysBase, req.kind, st);
       out.instructor = true;
       out.days = ins.days;
-      out.nuyenCost = req.free ? 0 : ins.nuyen;
+      // Martial arts: the book's instruction cost (RG p.128) instead of the per-week rate.
+      out.nuyenCost = req.free ? 0 : req.kind === 'martialArt' ? martialInstructionCost(out.from, out.to, !!costOpts.style) : ins.nuyen;
     }
     if (!ctx.skipChecks) {
       const mine = conflictKeys(actor, req);
@@ -962,6 +1018,27 @@ function resolveKind(actor: ActorLike, req: AdvancementRequest, out: AdvanceQuot
       }
       return;
     }
+    case 'martialArt': {
+      const name = req.name || req.target;
+      if (!req.catalogId && !name) bad(tk('Choose a martial art style'));
+      const known = findMartialArt(actor, req.catalogId, name, req.altName);
+      const knownTech = known?.techniques || [];
+      const fresh = req.techniques.filter((t) => !knownTech.some((k) => (k.catalogId && k.catalogId === t.id) || sameName(k.name, t.name, t.nameFr)));
+      if (known && !fresh.length) bad(tk('Nothing new to learn'));
+      req.techniques = fresh;
+      req.name = known?.name || name;
+      req.target = req.catalogId || slug(req.name);
+      out.target = req.target;
+      costOpts.style = !known;
+      costOpts.karma = req.karma || MARTIAL_RULES.styleKarma;
+      out.from = knownTech.length;
+      out.to = out.from + fresh.length;
+      const techniques = fresh.map((t) => t.nameFr || t.name).join(', ');
+      if (!known && !techniques) setLabel(out, tk('Martial art: {style}'), { style: req.name });
+      else if (!known) setLabel(out, tk('Martial art: {style} ({techniques})'), { style: req.name, techniques });
+      else setLabel(out, tk('Martial art techniques: {style} ({techniques})'), { style: req.name, techniques });
+      return;
+    }
     case 'other': {
       const name = req.name || req.target;
       if (!name) bad(tk('Describe the advancement'));
@@ -1148,6 +1225,21 @@ export function applyAdvance(actor: ActorLike | null | undefined, raw: unknown):
       if (req.options.metamagic) (m.metamagics = Array.isArray(m.metamagics) ? m.metamagics : []).push(req.options.metamagic);
       if (req.options.powerPoint) m.extraPP = num(m.extraPP) + 1;
       return `Initiation grade ${m.initiation}`;
+    }
+    case 'martialArt': {
+      actor.martialArts = Array.isArray(actor.martialArts) ? actor.martialArts : [];
+      let m = findMartialArt(actor, req.catalogId, req.name, req.altName);
+      if (!m) {
+        m = { id: uid('ma'), name: req.name || req.target, rating: 1, techniques: [] };
+        if (req.catalogId) m.catalogId = req.catalogId;
+        actor.martialArts.push(m);
+      }
+      if (!Array.isArray(m.techniques)) m.techniques = [];
+      for (const t of req.techniques) {
+        if (m.techniques.some((k) => k.catalogId === t.id)) continue;
+        m.techniques.push({ id: uid('tec'), catalogId: t.id, name: t.name, ...(t.nameFr ? { nameFr: t.nameFr } : {}) });
+      }
+      return `${m.name} (${m.techniques.map((k) => k.nameFr || k.name).join(', ')})`;
     }
     default:
       return req.name || req.target || '';

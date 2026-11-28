@@ -1638,7 +1638,15 @@ export interface ShopState {
 
 export type TrainingKind =
   | 'attribute' | 'skill' | 'skillGroup' | 'specialization' | 'knowledge' | 'quality' | 'removeQuality'
-  | 'spell' | 'complexForm' | 'power' | 'powerPoint' | 'initiation' | 'other';
+  | 'spell' | 'complexForm' | 'power' | 'powerPoint' | 'initiation' | 'martialArt' | 'other';
+
+/** A martial art technique carried by a 'martialArt' request (catalog martialarts.json, Run & Gun). */
+export interface AdvancementTechnique {
+  /** Catalog technique id. */
+  id: string;
+  name: string;
+  nameFr?: string;
+}
 
 /** Normalized advancement request (shared/advancement.js normalizeRequest). */
 export interface AdvancementRequest {
@@ -1662,6 +1670,8 @@ export interface AdvancementRequest {
   positive: boolean;
   data: { category: string; type: string; range: string; duration: string; drain: string };
   options: { group: boolean; ordeal: boolean; schooling: boolean; metamagic: string; powerPoint: boolean };
+  /** 'martialArt': techniques to learn (catalogId = style id, karma = style cost). */
+  techniques: AdvancementTechnique[];
   free: boolean;
 }
 

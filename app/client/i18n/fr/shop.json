@@ -457,5 +457,12 @@
   "Whole catalog": "Tout le catalogue",
   "You already live here": "Tu habites déjà ici",
   "You don’t have a character yet: ask the GM to assign you one to go shopping.": "Tu n’as pas encore de personnage : demande au MJ de t’en attribuer un pour faire tes achats.",
-  "Choose a home first": "Choisis d’abord un logement"
+  "Choose a home first": "Choisis d’abord un logement",
+  "{name} starts training: {style}": "{name} commence l’entraînement : {style}",
+  "Martial arts are learned like any advance: {style} karma and {styleTime} for a style (first technique included), then {tech} karma and {techTime} per technique. The GM approves.": "Les arts martiaux s’apprennent comme toute progression : style {style} karma et {styleTime} (première technique comprise), puis {tech} karma et {techTime} par technique. Le MJ valide.",
+  "Run & Gun p.128: 2,500¥ for a style, 1,500¥ per further technique": "Run & Gun p.128 : 2 500 ¥ pour un style, 1 500 ¥ par technique supplémentaire",
+  "With an instructor (−{pct}% time)": "Avec un instructeur (−{pct} % de temps)",
+  "Training time": "Temps d’entraînement",
+  "Start training ({n} karma)": "Lancer l’entraînement ({n} karma)",
+  "Learned at once, no karma and no training time": "Appris immédiatement, sans karma ni temps d’entraînement"
 }
