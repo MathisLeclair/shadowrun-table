@@ -676,6 +676,10 @@ export interface LifestyleHome {
   layout: string;
   since: Timestamp;
   moves: number;
+  /** Table map of this flat (server/lib/home-map.ts), created when the flat is picked. Missing = none yet. */
+  mapId?: MapId;
+  /** Add-ons the map was built with (homeAddons keys): differs from the current ones → the map is out of date. */
+  addons?: string;
 }
 
 export interface Lifestyle extends ItemBase {
@@ -1422,6 +1426,8 @@ export interface GameMap {
   /** Foundry scene thumbnail URL. */
   thumb?: string;
   foundry?: { id: string; world: string; importedAt: Timestamp; hash?: string };
+  /** A runner's home map (lifestyle.home.mapId points back here). */
+  home?: { actorId: ActorId; lifestyleId: string };
 }
 
 /** `state.scene`. */
@@ -2747,6 +2753,8 @@ export interface GameView {
   chummer: ChummerState;
   /** Built by the city module for everyone (state.city is never sent as is). */
   city: CityView;
+  /** Players: maps of their runners' homes and of the homes they were invited to (GM: in `maps`). */
+  homeMaps?: Record<MapId, GameMap>;
 }
 
 // =====================================================================================================================

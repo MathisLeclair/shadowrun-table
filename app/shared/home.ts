@@ -419,14 +419,17 @@ export function homeMoveCost(l: HomeLifestyleLike | null | undefined): number {
   return HOME_MOVE_COST[String(l?.base || '')] ?? Math.max(0, Math.round(Number(l?.baseCost) || 0));
 }
 
-/** Stored `home` from untrusted input (GM edits): { layout, since, moves } or null. */
+/** Stored `home` from untrusted input (GM edits): { layout, since, moves, mapId?, addons? } or null. */
 export function sanitizeHome(input: unknown): LifestyleHome | null {
   if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
   const h = input as Record<string, unknown>;
   const layout = String(h.layout || '').slice(0, 40);
   if (!Object.prototype.hasOwnProperty.call(HOME_LAYOUTS, layout)) return null;
   const n = (v: unknown): number => (Number.isFinite(Number(v)) ? Math.max(0, Math.round(Number(v))) : 0);
-  return { layout, since: n(h.since), moves: Math.min(999, n(h.moves)) };
+  const out: LifestyleHome = { layout, since: n(h.since), moves: Math.min(999, n(h.moves)) };
+  if (typeof h.mapId === 'string' && h.mapId) out.mapId = h.mapId.slice(0, 80);
+  if (typeof h.addons === 'string') out.addons = h.addons.slice(0, 400);
+  return out;
 }
 
 // ---------------------------------------------------------------------------

@@ -262,6 +262,27 @@ try {
   r = await gm.send('shop/chooseHome', { actorId: 'pc_low', lifestyleId: appart, layout: 'medium-family' });
   await settle();
   ok(r.fee === 0 && A(pl, 'pc_low').nuyen === n0 && A(pl, 'pc_low').lifestyles.find((l) => l.id === appart)!.home!.moves === 2, 'GM moves for free');
+
+  console.log('• home maps (server/lib/home-map.ts)');
+  const homeOf = () => A(gm, 'pc_low').lifestyles.find((l) => l.id === appart)!.home!;
+  let hm = gm.state.maps[homeOf().mapId!];
+  ok(hm && hm.home?.actorId === 'pc_low' && hm.home.lifestyleId === appart && hm.fog === false && hm.regions.length > 0, 'picking a flat creates its table map, linked both ways');
+  const former = Object.values(gm.state.maps).filter((m) => /\((ancien|former)\)$/.test(m.name) && !m.home);
+  ok(former.length === 2 && former.every((m) => m.folder !== hm.folder), 'each move keeps the old map, renamed and filed as a former home');
+  ok(!!pl.state.homeMaps?.[hm.id] && Object.keys(pl.state.homeMaps!).length === 1, 'owner sees their home map (not the former ones)');
+  ok(!pl.state.maps[hm.id] && !Object.keys(pb.state.homeMaps || {}).length, 'not in the shown maps; other players don’t get it');
+  await gm.send('actor/updateItem', { actorId: 'pc_low', list: 'lifestyles', itemId: appart, patch: { home: { ...homeOf(), addons: 'garageSmall' } } });
+  await settle();
+  r = await pl.send('shop/homeMap', { actorId: 'pc_low', lifestyleId: appart });
+  await settle();
+  ok(r.mapId === hm.id && homeOf().addons !== 'garageSmall', 'options changed → the owner rebuilds the same map');
+  await gm.send('maps/delete', { mapId: hm.id });
+  await settle();
+  ok(!pl.state.homeMaps?.[hm.id], 'GM deleted the home map: gone for the player too');
+  r = await pl.send('shop/homeMap', { actorId: 'pc_low', lifestyleId: appart });
+  await settle();
+  ok(r.mapId && r.mapId !== hm.id && gm.state.maps[r.mapId]?.home?.lifestyleId === appart && homeOf().mapId === r.mapId, 'owner recreates it');
+  await rejects(pb.send('shop/homeMap', { actorId: 'pc_low', lifestyleId: appart }), /not your character/, 'not for another player');
   await gm.send('actor/updateItem', { actorId: 'pc_low', list: 'lifestyles', itemId: appart, patch: { home: { layout: 'evil', x: 1 } } });
   await settle();
   ok(!A(gm, 'pc_low').lifestyles.find((l) => l.id === appart)!.home, 'GM edit with a bad home → removed (player picks again)');
@@ -284,6 +305,8 @@ try {
   ok(A(gm, 'pc_jane').history.length === histLen, 'no second restore entry');
   ok(A(gm, 'pc_low').lifestyles.length === 2, 'purchased lifestyles kept');
   ok(A(gm, 'pc_low').lifestyles.find((l) => l.id === appart)?.home?.layout === 'medium-family', 'home kept after a reboot');
+  const linked = Object.values(gm.state.maps).filter((m) => m.home?.lifestyleId === appart);
+  ok(linked.length === 1 && linked[0].id === A(gm, 'pc_low').lifestyles.find((l) => l.id === appart)?.home?.mapId, 'no second home map after a reboot');
   const errors = srv.output().split('\n').filter((l) => /\[action|Error|failed/i.test(l));
   ok(!errors.length, `no server errors: ${errors.join(' | ')}`);
   gm.close();

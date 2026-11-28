@@ -19,6 +19,7 @@ import { performRoll } from './10-characters.ts';
 import { HOME_LAYOUTS, homeLayout, homeMoveCost } from '../../shared/home.ts';
 import { placeAt, samePlace } from '../../shared/city.ts';
 import { activeCity } from '../lib/city.ts';
+import { archiveHomeMap, createHomeMap, ensureHomeMaps, homeMapsFor, rebuildHomeMap } from '../lib/home-map.ts';
 import { monthlyCost, settleLifestyles, primaryLifestyle, lifestyleFromCatalog, qualityFromCatalog, qualityProblem, baseOf } from '../../shared/lifestyle.ts';
 import { removeBonus, weaponFromStats, bakeItemBonus } from '../lib/augment.ts';
 import { formatSource } from '../lib/i18n.ts';
@@ -26,7 +27,7 @@ import { fillActorRefs } from '../lib/bookrefs.ts';
 import { thrownGearToWeapons } from './10-characters.ts';
 import type {
   ActionContext, Actor, ActorId, AvailRollInfo, AvailTest, ContactSheet, Legality, RollRecord, BiName, CatalogFile, CatalogItem, Contact, HistoryEntry, I18nEntry, I18nMessage, I18nParams, I18nParamValue, OrderLine, ServerEvents, ServerModule,
-  ShopOrder, ShopSpecial, ShopState, TableState, UserId,
+  ShopOrder, ShopSpecial, ShopState, TableState, UserId, Lifestyle,
 } from '../../shared/types.ts';
 
 /** Catalog entries, owned items and their sub-items are read generically here (fields differ per catalog file / actor list). */
@@ -1120,18 +1121,23 @@ function moveHome(ctx: ActionContext, { actorId, lifestyleId, layout, x, y }: Mo
     notifyOwners(ctx, actorId as ActorId, 'sfx', { id: 'cash' });
   }
   const moves = (Number(lf.home?.moves) || 0) + (isMove ? 1 : 0);
-  if (layoutChange) lf.home = { layout: next!.id, since: ctx.now, moves };
-  else if (lf.home && isMove) lf.home = { ...lf.home, since: ctx.now, moves };
+  if (layoutChange) {
+    // the old flat's map is kept as a « former home »; the new flat gets its own table map
+    archiveHomeMap(ctx.state, lf as Lifestyle);
+    lf.home = { layout: next!.id, since: ctx.now, moves };
+    createHomeMap(ctx.state, actor as Actor, lf as Lifestyle);
+  } else if (lf.home && isMove) lf.home = { ...lf.home, since: ctx.now, moves };
   if (placeChange) lf.place = place;
   if (isMove) shopLog(ctx, actorId as ActorId, fee ? tk('{actor} moves ({name}) — {cost}') : tk('{actor} moves ({name})'), { actor: actor.name, name: lf.name, cost: nuyen(fee) });
   else shopLog(ctx, actorId as ActorId, tk('{actor} moves in ({name})'), { actor: actor.name, name: lf.name });
-  return { layout: lf.home?.layout ?? null, place: lf.place ?? null, fee };
+  return { layout: lf.home?.layout ?? null, place: lf.place ?? null, fee, mapId: lf.home?.mapId ?? null };
 }
 
 const mod: ServerModule = {
   name: 'shop',
 
   init(state, { readSeed }) {
+    ensureHomeMaps(state); // flats picked before home maps existed
     const d = defaults();
     state.shop = state.shop && typeof state.shop === 'object' ? state.shop : ({} as ShopState);
     const shop = state.shop;
@@ -1573,6 +1579,18 @@ const mod: ServerModule = {
       handler: (ctx: ActionContext, payload: MovePayload) => moveHome(ctx, payload),
     },
     // Level-1 name (flat only), kept for older clients.
+    // Owner or GM: (re)build the home's table map — after the lifestyle's add-ons changed, or if the GM deleted it.
+    'shop/homeMap': {
+      role: 'any',
+      handler(ctx: ActionContext, { actorId, lifestyleId }: MovePayload) {
+        const actor = getActor(ctx, actorId);
+        const lf = (actor.lifestyles || []).find((l: Loose) => l.id === lifestyleId) as Lifestyle | undefined;
+        if (!lf) return ctx.fail('Lifestyle not found');
+        if (!homeLayout(lf)) return ctx.fail('Choose a home first');
+        const map = rebuildHomeMap(ctx.state, actor as Actor, lf);
+        return { mapId: map?.id ?? null };
+      },
+    },
     'shop/chooseHome': {
       role: 'any',
       handler: (ctx: ActionContext, { actorId, lifestyleId, layout }: MovePayload) => moveHome(ctx, { actorId, lifestyleId, layout: typeof layout === 'string' && layout ? layout : '?' }),
@@ -1589,6 +1607,7 @@ const mod: ServerModule = {
   },
 
   filter(view, user, fullState) {
+    view.homeMaps = homeMapsFor(fullState, user.characterIds || []);
     if (!view.shop) return;
     const mine = new Set(user.characterIds || []);
     view.shop.orders = (view.shop.orders || []).filter((o) => o.userId === user.id || mine.has(o.actorId));

@@ -5,7 +5,7 @@ import { Button, Modal, confirmAction } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
 import { setUI, goTab, toast } from '../../lib/ui-store.ts';
 import { t, fmtNuyen } from '../../lib/i18n.ts';
-import { homeLayoutsFor, homeLayout, homeMoveCost, buildHome, homeArea, type HomeBuild, type HomeLayout, type HomeMap } from '/shared/home.ts';
+import { homeLayoutsFor, homeLayout, homeMoveCost, buildHome, homeArea, homeAddons, type HomeBuild, type HomeLayout, type HomeMap } from '/shared/home.ts';
 import { drawStaticMap, type MapRenderer, type MapScene } from '../map/renderer.ts';
 import { lifestyleBaseLabel } from './sublists.tsx';
 import { fmtDate } from './common.tsx';
@@ -72,10 +72,10 @@ function HomePreview({ map, max = 280 }: { map: HomeMap; max?: number }) {
 }
 
 /** Pan / zoom view of a home with the map renderer (no tokens, no fog). */
-function HomeViewer({ game, map }: { game: GameView; map: HomeMap }) {
+function HomeViewer({ game, map }: { game: GameView; map: HomeMap | GameMap }) {
   const rRef = useRef<MapRenderer | null>(null);
-  // A drawn home has every field of a table map the renderer reads.
-  const scene = useMemo((): MapScene => ({ map: map as GameMap, actors: {}, role: 'player', me: game.me, selected: new Set(), gmLayer: false, editor: false, fog: null, unseen: null }), [map, game.me]);
+  // A drawn home has every field of a table map the renderer reads; the real (table) map also has its tokens.
+  const scene = useMemo((): MapScene => ({ map: map as GameMap, actors: game.actors, role: 'player', me: game.me, selected: new Set(), gmLayer: false, editor: false, fog: null, unseen: null }), [map, game.me, game.actors]);
   return <div className="hm-viewer">
     <MapCanvas rendererRef={rRef} scene={scene} handlers={{}} />
     <button className="hm-fit" title={t('Re-center')} onClick={() => rRef.current?.fit()}>⤢</button>
@@ -142,11 +142,17 @@ export function HomeModal({ game, actor, lifestyle, canMove, onClose }: HomeProp
   const [choosing, setChoosing] = useState(!current);
   const [busy, setBusy] = useState(false);
   const built = useMemo(() => (current ? build(lifestyle, current.id, { tr: t }) : null), [lifestyle, current?.id]);
+  // The flat's table map (created by the server when the flat was picked): GM in `maps`, players in `homeMaps`.
+  const mapId = lifestyle.home?.mapId;
+  const realMap = mapId ? (gm ? game.maps?.[mapId] : game.homeMaps?.[mapId]) || null : null;
+  const addons = homeAddons(lifestyle).map((a) => a.key).sort().join(',');
+  const stale = !!realMap && (lifestyle.home?.addons ?? '') !== addons;
+  const missing = !!current && !realMap && (gm || canMove);
 
   const pick = async (lay: HomeLayoutDef, fee: number) => {
     if (current) {
       const msg = fee
-        ? t('Move to “{name}” for {cost}? The money is taken from {actor} and the old home is lost.', { name: t(lay.name), cost: fmtNuyen(fee), actor: actor.name })
+        ? t('Move to “{name}” for {cost}? The money is taken from {actor}; the old home’s map is kept as a former home.', { name: t(lay.name), cost: fmtNuyen(fee), actor: actor.name })
         : t('Move to “{name}”?', { name: t(lay.name) });
       if (!(await confirmAction(msg))) return;
     } else if (!(await confirmAction(t('Move into “{name}”? Changing homes later will be a paid move.', { name: t(lay.name) })))) return;
@@ -161,16 +167,22 @@ export function HomeModal({ game, actor, lifestyle, canMove, onClose }: HomeProp
     }
   };
 
-  const toPlayMap = async () => {
-    if (!built || !current) return;
-    const map = { ...built.map, id: undefined, name: t('Home of {actor} — {name}', { actor: actor.name, name: t(current.name) }), folder: t('Homes'), fog: true };
+  /** Create the flat's map (GM deleted it) or rebuild it after the options changed. */
+  const remakeMap = async () => {
+    setBusy(true);
     try {
-      const id = await send<string>('maps/import', { map });
-      toast(t('Map “{name}” created', { name: map.name }), 'success');
-      setUI({ mapsEditId: id });
-      goTab('maps');
-      onClose();
-    } catch {}
+      await send('shop/homeMap', { actorId: actor.id, lifestyleId: lifestyle.id });
+      toast(stale ? t('Home map updated') : t('Home map created'), 'success');
+    } catch {
+    } finally {
+      setBusy(false);
+    }
+  };
+  const openInMaps = () => {
+    if (!realMap) return;
+    setUI({ mapsEditId: realMap.id });
+    goTab('maps');
+    onClose();
   };
 
   const title = <>🏠 {lifestyle.name || lifestyleBaseLabel(lifestyle.base)}{' '}<span className="muted small">{lifestyleBaseLabel(lifestyle.base)}</span></>;
@@ -178,8 +190,12 @@ export function HomeModal({ game, actor, lifestyle, canMove, onClose }: HomeProp
     {current && canMove && <Button small variant={choosing ? 'ghost' : 'default'} disabled={busy} onClick={() => setChoosing(!choosing)}>
       {choosing ? t('Back to the plan') : t('Move…')}
     </Button>}
-    {gm && built && !choosing && <Button small variant="accent" onClick={toPlayMap} title={t('Copies this plan into the table’s maps, to play a scene there')}>
-      {t('Create a play map')}
+    {!choosing && (missing || (stale && (gm || canMove))) && <Button small variant="accent" disabled={busy} onClick={remakeMap}
+      title={stale ? t('The lifestyle options changed: rebuild the walls and rooms of the map (tokens and notes are kept)') : t('Create this home’s table map')}>
+      {stale ? t('Update the map') : t('Create the map')}
+    </Button>}
+    {gm && realMap && !choosing && <Button small variant="ghost" onClick={openInMaps} title={t('Edit this home’s map or show it to the players from the Maps tab')}>
+      {t('Open in Maps')}
     </Button>}
   </>;
 
@@ -187,11 +203,12 @@ export function HomeModal({ game, actor, lifestyle, canMove, onClose }: HomeProp
     {choosing || !current || !built
       ? <Chooser lifestyle={lifestyle} current={current} canMove={canMove && !busy} gm={gm} onPick={pick} />
       : <div className="hm-main">
-        <HomeViewer key={`${built.map.width}x${built.map.height}`} game={game} map={built.map} />
+        <HomeViewer key={realMap ? `${realMap.id}:${realMap.width}x${realMap.height}` : `${built.map.width}x${built.map.height}`} game={game} map={realMap || built.map} />
         <div className="hm-side">
           <div><b>{t(current.name)}</b></div>
           <div className="small">{t(current.desc)}</div>
           <RoomList built={built} />
+          {stale && <div className="small warn-text">{t('The options changed since the map was made: update it to see them.')}</div>}
           <PlaceInfo game={game} lifestyle={lifestyle} />
           {lifestyle.home?.since ? <div className="small faint">{t('Since {date}', { date: fmtDate(lifestyle.home.since) })}</div> : null}
           <div className="small faint">{t('Drag to pan, scroll to zoom.')}</div>

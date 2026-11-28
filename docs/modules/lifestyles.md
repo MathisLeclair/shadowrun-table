@@ -54,8 +54,19 @@ bought / removed garage shows at once.
 - `lifestyle.home` is sanitized on GM edits (`sanitizeHome`, bad → removed), kept by Chummer re-imports (app-only
   field) and Foundry merges (`APP_ONLY_BY_LIST.lifestyles`); a layout of another level counts as none (new level → free
   pick).
+- **Home maps** (`server/lib/home-map.ts`): picking a flat creates a real table map (`createHomeMap`: the built map in the
+  table language, folder « Homes », no fog, `map.home = { actorId, lifestyleId }`) linked by `lifestyle.home.mapId`;
+  `home.addons` records the add-ons it was built with. Changing flat archives the old map (`archiveHomeMap`: renamed
+  « … (former) », folder « Former homes », link dropped — kept because the GM may have used it) and creates the new one;
+  a place-only move keeps the map. Boot creates the missing maps of flats picked before (`ensureHomeMaps`, once: a map
+  the GM deleted is not recreated). `shop/homeMap { actorId, lifestyleId }` (owner / GM) rebuilds the walls and rooms
+  after the add-ons changed (tokens and notes kept) or recreates a deleted map.
+- Players get `game.homeMaps` (40-shop filter): the maps of their runners' homes and of the homes one of their runners
+  was invited to on the city map ([city](city.md)), without GM notes, GM regions, hidden tokens or description (guests
+  also lose closed secret doors). They are not in `game.maps`, so the Map tab is unchanged.
 - The sheet's lifestyle card has a « 🏠 » button (GM / owner): chooser with previews (`drawStaticMap`), pan/zoom viewer
-  (`MapCanvas`), GM « Créer une carte de jeu » (`maps/import` of the built map, folder « Logements »).
+  (`MapCanvas`) of the real map (built preview if none), « Update the map » when the add-ons changed, « Create the map »
+  when it was deleted, GM « Open in Maps ».
 
 ## Migration
 
