@@ -492,6 +492,28 @@ export function fociLimits(actor: MagicActor | null | undefined) {
   return { mag, bonded: bonded.length, maxBonded: mag, force: sum(bonded), maxForce: mag * 5, activeForce: sum(active), addiction: sum(active) > mag };
 }
 
+/** Spell Shaping limit (SR5 p. 326): Magic, + the Force of an active spell shaping focus (p. 319). */
+export function spellShapingMax(actor: MagicActor | null | undefined): number {
+  const focus = ((actor?.gear || []) as GearLike[]).filter((g) => focusKind(g) === 'spellShaping' && focusWorks(g)).reduce((m, g) => Math.max(m, focusForce(g)), 0);
+  return attr(actor, 'MAG') + focus;
+}
+
+/**
+ * Metamagic modifiers (shared/modifiers collectModifiers): Centering +grade (+ an active centering focus's Force) on Drain
+ * Resistance, Shielding +grade on Counterspelling (SR5 pp. 319, 325-326).
+ */
+export function metamagicEffects(actor: MagicActor | null | undefined): Array<{ id: MetamagicId; name: string; page: number; effects: Array<{ type: string; target: string; value: number }> }> {
+  const grade = initiateGrade(actor);
+  if (!grade) return [];
+  const out: ReturnType<typeof metamagicEffects> = [];
+  if (hasMetamagic(actor, 'centering')) {
+    const focus = ((actor?.gear || []) as GearLike[]).filter((g) => focusKind(g) === 'centering' && focusWorks(g)).reduce((m, g) => Math.max(m, focusForce(g)), 0);
+    out.push({ id: 'centering', name: 'Centering', page: 325, effects: [{ type: 'stat', target: 'drainResist', value: grade + focus }] });
+  }
+  if (hasMetamagic(actor, 'shielding')) out.push({ id: 'shielding', name: 'Shielding', page: 326, effects: [{ type: 'skill', target: 'counterspelling', value: grade }] });
+  return out;
+}
+
 /**
  * Modifiers of the foci the catalog leaves without effects (shared/modifiers collectModifiers adds them for a bonded, active
  * focus): Counterspelling +Force (same category), Summoning / Binding +Force (the spirit type), Banishing +Force limit,
@@ -532,6 +554,41 @@ export function canPerceiveAstral(actor: MagicActor | null | undefined): boolean
 export const canProjectAstral = (actor: MagicActor | null | undefined): boolean => !!actor && usesTradition(actor);
 /** A projecting magician's astral form uses mental attributes in place of physical ones (SR5 p. 314, Astral Attributes table). */
 export const ASTRAL_ATTRIBUTES: Record<string, AttrKey> = { AGI: 'LOG', BOD: 'WIL', REA: 'INT', STR: 'CHA' };
+
+// ---------------------------------------------------------------------------
+// Metamagic (SR5 pp. 325-326): actor.magic.metamagics holds names (training); the table says what the app applies.
+// ---------------------------------------------------------------------------
+
+export type MetamagicId = 'adeptCentering' | 'centering' | 'shielding' | 'quickening' | 'spellShaping' | 'masking' | 'flexibleSignature' | 'fixation' | 'powerPoint';
+export interface MetamagicDef {
+  id: MetamagicId;
+  re: RegExp;
+  /** UI key. */
+  name: string;
+  page: number;
+  /** 'auto' = applied by the app, 'some' = partly, 'gm' = text for the GM. */
+  auto: 'auto' | 'some' | 'gm';
+  /** UI key: the rule and what the app does. */
+  rule: string;
+}
+export const METAMAGICS: MetamagicDef[] = [
+  { id: 'adeptCentering', re: /adept centering|centrage d.adepte/i, name: tk('Adept Centering'), page: 325, auto: 'gm', rule: tk('Reduce negative dice pool modifiers on Physical and Combat skills by your grade while you center: applied by the GM.') },
+  { id: 'centering', re: /centering|centrage/i, name: tk('Centering'), page: 325, auto: 'auto', rule: tk('+grade dice on every Drain Resistance Test (+ the Force of an active centering focus): applied.') },
+  { id: 'shielding', re: /shielding|protection|bouclier/i, name: tk('Shielding'), page: 326, auto: 'auto', rule: tk('+grade dice to your spell defense: added to Counterspelling.') },
+  { id: 'quickening', re: /quickening|stabilisation|vivification/i, name: tk('Quickening'), page: 326, auto: 'auto', rule: tk('Spend 1 to Force karma on a sustained spell: it becomes permanent, without the −2 (« Quicken » on the spell).') },
+  { id: 'spellShaping', re: /spell shaping|façonnage/i, name: tk('Spell Shaping'), page: 326, auto: 'auto', rule: tk('−1 die per metre added to or taken from an area spell’s radius, up to your Magic (cast modal).') },
+  { id: 'masking', re: /masking|masque/i, name: tk('Masking'), page: 326, auto: 'gm', rule: tk('Disguise your aura; assensing it is opposed by Magic + grade: applied by the GM.') },
+  { id: 'flexibleSignature', re: /flexible signature|signature flexible/i, name: tk('Flexible Signature'), page: 326, auto: 'gm', rule: tk('Alter or forge your astral signature (+grade to the Assensing threshold): applied by the GM.') },
+  { id: 'fixation', re: /fixation/i, name: tk('Fixation'), page: 325, auto: 'gm', rule: tk('Karma in an alchemical preparation slows its decay: applied by the GM.') },
+  { id: 'powerPoint', re: /power point|point de pouvoir/i, name: tk('Power Point'), page: 326, auto: 'auto', rule: tk('Adepts: a Power Point instead of a metamagic (Advancement).') },
+];
+/** The definition of a metamagic name (English or French), or null. */
+export function metamagicDef(name: unknown): MetamagicDef | null {
+  const n = String(name ?? '').trim();
+  return n ? METAMAGICS.find((m) => m.re.test(n)) || null : null;
+}
+export const initiateGrade = (actor: MagicActor | null | undefined): number => Math.max(0, Math.round(Number((actor?.magic as { initiation?: number } | null | undefined)?.initiation) || 0));
+export const hasMetamagic = (actor: MagicActor | null | undefined, id: MetamagicId): boolean => ((actor?.magic as { metamagics?: string[] } | null | undefined)?.metamagics || []).some((n) => metamagicDef(n)?.id === id);
 
 // ---------------------------------------------------------------------------
 // Ritual spellcasting (SR5 pp. 295-296) and teamwork (p. 49)

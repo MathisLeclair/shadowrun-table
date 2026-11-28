@@ -51,6 +51,8 @@
 .mg-spirits { display: flex; flex-direction: column; gap: 8px; }
 .mg-astral { display: flex; flex-direction: column; gap: 6px; }
 .mg-foci { display: flex; flex-direction: column; gap: 6px; }
+.mg-metamagic { display: flex; flex-direction: column; gap: 6px; }
+.mg-mm { padding: 4px 0; border-top: 1px solid var(--line); }
 .mg-focus { padding: 4px 0; border-top: 1px solid var(--line); flex-wrap: wrap; gap: 6px; }
 .mg-astral.on { border-color: color-mix(in srgb, var(--cyan) 55%, transparent); }
 .mg-spirit { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; background: var(--panel); display: flex; flex-direction: column; gap: 6px; }

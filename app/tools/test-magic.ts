@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   findTradition, traditionFromDef, parseDrainText, sortTraditions, drainValue, drainOffset, spellReach, isAreaSpell, spellCategory, spellDrainType, maxForce,
-  spellEffects, isSustainable, combatSpellProfile, spellResistance, attributeOfSpell, evalForce, spiritStats, optionalPowerCount, traditionSpiritTypes, reagentDrams, aidSpiritType, canPerceiveAstral, canProjectAstral, focusKind, focusBondMultiplier, focusCategory, fociLimits, teamwork, ritualDrain, isRitual, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
+  spellEffects, isSustainable, combatSpellProfile, spellResistance, attributeOfSpell, evalForce, spiritStats, optionalPowerCount, traditionSpiritTypes, reagentDrams, aidSpiritType, canPerceiveAstral, canProjectAstral, focusKind, focusBondMultiplier, focusCategory, fociLimits, teamwork, ritualDrain, isRitual, metamagicDef, metamagicEffects, spellShapingMax, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
   type TraditionDef,
 } from '../shared/magic.ts';
 import { derive } from '../shared/sr5.ts';
@@ -204,6 +204,18 @@ ok(focusCategory({ name: 'Sustaining Focus, Illusion' }) === 'illusion', 'focusC
   const g2 = { ...withFoci, gear: [{ id: 'f4', name: 'Counterspelling Focus, Combat', category: 'Foci', rating: 3, qty: 1, active: true, bonded: true }] } as unknown as ActorLike;
   const cs = poolModifiers(collectModifiers(g2, effectsLookup()), rollContext(g2, { skillId: 'counterspelling' }), { conditions: ['spell-combat'] });
   ok(cs.total === 3, `counterspelling focus: +Force against its category (${cs.total})`);
+}
+
+// Metamagic (#23)
+ok(metamagicDef('Centering')?.id === 'centering' && metamagicDef('Adept Centering')?.id === 'adeptCentering' && metamagicDef('Centrage')?.id === 'centering' && metamagicDef('Nope') === null, 'metamagicDef (adept centering before centering, French names)');
+{
+  const init = { ...mage, magic: { ...mage.magic, initiation: 2, metamagics: ['Centering', 'Shielding'] }, gear: [{ id: 'cf', name: 'Centering Focus', category: 'Foci', rating: 1, qty: 1, active: true, bonded: true }] } as unknown as ActorLike;
+  const fx = metamagicEffects(init);
+  ok(fx.find((x) => x.id === 'centering')?.effects[0].value === 3 && fx.find((x) => x.id === 'shielding')?.effects[0].value === 2, 'Centering = grade + centering focus Force; Shielding = grade');
+  const dr = poolModifiers(collectModifiers(init, () => null), rollContext(init, { attr: 'WIL', attr2: 'LOG', test: 'drainResist' }), {});
+  ok(dr.total === 3, `Centering on a Drain Resistance Test (${dr.total})`);
+  ok(metamagicEffects({ ...init, magic: { metamagics: ['Centering'] } } as unknown as ActorLike).length === 0, 'no grade, no bonus');
+  ok(spellShapingMax(mage) === 6, 'Spell Shaping up to Magic');
 }
 
 // Ritual (#22)
@@ -722,6 +734,34 @@ try {
   const rf = await gm.send('magic/ritualFail', { leaderId: 'pc_jane', ritualId: watcher, force: 2, participantIds: [helper] });
   ok(rf.dv >= 2 && rf.drains.length === 2, 'a failed ritual: Stun Drain for every participant');
   await restoreAll();
+
+  // ---------- Metamagic (#23) ----------
+  await gm.send('actor/update', { actorId: 'pc_jane', patch: { karma: 30, magic: { ...gm.state.actors.pc_jane.magic, initiation: 2, metamagics: ['Quickening', 'Spell Shaping', 'Centering'] } } });
+  await restoreAll();
+  await settle();
+  // Centering on the drain resistance.
+  const dres = await pj.send('dice/roll', { actorId: 'pc_jane', attr: 'WIL', attr2: 'CHA', test: 'drainResist', limit: null });
+  ok((dres.mods || []).some((m: { id: string; value: number; state: string }) => m.id.startsWith('metamagics:') && m.value === 2 && m.state === 'applied'), 'Centering: +grade on Drain resistance');
+  // Spell Shaping: Fireball F3 shaped +2 m → radius 5, −2 dice.
+  const shaped = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: ball, force: 3, mapId, area: { x: 10, y: 5 }, targetIds: ['pc_anthony'], shape: 2 });
+  await settle();
+  const shapedRoll = gm.state.log.find((e) => e.id === shaped.rollLogId);
+  ok(shaped.area?.radius === 5 && /spell shaping −2/.test(shapedRoll?.roll?.breakdown || ''), `spell shaping: radius 5, −2 dice (${shapedRoll?.roll?.breakdown})`);
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 2, shape: 1 }), /area|zone/i, 'only area spells are shaped');
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: ball, force: 2, shape: 9 }), /metres|mètres/i, 'at most Magic metres');
+  await restoreAll();
+  // Quickening.
+  let qs: { sustainedId?: string | null } = {};
+  for (let i = 0; i < 5 && !qs.sustainedId; i++) qs = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: armorSpell, force: 3, mapId, targetIds: ['pc_anthony'] });
+  await restoreAll();
+  await expectFail(pj.send('magic/quicken', { sustainedId: qs.sustainedId, karma: 4 }), /karma/i, 'quickening: at most the spell’s Force in karma');
+  const karmaQ = gm.state.actors.pc_jane.karma;
+  await pj.send('magic/quicken', { sustainedId: qs.sustainedId, karma: 2 });
+  await settle();
+  ok(gm.state.actors.pc_jane.karma === karmaQ - 2 && gm.state.magic.sustained[qs.sustainedId as string]?.by?.kind === 'quickened', 'quickened: 2 karma spent, the spell is permanent');
+  ok(!(gm.state.actors.pc_jane.magic?.sustaining || []).some((x) => x.id === qs.sustainedId) && (gm.state.actors.pc_anthony.magic?.spellEffects || []).some((x) => x.id === qs.sustainedId), 'no −2 for the caster, the Armor still on the target');
+  await expectFail(pj.send('magic/quicken', { sustainedId: qs.sustainedId, karma: 1 }), /already|déjà/i, 'not twice');
+  await gm.send('magic/drop', { id: qs.sustainedId });
 
   // A target left with no dice (WIL 1, badly wounded) still resolves the spell: 0 hits, not a blocked attack.
   const weakId = await gm.send<string>('actor/create', { type: 'npc', name: 'Weak test', attributes: { BOD: 1, WIL: 1 } });

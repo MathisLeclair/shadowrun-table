@@ -8,8 +8,8 @@
 | client | `client/modules/magic/` (MagicPage: cockpit for players, overview + cockpit for the GM; `common.tsx`: `TraditionPicker`, `openMagic`, roll labels shared with the sheet) |
 | tests | `node tools/test-magic.ts` (port 3650) |
 
-Rules: [rules/magic.md](../rules/magic.md). What is still to build (
-rituals, metamagic) and the sub-issues: [design/magic.md](../design/magic.md).
+Rules: [rules/magic.md](../rules/magic.md). The design and the decisions behind it (issue #7, sub-issues #12–#23):
+[design/magic.md](../design/magic.md).
 
 ## State
 
@@ -160,6 +160,19 @@ ritual Force » check (step 4, by hand).
   the ritual's effect (GM).
 - `magic/ritualFail` (GM): Stun Drain 2 × the hits of a Force × 2 roll for every participant.
 
+## Metamagic
+
+`METAMAGICS` (shared/magic.ts, SR5 325-326; names of `actor.magic.metamagics` matched in English or French, like the
+echoes): each has an automation status and a rule text shown in the cockpit « Metamagics » panel (with the initiate grade).
+- **Centering**: +grade dice on every Drain Resistance Test, + the Force of an active centering focus (319) —
+  `metamagicEffects` → a `stat drainResist` modifier. **Shielding**: +grade on Counterspelling (`skill counterspelling`).
+- **Quickening**: `magic/quicken { sustainedId, karma }` (the caster's owner or GM; the metamagic required for players):
+  1 … Force karma taken from the caster (history line), `sustained.by = { kind: 'quickened', karma }`: permanent, no −2,
+  its effects stay on the targets; « Quicken » button on the cockpit's sustained spells.
+- **Spell Shaping**: `magic/cast … shape` (area spells, the metamagic for players): radius Force ± shape metres, −|shape|
+  dice (bonus line « spell shaping »), |shape| ≤ MAG + an active spell shaping focus's Force (`spellShapingMax`).
+- Adept Centering, Masking, Flexible Signature, Fixation: text for the GM; Power Point: the training's.
+
 ## Combat spells (attacks)
 
 After the cast, a Combat spell with hits creates one `Attack` per target (`addSpellAttack` of 33-attacks, kind
@@ -212,7 +225,7 @@ with #19 / #21.
 - `magic/cast … sustain?, object?` (default: sustained when possible) → also `sustainedId`, `attackIds`, `object`; `magic/drop { id }`.
 - `magic/summon`, `magic/spiritServices`, `magic/materialize`, `magic/spiritCombat`, `magic/release`, `magic/sunrise`,
   `magic/bind`, `magic/callSpirit`, `magic/spiritSustain`, `magic/banish`, `magic/astral`, `magic/astralAttack`,
-  `magic/focusWeapon`, `magic/ritual`, `magic/ritualFail`: above. Focus bonding: `training/request { kind: 'focus', target: gearId }`.
+  `magic/focusWeapon`, `magic/ritual`, `magic/ritualFail`, `magic/quicken`: above. Focus bonding: `training/request { kind: 'focus', target: gearId }`.
 - `magic/settings { autoDrain?, showAstralToPlayers? }` (GM; « Resist Drain automatically » toggle of the GM page).
 
 ## Player view
