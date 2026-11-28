@@ -13,6 +13,8 @@ import { ListEditor, CatalogPicker } from './editors.tsx';
 import { SubChips, armorCapacityText, vehicleSlotsText, lifestyleBaseLabel, lifestyleBreakdown } from './sublists.tsx';
 import { armorMods } from './sheet-data.ts';
 import { openMatrix, ProgramRef } from '../matrix/common.tsx';
+import { openMagic, drainRollLabel, spellRollLabel, TraditionPicker } from '../magic/common.tsx';
+import { drainAttr, usesTradition } from '/shared/magic.ts';
 import { ruleRef, skillRef } from '/shared/bookrefs.ts';
 import { SinCards } from './sins.tsx';
 import { ContactCards } from './contacts.tsx';
@@ -22,10 +24,6 @@ import type { AnyItem, SheetCtx, SheetModifier } from './types.ts';
 import { ItemRef, RuleRef } from '../books/BookRef.tsx';
 
 
-// These roll labels are stored in French in the log (formats rollLabel() recognizes); rollLabel() (common.tsx) translates
-// them for each viewer.
-const drainRollLabel = (k: string): string => `Résistance au drain (VOL + ${k})`; // i18n-ignore
-const spellRollLabel = (name: string): string => `Sort — ${name}`; // i18n-ignore
 const hasSkill = (actor: Actor, id: string): boolean => (actor.skills || []).some((s) => s.id === id && s.rating > 0);
 // Augmentation grade ids shown as stored in French ('alpha', 'used'…), translated in English.
 const GRADE_LABELS: Record<string, string> = { alpha: tk('grade::alphaware'), beta: tk('grade::betaware'), delta: tk('grade::deltaware'), used: tk('grade::used'), gamma: tk('grade::gammaware'), omega: tk('grade::omegaware') };
@@ -46,12 +44,17 @@ export function MagicTab({ s }: { s: SheetCtx }) {
       <RollStat label={t('Astral Init.')} value={`${d.astralInitiative.base} + 2D6`} book={ruleRef('initiative')} />
       {d.limits.astral ? <LimitStat s={s} name="astral" label={t('Astral Limit')} /> : null}{powers.length > 0 && <RollStat label={t('Power Points')} value={`${fmtNum(pp)} / ${mag}`} accent={pp > mag ? 'magenta' : 'cyan'} title={t('PP spent / Magic')} book={ruleRef('powerPoints')} />}{hasSkill(actor, 'assensing') && <RollStat label={t('Assensing')} value={attrShort('INT')} book={skillRef('assensing')} onClick={() => s.roll({ skillId: 'assensing' })} />}{hasSkill(actor, 'spellcasting') && <RollStat label={t('Cast a spell')} value={attrShort('MAG')} book={ruleRef('spellcasting')} onClick={() => s.roll({ skillId: 'spellcasting', label: tk('Spellcasting'), limit: null })} />}{hasSkill(actor, 'counterspelling') && <RollStat label={t('Counterspelling')} value={attrShort('MAG')} book={skillRef('counterspelling')} onClick={() => s.roll({ skillId: 'counterspelling' })} />}{hasSkill(actor, 'summoning') && <RollStat label={t('Summoning')} value={attrShort('MAG')} book={skillRef('summoning')} onClick={() => s.roll({ skillId: 'summoning', limit: null })} />}
     </div>
+    {usesTradition(actor) && <div className="row wrap">
+      <span className="muted small">{t('Tradition:')}</span>
+      <TraditionPicker game={s.game} actor={actor} />
+    </div>}
     {(spells.length > 0 || hasSkill(actor, 'spellcasting') || hasSkill(actor, 'summoning')) && <div className="row wrap">
       <span className="muted small">{t('Resist Drain:')}</span>
       <RuleRef rule="drain" />
-      {['LOG', 'CHA', 'INT'].map((k) => <Button small key={k} onClick={() => s.roll({ attr: 'WIL', attr2: k, label: drainRollLabel(k), limit: null, applyWounds: false, test: 'drainResist' })}>
+      {(drainAttr(actor) ? [drainAttr(actor)!] : ['LOG', 'CHA', 'INT']).map((k) => <Button small key={k} onClick={() => s.roll({ attr: 'WIL', attr2: k, label: drainRollLabel(k), limit: null, applyWounds: false, test: 'drainResist' })}>
         {attrShort('WIL')} + {attrShort(k)}
       </Button>)}
+      {mag > 0 && <Button small variant="ghost" onClick={() => openMagic(actor.id)} title={t('Open the Magic tab on this character')}>✦ {t('Magic tab')}</Button>}
     </div>}
     <h4 className="section-title">{t('Adept Powers')}{' '}<RuleRef rule="adeptPowers" /></h4>
     {edit

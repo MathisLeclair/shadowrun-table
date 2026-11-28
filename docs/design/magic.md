@@ -1,6 +1,6 @@
 # Magic flow — design (issue #7)
 
-Status: **design, not built yet**. Each section ends with the sub-issue that builds it (list at the end). When a part
+Status: **partly built** (#12 foundation done). Each section ends with the sub-issue that builds it (list at the end). When a part
 lands, its facts move to `docs/modules/magic.md` (feature) and `docs/rules/magic.md` (rules), as for the Matrix, and
 this page keeps only what is still to do.
 
@@ -74,17 +74,10 @@ Players: their own sustained spells, astral state and spirits (full sheets for s
 players' spirits as NPC stubs when materialized on the map; astral presences only when they perceive or project
 themselves (`settings.showAstralToPlayers` lets the GM show them all). GM: everything.
 
-## Tradition and drain pool — *#12 Foundation*
+## Foundation — *#12, done*
 
-`actor.magic.tradition` set by chargen approval, by Chummer import (`<tradition>`), and editable on the sheet (GM
-edit mode). `traditions.json` gives the drain attribute (Hermetic WIL + LOG, Shamanic WIL + CHA…) and the spirit of
-each spell category. The sheet's three drain buttons collapse to one when the tradition is known. Without a tradition
-the cockpit asks for one (hint) and lets the player pick the drain attribute per roll, as today.
-
-The foundation issue also adds the empty module, `state.magic`, the tab in `registry.ts` (visible to the GM, and to
-players with an awakened character: MAG present and magician / mystic / aspected / adept), the cockpit layout
-(header: MAG, drain pool, sustained count and penalty, astral state; sections filled by later issues), the GM view
-shell and the hints panel (`magicHints({ actor, magic })`, toggled per browser like `sr.matrix.hints`).
+Built 2026-11-28: `47-magic.ts`, `state.magic`, the Magic tab, traditions on the actor, the hints panel. Facts:
+[modules/magic.md](../modules/magic.md). The sections below are still to build.
 
 ## Cast flow — *#13 Cast*
 
@@ -153,8 +146,7 @@ effect text; counterspelling dice from an ally can be added before the target ro
 ## Spirits: data — *#17 Spirit data*
 
 `tools/build-catalog.ts` reads Chummer `critters.xml` (category Spirits) → `data/catalog/spirits.json`: attributes as
-offsets from Force, initiative, skills (rating = Force), powers, optional powers, movement, source/page; and
-`traditions.xml` → `traditions.json`. `shared/magic.ts spiritStats(type, force)` turns a template into an actor
+offsets from Force, initiative, skills (rating = Force), powers, optional powers, movement, source/page (`traditions.json` already exists since #12). `shared/magic.ts spiritStats(type, force)` turns a template into an actor
 (attributes, monitors, astral attributes = Force, powers as `actor.powers`, natural weapons). French names through
 the catalog's FR names as for other items.
 
@@ -235,7 +227,7 @@ Filed on GitHub 2026-11-28, all « Part of #7 ». Order: #12 first; #13 → #14,
 
 | issue | title | depends on |
 |---|---|---|
-| #12 | Magic foundation: module, state, tab, tradition on the actor, hints panel | — |
+| #12 | Magic foundation: module, state, tab, tradition on the actor, hints panel (**done**) | — |
 | #13 | Cast flow: Force, Force as limit, reckless, drain computed and resisted | #12 |
 | #14 | Sustained spells: −2 per spell as a modifier, list, GM view | #13 |
 | #15 | Combat spells through the attack pipeline (direct, indirect, area) | #13 |

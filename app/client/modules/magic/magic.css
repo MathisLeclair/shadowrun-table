@@ -1,0 +1,51 @@
+/* Magic module (mg-): cockpit of an awakened character, GM overview. Uses the global theme variables. */
+.mg-page { max-width: 1400px; }
+.mg-tabs { margin-bottom: 12px; border-bottom: 1px solid var(--line); }
+.mg-gm-row { margin-bottom: 10px; gap: 6px; }
+.mg-pill { background: var(--panel2); border: 1px solid var(--line2); color: var(--dim); border-radius: 999px; padding: 3px 10px; cursor: pointer; font: 600 12.5px var(--sans); }
+.mg-pill.on { color: #fff; background: var(--magenta); border-color: var(--magenta); }
+
+/* ---------- cockpit ---------- */
+.mg-cockpit {
+  --aura: var(--magenta);
+  border: 1px solid color-mix(in srgb, var(--aura) 35%, transparent); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 12px;
+  background: radial-gradient(ellipse at 20% -30%, color-mix(in srgb, var(--aura) 16%, transparent) 0%, transparent 60%), var(--panel);
+}
+.mg-cockpit.astral { --aura: var(--cyan); }
+.mg-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.mg-id { min-width: 200px; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.mg-name { font: 800 18px var(--sans); color: var(--aura); letter-spacing: .5px; }
+.mg-stats { display: flex; gap: 8px; flex-wrap: wrap; }
+.mg-stat { display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 84px; padding: 6px 10px; border: 1px solid var(--line2); border-radius: 10px; background: var(--panel2); color: var(--text); font: 600 12.5px var(--sans); }
+.mg-stat b { font: 800 17px var(--mono); }
+.mg-stat small { font-size: 10.5px; color: var(--faint); }
+.mg-stat-l { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .5px; }
+.mg-stat.accent b { color: var(--aura); }
+.mg-stat.warn { border-color: var(--amber); }
+.mg-stat.warn b { color: var(--amber); }
+.mg-stat.clickable { cursor: pointer; }
+.mg-stat.clickable:hover:not(:disabled) { border-color: var(--aura); }
+.mg-stat:disabled { cursor: default; opacity: .7; }
+.mg-bar-btns { display: flex; gap: 6px; }
+.mg-tradition { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.mg-tradition select { max-width: 280px; }
+.mg-tradition.compact select { max-width: 200px; padding: 2px 6px; }
+
+.mg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; align-items: start; }
+.mg-panel { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--panel2); min-width: 0; overflow-x: auto; }
+.mg-panel-title { font: 700 13px var(--sans); text-transform: uppercase; letter-spacing: .6px; color: var(--dim); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.mg-spells { grid-column: 1 / -1; }
+.mg-skills { display: flex; flex-wrap: wrap; gap: 6px; }
+.mg-skill { display: inline-flex; align-items: center; gap: 8px; padding: 5px 10px; border: 1px solid var(--line2); border-radius: 8px; background: var(--panel); color: var(--text); cursor: pointer; font: 600 12.5px var(--sans); }
+.mg-skill b { font-family: var(--mono); color: var(--aura); }
+.mg-skill:hover:not(:disabled) { border-color: var(--aura); }
+.mg-skill:disabled { cursor: default; opacity: .7; }
+.mg-powers { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; }
+
+.mg-hints { display: flex; flex-direction: column; gap: 6px; }
+.mg-hint { padding: 6px 10px; border-left: 3px solid var(--cyan); background: var(--panel); border-radius: 0 6px 6px 0; }
+.mg-hint.tone-warn { border-left-color: var(--amber); }
+.mg-hint.tone-danger { border-left-color: var(--red); }
+
+.mg-overview td { vertical-align: middle; }
+.mg-overview td.num-cell { white-space: nowrap; }

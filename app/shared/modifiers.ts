@@ -925,7 +925,7 @@ export const ROLL_TESTS: string[] = ['composure', 'judgeIntentions', 'memory', '
 /** Attributes of each test (payload.attr / attr2 must be one of these sets, in either order; drain: per tradition). */
 export const TEST_ATTRS: Record<string, string[][]> = {
   composure: [['CHA', 'WIL']], judgeIntentions: [['CHA', 'INT']], memory: [['LOG', 'WIL']], liftCarry: [['BOD', 'STR']], defense: [['REA', 'INT']],
-  soak: [['BOD']], drainResist: [['WIL', 'LOG'], ['WIL', 'CHA'], ['WIL', 'INT']], biofeedback: [['WIL']], toxinResist: [['BOD', 'WIL']],
+  soak: [['BOD']], drainResist: [['WIL', 'LOG'], ['WIL', 'CHA'], ['WIL', 'INT'], ['WIL', 'MAG'], ['WIL', 'WIL']], biofeedback: [['WIL']], toxinResist: [['BOD', 'WIL']],
 };
 /** Damage resistance tests: SR5 applies the wound modifier to every test but these. */
 export const RESIST_TESTS: string[] = ['soak', 'drainResist', 'biofeedback', 'toxinResist'];

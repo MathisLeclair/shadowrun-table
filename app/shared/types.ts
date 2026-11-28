@@ -156,7 +156,7 @@ export interface TableMeta {
 // Log, rolls
 // =====================================================================================================================
 
-export type LogKind = 'chat' | 'whisper' | 'roll' | 'system' | 'combat' | 'shop' | 'training' | 'matrix';
+export type LogKind = 'chat' | 'whisper' | 'roll' | 'system' | 'combat' | 'shop' | 'training' | 'matrix' | 'magic';
 
 /** One line of `state.log` (max 600). Display with `logText(entry)`. */
 export interface LogEntry {
@@ -827,8 +827,28 @@ export interface TrainingJob {
   request: AdvancementRequest;
 }
 
-/** Written by training (initiation, metamagics…). */
+/** Spell categories of a tradition's spirits (SR5 p. 279). */
+export type SpellCategoryKey = 'combat' | 'detection' | 'health' | 'illusion' | 'manipulation';
+
+/**
+ * Magical tradition of an awakened actor (`actor.magic.tradition`, owner: 47-magic.ts). Copied from
+ * data/catalog/traditions.json (Chummer traditions.xml) when it is set, so a custom tradition keeps its own values.
+ */
+export interface ActorTradition extends BookRefFields {
+  /** Chummer tradition GUID (absent for a hand-made tradition). */
+  id?: string;
+  /** English (Chummer) name. */
+  name: string;
+  nameFr?: string;
+  /** Second drain attribute: drain is resisted with WIL + this (null: not chosen yet, e.g. Custom). */
+  drain: AttrKey | null;
+  /** English spirit type per spell category. */
+  spirits?: Partial<Record<SpellCategoryKey, string>>;
+}
+
+/** Written by training (initiation, metamagics…) and the magic module (tradition). */
 export interface ActorMagic {
+  tradition?: ActorTradition;
   initiation?: number;
   submersion?: number;
   metamagics?: string[];
@@ -2182,6 +2202,46 @@ export interface MatrixView {
 }
 
 // =====================================================================================================================
+// Magic — owner: 47-magic.ts, rules shared/magic.ts (design: docs/design/magic.md)
+// =====================================================================================================================
+
+export interface MagicSettings {
+  /** Drain resisted right after a cast / summoning (false: a « Resist drain » button is left instead). */
+  autoDrain: boolean;
+  /** Players see every astral presence (false: only when they perceive or project themselves). */
+  showAstralToPlayers: boolean;
+}
+
+/** `state.magic`. `sustained` and `astral` are filled by the sustained-spell and astral features. */
+export interface MagicState {
+  settings: MagicSettings;
+  sustained: Record<string, SustainedSpell>;
+  astral: Record<ActorId, AstralPresence>;
+}
+
+/** A spell being sustained (by its caster, a bound spirit or a sustaining focus). */
+export interface SustainedSpell {
+  id: string;
+  casterId: ActorId;
+  /** Id of the spell in the caster's `spells`. */
+  spellId: string;
+  name: BiName;
+  force: number;
+  hits: number;
+  targetIds: ActorId[];
+  ts: Timestamp;
+}
+
+/** Astral state of an actor (absent: physical only). */
+export interface AstralPresence {
+  mode: 'perceiving' | 'projecting';
+  since: Timestamp;
+}
+
+/** `view.magic`: players only get the entries of their own characters (astral: all when the GM shows them). */
+export type MagicView = MagicState;
+
+// =====================================================================================================================
 // Character creation — owner: 15-chargen.js, rules shared/chargen.js
 // =====================================================================================================================
 
@@ -2723,6 +2783,7 @@ export interface TableState {
   campaign: Campaign;
   notes: NotesState;
   matrix: MatrixState;
+  magic: MagicState;
   chargen: ChargenState;
   foundry: FoundryState;
   chummer: ChummerState;
@@ -2761,6 +2822,7 @@ export interface GameView {
   campaign: Campaign | PlayerCampaignView;
   notes: NotesView;
   matrix: MatrixView;
+  magic: MagicView;
   chargen: ChargenState;
   /** GM only. */
   foundry?: FoundryState;

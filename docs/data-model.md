@@ -27,6 +27,7 @@ Only the owning module writes a slice (other modules go through its exported hel
 | `attacks` | `33-attacks.ts` | `AttacksState`, `Attack`, `Blast` | [attacks](modules/attacks.md) |
 | `shop` | `40-shop.ts` | `ShopState`, `ShopOrder`, `AvailTest` | [shop](modules/shop.md) |
 | `matrix` | `45-matrix.ts` | `MatrixState`, `Persona`, `Host` | [matrix](modules/matrix.md) |
+| `magic` | `47-magic.ts` | `MagicState`, `SustainedSpell`, `AstralPresence` (+ `Actor.magic.tradition`) | [magic](modules/magic.md) |
 | `training` | `50-training.ts` | `TrainingState`, `TrainingRequest` (+ `Actor.training`, `Actor.magic`) | [training](modules/training.md) |
 | `audio` | `60-audio.ts` | `AudioState` | [audio](modules/audio.md) |
 | `campaign` | `70-campaign.ts` | `Campaign` | [campaign](modules/campaign.md) |
@@ -79,6 +80,7 @@ filters its own slice:
 | `combat`, `attacks` | hidden entries and attacks on hidden NPCs left out | [combat](modules/combat.md), [attacks](modules/attacks.md) |
 | `shop` | their actors' availability tests, `contactSearch` | [shop](modules/shop.md) |
 | `matrix` | their own personas, hosts they can see | [matrix](modules/matrix.md) |
+| `magic` | spells their characters sustain or are under, their own astral state (all when the GM shows them) | [magic](modules/magic.md) |
 | `campaign` | revealed handouts + `playerRecap` | [campaign](modules/campaign.md) |
 | `notes` | own private pages + party pages (built per user) | [notes](modules/notes.md) |
 | `chargen` | their own drafts | [chargen](modules/chargen.md) |

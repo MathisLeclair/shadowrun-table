@@ -345,6 +345,7 @@ export const MAGIC_TABLE: Record<string, Partial<Record<MagicType, MagicRow>>> =
 };
 export const ASPECTS: Record<Aspect, string> = { sorcery: tk('Sorcery'), conjuring: tk('Conjuring'), enchanting: tk('Enchanting') };
 /** Stored as the English key (older data: the French name), shown with t(). */
+/** Values of the creator's former short tradition list: older drafts still hold them (mapped by shared/magic.ts LEGACY_CHARGEN_TRADITIONS). */
 export const TRADITIONS: string[] = [tk('Hermetic'), tk('Shamanic'), tk('Chaos'), tk('Druid'), tk('Buddhist'), tk('Shinto'), tk('Wicca'), tk('Voodoo'), tk('Other')];
 /** Complex form targets (COMPLEX_FORMS[].target): UI keys, shown with t(). */
 export const FORM_TARGETS: string[] = [tk('Persona'), tk('Device'), tk('File'), tk('Self'), tk('Sprite')];
