@@ -66,8 +66,8 @@ dialog asks what is sought (`topic`) and how available it is (`searchLevel` → 
 above the threshold (`searchMinutes`), a failure logs the full base time. Either way a successful test creates a pending reveal
 (`newReveal`, GM ping) instead of revealing anything. `revealOptions` lists what the decker does not know yet: on a host
 its rating and attributes, its devices, and — from inside — its active IC and files (on an IC: that IC); on an NPC its
-commlink and PAN devices; a search inside a host: its files; a search outside / perception with no target: the hidden
-hosts. The GM popup (`RevealPrompt`, global component) shows the oldest pending one — perception: options pre-ticked up
+commlink and PAN devices; a search inside a host: its files; a perception with no target during a fight: the PANs of the NPCs in it (not hidden); a search outside / perception with
+no target: the hidden hosts. The GM popup (`RevealPrompt`, global component) shows the oldest pending one — perception: options pre-ticked up
 to the hits; search: topic, threshold and time, no limit, nothing pre-ticked — plus a free answer: `matrix/reveal { revealId, optionIds,
 answer }` applies them (host `known`, IC `detected`, scans, `visible`) and logs « X learns: … » to the decker's owners
 and the GM; `matrix/dropReveal` discards it; « Later » hides it for this session. The decker's cockpit shows a « ⏳ »

@@ -702,6 +702,16 @@ export type GearMatrixStats = (catalogId: string) => { deviceRating?: number; da
 interface PanItem { id?: string; name?: string; nameFr?: string; nameEn?: string; rating?: number | string | null; catalogId?: string; category?: string; wirelessOff?: boolean }
 const names = (it: PanItem) => ({ name: String(it.name || ''), ...(it.nameFr ? { nameFr: it.nameFr } : {}), ...(it.nameEn ? { nameEn: it.nameEn } : {}) });
 
+/**
+ * A commlink or cyberdeck in the gear: by catalog category (« Commlinks », « Cyberdecks ») or by name when the category is
+ * generic (« Équipement » / « Commlink (indice 4) »). Accessories, modules and form factors are not devices of their own.
+ */
+export function isMatrixDevice(g: { name?: string; category?: string }): boolean {
+  const cat = String(g.category || '').trim();
+  if (/accessor|module|form factor/i.test(cat)) return false;
+  return /^(commlinks?|cyberdecks?)$/i.test(cat) || /\b(commlink|cyberdeck)\b/i.test(String(g.name || ''));
+}
+
 /** The commlink / deck behind a character's persona: the sheet's Matrix device, else their best commlink or cyberdeck. */
 export function panMaster(actor: ActorLike | null | undefined, stats?: GearMatrixStats): PanMaster | null {
   const m = actor?.matrix as Record<string, unknown> | null | undefined;
@@ -710,7 +720,7 @@ export function panMaster(actor: ActorLike | null | undefined, stats?: GearMatri
   }
   let best: PanMaster | null = null;
   for (const g of ((actor?.gear || []) as PanItem[])) {
-    if (!g || !/^(commlinks?|cyberdecks?)$/i.test(String(g.category || '').trim())) continue;
+    if (!g || !isMatrixDevice(g)) continue;
     const st = (g.catalogId && stats?.(g.catalogId)) || null;
     const dr = Number(st?.deviceRating) || Number(g.rating) || AVERAGE_DEVICE_RATING;
     const cand = { name: String(g.name || ''), deviceRating: dr, dataProcessing: Number(st?.dataProcessing) || dr, firewall: Number(st?.firewall) || dr };

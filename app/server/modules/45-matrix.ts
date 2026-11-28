@@ -504,6 +504,14 @@ function revealOptions(state: TableState, actor: Actor, persona: Persona, action
     return out;
   }
   if (actionId === 'matrixSearch' || target.kind === 'none') {
+    if (actionId === 'matrixPerception' && state.combat?.active) {
+      // Scanning the vicinity during a fight: the PANs of the NPCs in it (SR5 p. 235: icons within 100 m are spotted).
+      const ids = new Set((state.combat.entries || []).filter((e) => e.actorId && !e.out).map((e) => e.actorId as ActorId));
+      for (const id of ids) {
+        const npc = state.actors?.[id];
+        if (npc && npc.type === 'npc' && !npc.hidden) out.push(...panOptions(persona, npc));
+      }
+    }
     for (const h of Object.values(slice(state).hosts)) {
       if (h.visible || persona.hostId === h.id || (persona.marks || []).some((m) => m.count > 0 && String(m.targetId).split(':')[1] === h.id)) continue;
       out.push({ id: `host-visible:${h.id}`, group: { t: 'Hidden hosts' }, label: h.name, detail: ratingMsg(h.rating) });
@@ -533,16 +541,20 @@ function revealOptions(state: TableState, actor: Actor, persona: Persona, action
     }
     return out;
   }
-  if (target.kind === 'persona' && target.actor && target.actor.type === 'npc') {
-    const owner = target.actor;
-    const scan = persona.scans?.[owner.id];
-    const group: I18nMessage = { t: 'PAN of {name}', params: { name: owner.name } };
-    const m = masterOf(owner);
-    if (m && !scan?.master) out.push({ id: `pan-master:${owner.id}`, group, label: { t: 'Commlink: {name}', params: { name: m.name } }, detail: { t: 'DR {dr} · DP {dp} · FW {fw}', params: { dr: m.deviceRating, dp: m.dataProcessing, fw: m.firewall } } });
-    const seen = new Set((scan?.devices || []).map((d) => d.id));
-    for (const d of panDevices(owner)) {
-      if (!seen.has(d.id)) out.push({ id: `pan:${owner.id}:${d.id}`, group, label: biName(d), detail: { t: 'DR {n}', params: { n: d.deviceRating } } });
-    }
+  if (target.kind === 'persona' && target.actor && target.actor.type === 'npc') out.push(...panOptions(persona, target.actor));
+  return out;
+}
+
+/** What the decker can still learn of a character's PAN: its commlink, then each device not seen yet. */
+function panOptions(persona: Persona, owner: Actor): RevealOption[] {
+  const out: RevealOption[] = [];
+  const scan = persona.scans?.[owner.id];
+  const group: I18nMessage = { t: 'PAN of {name}', params: { name: owner.name } };
+  const m = masterOf(owner);
+  if (m && !scan?.master) out.push({ id: `pan-master:${owner.id}`, group, label: { t: 'Commlink: {name}', params: { name: m.name } }, detail: { t: 'DR {dr} · DP {dp} · FW {fw}', params: { dr: m.deviceRating, dp: m.dataProcessing, fw: m.firewall } } });
+  const seen = new Set((scan?.devices || []).map((d) => d.id));
+  for (const d of panDevices(owner)) {
+    if (!seen.has(d.id)) out.push({ id: `pan:${owner.id}:${d.id}`, group, label: biName(d), detail: { t: 'DR {n}', params: { n: d.deviceRating } } });
   }
   return out;
 }

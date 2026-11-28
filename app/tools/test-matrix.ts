@@ -4,7 +4,7 @@ import {
   programId, detectAgents, availablePrograms, deckStats, actionPool, matrixInitiative, matrixMonitor, ACTION_BY_ID,
   ACTIONS, PROGRAMS, IC_TYPES, hostAttributes, osLevel, dumpshock, programSlots, isPermutation, agentInitiative,
   ACTION_CATS, ACTION_TYPES, TARGET_KIND_LABELS, HOST_PRESETS, MODE_LABELS, ASDF_LABELS, nextStepHints, DEVICE_CMD_LABELS,
-  markPenalty, convergenceAt, hasMatrixQuality, personaDefensePool, biofeedbackDice, OS_MAX, panDevices, panMaster, panDefensePool, searchMinutes,
+  markPenalty, convergenceAt, hasMatrixQuality, personaDefensePool, biofeedbackDice, OS_MAX, panDevices, panMaster, panDefensePool, searchMinutes, isMatrixDevice,
 } from '../shared/matrix.ts';
 import type { HintHost, PersonaLike, PoolPart } from '../shared/matrix.ts';
 import type { Host, HostDevice, HostFile, MatrixAgent, MatrixMark, MatrixState, PlayerHostView } from '../shared/types.ts';
@@ -564,6 +564,27 @@ try {
     await pl.send('matrix/forgetScan', { actorId: 'pc_bricks', targetId: npcId });
     await settle();
     ok(!pl.state.matrix.personas.pc_bricks.scans?.[npcId], 'forget a scan');
+
+    // Bestiary NPCs keep their commlink as generic gear (« Équipement » / « Commlink (indice 4) »).
+    const bestiaryLike = { gear: [{ name: 'Commlink (indice 4)', category: 'Équipement', rating: 4 }, { name: 'Dongle', category: 'Commlink Accessories', rating: 6 }] };
+    ok(panMaster(bestiaryLike as any)?.deviceRating === 4 && panMaster(bestiaryLike as any)?.name === 'Commlink (indice 4)', 'commlink found by its name in generic gear, accessories ignored');
+    ok(isMatrixDevice({ name: 'Cyberdeck Hermes Chariot', category: 'Équipement' }) && !isMatrixDevice({ name: 'Lunettes', category: 'Équipement' }), 'isMatrixDevice by name');
+
+    // Matrix Perception with no target during a fight: the PANs of the NPCs in it are offered.
+    await gm.send('actor/addItem', { actorId: npcId, list: 'gear', item: { name: 'Commlink (indice 4)', category: 'Équipement', rating: 4, qty: 1 } });
+    await gm.send('combat/start', { includeMapTokens: false });
+    await gm.send('combat/add', { actorIds: ['pc_bricks', npcId] });
+    await settle();
+    res = await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'matrixPerception', targetId: 'none' });
+    await settle();
+    const vic = Object.values(M().reveals || {}).find((r) => r.actionId === 'matrixPerception' && r.target === '')!;
+    const vicIds = (vic?.options || []).map((o) => o.id);
+    ok(res.success && vicIds.includes(`pan-master:${npcId}`) && vicIds.includes(`pan:${npcId}:${eyes.id}`) && vicIds.includes(`pan:${npcId}:${gun.id}`), `no target in a fight: the NPC's PAN is offered (${vicIds.join(', ')})`);
+    await gm.send('matrix/reveal', { revealId: vic.id, optionIds: [`pan-master:${npcId}`, `pan:${npcId}:${eyes.id}`] });
+    await settle();
+    const vs = pl.state.matrix.personas.pc_bricks.scans?.[npcId];
+    ok(vs?.master?.deviceRating === 4 && vs.devices.length === 1, `revealed from the vicinity: commlink DR ${vs?.master?.deviceRating} + 1 device`);
+    await gm.send('combat/end', {});
 
     // Matrix Search (SR5 p. 241): threshold from the table, extra hits divide the base time, failure = full base time
     ok(searchMinutes('limited', 3) === 30 && searchMinutes('limited', 5) === 15 && searchMinutes('hidden', 2) === 720 && searchMinutes('public', 4) === 1 / 3, 'search time: base ÷ hits above the threshold');
