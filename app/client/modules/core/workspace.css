@@ -1,0 +1,59 @@
+/* Multi-view workspace (Workspace.tsx): split pane, floating panels, tab menu, dock grip, pop-out windows. */
+.ws { position: relative; display: flex; width: 100%; height: 100%; min-width: 0; min-height: 0; isolation: isolate; }
+.ws-col { flex-direction: column; }
+.ws-pane { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; flex: 1 1 0; }
+.ws-split > .ws-primary { flex: 0 0 auto; }
+.ws-pane-body { position: relative; flex: 1; min-height: 0; }
+.ws-fill { position: absolute; inset: 0; overflow: hidden; }
+
+.ws-divider { flex: 0 0 6px; background: var(--line); cursor: col-resize; position: relative; z-index: 1; transition: background .12s; touch-action: none; }
+.ws-col > .ws-divider { cursor: row-resize; }
+.ws-divider:hover, .ws-dragging .ws-divider { background: var(--cyan-d); }
+.ws-divider::after { content: ''; position: absolute; inset: 0 -4px; }
+.ws-col > .ws-divider::after { inset: -4px 0; }
+
+/* Title bar of the split pane and floating panels. */
+.ws-bar { display: flex; align-items: center; gap: 4px; flex: none; height: 32px; padding: 0 4px 0 10px; background: var(--panel2); border-bottom: 1px solid var(--line); font: 600 12px var(--sans); color: var(--text); user-select: none; }
+.ws-bar-icon { color: var(--cyan); width: 16px; text-align: center; }
+.ws-bar-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.ws-bar-gap { flex: 1; }
+.ws-bar-select { background: transparent; border: 1px solid transparent; color: var(--text); font: 600 12px var(--sans); padding: 3px 4px; border-radius: 5px; cursor: pointer; max-width: 50%; }
+.ws-bar-select:hover, .ws-bar-select:focus { border-color: var(--line2); background: var(--bg2); outline: none; }
+.ws-bar-select option { background: var(--panel); }
+.ws-btn { width: 26px; height: 26px; font-size: 13px; }
+
+.ws-float { position: absolute; display: flex; flex-direction: column; background: var(--bg); border: 1px solid var(--line2); border-radius: var(--radius); box-shadow: 0 12px 40px #000a, 0 0 0 1px #0006; overflow: hidden; }
+.ws-float-bar { cursor: move; touch-action: none; }
+.ws-float-resize { position: absolute; right: 0; bottom: 0; width: 18px; height: 18px; cursor: nwse-resize; z-index: 3; touch-action: none; background: linear-gradient(135deg, transparent 55%, var(--line2) 55%, var(--line2) 65%, transparent 65%, transparent 75%, var(--line2) 75%, var(--line2) 85%, transparent 85%); }
+.ws-float-resize:hover { background-color: #3fd6d022; }
+
+/* Top tabs: where a tab is shown aside. */
+.main-tab.ws-in-split, .main-tab.ws-in-float { color: var(--text); box-shadow: inset 0 -2px 0 var(--cyan-d); }
+.ws-tab-where { font-size: 11px; color: var(--cyan); opacity: .8; }
+.ws-split-on { color: var(--cyan); border-color: var(--cyan-d); }
+
+.ws-menu { position: fixed; z-index: 300; min-width: 230px; background: var(--panel); border: 1px solid var(--line2); border-radius: var(--radius); box-shadow: 0 10px 30px #000b; padding: 4px; display: flex; flex-direction: column; }
+.ws-menu-item { display: flex; align-items: center; gap: 10px; background: none; border: none; color: var(--text); text-align: left; padding: 7px 10px; border-radius: 5px; font: 13px var(--sans); cursor: pointer; }
+.ws-menu-item:hover:not(:disabled) { background: var(--panel3); color: var(--cyan); }
+.ws-menu-item:disabled { color: var(--faint); cursor: default; }
+.ws-menu-icon { width: 16px; text-align: center; color: var(--cyan); }
+.ws-menu-item:disabled .ws-menu-icon { color: var(--faint); }
+
+/* Dock: resize grip on its left edge, pop-out button next to its tabs. */
+.ws-dock-head { display: flex; align-items: flex-end; gap: 2px; border-bottom: 1px solid var(--line); padding-right: 6px; }
+.ws-dock-head .dock-tabs { flex: 1; min-width: 0; border-bottom: none; }
+.ws-dock-head .ws-btn { margin-bottom: 4px; }
+.ws-dock-grip { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; cursor: col-resize; z-index: 5; touch-action: none; }
+.ws-dock-grip:hover, .ws-dragging .ws-dock-grip { background: var(--cyan-d); }
+@media (min-width: 901px) { .dock { position: relative; } }
+@media (max-width: 900px) { .ws-dock-grip { display: none; } }
+
+/* While dragging: no text selection, frames and canvases don't steal the pointer. */
+.ws-dragging, .ws-dragging * { user-select: none !important; }
+.ws-dragging iframe, .ws-dragging canvas, .ws-dragging embed, .ws-dragging object { pointer-events: none; }
+
+/* Pop-out window: one tab, the whole window. */
+.ws-pop { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+.ws-pop > .main { flex: 1; }
+.ws-pop-dock { overflow: auto; background: var(--bg2); }
+.ws-pop-offline { flex: none; background: var(--red); color: #fff; text-align: center; font: 600 12px var(--sans); padding: 3px; }

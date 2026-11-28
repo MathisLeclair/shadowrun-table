@@ -78,3 +78,6 @@ export const SheetView: ComponentType<GameProps & { actorId: string }> = SheetVi
 
 /** Mounted once for every user, outside the tabs (audio playback, overlays…). */
 export const globalComponents: ComponentType<GameProps>[] = [AudioEngine, BookViewer, AttackTray, Dice3D]; // BookViewer: rulebook drawer (openBook() from anywhere); AttackTray: defend / soak prompts; Dice3D: 3D dice overlay
+
+/** Mounted in pop-out windows (?pane=<tab>): the same minus the audio player (the main window plays the ambience). */
+export const popoutGlobalComponents: ComponentType<GameProps>[] = globalComponents.filter((C) => C !== AudioEngine);

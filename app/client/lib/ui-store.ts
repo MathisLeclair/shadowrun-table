@@ -39,8 +39,22 @@ export function getUI(): UIState {
   return ui;
 }
 
+let mainTabGuard: ((id: string) => boolean) | null = null;
+/**
+ * Core only (multi-view workspace): called with every requested main tab; returning true keeps the main tab as it is
+ * (the tab is already on screen in the split pane or a floating panel). Other keys of the patch still apply.
+ */
+export function setMainTabGuard(fn: ((id: string) => boolean) | null) {
+  mainTabGuard = fn;
+}
+
 export function setUI(patch: Partial<UIState> | ((ui: UIState) => Partial<UIState>)) {
-  Object.assign(ui, typeof patch === 'function' ? patch(ui) : patch);
+  let p = typeof patch === 'function' ? patch(ui) : patch;
+  if (p.mainTab && p.mainTab !== ui.mainTab && mainTabGuard?.(p.mainTab)) {
+    const { mainTab: _skip, ...rest } = p;
+    p = rest;
+  }
+  Object.assign(ui, p);
   for (const l of listeners) l({ ...ui });
 }
 
