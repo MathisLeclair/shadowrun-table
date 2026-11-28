@@ -595,6 +595,8 @@ export interface Gear extends ItemBase {
   ammoFor?: string;
   /** Unit price paid in the shop. */
   paid?: number;
+  /** Carry bag (inventory.ts CARRY_BAGS) whose container was opened once (inventory.ts linkCarryBags). */
+  bagMade?: boolean;
 }
 
 export type ContainerKind = 'body' | 'bag' | 'vehicle' | 'safehouse' | 'other';
@@ -605,7 +607,7 @@ export interface Container {
   name: string;
   kind: ContainerKind;
   notes?: string;
-  /** Gear item this container is (a Chummer bag with contents: the item keeps its cost, the container holds the contents). */
+  /** Gear item this container is (a Chummer bag with contents, a carry bag of the catalog: the item keeps its cost, the container holds the contents). */
   itemId?: string;
 }
 

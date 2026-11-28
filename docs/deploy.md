@@ -356,7 +356,8 @@ workflow*). It SSHes into the VPS, which runs `app/deploy/autodeploy.sh`:
 
 1. fetches `origin/main` with the VPS's read-only deploy key (`~/.ssh/shadowrun_deploy`, ssh alias `github-shadowrun`);
    nothing to do if it is already there;
-2. snapshots `app/runtime/` (all tables) into `~/shadowrun-backups/runtime-<date>-<oldcommit>.tgz` (10 newest kept);
+2. snapshots `app/runtime/` (all tables) into `~/shadowrun-backups/runtime-<date>-<oldcommit>.tgz` (10 newest kept); files the
+   running server writes meanwhile (rulebook index, autosaves) are only a tar warning, not a failed deploy;
 3. tags the running image `shadowrun-app:previous`, `git reset --hard` to the new commit, `docker compose up -d --build`;
 4. waits up to 3 minutes for `/api/health`;
 5. on failure: goes back to the previous commit and image and the job fails (GitHub emails you). Game data is never
