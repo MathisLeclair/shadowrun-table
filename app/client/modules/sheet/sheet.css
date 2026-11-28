@@ -364,6 +364,8 @@ tr.sh-skill:hover .sh-die-btn { color: var(--pc); }
 .sh-subchip i { font-style: normal; color: var(--cyan); font-family: var(--mono); font-size: 11px; }
 .sh-subchip.incl { border-style: dashed; color: var(--dim); }
 .sh-subchip.off { opacity: .5; text-decoration: line-through; }
+.sh-subchip-mount { font: 600 9.5px var(--sans); text-transform: uppercase; letter-spacing: .4px; color: var(--dim); border-right: 1px solid var(--line2); padding-right: 4px; margin-right: 1px; }
+.sh-acc-line { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
 .sh-sub-row > td { background: var(--panel); padding: 6px 8px 10px 22px !important; }
 .sh-subeditor { display: flex; flex-direction: column; gap: 6px; border-left: 2px solid var(--pc); padding-left: 10px; }
 .sh-sub-title { font: 600 12px var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: .04em; }

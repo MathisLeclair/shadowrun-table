@@ -86,6 +86,9 @@ catalogs `lifestyles`, `martialarts`, `lifestylequalities`, `accessories`, `armo
 gives every actor `lifestyles: []` / `martialArts: []`, ids to nested items, one primary lifestyle (legacy migration:
 [lifestyles.md](lifestyles.md)).
 
+Players switch weapon accessories on / off and move them between mounts with `shop/setAccessory`
+([shop-upgrades.md](shop-upgrades.md#actions)).
+
 Actions (GM; players read-only): `actor/addItem|updateItem|removeItem` accept the lists `lifestyles` and `martialArts`
 (lifestyle: `monthlyCost` is always recomputed, `primary: true` moves the primary flag) and sanitize nested arrays
 passed with an item; `actor/addSubItem { actorId, list, itemId, sub: 'accessories'|'mods'|'qualities'|'techniques',

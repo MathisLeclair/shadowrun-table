@@ -12,6 +12,7 @@ import { LimitStat } from './tab-summary.tsx';
 import { sourcesTitle, sourceName, effectText, poolModsOf, accuracyOf } from './modifiers-ui.tsx';
 import { ruleRef } from '/shared/bookrefs.ts';
 import { AmmoCell, ReadyToggle } from './weapon-ui.tsx';
+import { AccessoriesButton } from './accessories-ui.tsx';
 import { readyCount, isUnarmed, isGrenade, usesAmmo, fireOptions } from './inventory.ts';
 import { COMBAT_ACTIONS, unlockedActions, isUnlocked, AFFLICTIONS, stillActive } from '/shared/combat.ts';
 import { send } from '../../lib/net.ts';
@@ -143,7 +144,7 @@ export function CombatTab({ s }: { s: SheetCtx }) {
                     <div className="faint small">
                       {cat ? `${cat} · ` : ''}{def ? skillLabel(def.id) : w.skill || '—'}{def ? <>{' '}<SkillRef id={def.id} /></> : null}{sk ? '' : ` ${t('(untrained)')}`}{w.notes ? <> · <span title={w.notes}>{w.notes.length > 60 ? w.notes.slice(0, 60) + '…' : w.notes}</span></> : null}
                     </div>
-                    {(w.accessories || []).length > 0 && <div><SubChips sub="accessories" items={w.accessories} /></div>}
+                    {(w.accessories || []).length > 0 && <div className="sh-acc-line"><SubChips sub="accessories" items={w.accessories} /><AccessoriesButton s={s} w={w} /></div>}
                   </td>
                   <td className={'num-cell sh-pool' + (pm.total ? ' cyan' : '')} title={poolTitle}>
                     {pool.impossible ? '—' : pool.pool + wm.mods.dicePool + pm.total}

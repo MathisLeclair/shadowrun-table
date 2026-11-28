@@ -429,6 +429,49 @@ export function accessoryFit(weapon: Loose, weaponCat: Loose, accItem: Loose, op
   return { mount, problem: null };
 }
 
+/**
+ * Mount points an installed accessory can be moved to (players move them after purchase): the mounts its catalog entry
+ * accepts (standard ones for a hand-made accessory without catalog entry) that the weapon has and no other accessory
+ * uses, minus its current one. Built-in parts, accessories that need no mount and « Internal » ones never move.
+ * A switched-off accessory (equipped: false) stays on its mount: it still takes it.
+ */
+export function accessoryMoves(weapon: Loose, weaponCat: Loose, acc: Loose, accCat: Loose): string[] {
+  if (!acc || acc.included || !acc.mount || acc.mount === 'Internal') return [];
+  const wants: string[] = Array.isArray(accCat?.stats?.mount) ? accCat.stats.mount : STANDARD_MOUNTS;
+  const others = { ...weapon, accessories: (weapon?.accessories || []).filter((a: Loose) => a && a !== acc && a.id !== acc.id) };
+  const have = weaponMounts(others, weaponCat);
+  const used = usedMounts(others);
+  return wants.filter((m) => m && m !== 'Internal' && m !== acc.mount && have.includes(m) && !used.includes(m));
+}
+
+/** Can this installed accessory move to `mount`? → null when OK, else a message. */
+export function accessoryMoveProblem(weapon: Loose, weaponCat: Loose, acc: Loose, accCat: Loose, mount: string): FitProblem | null {
+  const params = { item: acc?.nameFr || acc?.name || '?', weapon: weapon?.name || '?' };
+  if (acc?.included) return { key: tk('Built-in part of {weapon}: it cannot be moved'), params };
+  if (mount === acc?.mount) return null;
+  if (!accessoryMoves(weapon, weaponCat, acc, accCat).includes(mount)) return { key: tk('{item} cannot go on that mount of {weapon}'), params };
+  return null;
+}
+
+/**
+ * Slot board of a weapon (shop « Customize », sheet): one row per mount point among STANDARD_MOUNTS + Internal.
+ * state: 'used' (an accessory sits there), 'free', 'none' (the weapon has no such mount). Internal lists the built-in
+ * parts and internal accessories (never limited). `items` = the accessories on that mount (several only on Internal).
+ */
+export function weaponSlots(weapon: Loose, weaponCat: Loose): { mount: string; state: 'used' | 'free' | 'none'; items: Loose[] }[] {
+  const have = weaponMounts(weapon, weaponCat);
+  const accs: Loose[] = (weapon?.accessories || []).filter((a: Loose) => a && typeof a === 'object');
+  const rows = STANDARD_MOUNTS.map((mount) => {
+    const items = accs.filter((a) => !a.included && a.mount === mount);
+    return { mount, state: (items.length ? 'used' : have.includes(mount) ? 'free' : 'none') as 'used' | 'free' | 'none', items };
+  });
+  const internal = accs.filter((a) => a.included || a.mount === 'Internal');
+  rows.push({ mount: 'Internal', state: internal.length ? 'used' : 'free', items: internal });
+  const loose = accs.filter((a) => !a.included && !a.mount);
+  if (loose.length) rows.push({ mount: '', state: 'used', items: loose });
+  return rows;
+}
+
 /** Accessory effects stored on weapon.accessories[].effects (sheet: weaponMods()). */
 export function accessoryEffects(accItem: Loose): { accuracy?: number; rc?: number; rcGroup?: number; smartgun?: boolean } {
   const st = accItem?.stats || {};
