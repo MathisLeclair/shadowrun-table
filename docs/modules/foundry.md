@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| server | `server/modules/80-foundry.ts` (owner of `state.foundry`), `server/lib/foundry/` (`world.ts`, `importer.ts`, `convert-actor.ts`, `convert-scene.ts`, `convert-misc.ts`, `assets.ts`, `upload.ts`) |
+| server | `server/modules/80-foundry.ts` (owner of `state.foundry`), `server/lib/foundry/` (`world.ts`, `importer.ts`, `containers.ts`, `convert-actor.ts`, `convert-scene.ts`, `convert-misc.ts`, `assets.ts`, `upload.ts`) |
 | client | `client/modules/foundry/FoundryPanel.tsx` (Réglages), `client/modules/admin/FoundryUpload.tsx` |
 | tools | `node tools/foundry-import.ts` |
 | tests | `node tools/test-foundry.ts` (port 3272) |

@@ -113,3 +113,11 @@ moves the contents that are still « Sur soi », dropping the old « in {bag} »
 
 `init` runs `normalizeActor` (containers [], locations 'on', ammo fields, ready defaults) and `fillItemNames` on every
 actor at every boot — idempotent (`tools/test-inventory.ts` boots twice).
+
+Tables seeded before the Foundry import read `system.inventories` (2026-11-28): their PCs had no containers and every
+item « Sur soi », and only a merge re-import from Foundry added the bags (a VPS table usually has no world to re-import
+from). Before `normalizeActor`, `10-characters init` calls `lib/foundry/containers.ts adoptSeedContainers` with the
+pack's actor of the same id: when it is the same Foundry document (`foundry.id`) and the live actor has no `fvtt_inv_`
+container yet, the pack's containers are added and the items the pack places in them move there if they are still
+« Sur soi » (stored: not active / not ready). Once per actor (flag `foundry.containers`): a bag deleted afterwards does
+not come back. `mergeContainers` (same file) is the Foundry merge re-import's version of the same adoption.
