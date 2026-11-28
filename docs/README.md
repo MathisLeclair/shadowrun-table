@@ -45,6 +45,7 @@ read the one you need, not all of them. Repo rules and commands: [AGENTS.md](../
 | [modules/shop-upgrades.md](modules/shop-upgrades.md) | upgrade catalogs, fitting rules (mounts, capacity, slots), upgrade / martial-art actions |
 | [modules/training.md](modules/training.md) | karma advancement requests, downtime |
 | [modules/matrix.md](modules/matrix.md) | personas, hosts, IC, agents, devices linked to the map, Matrix actions |
+| [modules/magic.md](modules/magic.md) | Magic tab (cockpit, GM overview), traditions and drain pool, `state.magic` |
 | [modules/audio.md](modules/audio.md) | ambience / music state, music library, standard sfx ids |
 | [modules/campaign.md](modules/campaign.md) | acts, quests, sessions, handouts, campaign docs, campaign facts |
 | [modules/notes.md](modules/notes.md) | private / party notes, rights, locks, conflicts, markdown extras |
@@ -55,6 +56,12 @@ read the one you need, not all of them. Repo rules and commands: [AGENTS.md](../
 | [modules/assistant.md](modules/assistant.md) | GM assistant (Claude): auth, budget, tools, proposals |
 | [modules/multi-table.md](modules/multi-table.md) | table registry, migration, auth, admin API, zips |
 | [modules/demo-table.md](modules/demo-table.md) | public demo table: logins, refusals, caps, resets |
+
+## Designs (not built yet)
+
+| page | answers |
+|---|---|
+| [design/magic.md](design/magic.md) | magic flow (issue #7): what is still to build (cast, sustain, summon, astral, foci…), sub-issues |
 
 ## SR5 rules
 

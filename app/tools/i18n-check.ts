@@ -44,6 +44,7 @@ const AREA_EXTRA: Record<string, string[]> = {
   combat: ['server/modules/30-combat.ts', 'server/modules/33-attacks.ts', 'shared/combat.ts'],
   shop: ['server/modules/40-shop.ts'],
   matrix: ['server/modules/45-matrix.ts', 'shared/matrix.ts'],
+  magic: ['server/modules/47-magic.ts', 'shared/magic.ts', 'server/lib/traditions.ts'],
   notes: ['server/modules/75-notes.ts'],
   chargen: ['server/modules/15-chargen.ts', 'shared/chargen.ts', 'shared/npcgen.ts'],
   training: ['server/modules/50-training.ts', 'shared/advancement.ts'],

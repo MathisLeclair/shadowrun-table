@@ -10,6 +10,7 @@ import { SKILL_BY_ID } from '../../../shared/sr5.ts';
 import { blankActor, categoryToSkill, evalFormula, MELEE_SKILLS, LIFESTYLE_BASES } from '../../../client/modules/sheet/sheet-data.ts';
 import { monthlyCost } from '../../../shared/lifestyle.ts';
 import { uid } from '../../../shared/util.ts';
+import { chummerTradition } from '../traditions.ts';
 import { guessContainerKind, ammoKindOf, isThrownExplosive, parseAmmo } from '../../../client/modules/sheet/inventory.ts';
 import type {
   Accessory, Actor, AmmoKind, ArmorMod, Augmentation, AttrKey, Container, ContainerKind, I18nMessage, I18nParams, ItemBase, KnowledgeSkill, KnowledgeType, Lang, Lifestyle,
@@ -601,8 +602,15 @@ export function parseChum5(xml: unknown, { fileName = '', now = Date.now(), make
   if (spirits.length) extras.push(tr(tk('Spirits / sprites: {list}'), { list: spirits.join(' ; ') }));
   const mentor = (c.get('mentorspirits')?.all('mentorspirit') || []).map((m) => m.val('name')).filter(Boolean);
   if (mentor.length) extras.push(tr(tk('Mentor: {list}'), { list: mentor.join(', ') }));
+  // Tradition of a magician (technomancer streams, traditiontype RES, are not stored): actor.magic.tradition (47-magic).
   const tradition = c.get('tradition');
-  if (tradition?.val('name')) extras.push(tr(tk('Tradition: {name}'), { name: tradition.val('name') }));
+  if (tradition?.val('name') && (tradition.val('traditiontype') || 'MAG') === 'MAG') {
+    const t = chummerTradition({
+      sourceid: tradition.val('sourceid'), name: tradition.val('name'), drain: tradition.val('drain'), source: tradition.val('source'), page: tradition.val('page'),
+      spirits: { combat: tradition.val('spiritcombat'), detection: tradition.val('spiritdetection'), health: tradition.val('spirithealth'), illusion: tradition.val('spiritillusion'), manipulation: tradition.val('spiritmanipulation') },
+    });
+    if (t) a.magic = { ...(a.magic || {}), tradition: t };
+  }
   if (extras.length) a.bio = [a.bio, `### ${tr(tk('Chummer data'))}\n\n${extras.map((x) => `- ${x}`).join('\n')}`].filter(Boolean).join('\n\n');
 
   // Condition monitor (Chummer stores overflow inside physicalcmfilled)

@@ -1,15 +1,27 @@
 // Wizard step: Magie / Résonance (type, tradition, free skills, spells, adept powers, complex forms).
 import { Field, Select, TextInput, NumberInput, Badge, Panel, IconButton } from '../../lib/ui.tsx';
 import { SKILLS } from '/shared/sr5.ts';
-import { t, tk, getLang, skillLabel, skillGroupLabel, itemName } from '../../lib/i18n.ts';
+import { t, tk, getLang, skillLabel, skillGroupLabel, itemName, attrShort } from '../../lib/i18n.ts';
 import { powerInfo, SPELL_CATEGORIES } from '/shared/advancement.ts';
-import { MAGIC_TYPES, ASPECTS, TRADITIONS, COMPLEX_FORMS, magicOptions, magicOptionParts, aspectGroup, rowId, type MagicOption } from '/shared/chargen.ts';
+import { MAGIC_TYPES, ASPECTS, COMPLEX_FORMS, magicOptions, magicOptionParts, aspectGroup, rowId, type MagicOption } from '/shared/chargen.ts';
 import { Budget, StepIssues, i18n } from './common.tsx';
 import Picker from './Picker.tsx';
 import { complexFormRef } from '/shared/bookrefs.ts';
+import { useCatalog } from '../../lib/net.ts';
+import { findTradition, traditionName, sortTraditions, type TraditionDef } from '/shared/magic.ts';
 import type { DraftData, MagicType } from '../../../shared/types.ts';
 import type { ChargenResult, DraftUpdate, LooseCatalogItem, RulesCtx, StepProps } from './types.ts';
 import { ItemRef, BookRef } from '../books/BookRef.tsx';
+
+/** Tradition of the draft: Chummer name of data/catalog/traditions.json (older drafts hold a legacy value, still matched). */
+function TraditionSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const list = useCatalog<TraditionDef>('traditions');
+  const lang = getLang();
+  const cur = findTradition(list, value);
+  const options = [{ value: '', label: t('— Choose —') }, ...sortTraditions(list, lang).map((d) => ({ value: d.name, label: d.drain ? `${traditionName(d, lang)} (${attrShort('WIL')} + ${attrShort(d.drain)})` : traditionName(d, lang) }))];
+  if (value && !cur) options.push({ value, label: t(value) });
+  return <Select value={cur ? cur.name : value} onChange={onChange} options={options} title={t('Tradition: sets the Drain attribute and the spirits you summon (SR5 p. 279)')} />;
+}
 
 /** Spell categories: French label from the catalog table, official English category (the key) in English. */
 const spellCats = () => (Object.entries(SPELL_CATEGORIES) as Array<[string, string]>).map(([value, label]) => ({ value, label: getLang() === 'fr' ? label : value }));
@@ -67,7 +79,7 @@ export function StepMagic({ data, update, result, issues, rc }: StepProps) {
         <div className="grid-3 cg-mt">
           {(m.type === 'magician' || m.type === 'mystic' || m.type === 'aspected') && (
             <Field label={t('Tradition')}>
-              <Select value={m.tradition} onChange={(v) => update((d) => (d.magic.tradition = v))} options={[{ value: '', label: t('— Choose —') }, ...(TRADITIONS as string[]).map((x) => ({ value: x, label: t(x) }))]} />
+              <TraditionSelect value={m.tradition} onChange={(v) => update((d) => (d.magic.tradition = v))} />
             </Field>
           )}
           {m.type === 'aspected' && (
