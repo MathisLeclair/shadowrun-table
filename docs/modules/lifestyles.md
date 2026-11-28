@@ -7,7 +7,7 @@ and the historic Chummer restore. Cost formula: [rules/availability-and-shop.md]
 |---|---|
 | shared | `shared/lifestyle.ts` (cost, options), `shared/home.ts` (layouts, `buildHome`) |
 | server | `server/modules/10-characters.ts` (lists), `40-shop.ts` (buying options, rent, `shop/chooseHome`, restore) |
-| client | `client/modules/sheet/home.tsx` + `home.css`; lifestyle cards in the « Contacts & SIN » tab |
+| client | `client/modules/sheet/home.tsx` + `home.css`; lifestyle cards in the « Contacts & SIN » tab (`LifestylesView` in `tab-misc.tsx`, `.sh-lifestyles` in `sheet.css`: one card = full width, 2 per line at most, 1 per line under 2 × 320 px; name / cost on the left, options / Home / City on the right) |
 | tests | `node tools/test-lifestyle.ts` (ports 3251-3252: cost math, migration idempotence, restore, lifestyle options, rent per lifestyle, permissions, homes), `node tools/test-home.ts`, `node tools/test-restore-lifestyles.ts` (ports 3290-3291) |
 
 ## State
