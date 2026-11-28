@@ -575,5 +575,12 @@
   "With the selection ({n})": "Avec la sélection ({n})",
   "wound modifiers ×{n}": "malus de blessures ×{n}",
   "You can't target yourself": "Impossible de se cibler soi-même",
-  "Your agent acts: pick its action in the cockpit (“Let my agent act”).": "Ton agent agit : choisis son action dans le cockpit (« Laisser mon agent agir »)."
+  "Your agent acts: pick its action in the cockpit (“Let my agent act”).": "Ton agent agit : choisis son action dans le cockpit (« Laisser mon agent agir »).",
+  "Each net hit of the caster is one box of damage; armor does not help.": "Chaque succès net du lanceur inflige une case de dommages ; l’armure ne protège pas.",
+  "Resist the spell — {name}": "Résister au sort — {name}",
+  "Resist the spell": "Résister au sort",
+  "Resist {spell} ({attr})": "Résister à {spell} ({attr})",
+  "direct spell ({damage}), resisted with {attr}": "sort direct ({damage}), résisté avec {attr}",
+  "resisted ({a} vs {d})": "résisté ({a} contre {d})",
+  "{target} resists {spell}.": "{target} résiste à {spell}."
 }

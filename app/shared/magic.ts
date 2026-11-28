@@ -184,6 +184,53 @@ export function spellEffects(spell: { name?: string; nameEn?: string; nameFr?: s
 /** Duration that can be sustained: Sustained (S), or Permanent (P) until it sets (SR5 p. 283). */
 export const isSustainable = (duration: unknown): boolean => /^(S|P)$/i.test(String(duration ?? '').trim());
 
+// ---------------------------------------------------------------------------
+// Combat spells (SR5 p. 283): Direct = resisted with BOD (physical) / WIL (mana), net hits are the damage, no soak;
+// Indirect = dodged like a ranged attack (REA + INT), DV = Force + net hits, AP = −Force, soaked with BOD + armor.
+// ---------------------------------------------------------------------------
+
+/** What the spells catalog says of a spell (data/catalog/spells.json: stats.descriptor, stats.damage). */
+export interface SpellCatalogInfo {
+  descriptor: string;
+  damage: string;
+}
+export type SpellElement = 'fire' | 'acid' | 'electricity' | 'cold';
+/** Elemental damage of indirect spells: the extra effect is the GM's (SR5 pp. 170-171). */
+export const ELEMENTS: Record<SpellElement, { name: string; page: number; re: RegExp }> = {
+  fire: { name: tk('Fire'), page: 171, re: /fire|flame|incendi|feu|flamme/i },
+  acid: { name: tk('Acid'), page: 170, re: /acid|toxic wave|acide|vague toxique/i },
+  electricity: { name: tk('Electricity'), page: 170, re: /lightning|electr|électr|foudre/i },
+  cold: { name: tk('Cold'), page: 170, re: /\bice\b|frost|cold|glace|givre|froid/i },
+};
+
+/** How a combat spell hits: Direct / Indirect, the resistance attribute of a direct one, its damage type and element. */
+export interface CombatSpellProfile {
+  mode: 'direct' | 'indirect';
+  /** Direct spells: BOD (physical spell) or WIL (mana spell). */
+  resist: 'BOD' | 'WIL';
+  damage: 'P' | 'S';
+  element: SpellElement | null;
+  /** Mana spells only affect living beings and astral forms (SR5 p. 282). */
+  mana: boolean;
+}
+
+/**
+ * Profile of a combat spell from the catalog (descriptor, damage) or, for a hand-made spell, from its type and name:
+ * mana → direct; physical → indirect when its name is elemental, else direct; Stun when the name says so.
+ */
+export function combatSpellProfile(spell: { type?: string; name?: string; nameEn?: string; nameFr?: string } | null | undefined, info: SpellCatalogInfo | null): CombatSpellProfile {
+  const mana = /^M/i.test(String(spell?.type ?? '').trim());
+  const names = [spell?.nameEn, spell?.name, spell?.nameFr].filter(Boolean).join(' ');
+  const element = (Object.keys(ELEMENTS) as SpellElement[]).find((k) => ELEMENTS[k].re.test(names)) || null;
+  const d = String(info?.descriptor || '');
+  const mode: 'direct' | 'indirect' = /indirect/i.test(d) ? 'indirect' : /direct/i.test(d) ? 'direct' : !mana && element ? 'indirect' : 'direct';
+  const dmg = String(info?.damage || '').trim().toUpperCase();
+  const damage: 'P' | 'S' = dmg === 'S' ? 'S' : dmg === 'P' ? 'P' : /stun|étourdi|etourdi/i.test(names) ? 'S' : 'P';
+  return { mode, resist: mana ? 'WIL' : 'BOD', damage, element: mode === 'indirect' ? element : /elemental/i.test(d) ? element : null, mana };
+}
+/** NPC kinds a mana spell cannot affect (no aura: drones, IC, hosts). */
+export const NO_AURA_KINDS = ['drone', 'ic', 'host'];
+
 /** Spell category (stored English or French) → its key ('combat', 'detection'…), null when unknown. */
 export function spellCategory(category: unknown): SpellCategoryKey | null {
   const c = String(category ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();

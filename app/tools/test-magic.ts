@@ -6,12 +6,13 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   findTradition, traditionFromDef, parseDrainText, sortTraditions, drainValue, drainOffset, spellReach, isAreaSpell, spellCategory, spellDrainType, maxForce,
-  spellEffects, isSustainable, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
+  spellEffects, isSustainable, combatSpellProfile, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
   type TraditionDef,
 } from '../shared/magic.ts';
 import { checkedTest, collectModifiers, poolModifiers, rollContext, derivedWithModifiers } from '../shared/modifiers.ts';
 import { traditions, actorTradition, chummerTradition } from '../server/lib/traditions.ts';
 import { parseChum5 } from '../server/lib/chummer/parse.ts';
+import { spellCatalogInfo } from '../server/lib/spells.ts';
 import { mergeActor } from '../server/lib/chummer/merge.ts';
 import type { Actor, ActorLike, MagicState, SustainedSpell } from '../shared/types.ts';
 
@@ -116,6 +117,20 @@ ok(isSustainable('S') && isSustainable('P') && !isSustainable('I'), 'isSustainab
   const tgt = { ...mundane, armor: [], magic: { spellEffects: [{ id: 's1', name: { fr: 'Armure', en: 'Armor' }, force: 4, hits: 3, casterId: 'npc_m', casterName: 'Mage', effects: [{ type: 'armor', value: 3 }] }] } } as unknown as ActorLike;
   const d = derivedWithModifiers(tgt, collectModifiers(tgt, noLookup));
   ok(d.armor === 3, `Armor spell on the target: armor 3 (got ${d.armor})`);
+}
+
+// Combat spells (#15): profile from the catalog, fallback from type and name
+{
+  const p = (name: string, type: string) => combatSpellProfile({ name, type }, spellCatalogInfo({ name }));
+  const mb = p('Manabolt', 'M');
+  ok(mb.mode === 'direct' && mb.resist === 'WIL' && mb.damage === 'P' && mb.mana, `Manabolt: direct, WIL, Physical (${JSON.stringify(mb)})`);
+  ok(p('Powerbolt', 'P').resist === 'BOD' && p('Stunbolt', 'M').damage === 'S', 'Powerbolt resisted with BOD; Stunbolt Stun');
+  const fb = p('Fireball', 'P');
+  ok(fb.mode === 'indirect' && fb.element === 'fire', `Fireball: indirect, fire (${JSON.stringify(fb)})`);
+  ok(p('Boule de feu', 'P').mode === 'indirect', 'French catalog name found');
+  const custom = combatSpellProfile({ name: 'Flame lash', type: 'P' }, null);
+  ok(custom.mode === 'indirect' && custom.element === 'fire', 'hand-made physical elemental → indirect');
+  ok(combatSpellProfile({ name: 'Mind spike', type: 'M' }, null).mode === 'direct' && combatSpellProfile({ name: 'Stun whip', type: 'M' }, null).damage === 'S', 'hand-made mana → direct; « stun » → Stun');
 }
 
 // ---------------------------------------------------------------------------
@@ -302,6 +317,37 @@ try {
   await gm.send('combat/end');
 
   await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  // ---------- Combat spells through the attacks (#15) ----------
+  for (const old of Object.values(gm.state.magic.sustained)) if (old.casterId === 'pc_jane') await gm.send('magic/drop', { id: old.id });
+  await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  await gm.send('actor/update', { actorId: 'pc_anthony', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  let mbCast: { hits: number; attackIds: string[] } = { hits: 0, attackIds: [] };
+  for (let i = 0; i < 5 && !mbCast.hits; i++) mbCast = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 6, mapId, targetIds: ['pc_anthony'] });
+  await settle();
+  const atk1 = gm.state.attacks.list.find((x) => x.id === mbCast.attackIds[0]);
+  ok(mbCast.attackIds.length === 1 && atk1?.kind === 'spell' && atk1.spell?.mode === 'direct' && atk1.spell.resist === 'WIL' && atk1.dv === null && atk1.status === 'defense' && atk1.hits === mbCast.hits, `Manabolt → a direct spell attack waiting for the resistance (${JSON.stringify(atk1)})`);
+  const physBeforeA = gm.state.actors.pc_anthony.condition.physical;
+  const res = await gm.send('attack/defend', { attackId: atk1!.id });
+  await settle();
+  const net = mbCast.hits - res.roll.hits;
+  const dmgA = gm.state.actors.pc_anthony.condition.physical - physBeforeA;
+  ok(/WIL/.test(res.roll.breakdown || ''), `resisted with WIL (${res.roll.breakdown})`);
+  ok(net > 0 ? res.attack.status === 'done' && res.attack.damage === net && dmgA === net : res.attack.status === 'missed' && dmgA === 0, `direct: net hits are Physical damage, no soak (net ${net}, damage ${dmgA}, ${res.attack.status})`);
+  await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  let fbCast: { hits: number; attackIds: string[] } = { hits: 0, attackIds: [] };
+  for (let i = 0; i < 5 && !fbCast.hits; i++) fbCast = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: ball, force: 4, mapId, targetIds: ['pc_anthony'] });
+  await settle();
+  const atk2 = gm.state.attacks.list.find((x) => x.id === fbCast.attackIds[0]);
+  ok(atk2?.spell?.mode === 'indirect' && atk2.dv === 4 && atk2.ap === -4 && atk2.type === 'P' && atk2.spell.element === 'fire', `Fireball → indirect: DV = Force, AP = −Force, fire (${JSON.stringify(atk2)})`);
+  const auto = await gm.send('attack/auto', { attackId: atk2!.id });
+  await settle();
+  ok(auto.attack.status === 'missed' || (auto.attack.status === 'done' && auto.attack.modifiedDv === 4 + auto.attack.net && auto.attack.soakHits !== undefined), 'indirect: dodge, then soak at DV Force + net hits');
+  if (auto.attack.net > 0) ok(gm.state.log.some((e) => e.i18n?.key?.startsWith('Elemental damage')), 'elemental reminder logged');
+  const droneId = await gm.send<string>('actor/create', { type: 'npc', name: 'Drone test', npc: { kind: 'drone' } });
+  await gm.send('maps/addToken', { mapId, token: { actorId: droneId, x: 8, y: 5 } });
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 3, mapId, targetIds: [droneId] }), /mana/i, 'a mana spell cannot target a drone');
+  await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+
   // Drain left pending (autoDrain off).
   await gm.send('magic/settings', { autoDrain: false });
   cr = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 4 });

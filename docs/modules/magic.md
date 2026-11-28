@@ -4,11 +4,11 @@
 |---|---|
 | server | `server/modules/47-magic.ts` (owner of `state.magic` and of `actor.magic.tradition`) |
 | shared | `shared/magic.ts` (traditions lookup, drain pool, `magicHints`) |
-| data | `data/catalog/traditions.json` (built by `tools/build-catalog.ts` from Chummer `traditions.xml`), read by `server/lib/traditions.ts` and the client (`/catalog/traditions.json`) |
+| data | `data/catalog/spells.json` (descriptor, damage: `server/lib/spells.ts`), `data/catalog/traditions.json` (built by `tools/build-catalog.ts` from Chummer `traditions.xml`), read by `server/lib/traditions.ts` and the client (`/catalog/traditions.json`) |
 | client | `client/modules/magic/` (MagicPage: cockpit for players, overview + cockpit for the GM; `common.tsx`: `TraditionPicker`, `openMagic`, roll labels shared with the sheet) |
 | tests | `node tools/test-magic.ts` (port 3650) |
 
-Rules: [rules/magic.md](../rules/magic.md). What is still to build (spell effects, spirits, astral, foci,
+Rules: [rules/magic.md](../rules/magic.md). What is still to build (non-combat spell resistance, spirits, astral, foci,
 rituals, metamagic) and the sub-issues: [design/magic.md](../design/magic.md).
 
 ## State
@@ -47,6 +47,21 @@ with `entry.magic` (`MagicLogInfo`: cast / drain); a glitch / critical glitch ad
 Drain: `resistDrain()` = `dice/roll`-like WIL + tradition attribute, `test: 'drainResist'`, damage applied with
 `applyDamage`; or a `PendingDrain` when `autoDrain` is off. The effects of the spell are the next steps (design).
 
+## Combat spells (attacks)
+
+After the cast, a Combat spell with hits creates one `Attack` per target (`addSpellAttack` of 33-attacks, kind
+`'spell'`, `attack.spell = { mode, resist, force, element, castLogId }`), so the attack tray, `attack/defend`,
+`attack/soak`, `attack/auto` and the GM's hand resolution work as for weapons. `combatSpellProfile(spell, info)`
+(shared): the catalog descriptor and damage (`server/lib/spells.ts spellCatalogInfo`, by catalog id or English / French
+name); a hand-made spell: mana → direct, physical → indirect when its name is elemental, Stun when its name says so.
+- **Direct** (SR5 283): status `defense` resolved by `doResistSpell`: the target rolls BOD (physical spell) or WIL
+  (mana spell), the net hits are the damage (spell's type), no soak, no armor.
+- **Indirect** (SR5 283): `dv = Force`, `ap = −Force`; the usual defense (REA + INT, dodge options) then soak at
+  Force + net hits. Elemental spells (fire, acid, electricity, cold by name) log a reminder of the extra effects
+  (SR5 170-171) when they hit.
+- Mana spells cannot target an NPC of kind drone, IC or host (SR5 282).
+The tray shows « Resist the spell » (`SpellResistDialog`: attribute, modifier, Edge) for a direct spell.
+
 ## Sustained spells
 
 A cast of a Sustained (S) or Permanent (P) spell with at least one hit is sustained unless the caster unticks it
@@ -68,7 +83,7 @@ with #19 / #21.
   clears. Owner = only an awakened character without a tradition, or to choose the drain of a tradition that has none
   (Custom); after that only the GM changes it. Unknown tradition / invalid drain refused.
 - `magic/cast { actorId, spellId, force, reckless?, explode?, modifier?, conditions?, ignore?, mapId?, targetIds?, area?, drainDv? }`
-  (owner or GM) → `{ logId, rollLogId, hits, rawHits, glitch, critGlitch, force, dv, drainType, drain, targetIds, area }`.
+  (owner or GM) → `{ logId, rollLogId, hits, rawHits, glitch, critGlitch, force, dv, drainType, drain, targetIds, area, sustainedId, attackIds }`.
 - `magic/resistDrain { id }` (owner or GM): resist a pending drain.
 - `magic/cast … sustain?` (default: sustained when possible) → also `sustainedId`; `magic/drop { id }`.
 - `magic/settings { autoDrain?, showAstralToPlayers? }` (GM; « Resist Drain automatically » toggle of the GM page).

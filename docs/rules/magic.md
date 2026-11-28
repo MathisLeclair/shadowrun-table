@@ -1,7 +1,7 @@
 # Magic rules
 
 Magic is being automated step by step (plan: [design/magic.md](../design/magic.md)); so far: karma costs, item effects,
-traditions, the drain pool, the cast flow and sustained spells. Page references used by the 📖 chips: drain SR5
+traditions, the drain pool, the cast flow, sustained spells and combat spells. Page references used by the 📖 chips: drain SR5
 282, power points 278, adept powers 308, spellcasting 281, initiation 324 (`RULE_REFS`, [book-refs](../modules/book-refs.md)).
 
 - **Adept powers**: powers with a catalog `stats.bonus` (Improved Reflexes: REA + initiative dice per level,
@@ -17,6 +17,10 @@ traditions, the drain pool, the cast flow and sustained spells. Page references 
   Force, never below 2, +3 for Reckless Spellcasting (Simple Action); Drain is Physical when the hits (after the limit)
   exceed Magic, else Stun; glitches are left to the GM (+2 Drain is the usual one). Line of Sight / Touch / Area (radius
   = Force metres) are checked on the map for players. Multiple spells in one action (split pool) stay manual.
+- **Combat spells** (SR5 283): direct = opposed by BOD (physical) / WIL (mana), damage = net hits, no soak; indirect =
+  dodged like a ranged attack, DV = Force + net hits, AP = −Force, soaked with BOD + armor. Direct / indirect and the
+  damage type come from Chummer's spell descriptor; elemental extra effects (SR5 170-171) are the GM's. Mana spells do
+  not affect drones, IC or hosts (282).
 - **Sustaining** (SR5 282-283): −2 dice per spell the character sustains, cumulative, on every test but damage
   resistance (the app's convention for « all tests » penalties, as for afflictions). Permanent spells are sustained Force Combat Turns
   (counted on new Combat Turns), then end. Armor (+hits armor, 293) and Combat Sense (+hits defense dice, 288) apply to
