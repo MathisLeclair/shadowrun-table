@@ -194,7 +194,11 @@ initiative, or its physical initiative when materialized (both from the spirit d
 « Use a power », « Release », disrupted when a monitor is full (302: services lost). GM action « Sunrise / sunset »:
 unbound spirits leave (300; no in-game clock exists).
 
-## Binding, bound spirits, banishing — *#19 Binding*
+## Binding, bound spirits, banishing — *#19, done*
+
+Built 2026-11-28 (facts: [modules/magic.md](../modules/magic.md#binding-bound-spirits-banishing)). Binding time (Force
+hours) is narrative; spell binding stays with the GM.
+
 
 - **Binding** (300-301): only an already summoned spirit; costs Force × 25 drams of reagents (gear « Reagents »
   quantity, refused without), Binding + MAG [Force] vs Force × 2, drain 2 × hits (min 2), extra net hits add services.
@@ -259,7 +263,7 @@ Filed on GitHub 2026-11-28, all « Part of #7 ». Order: #12 first; #13 → #14,
 | #16 | Non-combat spells: opposed resistance and net hits (**done**) | #13 |
 | #17 | Spirit data from Chummer (spirits.json, traditions.json, `spiritStats`) (**done**) | — |
 | #18 | Summoning: spirit NPC actors, services, control by the summoner, combat (**done**) | #12, #17 |
-| #19 | Binding, bound spirits (aid sorcery, sustaining), banishing | #18, #14 |
+| #19 | Binding, bound spirits (aid sorcery, sustaining), banishing (**done**) | #18, #14 |
 | #20 | Astral perception and projection, astral tokens and initiative | #12 |
 | #21 | Foci: bonding, active foci, non-spellcasting foci, sustaining focus | #12, #14 |
 | #22 | Ritual spellcasting | #13 |

@@ -7,13 +7,15 @@ import { useUI, openSheet } from '../../lib/ui-store.ts';
 import type { GameProps } from '../../lib/net.ts';
 import { t, tk, attrShort, getLang } from '../../lib/i18n.ts';
 import { attr, derive } from '/shared/sr5.ts';
-import { drainAttr, drainPool, sustainedBy, usesTradition, magicHints, SUSTAIN_PENALTY, type MagicHint } from '/shared/magic.ts';
+import { drainAttr, drainPool, sustainedBy, usesTradition, magicHints, reagentDrams, SUSTAIN_PENALTY, BINDING_DRAMS, type MagicHint } from '/shared/magic.ts';
 import { RollDialog } from '../sheet/RollDialog.tsx';
 import { RuleRef, ItemRef } from '../books/BookRef.tsx';
 import { categoryLabel, itemLabel } from '../sheet/common.tsx';
 import { isGM, magicActors, drainRollLabel, TraditionPicker } from './common.tsx';
 import CastModal from './CastModal.tsx';
 import SummonModal from './SummonModal.tsx';
+import BanishModal from './BanishModal.tsx';
+import { toast } from '../../lib/ui-store.ts';
 import { confirmAction } from '../../lib/ui.tsx';
 import type { RollPreset } from '../sheet/types.ts';
 import type { Actor, ActorSpirit, GameView, SustainedSpell } from '../../../shared/types.ts';
@@ -80,7 +82,7 @@ function useHintsToggle(): [boolean, (v: boolean) => void] {
 const biText = (n: { fr?: string; en?: string } | null | undefined): string => (getLang() === 'en' ? n?.en || n?.fr : n?.fr || n?.en) || '';
 
 /** Sustained spells (SR5 p. 282): caster, Force, hits, targets, turns left for a Permanent one, « Drop ». */
-function SustainedList({ game, list, canDrop, showCaster }: { game: GameView; list: SustainedSpell[]; canDrop: (s: SustainedSpell) => boolean; showCaster?: boolean }) {
+function SustainedList({ game, list, canDrop, showCaster, helpers }: { game: GameView; list: SustainedSpell[]; canDrop: (s: SustainedSpell) => boolean; showCaster?: boolean; helpers?: SpiritActor[] }) {
   const name = (id: string) => (game.actors?.[id] as { name?: string } | undefined)?.name || '?';
   return (
     <table className="sr mg-sustained">
@@ -93,8 +95,16 @@ function SustainedList({ game, list, canDrop, showCaster }: { game: GameView; li
             </td>
             <td className="num-cell">{t('F{force} · {hits} hit(s)', { force: s.force, hits: s.hits })}</td>
             <td className="small">{s.targetIds.length ? t('on {list}', { list: s.targetIds.map(name).join(', ') }) : <span className="muted">{t('no target')}</span>}</td>
-            <td className="small muted">{typeof s.turnsLeft === 'number' ? t('permanent in {n} Combat Turn(s)', { n: s.turnsLeft }) : ''}</td>
+            <td className="small muted">
+              {typeof s.turnsLeft === 'number' ? t('permanent in {n} Combat Turn(s)', { n: s.turnsLeft }) : ''}
+              {s.by?.kind === 'spirit' ? ' ' + t('sustained by {spirit} ({n} turn(s))', { spirit: name(s.by.actorId), n: s.by.turnsLeft }) : ''}
+            </td>
             <td>
+              {!s.by && canDrop(s) && (helpers || []).map((sp) => (
+                <Button small variant="ghost" key={sp.id} onClick={() => void send('magic/spiritSustain', { sustainedId: s.id, spiritId: sp.id }).catch(() => null)} title={t('The spirit sustains it for its Force in Combat Turns, instead of you (one service, SR5 p. 302)')}>
+                  {t('Give to {name}', { name: sp.name })}
+                </Button>
+              ))}
               {canDrop(s) && (
                 <Button small onClick={() => void send('magic/drop', { id: s.id }).catch(() => null)} title={t('Stop sustaining this spell')}>
                   {t('Drop')}
@@ -114,12 +124,21 @@ const spiritsOf = (game: GameView, summonerId: string): SpiritActor[] =>
   Object.values(game.actors || {}).filter((a): a is SpiritActor => 'attributes' in a && !!(a as Actor).spirit && (a as Actor).spirit!.summonerId === summonerId);
 
 /** Spirit cards (SR5 pp. 300-302): services, materialization, joining a fight, release. */
-function SpiritsPanel({ game, actor, own, onSummon }: { game: GameView; actor: Actor; own: boolean; onSummon: (() => void) | null }) {
+function SpiritsPanel({ game, actor, own, onSummon, onBanish }: { game: GameView; actor: Actor; own: boolean; onSummon: (() => void) | null; onBanish: (() => void) | null }) {
   const list = spiritsOf(game, actor.id);
   const fight = !!game.combat?.active;
   const gm = isGM(game);
-  if (!list.length && !onSummon) return null;
+  if (!list.length && !onSummon && !onBanish) return null;
   const act = (type: string, payload: object) => void send(type, payload).catch(() => null);
+  const bind = async (sp: SpiritActor) => {
+    const need = sp.spirit.force * BINDING_DRAMS;
+    const have = reagentDrams(actor);
+    const free = have < need && gm;
+    if (have < need && !gm) return toast(t('Binding needs {n} drams of reagents ({have} carried)', { n: need, have }), 'warn');
+    if (!(await confirmAction(free ? t('Bind {name}? No reagents: the GM binds it anyway.', { name: sp.name }) : t('Bind {name}? It uses {n} drams of reagents and takes {h} hour(s).', { name: sp.name, n: need, h: sp.spirit.force })))) return;
+    const r = await send<{ bound: boolean; services: number }>('magic/bind', { spiritId: sp.id, free }).catch(() => null);
+    if (r) toast(r.bound ? t('{name} is bound: {n} service(s).', { name: sp.name, n: r.services }) : t('The binding fails.'), r.bound ? 'success' : 'warn');
+  };
   return (
     <div className="mg-panel mg-spirits">
       <div className="mg-panel-title">
@@ -129,11 +148,17 @@ function SpiritsPanel({ game, actor, own, onSummon }: { game: GameView; actor: A
             ✦ {t('Summon')}
           </Button>
         )}
+        {onBanish && (
+          <Button small onClick={onBanish} title={t('Banish a spirit, yours or an enemy’s (SR5 p. 301)')}>
+            {t('Banish')}
+          </Button>
+        )}
       </div>
       {!list.length && <div className="muted small">{t('No spirit at your service.')}</div>}
       {list.map((sp) => {
         const s = sp.spirit;
         const inFight = (game.combat?.entries || []).some((e) => e.actorId === sp.id && !e.out);
+        const resting = s.bound && s.present === false;
         const hurt = (sp.condition?.physical || 0) + (sp.condition?.stun || 0);
         return (
           <div className="mg-spirit" key={sp.id}>
@@ -141,7 +166,7 @@ function SpiritsPanel({ game, actor, own, onSummon }: { game: GameView; actor: A
               <span>
                 <b>{sp.name}</b> <Badge color="magenta">{t('Force {n}', { n: s.force })}</Badge>{' '}
                 {s.bound ? <Badge color="cyan">{t('bound')}</Badge> : <Badge>{t('unbound')}</Badge>}{' '}
-                <Badge color={s.materialized ? 'amber' : 'dim'}>{s.materialized ? t('materialized') : t('astral')}</Badge>
+                {resting ? <Badge>{t('at rest')}</Badge> : <Badge color={s.materialized ? 'amber' : 'dim'}>{s.materialized ? t('materialized') : t('astral')}</Badge>}
                 {hurt ? <span className="small amber"> {t('{n} box(es) of damage', { n: hurt })}</span> : null}
               </span>
               <span className="mg-spirit-services" title={t('Services owed (SR5 p. 302)')}>
@@ -154,10 +179,18 @@ function SpiritsPanel({ game, actor, own, onSummon }: { game: GameView; actor: A
                   {t('Use a service')}
                 </Button>
                 {gm && <Button small variant="ghost" onClick={() => act('magic/spiritServices', { spiritId: sp.id, delta: 1 })}>{t('+1 service')}</Button>}
-                <Button small onClick={() => act('magic/materialize', { spiritId: sp.id, materialized: !s.materialized, mapId: game.scene?.activeMapId })}>
-                  {s.materialized ? t('Dematerialize') : t('Materialize')}
-                </Button>
-                {fight && !inFight && (
+                {!s.bound && <Button small onClick={() => void bind(sp)} title={t('Binding + Magic [Force] vs Force × 2; Force × 25 drams of reagents (SR5 p. 300)')}>{t('Bind')}</Button>}
+                {s.bound && (
+                  <Button small onClick={() => act('magic/callSpirit', { spiritId: sp.id, present: resting })}>
+                    {resting ? t('Call') : t('Send to rest')}
+                  </Button>
+                )}
+                {!resting && (
+                  <Button small onClick={() => act('magic/materialize', { spiritId: sp.id, materialized: !s.materialized, mapId: game.scene?.activeMapId })}>
+                    {s.materialized ? t('Dematerialize') : t('Materialize')}
+                  </Button>
+                )}
+                {fight && !inFight && !resting && (
                   <Button small variant="accent" onClick={() => act('magic/spiritCombat', { spiritId: sp.id })} title={t('The whole fight is one service (SR5 p. 302)')}>
                     ⚔ {t('Join the fight')}
                   </Button>
@@ -182,6 +215,7 @@ export function Cockpit({ game, actor }: { game: GameView; actor: Actor }) {
   const [roll, setRoll] = useState<RollPreset | null>(null);
   const [casting, setCasting] = useState<string | null>(null);
   const [summoning, setSummoning] = useState(false);
+  const [banishing, setBanishing] = useState(false);
   const [hintsOn, setHintsOn] = useHintsToggle();
   const open = (preset: RollPreset) => setRoll({ ...preset, _k: Date.now() });
   const mag = attr(actor, 'MAG');
@@ -268,7 +302,7 @@ export function Cockpit({ game, actor }: { game: GameView; actor: Actor }) {
               <div className="mg-panel-title">
                 {t('Sustained spells: −{n} dice on all tests', { n: mySustained.length * SUSTAIN_PENALTY })} <RuleRef rule="spellcasting" />
               </div>
-              <SustainedList game={game} list={mySustained} canDrop={() => own} />
+              <SustainedList game={game} list={mySustained} canDrop={() => own} helpers={spiritsOf(game, actor.id).filter((sp) => sp.spirit.bound && sp.spirit.present !== false && sp.spirit.services > 0)} />
             </>
           )}
           {onMe.length > 0 && (
@@ -279,7 +313,7 @@ export function Cockpit({ game, actor }: { game: GameView; actor: Actor }) {
           )}
         </div>
       )}
-      <SpiritsPanel game={game} actor={actor} own={own} onSummon={own && skillRating(actor, 'summoning') > 0 ? () => setSummoning(true) : null} />
+      <SpiritsPanel game={game} actor={actor} own={own} onSummon={own && skillRating(actor, 'summoning') > 0 ? () => setSummoning(true) : null} onBanish={own && skillRating(actor, 'banishing') > 0 ? () => setBanishing(true) : null} />
       <div className="mg-grid">
         {(spells.length > 0 || hasSpellcasting) && (
           <div className="mg-panel mg-spells">
@@ -355,6 +389,7 @@ export function Cockpit({ game, actor }: { game: GameView; actor: Actor }) {
       {roll && <RollDialog game={game} actor={actor} preset={roll} onClose={() => setRoll(null)} />}
       {casting && <CastModal game={game} actor={actor} spellId={casting} onClose={() => setCasting(null)} />}
       {summoning && <SummonModal game={game} actor={actor} onClose={() => setSummoning(false)} />}
+      {banishing && <BanishModal game={game} actor={actor} onClose={() => setBanishing(false)} />}
     </div>
   );
 }

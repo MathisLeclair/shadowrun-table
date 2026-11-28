@@ -1,7 +1,7 @@
 # Magic rules
 
 Magic is being automated step by step (plan: [design/magic.md](../design/magic.md)); so far: karma costs, item effects,
-traditions, the drain pool, the cast flow, sustained spells, combat spells, the resistance to other spells and summoning. Page references used by the 📖 chips: drain SR5
+traditions, the drain pool, the cast flow, sustained spells, combat spells, the resistance to other spells, summoning, binding and banishing. Page references used by the 📖 chips: drain SR5
 282, power points 278, adept powers 308, spellcasting 281, initiation 324 (`RULE_REFS`, [book-refs](../modules/book-refs.md)).
 
 - **Adept powers**: powers with a catalog `stats.bonus` (Improved Reflexes: REA + initiative dice per level,
@@ -30,6 +30,10 @@ traditions, the drain pool, the cast flow, sustained spells, combat spells, the 
   one per 3 full points of Force; the whole fight is one service; leaving at sunrise / sunset is a GM button; a spirit
   with a full condition monitor is disrupted and its services are lost. Spirit stats: SR5 303-304 (Chummer data).
   Astral initiative of a spirit: F × 2 + 3D6 (314).
+- **Binding** (SR5 300-301): Force × 25 drams of reagents used up per attempt, Binding + MAG [Force] vs Force × 2, net
+  hits beyond the first add services, up to CHA bound spirits, Drain as summoning. Bound services: aid sorcery (+Force
+  dice when the spirit is the tradition's type for the category), spell sustaining (Force Combat Turns per service).
+  **Banishing** (301): Banishing + MAG [Astral] vs Force (+ summoner's MAG if bound), net hits remove services.
 - **Sustaining** (SR5 282-283): −2 dice per spell the character sustains, cumulative, on every test but damage
   resistance (the app's convention for « all tests » penalties, as for afflictions). Permanent spells are sustained Force Combat Turns
   (counted on new Combat Turns), then end. Armor (+hits armor, 293) and Combat Sense (+hits defense dice, 288) apply to

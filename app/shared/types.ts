@@ -962,6 +962,8 @@ export interface ActorSpirit {
   bound: boolean;
   /** On the physical plane (token on the map), else astral. */
   materialized: boolean;
+  /** Bound spirit at rest on its metaplane (false) or called to the summoner (true / absent). */
+  present?: boolean;
   /** Chosen optional powers (English names). */
   optionalPowers: string[];
   ts: Timestamp;
@@ -2283,7 +2285,7 @@ export interface PendingDrain {
 
 /** `entry.magic` of a magic log entry. */
 export interface MagicLogInfo {
-  event: 'cast' | 'drain' | 'drop' | 'summon' | 'spirit';
+  event: 'cast' | 'drain' | 'drop' | 'summon' | 'spirit' | 'bind' | 'banish';
   actorId: ActorId;
   spellId?: string;
   force?: number;
@@ -2296,8 +2298,8 @@ export interface MagicLogInfo {
   targetIds?: ActorId[];
 }
 
-/** Who carries a sustained spell's −2: its caster (later: a bound spirit or a sustaining focus). */
-export type SustainCarrier = { kind: 'caster' };
+/** Who carries a sustained spell's −2: its caster, or a bound spirit for some Combat Turns (SR5 p. 302). */
+export type SustainCarrier = { kind: 'caster' } | { kind: 'spirit'; actorId: ActorId; turnsLeft: number };
 
 /** A spell being sustained (by its caster, a bound spirit or a sustaining focus). */
 export interface SustainedSpell {

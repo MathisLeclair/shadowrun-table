@@ -8,7 +8,7 @@
 | client | `client/modules/magic/` (MagicPage: cockpit for players, overview + cockpit for the GM; `common.tsx`: `TraditionPicker`, `openMagic`, roll labels shared with the sheet) |
 | tests | `node tools/test-magic.ts` (port 3650) |
 
-Rules: [rules/magic.md](../rules/magic.md). What is still to build (binding, astral, foci,
+Rules: [rules/magic.md](../rules/magic.md). What is still to build (astral, foci,
 rituals, metamagic) and the sub-issues: [design/magic.md](../design/magic.md).
 
 ## State
@@ -84,6 +84,26 @@ UI: cockpit « Spirits » panel (Summon, services, materialize, join the fight, 
 the tradition's first —, Force, stats preview, optional powers, Edge, Drain rule, result), GM overview column and
 « Sunrise / sunset » button.
 
+## Binding, bound spirits, banishing
+
+- `magic/bind { spiritId, explode?, modifier?, free? }` (SR5 300-301): a summoned unbound spirit; at most CHA bound
+  spirits; Force × 25 drams of reagents (`reagentDrams`: gear named « Reagents » / « Réactifs », `qty` = drams) used up
+  by every attempt (the GM may pass `free`); Binding + MAG [Force] vs Force × 2 (GM-only roll); Drain 2 × the spirit's
+  hits (min 2), Physical if Force > MAG; success: `bound`, `present`, services += net hits − 1.
+- Bound spirits stay at sunrise; `magic/callSpirit { spiritId, present }` sends one to rest (`present: false`: tokens
+  removed, out of the fight, cannot materialize, aid or sustain) or calls it back.
+- **Aid sorcery** (SR5 302): `magic/cast … aidSpiritId`: a bound, called spirit of the caster with a service whose type is
+  the tradition's spirit of the spell's category (`aidSpiritType`) adds its Force in dice (trusted bonus line
+  « spirit F »), one service.
+- **Spell sustaining** (SR5 302): `magic/spiritSustain { sustainedId, spiritId }`: `sustained.by = { kind: 'spirit',
+  actorId, turnsLeft: Force }`, one service; `syncSustained` puts the −2 on the spirit instead of the caster; each new
+  Combat Turn counts down, then the caster sustains it again (logged). Spell binding is the GM's.
+- **Banishing** (SR5 301): `magic/banish { actorId, spiritId }`: any spirit (one's own or an enemy's; players: not a
+  hidden NPC); Banishing + MAG [Astral] vs Force (+ the summoner's MAG if bound), each net hit removes a service, at 0
+  the spirit leaves; Drain 2 × the spirit's hits (min 2), Physical if Force > the banisher's MAG.
+UI: spirit cards « Bind » / « Call » / « Send to rest », « Give to <spirit> » on sustained spells, « Spirit aid » in the
+cast modal, `BanishModal` (spirits in view: full sheets with `spirit`, or NPC stubs whose metatype is a spirit type).
+
 ## Combat spells (attacks)
 
 After the cast, a Combat spell with hits creates one `Attack` per target (`addSpellAttack` of 33-attacks, kind
@@ -134,7 +154,8 @@ with #19 / #21.
   (owner or GM) → `{ logId, rollLogId, hits, rawHits, glitch, critGlitch, force, dv, drainType, drain, targetIds, area, sustainedId, attackIds }`.
 - `magic/resistDrain { id }` (owner or GM): resist a pending drain.
 - `magic/cast … sustain?, object?` (default: sustained when possible) → also `sustainedId`, `attackIds`, `object`; `magic/drop { id }`.
-- `magic/summon`, `magic/spiritServices`, `magic/materialize`, `magic/spiritCombat`, `magic/release`, `magic/sunrise`: above.
+- `magic/summon`, `magic/spiritServices`, `magic/materialize`, `magic/spiritCombat`, `magic/release`, `magic/sunrise`,
+  `magic/bind`, `magic/callSpirit`, `magic/spiritSustain`, `magic/banish`: above.
 - `magic/settings { autoDrain?, showAstralToPlayers? }` (GM; « Resist Drain automatically » toggle of the GM page).
 
 ## Player view

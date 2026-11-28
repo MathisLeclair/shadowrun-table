@@ -10,7 +10,7 @@ import { cellDistance } from '/shared/combat.ts';
 import { hasLineOfSight } from '/shared/vision.ts';
 import {
   drainValue, drainOffset, drainAttr, maxForce, spellReach, isAreaSpell, isSustainable, spellCategory, spellResistance, combatSpellProfile,
-  RECKLESS_DV, SUSTAIN_PENALTY, OBJECT_RESISTANCE, type SpellCatalogInfo,
+  RECKLESS_DV, SUSTAIN_PENALTY, OBJECT_RESISTANCE, aidSpiritType, type SpellCatalogInfo,
 } from '/shared/magic.ts';
 import { itemLabel, categoryLabel } from '../sheet/common.tsx';
 import { ItemRef, RuleRef } from '../books/BookRef.tsx';
@@ -66,6 +66,7 @@ export default function CastModal({ game, actor, spellId, onClose }: { game: Gam
   const [manualDv, setManualDv] = useState(2);
   const [sustain, setSustain] = useState(true);
   const [objectPool, setObjectPool] = useState('');
+  const [aidId, setAidId] = useState('');
   const catalog = useCatalog<CatalogSpell>('spells');
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<CastResult | null>(null);
@@ -95,6 +96,11 @@ export default function CastModal({ game, actor, spellId, onClose }: { game: Gam
   const combat = spellCategory(spell?.category) === 'combat';
   const profile = combat && spell ? combatSpellProfile(spell, info) : null;
   const resistance = !combat && spell ? spellResistance(spell, info) : null;
+  // Bound spirits that can aid this spell (SR5 p. 302): the tradition's spirit of the category, called, with a service.
+  const aidType = spell ? aidSpiritType(actor.magic?.tradition, spell.category) : null;
+  const aiders = Object.values(game.actors || {}).filter((a): a is Actor => 'attributes' in a && !!(a as Actor).spirit && (a as Actor).spirit!.summonerId === actor.id
+    && (a as Actor).spirit!.bound && (a as Actor).spirit!.present !== false && (a as Actor).spirit!.services > 0 && (a as Actor).spirit!.type === aidType);
+  const aid = aiders.find((a) => a.id === aidId) || null;
   const spellcasting = skillRating(actor, 'spellcasting');
   const toggle = (id: string) => setTargetIds((list) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]));
   const pickCenter = (id: string) => {
@@ -108,7 +114,7 @@ export default function CastModal({ game, actor, spellId, onClose }: { game: Gam
     setBusy(true);
     try {
       const r = await send<CastResult>('magic/cast', {
-        actorId: actor.id, spellId: spell.id, force, reckless, explode, modifier, mapId: map?.id, targetIds, sustain: sustainable && sustain, ...(objectPool ? { object: Number(objectPool) } : {}),
+        actorId: actor.id, spellId: spell.id, force, reckless, explode, modifier, mapId: map?.id, targetIds, sustain: sustainable && sustain, ...(objectPool ? { object: Number(objectPool) } : {}), ...(aid ? { aidSpiritId: aid.id } : {}),
         ...(area && center ? { area: { x: center.x, y: center.y } } : {}), ...(offset === null ? { drainDv: manualDv } : {}),
       });
       setResult(r);
@@ -194,7 +200,7 @@ export default function CastModal({ game, actor, spellId, onClose }: { game: Gam
           </div>
           <div className="field">
             <span className="field-label">{t('Pool')}</span>
-            <b className="mg-cast-dv">{spellcasting + mag + modifier}</b>
+            <b className="mg-cast-dv">{spellcasting + mag + modifier + (aid?.spirit?.force || 0)}</b>
             <span className="faint small">{t('Spellcasting {s} + Magic {m} (+ modifiers on the roll)', { s: spellcasting, m: mag })}</span>
           </div>
           <div className="field">
@@ -202,6 +208,12 @@ export default function CastModal({ game, actor, spellId, onClose }: { game: Gam
             <NumberInput value={modifier} min={-20} max={20} onChange={setModifier} />
           </div>
         </div>
+        {aiders.length > 0 && (
+          <div className="mg-cast-row">
+            <label className="field-label">{t('Spirit aid')}</label>
+            <Select value={aid?.id || ''} onChange={setAidId} options={[{ value: '', label: t('— none —') }, ...aiders.map((a) => ({ value: a.id, label: t('{name}: +{n} dice (one service)', { name: a.name, n: a.spirit!.force }) }))]} />
+          </div>
+        )}
         <div className="row wrap">
           <Toggle value={reckless} onChange={setReckless} label={t('Reckless Spellcasting (Simple Action, +3 Drain)')} />
           <Toggle value={explode} onChange={setExplode} label={t('Push the Limit (Edge: no limit)')} />
