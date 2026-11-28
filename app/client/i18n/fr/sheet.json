@@ -1199,5 +1199,6 @@
   "RCC Noise Reduction": "Réduction du bruit (console)",
   "Net hits: {n}": "Succès nets : {n}",
   "{n} flat tire (−2)": "{n} pneu crevé (−2)",
-  "{n} flat tires (−{m})": "{n} pneus crevés (−{m})"
+  "{n} flat tires (−{m})": "{n} pneus crevés (−{m})",
+  "Recrop the portrait": "Recadrer le portrait"
 }

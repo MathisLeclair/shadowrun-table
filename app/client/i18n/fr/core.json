@@ -185,5 +185,15 @@
   "Drag to resize · double-click to reset": "Glisser pour redimensionner · double-clic pour réinitialiser",
   "Swap the panes": "Échanger les volets",
   "Stack the panes": "Empiler les volets",
-  "Drag to move": "Glisser pour déplacer"
+  "Drag to move": "Glisser pour déplacer",
+  "Could not save the cropped image": "Impossible d’enregistrer l’image recadrée",
+  "This image comes from another site and cannot be cropped: download it, then upload it here.": "Cette image vient d’un autre site et ne peut pas être recadrée : téléchargez-la, puis envoyez-la ici.",
+  "Upload the file as it is (an animated GIF stays animated)": "Envoyer le fichier tel quel (un GIF animé reste animé)",
+  "Keep original": "Garder l’original",
+  "Use this crop": "Utiliser ce cadrage",
+  "Crop the portrait": "Recadrer le portrait",
+  "Crop area: drag to move, wheel or + / − to zoom, arrows to nudge": "Zone de recadrage : glissez pour déplacer, molette ou + / − pour zoomer, flèches pour ajuster",
+  "Could not load this image": "Impossible de charger cette image",
+  "Drag to frame the face; the circle shows the map token. Saved as a square image.": "Glissez pour cadrer le visage ; le cercle montre le pion sur la carte. Enregistré en image carrée.",
+  "Recrop": "Recadrer"
 }

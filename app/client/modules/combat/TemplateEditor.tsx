@@ -1,7 +1,8 @@
 // Structured editor for a bestiary template (works on a local draft, saved in one action).
 import { useState, useMemo, type ChangeEvent, type ReactNode } from 'react';
 import { Button, IconButton, Modal, Tabs, Panel, TextInput, NumberInput, Select, Toggle, SearchBox, Empty, Badge, type SelectOption } from '../../lib/ui.tsx';
-import { useCatalog, upload } from '../../lib/net.ts';
+import { useCatalog } from '../../lib/net.ts';
+import { usePortraitCrop } from '../../lib/ImageCrop.tsx';
 import { toast } from '../../lib/ui-store.ts';
 import { t, tk, tIfKnown, attrLabel, attrShort, skillLabel, skillCategoryLabel, itemName, metatypeLabel, getLang } from '../../lib/i18n.ts';
 import { SKILLS, SKILL_BY_ID, SKILL_CATEGORIES, METATYPES, type SkillDef } from '/shared/sr5.ts';
@@ -277,15 +278,11 @@ export default function TemplateEditor({ template, folders, onSave, onClose }: T
     }
     setSaving(false);
   };
-  const uploadPortrait = async (ev: ChangeEvent<HTMLInputElement>) => {
+  const crop = usePortraitCrop((url) => set(['portrait'], url));
+  const uploadPortrait = (ev: ChangeEvent<HTMLInputElement>) => {
     const f = ev.target.files?.[0];
-    if (!f) return;
-    try {
-      const r = await upload(f);
-      set(['portrait'], r.url);
-    } catch (err) {
-      toast((err as Error).message || t('Upload failed'), 'error');
-    }
+    ev.target.value = '';
+    crop.pick(f);
   };
 
   const pickerEl = picker && (
@@ -353,9 +350,11 @@ export default function TemplateEditor({ template, folders, onSave, onClose }: T
             <div className="row">
               <TextInput live value={draft.portrait} placeholder="/uploads/…" onChange={(v) => set(['portrait'], v)} />
               <label className="btn btn-sm">
-                {t('Upload')}
+                {crop.busy ? t('Uploading…') : t('Upload')}
                 <input type="file" accept="image/*" style={{ display: 'none' }} onChange={uploadPortrait} />
               </label>
+              {draft.portrait && <Button small variant="ghost" onClick={() => crop.recrop(draft.portrait)}>{t('Recrop')}</Button>}
+              {crop.dialog}
             </div>
           </F>
           <F label={t('Gender')}>

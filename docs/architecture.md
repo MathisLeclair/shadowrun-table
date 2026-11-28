@@ -36,6 +36,7 @@ app/
   client/lib/net.ts      useGame(), send(), on()/useServerEvent(), api(), upload(), useCatalog() (core-owned)
   client/lib/ui.tsx      UI kit, typed React components (Button, Panel, Modal, Tabs, Field, TextInput, NumberInput, Select, Toggle, Badge, Empty, SearchBox, Markdown, Stat, confirmAction, promptText, cx) (core-owned)
   client/lib/ui-store.ts useUI(), setUI(), openSheet(actorId), goTab(id), toast(text, kind), useLang() (core-owned)
+  client/lib/ImageCrop.tsx  portrait crop dialog + usePortraitCrop() (crop.ts: pure geometry)                 (core-owned)
   client/lib/i18n.ts     t(), tn(), tk(), tIfKnown(), logText(), errorText(), SR5 label helpers, formatting   (core-owned)
   client/i18n/format.ts  pure i18n core (interpolation, plurals) shared by client, server and tools   (core-owned)
   client/i18n/fr/*.json  French dictionaries, one per area { "english": "français" }    (legacy-fr-keys.json: old saved French keys)

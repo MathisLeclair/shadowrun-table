@@ -63,6 +63,17 @@ contactRoll`: [contacts-sins.md](contacts-sins.md).
 
 Damage: `'actor/damage'` `{ actorId, amount, type: 'P'|'S' }` (overflow rules: [rules/combat.md](../rules/combat.md#damage-sr5-p-169)). The combat UI calls it; the attacks module uses its body `applyDamage(ctx, actor, n, type)`.
 
+## Portrait
+
+The sheet header's portrait (owner / GM: click to pick a file, ✂ to recrop the current one), chargen's Concept step and
+the NPC template editor all go through `usePortraitCrop(onUploaded)` (`client/lib/ImageCrop.tsx`): picking a file opens a
+square crop dialog (drag to move, wheel / slider / `+` `−` to zoom, arrows to nudge; the round guide is the map
+token), then uploads a square WebP of at most 512 px (`OUTPUT_SIZE`; PNG where the browser cannot encode WebP; no
+upscaling of smaller crops) through `/api/upload` and sets the URL (`actor/update { portrait }`). « Keep original »
+uploads the picked file untouched (animated GIFs). « Recrop » opens the current portrait (same-origin uploads; a
+picture from another site without CORS cannot be read back and is refused with a message). Geometry is pure in
+`client/lib/crop.ts` (`node tools/test-crop.ts`).
+
 ## Nested items (accessories, mods, options, techniques)
 
 Nested lists restore what the characters had in Chummer (upgrades lost on the way Chummer → Foundry → app). Sub-items
