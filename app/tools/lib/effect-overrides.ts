@@ -108,6 +108,13 @@ export const EFFECT_OVERRIDES: Record<string, Record<string, EffectOverride>> = 
     'Dead SIN': { gm: 'the SIN of a dead person: who notices, and when, is the GM’s call' },
     // Rigger 5.0
     'Accident Prone': { effects: [{ ...VEHICLE, value: -2 }] },
+    Chaser: { handled: '+2 on Chase Actions (shared/vehicles.ts qualityLines)' },
+    'Stunt Driver': { handled: '+2 on chase Stunts (shared/vehicles.ts qualityLines)' },
+    'Speed Demon': { handled: '+1 on Vehicle Tests at Speed 3+ when aboard or jumped in (shared/vehicles.ts qualityLines)' },
+    'Too Much Data': { handled: '−2 on Vehicle Tests while directing 4+ vehicles in a chase (shared/vehicles.ts qualityLines)' },
+    'Subtle Pilot': { handled: '−2 to sensor tests locking the vehicle it steers (shared/vehicles.ts subtlePilotPenalty)' },
+    'Motion Sickness': { gm: 'Nausea while in a fast vehicle (SR5 p. 409)' },
+    'Grease Monkey': { effects: [{ type: 'skillGroup', target: 'engineering', value: 1 }] },
     // Run Faster
     'Did You Just Call Me Dumb?': { gm: 'glitches on Social tests become critical glitches' },
     'Striking Skin Pigmentation': { gm: 'helps others identify or locate the character' },

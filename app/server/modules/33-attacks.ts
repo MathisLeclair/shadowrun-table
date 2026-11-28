@@ -16,8 +16,8 @@ import { performRoll, applyDamage } from './10-characters.ts';
 import { ELEMENTS, elementLabel, hasEnergyAura, type CombatSpellProfile, type SpellElement } from '../../shared/magic.ts';
 import { spendInitiative, combatTurnKey } from './30-combat.ts';
 import { recordAction } from '../lib/combat-actions.ts';
-import { controllerInfo, driverOf, mayControl, vehicleOf } from '../lib/vehicles.ts';
-import { controlLimit, controlOf, gunneryPlan, vehicleDefensePlan, vehicleDestroyed, vehicleMonitor, vehicleStats, NO_CONTROLLER } from '../../shared/vehicles.ts';
+import { controllerInfo, driverOf, effectiveVehicle, mayControl, vehicleOf } from '../lib/vehicles.ts';
+import { CALLED_SHOT_BY_ID, controlLimit, controlOf, gunneryPlan, vehicleDefensePlan, vehicleDestroyed, vehicleMonitor, vehicleStats, withBreakdown, NO_CONTROLLER } from '../../shared/vehicles.ts';
 import type { PlanLine } from '../../shared/vehicles.ts';
 import type { PerformedRoll, RollBonusLine, RollInternal, RollPayload } from './10-characters.ts';
 import type {
@@ -179,6 +179,23 @@ export function damageVehicle(ctx: ActionContext, owner: Actor, v: Vehicle, boxe
   logAttack(ctx, tk('{rigger} is jumped into {vehicle}: biofeedback to resist.'), { rigger: rigger.name, vehicle: v.name }, hidden);
 }
 
+/**
+ * A called shot at a vehicle component landed (Run & Gun p. 115): its breakdown is set; an antenna shot cuts a remote
+ * control (the autopilot takes over, SR5 p. 202).
+ */
+function applyCalledShot(ctx: ActionContext, owner: Actor, v: Vehicle, atk: Attack): void {
+  const shot = atk.calledShot ? CALLED_SHOT_BY_ID[atk.calledShot] : null;
+  if (!shot) return;
+  v.breakdowns = withBreakdown(v.breakdowns, shot);
+  const hidden = atk.gmOnly || (owner.type === 'npc' && !!owner.hidden);
+  logAttack(ctx, tk('{vehicle}: {part} hit — {effect}'), { vehicle: v.name, part: { t: shot.label }, effect: { t: shot.note } }, hidden);
+  if (shot.effect === 'antenna' && controlOf(v) === 'remote') {
+    v.control = vehicleStats(v).pilot > 0 ? 'auto' : 'manual';
+    if (v.control === 'manual') delete v.control;
+    logAttack(ctx, tk('{vehicle} loses its remote control link.'), { vehicle: v.name }, hidden);
+  }
+}
+
 /** The vehicle of a vehicle attack (fails when it was sold / removed meanwhile). */
 function attackVehicle(ctx: ActionContext, atk: Attack): { owner: Actor; vehicle: Vehicle } {
   const owner = actorOf(ctx, atk.targetId);
@@ -232,9 +249,16 @@ function doVehicleDefend(ctx: ActionContext, atk: Attack, { options = [], modifi
     atk.status = 'done';
     atk.resolvedTs = ctx.now;
     logAttack(ctx, tk('{attacker} succeeds against {target}: {n} net hit(s).'), { attacker: atk.attackerName, target: atk.targetName, n: atk.net }, atk.gmOnly);
+  } else if (atk.calledShot && CALLED_SHOT_BY_ID[atk.calledShot]?.dvLimit === 0) {
+    // Door lock / window motor: no damage, the effect alone (Run & Gun p. 115).
+    atk.status = 'done';
+    atk.resolvedTs = ctx.now;
+    atk.damage = 0;
+    applyCalledShot(ctx, owner, vehicle, atk);
   } else {
     atk.status = 'soak';
-    atk.modifiedDv = atk.dv + atk.net;
+    const cap = atk.calledShot ? CALLED_SHOT_BY_ID[atk.calledShot]?.dvLimit : null;
+    atk.modifiedDv = cap ? Math.min(cap, atk.dv + atk.net) : atk.dv + atk.net;
     logAttack(ctx, tk('{attacker} hits {target}: DV {dv}{type}, AP {ap}.'), { attacker: atk.attackerName, target: atk.targetName, dv: atk.modifiedDv, type: atk.type, ap: atk.ap }, atk.gmOnly);
   }
   if (atk.ram && atk.net > 0) ramBacklash(ctx, atk);
@@ -272,8 +296,10 @@ function doVehicleSoak(ctx: ActionContext, atk: Attack, { modifier = 0 }: Resolv
   });
   const boxes = Math.max(0, dv - roll.hits);
   done(boxes, roll.hits, roll.logId);
-  if (boxes > 0) damageVehicle(ctx, owner, vehicle, boxes, { gmOnly: atk.gmOnly });
-  else logAttack(ctx, tk('{target} resists it all ({dv}{type}).'), { target: atk.targetName, dv, type: 'P' }, atk.gmOnly);
+  if (boxes > 0) {
+    damageVehicle(ctx, owner, vehicle, boxes, { gmOnly: atk.gmOnly });
+    applyCalledShot(ctx, owner, vehicle, atk);
+  } else logAttack(ctx, tk('{target} resists it all ({dv}{type}).'), { target: atk.targetName, dv, type: 'P' }, atk.gmOnly);
   return roll;
 }
 
@@ -322,7 +348,7 @@ function gunneryOptions(ctx: ActionContext, owner: Actor, weapon: Loose, passive
   if (vehicleDestroyed(vehicle)) ctx.fail('{vehicle} is destroyed', { vehicle: vehicle.name });
   const driver = driverOf(ctx.state, owner, vehicle);
   const c = driver ? controllerInfo(ctx.state, driver) : NO_CONTROLLER;
-  const plan = gunneryPlan(vehicle, weapon as { name: string }, c, driver, { passive });
+  const plan = gunneryPlan(effectiveVehicle(ctx.state, owner, vehicle), weapon as { name: string }, c, driver, { passive });
   if (plan.impossible) ctx.fail('{vehicle} has no Targeting autosoft for {weapon}', { vehicle: vehicle.name, weapon: weapon.name });
   const internal: RollInternal = {
     bonus: bonusOf(plan.bonus),
@@ -631,6 +657,8 @@ type AttackRollPayload = RollPayload & {
   mapId?: unknown;
   /** Vehicle-mounted weapon: passive targeting, the vehicle's Sensor as the limit (SR5 p. 184). */
   passive?: unknown;
+  /** Called shot at a vehicle component (Run & Gun p. 115): VEHICLE_CALLED_SHOTS id. */
+  calledShot?: unknown;
 };
 type AttackIdPayload = { attackId?: unknown };
 type DefendPayload = { attackId?: unknown; options?: unknown; situations?: unknown; modifier?: unknown; explode?: unknown };
@@ -669,6 +697,7 @@ const mod: ServerModule = {
         delete payload.profileId;
         delete payload.toxinId;
         delete payload.passive;
+        delete payload.calledShot;
         pruneExpired(ctx.state, ctx.now);
         delete payload.mapId;
         // Vehicle-mounted weapon: Gunnery with the attribute / limit of the control mode, or the drone's Pilot + Targeting.
@@ -710,6 +739,13 @@ const mod: ServerModule = {
         const targetVehicle = targetToken?.vehicleId && target ? vehicleOf(target, targetToken.vehicleId) : null;
         if (targetToken?.vehicleId && !targetVehicle) ctx.fail('Vehicle not found');
         if (target && target.id === actor.id && !targetVehicle) ctx.fail('You can\'t target yourself');
+        // Called shot at a vehicle component (Run & Gun p. 115).
+        const calledShot = p.calledShot ? CALLED_SHOT_BY_ID[str(p.calledShot, 20)] || null : null;
+        if (p.calledShot && (!calledShot || !targetVehicle)) ctx.fail('Called shots at a component need a vehicle target');
+        // Target lock of the firing vehicle (SR5 p. 184) and Target Device of its rigger (Rigger 5.0 p. 30).
+        const lock = gun && targetToken ? (ctx.state.rigging?.locks || []).find((l) => l.actorId === actor.id && l.vehicleId === gun.vehicle.id && l.targetTokenId === targetToken!.id) || null : null;
+        const turnKey = combatTurnKey(ctx.state);
+        const designation = gun && targetToken ? (ctx.state.rigging?.designations || []).find((d) => d.riggerId === actor.id && d.targetTokenId === targetToken!.id && (d.turn === null || d.turn === turnKey)) || null : null;
         // A mounted weapon fires from its vehicle's token when the vehicle is on the map.
         const attackerToken = (gun ? vehicleToken(map, actor.id, gun.vehicle.id) : null) || tokenOf(map, actor.id);
         const mpc = Number(map?.metersPerCell) || 1;
@@ -744,6 +780,8 @@ const mod: ServerModule = {
           }
         }
         if (action?.dice) bonus.push({ label: action.name, value: action.dice });
+        if (calledShot) bonus.push({ label: calledShot.label, value: calledShot.mod });
+        if (designation?.net) bonus.push({ label: tk('Target Device'), value: designation.net });
         // Launcher ammunition: the minigrenade profile listed on the sheet gives DV / AP / blast.
         // Without one (Chummer did not list it): the loaded minigrenade, or the catalog minigrenade chosen in the dialog.
         let profile: Loose | null = null;
@@ -887,7 +925,8 @@ const mod: ServerModule = {
           ...base, id: atkId, kind: weapon?.kind === 'melee' || action?.kind === 'test' ? 'melee' : 'ranged', targetId: target.id, targetTokenId: targetToken?.id || null, targetName,
           dv: action?.noDamage ? null : dmg.dv === null ? null : dmg.dv + (action?.dv || 0), type: dmg.type, ap: apOf(source) + (action?.ap || 0),
           reach: weapon?.kind === 'melee' ? (Number(weapon.reach) || 0) + (action?.reach || 0) + (/troll/i.test(actor.metatype || '') ? 1 : 0) : 0,
-          defenseMod: fireDef || 0, ...(fireDef ? { defenseLabel: tk('fire mode') } : {}), actionDefense: action?.defense || 0,
+          defenseMod: (fireDef || 0) - (lock?.net || 0), ...(fireDef || lock ? { defenseLabel: lock ? (fireDef ? tk('fire mode, target lock') : tk('target lock')) : tk('fire mode') } : {}), actionDefense: action?.defense || 0,
+          ...(calledShot ? { calledShot: calledShot.id } : {}),
           ...(action?.noDamage ? { noDamage: true } : {}), ...(range ? { range: { band: range.id, meters: range.meters } } : {}),
           ...(weapon?.natural ? { natural: { power: weapon.natural.power, element: weapon.natural.element ?? null } } : {}),
           ...(targetVehicle ? { vehicle: { vehicleId: targetVehicle.id, name: targetVehicle.name }, ...(/\(e\)|elec/i.test(String(source?.damage || '')) ? { electric: true } : {}) } : {}),
@@ -943,6 +982,7 @@ const mod: ServerModule = {
           if (n > 0 && atk.vehicle) {
             const { owner, vehicle } = attackVehicle(ctx, atk);
             damageVehicle(ctx, owner, vehicle, n, { gmOnly: atk.gmOnly });
+            applyCalledShot(ctx, owner, vehicle, atk);
           } else if (n > 0) applyDamage(ctx, actorOf(ctx, atk.targetId), n, type);
           atk.damage = n;
           atk.damageType = type;

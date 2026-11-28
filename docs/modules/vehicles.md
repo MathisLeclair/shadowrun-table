@@ -13,11 +13,12 @@ Vehicles stay items of their owner's sheet (`actor.vehicles`). The SR5 rules app
 
 `Vehicle` (types.ts) gains: `damage` (boxes), `control` ('manual' default | 'remote' | 'rigged' | 'auto'), `driverId`
 (the actor at the controls; absent = the owner), `ar` (manual AR interface), `drone`, `skill` (vehicle skill override),
-`riggerInterface`, `autosofts: [{ id, kind, rating, target? }]`. A weapon of the sheet with `vehicleId` is mounted on that
+`riggerInterface`, `autosofts: [{ id, kind, rating, target? }]`, `swarm`, `breakdowns` (called-shot effects). A weapon of the sheet with `vehicleId` is mounted on that
 vehicle. A token with `vehicleId` (and `actorId` = the owner) is the vehicle on the map. `CombatEntry.kind 'drone'`
 (`ownerId`, `vehicleId`) = a vehicle on autopilot in the initiative order. `Attack.vehicle` = an attack on a vehicle,
 `Attack.ram` = a ram, `Attack.feedback` = a rigger's biofeedback, `Attack.electric`. `RollRecord.vehicle` = the vehicle,
-test, threshold and outcome of a vehicle roll. `state.chase`: `ChaseState` (vehicles, pending tests, events).
+test, threshold and outcome of a vehicle roll. `state.chase`: `ChaseState` (vehicles, pending tests, events). `state.rigging`: `RiggingState` (target locks, Target
+Device designations; players see only their own characters').
 
 ## Actions
 
@@ -39,6 +40,14 @@ Who may act for a vehicle (`mayControl`): the GM, the owner's player, the driver
 - `vehicle/crash { actorId, vehicleId, passengerIds? }` (GM): soak attacks for the vehicle and the chosen passengers.
 - Firing a mounted weapon is `attack/roll` with its `weaponId` (+ `passive` for passive targeting): the attacks module
   takes the attribute, pool and limit from the control mode (`gunneryPlan`), fires from the vehicle's token.
+- `vehicle/lock { actorId, vehicleId, targetTokenId, modifier? }`: target lock (Simple Action) stored in `state.rigging.locks`;
+  `vehicle/unlock { lockId }`. A mounted weapon of that vehicle firing at the locked token lowers its defense by the lock.
+- `vehicle/ew { actorId, action: 'breakLock'|'confusePilot'|'detectLock'|'suppressNoise'|'targetDevice', lockId?, targetTokenId?, noiseReduction?, modifier?, explode? }`:
+  the rigger's electronic warfare (Rigger 5.0); Target Device stores `state.rigging.designations` (+dice for the rigger's
+  vehicles against that token this Combat Turn).
+- `vehicle/repair { actorId, vehicleId, mechanicId, boxes, conditions, tools, partsShort, skillId? }` → `{ success, rolls, hours, cost }`.
+- `vehicle/swarm { actorId, vehicleId, swarm }` (owner or GM), `vehicle/breakdown { actorId, vehicleId, patch }` (GM).
+- `attack/roll` takes `calledShot` (a `VEHICLE_CALLED_SHOTS` id) against a vehicle token.
 - Chase (GM): `chase/start { environment, terrain, vehicles: [{ actorId, vehicleId, role, range?, hidden? }] }`,
   `chase/update { environment?, terrain? }`, `chase/add`, `chase/set { id, patch: { role?, range?, lost?, uncontrolled?, crashed?, hidden? } }`,
   `chase/remove`, `chase/round`, `chase/end`, `chase/dismiss { pendingId }`.

@@ -10,3 +10,4 @@
 .sh-veh-weapons { display: flex; flex-direction: column; gap: 4px; padding: 6px 8px; border-left: 2px solid var(--amber); background: var(--panel2); border-radius: 4px; }
 .sh-veh-config { padding: 8px; border: 1px dashed var(--line2); border-radius: 6px; }
 .sh-veh-grid { display: grid; grid-template-columns: max-content 1fr; gap: 6px 10px; align-items: center; }
+.sh-veh-x { margin-left: 4px; padding: 0 2px; border: 0; background: transparent; color: inherit; cursor: pointer; }

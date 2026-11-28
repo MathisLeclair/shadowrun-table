@@ -708,6 +708,53 @@ export interface Vehicle extends ItemBase {
   /** Rigger interface installed (drones always have one, SR5 p. 265). */
   riggerInterface?: boolean;
   autosofts?: Autosoft[];
+  /** Swarm name (Rigger 5.0 p. 31): drones of the same owner with the same swarm act as one. */
+  swarm?: string;
+  /** Components knocked out by called shots (Run & Gun p. 115; tires SR5 p. 205): cleared by a repair or the GM. */
+  breakdowns?: VehicleBreakdowns;
+}
+
+/** Vehicle called-shot effects in place (`vehicles[].breakdowns`). */
+export interface VehicleBreakdowns {
+  /** Engine block / fuel tank / battery: the vehicle cannot move. */
+  disabled?: boolean;
+  /** Fuel tank / battery hit: leaking. */
+  leak?: boolean;
+  /** Axle: Speed 1. */
+  axle?: boolean;
+  /** Antenna: no communications, no wireless (no remote control). */
+  antenna?: boolean;
+  door?: boolean;
+  window?: boolean;
+  /** Flat tires: −2 dice each on Vehicle Tests. */
+  tires?: number;
+}
+
+/** A sensor target lock (SR5 p. 184): the vehicle's net hits lower the target's defense against its weapons. */
+export interface TargetLock {
+  id: string;
+  actorId: ActorId;
+  vehicleId: string;
+  vehicleName: string;
+  targetTokenId: string;
+  targetName: string;
+  net: number;
+  ts: Timestamp;
+}
+/** Target Device (Rigger 5.0 p. 30): the rigger's slaved drones / vehicles get +net dice against that token this Combat Turn. */
+export interface TargetDesignation {
+  id: string;
+  riggerId: ActorId;
+  targetTokenId: string;
+  targetName: string;
+  net: number;
+  /** combatTurnKey when set (null outside combat: until replaced). */
+  turn: string | null;
+}
+/** `state.rigging` (34-vehicles): locks and designations. Players see only their own. */
+export interface RiggingState {
+  locks: TargetLock[];
+  designations: TargetDesignation[];
 }
 
 /** The actor's Matrix device (`actor.matrix`). */
@@ -1367,6 +1414,8 @@ export interface Attack {
   vehicle?: { vehicleId: string; name: string };
   /** Electrical damage: a vehicle takes it as Physical (SR5 p. 199). */
   electric?: boolean;
+  /** Called shot at a vehicle component (Run & Gun p. 115): its id in shared/vehicles.ts VEHICLE_CALLED_SHOTS. */
+  calledShot?: string;
   /** The attacker rams with this vehicle of `attackerId` (SR5 p. 203): melee, DV from the Ramming Damage Table, AP −6. */
   ram?: { vehicleId: string; name: string; metersPerTurn: number };
   /** Biofeedback of a jumped-in rigger (half the vehicle's boxes, dumpshock): resisted with WIL + Firewall, no armor (SR5 p. 229, 266). */
@@ -3167,6 +3216,8 @@ export interface TableState {
   city: CityState;
   /** Chase combat (34-vehicles). */
   chase?: ChaseState;
+  /** Target locks and designations (34-vehicles). */
+  rigging?: RiggingState;
 }
 
 /**
@@ -3212,6 +3263,8 @@ export interface GameView {
   homeMaps?: Record<MapId, GameMap>;
   /** Chase combat (34-vehicles); players: without hidden vehicles. */
   chase?: ChaseState;
+  /** Players: their own locks and designations only. */
+  rigging?: RiggingState;
 }
 
 // =====================================================================================================================

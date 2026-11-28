@@ -1,7 +1,7 @@
 // Server helpers for vehicles (34-vehicles, 33-attacks, 30-combat): find a vehicle and its driver, the controller's rigging
 // situation (control rig, VR / hot sim, Data Processing), the catalog's drone flag. Rules are in shared/vehicles.ts.
 import { appCatalog } from './chummer/data.ts';
-import { controlRigRating, controlOf } from '../../shared/vehicles.ts';
+import { controlRigRating, controlOf, rccRating, swarmVehicle } from '../../shared/vehicles.ts';
 import type { ControllerInfo, RollerPlan, PlanLine } from '../../shared/vehicles.ts';
 import { attr, derive, skillPool, skillEn, SKILL_BY_ID } from '../../shared/sr5.ts';
 import type { ActionContext, Actor, ActorId, TableState, Vehicle } from '../../shared/types.ts';
@@ -105,4 +105,11 @@ export function vehiclesDrivenBy(state: TableState, actorId: ActorId): Array<{ o
   const out: Array<{ owner: Actor; vehicle: Vehicle }> = [];
   for (const a of Object.values(state.actors || {})) for (const v of a?.vehicles || []) if (v?.driverId === actorId) out.push({ owner: a, vehicle: v });
   return out;
+}
+
+/** The vehicle as it acts: its swarm merged into one drone when it is in one (Rigger 5.0 p. 31). */
+export function effectiveVehicle(state: TableState, owner: Actor, v: Vehicle): Vehicle {
+  if (!v.swarm) return v;
+  const driver = driverOf(state, owner, v);
+  return swarmVehicle(owner.vehicles, v, Math.max(rccRating(owner), rccRating(driver))) as Vehicle;
 }

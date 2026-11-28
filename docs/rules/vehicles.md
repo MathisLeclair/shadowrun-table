@@ -90,3 +90,51 @@ the vehicle branches of `server/modules/33-attacks.ts`. Feature page: [vehicles]
 - The other side of an opposed chase test is rolled for the acting player from the target's skill + attribute + wounds
   (no Edge, no sheet modifiers) so the action resolves at once (« vehicle scenes … resolve fast », p. 199).
 - Passengers firing a non-mounted weapon at a target outside the vehicle: −2 (p. 205): GM modifier for now.
+
+## Supplements
+
+### Vehicle called shots (Run & Gun p. 115; tires SR5 p. 205)
+
+A called shot at a vehicle token picks a component (`VEHICLE_CALLED_SHOTS`): engine block −4 (disables), fuel tank /
+battery −6 (disables, leak), axle −6 (DV max 6, Speed 1), antenna −8 (DV max 2, no wireless: a remote-controlled vehicle
+falls to its autopilot), door lock −6 and window motor −4 (DV 0: the effect alone, no damage), tire −4 (−2 dice per flat
+tire on Vehicle Tests). The effect lands only when the vehicle took damage after its soak (DV 0 shots: when they hit).
+Effects are kept on the vehicle (`breakdowns`) until a successful repair or the GM clears them. A disabled vehicle makes no
+Vehicle Test, chase action or ram.
+
+### Repair (Rigger 5.0 p. 29-30)
+
+Extended Mechanic (Automotive / Aeronautics / Nautical, from the vehicle) + LOG [Mental] test, threshold = boxes to repair,
+one die less per interval (SR5 p. 48), interval 4 hours or a day when parts are short. Repair Table: working conditions
++1 … −4, tools superior +1 / unavailable −4, −4 per box of parts lacking; Grease Monkey +1. Parts cost 5 % of the vehicle's
+price per box (logged, not charged). A totaled vehicle (full monitor) cannot be repaired. Scavenging parts is the GM's.
+
+### Target locks and electronic warfare (SR5 p. 184; Rigger 5.0 p. 30)
+
+- Active targeting: a Sensor Test (Perception + INT [Sensor], autopilot Pilot + Clearsight) with the Signature modifier of
+  the target (metahumans and drones −3, micro-drones −6, Body 16+ vehicles +3) and Subtle Pilot (−2), opposed by the
+  target's sensor defense (Sneaking + AGI [Physical]; a driven vehicle Sneaking + REA [Handling]; a drone Pilot + Evasion
+  [Handling]). The net hits are the lock: a defense penalty against that vehicle's weapons. Locks are secret.
+- Matrix actions of the rigger, limited by Data Processing, + the RCC's Noise Reduction (at most its Device Rating):
+  Break Target Lock (EW + INT vs LOG + Sensor of the locker: net hits off the lock), Confuse Pilot (EW + LOG vs Pilot +
+  Firewall: the pilot rolls Pilot × 2 against half the net hits, rounded up), Detect Target Lock (Computer + LOG (2): the
+  answer is whispered to the player), Suppress Noise (EW + LOG: logged, noise is not modelled), Target Device (EW + LOG vs
+  WIL + Firewall, a vehicle Pilot + Pilot: the rigger's own vehicles get the net hits as dice against that token this
+  Combat Turn).
+
+### Swarms (Rigger 5.0 p. 31)
+
+Drones of one owner with the same swarm name act as one drone: Pilot = the best Pilot or the RCC's Device Rating, best
+Sensor and autosofts, worst Handling / Speed / Acceleration, + (drones − 1) to pools and limits on actions; one initiative
+entry for the swarm. Defense and damage stay per drone (they are targeted individually).
+
+### Rigger qualities (Rigger 5.0 p. 33-34)
+
+Chaser +2 on Chase Actions; Stunt Driver +2 on Stunts; Speed Demon +1 on Vehicle Tests at Speed 3+ (aircraft 4+) when aboard
+or jumped in (on in a chase, a switch elsewhere); Too Much Data −2 while directing 4+ vehicles in a chase; Subtle Pilot −2 to
+the sensor tests locking the vehicle; Accident Prone −2 (catalog effect); Grease Monkey +1 Engineering. Motion Sickness,
+operational time and takeoff / landing distances stay with the GM.
+
+### Not applied
+
+Run & Gun's explosive damage thresholds for vehicles (p. 179) are for demolition charges, which the app does not model.

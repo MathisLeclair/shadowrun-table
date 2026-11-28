@@ -587,7 +587,10 @@ export function addEntries(ctx: ActionContext, c: CombatState, { tokenIds, actor
     const tok = findToken(tid);
     if (!tok || !tok.actorId || !state.actors[tok.actorId] || has(tok)) continue;
     if (tok.vehicleId) {
-      // A vehicle token acts through its driver; only a vehicle on autopilot has its own initiative (SR5 p. 270).
+      // A vehicle token acts through its driver; only a vehicle on autopilot has its own initiative (SR5 p. 270), and a
+      // swarm acts as one drone (Rigger 5.0 p. 31): one entry for all its drones.
+      const sw = vehicleOf(state.actors[tok.actorId], tok.vehicleId)?.swarm;
+      if (sw && c.entries.some((x) => x.kind === 'drone' && !x.out && x.ownerId === tok.actorId && vehicleOf(state.actors[tok.actorId], x.vehicleId)?.swarm === sw)) continue;
       const e = droneEntry(state, state.actors[tok.actorId], tok);
       if (e) {
         c.entries.push(e);

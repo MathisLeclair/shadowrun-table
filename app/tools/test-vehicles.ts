@@ -6,6 +6,7 @@ import { startServer, login, client, settle } from './test-client.ts';
 import {
   vehicleStats, vehicleMonitor, vehicleDamageMod, movementRate, ramDamage, controlLimit, controlThreshold, vehicleTestPlan, gunneryPlan,
   vehicleDefensePlan, shiftRange, vehicleSkillId, isDrone, autosoftRating, controlRigRating, droneInitiative, NO_CONTROLLER,
+  CALLED_SHOT_BY_ID, withBreakdown, vehicleDisabled, swarmVehicle, qualityLines, subtlePilotPenalty, mechanicSkillFor, repairPartsCost, extendedTest, signatureMod, rccRating,
 } from '../shared/vehicles.ts';
 import type { ActorLike, Vehicle } from '../shared/types.ts';
 
@@ -110,6 +111,59 @@ await test('vehicle defense: driver REA + INT, drone Pilot + Maneuvering [Handli
   const d = vehicleDefensePlan({ ...drone, control: 'auto' }, NO_CONTROLLER, null);
   assert.equal(d.roller.kind === 'pilot' && d.roller.pool, 6);
   assert.equal(d.limit, 5);
+});
+
+
+console.log('Pure rules: Rigger 5.0 / Run & Gun');
+await test('called shots (R&G p. 115): axle caps Speed at 1, tires stack −2 on Vehicle Tests, fuel tank disables', () => {
+  const axle = { ...car, breakdowns: withBreakdown(undefined, CALLED_SHOT_BY_ID.axle) };
+  assert.equal(vehicleStats(axle).speed, 1);
+  const twoTires = { ...car, breakdowns: withBreakdown(withBreakdown(undefined, CALLED_SHOT_BY_ID.tire), CALLED_SHOT_BY_ID.tire) };
+  assert.deepEqual(vehicleTestPlan(twoTires, 'control', NO_CONTROLLER, rigger, {}).bonus, [{ label: 'flat tires', value: -4 }]);
+  assert.equal(vehicleDisabled({ ...car, breakdowns: withBreakdown(undefined, CALLED_SHOT_BY_ID.fuel) }), true);
+  assert.equal(CALLED_SHOT_BY_ID.door.dvLimit, 0);
+});
+await test('swarm (R5 p. 31): best Pilot / Sensor / autosofts, worst Handling / Speed, + (n − 1) to pools and limits', () => {
+  const a = { ...drone, id: 'a', swarm: 'S', pilot: 2, sensor: 2, handling: '5', speed: '3' } as Vehicle;
+  const b = { ...drone, id: 'b', swarm: 'S', pilot: 4, sensor: 3, handling: '3', speed: '4', autosofts: [{ id: 'x', kind: 'maneuvering', rating: 5 }] } as Vehicle;
+  const c = { ...drone, id: 'c', swarm: 'S', pilot: 3, sensor: 1, handling: '4', speed: '2' } as Vehicle;
+  const sw = swarmVehicle([a, b, c], a, 5)!;
+  assert.equal(sw.swarmBonus, 2);
+  assert.equal(vehicleStats(sw).pilot, 5); // the RCC's Device Rating
+  assert.equal(vehicleStats(sw).handling, 3);
+  assert.equal(vehicleStats(sw).speed, 2);
+  assert.equal(vehicleStats(sw).sensor, 3);
+  assert.equal(autosoftRating(sw, 'maneuvering'), 5);
+  const plan = vehicleTestPlan({ ...sw, control: 'auto' }, 'control', NO_CONTROLLER, null, {});
+  assert.ok(plan.bonus.some((l) => l.label === 'swarm' && l.value === 2));
+  assert.ok(plan.limitLines.some((l) => l.label === 'swarm' && l.value === 2));
+  assert.equal(swarmVehicle([a], a), a, 'alone: no swarm');
+});
+await test('qualities (R5 p. 33-34): Chaser, Stunt Driver, Speed Demon (aboard, Speed 3+), Too Much Data, Subtle Pilot', () => {
+  const ace = { ...rigger, qualities: [{ name: 'Chaser' }, { name: 'Cascadeur' }, { name: 'Speed Demon' }, { name: 'Too Much Data' }, { name: 'Subtle Pilot' }] } as unknown as ActorLike;
+  const labels = (o: object, v: Vehicle = car) => qualityLines(ace, v, o).map((l) => `${l.label} ${l.value}`);
+  assert.deepEqual(labels({ chaseAction: 'stunt', atSpeed: true }), ['Chaser 2', 'Stunt Driver 2', 'Speed Demon 1']);
+  assert.deepEqual(labels({ atSpeed: true }, { ...car, control: 'remote' }), [], 'Speed Demon only aboard or jumped in');
+  assert.deepEqual(labels({ directing: 4 }), ['Too Much Data -2']);
+  assert.equal(subtlePilotPenalty(ace, car), -2);
+  assert.equal(subtlePilotPenalty(ace, { ...car, control: 'auto' }), 0);
+});
+await test('repair (R5 p. 29-30): mechanic skill per vehicle, parts 5 % per box, extended test loses a die per interval', () => {
+  assert.equal(mechanicSkillFor(car), 'automotive_mechanic');
+  assert.equal(mechanicSkillFor({ name: 'Nightwing', notes: 'Type : air' }), 'aeronautics_mechanic');
+  assert.equal(repairPartsCost(20000, 3), 3000);
+  const pools: number[] = [];
+  const r = extendedTest(6, 4, null, (n) => { pools.push(n); return { hits: 1 }; });
+  assert.deepEqual(pools, [6, 5, 4, 3]);
+  assert.equal(r.success, true);
+  assert.equal(extendedTest(2, 9, null, () => ({ hits: 1 })).success, false);
+});
+await test('signature (SR5 p. 184): people −3, drones −3, big vehicles +3; RCC rating from the Matrix device', () => {
+  assert.equal(signatureMod(null), -3);
+  assert.equal(signatureMod({ vehicle: drone }), -3);
+  assert.equal(signatureMod({ vehicle: { ...car, body: 18 } }), 3);
+  assert.equal(rccRating({ matrix: { device: 'Proteus Poseidon', rating: 6 }, gear: [] } as unknown as ActorLike), 0);
+  assert.equal(rccRating({ matrix: { device: 'X', rating: 4, gearId: 'g' }, gear: [{ id: 'g', category: 'Rigger Command Consoles' }] } as unknown as ActorLike), 4);
 });
 
 const srv = await startServer({ port: Number(process.env.SR_TEST_PORT) || 3295 });
@@ -247,6 +301,95 @@ try {
     await jane.send('vehicle/control', { actorId: 'pc_jane', vehicleId: WING, control: 'manual' });
     await settle();
     assert.equal(gm.state.combat.entries.find((e) => e.kind === 'drone')!.out, true);
+    await gm.send('combat/end', {});
+  });
+
+  console.log('Server: Rigger 5.0 / Run & Gun');
+  await test('called shot on a vehicle (R&G): −6 dice for the axle, DV capped at 6, the breakdown lands with the damage', async () => {
+    const anthonyTok = gm.state.maps[mapId].tokens.find((t) => t.actorId === 'pc_anthony' && !t.vehicleId)!;
+    void anthonyTok;
+    const wid = gm.state.actors.pc_anthony.weapons.find((w) => w.name === 'Pea shooter')!.id;
+    await gm.send('weapon/reload', { actorId: 'pc_anthony', weaponId: wid, free: true }).catch(() => null);
+    const r = await mat.send('attack/roll', { actorId: 'pc_anthony', weaponId: wid, targetTokenId: carToken, calledShot: 'axle', label: 'Attack — Pea shooter' });
+    assert.match(r.breakdown, /Axle −6/);
+    await settle();
+    const a = gm.state.attacks.list.find((x) => x.id === r.attackId)!;
+    assert.equal(a.calledShot, 'axle');
+    await rejects(mat.send('attack/roll', { actorId: 'pc_anthony', weaponId: wid, targetTokenId: gm.state.maps[mapId].tokens.find((t) => t.actorId === 'pc_jane' && !t.vehicleId)!.id, calledShot: 'axle' }), /vehicle target/);
+    if (a.status === 'defense' || a.status === 'soak') await gm.send('attack/resolve', { attackId: a.id, outcome: 'damage', amount: 2, type: 'P' });
+    else await gm.send('vehicle/breakdown', { actorId: 'pc_jane', vehicleId: SAAB, patch: { axle: true } });
+    await settle();
+    const v = gm.state.actors.pc_jane.vehicles!.find((x) => x.id === SAAB)!;
+    assert.equal(v.breakdowns?.axle, true);
+    assert.equal(vehicleStats(v).speed, 1);
+  });
+  await test('repair (R5): Jane fixes her car — boxes and breakdowns cleared on success, log with hours and parts', async () => {
+    await gm.send('vehicle/damage', { actorId: 'pc_jane', vehicleId: SAAB, damage: 1 });
+    // Jane has no Automotive Mechanic: it cannot default (SR5) — the GM's NPC mechanic does it instead.
+    const err = await jane.send('vehicle/repair', { actorId: 'pc_jane', vehicleId: SAAB, mechanicId: 'pc_jane', boxes: 1 }).then(() => null, (e: Error) => e);
+    if (err) assert.match(err.message, /untrained/);
+    await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'skills', item: { id: 'automotive_mechanic', name: 'Mécanique automobile', attr: 'LOG', rating: 12 } });
+    const r = await jane.send('vehicle/repair', { actorId: 'pc_jane', vehicleId: SAAB, mechanicId: 'pc_jane', boxes: 1, conditions: 1 });
+    assert.ok(r.rolls.length >= 1);
+    assert.equal(r.hours, r.rolls.length * 4);
+    await settle();
+    const v = gm.state.actors.pc_jane.vehicles!.find((x) => x.id === SAAB)!;
+    if (r.success) {
+      assert.equal(v.damage, undefined);
+      assert.equal(v.breakdowns, undefined);
+    }
+  });
+  await test('target lock (SR5 p. 184): a lock lowers the defense against the vehicle\'s weapons; players only see their own', async () => {
+    const anthonyTok = gm.state.maps[mapId].tokens.find((t) => t.actorId === 'pc_anthony' && !t.vehicleId)!;
+    let r: any;
+    for (let i = 0; i < 15; i++) {
+      r = await jane.send('vehicle/lock', { actorId: 'pc_jane', vehicleId: SAAB, targetTokenId: anthonyTok.id, modifier: 10 });
+      if (r.vehicle.net > 0) break;
+    }
+    assert.match(r.breakdown, /signature −3/);
+    await settle();
+    if (r.vehicle.net <= 0) return;
+    const lock = jane.state.rigging!.locks.find((l) => l.vehicleId === SAAB)!;
+    assert.equal(lock.net, r.vehicle.net);
+    assert.equal(mat.state.rigging!.locks.length, 0, 'Anthony does not see the lock on him');
+    const wid = gm.state.actors.pc_jane.weapons.find((w) => w.name === 'Ares Alpha')!.id;
+    await gm.send('weapon/reload', { actorId: 'pc_jane', weaponId: wid, free: true }).catch(() => null);
+    const shot = await jane.send('attack/roll', { actorId: 'pc_jane', weaponId: wid, targetTokenId: anthonyTok.id, label: 'Attack — Ares Alpha', fireMode: 'SA' });
+    await settle();
+    const a = gm.state.attacks.list.find((x) => x.id === shot.attackId);
+    if (a) assert.equal(a.defenseMod, -lock.net);
+    // Detect Target Lock: Anthony has no device in the seed — refused; the GM gives him one.
+    await gm.send('actor/update', { actorId: 'pc_anthony', patch: { matrix: { device: 'Test link', rating: 3, attack: 0, sleaze: 0, dataProcessing: 3, firewall: 3, programs: [] } } });
+    const d = await mat.send('vehicle/ew', { actorId: 'pc_anthony', action: 'detectLock', modifier: 20 });
+    if (d.success) assert.ok(d.locks.some((l: { vehicle: string }) => /SAAB/.test(l.vehicle)));
+    const lockId = gm.state.rigging!.locks.find((l) => l.vehicleId === SAAB)!.id;
+    await rejects(jane.send('vehicle/ew', { actorId: 'pc_jane', action: 'breakLock', lockId }), /no commlink|not on you/);
+    await rejects(mat.send('vehicle/ew', { actorId: 'pc_anthony', action: 'breakLock', lockId }), /untrained/);
+    await gm.send('actor/addItem', { actorId: 'pc_anthony', list: 'skills', item: { id: 'electronic_warfare', name: 'Guerre électronique', attr: 'LOG', rating: 6 } });
+    const b = await mat.send('vehicle/ew', { actorId: 'pc_anthony', action: 'breakLock', lockId, modifier: 20 });
+    await settle();
+    const left = gm.state.rigging!.locks.find((l) => l.id === lockId);
+    if (b.net >= lock.net) assert.equal(left, undefined);
+  });
+  await test('swarm (R5 p. 31): drones of one swarm share a single initiative entry', async () => {
+    const add = async (name: string) => {
+      await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'vehicles', item: { name, handling: '4', speed: '3', accel: '1', body: 2, armor: 2, pilot: 3, sensor: 3, drone: true, control: 'auto' } });
+      await settle();
+      return gm.state.actors.pc_jane.vehicles!.find((v) => v.name === name)!.id;
+    };
+    const d1 = await add('Fly-Spy A');
+    const d2 = await add('Fly-Spy B');
+    for (const id of [d1, d2]) {
+      await jane.send('vehicle/swarm', { actorId: 'pc_jane', vehicleId: id, swarm: 'Bees' });
+      await jane.send('vehicle/control', { actorId: 'pc_jane', vehicleId: id, control: 'auto' });
+      await jane.send('vehicle/place', { actorId: 'pc_jane', vehicleId: id });
+    }
+    await gm.send('combat/start', {});
+    await settle();
+    const drones = gm.state.combat.entries.filter((e) => e.kind === 'drone' && [d1, d2].includes(e.vehicleId!));
+    assert.equal(drones.length, 1);
+    const r = await jane.send('vehicle/roll', { actorId: 'pc_jane', vehicleId: d1, test: 'perception' });
+    assert.match(r.breakdown, /swarm \+1/);
     await gm.send('combat/end', {});
   });
 
