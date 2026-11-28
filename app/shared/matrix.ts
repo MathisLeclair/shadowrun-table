@@ -10,7 +10,7 @@
 // - The decker's agent shares the deck: same ASDF, same loaded programs, same marks and the same Overwatch Score.
 //   It uses its Rating for every skill and attribute (pool = 2 × Rating) and the deck's attributes as limits.
 import { attr, derive, SKILL_BY_ID, skillEn, skillKey } from './sr5.ts';
-import { poolModifiers, rollContext, derivedWithModifiers } from './modifiers.ts';
+import { poolModifiers, rollContext, derivedWithModifiers, conditionState } from './modifiers.ts';
 import type { CollectedModifier, ModifierLine } from './modifiers.ts';
 import type { ActorLike, AsdfKey, AttrKey, DamageType, DeviceLinkKind, I18nMessage, I18nParams, IcType, MatrixMode, Persona, Skill } from './types.ts';
 
@@ -57,6 +57,10 @@ export interface ProgramDef {
   effect: string;
   auto?: boolean;
   limitBonus?: Record<string, number>;
+  /** Extra dice on these actions (Tarball: Crash Program). */
+  poolBonus?: Record<string, number>;
+  /** Matrix attribute bonus when the persona defends against these actions (Swerve: Firewall vs Reboot Device). */
+  defenseBonus?: Record<string, Partial<Record<AsdfKey, number>>>;
   attrBonus?: Partial<Record<AsdfKey, number>>;
   noiseReduction?: number;
   slots?: number;
@@ -182,6 +186,39 @@ export const HOT_SIM_BONUS = 2;
 export const MAX_MARKS = 3;
 /** Extra marks requested on Hack on the Fly / Brute Force: 1 mark → 0, 2 marks → −4, 3 marks → −10 (SR5 p. 238). */
 export const MARK_PENALTY: Record<number, number> = { 1: 0, 2: -4, 3: -10 };
+/** Go Big or Go Home (Data Trails p. 44): 3 marks in one Brute Force / Hack on the Fly cost −6 instead of −10. */
+export const MARK_PENALTY_GO_BIG: Record<number, number> = { 1: 0, 2: -4, 3: -6 };
+/** Wanted by GOD (Data Trails p. 49): convergence at Overwatch Score 30. */
+export const OS_WANTED = 30;
+/** Faraday Himself (Data Trails p. 48): +2 Noise around the character, on their own tests too. */
+export const FARADAY_NOISE = 2;
+
+/**
+ * Data Trails qualities the cockpit applies itself (not through catalog effects): matched by catalog id, English or French
+ * name (as the catalog has them; Chummer / Foundry imports keep one of them).
+ */
+export const MATRIX_QUALITIES = {
+  goBig: { ids: ['64876d0b-bfa6-45df-b8c8-caf6385306c6'], names: ['go big or go home', 'comme un bourrin'] },
+  wantedByGod: { ids: ['a82b239b-fa92-45e7-ac87-4adedf72396a'], names: ['wanted by god', 'recherche par le dieu'] },
+  virtualStability: { ids: ['130f2287-6e27-4a7b-a45c-0313e8ecad73'], names: ['virtual stability', 'stabilite virtuelle'] },
+  faraday: { ids: ['38a26727-a736-47a9-803f-cfa762c9b8a0'], names: ['faraday himself', 'faraday incarne'] },
+} as const;
+export type MatrixQualityKey = keyof typeof MATRIX_QUALITIES;
+/** Does the actor have this Data Trails quality (MATRIX_QUALITIES)? */
+export function hasMatrixQuality(actor: ActorLike | null | undefined, key: MatrixQualityKey): boolean {
+  const def = MATRIX_QUALITIES[key];
+  return (actor?.qualities || []).some((q) => {
+    if (!q) return false;
+    if (q.catalogId && (def.ids as readonly string[]).includes(String(q.catalogId).toLowerCase())) return true;
+    const n = norm(q.name).replace(/\s*\([^)]*\)\s*$/, '');
+    return (def.names as readonly string[]).includes(n);
+  });
+}
+/** Overwatch Score at which GOD converges on the actor (40, or 30 with Wanted by GOD). */
+export const convergenceAt = (actor: ActorLike | null | undefined): number => (hasMatrixQuality(actor, 'wantedByGod') ? OS_WANTED : OS_MAX);
+/** Penalty for the extra marks of Brute Force / Hack on the Fly (Go Big or Go Home: 3 marks = −6). */
+export const markPenalty = (actor: ActorLike | null | undefined, marks: number): number =>
+  (hasMatrixQuality(actor, 'goBig') ? MARK_PENALTY_GO_BIG : MARK_PENALTY)[clampN(marks || 1, 1, 3)] || 0;
 
 export const ASDF: AsdfKey[] = ['attack', 'sleaze', 'dataProcessing', 'firewall'];
 export const ASDF_LABELS: Record<AsdfKey, string> = { attack: tk('Attack'), sleaze: tk('Sleaze'), dataProcessing: tk('Data Processing'), firewall: tk('Firewall') };
@@ -278,10 +315,10 @@ export const PROGRAMS: ProgramDef[] = [
   { id: 'encryption', en: 'Encryption', fr: 'Cryptage', kind: 'common', auto: true, attrBonus: { firewall: 1 }, effect: tk('+1 Firewall.') },
   { id: 'signalScrub', en: 'Signal Scrub', fr: 'Gommage de bruit', kind: 'common', auto: true, noiseReduction: 2, effect: tk('Reduces noise by 2.') },
   { id: 'toolbox', en: 'Toolbox', fr: 'Boîte à outils', kind: 'common', auto: true, attrBonus: { dataProcessing: 1 }, effect: tk('+1 Data Processing.') },
-  { id: 'virtualMachine', en: 'Virtual Machine', fr: 'Machine virtuelle', kind: 'common', auto: true, slots: 2, extraDamage: 1, effect: tk('+2 program slots, but +1 box whenever you take Matrix damage.') },
-  { id: 'bootstrap', en: 'Bootstrap', fr: 'Amorçage', kind: 'common', effect: tk('Data Trails: speeds up rebooting / recovering the deck (GM’s call).') },
-  { id: 'shredder', en: 'Shredder', fr: 'Déchiqueteuse', kind: 'common', effect: tk('Data Trails: permanently wipes deleted files (GM’s call).') },
-  { id: 'search', en: 'Search', fr: 'Recherche', kind: 'common', effect: tk('Data Trails: helps with Matrix Searches (GM’s call).') },
+  { id: 'virtualMachine', en: 'Virtual Machine', fr: 'Machine virtuelle', kind: 'common', auto: true, slots: 2, extraDamage: 1, effect: tk('+2 program slots, but +1 box whenever you take Matrix damage (not with Virtual Stability).') },
+  { id: 'bootstrap', en: 'Bootstrap', fr: 'Amorçage', kind: 'common', effect: tk('Data Trails p. 56: Format Device can plant boot commands (location beacon, forced configuration, ownership nag, action log) instead of bricking (GM’s call).') },
+  { id: 'shredder', en: 'Shredder', fr: 'Déchiqueteuse', kind: 'common', effect: tk('Data Trails p. 56: +2 to the limit of Edit File when deleting a file; a shredded file can only be recovered with a week-long extended test (GM’s call).') },
+  { id: 'search', en: 'Search', fr: 'Recherche', kind: 'common', effect: tk('Data Trails p. 56: +2 dice on Matrix Searches for data stored in the host you are in (GM’s call).') },
   // Hacking programs
   { id: 'armor', en: 'Armor', fr: 'Armure', kind: 'hacking', auto: true, resistMatrix: 2, effect: tk('+2 dice to resist Matrix damage.') },
   { id: 'babyMonitor', en: 'Baby Monitor', fr: 'Surveillance', kind: 'hacking', auto: true, osVisible: true, effect: tk('You always know your Overwatch Score.') },
@@ -302,19 +339,19 @@ export const PROGRAMS: ProgramDef[] = [
   { id: 'stealth', en: 'Stealth', fr: 'Furtivité', kind: 'hacking', auto: true, attrBonus: { sleaze: 1 }, effect: tk('+1 Sleaze.') },
   { id: 'track', en: 'Track', fr: 'Pistage', kind: 'hacking', auto: true, limitBonus: { traceIcon: 2 }, effect: tk('+2 to the limit of Trace Icon.') },
   { id: 'wrapper', en: 'Wrapper', fr: 'Maquillage', kind: 'hacking', effect: tk('Disguises your icon as another one (Matrix Perception to see through it).') },
-  { id: 'crash', en: 'Crash (Program)', fr: 'Crash', kind: 'hacking', names: ['crash program'], effect: tk('Data Trails: helps crash enemy programs (GM’s call).') },
+  { id: 'crash', en: 'Crash (Program)', fr: 'Crash', kind: 'hacking', names: ['crash program'], auto: true, limitBonus: { rebootDevice: 2 }, effect: tk('Data Trails p. 57: +2 to the limit of Reboot Device.') },
   { id: 'evaluate', en: 'Evaluate', fr: 'Évaluation', kind: 'hacking', auto: true, showsValue: true, effect: tk('Estimates the market value of files (shown in the host).') },
-  { id: 'paintjob', en: 'Paintjob', fr: 'Spray de peinture', kind: 'hacking', effect: tk('Data Trails: disguises your Matrix signature (GM’s call).') },
-  { id: 'tarball', en: 'Tarball', fr: 'Tarball', kind: 'hacking', effect: tk('Data Trails: chain program crashes (GM’s call).') },
-  { id: 'cloudless', en: 'Cloudless', fr: 'Copie locale', kind: 'hacking', effect: tk('Data Trails (GM’s call).') },
-  { id: 'detonator', en: 'Detonator', fr: 'Détonateur', kind: 'hacking', effect: tk('Data Trails: data bombs (GM’s call).') },
-  { id: 'swerve', en: 'Swerve', fr: 'Déviation', kind: 'hacking', effect: tk('Data Trails (GM’s call).') },
-  { id: 'smokeAndMirrors', en: 'Smoke and Mirrors', fr: 'Miroirs et fumée', kind: 'hacking', effect: tk('Data Trails (GM’s call).') },
-  { id: 'flyOnAWall', en: 'Fly on a Wall', fr: 'Mouche au mur', kind: 'hacking', effect: tk('Data Trails (GM’s call).') },
-  { id: 'tantrum', en: 'Tantrum', fr: 'Nausée', kind: 'hacking', effect: tk('Data Trails (GM’s call).') },
-  { id: 'catsPaw', en: 'Cat’s Paw', fr: 'Patte de chat', kind: 'hacking', names: ["cat's paw"], effect: tk('Data Trails (GM’s call).') },
-  { id: 'hitchhiker', en: 'Hitchhiker', fr: 'Routard', kind: 'hacking', effect: tk('Data Trails (GM’s call).') },
-  { id: 'nukeFromOrbit', en: 'Nuke-from-Orbit', fr: 'Bombardement orbital', kind: 'hacking', effect: tk('Data Trails (GM’s call).') },
+  { id: 'paintjob', en: 'Paintjob', fr: 'Spray de peinture', kind: 'hacking', auto: true, limitBonus: { eraseMark: 2 }, effect: tk('Data Trails p. 57: +2 to the limit of Erase Mark.') },
+  { id: 'tarball', en: 'Tarball', fr: 'Tarball', kind: 'hacking', auto: true, limitBonus: { crashProgram: 2 }, poolBonus: { crashProgram: 1 }, effect: tk('Data Trails p. 57: Crash Program gets +1 die and +2 to its limit, but crashes a random program of the target.') },
+  { id: 'cloudless', en: 'Cloudless', fr: 'Copie locale', kind: 'hacking', effect: tk('Data Trails p. 56: Edit File can move a file off the Matrix onto one device, opposed by the grid (6 public, 8 local, 10 global) (GM’s call).') },
+  { id: 'detonator', en: 'Detonator', fr: 'Détonateur', kind: 'hacking', effect: tk('Data Trails p. 57: Set Data Bomb with a trigger after a number of actions; the bomb hides better the more actions remain (GM’s call).') },
+  { id: 'swerve', en: 'Swerve', fr: 'Déviation', kind: 'hacking', auto: true, defenseBonus: { rebootDevice: { firewall: 1 } }, effect: tk('Data Trails p. 57: +1 Firewall when resisting Reboot Device.') },
+  { id: 'smokeAndMirrors', en: 'Smoke and Mirrors', fr: 'Miroirs et fumée', kind: 'hacking', effect: tk('Data Trails p. 57: +1 to +5 Sleaze (your choice) and as much Noise on your own tests and on Trace Icon against you (GM’s call: set the Noise).') },
+  { id: 'flyOnAWall', en: 'Fly on a Wall', fr: 'Mouche au mur', kind: 'hacking', effect: tk('Data Trails p. 57: after a Hide, while you only make Matrix Perception tests, your Overwatch Score rises by only 1D6 per 30 minutes (GM’s call).') },
+  { id: 'tantrum', en: 'Tantrum', fr: 'Nausée', kind: 'hacking', effect: tk('Data Trails p. 57: a Data Spike that would deal damage to a VR user or technomancer nauseates them for 3 Combat Turns instead (GM’s call).') },
+  { id: 'catsPaw', en: 'Cat’s Paw', fr: 'Patte de chat', kind: 'hacking', names: ["cat's paw"], effect: tk('Data Trails p. 56: a Data Spike deals no damage; the target gets −(2 + your marks on it) dice instead (GM’s call).') },
+  { id: 'hitchhiker', en: 'Hitchhiker', fr: 'Routard', kind: 'hacking', effect: tk('Data Trails p. 57: brings non-hackers along into Foundations and resonance realms (hot-sim persona, mutual marks) (GM’s call).') },
+  { id: 'nukeFromOrbit', en: 'Nuke-from-Orbit', fr: 'Bombardement orbital', kind: 'hacking', effect: tk('Data Trails p. 57: a file deleted with Edit File can never be recovered; the Overwatch Score of that test is doubled (GM’s call).') },
   // Agent
   { id: 'agent', en: 'Agent', fr: 'Agent', kind: 'agent', effect: tk('Autonomous program (rating 1-6): it assists you (teamwork) or acts alone with Rating × 2 dice.') },
 ];
@@ -371,6 +408,11 @@ export function availablePrograms(actor: ActorLike | null | undefined): Array<{ 
   };
   for (const p of actor?.matrix?.programs || []) add(p);
   for (const g of actor?.gear || []) if (programId(g.name)) add(g.name);
+  // Echo « Resonance [Program] » (SR5 p. 258): the technomancer runs that program natively.
+  for (const e of (actor as { magic?: { echoes?: unknown[] } } | null | undefined)?.magic?.echoes || []) {
+    const m = String(e || '').match(/^\s*r[eé]sonance\s*[[(:]?\s*([^\])]+?)\s*[\])]?\s*$/i);
+    if (m && programId(m[1])) add(m[1]);
+  }
   return out;
 }
 
@@ -427,11 +469,20 @@ export function deckStats(actor: ActorLike | null | undefined, persona: PersonaL
     penalty[k] = Math.max(0, Number(persona?.penalties?.[k]) || 0);
     eff[k] = Math.max(0, slotted[k] + bonus[k] - penalty[k]);
   }
-  const rawNoise = Math.max(0, Number(persona?.noise) || 0);
+  // Noise: the GM's value + Faraday Himself (Data Trails p. 48), minus the programs' reduction.
+  const rawNoise = Math.max(0, Number(persona?.noise) || 0) + (hasMatrixQuality(actor, 'faraday') ? FARADAY_NOISE : 0);
   let reduction = 0;
   for (const id of programs) reduction += PROGRAM_BY_ID[id]?.noiseReduction || 0;
   const deviceRating = Number(m.rating) || 0;
   return { deviceRating, isDeck: deck, base, slotted, bonus, penalty, eff, programs, rawNoise, noise: Math.max(0, rawNoise - reduction), monitor: matrixMonitor(deviceRating) };
+}
+
+/**
+ * Dice the actor's modifiers add to biofeedback resistance (stat 'biofeedback': Natural Hardening, NeuroFilter…). blackIc turns
+ * on the « against Black or Psychotropic IC » switch (Scorched −2, SR5 p. 83).
+ */
+export function biofeedbackDice(mods: CollectedModifier[] | null | undefined, blackIc = false): number {
+  return poolModifiers(mods, { test: 'biofeedback' }, { conditions: blackIc ? ['q-black-ic'] : [] }).total;
 }
 
 /** Sum of a numeric program property over the loaded programs (resistMatrix, resistBio…). */
@@ -455,7 +506,8 @@ export function matrixInitiative(
   if (mode === 'cold' || mode === 'hot') {
     const dp = deckStats(actor, persona).eff.dataProcessing;
     const base = dp + attr(actor, 'INT');
-    const extra = (mods || []).filter((m) => m.type === 'matrixInitiativeDice' && !m.condition && !m.info && m.value).reduce((n, m) => n + (m.value as number), 0);
+    // Unconditional dice, and those whose condition is this mode (Overclocking: hot-sim only).
+    const extra = (mods || []).filter((m) => m.type === 'matrixInitiativeDice' && !m.info && m.value && (!m.condition || conditionState(m.condition, { mode }) === 'auto')).reduce((n, m) => n + (m.value as number), 0);
     const dice = Math.min(5, (mode === 'hot' ? 4 : 3) + extra);
     return { base, dice, text: `${base} + ${dice}D6` };
   }
@@ -526,9 +578,12 @@ export function actionPool(
   }
   if (deck.noise) parts.push(part(tk('Noise'), -deck.noise));
   if (action.placesMarks) {
-    const pen = MARK_PENALTY[clampN(opts.marks || 1, 1, 3)] || 0;
+    const pen = opts.agent ? MARK_PENALTY[clampN(opts.marks || 1, 1, 3)] || 0 : markPenalty(actor, opts.marks || 1);
     if (pen) parts.push(part(tk('{n} marks'), pen, { n: clampN(opts.marks, 1, 3) }));
   }
+  let pb = 0;
+  for (const id of deck.programs) pb += PROGRAM_BY_ID[id]?.poolBonus?.[action.id] || 0;
+  if (pb) parts.push(part(tk('Programs'), pb));
   if (opts.assist?.dice) parts.push(part(tk('Agent assist'), Number(opts.assist.dice)));
   const mod = clampN(opts.modifier || 0, -30, 30);
   if (mod) parts.push(part(tk('Edit'), mod));
@@ -571,11 +626,15 @@ export function personaDefensePool(
   actor: ActorLike | null | undefined,
   persona: PersonaLike | null | undefined,
   defense: MatrixDefense | undefined,
+  actionId?: string | null,
 ): DefensePool | null {
   if (!actor || !Array.isArray(defense)) return null;
   const [a, k] = defense;
   const deck = deckStats(actor, persona);
   const parts: PoolPart[] = [MENTAL_LABEL[a] ? part(MENTAL_LABEL[a], attr(actor, a)) : { label: a, attr: a, value: attr(actor, a) }, part(ASDF_LABELS[k], deck.eff[k])];
+  let db = 0;
+  if (actionId) for (const id of deck.programs) db += PROGRAM_BY_ID[id]?.defenseBonus?.[actionId]?.[k] || 0;
+  if (db) parts.push(part(tk('Programs'), db));
   if (persona?.fullDefense) parts.push(part(tk('Full defense (WIL)'), attr(actor, 'WIL')));
   const w = derive(actor).woundModifier;
   if (w) parts.push(part(tk('Wounds'), w));
@@ -700,7 +759,8 @@ export function nextStepHints({
   const os = persona.overwatchHidden ? persona.osKnown : persona.overwatch;
   if (persona.linkLocked) add(tk('Link-locked: you cannot disconnect normally. Destroy the IC holding you, or try “Jack Out”.'), { tone: 'danger', actionId: 'jackOut' });
   if (ds.monitor && (persona.matrixDamage || 0) >= ds.monitor - 3) add(tk('Your deck is almost bricked: leave the host or disconnect.'), { tone: 'danger' });
-  if (os !== null && os !== undefined && os >= 30) add(tk('Overwatch Score {os}/40: convergence is near. Finish fast or reboot your deck.'), { tone: 'danger', params: { os } });
+  const osMax = convergenceAt(actor);
+  if (os !== null && os !== undefined && os >= osMax - 10) add(tk('Overwatch Score {os}/{max}: convergence is near. Finish fast or reboot your deck.'), { tone: 'danger', params: { os, max: osMax } });
   else if (persona.overwatchHidden && (persona.overwatch === null || persona.overwatch === undefined)) add(tk('You do not know your Overwatch Score: check it now and then (“Check Overwatch Score” action).'), { actionId: 'checkOverwatch' });
   if (persona.agent?.loaded && !persona.pendingAssist) add(tk('Your agent is loaded: have it assist your next test (+dice, +1 limit) from “Roll”.'));
   else if (persona.agent && !persona.agent.loaded) add(tk('Your agent is idle: load it (Agent panel) so it can assist you or act for you.'));

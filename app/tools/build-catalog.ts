@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url';
 import { XMLParser } from 'fast-xml-parser';
 import { evalFormula } from '../client/modules/shop/rules.ts';
 import { entryEffects, conditionKey } from './lib/bonus-effects.ts';
+import { effectOverride, EFFECT_OVERRIDES } from './lib/effect-overrides.ts';
 import { CONDITIONS, conditionToggle } from '../shared/modifiers.ts';
 import { stripContext } from '../client/i18n/format.ts';
 import type { CatalogItem, Effect, Formula } from '../shared/types.ts';
@@ -247,11 +248,19 @@ function lean(o: any): any {
 const hidden = (x: XmlNode) => x.hide !== undefined;
 
 /** Normalized Chummer <bonus>/<wirelessbonus> effects (tools/lib/bonus-effects.ts) attached to a catalog entry as `effects`. */
-function withEffects<T extends { effects?: Effect[] }>(file: string, it: T, x: XmlNode): T {
-  const eff = entryEffects(x);
+/** Hand-written effects (tools/lib/effect-overrides.ts) are added with tag 'hand' (or replace Chummer's: `replace`). */
+function withEffects<T extends { name?: string; effects?: Effect[] }>(file: string, it: T, x: XmlNode): T {
+  let eff = entryEffects(x);
+  const o = effectOverride(file, String(it.name || ''));
+  if (o) {
+    usedOverrides.add(`${file}/${it.name}`);
+    if (o.replace) eff = [];
+    eff = [...eff, ...(o.effects || []).map((e) => ({ ...e, tag: 'hand' }) as Effect)];
+  }
   if (eff.length) it.effects = eff;
   return it;
 }
+const usedOverrides = new Set<string>();
 
 /** Common fields; returns null if the entry must be dropped. */
 function base(file: string, x: XmlNode, { ratingRaw, minRaw, costRaw, availRaw, frFile = file, catOverride }: BaseOptions = {}): BuiltItem | null {
@@ -1048,17 +1057,42 @@ console.log(`\nCoverage report: ${path.relative(ROOT, path.join(OUT, 'coverage.m
 const EFFECT_FILES = ['armor', 'armormods', 'gear', 'cyberware', 'bioware', 'qualities', 'powers', 'accessories', 'lifestylequalities', 'spells'];
 const effIndex: { generated: string; files: Record<string, Record<string, unknown>>; names: Record<string, Record<string, string>> } = { generated: index.generated, files: {}, names: {} };
 // Runtime index: only the effects the app uses (no unsupported tags, no free-text choices, no Chummer tag names).
-const RUNTIME_SKIP = new Set(['unsupported', 'info']);
+const RUNTIME_SKIP = new Set(['unsupported', 'info', 'chargen']);
 const runtimeEffect = (e: Effect) => !RUNTIME_SKIP.has(e.type) && !(e.type === 'choice' && e.choice?.kind === 'text');
 const allEff: Array<[string, { id?: string; effects: Effect[] }]> = []; // [file, item] of every catalog entry with effects (coverage)
+/**
+ * Automation of an entry at the table (qualities: index `manual`, sheet marker, qualities-coverage.md):
+ * 'auto' = every play effect is applied or shown; 'some' = some effects applied, others left to the GM (unsupported tags,
+ * override `partial`); 'all' = nothing applied (no effect data, only unsupported tags, override `gm`); 'chargen' = only
+ * creation / structural tags (nothing to do at the table).
+ */
+type Automation = 'auto' | 'some' | 'all' | 'chargen';
+const BOOKKEEPING = new Set(['notoriety', 'publicAwareness', 'streetCred', 'lifestyleCost']);
+function automationOf(file: string, it: { name?: string; effects?: Effect[] }): Automation {
+  const eff = it.effects || [];
+  const o = effectOverride(file, String(it.name || ''));
+  // Reputation / lifestyle cost lines are bookkeeping shown on the item, not a game effect: they never make it « automated ».
+  const bookkeeping = (e: Effect) => e.type === 'stat' && BOOKKEEPING.has(String(e.target));
+  const play = eff.filter((e) => runtimeEffect(e) && !bookkeeping(e)).length;
+  const unsupported = eff.some((e) => e.type === 'unsupported');
+  if (o?.handled) return o.partial ? 'some' : 'auto';
+  if (o?.gm && !play) return 'all';
+  if (play) return unsupported || o?.partial || o?.gm ? 'some' : 'auto';
+  // Creation only: creation / structural tags (a free-text pick or reputation may come with them); anything else is left to the GM.
+  if (!unsupported && eff.some((e) => e.type === 'chargen') && eff.every((e) => e.type === 'chargen' || e.type === 'choice' || bookkeeping(e))) return 'chargen';
+  return 'all';
+}
+// Qualities get an index entry even without runtime effect: the sheet tells « not automated » from « nothing to automate ».
+const INDEX_ALL = new Set(['qualities']);
 const addEff = (file: string, it: BuiltItem | Technique) => {
-  if (!it?.effects?.length || !it.id) return;
-  allEff.push([file, it as { id?: string; effects: Effect[] }]);
-  const eff = it.effects.filter(runtimeEffect).map(({ tag, ...e }) => e);
-  if (!eff.length) return;
+  if (!it?.id) return;
+  if (it.effects?.length) allEff.push([file, it as { id?: string; effects: Effect[] }]);
+  const eff = (it.effects || []).filter(runtimeEffect).map(({ tag, ...e }) => e);
+  const auto = INDEX_ALL.has(file) ? automationOf(file, it) : 'auto';
+  if (!eff.length && !INDEX_ALL.has(file)) return;
   const f = (effIndex.files[file] ||= {});
   const n = (effIndex.names[file] ||= {});
-  f[it.id] = lean({ name: it.name, nameFr: it.nameFr, source: it.source, page: it.page, effects: eff });
+  f[it.id] = lean({ name: it.name, nameFr: it.nameFr, source: it.source, page: it.page, effects: eff, manual: auto === 'all' || auto === 'some' ? auto : undefined });
   for (const nm of [it.name, it.nameFr]) if (nm && !n[nm.toLowerCase()]) n[nm.toLowerCase()] = it.id;
 };
 for (const file of EFFECT_FILES) for (const it of written[file] || []) addEff(file, it);
@@ -1143,3 +1177,53 @@ for (const [k, n] of Object.entries(condCount).sort((a, b) => b[1] - a[1] || a[0
 eLines.push('');
 fs.writeFileSync(path.join(OUT, 'effects-coverage.md'), eLines.join('\n'));
 console.log(`Effects: ${withEff} entries, ${totS} supported / ${totU} unsupported → ${path.relative(ROOT, path.join(OUT, 'effects-coverage.md'))}`);
+
+// ---------------------------------------------------------------------------
+// Per-quality coverage (data/catalog/qualities-coverage.md): what each quality does at the table, by automation status.
+// ---------------------------------------------------------------------------
+for (const [file, names] of Object.entries(EFFECT_OVERRIDES)) for (const nm of Object.keys(names)) if (!usedOverrides.has(`${file}/${nm}`)) console.warn(`effect override not matched: ${file}/${nm}`);
+{
+  const STATUS_LABEL: Record<Automation, string> = { auto: 'Automated', some: 'Partly automated', all: 'Not automated', chargen: 'Creation only' };
+  const effText = (e: Effect) => {
+    const val = e.value === undefined || e.value === null ? '' : typeof e.value === 'number' && e.value > 0 ? `+${e.value}` : String(e.value);
+    return `${e.type}${e.target ? `:${e.target}` : ''}${val ? ` ${val}` : ''}${e.condition ? ` (if ${e.condition})` : ''}${e.wireless ? ' (wireless)' : ''}${e.tag === 'hand' ? ' ✍' : ''}`;
+  };
+  const rows = (written.qualities || []).map((q) => ({ q, auto: automationOf('qualities', q) }));
+  const count = (a: Automation) => rows.filter((r) => r.auto === a).length;
+  const books: Record<string, Record<Automation, number>> = {};
+  for (const r of rows) (books[r.q.source || '?'] ||= { auto: 0, some: 0, all: 0, chargen: 0 })[r.auto]++;
+  const hand = rows.filter((r) => effectOverride('qualities', r.q.name)).length;
+  const qLines = [
+    '# Qualities coverage',
+    '',
+    `Generated by \`node tools/build-catalog.ts\` from ${path.basename(path.dirname(CHUMMER))}. One line per quality of \`qualities.json\`: what the app`,
+    'applies at the table. Status: **automated** (every effect applied to rolls, limits and derived values, or shown: resistances,',
+    'reputation…), **partly automated** (some effects applied, the GM handles the rest), **not automated** (the GM handles it by hand:',
+    'no effect data, only unsupported Chummer tags, or a narrative effect), **creation only** (karma / point costs, unlocked tabs:',
+    'nothing to do at the table). The sheet shows a marker on « partly » and « not automated » qualities. ✍ = hand-written effect',
+    '(`tools/lib/effect-overrides.ts`). Unsupported tags: see [effects-coverage.md](effects-coverage.md).',
+    '',
+    `Qualities: ${rows.length} — automated ${count('auto')}, partly ${count('some')}, not automated ${count('all')}, creation only ${count('chargen')}; with hand-written data: ${hand}.`,
+    '',
+    '## By book',
+    '',
+    '| book | automated | partly | not automated | creation only |',
+    '|---|---:|---:|---:|---:|',
+    ...Object.entries(books).sort((a, b) => a[0].localeCompare(b[0])).map(([b, c]) => `| ${b} | ${c.auto} | ${c.some} | ${c.all} | ${c.chargen} |`),
+  ];
+  for (const a of ['all', 'some', 'auto', 'chargen'] as Automation[]) {
+    const list = rows.filter((r) => r.auto === a).sort((x, y) => String(x.q.source).localeCompare(String(y.q.source)) || x.q.name.localeCompare(y.q.name));
+    qLines.push('', `## ${STATUS_LABEL[a]} (${list.length})`, '', '| quality | book | karma | applied | not handled |', '|---|---|---:|---|---|');
+    for (const { q } of list) {
+      const eff = q.effects || [];
+      const o = effectOverride('qualities', q.name);
+      const applied = eff.filter(runtimeEffect).map(effText).join('; ');
+      const missing = [...new Set(eff.filter((e) => e.type === 'unsupported').map((e) => `\`${e.tag}\``))].join(', ');
+      const why = o?.gm ? `GM: ${o.gm}` : o?.partial ? `GM: ${o.partial}` : o?.handled ? `elsewhere: ${o.handled}` : !eff.length ? 'no effect data' : '';
+      qLines.push(`| ${cell(q.name)} | ${q.source} ${q.page} | ${q.stats?.karma ?? ''} | ${cell(applied)} | ${cell([missing, why].filter(Boolean).join(' — '))} |`);
+    }
+  }
+  qLines.push('');
+  fs.writeFileSync(path.join(OUT, 'qualities-coverage.md'), qLines.join('\n'));
+  console.log(`Qualities: automated ${count('auto')}, partly ${count('some')}, not automated ${count('all')}, creation only ${count('chargen')} → ${path.relative(ROOT, path.join(OUT, 'qualities-coverage.md'))}`);
+}

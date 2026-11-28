@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-26T15:05:22.851Z",
+ "generated": "2026-11-28T10:01:45.744Z",
  "source": "Chummer5.226.0",
  "files": [
   {
@@ -306,7 +306,7 @@
   {
    "name": "gear",
    "count": 1264,
-   "bytes": 351368,
+   "bytes": 351364,
    "categories": [
     {
      "name": "Alchemical Preperations",
@@ -630,7 +630,7 @@
   {
    "name": "cyberware",
    "count": 283,
-   "bytes": 103946,
+   "bytes": 103926,
    "categories": [
     {
      "name": "Bodyware",
@@ -712,7 +712,7 @@
   {
    "name": "bioware",
    "count": 183,
-   "bytes": 71152,
+   "bytes": 71348,
    "categories": [
     {
      "name": "Basic",
@@ -955,7 +955,7 @@
   {
    "name": "qualities",
    "count": 795,
-   "bytes": 254228,
+   "bytes": 259403,
    "categories": [
     {
      "name": "Negative",
@@ -972,7 +972,7 @@
   {
    "name": "spells",
    "count": 358,
-   "bytes": 91240,
+   "bytes": 91184,
    "categories": [
     {
      "name": "Combat",
@@ -1011,7 +1011,7 @@
   {
    "name": "powers",
    "count": 103,
-   "bytes": 29266,
+   "bytes": 29258,
    "categories": [
     {
      "name": "Adept Powers",

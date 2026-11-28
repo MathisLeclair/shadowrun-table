@@ -32,6 +32,11 @@ export interface EffectsIndexEntry {
   source?: string;
   page?: number | string;
   effects?: EffectIn[];
+  /**
+   * What the app does not apply by itself (tools/build-catalog.ts): 'all' = no play effect is automated (the GM handles the
+   * item by hand), 'some' = some of its effects are automated, others are not. Absent = fully automated, or no play effect.
+   */
+  manual?: 'all' | 'some';
 }
 
 /** data/catalog/effects.json: entries by file and id, and lower-case English / French names → id. */
@@ -301,6 +306,22 @@ export const CONDITIONS: Record<string, ConditionDef> = {
   't-jungle': C(tk('in the jungle')),
   't-mountain': C(tk('in the mountains')),
   't-polar': C(tk('in polar areas')),
+  // Hand-written quality effects (tools/lib/effect-overrides.ts)
+  'q-fear': C(tk('resisting fear or intimidation')),
+  'q-symptoms': C(tk('while symptoms show')),
+  'q-simsense': C(tk('using AR, VR or simsense (smartlink, simrig…)')),
+  'q-juryrigging': C(tk('jury-rigging'), { skills: ['aeronautics_mechanic', 'automotive_mechanic', 'industrial_mechanic', 'nautical_mechanic'] }),
+  'q-gearhead': C(tk('Gearhead: hard maneuvers and stunts')),
+  'q-impulsive': C(tk('resisting impulsive behavior')),
+  'q-allergen': C(tk('exposed to the allergen')),
+  'q-target-group': C(tk('with the target group')),
+  'q-black-ic': C(tk('against Black or Psychotropic IC')),
+  'q-spirit-type': C(tk('the chosen spirit type'), { skills: ['summoning', 'binding'] }),
+  'q-icu': C(tk('you can see the target or its owner')),
+  'q-online-fame': C(tk('over the Matrix, with people who know your persona')),
+  'q-not-recording': C(tk('when you cannot record (wireless off)')),
+  'q-out-of-combat': C(tk('outside combat')),
+  'q-nerdrage': C(tk('until you get your revenge')),
   // Spellcasting foci (spellcategory)
   'spell-combat': C(tk('combat spell'), { skills: ['spellcasting', 'ritual_spellcasting'] }),
   'spell-detection': C(tk('detection spell'), { skills: ['spellcasting', 'ritual_spellcasting'] }),
@@ -409,10 +430,44 @@ export function lookupFromIndex(index: EffectsIndex | null | undefined): Modifie
 }
 
 // ---------------------------------------------------------------------------
+// Echoes (technomancers: actor.magic.echoes, free names from training / imports)
+// ---------------------------------------------------------------------------
+/** An echo the app knows: name pattern (English / French), effects, book and page. */
+interface EchoDef {
+  re: RegExp;
+  name: string;
+  book: string;
+  page: number;
+  effects: EffectIn[];
+}
+/**
+ * Echoes with an effect (SR5 p. 258, Data Trails p. 58-59). Living persona attributes are shown (the sheet's Matrix values are
+ * the persona's, entered with the echoes); the others apply like item effects. Resonance [Program]: shared/matrix.ts
+ * availablePrograms(). Others (Resonance Link, Quiet, Resonance Scream, Skinlink, Sleepwalker…): the GM's call.
+ */
+export const ECHOES: EchoDef[] = [
+  { re: /attack\s*upgrade|am[ée]lioration.*attaque/i, name: 'Attack Upgrade', book: 'SR5', page: 258, effects: [{ type: 'personaAttribute', target: 'attack', value: 1 }] },
+  { re: /sleaze\s*upgrade|am[ée]lioration.*corruption/i, name: 'Sleaze Upgrade', book: 'SR5', page: 258, effects: [{ type: 'personaAttribute', target: 'sleaze', value: 1 }] },
+  { re: /data\s*processing\s*upgrade|am[ée]lioration.*traitement/i, name: 'Data Processing Upgrade', book: 'SR5', page: 258, effects: [{ type: 'personaAttribute', target: 'dataProcessing', value: 1 }] },
+  { re: /firewall\s*upgrade|am[ée]lioration.*firewall/i, name: 'Firewall Upgrade', book: 'SR5', page: 258, effects: [{ type: 'personaAttribute', target: 'firewall', value: 1 }] },
+  { re: /neuro\s*-?\s*filt/i, name: 'NeuroFilter', book: 'SR5', page: 258, effects: [{ type: 'stat', target: 'biofeedback', value: 1 }] },
+  { re: /overclock|surcaden/i, name: 'Overclocking', book: 'SR5', page: 258, effects: [{ type: 'matrixInitiativeDice', value: 1, condition: 't-hot-sim' }] },
+  { re: /mind\s*over\s*machine|esprit.*machine/i, name: 'Mind over Machine', book: 'SR5', page: 258, effects: [{ type: 'flag', target: 'controlRig', value: 1 }] },
+  { re: /\bmmri\b/i, name: 'MMRI', book: 'DT', page: 59, effects: [{ type: 'flag', target: 'controlRig', value: 1 }] },
+  { re: /math[ée]mag/i, name: 'Mathemagics', book: 'DT', page: 58, effects: [{ type: 'limit', target: 'mental', value: 2, condition: 'skills-knowledge-scientific-technical' }] },
+  { re: /\bfff\b|fight.or.flight/i, name: 'FFF (Fight-or-Flight Filter)', book: 'DT', page: 58, effects: [{ type: 'flag', target: 'painEditor', value: 1 }] },
+];
+/** Echo definition of a free echo name, or null. */
+export function echoDef(name: unknown): EchoDef | null {
+  const n = String(name || '').trim();
+  return n ? ECHOES.find((e) => e.re.test(n)) || null : null;
+}
+
+// ---------------------------------------------------------------------------
 // Collecting modifiers
 // ---------------------------------------------------------------------------
 const BAKED = new Set<string>(['attribute', 'initiativeDice', 'initiative']);
-const INFO = new Set<string>(['attributeMax', 'resist', 'flag', 'info', 'choice']);
+const INFO = new Set<string>(['attributeMax', 'resist', 'flag', 'info', 'choice', 'personaAttribute']);
 
 /** SR5 skill id from a free choice text (« Con », « con », « Escroquerie »…), or null. */
 export function skillFromText(text: unknown): string | null {
@@ -460,7 +515,7 @@ export function collectModifiers(actor: ActorLike | null | undefined, lookup: Mo
   const add = (list: string, it: SourceItem, entry: EffectsIndexEntry | null, sub?: SourceItem) => {
     const effects = entry?.effects || [];
     effects.forEach((e, i) => {
-      if (!e || e.type === 'unsupported') return;
+      if (!e || e.type === 'unsupported' || e.type === 'chargen') return;
       const x = sub || it;
       const rating = ratingOf(sub ? 'sub' : list, x);
       let target: string | null = e.target ?? null;
@@ -484,6 +539,7 @@ export function collectModifiers(actor: ActorLike | null | undefined, lookup: Mo
       };
       if (e.wireless) m.wireless = true;
       if (e.choice) m.choice = e.choice;
+      if (e.exclude?.length) m.exclude = e.exclude; // « every skill of the category but … » (concernsPool)
       if (e.note) m.note = e.note;
       if (e.type === 'resist' && e.value === 'immune') m.immune = true;
       if (BAKED.has(e.type)) stored.push({ m, it: x });
@@ -517,6 +573,12 @@ export function collectModifiers(actor: ActorLike | null | undefined, lookup: Mo
   for (const p of actor.powers || []) if (p) add('powers', p, find(SOURCE_FILES.powers, p));
   for (const g of actor.gear || []) if (g && g.active) add('gear', g, find(SOURCE_FILES.gear, g));
   for (const ma of actor.martialArts || []) for (const tq of ma?.techniques || []) if (tq) add('martialArts', ma, find(SOURCE_FILES.techniques, tq), tq);
+  // Echoes: one source per echo taken (Attack Upgrade twice = two +1).
+  ((actor as { magic?: { echoes?: unknown[] } }).magic?.echoes || []).forEach((name, i) => {
+    const def = echoDef(name);
+    if (!def) return;
+    add('echoes', { id: `echo${i}`, name: String(name) }, { name: def.name, source: def.book, page: def.page, effects: def.effects });
+  });
   if (opts.weaponId) {
     const w = (actor.weapons || []).find((x) => x && x.id === opts.weaponId);
     for (const acc of w?.accessories || []) {
@@ -629,6 +691,17 @@ export function bonusFromEffects(
     } else if (e.type === 'initiativeDice' || e.type === 'initiative') out[e.type] = plus(out[e.type], e.value);
   }
   return Object.keys(out).length ? out : undefined;
+}
+
+/**
+ * How much of a quality the app applies by itself: 'auto' (fully automated, or no effect at the table), 'some' (partly: the
+ * GM applies the rest), 'all' (nothing automated: the GM handles it by hand), 'custom' (not in the catalog: a home-made quality).
+ */
+export function qualityAutomation(q: { catalogId?: string; name?: string; nameFr?: string } | null | undefined, lookup: ModifierLookup | null | undefined): 'auto' | 'some' | 'all' | 'custom' {
+  if (!q || !lookup) return 'auto';
+  const e = lookup('qualities', q.catalogId, q.name) || (q.nameFr ? lookup('qualities', null, q.nameFr) : null);
+  if (!e) return 'custom';
+  return e.manual || 'auto';
 }
 
 /** Gear items whose catalog entry has effects (they get an « actif » switch on the sheet). */
@@ -986,7 +1059,7 @@ export function derivedWithModifiers(actor: ActorLike | null | undefined, mods: 
 
   // Shown only
   for (const m of mods) {
-    if (['resist', 'flag', 'attributeMax', 'info', 'choice', 'accuracy', 'matrixAction'].includes(m.type) || m.needsChoice) out.info.push(m);
+    if (['resist', 'flag', 'attributeMax', 'info', 'choice', 'accuracy', 'matrixAction', 'personaAttribute'].includes(m.type) || m.needsChoice) out.info.push(m);
     else if (m.type === 'stat' && !['soak', 'defense', 'composure', 'judgeIntentions', 'memory', 'liftCarry'].includes(m.target as string)) out.info.push(m);
   }
   return out;

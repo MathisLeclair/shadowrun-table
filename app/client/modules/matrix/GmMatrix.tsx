@@ -4,7 +4,7 @@ import { Button, Badge, Field, NumberInput, Select, TextInput, Toggle, Empty, Ic
 import { openSheet, toast } from '../../lib/ui-store.ts';
 import { t, tn, compare } from '../../lib/i18n.ts';
 import { uid } from '/shared/util.ts';
-import { ASDF, IC_TYPES, IC_ORDER, HOST_PRESETS, OS_MAX, OS_TICK_MS, hostAttributes, matrixMonitor, icInitiative, icAttackPool, deckStats, isCyberdeck } from './types.ts';
+import { ASDF, IC_TYPES, IC_ORDER, HOST_PRESETS, OS_MAX, OS_TICK_MS, hostAttributes, matrixMonitor, convergenceAt, icInitiative, icAttackPool, deckStats, isCyberdeck } from './types.ts';
 import {
   act, personaOf, OsMeter, MatrixMonitor, marksDots, icName, markName, linkLockName, asdfShort, asdfLabel, modeLabel, msgText, outcomeTexts,
   deviceLinkState, linkStateText, isFullActor, type ActionResult, type MsgLike,
@@ -68,7 +68,7 @@ function DeckerCard({ game, actor, onCockpit }: { game: GameView; actor: Actor; 
         {host && <Badge color="amber">{host.name}</Badge>}
         {p.bricked && <Badge color="red">{t('bricked')}</Badge>}
       </div>
-      <OsMeter value={p.overwatch} compact />
+      <OsMeter value={p.overwatch} compact max={convergenceAt(actor)} />
       <div className="row wrap mx-gm-row">
         <Field label={t('Overwatch Score')}>
           <NumberInput small value={p.overwatch || 0} min={0} max={OS_MAX} onChange={(v) => act('matrix/setOverwatch', { actorId: actor.id, value: v })} />

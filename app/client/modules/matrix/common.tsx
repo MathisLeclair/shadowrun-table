@@ -119,8 +119,8 @@ export const marksDots = (n: number, max = MAX_MARKS) => (
   </span>
 );
 
-/** Overwatch meter 0-40 with thresholds and a loud warning near convergence. */
-export function OsMeter({ value, hidden, knownAt, compact }: { value: number | null | undefined; hidden?: boolean; knownAt?: number | null; compact?: boolean }) {
+/** Overwatch meter 0-40 with thresholds and a loud warning near convergence (max: convergence score, 30 with Wanted by GOD). */
+export function OsMeter({ value, hidden, knownAt, compact, max = OS_MAX }: { value: number | null | undefined; hidden?: boolean; knownAt?: number | null; compact?: boolean; max?: number }) {
   if (hidden && (value === null || value === undefined)) {
     return (
       <div className="mx-os mx-os-unknown">
@@ -139,7 +139,7 @@ export function OsMeter({ value, hidden, knownAt, compact }: { value: number | n
   const lvl = osLevel(v);
   const segs = [];
   for (let i = 0; i < OS_MAX; i++) {
-    const zone = i >= 30 ? 'red' : i >= 20 ? 'amber' : i >= 10 ? 'cyan' : 'green';
+    const zone = i >= max - 10 ? 'red' : i >= max - 20 ? 'amber' : i >= max - 30 ? 'cyan' : 'green';
     segs.push(<span key={i} className={`mx-os-seg z-${zone}${i < v ? ' on' : ''}`}></span>);
   }
   return (
@@ -158,18 +158,18 @@ export function OsMeter({ value, hidden, knownAt, compact }: { value: number | n
         </span>
         <b className="mono">
           {v}
-          <small>/{OS_MAX}</small>
+          <small>/{max}</small>
         </b>
       </div>
       <div className="mx-os-bar">{segs}</div>
       {!compact && (
         <div className="mx-os-foot">
           <Badge color={lvl.color}>{t(lvl.label)}</Badge>
-          <span className="faint small">{t('Convergence at {n}', { n: OS_MAX })}</span>
+          <span className="faint small">{t('Convergence at {n}', { n: max })}</span>
         </div>
       )}
-      {!compact && v >= 35 && <div className="mx-os-alarm">{t('CONVERGENCE IMMINENT — jack out or reboot your deck!')}</div>}
-      {!compact && v >= 30 && v < 35 && <div className="mx-os-warn">{t('GOD is closing in: any illegal action may trigger convergence.')}</div>}
+      {!compact && v >= max - 5 && <div className="mx-os-alarm">{t('CONVERGENCE IMMINENT — jack out or reboot your deck!')}</div>}
+      {!compact && v >= max - 10 && v < max - 5 && <div className="mx-os-warn">{t('GOD is closing in: any illegal action may trigger convergence.')}</div>}
     </div>
   );
 }

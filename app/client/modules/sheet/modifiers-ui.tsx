@@ -2,7 +2,7 @@
 // rulebook reference (📖 BookRef) and tooltips listing the sources of a derived value. See ARCHITECTURE.md « Modifiers ».
 import { useMemo } from 'react';
 import { useCatalog } from '../../lib/net.ts';
-import { lookupFromIndex, collectModifiers, derivedWithModifiers, CONDITIONS, toggleLabel, conditionLabel, signedValue, poolModifiers, limitFor, weaponAccuracy, type EffectsIndex, type ModifierLine } from '/shared/modifiers.ts';
+import { lookupFromIndex, collectModifiers, derivedWithModifiers, qualityAutomation, CONDITIONS, toggleLabel, conditionLabel, signedValue, poolModifiers, limitFor, weaponAccuracy, type EffectsIndex, type ModifierLine } from '/shared/modifiers.ts';
 import { t, tk, limitLabel, skillLabel, skillGroupLabel, skillCategoryLabel, attrLabel } from '../../lib/i18n.ts';
 import { KNOWLEDGE_TYPES } from './sheet-data.ts';
 import type { Actor, ConditionState, Weapon } from '../../../shared/types.ts';
@@ -65,6 +65,8 @@ const STAT_LABELS: Record<string, string> = {
   fadingResist: tk('Fading resistance'), surprise: tk('Surprise'), spellResistance: tk('Spell resistance'),
   physicalRecovery: tk('Healing (physical)'), stunRecovery: tk('Healing (stun)'), judgeIntentionsDefense: tk('Resisting Judge Intentions'),
   judgeIntentions: tk('Judge Intentions'), fatigueResist: tk('Fatigue resistance'), throwSTR: tk('Strength (throwing)'), throwRangeSTR: tk('Strength (throwing range)'),
+  biofeedback: tk('dice to resist biofeedback'), toxinResist: tk('dice to resist toxins'), notoriety: tk('Notoriety'), publicAwareness: tk('Public Awareness'),
+  streetCred: tk('Street Cred'), lifestyleCost: tk('% lifestyle cost'), essenceLossResist: tk('dice to resist Essence loss'),
 };
 const RESIST_LABELS: Record<string, string> = {
   toxincontactresist: tk('contact toxins'), toxiningestionresist: tk('ingested toxins'), toxininhalationresist: tk('inhaled toxins'),
@@ -83,6 +85,7 @@ const MONITOR_LABELS: Record<string, string> = {
   threshold: tk('{v} box(es) per wound modifier'), thresholdOffset: tk('{v} damage box(es) ignored for wound modifiers'),
   sharedThresholdOffset: tk('{v} damage box(es) ignored for wound modifiers (Physical first, then Stun)'),
 };
+const MATRIX_ATTR_LABELS: Record<string, string> = { attack: tk('Attack'), sleaze: tk('Sleaze'), dataProcessing: tk('Data Processing'), firewall: tk('Firewall'), deviceRating: tk('Device Rating') };
 /** Short labels of the roll-dialog switches when shown next to a value (« 11 si visible »). */
 const SHORT_TOGGLES: Record<string, string> = { wireless: tk('wireless') };
 
@@ -128,7 +131,11 @@ export function effectText(m: SheetModifier): string {
         ? t('Immunity: {what}', { what: RESIST_LABELS[tg] ? t(RESIST_LABELS[tg]) : tg })
         : t('{v} dice to resist: {what}', { v: v(m), what: RESIST_LABELS[tg] ? t(RESIST_LABELS[tg]) : tg });
     case 'flag':
-      return tg === 'smartlink' ? t('Smartlink') : tg === 'unarmedPhysical' ? t('Unarmed attacks deal Physical damage') : String(tg);
+      return tg === 'smartlink' ? t('Smartlink') : tg === 'unarmedPhysical' ? t('Unarmed attacks deal Physical damage') : tg === 'ambidextrous' ? t('No off-hand penalty') : tg === 'controlRig' ? t('Works as a control rig') : tg === 'painEditor' ? t('Works as a pain editor') : String(tg);
+    case 'allTests':
+      return t('{v} dice: every test', { v: v(m) });
+    case 'personaAttribute':
+      return t('{v} {attr} (living persona)', { v: v(m), attr: MATRIX_ATTR_LABELS[tg] ? t(MATRIX_ATTR_LABELS[tg]) : tg });
     case 'accuracy':
       if (m.needsChoice) return t('{v} Accuracy (chosen skill)', { v: v(m) });
       return tg === 'all' ? t('{v} Accuracy (all weapons)', { v: v(m) }) : t('{v} Accuracy ({skill})', { v: v(m), skill: nameTarget(tg) || skillLabel(tg) });
@@ -197,6 +204,22 @@ export function ItemEffects({ mods, list, itemId }: { mods: SheetModifier[] | nu
   return <div className="sh-mods">
     {mine.map((m) => <ModChip key={m.id} m={m} showSource={!!m.source.subId} book={!!m.source.subId} />)}{choice && !mine.includes(choice) ? <ModChip m={choice} showSource={false} book={false} /> : null}
   </div>;
+}
+
+/**
+ * « not automated » / « partly automated » marker of a quality (data/catalog/effects.json `manual`, home-made qualities): the GM
+ * knows which qualities to apply by hand. Nothing while the effects index loads, nothing for fully automated qualities.
+ */
+export function AutomationMark({ item, lookup }: { item: { catalogId?: string; name?: string; nameFr?: string }; lookup: EffectsLookup }) {
+  if (lookup === noLookup) return null;
+  const a = qualityAutomation(item, lookup);
+  if (a === 'auto') return null;
+  const title = a === 'some'
+    ? t('Some effects of this quality are applied automatically; the GM applies the rest by hand.')
+    : a === 'custom'
+      ? t('Home-made quality (not in the catalog): the GM applies its effects by hand.')
+      : t('The app does not apply this quality: the GM handles it by hand.');
+  return <span className={'badge sh-manual' + (a === 'some' ? ' some' : '')} title={title}>{a === 'some' ? t('partly automated') : t('not automated')}</span>;
 }
 
 /** Tooltip text listing the sources of a derived value: sources = derivedWithModifiers().sources[key]. */

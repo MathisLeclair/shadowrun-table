@@ -9,13 +9,13 @@ import { startServer, login, client, settle } from './test-client.ts';
 import { normalizeBonus, entryEffects, effValue, conditionKey, skillIdOf } from './lib/bonus-effects.ts';
 import {
   collectModifiers, lookupFromIndex, poolModifiers, limitFor, rollContext, derivedWithModifiers, effectValue, cleanConditions,
-  weaponAccuracy, conditionState, CONDITIONS, gearHasEffects, bonusFromEffects, checkedTest, woundsApply,
+  weaponAccuracy, conditionState, CONDITIONS, gearHasEffects, bonusFromEffects, checkedTest, woundsApply, qualityAutomation,
 } from '../shared/modifiers.ts';
 import { healthStatus } from '../client/modules/sheet/sheet-data.ts';
 import { parseChum5 } from '../server/lib/chummer/parse.ts';
 import { convertSheet } from '../server/lib/foundry/convert-actor.ts';
 import { derive, attr, skillPool } from '../shared/sr5.ts';
-import { actionPool, ACTION_BY_ID } from '../shared/matrix.ts';
+import { actionPool, ACTION_BY_ID, matrixInitiative } from '../shared/matrix.ts';
 import { compute, buildActor, emptyDraft } from '../shared/chargen.ts';
 import * as rules from '../client/modules/shop/rules.ts';
 import type { ConvertedSheet, FoundryWeapon } from '../server/lib/foundry/convert-actor.ts';
@@ -426,6 +426,78 @@ await test('chargen offers accessories / armor mods, installed on a weapon / arm
   const jacket = actor.armor.find((x) => x.catalogId === ar.item.id)!;
   assert.equal(jacket.mods!.length, 1);
   assert.deepEqual(jacket.mods![0].bonus, { fire: 2 });
+});
+
+// ---------------------------------------------------------------------------
+console.log('Quality coverage: hand-written effects, automation status, echoes (issues #1, #2)');
+// ---------------------------------------------------------------------------
+const actorWith = (qualities: Array<Partial<Quality>>, extra: Partial<Actor> = {}): Actor =>
+  ({ ...pc('pc_jane'), qualities: qualities.map((q, i) => ({ id: `q${i}`, karma: 0, ...q })) as Quality[], powers: [], augmentations: [], gear: [], armor: [], ...extra }) as Actor;
+const qCat = catalog('qualities');
+const qByName = (n: string) => qCat.find((q) => q.name === n)!;
+
+await test('normalizer: creation-only tags → chargen, reputation / living persona / ambidextrous are read', () => {
+  const eff = normalizeBonus({ enabletab: { name: 'magician' }, notoriety: '1', livingpersona: { attack: '2' }, ambidextrous: '' });
+  assert.deepEqual(strip(eff), [
+    { type: 'chargen' },
+    { type: 'stat', target: 'notoriety', value: 1 },
+    { type: 'personaAttribute', target: 'attack', value: 2 },
+    { type: 'flag', target: 'ambidextrous', value: 1 },
+  ]);
+  assert.ok(!collectModifiers(actorWith([{ name: 'Magician', catalogId: qByName('Magician').id }]), lookup).length, 'chargen effects never become modifiers');
+});
+
+await test('automation status: index `manual` and qualityAutomation() (automated, partly, not automated, creation only, home-made)', () => {
+  const st = (n: string) => qualityAutomation({ catalogId: qByName(n).id, name: n }, lookup);
+  assert.equal(st('Toughness'), 'auto');
+  assert.equal(st('Magician'), 'auto', 'creation only: nothing to do at the table');
+  assert.equal(st('Agile Defender'), 'auto', 'handled by the full defense options');
+  assert.equal(st('Juryrigger'), 'some');
+  assert.equal(st('Gremlins'), 'all');
+  assert.equal(st('Addiction (Mild)'), 'all', 'notoriety alone does not make it automated');
+  assert.equal(qualityAutomation({ name: 'Régénération Lazarus' }, lookup), 'custom');
+  assert.equal(qualityAutomation({ name: 'Gremlins' }, lookup), 'all', 'matched by name (Foundry imports)');
+  const cov = fs.readFileSync(path.join(ROOT, 'data', 'catalog', 'qualities-coverage.md'), 'utf8');
+  assert.match(cov, /\| Gremlins \| SR5 81 \|/);
+  assert.match(cov, /## Not automated \(\d+\)/);
+});
+
+await test('hand-written effects: Guts on Composure with its switch, Accident Prone on vehicle tests (not Gunnery), Natural Hardening on biofeedback', () => {
+  const a = actorWith([
+    { name: 'Guts', catalogId: qByName('Guts').id },
+    { name: 'Accident Prone', catalogId: qByName('Accident Prone').id },
+    { name: 'Natural Hardening', catalogId: qByName('Natural Hardening').id },
+  ]);
+  const mods = collectModifiers(a, lookup);
+  const comp = poolModifiers(mods, rollContext(a, { test: 'composure', attr: 'CHA', attr2: 'WIL' }));
+  assert.equal(comp.total, 0, 'Guts needs « resisting fear or intimidation »');
+  assert.deepEqual(comp.toggles.map((x) => x.key), ['q-fear']);
+  assert.equal(poolModifiers(mods, rollContext(a, { test: 'composure', attr: 'CHA', attr2: 'WIL' }), { conditions: ['q-fear'] }).total, 2);
+  assert.equal(poolModifiers(mods, rollContext(a, { skillId: 'pilot_ground_craft' })).total, -2);
+  assert.equal(poolModifiers(mods, rollContext(a, { skillId: 'gunnery' })).total, 0);
+  assert.equal(poolModifiers(mods, rollContext(a, { test: 'biofeedback', attr: 'WIL' })).total, 1);
+  assert.equal(CONDITIONS['q-fear'].label, 'resisting fear or intimidation');
+});
+
+await test('Data Trails qualities: I C U on Matrix Perception (switch), Snooper on Snoop', () => {
+  const a = actorWith([{ name: 'I C U', catalogId: qByName('I C U').id }, { name: 'Snooper', catalogId: qByName('Snooper').id }]);
+  const mods = collectModifiers(a, lookup);
+  const ctx = (id: string) => ({ ...rollContext(a, { skillId: ACTION_BY_ID[id].skill, attr: ACTION_BY_ID[id].attr }), actionId: id });
+  assert.equal(poolModifiers(mods, ctx('matrixPerception')).total, 0);
+  assert.equal(poolModifiers(mods, ctx('matrixPerception'), { conditions: ['q-icu'] }).total, 2);
+  assert.equal(poolModifiers(mods, ctx('snoop')).total, 2);
+  assert.equal(poolModifiers(mods, ctx('hackOnTheFly')).total, 0);
+});
+
+await test('echoes: NeuroFilter (+1 biofeedback), Overclocking (+1D6 in hot-sim only), upgrades shown, unknown echoes ignored', () => {
+  const a = actorWith([], { magic: { initiation: 0, submersion: 2, metamagics: [], echoes: ['NeuroFilter', 'Overclocking', 'Attack Upgrade', 'Resonance Link'] } } as Partial<Actor>);
+  const mods = collectModifiers(a, lookup);
+  assert.equal(mods.filter((m) => m.source.list === 'echoes').length, 3);
+  assert.equal(poolModifiers(mods, rollContext(a, { test: 'biofeedback', attr: 'WIL' })).total, 1);
+  assert.equal(matrixInitiative(a, { mode: 'hot' }, 'hot', mods).dice, 5);
+  assert.equal(matrixInitiative(a, { mode: 'cold' }, 'cold', mods).dice, 3);
+  const up = mods.find((m) => m.type === 'personaAttribute')!;
+  assert.ok(up.info && up.target === 'attack' && up.source.book === 'SR5' && up.source.page === 258);
 });
 
 // ---------------------------------------------------------------------------

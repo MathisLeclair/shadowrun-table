@@ -7,7 +7,7 @@ import { t, tk, tIfKnown, attrShort, fmtNuyen, itemName } from '../../lib/i18n.t
 import { fmtDate, fmtNum, signed, itemLabel, itemTitle, categoryLabel } from './common.tsx';
 import { containerOf } from './inventory.ts';
 import { RollStat, LimitStat } from './tab-summary.tsx';
-import { ItemEffects, sourcesTitle } from './modifiers-ui.tsx';
+import { AutomationMark, ItemEffects, sourcesTitle } from './modifiers-ui.tsx';
 import { collectModifiers, gearHasEffects } from '/shared/modifiers.ts';
 import { ListEditor, CatalogPicker } from './editors.tsx';
 import { SubChips, armorCapacityText, vehicleSlotsText, lifestyleBaseLabel, lifestyleBreakdown } from './sublists.tsx';
@@ -427,6 +427,8 @@ export function QualitiesTab({ s }: { s: SheetCtx }) {
               <b>{q.name}</b>
               {' '}
               <ItemRef item={q} />
+              {' '}
+              <AutomationMark item={q} lookup={s.lookup} />
               {q.choice ? <>{' '}<span className="faint small">{t('Choice: {choice}', { choice: q.choice })}</span></> : null}
               <ItemEffects mods={mods} list="qualities" itemId={q.id} />
               {q.notes ? <div className="faint small">{q.notes}</div> : null}

@@ -4,6 +4,7 @@ import {
   programId, detectAgents, availablePrograms, deckStats, actionPool, matrixInitiative, matrixMonitor, ACTION_BY_ID,
   ACTIONS, PROGRAMS, IC_TYPES, hostAttributes, osLevel, dumpshock, programSlots, isPermutation, agentInitiative,
   ACTION_CATS, ACTION_TYPES, TARGET_KIND_LABELS, HOST_PRESETS, MODE_LABELS, ASDF_LABELS, nextStepHints, DEVICE_CMD_LABELS,
+  markPenalty, convergenceAt, hasMatrixQuality, personaDefensePool, biofeedbackDice, OS_MAX,
 } from '../shared/matrix.ts';
 import type { HintHost, PersonaLike, PoolPart } from '../shared/matrix.ts';
 import type { Host, HostDevice, HostFile, MatrixAgent, MatrixMark, MatrixState, PlayerHostView } from '../shared/types.ts';
@@ -60,7 +61,7 @@ ok(ds.noise === 3, 'noise without Signal Scrub');
 let hof = actionPool(bricks, persona, ACTION_BY_ID.hackOnTheFly, {});
 ok(hof.pool === 6 + 6 + 2 - 3 && hof.limit === 6, `Hack on the Fly: Hacking 6 + LOG 6 + hot 2 − noise 3 = 11 [6] (got ${hof.pool} [${hof.limit}])`);
 hof = actionPool(bricks, persona, ACTION_BY_ID.hackOnTheFly, { marks: 3, assist: { dice: 3, limitBonus: 1 } });
-ok(hof.pool === 11 - 10 + 3 && hof.limit === 7, 'extra marks −10, agent assist +3 dice / +1 limit');
+ok(hof.pool === 11 - 6 + 3 && hof.limit === 7, 'extra marks −6 (Bricks has Go Big or Go Home, DT p. 44), agent assist +3 dice / +1 limit');
 hof = actionPool(bricks, persona, ACTION_BY_ID.hackOnTheFly, { edge: true });
 ok(hof.limit === null && hof.pool === 11 + 5, 'Edge: +EDG dice, no limit');
 const agentPool = actionPool(bricks, { ...persona, agent: { rating: 5 } as MatrixAgent }, ACTION_BY_ID.dataSpike, { agent: true });
@@ -142,6 +143,35 @@ const missingFr = (keys: string[]) => keys.filter((k) => !FR[cur(k)]);
 // Server
 // ---------------------------------------------------------------------------
 process.env.SR_MATRIX_TEST = '1';
+
+// Data Trails (issue #2): cockpit qualities, programs, echoes
+{
+  const withQ = (names: string[], extra: Record<string, unknown> = {}) => ({ ...structuredClone(bricks), qualities: names.map((name, i) => ({ id: `dt${i}`, name, karma: 0 })), ...extra });
+  const plain: PersonaLike = { mode: 'cold', loadedPrograms: [], noise: 0 };
+  ok(markPenalty(withQ([]), 3) === -10 && markPenalty(bricks, 3) === -6 && markPenalty(withQ(['Go Big or Go Home']), 3) === -6 && markPenalty(withQ(['Comme un bourrin']), 2) === -4, 'Go Big or Go Home: 3 marks at −6 (French name too), 2 marks unchanged');
+  const hof3 = actionPool(withQ(['Go Big or Go Home']), plain, ACTION_BY_ID.hackOnTheFly, { marks: 3 });
+  ok(hof3.parts.some((p) => p.value === -6 && p.key === '{n} marks'), 'Go Big or Go Home: actionPool shows the −6 marks part');
+  ok(convergenceAt(bricks) === OS_MAX && convergenceAt(withQ(['Wanted by GOD'])) === 30, 'Wanted by GOD: convergence at 30');
+  ok(deckStats(withQ(['Faraday Himself']), plain).noise === 2 && deckStats(withQ(['Faraday Himself']), { ...plain, loadedPrograms: ['Signal Scrub'] }).noise === 0, 'Faraday Himself: +2 Noise, reduced by Signal Scrub');
+  ok(hasMatrixQuality(withQ(['Virtual Stability (AI)']), 'virtualStability'), 'quality names match without a trailing « (…) »');
+  const crash = actionPool(bricks, { ...plain, loadedPrograms: ['Crash (Program)'] }, ACTION_BY_ID.rebootDevice, {});
+  ok(crash.limitParts.some((p) => p.value === 2), 'Crash program: +2 limit on Reboot Device');
+  const base = actionPool(bricks, plain, ACTION_BY_ID.crashProgram, {});
+  const tar = actionPool(bricks, { ...plain, loadedPrograms: ['Tarball'] }, ACTION_BY_ID.crashProgram, {});
+  ok(tar.pool === base.pool + 1 && tar.limit === (base.limit as number) + 2, 'Tarball: Crash Program +1 die, +2 limit');
+  const paint = actionPool(bricks, { ...plain, loadedPrograms: ['Paintjob'] }, ACTION_BY_ID.eraseMark, {});
+  ok(paint.limitParts.some((p) => p.value === 2), 'Paintjob: +2 limit on Erase Mark');
+  const d0 = personaDefensePool(bricks, plain, ACTION_BY_ID.rebootDevice.defense, 'rebootDevice')!;
+  const d1 = personaDefensePool(bricks, { ...plain, loadedPrograms: ['Swerve'] }, ACTION_BY_ID.rebootDevice.defense, 'rebootDevice')!;
+  const d2 = personaDefensePool(bricks, { ...plain, loadedPrograms: ['Swerve'] }, ACTION_BY_ID.dataSpike.defense, 'dataSpike')!;
+  ok(d1.pool === d0.pool + 1 && d2.pool === personaDefensePool(bricks, plain, ACTION_BY_ID.dataSpike.defense, 'dataSpike')!.pool, 'Swerve: +1 Firewall against Reboot Device only');
+  const tm = { ...structuredClone(bricks), gear: [], matrix: { ...bricks.matrix, programs: [] }, magic: { echoes: ['Resonance [Armor]', 'Resonance Link'] } };
+  ok(availablePrograms(tm).length === 1 && availablePrograms(tm)[0].id === 'armor', 'echo Resonance [Program]: that program is available');
+  const nh = [{ id: 'q:1:0', source: { list: 'qualities', itemId: '1', name: 'Natural Hardening' }, type: 'stat', target: 'biofeedback', value: 1, condition: null },
+    { id: 'q:2:0', source: { list: 'qualities', itemId: '2', name: 'Scorched' }, type: 'stat', target: 'biofeedback', value: -2, condition: 'q-black-ic' }] as Parameters<typeof biofeedbackDice>[0];
+  ok(biofeedbackDice(nh) === 1 && biofeedbackDice(nh, true) === -1, 'biofeedback resistance: Natural Hardening always, Scorched against Black IC');
+}
+
 const { startServer, login, client, settle } = await import('./test-client.ts');
 const srv = await startServer({ port: Number(process.env.SR_TEST_PORT) || 3600 });
 try {
@@ -208,7 +238,7 @@ try {
   // Hack on the Fly — success (loaded dice)
   await gm.send('matrix/testDice', { mode: 'actor' });
   res = await pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'hackOnTheFly', targetId: 'host:host_hollow_pine', marks: 3 });
-  ok(res.success && res.roll.pool === 14 - 10 && res.defense.hits === 0, `HotF 3 marks: pool 14 − 10 = 4 (got ${res.roll.pool})`);
+  ok(res.success && res.roll.pool === 14 - 6 && res.defense.hits === 0, `HotF 3 marks (Go Big or Go Home): pool 14 − 6 = 8 (got ${res.roll.pool})`);
   ok(res.defense.pool === undefined, 'defense pool hidden from players');
   await settle();
   ok(P().marks.find((m) => m.targetId === 'host:host_hollow_pine')?.count === 3, '3 marks on the host');

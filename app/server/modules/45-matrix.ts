@@ -8,7 +8,7 @@ import { attr, derive, rollDice } from '../../shared/sr5.ts';
 import {
   ACTION_BY_ID, ASDF, ASDF_LABELS, MODE_LABELS, MODES, IC_TYPES, MAX_MARKS, OS_MAX, CONVERGENCE_DV, HOST_PRESETS,
   PROGRAM_BY_ID, isIllegal, isCyberdeck, isPermutation, identityAsdf, deckStats, actionPool, hostDefensePool,
-  personaDefensePool, programId, programSlots, programSum, availablePrograms, detectAgents, matrixMonitor,
+  personaDefensePool, programId, convergenceAt, hasMatrixQuality, biofeedbackDice, programSlots, programSum, availablePrograms, detectAgents, matrixMonitor,
   matrixInitiative, dumpshock, hostAttributes, defaultIcFor, icAttackPool, skillRating, loadedProgramIds,
   OS_TICK_MS, DEVICE_LINK_KINDS, DEVICE_CMD_LABELS, deviceWorks, type MatrixActionDef, type MatrixTargetKind,
 } from '../../shared/matrix.ts';
@@ -354,7 +354,8 @@ function rebootDeck(ctx: ActionContext, actor: Actor, persona: Persona): I18nMes
 function damageDeck(ctx: ActionContext, actor: Actor, persona: Persona, boxes: number): I18nMessage[] {
   const out: I18nMessage[] = [];
   if (boxes <= 0) return out;
-  const extra = loadedProgramIds(persona).has('virtualMachine') ? 1 : 0;
+  // Virtual Machine: +1 box per hit, except with Virtual Stability (Data Trails p. 151).
+  const extra = loadedProgramIds(persona).has('virtualMachine') && !hasMatrixQuality(actor, 'virtualStability') ? 1 : 0;
   const n = boxes + extra;
   const mon = matrixMonitor(actor.matrix?.rating);
   persona.matrixDamage = Math.min(mon, persona.matrixDamage + n);
@@ -482,7 +483,8 @@ function osTick(ctx: ActionContext, actor: Actor, persona: Persona, ticks = 1) {
   const params = { name: actor.name, n: added, os: persona.overwatch, ticks };
   mlog(ctx, { author: 'GOD', gmOnly: true, msgs: [ticks === 1 ? { t: 'Time passes: {name}’s OS +{n} (2D6) → {os}.', params } : { t: 'Time passes ({ticks} × 15 min): {name}’s OS +{n} → {os}.', params }], matrix: { event: 'osTick', actorId: actor.id } });
   let convergence: I18nMessage[] | null = null;
-  if ((before as number) < OS_MAX && (persona.overwatch as number) >= OS_MAX && persona.online && !persona.hostConverged) convergence = converge(ctx, actor, persona);
+  const at = convergenceAt(actor); // 40, or 30 with Wanted by GOD (Data Trails p. 49)
+  if ((before as number) < at && (persona.overwatch as number) >= at && persona.online && !persona.hostConverged) convergence = converge(ctx, actor, persona);
   return { added, convergence };
 }
 
@@ -719,13 +721,13 @@ function defenseFor(ctx: ActionContext, action: MatrixActionDef, target: Target,
   }
   if (target.kind === 'markOnMe') {
     if (target.host) return { ...(hostDefensePool(target.host, action) as Loose), labelMsg: target.host.name } as Defense;
-    if (target.actor) return { ...(personaDefensePool(target.actor, target.persona, d) as Loose), labelMsg: target.actor.name } as Defense;
+    if (target.actor) return { ...(personaDefensePool(target.actor, target.persona, d, action.id) as Loose), labelMsg: target.actor.name } as Defense;
     return { pending: true };
   }
   if (target.host) return { ...(hostDefensePool(target.host, action) as Loose), labelMsg: target.host.name } as Defense;
   if (target.kind === 'persona') {
     if (!target.actor!.attributes) return { pending: true };
-    return { ...(personaDefensePool(target.actor, target.persona, d) as Loose), labelMsg: target.actor!.name } as Defense;
+    return { ...(personaDefensePool(target.actor, target.persona, d, action.id) as Loose), labelMsg: target.actor!.name } as Defense;
   }
   if (target.kind === 'manual') {
     if (ctx.isGM && p.defensePool !== undefined && p.defensePool !== null && p.defensePool !== '') {
@@ -1105,7 +1107,7 @@ function performAction(ctx: ActionContext, actor: Actor, persona: Persona, actio
   if (osDelta) outcomes.push({ t: 'Overwatch Score +{n}.', params: { n: osDelta } });
   if (pending && isIllegal(action)) outcomes.push({ t: 'Illegal action: the GM adds the defense’s hits to the Overwatch Score.' });
 
-  const converged = (persona.overwatch as number) >= OS_MAX && persona.online && !persona.hostConverged;
+  const converged = (persona.overwatch as number) >= convergenceAt(actor) && persona.online && !persona.hostConverged;
   const rollLabelMsg: I18nMessage = agent ? { t: '{label} ({agent})', params: { label: labelMsg, agent: ag.name } } : labelMsg;
   const roll1 = { ...r, label: fr(rollLabelMsg), labelI18n: toI18n(rollLabelMsg), breakdown: sumParts(pc.parts) + (pc.limit ? ` [${pc.limit}]` : ''), explode: edge, edge };
   const defLabel = def && !def.pending ? fr(def.labelMsg) : '';
@@ -1215,7 +1217,7 @@ function icAttack(ctx: ActionContext, host: Host, ic: HostIc, actor: Actor, pers
         if (def.bio) {
           const type = def.bio === 'S' ? (persona.mode === 'ar' ? null : 'S') : persona.mode === 'hot' ? 'P' : persona.mode === 'cold' ? 'S' : null;
           if (type) {
-            const bp = attr(actor, 'WIL') + ds.eff.firewall + programSum(persona, 'resistBio');
+            const bp = attr(actor, 'WIL') + ds.eff.firewall + programSum(persona, 'resistBio') + biofeedbackDice(actorModifiers(actor), ic.type === 'black');
             const br = roll(bp, {}, 'actor');
             const bb = Math.max(0, dv - br.hits);
             applyActorDamage(actor, bb, type);
@@ -1771,7 +1773,7 @@ const actions: Record<string, ActionDef> = {
     if (!persona.overwatch) persona.osClock = null;
     else if (!before || !persona.osClock) persona.osClock = ctx.now || Date.now();
     let convergence: I18nMessage[] | null = null;
-    if (persona.overwatch >= OS_MAX && persona.online && !persona.hostConverged) convergence = converge(ctx, actor, persona);
+    if (persona.overwatch >= convergenceAt(actor) && persona.online && !persona.hostConverged) convergence = converge(ctx, actor, persona);
     return { overwatch: persona.overwatch, convergence: convergence ? convergence.map(fr) : null, convergenceMsgs: convergence };
   }),
 

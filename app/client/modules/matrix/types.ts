@@ -96,7 +96,7 @@ export type IcDef = IcTypeDef;
 export {
   OS_MAX, OS_TICK_MS, MAX_MARKS, ASDF, MODES, MARK_PENALTY, ACTIONS, ACTION_BY_ID, PROGRAM_BY_ID, IC_ORDER, HOST_PRESETS, isIllegal, isCyberdeck,
   matrixMonitor, identityAsdf, programId, osLevel, deckStats, programSum, programSlots, availablePrograms, detectAgents, matrixInitiative,
-  agentInitiative, actionPool, hostAttributes, icAttackPool, icInitiative, deviceWorks, nextStepHints,
+  agentInitiative, actionPool, hostAttributes, icAttackPool, icInitiative, deviceWorks, nextStepHints, convergenceAt, markPenalty, biofeedbackDice,
 } from '/shared/matrix.ts';
 
 // Label tables looked up with ids read from the state / the UI (plain strings): widened to string keys.

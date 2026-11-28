@@ -8,7 +8,7 @@ import { attr } from '/shared/sr5.ts';
 import {
   ASDF, MODES, ACTIONS, ACTION_CATS, ACTION_TYPES, IC_TYPES, PROGRAM_BY_ID,
   deckStats, actionPool, matrixInitiative, agentInitiative, programSlots, availablePrograms, detectAgents, isIllegal,
-  isCyberdeck, matrixMonitor, programId, DEVICE_LINK_KINDS, DEVICE_CMD_LABELS, nextStepHints, deviceWorks, ACTION_BY_ID,
+  isCyberdeck, matrixMonitor, programId, DEVICE_LINK_KINDS, DEVICE_CMD_LABELS, nextStepHints, deviceWorks, ACTION_BY_ID, convergenceAt,
   type PersonaView, type StepHint,
 } from './types.ts';
 import type { AsdfKey } from '../../../shared/types.ts';
@@ -302,7 +302,7 @@ function StatusPanel({ game, actor, persona }: PanelProps & { game: GameView }) 
   const pen = Object.entries(persona.penalties || {}).filter(([, v]) => (v || 0) > 0);
   return (
     <div className="mx-panel mx-status">
-      <OsMeter value={persona.overwatch} hidden={persona.overwatchHidden} knownAt={persona.osKnownAt} />
+      <OsMeter value={persona.overwatch} hidden={persona.overwatchHidden} knownAt={persona.osKnownAt} max={convergenceAt(actor)} />
       <MatrixMonitor value={persona.matrixDamage} deviceRating={ds.deviceRating} onSet={gm ? (n) => act('matrix/setPersona', { actorId: actor.id, patch: { matrixDamage: n } }) : null} />
       <div className="mx-chips">
         {persona.bricked && <Badge color="red">{t('Deck bricked')}</Badge>}

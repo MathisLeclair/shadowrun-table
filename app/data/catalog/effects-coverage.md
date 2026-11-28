@@ -6,7 +6,7 @@ normalized by `tools/lib/bonus-effects.ts` into `effects` (see ARCHITECTURE.md �
 (applied to rolls / limits / derived values, or shown as information: resistances, attribute maximums, `baked` attribute / initiative bonuses);
 « unsupported » = kept as `{ type: 'unsupported', tag }` on the entry (chargen, karma costs, critter powers… — nothing is silently dropped).
 
-Entries with effects: 1122 (464 with at least one unsupported tag). Effects: 1143 supported, 1000 unsupported.
+Entries with effects: 1137 (306 with at least one unsupported tag). Effects: 1776 supported, 428 unsupported.
 
 | tag | supported | unsupported | effect types | files |
 |---|---:|---:|---|---|
@@ -17,53 +17,54 @@ Entries with effects: 1122 (464 with at least one unsupported tag). Effects: 114
 | specificattribute | 103 | 0 | attribute, attributeMax | cyberware, bioware, qualities, powers |
 | critterpowers | 0 | 70 |  | qualities |
 | conditionmonitor | 68 | 0 | monitor | cyberware, bioware, qualities, powers |
-| enableattribute | 0 | 60 |  | qualities |
-| enabletab | 0 | 58 |  | qualities |
-| focusbindingkarmacost | 0 | 56 |  | qualities |
+| hand | 61 | 0 | skillCategory, allTests, stat, skillAttribute, skill, limit, matrixAction | qualities |
+| enableattribute | 60 | 0 | chargen | qualities |
+| enabletab | 58 | 0 | chargen | qualities |
+| focusbindingkarmacost | 56 | 0 | chargen | qualities |
 | skillcategory | 50 | 1 | skillCategory | armor, cyberware, bioware, qualities |
 | disablequality | 0 | 33 |  | cyberware, bioware, powers |
-| skillgroupdisable | 0 | 33 |  | qualities |
+| skillgroupdisable | 33 | 0 | chargen | qualities |
 | walkmultiplier | 0 | 33 |  | cyberware, qualities, powers |
 | armor | 29 | 0 | armor | cyberware, bioware, qualities, powers |
-| lifestylecost | 0 | 27 |  | bioware, qualities |
-| limitcritterpowercategory | 0 | 26 |  | qualities |
+| lifestylecost | 27 | 0 | stat | bioware, qualities |
+| limitcritterpowercategory | 26 | 0 | chargen | qualities |
 | fatigueresist | 25 | 0 | stat | armor, cyberware, bioware, qualities, powers |
-| selectattributes | 0 | 24 |  | qualities |
-| essencepenaltyt100 | 0 | 23 |  | gear, qualities |
-| replaceattributes | 0 | 23 |  | qualities |
-| essencepenaltymagonlyt100 | 0 | 22 |  | qualities |
-| notoriety | 0 | 22 |  | qualities |
+| selectattributes | 24 | 0 | chargen | qualities |
+| essencepenaltyt100 | 23 | 0 | chargen | gear, qualities |
+| replaceattributes | 23 | 0 | chargen | qualities |
+| essencepenaltymagonlyt100 | 22 | 0 | chargen | qualities |
+| notoriety | 22 | 0 | stat | qualities |
 | toxiningestionresist | 22 | 0 | resist | bioware, qualities, powers |
 | initiativepass | 20 | 0 | initiativeDice | cyberware, bioware, qualities, powers |
 | runmultiplier | 0 | 20 |  | cyberware, qualities |
 | toxincontactresist | 18 | 0 | resist | armormods, gear, bioware, qualities, powers |
-| addspirit | 0 | 17 |  | qualities, spells |
+| addspirit | 17 | 0 | chargen | qualities, spells |
 | skillgroup | 17 | 0 | skillGroup | bioware, qualities |
 | toxininjectionresist | 16 | 0 | resist | bioware, qualities, powers |
-| unlockskills | 0 | 16 |  | qualities, powers |
+| unlockskills | 16 | 0 | chargen | qualities, powers |
 | movementreplace | 0 | 15 |  | qualities |
 | pathogencontactresist | 15 | 0 | resist | armormods, gear, bioware, qualities, powers |
 | spellcategory | 15 | 0 | skill | gear |
 | fadingvalue | 0 | 14 |  | qualities |
 | toxininhalationresist | 13 | 0 | resist | gear, bioware, qualities, powers |
-| addqualities | 0 | 12 |  | cyberware, bioware, qualities |
+| addqualities | 12 | 0 | chargen | cyberware, bioware, qualities |
 | coldarmor | 12 | 0 | resist | armormods, bioware, qualities, powers |
-| disablecyberwaregrade | 0 | 12 |  | qualities |
-| essencepenalty | 0 | 12 |  | qualities |
+| disablecyberwaregrade | 12 | 0 | chargen | qualities |
+| essencepenalty | 12 | 0 | chargen | qualities |
 | unarmedreach | 12 | 0 | stat | bioware, techniques |
 | optionalpowers | 0 | 11 |  | qualities |
 | firearmor | 10 | 0 | resist | armormods, bioware, qualities, powers |
 | initiative | 9 | 0 | initiative | cyberware, bioware, qualities |
 | pathogeninhalationresist | 9 | 0 | resist | gear, bioware, qualities, powers |
 | selectskill | 9 | 0 | choice, skill | gear, bioware, qualities, powers |
-| skilldisable | 0 | 9 |  | qualities |
-| livingpersona | 0 | 8 |  | qualities |
+| skilldisable | 9 | 0 | chargen | qualities |
+| livingpersona | 8 | 0 | personaAttribute | qualities |
 | physicalcmrecovery | 8 | 0 | stat | cyberware, bioware, qualities, powers |
 | physiologicaladdictionfirsttime | 0 | 8 |  | bioware, qualities |
 | stuncmrecovery | 8 | 0 | stat | cyberware, bioware, qualities, powers |
 | unarmeddvphysical | 8 | 0 | flag | cyberware, bioware, qualities, powers |
 | damageresistance | 7 | 0 | stat | cyberware, bioware, qualities |
-| limitspellcategory | 0 | 7 |  | qualities |
+| limitspellcategory | 7 | 0 | chargen | qualities |
 | pathogeningestionresist | 7 | 0 | resist | bioware, qualities, powers |
 | pathogeninjectionresist | 7 | 0 | resist | bioware, qualities, powers |
 | physiologicaladdictionalreadyaddicted | 0 | 7 |  | bioware, qualities |
@@ -76,9 +77,9 @@ Entries with effects: 1122 (464 with at least one unsupported tag). Effects: 114
 | reach | 6 | 0 | stat | qualities |
 | toxininhalationimmune | 6 | 0 | resist | armormods, gear, cyberware |
 | unarmeddv | 6 | 0 | stat | cyberware, bioware, qualities |
-| disablebiowaregrade | 0 | 5 |  | qualities |
-| knowledgeskillkarmacost | 0 | 5 |  | cyberware, qualities |
-| limitspiritcategory | 0 | 5 |  | qualities |
+| disablebiowaregrade | 5 | 0 | chargen | qualities |
+| knowledgeskillkarmacost | 5 | 0 | chargen | cyberware, qualities |
+| limitspiritcategory | 5 | 0 | chargen | qualities |
 | psychologicaladdictionalreadyaddicted | 0 | 5 |  | bioware, qualities |
 | sprintbonus | 0 | 5 |  | cyberware, qualities, powers |
 | cyberseeker | 0 | 4 |  | qualities |
@@ -86,81 +87,81 @@ Entries with effects: 1122 (464 with at least one unsupported tag). Effects: 114
 | fame | 0 | 4 |  | qualities |
 | pathogencontactimmune | 4 | 0 | resist | armormods, gear |
 | physicallimit | 4 | 0 | limit | bioware, qualities, powers |
-| publicawareness | 0 | 4 |  | qualities |
+| publicawareness | 4 | 0 | stat | qualities |
 | selectattribute | 1 | 3 | attribute | powers, spells |
-| skillcategorykarmacostmultiplier | 0 | 4 |  | qualities |
-| skillcategorypointcostmultiplier | 0 | 4 |  | qualities |
+| skillcategorykarmacostmultiplier | 4 | 0 | chargen | qualities |
+| skillcategorypointcostmultiplier | 4 | 0 | chargen | qualities |
 | skilllinkedattribute | 4 | 0 | skillAttribute | cyberware, bioware |
 | surprise | 4 | 0 | stat | qualities, powers |
 | toxincontactimmune | 4 | 0 | resist | armormods, gear |
-| trustfund | 0 | 4 |  | qualities |
-| addmetamagic | 0 | 3 |  | qualities |
+| trustfund | 4 | 0 | chargen | qualities |
+| addmetamagic | 3 | 0 | chargen | qualities |
 | blockskillcategorydefaulting | 0 | 3 |  | qualities |
 | detectionspellresist | 3 | 0 | resist | bioware, qualities, powers |
 | judgeintentionsdefense | 3 | 0 | stat | bioware, qualities, powers |
 | manaillusionresist | 3 | 0 | resist | bioware, qualities, powers |
 | mentallimit | 3 | 0 | limit | bioware, qualities, powers |
 | mentalmanipulationresist | 3 | 0 | resist | bioware, qualities, powers |
-| metageniclimit | 0 | 3 |  | qualities |
-| nuyenmaxbp | 0 | 3 |  | qualities |
+| metageniclimit | 3 | 0 | chargen | qualities |
+| nuyenmaxbp | 3 | 0 | chargen | qualities |
 | selectpowers | 0 | 3 |  | gear |
-| skillcategorykarmacost | 0 | 3 |  | qualities |
-| skillcategoryspecializationkarmacostmultiplier | 0 | 3 |  | qualities |
+| skillcategorykarmacost | 3 | 0 | chargen | qualities |
+| skillcategoryspecializationkarmacostmultiplier | 3 | 0 | chargen | qualities |
 | skillwire | 0 | 3 |  | cyberware |
 | spellcategorydrain | 0 | 3 |  | qualities |
 | spellresistance | 3 | 0 | stat | qualities, powers |
 | weaponskillaccuracy | 3 | 0 | accuracy | cyberware, qualities, powers |
 | weaponspecificdice | 0 | 3 |  | gear |
-| activeskillkarmacost | 0 | 2 |  | qualities |
-| addcontact | 0 | 2 |  | qualities |
-| addgear | 0 | 2 |  | qualities |
-| addlimb | 0 | 2 |  | cyberware, qualities |
-| addskillspecializationoption | 0 | 2 |  | qualities |
-| allowspellrange | 0 | 2 |  | qualities |
-| ambidextrous | 0 | 2 |  | bioware, qualities |
-| biowareessmultiplier | 0 | 2 |  | qualities |
-| contactkarma | 0 | 2 |  | qualities |
-| cyberwareessmultiplier | 0 | 2 |  | qualities |
+| activeskillkarmacost | 2 | 0 | chargen | qualities |
+| addcontact | 2 | 0 | chargen | qualities |
+| addgear | 2 | 0 | chargen | qualities |
+| addlimb | 2 | 0 | chargen | cyberware, qualities |
+| addskillspecializationoption | 2 | 0 | chargen | qualities |
+| allowspellrange | 2 | 0 | chargen | qualities |
+| ambidextrous | 2 | 0 | flag | bioware, qualities |
+| biowareessmultiplier | 2 | 0 | chargen | qualities |
+| contactkarma | 2 | 0 | chargen | qualities |
+| cyberwareessmultiplier | 2 | 0 | chargen | qualities |
 | decreaseintresist | 2 | 0 | resist | bioware, qualities |
 | decreaselogresist | 2 | 0 | resist | bioware, qualities |
 | fadingresist | 2 | 0 | stat | bioware, qualities |
-| freequality | 0 | 2 |  | qualities |
-| freespells | 0 | 2 |  | qualities |
+| freequality | 2 | 0 | chargen | qualities |
+| freespells | 2 | 0 | chargen | qualities |
 | hardwires | 0 | 2 |  | cyberware |
 | judgeintentions | 2 | 0 | stat | powers |
-| nuyenamt | 0 | 2 |  | qualities |
+| nuyenamt | 2 | 0 | chargen | qualities |
 | physicalillusionresist | 2 | 0 | resist | qualities, powers |
 | radiationresist | 2 | 0 | resist | armormods, bioware |
-| selectcontact | 0 | 2 |  | qualities |
-| selectquality | 0 | 2 |  | qualities |
-| selectside | 0 | 2 |  | qualities |
+| selectcontact | 2 | 0 | chargen | qualities |
+| selectquality | 2 | 0 | chargen | qualities |
+| selectside | 2 | 0 | chargen | qualities |
 | selectweapon | 0 | 2 |  | gear |
 | skillsoft | 0 | 2 |  | gear |
-| specialmodificationlimit | 0 | 2 |  | qualities |
+| specialmodificationlimit | 2 | 0 | chargen | qualities |
 | spellcategorydamage | 0 | 2 |  | qualities |
 | weaponcategorydv | 0 | 2 |  | qualities, powers |
 | actiondicepool | 1 | 0 | matrixAction | qualities |
 | activesoft | 0 | 1 |  | gear |
 | adapsin | 0 | 1 |  | bioware |
-| addecho | 0 | 1 |  | qualities |
+| addecho | 1 | 0 | chargen | qualities |
 | addesstophysicalcmrecovery | 0 | 1 |  | qualities |
 | addesstostuncmrecovery | 0 | 1 |  | qualities |
-| addspell | 0 | 1 |  | qualities |
-| addware | 0 | 1 |  | qualities |
+| addspell | 1 | 0 | chargen | qualities |
+| addware | 1 | 0 | chargen | qualities |
 | addweapon | 1 | 0 | info | powers |
-| adeptpowerpoints | 0 | 1 |  | qualities |
-| allowspellcategory | 0 | 1 |  | qualities |
+| adeptpowerpoints | 1 | 0 | chargen | qualities |
+| allowspellcategory | 1 | 0 | chargen | qualities |
 | allowspritefettering | 0 | 1 |  | qualities |
 | astralreputation | 0 | 1 |  | qualities |
 | attributekarmacost | 0 | 1 |  | bioware |
-| availability | 0 | 1 |  | qualities |
+| availability | 1 | 0 | chargen | qualities |
 | blackmarketdiscount | 0 | 1 |  | qualities |
-| blockspelldescriptor | 0 | 1 |  | qualities |
+| blockspelldescriptor | 1 | 0 | chargen | qualities |
 | burnoutsway | 0 | 1 |  | qualities |
 | composure | 1 | 0 | stat | bioware |
-| contactkarmaminimum | 0 | 1 |  | qualities |
+| contactkarmaminimum | 1 | 0 | chargen | qualities |
 | cyberadeptdaemon | 0 | 1 |  | qualities |
-| cyberwaretotalessmultiplier | 0 | 1 |  | qualities |
+| cyberwaretotalessmultiplier | 1 | 0 | chargen | qualities |
 | dealerconnection | 0 | 1 |  | qualities |
 | decreaseagiresist | 1 | 0 | resist | bioware |
 | decreasebodresist | 1 | 0 | resist | bioware |
@@ -170,41 +171,41 @@ Entries with effects: 1122 (464 with at least one unsupported tag). Effects: 114
 | decreasewilresist | 1 | 0 | resist | bioware |
 | defensetest | 1 | 0 | stat | qualities |
 | directmanaspellresist | 1 | 0 | resist | bioware |
-| disablebioware | 0 | 1 |  | qualities |
+| disablebioware | 1 | 0 | chargen | qualities |
 | drainresist | 1 | 0 | stat | bioware |
 | drainvalue | 0 | 1 |  | qualities |
 | erased | 0 | 1 |  | qualities |
-| essencemax | 0 | 1 |  | qualities |
+| essencemax | 1 | 0 | attributeMax | qualities |
 | excon | 0 | 1 |  | qualities |
 | friendsinhighplaces | 0 | 1 |  | qualities |
 | judgeintentionsoffense | 1 | 0 | stat | qualities |
-| knowledgeskillkarmacostmin | 0 | 1 |  | qualities |
-| knowledgeskillpoints | 0 | 1 |  | qualities |
+| knowledgeskillkarmacostmin | 1 | 0 | chargen | qualities |
+| knowledgeskillpoints | 1 | 0 | chargen | qualities |
 | mademan | 0 | 1 |  | qualities |
-| magicianswaydiscount | 0 | 1 |  | qualities |
-| martialart | 0 | 1 |  | qualities |
+| magicianswaydiscount | 1 | 0 | chargen | qualities |
+| martialart | 1 | 0 | chargen | qualities |
 | matrixinitiativedice | 1 | 0 | matrixInitiativeDice | gear |
-| nativelanguagelimit | 0 | 1 |  | qualities |
-| newspellkarmacost | 0 | 1 |  | qualities |
+| nativelanguagelimit | 1 | 0 | chargen | qualities |
+| newspellkarmacost | 1 | 0 | chargen | qualities |
 | overclocker | 0 | 1 |  | qualities |
-| prototypetranshuman | 0 | 1 |  | qualities |
+| prototypetranshuman | 1 | 0 | chargen | qualities |
 | reflexrecorderoptimization | 0 | 1 |  | bioware |
-| restrictedgear | 0 | 1 |  | qualities |
+| restrictedgear | 1 | 0 | chargen | qualities |
 | selectcyberware | 0 | 1 |  | cyberware |
-| selectexpertise | 0 | 1 |  | qualities |
+| selectexpertise | 1 | 0 | chargen | qualities |
 | selectinherentaiprogram | 0 | 1 |  | qualities |
 | selectmentorspirit | 0 | 1 |  | qualities |
 | selectparagon | 0 | 1 |  | qualities |
 | selectrestricted | 0 | 1 |  | gear |
 | selectspell | 0 | 1 |  | powers |
-| selectsprite | 0 | 1 |  | qualities |
-| skillgroupcategorydisable | 0 | 1 |  | qualities |
-| skillgroupcategorykarmacostmultiplier | 0 | 1 |  | qualities |
-| skillgroupdisablechoice | 0 | 1 |  | qualities |
+| selectsprite | 1 | 0 | chargen | qualities |
+| skillgroupcategorydisable | 1 | 0 | chargen | qualities |
+| skillgroupcategorykarmacostmultiplier | 1 | 0 | chargen | qualities |
+| skillgroupdisablechoice | 1 | 0 | chargen | qualities |
 | skillsoftaccess | 0 | 1 |  | cyberware |
 | smartlink | 1 | 0 | flag | cyberware |
 | sonicresist | 1 | 0 | resist | cyberware |
-| specialattburnmultiplier | 0 | 1 |  | qualities |
+| specialattburnmultiplier | 1 | 0 | chargen | qualities |
 | spelldescriptordamage | 0 | 1 |  | qualities |
 | spelldescriptordrain | 0 | 1 |  | qualities |
 | spelldicepool | 0 | 1 |  | qualities |
@@ -221,24 +222,27 @@ Entries with effects: 1122 (464 with at least one unsupported tag). Effects: 114
 
 | type | count |
 |---|---:|
+| chargen | 508 |
 | choice | 267 |
 | resist | 178 |
-| limit | 139 |
-| skill | 130 |
-| stat | 105 |
+| stat | 171 |
+| limit | 140 |
+| skill | 137 |
 | monitor | 68 |
+| skillCategory | 63 |
 | attribute | 54 |
-| skillCategory | 50 |
-| attributeMax | 50 |
+| attributeMax | 51 |
 | armor | 29 |
+| skillAttribute | 28 |
 | initiativeDice | 20 |
 | skillGroup | 17 |
-| skillAttribute | 11 |
-| flag | 9 |
+| flag | 11 |
 | initiative | 9 |
+| personaAttribute | 8 |
+| allTests | 6 |
+| matrixAction | 5 |
 | accuracy | 4 |
 | matrixInitiativeDice | 1 |
-| matrixAction | 1 |
 | info | 1 |
 
 ## Conditions
@@ -248,10 +252,14 @@ Condition keys of the effects (`effects[].condition`). Unknown keys become their
 | key | effects | Chummer code | Chummer FR | Chummer EN | app label (FR) | app label (EN) | switch |
 |---|---:|---|---|---|---|---|---|
 | visible | 36 | LimitCondition_Visible | Doit être visible | Must be visible | si visible | if visible | visible |
+| q-allergen | 28 | (free text) |  |  | exposé à l’allergène | exposed to the allergen | q-allergen |
 | intimidation-visible | 12 | LimitCondition_IntimidationVisible | Uniquement pour l'intimidation. Doit être visible. | Only for Intimidation, Must be visible. | Intimidation, si visible | Intimidation, if visible | visible |
+| q-target-group | 6 | (free text) |  |  | avec le groupe visé | with the target group | q-target-group |
 | exclude-fans-gangers | 4 | LimitCondition_ExcludeFansGangers | Sauf pour les membres de gangs et les fans de lutte urbaine | Except for Urban Brawl Fans and Gangers | sauf fans d’Urban Brawl et gangers | except Urban Brawl fans and gangers | exclude-fans-gangers |
+| q-juryrigging | 4 | (free text) |  |  | bricolage de fortune | jury-rigging | q-juryrigging |
 | t-involves-a-significant-event-in-ork-or-troll-history | 4 | (free text) |  |  | événement marquant de l’histoire ork ou troll | a significant event of ork or troll history | t-involves-a-significant-event-in-ork-or-troll-history |
 | t-urban | 4 | (free text) |  |  | en milieu urbain | in urban areas | t-urban |
+| q-spirit-type | 3 | (free text) |  |  | type d’esprit choisi | the chosen spirit type | q-spirit-type |
 | skills-active-gymnastics-climbing | 3 | LimitCondition_SkillsActiveGymnasticsClimbing | Uniquement pour l'escalade | Only for Gymnastics (Climbing) | Gymnastique (escalade) | Gymnastics (climbing) | climbing |
 | skills-active-performance-singing | 3 | LimitCondition_SkillsActivePerformanceSinging | Uniquement pour le chant | Only for Performance (Singing) | Représentation (chant) | Performance (singing) | skills-active-performance-singing |
 | skillwires | 3 | LimitCondition_Skillwires | Uniquement pour les compétences câblées | Only for Skillwires | compétences câblées | skillwires | skillwires |
@@ -265,6 +273,8 @@ Condition keys of the effects (`effects[].condition`). Unknown keys become their
 | cyberware-cyberfins | 2 | LimitCondition_CyberwareCyberfins | Uniquement pour les réparation, l'écriture ou la danse. Doit être activé. | Only for making repairs, typing, dancing etc., Must be engaged | réparations, frappe, danse… (activé) | repairs, striking, dancing… (activated) | cyberware-cyberfins |
 | gang-visible | 2 | LimitCondition_GangVisible | Pour les membres de gang seulement. Doit être visible. | Gang members only, Must be visible. | avec des membres du gang, si visible | with gang members, if visible | gang-visible |
 | public-visible | 2 | LimitCondition_PublicVisible | Pour le grand public seulement. Doit être visible. | General public only, Must be visible. | avec le grand public, si visible | with the general public, if visible | public-visible |
+| q-fear | 2 | (free text) |  |  | pour résister à la peur ou à l’intimidation | resisting fear or intimidation | q-fear |
+| q-online-fame | 2 | (free text) |  |  | dans la Matrice, avec ceux qui connaissent ton persona | over the Matrix, with people who know your persona | q-online-fame |
 | shield-physical-penalty | 2 | LimitCondition_ShieldPhysicalPenalty | Pour les actions où le bouclier peut gêner. | For actions where Shield might get in the way. | quand le bouclier gêne | when the shield gets in the way | shield-physical-penalty |
 | skill-group-stealth-naked | 2 | LimitCondition_SkillGroupStealthNaked | Uniquement pour la furtivité de groupe. Doivent être totalement nus. | Only for Stealth group, Must be completely naked | groupe Furtivité, complètement nu·e | Stealth group, completely naked | naked |
 | skills-active-first-aid-medicine | 2 | LimitCondition_SkillsActiveFirstAidMedicine | Uniquement pour les Premiers Soins et la Médecine | Only for First Aid and Medicine | Premiers soins et Médecine | First Aid and Medicine | automatic |
@@ -300,6 +310,15 @@ Condition keys of the effects (`effects[].condition`). Unknown keys become their
 | intimidation | 1 | LimitCondition_Intimidation | Uniquement pour l'intimidation | Only for Intimidation | Intimidation | Intimidation | automatic |
 | megacorp | 1 | LimitCondition_Megacorp | Limité à une seule Mégacorp | Limited to Single Megacorp | avec une seule mégacorpo | with a single megacorp | megacorp |
 | national-language-ranks | 1 | LimitCondition_NationalLanguageRanks | Vous devez avoir un rang de 4+ dans la langue nationale | Must have 4+ Ranks in National Language | avec 4+ rangs dans la langue nationale | with 4+ ranks in the national language | national-language-ranks |
+| q-black-ic | 1 | (free text) |  |  | contre une CI noire ou psychotrope | against Black or Psychotropic IC | q-black-ic |
+| q-gearhead | 1 | (free text) |  |  | Fou du volant : manœuvres difficiles et cascades | Gearhead: hard maneuvers and stunts | q-gearhead |
+| q-icu | 1 | (free text) |  |  | si tu vois la cible ou son porteur | you can see the target or its owner | q-icu |
+| q-impulsive | 1 | (free text) |  |  | pour résister à un comportement impulsif | resisting impulsive behavior | q-impulsive |
+| q-nerdrage | 1 | (free text) |  |  | jusqu’à ta vengeance | until you get your revenge | q-nerdrage |
+| q-not-recording | 1 | (free text) |  |  | quand tu ne peux pas enregistrer (sans fil coupé) | when you cannot record (wireless off) | q-not-recording |
+| q-out-of-combat | 1 | (free text) |  |  | hors combat | outside combat | q-out-of-combat |
+| q-simsense | 1 | (free text) |  |  | en RA, en RV ou en simsens (smartlink, simrig…) | using AR, VR or simsense (smartlink, simrig…) | q-simsense |
+| q-symptoms | 1 | (free text) |  |  | pendant les symptômes | while symptoms show | q-symptoms |
 | quality-chatty | 1 | LimitCondition_QualityChatty | Uniquement en communication AR ou VR | Only when communicating via AR or VR. | communication en RA ou RV | AR or VR communication | quality-chatty |
 | quality-trustworthy | 1 | LimitCondition_QualityTrustworthy | Uniquement pour les situations appelant à la confiance | Only for situations involving trust. | situations de confiance | situations of trust | quality-trustworthy |
 | skills-active-disguise-impersonation | 1 | LimitCondition_SkillsActiveDisguiseImpersonation | Uniquement pour le déguisement et l'imitation. | Only for Disguise and Impersonation | Déguisement et Imposture | Disguise and Impersonation | automatic |

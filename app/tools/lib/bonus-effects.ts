@@ -87,6 +87,27 @@ const RESISTS = new Set([
   'manaillusionresist', 'physicalillusionresist', 'detectionspellresist', 'directmanaspellresist', 'decreasebodresist', 'decreaseagiresist',
   'decreaserearesist', 'decreasestrresist', 'decreasecharesist', 'decreaseintresist', 'decreaselogresist', 'decreasewilresist',
 ]);
+/**
+ * Tags that only matter at character creation / advancement or for the structure of the character (karma and point costs,
+ * tabs and attributes a quality unlocks, free spells or contacts, gear grades a quality forbids…): no effect on the tests at
+ * the table. Normalized as { type: 'chargen', tag } so the per-quality coverage does not count them as « not automated ».
+ */
+export const CHARGEN_TAGS = new Set([
+  'enableattribute', 'enabletab', 'unlockskills', 'focusbindingkarmacost', 'limitcritterpowercategory', 'selectattributes', 'replaceattributes',
+  'skillcategorykarmacostmultiplier', 'skillcategorypointcostmultiplier', 'skillcategoryspecializationkarmacostmultiplier', 'skillcategorykarmacost',
+  'skillgroupcategorykarmacostmultiplier', 'skillgroupcategorydisable', 'skillgroupdisable', 'skillgroupdisablechoice', 'skilldisable',
+  'activeskillkarmacost', 'knowledgeskillkarmacost', 'knowledgeskillkarmacostmin', 'knowledgeskillpoints', 'newspellkarmacost', 'magicianswaydiscount',
+  'nuyenmaxbp', 'nuyenamt', 'metageniclimit', 'freespells', 'contactkarma', 'contactkarmaminimum', 'freequality', 'addskillspecializationoption',
+  'nativelanguagelimit', 'restrictedgear', 'blockspelldescriptor', 'limitspellcategory', 'limitspiritcategory', 'allowspellcategory', 'allowspellrange',
+  'addqualities', 'addgear', 'addcontact', 'selectcontact', 'addspirit', 'addmetamagic', 'addecho', 'addspell', 'addware', 'addlimb', 'selectquality',
+  'selectside', 'selectsprite', 'selectexpertise', 'trustfund', 'availability', 'specialmodificationlimit', 'cyberwareessmultiplier',
+  'biowareessmultiplier', 'cyberwaretotalessmultiplier', 'disablecyberwaregrade', 'disablebiowaregrade', 'disablebioware', 'essencepenalty',
+  'essencepenaltyt100', 'essencepenaltymagonlyt100', 'adeptpowerpoints', 'martialart', 'prototypetranshuman', 'specialattburnmultiplier',
+]);
+/** Reputation tags (SR5 p. 372): shown on the quality, the GM keeps the actor's reputation scores. */
+const REPUTATION: Record<string, string> = { notoriety: 'notoriety', publicawareness: 'publicAwareness', streetcred: 'streetCred' };
+/** <livingpersona> children → Matrix attributes of a technomancer's living persona. */
+const PERSONA_KEYS: Record<string, string> = { attack: 'attack', sleaze: 'sleaze', dataprocessing: 'dataProcessing', firewall: 'firewall', devicerating: 'deviceRating' };
 const LIMIT_TAGS: Record<string, string> = { physicallimit: 'physical', mentallimit: 'mental', sociallimit: 'social', astrallimit: 'astral' };
 const MONITOR_KEYS = { physical: 'physical', stun: 'stun', overflow: 'overflow', threshold: 'threshold', thresholdoffset: 'thresholdOffset', sharedthresholdoffset: 'sharedThresholdOffset' };
 
@@ -204,6 +225,25 @@ export function normalizeBonus(node: XmlNode, { wireless = false }: { wireless?:
       } else if (tag === 'actiondicepool' && txt(v?.['@category']) === 'Matrix') {
         // Codeslinger (SR5 p.72): +2 dice to one chosen Matrix action.
         push({ type: 'matrixAction', target: '$choice', value: 2, choice: { kind: 'matrixAction' } }, tag);
+      } else if (REPUTATION[tag]) {
+        push({ type: 'stat', target: REPUTATION[tag], value: effValue(v) }, tag);
+      } else if (tag === 'ambidextrous') {
+        push({ type: 'flag', target: 'ambidextrous', value: 1 }, tag);
+      } else if (tag === 'essencemax') {
+        push({ type: 'attributeMax', target: 'ESS', value: effValue(v) }, tag);
+      } else if (tag === 'lifestylecost') {
+        push({ type: 'stat', target: 'lifestyleCost', value: effValue(v) }, tag);
+      } else if (tag === 'livingpersona') {
+        let any = false;
+        for (const [k, target] of Object.entries(PERSONA_KEYS)) {
+          if (v && typeof v === 'object' && txt(v[k])) {
+            push({ type: 'personaAttribute', target, value: effValue(v[k]) }, tag);
+            any = true;
+          }
+        }
+        if (!any) unsupported(tag);
+      } else if (CHARGEN_TAGS.has(tag)) {
+        out.push({ type: 'chargen', tag, ...(wireless ? { wireless: true } : {}) });
       } else if (tag === 'addweapon') {
         push({ type: 'info', target: 'weapon', note: txt(v.name) || txt(v) }, tag);
       } else {

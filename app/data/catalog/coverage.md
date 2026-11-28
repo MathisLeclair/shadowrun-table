@@ -75,11 +75,11 @@ out (2050 books, placeholders, items only granted by a parent, duplicates, formu
 | armor | 186 | 61 |
 | armormods | 58 | 19 |
 | gear | 1264 | 343 |
-| cyberware | 283 | 102 |
-| bioware | 183 | 69 |
+| cyberware | 283 | 101 |
+| bioware | 183 | 70 |
 | vehicles | 346 | 108 |
 | vehiclemods | 171 | 51 |
-| qualities | 795 | 248 |
+| qualities | 795 | 253 |
 | spells | 358 | 89 |
 | powers | 103 | 29 |
 | programs | 71 | 18 |

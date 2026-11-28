@@ -7,7 +7,8 @@ twice): [rules/modifiers-stacking.md](../rules/modifiers-stacking.md).
 
 ```
 tools/lib/bonus-effects.ts   Chummer XML <bonus> node → normalized effects (pure; build time)
-tools/build-catalog.ts       catalog entries get `effects`; writes data/catalog/effects.json (runtime index) + effects-coverage.md
+tools/lib/effect-overrides.ts hand-written effects of entries whose rule is in the book text only (merged at build time)
+tools/build-catalog.ts       catalog entries get `effects`; writes data/catalog/effects.json (runtime index), effects-coverage.md, qualities-coverage.md
 shared/modifiers.ts          collectModifiers / poolModifiers / limitFor / weaponAccuracy / derivedWithModifiers (pure, server + browser)
 server/lib/modifiers.ts      effects index (global read-only catalog data), actorModifiers(actor, { weaponId }), deriveFull(actor)
 client/modules/sheet/modifiers-ui.tsx   useEffectsLookup / useModifiers / useDerivedModifiers, effect texts, chips with 📖 BookRef, tooltips
@@ -32,14 +33,31 @@ formula with Rating: 'Rating', '-Rating', 'FixedValues(1,2,3)', 'Rating * 2'), c
   (+ offense / defense), reach, unarmeddv / unarmedap, drain / fading / fatigue resist, surprise, spellresistance,
   recovery, throw…), `resist` (toxin / pathogen / fire / cold… resistances and immunities: shown only), `accuracy`
   (weaponskillaccuracy, weaponaccuracy), `matrixAction` (Codeslinger), `flag` (smartlink, unarmed physical), `choice`
-  (selecttext / selectskill without a value), `info` (addweapon).
+  (selecttext / selectskill without a value), `info` (addweapon), reputation and lifestyle cost (`stat` notoriety /
+  publicAwareness / streetCred / lifestyleCost: shown), `personaAttribute` (livingpersona: shown), flags `ambidextrous`.
+- `chargen`: creation / structural tags (karma and point costs, unlocked tabs and attributes, free spells or contacts,
+  forbidden 'ware grades…, `CHARGEN_TAGS`): nothing to do at the table, never a modifier.
 - Any other tag → `{ type: 'unsupported', tag }` (kept on the catalog entry, never silently dropped).
+
+## Hand-written effects and automation status
+
+`tools/lib/effect-overrides.ts` = `{ [file]: { [English name]: { effects?, replace?, partial?, gm?, handled? } } }`: effects
+written from the book (tag `hand`, the entry's own `source` / `page`) for entries Chummer has no data for (Guts, Unsteady
+Hands, Allergy, Prejudiced, Accident Prone, Data Trails qualities…), `partial` / `gm` = what stays with the GM (text for
+the report), `handled` = applied elsewhere (Agile Defender: full defense options; Wanted by GOD: the Matrix cockpit).
+Their conditions are `q-…` keys of `CONDITIONS`. A name that matches no entry is reported by the build.
+
+Each quality gets an automation status (`automationOf()` in the build): **automated**, **partly** (`manual: 'some'`),
+**not automated** (`manual: 'all'`: no effect data, only unsupported tags or bookkeeping such as notoriety, or `gm`),
+**creation only**. Every quality has an index entry (even without runtime effect) so `qualityAutomation(q, lookup)` →
+'auto' | 'some' | 'all' | 'custom' (not in the catalog). `data/catalog/qualities-coverage.md` lists every quality by
+status and book, with what is applied and what is not.
 
 `data/catalog/effects-coverage.md` = tag → supported / unsupported counts, effect types, and every **condition** key
 with Chummer's FR / EN strings (`lang/*.xml` `LimitCondition_*`) and the app's labels. Index
 `data/catalog/effects.json` = `{ files: { [file]: { [catalogId]: { name, nameFr, source, page, effects } } }, names: {
-[file]: { [lower-case EN / FR name]: id } } }` (runtime effects only: no unsupported / info / free-text choices / tag
-names; techniques under `techniques`).
+[file]: { [lower-case EN / FR name]: id } } }` (runtime effects only: no unsupported / chargen / info / free-text choices /
+tag names; techniques under `techniques`; qualities: every entry, with `manual?: 'all' | 'some'`).
 
 ## Conditions
 
@@ -58,7 +76,8 @@ labels: `TOGGLE_LABELS` (« Tenue visible », « Bonus sans fil actifs »…). `
 rules; armor « Rating » formulas use `armor.itemRating` — `armor.rating` is the armor value), augmentations (rating;
 not `disabled`), qualities, adept powers (Rating = `level`), gear with `active: true` (players may toggle it on their
 own gear; the sheet shows an « actif » switch on gear whose catalog entry has effects; default off), martial-art
-techniques, and with `weaponId` that weapon's equipped accessories (`effects.dicePool` → `weaponPool`). Items are
+techniques, echoes (`actor.magic.echoes`, free names matched by `ECHOES`: NeuroFilter, Overclocking, Mathemagics…, SR5 258 /
+DT 58-59), and with `weaponId` that weapon's equipped accessories (`effects.dicePool` → `weaponPool`). Items are
 matched by `catalogId`, else by English / French name (Foundry imports), also without a trailing « (…) » / « R4 ».
 `Modifier = { id ('list:itemId[:subId]:i'), source: { list, itemId, subId?, name, nameFr?, parentName?, catalogId?,
 book, page }, type, target, value (number, Rating resolved), condition, wireless?, baked?, info?, needsChoice?, choice?,
@@ -109,15 +128,19 @@ limit breakdown.
 
 ## Not automated
 
-Shown, or left to the GM: resistances / immunities, reach / unarmed DV, attribute maximums, karma / chargen tags
-(unsupported), « Too Pretty To Hit » (empty `<bonus>` in Chummer: no data). Situational conditions without restriction
+Shown, or left to the GM: resistances / immunities, reach / unarmed DV, attribute maximums, reputation, living persona
+attributes, glitch rules (Gremlins, Social Stress). Qualities: see `data/catalog/qualities-coverage.md`; the sheet marks
+« non automatisé » / « en partie automatisé » qualities (`AutomationMark`, tooltip says the GM applies them by hand).
+Situational conditions without restriction
 (« avec la corpo concernée, si visible ») are their own switch.
 
 ## Tests
 
 `node tools/test-modifiers.ts` (port 3500): the normalizer on real Chummer entries (Heritage 12, Chameleon Suit,
 Improved Reflexes, Kinesics, Muscle Replacement, Synaptic Booster, Tailored Pheromones, Codeslinger, Dimmer Bulb,
-Toughness / Will to Live / Catlike, Fire Resistance, Spellcasting Focus), the Lazarus PCs (Jane's Con: pool 14 / 16
+Toughness / Will to Live / Catlike, Fire Resistance, Spellcasting Focus), creation-only / reputation / living persona tags,
+automation status (qualityAutomation, qualities-coverage.md), hand-written effects (Guts, Accident Prone — not Gunnery —,
+Natural Hardening, I C U, Snooper), echoes (NeuroFilter, Overclocking in hot-sim only), the Lazarus PCs (Jane's Con: pool 14 / 16
 with Seduction, social limit 9 → 11 « visible »; Improved Reflexes baked; Ank'Lay's ware baked; Bricks' Codeslinger),
 monitors / pain tolerance, chargen accessories / armor mods, and the server authority (no injected modifier, maluses
 kept, limit not raised, weapon / soak / Matrix limits, gear switch, GM sub-item edits keep `paid` / `extraMount` /

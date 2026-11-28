@@ -2572,7 +2572,7 @@ export interface CatalogIndex {
 export type EffectType =
   | 'limit' | 'skill' | 'skillCategory' | 'skillGroup' | 'skillAttribute' | 'attribute' | 'attributeMax' | 'initiativeDice' | 'initiative'
   | 'matrixInitiativeDice' | 'armor' | 'monitor' | 'stat' | 'resist' | 'accuracy' | 'matrixAction' | 'flag' | 'choice' | 'info'
-  | 'unsupported' | 'allTests';
+  | 'unsupported' | 'allTests' | 'chargen' | 'personaAttribute';
 
 /** Normalized Chummer <bonus> effect of a catalog entry (data/catalog/effects.json, tools/lib/bonus-effects.ts). */
 export interface Effect {

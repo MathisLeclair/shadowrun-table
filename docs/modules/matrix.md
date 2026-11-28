@@ -8,6 +8,7 @@
 | tests | `node tools/test-matrix.ts` (port 3600); `tools/test-integration.ts` covers Bricks + agent |
 
 SR5 rules applied (initiative, limits, Overwatch, convergence, IC, agents): [rules/matrix.md](../rules/matrix.md).
+Data Trails qualities, programs and echoes the cockpit applies: [rules/matrix.md](../rules/matrix.md#data-trails).
 
 ## State
 

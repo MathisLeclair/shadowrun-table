@@ -383,6 +383,8 @@ tr.sh-skill:hover .sh-die-btn { color: var(--pc); }
 .sh-mod.off, .sh-mod.ignored { opacity: .55; }
 .sh-mod.ignored span { text-decoration: line-through; }
 .sh-mod .bookref { font-size: 10.5px; }
+.sh-manual { font-size: 10px; font-weight: 600; padding: 1px 7px; color: var(--amber); border-color: #6a4f1d; border-style: dashed; background: transparent; cursor: help; }
+.sh-manual.some { color: var(--dim); border-color: var(--line2); }
 .sh-rd-part.mod { border-color: var(--cyan-d); }
 .sh-rd-mods { display: flex; flex-direction: column; gap: 4px; }
 .sh-rd-mod { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
