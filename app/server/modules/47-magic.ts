@@ -12,7 +12,7 @@ import { hasLineOfSight } from '../../shared/vision.ts';
 import {
   isAwakened, DRAIN_ATTRS, drainAttr, drainValue, spellDrainType, spellReach, isAreaSpell, spellCategory, maxForce, RECKLESS_DV,
   isSustainable, spellEffects, combatSpellProfile, MIN_DRAIN, spellResistance, NO_AURA_KINDS, OBJECT_RESISTANCE,
-  spiritStats, traditionSpiritTypes, optionalPowerCount,
+  spiritStats, traditionSpiritTypes, optionalPowerCount, BINDING_DRAMS, isReagent, reagentDrams, aidSpiritType,
 } from '../../shared/magic.ts';
 import { spellCatalogInfo } from '../lib/spells.ts';
 import { addSpellAttack } from './33-attacks.ts';
@@ -70,6 +70,7 @@ export function syncSustained(state: TableState): void {
       continue;
     }
     if (!s.by || s.by.kind === 'caster') (sustaining[caster.id] ||= []).push({ id: s.id, name: s.name, force: s.force });
+    else if (s.by.kind === 'spirit' && state.actors?.[s.by.actorId]) (sustaining[s.by.actorId] ||= []).push({ id: s.id, name: s.name, force: s.force });
     const spell = (caster.spells || []).find((x) => x.id === s.spellId) || { name: s.name.en || s.name.fr, nameEn: s.name.en, nameFr: s.name.fr };
     const fx = spellEffects(spell, s.hits);
     if (!fx.length) continue;
@@ -103,6 +104,17 @@ function dropSustained(ctx: ActionContext, s: SustainedSpell, key: string): void
 combatHooks.push((ctx: ActionContext, _c: TableState['combat'], event: string) => {
   if (event !== 'newTurn') return;
   for (const s of Object.values(slice(ctx.state).sustained)) {
+    // A bound spirit sustains a spell for its Force in Combat Turns per service (SR5 p. 302), then gives it back.
+    if (s.by?.kind === 'spirit') {
+      s.by.turnsLeft -= 1;
+      const sp = ctx.state.actors[s.by.actorId];
+      if (s.by.turnsLeft <= 0 || !sp) {
+        delete s.by;
+        syncSustained(ctx.state);
+        const caster = ctx.state.actors[s.casterId];
+        if (caster) logMagic(ctx, caster, tk('{spirit} stops sustaining {spell}: {name} sustains it again.'), { spirit: sp?.name || '?', spell: s.name, name: caster.name }, { event: 'spirit', actorId: caster.id }, hiddenCaster(caster));
+      }
+    }
     if (typeof s.turnsLeft !== 'number') continue;
     s.turnsLeft -= 1;
     if (s.turnsLeft <= 0) dropSustained(ctx, s, tk('{spell} (Force {force}) of {name} is now permanent: no longer sustained.'));
@@ -137,6 +149,8 @@ const tokenOf = (map: GameMap | null, actorId: ActorId): Token | null => (map?.t
 type CastPayload = {
   actorId?: ActorId; spellId?: unknown; force?: unknown; reckless?: unknown; explode?: unknown; modifier?: unknown; conditions?: unknown;
   ignore?: unknown; mapId?: unknown; targetIds?: unknown; area?: unknown; drainDv?: unknown; sustain?: unknown;
+  /** A bound spirit of the tradition's type for this category adds its Force in dice (SR5 p. 302, one service). */
+  aidSpiritId?: unknown;
   /** The spell targets an object: its Object Resistance dice pool (3, 6, 9, 15: SR5 p. 295). */
   object?: unknown;
 };
@@ -214,10 +228,27 @@ export function castSpell(ctx: ActionContext, p: CastPayload) {
   // Spellcasting foci (condition spell-<category>) apply to a spell of their category without a switch.
   const conditions = [...(Array.isArray(p.conditions) ? p.conditions.slice(0, 40) : []), ...(cat ? [`spell-${cat}`] : [])];
   const secret = hiddenCaster(a);
+  // Aid Sorcery (bound spirit service, SR5 p. 302): +Force dice when its type is the tradition's spirit of the category.
+  const bonus: Array<{ label: string; value: number }> = [];
+  let aid: Actor | null = null;
+  if (p.aidSpiritId) {
+    aid = ctx.state.actors[str(p.aidSpiritId, 80)] || null;
+    if (!aid?.spirit || aid.spirit.summonerId !== a.id) ctx.fail('Unknown spirit');
+    if (!aid.spirit.bound) ctx.fail('Only a bound spirit can aid spellcasting');
+    if (aid.spirit.present === false) ctx.fail('{name} is resting on its metaplane: call it first', { name: aid.name });
+    if (aid.spirit.services <= 0) ctx.fail('{name} owes no service', { name: aid.name });
+    if (aidSpiritType(a.magic?.tradition, spell.category) !== aid.spirit.type) ctx.fail('{name} cannot aid this category of spell', { name: aid.name });
+    bonus.push({ label: `spirit ${aid.spirit.force}`, value: aid.spirit.force });
+  }
   const roll = performRoll(ctx, {
     actorId: a.id, skillId: 'spellcasting', label: spellRollLabel(spell.nameFr || spell.name), limit: force, explode: !!p.explode,
     modifier: p.modifier, conditions, ignore: p.ignore, ...(secret ? { secret: true } : {}),
-  }, { logExtra: { labelI18n: { key: tk('Spell — {spell} (Force {force})'), params: { spell: biName(spell), force } } } });
+  }, { bonus, logExtra: { labelI18n: { key: tk('Spell — {spell} (Force {force})'), params: { spell: biName(spell), force } } } });
+  if (aid?.spirit) {
+    aid.spirit.services -= 1;
+    logMagic(ctx, a, tk('{spirit} aids the spell: +{n} dice (one service).'), { spirit: aid.name, n: aid.spirit.force }, { event: 'spirit', actorId: aid.id }, secret);
+    if (aid.spirit.services <= 0) dismissSpirit(ctx, aid, tk('{name} has no service left and returns to its metaplane.'));
+  }
   const hits = roll.hits;
   const type = spellDrainType(hits, mag);
   const params = { name: a.name, spell: biName(spell), force, hits, dv, targets: targets.map((t) => t.name).join(', ') };
@@ -352,6 +383,111 @@ function summon(ctx: ActionContext, p: SummonPayload) {
     drain = { pendingId: pd.id };
   }
   return { hits: roll.hits, spiritHits: sr.hits, net, dv, drainType: type, drain, spiritId: spirit?.id || null, services: spirit ? net : 0 };
+}
+
+/** Use up drams of reagents from the actor's gear (any « Reagents » item, quantities as drams). */
+function useReagents(a: Actor, drams: number): void {
+  let left = drams;
+  for (const g of a.gear || []) {
+    if (left <= 0) break;
+    if (!isReagent(g)) continue;
+    const take = Math.min(left, Math.max(0, Number(g.qty) || 0));
+    g.qty = (Number(g.qty) || 0) - take;
+    left -= take;
+  }
+  a.gear = (a.gear || []).filter((g) => !isReagent(g) || (Number(g.qty) || 0) > 0);
+}
+
+/** Opposed test against a spirit (Force dice, + extra), rolled by the server and logged for the GM only. */
+function spiritRoll(ctx: ActionContext, sp: Actor, dice: number, key: string) {
+  const r = rollDice(dice);
+  ctx.log({ kind: 'roll', userId: ctx.user.id, author: sp.name, text: `${dice}`, gmOnly: true, roll: { ...r, label: `${dice}`, labelI18n: { key, params: { n: dice } }, actorId: null } });
+  return r;
+}
+
+/**
+ * Bind a summoned spirit (SR5 pp. 300-301): Force × 25 drams of reagents used up, Binding + MAG [Force] vs Force × 2;
+ * Drain 2 × the spirit's hits (min 2), Physical if Force > MAG; net hits beyond the first add services. Up to CHA bound.
+ */
+function bind(ctx: ActionContext, p: { spiritId?: unknown; explode?: unknown; modifier?: unknown; free?: unknown }) {
+  const sp = spiritOf(ctx, p.spiritId);
+  const a = actorOf(ctx, sp.spirit.summonerId);
+  if (sp.spirit.bound) ctx.fail('{name} is already bound', { name: sp.name });
+  const mag = attr(a, 'MAG');
+  const bound = spiritsOf(ctx.state, a.id).filter((s) => s.spirit!.bound).length;
+  if (bound >= attr(a, 'CHA')) ctx.fail('{name} already binds as many spirits as their Charisma ({n})', { name: a.name, n: attr(a, 'CHA') });
+  const drams = sp.spirit.force * BINDING_DRAMS;
+  const free = ctx.isGM && !!p.free;
+  if (!free && reagentDrams(a) < drams) ctx.fail('Binding needs {n} drams of reagents ({have} carried)', { n: drams, have: reagentDrams(a) });
+  if (!free) useReagents(a, drams);
+  const secret = hiddenCaster(a);
+  const roll = performRoll(ctx, {
+    actorId: a.id, skillId: 'binding', label: `Lien — ${sp.name}`, limit: sp.spirit.force, explode: !!p.explode, modifier: p.modifier, ...(secret ? { secret: true } : {}), // i18n-ignore: stored label
+  }, { logExtra: { labelI18n: { key: tk('Binding — {spirit} (Force {force})'), params: { spirit: sp.name, force: sp.spirit.force } } } });
+  const sr = spiritRoll(ctx, sp, sp.spirit.force * 2, tk('Spirit resists the binding ({n} dice)'));
+  const net = roll.hits - sr.hits;
+  const dv = Math.max(MIN_DRAIN, 2 * sr.hits);
+  const type: 'P' | 'S' = sp.spirit.force > mag ? 'P' : 'S';
+  const source: BiName = { fr: sp.name, en: sp.name };
+  if (net > 0) {
+    sp.spirit.bound = true;
+    sp.spirit.present = true;
+    sp.spirit.services += net - 1;
+    logMagic(ctx, a, tk('{name} binds {spirit}: it now owes {n} service(s). Drain {dv}.'), { name: a.name, spirit: sp.name, n: sp.spirit.services, dv }, { event: 'bind', actorId: a.id, force: sp.spirit.force, hits: roll.hits, dv, drainType: type }, secret);
+  } else {
+    logMagic(ctx, a, tk('{name} fails to bind {spirit}. Drain {dv}.'), { name: a.name, spirit: sp.name, dv }, { event: 'bind', actorId: a.id, force: sp.spirit.force, hits: roll.hits, dv, drainType: type }, secret);
+  }
+  const drain = drainNow(ctx, a, dv, type, source);
+  return { hits: roll.hits, spiritHits: sr.hits, net, dv, drainType: type, drain, bound: net > 0, services: sp.spirit.services, drams: free ? 0 : drams };
+}
+
+/**
+ * Banish a spirit (SR5 p. 301), the banisher's own or an enemy's: Banishing + MAG [Astral] vs Force (+ the summoner's MAG
+ * if bound); each net hit removes a service, at 0 the spirit leaves. Drain 2 × the spirit's hits (min 2), Physical if
+ * Force > the banisher's MAG.
+ */
+function banish(ctx: ActionContext, p: { actorId?: ActorId; spiritId?: unknown; explode?: unknown; modifier?: unknown }) {
+  const a = actorOf(ctx, p.actorId);
+  const sp = ctx.state.actors[str(p.spiritId, 80)];
+  if (!sp?.spirit) ctx.fail('Unknown spirit');
+  if (!ctx.isGM && sp.hidden) ctx.fail('Unknown spirit');
+  const mag = attr(a, 'MAG');
+  if (mag <= 0) ctx.fail('{name} is not awakened', { name: a.name });
+  if (!drainAttr(a)) ctx.fail('Choose a tradition first: it sets the attribute you resist Drain with');
+  const summoner = ctx.state.actors[sp.spirit.summonerId];
+  const secret = hiddenCaster(a);
+  const roll = performRoll(ctx, {
+    actorId: a.id, skillId: 'banishing', label: `Bannissement — ${sp.name}`, explode: !!p.explode, modifier: p.modifier, ...(secret ? { secret: true } : {}), // i18n-ignore: stored label
+  }, { logExtra: { labelI18n: { key: tk('Banishing — {spirit}'), params: { spirit: sp.name } } } });
+  const dice = sp.spirit.force + (sp.spirit.bound && summoner ? attr(summoner, 'MAG') : 0);
+  const sr = spiritRoll(ctx, sp, dice, tk('Spirit resists the banishing ({n} dice)'));
+  const net = Math.max(0, roll.hits - sr.hits);
+  const dv = Math.max(MIN_DRAIN, 2 * sr.hits);
+  const type: 'P' | 'S' = sp.spirit.force > mag ? 'P' : 'S';
+  const name = sp.name;
+  let gone = false;
+  if (net > 0) {
+    sp.spirit.services = Math.max(0, sp.spirit.services - net);
+    if (sp.spirit.services <= 0) {
+      gone = true;
+      dismissSpirit(ctx, sp, tk('{name} is banished and returns to its metaplane.'));
+    }
+  }
+  logMagic(ctx, a, net > 0 ? tk('{name} banishes {spirit}: −{n} service(s). Drain {dv}.') : tk('{name} fails to banish {spirit}. Drain {dv}.'), { name: a.name, spirit: name, n: net, dv }, { event: 'banish', actorId: a.id, hits: roll.hits, dv, drainType: type }, secret);
+  const drain = drainNow(ctx, a, dv, type, { fr: name, en: name });
+  return { hits: roll.hits, spiritHits: sr.hits, net, dv, drainType: type, drain, gone, services: gone ? 0 : sp.spirit.services };
+}
+
+/** Drain resisted now (settings.autoDrain) or left pending. */
+function drainNow(ctx: ActionContext, a: Actor, dv: number, type: 'P' | 'S', source: BiName): { hits: number; damage: number } | { pendingId: string } {
+  const m = slice(ctx.state);
+  if (m.settings.autoDrain) {
+    const r = resistDrain(ctx, a, dv, type, source);
+    return { hits: r.roll.hits, damage: r.damage };
+  }
+  const pd: PendingDrain = { id: ctx.uid('drain'), actorId: a.id, dv, type, source, ts: ctx.now };
+  m.pendingDrain[pd.id] = pd;
+  return { pendingId: pd.id };
 }
 
 /** The spirit's NPC actor (SR5 pp. 303-304 via spiritStats), assigned to the summoner's player(s). */
@@ -512,6 +648,7 @@ const actions: Record<string, ActionDef> = {
     handler(ctx: ActionContext, p: { spiritId?: unknown; materialized?: unknown; mapId?: unknown } = {}) {
       const sp = spiritOf(ctx, p.spiritId);
       const on = !!p.materialized;
+      if (on && sp.spirit.present === false) ctx.fail('{name} is resting on its metaplane: call it first', { name: sp.name });
       sp.spirit.materialized = on;
       sp.npc = { ...(sp.npc || {}), initMode: on ? 'physical' : 'astral' };
       for (const e of ctx.state.combat?.entries || []) if (e.actorId === sp.id) e.mode = on ? 'physical' : 'astral';
@@ -537,6 +674,7 @@ const actions: Record<string, ActionDef> = {
       const sp = spiritOf(ctx, p.spiritId);
       const c = ctx.state.combat;
       if (!c?.active) ctx.fail('No fight in progress');
+      if (sp.spirit.present === false) ctx.fail('{name} is resting on its metaplane: call it first', { name: sp.name });
       if ((c.entries || []).some((e) => e.actorId === sp.id)) ctx.fail('{name} is already in the fight', { name: sp.name });
       const map = c.mapId ? ctx.state.maps?.[c.mapId] : null;
       const tok = tokenOf(map || null, sp.id);
@@ -554,6 +692,62 @@ const actions: Record<string, ActionDef> = {
       const sp = spiritOf(ctx, p.spiritId);
       dismissSpirit(ctx, sp, tk('{summoner} releases {name}.'));
       return true;
+    },
+  },
+
+  /** { spiritId, explode?, modifier?, free? (GM: no reagents) } — bind a summoned spirit (SR5 pp. 300-301). */
+  'magic/bind': {
+    role: 'any',
+    handler(ctx: ActionContext, p: { spiritId?: unknown; explode?: unknown; modifier?: unknown; free?: unknown } = {}) {
+      sweepDisrupted(ctx);
+      return bind(ctx, p);
+    },
+  },
+
+  /** { actorId, spiritId, explode?, modifier? } — banish a spirit, one's own or an enemy's (SR5 p. 301). */
+  'magic/banish': {
+    role: 'any',
+    handler(ctx: ActionContext, p: { actorId?: ActorId; spiritId?: unknown; explode?: unknown; modifier?: unknown } = {}) {
+      sweepDisrupted(ctx);
+      return banish(ctx, p);
+    },
+  },
+
+  /** { spiritId, present } — call a bound spirit to its summoner, or send it to rest on its metaplane (Simple Action). */
+  'magic/callSpirit': {
+    role: 'any',
+    handler(ctx: ActionContext, p: { spiritId?: unknown; present?: unknown } = {}) {
+      const sp = spiritOf(ctx, p.spiritId);
+      if (!sp.spirit.bound) ctx.fail('Only a bound spirit rests on its metaplane');
+      const on = !!p.present;
+      sp.spirit.present = on;
+      if (!on) {
+        sp.spirit.materialized = false;
+        for (const map of Object.values(ctx.state.maps || {})) map.tokens = (map.tokens || []).filter((t) => t.actorId !== sp.id);
+        for (const e of ctx.state.combat?.entries || []) if (e.actorId === sp.id) e.out = true;
+      }
+      logMagic(ctx, ctx.state.actors[sp.spirit.summonerId] || sp, on ? tk('{name} answers the call.') : tk('{name} goes back to rest on its metaplane.'), { name: sp.name }, { event: 'spirit', actorId: sp.id }, !!sp.hidden);
+      return { present: on };
+    },
+  },
+
+  /** { sustainedId, spiritId } — a bound spirit sustains a spell of its summoner for Force Combat Turns (one service). */
+  'magic/spiritSustain': {
+    role: 'any',
+    handler(ctx: ActionContext, p: { sustainedId?: unknown; spiritId?: unknown } = {}) {
+      const s = slice(ctx.state).sustained[str(p.sustainedId, 80)];
+      if (!s) ctx.fail('This spell is no longer sustained');
+      const sp = spiritOf(ctx, p.spiritId);
+      if (sp.spirit.summonerId !== s.casterId) ctx.fail('Only a spirit of the caster can sustain it');
+      if (!sp.spirit.bound) ctx.fail('Only a bound spirit can sustain a spell');
+      if (sp.spirit.present === false) ctx.fail('{name} is resting on its metaplane: call it first', { name: sp.name });
+      if (sp.spirit.services <= 0) ctx.fail('{name} owes no service', { name: sp.name });
+      sp.spirit.services -= 1;
+      s.by = { kind: 'spirit', actorId: sp.id, turnsLeft: sp.spirit.force };
+      syncSustained(ctx.state);
+      const caster = ctx.state.actors[s.casterId];
+      logMagic(ctx, caster || sp, tk('{spirit} sustains {spell} for {n} Combat Turn(s) (one service).'), { spirit: sp.name, spell: s.name, n: sp.spirit.force }, { event: 'spirit', actorId: sp.id }, !!sp.hidden);
+      return { turns: sp.spirit.force, services: sp.spirit.services };
     },
   },
 

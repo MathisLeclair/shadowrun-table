@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   findTradition, traditionFromDef, parseDrainText, sortTraditions, drainValue, drainOffset, spellReach, isAreaSpell, spellCategory, spellDrainType, maxForce,
-  spellEffects, isSustainable, combatSpellProfile, spellResistance, attributeOfSpell, evalForce, spiritStats, optionalPowerCount, traditionSpiritTypes, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
+  spellEffects, isSustainable, combatSpellProfile, spellResistance, attributeOfSpell, evalForce, spiritStats, optionalPowerCount, traditionSpiritTypes, reagentDrams, aidSpiritType, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
   type TraditionDef,
 } from '../shared/magic.ts';
 import { derive } from '../shared/sr5.ts';
@@ -175,6 +175,10 @@ ok(optionalPowerCount(2) === 0 && optionalPowerCount(3) === 1 && optionalPowerCo
   const sp = { attributes: st.attributes, spirit: { force: 4 } } as unknown as ActorLike;
   ok(derive(sp).astralInitiative.base === 8 && derive(sp).astralInitiative.dice === 3, 'a spirit actor: astral initiative F × 2 + 3D6 (SR5 p. 314)');
 }
+
+// Binding helpers (#19)
+ok(reagentDrams({ gear: [{ name: 'Reagents, per dram', qty: 30 }, { name: 'Medkit', qty: 1 }, { name: 'x', nameFr: 'Réactifs (Par drachme)', qty: 5 }] }) === 35, 'reagentDrams: reagent items only');
+ok(aidSpiritType({ name: 'Hermetic', drain: 'LOG', spirits: { combat: 'Spirit of Fire' } }, 'Combat') === 'Spirit of Fire' && aidSpiritType(null, 'Combat') === null, 'aidSpiritType: the tradition’s spirit of the category');
 
 // ---------------------------------------------------------------------------
 // Chummer import
@@ -491,6 +495,77 @@ try {
   await settle();
   ok(sun.left >= 1 && !gm.state.actors[sm3.spiritId as string], 'sunrise: unbound spirits leave');
   await gm.send('magic/setTradition', { actorId: 'pc_jane', tradition: 'Custom', drain: 'CHA' });
+  // ---------- Binding, bound spirits, banishing (#19) ----------
+  const restore = async (id: string) => gm.send('actor/update', { actorId: id, patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  await gm.send('magic/setTradition', { actorId: 'pc_jane', tradition: 'Hermetic' });
+  await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'skills', item: { id: 'binding', name: 'Binding', attr: 'MAG', rating: 6 } });
+  await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'skills', item: { id: 'banishing', name: 'Banishing', attr: 'MAG', rating: 6 } });
+  await restore('pc_jane');
+  let fire: { spiritId: string | null } = { spiritId: null };
+  for (let i = 0; i < 6 && !fire.spiritId; i++) {
+    fire = await pj.send('magic/summon', { actorId: 'pc_jane', type: 'Spirit of Fire', force: 2 });
+    await restore('pc_jane');
+  }
+  const fid = fire.spiritId as string;
+  await expectFail(pj.send('magic/bind', { spiritId: fid }), /reagent|réactif/i, 'binding without reagents refused');
+  await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'gear', item: { name: 'Reagents, per dram', qty: 400 } });
+  await settle();
+  let bd: { bound: boolean; services: number; net: number; drams: number } = { bound: false, services: 0, net: 0, drams: 0 };
+  let tries = 0;
+  const svBefore = gm.state.actors[fid].spirit!.services;
+  for (; tries < 6 && !bd.bound; tries++) {
+    bd = await pj.send('magic/bind', { spiritId: fid });
+    await restore('pc_jane');
+  }
+  await settle();
+  ok(bd.bound && gm.state.actors[fid].spirit!.bound && bd.services === svBefore + bd.net - 1, `bound: net hits beyond the first add services (${JSON.stringify(bd)})`);
+  ok(reagentDrams(gm.state.actors.pc_jane) === 400 - 50 * tries, `each binding attempt uses Force × 25 drams (${reagentDrams(gm.state.actors.pc_jane)} left after ${tries})`);
+  await expectFail(pj.send('magic/bind', { spiritId: fid }), /already|déjà/i, 'already bound');
+  // Rest and call.
+  await pj.send('magic/callSpirit', { spiritId: fid, present: false });
+  await settle();
+  ok(gm.state.actors[fid].spirit!.present === false, 'sent to rest');
+  await expectFail(pj.send('magic/materialize', { spiritId: fid, materialized: true, mapId }), /rest|repos/i, 'a resting spirit cannot materialize');
+  await pj.send('magic/callSpirit', { spiritId: fid, present: true });
+  await gm.send('magic/spiritServices', { spiritId: fid, delta: 4 });
+  await settle();
+  // Aid sorcery: Manabolt (combat) aided by the tradition's combat spirit (fire).
+  const svA = gm.state.actors[fid].spirit!.services;
+  const aided = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 2, aidSpiritId: fid });
+  await settle();
+  const aidRoll = gm.state.log.find((e) => e.id === aided.rollLogId);
+  ok(/spirit 2/.test(aidRoll?.roll?.breakdown || '') && gm.state.actors[fid].spirit!.services === svA - 1, `aid sorcery: +Force dice, one service (${aidRoll?.roll?.breakdown})`);
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: control, force: 2, aidSpiritId: fid, sustain: false }), /category|catégorie/i, 'a fire spirit cannot aid a manipulation spell (Hermetic: earth)');
+  await restore('pc_jane');
+  // Spell sustaining by the spirit (Force Combat Turns per service), then back to the caster.
+  let arm: { sustainedId?: string | null } = {};
+  for (let i = 0; i < 5 && !arm.sustainedId; i++) arm = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: armorSpell, force: 2, mapId, targetIds: ['pc_jane'] });
+  await restore('pc_jane');
+  const armId = arm.sustainedId as string;
+  await pj.send('magic/spiritSustain', { sustainedId: armId, spiritId: fid });
+  await settle();
+  ok(!(gm.state.actors.pc_jane.magic?.sustaining || []).some((x) => x.id === armId) && (gm.state.actors[fid].magic?.sustaining || []).some((x) => x.id === armId), 'the spirit carries the −2 instead of the caster');
+  await gm.send('combat/start', { mapId, includeMapTokens: false });
+  await gm.send('combat/newTurn');
+  await gm.send('combat/newTurn');
+  await settle();
+  ok(!gm.state.magic.sustained[armId]?.by && (gm.state.actors.pc_jane.magic?.sustaining || []).some((x) => x.id === armId), 'after Force Combat Turns the caster sustains it again');
+  await gm.send('combat/end');
+  await pj.send('magic/drop', { id: armId });
+  // Sunrise: a bound spirit stays.
+  await gm.send('magic/sunrise', {});
+  await settle();
+  ok(!!gm.state.actors[fid], 'a bound spirit does not leave at sunrise');
+  // Banishing one's own bound spirit: its Force + the summoner's Magic in dice.
+  const bn = await pj.send('magic/banish', { actorId: 'pc_jane', spiritId: fid });
+  await settle();
+  const spiritLog = [...gm.state.log].reverse().find((e) => e.roll?.labelI18n?.key === 'Spirit resists the banishing ({n} dice)');
+  ok(spiritLog?.roll?.labelI18n?.params?.n === 2 + 5 && spiritLog.gmOnly, `a bound spirit resists with Force + its summoner’s Magic, GM-only (${JSON.stringify(spiritLog?.roll?.labelI18n)})`);
+  ok(bn.gone ? !gm.state.actors[fid] : gm.state.actors[fid].spirit!.services === bn.services, 'net hits remove services (or the spirit leaves)');
+  if (!bn.gone) await gm.send('magic/release', { spiritId: fid });
+  await restore('pc_jane');
+  await gm.send('magic/setTradition', { actorId: 'pc_jane', tradition: 'Custom', drain: 'CHA' });
+
   // A target left with no dice (WIL 1, badly wounded) still resolves the spell: 0 hits, not a blocked attack.
   const weakId = await gm.send<string>('actor/create', { type: 'npc', name: 'Weak test', attributes: { BOD: 1, WIL: 1 } });
   await gm.send('maps/addToken', { mapId, token: { actorId: weakId, x: 7, y: 5 } });

@@ -442,6 +442,23 @@ export function spiritStats(def: SpiritDef, force: number): {
   };
 }
 
+/** Binding costs Force × 25 drams of reagents (SR5 p. 300). */
+export const BINDING_DRAMS = 25;
+/** Reagents of the gear (« Reagents », « Réactifs »…): their quantity counts as drams. */
+export const isReagent = (g: { name?: string; nameFr?: string; nameEn?: string } | null | undefined): boolean => /reagent|réactif|reactif/i.test([g?.name, g?.nameEn, g?.nameFr].filter(Boolean).join(' '));
+/** Drams of reagents an actor carries. */
+export const reagentDrams = (actor: { gear?: Array<{ name?: string; nameFr?: string; nameEn?: string; qty?: number }> | null } | null | undefined): number =>
+  (actor?.gear || []).filter(isReagent).reduce((s, g) => s + Math.max(0, Number(g.qty) || 0), 0);
+
+/**
+ * The bound spirit that can aid a spell (SR5 p. 302, Aid Sorcery): its type is the tradition's spirit of the spell's
+ * category. Returns the spirit types per category of the tradition.
+ */
+export function aidSpiritType(tradition: ActorTradition | null | undefined, category: unknown): string | null {
+  const cat = spellCategory(category);
+  return cat ? tradition?.spirits?.[cat] || null : null;
+}
+
 /** Spirit types a tradition summons (its five spirits, without duplicates), or every type of the data. */
 export function traditionSpiritTypes(tradition: ActorTradition | null | undefined, all: readonly SpiritDef[]): SpiritDef[] {
   const names = [...new Set(Object.values(tradition?.spirits || {}).filter(Boolean) as string[])];
