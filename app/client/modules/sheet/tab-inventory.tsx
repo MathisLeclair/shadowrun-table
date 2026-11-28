@@ -70,11 +70,15 @@ function ItemRow({ s, list, it, places, onDragStart }: ItemRowProps) {
   const extra = list === 'weapons' && usesAmmo(it) ? `${it.ammoLoaded ?? it.ammoMax}/${it.ammoMax}` : list === 'weapons' && isGrenade(it) ? `×${it.qty ?? 1}` : list === 'armor' ? `${it.stack ? '+' : ''}${it.rating ?? 0}` : null;
   return <div className={'sh-inv-row' + (own ? ' draggable' : '')} draggable={own} onDragStart={(e) => onDragStart(e, list, it)}>
     <span className="sh-inv-icon" title={t(LIST_TITLES[list])}>{LIST_ICONS[list]}</span>
-    <div className="grow sh-inv-name">
-      <span title={itemTitle(it)}>{itemLabel(it)}</span>
-      {it.rating && list === 'gear' ? <>{' '}<span className="faint small">{t('rating {n}', { n: it.rating })}</span></> : null}{' '}
-      <ItemRef item={it} />
-      {categoryLabel(it) ? <div className="faint small">{categoryLabel(it)}</div> : null}
+    <div className="sh-inv-name">
+      <div className="sh-inv-title">
+        <span className="sh-inv-label" title={itemTitle(it)}>{itemLabel(it)}</span>
+        {it.rating && list === 'gear' ? <span className="faint small sh-inv-nowrap">{t('rating {n}', { n: it.rating })}</span> : null}
+      </div>
+      <div className="sh-inv-sub">
+        {categoryLabel(it) ? <span className="faint small sh-inv-cat" title={categoryLabel(it)}>{categoryLabel(it)}</span> : null}
+        <ItemRef item={it} />
+      </div>
     </div>
     {extra !== null ? <span className="mono small">{extra}</span> : null}{list === 'gear' ? <span className="mono small" title={t('Quantity')}>×{it.qty ?? 1}</span> : null}{status}{own && <Select className="sh-inv-move" value="" title={t('Move to…')} onChange={(v) => v && move(v)} options={[{ value: '', label: t('Move to…') }, ...places.filter((p) => p.value !== (it.location || ON_BODY))]} />}
   </div>;
