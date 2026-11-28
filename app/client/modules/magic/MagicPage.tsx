@@ -5,7 +5,7 @@ import { Tabs, Empty, Button, Badge, Toggle } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
 import { useUI, openSheet } from '../../lib/ui-store.ts';
 import type { GameProps } from '../../lib/net.ts';
-import { t, tk, attrShort } from '../../lib/i18n.ts';
+import { t, tk, attrShort, getLang } from '../../lib/i18n.ts';
 import { attr, derive } from '/shared/sr5.ts';
 import { drainAttr, drainPool, sustainedBy, usesTradition, magicHints, SUSTAIN_PENALTY, type MagicHint } from '/shared/magic.ts';
 import { RollDialog } from '../sheet/RollDialog.tsx';
@@ -14,7 +14,7 @@ import { categoryLabel, itemLabel } from '../sheet/common.tsx';
 import { isGM, magicActors, drainRollLabel, TraditionPicker } from './common.tsx';
 import CastModal from './CastModal.tsx';
 import type { RollPreset } from '../sheet/types.ts';
-import type { Actor, GameView } from '../../../shared/types.ts';
+import type { Actor, GameView, SustainedSpell } from '../../../shared/types.ts';
 import './magic.css';
 
 function usePersistent<T>(key: string, initial: T): [T, (x: T) => void] {
@@ -74,6 +74,38 @@ function useHintsToggle(): [boolean, (v: boolean) => void] {
   return [on, setOn];
 }
 
+/** A name stored in both languages, in the UI language. */
+const biText = (n: { fr?: string; en?: string } | null | undefined): string => (getLang() === 'en' ? n?.en || n?.fr : n?.fr || n?.en) || '';
+
+/** Sustained spells (SR5 p. 282): caster, Force, hits, targets, turns left for a Permanent one, « Drop ». */
+function SustainedList({ game, list, canDrop, showCaster }: { game: GameView; list: SustainedSpell[]; canDrop: (s: SustainedSpell) => boolean; showCaster?: boolean }) {
+  const name = (id: string) => (game.actors?.[id] as { name?: string } | undefined)?.name || '?';
+  return (
+    <table className="sr mg-sustained">
+      <tbody>
+        {list.map((s) => (
+          <tr key={s.id}>
+            <td>
+              <b>{biText(s.name)}</b>
+              {showCaster ? <span className="muted small"> — {name(s.casterId)}</span> : null}
+            </td>
+            <td className="num-cell">{t('F{force} · {hits} hit(s)', { force: s.force, hits: s.hits })}</td>
+            <td className="small">{s.targetIds.length ? t('on {list}', { list: s.targetIds.map(name).join(', ') }) : <span className="muted">{t('no target')}</span>}</td>
+            <td className="small muted">{typeof s.turnsLeft === 'number' ? t('permanent in {n} Combat Turn(s)', { n: s.turnsLeft }) : ''}</td>
+            <td>
+              {canDrop(s) && (
+                <Button small onClick={() => void send('magic/drop', { id: s.id }).catch(() => null)} title={t('Stop sustaining this spell')}>
+                  {t('Drop')}
+                </Button>
+              )}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
 /** Cockpit of one awakened character. */
 export function Cockpit({ game, actor }: { game: GameView; actor: Actor }) {
   const gm = isGM(game);
@@ -96,6 +128,8 @@ export function Cockpit({ game, actor }: { game: GameView; actor: Actor }) {
   const pp = powers.reduce((s, p) => s + (Number(p.pp) || 0), 0);
   const hints = magicHints({ actor, magic: game.magic });
   const pending = Object.values(game.magic?.pendingDrain || {}).filter((pd) => pd.actorId === actor.id);
+  const mySustained = Object.values(game.magic?.sustained || {}).filter((s) => s.casterId === actor.id);
+  const onMe = Object.values(game.magic?.sustained || {}).filter((s) => s.casterId !== actor.id && s.targetIds.includes(actor.id));
   return (
     <div className={'mg-cockpit' + (astral ? ' astral' : '')}>
       <div className="mg-bar">
@@ -148,13 +182,31 @@ export function Cockpit({ game, actor }: { game: GameView; actor: Actor }) {
           {pending.map((pd) => (
             <div className="row" key={pd.id}>
               <span>
-                {t('Drain {dv}', { dv: pd.dv })} <Badge color={pd.type === 'P' ? 'red' : 'amber'}>{pd.type === 'P' ? t('Physical') : t('Stun')}</Badge> <span className="muted small">{pd.source[game.me?.lang === 'en' ? 'en' : 'fr'] || pd.source.fr}</span>
+                {t('Drain {dv}', { dv: pd.dv })} <Badge color={pd.type === 'P' ? 'red' : 'amber'}>{pd.type === 'P' ? t('Physical') : t('Stun')}</Badge> <span className="muted small">{biText(pd.source)}</span>
               </span>
               <Button small variant="primary" disabled={!own} onClick={() => void send('magic/resistDrain', { id: pd.id }).catch(() => null)}>
                 {t('Resist Drain')}
               </Button>
             </div>
           ))}
+        </div>
+      )}
+      {(mySustained.length > 0 || onMe.length > 0) && (
+        <div className="mg-panel mg-sustained-panel">
+          {mySustained.length > 0 && (
+            <>
+              <div className="mg-panel-title">
+                {t('Sustained spells: −{n} dice on all tests', { n: mySustained.length * SUSTAIN_PENALTY })} <RuleRef rule="spellcasting" />
+              </div>
+              <SustainedList game={game} list={mySustained} canDrop={() => own} />
+            </>
+          )}
+          {onMe.length > 0 && (
+            <>
+              <div className="mg-panel-title">{t('Spells on {name}', { name: actor.name })}</div>
+              <SustainedList game={game} list={onMe} canDrop={() => gm} showCaster />
+            </>
+          )}
         </div>
       )}
       <div className="mg-grid">
@@ -316,8 +368,10 @@ function GmMagicPage({ game }: GameProps) {
   };
   useMagicFocus(openCockpit);
   const cur = actors.find((a) => a.id === cockpitId) || actors[0] || null;
+  const active = Object.values(game.magic?.sustained || {});
   const tabs = [
     { id: 'overview', label: t('Overview') },
+    { id: 'spells', label: t('Active spells'), badge: active.length || null },
     { id: 'cockpit', label: t('Cockpit') },
   ];
   const current = tabs.some((x) => x.id === tab) ? tab : 'overview';
@@ -336,6 +390,14 @@ function GmMagicPage({ game }: GameProps) {
       </div>
       <Tabs tabs={tabs} value={current} onChange={setTab} className="mg-tabs" />
       {current === 'overview' && <Overview game={game} onCockpit={openCockpit} />}
+      {current === 'spells' &&
+        (active.length ? (
+          <div className="mg-panel">
+            <SustainedList game={game} list={active} canDrop={() => true} showCaster />
+          </div>
+        ) : (
+          <Empty>{t('No spell is being sustained.')}</Empty>
+        ))}
       {current === 'cockpit' &&
         (cur ? (
           <div>

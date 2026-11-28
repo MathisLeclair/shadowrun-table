@@ -6,13 +6,15 @@ import { cellDistance } from '../../shared/combat.ts';
 import { hasLineOfSight } from '../../shared/vision.ts';
 import {
   isAwakened, DRAIN_ATTRS, drainAttr, drainValue, spellDrainType, spellReach, isAreaSpell, spellCategory, maxForce, RECKLESS_DV,
+  isSustainable, spellEffects,
 } from '../../shared/magic.ts';
+import { combatHooks } from './30-combat.ts';
 import { actorTradition, traditionDef } from '../lib/traditions.ts';
 import { performRoll, applyDamage } from './10-characters.ts';
 import type { PerformedRoll } from './10-characters.ts';
 import type {
   ActionContext, ActionDef, Actor, ActorId, AttrKey, BiName, GameMap, I18nParams, MagicLogInfo, MagicSettings, MagicState, PendingDrain,
-  ServerModule, Spell, TableState, Token,
+  ServerModule, Spell, SpellEffectEntry, SustainedSpell, SustainingEntry, TableState, Token,
 } from '../../shared/types.ts';
 
 const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
@@ -42,6 +44,63 @@ function logMagic(ctx: ActionContext, a: Actor, key: string, params: I18nParams,
   return ctx.log({ kind: 'magic', userId: ctx.user.id, author: a.name, i18n: { key, params }, magic, ...(gmOnly ? { gmOnly: true } : {}) });
 }
 
+// ---------------------------------------------------------------------------
+// Sustained spells (SR5 p. 282): state.magic.sustained is the record; syncSustained() mirrors it on the actors
+// (actor.magic.sustaining = −2 dice on every test per spell, actor.magic.spellEffects = Armor, Combat Sense… on the
+// targets) so the modifiers (shared/modifiers.ts collectModifiers) see it in every roll, on the server and the sheet.
+// ---------------------------------------------------------------------------
+
+/** Rewrite the actors' mirrors from state.magic.sustained (drops the spells of deleted casters). */
+export function syncSustained(state: TableState): void {
+  const m = slice(state);
+  const sustaining: Record<ActorId, SustainingEntry[]> = {};
+  const effects: Record<ActorId, SpellEffectEntry[]> = {};
+  for (const [id, s] of Object.entries(m.sustained)) {
+    const caster = state.actors?.[s?.casterId];
+    if (!isObj(s) || !caster) {
+      delete m.sustained[id];
+      continue;
+    }
+    if (!s.by || s.by.kind === 'caster') (sustaining[caster.id] ||= []).push({ id: s.id, name: s.name, force: s.force });
+    const spell = (caster.spells || []).find((x) => x.id === s.spellId) || { name: s.name.en || s.name.fr, nameEn: s.name.en, nameFr: s.name.fr };
+    const fx = spellEffects(spell, s.hits);
+    if (!fx.length) continue;
+    for (const tid of s.targetIds || []) {
+      if (!state.actors?.[tid]) continue;
+      (effects[tid] ||= []).push({ id: s.id, name: s.name, force: s.force, hits: s.hits, casterId: caster.id, casterName: caster.name, effects: fx });
+    }
+  }
+  for (const a of Object.values(state.actors || {})) {
+    const want = sustaining[a.id];
+    const fx = effects[a.id];
+    if (!want && !fx && !a.magic?.sustaining && !a.magic?.spellEffects) continue;
+    a.magic = a.magic && typeof a.magic === 'object' ? a.magic : {};
+    if (want) a.magic.sustaining = want;
+    else delete a.magic.sustaining;
+    if (fx) a.magic.spellEffects = fx;
+    else delete a.magic.spellEffects;
+  }
+}
+
+/** End a sustained spell (logged). */
+function dropSustained(ctx: ActionContext, s: SustainedSpell, key: string): void {
+  const m = slice(ctx.state);
+  delete m.sustained[s.id];
+  syncSustained(ctx.state);
+  const a = ctx.state.actors[s.casterId];
+  if (a) logMagic(ctx, a, key, { name: a.name, spell: s.name, force: s.force }, { event: 'drop', actorId: a.id, spellId: s.spellId, force: s.force }, hiddenCaster(a));
+}
+
+// A new Combat Turn: Permanent spells count down their Force in Combat Turns, then their effect is permanent (SR5 p. 283).
+combatHooks.push((ctx: ActionContext, _c: TableState['combat'], event: string) => {
+  if (event !== 'newTurn') return;
+  for (const s of Object.values(slice(ctx.state).sustained)) {
+    if (typeof s.turnsLeft !== 'number') continue;
+    s.turnsLeft -= 1;
+    if (s.turnsLeft <= 0) dropSustained(ctx, s, tk('{spell} (Force {force}) of {name} is now permanent: no longer sustained.'));
+  }
+});
+
 /** NPC actors the GM keeps hidden roll in secret (as dice/roll does). */
 const hiddenCaster = (a: Actor): boolean => a.type === 'npc' && !!a.hidden;
 
@@ -69,7 +128,7 @@ const tokenOf = (map: GameMap | null, actorId: ActorId): Token | null => (map?.t
 
 type CastPayload = {
   actorId?: ActorId; spellId?: unknown; force?: unknown; reckless?: unknown; explode?: unknown; modifier?: unknown; conditions?: unknown;
-  ignore?: unknown; mapId?: unknown; targetIds?: unknown; area?: unknown; drainDv?: unknown;
+  ignore?: unknown; mapId?: unknown; targetIds?: unknown; area?: unknown; drainDv?: unknown; sustain?: unknown;
 };
 type CastArea = { x: number; y: number; radius: number };
 
@@ -228,7 +287,33 @@ const actions: Record<string, ActionDef> = {
   'magic/cast': {
     role: 'any',
     handler(ctx: ActionContext, p: CastPayload = {}) {
-      return castSpell(ctx, p).result;
+      const c = castSpell(ctx, p);
+      // Sustain (SR5 p. 282): a Sustained / Permanent spell that worked, unless the caster lets it go (sustain: false).
+      let sustainedId: string | null = null;
+      if (p.sustain !== false && c.hits > 0 && isSustainable(c.spell.duration)) {
+        const s: SustainedSpell = {
+          id: ctx.uid('sus'), casterId: c.actor.id, spellId: c.spell.id, name: biName(c.spell), force: c.force, hits: c.hits,
+          targetIds: c.targets.map((t) => t.id), ts: ctx.now,
+          ...(/^P$/i.test(String(c.spell.duration).trim()) ? { turnsLeft: c.force } : {}),
+          ...(c.area && str(p.mapId, 80) ? { area: { mapId: str(p.mapId, 80), ...c.area } } : {}),
+        };
+        slice(ctx.state).sustained[s.id] = s;
+        syncSustained(ctx.state);
+        sustainedId = s.id;
+      }
+      return { ...c.result, sustainedId };
+    },
+  },
+
+  /** { id } (the caster's owner or GM): stop sustaining a spell. */
+  'magic/drop': {
+    role: 'any',
+    handler(ctx: ActionContext, p: { id?: unknown } = {}) {
+      const s = slice(ctx.state).sustained[str(p.id, 80)];
+      if (!s) ctx.fail('This spell is no longer sustained');
+      actorOf(ctx, s.casterId);
+      dropSustained(ctx, s, tk('{name} stops sustaining {spell} (Force {force}).'));
+      return true;
     },
   },
 
@@ -267,6 +352,7 @@ const mod: ServerModule = {
     for (const [id, s] of Object.entries(m.sustained)) if (!isObj(s) || !state.actors?.[s.casterId]) delete m.sustained[id];
     for (const id of Object.keys(m.astral)) if (!state.actors?.[id]) delete m.astral[id];
     for (const [id, d] of Object.entries(m.pendingDrain)) if (!isObj(d) || !state.actors?.[d.actorId]) delete m.pendingDrain[id];
+    syncSustained(state);
   },
 
   actions,

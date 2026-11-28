@@ -8,16 +8,15 @@
 | client | `client/modules/magic/` (MagicPage: cockpit for players, overview + cockpit for the GM; `common.tsx`: `TraditionPicker`, `openMagic`, roll labels shared with the sheet) |
 | tests | `node tools/test-magic.ts` (port 3650) |
 
-Rules: [rules/magic.md](../rules/magic.md). What is still to build (sustaining, spell effects, spirits, astral, foci,
+Rules: [rules/magic.md](../rules/magic.md). What is still to build (spell effects, spirits, astral, foci,
 rituals, metamagic) and the sub-issues: [design/magic.md](../design/magic.md).
 
 ## State
 
 `MagicState`: `settings` (`autoDrain`, default on: drain resisted right after a cast; `showAstralToPlayers`, default
 off), `sustained: { [id]: SustainedSpell }`, `astral: { [actorId]: AstralPresence }`, `pendingDrain: { [id]: PendingDrain }`
-(drain to resist when `autoDrain` is off). `sustained` and `astral` are
-read by the cockpit and the hints but nothing writes them yet (sub-issues #14 and #20). `init` drops entries whose
-actor is gone.
+(drain to resist when `autoDrain` is off). `astral` is read by the cockpit but nothing writes it yet (#20). `init`
+drops entries whose actor is gone.
 
 ### Tradition (`actor.magic.tradition`)
 
@@ -48,6 +47,21 @@ with `entry.magic` (`MagicLogInfo`: cast / drain); a glitch / critical glitch ad
 Drain: `resistDrain()` = `dice/roll`-like WIL + tradition attribute, `test: 'drainResist'`, damage applied with
 `applyDamage`; or a `PendingDrain` when `autoDrain` is off. The effects of the spell are the next steps (design).
 
+## Sustained spells
+
+A cast of a Sustained (S) or Permanent (P) spell with at least one hit is sustained unless the caster unticks it
+(`sustain: false`): a `SustainedSpell` in `state.magic.sustained` (caster, spell, Force, hits, targets, area;
+`turnsLeft = Force` for a Permanent spell, counted down by the combat `newTurn` hook and dropped at 0: its effect is
+then permanent, SR5 283). `syncSustained(state)` mirrors the record on the actors after every change (and at boot):
+- `actor.magic.sustaining = [{ id, name, force }]` on the caster → `collectModifiers` adds an `allTests` −2 per
+  spell (source « Sustaining … », 📖 SR5 282): every skill / attribute test, Matrix pools included, not the resistance
+  tests (as the afflictions);
+- `actor.magic.spellEffects = [{ id, name, force, hits, casterId, casterName, effects }]` on each target, with the
+  numeric effects of `SPELL_EFFECTS` (shared/magic.ts): Armor (+hits armor, SR5 293), Combat Sense (+hits defense,
+  SR5 288). Other spells stay a text for the GM. Both mirrors are written by the module only.
+`magic/drop { id }` (the caster's owner or GM) ends it (logged). A bound spirit or a sustaining focus (`by`) comes
+with #19 / #21.
+
 ## Actions
 
 - `magic/setTradition { actorId, tradition: id | Chummer name | null, drain? }` (any): GM = any change, `null`
@@ -56,6 +70,7 @@ Drain: `resistDrain()` = `dice/roll`-like WIL + tradition attribute, `test: 'dra
 - `magic/cast { actorId, spellId, force, reckless?, explode?, modifier?, conditions?, ignore?, mapId?, targetIds?, area?, drainDv? }`
   (owner or GM) → `{ logId, rollLogId, hits, rawHits, glitch, critGlitch, force, dv, drainType, drain, targetIds, area }`.
 - `magic/resistDrain { id }` (owner or GM): resist a pending drain.
+- `magic/cast … sustain?` (default: sustained when possible) → also `sustainedId`; `magic/drop { id }`.
 - `magic/settings { autoDrain?, showAstralToPlayers? }` (GM; « Resist Drain automatically » toggle of the GM page).
 
 ## Player view
@@ -67,9 +82,9 @@ presence, every presence when `showAstralToPlayers`. Settings are sent as is.
 
 - Main tab `magic` (registry): GM, and players with an awakened character. Player: one cockpit per awakened character
   (tabs when several). GM: « Overview » (every awakened character: MAG, tradition picker, drain pool, sustained spells,
-  astral state, « Cockpit ») and « Cockpit » (pick a character).
+  astral state, « Cockpit »), « Active spells » (every sustained spell, « Drop ») and « Cockpit » (pick a character).
 - Cockpit: name, tradition picker, stats (Magic; Drain = WIL + attribute, click to roll the resistance with
-  `test: 'drainResist'`; Sustained count and penalty; Astral state and astral initiative), « Drain to resist » (pending drains), spells with « Cast » (`CastModal`: spell, Force,
+  `test: 'drainResist'`; Sustained count and penalty; Astral state and astral initiative), « Drain to resist » (pending drains), « Sustained spells » (with « Drop ») and « Spells on <name> », spells with « Cast » (`CastModal`: spell, Force,
   live Drain Value and pool, reckless, push the limit, targets of the map in view with distance and line-of-sight /
   reach / area warnings, centre of an area; then the result: hits, drain and damage), magical skills (roll buttons),
   adept powers with PP. Rolls open the sheet's `RollDialog`.

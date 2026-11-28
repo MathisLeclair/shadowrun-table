@@ -5,10 +5,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  findTradition, traditionFromDef, parseDrainText, sortTraditions, drainValue, drainOffset, spellReach, isAreaSpell, spellCategory, spellDrainType, maxForce, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
+  findTradition, traditionFromDef, parseDrainText, sortTraditions, drainValue, drainOffset, spellReach, isAreaSpell, spellCategory, spellDrainType, maxForce,
+  spellEffects, isSustainable, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
   type TraditionDef,
 } from '../shared/magic.ts';
-import { checkedTest } from '../shared/modifiers.ts';
+import { checkedTest, collectModifiers, poolModifiers, rollContext, derivedWithModifiers } from '../shared/modifiers.ts';
 import { traditions, actorTradition, chummerTradition } from '../server/lib/traditions.ts';
 import { parseChum5 } from '../server/lib/chummer/parse.ts';
 import { mergeActor } from '../server/lib/chummer/merge.ts';
@@ -99,6 +100,23 @@ ok(maxForce(mage) === 12, 'max Force = 2 × MAG');
 ok(spellReach('LOS') === 'los' && spellReach('LOS (A)') === 'los' && spellReach('T') === 'touch' && spellReach('T (A)') === 'touch' && spellReach('S') === 'self' && spellReach('Special') === 'special', 'spellReach');
 ok(isAreaSpell('LOS (A)') && isAreaSpell('S (A)') && !isAreaSpell('LOS'), 'isAreaSpell');
 ok(spellCategory('Combat') === 'combat' && spellCategory('Santé') === 'health' && spellCategory('Détection') === 'detection' && spellCategory('Health') === 'health' && spellCategory('?') === null, 'spellCategory (English / French)');
+
+// Sustained spells (#14): effects table and modifiers mirrored on the actors
+ok(JSON.stringify(spellEffects({ name: 'Armor' }, 3)) === JSON.stringify([{ type: 'armor', value: 3 }]), 'Armor: armor = hits');
+ok(spellEffects({ name: 'Armure' }, 2)[0]?.value === 2 && spellEffects({ name: 'x', nameEn: 'Combat Sense' }, 4)[0]?.target === 'defense', 'French name, Combat Sense → defense');
+ok(spellEffects({ name: 'Armor' }, 0).length === 0 && spellEffects({ name: 'Manabolt' }, 4).length === 0, 'no hits / no numeric effect → none');
+ok(isSustainable('S') && isSustainable('P') && !isSustainable('I'), 'isSustainable: S and P');
+{
+  const noLookup = () => null;
+  const sus = { ...mage, magic: { ...mage.magic, sustaining: [{ id: 's1', name: { fr: 'Armure', en: 'Armor' }, force: 4 }, { id: 's2', name: { fr: 'X', en: 'X' }, force: 2 }] } } as unknown as ActorLike;
+  const mods = collectModifiers(sus, noLookup);
+  const pm = poolModifiers(mods, rollContext(sus, { skillId: 'spellcasting' }), {});
+  ok(pm.total === -4, `two sustained spells: −4 on a skill test (got ${pm.total})`);
+  ok(poolModifiers(mods, rollContext(sus, { attr: 'WIL', attr2: 'LOG', test: 'drainResist' }), {}).total === 0, 'not on resistance tests (like afflictions)');
+  const tgt = { ...mundane, armor: [], magic: { spellEffects: [{ id: 's1', name: { fr: 'Armure', en: 'Armor' }, force: 4, hits: 3, casterId: 'npc_m', casterName: 'Mage', effects: [{ type: 'armor', value: 3 }] }] } } as unknown as ActorLike;
+  const d = derivedWithModifiers(tgt, collectModifiers(tgt, noLookup));
+  ok(d.armor === 3, `Armor spell on the target: armor 3 (got ${d.armor})`);
+}
 
 // ---------------------------------------------------------------------------
 // Chummer import
@@ -243,6 +261,47 @@ try {
   await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: odd, force: 3 }), /Drain/, 'Special drain: the value is required');
   cr = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: odd, force: 3, drainDv: 4 });
   ok(cr.dv === 4, 'Special drain: given value');
+  // ---------- Sustained spells (#14) ----------
+  for (const old of Object.values(gm.state.magic.sustained)) if (old.casterId === 'pc_jane') await gm.send('magic/drop', { id: old.id });
+  await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  const armorSpell = await addSpell({ name: 'Armor', category: 'Manipulation', type: 'P', range: 'LOS', duration: 'S', drain: 'F-2' });
+  let sus: { sustainedId?: string | null; hits: number } = { hits: 0 };
+  for (let i = 0; i < 5 && !sus.sustainedId; i++) sus = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: armorSpell, force: 5, mapId, targetIds: ['pc_anthony'] });
+  await settle();
+  const sid = sus.sustainedId as string;
+  ok(!!sid && gm.state.magic.sustained[sid]?.hits === sus.hits && gm.state.magic.sustained[sid].targetIds.join() === 'pc_anthony', 'a Sustained spell with hits is sustained');
+  ok(gm.state.actors.pc_jane.magic?.sustaining?.some((x) => x.id === sid), 'caster mirror: actor.magic.sustaining');
+  ok(gm.state.actors.pc_anthony.magic?.spellEffects?.[0]?.effects[0]?.value === sus.hits, 'target mirror: Armor = hits');
+  ok(!!pj.state.magic.sustained[sid] && !pb.state.magic.sustained[sid], 'the caster sees it; an unrelated player does not');
+  const r1 = await pj.send('dice/roll', { actorId: 'pc_jane', skillId: 'spellcasting' });
+  ok((r1.mods || []).some((m: { id: string; value: number; state: string }) => m.id === `sustained:${sid}` && m.value === -2 && m.state === 'applied'), 'the caster’s next roll has −2 (sustaining)');
+  cr = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: armorSpell, force: 3, mapId, targetIds: ['pc_anthony'], sustain: false });
+  ok(!cr.sustainedId, 'sustain: false → not sustained');
+  const inst = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 3 });
+  ok(!inst.sustainedId, 'an Instantaneous spell is never sustained');
+  await expectFail(pb.send('magic/drop', { id: sid }), /yours|vous/i, 'another player cannot drop it');
+  await pj.send('magic/drop', { id: sid });
+  await settle();
+  ok(!gm.state.magic.sustained[sid] && !(gm.state.actors.pc_jane.magic?.sustaining || []).some((x) => x.id === sid) && !(gm.state.actors.pc_anthony.magic?.spellEffects || []).some((x) => x.id === sid), 'drop clears the record and both mirrors');
+  ok(gm.state.log.some((e) => e.magic?.event === 'drop'), 'drop logged');
+  await expectFail(pj.send('magic/drop', { id: sid }), /sustained|maintenu/i, 'drop twice refused');
+  // Permanent spell: Force Combat Turns, then it is no longer sustained.
+  await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  let perm: { sustainedId?: string | null } = {};
+  for (let i = 0; i < 5 && !perm.sustainedId; i++) perm = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: heal, force: 2, mapId, targetIds: ['pc_jane'] });
+  await settle();
+  const pid2 = perm.sustainedId as string;
+  ok(gm.state.magic.sustained[pid2]?.turnsLeft === 2, 'Permanent spell: turnsLeft = Force');
+  await gm.send('combat/start', { mapId });
+  await gm.send('combat/newTurn');
+  await settle();
+  ok(gm.state.magic.sustained[pid2]?.turnsLeft === 1, 'a new Combat Turn counts down');
+  await gm.send('combat/newTurn');
+  await settle();
+  ok(!gm.state.magic.sustained[pid2], 'after Force Combat Turns the spell is permanent: no longer sustained');
+  await gm.send('combat/end');
+
+  await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
   // Drain left pending (autoDrain off).
   await gm.send('magic/settings', { autoDrain: false });
   cr = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 4 });

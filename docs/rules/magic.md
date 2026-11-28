@@ -1,7 +1,7 @@
 # Magic rules
 
 Magic is being automated step by step (plan: [design/magic.md](../design/magic.md)); so far: karma costs, item effects,
-traditions, the drain pool and the cast flow. Page references used by the 📖 chips: drain SR5
+traditions, the drain pool, the cast flow and sustained spells. Page references used by the 📖 chips: drain SR5
 282, power points 278, adept powers 308, spellcasting 281, initiation 324 (`RULE_REFS`, [book-refs](../modules/book-refs.md)).
 
 - **Adept powers**: powers with a catalog `stats.bonus` (Improved Reflexes: REA + initiative dice per level,
@@ -17,6 +17,10 @@ traditions, the drain pool and the cast flow. Page references used by the 📖 c
   Force, never below 2, +3 for Reckless Spellcasting (Simple Action); Drain is Physical when the hits (after the limit)
   exceed Magic, else Stun; glitches are left to the GM (+2 Drain is the usual one). Line of Sight / Touch / Area (radius
   = Force metres) are checked on the map for players. Multiple spells in one action (split pool) stay manual.
+- **Sustaining** (SR5 282-283): −2 dice per spell the character sustains, cumulative, on every test but damage
+  resistance (the app's convention for « all tests » penalties, as for afflictions). Permanent spells are sustained Force Combat Turns
+  (counted on new Combat Turns), then end. Armor (+hits armor, 293) and Combat Sense (+hits defense dice, 288) apply to
+  the target; other effects are the GM's.
 - **Spellcasting** has no default limit (`skillDefaultLimit`: a skill's `limit` null = none). Spellcasting foci give
   dice under the condition `spell-<category>` ([modifiers](../modules/modifiers.md#conditions)).
 - **Traditions** (SR5 279, Street Grimoire 41-52, Forbidden Arcana…): `data/catalog/traditions.json` from Chummer
