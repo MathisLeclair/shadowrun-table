@@ -522,7 +522,7 @@ export interface AmmoSlot {
 }
 
 export interface Weapon extends ItemBase {
-  /** Wireless switched off (GM): a firearm left out of its owner's PAN (SR5 p. 233). */
+  /** Wireless switched off (GM): a smart weapon left out of its owner's PAN (SR5 p. 233; shared/matrix.ts isSmartWeapon). */
   wirelessOff?: boolean;
   /** Category (French or English, as stored). */
   category: string;
@@ -631,6 +631,8 @@ export interface Gear extends ItemBase {
   paid?: number;
   /** Carry bag (inventory.ts CARRY_BAGS) whose container was opened once (inventory.ts linkCarryBags). */
   bagMade?: boolean;
+  /** Wireless switched off (GM): electronics left out of their owner's PAN (SR5 p. 233; shared/matrix.ts isDigitalGear). */
+  wirelessOff?: boolean;
 }
 
 export type ContainerKind = 'body' | 'bag' | 'vehicle' | 'safehouse' | 'other';
@@ -2207,9 +2209,9 @@ export interface Persona {
 
 /** Device of a character's PAN revealed by Matrix Perception (a copy of its names: the decker keeps what was seen). */
 export interface ScannedDevice {
-  /** Item id on the owner's sheet (augmentation or weapon). */
+  /** Item id on the owner's sheet (augmentation, weapon or gear). */
   id: string;
-  kind: 'cyberware' | 'weapon';
+  kind: 'cyberware' | 'weapon' | 'gear';
   name: string;
   nameFr?: string;
   nameEn?: string;

@@ -86,8 +86,8 @@ Matrix Search finds it, Perception reveals its devices, Control Device / Spoof C
 Rules: [rules/matrix.md](../rules/matrix.md#pans-characters-devices). Matrix Perception on an NPC persona reveals its
 PAN devices (one per hit, picked by the GM); the cockpit's « PAN spotted » panel lists them per NPC (persona = master, then the
 devices with marks, state and Hack on the Fly / Control Device / Data Spike buttons) and the action dialog offers them
-as `pan:<actorId>:<itemId>` targets. Augmentations and weapons have a GM « Wireless off » field (`wirelessOff`) that
-takes them out of the PAN. The GM's Deckers view lists hacked PAN devices with a Repair button (`matrix/panReset`).
+as `pan:<actorId>:<itemId>` targets (🔫 smart weapon, 📟 electronics, ⚙ cyberware). Augmentations, weapons and gear
+have a GM « Wireless off » field (`wirelessOff`) that takes them out of the PAN. The GM's Deckers view lists hacked PAN devices with a Repair button (`matrix/panReset`).
 
 ### Paydata and hints
 - `matrix/shareFile { actorId, fileId }` (owner/GM) — a player creates a party note ([notes](notes.md), folder

@@ -38,7 +38,7 @@ export const LIST_FIELDS: Record<string, FieldDef[]> = {
   ],
   gear: [
     { k: 'name', label: tk('Name'), w: 200 }, { k: 'category', label: tk('Category'), w: 120 }, { k: 'rating', label: tk('Rating'), type: 'num' }, { k: 'qty', label: tk('Qty'), type: 'num' },
-    { k: 'active', label: tk('Active'), type: 'bool' }, { k: 'choice', label: tk('Choice (effect)'), w: 110 }, { k: 'notes', label: tk('Notes'), w: 200 },
+    { k: 'active', label: tk('Active'), type: 'bool' }, { k: 'wirelessOff', label: tk('Wireless off'), type: 'bool' }, { k: 'choice', label: tk('Choice (effect)'), w: 110 }, { k: 'notes', label: tk('Notes'), w: 200 },
   ],
   vehicles: [
     { k: 'name', label: tk('Name'), w: 180 }, { k: 'handling', label: tk('Handl.'), w: 60 }, { k: 'speed', label: tk('Speed'), w: 60 }, { k: 'accel', label: tk('Accel.'), w: 60 },

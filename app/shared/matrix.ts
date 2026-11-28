@@ -669,16 +669,85 @@ export function searchMinutes(level: SearchLevel, hits: number, inHost = false):
 
 // ---------------------------------------------------------------------------
 // PAN (SR5 p. 233-235): a character's commlink (or deck) is subsumed by their persona and is the master of the
-// wireless devices slaved to it — cyberware and firearms whose wireless is not switched off.
+// wireless devices slaved to it — digital cyberware, smart weapons and electronic gear whose wireless is not switched off.
+// Analog equipment (bone lacing, a crowbar, a firearm without a smartgun system) has no icon on the Matrix.
 // ---------------------------------------------------------------------------
 /** Cyberware Device Rating by grade (SR5 p. 234: basic cyberware 2, alphaware 3, betaware 4, deltaware 5; Chummer grades.xml). */
 export const WARE_DEVICE_RATING: Record<string, number> = { used: 2, standard: 2, alpha: 3, beta: 4, delta: 5, gamma: 6, omega: 6 };
 /** Device Rating of weapons and standard personal electronics (SR5 p. 234: « Average »). */
 export const AVERAGE_DEVICE_RATING = 2;
-/** Skills of the firearms that are devices (bows and thrown weapons are not). */
-const FIREARM_SKILLS = new Set(['pistols', 'automatics', 'longarms', 'heavy_weapons', 'exotic_weapon']);
+/** « Smartgun » / « smartlink » in a name: a smart weapon, a smartlink implant or vision enhancement (SR5 p. 433, 444, 455). */
+const SMART_RE = /smart ?(gun|link)|smartgun|krime dual-mode/i;
 
-export type PanDeviceKind = 'cyberware' | 'weapon';
+/** Catalog entry seen by the PAN rules (English name and category; a weapon's built-in accessories). */
+export interface PanCatalogEntry { name?: string; category?: string; stats?: { included?: Array<{ name?: string; stats?: { smartgun?: boolean } }> } }
+/** Catalog lookup for the PAN rules (server: data/catalog, by catalogId else by name). Without it, the item's own names and category are used. */
+export type PanCatalog = (list: 'gear' | 'cyberware' | 'weapons', item: { catalogId?: string; name?: string; nameEn?: string }) => PanCatalogEntry | null | undefined;
+
+/**
+ * Gear categories of electronics devices (Chummer gear.xml, English and the French catalog's); everything else is analog.
+ * Vision / audio enhancements and sensor functions are modules inside a device (goggles, a sensor housing), not icons of
+ * their own: only a Smartlink enhancement is kept (by its name).
+ */
+const DIGITAL_GEAR_CATEGORIES = new Set([
+  'vision devices', 'audio devices', 'sensor housings', 'sensors', 'electronics accessories', 'commlink accessories', 'security devices',
+  'breaking and entering gear', 'communications and countermeasures', 'rigger command consoles', 'rfid tags', 'cyberterminals', 'pi-tac', 'reporter gear',
+  "appareils optiques et d'imagerie", 'appareils audio', 'logements pour senseurs', 'capteurs', 'accessoires électroniques', 'accessoires pour commlinks',
+  'matériel de sécurité', "matériel d'intrusion", 'communications et brouilleurs', 'console de commandes rigger', 'tags rfid', 'cyberterminaux', 'équipement de journaliste',
+]);
+/**
+ * Not a device of its own in those categories: analog items (SR5 p. 443-448: optical binoculars, restraints, mechanical
+ * locks, hand tools…) and a commlink's built-in hardware as Chummer lists it (SR5 p. 438: music / chip player, credstick
+ * reader, GPS, touchscreen, protective case: part of the commlink).
+ */
+const ANALOG_GEAR_RE = /binoculars, optical|^periscope$|mage sight|restraint|key lock|combination lock|chisel|lockpick|crowbar|miniwelder|monofilament chainsaw|glove molder|press pass|jumelles \(optiques\)|menottes|serrure à clé|cadenas|burin|kit de serrurerie|pied-de-biche|poste à soudure|tronçonneuse|commlink functionality|music player|chip player|credstick reader|gps guidance|touchscreen|resistant case|fonctionnalité commlink|lecteur de musique|lecteur de puces|lecteur de créditube|écran tactile|étui/i;
+/** Cyberware categories with no electronics (cosmetic surgery, nanoware). */
+const ANALOG_WARE_CATEGORIES = new Set(['cosmetic enhancement', 'soft nanoware', 'hard nanoware', 'nanocybernetics', 'améliorations esthétiques', 'nanoware injecté', 'nanoware implanté', 'nano-cybernétique']);
+/** Non-digital cyberware (SR5 p. 452-461: lacing, plating, compartments, implant blades…). */
+const ANALOG_WARE_RE = /bone lacing|dermal plating|compartment|essence (anti)?hole|cyberfins|climbing claws|cyberfangs|spurs|razors|blade|oral slasher|junkyard jaw|extreme cyberimplant|eye protectors|metatype reduction|renforcement osseux|ossature renforcée|plaques dermiques|compartiment|griffes|ergots|rasoirs|lames?\b|crocs|mâchoire/i;
+
+const lc = (v: unknown) => String(v || '').trim().toLowerCase();
+const itemNames = (it: PanItem, e?: PanCatalogEntry | null) => [it.name, it.nameEn, it.nameFr, e?.name].filter(Boolean).map(String);
+const entryOf = (cat: PanCatalog | undefined, list: 'gear' | 'cyberware' | 'weapons', it: PanItem) => cat?.(list, it) || null;
+
+/** A weapon accessory that is a smartgun system (effect, or name: internal / external smartgun, Krime smartgun link). */
+const isSmartAccessory = (x: unknown): boolean => {
+  const o = (x || {}) as { name?: string; nameEn?: string; nameFr?: string; effects?: { smartgun?: boolean }; stats?: { smartgun?: boolean } };
+  return !!(o.effects?.smartgun || o.stats?.smartgun) || [o.name, o.nameEn, o.nameFr].some((n) => n && SMART_RE.test(String(n)));
+};
+
+/**
+ * A smart weapon (SR5 p. 433): one with a smartgun system — an accessory with the smartgun effect or named so, the weapon's
+ * own name (Ingram Smartgun X), or, when the item has no accessories at all (imports that dropped them), the catalog's
+ * built-in ones (Ares Predator V, Ares Alpha). Only those are wireless devices on the PAN; other firearms are analog.
+ */
+export function isSmartWeapon(w: PanItem & { accessories?: unknown[] }, cat?: PanCatalog): boolean {
+  const accs = Array.isArray(w.accessories) ? w.accessories : [];
+  if (accs.some(isSmartAccessory) || itemNames(w).some((n) => SMART_RE.test(n))) return true;
+  if (accs.length) return false;
+  return (entryOf(cat, 'weapons', w)?.stats?.included || []).some(isSmartAccessory);
+}
+
+/** Electronic gear (a device of its own): a digital catalog category without an analog name, or anything smartlink. Not the PAN master (commlink / deck). */
+export function isDigitalGear(g: PanItem, cat?: PanCatalog): boolean {
+  if (isMatrixDevice(g)) return false;
+  const e = entryOf(cat, 'gear', g);
+  const names = itemNames(g, e);
+  if (names.some((n) => SMART_RE.test(n))) return true;
+  if (!DIGITAL_GEAR_CATEGORIES.has(lc(e?.category)) && !DIGITAL_GEAR_CATEGORIES.has(lc(g.category))) return false;
+  return !names.some((n) => ANALOG_GEAR_RE.test(n));
+}
+
+/** Cyberware with electronics (a device on the PAN): not cosmetic, nanoware, lacing, plating, compartments or implant blades. */
+export function isDigitalWare(a: PanItem, cat?: PanCatalog): boolean {
+  const e = entryOf(cat, 'cyberware', a);
+  const names = itemNames(a, e);
+  if (names.some((n) => SMART_RE.test(n))) return true;
+  if (ANALOG_WARE_CATEGORIES.has(lc(e?.category)) || ANALOG_WARE_CATEGORIES.has(lc(a.category))) return false;
+  return !names.some((n) => ANALOG_WARE_RE.test(n));
+}
+
+export type PanDeviceKind = 'cyberware' | 'weapon' | 'gear';
 /** A device slaved to a character's PAN. */
 export interface PanDevice {
   id: string;
@@ -736,16 +805,25 @@ export function panMaster(actor: ActorLike | null | undefined, stats?: GearMatri
   return best;
 }
 
-/** Devices of a character's PAN, in sheet order: cyberware (bioware has no wireless), then firearms (not implant weapons). */
-export function panDevices(actor: ActorLike | null | undefined): PanDevice[] {
+/**
+ * Devices of a character's PAN, in sheet order: digital cyberware (bioware has no wireless), smart weapons (not implant
+ * weapons: the implant is the device), then electronic gear. Items with their wireless switched off are left out.
+ */
+export function panDevices(actor: ActorLike | null | undefined, cat?: PanCatalog): PanDevice[] {
   const out: PanDevice[] = [];
+  const rated = (it: PanItem) => (Number(it.rating) > 0 ? { rating: Number(it.rating) } : {});
   for (const a of ((actor?.augmentations || []) as Array<PanItem & { kind?: string; grade?: string }>)) {
-    if (!a?.id || a.kind !== 'cyberware' || a.wirelessOff) continue;
-    out.push({ id: a.id, kind: 'cyberware', ...names(a), ...(Number(a.rating) > 0 ? { rating: Number(a.rating) } : {}), deviceRating: WARE_DEVICE_RATING[a.grade || 'standard'] || AVERAGE_DEVICE_RATING });
+    if (!a?.id || a.kind !== 'cyberware' || a.wirelessOff || !isDigitalWare(a, cat)) continue;
+    out.push({ id: a.id, kind: 'cyberware', ...names(a), ...rated(a), deviceRating: WARE_DEVICE_RATING[a.grade || 'standard'] || AVERAGE_DEVICE_RATING });
   }
-  for (const w of ((actor?.weapons || []) as Array<PanItem & { kind?: string; skill?: string; augId?: string }>)) {
-    if (!w?.id || w.kind !== 'ranged' || w.augId || w.wirelessOff || !FIREARM_SKILLS.has(String(w.skill || ''))) continue;
+  for (const w of ((actor?.weapons || []) as Array<PanItem & { kind?: string; augId?: string; accessories?: unknown[] }>)) {
+    if (!w?.id || w.kind !== 'ranged' || w.augId || w.wirelessOff || !isSmartWeapon(w, cat)) continue;
     out.push({ id: w.id, kind: 'weapon', ...names(w), deviceRating: AVERAGE_DEVICE_RATING });
+  }
+  // Electronics: their Rating is their Device Rating (SR5 p. 438), else « Average ».
+  for (const g of ((actor?.gear || []) as PanItem[])) {
+    if (!g?.id || g.wirelessOff || !isDigitalGear(g, cat)) continue;
+    out.push({ id: g.id, kind: 'gear', ...names(g), ...rated(g), deviceRating: Number(g.rating) > 0 ? Math.min(6, Number(g.rating)) : AVERAGE_DEVICE_RATING });
   }
   return out;
 }

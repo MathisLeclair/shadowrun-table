@@ -657,7 +657,7 @@ function PanPanel({ game, actor, persona, canEdit, open }: PanelProps & { game: 
           {(s.devices || []).map((d) => (
             <div className={'mx-pan-dev' + (d.state?.bricked ? ' dead' : '')} key={d.id}>
               <span className="grow" title={itemTitle(d)}>
-                {d.kind === 'weapon' ? '🔫 ' : '⚙ '}
+                {d.kind === 'weapon' ? '🔫 ' : d.kind === 'gear' ? '📟 ' : '⚙ '}
                 {itemLabel(d)}
                 {d.rating ? ` ${d.rating}` : ''} <span className="faint small">{t('DR {n}', { n: d.deviceRating })}</span> <PanState d={d} />
               </span>
