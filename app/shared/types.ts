@@ -925,6 +925,8 @@ export interface FoundryLink {
   snapshotVersion?: number;
   /** Foundry owner name. */
   user?: string;
+  /** The seed pack's Foundry containers were adopted once (lib/foundry/containers.ts adoptSeedContainers). */
+  containers?: boolean;
 }
 
 /**

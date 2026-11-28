@@ -14,6 +14,7 @@ import { uid, deepClone, nuyen as fmtNuyen } from '../../../shared/util.ts';
 import { ATTR_SHORT, SKILL_BY_ID } from '../../../shared/sr5.ts';
 import { formatSource } from '../../../client/i18n/format.ts';
 import { plural } from './messages.ts';
+import { mergeContainers } from './containers.ts';
 import type { FoundryDoc, FoundryWorld, WorldMeta } from './world.ts';
 import type { Assets } from './assets.ts';
 import type { ConvertedSheet } from './convert-actor.ts';
@@ -438,34 +439,6 @@ function mergeInto(a: FieldRec, fresh: FieldRec, snap: PcSnapshot, { legacy = fa
   mergeContainers(a, fresh);
   if (stableHash(fresh.matrix || null) !== snap.matrix && fresh.matrix) a.matrix = deepClone(fresh.matrix);
   if (stableHash(fresh.vision || {}) !== snap.vision) a.vision = deepClone(fresh.vision);
-}
-
-/**
- * Merge re-import of the Foundry inventories: containers the app does not have yet are added (same stable fvtt_inv_ ids), and the
- * app items Foundry puts in them are moved there when they are still « Sur soi » (first import of the containers: a live actor
- * migrated before inventories existed adopts Foundry's bags). Containers the app already has, and items moved in the app, are kept.
- */
-function mergeContainers(a: FieldRec, fresh: FieldRec): void {
-  a.containers = Array.isArray(a.containers) ? a.containers : [];
-  const have = new Set(a.containers.map((c: FieldRec | null) => c?.id));
-  const added = new Set<string>();
-  for (const c of fresh.containers || []) {
-    if (!c?.id || have.has(c.id)) continue;
-    a.containers.push(deepClone(c));
-    added.add(c.id);
-  }
-  if (!added.size) return;
-  for (const l of ['weapons', 'armor', 'gear']) {
-    const freshLoc = new Map<string, string>((fresh[l] || []).filter((x: FieldRec) => added.has(x.location)).map((x: FieldRec) => [x.id, x.location]));
-    for (const it of a[l] || []) {
-      const loc = freshLoc.get(it?.id);
-      if (loc && (!it.location || it.location === 'on')) {
-        it.location = loc;
-        if (l === 'gear') it.active = false;
-        else it.equipped = false;
-      }
-    }
-  }
 }
 
 function mergeBio(bio: unknown, foundryDesc: unknown): string {

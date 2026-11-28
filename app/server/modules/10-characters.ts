@@ -19,6 +19,7 @@ import { errorBody } from '../lib/i18n.ts';
 import { actorModifiers, deriveFull } from '../lib/modifiers.ts';
 import { fillActorRefs } from '../lib/bookrefs.ts';
 import { appCatalog, norm as catNorm } from '../lib/chummer/data.ts';
+import { adoptSeedContainers } from '../lib/foundry/containers.ts';
 import {
   ON_BODY, CONTAINER_KINDS, LOCATED_LISTS, isCarried, containerOf, guessContainerKind, usesAmmo, isGrenade, fireOptions,
   ammoFits, clipFits, reloadPlan, ammoKindOf, sameAmmoKind, parseAmmo,
@@ -1063,6 +1064,7 @@ const mod: ServerModule<ExpressApp> = {
   init(state: TableState, { seedDir }: InitOptions) {
     state.actors ||= {};
     const dir = path.join(seedDir, 'actors');
+    const seeds = new Map<string, Actor>();
     if (fs.existsSync(dir)) {
       for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.json')).sort()) {
         let list: unknown;
@@ -1074,6 +1076,7 @@ const mod: ServerModule<ExpressApp> = {
         }
         // Seed files: actors as stored (foreign JSON).
         for (const a of (Array.isArray(list) ? list : [list]) as Actor[]) {
+          if (a && a.id) seeds.set(a.id, a);
           if (a && a.id && !state.actors[a.id]) state.actors[a.id] = deepClone(a);
         }
       }
@@ -1084,6 +1087,8 @@ const mod: ServerModule<ExpressApp> = {
         continue;
       }
       a.id = id;
+      // PCs seeded before Foundry inventories were imported: the pack's bags and item locations, once (lib/foundry/containers.ts).
+      adoptSeedContainers(a, seeds.get(id));
       normalizeActor(a, uid); // also the inventory migration: containers, locations, ammo, ready weapons (idempotent)
       fillActorRefs(a); // rulebook references of items created before item.source existed (idempotent)
       // Catalog names in both languages, catalogId backfill by exact name (idempotent). A completed weapon `ammo` (Foundry « 14 » →

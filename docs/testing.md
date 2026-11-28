@@ -53,7 +53,7 @@ run at the same time.
 | `test-i18n.ts` | 3800-3849 | [i18n](i18n.md) |
 | `test-i18n-sheet-map.ts` | 3850 | [i18n](i18n.md) |
 | `test-integration.ts` | 3971 | below |
-| `test-inventory.ts` | 3443-3445 | [inventory](modules/inventory.md) |
+| `test-inventory.ts` | 3443-3447 | [inventory](modules/inventory.md) |
 | `test-lifestyle.ts` | 3251-3252 | [lifestyles](modules/lifestyles.md) |
 | `test-maplib.ts` | 3910-3912 | [map-library](modules/map-library.md) |
 | `test-maplib-campaign.ts` | 3940-3941 | [map-library](modules/map-library.md) |

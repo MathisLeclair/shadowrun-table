@@ -1,4 +1,4 @@
-// Inventory realism: node tools/test-inventory.ts  (ports 3443-3445 or SR_TEST_PORT…+2; exit code ≠ 0 on failure)
+// Inventory realism: node tools/test-inventory.ts  (ports 3443-3447 or SR_TEST_PORT…+4; exit code ≠ 0 on failure)
 // 1) Pure rules (client/modules/sheet/inventory.js): ammo parsing, fire modes, ammo / clip compatibility, reload plans, migration.
 // 2) Server (10-characters.js): firing consumption per mode, refusal + GM override, reload from ammo gear (qty decrement), clip swap,
 //    ammunition change, grenades, equip / locations / containers permissions, active-off in a bag, names backfill, migration idempotence.
@@ -512,6 +512,71 @@ await test('live table migration: idempotent at every boot (legacy ammoLeft, no 
   gm2.close?.();
   await srv2.stopAndWait();
   fs.rmSync(runtime, { recursive: true, force: true });
+});
+
+await test('live table seeded before Foundry inventories: the pack’s bags adopted once at boot, app moves kept', async () => {
+  const runtime = fs.mkdtempSync(path.join((await import('node:os')).tmpdir(), 'sr-inv-'));
+  const seedPcs = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'seed', 'actors', 'pcs.json'), 'utf8'));
+  const seedJane = seedPcs.find((x: { id: string }) => x.id === 'pc_jane');
+  // Old shape: no containers, every item « Sur soi » (as the Project Lazarus table was before the import read inventories).
+  const old = (id: string) => {
+    const a = clone(seedPcs.find((x: { id: string }) => x.id === id));
+    delete a.containers;
+    for (const l of ['weapons', 'armor', 'gear']) for (const it of a[l] || []) delete it.location;
+    return a;
+  };
+  const jane = old('pc_jane');
+  const DS = 'fvtt_z0d0D3M9DQ8s5Mjc'; // Desert Strike: Duffel Bag in the pack
+  const inBackpack = seedJane.gear.filter((g: { location?: string }) => g.location === 'fvtt_inv_backpack').map((g: { id: string }) => g.id);
+  const moved = jane.gear.find((g: { id: string }) => g.id === inBackpack[0]);
+  jane.containers = [{ id: 'box_app', name: 'Box', kind: 'other' }];
+  moved.location = 'box_app'; // the GM put it in an app container: left alone
+  const bricks = old('pc_bricks');
+  bricks.foundry.id = 'another_foundry_doc'; // not the pack's actor any more: untouched
+  const state = { version: 1, config: { gmPassword: 'lazarus', campaignName: 'T', lang: 'fr' }, users: {}, log: [], actors: { pc_jane: jane, pc_bricks: bricks } };
+  let srv2 = await startServer({ port: BASE_PORT + 3, runtime, keepRuntime: true, tables: [{ id: 't1', name: 'T', pack: 'project-lazarus', state }] });
+  const gm = await client(srv2.url, await login(srv2.url, { role: 'gm', password: 'lazarus', table: 't1' }), { table: 't1' });
+  await settle();
+  const j = clone(gm.state.actors.pc_jane);
+  assert.deepEqual(j.containers!.map((c) => c.id).sort(), ['box_app', 'fvtt_inv_backpack', 'fvtt_inv_duffel_bag', 'fvtt_inv_house']);
+  const ds = j.weapons.find((w) => w.id === DS)!;
+  assert.equal(ds.location, 'fvtt_inv_duffel_bag');
+  assert.equal(ds.equipped, false, 'stored weapons are not ready');
+  assert.equal(j.gear.find((g) => g.id === moved.id)!.location, 'box_app', 'app move kept');
+  assert.equal(j.gear.filter((g) => g.location === 'fvtt_inv_backpack').length, inBackpack.length - 1, 'backpack holds the rest');
+  assert.deepEqual(gm.state.actors.pc_bricks.containers, [], 'other Foundry document: nothing adopted');
+  gm.close?.();
+  await srv2.stopAndWait({ keep: true });
+  srv2 = await startServer({ port: BASE_PORT + 4, runtime, keepRuntime: true });
+  const gm2 = await client(srv2.url, await login(srv2.url, { role: 'gm', password: 'lazarus', table: 't1' }), { table: 't1' });
+  await settle();
+  assert.deepEqual(gm2.state.actors.pc_jane, j, 'second boot changes nothing');
+  gm2.close?.();
+  await srv2.stopAndWait();
+  fs.rmSync(runtime, { recursive: true, force: true });
+});
+
+await test('adoptSeedContainers: once, only for the same Foundry document, skipped when Foundry containers exist', async () => {
+  const { adoptSeedContainers } = await import('../server/lib/foundry/containers.ts');
+  const seed = { id: 'p', foundry: { id: 'F1' }, containers: [{ id: 'fvtt_inv_bag', name: 'Bag', kind: 'bag' }], weapons: [], armor: [], gear: [{ id: 'g1', name: 'Rope', location: 'fvtt_inv_bag' }] } as unknown as Actor;
+  const live = () => ({ id: 'p', foundry: { id: 'F1' }, containers: [], weapons: [], armor: [], gear: [{ id: 'g1', name: 'Rope', location: 'on', active: true }] }) as unknown as Actor;
+  const a = live();
+  assert.equal(adoptSeedContainers(a, seed), 1);
+  assert.equal(a.gear[0].location, 'fvtt_inv_bag');
+  assert.equal(a.gear[0].active, false);
+  assert.equal(a.foundry!.containers, true);
+  a.containers = []; // the GM deleted the bag
+  assert.equal(adoptSeedContainers(a, seed), 0, 'flagged: never again');
+  assert.deepEqual(a.containers, []);
+  const other = live();
+  other.foundry!.id = 'F2';
+  assert.equal(adoptSeedContainers(other, seed), 0);
+  assert.equal(other.foundry!.containers, undefined);
+  const imported = live();
+  imported.containers = [{ id: 'fvtt_inv_other', name: 'Other', kind: 'bag' }];
+  assert.equal(adoptSeedContainers(imported, seed), 0, 'already has Foundry containers');
+  assert.equal(imported.foundry!.containers, true);
+  assert.equal(imported.gear[0].location, 'on');
 });
 
 // ---------------------------------------------------------------------------
