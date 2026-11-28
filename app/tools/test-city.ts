@@ -87,9 +87,9 @@ try {
   await settle();
   ok(r.fee === 0 && L(pa, 'pc_anthony')!.place?.district === 'renton' && A(pa, 'pc_anthony').nuyen === n0, 'first placement is free, district computed');
   ok(pa.state.city.pins.length === 1 && pa.state.city.pins[0].own && pa.state.city.pins[0].district === 'renton', 'player sees their own pin');
-  await rejects(pa.send('shop/move', { actorId: 'pc_anthony', lifestyleId: ls, x: RENTON.x + 0.1, y: RENTON.y }), /déjà/, 'same spot refused');
-  await rejects(pa.send('shop/move', { actorId: 'pc_anthony', lifestyleId: ls }), /Rien/, 'nothing to change refused');
-  await rejects(pb.send('shop/move', { actorId: 'pc_anthony', lifestyleId: ls, ...AUBURN }), /pas ton personnage/, 'cannot move another runner');
+  await rejects(pa.send('shop/move', { actorId: 'pc_anthony', lifestyleId: ls, x: RENTON.x + 0.1, y: RENTON.y }), /already live here/, 'same spot refused');
+  await rejects(pa.send('shop/move', { actorId: 'pc_anthony', lifestyleId: ls }), /Nothing to change/, 'nothing to change refused');
+  await rejects(pb.send('shop/move', { actorId: 'pc_anthony', lifestyleId: ls, ...AUBURN }), /not your character/, 'cannot move another runner');
   r = await pa.send('shop/move', { actorId: 'pc_anthony', lifestyleId: ls, layout: 'medium-loft' });
   await settle();
   ok(r.fee === 0 && L(pa, 'pc_anthony')!.home?.layout === 'medium-loft' && A(pa, 'pc_anthony').nuyen === n0, 'first flat after the spot: free');
@@ -106,7 +106,7 @@ try {
   console.log('• visibility & invitations');
   ok(!pb.state.city.pins.length, 'other player: no pin');
   ok(!L(pb, 'pc_anthony')?.place && !L(pb, 'pc_anthony')?.home, 'other player: home and spot stripped from the other sheet');
-  await rejects(pa.send('actor/updateItem', { actorId: 'pc_anthony', list: 'lifestyles', itemId: ls, patch: { place: { x: 1, y: 1, guests: ['pc_bricks'] } } }), /MJ/, 'player cannot set the spot directly');
+  await rejects(pa.send('actor/updateItem', { actorId: 'pc_anthony', list: 'lifestyles', itemId: ls, patch: { place: { x: 1, y: 1, guests: ['pc_bricks'] } } }), /Only the GM/, 'player cannot set the spot directly');
   await rejects(pa.send('city/invite', { actorId: 'pc_anthony', lifestyleId: ls, guests: ['pc_bricks'] }), /./, 'player cannot invite');
   r = await gm.send('city/invite', { actorId: 'pc_anthony', lifestyleId: ls, guests: ['pc_bricks', 'pc_anthony', 'nobody'] });
   await settle();
@@ -127,7 +127,7 @@ try {
   await gm.send('city/unplace', { actorId: 'pc_bricks', lifestyleId: bl });
   await settle();
   ok(!L(gm, 'pc_bricks')!.place && gm.state.city.pins.length === 1, 'GM takes a home off the map');
-  await rejects(gm.send('city/settings', { mapId: 'nope' }), /introuvable/, 'unknown city map refused');
+  await rejects(gm.send('city/settings', { mapId: 'nope' }), /not found/, 'unknown city map refused');
   await gm.send('city/settings', { names: { renton: 'Renton (Ares)', nope: 'x' } });
   await settle();
   ok(pa.state.city.districts.find((d) => d.id === 'renton')?.name === 'Renton (Ares)', 'GM renames a district');
@@ -156,5 +156,5 @@ try {
 } finally {
   await srv.stopAndWait();
 }
-console.log(`\n${passes} ok, ${failures} échec(s)`);
+console.log(`\n${passes} ok, ${failures} failed`);
 process.exit(failures ? 1 : 0);
