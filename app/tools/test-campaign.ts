@@ -285,6 +285,15 @@ try {
   });
 
   await test('docs routes: GM lists and reads, players are refused', async () => {
+    // The Lazarus docs (../Shadowrun) are not in git (CI has none): the table then reads <table>/docs, filled here.
+    if (!fs.existsSync(path.resolve(ROOT, '..', 'Shadowrun'))) {
+      for (const id of fs.readdirSync(path.join(srv.runtime, 'tables'))) {
+        const dir = path.join(srv.runtime, 'tables', id, 'docs');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, 'campaign-outline.md'), '# Campaign outline\n');
+        fs.writeFileSync(path.join(dir, 'session-3-plan.md'), '# Plan for session 3\n');
+      }
+    }
     const list = await (await fetch(srv.url + '/api/docs', { headers: { Authorization: `Bearer ${gmToken}` } })).json();
     assert.ok(Array.isArray(list) && list.some((d: { name: string }) => d.name === 'campaign-outline.md'));
     const r = await fetch(srv.url + '/api/docs/session-3-plan.md', { headers: { Authorization: `Bearer ${gmToken}` } });
