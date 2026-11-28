@@ -12,11 +12,12 @@ import {
 import { FIRE_BY_ID, isLauncherProfile, launcherRounds, fireOptions, usesAmmo } from '../../client/modules/sheet/inventory.ts';
 import { createVisionContext, tokenVision } from '../../shared/vision.ts';
 import { performRoll, applyDamage } from './10-characters.ts';
+import { ELEMENTS, type CombatSpellProfile, type SpellElement } from '../../shared/magic.ts';
 import { spendInitiative, combatTurnKey } from './30-combat.ts';
 import type { PerformedRoll, RollBonusLine, RollInternal, RollPayload } from './10-characters.ts';
 import type {
-  ActionContext, Actor, ActorId, AfflictionKind, Attack, AttacksState, AttackTurnRecord, Blast, BlastHit, BiName, DamageType, GameMap, GameView,
-  I18nParams, Point, ServerModule, SessionUser, TableState, Token,
+  ActionContext, Actor, ActorId, AfflictionKind, AttrKey, Attack, AttacksState, AttackTurnRecord, Blast, BlastHit, BiName, DamageType, GameMap, GameView,
+  I18nEntry, I18nParams, Point, ServerModule, SessionUser, TableState, Token,
 } from '../../shared/types.ts';
 
 /** Weapons / launcher profiles / catalog entries / player payloads of several shapes: read field by field. */
@@ -102,11 +103,92 @@ const apOf = (w: { ap?: unknown } | null | undefined): number => {
   return Number.isFinite(n) ? n : 0;
 };
 
+/**
+ * Direct combat spell (SR5 p. 283): the target resists with BOD (physical spell) or WIL (mana spell); the net hits are the
+ * damage, with no soak and no armor. A non-combat spell (noDamage, SR5 pp. 285-292) is resisted the same way with its
+ * attributes (LOG + WIL…): the net hits are the spell's success, the GM applies the effect.
+ */
+function doResistSpell(ctx: ActionContext, atk: Attack, target: Actor, { modifier = 0, explode = false }: ResolveOpts = {}): PerformedRoll {
+  const sp = atk.spell!;
+  const labelI18n: I18nEntry = sp.resist2
+    ? { key: tk('Resist {spell} ({attr} + {attr2})'), params: { spell: atk.weaponName || '', attr: { t: sp.resist }, attr2: { t: sp.resist2 } } }
+    : { key: tk('Resist {spell} ({attr})'), params: { spell: atk.weaponName || '', attr: { t: sp.resist } } };
+  let roll: PerformedRoll;
+  try {
+    roll = performRoll(ctx, {
+      actorId: target.id, attr: sp.resist, ...(sp.resist2 ? { attr2: sp.resist2 } : {}), label: tk('Resist the spell'), limit: null, modifier: int(modifier, -30, 30), explode: !!explode,
+    }, { logExtra: { attackId: atk.id, defense: true, labelI18n } });
+  } catch (err) {
+    // A wounded target can be left with no dice: no dice means no hit, not a blocked attack.
+    if ((err as { i18nKey?: string }).i18nKey !== 'Dice pool of zero: automatic failure') throw err;
+    const zero = { pool: 0, dice: [], extra: [], hits: 0, rawHits: 0, ones: 0, glitch: false, critGlitch: false, limit: null, limited: false };
+    const rec = { ...zero, label: 'Resist the spell', labelI18n, actorId: target.id, attackId: atk.id, defense: true };
+    const entry = ctx.log({ kind: 'roll', userId: ctx.user.id, author: target.name, text: rec.label, roll: rec, ...(atk.gmOnly ? { gmOnly: true } : {}) });
+    roll = { ...rec, logId: entry.id, entry };
+  }
+  atk.defenseHits = roll.hits;
+  atk.defenseLogId = roll.logId;
+  atk.net = atk.hits - roll.hits;
+  atk.resolvedTs = ctx.now;
+  if (atk.net <= 0) {
+    atk.status = 'missed';
+    logAttack(ctx, tk('{target} resists {spell}.'), { target: atk.targetName, spell: atk.weaponName || '' }, atk.gmOnly);
+    return roll;
+  }
+  atk.status = 'done';
+  if (atk.noDamage) {
+    logAttack(ctx, tk('{attacker}’s {spell} affects {target}: {n} net hit(s).'), { attacker: atk.attackerName, spell: atk.weaponName || '', target: atk.targetName, n: atk.net }, atk.gmOnly);
+    return roll;
+  }
+  atk.damage = atk.net;
+  atk.damageType = atk.type;
+  applyDamage(ctx, target, atk.net, atk.type);
+  return roll;
+}
+
+/** Astral combat (SR5 p. 315): the target defends with Intuition + Logic (no active defense), then soaks. */
+function doAstralDefense(ctx: ActionContext, atk: Attack, target: Actor, { modifier = 0, explode = false }: ResolveOpts = {}): PerformedRoll {
+  const roll = performRoll(ctx, {
+    actorId: target.id, attr: 'INT', attr2: 'LOG', label: tk('Astral defense'), limit: null, modifier: int(modifier, -30, 30), explode: !!explode,
+  }, { logExtra: { attackId: atk.id, defense: true } });
+  atk.defenseHits = roll.hits;
+  atk.defenseLogId = roll.logId;
+  atk.net = atk.hits - roll.hits;
+  if (atk.net <= 0) {
+    atk.status = 'missed';
+    atk.resolvedTs = ctx.now;
+    logAttack(ctx, tk('{target} avoids {attacker}\'s attack.'), { target: atk.targetName, attacker: atk.attackerName }, atk.gmOnly);
+  } else {
+    atk.status = 'soak';
+    atk.modifiedDv = (atk.dv || 0) + atk.net;
+    logAttack(ctx, tk('{attacker} hits {target}: DV {dv}{type}, AP {ap}.'), { attacker: atk.attackerName, target: atk.targetName, dv: atk.modifiedDv, type: atk.type, ap: 0 }, atk.gmOnly);
+  }
+  return roll;
+}
+
+/**
+ * An astral attack (called by 47-magic after the Astral Combat roll): DV and type chosen by the attacker, defense INT + LOG,
+ * soak with `soak` (WIL for an astral form, BOD for a dual-natured body) and no armor (SR5 p. 315).
+ */
+export function addAstralAttack(ctx: ActionContext, o: { attacker: Actor; target: Actor; mapId: string | null; hits: number; dv: number; type: DamageType; soak: AttrKey; rollLogId?: string; gmOnly?: boolean }): Attack {
+  const s = slice(ctx.state);
+  const map = o.mapId ? ctx.state.maps?.[o.mapId] || null : null;
+  const gmOnly = !!o.gmOnly || (o.target.type === 'npc' && !!o.target.hidden);
+  return push<Attack>(ctx.state, s.list, {
+    id: ctx.uid('atk'), ts: ctx.now, mapId: map?.id || null, kind: 'melee', attackerId: o.attacker.id, attackerName: o.attacker.name,
+    ...(o.rollLogId ? { attackLogId: o.rollLogId } : {}), targetId: o.target.id, targetTokenId: tokenOf(map, o.target.id)?.id || null, targetName: o.target.name,
+    weaponName: { fr: 'Combat astral', en: 'Astral combat' }, hits: o.hits, dv: o.dv, type: o.type, ap: 0, astral: { soak: o.soak },
+    status: o.hits > 0 ? 'defense' : 'missed', ...(o.hits > 0 ? {} : { resolvedTs: ctx.now }), ...(gmOnly ? { gmOnly: true } : {}),
+  }, MAX_ATTACKS);
+}
+
 /** Defense test of the target (REA + INT + options), then the attack moves to soak / missed / done. Returns the roll. */
 function doDefend(ctx: ActionContext, atk: Attack, { options = [], situations = [], modifier = 0, explode = false }: ResolveOpts = {}): PerformedRoll {
   if (atk.status !== 'defense') ctx.fail('This attack is not waiting for a defense');
   const target = actorOf(ctx, atk.targetId);
   if (!ctx.owns(target.id)) ctx.fail('Only the target\'s player (or the GM) can defend');
+  if (atk.kind === 'spell' && atk.spell?.mode === 'direct') return doResistSpell(ctx, atk, target, { modifier, explode });
+  if (atk.astral) return doAstralDefense(ctx, atk, target, { modifier, explode });
   const turn = turnOf(ctx.state, target.id);
   const plan = defenseLines(target, atk, {
     options: options.filter((id: string) => DEFENSE_BY_ID[id]), situations: situations.filter((id: string) => SITUATION_BY_ID[id]),
@@ -137,8 +219,38 @@ function doDefend(ctx: ActionContext, atk: Attack, { options = [], situations = 
     atk.status = 'soak';
     atk.modifiedDv = atk.dv + atk.net;
     logAttack(ctx, tk('{attacker} hits {target}: DV {dv}{type}, AP {ap}.'), { attacker: atk.attackerName, target: atk.targetName, dv: atk.modifiedDv, type: atk.type, ap: atk.ap }, gmOnly);
+    // Elemental indirect spell: the extra effect (catching fire, shorting out, brittle armor…) is the GM's (SR5 pp. 170-171).
+    if (atk.kind === 'spell' && atk.spell?.element) {
+      logAttack(ctx, tk('Elemental damage ({element}) on {target}: see its extra effects (SR5 pp. 170-171).'), { element: { t: ELEMENTS[atk.spell.element as SpellElement]?.name || atk.spell.element }, target: atk.targetName }, gmOnly);
+    }
   }
   return roll;
+}
+
+/**
+ * A combat spell aimed at a target (called by 47-magic after the Spellcasting roll): direct → status 'defense' resolved by
+ * doResistSpell; indirect → like a ranged attack, DV = Force (+ net hits on the hit), AP = −Force (SR5 p. 283).
+ */
+export function addSpellAttack(ctx: ActionContext, o: {
+  attacker: Actor; target: Actor; mapId: string | null; hits: number; spellName: BiName; force: number;
+  profile: Pick<CombatSpellProfile, 'mode' | 'damage' | 'element'> & { resist: AttrKey; resist2?: AttrKey | null };
+  /** Non-combat spell: resisted for net hits, no damage. */
+  noDamage?: boolean;
+  castLogId?: string; rollLogId?: string; gmOnly?: boolean;
+}): Attack {
+  const s = slice(ctx.state);
+  const map = o.mapId ? ctx.state.maps?.[o.mapId] || null : null;
+  const direct = o.profile.mode === 'direct';
+  const gmOnly = !!o.gmOnly || (o.target.type === 'npc' && !!o.target.hidden);
+  const atk = push<Attack>(ctx.state, s.list, {
+    id: ctx.uid('atk'), ts: ctx.now, mapId: map?.id || null, kind: 'spell', attackerId: o.attacker.id, attackerName: o.attacker.name,
+    ...(o.rollLogId ? { attackLogId: o.rollLogId } : {}), targetId: o.target.id, targetTokenId: tokenOf(map, o.target.id)?.id || null,
+    targetName: o.target.name, weaponName: o.spellName, hits: o.hits, dv: direct ? null : o.force, type: o.profile.damage, ap: direct ? 0 : -o.force,
+    spell: { mode: o.profile.mode, resist: o.profile.resist, ...(o.profile.resist2 ? { resist2: o.profile.resist2 } : {}), force: o.force, element: o.profile.element, ...(o.castLogId ? { castLogId: o.castLogId } : {}) },
+    ...(o.noDamage ? { noDamage: true } : {}),
+    status: o.hits > 0 ? 'defense' : 'missed', ...(o.hits > 0 ? {} : { resolvedTs: ctx.now }), ...(gmOnly ? { gmOnly: true } : {}),
+  }, MAX_ATTACKS);
+  return atk;
 }
 
 /**
@@ -185,6 +297,23 @@ function doSoak(ctx: ActionContext, atk: Attack, { modifier = 0, explode = false
   const target = actorOf(ctx, atk.targetId);
   if (!ctx.owns(target.id)) ctx.fail('Only the target\'s player (or the GM) can resist the damage');
   if (atk.kind === 'toxin') return doToxin(ctx, atk, target, { modifier, explode });
+  if (atk.astral) {
+    // Astral soak: the astral body (WIL) or the dual-natured body (BOD), no armor (SR5 p. 315).
+    const roll = performRoll(ctx, {
+      actorId: target.id, attr: atk.astral.soak, label: tk('Soak'), applyWounds: false, limit: null, modifier: int(modifier, -30, 30), explode: !!explode,
+    }, { logExtra: { attackId: atk.id, soak: true } });
+    const dv = atk.modifiedDv ?? atk.dv ?? 0;
+    const boxes = Math.max(0, dv - roll.hits);
+    atk.soakHits = roll.hits;
+    atk.soakLogId = roll.logId;
+    atk.damage = boxes;
+    atk.damageType = atk.type;
+    atk.status = 'done';
+    atk.resolvedTs = ctx.now;
+    if (boxes > 0) applyDamage(ctx, target, boxes, atk.type);
+    else logAttack(ctx, tk('{target} resists it all ({dv}{type}).'), { target: atk.targetName, dv, type: atk.type }, atk.gmOnly);
+    return roll;
+  }
   const internal: RollInternal = { ap: atk.ap, logExtra: { attackId: atk.id, soak: true } };
   const roll = performRoll(ctx, {
     actorId: target.id, attr: 'BOD', test: 'soak', label: tk('Soak'), applyWounds: false, limit: null, modifier: int(modifier, -30, 30), explode: !!explode,

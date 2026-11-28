@@ -15,9 +15,14 @@ xml, mugshots, diff, summary, warnings, status }] }` (`ChummerState`, `ChummerRe
 - Routes: `POST /api/actors/import-chum5` (GM, new actor), `POST /api/chummer/import` (GM new actor, or `?actorId=` =
   update), `POST /api/chummer/preview`, `POST /api/chummer/update?actorId=` (3-way merge; players create a pending
   request unless allowed), `GET /api/chummer/export/:actorId` (owner/GM; the exported file becomes the merge base).
-  `CHUMMER_DATA_DIR` overrides the Chummer data folder.
+  `CHUMMER_DATA_DIR` overrides the Chummer data folder (default `../Chummer5.226.0/data`, never in git nor in the
+  Docker image). Without it, `data.ts` falls back to `snapshot.json` (skills, metatypes, grades, and the Fake SIN /
+  Fake License / Custom Item gear nodes; regenerate with `node server/lib/chummer/build-snapshot.ts`) and builds
+  weapon, armor, 'ware and gear nodes from the app catalog (`catalogNode`: sourceid, stats, essence, avail/cost
+  formulas, mounts; no `<bonus>`, `<spec>`). Qualities, powers, spells, vehicles, lifestyles, martial arts and
+  grenades still export without a sourceid there.
 - Actor fields: `actor.chummer = { xml, fileName, importedAt, syncedAt, exportedAt?, updatedAt?, sourceHash, created,
-  appVersion, mugshots? }` (xml stripped from the GM view by `gmFilter`), `item.chummerGuid`, `actor.realName`,
+  appVersion, lang?, bags?, mugshots? }` (xml stripped from the GM view by `gmFilter`), `item.chummerGuid`, `actor.realName`,
   `actor.metavariant`. Chummer mugshots go to the current table's uploads.
 
 ## Import, export, re-import
@@ -32,7 +37,7 @@ xml, mugshots, diff, summary, warnings, status }] }` (`ChummerState`, `ChummerRe
   Chummer, run *Réappliquer les améliorations* if bonuses look off.
 - Re-import never brings back items deleted in the app since the export, nor duplicates items the app keeps in another
   list (device in `actor.matrix`, shop SIN in gear).
-- Inventory locations, clips and ammo: [inventory.md](inventory.md#imports).
+- Inventory locations, bags (gear with contents → sub-inventory), clips and ammo: [inventory.md](inventory.md#imports).
 
 ## Nested lists
 

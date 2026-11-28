@@ -111,6 +111,7 @@ function cleanToken(t: Loose, map: MapSize): Token {
   if (light) tok.light = light;
   if (Array.isArray(t.status)) tok.status = t.status.map((s: unknown) => str(s, 30)).filter(Boolean).slice(0, 12);
   if (t.lastMove && Array.isArray(t.lastMove.path)) tok.lastMove = t.lastMove;
+  if (t.astral) tok.astral = true;
   return tok;
 }
 
@@ -369,6 +370,15 @@ function tokenFromActor(actor: Actor, extra: Loose = {}): Loose {
   const t: Loose = { actorId: actor.id, name: actor.name, disposition: actor.type === 'pc' ? 'pc' : 'hostile', hidden: false, ...extra };
   if (actor.color && !t.color) t.color = actor.color;
   if (actor.portrait && !t.img) t.img = actor.portrait;
+  return t;
+}
+
+/** Put an actor's token on the free cell nearest to (x, y) (47-magic: a materialized spirit next to its summoner). */
+export function placeActorToken(state: TableState, map: GameMap, actor: Actor, x: number, y: number, extra: Loose = {}): Token {
+  const [cell] = freeCellsNear(map, x, y, 1);
+  const t = cleanToken({ ...tokenFromActor(actor, extra), x: cell ? cell.x : x, y: cell ? cell.y : y, id: undefined }, map);
+  map.tokens.push(t);
+  refreshFog(state, map);
   return t;
 }
 

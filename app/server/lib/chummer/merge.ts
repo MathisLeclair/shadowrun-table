@@ -184,6 +184,14 @@ export function mergeActor(currentActor: Actor, theirsActor: ParsedActor, baseAc
   // Containers (Chummer locations, ids chum_<guid>): the app's are kept, the file's new ones are added (items may point at them).
   const cts = Array.isArray(current.containers) ? [...current.containers] : [];
   for (const ct of Array.isArray(theirs.containers) ? theirs.containers : []) if (ct?.id && !cts.some((x) => x?.id === ct.id)) cts.push({ ...ct });
+  // Bags (ids chumgear_<guid>, itemId = the bag's gear item): the parse gave the item a fresh id, point at the merged one.
+  for (let i = 0; i < cts.length; i++) {
+    const ct = cts[i];
+    if (!ct?.itemId || (m.gear || []).some((g: FieldRec) => g?.id === ct.itemId)) continue;
+    const guid = (theirs.gear || []).find((g: FieldRec) => g?.id === ct.itemId)?.chummerGuid;
+    const mine = guid && (m.gear || []).find((g: FieldRec) => g?.chummerGuid === guid);
+    cts[i] = mine ? { ...ct, itemId: mine.id } : (({ itemId: _drop, ...rest }) => rest)(ct);
+  }
   if (cts.length) m.containers = cts;
   // Keep the previous sync point when merging: app-side karma/nuyen entries made since then are not in the uploaded
   // file and must still become Chummer expenses at the next export (entries flagged `chummer` are skipped).

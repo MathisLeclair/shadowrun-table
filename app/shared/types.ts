@@ -178,6 +178,8 @@ export interface LogEntry {
   roll?: RollRecord;
   /** Matrix entries (kind 'matrix'). */
   matrix?: MatrixLogInfo;
+  /** Magic entries (kind 'magic'). */
+  magic?: MagicLogInfo;
 }
 
 /** Result of `rollDice()` (shared/sr5.js). */
@@ -586,6 +588,8 @@ export interface Gear extends ItemBase {
   qty: number;
   /** Worn / switched on: its catalog effects count (shared/modifiers.js). */
   active?: boolean;
+  /** Focus (category Foci): bonded to its owner (SR5 p. 318). false = bought, not bonded yet; absent = older sheets (counted as bonded). */
+  bonded?: boolean;
   location?: ItemLocation;
   /** Chummer <ammoforweapontype>. */
   ammoFor?: string;
@@ -601,6 +605,8 @@ export interface Container {
   name: string;
   kind: ContainerKind;
   notes?: string;
+  /** Gear item this container is (a Chummer bag with contents: the item keeps its cost, the container holds the contents). */
+  itemId?: string;
 }
 
 export interface Vehicle extends ItemBase {
@@ -844,9 +850,34 @@ export interface ActorTradition extends BookRefFields {
   spirits?: Partial<Record<SpellCategoryKey, string>>;
 }
 
-/** Written by training (initiation, metamagics…) and the magic module (tradition). */
+/** A spell the actor sustains (mirror of state.magic.sustained written by 47-magic): −2 dice on every test (SR5 p. 282). */
+export interface SustainingEntry {
+  id: string;
+  name: BiName;
+  force: number;
+  /** Sustained by this sustaining focus (gear id): no −2 while the focus is bonded and active (SR5 p. 320). */
+  focusId?: string;
+}
+
+/** A sustained spell acting on the actor (mirror of state.magic.sustained written by 47-magic), with its numeric effects. */
+export interface SpellEffectEntry {
+  id: string;
+  name: BiName;
+  force: number;
+  hits: number;
+  casterId: ActorId;
+  casterName: string;
+  /** Effects applied as modifiers (shared/magic.ts SPELL_EFFECTS): armor, defense… */
+  effects: Array<{ type: 'armor' | 'stat'; target?: string; value: number }>;
+}
+
+/** Written by training (initiation, metamagics…) and the magic module (tradition, sustained spells). */
 export interface ActorMagic {
   tradition?: ActorTradition;
+  /** Spells this actor sustains (47-magic, never edited by hand). */
+  sustaining?: SustainingEntry[];
+  /** Sustained spells on this actor (47-magic, never edited by hand). */
+  spellEffects?: SpellEffectEntry[];
   initiation?: number;
   submersion?: number;
   metamagics?: string[];
@@ -915,8 +946,31 @@ export interface ChummerLink {
   appVersion?: string;
   /** Language of the texts the import wrote (notes, bio headings); absent = French (imports before 2026-11). */
   lang?: Lang;
+  /** Gear with contents is a bag container (imports since 2026-11-28; older ones are migrated once at boot). */
+  bags?: boolean;
   /** Upload URLs of the portraits. */
   mugshots?: string[];
+}
+
+/** A summoned spirit (`actor.spirit`, owner: 47-magic; SR5 pp. 300-302). */
+export interface ActorSpirit {
+  /** English spirit type of data/catalog/spirits.json ('Spirit of Fire'). */
+  type: string;
+  typeFr?: string;
+  force: number;
+  /** The magician who summoned it; their player controls it. */
+  summonerId: ActorId;
+  /** Services still owed (SR5 p. 302). */
+  services: number;
+  /** Bound spirit (SR5 p. 300): does not leave at sunrise / sunset. */
+  bound: boolean;
+  /** On the physical plane (token on the map), else astral. */
+  materialized: boolean;
+  /** Bound spirit at rest on its metaplane (false) or called to the summoner (true / absent). */
+  present?: boolean;
+  /** Chosen optional powers (English names). */
+  optionalPowers: string[];
+  ts: Timestamp;
 }
 
 /** PC or spawned NPC (`state.actors[id]`). Derived numbers are never stored: use derive()/deriveFull(). */
@@ -993,6 +1047,8 @@ export interface Actor {
   retired?: boolean;
   training?: TrainingJob[];
   magic?: ActorMagic;
+  /** Summoned spirit (47-magic). */
+  spirit?: ActorSpirit;
   afflictions?: Affliction[];
   history: HistoryEntry[];
   foundry?: FoundryLink;
@@ -1135,7 +1191,7 @@ export interface CombatState {
 // Attacks — owner: 33-attacks.js
 // =====================================================================================================================
 
-export type AttackKind = 'ranged' | 'melee' | 'blast' | 'toxin';
+export type AttackKind = 'ranged' | 'melee' | 'blast' | 'toxin' | 'spell';
 export type AttackStatus = 'defense' | 'soak' | 'missed' | 'done' | 'cancelled';
 export type DamageType = 'P' | 'S';
 export type BlastEffect = 'explosion' | 'smoke' | 'thermalSmoke' | 'gas' | 'flashpak';
@@ -1189,6 +1245,10 @@ export interface Attack {
   manual?: boolean;
   resolvedTs?: Timestamp;
   gmOnly?: boolean;
+  /** Astral combat (47-magic, SR5 p. 315): defense INT + LOG, soak with `soak` and no armor. */
+  astral?: { soak: AttrKey };
+  /** Combat spell (kind 'spell', 47-magic): direct = resisted with `resist`, no soak; indirect = dodge then soak. */
+  spell?: { mode: 'direct' | 'indirect'; resist: AttrKey; resist2?: AttrKey | null; force: number; element?: string | null; castLogId?: string };
 }
 
 /** An actor caught in a blast. */
@@ -1402,6 +1462,8 @@ export interface Token {
   lastMove?: { path: Array<[number, number]>; ts: Timestamp };
   /** Combat movement used this Combat Turn, in metres. */
   moveBudget?: { key: string; meters: number };
+  /** Astral form (projecting magician, spirit on the astral plane): seen only by astral viewers (47-magic filter). */
+  astral?: boolean;
 }
 
 /**
@@ -1658,7 +1720,15 @@ export interface ShopState {
 
 export type TrainingKind =
   | 'attribute' | 'skill' | 'skillGroup' | 'specialization' | 'knowledge' | 'quality' | 'removeQuality'
-  | 'spell' | 'complexForm' | 'power' | 'powerPoint' | 'initiation' | 'other';
+  | 'spell' | 'complexForm' | 'power' | 'powerPoint' | 'initiation' | 'martialArt' | 'focus' | 'other';
+
+/** A martial art technique carried by a 'martialArt' request (catalog martialarts.json, Run & Gun). */
+export interface AdvancementTechnique {
+  /** Catalog technique id. */
+  id: string;
+  name: string;
+  nameFr?: string;
+}
 
 /** Normalized advancement request (shared/advancement.js normalizeRequest). */
 export interface AdvancementRequest {
@@ -1682,6 +1752,8 @@ export interface AdvancementRequest {
   positive: boolean;
   data: { category: string; type: string; range: string; duration: string; drain: string };
   options: { group: boolean; ordeal: boolean; schooling: boolean; metamagic: string; powerPoint: boolean };
+  /** 'martialArt': techniques to learn (catalogId = style id, karma = style cost). */
+  techniques: AdvancementTechnique[];
   free: boolean;
 }
 
@@ -2203,7 +2275,41 @@ export interface MagicState {
   settings: MagicSettings;
   sustained: Record<string, SustainedSpell>;
   astral: Record<ActorId, AstralPresence>;
+  /** Drain left to resist (settings.autoDrain off), by id. */
+  pendingDrain: Record<string, PendingDrain>;
 }
+
+/** Drain a caster still has to resist (SR5 p. 282). */
+export interface PendingDrain {
+  id: string;
+  actorId: ActorId;
+  /** Drain Value. */
+  dv: number;
+  type: 'P' | 'S';
+  /** What caused it (spell name). */
+  source: BiName;
+  ts: Timestamp;
+}
+
+/** `entry.magic` of a magic log entry. */
+export interface MagicLogInfo {
+  event: 'cast' | 'drain' | 'drop' | 'summon' | 'spirit' | 'bind' | 'banish' | 'astral' | 'ritual' | 'quicken';
+  actorId: ActorId;
+  spellId?: string;
+  force?: number;
+  hits?: number;
+  reckless?: boolean;
+  dv?: number;
+  drainType?: 'P' | 'S';
+  /** Drain boxes taken after resistance. */
+  damage?: number;
+  targetIds?: ActorId[];
+}
+
+/** Who carries a sustained spell's −2: its caster, a bound spirit for some Combat Turns (SR5 p. 302), or a sustaining focus (p. 320). */
+export type SustainCarrier = { kind: 'caster' } | { kind: 'spirit'; actorId: ActorId; turnsLeft: number } | { kind: 'focus'; gearId: string }
+  /** Quickened (SR5 p. 326): permanent, karma spent = its bonus against dispelling; nobody sustains it. */
+  | { kind: 'quickened'; karma: number };
 
 /** A spell being sustained (by its caster, a bound spirit or a sustaining focus). */
 export interface SustainedSpell {
@@ -2216,12 +2322,20 @@ export interface SustainedSpell {
   hits: number;
   targetIds: ActorId[];
   ts: Timestamp;
+  /** Absent = the caster. */
+  by?: SustainCarrier;
+  /** Permanent (P) spell: Combat Turns left before its effect becomes permanent and the spell ends (SR5 p. 283). */
+  turnsLeft?: number;
+  /** Area of the spell (cells, radius in metres). */
+  area?: { mapId: MapId; x: number; y: number; radius: number };
 }
 
 /** Astral state of an actor (absent: physical only). */
 export interface AstralPresence {
   mode: 'perceiving' | 'projecting';
   since: Timestamp;
+  /** Projecting: the map of the astral form. */
+  mapId?: MapId;
 }
 
 /** `view.magic`: players only get the entries of their own characters (astral: all when the GM shows them). */

@@ -405,6 +405,7 @@ export function normalizeInventory(a: RawData, makeId: MakeId): RawData {
       seen.add(id);
       const out: Container = { id, name: String(c.name || 'Contenant').slice(0, 60), kind: CONTAINER_KINDS[c.kind as ContainerKind] ? c.kind : 'other' };
       if (c.notes) out.notes = String(c.notes).slice(0, 500);
+      if (c.itemId) out.itemId = String(c.itemId).slice(0, 60);
       return out;
     });
   for (const list of LOCATED_LISTS) {

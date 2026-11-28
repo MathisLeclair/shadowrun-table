@@ -48,4 +48,36 @@
 .mg-hint.tone-danger { border-left-color: var(--red); }
 
 .mg-overview td { vertical-align: middle; }
+.mg-spirits { display: flex; flex-direction: column; gap: 8px; }
+.mg-astral { display: flex; flex-direction: column; gap: 6px; }
+.mg-foci { display: flex; flex-direction: column; gap: 6px; }
+.mg-metamagic { display: flex; flex-direction: column; gap: 6px; }
+.mg-mm { padding: 4px 0; border-top: 1px solid var(--line); }
+.mg-focus { padding: 4px 0; border-top: 1px solid var(--line); flex-wrap: wrap; gap: 6px; }
+.mg-astral.on { border-color: color-mix(in srgb, var(--cyan) 55%, transparent); }
+.mg-spirit { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; background: var(--panel); display: flex; flex-direction: column; gap: 6px; }
+.mg-spirit-services { font: 700 13px var(--mono); color: var(--magenta); }
+.mg-spirit-btns { gap: 6px; }
+.mg-spirit-preview { padding: 4px 8px; background: var(--panel2); border-radius: 6px; }
+
+/* ---------- cast modal ---------- */
+.mg-cast { display: flex; flex-direction: column; gap: 10px; }
+.mg-cast-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.mg-cast-row select { min-width: 220px; }
+.mg-cast-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.mg-cast-grid .field { display: flex; flex-direction: column; gap: 3px; }
+.mg-cast-dv { font: 800 20px var(--mono); color: var(--magenta); }
+.mg-cast-rule { color: var(--text); border-left: 3px solid var(--magenta); padding: 4px 8px; background: var(--panel2); }
+.mg-cast-warn { color: var(--dim); border-left: 3px solid var(--amber); padding: 4px 8px; background: var(--panel2); }
+.mg-cast-targets { display: flex; flex-direction: column; gap: 4px; max-height: 240px; overflow-y: auto; }
+.mg-target { display: flex; align-items: center; gap: 8px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; }
+.mg-target.on { border-color: var(--magenta); background: color-mix(in srgb, var(--magenta) 10%, transparent); }
+.mg-target.warn { opacity: .75; }
+.mg-cast-foot { margin-top: 12px; }
+.mg-cast-result { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.mg-cast-big b { font: 800 30px var(--mono); color: var(--magenta); }
+.mg-cast-drain { padding: 6px 10px; background: var(--panel2); border-radius: 8px; }
+.mg-pending .row { justify-content: space-between; padding: 4px 0; }
+.mg-sustained td { vertical-align: middle; }
+.mg-sustained-panel { border-color: color-mix(in srgb, var(--amber) 45%, transparent); }
 .mg-overview td.num-cell { white-space: nowrap; }

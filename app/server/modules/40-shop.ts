@@ -1,6 +1,6 @@
 // Shop module: gear catalog price authority, player purchases/sales, GM approval queue, fixer specials, lifestyles
 // (several per actor, with upgrades), upgrades installed on owned items (weapon accessories, armor/vehicle mods),
-// martial arts (karma, GM-approved).
+// martial arts (GM gifts; players learn them through training, 50-training.ts).
 // State slice: state.shop (see ARCHITECTURE.md > Shop & « Upgrades »). Pricing rules are shared with the client
 // (client/modules/shop/rules.js), lifestyle costs with shared/lifestyle.js.
 import fs from 'node:fs';
@@ -687,6 +687,7 @@ function addLine(ctx: ActionContext, actor: ShopActor, line: OrderLine, { paid }
       gearItem = { id: ctx.uid('gear'), name: line.name, category: line.category || '', qty: units, ...base };
       if (unitPaid !== undefined) gearItem.paid = unitPaid;
       if (line.rating) gearItem.rating = line.rating;
+      if (item.category === 'Foci') gearItem.bonded = false; // to bond with karma (47-magic / training, SR5 p. 318)
       actor.gear.push(gearItem);
     }
     if (line.file === 'programs' && actor.matrix) {
@@ -1437,26 +1438,16 @@ const mod: ServerModule = {
       },
     },
 
-    // Martial arts (karma): { actorId, styleId, techniqueIds: [], free? (GM: no karma) }.
-    // Player → pending order (kind 'karma', the GM approves and the karma is spent then). GM → granted at once.
+    // Martial arts, GM only: { actorId, styleId, techniqueIds: [], free? (no karma) } → granted at once, no training time.
+    // Learning one with training time (RG p.128) is a 'martialArt' training request (training/request, 50-training.ts):
+    // the storefront sends players there. Pending 'karma' orders of older saves are still approved by shop/resolve.
     'shop/martialArt': {
-      role: 'any',
+      role: 'gm',
       handler(ctx: ActionContext, { actorId, styleId, techniqueIds, free }: MartialArtPayload) {
         const actor = getActor(ctx, actorId);
         const plan = martialPlan(ctx, actor, styleId, techniqueIds);
-        if (ctx.isGM) {
-          const m = applyMartial(ctx, actor, plan, { free: !!free });
-          return { status: 'done', martialArtId: m.id, karma: free ? 0 : plan.karma };
-        }
-        if ((Number(actor.karma) || 0) < plan.karma) ctx.fail('Not enough karma: {cost} needed, {have} available', { cost: plan.karma, have: Number(actor.karma) || 0 });
-        if (ctx.state.shop.orders.some((o) => o.status === 'pending' && o.kind === 'karma' && o.actorId === actorId && o.items[0]?.ref === plan.style.id)) ctx.fail('A request for this martial art is already waiting for the GM');
-        const names = plan.techniques.map((t) => t.nameFr || t.name);
-        const line: OrderLine = { ref: plan.style.id, file: 'martialarts', name: itemName(plan.style), qty: 1, unitCost: 0, karma: plan.karma, techniqueIds: plan.techniques.map((t) => t.id), techniques: names };
-        const order: ShopOrder = { id: ctx.uid('ord'), ts: ctx.now, actorId: actorId as ActorId, userId: ctx.user.id, by: ctx.user.name, kind: 'karma', items: [line], total: 0, karma: plan.karma, status: 'pending', flags: [] };
-        pushOrder(ctx.state.shop, order);
-        shopLog(ctx, actorId as ActorId, tk('{actor} asks to learn {style} ({techniques}) — {karma} karma (waiting for the GM)'), { actor: actor.name, style: line.name, techniques: names.join(', ') || '—', karma: plan.karma });
-        ctx.emitTo('gm', 'sfx', { id: 'notify' });
-        return { status: 'pending', orderId: order.id, karma: plan.karma };
+        const m = applyMartial(ctx, actor, plan, { free: !!free });
+        return { status: 'done', martialArtId: m.id, karma: free ? 0 : plan.karma };
       },
     },
 

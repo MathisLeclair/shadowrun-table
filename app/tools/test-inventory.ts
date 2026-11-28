@@ -647,6 +647,143 @@ console.log('Chummer locations, clips, grenades, ready weapons');
   });
 }
 
+console.log('Chummer bags (gear with contents → sub-inventory)');
+{
+  const { parseChum5 } = await import('../server/lib/chummer/parse.ts');
+  const { exportChum5 } = await import('../server/lib/chummer/export.ts');
+  const { mergeActor } = await import('../server/lib/chummer/merge.ts');
+  const { adoptChummerBags } = await import('../server/lib/chummer/bags.ts');
+  const { parseXml } = await import('../server/lib/chummer/xml.ts');
+  const xml0 = fs.readFileSync(path.join(ROOT, 'tools', 'fixtures', 'chummer-test.chum5'), 'utf8');
+  const gear = (src: string, guid: string, name: string, category: string, { capacity = '0', kids = '', gearname = '' } = {}) =>
+    `<gear><sourceid>${src}</sourceid><guid>${guid}</guid><name>${name}</name><category>${category}</category><capacity>${capacity}</capacity><qty>1</qty><rating>0</rating>`
+    + `<gearname>${gearname}</gearname><location /><notes /><includedinparent>False</includedinparent><children>${kids}</children></gear>`;
+  const G = (n: number) => `${String(n).repeat(8)}-0000-4000-8000-${String(n).repeat(12)}`;
+  // Backpack: a lighter, a grapple gun with its rope (an accessory), a duffel bag holding water. Glasses with a vision enhancement
+  // (capacity slot: an accessory). « Pochette d'Anthony »: a custom-named gear with loose contents.
+  const bagXml = gear('d7c98f39-279e-4169-8818-0c3cad08205b', G(1), 'Backpack (Good)', 'Tools', {
+    kids: gear('17ff01a6-e143-4d07-979d-d524671e1d34', G(2), 'Lighter (Good)', 'Tools')
+      + gear('59561c08-3269-470d-9d8b-3cde8a8ccbf8', G(3), 'Grapple Gun', 'Grapple Gun', { kids: gear('8adaecd5-0c24-4982-8803-e4459e16589f', G(4), 'Standard Rope (100m)', 'Grapple Gun') })
+      + gear('f1d60d11-b2e1-41ba-8cb5-34ce86ee584e', G(5), 'Duffel Bag (Cheap)', 'Tools', { kids: gear('af06a5f9-a010-4e29-95b0-cd3e280d1de3', G(6), 'Liter Bottle of Water', 'Food') }),
+  }) + gear('b218dbd1-5706-4d9e-a6a7-ab9b658c3acd', G(7), 'Glasses', 'Vision Devices', { capacity: 'Rating', kids: gear('00000000-0000-0000-0000-000000000000', G(8), 'Low-Light Vision', 'Vision Enhancements', { capacity: '[1]' }) })
+    + gear('00000000-0000-0000-0000-000000000000', G(9), 'Custom Item', 'Custom', { gearname: 'Pochette d’Anthony', kids: gear('af06a5f9-a010-4e29-95b0-cd3e280d1de3', '99999999-1111-4000-8000-999999999999', 'Liter Bottle of Water', 'Food') });
+  const xml = xml0.replace('<gears />', `<gears>${bagXml}</gears>`);
+  const byGuid = (a: { gear: Actor['gear'] }, n: number) => a.gear.find((g) => g.chummerGuid === G(n))!;
+  await test('parse: gear with loose contents → a bag container linked to its item; accessories stay flat', () => {
+    const { actor } = parseChum5(xml, { keepXml: true, lang: 'en' });
+    const pack = byGuid(actor, 1);
+    const duffel = byGuid(actor, 5);
+    const pouch = byGuid(actor, 9);
+    assert.deepEqual(actor.containers, [
+      { id: `chumgear_${G(1)}`, name: pack.name, kind: 'bag', itemId: pack.id },
+      { id: `chumgear_${G(5)}`, name: duffel.name, kind: 'bag', itemId: duffel.id },
+      { id: `chumgear_${G(9)}`, name: 'Pochette d’Anthony', kind: 'bag', itemId: pouch.id },
+    ]);
+    assert.equal(pack.location, undefined, 'the bag itself stays where it was (on body)');
+    assert.equal(byGuid(actor, 2).location, `chumgear_${G(1)}`);
+    assert.equal(byGuid(actor, 2).notes, undefined, 'no « in {bag} » note: the container says it');
+    assert.equal(byGuid(actor, 3).location, `chumgear_${G(1)}`);
+    assert.equal(duffel.location, `chumgear_${G(1)}`, 'bag in a bag');
+    assert.equal(byGuid(actor, 6).location, `chumgear_${G(5)}`);
+    const rope = byGuid(actor, 4);
+    assert.equal(rope.location, `chumgear_${G(1)}`, 'an accessory follows its parent into the bag');
+    assert.match(rope.notes || '', /^in Grapple Gun/);
+    const llv = byGuid(actor, 8);
+    assert.equal(llv.location, undefined);
+    assert.match(llv.notes || '', /^in Glasses/, 'capacity slot = accessory, not contents');
+    assert.equal(actor.chummer?.bags, true);
+    normalizeActor(actor, mkId);
+    assert.equal(actor.containers!.find((c) => c.id === `chumgear_${G(1)}`)!.itemId, pack.id, 'normalizeInventory keeps the link');
+  });
+  await test('export: unchanged bags round-trip; contents taken out / put in move between <children> and <gears>', () => {
+    const { actor } = parseChum5(xml, { keepXml: true, lang: 'en' });
+    normalizeActor(actor, mkId);
+    const same = parseChum5(exportChum5(actor as Actor).xml, { keepXml: false, lang: 'en' }).actor;
+    assert.deepEqual(same.containers!.map((c) => c.id), actor.containers!.map((c) => c.id));
+    for (const n of [2, 3, 4, 5, 6]) assert.equal(byGuid(same, n).location, byGuid(actor, n).location === 'on' ? undefined : byGuid(actor, n).location, `item ${n}`);
+    byGuid(actor, 2).location = 'on'; // lighter out of the backpack
+    byGuid(actor, 7).location = `chumgear_${G(5)}`; // glasses (with their enhancement node) into the duffel bag
+    actor.gear.push({ id: 'itm_new', name: 'Ammo: APDS', category: 'Ammunition', qty: 10, location: `chumgear_${G(1)}` }); // new item in the backpack
+    const out = exportChum5(actor as Actor);
+    const doc = parseXml(out.xml);
+    const top = doc.root.child('gears')!.all('gear').map((g) => g.val('guid'));
+    assert.ok(top.includes(G(2)), 'lighter back at the top level');
+    const packNode = doc.root.child('gears')!.all('gear').find((g) => g.val('guid') === G(1))!;
+    const inPack = packNode.child('children')!.all('gear').map((g) => g.val('gearname') || g.val('name')); // Custom Item without Chummer's data
+    assert.ok(inPack.includes('Ammo: APDS') && !inPack.includes('Lighter (Good)'), inPack.join(', '));
+    assert.equal(doc.root.child('gearlocations')?.all('location').length || 0, 0, 'a bag is no Chummer location');
+    const back = parseChum5(out.xml, { keepXml: false, lang: 'en' }).actor;
+    assert.equal(byGuid(back, 2).location, undefined);
+    assert.equal(byGuid(back, 7).location, `chumgear_${G(5)}`);
+    assert.equal(byGuid(back, 8).location, `chumgear_${G(5)}`, 'the accessory went along');
+    assert.equal(back.gear.find((g) => g.chummerGuid === out.assigned.gear.itm_new)!.location, `chumgear_${G(1)}`);
+  });
+  await test('export: a bag deleted in the app keeps the contents the app still has', () => {
+    const { actor } = parseChum5(xml, { keepXml: true, lang: 'en' });
+    normalizeActor(actor, mkId);
+    const pack = byGuid(actor, 1);
+    actor.gear = actor.gear.filter((g) => g !== pack);
+    actor.containers = actor.containers!.filter((c) => c.itemId !== pack.id);
+    for (const g of actor.gear) if (g.location === `chumgear_${G(1)}`) g.location = 'on';
+    const back = parseChum5(exportChum5(actor as Actor).xml, { keepXml: false, lang: 'en' }).actor;
+    assert.equal(back.gear.some((g) => g.chummerGuid === G(1)), false);
+    for (const n of [2, 3, 4, 5, 6]) assert.ok(back.gear.some((g) => g.chummerGuid === G(n)), `item ${n} kept`);
+    assert.equal(byGuid(back, 6).location, `chumgear_${G(5)}`, 'the duffel bag still holds its water');
+  });
+  await test('export (generate mode, no stored file): bag contents are nested', () => {
+    const { actor } = parseChum5(xml, { keepXml: true, lang: 'en' });
+    normalizeActor(actor, mkId);
+    delete actor.chummer;
+    for (const g of actor.gear) delete g.chummerGuid;
+    const out = exportChum5(actor as Actor);
+    assert.equal(out.mode, 'generate');
+    const back = parseChum5(out.xml, { keepXml: false, lang: 'en' }).actor;
+    const pack = back.gear.find((g) => /Backpack|Sac à dos/.test(g.name))!;
+    const water = back.gear.filter((g) => /Water|eau/i.test(g.name));
+    assert.ok(back.containers!.some((c) => c.itemId === pack.id), 'the backpack is a bag again');
+    assert.equal(water.length, 2);
+    assert.ok(water.every((w) => String(w.location).startsWith('chumgear_')));
+  });
+  await test('merge: a re-import points the new bag at the app’s own item', () => {
+    const { actor: old } = parseChum5(xml0, { keepXml: true, lang: 'en' });
+    const current = { ...old, id: 'pc_x', gear: [{ id: 'mine_pack', name: 'Sac à dos', qty: 1, chummerGuid: G(1) }] } as unknown as Actor;
+    const theirs = parseChum5(xml, { keepXml: true, lang: 'en' }).actor;
+    const m = mergeActor(current, theirs, null);
+    const bag = m.containers!.find((c) => c.id === `chumgear_${G(1)}`)!;
+    assert.equal(bag.itemId, 'mine_pack');
+    assert.ok(m.containers!.every((c) => !c.itemId || m.gear.some((g) => g.id === c.itemId)));
+  });
+  await test('migration: an actor imported before bags gets them once (notes cleaned, app moves kept)', () => {
+    const { actor } = parseChum5(xml, { keepXml: true, lang: 'en' });
+    normalizeActor(actor, mkId);
+    // Shape of the old import: no bag containers, contents « on body » with an « in {bag} » note, no `bags` flag.
+    const parsedLoc = new Map(actor.gear.map((g) => [g.id, g.location]));
+    actor.containers = [];
+    delete actor.chummer!.bags;
+    for (const g of actor.gear) {
+      const loc = parsedLoc.get(g.id);
+      if (loc === 'on') continue;
+      g.location = 'on';
+      if (!g.notes) g.notes = loc === `chumgear_${G(5)}` ? 'in Duffel Bag (Cheap)' : 'in Backpack (Good)';
+    }
+    actor.containers.push({ id: 'ct_car', name: 'Voiture', kind: 'vehicle' });
+    byGuid(actor, 3).location = 'ct_car'; // the GM put the grapple gun in the car since
+    const moved = adoptChummerBags(actor as Actor);
+    assert.equal(moved, 5, 'lighter, rope, duffel, water ×2');
+    assert.equal(actor.chummer!.bags, true);
+    const pack = byGuid(actor, 1);
+    assert.deepEqual(actor.containers.find((c) => c.id === `chumgear_${G(1)}`), { id: `chumgear_${G(1)}`, name: pack.name, kind: 'bag', itemId: pack.id });
+    assert.equal(byGuid(actor, 2).location, `chumgear_${G(1)}`);
+    assert.equal(byGuid(actor, 2).notes, undefined, '« in Backpack (Good) » dropped');
+    assert.match(byGuid(actor, 4).notes || '', /^in Grapple Gun/, 'accessory note kept');
+    assert.equal(byGuid(actor, 3).location, 'ct_car', 'moved in the app: untouched');
+    assert.equal(byGuid(actor, 6).location, `chumgear_${G(5)}`);
+    const snap = clone(actor);
+    assert.equal(adoptChummerBags(actor as Actor), 0);
+    assert.deepEqual(actor, snap, 'second run changes nothing');
+  });
+}
+
 if (failures) {
   console.log(`\n${failures} test(s) failed`);
   process.exit(1);

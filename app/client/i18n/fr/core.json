@@ -169,5 +169,21 @@
   "Wrong GM password": "Mot de passe MJ incorrect",
   "Wrong PIN for this player": "Code PIN incorrect pour ce joueur",
   "Your character": "Ton personnage",
-  "Your name": "Ton nom"
+  "Your name": "Ton nom",
+  "{tab} — {name}": "{tab} — {name}",
+  "This view is not available": "Cette vue n’est pas disponible",
+  "The browser blocked the new window: allow pop-ups for this site": "Le navigateur a bloqué la nouvelle fenêtre : autorise les pop-ups pour ce site",
+  "Show in the main view": "Afficher dans la vue principale",
+  "Open in split view": "Ouvrir en vue partagée",
+  "Bring to front": "Mettre au premier plan",
+  "Open as floating panel": "Ouvrir en panneau flottant",
+  "Pop out to a new window": "Détacher dans une nouvelle fenêtre",
+  "Close the split view": "Fermer la vue partagée",
+  "Close the floating panel": "Fermer le panneau flottant",
+  "Ctrl+click: open in split view · right-click: more": "Ctrl+clic : ouvrir en vue partagée · clic droit : plus d’options",
+  "Split view": "Vue partagée",
+  "Drag to resize · double-click to reset": "Glisser pour redimensionner · double-clic pour réinitialiser",
+  "Swap the panes": "Échanger les volets",
+  "Stack the panes": "Empiler les volets",
+  "Drag to move": "Glisser pour déplacer"
 }

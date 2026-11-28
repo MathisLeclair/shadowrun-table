@@ -28,6 +28,7 @@ read the one you need, not all of them. Repo rules and commands: [AGENTS.md](../
 | page | answers |
 |---|---|
 | [modules/core.md](modules/core.md) | config, users, chat, log entries, core actions |
+| [modules/workspace.md](modules/workspace.md) | multi-view: split pane, floating panels, pop-out windows, dock width, what modules must handle |
 | [modules/characters.md](modules/characters.md) | actor sheet fields, permissions, sheet actions, damage, nested upgrades (accessories, mods, techniques) |
 | [modules/dice.md](modules/dice.md) | `dice/roll` payload, `performRoll`, Second Chance, 3D dice |
 | [modules/inventory.md](modules/inventory.md) | FR/EN item names, ammunition, firing, reloading, ready weapons, containers, import of locations |
@@ -56,11 +57,11 @@ read the one you need, not all of them. Repo rules and commands: [AGENTS.md](../
 | [modules/multi-table.md](modules/multi-table.md) | table registry, migration, auth, admin API, zips |
 | [modules/demo-table.md](modules/demo-table.md) | public demo table: logins, refusals, caps, resets |
 
-## Designs (not built yet)
+## Designs
 
 | page | answers |
 |---|---|
-| [design/magic.md](design/magic.md) | magic flow (issue #7): what is still to build (cast, sustain, summon, astral, foci…), sub-issues |
+| [design/magic.md](design/magic.md) | magic flow (issue #7, built in #12–#23): plan, decisions, sub-issues |
 
 ## SR5 rules
 

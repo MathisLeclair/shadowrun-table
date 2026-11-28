@@ -59,6 +59,7 @@ run at the same time.
 | `test-maplib-campaign.ts` | 3940-3941 | [map-library](modules/map-library.md) |
 | `test-maps.ts` | 3201 | [maps](modules/maps.md) |
 | `test-maptrace.ts` | no server (3900-3909 stay free) | `tools/maptrace/` |
+| `test-layout.ts` | no server | [workspace](modules/workspace.md) |
 | `test-markdown.ts` | no server | [architecture](architecture.md#security-rules) |
 | `test-magic.ts` | 3650 | [magic](modules/magic.md) |
 | `test-matrix.ts` | 3600 | [matrix](modules/matrix.md) |

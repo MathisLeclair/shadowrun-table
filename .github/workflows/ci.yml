@@ -1,0 +1,110 @@
+# Checks every pull request (and every push to main): type check, client build, French dictionaries, then each
+# app/tools/test-*.ts file in its own job (own runner, so the fixed test ports never collide).
+#
+# Safe for pull requests from forks:
+# - `pull_request` (never `pull_request_target`): fork PRs run with a read-only token and no secrets.
+# - The token is read-only and is not left in the checkout.
+# - Test file names come from the PR's own tree, so they are filtered and passed through env, never pasted into
+#   a shell command (a file named `test-$(curl …).ts` would otherwise run).
+# - Third-party actions are pinned to a commit SHA.
+#
+# For branch protection, require the single « CI passed » check: the matrix job names change with the test files.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: app
+
+jobs:
+  check:
+    name: Typecheck, build, i18n
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - run: node tools/i18n-check.ts
+
+  list:
+    name: List test files
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      tests: ${{ steps.list.outputs.tests }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: app/tools
+      - id: list
+        # Only plain names (letters, digits, dashes) make it into the matrix.
+        run: |
+          tests=$(ls tools | grep -E '^(test-[a-z0-9-]+|smoke)\.ts$' | grep -vx 'test-client.ts' \
+            | jq -R . | jq -sc .)
+          echo "tests=$tests" >> "$GITHUB_OUTPUT"
+          echo "$tests" | jq -r '.[]'
+
+  test:
+    name: ${{ matrix.test }}
+    needs: list
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        test: ${{ fromJSON(needs.list.outputs.tests) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+      # Page tests (picker, CSP) need the built client.
+      - run: npm run build
+      - name: Run the test
+        env:
+          TEST_FILE: ${{ matrix.test }}
+        run: node "tools/$TEST_FILE"
+
+  ci-passed:
+    name: CI passed
+    if: always()
+    needs: [check, list, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: . # no checkout here, so no app/ folder
+    steps:
+      - name: Every job succeeded
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "$RESULTS"
+          for r in $RESULTS; do [ "$r" = success ] || exit 1; done

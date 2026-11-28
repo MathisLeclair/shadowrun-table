@@ -203,6 +203,13 @@ for (const seed of seeds) {
     assert.equal(b.name, seed.name);
     assert.equal(b.metatype, seed.metatype);
     for (const l of ['weapons', 'armor', 'augmentations', 'contacts', 'qualities', 'powers', 'spells', 'sins', 'knowledge', 'vehicles'] as const) assert.equal((b[l] || []).length, (seed[l] || []).length, l);
+    // SINs come back as SINs (Fake SIN node, even without Chummer's data folder: snapshot.json) with rating and licenses.
+    for (const s of seed.sins || []) {
+      const t = b.sins.find((x) => x.name === s.name);
+      assert.ok(t, `SIN ${s.name}`);
+      assert.equal(t.rating, s.rating, `${s.name} rating`);
+      assert.deepEqual([...(t.licenses || [])].sort(), [...(s.licenses || [])].sort(), `${s.name} licenses`);
+    }
     if (seed.id === 'pc_jane') fs.writeFileSync(OUT_JANE, '﻿' + r.xml.replace(/\r?\n/g, '\r\n'));
   });
 }

@@ -263,7 +263,7 @@ export function catalogToItem(catalog: string, entry: CatalogEntryData, rating?:
     default: {
       const sub = subFromCatalog(catalog, entry, r);
       if (sub) return sub;
-      return { list: 'gear', item: { ...base, category: entry.categoryFr || entry.category || '', qty: 1 } };
+      return { list: 'gear', item: { ...base, category: entry.categoryFr || entry.category || '', qty: 1, ...(entry.category === 'Foci' ? { bonded: false } : {}) } };
     }
   }
 }

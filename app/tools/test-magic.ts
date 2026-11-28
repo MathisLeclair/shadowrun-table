@@ -5,12 +5,17 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  findTradition, traditionFromDef, parseDrainText, sortTraditions, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
+  findTradition, traditionFromDef, parseDrainText, sortTraditions, drainValue, drainOffset, spellReach, isAreaSpell, spellCategory, spellDrainType, maxForce,
+  spellEffects, isSustainable, combatSpellProfile, spellResistance, attributeOfSpell, evalForce, spiritStats, optionalPowerCount, traditionSpiritTypes, reagentDrams, aidSpiritType, canPerceiveAstral, canProjectAstral, focusKind, focusBondMultiplier, focusCategory, fociLimits, teamwork, ritualDrain, isRitual, metamagicDef, metamagicEffects, spellShapingMax, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
   type TraditionDef,
 } from '../shared/magic.ts';
-import { checkedTest } from '../shared/modifiers.ts';
+import { derive } from '../shared/sr5.ts';
+import { checkedTest, collectModifiers, poolModifiers, rollContext, derivedWithModifiers } from '../shared/modifiers.ts';
 import { traditions, actorTradition, chummerTradition } from '../server/lib/traditions.ts';
+import { effectsLookup } from '../server/lib/modifiers.ts';
 import { parseChum5 } from '../server/lib/chummer/parse.ts';
+import { spellCatalogInfo } from '../server/lib/spells.ts';
+import { spiritDefs, spiritDef } from '../server/lib/spirits.ts';
 import { mergeActor } from '../server/lib/chummer/merge.ts';
 import type { Actor, ActorLike, MagicState, SustainedSpell } from '../shared/types.ts';
 
@@ -87,6 +92,141 @@ ok(sustainedBy({ sustained }, 'npc_m') === 2 && sustainedBy({ sustained }, 'othe
 hints = magicHints({ actor: mage, magic: { sustained } });
 ok(hints[0]?.tone === 'warn' && hints[0].params?.p === 4, 'hint: sustained spells −2 each, first (most urgent)');
 ok(magicHints({ actor: adept, magic: null }).length === 0 && magicHints({ actor: mundane, magic: null }).length === 0, 'no hints for an adept without sustained spells / a mundane');
+
+// Spellcasting rules (SR5 pp. 281-283)
+ok(drainOffset('F-3') === -3 && drainOffset('F−2') === -2 && drainOffset('F+1') === 1 && drainOffset('F') === 0 && drainOffset(' F - 4 ') === -4, 'drainOffset: F ± n (ASCII or Unicode minus, spaces)');
+ok(drainOffset('Special') === null && drainOffset('0') === null && drainOffset('') === null, 'drainOffset: Special / 0 / empty → null');
+ok(drainValue('F-3', 6) === 3 && drainValue('F-3', 4) === 2 && drainValue('F-6', 3) === 2, 'drainValue: Force − n, never below 2');
+ok(drainValue('F+1', 3) === 4 && drainValue('F-3', 6, { reckless: true }) === 6 && drainValue('F-6', 3, { reckless: true }) === 5, 'drainValue: + n; reckless +3 after the minimum');
+ok(drainValue('Special', 5) === null, 'drainValue: Special → null');
+ok(spellDrainType(6, 5) === 'P' && spellDrainType(5, 5) === 'S', 'drain Physical only when hits exceed Magic');
+ok(maxForce(mage) === 12, 'max Force = 2 × MAG');
+ok(spellReach('LOS') === 'los' && spellReach('LOS (A)') === 'los' && spellReach('T') === 'touch' && spellReach('T (A)') === 'touch' && spellReach('S') === 'self' && spellReach('Special') === 'special', 'spellReach');
+ok(isAreaSpell('LOS (A)') && isAreaSpell('S (A)') && !isAreaSpell('LOS'), 'isAreaSpell');
+ok(spellCategory('Combat') === 'combat' && spellCategory('Santé') === 'health' && spellCategory('Détection') === 'detection' && spellCategory('Health') === 'health' && spellCategory('?') === null, 'spellCategory (English / French)');
+
+// Sustained spells (#14): effects table and modifiers mirrored on the actors
+ok(JSON.stringify(spellEffects({ name: 'Armor' }, 3)) === JSON.stringify([{ type: 'armor', value: 3 }]), 'Armor: armor = hits');
+ok(spellEffects({ name: 'Armure' }, 2)[0]?.value === 2 && spellEffects({ name: 'x', nameEn: 'Combat Sense' }, 4)[0]?.target === 'defense', 'French name, Combat Sense → defense');
+ok(spellEffects({ name: 'Armor' }, 0).length === 0 && spellEffects({ name: 'Manabolt' }, 4).length === 0, 'no hits / no numeric effect → none');
+ok(isSustainable('S') && isSustainable('P') && !isSustainable('I'), 'isSustainable: S and P');
+{
+  const noLookup = () => null;
+  const sus = { ...mage, magic: { ...mage.magic, sustaining: [{ id: 's1', name: { fr: 'Armure', en: 'Armor' }, force: 4 }, { id: 's2', name: { fr: 'X', en: 'X' }, force: 2 }] } } as unknown as ActorLike;
+  const mods = collectModifiers(sus, noLookup);
+  const pm = poolModifiers(mods, rollContext(sus, { skillId: 'spellcasting' }), {});
+  ok(pm.total === -4, `two sustained spells: −4 on a skill test (got ${pm.total})`);
+  ok(poolModifiers(mods, rollContext(sus, { attr: 'WIL', attr2: 'LOG', test: 'drainResist' }), {}).total === 0, 'not on resistance tests (like afflictions)');
+  const tgt = { ...mundane, armor: [], magic: { spellEffects: [{ id: 's1', name: { fr: 'Armure', en: 'Armor' }, force: 4, hits: 3, casterId: 'npc_m', casterName: 'Mage', effects: [{ type: 'armor', value: 3 }] }] } } as unknown as ActorLike;
+  const d = derivedWithModifiers(tgt, collectModifiers(tgt, noLookup));
+  ok(d.armor === 3, `Armor spell on the target: armor 3 (got ${d.armor})`);
+}
+
+// Combat spells (#15): profile from the catalog, fallback from type and name
+{
+  const p = (name: string, type: string) => combatSpellProfile({ name, type }, spellCatalogInfo({ name }));
+  const mb = p('Manabolt', 'M');
+  ok(mb.mode === 'direct' && mb.resist === 'WIL' && mb.damage === 'P' && mb.mana, `Manabolt: direct, WIL, Physical (${JSON.stringify(mb)})`);
+  ok(p('Powerbolt', 'P').resist === 'BOD' && p('Stunbolt', 'M').damage === 'S', 'Powerbolt resisted with BOD; Stunbolt Stun');
+  const fb = p('Fireball', 'P');
+  ok(fb.mode === 'indirect' && fb.element === 'fire', `Fireball: indirect, fire (${JSON.stringify(fb)})`);
+  ok(p('Boule de feu', 'P').mode === 'indirect', 'French catalog name found');
+  const custom = combatSpellProfile({ name: 'Flame lash', type: 'P' }, null);
+  ok(custom.mode === 'indirect' && custom.element === 'fire', 'hand-made physical elemental → indirect');
+  ok(combatSpellProfile({ name: 'Mind spike', type: 'M' }, null).mode === 'direct' && combatSpellProfile({ name: 'Stun whip', type: 'M' }, null).damage === 'S', 'hand-made mana → direct; « stun » → Stun');
+}
+
+// Non-combat spells (#16): resistance from the catalog descriptor
+{
+  const r = (name: string, category: string, type: string, choice?: string) => spellResistance({ name, category, type, choice }, spellCatalogInfo({ name }));
+  const attrs = (x: ReturnType<typeof r>) => (x ? x.attrs.join('+') : 'none');
+  ok(attrs(r('Detect Enemies', 'Detection', 'M')) === 'LOG+WIL' && r('Detect Enemies', 'Detection', 'M')!.objects, 'active detection: LOG + WIL, objects allowed');
+  ok(r('Clairvoyance', 'Detection', 'M') === null && r('Heal', 'Health', 'M') === null, 'passive detection and Heal: no resistance');
+  ok(attrs(r('Decrease [Attribute]', 'Health', 'P', 'Body')) === 'BOD+WIL', 'Decrease [Body]: BOD + WIL (SR5 p. 288)');
+  ok(attributeOfSpell({ name: 'Decrease [Agility]' }) === 'AGI' && attributeOfSpell({ name: 'x', choice: 'Volonté' }) === 'WIL', 'attributeOfSpell (name brackets, French choice)');
+  ok(attrs(r('Invisibility', 'Illusion', 'M')) === 'LOG+WIL' && attrs(r('Chaos', 'Illusion', 'P')) === 'INT+LOG', 'illusions: mana LOG + WIL, physical INT + LOG');
+  ok(r('Entertainment', 'Illusion', 'M') === null, 'obvious illusion: no resistance');
+  ok(attrs(r('Control Thoughts', 'Manipulation', 'M')) === 'LOG+WIL' && attrs(r('Levitate', 'Manipulation', 'P')) === 'BOD+STR' && r('Light', 'Manipulation', 'P') === null, 'manipulation: mental, physical, environmental');
+  ok(r('Manabolt', 'Combat', 'M') === null, 'combat spells are not handled here');
+}
+
+// Spirit data (#17): spirits.json from Chummer, stats at a Force (SR5 pp. 303-304)
+ok(evalForce('F', 4) === 4 && evalForce('F+1', 4) === 5 && evalForce('F-2', 4) === 2 && evalForce('F/2', 5) === 2 && evalForce('(F*2)+3', 4) === 11, 'evalForce: F, F±n, F/2 (rounded down), (F*2)+3');
+ok(evalForce('F-3', 1) === 0 && evalForce('alert(1)', 4) === 0 && evalForce('', 4) === 0 && evalForce('3', 9) === 3, 'evalForce: never negative, rejects anything else');
+ok(optionalPowerCount(2) === 0 && optionalPowerCount(3) === 1 && optionalPowerCount(5) === 1 && optionalPowerCount(6) === 2, 'optional powers: one per 3 full points of Force (SR5 p. 300)');
+{
+  const defs = spiritDefs();
+  ok(defs.length >= 20 && ['Spirit of Air', 'Spirit of Beasts', 'Spirit of Earth', 'Spirit of Fire', 'Spirit of Man', 'Spirit of Water'].every((n) => defs.some((d) => d.name === n)), `spirits.json: the six SR5 spirits (${defs.length} types)`);
+  const fire = spiritDef('Spirit of Fire')!;
+  ok(spiritDef('esprit du feu')?.id === fire.id && fire.page === 303 && fire.source === 'SR5', 'spiritDef by French name; book page');
+  const st = spiritStats(fire, 4);
+  const a = st.attributes;
+  ok(a.BOD === 5 && a.AGI === 6 && a.REA === 7 && a.STR === 2 && a.WIL === 4 && a.LOG === 4 && a.INT === 5 && a.CHA === 4 && a.EDG === 2 && a.MAG === 4 && a.ESS === 4,
+    `Fire spirit F4: BOD 5 AGI 6 REA 7 STR 2 WIL 4 LOG 4 INT 5 CHA 4 EDG 2 MAG 4 ESS 4 (${JSON.stringify(a)})`);
+  ok(st.initiativeBase === 11 && st.initiative.dice === 1 && a.REA + a.INT + st.initiative.bonus === 11, `Fire spirit F4: initiative (F × 2) + 3 = 11 + 2D6 (${JSON.stringify(st.initiative)})`);
+  ok(st.astralInitiative.base === 8 && st.astralInitiative.dice === 3, 'astral initiative F × 2 + 3D6');
+  ok(st.skills.length === 6 && st.skills.every((x) => x.rating === 4) && st.skills.some((x) => x.id === 'exotic_weapon' && x.spec === 'Elemental Attack') && st.skills.some((x) => x.id === 'flight' && x.attr === 'AGI'),
+    `skills at rating F, Exotic Ranged Weapon → exotic_weapon, Flight kept (${st.skills.map((x) => x.id).join(', ')})`);
+  ok(st.powers.some((p) => p.name === 'Elemental Attack' && p.select === 'Fire') && st.optionalPowers === 1, 'powers with their choice; 1 optional power at F4');
+  const man = spiritStats(spiritDef('Spirit of Man')!, 6).attributes;
+  ok(man.BOD === 7 && man.REA === 8 && man.STR === 4, `Spirit of Man F6: BOD F+1, REA F+2, STR F−2 (${JSON.stringify(man)})`);
+  const herm = traditionSpiritTypes({ name: 'Hermetic', drain: 'LOG', spirits: { combat: 'Spirit of Fire', detection: 'Spirit of Air', health: 'Spirit of Man', illusion: 'Spirit of Water', manipulation: 'Spirit of Earth' } }, defs);
+  ok(herm.length === 5 && herm[0].name === 'Spirit of Fire', 'a tradition summons its five spirits');
+  ok(traditionSpiritTypes(null, defs).length === defs.length, 'no tradition: every type (GM)');
+  const sp = { attributes: st.attributes, spirit: { force: 4 } } as unknown as ActorLike;
+  ok(derive(sp).astralInitiative.base === 8 && derive(sp).astralInitiative.dice === 3, 'a spirit actor: astral initiative F × 2 + 3D6 (SR5 p. 314)');
+}
+
+// Astral (#20)
+ok(canPerceiveAstral(mage) && canProjectAstral(mage), 'a magician perceives and projects');
+ok(!canPerceiveAstral(adept) && !canProjectAstral(adept), 'an adept without the power does neither');
+ok(canPerceiveAstral({ ...adept, powers: [{ id: 'p2', name: 'Astral Perception', pp: 1 }] } as unknown as ActorLike) && !canProjectAstral({ ...adept, powers: [{ id: 'p2', name: 'Astral Perception', pp: 1 }] } as unknown as ActorLike), 'an adept with Astral Perception perceives, never projects');
+ok(!canPerceiveAstral(mundane), 'a mundane does not perceive');
+ok(derive(mage).astralInitiative.base === 8 && derive(mage).astralInitiative.dice === 3, 'astral initiative INT × 2 + 3D6 (SR5 p. 314)');
+
+// Foci (#21)
+ok(focusKind({ name: 'Spellcasting Focus, Combat', category: 'Foci' }) === 'spellcasting' && focusKind({ name: 'Ritual Spellcasting Focus', category: 'Foci' }) === 'ritual' && focusKind({ name: 'Counterspelling Focus, Health', category: 'Foci' }) === 'counterspelling', 'focusKind: spell foci (ritual and counterspelling before spellcasting)');
+ok(focusKind({ name: 'Focus de maintien', nameEn: 'Sustaining Focus, Combat', category: 'Focus' }) === 'sustaining' && focusKind({ name: 'Medkit', category: 'Biotech' }) === null, 'focusKind: French category, non-focus gear');
+ok(focusBondMultiplier('power') === 6 && focusBondMultiplier('weapon') === 3 && focusBondMultiplier('spellcasting') === 2 && focusBondMultiplier('summoning') === 2, 'bonding karma multipliers (SR5 p. 318)');
+ok(focusCategory({ name: 'Sustaining Focus, Illusion' }) === 'illusion', 'focusCategory');
+{
+  const withFoci = { ...mage, gear: [
+    { id: 'f1', name: 'Spellcasting Focus, Combat', category: 'Foci', rating: 4, qty: 1, active: true, bonded: true },
+    { id: 'f2', name: 'Power Focus', category: 'Foci', rating: 3, qty: 1, active: true },
+    { id: 'f3', name: 'Counterspelling Focus, Combat', category: 'Foci', rating: 2, qty: 1, active: true, bonded: false },
+  ] } as unknown as ActorLike;
+  const lim = fociLimits(withFoci);
+  ok(lim.bonded === 2 && lim.force === 7 && lim.maxBonded === 6 && lim.maxForce === 30 && lim.activeForce === 7 && lim.addiction, `fociLimits: unbonded excluded, addiction when active Force > MAG (${JSON.stringify(lim)})`);
+  const mods = collectModifiers(withFoci, effectsLookup());
+  const sc = poolModifiers(mods, rollContext(withFoci, { skillId: 'spellcasting' }), { conditions: ['spell-combat'] });
+  ok(sc.lines.some((l) => l.mod.source.itemId === 'f1' && l.state === 'applied' && l.value === 4), 'a bonded, active spellcasting focus adds its Force to a combat spell');
+  ok(!mods.some((m) => m.source.itemId === 'f3'), 'an unbonded focus does nothing');
+  const g2 = { ...withFoci, gear: [{ id: 'f4', name: 'Counterspelling Focus, Combat', category: 'Foci', rating: 3, qty: 1, active: true, bonded: true }] } as unknown as ActorLike;
+  const cs = poolModifiers(collectModifiers(g2, effectsLookup()), rollContext(g2, { skillId: 'counterspelling' }), { conditions: ['spell-combat'] });
+  ok(cs.total === 3, `counterspelling focus: +Force against its category (${cs.total})`);
+}
+
+// Metamagic (#23)
+ok(metamagicDef('Centering')?.id === 'centering' && metamagicDef('Adept Centering')?.id === 'adeptCentering' && metamagicDef('Centrage')?.id === 'centering' && metamagicDef('Nope') === null, 'metamagicDef (adept centering before centering, French names)');
+{
+  const init = { ...mage, magic: { ...mage.magic, initiation: 2, metamagics: ['Centering', 'Shielding'] }, gear: [{ id: 'cf', name: 'Centering Focus', category: 'Foci', rating: 1, qty: 1, active: true, bonded: true }] } as unknown as ActorLike;
+  const fx = metamagicEffects(init);
+  ok(fx.find((x) => x.id === 'centering')?.effects[0].value === 3 && fx.find((x) => x.id === 'shielding')?.effects[0].value === 2, 'Centering = grade + centering focus Force; Shielding = grade');
+  const dr = poolModifiers(collectModifiers(init, () => null), rollContext(init, { attr: 'WIL', attr2: 'LOG', test: 'drainResist' }), {});
+  ok(dr.total === 3, `Centering on a Drain Resistance Test (${dr.total})`);
+  ok(metamagicEffects({ ...init, magic: { metamagics: ['Centering'] } } as unknown as ActorLike).length === 0, 'no grade, no bonus');
+  ok(spellShapingMax(mage) === 6, 'Spell Shaping up to Magic');
+}
+
+// Ritual (#22)
+ok(JSON.stringify(teamwork([{ hits: 2 }, { hits: 0 }, { hits: 3, glitch: true }], 4)) === JSON.stringify({ dice: 4, limit: 1 }), 'teamwork: dice capped by the leader’s skill, +1 limit per assistant with hits and no glitch (SR5 p. 49)');
+ok(teamwork([{ hits: 2 }, { hits: 1, critGlitch: true }], 6).limit === 0, 'teamwork: a critical glitch cancels the limit bonus');
+ok(ritualDrain(3, 1) === 5 && ritualDrain(0, 0) === 2 && ritualDrain(1, 5) === 2, 'ritual Drain: 2 × opposition hits − extra offerings, min 2 (SR5 p. 296)');
+ok(isRitual({ category: 'Rituals' }) && !isRitual({ category: 'Combat' }), 'isRitual');
+
+// Binding helpers (#19)
+ok(reagentDrams({ gear: [{ name: 'Reagents, per dram', qty: 30 }, { name: 'Medkit', qty: 1 }, { name: 'x', nameFr: 'Réactifs (Par drachme)', qty: 5 }] }) === 35, 'reagentDrams: reagent items only');
+ok(aidSpiritType({ name: 'Hermetic', drain: 'LOG', spirits: { combat: 'Spirit of Fire' } }, 'Combat') === 'Spirit of Fire' && aidSpiritType(null, 'Combat') === null, 'aidSpiritType: the tradition’s spirit of the category');
 
 // ---------------------------------------------------------------------------
 // Chummer import
@@ -180,6 +320,475 @@ try {
   await gm.send('magic/setTradition', { actorId: mageId, tradition: 'Hermetic', drain: 'CHA' });
   await settle();
   ok(gm.state.actors[mageId].magic?.tradition?.drain === 'LOG', 'a catalog tradition keeps its own drain');
+  // ---------- Cast flow (#13) ----------
+  await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'skills', item: { id: 'spellcasting', name: 'Spellcasting', attr: 'MAG', rating: 5 } });
+  const addSpell = async (item: object) => {
+    await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'spells', item });
+    await settle();
+    return gm.state.actors.pc_jane.spells[gm.state.actors.pc_jane.spells.length - 1].id;
+  };
+  const manabolt = await addSpell({ name: 'Manabolt', category: 'Combat', type: 'M', range: 'LOS', duration: 'I', drain: 'F-3' });
+  const heal = await addSpell({ name: 'Heal', category: 'Health', type: 'M', range: 'T', duration: 'P', drain: 'F-4' });
+  const ball = await addSpell({ name: 'Fireball', category: 'Combat', type: 'P', range: 'LOS (A)', duration: 'I', drain: 'F-1' });
+  const odd = await addSpell({ name: 'Odd spell', category: 'Manipulation', type: 'P', range: 'LOS', duration: 'S', drain: 'Special' });
+  const mapId = await gm.send<string>('maps/create', { name: 'Magic test', width: 30, height: 12 });
+  await gm.send('maps/setActive', { mapId });
+  await gm.send('maps/addToken', { mapId, token: { actorId: 'pc_jane', x: 5, y: 5 } });
+  await gm.send('maps/addToken', { mapId, token: { actorId: 'pc_anthony', x: 10, y: 5 } });
+  await gm.send('maps/addToken', { mapId, token: { actorId: 'pc_bricks', x: 20, y: 5 } });
+  await gm.send('maps/addWall', { mapId, wall: { x1: 15, y1: 0, x2: 15, y2: 12, move: true, sight: true } });
+  await settle();
+  const stunBefore = gm.state.actors.pc_jane.condition.stun;
+  const physBefore = gm.state.actors.pc_jane.condition.physical;
+  let cr = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 6, mapId, targetIds: ['pc_anthony'] });
+  ok(cr.force === 6 && cr.dv === 3 && cr.hits <= 6 && 'hits' in cr.drain && cr.targetIds.join() === 'pc_anthony', `cast Manabolt F6: DV 3, hits ≤ Force, drain resisted (${JSON.stringify(cr)})`);
+  ok(cr.drainType === (cr.hits > 5 ? 'P' : 'S'), 'drain type from hits vs Magic');
+  await settle();
+  const dmg = (cr.drain as { damage: number }).damage;
+  const after = gm.state.actors.pc_jane.condition;
+  ok(dmg === Math.max(0, 3 - (cr.drain as { hits: number }).hits) && (cr.drainType === 'S' ? after.stun - stunBefore === dmg : after.physical - physBefore === dmg), 'drain damage applied to the caster');
+  const castLog = gm.state.log.find((e) => e.id === cr.logId);
+  ok(castLog?.kind === 'magic' && castLog.magic?.event === 'cast' && castLog.magic.force === 6 && castLog.magic.dv === 3, 'cast log entry (kind magic)');
+  const rollLog = gm.state.log.find((e) => e.id === cr.rollLogId);
+  ok(rollLog?.roll?.limit === 6 && rollLog.roll.labelI18n?.key === 'Spell — {spell} (Force {force})', 'Spellcasting roll limited by the Force, labelled with it');
+  ok(gm.state.log.some((e) => e.kind === 'magic' && e.magic?.event === 'drain' && e.magic.actorId === 'pc_jane'), 'drain log entry');
+  cr = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 2, reckless: true });
+  ok(cr.dv === 5, 'reckless: max(2, 2 − 3) + 3 = 5');
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 11 }), /Force|Puissance/, 'Force above 2 × MAG refused');
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 0 }), /Force|Puissance/, 'Force 0 refused');
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: 'nope', force: 3 }), /spell|sort/i, 'unknown spell refused');
+  await expectFail(pb.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 3 }), /yours|vous/i, 'another player cannot cast for Jane');
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 3, mapId, targetIds: ['pc_bricks'] }), /line of sight|ligne de vue/i, 'LOS spell: target behind a wall refused');
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 3, targetIds: ['pc_anthony'] }), /map|carte/i, 'targets need the map');
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: heal, force: 3, mapId, targetIds: ['pc_anthony'] }), /reach|portée/i, 'touch spell: distant target refused');
+  cr = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: heal, force: 3, mapId, targetIds: ['pc_jane'] });
+  ok(cr.targetIds.join() === 'pc_jane', 'touch spell on oneself');
+  cr = await gm.send('magic/cast', { actorId: 'pc_jane', spellId: heal, force: 3, mapId, targetIds: ['pc_anthony'] });
+  ok(cr.targetIds.join() === 'pc_anthony', 'the GM is not checked');
+  cr = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: ball, force: 3, mapId, targetIds: ['pc_anthony'] });
+  ok(cr.area?.x === 10 && cr.area.radius === 3, 'area centred on the first target, radius = Force');
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: ball, force: 3, mapId, area: { x: 10, y: 5 }, targetIds: ['pc_anthony', 'pc_jane'] }), /outside|hors/i, 'area: a target outside the radius refused');
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: odd, force: 3 }), /Drain/, 'Special drain: the value is required');
+  cr = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: odd, force: 3, drainDv: 4 });
+  ok(cr.dv === 4, 'Special drain: given value');
+  // ---------- Sustained spells (#14) ----------
+  for (const old of Object.values(gm.state.magic.sustained)) if (old.casterId === 'pc_jane') await gm.send('magic/drop', { id: old.id });
+  await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  const armorSpell = await addSpell({ name: 'Armor', category: 'Manipulation', type: 'P', range: 'LOS', duration: 'S', drain: 'F-2' });
+  let sus: { sustainedId?: string | null; hits: number } = { hits: 0 };
+  for (let i = 0; i < 5 && !sus.sustainedId; i++) sus = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: armorSpell, force: 5, mapId, targetIds: ['pc_anthony'] });
+  await settle();
+  const sid = sus.sustainedId as string;
+  ok(!!sid && gm.state.magic.sustained[sid]?.hits === sus.hits && gm.state.magic.sustained[sid].targetIds.join() === 'pc_anthony', 'a Sustained spell with hits is sustained');
+  ok(gm.state.actors.pc_jane.magic?.sustaining?.some((x) => x.id === sid), 'caster mirror: actor.magic.sustaining');
+  ok(gm.state.actors.pc_anthony.magic?.spellEffects?.[0]?.effects[0]?.value === sus.hits, 'target mirror: Armor = hits');
+  ok(!!pj.state.magic.sustained[sid] && !pb.state.magic.sustained[sid], 'the caster sees it; an unrelated player does not');
+  const r1 = await pj.send('dice/roll', { actorId: 'pc_jane', skillId: 'spellcasting' });
+  ok((r1.mods || []).some((m: { id: string; value: number; state: string }) => m.id === `sustained:${sid}` && m.value === -2 && m.state === 'applied'), 'the caster’s next roll has −2 (sustaining)');
+  cr = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: armorSpell, force: 3, mapId, targetIds: ['pc_anthony'], sustain: false });
+  ok(!cr.sustainedId, 'sustain: false → not sustained');
+  const inst = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 3 });
+  ok(!inst.sustainedId, 'an Instantaneous spell is never sustained');
+  await expectFail(pb.send('magic/drop', { id: sid }), /yours|vous/i, 'another player cannot drop it');
+  await pj.send('magic/drop', { id: sid });
+  await settle();
+  ok(!gm.state.magic.sustained[sid] && !(gm.state.actors.pc_jane.magic?.sustaining || []).some((x) => x.id === sid) && !(gm.state.actors.pc_anthony.magic?.spellEffects || []).some((x) => x.id === sid), 'drop clears the record and both mirrors');
+  ok(gm.state.log.some((e) => e.magic?.event === 'drop'), 'drop logged');
+  await expectFail(pj.send('magic/drop', { id: sid }), /sustained|maintenu/i, 'drop twice refused');
+  // Permanent spell: Force Combat Turns, then it is no longer sustained.
+  await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  let perm: { sustainedId?: string | null } = {};
+  for (let i = 0; i < 5 && !perm.sustainedId; i++) perm = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: heal, force: 2, mapId, targetIds: ['pc_jane'] });
+  await settle();
+  const pid2 = perm.sustainedId as string;
+  ok(gm.state.magic.sustained[pid2]?.turnsLeft === 2, 'Permanent spell: turnsLeft = Force');
+  await gm.send('combat/start', { mapId });
+  await gm.send('combat/newTurn');
+  await settle();
+  ok(gm.state.magic.sustained[pid2]?.turnsLeft === 1, 'a new Combat Turn counts down');
+  await gm.send('combat/newTurn');
+  await settle();
+  ok(!gm.state.magic.sustained[pid2], 'after Force Combat Turns the spell is permanent: no longer sustained');
+  await gm.send('combat/end');
+
+  await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  // ---------- Combat spells through the attacks (#15) ----------
+  for (const old of Object.values(gm.state.magic.sustained)) if (old.casterId === 'pc_jane') await gm.send('magic/drop', { id: old.id });
+  await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  await gm.send('actor/update', { actorId: 'pc_anthony', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  let mbCast: { hits: number; attackIds: string[] } = { hits: 0, attackIds: [] };
+  for (let i = 0; i < 5 && !mbCast.hits; i++) mbCast = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 6, mapId, targetIds: ['pc_anthony'] });
+  await settle();
+  const atk1 = gm.state.attacks.list.find((x) => x.id === mbCast.attackIds[0]);
+  ok(mbCast.attackIds.length === 1 && atk1?.kind === 'spell' && atk1.spell?.mode === 'direct' && atk1.spell.resist === 'WIL' && atk1.dv === null && atk1.status === 'defense' && atk1.hits === mbCast.hits, `Manabolt → a direct spell attack waiting for the resistance (${JSON.stringify(atk1)})`);
+  const physBeforeA = gm.state.actors.pc_anthony.condition.physical;
+  const res = await gm.send('attack/defend', { attackId: atk1!.id });
+  await settle();
+  const net = mbCast.hits - res.roll.hits;
+  const dmgA = gm.state.actors.pc_anthony.condition.physical - physBeforeA;
+  ok(/WIL/.test(res.roll.breakdown || ''), `resisted with WIL (${res.roll.breakdown})`);
+  ok(net > 0 ? res.attack.status === 'done' && res.attack.damage === net && dmgA === net : res.attack.status === 'missed' && dmgA === 0, `direct: net hits are Physical damage, no soak (net ${net}, damage ${dmgA}, ${res.attack.status})`);
+  await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  let fbCast: { hits: number; attackIds: string[] } = { hits: 0, attackIds: [] };
+  for (let i = 0; i < 5 && !fbCast.hits; i++) fbCast = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: ball, force: 4, mapId, targetIds: ['pc_anthony'] });
+  await settle();
+  const atk2 = gm.state.attacks.list.find((x) => x.id === fbCast.attackIds[0]);
+  ok(atk2?.spell?.mode === 'indirect' && atk2.dv === 4 && atk2.ap === -4 && atk2.type === 'P' && atk2.spell.element === 'fire', `Fireball → indirect: DV = Force, AP = −Force, fire (${JSON.stringify(atk2)})`);
+  const auto = await gm.send('attack/auto', { attackId: atk2!.id });
+  await settle();
+  ok(auto.attack.status === 'missed' || (auto.attack.status === 'done' && auto.attack.modifiedDv === 4 + auto.attack.net && auto.attack.soakHits !== undefined), 'indirect: dodge, then soak at DV Force + net hits');
+  if (auto.attack.net > 0) ok(gm.state.log.some((e) => e.i18n?.key?.startsWith('Elemental damage')), 'elemental reminder logged');
+  const droneId = await gm.send<string>('actor/create', { type: 'npc', name: 'Drone test', npc: { kind: 'drone' } });
+  await gm.send('maps/addToken', { mapId, token: { actorId: droneId, x: 8, y: 5 } });
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 3, mapId, targetIds: [droneId] }), /mana/i, 'a mana spell cannot target a drone');
+  await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+
+  // ---------- Non-combat spells: resistance (#16) ----------
+  const control = await addSpell({ name: 'Control Thoughts', category: 'Manipulation', type: 'M', range: 'LOS', duration: 'S', drain: 'F-1' });
+  const levitate = await addSpell({ name: 'Levitate', category: 'Manipulation', type: 'P', range: 'LOS', duration: 'S', drain: 'F-2' });
+  await gm.send('actor/update', { actorId: 'pc_anthony', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  let ct: { hits: number; attackIds: string[]; sustainedId?: string | null } = { hits: 0, attackIds: [] };
+  for (let i = 0; i < 5 && !ct.hits; i++) ct = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: control, force: 4, mapId, targetIds: ['pc_anthony'] });
+  await settle();
+  const atk3 = gm.state.attacks.list.find((x) => x.id === ct.attackIds[0]);
+  ok(ct.attackIds.length === 1 && atk3?.noDamage && atk3.spell?.resist === 'LOG' && atk3.spell.resist2 === 'WIL' && atk3.status === 'defense', `Control Thoughts → a resistance test LOG + WIL, no damage (${JSON.stringify(atk3)})`);
+  const physA = gm.state.actors.pc_anthony.condition;
+  const res3 = await gm.send('attack/defend', { attackId: atk3!.id });
+  await settle();
+  ok(/LOG/.test(res3.roll.breakdown) && /WIL/.test(res3.roll.breakdown), `resisted with LOG + WIL (${res3.roll.breakdown})`);
+  ok((res3.attack.status === 'done' && res3.attack.net === ct.hits - res3.roll.hits) || res3.attack.status === 'missed', 'net hits recorded');
+  ok(JSON.stringify(gm.state.actors.pc_anthony.condition) === JSON.stringify(physA), 'no damage from a non-combat spell');
+  if (ct.sustainedId) await pj.send('magic/drop', { id: ct.sustainedId });
+  // A spell on oneself is not resisted.
+  const selfCast = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: control, force: 2, mapId, targetIds: ['pc_jane'], sustain: false });
+  ok(selfCast.attackIds.length === 0, 'the caster does not resist their own spell');
+  // Object Resistance.
+  await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  const objCast = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: levitate, force: 4, object: 6, sustain: false });
+  ok(objCast.object?.pool === 6 && objCast.object.net === Math.max(0, objCast.hits - objCast.object.hits), `object resists with 6 dice (${JSON.stringify(objCast.object)})`);
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: levitate, force: 2, object: 7, sustain: false }), /Object|objets/, 'a player cannot invent an Object Resistance');
+  await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+
+  // ---------- Summoning (#18) ----------
+  await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'skills', item: { id: 'summoning', name: 'Summoning', attr: 'MAG', rating: 6 } });
+  await gm.send('magic/setTradition', { actorId: 'pc_jane', tradition: 'Hermetic' });
+  await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  await settle();
+  await expectFail(pj.send('magic/summon', { actorId: 'pc_jane', type: 'Spirit of Beasts', force: 3 }), /tradition/i, 'a Hermetic cannot summon a spirit of beasts');
+  await expectFail(pj.send('magic/summon', { actorId: 'pc_jane', type: 'Nope', force: 3 }), /spirit|esprit/i, 'unknown spirit type');
+  await expectFail(pj.send('magic/summon', { actorId: 'pc_jane', type: 'Spirit of Fire', force: 11 }), /Force|Puissance/, 'Force above 2 × MAG refused');
+  let sm: { net: number; spiritHits: number; dv: number; spiritId: string | null; services: number; drainType: string } = { net: 0, spiritHits: 0, dv: 0, spiritId: null, services: 0, drainType: '' };
+  for (let i = 0; i < 6 && !sm.spiritId; i++) {
+    sm = await pj.send('magic/summon', { actorId: 'pc_jane', type: 'Spirit of Fire', force: 3, optionalPowers: ['Fear', 'Guard'] });
+    await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  }
+  await settle();
+  ok(sm.dv === Math.max(2, 2 * sm.spiritHits) && sm.drainType === 'S', `drain = 2 × the spirit's hits (min 2), Stun when Force ≤ Magic (${JSON.stringify(sm)})`);
+  const sid2 = sm.spiritId as string;
+  const spirit = gm.state.actors[sid2];
+  ok(!!spirit && spirit.npc?.kind === 'spirit' && spirit.spirit?.summonerId === 'pc_jane' && spirit.spirit.services === sm.net && !spirit.spirit.bound && !spirit.spirit.materialized, 'a spirit actor with net hits as services');
+  ok(spirit.attributes.REA === 6 && spirit.attributes.AGI === 5 && spirit.spirit!.optionalPowers.join() === 'Fear' && spirit.powers.some((p) => p.name === 'Elemental Attack' && p.choice === 'Fire'), `fire spirit F3 stats; one optional power at F3 (${spirit.spirit?.optionalPowers})`);
+  ok(!!(pj.state.actors[sid2] as Actor | undefined)?.attributes, 'the summoner’s player gets the full sheet (controls the spirit)');
+  ok(!(pb.state.actors[sid2] as Actor | undefined)?.attributes, 'another player only sees a stub');
+  await expectFail(pj.send('magic/summon', { actorId: 'pc_jane', type: 'Spirit of Fire', force: 2 }), /unbound|non lié/i, 'one unbound spirit at a time');
+  // Services.
+  const before = gm.state.actors[sid2].spirit!.services;
+  await expectFail(pj.send('magic/spiritServices', { spiritId: sid2, delta: 1 }), /GM|MJ/, 'a player cannot add services');
+  await expectFail(pb.send('magic/spiritServices', { spiritId: sid2, delta: -1 }), /yours|vôtre/i, 'another player cannot use them');
+  await gm.send('magic/spiritServices', { spiritId: sid2, delta: 2 });
+  await pj.send('magic/spiritServices', { spiritId: sid2, delta: -1 });
+  await settle();
+  ok(gm.state.actors[sid2].spirit!.services === before + 1, 'GM +2, player −1');
+  // Materialize next to the summoner, then back to the astral plane.
+  await pj.send('magic/materialize', { spiritId: sid2, materialized: true, mapId });
+  await settle();
+  const tok = gm.state.maps[mapId].tokens.find((t) => t.actorId === sid2);
+  const janeTok = gm.state.maps[mapId].tokens.find((t) => t.actorId === 'pc_jane')!;
+  ok(!!tok && Math.max(Math.abs(tok.x - janeTok.x), Math.abs(tok.y - janeTok.y)) <= 2 && gm.state.actors[sid2].spirit!.materialized && gm.state.actors[sid2].npc?.initMode === 'physical', 'materialized: a token next to the summoner, physical initiative');
+  // Join a fight: one service.
+  await gm.send('combat/start', { mapId, includeMapTokens: false });
+  const sv = gm.state.actors[sid2].spirit!.services;
+  await pj.send('magic/spiritCombat', { spiritId: sid2 });
+  await settle();
+  ok(gm.state.combat.entries.some((e) => e.actorId === sid2) && gm.state.actors[sid2].spirit!.services === sv - 1, 'joining the fight costs one service');
+  await expectFail(pj.send('magic/spiritCombat', { spiritId: sid2 }), /already|déjà/i, 'not twice');
+  await pj.send('magic/materialize', { spiritId: sid2, materialized: false });
+  await settle();
+  ok(gm.state.maps[mapId].tokens.find((t) => t.actorId === sid2)?.astral === true && gm.state.combat.entries.find((e) => e.actorId === sid2)?.mode === 'astral', 'dematerialized: its token turns astral, astral initiative in the fight');
+  await gm.send('combat/end');
+  // Disrupted when a monitor is full (SR5 p. 302).
+  await gm.send('actor/update', { actorId: sid2, patch: { condition: { physical: 0, stun: 20, overflow: 0 } } });
+  await gm.send('combat/start', { mapId, includeMapTokens: false });
+  await gm.send('combat/newTurn');
+  await settle();
+  ok(!gm.state.actors[sid2], 'a disrupted spirit leaves at the next Combat Turn');
+  ok(!gm.state.users[Object.keys(gm.state.users).find((k) => gm.state.users[k].characterIds?.includes('pc_jane'))!].characterIds.includes(sid2), 'and is no longer assigned to the player');
+  await gm.send('combat/end');
+  // Release, sunrise.
+  let sm2: { spiritId: string | null } = { spiritId: null };
+  for (let i = 0; i < 6 && !sm2.spiritId; i++) {
+    sm2 = await pj.send('magic/summon', { actorId: 'pc_jane', type: 'Spirit of Air', force: 2 });
+    await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  }
+  await pj.send('magic/release', { spiritId: sm2.spiritId });
+  await settle();
+  ok(!gm.state.actors[sm2.spiritId as string], 'release removes the spirit');
+  let sm3: { spiritId: string | null } = { spiritId: null };
+  for (let i = 0; i < 6 && !sm3.spiritId; i++) {
+    sm3 = await pj.send('magic/summon', { actorId: 'pc_jane', type: 'Spirit of Water', force: 2 });
+    await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  }
+  await expectFail(pj.send('magic/sunrise', {}), /GM|MJ/, 'sunrise is the GM’s');
+  const sun = await gm.send('magic/sunrise', {});
+  await settle();
+  ok(sun.left >= 1 && !gm.state.actors[sm3.spiritId as string], 'sunrise: unbound spirits leave');
+  await gm.send('magic/setTradition', { actorId: 'pc_jane', tradition: 'Custom', drain: 'CHA' });
+  // ---------- Binding, bound spirits, banishing (#19) ----------
+  const restore = async (id: string) => gm.send('actor/update', { actorId: id, patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  await gm.send('magic/setTradition', { actorId: 'pc_jane', tradition: 'Hermetic' });
+  await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'skills', item: { id: 'binding', name: 'Binding', attr: 'MAG', rating: 6 } });
+  await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'skills', item: { id: 'banishing', name: 'Banishing', attr: 'MAG', rating: 6 } });
+  await restore('pc_jane');
+  let fire: { spiritId: string | null } = { spiritId: null };
+  for (let i = 0; i < 6 && !fire.spiritId; i++) {
+    fire = await pj.send('magic/summon', { actorId: 'pc_jane', type: 'Spirit of Fire', force: 2 });
+    await restore('pc_jane');
+  }
+  const fid = fire.spiritId as string;
+  await expectFail(pj.send('magic/bind', { spiritId: fid }), /reagent|réactif/i, 'binding without reagents refused');
+  await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'gear', item: { name: 'Reagents, per dram', qty: 400 } });
+  await settle();
+  let bd: { bound: boolean; services: number; net: number; drams: number } = { bound: false, services: 0, net: 0, drams: 0 };
+  let tries = 0;
+  const svBefore = gm.state.actors[fid].spirit!.services;
+  for (; tries < 6 && !bd.bound; tries++) {
+    bd = await pj.send('magic/bind', { spiritId: fid });
+    await restore('pc_jane');
+  }
+  await settle();
+  ok(bd.bound && gm.state.actors[fid].spirit!.bound && bd.services === svBefore + bd.net - 1, `bound: net hits beyond the first add services (${JSON.stringify(bd)})`);
+  ok(reagentDrams(gm.state.actors.pc_jane) === 400 - 50 * tries, `each binding attempt uses Force × 25 drams (${reagentDrams(gm.state.actors.pc_jane)} left after ${tries})`);
+  await expectFail(pj.send('magic/bind', { spiritId: fid }), /already|déjà/i, 'already bound');
+  // Rest and call.
+  await pj.send('magic/callSpirit', { spiritId: fid, present: false });
+  await settle();
+  ok(gm.state.actors[fid].spirit!.present === false, 'sent to rest');
+  await expectFail(pj.send('magic/materialize', { spiritId: fid, materialized: true, mapId }), /rest|repos/i, 'a resting spirit cannot materialize');
+  await pj.send('magic/callSpirit', { spiritId: fid, present: true });
+  await gm.send('magic/spiritServices', { spiritId: fid, delta: 4 });
+  await settle();
+  // Aid sorcery: Manabolt (combat) aided by the tradition's combat spirit (fire).
+  const svA = gm.state.actors[fid].spirit!.services;
+  const aided = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 2, aidSpiritId: fid });
+  await settle();
+  const aidRoll = gm.state.log.find((e) => e.id === aided.rollLogId);
+  ok(/spirit 2/.test(aidRoll?.roll?.breakdown || '') && gm.state.actors[fid].spirit!.services === svA - 1, `aid sorcery: +Force dice, one service (${aidRoll?.roll?.breakdown})`);
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: control, force: 2, aidSpiritId: fid, sustain: false }), /category|catégorie/i, 'a fire spirit cannot aid a manipulation spell (Hermetic: earth)');
+  await restore('pc_jane');
+  // Spell sustaining by the spirit (Force Combat Turns per service), then back to the caster.
+  let arm: { sustainedId?: string | null } = {};
+  for (let i = 0; i < 5 && !arm.sustainedId; i++) arm = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: armorSpell, force: 2, mapId, targetIds: ['pc_jane'] });
+  await restore('pc_jane');
+  const armId = arm.sustainedId as string;
+  await pj.send('magic/spiritSustain', { sustainedId: armId, spiritId: fid });
+  await settle();
+  ok(!(gm.state.actors.pc_jane.magic?.sustaining || []).some((x) => x.id === armId) && (gm.state.actors[fid].magic?.sustaining || []).some((x) => x.id === armId), 'the spirit carries the −2 instead of the caster');
+  await gm.send('combat/start', { mapId, includeMapTokens: false });
+  await gm.send('combat/newTurn');
+  await gm.send('combat/newTurn');
+  await settle();
+  ok(!gm.state.magic.sustained[armId]?.by && (gm.state.actors.pc_jane.magic?.sustaining || []).some((x) => x.id === armId), 'after Force Combat Turns the caster sustains it again');
+  await gm.send('combat/end');
+  await pj.send('magic/drop', { id: armId });
+  // Sunrise: a bound spirit stays.
+  await gm.send('magic/sunrise', {});
+  await settle();
+  ok(!!gm.state.actors[fid], 'a bound spirit does not leave at sunrise');
+  // Banishing one's own bound spirit: its Force + the summoner's Magic in dice.
+  const bn = await pj.send('magic/banish', { actorId: 'pc_jane', spiritId: fid });
+  await settle();
+  const spiritLog = [...gm.state.log].reverse().find((e) => e.roll?.labelI18n?.key === 'Spirit resists the banishing ({n} dice)');
+  ok(spiritLog?.roll?.labelI18n?.params?.n === 2 + 5 && spiritLog.gmOnly, `a bound spirit resists with Force + its summoner’s Magic, GM-only (${JSON.stringify(spiritLog?.roll?.labelI18n)})`);
+  ok(bn.gone ? !gm.state.actors[fid] : gm.state.actors[fid].spirit!.services === bn.services, 'net hits remove services (or the spirit leaves)');
+  if (!bn.gone) await gm.send('magic/release', { spiritId: fid });
+  await restore('pc_jane');
+  await gm.send('magic/setTradition', { actorId: 'pc_jane', tradition: 'Custom', drain: 'CHA' });
+
+  // ---------- Astral (#20) ----------
+  const restoreAll = async () => {
+    for (const id of ['pc_jane', 'pc_anthony']) await gm.send('actor/update', { actorId: id, patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  };
+  await gm.send('magic/settings', { showAstralToPlayers: false });
+  await gm.send('maps/setActive', { mapId });
+  for (const id of Object.keys(gm.state.magic.astral)) await gm.send('magic/astral', { actorId: id, mode: null });
+  await expectFail(pb.send('magic/astral', { actorId: 'pc_bricks', mode: 'perceiving' }), /perceive|percevoir/i, 'a mundane cannot perceive');
+  await pj.send('magic/astral', { actorId: 'pc_jane', mode: 'projecting', mapId });
+  await settle();
+  const jt = gm.state.maps[mapId].tokens.filter((t) => t.actorId === 'pc_jane');
+  ok(jt.length === 2 && jt[0].status?.includes('empty body') && jt[1].astral === true, `projecting: the body stays (empty), an astral token appears (${JSON.stringify(jt.map((t) => [t.astral, t.status]))})`);
+  ok(gm.state.magic.astral.pc_jane?.mode === 'projecting', 'astral state recorded');
+  const seen = (c: typeof gm, id: string) => (c.state.maps[mapId]?.tokens || []).filter((t) => t.actorId === id);
+  ok(seen(pj, 'pc_jane').some((t) => t.astral), 'the projecting player sees their astral form');
+  ok(!seen(pb, 'pc_jane').some((t) => t.astral), 'a player with no astral sight does not see it');
+  await gm.send('magic/settings', { showAstralToPlayers: true });
+  await settle();
+  ok(seen(pb, 'pc_jane').some((t) => t.astral), 'the GM can show astral forms to everyone');
+  await gm.send('magic/settings', { showAstralToPlayers: false });
+  // Astral attack from the astral form: Astral Combat + WIL vs INT + LOG; DV = CHA (astral STR) + net, soak without armor.
+  await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'skills', item: { id: 'astral_combat', name: 'Astral Combat', attr: 'WIL', rating: 4 } });
+  await restoreAll();
+  const aa = await pj.send('magic/astralAttack', { actorId: 'pc_jane', targetId: 'pc_anthony', mapId, damage: 'S' });
+  await settle();
+  const aAtk = gm.state.attacks.list.find((x) => x.id === aa.attackId);
+  ok(aa.dv === gm.state.actors.pc_jane.attributes.CHA && aAtk?.astral?.soak === 'BOD' && aAtk.type === 'S', `astral attack: DV = CHA when projecting, the physical target soaks with BOD (${JSON.stringify({ dv: aa.dv, a: aAtk?.astral })})`);
+  if (aAtk?.status === 'defense') {
+    const d2 = await gm.send('attack/defend', { attackId: aAtk.id });
+    ok(/INT/.test(d2.roll.breakdown || '') && /LOG/.test(d2.roll.breakdown || ''), `astral defense INT + LOG (${d2.roll.breakdown})`);
+    if (d2.attack.status === 'soak') {
+      const s2 = await gm.send('attack/soak', { attackId: aAtk.id });
+      ok(!/armor/.test(s2.roll.breakdown || ''), `astral soak without armor (${s2.roll.breakdown})`);
+    }
+  }
+  await pj.send('magic/astral', { actorId: 'pc_jane', mode: null });
+  await settle();
+  const jt2 = gm.state.maps[mapId].tokens.filter((t) => t.actorId === 'pc_jane');
+  ok(jt2.length === 1 && !jt2[0].astral && !jt2[0].status?.includes('empty body') && !gm.state.magic.astral.pc_jane, 'back to the physical plane: astral token gone, body no longer empty');
+  await expectFail(pj.send('magic/astralAttack', { actorId: 'pc_jane', targetId: 'pc_anthony' }), /astral/i, 'no astral attack from the physical plane');
+  // A summoned spirit arrives on the astral plane next to its summoner: hidden from players without astral sight.
+  let sm4: { spiritId: string | null } = { spiritId: null };
+  for (let i = 0; i < 6 && !sm4.spiritId; i++) {
+    sm4 = await pj.send('magic/summon', { actorId: 'pc_jane', type: 'Spirit of Air', force: 2 });
+    await restoreAll();
+  }
+  await settle();
+  const st4 = gm.state.maps[mapId].tokens.find((t) => t.actorId === sm4.spiritId);
+  ok(st4?.astral === true && !seen(pb, sm4.spiritId as string).length && seen(pj, sm4.spiritId as string).length === 1, 'a new spirit: astral token, seen by its summoner’s player only');
+  await pj.send('magic/materialize', { spiritId: sm4.spiritId, materialized: true, mapId });
+  await settle();
+  ok(seen(pb, sm4.spiritId as string).length === 1 && !gm.state.maps[mapId].tokens.find((t) => t.actorId === sm4.spiritId)?.astral, 'materialized: everyone sees it');
+  await pj.send('magic/release', { spiritId: sm4.spiritId });
+
+  // ---------- Foci (#21) ----------
+  await gm.send('magic/setTradition', { actorId: 'pc_jane', tradition: 'Hermetic' });
+  await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'gear', item: { name: 'Sustaining Focus, Manipulation', category: 'Foci', rating: 4, qty: 1, bonded: false } });
+  await settle();
+  const sf = gm.state.actors.pc_jane.gear.find((g) => g.name === 'Sustaining Focus, Manipulation')!;
+  ok(sf.bonded === false, 'a new focus is not bonded');
+  const rq = await pj.send('training/request', { actorId: 'pc_jane', kind: 'focus', target: sf.id });
+  await settle();
+  const req = gm.state.training.requests.find((r) => r.id === rq.requestId);
+  ok(rq.status === 'pending' && req?.karmaCost === 8, `bonding request: Force 4 × 2 = 8 karma, waits for the GM (${JSON.stringify({ st: rq.status, k: req?.karmaCost })})`);
+  const karmaBefore = gm.state.actors.pc_jane.karma;
+  await gm.send('actor/update', { actorId: 'pc_jane', patch: { karma: Math.max(karmaBefore, 20) } });
+  await gm.send('training/resolve', { requestId: rq.requestId, approve: true });
+  await settle();
+  if (gm.state.actors.pc_jane.gear.find((g) => g.id === sf.id)?.bonded !== true) await gm.send('training/advanceDays', { days: 1 });
+  await settle();
+  ok(gm.state.actors.pc_jane.gear.find((g) => g.id === sf.id)?.bonded === true, 'approved: the focus is bonded');
+  await expectFail(pj.send('training/request', { actorId: 'pc_jane', kind: 'focus', target: sf.id }), /bonded|lié/i, 'not twice');
+  await pj.send('actor/updateItem', { actorId: 'pc_jane', list: 'gear', itemId: sf.id, patch: { active: true } });
+  await restoreAll();
+  // A sustaining focus sustains a manipulation spell up to its Force: no −2 for the caster.
+  let fs1: { sustainedId?: string | null } = {};
+  for (let i = 0; i < 5 && !fs1.sustainedId; i++) fs1 = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: armorSpell, force: 3, mapId, targetIds: ['pc_jane'], sustainFocusId: sf.id });
+  await settle();
+  ok(gm.state.magic.sustained[fs1.sustainedId as string]?.by?.kind === 'focus', 'sustained by the focus');
+  const noPen = await pj.send('dice/roll', { actorId: 'pc_jane', skillId: 'spellcasting' });
+  ok(!(noPen.mods || []).some((m: { id: string; state: string }) => m.id === `sustained:${fs1.sustainedId}` && m.state === 'applied'), 'no −2 for the caster while the focus works');
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: armorSpell, force: 2, sustainFocusId: sf.id }), /already|déjà/i, 'one spell per sustaining focus');
+  // Switching the focus off: the caster carries the −2 at once.
+  await pj.send('actor/updateItem', { actorId: 'pc_jane', list: 'gear', itemId: sf.id, patch: { active: false } });
+  const pen = await pj.send('dice/roll', { actorId: 'pc_jane', skillId: 'spellcasting' });
+  ok((pen.mods || []).some((m: { id: string; state: string; value: number }) => m.id === `sustained:${fs1.sustainedId}` && m.state === 'applied' && m.value === -2), 'focus switched off: −2 for the caster at once');
+  await pj.send('magic/drop', { id: fs1.sustainedId });
+  // Weapon focus linked to a melee weapon.
+  await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'weapons', item: { name: 'Focus blade', kind: 'melee', skill: 'blades', damage: '(STR+3)P', accuracy: '6' } });
+  await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'gear', item: { name: 'Weapon Focus', category: 'Foci', rating: 2, qty: 1, active: true } });
+  await settle();
+  const wf = gm.state.actors.pc_jane.gear.find((g) => g.name === 'Weapon Focus')!;
+  const blade = gm.state.actors.pc_jane.weapons.find((w) => w.name === 'Focus blade')!;
+  await pj.send('magic/focusWeapon', { actorId: 'pc_jane', gearId: wf.id, weaponId: blade.id });
+  await settle();
+  const atkRoll = await pj.send('dice/roll', { actorId: 'pc_jane', weaponId: blade.id });
+  ok((atkRoll.mods || []).some((m: { id: string; value: number; state: string }) => m.id.startsWith(`gear:${wf.id}`) && m.value === 2 && m.state === 'applied'), 'weapon focus: +Force on its weapon’s attacks');
+  await restoreAll();
+  await gm.send('magic/setTradition', { actorId: 'pc_jane', tradition: 'Custom', drain: 'CHA' });
+
+  // ---------- Ritual spellcasting (#22) ----------
+  await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'skills', item: { id: 'ritual_spellcasting', name: 'Ritual Spellcasting', attr: 'MAG', rating: 5 } });
+  const watcher = await addSpell({ name: 'Watchers', category: 'Rituals', type: 'M', range: 'Special', duration: 'Special', drain: 'Special' });
+  const helper = await gm.send<string>('actor/create', { type: 'npc', name: 'Ritual helper', attributes: { WIL: 4, LOG: 4, MAG: 4 } });
+  await gm.send('actor/addItem', { actorId: helper, list: 'skills', item: { id: 'ritual_spellcasting', name: 'Ritual Spellcasting', attr: 'MAG', rating: 4 } });
+  await gm.send('magic/setTradition', { actorId: helper, tradition: 'Hermetic' });
+  await restoreAll();
+  await settle();
+  const dramsBefore = reagentDrams(gm.state.actors.pc_jane);
+  await expectFail(pj.send('magic/ritual', { leaderId: 'pc_jane', ritualId: watcher, force: 2, participantIds: [helper] }), /GM|MJ/, 'a ritual is sealed by the GM');
+  const rit = await gm.send('magic/ritual', { leaderId: 'pc_jane', ritualId: watcher, force: 2, participantIds: [helper], extraOfferings: 1 });
+  await settle();
+  ok(rit.drams === 4 && reagentDrams(gm.state.actors.pc_jane) === dramsBefore - 4, `offering Force + one extra Force drams (${rit.drams}, left ${reagentDrams(gm.state.actors.pc_jane)})`);
+  ok(rit.dv === Math.max(2, 2 * rit.opposition - 1) && rit.net === Math.max(0, rit.hits - rit.opposition) && rit.drains.length === 2, `seal: Drain 2 × opposition − 1 for each of the 2 participants (${JSON.stringify({ dv: rit.dv, opp: rit.opposition })})`);
+  const helperRoll = [...gm.state.log].reverse().find((e) => e.roll?.labelI18n?.key === 'Ritual teamwork — {ritual}');
+  ok(/mod\. −2/.test(helperRoll?.roll?.breakdown || ''), `another tradition: −2 dice for the participant (${helperRoll?.roll?.breakdown})`);
+  ok(gm.state.log.some((e) => e.magic?.event === 'ritual' && e.i18n?.key?.startsWith('Ritual {ritual}')), 'ritual logged');
+  const rf = await gm.send('magic/ritualFail', { leaderId: 'pc_jane', ritualId: watcher, force: 2, participantIds: [helper] });
+  ok(rf.dv >= 2 && rf.drains.length === 2, 'a failed ritual: Stun Drain for every participant');
+  await restoreAll();
+
+  // ---------- Metamagic (#23) ----------
+  await gm.send('actor/update', { actorId: 'pc_jane', patch: { karma: 30, magic: { ...gm.state.actors.pc_jane.magic, initiation: 2, metamagics: ['Quickening', 'Spell Shaping', 'Centering'] } } });
+  await restoreAll();
+  await settle();
+  // Centering on the drain resistance.
+  const dres = await pj.send('dice/roll', { actorId: 'pc_jane', attr: 'WIL', attr2: 'CHA', test: 'drainResist', limit: null });
+  ok((dres.mods || []).some((m: { id: string; value: number; state: string }) => m.id.startsWith('metamagics:') && m.value === 2 && m.state === 'applied'), 'Centering: +grade on Drain resistance');
+  // Spell Shaping: Fireball F3 shaped +2 m → radius 5, −2 dice.
+  const shaped = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: ball, force: 3, mapId, area: { x: 10, y: 5 }, targetIds: ['pc_anthony'], shape: 2 });
+  await settle();
+  const shapedRoll = gm.state.log.find((e) => e.id === shaped.rollLogId);
+  ok(shaped.area?.radius === 5 && /spell shaping −2/.test(shapedRoll?.roll?.breakdown || ''), `spell shaping: radius 5, −2 dice (${shapedRoll?.roll?.breakdown})`);
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 2, shape: 1 }), /area|zone/i, 'only area spells are shaped');
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: ball, force: 2, shape: 9 }), /metres|mètres/i, 'at most Magic metres');
+  await restoreAll();
+  // Quickening.
+  let qs: { sustainedId?: string | null } = {};
+  for (let i = 0; i < 5 && !qs.sustainedId; i++) qs = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: armorSpell, force: 3, mapId, targetIds: ['pc_anthony'] });
+  await restoreAll();
+  await expectFail(pj.send('magic/quicken', { sustainedId: qs.sustainedId, karma: 4 }), /karma/i, 'quickening: at most the spell’s Force in karma');
+  const karmaQ = gm.state.actors.pc_jane.karma;
+  await pj.send('magic/quicken', { sustainedId: qs.sustainedId, karma: 2 });
+  await settle();
+  ok(gm.state.actors.pc_jane.karma === karmaQ - 2 && gm.state.magic.sustained[qs.sustainedId as string]?.by?.kind === 'quickened', 'quickened: 2 karma spent, the spell is permanent');
+  ok(!(gm.state.actors.pc_jane.magic?.sustaining || []).some((x) => x.id === qs.sustainedId) && (gm.state.actors.pc_anthony.magic?.spellEffects || []).some((x) => x.id === qs.sustainedId), 'no −2 for the caster, the Armor still on the target');
+  await expectFail(pj.send('magic/quicken', { sustainedId: qs.sustainedId, karma: 1 }), /already|déjà/i, 'not twice');
+  await gm.send('magic/drop', { id: qs.sustainedId });
+
+  // A target left with no dice (WIL 1, badly wounded) still resolves the spell: 0 hits, not a blocked attack.
+  const weakId = await gm.send<string>('actor/create', { type: 'npc', name: 'Weak test', attributes: { BOD: 1, WIL: 1 } });
+  await gm.send('maps/addToken', { mapId, token: { actorId: weakId, x: 7, y: 5 } });
+  await gm.send('actor/update', { actorId: weakId, patch: { condition: { physical: 0, stun: 7, overflow: 0 } } });
+  let wk: { hits: number; attackIds: string[] } = { hits: 0, attackIds: [] };
+  for (let i = 0; i < 5 && !wk.hits; i++) {
+    wk = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 3, mapId, targetIds: [weakId] });
+    await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  }
+  const wr = await gm.send('attack/defend', { attackId: wk.attackIds[0] });
+  ok(wr.roll.hits === 0 && wr.roll.pool === 0 && wr.attack.status === 'done' && wr.attack.damage === wk.hits, `a zero pool resists with 0 hits (${JSON.stringify({ pool: wr.roll.pool, st: wr.attack.status })})`);
+
+  // Drain left pending (autoDrain off).
+  await gm.send('magic/settings', { autoDrain: false });
+  cr = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 4 });
+  await settle();
+  const pid = (cr.drain as { pendingId: string }).pendingId;
+  ok(!!pid && pj.state.magic.pendingDrain[pid]?.dv === 2, 'autoDrain off: drain left pending, visible to the caster');
+  ok(!pb.state.magic.pendingDrain[pid], 'pending drain hidden from other players');
+  await expectFail(pb.send('magic/resistDrain', { id: pid }), /yours|vous/i, 'another player cannot resist it');
+  const rd = await pj.send('magic/resistDrain', { id: pid });
+  await settle();
+  ok(typeof rd.hits === 'number' && !pj.state.magic.pendingDrain[pid], 'resistDrain rolls and clears it');
+  await expectFail(pj.send('magic/resistDrain', { id: pid }), /Drain/, 'resisted only once');
+  await gm.send('magic/settings', { autoDrain: true });
+
   // The drain roll of the tradition goes through dice/roll with the drainResist test.
   const roll = await pj.send('dice/roll', { actorId: 'pc_jane', attr: 'WIL', attr2: 'INT', test: 'drainResist', limit: null, applyWounds: false, label: 'Résistance au drain (VOL + INT)' });
   ok(roll && typeof roll === 'object', 'drain resistance roll accepted');

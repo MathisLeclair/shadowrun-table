@@ -273,10 +273,10 @@ export const TILE_FLAT: Record<string, string> = {
   c: '#7a5f35', o: '#6a7482', m: '#2f3a48', v: '#4a5a70', b: '#5a4a72', s: '#4a5560', e: '#5a6778', '~': '#1d4f6a',
   g: '#24452c', r: '#4a4f57', x: '#b0702a', t: '#1f4a28', _: '#5a2a5a',
 };
-export const STATUS_GLYPHS: Record<string, string> = { 'à terre': '↧', inconscient: 'z', mort: '✝', étourdi: '✶', 'en feu': '♨', aveuglé: '◌', 'à couvert': '▣', caché: '◐', paniqué: '!', saignement: '♦', entravé: '⛓' };
+export const STATUS_GLYPHS: Record<string, string> = { 'empty body': '⌀', 'à terre': '↧', inconscient: 'z', mort: '✝', étourdi: '✶', 'en feu': '♨', aveuglé: '◌', 'à couvert': '▣', caché: '◐', paniqué: '!', saignement: '♦', entravé: '⛓' };
 // Token statuses are stored in French (keys above, save compatibility); these markers give the checker the English keys
 // the legacy map translates them to.
-export const STATUS_KEYS = [tk('prone'), tk('unconscious'), tk('dead'), tk('stunned'), tk('on fire'), tk('blinded'), tk('in cover'), tk('hidden'), tk('panicked'), tk('bleeding'), tk('restrained')];
+export const STATUS_KEYS = [tk('empty body'), tk('prone'), tk('unconscious'), tk('dead'), tk('stunned'), tk('on fire'), tk('blinded'), tk('in cover'), tk('hidden'), tk('panicked'), tk('bleeding'), tk('restrained')];
 /** Stored token status ('à terre'…) in the UI language (custom statuses unchanged). */
 export const statusText = (s: unknown): string => tIfKnown(String(s ?? ''));
 
@@ -2140,7 +2140,16 @@ export class MapRenderer {
     const dead = status.includes('mort'); // stored token status (French)
     const selected = !ghost && sc.selected?.has(tok.id);
     ctx.save();
-    ctx.globalAlpha = alpha * (tok.hidden ? 0.5 : 1) * (dead ? 0.7 : 1);
+    ctx.globalAlpha = alpha * (tok.hidden ? 0.5 : 1) * (dead ? 0.7 : 1) * (tok.astral ? 0.6 : 1);
+    // astral form (47-magic): dashed cyan halo
+    if (tok.astral) {
+      ctx.save();
+      ctx.setLineDash([4, 3]);
+      ctx.strokeStyle = 'rgba(63,214,208,0.9)';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(cx, cy, R * 1.12, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    }
 
     // current combat turn: pulsing ring
     if (!ghost && sc.turnTokenId === tok.id) {

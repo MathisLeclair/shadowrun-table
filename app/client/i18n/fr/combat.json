@@ -575,5 +575,20 @@
   "With the selection ({n})": "Avec la sélection ({n})",
   "wound modifiers ×{n}": "malus de blessures ×{n}",
   "You can't target yourself": "Impossible de se cibler soi-même",
-  "Your agent acts: pick its action in the cockpit (“Let my agent act”).": "Ton agent agit : choisis son action dans le cockpit (« Laisser mon agent agir »)."
+  "Your agent acts: pick its action in the cockpit (“Let my agent act”).": "Ton agent agit : choisis son action dans le cockpit (« Laisser mon agent agir »).",
+  "Each net hit of the caster is one box of damage; armor does not help.": "Chaque succès net du lanceur inflige une case de dommages ; l’armure ne protège pas.",
+  "Resist the spell — {name}": "Résister au sort — {name}",
+  "Resist the spell": "Résister au sort",
+  "Resist {spell} ({attr})": "Résister à {spell} ({attr})",
+  "direct spell ({damage}), resisted with {attr}": "sort direct ({damage}), résisté avec {attr}",
+  "resisted ({a} vs {d})": "résisté ({a} contre {d})",
+  "{target} resists {spell}.": "{target} résiste à {spell}.",
+  "An ally’s Counterspelling dice go in the modifier (SR5 p. 294).": "Les dés de Contresort d’un allié vont dans le modificateur (SR5 p. 294).",
+  "Resist {spell} ({attr} + {attr2})": "Résister à {spell} ({attr} + {attr2})",
+  "The caster’s net hits measure the spell’s effect; the GM applies it.": "Les succès nets du lanceur mesurent l’effet du sort ; le MJ l’applique.",
+  "spell, resisted with {attr}": "sort, résisté avec {attr}",
+  "{attacker}’s {spell} affects {target}: {n} net hit(s).": "{spell} de {attacker} affecte {target} : {n} succès net(s).",
+  "Astral defense — {name}": "Défense astrale — {name}",
+  "Astral defense": "Défense astrale",
+  "Astral defense: Intuition + Logic, then the damage is soaked without armor (SR5 p. 315).": "Défense astrale : Intuition + Logique, puis les dommages s’encaissent sans armure (SR5 p. 315)."
 }

@@ -1,13 +1,16 @@
 // App shell: table picker (/), admin page (/admin), and for a table (/t/<slug>/): login screen, header + main tabs,
-// right dock, sheet modal, toasts, global components. Dictionaries are loaded before the first render (no French
+// main area (multi-view workspace: modules/core/Workspace.tsx), right dock, sheet modal, toasts, global components;
+// /t/<slug>/?pane=<tab> is a pop-out window showing one tab. Dictionaries are loaded before the first render (no French
 // flash in an English session); a language switch re-renders the whole tree (see docs/i18n.md).
-import { useEffect, useState, type ComponentType, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type ComponentType, type CSSProperties, type FormEvent } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Button, Badge, Modal, Tabs, LangSwitch } from './lib/ui.tsx';
 import { connect, getToken, setToken, useGame, useConnected, logout, api, send, TABLE, type GameProps } from './lib/net.ts';
 import { useUI, setUI, toast, useLang } from './lib/ui-store.ts';
 import { t, tn, errorText, getLang, setLang, isLang, storedLang, storeLang, browserLang, expectUserLang, loadDictionaries } from './lib/i18n.ts';
-import { mainTabs, dockTabs, SheetView, globalComponents } from './modules/registry.ts';
+import { mainTabs, dockTabs, SheetView, globalComponents, popoutGlobalComponents } from './modules/registry.ts';
+import { TopTabs, SplitButton, Workspace, DockGrip, DockPopButton, useDockWidth } from './modules/core/Workspace.tsx';
+import { POPOUT_TAB, useLayout } from './lib/layout-store.ts';
 import type { GameView } from '../shared/types.ts';
 
 import './modules/admin/admin.css'; // table picker + admin page + login extras
@@ -234,38 +237,28 @@ function Shell() {
     const chosen = storedLang();
     if (game && !hasOwnLang && chosen && chosen !== game.config?.lang) send('users/setLang', { lang: chosen }, { silent: true }).catch(() => {});
   }, [!!game, hasOwnLang]);
+  const shellRef = useRef<HTMLDivElement>(null);
+  const dockW = useDockWidth();
+  const layout = useLayout();
   if (!game) return <div className="loading">{t('Connecting to the Matrix…')}</div>;
   const role = game.me.role;
   const tabs = mainTabs.filter((tb) => tb.roles.includes(role) && (!tb.visible || tb.visible(game)));
   const docks = dockTabs.filter((tb) => tb.roles.includes(role));
-  const current = tabs.find((tb) => tb.id === ui.mainTab) || tabs[0];
+  const current = tabs.find((tb) => tb.id === (ui.mainTab || layout.main)) || tabs[0];
   const dock = docks.find((tb) => tb.id === ui.dockTab) || docks[0];
-  const Main = current.component;
   const Dock = dock?.component;
-  const Sheet = SheetView;
-  const sheetActor = ui.sheetActorId ? game.actors[ui.sheetActorId] : null;
 
   // key=lang on the page, dock and sheet: a language switch remounts them, so nothing cached keeps the old language.
   return (
-    <div className={'shell' + (ui.dockOpen ? '' : ' dock-closed')}>
+    <div ref={shellRef} className={'shell' + (ui.dockOpen ? '' : ' dock-closed')} style={{ '--dock-w': `${dockW}px` } as CSSProperties}>
       <header className="topbar">
         <div className="brand" title={t('Table: {slug}', { slug: game.config.table?.slug || TABLE || '' })}>
           <div className="logo-mark small"></div>
           <span>{game.config.campaignName}</span>
         </div>
-        <nav className="main-tabs">
-          {tabs.map((tb) => {
-            const badge = tb.badge ? tb.badge(game) : null;
-            return (
-              <button key={tb.id} className={'main-tab' + (tb.id === current.id ? ' active' : '')} onClick={() => setUI({ mainTab: tb.id })}>
-                <span className="tab-icon">{tb.icon}</span>
-                <span className="tab-label">{t(tb.label)}</span>
-                {badge ? <span className="tab-badge">{badge}</span> : null}
-              </button>
-            );
-          })}
-        </nav>
+        <TopTabs game={game} tabs={tabs} current={current} />
         <div className="topbar-right">
+          <SplitButton tabs={tabs} current={current} />
           <LangSwitch value={lang} onChange={pickLangLoggedIn} />
           <span className={'conn ' + (online ? 'on' : 'off')} title={online ? t('Connected') : t('Disconnected — reconnecting…')}></span>
           <Badge color={role === 'gm' ? 'magenta' : 'cyan'}>{role === 'gm' ? t('GM') : game.me.name}</Badge>
@@ -279,28 +272,73 @@ function Shell() {
       </header>
       {game.ui?.announcement && <div className="announcement">{game.ui.announcement}</div>}
       <main className="main">
-        <Main key={lang} game={game} />
+        <Workspace game={game} tabs={tabs} current={current} lang={lang} />
       </main>
       {ui.dockOpen && Dock && (
         <aside className="dock">
-          <Tabs
-            className="dock-tabs"
-            tabs={docks.map((d) => ({ id: d.id, label: t(d.label), badge: d.badge ? d.badge(game) : null }))}
-            value={dock.id}
-            onChange={(id) => setUI({ dockTab: id })}
-          />
+          <DockGrip shellRef={shellRef} />
+          <div className="ws-dock-head">
+            <Tabs
+              className="dock-tabs"
+              tabs={docks.map((d) => ({ id: d.id, label: t(d.label), badge: d.badge ? d.badge(game) : null }))}
+              value={dock.id}
+              onChange={(id) => setUI({ dockTab: id })}
+            />
+            <DockPopButton tab={dock.id} />
+          </div>
           <div className="dock-body">
             <Dock key={lang} game={game} />
           </div>
         </aside>
       )}
-      {sheetActor && ui.sheetActorId && (
-        <Modal title={sheetActor.name} width={1100} onClose={() => setUI({ sheetActorId: null })}>
-          <Sheet key={lang} game={game} actorId={ui.sheetActorId} />
-        </Modal>
-      )}
+      <SheetModal game={game} lang={lang} />
       {globalComponents.map((C, i) => (
         <C key={i} game={game} />
+      ))}
+    </div>
+  );
+}
+
+/** Any actor's sheet in the global modal (openSheet(actorId)). */
+function SheetModal({ game, lang }: { game: GameView; lang: string }) {
+  const ui = useUI();
+  const sheetActor = ui.sheetActorId ? game.actors[ui.sheetActorId] : null;
+  if (!sheetActor || !ui.sheetActorId) return null;
+  return (
+    <Modal title={sheetActor.name} width={1100} onClose={() => setUI({ sheetActorId: null })}>
+      <SheetView key={lang} game={game} actorId={ui.sheetActorId} />
+    </Modal>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Pop-out window (/t/<slug>/?pane=<tab id>): one main or dock tab alone, e.g. on a second screen.
+// Same login (the token is shared by the browser), its own connection; no ambience audio (the main window plays it).
+// ---------------------------------------------------------------------------
+function PopoutShell({ tabId }: { tabId: string }) {
+  const game = useGame();
+  const online = useConnected();
+  const lang = useLang();
+  const role = game?.me.role;
+  const fits = (tb: (typeof mainTabs)[number]) => !!game && !!role && tb.roles.includes(role) && (!tb.visible || tb.visible(game));
+  const main = mainTabs.find((tb) => tb.id === tabId && fits(tb));
+  const dockTab = main ? null : dockTabs.find((tb) => tb.id === tabId && fits(tb));
+  const tab = main || dockTab;
+  const label = tab ? t(tab.label) : '';
+  const tableName = game?.config?.campaignName;
+  useEffect(() => {
+    if (label) document.title = tableName ? t('{tab} — {name}', { tab: label, name: tableName }) : label;
+  }, [label, tableName, lang]);
+  if (!game) return <div className="loading">{t('Connecting to the Matrix…')}</div>;
+  const C = tab?.component;
+  return (
+    <div className="ws-pop">
+      {!online && <div className="ws-pop-offline">{t('Disconnected — reconnecting…')}</div>}
+      {game.ui?.announcement && <div className="announcement">{game.ui.announcement}</div>}
+      <main className={'main' + (dockTab ? ' ws-pop-dock' : '')}>{C ? <C key={lang} game={game} /> : <div className="loading">{t('This view is not available')}</div>}</main>
+      <SheetModal game={game} lang={lang} />
+      {popoutGlobalComponents.map((G, i) => (
+        <G key={i} game={game} />
       ))}
     </div>
   );
@@ -339,7 +377,7 @@ function App() {
   }, [authed]);
   return (
     <>
-      {authed ? <Shell /> : <Login onDone={() => setAuthed(true)} />}
+      {authed ? POPOUT_TAB ? <PopoutShell tabId={POPOUT_TAB} /> : <Shell /> : <Login onDone={() => setAuthed(true)} />}
       <Toasts />
     </>
   );

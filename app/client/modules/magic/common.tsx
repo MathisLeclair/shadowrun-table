@@ -14,7 +14,7 @@ export function magicActors(game: GameView): Actor[] {
   const gm = isGM(game);
   const own = new Set(game.me?.characterIds || []);
   return Object.values(game.actors || {})
-    .filter((a): a is Actor => isFullActor(a) && isAwakened(a) && (gm ? !a.retired : own.has(a.id)))
+    .filter((a): a is Actor => isFullActor(a) && isAwakened(a) && !a.spirit && (gm ? !a.retired : own.has(a.id)))
     .sort((a, b) => (a.type === b.type ? a.name.localeCompare(b.name) : a.type === 'pc' ? -1 : 1));
 }
 

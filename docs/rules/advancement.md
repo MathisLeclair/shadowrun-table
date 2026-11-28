@@ -1,7 +1,9 @@
 # Advancement rules (karma & training)
 
-Code: `shared/advancement.ts` — sources SR5 core p. 103-107 (« Progression du personnage ») and Run Faster; house rules
-are flagged in that file. Feature (requests, approval, downtime): [modules/training.md](../modules/training.md).
+Code: `shared/advancement.ts` — sources SR5 core p. 103-107 (« Progression du personnage »), Run Faster and Run & Gun
+p. 128 (martial arts); house rules are flagged in that file. Feature (requests, approval, downtime): [modules/training.md](../modules/training.md).
+
+> **Focus bonding** (kind `focus`, SR5 318): Force × 2 / 3 / 6 karma by focus type, no training days; see [magic rules](magic.md).
 
 ## Karma costs (SR5 p. 103)
 
@@ -9,7 +11,20 @@ Karma costs per SR5: attribute new×5, active skill new×2, group new×5, knowle
 new knowledge 1, positive quality karma×2, remove negative karma×2, spell 5, complex form 4, initiation 10+grade×3,
 power point 5. Initiation options (group, ordeal, schooling) each lower the karma cost by 10 % (`InitiationOptions`).
 
-Martial arts are bought through the shop, not training: [availability-and-shop.md](availability-and-shop.md#martial-arts-rg-p-128).
+## Martial arts (RG p. 128)
+
+Kind `martialArt` (`MARTIAL_RULES`, `costFor` / `timeFor` / `martialInstructionCost`). `from` / `to` = techniques known in
+the style before / after the training; `CostOptions.style` = the style itself is new.
+
+| | Karma | Time | Instruction |
+|---|---|---|---|
+| New style (first technique included) | catalog `stats.karma` (7; Way of Unified Mana 15) | 1 month | 2,500¥ |
+| Further technique | 5 | 2 weeks | 1,500¥ |
+
+A known style without any technique (bought without, imported) still gets its first technique included (no karma, no
+time), like the shop's `martialKarma` (Chummer charges the style with its first technique). With an instructor the time
+drops by `instructorTimeReduction` like any training, and the nuyen cost is the book's instruction cost above (not
+`instructorCostPerWeek`). One training per style at a time (`conflictKeys` → `martial:<styleId>`).
 
 ## Training time
 

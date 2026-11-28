@@ -1,6 +1,7 @@
 # Magic flow — design (issue #7)
 
-Status: **partly built** (#12 foundation done). Each section ends with the sub-issue that builds it (list at the end). When a part
+Status: **built** — every sub-issue (#12–#23) is done; this page keeps the plan and the decisions. Facts live in
+[modules/magic.md](../modules/magic.md) and [rules/magic.md](../rules/magic.md). Each section ends with the sub-issue that builds it (list at the end). When a part
 lands, its facts move to `docs/modules/magic.md` (feature) and `docs/rules/magic.md` (rules), as for the Matrix, and
 this page keeps only what is still to do.
 
@@ -79,7 +80,11 @@ themselves (`settings.showAstralToPlayers` lets the GM show them all). GM: every
 Built 2026-11-28: `47-magic.ts`, `state.magic`, the Magic tab, traditions on the actor, the hints panel. Facts:
 [modules/magic.md](../modules/magic.md). The sections below are still to build.
 
-## Cast flow — *#13 Cast*
+## Cast flow — *#13, done*
+
+Built 2026-11-28 (facts: [modules/magic.md](../modules/magic.md#cast-flow-magiccast)). What follows was the plan; the
+effect steps below (#14–#16) hook onto `castSpell()`.
+
 
 Cockpit « Cast » (or sheet « Cast ») → `CastModal`:
 
@@ -103,7 +108,12 @@ Cockpit « Cast » (or sheet « Cast ») → `CastModal`:
 
 Multiple spells at once (split pool, 281) stays manual for now.
 
-## Sustained spells — *#14 Sustain*
+## Sustained spells — *#14, done*
+
+Built 2026-11-28 (facts: [modules/magic.md](../modules/magic.md#sustained-spells)); the −2 is mirrored on the actor
+(`actor.magic.sustaining`) rather than read from the state, so every roll and the sheet see it. Still to do here:
+carriers other than the caster (#19, #21), more numeric spell effects.
+
 
 - Each spell sustained by the caster = **−2 dice pool on all tests**, cumulative (282). Applied server-side as a
   modifier source in `actorModifiers()` (kind `pool`, type `sustained`, one line per spell, 📖 chip SR5 282), so it
@@ -115,7 +125,11 @@ Multiple spells at once (split pool, 281) stays manual for now.
 - GM view: all active spells, by caster, with « Drop ».
 - A spell sustained by a sustaining focus (#J) or a bound spirit (#H) does not cost the caster the −2.
 
-## Combat spells through the attack pipeline — *#15 Combat spells*
+## Combat spells through the attack pipeline — *#15, done*
+
+Built 2026-11-28 (facts: [modules/magic.md](../modules/magic.md#combat-spells-attacks)). Elemental effects are logged
+reminders, not afflictions yet.
+
 
 The cast creates `Attack`s (new `AttackKind: 'spell'`) so the existing tray, defense, soak and damage steps work:
 
@@ -127,7 +141,12 @@ The cast creates `Attack`s (new `AttackKind: 'spell'`) so the existing tray, def
 - **Area**: one attack per selected target, each with its own defense.
 - Stun spells (Stunbolt, Stunball) deal Stun.
 
-## Other spells: opposed resistance — *#16 Resistance*
+## Other spells: opposed resistance — *#16, done*
+
+Built 2026-11-28 (facts: [modules/magic.md](../modules/magic.md#non-combat-spells-resistance)): derived from the
+descriptor (no per-spell override table needed so far); magical objects (Force × 2) and automatic counterspelling are
+not modelled.
+
 
 For non-combat spells the cast shows the resistance and, when there is a target, rolls it:
 
@@ -143,14 +162,21 @@ Built as data: a `resistance` field derived from the catalog `descriptor` + cate
 `shared/magic.ts` for the spells whose text says otherwise (cite page). The result shows net hits and the spell's
 effect text; counterspelling dice from an ally can be added before the target rolls.
 
-## Spirits: data — *#17 Spirit data*
+## Spirits: data — *#17, done*
+
+Built 2026-11-28 (facts: [modules/magic.md](../modules/magic.md#spirit-data)).
+
 
 `tools/build-catalog.ts` reads Chummer `critters.xml` (category Spirits) → `data/catalog/spirits.json`: attributes as
 offsets from Force, initiative, skills (rating = Force), powers, optional powers, movement, source/page (`traditions.json` already exists since #12). `shared/magic.ts spiritStats(type, force)` turns a template into an actor
 (attributes, monitors, astral attributes = Force, powers as `actor.powers`, natural weapons). French names through
 the catalog's FR names as for other items.
 
-## Summoning and spirit actors — *#18 Summoning*
+## Summoning and spirit actors — *#18, done*
+
+Built 2026-11-28 (facts: [modules/magic.md](../modules/magic.md#summoning-and-spirit-actors)). Control went through the
+player's `characterIds` rather than a new permission rule. « Use a power » is a service click; astral tokens come with #20.
+
 
 Cockpit « Summon » → `SummonModal`:
 
@@ -169,7 +195,11 @@ initiative, or its physical initiative when materialized (both from the spirit d
 « Use a power », « Release », disrupted when a monitor is full (302: services lost). GM action « Sunrise / sunset »:
 unbound spirits leave (300; no in-game clock exists).
 
-## Binding, bound spirits, banishing — *#19 Binding*
+## Binding, bound spirits, banishing — *#19, done*
+
+Built 2026-11-28 (facts: [modules/magic.md](../modules/magic.md#binding-bound-spirits-banishing)). Binding time (Force
+hours) is narrative; spell binding stays with the GM.
+
 
 - **Binding** (300-301): only an already summoned spirit; costs Force × 25 drams of reagents (gear « Reagents »
   quantity, refused without), Binding + MAG [Force] vs Force × 2, drain 2 × hits (min 2), extra net hits add services.
@@ -182,7 +212,10 @@ unbound spirits leave (300; no in-game clock exists).
 - **Banishing** (301): Banishing + MAG [Astral] vs Force (+ summoner's MAG if bound); each net hit removes a service;
   at 0 the spirit leaves. Drain 2 × hits (min 2), Physical if Force > MAG. Works on enemy spirits too.
 
-## Astral — *#20 Astral*
+## Astral — *#20, done*
+
+Built 2026-11-28 (facts: [modules/magic.md](../modules/magic.md#astral)). Weapon foci in astral combat come with #21.
+
 
 - **Astral perception** (312, Simple Action): toggle in the cockpit; the actor becomes dual-natured, can target
   astral beings with mana spells, sees spirits on the map that are not materialized. Map: astral-only tokens (spirits,
@@ -192,7 +225,11 @@ unbound spirits leave (300; no in-game clock exists).
 - Astral combat (315) uses the attack pipeline with Astral Combat + WIL [Astral] / weapon foci.
 - GM view: list of astral presences (who, mode, since).
 
-## Foci — *#21 Foci*
+## Foci — *#21, done*
+
+Built 2026-11-28 (facts: [modules/magic.md](../modules/magic.md#foci)). Note: the addiction threshold is the active Force
+above MAG (SR5 319), and MAG × 5 is the cap on bonded Force (318) — the design text below mixed them up.
+
 
 - **Bonding** (318): karma cost per focus type × Force (focus table), through training like other karma spends;
   max bonded foci = MAG; total active Force > MAG × 5 (addiction threshold, 319) shown as a warning.
@@ -202,13 +239,19 @@ unbound spirits leave (300; no in-game clock exists).
   astral combat, qi focus, spirit focus, metamagic focus).
 - Sustaining focus: sustains one spell of its category up to its Force without the −2 (#C).
 
-## Ritual spellcasting — *#22 Ritual*
+## Ritual spellcasting — *#22, done*
+
+Built 2026-11-28 (facts: [modules/magic.md](../modules/magic.md#ritual-spellcasting)).
+
 
 SR5 295-296: leader + participants, lodge or foci, Ritual Spellcasting + MAG [Force] vs Force × 2, drain per
 participant, time in hours. A GM-started « ritual » panel that collects participants, rolls teamwork and applies
 drain to all. Lowest priority.
 
-## Metamagic effects — *#23 Metamagic*
+## Metamagic effects — *#23, done*
+
+Built 2026-11-28 (facts: [modules/magic.md](../modules/magic.md#metamagic)).
+
 
 Data-driven like `ECHOES`: `METAMAGICS` in `shared/magic.ts` (SR5 325-326 + Street Grimoire), applied where
 mechanical — Centering (reduce penalties with a metamagic skill), Shielding (+initiate grade dice vs spells as
@@ -228,14 +271,14 @@ Filed on GitHub 2026-11-28, all « Part of #7 ». Order: #12 first; #13 → #14,
 | issue | title | depends on |
 |---|---|---|
 | #12 | Magic foundation: module, state, tab, tradition on the actor, hints panel (**done**) | — |
-| #13 | Cast flow: Force, Force as limit, reckless, drain computed and resisted | #12 |
-| #14 | Sustained spells: −2 per spell as a modifier, list, GM view | #13 |
-| #15 | Combat spells through the attack pipeline (direct, indirect, area) | #13 |
-| #16 | Non-combat spells: opposed resistance and net hits | #13 |
-| #17 | Spirit data from Chummer (spirits.json, traditions.json, `spiritStats`) | — |
-| #18 | Summoning: spirit NPC actors, services, control by the summoner, combat | #12, #17 |
-| #19 | Binding, bound spirits (aid sorcery, sustaining), banishing | #18, #14 |
-| #20 | Astral perception and projection, astral tokens and initiative | #12 |
-| #21 | Foci: bonding, active foci, non-spellcasting foci, sustaining focus | #12, #14 |
-| #22 | Ritual spellcasting | #13 |
-| #23 | Metamagic effects | #13, #20 |
+| #13 | Cast flow: Force, Force as limit, reckless, drain computed and resisted (**done**) | #12 |
+| #14 | Sustained spells: −2 per spell as a modifier, list, GM view (**done**) | #13 |
+| #15 | Combat spells through the attack pipeline (direct, indirect, area) (**done**) | #13 |
+| #16 | Non-combat spells: opposed resistance and net hits (**done**) | #13 |
+| #17 | Spirit data from Chummer (spirits.json, traditions.json, `spiritStats`) (**done**) | — |
+| #18 | Summoning: spirit NPC actors, services, control by the summoner, combat (**done**) | #12, #17 |
+| #19 | Binding, bound spirits (aid sorcery, sustaining), banishing (**done**) | #18, #14 |
+| #20 | Astral perception and projection, astral tokens and initiative (**done**) | #12 |
+| #21 | Foci: bonding, active foci, non-spellcasting foci, sustaining focus (**done**) | #12, #14 |
+| #22 | Ritual spellcasting (**done**) | #13 |
+| #23 | Metamagic effects (**done**) | #13, #20 |

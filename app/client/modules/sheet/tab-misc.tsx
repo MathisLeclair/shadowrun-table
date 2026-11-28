@@ -6,6 +6,7 @@ import { attr, SKILL_BY_ID } from '/shared/sr5.ts';
 import { t, tk, tIfKnown, attrShort, fmtNuyen, itemName } from '../../lib/i18n.ts';
 import { fmtDate, fmtNum, signed, itemLabel, itemTitle, categoryLabel } from './common.tsx';
 import { containerOf } from './inventory.ts';
+import { toast } from '../../lib/ui-store.ts';
 import { RollStat, LimitStat } from './tab-summary.tsx';
 import { AutomationMark, ItemEffects, sourcesTitle } from './modifiers-ui.tsx';
 import { collectModifiers, gearHasEffects } from '/shared/modifiers.ts';
@@ -13,7 +14,8 @@ import { ListEditor, CatalogPicker } from './editors.tsx';
 import { SubChips, armorCapacityText, vehicleSlotsText, lifestyleBaseLabel, lifestyleBreakdown } from './sublists.tsx';
 import { armorMods } from './sheet-data.ts';
 import { openMatrix, ProgramRef } from '../matrix/common.tsx';
-import { openMagic, drainRollLabel, spellRollLabel, TraditionPicker } from '../magic/common.tsx';
+import { openMagic, drainRollLabel, TraditionPicker } from '../magic/common.tsx';
+import CastModal from '../magic/CastModal.tsx';
 import { drainAttr, usesTradition } from '/shared/magic.ts';
 import { ruleRef, skillRef } from '/shared/bookrefs.ts';
 import { SinCards } from './sins.tsx';
@@ -38,7 +40,9 @@ export function MagicTab({ s }: { s: SheetCtx }) {
   const powers = actor.powers || [];
   const spells = actor.spells || [];
   const pp = powers.reduce((sum, p) => sum + (Number(p.pp) || 0), 0);
+  const [casting, setCasting] = useState<string | null>(null);
   return <div className="sh-magic">
+    {casting && <CastModal game={s.game} actor={actor} spellId={casting} onClose={() => setCasting(null)} />}
     <div className="sh-derived">
       <RollStat label={t('Magic')} value={mag} accent="magenta" />
       <RollStat label={t('Astral Init.')} value={`${d.astralInitiative.base} + 2D6`} book={ruleRef('initiative')} />
@@ -101,7 +105,7 @@ export function MagicTab({ s }: { s: SheetCtx }) {
                 <td>{sp.duration}</td>
                 <td className="mono">{sp.drain}</td>
                 <td>
-                  <Button small variant="accent" onClick={() => s.roll({ skillId: 'spellcasting', label: spellRollLabel(sp.name), limit: null })} title={t('Spellcasting + Magic (limit = Force, set it yourself)')}>
+                  <Button small variant="accent" onClick={() => (s.own ? setCasting(sp.id) : toast(t('You can only roll for your own character'), 'warn'))} title={t('Choose the Force and the targets, roll, then resist the Drain')}>
                     {t('spell::Cast')}
                   </Button>
                 </td>

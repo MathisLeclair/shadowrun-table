@@ -2,10 +2,10 @@
 // Unit-tests shared/advancement.ts, then drives server/modules/50-training.ts through an isolated server.
 import fs from 'node:fs';
 import {
-  costFor, timeFor, formatDays, withInstructor, validate, quote, applyAdvance, attrMax, groupState, powerPoints,
+  costFor, timeFor, formatDays, withInstructor, validate, quote, applyAdvance, attrMax, groupState, powerPoints, martialInstructionCost,
 } from '../shared/advancement.ts';
 import type { CostOptions } from '../shared/advancement.ts';
-import type { Actor, Quality, TrainingJob, TrainingKind, TrainingRequest, TrainingSettings } from '../shared/types.ts';
+import type { Actor, CatalogEntry, Quality, TrainingJob, TrainingKind, TrainingRequest, TrainingSettings } from '../shared/types.ts';
 import type { TestClient } from './test-client.ts';
 
 let failures = 0;
@@ -87,6 +87,18 @@ const timeTable: Array<[TrainingKind, number, number, CostOptions, number]> = [
 ];
 for (const [k, f, t, o, exp] of timeTable) eq(timeFor(k, f, t, o), exp, `timeFor ${k} ${f}→${t}`);
 
+// Martial arts (Run & Gun p.128): from/to = techniques known before/after; style = the style is new.
+const martialCost: Array<[number, number, CostOptions, number, number]> = [
+  [0, 1, { style: true, karma: 7 }, 7, 30], // new style + its first technique: 7 karma, 1 month
+  [0, 0, { style: true, karma: 7 }, 7, 30], // new style without technique
+  [0, 3, { style: true, karma: 15 }, 25, 58], // Way of Unified Mana + 2 further techniques
+  [2, 3, {}, 5, 14], // further technique of a known style: 5 karma, 2 weeks
+  [1, 3, {}, 10, 28],
+  [0, 2, {}, 5, 14], // known style without technique (import): the first one is included
+];
+for (const [f, t, o, k, d] of martialCost) eq([costFor('martialArt', f, t, o), timeFor('martialArt', f, t, o)], [k, d], `martialArt ${f}→${t}${o.style ? ' (new style)' : ''}: karma, days`);
+eq([martialInstructionCost(0, 1, true), martialInstructionCost(0, 2, true), martialInstructionCost(1, 3, false), martialInstructionCost(0, 2, false)], [2500, 4000, 3000, 1500], 'martial art instruction cost (RG p.128)');
+
 eq(formatDays(0), 'immediate', 'formatDays 0');
 eq(formatDays(1), '1 day', 'formatDays 1');
 eq(formatDays(21), '3 weeks', 'formatDays 21');
@@ -149,6 +161,27 @@ check(/one grade at a time/.test(validate(mage(), { kind: 'initiation', to: 2 })
   const m = mage();
   applyAdvance(m, { kind: 'initiation', to: 1, options: { metamagic: 'Centrage' } });
   eq([m.magic!.initiation, m.magic!.metamagics, attrMax(m, 'MAG')], [1, ['Centrage'], 5], 'apply: initiation');
+}
+
+// Martial arts: quote + apply
+{
+  const a = sam();
+  const krav = { kind: 'martialArt', catalogId: 'st_krav', name: 'Krav Maga', karma: 7, techniques: [{ id: 'tq_a', name: 'Kick Attack', nameFr: 'Coup de pied' }, { id: 'tq_b', name: 'Sweep' }] };
+  const q1 = quote(a, { ...krav, instructor: true });
+  eq([q1.error, q1.karmaCost, q1.daysBase, q1.days, q1.nuyenCost, q1.from, q1.to], [null, 12, 44, 33, 4000, 0, 2], 'martial quote: new style + 2 techniques, instructor −25 %, 2,500 + 1,500¥');
+  eq(q1.label, 'Martial art: Krav Maga (Coup de pied, Sweep)', 'martial quote label');
+  eq(quote(a, krav, { useTime: false }).days, 0, 'martial: useTime false → immediate');
+  check(/Already in progress/.test(validate(a, krav, undefined, { active: [{ label: 'Krav', request: { ...krav, techniques: [] } }] })!), 'martial: one training per style');
+  check(/Choose a martial art style/.test(validate(a, { kind: 'martialArt' })!), 'martial: style required');
+  applyAdvance(a, q1.req);
+  const ma = a.martialArts?.find((m) => m.catalogId === 'st_krav');
+  eq([ma?.name, ma?.rating, ma?.techniques.map((t) => [t.catalogId, t.name, t.nameFr ?? null])], ['Krav Maga', 1, [['tq_a', 'Kick Attack', 'Coup de pied'], ['tq_b', 'Sweep', null]]], 'apply: martial art style + techniques');
+  check(/Nothing new to learn/.test(validate(a, krav)!), 'martial: known techniques refused');
+  const q2 = quote(a, { ...krav, techniques: [...krav.techniques, { id: 'tq_c', name: 'Throw Person' }] });
+  eq([q2.karmaCost, q2.daysBase, q2.req.techniques.map((t) => t.id), q2.label], [5, 14, ['tq_c'], 'Martial art techniques: Krav Maga (Throw Person)'], 'martial quote: known style → only the new technique');
+  applyAdvance(a, q2.req);
+  eq(a.martialArts?.length, 1, 'apply: same style not duplicated');
+  eq(a.martialArts?.[0].techniques.length, 3, 'apply: technique added to the known style');
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -310,6 +343,55 @@ try {
   await settle();
   eq([gm.state.actors.npc_t_mage.karma, r11.status], [88, 'approved'], 'learning given by the GM (free)');
   await rejects(p1.send('training/request', { actorId: 'pc_t_sam', kind: 'skill', target: 'blades', to: 8, free: true }), /Not enough karma/, 'free ignored for a player');
+
+  // Martial arts (RG p.128): training requests checked against data/catalog/martialarts.json
+  {
+    const styles = JSON.parse(fs.readFileSync(new URL('../data/catalog/martialarts.json', import.meta.url), 'utf8')) as Array<CatalogEntry<'martialarts'> & { stats: NonNullable<CatalogEntry<'martialarts'>['stats']> }>;
+    const ma = styles.find((m) => m.name === 'Krav Maga') || styles[0];
+    const [t1, t2, t3] = ma.stats.techniques;
+    await gm.send('training/updateSettings', { approval: 'always', useTime: true, instructorTimeReduction: 25 });
+    await gm.send('actor/update', { actorId: 'pc_t_sam', patch: { karma: 40, nuyen: 10000 } });
+    await rejects(p1.send('training/request', { actorId: 'pc_t_sam', kind: 'martialArt', catalogId: 'nope', techniques: [{ id: t1.id }] }), /Unknown martial art or technique/, 'martial: unknown style');
+    await rejects(p1.send('training/request', { actorId: 'pc_t_sam', kind: 'martialArt', catalogId: ma.id, techniques: [{ id: 'nope' }] }), /Unknown martial art or technique/, 'martial: unknown technique');
+    // Client-provided karma and names are replaced by the catalog's.
+    const rm = await p1.send('training/request', { actorId: 'pc_t_sam', kind: 'martialArt', catalogId: ma.id, karma: 1, name: 'Cheat', techniques: [{ id: t1.id, name: 'Fake' }, { id: t2.id }] });
+    eq(rm.status, 'pending', 'martial: player request pending');
+    await settle();
+    const reqM = gm.state.training.requests.find((r) => r.id === rm.requestId)!;
+    eq([reqM.kind, reqM.karmaCost, reqM.days, reqM.manual], ['martialArt', 12, 44, false], 'martial: 7 + 5 karma, 1 month + 2 weeks, verified');
+    check(reqM.label.includes(ma.nameFr || ma.name) && reqM.label.includes(t1.nameFr || t1.name) && !/Fake|Cheat/.test(reqM.label), 'martial: catalog names in the label', reqM.label);
+    await rejects(p1.send('training/request', { actorId: 'pc_t_sam', kind: 'martialArt', catalogId: ma.id, techniques: [{ id: t3.id }] }), /Already in progress or pending/, 'martial: one request per style');
+    await gm.send('training/resolve', { requestId: rm.requestId, approve: true });
+    await settle();
+    let s = gm.state.actors.pc_t_sam;
+    eq([s.karma, s.training!.find((j) => j.requestId === rm.requestId)?.daysTotal, (s.martialArts || []).length], [28, 44, 0], 'martial: karma spent, 44-day job, not learned yet');
+    const advM = await gm.send('training/advanceDays', { days: 44, actorIds: ['pc_t_sam'] });
+    check(advM.completed.some((c: { label: string }) => c.label === reqM.label), 'martial: GM downtime days finish the training');
+    await settle();
+    s = gm.state.actors.pc_t_sam;
+    const learned = (s.martialArts || []).find((m) => m.catalogId === ma.id);
+    eq(learned?.techniques.map((t) => t.catalogId), [t1.id, t2.id], 'martial: style and techniques learned');
+    // A further technique with an instructor: 5 karma, 2 weeks −25 % → 11 days, 1,500¥.
+    const rm2 = await p1.send('training/request', { actorId: 'pc_t_sam', kind: 'martialArt', catalogId: ma.id, techniques: [{ id: t1.id }, { id: t3.id }], instructor: true });
+    await settle();
+    const reqM2 = gm.state.training.requests.find((r) => r.id === rm2.requestId)!;
+    eq([reqM2.karmaCost, reqM2.daysBase, reqM2.days, reqM2.nuyenCost], [5, 14, 11, 1500], 'martial: further technique with an instructor');
+    await gm.send('training/resolve', { requestId: rm2.requestId, approve: true });
+    await settle();
+    s = gm.state.actors.pc_t_sam;
+    eq([s.karma, s.nuyen], [23, 8500], 'martial: karma and instruction nuyen spent');
+    await gm.send('training/complete', { actorId: 'pc_t_sam', jobId: s.training!.find((j) => j.requestId === rm2.requestId)!.id });
+    await settle();
+    eq((gm.state.actors.pc_t_sam.martialArts || []).find((m) => m.catalogId === ma.id)?.techniques.length, 3, 'martial: technique added to the known style');
+    // Training time off: applied on approval (GM request = auto-approved; free = no karma).
+    await gm.send('training/updateSettings', { useTime: false });
+    const other = styles.find((m) => m.id !== ma.id && m.stats.techniques.length)!;
+    const rm3 = await gm.send('training/request', { actorId: 'pc_t_sam', kind: 'martialArt', catalogId: other.id, techniques: [{ id: other.stats.techniques[0].id }], free: true });
+    await settle();
+    s = gm.state.actors.pc_t_sam;
+    eq([rm3.status, s.karma, (s.martialArts || []).some((m) => m.catalogId === other.id)], ['done', 23, true], 'martial: useTime off → learned at once (GM, free)');
+    await gm.send('training/updateSettings', { useTime: true });
+  }
 
   // History clean-up
   const cleared = await gm.send('training/clearHistory', {});

@@ -1,6 +1,7 @@
 // Shared UI kit. Every module builds its screens from these so the app looks consistent.
 // Usage: import { Button, Panel, ... } from '../../lib/ui.tsx';
 import { useEffect, useRef, useState, type ReactNode, type ButtonHTMLAttributes, type HTMLAttributes, type CSSProperties } from 'react';
+import { createPortal } from 'react-dom';
 import { renderMarkdown } from './markdown.ts';
 import { t, LANGS } from './i18n.ts';
 
@@ -75,7 +76,8 @@ export function Modal({ title, onClose, width = 720, children, actions }: ModalP
       if (i >= 0) modalStack.splice(i, 1);
     };
   }, []);
-  return (
+  // Rendered on <body>: a modal opened inside a workspace pane (isolated stacking context) must still cover the dock.
+  return createPortal(
     <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>
       <div className="modal" style={{ width: `min(${width}px, calc(100vw - 24px))` }}>
         <header className="modal-head">
@@ -87,7 +89,8 @@ export function Modal({ title, onClose, width = 720, children, actions }: ModalP
         </header>
         <div className="modal-body">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

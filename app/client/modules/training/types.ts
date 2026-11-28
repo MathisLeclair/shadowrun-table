@@ -46,8 +46,12 @@ export interface TrainingDraft {
   instructor?: boolean;
   note?: string;
   catalogId?: string;
+  /** Other-language catalog name (duplicate checks). */
+  altName?: string;
   data?: Partial<AdvancementRequest['data']>;
   options?: Partial<AdvancementRequest['options']>;
+  /** Martial art techniques (kind 'martialArt'; catalogId = style id). */
+  techniques?: AdvancementRequest['techniques'];
   free?: boolean;
   existing?: boolean;
 }

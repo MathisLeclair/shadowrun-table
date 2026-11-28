@@ -76,6 +76,8 @@ for (const m of Object.values(seedMaps)) if (m.folder === 'Cartes maison (ancien
 // ---------------------------------------------------------------------------------------------------------- server
 const runtime = fs.mkdtempSync(path.join(os.tmpdir(), 'sr-maplib-campaign-'));
 const haveArt = fs.existsSync(path.resolve(APP, '..', 'fragmap'));
+// The fragmaps-free images are Foundry assets (data/assets/foundry/scenes), not in git either (CI has none).
+const haveFreeArt = fs.existsSync(path.join(APP, 'data', 'assets', 'foundry', 'scenes'));
 if (haveArt) {
   const only = libSeeds.map((m) => m.library!.slug).filter((s) => gitLib[s]).join(',');
   const r = spawnSync(process.execPath, [...process.execArgv.filter((a) => a === '--experimental-strip-types' || a === '--no-warnings'), 'tools/maplib-build.ts', '--only', only], { cwd: APP, env: { ...process.env, SR_RUNTIME_DIR: runtime }, encoding: 'utf8' });
@@ -98,7 +100,7 @@ try {
     const r = await fetch(`${srv.url}/api/maplib/image/${m.library!.slug}?k=${encodeURIComponent(key.k)}`);
     const missing = r.headers.get('x-maplib-missing') === '1';
     ok(r.status === 200, `${m.library!.slug}: image 200 (${r.status})`);
-    if (haveArt || FREE.has(m.library!.slug)) ok(!missing && /^image\/(jpeg|png|webp)/.test(r.headers.get('content-type') || ''), `${m.library!.slug}: real artwork served (${r.headers.get('content-type')})`);
+    if (haveArt || (haveFreeArt && FREE.has(m.library!.slug))) ok(!missing && /^image\/(jpeg|png|webp)/.test(r.headers.get('content-type') || ''), `${m.library!.slug}: real artwork served (${r.headers.get('content-type')})`);
     await r.arrayBuffer();
     const d = await gm.send<{ current: number; latest: number; diff: LibraryDiff }>('maps/libraryDiff', { mapId: m.id });
     // Lights are not compared: table maps keep lights on whole cells (20-maps.js cleanLight), library lights may be fractional.
