@@ -559,6 +559,42 @@ export function naturalAttackRule(n: NaturalAttack | null | undefined): string |
   }
 }
 
+/** What syncSpiritControl() reads and writes: the actors' spirit data and the players' characters. */
+export interface SpiritControlState {
+  actors?: Record<string, { type?: string; spirit?: { summonerId?: string | null } | null } | null> | null;
+  users?: Record<string, { characterIds?: string[] } | null> | null;
+}
+
+/**
+ * A spirit follows its summoner (SR5 p. 300: it serves the magician who called it): every player holding the summoner
+ * gets the spirit among their characters (sheet, rolls, token, combat rights), the others lose it — so a player character
+ * nobody holds leaves its spirits uncontrolled. An NPC summoner's spirit keeps the assignments the GM gave it. Called when a
+ * summoner changes hands: login, GM
+ * assignment, summoning, boot. Returns true when a player's list changed.
+ */
+export function syncSpiritControl(state: SpiritControlState): boolean {
+  const users = Object.values(state.users || {}).filter((u): u is { characterIds?: string[] } => !!u);
+  let changed = false;
+  for (const [id, a] of Object.entries(state.actors || {})) {
+    const summonerId = a?.spirit?.summonerId;
+    if (!summonerId) continue;
+    const owners = users.filter((u) => (u.characterIds || []).includes(summonerId));
+    if (!owners.length && state.actors?.[summonerId]?.type !== 'pc') continue;
+    for (const u of users) {
+      const ids = u.characterIds || [];
+      const want = owners.includes(u);
+      if (want && !ids.includes(id)) {
+        u.characterIds = [...ids, id];
+        changed = true;
+      } else if (!want && ids.includes(id)) {
+        u.characterIds = ids.filter((x) => x !== id);
+        changed = true;
+      }
+    }
+  }
+  return changed;
+}
+
 /** Energy Aura of a critter (SR5 p. 396): melee attackers that hit it take Magic × 2 DV, AP −Magic. */
 export function hasEnergyAura(a: { powers?: Array<{ name: string }> | null } | null | undefined): boolean {
   return !!(a?.powers || []).some((p) => String(p?.name || '').trim().toLowerCase() === 'energy aura');

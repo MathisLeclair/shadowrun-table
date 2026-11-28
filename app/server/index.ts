@@ -16,6 +16,7 @@ import { Table, bootRegistry, listMetas, getMeta, updateMeta, setupAdminPassword
 import type { StoredMeta, TableApi, SocketEntry } from './lib/tables.ts';
 import { registerAdminRoutes, createRateLimiter } from './lib/admin.ts';
 import { uid, deepClone } from '../shared/util.ts';
+import { syncSpiritControl } from '../shared/magic.ts';
 import { ActionError } from './errors.ts';
 import { errorBody, normalizeLogEntry, dictionaryFiles, isLang, formatSource, cleanParams, t as translate } from './lib/i18n.ts';
 import {
@@ -609,6 +610,7 @@ app.post('/api/login', (req, res) => {
     const owner = Object.values(state.users).find((u) => u.id !== player.id && (u.characterIds || []).includes(characterId));
     if (owner && !demo) return res.status(403).json(errorBody('This character is already taken by {name}', { name: owner.name }));
     if (!player.characterIds.includes(characterId)) player.characterIds.push(characterId);
+    syncSpiritControl(state); // the summoner's spirits come with it (47-magic)
   }
   if (isLang(body.lang)) player.lang = body.lang; // language picked on the login screen
   t.store.saveSoon();
