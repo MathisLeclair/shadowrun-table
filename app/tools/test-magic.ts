@@ -292,6 +292,7 @@ const magicSeed: Partial<MagicState> = {
 };
 const srv = await startServer({
   port: Number(process.env.SR_TEST_PORT) || 3650,
+  env: { SR_MAGIC_TEST: '1' },
   tables: [{ id: 'lazarus', state: { version: 1, config: { gmPassword: 'lazarus', campaignName: 'Test', lang: 'fr' }, users: {}, actors: {}, log: [], magic: magicSeed } }],
 });
 try {
@@ -626,16 +627,15 @@ try {
   await expectFail(pj.send('magic/bind', { spiritId: fid }), /reagent|réactif/i, 'binding without reagents refused');
   await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'gear', item: { name: 'Reagents, per dram', qty: 400 } });
   await settle();
-  let bd: { bound: boolean; services: number; net: number; drams: number } = { bound: false, services: 0, net: 0, drams: 0 };
-  let tries = 0;
+  // Loaded dice: every binder die hits (limited by Force 2 → 2 hits), the spirit's 4 dice miss → 2 net hits, 1 extra service.
+  await gm.send('magic/testDice', { mode: 'caster' });
   const svBefore = gm.state.actors[fid].spirit!.services;
-  for (; tries < 6 && !bd.bound; tries++) {
-    bd = await pj.send('magic/bind', { spiritId: fid });
-    await restore('pc_jane');
-  }
+  const bd: { bound: boolean; services: number; net: number; drams: number } = await pj.send('magic/bind', { spiritId: fid });
+  await gm.send('magic/testDice', { mode: null });
+  await restore('pc_jane');
   await settle();
-  ok(bd.bound && gm.state.actors[fid].spirit!.bound && bd.services === svBefore + bd.net - 1, `bound: net hits beyond the first add services (${JSON.stringify(bd)})`);
-  ok(reagentDrams(gm.state.actors.pc_jane) === 400 - 50 * tries, `each binding attempt uses Force × 25 drams (${reagentDrams(gm.state.actors.pc_jane)} left after ${tries})`);
+  ok(bd.bound && bd.net === 2 && gm.state.actors[fid].spirit!.bound && bd.services === svBefore + 1 && gm.state.actors[fid].spirit!.services === svBefore + 1, `bound: net hits beyond the first add services (${JSON.stringify(bd)})`);
+  ok(bd.drams === 50 && reagentDrams(gm.state.actors.pc_jane) === 400 - 50, `each binding attempt uses Force × 25 drams (${reagentDrams(gm.state.actors.pc_jane)} left)`);
   await expectFail(pj.send('magic/bind', { spiritId: fid }), /already|déjà/i, 'already bound');
   // Rest and call.
   await pj.send('magic/callSpirit', { spiritId: fid, present: false });

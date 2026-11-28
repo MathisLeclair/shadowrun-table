@@ -240,6 +240,8 @@ with #19 / #21.
   `magic/bind`, `magic/callSpirit`, `magic/spiritSustain`, `magic/banish`, `magic/astral`, `magic/astralAttack`,
   `magic/focusWeapon`, `magic/ritual`, `magic/ritualFail`, `magic/quicken`: above. Focus bonding: `training/request { kind: 'focus', target: gearId }`.
 - `magic/settings { autoDrain?, showAstralToPlayers? }` (GM; « Resist Drain automatically » toggle of the GM page).
+- `magic/testDice { mode: 'caster' | null }` (GM) only exists with `SR_MAGIC_TEST=1` (tests): every binder die hits and
+  every spirit die misses (the loaded-dice flag is process-wide).
 
 ## Player view
 

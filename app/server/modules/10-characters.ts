@@ -806,6 +806,8 @@ export type RollInternal = {
   ap?: number;
   logExtra?: Partial<RollRecord>;
   armorUsed?: number;
+  /** Dice source (loaded dice from a test hook); Math.random when absent. */
+  rng?: () => number;
 };
 /** performRoll result: the stored roll plus its log entry. */
 export type PerformedRoll = RollRecord & { logId: string; entry: LogEntry };
@@ -1025,7 +1027,7 @@ export function performRoll(ctx: ActionContext, p: RollPayload | null | undefine
   }
   if (explode) actor!.edge.current -= 1;
   const fire = shot ? applyShot(actor!, weapon!, shot) : null;
-  const r = rollDice(pool, { limit, explode });
+  const r = rollDice(pool, { limit, explode, rng: internal.rng });
   if (!label) {
     label = `Roll of ${pool} dice`;
     defaultLabelI18n = { key: tk('Roll of {n} dice'), params: { n: pool } };
