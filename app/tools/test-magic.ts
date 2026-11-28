@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  findTradition, traditionFromDef, parseDrainText, sortTraditions, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
+  findTradition, traditionFromDef, parseDrainText, sortTraditions, drainValue, drainOffset, spellReach, isAreaSpell, spellCategory, spellDrainType, maxForce, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
   type TraditionDef,
 } from '../shared/magic.ts';
 import { checkedTest } from '../shared/modifiers.ts';
@@ -87,6 +87,18 @@ ok(sustainedBy({ sustained }, 'npc_m') === 2 && sustainedBy({ sustained }, 'othe
 hints = magicHints({ actor: mage, magic: { sustained } });
 ok(hints[0]?.tone === 'warn' && hints[0].params?.p === 4, 'hint: sustained spells −2 each, first (most urgent)');
 ok(magicHints({ actor: adept, magic: null }).length === 0 && magicHints({ actor: mundane, magic: null }).length === 0, 'no hints for an adept without sustained spells / a mundane');
+
+// Spellcasting rules (SR5 pp. 281-283)
+ok(drainOffset('F-3') === -3 && drainOffset('F−2') === -2 && drainOffset('F+1') === 1 && drainOffset('F') === 0 && drainOffset(' F - 4 ') === -4, 'drainOffset: F ± n (ASCII or Unicode minus, spaces)');
+ok(drainOffset('Special') === null && drainOffset('0') === null && drainOffset('') === null, 'drainOffset: Special / 0 / empty → null');
+ok(drainValue('F-3', 6) === 3 && drainValue('F-3', 4) === 2 && drainValue('F-6', 3) === 2, 'drainValue: Force − n, never below 2');
+ok(drainValue('F+1', 3) === 4 && drainValue('F-3', 6, { reckless: true }) === 6 && drainValue('F-6', 3, { reckless: true }) === 5, 'drainValue: + n; reckless +3 after the minimum');
+ok(drainValue('Special', 5) === null, 'drainValue: Special → null');
+ok(spellDrainType(6, 5) === 'P' && spellDrainType(5, 5) === 'S', 'drain Physical only when hits exceed Magic');
+ok(maxForce(mage) === 12, 'max Force = 2 × MAG');
+ok(spellReach('LOS') === 'los' && spellReach('LOS (A)') === 'los' && spellReach('T') === 'touch' && spellReach('T (A)') === 'touch' && spellReach('S') === 'self' && spellReach('Special') === 'special', 'spellReach');
+ok(isAreaSpell('LOS (A)') && isAreaSpell('S (A)') && !isAreaSpell('LOS'), 'isAreaSpell');
+ok(spellCategory('Combat') === 'combat' && spellCategory('Santé') === 'health' && spellCategory('Détection') === 'detection' && spellCategory('Health') === 'health' && spellCategory('?') === null, 'spellCategory (English / French)');
 
 // ---------------------------------------------------------------------------
 // Chummer import
@@ -180,6 +192,71 @@ try {
   await gm.send('magic/setTradition', { actorId: mageId, tradition: 'Hermetic', drain: 'CHA' });
   await settle();
   ok(gm.state.actors[mageId].magic?.tradition?.drain === 'LOG', 'a catalog tradition keeps its own drain');
+  // ---------- Cast flow (#13) ----------
+  await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'skills', item: { id: 'spellcasting', name: 'Spellcasting', attr: 'MAG', rating: 5 } });
+  const addSpell = async (item: object) => {
+    await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'spells', item });
+    await settle();
+    return gm.state.actors.pc_jane.spells[gm.state.actors.pc_jane.spells.length - 1].id;
+  };
+  const manabolt = await addSpell({ name: 'Manabolt', category: 'Combat', type: 'M', range: 'LOS', duration: 'I', drain: 'F-3' });
+  const heal = await addSpell({ name: 'Heal', category: 'Health', type: 'M', range: 'T', duration: 'P', drain: 'F-4' });
+  const ball = await addSpell({ name: 'Fireball', category: 'Combat', type: 'P', range: 'LOS (A)', duration: 'I', drain: 'F-1' });
+  const odd = await addSpell({ name: 'Odd spell', category: 'Manipulation', type: 'P', range: 'LOS', duration: 'S', drain: 'Special' });
+  const mapId = await gm.send<string>('maps/create', { name: 'Magic test', width: 30, height: 12 });
+  await gm.send('maps/setActive', { mapId });
+  await gm.send('maps/addToken', { mapId, token: { actorId: 'pc_jane', x: 5, y: 5 } });
+  await gm.send('maps/addToken', { mapId, token: { actorId: 'pc_anthony', x: 10, y: 5 } });
+  await gm.send('maps/addToken', { mapId, token: { actorId: 'pc_bricks', x: 20, y: 5 } });
+  await gm.send('maps/addWall', { mapId, wall: { x1: 15, y1: 0, x2: 15, y2: 12, move: true, sight: true } });
+  await settle();
+  const stunBefore = gm.state.actors.pc_jane.condition.stun;
+  const physBefore = gm.state.actors.pc_jane.condition.physical;
+  let cr = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 6, mapId, targetIds: ['pc_anthony'] });
+  ok(cr.force === 6 && cr.dv === 3 && cr.hits <= 6 && 'hits' in cr.drain && cr.targetIds.join() === 'pc_anthony', `cast Manabolt F6: DV 3, hits ≤ Force, drain resisted (${JSON.stringify(cr)})`);
+  ok(cr.drainType === (cr.hits > 5 ? 'P' : 'S'), 'drain type from hits vs Magic');
+  await settle();
+  const dmg = (cr.drain as { damage: number }).damage;
+  const after = gm.state.actors.pc_jane.condition;
+  ok(dmg === Math.max(0, 3 - (cr.drain as { hits: number }).hits) && (cr.drainType === 'S' ? after.stun - stunBefore === dmg : after.physical - physBefore === dmg), 'drain damage applied to the caster');
+  const castLog = gm.state.log.find((e) => e.id === cr.logId);
+  ok(castLog?.kind === 'magic' && castLog.magic?.event === 'cast' && castLog.magic.force === 6 && castLog.magic.dv === 3, 'cast log entry (kind magic)');
+  const rollLog = gm.state.log.find((e) => e.id === cr.rollLogId);
+  ok(rollLog?.roll?.limit === 6 && rollLog.roll.labelI18n?.key === 'Spell — {spell} (Force {force})', 'Spellcasting roll limited by the Force, labelled with it');
+  ok(gm.state.log.some((e) => e.kind === 'magic' && e.magic?.event === 'drain' && e.magic.actorId === 'pc_jane'), 'drain log entry');
+  cr = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 2, reckless: true });
+  ok(cr.dv === 5, 'reckless: max(2, 2 − 3) + 3 = 5');
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 11 }), /Force|Puissance/, 'Force above 2 × MAG refused');
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 0 }), /Force|Puissance/, 'Force 0 refused');
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: 'nope', force: 3 }), /spell|sort/i, 'unknown spell refused');
+  await expectFail(pb.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 3 }), /yours|vous/i, 'another player cannot cast for Jane');
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 3, mapId, targetIds: ['pc_bricks'] }), /line of sight|ligne de vue/i, 'LOS spell: target behind a wall refused');
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 3, targetIds: ['pc_anthony'] }), /map|carte/i, 'targets need the map');
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: heal, force: 3, mapId, targetIds: ['pc_anthony'] }), /reach|portée/i, 'touch spell: distant target refused');
+  cr = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: heal, force: 3, mapId, targetIds: ['pc_jane'] });
+  ok(cr.targetIds.join() === 'pc_jane', 'touch spell on oneself');
+  cr = await gm.send('magic/cast', { actorId: 'pc_jane', spellId: heal, force: 3, mapId, targetIds: ['pc_anthony'] });
+  ok(cr.targetIds.join() === 'pc_anthony', 'the GM is not checked');
+  cr = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: ball, force: 3, mapId, targetIds: ['pc_anthony'] });
+  ok(cr.area?.x === 10 && cr.area.radius === 3, 'area centred on the first target, radius = Force');
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: ball, force: 3, mapId, area: { x: 10, y: 5 }, targetIds: ['pc_anthony', 'pc_jane'] }), /outside|hors/i, 'area: a target outside the radius refused');
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: odd, force: 3 }), /Drain/, 'Special drain: the value is required');
+  cr = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: odd, force: 3, drainDv: 4 });
+  ok(cr.dv === 4, 'Special drain: given value');
+  // Drain left pending (autoDrain off).
+  await gm.send('magic/settings', { autoDrain: false });
+  cr = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 4 });
+  await settle();
+  const pid = (cr.drain as { pendingId: string }).pendingId;
+  ok(!!pid && pj.state.magic.pendingDrain[pid]?.dv === 2, 'autoDrain off: drain left pending, visible to the caster');
+  ok(!pb.state.magic.pendingDrain[pid], 'pending drain hidden from other players');
+  await expectFail(pb.send('magic/resistDrain', { id: pid }), /yours|vous/i, 'another player cannot resist it');
+  const rd = await pj.send('magic/resistDrain', { id: pid });
+  await settle();
+  ok(typeof rd.hits === 'number' && !pj.state.magic.pendingDrain[pid], 'resistDrain rolls and clears it');
+  await expectFail(pj.send('magic/resistDrain', { id: pid }), /Drain/, 'resisted only once');
+  await gm.send('magic/settings', { autoDrain: true });
+
   // The drain roll of the tradition goes through dice/roll with the drainResist test.
   const roll = await pj.send('dice/roll', { actorId: 'pc_jane', attr: 'WIL', attr2: 'INT', test: 'drainResist', limit: null, applyWounds: false, label: 'Résistance au drain (VOL + INT)' });
   ok(roll && typeof roll === 'object', 'drain resistance roll accepted');

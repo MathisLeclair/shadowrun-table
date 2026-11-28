@@ -40,7 +40,7 @@ function savePrefs(p: DockPrefs) {
   } catch {}
 }
 
-const KIND_LABEL: Record<string, string> = { system: tk('System'), combat: tk('Combat'), shop: tk('Shop'), training: tk('Advancement') };
+const KIND_LABEL: Record<string, string> = { system: tk('System'), combat: tk('Combat'), shop: tk('Shop'), training: tk('Advancement'), magic: tk('Magic') };
 // Labels are sent to the server as UI keys (stored in the log), shown with t().
 const PAIRS = [
   ['REA', 'INT', tk('Defense')],

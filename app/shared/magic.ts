@@ -119,6 +119,59 @@ export function sustainedBy(magic: Pick<MagicState, 'sustained'> | null | undefi
 export const SUSTAIN_PENALTY = 2;
 
 // ---------------------------------------------------------------------------
+// Spellcasting (SR5 pp. 281-283)
+// ---------------------------------------------------------------------------
+
+/** Reckless Spellcasting: Simple Action instead of Complex, +3 Drain Value (SR5 p. 281). */
+export const RECKLESS_DV = 3;
+/** Drain Value never goes below 2 (SR5 p. 282). */
+export const MIN_DRAIN = 2;
+
+/** Highest Force a caster may choose: twice their Magic (SR5 p. 281). */
+export const maxForce = (actor: MagicActor | null | undefined): number => Math.max(0, 2 * attr(actor, 'MAG'));
+
+/**
+ * Offset of a drain formula relative to the Force: 'F-3' / 'F−3' / 'F+1' / 'F' → -3 / -3 / 1 / 0. Null when the formula
+ * is not « F ± n » (« Special », « 0 », empty): the caster gives the Drain Value.
+ */
+export function drainOffset(formula: unknown): number | null {
+  const m = String(formula ?? '').replace(/\s+/g, '').replace(/[−–]/g, '-').match(/^F([+-]\d+)?$/i);
+  return m ? Number(m[1] || 0) : null;
+}
+
+/** Drain Value of a spell at a Force (min 2, +3 when reckless); null when the formula cannot be computed. */
+export function drainValue(formula: unknown, force: number, { reckless = false }: { reckless?: boolean } = {}): number | null {
+  const off = drainOffset(formula);
+  if (off === null) return null;
+  return Math.max(MIN_DRAIN, force + off) + (reckless ? RECKLESS_DV : 0);
+}
+
+/** Drain is Physical when the hits (after the limit) exceed the caster's Magic, else Stun (SR5 p. 281). */
+export const spellDrainType = (hits: number, magic: number): 'P' | 'S' => (hits > magic ? 'P' : 'S');
+
+/** How a spell reaches its target, from its range: 'los' (Line of Sight), 'touch', 'self', or 'special'. */
+export function spellReach(range: unknown): 'los' | 'touch' | 'self' | 'special' {
+  const r = String(range ?? '').toUpperCase().replace(/\s*\(A\)\s*/, '').trim();
+  if (r === 'LOS' || r === 'LDV' || r === 'LOS/T') return 'los';
+  if (r === 'T' || r === 'C') return 'touch';
+  if (r === 'S' || r === 'P') return 'self';
+  return 'special';
+}
+/** Area spell: range noted « (A) » — a sphere of radius Force metres unless the spell says otherwise (SR5 p. 281). */
+export const isAreaSpell = (range: unknown): boolean => /\(A\)/i.test(String(range ?? ''));
+
+/** Spell category (stored English or French) → its key ('combat', 'detection'…), null when unknown. */
+export function spellCategory(category: unknown): SpellCategoryKey | null {
+  const c = String(category ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+  if (c.startsWith('combat')) return 'combat';
+  if (c.startsWith('detect')) return 'detection';
+  if (c.startsWith('health') || c.startsWith('sante')) return 'health';
+  if (c.startsWith('illusion')) return 'illusion';
+  if (c.startsWith('manipulation')) return 'manipulation';
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // Next-step hints of the cockpit (players), as the Matrix « Hints »
 // ---------------------------------------------------------------------------
 

@@ -1,7 +1,8 @@
 // « Magic » tab: cockpit of an awakened character for players, overview + cockpit of every awakened character for the GM.
 // Design and the flows still to come (cast, sustain, summon, astral, foci): docs/design/magic.md.
 import { useEffect, useState } from 'react';
-import { Tabs, Empty, Button, Badge } from '../../lib/ui.tsx';
+import { Tabs, Empty, Button, Badge, Toggle } from '../../lib/ui.tsx';
+import { send } from '../../lib/net.ts';
 import { useUI, openSheet } from '../../lib/ui-store.ts';
 import type { GameProps } from '../../lib/net.ts';
 import { t, tk, attrShort } from '../../lib/i18n.ts';
@@ -10,7 +11,8 @@ import { drainAttr, drainPool, sustainedBy, usesTradition, magicHints, SUSTAIN_P
 import { RollDialog } from '../sheet/RollDialog.tsx';
 import { RuleRef, ItemRef } from '../books/BookRef.tsx';
 import { categoryLabel, itemLabel } from '../sheet/common.tsx';
-import { isGM, magicActors, drainRollLabel, spellRollLabel, TraditionPicker } from './common.tsx';
+import { isGM, magicActors, drainRollLabel, TraditionPicker } from './common.tsx';
+import CastModal from './CastModal.tsx';
 import type { RollPreset } from '../sheet/types.ts';
 import type { Actor, GameView } from '../../../shared/types.ts';
 import './magic.css';
@@ -77,6 +79,7 @@ export function Cockpit({ game, actor }: { game: GameView; actor: Actor }) {
   const gm = isGM(game);
   const own = gm || (game.me?.characterIds || []).includes(actor.id);
   const [roll, setRoll] = useState<RollPreset | null>(null);
+  const [casting, setCasting] = useState<string | null>(null);
   const [hintsOn, setHintsOn] = useHintsToggle();
   const open = (preset: RollPreset) => setRoll({ ...preset, _k: Date.now() });
   const mag = attr(actor, 'MAG');
@@ -92,6 +95,7 @@ export function Cockpit({ game, actor }: { game: GameView; actor: Actor }) {
   const powers = actor.powers || [];
   const pp = powers.reduce((s, p) => s + (Number(p.pp) || 0), 0);
   const hints = magicHints({ actor, magic: game.magic });
+  const pending = Object.values(game.magic?.pendingDrain || {}).filter((pd) => pd.actorId === actor.id);
   return (
     <div className={'mg-cockpit' + (astral ? ' astral' : '')}>
       <div className="mg-bar">
@@ -138,6 +142,21 @@ export function Cockpit({ game, actor }: { game: GameView; actor: Actor }) {
         </div>
       </div>
       {hintsOn && own && !gm && <HintsPanel hints={hints} />}
+      {pending.length > 0 && (
+        <div className="mg-panel mg-pending">
+          <div className="mg-panel-title">{t('Drain to resist')}</div>
+          {pending.map((pd) => (
+            <div className="row" key={pd.id}>
+              <span>
+                {t('Drain {dv}', { dv: pd.dv })} <Badge color={pd.type === 'P' ? 'red' : 'amber'}>{pd.type === 'P' ? t('Physical') : t('Stun')}</Badge> <span className="muted small">{pd.source[game.me?.lang === 'en' ? 'en' : 'fr'] || pd.source.fr}</span>
+              </span>
+              <Button small variant="primary" disabled={!own} onClick={() => void send('magic/resistDrain', { id: pd.id }).catch(() => null)}>
+                {t('Resist Drain')}
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
       <div className="mg-grid">
         {(spells.length > 0 || hasSpellcasting) && (
           <div className="mg-panel mg-spells">
@@ -168,7 +187,7 @@ export function Cockpit({ game, actor }: { game: GameView; actor: Actor }) {
                       <td>{sp.duration}</td>
                       <td className="mono">{sp.drain}</td>
                       <td>
-                        <Button small variant="accent" disabled={!own || !hasSpellcasting} onClick={() => open({ skillId: 'spellcasting', label: spellRollLabel(sp.name), limit: null })} title={t('Spellcasting + Magic (limit = Force, set it yourself)')}>
+                        <Button small variant="accent" disabled={!own || !hasSpellcasting} onClick={() => setCasting(sp.id)} title={t('Choose the Force and the targets, roll, then resist the Drain')}>
                           {t('spell::Cast')}
                         </Button>
                       </td>
@@ -211,6 +230,7 @@ export function Cockpit({ game, actor }: { game: GameView; actor: Actor }) {
         )}
       </div>
       {roll && <RollDialog game={game} actor={actor} preset={roll} onClose={() => setRoll(null)} />}
+      {casting && <CastModal game={game} actor={actor} spellId={casting} onClose={() => setCasting(null)} />}
     </div>
   );
 }
@@ -305,6 +325,14 @@ function GmMagicPage({ game }: GameProps) {
     <div className="page mg-page">
       <div className="page-title">
         <h2>{t('Magic')}</h2>
+        <div className="row wrap">
+          <Toggle
+            value={game.magic?.settings?.autoDrain !== false}
+            onChange={(v) => void send('magic/settings', { autoDrain: v }).catch(() => null)}
+            label={t('Resist Drain automatically')}
+            title={t('On: Drain is rolled right after the cast. Off: the caster clicks « Resist Drain » (SR5 p. 282)')}
+          />
+        </div>
       </div>
       <Tabs tabs={tabs} value={current} onChange={setTab} className="mg-tabs" />
       {current === 'overview' && <Overview game={game} onCockpit={openCockpit} />}

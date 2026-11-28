@@ -79,7 +79,11 @@ themselves (`settings.showAstralToPlayers` lets the GM show them all). GM: every
 Built 2026-11-28: `47-magic.ts`, `state.magic`, the Magic tab, traditions on the actor, the hints panel. Facts:
 [modules/magic.md](../modules/magic.md). The sections below are still to build.
 
-## Cast flow — *#13 Cast*
+## Cast flow — *#13, done*
+
+Built 2026-11-28 (facts: [modules/magic.md](../modules/magic.md#cast-flow-magiccast)). What follows was the plan; the
+effect steps below (#14–#16) hook onto `castSpell()`.
+
 
 Cockpit « Cast » (or sheet « Cast ») → `CastModal`:
 
@@ -228,7 +232,7 @@ Filed on GitHub 2026-11-28, all « Part of #7 ». Order: #12 first; #13 → #14,
 | issue | title | depends on |
 |---|---|---|
 | #12 | Magic foundation: module, state, tab, tradition on the actor, hints panel (**done**) | — |
-| #13 | Cast flow: Force, Force as limit, reckless, drain computed and resisted | #12 |
+| #13 | Cast flow: Force, Force as limit, reckless, drain computed and resisted (**done**) | #12 |
 | #14 | Sustained spells: −2 per spell as a modifier, list, GM view | #13 |
 | #15 | Combat spells through the attack pipeline (direct, indirect, area) | #13 |
 | #16 | Non-combat spells: opposed resistance and net hits | #13 |

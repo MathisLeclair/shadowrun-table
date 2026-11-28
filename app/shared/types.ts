@@ -178,6 +178,8 @@ export interface LogEntry {
   roll?: RollRecord;
   /** Matrix entries (kind 'matrix'). */
   matrix?: MatrixLogInfo;
+  /** Magic entries (kind 'magic'). */
+  magic?: MagicLogInfo;
 }
 
 /** Result of `rollDice()` (shared/sr5.js). */
@@ -2217,6 +2219,35 @@ export interface MagicState {
   settings: MagicSettings;
   sustained: Record<string, SustainedSpell>;
   astral: Record<ActorId, AstralPresence>;
+  /** Drain left to resist (settings.autoDrain off), by id. */
+  pendingDrain: Record<string, PendingDrain>;
+}
+
+/** Drain a caster still has to resist (SR5 p. 282). */
+export interface PendingDrain {
+  id: string;
+  actorId: ActorId;
+  /** Drain Value. */
+  dv: number;
+  type: 'P' | 'S';
+  /** What caused it (spell name). */
+  source: BiName;
+  ts: Timestamp;
+}
+
+/** `entry.magic` of a magic log entry. */
+export interface MagicLogInfo {
+  event: 'cast' | 'drain';
+  actorId: ActorId;
+  spellId?: string;
+  force?: number;
+  hits?: number;
+  reckless?: boolean;
+  dv?: number;
+  drainType?: 'P' | 'S';
+  /** Drain boxes taken after resistance. */
+  damage?: number;
+  targetIds?: ActorId[];
 }
 
 /** A spell being sustained (by its caster, a bound spirit or a sustaining focus). */
