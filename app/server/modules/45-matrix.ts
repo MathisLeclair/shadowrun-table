@@ -11,13 +11,14 @@ import {
   personaDefensePool, programId, convergenceAt, hasMatrixQuality, biofeedbackDice, programSlots, programSum, availablePrograms, detectAgents, matrixMonitor,
   matrixInitiative, dumpshock, hostAttributes, defaultIcFor, icAttackPool, skillRating, loadedProgramIds,
   OS_TICK_MS, DEVICE_LINK_KINDS, DEVICE_CMD_LABELS, deviceWorks, type MatrixActionDef, type MatrixTargetKind,
-  panMaster, panDevices, panDefensePool, panDeviceRating, type PanDevice, type PanMaster,
+  panMaster, panDevices, panDefensePool, panDeviceRating, type PanDevice, type PanMaster, type PanCatalog, type PanCatalogEntry,
   SEARCH_LEVELS, searchLevel, searchMinutes, panMode,
 } from '../../shared/matrix.ts';
 import { uid, deepClone, slug } from '../../shared/util.ts';
 import { cleanConditions } from '../../shared/modifiers.ts';
 import { actorModifiers, deriveFull } from '../lib/modifiers.ts';
 import { formatSource } from '../lib/i18n.ts';
+import { findCatalogEntry } from '../lib/chummer/data.ts';
 import combatModule, { combatHooks, upsertVirtualEntry, setVirtualOut, endTurnOf, isVirtual } from './30-combat.ts';
 import { recordAction, type ActionTaker } from '../lib/combat-actions.ts';
 import { refreshFog, findAnyDoor } from './20-maps.ts';
@@ -470,6 +471,10 @@ function gearMatrixStats(catalogId: string): Loose | null {
   return gearCatalog.get(catalogId) || null;
 }
 const masterOf = (actor: Actor): PanMaster | null => panMaster(actor, gearMatrixStats);
+/** Catalog entries for the PAN rules (smart weapons' built-in accessories, gear and cyberware categories). */
+const panCatalog: PanCatalog = (list, it) => findCatalogEntry(list, { id: it.catalogId, name: it.nameEn || it.name }) as PanCatalogEntry | null;
+/** Devices of a character's PAN (shared/matrix.ts: digital cyberware, smart weapons, electronics). */
+const devicesOf = (owner: Actor): PanDevice[] => panDevices(owner, panCatalog);
 
 const MAX_SCANS = 60;
 const MAX_REVEALS = 40;
@@ -569,7 +574,7 @@ function panOptions(persona: Persona, owner: Actor): RevealOption[] {
   const m = masterOf(owner);
   if (m && !scan?.master) out.push({ id: `pan-master:${owner.id}`, group, label: { t: 'Commlink: {name}', params: { name: m.name } }, detail: { t: 'DR {dr} · DP {dp} · FW {fw}', params: { dr: m.deviceRating, dp: m.dataProcessing, fw: m.firewall } } });
   const seen = new Set((scan?.devices || []).map((d) => d.id));
-  for (const d of panDevices(owner)) {
+  for (const d of devicesOf(owner)) {
     if (!seen.has(d.id)) out.push({ id: `pan:${owner.id}:${d.id}`, group, label: biName(d), detail: { t: 'DR {n}', params: { n: d.deviceRating } } });
   }
   return out;
@@ -627,7 +632,7 @@ function applyReveal(state: TableState, actor: Actor, persona: Persona, optionId
     return true;
   }
   if (kind === 'pan') {
-    const d = panDevices(owner).find((x) => x.id === b);
+    const d = devicesOf(owner).find((x) => x.id === b);
     if (!d) return false;
     const scan = scanOf(persona, owner);
     if (!scan.devices.some((x) => x.id === d.id)) scan.devices.push(d);
@@ -928,7 +933,7 @@ function resolveTarget(ctx: ActionContext, persona: Persona, action: MatrixActio
     if (!owner || (!ctx.isGM && owner.type === 'npc' && owner.hidden)) return ctx.fail('Persona not found');
     if (owner.id === persona.actorId) ctx.fail('You cannot target yourself');
     panGate(ctx, persona, owner, action, { device: true });
-    const device = panDevices(owner).find((d) => d.id === b);
+    const device = devicesOf(owner).find((d) => d.id === b);
     if (!device) return ctx.fail('Device not found');
     if (own && !persona.scans?.[owner.id]?.devices?.some((d) => d.id === device.id)) ctx.fail('Spot this device first (Matrix Perception on its owner)');
     t.actor = owner;

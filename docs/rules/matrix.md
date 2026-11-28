@@ -47,10 +47,23 @@ Page references used by the 📖 chips: Matrix initiative SR5 231, Matrix damage
   A character without a Matrix device on the sheet defends with their best commlink / cyberdeck from the gear — by
   catalog category, or by name in generic gear (« Commlink (indice 4) ») — (catalog Device Rating / Data Processing /
   Firewall, else the item rating, else 2).
-- Slaved devices (SR5 p. 233): cyberware (bioware has no wireless) and firearms (pistols, automatics, longarms, heavy
-  weapons, exotic ranged; not bows, thrown or implant weapons), unless the GM ticked **Wireless off** on the item.
-  Device Rating (SR5 p. 234): weapons 2; cyberware by grade, standard / used 2, alpha 3, beta 4, delta 5, gamma / omega 6
-  (Chummer grades).
+- Slaved devices (SR5 p. 233): only wireless electronics, unless the GM ticked **Wireless off** on the item (sheet
+  order; `panDevices(actor, catalog)`, the server's catalog lookup by `catalogId` else by name):
+  - **cyberware** with electronics (`isDigitalWare`): not bioware, cosmetic ware, nanoware, bone lacing, dermal plating,
+    compartments or implant blades / spurs / fangs (SR5 p. 452-461). A name with « smartlink » always counts.
+  - **smart weapons** (`isSmartWeapon`, SR5 p. 433): ranged weapons with a smartgun system — an accessory with the
+    smartgun effect or named smartgun / smartlink, the weapon's own name (Ingram Smartgun X), or, for an item with no
+    accessories at all (Foundry imports), the catalog's built-in ones (Ares Predator V, Ares Alpha). Other firearms,
+    bows, thrown weapons and grenades are analog; implant weapons are covered by their implant.
+  - **electronics** in the gear (`isDigitalGear`): catalog categories Vision / Audio Devices, Sensor Housings,
+    Electronics / Commlink Accessories, Security Devices, Breaking and Entering Gear, Communications and Countermeasures,
+    RCCs, RFID Tags, Cyberterminals, PI-Tac, Reporter Gear (English or French category, the catalog's first), minus their
+    analog items (optical binoculars, restraints, mechanical locks, lockpicks, crowbar, miniwelder…) and a commlink's
+    built-in hardware as Chummer lists it (music / chip player, credstick reader, GPS, touchscreen, case: part of the
+    commlink, SR5 p. 438). Vision / audio enhancements and sensor functions are modules of a device, not icons; a
+    Smartlink enhancement (« smartlink » in the name) is kept. Commlinks / decks are the master, not slaves.
+  Device Rating (SR5 p. 234): weapons 2; electronics their Rating (max 6), else 2; cyberware by grade, standard / used 2,
+  alpha 3, beta 4, delta 5, gamma / omega 6 (Chummer grades).
 - PAN mode of an NPC (`npc.pan`, sheet « PNJ » tab, GM only; `panMode`): online by default (the PAN is visible, the
   common case); **offline** = wireless off, nothing on the Matrix — players cannot target the persona or its devices
   and nothing is offered around (only a direct connection would reach it); **running silent** (SR5 p. 235) = a

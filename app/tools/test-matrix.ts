@@ -4,9 +4,9 @@ import {
   programId, detectAgents, availablePrograms, deckStats, actionPool, matrixInitiative, matrixMonitor, ACTION_BY_ID,
   ACTIONS, PROGRAMS, IC_TYPES, hostAttributes, osLevel, dumpshock, programSlots, isPermutation, agentInitiative,
   ACTION_CATS, ACTION_TYPES, TARGET_KIND_LABELS, HOST_PRESETS, MODE_LABELS, ASDF_LABELS, nextStepHints, DEVICE_CMD_LABELS,
-  markPenalty, convergenceAt, hasMatrixQuality, personaDefensePool, biofeedbackDice, OS_MAX, panDevices, panMaster, panDefensePool, searchMinutes, isMatrixDevice, panMode,
+  markPenalty, convergenceAt, hasMatrixQuality, personaDefensePool, biofeedbackDice, OS_MAX, panDevices, panMaster, panDefensePool, searchMinutes, isMatrixDevice, panMode, isSmartWeapon, isDigitalGear, isDigitalWare,
 } from '../shared/matrix.ts';
-import type { HintHost, PersonaLike, PoolPart } from '../shared/matrix.ts';
+import type { HintHost, PersonaLike, PoolPart, PanCatalog, PanCatalogEntry } from '../shared/matrix.ts';
 import type { Host, HostDevice, HostFile, MatrixAgent, MatrixMark, MatrixState, PlayerHostView } from '../shared/types.ts';
 import { interpolate, stripContext } from '../client/i18n/format.ts';
 import type { Dictionary, TParams } from '../client/i18n/format.ts';
@@ -15,6 +15,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+/** The PAN rules' catalog lookup as the server does it (data/catalog, by id else by English / French name). */
+const catFiles: Record<string, Array<PanCatalogEntry & { id: string; nameFr?: string }>> = {};
+const panCat: PanCatalog = (list, it) => {
+  const all = (catFiles[list] ||= JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'catalog', `${list}.json`), 'utf8')));
+  return all.find((e) => e.id === it.catalogId) || all.find((e) => e.name === (it.nameEn || it.name) || e.nameFr === it.name) || null;
+};
 let failures = 0;
 let passes = 0;
 function ok(cond: unknown, msg: string) {
@@ -551,8 +557,9 @@ try {
     const npc = gm.state.actors[npcId] as any;
     const eyes = npc.augmentations.find((a: any) => a.name === 'Cybereyes');
     const gun = npc.weapons.find((w: any) => w.name === 'Ares Predator V');
-    const devs = panDevices(npc);
-    ok(devs.map((d) => `${d.kind}:${d.name}:${d.deviceRating}`).join('|') === 'cyberware:Cybereyes:3|weapon:Ares Predator V:2', `PAN: alpha cyberware DR 3 + pistol DR 2, no bioware, no wireless-off implant (${devs.map((d) => d.name).join(', ')})`);
+    ok(panDevices(npc).every((d) => d.kind !== 'weapon'), 'no catalog: a bare « Ares Predator V » (no accessories) is not known to be smart');
+    const devs = panDevices(npc, panCat);
+    ok(devs.map((d) => `${d.kind}:${d.name}:${d.deviceRating}`).join('|') === 'cyberware:Cybereyes:3|weapon:Ares Predator V:2', `PAN: alpha cyberware DR 3 + smart pistol DR 2 (built-in smartgun from the catalog), no bioware, no wireless-off implant (${devs.map((d) => d.name).join(', ')})`);
     const master = panMaster(npc);
     ok(master?.name === 'Meta Link' && master.deviceRating === 1 && master.firewall === 1, 'PAN master: the commlink from the gear');
     ok(panDefensePool(npc, master, devs[0], ['WIL', 'firewall'])!.pool === 3 + 3, 'slaved device defense: max(WIL 3, DR 3) + max(FW 3, master FW 1)');
@@ -592,7 +599,47 @@ try {
     await settle();
     ok(!pl.state.matrix.personas.pc_bricks.scans?.[npcId], 'forget a scan');
 
-    // Bestiary NPCs keep their commlink as generic gear (« Équipement » / « Commlink (indice 4) »).
+    // PAN devices: smart weapons, digital cyberware and electronics only (analog gear has no icon).
+    {
+      const add = (list: string, item: any) => gm.send('actor/addItem', { actorId: npcId, list, item });
+      await add('weapons', { name: 'Colt Government 2066', kind: 'ranged', skill: 'pistols', accuracy: 6, damage: '7P', ap: -1, mode: 'SA', ammo: '14(c)' });
+      await add('weapons', { name: 'Enfield AS-7', kind: 'ranged', skill: 'longarms', accessories: [{ name: 'Laser Sight', mount: 'Barrel', cost: 0, avail: '' }] });
+      await add('weapons', { name: 'Fichetti Security 600', kind: 'ranged', skill: 'pistols', accessories: [{ name: 'Smartgun System, External', mount: 'Top', cost: 0, avail: '', effects: { smartgun: true } }] });
+      await add('weapons', { name: 'Grenade: Flash-Bang', kind: 'ranged', skill: 'throwing_weapons' });
+      await add('augmentations', { name: 'Bone Lacing (Aluminum)', kind: 'cyberware', grade: 'standard', essence: 1 });
+      await add('augmentations', { name: 'Smartlink', kind: 'cyberware', grade: 'standard', essence: 0.2 });
+      await add('gear', { name: 'Glasses', category: 'Vision Devices', rating: 3, qty: 1 });
+      await add('gear', { name: 'Smartlink', category: 'Vision Enhancements', qty: 1 });
+      await add('gear', { name: 'Crowbar', category: 'Breaking and Entering Gear', qty: 1 });
+      await add('gear', { name: 'Autopicker', category: 'Breaking and Entering Gear', rating: 4, qty: 1 });
+      await add('gear', { name: 'Menottes (Métal)', category: 'Matériel de sécurité', qty: 1 });
+      await add('gear', { name: 'Kit de survie', category: 'Matériel de Survie', qty: 1 });
+      await add('gear', { name: 'Écouteurs', category: 'Appareils audio', rating: 2, qty: 1, wirelessOff: true });
+      await settle();
+      const list = panDevices(gm.state.actors[npcId], panCat).map((d) => `${d.kind}:${d.name}:${d.deviceRating}`).join('|');
+      ok(list === 'cyberware:Cybereyes:3|cyberware:Smartlink:2|weapon:Ares Predator V:2|weapon:Fichetti Security 600:2|gear:Glasses:3|gear:Smartlink:2|gear:Autopicker:4',
+        `PAN: smartlink ware, smart weapons, electronics; no lacing, analog firearms, grenades, crowbar, restraints, survival kit, wireless-off earbuds (${list})`);
+      ok(isSmartWeapon({ name: 'Ingram Smartgun X' }) && isSmartWeapon({ name: 'X', accessories: [{ name: 'Système de smartgun interne', effects: { smartgun: true } }] }), 'smart weapon by name or by the smartgun effect');
+      ok(!isSmartWeapon({ name: 'Ares Alpha', catalogId: '3a7a90ce-fbb5-4599-a857-b9849eb9769c', accessories: [{ name: 'Laser Sight' }] }, panCat), 'accessories listed: the catalog built-ins are not guessed');
+      ok(isSmartWeapon({ name: 'Ares Alpha', catalogId: '3a7a90ce-fbb5-4599-a857-b9849eb9769c' }, panCat), 'no accessories (Foundry import): the catalog built-in smartgun counts');
+      ok(isDigitalGear({ name: 'Lunettes', category: "Appareils optiques et d'imagerie" }) && !isDigitalGear({ name: 'Jumelles (Optiques)', category: "Appareils optiques et d'imagerie" }), 'French categories: glasses digital, optical binoculars analog');
+      ok(!isDigitalGear({ name: 'Fairlight Caliban', category: 'Commlinks' }), 'the commlink is the PAN master, not a slave');
+      ok(!isDigitalGear({ name: 'Image Link', category: 'Vision Enhancements' }) && isDigitalGear({ name: 'Smartlink', category: 'Vision Enhancements' }), 'vision enhancements are modules of the goggles, except the smartlink');
+      ok(!isDigitalGear({ name: 'Music Player', category: 'Electronics Accessories' }) && !isDigitalGear({ name: 'Shock- and Water-Resistant Case', category: 'Commlink Accessories' }) && isDigitalGear({ name: 'Trodes', category: 'Electronics Accessories' }), 'commlink built-ins are part of the commlink; trodes are a device');
+      ok(isDigitalWare({ name: 'Wired Reflexes' }) && !isDigitalWare({ name: 'Dermal Plating' }) && !isDigitalWare({ name: 'Os renforcés', catalogId: 'x' }, () => ({ name: 'Bone Lacing (Titanium)', category: 'Bodyware' })), 'analog cyberware by English name, also through the catalog');
+      ok(!isDigitalWare({ name: 'Skin Toner', category: 'Cosmetic Enhancement' }), 'cosmetic ware is analog');
+      // The server resolves the same way: the analog pistol is not a target, the smart one is.
+      const colt = gm.state.actors[npcId].weapons.find((w: any) => w.name === 'Colt Government 2066')!;
+      await expectFail(pl.send('matrix/action', { actorId: 'pc_bricks', actionId: 'hackOnTheFly', targetId: `pan:${npcId}:${colt.id}` }), /Device not found/, 'analog firearm: not on the PAN');
+      for (const list of ['weapons', 'augmentations', 'gear'] as const) {
+        for (const it of [...((gm.state.actors[npcId] as any)[list] as Array<{ id: string; name: string }>)]) {
+          if (!['Ares Predator V', 'Cybereyes', 'Muscle Toner', 'Wired Reflexes', 'Meta Link'].includes(it.name)) await gm.send('actor/removeItem', { actorId: npcId, list, itemId: it.id });
+        }
+      }
+      await settle();
+    }
+
+
     const bestiaryLike = { gear: [{ name: 'Commlink (indice 4)', category: 'Équipement', rating: 4 }, { name: 'Dongle', category: 'Commlink Accessories', rating: 6 }] };
     ok(panMaster(bestiaryLike as any)?.deviceRating === 4 && panMaster(bestiaryLike as any)?.name === 'Commlink (indice 4)', 'commlink found by its name in generic gear, accessories ignored');
     ok(isMatrixDevice({ name: 'Cyberdeck Hermes Chariot', category: 'Équipement' }) && !isMatrixDevice({ name: 'Lunettes', category: 'Équipement' }), 'isMatrixDevice by name');
