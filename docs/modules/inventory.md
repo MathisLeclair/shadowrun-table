@@ -57,6 +57,18 @@ from its loaded kind (« Plus de {ammo} à portée : choisis d’autres munition
 instead of reloading at once when the only source is another kind.
 Returns `{ loaded, ammoLoaded, max, action, swap, sourceId, clipId, returned, dropped }`; logged.
 
+### Several magazines
+A weapon with Additional Clip/Magazine accessories (`isAdditionalClip`: catalog ids `ADDITIONAL_CLIP_IDS` or the name;
+Beretta Northstar, PSG Enforcer — delivered with it) has `ammoSlotCount` = 1 + their number (max 4) magazines of `ammo`
+each: `ammoSlots: [{ loaded, ammoKind }]` + `activeSlot` (`normalizeMagazines`, run by `normalizeInventory` and by the
+shop after installing an accessory; a new magazine starts full of the default ammunition; absent with one magazine).
+The magazine in use IS `ammoLoaded` / `ammoKind` (fire and reload are unchanged); its `ammoSlots` entry is only a copy
+(`magazines(w)` reads them merged). `weapon/switchMagazine { actorId, weaponId, slot? }` (owner / GM, within reach) →
+`{ activeSlot, slots, ammoLoaded, max, ammoKind, action: 'free' }`, logged: Free Action, next magazine (or `slot`).
+Sheet: « C1/2 » badge (tooltip: every magazine) + ⇄ button beside ↻. Foundry counts both magazines as one (« 12(m) »):
+`fillItemNames` gives a catalog weapon whose capacity is the catalog's × the magazine count the catalog `ammo` and
+splits the rounds. Chummer: the parse reads every `<clip>` and `activeammoslot`; the export writes them back.
+
 ## Ready weapons and locations
 
 `weapon.equipped` (« prête » / « rangée »; unarmed always ready). Defaults (idempotent): flags already set are kept;

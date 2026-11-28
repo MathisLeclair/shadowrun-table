@@ -1086,5 +1086,16 @@
   "Online": "En ligne",
   "Running silent": "Mode silencieux",
   "pan::Offline": "Hors ligne",
-  "Online: deckers see their PAN. Running silent: a Matrix Perception must find it first (opposed by Logic + Sleaze). Offline: wireless off, nothing on the Matrix (SR5 p. 235).": "En ligne : les deckers voient son PAN. Mode silencieux : une Perception matricielle doit d’abord le trouver (opposée par Logique + Corruption). Hors ligne : sans fil coupé, rien sur la Matrice (SR5 p. 235)."
+  "Online: deckers see their PAN. Running silent: a Matrix Perception must find it first (opposed by Logic + Sleaze). Offline: wireless off, nothing on the Matrix (SR5 p. 235).": "En ligne : les deckers voient son PAN. Mode silencieux : une Perception matricielle doit d’abord le trouver (opposée par Logique + Corruption). Hors ligne : sans fil coupé, rien sur la Matrice (SR5 p. 235).",
+  "Free Action": "action gratuite",
+  "Magazine {slot}/{n}: {loaded}/{max} — {action}": "Chargeur {slot}/{n} : {loaded}/{max} — {action}",
+  "Magazine {slot}: {loaded}/{max} {ammo}": "Chargeur {slot} : {loaded}/{max} {ammo}",
+  "Magazine {slot}: {loaded}/{max} {ammo} (in use)": "Chargeur {slot} : {loaded}/{max} {ammo} (engagé)",
+  "Reloads the magazine in use ({slot}/{n}); switch magazines first to reload the other one.": "Recharge le chargeur engagé ({slot}/{n}) ; changez de chargeur d’abord pour recharger l’autre.",
+  "M{slot}/{n}": "C{slot}/{n}",
+  "Switch magazine (Free Action)": "Changer de chargeur (action gratuite)",
+  "{name} switches {weapon} to magazine {slot}/{n}: {loaded}/{max} ({ammo}) — {action}": "{name} passe {weapon} sur le chargeur {slot}/{n} : {loaded}/{max} ({ammo}) — {action}",
+  "{weapon} has only one magazine": "{weapon} n’a qu’un chargeur",
+  "Unknown magazine: {slot}": "Chargeur inconnu : {slot}",
+  "This magazine is already in use": "Ce chargeur est déjà engagé"
 }

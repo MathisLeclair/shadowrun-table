@@ -1092,11 +1092,18 @@ function placeBagContents(c: Element, actor: Actor, guids: Record<string, string
 /** Fields the app may change on an item that already exists in the file. */
 function patchItem(list: string, node: Element, it: AnyItem, was: AnyItem): void {
   const diff = (k: string) => !eq(it[k], was[k]);
-  if (list === 'weapons' && it.ammoLoaded !== undefined && was.ammoLoaded !== undefined && diff('ammoLoaded')) {
+  const clips = list === 'weapons' ? node.get('clips')?.all('clip') || [] : [];
+  const setCount = (clip: Element, n: unknown) => clip.set(clip.has('count') ? 'count' : 'ammo', String(Math.max(0, Math.round(Number(n) || 0))));
+  if (list === 'weapons' && Array.isArray(it.ammoSlots) && it.ammoSlots.length > 1 && clips.length === it.ammoSlots.length
+    && (diff('ammoSlots') || diff('activeSlot') || diff('ammoLoaded'))) {
+    // Several magazines (Additional Clip/Magazine): the active slot and every clip's rounds (the active one from ammoLoaded).
+    const active = Math.max(0, Math.min(clips.length - 1, Math.round(Number(it.activeSlot) || 0)));
+    node.set('activeammoslot', String(active + 1));
+    clips.forEach((clip, i) => setCount(clip, i === active ? it.ammoLoaded : it.ammoSlots[i]?.loaded));
+  } else if (list === 'weapons' && it.ammoLoaded !== undefined && was.ammoLoaded !== undefined && diff('ammoLoaded')) {
     // Rounds in the active clip (only when the file has clips: the parse read them from there).
-    const clips = node.get('clips')?.all('clip') || [];
     const slot = clips[Math.max(0, (Number(node.val('activeammoslot')) || 1) - 1)] || clips[0];
-    if (slot) slot.set(slot.has('count') ? 'count' : 'ammo', String(Math.max(0, Math.round(it.ammoLoaded))));
+    if (slot) setCount(slot, it.ammoLoaded);
   }
   if (list === 'armor' && diff('equipped')) node.set('equipped', B(it.equipped));
   if ((list === 'gear' || list === 'sins') && diff('rating')) node.set('rating', String(it.rating || 0));

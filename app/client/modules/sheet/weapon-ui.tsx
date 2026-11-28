@@ -9,7 +9,7 @@ import { t, tk, tn, getLang } from '../../lib/i18n.ts';
 import { Overlay, itemLabel, itemTitle, modeLabel } from './common.tsx';
 import {
   usesAmmo, isGrenade, ammoFits, clipFits, reloadPlan, isCarried, containerOf, fireOptions, AMMO_TYPE_LABELS, MODE_SHORT_FR, readyCount, ON_BODY,
-  ammoKindOf, sameAmmoKind, type AmmoInfo,
+  ammoKindOf, sameAmmoKind, magazines, type AmmoInfo,
 } from './inventory.ts';
 import type { Actor, AmmoKind, Gear, Weapon } from '../../../shared/types.ts';
 import type { SheetCtx } from './types.ts';
@@ -66,6 +66,29 @@ async function doReload(actor: Actor, w: Weapon, sourceItemId?: string | null, f
   }
 }
 
+/** Reply of 'weapon/switchMagazine'. */
+interface SwitchReply {
+  activeSlot: number;
+  slots: number;
+  ammoLoaded: number;
+  max: number;
+}
+
+/** Switch to the next magazine (Additional Clip/Magazine: Beretta Northstar…), a Free Action. */
+async function doSwitch(actor: Actor, w: Weapon): Promise<void> {
+  try {
+    const r = await send<SwitchReply>('weapon/switchMagazine', { actorId: actor.id, weaponId: w.id });
+    toast(t('Magazine {slot}/{n}: {loaded}/{max} — {action}', { slot: r.activeSlot + 1, n: r.slots, loaded: r.ammoLoaded, max: r.max, action: t('Free Action') }), 'success');
+  } catch {}
+}
+
+/** One line per magazine: « Magazine 1: 4/6 Regular Ammo (in use) ». */
+function magazineLines(w: Weapon): string[] {
+  const mags = magazines(w) || [];
+  const active = Number(w.activeSlot) || 0;
+  return mags.map((m, i) => t(i === active ? 'Magazine {slot}: {loaded}/{max} {ammo} (in use)' : 'Magazine {slot}: {loaded}/{max} {ammo}', { slot: i + 1, loaded: m.loaded, max: w.ammoMax ?? 0, ammo: ammoKindLabel(m.ammoKind) }));
+}
+
 /** Reload chooser: compatible ammunition in the inventory (with where it is), spare clip / speed loader, action type; GM « free » reload. */
 export function ReloadDialog({ actor, w, gm, onClose }: { actor: Actor; w: Weapon; gm: boolean; onClose: () => void }) {
   const sources = reloadSources(actor, w);
@@ -76,6 +99,7 @@ export function ReloadDialog({ actor, w, gm, onClose }: { actor: Actor; w: Weapo
   const go = async (id: string | null, free?: boolean) => {
     if (await doReload(actor, w, id, free)) onClose();
   };
+  const mags = magazines(w);
   const per = Number.isFinite(plan.perAction) ? tn(plan.perAction, '{n} round per action', '{n} rounds per action') : t('full reload');
   return <Overlay title={t('Reload — {weapon}', { weapon: itemLabel(w) })} onClose={onClose} width={460}>
     <div className="col gap-s">
@@ -83,6 +107,7 @@ export function ReloadDialog({ actor, w, gm, onClose }: { actor: Actor; w: Weapo
         <span className="badge badge-cyan mono">{w.ammoLoaded ?? 0}/{w.ammoMax}</span>
         {w.ammoType && (AMMO_TYPE_LABELS as Record<string, string>)[w.ammoType] ? <span className="badge">{t((AMMO_TYPE_LABELS as Record<string, string>)[w.ammoType])}</span> : null}{w.ammoKind ? <span className="muted small">{t('Loaded: {ammo}', { ammo: ammoKindLabel(w.ammoKind) })}</span> : null}
       </div>
+      {mags ? <div className="muted small">{t('Reloads the magazine in use ({slot}/{n}); switch magazines first to reload the other one.', { slot: (Number(w.activeSlot) || 0) + 1, n: mags.length })}</div> : null}
       <div className="muted small">
         {plan.swap
         ? t('Clip change ({clip}): {action}.', { clip: itemLabel(clip || loader), action: actionLabel(plan.action) })
@@ -130,9 +155,16 @@ export function AmmoCell({ s, w }: { s: SheetCtx; w: Weapon }) {
     if (src.length === 1 && !s.gm && !swaps) doReload(s.actor, w, src[0].id);
     else setOpen(true);
   };
-  const title = [t('Clip: {ammo}', { ammo: w.ammo }), w.ammoKind ? t('Loaded: {ammo}', { ammo: ammoKindLabel(w.ammoKind) }) : ''].filter(Boolean).join('\n');
+  const mags = magazines(w);
+  const title = [t('Clip: {ammo}', { ammo: w.ammo }), ...(mags ? magazineLines(w) : [w.ammoKind ? t('Loaded: {ammo}', { ammo: ammoKindLabel(w.ammoKind) }) : ''])].filter(Boolean).join('\n');
+  const swap = (e: MouseEvent) => {
+    e.stopPropagation();
+    doSwitch(s.actor, w);
+  };
   return <span className="sh-ammo">
     <span className={'mono' + (left === 0 ? ' red' : left <= cap / 4 ? ' amber' : '')} title={title}>{left}/{cap}</span>
+    {mags ? <span className="badge mono" title={title}>{t('M{slot}/{n}', { slot: (Number(w.activeSlot) || 0) + 1, n: mags.length })}</span> : null}
+    {s.own && mags ? <IconButton icon="⇄" title={t('Switch magazine (Free Action)')} onClick={swap} /> : null}
     {s.own && <IconButton icon="↻" title={t('Reload')} disabled={left >= cap && !s.gm} onClick={reload} />}{open && <ReloadDialog actor={s.actor} w={w} gm={s.gm} onClose={() => setOpen(false)} />}
   </span>;
 }

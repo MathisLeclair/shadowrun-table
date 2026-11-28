@@ -202,6 +202,11 @@ try {
     await settle();
     const entry = gm.state.combat.entries.find((e) => e.actorId === 'pc_anthony')!;
     assert.ok(entry.adjust! <= -10, 'initiative paid');
+    // Action counter: the melee special action is one Complex attack action, its initiative cost an interrupt line.
+    const complex = (entry.spent || []).filter((a) => a.type === 'complex');
+    assert.equal(complex.length, 1, 'one Complex Action counted');
+    assert.ok(complex[0].attack && complex[0].auto, 'counted as an automatic attack action');
+    assert.ok((entry.spent || []).some((a) => a.type === 'interrupt' && a.cost === 10), 'initiative cost listed');
     await gm.send('combat/end', {});
   });
 

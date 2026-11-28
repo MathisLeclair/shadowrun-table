@@ -18,11 +18,12 @@ import { removeBonus, weaponFromStats, wareCatalogItem, detachAugmentation, bake
 import { errorBody } from '../lib/i18n.ts';
 import { actorModifiers, deriveFull } from '../lib/modifiers.ts';
 import { fillActorRefs } from '../lib/bookrefs.ts';
+import { recordAction } from '../lib/combat-actions.ts';
 import { appCatalog, norm as catNorm } from '../lib/chummer/data.ts';
 import { adoptSeedContainers } from '../lib/foundry/containers.ts';
 import {
   ON_BODY, CONTAINER_KINDS, LOCATED_LISTS, isCarried, containerOf, guessContainerKind, usesAmmo, isGrenade, fireOptions,
-  ammoFits, clipFits, reloadPlan, ammoKindOf, sameAmmoKind, parseAmmo,
+  ammoFits, clipFits, reloadPlan, ammoKindOf, sameAmmoKind, parseAmmo, magazines, nextSlot, switchMagazine, ammoSlotCount,
 } from '../../client/modules/sheet/inventory.ts';
 import {
   poolModifiers, limitFor, rollContext, cleanConditions, derivedWithModifiers, weaponAccuracy, checkedTest, woundsApply, importedItem,
@@ -351,12 +352,15 @@ function sanitizeItem(list: string, item: unknown, ctx?: ActionContext): Loose {
     for (const k of ['ammoLoaded', 'ammoLeft', 'qty']) if (out[k] !== undefined && out[k] !== null) out[k] = clampInt(out[k], 0, 999);
     delete out.ammoMax; // derived from `ammo` by normalizeActor
     delete out.ammoType;
-    if (out.ammoKind !== undefined) {
-      const k = out.ammoKind;
-      out.ammoKind = isObj(k) && String(k.name || '').trim()
-        ? { name: str(k.name, 120).trim(), ...(k.nameFr ? { nameFr: str(k.nameFr, 120) } : {}), ...(k.catalogId ? { catalogId: str(k.catalogId, 80) } : {}) }
-        : null;
+    const cleanKind = (k: unknown) => (isObj(k) && String(k.name || '').trim()
+      ? { name: str(k.name, 120).trim(), ...(k.nameFr ? { nameFr: str(k.nameFr, 120) } : {}), ...(k.catalogId ? { catalogId: str(k.catalogId, 80) } : {}) }
+      : null);
+    if (out.ammoKind !== undefined) out.ammoKind = cleanKind(out.ammoKind);
+    // Magazines of an Additional Clip weapon (GM edit / import): count and capacity re-derived by normalizeInventory.
+    if (out.ammoSlots !== undefined) {
+      out.ammoSlots = Array.isArray(out.ammoSlots) ? out.ammoSlots.slice(0, 4).filter(isObj).map((m: Loose) => ({ loaded: clampInt(m.loaded, 0, 999), ammoKind: cleanKind(m.ammoKind) })) : null;
     }
+    if (out.activeSlot !== undefined && out.activeSlot !== null) out.activeSlot = clampInt(out.activeSlot, 0, 3);
   }
   if (out.choice !== undefined && out.choice !== null) out.choice = str(out.choice, 120); // Chummer <extra> / GM pick of a « select… » effect
   if (out.itemRating !== undefined && out.itemRating !== null) out.itemRating = clampInt(out.itemRating, 0, 99); // armor: Chummer item rating (≠ armor value)
@@ -502,6 +506,17 @@ function fillItemNames(a: Actor): boolean {
         const cat = parseAmmo(e.stats.ammo);
         if (mine.max && !mine.type && cat.type && cat.max === mine.max) {
           it.ammo = String(e.stats.ammo).slice(0, 40);
+          ammoChanged = true;
+        }
+        // Several magazines counted as one (Foundry « 12(m) » for the Beretta Northstar's 6(m) × 2): one magazine's capacity,
+        // the rounds split between the magazines (sheet/inventory.ts normalizeMagazines).
+        const slots = ammoSlotCount({ ...it, ammoMax: mine.max || 1 } as Loose);
+        if (slots > 1 && cat.max && mine.max === cat.max * slots && (!mine.type || mine.type === cat.type)) {
+          const total = Math.max(0, Math.min(mine.max, Math.round(Number(it.ammoLoaded ?? mine.max) || 0)));
+          it.ammo = String(e.stats.ammo).slice(0, 40);
+          it.ammoLoaded = Math.min(cat.max, total);
+          it.ammoSlots = Array.from({ length: slots }, (_, i) => ({ loaded: Math.max(0, Math.min(cat.max, total - cat.max * i)), ...(it.ammoKind !== undefined ? { ammoKind: it.ammoKind } : {}) }));
+          it.activeSlot = 0;
           ammoChanged = true;
         }
       }
@@ -705,6 +720,7 @@ function reloadWeapon(ctx: ActionContext, a: Actor, w: Loose, { sourceItemId, fr
   const params = { name: a.name, weapon: biName(w), n, loaded: w.ammoLoaded, max, ammo: biAmmo(newKind), action: { t: plan.action === 'simple' ? tk('Simple Action') : tk('Complex Action') } };
   const key = plan.swap ? tk('{name} changes the clip of {weapon}: {loaded}/{max} ({ammo}) — {action}') : tk('{name} reloads {weapon}: +{n} → {loaded}/{max} ({ammo}) — {action}');
   ctx.log({ kind: 'combat', userId: ctx.user.id, author: a.name, i18n: { key, params }, gmOnly: a.type === 'npc' ? true : undefined });
+  recordAction(ctx, { actorId: a.id }, { type: plan.action === 'simple' ? 'simple' : 'complex', label: { t: tk('Reload — {weapon}'), params: { weapon: biName(w) } }, auto: true });
   return { loaded: n, ammoLoaded: w.ammoLoaded, max, action: plan.action, swap: plan.swap, sourceId: source?.id || null, clipId: plan.swap ? (clip || loader)?.id || null : null, returned, dropped };
 }
 
@@ -1046,6 +1062,7 @@ type ContainerPayload = { actorId: ActorId; containerId?: string; patch?: unknow
 type MovePayload = { actorId: ActorId; list: string; itemId?: string; location?: unknown };
 type FirePayload = { actorId: ActorId; weaponId?: unknown; mode?: unknown; override?: unknown };
 type ReloadPayload = { actorId: ActorId; weaponId?: unknown; sourceItemId?: unknown; free?: unknown };
+type MagazinePayload = { actorId: ActorId; weaponId?: unknown; slot?: unknown };
 type DamagePayload = { actorId: ActorId; amount?: unknown; type?: string };
 type AdjustPayload = { actorId?: ActorId; actorIds?: unknown; karma?: unknown; nuyen?: unknown; reason?: unknown };
 type EdgeSpendPayload = { actorId: ActorId; reason?: unknown };
@@ -1478,6 +1495,31 @@ const mod: ServerModule<ExpressApp> = {
         const w = (a.weapons || []).find((x) => x && x.id === String(weaponId));
         if (!w) ctx.fail('Weapon not found');
         return reloadWeapon(ctx, a, w, { sourceItemId, free });
+      },
+    },
+
+    // { actorId, weaponId, slot? (0-based; default: the next one) } → { activeSlot, slots, ammoLoaded, max, ammoKind, action: 'free' }
+    // Weapons with an Additional Clip/Magazine (Beretta Northstar: two 6-round magazines, SL p. 39 / 45): toggle the magazine fed to
+    // the weapon, a Free Action (table ruling). Fire and reload use the active magazine.
+    'weapon/switchMagazine': {
+      role: 'any',
+      handler(ctx: ActionContext, { actorId, weaponId, slot }: MagazinePayload) {
+        const a = getActor(ctx, actorId);
+        requireOwn(ctx, actorId);
+        normalizeActor(a, uid); // magazines of an accessory installed since the last pass
+        const w: Loose | undefined = (a.weapons || []).find((x) => x && x.id === String(weaponId));
+        if (!w) ctx.fail('Weapon not found');
+        requireReach(ctx, a, w);
+        if (!magazines(w)) ctx.fail('{weapon} has only one magazine', { weapon: biName(w) });
+        const want = slot === undefined || slot === null || slot === '' ? null : Number(slot);
+        if (want !== null && nextSlot(w, want) !== want) ctx.fail('Unknown magazine: {slot}', { slot: String(slot) });
+        const to = switchMagazine(w, want);
+        if (to < 0) ctx.fail('This magazine is already in use');
+        const n = (w.ammoSlots as unknown[]).length;
+        const max = Number(w.ammoMax) || 0;
+        const params = { name: a.name, weapon: biName(w), slot: to + 1, n, loaded: w.ammoLoaded, max, ammo: biAmmo(w.ammoKind || null), action: { t: tk('Free Action') } };
+        ctx.log({ kind: 'combat', userId: ctx.user.id, author: a.name, i18n: { key: tk('{name} switches {weapon} to magazine {slot}/{n}: {loaded}/{max} ({ammo}) — {action}'), params }, gmOnly: a.type === 'npc' ? true : undefined });
+        return { activeSlot: to, slots: n, ammoLoaded: w.ammoLoaded, max, ammoKind: w.ammoKind || null, action: 'free' };
       },
     },
 

@@ -12,6 +12,20 @@ header cites range SR5 p. 185, scatter p. 182, blast p. 435, defense modifiers p
 - A PC rolling `cold` / `hot` initiative with a Matrix persona uses `matrixInitiative()` of shared/matrix.ts (deck as
   configured + modifiers). IC: Host Rating × 2 + 4D6; agents: Data Processing + Rating + 4D6.
 
+## Action Phase (SR5 p. 163-167)
+
+- Each Initiative Pass, a participant's Action Phase allows **2 Simple Actions or 1 Complex Action**, plus **1 Free
+  Action** at any point of the pass (p. 163); only **one attack action** per Action Phase (p. 164). Interrupt actions
+  cost initiative instead and do not use the Action Phase (p. 167).
+- Common actions and their type: `PHASE_ACTIONS` in shared/combat.ts (Combat Actions, p. 163-167). Budget:
+  `phaseUsage()` / `overPhase()` / `phaseLeft()` (Simple = 1 slot, Complex = 2, of 2).
+- Costs counted by the app: a weapon attack takes its fire option's action (SS/SA/BF/FA 6 Simple; SA burst/LB/FA 10/
+  suppressive Complex, p. 165-167), a melee attack is Complex, a thrown weapon Simple; an R&G special action keeps its
+  own type. Reloading: the reload plan's action (Simple for a clip, Complex for belt/drum/internal magazine, p. 163).
+  Matrix actions: their type from the Matrix Actions table (p. 164); Load / Unload Program and Switch Two Matrix
+  Attributes are Free Actions.
+- Over-budget actions are never refused (the GM may allow more, p. 164 for Free Actions): they are kept and flagged.
+
 ## Movement (SR5 p. 161)
 
 Run rate = AGI × 4 m per Combat Turn, enforced for players' tokens on the map ([maps](../modules/maps.md#segment-walls-and-image-backgrounds)).
@@ -31,6 +45,9 @@ Stun overflow rolls into Physical; Physical overflow into `overflow`. An `actor.
   (simplification: SR5 counts remove + insert clip as a Simple Action each; drum / belt: Complex); without one (« Fill
   Clip / Belt / Drum ») = AGI rounds per Complex Action; internal magazine / cylinder AGI rounds, break action 2,
   muzzle loader 1 per Complex Action; cylinder + speed loader: Complex, full.
+- Several magazines (Additional Clip/Magazine, SL p. 45; Beretta Northstar « 6(m) × 2 », SL p. 39): one magazine per
+  accessory on top of the weapon's own (as Chummer's ammo slots), each with its own rounds and ammunition. Switching the
+  magazine fed to the weapon is a Free Action (table ruling); firing and reloading use the magazine in use.
 
 ## Range and environment
 

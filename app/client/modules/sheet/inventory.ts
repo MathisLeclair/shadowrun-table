@@ -3,7 +3,7 @@
 // equipped weapons, containers (« Sur soi », bags, vehicles, safehouses) and item locations. See ARCHITECTURE.md « Inventaire ».
 // Labels are English UI keys here; the UI renders them with t().
 
-import type { AmmoKind, Container, ContainerKind, Weapon } from '../../../shared/types.ts';
+import type { AmmoKind, AmmoSlot, Container, ContainerKind, Weapon } from '../../../shared/types.ts';
 
 /** A weapon as these rules read it: stored weapons, launcher profiles, catalog-built stand-ins (every field optional). */
 export type WeaponLike = Partial<Weapon>;
@@ -347,6 +347,103 @@ export function reloadPlan(w: WeaponLike | null | undefined, { agi = 3, clip = f
 }
 
 // ---------------------------------------------------------------------------
+// Several magazines (Additional Clip/Magazine, SL p. 45)
+// ---------------------------------------------------------------------------
+/** Catalog ids of the « Additional Clip/Magazine » accessories (data/catalog/accessories.json: rifles / shotguns, pistols). */
+export const ADDITIONAL_CLIP_IDS = new Set(['d2a1cc9b-72e3-49df-957c-8ed6fb47a813', '20d18222-448c-47f8-bb4e-be307a0cd995']);
+const ADDITIONAL_CLIP_NAME = /^(additional (clip|magazine)|chargeur supplementaire)\b/;
+
+/** Is this weapon accessory an Additional Clip/Magazine (a second magazine on the weapon, Chummer <ammoslots>)? */
+export function isAdditionalClip(acc: unknown): boolean {
+  if (!isObj(acc)) return false;
+  if (acc.catalogId && ADDITIONAL_CLIP_IDS.has(String(acc.catalogId))) return true;
+  return [acc.name, acc.nameEn, acc.nameFr].filter(Boolean).some((n) => ADDITIONAL_CLIP_NAME.test(norm(n)));
+}
+
+/**
+ * Magazines of a weapon: 1 + its Additional Clip/Magazine accessories (Beretta Northstar « 6(m) × 2 », SL p. 39; Chummer adds one
+ * ammo slot per accessory the same way). Only weapons with tracked ammunition.
+ */
+export function ammoSlotCount(w: WeaponLike | null | undefined): number {
+  if (!w || !usesAmmo(w)) return 1;
+  const extra = (Array.isArray(w.accessories) ? w.accessories : []).filter(isAdditionalClip).length;
+  return Math.min(4, 1 + extra);
+}
+
+/** The magazines of a weapon with the active one read from ammoLoaded / ammoKind (null: one magazine). */
+export function magazines(w: WeaponLike | null | undefined): AmmoSlot[] | null {
+  if (!w || !Array.isArray(w.ammoSlots) || w.ammoSlots.length < 2) return null;
+  const active = activeSlotOf(w);
+  return w.ammoSlots.map((m, i) => (i === active ? { loaded: num(w.ammoLoaded), ammoKind: w.ammoKind ?? null } : { loaded: num(m?.loaded), ammoKind: m?.ammoKind ?? null }));
+}
+const activeSlotOf = (w: WeaponLike): number => {
+  const n = Array.isArray(w.ammoSlots) ? w.ammoSlots.length : 1;
+  const i = Math.round(num(w.activeSlot));
+  return i >= 0 && i < n ? i : 0;
+};
+
+/** The other magazine a switch selects: the next one (wraps around), or `slot` when given. -1 when the weapon has one magazine. */
+export function nextSlot(w: WeaponLike | null | undefined, slot?: number | null): number {
+  const mags = magazines(w);
+  if (!mags) return -1;
+  if (slot !== undefined && slot !== null && Number.isInteger(slot) && slot >= 0 && slot < mags.length) return slot;
+  return (activeSlotOf(w!) + 1) % mags.length;
+}
+
+/**
+ * Switch to another magazine (in place): the active one's rounds / ammunition are stored in its slot, the chosen one's become
+ * ammoLoaded / ammoKind. Toggling magazines is a Free Action (table ruling, like the smartgun's clip commands SR5 p. 164).
+ * Returns the new active index, or -1 when nothing changed.
+ */
+export function switchMagazine(w: RawData, slot?: number | null): number {
+  const mags = magazines(w);
+  const to = nextSlot(w, slot);
+  if (!mags || to < 0 || to === activeSlotOf(w)) return -1;
+  w.ammoSlots = mags;
+  w.activeSlot = to;
+  w.ammoLoaded = mags[to].loaded;
+  w.ammoKind = mags[to].ammoKind;
+  return to;
+}
+
+/**
+ * ammoSlots / activeSlot of a weapon fixed up (normalizeInventory; the shop after installing an accessory): count from the
+ * accessories, rounds within the capacity (`max`, default ammoMax).
+ */
+export function normalizeMagazines(w: RawData, max: number = num(w?.ammoMax)): void {
+  if (!isObj(w)) return;
+  const n = max > 0 ? ammoSlotCount(w) : 1;
+  if (n < 2) {
+    delete w.ammoSlots;
+    delete w.activeSlot;
+    return;
+  }
+  const old: RawData[] = Array.isArray(w.ammoSlots) ? w.ammoSlots : [];
+  let active = Math.round(num(w.activeSlot));
+  if (!(active >= 0 && active < old.length)) active = 0;
+  const kindOf = (k: unknown): AmmoKind | null => (isObj(k) && String(k.name || '').trim() ? ammoKindOf(k) : null);
+  const slots: AmmoSlot[] = [];
+  for (let i = 0; i < Math.max(n, old.length); i++) {
+    const m = isObj(old[i]) ? old[i] : null;
+    // A magazine the weapon just got (accessory added, old save): full of the default ammunition, like a new weapon.
+    slots.push(m
+      ? { loaded: Math.max(0, Math.min(max, Math.round(num(m.loaded, max)))), ammoKind: m.ammoKind === undefined ? defaultAmmoKind(w) : kindOf(m.ammoKind) }
+      : { loaded: max, ammoKind: defaultAmmoKind(w) });
+  }
+  slots[active] = { loaded: w.ammoLoaded, ammoKind: w.ammoKind ?? null };
+  if (slots.length > n) {
+    // Fewer magazines (an accessory removed): the active one stays loaded, the last ones go.
+    if (active >= n) {
+      slots[n - 1] = slots[active];
+      active = n - 1;
+    }
+    slots.length = n;
+  }
+  w.ammoSlots = slots;
+  w.activeSlot = active;
+}
+
+// ---------------------------------------------------------------------------
 // Containers & locations
 // ---------------------------------------------------------------------------
 /** Item lists that live somewhere (« Sur soi » or a container). */
@@ -464,10 +561,13 @@ export function normalizeInventory(a: RawData, makeId: MakeId): RawData {
       if (w.ammoLoaded === undefined || w.ammoLoaded === null || !Number.isFinite(Number(w.ammoLoaded))) w.ammoLoaded = w.ammoLeft ?? p.max;
       w.ammoLoaded = Math.max(0, Math.min(p.max, Math.round(num(w.ammoLoaded, p.max))));
       if (w.ammoKind === undefined) w.ammoKind = defaultAmmoKind(w);
+      normalizeMagazines(w, p.max);
     } else {
       delete w.ammoMax;
       delete w.ammoType;
       delete w.ammoLoaded;
+      delete w.ammoSlots;
+      delete w.activeSlot;
     }
     delete w.ammoLeft;
     if (w.qty !== undefined) w.qty = Math.max(0, Math.round(num(w.qty, 1)));

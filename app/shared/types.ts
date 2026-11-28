@@ -513,6 +513,14 @@ export interface AmmoKind {
   catalogId?: string;
 }
 
+/** One magazine of a weapon with several (Additional Clip/Magazine, SL p. 45; Chummer « ammo slots »). */
+export interface AmmoSlot {
+  /** Rounds in this magazine (0..ammoMax). */
+  loaded: number;
+  /** Ammunition loaded in this magazine. */
+  ammoKind: AmmoKind | null;
+}
+
 export interface Weapon extends ItemBase {
   /** Wireless switched off (GM): a firearm left out of its owner's PAN (SR5 p. 233). */
   wirelessOff?: boolean;
@@ -547,6 +555,14 @@ export interface Weapon extends ItemBase {
   /** Legacy name of ammoLoaded (migrated). */
   ammoLeft?: number;
   ammoKind?: AmmoKind | null;
+  /**
+   * Weapons with an Additional Clip/Magazine (Beretta Northstar, PSG Enforcer…): one entry per magazine, derived count
+   * (1 + Additional Clip accessories, inventory.ts ammoSlotCount). The ACTIVE magazine lives in ammoLoaded / ammoKind (what fire
+   * and reload use); its entry here is only a copy refreshed by normalizeInventory and switchMagazine. Absent for one magazine.
+   */
+  ammoSlots?: AmmoSlot[];
+  /** Index (0-based) of the active magazine in ammoSlots. */
+  activeSlot?: number;
   /** Grenades / throwing weapons: how many. */
   qty?: number;
   /** Implant weapon of that augmentation (removed with it, never sold separately). */
@@ -1156,6 +1172,25 @@ export interface Template
 
 export type CombatEntryKind = 'pc' | 'npc' | 'ic' | 'agent';
 
+/** Action categories (SR5 p. 163): an Action Phase allows 1 Free + 2 Simple or 1 Complex; Interrupts cost initiative. */
+export type PhaseActionType = 'free' | 'simple' | 'complex' | 'interrupt';
+
+/** An action taken in the current Initiative Pass (the action counter of the tracker, see shared/combat.ts). */
+export interface SpentAction {
+  id: string;
+  type: PhaseActionType;
+  /** Translatable label ({ t, params }) or a text typed by the user. */
+  label: string | I18nMessage;
+  /** Attack action: only one per Action Phase (SR5 p. 164). */
+  attack?: boolean;
+  /** Recorded by the app (attack roll, reload, Matrix action), not added by hand. */
+  auto?: boolean;
+  /** Interrupt actions: initiative paid. */
+  cost?: number;
+  /** It went over what the Action Phase allows (kept, shown as a warning). */
+  over?: boolean;
+}
+
 /** One line of the initiative tracker. Players lose the roll details of entries they do not own. */
 export interface CombatEntry {
   id: string;
@@ -1178,6 +1213,8 @@ export interface CombatEntry {
   wound?: number;
   /** Interrupt actions spent (dodge, full defense…). */
   adjust?: number;
+  /** Actions taken in the current Initiative Pass (emptied at every pass and Combat Turn). */
+  spent?: SpentAction[];
   acted: boolean;
   delayed: boolean;
   /** GM only until revealed. */
