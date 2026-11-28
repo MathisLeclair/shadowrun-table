@@ -8,11 +8,12 @@ import { deriveFull as derive, actorModifiers } from '../lib/modifiers.ts';
 import { icInitiative, agentInitiative, matrixInitiative } from '../../shared/matrix.ts';
 import { fillActorRefs } from '../lib/bookrefs.ts';
 import { uid, clamp, deepClone } from '../../shared/util.ts';
-import { pruneExpired } from '../../shared/combat.ts';
+import { pruneExpired, PHASE_ACTION_BY_ID, PHASE_ACTION_TYPES, phaseUsage, overPhase } from '../../shared/combat.ts';
+import { recordAction } from '../lib/combat-actions.ts';
 import { thrownGearToWeapons } from './10-characters.ts';
 import type {
   ActionContext, Actor, ActorId, CombatEntry, CombatState, Disposition, GameMap, GameView, I18nMessage, I18nParams, I18nParamValue,
-  InitMode, InitOptions, MapId, Point, ServerModule, SessionUser, TableState, Template, Token, UserId,
+  InitMode, InitOptions, MapId, PhaseActionType, Point, ServerModule, SessionUser, SpentAction, TableState, Template, Token, UserId,
 } from '../../shared/types.ts';
 
 /** Templates and their list items come from the GM UI, imports and seeds: unknown shape, sanitized field by field. */
@@ -426,6 +427,7 @@ export function spendInitiative(ctx: ActionContext, actorId: ActorId, cost: unkn
   syncActors(ctx.state, c);
   e.score -= n;
   e.adjust = (e.adjust || 0) - n;
+  recordAction(ctx, { entryId: e.id }, { type: 'interrupt', label: { t: label }, cost: n, auto: true });
   logCombat(ctx, tk('{name}: {label} ({delta} initiative → {score})'), { name: e.name, label: { t: label }, delta: `-${n}`, score: e.score }, { gmOnly: !!e.hidden });
   sortEntries(ctx.state, c);
   return e.score;
@@ -534,6 +536,7 @@ function makeEntry(state: TableState, actor: Actor, token: Token | null): Combat
     score: 0,
     wound: 0,
     adjust: 0,
+    spent: [],
     acted: false,
     delayed: false,
     hidden: !!(token ? token.hidden : !pc && actor.hidden),
@@ -606,6 +609,7 @@ function newCombatTurn(ctx: ActionContext, c: CombatState): void {
     e.seized = false;
     e.blitz = false;
     e.adjust = 0;
+    e.spent = [];
     if (e.kind === 'pc' || isPC(ctx.state, e)) {
       e.toRoll = true;
       e.score = 0;
@@ -645,6 +649,7 @@ function advance(ctx: ActionContext, c: CombatState, { markActed = true }: { mar
         if (!e.toRoll) e.score -= 10;
         e.acted = false;
         e.delayed = false;
+        e.spent = []; // a new Action Phase: 1 Free + 2 Simple or 1 Complex again
       }
       logCombat(ctx, tk('Initiative pass {n}'), { n: c.pass });
       next = firstActable(ctx.state, c);
@@ -690,7 +695,7 @@ export function upsertVirtualEntry(ctx: ActionContext, spec: VirtualEntrySpec): 
       ...(spec.nameI18n ? { nameI18n: spec.nameI18n } : {}),
       ...(spec.kind === 'ic' ? { hostId: spec.hostId, icId: spec.icId } : { ownerId: spec.ownerId }),
       disposition: spec.disposition || (spec.kind === 'ic' ? 'hostile' : 'ally'),
-      base: 0, dice: 0, rolls: [], total: 0, score: 0, wound: 0, adjust: 0, acted: false, delayed: false,
+      base: 0, dice: 0, rolls: [], total: 0, score: 0, wound: 0, adjust: 0, spent: [], acted: false, delayed: false,
       hidden: false, out: false, down: false, toRoll: true, seized: false, blitz: false, mode: 'physical',
     };
     c.entries.push(e);
@@ -727,6 +732,23 @@ export function endTurnOf(ctx: ActionContext, entryId: unknown): boolean {
 }
 
 // ---------------------------------------------------------------------------
+// Action counter (SR5 p. 163; recording: server/lib/combat-actions.ts)
+// ---------------------------------------------------------------------------
+const SPEND_TYPES: readonly unknown[] = ['free', 'simple', 'complex'];
+/** Category in a log sentence (« Take aim (Simple Action) »). */
+const TYPE_LOG_LABELS: Record<PhaseActionType, string> = { free: tk('Free Action'), simple: tk('Simple Action'), complex: tk('Complex Action'), interrupt: tk('Interrupt Action') };
+
+/** Recompute the over-budget flags after an action was taken back (replays the list in order). */
+function reflagSpent(list: SpentAction[]): void {
+  const done: SpentAction[] = [];
+  for (const a of list) {
+    if (a.type !== 'interrupt' && overPhase(phaseUsage(done), a.type, !!a.attack)) a.over = true;
+    else delete a.over;
+    done.push(a);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Module
 // ---------------------------------------------------------------------------
 // Action payloads (players' fields are checked in the handlers).
@@ -757,6 +779,8 @@ type AdjustPayload = { entryId?: string; delta?: unknown; label?: unknown };
 type SetModePayload = { entryId?: string; mode?: InitMode };
 type RevealPayload = { entryId?: string; token?: boolean };
 type SetOutPayload = { entryId?: string; out?: boolean };
+type SpendPayload = { entryId?: string; actionId?: unknown; type?: unknown; label?: unknown };
+type UnspendPayload = { entryId?: string; actionId?: unknown };
 
 const mod: ServerModule = {
   name: 'combat',
@@ -1059,6 +1083,44 @@ const mod: ServerModule = {
         return { rolled: rolled.length };
       },
     },
+    // Owner or GM: count an action of this pass. { entryId, actionId } (PHASE_ACTIONS) or { entryId, type: free|simple|complex,
+    // label? }. Never refused for the budget: an action over it is kept and flagged (the counter is an indication).
+    'combat/spend': {
+      role: 'any',
+      handler(ctx: ActionContext, { entryId, actionId, type, label }: SpendPayload = {}) {
+        const c = combatOf(ctx);
+        const e = getEntry(ctx, c, entryId);
+        requireOwner(ctx, e);
+        if (e.toRoll) ctx.fail('Roll your initiative first');
+        if (e.out) ctx.fail('This participant is out of the fight');
+        const def = actionId ? PHASE_ACTION_BY_ID[str(actionId, 40)] : null;
+        if (actionId && !def) ctx.fail('Unknown action');
+        const kind = (def ? def.type : type) as PhaseActionType;
+        if (!def && !SPEND_TYPES.includes(kind)) ctx.fail('Unknown action type');
+        const text = str(label, 60).trim();
+        const res = recordAction(ctx, { entryId: e.id }, { type: kind, label: def ? { t: def.name } : text || { t: PHASE_ACTION_TYPES[kind] }, attack: !!def?.attack });
+        if (!res) ctx.fail('Roll your initiative first');
+        const params = { name: e.name, action: res.action.label, type: { t: TYPE_LOG_LABELS[kind] } };
+        if (res.reason) logCombat(ctx, tk('{name}: {action} ({type}) — {reason}'), { ...params, reason: { t: res.reason } }, { gmOnly: !!e.hidden });
+        else logCombat(ctx, tk('{name}: {action} ({type})'), params, { gmOnly: !!e.hidden });
+        return { spent: e.spent, over: !!res.reason };
+      },
+    },
+    // Owner or GM: take back a counted action (a misclick, an action finally not taken). { entryId, actionId }
+    'combat/unspend': {
+      role: 'any',
+      handler(ctx: ActionContext, { entryId, actionId }: UnspendPayload = {}) {
+        const c = combatOf(ctx);
+        const e = getEntry(ctx, c, entryId);
+        requireOwner(ctx, e);
+        const list = e.spent || [];
+        const i = list.findIndex((a) => a.id === actionId);
+        if (i < 0) ctx.fail('Unknown action');
+        list.splice(i, 1);
+        reflagSpent(list);
+        return { spent: list };
+      },
+    },
     // GM. { entryId, score }
     'combat/setScore': {
       handler(ctx: ActionContext, { entryId, score }: SetScorePayload = {}) {
@@ -1094,6 +1156,7 @@ const mod: ServerModule = {
         e.score += d;
         e.adjust = (e.adjust || 0) + d;
         const what = str(label, 40).trim();
+        if (d < 0) recordAction(ctx, { entryId: e.id }, { type: 'interrupt', label: what ? (ADJUST_LABELS.has(what) ? { t: what } : what) : { t: tk('Initiative cost') }, cost: -d });
         const ap = { name: e.name, delta: `${d > 0 ? '+' : ''}${d}`, score: e.score };
         if (what) logCombat(ctx, tk('{name}: {label} ({delta} initiative → {score})'), { ...ap, label: ADJUST_LABELS.has(what) ? { t: what } : what }, { gmOnly: !!e.hidden });
         else logCombat(ctx, tk('{name}: ({delta} initiative → {score})'), ap, { gmOnly: !!e.hidden });

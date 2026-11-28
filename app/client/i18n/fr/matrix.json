@@ -762,5 +762,8 @@
   "Slaved devices ({n})": "Appareils asservis ({n})",
   "This map has no door, light or zone to link.": "Cette carte n’a ni porte, ni lumière, ni zone à lier.",
   "already in « {host} »": "déjà dans « {host} »",
-  "{what} is no longer on the map": "{what} n’est plus sur la carte"
+  "{what} is no longer on the map": "{what} n’est plus sur la carte",
+  "Switch two Matrix attributes": "Intervertir deux attributs matriciels",
+  "Load program: {name}": "Charger le programme : {name}",
+  "Unload program: {name}": "Décharger le programme : {name}"
 }

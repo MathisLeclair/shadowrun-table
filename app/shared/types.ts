@@ -1154,6 +1154,25 @@ export interface Template
 
 export type CombatEntryKind = 'pc' | 'npc' | 'ic' | 'agent';
 
+/** Action categories (SR5 p. 163): an Action Phase allows 1 Free + 2 Simple or 1 Complex; Interrupts cost initiative. */
+export type PhaseActionType = 'free' | 'simple' | 'complex' | 'interrupt';
+
+/** An action taken in the current Initiative Pass (the action counter of the tracker, see shared/combat.ts). */
+export interface SpentAction {
+  id: string;
+  type: PhaseActionType;
+  /** Translatable label ({ t, params }) or a text typed by the user. */
+  label: string | I18nMessage;
+  /** Attack action: only one per Action Phase (SR5 p. 164). */
+  attack?: boolean;
+  /** Recorded by the app (attack roll, reload, Matrix action), not added by hand. */
+  auto?: boolean;
+  /** Interrupt actions: initiative paid. */
+  cost?: number;
+  /** It went over what the Action Phase allows (kept, shown as a warning). */
+  over?: boolean;
+}
+
 /** One line of the initiative tracker. Players lose the roll details of entries they do not own. */
 export interface CombatEntry {
   id: string;
@@ -1176,6 +1195,8 @@ export interface CombatEntry {
   wound?: number;
   /** Interrupt actions spent (dodge, full defense…). */
   adjust?: number;
+  /** Actions taken in the current Initiative Pass (emptied at every pass and Combat Turn). */
+  spent?: SpentAction[];
   acted: boolean;
   delayed: boolean;
   /** GM only until revealed. */

@@ -209,6 +209,38 @@ try {
   ok(c.currentId === pcE.id && c.turn === 0, 'PC acts first (auto start)');
   ok(p1.state.combat.currentId === pcE.id, 'player sees it is their turn');
 
+  // Action counter (SR5 p. 163): 1 Free + 2 Simple or 1 Complex per pass, one attack; never refused, flagged when over.
+  {
+    const spentOf = (id: string) => gm.state.combat.entries.find((e) => e.id === id)!.spent || [];
+    await p1.send('combat/spend', { entryId: pcE.id, actionId: 'take-aim' });
+    await p1.send('combat/spend', { entryId: pcE.id, actionId: 'fire-simple' });
+    await settle();
+    ok(spentOf(pcE.id).length === 2 && spentOf(pcE.id).every((a) => a.type === 'simple' && !a.over), 'two Simple Actions counted');
+    const res = await p1.send<{ over: boolean }>('combat/spend', { entryId: pcE.id, type: 'complex', label: 'Grab the case' });
+    await settle();
+    const extra = spentOf(pcE.id)[2];
+    ok(res.over && extra.over && extra.label === 'Grab the case', 'a Complex Action after two Simple ones is kept and flagged over');
+    await p1.send('combat/unspend', { entryId: pcE.id, actionId: extra.id });
+    await p1.send('combat/spend', { entryId: pcE.id, actionId: 'run' });
+    await p1.send('combat/spend', { entryId: pcE.id, actionId: 'gesture' });
+    await settle();
+    const sp = spentOf(pcE.id);
+    ok(sp.length === 4 && !sp[2].over && sp[3].over, `unspend; a second Free Action is over (${sp.map((a) => a.type + (a.over ? '!' : '')).join(',')})`);
+    await expectFail(p1.send('combat/spend', { entryId: npcIds[0], actionId: 'melee' }), 'player cannot count an NPC action');
+    await expectFail(p1.send('combat/spend', { entryId: pcE.id, actionId: 'teleport' }), 'unknown action rejected');
+    await expectFail(p1.send('combat/spend', { entryId: pcE.id, type: 'epic' }), 'unknown action type rejected');
+    await gm.send('combat/spend', { entryId: npcIds[0], actionId: 'melee' });
+    await gm.send('combat/spend', { entryId: npcIds[0], actionId: 'throw' });
+    await settle();
+    const npcSpent = p1.state.combat.entries.find((e) => e.id === npcIds[0])!.spent || [];
+    ok(npcSpent.length === 2 && !!npcSpent[0].attack && !!npcSpent[1].over, 'players see what an NPC did; a second attack is over');
+    const spendLogs = gm.state.log.filter((l) => l.i18n?.key?.startsWith('{name}: {action} ({type})'));
+    const { fr: spendFr } = await renderI18n(spendLogs, 'action counter log');
+    ok(spendFr.some((x) => /^Testeuse : Viser \(action simple\)$/.test(x)), `French counter log (${spendFr[0]})`);
+    const S = await import('../shared/combat.ts');
+    ok(S.attackActionType({ fireAction: 'complex' }) === 'complex' && S.attackActionType({ melee: true }) === 'complex' && S.attackActionType({}) === 'simple', 'attack action types');
+  }
+
   // Turn flow
   p1.events.length = 0;
   await p1.send('combat/next', { entryId: pcE.id });
@@ -225,6 +257,7 @@ try {
   c = gm.state.combat;
   ok(c.pass === 2 && c.currentId === pcE.id, `pass 2 starts with the PC (pass ${c.pass})`);
   ok(c.entries.find((e) => e.id === npcIds[2])!.score === -7, 'scores reduced by 10');
+  ok(c.entries.every((e) => !(e.spent || []).length), 'action counters emptied at the new pass');
   ok(p1.events.some((ev) => ev.ev === 'sfx' && ev.data.id === 'notify'), 'player notified on their turn');
 
   // Interrupts
@@ -232,6 +265,7 @@ try {
   await expectFail(p1.send('combat/adjust', { entryId: pcE.id, delta: 5 }), 'player cannot add initiative');
   await settle();
   ok(gm.state.combat.entries.find((e) => e.id === pcE.id)!.score === 10, 'adjust −5');
+  ok((gm.state.combat.entries.find((e) => e.id === pcE.id)!.spent || []).some((a) => a.type === 'interrupt' && a.cost === 5), 'interrupt listed with its cost');
 
   // Delay / act now
   await p1.send('combat/delay', { entryId: pcE.id });

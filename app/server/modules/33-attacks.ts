@@ -7,17 +7,18 @@ import {
   ACTION_BY_ID, isUnlocked, rangeFor, rangeClass, RANGE_BANDS, environmentFor, attackSenses, activeBlasts, pruneExpired, areaEffectOf,
   LASTING_EFFECTS, TOXIN_BY_ID, toxinFromText, toxinOutcome, toxinProtection, untilFor, AFFLICTIONS,
   cellDistance, isAreaWeapon, scatterDice, rollScatter, blastOf, blastDvAt, blastReach, defenseLines,
-  finalDamageType, DEFENSE_BY_ID, SITUATION_BY_ID,
+  finalDamageType, DEFENSE_BY_ID, SITUATION_BY_ID, attackActionType,
 } from '../../shared/combat.ts';
 import { FIRE_BY_ID, isLauncherProfile, launcherRounds, fireOptions, usesAmmo } from '../../client/modules/sheet/inventory.ts';
 import { createVisionContext, tokenVision } from '../../shared/vision.ts';
 import { performRoll, applyDamage } from './10-characters.ts';
 import { ELEMENTS, elementLabel, hasEnergyAura, type CombatSpellProfile, type SpellElement } from '../../shared/magic.ts';
 import { spendInitiative, combatTurnKey } from './30-combat.ts';
+import { recordAction } from '../lib/combat-actions.ts';
 import type { PerformedRoll, RollBonusLine, RollInternal, RollPayload } from './10-characters.ts';
 import type {
   ActionContext, Actor, ActorId, AfflictionKind, AttrKey, Attack, AttacksState, AttackTurnRecord, Blast, BlastHit, BiName, DamageType, GameMap, GameView,
-  I18nEntry, I18nParams, Point, ServerModule, SessionUser, TableState, Token,
+  I18nEntry, I18nMessage, I18nParams, Point, ServerModule, SessionUser, TableState, Token,
 } from '../../shared/types.ts';
 
 /** Weapons / launcher profiles / catalog entries / player payloads of several shapes: read field by field. */
@@ -523,6 +524,16 @@ const mod: ServerModule = {
           if (action.ini) spendInitiative(ctx, actor.id, action.ini, action.name);
           const turn = turnOf(ctx.state, actor.id);
           if (action.once && turn) turn.once.push(action.id);
+        }
+        // Action counter of the tracker (SR5 p. 164-167): the special action's own type, else the fire option's (SS/SA/BF/FA
+        // Simple, SA burst/LB/FA 10/suppressive Complex), a melee attack Complex, a thrown weapon Simple.
+        if (action || source) {
+          const fireAction = FIRE_BY_ID[String(roll.fire?.mode || payload.fireMode || '')]?.action;
+          const type = action?.type || attackActionType({ fireAction, melee: weapon?.kind === 'melee' });
+          const what: I18nMessage = action
+            ? source ? { t: '{a} · {b}', params: { a: { t: action.name }, b: biName(source) } } : { t: action.name }
+            : { t: tk('Attack — {weapon}'), params: { weapon: biName(source!) } };
+          recordAction(ctx, { actorId: actor.id }, { type, label: what, attack: action?.kind !== 'test', auto: true });
         }
         const gmOnly = !!roll.secret || !!(actor.type === 'npc' && actor.hidden);
         const s = slice(ctx.state);

@@ -19,6 +19,7 @@ import { cleanConditions } from '../../shared/modifiers.ts';
 import { actorModifiers, deriveFull } from '../lib/modifiers.ts';
 import { formatSource } from '../lib/i18n.ts';
 import combatModule, { combatHooks, upsertVirtualEntry, setVirtualOut, endTurnOf, isVirtual } from './30-combat.ts';
+import { recordAction, type ActionTaker } from '../lib/combat-actions.ts';
 import { refreshFog, findAnyDoor } from './20-maps.ts';
 import notesModule from './75-notes.ts';
 import campaignModule from './70-campaign.ts';
@@ -1032,6 +1033,12 @@ function explodeBomb(ctx: ActionContext, actor: Actor, persona: Persona, host: H
 // ---------------------------------------------------------------------------
 // Action resolution (decker or agent)
 // ---------------------------------------------------------------------------
+/** Count a Matrix action on the initiative tracker (SR5 p. 164: Free / Simple / Complex; other types are not counted). */
+function countAction(ctx: ActionContext, who: ActionTaker, action: Pick<MatrixActionDef, 'type' | 'fr' | 'cat'>): void {
+  const type = action.type;
+  if (type !== 'free' && type !== 'simple' && type !== 'complex') return;
+  recordAction(ctx, who, { type, label: { t: action.fr }, attack: action.cat === 'attack', auto: true });
+}
 function performAction(ctx: ActionContext, actor: Actor, persona: Persona, action: MatrixActionDef, p: MatrixActionPayload, { agent = false }: { agent?: boolean } = {}) {
   const ag = persona.agent!;
   const who = agent ? ag.name : actor.name;
@@ -1717,6 +1724,7 @@ const actions: Record<string, ActionDef> = {
     } else if (isPermutation(asdf)) {
       persona.asdf = Object.fromEntries((ASDF as AsdfKey[]).map((k) => [k, asdf![k]])) as Persona['asdf'];
     } else ctx.fail('Invalid configuration');
+    recordAction(ctx, { actorId: actor.id }, { type: 'free', label: { t: tk('Switch two Matrix attributes') }, auto: true });
     return { asdf: persona.asdf, eff: deckStats(actor, persona).eff };
   }),
 
@@ -1732,17 +1740,19 @@ const actions: Record<string, ActionDef> = {
     const gain: number = prog.id === 'virtualMachine' ? (PROGRAM_BY_ID as Loose).virtualMachine.slots : 0;
     if (s.used + 1 > s.total + gain) ctx.fail('No free slot ({used}/{total}): unload a program first', { used: s.used, total: s.total });
     persona.loadedPrograms.push(prog.name);
+    recordAction(ctx, { actorId: actor.id }, { type: 'free', label: { t: tk('Load program: {name}'), params: { name: prog.name } }, auto: true });
     return { loadedPrograms: persona.loadedPrograms, slots: programSlots(persona) };
   }),
 
   'matrix/unloadProgram': any((ctx: ActionContext, { actorId, name }: ActorPayload & { name?: string } = {}) => {
-    const { persona } = ownPersona(ctx, actorId);
+    const { actor, persona } = ownPersona(ctx, actorId);
     const n = str(name, 80).trim().toLowerCase();
     const idx = persona.loadedPrograms.findIndex((x) => x.toLowerCase() === n);
     if (idx < 0) ctx.fail('Program not loaded');
     const next = persona.loadedPrograms.filter((_, i) => i !== idx);
     const s = programSlots({ ...persona, loadedPrograms: next });
     if (s.used > s.total) ctx.fail('Unload other programs first: Virtual Machine provides slots that are in use');
+    recordAction(ctx, { actorId: actor.id }, { type: 'free', label: { t: tk('Unload program: {name}'), params: { name: persona.loadedPrograms[idx] } }, auto: true });
     persona.loadedPrograms = next;
     return { loadedPrograms: persona.loadedPrograms, slots: programSlots(persona) };
   }),
@@ -1837,7 +1847,9 @@ const actions: Record<string, ActionDef> = {
     const action: MatrixActionDef | undefined = ACTION_BY_ID[p.actionId as string];
     if (!action) return ctx.fail('Unknown Matrix action');
     if (action.noTest || action.id === 'jackOut') ctx.fail('Your agent cannot take this action for you');
-    return performAction(ctx, actor, persona, action, { ...p, assistFromAgent: false, edge: false, useSpec: false }, { agent: true });
+    const res = performAction(ctx, actor, persona, action, { ...p, assistFromAgent: false, edge: false, useSpec: false }, { agent: true });
+    countAction(ctx, { matrixKey: `agent:${actor.id}` }, action);
+    return res;
   }),
 
   // { actorId, actionId, targetId?, modifier?, edge?, useSpec?, marks?, assistFromAgent?, fileOp?, command?, threshold?, targetName?, defensePool? (GM) }
@@ -1849,7 +1861,9 @@ const actions: Record<string, ActionDef> = {
     if (action.id === 'rebootSelf' && !persona.online) {
       if (persona.bricked) ctx.fail('{name}’s deck is bricked: it must be repaired', { name: actor.name });
     } else requireOnline(ctx, actor, persona);
-    return performAction(ctx, actor, persona, action, p);
+    const res = performAction(ctx, actor, persona, action, p);
+    countAction(ctx, { actorId: actor.id }, action);
+    return res;
   }),
 
   // Owner/GM: { actorId, fileId } — share recovered paydata with the team. A player creates a party note (Notes › groupe,
