@@ -8,7 +8,7 @@ import { t, attrShort } from '../../lib/i18n.ts';
 import { attr } from '/shared/sr5.ts';
 import { cellDistance } from '/shared/combat.ts';
 import { hasLineOfSight } from '/shared/vision.ts';
-import { drainValue, drainOffset, drainAttr, maxForce, spellReach, isAreaSpell, RECKLESS_DV } from '/shared/magic.ts';
+import { drainValue, drainOffset, drainAttr, maxForce, spellReach, isAreaSpell, isSustainable, RECKLESS_DV, SUSTAIN_PENALTY } from '/shared/magic.ts';
 import { itemLabel, categoryLabel } from '../sheet/common.tsx';
 import { ItemRef, RuleRef } from '../books/BookRef.tsx';
 import { isGM } from './common.tsx';
@@ -25,6 +25,7 @@ interface CastResult {
   drainType: 'P' | 'S';
   drain: { hits: number; damage: number } | { pendingId: string };
   targetIds: string[];
+  sustainedId?: string | null;
 }
 
 /** The map the user is looking at (GM: the one open in the map tab). */
@@ -49,6 +50,7 @@ export default function CastModal({ game, actor, spellId, onClose }: { game: Gam
   const [explode, setExplode] = useState(false);
   const [modifier, setModifier] = useState(0);
   const [manualDv, setManualDv] = useState(2);
+  const [sustain, setSustain] = useState(true);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<CastResult | null>(null);
   const map = currentMap(game, ui.viewMapId);
@@ -72,6 +74,7 @@ export default function CastModal({ game, actor, spellId, onClose }: { game: Gam
   const offset = drainOffset(spell?.drain);
   const dv = spell ? (offset === null ? manualDv + (reckless ? RECKLESS_DV : 0) : drainValue(spell.drain, force, { reckless })) : null;
   const second = drainAttr(actor);
+  const sustainable = !!spell && isSustainable(spell.duration);
   const spellcasting = skillRating(actor, 'spellcasting');
   const toggle = (id: string) => setTargetIds((list) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]));
   const pickCenter = (id: string) => {
@@ -85,7 +88,7 @@ export default function CastModal({ game, actor, spellId, onClose }: { game: Gam
     setBusy(true);
     try {
       const r = await send<CastResult>('magic/cast', {
-        actorId: actor.id, spellId: spell.id, force, reckless, explode, modifier, mapId: map?.id, targetIds,
+        actorId: actor.id, spellId: spell.id, force, reckless, explode, modifier, mapId: map?.id, targetIds, sustain: sustainable && sustain,
         ...(area && center ? { area: { x: center.x, y: center.y } } : {}), ...(offset === null ? { drainDv: manualDv } : {}),
       });
       setResult(r);
@@ -116,6 +119,7 @@ export default function CastModal({ game, actor, spellId, onClose }: { game: Gam
                 ? t('{hits} hit(s) on the resistance: {n} box(es) of damage', { hits: d.hits, n: d.damage })
                 : t('{hits} hit(s) on the resistance: no damage', { hits: d.hits })}
           </div>
+          {result.sustainedId && <div className="mg-cast-drain">{t('Sustained: −{n} dice on all your tests until you drop it (Magic tab).', { n: SUSTAIN_PENALTY })}</div>}
           <p className="faint small">{t('Apply the spell’s effect: the log keeps the hits.')}</p>
         </div>
         <div className="row spread">
@@ -171,6 +175,7 @@ export default function CastModal({ game, actor, spellId, onClose }: { game: Gam
         <div className="row wrap">
           <Toggle value={reckless} onChange={setReckless} label={t('Reckless Spellcasting (Simple Action, +3 Drain)')} />
           <Toggle value={explode} onChange={setExplode} label={t('Push the Limit (Edge: no limit)')} />
+          {sustainable && <Toggle value={sustain} onChange={setSustain} label={spell && /^P$/i.test(spell.duration) ? t('Sustain until permanent (Force Combat Turns, −2 dice)') : t('Sustain the spell (−2 dice on all your tests)')} />}
         </div>
         <div className="mg-cast-warn small">
           {t('Drain is resisted with {wil} + {attr}; it becomes Physical if you get more than {mag} hits.', { wil: attrShort('WIL'), attr: second ? attrShort(second) : '?', mag })}

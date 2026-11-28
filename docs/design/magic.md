@@ -107,7 +107,12 @@ Cockpit « Cast » (or sheet « Cast ») → `CastModal`:
 
 Multiple spells at once (split pool, 281) stays manual for now.
 
-## Sustained spells — *#14 Sustain*
+## Sustained spells — *#14, done*
+
+Built 2026-11-28 (facts: [modules/magic.md](../modules/magic.md#sustained-spells)); the −2 is mirrored on the actor
+(`actor.magic.sustaining`) rather than read from the state, so every roll and the sheet see it. Still to do here:
+carriers other than the caster (#19, #21), more numeric spell effects.
+
 
 - Each spell sustained by the caster = **−2 dice pool on all tests**, cumulative (282). Applied server-side as a
   modifier source in `actorModifiers()` (kind `pool`, type `sustained`, one line per spell, 📖 chip SR5 282), so it
@@ -233,7 +238,7 @@ Filed on GitHub 2026-11-28, all « Part of #7 ». Order: #12 first; #13 → #14,
 |---|---|---|
 | #12 | Magic foundation: module, state, tab, tradition on the actor, hints panel (**done**) | — |
 | #13 | Cast flow: Force, Force as limit, reckless, drain computed and resisted (**done**) | #12 |
-| #14 | Sustained spells: −2 per spell as a modifier, list, GM view | #13 |
+| #14 | Sustained spells: −2 per spell as a modifier, list, GM view (**done**) | #13 |
 | #15 | Combat spells through the attack pipeline (direct, indirect, area) | #13 |
 | #16 | Non-combat spells: opposed resistance and net hits | #13 |
 | #17 | Spirit data from Chummer (spirits.json, traditions.json, `spiritStats`) | — |

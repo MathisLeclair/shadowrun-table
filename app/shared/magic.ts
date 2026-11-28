@@ -160,6 +160,30 @@ export function spellReach(range: unknown): 'los' | 'touch' | 'self' | 'special'
 /** Area spell: range noted « (A) » — a sphere of radius Force metres unless the spell says otherwise (SR5 p. 281). */
 export const isAreaSpell = (range: unknown): boolean => /\(A\)/i.test(String(range ?? ''));
 
+/**
+ * Sustained spells whose effect is a plain number the app can apply to the target as a modifier. Keys: English and French
+ * names, lower case. Others stay a text for the GM.
+ */
+export const SPELL_EFFECTS: Record<string, { page: number; effects: (hits: number) => Array<{ type: 'armor' | 'stat'; target?: string; value: number }> }> = {
+  // Armor: Armor equal to the hits, cumulative with other armor (SR5 p. 293).
+  armor: { page: 293, effects: (hits) => [{ type: 'armor', value: hits }] },
+  armure: { page: 293, effects: (hits) => [{ type: 'armor', value: hits }] },
+  // Combat Sense: +1 die per hit to defend against ranged and melee attacks (SR5 p. 288; surprise: GM).
+  'combat sense': { page: 288, effects: (hits) => [{ type: 'stat', target: 'defense', value: hits }] },
+  'sens du combat': { page: 288, effects: (hits) => [{ type: 'stat', target: 'defense', value: hits }] },
+};
+/** Numeric effects of a sustained spell with these hits ([] when the app does not apply it). */
+export function spellEffects(spell: { name?: string; nameEn?: string; nameFr?: string } | null | undefined, hits: number): Array<{ type: 'armor' | 'stat'; target?: string; value: number }> {
+  if (!spell || hits <= 0) return [];
+  for (const n of [spell.nameEn, spell.name, spell.nameFr]) {
+    const def = n ? SPELL_EFFECTS[String(n).trim().toLowerCase()] : null;
+    if (def) return def.effects(hits);
+  }
+  return [];
+}
+/** Duration that can be sustained: Sustained (S), or Permanent (P) until it sets (SR5 p. 283). */
+export const isSustainable = (duration: unknown): boolean => /^(S|P)$/i.test(String(duration ?? '').trim());
+
 /** Spell category (stored English or French) → its key ('combat', 'detection'…), null when unknown. */
 export function spellCategory(category: unknown): SpellCategoryKey | null {
   const c = String(category ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();

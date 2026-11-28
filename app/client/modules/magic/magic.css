@@ -66,4 +66,6 @@
 .mg-cast-big b { font: 800 30px var(--mono); color: var(--magenta); }
 .mg-cast-drain { padding: 6px 10px; background: var(--panel2); border-radius: 8px; }
 .mg-pending .row { justify-content: space-between; padding: 4px 0; }
+.mg-sustained td { vertical-align: middle; }
+.mg-sustained-panel { border-color: color-mix(in srgb, var(--amber) 45%, transparent); }
 .mg-overview td.num-cell { white-space: nowrap; }

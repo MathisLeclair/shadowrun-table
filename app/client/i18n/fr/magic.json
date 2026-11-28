@@ -105,5 +105,21 @@
   "{name} resists Drain {dv} ({source}): {hits} hit(s), {damage} box(es) of Stun damage.": "{name} résiste au Drain {dv} ({source}) : {hits} succès, {damage} case(s) de dommages étourdissants.",
   "{n} hit(s) lost to the Force limit": "{n} succès perdu(s) à cause de la limite de Puissance",
   "{spell} can only target its caster": "{spell} ne peut viser que son lanceur",
-  "— Token —": "— Pion —"
+  "— Token —": "— Pion —",
+  "Active spells": "Sorts actifs",
+  "Drop": "Relâcher",
+  "F{force} · {hits} hit(s)": "P{force} · {hits} succès",
+  "No spell is being sustained.": "Aucun sort n’est maintenu.",
+  "Spells on {name}": "Sorts sur {name}",
+  "Stop sustaining this spell": "Arrêter de maintenir ce sort",
+  "Sustain the spell (−2 dice on all your tests)": "Maintenir le sort (−2 dés à tous vos tests)",
+  "Sustain until permanent (Force Combat Turns, −2 dice)": "Maintenir jusqu’à permanence (Puissance tours de combat, −2 dés)",
+  "Sustained spells: −{n} dice on all tests": "Sorts maintenus : −{n} dés à tous les tests",
+  "Sustained: −{n} dice on all your tests until you drop it (Magic tab).": "Maintenu : −{n} dés à tous vos tests jusqu’à ce que vous le relâchiez (onglet Magie).",
+  "This spell is no longer sustained": "Ce sort n’est plus maintenu",
+  "no target": "pas de cible",
+  "on {list}": "sur {list}",
+  "permanent in {n} Combat Turn(s)": "permanent dans {n} tour(s) de combat",
+  "{name} stops sustaining {spell} (Force {force}).": "{name} cesse de maintenir {spell} (Puissance {force}).",
+  "{spell} (Force {force}) of {name} is now permanent: no longer sustained.": "{spell} (Puissance {force}) de {name} est désormais permanent : il n’est plus maintenu."
 }

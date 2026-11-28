@@ -848,9 +848,32 @@ export interface ActorTradition extends BookRefFields {
   spirits?: Partial<Record<SpellCategoryKey, string>>;
 }
 
-/** Written by training (initiation, metamagics…) and the magic module (tradition). */
+/** A spell the actor sustains (mirror of state.magic.sustained written by 47-magic): −2 dice on every test (SR5 p. 282). */
+export interface SustainingEntry {
+  id: string;
+  name: BiName;
+  force: number;
+}
+
+/** A sustained spell acting on the actor (mirror of state.magic.sustained written by 47-magic), with its numeric effects. */
+export interface SpellEffectEntry {
+  id: string;
+  name: BiName;
+  force: number;
+  hits: number;
+  casterId: ActorId;
+  casterName: string;
+  /** Effects applied as modifiers (shared/magic.ts SPELL_EFFECTS): armor, defense… */
+  effects: Array<{ type: 'armor' | 'stat'; target?: string; value: number }>;
+}
+
+/** Written by training (initiation, metamagics…) and the magic module (tradition, sustained spells). */
 export interface ActorMagic {
   tradition?: ActorTradition;
+  /** Spells this actor sustains (47-magic, never edited by hand). */
+  sustaining?: SustainingEntry[];
+  /** Sustained spells on this actor (47-magic, never edited by hand). */
+  spellEffects?: SpellEffectEntry[];
   initiation?: number;
   submersion?: number;
   metamagics?: string[];
@@ -2237,7 +2260,7 @@ export interface PendingDrain {
 
 /** `entry.magic` of a magic log entry. */
 export interface MagicLogInfo {
-  event: 'cast' | 'drain';
+  event: 'cast' | 'drain' | 'drop';
   actorId: ActorId;
   spellId?: string;
   force?: number;
@@ -2250,6 +2273,9 @@ export interface MagicLogInfo {
   targetIds?: ActorId[];
 }
 
+/** Who carries a sustained spell's −2: its caster (later: a bound spirit or a sustaining focus). */
+export type SustainCarrier = { kind: 'caster' };
+
 /** A spell being sustained (by its caster, a bound spirit or a sustaining focus). */
 export interface SustainedSpell {
   id: string;
@@ -2261,6 +2287,12 @@ export interface SustainedSpell {
   hits: number;
   targetIds: ActorId[];
   ts: Timestamp;
+  /** Absent = the caster. */
+  by?: SustainCarrier;
+  /** Permanent (P) spell: Combat Turns left before its effect becomes permanent and the spell ends (SR5 p. 283). */
+  turnsLeft?: number;
+  /** Area of the spell (cells, radius in metres). */
+  area?: { mapId: MapId; x: number; y: number; radius: number };
 }
 
 /** Astral state of an actor (absent: physical only). */
