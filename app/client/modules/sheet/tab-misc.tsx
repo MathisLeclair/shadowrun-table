@@ -16,7 +16,7 @@ import { openMatrix, ProgramRef } from '../matrix/common.tsx';
 import { ruleRef, skillRef } from '/shared/bookrefs.ts';
 import { SinCards } from './sins.tsx';
 import { ContactCards } from './contacts.tsx';
-import { HomeButton } from './home.tsx';
+import { HomeButton, CityPlaceButton } from './home.tsx';
 import type { Actor, ActorMatrix, ComplexForm, GameView, Quality } from '../../../shared/types.ts';
 import type { AnyItem, SheetCtx, SheetModifier } from './types.ts';
 import { ItemRef, RuleRef } from '../books/BookRef.tsx';
@@ -373,7 +373,7 @@ function LifestylesView({ game, actor, showPaid }: { game: GameView; actor: Acto
       {t('Comforts {c} · Security {s} · Neighborhood {n}', { c: l.points.comforts ?? '—', s: l.points.security ?? '—', n: l.points.neighborhood ?? '—' })}
     </div>}
       <SubChips sub="qualities" items={l.qualities} />
-      {l.notes && <div className="faint small">{l.notes}</div>}{showPaid && game ? <div><HomeButton game={game} actor={actor} lifestyle={l} canMove={showPaid} /></div> : null}
+      {l.notes && <div className="faint small">{l.notes}</div>}{showPaid && game ? <div className="row wrap gap-s"><HomeButton game={game} actor={actor} lifestyle={l} canMove={showPaid} /><CityPlaceButton game={game} actor={actor} lifestyle={l} /></div> : null}
     </div>)}
   </div>;
 }

@@ -57,7 +57,7 @@ let srv = await startServer({
   port: BASE,
   tables: [
     { id: 'lazarus', pack: 'project-lazarus', gmPassword: 'pw-restore', state: tableState(actors, { restored: ids }) },
-    { id: 'autre', pack: 'vierge', gmPassword: 'pw-other' },
+    { id: 'autre', pack: 'blank', gmPassword: 'pw-other' },
   ],
 });
 try {

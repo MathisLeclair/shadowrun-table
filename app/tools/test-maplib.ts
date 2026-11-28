@@ -110,7 +110,7 @@ fs.writeFileSync(path.join(gitDir, 'library.json'), JSON.stringify({ not: 'an en
 
 const tables: TestTableSpec[] = [
   { id: 'alpha', name: 'Alpha', pack: 'project-lazarus', gmPassword: 'alpha-pw' },
-  { id: 'beta', name: 'Beta', pack: 'vierge', gmPassword: 'beta-pw' },
+  { id: 'beta', name: 'Beta', pack: 'blank', gmPassword: 'beta-pw' },
 ];
 const env = { SR_MAPLIB_SOURCE: gitDir };
 let srv = await startServer({ port: 3910, tables, runtime, keepRuntime: true, env });

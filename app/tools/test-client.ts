@@ -6,7 +6,7 @@
 //   gm.state  -> latest view;  await gm.nextState()  -> waits for the next broadcast
 //   srv.stop()
 // Multi-table:
-//   const srv = await startServer({ port, tables: [{ id: 'alpha', pack: 'vierge', gmPassword: 'secret-a' }, { id: 'beta' }] });
+//   const srv = await startServer({ port, tables: [{ id: 'alpha', pack: 'blank', gmPassword: 'secret-a' }, { id: 'beta' }] });
 //     → those tables exist at boot (no bootstrap "lazarus" table unless `bootstrap: true`)
 //   login(srv.url, { role: 'gm', password, table: 'alpha' }) ; client(srv.url, token, { table: 'alpha' })
 //   const adminToken = await srv.admin();  // admin password: srv.adminPassword

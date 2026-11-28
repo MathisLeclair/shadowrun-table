@@ -80,7 +80,7 @@ await test('lookup / currentKey / formatSource: English source, French dictionar
   assert.equal(F.currentKey(legacy, 'Attaque — {weapon}'), 'Attack — {weapon}');
   assert.equal(F.currentKey(legacy, 'Free text'), 'Free text');
   assert.equal(F.currentKey(null, 'x'), 'x');
-  assert.equal(F.formatSource('Attaque — {weapon}', { weapon: 'Ares Predator V' }, legacy), 'Attack — Ares Predator V');
+  assert.equal(F.formatSource('Attack — {weapon}', { weapon: 'Ares Predator V' }, legacy), 'Attack — Ares Predator V');
   assert.equal(F.formatSource('fem::current'), 'current');
 });
 await test('cleanParams keeps small JSON-safe values and nested { t } params only', () => {
@@ -172,25 +172,25 @@ await test('errorText / logText', () => {
 await test('legacy French keys (saved before the switch) render in English and in French', () => {
   I.setDictionary(frenchDictionary(), { legacyKeys: LEGACY });
   assert.equal(LEGACY['Attaque — {weapon}'], 'Attack — {weapon}');
-  const entry = { kind: 'roll', text: 'Attaque — Ares Predator V', i18n: { key: 'Attaque — {weapon}', params: { weapon: 'Ares Predator V' } } };
+  const entry = { kind: 'roll', text: 'Attaque — Ares Predator V', i18n: { key: 'Attack — {weapon}', params: { weapon: 'Ares Predator V' } } };
   I.setLang('en');
   assert.equal(I.logText(entry), 'Attack — Ares Predator V');
-  assert.equal(I.t('Attaque — {weapon}', { weapon: 'X' }), 'Attack — X');
+  assert.equal(I.t('Attack — {weapon}', { weapon: 'X' }), 'Attack — X');
   assert.equal(I.errorText({ error: 'Introuvable' }), 'Not found', 'an old French error text');
-  assert.equal(I.tIfKnown('Nain'), 'Dwarf', 'a stored French value');
+  assert.equal(I.tIfKnown('Dwarf'), 'Dwarf', 'a stored French value');
   I.setLang('fr');
   I.clearMissing();
   assert.equal(I.logText(entry), 'Attaque — Ares Predator V');
   assert.equal(I.errorText({ error: 'Introuvable' }), 'Introuvable');
-  assert.equal(I.tIfKnown('Nain'), 'Nain');
+  assert.equal(I.tIfKnown('Dwarf'), 'Nain');
   assert.equal(I.missingCount(), 0, 'legacy keys are found through their English key');
   // server side: same map
   assert.equal(S.t('en', 'Attaque — {weapon}', { weapon: 'X' }), 'Attack — X');
   assert.equal(S.t('fr', 'Attaque — {weapon}', { weapon: 'X' }), 'Attaque — X');
-  assert.equal(S.formatSource('Attaque — {weapon}', { weapon: 'X' }), 'Attack — X');
+  assert.equal(S.formatSource('Attack — {weapon}', { weapon: 'X' }), 'Attack — X');
   assert.equal(S.sourceKey('Attaque — {weapon}'), 'Attack — {weapon}');
-  assert.deepEqual(S.errorBody('Introuvable'), { error: 'Not found', errorKey: 'Not found' });
-  const old = S.normalizeLogEntry({ kind: 'roll', i18n: { key: 'Attaque — {weapon}', params: { weapon: 'X' } } } as NewLogEntry);
+  assert.deepEqual(S.errorBody('Not found'), { error: 'Not found', errorKey: 'Not found' });
+  const old = S.normalizeLogEntry({ kind: 'roll', i18n: { key: 'Attack — {weapon}', params: { weapon: 'X' } } } as NewLogEntry);
   assert.equal(old.text, 'Attack — X');
 });
 await test('SR5 vocabulary helpers and catalog names (real French dictionaries)', () => {

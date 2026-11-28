@@ -144,6 +144,7 @@
   "Aptitude: pick the skill it applies to.": "Aptitude : choisis la compétence concernée.",
   "Ask for changes": "Demander des changements",
   "Aspect": "Aspect",
+  "Aspect: {name}": "Aspect : {name}",
   "Aspected": "Spécialisé",
   "aspected magician": "magicien spécialisé",
   "Aspected Magician": "Magicien spécialisé",
@@ -329,6 +330,7 @@
   "Maximum Magic × 2 = {max}.": "Maximum Magie × 2 = {max}.",
   "Mental": "Mentaux",
   "Mentor spirit (optional)": "Mentor (facultatif)",
+  "Mentor: {name}": "Mentor : {name}",
   "Mercenary / street samurai": "Mercenaire / samouraï des rues",
   "Metahumans": "Métahumains",
   "Metahumans infected with HMHVV, blind but fearsome.": "Métahumains infectés par le VIHMH, aveugles mais redoutables.",
@@ -528,9 +530,11 @@
   "Too many saved drafts": "Trop de brouillons enregistrés",
   "Toxic cultist": "Cultiste toxique",
   "Toxin and pathogen resistance (+2 dice)": "Résistance aux toxines et pathogènes (+2 dés)",
+  "Tradition: {name}": "Tradition : {name}",
   "Typical builds:": "Répartitions types :",
   "Unavailable": "Indisponible",
   "Unknown archetype": "Archétype inconnu",
+  "Unknown player": "Joueur inconnu",
   "Unnamed": "Sans nom",
   "Unsaved changes…": "Modifications en cours…",
   "Upload failed": "Envoi impossible",
@@ -550,9 +554,5 @@
   "Withdraw and edit": "Retirer et modifier",
   "Withdraw request": "Retirer la demande",
   "Withdraw the request sent to the GM first": "Retire d’abord la demande envoyée au MJ",
-  "Your character has been approved by the GM!": "Ton personnage a été validé par le MJ !",
-  "Tradition: {name}": "Tradition : {name}",
-  "Aspect: {name}": "Aspect : {name}",
-  "Mentor: {name}": "Mentor : {name}",
-  "Unknown player": "Joueur inconnu"
+  "Your character has been approved by the GM!": "Ton personnage a été validé par le MJ !"
 }

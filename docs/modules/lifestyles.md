@@ -48,7 +48,7 @@ tunnel…) become modules glued onto a free wall (`buildHome`: 4 rotations, ever
 share ≥ 3 wall cells with the home and get a door onto the living room > another room > another add-on; outside of
 entrances stays free; « Pas de place pour : … » when nothing fits). The map is rebuilt on the fly (never stored), so a
 bought / removed garage shows at once.
-- `shop/chooseHome { actorId, lifestyleId, layout }` (owner or GM): first pick free; another layout of the same level
+- `shop/move { actorId, lifestyleId, layout?, x?, y? }` (alias `shop/chooseHome` with a layout; spot on the city map: [city](city.md)) (owner or GM): first pick free; another layout of the same level
   = a move, paid `homeMoveCost` (one month of the level's rent — house rule, SR5 has none) by players, free for the GM;
   logs « emménage / déménage ».
 - `lifestyle.home` is sanitized on GM edits (`sanitizeHome`, bad → removed), kept by Chummer re-imports (app-only

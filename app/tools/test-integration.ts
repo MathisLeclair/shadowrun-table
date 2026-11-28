@@ -1,5 +1,5 @@
 // Cross-module integration flow, two tables at once (EN + FR): node tools/test-integration.ts (port 3971 or SR_TEST_PORT).
-// Admin creates a « vierge » English table, a player builds a character → GM approval → sheet; GM generates tier-3 enemies,
+// Admin creates a « blank » English table, a player builds a character → GM approval → sheet; GM generates tier-3 enemies,
 // spawns them and starts combat; on Lazarus, Bricks enters the Matrix and her agent assists then acts.
 // Checks that nothing leaks across tables and that keyed errors translate to English.
 import fs from 'node:fs';

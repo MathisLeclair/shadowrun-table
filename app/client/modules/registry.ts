@@ -17,6 +17,7 @@ import CampaignPage from './campaign/CampaignPage.tsx';
 import DossiersPage from './campaign/DossiersPage.tsx';
 import SettingsPage from './core/SettingsPage.tsx';
 import MatrixPage from './matrix/MatrixPage.tsx';
+import CityPage from './city/CityPage.tsx';
 import ChargenPage from './chargen/ChargenPage.tsx';
 import NotesPage from './notes/NotesPage.tsx';
 import BooksPage from './books/BooksPage.tsx';
@@ -38,6 +39,8 @@ export interface TabEntry {
   roles: string[];
   component: ComponentType<GameProps>;
   badge?: (game: GameView) => string | number | null;
+  /** Shown only when this returns true (default: always). */
+  visible?: (game: GameView) => boolean;
 }
 
 const pending = (list: Array<{ status: string }> | null | undefined) => (list || []).filter((r) => r.status === 'pending').length || null;
@@ -49,6 +52,7 @@ export const mainTabs: TabEntry[] = [
   { id: 'characters', label: tk('Characters'), icon: '☰', roles: ['gm'], component: CharactersPage },
   { id: 'bestiary', label: tk('Bestiary'), icon: '☠', roles: ['gm'], component: BestiaryPage },
   { id: 'maps', label: tk('Maps'), icon: '▦', roles: ['gm'], component: MapsPage },
+  { id: 'city', label: tk('Seattle'), icon: '⌂', roles: ['gm', 'player'], component: CityPage, visible: (g) => g.me.role === 'gm' || !!g.city?.map },
   { id: 'matrix', label: tk('Matrix'), icon: '⌬', roles: ['gm', 'player'], component: MatrixPage },
   { id: 'chargen', label: tk('Creation'), icon: '✚', roles: ['gm', 'player'], component: ChargenPage, badge: (g) => (g.me.role === 'gm' ? pending(g.chargen?.drafts) : null) },
   { id: 'shop', label: tk('Shop'), icon: '¥', roles: ['gm', 'player'], component: ShopPage, badge: (g) => (g.me.role === 'gm' ? pending(g.shop?.orders) : null) },

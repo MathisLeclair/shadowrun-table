@@ -245,7 +245,7 @@ const byName = (f: string, n: string) => catalog(f).find((e) => e.name === n)!;
     gear: [{ id: 'g1', name: 'Bricole', qty: 1 }],
     spells: [], powers: [], armor: [], augmentations: [], vehicles: [], lifestyles: [], martialArts: [],
   };
-  const srv = await startServer({ port: 3531, tables: [{ id: 'old', pack: 'vierge', gmPassword: 'pw', state: { version: 1, config: { gmPassword: 'pw', campaignName: 'Old', lang: 'fr' }, users: {}, actors: { pc_old: oldActor }, log: [] } }] });
+  const srv = await startServer({ port: 3531, tables: [{ id: 'old', pack: 'blank', gmPassword: 'pw', state: { version: 1, config: { gmPassword: 'pw', campaignName: 'Old', lang: 'fr' }, users: {}, actors: { pc_old: oldActor }, log: [] } }] });
   try {
     const gm = await client(srv.url, await login(srv.url, { role: 'gm', password: 'pw', table: 'old' }), { table: 'old' });
     await settle();

@@ -119,6 +119,7 @@
   "Mute this device": "Couper le son sur cet appareil",
   "My files": "Mes fichiers",
   "Name": "Nom",
+  "New scene": "Nouvelle scène",
   "New sound scene": "Nouvelle scène sonore",
   "night": "nuit",
   "Nightclub": "Boîte de nuit",
@@ -142,6 +143,7 @@
   "Remove “{name}” from the library?\n(The file stays on the server.)": "Retirer « {name} » de la bibliothèque ?\n(Le fichier reste sur le serveur.)",
   "Remove from library": "Retirer de la bibliothèque",
   "Rifle": "Fusil",
+  "Scene": "Scène",
   "Scene “{name}”": "Scène « {name} »",
   "Scene “{name}” created": "Scène « {name} » créée",
   "Scene from current ambience": "Scène depuis l’ambiance actuelle",
@@ -194,7 +196,5 @@
   "Volume of this device only": "Volume de cet appareil uniquement",
   "volume::Master": "Général",
   "When the active map changes, play the sound scene linked to that map": "Quand la carte active change, lancer la scène sonore liée à cette carte",
-  "When this map becomes the active map, the scene starts (if the “auto scene” option is on).": "Quand cette carte devient la carte active, la scène se lance (si l’option « scène auto » est activée).",
-  "New scene": "Nouvelle scène",
-  "Scene": "Scène"
+  "When this map becomes the active map, the scene starts (if the “auto scene” option is on).": "Quand cette carte devient la carte active, la scène se lance (si l’option « scène auto » est activée)."
 }

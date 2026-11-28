@@ -98,11 +98,14 @@
   "Move up": "Monter",
   "Move up in the act": "Monter dans l'acte",
   "New": "Nouveau",
+  "New act": "Nouvel acte",
   "New handout": "Nouveau document",
   "New handout: {title}": "Nouveau document : {title}",
+  "New phase": "Nouvelle phase",
   "New phase… (Enter to add)": "Nouvelle phase… (Entrée pour ajouter)",
   "New quest": "Nouvelle quête",
   "New session": "Nouvelle séance",
+  "New thread": "Nouveau fil",
   "Newest first": "Plus récentes d'abord",
   "Next available:": "Prochaine possible :",
   "Next match (Enter)": "Résultat suivant (Entrée)",
@@ -245,8 +248,5 @@
   "When to reveal it, to whom…": "Quand le révéler, à qui…",
   "Write": "Écrire",
   "Yes": "Oui",
-  "Your GM notepad — never visible to players. Markdown accepted; saved when you leave the field or press Ctrl+S.": "Ton bloc-notes de MJ — jamais visible par les joueurs. Markdown accepté ; enregistrement en quittant le champ ou avec Ctrl+S.",
-  "New act": "Nouvel acte",
-  "New phase": "Nouvelle phase",
-  "New thread": "Nouveau fil"
+  "Your GM notepad — never visible to players. Markdown accepted; saved when you leave the field or press Ctrl+S.": "Ton bloc-notes de MJ — jamais visible par les joueurs. Markdown accepté ; enregistrement en quittant le champ ou avec Ctrl+S."
 }

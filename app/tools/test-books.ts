@@ -269,7 +269,7 @@ console.log('Server…');
 const srv = await startServer({
   port: PORT,
   runtime,
-  tables: [{ id: 'alpha', pack: 'vierge', gmPassword: 'secret-a' }, { id: 'beta', pack: 'vierge', gmPassword: 'secret-b' }],
+  tables: [{ id: 'alpha', pack: 'blank', gmPassword: 'secret-a' }, { id: 'beta', pack: 'blank', gmPassword: 'secret-b' }],
 });
 const U = srv.url;
 const get = (p: string, { token, table, headers = {} }: { token?: string; table?: string; headers?: Record<string, string> } = {}) => fetch(U + p, { headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(table ? { 'X-SR-Table': table } : {}), ...headers } });
@@ -498,7 +498,7 @@ try {
 
 // ---------------------------------------------------------------------------
 console.log('Indexing memory guard…');
-const srv2 = await startServer({ port: PORT2, runtime: runtime2, tables: [{ id: 'alpha', pack: 'vierge', gmPassword: 'secret-a' }], env: { SR_MEMORY_LIMIT_BYTES: '1000000' } });
+const srv2 = await startServer({ port: PORT2, runtime: runtime2, tables: [{ id: 'alpha', pack: 'blank', gmPassword: 'secret-a' }], env: { SR_MEMORY_LIMIT_BYTES: '1000000' } });
 try {
   const admin2 = await srv2.admin();
   const req2 = (p: string, { method = 'GET', body }: { method?: string; body?: unknown } = {}) =>

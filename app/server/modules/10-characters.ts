@@ -11,6 +11,7 @@ import {
 } from '../../client/modules/sheet/sheet-data.ts';
 import { normalizeLifestyle } from '../../shared/lifestyle.ts';
 import { sanitizeHome } from '../../shared/home.ts';
+import { sanitizePlace } from '../../shared/city.ts';
 import { contactSheet, connectionOf, loyaltyOf, bribeCost, MAX_CONNECTION, ROLL_KINDS as CONTACT_ROLLS } from '../../shared/contacts.ts';
 import { isRealSin, sinRating, sinIdentity, sinLicenses, sinCheckOutcome, verificationPool, MAX_DEVICE_RATING } from '../../shared/sins.ts';
 import { removeBonus, weaponFromStats, wareCatalogItem, detachAugmentation, bakeItemBonus, itemBonusSpec } from '../lib/augment.ts';
@@ -310,6 +311,11 @@ function sanitizeItem(list: string, item: unknown, ctx?: ActionContext): Loose {
       if (out.monthsPaid !== undefined) out.monthsPaid = clampInt(out.monthsPaid, 0, 999);
       if (out.primary !== undefined) out.primary = !!out.primary;
       if (out.home !== undefined) out.home = sanitizeHome(out.home); // shared/home.js (null → removed: the player picks again)
+      // shared/city.ts; players only place a home through shop/move (paid move, guests set by the GM)
+      if (out.place !== undefined) {
+        if (ctx.isGM) out.place = sanitizePlace(out.place);
+        else delete out.place;
+      }
       if (out.points !== undefined) {
         const p = isObj(out.points) ? out.points : null;
         out.points = p ? Object.fromEntries(['comforts', 'security', 'neighborhood', 'entertainment'].filter((k) => p[k] !== undefined && p[k] !== null).map((k) => [k, clampInt(p[k], 0, 20)])) : null;

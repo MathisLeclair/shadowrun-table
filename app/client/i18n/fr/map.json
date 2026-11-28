@@ -144,6 +144,7 @@
   "Edit": "Modifier",
   "Elevator": "Ascenseur",
   "Empty (draw everything)": "Vide (tout dessiner)",
+  "Entrance": "Entrée",
   "Eraser": "Gomme",
   "Erases (void) under the brush.": "Efface (vide) sous le pinceau.",
   "Error — retrying": "Erreur — nouvel essai",
@@ -390,6 +391,7 @@
   "Turn off the light": "Éteindre la lampe",
   "Turn on a flashlight": "Allumer une lampe torche",
   "Undo (Ctrl+Z)": "Annuler (Ctrl+Z)",
+  "Unnamed map": "Carte sans nom",
   "Unreachable": "Inaccessible",
   "Unseen areas": "Zones non vues",
   "Update from the library": "Mettre à jour depuis la bibliothèque",
@@ -417,7 +419,5 @@
   "X (cells)": "X (cases)",
   "Y (cells)": "Y (cases)",
   "You can only change your token's appearance": "Tu ne peux modifier que l’apparence de ton pion",
-  "You have no token on this map": "Tu n’as pas de pion sur cette carte",
-  "Entrance": "Entrée",
-  "Unnamed map": "Carte sans nom"
+  "You have no token on this map": "Tu n’as pas de pion sur cette carte"
 }

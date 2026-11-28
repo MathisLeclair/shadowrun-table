@@ -17,6 +17,8 @@ import { rollDice } from '../../shared/sr5.ts';
 import { contactSheet } from '../../shared/contacts.ts';
 import { performRoll } from './10-characters.ts';
 import { HOME_LAYOUTS, homeLayout, homeMoveCost } from '../../shared/home.ts';
+import { placeAt, samePlace } from '../../shared/city.ts';
+import { activeCity } from '../lib/city.ts';
 import { monthlyCost, settleLifestyles, primaryLifestyle, lifestyleFromCatalog, qualityFromCatalog, qualityProblem, baseOf } from '../../shared/lifestyle.ts';
 import { removeBonus, weaponFromStats, bakeItemBonus } from '../lib/augment.ts';
 import { formatSource } from '../lib/i18n.ts';
@@ -1070,10 +1072,60 @@ interface PayLifestylePayload {
   lifestyleId?: string;
   months?: number;
 }
-interface ChooseHomePayload {
+interface MovePayload {
   actorId?: ActorId;
   lifestyleId?: string;
-  layout?: string;
+  /** HOME_LAYOUTS id (the flat). */
+  layout?: string | null;
+  /** Spot on the city map (cells). */
+  x?: number | null;
+  y?: number | null;
+}
+
+/**
+ * Choose or change a lifestyle's home: the flat (`layout`) and / or its spot on the city map (`x`, `y`). Setting either
+ * for the first time is free; changing one that is already set is a move and costs one fee (homeMoveCost: a month of
+ * the level's base rent), even when both change. The GM moves runners for free. A new spot forgets the GM's invitations.
+ */
+function moveHome(ctx: ActionContext, { actorId, lifestyleId, layout, x, y }: MovePayload) {
+  const actor = getActor(ctx, actorId);
+  const lf: Loose | undefined = (actor.lifestyles || []).find((l: Loose) => l.id === lifestyleId);
+  if (!lf) return ctx.fail('Lifestyle not found');
+  const wantsLayout = layout !== undefined && layout !== null && layout !== '';
+  const wantsPlace = x !== undefined && x !== null && y !== undefined && y !== null;
+  if (!wantsLayout && !wantsPlace) ctx.fail('Nothing to change');
+  let next = null;
+  if (wantsLayout) {
+    next = typeof layout === 'string' && Object.prototype.hasOwnProperty.call(HOME_LAYOUTS, layout) ? HOME_LAYOUTS[layout as keyof typeof HOME_LAYOUTS] : null;
+    if (!next || !next.bases.includes(String(lf.base || ''))) return ctx.fail('This home does not match this lifestyle');
+  }
+  let place = null;
+  if (wantsPlace) {
+    const city = activeCity(ctx.state);
+    if (!city) return ctx.fail('There is no city map on this table');
+    place = placeAt(city, x, y, ctx.now);
+    if (!place) return ctx.fail('Invalid position');
+  }
+  const current = homeLayout(lf);
+  const curPlace = lf.place && Number.isFinite(lf.place.x) ? lf.place : null;
+  const layoutChange = !!next && next.id !== current?.id;
+  const placeChange = !!place && !samePlace(place, curPlace);
+  if (!layoutChange && !placeChange) ctx.fail('You already live here');
+  const isMove = (layoutChange && !!current) || (placeChange && !!curPlace);
+  const fee = isMove && !ctx.isGM ? homeMoveCost(lf) : 0;
+  if (fee > 0) {
+    checkFunds(ctx, actor, fee);
+    actor.nuyen = (Number(actor.nuyen) || 0) - fee;
+    history(actor, tk('Moving: {name}'), { name: lf.name }, -fee);
+    notifyOwners(ctx, actorId as ActorId, 'sfx', { id: 'cash' });
+  }
+  const moves = (Number(lf.home?.moves) || 0) + (isMove ? 1 : 0);
+  if (layoutChange) lf.home = { layout: next!.id, since: ctx.now, moves };
+  else if (lf.home && isMove) lf.home = { ...lf.home, since: ctx.now, moves };
+  if (placeChange) lf.place = place;
+  if (isMove) shopLog(ctx, actorId as ActorId, fee ? tk('{actor} moves ({name}) — {cost}') : tk('{actor} moves ({name})'), { actor: actor.name, name: lf.name, cost: nuyen(fee) });
+  else shopLog(ctx, actorId as ActorId, tk('{actor} moves in ({name})'), { actor: actor.name, name: lf.name });
+  return { layout: lf.home?.layout ?? null, place: lf.place ?? null, fee };
 }
 
 const mod: ServerModule = {
@@ -1515,28 +1567,15 @@ const mod: ServerModule = {
 
     // Home of a lifestyle (shared/home.js): the first pick is free; another layout on the same level is a move,
     // paid one month of the level's rent by the player (house rule — the GM moves runners for free).
+    // { actorId, lifestyleId, layout?, x?, y? } — see moveHome().
+    'shop/move': {
+      role: 'any',
+      handler: (ctx: ActionContext, payload: MovePayload) => moveHome(ctx, payload),
+    },
+    // Level-1 name (flat only), kept for older clients.
     'shop/chooseHome': {
       role: 'any',
-      handler(ctx: ActionContext, { actorId, lifestyleId, layout }: ChooseHomePayload) {
-        const actor = getActor(ctx, actorId);
-        const lf: Loose | undefined = (actor.lifestyles || []).find((l: Loose) => l.id === lifestyleId);
-        if (!lf) return ctx.fail('Lifestyle not found');
-        const next = typeof layout === 'string' && Object.prototype.hasOwnProperty.call(HOME_LAYOUTS, layout) ? HOME_LAYOUTS[layout as keyof typeof HOME_LAYOUTS] : null;
-        if (!next || !next.bases.includes(String(lf.base || ''))) return ctx.fail('This home does not match this lifestyle');
-        const current = homeLayout(lf);
-        if (current?.id === next.id) ctx.fail('You already live here');
-        const fee = current && !ctx.isGM ? homeMoveCost(lf) : 0;
-        if (fee > 0) {
-          checkFunds(ctx, actor, fee);
-          actor.nuyen = (Number(actor.nuyen) || 0) - fee;
-          history(actor, tk('Moving: {name}'), { name: lf.name }, -fee);
-          notifyOwners(ctx, actorId as ActorId, 'sfx', { id: 'cash' });
-        }
-        lf.home = { layout: next.id, since: ctx.now, moves: (Number(lf.home?.moves) || 0) + (current ? 1 : 0) };
-        if (current) shopLog(ctx, actorId as ActorId, fee ? tk('{actor} moves ({name}) — {cost}') : tk('{actor} moves ({name})'), { actor: actor.name, name: lf.name, cost: nuyen(fee) });
-        else shopLog(ctx, actorId as ActorId, tk('{actor} moves in ({name})'), { actor: actor.name, name: lf.name });
-        return { layout: next.id, fee };
-      },
+      handler: (ctx: ActionContext, { actorId, lifestyleId, layout }: MovePayload) => moveHome(ctx, { actorId, lifestyleId, layout: typeof layout === 'string' && layout ? layout : '?' }),
     },
 
     // GM: remove resolved orders from the history (pending ones are kept).

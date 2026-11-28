@@ -1,0 +1,43 @@
+/* « Seattle » tab (CityPage.tsx): city map + SVG overlay (districts, pins) + side panel */
+.city-page { position: absolute; inset: 0; display: grid; grid-template-columns: minmax(0, 1fr) 320px; background: #05070a; }
+.city-page.city-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 20px; }
+.city-page.city-empty .city-settings { width: min(360px, 100%); }
+.city-map { position: relative; min-width: 0; min-height: 0; overflow: hidden; user-select: none; -webkit-user-select: none; }
+.city-map .map-canvas { cursor: pointer; }
+.city-map.placing .map-canvas { cursor: crosshair; }
+.city-overlay { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.city-dim { fill: rgba(5, 7, 10, .74); }
+.city-hover { fill: rgba(255, 255, 255, .10); stroke: rgba(255, 255, 255, .75); stroke-width: 1.5px; vector-effect: non-scaling-stroke; }
+.city-focus { fill: none; stroke: var(--cyan); stroke-width: 2px; vector-effect: non-scaling-stroke; }
+.city-pin path { fill: var(--cyan); stroke: #fff; stroke-width: 2px; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .7)); }
+.city-pin text { fill: #05070a; font: 700 10px var(--sans); }
+.city-pin.guest path { stroke: var(--amber); stroke-dasharray: 4 3; }
+.city-pin.hot path { stroke-width: 3px; }
+.city-pin.ghost path { fill: rgba(255, 255, 255, .35); stroke-dasharray: 3 3; }
+.city-tip { position: absolute; pointer-events: none; padding: 3px 8px; border-radius: 6px; background: rgba(10, 14, 20, .92); border: 1px solid var(--line2); font-size: 12.5px; white-space: nowrap; }
+.city-banner { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; max-width: calc(100% - 20px);
+  padding: 6px 8px 6px 12px; border-radius: 8px; background: rgba(10, 14, 20, .94); border: 1px solid var(--cyan); font-size: 13px; }
+.city-tools { position: absolute; right: 10px; bottom: 10px; display: flex; gap: 6px; align-items: center; }
+.city-fit { width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--line2); background: var(--panel2); color: var(--text); cursor: pointer; }
+.city-fit:hover { border-color: var(--cyan); }
+.city-side { overflow-y: auto; border-left: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; }
+.city-block { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.city-block h3 { margin: 0; font-size: 15px; color: var(--cyan); }
+.city-dname { display: flex; align-items: center; gap: 8px; }
+.city-swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; flex: none; border: 1px solid rgba(255, 255, 255, .3); }
+.city-sub { margin-top: 4px; font-size: 11px; letter-spacing: .6px; text-transform: uppercase; color: var(--dim); }
+.city-sec { color: var(--amber); }
+.city-home { display: flex; flex-direction: column; gap: 4px; padding: 8px 0; border-top: 1px solid var(--line); }
+.city-home:first-of-type { border-top: none; }
+.city-home-head { overflow-wrap: anywhere; }
+.city-link, .city-home-link { background: none; border: none; padding: 0; color: var(--cyan); cursor: pointer; text-align: left; font: inherit; }
+.city-home-link { color: var(--text); padding: 4px 0; }
+.city-link:hover, .city-home-link:hover { text-decoration: underline; }
+.city-keep { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin: 4px 0; }
+.city-rename { align-items: center; }
+.city-rename input { flex: 1; min-width: 0; }
+.hm-security { color: var(--dim); }
+@media (max-width: 760px) {
+  .city-page { grid-template-columns: 1fr; grid-template-rows: minmax(0, 58%) minmax(0, 42%); }
+  .city-side { border-left: none; border-top: 1px solid var(--line); }
+}

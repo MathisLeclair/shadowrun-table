@@ -72,7 +72,7 @@ const sockets: TestClient[] = [];
 const track = (c: TestClient) => (sockets.push(c), c);
 
 try {
-  srv = await startServer({ port: 3960, runtime, keepRuntime: true, env: ENV, tables: [{ id: 'alpha', pack: 'vierge', gmPassword: 'alpha-pw', hidden: true }] });
+  srv = await startServer({ port: 3960, runtime, keepRuntime: true, env: ENV, tables: [{ id: 'alpha', pack: 'blank', gmPassword: 'alpha-pw', hidden: true }] });
   const url: string = srv.url;
 
   // -------------------------------------------------------------------------
@@ -93,7 +93,7 @@ try {
   ok(!!st.maps.map_demo_bar, 'map-library copy present');
   const host = st.matrix?.hosts?.host_demo_entrepot;
   ok(host && host.devices.some((d) => (d.link as DeviceLink | undefined)?.mapId === 'map_demo_entrepot'), 'Matrix host with map-linked devices');
-  ok(!!st.bestiary?.tpl_street_ganger && !!st.bestiary?.tpl_spider_junior, 'vierge bestiary layered under the demo pack');
+  ok(!!st.bestiary?.tpl_street_ganger && !!st.bestiary?.tpl_spider_junior, 'blank bestiary layered under the demo pack');
   const campaign = st.campaign as Campaign; // GM view: the full campaign
   ok(campaign?.acts?.some((a) => a.id === 'act_demo') && campaign?.handouts?.some((h) => h.id === 'ho_demo_brief'), 'demo scenario (act, handout)');
   ok(!JSON.stringify(st).includes('Lazarus'), 'no Project Lazarus content in the demo state');

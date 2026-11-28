@@ -52,6 +52,7 @@ const AREA_EXTRA: Record<string, string[]> = {
   foundry: ['server/modules/80-foundry.ts', 'server/lib/foundry'],
   chummer: ['server/modules/85-chummer.ts', 'server/lib/chummer'],
   books: ['server/modules/90-books.ts', 'server/lib/books', 'server/lib/bookrefs.ts', 'shared/bookrefs.ts', 'client/modules/admin/BooksAdmin.tsx'],
+  city: ['server/modules/72-city.ts', 'server/lib/city.ts', 'shared/city.ts'],
   assistant: ['server/modules/95-assistant.ts', 'server/lib/assistant', 'client/modules/admin/AssistantAdmin.tsx'],
 };
 const DEFAULT_ROOTS = ['client', 'shared', 'server'];

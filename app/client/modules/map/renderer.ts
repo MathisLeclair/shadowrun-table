@@ -857,8 +857,10 @@ export class MapRenderer {
   layers: RendererLayers;
   machinery: Cell[];
   destroyed: boolean;
-  /** Called after fit / zoom / centerOn (not on pan). */
+  /** Called after fit / zoom / centerOn / fitRect steps (not on pan). */
   onViewChange: (() => void) | null;
+  /** fitRect() animation in progress. */
+  tween: { from: ViewTransform; to: ViewTransform; start: number; dur: number } | null = null;
   raf: number;
   gridPath?: Path2D;
   gridPathKey?: string;
@@ -925,6 +927,44 @@ export class MapRenderer {
     this.dirty = true;
     this.onViewChange?.();
   }
+  /** View showing a rectangle of cells with `marginPx` around it (scale clamped like zoomAt). */
+  rectView(x: number, y: number, w: number, h: number, marginPx = 30): ViewTransform {
+    const m = Math.min(marginPx, Math.min(this.cssW, this.cssH) * 0.1);
+    const scale = Math.max(4, Math.min(160, Math.min((this.cssW - 2 * m) / Math.max(w, 0.5), (this.cssH - 2 * m) / Math.max(h, 0.5))));
+    return { scale, x: this.cssW / 2 - (x + w / 2) * scale, y: this.cssH / 2 - (y + h / 2) * scale };
+  }
+  /** Show a rectangle of cells, animated over `ms` (0: at once). Pan / zoom by the user stops the animation. */
+  fitRect(x: number, y: number, w: number, h: number, ms = 0, marginPx = 30): void {
+    if (this.cssW < 10 || this.cssH < 10) return;
+    const to = this.rectView(x, y, w, h, marginPx);
+    this.fitPending = false;
+    if (ms > 0) this.tween = { from: { ...this.view }, to, start: performance.now(), dur: ms };
+    else {
+      this.tween = null;
+      this.view = to;
+      this.onViewChange?.();
+    }
+    this.dirty = true;
+  }
+  stepTween(now: number): void {
+    const tw = this.tween;
+    if (!tw) return;
+    const k = Math.min(1, (now - tw.start) / tw.dur);
+    const e = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2; // ease in-out
+    // interpolate in log scale so zooming feels even
+    const scale = Math.exp(Math.log(tw.from.scale) + (Math.log(tw.to.scale) - Math.log(tw.from.scale)) * e);
+    // keep the screen centre on the interpolated world point
+    const cf = { x: (this.cssW / 2 - tw.from.x) / tw.from.scale, y: (this.cssH / 2 - tw.from.y) / tw.from.scale };
+    const ct = { x: (this.cssW / 2 - tw.to.x) / tw.to.scale, y: (this.cssH / 2 - tw.to.y) / tw.to.scale };
+    const c = { x: cf.x + (ct.x - cf.x) * e, y: cf.y + (ct.y - cf.y) * e };
+    this.view = { scale, x: this.cssW / 2 - c.x * scale, y: this.cssH / 2 - c.y * scale };
+    if (k >= 1) {
+      this.view = { ...tw.to };
+      this.tween = null;
+    }
+    this.dirty = true;
+    this.onViewChange?.();
+  }
   centerOn(x: number, y: number, minScale = 0): void {
     if (minScale && this.view.scale < minScale) this.view.scale = minScale;
     this.view.x = this.cssW / 2 - (x + 0.5) * this.view.scale;
@@ -934,6 +974,7 @@ export class MapRenderer {
     this.onViewChange?.();
   }
   zoomAt(sx: number, sy: number, factor: number): void {
+    this.tween = null;
     const s = Math.max(4, Math.min(160, this.view.scale * factor));
     const k = s / this.view.scale;
     this.view.x = sx - (sx - this.view.x) * k;
@@ -944,6 +985,7 @@ export class MapRenderer {
     this.onViewChange?.();
   }
   pan(dx: number, dy: number): void {
+    this.tween = null;
     this.view.x += dx;
     this.view.y += dy;
     this.fitPending = false;
@@ -1298,6 +1340,7 @@ export class MapRenderer {
   loop(now: number): void {
     if (this.destroyed) return;
     this.raf = requestAnimationFrame(this.loop);
+    if (this.tween) this.stepTween(now);
     const anim = this.needsAnimation(now);
     if (this.dirty || anim === 'fast' || (anim === 'slow' && now - this.lastAmbient > 66)) {
       this.dirty = false;

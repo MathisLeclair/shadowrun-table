@@ -221,6 +221,7 @@
   "Insufficient funds.": "Fonds insuffisants.",
   "Invalid list": "Liste invalide",
   "Invalid number of months (1 to 24)": "Nombre de mois invalide (1 à 24)",
+  "Invalid position": "Position invalide",
   "Invalid quantity": "Quantité invalide",
   "inventory::Stock": "Stock",
   "Item": "Objet",
@@ -252,6 +253,7 @@
   "Martial arts cost karma: {style} karma for a style (first technique included), then {tech} karma per technique. The GM approves.": "Les arts martiaux s’achètent en karma : style {style} karma (première technique comprise), puis {tech} karma par technique. Le MJ valide.",
   "Matrix device": "Appareil Matriciel",
   "Max availability": "Disponibilité max",
+  "min": "min",
   "Missing item": "Article manquant",
   "Models": "Modèles",
   "Months paid in advance": "Mois payés d’avance",
@@ -297,6 +299,7 @@
   "Note for the player (optional)": "Note pour le joueur (optionnel)",
   "Nothing matches your search.": "Rien ne correspond à ta recherche.",
   "Nothing new to learn": "Rien de nouveau à apprendre",
+  "Nothing to change": "Rien à changer",
   "now (months already paid), then {delta}/month": "maintenant (mois déjà payés), puis {delta}/mois",
   "Off": "Désactivé",
   "Offered:": "Proposé :",
@@ -416,6 +419,7 @@
   "That is not your character": "Ce n’est pas ton personnage",
   "That is not your order": "Ce n’est pas ta commande",
   "The character of this order no longer exists": "Le personnage de cette commande n’existe plus",
+  "There is no city map on this table": "Pas de carte de la ville sur cette table",
   "This deal is reserved for another runner": "Cette offre est réservée à un autre runner",
   "This deal no longer exists": "Cette offre n’existe plus",
   "This home does not match this lifestyle": "Ce logement ne correspond pas à ce train de vie",
@@ -442,6 +446,7 @@
   "Unknown technique for {style}": "Technique inconnue pour {style}",
   "unlimited": "illimité",
   "Unlimited stock": "Stock illimité",
+  "Unnamed deal": "Offre sans nom",
   "Used": "D'occasion",
   "vehicle::Armor": "Blindage",
   "verb::Empty": "Vider",
@@ -451,7 +456,5 @@
   "Who searches?": "Qui cherche ?",
   "Whole catalog": "Tout le catalogue",
   "You already live here": "Tu habites déjà ici",
-  "You don’t have a character yet: ask the GM to assign you one to go shopping.": "Tu n’as pas encore de personnage : demande au MJ de t’en attribuer un pour faire tes achats.",
-  "min": "min",
-  "Unnamed deal": "Offre sans nom"
+  "You don’t have a character yet: ask the GM to assign you one to go shopping.": "Tu n’as pas encore de personnage : demande au MJ de t’en attribuer un pour faire tes achats."
 }

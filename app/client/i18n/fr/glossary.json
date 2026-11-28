@@ -286,6 +286,7 @@
   "Sprite": "Sprite",
   "Sprites": "Sprites",
   "Standard": "Standard",
+  "Stealth": "Furtivité",
   "STR": "FOR",
   "Street": "Rue",
   "Street Cred": "Réputation",
@@ -322,6 +323,5 @@
   "WIL": "VOL",
   "Willpower": "Volonté",
   "Wound Modifier": "Modificateur de blessure",
-  "Wound Modifiers": "Modificateurs de blessure",
-  "Stealth": "Furtivité"
+  "Wound Modifiers": "Modificateurs de blessure"
 }
