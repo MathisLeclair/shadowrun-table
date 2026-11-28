@@ -228,6 +228,75 @@ export function combatSpellProfile(spell: { type?: string; name?: string; nameEn
   const damage: 'P' | 'S' = dmg === 'S' ? 'S' : dmg === 'P' ? 'P' : /stun|étourdi|etourdi/i.test(names) ? 'S' : 'P';
   return { mode, resist: mana ? 'WIL' : 'BOD', damage, element: mode === 'indirect' ? element : /elemental/i.test(d) ? element : null, mana };
 }
+// ---------------------------------------------------------------------------
+// Non-combat spells: the target's resistance (Opposed Test), from the catalog descriptor (SR5 pp. 285-292)
+// ---------------------------------------------------------------------------
+
+/** How a non-combat spell is resisted: the target's attributes, the book page, and whether an object can be targeted. */
+export interface SpellResistance {
+  attrs: AttrKey[];
+  page: number;
+  /** An object resists with its Object Resistance (SR5 p. 295). */
+  objects: boolean;
+  /** Text key of the rule shown in the cast modal. */
+  rule: string;
+}
+const ATTR_CHOICE: Record<string, AttrKey> = {
+  body: 'BOD', agility: 'AGI', reaction: 'REA', strength: 'STR', willpower: 'WIL', logic: 'LOG', intuition: 'INT', charisma: 'CHA',
+  constitution: 'BOD', agilite: 'AGI', force: 'STR', volonte: 'WIL', logique: 'LOG', charisme: 'CHA', // French (accents stripped)
+};
+/** Attribute named by a spell's choice / name (« Decrease [Body] », choice « Agilité »), or null. */
+export function attributeOfSpell(spell: { choice?: string | null; name?: string; nameEn?: string } | null | undefined): AttrKey | null {
+  for (const raw of [spell?.choice, (spell?.nameEn || spell?.name || '').match(/\[([^\]]+)\]/)?.[1]]) {
+    const k = String(raw || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (!k) continue;
+    if (ATTR_CHOICE[k]) return ATTR_CHOICE[k];
+    const up = k.toUpperCase();
+    if (['BOD', 'AGI', 'REA', 'STR', 'WIL', 'LOG', 'INT', 'CHA'].includes(up)) return up as AttrKey;
+  }
+  return null;
+}
+
+/**
+ * Resistance of a non-combat spell (null: none, the caster's hits alone count):
+ * - Detection, Active: LOG + WIL (+ counterspelling) for the living, Object Resistance for objects (SR5 p. 285); Passive: none.
+ * - Health: none, but a Negative spell (Decrease [Attribute]) is opposed by that attribute + WIL (SR5 p. 288).
+ * - Illusion: mana → LOG + WIL, physical → INT + LOG or Object Resistance; Obvious illusions: none (SR5 p. 290).
+ * - Manipulation: Mental → LOG + WIL; Physical → BOD + STR or Object Resistance; Environmental: none (SR5 p. 292).
+ */
+export function spellResistance(spell: { category?: string; type?: string; choice?: string | null; name?: string; nameEn?: string; nameFr?: string } | null | undefined, info: SpellCatalogInfo | null): SpellResistance | null {
+  const cat = spellCategory(spell?.category);
+  const d = String(info?.descriptor || '');
+  const mana = /^M/i.test(String(spell?.type ?? '').trim());
+  if (cat === 'detection') return /active/i.test(d) ? { attrs: ['LOG', 'WIL'], page: 285, objects: true, rule: tk('Active detection: the target resists with Logic + Willpower (+ Counterspelling); an object with its Object Resistance') } : null;
+  if (cat === 'health') {
+    // Decrease [Attribute] is not tagged Negative in Chummer's data: matched by name too.
+    if (!/negative/i.test(d) && !/decrease|diminu/i.test([spell?.nameEn, spell?.name, spell?.nameFr].filter(Boolean).join(' '))) return null;
+    const a = attributeOfSpell(spell);
+    return { attrs: a && a !== 'WIL' ? [a, 'WIL'] : ['WIL'], page: 288, objects: false, rule: tk('Negative health spell: the target resists with the attribute + Willpower') };
+  }
+  if (cat === 'illusion') {
+    if (/obvious/i.test(d)) return null;
+    return mana
+      ? { attrs: ['LOG', 'WIL'], page: 290, objects: false, rule: tk('Mana illusion: the target resists with Logic + Willpower') }
+      : { attrs: ['INT', 'LOG'], page: 290, objects: true, rule: tk('Physical illusion: the target resists with Intuition + Logic; a device with its Object Resistance') };
+  }
+  if (cat === 'manipulation') {
+    if (/\bmental\b/i.test(d)) return { attrs: ['LOG', 'WIL'], page: 292, objects: false, rule: tk('Mental manipulation: the target resists with Logic + Willpower') };
+    if (/\bphysical\b/i.test(d)) return { attrs: ['BOD', 'STR'], page: 292, objects: true, rule: tk('Physical manipulation: a living target resists with Body + Strength, an object with its Object Resistance') };
+    return null;
+  }
+  return null;
+}
+
+/** Object Resistance dice pool (SR5 p. 295). */
+export const OBJECT_RESISTANCE: Array<{ value: number; name: string }> = [
+  { value: 3, name: tk('Natural object (3)') },
+  { value: 6, name: tk('Manufactured low-tech (6)') },
+  { value: 9, name: tk('Manufactured high-tech (9)') },
+  { value: 15, name: tk('Highly processed: computer, drone, vehicle (15)') },
+];
+
 /** NPC kinds a mana spell cannot affect (no aura: drones, IC, hosts). */
 export const NO_AURA_KINDS = ['drone', 'ic', 'host'];
 

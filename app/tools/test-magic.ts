@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   findTradition, traditionFromDef, parseDrainText, sortTraditions, drainValue, drainOffset, spellReach, isAreaSpell, spellCategory, spellDrainType, maxForce,
-  spellEffects, isSustainable, combatSpellProfile, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
+  spellEffects, isSustainable, combatSpellProfile, spellResistance, attributeOfSpell, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
   type TraditionDef,
 } from '../shared/magic.ts';
 import { checkedTest, collectModifiers, poolModifiers, rollContext, derivedWithModifiers } from '../shared/modifiers.ts';
@@ -131,6 +131,20 @@ ok(isSustainable('S') && isSustainable('P') && !isSustainable('I'), 'isSustainab
   const custom = combatSpellProfile({ name: 'Flame lash', type: 'P' }, null);
   ok(custom.mode === 'indirect' && custom.element === 'fire', 'hand-made physical elemental → indirect');
   ok(combatSpellProfile({ name: 'Mind spike', type: 'M' }, null).mode === 'direct' && combatSpellProfile({ name: 'Stun whip', type: 'M' }, null).damage === 'S', 'hand-made mana → direct; « stun » → Stun');
+}
+
+// Non-combat spells (#16): resistance from the catalog descriptor
+{
+  const r = (name: string, category: string, type: string, choice?: string) => spellResistance({ name, category, type, choice }, spellCatalogInfo({ name }));
+  const attrs = (x: ReturnType<typeof r>) => (x ? x.attrs.join('+') : 'none');
+  ok(attrs(r('Detect Enemies', 'Detection', 'M')) === 'LOG+WIL' && r('Detect Enemies', 'Detection', 'M')!.objects, 'active detection: LOG + WIL, objects allowed');
+  ok(r('Clairvoyance', 'Detection', 'M') === null && r('Heal', 'Health', 'M') === null, 'passive detection and Heal: no resistance');
+  ok(attrs(r('Decrease [Attribute]', 'Health', 'P', 'Body')) === 'BOD+WIL', 'Decrease [Body]: BOD + WIL (SR5 p. 288)');
+  ok(attributeOfSpell({ name: 'Decrease [Agility]' }) === 'AGI' && attributeOfSpell({ name: 'x', choice: 'Volonté' }) === 'WIL', 'attributeOfSpell (name brackets, French choice)');
+  ok(attrs(r('Invisibility', 'Illusion', 'M')) === 'LOG+WIL' && attrs(r('Chaos', 'Illusion', 'P')) === 'INT+LOG', 'illusions: mana LOG + WIL, physical INT + LOG');
+  ok(r('Entertainment', 'Illusion', 'M') === null, 'obvious illusion: no resistance');
+  ok(attrs(r('Control Thoughts', 'Manipulation', 'M')) === 'LOG+WIL' && attrs(r('Levitate', 'Manipulation', 'P')) === 'BOD+STR' && r('Light', 'Manipulation', 'P') === null, 'manipulation: mental, physical, environmental');
+  ok(r('Manabolt', 'Combat', 'M') === null, 'combat spells are not handled here');
 }
 
 // ---------------------------------------------------------------------------
@@ -346,6 +360,31 @@ try {
   const droneId = await gm.send<string>('actor/create', { type: 'npc', name: 'Drone test', npc: { kind: 'drone' } });
   await gm.send('maps/addToken', { mapId, token: { actorId: droneId, x: 8, y: 5 } });
   await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 3, mapId, targetIds: [droneId] }), /mana/i, 'a mana spell cannot target a drone');
+  await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+
+  // ---------- Non-combat spells: resistance (#16) ----------
+  const control = await addSpell({ name: 'Control Thoughts', category: 'Manipulation', type: 'M', range: 'LOS', duration: 'S', drain: 'F-1' });
+  const levitate = await addSpell({ name: 'Levitate', category: 'Manipulation', type: 'P', range: 'LOS', duration: 'S', drain: 'F-2' });
+  let ct: { hits: number; attackIds: string[]; sustainedId?: string | null } = { hits: 0, attackIds: [] };
+  for (let i = 0; i < 5 && !ct.hits; i++) ct = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: control, force: 4, mapId, targetIds: ['pc_anthony'] });
+  await settle();
+  const atk3 = gm.state.attacks.list.find((x) => x.id === ct.attackIds[0]);
+  ok(ct.attackIds.length === 1 && atk3?.noDamage && atk3.spell?.resist === 'LOG' && atk3.spell.resist2 === 'WIL' && atk3.status === 'defense', `Control Thoughts → a resistance test LOG + WIL, no damage (${JSON.stringify(atk3)})`);
+  const physA = gm.state.actors.pc_anthony.condition;
+  const res3 = await gm.send('attack/defend', { attackId: atk3!.id });
+  await settle();
+  ok(/LOG/.test(res3.roll.breakdown) && /WIL/.test(res3.roll.breakdown), `resisted with LOG + WIL (${res3.roll.breakdown})`);
+  ok((res3.attack.status === 'done' && res3.attack.net === ct.hits - res3.roll.hits) || res3.attack.status === 'missed', 'net hits recorded');
+  ok(JSON.stringify(gm.state.actors.pc_anthony.condition) === JSON.stringify(physA), 'no damage from a non-combat spell');
+  if (ct.sustainedId) await pj.send('magic/drop', { id: ct.sustainedId });
+  // A spell on oneself is not resisted.
+  const selfCast = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: control, force: 2, mapId, targetIds: ['pc_jane'], sustain: false });
+  ok(selfCast.attackIds.length === 0, 'the caster does not resist their own spell');
+  // Object Resistance.
+  await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  const objCast = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: levitate, force: 4, object: 6, sustain: false });
+  ok(objCast.object?.pool === 6 && objCast.object.net === Math.max(0, objCast.hits - objCast.object.hits), `object resists with 6 dice (${JSON.stringify(objCast.object)})`);
+  await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: levitate, force: 2, object: 7, sustain: false }), /Object|objets/, 'a player cannot invent an Object Resistance');
   await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
 
   // Drain left pending (autoDrain off).

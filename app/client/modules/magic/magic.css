@@ -56,6 +56,7 @@
 .mg-cast-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
 .mg-cast-grid .field { display: flex; flex-direction: column; gap: 3px; }
 .mg-cast-dv { font: 800 20px var(--mono); color: var(--magenta); }
+.mg-cast-rule { color: var(--text); border-left: 3px solid var(--magenta); padding: 4px 8px; background: var(--panel2); }
 .mg-cast-warn { color: var(--dim); border-left: 3px solid var(--amber); padding: 4px 8px; background: var(--panel2); }
 .mg-cast-targets { display: flex; flex-direction: column; gap: 4px; max-height: 240px; overflow-y: auto; }
 .mg-target { display: flex; align-items: center; gap: 8px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; }

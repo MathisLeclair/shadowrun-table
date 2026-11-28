@@ -140,7 +140,12 @@ The cast creates `Attack`s (new `AttackKind: 'spell'`) so the existing tray, def
 - **Area**: one attack per selected target, each with its own defense.
 - Stun spells (Stunbolt, Stunball) deal Stun.
 
-## Other spells: opposed resistance — *#16 Resistance*
+## Other spells: opposed resistance — *#16, done*
+
+Built 2026-11-28 (facts: [modules/magic.md](../modules/magic.md#non-combat-spells-resistance)): derived from the
+descriptor (no per-spell override table needed so far); magical objects (Force × 2) and automatic counterspelling are
+not modelled.
+
 
 For non-combat spells the cast shows the resistance and, when there is a target, rolls it:
 
@@ -244,7 +249,7 @@ Filed on GitHub 2026-11-28, all « Part of #7 ». Order: #12 first; #13 → #14,
 | #13 | Cast flow: Force, Force as limit, reckless, drain computed and resisted (**done**) | #12 |
 | #14 | Sustained spells: −2 per spell as a modifier, list, GM view (**done**) | #13 |
 | #15 | Combat spells through the attack pipeline (direct, indirect, area) (**done**) | #13 |
-| #16 | Non-combat spells: opposed resistance and net hits | #13 |
+| #16 | Non-combat spells: opposed resistance and net hits (**done**) | #13 |
 | #17 | Spirit data from Chummer (spirits.json, traditions.json, `spiritStats`) | — |
 | #18 | Summoning: spirit NPC actors, services, control by the summoner, combat | #12, #17 |
 | #19 | Binding, bound spirits (aid sorcery, sustaining), banishing | #18, #14 |

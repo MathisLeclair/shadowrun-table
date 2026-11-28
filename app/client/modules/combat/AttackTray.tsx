@@ -42,7 +42,8 @@ function attackSummary(a: Attack): string {
   if (a.kind === 'blast') bits.push(t('blast at {m} m', { m: a.meters }));
   else bits.push(tn(a.hits, 'one::{n} hit', 'other::{n} hits'));
   if (a.kind === 'spell' && a.spell?.mode === 'direct') {
-    bits.push(t('direct spell ({damage}), resisted with {attr}', { damage: a.type === 'S' ? t('Stun') : t('Physical'), attr: attrShort(a.spell.resist) }));
+    const attrs = [a.spell.resist, a.spell.resist2].filter(Boolean).map((k) => attrShort(k)).join(' + ');
+    bits.push(a.noDamage ? t('spell, resisted with {attr}', { attr: attrs }) : t('direct spell ({damage}), resisted with {attr}', { damage: a.type === 'S' ? t('Stun') : t('Physical'), attr: attrs }));
     return bits.join(' · ');
   }
   if (a.dv !== null && a.dv !== undefined) bits.push(t('DV {dv}{type}', { dv: a.modifiedDv ?? a.dv, type: a.type }) + (a.ap ? ` · ${t('AP {ap}', { ap: signed(a.ap) })}` : ''));
@@ -54,6 +55,7 @@ function outcomeText(a: Attack): string {
   if (a.status === 'cancelled') return t('cancelled');
   if (a.kind === 'spell' && a.spell?.mode === 'direct') {
     if (a.status === 'missed') return a.defenseHits !== undefined ? t('resisted ({a} vs {d})', { a: a.hits, d: a.defenseHits }) : t('missed');
+    if (a.status === 'done' && a.noDamage) return tn(a.net || 0, 'success: {n} net hit', 'success: {n} net hits');
     if (a.status === 'done') return a.damageType === 'S' ? tn(a.damage || 0, '{n} stun box', '{n} stun boxes') : tn(a.damage || 0, '{n} physical box', '{n} physical boxes');
   }
   if (a.status === 'missed') return a.defenseHits !== undefined ? t('dodged ({a} vs {d})', { a: a.hits, d: a.defenseHits }) : t('missed');
@@ -250,8 +252,9 @@ function SpellResistDialog({ game, atk, onClose }: DialogProps) {
     );
   }
   const k = atk.spell.resist;
+  const k2 = atk.spell.resist2 || null;
   const edgeMax: number = attr(actor, 'EDG');
-  const base: number = attr(actor, k);
+  const base: number = attr(actor, k) + (k2 ? attr(actor, k2) : 0);
   const total = Math.max(0, base + modifier + (explode ? edgeMax : 0));
   const go = async () => {
     setBusy(true);
@@ -270,10 +273,13 @@ function SpellResistDialog({ game, atk, onClose }: DialogProps) {
         </div>
         {!result ? (
           <>
-            <div className="faint small">{t('Each net hit of the caster is one box of damage; armor does not help.')}</div>
+            <div className="faint small">
+              {atk.noDamage ? t('The caster’s net hits measure the spell’s effect; the GM applies it.') : t('Each net hit of the caster is one box of damage; armor does not help.')}{' '}
+              {t('An ally’s Counterspelling dice go in the modifier (SR5 p. 294).')}
+            </div>
             <div className="sh-rd-breakdown">
               <span className="sh-rd-part">
-                <span>{attrShort(k)}</span>
+                <span>{k2 ? `${attrShort(k)} + ${attrShort(k2)}` : attrShort(k)}</span>
                 <b>{base}</b>
               </span>
               {modifier ? (
