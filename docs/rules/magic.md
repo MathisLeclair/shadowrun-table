@@ -1,7 +1,7 @@
 # Magic rules
 
 Magic is being automated step by step (plan: [design/magic.md](../design/magic.md)); so far: karma costs, item effects,
-traditions, the drain pool, the cast flow, sustained spells, combat spells and the resistance to other spells. Page references used by the 📖 chips: drain SR5
+traditions, the drain pool, the cast flow, sustained spells, combat spells, the resistance to other spells and summoning. Page references used by the 📖 chips: drain SR5
 282, power points 278, adept powers 308, spellcasting 281, initiation 324 (`RULE_REFS`, [book-refs](../modules/book-refs.md)).
 
 - **Adept powers**: powers with a catalog `stats.bonus` (Improved Reflexes: REA + initiative dice per level,
@@ -25,6 +25,11 @@ traditions, the drain pool, the cast flow, sustained spells, combat spells and t
   + LOG; mental manipulation LOG + WIL, physical manipulation BOD + STR; Decrease [Attribute] that attribute + WIL;
   objects use the Object Resistance table (3 / 6 / 9 / 15+, SR5 295). Passive detection, most health spells, obvious
   illusions and environmental manipulations are not resisted. Counterspelling dice are added by hand (modifier).
+- **Summoning** (SR5 300-302): a type of the tradition, Force ≤ 2 × MAG, Summoning + MAG [Force] vs Force; net hits =
+  services; Drain 2 × the spirit's hits (min 2), Physical if Force > MAG; one unbound spirit at a time; optional powers:
+  one per 3 full points of Force; the whole fight is one service; leaving at sunrise / sunset is a GM button; a spirit
+  with a full condition monitor is disrupted and its services are lost. Spirit stats: SR5 303-304 (Chummer data).
+  Astral initiative of a spirit: F × 2 + 3D6 (314).
 - **Sustaining** (SR5 282-283): −2 dice per spell the character sustains, cumulative, on every test but damage
   resistance (the app's convention for « all tests » penalties, as for afflictions). Permanent spells are sustained Force Combat Turns
   (counted on new Combat Turns), then end. Armor (+hits armor, 293) and Combat Sense (+hits defense dice, 288) apply to

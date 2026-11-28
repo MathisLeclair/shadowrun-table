@@ -9,6 +9,7 @@ import {
   spellEffects, isSustainable, combatSpellProfile, spellResistance, attributeOfSpell, evalForce, spiritStats, optionalPowerCount, traditionSpiritTypes, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
   type TraditionDef,
 } from '../shared/magic.ts';
+import { derive } from '../shared/sr5.ts';
 import { checkedTest, collectModifiers, poolModifiers, rollContext, derivedWithModifiers } from '../shared/modifiers.ts';
 import { traditions, actorTradition, chummerTradition } from '../server/lib/traditions.ts';
 import { parseChum5 } from '../server/lib/chummer/parse.ts';
@@ -171,6 +172,8 @@ ok(optionalPowerCount(2) === 0 && optionalPowerCount(3) === 1 && optionalPowerCo
   const herm = traditionSpiritTypes({ name: 'Hermetic', drain: 'LOG', spirits: { combat: 'Spirit of Fire', detection: 'Spirit of Air', health: 'Spirit of Man', illusion: 'Spirit of Water', manipulation: 'Spirit of Earth' } }, defs);
   ok(herm.length === 5 && herm[0].name === 'Spirit of Fire', 'a tradition summons its five spirits');
   ok(traditionSpiritTypes(null, defs).length === defs.length, 'no tradition: every type (GM)');
+  const sp = { attributes: st.attributes, spirit: { force: 4 } } as unknown as ActorLike;
+  ok(derive(sp).astralInitiative.base === 8 && derive(sp).astralInitiative.dice === 3, 'a spirit actor: astral initiative F × 2 + 3D6 (SR5 p. 314)');
 }
 
 // ---------------------------------------------------------------------------
@@ -391,6 +394,7 @@ try {
   // ---------- Non-combat spells: resistance (#16) ----------
   const control = await addSpell({ name: 'Control Thoughts', category: 'Manipulation', type: 'M', range: 'LOS', duration: 'S', drain: 'F-1' });
   const levitate = await addSpell({ name: 'Levitate', category: 'Manipulation', type: 'P', range: 'LOS', duration: 'S', drain: 'F-2' });
+  await gm.send('actor/update', { actorId: 'pc_anthony', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
   let ct: { hits: number; attackIds: string[]; sustainedId?: string | null } = { hits: 0, attackIds: [] };
   for (let i = 0; i < 5 && !ct.hits; i++) ct = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: control, force: 4, mapId, targetIds: ['pc_anthony'] });
   await settle();
@@ -412,6 +416,92 @@ try {
   ok(objCast.object?.pool === 6 && objCast.object.net === Math.max(0, objCast.hits - objCast.object.hits), `object resists with 6 dice (${JSON.stringify(objCast.object)})`);
   await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: levitate, force: 2, object: 7, sustain: false }), /Object|objets/, 'a player cannot invent an Object Resistance');
   await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+
+  // ---------- Summoning (#18) ----------
+  await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'skills', item: { id: 'summoning', name: 'Summoning', attr: 'MAG', rating: 6 } });
+  await gm.send('magic/setTradition', { actorId: 'pc_jane', tradition: 'Hermetic' });
+  await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  await settle();
+  await expectFail(pj.send('magic/summon', { actorId: 'pc_jane', type: 'Spirit of Beasts', force: 3 }), /tradition/i, 'a Hermetic cannot summon a spirit of beasts');
+  await expectFail(pj.send('magic/summon', { actorId: 'pc_jane', type: 'Nope', force: 3 }), /spirit|esprit/i, 'unknown spirit type');
+  await expectFail(pj.send('magic/summon', { actorId: 'pc_jane', type: 'Spirit of Fire', force: 11 }), /Force|Puissance/, 'Force above 2 × MAG refused');
+  let sm: { net: number; spiritHits: number; dv: number; spiritId: string | null; services: number; drainType: string } = { net: 0, spiritHits: 0, dv: 0, spiritId: null, services: 0, drainType: '' };
+  for (let i = 0; i < 6 && !sm.spiritId; i++) {
+    sm = await pj.send('magic/summon', { actorId: 'pc_jane', type: 'Spirit of Fire', force: 3, optionalPowers: ['Fear', 'Guard'] });
+    await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  }
+  await settle();
+  ok(sm.dv === Math.max(2, 2 * sm.spiritHits) && sm.drainType === 'S', `drain = 2 × the spirit's hits (min 2), Stun when Force ≤ Magic (${JSON.stringify(sm)})`);
+  const sid2 = sm.spiritId as string;
+  const spirit = gm.state.actors[sid2];
+  ok(!!spirit && spirit.npc?.kind === 'spirit' && spirit.spirit?.summonerId === 'pc_jane' && spirit.spirit.services === sm.net && !spirit.spirit.bound && !spirit.spirit.materialized, 'a spirit actor with net hits as services');
+  ok(spirit.attributes.REA === 6 && spirit.attributes.AGI === 5 && spirit.spirit!.optionalPowers.join() === 'Fear' && spirit.powers.some((p) => p.name === 'Elemental Attack' && p.choice === 'Fire'), `fire spirit F3 stats; one optional power at F3 (${spirit.spirit?.optionalPowers})`);
+  ok(!!(pj.state.actors[sid2] as Actor | undefined)?.attributes, 'the summoner’s player gets the full sheet (controls the spirit)');
+  ok(!(pb.state.actors[sid2] as Actor | undefined)?.attributes, 'another player only sees a stub');
+  await expectFail(pj.send('magic/summon', { actorId: 'pc_jane', type: 'Spirit of Fire', force: 2 }), /unbound|non lié/i, 'one unbound spirit at a time');
+  // Services.
+  const before = gm.state.actors[sid2].spirit!.services;
+  await expectFail(pj.send('magic/spiritServices', { spiritId: sid2, delta: 1 }), /GM|MJ/, 'a player cannot add services');
+  await expectFail(pb.send('magic/spiritServices', { spiritId: sid2, delta: -1 }), /yours|vôtre/i, 'another player cannot use them');
+  await gm.send('magic/spiritServices', { spiritId: sid2, delta: 2 });
+  await pj.send('magic/spiritServices', { spiritId: sid2, delta: -1 });
+  await settle();
+  ok(gm.state.actors[sid2].spirit!.services === before + 1, 'GM +2, player −1');
+  // Materialize next to the summoner, then back to the astral plane.
+  await pj.send('magic/materialize', { spiritId: sid2, materialized: true, mapId });
+  await settle();
+  const tok = gm.state.maps[mapId].tokens.find((t) => t.actorId === sid2);
+  const janeTok = gm.state.maps[mapId].tokens.find((t) => t.actorId === 'pc_jane')!;
+  ok(!!tok && Math.max(Math.abs(tok.x - janeTok.x), Math.abs(tok.y - janeTok.y)) <= 2 && gm.state.actors[sid2].spirit!.materialized && gm.state.actors[sid2].npc?.initMode === 'physical', 'materialized: a token next to the summoner, physical initiative');
+  // Join a fight: one service.
+  await gm.send('combat/start', { mapId, includeMapTokens: false });
+  const sv = gm.state.actors[sid2].spirit!.services;
+  await pj.send('magic/spiritCombat', { spiritId: sid2 });
+  await settle();
+  ok(gm.state.combat.entries.some((e) => e.actorId === sid2) && gm.state.actors[sid2].spirit!.services === sv - 1, 'joining the fight costs one service');
+  await expectFail(pj.send('magic/spiritCombat', { spiritId: sid2 }), /already|déjà/i, 'not twice');
+  await pj.send('magic/materialize', { spiritId: sid2, materialized: false });
+  await settle();
+  ok(!gm.state.maps[mapId].tokens.some((t) => t.actorId === sid2) && gm.state.combat.entries.find((e) => e.actorId === sid2)?.mode === 'astral', 'dematerialized: token removed, astral initiative in the fight');
+  await gm.send('combat/end');
+  // Disrupted when a monitor is full (SR5 p. 302).
+  await gm.send('actor/update', { actorId: sid2, patch: { condition: { physical: 0, stun: 20, overflow: 0 } } });
+  await gm.send('combat/start', { mapId, includeMapTokens: false });
+  await gm.send('combat/newTurn');
+  await settle();
+  ok(!gm.state.actors[sid2], 'a disrupted spirit leaves at the next Combat Turn');
+  ok(!gm.state.users[Object.keys(gm.state.users).find((k) => gm.state.users[k].characterIds?.includes('pc_jane'))!].characterIds.includes(sid2), 'and is no longer assigned to the player');
+  await gm.send('combat/end');
+  // Release, sunrise.
+  let sm2: { spiritId: string | null } = { spiritId: null };
+  for (let i = 0; i < 6 && !sm2.spiritId; i++) {
+    sm2 = await pj.send('magic/summon', { actorId: 'pc_jane', type: 'Spirit of Air', force: 2 });
+    await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  }
+  await pj.send('magic/release', { spiritId: sm2.spiritId });
+  await settle();
+  ok(!gm.state.actors[sm2.spiritId as string], 'release removes the spirit');
+  let sm3: { spiritId: string | null } = { spiritId: null };
+  for (let i = 0; i < 6 && !sm3.spiritId; i++) {
+    sm3 = await pj.send('magic/summon', { actorId: 'pc_jane', type: 'Spirit of Water', force: 2 });
+    await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  }
+  await expectFail(pj.send('magic/sunrise', {}), /GM|MJ/, 'sunrise is the GM’s');
+  const sun = await gm.send('magic/sunrise', {});
+  await settle();
+  ok(sun.left >= 1 && !gm.state.actors[sm3.spiritId as string], 'sunrise: unbound spirits leave');
+  await gm.send('magic/setTradition', { actorId: 'pc_jane', tradition: 'Custom', drain: 'CHA' });
+  // A target left with no dice (WIL 1, badly wounded) still resolves the spell: 0 hits, not a blocked attack.
+  const weakId = await gm.send<string>('actor/create', { type: 'npc', name: 'Weak test', attributes: { BOD: 1, WIL: 1 } });
+  await gm.send('maps/addToken', { mapId, token: { actorId: weakId, x: 7, y: 5 } });
+  await gm.send('actor/update', { actorId: weakId, patch: { condition: { physical: 0, stun: 7, overflow: 0 } } });
+  let wk: { hits: number; attackIds: string[] } = { hits: 0, attackIds: [] };
+  for (let i = 0; i < 5 && !wk.hits; i++) {
+    wk = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: manabolt, force: 3, mapId, targetIds: [weakId] });
+    await gm.send('actor/update', { actorId: 'pc_jane', patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  }
+  const wr = await gm.send('attack/defend', { attackId: wk.attackIds[0] });
+  ok(wr.roll.hits === 0 && wr.roll.pool === 0 && wr.attack.status === 'done' && wr.attack.damage === wk.hits, `a zero pool resists with 0 hits (${JSON.stringify({ pool: wr.roll.pool, st: wr.attack.status })})`);
 
   // Drain left pending (autoDrain off).
   await gm.send('magic/settings', { autoDrain: false });

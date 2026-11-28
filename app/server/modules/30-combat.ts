@@ -547,7 +547,8 @@ function makeEntry(state: TableState, actor: Actor, token: Token | null): Combat
 }
 
 /** Add entries for tokens/actors. NPCs are rolled immediately; PCs are « à lancer ». */
-function addEntries(ctx: ActionContext, c: CombatState, { tokenIds, actorIds, rollNpcs = true }: { tokenIds?: unknown; actorIds?: unknown; rollNpcs?: boolean }): CombatEntry[] {
+/** Add tokens / actors to a fight (used by 47-magic for spirits joining combat). */
+export function addEntries(ctx: ActionContext, c: CombatState, { tokenIds, actorIds, rollNpcs = true }: { tokenIds?: unknown; actorIds?: unknown; rollNpcs?: boolean }): CombatEntry[] {
   const state = ctx.state;
   const added: CombatEntry[] = [];
   const has = (tok: Token | null, actorId?: ActorId) => c.entries.some((e) => (tok ? e.tokenId === tok.id : !e.tokenId && e.actorId === actorId));

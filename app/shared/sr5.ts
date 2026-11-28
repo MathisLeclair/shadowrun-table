@@ -218,7 +218,8 @@ export function derive(actor: ActorLike | null | undefined) {
     overflowMax: A('BOD'),
     woundModifier,
     initiative: { base: initBase, dice: initDice, text: `${initBase} + ${initDice}D6` },
-    astralInitiative: { base: A('INT') * 2, dice: 2 },
+    // Spirits: Force × 2 + 3D6 (SR5 p. 314); everyone else INT × 2 + 2D6.
+    astralInitiative: actor?.spirit?.force ? { base: Number(actor.spirit.force) * 2, dice: 3 } : { base: A('INT') * 2, dice: 2 },
     matrixInitiative: {
       ar: { base: initBase, dice: 1 },
       cold: { base: Number(actor?.matrix?.dataProcessing ?? 0) + A('INT'), dice: 3 },

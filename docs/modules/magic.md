@@ -8,7 +8,7 @@
 | client | `client/modules/magic/` (MagicPage: cockpit for players, overview + cockpit for the GM; `common.tsx`: `TraditionPicker`, `openMagic`, roll labels shared with the sheet) |
 | tests | `node tools/test-magic.ts` (port 3650) |
 
-Rules: [rules/magic.md](../rules/magic.md). What is still to build (spirits, astral, foci,
+Rules: [rules/magic.md](../rules/magic.md). What is still to build (binding, astral, foci,
 rituals, metamagic) and the sub-issues: [design/magic.md](../design/magic.md).
 
 ## State
@@ -58,6 +58,31 @@ physical initiative as a bonus over REA + INT so the normal initiative rules giv
 F × 2 + 3D6, skills mapped to the app's ids (Exotic Ranged Weapon → `exotic_weapon`, Flight kept as a custom AGI
 skill), powers, `optionalPowerCount` = one per 3 full points of Force (SR5 300). `traditionSpiritTypes(tradition, all)`:
 the tradition's five spirits (every type without one). Summoning (#18) uses them.
+
+## Summoning and spirit actors
+
+`magic/summon { actorId, type, force, optionalPowers?, explode?, modifier?, replace? }` (SR5 300): the type must be one of
+the tradition's spirits for players (`traditionSpiritTypes`; a tradition without spirits, and the GM, may summon any);
+Force 1 … 2 × MAG; one unbound spirit at a time (`replace: true` releases the old one once the new one answers).
+Summoning + MAG [Force] (`performRoll`) vs the spirit's Force dice (`rollDice`, a GM-only log entry). Drain =
+max(2, 2 × the spirit's hits), Physical if Force > MAG, resisted or left pending as for spells. Net hits > 0 →
+`createSpirit`: an NPC actor (`npc.kind: 'spirit'`, `initMode: 'astral'`, `metatype` = the type, attributes / initiative
+/ skills / powers of `spiritStats`, chosen optional powers ≤ one per 3 Force, the summoner's color, hidden like a hidden
+summoner) with `actor.spirit = { type, typeFr, force, summonerId, services, bound, materialized, optionalPowers, ts }`.
+**Control**: the spirit's id is added to the `characterIds` of the summoner's player(s), so the existing rights (full
+sheet, rolls, token moves, combat) apply unchanged; `removeActor` takes it out again.
+- `magic/spiritServices { spiritId, delta }`: the player may use one (−1), the GM sets any; at 0 the spirit leaves.
+- `magic/materialize { spiritId, materialized, mapId? }`: a token next to the summoner (`placeActorToken` of 20-maps),
+  initiative mode physical; dematerialized: tokens removed, astral mode (also on its combat entry).
+- `magic/spiritCombat { spiritId }`: joins the running fight (`addEntries` of 30-combat); one service for an unbound
+  spirit (the whole fight, SR5 302).
+- `magic/release { spiritId }`; `magic/sunrise` (GM): every unbound spirit leaves (no in-game clock).
+- Disrupted (a full condition monitor, SR5 302): removed on the next magic action or Combat Turn (`sweepDisrupted`).
+- Spirits' astral initiative is F × 2 + 3D6 (`derive`, SR5 314). They never get the Magic cockpit (`magicActors`,
+  `usesTradition` skip `actor.spirit`).
+UI: cockpit « Spirits » panel (Summon, services, materialize, join the fight, sheet, release), `SummonModal` (type —
+the tradition's first —, Force, stats preview, optional powers, Edge, Drain rule, result), GM overview column and
+« Sunrise / sunset » button.
 
 ## Combat spells (attacks)
 
@@ -109,6 +134,7 @@ with #19 / #21.
   (owner or GM) → `{ logId, rollLogId, hits, rawHits, glitch, critGlitch, force, dv, drainType, drain, targetIds, area, sustainedId, attackIds }`.
 - `magic/resistDrain { id }` (owner or GM): resist a pending drain.
 - `magic/cast … sustain?, object?` (default: sustained when possible) → also `sustainedId`, `attackIds`, `object`; `magic/drop { id }`.
+- `magic/summon`, `magic/spiritServices`, `magic/materialize`, `magic/spiritCombat`, `magic/release`, `magic/sunrise`: above.
 - `magic/settings { autoDrain?, showAstralToPlayers? }` (GM; « Resist Drain automatically » toggle of the GM page).
 
 ## Player view

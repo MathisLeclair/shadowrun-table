@@ -13,6 +13,7 @@ Initiative costs: `spendInitiative(ctx, actorId, cost, label)` (combat module). 
 environment, scatter, blast, toxins, defense, soak): [rules/combat.md](../rules/combat.md).
 
 > Combat spells (kind `'spell'`) are created by the magic module after a cast: see [magic.md](magic.md#combat-spells-attacks).
+> A resistance roll left with no dice (a badly wounded target) counts as 0 hits instead of blocking the spell.
 
 ## State
 

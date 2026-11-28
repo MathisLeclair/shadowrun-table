@@ -48,6 +48,11 @@
 .mg-hint.tone-danger { border-left-color: var(--red); }
 
 .mg-overview td { vertical-align: middle; }
+.mg-spirits { display: flex; flex-direction: column; gap: 8px; }
+.mg-spirit { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; background: var(--panel); display: flex; flex-direction: column; gap: 6px; }
+.mg-spirit-services { font: 700 13px var(--mono); color: var(--magenta); }
+.mg-spirit-btns { gap: 6px; }
+.mg-spirit-preview { padding: 4px 8px; background: var(--panel2); border-radius: 6px; }
 
 /* ---------- cast modal ---------- */
 .mg-cast { display: flex; flex-direction: column; gap: 10px; }
