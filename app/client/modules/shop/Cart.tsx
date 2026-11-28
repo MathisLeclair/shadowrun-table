@@ -1,5 +1,6 @@
 // Cart drawer: lines, quantities, totals, nuyen before/after, essence impact, checkout (player order / GM sale or gift).
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Button, IconButton, Empty, NumberInput, Badge, confirmAction } from '../../lib/ui.tsx';
 import { send } from '../../lib/net.ts';
 import { toast } from '../../lib/ui-store.ts';
@@ -121,7 +122,9 @@ export default function Cart({ game, actor, catalog, lines, onClose }: CartProps
     setBusy(false);
   };
 
-  return (
+  // Rendered on <body>, like Modal: the shop pane sits in the workspace's isolated stacking context, so an inline
+  // fixed drawer would paint under the dock.
+  return createPortal(
     <div className="shop-drawer-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <aside className="shop-drawer">
         <header className="shop-drawer-head">
@@ -236,6 +239,7 @@ export default function Cart({ game, actor, catalog, lines, onClose }: CartProps
           </footer>
         )}
       </aside>
-    </div>
+    </div>,
+    document.body,
   );
 }
