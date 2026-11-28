@@ -20,9 +20,11 @@ node tools/city-districts.ts [--image <jpeg>] [--out data/city/seattle.json] [--
 It samples the image every 4 px, gives each sample the nearest palette colour (the 12 district fills + backgrounds),
 lets unknown samples (white sub-district lines, labels, road marks) take the majority district around them, removes
 roads with a morphological opening, drops components under 150 samples, gives the components of two same-colour
-districts (Council Island / Ft. Lewis) to the nearest seed, then traces pixel-edge contours and simplifies them
+districts (Council Island / Ft. Lewis) to the nearest seed, closes notches and border lines (radius 3 samples, only
+over unclaimed samples), fills every hole that holds no other district (lakes, road numbers, labels inside a district
+belong to it; a lake between two districts stays outside), then traces pixel-edge contours and simplifies them
 (Douglas–Peucker). Rings are in cells (÷ 25 px) and use the even-odd rule: several rings = islands (Outremer), a ring
-inside another = a hole (lakes). `--qa` writes the image with the outlines for a check by eye. Seeds and colours of
+inside another = a hole. `--qa` writes the image with the outlines for a check by eye. Seeds and colours of
 Seattle are at the top of the tool.
 
 `CityShapes` (`data/city/<id>.json`): `{ id, name, background (image URL), width, height, traced, districts }`; a

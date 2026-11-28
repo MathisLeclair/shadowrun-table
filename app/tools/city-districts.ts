@@ -7,7 +7,8 @@
 // 2. Unknown samples (white sub-district lines, labels, road marks) take the majority district around them (a few passes).
 // 3. Morphological opening removes roads and slivers; components smaller than --min samples are dropped; districts with
 //    near-identical colours (Council Island / Ft. Lewis) keep the components closest to their own seed.
-// 4. Pixel-edge contours → rings, Douglas–Peucker simplified, converted to cells (÷ gridPx). Even-odd rings: lakes are holes.
+// 4. A closing fills notches and border lines; holes holding no other district (lakes, road numbers) are filled.
+// 5. Pixel-edge contours → rings, Douglas–Peucker simplified, converted to cells (÷ gridPx). Even-odd rings.
 import fs from 'node:fs';
 import path from 'node:path';
 import { APP_DIR, args as parseArgs, isMain, line, readJpeg, resize, text, writeJpeg, type Img } from './maptrace/lib.ts';
@@ -246,6 +247,8 @@ export interface TraceOptions {
   gridPx?: number;
   maxDist?: number;
   growPasses?: number;
+  /** Closing radius (samples) that fills notches and border lines. */
+  close?: number;
   open?: number;
   minSamples?: number;
   tol?: number;
@@ -286,11 +289,45 @@ export function traceDistricts(img: Img, seeds: Seed[], bg: Array<[number, numbe
     for (const i of members) masks[i].fill(0);
     for (let j = 0; j < w * h; j++) if (id[j]) masks[owner[id[j]]][j] = 1;
   }
-  return seeds.map((sd, i) => {
-    const { id, comps } = components(masks[i], w, h);
+  const finals = masks.map((mask) => {
+    const { id, comps } = components(mask, w, h);
     const keep = comps.map((c) => c.size >= (o.minSamples ?? 150));
     const m = new Uint8Array(w * h);
     for (let j = 0; j < w * h; j++) if (id[j] && keep[id[j]]) m[j] = 1;
+    return m;
+  });
+  // owner of each sample (-1 = none), to keep districts from overlapping while they absorb what is inside them
+  const owner = new Int16Array(w * h).fill(-1);
+  finals.forEach((m, i) => {
+    for (let j = 0; j < w * h; j++) if (m[j]) owner[j] = i;
+  });
+  // 1. closing: notches and border lines (road number circles on an edge, white district lines) join the district
+  const R = o.close ?? 3;
+  finals.forEach((m, i) => {
+    const closed = morph(morph(m, w, h, R, false), w, h, R, true);
+    for (let j = 0; j < w * h; j++) if (closed[j] && owner[j] === -1) {
+      m[j] = 1;
+      owner[j] = i;
+    }
+  });
+  // 2. holes: lakes, labels, road numbers fully inside a district are part of it (unless another district is in there)
+  finals.forEach((m, i) => {
+    const inv = new Uint8Array(w * h);
+    for (let j = 0; j < w * h; j++) inv[j] = m[j] ? 0 : 1;
+    const { id, comps } = components(inv, w, h);
+    const open = new Uint8Array(comps.length); // touches the image edge or holds another district
+    for (let j = 0; j < w * h; j++) {
+      if (!id[j]) continue;
+      const x = j % w, y = (j - x) / w;
+      if (x === 0 || y === 0 || x === w - 1 || y === h - 1 || (owner[j] !== -1 && owner[j] !== i)) open[id[j]] = 1;
+    }
+    for (let j = 0; j < w * h; j++) if (id[j] && !open[id[j]]) {
+      m[j] = 1;
+      owner[j] = i;
+    }
+  });
+  return seeds.map((sd, i) => {
+    const m = finals[i];
     const rings = traceRings(m, w, h)
       .map((r) => simplify(r, o.tol ?? 1.2))
       .filter((r) => r.length >= 3 && ringArea(r) >= 6)

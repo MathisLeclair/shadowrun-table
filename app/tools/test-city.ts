@@ -39,6 +39,10 @@ const SEEDS: Record<string, [number, number]> = {
   renton: [1440, 1410], outremer: [660, 1530], tacoma: [690, 1980], auburn: [1410, 1800], puyallup: [1200, 2400], 'fort-lewis': [450, 2430],
 };
 for (const [id, [px, py]] of Object.entries(SEEDS)) ok(districtAt(shapes.districts, px / 25, py / 25)?.id === id, `${id}: seed point inside`);
+// lakes and road numbers inside a district belong to it (px of the image ÷ 25)
+ok(districtAt(shapes.districts, 1197 / 25, 1603 / 25)?.id === 'renton', 'the lake in Renton is part of Renton');
+ok(districtAt(shapes.districts, 1371 / 25, 1817 / 25)?.id === 'auburn', 'road number 169 is part of Auburn');
+ok(districtAt(shapes.districts, 1101 / 25, 1077 / 25)?.id === 'bellevue', 'road number 405 is part of Bellevue');
 ok(districtAt(shapes.districts, 240 / 25, 1200 / 25) === null, 'Puget Sound: no district');
 ok(districtAt(shapes.districts, 2400 / 25, 1500 / 25) === null, 'east of the metroplex: no district');
 for (const d of shapes.districts) {

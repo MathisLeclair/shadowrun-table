@@ -2,6 +2,7 @@
 // lifestyle's home is (lifestyle.place, set by shop/move in 40-shop.ts). Players see their own runners' homes; another
 // runner's home only once the GM « invites » one of their runners there (place.guests). See docs/modules/city.md.
 import { deepClone } from '../../shared/util.ts';
+import { districtAt } from '../../shared/city.ts';
 import { activeCity, cityShapes, guessCityMap, shapesForMap } from '../lib/city.ts';
 import type { ActionContext, Actor, ActorId, CityPin, CityState, CityView, GameView, Lifestyle, ServerModule, SessionUser, TableState } from '../../shared/types.ts';
 
@@ -86,6 +87,15 @@ const mod: ServerModule = {
   init(state) {
     ensureSlice(state);
     syncDistricts(state);
+    // Re-traced shapes (lakes, road numbers now inside their district): stored homes follow the current outlines.
+    const city = activeCity(state);
+    if (city?.districts.length) {
+      for (const a of Object.values(state.actors || {})) {
+        for (const l of a?.lifestyles || []) {
+          if (l?.place && Number.isFinite(l.place.x) && Number.isFinite(l.place.y)) l.place.district = districtAt(city.districts, l.place.x, l.place.y)?.id || null;
+        }
+      }
+    }
   },
 
   actions: {
