@@ -11,6 +11,7 @@ import { normalizeActor, slugify, SUB_LISTS } from '../../client/modules/sheet/s
 import { parseChum5, sha1, ChummerError } from '../lib/chummer/parse.ts';
 import { exportChum5, detachMugshots } from '../lib/chummer/export.ts';
 import { mergeActor, diffActors } from '../lib/chummer/merge.ts';
+import { adoptChummerBags } from '../lib/chummer/bags.ts';
 import { errorBody, formatSource, isLang } from '../lib/i18n.ts';
 import { errorParam } from '../lib/chummer/messages.ts';
 import { fillActorRefs } from '../lib/bookrefs.ts';
@@ -207,6 +208,8 @@ const mod: ServerModule<HttpApp> = {
     slice(state);
     // Drop requests whose actor disappeared.
     state.chummer.pending = state.chummer.pending.filter((r) => r && state.actors?.[r.actorId]);
+    // Characters imported before bags existed: their gear with contents becomes a bag, once (lib/chummer/bags.ts).
+    for (const actor of Object.values(state.actors || {})) if (actor && adoptChummerBags(actor)) normalizeActor(actor, uid);
   },
 
   actions: {
@@ -470,6 +473,7 @@ const mod: ServerModule<HttpApp> = {
       actor.chummer = {
         ...(actor.chummer || {}), xml: stored.xml, ...(stored.urls.length ? { mugshots: stored.urls } : {}), fileName: actor.chummer?.fileName || `${fileBase}.chum5`, exportedAt: now, syncedAt: now,
         sourceHash: sha1(result.xml), created: /<created>True<\/created>/.test(result.xml), appVersion: actor.chummer?.appVersion || '5.226.0',
+        bags: true, // the exported file nests bag contents the way the app holds them (lib/chummer/bags.ts)
         // A first link: later re-imports of this file write their texts in the table language.
         ...(actor.chummer ? {} : { lang: tableLang(state) }),
       };
