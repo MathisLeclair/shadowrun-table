@@ -211,7 +211,10 @@ hours) is narrative; spell binding stays with the GM.
 - **Banishing** (301): Banishing + MAG [Astral] vs Force (+ summoner's MAG if bound); each net hit removes a service;
   at 0 the spirit leaves. Drain 2 × hits (min 2), Physical if Force > MAG. Works on enemy spirits too.
 
-## Astral — *#20 Astral*
+## Astral — *#20, done*
+
+Built 2026-11-28 (facts: [modules/magic.md](../modules/magic.md#astral)). Weapon foci in astral combat come with #21.
+
 
 - **Astral perception** (312, Simple Action): toggle in the cockpit; the actor becomes dual-natured, can target
   astral beings with mana spells, sees spirits on the map that are not materialized. Map: astral-only tokens (spirits,
@@ -264,7 +267,7 @@ Filed on GitHub 2026-11-28, all « Part of #7 ». Order: #12 first; #13 → #14,
 | #17 | Spirit data from Chummer (spirits.json, traditions.json, `spiritStats`) (**done**) | — |
 | #18 | Summoning: spirit NPC actors, services, control by the summoner, combat (**done**) | #12, #17 |
 | #19 | Binding, bound spirits (aid sorcery, sustaining), banishing (**done**) | #18, #14 |
-| #20 | Astral perception and projection, astral tokens and initiative | #12 |
+| #20 | Astral perception and projection, astral tokens and initiative (**done**) | #12 |
 | #21 | Foci: bonding, active foci, non-spellcasting foci, sustaining focus | #12, #14 |
 | #22 | Ritual spellcasting | #13 |
 | #23 | Metamagic effects | #13, #20 |

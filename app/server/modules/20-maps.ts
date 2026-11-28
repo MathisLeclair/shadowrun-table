@@ -111,6 +111,7 @@ function cleanToken(t: Loose, map: MapSize): Token {
   if (light) tok.light = light;
   if (Array.isArray(t.status)) tok.status = t.status.map((s: unknown) => str(s, 30)).filter(Boolean).slice(0, 12);
   if (t.lastMove && Array.isArray(t.lastMove.path)) tok.lastMove = t.lastMove;
+  if (t.astral) tok.astral = true;
   return tok;
 }
 

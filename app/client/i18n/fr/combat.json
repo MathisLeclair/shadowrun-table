@@ -587,5 +587,8 @@
   "Resist {spell} ({attr} + {attr2})": "Résister à {spell} ({attr} + {attr2})",
   "The caster’s net hits measure the spell’s effect; the GM applies it.": "Les succès nets du lanceur mesurent l’effet du sort ; le MJ l’applique.",
   "spell, resisted with {attr}": "sort, résisté avec {attr}",
-  "{attacker}’s {spell} affects {target}: {n} net hit(s).": "{spell} de {attacker} affecte {target} : {n} succès net(s)."
+  "{attacker}’s {spell} affects {target}: {n} net hit(s).": "{spell} de {attacker} affecte {target} : {n} succès net(s).",
+  "Astral defense — {name}": "Défense astrale — {name}",
+  "Astral defense": "Défense astrale",
+  "Astral defense: Intuition + Logic, then the damage is soaked without armor (SR5 p. 315).": "Défense astrale : Intuition + Logique, puis les dommages s’encaissent sans armure (SR5 p. 315)."
 }

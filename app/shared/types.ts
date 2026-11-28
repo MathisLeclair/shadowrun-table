@@ -1241,6 +1241,8 @@ export interface Attack {
   manual?: boolean;
   resolvedTs?: Timestamp;
   gmOnly?: boolean;
+  /** Astral combat (47-magic, SR5 p. 315): defense INT + LOG, soak with `soak` and no armor. */
+  astral?: { soak: AttrKey };
   /** Combat spell (kind 'spell', 47-magic): direct = resisted with `resist`, no soak; indirect = dodge then soak. */
   spell?: { mode: 'direct' | 'indirect'; resist: AttrKey; resist2?: AttrKey | null; force: number; element?: string | null; castLogId?: string };
 }
@@ -1456,6 +1458,8 @@ export interface Token {
   lastMove?: { path: Array<[number, number]>; ts: Timestamp };
   /** Combat movement used this Combat Turn, in metres. */
   moveBudget?: { key: string; meters: number };
+  /** Astral form (projecting magician, spirit on the astral plane): seen only by astral viewers (47-magic filter). */
+  astral?: boolean;
 }
 
 /**
@@ -2285,7 +2289,7 @@ export interface PendingDrain {
 
 /** `entry.magic` of a magic log entry. */
 export interface MagicLogInfo {
-  event: 'cast' | 'drain' | 'drop' | 'summon' | 'spirit' | 'bind' | 'banish';
+  event: 'cast' | 'drain' | 'drop' | 'summon' | 'spirit' | 'bind' | 'banish' | 'astral';
   actorId: ActorId;
   spellId?: string;
   force?: number;
@@ -2324,6 +2328,8 @@ export interface SustainedSpell {
 export interface AstralPresence {
   mode: 'perceiving' | 'projecting';
   since: Timestamp;
+  /** Projecting: the map of the astral form. */
+  mapId?: MapId;
 }
 
 /** `view.magic`: players only get the entries of their own characters (astral: all when the GM shows them). */

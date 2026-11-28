@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   findTradition, traditionFromDef, parseDrainText, sortTraditions, drainValue, drainOffset, spellReach, isAreaSpell, spellCategory, spellDrainType, maxForce,
-  spellEffects, isSustainable, combatSpellProfile, spellResistance, attributeOfSpell, evalForce, spiritStats, optionalPowerCount, traditionSpiritTypes, reagentDrams, aidSpiritType, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
+  spellEffects, isSustainable, combatSpellProfile, spellResistance, attributeOfSpell, evalForce, spiritStats, optionalPowerCount, traditionSpiritTypes, reagentDrams, aidSpiritType, canPerceiveAstral, canProjectAstral, drainPool, drainAttr, usesTradition, isAwakened, magicHints, sustainedBy, traditionName,
   type TraditionDef,
 } from '../shared/magic.ts';
 import { derive } from '../shared/sr5.ts';
@@ -175,6 +175,13 @@ ok(optionalPowerCount(2) === 0 && optionalPowerCount(3) === 1 && optionalPowerCo
   const sp = { attributes: st.attributes, spirit: { force: 4 } } as unknown as ActorLike;
   ok(derive(sp).astralInitiative.base === 8 && derive(sp).astralInitiative.dice === 3, 'a spirit actor: astral initiative F × 2 + 3D6 (SR5 p. 314)');
 }
+
+// Astral (#20)
+ok(canPerceiveAstral(mage) && canProjectAstral(mage), 'a magician perceives and projects');
+ok(!canPerceiveAstral(adept) && !canProjectAstral(adept), 'an adept without the power does neither');
+ok(canPerceiveAstral({ ...adept, powers: [{ id: 'p2', name: 'Astral Perception', pp: 1 }] } as unknown as ActorLike) && !canProjectAstral({ ...adept, powers: [{ id: 'p2', name: 'Astral Perception', pp: 1 }] } as unknown as ActorLike), 'an adept with Astral Perception perceives, never projects');
+ok(!canPerceiveAstral(mundane), 'a mundane does not perceive');
+ok(derive(mage).astralInitiative.base === 8 && derive(mage).astralInitiative.dice === 3, 'astral initiative INT × 2 + 3D6 (SR5 p. 314)');
 
 // Binding helpers (#19)
 ok(reagentDrams({ gear: [{ name: 'Reagents, per dram', qty: 30 }, { name: 'Medkit', qty: 1 }, { name: 'x', nameFr: 'Réactifs (Par drachme)', qty: 5 }] }) === 35, 'reagentDrams: reagent items only');
@@ -466,7 +473,7 @@ try {
   await expectFail(pj.send('magic/spiritCombat', { spiritId: sid2 }), /already|déjà/i, 'not twice');
   await pj.send('magic/materialize', { spiritId: sid2, materialized: false });
   await settle();
-  ok(!gm.state.maps[mapId].tokens.some((t) => t.actorId === sid2) && gm.state.combat.entries.find((e) => e.actorId === sid2)?.mode === 'astral', 'dematerialized: token removed, astral initiative in the fight');
+  ok(gm.state.maps[mapId].tokens.find((t) => t.actorId === sid2)?.astral === true && gm.state.combat.entries.find((e) => e.actorId === sid2)?.mode === 'astral', 'dematerialized: its token turns astral, astral initiative in the fight');
   await gm.send('combat/end');
   // Disrupted when a monitor is full (SR5 p. 302).
   await gm.send('actor/update', { actorId: sid2, patch: { condition: { physical: 0, stun: 20, overflow: 0 } } });
@@ -565,6 +572,60 @@ try {
   if (!bn.gone) await gm.send('magic/release', { spiritId: fid });
   await restore('pc_jane');
   await gm.send('magic/setTradition', { actorId: 'pc_jane', tradition: 'Custom', drain: 'CHA' });
+
+  // ---------- Astral (#20) ----------
+  const restoreAll = async () => {
+    for (const id of ['pc_jane', 'pc_anthony']) await gm.send('actor/update', { actorId: id, patch: { condition: { physical: 0, stun: 0, overflow: 0 } } });
+  };
+  await gm.send('magic/settings', { showAstralToPlayers: false });
+  await gm.send('maps/setActive', { mapId });
+  for (const id of Object.keys(gm.state.magic.astral)) await gm.send('magic/astral', { actorId: id, mode: null });
+  await expectFail(pb.send('magic/astral', { actorId: 'pc_bricks', mode: 'perceiving' }), /perceive|percevoir/i, 'a mundane cannot perceive');
+  await pj.send('magic/astral', { actorId: 'pc_jane', mode: 'projecting', mapId });
+  await settle();
+  const jt = gm.state.maps[mapId].tokens.filter((t) => t.actorId === 'pc_jane');
+  ok(jt.length === 2 && jt[0].status?.includes('empty body') && jt[1].astral === true, `projecting: the body stays (empty), an astral token appears (${JSON.stringify(jt.map((t) => [t.astral, t.status]))})`);
+  ok(gm.state.magic.astral.pc_jane?.mode === 'projecting', 'astral state recorded');
+  const seen = (c: typeof gm, id: string) => (c.state.maps[mapId]?.tokens || []).filter((t) => t.actorId === id);
+  ok(seen(pj, 'pc_jane').some((t) => t.astral), 'the projecting player sees their astral form');
+  ok(!seen(pb, 'pc_jane').some((t) => t.astral), 'a player with no astral sight does not see it');
+  await gm.send('magic/settings', { showAstralToPlayers: true });
+  await settle();
+  ok(seen(pb, 'pc_jane').some((t) => t.astral), 'the GM can show astral forms to everyone');
+  await gm.send('magic/settings', { showAstralToPlayers: false });
+  // Astral attack from the astral form: Astral Combat + WIL vs INT + LOG; DV = CHA (astral STR) + net, soak without armor.
+  await gm.send('actor/addItem', { actorId: 'pc_jane', list: 'skills', item: { id: 'astral_combat', name: 'Astral Combat', attr: 'WIL', rating: 4 } });
+  await restoreAll();
+  const aa = await pj.send('magic/astralAttack', { actorId: 'pc_jane', targetId: 'pc_anthony', mapId, damage: 'S' });
+  await settle();
+  const aAtk = gm.state.attacks.list.find((x) => x.id === aa.attackId);
+  ok(aa.dv === gm.state.actors.pc_jane.attributes.CHA && aAtk?.astral?.soak === 'BOD' && aAtk.type === 'S', `astral attack: DV = CHA when projecting, the physical target soaks with BOD (${JSON.stringify({ dv: aa.dv, a: aAtk?.astral })})`);
+  if (aAtk?.status === 'defense') {
+    const d2 = await gm.send('attack/defend', { attackId: aAtk.id });
+    ok(/INT/.test(d2.roll.breakdown || '') && /LOG/.test(d2.roll.breakdown || ''), `astral defense INT + LOG (${d2.roll.breakdown})`);
+    if (d2.attack.status === 'soak') {
+      const s2 = await gm.send('attack/soak', { attackId: aAtk.id });
+      ok(!/armor/.test(s2.roll.breakdown || ''), `astral soak without armor (${s2.roll.breakdown})`);
+    }
+  }
+  await pj.send('magic/astral', { actorId: 'pc_jane', mode: null });
+  await settle();
+  const jt2 = gm.state.maps[mapId].tokens.filter((t) => t.actorId === 'pc_jane');
+  ok(jt2.length === 1 && !jt2[0].astral && !jt2[0].status?.includes('empty body') && !gm.state.magic.astral.pc_jane, 'back to the physical plane: astral token gone, body no longer empty');
+  await expectFail(pj.send('magic/astralAttack', { actorId: 'pc_jane', targetId: 'pc_anthony' }), /astral/i, 'no astral attack from the physical plane');
+  // A summoned spirit arrives on the astral plane next to its summoner: hidden from players without astral sight.
+  let sm4: { spiritId: string | null } = { spiritId: null };
+  for (let i = 0; i < 6 && !sm4.spiritId; i++) {
+    sm4 = await pj.send('magic/summon', { actorId: 'pc_jane', type: 'Spirit of Air', force: 2 });
+    await restoreAll();
+  }
+  await settle();
+  const st4 = gm.state.maps[mapId].tokens.find((t) => t.actorId === sm4.spiritId);
+  ok(st4?.astral === true && !seen(pb, sm4.spiritId as string).length && seen(pj, sm4.spiritId as string).length === 1, 'a new spirit: astral token, seen by its summoner’s player only');
+  await pj.send('magic/materialize', { spiritId: sm4.spiritId, materialized: true, mapId });
+  await settle();
+  ok(seen(pb, sm4.spiritId as string).length === 1 && !gm.state.maps[mapId].tokens.find((t) => t.actorId === sm4.spiritId)?.astral, 'materialized: everyone sees it');
+  await pj.send('magic/release', { spiritId: sm4.spiritId });
 
   // A target left with no dice (WIL 1, badly wounded) still resolves the spell: 0 hits, not a blocked attack.
   const weakId = await gm.send<string>('actor/create', { type: 'npc', name: 'Weak test', attributes: { BOD: 1, WIL: 1 } });

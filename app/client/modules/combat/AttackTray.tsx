@@ -151,7 +151,7 @@ export default function AttackTray({ game }: GameProps) {
                   <div className="row wrap gap-s atk-card-actions">
                     {canAct && a.status === 'defense' && (
                       <Button small variant="primary" onClick={() => setDialog({ kind: 'defend', attackId: a.id })}>
-                        🛡 {a.kind === 'spell' && a.spell?.mode === 'direct' ? t('Resist the spell') : t('Defend')}
+                        🛡 {a.kind === 'spell' && a.spell?.mode === 'direct' ? t('Resist the spell') : a.astral ? t('Astral defense') : t('Defend')}
                       </Button>
                     )}
                     {canAct && a.status === 'soak' && (
@@ -196,7 +196,7 @@ export default function AttackTray({ game }: GameProps) {
           })}
         </div>
       )}
-      {open && dialog && dialog.kind === 'defend' && open.status === 'defense' && (open.kind === 'spell' && open.spell?.mode === 'direct'
+      {open && dialog && dialog.kind === 'defend' && open.status === 'defense' && ((open.kind === 'spell' && open.spell?.mode === 'direct') || open.astral
         ? <SpellResistDialog game={game} atk={open} onClose={() => setDialog(null)} />
         : <DefenseDialog game={game} atk={open} onClose={() => setDialog(null)} />)}
       {open && dialog && (dialog.kind === 'soak' || (dialog.kind === 'defend' && open.status !== 'defense')) && (
@@ -244,15 +244,16 @@ function SpellResistDialog({ game, atk, onClose }: DialogProps) {
   const [explode, setExplode] = useState(false);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<RollReply | null>(null);
-  if (!actor || !atk.spell) {
+  if (!actor || (!atk.spell && !atk.astral)) {
     return (
       <Overlay title={t('Resist the spell')} onClose={onClose} width={420}>
         <div className="muted">{t('Target sheet unavailable.')}</div>
       </Overlay>
     );
   }
-  const k = atk.spell.resist;
-  const k2 = atk.spell.resist2 || null;
+  // Astral combat: Intuition + Logic (SR5 p. 315).
+  const k = atk.spell?.resist || 'INT';
+  const k2 = atk.spell ? atk.spell.resist2 || null : 'LOG';
   const edgeMax: number = attr(actor, 'EDG');
   const base: number = attr(actor, k) + (k2 ? attr(actor, k2) : 0);
   const total = Math.max(0, base + modifier + (explode ? edgeMax : 0));
@@ -266,7 +267,7 @@ function SpellResistDialog({ game, atk, onClose }: DialogProps) {
     }
   };
   return (
-    <Overlay title={t('Resist the spell — {name}', { name: actor.name })} onClose={onClose} width={460}>
+    <Overlay title={atk.astral ? t('Astral defense — {name}', { name: actor.name }) : t('Resist the spell — {name}', { name: actor.name })} onClose={onClose} width={460}>
       <div className="col gap-s atk-dlg">
         <div className="atk-dlg-attack">
           <b>{atk.attackerName}</b> · {attackSummary(atk)} <BookRef source="SR5" page={283} />
@@ -274,8 +275,9 @@ function SpellResistDialog({ game, atk, onClose }: DialogProps) {
         {!result ? (
           <>
             <div className="faint small">
-              {atk.noDamage ? t('The caster’s net hits measure the spell’s effect; the GM applies it.') : t('Each net hit of the caster is one box of damage; armor does not help.')}{' '}
-              {t('An ally’s Counterspelling dice go in the modifier (SR5 p. 294).')}
+              {atk.astral
+                ? t('Astral defense: Intuition + Logic, then the damage is soaked without armor (SR5 p. 315).')
+                : <>{atk.noDamage ? t('The caster’s net hits measure the spell’s effect; the GM applies it.') : t('Each net hit of the caster is one box of damage; armor does not help.')}{' '}{t('An ally’s Counterspelling dice go in the modifier (SR5 p. 294).')}</>}
             </div>
             <div className="sh-rd-breakdown">
               <span className="sh-rd-part">
@@ -311,7 +313,9 @@ function SpellResistDialog({ game, atk, onClose }: DialogProps) {
             </div>
           </>
         ) : (
-          <SoakResult result={result} a={result.attack} hit={result.attack.status === 'done'} onClose={onClose} />
+          result.attack.status === 'soak'
+            ? <div className="atk-big hit">{t('Hit: {net} net hit(s) → DV {dv}{type}', { net: result.attack.net, dv: result.attack.modifiedDv, type: result.attack.type })}</div>
+            : <SoakResult result={result} a={result.attack} hit={result.attack.status === 'done'} onClose={onClose} />
         )}
       </div>
     </Overlay>
@@ -614,13 +618,14 @@ export function SoakDialog({ game, atk, onClose }: DialogProps) {
   if (atk.kind === 'toxin') return <ToxinDialog actor={actor} atk={atk} onClose={onClose} />;
   let armor = 0;
   try {
-    armor = derivedWithModifiers(actor, mods).armor || 0;
+    // Astral combat: no armor (SR5 p. 315).
+    armor = atk.astral ? 0 : derivedWithModifiers(actor, mods).armor || 0;
   } catch {}
   const ap = Number(atk.ap) || 0;
   const modArmor = Math.max(0, armor + ap);
   const dv = atk.modifiedDv ?? atk.dv ?? 0;
   const edgeMax: number = attr(actor, 'EDG');
-  const total = Math.max(0, attr(actor, 'BOD') + modArmor + modifier + (explode ? edgeMax : 0));
+  const total = Math.max(0, attr(actor, atk.astral?.soak || 'BOD') + modArmor + modifier + (explode ? edgeMax : 0));
   const type = finalDamageType(atk.type, dv, modArmor);
   const go = async () => {
     setBusy(true);
