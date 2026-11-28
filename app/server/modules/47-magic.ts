@@ -258,7 +258,7 @@ export function castSpell(ctx: ActionContext, p: CastPayload) {
   const roll = performRoll(ctx, {
     actorId: a.id, skillId: 'spellcasting', label: spellRollLabel(spell.nameFr || spell.name), limit: force, explode: !!p.explode,
     modifier: p.modifier, conditions, ignore: p.ignore, ...(secret ? { secret: true } : {}),
-  }, { bonus: [...bonus, ...(shape ? [{ label: 'spell shaping', value: -Math.abs(shape) }] : [])], logExtra: { labelI18n: { key: tk('Spell — {spell} (Force {force})'), params: { spell: biName(spell), force } } } });
+  }, { rng: loadedRng('caster'), bonus: [...bonus, ...(shape ? [{ label: 'spell shaping', value: -Math.abs(shape) }] : [])], logExtra: { labelI18n: { key: tk('Spell — {spell} (Force {force})'), params: { spell: biName(spell), force } } } });
   if (aid?.spirit) {
     aid.spirit.services -= 1;
     logMagic(ctx, a, tk('{spirit} aids the spell: +{n} dice (one service).'), { spirit: aid.name, n: aid.spirit.force }, { event: 'spirit', actorId: aid.id }, secret);
@@ -436,8 +436,8 @@ function useReagents(a: Actor, drams: number): void {
   a.gear = (a.gear || []).filter((g) => !isReagent(g) || (Number(g.qty) || 0) > 0);
 }
 
-// Test hook: SR_MAGIC_TEST=1 enables 'magic/testDice' to load the dice of a binding. 'caster' = every binder die rolls
-// 5 (a hit) and every spirit die (spiritRoll: binding, banishing) rolls 2 (no hit); null = random.
+// Test hook: SR_MAGIC_TEST=1 enables 'magic/testDice' to load the dice. 'caster' = every die of a spellcasting or
+// binding roll rolls 5 (a hit) and every spirit die (spiritRoll: binding, banishing) rolls 2 (no hit); null = random.
 let testDice: 'caster' | null = null;
 const loadedRng = (side: 'caster' | 'spirit'): (() => number) | undefined => {
   if (!testDice) return undefined;
@@ -1071,7 +1071,7 @@ const actions: Record<string, ActionDef> = {
 };
 
 if (process.env.SR_MAGIC_TEST === '1') {
-  /** Test hook only: { mode: 'caster' | null } loads the binding dice (see loadedRng). */
+  /** Test hook only: { mode: 'caster' | null } loads the spellcasting and binding dice (see loadedRng). */
   actions['magic/testDice'] = {
     role: 'gm',
     handler(_ctx: ActionContext, p: { mode?: unknown } = {}) {

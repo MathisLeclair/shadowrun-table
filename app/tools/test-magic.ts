@@ -757,13 +757,16 @@ try {
   await pj.send('actor/updateItem', { actorId: 'pc_jane', list: 'gear', itemId: sf.id, patch: { active: true } });
   await restoreAll();
   // A sustaining focus sustains a manipulation spell up to its Force: no −2 for the caster.
-  let fs1: { sustainedId?: string | null } = {};
-  for (let i = 0; i < 5 && !fs1.sustainedId; i++) fs1 = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: armorSpell, force: 3, mapId, targetIds: ['pc_jane'], sustainFocusId: sf.id });
+  // Loaded dice: every spellcasting die hits, so both casts succeed and reach the focus checks (only a cast with hits
+  // is sustained): the first is sustained by the focus, the second is refused.
+  await gm.send('magic/testDice', { mode: 'caster' });
+  const fs1: { sustainedId?: string | null } = await pj.send('magic/cast', { actorId: 'pc_jane', spellId: armorSpell, force: 3, mapId, targetIds: ['pc_jane'], sustainFocusId: sf.id });
   await settle();
   ok(gm.state.magic.sustained[fs1.sustainedId as string]?.by?.kind === 'focus', 'sustained by the focus');
   const noPen = await pj.send('dice/roll', { actorId: 'pc_jane', skillId: 'spellcasting' });
   ok(!(noPen.mods || []).some((m: { id: string; state: string }) => m.id === `sustained:${fs1.sustainedId}` && m.state === 'applied'), 'no −2 for the caster while the focus works');
   await expectFail(pj.send('magic/cast', { actorId: 'pc_jane', spellId: armorSpell, force: 2, sustainFocusId: sf.id }), /already|déjà/i, 'one spell per sustaining focus');
+  await gm.send('magic/testDice', { mode: null });
   // Switching the focus off: the caster carries the −2 at once.
   await pj.send('actor/updateItem', { actorId: 'pc_jane', list: 'gear', itemId: sf.id, patch: { active: false } });
   const pen = await pj.send('dice/roll', { actorId: 'pc_jane', skillId: 'spellcasting' });
