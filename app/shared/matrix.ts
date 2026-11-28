@@ -270,7 +270,7 @@ export const ACTIONS: MatrixActionDef[] = [
     desc: tk('Opposed by 6 dice (GOD). Success: you learn your current OS.') },
   // --- Legal: information
   { id: 'matrixPerception', fr: tk('Matrix Perception'), en: 'Matrix Perception', cat: 'info', type: 'complex', skill: 'computer', attr: 'INT', limit: 'dataProcessing', defense: null, marks: 0, targets: ['host', 'ic', 'device', 'pan', 'file', 'persona', 'manual', 'none'], page: 241,
-    desc: tk('Each hit reveals one piece of information. On a host: rating, attributes, IC, files, devices and data bombs.') },
+    desc: tk('Looks at icons: each hit reveals one piece of information. On a host: rating, attributes, IC, files, devices and data bombs; on a character: their commlink and PAN devices; with no target during a fight: the PANs around.') },
   { id: 'matrixSearch', fr: tk('Matrix Search'), en: 'Matrix Search', cat: 'info', type: 'special', skill: 'computer', attr: 'INT', limit: 'dataProcessing', defense: null, marks: 0, targets: ['none'], page: 241,
     desc: tk('Searches the Matrix for information on a topic: the threshold and the base time depend on how available it is; hits above the threshold divide the time. Protected or secret data: search inside its host.') },
   { id: 'traceIcon', fr: tk('Trace Icon'), en: 'Trace Icon', cat: 'info', type: 'complex', skill: 'computer', attr: 'INT', limit: 'dataProcessing', defense: ['WIL', 'sleaze'], marks: 2, targets: ['persona', 'device', 'pan', 'manual'], page: 243,
@@ -702,6 +702,16 @@ export type GearMatrixStats = (catalogId: string) => { deviceRating?: number; da
 interface PanItem { id?: string; name?: string; nameFr?: string; nameEn?: string; rating?: number | string | null; catalogId?: string; category?: string; wirelessOff?: boolean }
 const names = (it: PanItem) => ({ name: String(it.name || ''), ...(it.nameFr ? { nameFr: it.nameFr } : {}), ...(it.nameEn ? { nameEn: it.nameEn } : {}) });
 
+/**
+ * A commlink or cyberdeck in the gear: by catalog category (« Commlinks », « Cyberdecks ») or by name when the category is
+ * generic (« Équipement » / « Commlink (indice 4) »). Accessories, modules and form factors are not devices of their own.
+ */
+export function isMatrixDevice(g: { name?: string; category?: string }): boolean {
+  const cat = String(g.category || '').trim();
+  if (/accessor|module|form factor/i.test(cat)) return false;
+  return /^(commlinks?|cyberdecks?)$/i.test(cat) || /\b(commlink|cyberdeck)\b/i.test(String(g.name || ''));
+}
+
 /** The commlink / deck behind a character's persona: the sheet's Matrix device, else their best commlink or cyberdeck. */
 export function panMaster(actor: ActorLike | null | undefined, stats?: GearMatrixStats): PanMaster | null {
   const m = actor?.matrix as Record<string, unknown> | null | undefined;
@@ -710,7 +720,7 @@ export function panMaster(actor: ActorLike | null | undefined, stats?: GearMatri
   }
   let best: PanMaster | null = null;
   for (const g of ((actor?.gear || []) as PanItem[])) {
-    if (!g || !/^(commlinks?|cyberdecks?)$/i.test(String(g.category || '').trim())) continue;
+    if (!g || !isMatrixDevice(g)) continue;
     const st = (g.catalogId && stats?.(g.catalogId)) || null;
     const dr = Number(st?.deviceRating) || Number(g.rating) || AVERAGE_DEVICE_RATING;
     const cand = { name: String(g.name || ''), deviceRating: dr, dataProcessing: Number(st?.dataProcessing) || dr, firewall: Number(st?.firewall) || dr };

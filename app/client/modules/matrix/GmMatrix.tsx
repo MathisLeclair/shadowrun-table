@@ -388,7 +388,8 @@ function FilesSection({ host }: { host: Host }) {
 }
 
 /** Map objects a device can drive: tile doors, segment-wall doors, lights, regions (camera zones). value = 'kind:id'. */
-function linkOptions(map: GameMap | null | undefined) {
+/** The map objects a host device can drive: doors (tile or wall), lights, camera zones (regions). */
+export function linkOptions(map: GameMap | null | undefined) {
   if (!map) return [];
   const opts: Array<{ value: string; label: string }> = [];
   for (const d of map.doors || []) opts.push({ value: `door:${d.id}`, label: `🚪 ${d.name || t('Door ({x}, {y})', { x: d.x, y: d.y })}` });

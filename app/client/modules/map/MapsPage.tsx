@@ -12,6 +12,7 @@ const byName = (a: unknown, b: unknown) => String(a).localeCompare(String(b), ge
 import { MapEditor } from './editor.tsx';
 import { LibraryBrowser, LibraryLinkModal } from './LibraryBrowser.tsx';
 import { useLibrary } from './maplib-client.ts';
+import MapHostModal from '../matrix/MapHostModal.tsx';
 import './map.css';
 
 const quiet = () => {};
@@ -82,6 +83,7 @@ function MapsList({ game, tabs }: { game: GameView; tabs: ReactNode }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const activeId = game.scene?.activeMapId;
   const [linkMap, setLinkMap] = useState<string | null>(null);
+  const [hostMap, setHostMap] = useState<string | null>(null);
   const hasLinked = Object.values(maps).some((m) => m.library);
   const lib = useLibrary(hasLinked).data;
   const latest = useMemo<Record<string, number>>(() => Object.fromEntries((lib?.maps || []).map((e) => [e.slug, e.version])), [lib]);
@@ -148,13 +150,14 @@ function MapsList({ game, tabs }: { game: GameView; tabs: ReactNode }) {
           </div>
           <div className="maps-grid">
             {list.map((m) => (
-              <MapCard key={m.id} map={m} active={m.id === activeId} latest={m.library ? latest[m.library.slug] : null} onLibrary={() => setLinkMap(m.id)} />
+              <MapCard key={m.id} map={m} active={m.id === activeId} latest={m.library ? latest[m.library.slug] : null} onLibrary={() => setLinkMap(m.id)} onHost={() => setHostMap(m.id)} />
             ))}
           </div>
         </div>
       ))}
       {creating && <CreateMapModal game={game} onClose={() => setCreating(false)} />}
       {linkMap && maps[linkMap] && <LibraryLinkModal map={maps[linkMap]} onClose={() => setLinkMap(null)} />}
+      {hostMap && maps[hostMap] && <MapHostModal game={game} map={maps[hostMap]} onClose={() => setHostMap(null)} />}
     </div>
   );
 }
@@ -164,9 +167,10 @@ interface MapCardProps {
   active: boolean;
   latest: number | null | undefined;
   onLibrary: () => void;
+  onHost: () => void;
 }
 
-function MapCard({ map, active, latest, onLibrary }: MapCardProps) {
+function MapCard({ map, active, latest, onLibrary, onHost }: MapCardProps) {
   const ref = useRef<HTMLCanvasElement>(null);
   const bg = map.background;
   const sig = `${map.width}x${map.height}|${map.theme}|${map.tiles.join('')}|${(map.doors || []).map((d) => d.state + d.kind).join()}|${(map.tokens || []).map((t) => t.x + ',' + t.y + t.disposition).join()}|${bg ? `${bg.url}${bg.mode}${bg.x},${bg.y},${bg.w},${bg.h},${bg.opacity}` : ''}|${wallsKey(map)}`;
@@ -266,6 +270,9 @@ function MapCard({ map, active, latest, onLibrary }: MapCardProps) {
             {t('Library…')}
           </Button>
         )}
+        <Button small variant="ghost" onClick={onHost} title={t('Create the security host of this map: its cameras, lights and doors become Matrix devices')}>
+          {t('Matrix host…')}
+        </Button>
         <Button small variant="ghost" onClick={dup}>
           {t('Duplicate')}
         </Button>

@@ -497,16 +497,28 @@ function durationMsg(minutes: number): I18nMessage {
 function revealOptions(state: TableState, actor: Actor, persona: Persona, actionId: string, target: Target): RevealOption[] {
   const out: RevealOption[] = [];
   const me = [actor.id];
-  const inHost = persona.hostId ? slice(state).hosts[persona.hostId] : null;
-  if (actionId === 'matrixSearch' && inHost) {
-    // Searching inside a host: its files (protected or secret data is only found there, SR5 p. 241).
-    for (const f of inHost.files || []) if (!knows(inHost, me, 'files', f.id)) out.push({ id: `file:${inHost.id}:${f.id}`, group: inHost.name, label: { t: 'file “{name}”', params: { name: f.name } } });
+  // Matrix Search = information on a topic (SR5 p. 241): where the data is — a hidden host, or inside a host the file
+  // that holds the answer. The answer itself is the GM's.
+  if (actionId === 'matrixSearch') {
+    const inHost = persona.hostId ? slice(state).hosts[persona.hostId] : null;
+    if (inHost) {
+      for (const f of inHost.files || []) out.push({ id: `answer-file:${inHost.id}:${f.id}`, group: inHost.name, label: { t: 'The answer is in file “{name}”', params: { name: f.name } } });
+      return out;
+    }
+    for (const h of Object.values(slice(state).hosts)) {
+      if (h.visible || (persona.marks || []).some((m) => m.count > 0 && String(m.targetId).split(':')[1] === h.id)) continue;
+      out.push({ id: `host-visible:${h.id}`, group: { t: 'Where the data is: hidden hosts' }, label: h.name, detail: ratingMsg(h.rating) });
+    }
     return out;
   }
-  if (actionId === 'matrixSearch' || target.kind === 'none') {
-    for (const h of Object.values(slice(state).hosts)) {
-      if (h.visible || persona.hostId === h.id || (persona.marks || []).some((m) => m.count > 0 && String(m.targetId).split(':')[1] === h.id)) continue;
-      out.push({ id: `host-visible:${h.id}`, group: { t: 'Hidden hosts' }, label: h.name, detail: ratingMsg(h.rating) });
+  // Matrix Perception = icons (SR5 p. 235): with no target, the icons around — during a fight, the NPCs' PANs.
+  if (target.kind === 'none') {
+    if (state.combat?.active) {
+      const ids = new Set((state.combat.entries || []).filter((e) => e.actorId && !e.out).map((e) => e.actorId as ActorId));
+      for (const id of ids) {
+        const npc = state.actors?.[id];
+        if (npc && npc.type === 'npc' && !npc.hidden) out.push(...panOptions(persona, npc));
+      }
     }
     return out;
   }
@@ -533,16 +545,20 @@ function revealOptions(state: TableState, actor: Actor, persona: Persona, action
     }
     return out;
   }
-  if (target.kind === 'persona' && target.actor && target.actor.type === 'npc') {
-    const owner = target.actor;
-    const scan = persona.scans?.[owner.id];
-    const group: I18nMessage = { t: 'PAN of {name}', params: { name: owner.name } };
-    const m = masterOf(owner);
-    if (m && !scan?.master) out.push({ id: `pan-master:${owner.id}`, group, label: { t: 'Commlink: {name}', params: { name: m.name } }, detail: { t: 'DR {dr} · DP {dp} · FW {fw}', params: { dr: m.deviceRating, dp: m.dataProcessing, fw: m.firewall } } });
-    const seen = new Set((scan?.devices || []).map((d) => d.id));
-    for (const d of panDevices(owner)) {
-      if (!seen.has(d.id)) out.push({ id: `pan:${owner.id}:${d.id}`, group, label: biName(d), detail: { t: 'DR {n}', params: { n: d.deviceRating } } });
-    }
+  if (target.kind === 'persona' && target.actor && target.actor.type === 'npc') out.push(...panOptions(persona, target.actor));
+  return out;
+}
+
+/** What the decker can still learn of a character's PAN: its commlink, then each device not seen yet. */
+function panOptions(persona: Persona, owner: Actor): RevealOption[] {
+  const out: RevealOption[] = [];
+  const scan = persona.scans?.[owner.id];
+  const group: I18nMessage = { t: 'PAN of {name}', params: { name: owner.name } };
+  const m = masterOf(owner);
+  if (m && !scan?.master) out.push({ id: `pan-master:${owner.id}`, group, label: { t: 'Commlink: {name}', params: { name: m.name } }, detail: { t: 'DR {dr} · DP {dp} · FW {fw}', params: { dr: m.deviceRating, dp: m.dataProcessing, fw: m.firewall } } });
+  const seen = new Set((scan?.devices || []).map((d) => d.id));
+  for (const d of panDevices(owner)) {
+    if (!seen.has(d.id)) out.push({ id: `pan:${owner.id}:${d.id}`, group, label: biName(d), detail: { t: 'DR {n}', params: { n: d.deviceRating } } });
   }
   return out;
 }
@@ -566,7 +582,8 @@ function newReveal(ctx: ActionContext, actor: Actor, persona: Persona, actionId:
 
 /** Apply one revealed option to the decker's knowledge. false = it no longer exists. */
 function applyReveal(state: TableState, actor: Actor, persona: Persona, optionId: string): boolean {
-  const [kind, a, b] = optionId.split(':');
+  const [rawKind, a, b] = optionId.split(':');
+  const kind = rawKind === 'answer-file' ? 'file' : rawKind; // a search pointing at a file: the decker now knows that file
   const hosts = slice(state).hosts;
   if (kind === 'host-stats' || kind === 'ic' || kind === 'file' || kind === 'device' || kind === 'host-visible') {
     const h = hosts[a];
@@ -1621,6 +1638,16 @@ interface MatrixActionPayload {
   /** GM only. */
   defensePool?: number | string | null;
 }
+interface HostFromMapPayload {
+  mapId?: string;
+  name?: string;
+  rating?: number;
+  preset?: string;
+  ic?: boolean;
+  folder?: string;
+  deviceRating?: number;
+  devices?: Array<{ link?: string; name?: string }>;
+}
 interface HostCreatePayload {
   name?: string;
   rating?: number;
@@ -1911,6 +1938,37 @@ const actions: Record<string, ActionDef> = {
     const host: Loose = { id, name: str(p.name, 80).trim() || (ctx.t ? ctx.t(tk('Host {n}'), { n: rating }) : formatSource('Host {n}', { n: rating })), rating, ...hostAttributes(rating, preset), alert: 'none', visible: false, folder: str(p.folder, 60) };
     host.ic = p.ic === false ? [] : defaultIcFor(rating).map((type, i) => ({ id: uid('ic'), type, rating, active: i === 0 && type === 'patrol', damage: 0 }));
     m.hosts[id] = normalizeHost(host, id);
+    return { id };
+  }),
+
+  // { mapId, name?, rating?, preset?, ic?, deviceRating?, devices: [{ link: 'door:<id>'|'light:<id>'|'camera:<regionId>', name }] }
+  // → { id }. The map's security host: one slaved device per picked door / light / camera zone, already linked to the map.
+  'matrix/hostFromMap': gm((ctx: ActionContext, p: HostFromMapPayload = {}) => {
+    const map = ctx.state.maps?.[str(p.mapId, 80)];
+    if (!map) return ctx.fail('Map not found');
+    const list = Array.isArray(p.devices) ? p.devices.slice(0, 200) : [];
+    const deviceRating = clampInt(p.deviceRating, 1, 6, 3);
+    const seen = new Set<string>();
+    const devices: Loose[] = [];
+    for (const x of list) {
+      if (!isObj(x)) continue;
+      const [kind, targetId] = str(x.link, 120).split(':');
+      if (!targetId || seen.has(`${kind}:${targetId}`)) continue;
+      const exists = kind === 'door' ? !!findAnyDoor(map, targetId) : kind === 'light' ? (map.lights || []).some((l) => l.id === targetId) : kind === 'camera' ? (map.regions || []).some((r) => r.id === targetId) : false;
+      if (!exists) ctx.fail('{what} is no longer on the map', { what: str(x.name, 80) || targetId });
+      seen.add(`${kind}:${targetId}`);
+      devices.push({ id: uid('dev'), name: str(x.name, 80).trim() || targetId, rating: deviceRating, link: { mapId: map.id, kind, targetId }, on: true });
+    }
+    const rating = clampInt(p.rating, 1, 12, 3);
+    const preset = (HOST_PRESETS as Loose)[p.preset as string] ? p.preset : 'fortress';
+    const id = uid('host');
+    const host: Loose = {
+      id, name: str(p.name, 80).trim() || map.name, rating, ...hostAttributes(rating, preset), alert: 'none', visible: false,
+      folder: str(p.folder, 60) || map.folder || '', devices,
+    };
+    host.ic = p.ic === false ? [] : defaultIcFor(rating).map((type, i) => ({ id: uid('ic'), type, rating, active: i === 0 && type === 'patrol', damage: 0 }));
+    const h = (slice(ctx.state).hosts[id] = normalizeHost(host, id));
+    for (const d of h.devices) syncDeviceLink(ctx, d); // camera zones show « 📷 », lights follow the device
     return { id };
   }),
 

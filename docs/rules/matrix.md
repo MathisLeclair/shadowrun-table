@@ -31,8 +31,10 @@ Page references used by the 📖 chips: Matrix initiative SR5 231, Matrix damage
 
 ## Matrix Perception and Matrix Search (SR5 p. 241)
 
-- Matrix Perception: one fact per net hit, picked by the GM from what the decker does not know yet (or answered
-  freely). Each decker's knowledge of a host is kept item by item (`host.known`).
+- Matrix Perception sees icons (SR5 p. 235): one fact per net hit, picked by the GM from what the decker does not know
+  yet (or answered freely) — a host's rating, IC, files and devices, a character's commlink and PAN, the NPCs' PANs
+  around during a fight. Spotting a host needs no test (p. 235), so finding a hidden host is information: Matrix
+  Search. Each decker's knowledge of a host is kept item by item (`host.known`).
 - Matrix Search (`SEARCH_LEVELS`, `searchMinutes`): Simple Test against the Matrix Search Table — public 1 (1 min),
   limited interest 3 (30 min), hidden or erased 6 (12 h); protected / secret data only from inside its host, where the
   base time is 1 minute. Dice modifiers: intricate −1, obscure −2, another grid −2. Hits above the threshold divide the
@@ -42,8 +44,9 @@ Page references used by the 📖 chips: Matrix initiative SR5 231, Matrix damage
 
 `panMaster`, `panDevices`, `panDefensePool` (shared/matrix.ts), used by `scanPan` / the `pan:` target of 45-matrix.
 - The commlink (or deck) is subsumed by its owner's persona (SR5 p. 235): the PAN master *is* the `persona:<id>` target.
-  A character without a Matrix device on the sheet defends with their best commlink / cyberdeck from the gear
-  (catalog Device Rating / Data Processing / Firewall, else the item rating, else 2).
+  A character without a Matrix device on the sheet defends with their best commlink / cyberdeck from the gear — by
+  catalog category, or by name in generic gear (« Commlink (indice 4) ») — (catalog Device Rating / Data Processing /
+  Firewall, else the item rating, else 2).
 - Slaved devices (SR5 p. 233): cyberware (bioware has no wireless) and firearms (pistols, automatics, longarms, heavy
   weapons, exotic ranged; not bows, thrown or implant weapons), unless the GM ticked **Wireless off** on the item.
   Device Rating (SR5 p. 234): weapons 2; cyberware by grade, standard / used 2, alpha 3, beta 4, delta 5, gamma / omega 6
