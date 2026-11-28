@@ -90,69 +90,74 @@ export function VehicleCard({ s, v }: { s: SheetCtx; v: Vehicle }) {
   const stat = (label: string, value: number | string, extra?: string) => <span key={label}><span className="faint">{t(label)}</span>{' '}<b>{value}</b>{extra ? <small className="red"> {extra}</small> : null}</span>;
   const [hOn, hOff] = splitStat(v.handling);
   const hText = hOn !== hOff ? `${st.handling}/${st.handlingOff}` : String(st.handling);
-  return <div className={'sh-card sh-veh' + (destroyed ? ' sh-veh-destroyed' : '')}>
-    <div className="row spread wrap gap-s">
-      <span>
-        <b title={itemTitle(v)}>{itemLabel(v)}</b>{' '}<ItemRef item={v} />
-        {drone ? <>{' '}<span className="badge badge-cyan">{t('drone')}</span></> : null}
-        {destroyed ? <>{' '}<span className="badge badge-red">{t('destroyed')}</span></> : null}
-        {chase ? <>{' '}<span className="badge badge-amber" title={t('In the chase')}>🏁 {chase.role === 'quarry' ? t('quarry') : t(CHASE_RANGE_LABELS[chase.range || 'medium'])}</span></> : null}
-      </span>
-      <span className="faint small">{t(skillKey(vehicleSkillId(v)))}</span>
+  // Two sides (wide card): what the vehicle is and its state on the left; controls, tests, weapons on the right.
+  return <div className={'sh-card sh-card-split sh-veh' + (destroyed ? ' sh-veh-destroyed' : '')}>
+    <div className="sh-card-main">
+      <div className="row spread wrap gap-s">
+        <span>
+          <b title={itemTitle(v)}>{itemLabel(v)}</b>{' '}<ItemRef item={v} />
+          {drone ? <>{' '}<span className="badge badge-cyan">{t('drone')}</span></> : null}
+          {destroyed ? <>{' '}<span className="badge badge-red">{t('destroyed')}</span></> : null}
+          {chase ? <>{' '}<span className="badge badge-amber" title={t('In the chase')}>🏁 {chase.role === 'quarry' ? t('quarry') : t(CHASE_RANGE_LABELS[chase.range || 'medium'])}</span></> : null}
+        </span>
+        <span className="faint small">{t(skillKey(vehicleSkillId(v)))}</span>
     </div>
-    <div className="sh-vstats">
-      {stat(tk('Handl.'), hText, dmgMod ? String(dmgMod) : '')}
-      {stat(tk('Speed'), st.speed)}{stat(tk('Accel.'), st.accel)}{stat(tk('vehicle-abbr::Body'), st.body)}{stat(tk('vehicle-abbr::Armor'), st.armor)}
-      {stat(tk('Pilot'), st.pilot)}{stat(tk('Sensor'), st.sensor)}{st.seats ? stat(tk('Seats'), st.seats) : null}
+      <div className="sh-vstats">
+        {stat(tk('Handl.'), hText, dmgMod ? String(dmgMod) : '')}
+        {stat(tk('Speed'), st.speed)}{stat(tk('Accel.'), st.accel)}{stat(tk('vehicle-abbr::Body'), st.body)}{stat(tk('vehicle-abbr::Armor'), st.armor)}
+        {stat(tk('Pilot'), st.pilot)}{stat(tk('Sensor'), st.sensor)}{st.seats ? stat(tk('Seats'), st.seats) : null}
     </div>
-    <div className="sh-veh-monitor" title={t('Condition monitor: {n} boxes ({base} + Body/2) — vehicles ignore Stun', { n: max, base: drone ? 6 : 12 })}>
-      {Array.from({ length: max }, (_, i) => <button key={i} type="button" disabled={!(gm || s.own)} className={'sh-veh-box' + (i < dmg ? ' on' : '') + ((i + 1) % 3 === 0 ? ' third' : '')}
-        onClick={() => setDamage(i + 1 === dmg ? i : i + 1)} aria-label={t('{n} box(es) of damage', { n: i + 1 })} />)}
-      <span className="mono small">{dmg}/{max}</span>
-      <BookRef source="SR5" page={199} />
+      <div className="sh-veh-monitor" title={t('Condition monitor: {n} boxes ({base} + Body/2) — vehicles ignore Stun', { n: max, base: drone ? 6 : 12 })}>
+        {Array.from({ length: max }, (_, i) => <button key={i} type="button" disabled={!(gm || s.own)} className={'sh-veh-box' + (i < dmg ? ' on' : '') + ((i + 1) % 3 === 0 ? ' third' : '')}
+          onClick={() => setDamage(i + 1 === dmg ? i : i + 1)} aria-label={t('{n} box(es) of damage', { n: i + 1 })} />)}
+        <span className="mono small">{dmg}/{max}</span>
+        <BookRef source="SR5" page={199} />
     </div>
-    {canAct && <div className="row wrap gap-s sh-veh-control">
-      <Select value={control} onChange={(c) => act('vehicle/control', { actorId: actor.id, vehicleId: v.id, control: c })}
-        options={VEHICLE_CONTROLS.map((c) => ({ value: c, label: t(CONTROL_LABELS[c]) }))} title={t(CONTROL_HINTS[control])} />
-      {control !== 'auto' && drivers.length > 1 && <Select value={v.driverId || actor.id} onChange={(id) => act('vehicle/control', { actorId: actor.id, vehicleId: v.id, driverId: id === actor.id ? null : id })}
-        options={drivers.map((a) => ({ value: a.id, label: a.name }))} title={t('At the controls')} />}
-      {control === 'manual' && <Toggle value={!!v.ar} onChange={(on) => act('vehicle/control', { actorId: actor.id, vehicleId: v.id, ar: on })} label={t('AR')} title={t('AR interface: +1 to the limits')} />}
-      {control === 'rigged' && driver && <span className="badge badge-magenta" title={t('Control rig rating')}>{t('rig {n}', { n: controlRigRating(driver) })}</span>}
-      {!hasRiggerInterface(v) && <span className="faint small" title={t('Needed to jump in (drones have one)')}>{t('no rigger interface')}</span>}
-    </div>}
-    <VehicleExtras s={s} v={v} canAct={canAct} />
-    {!canAct && <div className="faint small">{t(CONTROL_LABELS[control])}{driver && driver.id !== actor.id ? ` · ${driver.name}` : ''}</div>}
-    {canAct && !destroyed && <div className="row wrap gap-s">
-      <Button small disabled={vehicleDisabled(v)} onClick={() => setDialog({ mode: 'test', test: 'control' })} title={t('Vehicle skill + REA [Handling] against a threshold (SR5 p. 199)')}>🎲 {t('Vehicle Test')}</Button>
-      <Button small onClick={() => setDialog({ mode: 'test', test: 'perception' })} title={t('Perception + INT [Sensor], autopilot Pilot + Clearsight')}>{t('Sensors')}</Button>
-      <Button small onClick={() => setDialog({ mode: 'test', test: 'stealth' })}>{t('Stealth')}</Button>
-      {control === 'auto' && <Button small onClick={() => setDialog({ mode: 'test', test: 'pilot' })} title={t('Pilot × 2 when something unexpected happens (SR5 p. 269)')}>{t('Pilot program')}</Button>}
-      {token && <Button small disabled={!target || target.id === token.id} onClick={() => setDialog({ mode: 'ram' })} title={target ? t('Ram {name}', { name: target.name }) : t('Target a token on the map first')}>{t('Ram')}</Button>}
-      {token && <Button small disabled={!target || target.id === token.id} onClick={() => target && act('vehicle/lock', { actorId: actor.id, vehicleId: v.id, targetTokenId: target.id })} title={target ? t('Sensor Test vs {name}: the net hits lower its defense against this vehicle\'s weapons (SR5 p. 184)', { name: target.name }) : t('Target a token on the map first')}>🔒 {t('Lock')}</Button>}
-      {driver && mine(game, driver.id) && driver.matrix && <Button small onClick={() => setExtra('ew')} title={t('Electronic warfare (Rigger 5.0 p. 30)')}>📡 {t('EW')}</Button>}
-      {token
-        ? <Button small variant="ghost" onClick={() => act('vehicle/unplace', { actorId: actor.id, vehicleId: v.id })}>{t('Remove from the map')}</Button>
-        : <Button small variant="ghost" onClick={() => act('vehicle/place', { actorId: actor.id, vehicleId: v.id })} title={t('Put the vehicle on the shown map, next to its driver')}>⌖ {t('Put on the map')}</Button>}
-    </div>}
-    {(mounted.length > 0 || (canAct && mountable.length > 0)) && <div className="sh-veh-weapons">
-      {mounted.map((w) => <div className="row wrap gap-s" key={w.id}>
-        <span className="grow"><b>{itemLabel(w)}</b> <span className="faint small">{w.damage} · {t('AP')} {w.ap} · {w.mode}{usesAmmo(w) ? ` · ${Number(w.ammoLoaded ?? 0)}/${w.ammoMax ?? ''}` : ''}</span></span>
-        {canAct && !destroyed && <Button small onClick={() => setDialog({ mode: 'fire', weaponId: w.id })}>🎯 {t('Fire')}</Button>}
-        {(gm || s.own) && <Button small variant="ghost" onClick={() => act('vehicle/mount', { actorId: actor.id, weaponId: w.id, vehicleId: null })} title={t('Take it off the vehicle')}>✕</Button>}
-      </div>)}
-      {(gm || s.own) && mountable.length > 0 && <Select value="" onChange={(id) => id && act('vehicle/mount', { actorId: actor.id, weaponId: id, vehicleId: v.id })}
-        options={[{ value: '', label: t('+ Mount a weapon…') }, ...mountable.map((w) => ({ value: w.id, label: itemLabel(w) }))]} />}
-    </div>}
-    {((v.autosofts || []).length > 0 || gm) && <div className="row wrap gap-s small">
-      <span className="faint">{t('Autosofts')}</span>
-      {(v.autosofts || []).map((a) => <span className="badge" key={a.id}>{t(AUTOSOFT_LABELS[a.kind])} {a.rating}{a.target ? ` (${a.target})` : ''}</span>)}
-      {gm && <Button small variant="ghost" onClick={() => setConfig(!config)}>{config ? t('Done') : '✎'}</Button>}
-    </div>}
-    {config && gm && <VehicleConfig actor={actor} v={v} />}
-    {(v.mods || []).length > 0 && <><div className="faint small">{vehicleSlotsText(v)}</div><SubChips sub="mods" items={v.mods} /></>}{v.notes && <div className="faint small">{v.notes}</div>}
-    {(gm || s.own) && !destroyed && (dmg > 0 || Object.values(v.breakdowns || {}).some(Boolean)) && <div className="row gap-s">
-      <Button small variant="ghost" onClick={() => setExtra('repair')} title={t('Repair (Rigger 5.0 p. 29)')}>🔧 {t('Repair')}</Button>
-    </div>}
+      <VehicleExtras s={s} v={v} canAct={canAct} />
+      {((v.autosofts || []).length > 0 || gm) && <div className="row wrap gap-s small">
+        <span className="faint">{t('Autosofts')}</span>
+        {(v.autosofts || []).map((a) => <span className="badge" key={a.id}>{t(AUTOSOFT_LABELS[a.kind])} {a.rating}{a.target ? ` (${a.target})` : ''}</span>)}
+        {gm && <Button small variant="ghost" onClick={() => setConfig(!config)}>{config ? t('Done') : '✎'}</Button>}
+      </div>}
+      {config && gm && <VehicleConfig actor={actor} v={v} />}
+      {(v.mods || []).length > 0 && <><div className="faint small">{vehicleSlotsText(v)}</div><SubChips sub="mods" items={v.mods} /></>}{v.notes && <div className="faint small">{v.notes}</div>}
+    </div>
+    <div className="sh-card-side">
+      {canAct && <div className="row wrap gap-s sh-veh-control">
+        <Select value={control} onChange={(c) => act('vehicle/control', { actorId: actor.id, vehicleId: v.id, control: c })}
+          options={VEHICLE_CONTROLS.map((c) => ({ value: c, label: t(CONTROL_LABELS[c]) }))} title={t(CONTROL_HINTS[control])} />
+        {control !== 'auto' && drivers.length > 1 && <Select value={v.driverId || actor.id} onChange={(id) => act('vehicle/control', { actorId: actor.id, vehicleId: v.id, driverId: id === actor.id ? null : id })}
+          options={drivers.map((a) => ({ value: a.id, label: a.name }))} title={t('At the controls')} />}
+        {control === 'manual' && <Toggle value={!!v.ar} onChange={(on) => act('vehicle/control', { actorId: actor.id, vehicleId: v.id, ar: on })} label={t('AR')} title={t('AR interface: +1 to the limits')} />}
+        {control === 'rigged' && driver && <span className="badge badge-magenta" title={t('Control rig rating')}>{t('rig {n}', { n: controlRigRating(driver) })}</span>}
+        {!hasRiggerInterface(v) && <span className="faint small" title={t('Needed to jump in (drones have one)')}>{t('no rigger interface')}</span>}
+      </div>}
+      {!canAct && <div className="faint small">{t(CONTROL_LABELS[control])}{driver && driver.id !== actor.id ? ` · ${driver.name}` : ''}</div>}
+      {canAct && !destroyed && <div className="row wrap gap-s">
+        <Button small disabled={vehicleDisabled(v)} onClick={() => setDialog({ mode: 'test', test: 'control' })} title={t('Vehicle skill + REA [Handling] against a threshold (SR5 p. 199)')}>🎲 {t('Vehicle Test')}</Button>
+        <Button small onClick={() => setDialog({ mode: 'test', test: 'perception' })} title={t('Perception + INT [Sensor], autopilot Pilot + Clearsight')}>{t('Sensors')}</Button>
+        <Button small onClick={() => setDialog({ mode: 'test', test: 'stealth' })}>{t('Stealth')}</Button>
+        {control === 'auto' && <Button small onClick={() => setDialog({ mode: 'test', test: 'pilot' })} title={t('Pilot × 2 when something unexpected happens (SR5 p. 269)')}>{t('Pilot program')}</Button>}
+        {token && <Button small disabled={!target || target.id === token.id} onClick={() => setDialog({ mode: 'ram' })} title={target ? t('Ram {name}', { name: target.name }) : t('Target a token on the map first')}>{t('Ram')}</Button>}
+        {token && <Button small disabled={!target || target.id === token.id} onClick={() => target && act('vehicle/lock', { actorId: actor.id, vehicleId: v.id, targetTokenId: target.id })} title={target ? t('Sensor Test vs {name}: the net hits lower its defense against this vehicle\'s weapons (SR5 p. 184)', { name: target.name }) : t('Target a token on the map first')}>🔒 {t('Lock')}</Button>}
+        {driver && mine(game, driver.id) && driver.matrix && <Button small onClick={() => setExtra('ew')} title={t('Electronic warfare (Rigger 5.0 p. 30)')}>📡 {t('EW')}</Button>}
+        {token
+          ? <Button small variant="ghost" onClick={() => act('vehicle/unplace', { actorId: actor.id, vehicleId: v.id })}>{t('Remove from the map')}</Button>
+          : <Button small variant="ghost" onClick={() => act('vehicle/place', { actorId: actor.id, vehicleId: v.id })} title={t('Put the vehicle on the shown map, next to its driver')}>⌖ {t('Put on the map')}</Button>}
+      </div>}
+      {(mounted.length > 0 || (canAct && mountable.length > 0)) && <div className="sh-veh-weapons">
+        {mounted.map((w) => <div className="row wrap gap-s" key={w.id}>
+          <span className="grow"><b>{itemLabel(w)}</b> <span className="faint small">{w.damage} · {t('AP')} {w.ap} · {w.mode}{usesAmmo(w) ? ` · ${Number(w.ammoLoaded ?? 0)}/${w.ammoMax ?? ''}` : ''}</span></span>
+          {canAct && !destroyed && <Button small onClick={() => setDialog({ mode: 'fire', weaponId: w.id })}>🎯 {t('Fire')}</Button>}
+          {(gm || s.own) && <Button small variant="ghost" onClick={() => act('vehicle/mount', { actorId: actor.id, weaponId: w.id, vehicleId: null })} title={t('Take it off the vehicle')}>✕</Button>}
+        </div>)}
+        {(gm || s.own) && mountable.length > 0 && <Select value="" onChange={(id) => id && act('vehicle/mount', { actorId: actor.id, weaponId: id, vehicleId: v.id })}
+          options={[{ value: '', label: t('+ Mount a weapon…') }, ...mountable.map((w) => ({ value: w.id, label: itemLabel(w) }))]} />}
+      </div>}
+      {(gm || s.own) && !destroyed && (dmg > 0 || Object.values(v.breakdowns || {}).some(Boolean)) && <div className="row gap-s">
+        <Button small variant="ghost" onClick={() => setExtra('repair')} title={t('Repair (Rigger 5.0 p. 29)')}>🔧 {t('Repair')}</Button>
+      </div>}
+    </div>
     {dialog && <VehicleDialog game={game} owner={actor} v={v} state={dialog} onClose={() => setDialog(null)} />}
     {extra === 'repair' && <RepairDialog game={game} owner={actor} v={v} onClose={() => setExtra(null)} />}
     {extra === 'ew' && driver && <EwDialog game={game} rigger={driver} v={v} onClose={() => setExtra(null)} />}

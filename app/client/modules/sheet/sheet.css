@@ -192,6 +192,16 @@ tr.sh-skill:hover .sh-die-btn { color: var(--pc); }
 /* cards & lists */
 .sh-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
 .sh-card { background: var(--panel2); border: 1px solid var(--line); border-left: 3px solid var(--pc); border-radius: 8px; padding: 9px 11px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+/* Wide cards (lifestyles, vehicles & drones): alone → full width; several → 2 per line at most; narrow sheet
+   (< 2 × 320 px) → 1 per line. auto-fit collapses empty tracks, the calc(50%) minimum caps it at 2 columns,
+   min(100%, 320px) drops to 1. An odd last card (the 3rd of 3) takes the whole line. */
+.sh-cards.sh-cards-wide { grid-template-columns: repeat(auto-fit, minmax(max(min(100%, 320px), calc((100% - 8px) / 2)), 1fr)); }
+.sh-cards-wide > .sh-card:last-child:nth-child(odd) { grid-column: 1 / -1; }
+/* Two-sided card: .sh-card-main (what it is) on the left, .sh-card-side (options, actions) on the right, below when
+   the card is too narrow for both (half-width cards stack, full-width ones sit side by side). */
+.sh-card.sh-card-split { flex-direction: row; flex-wrap: wrap; align-items: flex-start; align-content: flex-start; gap: 6px 18px; padding: 11px 13px; }
+.sh-card-main, .sh-card-side { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1 1 240px; }
+.sh-card-main { flex-basis: 260px; }
 .sh-list { display: flex; flex-direction: column; gap: 4px; }
 .sh-list-row { display: flex; align-items: center; gap: 10px; padding: 7px 10px; background: var(--panel2); border: 1px solid var(--line); border-radius: 7px; min-width: 0; }
 .sh-list-row.on { border-color: var(--cyan-d); background: #0f262640; }
@@ -373,16 +383,6 @@ tr.sh-skill:hover .sh-die-btn { color: var(--pc); }
 .sh-subeditor { display: flex; flex-direction: column; gap: 6px; border-left: 2px solid var(--pc); padding-left: 10px; }
 .sh-sub-title { font: 600 12px var(--mono); color: var(--dim); text-transform: uppercase; letter-spacing: .04em; }
 .sh-edit-table td.nowrap { white-space: nowrap; }
-/* Lifestyle cards: alone → full width; several → 2 per line at most; narrow sheet (< 2 × 320 px) → 1 per line.
-   auto-fit collapses empty tracks, the calc(50%) minimum caps it at 2 columns, min(100%, 320px) drops to 1.
-   An odd last card (the 3rd of 3) takes the whole line. */
-.sh-cards.sh-lifestyles { grid-template-columns: repeat(auto-fit, minmax(max(min(100%, 320px), calc((100% - 8px) / 2)), 1fr)); }
-.sh-lifestyles > .sh-lifestyle:last-child:nth-child(odd) { grid-column: 1 / -1; }
-/* Two sides: name, badges, cost and breakdown on the left; points, options, notes and Home / City on the right
-   (below when the card is too narrow for both). */
-.sh-lifestyle { flex-direction: row; flex-wrap: wrap; align-items: flex-start; align-content: flex-start; gap: 6px 18px; padding: 11px 13px; }
-.sh-lifestyle-main, .sh-lifestyle-side { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1 1 240px; }
-.sh-lifestyle-main { flex-basis: 260px; }
 .sh-lifestyle-actions { margin-top: 2px; }
 .sh-lifestyle.primary { border-left-color: var(--amber); }
 .sh-lifestyle-head { align-items: flex-start; row-gap: 4px; }

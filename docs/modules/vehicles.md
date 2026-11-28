@@ -4,7 +4,7 @@
 |---|---|
 | server | `server/modules/34-vehicles.ts` (vehicle actions, owner of `state.chase`); vehicle targets in `33-attacks.ts` |
 | shared | `shared/vehicles.ts` (rules and test plans), `server/lib/vehicles.ts` (driver, controller, catalog drone flag) |
-| client | `client/modules/sheet/vehicles.tsx` (vehicle card + dialog, Gear tab), `combat/ChasePanel.tsx` (Initiative dock), `combat/VehicleAttack.tsx` (attack tray) |
+| client | `client/modules/sheet/vehicles.tsx` (vehicle card + dialog, Gear tab; wide two-sided card `.sh-cards-wide` / `.sh-card-split` from `sheet.css`: state on the left, controls / tests / weapons on the right), `combat/ChasePanel.tsx` (Initiative dock), `combat/VehicleAttack.tsx` (attack tray) |
 | tests | `node tools/test-vehicles.ts` (port 3295, `SR_TEST_PORT` overrides) |
 
 Vehicles stay items of their owner's sheet (`actor.vehicles`). The SR5 rules applied: [rules/vehicles.md](../rules/vehicles.md).

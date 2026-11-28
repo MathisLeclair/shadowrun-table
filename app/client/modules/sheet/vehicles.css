@@ -1,5 +1,6 @@
 /* Vehicles & drones on the sheet (vehicles.tsx). Prefix: .sh-veh- */
-.sh-veh { display: flex; flex-direction: column; gap: 6px; }
+/* Two-sided wide card (.sh-card-split, sheet.css): state on the left, controls / tests / weapons on the right. */
+.sh-veh .sh-card-main, .sh-veh .sh-card-side { gap: 6px; }
 .sh-veh-destroyed { opacity: .75; border-color: var(--red); }
 .sh-veh-monitor { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; }
 .sh-veh-box { width: 13px; height: 13px; padding: 0; border: 1px solid var(--line2); border-radius: 2px; background: var(--panel2); cursor: pointer; }
@@ -7,6 +8,8 @@
 .sh-veh-box.on { background: var(--red); border-color: var(--red); }
 .sh-veh-box:disabled { cursor: default; }
 .sh-veh-control { align-items: center; }
+/* Control mode and driver share a line when the card is wide enough. */
+.sh-veh-control > select.input { flex: 1 1 150px; width: auto; }
 .sh-veh-weapons { display: flex; flex-direction: column; gap: 4px; padding: 6px 8px; border-left: 2px solid var(--amber); background: var(--panel2); border-radius: 4px; }
 .sh-veh-config { padding: 8px; border: 1px dashed var(--line2); border-radius: 6px; }
 .sh-veh-grid { display: grid; grid-template-columns: max-content 1fr; gap: 6px 10px; align-items: center; }
